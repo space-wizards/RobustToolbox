@@ -1,0 +1,385 @@
+18:16:43: Creating resource group General
+18:16:43: Creating resource group Internal
+18:16:43: Creating resource group Autodetect
+18:16:43: SceneManagerFactory for type 'DefaultSceneManager' registered.
+18:16:43: Registering ResourceManager for type Material
+18:16:43: Registering ResourceManager for type Mesh
+18:16:43: Registering ResourceManager for type Skeleton
+18:16:43: MovableObjectFactory for type 'ParticleSystem' registered.
+18:16:43: OverlayElementFactory for type Panel registered.
+18:16:43: OverlayElementFactory for type BorderPanel registered.
+18:16:43: OverlayElementFactory for type TextArea registered.
+18:16:43: Registering ResourceManager for type Font
+18:16:43: ArchiveFactory for archive type FileSystem registered.
+18:16:43: ArchiveFactory for archive type Zip registered.
+18:16:43: DDS codec registering
+18:16:43: FreeImage version: 3.13.1
+18:16:43: This program uses FreeImage, a free, open source image library supporting all common bitmap formats. See http://freeimage.sourceforge.net for details
+18:16:43: Supported formats: bmp,ico,jpg,jif,jpeg,jpe,jng,koa,iff,lbm,mng,pbm,pbm,pcd,pcx,pgm,pgm,png,ppm,ppm,ras,tga,targa,tif,tiff,wap,wbmp,wbm,psd,cut,xbm,xpm,gif,hdr,g3,sgi,exr,j2k,j2c,jp2,pfm,pct,pict,pic,bay,bmq,cr2,crw,cs1,dc2,dcr,dng,erf,fff,hdr,k25,kdc,mdc,mos,mrw,nef,orf,pef,pxn,raf,raw,rdc,sr2,srf,arw,3fr,cine,ia,kc2,mef,nrw,qtk,rw2,sti,drf,dsc,ptx,cap,iiq,rwz
+18:16:43: PVRTC codec registering
+18:16:43: Registering ResourceManager for type HighLevelGpuProgram
+18:16:43: Registering ResourceManager for type Compositor
+18:16:43: MovableObjectFactory for type 'Entity' registered.
+18:16:43: MovableObjectFactory for type 'Light' registered.
+18:16:43: MovableObjectFactory for type 'BillboardSet' registered.
+18:16:43: MovableObjectFactory for type 'ManualObject' registered.
+18:16:43: MovableObjectFactory for type 'BillboardChain' registered.
+18:16:43: MovableObjectFactory for type 'RibbonTrail' registered.
+18:16:43: Loading library .\RenderSystem_Direct3D9
+18:16:43: Installing plugin: D3D9 RenderSystem
+18:16:43: D3D9 : Direct3D9 Rendering Subsystem created.
+18:16:43: D3D9: Driver Detection Starts
+18:16:43: D3D9: Driver Detection Ends
+18:16:43: Plugin successfully installed
+18:16:43: Loading library .\Plugin_ParticleFX
+18:16:43: Installing plugin: ParticleFX
+18:16:43: Particle Emitter Type 'Point' registered
+18:16:43: Particle Emitter Type 'Box' registered
+18:16:43: Particle Emitter Type 'Ellipsoid' registered
+18:16:43: Particle Emitter Type 'Cylinder' registered
+18:16:43: Particle Emitter Type 'Ring' registered
+18:16:43: Particle Emitter Type 'HollowEllipsoid' registered
+18:16:43: Particle Affector Type 'LinearForce' registered
+18:16:43: Particle Affector Type 'ColourFader' registered
+18:16:43: Particle Affector Type 'ColourFader2' registered
+18:16:43: Particle Affector Type 'ColourImage' registered
+18:16:43: Particle Affector Type 'ColourInterpolator' registered
+18:16:43: Particle Affector Type 'Scaler' registered
+18:16:43: Particle Affector Type 'Rotator' registered
+18:16:43: Particle Affector Type 'DirectionRandomiser' registered
+18:16:43: Particle Affector Type 'DeflectorPlane' registered
+18:16:43: Plugin successfully installed
+18:16:43: Loading library .\Plugin_OctreeSceneManager
+18:16:43: Installing plugin: Octree & Terrain Scene Manager
+18:16:43: Plugin successfully installed
+18:16:43: Loading library .\Plugin_CgProgramManager
+18:16:43: Installing plugin: Cg Program Manager
+18:16:43: Plugin successfully installed
+18:16:43: *-*-* OGRE Initialising
+18:16:43: *-*-* Version 1.7.1 (Cthugha)
+18:16:43: CPU Identifier & Features
+18:16:43: -------------------------
+18:16:43:  *   CPU ID: GenuineIntel: Intel(R) Core(TM)2 Duo CPU     E6750  @ 2.66GHz
+18:16:43:  *      SSE: yes
+18:16:43:  *     SSE2: yes
+18:16:43:  *     SSE3: yes
+18:16:43:  *      MMX: yes
+18:16:43:  *   MMXEXT: yes
+18:16:43:  *    3DNOW: no
+18:16:43:  * 3DNOWEXT: no
+18:16:43:  *     CMOV: yes
+18:16:43:  *      TSC: yes
+18:16:43:  *      FPU: yes
+18:16:43:  *      PRO: yes
+18:16:43:  *       HT: no
+18:16:43: -------------------------
+18:16:43: D3D9 : Subsystem Initialising
+18:16:43: Registering ResourceManager for type Texture
+18:16:43: Registering ResourceManager for type GpuProgram
+18:16:43: ***************************************
+18:16:43: *** D3D9 : Subsystem Initialised OK ***
+18:16:43: ***************************************
+18:16:43: D3D9RenderSystem::_createRenderWindow "SpaceStation3D", 1024x768 windowed  miscParams: FSAA=0 vsync=True 
+18:16:43: D3D9 : Created D3D9 Rendering Window 'SpaceStation3D' : 1024x768, 32bpp
+18:16:44: D3D9: Vertex texture format supported - PF_L8
+18:16:44: D3D9: Vertex texture format supported - PF_L16
+18:16:44: D3D9: Vertex texture format supported - PF_A8
+18:16:44: D3D9: Vertex texture format supported - PF_A4L4
+18:16:44: D3D9: Vertex texture format supported - PF_BYTE_LA
+18:16:44: D3D9: Vertex texture format supported - PF_R5G6B5
+18:16:44: D3D9: Vertex texture format supported - PF_B5G6R5
+18:16:44: D3D9: Vertex texture format supported - PF_A4R4G4B4
+18:16:44: D3D9: Vertex texture format supported - PF_A1R5G5B5
+18:16:44: D3D9: Vertex texture format supported - PF_A8R8G8B8
+18:16:44: D3D9: Vertex texture format supported - PF_B8G8R8A8
+18:16:44: D3D9: Vertex texture format supported - PF_A2R10G10B10
+18:16:44: D3D9: Vertex texture format supported - PF_A2B10G10R10
+18:16:44: D3D9: Vertex texture format supported - PF_DXT1
+18:16:44: D3D9: Vertex texture format supported - PF_DXT2
+18:16:44: D3D9: Vertex texture format supported - PF_DXT3
+18:16:44: D3D9: Vertex texture format supported - PF_DXT4
+18:16:44: D3D9: Vertex texture format supported - PF_DXT5
+18:16:44: D3D9: Vertex texture format supported - PF_FLOAT16_RGB
+18:16:44: D3D9: Vertex texture format supported - PF_FLOAT16_RGBA
+18:16:44: D3D9: Vertex texture format supported - PF_FLOAT32_RGB
+18:16:44: D3D9: Vertex texture format supported - PF_FLOAT32_RGBA
+18:16:44: D3D9: Vertex texture format supported - PF_X8R8G8B8
+18:16:44: D3D9: Vertex texture format supported - PF_X8B8G8R8
+18:16:44: D3D9: Vertex texture format supported - PF_R8G8B8A8
+18:16:44: D3D9: Vertex texture format supported - PF_DEPTH
+18:16:44: D3D9: Vertex texture format supported - PF_SHORT_RGBA
+18:16:44: D3D9: Vertex texture format supported - PF_FLOAT16_R
+18:16:44: D3D9: Vertex texture format supported - PF_FLOAT32_R
+18:16:44: D3D9: Vertex texture format supported - PF_SHORT_GR
+18:16:44: D3D9: Vertex texture format supported - PF_FLOAT16_GR
+18:16:44: D3D9: Vertex texture format supported - PF_FLOAT32_GR
+18:16:44: D3D9: Vertex texture format supported - PF_SHORT_RGB
+18:16:44: D3D9: Vertex texture format supported - PF_PVRTC_RGB2
+18:16:44: D3D9: Vertex texture format supported - PF_PVRTC_RGBA2
+18:16:44: D3D9: Vertex texture format supported - PF_PVRTC_RGB4
+18:16:44: D3D9: Vertex texture format supported - PF_PVRTC_RGBA4
+18:16:44: RenderSystem capabilities
+18:16:44: -------------------------
+18:16:44: RenderSystem Name: Direct3D9 Rendering Subsystem
+18:16:44: GPU Vendor: ati
+18:16:44: Device Name: Monitor-1-ATI Radeon HD 4800 Series
+18:16:44: Driver Version: 8.17.10.1070
+18:16:44:  * Fixed function pipeline: yes
+18:16:44:  * Hardware generation of mipmaps: yes
+18:16:44:  * Texture blending: yes
+18:16:44:  * Anisotropic texture filtering: yes
+18:16:44:  * Dot product texture operation: yes
+18:16:44:  * Cube mapping: yes
+18:16:44:  * Hardware stencil buffer: yes
+18:16:44:    - Stencil depth: 8
+18:16:44:    - Two sided stencil support: yes
+18:16:44:    - Wrap stencil values: yes
+18:16:44:  * Hardware vertex / index buffers: yes
+18:16:44:  * Vertex programs: yes
+18:16:44:  * Number of floating-point constants for vertex programs: 256
+18:16:44:  * Number of integer constants for vertex programs: 16
+18:16:44:  * Number of boolean constants for vertex programs: 16
+18:16:44:  * Fragment programs: yes
+18:16:44:  * Number of floating-point constants for fragment programs: 224
+18:16:44:  * Number of integer constants for fragment programs: 16
+18:16:44:  * Number of boolean constants for fragment programs: 16
+18:16:44:  * Geometry programs: no
+18:16:44:  * Number of floating-point constants for geometry programs: 0
+18:16:44:  * Number of integer constants for geometry programs: 0
+18:16:44:  * Number of boolean constants for geometry programs: 0
+18:16:44:  * Supported Shader Profiles: hlsl ps_1_1 ps_1_2 ps_1_3 ps_1_4 ps_2_0 ps_2_a ps_2_b ps_2_x ps_3_0 vs_1_1 vs_2_0 vs_2_a vs_2_x vs_3_0
+18:16:44:  * Texture Compression: yes
+18:16:44:    - DXT: yes
+18:16:44:    - VTC: no
+18:16:44:    - PVRTC: no
+18:16:44:  * Scissor Rectangle: yes
+18:16:44:  * Hardware Occlusion Query: yes
+18:16:44:  * User clip planes: yes
+18:16:44:  * VET_UBYTE4 vertex element type: yes
+18:16:44:  * Infinite far plane projection: yes
+18:16:44:  * Hardware render-to-texture: yes
+18:16:44:  * Floating point textures: yes
+18:16:44:  * Non-power-of-two textures: yes
+18:16:44:  * Volume textures: yes
+18:16:44:  * Multiple Render Targets: 4
+18:16:44:    - With different bit depths: yes
+18:16:44:  * Point Sprites: yes
+18:16:44:  * Extended point parameters: yes
+18:16:44:  * Max Point Size: 10
+18:16:44:  * Vertex texture fetch: yes
+18:16:44:  * Number of world matrices: 0
+18:16:44:  * Number of texture units: 8
+18:16:44:  * Stencil buffer depth: 8
+18:16:44:  * Number of vertex blend matrices: 0
+18:16:44:    - Max vertex textures: 4
+18:16:44:    - Vertex textures shared: no
+18:16:44:  * Render to Vertex Buffer : no
+18:16:44:  * DirectX per stage constants: yes
+18:16:44: DefaultWorkQueue('Root') initialising on thread main.
+18:16:44: Particle Renderer Type 'billboard' registered
+18:16:44: SceneManagerFactory for type 'OctreeSceneManager' registered.
+18:16:44: SceneManagerFactory for type 'TerrainSceneManager' registered.
+18:16:44: Creating resource group Default
+18:16:44: Added resource location '../../../../Media/GUI/' of type 'FileSystem' to resource group 'Default'
+18:16:44: Added resource location '../../../../Media/Cursor/' of type 'FileSystem' to resource group 'Default'
+18:16:44: Added resource location '../../../../Media/Fonts/' of type 'FileSystem' to resource group 'Default'
+18:16:44: Added resource location '../../../../Media/OgreCore.zip' of type 'Zip' to resource group 'Default'
+18:16:44: Added resource location '../../../../Media/textures/' of type 'FileSystem' to resource group 'Default'
+18:16:44: Added resource location '../../../../Media/materials/' of type 'FileSystem' to resource group 'Default'
+18:16:44: Added resource location '../../../../Media/models/' of type 'FileSystem' to resource group 'Default'
+18:16:44: Added resource location '../../../../Media/overlays/' of type 'FileSystem' to resource group 'Default'
+18:16:44: Added resource location '../../../../Media/shaders/' of type 'FileSystem' to resource group 'Default'
+18:16:44: Initialising resource group Default
+18:16:44: Parsing scripts for resource group Default
+18:16:44: Parsing script OgreCore.material
+18:16:44: Parsing script OgreProfiler.material
+18:16:44: Parsing script 00diffuse.material
+18:16:44: Parsing script Flare.000.material
+18:16:44: Parsing script FloorTexture.material
+18:16:44: Parsing script Lobby.material
+18:16:44: Parsing script Mainmenu.material
+18:16:44: Parsing script Ogre.material
+18:16:44: Parsing script PE_materials.material
+18:16:44: Parsing script player.material
+18:16:44: Parsing script Pointer.material
+18:16:44: Parsing script SkyBox.material
+18:16:44: Parsing script SpaceTexture.material
+18:16:44: Parsing script UserInterface.material
+18:16:44: Parsing script WallTexture.material
+18:16:44: Parsing script 00ambient.material
+18:16:44: Parsing script 00diffuse.material
+18:16:44: Parsing script shadow_caster.material
+18:16:44: Parsing script gasScript.particle
+18:16:44: Parsing script PE_templates_1.particle
+18:16:44: Parsing script PE_templates_2.particle
+18:16:44: Parsing script Gas.particle
+18:16:44: Parsing script Ogre.fontdef
+18:16:44: Parsing script Ogre.fontdef
+18:16:44: Parsing script OgreDebugPanel.overlay
+18:16:44: Texture: New_Ogre_Border_Center.png: Loading 1 faces(PF_A8R8G8B8,256x128x1) with  hardware generated mipmaps from Image. Internal format is PF_A8R8G8B8,256x128x1.
+18:16:44: Texture: New_Ogre_Border.png: Loading 1 faces(PF_A8R8G8B8,256x256x1) with  hardware generated mipmaps from Image. Internal format is PF_A8R8G8B8,256x256x1.
+18:16:44: Texture: New_Ogre_Border_Break.png: Loading 1 faces(PF_A8R8G8B8,32x32x1) with  hardware generated mipmaps from Image. Internal format is PF_A8R8G8B8,32x32x1.
+18:16:44: Texture: ogretext.png: Loading 1 faces(PF_A8R8G8B8,256x128x1) with  hardware generated mipmaps from Image. Internal format is PF_A8R8G8B8,256x128x1.
+18:16:44: Parsing script OgreLoadingPanel.overlay
+18:16:44: Parsing script Lobby.overlay
+18:16:44: Texture: LobbyBackground.jpg: Loading 1 faces(PF_R8G8B8,1280x812x1) with 8 generated mipmaps from Image. Internal format is PF_X8R8G8B8,1280x812x1.
+18:16:44: Parsing script Mainmenu.overlay
+18:16:44: Texture: MainBackground.jpg: Loading 1 faces(PF_R8G8B8,2037x1423x1) with 8 generated mipmaps from Image. Internal format is PF_X8R8G8B8,2037x1423x1.
+18:16:45: Parsing script pointer.overlay
+18:16:45: Texture: pointer.png: Loading 1 faces(PF_A8R8G8B8,61x50x1) with 5 generated mipmaps from Image. Internal format is PF_A8R8G8B8,61x50x1.
+18:16:45: Finished parsing scripts for resource group Default
+18:16:45: Loading resource group 'Default' - Resources: 1 World Geometry: 1
+18:16:45: Texture: axes.png: Loading 1 faces(PF_R8G8B8,256x256x1) with  hardware generated mipmaps from Image. Internal format is PF_X8R8G8B8,256x256x1.
+18:16:45: Texture: ProfileCurrentBar.png: Loading 1 faces(PF_A8R8G8B8,256x256x1) with  hardware generated mipmaps from Image. Internal format is PF_A8R8G8B8,256x256x1.
+18:16:45: Texture: ProfileAvgBar.png: Loading 1 faces(PF_A8R8G8B8,256x256x1) with  hardware generated mipmaps from Image. Internal format is PF_A8R8G8B8,256x256x1.
+18:16:45: Texture: ProfileMinBar.png: Loading 1 faces(PF_A8R8G8B8,256x256x1) with  hardware generated mipmaps from Image. Internal format is PF_A8R8G8B8,256x256x1.
+18:16:45: Texture: ProfileMaxBar.png: Loading 1 faces(PF_A8R8G8B8,256x256x1) with  hardware generated mipmaps from Image. Internal format is PF_A8R8G8B8,256x256x1.
+18:16:45: Texture: Flare.png: Loading 1 faces(PF_R8G8B8,256x256x1) with  hardware generated mipmaps from Image. Internal format is PF_X8R8G8B8,256x256x1.
+18:16:45: Texture: FloorTexture.png: Loading 1 faces(PF_R8G8B8,32x32x1) with  hardware generated mipmaps from Image. Internal format is PF_X8R8G8B8,32x32x1.
+18:16:45: Texture: spheremap.png: Loading 1 faces(PF_R8G8B8,256x256x1) with  hardware generated mipmaps from Image. Internal format is PF_X8R8G8B8,256x256x1.
+18:16:45: Texture: GreenSkin.jpg: Loading 1 faces(PF_R8G8B8,256x256x1) with  hardware generated mipmaps from Image. Internal format is PF_X8R8G8B8,256x256x1.
+18:16:45: Texture: tusk.jpg: Loading 1 faces(PF_R8G8B8,96x96x1) with 6 generated mipmaps from Image. Internal format is PF_X8R8G8B8,96x96x1.
+18:16:45: Texture: flare.png: Loading 1 faces(PF_R8G8B8,256x256x1) with  hardware generated mipmaps from Image. Internal format is PF_X8R8G8B8,256x256x1.
+18:16:45: Texture: bigflame.png: Loading 1 faces(PF_A8R8G8B8,256x256x1) with  hardware generated mipmaps from Image. Internal format is PF_A8R8G8B8,256x256x1.
+18:16:45: Texture: smoke.png: Loading 1 faces(PF_A8R8G8B8,256x256x1) with  hardware generated mipmaps from Image. Internal format is PF_A8R8G8B8,256x256x1.
+18:16:45: Texture: explosion.png: Loading 1 faces(PF_R8G8B8,64x64x1) with  hardware generated mipmaps from Image. Internal format is PF_X8R8G8B8,64x64x1.
+18:16:45: Texture: ring_flare.png: Loading 1 faces(PF_R8G8B8,256x256x1) with  hardware generated mipmaps from Image. Internal format is PF_X8R8G8B8,256x256x1.
+18:16:45: Texture: ring_flare2.png: Loading 1 faces(PF_R8G8B8,256x256x1) with  hardware generated mipmaps from Image. Internal format is PF_X8R8G8B8,256x256x1.
+18:16:45: Texture: flaretrail.png: Loading 1 faces(PF_R8G8B8,128x128x1) with  hardware generated mipmaps from Image. Internal format is PF_X8R8G8B8,128x128x1.
+18:16:45: Texture: streak.png: Loading 1 faces(PF_A8R8G8B8,64x64x1) with  hardware generated mipmaps from Image. Internal format is PF_A8R8G8B8,64x64x1.
+18:16:45: Texture: face.bmp: Loading 1 faces(PF_R8G8B8,1024x512x1) with  hardware generated mipmaps from Image. Internal format is PF_X8R8G8B8,1024x512x1.
+18:16:45: Texture: body.bmp: Loading 1 faces(PF_R8G8B8,1024x512x1) with  hardware generated mipmaps from Image. Internal format is PF_X8R8G8B8,1024x512x1.
+18:16:45: Texture: feet.bmp: Loading 1 faces(PF_R8G8B8,1024x512x1) with  hardware generated mipmaps from Image. Internal format is PF_X8R8G8B8,1024x512x1.
+18:16:45: Texture: arms.bmp: Loading 1 faces(PF_R8G8B8,1024x512x1) with  hardware generated mipmaps from Image. Internal format is PF_X8R8G8B8,1024x512x1.
+18:16:45: Texture: pointerdown.png: Loading 1 faces(PF_A8R8G8B8,61x50x1) with 5 generated mipmaps from Image. Internal format is PF_A8R8G8B8,61x50x1.
+18:16:45: Texture: Skybox\front.png: Loading 1 faces(PF_R8G8B8,2048x2048x1) with  hardware generated mipmaps from Image. Internal format is PF_X8R8G8B8,2048x2048x1.
+18:16:45: Texture: Skybox\back.png: Loading 1 faces(PF_R8G8B8,2048x2048x1) with  hardware generated mipmaps from Image. Internal format is PF_X8R8G8B8,2048x2048x1.
+18:16:46: Texture: Skybox\left.png: Loading 1 faces(PF_R8G8B8,2048x2048x1) with  hardware generated mipmaps from Image. Internal format is PF_X8R8G8B8,2048x2048x1.
+18:16:46: Texture: Skybox\right.png: Loading 1 faces(PF_R8G8B8,2048x2048x1) with  hardware generated mipmaps from Image. Internal format is PF_X8R8G8B8,2048x2048x1.
+18:16:46: Texture: Skybox\top.png: Loading 1 faces(PF_R8G8B8,2048x2048x1) with  hardware generated mipmaps from Image. Internal format is PF_X8R8G8B8,2048x2048x1.
+18:16:46: Texture: Skybox\bottom.png: Loading 1 faces(PF_R8G8B8,2048x2048x1) with  hardware generated mipmaps from Image. Internal format is PF_X8R8G8B8,2048x2048x1.
+18:16:47: Texture: button0.png: Loading 1 faces(PF_A8R8G8B8,158x32x1) with 7 generated mipmaps from Image. Internal format is PF_A8R8G8B8,158x32x1.
+18:16:47: Texture: button1.png: Loading 1 faces(PF_A8R8G8B8,158x32x1) with 7 generated mipmaps from Image. Internal format is PF_A8R8G8B8,158x32x1.
+18:16:47: Texture: check0.png: Loading 1 faces(PF_A8R8G8B8,28x28x1) with 4 generated mipmaps from Image. Internal format is PF_A8R8G8B8,28x28x1.
+18:16:47: Texture: check1.png: Loading 1 faces(PF_A8R8G8B8,28x28x1) with 4 generated mipmaps from Image. Internal format is PF_A8R8G8B8,28x28x1.
+18:16:47: Texture: textbox.png: Loading 1 faces(PF_A8R8G8B8,240x40x1) with 7 generated mipmaps from Image. Internal format is PF_A8R8G8B8,240x40x1.
+18:16:47: Texture: textbox_focus.png: Loading 1 faces(PF_A8R8G8B8,240x40x1) with 7 generated mipmaps from Image. Internal format is PF_A8R8G8B8,240x40x1.
+18:16:47: Texture: dropelement_main.png: Loading 1 faces(PF_A8R8G8B8,240x32x1) with 7 generated mipmaps from Image. Internal format is PF_A8R8G8B8,240x32x1.
+18:16:47: Texture: dropelement_main_open.png: Loading 1 faces(PF_A8R8G8B8,240x32x1) with 7 generated mipmaps from Image. Internal format is PF_A8R8G8B8,240x32x1.
+18:16:47: Texture: dropelement_first.png: Loading 1 faces(PF_A8R8G8B8,240x32x1) with 7 generated mipmaps from Image. Internal format is PF_A8R8G8B8,240x32x1.
+18:16:47: Texture: dropelement_middle.png: Loading 1 faces(PF_A8R8G8B8,240x32x1) with 7 generated mipmaps from Image. Internal format is PF_A8R8G8B8,240x32x1.
+18:16:47: Texture: dropelement_last.png: Loading 1 faces(PF_A8R8G8B8,240x32x1) with 7 generated mipmaps from Image. Internal format is PF_A8R8G8B8,240x32x1.
+18:16:47: Texture: WallTexture.png: Loading 1 faces(PF_R8G8B8,32x32x1) with  hardware generated mipmaps from Image. Internal format is PF_X8R8G8B8,32x32x1.
+18:16:47: Font BlueHighwayusing texture size 512x512
+18:16:47: Info: Freetype returned null for character 127 in font BlueHighway
+18:16:47: Info: Freetype returned null for character 128 in font BlueHighway
+18:16:47: Info: Freetype returned null for character 129 in font BlueHighway
+18:16:47: Info: Freetype returned null for character 130 in font BlueHighway
+18:16:47: Info: Freetype returned null for character 131 in font BlueHighway
+18:16:47: Info: Freetype returned null for character 132 in font BlueHighway
+18:16:47: Info: Freetype returned null for character 133 in font BlueHighway
+18:16:47: Info: Freetype returned null for character 134 in font BlueHighway
+18:16:47: Info: Freetype returned null for character 135 in font BlueHighway
+18:16:47: Info: Freetype returned null for character 136 in font BlueHighway
+18:16:47: Info: Freetype returned null for character 137 in font BlueHighway
+18:16:47: Info: Freetype returned null for character 138 in font BlueHighway
+18:16:47: Info: Freetype returned null for character 139 in font BlueHighway
+18:16:47: Info: Freetype returned null for character 140 in font BlueHighway
+18:16:47: Info: Freetype returned null for character 141 in font BlueHighway
+18:16:47: Info: Freetype returned null for character 142 in font BlueHighway
+18:16:47: Info: Freetype returned null for character 143 in font BlueHighway
+18:16:47: Info: Freetype returned null for character 144 in font BlueHighway
+18:16:47: Info: Freetype returned null for character 145 in font BlueHighway
+18:16:47: Info: Freetype returned null for character 146 in font BlueHighway
+18:16:47: Info: Freetype returned null for character 147 in font BlueHighway
+18:16:47: Info: Freetype returned null for character 148 in font BlueHighway
+18:16:47: Info: Freetype returned null for character 149 in font BlueHighway
+18:16:47: Info: Freetype returned null for character 150 in font BlueHighway
+18:16:47: Info: Freetype returned null for character 151 in font BlueHighway
+18:16:47: Info: Freetype returned null for character 152 in font BlueHighway
+18:16:47: Info: Freetype returned null for character 153 in font BlueHighway
+18:16:47: Info: Freetype returned null for character 154 in font BlueHighway
+18:16:47: Info: Freetype returned null for character 155 in font BlueHighway
+18:16:47: Info: Freetype returned null for character 156 in font BlueHighway
+18:16:47: Info: Freetype returned null for character 157 in font BlueHighway
+18:16:47: Info: Freetype returned null for character 158 in font BlueHighway
+18:16:47: Info: Freetype returned null for character 159 in font BlueHighway
+18:16:47: Info: Freetype returned null for character 160 in font BlueHighway
+18:16:47: Texture: BlueHighwayTexture: Loading 1 faces(PF_BYTE_LA,512x512x1) with 0 generated mipmaps from Image. Internal format is PF_BYTE_LA,512x512x1.
+18:16:47: Font BlueHighwayusing texture size 512x512
+18:16:47: Info: Freetype returned null for character 127 in font BlueHighway
+18:16:47: Info: Freetype returned null for character 128 in font BlueHighway
+18:16:47: Info: Freetype returned null for character 129 in font BlueHighway
+18:16:47: Info: Freetype returned null for character 130 in font BlueHighway
+18:16:47: Info: Freetype returned null for character 131 in font BlueHighway
+18:16:47: Info: Freetype returned null for character 132 in font BlueHighway
+18:16:47: Info: Freetype returned null for character 133 in font BlueHighway
+18:16:47: Info: Freetype returned null for character 134 in font BlueHighway
+18:16:47: Info: Freetype returned null for character 135 in font BlueHighway
+18:16:47: Info: Freetype returned null for character 136 in font BlueHighway
+18:16:47: Info: Freetype returned null for character 137 in font BlueHighway
+18:16:47: Info: Freetype returned null for character 138 in font BlueHighway
+18:16:47: Info: Freetype returned null for character 139 in font BlueHighway
+18:16:47: Info: Freetype returned null for character 140 in font BlueHighway
+18:16:47: Info: Freetype returned null for character 141 in font BlueHighway
+18:16:47: Info: Freetype returned null for character 142 in font BlueHighway
+18:16:47: Info: Freetype returned null for character 143 in font BlueHighway
+18:16:47: Info: Freetype returned null for character 144 in font BlueHighway
+18:16:47: Info: Freetype returned null for character 145 in font BlueHighway
+18:16:47: Info: Freetype returned null for character 146 in font BlueHighway
+18:16:47: Info: Freetype returned null for character 147 in font BlueHighway
+18:16:47: Info: Freetype returned null for character 148 in font BlueHighway
+18:16:47: Info: Freetype returned null for character 149 in font BlueHighway
+18:16:47: Info: Freetype returned null for character 150 in font BlueHighway
+18:16:47: Info: Freetype returned null for character 151 in font BlueHighway
+18:16:47: Info: Freetype returned null for character 152 in font BlueHighway
+18:16:47: Info: Freetype returned null for character 153 in font BlueHighway
+18:16:47: Info: Freetype returned null for character 154 in font BlueHighway
+18:16:47: Info: Freetype returned null for character 155 in font BlueHighway
+18:16:47: Info: Freetype returned null for character 156 in font BlueHighway
+18:16:47: Info: Freetype returned null for character 157 in font BlueHighway
+18:16:47: Info: Freetype returned null for character 158 in font BlueHighway
+18:16:47: Info: Freetype returned null for character 159 in font BlueHighway
+18:16:47: Info: Freetype returned null for character 160 in font BlueHighway
+18:16:47: Texture: BlueHighwayTexture: Loading 1 faces(PF_BYTE_LA,512x512x1) with 0 generated mipmaps from Image. Internal format is PF_BYTE_LA,512x512x1.
+18:16:47: Finished loading resource group Default
+18:16:47: Texture: bluehigh.png: Loading 1 faces(PF_A8R8G8B8,256x128x1) with  hardware generated mipmaps from Image. Internal format is PF_A8R8G8B8,256x128x1.
+18:16:47: Managers loaded successfully.
+18:16:47: Texture: Cbackground.png: Loading 1 faces(PF_A8R8G8B8,50x50x1) with 5 generated mipmaps from Image. Internal format is PF_A8R8G8B8,50x50x1.
+18:16:47: Texture: Cborder.png: Loading 1 faces(PF_A8R8G8B8,32x32x1) with  hardware generated mipmaps from Image. Internal format is PF_A8R8G8B8,32x32x1.
+18:16:47: Texture: Ctextbox.png: Loading 1 faces(PF_A8R8G8B8,400x40x1) with 8 generated mipmaps from Image. Internal format is PF_A8R8G8B8,400x40x1.
+18:16:48: Texture: MainBackground.png: Loading 1 faces(PF_A8R8G8B8,2037x1423x1) with 8 generated mipmaps from Image. Internal format is PF_A8R8G8B8,2037x1423x1.
+18:16:48: Texture: Button.png: Loading 1 faces(PF_A8R8G8B8,361x137x1) with 8 generated mipmaps from Image. Internal format is PF_A8R8G8B8,361x137x1.
+18:16:48: Texture: Cursor.png: Loading 1 faces(PF_A8R8G8B8,256x32x1) with  hardware generated mipmaps from Image. Internal format is PF_A8R8G8B8,256x32x1.
+18:17:13: Texture: Button.MouseEnterGreen.png: Loading 1 faces(PF_A8R8G8B8,361x137x1) with 8 generated mipmaps from Image. Internal format is PF_A8R8G8B8,361x137x1.
+18:17:14: Texture: Textbox.png: Loading 1 faces(PF_A8R8G8B8,240x40x1) with 7 generated mipmaps from Image. Internal format is PF_A8R8G8B8,240x40x1.
+18:17:26: Texture: spot_shadow_fade.png: Loading 1 faces(PF_R8G8B8,128x128x1) with  hardware generated mipmaps from Image. Internal format is PF_X8R8G8B8,128x128x1.
+18:17:27: Mesh: Loading robot.mesh.
+18:17:27: Skeleton: Loading robot.skeleton
+18:17:27: WARNING: robot.mesh is an older format ([MeshSerializer_v1.40]); you should upgrade it as soon as possible using the OgreMeshUpgrade tool.
+18:17:27: Can't assign material Examples/Robot to SubEntity of Mob1 because this Material does not exist. Have you forgotten to define it in a .material script?
+18:17:27: Can't assign material Examples/Robot to SubEntity of Mob1 because this Material does not exist. Have you forgotten to define it in a .material script?
+18:17:39: DefaultWorkQueue('Root') shutting down on thread main.
+18:17:39: *-*-* OGRE Shutdown
+18:17:39: Unregistering ResourceManager for type Compositor
+18:17:39: Unregistering ResourceManager for type Font
+18:17:39: Unregistering ResourceManager for type Skeleton
+18:17:39: Unregistering ResourceManager for type Mesh
+18:17:39: Unregistering ResourceManager for type HighLevelGpuProgram
+18:17:39: Uninstalling plugin: Cg Program Manager
+18:17:39: Plugin successfully uninstalled
+18:17:39: Unloading library .\Plugin_CgProgramManager
+18:17:39: Uninstalling plugin: Octree & Terrain Scene Manager
+18:17:39: Plugin successfully uninstalled
+18:17:39: Unloading library .\Plugin_OctreeSceneManager
+18:17:39: Uninstalling plugin: ParticleFX
+18:17:39: Plugin successfully uninstalled
+18:17:39: Unloading library .\Plugin_ParticleFX
+18:17:39: Uninstalling plugin: D3D9 RenderSystem
+18:17:39: D3D9 : Shutting down cleanly.
+18:17:39: Unregistering ResourceManager for type Texture
+18:17:39: Unregistering ResourceManager for type GpuProgram
+18:17:39: D3D9 : Direct3D9 Rendering Subsystem destroyed.
+18:17:39: Plugin successfully uninstalled
+18:17:39: Unloading library .\RenderSystem_Direct3D9
+18:17:39: Unregistering ResourceManager for type Material

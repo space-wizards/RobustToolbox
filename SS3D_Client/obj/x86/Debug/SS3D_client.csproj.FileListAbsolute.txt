@@ -1,0 +1,13 @@
+C:\MOGREss3d\code\MOGRE\SS3d\SS3D_client\bin\x86\Debug\SpaceStation3D.exe.config
+C:\MOGREss3d\code\MOGRE\SS3d\SS3D_client\bin\x86\Debug\SpaceStation3D.exe
+C:\MOGREss3d\code\MOGRE\SS3d\SS3D_client\bin\x86\Debug\SpaceStation3D.pdb
+C:\MOGREss3d\code\MOGRE\SS3d\SS3D_client\bin\x86\Debug\Lidgren.Network.dll
+C:\MOGREss3d\code\MOGRE\SS3d\SS3D_client\bin\x86\Debug\Mogre.dll
+C:\MOGREss3d\code\MOGRE\SS3d\SS3D_client\bin\x86\Debug\MOIS.dll
+C:\MOGREss3d\code\MOGRE\SS3d\SS3D_client\bin\x86\Debug\SS3D_shared.dll
+C:\MOGREss3d\code\MOGRE\SS3d\SS3D_client\bin\x86\Debug\SS3D_shared.pdb
+C:\MOGREss3d\code\MOGRE\SS3d\SS3D_client\bin\x86\Debug\Lidgren.Network.pdb
+C:\MOGREss3d\code\MOGRE\SS3d\SS3D_client\bin\x86\Debug\Lidgren.Network.xml
+C:\MOGREss3d\code\MOGRE\SS3d\SS3D_client\obj\x86\Debug\ResolveAssemblyReference.cache
+C:\MOGREss3d\code\MOGRE\SS3d\SS3D_client\obj\x86\Debug\SpaceStation3D.exe
+C:\MOGREss3d\code\MOGRE\SS3d\SS3D_client\obj\x86\Debug\SpaceStation3D.pdb

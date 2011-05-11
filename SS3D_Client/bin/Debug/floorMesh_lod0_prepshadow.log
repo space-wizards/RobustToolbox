@@ -1,0 +1,146 @@
+10:26:13: Edge Data
+10:26:13: ---------
+10:26:13: Triangle 0 = {indexSet=0, vertexSet=0, v0=0, v1=1, v2=2}
+10:26:13: Triangle 1 = {indexSet=0, vertexSet=0, v0=1, v1=3, v2=2}
+10:26:13: Triangle 2 = {indexSet=1, vertexSet=1, v0=0, v1=1, v2=2}
+10:26:13: Triangle 3 = {indexSet=1, vertexSet=1, v0=1, v1=3, v2=2}
+10:26:13: Triangle 4 = {indexSet=2, vertexSet=2, v0=0, v1=1, v2=2}
+10:26:13: Triangle 5 = {indexSet=2, vertexSet=2, v0=1, v1=3, v2=2}
+10:26:13: Triangle 6 = {indexSet=3, vertexSet=3, v0=0, v1=1, v2=2}
+10:26:13: Triangle 7 = {indexSet=3, vertexSet=3, v0=1, v1=3, v2=2}
+10:26:13: Triangle 8 = {indexSet=4, vertexSet=4, v0=1, v1=0, v2=2}
+10:26:13: Triangle 9 = {indexSet=4, vertexSet=4, v0=2, v1=3, v2=1}
+10:26:13: Triangle 10 = {indexSet=5, vertexSet=5, v0=0, v1=1, v2=2}
+10:26:13: Triangle 11 = {indexSet=5, vertexSet=5, v0=1, v1=3, v2=2}
+10:26:13: Edge Group vertexSet=0
+10:26:13: Edge 0 = {
+  tri0=0, 
+  tri1=7, 
+  v0=0, 
+  v1=1, 
+  degenerate=false 
+}
+10:26:13: Edge 1 = {
+  tri0=0, 
+  tri1=1, 
+  v0=1, 
+  v1=2, 
+  degenerate=false 
+}
+10:26:13: Edge 2 = {
+  tri0=0, 
+  tri1=11, 
+  v0=2, 
+  v1=0, 
+  degenerate=false 
+}
+10:26:13: Edge 3 = {
+  tri0=1, 
+  tri1=9, 
+  v0=1, 
+  v1=3, 
+  degenerate=false 
+}
+10:26:13: Edge 4 = {
+  tri0=1, 
+  tri1=2, 
+  v0=3, 
+  v1=2, 
+  degenerate=false 
+}
+10:26:13: Edge Group vertexSet=1
+10:26:13: Edge 0 = {
+  tri0=2, 
+  tri1=3, 
+  v0=1, 
+  v1=2, 
+  degenerate=false 
+}
+10:26:13: Edge 1 = {
+  tri0=2, 
+  tri1=11, 
+  v0=2, 
+  v1=0, 
+  degenerate=false 
+}
+10:26:13: Edge 2 = {
+  tri0=3, 
+  tri1=9, 
+  v0=1, 
+  v1=3, 
+  degenerate=false 
+}
+10:26:13: Edge 3 = {
+  tri0=3, 
+  tri1=4, 
+  v0=3, 
+  v1=2, 
+  degenerate=false 
+}
+10:26:13: Edge Group vertexSet=2
+10:26:13: Edge 0 = {
+  tri0=4, 
+  tri1=5, 
+  v0=1, 
+  v1=2, 
+  degenerate=false 
+}
+10:26:13: Edge 1 = {
+  tri0=4, 
+  tri1=10, 
+  v0=2, 
+  v1=0, 
+  degenerate=false 
+}
+10:26:13: Edge 2 = {
+  tri0=5, 
+  tri1=8, 
+  v0=1, 
+  v1=3, 
+  degenerate=false 
+}
+10:26:13: Edge 3 = {
+  tri0=5, 
+  tri1=6, 
+  v0=3, 
+  v1=2, 
+  degenerate=false 
+}
+10:26:13: Edge Group vertexSet=3
+10:26:13: Edge 0 = {
+  tri0=6, 
+  tri1=7, 
+  v0=1, 
+  v1=2, 
+  degenerate=false 
+}
+10:26:13: Edge 1 = {
+  tri0=6, 
+  tri1=10, 
+  v0=2, 
+  v1=0, 
+  degenerate=false 
+}
+10:26:13: Edge 2 = {
+  tri0=7, 
+  tri1=8, 
+  v0=1, 
+  v1=3, 
+  degenerate=false 
+}
+10:26:13: Edge Group vertexSet=4
+10:26:13: Edge 0 = {
+  tri0=8, 
+  tri1=9, 
+  v0=2, 
+  v1=1, 
+  degenerate=false 
+}
+10:26:13: Edge Group vertexSet=5
+10:26:13: Edge 0 = {
+  tri0=10, 
+  tri1=11, 
+  v0=1, 
+  v1=2, 
+  degenerate=false 
+}

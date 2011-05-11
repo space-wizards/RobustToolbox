@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Configuration xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema">
+  <DisplayWidth>1024</DisplayWidth>
+  <DisplayHeigth>768</DisplayHeigth>
+  <Fullscreen>false</Fullscreen>
+  <Resources>
+    <string>../../../../Media/GUI/</string>
+    <string>../../../../Media/Cursor/</string>
+	<string>../../../../Media/Fonts/</string>
+    <string>../../../../Media/core/</string>
+	<string>../../../../Media/OgreCore.zip</string>
+	<string>../../../../Media/textures/</string>
+    <string>../../../../Media/Textures.zip</string>
+    <string>../../../../Media/materials/</string>
+	<string>../../../../Media/Materials.zip</string>
+	<string>../../../../Media/models/</string>
+    <string>../../../../Media/Models.zip</string>
+	<string>../../../../Media/overlays/</string>
+	<string>../../../../Media/Overlays.zip</string>
+    <string>../../../../Media/shaders/</string>
+    <string>../../../../Media/Shaders.zip</string>
+  </Resources>
+  <MiyagiTrueTypeFonts>../../../../Media/Fonts/TrueTypeFonts.xml</MiyagiTrueTypeFonts>
+  <MiyagiImageFonts>../../../../Media/Fonts/ImageFonts.xml</MiyagiImageFonts>
+  <MiyagiSkins>
+    <string>../../../../Media/GUI/skins.xml</string>
+    <string>../../../../Media/Cursor/CursorSkin.xml</string>
+  </MiyagiSkins>
+</Configuration>

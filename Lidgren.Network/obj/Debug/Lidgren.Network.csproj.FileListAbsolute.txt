@@ -1,0 +1,6 @@
+C:\Users\Administrator\Desktop\lidgren-network-gen3-2010-11-03\lidgren-network-gen3\Lidgren.Network\bin\Debug\Lidgren.Network.XML
+C:\Users\Administrator\Desktop\lidgren-network-gen3-2010-11-03\lidgren-network-gen3\Lidgren.Network\bin\Debug\Lidgren.Network.dll
+C:\Users\Administrator\Desktop\lidgren-network-gen3-2010-11-03\lidgren-network-gen3\Lidgren.Network\bin\Debug\Lidgren.Network.pdb
+C:\Users\Administrator\Desktop\lidgren-network-gen3-2010-11-03\lidgren-network-gen3\Lidgren.Network\obj\Debug\ResolveAssemblyReference.cache
+C:\Users\Administrator\Desktop\lidgren-network-gen3-2010-11-03\lidgren-network-gen3\Lidgren.Network\obj\Debug\Lidgren.Network.dll
+C:\Users\Administrator\Desktop\lidgren-network-gen3-2010-11-03\lidgren-network-gen3\Lidgren.Network\obj\Debug\Lidgren.Network.pdb

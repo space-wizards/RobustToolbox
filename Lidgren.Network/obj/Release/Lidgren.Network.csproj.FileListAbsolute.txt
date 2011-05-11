@@ -1,0 +1,6 @@
+C:\MOGREss3d\code\MOGRE\SS3d\Lidgren.Network\bin\Release\Lidgren.Network.XML
+C:\MOGREss3d\code\MOGRE\SS3d\Lidgren.Network\bin\Release\Lidgren.Network.dll
+C:\MOGREss3d\code\MOGRE\SS3d\Lidgren.Network\bin\Release\Lidgren.Network.pdb
+C:\MOGREss3d\code\MOGRE\SS3d\Lidgren.Network\obj\Release\ResolveAssemblyReference.cache
+C:\MOGREss3d\code\MOGRE\SS3d\Lidgren.Network\obj\Release\Lidgren.Network.dll
+C:\MOGREss3d\code\MOGRE\SS3d\Lidgren.Network\obj\Release\Lidgren.Network.pdb

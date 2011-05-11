@@ -1,0 +1,2 @@
+REM cg.dll, OgreMain.dll, OgrePaging.dll, OgreRTShaderSystem.dll, OgreTerrain_d.dll, Plugin_BSPSceneManager_d.dll Plugin_CgProgramManager_d.dll Plugin_OctreeSceneManager_d.dll Plugin_OctreeZone_d.dll Plugin_ParticleFX_d.dll Plugin_PCZSceneManager_d.dll RenderSystem_Direct3D9_d.dll RenderSystem_GL_d.dll
+ilmerge /zeroPekind /target:winexe /out:SelfContainedProgram.exe SpaceStation3D.exe Lidgren.Network.dll Miyagi.Backend.Mogre.dll Miyagi.dll Miyagi.Plugin.Input.Mois.dll Mogre.dll MOIS.dll SS3D_shared.dll

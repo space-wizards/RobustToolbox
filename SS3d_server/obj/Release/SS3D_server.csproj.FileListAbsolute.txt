@@ -1,0 +1,10 @@
+C:\MOGREss3d\code\MOGRE\SS3d\SS3D_server\bin\Release\SS3d_server.exe
+C:\MOGREss3d\code\MOGRE\SS3d\SS3D_server\bin\Release\SS3d_server.pdb
+C:\MOGREss3d\code\MOGRE\SS3d\SS3D_server\bin\Release\Lidgren.Network.dll
+C:\MOGREss3d\code\MOGRE\SS3d\SS3D_server\bin\Release\Lidgren.Network.pdb
+C:\MOGREss3d\code\MOGRE\SS3d\SS3D_server\bin\Release\Lidgren.Network.xml
+C:\MOGREss3d\code\MOGRE\SS3d\SS3D_server\obj\Release\ResolveAssemblyReference.cache
+C:\MOGREss3d\code\MOGRE\SS3d\SS3D_server\obj\Release\SS3d_server.exe
+C:\MOGREss3d\code\MOGRE\SS3d\SS3D_server\obj\Release\SS3d_server.pdb
+C:\MOGREss3d\code\MOGRE\SS3d\SS3D_server\bin\Release\SS3D_shared.dll
+C:\MOGREss3d\code\MOGRE\SS3d\SS3D_server\bin\Release\SS3D_shared.pdb

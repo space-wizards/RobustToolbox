@@ -232,9 +232,12 @@ namespace SS3D.Modules.Mobs
             {
                 myMobID = mobID;
 
-                mob.Node.AttachObject(mEngine.Camera);
-                mEngine.Camera.Position = new Vector3(-160, 160, 0);
-                mEngine.Camera.SetAutoTracking(true, mob.Node);
+                mEngine.Camera.DetachFromParent();
+                mEngine.Camera.Position = new Vector3(-160, 240, 0);
+
+                SceneNode camNode = mob.Node.CreateChildSceneNode();
+                camNode.AttachObject(mEngine.Camera);
+                mEngine.Camera.SetAutoTracking(true, camNode);
             }
         }
         #endregion

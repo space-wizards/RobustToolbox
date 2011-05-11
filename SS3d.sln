@@ -1,0 +1,32 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 11.00
+# Visual C# Express 2010
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SS3D_client", "SS3D_client\SS3D_client.csproj", "{835500C3-34D6-4329-954A-5D028D634E90}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SS3D_server", "SS3D_server\SS3D_server.csproj", "{54B6035E-489F-4790-A033-3C0B34C6F2BD}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SS3D_shared", "SS3D_shared\SS3D_shared.csproj", "{4229D7E3-C3AE-4C0A-B2B1-BB20911150DC}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{835500C3-34D6-4329-954A-5D028D634E90}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{835500C3-34D6-4329-954A-5D028D634E90}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{835500C3-34D6-4329-954A-5D028D634E90}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{835500C3-34D6-4329-954A-5D028D634E90}.Release|Any CPU.Build.0 = Release|Any CPU
+		{54B6035E-489F-4790-A033-3C0B34C6F2BD}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{54B6035E-489F-4790-A033-3C0B34C6F2BD}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{54B6035E-489F-4790-A033-3C0B34C6F2BD}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{54B6035E-489F-4790-A033-3C0B34C6F2BD}.Release|Any CPU.Build.0 = Release|Any CPU
+		{4229D7E3-C3AE-4C0A-B2B1-BB20911150DC}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{4229D7E3-C3AE-4C0A-B2B1-BB20911150DC}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{4229D7E3-C3AE-4C0A-B2B1-BB20911150DC}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{4229D7E3-C3AE-4C0A-B2B1-BB20911150DC}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+EndGlobal

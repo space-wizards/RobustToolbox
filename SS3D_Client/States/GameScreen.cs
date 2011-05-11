@@ -35,6 +35,13 @@ namespace SS3D.States
         private ItemManager itemManager;
         private MobManager mobManager;
         private GUI guiGameScreen;
+
+        #region Mouse/Camera stuff
+        private DateTime lastRMBClick = DateTime.Now;
+        private int lastMouseX = 0;
+        private int lastMouseY = 0;
+        #endregion
+
         #endregion
 
         public GameScreen()
@@ -51,9 +58,6 @@ namespace SS3D.States
             map = new Map(mEngine);
             itemManager = new ItemManager(mEngine, map, mEngine.mNetworkMgr);
             mobManager = new MobManager(mEngine, map, mEngine.mNetworkMgr);
-            
-            mEngine.Camera.Position = new Mogre.Vector3(0, 300, 0);
-            mEngine.Camera.LookAt(new Mogre.Vector3(160,64,160));
 
             SetUp();
 
@@ -198,10 +202,33 @@ namespace SS3D.States
 
         public override void MouseDown(MOIS.MouseEvent mouseState, MOIS.MouseButtonID button)
         {
+            if (button == MOIS.MouseButtonID.MB_Right)
+            {
+                TimeSpan clickDiff = DateTime.Now - lastRMBClick;
+                lastRMBClick = DateTime.Now;
+                if (clickDiff.TotalMilliseconds < 250)
+                {
+                    mEngine.Camera.ParentNode.ResetOrientation();
+                }
+            }
         }
 
         public override void MouseMove(MOIS.MouseEvent mouseState)
         {
+            if (mouseState.state.ButtonDown(MOIS.MouseButtonID.MB_Right))
+            {
+                int degree;
+                if (mouseState.state.X.rel > lastMouseX)
+                {
+                    degree = -mouseState.state.X.rel;
+                }
+                else
+                {
+                    degree = mouseState.state.X.rel;
+                }
+                mEngine.Camera.ParentNode.Yaw(Mogre.Math.DegreesToRadians(degree), Node.TransformSpace.TS_WORLD);
+                lastMouseX = mouseState.state.X.abs;
+            }
         }
 
         #endregion

@@ -1,4 +1,6 @@
 ﻿using System;
+using System.Linq;
+
 using MOIS;
 using Mogre;
 
@@ -25,6 +27,7 @@ namespace SS3D
     private static MOIS.InputManager mInputMgr;
 
     private uint consoleSeparationCounter = 0;
+    private bool autoConnect = false;
     
     private MiyagiSystem mMiyagiSystem;
 
@@ -38,7 +41,7 @@ namespace SS3D
     /* program starts here                                                  */
     /************************************************************************/
     [STAThread]
-    static void Main()
+    static void Main(string[] args)
     {
       // create Ogre manager
       mEngine = new OgreManager();
@@ -48,6 +51,9 @@ namespace SS3D
       
       // create main program
       Program prg = new Program();
+
+      // parse command line arguments
+      prg.ParseCommandLine(args);
 
       //Create Miyagi
       prg.mMiyagiSystem = new MiyagiSystem("Mogre");
@@ -102,6 +108,16 @@ namespace SS3D
           //Try to initialize the state manager.
           if (mStateMgr.Startup(typeof(MainMenu))) 
           {
+              // autoconnect to default host (127.0.0.1) if command line switch set
+              if (prg.autoConnect)
+              {
+                  if (mStateMgr.RequestStateChange(typeof(ConnectMenu)))
+                  {
+                      prg.UpdateScene();
+                      ((ConnectMenu)mStateMgr.mCurrentState).StartConnect();
+                  }
+              }
+
               //Run main loop until the window is closed
               while (!mEngine.Window.IsClosed)
               {
@@ -131,7 +147,7 @@ namespace SS3D
       mEngine.Shutdown();
     }
 
-    #region Update, Create and Remove scene , Constructor
+    #region Update, Create and Remove scene , Constructor, Command line
     public Program()
     {
         //Constructor
@@ -141,6 +157,15 @@ namespace SS3D
     {
         //update the state manager - this will update the active state.
         mStateMgr.Update(0);
+    }
+
+    // parse command line
+    // for now, only care about -auto to autoconnect to local host  
+    // make more general if other switches are required
+    void ParseCommandLine(string[] args)
+    {
+        if (args.Length > 0 && args.Contains("-auto"))
+            autoConnect = true;
     }
 
     bool FrameStarted(FrameEvent evt)
@@ -221,6 +246,7 @@ namespace SS3D
 
     #endregion
 
+      
   }
 
 }

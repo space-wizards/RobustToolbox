@@ -142,6 +142,12 @@ namespace SS3D.States
 
     private void JoinButtonMouseDown(object sender, MouseButtonEventArgs e)
     {
+        StartConnect();
+    }
+
+    // called when join button pressed and also if autoconnecting at startup
+    public void StartConnect()
+    {
         connectTime = DateTime.Now;
         connecting = true;
         mEngine.mNetworkMgr.ConnectTo(ipTextboxIP);

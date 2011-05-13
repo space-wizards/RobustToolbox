@@ -1113,17 +1113,9 @@ namespace SS3D.States
 
             if (inEditor)
             {
-                Ray mouseRay = mEngine.Camera.GetCameraToViewportRay(mousePosAbs.x, mousePosAbs.y);
-                RaySceneQuery sceneQuery = mEngine.SceneMgr.CreateRayQuery(mouseRay);
-                sceneQuery.QueryTypeMask = Mogre.SceneManager.ENTITY_TYPE_MASK;
-                sceneQuery.SetSortByDistance(true);
-                RaySceneQueryResult rayResult = sceneQuery.Execute();
-                sceneQuery.Dispose();
+                Mogre.Vector3 worldPos;
+                AtomBaseClass SelectedObject = HelperClasses.AtomUtil.PickAtScreenPosition(mEngine, mousePosAbs, out worldPos); 
 
-                if (rayResult.Count == 0) 
-                    return; //Nothing there. The fuck?
-
-                AtomBaseClass SelectedObject = (AtomBaseClass)rayResult.Front.movable.UserObject; //UserObject should ALWAYS be a reference to the object as AtomBaseClass.
                 if (SelectedObject == null)
                 {
                     return;
@@ -1150,7 +1142,7 @@ namespace SS3D.States
                     if (newItemType != ItemType.None)
                     {
                         //Mogre.Vector3 position = new Mogre.Vector3(SelectedObject.Node.Position.x, 1, SelectedObject.Node.Position.z);
-                        Mogre.Vector3 position = mouseRay.GetPoint(rayResult.Front.distance) + new Mogre.Vector3(0, 1, 0);
+                        Mogre.Vector3 position = worldPos + new Mogre.Vector3(0, 1, 0);
 
                         if (mEngine.mNetworkMgr.isConnected)
                         {

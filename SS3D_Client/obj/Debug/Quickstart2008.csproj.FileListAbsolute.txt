@@ -1,5 +1,0 @@
-C:\Users\Administrator\Desktop\mogrequickstart-tip\mogrequickstart\Quickstart2008\Quickstart2008\bin\Debug\Quickstart2008.exe
-C:\Users\Administrator\Desktop\mogrequickstart-tip\mogrequickstart\Quickstart2008\Quickstart2008\bin\Debug\Quickstart2008.pdb
-C:\Users\Administrator\Desktop\mogrequickstart-tip\mogrequickstart\Quickstart2008\Quickstart2008\obj\Debug\ResolveAssemblyReference.cache
-C:\Users\Administrator\Desktop\mogrequickstart-tip\mogrequickstart\Quickstart2008\Quickstart2008\obj\Debug\Quickstart2008.exe
-C:\Users\Administrator\Desktop\mogrequickstart-tip\mogrequickstart\Quickstart2008\Quickstart2008\obj\Debug\Quickstart2008.pdb

@@ -104,16 +104,32 @@ namespace SS3D.Modules.Mobs
         }
 
         // This is horrible I know, it will be changed!
+        public void Animate(string animation)
+        {
+           if (!mobDict.Keys.Contains(myMobID))
+               return;
+
+           mobDict[myMobID].animState.Enabled = true;
+           mobDict[myMobID].animState.Loop = true;
+ 
+           switch (animation)
+            {
+                case "walk":
+                    mobDict[myMobID].animState = mobDict[myMobID].Entity.GetAnimationState("trns_walk");
+                    break;
+                case "idle":
+                    mobDict[myMobID].animState = mobDict[myMobID].Entity.GetAnimationState("idle");
+                    break;
+            }
+                   
+        }
         public void MoveMe(int i)
         {
-            mobDict[myMobID].animState = mobDict[myMobID].Entity.GetAnimationState("Walk");
-            mobDict[myMobID].animState.Enabled = true;
-            mobDict[myMobID].animState.Loop = true;
             Mogre.Vector3 lastPosition = mobDict[myMobID].Node.Position;
             switch (i)
             {
                 case 1:
-                    mobDict[myMobID].Node.Translate(new Vector3(1, 0, 0), Node.TransformSpace.TS_LOCAL);
+                    mobDict[myMobID].Node.Translate(new Vector3(0, 0, 1), Node.TransformSpace.TS_LOCAL);
                     break;
                 case 2:
                     mobDict[myMobID].Node.Rotate(Mogre.Vector3.UNIT_Y, Mogre.Math.DegreesToRadians(-2));
@@ -122,7 +138,7 @@ namespace SS3D.Modules.Mobs
                     mobDict[myMobID].Node.Rotate(Mogre.Vector3.UNIT_Y, Mogre.Math.DegreesToRadians(2));
                     break;
                 case 4:
-                    mobDict[myMobID].Node.Translate(new Vector3(-1, 0, 0), Node.TransformSpace.TS_LOCAL);
+                    mobDict[myMobID].Node.Translate(new Vector3(0, 0, -1), Node.TransformSpace.TS_LOCAL);
                     break;
                 default:
                     break;
@@ -236,7 +252,7 @@ namespace SS3D.Modules.Mobs
                 myMobID = mobID;
 
                 mEngine.Camera.DetachFromParent();
-                mEngine.Camera.Position = new Vector3(-160, 240, 0);
+                mEngine.Camera.Position = new Vector3(0, 240, -160);
 
                 SceneNode camNode = mob.Node.CreateChildSceneNode();
                 camNode.AttachObject(mEngine.Camera);

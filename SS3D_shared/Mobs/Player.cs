@@ -26,15 +26,15 @@ namespace SS3D_shared
                 sceneManager.DestroySceneNode(entityName);
             }
             Node = sceneManager.RootSceneNode.CreateChildSceneNode(entityName);
-            Entity = sceneManager.CreateEntity(entityName, "robot.mesh");
+            Entity = sceneManager.CreateEntity(entityName, "male.mesh");
             Entity.UserObject = (AtomBaseClass)this;
-            Node.Scale(0.4f, 0.4f, 0.4f);
+            Node.Scale(15f, 15f, 15f);
             Node.Position = position;
             Node.AttachObject(Entity);
             interpolationPacket = new List<InterpolationPacket>();
             mobID = ID;
 
-            animState = Entity.GetAnimationState("Idle");
+            animState = Entity.GetAnimationState("idle");
             animState.Loop = true;
             animState.Enabled = true;
         }

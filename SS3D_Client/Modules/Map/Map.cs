@@ -13,7 +13,7 @@ namespace SS3D.Modules.Map
         public BaseTile[,] tileArray; // The array holding all the tiles that make up the map
         public int mapWidth; // Number of tiles across the map (must be a multiple of StaticGeoSize)
         public int mapHeight; // Number of tiles up the map (must be a multiple of StaticGeoSize)
-        public int tileSpacing = 32; // Distance between tiles
+        public int tileSpacing = 16; // Distance between tiles
         public AxisAlignedBox[,] boundingBoxArray;
 
         private OgreManager mEngine;

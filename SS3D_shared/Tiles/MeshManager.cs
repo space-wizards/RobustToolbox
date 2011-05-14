@@ -12,8 +12,8 @@ namespace SS3D_shared
         public Mesh wallMesh;
         public Mesh spaceMesh;
 
-        private float tileX = 16.0f; // How far from X = 0 relative to the tile it extends
-        private float tileZ = 16.0f; // How far from Z = 0 relative to the tile it extends (this should always == tileX so i don't know why i put this here)
+        private float tileX = 8.0f; // How far from X = 0 relative to the tile it extends
+        private float tileZ = 8.0f; // How far from Z = 0 relative to the tile it extends (this should always == tileX so i don't know why i put this here)
         private float tileBottom = 4.0f; // The "bottom" of all tiles - how far under Y = 0 it extends
         private float floorHeight = 0.0f; // How far above Y = 0 the top of a floor is
         private float wallHeight = 40.0f; // How far about Y = 0 the top of a wall is

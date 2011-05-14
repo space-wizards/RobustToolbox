@@ -44,6 +44,9 @@ namespace SS3D.Modules.Mobs
                 case MobMessage.InterpolationPacket:
                     HandleInterpolationPacket(message);
                     break;
+                case MobMessage.DeleteMob:
+                    HandleDeleteMob(message);
+                    break;
                 default:
                     break; 
             }
@@ -242,6 +245,18 @@ namespace SS3D.Modules.Mobs
         }
         #endregion
 
+        #region Mob Deletion
+        private void HandleDeleteMob(NetIncomingMessage msg)
+        {
+            string mobName = msg.ReadString();
+            ushort mobID = msg.ReadUInt16();
+
+            if (!mobDict.Keys.Contains(mobID))
+                return;
+
+            mobDict.Remove(mobID);
+        }
+        #endregion
 
 
     }

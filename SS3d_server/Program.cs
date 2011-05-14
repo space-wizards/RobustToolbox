@@ -22,7 +22,9 @@ namespace SS3d_server
                 Console.WriteLine("Server -> Can not start server"); //Not like you'd see this, haha. Perhaps later for logging.
                 Environment.Exit(0);
             }
-            Console.WriteLine("Server -> Ready");
+
+            string strVersion = System.Reflection.Assembly.GetExecutingAssembly().GetName().Version.ToString();
+            Console.WriteLine("Server Version " + strVersion + " -> Ready");
 
             while(main.server.Active)
             {

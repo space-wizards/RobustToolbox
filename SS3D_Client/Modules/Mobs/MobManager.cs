@@ -254,6 +254,8 @@ namespace SS3D.Modules.Mobs
             if (!mobDict.Keys.Contains(mobID))
                 return;
 
+            Player player = (Player)mobDict[mobID];
+            player.Delete();
             mobDict.Remove(mobID);
         }
         #endregion

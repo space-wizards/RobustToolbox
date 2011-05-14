@@ -173,6 +173,7 @@ namespace SS3D.States
             if(keyState.IsKeyDown(MOIS.KeyCode.KC_W))
             {
                 mobManager.MoveMe(1);
+                mobManager.Animate("walk");
             }
             if(keyState.IsKeyDown(MOIS.KeyCode.KC_D))
             {
@@ -185,6 +186,11 @@ namespace SS3D.States
             if (keyState.IsKeyDown(MOIS.KeyCode.KC_S))
             {
                 mobManager.MoveMe(4);
+                mobManager.Animate("walk");
+            }
+            if (!keyState.IsKeyDown(MOIS.KeyCode.KC_W) && !keyState.IsKeyDown(MOIS.KeyCode.KC_S))
+            {
+                mobManager.Animate("idle");
             }
         }
 

@@ -159,5 +159,11 @@ namespace SS3d_server.Modules.Mobs
             mobDict[lastID] = player;
             netServer.clientList[netConnection].mobID = lastID;
         }
+
+        public void DeletePlayer(NetConnection netConnection)
+        {
+            ushort mobID = netServer.clientList[netConnection].mobID;
+            mobDict.Remove(mobID);                       
+        }
     }
 }

@@ -182,10 +182,14 @@ namespace SS3d_server
             else if (sender.Status == NetConnectionStatus.Disconnected)
             {
                 Console.WriteLine(senderIP + ": Disconnected");
+
+                mobManager.DeletePlayer(sender);
+
                 if (clientList.ContainsKey(sender))
                 {
                     clientList.Remove(sender);
                 }
+
             }
         }
 

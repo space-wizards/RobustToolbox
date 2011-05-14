@@ -9,11 +9,13 @@ namespace SS3D_shared
 {
     public class Player : Mob
     {
-
-         public Player(SceneManager sceneManager, Mogre.Vector3 position, ushort ID)
+        private SceneManager sceneManager;
+        public Player(SceneManager sceneManager, Mogre.Vector3 position, ushort ID)
             : base()
         {
             name = "Mob" + ID;
+            this.sceneManager = sceneManager;
+
             string entityName = name;
             if (sceneManager.HasEntity(entityName))
             {
@@ -45,6 +47,18 @@ namespace SS3D_shared
             serverInfo.rotW = 1;
             serverInfo.rotY = 0;
         }
+
+         public void Delete()
+         {
+             if (sceneManager.HasEntity(name))
+             {
+                 sceneManager.DestroyEntity(name);
+             }
+             if (sceneManager.HasSceneNode(name))
+             {
+                 sceneManager.DestroySceneNode(name);
+             }
+         }
 
     }
 }

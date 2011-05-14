@@ -25,7 +25,8 @@ public enum ItemMessage
 public enum MobMessage
 {
     CreateMob = 0,
-    InterpolationPacket
+    InterpolationPacket,
+    DeleteMob
 }
 
 public enum GameType

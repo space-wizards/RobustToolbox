@@ -109,6 +109,23 @@ namespace SS3d_server.Modules.Mobs
             Console.WriteLine("mob sent with ID: " + mobID);
         }
 
+        private void SendDeleteMob(ushort mobID)
+        {
+            if (!mobDict.Keys.Contains(mobID))
+                return;
+
+            NetOutgoingMessage message = netServer.netServer.CreateMessage();
+
+            message.Write((byte)NetMessage.MobMessage);
+            message.Write((byte)MobMessage.DeleteMob);
+
+            message.Write(mobDict[mobID].name);
+            message.Write(mobID);
+
+            netServer.SendMessageToAll(message);
+
+        }
+
         private void SendmobUpdate(ushort mobID)
         {
             if (!mobDict.Keys.Contains(mobID))
@@ -163,6 +180,8 @@ namespace SS3d_server.Modules.Mobs
         public void DeletePlayer(NetConnection netConnection)
         {
             ushort mobID = netServer.clientList[netConnection].mobID;
+
+            SendDeleteMob(mobID);
             mobDict.Remove(mobID);                       
         }
     }

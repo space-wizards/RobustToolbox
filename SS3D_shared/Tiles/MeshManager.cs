@@ -120,7 +120,7 @@ namespace SS3D_shared
             ManualObject mobject = new ManualObject("wallMesh");
 
             #region +Z side
-            mobject.Begin("WallTexture", RenderOperation.OperationTypes.OT_TRIANGLE_LIST);
+            mobject.Begin("WallTextureSide", RenderOperation.OperationTypes.OT_TRIANGLE_LIST);
             mobject.Position(tileX, -tileBottom, tileZ); mobject.TextureCoord(1, 1); mobject.Normal(Vector3.UNIT_Z);
             mobject.Position(tileX, wallHeight, tileZ); mobject.TextureCoord(1, 0); mobject.Normal(Vector3.UNIT_Z);
             mobject.Position(-tileX, -tileBottom, tileZ); mobject.TextureCoord(0, 1); mobject.Normal(Vector3.UNIT_Z);
@@ -131,7 +131,7 @@ namespace SS3D_shared
             #endregion
 
             #region -X side
-            mobject.Begin("WallTexture", RenderOperation.OperationTypes.OT_TRIANGLE_LIST);
+            mobject.Begin("WallTextureSide", RenderOperation.OperationTypes.OT_TRIANGLE_LIST);
             mobject.Position(-tileX, -tileBottom, tileZ); mobject.TextureCoord(0, 1); mobject.Normal(Vector3.NEGATIVE_UNIT_X);
             mobject.Position(-tileX, wallHeight, tileZ); mobject.TextureCoord(0, 0); mobject.Normal(Vector3.NEGATIVE_UNIT_X);
             mobject.Position(-tileX, -tileBottom, -tileZ); mobject.TextureCoord(1, 1); mobject.Normal(Vector3.NEGATIVE_UNIT_X);
@@ -142,7 +142,7 @@ namespace SS3D_shared
             #endregion
 
             #region -Z side
-            mobject.Begin("WallTexture", RenderOperation.OperationTypes.OT_TRIANGLE_LIST);
+            mobject.Begin("WallTextureSide", RenderOperation.OperationTypes.OT_TRIANGLE_LIST);
             mobject.Position(-tileX, -tileBottom, -tileZ); mobject.TextureCoord(1, 1); mobject.Normal(Vector3.NEGATIVE_UNIT_Z);
             mobject.Position(-tileX, wallHeight, -tileZ); mobject.TextureCoord(1, 0); mobject.Normal(Vector3.NEGATIVE_UNIT_Z);
             mobject.Position(tileX, -tileBottom, -tileZ); mobject.TextureCoord(0, 1); mobject.Normal(Vector3.NEGATIVE_UNIT_Z);
@@ -153,7 +153,7 @@ namespace SS3D_shared
             #endregion
 
             #region +X side
-            mobject.Begin("WallTexture", RenderOperation.OperationTypes.OT_TRIANGLE_LIST);
+            mobject.Begin("WallTextureSide", RenderOperation.OperationTypes.OT_TRIANGLE_LIST);
             mobject.Position(tileX, -tileBottom, -tileZ); mobject.TextureCoord(0, 1); mobject.Normal(Vector3.UNIT_X);
             mobject.Position(tileX, wallHeight, -tileZ); mobject.TextureCoord(0, 0); mobject.Normal(Vector3.UNIT_X);
             mobject.Position(tileX, -tileBottom, tileZ); mobject.TextureCoord(1, 1); mobject.Normal(Vector3.UNIT_X);
@@ -164,7 +164,7 @@ namespace SS3D_shared
             #endregion
 
             #region +Y side
-            mobject.Begin("WallTexture", RenderOperation.OperationTypes.OT_TRIANGLE_LIST);
+            mobject.Begin("WallTextureTop", RenderOperation.OperationTypes.OT_TRIANGLE_LIST);
             mobject.Position(tileX, wallHeight, -tileZ); mobject.TextureCoord(1, 1); mobject.Normal(Vector3.UNIT_Y);
             mobject.Position(tileX, wallHeight, tileZ); mobject.TextureCoord(1, 0); mobject.Normal(Vector3.UNIT_Y);
             mobject.Position(-tileX, wallHeight, -tileZ); mobject.TextureCoord(0, 1); mobject.Normal(Vector3.UNIT_Y);
@@ -175,7 +175,7 @@ namespace SS3D_shared
             #endregion
 
             #region -Y side
-            mobject.Begin("WallTexture", RenderOperation.OperationTypes.OT_TRIANGLE_LIST);
+            mobject.Begin("WallTextureTop", RenderOperation.OperationTypes.OT_TRIANGLE_LIST);
             mobject.Position(tileX, -tileBottom, -tileZ); mobject.TextureCoord(1, 1); mobject.Normal(Vector3.NEGATIVE_UNIT_Y);
             mobject.Position(tileX, -tileBottom, tileZ); mobject.TextureCoord(1, 0); mobject.Normal(Vector3.NEGATIVE_UNIT_Y);
             mobject.Position(-tileX, -tileBottom, -tileZ); mobject.TextureCoord(0, 1); mobject.Normal(Vector3.NEGATIVE_UNIT_Y);

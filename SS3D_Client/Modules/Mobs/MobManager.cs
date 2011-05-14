@@ -206,13 +206,13 @@ namespace SS3D.Modules.Mobs
                       
             if (System.Math.Round(difference.Length) != 0)
             {
-                mobDict[mobID].animState = mobDict[mobID].Entity.GetAnimationState("Walk");
+                mobDict[mobID].animState = mobDict[mobID].Entity.GetAnimationState("trns_walk");
                 mobDict[mobID].animState.Loop = true;
                 mobDict[mobID].animState.Enabled = true;
             }
             else
             {
-                mobDict[mobID].animState = mobDict[mobID].Entity.GetAnimationState("Idle");
+                mobDict[mobID].animState = mobDict[mobID].Entity.GetAnimationState("idle");
                 mobDict[mobID].animState.Loop = true;
                 mobDict[mobID].animState.Enabled = true;
             }

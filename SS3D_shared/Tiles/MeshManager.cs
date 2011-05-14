@@ -46,7 +46,7 @@ namespace SS3D_shared
             ManualObject mobject = new ManualObject("floorMesh");
 
             #region +Z side
-            mobject.Begin("FloorTexture", RenderOperation.OperationTypes.OT_TRIANGLE_LIST);
+            mobject.Begin("FloorTextureSide", RenderOperation.OperationTypes.OT_TRIANGLE_LIST);
             mobject.Position(tileX, -tileBottom, tileZ); mobject.TextureCoord(1, 1); mobject.Normal(Vector3.UNIT_Z);
             mobject.Position(tileX, floorHeight, tileZ); mobject.TextureCoord(1, 0); mobject.Normal(Vector3.UNIT_Z);
             mobject.Position(-tileX, -tileBottom, tileZ); mobject.TextureCoord(0, 1); mobject.Normal(Vector3.UNIT_Z);
@@ -57,7 +57,7 @@ namespace SS3D_shared
             #endregion
 
             #region -X side
-            mobject.Begin("FloorTexture", RenderOperation.OperationTypes.OT_TRIANGLE_LIST);
+            mobject.Begin("FloorTextureSide", RenderOperation.OperationTypes.OT_TRIANGLE_LIST);
             mobject.Position(-tileX, -tileBottom, tileZ); mobject.TextureCoord(0, 1); mobject.Normal(Vector3.NEGATIVE_UNIT_X);
             mobject.Position(-tileX, floorHeight, tileZ); mobject.TextureCoord(0, 0); mobject.Normal(Vector3.NEGATIVE_UNIT_X);
             mobject.Position(-tileX, -tileBottom, -tileZ); mobject.TextureCoord(1, 1); mobject.Normal(Vector3.NEGATIVE_UNIT_X);
@@ -68,7 +68,7 @@ namespace SS3D_shared
             #endregion
 
             #region -Z side
-            mobject.Begin("FloorTexture", RenderOperation.OperationTypes.OT_TRIANGLE_LIST);
+            mobject.Begin("FloorTextureSide", RenderOperation.OperationTypes.OT_TRIANGLE_LIST);
             mobject.Position(-tileX, -tileBottom, -tileZ); mobject.TextureCoord(1, 1); mobject.Normal(Vector3.NEGATIVE_UNIT_Z);
             mobject.Position(-tileX, floorHeight, -tileZ); mobject.TextureCoord(1, 0); mobject.Normal(Vector3.NEGATIVE_UNIT_Z);
             mobject.Position(tileX, -tileBottom, -tileZ); mobject.TextureCoord(0, 1); mobject.Normal(Vector3.NEGATIVE_UNIT_Z);
@@ -79,7 +79,7 @@ namespace SS3D_shared
             #endregion
 
             #region +X side
-            mobject.Begin("FloorTexture", RenderOperation.OperationTypes.OT_TRIANGLE_LIST);
+            mobject.Begin("FloorTextureSide", RenderOperation.OperationTypes.OT_TRIANGLE_LIST);
             mobject.Position(tileX, -tileBottom, -tileZ); mobject.TextureCoord(0, 1); mobject.Normal(Vector3.UNIT_X);
             mobject.Position(tileX, floorHeight, -tileZ); mobject.TextureCoord(0, 0); mobject.Normal(Vector3.UNIT_X);
             mobject.Position(tileX, -tileBottom, tileZ); mobject.TextureCoord(1, 1); mobject.Normal(Vector3.UNIT_X);
@@ -90,7 +90,7 @@ namespace SS3D_shared
             #endregion
 
             #region +Y size
-            mobject.Begin("FloorTexture", RenderOperation.OperationTypes.OT_TRIANGLE_LIST);
+            mobject.Begin("FloorTextureTop", RenderOperation.OperationTypes.OT_TRIANGLE_LIST);
             mobject.Position(tileX, floorHeight, -tileZ); mobject.TextureCoord(1, 1); mobject.Normal(Vector3.UNIT_Y);
             mobject.Position(tileX, floorHeight, tileZ); mobject.TextureCoord(1, 0); mobject.Normal(Vector3.UNIT_Y);
             mobject.Position(-tileX, floorHeight, -tileZ); mobject.TextureCoord(0, 1); mobject.Normal(Vector3.UNIT_Y);
@@ -101,7 +101,7 @@ namespace SS3D_shared
             #endregion
 
             #region -Y side
-            mobject.Begin("FloorTexture", RenderOperation.OperationTypes.OT_TRIANGLE_LIST);
+            mobject.Begin("FloorTextureTop", RenderOperation.OperationTypes.OT_TRIANGLE_LIST);
             mobject.Position(tileX, -tileBottom, -tileZ); mobject.TextureCoord(1, 1); mobject.Normal(Vector3.NEGATIVE_UNIT_Y);
             mobject.Position(tileX, -tileBottom, tileZ); mobject.TextureCoord(1, 0);  mobject.Normal(Vector3.NEGATIVE_UNIT_Y);
             mobject.Position(-tileX, -tileBottom, -tileZ); mobject.TextureCoord(0, 1);mobject.Normal(Vector3.NEGATIVE_UNIT_Y);

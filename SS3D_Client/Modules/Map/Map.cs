@@ -455,7 +455,7 @@ namespace SS3D.Modules.Map
             }
             else if (tile == TileType.Wall)
             {
-                return new Vector3(pos.x, 40f, pos.z);
+                return new Vector3(pos.x, meshManager.GetWallHeight(), pos.z);
             }
             else if ((tile == TileType.Floor || tile == TileType.Space) && pos.y < 0)
             {

@@ -356,7 +356,7 @@ namespace SS3D.Modules.Map
 
         private TileType GetObjectTypeFromArrayPosition(int x, int z)
         {
-            if (x < 0 || z < 0 || x > mapWidth || z > mapHeight)
+            if (x < 0 || z < 0 || x >= mapWidth || z >= mapHeight)
             {
                 return TileType.None;
             }

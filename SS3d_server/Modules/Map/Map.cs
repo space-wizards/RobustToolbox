@@ -17,7 +17,7 @@ namespace SS3d_server.Modules.Map
         private int mapWidth;
         private int mapHeight;
         private string[,] nameArray;
-        private int tileSpacing = 32;
+        private int tileSpacing = 16;
         private int wallHeight = 40; // This must be the same as defined in the MeshManager.
         #endregion
 
@@ -164,7 +164,7 @@ namespace SS3d_server.Modules.Map
             
             if (x < 0 || z < 0)
                 return new Point(-1, -1);
-            if (x > mapWidth * tileSpacing || z > mapWidth * tileSpacing)
+            if (x >= mapWidth * tileSpacing || z >= mapWidth * tileSpacing)
                 return new Point(-1, -1);
 
             // We use floor here, because even if we're at pos 10.999999, we're still on tile 10 in the array.
@@ -208,7 +208,7 @@ namespace SS3d_server.Modules.Map
 
         private TileType GetObjectTypeFromArrayPosition(int x, int z)
         {
-            if (x < 0 || z < 0 || x > mapWidth || z > mapHeight)
+            if (x < 0 || z < 0 || x >= mapWidth || z >= mapHeight)
             {
                 return TileType.None;
             }

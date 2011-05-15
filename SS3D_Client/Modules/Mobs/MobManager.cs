@@ -280,6 +280,11 @@ namespace SS3D.Modules.Mobs
         }
         #endregion
 
+        public Mob GetMob(ushort mobID)
+        {
+            return mobDict[mobID];
+        }
+
 
     }
 }

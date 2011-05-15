@@ -18,5 +18,7 @@ namespace SS3D_shared
         public float runSpeed = 2.0f;
 
         public float speed = 0.0f;
+
+        public Item heldItem; // Just a temporary storage spot, for now.
     }
 }

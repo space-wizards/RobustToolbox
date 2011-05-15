@@ -85,7 +85,7 @@ namespace SS3D.States
             mEngine.Camera.Position = new Mogre.Vector3(0, 300, 0);
             mEngine.Camera.LookAt(new Mogre.Vector3(160,64,160));
 
-            itemManager = new ItemManager(mEngine, map, mEngine.mNetworkMgr);
+            itemManager = new ItemManager(mEngine, map, mEngine.mNetworkMgr, null);
 
             if (!mEngine.mNetworkMgr.isConnected)
             {

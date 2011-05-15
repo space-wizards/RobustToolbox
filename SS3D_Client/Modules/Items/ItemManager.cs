@@ -14,6 +14,7 @@ namespace SS3D.Modules.Items
         private Map.Map map;
         private OgreManager mEngine;
         private Network.NetworkManager networkManager;
+        private Mobs.MobManager mobManager;
         private Dictionary<ushort, Item> itemDict; // ItemID, Item
         private List<ushort> itemsToMove;
         private List<ushort> itemsToStop;
@@ -22,11 +23,12 @@ namespace SS3D.Modules.Items
         private double itemUpdateTime = 20;
         private double serverUpdateTime = 100;
 
-        public ItemManager(OgreManager _mEngine, Map.Map _map, Network.NetworkManager _networkManager)
+        public ItemManager(OgreManager _mEngine, Map.Map _map, Network.NetworkManager _networkManager, Mobs.MobManager _mobManager)
         {
             mEngine = _mEngine;
             map = _map;
             networkManager = _networkManager;
+            mobManager = _mobManager;
             itemDict = new Dictionary<ushort, Item>();
             itemAssemblyName = typeof(SS3D_shared.Item).Assembly.ToString();
             itemsToMove = new List<ushort>();
@@ -43,6 +45,9 @@ namespace SS3D.Modules.Items
                     break;
                 case ItemMessage.InterpolationPacket:
                     HandleInterpolationPacket(message);
+                    break;
+                case ItemMessage.PickUpItem:
+                    HandlePickupItem(message);
                     break;
                 default:
                     break; 
@@ -71,7 +76,7 @@ namespace SS3D.Modules.Items
         {
             foreach (Item item in itemDict.Values)
             {
-                mEngine.SceneMgr.DestroyEntity(item.Entity);
+                //mEngine.SceneMgr.DestroyEntity(item.Entity);
                 mEngine.SceneMgr.DestroySceneNode(item.Node);
             }
             itemDict = null;
@@ -156,5 +161,29 @@ namespace SS3D.Modules.Items
             mEngine.mNetworkMgr.SendMessage(message, NetDeliveryMethod.ReliableOrdered);
         }
         #endregion
+
+        public void ClickItem(Item item)
+        {
+            NetOutgoingMessage message = networkManager.netClient.CreateMessage();
+            message.Write((byte)NetMessage.ItemMessage);
+            message.Write((byte)ItemMessage.ClickItem);
+            message.Write(item.itemID);
+            networkManager.SendMessage(message, NetDeliveryMethod.Unreliable);
+        }
+
+        private void HandlePickupItem(NetIncomingMessage message)
+        {
+            ushort mobID = message.ReadUInt16();
+            ushort itemID = message.ReadUInt16();
+
+            itemDict[itemID].Entity.DetachFromParent();
+            Mob mob = mobManager.GetMob(mobID);
+
+            mob.Entity.AttachObjectToBone("RHand", itemDict[itemID].Entity);
+
+            mob.heldItem = itemDict[itemID];
+            itemDict[itemID].holder = mob;
+            
+        }
     }
 }

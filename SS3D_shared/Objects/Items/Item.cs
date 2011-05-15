@@ -15,6 +15,7 @@ namespace SS3D_shared
         public List<InterpolationPacket> interpolationPacket;
         public DateTime lastUpdate;
         public ItemType ItemType = ItemType.None;
+        public Mob holder; // Just temporary holder for now.
 
         public Item()
         {

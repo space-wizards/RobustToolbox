@@ -42,8 +42,8 @@ namespace SS3d_server
             map = new Map();
             map.InitMap(serverMapName);
 
-            itemManager = new ItemManager(this, map);
             mobManager = new MobManager(this, map);
+            itemManager = new ItemManager(this, map, mobManager);
             chatManager = new ChatManager(this, mobManager);
 
         }
@@ -58,6 +58,7 @@ namespace SS3d_server
                 netConfig.Port = serverPort;
                 netServer = new NetServer(netConfig);
                 netServer.Start();
+                AddRandomCrowbars();
                 active = true;
                 return false;
             }
@@ -309,9 +310,9 @@ namespace SS3d_server
             netServer.SendMessage(mapMessage, connection, NetDeliveryMethod.ReliableOrdered);
             Console.WriteLine(connection.RemoteEndpoint.Address.ToString() + ": Sending map finished with message size: " + mapMessage.LengthBytes + " bytes");
 
-            // Lets also send them all the items.
-            itemManager.NewPlayer(connection);
+            // Lets also send them all the items and mobs.
             mobManager.NewPlayer(connection);
+            itemManager.NewPlayer(connection);
         }
 
         public void HandleChangeTile(NetIncomingMessage msg)
@@ -447,6 +448,20 @@ namespace SS3d_server
             }
             Console.WriteLine("Sending to one with size: " + message.LengthBytes + " bytes");
             netServer.SendMessage(message, connection, NetDeliveryMethod.ReliableOrdered);
+        }
+
+        public void AddRandomCrowbars()
+        {
+            Crowbar c = new Crowbar();
+            Type type = c.GetType();
+
+            Random r = new Random();
+
+            for (int i = 0; i < 10; i++)
+            {
+                SS3D_shared.HelperClasses.Vector3 pos = new SS3D_shared.HelperClasses.Vector3(r.NextDouble() * map.GetMapWidth() * map.tileSpacing, 60, r.NextDouble() * map.GetMapHeight() * map.tileSpacing);
+                itemManager.CreateItem(type, pos);
+            }
         }
     }
 }

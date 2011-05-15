@@ -14,7 +14,7 @@ namespace SS3d_server.Modules.Mobs
     {
         private Map.Map map;
         private SS3DNetserver netServer;
-        private Dictionary<ushort, Mob> mobDict; // mobID, mob
+        public Dictionary<ushort, Mob> mobDict; // mobID, mob
         ushort lastID = 0;
         private string mobAssemblyName;
         private DateTime lastmobUpdateSent = DateTime.Now;

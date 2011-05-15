@@ -13,6 +13,7 @@ namespace SS3d_server.Modules.Items
     {
         private Map.Map map;
         private SS3DNetserver netServer;
+        private Mobs.MobManager mobManager;
         private Dictionary<ushort, Item> itemDict; // ItemID, Item
         private List<ushort> itemsToSend;
         ushort lastID = 0;
@@ -22,10 +23,11 @@ namespace SS3d_server.Modules.Items
         private float fallSpeed = 5.0f; // Just a constant now (not acceleration) for testing.
 
 
-        public ItemManager(SS3DNetserver _netServer, Map.Map _map)
+        public ItemManager(SS3DNetserver _netServer, Map.Map _map, Mobs.MobManager _mobManager)
         {
             netServer = _netServer;
             map = _map;
+            mobManager = _mobManager;
             itemDict = new Dictionary<ushort, Item>();
             itemAssemblyName = typeof(Item).Assembly.ToString();
             itemsToSend = new List<ushort>();
@@ -79,6 +81,9 @@ namespace SS3d_server.Modules.Items
                 case ItemMessage.CreateItem:
                     HandleCreateItem(message);
                     break;
+                case ItemMessage.ClickItem:
+                    HandleClickItem(message);
+                    break;
             }
 
         }
@@ -97,6 +102,33 @@ namespace SS3d_server.Modules.Items
 
             itemDict[lastID] = (Item)newItem;
             itemDict[lastID].serverInfo.position = new Vector3(x, y, z);
+            itemDict[lastID].itemID = lastID;
+
+            SendCreateItem(lastID);
+        }
+
+        private void HandleClickItem(NetIncomingMessage message)
+        {
+            ushort itemID = message.ReadUInt16();
+            ushort mobID = netServer.clientList[message.SenderConnection].mobID;
+
+            if (itemDict[itemID].holder == null && mobManager.mobDict[mobID].heldItem == null)
+            {
+                itemDict[itemID].holder = mobManager.mobDict[mobID];
+                mobManager.mobDict[mobID].heldItem = itemDict[itemID];
+                SendPickupItem(itemID, mobID);
+            }
+            
+        }
+
+
+        public void CreateItem(Type type, Vector3 pos)
+        {
+            object newItem = Activator.CreateInstance(type);
+            lastID++;
+
+            itemDict[lastID] = (Item)newItem;
+            itemDict[lastID].serverInfo.position = pos;
             itemDict[lastID].itemID = lastID;
 
             SendCreateItem(lastID);
@@ -169,6 +201,26 @@ namespace SS3d_server.Modules.Items
             netServer.SendMessageToAll(message);
         }
 
+        private void SendPickupItem(ushort itemID, ushort mobID)
+        {
+            NetOutgoingMessage message = netServer.netServer.CreateMessage();
+            message.Write((byte)NetMessage.ItemMessage);
+            message.Write((byte)ItemMessage.PickUpItem);
+            message.Write(mobID);
+            message.Write(itemID);
+            netServer.SendMessageToAll(message);
+        }
+
+        private void SendPickupItem(ushort itemID, ushort mobID, NetConnection netConnection)
+        {
+            NetOutgoingMessage message = netServer.netServer.CreateMessage();
+            message.Write((byte)NetMessage.ItemMessage);
+            message.Write((byte)ItemMessage.PickUpItem);
+            message.Write(mobID);
+            message.Write(itemID);
+            netServer.SendMessageTo(message, netConnection);
+        }
+
         // A new player is joining so lets send them everything we know!
         // Each module should probably have one of these.
         public void NewPlayer(NetConnection netConnection) 
@@ -180,6 +232,10 @@ namespace SS3d_server.Modules.Items
                     continue;
                 }
                 SendCreateItem(item.itemID, netConnection);
+                if (item.holder != null)
+                {
+                    SendPickupItem(item.itemID, item.holder.mobID, netConnection);
+                }
             }
         }
     }

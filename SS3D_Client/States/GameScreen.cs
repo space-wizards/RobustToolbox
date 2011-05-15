@@ -37,6 +37,8 @@ namespace SS3D.States
         private MobManager mobManager;
         private GUI guiGameScreen;
         private Chatbox gameChat;
+        private ushort defaultChannel;
+
 
         #region Mouse/Camera stuff
         private DateTime lastRMBClick = DateTime.Now;
@@ -71,6 +73,10 @@ namespace SS3D.States
             mEngine.mMiyagiSystem.GUIManager.GUIs.Add(gameChat.chatGUI);
             gameChat.chatPanel.ResizeMode = Miyagi.UI.ResizeModes.None;
             gameChat.chatPanel.Movable = false;
+            defaultChannel = 1; 
+            gameChat.chatTextbox.Submit += new EventHandler<ValueEventArgs<string>>(chatTextbox_Submit);
+            gameChat.chatTextbox.Submit -= new EventHandler<ValueEventArgs<string>>(gameChat.chatTextbox_Submit);
+
 
             mEngine.mNetworkMgr.SetMap(map);
             mEngine.mNetworkMgr.RequestMap();
@@ -78,6 +84,8 @@ namespace SS3D.States
 
             return true;
         }
+
+
 
         private void SetUp()
         {
@@ -137,6 +145,9 @@ namespace SS3D.States
                         case NetMessage.SendMap:
                             RecieveMap(msg);
                             break;
+                        case NetMessage.ChatMessage:
+                            HandleChatMessage(msg);
+                            break;
                         default:
                             break;
                     }
@@ -173,6 +184,31 @@ namespace SS3D.States
             int z = msg.ReadInt32();
             TileType newTile = (TileType)msg.ReadByte();
             map.ChangeTile(x, z, newTile);
+        }
+
+        private void HandleChatMessage(NetIncomingMessage msg)
+        {
+            ushort channel = msg.ReadUInt16();
+            string text = msg.ReadString();
+
+            string message = "(" + channel.ToString() + "):" + text;
+
+            gameChat.AddLine(message);
+        }
+
+        private void SendChatMessage(string text)
+        {
+            NetOutgoingMessage message = mEngine.mNetworkMgr.netClient.CreateMessage();
+            message.Write((byte)NetMessage.ChatMessage);
+            message.Write(defaultChannel);
+            message.Write(text);
+
+            mEngine.mNetworkMgr.SendMessage(message, NetDeliveryMethod.ReliableUnordered);
+        }
+
+        void chatTextbox_Submit(object sender, ValueEventArgs<string> e)
+        {
+            SendChatMessage(e.Data);
         }
 
         #endregion

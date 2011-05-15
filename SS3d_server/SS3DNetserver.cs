@@ -44,6 +44,8 @@ namespace SS3d_server
 
             itemManager = new ItemManager(this, map);
             mobManager = new MobManager(this, map);
+            chatManager = new ChatManager(this, mobManager);
+
         }
 
         public bool Start()
@@ -247,6 +249,9 @@ namespace SS3d_server
                     break;
                 case NetMessage.MobMessage:
                     mobManager.HandleNetMessage(msg);
+                    break;
+                case NetMessage.ChatMessage:
+                    chatManager.HandleNetMessage(msg);
                     break;
                 default:
                     break;

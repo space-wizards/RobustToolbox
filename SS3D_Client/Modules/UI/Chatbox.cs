@@ -24,11 +24,8 @@ namespace SS3D.Modules.UI
             get;
         }
 
-        public TextBox chatTextbox
-        {
-            private set;
-            get;
-        }
+        public TextBox chatTextbox;
+        
 
         public GUI chatGUI
         {
@@ -136,7 +133,7 @@ namespace SS3D.Modules.UI
             chatGUI.ZOrder = 10;
         }
 
-        void chatTextbox_Submit(object sender, ValueEventArgs<string> e)
+        public void chatTextbox_Submit(object sender, ValueEventArgs<string> e)
         {
             AddLine(e.Data);
         }

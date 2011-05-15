@@ -9,6 +9,7 @@ using SS3D.Modules.Map;
 using SS3D.Modules.Items;
 using SS3D.Modules.Mobs;
 using SS3D.Modules.Network;
+using SS3D.Modules.UI;
 
 using SS3D_shared;
 
@@ -35,6 +36,7 @@ namespace SS3D.States
         private ItemManager itemManager;
         private MobManager mobManager;
         private GUI guiGameScreen;
+        private Chatbox gameChat;
 
         #region Mouse/Camera stuff
         private DateTime lastRMBClick = DateTime.Now;
@@ -55,6 +57,8 @@ namespace SS3D.States
             mEngine = _mgr.Engine;
             mStateMgr = _mgr;
 
+            mEngine.mMiyagiSystem.GUIManager.DisposeAllGUIs();
+
             map = new Map(mEngine);
             itemManager = new ItemManager(mEngine, map, mEngine.mNetworkMgr);
             mobManager = new MobManager(mEngine, map, mEngine.mNetworkMgr);
@@ -63,10 +67,14 @@ namespace SS3D.States
 
             mEngine.mNetworkMgr.MessageArrived += new NetworkMsgHandler(mNetworkMgr_MessageArrived);
 
+            gameChat = new Chatbox("gameChat");
+            mEngine.mMiyagiSystem.GUIManager.GUIs.Add(gameChat.chatGUI);
+            gameChat.chatPanel.ResizeMode = Miyagi.UI.ResizeModes.None;
+            gameChat.chatPanel.Movable = false;
+
             mEngine.mNetworkMgr.SetMap(map);
             mEngine.mNetworkMgr.RequestMap();
 
-            mEngine.mMiyagiSystem.GUIManager.DisposeAllGUIs();
 
             return true;
         }

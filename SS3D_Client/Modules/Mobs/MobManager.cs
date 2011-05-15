@@ -282,7 +282,11 @@ namespace SS3D.Modules.Mobs
 
         public Mob GetMob(ushort mobID)
         {
-            return mobDict[mobID];
+            if (mobDict.ContainsKey(mobID))
+            {
+                return mobDict[mobID];
+            }
+            return null;
         }
 
 

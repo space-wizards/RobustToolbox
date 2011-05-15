@@ -179,6 +179,11 @@ namespace SS3D.Modules.Items
             itemDict[itemID].Entity.DetachFromParent();
             Mob mob = mobManager.GetMob(mobID);
 
+            if (mob == null)
+            {
+                return;
+            }
+
             mob.Entity.AttachObjectToBone("RHand", itemDict[itemID].Entity);
 
             mob.heldItem = itemDict[itemID];

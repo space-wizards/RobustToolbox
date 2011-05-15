@@ -12,7 +12,8 @@ public enum NetMessage
     SendMap,
     ChangeTile,
     ItemMessage, // It's something the item system needs to handle
-    MobMessage
+    MobMessage,
+    ChatMessage
 }
 
 public enum ItemMessage
@@ -40,3 +41,4 @@ public enum ClientStatus
     Lobby = 0,
     Game
 }
+

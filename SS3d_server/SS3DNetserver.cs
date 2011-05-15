@@ -7,6 +7,7 @@ using SS3d_server.Modules.Client;
 using SS3d_server.Modules.Map;
 using SS3d_server.Modules.Items;
 using SS3d_server.Modules.Mobs;
+using SS3d_server.Modules.Chat;
 
 using Lidgren.Network;
 using SS3D_shared;
@@ -21,6 +22,7 @@ namespace SS3d_server
         Map map;
         ItemManager itemManager;
         MobManager mobManager;
+        ChatManager chatManager;
         
         bool active = false;
         

@@ -82,6 +82,7 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Helper Classes\Point.cs" />
+    <Compile Include="Modules\Chat\ChatManager.cs" />
     <Compile Include="Modules\Client\Client.cs" />
     <Compile Include="Modules\Items\ItemManager.cs" />
     <Compile Include="Modules\Map\Map.cs" />

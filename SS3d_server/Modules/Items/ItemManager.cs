@@ -112,13 +112,16 @@ namespace SS3d_server.Modules.Items
             ushort itemID = message.ReadUInt16();
             ushort mobID = netServer.clientList[message.SenderConnection].mobID;
 
-            if (itemDict[itemID].holder == null && mobManager.mobDict[mobID].heldItem == null)
+            Vector3 Dist = itemDict[itemID].serverInfo.position -= mobManager.mobDict[mobID].serverInfo.position;
+            if (Dist.Magnitude <= 32)
             {
-                itemDict[itemID].holder = mobManager.mobDict[mobID];
-                mobManager.mobDict[mobID].heldItem = itemDict[itemID];
-                SendPickupItem(itemID, mobID);
+                if (itemDict[itemID].holder == null && mobManager.mobDict[mobID].heldItem == null)
+                {
+                    itemDict[itemID].holder = mobManager.mobDict[mobID];
+                    mobManager.mobDict[mobID].heldItem = itemDict[itemID];
+                    SendPickupItem(itemID, mobID);
+                }
             }
-            
         }
 
 

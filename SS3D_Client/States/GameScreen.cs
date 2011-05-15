@@ -208,7 +208,16 @@ namespace SS3D.States
 
         void chatTextbox_Submit(object sender, ValueEventArgs<string> e)
         {
-            SendChatMessage(e.Data);
+            if (e.Data == "/crowbar")
+            {
+                Mogre.Vector3 pos = mobManager.myMob.Node.Position;
+                pos.y += 40;
+                itemManager.SendCreateItem(pos);
+            }
+            else
+            {
+                SendChatMessage(e.Data);
+            }
         }
 
         #endregion
@@ -279,7 +288,8 @@ namespace SS3D.States
                 Mogre.Vector2 mousePosAbs = new Vector2((float)mousePos.X / (float)mEngine.Window.Width, (float)mousePos.Y / (float)mEngine.Window.Height);
                 AtomBaseClass atom = HelperClasses.AtomUtil.PickAtScreenPosition(mEngine, mousePosAbs, out worldPos);
 
-                if (atom != null && atom.AtomType == AtomType.Item)
+                Mogre.Vector3 distance = worldPos - mobManager.myMob.Node.Position;
+                if (atom != null && distance.Length <= 32 && atom.AtomType == AtomType.Item)
                 {
                     itemManager.ClickItem((Item)atom);
                 }

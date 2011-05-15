@@ -37,6 +37,8 @@ namespace SS3D_shared
             animState = Entity.GetAnimationState("idle");
             animState.Loop = true;
             animState.Enabled = true;
+
+            speed = walkSpeed;
         }
 
          public Player()

@@ -289,9 +289,18 @@ namespace SS3D.States
                 AtomBaseClass atom = HelperClasses.AtomUtil.PickAtScreenPosition(mEngine, mousePosAbs, out worldPos);
 
                 Mogre.Vector3 distance = worldPos - mobManager.myMob.Node.Position;
-                if (atom != null && distance.Length <= 32 && atom.AtomType == AtomType.Item)
+                if (atom != null && distance.Length <= 48)
                 {
-                    itemManager.ClickItem((Item)atom);
+                    switch (atom.AtomType)
+                    {
+                        case AtomType.Item:
+                            itemManager.ClickItem((Item)atom);
+                            break;
+                        case AtomType.Mob:
+                            mobManager.ClickMob((Mob)atom);
+                            break;
+                    }
+                    
                 }
             }
         }

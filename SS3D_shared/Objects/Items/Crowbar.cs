@@ -34,6 +34,8 @@ namespace SS3D_shared
             interpolationPacket = new List<InterpolationPacket>();
             itemID = ID;
             lastUpdate = DateTime.Now;
+
+            power = 5.0f;
             
         }
 

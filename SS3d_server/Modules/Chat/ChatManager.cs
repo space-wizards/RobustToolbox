@@ -11,7 +11,7 @@ using SS3d_server.Modules.Mobs;
 
 namespace SS3d_server.Modules.Chat
 {
-    class ChatManager
+    public class ChatManager
     {
         private SS3DNetserver netServer;
         private MobManager mobManager;
@@ -31,7 +31,7 @@ namespace SS3d_server.Modules.Chat
             SendChatMessage(channel, text, name);
         }
 
-        private void SendChatMessage(ushort channel, string text, string name)
+        public void SendChatMessage(ushort channel, string text, string name)
         {
             string fullmsg = name + ": " + text;
 

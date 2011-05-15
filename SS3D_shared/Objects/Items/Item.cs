@@ -17,6 +17,8 @@ namespace SS3D_shared
         public ItemType ItemType = ItemType.None;
         public Mob holder; // Just temporary holder for now.
 
+        public float power = 0.0f;
+
         public Item()
         {
             AtomType = global::AtomType.Item;

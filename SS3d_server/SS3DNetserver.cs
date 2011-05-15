@@ -17,12 +17,12 @@ namespace SS3d_server
     public class SS3DNetserver
     {
         public NetServer netServer;
-        NetPeerConfiguration netConfig = new NetPeerConfiguration("SS3D_NetTag");
+        private NetPeerConfiguration netConfig = new NetPeerConfiguration("SS3D_NetTag");
         public Dictionary<NetConnection, Client> clientList = new Dictionary<NetConnection, Client>();
-        Map map;
-        ItemManager itemManager;
-        MobManager mobManager;
-        ChatManager chatManager;
+        public Map map;
+        public ItemManager itemManager;
+        public MobManager mobManager;
+        public ChatManager chatManager;
         
         bool active = false;
         

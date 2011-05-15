@@ -73,8 +73,29 @@ namespace SS3d_server.Modules.Mobs
                 case(MobMessage.InterpolationPacket):
                     RecieveMobPosUpdate(message);
                     break;
+                case(MobMessage.AttackMob):
+                    HandleAttackMob(message);
+                    break;
             }
 
+        }
+
+        private void HandleAttackMob(NetIncomingMessage message)
+        {
+            ushort victimID = message.ReadUInt16();
+            ushort attackerID = netServer.clientList[message.SenderConnection].mobID;
+
+            // This is ugly for now I'm aware. It will want to be moved into its own "Attack" method, and then through a "Damage" method to apply health effects eventually.
+            Vector3 Dist = mobDict[victimID].serverInfo.position - mobDict[attackerID].serverInfo.position;
+            string weaponName = "fists";
+            if(mobDict[attackerID].heldItem != null)
+            {
+                weaponName = mobDict[attackerID].heldItem.ItemType.ToString();
+            }
+            if (Dist.Magnitude <= 48)
+            {
+                netServer.chatManager.SendChatMessage(0, mobDict[attackerID].name + " hits " + mobDict[victimID].name + " with his " + weaponName, "");
+            }
         }
 
         private void SendCreatemob(ushort mobID, NetConnection netConnection)

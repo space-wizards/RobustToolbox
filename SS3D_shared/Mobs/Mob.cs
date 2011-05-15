@@ -20,5 +20,11 @@ namespace SS3D_shared
         public float speed = 0.0f;
 
         public Item heldItem; // Just a temporary storage spot, for now.
+
+        public Mob()
+        {
+            AtomType = global::AtomType.Mob;
+        }
+
     }
 }

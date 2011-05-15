@@ -7,6 +7,7 @@ using SS3d_server.Modules.Client;
 using SS3d_server.Modules.Map;
 using SS3d_server.Modules.Items;
 using SS3d_server.Modules.Mobs;
+using SS3d_server.Modules.Chat;
 
 using Lidgren.Network;
 using SS3D_shared;
@@ -21,6 +22,7 @@ namespace SS3d_server
         Map map;
         ItemManager itemManager;
         MobManager mobManager;
+        ChatManager chatManager;
         
         bool active = false;
         
@@ -42,6 +44,8 @@ namespace SS3d_server
 
             itemManager = new ItemManager(this, map);
             mobManager = new MobManager(this, map);
+            chatManager = new ChatManager(this, mobManager);
+
         }
 
         public bool Start()
@@ -245,6 +249,9 @@ namespace SS3d_server
                     break;
                 case NetMessage.MobMessage:
                     mobManager.HandleNetMessage(msg);
+                    break;
+                case NetMessage.ChatMessage:
+                    chatManager.HandleNetMessage(msg);
                     break;
                 default:
                     break;

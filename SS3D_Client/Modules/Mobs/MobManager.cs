@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using System.IO;
 
 using Lidgren.Network;
 using SS3D_shared;
@@ -21,6 +22,8 @@ namespace SS3D.Modules.Mobs
         private DateTime lastAnimUpdate = DateTime.Now;
         private double mobUpdateTime = 10;
         private double serverUpdateTime = 50;
+
+        public Mob myMob;
         
         private ushort myMobID = 0;
 
@@ -129,7 +132,7 @@ namespace SS3D.Modules.Mobs
             switch (i)
             {
                 case 1:
-                    mobDict[myMobID].Node.Translate(new Vector3(0, 0, 1), Node.TransformSpace.TS_LOCAL);
+                    mobDict[myMobID].Node.Translate(new Vector3(0, 0, mobDict[myMobID].speed), Node.TransformSpace.TS_LOCAL);
                     break;
                 case 2:
                     mobDict[myMobID].Node.Rotate(Mogre.Vector3.UNIT_Y, Mogre.Math.DegreesToRadians(-2));
@@ -235,7 +238,7 @@ namespace SS3D.Modules.Mobs
         {
             string mobName = msg.ReadString();
             ushort mobID = msg.ReadUInt16();
-            bool myMob = msg.ReadBoolean();
+            bool isMe = msg.ReadBoolean();
             float x = msg.ReadFloat();
             float y = msg.ReadFloat();
             float z = msg.ReadFloat();
@@ -247,9 +250,10 @@ namespace SS3D.Modules.Mobs
             mobDict[mobID] = mob;
             mob.Node.SetOrientation(rotW, 0, rotY, 0);
 
-            if (myMob)
+            if (isMe)
             {
                 myMobID = mobID;
+                myMob = mobDict[myMobID];
 
                 mEngine.Camera.DetachFromParent();
                 mEngine.Camera.Position = new Vector3(0, 240, -160);

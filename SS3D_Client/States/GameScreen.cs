@@ -83,6 +83,7 @@ namespace SS3D.States
             mEngine.SceneMgr.AmbientLight = ColourValue.White;
 
             mEngine.SceneMgr.SetSkyBox(true, "SkyBox", 900f, true);
+
         }
 
         public override void Shutdown()
@@ -99,6 +100,7 @@ namespace SS3D.States
 
         public override void Update(long _frameTime)
         {
+            mEngine.SceneMgr.SkyBoxNode.Rotate(Mogre.Vector3.UNIT_Y, 0.0001f);
             itemManager.Update();
             mobManager.Update();
         }
@@ -196,10 +198,18 @@ namespace SS3D.States
 
         public override void KeyDown(MOIS.KeyEvent keyState)
         {
+            if (keyState.key == MOIS.KeyCode.KC_LSHIFT)
+            {
+                mobManager.myMob.speed = mobManager.myMob.runSpeed;
+            }
         }
 
         public override void KeyUp(MOIS.KeyEvent keyState)
         {
+            if (keyState.key == MOIS.KeyCode.KC_LSHIFT)
+            {
+                mobManager.myMob.speed = mobManager.myMob.walkSpeed;
+            }
         }
 
         public override void MouseUp(MOIS.MouseEvent mouseState, MOIS.MouseButtonID button)

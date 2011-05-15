@@ -62,9 +62,9 @@ namespace SS3D.States
             mEngine.mMiyagiSystem.GUIManager.DisposeAllGUIs();
 
             map = new Map(mEngine);
-            itemManager = new ItemManager(mEngine, map, mEngine.mNetworkMgr);
-            mobManager = new MobManager(mEngine, map, mEngine.mNetworkMgr);
 
+            mobManager = new MobManager(mEngine, map, mEngine.mNetworkMgr);
+            itemManager = new ItemManager(mEngine, map, mEngine.mNetworkMgr, mobManager);
             SetUp();
 
             mEngine.mNetworkMgr.MessageArrived += new NetworkMsgHandler(mNetworkMgr_MessageArrived);
@@ -269,6 +269,19 @@ namespace SS3D.States
                 if (clickDiff.TotalMilliseconds < 250)
                 {
                     mEngine.Camera.ParentNode.ResetOrientation();
+                }
+            }
+
+            if (button == MOIS.MouseButtonID.MB_Left)
+            {
+                Mogre.Vector3 worldPos;
+                Point mousePos = mEngine.mMiyagiSystem.InputManager.MouseLocation;
+                Mogre.Vector2 mousePosAbs = new Vector2((float)mousePos.X / (float)mEngine.Window.Width, (float)mousePos.Y / (float)mEngine.Window.Height);
+                AtomBaseClass atom = HelperClasses.AtomUtil.PickAtScreenPosition(mEngine, mousePosAbs, out worldPos);
+
+                if (atom != null && atom.AtomType == AtomType.Item)
+                {
+                    itemManager.ClickItem((Item)atom);
                 }
             }
         }

@@ -28,7 +28,6 @@ namespace SS3D_shared
             Node = sceneManager.RootSceneNode.CreateChildSceneNode(entityName);
             Entity = sceneManager.CreateEntity(entityName, "male.mesh");
             Entity.UserObject = (AtomBaseClass)this;
-            Node.Scale(15f, 15f, 15f);
             Node.Position = position;
             Node.AttachObject(Entity);
             interpolationPacket = new List<InterpolationPacket>();

@@ -20,6 +20,8 @@ public enum ItemMessage
 {
     CreateItem = 0,
     InterpolationPacket,
+    ClickItem,
+    PickUpItem,
     UseItem // etc.
 }
 

@@ -17,7 +17,7 @@ namespace SS3d_server.Modules.Map
         private int mapWidth;
         private int mapHeight;
         private string[,] nameArray;
-        private int tileSpacing = 16;
+        public int tileSpacing = 16;
         private int wallHeight = 40; // This must be the same as defined in the MeshManager.
         #endregion
 

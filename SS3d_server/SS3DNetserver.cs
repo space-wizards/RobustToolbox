@@ -57,8 +57,31 @@ namespace SS3d_server
                 active = true;
                 return false;
             }
-            catch
+            catch (Lidgren.Network.NetException e)
             {
+                FileStream fs = new FileStream("Server Errors.txt", FileMode.Append, FileAccess.Write);
+                StreamWriter sw = new StreamWriter(fs);
+                sw.WriteLine("----------" + DateTime.Now.ToString() + "----------");
+                sw.Write(e.Message);
+                sw.WriteLine();
+                sw.WriteLine();
+                sw.Close();
+                fs.Close();
+                Console.WriteLine(e.Message);
+                active = false;
+                return true;
+            }
+            catch (Exception e)
+            {
+                FileStream fs = new FileStream("Server Errors.txt", FileMode.Append, FileAccess.Write);
+                StreamWriter sw = new StreamWriter(fs);
+                sw.WriteLine("----------" + DateTime.Now.ToString() + "----------");
+                sw.Write(e.Message);
+                sw.WriteLine();
+                sw.WriteLine();
+                sw.Close();
+                fs.Close();
+                Console.WriteLine(e.Message);
                 active = false;
                 return true;
             }

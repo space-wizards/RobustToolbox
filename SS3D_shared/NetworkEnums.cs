@@ -30,7 +30,7 @@ public enum MobMessage
     CreateMob = 0,
     InterpolationPacket,
     DeleteMob,
-    AttackMob
+    ClickMob
 }
 
 public enum GameType

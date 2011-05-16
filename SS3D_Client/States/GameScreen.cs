@@ -73,14 +73,13 @@ namespace SS3D.States
             mEngine.mMiyagiSystem.GUIManager.GUIs.Add(gameChat.chatGUI);
             gameChat.chatPanel.ResizeMode = Miyagi.UI.ResizeModes.None;
             gameChat.chatPanel.Movable = false;
+            gameChat.Transparency = 50;
             defaultChannel = 1; 
-            gameChat.chatTextbox.Submit += new EventHandler<ValueEventArgs<string>>(chatTextbox_Submit);
-            gameChat.chatTextbox.Submit -= new EventHandler<ValueEventArgs<string>>(gameChat.chatTextbox_Submit);
 
+            gameChat.TextSubmitted += new Chatbox.TextSubmitHandler(chatTextbox_TextSubmitted);
 
             mEngine.mNetworkMgr.SetMap(map);
             mEngine.mNetworkMgr.RequestMap();
-
 
             return true;
         }
@@ -206,9 +205,9 @@ namespace SS3D.States
             mEngine.mNetworkMgr.SendMessage(message, NetDeliveryMethod.ReliableUnordered);
         }
 
-        void chatTextbox_Submit(object sender, ValueEventArgs<string> e)
+        void chatTextbox_TextSubmitted(Chatbox chatbox, string text)
         {
-            SendChatMessage(e.Data);
+            SendChatMessage(text);
         }
 
         #endregion

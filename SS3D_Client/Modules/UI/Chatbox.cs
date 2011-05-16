@@ -24,8 +24,7 @@ namespace SS3D.Modules.UI
             get;
         }
 
-        public TextBox chatTextbox;
-        
+        private TextBox chatTextbox;
 
         public GUI chatGUI
         {
@@ -33,10 +32,27 @@ namespace SS3D.Modules.UI
             get;
         }
 
+        public delegate void TextSubmitHandler(Chatbox Chatbox, string Text);
+
         private List<Label> entries = new List<Label>();
 
         private int currentYpos = 0;
         private readonly int maxLines = 20;
+        private int transparency = 1;
+
+        public int Transparency
+        {
+            get
+            {
+                return transparency;
+            }
+
+            set
+            {
+                transparency = Math.Min(Math.Max(value,1), 100);
+                chatGUI.Fade((float)transparency * 0.01f, (float)transparency * 0.01f, 1); //Since we don't have direct access to that :(
+            }
+        }
 
         public Chatbox(string name)
         {
@@ -51,7 +67,6 @@ namespace SS3D.Modules.UI
                 Location = new Point(0, 0),
                 MinSize = new Size(100, 100),
                 AlwaysOnTop = false,
-                Movable = true,
                 ResizeThreshold = new Thickness(3),
                 Padding = new Thickness(2, 2, 2, 2),
                 BorderStyle =
@@ -122,6 +137,7 @@ namespace SS3D.Modules.UI
                     }
                 },
                 Skin = MiyagiResources.Singleton.Skins["ConsoleTextBoxSkin"],
+                TextureFiltering = Miyagi.Common.TextureFiltering.Anisotropic,
                 ClearTextOnSubmit = true
             };
 
@@ -133,9 +149,12 @@ namespace SS3D.Modules.UI
             chatGUI.ZOrder = 10;
         }
 
-        public void chatTextbox_Submit(object sender, ValueEventArgs<string> e)
+        public event TextSubmitHandler TextSubmitted;
+
+        private void chatTextbox_Submit(object sender, ValueEventArgs<string> e)
         {
-            AddLine(e.Data);
+            if (string.IsNullOrWhiteSpace(e.Data)) return;
+            TextSubmitted(this, e.Data);
         }
 
         public void AddLine(string text)
@@ -145,6 +164,7 @@ namespace SS3D.Modules.UI
                 Location = new Point(0, currentYpos),
                 Text = text,
                 AutoSize = true,
+                TextureFiltering = Miyagi.Common.TextureFiltering.Anisotropic,
                 TextStyle =
                 {
                     ForegroundColour = Colours.LightGrey
@@ -153,13 +173,15 @@ namespace SS3D.Modules.UI
             label.SuccessfulHitTest += (s, e) => e.Cancel = true;
             this.chatPanel.Controls.Add(label);
 
-            if (!chatGUI.Visible) //Fuck miyagi. If the ui is hidden the size of it is 0,0. So here. Ugly hack.
+            #region Workaround for a bug
+            if (!chatGUI.Visible)
             {
                 chatGUI.Visible = true;
                 this.currentYpos += label.Size.Height;
                 chatGUI.Visible = false;
             }
-            else this.currentYpos += label.Size.Height;
+            else this.currentYpos += label.Size.Height; 
+            #endregion
 
             this.entries.Add(label);
             if (entries.Count > maxLines) Trim();
@@ -173,6 +195,7 @@ namespace SS3D.Modules.UI
                 Location = new Point(0, currentYpos),
                 Text = text,
                 AutoSize = true,
+                TextureFiltering = Miyagi.Common.TextureFiltering.Anisotropic,
                 TextStyle =
                 {
                     ForegroundColour = colour
@@ -181,13 +204,15 @@ namespace SS3D.Modules.UI
             label.SuccessfulHitTest += (s, e) => e.Cancel = true;
             this.chatPanel.Controls.Add(label);
 
-            if (!chatGUI.Visible) //Fuck miyagi. If the ui is hidden the size of it is 0,0. So here. Ugly hack.
+            #region Workaround for a bug
+            if (!chatGUI.Visible)
             {
                 chatGUI.Visible = true;
                 this.currentYpos += label.Size.Height;
                 chatGUI.Visible = false;
             }
-            else this.currentYpos += label.Size.Height;
+            else this.currentYpos += label.Size.Height; 
+            #endregion
 
             this.entries.Add(label);
             if (entries.Count > maxLines) Trim();
@@ -196,13 +221,13 @@ namespace SS3D.Modules.UI
 
         void Trim()
         {
-            if (entries.Count < 2) return; //This should never happen. Just make sure maxlines is > 2.
+            if (entries.Count < 2) return;
             entries[1].Location = new Point(0, 0);
             Label toDelete = entries[0];
-            entries.RemoveAt(0); //Remove the oldest element.
+            entries.RemoveAt(0);
             currentYpos -= toDelete.Size.Height;
             toDelete.Dispose();
-            for (int i = 0; i < entries.Count; i++) //Update the positions of the other elements.
+            for (int i = 0; i < entries.Count; i++)
             {
                 entries[i].Location = (i != 0) ? new Point(0, entries[i - 1].Location.Y + entries[i - 1].Size.Height) : new Point(0, 0);
             }

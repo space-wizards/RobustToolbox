@@ -27,6 +27,7 @@ namespace SS3D.States
     private StateManager mStateMgr;
     private GUI guiConnectMenu;
     private string ipTextboxIP = "127.0.0.1";
+    private string name = "Player";
     private bool connecting = false;
     private DateTime connectTime;
     private float connectTimeOut = 5000f;
@@ -123,7 +124,34 @@ namespace SS3D.States
         ipTextbox.TextChanged += ipTextBoxChanged;
         guiConnectMenu.Controls.Add(ipTextbox);
 
+        TextBox nameTextbox = new TextBox("nameTextbox")
+        {
+            Size = new Size(160, 32),
+            Location = new Point(820, 330),
+            Padding = new Thickness(2, 2, 2, 2),
+            Text = name,
+            TextStyle =
+            {
+                Alignment = Alignment.MiddleLeft,
+            },
+            TextBoxStyle =
+            {
+                CaretStyle =
+                {
+                    Size = new Size(2, 16),
+                    Colour = Colours.Black
+                }
+            },
+            Skin = MiyagiResources.Singleton.Skins["TextBoxSkin"]
+        };
+        nameTextbox.TextChanged += new EventHandler<TextEventArgs>(nameTextbox_TextChanged);
+        guiConnectMenu.Controls.Add(nameTextbox);
 
+    }
+
+    void nameTextbox_TextChanged(object sender, TextEventArgs e)
+    {
+        name = ((TextBox)sender).Text;
     }
 
     private void ipTextBoxChanged(object sender, Miyagi.Common.Events.TextEventArgs e)
@@ -136,7 +164,8 @@ namespace SS3D.States
         connecting = false;
         //guiConnectMenu.GetControl("connectJoinButton").Enabled = true;
         //((Button)guiConnectMenu.GetControl("connectJoinButton")).Text = "Join";
-
+        //Send client name
+        mEngine.mNetworkMgr.SendClientName(name);
         mStateMgr.RequestStateChange(typeof(GameScreen));
     }
 

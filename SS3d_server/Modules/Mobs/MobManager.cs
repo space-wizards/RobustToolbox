@@ -73,28 +73,29 @@ namespace SS3d_server.Modules.Mobs
                 case(MobMessage.InterpolationPacket):
                     RecieveMobPosUpdate(message);
                     break;
-                case(MobMessage.AttackMob):
-                    HandleAttackMob(message);
+                case(MobMessage.ClickMob):
+                    HandleClickMob(message);
                     break;
             }
 
         }
 
-        private void HandleAttackMob(NetIncomingMessage message)
+        private void HandleClickMob(NetIncomingMessage message)
         {
-            ushort victimID = message.ReadUInt16();
-            ushort attackerID = netServer.clientList[message.SenderConnection].mobID;
+            ushort targetID = message.ReadUInt16();
+            //Renamed "victim" and "attacker" to "target" and "actor" as in "one who acts" this function will be reusable if it is generalized a bit
+            ushort actorID = netServer.clientList[message.SenderConnection].mobID;
 
             // This is ugly for now I'm aware. It will want to be moved into its own "Attack" method, and then through a "Damage" method to apply health effects eventually.
-            Vector3 Dist = mobDict[victimID].serverInfo.position - mobDict[attackerID].serverInfo.position;
+            Vector3 Dist = mobDict[targetID].serverInfo.position - mobDict[actorID].serverInfo.position;
             string weaponName = "fists";
-            if(mobDict[attackerID].heldItem != null)
+            if(mobDict[actorID].heldItem != null)
             {
-                weaponName = mobDict[attackerID].heldItem.ItemType.ToString();
+                weaponName = mobDict[actorID].heldItem.ItemType.ToString();
             }
             if (Dist.Magnitude <= 48)
             {
-                netServer.chatManager.SendChatMessage(0, mobDict[attackerID].name + " hits " + mobDict[victimID].name + " with his " + weaponName, "");
+                netServer.chatManager.SendChatMessage(0, mobDict[actorID].name + " hits " + (targetID!=actorID ? mobDict[targetID].name : "himself") + " with his " + weaponName, "");
             }
         }
 
@@ -190,7 +191,8 @@ namespace SS3d_server.Modules.Mobs
         {
             lastID++;
             Player player = new Player();
-            player.name = "Player" + lastID.ToString();
+            //player.name = "Player" + lastID.ToString();
+            player.name = netServer.clientList[netConnection].playerName;
             player.mobID = lastID;
             player.serverInfo.position = new Vector3(160, 0, 160);
 

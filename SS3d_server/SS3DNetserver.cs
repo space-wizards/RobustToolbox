@@ -264,6 +264,11 @@ namespace SS3d_server
         {
             string name = msg.ReadString();
             clientList[msg.SenderConnection].SetName(name);
+            ushort mobid = clientList[msg.SenderConnection].mobID;
+            string fixedname = name.Trim();
+            if (fixedname.Length < 3)
+                fixedname = "Player";
+            mobManager.mobDict[mobid].name = fixedname;
        }
 
         public void HandleLobbyChat(NetIncomingMessage msg)

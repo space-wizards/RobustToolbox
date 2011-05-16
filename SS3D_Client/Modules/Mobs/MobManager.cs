@@ -284,7 +284,7 @@ namespace SS3D.Modules.Mobs
         {
             NetOutgoingMessage message = networkManager.netClient.CreateMessage();
             message.Write((byte)NetMessage.MobMessage);
-            message.Write((byte)MobMessage.AttackMob);
+            message.Write((byte)MobMessage.ClickMob);
             message.Write(mob.mobID);
 
             networkManager.SendMessage(message, NetDeliveryMethod.Unreliable);

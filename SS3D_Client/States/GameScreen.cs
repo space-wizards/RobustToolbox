@@ -283,13 +283,13 @@ namespace SS3D.States
 
             if (button == MOIS.MouseButtonID.MB_Left)
             {
-                Mogre.Vector3 worldPos;
-                Point mousePos = mEngine.mMiyagiSystem.InputManager.MouseLocation;
-                Mogre.Vector2 mousePosAbs = new Vector2((float)mousePos.X / (float)mEngine.Window.Width, (float)mousePos.Y / (float)mEngine.Window.Height);
-                AtomBaseClass atom = HelperClasses.AtomUtil.PickAtScreenPosition(mEngine, mousePosAbs, out worldPos);
+                Point mouseLoc = mEngine.mMiyagiSystem.InputManager.MouseLocation;
+                Vector2 mousePos = new Vector2((float)mouseLoc.X, (float)mouseLoc.Y);
+                
+                //Changed this because it is simpler to use a helper class just for raycasting, and we don't need the worldpos.
+                AtomBaseClass atom = HelperClasses.AtomUtil.PickAtScreenPosition(mEngine, mousePos);
 
-                Mogre.Vector3 distance = worldPos - mobManager.myMob.Node.Position;
-                if (atom != null && distance.Length <= 48)
+                if (atom != null)
                 {
                     switch (atom.AtomType)
                     {

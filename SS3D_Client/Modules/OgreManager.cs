@@ -14,9 +14,17 @@ namespace SS3D.Modules
   public class OgreManager
   {
     private Root mRoot;
-    private RenderWindow mWindow;
+    public RenderWindow mWindow
+    {
+        private set;
+        get;
+    }
     private SceneManager mSceneMgr;
-    private Camera mCamera;
+    public Camera mCamera
+    {
+        private set;
+        get;
+    }
     private Viewport mViewport;
     private bool mRenderingActive;
     public NetworkManager mNetworkMgr;

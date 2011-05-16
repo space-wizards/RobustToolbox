@@ -5,6 +5,8 @@ using System.Text;
 using SS3D_shared;
 using Mogre;
 
+using MMOC;
+
 // Helper class for client-side AtomBaseClass-related procedures
 // Could be refactored into SS3D_Shared
 namespace SS3D.HelperClasses
@@ -36,6 +38,16 @@ namespace SS3D.HelperClasses
 
             worldPos = screenRay.GetPoint(rayResult.Front.distance);
             return (AtomBaseClass)rayResult.Front.movable.UserObject; //UserObject should ALWAYS be a reference to the object as AtomBaseClass.
+        }
+
+        public static AtomBaseClass PickAtScreenPosition(SS3D.Modules.OgreManager mEngine, Vector2 mousePos)
+        {
+
+            CollisionTools ct = new CollisionTools(mEngine.SceneMgr);
+            CollisionTools.RaycastResult rr = ct.RaycastFromCamera(mEngine.mWindow, mEngine.mCamera, mousePos, Mogre.SceneManager.ENTITY_TYPE_MASK);
+
+            return (AtomBaseClass)rr.Target.UserObject;
+
         }
     }
 }

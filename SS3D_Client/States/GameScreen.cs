@@ -44,6 +44,7 @@ namespace SS3D.States
         private DateTime lastRMBClick = DateTime.Now;
         private int lastMouseX = 0;
         private int lastMouseY = 0;
+        private int lastMouseZ = 0;
         #endregion
 
         #endregion
@@ -307,6 +308,7 @@ namespace SS3D.States
 
         public override void MouseMove(MOIS.MouseEvent mouseState)
         {
+            // r-button camera yaw
             if (mouseState.state.ButtonDown(MOIS.MouseButtonID.MB_Right))
             {
                 int degree;
@@ -321,6 +323,14 @@ namespace SS3D.States
                 mEngine.Camera.ParentNode.Yaw(Mogre.Math.DegreesToRadians(degree), Node.TransformSpace.TS_WORLD);
                 lastMouseX = mouseState.state.X.abs;
             }
+
+            // mousewheel camera zoom
+            if (mouseState.state.Z.rel != 0)
+            {
+                mEngine.CameraDistance += mouseState.state.Z.rel / 6; 
+                // single mousewheel tick is 120 units, so 20 units per tick
+                mEngine.Camera.Position = new Mogre.Vector3(0, mEngine.CameraDistance, -2 * mEngine.CameraDistance / 3);
+           }
         }
 
         #endregion

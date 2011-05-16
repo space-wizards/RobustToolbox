@@ -34,6 +34,21 @@ namespace SS3D.Modules
     private double scalarX;
     private double scalarY;
 
+
+    // camera zoom parameters
+ 
+    private const int maxCameraDistance = 300;
+    private const int minCameraDistance = 60;
+
+    private int cameraDistance = 240;
+
+    public int CameraDistance
+    {
+        get { return cameraDistance; }
+        // clamp to min/max
+        set { cameraDistance = System.Math.Min(System.Math.Max(minCameraDistance, value), maxCameraDistance); }
+    }
+
     public double ScalarX
     {
         private set { scalarX = value; }
@@ -136,11 +151,11 @@ namespace SS3D.Modules
         mCamera.AutoAspectRatio = true;
         mCamera.NearClipDistance = 1.0f;
         mCamera.FarClipDistance = 1500.0f;
-        mCamera.Position = new Mogre.Vector3(0, 300,0);
+        mCamera.Position = new Mogre.Vector3(0, cameraDistance,0);
         mCamera.LookAt(Mogre.Vector3.ZERO);
         // create default viewport
         mViewport = mWindow.AddViewport(mCamera);
-
+   
         // set rendering active flag
         mRenderingActive = true;
 

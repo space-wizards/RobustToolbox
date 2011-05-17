@@ -152,7 +152,7 @@ namespace SS3D.Modules
         mCamera.NearClipDistance = 1.0f;
         mCamera.FarClipDistance = 1500.0f;
         mCamera.Position = new Mogre.Vector3(0, cameraDistance,0);
-        mCamera.LookAt(Mogre.Vector3.ZERO);
+        mCamera.LookAt(0, 32, 0);
         // create default viewport
         mViewport = mWindow.AddViewport(mCamera);
    

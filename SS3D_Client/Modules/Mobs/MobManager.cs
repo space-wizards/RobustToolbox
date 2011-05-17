@@ -260,7 +260,7 @@ namespace SS3D.Modules.Mobs
 
                 SceneNode camNode = mob.Node.CreateChildSceneNode();
                 camNode.AttachObject(mEngine.Camera);
-                mEngine.Camera.SetAutoTracking(true, camNode);
+                mEngine.Camera.SetAutoTracking(true, camNode, new Vector3(0,32,0));
             }
         }
         #endregion

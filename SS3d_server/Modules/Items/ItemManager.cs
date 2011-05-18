@@ -35,7 +35,7 @@ namespace SS3d_server.Modules.Items
 
         public void Update()
         {
-            TimeSpan updateSpan = DateTime.Now - lastItemUpdateSent;
+            TimeSpan updateSpan = netServer.time - lastItemUpdateSent;
             if (updateSpan.TotalMilliseconds > itemUpdateTime)
             {
                 foreach (Item item in itemDict.Values)
@@ -47,7 +47,7 @@ namespace SS3d_server.Modules.Items
                     SendItemUpdate(itemID);
                 }
                 itemsToSend.Clear();
-                lastItemUpdateSent = DateTime.Now;
+                lastItemUpdateSent = netServer.time;
             }
 
         }

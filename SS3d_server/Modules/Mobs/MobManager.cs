@@ -30,7 +30,7 @@ namespace SS3d_server.Modules.Mobs
 
         public void Update()
         {
-            TimeSpan updateSpan = DateTime.Now - lastmobUpdateSent;
+            TimeSpan updateSpan = netServer.time - lastmobUpdateSent;
             if (updateSpan.TotalMilliseconds > mobUpdateTime)
             {
                 foreach (Mob mob in mobDict.Values)
@@ -39,7 +39,7 @@ namespace SS3d_server.Modules.Mobs
                     SendmobUpdate(mob.mobID);
                 }
 
-                lastmobUpdateSent = DateTime.Now;
+                lastmobUpdateSent = netServer.time;
             }
 
         }

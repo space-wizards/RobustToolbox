@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.IO;
+using System.Threading;
 using SS3d_server.Modules.Client;
 using SS3d_server.Modules.Map;
 using SS3d_server.Modules.Items;
@@ -25,6 +26,8 @@ namespace SS3d_server
         public ChatManager chatManager;
         
         bool active = false;
+
+        public DateTime time;   // The server current frame time
         
         #region Server Settings
         string dataFilename = "ServerSettings.cfg";
@@ -35,7 +38,18 @@ namespace SS3d_server
         string serverWelcomeMessage = "Welcome to the server!";
         int serverMaxPlayers = 32;
         GameType gameType = GameType.Game;
+        
+        public int framePeriod = 33; // The time (in milliseconds) between server frames
+
+        public float serverRate     // desired server framerate in frames per second,  backed by framePeriod
+        {
+            get { return 1000.0f / framePeriod; }
+            set { framePeriod = (int)(1000.0f / value); }
+        }
+                
         #endregion
+
+
 
         public void InitModules()
         {
@@ -52,6 +66,7 @@ namespace SS3d_server
         {
             try
             {
+                time = DateTime.Now;
                 LoadDataFile(dataFilename);
                 LoadSettings();
                 InitModules();
@@ -90,6 +105,35 @@ namespace SS3d_server
                 active = false;
                 return true;
             }
+        }
+
+        #region server mainloop
+        
+        // The main server loop
+        public void MainLoop()
+        {
+            TimeSpan sleepTime;
+
+            while (Active)
+            {
+                FrameStart();
+                ProcessPackets();
+                Update();
+                sleepTime = time.AddMilliseconds(framePeriod) - DateTime.Now;
+
+                if (sleepTime.TotalMilliseconds > 0)
+                    Thread.Sleep(sleepTime);
+                //else
+                //    Console.WriteLine("Server slow by " + sleepTime.TotalMilliseconds);
+                
+            }
+        }
+        
+
+        // called at the start of each server frame
+        public void FrameStart()
+        {
+            time = DateTime.Now;
         }
 
         public void ProcessPackets()
@@ -146,6 +190,7 @@ namespace SS3d_server
             itemManager.Update();
             mobManager.Update();
         }
+        #endregion
 
         public bool Active
         {
@@ -156,7 +201,7 @@ namespace SS3d_server
         {
 
         }
-
+        
         public void HandleConnectionApproval(NetConnection sender)
         {
             clientList.Add(sender, new Client(sender));
@@ -387,6 +432,11 @@ namespace SS3d_server
                 serverName = serverSettings["Name"];
             }
             Console.WriteLine("Name: " + serverName);
+            if (serverSettings.ContainsKey("Rate"))
+            {
+                serverRate = float.Parse(serverSettings["Rate"]);
+            }
+            Console.WriteLine("Rate: " + serverRate+ "("+framePeriod+")");
             if (serverSettings.ContainsKey("MapName"))
             {
                 serverMapName = serverSettings["MapName"];
@@ -427,6 +477,10 @@ namespace SS3d_server
             sw.WriteLine("MapName=" + serverMapName);
             sw.WriteLine("#The max number of players allowed");
             sw.WriteLine("MaxPlayers=" + serverMaxPlayers);
+            sw.WriteLine("#The target server update rate in frames per second");
+            sw.WriteLine("Rate=" + serverRate);
+
+
             sw.Close();
             fs.Close();
         }

@@ -436,7 +436,7 @@ namespace SS3d_server
             {
                 serverRate = float.Parse(serverSettings["Rate"]);
             }
-            Console.WriteLine("Rate: " + (int)serverRate+ " ("+framePeriod+" ms)");
+            Console.WriteLine("Rate: " + serverRate+ "("+framePeriod+")");
             if (serverSettings.ContainsKey("MapName"))
             {
                 serverMapName = serverSettings["MapName"];

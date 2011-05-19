@@ -9,18 +9,13 @@ namespace SS3D_shared
 {
     public class Crowbar : Item
     {
-
-         public Crowbar(SceneManager sceneManager, Mogre.Vector3 position, ushort ID)
+        public Crowbar(SceneManager sceneManager, Mogre.Vector3 position, ushort ID)
             : base()
         {
             ItemType = ItemType.Crowbar;
             meshName = "crowbar.mesh";
             name = "crowbar" + ID;
-            heldQuat = new Mogre.Quaternion(new Mogre.Degree(90), Mogre.Vector3.UNIT_Y);
-            heldOffset = new Mogre.Vector3(3, 0, 0);
-
-             
-             string entityName = name;
+            string entityName = name;
             if (sceneManager.HasEntity(entityName))
             {
                 sceneManager.DestroyEntity(entityName);

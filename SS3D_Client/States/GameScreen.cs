@@ -66,6 +66,7 @@ namespace SS3D.States
             mobManager = new MobManager(mEngine, map, mEngine.mNetworkMgr);
             itemManager = new ItemManager(mEngine, map, mEngine.mNetworkMgr, mobManager);
             SetUp();
+            SetUpGUI();
 
             mEngine.mNetworkMgr.MessageArrived += new NetworkMsgHandler(mNetworkMgr_MessageArrived);
 
@@ -84,8 +85,6 @@ namespace SS3D.States
             return true;
         }
 
-
-
         private void SetUp()
         {
             mEngine.SceneMgr.ShadowTextureSelfShadow = true;
@@ -98,6 +97,71 @@ namespace SS3D.States
             mEngine.SceneMgr.AmbientLight = ColourValue.White;
 
             mEngine.SceneMgr.SetSkyBox(true, "SkyBox", 900f, true);
+
+        }
+
+        private void SetUpGUI()
+        {
+            guiGameScreen = new GUI("guiGameScreen");
+            mEngine.mMiyagiSystem.GUIManager.GUIs.Add(guiGameScreen);
+            Point screenSize = new Point((int)mEngine.Window.Width, (int)mEngine.Window.Height);
+            
+            // The health background
+            Panel healthPanel = new Panel("healthPanel")
+            {
+                Size = new Size(48, 105),
+                Location = new Point(10, screenSize.Y - 115),
+                Skin = MiyagiResources.Singleton.Skins["HealthPanelSkin"],
+            };
+
+            // The actual health graphic - this will need to be changed if we do regional damage.
+            PictureBox healthBodyBox = new PictureBox("healthBodyBox")
+            {
+                Size = new Size(42, 99),
+                Location = new Point(2, 3),
+                Bitmap = (System.Drawing.Bitmap)System.Drawing.Image.FromFile("../../../Media/GUI/HuD/healthgreen.png")
+            };
+
+
+            Button leftHandButton = new Button("leftHandButton")
+            {
+                Size = new Size(70, 61),
+                Location = new Point(68, screenSize.Y - 71),
+                Skin = MiyagiResources.Singleton.Skins["LeftHandButtonSkin"]
+            };
+            leftHandButton.MouseDown += LeftHandButtonMouseDown;
+
+            Button rightHandButton = new Button("rightHandButton")
+            {
+                Size = new Size(70, 61),
+                Location = new Point(143, screenSize.Y - 71),
+                Skin = MiyagiResources.Singleton.Skins["RightHandButtonSkin"]
+            };
+            rightHandButton.MouseDown += RightHandButtonMouseDown;
+
+            // These two boxes contain the pictures of the item we are holding in that hand. They are set in the itemmanager
+            // when we recieve a message that we successfully picked up an option, that is why their name doesn't follow the
+            // convention exactly.
+            PictureBox leftHandBox = new PictureBox("LHandBox")
+            {
+                Size = new Size(28,48),
+                Location = new Point(15, 5)
+            };
+
+            PictureBox rightHandBox = new PictureBox("RHandBox")
+            {
+                Size = new Size(28, 48),
+                Location = new Point(15, 5)
+            };
+
+            leftHandButton.Controls.Add(leftHandBox);
+            rightHandButton.Controls.Add(rightHandBox);
+
+            healthPanel.Controls.Add(healthBodyBox);
+
+            guiGameScreen.Controls.Add(healthPanel);
+            guiGameScreen.Controls.Add(leftHandButton);
+            guiGameScreen.Controls.Add(rightHandButton);
 
         }
 
@@ -254,6 +318,19 @@ namespace SS3D.States
             {
                 mobManager.myMob.speed = mobManager.myMob.runSpeed;
             }
+
+            if (keyState.key == MOIS.KeyCode.KC_1)
+            {
+                guiGameScreen.GetControl("leftHandButton").Focused = true;
+                guiGameScreen.GetControl("rightHandButton").Focused = false;
+                mobManager.myMob.selectedHand = MobHand.LHand;
+            }
+            else if (keyState.key == MOIS.KeyCode.KC_2)
+            {
+                guiGameScreen.GetControl("leftHandButton").Focused = false;
+                guiGameScreen.GetControl("rightHandButton").Focused = true;
+                mobManager.myMob.selectedHand = MobHand.RHand;
+            }
         }
 
         public override void KeyUp(MOIS.KeyEvent keyState)
@@ -331,6 +408,15 @@ namespace SS3D.States
            }
         }
 
+        private void LeftHandButtonMouseDown(object sender, MouseButtonEventArgs e)
+        {
+            mobManager.myMob.selectedHand = MobHand.LHand;
+        }
+
+        private void RightHandButtonMouseDown(object sender, MouseButtonEventArgs e)
+        {
+            mobManager.myMob.selectedHand = MobHand.RHand;
+        }
         #endregion
 
     }

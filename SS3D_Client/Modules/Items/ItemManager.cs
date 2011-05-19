@@ -2,10 +2,13 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using System.Drawing;
 
 using Lidgren.Network;
 using SS3D_shared;
 using Mogre;
+
+using Miyagi.UI.Controls;
 
 namespace SS3D.Modules.Items
 {
@@ -167,29 +170,62 @@ namespace SS3D.Modules.Items
             NetOutgoingMessage message = networkManager.netClient.CreateMessage();
             message.Write((byte)NetMessage.ItemMessage);
             message.Write((byte)ItemMessage.ClickItem);
+            message.Write((byte)mobManager.myMob.selectedHand);
             message.Write(item.itemID);
             networkManager.SendMessage(message, NetDeliveryMethod.Unreliable);
         }
 
         private void HandlePickupItem(NetIncomingMessage message)
         {
+            MobHand hand = (MobHand)message.ReadByte();
             ushort mobID = message.ReadUInt16();
             ushort itemID = message.ReadUInt16();
+
+            if(!itemDict.ContainsKey(itemID))
+            {
+                return; 
+                // OH SHIT THIS IS NOT GOOD! 
+                // We somehow got info about an ItemID we've never heard of!
+                // We will probably want to add something to query the server to get
+                // info about it, then handle the rest of this message once we have that.
+            }
+
             Item item = itemDict[itemID];
 
-            item.Entity.DetachFromParent();
             Mob mob = mobManager.GetMob(mobID);
 
             if (mob == null)
             {
                 return;
+                // OH SHIT THIS IS EVEN WORSE!
+                // We somehow got info that a mob we have never heard about
+                // just picked something up! We'll want a method here to ask the server
+                // to send us info about him so we can spawn him locally!
             }
+
+            item.Entity.DetachFromParent();
 
             mob.Entity.AttachObjectToBone("RHand", item.Entity, item.heldQuat, item.heldOffset);
 
-            mob.heldItem = item;
             item.holder = mob;
-            
+            item.holderHand = hand;
+
+            if (hand == MobHand.RHand)
+            {
+                mob.rightHandItem = item;
+            }
+            else
+            {
+                mob.leftHandItem = item;
+            }
+
+            // If WE picked up the object, we want to display the icon in the UI, and also probably do some
+            // other stuff here too in the future.
+            if (mob.mobID == mobManager.myMob.mobID)
+            {
+                PictureBox box = (PictureBox)mEngine.mMiyagiSystem.GUIManager.GetControl(hand + "Box");
+                box.Bitmap = (Bitmap)System.Drawing.Image.FromFile("../../../Media/GUI/HuD/" + item.name + "_icon.png");
+            }
         }
     }
 }

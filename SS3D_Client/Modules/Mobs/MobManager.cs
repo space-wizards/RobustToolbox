@@ -126,6 +126,7 @@ namespace SS3D.Modules.Mobs
             }
                    
         }
+
         public void MoveMe(int i)
         {
             Mogre.Vector3 lastPosition = mobDict[myMobID].Node.Position;
@@ -161,7 +162,7 @@ namespace SS3D.Modules.Mobs
         {
             foreach (Mob mob in mobDict.Values)
             {
-                //mEngine.SceneMgr.DestroyEntity(mob.Entity);
+                //mEngine.SceneMgr.DestroyEntity(mob.Entity); For some reason this creates an error on quit...
                 mEngine.SceneMgr.DestroySceneNode(mob.Node);
             }
             mobDict = null;
@@ -224,6 +225,12 @@ namespace SS3D.Modules.Mobs
             mobDict[mobID].Node.SetOrientation(rotW, 0, rotY, 0);
         }
 
+        // What we want to eventually do here is that if we recieve a packet updating our own position from the
+        // server we know something has gone wrong - we've moved somewhere we shouldn't be able to for some reason.
+        // We will want to interpolate between the recieved position and our current one (not just snap us back as that
+        // looks ugly and nobody likes rubberbanding). We may also want to have some way of asking the server WHY we couldn't
+        // move there, as we can assume some information we have about the world is perhaps incorrect, if something static is
+        // in our way (a wall for example).
         private void UpdateMyMobPosition()
         {
 
@@ -285,6 +292,7 @@ namespace SS3D.Modules.Mobs
             NetOutgoingMessage message = networkManager.netClient.CreateMessage();
             message.Write((byte)NetMessage.MobMessage);
             message.Write((byte)MobMessage.ClickMob);
+            message.Write((byte)myMob.selectedHand);
             message.Write(mob.mobID);
 
             networkManager.SendMessage(message, NetDeliveryMethod.Unreliable);

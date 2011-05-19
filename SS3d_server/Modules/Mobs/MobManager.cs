@@ -82,6 +82,7 @@ namespace SS3d_server.Modules.Mobs
 
         private void HandleClickMob(NetIncomingMessage message)
         {
+            MobHand hand = (MobHand)message.ReadByte();
             ushort targetID = message.ReadUInt16();
             //Renamed "victim" and "attacker" to "target" and "actor" as in "one who acts" this function will be reusable if it is generalized a bit
             ushort actorID = netServer.clientList[message.SenderConnection].mobID;
@@ -89,12 +90,26 @@ namespace SS3d_server.Modules.Mobs
             // This is ugly for now I'm aware. It will want to be moved into its own "Attack" method, and then through a "Damage" method to apply health effects eventually.
             Vector3 Dist = mobDict[targetID].serverInfo.position - mobDict[actorID].serverInfo.position;
             string weaponName = "fists";
-            if(mobDict[actorID].heldItem != null)
+            switch (hand)
             {
-                weaponName = mobDict[actorID].heldItem.ItemType.ToString();
+                case MobHand.LHand:
+                    if (mobDict[actorID].leftHandItem != null)
+                    {
+                        weaponName = mobDict[actorID].leftHandItem.name;
+                    }
+                    break;
+                case MobHand.RHand:
+                    if (mobDict[actorID].rightHandItem != null)
+                    {
+                        weaponName = mobDict[actorID].rightHandItem.name;
+                    }
+                    break;
             }
             if (Dist.Magnitude <= 48)
             {
+                // This is also ugly - we dont want to have to hack messages into the chatmanager, it should have a different method to send information ones perhaps?
+                // This could also be easily optimised bandwidth wise by sendinging IDs instead of a string for the names of the mobs and items used, don't know if it
+                // is worth it though!
                 netServer.chatManager.SendChatMessage(0, mobDict[actorID].name + " hits " + (targetID!=actorID ? mobDict[targetID].name : "himself") + " with his " + weaponName, "");
             }
         }

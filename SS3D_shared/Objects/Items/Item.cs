@@ -19,6 +19,9 @@ namespace SS3D_shared
 
         public float power = 0.0f;
 
+        public Mogre.Vector3 heldOffset = Mogre.Vector3.ZERO;           // the offset vector when held
+        public Mogre.Quaternion heldQuat = Mogre.Quaternion.IDENTITY;   // the rotation when held
+
         public Item()
         {
             AtomType = global::AtomType.Item;

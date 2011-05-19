@@ -44,7 +44,6 @@ namespace SS3D.States
         private DateTime lastRMBClick = DateTime.Now;
         private int lastMouseX = 0;
         private int lastMouseY = 0;
-        private int lastMouseZ = 0;
         #endregion
 
         #endregion

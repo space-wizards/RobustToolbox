@@ -61,7 +61,7 @@ namespace SS3D.States
 
             mEngine.mMiyagiSystem.GUIManager.DisposeAllGUIs();
 
-            map = new Map(mEngine);
+            map = new Map(mEngine, false);
 
             mobManager = new MobManager(mEngine, map, mEngine.mNetworkMgr);
             itemManager = new ItemManager(mEngine, map, mEngine.mNetworkMgr, mobManager);

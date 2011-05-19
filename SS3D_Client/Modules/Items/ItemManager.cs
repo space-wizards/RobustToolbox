@@ -175,9 +175,8 @@ namespace SS3D.Modules.Items
         {
             ushort mobID = message.ReadUInt16();
             ushort itemID = message.ReadUInt16();
-            Item item = itemDict[itemID];
 
-            item.Entity.DetachFromParent();
+            itemDict[itemID].Entity.DetachFromParent();
             Mob mob = mobManager.GetMob(mobID);
 
             if (mob == null)
@@ -185,10 +184,10 @@ namespace SS3D.Modules.Items
                 return;
             }
 
-            mob.Entity.AttachObjectToBone("RHand", item.Entity, item.heldQuat, item.heldOffset);
+            mob.Entity.AttachObjectToBone("RHand", itemDict[itemID].Entity);
 
-            mob.heldItem = item;
-            item.holder = mob;
+            mob.heldItem = itemDict[itemID];
+            itemDict[itemID].holder = mob;
             
         }
     }

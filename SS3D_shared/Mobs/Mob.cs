@@ -19,7 +19,10 @@ namespace SS3D_shared
 
         public float speed = 0.0f;
 
-        public Item heldItem; // Just a temporary storage spot, for now.
+        public Item leftHandItem; // Just a temporary storage spot, for now.
+        public Item rightHandItem;
+        public MobHand selectedHand = MobHand.LHand; // The hand we are currently using, and also used to tell clients which
+                                                     // hand to attach items to on remote mobs when the pick something up.
 
         public Mob()
         {

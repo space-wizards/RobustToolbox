@@ -33,6 +33,12 @@ public enum MobMessage
     ClickMob
 }
 
+public enum MobHand
+{
+    RHand = 0,
+    LHand
+}
+
 public enum GameType
 {
     MapEditor = 0,

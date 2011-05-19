@@ -205,7 +205,7 @@ namespace SS3D.Modules.Items
 
             item.Entity.DetachFromParent();
 
-            mob.Entity.AttachObjectToBone("RHand", item.Entity, item.heldQuat, item.heldOffset);
+            mob.Entity.AttachObjectToBone(hand.ToString(), item.Entity, item.heldQuat, item.heldOffset);
 
             item.holder = mob;
             item.holderHand = hand;

@@ -15,6 +15,7 @@ namespace SS3D.Modules.Map
         public int mapHeight; // Number of tiles up the map (must be a multiple of StaticGeoSize)
         public int tileSpacing = 16; // Distance between tiles
         public AxisAlignedBox[,] boundingBoxArray;
+        private bool useStaticGeo;
 
         private OgreManager mEngine;
         private geometryMeshManager meshManager; // Builds and stores the meshes for all floors/walls.
@@ -33,9 +34,10 @@ namespace SS3D.Modules.Map
         private Vector2 lastCamGeoPos = Vector2.UNIT_SCALE;
         #endregion
 
-        public Map(OgreManager _mEngine)
+        public Map(OgreManager _mEngine, bool _useStaticGeo)
         {
             mEngine = _mEngine;
+            useStaticGeo = _useStaticGeo;
         }
 
         #region Startup / Loading
@@ -47,13 +49,16 @@ namespace SS3D.Modules.Map
             mapWidth = width;
             mapHeight = height;
 
-            float geoSize = StaticGeoSize;
-            
-            // Get the width and height our staticgeometry array needs to be.
-            StaticGeoX = (int)System.Math.Ceiling(width / geoSize);
-            StaticGeoZ = (int)System.Math.Ceiling(height / geoSize);
+            if (useStaticGeo)
+            {
+                float geoSize = StaticGeoSize;
 
-            InitStaticgeometry();
+                // Get the width and height our staticgeometry array needs to be.
+                StaticGeoX = (int)System.Math.Ceiling(width / geoSize);
+                StaticGeoZ = (int)System.Math.Ceiling(height / geoSize);
+
+                InitStaticgeometry();
+            }
 
             // Init our tileArray.
             tileArray = new BaseTile[mapWidth, mapHeight];
@@ -80,22 +85,28 @@ namespace SS3D.Modules.Map
                         tileArray[x, z] = GenerateNewTile(TileType.Floor, new Vector3(posX, 0, posZ));  
                     }
 
-                    // Get which piece of the staticGeometry array this tile belongs in (automatically
-                    // worked out when the tile is created)
-                    int GeoX = tileArray[x,z].GeoPosX;
-                    int GeoZ = tileArray[x,z].GeoPosZ;
+                    if (useStaticGeo)
+                    {
+                        // Get which piece of the staticGeometry array this tile belongs in (automatically
+                        // worked out when the tile is created)
+                        int GeoX = tileArray[x, z].GeoPosX;
+                        int GeoZ = tileArray[x, z].GeoPosZ;
 
-                    // Add it to the appropriate staticgeometry array.
-                    staticGeometry[GeoX, GeoZ].AddSceneNode(tileArray[x,z].Node);
-                    // Remove it from the main scene manager, otherwise it would be draw twice.
-                    //mEngine.SceneMgr.RootSceneNode.RemoveChild(tileArray[x, z].tileNode);
-                    tileArray[x, z].Node.SetVisible(false);
+                        // Add it to the appropriate staticgeometry array.
+                        staticGeometry[GeoX, GeoZ].AddSceneNode(tileArray[x, z].Node);
+                        // Remove it from the main scene manager, otherwise it would be draw twice.
+                        //mEngine.SceneMgr.RootSceneNode.RemoveChild(tileArray[x, z].tileNode);
+                        tileArray[x, z].Node.SetVisible(false);
+                    }
 
                 }
             }
 
-            // Build all the staticgeometrys.
-            BuildAllgeometry();
+            if (useStaticGeo)
+            {
+                // Build all the staticgeometrys.
+                BuildAllgeometry();
+            }
             return true;
         }
 
@@ -107,32 +118,38 @@ namespace SS3D.Modules.Map
             mapWidth = width;
             mapHeight = height;
 
-            float geoSize = StaticGeoSize;
-            // Get the width and height our staticgeometry array needs to be.
-            StaticGeoX = (int)System.Math.Ceiling(width / geoSize);
-            StaticGeoZ = (int)System.Math.Ceiling(height / geoSize);
+            if (useStaticGeo)
+            {
+                float geoSize = StaticGeoSize;
+                // Get the width and height our staticgeometry array needs to be.
+                StaticGeoX = (int)System.Math.Ceiling(width / geoSize);
+                StaticGeoZ = (int)System.Math.Ceiling(height / geoSize);
 
-            InitStaticgeometry();
+                InitStaticgeometry();
+            }
 
             ParseNameArray(savedArray);
 
-            for (int x = 0; x < mapWidth; x++)
+            if (useStaticGeo)
             {
-                for (int z = 0; z < mapHeight; z++)
+                for (int x = 0; x < mapWidth; x++)
                 {
-                    
-                    // Get which piece of the staticGeometry array this tile belongs in (automatically
-                    // worked out when the tile is created)
-                    int GeoX = tileArray[x, z].GeoPosX;
-                    int GeoZ = tileArray[x, z].GeoPosZ;
+                    for (int z = 0; z < mapHeight; z++)
+                    {
 
-                    // Add it to the appropriate staticgeometry array.
-                    staticGeometry[GeoX, GeoZ].AddSceneNode(tileArray[x, z].Node);
+                        // Get which piece of the staticGeometry array this tile belongs in (automatically
+                        // worked out when the tile is created)
+                        int GeoX = tileArray[x, z].GeoPosX;
+                        int GeoZ = tileArray[x, z].GeoPosZ;
+
+                        // Add it to the appropriate staticgeometry array.
+                        staticGeometry[GeoX, GeoZ].AddSceneNode(tileArray[x, z].Node);
+                    }
                 }
-            }
 
-            // Build all the staticgeometrys.
-            BuildAllgeometry();
+                // Build all the staticgeometrys.
+                BuildAllgeometry();
+            }
             mEngine.Update();
             return true;
         }
@@ -169,35 +186,40 @@ namespace SS3D.Modules.Map
                             break;
                     }
 
-                    //mEngine.SceneMgr.RootSceneNode.RemoveChild(tileArray[x, z].tileNode);
-                    tileArray[x, z].Node.SetVisible(false);
+                    if (useStaticGeo)
+                    {
+                        tileArray[x, z].Node.SetVisible(false);
+                    }
                 }
             }
 
-            float geoSize = StaticGeoSize;
-            // Get the width and height our staticgeometry array needs to be.
-            StaticGeoX = (int)System.Math.Ceiling(mapWidth / geoSize);
-            StaticGeoZ = (int)System.Math.Ceiling(mapHeight / geoSize);
-
-            InitStaticgeometry();
-
-            for (int x = 0; x < mapWidth; x++)
+            if (useStaticGeo)
             {
-                for (int z = 0; z < mapHeight; z++)
+                float geoSize = StaticGeoSize;
+                // Get the width and height our staticgeometry array needs to be.
+                StaticGeoX = (int)System.Math.Ceiling(mapWidth / geoSize);
+                StaticGeoZ = (int)System.Math.Ceiling(mapHeight / geoSize);
+
+                InitStaticgeometry();
+
+                for (int x = 0; x < mapWidth; x++)
                 {
+                    for (int z = 0; z < mapHeight; z++)
+                    {
 
-                    // Get which piece of the staticGeometry array this tile belongs in (automatically
-                    // worked out when the tile is created)
-                    int GeoX = tileArray[x, z].GeoPosX;
-                    int GeoZ = tileArray[x, z].GeoPosZ;
+                        // Get which piece of the staticGeometry array this tile belongs in (automatically
+                        // worked out when the tile is created)
+                        int GeoX = tileArray[x, z].GeoPosX;
+                        int GeoZ = tileArray[x, z].GeoPosZ;
 
-                    // Add it to the appropriate staticgeometry array.
-                    staticGeometry[GeoX, GeoZ].AddSceneNode(tileArray[x, z].Node);
+                        // Add it to the appropriate staticgeometry array.
+                        staticGeometry[GeoX, GeoZ].AddSceneNode(tileArray[x, z].Node);
+                    }
                 }
-            }
 
-            // Build all the staticgeometrys.
-            BuildAllgeometry();
+                // Build all the staticgeometrys.
+                BuildAllgeometry();
+            }
             mEngine.Update();
             return true;
         }
@@ -225,8 +247,10 @@ namespace SS3D.Modules.Map
                             break;
                     }
 
-                    //mEngine.SceneMgr.RootSceneNode.RemoveChild(tileArray[x, z].tileNode);
-                    tileArray[x, z].Node.SetVisible(false);
+                    if (useStaticGeo)
+                    {
+                        tileArray[x, z].Node.SetVisible(false);
+                    }
                 }
             }
         }
@@ -386,12 +410,15 @@ namespace SS3D.Modules.Map
             }
 
             tileArray[x, z] = tile;
-            //mEngine.SceneMgr.RootSceneNode.RemoveChild(tileArray[x, z].tileNode);
-            tileArray[x, z].Node.SetVisible(false);
-            int xPos = tileArray[x, z].GeoPosX;
-            int yPos = tileArray[x, z].GeoPosZ;
+            if (useStaticGeo)
+            {
+                tileArray[x, z].Node.SetVisible(false);
+                int xPos = tileArray[x, z].GeoPosX;
+                int yPos = tileArray[x, z].GeoPosZ;
 
-            RepopRebuildOnegeometry(xPos, yPos);
+
+                RepopRebuildOnegeometry(xPos, yPos);
+            }
             return true;
         }
 
@@ -556,14 +583,17 @@ namespace SS3D.Modules.Map
         #region Shutdown
         public void Shutdown()
         {
-            for (int i = 0; i < StaticGeoX; i++)
+            if (useStaticGeo)
             {
-                for (int j = 0; j < StaticGeoZ; j++)
+                for (int i = 0; i < StaticGeoX; i++)
                 {
-                    staticGeometry[i, j].Reset();
+                    for (int j = 0; j < StaticGeoZ; j++)
+                    {
+                        staticGeometry[i, j].Reset();
+                    }
                 }
+                mEngine.SceneMgr.DestroyAllStaticGeometry();
             }
-            mEngine.SceneMgr.DestroyAllStaticGeometry();
             mEngine.SceneMgr.DestroyAllEntities();
             for (int x = 0; x < mapWidth; x++)
             {

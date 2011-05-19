@@ -75,7 +75,7 @@ namespace SS3D.States
             mEngine.SceneMgr.SetSkyBox(true, "SkyBox", 900f, true);
 
             mEngine.SceneMgr.ShadowTechnique = ShadowTechnique.SHADOWTYPE_TEXTURE_ADDITIVE_INTEGRATED;
-            map = new Map(mEngine);
+            map = new Map(mEngine, false);
 
             mapSaver = new MapSaver(map, mEngine);
 

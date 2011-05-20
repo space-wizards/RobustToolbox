@@ -22,6 +22,7 @@ public enum ItemMessage
     InterpolationPacket,
     ClickItem,
     PickUpItem,
+    DropItem,
     UseItem // etc.
 }
 

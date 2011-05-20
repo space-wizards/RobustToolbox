@@ -52,6 +52,9 @@ namespace SS3D.Modules.Items
                 case ItemMessage.PickUpItem:
                     HandlePickupItem(message);
                     break;
+                case ItemMessage.DropItem:
+                    HandleDropItem(message);
+                    break;
                 default:
                     break; 
             }
@@ -173,6 +176,97 @@ namespace SS3D.Modules.Items
             message.Write((byte)mobManager.myMob.selectedHand);
             message.Write(item.itemID);
             networkManager.SendMessage(message, NetDeliveryMethod.Unreliable);
+        }
+
+        public void DropItem(MobHand hand)
+        {
+            Mob myMob = mobManager.myMob;
+            uint itemID = 0;
+            if (hand == MobHand.RHand)
+            {
+                if (myMob.rightHandItem == null)
+                {
+                    return;
+                }
+                else
+                {
+                    itemID = myMob.rightHandItem.itemID;
+                }
+            }
+            else
+            {
+                if (myMob.leftHandItem == null)
+                {
+                    return;
+                }
+                else
+                {
+                    itemID = myMob.leftHandItem.itemID;
+                }
+            }
+
+            NetOutgoingMessage message = networkManager.netClient.CreateMessage();
+            message.Write((byte)NetMessage.ItemMessage);
+            message.Write((byte)ItemMessage.DropItem);
+            message.Write(itemID);
+            networkManager.SendMessage(message, NetDeliveryMethod.ReliableOrdered);
+        }
+
+        private void HandleDropItem(NetIncomingMessage message)
+        {
+            ushort mobID = message.ReadUInt16();
+            ushort itemID = message.ReadUInt16();
+            float posX = message.ReadFloat();
+            float posZ = message.ReadFloat();
+
+            if (!itemDict.ContainsKey(itemID))
+            {
+                return;
+            }
+
+            Item item = itemDict[itemID];
+
+            Mob mob = mobManager.GetMob(mobID);
+
+            if (mob == null)
+            {
+                return;
+            }
+
+            Vector3 itemPos = new Vector3(posX, 0, posZ);
+
+            if (mob.rightHandItem != null && mob.rightHandItem.itemID == itemID)
+            {
+                mob.Entity.DetachObjectFromBone(item.Entity);
+                mob.rightHandItem = null;
+                item.holder = null;
+                item.Entity.DetachFromParent();
+                // The item already has a scenenode around we detached it from earlier
+                // so lets just attach it to that again and move it into the new position.
+                item.Node.AttachObject(item.Entity);
+                item.Node.Position = itemPos;
+            }
+            else if (mob.leftHandItem != null && mob.leftHandItem.itemID == itemID)
+            {
+                mob.Entity.DetachObjectFromBone(item.Entity);
+                mob.leftHandItem = null;
+                item.holder = null;
+                item.Entity.DetachFromParent();
+                item.Node.AttachObject(item.Entity);
+                item.Node.Position = itemPos;
+            }
+            else
+            {
+                // For some reason we didn't know this item was being held by anyone.
+                // This should never happen, but just in case lets put it in its new
+                // position.
+
+                item.holder = null;
+                item.Entity.DetachFromParent();
+                item.Node.AttachObject(item.Entity);
+                item.Node.Position = itemPos;
+            }
+
         }
 
         private void HandlePickupItem(NetIncomingMessage message)

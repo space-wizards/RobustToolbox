@@ -84,6 +84,9 @@ namespace SS3d_server.Modules.Items
                 case ItemMessage.ClickItem:
                     HandleClickItem(message);
                     break;
+                case ItemMessage.DropItem:
+                    HandleDropItem(message);
+                    break;
             }
 
         }
@@ -156,6 +159,31 @@ namespace SS3d_server.Modules.Items
                             break;
                     }
                 }
+            }
+        }
+
+        private void HandleDropItem(NetIncomingMessage message)
+        {
+            ushort itemID = message.ReadUInt16();
+            ushort mobID = netServer.clientList[message.SenderConnection].mobID;
+
+
+            Mob mob = mobManager.mobDict[mobID];
+            Item item = itemDict[itemID];
+
+            if (mob.rightHandItem != null && mob.rightHandItem.itemID == itemID)
+            {
+                mob.rightHandItem = null;
+                item.holder = null;
+                item.serverInfo.position = mob.serverInfo.position;
+                SendDropItem(itemID, mobID);
+            }
+            else if (mob.leftHandItem != null && mob.leftHandItem.itemID == itemID)
+            {
+                mob.leftHandItem = null;
+                item.holder = null;
+                item.serverInfo.position = mob.serverInfo.position;
+                SendDropItem(itemID, mobID);
             }
         }
 
@@ -258,6 +286,18 @@ namespace SS3d_server.Modules.Items
             message.Write(mobID);
             message.Write(itemID);
             netServer.SendMessageTo(message, netConnection);
+        }
+
+        private void SendDropItem(ushort itemID, ushort mobID)
+        {
+            NetOutgoingMessage message = netServer.netServer.CreateMessage();
+            message.Write((byte)NetMessage.ItemMessage);
+            message.Write((byte)ItemMessage.DropItem);
+            message.Write(mobID);
+            message.Write(itemID);
+            message.Write((float)mobManager.mobDict[mobID].serverInfo.position.X);
+            message.Write((float)mobManager.mobDict[mobID].serverInfo.position.Z);
+            netServer.SendMessageToAll(message);
         }
 
         // A new player is joining so lets send them everything we know!

@@ -61,7 +61,7 @@ namespace SS3D.States
 
             mEngine.mMiyagiSystem.GUIManager.DisposeAllGUIs();
 
-            map = new Map(mEngine, false);
+            map = new Map(mEngine, true);
 
             mobManager = new MobManager(mEngine, map, mEngine.mNetworkMgr);
             itemManager = new ItemManager(mEngine, map, mEngine.mNetworkMgr, mobManager);
@@ -330,6 +330,10 @@ namespace SS3D.States
                 guiGameScreen.GetControl("leftHandButton").Focused = false;
                 guiGameScreen.GetControl("rightHandButton").Focused = true;
                 mobManager.myMob.selectedHand = MobHand.RHand;
+            }
+            else if (keyState.key == MOIS.KeyCode.KC_Q)
+            {
+                itemManager.DropItem(mobManager.myMob.selectedHand);
             }
         }
 

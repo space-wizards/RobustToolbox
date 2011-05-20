@@ -234,9 +234,10 @@ namespace SS3D.Modules.Items
             }
 
             Vector3 itemPos = new Vector3(posX, 0, posZ);
-
+            MobHand hand = MobHand.LHand;
             if (mob.rightHandItem != null && mob.rightHandItem.itemID == itemID)
             {
+                hand = MobHand.RHand;
                 mob.Entity.DetachObjectFromBone(item.Entity);
                 mob.rightHandItem = null;
                 item.holder = null;
@@ -265,6 +266,11 @@ namespace SS3D.Modules.Items
                 item.Entity.DetachFromParent();
                 item.Node.AttachObject(item.Entity);
                 item.Node.Position = itemPos;
+            }
+
+            if (mobID == mobManager.myMob.mobID)
+            {
+                mEngine.mMiyagiSystem.GUIManager.GetControl(hand + "Box").Visible = false;
             }
 
         }
@@ -319,6 +325,7 @@ namespace SS3D.Modules.Items
             {
                 PictureBox box = (PictureBox)mEngine.mMiyagiSystem.GUIManager.GetControl(hand + "Box");
                 box.Bitmap = (Bitmap)System.Drawing.Image.FromFile("../../../Media/GUI/HuD/" + item.name + "_icon.png");
+                box.Visible = true;
             }
         }
     }

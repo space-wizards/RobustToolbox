@@ -109,7 +109,7 @@ namespace SS3D.States
             Text = ipTextboxIP,
             TextStyle =
             {
-                Alignment = Alignment.MiddleLeft,
+                Alignment = Alignment.MiddleCenter,
             },
             TextBoxStyle =
             {
@@ -132,7 +132,7 @@ namespace SS3D.States
             Text = name,
             TextStyle =
             {
-                Alignment = Alignment.MiddleLeft,
+                Alignment = Alignment.MiddleCenter,
             },
             TextBoxStyle =
             {

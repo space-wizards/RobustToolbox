@@ -59,6 +59,8 @@ namespace SS3D.States
             mEngine = _mgr.Engine;
             mStateMgr = _mgr;
 
+            defaultChannel = 1;
+
             mEngine.mMiyagiSystem.GUIManager.DisposeAllGUIs();
 
             map = new Map(mEngine, true);
@@ -70,15 +72,7 @@ namespace SS3D.States
 
             mEngine.mNetworkMgr.MessageArrived += new NetworkMsgHandler(mNetworkMgr_MessageArrived);
 
-            gameChat = new Chatbox("gameChat");
-            mEngine.mMiyagiSystem.GUIManager.GUIs.Add(gameChat.chatGUI);
-            gameChat.chatPanel.ResizeMode = Miyagi.UI.ResizeModes.None;
-            gameChat.chatPanel.Movable = false;
-            gameChat.Transparency = 50;
-            defaultChannel = 1; 
-
-            gameChat.TextSubmitted += new Chatbox.TextSubmitHandler(chatTextbox_TextSubmitted);
-
+            
             mEngine.mNetworkMgr.SetMap(map);
             mEngine.mNetworkMgr.RequestMap();
 
@@ -102,6 +96,15 @@ namespace SS3D.States
 
         private void SetUpGUI()
         {
+            // The chatbox
+            gameChat = new Chatbox("gameChat");
+            mEngine.mMiyagiSystem.GUIManager.GUIs.Add(gameChat.chatGUI);
+            gameChat.chatPanel.ResizeMode = Miyagi.UI.ResizeModes.None;
+            gameChat.chatPanel.Movable = false;
+            gameChat.Transparency = 50;
+            gameChat.TextSubmitted += new Chatbox.TextSubmitHandler(chatTextbox_TextSubmitted);
+
+
             guiGameScreen = new GUI("guiGameScreen");
             mEngine.mMiyagiSystem.GUIManager.GUIs.Add(guiGameScreen);
             Point screenSize = new Point((int)mEngine.Window.Width, (int)mEngine.Window.Height);
@@ -318,7 +321,7 @@ namespace SS3D.States
 
         public override void KeyDown(MOIS.KeyEvent keyState)
         {
-            if (gameChat.chatGUI.GetControl("ChatTextbox").Focused)
+            if (gameChat.HasFocus())
             {
                 return;
             }
@@ -339,20 +342,28 @@ namespace SS3D.States
                 guiGameScreen.GetControl("rightHandButton").Focused = true;
                 mobManager.myMob.selectedHand = MobHand.RHand;
             }
+            else if (keyState.key == MOIS.KeyCode.KC_Q)
+            {
+                itemManager.DropItem(mobManager.myMob.selectedHand);
+            }
             else if (keyState.key == MOIS.KeyCode.KC_SPACE)
             {
                 if (mobManager.myMob.selectedHand == MobHand.LHand)
                 {
+                    guiGameScreen.GetControl("leftHandButton").Focused = false;
+                    guiGameScreen.GetControl("rightHandButton").Focused = true;
                     mobManager.myMob.selectedHand = MobHand.RHand;
                 }
                 else
                 {
+                    guiGameScreen.GetControl("leftHandButton").Focused = true;
+                    guiGameScreen.GetControl("rightHandButton").Focused = false;
                     mobManager.myMob.selectedHand = MobHand.LHand;
                 }
             }
-            else if (keyState.key == MOIS.KeyCode.KC_Q)
+            else if (keyState.key == MOIS.KeyCode.KC_T)
             {
-                itemManager.DropItem(mobManager.myMob.selectedHand);
+                gameChat.SetInputFocus();
             }
         }
 

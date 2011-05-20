@@ -414,12 +414,26 @@ namespace SS3D.States
 
         private void LeftHandButtonMouseDown(object sender, MouseButtonEventArgs e)
         {
-            mobManager.myMob.selectedHand = MobHand.LHand;
+            if (e.MouseButton == MouseButton.Left)
+            {
+                mobManager.myMob.selectedHand = MobHand.LHand;
+            }
+            else if (e.MouseButton == MouseButton.Right)
+            {
+                itemManager.DropItem(MobHand.LHand);
+            }
         }
 
         private void RightHandButtonMouseDown(object sender, MouseButtonEventArgs e)
         {
-            mobManager.myMob.selectedHand = MobHand.RHand;
+            if (e.MouseButton == MouseButton.Left)
+            {
+                mobManager.myMob.selectedHand = MobHand.RHand;
+            }
+            else if (e.MouseButton == MouseButton.Right)
+            {
+                itemManager.DropItem(MobHand.RHand);
+            }
         }
         #endregion
 

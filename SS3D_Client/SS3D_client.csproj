@@ -120,6 +120,7 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Atom\AtomBaseClass.cs" />
     <Compile Include="HelperClasses\AtomUtil.cs" />
     <Compile Include="HelperClasses\CollisionTools.cs" />
     <Compile Include="HelperClasses\Rect2D.cs" />

@@ -81,6 +81,7 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Atom\AtomBaseClass.cs" />
     <Compile Include="Helper Classes\Point.cs" />
     <Compile Include="Modules\Chat\ChatManager.cs" />
     <Compile Include="Modules\Client\Client.cs" />

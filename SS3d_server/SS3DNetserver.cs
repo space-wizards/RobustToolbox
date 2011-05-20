@@ -9,6 +9,7 @@ using SS3d_server.Modules.Map;
 using SS3d_server.Modules.Items;
 using SS3d_server.Modules.Mobs;
 using SS3d_server.Modules.Chat;
+using SS3d_server.Atom;
 
 using Lidgren.Network;
 using SS3D_shared;
@@ -24,6 +25,7 @@ namespace SS3d_server
         public ItemManager itemManager;
         public MobManager mobManager;
         public ChatManager chatManager;
+        public AtomManager atomManager;
         
         bool active = false;
 
@@ -59,7 +61,7 @@ namespace SS3d_server
             mobManager = new MobManager(this, map);
             itemManager = new ItemManager(this, map, mobManager);
             chatManager = new ChatManager(this, mobManager);
-
+            atomManager = new AtomManager(this);
         }
 
         public bool Start()

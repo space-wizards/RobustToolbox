@@ -149,12 +149,24 @@ namespace SS3D.Modules.UI
             chatGUI.ZOrder = 10;
         }
 
+
+        public void SetInputFocus()
+        {
+            chatTextbox.Focused = true;
+        }
+
+        public bool HasFocus()
+        {
+            return chatTextbox.Focused;
+        }
+
         public event TextSubmitHandler TextSubmitted;
 
         private void chatTextbox_Submit(object sender, ValueEventArgs<string> e)
         {
             if (string.IsNullOrWhiteSpace(e.Data)) return;
             TextSubmitted(this, e.Data);
+            chatTextbox.Focused = false;
         }
 
         public void AddLine(string text)

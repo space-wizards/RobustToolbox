@@ -120,7 +120,8 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="Atom\AtomBaseClass.cs" />
+    <Compile Include="Atom\Atom.cs" />
+    <Compile Include="Atom\AtomManager.cs" />
     <Compile Include="HelperClasses\AtomUtil.cs" />
     <Compile Include="HelperClasses\CollisionTools.cs" />
     <Compile Include="HelperClasses\Rect2D.cs" />
@@ -192,6 +193,7 @@
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </Content>
   </ItemGroup>
+  <ItemGroup />
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <PropertyGroup>
     <PostBuildEvent>copy "$(SolutionDir)References\$(Configuration)\*.dll" "$(ProjectDir)$(OutDir)"</PostBuildEvent>

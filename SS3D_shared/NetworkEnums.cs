@@ -13,7 +13,8 @@ public enum NetMessage
     ChangeTile,
     ItemMessage, // It's something the item system needs to handle
     MobMessage,
-    ChatMessage
+    ChatMessage,
+    AtomMessage
 }
 
 public enum ItemMessage
@@ -24,6 +25,13 @@ public enum ItemMessage
     PickUpItem,
     DropItem,
     UseItem // etc.
+}
+
+public enum AtomMessage
+{
+    SpawnAtom,
+    DeleteAtom,
+    Passthrough
 }
 
 public enum MobMessage

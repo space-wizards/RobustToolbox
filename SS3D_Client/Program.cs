@@ -25,7 +25,7 @@ namespace SS3D
     private static OgreManager mEngine;
     private static StateManager mStateMgr;
     private static MOIS.InputManager mInputMgr;
-
+    
     private uint consoleSeparationCounter = 0;
     private bool autoConnect = false;
     

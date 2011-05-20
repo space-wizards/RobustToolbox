@@ -288,6 +288,10 @@ namespace SS3D.States
         #region Input
         public override void UpdateInput(Mogre.FrameEvent evt, MOIS.Keyboard keyState, MOIS.Mouse mouseState)
         {
+            if (gameChat.chatGUI.GetControl("ChatTextbox").Focused)
+            {
+                return;
+            }
             if(keyState.IsKeyDown(MOIS.KeyCode.KC_W))
             {
                 mobManager.MoveMe(1);
@@ -314,6 +318,10 @@ namespace SS3D.States
 
         public override void KeyDown(MOIS.KeyEvent keyState)
         {
+            if (gameChat.chatGUI.GetControl("ChatTextbox").Focused)
+            {
+                return;
+            }
             if (keyState.key == MOIS.KeyCode.KC_LSHIFT)
             {
                 mobManager.myMob.speed = mobManager.myMob.runSpeed;
@@ -331,6 +339,17 @@ namespace SS3D.States
                 guiGameScreen.GetControl("rightHandButton").Focused = true;
                 mobManager.myMob.selectedHand = MobHand.RHand;
             }
+            else if (keyState.key == MOIS.KeyCode.KC_SPACE)
+            {
+                if (mobManager.myMob.selectedHand == MobHand.LHand)
+                {
+                    mobManager.myMob.selectedHand = MobHand.RHand;
+                }
+                else
+                {
+                    mobManager.myMob.selectedHand = MobHand.LHand;
+                }
+            }
             else if (keyState.key == MOIS.KeyCode.KC_Q)
             {
                 itemManager.DropItem(mobManager.myMob.selectedHand);
@@ -339,6 +358,10 @@ namespace SS3D.States
 
         public override void KeyUp(MOIS.KeyEvent keyState)
         {
+            if (gameChat.chatGUI.GetControl("ChatTextbox").Focused)
+            {
+                return;
+            }
             if (keyState.key == MOIS.KeyCode.KC_LSHIFT)
             {
                 mobManager.myMob.speed = mobManager.myMob.walkSpeed;

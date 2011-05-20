@@ -10,6 +10,7 @@ using SS3D.Modules.Items;
 using SS3D.Modules.Mobs;
 using SS3D.Modules.Network;
 using SS3D.Modules.UI;
+using SS3D.Atom;
 
 using SS3D_shared;
 
@@ -38,7 +39,7 @@ namespace SS3D.States
         private GUI guiGameScreen;
         private Chatbox gameChat;
         private ushort defaultChannel;
-
+        private AtomManager atomManager;
 
         #region Mouse/Camera stuff
         private DateTime lastRMBClick = DateTime.Now;
@@ -59,26 +60,21 @@ namespace SS3D.States
             mEngine = _mgr.Engine;
             mStateMgr = _mgr;
 
+            defaultChannel = 1;
+
             mEngine.mMiyagiSystem.GUIManager.DisposeAllGUIs();
 
             map = new Map(mEngine, true);
 
             mobManager = new MobManager(mEngine, map, mEngine.mNetworkMgr);
             itemManager = new ItemManager(mEngine, map, mEngine.mNetworkMgr, mobManager);
+            atomManager = new AtomManager(this);
             SetUp();
             SetUpGUI();
 
             mEngine.mNetworkMgr.MessageArrived += new NetworkMsgHandler(mNetworkMgr_MessageArrived);
 
-            gameChat = new Chatbox("gameChat");
-            mEngine.mMiyagiSystem.GUIManager.GUIs.Add(gameChat.chatGUI);
-            gameChat.chatPanel.ResizeMode = Miyagi.UI.ResizeModes.None;
-            gameChat.chatPanel.Movable = false;
-            gameChat.Transparency = 50;
-            defaultChannel = 1; 
-
-            gameChat.TextSubmitted += new Chatbox.TextSubmitHandler(chatTextbox_TextSubmitted);
-
+            
             mEngine.mNetworkMgr.SetMap(map);
             mEngine.mNetworkMgr.RequestMap();
 
@@ -97,11 +93,19 @@ namespace SS3D.States
             mEngine.SceneMgr.AmbientLight = ColourValue.White;
 
             mEngine.SceneMgr.SetSkyBox(true, "SkyBox", 900f, true);
-
         }
 
         private void SetUpGUI()
         {
+            // The chatbox
+            gameChat = new Chatbox("gameChat");
+            mEngine.mMiyagiSystem.GUIManager.GUIs.Add(gameChat.chatGUI);
+            gameChat.chatPanel.ResizeMode = Miyagi.UI.ResizeModes.None;
+            gameChat.chatPanel.Movable = false;
+            gameChat.Transparency = 50;
+            gameChat.TextSubmitted += new Chatbox.TextSubmitHandler(chatTextbox_TextSubmitted);
+
+
             guiGameScreen = new GUI("guiGameScreen");
             mEngine.mMiyagiSystem.GUIManager.GUIs.Add(guiGameScreen);
             Point screenSize = new Point((int)mEngine.Window.Width, (int)mEngine.Window.Height);
@@ -127,7 +131,8 @@ namespace SS3D.States
             {
                 Size = new Size(70, 61),
                 Location = new Point(68, screenSize.Y - 71),
-                Skin = MiyagiResources.Singleton.Skins["LeftHandButtonSkin"]
+                Skin = MiyagiResources.Singleton.Skins["LeftHandButtonSkin"],
+                TabStop = false
             };
             leftHandButton.MouseDown += LeftHandButtonMouseDown;
 
@@ -135,13 +140,14 @@ namespace SS3D.States
             {
                 Size = new Size(70, 61),
                 Location = new Point(143, screenSize.Y - 71),
-                Skin = MiyagiResources.Singleton.Skins["RightHandButtonSkin"]
+                Skin = MiyagiResources.Singleton.Skins["RightHandButtonSkin"],
+                TabStop = false
             };
             rightHandButton.MouseDown += RightHandButtonMouseDown;
 
             // These two boxes contain the pictures of the item we are holding in that hand. They are set in the itemmanager
-            // when we recieve a message that we successfully picked up an option, that is why their name doesn't follow the
-            // convention exactly.
+            // when we recieve a message that we successfully picked up an item, that is why their name doesn't follow the
+            // convention.
             PictureBox leftHandBox = new PictureBox("LHandBox")
             {
                 Size = new Size(28,48),
@@ -288,6 +294,10 @@ namespace SS3D.States
         #region Input
         public override void UpdateInput(Mogre.FrameEvent evt, MOIS.Keyboard keyState, MOIS.Mouse mouseState)
         {
+            if (gameChat.chatGUI.GetControl("ChatTextbox").Focused)
+            {
+                return;
+            }
             if(keyState.IsKeyDown(MOIS.KeyCode.KC_W))
             {
                 mobManager.MoveMe(1);
@@ -314,6 +324,10 @@ namespace SS3D.States
 
         public override void KeyDown(MOIS.KeyEvent keyState)
         {
+            if (gameChat.HasFocus())
+            {
+                return;
+            }
             if (keyState.key == MOIS.KeyCode.KC_LSHIFT)
             {
                 mobManager.myMob.speed = mobManager.myMob.runSpeed;
@@ -335,10 +349,33 @@ namespace SS3D.States
             {
                 itemManager.DropItem(mobManager.myMob.selectedHand);
             }
+            else if (keyState.key == MOIS.KeyCode.KC_SPACE)
+            {
+                if (mobManager.myMob.selectedHand == MobHand.LHand)
+                {
+                    guiGameScreen.GetControl("leftHandButton").Focused = false;
+                    guiGameScreen.GetControl("rightHandButton").Focused = true;
+                    mobManager.myMob.selectedHand = MobHand.RHand;
+                }
+                else
+                {
+                    guiGameScreen.GetControl("leftHandButton").Focused = true;
+                    guiGameScreen.GetControl("rightHandButton").Focused = false;
+                    mobManager.myMob.selectedHand = MobHand.LHand;
+                }
+            }
+            else if (keyState.key == MOIS.KeyCode.KC_T)
+            {
+                gameChat.SetInputFocus();
+            }
         }
 
         public override void KeyUp(MOIS.KeyEvent keyState)
         {
+            if (gameChat.chatGUI.GetControl("ChatTextbox").Focused)
+            {
+                return;
+            }
             if (keyState.key == MOIS.KeyCode.KC_LSHIFT)
             {
                 mobManager.myMob.speed = mobManager.myMob.walkSpeed;

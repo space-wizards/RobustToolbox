@@ -81,7 +81,8 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="Atom\AtomBaseClass.cs" />
+    <Compile Include="Atom\Atom.cs" />
+    <Compile Include="Atom\AtomManager.cs" />
     <Compile Include="Helper Classes\Point.cs" />
     <Compile Include="Modules\Chat\ChatManager.cs" />
     <Compile Include="Modules\Client\Client.cs" />
@@ -107,6 +108,7 @@
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
   </ItemGroup>
+  <ItemGroup />
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <PropertyGroup>
     <PostBuildEvent>copy "$(SolutionDir)References\$(Configuration)\Lidgren*l" "$(ProjectDir)$(OutDir)"

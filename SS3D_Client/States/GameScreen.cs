@@ -91,7 +91,6 @@ namespace SS3D.States
             mEngine.SceneMgr.AmbientLight = ColourValue.White;
 
             mEngine.SceneMgr.SetSkyBox(true, "SkyBox", 900f, true);
-
         }
 
         private void SetUpGUI()
@@ -130,7 +129,8 @@ namespace SS3D.States
             {
                 Size = new Size(70, 61),
                 Location = new Point(68, screenSize.Y - 71),
-                Skin = MiyagiResources.Singleton.Skins["LeftHandButtonSkin"]
+                Skin = MiyagiResources.Singleton.Skins["LeftHandButtonSkin"],
+                TabStop = false
             };
             leftHandButton.MouseDown += LeftHandButtonMouseDown;
 
@@ -138,13 +138,14 @@ namespace SS3D.States
             {
                 Size = new Size(70, 61),
                 Location = new Point(143, screenSize.Y - 71),
-                Skin = MiyagiResources.Singleton.Skins["RightHandButtonSkin"]
+                Skin = MiyagiResources.Singleton.Skins["RightHandButtonSkin"],
+                TabStop = false
             };
             rightHandButton.MouseDown += RightHandButtonMouseDown;
 
             // These two boxes contain the pictures of the item we are holding in that hand. They are set in the itemmanager
-            // when we recieve a message that we successfully picked up an option, that is why their name doesn't follow the
-            // convention exactly.
+            // when we recieve a message that we successfully picked up an item, that is why their name doesn't follow the
+            // convention.
             PictureBox leftHandBox = new PictureBox("LHandBox")
             {
                 Size = new Size(28,48),

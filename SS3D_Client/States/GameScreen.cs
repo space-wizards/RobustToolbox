@@ -39,7 +39,6 @@ namespace SS3D.States
         private Chatbox gameChat;
         private ushort defaultChannel;
 
-
         #region Mouse/Camera stuff
         private DateTime lastRMBClick = DateTime.Now;
         private int lastMouseX = 0;
@@ -76,6 +75,9 @@ namespace SS3D.States
             mEngine.mNetworkMgr.SetMap(map);
             mEngine.mNetworkMgr.RequestMap();
 
+
+            
+            
             return true;
         }
 
@@ -259,8 +261,9 @@ namespace SS3D.States
             string text = msg.ReadString();
 
             string message = "(" + channel.ToString() + "):" + text;
-
+            ushort mobID = msg.ReadUInt16();
             gameChat.AddLine(message);
+            mobManager.GetMob(mobID).speaking = true;
         }
 
         private void SendChatMessage(string text)

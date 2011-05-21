@@ -29,11 +29,14 @@ namespace SS3d_server.Atom
         #region updating
         public void Update()
         {
+            // Using LINQ to find atoms that have flagged themselves as needing an update.
+            // TODO: Modify to add an update queue that will run updates for atoms that need it on a time schedule
             var updateList =
                 from atom in atomDictionary
                 where atom.Value.updateRequired == true
                 select atom.Value;
-
+           
+            //Update all of the bastards in the update list
             foreach (Atom a in updateList)
             {
                 a.Update();

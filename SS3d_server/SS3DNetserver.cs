@@ -191,6 +191,7 @@ namespace SS3d_server
         {
             itemManager.Update();
             mobManager.Update();
+            atomManager.Update();
         }
         #endregion
 
@@ -300,6 +301,9 @@ namespace SS3d_server
                     break;
                 case NetMessage.ChatMessage:
                     chatManager.HandleNetMessage(msg);
+                    break;
+                case NetMessage.AtomManagerMessage:
+                    atomManager.HandleNetworkMessage(msg);
                     break;
                 default:
                     break;

@@ -40,6 +40,10 @@ namespace SS3d_server.Atom
                     // Pass a message to the atom in question
                     Push();
                     break;
+                case AtomMessage.PositionUpdate:
+                    // We'll accept position packets from the client so that movement doesn't lag. There may be other special cases like this.
+                    HandlePositionUpdate(message);
+                    break;
                 default:
                     break;
             }
@@ -51,5 +55,10 @@ namespace SS3d_server.Atom
             // Do nothing, this is a default atom and nothing needs to be pushed.
         }
 
+        public virtual void HandlePositionUpdate(NetIncomingMessage message)
+        {
+            //This will be largely ignored by the server, as the client shouldn't be able to move shit besides its associated player mob
+            //There may be cases when the client will need to move stuff around in a non-laggy way, but For now the only case I can think of is the player mob.
+        }
     }
 }

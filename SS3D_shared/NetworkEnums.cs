@@ -14,7 +14,7 @@ public enum NetMessage
     ItemMessage, // It's something the item system needs to handle
     MobMessage,
     ChatMessage,
-    AtomMessage
+    AtomManagerMessage
 }
 
 public enum ItemMessage
@@ -27,7 +27,7 @@ public enum ItemMessage
     UseItem // etc.
 }
 
-public enum AtomMessage
+public enum AtomManagerMessage
 {
     SpawnAtom,
     DeleteAtom,

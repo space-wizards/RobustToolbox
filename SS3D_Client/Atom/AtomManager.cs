@@ -2,17 +2,24 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using System.Reflection;
 
 using SS3D_shared;
 using SS3D.States;
+using SS3D.Modules;
 using Lidgren.Network;
+using Mogre;
+using SS3D.Modules.Network;
 
 namespace SS3D.Atom
 {
     public class AtomManager // CLIENTSIDE
     {
         #region Vars
-        private GameScreen gameState;
+        public GameScreen gameState;
+        public OgreManager mEngine;
+        public NetworkManager networkManager;
+
         public Dictionary<ushort, Atom> atomDictionary;
         #endregion
 
@@ -20,6 +27,7 @@ namespace SS3D.Atom
         public AtomManager(GameScreen _gameState)
         {
             gameState = _gameState;
+            mEngine = gameState.mEngine;
         }
         #endregion
 
@@ -33,20 +41,19 @@ namespace SS3D.Atom
         #region Network
         public void HandleNetworkMessage(NetIncomingMessage message)
         {
-            AtomMessage messageType = (AtomMessage)message.ReadByte();
+            AtomManagerMessage messageType = (AtomManagerMessage)message.ReadByte();
             
             switch (messageType)
             {
-                case AtomMessage.SpawnAtom:
+                case AtomManagerMessage.SpawnAtom:
                     HandleSpawnAtom(message);
                     break;
-                case AtomMessage.DeleteAtom:
+                case AtomManagerMessage.DeleteAtom:
                     HandleDeleteAtom(message); 
                     break;
-                case AtomMessage.Passthrough:
-                    PassMessage(message);
-                    //TODO: Get the atom id
+                case AtomManagerMessage.Passthrough:
                     //Pass the rest of the message through to the specific item in question. 
+                    PassMessage(message);
                     break;
                 default:
                     break;
@@ -55,22 +62,48 @@ namespace SS3D.Atom
 
         private void HandleSpawnAtom(NetIncomingMessage message)
         {
-            throw new NotImplementedException();
-        }
+            ushort uid = message.ReadUInt16();
+            string type = message.ReadString();
 
+            Atom a = SpawnAtom(uid, type);
+            a.SendPullMessage();
+        }
+        
+        public Atom SpawnAtom(ushort uid, string type)
+        {
+            Assembly currentAssembly = Assembly.GetExecutingAssembly();
+            Type atomType = currentAssembly.GetType(type);
+            object atom = Activator.CreateInstance(atomType); // Create atom of type atomType with parameters uid, this
+            atomDictionary[uid] = (Atom)atom;
+
+            atomDictionary[uid].uid = uid;
+            atomDictionary[uid].atomManager = this;
+
+            return atomDictionary[uid]; // Why do we return it? So we can do whatever is needed easily from the calling function.
+        }
+        
         private void HandleDeleteAtom(NetIncomingMessage message)
         {
             ushort uid = message.ReadUInt16();
-            throw new NotImplementedException();
+            atomDictionary.Remove(uid);
         }
 
+        // Passes a message to a specific atom.
         private void PassMessage(NetIncomingMessage message)
         {
+            // Get the atom id
             ushort uid = message.ReadUInt16();
 
             var atom = atomDictionary[uid];
+            // Pass the message to the atom in question.
             atom.HandleNetworkMessage(message);
         }
+
+        private void SendMessage(NetOutgoingMessage message)
+        {
+
+        }
+
         #endregion
     }
 }

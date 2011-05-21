@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using SS3D_shared.HelperClasses;
+using Lidgren.Network;
 
 namespace SS3d_server.Atom
 {
@@ -26,6 +27,13 @@ namespace SS3d_server.Atom
         {
             //Updates the atom, item, whatever. This should be called from the atom manager's update queue.
         }
+
+        public void HandleNetworkMessage(NetIncomingMessage message)
+        {
+            //Do nothing, this is a default atom. This should be overridden by the inheriting class.
+            return;
+        }
+
 
     }
 }

@@ -2,5 +2,6 @@
 {
     Pull,
     Push,
-    InterpolationPacket
+    InterpolationPacket,
+    PositionUpdate
 }

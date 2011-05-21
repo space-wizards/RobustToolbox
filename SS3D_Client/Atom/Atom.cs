@@ -25,11 +25,13 @@ namespace SS3D.Atom
         public SS3D_shared.HelperClasses.Vector3 position;
         public float rotW;
         public float rotY;
+        public bool positionChanged;
 
         public List<InterpolationPacket> interpolationPacket;
 
         public Atom()
         {
+
         }
 
         public void HandleNetworkMessage(NetIncomingMessage message)
@@ -42,15 +44,23 @@ namespace SS3D.Atom
                     // Pass a message to the atom in question
                     HandlePush(message);
                     break;
+                case AtomMessage.InterpolationPacket:
+                    HandleInterpolationPacket(message);
+                    break;
                 default:
                     break;
             }
             return;
         }
 
+        public virtual void HandleInterpolationPacket(NetIncomingMessage message)
+        {
+
+        }
+
         public void Update()
         { 
-        
+            
         }
 
         // Sends a message to the server to request the atom's data.

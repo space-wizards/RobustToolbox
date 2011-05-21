@@ -191,6 +191,7 @@ namespace SS3D.States
             mEngine.SceneMgr.SkyBoxNode.Rotate(Mogre.Vector3.UNIT_Y, 0.0001f);
             itemManager.Update();
             mobManager.Update();
+            atomManager.Update();
         }
 
         private void mNetworkMgr_MessageArrived(NetworkManager netMgr, NetIncomingMessage msg)
@@ -213,6 +214,9 @@ namespace SS3D.States
                             break;
                         case NetMessage.MobMessage:
                             mobManager.HandleNetworkMessage(msg);
+                            break;
+                        case NetMessage.AtomManagerMessage:
+                            atomManager.HandleNetworkMessage(msg);
                             break;
                         case NetMessage.SendMap:
                             RecieveMap(msg);

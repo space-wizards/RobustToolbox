@@ -11,16 +11,30 @@ namespace SS3D.Atom
 {
     public class AtomManager // CLIENTSIDE
     {
+        #region Vars
         private GameScreen gameState;
+        public Dictionary<ushort, Atom> atomDictionary;
+        #endregion
+
+        #region Instatiation
         public AtomManager(GameScreen _gameState)
         {
             gameState = _gameState;
         }
-        public List<Atom> atomList;
-        
+        #endregion
+
+        #region Updating
+        public void Update()
+        {
+
+        }
+        #endregion
+
+        #region Network
         public void HandleNetworkMessage(NetIncomingMessage message)
         {
             AtomMessage messageType = (AtomMessage)message.ReadByte();
+            
             switch (messageType)
             {
                 case AtomMessage.SpawnAtom:
@@ -31,6 +45,8 @@ namespace SS3D.Atom
                     break;
                 case AtomMessage.Passthrough:
                     PassMessage(message);
+                    //TODO: Get the atom id
+                    //Pass the rest of the message through to the specific item in question. 
                     break;
                 default:
                     break;
@@ -44,12 +60,17 @@ namespace SS3D.Atom
 
         private void HandleDeleteAtom(NetIncomingMessage message)
         {
+            ushort uid = message.ReadUInt16();
             throw new NotImplementedException();
         }
 
         private void PassMessage(NetIncomingMessage message)
         {
-            throw new NotImplementedException();
+            ushort uid = message.ReadUInt16();
+
+            var atom = atomDictionary[uid];
+            atom.HandleNetworkMessage(message);
         }
+        #endregion
     }
 }

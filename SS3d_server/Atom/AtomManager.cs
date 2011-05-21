@@ -11,16 +11,29 @@ namespace SS3d_server.Atom
 {
     public class AtomManager //SERVERSIDE
     {
+        #region Vars
         private Map map;
         private SS3DNetserver netServer;
 
+        public Dictionary<ushort, Atom> atomDictionary;
+        #endregion
+
+        #region instantiation
         public AtomManager(SS3DNetserver _netServer)
         {
             netServer = _netServer;
 
         }
-        public List<Atom> atomList;
+        #endregion
 
+        #region updating
+        public void Update()
+        {
+
+        }
+        #endregion
+
+        #region Network
         public void HandleNetworkMessage(NetIncomingMessage message)
         {
             AtomMessage messageType = (AtomMessage)message.ReadByte();
@@ -42,7 +55,10 @@ namespace SS3d_server.Atom
 
         private void PassMessage(NetIncomingMessage message)
         {
-            throw new NotImplementedException();
+            ushort uid = message.ReadUInt16();
+
+            var atom = atomDictionary[uid];
+            atom.HandleNetworkMessage(message);
         }
 
         private void HandleDeleteAtom(NetIncomingMessage message)
@@ -54,5 +70,6 @@ namespace SS3d_server.Atom
         {
             throw new NotImplementedException();
         }
+        #endregion
     }
 }

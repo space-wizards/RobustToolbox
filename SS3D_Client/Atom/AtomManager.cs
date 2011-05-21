@@ -28,13 +28,22 @@ namespace SS3D.Atom
         {
             gameState = _gameState;
             mEngine = gameState.mEngine;
+            networkManager = mEngine.mNetworkMgr;
         }
         #endregion
 
         #region Updating
         public void Update()
         {
+            var updateList =
+                from atom in atomDictionary
+                where atom.Value.updateRequired == true
+                select atom.Value;
 
+            foreach (Atom a in updateList)
+            {
+                a.Update();
+            }
         }
         #endregion
 

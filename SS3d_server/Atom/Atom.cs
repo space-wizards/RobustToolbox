@@ -12,6 +12,7 @@ namespace SS3d_server.Atom
         public string name;
         public ushort uid;
         public AtomManager atomManager;
+        public bool updateRequired = false;
 
         // Position data
         public Vector3 position;

@@ -1,5 +1,6 @@
 ﻿public enum AtomMessage
 {
     Pull,
-    Push
+    Push,
+    InterpolationPacket
 }

@@ -36,10 +36,10 @@ namespace SS3D.States
         private Map map;
         private ItemManager itemManager;
         private MobManager mobManager;
+        private AtomManager atomManager;
         private GUI guiGameScreen;
         private Chatbox gameChat;
         private ushort defaultChannel;
-        private AtomManager atomManager;
 
         #region Mouse/Camera stuff
         private DateTime lastRMBClick = DateTime.Now;
@@ -266,7 +266,8 @@ namespace SS3D.States
             string message = "(" + channel.ToString() + "):" + text;
             ushort mobID = msg.ReadUInt16();
             gameChat.AddLine(message);
-            mobManager.GetMob(mobID).speaking = true;
+            if(mobManager.GetMob(mobID) != null)
+                mobManager.GetMob(mobID).speaking = true;
         }
 
         private void SendChatMessage(string text)

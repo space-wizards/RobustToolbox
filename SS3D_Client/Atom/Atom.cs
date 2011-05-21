@@ -15,6 +15,7 @@ namespace SS3D.Atom
         public SceneNode Node;
         public Entity Entity;
         public string meshName = "ogrehead.mesh"; // Ogrehead is a nice default mesh. This prevents any atom from inadvertently spawning without a mesh.
+        public bool updateRequired = false;
 
         public string name;
         public ushort uid;
@@ -33,8 +34,23 @@ namespace SS3D.Atom
 
         public void HandleNetworkMessage(NetIncomingMessage message)
         {
-            //Do nothing, this is a default atom. This should be overridden by the inheriting class.
+            //Pass on a push message.
+            AtomMessage messageType = (AtomMessage)message.ReadByte();
+            switch (messageType)
+            {
+                case AtomMessage.Push:
+                    // Pass a message to the atom in question
+                    HandlePush(message);
+                    break;
+                default:
+                    break;
+            }
             return;
+        }
+
+        public void Update()
+        { 
+        
         }
 
         // Sends a message to the server to request the atom's data.
@@ -46,6 +62,11 @@ namespace SS3D.Atom
             message.Write((ushort)uid);
             message.Write((byte)AtomMessage.Pull);
             atomManager.networkManager.SendMessage(message, NetDeliveryMethod.Unreliable);
+        }
+
+        public virtual void HandlePush(NetIncomingMessage message)
+        {
+            // Do nothing. This should be overridden by the child.
         }
     }
 }

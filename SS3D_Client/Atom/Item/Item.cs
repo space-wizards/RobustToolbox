@@ -9,5 +9,6 @@ namespace SS3D.Atom.Item
 {
     public class Item : Atom
     {
+
     }
 }

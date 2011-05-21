@@ -22,6 +22,7 @@ namespace SS3D.Modules.Mobs
         private DateTime lastAnimUpdate = DateTime.Now;
         private double mobUpdateTime = 10;
         private double serverUpdateTime = 50;
+        private float speakLength = 2000;
 
         public Mob myMob;
         
@@ -73,6 +74,7 @@ namespace SS3D.Modules.Mobs
                      {
                          UpdateMobPosition(mobID);
                      }
+                     UpdatemobChat(mobID);
                  }
                  lastMobUpdate = DateTime.Now;
              }
@@ -305,6 +307,25 @@ namespace SS3D.Modules.Mobs
                 return mobDict[mobID];
             }
             return null;
+        }
+
+        private void UpdatemobChat(ushort mobID)
+        {
+            Mob mob = mobDict[mobID];
+            if (mob.speaking)
+            {
+                mob.speakTime += (float)mobUpdateTime;
+                if (mob.speakTime >= speakLength)
+                {
+                    mob.speaking = false;
+                    mob.speakTime = 0;
+                    mob.billboardSet.Visible = false;
+                }
+                else
+                {
+                    mob.billboardSet.Visible = true;
+                }
+            }
         }
 
 

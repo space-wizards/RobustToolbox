@@ -365,10 +365,7 @@ namespace SS3D.States
                     mobManager.myMob.selectedHand = MobHand.LHand;
                 }
             }
-            else if (keyState.key == MOIS.KeyCode.KC_T)
-            {
-                gameChat.SetInputFocus();
-            }
+
         }
 
         public override void KeyUp(MOIS.KeyEvent keyState)
@@ -380,6 +377,10 @@ namespace SS3D.States
             if (keyState.key == MOIS.KeyCode.KC_LSHIFT)
             {
                 mobManager.myMob.speed = mobManager.myMob.walkSpeed;
+            }
+            else if (keyState.key == MOIS.KeyCode.KC_T)
+            {
+                gameChat.SetInputFocus();
             }
         }
 

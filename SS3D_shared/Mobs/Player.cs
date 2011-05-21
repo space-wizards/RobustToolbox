@@ -38,6 +38,16 @@ namespace SS3D_shared
             animState.Enabled = true;
 
             speed = walkSpeed;
+
+            billboardSet = sceneManager.CreateBillboardSet();
+            Billboard bill = billboardSet.CreateBillboard(new Mogre.Vector3(0, 35, 2));
+            bill.SetDimensions(6, 6);
+            billboardSet.SetMaterialName("mChatBubble");
+            billboardSet.Visible = false;
+            billboardSet.BillboardType = BillboardType.BBT_POINT;
+            billboardSet.BillboardOrigin = BillboardOrigin.BBO_CENTER;
+            billboardSet.BillboardRotationType = BillboardRotationType.BBR_VERTEX;
+            Node.AttachObject(billboardSet);
         }
 
          public Player()

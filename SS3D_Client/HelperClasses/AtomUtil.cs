@@ -46,7 +46,12 @@ namespace SS3D.HelperClasses
             CollisionTools ct = new CollisionTools(mEngine.SceneMgr);
             CollisionTools.RaycastResult rr = ct.RaycastFromCamera(mEngine.mWindow, mEngine.mCamera, mousePos, Mogre.SceneManager.ENTITY_TYPE_MASK);
 
-            return (AtomBaseClass)rr.Target.UserObject;
+            if (rr != null)
+            {
+                return (AtomBaseClass)rr.Target.UserObject;
+            }
+
+            return null;
 
         }
     }

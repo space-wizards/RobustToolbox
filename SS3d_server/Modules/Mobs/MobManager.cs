@@ -49,6 +49,8 @@ namespace SS3d_server.Modules.Mobs
             Vector3 currentPos = mobDict[mobID].serverInfo.position;
         }
 
+
+
         private void RecieveMobPosUpdate(NetIncomingMessage message)
         {
             ushort mobID = message.ReadUInt16();
@@ -110,7 +112,7 @@ namespace SS3d_server.Modules.Mobs
                 // This is also ugly - we dont want to have to hack messages into the chatmanager, it should have a different method to send information ones perhaps?
                 // This could also be easily optimised bandwidth wise by sendinging IDs instead of a string for the names of the mobs and items used, don't know if it
                 // is worth it though!
-                netServer.chatManager.SendChatMessage(0, mobDict[actorID].name + " hits " + (targetID!=actorID ? mobDict[targetID].name : "himself") + " with his " + weaponName, "");
+                netServer.chatManager.SendChatMessage(0, mobDict[actorID].name + " hits " + (targetID!=actorID ? mobDict[targetID].name : "himself") + " with his " + weaponName, "", 0);
             }
         }
 

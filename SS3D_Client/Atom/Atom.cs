@@ -33,7 +33,7 @@ namespace SS3D.Atom
         public Atom()
         {
             position = new Mogre.Vector3(0, 0, 0);
-            rotW = 0;
+            rotW = 1;
             rotY = 0;
 
             interpolationPackets = new List<InterpolationPacket>();
@@ -45,7 +45,7 @@ namespace SS3D.Atom
             atomManager = _atomManager;
 
             position = new Mogre.Vector3(0, 0, 0);
-            rotW = 0;
+            rotW = 1;
             rotY = 0;
 
             interpolationPackets = new List<InterpolationPacket>();
@@ -124,7 +124,7 @@ namespace SS3D.Atom
                 updateRequired = false;
                 return;
             }
-            difference = interpolationPackets[0].position - Node.Position;
+            difference = interpolationPackets[0].position - position;
             
             // Set rotation. The packet may be rotation only.
             rotW = interpolationPackets[0].rotW;
@@ -144,7 +144,8 @@ namespace SS3D.Atom
                 //This constant should be time interval based.
                 //TODO: Make this better if it isn't good enough.
                 difference /= 5;
-                Node.Position += difference;
+                position += difference;
+                Node.Position = position;
                 updateRequired = true; // This interpolation packet and probably the ones after it are still useful, so we'll update again on the next cycle.
             }
         }
@@ -170,6 +171,7 @@ namespace SS3D.Atom
             Node.Position = position;
             Node.AttachObject(Entity);
 
+            var entities = sceneManager.ToString();
             drawn = true;
         }
 

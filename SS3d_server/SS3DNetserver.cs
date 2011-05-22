@@ -76,6 +76,7 @@ namespace SS3d_server
                 netServer = new NetServer(netConfig);
                 netServer.Start();
                 AddRandomCrowbars();
+                atomManager.SpawnAtom("Atom.Atom");
                 active = true;
                 return false;
             }
@@ -369,6 +370,7 @@ namespace SS3d_server
             // Lets also send them all the items and mobs.
             mobManager.NewPlayer(connection);
             itemManager.NewPlayer(connection);
+            atomManager.NewPlayer(connection);
         }
 
         public void HandleChangeTile(NetIncomingMessage msg)

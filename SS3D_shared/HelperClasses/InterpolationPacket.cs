@@ -42,5 +42,10 @@ namespace SS3D_shared.HelperClasses
             time = 0;
         }
 
+        public void WriteMessage(NetOutgoingMessage message)
+        {
+
+        }
+
     }
 }

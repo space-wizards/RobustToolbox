@@ -23,12 +23,13 @@ namespace SS3D.Atom
         public Dictionary<ushort, Atom> atomDictionary;
         #endregion
 
-        #region Instatiation
+        #region Instantiation
         public AtomManager(GameScreen _gameState)
         {
             gameState = _gameState;
             mEngine = gameState.mEngine;
             networkManager = mEngine.mNetworkMgr;
+            atomDictionary = new Dictionary<ushort, Atom>();
         }
         #endregion
 
@@ -75,18 +76,18 @@ namespace SS3D.Atom
             string type = message.ReadString();
 
             Atom a = SpawnAtom(uid, type);
+            // Tell the atom to pull its position data etc. from the server
             a.SendPullMessage();
         }
         
         public Atom SpawnAtom(ushort uid, string type)
         {
             Assembly currentAssembly = Assembly.GetExecutingAssembly();
-            Type atomType = currentAssembly.GetType(type);
+            Type atomType = currentAssembly.GetType("SS3D." + type);
             object atom = Activator.CreateInstance(atomType); // Create atom of type atomType with parameters uid, this
             atomDictionary[uid] = (Atom)atom;
 
-            atomDictionary[uid].uid = uid;
-            atomDictionary[uid].atomManager = this;
+            atomDictionary[uid].SetUp(uid, this);
 
             return atomDictionary[uid]; // Why do we return it? So we can do whatever is needed easily from the calling function.
         }

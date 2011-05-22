@@ -40,7 +40,9 @@ namespace SS3D.States
         private TileType newTileType = TileType.None;
         private ItemType newItemType = ItemType.None;
         private ushort lastID = 0;
+
         private AtomBaseClass selectedItem;
+        private AtomBaseClass previousHoverItem;
 
         private bool inEditor = false;
 
@@ -79,8 +81,6 @@ namespace SS3D.States
 
             mapSaver = new MapSaver(map, mEngine);
 
-            mEngine.mNetworkMgr.SetMap(map);
-
             mEngine.SceneMgr.AmbientLight = ColourValue.White;
 
             mEngine.Camera.Position = new Mogre.Vector3(0, 300, 0);
@@ -88,23 +88,7 @@ namespace SS3D.States
 
             itemManager = new ItemManager(mEngine, map, mEngine.mNetworkMgr, null);
 
-            if (!mEngine.mNetworkMgr.isConnected)
-            {
-                AddSetUpButtons();
-            }
-            else
-            {
-                mEngine.mNetworkMgr.MessageArrived += new NetworkMsgHandler(mNetworkMgr_MessageArrived);
-
-                mEngine.mNetworkMgr.RequestMap();
-                while (!mEngine.mNetworkMgr.mapRecieved)
-                {
-                    mEngine.mNetworkMgr.UpdateNetwork();
-                }
-                map.LoadNetworkedMap(mEngine.mNetworkMgr.GetTileArray(), mEngine.mNetworkMgr.GetMapWidth(), mEngine.mNetworkMgr.GetMapHeight());
-                inEditor = true;
-                AddEditorButtons();
-            }
+            AddSetUpButtons();
 
             return true;
         }
@@ -117,64 +101,42 @@ namespace SS3D.States
                 map.Shutdown();
                 map = null;
                 itemManager.Shutdown();
-                itemManager = null;
-                
+                itemManager = null;            
             }
             else
             {
                 guiEditOptions.Visible = false;
             }
-            mEngine.mNetworkMgr.Disconnect();
         }
 
         public override void Update(long _frameTime)
         {
-            if (!inEditor)
-            {
-                mEngine.Camera.Pitch((Radian)0.001);
-                mEngine.Camera.Yaw((Radian)0.001);
-                mEngine.Camera.Roll((Radian)0.001);
-            }
             itemManager.Update();
-        }
-
-        private void mNetworkMgr_MessageArrived(NetworkManager netMgr, NetIncomingMessage msg)
-        {
-            if (msg == null)
+            if (inEditor)
             {
-                return;
-            }
-            switch (msg.MessageType)
-            {
-                case NetIncomingMessageType.Data:
-                    NetMessage messageType = (NetMessage)msg.ReadByte();
-                    switch (messageType)
+                Point mousePos = mEngine.mMiyagiSystem.InputManager.MouseLocation;
+                Mogre.Vector2 mousePosAbs = new Vector2((float)mousePos.X / (float)mEngine.Window.Width, (float)mousePos.Y / (float)mEngine.Window.Height);
+                Mogre.Vector3 worldPos;
+                AtomBaseClass HoverObject = HelperClasses.AtomUtil.PickAtScreenPosition(mEngine, mousePosAbs, out worldPos);
+                if (previousHoverItem != HoverObject && HoverObject != null)
+                {
+                    try
                     {
-                        case NetMessage.ChangeTile:
-                            ChangeTile(msg);
-                            break;
-                        case NetMessage.ItemMessage:
-                            itemManager.HandleNetworkMessage(msg);
-                            break;
-                        default:
-                            break;
+                        if (previousHoverItem != null)
+                            previousHoverItem.Node.ShowBoundingBox = false;
                     }
-                    break;
-                default:
-                    break;
+                    catch
+                    {
+                    }
+                    previousHoverItem = HoverObject;
+                    HoverObject.Node.ShowBoundingBox = true;
+                }
+                else if (previousHoverItem != HoverObject && HoverObject == null && previousHoverItem != null)
+                {
+                    previousHoverItem.Node.ShowBoundingBox = false;
+                }
             }
-        }
 
-        private void ChangeTile(NetIncomingMessage msg)
-        {
-            if (map == null)
-            {
-                return;
-            }
-            int x = msg.ReadInt32();
-            int z = msg.ReadInt32();
-            TileType newTile = (TileType)msg.ReadByte();
-            map.ChangeTile(x, z, newTile);
         }
 
         public void WriteBoundingBox(AxisAlignedBox box, float scale)
@@ -185,7 +147,7 @@ namespace SS3D.States
             Mogre.Vector3[] corners = box.GetAllCorners();
 
             sw.WriteLine("Crowbar:");
-            sw.WriteLine("Deafult size:");
+            sw.WriteLine("Default size:");
             for (int i = 0; i < corners.Length; i++)
             {
                 sw.WriteLine("Corner: " + i + " : " + (corners[i]));
@@ -483,6 +445,7 @@ namespace SS3D.States
                 mEngine.Camera.Position = new Mogre.Vector3(0, 300, 0);
                 mEngine.Camera.LookAt(new Mogre.Vector3(160, 64, 160));
             }
+
         }
 
         private void LoadMapButtonMouseDown(object sender, MouseButtonEventArgs e)

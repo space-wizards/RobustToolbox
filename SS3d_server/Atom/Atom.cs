@@ -24,7 +24,7 @@ namespace SS3d_server.Atom
         public Atom()
         {
             position = new Vector3(160, 0, 160);
-            rotW = 0;
+            rotW = 1;
             rotY = 0;
         }
 

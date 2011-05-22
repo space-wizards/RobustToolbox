@@ -126,6 +126,7 @@
     <Compile Include="Modules\ConfigManager.cs" />
     <Compile Include="Modules\Items\ItemManager.cs" />
     <Compile Include="Modules\Map\Map.cs" />
+    <Compile Include="Modules\Map\MapFile.cs" />
     <Compile Include="Modules\Map\MapSaver.cs" />
     <Compile Include="Modules\MiyagiRessources.cs" />
     <Compile Include="Modules\Mobs\MobManager.cs" />
@@ -139,6 +140,7 @@
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="States\ConnectMenu.cs" />
+    <Compile Include="States\EditorScreen.cs" />
     <Compile Include="States\GameScreen.cs" />
     <Compile Include="States\LoadingScreen.cs" />
     <Compile Include="States\EditScreen.cs" />

@@ -30,6 +30,10 @@ namespace SS3D.Modules.UI
 
         private readonly int maxLines = 75;
 
+        private Boolean reinitializing = false; //Used in the initialize method to check if were just resetting the GUI.
+
+        private List<string> autocompleteList = new List<string>();
+
         private bool visible = false;
         public bool Visible
         {
@@ -42,8 +46,13 @@ namespace SS3D.Modules.UI
             {
                 if (consoleGUI != null)
                 {
-                    //foreach (Label lbl in entries) lbl.Visible = value;
-                    //consoleGUI.Fade(value ? 0 : 0.95f, value ? 0.95f : 0, 100);
+                    if (consoleGUI.Controls == null) // Something disposed the gui.
+                    {
+                        reinitializing = true;
+                        Initialize(mEngine);
+                        return;
+                    }
+
                     consoleGUI.Visible = value;
                     consolePanel.Enabled = consoleTextbox.Enabled = value;
                     visible = value;
@@ -51,6 +60,8 @@ namespace SS3D.Modules.UI
                     consoleGUI.ZOrder = 100;
                     consoleGUI.EnsureZOrder();
                 }
+
+
             }
         }
 
@@ -75,13 +86,12 @@ namespace SS3D.Modules.UI
             mMiyagiRes = MiyagiResources.Singleton;
             mEngine = engine;
 
-            if(consoleGUI != null)
-            {
-                Visible = true;
-                return;
-            }
-
             consoleGUI = new GUI("Console");
+
+            autocompleteList.Add("getstate");
+            autocompleteList.Add("setstate");
+            autocompleteList.Add("exit");
+            autocompleteList.Add("cls");
 
             this.consolePanel = new Panel("ConsolePanel")
             {
@@ -158,6 +168,7 @@ namespace SS3D.Modules.UI
                     }
                 },
                 Skin = MiyagiResources.Singleton.Skins["ConsoleTextBoxSkin"],
+                AutoCompleteSource = autocompleteList,
                 ClearTextOnSubmit = true
             };
             consoleTextbox.Submit += new EventHandler<ValueEventArgs<string>>(consoleTextbox_Submit);
@@ -169,7 +180,10 @@ namespace SS3D.Modules.UI
 
             mMiyagiRes.mMiyagiSystem.GUIManager.GUIs.Add(consoleGUI);
 
-            Visible = false;
+            if (!reinitializing) //We just reset the console because the GUI was disposed of.
+                Visible = false;
+            else
+                reinitializing = false;        
         }
 
         public void AddLine(string text)

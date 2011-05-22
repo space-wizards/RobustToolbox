@@ -44,7 +44,11 @@ namespace SS3D_shared.HelperClasses
 
         public void WriteMessage(NetOutgoingMessage message)
         {
-
+            message.Write(position.x);
+            message.Write(position.y);
+            message.Write(position.z);
+            message.Write(rotW);
+            message.Write(rotY);
         }
 
     }

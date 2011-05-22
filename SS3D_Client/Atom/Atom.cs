@@ -118,7 +118,12 @@ namespace SS3D.Atom
         {
             Mogre.Vector3 difference;
             float rotW, rotY;
-            
+
+            if (interpolationPackets.Count == 0)
+            {
+                updateRequired = false;
+                return;
+            }
             difference = interpolationPackets[0].position - Node.Position;
             
             // Set rotation. The packet may be rotation only.
@@ -160,10 +165,12 @@ namespace SS3D.Atom
                 sceneManager.DestroySceneNode(entityName);
             }
             Node = sceneManager.RootSceneNode.CreateChildSceneNode(entityName);
-            Entity = sceneManager.CreateEntity(entityName, "male.mesh");
+            Entity = sceneManager.CreateEntity(entityName, meshName);
             Entity.UserObject = this;
             Node.Position = position;
             Node.AttachObject(Entity);
+
+            drawn = true;
         }
 
         // Sends a message to the server to request the atom's data.

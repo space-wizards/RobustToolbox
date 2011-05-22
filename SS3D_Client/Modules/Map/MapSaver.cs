@@ -5,7 +5,10 @@ using System.IO;
 using Mogre;
 using SS3D.HelperClasses;
 using SS3D_shared;
+using SS3D.Modules.Items;
 
+using System.Xml;
+using System.Xml.Serialization;
 
 namespace SS3D.Modules.Map
 {
@@ -18,7 +21,6 @@ namespace SS3D.Modules.Map
         public string[,] nameArray;
         public int mapWidth;
         public int mapHeight;
-
 
         public MapSaver(Map _map, OgreManager _mEngine)
         {
@@ -84,5 +86,66 @@ namespace SS3D.Modules.Map
         }
 
 
+    }
+
+    public class MapFileHandler
+    {
+        //TO-DO: Add support for objects once they exist. Also need to change MapFile class for that.
+        //       Maybe save / Load in separate threads.
+        //       Support for rotated Items & Objects.
+
+        public static void SaveMap(string path, Map map, ItemManager itemManager)
+        {
+            MapFile MapToSave = new MapFile();
+
+            //Preparing the tile data. MapWidth - MapHeight
+            MapToSave.TileData = new TileData();
+            MapToSave.TileData.width = map.mapWidth;
+            MapToSave.TileData.height = map.mapHeight;
+            MapToSave.TileData.TileInfo = new List<TileEntry>();
+            //Unfortunately we can't serialize multidimensional arrays :(. So it's a list.
+            for (int y = 0; y < map.mapHeight; y++)
+            {
+                for (int x = 0; x < map.mapWidth; x++)
+                {
+                    TileEntry NewTileEntry = new TileEntry();
+                    NewTileEntry.type = (int)map.tileArray[x,y].TileType;
+                    NewTileEntry.position = new Vec2(x, y);
+                    MapToSave.TileData.TileInfo.Add(NewTileEntry);
+                }
+            }
+
+            //Preparing the item data. ADD CHECK FOR PICKED UP ITEMS / ITEMS NOT IN WORLD / ITEMS IN OBJECTS OR OTHER ITEMS (CLOSET?) !!!
+            MapToSave.ItemData = new ItemData();
+            MapToSave.ItemData.ItemEntries = new List<ItemEntry>();
+            foreach(KeyValuePair<ushort, Item> pair in itemManager.itemDict)
+            {
+                Item currentItem = pair.Value;
+                ItemEntry newEntry = new ItemEntry();
+                newEntry.type = (int)currentItem.ItemType;
+                newEntry.position = new Vec3f(currentItem.Node.Position.x,currentItem.Node.Position.y,currentItem.Node.Position.z);
+                newEntry.rotation = new RotaDeg(currentItem.Node.Orientation.Yaw.ValueDegrees, currentItem.Node.Orientation.Pitch.ValueDegrees, currentItem.Node.Orientation.Roll.ValueDegrees);
+                MapToSave.ItemData.ItemEntries.Add(newEntry);
+            }
+
+            //Serialize & Write map to file.
+            if (!Directory.Exists(Path.GetDirectoryName(path))) Directory.CreateDirectory(Path.GetDirectoryName(path));
+            System.Xml.Serialization.XmlSerializer MapSerializer = new System.Xml.Serialization.XmlSerializer(typeof(MapFile));
+            StreamWriter MapWriter = File.CreateText(path);
+            MapSerializer.Serialize(MapWriter, MapToSave);
+            MapWriter.Flush();
+            MapWriter.Close();
+        }
+
+        public static MapFile LoadMap(string path)
+        {
+            if(!File.Exists(path)) throw new FileNotFoundException("Map file not found.");
+            MapFile LoadedMap;
+            System.Xml.Serialization.XmlSerializer MapLoader = new System.Xml.Serialization.XmlSerializer(typeof(MapFile));
+            StreamReader MapReader = File.OpenText(path);
+            LoadedMap = (MapFile)MapLoader.Deserialize(MapReader);
+            MapReader.Close();
+            return LoadedMap;
+        }
     }
 }

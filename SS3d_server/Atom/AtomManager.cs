@@ -23,6 +23,7 @@ namespace SS3d_server.Atom
         public AtomManager(SS3DNetserver _netServer)
         {
             netServer = _netServer;
+            atomDictionary = new Dictionary<ushort, Atom>();
         }
         #endregion
 
@@ -74,6 +75,11 @@ namespace SS3d_server.Atom
         {
             //Message should already have the uid attached by the atom in question. Just need to send it here.
         }
+
+        public void NewPlayer(NetConnection connection)
+        {
+            SendAllAtoms(connection);
+        }
         #endregion
 
         #region deletion
@@ -98,17 +104,44 @@ namespace SS3d_server.Atom
             netServer.SendMessageToAll(message);
         }
 
+        private void SendSpawnAtom(ushort uid, string type, NetConnection client)
+        {
+            NetOutgoingMessage message = netServer.netServer.CreateMessage();
+            message.Write((byte)NetMessage.AtomManagerMessage);
+            message.Write((byte)AtomManagerMessage.SpawnAtom);
+            message.Write(uid);
+            message.Write(type);
+            netServer.SendMessageTo(message, client);
+        }
+
+        public void SendAllAtoms(NetConnection client)
+        {
+            // Send all atoms to a specific client. 
+            // TODO: Make this less fucking stupid ie: send all of the atoms in a condensed form instead of this heavy-handed looping shit.
+            // This will get laggy later on.
+            foreach(Atom atom in atomDictionary.Values) 
+            {
+                SendSpawnAtom(atom.uid, AtomName(atom), client);
+            }
+        }
+
+        public string AtomName(object atom)
+        {
+            string type = atom.GetType().ToString();
+            type = type.Substring(type.IndexOf(".") + 1); // Fuckugly method of stripping the assembly name of the type.
+            return type;
+        }
+
         public Atom SpawnAtom(string type)
         {
             ushort uid = (ushort)(1 + atomDictionary.Count);
 
             Assembly currentAssembly = Assembly.GetExecutingAssembly();
-            Type atomType = currentAssembly.GetType(type);
+            Type atomType = currentAssembly.GetType("SS3d_server." + type, true);
             object atom = Activator.CreateInstance(atomType); // Create atom of type atomType with parameters uid, this
             atomDictionary[uid] = (Atom)atom;
 
-            atomDictionary[uid].uid = uid;
-            atomDictionary[uid].atomManager = this;
+            atomDictionary[uid].SetUp(uid, this);
 
             SendSpawnAtom(uid, type);
 

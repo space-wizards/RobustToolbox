@@ -23,6 +23,15 @@ namespace SS3d_server.Atom
 
         public Atom()
         {
+            position = new Vector3(160, 0, 160);
+            rotW = 0;
+            rotY = 0;
+        }
+
+        public void SetUp(ushort _uid, AtomManager _atomManager)
+        {
+            uid = _uid;
+            atomManager = _atomManager;
         }
 
         public virtual void Update()
@@ -53,6 +62,20 @@ namespace SS3d_server.Atom
         public virtual void Push()
         {
             // Do nothing, this is a default atom and nothing needs to be pushed.
+            SendInterpolationPacket();
+        }
+
+        public void SendInterpolationPacket()
+        {
+            NetOutgoingMessage message = atomManager.netServer.netServer.CreateMessage();
+            message.Write((byte)NetMessage.AtomManagerMessage);
+            message.Write((byte)AtomManagerMessage.Passthrough);
+            message.Write(uid);
+            message.Write((byte)AtomMessage.InterpolationPacket);
+
+            InterpolationPacket i = new InterpolationPacket((float)position.X, (float)position.Y, (float)position.Z, rotW, rotY, 0); // Fuckugly
+            i.WriteMessage(message);
+            atomManager.netServer.SendMessageToAll(message);
         }
 
         public virtual void HandlePositionUpdate(NetIncomingMessage message)

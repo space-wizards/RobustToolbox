@@ -16,6 +16,7 @@ namespace SS3D.Atom
         public Entity Entity;
         public string meshName = "ogrehead.mesh"; // Ogrehead is a nice default mesh. This prevents any atom from inadvertently spawning without a mesh.
         public bool updateRequired = false;
+        public bool drawn = false;
 
         public string name;
         public ushort uid;
@@ -25,13 +26,39 @@ namespace SS3D.Atom
         public Mogre.Vector3 position;
         public float rotW;
         public float rotY;
-        public bool positionChanged;
+        public bool positionChanged = false;
 
         public List<InterpolationPacket> interpolationPackets;
 
         public Atom()
         {
+            position = new Mogre.Vector3(0, 0, 0);
+            rotW = 0;
+            rotY = 0;
 
+            interpolationPackets = new List<InterpolationPacket>();
+        }
+
+        public Atom(ushort _uid, AtomManager _atomManager)
+        {
+            uid = _uid;
+            atomManager = _atomManager;
+
+            position = new Mogre.Vector3(0, 0, 0);
+            rotW = 0;
+            rotY = 0;
+
+            interpolationPackets = new List<InterpolationPacket>();
+
+            Draw();
+        }
+
+        public void SetUp(ushort _uid, AtomManager _atomManager)
+        {
+            uid = _uid;
+            atomManager = _atomManager;
+
+            Draw();
         }
 
         public void HandleNetworkMessage(NetIncomingMessage message)
@@ -73,6 +100,9 @@ namespace SS3D.Atom
 
         public virtual void Update()
         {
+            //If the node hasn't even been drawn into the scene, there's no point updating the fucker, is there?
+            if (!drawn)
+                return;
             //This lets the atom only update when it needs to. If it needs to update subsequent to this, the functions below will set that flag.
             updateRequired = false;
 
@@ -88,7 +118,6 @@ namespace SS3D.Atom
         {
             Mogre.Vector3 difference;
             float rotW, rotY;
-
             
             difference = interpolationPackets[0].position - Node.Position;
             
@@ -101,21 +130,40 @@ namespace SS3D.Atom
             if (difference.Length < 1)
             {
                 interpolationPackets.RemoveAt(0);
-                UpdatePosition(); // RECURSION :D - this just discards interpolationpackets we don't need anymore.
+                UpdatePosition(); // RECURSION :D - this discards interpolationpackets we don't need anymore.
             }
             else
             {
+                //Distance between interpolation packet and current position is big, so we will move the node towards it.
+
                 //This constant should be time interval based.
                 //TODO: Make this better if it isn't good enough.
                 difference /= 5;
                 Node.Position += difference;
-                updateRequired = true;
+                updateRequired = true; // This interpolation packet and probably the ones after it are still useful, so we'll update again on the next cycle.
             }
         }
 
         public void Draw()
         {
+            // Draw the atom into the scene. This should be called after instantiation.
+            name = "Atom" + uid;
+            SceneManager sceneManager = atomManager.mEngine.SceneMgr;
 
+            string entityName = name;
+            if (sceneManager.HasEntity(entityName))
+            {
+                sceneManager.DestroyEntity(entityName);
+            }
+            if (sceneManager.HasSceneNode(entityName))
+            {
+                sceneManager.DestroySceneNode(entityName);
+            }
+            Node = sceneManager.RootSceneNode.CreateChildSceneNode(entityName);
+            Entity = sceneManager.CreateEntity(entityName, "male.mesh");
+            Entity.UserObject = this;
+            Node.Position = position;
+            Node.AttachObject(Entity);
         }
 
         // Sends a message to the server to request the atom's data.

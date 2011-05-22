@@ -74,7 +74,7 @@ namespace SS3D.States
             mEngine.mMiyagiSystem.GUIManager.GUIs.Add(gameChat.chatGUI);
             gameChat.chatPanel.ResizeMode = Miyagi.UI.ResizeModes.None;
             gameChat.chatPanel.Movable = false;
-            gameChat.Transparency = 50;
+            gameChat.Transparency = 25;
             defaultChannel = 1; 
 
             gameChat.TextSubmitted += new Chatbox.TextSubmitHandler(chatTextbox_TextSubmitted);
@@ -213,6 +213,11 @@ namespace SS3D.States
                 Mogre.Vector3 pos = mobManager.myMob.Node.Position;
                 pos.y += 40;
                 itemManager.SendCreateItem(pos);
+            }
+            else if (text == "/dumpmap")
+            {
+                if(map != null && itemManager != null)
+                    MapFileHandler.SaveMap("./Maps/mapdump.map", map, itemManager);
             }
             else
             {

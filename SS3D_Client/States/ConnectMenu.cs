@@ -26,7 +26,7 @@ namespace SS3D.States
     private OgreManager mEngine;
     private StateManager mStateMgr;
     private GUI guiConnectMenu;
-    private string ipTextboxIP = "127.0.0.1";
+    private string ipTextboxIP = "games.ques.to";
     private string name = "Player";
     private bool connecting = false;
     private DateTime connectTime;

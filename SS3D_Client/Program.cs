@@ -26,7 +26,6 @@ namespace SS3D
     private static StateManager mStateMgr;
     private static MOIS.InputManager mInputMgr;
 
-    private uint consoleSeparationCounter = 0;
     private bool autoConnect = false;
     
     private MiyagiSystem mMiyagiSystem;
@@ -119,7 +118,7 @@ namespace SS3D
               }
 
               //Run main loop until the window is closed
-              while (!mEngine.Window.IsClosed)
+              while (!mEngine.Window.IsClosed && Environment.HasShutdownStarted == false)
               {
                   // update networking
                   mEngine.mNetworkMgr.UpdateNetwork();
@@ -170,21 +169,13 @@ namespace SS3D
 
     bool FrameStarted(FrameEvent evt)
     {
-        try
-        {
-            mKeyboard.Capture();
-            mMouse.Capture();
-        }
-        catch(Exception e)
-        {
-            e.ToString(); //Just to make VS shut up.
-            //LogManager.Singleton.LogMessage("MOIS: Input Capture failed -> " + e.Message);
-        }
+        mKeyboard.Capture();
+        mMouse.Capture();
+
+        ProcessUnbufferedInput(evt);
 
         if (mMiyagiSystem != null)
             mEngine.mMiyagiSystem.Update();
-
-        ProcessUnbufferedInput(evt);
 
         return true;
     }
@@ -206,15 +197,6 @@ namespace SS3D
 
         if (evt.key == MOIS.KeyCode.KC_F12)
             GameConsole.Singleton.Visible = !GameConsole.Singleton.Visible;
-
-        if (evt.key == MOIS.KeyCode.KC_F11)
-            GameConsole.Singleton.AddLine("Abs X: " + (mMiyagiSystem.GUIManager.Cursor.Location.X / (float)mEngine.Window.Width).ToString() + " / Abs Y: " + (mMiyagiSystem.GUIManager.Cursor.Location.Y / (float)mEngine.Window.Height).ToString(), Colours.MediumBlue);
-
-        if (evt.key == MOIS.KeyCode.KC_F10)
-        {
-            GameConsole.Singleton.AddLine("***" + consoleSeparationCounter.ToString() + "***", Colours.MediumSlateBlue);
-            consoleSeparationCounter++;
-        }
 
         mStateMgr.KeyDown(evt);
         return true;

@@ -15,7 +15,13 @@ namespace SS3D.Modules.Items
         private OgreManager mEngine;
         private Network.NetworkManager networkManager;
         private Mobs.MobManager mobManager;
-        private Dictionary<ushort, Item> itemDict; // ItemID, Item
+
+        public Dictionary<ushort, Item> itemDict // ItemID, Item
+        {
+            get;
+            private set;
+        }
+
         private List<ushort> itemsToMove;
         private List<ushort> itemsToStop;
         private string itemAssemblyName;

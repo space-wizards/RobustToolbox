@@ -110,6 +110,82 @@ namespace SS3D.Modules.Map
             return true;
         }
 
+        public bool LoadMap(MapFile toLoad)
+        {
+            meshManager = new geometryMeshManager();
+            meshManager.CreateMeshes();
+
+            mapWidth = toLoad.TileData.width;
+            mapHeight = toLoad.TileData.height;
+
+            float geoSize = StaticGeoSize;
+
+            StaticGeoX = (int)System.Math.Ceiling(mapWidth / geoSize);
+            StaticGeoZ = (int)System.Math.Ceiling(mapHeight / geoSize);
+
+            InitStaticgeometry();
+
+            tileArray = new BaseTile[mapWidth, mapHeight];
+
+            foreach (TileEntry entry in toLoad.TileData.TileInfo)
+            {   // x=x z=y
+                int posX = entry.position.x * tileSpacing;
+                int posZ = entry.position.y * tileSpacing;
+                //OH FUCK.
+                TileType type = (TileType)entry.type;
+                Type classType = type.GetClass();
+                object[] arguments = new object[3];
+                //arguments[0] = mEngine.SceneMgr;
+                //arguments[1] = new Vector3(x, y, z);
+                //arguments[2] = itemID;
+
+                object newTile = Activator.CreateInstance(classType, arguments);
+            }
+
+
+            //for (int z = 0; z < mapHeight; z++)
+            //{
+            //    for (int x = 0; x < mapWidth; x++)
+            //    {
+            //        int posX = x * tileSpacing;
+            //        int posZ = z * tileSpacing;
+
+            //        switch (savedArray[x, z])
+            //        {
+            //            case "wall":
+            //                tileArray[x, z] = new Wall(meshManager.wallMesh.Name, mEngine.SceneMgr, new Vector3(posX, 0, posZ), tileSpacing);
+            //                break;
+            //            case "floor":
+            //                tileArray[x, z] = new Floor(meshManager.floorMesh.Name, mEngine.SceneMgr, new Vector3(posX, 0, posZ), tileSpacing);
+            //                break;
+            //            default:
+            //                break;
+            //        }
+            //        tileArray[x, z].Node.SetVisible(false);
+            //    }
+            //}
+
+            //for (int x = 0; x < mapWidth; x++)
+            //{
+            //    for (int z = 0; z < mapHeight; z++)
+            //    {
+
+            //        // Get which piece of the staticGeometry array this tile belongs in (automatically
+            //        // worked out when the tile is created)
+            //        int GeoX = tileArray[x, z].GeoPosX;
+            //        int GeoZ = tileArray[x, z].GeoPosZ;
+
+            //        // Add it to the appropriate staticgeometry array.
+            //        staticGeometry[GeoX, GeoZ].AddSceneNode(tileArray[x, z].Node);
+            //    }
+            //}
+
+            //// Build all the staticgeometrys.
+            //BuildAllgeometry();
+            //mEngine.Update();
+            return true;
+        }
+
         public bool LoadMapSaverMap(int width, int height, string[,] savedArray)
         {
             meshManager = new geometryMeshManager();

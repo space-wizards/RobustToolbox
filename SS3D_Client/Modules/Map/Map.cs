@@ -118,6 +118,8 @@ namespace SS3D.Modules.Map
             mapWidth = toLoad.TileData.width;
             mapHeight = toLoad.TileData.height;
 
+            tileArray = new BaseTile[mapWidth, mapHeight];
+
             float geoSize = StaticGeoSize;
 
             StaticGeoX = (int)System.Math.Ceiling(mapWidth / geoSize);
@@ -125,64 +127,41 @@ namespace SS3D.Modules.Map
 
             InitStaticgeometry();
 
-            tileArray = new BaseTile[mapWidth, mapHeight];
-
             foreach (TileEntry entry in toLoad.TileData.TileInfo)
             {   // x=x z=y
                 int posX = entry.position.x * tileSpacing;
                 int posZ = entry.position.y * tileSpacing;
-                //OH FUCK.
                 TileType type = (TileType)entry.type;
                 Type classType = type.GetClass();
                 object[] arguments = new object[3];
-                //arguments[0] = mEngine.SceneMgr;
-                //arguments[1] = new Vector3(x, y, z);
-                //arguments[2] = itemID;
-
+                //(SceneManager sceneManager, Vector3 position, int tileSpacing)
+                arguments[0] = mEngine.SceneMgr;
+                arguments[1] = new Vector3(posX, 0, posZ);
+                arguments[2] = tileSpacing;
                 object newTile = Activator.CreateInstance(classType, arguments);
+                BaseTile newTileConv = (BaseTile)newTile;
+                tileArray[entry.position.x, entry.position.y] = newTileConv;
+                tileArray[entry.position.x, entry.position.y].Node.SetVisible(false);
+                staticGeometry[newTileConv.GeoPosX, newTileConv.GeoPosZ].AddSceneNode(tileArray[entry.position.x, entry.position.y].Node);
             }
 
+            for (int x = 0; x < mapWidth; x++)
+            {
+                for (int z = 0; z < mapHeight; z++)
+                {
+                    if (tileArray[x, z] == null) //If theres nothing in it at this point, then its space.
+                    {
+                        int posX = x * tileSpacing;
+                        int posZ = z * tileSpacing;
+                        tileArray[x, z] = new Space(mEngine.SceneMgr, new Vector3(posX, 0, posZ), tileSpacing);
+                        tileArray[x, z].Node.SetVisible(false);
+                        staticGeometry[tileArray[x, z].GeoPosX, tileArray[x, z].GeoPosZ].AddSceneNode(tileArray[x, z].Node);
+                    }
+                }
+            }
 
-            //for (int z = 0; z < mapHeight; z++)
-            //{
-            //    for (int x = 0; x < mapWidth; x++)
-            //    {
-            //        int posX = x * tileSpacing;
-            //        int posZ = z * tileSpacing;
-
-            //        switch (savedArray[x, z])
-            //        {
-            //            case "wall":
-            //                tileArray[x, z] = new Wall(meshManager.wallMesh.Name, mEngine.SceneMgr, new Vector3(posX, 0, posZ), tileSpacing);
-            //                break;
-            //            case "floor":
-            //                tileArray[x, z] = new Floor(meshManager.floorMesh.Name, mEngine.SceneMgr, new Vector3(posX, 0, posZ), tileSpacing);
-            //                break;
-            //            default:
-            //                break;
-            //        }
-            //        tileArray[x, z].Node.SetVisible(false);
-            //    }
-            //}
-
-            //for (int x = 0; x < mapWidth; x++)
-            //{
-            //    for (int z = 0; z < mapHeight; z++)
-            //    {
-
-            //        // Get which piece of the staticGeometry array this tile belongs in (automatically
-            //        // worked out when the tile is created)
-            //        int GeoX = tileArray[x, z].GeoPosX;
-            //        int GeoZ = tileArray[x, z].GeoPosZ;
-
-            //        // Add it to the appropriate staticgeometry array.
-            //        staticGeometry[GeoX, GeoZ].AddSceneNode(tileArray[x, z].Node);
-            //    }
-            //}
-
-            //// Build all the staticgeometrys.
-            //BuildAllgeometry();
-            //mEngine.Update();
+            BuildAllgeometry();
+            mEngine.Update();
             return true;
         }
 
@@ -250,10 +229,10 @@ namespace SS3D.Modules.Map
                     switch (networkedArray[x, z])
                     {
                         case TileType.Wall:
-                            tileArray[x, z] = new Wall(meshManager.wallMesh.Name, mEngine.SceneMgr, new Vector3(posX, 0, posZ), tileSpacing);
+                            tileArray[x, z] = new Wall(mEngine.SceneMgr, new Vector3(posX, 0, posZ), tileSpacing);
                             break;
                         case TileType.Floor:
-                            tileArray[x, z] = new Floor(meshManager.floorMesh.Name, mEngine.SceneMgr, new Vector3(posX, 0, posZ), tileSpacing);
+                            tileArray[x, z] = new Floor(mEngine.SceneMgr, new Vector3(posX, 0, posZ), tileSpacing);
                             break;
                         case TileType.Space:
                             tileArray[x, z] = new Space(mEngine.SceneMgr, new Vector3(posX, 0, posZ), tileSpacing);
@@ -314,10 +293,10 @@ namespace SS3D.Modules.Map
                     switch (savedArray[x, z])
                     {
                         case "wall":
-                            tileArray[x, z] = new Wall(meshManager.wallMesh.Name, mEngine.SceneMgr, new Vector3(posX, 0, posZ), tileSpacing);
+                            tileArray[x, z] = new Wall(mEngine.SceneMgr, new Vector3(posX, 0, posZ), tileSpacing);
                             break;
                         case "floor":
-                            tileArray[x, z] = new Floor(meshManager.floorMesh.Name, mEngine.SceneMgr, new Vector3(posX, 0, posZ), tileSpacing);
+                            tileArray[x, z] = new Floor(mEngine.SceneMgr, new Vector3(posX, 0, posZ), tileSpacing);
                             break;
                         default:
                             break;
@@ -512,10 +491,10 @@ namespace SS3D.Modules.Map
                     Space space = new Space(mEngine.SceneMgr, pos, tileSpacing);
                     return space;
                 case TileType.Floor:
-                    Floor floor = new Floor(meshManager.floorMesh.Name, mEngine.SceneMgr, pos, tileSpacing);
+                    Floor floor = new Floor(mEngine.SceneMgr, pos, tileSpacing);
                     return floor;
                 case TileType.Wall:
-                    Wall wall = new Wall(meshManager.wallMesh.Name, mEngine.SceneMgr, pos, tileSpacing);
+                    Wall wall = new Wall(mEngine.SceneMgr, pos, tileSpacing);
                     return wall;
                 default:
                     return null;

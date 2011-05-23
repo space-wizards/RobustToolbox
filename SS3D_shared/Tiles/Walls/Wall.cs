@@ -8,12 +8,13 @@ namespace SS3D_shared
 {
     public class Wall : BaseTile
     {
-        public Wall(string meshName, SceneManager sceneManager, Vector3 position, int tileSpacing)
+        public Wall(SceneManager sceneManager, Vector3 position, int tileSpacing)
             : base(tileSpacing)
         {
             TileType = TileType.Wall;
             string entityName;
             name = "wall";
+            meshName = "wallMesh";
             entityName = "0" + position.x + "0" + position.z;
             if (sceneManager.HasEntity(entityName))
             {

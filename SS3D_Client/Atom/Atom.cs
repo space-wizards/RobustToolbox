@@ -215,11 +215,15 @@ namespace SS3D.Atom
         public virtual void TurnLeft()
         {
             Node.Rotate(Mogre.Vector3.UNIT_Y, Mogre.Math.DegreesToRadians(-2));
+            rotW = Node.Orientation.w;
+            rotY = Node.Orientation.y;
         }
 
         public virtual void TurnRight()
         {
             Node.Rotate(Mogre.Vector3.UNIT_Y, Mogre.Math.DegreesToRadians(2));
+            rotW = Node.Orientation.w;
+            rotY = Node.Orientation.y;
         }
 
         #endregion
@@ -271,12 +275,20 @@ namespace SS3D.Atom
         
         public void HandleKeyPressed(MOIS.KeyCode k)
         {
-
+            SetKeyState(k, true);
         }
 
         public void HandleKeyReleased(MOIS.KeyCode k)
         {
+            SetKeyState(k, false);
+        }
 
+        private void SetKeyState(MOIS.KeyCode k, bool state)
+        {
+            if (keyHandlers.ContainsKey(k))
+            {
+                keyStates[k] = state;
+            }
         }
 
         #region key handlers

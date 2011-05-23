@@ -192,6 +192,9 @@ namespace SS3D.States
             };
             loadPanel.Controls.Add(filePanel);
 
+            if (!Directory.Exists(@".\Maps")) 
+                Directory.CreateDirectory(@".\Maps");
+
             string[] mapFiles = Directory.GetFiles(@".\Maps", "*.map");
             int currY = 0;
             foreach (string currFile in mapFiles)
@@ -252,6 +255,7 @@ namespace SS3D.States
         void cancelButton_Click(object sender, EventArgs e)
         {
             this.Pop();
+            this.Dispose();
             mStateMgr.Engine.mMiyagiSystem.GUIManager.GUIs.Remove(this);
         }
     }

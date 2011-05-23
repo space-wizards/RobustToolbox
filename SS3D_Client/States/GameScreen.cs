@@ -383,7 +383,7 @@ namespace SS3D.States
 
         public override void KeyUp(MOIS.KeyEvent keyState)
         {
-            if (gameChat.chatGUI.GetControl("ChatTextbox").Focused)
+            if (gameChat.HasFocus())
             {
                 return;
             }

@@ -268,6 +268,9 @@ namespace SS3d_server.Modules.Items
 
         private void SendPickupItem(ushort itemID, ushort mobID, MobHand hand)
         {
+            // DEBUG
+            Console.WriteLine("SendPickupItem " + itemID + " " + mobID + " " + hand);
+
             NetOutgoingMessage message = netServer.netServer.CreateMessage();
             message.Write((byte)NetMessage.ItemMessage);
             message.Write((byte)ItemMessage.PickUpItem);

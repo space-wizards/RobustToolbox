@@ -316,6 +316,7 @@ namespace SS3D.States
         #region Input
         public override void UpdateInput(Mogre.FrameEvent evt, MOIS.Keyboard keyState, MOIS.Mouse mouseState)
         {
+            // TODO: Rewrite this shit
             if (gameChat.chatGUI.GetControl("ChatTextbox").Focused)
             {
                 return;

@@ -27,8 +27,14 @@ namespace SS3D.Atom
         public float rotW;
         public float rotY;
         public bool positionChanged = false;
-
         public List<InterpolationPacket> interpolationPackets;
+        public float speed = 1.0f;
+
+        //Input
+        public Dictionary<MOIS.KeyCode, bool> keyStates;
+        public Dictionary<MOIS.KeyCode, KeyEvent> keyHandlers;
+
+        public delegate void KeyEvent(bool newState);
 
         public Atom()
         {
@@ -61,6 +67,7 @@ namespace SS3D.Atom
             Draw();
         }
 
+        #region network stuff
         public void HandleNetworkMessage(NetIncomingMessage message)
         {
             //Pass on a push message.
@@ -98,6 +105,40 @@ namespace SS3D.Atom
             updateRequired = true;
         }
 
+        // Sends a message to the server to request the atom's data.
+        public void SendPullMessage()
+        {
+            NetOutgoingMessage message = atomManager.networkManager.netClient.CreateMessage();
+            message.Write((byte)NetMessage.AtomManagerMessage);
+            message.Write((byte)AtomManagerMessage.Passthrough);
+            message.Write((ushort)uid);
+            message.Write((byte)AtomMessage.Pull);
+            atomManager.networkManager.SendMessage(message, NetDeliveryMethod.Unreliable);
+        }
+
+        public virtual void HandlePush(NetIncomingMessage message)
+        {
+            // Do nothing. This should be overridden by the child.
+        }
+
+        public void SendPositionUpdate()
+        {
+            // This is only useful if the fucking shit is actually controlled by a player
+            NetOutgoingMessage message = atomManager.networkManager.netClient.CreateMessage();
+            message.Write((byte)NetMessage.AtomManagerMessage);
+            message.Write((byte)AtomManagerMessage.Passthrough);
+            message.Write((ushort)uid);
+            message.Write((byte)AtomMessage.PositionUpdate);
+            message.Write(position.x);
+            message.Write(position.y);
+            message.Write(position.z);
+            message.Write(rotW);
+            message.Write(rotY);
+            atomManager.networkManager.SendMessage(message, NetDeliveryMethod.Unreliable);
+        }
+
+        #endregion
+
         public virtual void Update()
         {
             //If the node hasn't even been drawn into the scene, there's no point updating the fucker, is there?
@@ -113,6 +154,7 @@ namespace SS3D.Atom
             
         }
 
+        #region positioning
         // Mobs may need to override this for animation, or they could use this.
         public virtual void UpdatePosition()
         {
@@ -150,6 +192,38 @@ namespace SS3D.Atom
             }
         }
 
+        public virtual void Translate() {
+
+        }
+
+        //TODO: Unfuck this. 
+        /* Shouldn't really be translating the node and then backfilling the atom objects
+         * position and rotation from it. Ostaf? */
+
+        public virtual void MoveForward() 
+        {
+            Node.Translate(new Mogre.Vector3(0, 0, speed), Mogre.Node.TransformSpace.TS_LOCAL);
+            position = Node.Position;
+        }
+
+        public virtual void MoveBack()
+        {
+            Node.Translate(new Mogre.Vector3(0,0,-1 * speed), Mogre.Node.TransformSpace.TS_LOCAL);
+            position = Node.Position;
+        }
+
+        public virtual void TurnLeft()
+        {
+            Node.Rotate(Mogre.Vector3.UNIT_Y, Mogre.Math.DegreesToRadians(-2));
+        }
+
+        public virtual void TurnRight()
+        {
+            Node.Rotate(Mogre.Vector3.UNIT_Y, Mogre.Math.DegreesToRadians(2));
+        }
+
+        #endregion
+
         public void Draw()
         {
             // Draw the atom into the scene. This should be called after instantiation.
@@ -175,20 +249,56 @@ namespace SS3D.Atom
             drawn = true;
         }
 
-        // Sends a message to the server to request the atom's data.
-        public void SendPullMessage()
+
+
+        #region input handling
+        /* You might be wondering why input handling is in the base atom code. Well, It's simple.
+         * This way I can make any item on the station player controllable. If I want to, I can spawn
+         * a watermelon and make the player I hate with the fire of a million burning suns become that
+         * melon. Awesome.
+         */
+        public void initKeys()
         {
-            NetOutgoingMessage message = atomManager.networkManager.netClient.CreateMessage();
-            message.Write((byte)NetMessage.AtomManagerMessage);
-            message.Write((byte)AtomManagerMessage.Passthrough);
-            message.Write((ushort)uid);
-            message.Write((byte)AtomMessage.Pull);
-            atomManager.networkManager.SendMessage(message, NetDeliveryMethod.Unreliable);
+            /* Set up key handlers (we don't need to do this unless a playercontroller attaches.)
+             * Example: keyHandlers.Add(MOIS.KeyCode.KC_Whatever, new KeyEvent(HandleKC_whatever));
+             * To override a keyhandler, delete it and make a new one OR override the handler function 
+             * BEFORE calling initKeys(). */
+            keyHandlers.Add(MOIS.KeyCode.KC_W, new KeyEvent(HandleKC_W));
+            keyHandlers.Add(MOIS.KeyCode.KC_A, new KeyEvent(HandleKC_A));
+            keyHandlers.Add(MOIS.KeyCode.KC_S, new KeyEvent(HandleKC_S));
+            keyHandlers.Add(MOIS.KeyCode.KC_D, new KeyEvent(HandleKC_D));
+        }
+        
+        public void HandleKeyPressed(MOIS.KeyCode k)
+        {
+
         }
 
-        public virtual void HandlePush(NetIncomingMessage message)
+        public void HandleKeyReleased(MOIS.KeyCode k)
         {
-            // Do nothing. This should be overridden by the child.
+
         }
+
+        #region key handlers
+        protected void HandleKC_W(bool keystate)
+        {
+            MoveForward();
+        }
+        protected void HandleKC_A(bool keystate)
+        {
+            //moveLeft(); // I want this to be strafe
+            TurnLeft();
+        }
+        protected void HandleKC_S(bool keystate)
+        {
+            MoveBack();
+        }
+        protected void HandleKC_D(bool keystate)
+        {
+            //moveRight(); // I want this to be strafe
+            TurnRight();
+        }
+        #endregion
+        #endregion
     }
 }

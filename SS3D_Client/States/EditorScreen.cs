@@ -255,6 +255,7 @@ namespace SS3D.States
         void cancelButton_Click(object sender, EventArgs e)
         {
             this.Pop();
+            this.Dispose();
             mStateMgr.Engine.mMiyagiSystem.GUIManager.GUIs.Remove(this);
         }
     }

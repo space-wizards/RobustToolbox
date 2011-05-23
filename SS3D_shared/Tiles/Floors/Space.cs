@@ -14,6 +14,7 @@ namespace SS3D_shared
             TileType = TileType.Space;
             string entityName;
             name = "space";
+            meshName = "spaceMesh";
             entityName = "0" + position.x + "0" + position.z;
             if (sceneManager.HasEntity(entityName))
             {

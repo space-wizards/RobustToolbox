@@ -51,6 +51,7 @@ namespace SS3d_server.Atom
                     break;
                 case AtomMessage.PositionUpdate:
                     // We'll accept position packets from the client so that movement doesn't lag. There may be other special cases like this.
+                    // TODO: route these messages through the player controller instead of directly to the atom. That way we can prevent client x from controlling client y's mob.
                     HandlePositionUpdate(message);
                     break;
                 default:

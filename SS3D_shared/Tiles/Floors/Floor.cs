@@ -8,12 +8,13 @@ namespace SS3D_shared
 {
     public class Floor : BaseTile
     {
-        public Floor(string meshName, SceneManager sceneManager, Vector3 position, int tileSpacing)
+        public Floor(SceneManager sceneManager, Vector3 position, int tileSpacing)
             : base(tileSpacing)
         {
             TileType = TileType.Floor;
             string entityName;
             name = "floor";
+            meshName = "floorMesh";
             entityName = "0" + position.x + "0" + position.z;
             if (sceneManager.HasEntity(entityName))
             {

@@ -21,6 +21,8 @@ namespace SS3d_server.Atom
 
         public List<InterpolationPacket> interpolationPacket;
 
+        private NetConnection attachedClient = null;
+
         public Atom()
         {
             position = new Vector3(160, 0, 160);
@@ -81,8 +83,20 @@ namespace SS3d_server.Atom
 
         public virtual void HandlePositionUpdate(NetIncomingMessage message)
         {
-            //This will be largely ignored by the server, as the client shouldn't be able to move shit besides its associated player mob
-            //There may be cases when the client will need to move stuff around in a non-laggy way, but For now the only case I can think of is the player mob.
+            /* This will be largely unused by the server, as the client shouldn't 
+             * be able to move shit besides its associated player mob there may be 
+             * cases when the client will need to move stuff around in a non-laggy 
+             * way, but For now the only case I can think of is the player mob.*/
+            // Hack to accept position updates from clients
+            if (attachedClient != null && message.SenderConnection == attachedClient)
+            {
+                position.X = (double)message.ReadFloat();
+                position.Y = (double)message.ReadFloat();
+                position.Z = (double)message.ReadFloat();
+                rotW = message.ReadFloat();
+                rotY = message.ReadFloat();
+            }
+            // Discard the rest.
         }
     }
 }

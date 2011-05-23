@@ -97,6 +97,7 @@ namespace SS3D.States
         {
             if (inEditor)
             {
+                guiEditScreen.Dispose();
                 mEngine.mMiyagiSystem.GUIManager.GUIs.Remove(guiEditScreen);
                 map.Shutdown();
                 map = null;

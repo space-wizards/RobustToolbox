@@ -13,6 +13,7 @@ namespace SS3D_shared
         public int GeoPosZ;
         public int tileSpacing;
         public TileType TileType = TileType.None;
+        public string meshName;
 
         public BaseTile(int _tileSpacing)
         {

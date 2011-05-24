@@ -40,7 +40,7 @@ namespace SS3D.States
         private GUI guiGameScreen;
         private Chatbox gameChat;
         private ushort defaultChannel;
-        private PlayerController playerController;
+        public PlayerController playerController;
 
         #region Mouse/Camera stuff
         private DateTime lastRMBClick = DateTime.Now;
@@ -350,6 +350,9 @@ namespace SS3D.States
             {
                 return;
             }
+            // Pass keydown events to the PlayerController
+            playerController.KeyDown(keyState.key);
+
             if (keyState.key == MOIS.KeyCode.KC_LSHIFT)
             {
                 mobManager.myMob.speed = mobManager.myMob.runSpeed;
@@ -391,6 +394,8 @@ namespace SS3D.States
 
         public override void KeyUp(MOIS.KeyEvent keyState)
         {
+            playerController.KeyUp(keyState.key); // We want to pass key up events regardless of UI focus.
+                
             if (gameChat.chatGUI.GetControl("ChatTextbox").Focused)
             {
                 return;

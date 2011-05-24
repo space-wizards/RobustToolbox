@@ -78,6 +78,7 @@ namespace SS3D.Atom
             Atom a = SpawnAtom(uid, type);
             // Tell the atom to pull its position data etc. from the server
             a.SendPullMessage();
+            gameState.playerController.Attach(a);
         }
         
         public Atom SpawnAtom(ushort uid, string type)

@@ -452,6 +452,9 @@ namespace SS3D.States
                     degree = mouseState.state.X.rel;
                 }
                 mEngine.Camera.ParentNode.Yaw(Mogre.Math.DegreesToRadians(degree), Node.TransformSpace.TS_WORLD);
+                // uncomment to allow pitch control using the mouse y axis
+                //mEngine.Camera.ParentNode.Pitch(Mogre.Math.DegreesToRadians(mouseState.state.Y.rel), Node.TransformSpace.TS_LOCAL);
+                
                 lastMouseX = mouseState.state.X.abs;
             }
 

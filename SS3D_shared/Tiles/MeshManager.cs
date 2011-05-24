@@ -91,7 +91,7 @@ namespace SS3D_shared
 
             #region +Y size
             mobject.Begin("FloorTextureTop", RenderOperation.OperationTypes.OT_TRIANGLE_LIST);
-            mobject.Position(tileX, floorHeight, -tileZ); mobject.TextureCoord(1, 1); mobject.Normal(Vector3.UNIT_Y);
+            mobject.Position(tileX, floorHeight, -tileZ); mobject.TextureCoord(1, 1); mobject.Normal(Vector3.UNIT_Y); 
             mobject.Position(tileX, floorHeight, tileZ); mobject.TextureCoord(1, 0); mobject.Normal(Vector3.UNIT_Y);
             mobject.Position(-tileX, floorHeight, -tileZ); mobject.TextureCoord(0, 1); mobject.Normal(Vector3.UNIT_Y);
             mobject.Position(-tileX, floorHeight, tileZ); mobject.TextureCoord(0, 0); mobject.Normal(Vector3.UNIT_Y);
@@ -112,6 +112,7 @@ namespace SS3D_shared
             #endregion
 
             floorMesh = mobject.ConvertToMesh("floorMesh");
+            floorMesh.BuildTangentVectors();
 
         }
 

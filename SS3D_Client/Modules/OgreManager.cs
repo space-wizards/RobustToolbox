@@ -8,9 +8,16 @@ using Miyagi.Common;
 using SS3D.Modules.Network;
 namespace SS3D.Modules
 {
+    public abstract class LoadingTracker //Very simple abstract class. 
+    { //Simply used to provide a common interface for this stuff. Like an interface but uglier.
+        public float loadingPercent = 0;
+        public string loadingText = "";
+    }
+
   /************************************************************************/
   /* ogre manager                                                         */
   /************************************************************************/
+
   public class OgreManager
   {
     private Root mRoot;
@@ -182,6 +189,13 @@ namespace SS3D.Modules
         mCamera = null;
         mViewport = null;
         mRenderingActive = false;
+    }
+
+    public void OneUpdate()
+    {   //Updates Engine (render, input), state manager and network manager.
+        mNetworkMgr.UpdateNetwork();
+        Update();
+        mStateMgr.Update(0);
     }
 
     internal void Update()

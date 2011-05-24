@@ -165,13 +165,17 @@ namespace SS3D.Atom
             var activeKeyHandlers =
                 from keyState in keyStates
                 join handler in keyHandlers on keyState.Key equals handler.Key
+                where keyState.Value == true
                 select handler.Value;
 
             //Execute the bastards!
             foreach (var keyHandler in activeKeyHandlers)
             {
+                //If there's even one active, we set updateRequired so that this gets hit again next update
+                updateRequired = true; // QUICKNDIRTY
                 keyHandler();
             }
+            
         }
 
         #region positioning
@@ -234,14 +238,14 @@ namespace SS3D.Atom
 
         public virtual void TurnLeft()
         {
-            Node.Rotate(Mogre.Vector3.UNIT_Y, Mogre.Math.DegreesToRadians(-2));
+            Node.Rotate(Mogre.Vector3.UNIT_Y, Mogre.Math.DegreesToRadians(2));
             rotW = Node.Orientation.w;
             rotY = Node.Orientation.y;
         }
 
         public virtual void TurnRight()
         {
-            Node.Rotate(Mogre.Vector3.UNIT_Y, Mogre.Math.DegreesToRadians(2));
+            Node.Rotate(Mogre.Vector3.UNIT_Y, Mogre.Math.DegreesToRadians(-2));
             rotW = Node.Orientation.w;
             rotY = Node.Orientation.y;
         }
@@ -310,6 +314,7 @@ namespace SS3D.Atom
             {
                 keyStates[k] = state;
             }
+            updateRequired = true;
         }
 
         #region key handlers

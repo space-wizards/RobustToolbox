@@ -26,7 +26,7 @@ namespace SS3D.States
     private OgreManager mEngine;
     private StateManager mStateMgr;
     private GUI guiConnectMenu;
-    private string ipTextboxIP = "games.ques.to";
+    private string ipTextboxIP = "localhost";
     private string name = "Player";
     private bool connecting = false;
     private DateTime connectTime;
@@ -109,7 +109,7 @@ namespace SS3D.States
             Text = ipTextboxIP,
             TextStyle =
             {
-                Alignment = Alignment.MiddleLeft,
+                Alignment = Alignment.MiddleCenter,
             },
             TextBoxStyle =
             {
@@ -132,7 +132,7 @@ namespace SS3D.States
             Text = name,
             TextStyle =
             {
-                Alignment = Alignment.MiddleLeft,
+                Alignment = Alignment.MiddleCenter,
             },
             TextBoxStyle =
             {

@@ -35,7 +35,7 @@ namespace SS3d_server.Modules.Items
 
         public void Update()
         {
-            TimeSpan updateSpan = DateTime.Now - lastItemUpdateSent;
+            TimeSpan updateSpan = netServer.time - lastItemUpdateSent;
             if (updateSpan.TotalMilliseconds > itemUpdateTime)
             {
                 foreach (Item item in itemDict.Values)
@@ -47,7 +47,7 @@ namespace SS3d_server.Modules.Items
                     SendItemUpdate(itemID);
                 }
                 itemsToSend.Clear();
-                lastItemUpdateSent = DateTime.Now;
+                lastItemUpdateSent = netServer.time;
             }
 
         }
@@ -84,6 +84,9 @@ namespace SS3d_server.Modules.Items
                 case ItemMessage.ClickItem:
                     HandleClickItem(message);
                     break;
+                case ItemMessage.DropItem:
+                    HandleDropItem(message);
+                    break;
             }
 
         }
@@ -109,21 +112,80 @@ namespace SS3d_server.Modules.Items
 
         private void HandleClickItem(NetIncomingMessage message)
         {
+            MobHand hand = (MobHand)message.ReadByte();
             ushort itemID = message.ReadUInt16();
             ushort mobID = netServer.clientList[message.SenderConnection].mobID;
 
             Vector3 Dist = itemDict[itemID].serverInfo.position -= mobManager.mobDict[mobID].serverInfo.position;
+
+
+            // If we don't know about the itemID or mobID something fishy is going on, or the client has some fucked up
+            // information so lets just discard this message.
+            if (!itemDict.ContainsKey(itemID))
+            {
+                return;
+            }
+            if (!mobManager.mobDict.ContainsKey(mobID))
+            {
+                return;
+            }
+
+            Item item = itemDict[itemID];
+            Mob mob = mobManager.mobDict[mobID];
+
             if (Dist.Magnitude <= 32)
             {
-                if (itemDict[itemID].holder == null && mobManager.mobDict[mobID].heldItem == null)
+                if (item.holder == null)
                 {
-                    itemDict[itemID].holder = mobManager.mobDict[mobID];
-                    mobManager.mobDict[mobID].heldItem = itemDict[itemID];
-                    SendPickupItem(itemID, mobID);
+                    switch (hand)
+                    {
+                        case MobHand.LHand:
+                            if (mob.leftHandItem == null)
+                            {
+                                item.holder = mob;
+                                item.holderHand = hand;
+                                mob.leftHandItem = item;
+                                SendPickupItem(itemID, mobID, hand);
+                            }
+                            break;
+                        case MobHand.RHand:
+                            if (mob.rightHandItem == null)
+                            {
+                                item.holder = mob;
+                                item.holderHand = hand;
+                                mob.rightHandItem = item;
+                                SendPickupItem(itemID, mobID, hand);
+                            }
+                            break;
+                    }
                 }
             }
         }
 
+        private void HandleDropItem(NetIncomingMessage message)
+        {
+            ushort itemID = message.ReadUInt16();
+            ushort mobID = netServer.clientList[message.SenderConnection].mobID;
+
+
+            Mob mob = mobManager.mobDict[mobID];
+            Item item = itemDict[itemID];
+
+            if (mob.rightHandItem != null && mob.rightHandItem.itemID == itemID)
+            {
+                mob.rightHandItem = null;
+                item.holder = null;
+                item.serverInfo.position = mob.serverInfo.position;
+                SendDropItem(itemID, mobID);
+            }
+            else if (mob.leftHandItem != null && mob.leftHandItem.itemID == itemID)
+            {
+                mob.leftHandItem = null;
+                item.holder = null;
+                item.serverInfo.position = mob.serverInfo.position;
+                SendDropItem(itemID, mobID);
+            }
+        }
 
         public void CreateItem(Type type, Vector3 pos)
         {
@@ -204,24 +266,41 @@ namespace SS3d_server.Modules.Items
             netServer.SendMessageToAll(message);
         }
 
-        private void SendPickupItem(ushort itemID, ushort mobID)
+        private void SendPickupItem(ushort itemID, ushort mobID, MobHand hand)
         {
+            // DEBUG
+            Console.WriteLine("SendPickupItem " + itemID + " " + mobID + " " + hand);
+
             NetOutgoingMessage message = netServer.netServer.CreateMessage();
             message.Write((byte)NetMessage.ItemMessage);
             message.Write((byte)ItemMessage.PickUpItem);
+            message.Write((byte)hand);
             message.Write(mobID);
             message.Write(itemID);
             netServer.SendMessageToAll(message);
         }
 
-        private void SendPickupItem(ushort itemID, ushort mobID, NetConnection netConnection)
+        private void SendPickupItem(ushort itemID, ushort mobID, MobHand hand, NetConnection netConnection)
         {
             NetOutgoingMessage message = netServer.netServer.CreateMessage();
             message.Write((byte)NetMessage.ItemMessage);
             message.Write((byte)ItemMessage.PickUpItem);
+            message.Write((byte)hand);
             message.Write(mobID);
             message.Write(itemID);
             netServer.SendMessageTo(message, netConnection);
+        }
+
+        private void SendDropItem(ushort itemID, ushort mobID)
+        {
+            NetOutgoingMessage message = netServer.netServer.CreateMessage();
+            message.Write((byte)NetMessage.ItemMessage);
+            message.Write((byte)ItemMessage.DropItem);
+            message.Write(mobID);
+            message.Write(itemID);
+            message.Write((float)mobManager.mobDict[mobID].serverInfo.position.X);
+            message.Write((float)mobManager.mobDict[mobID].serverInfo.position.Z);
+            netServer.SendMessageToAll(message);
         }
 
         // A new player is joining so lets send them everything we know!
@@ -237,7 +316,7 @@ namespace SS3d_server.Modules.Items
                 SendCreateItem(item.itemID, netConnection);
                 if (item.holder != null)
                 {
-                    SendPickupItem(item.itemID, item.holder.mobID, netConnection);
+                    SendPickupItem(item.itemID, item.holder.mobID, item.holderHand, netConnection);
                 }
             }
         }

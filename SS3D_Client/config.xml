@@ -10,6 +10,7 @@
   <NumMipmaps>8</NumMipmaps>
   <Resources>
     <string>../../../Media/GUI/</string>
+    <string>../../../Media/GUI/HuD</string>
     <string>../../../Media/Cursor/</string>
     <string>../../../Media/Fonts/</string>
     <string>../../../Media/core/</string>
@@ -29,6 +30,7 @@
   <MiyagiImageFonts>../../../Media/Fonts/ImageFonts.xml</MiyagiImageFonts>
   <MiyagiSkins>
     <string>../../../Media/GUI/skins.xml</string>
+    <string>../../../Media/GUI/HuD/HudSkins.xml</string>
     <string>../../../Media/Cursor/CursorSkin.xml</string>
   </MiyagiSkins>
 </Configuration>

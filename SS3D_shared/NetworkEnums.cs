@@ -22,6 +22,7 @@ public enum ItemMessage
     InterpolationPacket,
     ClickItem,
     PickUpItem,
+    DropItem,
     UseItem // etc.
 }
 
@@ -31,6 +32,12 @@ public enum MobMessage
     InterpolationPacket,
     DeleteMob,
     ClickMob
+}
+
+public enum MobHand
+{
+    RHand = 0,
+    LHand
 }
 
 public enum GameType

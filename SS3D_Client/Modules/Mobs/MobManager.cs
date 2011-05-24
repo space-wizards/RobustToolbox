@@ -22,6 +22,7 @@ namespace SS3D.Modules.Mobs
         private DateTime lastAnimUpdate = DateTime.Now;
         private double mobUpdateTime = 10;
         private double serverUpdateTime = 50;
+        private float speakLength = 2000;
 
         public Mob myMob;
         
@@ -73,6 +74,7 @@ namespace SS3D.Modules.Mobs
                      {
                          UpdateMobPosition(mobID);
                      }
+                     UpdatemobChat(mobID);
                  }
                  lastMobUpdate = DateTime.Now;
              }
@@ -126,6 +128,7 @@ namespace SS3D.Modules.Mobs
             }
                    
         }
+
         public void MoveMe(int i)
         {
             Mogre.Vector3 lastPosition = mobDict[myMobID].Node.Position;
@@ -161,7 +164,7 @@ namespace SS3D.Modules.Mobs
         {
             foreach (Mob mob in mobDict.Values)
             {
-                //mEngine.SceneMgr.DestroyEntity(mob.Entity);
+                //mEngine.SceneMgr.DestroyEntity(mob.Entity); For some reason this creates an error on quit...
                 mEngine.SceneMgr.DestroySceneNode(mob.Node);
             }
             mobDict = null;
@@ -224,6 +227,12 @@ namespace SS3D.Modules.Mobs
             mobDict[mobID].Node.SetOrientation(rotW, 0, rotY, 0);
         }
 
+        // What we want to eventually do here is that if we recieve a packet updating our own position from the
+        // server we know something has gone wrong - we've moved somewhere we shouldn't be able to for some reason.
+        // We will want to interpolate between the recieved position and our current one (not just snap us back as that
+        // looks ugly and nobody likes rubberbanding). We may also want to have some way of asking the server WHY we couldn't
+        // move there, as we can assume some information we have about the world is perhaps incorrect, if something static is
+        // in our way (a wall for example).
         private void UpdateMyMobPosition()
         {
 
@@ -260,7 +269,7 @@ namespace SS3D.Modules.Mobs
 
                 SceneNode camNode = mob.Node.CreateChildSceneNode();
                 camNode.AttachObject(mEngine.Camera);
-                mEngine.Camera.SetAutoTracking(true, camNode);
+                mEngine.Camera.SetAutoTracking(true, camNode, new Vector3(0,32,0));
             }
         }
         #endregion
@@ -285,6 +294,7 @@ namespace SS3D.Modules.Mobs
             NetOutgoingMessage message = networkManager.netClient.CreateMessage();
             message.Write((byte)NetMessage.MobMessage);
             message.Write((byte)MobMessage.ClickMob);
+            message.Write((byte)myMob.selectedHand);
             message.Write(mob.mobID);
 
             networkManager.SendMessage(message, NetDeliveryMethod.Unreliable);
@@ -297,6 +307,25 @@ namespace SS3D.Modules.Mobs
                 return mobDict[mobID];
             }
             return null;
+        }
+
+        private void UpdatemobChat(ushort mobID)
+        {
+            Mob mob = mobDict[mobID];
+            if (mob.speaking)
+            {
+                mob.speakTime += (float)mobUpdateTime;
+                if (mob.speakTime >= speakLength)
+                {
+                    mob.speaking = false;
+                    mob.speakTime = 0;
+                    mob.billboardSet.Visible = false;
+                }
+                else
+                {
+                    mob.billboardSet.Visible = true;
+                }
+            }
         }
 
 

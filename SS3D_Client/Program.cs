@@ -81,7 +81,16 @@ namespace SS3D
           //Create input handlers
           int windowHandle;
           mEngine.Window.GetCustomAttribute("WINDOW", out windowHandle);
-          mInputMgr = MOIS.InputManager.CreateInputSystem((uint)windowHandle);
+
+          MOIS.ParamList pl = new ParamList();
+          pl.Insert("WINDOW", windowHandle.ToString());
+
+          //Stuff to make the mouse able to exit the window
+          pl.Insert("w32_mouse", "DISCL_FOREGROUND" );
+          pl.Insert("w32_mouse", "DISCL_NONEXCLUSIVE");
+          pl.Insert("w32_keyboard", "DISCL_FOREGROUND");
+          pl.Insert("w32_keyboard", "DISCL_NONEXCLUSIVE");
+          mInputMgr = MOIS.InputManager.CreateInputSystem(pl);
 
           prg.mKeyboard = (MOIS.Keyboard)mInputMgr.CreateInputObject(MOIS.Type.OISKeyboard, true);
           prg.mMouse = (MOIS.Mouse)mInputMgr.CreateInputObject(MOIS.Type.OISMouse, true);

@@ -59,10 +59,7 @@ namespace SS3D.States
 
             mEngine.SceneMgr.SetSkyBox(true, "SkyBox", 900f, true);
 
-            mEngine.Camera.Position = new Mogre.Vector3(0, 300, 0);
-            mEngine.Camera.LookAt(new Mogre.Vector3(160, 64, 160));
-
-            currentMap = new Map(mEngine);
+            currentMap = new Map(mEngine, true);
             itemManager = new ItemManager(mEngine, currentMap, mEngine.mNetworkMgr, null);
 
             mEngine.mMiyagiSystem.GUIManager.GUIs.Add(new EditorToolbar(mStateMgr));
@@ -195,48 +192,8 @@ namespace SS3D.States
             };
             loadPanel.Controls.Add(filePanel);
 
-            cancelButton = new Button("mapCancelLoadButton")
-            {
-                Size = new Size(80, 35),
-                Location = new Point(75, filePanel.Bottom + 5),
-                Text = "Cancel",
-                TextStyle =
-                {
-                    Alignment = Alignment.MiddleCenter,
-                    ForegroundColour = Colours.Black
-                },
-                Skin = MiyagiResources.Singleton.Skins["ButtonSkinGreen"]
-            };
-            cancelButton.Click += new EventHandler(cancelButton_Click);
-            loadPanel.Controls.Add(cancelButton);
-
-            BuildFileList();
-
-            mStateMgr.Engine.mMiyagiSystem.GUIManager.GUIs.Add(this);
-        }
-
-        void loadMapFile_Click(object sender, EventArgs e)
-        {
-            Button sButton = (Button)sender;
-            MapFile loadedMap = MapFileHandler.LoadMap((string)sButton.UserData);
-
-            if (mStateMgr.mCurrentState.GetType() != typeof(EditorScreen))
-                throw new Exception("UI Element 'Editor Toolbar' in unsupported state.");
-            else
-            {
-                EditorScreen editorState = (EditorScreen)mStateMgr.mCurrentState;
-                editorState.currentMap.LoadMap(loadedMap);
-            }
-            
-        }
-
-        private void BuildFileList()
-        {
-            foreach(Control ctrl in filePanel.Controls)
-            {
-                ctrl.Dispose();
-            }
-            filePanel.Controls.Clear();
+            if (!Directory.Exists(@".\Maps")) 
+                Directory.CreateDirectory(@".\Maps");
 
             string[] mapFiles = Directory.GetFiles(@".\Maps", "*.map");
             int currY = 0;
@@ -260,12 +217,45 @@ namespace SS3D.States
                 currY += newButton.Size.Height;
                 newButton.Click += new EventHandler(loadMapFile_Click);
             }
+
+            cancelButton = new Button("mapCancelLoadButton")
+            {
+                Size = new Size(80, 35),
+                Location = new Point(75, filePanel.Bottom + 5),
+                Text = "Cancel",
+                TextStyle =
+                {
+                    Alignment = Alignment.MiddleCenter,
+                    ForegroundColour = Colours.Black
+                },
+                Skin = MiyagiResources.Singleton.Skins["ButtonSkinGreen"]
+            };
+            cancelButton.Click += new EventHandler(cancelButton_Click);
+            loadPanel.Controls.Add(cancelButton);
+
+            mStateMgr.Engine.mMiyagiSystem.GUIManager.GUIs.Add(this);
+        }
+
+        void loadMapFile_Click(object sender, EventArgs e)
+        {
+            Button sButton = (Button)sender;
+            MapFile loadedMap = MapFileHandler.LoadMap((string)sButton.UserData);
+            //Now this is where it gets funky.
+            if (mStateMgr.mCurrentState.GetType() != typeof(EditorScreen))
+                throw new Exception("UI Element 'Editor Toolbar' in unsupported state.");
+            else
+            {
+                EditorScreen editorState = (EditorScreen)mStateMgr.mCurrentState;
+                editorState.currentMap.LoadMap(loadedMap);
+                //SEE MAP.CS @ Line 102 - LoadMap Method
+            }
+            
         }
 
         void cancelButton_Click(object sender, EventArgs e)
         {
-            this.Visible = false;
-            //this.Dispose();
+            this.Pop();
+            this.Dispose();
             mStateMgr.Engine.mMiyagiSystem.GUIManager.GUIs.Remove(this);
         }
     }

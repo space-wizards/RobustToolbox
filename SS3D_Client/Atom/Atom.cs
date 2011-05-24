@@ -34,10 +34,13 @@ namespace SS3D.Atom
         public Dictionary<MOIS.KeyCode, bool> keyStates;
         public Dictionary<MOIS.KeyCode, KeyEvent> keyHandlers;
 
-        public delegate void KeyEvent(bool newState);
+        public delegate void KeyEvent();
 
         public Atom()
         {
+            keyStates = new Dictionary<MOIS.KeyCode, bool>();
+            keyHandlers = new Dictionary<MOIS.KeyCode, KeyEvent>();
+
             position = new Mogre.Vector3(0, 0, 0);
             rotW = 1;
             rotY = 0;
@@ -47,6 +50,9 @@ namespace SS3D.Atom
 
         public Atom(ushort _uid, AtomManager _atomManager)
         {
+            keyStates = new Dictionary<MOIS.KeyCode, bool>();
+            keyHandlers = new Dictionary<MOIS.KeyCode, KeyEvent>();
+
             uid = _uid;
             atomManager = _atomManager;
 
@@ -136,22 +142,36 @@ namespace SS3D.Atom
             message.Write(rotY);
             atomManager.networkManager.SendMessage(message, NetDeliveryMethod.Unreliable);
         }
-
         #endregion
 
         public virtual void Update()
         {
+            //This is where all the good stuff happens. 
+
             //If the node hasn't even been drawn into the scene, there's no point updating the fucker, is there?
             if (!drawn)
                 return;
             //This lets the atom only update when it needs to. If it needs to update subsequent to this, the functions below will set that flag.
             updateRequired = false;
 
-            if (interpolationPackets.Count > 0)
+            UpdatePosition();
+            UpdateKeys();
+        }
+
+        public virtual void UpdateKeys()
+        {
+            // So basically we check for active keys with handlers and execute them. This is a linq query.
+            // Get all of the active keys' handlers
+            var activeKeyHandlers =
+                from keyState in keyStates
+                join handler in keyHandlers on keyState.Key equals handler.Key
+                select handler.Value;
+
+            //Execute the bastards!
+            foreach (var keyHandler in activeKeyHandlers)
             {
-                UpdatePosition();
+                keyHandler();
             }
-            
         }
 
         #region positioning
@@ -285,6 +305,7 @@ namespace SS3D.Atom
 
         private void SetKeyState(MOIS.KeyCode k, bool state)
         {
+            // Check to see if we have a keyhandler for the key that's been pressed. Discard invalid keys.
             if (keyHandlers.ContainsKey(k))
             {
                 keyStates[k] = state;
@@ -292,20 +313,20 @@ namespace SS3D.Atom
         }
 
         #region key handlers
-        protected void HandleKC_W(bool keystate)
+        protected void HandleKC_W()
         {
             MoveForward();
         }
-        protected void HandleKC_A(bool keystate)
+        protected void HandleKC_A()
         {
             //moveLeft(); // I want this to be strafe
             TurnLeft();
         }
-        protected void HandleKC_S(bool keystate)
+        protected void HandleKC_S()
         {
             MoveBack();
         }
-        protected void HandleKC_D(bool keystate)
+        protected void HandleKC_D()
         {
             //moveRight(); // I want this to be strafe
             TurnRight();

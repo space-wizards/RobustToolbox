@@ -26,11 +26,7 @@ namespace SS3d_server
             string strVersion = System.Reflection.Assembly.GetExecutingAssembly().GetName().Version.ToString();
             Console.WriteLine("Server Version " + strVersion + " -> Ready");
 
-            while(main.server.Active)
-            {
-                main.server.ProcessPackets();
-                main.server.Update();
-            }
+            main.server.MainLoop();
         }
 
 

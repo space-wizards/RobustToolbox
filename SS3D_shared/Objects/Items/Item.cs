@@ -15,9 +15,13 @@ namespace SS3D_shared
         public List<InterpolationPacket> interpolationPacket;
         public DateTime lastUpdate;
         public ItemType ItemType = ItemType.None;
-        public Mob holder; // Just temporary holder for now.
+        public Mob holder; // Who's holding us?
+        public MobHand holderHand; // Which hand are we held in?
 
-        public float power = 0.0f;
+        public float power = 0.0f; // This is just a temporary thing to differentiate how much damage each item will do.
+
+        public Mogre.Vector3 heldOffset = Mogre.Vector3.ZERO;           // the offset vector when held
+        public Mogre.Quaternion heldQuat = Mogre.Quaternion.IDENTITY;   // the rotation when held
 
         public Item()
         {

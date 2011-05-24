@@ -139,6 +139,7 @@
     <Compile Include="Modules\Network\NetworkManager.cs" />
     <Compile Include="Modules\OgreEventArgs.cs" />
     <Compile Include="Modules\OgreManager.cs" />
+    <Compile Include="Modules\PlayerController.cs" />
     <Compile Include="Modules\State.cs" />
     <Compile Include="Modules\StateManager.cs" />
     <Compile Include="Modules\UI\Console.cs" />

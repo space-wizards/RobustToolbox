@@ -40,6 +40,7 @@ namespace SS3D.States
         private GUI guiGameScreen;
         private Chatbox gameChat;
         private ushort defaultChannel;
+        private PlayerController playerController;
 
         #region Mouse/Camera stuff
         private DateTime lastRMBClick = DateTime.Now;
@@ -69,6 +70,7 @@ namespace SS3D.States
             mobManager = new MobManager(mEngine, map, mEngine.mNetworkMgr);
             itemManager = new ItemManager(mEngine, map, mEngine.mNetworkMgr, mobManager);
             atomManager = new AtomManager(this);
+            playerController = new PlayerController(this, atomManager);
             SetUp();
             SetUpGUI();
 
@@ -85,10 +87,7 @@ namespace SS3D.States
 
             mEngine.mNetworkMgr.SetMap(map);
             mEngine.mNetworkMgr.RequestMap();
-
-
-            
-            
+                        
             return true;
         }
 

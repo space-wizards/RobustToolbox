@@ -38,7 +38,41 @@ namespace SS3D.States
         public EditorStatusBar statusBar;
         public EditorToolbar toolBar;
 
-        //private AtomBaseClass prevMouseOverEntity;
+        private SceneNode gridNode = null;
+        private ManualObject grid = null;
+
+        private AtomBaseClass mouseOverEntity = null;
+        private AtomBaseClass MouseOverEntity
+        {
+            get
+            {
+                return mouseOverEntity;
+            }
+
+            set
+            {
+                if (value == mouseOverEntity) return;
+                if (mouseOverEntity != null && value != null) //Different object.
+                {
+                    mouseOverEntity.Node.ShowBoundingBox = false;
+                    value.Node.ShowBoundingBox = true;
+                    mouseOverEntity = value;
+                }
+                else if (mouseOverEntity != null && value == null) //Something to nothing.
+                {
+                    mouseOverEntity.Node.ShowBoundingBox = false;
+                    mouseOverEntity = value;
+                }
+                else if (mouseOverEntity == null && value != null) //Nothing to something.
+                {
+                    mouseOverEntity = value;
+                    mouseOverEntity.Node.ShowBoundingBox = true;
+                }
+
+            }
+        }
+
+        public Boolean isBusy = false; //This is set to true while maps are loading etc. To disable certain things.
 
         //private AtomBaseClass selectedEntity;
         //private AtomBaseClass prevSelectedEntity;
@@ -82,11 +116,45 @@ namespace SS3D.States
         public override void Shutdown()
         {
             mEngine.mMiyagiSystem.GUIManager.DisposeAllGUIs();
+
+            if (grid != null)
+                mEngine.SceneMgr.DestroyManualObject(grid);
+
+            if (gridNode != null)
+                mEngine.SceneMgr.DestroySceneNode(gridNode);
         }
 
         public override void Update(long _frameTime)
         {
-            mEngine.SceneMgr.SkyBoxNode.Rotate(Mogre.Vector3.UNIT_Y, 0.0001f);
+
+            if (!isBusy)
+            {
+                mEngine.SceneMgr.SkyBoxNode.Rotate(Mogre.Vector3.UNIT_Y, 0.0001f);
+
+                Point mousePos = mEngine.mMiyagiSystem.InputManager.MouseLocation;
+                Mogre.Vector2 mousePosAbs = new Vector2((float)mousePos.X / (float)mEngine.Window.Width, (float)mousePos.Y / (float)mEngine.Window.Height);
+                Mogre.Vector3 worldPos;
+                AtomBaseClass HoverObject = HelperClasses.AtomUtil.PickAtScreenPosition(mEngine, mousePosAbs, out worldPos);
+
+                MouseOverEntity = HoverObject;
+
+                //if (MouseOverEntity != HoverObject && MouseOverEntity != null && HoverObject != null) //Different object.
+                //{
+                //    MouseOverEntity.Node.ShowBoundingBox = false;
+                //    HoverObject.Node.ShowBoundingBox = true;
+                //    MouseOverEntity = HoverObject;
+                //}
+                //else if (MouseOverEntity != HoverObject && MouseOverEntity != null && HoverObject == null) //From something to nothing.
+                //{
+                //    MouseOverEntity.Node.ShowBoundingBox = false;
+                //    MouseOverEntity = null;
+                //}
+                //else if (MouseOverEntity != HoverObject && MouseOverEntity == null && HoverObject != null) //From nothing to something.
+                //{
+                //    HoverObject.Node.ShowBoundingBox = true;
+                //    MouseOverEntity = HoverObject;
+                //}
+            }
 
             if (currentLoadingTracker != null)
             {
@@ -96,18 +164,57 @@ namespace SS3D.States
             }
         }
 
+        public void ToggleGrid()
+        {
+            if (grid == null && gridNode == null)
+            {
+                grid = currentMap.CreateGrid();
+                if (grid != null)
+                {
+                    gridNode = mEngine.SceneMgr.RootSceneNode.CreateChildSceneNode("GridNode");
+                    gridNode.AttachObject(grid);
+                }
+            }
+            else
+            {
+                grid.Visible = !grid.Visible;
+            }
+        }
+
         public void LoadMap(string mapPath)
         {
+            if (isBusy) return;
+            isBusy = true;
             this.currentLoadingTracker = this.currentMap;
             MapFile loadedMap = MapFileHandler.LoadMap(mapPath);
             this.currentMap.Shutdown();
-            System.GC.Collect(); //Oh boy.
+            System.GC.Collect(); //I have no idea if that even does anything.
             this.currentMap.LoadMap(loadedMap);
+            isBusy = false;
         }
 
         #region Input
         public override void UpdateInput(Mogre.FrameEvent evt, MOIS.Keyboard keyState, MOIS.Mouse mouseState)
         {
+            if (!isBusy)
+            {
+                if (keyState.IsKeyDown(MOIS.KeyCode.KC_RIGHT) || keyState.IsKeyDown(MOIS.KeyCode.KC_D))
+                {
+                    mEngine.Camera.MoveRelative(new Mogre.Vector3(3f, 0, 0));
+                }
+                else if (keyState.IsKeyDown(MOIS.KeyCode.KC_LEFT) || keyState.IsKeyDown(MOIS.KeyCode.KC_A))
+                {
+                    mEngine.Camera.MoveRelative(new Mogre.Vector3(-3f, 0, 0));
+                }
+                if (keyState.IsKeyDown(MOIS.KeyCode.KC_UP) || keyState.IsKeyDown(MOIS.KeyCode.KC_W))
+                {
+                    mEngine.Camera.MoveRelative(new Mogre.Vector3(0, 3f, -3f));
+                }
+                else if (keyState.IsKeyDown(MOIS.KeyCode.KC_DOWN) || keyState.IsKeyDown(MOIS.KeyCode.KC_S))
+                {
+                    mEngine.Camera.MoveRelative(new Mogre.Vector3(0, -3f, 3f));
+                }
+            }
         }
 
         public override void KeyDown(MOIS.KeyEvent keyState)
@@ -273,6 +380,7 @@ namespace SS3D.States
 
         void loadMapFile_Click(object sender, EventArgs e)
         {
+            if (editorState.isBusy) return;
             Button sButton = (Button)sender;
             this.Visible = false;
             //TODO: Block Main toolbar while loading.
@@ -328,6 +436,7 @@ namespace SS3D.States
                 },
                 Skin = MiyagiResources.Singleton.Skins["ButtonSkinGreen"]
             };
+            newButton.Click += new EventHandler(newButton_Click);
 
             this.loadButton = new Button("EditLoadButton")
             {
@@ -355,6 +464,7 @@ namespace SS3D.States
                 },
                 Skin = MiyagiResources.Singleton.Skins["ButtonSkinGreen"]
             };
+            saveButton.Click += new EventHandler(saveButton_Click);
 
             this.PopupOrientation = Orientation.Vertical;
             this.PopupRange = new Range(0, 50);
@@ -363,8 +473,25 @@ namespace SS3D.States
             this.Controls.Add(toolbarPanel);
         }
 
+        void saveButton_Click(object sender, EventArgs e)
+        {
+            if (editorState.isBusy) return;
+            editorState.ToggleGrid();
+        }
+
+        void newButton_Click(object sender, EventArgs e)
+        {
+            if (editorState.isBusy) return;
+            editorState.isBusy = true;
+            editorState.currentLoadingTracker = editorState.currentMap;
+            editorState.currentMap.Shutdown();
+            editorState.currentMap.InitMap(100, 100, false, true, 10);
+            editorState.isBusy = false;
+        }
+
         void loadButton_Click(object sender, EventArgs e)
         {
+            if (editorState.isBusy) return;
             mStateMgr.Engine.mMiyagiSystem.GUIManager.GUIs.Add(new EditorLoadWindow(mStateMgr, editorState) { Visible = true });
         }
 
@@ -467,6 +594,66 @@ namespace SS3D.States
                 Skin = MiyagiResources.Singleton.Skins["ProgressBarHSkin"]
             };
             BackgroundPanel.Controls.Add(StatusProgressBar);
+        }
+    }
+
+    public sealed class EditorNewWindow : ModalGUI
+    {
+        Panel newPanel;
+
+        Button cancelButton;
+
+        StateManager mStateMgr;
+        EditorScreen editorState;
+
+        public EditorNewWindow(StateManager _mgr, EditorScreen editScreen)
+            : base("editorNewBox")
+        {
+            mStateMgr = _mgr;
+            editorState = editScreen;
+
+            this.newPanel = new Panel("EditorNewPanel")
+            {
+                Location = new Point(150, 150),
+                Size = new Size(236, 300),
+                ResizeMode = ResizeModes.None,
+                Movable = true,
+                BorderStyle =
+                {
+                    Thickness = new Thickness(3, 3, 3, 3)
+                },
+                Skin = MiyagiResources.Singleton.Skins["ConsolePanelSkin"]
+            };
+            this.Controls.Add(newPanel);
+
+            newPanel.Controls.Add(new Panel("EditorNewPanelText")
+            {
+                Location = new Point(25, 0),
+                Size = new Size(180, 30),
+                ResizeMode = ResizeModes.None,
+                Text = "Create Map",
+                HitTestVisible = false,
+                TextStyle =
+                {
+                    Alignment = Alignment.MiddleCenter,
+                    ForegroundColour = Colours.Black
+                },
+                Skin = MiyagiResources.Singleton.Skins["ConsolePanelSkin"]
+            });
+
+            cancelButton = new Button("mapCancelLoadButton")
+            {
+                Size = new Size(80, 35),
+                Location = new Point(75, newPanel.Bottom + 5),
+                Text = "Cancel",
+                TextStyle =
+                {
+                    Alignment = Alignment.MiddleCenter,
+                    ForegroundColour = Colours.Black
+                },
+                Skin = MiyagiResources.Singleton.Skins["ButtonSkinGreen"]
+            };
+            newPanel.Controls.Add(cancelButton);
         }
     }
 }

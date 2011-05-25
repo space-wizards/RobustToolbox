@@ -90,9 +90,15 @@ namespace SS3D.Atom
                     HandleInterpolationPacket(message);
                     break;
                 default:
+                    HandleExtendedMessage(message); // This will punt unhandled messages to a virtual method so derived classes can handle them.
                     break;
             }
             return;
+        }
+
+        protected virtual void HandleExtendedMessage(NetIncomingMessage message)
+        {
+            //Override this to handle custom messages.
         }
 
         public virtual void HandleInterpolationPacket(NetIncomingMessage message)
@@ -122,10 +128,7 @@ namespace SS3D.Atom
         // Sends a message to the server to request the atom's data.
         public void SendPullMessage()
         {
-            NetOutgoingMessage message = atomManager.networkManager.netClient.CreateMessage();
-            message.Write((byte)NetMessage.AtomManagerMessage);
-            message.Write((byte)AtomManagerMessage.Passthrough);
-            message.Write((ushort)uid);
+            NetOutgoingMessage message = CreateAtomMessage(); 
             message.Write((byte)AtomMessage.Pull);
             atomManager.networkManager.SendMessage(message, NetDeliveryMethod.Unreliable);
         }
@@ -138,10 +141,7 @@ namespace SS3D.Atom
         public void SendPositionUpdate()
         {
             // This is only useful if the fucking shit is actually controlled by a player
-            NetOutgoingMessage message = atomManager.networkManager.netClient.CreateMessage();
-            message.Write((byte)NetMessage.AtomManagerMessage);
-            message.Write((byte)AtomManagerMessage.Passthrough);
-            message.Write((ushort)uid);
+            NetOutgoingMessage message = CreateAtomMessage();
             message.Write((byte)AtomMessage.PositionUpdate);
             message.Write(position.x);
             message.Write(position.y);
@@ -149,6 +149,26 @@ namespace SS3D.Atom
             message.Write(rotW);
             message.Write(rotY);
             atomManager.networkManager.SendMessage(message, NetDeliveryMethod.Unreliable);
+        }
+
+        protected NetOutgoingMessage CreateAtomMessage()
+        {
+            NetOutgoingMessage message = atomManager.networkManager.netClient.CreateMessage();
+            message.Write((byte)NetMessage.AtomManagerMessage);
+            message.Write((byte)AtomManagerMessage.Passthrough);
+            message.Write(uid);
+            return message;
+        }
+
+        protected void SendMessage(NetOutgoingMessage message)
+        {
+            // Send messages unreliably by default
+            SendMessage(message, NetDeliveryMethod.Unreliable);
+        }
+
+        protected void SendMessage(NetOutgoingMessage message, NetDeliveryMethod method)
+        {
+            atomManager.networkManager.SendMessage(message, method);
         }
         #endregion
 
@@ -173,7 +193,6 @@ namespace SS3D.Atom
             var activeKeyHandlers =
                 from keyState in keyStates
                 join handler in keyHandlers on keyState.Key equals handler.Key
-                where keyState.Value == true
                 select new { evt = handler.Value, state = keyState.Value };
 
             //Execute the bastards!
@@ -183,6 +202,7 @@ namespace SS3D.Atom
                 updateRequired = true; // QUICKNDIRTY
                 KeyEvent k = keyHandler.evt;
                 k(keyHandler.state);
+
             }
             
         }
@@ -321,7 +341,7 @@ namespace SS3D.Atom
             SetKeyState(k, false);
         }
 
-        private void SetKeyState(MOIS.KeyCode k, bool state)
+        protected void SetKeyState(MOIS.KeyCode k, bool state)
         {
             // Check to see if we have a keyhandler for the key that's been pressed. Discard invalid keys.
             if (keyHandlers.ContainsKey(k))

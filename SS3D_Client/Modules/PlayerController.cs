@@ -6,13 +6,15 @@ using System.Text;
 using SS3D.Atom;
 using SS3D.States;
 using MOIS;
+using Lidgren.Network;
 
 namespace SS3D.Modules
 {
     public class PlayerController
     {
         /* Here's the player controller. This will handle attaching GUIS and input to controllable things.
-         * Why not just attach the inputs directly? It's messy! This makes the whole thing nicely encapsulated. */
+         * Why not just attach the inputs directly? It's messy! This makes the whole thing nicely encapsulated. 
+         * This class also communicates with the server to let the server control what atom it is attached to. */
         GameScreen gameScreen;
         AtomManager atomManager;
         Atom.Atom controlledAtom;
@@ -27,10 +29,12 @@ namespace SS3D.Modules
         {
             controlledAtom = newAtom;
             controlledAtom.initKeys();
+            controlledAtom.attached = true;
         }
 
         public void Detach()
         {
+            controlledAtom.attached = false;
             controlledAtom = null;
         }
 
@@ -49,5 +53,28 @@ namespace SS3D.Modules
 
             controlledAtom.HandleKeyReleased(k);
         }
+
+        #region netcode
+        public void HandleNetworkMessage(NetIncomingMessage message)
+        {
+            PlayerSessionMessage messageType = (PlayerSessionMessage)message.ReadByte();
+
+            switch (messageType)
+            {
+                case PlayerSessionMessage.AttachToAtom:
+                    HandleAttachToAtom(message);
+                    break;
+                default:
+                    break;
+            }
+        }
+
+        private void HandleAttachToAtom(NetIncomingMessage message)
+        {
+            ushort uid = message.ReadUInt16();
+            Attach(atomManager.GetAtom(uid));
+        }
+        #endregion
+
     }
 }

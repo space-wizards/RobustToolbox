@@ -93,6 +93,8 @@
     <Compile Include="Modules\Items\ItemManager.cs" />
     <Compile Include="Modules\Map\Map.cs" />
     <Compile Include="Modules\Mobs\MobManager.cs" />
+    <Compile Include="Modules\PlayerManager.cs" />
+    <Compile Include="Modules\PlayerSession.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="SS3DNetserver.cs" />

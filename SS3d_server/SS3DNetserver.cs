@@ -4,6 +4,7 @@ using System.Linq;
 using System.Text;
 using System.IO;
 using System.Threading;
+using SS3d_server.Modules;
 using SS3d_server.Modules.Client;
 using SS3d_server.Modules.Map;
 using SS3d_server.Modules.Items;
@@ -26,6 +27,7 @@ namespace SS3d_server
         public MobManager mobManager;
         public ChatManager chatManager;
         public AtomManager atomManager;
+        public PlayerManager playerManager;
         
         bool active = false;
 
@@ -62,6 +64,7 @@ namespace SS3d_server
             itemManager = new ItemManager(this, map, mobManager);
             chatManager = new ChatManager(this, mobManager);
             atomManager = new AtomManager(this);
+            playerManager = new PlayerManager(this);
         }
 
         public bool Start()
@@ -77,6 +80,7 @@ namespace SS3d_server
                 netServer.Start();
                 AddRandomCrowbars();
                 atomManager.SpawnAtom("Atom.Atom");
+                
                 active = true;
                 return false;
             }
@@ -306,6 +310,9 @@ namespace SS3d_server
                 case NetMessage.AtomManagerMessage:
                     atomManager.HandleNetworkMessage(msg);
                     break;
+                case NetMessage.PlayerSessionMessage:
+                    playerManager.HandleNetworkMessage(msg);
+                    break;
                 default:
                     break;
             }
@@ -371,6 +378,7 @@ namespace SS3d_server
             mobManager.NewPlayer(connection);
             itemManager.NewPlayer(connection);
             atomManager.NewPlayer(connection);
+            playerManager.NewSession(connection);
         }
 
         public void HandleChangeTile(NetIncomingMessage msg)

@@ -13,7 +13,6 @@ namespace SS3d_server.Atom
     public class AtomManager //SERVERSIDE
     {
         #region Vars
-        private Map map;
         public SS3DNetserver netServer;
 
         public Dictionary<ushort, Atom> atomDictionary;

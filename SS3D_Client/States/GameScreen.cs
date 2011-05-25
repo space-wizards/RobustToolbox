@@ -225,6 +225,9 @@ namespace SS3D.States
                         case NetMessage.AtomManagerMessage:
                             atomManager.HandleNetworkMessage(msg);
                             break;
+                        case NetMessage.PlayerSessionMessage:
+                            playerController.HandleNetworkMessage(msg);
+                            break;
                         case NetMessage.SendMap:
                             RecieveMap(msg);
                             break;

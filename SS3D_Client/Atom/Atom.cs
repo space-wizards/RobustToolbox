@@ -67,7 +67,7 @@ namespace SS3D.Atom
             Draw();
         }
 
-        public void SetUp(ushort _uid, AtomManager _atomManager)
+        public virtual void SetUp(ushort _uid, AtomManager _atomManager)
         {
             uid = _uid;
             atomManager = _atomManager;

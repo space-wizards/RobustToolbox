@@ -5,7 +5,12 @@ using System.Text;
 
 namespace SS3d_server.Atom.Mob
 {
-    public class Player : Mob
+    public class Human : Mob
     {
+        public Human()
+            : base()
+        {
+
+        }
     }
 }

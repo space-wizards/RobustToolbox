@@ -41,6 +41,8 @@ namespace SS3D.States
         private Chatbox gameChat;
         private ushort defaultChannel;
         public PlayerController playerController;
+        public DateTime lastUpdate;
+        public DateTime now;
 
         #region Mouse/Camera stuff
         private DateTime lastRMBClick = DateTime.Now;
@@ -60,6 +62,9 @@ namespace SS3D.States
         {
             mEngine = _mgr.Engine;
             mStateMgr = _mgr;
+
+            lastUpdate = DateTime.Now;
+            now = DateTime.Now;
 
             defaultChannel = 1;
 
@@ -195,11 +200,17 @@ namespace SS3D.States
 
         public override void Update(long _frameTime)
         {
+            /* There's no reason to spam DateTime.Now everywhere. */
+            lastUpdate = now;
+            now = DateTime.Now;
+
             mEngine.SceneMgr.SkyBoxNode.Rotate(Mogre.Vector3.UNIT_Y, 0.0001f);
+
             itemManager.Update();
             mobManager.Update();
             atomManager.Update();
         }
+
 
         private void mNetworkMgr_MessageArrived(NetworkManager netMgr, NetIncomingMessage msg)
         {

@@ -53,27 +53,28 @@ namespace SS3d_server.Atom
                     break;
                 case AtomMessage.PositionUpdate:
                     // We'll accept position packets from the client so that movement doesn't lag. There may be other special cases like this.
-                    // TODO: route these messages through the player controller instead of directly to the atom. That way we can prevent client x from controlling client y's mob.
                     HandlePositionUpdate(message);
                     break;
                 default:
+                    HandleExtendedMessage(message); // This will punt unhandled messages to a virtual method so derived classes can handle them.
                     break;
             }
             return;
         }
 
+        protected virtual void HandleExtendedMessage(NetIncomingMessage message)
+        {
+            //Override this to handle custom messages.
+        }
+
         public virtual void Push()
         {
-            // Do nothing, this is a default atom and nothing needs to be pushed.
             SendInterpolationPacket(true); // Forcibly update the position of the node.
         }
 
         public void SendInterpolationPacket(bool force)
         {
-            NetOutgoingMessage message = atomManager.netServer.netServer.CreateMessage();
-            message.Write((byte)NetMessage.AtomManagerMessage);
-            message.Write((byte)AtomManagerMessage.Passthrough);
-            message.Write(uid);
+            NetOutgoingMessage message = CreateAtomMessage();
             message.Write((byte)AtomMessage.InterpolationPacket);
 
             InterpolationPacket i = new InterpolationPacket((float)position.X, (float)position.Y, (float)position.Z, rotW, rotY, 0); // Fuckugly
@@ -83,6 +84,20 @@ namespace SS3d_server.Atom
              * packet even if it is that client's player mob. Use this in case the client has ended up somewhere bad.
              */
             message.Write(force); 
+            atomManager.netServer.SendMessageToAll(message);
+        }
+
+        protected NetOutgoingMessage CreateAtomMessage()
+        {
+            NetOutgoingMessage message = atomManager.netServer.netServer.CreateMessage();
+            message.Write((byte)NetMessage.AtomManagerMessage);
+            message.Write((byte)AtomManagerMessage.Passthrough);
+            message.Write(uid);
+            return message;
+        }
+
+        protected void SendMessageToAll(NetOutgoingMessage message)
+        {
             atomManager.netServer.SendMessageToAll(message);
         }
 

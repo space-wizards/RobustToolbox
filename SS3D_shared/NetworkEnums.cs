@@ -40,7 +40,8 @@ public enum MobMessage
     CreateMob = 0,
     InterpolationPacket,
     DeleteMob,
-    ClickMob
+    ClickMob,
+    AnimationState
 }
 
 public enum MobHand

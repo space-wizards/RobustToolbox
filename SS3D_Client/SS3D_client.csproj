@@ -122,6 +122,7 @@
   <ItemGroup>
     <Compile Include="HelperClasses\AtomUtil.cs" />
     <Compile Include="HelperClasses\CollisionTools.cs" />
+    <Compile Include="HelperClasses\QueryFlags.cs" />
     <Compile Include="HelperClasses\Rect2D.cs" />
     <Compile Include="Modules\ConfigManager.cs" />
     <Compile Include="Modules\Items\ItemManager.cs" />

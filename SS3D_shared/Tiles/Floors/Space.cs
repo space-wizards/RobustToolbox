@@ -9,7 +9,7 @@ namespace SS3D_shared
     public class Space : BaseTile
     {
         public Space(SceneManager sceneManager, Vector3 position, int tileSpacing)
-            : base()
+            : base(tileSpacing)
         {
             TileType = TileType.Space;
             string entityName;

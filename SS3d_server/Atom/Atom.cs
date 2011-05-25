@@ -65,10 +65,10 @@ namespace SS3d_server.Atom
         public virtual void Push()
         {
             // Do nothing, this is a default atom and nothing needs to be pushed.
-            SendInterpolationPacket();
+            SendInterpolationPacket(true); // Forcibly update the position of the node.
         }
 
-        public void SendInterpolationPacket()
+        public void SendInterpolationPacket(bool force)
         {
             NetOutgoingMessage message = atomManager.netServer.netServer.CreateMessage();
             message.Write((byte)NetMessage.AtomManagerMessage);
@@ -82,7 +82,7 @@ namespace SS3d_server.Atom
             /* VVVV This is the force flag. If this flag is set, the client will run the interpolation 
              * packet even if it is that client's player mob. Use this in case the client has ended up somewhere bad.
              */
-            message.Write(false); 
+            message.Write(force); 
             atomManager.netServer.SendMessageToAll(message);
         }
 
@@ -101,7 +101,7 @@ namespace SS3d_server.Atom
                 rotW = message.ReadFloat();
                 rotY = message.ReadFloat();
 
-                SendInterpolationPacket(); // Send position updates to everyone. The client that is controlling this atom should discard this packet.
+                SendInterpolationPacket(false); // Send position updates to everyone. The client that is controlling this atom should discard this packet.
             }
             // Discard the rest.
         }

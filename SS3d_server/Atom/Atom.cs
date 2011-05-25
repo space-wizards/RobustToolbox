@@ -21,7 +21,7 @@ namespace SS3d_server.Atom
 
         public List<InterpolationPacket> interpolationPacket;
 
-        private NetConnection attachedClient = null;
+        public NetConnection attachedClient = null;
 
         public Atom()
         {
@@ -78,6 +78,11 @@ namespace SS3d_server.Atom
 
             InterpolationPacket i = new InterpolationPacket((float)position.X, (float)position.Y, (float)position.Z, rotW, rotY, 0); // Fuckugly
             i.WriteMessage(message);
+
+            /* VVVV This is the force flag. If this flag is set, the client will run the interpolation 
+             * packet even if it is that client's player mob. Use this in case the client has ended up somewhere bad.
+             */
+            message.Write(false); 
             atomManager.netServer.SendMessageToAll(message);
         }
 
@@ -95,6 +100,8 @@ namespace SS3d_server.Atom
                 position.Z = (double)message.ReadFloat();
                 rotW = message.ReadFloat();
                 rotY = message.ReadFloat();
+
+                SendInterpolationPacket(); // Send position updates to everyone. The client that is controlling this atom should discard this packet.
             }
             // Discard the rest.
         }

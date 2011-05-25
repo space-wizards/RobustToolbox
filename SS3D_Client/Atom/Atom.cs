@@ -30,6 +30,8 @@ namespace SS3D.Atom
         public List<InterpolationPacket> interpolationPackets;
         public float speed = 1.0f;
 
+        public bool attached;
+
         //Input
         public Dictionary<MOIS.KeyCode, bool> keyStates;
         public Dictionary<MOIS.KeyCode, KeyEvent> keyHandlers;
@@ -96,7 +98,13 @@ namespace SS3D.Atom
         public virtual void HandleInterpolationPacket(NetIncomingMessage message)
         {
             SS3D_shared.HelperClasses.InterpolationPacket intPacket = new SS3D_shared.HelperClasses.InterpolationPacket(message);
-            
+
+            // This makes the client discard interpolation packets for the atom the local player is controlling, 
+            // unless the force flag is set. If the force flag is set, the server is trying to correct an issue.
+            bool forceUpdate = message.ReadBoolean();
+            if (attached && forceUpdate == false)
+                return;
+
             //Add an interpolation packet to the end of the list. If the list is more than 10 long, delete a packet.
             //TODO: For the Player class, override this function to do some sort of intelligent checking on the interpolation packets 
             // recieved to make sure they don't greatly disagree with the client's own data.
@@ -224,16 +232,19 @@ namespace SS3D.Atom
         /* Shouldn't really be translating the node and then backfilling the atom objects
          * position and rotation from it. Ostaf? */
 
+        /* These are solely for user input, not for updating position from server. */
         public virtual void MoveForward() 
         {
             Node.Translate(new Mogre.Vector3(0, 0, speed), Mogre.Node.TransformSpace.TS_LOCAL);
             position = Node.Position;
+            SendPositionUpdate();
         }
 
         public virtual void MoveBack()
         {
             Node.Translate(new Mogre.Vector3(0,0,-1 * speed), Mogre.Node.TransformSpace.TS_LOCAL);
             position = Node.Position;
+            SendPositionUpdate();
         }
 
         public virtual void TurnLeft()
@@ -241,6 +252,7 @@ namespace SS3D.Atom
             Node.Rotate(Mogre.Vector3.UNIT_Y, Mogre.Math.DegreesToRadians(2));
             rotW = Node.Orientation.w;
             rotY = Node.Orientation.y;
+            SendPositionUpdate();
         }
 
         public virtual void TurnRight()
@@ -248,6 +260,7 @@ namespace SS3D.Atom
             Node.Rotate(Mogre.Vector3.UNIT_Y, Mogre.Math.DegreesToRadians(-2));
             rotW = Node.Orientation.w;
             rotY = Node.Orientation.y;
+            SendPositionUpdate();
         }
 
         #endregion

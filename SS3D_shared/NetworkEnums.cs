@@ -14,7 +14,8 @@ public enum NetMessage
     ItemMessage, // It's something the item system needs to handle
     MobMessage,
     ChatMessage,
-    AtomManagerMessage
+    AtomManagerMessage,
+    PlayerSessionMessage
 }
 
 public enum ItemMessage
@@ -60,3 +61,7 @@ public enum ClientStatus
     Game
 }
 
+public enum PlayerSessionMessage
+{
+    AttachToAtom
+}

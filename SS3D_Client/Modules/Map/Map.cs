@@ -41,6 +41,48 @@ namespace SS3D.Modules.Map
             useStaticGeo = _useStaticGeo;
         }
 
+        public ManualObject CreateGrid(int height = 1)
+        {
+            if (tileArray == null) return null;
+
+            ManualObject grid = new ManualObject("MapGrid");
+            grid.Begin("Grid", RenderOperation.OperationTypes.OT_LINE_LIST);
+
+            Vector3 vert1 = Vector3.ZERO;
+            Vector3 vert2 = Vector3.ZERO;
+
+            float offset = tileSpacing / 2; //Used to correctly align the grid. Tiles are centered on their nodes.
+
+            ColourValue gridColor = new ColourValue(1.0f, 0f, 0f);
+
+            for (int z = 0; z < mapHeight; z++)
+            {
+                if (z == 0) continue;
+                vert1 = new Vector3(0 - offset, height, z * tileSpacing - offset);
+                vert2 = new Vector3(mapWidth * tileSpacing - offset, height, z * tileSpacing - offset);
+                grid.Position(vert1);
+                grid.Colour(gridColor);
+                grid.Position(vert2);
+                grid.Colour(gridColor);
+            }
+
+            for (int x = 0; x < mapWidth; x++)
+            {
+                if (x == 0) continue;
+                vert1 = new Vector3(x * tileSpacing - offset, height, 0 - offset);
+                vert2 = new Vector3(x * tileSpacing - offset, height, mapHeight * tileSpacing - offset);
+                grid.Position(vert1);
+                grid.Colour(gridColor);
+                grid.Position(vert2);
+                grid.Colour(gridColor);
+            }
+
+            grid.QueryFlags = QueryFlags.DO_NOT_PICK;
+            grid.End();
+
+            return grid;
+        }
+
         #region Startup / Loading
         public bool InitMap(int width, int height, bool wallSurround, bool startBlank, int partitionSize)
         {
@@ -64,6 +106,14 @@ namespace SS3D.Modules.Map
             // Init our tileArray.
             tileArray = new BaseTile[mapWidth, mapHeight];
             boundingBoxArray = new AxisAlignedBox[mapWidth, mapHeight];
+
+            loadingText = "Building Map";
+            loadingPercent = 0;
+            mEngine.OneUpdate();
+
+            float maxElements = (mapHeight * mapWidth);
+            float oneElement = 100f / maxElements;
+            float currCount = 0;
 
             for (int x = 0; x < mapWidth; x++)
             {
@@ -100,6 +150,14 @@ namespace SS3D.Modules.Map
                         tileArray[x, z].Node.SetVisible(false);
                     }
 
+                    currCount += oneElement;
+                    if (currCount >= 1)
+                    {
+                        loadingPercent += maxElements > 100 ? 1 : oneElement;
+                        currCount = 0;
+                        mEngine.OneUpdate();
+                    }
+
                 }
             }
 
@@ -108,6 +166,9 @@ namespace SS3D.Modules.Map
                 // Build all the staticgeometrys.
                 BuildAllgeometry();
             }
+            loadingText = "Map Created";
+            loadingPercent = 0;
+            mEngine.OneUpdate();
             return true;
         }
 
@@ -788,6 +849,7 @@ namespace SS3D.Modules.Map
             tileArray = null;
             meshManager = null;
             boundingBoxArray = null;
+            staticGeometry = null;
             loadingPercent = 0;
         }
         #endregion

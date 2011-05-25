@@ -398,8 +398,7 @@ namespace SS3D.States
         public override void KeyUp(MOIS.KeyEvent keyState)
         {
             playerController.KeyUp(keyState.key); // We want to pass key up events regardless of UI focus.
-                
-            if (gameChat.chatGUI.GetControl("ChatTextbox").Focused)
+            if (gameChat.HasFocus())
             {
                 return;
             }
@@ -468,6 +467,9 @@ namespace SS3D.States
                     degree = mouseState.state.X.rel;
                 }
                 mEngine.Camera.ParentNode.Yaw(Mogre.Math.DegreesToRadians(degree), Node.TransformSpace.TS_WORLD);
+                // uncomment to allow pitch control using the mouse y axis
+                //mEngine.Camera.ParentNode.Pitch(Mogre.Math.DegreesToRadians(mouseState.state.Y.rel), Node.TransformSpace.TS_LOCAL);
+                
                 lastMouseX = mouseState.state.X.abs;
             }
 

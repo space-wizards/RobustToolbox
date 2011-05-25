@@ -37,6 +37,15 @@ namespace SS3D.Atom.Mob
             animState.Enabled = true;
         }
 
+        public virtual void SetAnimationState(string state)
+        {
+            animState = Entity.GetAnimationState(state);
+            animState.Loop = true;
+            animState.Enabled = true;
+            if (animState == null)
+                animState = Entity.GetAnimationState("idle");
+        }
+
         public override void Update()
         {
             base.Update();
@@ -47,5 +56,24 @@ namespace SS3D.Atom.Mob
 
             updateRequired = true;
         }
+
+        public override void HandleKC_W(bool state)
+        {
+            base.HandleKC_W(state);
+            if (state)
+                SetAnimationState("trns_walk");
+            else
+                SetAnimationState("idle");
+        }
+       
+        public override void HandleKC_S(bool state)
+        {
+            base.HandleKC_S(state);
+            if (state)
+                SetAnimationState("trns_walk");
+            else
+                SetAnimationState("idle");
+        }
+        
     }
 }

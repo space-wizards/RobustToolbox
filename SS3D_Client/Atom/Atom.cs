@@ -36,7 +36,7 @@ namespace SS3D.Atom
         public Dictionary<MOIS.KeyCode, bool> keyStates;
         public Dictionary<MOIS.KeyCode, KeyEvent> keyHandlers;
 
-        public delegate void KeyEvent();
+        public delegate void KeyEvent(bool state);
 
         public Atom()
         {
@@ -174,14 +174,15 @@ namespace SS3D.Atom
                 from keyState in keyStates
                 join handler in keyHandlers on keyState.Key equals handler.Key
                 where keyState.Value == true
-                select handler.Value;
+                select new { evt = handler.Value, state = keyState.Value };
 
             //Execute the bastards!
             foreach (var keyHandler in activeKeyHandlers)
             {
                 //If there's even one active, we set updateRequired so that this gets hit again next update
                 updateRequired = true; // QUICKNDIRTY
-                keyHandler();
+                KeyEvent k = keyHandler.evt;
+                k(keyHandler.state);
             }
             
         }
@@ -331,23 +332,27 @@ namespace SS3D.Atom
         }
 
         #region key handlers
-        protected void HandleKC_W()
+        public virtual void HandleKC_W(bool state)
         {
-            MoveForward();
+            if(state)
+                MoveForward();
         }
-        protected void HandleKC_A()
+        public virtual void HandleKC_A(bool state)
         {
             //moveLeft(); // I want this to be strafe
-            TurnLeft();
+            if (state)
+                TurnLeft();
         }
-        protected void HandleKC_S()
+        public virtual void HandleKC_S(bool state)
         {
-            MoveBack();
+            if (state)
+                MoveBack();
         }
-        protected void HandleKC_D()
+        public virtual void HandleKC_D(bool state)
         {
             //moveRight(); // I want this to be strafe
-            TurnRight();
+            if (state)
+                TurnRight();
         }
         #endregion
         #endregion

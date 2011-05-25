@@ -25,7 +25,11 @@ namespace SS3D.HelperClasses
         {
             Ray screenRay = engine.Camera.GetCameraToViewportRay(screenPos.x, screenPos.y);
             RaySceneQuery sceneQuery = engine.SceneMgr.CreateRayQuery(screenRay);
-            sceneQuery.QueryTypeMask = Mogre.SceneManager.ENTITY_TYPE_MASK;
+
+            sceneQuery.QueryTypeMask = Mogre.SceneManager.ENTITY_TYPE_MASK; //Pick only entities. QueryTypeMask defines the type of object that can be picked up by this ray query.
+            sceneQuery.QueryMask = ~QueryFlags.DO_NOT_PICK; //Do not pick stuff with the DO_NOT_PICK Flag. QueryMask is for cutom flags. For example a mob flag. With that it would pick mobs.
+                                                            //They're defined in QueryFlags.cs in the helper classes.
+
             sceneQuery.SetSortByDistance(true);
             RaySceneQueryResult rayResult = sceneQuery.Execute();
             sceneQuery.Dispose();
@@ -33,7 +37,7 @@ namespace SS3D.HelperClasses
             if (rayResult.Count == 0)
             {
                 worldPos = Vector3.ZERO;
-                return null; //Nothing there. The fuck?
+                return null;
             }
 
             worldPos = screenRay.GetPoint(rayResult.Front.distance);
@@ -44,8 +48,12 @@ namespace SS3D.HelperClasses
         {
 
             CollisionTools ct = new CollisionTools(mEngine.SceneMgr);
-            CollisionTools.RaycastResult rr = ct.RaycastFromCamera(mEngine.mWindow, mEngine.mCamera, mousePos, Mogre.SceneManager.ENTITY_TYPE_MASK);
-
+            CollisionTools.RaycastResult rr = ct.RaycastFromCamera(mEngine.mWindow, mEngine.mCamera, mousePos, Mogre.SceneManager.ENTITY_TYPE_MASK); //Mogre.SceneManager.ENTITY_TYPE_MASK does not go here!!!
+                                                                                                                                                     //The flags in that position are for the QueryMask
+                                                                                                                                                     //Not the QueryTypeMask. The QueryMask is for custom flags.
+                                                                                                                                                     //Mogre.SceneManager.ENTITY_TYPE_MASK is a QueryTypeMask Flag.
+                                                                                                                                                     //This will probably cause problems at some point if it stays like this.
+                                                                                                                                                     //See the Method above if you don't understand this.
             if (rr != null)
             {
                 return (AtomBaseClass)rr.Target.UserObject;

@@ -262,7 +262,9 @@ namespace SS3D.Atom
         {
             foreach (AxisAlignedBox box in atomManager.gameState.map.GetSurroundingAABB(Node.Position))
             {
-                if (Entity.GetWorldBoundingBox().Intersects(box))
+                //if (Entity.GetWorldBoundingBox().Intersects(box))
+                Sphere esphere = new Sphere(Node.Position, 5f);
+                if (box.Intersects(esphere))
                 {
                     return true;
                 }
@@ -276,17 +278,20 @@ namespace SS3D.Atom
             {
                 //Node.Position = position;
                 // BEGIN FUCKING CRAZY HACK.
+                // Sees if the node's position is inside the wall. If it is, translate the character along the x or z component of its velocity.
                 Mogre.Vector3 targetPosition = Node.Position;
                 Mogre.Vector3 difference = targetPosition - position;
                 //Test X 
                 Node.Position = position + new Mogre.Vector3(difference.x, 0, 0);
                 if (IsInWall())
                 {
+                    //Test z.
                     Node.Position = position + new Mogre.Vector3(0, 0, difference.z);
                     if (IsInWall())
-                        Node.Position = position;
+                       Node.Position = position;
                 }
                 // END FUCKING CRAZY HACK
+                position = Node.Position;
             }
             else
                 position = Node.Position;

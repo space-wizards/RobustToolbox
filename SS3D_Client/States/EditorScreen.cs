@@ -52,6 +52,10 @@ namespace SS3D.States
             set
             {
                 if (value == mouseOverEntity) return;
+
+                if (mouseOverEntity.Entity == null || mouseOverEntity.Node == null) //Disposed obj.
+                    mouseOverEntity = null;
+
                 if (mouseOverEntity != null && value != null) //Different object.
                 {
                     mouseOverEntity.Node.ShowBoundingBox = false;
@@ -72,7 +76,7 @@ namespace SS3D.States
             }
         }
 
-        public Boolean isBusy = false; //This is set to true while maps are loading etc. To disable certain things.
+        public Boolean isBusy = false; //This is set to true while maps are loading etc., to disable certain things.
 
         //private AtomBaseClass selectedEntity;
         //private AtomBaseClass prevSelectedEntity;
@@ -137,28 +141,11 @@ namespace SS3D.States
                 AtomBaseClass HoverObject = HelperClasses.AtomUtil.PickAtScreenPosition(mEngine, mousePosAbs, out worldPos);
 
                 MouseOverEntity = HoverObject;
-
-                //if (MouseOverEntity != HoverObject && MouseOverEntity != null && HoverObject != null) //Different object.
-                //{
-                //    MouseOverEntity.Node.ShowBoundingBox = false;
-                //    HoverObject.Node.ShowBoundingBox = true;
-                //    MouseOverEntity = HoverObject;
-                //}
-                //else if (MouseOverEntity != HoverObject && MouseOverEntity != null && HoverObject == null) //From something to nothing.
-                //{
-                //    MouseOverEntity.Node.ShowBoundingBox = false;
-                //    MouseOverEntity = null;
-                //}
-                //else if (MouseOverEntity != HoverObject && MouseOverEntity == null && HoverObject != null) //From nothing to something.
-                //{
-                //    HoverObject.Node.ShowBoundingBox = true;
-                //    MouseOverEntity = HoverObject;
-                //}
             }
 
             if (currentLoadingTracker != null)
             {
-                statusBar.StatusTextPanel.Text = currentLoadingTracker.loadingText;
+                statusBar.StatusTextLabel.Text = currentLoadingTracker.loadingText;
                 statusBar.StatusProgressBar.Value = (int)currentLoadingTracker.loadingPercent;
                 statusBar.StatusProgressBar.Text = System.Math.Floor(currentLoadingTracker.loadingPercent).ToString() + "%";
             }
@@ -269,19 +256,17 @@ namespace SS3D.States
             };
             this.Controls.Add(loadPanel);
 
-            loadPanel.Controls.Add(new Panel("EditorLoadPanelText")
+            loadPanel.Controls.Add(new Label("EditorLoadPanelText")
             {
                 Location = new Point(25, 0),
                 Size = new Size(180, 30),
-                ResizeMode = ResizeModes.None,
                 Text = "Load Map",
                 HitTestVisible = false,
                 TextStyle = 
                 {
                     Alignment = Alignment.MiddleCenter,
                     ForegroundColour = Colours.Black
-                },
-                Skin = MiyagiResources.Singleton.Skins["ConsolePanelSkin"]
+                }
             });
 
             this.filePanel = new Panel("EditorFilePanel")
@@ -383,7 +368,6 @@ namespace SS3D.States
             if (editorState.isBusy) return;
             Button sButton = (Button)sender;
             this.Visible = false;
-            //TODO: Block Main toolbar while loading.
             editorState.LoadMap((string)sButton.UserData); //This contains the path.
             this.Dispose();
             mStateMgr.Engine.mMiyagiSystem.GUIManager.GUIs.Remove(this);
@@ -403,6 +387,8 @@ namespace SS3D.States
         Button newButton;
         Button loadButton;
         Button saveButton;
+        Button backButton;
+        Button gridButton;
 
         private LinearFunctionValueController<float> FaderIn;
         private LinearFunctionValueController<float> FaderOut;
@@ -423,6 +409,35 @@ namespace SS3D.States
                 ResizeMode = ResizeModes.None,
                 Skin = MiyagiResources.Singleton.Skins["ConsolePanelSkin"]
             };
+
+            this.backButton = new Button("EditBackButton")
+            {
+                Size = new Size(80, 32),
+                Location = new Point((int)mStateMgr.Engine.mWindow.Width - 90, 10),
+                Text = "Main Menu",
+                TextStyle =
+                {
+                    Alignment = Alignment.MiddleCenter,
+                    ForegroundColour = Colours.Black
+                },
+                Skin = MiyagiResources.Singleton.Skins["ButtonSkinGreen"]
+            };
+            backButton.Click += new EventHandler(backButton_Click);
+
+
+            this.gridButton = new Button("EditGridButton")
+            {
+                Size = new Size(80, 32),
+                Location = new Point((int)mStateMgr.Engine.mWindow.Width - 180, 10),
+                Text = "Grid",
+                TextStyle =
+                {
+                    Alignment = Alignment.MiddleCenter,
+                    ForegroundColour = Colours.Black
+                },
+                Skin = MiyagiResources.Singleton.Skins["ButtonSkinGreen"]
+            };
+            gridButton.Click += new EventHandler(gridButton_Click);
 
             this.newButton = new Button("EditNewButton")
             {
@@ -469,14 +484,24 @@ namespace SS3D.States
             this.PopupOrientation = Orientation.Vertical;
             this.PopupRange = new Range(0, 50);
 
-            this.toolbarPanel.Controls.AddRange(loadButton, saveButton, newButton);
+            this.toolbarPanel.Controls.AddRange(loadButton, saveButton, newButton, gridButton, backButton);
             this.Controls.Add(toolbarPanel);
+        }
+
+        void gridButton_Click(object sender, EventArgs e)
+        {
+            if (editorState.isBusy) return;
+            editorState.ToggleGrid();
+        }
+
+        void backButton_Click(object sender, EventArgs e)
+        {
+            if (editorState.isBusy) return;
         }
 
         void saveButton_Click(object sender, EventArgs e)
         {
             if (editorState.isBusy) return;
-            editorState.ToggleGrid();
         }
 
         void newButton_Click(object sender, EventArgs e)
@@ -527,7 +552,7 @@ namespace SS3D.States
     public sealed class EditorStatusBar : GUI
     {
         Panel BackgroundPanel;
-        public Panel StatusTextPanel;
+        public Label StatusTextLabel;
         public ProgressBar StatusProgressBar;
 
         StateManager mStateMgr;
@@ -550,12 +575,11 @@ namespace SS3D.States
             };
             this.Controls.Add(BackgroundPanel);
 
-            StatusTextPanel = new Panel("EditorStatusTextPanel")
+            StatusTextLabel = new Label("EditorStatusTextLabel")
             {
                 Location = new Point(0, 3),
                 Size = new Size(180, 30),
-                ResizeMode = ResizeModes.None,
-                Text = "Status...",
+                Text = "[Status]",
                 HitTestVisible = false,
                 TextStyle =
                 {
@@ -563,9 +587,8 @@ namespace SS3D.States
                     ForegroundColour = Colours.White,
                 },
                 TextureFiltering = TextureFiltering.Anisotropic,
-                Skin = MiyagiResources.Singleton.Skins["ConsolePanelSkin"]
             };
-            BackgroundPanel.Controls.Add(StatusTextPanel);
+            BackgroundPanel.Controls.Add(StatusTextLabel);
 
             StatusProgressBar = new ProgressBar("EditorStatusProgressBar")
             {
@@ -606,6 +629,11 @@ namespace SS3D.States
         StateManager mStateMgr;
         EditorScreen editorState;
 
+        Slider sliderWidth;
+        Slider sliderHeight;
+
+        private const int maxSize = 30; //This * maps staticgeosize = real size - Right now static geo size = 10, so 300x300
+
         public EditorNewWindow(StateManager _mgr, EditorScreen editScreen)
             : base("editorNewBox")
         {
@@ -626,11 +654,28 @@ namespace SS3D.States
             };
             this.Controls.Add(newPanel);
 
-            newPanel.Controls.Add(new Panel("EditorNewPanelText")
+            this.sliderHeight = new Slider("SliderHeight")
             {
+                Location = new Point(5,40),
+                Size = new Size(newPanel.Size.Width - 10, 30),
+                LargeChange = editorState.currentMap.StaticGeoSize,
+                SmallChange = editorState.currentMap.StaticGeoSize,
+                Max = editorState.currentMap.StaticGeoSize * maxSize,
+                Min = editorState.currentMap.StaticGeoSize,
+                ThumbStyle =
+                {
+                    BorderStyle =
+                    {
+                        Thickness = new Thickness(2, 2, 2, 2)
+                    }
+                }, 
+                Skin = MiyagiResources.Singleton.Skins["SliderSkin"]
+            };
+
+            newPanel.Controls.Add(new Label("EditorNewPanelText")
+            { 
                 Location = new Point(25, 0),
                 Size = new Size(180, 30),
-                ResizeMode = ResizeModes.None,
                 Text = "Create Map",
                 HitTestVisible = false,
                 TextStyle =
@@ -638,7 +683,6 @@ namespace SS3D.States
                     Alignment = Alignment.MiddleCenter,
                     ForegroundColour = Colours.Black
                 },
-                Skin = MiyagiResources.Singleton.Skins["ConsolePanelSkin"]
             });
 
             cancelButton = new Button("mapCancelLoadButton")

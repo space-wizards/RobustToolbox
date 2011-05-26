@@ -28,12 +28,15 @@ namespace SS3d_server.Modules.Chat
             ushort channel = message.ReadUInt16();
             string text = message.ReadString();
             string name = netServer.clientList[message.SenderConnection].playerName;
-            ushort mobID = netServer.clientList[message.SenderConnection].mobID;
+            //ushort mobID = netServer.clientList[message.SenderConnection].mobID;
+            ushort atomID = netServer.playerManager.GetSessionByConnection(message.SenderConnection).attachedAtom.uid;
+            if (atomID == null)
+                atomID = 0;
 
-            SendChatMessage(channel, text, name, mobID);
+            SendChatMessage(channel, text, name, atomID);
         }
 
-        public void SendChatMessage(ushort channel, string text, string name, ushort mobID)
+        public void SendChatMessage(ushort channel, string text, string name, ushort atomID)
         {
             string fullmsg = name + ": " + text;
 
@@ -43,7 +46,7 @@ namespace SS3d_server.Modules.Chat
             message.Write((byte)NetMessage.ChatMessage);
             message.Write(channel);
             message.Write(fullmsg);
-            message.Write(mobID);
+            message.Write(atomID);
 
             netServer.SendMessageToAll(message);
         }

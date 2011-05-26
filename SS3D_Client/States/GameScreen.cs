@@ -289,10 +289,11 @@ namespace SS3D.States
             string text = msg.ReadString();
 
             string message = "(" + channel.ToString() + "):" + text;
-            ushort mobID = msg.ReadUInt16();
+            ushort atomID = msg.ReadUInt16();
             gameChat.AddLine(message);
-            if(mobManager.GetMob(mobID) != null)
-                mobManager.GetMob(mobID).speaking = true;
+            Atom.Atom a = atomManager.GetAtom(atomID);
+            if(a != null)
+                a.speaking = true;
         }
 
         private void SendChatMessage(string text)

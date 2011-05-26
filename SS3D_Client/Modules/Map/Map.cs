@@ -30,7 +30,7 @@ namespace SS3D.Modules.Map
         public StaticGeometry[,] staticGeometry;
         private int StaticGeoX; // The width of the array - the number of tiles / 10 rounded up.
         private int StaticGeoZ; // Same as above.
-        private int StaticGeoSize = 10; // Size of one side of the square of tiles stored by each staticgeometry in the array.
+        public int StaticGeoSize = 10; // Size of one side of the square of tiles stored by each staticgeometry in the array.
         private Vector2 lastCamGeoPos = Vector2.UNIT_SCALE;
 
         #endregion
@@ -107,7 +107,7 @@ namespace SS3D.Modules.Map
             tileArray = new BaseTile[mapWidth, mapHeight];
             boundingBoxArray = new AxisAlignedBox[mapWidth, mapHeight];
 
-            loadingText = "Building Map";
+            loadingText = "Building Map...";
             loadingPercent = 0;
             mEngine.OneUpdate();
 
@@ -192,7 +192,7 @@ namespace SS3D.Modules.Map
             float maxElements = toLoad.TileData.TileInfo.Count;       //Number of elements total.
             float oneElement = 100f / toLoad.TileData.TileInfo.Count; //Value of one element.
             float currCount = 0;                                      //Counter.
-            loadingText = "Loading Tiles";                            //Setting the text of the inherited abstract class.
+            loadingText = "Loading Tiles...";                         //Setting the text of the inherited abstract class.
 
             foreach (TileEntry entry in toLoad.TileData.TileInfo)
             {   // x=x z=y , sorry about that.
@@ -230,7 +230,7 @@ namespace SS3D.Modules.Map
             oneElement = 100f / maxElements;
             currCount = 0;
 
-            loadingText = "Loading Space";
+            loadingText = "Loading Space...";
             mEngine.OneUpdate();
 
             for (int x = 0; x < mapWidth; x++)
@@ -318,7 +318,7 @@ namespace SS3D.Modules.Map
 
             tileArray = new BaseTile[mapWidth, mapHeight];
 
-            loadingText = "Building Map";
+            loadingText = "Building Map...";
             loadingPercent = 0;
             mEngine.OneUpdate();
 
@@ -366,7 +366,7 @@ namespace SS3D.Modules.Map
 
             if (useStaticGeo)
             {
-                loadingText = "Initializing Static Geometry";
+                loadingText = "Initializing Static Geometry...";
                 loadingPercent = 0;
                 mEngine.OneUpdate();
 
@@ -470,7 +470,7 @@ namespace SS3D.Modules.Map
         // for the first time.
         private void BuildAllgeometry()
         {
-            loadingText = "Building Static Geometry";
+            loadingText = "Building Static Geometry...";
             loadingPercent = 0;
             mEngine.OneUpdate();
 
@@ -798,7 +798,7 @@ namespace SS3D.Modules.Map
 
             if (useStaticGeo)
             {
-                loadingText = "Unloading Static Geometry";
+                loadingText = "Unloading Static Geometry...";
                 loadingPercent = 0;
                 mEngine.OneUpdate();
 
@@ -824,7 +824,7 @@ namespace SS3D.Modules.Map
             }
             mEngine.SceneMgr.DestroyAllEntities();
 
-            loadingText = "Unloading Map";
+            loadingText = "Unloading Map...";
             loadingPercent = 0;
             mEngine.OneUpdate();
 

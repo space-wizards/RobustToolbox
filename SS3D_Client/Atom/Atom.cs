@@ -38,6 +38,9 @@ namespace SS3D.Atom
 
         public delegate void KeyEvent(bool state);
 
+        //Misc?
+        public bool speaking = false;
+
         public Atom()
         {
             keyStates = new Dictionary<MOIS.KeyCode, bool>();

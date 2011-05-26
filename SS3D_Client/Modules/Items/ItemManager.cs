@@ -181,7 +181,7 @@ namespace SS3D.Modules.Items
             message.Write((byte)ItemMessage.ClickItem);
             message.Write((byte)mobManager.myMob.selectedHand);
             message.Write(item.itemID);
-            networkManager.SendMessage(message, NetDeliveryMethod.Unreliable);
+            networkManager.SendMessage(message, NetDeliveryMethod.ReliableOrdered);
         }
 
         public void DropItem(MobHand hand)

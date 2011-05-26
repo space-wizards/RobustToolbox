@@ -157,5 +157,10 @@ namespace SS3d_server.Atom
             atomDictionary.Remove(uid);
             SendDeleteAtom(uid);
         }
+
+        public void DeleteAtom(Atom atom)
+        {
+            DeleteAtom(atom.uid);
+        }
     }
 }

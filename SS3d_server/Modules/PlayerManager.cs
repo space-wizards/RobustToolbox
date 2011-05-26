@@ -50,5 +50,15 @@ namespace SS3d_server.Modules
                     break;
             }
         }
+
+        internal void EndSession(NetConnection client)
+        {
+            // Ends the session.
+            PlayerSession session = GetSessionByConnection(client);
+            //Detach the atom and delete it.
+            var a = session.attachedAtom;
+            session.DetachFromAtom();
+            netServer.atomManager.DeleteAtom(a);
+        }
     }
 }

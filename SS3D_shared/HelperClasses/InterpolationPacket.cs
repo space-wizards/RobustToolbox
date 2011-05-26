@@ -4,6 +4,7 @@ using System.Linq;
 using System.Text;
 
 using Mogre;
+using Lidgren.Network;
 
 namespace SS3D_shared.HelperClasses
 {
@@ -28,6 +29,26 @@ namespace SS3D_shared.HelperClasses
             this.rotW = _rotW;
             this.rotY = _rotY;
             this.time = _time;
+        }
+
+        public InterpolationPacket(NetIncomingMessage message)
+        {
+            float x = message.ReadFloat();
+            float y = message.ReadFloat();
+            float z = message.ReadFloat();
+            position = new Mogre.Vector3(x, y, z);
+            rotW = message.ReadFloat();
+            rotY = message.ReadFloat();
+            time = 0;
+        }
+
+        public void WriteMessage(NetOutgoingMessage message)
+        {
+            message.Write(position.x);
+            message.Write(position.y);
+            message.Write(position.z);
+            message.Write(rotW);
+            message.Write(rotY);
         }
 
     }

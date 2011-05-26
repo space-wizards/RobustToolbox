@@ -10,6 +10,7 @@ using SS3D.Modules.Items;
 using SS3D.Modules.Mobs;
 using SS3D.Modules.Network;
 using SS3D.Modules.UI;
+using SS3D.Atom;
 
 using SS3D_shared;
 
@@ -30,14 +31,18 @@ namespace SS3D.States
     public class GameScreen : State
     {
         #region Variables
-        private OgreManager mEngine;
+        public OgreManager mEngine;
         private StateManager mStateMgr;
-        private Map map;
-        private ItemManager itemManager;
-        private MobManager mobManager;
+        public Map map;
+        //private ItemManager itemManager;
+        //private MobManager mobManager;
+        private AtomManager atomManager;
         private GUI guiGameScreen;
         private Chatbox gameChat;
         private ushort defaultChannel;
+        public PlayerController playerController;
+        public DateTime lastUpdate;
+        public DateTime now;
 
         #region Mouse/Camera stuff
         private DateTime lastRMBClick = DateTime.Now;
@@ -58,14 +63,19 @@ namespace SS3D.States
             mEngine = _mgr.Engine;
             mStateMgr = _mgr;
 
+            lastUpdate = DateTime.Now;
+            now = DateTime.Now;
+
             defaultChannel = 1;
 
             mEngine.mMiyagiSystem.GUIManager.DisposeAllGUIs();
 
             map = new Map(mEngine, true);
 
-            mobManager = new MobManager(mEngine, map, mEngine.mNetworkMgr);
-            itemManager = new ItemManager(mEngine, map, mEngine.mNetworkMgr, mobManager);
+            //mobManager = new MobManager(mEngine, map, mEngine.mNetworkMgr);
+            //itemManager = new ItemManager(mEngine, map, mEngine.mNetworkMgr, mobManager);
+            atomManager = new AtomManager(this);
+            playerController = new PlayerController(this, atomManager);
             SetUp();
             SetUpGUI();
 
@@ -82,10 +92,7 @@ namespace SS3D.States
 
             mEngine.mNetworkMgr.SetMap(map);
             mEngine.mNetworkMgr.RequestMap();
-
-
-            
-            
+                        
             return true;
         }
 
@@ -184,19 +191,26 @@ namespace SS3D.States
             mEngine.mMiyagiSystem.GUIManager.GUIs.Remove(guiGameScreen);
             map.Shutdown();
             map = null;
-            itemManager.Shutdown();
-            itemManager = null;
-            mobManager.Shutdown();
-            mobManager = null;
+            //itemManager.Shutdown();
+            //itemManager = null;
+            //mobManager.Shutdown();
+            //mobManager = null;
             mEngine.mNetworkMgr.Disconnect();
         }
 
         public override void Update(long _frameTime)
         {
+            /* There's no reason to spam DateTime.Now everywhere. */
+            lastUpdate = now;
+            now = DateTime.Now;
+
             mEngine.SceneMgr.SkyBoxNode.Rotate(Mogre.Vector3.UNIT_Y, 0.0001f);
-            itemManager.Update();
-            mobManager.Update();
+
+            //itemManager.Update();
+            //mobManager.Update();
+            atomManager.Update();
         }
+
 
         private void mNetworkMgr_MessageArrived(NetworkManager netMgr, NetIncomingMessage msg)
         {
@@ -213,11 +227,18 @@ namespace SS3D.States
                         case NetMessage.ChangeTile:
                             ChangeTile(msg);
                             break;
-                        case NetMessage.ItemMessage:
+                        /*case NetMessage.ItemMessage:
                             itemManager.HandleNetworkMessage(msg);
                             break;
                         case NetMessage.MobMessage:
                             mobManager.HandleNetworkMessage(msg);
+                            break;
+                         * */
+                        case NetMessage.AtomManagerMessage:
+                            atomManager.HandleNetworkMessage(msg);
+                            break;
+                        case NetMessage.PlayerSessionMessage:
+                            playerController.HandleNetworkMessage(msg);
                             break;
                         case NetMessage.SendMap:
                             RecieveMap(msg);
@@ -269,9 +290,11 @@ namespace SS3D.States
             string text = msg.ReadString();
 
             string message = "(" + channel.ToString() + "):" + text;
-            ushort mobID = msg.ReadUInt16();
+            ushort atomID = msg.ReadUInt16();
             gameChat.AddLine(message);
-            mobManager.GetMob(mobID).speaking = true;
+            Atom.Atom a = atomManager.GetAtom(atomID);
+            if(a != null)
+                a.speaking = true;
         }
 
         private void SendChatMessage(string text)
@@ -288,14 +311,14 @@ namespace SS3D.States
         {
             if (text == "/crowbar")
             {
-                Mogre.Vector3 pos = mobManager.myMob.Node.Position;
+                /*Mogre.Vector3 pos = mobManager.myMob.Node.Position;
                 pos.y += 40;
-                itemManager.SendCreateItem(pos);
+                itemManager.SendCreateItem(pos);*/
             }
             else if (text == "/dumpmap")
             {
-                if(map != null && itemManager != null)
-                    MapFileHandler.SaveMap("./Maps/mapdump.map", map, itemManager);
+               /* if(map != null && itemManager != null)
+                    MapFileHandler.SaveMap("./Maps/mapdump.map", map, itemManager);*/
             }
             else
             {
@@ -308,11 +331,12 @@ namespace SS3D.States
         #region Input
         public override void UpdateInput(Mogre.FrameEvent evt, MOIS.Keyboard keyState, MOIS.Mouse mouseState)
         {
+            // TODO: Rewrite this shit
             if (gameChat.chatGUI.GetControl("ChatTextbox").Focused)
             {
                 return;
             }
-            if(keyState.IsKeyDown(MOIS.KeyCode.KC_W))
+            /*if(keyState.IsKeyDown(MOIS.KeyCode.KC_W))
             {
                 mobManager.MoveMe(1);
                 mobManager.Animate("walk");
@@ -333,7 +357,7 @@ namespace SS3D.States
             if (!keyState.IsKeyDown(MOIS.KeyCode.KC_W) && !keyState.IsKeyDown(MOIS.KeyCode.KC_S))
             {
                 mobManager.Animate("idle");
-            }
+            }*/
         }
 
         public override void KeyDown(MOIS.KeyEvent keyState)
@@ -342,7 +366,10 @@ namespace SS3D.States
             {
                 return;
             }
-            if (keyState.key == MOIS.KeyCode.KC_LSHIFT)
+            // Pass keydown events to the PlayerController
+            playerController.KeyDown(keyState.key);
+
+            /*if (keyState.key == MOIS.KeyCode.KC_LSHIFT)
             {
                 mobManager.myMob.speed = mobManager.myMob.runSpeed;
             }
@@ -377,20 +404,21 @@ namespace SS3D.States
                     guiGameScreen.GetControl("rightHandButton").Focused = false;
                     mobManager.myMob.selectedHand = MobHand.LHand;
                 }
-            }
+            }*/
 
         }
 
         public override void KeyUp(MOIS.KeyEvent keyState)
         {
+            playerController.KeyUp(keyState.key); // We want to pass key up events regardless of UI focus.
             if (gameChat.HasFocus())
             {
                 return;
             }
-            if (keyState.key == MOIS.KeyCode.KC_LSHIFT)
+            /*if (keyState.key == MOIS.KeyCode.KC_LSHIFT)
             {
                 mobManager.myMob.speed = mobManager.myMob.walkSpeed;
-            }
+            }*/
             else if (keyState.key == MOIS.KeyCode.KC_T)
             {
                 gameChat.SetInputFocus();
@@ -419,11 +447,13 @@ namespace SS3D.States
                 Vector2 mousePos = new Vector2((float)mouseLoc.X, (float)mouseLoc.Y);
                 
                 //Changed this because it is simpler to use a helper class just for raycasting, and we don't need the worldpos.
-                AtomBaseClass atom = HelperClasses.AtomUtil.PickAtScreenPosition(mEngine, mousePos);
+                Atom.Atom atom = HelperClasses.AtomUtil.PickAtScreenPosition(mEngine, mousePos);
 
                 if (atom != null)
                 {
-                    switch (atom.AtomType)
+
+                    atom.HandleClick();
+                    /*switch (atom.AtomType)
                     {
                         case AtomType.Item:
                             itemManager.ClickItem((Item)atom);
@@ -431,7 +461,7 @@ namespace SS3D.States
                         case AtomType.Mob:
                             mobManager.ClickMob((Mob)atom);
                             break;
-                    }
+                    }*/
                     
                 }
             }
@@ -471,11 +501,11 @@ namespace SS3D.States
         {
             if (e.MouseButton == MouseButton.Left)
             {
-                mobManager.myMob.selectedHand = MobHand.LHand;
+                //mobManager.myMob.selectedHand = MobHand.LHand;
             }
             else if (e.MouseButton == MouseButton.Right)
             {
-                itemManager.DropItem(MobHand.LHand);
+                //itemManager.DropItem(MobHand.LHand);
             }
         }
 
@@ -483,11 +513,11 @@ namespace SS3D.States
         {
             if (e.MouseButton == MouseButton.Left)
             {
-                mobManager.myMob.selectedHand = MobHand.RHand;
+                //mobManager.myMob.selectedHand = MobHand.RHand;
             }
             else if (e.MouseButton == MouseButton.Right)
             {
-                itemManager.DropItem(MobHand.RHand);
+                //itemManager.DropItem(MobHand.RHand);
             }
         }
         #endregion

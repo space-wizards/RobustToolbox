@@ -77,7 +77,7 @@ namespace SS3D.Modules.Map
                 grid.Colour(gridColor);
             }
 
-            grid.QueryFlags = QueryFlags.DO_NOT_PICK;
+            grid.QueryFlags = SS3D_shared.HelperClasses.QueryFlags.DO_NOT_PICK;
             grid.End();
 
             return grid;

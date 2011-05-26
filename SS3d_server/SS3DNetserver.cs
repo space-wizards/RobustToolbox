@@ -4,11 +4,13 @@ using System.Linq;
 using System.Text;
 using System.IO;
 using System.Threading;
+using SS3d_server.Modules;
 using SS3d_server.Modules.Client;
 using SS3d_server.Modules.Map;
 using SS3d_server.Modules.Items;
 using SS3d_server.Modules.Mobs;
 using SS3d_server.Modules.Chat;
+using SS3d_server.Atom;
 
 using Lidgren.Network;
 using SS3D_shared;
@@ -21,9 +23,11 @@ namespace SS3d_server
         private NetPeerConfiguration netConfig = new NetPeerConfiguration("SS3D_NetTag");
         public Dictionary<NetConnection, Client> clientList = new Dictionary<NetConnection, Client>();
         public Map map;
-        public ItemManager itemManager;
-        public MobManager mobManager;
+        //public ItemManager itemManager;
+        //public MobManager mobManager;
         public ChatManager chatManager;
+        public AtomManager atomManager;
+        public PlayerManager playerManager;
         
         bool active = false;
 
@@ -56,10 +60,11 @@ namespace SS3d_server
             map = new Map();
             map.InitMap(serverMapName);
 
-            mobManager = new MobManager(this, map);
-            itemManager = new ItemManager(this, map, mobManager);
-            chatManager = new ChatManager(this, mobManager);
-
+            //mobManager = new MobManager(this, map);
+            //itemManager = new ItemManager(this, map, mobManager);
+            chatManager = new ChatManager(this);
+            atomManager = new AtomManager(this);
+            playerManager = new PlayerManager(this);
         }
 
         public bool Start()
@@ -73,7 +78,8 @@ namespace SS3d_server
                 netConfig.Port = serverPort;
                 netServer = new NetServer(netConfig);
                 netServer.Start();
-                AddRandomCrowbars();
+                //AddRandomCrowbars();
+                
                 active = true;
                 return false;
             }
@@ -172,7 +178,6 @@ namespace SS3d_server
                         case NetIncomingMessageType.StatusChanged:
                             HandleStatusChanged(msg);
                             break;
-
                         default:
                             Console.WriteLine("Unhandled type: " + msg.MessageType);
                             break;
@@ -187,8 +192,9 @@ namespace SS3d_server
 
         public void Update()
         {
-            itemManager.Update();
-            mobManager.Update();
+            //itemManager.Update();
+            //mobManager.Update();
+            atomManager.Update();
         }
         #endregion
 
@@ -256,7 +262,8 @@ namespace SS3d_server
             {
                 Console.WriteLine(senderIP + ": Disconnected");
 
-                mobManager.DeletePlayer(sender);
+                //mobManager.DeletePlayer(sender);
+                playerManager.EndSession(sender);
 
                 if (clientList.ContainsKey(sender))
                 {
@@ -291,13 +298,19 @@ namespace SS3d_server
                     HandleClientName(msg);
                     break;
                 case NetMessage.ItemMessage:
-                    itemManager.HandleNetMessage(msg);
+                    //itemManager.HandleNetMessage(msg);
                     break;
                 case NetMessage.MobMessage:
-                    mobManager.HandleNetMessage(msg);
+                    //mobManager.HandleNetMessage(msg);
                     break;
                 case NetMessage.ChatMessage:
                     chatManager.HandleNetMessage(msg);
+                    break;
+                case NetMessage.AtomManagerMessage:
+                    atomManager.HandleNetworkMessage(msg);
+                    break;
+                case NetMessage.PlayerSessionMessage:
+                    playerManager.HandleNetworkMessage(msg);
                     break;
                 default:
                     break;
@@ -313,7 +326,7 @@ namespace SS3d_server
             string fixedname = name.Trim();
             if (fixedname.Length < 3)
                 fixedname = "Player";
-            mobManager.mobDict[mobid].name = fixedname;
+            //mobManager.mobDict[mobid].name = fixedname;
        }
 
         public void HandleLobbyChat(NetIncomingMessage msg)
@@ -330,7 +343,7 @@ namespace SS3d_server
             chatMessage.Write(text);
             foreach (NetConnection connection in clientList.Keys)
             {
-                netServer.SendMessage(chatMessage, connection, NetDeliveryMethod.Unreliable);
+                netServer.SendMessage(chatMessage, connection, NetDeliveryMethod.ReliableOrdered);
             }
         }
 
@@ -361,8 +374,10 @@ namespace SS3d_server
             Console.WriteLine(connection.RemoteEndpoint.Address.ToString() + ": Sending map finished with message size: " + mapMessage.LengthBytes + " bytes");
 
             // Lets also send them all the items and mobs.
-            mobManager.NewPlayer(connection);
-            itemManager.NewPlayer(connection);
+            //mobManager.NewPlayer(connection);
+            //itemManager.NewPlayer(connection);
+            atomManager.NewPlayer(connection);
+            playerManager.NewSession(connection);
         }
 
         public void HandleChangeTile(NetIncomingMessage msg)
@@ -519,7 +534,7 @@ namespace SS3d_server
             for (int i = 0; i < 10; i++)
             {
                 SS3D_shared.HelperClasses.Vector3 pos = new SS3D_shared.HelperClasses.Vector3(r.NextDouble() * map.GetMapWidth() * map.tileSpacing, 60, r.NextDouble() * map.GetMapHeight() * map.tileSpacing);
-                itemManager.CreateItem(type, pos);
+                //itemManager.CreateItem(type, pos);
             }
         }
     }

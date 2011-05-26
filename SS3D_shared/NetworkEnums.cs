@@ -13,7 +13,9 @@ public enum NetMessage
     ChangeTile,
     ItemMessage, // It's something the item system needs to handle
     MobMessage,
-    ChatMessage
+    ChatMessage,
+    AtomManagerMessage,
+    PlayerSessionMessage
 }
 
 public enum ItemMessage
@@ -26,12 +28,20 @@ public enum ItemMessage
     UseItem // etc.
 }
 
+public enum AtomManagerMessage
+{
+    SpawnAtom,
+    DeleteAtom,
+    Passthrough
+}
+
 public enum MobMessage
 {
     CreateMob = 0,
     InterpolationPacket,
     DeleteMob,
-    ClickMob
+    ClickMob,
+    AnimationState
 }
 
 public enum MobHand
@@ -52,3 +62,7 @@ public enum ClientStatus
     Game
 }
 
+public enum PlayerSessionMessage
+{
+    AttachToAtom
+}

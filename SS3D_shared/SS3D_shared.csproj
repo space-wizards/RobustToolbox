@@ -76,7 +76,11 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="AtomBaseClass.cs" />
+    <Compile Include="Atom\Atom.cs" />
+    <Compile Include="Atom\Mob\Mob.cs" />
+    <Compile Include="Atom\Mob\Player.cs" />
     <Compile Include="HelperClasses\InterpolationPacket.cs" />
+    <Compile Include="HelperClasses\QueryFlags.cs" />
     <Compile Include="HelperClasses\Vector3.cs" />
     <Compile Include="Mobs\Mob.cs" />
     <Compile Include="Mobs\Player.cs" />
@@ -92,6 +96,9 @@
     <Compile Include="Tiles\Floors\Space.cs" />
     <Compile Include="Tiles\MeshManager.cs" />
     <Compile Include="Tiles\Walls\Wall.cs" />
+  </ItemGroup>
+  <ItemGroup>
+    <Content Include="Atom\readme.txt" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 

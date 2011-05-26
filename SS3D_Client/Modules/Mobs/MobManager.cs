@@ -297,7 +297,7 @@ namespace SS3D.Modules.Mobs
             message.Write((byte)myMob.selectedHand);
             message.Write(mob.mobID);
 
-            networkManager.SendMessage(message, NetDeliveryMethod.Unreliable);
+            networkManager.SendMessage(message, NetDeliveryMethod.ReliableOrdered);
         }
 
         public Mob GetMob(ushort mobID)

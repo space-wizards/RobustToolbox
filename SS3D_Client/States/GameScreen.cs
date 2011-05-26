@@ -447,20 +447,21 @@ namespace SS3D.States
                 Vector2 mousePos = new Vector2((float)mouseLoc.X, (float)mouseLoc.Y);
                 
                 //Changed this because it is simpler to use a helper class just for raycasting, and we don't need the worldpos.
-                AtomBaseClass atom = HelperClasses.AtomUtil.PickAtScreenPosition(mEngine, mousePos);
+                Atom.Atom atom = HelperClasses.AtomUtil.PickAtScreenPosition(mEngine, mousePos);
 
                 if (atom != null)
                 {
-                    switch (atom.AtomType)
+
+                    atom.HandleClick();
+                    /*switch (atom.AtomType)
                     {
-                        /*case AtomType.Item:
+                        case AtomType.Item:
                             itemManager.ClickItem((Item)atom);
                             break;
                         case AtomType.Mob:
                             mobManager.ClickMob((Mob)atom);
                             break;
-                         * */
-                    }
+                    }*/
                     
                 }
             }

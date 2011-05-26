@@ -9,7 +9,7 @@ namespace SS3D_shared
     public class Space : BaseTile
     {
         public Space(SceneManager sceneManager, Vector3 position, int tileSpacing)
-            : base()
+            : base(tileSpacing)
         {
             TileType = TileType.Space;
             string entityName;
@@ -27,6 +27,7 @@ namespace SS3D_shared
             
             Node = sceneManager.RootSceneNode.CreateChildSceneNode(entityName);
             Entity = sceneManager.CreateEntity(entityName, "spaceMesh");
+            Entity.QueryFlags = HelperClasses.QueryFlags.ENTITY_SPACE;
             Node.Position = position;
             Node.AttachObject(Entity);
             Entity.UserObject = (AtomBaseClass)this;

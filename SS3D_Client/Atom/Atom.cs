@@ -351,6 +351,7 @@ namespace SS3D.Atom
             }
             Node = sceneManager.RootSceneNode.CreateChildSceneNode(entityName);
             Entity = sceneManager.CreateEntity(entityName, meshName);
+            Entity.QueryFlags = QueryFlags.ENTITY_ATOM;
             Entity.UserObject = this;
             Node.Position = position;
             Node.AttachObject(Entity);
@@ -359,7 +360,7 @@ namespace SS3D.Atom
             drawn = true;
         }
 
-
+        
 
         #region input handling
         /* You might be wondering why input handling is in the base atom code. Well, It's simple.
@@ -423,6 +424,11 @@ namespace SS3D.Atom
                 TurnRight();
         }
         #endregion
+
+        public virtual void HandleClick()
+        {
+
+        }
         #endregion
     }
 }

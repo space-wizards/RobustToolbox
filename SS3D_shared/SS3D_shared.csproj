@@ -80,6 +80,7 @@
     <Compile Include="Atom\Mob\Mob.cs" />
     <Compile Include="Atom\Mob\Player.cs" />
     <Compile Include="HelperClasses\InterpolationPacket.cs" />
+    <Compile Include="HelperClasses\QueryFlags.cs" />
     <Compile Include="HelperClasses\Vector3.cs" />
     <Compile Include="Mobs\Mob.cs" />
     <Compile Include="Mobs\Player.cs" />

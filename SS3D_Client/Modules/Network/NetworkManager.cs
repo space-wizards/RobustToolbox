@@ -173,7 +173,7 @@ namespace SS3D.Modules.Network
             netMessage.Write(x);
             netMessage.Write(z);
             netMessage.Write((byte)newTile);
-            netClient.SendMessage(netMessage, NetDeliveryMethod.Unreliable);
+            netClient.SendMessage(netMessage, NetDeliveryMethod.ReliableOrdered);
         }
 
         public NetOutgoingMessage GetMessage()
@@ -186,7 +186,7 @@ namespace SS3D.Modules.Network
             NetOutgoingMessage message = netClient.CreateMessage();
             message.Write((byte)NetMessage.ClientName);
             message.Write(name);
-            netClient.SendMessage(message, NetDeliveryMethod.Unreliable);
+            netClient.SendMessage(message, NetDeliveryMethod.ReliableOrdered);
         }
 
         public void SendMessage(NetOutgoingMessage message, NetDeliveryMethod deliveryMethod)

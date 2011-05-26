@@ -79,7 +79,6 @@ namespace SS3d_server
                 netServer = new NetServer(netConfig);
                 netServer.Start();
                 AddRandomCrowbars();
-                atomManager.SpawnAtom("Atom.Atom");
                 
                 active = true;
                 return false;
@@ -179,7 +178,6 @@ namespace SS3d_server
                         case NetIncomingMessageType.StatusChanged:
                             HandleStatusChanged(msg);
                             break;
-
                         default:
                             Console.WriteLine("Unhandled type: " + msg.MessageType);
                             break;
@@ -265,6 +263,7 @@ namespace SS3d_server
                 Console.WriteLine(senderIP + ": Disconnected");
 
                 mobManager.DeletePlayer(sender);
+                playerManager.EndSession(sender);
 
                 if (clientList.ContainsKey(sender))
                 {
@@ -344,7 +343,7 @@ namespace SS3d_server
             chatMessage.Write(text);
             foreach (NetConnection connection in clientList.Keys)
             {
-                netServer.SendMessage(chatMessage, connection, NetDeliveryMethod.Unreliable);
+                netServer.SendMessage(chatMessage, connection, NetDeliveryMethod.ReliableOrdered);
             }
         }
 

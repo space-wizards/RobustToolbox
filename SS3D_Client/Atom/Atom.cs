@@ -89,8 +89,10 @@ namespace SS3D.Atom
                 case AtomMessage.InterpolationPacket:
                     HandleInterpolationPacket(message);
                     break;
-                default:
+                case AtomMessage.Extended:
                     HandleExtendedMessage(message); // This will punt unhandled messages to a virtual method so derived classes can handle them.
+                    break;
+                default:
                     break;
             }
             return;
@@ -130,7 +132,7 @@ namespace SS3D.Atom
         {
             NetOutgoingMessage message = CreateAtomMessage(); 
             message.Write((byte)AtomMessage.Pull);
-            atomManager.networkManager.SendMessage(message, NetDeliveryMethod.Unreliable);
+            atomManager.networkManager.SendMessage(message, NetDeliveryMethod.ReliableOrdered);
         }
 
         public virtual void HandlePush(NetIncomingMessage message)
@@ -148,7 +150,7 @@ namespace SS3D.Atom
             message.Write(position.z);
             message.Write(rotW);
             message.Write(rotY);
-            atomManager.networkManager.SendMessage(message, NetDeliveryMethod.Unreliable);
+            atomManager.networkManager.SendMessage(message, NetDeliveryMethod.ReliableOrdered);
         }
 
         protected NetOutgoingMessage CreateAtomMessage()
@@ -163,7 +165,7 @@ namespace SS3D.Atom
         protected void SendMessage(NetOutgoingMessage message)
         {
             // Send messages unreliably by default
-            SendMessage(message, NetDeliveryMethod.Unreliable);
+            SendMessage(message, NetDeliveryMethod.ReliableOrdered);
         }
 
         protected void SendMessage(NetOutgoingMessage message, NetDeliveryMethod method)
@@ -193,7 +195,7 @@ namespace SS3D.Atom
             var activeKeyHandlers =
                 from keyState in keyStates
                 join handler in keyHandlers on keyState.Key equals handler.Key
-                select new { evt = handler.Value, state = keyState.Value };
+                select new { evt = handler.Value, state = keyState.Value};
 
             //Execute the bastards!
             foreach (var keyHandler in activeKeyHandlers)
@@ -202,7 +204,13 @@ namespace SS3D.Atom
                 updateRequired = true; // QUICKNDIRTY
                 KeyEvent k = keyHandler.evt;
                 k(keyHandler.state);
+            }
 
+            //Delete false states from the dictionary so they don't get reprocessed and fuck up other stuff. 
+            foreach (var state in keyStates.ToList())
+            {
+                if (state.Value == false)
+                    keyStates.Remove(state.Key);
             }
             
         }

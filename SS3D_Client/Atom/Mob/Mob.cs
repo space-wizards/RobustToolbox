@@ -59,6 +59,7 @@ namespace SS3D.Atom.Mob
         protected virtual void SendAnimationState(string state)
         {
             NetOutgoingMessage message = CreateAtomMessage();
+            message.Write((byte)AtomMessage.Extended);
             message.Write((byte)MobMessage.AnimationState);
             message.Write(state);
             SendMessage(message);
@@ -103,7 +104,8 @@ namespace SS3D.Atom.Mob
 
         protected override void HandleExtendedMessage(NetIncomingMessage message)
         {
-            switch ((MobMessage)message.ReadByte())
+            MobMessage mobMessageType = (MobMessage)message.ReadByte();
+            switch (mobMessageType)
             {
                 case MobMessage.AnimationState:
                     HandleAnimationState(message);

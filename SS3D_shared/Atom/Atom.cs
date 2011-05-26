@@ -3,5 +3,6 @@
     Pull,
     Push,
     InterpolationPacket,
-    PositionUpdate
+    PositionUpdate,
+    Extended
 }

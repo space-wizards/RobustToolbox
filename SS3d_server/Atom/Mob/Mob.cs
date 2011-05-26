@@ -26,13 +26,14 @@ namespace SS3d_server.Atom.Mob
 
         protected override void HandleExtendedMessage(Lidgren.Network.NetIncomingMessage message)
         {
-            base.HandleExtendedMessage(message);
-            switch ((MobMessage)message.ReadByte())
+            MobMessage mobMessageType = (MobMessage)message.ReadByte();
+            switch (mobMessageType)
             {
                 case MobMessage.AnimationState:
                     HandleAnimationState(message);
                     break;
-                default: break;
+                default: 
+                    break;
             }
         }
 
@@ -40,6 +41,7 @@ namespace SS3d_server.Atom.Mob
         {
             string state = message.ReadString();
             NetOutgoingMessage outmessage = CreateAtomMessage();
+            outmessage.Write((byte)AtomMessage.Extended);
             outmessage.Write((byte)MobMessage.AnimationState);
             outmessage.Write(state);
             SendMessageToAll(outmessage);

@@ -263,6 +263,7 @@ namespace SS3D.Atom
             foreach (AxisAlignedBox box in atomManager.gameState.map.GetSurroundingAABB(Node.Position))
             {
                 //if (Entity.GetWorldBoundingBox().Intersects(box))
+                // TODO: Calculate this sphere based on the entity's bounding box instead of a hardcoded 5f radius.
                 Sphere esphere = new Sphere(Node.Position, 5f);
                 if (box.Intersects(esphere))
                 {

@@ -14,12 +14,10 @@ namespace SS3d_server.Modules.Chat
     public class ChatManager
     {
         private SS3DNetserver netServer;
-        private MobManager mobManager;
         
-        public ChatManager(SS3DNetserver _netServer, MobManager _mobManager)
+        public ChatManager(SS3DNetserver _netServer)
         {
             netServer = _netServer;
-            mobManager = _mobManager;
         }
 
         public void HandleNetMessage(NetIncomingMessage message)

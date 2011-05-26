@@ -7,6 +7,7 @@ using SS3D.Atom;
 using SS3D.States;
 using MOIS;
 using Lidgren.Network;
+using Mogre;
 
 namespace SS3D.Modules
 {
@@ -30,6 +31,13 @@ namespace SS3D.Modules
             controlledAtom = newAtom;
             controlledAtom.initKeys();
             controlledAtom.attached = true;
+            
+            atomManager.mEngine.Camera.DetachFromParent();
+            atomManager.mEngine.Camera.Position = new Mogre.Vector3(0, 240, -160);
+
+            SceneNode camNode = controlledAtom.Node.CreateChildSceneNode();
+            camNode.AttachObject(atomManager.mEngine.Camera);
+            atomManager.mEngine.Camera.SetAutoTracking(true, camNode, new Mogre.Vector3(0, 32, 0));
         }
 
         public void Detach()

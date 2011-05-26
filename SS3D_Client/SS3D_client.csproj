@@ -120,9 +120,14 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Atom\Atom.cs" />
+    <Compile Include="Atom\AtomManager.cs" />
+    <Compile Include="Atom\Item\Item.cs" />
+    <Compile Include="Atom\Item\Tool\Crowbar.cs" />
+    <Compile Include="Atom\Mob\Human.cs" />
+    <Compile Include="Atom\Mob\Mob.cs" />
     <Compile Include="HelperClasses\AtomUtil.cs" />
     <Compile Include="HelperClasses\CollisionTools.cs" />
-    <Compile Include="HelperClasses\QueryFlags.cs" />
     <Compile Include="HelperClasses\Rect2D.cs" />
     <Compile Include="Modules\ConfigManager.cs" />
     <Compile Include="Modules\Items\ItemManager.cs" />
@@ -134,6 +139,7 @@
     <Compile Include="Modules\Network\NetworkManager.cs" />
     <Compile Include="Modules\OgreEventArgs.cs" />
     <Compile Include="Modules\OgreManager.cs" />
+    <Compile Include="Modules\PlayerController.cs" />
     <Compile Include="Modules\State.cs" />
     <Compile Include="Modules\StateManager.cs" />
     <Compile Include="Modules\UI\Console.cs" />
@@ -194,6 +200,7 @@
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </Content>
   </ItemGroup>
+  <ItemGroup />
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <PropertyGroup>
     <PostBuildEvent>copy "$(SolutionDir)References\$(Configuration)\*.dll" "$(ProjectDir)$(OutDir)"</PostBuildEvent>

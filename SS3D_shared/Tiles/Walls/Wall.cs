@@ -26,6 +26,7 @@ namespace SS3D_shared
             }
             Node = sceneManager.RootSceneNode.CreateChildSceneNode(entityName);
             Entity = sceneManager.CreateEntity(entityName, meshName);
+            Entity.QueryFlags = HelperClasses.QueryFlags.ENTITY_WALL;
             Node.Position = position;
             Node.AttachObject(Entity);
             Entity.UserObject = (AtomBaseClass)this;

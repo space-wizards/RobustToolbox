@@ -81,12 +81,20 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Atom\Atom.cs" />
+    <Compile Include="Atom\AtomManager.cs" />
+    <Compile Include="Atom\Item\Item.cs" />
+    <Compile Include="Atom\Item\Tool\Crowbar.cs" />
+    <Compile Include="Atom\Mob\Human.cs" />
+    <Compile Include="Atom\Mob\Mob.cs" />
     <Compile Include="Helper Classes\Point.cs" />
     <Compile Include="Modules\Chat\ChatManager.cs" />
     <Compile Include="Modules\Client\Client.cs" />
     <Compile Include="Modules\Items\ItemManager.cs" />
     <Compile Include="Modules\Map\Map.cs" />
     <Compile Include="Modules\Mobs\MobManager.cs" />
+    <Compile Include="Modules\PlayerManager.cs" />
+    <Compile Include="Modules\PlayerSession.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="SS3DNetserver.cs" />
@@ -106,6 +114,7 @@
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
   </ItemGroup>
+  <ItemGroup />
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <PropertyGroup>
     <PostBuildEvent>copy "$(SolutionDir)References\$(Configuration)\Lidgren*l" "$(ProjectDir)$(OutDir)"

@@ -33,7 +33,7 @@ namespace SS3D.States
         #region Variables
         public OgreManager mEngine;
         private StateManager mStateMgr;
-        private Map map;
+        public Map map;
         private ItemManager itemManager;
         private MobManager mobManager;
         private AtomManager atomManager;

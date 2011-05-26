@@ -29,6 +29,7 @@ namespace SS3D.Atom
         public bool positionChanged = false;
         public List<InterpolationPacket> interpolationPackets;
         public float speed = 1.0f;
+        public bool clipping = true;
 
         public bool attached;
 
@@ -46,7 +47,7 @@ namespace SS3D.Atom
             keyStates = new Dictionary<MOIS.KeyCode, bool>();
             keyHandlers = new Dictionary<MOIS.KeyCode, KeyEvent>();
 
-            position = new Mogre.Vector3(0, 0, 0);
+            position = new Mogre.Vector3(160, 0, 160);
             rotW = 1;
             rotY = 0;
 
@@ -61,7 +62,7 @@ namespace SS3D.Atom
             uid = _uid;
             atomManager = _atomManager;
 
-            position = new Mogre.Vector3(0, 0, 0);
+            position = new Mogre.Vector3(160, 0, 160);
             rotW = 1;
             rotY = 0;
 
@@ -254,9 +255,41 @@ namespace SS3D.Atom
                 Node.Position = position;
                 updateRequired = true; // This interpolation packet and probably the ones after it are still useful, so we'll update again on the next cycle.
             }
+
         }
 
-        public virtual void Translate() {
+        public virtual bool IsInWall()
+        {
+            foreach (AxisAlignedBox box in atomManager.gameState.map.GetSurroundingAABB(Node.Position))
+            {
+                if (Entity.GetWorldBoundingBox().Intersects(box))
+                {
+                    return true;
+                }
+            }
+            return false;
+        }
+
+        public virtual void TranslateLocal(Mogre.Vector3 toPosition) {
+            Node.Translate(toPosition, Mogre.Node.TransformSpace.TS_LOCAL);
+            if (clipping && IsInWall())
+            {
+                //Node.Position = position;
+                // BEGIN FUCKING CRAZY HACK.
+                Mogre.Vector3 targetPosition = Node.Position;
+                Mogre.Vector3 difference = targetPosition - position;
+                //Test X 
+                Node.Position = position + new Mogre.Vector3(difference.x, 0, 0);
+                if (IsInWall())
+                {
+                    Node.Position = position + new Mogre.Vector3(0, 0, difference.z);
+                    if (IsInWall())
+                        Node.Position = position;
+                }
+                // END FUCKING CRAZY HACK
+            }
+            else
+                position = Node.Position;
 
         }
 
@@ -267,15 +300,13 @@ namespace SS3D.Atom
         /* These are solely for user input, not for updating position from server. */
         public virtual void MoveForward() 
         {
-            Node.Translate(new Mogre.Vector3(0, 0, speed), Mogre.Node.TransformSpace.TS_LOCAL);
-            position = Node.Position;
+            TranslateLocal(new Mogre.Vector3(0, 0, speed));
             SendPositionUpdate();
         }
 
         public virtual void MoveBack()
         {
-            Node.Translate(new Mogre.Vector3(0,0,-1 * speed), Mogre.Node.TransformSpace.TS_LOCAL);
-            position = Node.Position;
+            TranslateLocal(new Mogre.Vector3(0,0,-1 * speed));
             SendPositionUpdate();
         }
 

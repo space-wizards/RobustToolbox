@@ -187,6 +187,7 @@ namespace SS3D_shared
             #endregion
 
             wallMesh = mobject.ConvertToMesh("wallMesh");
+            wallMesh.BuildTangentVectors();
         }
 
         private void CreateSpaceMesh()

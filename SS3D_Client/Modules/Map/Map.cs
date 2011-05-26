@@ -7,7 +7,7 @@ using SS3D_shared;
 
 namespace SS3D.Modules.Map
 {
-    public class Map
+    public class Map : LoadingTracker
     {
         #region Variables
         public BaseTile[,] tileArray; // The array holding all the tiles that make up the map
@@ -30,14 +30,57 @@ namespace SS3D.Modules.Map
         public StaticGeometry[,] staticGeometry;
         private int StaticGeoX; // The width of the array - the number of tiles / 10 rounded up.
         private int StaticGeoZ; // Same as above.
-        private int StaticGeoSize = 10; // Size of one side of the square of tiles stored by each staticgeometry in the array.
+        public int StaticGeoSize = 10; // Size of one side of the square of tiles stored by each staticgeometry in the array.
         private Vector2 lastCamGeoPos = Vector2.UNIT_SCALE;
+
         #endregion
 
         public Map(OgreManager _mEngine, bool _useStaticGeo)
         {
             mEngine = _mEngine;
             useStaticGeo = _useStaticGeo;
+        }
+
+        public ManualObject CreateGrid(int height = 1)
+        {
+            if (tileArray == null) return null;
+
+            ManualObject grid = new ManualObject("MapGrid");
+            grid.Begin("Grid", RenderOperation.OperationTypes.OT_LINE_LIST);
+
+            Vector3 vert1 = Vector3.ZERO;
+            Vector3 vert2 = Vector3.ZERO;
+
+            float offset = tileSpacing / 2; //Used to correctly align the grid. Tiles are centered on their nodes.
+
+            ColourValue gridColor = new ColourValue(1.0f, 0f, 0f);
+
+            for (int z = 0; z < mapHeight; z++)
+            {
+                if (z == 0) continue;
+                vert1 = new Vector3(0 - offset, height, z * tileSpacing - offset);
+                vert2 = new Vector3(mapWidth * tileSpacing - offset, height, z * tileSpacing - offset);
+                grid.Position(vert1);
+                grid.Colour(gridColor);
+                grid.Position(vert2);
+                grid.Colour(gridColor);
+            }
+
+            for (int x = 0; x < mapWidth; x++)
+            {
+                if (x == 0) continue;
+                vert1 = new Vector3(x * tileSpacing - offset, height, 0 - offset);
+                vert2 = new Vector3(x * tileSpacing - offset, height, mapHeight * tileSpacing - offset);
+                grid.Position(vert1);
+                grid.Colour(gridColor);
+                grid.Position(vert2);
+                grid.Colour(gridColor);
+            }
+
+            grid.QueryFlags = SS3D_shared.HelperClasses.QueryFlags.DO_NOT_PICK;
+            grid.End();
+
+            return grid;
         }
 
         #region Startup / Loading
@@ -63,6 +106,14 @@ namespace SS3D.Modules.Map
             // Init our tileArray.
             tileArray = new BaseTile[mapWidth, mapHeight];
             boundingBoxArray = new AxisAlignedBox[mapWidth, mapHeight];
+
+            loadingText = "Building Map...";
+            loadingPercent = 0;
+            mEngine.OneUpdate();
+
+            float maxElements = (mapHeight * mapWidth);
+            float oneElement = 100f / maxElements;
+            float currCount = 0;
 
             for (int x = 0; x < mapWidth; x++)
             {
@@ -99,6 +150,14 @@ namespace SS3D.Modules.Map
                         tileArray[x, z].Node.SetVisible(false);
                     }
 
+                    currCount += oneElement;
+                    if (currCount >= 1)
+                    {
+                        loadingPercent += maxElements > 100 ? 1 : oneElement;
+                        currCount = 0;
+                        mEngine.OneUpdate();
+                    }
+
                 }
             }
 
@@ -107,6 +166,9 @@ namespace SS3D.Modules.Map
                 // Build all the staticgeometrys.
                 BuildAllgeometry();
             }
+            loadingText = "Map Created";
+            loadingPercent = 0;
+            mEngine.OneUpdate();
             return true;
         }
 
@@ -127,41 +189,78 @@ namespace SS3D.Modules.Map
 
             InitStaticgeometry();
 
+            float maxElements = toLoad.TileData.TileInfo.Count;       //Number of elements total.
+            float oneElement = 100f / toLoad.TileData.TileInfo.Count; //Value of one element.
+            float currCount = 0;                                      //Counter.
+            loadingText = "Loading Tiles...";                         //Setting the text of the inherited abstract class.
+
             foreach (TileEntry entry in toLoad.TileData.TileInfo)
-            {   // x=x z=y
+            {   // x=x z=y , sorry about that.
+
                 int posX = entry.position.x * tileSpacing;
                 int posZ = entry.position.y * tileSpacing;
-                TileType type = (TileType)entry.type;
-                Type classType = type.GetClass();
+
+                TileType type = (TileType)entry.type; //Enum is saved as int in file.
+                Type classType = type.GetClass();     //Reflection magic in the enum.
+
+                // Arguments for Turf Constructuctors : (SceneManager sceneManager, Vector3 position, int tileSpacing)
                 object[] arguments = new object[3];
-                //(SceneManager sceneManager, Vector3 position, int tileSpacing)
                 arguments[0] = mEngine.SceneMgr;
                 arguments[1] = new Vector3(posX, 0, posZ);
                 arguments[2] = tileSpacing;
-                object newTile = Activator.CreateInstance(classType, arguments);
-                BaseTile newTileConv = (BaseTile)newTile;
-                tileArray[entry.position.x, entry.position.y] = newTileConv;
+
+                object newTile = Activator.CreateInstance(classType, arguments);      //Create new instance.
+                BaseTile newTileConv = (BaseTile)newTile;                        
+                tileArray[entry.position.x, entry.position.y] = newTileConv;          //Put instance in correct place.
                 tileArray[entry.position.x, entry.position.y].Node.SetVisible(false);
-                staticGeometry[newTileConv.GeoPosX, newTileConv.GeoPosZ].AddSceneNode(tileArray[entry.position.x, entry.position.y].Node);
+                staticGeometry[newTileConv.GeoPosX, newTileConv.GeoPosZ].AddSceneNode(tileArray[entry.position.x, entry.position.y].Node); //Add to static geometry array.
+
+                currCount += oneElement; //Increase counter by value of one element.
+                if (currCount >= 1)      //One percent full.
+                {
+                    loadingPercent += maxElements > 100 ? 1 : oneElement; //Setting the value of the inherited class.
+                    currCount = 0;                                        //If more than 100 elements total inc by 1, else by the value of one element
+                    mEngine.OneUpdate();//Update Engine & Render          //This allows the progress bar to move at bigger steps than 1% if needed.
+                }
+
             }
+
+            loadingPercent = 0; //Reset all the progress bar stuff.
+            maxElements = toLoad.TileData.TileInfo.Count;
+            oneElement = 100f / maxElements;
+            currCount = 0;
+
+            loadingText = "Loading Space...";
+            mEngine.OneUpdate();
 
             for (int x = 0; x < mapWidth; x++)
             {
                 for (int z = 0; z < mapHeight; z++)
                 {
                     if (tileArray[x, z] == null) //If theres nothing in it at this point, then its space.
-                    {
+                    {                            //Space tiles are not saved or loaded.
                         int posX = x * tileSpacing;
                         int posZ = z * tileSpacing;
                         tileArray[x, z] = new Space(mEngine.SceneMgr, new Vector3(posX, 0, posZ), tileSpacing);
                         tileArray[x, z].Node.SetVisible(false);
                         staticGeometry[tileArray[x, z].GeoPosX, tileArray[x, z].GeoPosZ].AddSceneNode(tileArray[x, z].Node);
                     }
+                    currCount += oneElement;
+                    if (currCount >= 1)
+                    {
+                        loadingPercent += maxElements > 100 ? 1 : oneElement;
+                        currCount = 0;
+                        mEngine.OneUpdate();
+                    }
                 }
             }
 
             BuildAllgeometry();
-            mEngine.Update();
+            mEngine.OneUpdate();
+
+            loadingText = "Map loaded";
+            loadingPercent = 0;
+
             return true;
         }
 
@@ -219,6 +318,14 @@ namespace SS3D.Modules.Map
 
             tileArray = new BaseTile[mapWidth, mapHeight];
 
+            loadingText = "Building Map...";
+            loadingPercent = 0;
+            mEngine.OneUpdate();
+
+            float maxElements = (mapHeight * mapWidth);
+            float oneElement = 100f / maxElements;
+            float currCount = 0;
+
             for (int z = 0; z < mapHeight; z++)
             {
                 for (int x = 0; x < mapWidth; x++)
@@ -245,11 +352,28 @@ namespace SS3D.Modules.Map
                     {
                         tileArray[x, z].Node.SetVisible(false);
                     }
+
+                    currCount += oneElement;
+                    if (currCount >= 1)
+                    {
+                        loadingPercent += maxElements > 100 ? 1 : oneElement;
+                        currCount = 0;
+                        mEngine.OneUpdate();
+                    }
                 }
             }
 
+
             if (useStaticGeo)
             {
+                loadingText = "Initializing Static Geometry...";
+                loadingPercent = 0;
+                mEngine.OneUpdate();
+
+                maxElements = (mapHeight * mapWidth);
+                oneElement = 100f / maxElements;
+                currCount = 0;
+
                 float geoSize = StaticGeoSize;
                 // Get the width and height our staticgeometry array needs to be.
                 StaticGeoX = (int)System.Math.Ceiling(mapWidth / geoSize);
@@ -269,6 +393,14 @@ namespace SS3D.Modules.Map
 
                         // Add it to the appropriate staticgeometry array.
                         staticGeometry[GeoX, GeoZ].AddSceneNode(tileArray[x, z].Node);
+
+                        currCount += oneElement;
+                        if (currCount >= 1)
+                        {
+                            loadingPercent += maxElements > 100 ? 1 : oneElement;
+                            currCount = 0;
+                            mEngine.OneUpdate();
+                        }
                     }
                 }
 
@@ -338,11 +470,28 @@ namespace SS3D.Modules.Map
         // for the first time.
         private void BuildAllgeometry()
         {
+            loadingText = "Building Static Geometry...";
+            loadingPercent = 0;
+            mEngine.OneUpdate();
+
+            float maxElements = (StaticGeoX * StaticGeoZ);
+            float oneElement = 100f / maxElements;
+            float currCount = 0;
+
             for (int i = 0; i < StaticGeoX; i++)
             {
                 for (int j = 0; j < StaticGeoZ; j++)
                 {
                     staticGeometry[i, j].Build();
+
+                    currCount += oneElement;
+                    if (currCount >= 1)
+                    {
+                        loadingPercent += maxElements > 100 ? 1 : oneElement;
+                        currCount = 0;
+                        mEngine.OneUpdate();
+                    }
+
                 }
                 
             }
@@ -638,28 +787,70 @@ namespace SS3D.Modules.Map
         #region Shutdown
         public void Shutdown()
         {
+
+            loadingText = "";
+            loadingPercent = 0;
+            mEngine.OneUpdate();
+
+            float maxElements;
+            float oneElement;
+            float currCount = 0;
+
             if (useStaticGeo)
             {
+                loadingText = "Unloading Static Geometry...";
+                loadingPercent = 0;
+                mEngine.OneUpdate();
+
+                maxElements = (StaticGeoX * StaticGeoZ);
+                oneElement = 100f / maxElements;
+                currCount = 0;
+
                 for (int i = 0; i < StaticGeoX; i++)
                 {
                     for (int j = 0; j < StaticGeoZ; j++)
                     {
                         staticGeometry[i, j].Reset();
+                        currCount += oneElement;
+                        if (currCount >= 1)
+                        {
+                            loadingPercent += maxElements > 100 ? 1 : oneElement;
+                            currCount = 0;
+                            mEngine.OneUpdate();
+                        }
                     }
                 }
                 mEngine.SceneMgr.DestroyAllStaticGeometry();
             }
             mEngine.SceneMgr.DestroyAllEntities();
+
+            loadingText = "Unloading Map...";
+            loadingPercent = 0;
+            mEngine.OneUpdate();
+
+            maxElements = (mapWidth * mapHeight);
+            oneElement = 100f / maxElements;
+            currCount = 0;
+
             for (int x = 0; x < mapWidth; x++)
             {
                 for (int z = 0; z < mapHeight; z++)
                 {
                     mEngine.SceneMgr.DestroySceneNode(tileArray[x, z].Node.Name);
+                    currCount += oneElement;
+                    if (currCount >= 1)
+                    {
+                        loadingPercent += maxElements > 100 ? 1 : oneElement;
+                        currCount = 0;
+                        mEngine.OneUpdate();
+                    }
                 }
             }
             tileArray = null;
             meshManager = null;
             boundingBoxArray = null;
+            staticGeometry = null;
+            loadingPercent = 0;
         }
         #endregion
     }

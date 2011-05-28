@@ -55,6 +55,9 @@ namespace SS3d_server.Atom
                     // We'll accept position packets from the client so that movement doesn't lag. There may be other special cases like this.
                     HandlePositionUpdate(message);
                     break;
+                case AtomMessage.Click:
+                    HandleClick();
+                    break;
                 case AtomMessage.Extended:
                     HandleExtendedMessage(message); // This will punt unhandled messages to a virtual method so derived classes can handle them.
                     break;
@@ -67,6 +70,11 @@ namespace SS3d_server.Atom
         protected virtual void HandleExtendedMessage(NetIncomingMessage message)
         {
             //Override this to handle custom messages.
+        }
+
+        protected virtual void HandleClick()
+        {
+
         }
 
         public virtual void Push()

@@ -4,5 +4,6 @@
     Push,
     InterpolationPacket,
     PositionUpdate,
-    Extended
+    Extended,
+    Click
 }

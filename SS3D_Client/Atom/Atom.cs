@@ -59,13 +59,16 @@ namespace SS3D.Atom
             keyStates = new Dictionary<MOIS.KeyCode, bool>();
             keyHandlers = new Dictionary<MOIS.KeyCode, KeyEvent>();
 
+            uid = _uid;
+            atomManager = _atomManager;
+
             position = new Mogre.Vector3(160, 0, 160);
             rotW = 1;
             rotY = 0;
 
             interpolationPackets = new List<InterpolationPacket>();
 
-            SetUp(_uid, _atomManager);
+            Draw();
         }
 
         public virtual void SetUp(ushort _uid, AtomManager _atomManager)
@@ -424,14 +427,7 @@ namespace SS3D.Atom
 
         public virtual void HandleClick()
         {
-            SendClick();
-        }
 
-        public void SendClick()
-        {
-            NetOutgoingMessage message = CreateAtomMessage();
-            message.Write((byte)AtomMessage.Click);
-            SendMessage(message);
         }
         #endregion
     }

@@ -77,6 +77,7 @@
   <ItemGroup>
     <Compile Include="AtomBaseClass.cs" />
     <Compile Include="Atom\Atom.cs" />
+    <Compile Include="Atom\Item\Item.cs" />
     <Compile Include="Atom\Mob\Mob.cs" />
     <Compile Include="Atom\Mob\Player.cs" />
     <Compile Include="HelperClasses\InterpolationPacket.cs" />

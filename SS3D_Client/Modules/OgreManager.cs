@@ -136,6 +136,9 @@ namespace SS3D.Modules
         NameValuePairList parm = new NameValuePairList();
         parm["vsync"] = config.VSync.ToString();
         parm["FSAA"] = config.FSAA.ToString();
+        parm["monitorIndex"] = "0";
+        parm["left"] = "0";
+        parm["top"] = "0";
         
         // create window
         mWindow = mRoot.CreateRenderWindow("SpaceStation3D", (uint)config.DisplayWidth, (uint)config.DisplayHeight, config.Fullscreen, parm);

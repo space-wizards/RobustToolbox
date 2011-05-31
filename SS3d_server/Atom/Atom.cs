@@ -28,6 +28,7 @@ namespace SS3d_server.Atom
             position = new Vector3(160, 0, 160);
             rotW = 1;
             rotY = 0;
+            name = this.GetType().ToString();
         }
 
         public void SetUp(ushort _uid, AtomManager _atomManager)
@@ -74,7 +75,7 @@ namespace SS3d_server.Atom
 
         protected virtual void HandleClick()
         {
-
+            atomManager.netServer.chatManager.SendChatMessage(0, "Clicked", name, uid);
         }
 
         public virtual void Push()
@@ -129,6 +130,11 @@ namespace SS3d_server.Atom
                 SendInterpolationPacket(false); // Send position updates to everyone. The client that is controlling this atom should discard this packet.
             }
             // Discard the rest.
+        }
+
+        public void SetName(string _name)
+        {
+            name = _name;
         }
     }
 }

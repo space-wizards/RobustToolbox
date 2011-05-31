@@ -151,7 +151,7 @@ namespace SS3D.States
 
     void nameTextbox_TextChanged(object sender, TextEventArgs e)
     {
-        name = ((TextBox)sender).Text;
+        PlayerVars.PlayerName = ((TextBox)sender).Text;
     }
 
     private void ipTextBoxChanged(object sender, Miyagi.Common.Events.TextEventArgs e)
@@ -165,7 +165,6 @@ namespace SS3D.States
         //guiConnectMenu.GetControl("connectJoinButton").Enabled = true;
         //((Button)guiConnectMenu.GetControl("connectJoinButton")).Text = "Join";
         //Send client name
-        mEngine.mNetworkMgr.SendClientName(name);
         mStateMgr.RequestStateChange(typeof(GameScreen));
     }
 

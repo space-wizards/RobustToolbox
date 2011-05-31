@@ -16,6 +16,7 @@ namespace SS3d_server.Modules
         public NetConnection connectedClient;
         public Atom.Atom attachedAtom;
         private SS3DNetserver netServer;
+        public string name = "";
 
         public PlayerSession(NetConnection client, SS3DNetserver _netServer)
         {
@@ -47,6 +48,15 @@ namespace SS3d_server.Modules
             {
                 attachedAtom.attachedClient = null;
                 attachedAtom = null;
+            }
+        }
+
+        public void SetName(string _name)
+        {
+            name = _name;
+            if (attachedAtom != null)
+            {
+                attachedAtom.SetName(_name);
             }
         }
     }

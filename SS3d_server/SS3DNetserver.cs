@@ -322,11 +322,11 @@ namespace SS3d_server
         {
             string name = msg.ReadString();
             clientList[msg.SenderConnection].SetName(name);
-            ushort mobid = clientList[msg.SenderConnection].mobID;
             string fixedname = name.Trim();
             if (fixedname.Length < 3)
                 fixedname = "Player";
-            //mobManager.mobDict[mobid].name = fixedname;
+            PlayerSession p = playerManager.GetSessionByConnection(msg.SenderConnection);
+            p.SetName(fixedname);
        }
 
         public void HandleLobbyChat(NetIncomingMessage msg)
@@ -377,7 +377,7 @@ namespace SS3d_server
             //mobManager.NewPlayer(connection);
             //itemManager.NewPlayer(connection);
             atomManager.NewPlayer(connection);
-            playerManager.NewSession(connection);
+            playerManager.NewSession(connection); // TODO move this to somewhere that makes more sense.
         }
 
         public void HandleChangeTile(NetIncomingMessage msg)

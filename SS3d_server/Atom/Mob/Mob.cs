@@ -28,8 +28,8 @@ namespace SS3d_server.Atom.Mob
         /// </summary>
         protected virtual void initAppendages()
         {
-            appendages.Add("LeftHand", new HelperClasses.Appendage("LeftHand"));
-            appendages.Add("RightHand", new HelperClasses.Appendage("RightHand"));
+            appendages.Add("LeftHand", new HelperClasses.Appendage("LeftHand", this));
+            appendages.Add("RightHand", new HelperClasses.Appendage("RightHand", this));
             selectedAppendage = appendages["LeftHand"];
         }
 

@@ -26,7 +26,8 @@ public enum ItemMessage
     PickUpItem,
     DropItem,
     UseItem,
-    Click // etc.
+    Click,
+    AttachTo
 }
 
 public enum AtomManagerMessage

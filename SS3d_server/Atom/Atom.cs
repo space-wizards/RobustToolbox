@@ -57,7 +57,7 @@ namespace SS3d_server.Atom
                     HandlePositionUpdate(message);
                     break;
                 case AtomMessage.Click:
-                    HandleClick();
+                    HandleClick(message);
                     break;
                 case AtomMessage.Extended:
                     HandleExtendedMessage(message); // This will punt unhandled messages to a virtual method so derived classes can handle them.
@@ -73,8 +73,9 @@ namespace SS3d_server.Atom
             //Override this to handle custom messages.
         }
 
-        protected virtual void HandleClick()
+        protected virtual void HandleClick(NetIncomingMessage message)
         {
+
             atomManager.netServer.chatManager.SendChatMessage(0, "Clicked", name, uid);
         }
 

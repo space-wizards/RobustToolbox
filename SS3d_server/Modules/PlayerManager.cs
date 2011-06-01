@@ -43,12 +43,9 @@ namespace SS3d_server.Modules
 
         public void HandleNetworkMessage(NetIncomingMessage message)
         {
-            PlayerSessionMessage messageType = (PlayerSessionMessage)message.ReadByte();
-            switch (messageType)
-            {
-                default:
-                    break;
-            }
+            // Pass message on to session
+            PlayerSession s = GetSessionByConnection(message.SenderConnection);
+            s.HandleNetworkMessage(message);
         }
 
         internal void EndSession(NetConnection client)

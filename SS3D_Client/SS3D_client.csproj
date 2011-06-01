@@ -124,6 +124,7 @@
     <Compile Include="Atom\AtomManager.cs" />
     <Compile Include="Atom\Item\Item.cs" />
     <Compile Include="Atom\Item\Tool\Crowbar.cs" />
+    <Compile Include="Atom\Mob\HelperClasses\Appendage.cs" />
     <Compile Include="Atom\Mob\Human.cs" />
     <Compile Include="Atom\Mob\Mob.cs" />
     <Compile Include="HelperClasses\AtomUtil.cs" />

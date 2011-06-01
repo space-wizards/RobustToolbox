@@ -9,6 +9,9 @@ namespace SS3d_server.Atom.Item
 {
     public class Item : Atom
     {
+        public bool attachedAppendage;
+
+
         public Item()
             : base()
         {
@@ -23,6 +26,20 @@ namespace SS3d_server.Atom.Item
                 default:
                     break;
             }
+        }
+
+        /// <summary>
+        /// This is called when a mob picks up an item.
+        /// </summary>
+        /// <param name="uid">an atom uid that has just picked up this item</param>
+        public virtual void PickedUpBy(ushort uid)
+        {
+            
+        }
+
+        public virtual void Dropped(ushort uid)
+        {
+
         }
     }
 }

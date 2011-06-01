@@ -42,6 +42,29 @@ namespace SS3d_server.Modules
             netServer.SendMessageTo(m, connectedClient);
         }
 
+        public void HandleNetworkMessage(NetIncomingMessage message)
+        {
+            PlayerSessionMessage messageType = (PlayerSessionMessage)message.ReadByte();
+            switch (messageType)
+            {
+                case PlayerSessionMessage.Verb:
+                    HandleVerb(message);
+                    break;
+                default:
+                    break;
+            }
+        }
+
+        private void HandleVerb(NetIncomingMessage message)
+        {
+            DispatchVerb(message.ReadString());
+        }
+
+        public void DispatchVerb(string verb)
+        {
+
+        }
+
         public void DetachFromAtom()
         {
             if (attachedAtom != null)

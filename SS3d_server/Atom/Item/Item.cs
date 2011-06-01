@@ -52,11 +52,15 @@ namespace SS3d_server.Atom.Item
         /// <param name="uid">an atom uid that has just picked up this item</param>
         public virtual void PickedUpBy(Mob.Mob newHolder)
         {
+            //We store the appendage that is holding this item
             holdingAppendage = newHolder.selectedAppendage;
+            //The appendage stores the item it is holding. This is probably redundant, but it is convenient.
+            newHolder.selectedAppendage.heldItem = this;
 
             /// Ok, this will send a message to all clients saying that 
             /// this item is now attached to a certain appendage on the mob with id uid.
             NetOutgoingMessage outmessage = CreateAtomMessage();
+            outmessage.Write((byte)AtomMessage.Extended);
             outmessage.Write((byte)ItemMessage.AttachTo);
             outmessage.Write(newHolder.uid);
             outmessage.Write(holdingAppendage.appendageName);

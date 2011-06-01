@@ -29,6 +29,7 @@ namespace SS3D.Atom.Mob
 
         public virtual void initAppendages()
         {
+            appendages = new Dictionary<string, Appendage>();
             appendages.Add("LeftHand", new Appendage("LHand", "LeftHand", this));
             appendages.Add("RightHand", new Appendage("RHand", "RightHand", this));
             selectedAppendage = appendages["LeftHand"];

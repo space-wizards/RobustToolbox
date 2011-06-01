@@ -133,6 +133,15 @@ namespace SS3d_server.Atom
             // Discard the rest.
         }
 
+        public virtual void MoveTo(Vector3 newPosition)
+        {
+            position.X = newPosition.X;
+            position.Y = newPosition.Y;
+            position.Z = newPosition.Z;
+
+            SendInterpolationPacket(false);
+        }
+
         public void SetName(string _name)
         {
             name = _name;

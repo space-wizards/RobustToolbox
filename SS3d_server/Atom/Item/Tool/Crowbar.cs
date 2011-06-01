@@ -7,5 +7,10 @@ namespace SS3d_server.Atom.Item.Tool
 {
     public class Crowbar : Item
     {
+        public Crowbar()
+            : base()
+        {
+            name = "Crowbar";
+        }
     }
 }

@@ -42,7 +42,8 @@ public enum MobMessage
     InterpolationPacket,
     DeleteMob,
     ClickMob,
-    AnimationState
+    AnimationState,
+    SelectAppendage
 }
 
 public enum MobHand
@@ -65,5 +66,6 @@ public enum ClientStatus
 
 public enum PlayerSessionMessage
 {
-    AttachToAtom
+    AttachToAtom,
+    Verb
 }

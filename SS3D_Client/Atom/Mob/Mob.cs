@@ -4,6 +4,7 @@ using System.Linq;
 using System.Text;
 using Mogre;
 using Lidgren.Network;
+using SS3D.Atom.Mob.HelperClasses;
 
 namespace SS3D.Atom.Mob
 {
@@ -14,10 +15,8 @@ namespace SS3D.Atom.Mob
         public float walkSpeed = 1.0f;
         public float runSpeed = 2.0f;
 
-        public Atom leftHandItem; // Just a temporary storage spot, for now.
-        public Atom rightHandItem;
-        public MobHand selectedHand = MobHand.LHand; // The hand we are currently using, and also used to tell clients which
-        // hand to attach items to on remote mobs when the pick something up.
+        public Dictionary<string, HelperClasses.Appendage> appendages;
+        public Appendage selectedAppendage;
 
         //Current animation state -- or at least the one we want to add some time to. This will need to become more robust.
         public AnimationState animState;
@@ -26,7 +25,13 @@ namespace SS3D.Atom.Mob
             : base()
         {
             meshName = "male.mesh";
+        }
 
+        public virtual void initAppendages()
+        {
+            appendages.Add("LeftHand", new Appendage("LHand", "LeftHand"));
+            appendages.Add("RightHand", new Appendage("RHand", "RightHand"));
+            selectedAppendage = appendages["LeftHand"];
         }
 
         public override void SetUp(ushort _uid, AtomManager _atomManager)
@@ -36,6 +41,8 @@ namespace SS3D.Atom.Mob
             animState = Entity.GetAnimationState("idle");
             animState.Loop = true;
             animState.Enabled = true;
+
+            initAppendages();
         }
 
         public virtual void SetAnimationState(string state)
@@ -110,9 +117,30 @@ namespace SS3D.Atom.Mob
                 case MobMessage.AnimationState:
                     HandleAnimationState(message);
                     break;
+                case MobMessage.SelectAppendage:
+                    HandleSelectAppendage(message);
+                    break;
                 default: break;
             }
         }
 
+        /// <summary>
+        /// Sets selected appendage to what is contained in the message
+        /// </summary>
+        /// <param name="message">Incoming netmessage</param>
+        protected virtual void HandleSelectAppendage(NetIncomingMessage message)
+        {
+            SetSelectedAppendage(message.ReadString());
+        }
+
+        /// <summary>
+        /// Sets selected appendage to the appendage named
+        /// </summary>
+        /// <param name="appendageName">Appendage name</param>
+        protected virtual void SetSelectedAppendage(string appendageName)
+        {
+            if (appendages.Keys.Contains(appendageName))
+                selectedAppendage = appendages[appendageName];
+        }
     }
 }

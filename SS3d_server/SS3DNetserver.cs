@@ -78,7 +78,7 @@ namespace SS3d_server
                 netConfig.Port = serverPort;
                 netServer = new NetServer(netConfig);
                 netServer.Start();
-                //AddRandomCrowbars();
+                AddRandomCrowbars();
                 
                 active = true;
                 return false;
@@ -524,6 +524,7 @@ namespace SS3d_server
             netServer.SendMessage(message, connection, NetDeliveryMethod.ReliableOrdered);
         }
 
+        /*
         public void AddRandomCrowbars()
         {
             Crowbar c = new Crowbar();
@@ -536,6 +537,20 @@ namespace SS3d_server
                 SS3D_shared.HelperClasses.Vector3 pos = new SS3D_shared.HelperClasses.Vector3(r.NextDouble() * map.GetMapWidth() * map.tileSpacing, 60, r.NextDouble() * map.GetMapHeight() * map.tileSpacing);
                 //itemManager.CreateItem(type, pos);
             }
+        }
+         */
+
+        public void AddRandomCrowbars()
+        {
+            Atom.Item.Tool.Crowbar c;
+
+            Random r = new Random();
+            for (int i = 0; i < 10; i++)
+            {
+                c = (Atom.Item.Tool.Crowbar)atomManager.SpawnAtom("Atom.Item.Tool.Crowbar");
+                c.MoveTo(new SS3D_shared.HelperClasses.Vector3(r.NextDouble() * map.GetMapWidth() * map.tileSpacing, 60, r.NextDouble() * map.GetMapHeight() * map.tileSpacing));
+            }
+
         }
     }
 }

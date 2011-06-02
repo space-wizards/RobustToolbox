@@ -77,6 +77,15 @@ namespace SS3D.Modules
             }
         }
 
+        public void SendVerb(string verb)
+        {
+            NetOutgoingMessage message = gameScreen.mEngine.mNetworkMgr.netClient.CreateMessage();
+            message.Write((byte)NetMessage.PlayerSessionMessage);
+            message.Write((byte)PlayerSessionMessage.Verb);
+            message.Write(verb);
+            gameScreen.mEngine.mNetworkMgr.SendMessage(message, NetDeliveryMethod.ReliableOrdered);
+        }
+
         private void HandleAttachToAtom(NetIncomingMessage message)
         {
             ushort uid = message.ReadUInt16();

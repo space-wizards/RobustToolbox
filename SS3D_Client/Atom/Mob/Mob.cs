@@ -44,7 +44,7 @@ namespace SS3D.Atom.Mob
             animState.Enabled = true;
 
             initAppendages();
-        }
+        }        
 
         public override void initKeys()
         {

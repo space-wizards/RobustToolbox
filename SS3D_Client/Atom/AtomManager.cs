@@ -31,6 +31,11 @@ namespace SS3D.Atom
             networkManager = mEngine.mNetworkMgr;
             atomDictionary = new Dictionary<ushort, Atom>();
         }
+
+        public void Shutdown()
+        {
+            atomDictionary.Clear(); // Dump all the atoms, we is gettin da fuck outta here bro
+        }
         #endregion
 
         #region Updating

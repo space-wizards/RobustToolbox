@@ -198,6 +198,8 @@ namespace SS3D.States
             //itemManager = null;
             //mobManager.Shutdown();
             //mobManager = null;
+            atomManager.Shutdown();
+            atomManager = null;
             mEngine.mNetworkMgr.Disconnect();
         }
 

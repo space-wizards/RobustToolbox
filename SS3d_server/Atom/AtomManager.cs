@@ -139,13 +139,11 @@ namespace SS3d_server.Atom
             Type atomType = currentAssembly.GetType("SS3d_server." + type, true);
             object atom = Activator.CreateInstance(atomType); // Create atom of type atomType with parameters uid, this
             atomDictionary[uid] = (Atom)atom;
-
+            
             atomDictionary[uid].SetUp(uid, this);
 
             SendSpawnAtom(uid, type);
-
             return atomDictionary[uid]; // Why do we return it? So we can do whatever is needed easily from the calling function.
-
         }
         #endregion
 

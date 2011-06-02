@@ -12,11 +12,31 @@ namespace SS3d_server.Atom.Item
     public class Item : Atom
     {
         public Appendage holdingAppendage = null;
+        private float fallSpeed = 5.0f;
 
         public Item()
             : base()
         {
 
+        }
+
+        public override void Update()
+        {
+            base.Update();
+            
+            double heightAboveTile = position.Y - (atomManager.netServer.map.GetHeightAboveTileAt(position) + 1.0f);
+            if (heightAboveTile > 1.0)
+            {
+                if (heightAboveTile > fallSpeed)
+                {
+                    MoveTo(position - new Vector3(0, fallSpeed, 0));
+                }
+                else
+                {
+                    MoveTo(position - new Vector3(0,heightAboveTile,0));
+                }
+                updateRequired = true;
+            }
         }
 
         protected override void HandleExtendedMessage(NetIncomingMessage message)
@@ -37,13 +57,18 @@ namespace SS3d_server.Atom.Item
             if (clicker == null)
                 return;
 
+            Vector3 dist = clicker.position - position;
+
+            //If we're too far away
+            if (dist.Magnitude > 32)
+                return;
+
             /// If the selected hand is empty, this item should go into that hand.
             /// Otherwise, the item that is in that hand is used on this item.
             if (clicker.selectedAppendage.heldItem == null)
                 PickedUpBy(clicker);
             else
                 clicker.selectedAppendage.heldItem.UsedOn(this);
-
         }
 
         /// <summary>

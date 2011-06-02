@@ -35,11 +35,13 @@ namespace SS3d_server.Atom
         {
             uid = _uid;
             atomManager = _atomManager;
+            updateRequired = true;
         }
 
         public virtual void Update()
         {
             //Updates the atom, item, whatever. This should be called from the atom manager's update queue.
+            updateRequired = false;
         }
 
         public void HandleNetworkMessage(NetIncomingMessage message)

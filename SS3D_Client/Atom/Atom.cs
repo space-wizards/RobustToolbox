@@ -365,7 +365,7 @@ namespace SS3D.Atom
          * a watermelon and make the player I hate with the fire of a million burning suns become that
          * melon. Awesome.
          */
-        public void initKeys()
+        public virtual void initKeys()
         {
             /* Set up key handlers (we don't need to do this unless a playercontroller attaches.)
              * Example: keyHandlers.Add(MOIS.KeyCode.KC_Whatever, new KeyEvent(HandleKC_whatever));

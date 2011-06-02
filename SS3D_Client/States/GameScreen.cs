@@ -504,6 +504,7 @@ namespace SS3D.States
         {
             if (e.MouseButton == MouseButton.Left)
             {
+                playerController.SendVerb("selectlefthand");
                 //mobManager.myMob.selectedHand = MobHand.LHand;
             }
             else if (e.MouseButton == MouseButton.Right)
@@ -516,6 +517,7 @@ namespace SS3D.States
         {
             if (e.MouseButton == MouseButton.Left)
             {
+                playerController.SendVerb("selectrighthand");
                 //mobManager.myMob.selectedHand = MobHand.RHand;
             }
             else if (e.MouseButton == MouseButton.Right)

@@ -46,6 +46,13 @@ namespace SS3D.Atom.Mob
             initAppendages();
         }
 
+        public override void initKeys()
+        {
+            base.initKeys();
+
+            keyHandlers.Add(MOIS.KeyCode.KC_F, new KeyEvent(HandleKC_F));
+        }
+
         public virtual void SetAnimationState(string state)
         {
             SetAnimationState(state, false);
@@ -53,6 +60,8 @@ namespace SS3D.Atom.Mob
 
         public virtual void SetAnimationState(string state, bool send)
         {
+            //Disable old animation state.
+            animState.Enabled = false;
             // TODO: error checking
             if (send)
                 SendAnimationState(state);
@@ -61,7 +70,6 @@ namespace SS3D.Atom.Mob
             animState.Enabled = true;
             if (animState == null)
                 animState = Entity.GetAnimationState("idle");
-
         }
 
         protected virtual void SendAnimationState(string state)
@@ -106,6 +114,14 @@ namespace SS3D.Atom.Mob
             base.HandleKC_S(state);
             if (state==true)
                 SetAnimationState("trns_walk", true);
+            else
+                SetAnimationState("idle", true);
+        }
+
+        public virtual void HandleKC_F(bool state)
+        {
+            if (state == true)
+                SetAnimationState("ofns_slash", true);
             else
                 SetAnimationState("idle", true);
         }

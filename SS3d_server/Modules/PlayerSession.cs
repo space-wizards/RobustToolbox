@@ -62,7 +62,22 @@ namespace SS3d_server.Modules
 
         public void DispatchVerb(string verb)
         {
-
+            Atom.Mob.Mob m;
+            //This will be replaced by a verb table
+            //TODO build dynamic verb lookup table with delegate functions :D
+            switch (verb)
+            {
+                case "selectlefthand":
+                    m = (Atom.Mob.Mob)attachedAtom;
+                    m.selectedAppendage = m.appendages["LeftHand"];
+                    break;
+                case "selectrighthand":
+                    m = (Atom.Mob.Mob)attachedAtom;
+                    m.selectedAppendage = m.appendages["RightHand"];
+                    break;
+                default:
+                    break;
+            }
         }
 
         public void DetachFromAtom()

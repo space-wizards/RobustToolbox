@@ -44,6 +44,7 @@ public enum MobMessage
     DeleteMob,
     ClickMob,
     AnimationState,
+    AnimateOnce,
     SelectAppendage
 }
 

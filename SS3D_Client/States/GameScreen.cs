@@ -192,14 +192,15 @@ namespace SS3D.States
         public override void Shutdown()
         {
             mEngine.mMiyagiSystem.GUIManager.GUIs.Remove(guiGameScreen);
+            atomManager.Shutdown();
             map.Shutdown();
+
+            atomManager = null; 
             map = null;
             //itemManager.Shutdown();
             //itemManager = null;
             //mobManager.Shutdown();
             //mobManager = null;
-            atomManager.Shutdown();
-            atomManager = null;
             mEngine.mNetworkMgr.Disconnect();
         }
 

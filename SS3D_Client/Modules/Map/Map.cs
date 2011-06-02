@@ -790,8 +790,7 @@ namespace SS3D.Modules.Map
 
             loadingText = "";
             loadingPercent = 0;
-            //WHY IS IT UPDATING A BAZILLION TIMES WHEN SHUTTING DOWN?
-            //mEngine.OneUpdate();
+            mEngine.OneUpdate();
 
             float maxElements;
             float oneElement;
@@ -801,7 +800,7 @@ namespace SS3D.Modules.Map
             {
                 loadingText = "Unloading Static Geometry...";
                 loadingPercent = 0;
-                //mEngine.OneUpdate();
+                mEngine.OneUpdate();
 
                 maxElements = (StaticGeoX * StaticGeoZ);
                 oneElement = 100f / maxElements;
@@ -817,7 +816,7 @@ namespace SS3D.Modules.Map
                         {
                             loadingPercent += maxElements > 100 ? 1 : oneElement;
                             currCount = 0;
-                            //mEngine.OneUpdate();
+                            mEngine.OneUpdate();
                         }
                     }
                 }
@@ -827,7 +826,7 @@ namespace SS3D.Modules.Map
 
             loadingText = "Unloading Map...";
             loadingPercent = 0;
-            //mEngine.OneUpdate();
+            mEngine.OneUpdate();
 
             maxElements = (mapWidth * mapHeight);
             oneElement = 100f / maxElements;
@@ -843,7 +842,7 @@ namespace SS3D.Modules.Map
                     {
                         loadingPercent += maxElements > 100 ? 1 : oneElement;
                         currCount = 0;
-                        //mEngine.OneUpdate();
+                        mEngine.OneUpdate();
                     }
                 }
             }

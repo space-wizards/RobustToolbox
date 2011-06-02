@@ -44,6 +44,9 @@ namespace SS3D.States
         public DateTime lastUpdate;
         public DateTime now;
 
+        private bool showStats = false;     // show FPS etc. panel if true
+        private Label fpsLabel1, fpsLabel2, fpsLabel3, fpsLabel4;
+        
         #region Mouse/Camera stuff
         private DateTime lastRMBClick = DateTime.Now;
         private int lastMouseX = 0;
@@ -127,7 +130,7 @@ namespace SS3D.States
             guiGameScreen = new GUI("guiGameScreen");
             mEngine.mMiyagiSystem.GUIManager.GUIs.Add(guiGameScreen);
             Point screenSize = new Point((int)mEngine.Window.Width, (int)mEngine.Window.Height);
-            
+
             // The health background
             Panel healthPanel = new Panel("healthPanel")
             {
@@ -168,7 +171,7 @@ namespace SS3D.States
             // convention.
             PictureBox leftHandBox = new PictureBox("LHandBox")
             {
-                Size = new Size(28,48),
+                Size = new Size(28, 48),
                 Location = new Point(15, 5)
             };
 
@@ -178,15 +181,70 @@ namespace SS3D.States
                 Location = new Point(15, 5)
             };
 
+
+            Panel fpsPanel = new Panel("FPSPanel")
+            {
+                Size = new Size(128, 64),
+                Location = new Point(10, screenSize.Y - 200),
+            };
+
+            fpsLabel1 = new Label()
+            {
+                Size = new Size(128, 16),
+                Location = new Point(0, 0),
+                TextStyle =
+                {
+                    ForegroundColour = Colours.White
+                }
+
+            };
+            fpsPanel.Controls.Add(fpsLabel1);
+            fpsLabel2 = new Label()
+            {
+                Size = new Size(128, 16),
+                Location = new Point(0, 16),
+                TextStyle =
+                {
+                    ForegroundColour = Colours.White
+                }
+
+            };
+            fpsPanel.Controls.Add(fpsLabel2);
+            fpsLabel3 = new Label()
+            {
+                Size = new Size(128, 16),
+                Location = new Point(0, 32),
+                TextStyle =
+                {
+                    ForegroundColour = Colours.White
+                }
+
+            };
+            fpsPanel.Controls.Add(fpsLabel3);
+            fpsLabel4 = new Label()
+            {
+                Size = new Size(128, 16),
+                Location = new Point(0, 48),
+                TextStyle =
+                {
+                    ForegroundColour = Colours.White
+                }
+
+            };
+            fpsPanel.Controls.Add(fpsLabel4);
+            fpsPanel.Visible = false;
+
             leftHandButton.Controls.Add(leftHandBox);
             rightHandButton.Controls.Add(rightHandBox);
 
             healthPanel.Controls.Add(healthBodyBox);
-
+            
             guiGameScreen.Controls.Add(healthPanel);
             guiGameScreen.Controls.Add(leftHandButton);
             guiGameScreen.Controls.Add(rightHandButton);
-
+            guiGameScreen.Controls.Add(fpsPanel);
+            
+          
         }
 
         public override void Shutdown()
@@ -215,6 +273,15 @@ namespace SS3D.States
             //itemManager.Update();
             //mobManager.Update();
             atomManager.Update();
+
+            if (showStats)
+            {
+                fpsLabel1.Text = String.Format("FPS: {0:F1}", mEngine.mWindow.LastFPS);
+                fpsLabel2.Text = String.Format("Time: {0:F1}", 1000.0f / mEngine.mWindow.LastFPS);
+                fpsLabel3.Text = String.Format("Batch: {0:F0}", mEngine.mWindow.BatchCount);
+                fpsLabel4.Text = String.Format("Tris: {0:F0}", mEngine.mWindow.TriangleCount);
+            }
+            
         }
 
 
@@ -338,7 +405,7 @@ namespace SS3D.States
         public override void UpdateInput(Mogre.FrameEvent evt, MOIS.Keyboard keyState, MOIS.Mouse mouseState)
         {
             // TODO: Rewrite this shit
-            if (gameChat.chatGUI.GetControl("ChatTextbox").Focused)
+            if (gameChat.HasFocus())
             {
                 return;
             }
@@ -429,6 +496,12 @@ namespace SS3D.States
             {
                 gameChat.SetInputFocus();
             }
+            else if (keyState.key == MOIS.KeyCode.KC_F1) // Toggle stats panel
+            {
+                showStats = !showStats;
+                guiGameScreen.GetControl("FPSPanel").Visible = showStats;
+            }
+
         }
 
         public override void MouseUp(MOIS.MouseEvent mouseState, MOIS.MouseButtonID button)
@@ -489,7 +562,7 @@ namespace SS3D.States
                 }
                 mEngine.Camera.ParentNode.Yaw(Mogre.Math.DegreesToRadians(degree), Node.TransformSpace.TS_WORLD);
                 // uncomment to allow pitch control using the mouse y axis
-                //mEngine.Camera.ParentNode.Pitch(Mogre.Math.DegreesToRadians(mouseState.state.Y.rel), Node.TransformSpace.TS_LOCAL);
+                mEngine.Camera.ParentNode.Pitch(Mogre.Math.DegreesToRadians(mouseState.state.Y.rel), Node.TransformSpace.TS_LOCAL);
                 
                 lastMouseX = mouseState.state.X.abs;
             }

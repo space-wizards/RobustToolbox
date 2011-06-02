@@ -104,7 +104,12 @@ namespace SS3D.Atom
             // Get the atom id
             ushort uid = message.ReadUInt16();
 
+            //TODO add some real error handling here. We shouldn't be getting bad messages like this, and if we are, it means we're doing something out of sequence.
+            if (!atomDictionary.Keys.Contains(uid))
+                return;
+
             var atom = atomDictionary[uid];
+            
             // Pass the message to the atom in question.
             atom.HandleNetworkMessage(message);
         }

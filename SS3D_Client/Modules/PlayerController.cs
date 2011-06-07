@@ -16,9 +16,9 @@ namespace SS3D.Modules
         /* Here's the player controller. This will handle attaching GUIS and input to controllable things.
          * Why not just attach the inputs directly? It's messy! This makes the whole thing nicely encapsulated. 
          * This class also communicates with the server to let the server control what atom it is attached to. */
-        GameScreen gameScreen;
-        AtomManager atomManager;
-        Atom.Atom controlledAtom;
+        public GameScreen gameScreen;
+        public AtomManager atomManager;
+        public Atom.Atom controlledAtom;
 
         public PlayerController(GameScreen _gameScreen, AtomManager _atomManager)
         {
@@ -33,7 +33,7 @@ namespace SS3D.Modules
             controlledAtom.attached = true;
             
             atomManager.mEngine.Camera.DetachFromParent();
-            atomManager.mEngine.Camera.Position = new Mogre.Vector3(0, 240, -160);
+            atomManager.mEngine.Camera.Position = new Mogre.Vector3(0, 240, -160) - newAtom.offset;
 
             SceneNode camNode = controlledAtom.Node.CreateChildSceneNode();
             camNode.AttachObject(atomManager.mEngine.Camera);

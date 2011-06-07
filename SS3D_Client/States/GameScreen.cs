@@ -573,6 +573,9 @@ namespace SS3D.States
                 mEngine.CameraDistance += mouseState.state.Z.rel / 6; 
                 // single mousewheel tick is 120 units, so 20 units per tick
                 mEngine.Camera.Position = new Mogre.Vector3(0, mEngine.CameraDistance, -2 * mEngine.CameraDistance / 3);
+                // Offset the camera position to deal with atom node offsets. 
+                //TODO make this less hackish
+                mEngine.Camera.Position = mEngine.Camera.Position + playerController.controlledAtom.offset;
            }
         }
 

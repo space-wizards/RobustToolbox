@@ -17,6 +17,7 @@ namespace SS3D.Atom
         public string meshName = "ogrehead.mesh"; // Ogrehead is a nice default mesh. This prevents any atom from inadvertently spawning without a mesh.
         public bool updateRequired = false;
         public bool drawn = false;
+        public Mogre.Vector3 scale = Mogre.Vector3.UNIT_SCALE;
 
         public string name;
         public ushort uid;
@@ -24,6 +25,7 @@ namespace SS3D.Atom
 
         // Position data
         public Mogre.Vector3 position;
+        public Mogre.Vector3 offset = Mogre.Vector3.ZERO; // For odd models
         public float rotW;
         public float rotY;
         public bool positionChanged = false;
@@ -249,7 +251,7 @@ namespace SS3D.Atom
                 //TODO: Make this better if it isn't good enough.
                 difference /= 5;
                 position += difference;
-                Node.Position = position;
+                Node.Position = position + offset; ;
                 updateRequired = true; // This interpolation packet and probably the ones after it are still useful, so we'll update again on the next cycle.
             }
 
@@ -257,11 +259,11 @@ namespace SS3D.Atom
 
         public virtual bool IsInWall()
         {
-            foreach (AxisAlignedBox box in atomManager.gameState.map.GetSurroundingAABB(Node.Position))
+            foreach (AxisAlignedBox box in atomManager.gameState.map.GetSurroundingAABB(Node.Position - offset))
             {
                 //if (Entity.GetWorldBoundingBox().Intersects(box))
                 // TODO: Calculate this sphere based on the entity's bounding box instead of a hardcoded 5f radius.
-                Sphere esphere = new Sphere(Node.Position, 5f);
+                Sphere esphere = new Sphere(Node.Position - offset, 5f);
                 if (box.Intersects(esphere))
                 {
                     return true;
@@ -277,22 +279,22 @@ namespace SS3D.Atom
                 //Node.Position = position;
                 // BEGIN FUCKING CRAZY HACK.
                 // Sees if the node's position is inside the wall. If it is, translate the character along the x or z component of its velocity.
-                Mogre.Vector3 targetPosition = Node.Position;
+                Mogre.Vector3 targetPosition = Node.Position - offset;
                 Mogre.Vector3 difference = targetPosition - position;
                 //Test X 
-                Node.Position = position + new Mogre.Vector3(difference.x, 0, 0);
+                Node.Position = position + new Mogre.Vector3(difference.x, 0, 0) + offset;
                 if (IsInWall())
                 {
                     //Test z.
-                    Node.Position = position + new Mogre.Vector3(0, 0, difference.z);
+                    Node.Position = position + new Mogre.Vector3(0, 0, difference.z) + offset;
                     if (IsInWall())
-                       Node.Position = position;
+                       Node.Position = position + offset;
                 }
                 // END FUCKING CRAZY HACK
-                position = Node.Position;
+                position = Node.Position - offset;
             }
             else
-                position = Node.Position;
+                position = Node.Position - offset;
 
         }
 
@@ -350,8 +352,9 @@ namespace SS3D.Atom
             Entity = sceneManager.CreateEntity(entityName, meshName);
             Entity.QueryFlags = QueryFlags.ENTITY_ATOM;
             Entity.UserObject = this;
-            Node.Position = position;
+            Node.Position = position + offset;
             Node.AttachObject(Entity);
+            Node.SetScale(scale);
 
             var entities = sceneManager.ToString();
             drawn = true;

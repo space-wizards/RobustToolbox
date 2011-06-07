@@ -60,6 +60,7 @@ namespace SS3D.Atom.Mob
 
         public virtual void SetAnimationState(string state, bool send)
         {
+            //return;
             //Disable old animation state.
             animState.Enabled = false;
             // TODO: error checking

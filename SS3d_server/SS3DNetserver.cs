@@ -543,12 +543,18 @@ namespace SS3d_server
         public void AddRandomCrowbars()
         {
             Atom.Item.Tool.Crowbar c;
+            Atom.Item.Container.Toolbox t;
 
             Random r = new Random();
             for (int i = 0; i < 10; i++)
             {
                 c = (Atom.Item.Tool.Crowbar)atomManager.SpawnAtom("Atom.Item.Tool.Crowbar");
                 c.MoveTo(new SS3D_shared.HelperClasses.Vector3(r.NextDouble() * map.GetMapWidth() * map.tileSpacing, 60, r.NextDouble() * map.GetMapHeight() * map.tileSpacing));
+            }
+            for (int i = 0; i < 10; i++)
+            {
+                t = (Atom.Item.Container.Toolbox)atomManager.SpawnAtom("Atom.Item.Container.Toolbox");
+                t.MoveTo(new SS3D_shared.HelperClasses.Vector3(r.NextDouble() * map.GetMapWidth() * map.tileSpacing, 60, r.NextDouble() * map.GetMapHeight() * map.tileSpacing));
             }
 
         }

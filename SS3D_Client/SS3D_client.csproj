@@ -122,6 +122,7 @@
   <ItemGroup>
     <Compile Include="Atom\Atom.cs" />
     <Compile Include="Atom\AtomManager.cs" />
+    <Compile Include="Atom\Item\Container\Toolbox.cs" />
     <Compile Include="Atom\Item\Item.cs" />
     <Compile Include="Atom\Item\Tool\Crowbar.cs" />
     <Compile Include="Atom\Mob\HelperClasses\Appendage.cs" />

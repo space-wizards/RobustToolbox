@@ -11,8 +11,8 @@ namespace SS3D.Atom.Mob
             : base()
         {
             meshName = "male_new.mesh";
-            scale = new Mogre.Vector3(.6f, .6f, .6f);
-            offset = new Mogre.Vector3(0, 14, 0);
+            scale = new Mogre.Vector3(1f, 1f, 1f);
+            offset = new Mogre.Vector3(0, 0, 0);
         }
 
         public override void MoveForward()

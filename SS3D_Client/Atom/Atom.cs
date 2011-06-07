@@ -354,7 +354,7 @@ namespace SS3D.Atom
             Entity.UserObject = this;
             Node.Position = position + offset;
             Node.AttachObject(Entity);
-            Node.SetScale(scale);
+            //Node.SetScale(scale);
 
             var entities = sceneManager.ToString();
             drawn = true;

@@ -16,6 +16,7 @@ namespace SS3d_server.Atom
 
         // Position data
         public Vector3 position;
+        public Vector3 offset;
         public float rotW;
         public float rotY;
 
@@ -26,6 +27,7 @@ namespace SS3d_server.Atom
         public Atom()
         {
             position = new Vector3(160, 0, 160);
+            offset = new Vector3(0, 0, 0);
             rotW = 1;
             rotY = 0;
             name = this.GetType().ToString();

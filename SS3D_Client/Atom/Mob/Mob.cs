@@ -24,14 +24,14 @@ namespace SS3D.Atom.Mob
         public Mob()
             : base()
         {
-            meshName = "male.mesh";
+            meshName = "male_new.mesh";
         }
 
         public virtual void initAppendages()
         {
             appendages = new Dictionary<string, Appendage>();
-            appendages.Add("LeftHand", new Appendage("LHand", "LeftHand", this));
-            appendages.Add("RightHand", new Appendage("RHand", "RightHand", this));
+            appendages.Add("LeftHand", new Appendage("Bip001 L Hand", "LeftHand", this));
+            appendages.Add("RightHand", new Appendage("Bip001 R Hand", "RightHand", this));
             selectedAppendage = appendages["LeftHand"];
         }
 
@@ -39,7 +39,7 @@ namespace SS3D.Atom.Mob
         {
             base.SetUp(_uid, _atomManager);
 
-            animState = Entity.GetAnimationState("idle");
+            animState = Entity.GetAnimationState("idle1");
             animState.Loop = true;
             animState.Enabled = true;
 
@@ -69,7 +69,7 @@ namespace SS3D.Atom.Mob
             animState.Loop = true;
             animState.Enabled = true;
             if (animState == null)
-                animState = Entity.GetAnimationState("idle");
+                animState = Entity.GetAnimationState("idle1");
         }
 
         protected virtual void SendAnimationState(string state)
@@ -104,26 +104,26 @@ namespace SS3D.Atom.Mob
         {
             base.HandleKC_W(state);
             if (state==true)
-                SetAnimationState("trns_walk", true);
+                SetAnimationState("walk1", true);
             else
-                SetAnimationState("idle", true);
+                SetAnimationState("idle1", true);
         }
        
         public override void HandleKC_S(bool state)
         {
             base.HandleKC_S(state);
             if (state==true)
-                SetAnimationState("trns_walk", true);
+                SetAnimationState("walk1", true);
             else
-                SetAnimationState("idle", true);
+                SetAnimationState("idle1", true);
         }
 
         public virtual void HandleKC_F(bool state)
         {
             if (state == true)
-                SetAnimationState("ofns_slash", true);
+                SetAnimationState("walk1", true);
             else
-                SetAnimationState("idle", true);
+                SetAnimationState("idle1", true);
         }
 
         protected override void HandleExtendedMessage(NetIncomingMessage message)

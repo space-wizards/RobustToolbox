@@ -20,6 +20,10 @@ namespace SS3d_server.Atom
         public float rotW;
         public float rotY;
 
+        public int maxHealth = 100;
+        public int currentHealth = 100; // By default health is 100
+        
+
         public List<InterpolationPacket> interpolationPacket;
 
         public NetConnection attachedClient = null;
@@ -79,8 +83,52 @@ namespace SS3d_server.Atom
 
         protected virtual void HandleClick(NetIncomingMessage message)
         {
+            //base.HandleClick(message);
+            //Who clicked us?
+            Mob.Mob clicker = (Mob.Mob)atomManager.netServer.playerManager.GetSessionByConnection(message.SenderConnection).attachedAtom;
+            if (clicker == null)
+                return;
 
-            atomManager.netServer.chatManager.SendChatMessage(0, "Clicked", name, uid);
+            Clicked(clicker);
+
+        }
+
+        protected virtual void Clicked(Mob.Mob clicker)
+        {
+            Vector3 dist = clicker.position - position;
+
+            //If we're too far away
+            if (dist.Magnitude > 32)
+                return;
+
+            /// TODO: add intent handling
+            if (clicker.selectedAppendage.heldItem == null)
+                ApplyAction(null, clicker);
+            else
+                ApplyAction(clicker.selectedAppendage.heldItem, clicker);
+
+            atomManager.netServer.chatManager.SendChatMessage(0, clicker.name + "(" + clicker.uid.ToString() + ")" + " clicked " + name + "(" + uid.ToString() + ")", name, uid);
+        }
+
+        /// <summary>
+        /// Applies the specified atom to this atom. This should always have an originating mob m. 
+        /// </summary>
+        /// <param name="a">Atom that has been used on this one</param>
+        /// <param name="m">Mob that used a on this one</param>
+        protected virtual void ApplyAction(Atom a, Mob.Mob m)
+        {
+            m.selectedAppendage.heldItem.UsedOn(this); //Technically this is the same fucking thing as a, but i dont want to fuck with explicit casting it.
+        }
+
+        /// <summary>
+        /// This is a base method to allow any atom to be used on any other atom. 
+        /// It is mainly useful for items, though it may be useful for other things
+        /// down the road.
+        /// </summary>
+        /// <param name="target">Atom for this atom to be used on</param>
+        protected virtual void UsedOn(Atom target)
+        {
+
         }
 
         public virtual void Push()
@@ -150,5 +198,21 @@ namespace SS3d_server.Atom
         {
             name = _name;
         }
+
+        /// <summary>
+        /// Apply damage to the atom. All atoms have this, though not all atoms will react to their health being depleted.
+        /// </summary>
+        /// <param name="amount"></param>
+        public virtual void Damage(int amount)
+        {
+            //Lots of room to get more complicated here
+            currentHealth -= amount;
+        #if DEBUG
+            string healthmsg = name + "(" + uid.ToString() + ") " + "took " + amount.ToString() + " points of damage.";
+            healthmsg += " Current health: " + currentHealth.ToString() + "/" + maxHealth.ToString();//TODO SEND DAMAGE MESSAGES
+            atomManager.netServer.chatManager.SendChatMessage(0, healthmsg, name, uid);
+        #endif
+        }
+
     }
 }

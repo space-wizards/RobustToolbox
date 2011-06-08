@@ -14,6 +14,9 @@ namespace SS3d_server.Atom.Item
         public Appendage holdingAppendage = null;
         private float fallSpeed = 5.0f;
 
+        public bool isWeapon = true; // By default every holdable object is usable as a weapon.
+        public int damageAmount = 10; // By default each hit with an item causes 10 damage.
+
         public Item()
             : base()
         {
@@ -49,26 +52,12 @@ namespace SS3d_server.Atom.Item
             }
         }
 
-        protected override void HandleClick(NetIncomingMessage message)
+        protected override void ApplyAction(Atom a, Mob.Mob m)
         {
-            //base.HandleClick(message);
-            //Who clicked us?
-            Mob.Mob clicker = (Mob.Mob)atomManager.netServer.playerManager.GetSessionByConnection(message.SenderConnection).attachedAtom;
-            if (clicker == null)
-                return;
-
-            Vector3 dist = clicker.position - position;
-
-            //If we're too far away
-            if (dist.Magnitude > 32)
-                return;
-
-            /// If the selected hand is empty, this item should go into that hand.
-            /// Otherwise, the item that is in that hand is used on this item.
-            if (clicker.selectedAppendage.heldItem == null)
-                PickedUpBy(clicker);
+            if (a == null)
+                PickedUpBy(m);
             else
-                clicker.selectedAppendage.heldItem.UsedOn(this);
+                base.ApplyAction(a, m);
         }
 
         /// <summary>
@@ -90,8 +79,6 @@ namespace SS3d_server.Atom.Item
             outmessage.Write(newHolder.uid);
             outmessage.Write(holdingAppendage.appendageName);
             atomManager.netServer.SendMessageToAll(outmessage);
-
-            
         }
 
         /// <summary>
@@ -103,9 +90,23 @@ namespace SS3d_server.Atom.Item
 
         }
 
-        public virtual void UsedOn(Item i)
+        /// <summary>
+        /// Bigtime method to apply actions. The reason this functionality is duplicated with ApplyActions is
+        /// that when I write a new item, I don't want to write the code in two places. If I want to make a new atom and
+        /// allow it to be affected by other atoms, I can write those actions just in that atom. If I want to write a new 
+        /// item and allow it to affect other atoms, I can write that in that item and not everywhere else. 
+        /// -spooge
+        /// </summary>
+        /// <param name="target"></param>
+        protected override void UsedOn(Atom target)
         {
-
+            switch (target.GetType().ToString())
+            {
+                default:
+                    //By default, Atoms will do damage.
+                    target.Damage(damageAmount);
+                    break;
+            }
         }
 
         public override void Push()

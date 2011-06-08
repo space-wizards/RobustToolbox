@@ -15,8 +15,7 @@ namespace SS3D.Atom.Item
         public Mogre.Quaternion heldQuat = Mogre.Quaternion.IDENTITY;   // the rotation when held
 
         public Appendage holdingAppendage = null;
-
-        public Item()
+                public Item()
             : base()
         {
 

@@ -57,26 +57,34 @@ namespace SS3d_server.Modules
 
         private void HandleVerb(NetIncomingMessage message)
         {
-            DispatchVerb(message.ReadString());
+            DispatchVerb(message.ReadString(), message.ReadUInt16());
         }
 
-        public void DispatchVerb(string verb)
+        public void DispatchVerb(string verb, ushort uid)
         {
-            Atom.Mob.Mob m;
-            //This will be replaced by a verb table
-            //TODO build dynamic verb lookup table with delegate functions :D
-            switch (verb)
+            //Handle global verbs
+            if (uid == 0)
             {
-                case "selectlefthand":
-                    m = (Atom.Mob.Mob)attachedAtom;
-                    m.selectedAppendage = m.appendages["LeftHand"];
-                    break;
-                case "selectrighthand":
-                    m = (Atom.Mob.Mob)attachedAtom;
-                    m.selectedAppendage = m.appendages["RightHand"];
-                    break;
-                default:
-                    break;
+                Atom.Mob.Mob m;
+
+                switch (verb)
+                {
+                    case "selectlefthand":
+                        m = (Atom.Mob.Mob)attachedAtom;
+                        m.selectedAppendage = m.appendages["LeftHand"];
+                        break;
+                    case "selectrighthand":
+                        m = (Atom.Mob.Mob)attachedAtom;
+                        m.selectedAppendage = m.appendages["RightHand"];
+                        break;
+                    default:
+                        break;
+                }
+            }
+            else
+            {
+                var targetAtom = netServer.atomManager.GetAtom(uid);
+                targetAtom.HandleVerb(verb);
             }
         }
 

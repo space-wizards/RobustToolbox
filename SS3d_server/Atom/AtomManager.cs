@@ -160,5 +160,13 @@ namespace SS3d_server.Atom
         {
             DeleteAtom(atom.uid);
         }
+
+        public Atom GetAtom(ushort uid)
+        {
+            if (atomDictionary.Keys.Contains(uid))
+                return atomDictionary[uid];
+            else
+                return null;
+        }
     }
 }

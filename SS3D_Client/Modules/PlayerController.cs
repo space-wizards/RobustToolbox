@@ -77,12 +77,19 @@ namespace SS3D.Modules
             }
         }
 
-        public void SendVerb(string verb)
+        /// <summary>
+        /// Verb sender
+        /// If UID is 0, it means its a global verb.
+        /// </summary>
+        /// <param name="verb">the verb</param>
+        /// <param name="uid">a target atom's uid</param>
+        public void SendVerb(string verb, ushort uid)
         {
             NetOutgoingMessage message = gameScreen.mEngine.mNetworkMgr.netClient.CreateMessage();
             message.Write((byte)NetMessage.PlayerSessionMessage);
             message.Write((byte)PlayerSessionMessage.Verb);
             message.Write(verb);
+            message.Write(uid);
             gameScreen.mEngine.mNetworkMgr.SendMessage(message, NetDeliveryMethod.ReliableOrdered);
         }
 

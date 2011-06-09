@@ -9,6 +9,7 @@ namespace SS3d_server.Atom
 {
     public class Atom // SERVER SIDE
     {
+        #region variables
         public string name;
         public ushort uid;
         public AtomManager atomManager;
@@ -27,7 +28,9 @@ namespace SS3d_server.Atom
         public List<InterpolationPacket> interpolationPacket;
 
         public NetConnection attachedClient = null;
+        #endregion
 
+        #region constructors and init
         public Atom()
         {
             position = new Vector3(160, 0, 160);
@@ -43,13 +46,17 @@ namespace SS3d_server.Atom
             atomManager = _atomManager;
             updateRequired = true;
         }
+        #endregion
 
+        #region updating
         public virtual void Update()
         {
             //Updates the atom, item, whatever. This should be called from the atom manager's update queue.
             updateRequired = false;
         }
+        #endregion
 
+        #region networking
         public void HandleNetworkMessage(NetIncomingMessage message)
         {
             //Do nothing, this is a default atom. This should be overridden by the inheriting class.
@@ -90,45 +97,6 @@ namespace SS3d_server.Atom
                 return;
 
             Clicked(clicker);
-
-        }
-
-        protected virtual void Clicked(Mob.Mob clicker)
-        {
-            Vector3 dist = clicker.position - position;
-
-            //If we're too far away
-            if (dist.Magnitude > 32)
-                return;
-
-            /// TODO: add intent handling
-            if (clicker.selectedAppendage.heldItem == null)
-                ApplyAction(null, clicker);
-            else
-                ApplyAction(clicker.selectedAppendage.heldItem, clicker);
-
-            atomManager.netServer.chatManager.SendChatMessage(0, clicker.name + "(" + clicker.uid.ToString() + ")" + " clicked " + name + "(" + uid.ToString() + ")", name, uid);
-        }
-
-        /// <summary>
-        /// Applies the specified atom to this atom. This should always have an originating mob m. 
-        /// </summary>
-        /// <param name="a">Atom that has been used on this one</param>
-        /// <param name="m">Mob that used a on this one</param>
-        protected virtual void ApplyAction(Atom a, Mob.Mob m)
-        {
-            m.selectedAppendage.heldItem.UsedOn(this); //Technically this is the same fucking thing as a, but i dont want to fuck with explicit casting it.
-        }
-
-        /// <summary>
-        /// This is a base method to allow any atom to be used on any other atom. 
-        /// It is mainly useful for items, though it may be useful for other things
-        /// down the road.
-        /// </summary>
-        /// <param name="target">Atom for this atom to be used on</param>
-        protected virtual void UsedOn(Atom target)
-        {
-
         }
 
         public virtual void Push()
@@ -147,7 +115,7 @@ namespace SS3d_server.Atom
             /* VVVV This is the force flag. If this flag is set, the client will run the interpolation 
              * packet even if it is that client's player mob. Use this in case the client has ended up somewhere bad.
              */
-            message.Write(force); 
+            message.Write(force);
             atomManager.netServer.SendMessageToAll(message);
         }
 
@@ -193,7 +161,51 @@ namespace SS3d_server.Atom
 
             SendInterpolationPacket(false);
         }
+        #endregion
 
+        #region input handling
+        protected virtual void Clicked(Mob.Mob clicker)
+        {
+            Vector3 dist = clicker.position - position;
+
+            //If we're too far away
+            if (dist.Magnitude > 32)
+                return;
+
+            /// TODO: add intent handling
+            if (clicker.selectedAppendage.heldItem == null)
+                ApplyAction(null, clicker);
+            else
+                ApplyAction(clicker.selectedAppendage.heldItem, clicker);
+
+            atomManager.netServer.chatManager.SendChatMessage(0, clicker.name + "(" + clicker.uid.ToString() + ")" + " clicked " + name + "(" + uid.ToString() + ")", name, uid);
+        }
+        #endregion
+
+        #region inter-atom functions
+        /// <summary>
+        /// Applies the specified atom to this atom. This should always have an originating mob m. 
+        /// </summary>
+        /// <param name="a">Atom that has been used on this one</param>
+        /// <param name="m">Mob that used a on this one</param>
+        protected virtual void ApplyAction(Atom a, Mob.Mob m)
+        {
+            m.selectedAppendage.heldItem.UsedOn(this); //Technically this is the same fucking thing as a, but i dont want to fuck with explicit casting it.
+        }
+
+        /// <summary>
+        /// This is a base method to allow any atom to be used on any other atom. 
+        /// It is mainly useful for items, though it may be useful for other things
+        /// down the road.
+        /// </summary>
+        /// <param name="target">Atom for this atom to be used on</param>
+        protected virtual void UsedOn(Atom target)
+        {
+
+        }
+        #endregion
+
+        #region utility functions
         public void SetName(string _name)
         {
             name = _name;
@@ -213,6 +225,6 @@ namespace SS3d_server.Atom
             atomManager.netServer.chatManager.SendChatMessage(0, healthmsg, name, uid);
         #endif
         }
-
+        #endregion
     }
 }

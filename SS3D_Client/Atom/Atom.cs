@@ -11,6 +11,7 @@ namespace SS3D.Atom
 {
     public class Atom // CLIENT SIDE
     {
+        #region variables
         // GRAPHICS
         public SceneNode Node;
         public Entity Entity;
@@ -44,6 +45,9 @@ namespace SS3D.Atom
         //Misc?
         public bool speaking = false;
 
+        #endregion
+
+        #region constructors and init
         public Atom()
         {
             keyStates = new Dictionary<MOIS.KeyCode, bool>();
@@ -77,6 +81,36 @@ namespace SS3D.Atom
 
             Draw();
         }
+
+        public void Draw()
+        {
+            // Draw the atom into the scene. This should be called after instantiation.
+            name = "Atom" + uid;
+            SceneManager sceneManager = atomManager.mEngine.SceneMgr;
+
+            string entityName = name;
+            if (sceneManager.HasEntity(entityName))
+            {
+                sceneManager.DestroyEntity(entityName);
+            }
+            if (sceneManager.HasSceneNode(entityName))
+            {
+                sceneManager.DestroySceneNode(entityName);
+            }
+            Node = sceneManager.RootSceneNode.CreateChildSceneNode(entityName);
+            Entity = sceneManager.CreateEntity(entityName, meshName);
+            Entity.QueryFlags = QueryFlags.ENTITY_ATOM;
+            Entity.UserObject = this;
+            Node.Position = position + offset;
+            Node.AttachObject(Entity);
+            //Node.SetScale(scale);
+
+            var entities = sceneManager.ToString();
+            drawn = true;
+        }
+
+        
+        #endregion
 
         #region network stuff
         public void HandleNetworkMessage(NetIncomingMessage message)
@@ -177,6 +211,7 @@ namespace SS3D.Atom
         }
         #endregion
 
+        #region updating
         public virtual void Update()
         {
             //This is where all the good stuff happens. 
@@ -218,7 +253,6 @@ namespace SS3D.Atom
             
         }
 
-        #region positioning
         // Mobs may need to override this for animation, or they could use this.
         public virtual void UpdatePosition()
         {
@@ -257,6 +291,9 @@ namespace SS3D.Atom
 
         }
 
+        #endregion
+        
+        #region positioning
         public virtual bool IsInWall()
         {
             foreach (AxisAlignedBox box in atomManager.gameState.map.GetSurroundingAABB(Node.Position - offset))
@@ -333,35 +370,6 @@ namespace SS3D.Atom
 
         #endregion
 
-        public void Draw()
-        {
-            // Draw the atom into the scene. This should be called after instantiation.
-            name = "Atom" + uid;
-            SceneManager sceneManager = atomManager.mEngine.SceneMgr;
-
-            string entityName = name;
-            if (sceneManager.HasEntity(entityName))
-            {
-                sceneManager.DestroyEntity(entityName);
-            }
-            if (sceneManager.HasSceneNode(entityName))
-            {
-                sceneManager.DestroySceneNode(entityName);
-            }
-            Node = sceneManager.RootSceneNode.CreateChildSceneNode(entityName);
-            Entity = sceneManager.CreateEntity(entityName, meshName);
-            Entity.QueryFlags = QueryFlags.ENTITY_ATOM;
-            Entity.UserObject = this;
-            Node.Position = position + offset;
-            Node.AttachObject(Entity);
-            //Node.SetScale(scale);
-
-            var entities = sceneManager.ToString();
-            drawn = true;
-        }
-
-        
-
         #region input handling
         /* You might be wondering why input handling is in the base atom code. Well, It's simple.
          * This way I can make any item on the station player controllable. If I want to, I can spawn
@@ -400,6 +408,20 @@ namespace SS3D.Atom
             updateRequired = true;
         }
 
+        #region mouse handling
+        public virtual void HandleClick()
+        {
+            SendClick();
+        }
+
+        public void SendClick()
+        {
+            NetOutgoingMessage message = CreateAtomMessage();
+            message.Write((byte)AtomMessage.Click);
+            SendMessage(message);
+        }
+        #endregion
+
         #region key handlers
         public virtual void HandleKC_W(bool state)
         {
@@ -425,17 +447,7 @@ namespace SS3D.Atom
         }
         #endregion
 
-        public virtual void HandleClick()
-        {
-            SendClick();
-        }
-
-        public void SendClick()
-        {
-            NetOutgoingMessage message = CreateAtomMessage();
-            message.Write((byte)AtomMessage.Click);
-            SendMessage(message);
-        }
+ 
         #endregion
     }
 }

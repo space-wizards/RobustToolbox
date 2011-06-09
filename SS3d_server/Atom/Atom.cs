@@ -161,6 +161,11 @@ namespace SS3d_server.Atom
 
             SendInterpolationPacket(false);
         }
+
+        public virtual void HandleVerb(string verb)
+        {
+
+        }
         #endregion
 
         #region input handling

@@ -51,6 +51,7 @@ namespace SS3D.Atom.Mob
             base.initKeys();
 
             keyHandlers.Add(MOIS.KeyCode.KC_F, new KeyEvent(HandleKC_F));
+            keyHandlers.Add(MOIS.KeyCode.KC_Q, new KeyEvent(HandleKC_Q));
         }
 
         public virtual void SetAnimationState(string state)
@@ -127,6 +128,14 @@ namespace SS3D.Atom.Mob
                 SetAnimationState("idle1", true);
         }
 
+        public virtual void HandleKC_Q(bool state)
+        {
+            if (state == true)
+                return;
+            else
+                SendDropItem();
+        }
+
         protected override void HandleExtendedMessage(NetIncomingMessage message)
         {
             MobMessage mobMessageType = (MobMessage)message.ReadByte();
@@ -159,6 +168,17 @@ namespace SS3D.Atom.Mob
         {
             if (appendages.Keys.Contains(appendageName))
                 selectedAppendage = appendages[appendageName];
+        }
+
+        /// <summary>
+        /// Sends a message to drop the item in the currently selected appendage
+        /// </summary>
+        protected virtual void SendDropItem()
+        {
+            NetOutgoingMessage message = CreateAtomMessage();
+            message.Write((byte)AtomMessage.Extended);
+            message.Write((byte)MobMessage.DropItem);
+            SendMessage(message);
         }
     }
 }

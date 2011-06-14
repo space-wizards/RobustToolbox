@@ -27,7 +27,8 @@ public enum ItemMessage
     DropItem,
     UseItem,
     Click,
-    AttachTo
+    AttachTo,
+    Detach
 }
 
 public enum AtomManagerMessage
@@ -45,7 +46,8 @@ public enum MobMessage
     ClickMob,
     AnimationState,
     AnimateOnce,
-    SelectAppendage
+    SelectAppendage,
+    DropItem
 }
 
 public enum MobHand

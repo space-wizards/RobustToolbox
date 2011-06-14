@@ -84,10 +84,15 @@ namespace SS3d_server.Atom.Item
         /// <summary>
         /// Called when a mob drops an item
         /// </summary>
-        /// <param name="uid">mob that dropped the item.</param>
-        public virtual void Dropped(ushort uid)
+        public virtual void Dropped()
         {
+            holdingAppendage.heldItem = null;
+            holdingAppendage = null;
 
+            NetOutgoingMessage outmessage = CreateAtomMessage();
+            outmessage.Write((byte)AtomMessage.Extended);
+            outmessage.Write((byte)ItemMessage.Detach);
+            atomManager.netServer.SendMessageToAll(outmessage);
         }
 
         /// <summary>

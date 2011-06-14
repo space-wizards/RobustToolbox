@@ -42,6 +42,9 @@ namespace SS3d_server.Atom.Mob
                 case MobMessage.AnimationState:
                     HandleAnimationState(message);
                     break;
+                case MobMessage.DropItem:
+                    HandleDropItem();
+                    break;
                 default: 
                     break;
             }
@@ -78,6 +81,12 @@ namespace SS3d_server.Atom.Mob
             outmessage.Write((byte)MobMessage.SelectAppendage);
             outmessage.Write(selectedAppendage.appendageName);
             SendMessageToAll(outmessage);
+        }
+
+        public virtual void HandleDropItem()
+        {
+            if (selectedAppendage.heldItem != null)
+                selectedAppendage.heldItem.Dropped();
         }
     }
 }

@@ -29,6 +29,9 @@ namespace SS3D.Atom.Item
                 case ItemMessage.AttachTo:
                     HandleAttachTo(message);
                     break;
+                case ItemMessage.Detach:
+                    HandleDetach();
+                    break;
                 default:
                     break;
             }
@@ -46,11 +49,26 @@ namespace SS3D.Atom.Item
             AttachTo(m, a);
         }
 
+        protected virtual void HandleDetach()
+        {
+            if(holdingAppendage != null)
+            {
+                holdingAppendage.owner.Entity.DetachObjectFromBone(Entity);
+
+                Mogre.Vector3 mobpos = holdingAppendage.owner.position;
+                position = mobpos;
+                Node.Position = position + offset;
+                Node.AttachObject(Entity);
+                holdingAppendage = null;
+            }
+        }
+
         protected virtual void AttachTo(Mob.Mob m, Appendage a)
         {
             Entity.DetachFromParent();
 
             m.Entity.AttachObjectToBone(a.bone, Entity, heldQuat, heldOffset);
+            holdingAppendage = a;
         }
     }
 }

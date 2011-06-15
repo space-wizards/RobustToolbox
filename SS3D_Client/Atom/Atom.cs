@@ -5,6 +5,7 @@ using System.Text;
 
 using Mogre;
 using SS3D_shared.HelperClasses;
+using SS3D.HelperClasses;
 using Lidgren.Network;
 
 namespace SS3D.Atom
@@ -142,7 +143,7 @@ namespace SS3D.Atom
 
         public virtual void HandleInterpolationPacket(NetIncomingMessage message)
         {
-            SS3D_shared.HelperClasses.InterpolationPacket intPacket = new SS3D_shared.HelperClasses.InterpolationPacket(message);
+            SS3D.HelperClasses.InterpolationPacket intPacket = new SS3D.HelperClasses.InterpolationPacket(message);
 
             // This makes the client discard interpolation packets for the atom the local player is controlling, 
             // unless the force flag is set. If the force flag is set, the server is trying to correct an issue.

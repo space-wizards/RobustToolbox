@@ -7,7 +7,7 @@ using Lidgren.Network;
 
 using SS3D.Modules;
 using SS3D.Modules.Map;
-using SS3D.Modules.Items;
+//using SS3D.Modules.Items;
 using SS3D.Modules.Network;
 
 using SS3D_shared;
@@ -32,13 +32,13 @@ namespace SS3D.States
         private OgreManager mEngine;
         private StateManager mStateMgr;
         private Map map;
-        private ItemManager itemManager;
+        //private ItemManager itemManager;
         private MapSaver mapSaver;
         private GUI guiEditOptions;
         private GUI guiEditScreen;
         private Dictionary<TileType, string> tileList = new Dictionary<TileType, string>();
         private TileType newTileType = TileType.None;
-        private ItemType newItemType = ItemType.None;
+        //private ItemType newItemType = ItemType.None;
         private ushort lastID = 0;
 
         private AtomBaseClass selectedItem;
@@ -86,7 +86,7 @@ namespace SS3D.States
             mEngine.Camera.Position = new Mogre.Vector3(0, 300, 0);
             mEngine.Camera.LookAt(new Mogre.Vector3(160,64,160));
 
-            itemManager = new ItemManager(mEngine, map, mEngine.mNetworkMgr, null);
+            //itemManager = new ItemManager(mEngine, map, mEngine.mNetworkMgr, null);
 
             AddSetUpButtons();
 
@@ -101,8 +101,8 @@ namespace SS3D.States
                 mEngine.mMiyagiSystem.GUIManager.GUIs.Remove(guiEditScreen);
                 map.Shutdown();
                 map = null;
-                itemManager.Shutdown();
-                itemManager = null;            
+                //itemManager.Shutdown();
+                //itemManager = null;            
             }
             else
             {
@@ -112,7 +112,7 @@ namespace SS3D.States
 
         public override void Update(long _frameTime)
         {
-            itemManager.Update();
+            //itemManager.Update();
             if (inEditor)
             {
                 Point mousePos = mEngine.mMiyagiSystem.InputManager.MouseLocation;
@@ -878,7 +878,7 @@ namespace SS3D.States
         private void itemDropDown_SelectedIndexChanged(object sender, EventArgs e)
         {
             DropDownList ddList = (DropDownList)sender;
-            newItemType = (ItemType)ddList.SelectedIndex;
+            //newItemType = (ItemType)ddList.SelectedIndex;
         }
 
         private void SaveButtonMouseDown(object sender, MouseButtonEventArgs e)
@@ -1104,7 +1104,7 @@ namespace SS3D.States
                 }
                 else if (button == MOIS.MouseButtonID.MB_Right)
                 {
-                    if (newItemType != ItemType.None)
+                    /*if (newItemType != ItemType.None)
                     {
                         //Mogre.Vector3 position = new Mogre.Vector3(SelectedObject.Node.Position.x, 1, SelectedObject.Node.Position.z);
                         Mogre.Vector3 position = worldPos + new Mogre.Vector3(0, 1, 0);
@@ -1149,7 +1149,7 @@ namespace SS3D.States
                             selectedItem = SelectedObject;
                             selectedItem.Node.ShowBoundingBox = true;
                         }
-                    }
+                    }*/
                 }
 
             }

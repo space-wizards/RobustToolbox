@@ -7,7 +7,7 @@ using Lidgren.Network;
 using SS3D_shared;
 using SS3D_shared.HelperClasses;
 
-using SS3d_server.Modules.Mobs;
+//using SS3d_server.Modules.Mobs;
 
 namespace SS3d_server.Modules.Chat
 {
@@ -34,10 +34,8 @@ namespace SS3d_server.Modules.Chat
             text = text.Trim(); // Remove whitespace
             if (text[0] == '/')
                 ProcessCommand(text, name, channel, atomID);
-
-
-
-            SendChatMessage(channel, text, name, atomID);
+            else
+                SendChatMessage(channel, text, name, atomID);
         }
 
         public void SendChatMessage(ushort channel, string text, string name, ushort atomID)
@@ -63,8 +61,13 @@ namespace SS3d_server.Modules.Chat
 
             string command = args[0];
 
-            string message = "Command: " + command;
-            SendChatMessage(channel, message, name, atomID);
+            switch (command)
+            {
+                default:
+                    string message = "Command '" + command + "' not recognized.";
+                    SendChatMessage(channel, message, name, atomID);
+                    break;
+            }
         }
 
         private void ParseArguments(string text, List<string> args)

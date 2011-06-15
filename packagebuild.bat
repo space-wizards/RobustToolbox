@@ -16,3 +16,5 @@ FOR /F "tokens=*" %%G IN ('DIR /B /AD /S *.svn*') DO RMDIR /S /Q "%%G"
 cd ..
 %zip% -tzip a %dir%.zip %dir%
 rd /S /Q %dir%
+
+pause

@@ -47,7 +47,8 @@ public enum MobMessage
     AnimationState,
     AnimateOnce,
     SelectAppendage,
-    DropItem
+    DropItem,
+    Death
 }
 
 public enum MobHand

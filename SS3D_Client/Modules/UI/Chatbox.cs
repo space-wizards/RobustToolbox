@@ -150,9 +150,9 @@ namespace SS3D.Modules.UI
         }
 
 
-        public void SetInputFocus()
+        public void SetInputFocus(bool focus = true)
         {
-            chatTextbox.Focused = true;
+            chatTextbox.Focused = focus;
         }
 
         public bool HasFocus()
@@ -166,7 +166,7 @@ namespace SS3D.Modules.UI
         {
             if (string.IsNullOrWhiteSpace(e.Data)) return;
             TextSubmitted(this, e.Data);
-            chatTextbox.Focused = false;
+            //chatTextbox.Focused = false;
         }
 
         public void AddLine(string text)

@@ -88,5 +88,36 @@ namespace SS3d_server.Atom.Mob
             if (selectedAppendage.heldItem != null)
                 selectedAppendage.heldItem.Dropped();
         }
+
+        public virtual void DropAllItems()
+        {
+            foreach (Appendage a in appendages.Values)
+            {
+                if (a.heldItem != null)
+                    a.heldItem.Dropped();
+            }
+        }
+
+        public virtual void Die()
+        {
+            DropAllItems();
+            SendDeathMessage();
+        }
+
+        public virtual void SendDeathMessage()
+        {
+            NetOutgoingMessage msg = CreateAtomMessage();
+            msg.Write((byte)AtomMessage.Extended);
+            msg.Write((byte)MobMessage.Death);
+            SendMessageToAll(msg);
+        }
+
+        public override void Damage(int amount)
+        {
+            base.Damage(amount);
+
+            if (currentHealth <= 0)
+                Die();
+        }
     }
 }

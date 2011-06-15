@@ -69,6 +69,8 @@ namespace SS3D.Atom.Mob
                 SendAnimationState(state);
             animState = Entity.GetAnimationState(state);
             animState.Loop = true;
+            if (state == "tpose")
+                animState.Loop = false;
             animState.Enabled = true;
             if (animState == null)
                 animState = Entity.GetAnimationState("idle1");
@@ -147,8 +149,21 @@ namespace SS3D.Atom.Mob
                 case MobMessage.SelectAppendage:
                     HandleSelectAppendage(message);
                     break;
+                case MobMessage.Death:
+                    HandleDeath();
+                    break;
                 default: break;
             }
+        }
+
+        private void HandleDeath()
+        {
+            //Set death Animation
+            SetAnimationState("tpose", true);
+
+            //Clear key handlers
+            keyHandlers.Clear();
+            keyStates.Clear();
         }
 
         /// <summary>

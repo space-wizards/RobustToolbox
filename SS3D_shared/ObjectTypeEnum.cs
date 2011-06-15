@@ -10,11 +10,11 @@ public enum AtomType
     [AtomClassAttribute(typeof(SS3D_shared.BaseTile))] 
     Tile,          //Walls, floors etc
 
-    [AtomClassAttribute(typeof(SS3D_shared.Item))] 
-    Item,          //Objects that can be picked up. Crowbar etc.
+    //[AtomClassAttribute(typeof(SS3D_shared.Item))] 
+    //Item,          //Objects that can be picked up. Crowbar etc.
 
-    [AtomClassAttribute(typeof(SS3D_shared.Object))] 
-    Object,        //Objects that never can be picked up. Doors , computers etc.
+    //[AtomClassAttribute(typeof(SS3D_shared.Object))] 
+    //Object,        //Objects that never can be picked up. Doors , computers etc.
 
     [AtomClassAttribute(typeof(SS3D_shared.AtomBaseClass))] 
     Mob            //Players. Returns atombaseclass until we have a playerclass.
@@ -37,17 +37,17 @@ public enum TileType
 
 public enum ItemType
 {
-    [AtomClassAttribute(typeof(SS3D_shared.Item))] 
-    None = 0,
+    //[AtomClassAttribute(typeof(SS3D_shared.Item))] 
+    //None = 0,
 
-    [AtomClassAttribute(typeof(SS3D_shared.Crowbar))] 
-    Crowbar
+    //[AtomClassAttribute(typeof(SS3D_shared.Crowbar))] 
+    //Crowbar
 }
 
 public enum ObjectType
 {
-    [AtomClassAttribute(typeof(SS3D_shared.Object))] 
-    None = 0
+    //[AtomClassAttribute(typeof(SS3D_shared.Object))] 
+    //None = 0
 }
 
 public enum MobType

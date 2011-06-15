@@ -6,8 +6,8 @@ using Lidgren.Network;
 
 using SS3D.Modules;
 using SS3D.Modules.Map;
-using SS3D.Modules.Items;
-using SS3D.Modules.Mobs;
+//using SS3D.Modules.Items;
+//using SS3D.Modules.Mobs;
 using SS3D.Modules.Network;
 using SS3D.Modules.UI;
 using SS3D.Atom;

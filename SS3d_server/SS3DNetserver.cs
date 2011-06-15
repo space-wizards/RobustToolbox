@@ -7,8 +7,8 @@ using System.Threading;
 using SS3d_server.Modules;
 using SS3d_server.Modules.Client;
 using SS3d_server.Modules.Map;
-using SS3d_server.Modules.Items;
-using SS3d_server.Modules.Mobs;
+//using SS3d_server.Modules.Items;
+//using SS3d_server.Modules.Mobs;
 using SS3d_server.Modules.Chat;
 using SS3d_server.Atom;
 

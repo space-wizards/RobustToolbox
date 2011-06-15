@@ -5,7 +5,7 @@ using System.IO;
 using Mogre;
 using SS3D.HelperClasses;
 using SS3D_shared;
-using SS3D.Modules.Items;
+//using SS3D.Modules.Items;
 
 using System.Xml;
 using System.Xml.Serialization;
@@ -94,7 +94,7 @@ namespace SS3D.Modules.Map
         //       Maybe save / Load in separate threads.
         //       Support for rotated Items & Objects.
 
-        public static void SaveMap(string path, Map map, ItemManager itemManager)
+        public static void SaveMap(string path, Map map)
         {
             MapFile MapToSave = new MapFile();
 
@@ -119,7 +119,7 @@ namespace SS3D.Modules.Map
             //Preparing the item data. ADD CHECK FOR PICKED UP ITEMS / ITEMS NOT IN WORLD / ITEMS IN OBJECTS OR OTHER ITEMS (CLOSET?) !!!
             MapToSave.ItemData = new ItemData();
             MapToSave.ItemData.ItemEntries = new List<ItemEntry>();
-            foreach(KeyValuePair<ushort, Item> pair in itemManager.itemDict)
+            /*foreach(KeyValuePair<ushort, Item> pair in itemManager.itemDict)
             {
                 Item currentItem = pair.Value;
                 ItemEntry newEntry = new ItemEntry();
@@ -127,7 +127,7 @@ namespace SS3D.Modules.Map
                 newEntry.position = new Vec3f(currentItem.Node.Position.x,currentItem.Node.Position.y,currentItem.Node.Position.z);
                 newEntry.rotation = new RotaDeg(currentItem.Node.Orientation.Yaw.ValueDegrees, currentItem.Node.Orientation.Pitch.ValueDegrees, currentItem.Node.Orientation.Roll.ValueDegrees);
                 MapToSave.ItemData.ItemEntries.Add(newEntry);
-            }
+            }*/
 
             //Serialize & Write map to file.
             if (!Directory.Exists(Path.GetDirectoryName(path))) Directory.CreateDirectory(Path.GetDirectoryName(path));

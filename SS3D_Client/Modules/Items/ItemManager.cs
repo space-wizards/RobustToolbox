@@ -103,7 +103,7 @@ namespace SS3D.Modules.Items
             float x = msg.ReadFloat();
             float y = msg.ReadFloat();
             float z = msg.ReadFloat();
-            SS3D_shared.HelperClasses.InterpolationPacket intPacket = new SS3D_shared.HelperClasses.InterpolationPacket(x,y,z,0,0,0);
+            HelperClasses.InterpolationPacket intPacket = new HelperClasses.InterpolationPacket(x,y,z,0,0,0);
             itemDict[itemID].interpolationPacket.Add(intPacket);
 
             if (itemDict[itemID].interpolationPacket.Count > 2)

@@ -8,7 +8,7 @@ using Mogre;
 using SS3D.Modules;
 using SS3D.Modules.UI;
 using SS3D.Modules.Map;
-using SS3D.Modules.Items;
+//using SS3D.Modules.Items;
 using SS3D.Modules.Network;
 
 using SS3D_shared;
@@ -30,7 +30,7 @@ namespace SS3D.States
         public OgreManager mEngine;
         public StateManager mStateMgr;
 
-        public ItemManager itemManager;
+        //public ItemManager itemManager;
         public Map currentMap;
 
         public LoadingTracker currentLoadingTracker = null;
@@ -106,7 +106,7 @@ namespace SS3D.States
             mEngine.Camera.LookAt(new Mogre.Vector3(160, 64, 160));
 
             currentMap = new Map(mEngine, true);
-            itemManager = new ItemManager(mEngine, currentMap, mEngine.mNetworkMgr, null);
+            //itemManager = new ItemManager(mEngine, currentMap, mEngine.mNetworkMgr, null);
 
             toolBar = new EditorToolbar(mStateMgr, this);
             mEngine.mMiyagiSystem.GUIManager.GUIs.Add(toolBar);

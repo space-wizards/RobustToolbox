@@ -62,11 +62,6 @@
       <SpecificVersion>False</SpecificVersion>
       <HintPath>..\References\$(Configuration)\Lidgren.Network.dll</HintPath>
     </Reference>
-    <Reference Include="Mogre, Version=1.7.1.0, Culture=neutral, processorArchitecture=x86">
-      <SpecificVersion>False</SpecificVersion>
-      <HintPath>..\References\$(Configuration)\Mogre.dll</HintPath>
-      <Private>True</Private>
-    </Reference>
     <Reference Include="System" />
     <Reference Include="System.Core">
       <RequiredTargetFramework>3.5</RequiredTargetFramework>
@@ -89,12 +84,13 @@
     <Compile Include="Atom\Mob\HelperClasses\Appendage.cs" />
     <Compile Include="Atom\Mob\Human.cs" />
     <Compile Include="Atom\Mob\Mob.cs" />
+    <Compile Include="Helper Classes\InterpolationPacket.cs" />
     <Compile Include="Helper Classes\Point.cs" />
     <Compile Include="Modules\Chat\ChatManager.cs" />
     <Compile Include="Modules\Client\Client.cs" />
-    <Compile Include="Modules\Items\ItemManager.cs" />
+    <None Include="Modules\Items\ItemManager.cs" />
     <Compile Include="Modules\Map\Map.cs" />
-    <Compile Include="Modules\Mobs\MobManager.cs" />
+    <None Include="Modules\Mobs\MobManager.cs" />
     <Compile Include="Modules\PlayerManager.cs" />
     <Compile Include="Modules\PlayerSession.cs" />
     <Compile Include="Program.cs" />

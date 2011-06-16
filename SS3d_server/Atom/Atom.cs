@@ -117,7 +117,7 @@ namespace SS3d_server.Atom
              * packet even if it is that client's player mob. Use this in case the client has ended up somewhere bad.
              */
             message.Write(force);
-            atomManager.netServer.SendMessageToAll(message);
+            atomManager.netServer.SendMessageToAll(message, NetDeliveryMethod.ReliableUnordered);
         }
 
         protected NetOutgoingMessage CreateAtomMessage()
@@ -129,9 +129,9 @@ namespace SS3d_server.Atom
             return message;
         }
 
-        protected void SendMessageToAll(NetOutgoingMessage message)
+        protected void SendMessageToAll(NetOutgoingMessage message, NetDeliveryMethod method = NetDeliveryMethod.ReliableOrdered)
         {
-            atomManager.netServer.SendMessageToAll(message);
+            atomManager.netServer.SendMessageToAll(message, method);
         }
 
         public virtual void HandlePositionUpdate(NetIncomingMessage message)
@@ -141,7 +141,7 @@ namespace SS3d_server.Atom
              * cases when the client will need to move stuff around in a non-laggy 
              * way, but For now the only case I can think of is the player mob.*/
             // Hack to accept position updates from clients
-            if (attachedClient != null && message.SenderConnection == attachedClient)
+            if (attachedClient != null && message.SenderConnection == attachedClient && !IsDead())
             {
                 position.X = (double)message.ReadFloat();
                 position.Y = (double)message.ReadFloat();
@@ -151,6 +151,8 @@ namespace SS3d_server.Atom
 
                 SendInterpolationPacket(false); // Send position updates to everyone. The client that is controlling this atom should discard this packet.
             }
+            else
+                SendInterpolationPacket(true); // If its dead, it should update everyone (prevents movement after death)
             // Discard the rest.
         }
 
@@ -230,6 +232,13 @@ namespace SS3d_server.Atom
             healthmsg += " Current health: " + currentHealth.ToString() + "/" + maxHealth.ToString();//TODO SEND DAMAGE MESSAGES
             atomManager.netServer.chatManager.SendChatMessage(0, healthmsg, name, uid);
         #endif
+        }
+
+        public bool IsDead()
+        {
+            if (currentHealth <= 0)
+                return true;
+            return false;
         }
         #endregion
     }

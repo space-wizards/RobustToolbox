@@ -109,14 +109,14 @@ namespace SS3d_server.Atom.Mob
             NetOutgoingMessage msg = CreateAtomMessage();
             msg.Write((byte)AtomMessage.Extended);
             msg.Write((byte)MobMessage.Death);
-            SendMessageToAll(msg);
+            SendMessageToAll(msg, NetDeliveryMethod.ReliableUnordered);
         }
 
         public override void Damage(int amount)
         {
             base.Damage(amount);
 
-            if (currentHealth <= 0)
+            if (IsDead())
                 Die();
         }
     }

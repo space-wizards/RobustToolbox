@@ -49,8 +49,6 @@ namespace SS3d_server.HelperClasses
             message.Write((float)Math.Round(position.Z, 4));
             message.Write((float)Math.Round(rotW, 4));
             message.Write((float)Math.Round(rotY, 4));
-
-            Console.WriteLine(position);
         }
 
     }

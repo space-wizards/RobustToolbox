@@ -34,6 +34,8 @@ namespace SS3D.Atom
         public List<InterpolationPacket> interpolationPackets;
         public float speed = 1.0f;
         public bool clipping = true;
+        private DateTime lastPositionUpdate;
+        private int positionUpdateRateLimit = 10; //Packets per second
 
         public bool attached;
 
@@ -170,7 +172,7 @@ namespace SS3D.Atom
         {
             NetOutgoingMessage message = CreateAtomMessage(); 
             message.Write((byte)AtomMessage.Pull);
-            atomManager.networkManager.SendMessage(message, NetDeliveryMethod.ReliableOrdered);
+            atomManager.networkManager.SendMessage(message, NetDeliveryMethod.ReliableUnordered);
         }
 
         public virtual void HandlePush(NetIncomingMessage message)
@@ -180,6 +182,11 @@ namespace SS3D.Atom
 
         public void SendPositionUpdate()
         {
+            //Rate limit
+            TimeSpan timeSinceLastUpdate = DateTime.Now - lastPositionUpdate;
+            if (timeSinceLastUpdate.TotalMilliseconds < 1000 / positionUpdateRateLimit)
+                return;
+
             // This is only useful if the fucking shit is actually controlled by a player
             NetOutgoingMessage message = CreateAtomMessage();
             message.Write((byte)AtomMessage.PositionUpdate);
@@ -188,7 +195,8 @@ namespace SS3D.Atom
             message.Write(position.z);
             message.Write(rotW);
             message.Write(rotY);
-            atomManager.networkManager.SendMessage(message, NetDeliveryMethod.ReliableOrdered);
+            atomManager.networkManager.SendMessage(message, NetDeliveryMethod.ReliableUnordered);
+            lastPositionUpdate = DateTime.Now;
         }
 
         protected NetOutgoingMessage CreateAtomMessage()
@@ -203,10 +211,10 @@ namespace SS3D.Atom
         protected void SendMessage(NetOutgoingMessage message)
         {
             // Send messages unreliably by default
-            SendMessage(message, NetDeliveryMethod.ReliableOrdered);
+            SendMessage(message, NetDeliveryMethod.ReliableUnordered);
         }
 
-        protected void SendMessage(NetOutgoingMessage message, NetDeliveryMethod method)
+        protected void SendMessage(NetOutgoingMessage message, NetDeliveryMethod method = NetDeliveryMethod.ReliableUnordered)
         {
             atomManager.networkManager.SendMessage(message, method);
         }

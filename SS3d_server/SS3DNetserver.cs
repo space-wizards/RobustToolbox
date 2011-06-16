@@ -500,7 +500,7 @@ namespace SS3d_server
             fs.Close();
         }
 
-        public void SendMessageToAll(NetOutgoingMessage message)
+        public void SendMessageToAll(NetOutgoingMessage message, NetDeliveryMethod method = NetDeliveryMethod.ReliableOrdered)
         {
             if (message == null)
             {
@@ -510,7 +510,7 @@ namespace SS3d_server
             //Console.WriteLine("Sending to all ("+i+") with size: " + message.LengthBits + " bytes");
             foreach (Client client in clientList.Values)
             {
-                netServer.SendMessage(message, client.netConnection, NetDeliveryMethod.ReliableOrdered);
+                netServer.SendMessage(message, client.netConnection, method);
             }
         }
 

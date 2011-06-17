@@ -23,6 +23,13 @@ namespace SS3d_server.Atom.Item
 
         }
 
+        public override void SendState(NetConnection client)
+        {
+            base.SendState(client);
+
+            SendAttachMessage();
+        }
+
         public override void Update()
         {
             base.Update();
@@ -54,10 +61,12 @@ namespace SS3d_server.Atom.Item
 
         protected override void ApplyAction(Atom a, Mob.Mob m)
         {
-            if (a == null)
+            if (a == null && holdingAppendage == null) //If mob's not holding an item and this item is not being held
                 PickedUpBy(m);
-            else
+            else if (a != null) // If mob's holding an item
                 base.ApplyAction(a, m);
+
+            //Otherwise do nothing.             
         }
 
         /// <summary>
@@ -71,12 +80,23 @@ namespace SS3d_server.Atom.Item
             //The appendage stores the item it is holding. This is probably redundant, but it is convenient.
             newHolder.selectedAppendage.heldItem = this;
 
+            SendAttachMessage();
+        }
+
+        /// <summary>
+        /// Sends an attach message to the owner of the attached appendage
+        /// </summary>
+        public virtual void SendAttachMessage()
+        {
+            if (holdingAppendage == null)
+                return;
+
             /// Ok, this will send a message to all clients saying that 
             /// this item is now attached to a certain appendage on the mob with id uid.
             NetOutgoingMessage outmessage = CreateAtomMessage();
             outmessage.Write((byte)AtomMessage.Extended);
             outmessage.Write((byte)ItemMessage.AttachTo);
-            outmessage.Write(newHolder.uid);
+            outmessage.Write(holdingAppendage.owner.uid);
             outmessage.Write(holdingAppendage.appendageName);
             atomManager.netServer.SendMessageToAll(outmessage);
         }

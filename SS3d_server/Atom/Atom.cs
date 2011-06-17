@@ -47,6 +47,11 @@ namespace SS3d_server.Atom
             atomManager = _atomManager;
             updateRequired = true;
         }
+
+        public virtual void SendState(NetConnection client)
+        {
+            /// This is empty because so far the only things that need it are items.
+        }
         #endregion
 
         #region updating

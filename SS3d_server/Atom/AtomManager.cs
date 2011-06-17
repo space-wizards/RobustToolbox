@@ -122,6 +122,14 @@ namespace SS3d_server.Atom
             {
                 SendSpawnAtom(atom.uid, AtomName(atom), client);
             }
+
+            ///Tell each atom to do its post-instantiation shit. Theoretically, this should all occur after each atom has
+            ///been spawned and instantiated on the clientside. Network traffic wise this might be weird
+            ///
+            foreach (Atom atom in atomDictionary.Values)
+            {
+                atom.SendState(client);
+            }
         }
 
         public string AtomName(object atom)

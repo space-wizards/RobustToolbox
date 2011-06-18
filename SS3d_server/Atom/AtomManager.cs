@@ -5,6 +5,7 @@ using System.Text;
 using System.Reflection;
 
 using SS3D_shared;
+using SS3D_shared.HelperClasses;
 using SS3d_server.Modules.Map;
 using Lidgren.Network;
 
@@ -152,6 +153,13 @@ namespace SS3d_server.Atom
 
             SendSpawnAtom(uid, type);
             return atomDictionary[uid]; // Why do we return it? So we can do whatever is needed easily from the calling function.
+        }
+
+        public Atom SpawnAtom(string type, Vector3 position)
+        {
+            Atom spawned = SpawnAtom(type);
+            spawned.MoveTo(position);
+            return spawned;
         }
         #endregion
 

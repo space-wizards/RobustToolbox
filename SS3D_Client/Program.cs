@@ -201,9 +201,9 @@ namespace SS3D
 
     bool ProcessKeyPress(KeyEvent evt)
     {
-        if (evt.key == MOIS.KeyCode.KC_ESCAPE)
+        /*if (evt.key == MOIS.KeyCode.KC_ESCAPE)
             mEngine.Window.Destroy();
-
+        */
         if (evt.key == MOIS.KeyCode.KC_F12)
             GameConsole.Singleton.Visible = !GameConsole.Singleton.Visible;
 

@@ -373,13 +373,7 @@ namespace SS3D.States
 
         void chatTextbox_TextSubmitted(Chatbox chatbox, string text)
         {
-            if (text == "/crowbar")
-            {
-                /*Mogre.Vector3 pos = mobManager.myMob.Node.Position;
-                pos.y += 40;
-                itemManager.SendCreateItem(pos);*/
-            }
-            else if (text == "/dumpmap")
+            if (text == "/dumpmap")
             {
                /* if(map != null && itemManager != null)
                     MapFileHandler.SaveMap("./Maps/mapdump.map", map, itemManager);*/
@@ -400,28 +394,6 @@ namespace SS3D.States
             {
                 return;
             }
-            /*if(keyState.IsKeyDown(MOIS.KeyCode.KC_W))
-            {
-                mobManager.MoveMe(1);
-                mobManager.Animate("walk");
-            }
-            if(keyState.IsKeyDown(MOIS.KeyCode.KC_D))
-            {
-                mobManager.MoveMe(2);
-            }
-            if (keyState.IsKeyDown(MOIS.KeyCode.KC_A))
-            {
-                mobManager.MoveMe(3);
-            }
-            if (keyState.IsKeyDown(MOIS.KeyCode.KC_S))
-            {
-                mobManager.MoveMe(4);
-                mobManager.Animate("walk");
-            }
-            if (!keyState.IsKeyDown(MOIS.KeyCode.KC_W) && !keyState.IsKeyDown(MOIS.KeyCode.KC_S))
-            {
-                mobManager.Animate("idle");
-            }*/
         }
 
         public override void KeyDown(MOIS.KeyEvent keyState)
@@ -432,14 +404,14 @@ namespace SS3D.States
                     gameChat.SetInputFocus(false);
                 return;
             }
+
+            if (keyState.key == MOIS.KeyCode.KC_ESCAPE)
+                mStateMgr.RequestStateChange(typeof(MainMenu));
+
             // Pass keydown events to the PlayerController
             playerController.KeyDown(keyState.key);
 
-            /*if (keyState.key == MOIS.KeyCode.KC_LSHIFT)
-            {
-                mobManager.myMob.speed = mobManager.myMob.runSpeed;
-            }
-
+            /*
             if (keyState.key == MOIS.KeyCode.KC_1)
             {
                 guiGameScreen.GetControl("leftHandButton").Focused = true;
@@ -451,10 +423,6 @@ namespace SS3D.States
                 guiGameScreen.GetControl("leftHandButton").Focused = false;
                 guiGameScreen.GetControl("rightHandButton").Focused = true;
                 mobManager.myMob.selectedHand = MobHand.RHand;
-            }
-            else if (keyState.key == MOIS.KeyCode.KC_Q)
-            {
-                itemManager.DropItem(mobManager.myMob.selectedHand);
             }
             else if (keyState.key == MOIS.KeyCode.KC_SPACE)
             {
@@ -481,10 +449,6 @@ namespace SS3D.States
             {
                 return;
             }
-            /*if (keyState.key == MOIS.KeyCode.KC_LSHIFT)
-            {
-                mobManager.myMob.speed = mobManager.myMob.walkSpeed;
-            }*/
             else if (keyState.key == MOIS.KeyCode.KC_T)
             {
                 gameChat.SetInputFocus();

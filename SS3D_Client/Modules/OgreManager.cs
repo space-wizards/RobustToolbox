@@ -201,6 +201,15 @@ namespace SS3D.Modules
         mStateMgr.Update(0);
     }
 
+      /// <summary>
+      /// Simpler updater to be used while shutting down. This avoids recursion loops with the state manager 
+      /// when it changes states.
+      /// </summary>
+    public void RenderUpdate()
+    {
+        Update();
+    }
+
     internal void Update()
     {
         // check if ogre manager is initialized

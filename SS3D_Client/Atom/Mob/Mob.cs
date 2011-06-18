@@ -52,6 +52,9 @@ namespace SS3D.Atom.Mob
 
             keyHandlers.Add(MOIS.KeyCode.KC_F, new KeyEvent(HandleKC_F));
             keyHandlers.Add(MOIS.KeyCode.KC_Q, new KeyEvent(HandleKC_Q));
+            keyHandlers.Add(MOIS.KeyCode.KC_LSHIFT, new KeyEvent(HandleKC_SHIFT));
+            keyHandlers.Add(MOIS.KeyCode.KC_RSHIFT, new KeyEvent(HandleKC_SHIFT));
+            
         }
 
         public virtual void SetAnimationState(string state)
@@ -136,6 +139,14 @@ namespace SS3D.Atom.Mob
                 return;
             else
                 SendDropItem();
+        }
+
+        public virtual void HandleKC_SHIFT(bool state)
+        {
+            if (state == true)
+                speed = runSpeed;
+            else
+                speed = walkSpeed;
         }
 
         protected override void HandleExtendedMessage(NetIncomingMessage message)

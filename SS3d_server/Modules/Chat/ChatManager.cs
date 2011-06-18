@@ -53,6 +53,13 @@ namespace SS3d_server.Modules.Chat
             netServer.SendMessageToAll(message);
         }
 
+        /// <summary>
+        /// Processes commands (chat messages starting with /)
+        /// </summary>
+        /// <param name="text">chat text</param>
+        /// <param name="name">player name that sent the chat text</param>
+        /// <param name="channel">channel message was recieved on</param>
+        /// <param name="atomID">uid of the atom that sent the message. This will always be a player's attached atom</param>
         private void ProcessCommand(string text, string name, ushort channel, ushort atomID)
         {
             List<string> args = new List<string>();
@@ -61,8 +68,27 @@ namespace SS3d_server.Modules.Chat
 
             string command = args[0];
 
+            Vector3 position;
+            Atom.Atom player;
+
             switch (command)
             {
+                case "crowbar":
+                    player = netServer.atomManager.GetAtom(atomID);
+                    if (player == null)
+                        position = new Vector3(0, 0, 0);
+                    else
+                        position = player.position;
+                    netServer.atomManager.SpawnAtom("Atom.Item.Tool.Crowbar", position);                   
+                    break;
+                case "toolbox":
+                    player = netServer.atomManager.GetAtom(atomID);
+                    if (player == null)
+                        position = new Vector3(0, 0, 0);
+                    else
+                        position = player.position;
+                    netServer.atomManager.SpawnAtom("Atom.Item.Container.Toolbox", position);  
+                    break;
                 default:
                     string message = "Command '" + command + "' not recognized.";
                     SendChatMessage(channel, message, name, atomID);
@@ -70,6 +96,11 @@ namespace SS3d_server.Modules.Chat
             }
         }
 
+        /// <summary>
+        /// Command parsing func
+        /// </summary>
+        /// <param name="text">full input string</param>
+        /// <param name="args">List of arguments, including the command as #0</param>
         private void ParseArguments(string text, List<string> args)
         {
             string buf = "";

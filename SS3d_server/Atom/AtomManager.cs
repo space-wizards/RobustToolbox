@@ -168,13 +168,14 @@ namespace SS3d_server.Atom
         public void DeleteAtom(ushort uid)
         {
             // Delete the atom and send a delete atom message
-            atomDictionary.Remove(uid);
-            SendDeleteAtom(uid);
+            DeleteAtom(atomDictionary[uid]);
         }
 
         public void DeleteAtom(Atom atom)
         {
-            DeleteAtom(atom.uid);
+            atomDictionary.Remove(atom.uid);
+            atom.Destruct();
+            SendDeleteAtom(atom.uid);
         }
 
         public Atom GetAtom(ushort uid)

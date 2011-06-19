@@ -52,6 +52,14 @@ namespace SS3d_server.Atom
         {
             /// This is empty because so far the only things that need it are items.
         }
+
+        /// <summary>
+        /// Used to cleanly destroy an atom.
+        /// </summary>
+        public virtual void Destruct()
+        {
+
+        }
         #endregion
 
         #region updating

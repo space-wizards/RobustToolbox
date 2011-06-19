@@ -23,6 +23,13 @@ namespace SS3d_server.Atom.Mob
             initAppendages();
         }
 
+        public override void Destruct()
+        {
+            base.Destruct();
+
+            DropAllItems();
+        }
+
         /// <summary>
         /// Initializes appendage dictionary
         /// </summary>

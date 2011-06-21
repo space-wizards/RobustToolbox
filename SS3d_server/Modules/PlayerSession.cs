@@ -93,6 +93,7 @@ namespace SS3d_server.Modules
             if (attachedAtom != null)
             {
                 attachedAtom.attachedClient = null;
+                attachedAtom.Die();
                 attachedAtom = null;
             }
         }

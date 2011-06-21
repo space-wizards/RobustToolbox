@@ -134,6 +134,7 @@ namespace SS3d_server.Atom.Item
         /// </summary>
         public virtual void Dropped()
         {
+            Vector3 droppedposition = holdingAppendage.owner.position;
             holdingAppendage.heldItem = null;
             holdingAppendage = null;
 
@@ -141,6 +142,8 @@ namespace SS3d_server.Atom.Item
             outmessage.Write((byte)AtomMessage.Extended);
             outmessage.Write((byte)ItemMessage.Detach);
             atomManager.netServer.SendMessageToAll(outmessage);
+
+            MoveTo(droppedposition);
         }
 
         public override void Push()

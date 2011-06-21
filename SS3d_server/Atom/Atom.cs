@@ -24,6 +24,7 @@ namespace SS3d_server.Atom
 
         public int maxHealth = 100;
         public int currentHealth = 100; // By default health is 100
+        public bool isDead = false;
         
 
         public List<InterpolationPacket> interpolationPacket;
@@ -147,6 +148,11 @@ namespace SS3d_server.Atom
             atomManager.netServer.SendMessageToAll(message, method);
         }
 
+        protected void SendMessageTo(NetOutgoingMessage message, NetConnection client , NetDeliveryMethod method = NetDeliveryMethod.ReliableOrdered)
+        {
+            atomManager.netServer.SendMessageTo(message, client, method);
+        }
+
         public virtual void HandlePositionUpdate(NetIncomingMessage message)
         {
             /* This will be largely unused by the server, as the client shouldn't 
@@ -250,8 +256,14 @@ namespace SS3d_server.Atom
         public bool IsDead()
         {
             if (currentHealth <= 0)
-                return true;
-            return false;
+                isDead = true;
+            
+            return isDead;
+        }
+
+        public virtual void Die()
+        {
+            isDead = true;
         }
         #endregion
     }

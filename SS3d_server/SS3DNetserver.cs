@@ -514,14 +514,14 @@ namespace SS3d_server
             }
         }
 
-        public void SendMessageTo(NetOutgoingMessage message, NetConnection connection)
+        public void SendMessageTo(NetOutgoingMessage message, NetConnection connection, NetDeliveryMethod method = NetDeliveryMethod.ReliableOrdered)
         {
             if (message == null || connection == null)
             {
                 return;
             }
             Console.WriteLine("Sending to one with size: " + message.LengthBytes + " bytes");
-            netServer.SendMessage(message, connection, NetDeliveryMethod.ReliableOrdered);
+            netServer.SendMessage(message, connection, method);
         }
 
         /*

@@ -55,7 +55,7 @@ namespace SS3d_server.Modules
             //Detach the atom and delete it.
             var a = session.attachedAtom;
             session.DetachFromAtom();
-            netServer.atomManager.DeleteAtom(a);
+            //netServer.atomManager.DeleteAtom(a);
         }
     }
 }

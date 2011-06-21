@@ -251,6 +251,7 @@ namespace SS3D.States
             //mobManager.Shutdown();
             //mobManager = null;
             mEngine.mNetworkMgr.Disconnect();
+            mEngine.mNetworkMgr.MessageArrived -= new NetworkMsgHandler(mNetworkMgr_MessageArrived);
         }
 
         public override void Update(long _frameTime)

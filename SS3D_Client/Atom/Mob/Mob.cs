@@ -255,6 +255,7 @@ namespace SS3D.Atom.Mob
             DisableAllAnimationStates();
             AnimState deathstate = animStates["death"];
             deathstate.final = true;
+            deathstate.tempdisabled = false;
             deathstate.Enable();
             deathstate.LoopOff();
         }

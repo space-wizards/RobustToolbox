@@ -38,6 +38,8 @@ namespace SS3d_server.Atom.Mob
             appendages = new Dictionary<string,Appendage>();
             appendages.Add("LeftHand", new HelperClasses.Appendage("LeftHand", this));
             appendages.Add("RightHand", new HelperClasses.Appendage("RightHand", this));
+            appendages["LeftHand"].attackAnimation = "lattack";
+            appendages["RightHand"].attackAnimation = "rattack";
             selectedAppendage = appendages["LeftHand"];
         }
 
@@ -103,6 +105,15 @@ namespace SS3d_server.Atom.Mob
                 if (a.heldItem != null)
                     a.heldItem.Dropped();
             }
+        }
+
+        public virtual void AnimateOnce(string animation)
+        {
+            NetOutgoingMessage outmessage = CreateAtomMessage();
+            outmessage.Write((byte)AtomMessage.Extended);
+            outmessage.Write((byte)MobMessage.AnimateOnce);
+            outmessage.Write(animation);
+            SendMessageToAll(outmessage);
         }
 
         public virtual void Die()

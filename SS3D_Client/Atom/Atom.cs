@@ -85,7 +85,7 @@ namespace SS3D.Atom
             Draw();
         }
 
-        public void Draw()
+        public virtual void Draw()
         {
             // Draw the atom into the scene. This should be called after instantiation.
             name = "Atom" + uid;

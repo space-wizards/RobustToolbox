@@ -120,6 +120,7 @@ namespace SS3d_server.Atom.Mob
         {
             DropAllItems();
             SendDeathMessage();
+            //AnimateOnce("death");
         }
 
         public virtual void SendDeathMessage()

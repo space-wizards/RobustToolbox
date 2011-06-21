@@ -30,6 +30,14 @@ namespace SS3d_server.Atom.Mob
             DropAllItems();
         }
 
+        public override void SendState(NetConnection client)
+        {
+            base.SendState(client);
+
+            if (IsDead())
+                SendDeathMessage(client);
+        }
+
         /// <summary>
         /// Initializes appendage dictionary
         /// </summary>
@@ -116,8 +124,10 @@ namespace SS3d_server.Atom.Mob
             SendMessageToAll(outmessage);
         }
 
-        public virtual void Die()
+        public override void Die()
         {
+            base.Die();
+
             DropAllItems();
             SendDeathMessage();
             //AnimateOnce("death");
@@ -128,7 +138,15 @@ namespace SS3d_server.Atom.Mob
             NetOutgoingMessage msg = CreateAtomMessage();
             msg.Write((byte)AtomMessage.Extended);
             msg.Write((byte)MobMessage.Death);
-            SendMessageToAll(msg, NetDeliveryMethod.ReliableUnordered);
+            SendMessageToAll(msg, NetDeliveryMethod.ReliableOrdered);
+        }
+        
+        public virtual void SendDeathMessage(NetConnection client)
+        {
+            NetOutgoingMessage msg = CreateAtomMessage();
+            msg.Write((byte)AtomMessage.Extended);
+            msg.Write((byte)MobMessage.Death);
+            SendMessageTo(msg, client, NetDeliveryMethod.ReliableOrdered);
         }
 
         public override void Damage(int amount)

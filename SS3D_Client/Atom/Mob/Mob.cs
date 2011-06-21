@@ -15,14 +15,17 @@ namespace SS3D.Atom.Mob
         public float walkSpeed = 1.0f;
         public float runSpeed = 2.0f;
 
+        public bool isDead = false;
+
         public Dictionary<string, HelperClasses.Appendage> appendages;
         public Appendage selectedAppendage;
 
         //Current animation state -- or at least the one we want to add some time to. This will need to become more robust.
         public AnimationState animState;
+        public AnimState currentAnimState;
 
         public Dictionary<string, AnimState> animStates;
-
+        
         public Mob()
             : base()
         {
@@ -41,9 +44,12 @@ namespace SS3D.Atom.Mob
         {
             base.SetUp(_uid, _atomManager);
 
-            animState = Entity.GetAnimationState("idle1");
+            currentAnimState = animStates["idle1"];
+            currentAnimState.Enable();
+            currentAnimState.LoopOn();
+            /*animState = Entity.GetAnimationState("idle1");
             animState.Loop = true;
-            animState.Enabled = true;
+            animState.Enabled = true;*/
 
             initAppendages();
         }
@@ -75,12 +81,12 @@ namespace SS3D.Atom.Mob
         {
             animStates = new Dictionary<string, AnimState>();
 
-            animStates.Add("death", new AnimState(Entity.GetAnimationState("death")));
-            animStates.Add("tpose", new AnimState(Entity.GetAnimationState("tpose")));
-            animStates.Add("walk1", new AnimState(Entity.GetAnimationState("walk1")));
-            animStates.Add("idle1", new AnimState(Entity.GetAnimationState("idle1")));
-            animStates.Add("rattack", new AnimState(Entity.GetAnimationState("rattack")));
-            animStates.Add("lattack", new AnimState(Entity.GetAnimationState("lattack")));
+            animStates.Add("death", new AnimState(Entity.GetAnimationState("death"), this));
+            animStates.Add("tpose", new AnimState(Entity.GetAnimationState("tpose"), this));
+            animStates.Add("walk1", new AnimState(Entity.GetAnimationState("walk1"), this));
+            animStates.Add("idle1", new AnimState(Entity.GetAnimationState("idle1"), this));
+            animStates.Add("rattack", new AnimState(Entity.GetAnimationState("rattack"), this));
+            animStates.Add("lattack", new AnimState(Entity.GetAnimationState("lattack"), this));
         }
 
         public virtual void SetAnimationState(string state)
@@ -92,17 +98,19 @@ namespace SS3D.Atom.Mob
         {
             //return;
             //Disable old animation state.
-            animState.Enabled = false;
+            currentAnimState.Disable();
+            currentAnimState.LoopOff();
+
             // TODO: error checking
             if (send)
                 SendAnimationState(state);
-            animState = Entity.GetAnimationState(state);
-            animState.Loop = true;
+            currentAnimState = animStates[state];
+            currentAnimState.LoopOn();
             if (state == "tpose")
-                animState.Loop = false;
-            animState.Enabled = true;
-            if (animState == null)
-                animState = Entity.GetAnimationState("idle1");
+                currentAnimState.LoopOff();
+            currentAnimState.Enable();
+            if (currentAnimState == null)
+                currentAnimState = animStates["idle1"];
         }
 
         protected virtual void SendAnimationState(string state)
@@ -127,7 +135,7 @@ namespace SS3D.Atom.Mob
 
             // Update Animation. Right now, anything animated will have to be updated in entirety every tick.
             TimeSpan t = atomManager.gameState.now - atomManager.gameState.lastUpdate; //LOL GOT IT BACKWRDS
-            animState.AddTime((float)t.TotalMilliseconds / 1000f);
+            //animState.AddTime((float)t.TotalMilliseconds / 1000f);
             var statestoupdate =
                 from astate in animStates
                 where astate.Value.enabled == true
@@ -140,30 +148,57 @@ namespace SS3D.Atom.Mob
             updateRequired = true;
         }
 
+        /// <summary>
+        /// Override to handle walk animations
+        /// </summary>
+        public override void UpdatePosition()
+        {
+            base.UpdatePosition();
+            if (isDead)
+                return;
+            AnimState walk = animStates["walk1"];
+            AnimState idle = animStates["idle1"];
+
+            if (interpolationPackets.Count == 0)
+            {
+                walk.Disable();
+                walk.LoopOff();
+                idle.Enable();
+                idle.LoopOn();
+            }
+            else
+            {
+                walk.Enable();
+                walk.LoopOn();
+                idle.Disable();
+                idle.LoopOff();
+            }
+        }
+
         public override void HandleKC_W(bool state)
         {
             base.HandleKC_W(state);
             if (state==true)
-                SetAnimationState("walk1", true);
+                SetAnimationState("walk1", false);
             else
-                SetAnimationState("idle1", true);
+                SetAnimationState("idle1", false);
         }
        
         public override void HandleKC_S(bool state)
         {
             base.HandleKC_S(state);
             if (state==true)
-                SetAnimationState("walk1", true);
+                SetAnimationState("walk1", false);
             else
-                SetAnimationState("idle1", true);
+                SetAnimationState("idle1", false);
         }
 
         public virtual void HandleKC_F(bool state)
         {
             if (state == true)
-                SetAnimationState("walk1", true);
+                SetAnimationState("walk1", false);
             else
-                SetAnimationState("idle1", true);
+                SetAnimationState("idle1", false);
         }
 
         public virtual void HandleKC_Q(bool state)
@@ -205,20 +240,55 @@ namespace SS3D.Atom.Mob
 
         private void HandleDeath()
         {
+            isDead = true;
             //Set death Animation
-            SetAnimationState("death", true);
+            //SetAnimationState("death", true);
+            DeathAnimation();
 
             //Clear key handlers
             keyHandlers.Clear();
             keyStates.Clear();
         }
 
+        private void DeathAnimation()
+        {
+            DisableAllAnimationStates();
+            AnimState deathstate = animStates["death"];
+            deathstate.final = true;
+            deathstate.Enable();
+            deathstate.LoopOff();
+        }
+
+        public void DisableAllAnimationStates()
+        {
+            var statestodisable =
+                from astate in animStates
+                where astate.Value.enabled == true
+                select astate.Value;
+
+            foreach (AnimState a in statestodisable)
+                a.Disable();
+        }
+
         public virtual void HandleAnimateOnce(NetIncomingMessage message)
         {
+            foreach (var s in animStates)
+            {
+                s.Value.tempdisabled = true;
+            }
             AnimState state = animStates[message.ReadString()];
 
             state.RunOnce();
         }
+
+        public virtual void AnimationComplete()
+        {
+            foreach (var s in animStates)
+            {
+                s.Value.tempdisabled = false;
+            }
+        }
+
 
         /// <summary>
         /// Sets selected appendage to what is contained in the message

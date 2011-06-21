@@ -11,26 +11,31 @@ namespace SS3D.Atom.Mob.HelperClasses
         private AnimationState animationState;
         public bool looping;
         public bool enabled;
+        public Mob parent;
         float length;
         float timeposition;
+        public bool tempdisabled;
+        public bool final;
 
-        public AnimState(AnimationState a)
+        public AnimState(AnimationState a, Mob _parent)
         {
             animationState = a;
             Disable();
             LoopOff();
             length = animationState.Length;
             timeposition = 0f;
+            parent = _parent;
         }
 
         public void Update(float time)
         {
-            if (!enabled)
+            if (!enabled || tempdisabled)
                 return;
-            if (!looping && animationState.HasEnded)
+            if (!looping && animationState.HasEnded && !final)
             {
                 animationState.TimePosition = 0;
                 Disable();
+                parent.AnimationComplete(); // Should really use events for this, but i'm too lazy to learn that at the moment.
                 return;
             }
 
@@ -41,6 +46,7 @@ namespace SS3D.Atom.Mob.HelperClasses
         {
             Enable();
             LoopOff();
+            tempdisabled = false;
         }
 
         public void Enable()

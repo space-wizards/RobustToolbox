@@ -153,12 +153,12 @@ namespace SS3D.Atom
             if (attached && forceUpdate == false)
                 return;
 
-            //Add an interpolation packet to the end of the list. If the list is more than 10 long, delete a packet.
+            //Add an interpolation packet to the end of the list. If the list is more than 5 long, delete a packet.
             //TODO: For the Player class, override this function to do some sort of intelligent checking on the interpolation packets 
             // recieved to make sure they don't greatly disagree with the client's own data.
             interpolationPackets.Add(intPacket);
 
-            if (interpolationPackets.Count > 10)
+            if (interpolationPackets.Count > 5)
             {
                 interpolationPackets.RemoveAt(0);
             }
@@ -266,6 +266,7 @@ namespace SS3D.Atom
         public virtual void UpdatePosition()
         {
             Mogre.Vector3 difference;
+            Mogre.Vector3 fulldifference;
             float rotW, rotY;
 
             if (interpolationPackets.Count == 0)
@@ -273,11 +274,17 @@ namespace SS3D.Atom
                 updateRequired = false;
                 return;
             }
-            difference = interpolationPackets[0].position - position;
-            
+            InterpolationPacket i = interpolationPackets[0];
+
+            if (i.startposition.x == 1234 && i.startposition.y == 1234) //This is silly, but vectors are non-nullable, so I can't do what I'd rather.
+                i.startposition = position;
+
+            difference = i.position - position;
+            fulldifference = i.position - i.startposition;
+
             // Set rotation. The packet may be rotation only.
-            rotW = interpolationPackets[0].rotW;
-            rotY = interpolationPackets[0].rotY;
+            rotW = i.rotW;
+            rotY = i.rotY;
             Node.SetOrientation(rotW, 0, rotY, 0);
 
             //Check interpolation packet to see if we're close enough to the interpolation packet on the top of the stack.
@@ -292,9 +299,10 @@ namespace SS3D.Atom
 
                 //This constant should be time interval based.
                 //TODO: Make this better if it isn't good enough.
-                difference /= 5;
+                difference /= 5; //Position updates were lagging. This would probably be faster on a better system.
+                //difference = fulldifference / 3;
                 position += difference;
-                Node.Position = position + offset; ;
+                Node.Position = position + offset;
                 updateRequired = true; // This interpolation packet and probably the ones after it are still useful, so we'll update again on the next cycle.
             }
 

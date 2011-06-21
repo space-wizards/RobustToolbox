@@ -59,6 +59,13 @@ namespace SS3d_server.Atom.Item
             }
         }
 
+        /// <summary>
+        /// This is a method to apply an action to another atom. This may be confusing, but bear with me. The idea is
+        /// to allow either the source or the target atom to execute actions. This code allows the target atom to execute code
+        /// based on what has been used on it.
+        /// </summary>
+        /// <param name="a">The atom that has been used on this one.</param>
+        /// <param name="m">The mob that has used atom a on this one.</param>
         protected override void ApplyAction(Atom a, Mob.Mob m)
         {
             if (a == null && holdingAppendage == null) //If mob's not holding an item and this item is not being held
@@ -67,6 +74,27 @@ namespace SS3d_server.Atom.Item
                 base.ApplyAction(a, m);
 
             //Otherwise do nothing.             
+        }
+
+        /// <summary>
+        /// Bigtime method to apply actions. The reason this functionality is duplicated with ApplyActions is
+        /// that when I write a new item, I don't want to write the code in two places. If I want to make a new atom and
+        /// allow it to be affected by other atoms, I can write those actions just in that atom. If I want to write a new 
+        /// item and allow it to affect other atoms, I can write that in that item and not everywhere else. 
+        /// -spooge
+        /// </summary>
+        /// <param name="target">The atom that this one has been used on.</param>
+        protected override void UsedOn(Atom target)
+        {
+            switch (target.GetType().ToString())
+            {
+                default:
+                    //By default, Atoms will do damage.
+                    target.Damage(damageAmount);
+                    //Send attack animation (this is a retarded way of doing this really)
+                    holdingAppendage.AnimateAttack();
+                    break;
+            }
         }
 
         /// <summary>
@@ -113,25 +141,6 @@ namespace SS3d_server.Atom.Item
             outmessage.Write((byte)AtomMessage.Extended);
             outmessage.Write((byte)ItemMessage.Detach);
             atomManager.netServer.SendMessageToAll(outmessage);
-        }
-
-        /// <summary>
-        /// Bigtime method to apply actions. The reason this functionality is duplicated with ApplyActions is
-        /// that when I write a new item, I don't want to write the code in two places. If I want to make a new atom and
-        /// allow it to be affected by other atoms, I can write those actions just in that atom. If I want to write a new 
-        /// item and allow it to affect other atoms, I can write that in that item and not everywhere else. 
-        /// -spooge
-        /// </summary>
-        /// <param name="target"></param>
-        protected override void UsedOn(Atom target)
-        {
-            switch (target.GetType().ToString())
-            {
-                default:
-                    //By default, Atoms will do damage.
-                    target.Damage(damageAmount);
-                    break;
-            }
         }
 
         public override void Push()

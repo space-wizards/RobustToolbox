@@ -21,6 +21,8 @@ namespace SS3D.Atom.Mob
         //Current animation state -- or at least the one we want to add some time to. This will need to become more robust.
         public AnimationState animState;
 
+        public Dictionary<string, AnimState> animStates;
+
         public Mob()
             : base()
         {
@@ -44,7 +46,17 @@ namespace SS3D.Atom.Mob
             animState.Enabled = true;
 
             initAppendages();
-        }        
+        }
+
+        /// <summary>
+        /// Base atoms dont have animations, fuckface
+        /// </summary>
+        public override void Draw()
+        {
+            base.Draw();
+
+            InitAnimations();
+        }
 
         public override void initKeys()
         {
@@ -55,6 +67,20 @@ namespace SS3D.Atom.Mob
             keyHandlers.Add(MOIS.KeyCode.KC_LSHIFT, new KeyEvent(HandleKC_SHIFT));
             keyHandlers.Add(MOIS.KeyCode.KC_RSHIFT, new KeyEvent(HandleKC_SHIFT));
             
+        }
+        /// <summary>
+        /// Initialize dictionary of animations. Also cocks.
+        /// </summary>
+        public virtual void InitAnimations()
+        {
+            animStates = new Dictionary<string, AnimState>();
+
+            animStates.Add("death", new AnimState(Entity.GetAnimationState("death")));
+            animStates.Add("tpose", new AnimState(Entity.GetAnimationState("tpose")));
+            animStates.Add("walk1", new AnimState(Entity.GetAnimationState("walk1")));
+            animStates.Add("idle1", new AnimState(Entity.GetAnimationState("idle1")));
+            animStates.Add("rattack", new AnimState(Entity.GetAnimationState("rattack")));
+            animStates.Add("lattack", new AnimState(Entity.GetAnimationState("lattack")));
         }
 
         public virtual void SetAnimationState(string state)
@@ -100,8 +126,15 @@ namespace SS3D.Atom.Mob
             base.Update();
 
             // Update Animation. Right now, anything animated will have to be updated in entirety every tick.
-            TimeSpan t = atomManager.gameState.lastUpdate - atomManager.gameState.now;
+            TimeSpan t = atomManager.gameState.now - atomManager.gameState.lastUpdate; //LOL GOT IT BACKWRDS
             animState.AddTime((float)t.TotalMilliseconds / 1000f);
+            var statestoupdate =
+                from astate in animStates
+                where astate.Value.enabled == true
+                select astate.Value;
+
+            foreach (AnimState a in statestoupdate)
+                a.Update((float)t.TotalMilliseconds / 1000f);
 
             //Update every tick
             updateRequired = true;
@@ -163,6 +196,9 @@ namespace SS3D.Atom.Mob
                 case MobMessage.Death:
                     HandleDeath();
                     break;
+                case MobMessage.AnimateOnce:
+                    HandleAnimateOnce(message);
+                    break;
                 default: break;
             }
         }
@@ -170,11 +206,18 @@ namespace SS3D.Atom.Mob
         private void HandleDeath()
         {
             //Set death Animation
-            SetAnimationState("tpose", true);
+            SetAnimationState("death", true);
 
             //Clear key handlers
             keyHandlers.Clear();
             keyStates.Clear();
+        }
+
+        public virtual void HandleAnimateOnce(NetIncomingMessage message)
+        {
+            AnimState state = animStates[message.ReadString()];
+
+            state.RunOnce();
         }
 
         /// <summary>

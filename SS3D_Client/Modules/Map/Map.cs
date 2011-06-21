@@ -109,7 +109,7 @@ namespace SS3D.Modules.Map
 
             loadingText = "Building Map...";
             loadingPercent = 0;
-            mEngine.OneUpdate();
+            mEngine.RenderUpdate();
 
             float maxElements = (mapHeight * mapWidth);
             float oneElement = 100f / maxElements;
@@ -155,7 +155,7 @@ namespace SS3D.Modules.Map
                     {
                         loadingPercent += maxElements > 100 ? 1 : oneElement;
                         currCount = 0;
-                        mEngine.OneUpdate();
+                        mEngine.RenderUpdate();
                     }
 
                 }
@@ -168,7 +168,7 @@ namespace SS3D.Modules.Map
             }
             loadingText = "Map Created";
             loadingPercent = 0;
-            mEngine.OneUpdate();
+            mEngine.RenderUpdate();
             return true;
         }
 
@@ -220,7 +220,7 @@ namespace SS3D.Modules.Map
                 {
                     loadingPercent += maxElements > 100 ? 1 : oneElement; //Setting the value of the inherited class.
                     currCount = 0;                                        //If more than 100 elements total inc by 1, else by the value of one element
-                    mEngine.OneUpdate();//Update Engine & Render          //This allows the progress bar to move at bigger steps than 1% if needed.
+                    mEngine.RenderUpdate();//Update Engine & Render          //This allows the progress bar to move at bigger steps than 1% if needed.
                 }
 
             }
@@ -231,7 +231,7 @@ namespace SS3D.Modules.Map
             currCount = 0;
 
             loadingText = "Loading Space...";
-            mEngine.OneUpdate();
+            mEngine.RenderUpdate();
 
             for (int x = 0; x < mapWidth; x++)
             {
@@ -250,13 +250,13 @@ namespace SS3D.Modules.Map
                     {
                         loadingPercent += maxElements > 100 ? 1 : oneElement;
                         currCount = 0;
-                        mEngine.OneUpdate();
+                        mEngine.RenderUpdate();
                     }
                 }
             }
 
             BuildAllgeometry();
-            mEngine.OneUpdate();
+            mEngine.RenderUpdate();
 
             loadingText = "Map loaded";
             loadingPercent = 0;
@@ -320,7 +320,7 @@ namespace SS3D.Modules.Map
 
             loadingText = "Building Map...";
             loadingPercent = 0;
-            mEngine.OneUpdate();
+            mEngine.RenderUpdate();
 
             float maxElements = (mapHeight * mapWidth);
             float oneElement = 100f / maxElements;
@@ -358,7 +358,7 @@ namespace SS3D.Modules.Map
                     {
                         loadingPercent += maxElements > 100 ? 1 : oneElement;
                         currCount = 0;
-                        mEngine.OneUpdate();
+                        mEngine.RenderUpdate();
                     }
                 }
             }
@@ -368,7 +368,7 @@ namespace SS3D.Modules.Map
             {
                 loadingText = "Initializing Static Geometry...";
                 loadingPercent = 0;
-                mEngine.OneUpdate();
+                mEngine.RenderUpdate();
 
                 maxElements = (mapHeight * mapWidth);
                 oneElement = 100f / maxElements;
@@ -399,7 +399,7 @@ namespace SS3D.Modules.Map
                         {
                             loadingPercent += maxElements > 100 ? 1 : oneElement;
                             currCount = 0;
-                            mEngine.OneUpdate();
+                            mEngine.RenderUpdate();
                         }
                     }
                 }

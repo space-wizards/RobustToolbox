@@ -158,7 +158,7 @@ namespace SS3d_server.Atom
         public Atom SpawnAtom(string type, Vector3 position)
         {
             Atom spawned = SpawnAtom(type);
-            spawned.MoveTo(position);
+            spawned.Translate(position);
             return spawned;
         }
         #endregion

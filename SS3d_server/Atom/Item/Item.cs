@@ -39,11 +39,11 @@ namespace SS3d_server.Atom.Item
             {
                 if (heightAboveTile > fallSpeed)
                 {
-                    MoveTo(position - new Vector3(0, fallSpeed, 0));
+                    Translate(position - new Vector3(0, fallSpeed, 0));
                 }
                 else
                 {
-                    MoveTo(position - new Vector3(0,heightAboveTile,0));
+                    Translate(position - new Vector3(0,heightAboveTile,0));
                 }
                 updateRequired = true;
             }
@@ -135,6 +135,8 @@ namespace SS3d_server.Atom.Item
         public virtual void Dropped()
         {
             Vector3 droppedposition = holdingAppendage.owner.position;
+            float droppedrotW = holdingAppendage.owner.rotW;
+            float droppedrotY = holdingAppendage.owner.rotY;
             holdingAppendage.heldItem = null;
             holdingAppendage = null;
 
@@ -143,7 +145,7 @@ namespace SS3d_server.Atom.Item
             outmessage.Write((byte)ItemMessage.Detach);
             atomManager.netServer.SendMessageToAll(outmessage);
 
-            MoveTo(droppedposition);
+            Translate(droppedposition, droppedrotW, droppedrotY);
         }
 
         public override void Push()

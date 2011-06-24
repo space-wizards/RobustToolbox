@@ -175,11 +175,35 @@ namespace SS3d_server.Atom
             // Discard the rest.
         }
 
-        public virtual void MoveTo(Vector3 newPosition)
+
+        // For movement only
+        public virtual void Translate(Vector3 newPosition)
         {
             position.X = newPosition.X;
             position.Y = newPosition.Y;
             position.Z = newPosition.Z;
+
+            SendInterpolationPacket(false);
+        }
+
+        // For rotation only
+        public virtual void Translate(float W, float Y)
+        {
+            rotW = W;
+            rotY = Y;
+
+            SendInterpolationPacket(false);
+        }
+
+        // For both movement and rotation
+        public virtual void Translate(Vector3 newPosition, float W, float Y)
+        {
+            position.X = newPosition.X;
+            position.Y = newPosition.Y;
+            position.Z = newPosition.Z;
+
+            rotW = W;
+            rotY = Y;
 
             SendInterpolationPacket(false);
         }

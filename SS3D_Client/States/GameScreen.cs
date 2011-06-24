@@ -88,7 +88,7 @@ namespace SS3D.States
             mEngine.mNetworkMgr.RequestMap();
 
             //TODO This should go somewhere else, there should be explicit session setup and teardown at some point.
-            mEngine.mNetworkMgr.SendClientName(PlayerVars.PlayerName);
+            mEngine.mNetworkMgr.SendClientName(ConfigManager.Singleton.Configuration.PlayerName);
                                 
             return true;
         }

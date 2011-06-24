@@ -144,14 +144,23 @@ namespace SS3D.States
             },
             Skin = MiyagiResources.Singleton.Skins["TextBoxSkin"]
         };
-        nameTextbox.TextChanged += new EventHandler<TextEventArgs>(nameTextbox_TextChanged);
+        nameTextbox.Text = ConfigManager.Singleton.Configuration.PlayerName;
+        nameTextbox.Submit += new EventHandler<ValueEventArgs<string>>(nameTextbox_Submit);
+        nameTextbox.LostFocus += new EventHandler(nameTextbox_LostFocus);
         guiConnectMenu.Controls.Add(nameTextbox);
 
     }
 
-    void nameTextbox_TextChanged(object sender, TextEventArgs e)
+    void nameTextbox_LostFocus(object sender, EventArgs e)
     {
-        PlayerVars.PlayerName = ((TextBox)sender).Text;
+        ConfigManager.Singleton.Configuration.PlayerName = ((TextBox)sender).Text;
+        ConfigManager.Singleton.Save();
+    }
+
+    void nameTextbox_Submit(object sender, ValueEventArgs<string> e)
+    {
+        ConfigManager.Singleton.Configuration.PlayerName = ((TextBox)sender).Text;
+        ConfigManager.Singleton.Save();
     }
 
     private void ipTextBoxChanged(object sender, Miyagi.Common.Events.TextEventArgs e)

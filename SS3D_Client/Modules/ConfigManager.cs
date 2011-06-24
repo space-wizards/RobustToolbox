@@ -171,5 +171,7 @@ namespace SS3D.Modules
         public string MiyagiTrueTypeFonts = "";
         public string MiyagiImageFonts = "";
         public List<string> MiyagiSkins = new List<string>();
+
+        public string PlayerName = "George Melons";
     }
 }

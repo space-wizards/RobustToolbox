@@ -262,7 +262,6 @@ namespace SS3d_server
             {
                 Console.WriteLine(senderIP + ": Disconnected");
 
-                //mobManager.DeletePlayer(sender);
                 playerManager.EndSession(sender);
 
                 if (clientList.ContainsKey(sender))
@@ -276,10 +275,6 @@ namespace SS3d_server
         public void HandleData(NetIncomingMessage msg)
         {
             NetMessage messageType = (NetMessage)msg.ReadByte();
-            /*if (messageType != NetMessage.MobMessage)
-            {
-                //Console.WriteLine(msg.SenderConnection.RemoteEndpoint.Address.ToString() + ": " + messageType.ToString());
-            }*/
             switch (messageType)
             {
                 case NetMessage.WelcomeMessage:
@@ -296,12 +291,6 @@ namespace SS3d_server
                     break;
                 case NetMessage.ClientName:
                     HandleClientName(msg);
-                    break;
-                case NetMessage.ItemMessage:
-                    //itemManager.HandleNetMessage(msg);
-                    break;
-                case NetMessage.MobMessage:
-                    //mobManager.HandleNetMessage(msg);
                     break;
                 case NetMessage.ChatMessage:
                     chatManager.HandleNetMessage(msg);
@@ -374,10 +363,9 @@ namespace SS3d_server
             Console.WriteLine(connection.RemoteEndpoint.Address.ToString() + ": Sending map finished with message size: " + mapMessage.LengthBytes + " bytes");
 
             // Lets also send them all the items and mobs.
-            //mobManager.NewPlayer(connection);
-            //itemManager.NewPlayer(connection);
             atomManager.NewPlayer(connection);
             playerManager.NewSession(connection); // TODO move this to somewhere that makes more sense.
+            //Todo: Preempt this with the lobby.
         }
 
         public void HandleChangeTile(NetIncomingMessage msg)

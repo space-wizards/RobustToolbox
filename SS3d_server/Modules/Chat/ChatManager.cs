@@ -23,22 +23,23 @@ namespace SS3d_server.Modules.Chat
         public void HandleNetMessage(NetIncomingMessage message)
         {
             //Read the chat message and pass it on
-            ushort channel = message.ReadUInt16();
+            ChatChannel channel = (ChatChannel)message.ReadByte();
             string text = message.ReadString();
             string name = netServer.clientList[message.SenderConnection].playerName;
-            //ushort mobID = netServer.clientList[message.SenderConnection].mobID;
-            ushort atomID = netServer.playerManager.GetSessionByConnection(message.SenderConnection).attachedAtom.uid;
-            if (atomID == null)
-                atomID = 0;
+            Console.Write("CHAT- Channel " + channel.ToString() +  " - Player " + name + "Message: " + text + "\n");
+
+            ushort atomID = 0;
+            if(netServer.playerManager.GetSessionByConnection(message.SenderConnection).attachedAtom != null)
+                atomID = netServer.playerManager.GetSessionByConnection(message.SenderConnection).attachedAtom.uid;
 
             text = text.Trim(); // Remove whitespace
             if (text[0] == '/')
-                ProcessCommand(text, name, channel, atomID);
+                ProcessCommand(text, name, channel, atomID, message.SenderConnection);
             else
                 SendChatMessage(channel, text, name, atomID);
         }
 
-        public void SendChatMessage(ushort channel, string text, string name, ushort atomID)
+        public void SendChatMessage(ChatChannel channel, string text, string name, ushort atomID)
         {
             string fullmsg = name + ": " + text;
 
@@ -46,7 +47,7 @@ namespace SS3d_server.Modules.Chat
             NetOutgoingMessage message = netServer.netServer.CreateMessage();
 
             message.Write((byte)NetMessage.ChatMessage);
-            message.Write(channel);
+            message.Write((byte)channel);
             message.Write(fullmsg);
             message.Write(atomID);
 
@@ -60,7 +61,7 @@ namespace SS3d_server.Modules.Chat
         /// <param name="name">player name that sent the chat text</param>
         /// <param name="channel">channel message was recieved on</param>
         /// <param name="atomID">uid of the atom that sent the message. This will always be a player's attached atom</param>
-        private void ProcessCommand(string text, string name, ushort channel, ushort atomID)
+        private void ProcessCommand(string text, string name, ChatChannel channel, ushort atomID, NetConnection client)
         {
             List<string> args = new List<string>();
 
@@ -88,6 +89,10 @@ namespace SS3d_server.Modules.Chat
                     else
                         position = player.position;
                     netServer.atomManager.SpawnAtom("Atom.Item.Container.Toolbox", position);  
+                    break;
+                case "joingame":
+                    PlayerSession s = netServer.playerManager.GetSessionByConnection(client);
+                    s.JoinGame();
                     break;
                 default:
                     string message = "Command '" + command + "' not recognized.";

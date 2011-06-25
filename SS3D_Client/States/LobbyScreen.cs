@@ -2,6 +2,14 @@
 
 using Mogre;
 using Lidgren.Network;
+using Miyagi;
+using Miyagi.UI;
+using Miyagi.UI.Controls;
+using Miyagi.Common;
+using Miyagi.Common.Data;
+using Miyagi.Common.Resources;
+using Miyagi.Common.Events;
+using Miyagi.TwoD;
 
 using SS3D.Modules;
 using SS3D.Modules.Map;
@@ -20,6 +28,7 @@ namespace SS3D.States
         private StateManager mStateMgr;
         private int serverMaxPlayers;
         private Chatbox lobbyChat;
+        private GUI guiBackground;
 
         public LobbyScreen()
         {
@@ -33,19 +42,56 @@ namespace SS3D.States
 
             mEngine.mNetworkMgr.MessageArrived += new NetworkMsgHandler(mNetworkMgr_MessageArrived);
 
-            lobbyChat = new Chatbox("lobbyChat");
-            mEngine.mMiyagiSystem.GUIManager.GUIs.Add(lobbyChat.chatGUI);
-            lobbyChat.chatPanel.ResizeMode = Miyagi.UI.ResizeModes.None;
-            lobbyChat.chatPanel.Movable = false;
-
-            //guiConnectMenu.Resize(mEngine.ScalarX, mEngine.ScalarY);
-
+            CreateGUI();
+ 
             NetworkManager netMgr = mEngine.mNetworkMgr;
             NetOutgoingMessage message = netMgr.netClient.CreateMessage();
             message.Write((byte)NetMessage.WelcomeMessage); //Request Welcome msg.
             netMgr.netClient.SendMessage(message, NetDeliveryMethod.ReliableOrdered);
-
+            mEngine.mNetworkMgr.SendClientName(ConfigManager.Singleton.Configuration.PlayerName);
+            
             return true;
+        }
+
+        public void CreateGUI()
+        {
+            lobbyChat = new Chatbox("lobbyChat");
+            lobbyChat.chatGUI.ZOrder = 10;
+            lobbyChat.chatPanel.ResizeMode = Miyagi.UI.ResizeModes.None;
+            lobbyChat.chatPanel.Movable = true;
+            lobbyChat.TextSubmitted += new Chatbox.TextSubmitHandler(chatTextbox_TextSubmitted);
+            
+            guiBackground = new GUI("guiBackground");
+
+            Panel guiBackgroundPanel = new Panel("mainGuiBackgroundPanel")
+            {
+                Location = new Point(0, 0),
+                Size = new Size((int)mEngine.Window.Width, (int)mEngine.Window.Height),
+                ResizeMode = ResizeModes.None,
+                Skin = MiyagiResources.Singleton.Skins["LobbyBackground"],
+                AlwaysOnTop = false,
+                TextureFiltering = TextureFiltering.Anisotropic
+            };
+            guiBackground.Controls.Add(guiBackgroundPanel);
+
+            guiBackground.ZOrder = 5;
+            mEngine.mMiyagiSystem.GUIManager.GUIs.Add(guiBackground);
+            mEngine.mMiyagiSystem.GUIManager.GUIs.Add(lobbyChat.chatGUI);
+
+            guiBackground.Visible = true;
+        }
+
+        void chatTextbox_TextSubmitted(Chatbox chatbox, string text)
+        {
+            if (text == "/dumpmap")
+            {
+                /* if(map != null && itemManager != null)
+                     MapFileHandler.SaveMap("./Maps/mapdump.map", map, itemManager);*/
+            }
+            else
+            {
+                SendLobbyChat(text);
+            }
         }
 
         void mNetworkMgr_MessageArrived(NetworkManager netMgr, NetIncomingMessage msg)
@@ -66,6 +112,12 @@ namespace SS3D.States
                         case NetMessage.WelcomeMessage:
                             HandleWelcomeMessage(msg);
                             break;
+                        case NetMessage.ChatMessage:
+                            HandleChatMessage(msg);
+                            break;
+                        case NetMessage.JoinGame:
+                            HandleJoinGame();
+                            break;
                         default:
                             break;
                     }
@@ -73,6 +125,11 @@ namespace SS3D.States
                 default:
                     break;
             }
+        }
+
+        private void HandleJoinGame()
+        {
+            mStateMgr.RequestStateChange(typeof(GameScreen));
         }
 
         private void AddChat(string text)
@@ -110,11 +167,12 @@ namespace SS3D.States
 
         public void SendLobbyChat(string text)
         {
-            NetworkManager netMgr = mEngine.mNetworkMgr;
-            NetOutgoingMessage message = netMgr.netClient.CreateMessage();
-            message.Write((byte)NetMessage.LobbyChat);
+            NetOutgoingMessage message = mEngine.mNetworkMgr.netClient.CreateMessage();
+            message.Write((byte)NetMessage.ChatMessage);
+            message.Write((byte)ChatChannel.Lobby);
             message.Write(text);
-            netMgr.netClient.SendMessage(message, NetDeliveryMethod.ReliableOrdered);
+
+            mEngine.mNetworkMgr.SendMessage(message, NetDeliveryMethod.ReliableUnordered);
         }
 
         public override void Shutdown()
@@ -128,10 +186,23 @@ namespace SS3D.States
 
         private void HandleWelcomeMessage(NetIncomingMessage msg)
         {
+            string serverName = msg.ReadString();
+            int serverPort = msg.ReadInt32();
             string welcomeString = msg.ReadString();
             serverMaxPlayers = msg.ReadInt32();
-            string serverMapNames = msg.ReadString();
+            string serverMapName = msg.ReadString();
             GameType gameType = (GameType)msg.ReadByte();
+            lobbyChat.AddLine("Server name: " + serverName + " MaxPlayers: " + serverMaxPlayers.ToString() + "\n" + welcomeString);
+        }
+
+        private void HandleChatMessage(NetIncomingMessage msg)
+        {
+            ChatChannel channel = (ChatChannel)msg.ReadByte();
+            string text = msg.ReadString();
+
+            string message = "(" + channel.ToString() + "):" + text;
+            ushort atomID = msg.ReadUInt16();
+            lobbyChat.AddLine(message);
         }
 
         #region Input

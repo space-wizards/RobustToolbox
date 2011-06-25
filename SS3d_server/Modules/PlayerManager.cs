@@ -25,10 +25,13 @@ namespace SS3d_server.Modules
         {
             PlayerSession session = new PlayerSession(client, netServer);
             playerSessions.Add(playerSessions.Values.Count + 1, session);
+        }
 
+        public void SpawnPlayerMob(PlayerSession s)
+        {
             //Spawn the player's atom. There's probably a much better place to do this.
             Atom.Atom a = netServer.atomManager.SpawnAtom("Atom.Mob.Human");
-            session.AttachToAtom(a);
+            s.AttachToAtom(a);
         }
 
         public PlayerSession GetSessionByConnection(NetConnection client)
@@ -56,6 +59,14 @@ namespace SS3d_server.Modules
             var a = session.attachedAtom;
             session.DetachFromAtom();
             //netServer.atomManager.DeleteAtom(a);
+        }
+
+        public void SendJoinGameToAll()
+        {
+            foreach( PlayerSession s in playerSessions.Values)
+            {
+                s.JoinGame();
+            }
         }
     }
 }

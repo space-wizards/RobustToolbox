@@ -92,6 +92,7 @@
     <Compile Include="Objects\ServerItemInfo.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Tiles\BaseTile.cs" />
+    <Compile Include="ChatConfig.cs" />
     <Compile Include="Tiles\Floors\Floor.cs" />
     <Compile Include="Tiles\Floors\Space.cs" />
     <Compile Include="Tiles\MeshManager.cs" />

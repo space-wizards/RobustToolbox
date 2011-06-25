@@ -174,7 +174,8 @@ namespace SS3D.States
         //guiConnectMenu.GetControl("connectJoinButton").Enabled = true;
         //((Button)guiConnectMenu.GetControl("connectJoinButton")).Text = "Join";
         //Send client name
-        mStateMgr.RequestStateChange(typeof(GameScreen));
+        mStateMgr.RequestStateChange(typeof(LobbyScreen));
+        //mStateMgr.RequestStateChange(typeof(GameScreen));
     }
 
     private void JoinButtonMouseDown(object sender, MouseButtonEventArgs e)
@@ -201,7 +202,8 @@ namespace SS3D.States
             ((Button)guiConnectMenu.GetControl("connectJoinButton")).Text = "Retry";
             mEngine.mNetworkMgr.Disconnect();
         }
-        mStateMgr.RequestStateChange(typeof(MainMenu));
+        //mStateMgr.RequestStateChange(typeof(LobbyScreen));
+        mStateMgr.RequestStateChange(typeof(GameScreen));
     }
  
     public override void Shutdown()

@@ -351,7 +351,7 @@ namespace SS3D.States
 
         private void HandleChatMessage(NetIncomingMessage msg)
         {
-            ushort channel = msg.ReadUInt16();
+            ChatChannel channel = (ChatChannel)msg.ReadByte();
             string text = msg.ReadString();
 
             string message = "(" + channel.ToString() + "):" + text;
@@ -366,12 +366,12 @@ namespace SS3D.States
         {
             NetOutgoingMessage message = mEngine.mNetworkMgr.netClient.CreateMessage();
             message.Write((byte)NetMessage.ChatMessage);
-            message.Write(defaultChannel);
+            message.Write((byte)ChatChannel.Default);
             message.Write(text);
 
             mEngine.mNetworkMgr.SendMessage(message, NetDeliveryMethod.ReliableUnordered);
         }
-
+        
         void chatTextbox_TextSubmitted(Chatbox chatbox, string text)
         {
             if (text == "/dumpmap")

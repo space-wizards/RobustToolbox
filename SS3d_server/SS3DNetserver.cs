@@ -28,7 +28,14 @@ namespace SS3d_server
         public ChatManager chatManager;
         public AtomManager atomManager;
         public PlayerManager playerManager;
-        
+        private RunLevel runlevel = RunLevel.Init;
+
+        public enum RunLevel
+        {
+            Init,
+            Lobby,
+            Game
+        }
         bool active = false;
 
         public DateTime time;   // The server current frame time
@@ -53,18 +60,30 @@ namespace SS3d_server
                 
         #endregion
 
-
-
-        public void InitModules()
+        /// <summary>
+        /// Controls what modules are running.
+        /// </summary>
+        /// <param name="_runlevel"></param>
+        public void InitModules(RunLevel _runlevel = RunLevel.Lobby)
         {
-            map = new Map();
-            map.InitMap(serverMapName);
+            if (_runlevel == runlevel)
+                return;
 
-            //mobManager = new MobManager(this, map);
-            //itemManager = new ItemManager(this, map, mobManager);
-            chatManager = new ChatManager(this);
-            atomManager = new AtomManager(this);
-            playerManager = new PlayerManager(this);
+            runlevel = _runlevel;
+            if (runlevel == RunLevel.Lobby)
+            {
+                chatManager = new ChatManager(this);
+                playerManager = new PlayerManager(this);
+            }
+            else if (runlevel == RunLevel.Game)
+            {
+                map = new Map();
+                map.InitMap(serverMapName);
+
+                atomManager = new AtomManager(this);
+                playerManager = new PlayerManager(this);
+            }
+            
         }
 
         public bool Start()
@@ -74,11 +93,12 @@ namespace SS3d_server
                 time = DateTime.Now;
                 LoadDataFile(dataFilename);
                 LoadSettings();
-                InitModules();
                 netConfig.Port = serverPort;
                 netServer = new NetServer(netConfig);
                 netServer.Start();
-                AddRandomCrowbars();
+
+                StartLobby();
+                StartGame();
                 
                 active = true;
                 return false;
@@ -111,6 +131,18 @@ namespace SS3d_server
                 active = false;
                 return true;
             }
+        }
+
+        public void StartLobby()
+        {
+            InitModules(RunLevel.Lobby);
+        }
+
+        public void StartGame()
+        {
+            InitModules(RunLevel.Game);
+            AddRandomCrowbars();
+            playerManager.SendJoinGameToAll();
         }
 
         #region server mainloop
@@ -192,9 +224,10 @@ namespace SS3d_server
 
         public void Update()
         {
-            //itemManager.Update();
-            //mobManager.Update();
-            atomManager.Update();
+            if (runlevel == RunLevel.Game)
+            {
+                atomManager.Update();
+            }
         }
         #endregion
 
@@ -255,6 +288,7 @@ namespace SS3d_server
                 else
                 {
                     HandleConnectionApproval(sender);
+                    playerManager.NewSession(sender); // TODO move this to somewhere that makes more sense.
                 }
                 // Send map
             }
@@ -364,7 +398,7 @@ namespace SS3d_server
 
             // Lets also send them all the items and mobs.
             atomManager.NewPlayer(connection);
-            playerManager.NewSession(connection); // TODO move this to somewhere that makes more sense.
+            playerManager.SpawnPlayerMob(playerManager.GetSessionByConnection(connection));
             //Todo: Preempt this with the lobby.
         }
 

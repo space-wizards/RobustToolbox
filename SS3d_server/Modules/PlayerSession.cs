@@ -17,12 +17,27 @@ namespace SS3d_server.Modules
         public Atom.Atom attachedAtom;
         private SS3DNetserver netServer;
         public string name = "";
+        public enum SessionStatus
+        {
+            Zombie,
+            Connected,
+            InLobby,
+            InGame,
+            Disconnected
+        }
+        public SessionStatus status;
 
         public PlayerSession(NetConnection client, SS3DNetserver _netServer)
         {
-            if(client != null)
-                connectedClient = client;
             netServer = _netServer;
+         
+            if (client != null)
+            {
+                connectedClient = client;
+                OnConnect();
+            }
+            else
+                status = SessionStatus.Zombie;
         }
 
         public void AttachToAtom(Atom.Atom a)
@@ -31,6 +46,16 @@ namespace SS3d_server.Modules
             a.attachedClient = connectedClient;
             attachedAtom = a;
             SendAttachMessage();
+        }
+
+        public void DetachFromAtom()
+        {
+            if (attachedAtom != null)
+            {
+                attachedAtom.attachedClient = null;
+                attachedAtom.Die();
+                attachedAtom = null;
+            }
         }
 
         private void SendAttachMessage()
@@ -49,6 +74,9 @@ namespace SS3d_server.Modules
             {
                 case PlayerSessionMessage.Verb:
                     HandleVerb(message);
+                    break;
+                case PlayerSessionMessage.JoinLobby:
+                    JoinLobby();
                     break;
                 default:
                     break;
@@ -88,15 +116,7 @@ namespace SS3d_server.Modules
             }
         }
 
-        public void DetachFromAtom()
-        {
-            if (attachedAtom != null)
-            {
-                attachedAtom.attachedClient = null;
-                attachedAtom.Die();
-                attachedAtom = null;
-            }
-        }
+
 
         public void SetName(string _name)
         {
@@ -105,6 +125,40 @@ namespace SS3d_server.Modules
             {
                 attachedAtom.SetName(_name);
             }
+        }
+
+        public void JoinLobby()
+        {
+            NetOutgoingMessage m = netServer.netServer.CreateMessage();
+            m.Write((byte)NetMessage.PlayerSessionMessage);
+            m.Write((byte)PlayerSessionMessage.JoinLobby);
+            netServer.SendMessageTo(m, connectedClient);
+            status = SessionStatus.InLobby;
+        }
+
+        public void JoinGame()
+        {
+            if (connectedClient != null && status != SessionStatus.InGame)
+            {
+                NetOutgoingMessage m = netServer.netServer.CreateMessage();
+                m.Write((byte)NetMessage.JoinGame);
+                netServer.SendMessageTo(m, connectedClient);
+
+                status = SessionStatus.InGame;
+            }
+        }
+
+        public void OnConnect()
+        {
+            status = SessionStatus.Connected;
+            //Put player in lobby immediately.
+            JoinLobby();
+        }
+
+        public void OnDisconnect()
+        {
+            status = SessionStatus.Disconnected;
+            DetachFromAtom();
         }
     }
 }

@@ -15,7 +15,8 @@ public enum NetMessage
     MobMessage,
     ChatMessage,
     AtomManagerMessage,
-    PlayerSessionMessage
+    PlayerSessionMessage,
+    JoinGame
 }
 
 public enum ItemMessage
@@ -72,5 +73,6 @@ public enum ClientStatus
 public enum PlayerSessionMessage
 {
     AttachToAtom,
-    Verb
+    Verb,
+    JoinLobby
 }

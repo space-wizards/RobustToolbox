@@ -312,7 +312,7 @@ namespace SS3D.Atom
         #endregion
         
         #region positioning
-        public virtual bool IsInBlockedTile()
+        public virtual bool IsColliding()
         {
             Sphere esphere = new Sphere(Node.Position + new Mogre.Vector3(0, 20, 0) - offset, 5f);
             foreach (AxisAlignedBox box in atomManager.gameState.map.GetSurroundingAABB(Node.Position - offset))
@@ -346,7 +346,7 @@ namespace SS3D.Atom
         public virtual void TranslateLocal(Mogre.Vector3 toPosition) 
         {
             Node.Translate(toPosition, Mogre.Node.TransformSpace.TS_LOCAL);
-            if (clipping && IsInBlockedTile())
+            if (clipping && IsColliding())
             {
                 //Node.Position = position;
                 // BEGIN FUCKING CRAZY HACK.
@@ -355,11 +355,11 @@ namespace SS3D.Atom
                 Mogre.Vector3 difference = targetPosition - position;
                 //Test X 
                 Node.Position = position + new Mogre.Vector3(difference.x, 0, 0) + offset;
-                if (IsInBlockedTile())
+                if (IsColliding())
                 {
                     //Test z.
                     Node.Position = position + new Mogre.Vector3(0, 0, difference.z) + offset;
-                    if (IsInBlockedTile())
+                    if (IsColliding())
                        Node.Position = position + offset;
                 }
                 // END FUCKING CRAZY HACK

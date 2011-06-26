@@ -90,10 +90,6 @@ namespace SS3d_server.Modules.Chat
                         position = player.position;
                     netServer.atomManager.SpawnAtom("Atom.Item.Container.Toolbox", position);  
                     break;
-                case "joingame":
-                    PlayerSession s = netServer.playerManager.GetSessionByConnection(client);
-                    s.JoinGame();
-                    break;
                 default:
                     string message = "Command '" + command + "' not recognized.";
                     SendChatMessage(channel, message, name, atomID);

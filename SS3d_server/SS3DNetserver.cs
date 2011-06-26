@@ -60,7 +60,7 @@ namespace SS3d_server
 
         public SS3DNetserver()
         {
-            runlevel = RunLevel.Lobby;
+            runlevel = RunLevel.Init;
         }
         #endregion
 

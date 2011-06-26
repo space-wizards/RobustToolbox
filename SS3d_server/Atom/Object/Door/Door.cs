@@ -10,6 +10,7 @@ namespace SS3d_server.Atom.Object.Door
     {
 
         DoorState status = DoorState.Closed;
+        DoorState laststatus = DoorState.Closed;
         float openLength = 5000;
         float timeOpen = 0;
 
@@ -17,25 +18,43 @@ namespace SS3d_server.Atom.Object.Door
             : base()
         {
             name = "door";
-            
         }
 
         protected override void ApplyAction(Atom a, Mob.Mob m)
         {
-            if (status != DoorState.Broken)
+            laststatus = status;
+            if (status == DoorState.Closed)
             {
-                if (status == DoorState.Closed)
+                // Just as a test of item interaction, lets make a crowbar break / fix a door.
+                if (a != null && a.IsTypeOf(typeof(Item.Tool.Crowbar)))
                 {
-                    status = DoorState.Open;
+                    status = DoorState.Broken;
                 }
                 else
                 {
-                    status = DoorState.Closed;
+                    status = DoorState.Open;
                 }
+                
+            }
+            else if (status == DoorState.Open)
+            {
+                status = DoorState.Closed;
+            }
+            else if (status == DoorState.Broken)
+            {
+                if (a != null && a.IsTypeOf(typeof(Item.Tool.Crowbar)))
+                {
+                    status = DoorState.Open;
+                }
+            }
+            // If the status hasn't changed, we don't need to send anything.
+            if (laststatus != status)
+            {
                 timeOpen = 0;
                 UpdateState();
                 updateRequired = true;
             }
+
         }
 
         public override void Update(float framePeriod)
@@ -59,7 +78,8 @@ namespace SS3d_server.Atom.Object.Door
             }
             else if (status == DoorState.Broken)
             {
-
+                updateRequired = false;
+                timeOpen = 0;
             }
          }
 

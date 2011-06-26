@@ -263,6 +263,35 @@ namespace SS3d_server.Atom
         }
 
         /// <summary>
+        /// Checks if the atom is a child / derived from the passed in type.
+        /// </summary>
+        /// <param name="type">Use typeof() on the type you want to check. For example, typeof(Item.Tool.Crowbar)</param>
+        /// <returns>True if a child, false otherwise.</returns>
+        public bool IsChildOfType(Type type)
+        {
+            if(this.GetType().IsSubclassOf(type))
+            {
+                return true;
+            }
+            return false;
+        }
+
+        /// <summary>
+        /// Checks if the atom is of the type passed in.
+        /// </summary>
+        /// <param name="type">Use typeof() on the type you want to check. For example, typeof(Item.Tool.Crowbar)</param>
+        /// <returns>True if is the select type, false otherwise.</returns>
+        public bool IsTypeOf(Type type)
+        {
+            if (this.GetType() == type)
+            {
+                return true;
+            }
+            
+            return false;
+        }
+
+        /// <summary>
         /// Apply damage to the atom. All atoms have this, though not all atoms will react to their health being depleted.
         /// </summary>
         /// <param name="amount"></param>

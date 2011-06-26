@@ -9,6 +9,7 @@ namespace SS3D.Atom.Object.Door
     public class Door : Object
     {
         DoorState status = DoorState.Closed;
+        DoorState laststatus = DoorState.Closed;
         Mogre.Vector3 slidePos;
         private int slideStepsTotal = 10;
         private int slideStepsCurrent = 10;
@@ -25,6 +26,7 @@ namespace SS3D.Atom.Object.Door
 
         protected override void HandleExtendedMessage(Lidgren.Network.NetIncomingMessage message)
         {
+            laststatus = status;
             status = (DoorState)message.ReadByte();
             UpdateStatus();
         }
@@ -61,7 +63,16 @@ namespace SS3D.Atom.Object.Door
                         TranslateLocal(-slidePos / slideStepsTotal);
                         break;
                     case DoorState.Open:
-                        TranslateLocal(slidePos / slideStepsTotal);
+                        if (laststatus == DoorState.Broken)
+                        {
+                            TranslateLocal(slidePos / 2);
+                            slideStepsCurrent = slideStepsTotal;
+                        }
+                        else
+                        {
+                            TranslateLocal(slidePos / slideStepsTotal);
+                        }
+                        
                         break;
                     case DoorState.Broken:
                         TranslateLocal(slidePos / 2);

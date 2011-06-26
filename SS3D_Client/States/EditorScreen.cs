@@ -27,7 +27,6 @@ namespace SS3D.States
 {
     public class EditorScreen : State
     {
-        public OgreManager mEngine;
         public StateManager mStateMgr;
 
         //public ItemManager itemManager;

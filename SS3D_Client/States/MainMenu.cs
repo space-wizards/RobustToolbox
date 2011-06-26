@@ -17,8 +17,6 @@ namespace SS3D.States
 {
   public class MainMenu : State
   {
-
-    private OgreManager mEngine;
     private StateManager mStateMgr;
     private GUI guiMainMenu;
     private GUI guiBackground;

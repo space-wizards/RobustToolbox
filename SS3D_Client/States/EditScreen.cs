@@ -29,7 +29,6 @@ namespace SS3D.States
     public class EditScreen : State
     {
         #region Variables
-        private OgreManager mEngine;
         private StateManager mStateMgr;
         private Map map;
         //private ItemManager itemManager;

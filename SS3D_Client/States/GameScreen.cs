@@ -31,7 +31,6 @@ namespace SS3D.States
     public class GameScreen : State
     {
         #region Variables
-        public OgreManager mEngine;
         private StateManager mStateMgr;
         public Map map;
         //private ItemManager itemManager;

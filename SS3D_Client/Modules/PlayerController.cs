@@ -16,18 +16,26 @@ namespace SS3D.Modules
         /* Here's the player controller. This will handle attaching GUIS and input to controllable things.
          * Why not just attach the inputs directly? It's messy! This makes the whole thing nicely encapsulated. 
          * This class also communicates with the server to let the server control what atom it is attached to. */
-        public GameScreen gameScreen;
+        public State runningState;
         public AtomManager atomManager;
         public Atom.Atom controlledAtom;
 
-        public PlayerController(GameScreen _gameScreen, AtomManager _atomManager)
+        public PlayerController(State _runningState, AtomManager _atomManager)
         {
-            gameScreen = _gameScreen;
+            runningState = _runningState;
             atomManager = _atomManager;
+        }
+
+        public PlayerController(State _runningState)
+        {
+            runningState = _runningState;
+            atomManager = null;
         }
 
         public void Attach(Atom.Atom newAtom)
         {
+            if (atomManager == null)
+                return;
             controlledAtom = newAtom;
             controlledAtom.initKeys();
             controlledAtom.attached = true;
@@ -42,12 +50,16 @@ namespace SS3D.Modules
 
         public void Detach()
         {
+            if (atomManager == null)
+                return;
             controlledAtom.attached = false;
             controlledAtom = null;
         }
 
         public void KeyDown(MOIS.KeyCode k)
         {
+            if (atomManager == null)
+                return;
             if (controlledAtom == null)
                 return;
 
@@ -56,6 +68,8 @@ namespace SS3D.Modules
 
         public void KeyUp(MOIS.KeyCode k)
         {
+            if (atomManager == null)
+                return;
             if (controlledAtom == null)
                 return;
 
@@ -85,16 +99,18 @@ namespace SS3D.Modules
         /// <param name="uid">a target atom's uid</param>
         public void SendVerb(string verb, ushort uid)
         {
-            NetOutgoingMessage message = gameScreen.mEngine.mNetworkMgr.netClient.CreateMessage();
+            NetOutgoingMessage message = runningState.mEngine.mNetworkMgr.netClient.CreateMessage();
             message.Write((byte)NetMessage.PlayerSessionMessage);
             message.Write((byte)PlayerSessionMessage.Verb);
             message.Write(verb);
             message.Write(uid);
-            gameScreen.mEngine.mNetworkMgr.SendMessage(message, NetDeliveryMethod.ReliableOrdered);
+            runningState.mEngine.mNetworkMgr.SendMessage(message, NetDeliveryMethod.ReliableOrdered);
         }
 
         private void HandleAttachToAtom(NetIncomingMessage message)
         {
+            if (atomManager == null)
+                return;
             ushort uid = message.ReadUInt16();
             Attach(atomManager.GetAtom(uid));
         }

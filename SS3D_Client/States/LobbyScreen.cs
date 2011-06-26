@@ -24,11 +24,12 @@ namespace SS3D.States
 {
     public class LobbyScreen : State
     {
-        private OgreManager mEngine;
         private StateManager mStateMgr;
         private int serverMaxPlayers;
         private Chatbox lobbyChat;
         private GUI guiBackground;
+        private GUI guiLobbyMenu;
+        private PlayerController playerController;
 
         public LobbyScreen()
         {
@@ -39,6 +40,7 @@ namespace SS3D.States
         {
             mEngine = _mgr.Engine;
             mStateMgr = _mgr;
+            playerController = new PlayerController(this);
 
             mEngine.mNetworkMgr.MessageArrived += new NetworkMsgHandler(mNetworkMgr_MessageArrived);
 
@@ -75,8 +77,29 @@ namespace SS3D.States
             guiBackground.Controls.Add(guiBackgroundPanel);
 
             guiBackground.ZOrder = 5;
+
+            guiLobbyMenu = new GUI("guiLobbyMenu");
+
+            Button lobbyJoinGameButton = new Button("lobbyJoinGameButton")
+            {
+                Location = new Point(580, 350),
+                Size = new Size(240, 30),
+                Skin = MiyagiResources.Singleton.Skins["ButtonStandardSkin"],
+                Text = "Join Game",
+                TextStyle =
+                {
+                    Alignment = Alignment.MiddleCenter,
+                    ForegroundColour = Colours.DarkBlue,
+                    Font = MiyagiResources.Singleton.Fonts["SpacedockStencil"]
+                }
+            };
+            lobbyJoinGameButton.MouseDown += lobbyJoinGameButtonMouseDown;
+            guiLobbyMenu.Controls.Add(lobbyJoinGameButton);
+            guiLobbyMenu.ZOrder = 11;
+
             mEngine.mMiyagiSystem.GUIManager.GUIs.Add(guiBackground);
             mEngine.mMiyagiSystem.GUIManager.GUIs.Add(lobbyChat.chatGUI);
+            mEngine.mMiyagiSystem.GUIManager.GUIs.Add(guiLobbyMenu);
 
             guiBackground.Visible = true;
         }
@@ -92,6 +115,11 @@ namespace SS3D.States
             {
                 SendLobbyChat(text);
             }
+        }
+
+        private void lobbyJoinGameButtonMouseDown(object sender, MouseButtonEventArgs e)
+        {
+            playerController.SendVerb("joingame", 0);
         }
 
         void mNetworkMgr_MessageArrived(NetworkManager netMgr, NetIncomingMessage msg)

@@ -22,8 +22,6 @@ namespace SS3D.States
 {
   public class OptionsMenu : State
   {
-
-    private OgreManager mEngine;
     private StateManager mStateMgr;
     private Dictionary<string, KeyValuePair<uint, uint>> possible_resolutions;
     private GUI guiOptionsMenu;

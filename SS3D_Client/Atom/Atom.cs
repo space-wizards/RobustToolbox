@@ -314,7 +314,7 @@ namespace SS3D.Atom
         #region positioning
         public virtual bool IsInBlockedTile()
         {
-            Sphere esphere = new Sphere(Node.Position - offset, 5f);
+            Sphere esphere = new Sphere(Node.Position + new Mogre.Vector3(0, 20, 0) - offset, 5f);
             foreach (AxisAlignedBox box in atomManager.gameState.map.GetSurroundingAABB(Node.Position - offset))
             {
                 //if (Entity.GetWorldBoundingBox().Intersects(box))
@@ -326,9 +326,9 @@ namespace SS3D.Atom
             }
 
             IEnumerable<Atom> atoms = from a in atomManager.atomDictionary.Values
-                                     where a.collidable == true/* &&
-                                     System.Math.Sqrt((position.x + a.position.x) * (position.x + a.position.x)) < 16 &&
-                                     System.Math.Sqrt((position.z + a.position.z) * (position.z + a.position.z)) < 16*/
+                                     where a.collidable == true &&
+                                     System.Math.Sqrt((position.x - a.position.x) * (position.x - a.position.x)) < 16 &&
+                                     System.Math.Sqrt((position.z - a.position.z) * (position.z - a.position.z)) < 16
                                      select a;
             
             foreach (Atom a in atoms)

@@ -64,7 +64,7 @@ namespace SS3d_server.Atom
         #endregion
 
         #region updating
-        public virtual void Update()
+        public virtual void Update(float framePeriod)
         {
             //Updates the atom, item, whatever. This should be called from the atom manager's update queue.
             updateRequired = false;

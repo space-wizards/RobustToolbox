@@ -30,9 +30,9 @@ namespace SS3d_server.Atom.Item
             SendAttachMessage();
         }
 
-        public override void Update()
+        public override void Update(float framePeriod)
         {
-            base.Update();
+            base.Update(framePeriod);
             
             double heightAboveTile = position.Y - (atomManager.netServer.map.GetHeightAboveTileAt(position) + 1.0f);
             if (heightAboveTile > 1.0)

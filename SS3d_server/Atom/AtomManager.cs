@@ -28,7 +28,7 @@ namespace SS3d_server.Atom
         #endregion
 
         #region updating
-        public void Update()
+        public void Update(float framePeriod)
         {
             // Using LINQ to find atoms that have flagged themselves as needing an update.
             // TODO: Modify to add an update queue that will run updates for atoms that need it on a time schedule
@@ -40,7 +40,7 @@ namespace SS3d_server.Atom
             //Update all of the bastards in the update list
             foreach (Atom a in updateList)
             {
-                a.Update();
+                a.Update(framePeriod);
             }
         }
         #endregion

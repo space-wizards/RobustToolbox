@@ -13,6 +13,7 @@ namespace SS3D.Atom.Item
     {
         public Mogre.Vector3 heldOffset = Mogre.Vector3.ZERO;           // the offset vector when held
         public Mogre.Quaternion heldQuat = Mogre.Quaternion.IDENTITY;   // the rotation when held
+        
 
         public Appendage holdingAppendage = null;
                 public Item()

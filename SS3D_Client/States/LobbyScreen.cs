@@ -24,7 +24,6 @@ namespace SS3D.States
 {
     public class LobbyScreen : State
     {
-        private OgreManager mEngine;
         private StateManager mStateMgr;
         private int serverMaxPlayers;
         private Chatbox lobbyChat;

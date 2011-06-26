@@ -105,6 +105,9 @@ namespace SS3d_server.Modules
                         m = (Atom.Mob.Mob)attachedAtom;
                         m.selectedAppendage = m.appendages["RightHand"];
                         break;
+                    case "joingame":
+                        JoinGame();
+                        break;
                     default:
                         break;
                 }
@@ -138,7 +141,7 @@ namespace SS3d_server.Modules
 
         public void JoinGame()
         {
-            if (connectedClient != null && status != SessionStatus.InGame)
+            if (connectedClient != null && status != SessionStatus.InGame && netServer.runlevel == SS3DNetserver.RunLevel.Game)
             {
                 NetOutgoingMessage m = netServer.netServer.CreateMessage();
                 m.Write((byte)NetMessage.JoinGame);

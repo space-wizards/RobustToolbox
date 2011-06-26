@@ -12,6 +12,7 @@ namespace SS3D.Modules
     {
        
     }
+    public OgreManager mEngine;
 
     public abstract bool Startup( StateManager _mgr );
 

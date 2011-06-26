@@ -28,7 +28,7 @@ namespace SS3d_server
         public ChatManager chatManager;
         public AtomManager atomManager;
         public PlayerManager playerManager;
-        private RunLevel runlevel = RunLevel.Init;
+        public RunLevel runlevel {get;private set;}
 
         public enum RunLevel
         {
@@ -57,7 +57,11 @@ namespace SS3d_server
             get { return 1000.0f / framePeriod; }
             set { framePeriod = (int)(1000.0f / value); }
         }
-                
+
+        public SS3DNetserver()
+        {
+            runlevel = RunLevel.Lobby;
+        }
         #endregion
 
         /// <summary>
@@ -352,6 +356,7 @@ namespace SS3d_server
             p.SetName(fixedname);
        }
 
+        [Obsolete]
         public void HandleLobbyChat(NetIncomingMessage msg)
         {
             string text = clientList[msg.SenderConnection].playerName + ": ";
@@ -359,6 +364,7 @@ namespace SS3d_server
             SendLobbyChat(text);
         }
 
+        [Obsolete]
         public void SendLobbyChat(string text)
         {
             NetOutgoingMessage chatMessage = netServer.CreateMessage();
@@ -545,22 +551,6 @@ namespace SS3d_server
             Console.WriteLine("Sending to one with size: " + message.LengthBytes + " bytes");
             netServer.SendMessage(message, connection, method);
         }
-
-        /*
-        public void AddRandomCrowbars()
-        {
-            Crowbar c = new Crowbar();
-            Type type = c.GetType();
-
-            Random r = new Random();
-
-            for (int i = 0; i < 10; i++)
-            {
-                SS3D_shared.HelperClasses.Vector3 pos = new SS3D_shared.HelperClasses.Vector3(r.NextDouble() * map.GetMapWidth() * map.tileSpacing, 60, r.NextDouble() * map.GetMapHeight() * map.tileSpacing);
-                //itemManager.CreateItem(type, pos);
-            }
-        }
-         */
 
         public void AddRandomCrowbars()
         {

@@ -26,8 +26,16 @@ namespace SS3D.Modules
             atomManager = _atomManager;
         }
 
+        public PlayerController(State _runningState)
+        {
+            runningState = _runningState;
+            atomManager = null;
+        }
+
         public void Attach(Atom.Atom newAtom)
         {
+            if (atomManager == null)
+                return;
             controlledAtom = newAtom;
             controlledAtom.initKeys();
             controlledAtom.attached = true;
@@ -42,12 +50,16 @@ namespace SS3D.Modules
 
         public void Detach()
         {
+            if (atomManager == null)
+                return;
             controlledAtom.attached = false;
             controlledAtom = null;
         }
 
         public void KeyDown(MOIS.KeyCode k)
         {
+            if (atomManager == null)
+                return;
             if (controlledAtom == null)
                 return;
 
@@ -56,6 +68,8 @@ namespace SS3D.Modules
 
         public void KeyUp(MOIS.KeyCode k)
         {
+            if (atomManager == null)
+                return;
             if (controlledAtom == null)
                 return;
 
@@ -95,6 +109,8 @@ namespace SS3D.Modules
 
         private void HandleAttachToAtom(NetIncomingMessage message)
         {
+            if (atomManager == null)
+                return;
             ushort uid = message.ReadUInt16();
             Attach(atomManager.GetAtom(uid));
         }

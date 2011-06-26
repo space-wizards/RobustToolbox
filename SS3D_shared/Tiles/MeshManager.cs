@@ -11,6 +11,7 @@ namespace SS3D_shared
         public Mesh floorMesh;
         public Mesh wallMesh;
         public Mesh spaceMesh;
+        public Mesh doorMesh;
 
         private float tileX = 8.0f; // How far from X = 0 relative to the tile it extends
         private float tileZ = 8.0f; // How far from Z = 0 relative to the tile it extends (this should always == tileX so i don't know why i put this here)
@@ -39,6 +40,7 @@ namespace SS3D_shared
             CreateFloorMesh();
             CreateWallMesh();
             CreateSpaceMesh();
+            CreateDoorMesh();
         }
 
         private void CreateFloorMesh()
@@ -206,6 +208,80 @@ namespace SS3D_shared
             #endregion
 
             spaceMesh = mobject.ConvertToMesh("spaceMesh");
+        }
+
+        private void CreateDoorMesh()
+        {
+            ManualObject mobject = new ManualObject("doorMesh");
+
+            #region +Z side
+            mobject.Begin("DoorTexture", RenderOperation.OperationTypes.OT_TRIANGLE_LIST);
+            mobject.Position(2, 0, tileZ); mobject.TextureCoord(1, 1); mobject.Normal(Vector3.UNIT_Z);
+            mobject.Position(2, wallHeight, tileZ); mobject.TextureCoord(1, 0); mobject.Normal(Vector3.UNIT_Z);
+            mobject.Position(-2, 0, tileZ); mobject.TextureCoord(0, 1); mobject.Normal(Vector3.UNIT_Z);
+            mobject.Position(-2, wallHeight, tileZ); mobject.TextureCoord(0, 0); mobject.Normal(Vector3.UNIT_Z);
+            mobject.Triangle(0, 1, 2);
+            mobject.Triangle(1, 3, 2);
+            mobject.End();
+            #endregion
+
+            #region -X side
+            mobject.Begin("DoorTexture", RenderOperation.OperationTypes.OT_TRIANGLE_LIST);
+            mobject.Position(-2, 0, tileZ); mobject.TextureCoord(0, 1); mobject.Normal(Vector3.NEGATIVE_UNIT_X);
+            mobject.Position(-2, wallHeight, tileZ); mobject.TextureCoord(0, 0); mobject.Normal(Vector3.NEGATIVE_UNIT_X);
+            mobject.Position(-2, 0, -tileZ); mobject.TextureCoord(1, 1); mobject.Normal(Vector3.NEGATIVE_UNIT_X);
+            mobject.Position(-2, wallHeight, -tileZ); mobject.TextureCoord(1, 0); mobject.Normal(Vector3.NEGATIVE_UNIT_X);
+            mobject.Triangle(0, 1, 2);
+            mobject.Triangle(1, 3, 2);
+            mobject.End();
+            #endregion
+
+            #region -Z side
+            mobject.Begin("DoorTexture", RenderOperation.OperationTypes.OT_TRIANGLE_LIST);
+            mobject.Position(-2, 0, -tileZ); mobject.TextureCoord(1, 1); mobject.Normal(Vector3.NEGATIVE_UNIT_Z);
+            mobject.Position(-2, wallHeight, -tileZ); mobject.TextureCoord(1, 0); mobject.Normal(Vector3.NEGATIVE_UNIT_Z);
+            mobject.Position(2, 0, -tileZ); mobject.TextureCoord(0, 1); mobject.Normal(Vector3.NEGATIVE_UNIT_Z);
+            mobject.Position(2, wallHeight, -tileZ); mobject.TextureCoord(0, 0); mobject.Normal(Vector3.NEGATIVE_UNIT_Z);
+            mobject.Triangle(0, 1, 2);
+            mobject.Triangle(1, 3, 2);
+            mobject.End();
+            #endregion
+
+            #region +X side
+            mobject.Begin("DoorTexture", RenderOperation.OperationTypes.OT_TRIANGLE_LIST);
+            mobject.Position(2, 0, -tileZ); mobject.TextureCoord(0, 1); mobject.Normal(Vector3.UNIT_X);
+            mobject.Position(2, wallHeight, -tileZ); mobject.TextureCoord(0, 0); mobject.Normal(Vector3.UNIT_X);
+            mobject.Position(2, 0, tileZ); mobject.TextureCoord(1, 1); mobject.Normal(Vector3.UNIT_X);
+            mobject.Position(2, wallHeight, tileZ); mobject.TextureCoord(1, 0); mobject.Normal(Vector3.UNIT_X);
+            mobject.Triangle(0, 1, 2);
+            mobject.Triangle(1, 3, 2);
+            mobject.End();
+            #endregion
+
+            #region +Y side
+            mobject.Begin("DoorTexture", RenderOperation.OperationTypes.OT_TRIANGLE_LIST);
+            mobject.Position(2, wallHeight, -tileZ); mobject.TextureCoord(1, 1); mobject.Normal(Vector3.UNIT_Y);
+            mobject.Position(2, wallHeight, tileZ); mobject.TextureCoord(1, 0); mobject.Normal(Vector3.UNIT_Y);
+            mobject.Position(-2, wallHeight, -tileZ); mobject.TextureCoord(0, 1); mobject.Normal(Vector3.UNIT_Y);
+            mobject.Position(-2, wallHeight, tileZ); mobject.TextureCoord(0, 0); mobject.Normal(Vector3.UNIT_Y);
+            mobject.Triangle(1, 0, 2);
+            mobject.Triangle(2, 3, 1);
+            mobject.End();
+            #endregion
+
+            #region -Y side
+            mobject.Begin("DoorTexture", RenderOperation.OperationTypes.OT_TRIANGLE_LIST);
+            mobject.Position(2, 0, -tileZ); mobject.TextureCoord(1, 1); mobject.Normal(Vector3.NEGATIVE_UNIT_Y);
+            mobject.Position(2, 0, tileZ); mobject.TextureCoord(1, 0); mobject.Normal(Vector3.NEGATIVE_UNIT_Y);
+            mobject.Position(-2, 0, -tileZ); mobject.TextureCoord(0, 1); mobject.Normal(Vector3.NEGATIVE_UNIT_Y);
+            mobject.Position(-2, 0, tileZ); mobject.TextureCoord(0, 0); mobject.Normal(Vector3.NEGATIVE_UNIT_Y);
+            mobject.Triangle(0, 1, 2);
+            mobject.Triangle(1, 3, 2);
+            mobject.End();
+            #endregion
+
+            doorMesh = mobject.ConvertToMesh("doorMesh");
+            doorMesh.BuildTangentVectors();
         }
 
     }

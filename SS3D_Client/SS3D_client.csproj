@@ -129,6 +129,8 @@
     <Compile Include="Atom\Mob\HelperClasses\Appendage.cs" />
     <Compile Include="Atom\Mob\Human.cs" />
     <Compile Include="Atom\Mob\Mob.cs" />
+    <Compile Include="Atom\Object\Door\Door.cs" />
+    <Compile Include="Atom\Object\Object.cs" />
     <Compile Include="HelperClasses\AtomUtil.cs" />
     <Compile Include="HelperClasses\CollisionTools.cs" />
     <Compile Include="HelperClasses\InterpolationPacket.cs" />

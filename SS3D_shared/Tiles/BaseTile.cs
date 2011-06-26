@@ -14,6 +14,9 @@ namespace SS3D_shared
         public int tileSpacing;
         public TileType TileType = TileType.None;
         public string meshName;
+        // Is the tile open, but blocked by something outside? (a door for example). This will eventually be changed
+        // to show the DIRECTION the tile is blocked, so hte direction you cannot pass through it (N -> S or E -> W)
+        public bool blocked = false;
 
         public BaseTile(int _tileSpacing)
         {

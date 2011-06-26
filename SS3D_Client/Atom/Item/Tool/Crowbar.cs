@@ -15,7 +15,6 @@ namespace SS3D.Atom.Item.Tool
             name = "Crowbar";
             heldQuat = new Mogre.Quaternion(new Mogre.Degree(90), Mogre.Vector3.UNIT_Z);
             heldOffset = new Mogre.Vector3(2f, 0f, 0.6f);
-
         }
     }
 }

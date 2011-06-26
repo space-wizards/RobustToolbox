@@ -34,6 +34,7 @@ namespace SS3D.Atom
         public List<InterpolationPacket> interpolationPackets;
         public float speed = 1.0f;
         public bool clipping = true;
+        public bool collidable = false;
         private DateTime lastPositionUpdate;
         private int positionUpdateRateLimit = 10; //Packets per second
 
@@ -311,24 +312,41 @@ namespace SS3D.Atom
         #endregion
         
         #region positioning
-        public virtual bool IsInWall()
+        public virtual bool IsInBlockedTile()
         {
+            Sphere esphere = new Sphere(Node.Position - offset, 5f);
             foreach (AxisAlignedBox box in atomManager.gameState.map.GetSurroundingAABB(Node.Position - offset))
             {
                 //if (Entity.GetWorldBoundingBox().Intersects(box))
                 // TODO: Calculate this sphere based on the entity's bounding box instead of a hardcoded 5f radius.
-                Sphere esphere = new Sphere(Node.Position - offset, 5f);
                 if (box.Intersects(esphere))
                 {
                     return true;
                 }
             }
+
+            IEnumerable<Atom> atoms = from a in atomManager.atomDictionary.Values
+                                     where a.collidable == true/* &&
+                                     System.Math.Sqrt((position.x + a.position.x) * (position.x + a.position.x)) < 16 &&
+                                     System.Math.Sqrt((position.z + a.position.z) * (position.z + a.position.z)) < 16*/
+                                     select a;
+            
+            foreach (Atom a in atoms)
+            {
+                AxisAlignedBox box = a.Node._getWorldAABB();
+                if(box.Intersects(esphere))
+                {
+                    return true;
+                }
+            }
+
             return false;
         }
 
-        public virtual void TranslateLocal(Mogre.Vector3 toPosition) {
+        public virtual void TranslateLocal(Mogre.Vector3 toPosition) 
+        {
             Node.Translate(toPosition, Mogre.Node.TransformSpace.TS_LOCAL);
-            if (clipping && IsInWall())
+            if (clipping && IsInBlockedTile())
             {
                 //Node.Position = position;
                 // BEGIN FUCKING CRAZY HACK.
@@ -337,11 +355,11 @@ namespace SS3D.Atom
                 Mogre.Vector3 difference = targetPosition - position;
                 //Test X 
                 Node.Position = position + new Mogre.Vector3(difference.x, 0, 0) + offset;
-                if (IsInWall())
+                if (IsInBlockedTile())
                 {
                     //Test z.
                     Node.Position = position + new Mogre.Vector3(0, 0, difference.z) + offset;
-                    if (IsInWall())
+                    if (IsInBlockedTile())
                        Node.Position = position + offset;
                 }
                 // END FUCKING CRAZY HACK

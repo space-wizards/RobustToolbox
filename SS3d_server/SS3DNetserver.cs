@@ -156,7 +156,7 @@ namespace SS3d_server
             {
                 FrameStart();
                 ProcessPackets();
-                Update();
+                Update(framePeriod);
                 sleepTime = time.AddMilliseconds(framePeriod) - DateTime.Now;
 
                 if (sleepTime.TotalMilliseconds > 0)
@@ -222,11 +222,11 @@ namespace SS3d_server
             }
         }
 
-        public void Update()
+        public void Update(float framePeriod)
         {
             if (runlevel == RunLevel.Game)
             {
-                atomManager.Update();
+                atomManager.Update(framePeriod);
             }
         }
         #endregion
@@ -566,6 +566,7 @@ namespace SS3d_server
         {
             Atom.Item.Tool.Crowbar c;
             Atom.Item.Container.Toolbox t;
+            Atom.Object.Door.Door d;
 
             Random r = new Random();
             for (int i = 0; i < 10; i++)
@@ -579,6 +580,17 @@ namespace SS3d_server
                 t.Translate(new SS3D_shared.HelperClasses.Vector3(r.NextDouble() * map.GetMapWidth() * map.tileSpacing, 60, r.NextDouble() * map.GetMapHeight() * map.tileSpacing));
             }
 
+            d = (Atom.Object.Door.Door)atomManager.SpawnAtom("Atom.Object.Door.Door");
+            d.Translate(new SS3D_shared.HelperClasses.Vector3(144, 0, 160));
+
+            d = (Atom.Object.Door.Door)atomManager.SpawnAtom("Atom.Object.Door.Door");
+            d.Translate(new SS3D_shared.HelperClasses.Vector3(144, 0, 208));
+
+            d = (Atom.Object.Door.Door)atomManager.SpawnAtom("Atom.Object.Door.Door");
+            d.Translate(new SS3D_shared.HelperClasses.Vector3(288, 0, 160));
+
+            d = (Atom.Object.Door.Door)atomManager.SpawnAtom("Atom.Object.Door.Door");
+            d.Translate(new SS3D_shared.HelperClasses.Vector3(288, 0, 208));
         }
     }
 }

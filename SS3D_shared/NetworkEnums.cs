@@ -76,3 +76,10 @@ public enum PlayerSessionMessage
     Verb,
     JoinLobby
 }
+
+public enum DoorState
+{
+    Closed = 0,
+    Open,
+    Broken
+}

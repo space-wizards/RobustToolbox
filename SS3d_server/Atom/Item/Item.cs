@@ -20,7 +20,7 @@ namespace SS3d_server.Atom.Item
         public Item()
             : base()
         {
-
+            extensions.Add(new Extension.DummyExtension(this));
         }
 
         public override void SendState(NetConnection client)
@@ -86,6 +86,7 @@ namespace SS3d_server.Atom.Item
         /// <param name="target">The atom that this one has been used on.</param>
         protected override void UsedOn(Atom target)
         {
+            base.UsedOn(target);
             switch (target.GetType().ToString())
             {
                 default:

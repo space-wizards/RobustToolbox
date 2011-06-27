@@ -5,16 +5,21 @@ using System.Text;
 using SS3d_server.HelperClasses;
 using Lidgren.Network;
 using SS3D_shared.HelperClasses;
+using SS3d_server.Atom.Extension;
 
 namespace SS3d_server.Atom
 {
     public class Atom // SERVER SIDE
     {
         #region variables
+        // wat
         public string name;
         public ushort uid;
         public AtomManager atomManager;
         public bool updateRequired = false;
+
+        // Extensions
+        public List<Extension.Extension> extensions;
 
         // Position data
         public Vector3 position;
@@ -40,6 +45,8 @@ namespace SS3d_server.Atom
             rotW = 1;
             rotY = 0;
             name = this.GetType().ToString();
+
+            extensions = new List<Extension.Extension>();
         }
 
         public void SetUp(ushort _uid, AtomManager _atomManager)
@@ -68,6 +75,9 @@ namespace SS3d_server.Atom
         {
             //Updates the atom, item, whatever. This should be called from the atom manager's update queue.
             updateRequired = false;
+
+            foreach (Extension.Extension e in extensions)
+                e.Update(framePeriod);
         }
         #endregion
 
@@ -242,6 +252,10 @@ namespace SS3d_server.Atom
         protected virtual void ApplyAction(Atom a, Mob.Mob m)
         {
             m.selectedAppendage.heldItem.UsedOn(this); //Technically this is the same fucking thing as a, but i dont want to fuck with explicit casting it.
+
+            //apply extension actions
+            foreach (Extension.Extension e in extensions)
+                e.ApplyAction(a, m);
         }
 
         /// <summary>
@@ -252,7 +266,9 @@ namespace SS3d_server.Atom
         /// <param name="target">Atom for this atom to be used on</param>
         protected virtual void UsedOn(Atom target)
         {
-
+            //Apply extensions
+            foreach (Extension.Extension e in extensions)
+                e.UsedOn(target);
         }
         #endregion
 

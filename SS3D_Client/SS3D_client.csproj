@@ -136,12 +136,10 @@
     <Compile Include="HelperClasses\InterpolationPacket.cs" />
     <Compile Include="HelperClasses\Rect2D.cs" />
     <Compile Include="Modules\ConfigManager.cs" />
-    <None Include="Modules\Items\ItemManager.cs" />
     <Compile Include="Modules\Map\Map.cs" />
     <Compile Include="Modules\Map\MapFile.cs" />
     <Compile Include="Modules\Map\MapSaver.cs" />
     <Compile Include="Modules\MiyagiRessources.cs" />
-    <None Include="Modules\Mobs\MobManager.cs" />
     <Compile Include="Modules\Network\NetworkManager.cs" />
     <Compile Include="Modules\OgreEventArgs.cs" />
     <Compile Include="Modules\OgreManager.cs" />

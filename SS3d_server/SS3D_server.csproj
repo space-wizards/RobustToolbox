@@ -92,9 +92,7 @@
     <Compile Include="Helper Classes\Point.cs" />
     <Compile Include="Modules\Chat\ChatManager.cs" />
     <Compile Include="Modules\Client\Client.cs" />
-    <None Include="Modules\Items\ItemManager.cs" />
     <Compile Include="Modules\Map\Map.cs" />
-    <None Include="Modules\Mobs\MobManager.cs" />
     <Compile Include="Modules\PlayerManager.cs" />
     <Compile Include="Modules\PlayerSession.cs" />
     <Compile Include="Program.cs" />

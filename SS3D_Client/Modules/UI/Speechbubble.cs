@@ -126,7 +126,7 @@ public class SpeechBubble : GUI
     public void Show(string text)
     {
         this.opacity = 100;
-        this.Visible = true;
+        //this.Visible = true;
         this.Text.Text = text;
         this.removeAt = DateTime.Now.AddMilliseconds(4000);
     }
@@ -134,7 +134,7 @@ public class SpeechBubble : GUI
     public void Show(string text, double durationMilli)
     {
         this.opacity = 100;
-        this.Visible = true;
+        //this.Visible = true;
         this.Text.Text = text;
         this.removeAt = DateTime.Now.AddMilliseconds(durationMilli);
     }
@@ -142,7 +142,7 @@ public class SpeechBubble : GUI
     public void Hide()
     {
         this.opacity = 0;
-        this.Visible = false;
+        //this.Visible = false;
     }
 
     public void ScheduleDispose() //Schedules removal after next update.
@@ -152,7 +152,6 @@ public class SpeechBubble : GUI
 
     private void SpeechBubble_DisposeNow(object sender, EventArgs e)
     {
-        Hide();
         Dispose();
         mMiyagiMgr.GUIManager.GUIs.Remove(this);
     } //Used by ScheduleDispose()

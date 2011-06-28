@@ -46,8 +46,8 @@ namespace SS3D.Atom
 
         public delegate void KeyEvent(bool state);
 
-        //Misc?
-        public bool speaking = false;
+        //Misc
+        public SpeechBubble speechBubble;
 
         #endregion
 

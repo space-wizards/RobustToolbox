@@ -34,7 +34,7 @@ namespace SS3D.Modules.Mobs
             map = _map;
             networkManager = _networkManager;
             mobDict = new Dictionary<ushort, Mob>();
-           mobAssemblyName = typeof(SS3D_shared.Item).Assembly.ToString();
+            mobAssemblyName = typeof(SS3D_shared.Item).Assembly.ToString();
         }
 
         public void HandleNetworkMessage(NetIncomingMessage message)
@@ -74,7 +74,6 @@ namespace SS3D.Modules.Mobs
                      {
                          UpdateMobPosition(mobID);
                      }
-                     UpdatemobChat(mobID);
                  }
                  lastMobUpdate = DateTime.Now;
              }
@@ -308,26 +307,5 @@ namespace SS3D.Modules.Mobs
             }
             return null;
         }
-
-        private void UpdatemobChat(ushort mobID)
-        {
-            Mob mob = mobDict[mobID];
-            if (mob.speaking)
-            {
-                mob.speakTime += (float)mobUpdateTime;
-                if (mob.speakTime >= speakLength)
-                {
-                    mob.speaking = false;
-                    mob.speakTime = 0;
-                    mob.billboardSet.Visible = false;
-                }
-                else
-                {
-                    mob.billboardSet.Visible = true;
-                }
-            }
-        }
-
-
     }
 }

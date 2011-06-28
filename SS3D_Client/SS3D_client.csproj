@@ -150,6 +150,7 @@
     <Compile Include="Modules\StateManager.cs" />
     <Compile Include="Modules\UI\Console.cs" />
     <Compile Include="Modules\UI\Chatbox.cs" />
+    <Compile Include="Modules\UI\Speechbubble.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="States\ConnectMenu.cs" />

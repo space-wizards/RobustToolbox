@@ -46,6 +46,7 @@ namespace SS3D.Modules
             SceneNode camNode = controlledAtom.Node.CreateChildSceneNode();
             camNode.AttachObject(atomManager.mEngine.Camera);
             atomManager.mEngine.Camera.SetAutoTracking(true, camNode, new Mogre.Vector3(0, 32, 0));
+
         }
 
         public void Detach()

@@ -357,8 +357,11 @@ namespace SS3D.States
             ushort atomID = msg.ReadUInt16();
             gameChat.AddLine(message);
             Atom.Atom a = atomManager.GetAtom(atomID);
-            if(a != null)
-                a.speaking = true;
+            if (a != null)
+            {
+                if (a.speechBubble == null) a.speechBubble = new SpeechBubble(mEngine, a.Entity);
+                a.speechBubble.Show(text, 4000 + ((double)text.Length * (double)30));
+            }
         }
 
         private void SendChatMessage(string text)

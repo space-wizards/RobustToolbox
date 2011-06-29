@@ -6,6 +6,7 @@ using Mogre;
 using Miyagi;
 using Miyagi.Common;
 using SS3D.Modules.Network;
+using Miyagi.Common.Data;
 namespace SS3D.Modules
 {
     public abstract class LoadingTracker //Very simple abstract class. 
@@ -381,6 +382,11 @@ namespace SS3D.Modules
         // remove object from its parent
         _node.Parent.RemoveChild( _node );
       }
+    }
+
+    public Point GetScreenSize()
+    {
+        return new Point((int)Window.Width, (int)Window.Height);
     }
 
   }

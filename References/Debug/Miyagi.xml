@@ -3565,12 +3565,11 @@
             Gets or sets the UpdateType.
             </summary>
         </member>
-        <member name="M:Miyagi.UI.Controls.Elements.Element`2.#ctor(`0,Miyagi.UI.Controls.Control,System.Func{System.Int32})">
+        <member name="M:Miyagi.UI.Controls.Elements.Element`2.#ctor(`0,System.Func{System.Int32})">
             <summary>
             Initializes a new instance of the <see cref="T:Miyagi.UI.Controls.Elements.Element`2"/> class.
             </summary>
             <param name="owner">The owner.</param>
-            <param name="owningControl"></param>
             <param name="zorderGetter">The zorder getter.</param>
         </member>
         <member name="M:Miyagi.UI.Controls.Elements.Element`2.Finalize">
@@ -3883,7 +3882,6 @@
             <summary>
             Gets or sets the owner of the element.
             </summary>
-            <value>A IElementOwner representing the owner.</value>
         </member>
         <member name="P:Miyagi.UI.Controls.Elements.Element`2.OwningControl">
             <summary>
@@ -3956,12 +3954,11 @@
             Gets the current uv-coordinates.
             </summary>
         </member>
-        <member name="M:Miyagi.UI.Controls.Elements.InteractiveElement`2.#ctor(`0,Miyagi.UI.Controls.Control,System.Func{System.Int32})">
+        <member name="M:Miyagi.UI.Controls.Elements.InteractiveElement`2.#ctor(`0,System.Func{System.Int32})">
             <summary>
             Initializes a new instance of the <see cref="T:Miyagi.UI.Controls.Elements.InteractiveElement`2"/> class.
             </summary>
             <param name="owner">The owner.</param>
-            <param name="owningControl"></param>
             <param name="zorderGetter">The zorder getter.</param>
         </member>
         <member name="M:Miyagi.UI.Controls.Elements.InteractiveElement`2.ChangeTexture(Miyagi.Common.SkinChangingEvent)">
@@ -4015,12 +4012,11 @@
             The minimum size of a thumb.
             </summary>
         </member>
-        <member name="M:Miyagi.UI.Controls.Elements.ThumbElement`1.#ctor(Miyagi.UI.Controls.Elements.IThumbElementOwner{`0},Miyagi.UI.Controls.Control,System.Func{System.Int32})">
+        <member name="M:Miyagi.UI.Controls.Elements.ThumbElement`1.#ctor(Miyagi.UI.Controls.Elements.IThumbElementOwner{`0},System.Func{System.Int32})">
             <summary>
             Initializes a new instance of the ThumbElement class.
             </summary>
             <param name="owner">The owner of the element.</param>
-            <param name="owningControl"></param>
             <param name="zorderGetter">The zorder getter.</param>
         </member>
         <member name="M:Miyagi.UI.Controls.Elements.ThumbElement`1.AreAllSpritesNull">
@@ -4119,12 +4115,11 @@
             An element for displaying a ListBox.
             </summary>
         </member>
-        <member name="M:Miyagi.UI.Controls.Elements.ListElement.#ctor(Miyagi.UI.Controls.Elements.IListElementOwner,Miyagi.UI.Controls.Control,System.Func{System.Int32})">
+        <member name="M:Miyagi.UI.Controls.Elements.ListElement.#ctor(Miyagi.UI.Controls.Elements.IListElementOwner,System.Func{System.Int32})">
             <summary>
             Initializes a new instance of the ListBoxElement class.
             </summary>
             <param name="owner">The owner of the element.</param>
-            <param name="owningControl"></param>
             <param name="zorderGetter">The zorder getter.</param>
         </member>
         <member name="M:Miyagi.UI.Controls.Elements.ListElement.AreAllSpritesNull">
@@ -4442,12 +4437,11 @@
             Gets the scroll offset.
             </summary>
         </member>
-        <member name="M:Miyagi.UI.Controls.Elements.EditBoxElement`2.#ctor(`0,Miyagi.UI.Controls.Control,System.Func{System.Int32})">
+        <member name="M:Miyagi.UI.Controls.Elements.EditBoxElement`2.#ctor(`0,System.Func{System.Int32})">
             <summary>
             Initializes a new instance of the TextBoxElement class.
             </summary>
             <param name="owner">The owner of the element.</param>
-            <param name="owningControl"></param>
             <param name="zorderGetter">The zorder getter.</param>
         </member>
         <member name="M:Miyagi.UI.Controls.Elements.EditBoxElement`2.DeselectText">
@@ -4605,12 +4599,11 @@
             An element for displaying a button.
             </summary>
         </member>
-        <member name="M:Miyagi.UI.Controls.Elements.ButtonElement.#ctor(Miyagi.UI.Controls.Elements.IInteractiveElementOwner,Miyagi.UI.Controls.Control,System.Func{System.Int32},System.String)">
+        <member name="M:Miyagi.UI.Controls.Elements.ButtonElement.#ctor(Miyagi.UI.Controls.Elements.IInteractiveElementOwner,System.Func{System.Int32},System.String)">
             <summary>
             Initializes a new instance of the <see cref="T:Miyagi.UI.Controls.Elements.ButtonElement"/> class.
             </summary>
             <param name="owner">The owner.</param>
-            <param name="owningControl"></param>
             <param name="zorderGetter">The zorder getter.</param>
             <param name="skinName">Name of the skin.</param>
         </member>
@@ -5511,12 +5504,11 @@
             An element for displaying a texture.
             </summary>
         </member>
-        <member name="M:Miyagi.UI.Controls.Elements.TextureElement.#ctor(Miyagi.UI.Controls.Elements.IElementOwner,Miyagi.UI.Controls.Control,System.Func{System.Int32})">
+        <member name="M:Miyagi.UI.Controls.Elements.TextureElement.#ctor(Miyagi.UI.Controls.Elements.IElementOwner,System.Func{System.Int32})">
             <summary>
             Initializes a new instance of the TextureElement class.
             </summary>
             <param name="owner">The owner of the element.</param>
-            <param name="owningControl"></param>
             <param name="zorderGetter">The zorder getter.</param>
         </member>
         <member name="M:Miyagi.UI.Controls.Elements.TextureElement.Resize(Miyagi.Common.Data.Point)">
@@ -5998,42 +5990,6 @@
         <member name="T:Miyagi.Common.Serialization.SerializableTypeAttribute">
             <summary>
             Indicates a serializable type.
-            </summary>
-        </member>
-        <member name="T:Miyagi.Internals.Resources.Gfx.DialogBoxSkin">
-            <summary>
-              A strongly-typed resource class, for looking up localized strings, etc.
-            </summary>
-        </member>
-        <member name="P:Miyagi.Internals.Resources.Gfx.DialogBoxSkin.ResourceManager">
-            <summary>
-              Returns the cached ResourceManager instance used by this class.
-            </summary>
-        </member>
-        <member name="P:Miyagi.Internals.Resources.Gfx.DialogBoxSkin.Culture">
-            <summary>
-              Overrides the current thread's CurrentUICulture property for all
-              resource lookups using this strongly typed resource class.
-            </summary>
-        </member>
-        <member name="P:Miyagi.Internals.Resources.Gfx.DialogBoxSkin.UV_Button">
-            <summary>
-              Looks up a localized string similar to 0.75,0,0.125,0.25.
-            </summary>
-        </member>
-        <member name="P:Miyagi.Internals.Resources.Gfx.DialogBoxSkin.UV_Button_MouseDown">
-            <summary>
-              Looks up a localized string similar to 0.5,0,0.125,0.25.
-            </summary>
-        </member>
-        <member name="P:Miyagi.Internals.Resources.Gfx.DialogBoxSkin.UV_Button_MouseEnter">
-            <summary>
-              Looks up a localized string similar to 0.625,0,0.125,0.25.
-            </summary>
-        </member>
-        <member name="P:Miyagi.Internals.Resources.Gfx.DialogBoxSkin.UV_Panel">
-            <summary>
-              Looks up a localized string similar to 0,0,0.5,1.
             </summary>
         </member>
         <member name="T:Miyagi.Common.IManager">
@@ -6541,12 +6497,11 @@
             An element for displaying a ToolTip item.
             </summary>
         </member>
-        <member name="M:Miyagi.UI.Controls.Elements.ToolTipElement.#ctor(Miyagi.UI.Controls.Elements.IToolTipElementOwner,Miyagi.UI.Controls.Control,System.Func{System.Int32})">
+        <member name="M:Miyagi.UI.Controls.Elements.ToolTipElement.#ctor(Miyagi.UI.Controls.Elements.IToolTipElementOwner,System.Func{System.Int32})">
             <summary>
             Initializes a new instance of the ToolTipElement class.
             </summary>
             <param name="owner">The owner of the ToolTipElement.</param>
-            <param name="owningControl"></param>
             <param name="zorderGetter">The zorder getter.</param>
         </member>
         <member name="M:Miyagi.UI.Controls.Elements.ToolTipElement.AreAllSpritesNull">
@@ -6682,12 +6637,11 @@
             An element for displaying a texture that is surrounded by a border.
             </summary>
         </member>
-        <member name="M:Miyagi.UI.Controls.Elements.SkinElement.#ctor(Miyagi.UI.Controls.Elements.ISkinElementOwner,Miyagi.UI.Controls.Control,System.Func{System.Int32})">
+        <member name="M:Miyagi.UI.Controls.Elements.SkinElement.#ctor(Miyagi.UI.Controls.Elements.ISkinElementOwner,System.Func{System.Int32})">
             <summary>
             Initializes a new instance of the SkinElement class.
             </summary>
             <param name="owner">The owner of the element.</param>
-            <param name="owningControl"></param>
             <param name="zorderGetter">The zorder getter.</param>
         </member>
         <member name="M:Miyagi.UI.Controls.Elements.SkinElement.GetBounds">
@@ -6707,12 +6661,11 @@
             An element for displaying a ListBox item.
             </summary>
         </member>
-        <member name="M:Miyagi.UI.Controls.Elements.ListItemElement.#ctor(Miyagi.UI.Controls.Elements.ITextElementOwner,Miyagi.UI.Controls.Control,System.Func{System.Int32})">
+        <member name="M:Miyagi.UI.Controls.Elements.ListItemElement.#ctor(Miyagi.UI.Controls.Elements.ITextElementOwner,System.Func{System.Int32})">
             <summary>
             Initializes a new instance of the ListBoxItemElement class.
             </summary>
             <param name="owner">The owner of the ListBoxItemElement.</param>
-            <param name="owningControl"></param>
             <param name="zorderGetter">The zorder getter.</param>
         </member>
         <member name="M:Miyagi.UI.Controls.Elements.ListItemElement.AreAllSpritesNull">
@@ -7019,78 +6972,6 @@
         <member name="P:Miyagi.Common.Serialization.Serializer.SerializationManager">
             <summary>
             Gets the serialization manager.
-            </summary>
-        </member>
-        <member name="T:Miyagi.Common.Resources.TrueTypeFont">
-            <summary>
-            A font based on a ttf file.
-            </summary>
-        </member>
-        <member name="M:Miyagi.Common.Resources.TrueTypeFont.Create(Miyagi.Common.MiyagiSystem,System.String,Miyagi.Common.Resources.TrueTypeFontSettings)">
-            <summary>
-            Creates a new TrueTypeFont.
-            </summary>
-            <param name="system">The MiyagiSystem.</param>
-            <param name="name">The name of the TrueTypeFont.</param>
-            <returns>The created TrueType font.</returns>
-        </member>
-        <member name="M:Miyagi.Common.Resources.TrueTypeFont.CreateFromXml(System.String,Miyagi.Common.MiyagiSystem)">
-            <summary>
-            Creates TrueTypeFonts from XML.
-            </summary>
-            <param name="fileName">The location of the XML file.</param>
-            <param name="system">The system.</param>
-            <returns>The newly created TrueTypeFonts.</returns>
-        </member>
-        <member name="M:Miyagi.Common.Resources.TrueTypeFont.CreateFromXml(System.Xml.Linq.XElement,Miyagi.Common.MiyagiSystem)">
-            <summary>
-            Creates a TrueTypeFont from XML.
-            </summary>
-            <param name="xElement">An XElement that contains the XML representation of the TrueTypeFont.</param>
-            <param name="system">The MiyagiSystem.</param>
-            <returns>
-            The newly created TrueTypeFont or null if the XML file is invalid.
-            </returns>
-        </member>
-        <member name="M:Miyagi.Common.Resources.TrueTypeFont.ToString">
-            <summary>
-            Returns a string representing the TrueTypeFont.
-            </summary>
-            <returns>A string representing the TrueTypeFont.</returns>
-        </member>
-        <member name="M:Miyagi.Common.Resources.TrueTypeFont.ToXElement">
-            <summary>
-            Converts the font to an XElement.
-            </summary>
-            <returns>An <see cref="T:System.Xml.Linq.XElement"/> representing the font.</returns>
-        </member>
-        <member name="M:Miyagi.Common.Resources.TrueTypeFont.CreateFont(Miyagi.Common.MiyagiSystem)">
-            <summary>
-            Creates the font.
-            </summary>
-            <param name="system">The MiyagiSystem.</param>
-        </member>
-        <member name="M:Miyagi.Common.Resources.TrueTypeFont.CreateFontBitmap(System.Drawing.FontFamily,System.Drawing.FontStyle,System.Int32,System.Int32,System.Int32@,System.Collections.Generic.IEnumerable{Miyagi.Common.Data.Range},System.Collections.Generic.IDictionary{System.Char,Miyagi.Common.Data.RectangleF})">
-            <exception cref="T:System.ArgumentException">Invalid font style</exception>
-        </member>
-        <member name="P:Miyagi.Common.Resources.TrueTypeFont.FontStyle">
-            <summary>
-            Gets the FontStyle.
-            </summary>
-        </member>
-        <member name="P:Miyagi.Common.Resources.TrueTypeFont.Resolution">
-            <summary>
-            Gets the resolution of the font in dpi.
-            </summary>
-        </member>
-        <member name="P:Miyagi.Common.Resources.TrueTypeFont.Size">
-            <summary>
-            Gets the size of the font in points.
-            </summary>
-        </member>
-        <member name="P:Miyagi.Common.Resources.TrueTypeFont.TextureName">
-            <summary>
-            Gets the name of the texture of the font.
             </summary>
         </member>
         <member name="T:Miyagi.Common.Resources.ImageFont">
@@ -7729,12 +7610,11 @@
             An element for displaying a caret.
             </summary>
         </member>
-        <member name="M:Miyagi.UI.Controls.Elements.CaretElement.#ctor(Miyagi.UI.Controls.Elements.ICaretElementOwner,Miyagi.UI.Controls.Control,System.Func{System.Int32})">
+        <member name="M:Miyagi.UI.Controls.Elements.CaretElement.#ctor(Miyagi.UI.Controls.Elements.ICaretElementOwner,System.Func{System.Int32})">
             <summary>
             Initializes a new instance of the CaretElement class.
             </summary>
             <param name="owner">The owner of the element.</param>
-            <param name="owningControl"></param>
             <param name="zorderGetter">The zorder getter.</param>
         </member>
         <member name="M:Miyagi.UI.Controls.Elements.CaretElement.ApplyOpacity">
@@ -8553,146 +8433,6 @@
             </summary>
             <value>The check state of the control.</value>
         </member>
-        <member name="T:Miyagi.UI.Controls.PictureBox">
-            <summary>
-            A PictureBox.
-            </summary>
-        </member>
-        <member name="T:Miyagi.UI.Controls.BitmapControl">
-            <summary>
-            A base class for Bitmap controls.
-            </summary>
-        </member>
-        <member name="M:Miyagi.UI.Controls.BitmapControl.#ctor(System.String)">
-            <summary>
-            Initializes a new instance of the BitmapControl class.
-            </summary>
-            <param name="name">The name of the BitmapControl.</param>
-        </member>
-        <member name="M:Miyagi.UI.Controls.BitmapControl.Save(System.String,System.Drawing.Imaging.ImageFormat)">
-            <summary>
-            Saves the Bitmap to the specified file.
-            </summary>
-            <param name="fileName">A string representing the name of the file.</param>
-            <param name="format">An BitmapFormat representing the format.</param>
-        </member>
-        <member name="M:Miyagi.UI.Controls.BitmapControl.Dispose(System.Boolean)">
-            <summary>
-            Disposes the control.
-            </summary>
-            <param name="disposing">Whether Dispose has been called.</param>
-        </member>
-        <member name="M:Miyagi.UI.Controls.BitmapControl.DoResize(System.Double,System.Double)">
-            <summary>
-            Resizes the control.
-            </summary>
-            <param name="widthFactor">The relative growth of the width.</param>
-            <param name="heightFactor">The relative growth of the height.</param>
-        </member>
-        <member name="M:Miyagi.UI.Controls.BitmapControl.OnBitmapChanged">
-            <summary>
-            Called when the <see cref="P:Miyagi.UI.Controls.BitmapControl.Bitmap"/> changes.
-            </summary>
-        </member>
-        <member name="M:Miyagi.UI.Controls.BitmapControl.OnSizeChanged(Miyagi.Common.Events.ChangedValueEventArgs{Miyagi.Common.Data.Size})">
-            <summary>
-            Raises the <see cref="E:Miyagi.UI.Controls.Control.SizeChanged"/> event.
-            </summary>
-            <param name="e">The <see cref="T:Miyagi.Common.Events.ChangedValueEventArgs`1"/> instance containing the event data.</param>
-        </member>
-        <member name="M:Miyagi.UI.Controls.BitmapControl.RemoveTexture">
-            <summary>
-            Removes the texture.
-            </summary>
-        </member>
-        <member name="M:Miyagi.UI.Controls.BitmapControl.SetBitmap(System.Drawing.Bitmap)">
-            <summary>
-            Sets the bitmap.
-            </summary>
-        </member>
-        <member name="M:Miyagi.UI.Controls.BitmapControl.UpdateBitmap">
-            <summary>
-            Updates the <see cref="P:Miyagi.UI.Controls.BitmapControl.Bitmap"/>.
-            </summary>
-            <remarks>This is called <see cref="P:Miyagi.UI.Controls.BitmapControl.NeedsUpdate"/> is true.</remarks>
-        </member>
-        <member name="M:Miyagi.UI.Controls.BitmapControl.UpdateCore">
-            <summary>
-            Updates the control.
-            </summary>
-        </member>
-        <member name="P:Miyagi.UI.Controls.BitmapControl.Bitmap">
-            <summary>
-            Gets or sets the used Bitmap.
-            </summary>
-        </member>
-        <member name="P:Miyagi.UI.Controls.BitmapControl.Elements">
-            <summary>
-            Gets a list of elements.
-            </summary>
-            <value>A list of elements.</value>
-        </member>
-        <member name="P:Miyagi.UI.Controls.BitmapControl.NeedsUpdate">
-            <summary>
-            Gets or sets a value indicating whether the Bitmap needs to be written to the texture.
-            </summary>
-        </member>
-        <member name="P:Miyagi.UI.Controls.BitmapControl.TextureElement">
-            <summary>
-            Gets the TextureElement.
-            </summary>
-        </member>
-        <member name="P:Miyagi.UI.Controls.BitmapControl.TextureName">
-            <summary>
-            Gets the name of the texture.
-            </summary>
-        </member>
-        <member name="M:Miyagi.UI.Controls.PictureBox.#ctor">
-            <summary>
-            Initializes a new instance of the PictureBox class.
-            </summary>
-        </member>
-        <member name="M:Miyagi.UI.Controls.PictureBox.#ctor(System.String)">
-            <summary>
-            Initializes a new instance of the PictureBox class.
-            </summary>
-            <param name="name">The name of the PictureBox.</param>
-        </member>
-        <member name="M:Miyagi.UI.Controls.PictureBox.Load(System.Byte[])">
-            <summary>
-            Loads a image from the specified byte array.
-            </summary>
-            <param name="bytes">The bytes.</param>
-        </member>
-        <member name="M:Miyagi.UI.Controls.PictureBox.Load(System.IO.Stream)">
-            <summary>
-            Loads a image from the specified stream.
-            </summary>
-            <param name="stream">The stream.</param>
-        </member>
-        <member name="M:Miyagi.UI.Controls.PictureBox.Load(System.String)">
-            <summary>
-            Loads a image from the specified file.
-            </summary>
-            <param name="fileName">A string representing the name of the file.</param>
-        </member>
-        <member name="M:Miyagi.UI.Controls.PictureBox.Dispose(System.Boolean)">
-            <summary>
-            Disposes the control.
-            </summary>
-            <param name="disposing">Whether Dispose has been called.</param>
-        </member>
-        <member name="M:Miyagi.UI.Controls.PictureBox.OnBitmapChanged">
-            <summary>
-            Called when the <see cref="T:System.Drawing.Bitmap"/> changes.
-            </summary>
-        </member>
-        <member name="M:Miyagi.UI.Controls.PictureBox.UpdateBitmap">
-            <summary>
-            Updates the Bitmap
-            </summary>
-            <remarks>This is called <see cref="P:Miyagi.UI.Controls.BitmapControl.NeedsUpdate"/> is true.</remarks>
-        </member>
         <member name="T:Miyagi.UI.Controls.Elements.ITabBarElementOwner">
             <summary>
             Enables a class the be the parent of a TabBarElement.
@@ -8715,12 +8455,11 @@
             An element for displaying a tabbar.
             </summary>
         </member>
-        <member name="M:Miyagi.UI.Controls.Elements.TabBarElement.#ctor(Miyagi.UI.Controls.Elements.ITabBarElementOwner,Miyagi.UI.Controls.Control,System.Func{System.Int32})">
+        <member name="M:Miyagi.UI.Controls.Elements.TabBarElement.#ctor(Miyagi.UI.Controls.Elements.ITabBarElementOwner,System.Func{System.Int32})">
             <summary>
             Initializes a new instance of the <see cref="T:Miyagi.UI.Controls.Elements.TabBarElement"/> class.
             </summary>
             <param name="owner">The owner.</param>
-            <param name="owningControl"></param>
             <param name="zorderGetter">The zorder getter.</param>
         </member>
         <member name="M:Miyagi.UI.Controls.Elements.TabBarElement.GetLocationInViewport">
@@ -11317,12 +11056,11 @@
             An element for displaying a tab.
             </summary>
         </member>
-        <member name="M:Miyagi.UI.Controls.Elements.TabElement.#ctor(Miyagi.UI.Controls.Elements.ITabElementOwner,Miyagi.UI.Controls.Control,System.Func{System.Int32})">
+        <member name="M:Miyagi.UI.Controls.Elements.TabElement.#ctor(Miyagi.UI.Controls.Elements.ITabElementOwner,System.Func{System.Int32})">
             <summary>
             Initializes a new instance of the <see cref="T:Miyagi.UI.Controls.Elements.TabElement"/> class.
             </summary>
             <param name="owner">The owner.</param>
-            <param name="owningControl"></param>
             <param name="zorderGetter">The zorder getter.</param>
         </member>
         <member name="M:Miyagi.UI.Controls.Elements.TabElement.AreAllSpritesNull">
@@ -12262,12 +12000,11 @@
             An element for displaying text.
             </summary>
         </member>
-        <member name="M:Miyagi.UI.Controls.Elements.TextElement.#ctor(Miyagi.UI.Controls.Elements.ITextElementOwner,Miyagi.UI.Controls.Control,System.Func{System.Int32})">
+        <member name="M:Miyagi.UI.Controls.Elements.TextElement.#ctor(Miyagi.UI.Controls.Elements.ITextElementOwner,System.Func{System.Int32})">
             <summary>
             Initializes a new instance of the TextElement class.
             </summary>
             <param name="owner">The owner of the element.</param>
-            <param name="owningControl"></param>
             <param name="zorderGetter">The zorder getter.</param>
         </member>
         <member name="M:Miyagi.UI.Controls.Elements.TextElement.ApplyOpacity">
@@ -12368,12 +12105,11 @@
             An element for displaying a border.
             </summary>
         </member>
-        <member name="M:Miyagi.UI.Controls.Elements.BorderElement.#ctor(Miyagi.UI.Controls.Elements.IBorderElementOwner,Miyagi.UI.Controls.Control,System.Func{System.Int32})">
+        <member name="M:Miyagi.UI.Controls.Elements.BorderElement.#ctor(Miyagi.UI.Controls.Elements.IBorderElementOwner,System.Func{System.Int32})">
             <summary>
             Initializes a new instance of the BorderElement class.
             </summary>
             <param name="owner">The owner of the element.</param>
-            <param name="owningControl"></param>
             <param name="zorderGetter">The zorder getter.</param>
         </member>
         <member name="M:Miyagi.UI.Controls.Elements.BorderElement.CreateBorderQuads(Miyagi.Common.Data.Rectangle,Miyagi.Common.Data.Thickness)">
@@ -15541,12 +15277,11 @@
             An element for displaying a textbox.
             </summary>
         </member>
-        <member name="M:Miyagi.UI.Controls.Elements.TextBoxElement.#ctor(Miyagi.UI.Controls.Elements.ITextBoxElementOwner,Miyagi.UI.Controls.Control,System.Func{System.Int32})">
+        <member name="M:Miyagi.UI.Controls.Elements.TextBoxElement.#ctor(Miyagi.UI.Controls.Elements.ITextBoxElementOwner,System.Func{System.Int32})">
             <summary>
             Initializes a new instance of the <see cref="T:Miyagi.UI.Controls.Elements.TextBoxElement"/> class.
             </summary>
             <param name="owner">The owner.</param>
-            <param name="owningControl"></param>
             <param name="zorderGetter">The zorder getter.</param>
         </member>
         <member name="M:Miyagi.UI.Controls.Elements.TextBoxElement.CheckRestrictions(System.String)">
@@ -15575,12 +15310,11 @@
             An element for displaying a progressbar.
             </summary>
         </member>
-        <member name="M:Miyagi.UI.Controls.Elements.ProgressBarElement.#ctor(Miyagi.UI.Controls.Elements.IProgressBarElementOwner,Miyagi.UI.Controls.Control,System.Func{System.Int32})">
+        <member name="M:Miyagi.UI.Controls.Elements.ProgressBarElement.#ctor(Miyagi.UI.Controls.Elements.IProgressBarElementOwner,System.Func{System.Int32})">
             <summary>
             Initializes a new instance of the BarElement class.
             </summary>
             <param name="owner">The owner of the element.</param>
-            <param name="owningControl"></param>
             <param name="zorderGetter">The zorder getter.</param>
         </member>
         <member name="M:Miyagi.UI.Controls.Elements.ProgressBarElement.GetBounds">
@@ -16295,12 +16029,11 @@
             An element for displaying a scrollbar.
             </summary>
         </member>
-        <member name="M:Miyagi.UI.Controls.Elements.ScrollBarElement.#ctor(Miyagi.UI.Controls.Elements.IInteractiveElementOwner,Miyagi.UI.Controls.Control,Miyagi.UI.Controls.Elements.IScrollBarElementController,System.Func{System.Int32})">
+        <member name="M:Miyagi.UI.Controls.Elements.ScrollBarElement.#ctor(Miyagi.UI.Controls.Elements.IInteractiveElementOwner,Miyagi.UI.Controls.Elements.IScrollBarElementController,System.Func{System.Int32})">
             <summary>
             Initializes a new instance of the ScrollBarElement class.
             </summary>
             <param name="owner">The owner of the element.</param>
-            <param name="owningControl"></param>
             <param name="controller">The controller of the element.</param>
             <param name="zorderGetter">The zorder getter.</param>
         </member>

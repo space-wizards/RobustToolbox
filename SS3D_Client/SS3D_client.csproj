@@ -93,9 +93,15 @@
       <HintPath>..\References\$(Configuration)\Backends\Miyagi.Backend.Mogre.dll</HintPath>
       <Private>True</Private>
     </Reference>
+    <Reference Include="Miyagi.BitmapControl">
+      <HintPath>..\References\Release\Addons\Miyagi.BitmapControl.dll</HintPath>
+    </Reference>
     <Reference Include="Miyagi.Plugin.Input.Mois">
       <HintPath>..\References\$(Configuration)\Plugins\Miyagi.Plugin.Input.Mois.dll</HintPath>
       <Private>True</Private>
+    </Reference>
+    <Reference Include="Miyagi.TrueTypeFont">
+      <HintPath>..\References\Release\Addons\Miyagi.TrueTypeFont.dll</HintPath>
     </Reference>
     <Reference Include="Mogre, Version=1.7.1.0, Culture=neutral, processorArchitecture=x86">
       <HintPath>..\References\$(Configuration)\Mogre.dll</HintPath>

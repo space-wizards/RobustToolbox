@@ -209,9 +209,9 @@ namespace GasPropagationTest
                 {
                     //transfer some back.
                     double halfofdiff = (c.Key.nextGasAmount - (currentCell.gasAmount - adjustedSum))/2;
-                    //c.Key.nextGasAmount -= halfofdiff;
+                    c.Key.nextGasAmount -= halfofdiff;
                     //currentCell.gasAmount += halfofdiff;
-                    //currentCell.nextGasAmount += halfofdiff;                
+                    currentCell.nextGasAmount += halfofdiff;                
 
                 }
                 

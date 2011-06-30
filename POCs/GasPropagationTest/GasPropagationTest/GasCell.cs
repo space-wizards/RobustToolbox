@@ -128,8 +128,8 @@ namespace GasPropagationTest
                 {
                     if (i == 0 && j == 0) // If we're on this cell
                         continue;
-                    if (Math.Abs(i) + Math.Abs(j) == 2)
-                        continue;
+                    //if (Math.Abs(i) + Math.Abs(j) == 2)
+                      //  continue;
                     if (arrX + i < 0 || arrX + i > 38 || arrY + j < 0 || arrY + j > 38) // If out of bounds
                         continue;
 
@@ -143,27 +143,28 @@ namespace GasPropagationTest
                         return;
                     }
                     /// Calculate change due to velocity
-                    FlowX = 0; FlowY = 0;
-                    if(Math.Sign(i*vx)>=0)
-                        FlowX = (i*vx) / 2;
-                    if (Math.Sign(j * vy) >= 0)
-                        FlowY = (j * vy) / 2;
-
-                    //if (vy < 0)
-                        //vy = 0;
+                    //FlowX = 0; FlowY = 0;
+                    //FlowX = vx * .15;
+                    //FlowY = vy * .15;
+                                        
                     ///Calculate change
-                    Flow = FlowConstant * DAmount + FlowX + FlowY;
+                    Flow = FlowConstant * DAmount;// +FlowX + FlowY;
                     Flow = Clamp(Flow, gasAmount / 4, neighbor.gasAmount / 4);
                     nextGasAmount -= Flow * RateConstant;
                     neighbor.nextGasAmount += Flow * RateConstant;
 
-                    ///Calculate new velocity
+                    /*//Calculate new velocity
                     double v = Flow * RateConstant;
-                    neighbor.nextvx += v * i * 1;
-                    neighbor.nextvy += v * j * 1;
-                    v = Flow * RateConstant;
-                    nextvx += v * i * 1;
-                    nextvy += v * j * 1;
+                    if (Flow > 0)
+                    {
+                        neighbor.nextvx += v * i;
+                        neighbor.nextvy += v * j;
+                    }
+                    else if (Flow < 0)
+                    {
+                        nextvx += v * i;
+                        nextvy += v * j;
+                    }*/
 
                     if(nextGasAmount < 0)
                         nextGasAmount = 0;

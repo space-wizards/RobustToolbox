@@ -19,25 +19,48 @@ namespace GasPropagationTest
         Ellipse attachedellipse;
         double x;
         double y;
-        public double nextGasAmount = 0.1;
-        public double gasAmount = 0.1;
+        public double nextGasAmount = 10;
+        public double gasAmount = 10;
         int circleDiameter = 15;
         public bool sink = false;
+        public bool blocking = false;
 
         public GasCell(Ellipse e, double _x, double _y)
         {
             attachedellipse = e;
             x = _x;
             y = _y;
+            SetRadius(circleDiameter * gasAmount / 200);
         }
 
         public void Update()
         {
-            if (sink)
+            if (sink || blocking)
                 nextGasAmount = 0;
-            gasAmount = nextGasAmount;
-            
-            SetRadius(circleDiameter * gasAmount/2);
+
+            if (gasAmount != nextGasAmount)
+            {
+                gasAmount = nextGasAmount;
+                SetRadius(circleDiameter * gasAmount / 200);
+            }
+
+            if (blocking)
+            {
+                attachedellipse.Height = 15;
+                attachedellipse.Width = 15;
+                Canvas.SetLeft(attachedellipse, x);
+                Canvas.SetTop(attachedellipse, y);
+                attachedellipse.Fill = Brushes.Black;
+            }
+            if (sink)
+            {
+                attachedellipse.Height = 15;
+                attachedellipse.Width = 15;
+                Canvas.SetLeft(attachedellipse, x);
+                Canvas.SetTop(attachedellipse, y);
+                attachedellipse.Fill = Brushes.LightGray;
+            }
+                
         }
 
         public void SetRadius(double r)

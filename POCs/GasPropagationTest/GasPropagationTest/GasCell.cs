@@ -30,7 +30,7 @@ namespace GasPropagationTest
             attachedellipse = e;
             x = _x;
             y = _y;
-            SetRadius(circleDiameter * gasAmount / 200);
+            SetGasDisplay();
         }
 
         public void Update()
@@ -41,7 +41,7 @@ namespace GasPropagationTest
             if (gasAmount != nextGasAmount)
             {
                 gasAmount = nextGasAmount;
-                SetRadius(circleDiameter * gasAmount / 200);
+                SetGasDisplay();
             }
 
             if (blocking)
@@ -63,26 +63,34 @@ namespace GasPropagationTest
                 
         }
 
+        public void SetGasDisplay()
+        {
+            float gas = (float)gasAmount;
+            if (gas < 1)
+                gas = 1;
+            else if (gas > 10000)
+                gas = 10000;
+
+            float blue = (10 / (float)Math.Sqrt(gas));
+            float red = gas/1000;
+            if (red > 1)
+                red = 1;
+            if (blue > 1)
+                blue = 1;
+
+            Color c = new Color();
+            c.R = (byte)Math.Round(red * 255);
+            c.G = 0;
+            c.B = (byte)Math.Round(blue * 255);
+            c.A = 255;
+            attachedellipse.Fill = new SolidColorBrush(c);
+            SetRadius(circleDiameter * gasAmount / 200);
+        }
+
         public void SetRadius(double r)
         {
-            if (r <= 7.5)
-            {
-                attachedellipse.Fill = Brushes.Blue;
-                attachedellipse.Height = 2 * r;
-                attachedellipse.Width = 2 * r;
-                Canvas.SetLeft(attachedellipse, 7.5 - r + x);
-                Canvas.SetTop(attachedellipse, 7.5 - r + y);
-                return;
-            }
-            else if (r <= 15 && r > 7.5) 
-            {
-                attachedellipse.Fill = Brushes.Purple;
-            }
-            else
-            {
-                attachedellipse.Fill = Brushes.Red;
-            }
-            r = 7.5;
+            if(r > 7.5)
+                r = 7.5;
             attachedellipse.Height = 2 * r;
             attachedellipse.Width = 2 * r;
             Canvas.SetLeft(attachedellipse, 7.5 - r + x);

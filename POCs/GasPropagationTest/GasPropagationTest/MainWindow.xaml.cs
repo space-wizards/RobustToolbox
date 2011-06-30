@@ -98,16 +98,16 @@ namespace GasPropagationTest
                 return;//Threshold
             l = new Dictionary<GasCell, double>();
             if (x > 0 && y > 0 && currentCell.gasAmount > cellArray[x - 1, y - 1].gasAmount && !cellArray[x - 1, y - 1].blocking)
-                l.Add(cellArray[x - 1, y - 1], currentCell.gasAmount - cellArray[x - 1, y - 1].gasAmount);
+                l.Add(cellArray[x - 1, y - 1], (currentCell.gasAmount - cellArray[x - 1, y - 1].gasAmount) * .6);
 
             if (x < 38 && y < 38 && currentCell.gasAmount > cellArray[x + 1, y + 1].gasAmount && !cellArray[x + 1, y + 1].blocking)
-                l.Add(cellArray[x + 1, y + 1], currentCell.gasAmount - cellArray[x + 1, y + 1].gasAmount);
+                l.Add(cellArray[x + 1, y + 1], (currentCell.gasAmount - cellArray[x + 1, y + 1].gasAmount) * .6);
 
             if (x < 38 && y > 0 && currentCell.gasAmount > cellArray[x + 1, y - 1].gasAmount && !cellArray[x + 1, y - 1].blocking)
-                l.Add(cellArray[x + 1, y - 1], currentCell.gasAmount - cellArray[x + 1, y - 1].gasAmount);
+                l.Add(cellArray[x + 1, y - 1], (currentCell.gasAmount - cellArray[x + 1, y - 1].gasAmount) * .6);
 
             if (x > 0 && y < 38 && currentCell.gasAmount > cellArray[x - 1, y + 1].gasAmount && !cellArray[x - 1, y + 1].blocking)
-                l.Add(cellArray[x - 1, y + 1], currentCell.gasAmount - cellArray[x - 1, y + 1].gasAmount);
+                l.Add(cellArray[x - 1, y + 1], (currentCell.gasAmount - cellArray[x - 1, y + 1].gasAmount)* .6);
 
             if (y > 0 && currentCell.gasAmount > cellArray[x, y - 1].gasAmount && !cellArray[x, y - 1].blocking)
                 l.Add(cellArray[x, y - 1], currentCell.gasAmount - cellArray[x, y - 1].gasAmount);

@@ -121,7 +121,10 @@ namespace SS3D.States
             mEngine.mMiyagiSystem.GUIManager.GUIs.Add(guiGameScreen);
             Point screenSize = new Point((int)mEngine.Window.Width, (int)mEngine.Window.Height);
 
-            // The health background
+            HealthPanel healthPanel = new HealthPanel(mEngine);
+            healthPanel.Initialize();
+
+            /*// The health background
             Panel healthPanel = new Panel("healthPanel")
             {
                 Size = new Size(48, 105),
@@ -135,7 +138,7 @@ namespace SS3D.States
                 Size = new Size(42, 99),
                 Location = new Point(2, 3),
                 Bitmap = (System.Drawing.Bitmap)System.Drawing.Image.FromFile("../../../Media/GUI/HuD/healthgreen.png")
-            };
+            };*/
 
 
             Button leftHandButton = new Button("leftHandButton")
@@ -226,10 +229,8 @@ namespace SS3D.States
 
             leftHandButton.Controls.Add(leftHandBox);
             rightHandButton.Controls.Add(rightHandBox);
-
-            healthPanel.Controls.Add(healthBodyBox);
-            
-            guiGameScreen.Controls.Add(healthPanel);
+                        
+            guiGameScreen.Controls.Add(healthPanel.control);
             guiGameScreen.Controls.Add(leftHandButton);
             guiGameScreen.Controls.Add(rightHandButton);
             guiGameScreen.Controls.Add(fpsPanel);

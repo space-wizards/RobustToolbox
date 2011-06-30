@@ -128,6 +128,8 @@ namespace GasPropagationTest
                 {
                     if (i == 0 && j == 0) // If we're on this cell
                         continue;
+                    if (Math.Abs(i) + Math.Abs(j) == 2)
+                        continue;
                     if (arrX + i < 0 || arrX + i > 38 || arrY + j < 0 || arrY + j > 38) // If out of bounds
                         continue;
 
@@ -154,17 +156,17 @@ namespace GasPropagationTest
 
                     ///Calculate change
                     Flow = FlowConstant * DAmount + FlowX + FlowY;
-                    Flow = Clamp(Flow, gasAmount / 8, neighbor.gasAmount / 8);
+                    Flow = Clamp(Flow, gasAmount / 4, neighbor.gasAmount / 4);
                     nextGasAmount -= Flow * RateConstant;
                     neighbor.nextGasAmount += Flow * RateConstant;
 
                     ///Calculate new velocity
                     double v = Flow * RateConstant / (Math.Abs(i) + Math.Abs(j));
-                    neighbor.nextvx += v * i * .5;
-                    neighbor.nextvy += v * j * .5;
+                    neighbor.nextvx += v * i * 1;
+                    neighbor.nextvy += v * j * 1;
                     v = Flow * RateConstant / (Math.Abs(i) + Math.Abs(j));
-                    nextvx += v * i * .5;
-                    nextvy += v * j * .5;
+                    nextvx += v * i * 1;
+                    nextvy += v * j * 1;
 
                     if(nextGasAmount < 0)
                         nextGasAmount = 0;

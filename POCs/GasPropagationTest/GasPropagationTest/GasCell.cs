@@ -121,7 +121,7 @@ namespace GasPropagationTest
             double Flow;
             double FlowX;
             double FlowY;
-            float RateConstant;
+            float RateConstant = 1;
             GasCell neighbor;
             for (int i = -1; i <= 1; i++)
                 for (int j = -1; j <= 1; j++)
@@ -137,11 +137,6 @@ namespace GasPropagationTest
                     if (neighbor.calculated || neighbor.blocking)
                         continue;
 
-                    if(Math.Abs(i) + Math.Abs(j) == 2) // Are we talking about a corner or a cardinal dir?
-                        RateConstant = 1f; // for corners
-                    else
-                        RateConstant = 1f; // for cardinal directions.
-
                     DAmount = gasAmount - neighbor.gasAmount;
                     if (DAmount == 0)
                     {
@@ -154,6 +149,8 @@ namespace GasPropagationTest
                     if (Math.Sign(j * vy) >= 0)
                         FlowY = (j * vy) / 2;
 
+                    //if (vy < 0)
+                        //vy = 0;
                     ///Calculate change
                     Flow = FlowConstant * DAmount + FlowX + FlowY;
                     Flow = Clamp(Flow, gasAmount / 4, neighbor.gasAmount / 4);
@@ -161,10 +158,10 @@ namespace GasPropagationTest
                     neighbor.nextGasAmount += Flow * RateConstant;
 
                     ///Calculate new velocity
-                    double v = Flow * RateConstant / (Math.Abs(i) + Math.Abs(j));
+                    double v = Flow * RateConstant;
                     neighbor.nextvx += v * i * 1;
                     neighbor.nextvy += v * j * 1;
-                    v = Flow * RateConstant / (Math.Abs(i) + Math.Abs(j));
+                    v = Flow * RateConstant;
                     nextvx += v * i * 1;
                     nextvy += v * j * 1;
 

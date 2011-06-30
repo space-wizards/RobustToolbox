@@ -122,6 +122,7 @@ namespace SS3D.States
             Point screenSize = new Point((int)mEngine.Window.Width, (int)mEngine.Window.Height);
 
             HealthPanel healthPanel = new HealthPanel(mEngine);
+            healthPanel.Initialize();
 
             /*// The health background
             Panel healthPanel = new Panel("healthPanel")
@@ -228,10 +229,8 @@ namespace SS3D.States
 
             leftHandButton.Controls.Add(leftHandBox);
             rightHandButton.Controls.Add(rightHandBox);
-
-            healthPanel.Controls.Add(healthBodyBox);
-            
-            guiGameScreen.Controls.Add(healthPanel);
+                        
+            guiGameScreen.Controls.Add(healthPanel.control);
             guiGameScreen.Controls.Add(leftHandButton);
             guiGameScreen.Controls.Add(rightHandButton);
             guiGameScreen.Controls.Add(fpsPanel);

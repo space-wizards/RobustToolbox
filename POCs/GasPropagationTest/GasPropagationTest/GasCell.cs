@@ -33,7 +33,7 @@ namespace GasPropagationTest
             SetGasDisplay();
         }
 
-        public void Update()
+        public void Update(bool draw)
         {
             if (sink || blocking)
                 nextGasAmount = 0;
@@ -41,10 +41,11 @@ namespace GasPropagationTest
             if (gasAmount != nextGasAmount)
             {
                 gasAmount = nextGasAmount;
-                SetGasDisplay();
+                if(draw)
+                    SetGasDisplay();
             }
 
-            if (blocking)
+            if (blocking && attachedellipse.Fill != Brushes.Black)
             {
                 attachedellipse.Height = 15;
                 attachedellipse.Width = 15;
@@ -52,7 +53,7 @@ namespace GasPropagationTest
                 Canvas.SetTop(attachedellipse, y);
                 attachedellipse.Fill = Brushes.Black;
             }
-            if (sink)
+            if (sink && attachedellipse.Fill != Brushes.LightGray)
             {
                 attachedellipse.Height = 15;
                 attachedellipse.Width = 15;

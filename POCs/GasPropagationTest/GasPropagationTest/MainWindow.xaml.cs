@@ -21,9 +21,13 @@ namespace GasPropagationTest
     {
         GasCell[,] cellArray;
         DateTime lastUpdate;
+        DateTime lastDraw;
+        DateTime lastDataUpdate;
         double propagationthreshold = 1;
         double propagationrateconstant = 0.95;
-        int updatePeriod = 40; //update period in ms
+        int updatePeriod = 10; //update period in ms
+        int drawPeriod = 60;
+        int dataPeriod = 1000;
 
         public MainWindow()
         {
@@ -39,6 +43,7 @@ namespace GasPropagationTest
         public void Initialize()
         {
             lastUpdate = DateTime.Now;
+            lastDraw = DateTime.Now;
             Ellipse e;
             for (int i = 0; i < 39; i++)
             {
@@ -60,13 +65,22 @@ namespace GasPropagationTest
 
         public void Update(object sender, EventArgs e)
         {
+            Update(false);
+        }
+
+        public void Update(bool clicked)
+        {
+            TimeSpan x = DateTime.Now - lastDataUpdate;
+            if (x.TotalMilliseconds > dataPeriod)
+                DataUpdate();
+                
+
             TimeSpan t = DateTime.Now - lastUpdate;
             if (t.TotalMilliseconds < updatePeriod)
                 return;
             else
                 lastUpdate = DateTime.Now;
-            
-            GasCell toCell;
+
             for (int i = 0; i < 39; i++)
             {
                 for (int j = 0; j < 39; j++)
@@ -76,14 +90,35 @@ namespace GasPropagationTest
                 }
             }
 
+            bool draw = false;
+            TimeSpan d = DateTime.Now - lastDraw;
+            if (d.TotalMilliseconds >= drawPeriod)
+                draw = true;
+            draw = draw || clicked;
+            
             for (int i = 0; i < 39; i++)
             {
                 for (int j = 0; j < 39; j++)
                 {
-                    cellArray[i, j].Update();
+                    
+                    cellArray[i, j].Update(draw);
                 }
             }
 
+        }
+
+        public void DataUpdate()
+        {
+            double Sum = 0;
+            for (int i = 0; i < 39; i++)
+            {
+                for (int j = 0; j < 39; j++)
+                {
+                    Sum += cellArray[i, j].gasAmount;
+                }
+            }
+
+            totalgas.Text = Sum.ToString();
         }
 
         public bool BoundsCheck(int x, int y)
@@ -174,8 +209,9 @@ namespace GasPropagationTest
                 {
                     //transfer some back.
                     double halfofdiff = (c.Key.nextGasAmount - (currentCell.gasAmount - adjustedSum))/2;
-                    c.Key.nextGasAmount -= halfofdiff;
-                    currentCell.nextGasAmount += halfofdiff;
+                    //c.Key.nextGasAmount -= halfofdiff;
+                    //currentCell.gasAmount += halfofdiff;
+                    //currentCell.nextGasAmount += halfofdiff;                
 
                 }
                 
@@ -270,8 +306,6 @@ namespace GasPropagationTest
                 g.nextGasAmount += addamount;
             else if (e.RightButton == MouseButtonState.Pressed)
                 g.nextGasAmount += addamount * 10;
-
-            
         }
 
         private void button1_Click(object sender, RoutedEventArgs e)

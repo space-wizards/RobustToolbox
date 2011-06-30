@@ -67,76 +67,13 @@ namespace GasPropagationTest
                 return;
             else
                 lastUpdate = DateTime.Now;
-            Dictionary<GasCell, double> l;
-            GasCell currentCell;
+            
             GasCell toCell;
             for (int i = 0; i < 39; i++)
             {
                 for (int j = 0; j < 39; j++)
                 {
-                    currentCell = cellArray[i, j];
-                    if (currentCell.gasAmount < 0.1)
-                        continue;//Threshold
-                    l = new Dictionary<GasCell, double>();
-                    if (i > 0 && j > 0 && currentCell.gasAmount > cellArray[i - 1, j - 1].gasAmount && !cellArray[i-1,j-1].blocking)
-                        l.Add(cellArray[i - 1, j - 1], currentCell.gasAmount - cellArray[i - 1, j - 1].gasAmount);
-
-                    if (i < 38 && j < 38 && currentCell.gasAmount > cellArray[i + 1, j + 1].gasAmount && !cellArray[i+1, j+1].blocking)
-                        l.Add(cellArray[i + 1, j + 1], currentCell.gasAmount - cellArray[i + 1, j + 1].gasAmount);
-
-                    if (i < 38 && j > 0 && currentCell.gasAmount > cellArray[i + 1, j - 1].gasAmount && !cellArray[i+1, j-1].blocking)
-                        l.Add(cellArray[i + 1, j - 1], currentCell.gasAmount - cellArray[i + 1, j - 1].gasAmount);
-
-                    if (i > 0 && j < 38 && currentCell.gasAmount > cellArray[i - 1, j + 1].gasAmount && !cellArray[i-1, j+1].blocking)
-                        l.Add(cellArray[i - 1, j + 1], currentCell.gasAmount - cellArray[i - 1, j + 1].gasAmount);
-
-                    if (j > 0 && currentCell.gasAmount > cellArray[i, j - 1].gasAmount && !cellArray[i, j-1].blocking)
-                        l.Add(cellArray[i, j - 1], currentCell.gasAmount - cellArray[i, j - 1].gasAmount);
-
-                    if (j < 38 && currentCell.gasAmount > cellArray[i, j + 1].gasAmount && !cellArray[i, j+1].blocking)
-                        l.Add(cellArray[i, j + 1], currentCell.gasAmount - cellArray[i, j + 1].gasAmount);
-
-                    if (i > 0 && currentCell.gasAmount > cellArray[i - 1, j].gasAmount && !cellArray[i-1, j].blocking)
-                        l.Add(cellArray[i - 1, j], currentCell.gasAmount - cellArray[i - 1, j].gasAmount);
-
-                    if (i < 38 && currentCell.gasAmount > cellArray[i + 1, j].gasAmount && !cellArray[i+1, j].blocking)
-                        l.Add(cellArray[i + 1, j], currentCell.gasAmount - cellArray[i + 1, j].gasAmount);
-
-                    if (l.Count == 0) //if there are no gas differences, continue.
-                        continue;
-
-                    /// Find the sum of all differences, average them and subtract that amount of gas from the source.
-                    double differenceSum=0;
-                    foreach (var c in l)
-                    {
-                        differenceSum += c.Value;
-                    }
-                    if (differenceSum < propagationthreshold) // If the difference is neglibible, continue.
-                        continue;
-                    double adjustedSum = differenceSum / l.Count * propagationrateconstant;
-                    //if (adjustedSum > currentCell.gasAmount / 2)
-                    //    adjustedSum = currentCell.gasAmount / 2; // Limit the amount of gas that can flow out of a cell per turn
-                    
-                    foreach (var c in l)
-                    {
-                        //Transfer gas
-                        c.Key.nextGasAmount += (c.Value/differenceSum) * adjustedSum;
-/*
-                        // If we transferred too much...
-                        if (c.Key.nextGasAmount > currentCell.nextGasAmount - adjustedSum)
-                        {
-                            //transfer some back.
-                            double halfofdiff = (c.Key.nextGasAmount - (currentCell.nextGasAmount - adjustedSum))/2;
-                            c.Key.nextGasAmount -= halfofdiff;
-                            currentCell.nextGasAmount += halfofdiff;
-
-                        }
- */ // Smoothing
-                    }
-
-                    currentCell.nextGasAmount -= adjustedSum;
-                    if (currentCell.nextGasAmount < 0)
-                        currentCell.nextGasAmount = 0;
+                    SpreadGas(i, j);
 
                 }
             }
@@ -151,6 +88,76 @@ namespace GasPropagationTest
 
         }
 
+        public void SpreadGas(int x, int y)
+        {
+            Dictionary<GasCell, double> l;
+            GasCell currentCell;
+
+            currentCell = cellArray[x, y];
+            if (currentCell.gasAmount < 0.1)
+                return;//Threshold
+            l = new Dictionary<GasCell, double>();
+            if (x > 0 && y > 0 && currentCell.gasAmount > cellArray[x - 1, y - 1].gasAmount && !cellArray[x - 1, y - 1].blocking)
+                l.Add(cellArray[x - 1, y - 1], currentCell.gasAmount - cellArray[x - 1, y - 1].gasAmount);
+
+            if (x < 38 && y < 38 && currentCell.gasAmount > cellArray[x + 1, y + 1].gasAmount && !cellArray[x + 1, y + 1].blocking)
+                l.Add(cellArray[x + 1, y + 1], currentCell.gasAmount - cellArray[x + 1, y + 1].gasAmount);
+
+            if (x < 38 && y > 0 && currentCell.gasAmount > cellArray[x + 1, y - 1].gasAmount && !cellArray[x + 1, y - 1].blocking)
+                l.Add(cellArray[x + 1, y - 1], currentCell.gasAmount - cellArray[x + 1, y - 1].gasAmount);
+
+            if (x > 0 && y < 38 && currentCell.gasAmount > cellArray[x - 1, y + 1].gasAmount && !cellArray[x - 1, y + 1].blocking)
+                l.Add(cellArray[x - 1, y + 1], currentCell.gasAmount - cellArray[x - 1, y + 1].gasAmount);
+
+            if (y > 0 && currentCell.gasAmount > cellArray[x, y - 1].gasAmount && !cellArray[x, y - 1].blocking)
+                l.Add(cellArray[x, y - 1], currentCell.gasAmount - cellArray[x, y - 1].gasAmount);
+
+            if (y < 38 && currentCell.gasAmount > cellArray[x, y + 1].gasAmount && !cellArray[x, y + 1].blocking)
+                l.Add(cellArray[x, y + 1], currentCell.gasAmount - cellArray[x, y + 1].gasAmount);
+
+            if (x > 0 && currentCell.gasAmount > cellArray[x - 1, y].gasAmount && !cellArray[x - 1, y].blocking)
+                l.Add(cellArray[x - 1, y], currentCell.gasAmount - cellArray[x - 1, y].gasAmount);
+
+            if (x < 38 && currentCell.gasAmount > cellArray[x + 1, y].gasAmount && !cellArray[x + 1, y].blocking)
+                l.Add(cellArray[x + 1, y], currentCell.gasAmount - cellArray[x + 1, y].gasAmount);
+
+            if (l.Count == 0) //if there are no gas differences, continue.
+                return;
+
+            /// Find the sum of all differences, average them and subtract that amount of gas from the source.
+            double differenceSum = 0;
+            foreach (var c in l)
+            {
+                differenceSum += c.Value;
+            }
+            if (differenceSum < propagationthreshold) // If the difference is neglibible, continue.
+                return;
+            double adjustedSum = differenceSum / l.Count * propagationrateconstant;
+            //if (adjustedSum > currentCell.gasAmount / 2)
+            //    adjustedSum = currentCell.gasAmount / 2; // Limit the amount of gas that can flow out of a cell per turn
+
+            foreach (var c in l)
+            {
+                //Transfer gas
+                c.Key.nextGasAmount += (c.Value / differenceSum) * adjustedSum;
+                /*
+                                        // If we transferred too much...
+                                        if (c.Key.nextGasAmount > currentCell.nextGasAmount - adjustedSum)
+                                        {
+                                            //transfer some back.
+                                            double halfofdiff = (c.Key.nextGasAmount - (currentCell.nextGasAmount - adjustedSum))/2;
+                                            c.Key.nextGasAmount -= halfofdiff;
+                                            currentCell.nextGasAmount += halfofdiff;
+
+                                        }
+                 */
+                // Smoothing
+            }
+
+            currentCell.nextGasAmount -= adjustedSum;
+            if (currentCell.nextGasAmount < 0)
+                currentCell.nextGasAmount = 0;
+        }
         
         public void SetAllRadii(int n)
         {

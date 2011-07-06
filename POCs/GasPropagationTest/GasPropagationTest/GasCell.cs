@@ -24,14 +24,18 @@ namespace GasPropagationTest
         double y;
         public double nextGasAmount = 10;
         public double gasAmount = 10;
-        int circleDiameter = 15;
         public bool sink = false;
         public bool blocking = false;
-        private float FlowConstant = 0.1f;
         bool calculated = true;
         public Vector2 GasVel;
         public Vector2 NextGasVel;
+        
+        //Constants
+        double SourceDamping = .5;
+        double RecieverDamping = .7;
         public const double quarterpi = Math.PI / 4;
+        int circleDiameter = 15;
+        private float FlowConstant = .1f;
 
         public GasCell(Ellipse e, double _x, double _y, GasCell[,] _cellArray)
         {
@@ -121,9 +125,6 @@ namespace GasPropagationTest
             double DAmount;
             double Flow = 0;
             
-            //Constants
-            double SourceDamping = .5;
-            double RecieverDamping = .9;
 
             GasCell neighbor;
             Random rand = new Random();

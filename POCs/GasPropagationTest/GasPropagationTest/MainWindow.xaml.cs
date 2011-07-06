@@ -210,7 +210,9 @@ namespace GasPropagationTest
             else if (e.LeftButton == MouseButtonState.Pressed && Keyboard.IsKeyDown(Key.LeftAlt))
                 g.nextGasAmount += addamount * 100;
             else if (e.LeftButton == MouseButtonState.Pressed && Keyboard.IsKeyDown(Key.RightShift))
-                g.GasVel.X += 10;
+                g.GasVel.X += 1000;
+            else if (e.RightButton == MouseButtonState.Pressed && Keyboard.IsKeyDown(Key.RightShift))
+                g.GasVel.X += 100000;
             else if (e.LeftButton == MouseButtonState.Pressed)
                 g.nextGasAmount += addamount;
             else if (e.RightButton == MouseButtonState.Pressed)

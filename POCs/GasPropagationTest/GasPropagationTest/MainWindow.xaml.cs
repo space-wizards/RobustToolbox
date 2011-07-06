@@ -26,7 +26,7 @@ namespace GasPropagationTest
         double propagationthreshold = 1;
         double propagationrateconstant = 0.95;
         int updatePeriod = 10; //update period in ms
-        int drawPeriod = 60;
+        int drawPeriod = 10;
         int dataPeriod = 1000;
 
         public MainWindow()
@@ -209,6 +209,8 @@ namespace GasPropagationTest
                 g.blocking = !g.blocking;
             else if (e.LeftButton == MouseButtonState.Pressed && Keyboard.IsKeyDown(Key.LeftAlt))
                 g.nextGasAmount += addamount * 100;
+            else if (e.LeftButton == MouseButtonState.Pressed && Keyboard.IsKeyDown(Key.RightShift))
+                g.GasVel.X += 10;
             else if (e.LeftButton == MouseButtonState.Pressed)
                 g.nextGasAmount += addamount;
             else if (e.RightButton == MouseButtonState.Pressed)

@@ -29,10 +29,8 @@ namespace GasPropagationTest
         public bool blocking = false;
         private float FlowConstant = 0.1f;
         bool calculated = true;
-        private double vx=0;
-        private double vy=0;
-        private double nextvx = 0;
-        private double nextvy = 0;
+        public Vector2 GasVel;
+        public Vector2 NextGasVel;
 
         public GasCell(Ellipse e, double _x, double _y, GasCell[,] _cellArray)
         {
@@ -41,6 +39,8 @@ namespace GasPropagationTest
             y = _y;
             SetGasDisplay();
             cellArray = _cellArray;
+            GasVel = new Vector2(0, 0);
+            NextGasVel = new Vector2(0, 0);
         }
 
         public void Update(bool draw)
@@ -48,10 +48,8 @@ namespace GasPropagationTest
             if (sink || blocking)
                 nextGasAmount = 0;
 
-            vx = nextvx;
-            vy = nextvy;
-            nextvx = 0;
-            nextvy = 0;
+            GasVel = NextGasVel;
+            NextGasVel = new Vector2(0, 0);
 
             if (gasAmount != nextGasAmount)
             {
@@ -107,6 +105,8 @@ namespace GasPropagationTest
         {
             if(r > 7.5)
                 r = 7.5;
+            if (r < 0)
+                r = 0;
             attachedellipse.Height = 2 * r;
             attachedellipse.Width = 2 * r;
             Canvas.SetLeft(attachedellipse, 7.5 - r + x);
@@ -118,9 +118,7 @@ namespace GasPropagationTest
             if (blocking)
                 return;
             double DAmount;
-            double Flow;
-            double FlowX;
-            double FlowY;
+            double Flow = 0;
             float RateConstant = 1;
             GasCell neighbor;
             for (int i = -1; i <= 1; i++)
@@ -128,13 +126,11 @@ namespace GasPropagationTest
                 {
                     if (i == 0 && j == 0) // If we're on this cell
                         continue;
-                    //if (Math.Abs(i) + Math.Abs(j) == 2)
-                      //  continue;
                     if (arrX + i < 0 || arrX + i > 38 || arrY + j < 0 || arrY + j > 38) // If out of bounds
                         continue;
 
                     neighbor = cellArray[arrX+i,arrY+j];
-                    if (neighbor.calculated || neighbor.blocking)
+                    if (neighbor.calculated || neighbor.blocking) // TODO work out rebound
                         continue;
 
                     DAmount = gasAmount - neighbor.gasAmount;
@@ -142,35 +138,62 @@ namespace GasPropagationTest
                     {
                         return;
                     }
-                    /// Calculate change due to velocity
-                    //FlowX = 0; FlowY = 0;
-                    //FlowX = vx * .15;
-                    //FlowY = vy * .15;
-                                        
-                    ///Calculate change
-                    Flow = FlowConstant * DAmount;// +FlowX + FlowY;
-                    Flow = Clamp(Flow, gasAmount / 4, neighbor.gasAmount / 4);
+
+                    ///Calculate initial flow
+                    Flow = FlowConstant * DAmount;
+                    Flow = Clamp(Flow, gasAmount / 8, neighbor.gasAmount / 8);
+
+                    //Velocity application code
+                    Vector2 Dir = new Vector2(i, j);
+                    double proportion = 0;
+                    //Process velocity flow to neighbor
+                    if (GasVel.Magnitude > 0 && Math.Abs(Dir.Angle(GasVel)) < Math.PI / 4) //If the gas velocity vector is within 45 degrees of the direction of the neighbor
+                    {
+                        proportion = (1 / (Math.PI / 4)) * ( (Math.PI / 4) - Math.Abs(Dir.Angle(GasVel)) ); // Get the proper proportion of the vel vector
+                        double velflow = proportion + GasVel.Magnitude * .95; // Calculate flow due to gas velocity
+                        if (velflow > gasAmount / 8)
+                            velflow = gasAmount / 8;
+                        Flow += velflow;
+                    }
+                    //Process velocity flow from neighbor
+                    Dir = -1 * Dir; // Reverse Dir and apply same process to neighbor
+                    if (neighbor.GasVel.Magnitude > 0 && Math.Abs(Dir.Angle(neighbor.GasVel)) < Math.PI / 4) //If the gas velocity vector is within 45 degrees of the direction of the neighbor
+                    {
+                        proportion = (1 / (Math.PI / 4)) * ((Math.PI / 4) - Math.Abs(Dir.Angle(neighbor.GasVel))); // Get the proper proportion of the vel vector
+                        double velflow = proportion + neighbor.GasVel.Magnitude * .95; // Calculate flow due to gas velocity
+                        if (velflow > gasAmount / 8)
+                            velflow = gasAmount / 8;
+                        Flow -= velflow;
+                    }
+
                     nextGasAmount -= Flow * RateConstant;
                     neighbor.nextGasAmount += Flow * RateConstant;
-
-                    /*//Calculate new velocity
-                    double v = Flow * RateConstant;
+                    
+                    //Process next velocities
                     if (Flow > 0)
                     {
-                        neighbor.nextvx += v * i;
-                        neighbor.nextvy += v * j;
+                        Vector2 addvel = new Vector2(i, j);
+                        addvel.Magnitude = Math.Abs(Flow) * .2; // Damping coefficient of .5
+                        neighbor.NextGasVel = neighbor.NextGasVel + addvel;
+                        NextGasVel = NextGasVel + addvel;
                     }
-                    else if (Flow < 0)
+                    if (Flow < 0)
                     {
-                        nextvx += v * i;
-                        nextvy += v * j;
-                    }*/
+                        Vector2 addvel = new Vector2(-1 * i, -1 * j);
+                        addvel.Magnitude = Math.Abs(Flow) * .2;
+                        neighbor.NextGasVel = neighbor.NextGasVel + addvel;
+                        NextGasVel = NextGasVel + addvel;
 
-                    if(nextGasAmount < 0)
+                    }
+
+
+
+                    // Rescue clause. If this is needed to avoid crashes, something is wrong
+                    /*if(nextGasAmount < 0)
                         nextGasAmount = 0;
                     if (neighbor.nextGasAmount < 0)
                         neighbor.nextGasAmount = 0;
-                      
+                      */
                     calculated = true;
                 }
         }

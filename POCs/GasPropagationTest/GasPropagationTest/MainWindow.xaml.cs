@@ -23,10 +23,8 @@ namespace GasPropagationTest
         DateTime lastUpdate;
         DateTime lastDraw;
         DateTime lastDataUpdate;
-        double propagationthreshold = 1;
-        double propagationrateconstant = 0.95;
-        int updatePeriod = 10; //update period in ms
-        int drawPeriod = 10;
+        int updatePeriod = 30; //update period in ms
+        int drawPeriod = 66;
         int dataPeriod = 1000;
 
         public MainWindow()
@@ -44,6 +42,7 @@ namespace GasPropagationTest
         {
             lastUpdate = DateTime.Now;
             lastDraw = DateTime.Now;
+            lastDataUpdate = DateTime.Now;
             Ellipse e;
             for (int i = 0; i < 39; i++)
             {
@@ -121,6 +120,7 @@ namespace GasPropagationTest
             }
 
             totalgas.Text = Sum.ToString();
+            lastDataUpdate = DateTime.Now;
         }
 
         public bool BoundsCheck(int x, int y)

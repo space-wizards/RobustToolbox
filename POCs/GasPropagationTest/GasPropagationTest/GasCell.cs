@@ -31,6 +31,7 @@ namespace GasPropagationTest
         bool calculated = true;
         public Vector2 GasVel;
         public Vector2 NextGasVel;
+        public const double quarterpi = Math.PI / 4;
 
         public GasCell(Ellipse e, double _x, double _y, GasCell[,] _cellArray)
         {
@@ -119,7 +120,11 @@ namespace GasPropagationTest
                 return;
             double DAmount;
             double Flow = 0;
-            float RateConstant = 1;
+            
+            //Constants
+            double SourceDamping = .5;
+            double RecieverDamping = .9;
+
             GasCell neighbor;
             Random rand = new Random();
             for (int i = -1; i <= 1; i++)
@@ -147,45 +152,54 @@ namespace GasPropagationTest
                     //Velocity application code
                     Vector2 Dir = new Vector2(i, j);
                     double proportion = 0;
+                    double componentangle;
                     //Process velocity flow to neighbor
-                    if (GasVel.Magnitude > 0.01 && Math.Abs(Dir.Angle(GasVel)) < Math.PI / 4) //If the gas velocity vector is within 45 degrees of the direction of the neighbor
+                    if (GasVel.Magnitude > 0.01) //If the gas velocity vector is within 45 degrees of the direction of the neighbor
                     {
-                        proportion = Math.Abs((1 / (Math.PI / 4)) * ( (Math.PI / 4) - Dir.Angle(GasVel))); // Get the proper proportion of the vel vector
-                        double velflow = proportion * GasVel.Magnitude; // Calculate flow due to gas velocity
-                        if (velflow > gasAmount /2)
-                            velflow = gasAmount /2;
-                        Flow += velflow;
+                        componentangle = Dir.Angle(GasVel);
+                        if (Math.Abs(componentangle) < quarterpi)
+                        {
+                            proportion = Math.Abs((1 / quarterpi) * (quarterpi - componentangle)); // Get the proper proportion of the vel vector
+                            double velflow = proportion * GasVel.Magnitude; // Calculate flow due to gas velocity
+                            if (velflow > gasAmount / 2.5)
+                                velflow = gasAmount / 2.5;
+                            Flow += velflow;
+                        }
                     }
                     //Process velocity flow from neighbor
                     Dir = -1 * Dir; // Reverse Dir and apply same process to neighbor
-                    if (neighbor.GasVel.Magnitude > 0.01 && Math.Abs(Dir.Angle(neighbor.GasVel)) < Math.PI / 4) //If the gas velocity vector is within 45 degrees of the direction of the neighbor
+                    if (neighbor.GasVel.Magnitude > 0.01) //If the gas velocity vector is within 45 degrees of the direction of the neighbor
                     {
-                        proportion = Math.Abs((1 / (Math.PI / 4)) * ((Math.PI / 4) - Dir.Angle(neighbor.GasVel))); // Get the proper proportion of the vel vector
-                        double velflow = proportion * neighbor.GasVel.Magnitude; // Calculate flow due to gas velocity
-                        if (velflow > neighbor.gasAmount / 2)
-                            velflow = neighbor.gasAmount / 2;
-                        Flow -= velflow;
+                        componentangle = Dir.Angle(neighbor.GasVel);
+                        if (Math.Abs(componentangle) < quarterpi)
+                        {
+                            proportion = Math.Abs((1 / quarterpi) * (quarterpi - componentangle)); // Get the proper proportion of the vel vector
+                            double velflow = proportion * neighbor.GasVel.Magnitude; // Calculate flow due to gas velocity
+                            if (velflow > neighbor.gasAmount / 2.5)
+                                velflow = neighbor.gasAmount / 2.5;
+                            Flow -= velflow;
+                        }
                     }
 
-                    nextGasAmount -= Flow * RateConstant;
-                    neighbor.nextGasAmount += Flow * RateConstant;
+                    nextGasAmount -= Flow;
+                    neighbor.nextGasAmount += Flow;
 
-                    double chaos = (double)rand.Next(70000, 100000)/100000;
+                    double chaos = (double)rand.Next(70000, 100000)/100000; // Get a random number between .7 and 1 with 4 sig figs
 
                     //Process next velocities
-                    if (Flow > 0)
+                    if (Flow > 0) //Flow is to neighbor
                     {
                         Vector2 addvel = new Vector2(i, j);
                         addvel.Magnitude = Math.Abs(Flow); // Damping coefficient of .5
-                        neighbor.NextGasVel = neighbor.NextGasVel + addvel * .5 * chaos;
-                        NextGasVel = NextGasVel + addvel * chaos * .5;
+                        neighbor.NextGasVel = neighbor.NextGasVel + addvel * chaos * RecieverDamping;
+                        NextGasVel = NextGasVel + addvel * chaos * SourceDamping;
                     }
-                    if (Flow < 0)
+                    if (Flow < 0) // Flow is from neighbor
                     {
                         Vector2 addvel = new Vector2(-1 * i, -1 * j);
                         addvel.Magnitude = Math.Abs(Flow);
-                        neighbor.NextGasVel = neighbor.NextGasVel + addvel * .5 * chaos;
-                        NextGasVel = NextGasVel + addvel * chaos * .5;
+                        neighbor.NextGasVel = neighbor.NextGasVel + addvel * chaos * SourceDamping;
+                        NextGasVel = NextGasVel + addvel * chaos * RecieverDamping;
 
                     }
 

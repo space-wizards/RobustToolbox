@@ -32,7 +32,7 @@ namespace GasPropagationTest
         
         //Constants
         double SourceDamping = .5;
-        double RecieverDamping = .7;
+        double RecieverDamping = .75;
         public const double quarterpi = Math.PI / 4;
         int circleDiameter = 15;
         private float FlowConstant = .1f;

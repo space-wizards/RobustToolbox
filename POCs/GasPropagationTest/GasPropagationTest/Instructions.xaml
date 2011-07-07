@@ -4,9 +4,9 @@
         Title="Instructions" Height="300" Width="300">
     <Grid>
         <TextBlock Height="16" HorizontalAlignment="Left" Margin="19,11,0,0" Name="textBlock1" Text="Shift-leftclick to toggle tile sink mode" VerticalAlignment="Top" Width="240" />
-        <TextBlock Height="16" HorizontalAlignment="Left" Margin="19,33,0,0" Name="textBlock2" Text="Shift-Rightclick to toggle tile blocking mode" VerticalAlignment="Top" Width="240" />
-        <TextBlock Height="16" HorizontalAlignment="Left" Margin="19,77,0,0" Name="textBlock3" Text="leftclick to add 2 units of gas" VerticalAlignment="Top" Width="240" />
-        <TextBlock Height="16" HorizontalAlignment="Left" Margin="19,55,0,0" Name="textBlock4" Text="rightclick to add 20 units of gas" VerticalAlignment="Top" Width="240" />
-
+        <TextBlock Height="16" HorizontalAlignment="Left" Margin="19,33,0,0" Name="textBlock2" Text="Shift-Rightclick to toggle tile blocking(wall) mode" VerticalAlignment="Top" Width="240" />
+        <TextBlock Height="16" HorizontalAlignment="Left" Margin="19,55,0,0" Name="textBlock3" Text="leftclick to add 100 units of gas" VerticalAlignment="Top" Width="240" />
+        <TextBlock Height="16" HorizontalAlignment="Left" Margin="19,77,0,0" Name="textBlock4" Text="rightclick to add 1000 units of gas" VerticalAlignment="Top" Width="240" />
+        <TextBlock Height="16" HorizontalAlignment="Left" Margin="19,99,0,0" Name="textBlock5" Text="rightclick to add 10000 units of gas" VerticalAlignment="Top" Width="240" />
     </Grid>
 </Window>

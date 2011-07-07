@@ -220,7 +220,7 @@ namespace SS3D.States
             serverMaxPlayers = msg.ReadInt32();
             string serverMapName = msg.ReadString();
             GameType gameType = (GameType)msg.ReadByte();
-            lobbyChat.AddLine("Server name: " + serverName + " MaxPlayers: " + serverMaxPlayers.ToString() + "\n" + welcomeString);
+            lobbyChat.AddLine("Server name: " + serverName + "\r\nMaxPlayers: " + serverMaxPlayers.ToString() + "\r\n" + welcomeString);
         }
 
         private void HandleChatMessage(NetIncomingMessage msg)

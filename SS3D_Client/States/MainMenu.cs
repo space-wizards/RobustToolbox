@@ -60,7 +60,6 @@ namespace SS3D.States
     public void CreateMenu()
     {
         mEngine.mMiyagiSystem.GUIManager.Cursor = new Cursor(MiyagiResources.Singleton.Skins["CursorSkin"], new Size(16, 16), Point.Empty, true);
-        
         guiMainMenu = new GUI("guiMainMenu");
         guiBackground = new GUI("guiBackground");
 

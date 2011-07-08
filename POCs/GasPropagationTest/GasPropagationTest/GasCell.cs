@@ -137,7 +137,7 @@ namespace GasPropagationTest
                         continue;
 
                     neighbor = cellArray[arrX+i,arrY+j];
-                    if (neighbor.calculated || neighbor.blocking) // TODO work out rebound
+                    if (neighbor.calculated) // TODO work out rebound
                         continue;
 
                     DAmount = gasAmount - neighbor.gasAmount;
@@ -182,8 +182,21 @@ namespace GasPropagationTest
                         }
                     }
 
+                    //Wall destruction
+                    if (neighbor.blocking)
+                    {
+                        if (Flow > 500)
+                        {
+                            neighbor.blocking = false; // Incident flow is > 750 so the wall is destroyed
+                            Flow = Flow * .75; //Dying wall takes out some of the flow.
+                        }
+                        else
+                            continue;
+                    }
+
                     nextGasAmount -= Flow;
                     neighbor.nextGasAmount += Flow;
+
 
                     double chaos = (double)rand.Next(70000, 100000)/100000; // Get a random number between .7 and 1 with 4 sig figs
 

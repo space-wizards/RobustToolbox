@@ -112,6 +112,23 @@ namespace SS3D.Modules.Map
                         byte i = SetSprite(x, y);
                         tileArray[x, y].SetSprites(tileSprites[wallTopSpriteName+i], tileSprites[wallSideSpriteName], i);
                     }
+                    if (y > 0)
+                    {
+                        tileArray[x, y].surroundingTiles[0] = tileArray[x, y - 1];
+                    }
+                    if (x < mapWidth - 1)
+                    {
+                        tileArray[x, y].surroundingTiles[1] = tileArray[x + 1, y];
+                    }
+                    if (y < mapHeight - 1)
+                    {
+                        tileArray[x, y].surroundingTiles[2] = tileArray[x, y + 1];
+                    }
+                    if (x > 0)
+                    {
+                        tileArray[x, y].surroundingTiles[3] = tileArray[x - 1, y];
+                    }
+
                 }
             }
             return true;

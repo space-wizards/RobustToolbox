@@ -230,6 +230,13 @@ namespace SS3D.States
                     {
                         for (int y = yStart; y < yEnd; y++)
                         {
+                            map.tileArray[x, y].DoColour();
+                        }
+                    }
+                    for (int x = xStart; x < xEnd; x++)
+                    {
+                        for (int y = yStart; y < yEnd; y++)
+                        {
                             if (map.tileArray[x, y].tileType == TileType.Wall)
                             {
                                 if (y <= centerTile.Y)
@@ -295,11 +302,11 @@ namespace SS3D.States
             return System.Drawing.Color.FromArgb(r, g, b);
         }
 
-        public System.Drawing.Color Add(System.Drawing.Color color, System.Drawing.Color color2)
+        public System.Drawing.Color Add(System.Drawing.Color color, System.Drawing.Color color2, double amount)
         {
-            byte r = (byte)Math.Max((color.R + color2.R), 255);
-            byte g = (byte)Math.Max((color.G + color2.G), 255);
-            byte b = (byte)Math.Max((color.B + color2.B), 255);
+            byte r = (byte)(color.R + (color2.R * amount));
+            byte g = (byte)(color.G + (color2.G * amount));
+            byte b = (byte)(color.B + (color2.B * amount));
             return System.Drawing.Color.FromArgb(r, g, b);
         }
 

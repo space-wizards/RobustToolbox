@@ -326,19 +326,7 @@ namespace SS3D.Atom
                     {
                         if (lighting)
                         {
-                            System.Drawing.Color col = System.Drawing.Color.Black;
-                            foreach (Light l in atomManager.gameState.map.tileArray[tilePos.X, tilePos.Y].lights)
-                            {
-                                double d = 1;
-                                System.Drawing.Point p = new System.Drawing.Point(tilePos.X - l.position.X , tilePos.Y - l.position.Y);
-                                p.X *= p.X;
-                                p.Y *= p.Y;
-                                d = Math.Sqrt(p.X + p.Y);
-                                if (d < 2)
-                                    d = 2;
-                                col = atomManager.gameState.Blend(col, l.color, 1 / d);
-                            }
-                            sprite.Color = col;
+                            sprite.Color = atomManager.gameState.map.tileArray[tilePos.X, tilePos.Y].color;
                         }
                         else
                         {

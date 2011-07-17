@@ -60,10 +60,17 @@ namespace SS3D.Tiles
                 {
                     if (lighting)
                     {
-                        System.Drawing.Color col = System.Drawing.Color.Transparent;
+                        System.Drawing.Color col = System.Drawing.Color.Black;
                         foreach (Atom.Light l in lights)
                         {
-                            col = Blend(col, l.color, 0.5d);
+                            double d = 1;
+                            Point p = new Point(tilePosition.X - l.position.X, tilePosition.Y - l.position.Y);
+                            p.X *= p.X;
+                            p.Y *= p.Y;
+                            d = Math.Sqrt(p.X + p.Y);
+                            if (d < 2)
+                                d = 2;
+                            col = Blend(col, l.color, 1 / d);
                         }
                         sprite.Color = col;
                     }
@@ -96,9 +103,17 @@ namespace SS3D.Tiles
         // This definately shouldn't be here but i'm putting it here for now just so it works.
         public System.Drawing.Color Blend(System.Drawing.Color color, System.Drawing.Color backColor, double amount)
         {
-            byte r = (byte)((color.R * amount) + backColor.R * (1 - amount));
-            byte g = (byte)((color.G * amount) + backColor.G * (1 - amount));
-            byte b = (byte)((color.B * amount) + backColor.B * (1 - amount));
+            byte r = (byte)((color.R * amount) + (backColor.R * amount));
+            byte g = (byte)((color.G * amount) + (backColor.G * amount));
+            byte b = (byte)((color.B * amount) + (backColor.B * amount));
+            return System.Drawing.Color.FromArgb(r, g, b);
+        }
+
+        public System.Drawing.Color Add(System.Drawing.Color color, System.Drawing.Color color2)
+        {
+            byte r = (byte)Math.Max((color.R + color2.R), 255);
+            byte g = (byte)Math.Max((color.G + color2.G), 255);
+            byte b = (byte)Math.Max((color.B + color2.B), 255);
             return System.Drawing.Color.FromArgb(r, g, b);
         }
 

@@ -29,10 +29,17 @@ namespace SS3D.Tiles.Wall
                 {
                     if (lighting)
                     {
-                        System.Drawing.Color col = System.Drawing.Color.White;
+                        System.Drawing.Color col = System.Drawing.Color.Black;
                         foreach (Atom.Light l in lights)
                         {
-                            col = Blend(col, l.color, 0.5d);
+                            double d = 1;
+                            Point p = new Point(tilePosition.X - l.position.X, tilePosition.Y - l.position.Y);
+                            p.X *= p.X;
+                            p.Y *= p.Y;
+                            d = Math.Sqrt(p.X + p.Y);
+                            if (d < 2)
+                                d = 2;
+                            col = Blend(col, l.color, 1 / d);
                         }
                         sideSprite.Color = col;
                     }
@@ -68,10 +75,17 @@ namespace SS3D.Tiles.Wall
                 {
                     if (lighting)
                     {
-                        System.Drawing.Color col = System.Drawing.Color.Transparent;
+                        System.Drawing.Color col = System.Drawing.Color.Black;
                         foreach (Atom.Light l in lights)
                         {
-                            col = Blend(col, l.color, 0.5d);
+                            double d = 1;
+                            Point p = new Point(tilePosition.X - l.position.X, tilePosition.Y - l.position.Y);
+                            p.X *= p.X;
+                            p.Y *= p.Y;
+                            d = Math.Sqrt(p.X + p.Y);
+                            if (d < 2)
+                                d = 2;
+                            col = Blend(col, l.color, 1 / d);
                         }
                         sprite.Color = col;
                     }

@@ -4,6 +4,7 @@ using System.Linq;
 using System.Text;
 using System.IO;
 using System.Media;
+using SS3d_server.Tiles;
 
 using SS3D_shared;
 using SS3D_shared.HelperClasses;
@@ -13,11 +14,11 @@ namespace SS3d_server.Modules.Map
     public class Map
     {
         #region Variables
-        private BaseTile[,] tileArray;
+        private Tile[,] tileArray;
         private int mapWidth;
         private int mapHeight;
         private string[,] nameArray;
-        public int tileSpacing = 16;
+        public int tileSpacing = 64;
         private int wallHeight = 40; // This must be the same as defined in the MeshManager.
         #endregion
 
@@ -72,7 +73,7 @@ namespace SS3d_server.Modules.Map
 
         private void ParseNameArray()
         {
-            tileArray = new BaseTile[mapWidth, mapHeight];
+            tileArray = new Tile[mapWidth, mapHeight];
 
             for (int z = 0; z < mapHeight; z++)
             {
@@ -81,13 +82,13 @@ namespace SS3d_server.Modules.Map
                     switch (nameArray[x, z])
                     {
                         case "wall":
-                            tileArray[x, z] = new Wall();
+                            tileArray[x, z] = new Tiles.Wall.Wall();
                             break;
                         case "floor":
-                            tileArray[x, z] = new Floor();
+                            tileArray[x, z] = new Tiles.Floor.Floor();
                             break;
                         case "space":
-                            tileArray[x, z] = new Space();
+                            tileArray[x, z] = new Tiles.Floor.Space();
                             break;
                         default:
                             break;
@@ -104,7 +105,7 @@ namespace SS3d_server.Modules.Map
             {
                 for (int z = 0; z < mapHeight; z++)
                 {
-                    mapObjectType[x, z] = tileArray[x, z].TileType;
+                    mapObjectType[x, z] = tileArray[x, z].tileType;
                 }
             }
 
@@ -121,24 +122,24 @@ namespace SS3d_server.Modules.Map
             if (x > mapWidth || z > mapWidth)
                 return false;
 
-            BaseTile tile = GenerateNewTile(newType);
+            Tile tile = GenerateNewTile(newType);
 
             tileArray[x, z] = tile;
             return true;
         }
 
-        public BaseTile GenerateNewTile(TileType type)
+        public Tile GenerateNewTile(TileType type)
         {
             switch (type)
             {
                 case TileType.Space:
-                    Space space = new Space();
+                    Tiles.Floor.Space space = new Tiles.Floor.Space();
                     return space;
                 case TileType.Floor:
-                    Floor floor = new Floor();
+                    Tiles.Floor.Floor floor = new Tiles.Floor.Floor();
                     return floor;
                 case TileType.Wall:
-                    Wall wall = new Wall();
+                    Tiles.Wall.Wall wall = new Tiles.Wall.Wall();
                     return wall;
                 default:
                     return null;
@@ -174,9 +175,9 @@ namespace SS3d_server.Modules.Map
             return new Point(xPos, zPos);
         }
 
-        public Point GetTileArrayPositionFromWorldPosition(Vector3 pos)
+        public Point GetTileArrayPositionFromWorldPosition(Vector2 pos)
         {
-            return GetTileArrayPositionFromWorldPosition(pos.X, pos.Z);
+            return GetTileArrayPositionFromWorldPosition(pos.X, pos.Y);
         }
 
         public TileType GetObjectTypeFromWorldPosition(float x, float z)
@@ -193,9 +194,9 @@ namespace SS3d_server.Modules.Map
         }
 
 
-        private TileType GetObjectTypeFromWorldPosition(Vector3 pos)
+        private TileType GetObjectTypeFromWorldPosition(Vector2 pos)
         {
-            Point arrayPosition = GetTileArrayPositionFromWorldPosition(pos.X, pos.Z);
+            Point arrayPosition = GetTileArrayPositionFromWorldPosition(pos.X, pos.Y);
             if (arrayPosition.x < 0 || arrayPosition.y < 0)
             {
                 return TileType.None;
@@ -214,7 +215,7 @@ namespace SS3d_server.Modules.Map
             }
             else
             {
-                return tileArray[x, z].TileType;
+                return tileArray[x, z].tileType;
             }
         }
         #endregion
@@ -222,7 +223,7 @@ namespace SS3d_server.Modules.Map
 
         #region BASIC collision things
 
-        public bool CheckCollision(Vector3 pos)
+        public bool CheckCollision(Vector2 pos)
         {
             TileType tile = GetObjectTypeFromWorldPosition(pos);
 
@@ -244,56 +245,12 @@ namespace SS3d_server.Modules.Map
             }
         }
 
-        public Vector3 GetPointAboveTileAt(Vector3 pos)
-        {
-            TileType tile = GetObjectTypeFromWorldPosition(pos);
-
-            if (tile == TileType.None)
-            {
-                return pos;
-            }
-            else if (tile == TileType.Wall)
-            {
-                return new Vector3(pos.X, 40f, pos.Z);
-            }
-            else if ((tile == TileType.Floor || tile == TileType.Space) && pos.Y < 0)
-            {
-                return new Vector3(pos.X, 0, pos.Z);
-            }
-            else
-            {
-                return pos;
-            }
-        }
-
-        public double GetHeightAboveTileAt(Vector3 pos)
-        {
-            TileType tile = GetObjectTypeFromWorldPosition(pos);
-
-            if (tile == TileType.None)
-            {
-                return pos.Y;
-            }
-            else if (tile == TileType.Wall)
-            {
-                return wallHeight;
-            }
-            else if ((tile == TileType.Floor || tile == TileType.Space))
-            {
-                return 0;
-            }
-            else
-            {
-                return pos.Y;
-            }
-        }
-
-        public TileType GetObjectTypeAt(Vector3 pos)
+        public TileType GetObjectTypeAt(Vector2 pos)
         {
             return GetObjectTypeFromWorldPosition(pos);
         }
 
-        public bool IsFloorUnder(Vector3 pos)
+        public bool IsFloorUnder(Vector2 pos)
         {
             if (GetObjectTypeFromWorldPosition(pos) == TileType.Floor)
             {

@@ -557,30 +557,37 @@ namespace SS3d_server
             Atom.Item.Tool.Crowbar c;
             Atom.Item.Container.Toolbox t;
             Atom.Object.Door.Door d;
+            Atom.Item.Misc.Flashlight f;
 
             Random r = new Random();
             for (int i = 0; i < 10; i++)
             {
                 c = (Atom.Item.Tool.Crowbar)atomManager.SpawnAtom("Atom.Item.Tool.Crowbar");
-                c.Translate(new SS3D_shared.HelperClasses.Vector3(r.NextDouble() * map.GetMapWidth() * map.tileSpacing, 60, r.NextDouble() * map.GetMapHeight() * map.tileSpacing));
+                c.Translate(new SS3D_shared.HelperClasses.Vector2(r.NextDouble() * map.GetMapWidth() * map.tileSpacing, r.NextDouble() * map.GetMapHeight() * map.tileSpacing));
             }
-            for (int i = 0; i < 10; i++)
+            for (int i = 0; i < 1; i++)
             {
                 t = (Atom.Item.Container.Toolbox)atomManager.SpawnAtom("Atom.Item.Container.Toolbox");
-                t.Translate(new SS3D_shared.HelperClasses.Vector3(r.NextDouble() * map.GetMapWidth() * map.tileSpacing, 60, r.NextDouble() * map.GetMapHeight() * map.tileSpacing));
+                t.Translate(new SS3D_shared.HelperClasses.Vector2(r.NextDouble() * map.GetMapWidth() * map.tileSpacing, r.NextDouble() * map.GetMapHeight() * map.tileSpacing));
+            }
+
+            for (int i = 0; i < 10; i++)
+            {
+                f = (Atom.Item.Misc.Flashlight)atomManager.SpawnAtom("Atom.Item.Misc.Flashlight");
+                f.Translate(new SS3D_shared.HelperClasses.Vector2(r.NextDouble() * map.GetMapWidth() * map.tileSpacing, r.NextDouble() * map.GetMapHeight() * map.tileSpacing));
             }
 
             d = (Atom.Object.Door.Door)atomManager.SpawnAtom("Atom.Object.Door.Door");
-            d.Translate(new SS3D_shared.HelperClasses.Vector3(144, 0, 160));
+            d.Translate(new SS3D_shared.HelperClasses.Vector2(304, 336));
 
             d = (Atom.Object.Door.Door)atomManager.SpawnAtom("Atom.Object.Door.Door");
-            d.Translate(new SS3D_shared.HelperClasses.Vector3(144, 0, 208));
+            d.Translate(new SS3D_shared.HelperClasses.Vector2(304, 432));
 
             d = (Atom.Object.Door.Door)atomManager.SpawnAtom("Atom.Object.Door.Door");
-            d.Translate(new SS3D_shared.HelperClasses.Vector3(288, 0, 160));
+            d.Translate(new SS3D_shared.HelperClasses.Vector2(592, 336));
 
             d = (Atom.Object.Door.Door)atomManager.SpawnAtom("Atom.Object.Door.Door");
-            d.Translate(new SS3D_shared.HelperClasses.Vector3(288, 0, 208));
+            d.Translate(new SS3D_shared.HelperClasses.Vector2(592, 432));
         }
     }
 }

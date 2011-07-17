@@ -10,6 +10,8 @@ using SS3D.Modules;
 using Lidgren.Network;
 using Mogre;
 using SS3D.Modules.Network;
+using GorgonLibrary;
+using GorgonLibrary.Graphics;
 
 namespace SS3D.Atom
 {
@@ -17,18 +19,21 @@ namespace SS3D.Atom
     {
         #region Vars
         public GameScreen gameState;
-        public OgreManager mEngine;
+        public Program prg;
         public NetworkManager networkManager;
 
         public Dictionary<ushort, Atom> atomDictionary;
+        public DateTime now;
+        public DateTime lastUpdate;
+        public int updateRateLimit = 200; //200 updates / second
         #endregion
 
         #region Instantiation
-        public AtomManager(GameScreen _gameState)
+        public AtomManager(GameScreen _gameState, Program _prg)
         {
+            prg = _prg;
             gameState = _gameState;
-            mEngine = gameState.mEngine;
-            networkManager = mEngine.mNetworkMgr;
+            networkManager = prg.mNetworkMgr;
             atomDictionary = new Dictionary<ushort, Atom>();
         }
 
@@ -41,6 +46,12 @@ namespace SS3D.Atom
         #region Updating
         public void Update()
         {
+            now = DateTime.Now;
+            //Rate limit
+            TimeSpan timeSinceLastUpdate = now - lastUpdate;
+            if (timeSinceLastUpdate.TotalMilliseconds < 1000 / updateRateLimit)
+                return;
+
             var updateList =
                 from atom in atomDictionary
                 where atom.Value.updateRequired == true
@@ -48,8 +59,9 @@ namespace SS3D.Atom
 
             foreach (Atom a in updateList)
             {
-                a.Update();
+                a.Update(timeSinceLastUpdate.TotalMilliseconds);
             }
+            lastUpdate = now;
         }
         #endregion
 

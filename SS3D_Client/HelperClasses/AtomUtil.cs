@@ -4,7 +4,6 @@ using System.Linq;
 using System.Text;
 using SS3D_shared;
 using SS3D_shared.HelperClasses;
-using Mogre;
 
 using MMOC;
 using SS3D.Atom;
@@ -23,9 +22,9 @@ namespace SS3D.HelperClasses
         /// <param name="screenPos">The screen position</param>
         /// <param name="worldPos">Outputs the world position of the picked point</param>
         /// <returns>The Atom at the position, or null if none</returns>
-        public static AtomBaseClass PickAtScreenPosition(SS3D.Modules.OgreManager engine, Vector2 screenPos, out Mogre.Vector3 worldPos)
+        public static AtomBaseClass PickAtScreenPosition(SS3D.Modules.OgreManager engine, Vector2 screenPos, out Vector2 worldPos)
         {
-            Ray screenRay = engine.Camera.GetCameraToViewportRay(screenPos.x, screenPos.y);
+            /*&Ray screenRay = engine.Camera.GetCameraToViewportRay(screenPos.x, screenPos.y);
             RaySceneQuery sceneQuery = engine.SceneMgr.CreateRayQuery(screenRay);
 
             sceneQuery.QueryTypeMask = Mogre.SceneManager.ENTITY_TYPE_MASK; //Pick only entities. QueryTypeMask defines the type of object that can be picked up by this ray query.
@@ -43,13 +42,16 @@ namespace SS3D.HelperClasses
             }
 
             worldPos = screenRay.GetPoint(rayResult.Front.distance);
-            return (AtomBaseClass)rayResult.Front.movable.UserObject; //UserObject should ALWAYS be a reference to the object as AtomBaseClass.
+            return (AtomBaseClass)rayResult.Front.movable.UserObject; //UserObject should ALWAYS be a reference to the object as AtomBaseClass.*/
+            worldPos = new Vector2(0, 0);
+            return null;
+        
         }
 
         public static Atom.Atom PickAtScreenPosition(SS3D.Modules.OgreManager mEngine, Vector2 mousePos)
         {
 
-            CollisionTools ct = new CollisionTools(mEngine.SceneMgr);
+            /*CollisionTools ct = new CollisionTools(mEngine.SceneMgr);
             CollisionTools.RaycastResult rr = ct.RaycastFromCamera(mEngine.mWindow, mEngine.mCamera, mousePos, QueryFlags.ENTITY_ATOM); //Mogre.SceneManager.ENTITY_TYPE_MASK does not go here!!!
                                                                                                                                                      //The flags in that position are for the QueryMask
                                                                                                                                                      //Not the QueryTypeMask. The QueryMask is for custom flags.
@@ -59,7 +61,7 @@ namespace SS3D.HelperClasses
             if (rr != null)
             {
                 return (Atom.Atom)rr.Target.UserObject;
-            }
+            }*/
 
             return null;
 

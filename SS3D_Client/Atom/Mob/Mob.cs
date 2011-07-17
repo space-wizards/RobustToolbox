@@ -6,6 +6,10 @@ using Mogre;
 using Lidgren.Network;
 using SS3D.Atom.Mob.HelperClasses;
 
+using GorgonLibrary;
+using GorgonLibrary.Graphics;
+using GorgonLibrary.InputDevices;
+
 namespace SS3D.Atom.Mob
 {
     public class Mob : Atom
@@ -21,15 +25,16 @@ namespace SS3D.Atom.Mob
         public Appendage selectedAppendage;
 
         //Current animation state -- or at least the one we want to add some time to. This will need to become more robust.
-        public AnimationState animState;
+        public Mogre.AnimationState animState;
         public AnimState currentAnimState;
-
-        public Dictionary<string, AnimState> animStates;
         
+        public Dictionary<string, AnimState> animStates;
+
         public Mob()
             : base()
         {
-            meshName = "male_new.mesh";
+            //meshName = "male_new.mesh";
+            spritename = "spaceman.png";
         }
 
         public virtual void initAppendages()
@@ -44,13 +49,14 @@ namespace SS3D.Atom.Mob
         {
             base.SetUp(_uid, _atomManager);
 
-            currentAnimState = animStates["idle1"];
-            currentAnimState.Enable();
-            currentAnimState.LoopOn();
+            //currentAnimState = animStates["idle1"];
+            //currentAnimState.Enable();
+            //currentAnimState.LoopOn();
             /*animState = Entity.GetAnimationState("idle1");
             animState.Loop = true;
             animState.Enabled = true;*/
 
+            sprite.UniformScale = 2f;
             initAppendages();
         }
 
@@ -68,10 +74,10 @@ namespace SS3D.Atom.Mob
         {
             base.initKeys();
 
-            keyHandlers.Add(MOIS.KeyCode.KC_F, new KeyEvent(HandleKC_F));
-            keyHandlers.Add(MOIS.KeyCode.KC_Q, new KeyEvent(HandleKC_Q));
-            keyHandlers.Add(MOIS.KeyCode.KC_LSHIFT, new KeyEvent(HandleKC_SHIFT));
-            keyHandlers.Add(MOIS.KeyCode.KC_RSHIFT, new KeyEvent(HandleKC_SHIFT));
+            keyHandlers.Add(KeyboardKeys.F, new KeyEvent(HandleKC_F));
+            keyHandlers.Add(KeyboardKeys.Q, new KeyEvent(HandleKC_Q));
+            keyHandlers.Add(KeyboardKeys.LShiftKey, new KeyEvent(HandleKC_SHIFT));
+            keyHandlers.Add(KeyboardKeys.RShiftKey, new KeyEvent(HandleKC_SHIFT));
             
         }
         /// <summary>
@@ -81,12 +87,12 @@ namespace SS3D.Atom.Mob
         {
             animStates = new Dictionary<string, AnimState>();
 
-            animStates.Add("death", new AnimState(Entity.GetAnimationState("death"), this));
+            /*animStates.Add("death", new AnimState(Entity.GetAnimationState("death"), this));
             animStates.Add("tpose", new AnimState(Entity.GetAnimationState("tpose"), this));
             animStates.Add("walk1", new AnimState(Entity.GetAnimationState("walk1"), this));
             animStates.Add("idle1", new AnimState(Entity.GetAnimationState("idle1"), this));
             animStates.Add("rattack", new AnimState(Entity.GetAnimationState("rattack"), this));
-            animStates.Add("lattack", new AnimState(Entity.GetAnimationState("lattack"), this));
+            animStates.Add("lattack", new AnimState(Entity.GetAnimationState("lattack"), this));*/
         }
 
         public virtual void SetAnimationState(string state)
@@ -98,11 +104,11 @@ namespace SS3D.Atom.Mob
         {
             //return;
             //Disable old animation state.
-            currentAnimState.Disable();
-            currentAnimState.LoopOff();
+            //currentAnimState.Disable();
+            //currentAnimState.LoopOff();
 
             // TODO: error checking
-            if (send)
+            /*if (send)
                 SendAnimationState(state);
             currentAnimState = animStates[state];
             currentAnimState.LoopOn();
@@ -110,7 +116,7 @@ namespace SS3D.Atom.Mob
                 currentAnimState.LoopOff();
             currentAnimState.Enable();
             if (currentAnimState == null)
-                currentAnimState = animStates["idle1"];
+                currentAnimState = animStates["idle1"];*/
         }
 
         protected virtual void SendAnimationState(string state)
@@ -129,9 +135,9 @@ namespace SS3D.Atom.Mob
                 SetAnimationState(message.ReadString());
         }
 
-        public override void Update()
+        public override void Update(double time)
         {
-            base.Update();
+            base.Update(time);
 
             // Update Animation. Right now, anything animated will have to be updated in entirety every tick.
             TimeSpan t = atomManager.gameState.now - atomManager.gameState.lastUpdate; //LOL GOT IT BACKWRDS
@@ -154,9 +160,17 @@ namespace SS3D.Atom.Mob
         public override void UpdatePosition()
         {
             base.UpdatePosition();
+            foreach (Appendage a in appendages.Values)
+            {
+                if (a.attachedItem != null)
+                {
+                    a.attachedItem.UpdatePosition();
+                }
+            }
             if (isDead)
                 return;
-            AnimState walk = animStates["walk1"];
+            
+            /*AnimState walk = animStates["walk1"];
             AnimState idle = animStates["idle1"];
 
             if (interpolationPackets.Count == 0)
@@ -172,7 +186,8 @@ namespace SS3D.Atom.Mob
                 walk.LoopOn();
                 idle.Disable();
                 idle.LoopOff();
-            }
+            }*/
+
         }
 
         public override void HandleKC_W(bool state)
@@ -252,42 +267,42 @@ namespace SS3D.Atom.Mob
 
         private void DeathAnimation()
         {
-            DisableAllAnimationStates();
+            /*DisableAllAnimationStates();
             AnimState deathstate = animStates["death"];
             deathstate.final = true;
             deathstate.tempdisabled = false;
             deathstate.Enable();
-            deathstate.LoopOff();
+            deathstate.LoopOff();*/
         }
 
         public void DisableAllAnimationStates()
         {
-            var statestodisable =
+            /*var statestodisable =
                 from astate in animStates
                 where astate.Value.enabled == true
                 select astate.Value;
 
             foreach (AnimState a in statestodisable)
-                a.Disable();
+                a.Disable();*/
         }
 
         public virtual void HandleAnimateOnce(NetIncomingMessage message)
         {
-            foreach (var s in animStates)
+            /*foreach (var s in animStates)
             {
                 s.Value.tempdisabled = true;
             }
             AnimState state = animStates[message.ReadString()];
 
-            state.RunOnce();
+            state.RunOnce();*/
         }
 
         public virtual void AnimationComplete()
         {
-            foreach (var s in animStates)
+            /*foreach (var s in animStates)
             {
                 s.Value.tempdisabled = false;
-            }
+            }*/
         }
 
 

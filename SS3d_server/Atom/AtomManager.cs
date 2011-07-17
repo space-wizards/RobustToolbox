@@ -155,7 +155,7 @@ namespace SS3d_server.Atom
             return atomDictionary[uid]; // Why do we return it? So we can do whatever is needed easily from the calling function.
         }
 
-        public Atom SpawnAtom(string type, Vector3 position)
+        public Atom SpawnAtom(string type, Vector2 position)
         {
             Atom spawned = SpawnAtom(type);
             spawned.Translate(position);

@@ -7,9 +7,6 @@ public enum AtomType
     [AtomClassAttribute(typeof(SS3D_shared.AtomBaseClass))] 
     None = 0,
 
-    [AtomClassAttribute(typeof(SS3D_shared.BaseTile))] 
-    Tile,          //Walls, floors etc
-
     //[AtomClassAttribute(typeof(SS3D_shared.Item))] 
     //Item,          //Objects that can be picked up. Crowbar etc.
 
@@ -22,16 +19,13 @@ public enum AtomType
 
 public enum TileType
 {
-    [AtomClassAttribute(typeof(SS3D_shared.BaseTile))] 
     None = 0,
 
-    [AtomClassAttribute(typeof(SS3D_shared.Floor))] 
     Floor,
 
-    [AtomClassAttribute(typeof(SS3D_shared.Wall))] 
     Wall,
 
-    [AtomClassAttribute(typeof(SS3D_shared.Space))] 
+
     Space
 }
 

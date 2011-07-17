@@ -10,18 +10,12 @@ namespace SS3D.Atom.Object.Door
     {
         DoorState status = DoorState.Closed;
         DoorState laststatus = DoorState.Closed;
-        Mogre.Vector3 slidePos;
-        private int slideStepsTotal = 10;
-        private int slideStepsCurrent = 10;
 
         public Door()
             : base()
         {
-            meshName = "doorMesh";
-            name = "Door";
+            spritename = "Door.png";
             collidable = true;
-            clipping = false;
-            slidePos = new Mogre.Vector3(0, 40, 0); // guess i'll just hide it under the map for now
         }
 
         protected override void HandleExtendedMessage(Lidgren.Network.NetIncomingMessage message)
@@ -38,51 +32,41 @@ namespace SS3D.Atom.Object.Door
             switch (status)
             {
                 case DoorState.Closed:
-                    slideStepsCurrent = 0;
+                    visible = true;
+                    collidable = true;
                     break;
                 case DoorState.Open:
-                    slideStepsCurrent = 0;
+                    visible = false;
+                    collidable = false;
                     break;
                 case DoorState.Broken:
-                    slideStepsCurrent = 0;
                     break;
                 default:
                     break;
             }
+            atomManager.gameState.map.GetTileAt(position).sightBlocked = visible;
+            List<Light> lights = atomManager.gameState.map.GetTileAt(position).lights.ToList();
+            foreach (Light l in lights)
+            {
+                l.UpdateLight();
+            }
+            atomManager.gameState.map.needVisUpdate = true;
             updateRequired = true;
         }
 
-        public override void Update()
+        public override void Update(double time)
         {
-            base.Update();
-            if (slideStepsCurrent < slideStepsTotal)
+            base.Update(time);
+            if (this.interpolationPackets.Count == 0)
             {
-                switch (status)
-                {
-                    case DoorState.Closed:
-                        TranslateLocal(-slidePos / slideStepsTotal);
-                        break;
-                    case DoorState.Open:
-                        if (laststatus == DoorState.Broken)
-                        {
-                            TranslateLocal(slidePos / 2);
-                            slideStepsCurrent = slideStepsTotal;
-                        }
-                        else
-                        {
-                            TranslateLocal(slidePos / slideStepsTotal);
-                        }
-                        
-                        break;
-                    case DoorState.Broken:
-                        TranslateLocal(slidePos / 2);
-                        slideStepsCurrent = slideStepsTotal;
-                        break;
-                }
-                slideStepsCurrent++;
+                UpdateStatus();
+            }
+            else
+            {
                 updateRequired = true;
             }
-            
+
+
         }
     }
 }

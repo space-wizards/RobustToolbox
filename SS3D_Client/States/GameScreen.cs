@@ -1,13 +1,11 @@
 ﻿using System;
 using System.IO;
+using System.Linq;
 
-using Mogre;
 using Lidgren.Network;
 
 using SS3D.Modules;
 using SS3D.Modules.Map;
-//using SS3D.Modules.Items;
-//using SS3D.Modules.Mobs;
 using SS3D.Modules.Network;
 using SS3D.Modules.UI;
 using SS3D.Atom;
@@ -17,14 +15,9 @@ using SS3D_shared;
 using System.Collections.Generic;
 using System.Reflection;
 
-using Miyagi;
-using Miyagi.UI;
-using Miyagi.UI.Controls;
-using Miyagi.Common;
-using Miyagi.Common.Data;
-using Miyagi.Common.Resources;
-using Miyagi.Common.Events;
-using Miyagi.TwoD;
+using GorgonLibrary;
+using GorgonLibrary.Graphics;
+using GorgonLibrary.InputDevices;
 
 namespace SS3D.States
 {
@@ -33,19 +26,33 @@ namespace SS3D.States
         #region Variables
         private StateManager mStateMgr;
         public Map map;
-        //private ItemManager itemManager;
-        //private MobManager mobManager;
         private AtomManager atomManager;
-        private GUI guiGameScreen;
+        //private GUI guiGameScreen;
         private Chatbox gameChat;
         private ushort defaultChannel;
         public PlayerController playerController;
         public DateTime lastUpdate;
         public DateTime now;
+        private RenderImage baseTarget;
+
+        private int screenWidthTiles = 15; // How many tiles around us do we draw?
+        private int screenHeightTiles = 12;
+
+        private float realScreenWidthTiles = 0;
+        private float realScreenHeightTiles = 0;
 
         private bool showStats = false;     // show FPS etc. panel if true
-        private Label fpsLabel1, fpsLabel2, fpsLabel3, fpsLabel4;
-        
+        //private Label fpsLabel1, fpsLabel2, fpsLabel3, fpsLabel4;
+
+        private float xTopLeft = 0;
+        private float yTopLeft = 0;
+
+        private float scaleX = 1.0f;
+        private float scaleY = 1.0f;
+
+        private System.Drawing.Point screenSize;
+        private bool lighting = true;
+   
         #region Mouse/Camera stuff
         private DateTime lastRMBClick = DateTime.Now;
         private int lastMouseX = 0;
@@ -56,57 +63,300 @@ namespace SS3D.States
 
         public GameScreen()
         {
-            mEngine = null;
         }
 
         #region Startup, Shutdown, Update
-        public override bool Startup(StateManager _mgr)
+        public override bool Startup(Program _prg)
         {
-            mEngine = _mgr.Engine;
-            mStateMgr = _mgr;
+            prg = _prg;
+            mStateMgr = prg.mStateMgr;
 
             lastUpdate = DateTime.Now;
             now = DateTime.Now;
 
             defaultChannel = 1;
 
-            mEngine.mMiyagiSystem.GUIManager.DisposeAllGUIs();
+            map = new Map();
 
-            map = new Map(mEngine, true);
-
-            //mobManager = new MobManager(mEngine, map, mEngine.mNetworkMgr);
-            //itemManager = new ItemManager(mEngine, map, mEngine.mNetworkMgr, mobManager);
-            atomManager = new AtomManager(this);
+            atomManager = new AtomManager(this, prg);
             playerController = new PlayerController(this, atomManager);
-            SetUp();
-            SetUpGUI();
+            //SetUp();
+            //SetUpGUI();
 
-            mEngine.mNetworkMgr.MessageArrived += new NetworkMsgHandler(mNetworkMgr_MessageArrived);
+            prg.mNetworkMgr.MessageArrived += new NetworkMsgHandler(mNetworkMgr_MessageArrived);
 
-            mEngine.mNetworkMgr.SetMap(map);
-            mEngine.mNetworkMgr.RequestMap();
+            prg.mNetworkMgr.SetMap(map);
+            prg.mNetworkMgr.RequestMap();
 
             //TODO This should go somewhere else, there should be explicit session setup and teardown at some point.
-            mEngine.mNetworkMgr.SendClientName(ConfigManager.Singleton.Configuration.PlayerName);
-                                
+            prg.mNetworkMgr.SendClientName(ConfigManager.Singleton.Configuration.PlayerName);
+            baseTarget = new RenderImage("baseTarget", 800, 640, ImageBufferFormats.BufferUnknown);
+            baseTarget.AlphaMaskFunction = CompareFunctions.GreaterThan;
+
+            realScreenWidthTiles = (float)Gorgon.CurrentClippingViewport.Width / map.tileSpacing;
+            realScreenHeightTiles = (float)Gorgon.CurrentClippingViewport.Height / map.tileSpacing;
+
+            screenSize = new System.Drawing.Point(Gorgon.CurrentClippingViewport.Width, Gorgon.CurrentClippingViewport.Height);
+
+            //scaleX = (float)Gorgon.CurrentClippingViewport.Width / (realScreenWidthTiles * map.tileSpacing);
+            //scaleY = (float)Gorgon.CurrentClippingViewport.Height / (realScreenHeightTiles * map.tileSpacing);
+
             return true;
         }
 
-        private void SetUp()
+        public override void Shutdown()
         {
-            mEngine.SceneMgr.ShadowTextureSelfShadow = true;
-            mEngine.SceneMgr.SetShadowTextureCasterMaterial("shadow_caster");
-            mEngine.SceneMgr.SetShadowTexturePixelFormat(PixelFormat.PF_FLOAT16_RGB);
-            mEngine.SceneMgr.ShadowCasterRenderBackFaces = false;
-            mEngine.SceneMgr.SetShadowTextureSize(512);
-            mEngine.SceneMgr.ShadowTechnique = ShadowTechnique.SHADOWTYPE_TEXTURE_ADDITIVE_INTEGRATED;
-            
-            mEngine.SceneMgr.AmbientLight = ColourValue.White;
-
-            mEngine.SceneMgr.SetSkyBox(true, "SkyBox", 900f, true);
+            if (baseTarget != null)
+            {
+                baseTarget.Dispose();
+            }
+            atomManager.Shutdown();
+            map.Shutdown();
+            atomManager = null; 
+            map = null;
+            prg.mNetworkMgr.Disconnect();
+            prg.mNetworkMgr.MessageArrived -= new NetworkMsgHandler(mNetworkMgr_MessageArrived);
         }
 
-        private void SetUpGUI()
+        public override void Update(long _frameTime)
+        {
+            lastUpdate = now;
+            now = DateTime.Now;
+            atomManager.Update();
+        }
+
+        private void mNetworkMgr_MessageArrived(NetworkManager netMgr, NetIncomingMessage msg)
+        {
+            if (msg == null)
+            {
+                return;
+            }
+            switch (msg.MessageType)
+            {
+                case NetIncomingMessageType.Data:
+                    NetMessage messageType = (NetMessage)msg.ReadByte();
+                    switch (messageType)
+                    {
+                        case NetMessage.ChangeTile:
+                            ChangeTile(msg);
+                            break;
+                        case NetMessage.AtomManagerMessage:
+                            atomManager.HandleNetworkMessage(msg);
+                            break;
+                        case NetMessage.PlayerSessionMessage:
+                            playerController.HandleNetworkMessage(msg);
+                            break;
+                        case NetMessage.SendMap:
+                            RecieveMap(msg);
+                            break;
+                        //case NetMessage.ChatMessage:
+                            //HandleChatMessage(msg);
+                            //break;
+                        default:
+                            break;
+                    }
+                    break;
+                default:
+                    break;
+            }
+        }
+
+        public void RecieveMap(NetIncomingMessage msg)
+        {
+            int mapWidth = msg.ReadInt32();
+            int mapHeight = msg.ReadInt32();
+
+            TileType[,] tileArray = new TileType[mapWidth, mapHeight];
+
+            for (int x = 0; x < mapWidth; x++)
+            {
+                for (int z = 0; z < mapHeight; z++)
+                {
+                    tileArray[x, z] = (TileType)msg.ReadByte();
+                }
+            }
+            map.LoadNetworkedMap(tileArray, mapWidth, mapHeight);
+        }
+
+        private void ChangeTile(NetIncomingMessage msg)
+        {
+            if (map == null)
+            {
+                return;
+            }
+            int x = msg.ReadInt32();
+            int z = msg.ReadInt32();
+            TileType newTile = (TileType)msg.ReadByte();
+            map.ChangeTile(x, z, newTile);
+        }
+
+        #endregion
+
+
+        /* What are we doing here exactly? Well:
+         * First we get the tile we are stood on, and try and make this the centre of the view. However if we're too close to one edge
+         * we allow us to be drawn nearer that edge, and not in the middle of the screen.
+         * We then find how far "into" the map we are (xTopLeft, yTopLeft), the position of the top left of the screen in WORLD
+         * co-ordinates so we can work out what we need to draw, and what we dont need to (what's off screen).
+         * Then we see if we've moved a tile recently or a flag has been set on the map that we need to update the visibility (a door 
+         * opened for example).
+         * We then loop through all the tiles, and draw the floor and the sides of the walls, as they will always be under us
+         * and the atoms. Next we find all the atoms in view and draw them. Lastly we draw the top section of walls as they will
+         * always be on top of us and atoms.
+         * */
+        public override void GorgonRender()
+        {
+            Gorgon.Screen.Clear(System.Drawing.Color.Black);
+            if (playerController.controlledAtom != null)
+            {
+                System.Drawing.Point centerTile = map.GetTileArrayPositionFromWorldPosition(playerController.controlledAtom.position);
+              
+                int xStart = System.Math.Max(0, centerTile.X - (screenWidthTiles / 2) - 1);
+                int yStart = System.Math.Max(0, centerTile.Y - (screenHeightTiles / 2) - 1);
+                int xEnd = System.Math.Min(xStart + screenWidthTiles + 2, map.mapWidth);
+                int yEnd = System.Math.Min(yStart + screenHeightTiles + 2, map.mapHeight);
+
+                xTopLeft = Math.Max(0, playerController.controlledAtom.position.X - ((screenWidthTiles / 2) * map.tileSpacing));
+                yTopLeft = Math.Max(0, playerController.controlledAtom.position.Y - ((screenHeightTiles / 2) * map.tileSpacing));
+
+                if (centerTile != map.lastVisPoint || map.needVisUpdate)
+                {
+                    map.compute_visibility(centerTile.X, centerTile.Y);
+                    map.lastVisPoint = centerTile;
+                }
+                if (map.tileArray != null)
+                {
+                    for (int x = xStart; x < xEnd; x++)
+                    {
+                        for (int y = yStart; y < yEnd; y++)
+                        {
+                            if (map.tileArray[x, y].tileType == TileType.Wall)
+                            {
+                                if (y <= centerTile.Y)
+                                {
+                                    map.tileArray[x, y].Render(xTopLeft, yTopLeft, map.tileSpacing, lighting);
+                                }
+                            }
+                            else
+                            {
+                                map.tileArray[x, y].Render(xTopLeft, yTopLeft, map.tileSpacing, lighting);
+                            }
+                        }
+                    }
+                }
+
+                if (atomManager != null)
+                {
+                    IEnumerable<Atom.Atom> atoms = from a in atomManager.atomDictionary.Values
+                                                   where
+                                                   a.visible &&
+                                                   System.Math.Sqrt((playerController.controlledAtom.position.X - a.position.X) * (playerController.controlledAtom.position.X - a.position.X)) < screenHeightTiles * map.tileSpacing + 160 &&
+                                                   System.Math.Sqrt((playerController.controlledAtom.position.Y - a.position.Y) * (playerController.controlledAtom.position.Y - a.position.Y)) < screenHeightTiles * map.tileSpacing + 160
+                                                   select a;
+
+                    foreach (Atom.Atom a in atoms)
+                    {
+                        a.Render(xTopLeft, yTopLeft, lighting);
+                    }
+                }
+
+                if (map.tileArray != null)
+                {
+                    for (int x = xStart; x < xEnd; x++)
+                    {
+                        for (int y = yStart; y < yEnd; y++)
+                        {
+                            if (map.tileArray[x, y].tileType == TileType.Wall)
+                            {
+                                map.tileArray[x, y].RenderTop(xTopLeft, yTopLeft, map.tileSpacing, lighting);
+                            }
+                        }
+                    }
+                }
+            }
+            return;
+        }
+
+        // Not currently used.
+        public override void FormResize()
+        {
+            scaleX = (float)Gorgon.CurrentClippingViewport.Width / (realScreenWidthTiles * map.tileSpacing);
+            scaleY = (float)Gorgon.CurrentClippingViewport.Height / (realScreenHeightTiles * map.tileSpacing);
+            screenSize = new System.Drawing.Point(Gorgon.CurrentClippingViewport.Width, Gorgon.CurrentClippingViewport.Height);
+        }
+
+        public System.Drawing.Color Blend(System.Drawing.Color color, System.Drawing.Color backColor, double amount)
+        {
+            byte r = (byte)((color.R * amount) + backColor.R * (1 - amount));
+            byte g = (byte)((color.G * amount) + backColor.G * (1 - amount));
+            byte b = (byte)((color.B * amount) + backColor.B * (1 - amount));
+            return System.Drawing.Color.FromArgb(r, g, b);
+        }
+
+        #region Input
+
+        public override void KeyDown(KeyboardInputEventArgs e)
+        {
+            if (e.Key == KeyboardKeys.F1)
+            {
+                Gorgon.FrameStatsVisible = !Gorgon.FrameStatsVisible;
+            }
+            if (e.Key == KeyboardKeys.F2)
+            {
+                lighting = !lighting;
+            }
+            playerController.KeyDown(e.Key);
+        }
+        public override void KeyUp(KeyboardInputEventArgs e)
+        {
+            playerController.KeyUp(e.Key); // We want to pass key up events regardless of UI focus.
+        }
+        public override void MouseUp(MouseInputEventArgs e)
+        {
+        
+        }
+        public override void MouseDown(MouseInputEventArgs e)
+        {
+            // Convert our click from screen -> world coordinates
+            Vector2D worldPosition = new Vector2D(e.Position.X + xTopLeft, e.Position.Y + yTopLeft);
+            // A bounding box for our click
+            System.Drawing.RectangleF mouseAABB = new System.Drawing.RectangleF(worldPosition.X, worldPosition.Y, 1, 1);
+
+
+            // Find all the atoms near us we could have clicked
+            IEnumerable<Atom.Atom> atoms = from a in atomManager.atomDictionary.Values
+                                           where
+                                           System.Math.Sqrt((playerController.controlledAtom.position.X - a.position.X) * (playerController.controlledAtom.position.X - a.position.X)) < map.tileSpacing * 1.5f &&
+                                           System.Math.Sqrt((playerController.controlledAtom.position.Y - a.position.Y) * (playerController.controlledAtom.position.Y - a.position.Y)) < map.tileSpacing * 1.5f &&
+                                           a.visible
+                                           select a;
+
+            // See which one our click AABB intersected with
+            foreach (Atom.Atom a in atoms)
+            {
+                System.Drawing.RectangleF AABB = new System.Drawing.RectangleF(a.position.X - (a.sprite.Width / 2), a.position.Y - (a.sprite.Height / 2), a.sprite.Width, a.sprite.Height);
+                if (mouseAABB.IntersectsWith(AABB))
+                {
+                    a.HandleClick();
+                }
+            }
+            
+        }
+        public override void MouseMove(MouseInputEventArgs e)
+        {
+        
+        }
+ 
+        #endregion
+
+    }
+
+}
+
+#region Old / Depreciated Methods
+
+
+        /*private void SetUpGUI()
         {
             // The chatbox
             gameChat = new Chatbox("gameChat");
@@ -124,7 +374,7 @@ namespace SS3D.States
             HealthPanel healthPanel = new HealthPanel(mEngine);
             healthPanel.Initialize();
 
-            /*// The health background
+            // The health background
             Panel healthPanel = new Panel("healthPanel")
             {
                 Size = new Size(48, 105),
@@ -138,7 +388,7 @@ namespace SS3D.States
                 Size = new Size(42, 99),
                 Location = new Point(2, 3),
                 Bitmap = (System.Drawing.Bitmap)System.Drawing.Image.FromFile("../../../Media/GUI/HuD/healthgreen.png")
-            };*/
+            };
 
 
             Button leftHandButton = new Button("leftHandButton")
@@ -236,120 +486,9 @@ namespace SS3D.States
             guiGameScreen.Controls.Add(fpsPanel);
             
           
-        }
+        }*/
 
-        public override void Shutdown()
-        {
-            mEngine.mMiyagiSystem.GUIManager.GUIs.Remove(guiGameScreen);
-            atomManager.Shutdown();
-            map.Shutdown();
-
-            atomManager = null; 
-            map = null;
-            //itemManager.Shutdown();
-            //itemManager = null;
-            //mobManager.Shutdown();
-            //mobManager = null;
-            mEngine.mNetworkMgr.Disconnect();
-            mEngine.mNetworkMgr.MessageArrived -= new NetworkMsgHandler(mNetworkMgr_MessageArrived);
-        }
-
-        public override void Update(long _frameTime)
-        {
-            /* There's no reason to spam DateTime.Now everywhere. */
-            lastUpdate = now;
-            now = DateTime.Now;
-
-            mEngine.SceneMgr.SkyBoxNode.Rotate(Mogre.Vector3.UNIT_Y, 0.0001f);
-
-            //itemManager.Update();
-            //mobManager.Update();
-            atomManager.Update();
-
-            if (showStats)
-            {
-                fpsLabel1.Text = String.Format("FPS: {0:F1}", mEngine.mWindow.LastFPS);
-                fpsLabel2.Text = String.Format("Time: {0:F1}", 1000.0f / mEngine.mWindow.LastFPS);
-                fpsLabel3.Text = String.Format("Batch: {0:F0}", mEngine.mWindow.BatchCount);
-                fpsLabel4.Text = String.Format("Tris: {0:F0}", mEngine.mWindow.TriangleCount);
-            }
-            
-        }
-
-
-        private void mNetworkMgr_MessageArrived(NetworkManager netMgr, NetIncomingMessage msg)
-        {
-            if (msg == null)
-            {
-                return;
-            }
-            switch (msg.MessageType)
-            {
-                case NetIncomingMessageType.Data:
-                    NetMessage messageType = (NetMessage)msg.ReadByte();
-                    switch (messageType)
-                    {
-                        case NetMessage.ChangeTile:
-                            ChangeTile(msg);
-                            break;
-                        /*case NetMessage.ItemMessage:
-                            itemManager.HandleNetworkMessage(msg);
-                            break;
-                        case NetMessage.MobMessage:
-                            mobManager.HandleNetworkMessage(msg);
-                            break;
-                         * */
-                        case NetMessage.AtomManagerMessage:
-                            atomManager.HandleNetworkMessage(msg);
-                            break;
-                        case NetMessage.PlayerSessionMessage:
-                            playerController.HandleNetworkMessage(msg);
-                            break;
-                        case NetMessage.SendMap:
-                            RecieveMap(msg);
-                            break;
-                        case NetMessage.ChatMessage:
-                            HandleChatMessage(msg);
-                            break;
-                        default:
-                            break;
-                    }
-                    break;
-                default:
-                    break;
-            }
-        }
-
-        public void RecieveMap(NetIncomingMessage msg)
-        {
-            int mapWidth = msg.ReadInt32();
-            int mapHeight = msg.ReadInt32();
-
-            TileType[,] tileArray = new TileType[mapWidth, mapHeight];
-
-            for (int x = 0; x < mapWidth; x++)
-            {
-                for (int z = 0; z < mapHeight; z++)
-                {
-                    tileArray[x, z] = (TileType)msg.ReadByte();
-                }
-            }
-            map.LoadNetworkedMap(tileArray, mapWidth, mapHeight);
-        }
-
-        private void ChangeTile(NetIncomingMessage msg)
-        {
-            if (map == null)
-            {
-                return;
-            }
-            int x = msg.ReadInt32();
-            int z = msg.ReadInt32();
-            TileType newTile = (TileType)msg.ReadByte();
-            map.ChangeTile(x, z, newTile);
-        }
-
-        private void HandleChatMessage(NetIncomingMessage msg)
+        /*private void HandleChatMessage(NetIncomingMessage msg)
         {
             ChatChannel channel = (ChatChannel)msg.ReadByte();
             string text = msg.ReadString();
@@ -360,12 +499,12 @@ namespace SS3D.States
             Atom.Atom a = atomManager.GetAtom(atomID);
             if (a != null)
             {
-                if (a.speechBubble == null) a.speechBubble = new SpeechBubble(mEngine, a.Entity);
+                /*if (a.speechBubble == null) a.speechBubble = new SpeechBubble(mEngine, a.Entity);
                 a.speechBubble.Show(text, 4000 + ((double)text.Length * (double)30));
             }
-        }
+        }*/
 
-        private void SendChatMessage(string text)
+        /*private void SendChatMessage(string text)
         {
             NetOutgoingMessage message = mEngine.mNetworkMgr.netClient.CreateMessage();
             message.Write((byte)NetMessage.ChatMessage);
@@ -373,34 +512,41 @@ namespace SS3D.States
             message.Write(text);
 
             mEngine.mNetworkMgr.SendMessage(message, NetDeliveryMethod.ReliableUnordered);
-        }
-        
-        void chatTextbox_TextSubmitted(Chatbox chatbox, string text)
+        }*/
+
+        /*void chatTextbox_TextSubmitted(Chatbox chatbox, string text)
         {
             if (text == "/dumpmap")
             {
-               /* if(map != null && itemManager != null)
-                    MapFileHandler.SaveMap("./Maps/mapdump.map", map, itemManager);*/
+                if(map != null && itemManager != null)
+                    MapFileHandler.SaveMap("./Maps/mapdump.map", map, itemManager);
             }
             else
             {
                 SendChatMessage(text);
             }
-        }
+        }*/
 
-        #endregion
-
-        #region Input
-        public override void UpdateInput(Mogre.FrameEvent evt, MOIS.Keyboard keyState, MOIS.Mouse mouseState)
+        /*public override void KeyUp(MOIS.KeyEvent keyState)
         {
-            // TODO: Rewrite this shit
+            playerController.KeyUp(keyState.key); // We want to pass key up events regardless of UI focus.
             if (gameChat.HasFocus())
             {
                 return;
             }
-        }
+            else if (keyState.key == MOIS.KeyCode.KC_T)
+            {
+                gameChat.SetInputFocus();
+            }
+            else if (keyState.key == MOIS.KeyCode.KC_F1) // Toggle stats panel
+            {
+                showStats = !showStats;
+                //guiGameScreen.GetControl("FPSPanel").Visible = showStats;
+            }
 
-        public override void KeyDown(MOIS.KeyEvent keyState)
+        }*/
+
+        /* public override void KeyDown(MOIS.KeyEvent keyState)
         {
             if (gameChat.HasFocus())
             {
@@ -409,13 +555,12 @@ namespace SS3D.States
                 return;
             }
 
-            if (keyState.key == MOIS.KeyCode.KC_ESCAPE)
+            /*if (keyState.key == MOIS.KeyCode.KC_ESCAPE)
                 mStateMgr.RequestStateChange(typeof(MainMenu));
 
             // Pass keydown events to the PlayerController
-            playerController.KeyDown(keyState.key);
 
-            /*
+            
             if (keyState.key == MOIS.KeyCode.KC_1)
             {
                 guiGameScreen.GetControl("leftHandButton").Focused = true;
@@ -442,34 +587,11 @@ namespace SS3D.States
                     guiGameScreen.GetControl("rightHandButton").Focused = false;
                     mobManager.myMob.selectedHand = MobHand.LHand;
                 }
-            }*/
-
-        }
-
-        public override void KeyUp(MOIS.KeyEvent keyState)
-        {
-            playerController.KeyUp(keyState.key); // We want to pass key up events regardless of UI focus.
-            if (gameChat.HasFocus())
-            {
-                return;
-            }
-            else if (keyState.key == MOIS.KeyCode.KC_T)
-            {
-                gameChat.SetInputFocus();
-            }
-            else if (keyState.key == MOIS.KeyCode.KC_F1) // Toggle stats panel
-            {
-                showStats = !showStats;
-                guiGameScreen.GetControl("FPSPanel").Visible = showStats;
             }
 
-        }
+        }*/
 
-        public override void MouseUp(MOIS.MouseEvent mouseState, MOIS.MouseButtonID button)
-        {
-        }
-
-        public override void MouseDown(MOIS.MouseEvent mouseState, MOIS.MouseButtonID button)
+        /*public override void MouseDown(MOIS.MouseEvent mouseState, MOIS.MouseButtonID button)
         {
             if (button == MOIS.MouseButtonID.MB_Right)
             {
@@ -501,13 +623,13 @@ namespace SS3D.States
                         case AtomType.Mob:
                             mobManager.ClickMob((Mob)atom);
                             break;
-                    }*/
+                    }
                     
                 }
             }
-        }
+        }*/
 
-        public override void MouseMove(MOIS.MouseEvent mouseState)
+        /*public override void MouseMove(MOIS.MouseEvent mouseState)
         {
             // r-button camera yaw
             if (mouseState.state.ButtonDown(MOIS.MouseButtonID.MB_Right))
@@ -536,11 +658,11 @@ namespace SS3D.States
                 mEngine.Camera.Position = new Mogre.Vector3(0, mEngine.CameraDistance, -2 * mEngine.CameraDistance / 3);
                 // Offset the camera position to deal with atom node offsets. 
                 //TODO make this less hackish
-                mEngine.Camera.Position = mEngine.Camera.Position + playerController.controlledAtom.offset;
+                //mEngine.Camera.Position = mEngine.Camera.Position + playerController.controlledAtom.offset;
            }
-        }
+        }*/
 
-        private void LeftHandButtonMouseDown(object sender, MouseButtonEventArgs e)
+        /*private void LeftHandButtonMouseDown(object sender, MouseButtonEventArgs e)
         {
             if (e.MouseButton == MouseButton.Left)
             {
@@ -551,9 +673,9 @@ namespace SS3D.States
             {
                 //itemManager.DropItem(MobHand.LHand);
             }
-        }
+        }*/
 
-        private void RightHandButtonMouseDown(object sender, MouseButtonEventArgs e)
+        /*private void RightHandButtonMouseDown(object sender, MouseButtonEventArgs e)
         {
             if (e.MouseButton == MouseButton.Left)
             {
@@ -564,9 +686,7 @@ namespace SS3D.States
             {
                 //itemManager.DropItem(MobHand.RHand);
             }
-        }
-        #endregion
+        }*/
 
-    }
 
-}
+#endregion

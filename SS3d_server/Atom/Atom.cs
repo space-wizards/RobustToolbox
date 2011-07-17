@@ -22,8 +22,8 @@ namespace SS3d_server.Atom
         public List<Extension.Extension> extensions;
 
         // Position data
-        public Vector3 position;
-        public Vector3 offset;
+        public Vector2 position;
+        public Vector2 offset;
         public float rotW;
         public float rotY;
 
@@ -40,8 +40,8 @@ namespace SS3d_server.Atom
         #region constructors and init
         public Atom()
         {
-            position = new Vector3(160, 0, 160);
-            offset = new Vector3(0, 0, 0);
+            position = new Vector2(192, 192);
+            offset = new Vector2(0, 0);
             rotW = 1;
             rotY = 0;
             name = this.GetType().ToString();
@@ -134,7 +134,7 @@ namespace SS3d_server.Atom
             NetOutgoingMessage message = CreateAtomMessage();
             message.Write((byte)AtomMessage.InterpolationPacket);
 
-            InterpolationPacket i = new InterpolationPacket((float)position.X, (float)position.Y, (float)position.Z, rotW, rotY, 0); // Fuckugly
+            InterpolationPacket i = new InterpolationPacket((float)position.X, (float)position.Y, rotW, rotY, 0); // Fuckugly
             i.WriteMessage(message);
 
             /* VVVV This is the force flag. If this flag is set, the client will run the interpolation 
@@ -174,7 +174,6 @@ namespace SS3d_server.Atom
             {
                 position.X = (double)message.ReadFloat();
                 position.Y = (double)message.ReadFloat();
-                position.Z = (double)message.ReadFloat();
                 rotW = message.ReadFloat();
                 rotY = message.ReadFloat();
 
@@ -187,11 +186,10 @@ namespace SS3d_server.Atom
 
 
         // For movement only
-        public virtual void Translate(Vector3 newPosition)
+        public virtual void Translate(Vector2 newPosition)
         {
             position.X = newPosition.X;
             position.Y = newPosition.Y;
-            position.Z = newPosition.Z;
 
             SendInterpolationPacket(false);
         }
@@ -206,11 +204,10 @@ namespace SS3d_server.Atom
         }
 
         // For both movement and rotation
-        public virtual void Translate(Vector3 newPosition, float W, float Y)
+        public virtual void Translate(Vector2 newPosition, float W, float Y)
         {
             position.X = newPosition.X;
             position.Y = newPosition.Y;
-            position.Z = newPosition.Z;
 
             rotW = W;
             rotY = Y;
@@ -227,11 +224,12 @@ namespace SS3d_server.Atom
         #region input handling
         protected virtual void Clicked(Mob.Mob clicker)
         {
-            Vector3 dist = clicker.position - position;
+            Vector2 dist = clicker.position - position;
 
             //If we're too far away
-            if (dist.Magnitude > 32)
+            if (dist.Magnitude > 48)
                 return;
+
 
             /// TODO: add intent handling
             if (clicker.selectedAppendage.heldItem == null)

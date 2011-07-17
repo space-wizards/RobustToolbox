@@ -9,6 +9,8 @@ using SS3D.Modules.Network;
 using System.Collections.Generic;
 using System.Reflection;
 
+using GorgonLibrary;
+using GorgonLibrary.InputDevices;
 namespace SS3D.States
 {
     public class LoadingScreen : State
@@ -18,15 +20,14 @@ namespace SS3D.States
 
         public LoadingScreen()
         {
-            mEngine = null;
         }
 
         #region Startup, Shutdown, Update
-        public override bool Startup(StateManager _mgr)
+        public override bool Startup(Program _prg)
         {
-            mEngine = _mgr.Engine;
-            mStateMgr = _mgr;
-            mNetworkMgr = mEngine.mNetworkMgr;
+            prg = _prg;
+            mStateMgr = prg.mStateMgr;
+            mNetworkMgr = prg.mNetworkMgr;
 
             return true;
         }
@@ -39,32 +40,27 @@ namespace SS3D.States
         {
         }
         #endregion
+        public override void GorgonRender()
+        {
 
+            return;
+        }
         #region Input
-        public override void UpdateInput(Mogre.FrameEvent evt, MOIS.Keyboard keyState, MOIS.Mouse mouseState)
+       
+        public override void KeyDown(KeyboardInputEventArgs e)
+        { }
+        public override void KeyUp(KeyboardInputEventArgs e)
+        { }
+        public override void MouseUp(MouseInputEventArgs e)
+        { }
+        public override void MouseDown(MouseInputEventArgs e)
+        { }
+        public override void MouseMove(MouseInputEventArgs e)
+        { }
+        public override void FormResize()
         {
+            throw new NotImplementedException();
         }
-
-        public override void KeyDown(MOIS.KeyEvent keyState)
-        {
-        }
-
-        public override void KeyUp(MOIS.KeyEvent keyState)
-        {
-        }
-
-        public override void MouseUp(MOIS.MouseEvent mouseState, MOIS.MouseButtonID button)
-        {
-        }
-
-        public override void MouseDown(MOIS.MouseEvent mouseState, MOIS.MouseButtonID button)
-        {
-        }
-
-        public override void MouseMove(MOIS.MouseEvent mouseState)
-        {
-        }
-
         #endregion
 
     }

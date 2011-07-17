@@ -33,20 +33,6 @@ namespace SS3d_server.Atom.Item
         public override void Update(float framePeriod)
         {
             base.Update(framePeriod);
-            
-            double heightAboveTile = position.Y - (atomManager.netServer.map.GetHeightAboveTileAt(position) + 1.0f);
-            if (heightAboveTile > 1.0)
-            {
-                if (heightAboveTile > fallSpeed)
-                {
-                    Translate(position - new Vector3(0, fallSpeed, 0));
-                }
-                else
-                {
-                    Translate(position - new Vector3(0,heightAboveTile,0));
-                }
-                updateRequired = true;
-            }
         }
 
         protected override void HandleExtendedMessage(NetIncomingMessage message)
@@ -69,7 +55,9 @@ namespace SS3d_server.Atom.Item
         protected override void ApplyAction(Atom a, Mob.Mob m)
         {
             if (a == null && holdingAppendage == null) //If mob's not holding an item and this item is not being held
+            {
                 PickedUpBy(m);
+            }
             else if (a != null) // If mob's holding an item
                 base.ApplyAction(a, m);
 
@@ -135,7 +123,7 @@ namespace SS3d_server.Atom.Item
         /// </summary>
         public virtual void Dropped()
         {
-            Vector3 droppedposition = holdingAppendage.owner.position;
+            Vector2 droppedposition = holdingAppendage.owner.position;
             float droppedrotW = holdingAppendage.owner.rotW;
             float droppedrotY = holdingAppendage.owner.rotY;
             holdingAppendage.heldItem = null;

@@ -1,0 +1,762 @@
+<?xml version="1.0"?>
+<doc>
+    <assembly>
+        <name>DialogHelper</name>
+    </assembly>
+    <members>
+        <member name="T:Dialogs.ErrorDialogIcons">
+            <summary>
+            Enumeration for error dialog icons.
+            </summary>
+        </member>
+        <member name="F:Dialogs.ErrorDialogIcons.Default">
+            <summary>
+            Default round error icon.
+            </summary>
+        </member>
+        <member name="F:Dialogs.ErrorDialogIcons.Bug">
+            <summary>
+            Icon for a general bug.
+            </summary>
+        </member>
+        <member name="F:Dialogs.ErrorDialogIcons.Box">
+            <summary>
+            Same as the round error icon, except in a square.
+            </summary>
+        </member>
+        <member name="F:Dialogs.ErrorDialogIcons.Disk">
+            <summary>
+            Icon for a disk error.
+            </summary>
+        </member>
+        <member name="F:Dialogs.ErrorDialogIcons.Data">
+            <summary>
+            Icon for a data error.
+            </summary>
+        </member>
+        <member name="F:Dialogs.ErrorDialogIcons.Hardware">
+            <summary>
+            Icon for a hardware error.
+            </summary>
+        </member>
+        <member name="T:Dialogs.ConfirmationResult">
+            <summary>
+            Enumeration for confirmation results.
+            </summary>
+        </member>
+        <member name="F:Dialogs.ConfirmationResult.None">
+            <summary>
+            No confirmation.
+            </summary>
+        </member>
+        <member name="F:Dialogs.ConfirmationResult.Yes">
+            <summary>
+            Yes clicked.
+            </summary>
+        </member>
+        <member name="F:Dialogs.ConfirmationResult.No">
+            <summary>
+            No clicked.
+            </summary>
+        </member>
+        <member name="F:Dialogs.ConfirmationResult.Cancel">
+            <summary>
+            Cancel clicked.
+            </summary>
+        </member>
+        <member name="F:Dialogs.ConfirmationResult.ToAll">
+            <summary>
+            To all checked.
+            </summary>
+        </member>
+        <member name="T:Dialogs.UI">
+            <summary>
+            Static class representing various User Interface utilities.
+            </summary>
+        </member>
+        <member name="M:Dialogs.UI.FormatStackTrace(System.String)">
+            <summary>
+            Function to format the stack trace output.
+            </summary>
+            <param name="stackTrace">Stack trace to format.</param>
+            <returns>A formatted stack trace.</returns>
+        </member>
+        <member name="M:Dialogs.UI.AbortRetryBox(System.Windows.Forms.Form,System.String,System.String)">
+            <summary>
+            Function to display an error box.
+            </summary>
+            <param name="owner">Owning window of this dialog.</param>
+            <param name="message">Message to display.</param>
+            <param name="caption">Caption for the dialog.</param>
+        </member>
+        <member name="M:Dialogs.UI.AbortRetryBox(System.Windows.Forms.Form,System.String)">
+            <summary>
+            Function to display an error box.
+            </summary>
+            <param name="owner">Owning window of this dialog.</param>
+            <param name="message">Message to display.</param>
+        </member>
+        <member name="M:Dialogs.UI.ErrorBox(System.Windows.Forms.Form,Dialogs.ErrorDialogIcons,System.String,System.Exception,System.String)">
+            <summary>
+            Function to display the enhanced error dialog.
+            </summary>
+            <param name="owner">Owning window of this dialog.</param>
+            <param name="icon">Icon to be displayed in the error message.</param>
+            <param name="message">Supplementary error message.</param>
+            <param name="innerException">Exception that was thrown.</param>
+            <param name="caption">Caption for the error box.</param>
+        </member>
+        <member name="M:Dialogs.UI.ErrorBox(System.Windows.Forms.Form,Dialogs.ErrorDialogIcons,System.String,System.Exception)">
+            <summary>
+            Function to display the enhanced error dialog.
+            </summary>
+            <param name="owner">Owning window of this dialog.</param>
+            <param name="icon">Icon to be displayed in the error message.</param>
+            <param name="message">Supplementary error message.</param>
+            <param name="innerException">Exception that was thrown.</param>
+        </member>
+        <member name="M:Dialogs.UI.ErrorBox(System.Windows.Forms.Form,Dialogs.ErrorDialogIcons,System.Exception)">
+            <summary>
+            Function to display the enhanced error dialog.
+            </summary>
+            <param name="owner">Owning window of this dialog.</param>
+            <param name="icon">Icon to be displayed in the error message.</param>
+            <param name="innerException">Exception that was thrown.</param>
+        </member>
+        <member name="M:Dialogs.UI.ErrorBox(System.Windows.Forms.Form,System.String,System.Exception)">
+            <summary>
+            Function to display the enhanced error dialog.
+            </summary>
+            <param name="owner">Owning window of this dialog.</param>
+            <param name="message">Supplementary error message.</param>
+            <param name="innerException">Exception that was thrown.</param>
+        </member>
+        <member name="M:Dialogs.UI.ErrorBox(System.Windows.Forms.Form,System.Exception)">
+            <summary>
+            Function to display the enhanced error dialog.
+            </summary>
+            <param name="owner">Owning window of this dialog.</param>
+            <param name="innerException">Exception that was thrown.</param>
+        </member>
+        <member name="M:Dialogs.UI.ErrorBox(System.Windows.Forms.Form,Dialogs.ErrorDialogIcons,System.String,System.String,System.String)">
+            <summary>
+            Function to display the enhanced error dialog.
+            </summary>
+            <param name="owner">Owning window of this dialog.</param>
+            <param name="icon">Icon to be displayed in the error message.</param>
+            <param name="description">Error description.</param>
+            <param name="details">Details for the error.</param>
+            <param name="caption">Caption for the error box.</param>
+        </member>
+        <member name="M:Dialogs.UI.ErrorBox(System.Windows.Forms.Form,Dialogs.ErrorDialogIcons,System.String,System.String)">
+            <summary>
+            Function to display the enhanced error dialog.
+            </summary>
+            <param name="owner">Owning window of this dialog.</param>
+            <param name="icon">Icon to be displayed in the error message.</param>
+            <param name="description">Error description.</param>
+            <param name="details">Details for the error.</param>
+        </member>
+        <member name="M:Dialogs.UI.ErrorBox(System.Windows.Forms.Form,Dialogs.ErrorDialogIcons,System.String)">
+            <summary>
+            Function to display the enhanced error dialog.
+            </summary>
+            <param name="owner">Owning window of this dialog.</param>
+            <param name="icon">Icon to be displayed in the error message.</param>
+            <param name="description">Error description.</param>		
+        </member>
+        <member name="M:Dialogs.UI.ErrorBox(System.Windows.Forms.Form,System.String,System.String)">
+            <summary>
+            Function to display the enhanced error dialog.
+            </summary>
+            <param name="owner">Owning window of this dialog.</param>		
+            <param name="description">Error description.</param>
+            <param name="details">Details for the error.</param>
+        </member>
+        <member name="M:Dialogs.UI.ErrorBox(System.Windows.Forms.Form,System.String)">
+            <summary>
+            Function to display the enhanced error dialog.
+            </summary>
+            <param name="owner">Owning window of this dialog.</param>
+            <param name="description">Error description.</param>		
+        </member>
+        <member name="M:Dialogs.UI.ErrorRetryBox(System.Windows.Forms.Form,System.String,System.String)">
+            <summary>
+            Function to display an error box.
+            </summary>
+            <param name="owner">Owning window of this dialog.</param>
+            <param name="message">Message to display.</param>
+            <param name="caption">Caption for the dialog.</param>
+            <returns>TRUE if Retry clicked, FALSE if cancelled.</returns>
+        </member>
+        <member name="M:Dialogs.UI.ErrorRetryBox(System.Windows.Forms.Form,System.String)">
+            <summary>
+            Function to display an error box.
+            </summary>
+            <param name="owner">Owning window of this dialog.</param>
+            <param name="message">Message to display.</param>
+            <returns>TRUE if Retry clicked, FALSE if cancelled.</returns>
+        </member>
+        <member name="M:Dialogs.UI.InfoBox(System.Windows.Forms.Form,System.String,System.String)">
+            <summary>
+            Function to display an information box.
+            </summary>
+            <param name="owner">Owning window of this dialog.</param>
+            <param name="message">Message to display.</param>
+            <param name="caption">Caption for the dialog.</param>
+        </member>
+        <member name="M:Dialogs.UI.InfoBox(System.Windows.Forms.Form,System.String)">
+            <summary>
+            Function to display an information box.
+            </summary>
+            <param name="owner">Owning window of this dialog.</param>
+            <param name="message">Message to display.</param>
+        </member>
+        <member name="M:Dialogs.UI.WarningBox(System.Windows.Forms.Form,System.String,System.String)">
+            <summary>
+            Function to display a warning box.
+            </summary>
+            <param name="owner">Owning window of this dialog.</param>
+            <param name="message">Message to display.</param>
+            <param name="caption">Caption for the dialog.</param>
+        </member>
+        <member name="M:Dialogs.UI.WarningBox(System.Windows.Forms.Form,System.String)">
+            <summary>
+            Function to display a warning box.
+            </summary>
+            <param name="owner">Owning window of this dialog.</param>
+            <param name="message">Message to display.</param>
+        </member>
+        <member name="M:Dialogs.UI.WarningRetryBox(System.Windows.Forms.Form,System.String,System.String)">
+            <summary>
+            Function to display a warning box.
+            </summary>
+            <param name="owner">Owning window of this dialog.</param>
+            <param name="message">Message to display.</param>
+            <param name="caption">Caption for the dialog.</param>
+            <returns>TRUE if Retry clicked, FALSE if cancelled.</returns>
+        </member>
+        <member name="M:Dialogs.UI.WarningRetryBox(System.Windows.Forms.Form,System.String)">
+            <summary>
+            Function to display a warning box.
+            </summary>
+            <param name="owner">Owning window of this dialog.</param>
+            <param name="message">Message to display.</param>
+            <returns>TRUE if Retry clicked, FALSE if cancelled.</returns>
+        </member>
+        <member name="M:Dialogs.UI.OKCancelBox(System.Windows.Forms.Form,System.String,System.String)">
+            <summary>
+            Function to display a confirmation box.
+            </summary>
+            <param name="owner">Owning window of this dialog.</param>
+            <param name="message">Message to display.</param>
+            <param name="caption">Caption for the dialog.</param>
+            <returns>TRUE if OK is clicked, FALSE if cancel is clicked.</returns>
+        </member>
+        <member name="M:Dialogs.UI.OkCancelBox(System.Windows.Forms.Form,System.String)">
+            <summary>
+            Function to display a confirmation box.
+            </summary>
+            <param name="owner">Owning window of this dialog.</param>
+            <param name="message">Message to display.</param>
+            <returns>TRUE if yes is clicked, FALSE if no is clicked.</returns>
+        </member>
+        <member name="M:Dialogs.UI.ConfirmBox(System.Windows.Forms.Form,System.String,System.String,System.Boolean,System.Boolean)">
+            <summary>
+            Function to display a confirmation dialog.
+            </summary>
+            <param name="owner">Owning window of this dialog.</param>
+            <param name="message">Message to display.</param>
+            <param name="caption">Caption for the dialog.</param>
+            <param name="allowCancel">TRUE to show a Cancel button, FALSE to hide.</param>
+            <param name="allowToAll">TRUE to show a 'To all' option, FALSE to hide.</param>
+            <returns>Any member of ConfirmationResult except ConfirmationResult.None.</returns>
+        </member>
+        <member name="M:Dialogs.UI.ConfirmBox(System.String,System.String,System.Boolean,System.Boolean)">
+            <summary>
+            Function to display a confirmation dialog.
+            </summary>
+            <param name="message">Message to display.</param>
+            <param name="caption">Caption for the dialog.</param>
+            <param name="allowCancel">TRUE to show a Cancel button, FALSE to hide.</param>
+            <param name="allowToAll">TRUE to show a 'To all' option, FALSE to hide.</param>
+            <returns>Any member of ConfirmationResult except ConfirmationResult.None.</returns>
+        </member>
+        <member name="M:Dialogs.UI.ConfirmBox(System.Windows.Forms.Form,System.String,System.Boolean,System.Boolean)">
+            <summary>
+            Function to display a confirmation dialog.
+            </summary>
+            <param name="owner">Owning window of this dialog.</param>
+            <param name="message">Message to display.</param>
+            <param name="allowCancel">TRUE to show a Cancel button, FALSE to hide.</param>
+            <param name="allowToAll">TRUE to show a 'To all' option, FALSE to hide.</param>
+            <returns>Any member of ConfirmationResult except ConfirmationResult.None.</returns>
+        </member>
+        <member name="M:Dialogs.UI.ConfirmBox(System.String,System.Boolean,System.Boolean)">
+            <summary>
+            Function to display a confirmation dialog.
+            </summary>
+            <param name="message">Message to display.</param>
+            <param name="allowCancel">TRUE to show a Cancel button, FALSE to hide.</param>
+            <param name="allowToAll">TRUE to show a 'To all' option, FALSE to hide.</param>
+            <returns>Any member of ConfirmationResult except ConfirmationResult.None.</returns>
+        </member>
+        <member name="M:Dialogs.UI.ConfirmBox(System.Windows.Forms.Form,System.String,System.String,System.Boolean)">
+            <summary>
+            Function to display a confirmation dialog.
+            </summary>
+            <param name="owner">Owning window of this dialog.</param>
+            <param name="message">Message to display.</param>
+            <param name="caption">Caption for the dialog.</param>
+            <param name="allowCancel">TRUE to show a Cancel button, FALSE to hide.</param>
+            <returns>Any member of ConfirmationResult except ConfirmationResult.None.</returns>
+        </member>
+        <member name="M:Dialogs.UI.ConfirmBox(System.Windows.Forms.Form,System.String,System.String)">
+            <summary>
+            Function to display a confirmation dialog.
+            </summary>
+            <param name="owner">Owning window of this dialog.</param>
+            <param name="message">Message to display.</param>
+            <param name="caption">Caption for the dialog.</param>
+            <returns>Any member of ConfirmationResult except ConfirmationResult.None.</returns>
+        </member>
+        <member name="M:Dialogs.UI.ConfirmBox(System.Windows.Forms.Form,System.String)">
+            <summary>
+            Function to display a confirmation dialog.
+            </summary>
+            <param name="owner">Owning window of this dialog.</param>
+            <param name="message">Message to display.</param>
+            <returns>Any member of ConfirmationResult except ConfirmationResult.None.</returns>
+        </member>
+        <member name="M:Dialogs.UI.ConfirmBox(System.String)">
+            <summary>
+            Function to display a confirmation dialog.
+            </summary>
+            <param name="message">Message to display.</param>
+            <returns>Any member of ConfirmationResult except ConfirmationResult.None.</returns>
+        </member>
+        <member name="M:Dialogs.UI.AbortRetryBox(System.String,System.String)">
+            <summary>
+            Function to display an error box.
+            </summary>
+            <param name="message">Message to display.</param>
+            <param name="caption">Caption for the dialog.</param>
+        </member>
+        <member name="M:Dialogs.UI.AbortRetryBox(System.String)">
+            <summary>
+            Function to display an error box.
+            </summary>
+            <param name="message">Message to display.</param>
+        </member>
+        <member name="M:Dialogs.UI.ErrorRetryBox(System.String,System.String)">
+            <summary>
+            Function to display an error box.
+            </summary>
+            <param name="message">Message to display.</param>
+            <param name="caption">Caption for the dialog.</param>
+            <returns>TRUE if Retry clicked, FALSE if cancelled.</returns>
+        </member>
+        <member name="M:Dialogs.UI.ErrorRetryBox(System.String)">
+            <summary>
+            Function to display an error box.
+            </summary>
+            <param name="message">Message to display.</param>
+            <returns>TRUE if Retry clicked, FALSE if cancelled.</returns>
+        </member>
+        <member name="M:Dialogs.UI.InfoBox(System.String,System.String)">
+            <summary>
+            Function to display an information box.
+            </summary>
+            <param name="message">Message to display.</param>
+            <param name="caption">Caption for the dialog.</param>
+        </member>
+        <member name="M:Dialogs.UI.InfoBox(System.String)">
+            <summary>
+            Function to display an information box.
+            </summary>
+            <param name="message">Message to display.</param>
+        </member>
+        <member name="M:Dialogs.UI.WarningBox(System.String,System.String)">
+            <summary>
+            Function to display a warning box.
+            </summary>
+            <param name="message">Message to display.</param>
+            <param name="caption">Caption for the dialog.</param>
+        </member>
+        <member name="M:Dialogs.UI.WarningBox(System.String)">
+            <summary>
+            Function to display a warning box.
+            </summary>
+            <param name="message">Message to display.</param>
+        </member>
+        <member name="M:Dialogs.UI.WarningRetryBox(System.String,System.String)">
+            <summary>
+            Function to display a warning box.
+            </summary>
+            <param name="message">Message to display.</param>
+            <param name="caption">Caption for the dialog.</param>
+            <returns>TRUE if Retry clicked, FALSE if cancelled.</returns>
+        </member>
+        <member name="M:Dialogs.UI.WarningRetryBox(System.String)">
+            <summary>
+            Function to display a warning box.
+            </summary>
+            
+            <param name="message">Message to display.</param>
+            <returns>TRUE if Retry clicked, FALSE if cancelled.</returns>
+        </member>
+        <member name="M:Dialogs.UI.OKCancelBox(System.String,System.String)">
+            <summary>
+            Function to display a confirmation box.
+            </summary>
+            <param name="message">Message to display.</param>
+            <param name="caption">Caption for the dialog.</param>
+            <returns>TRUE if OK is clicked, FALSE if cancel is clicked.</returns>
+        </member>
+        <member name="M:Dialogs.UI.OkCancelBox(System.String)">
+            <summary>
+            Function to display a confirmation box.
+            </summary>
+            <param name="message">Message to display.</param>
+            <returns>TRUE if yes is clicked, FALSE if no is clicked.</returns>
+        </member>
+        <member name="T:Dialogs.ErrorDialog">
+            <summary>
+            Dialog for error messages.
+            </summary>
+        </member>
+        <member name="T:Dialogs.BaseDialog">
+            <summary>
+            Base form for common dialogs.
+            </summary>
+        </member>
+        <member name="F:Dialogs.BaseDialog.components">
+            <summary>
+            Required designer variable.
+            </summary>
+        </member>
+        <member name="M:Dialogs.BaseDialog.Dispose(System.Boolean)">
+            <summary>
+            Clean up any resources being used.
+            </summary>
+            <param name="disposing">true if managed resources should be disposed; otherwise, false.</param>
+        </member>
+        <member name="M:Dialogs.BaseDialog.InitializeComponent">
+            <summary>
+            Required method for Designer support - do not modify
+            the contents of this method with the code editor.
+            </summary>
+        </member>
+        <member name="F:Dialogs.BaseDialog.imageIcon">
+            <summary>
+            Image used for the dialog icon.
+            </summary>
+        </member>
+        <member name="F:Dialogs.BaseDialog.OKButton">
+            <summary>
+            OK button.
+            </summary>
+        </member>
+        <member name="M:Dialogs.BaseDialog.OnKeyDown(System.Windows.Forms.KeyEventArgs)">
+            <summary>
+            Raises the <see cref="E:System.Windows.Forms.Control.KeyDown"></see> event.
+            </summary>
+            <param name="e">A <see cref="T:System.Windows.Forms.KeyEventArgs"></see> that contains the event data.</param>
+        </member>
+        <member name="M:Dialogs.BaseDialog.ValidateFunctions">
+            <summary>
+            Function to validate the various functions bound to the form.
+            </summary>
+        </member>
+        <member name="M:Dialogs.BaseDialog.OnLoad(System.EventArgs)">
+            <summary>
+            Form load event.
+            </summary>
+            <param name="e">Event arguments.</param>
+        </member>
+        <member name="M:Dialogs.BaseDialog.OnShown(System.EventArgs)">
+            <summary>
+            Raises the <see cref="E:System.Windows.Forms.Form.Shown"></see> event.
+            </summary>
+            <param name="e">A <see cref="T:System.EventArgs"></see> that contains the event data.</param>
+        </member>
+        <member name="M:Dialogs.BaseDialog.DrawDialog(System.Drawing.Graphics)">
+            <summary>
+            Function to perform the actual drawing of the dialog.
+            </summary>
+            <param name="g">Graphics object to use.</param>
+        </member>
+        <member name="M:Dialogs.BaseDialog.AdjustSize(System.Drawing.Graphics,System.Int32)">
+            <summary>
+            Function to adjust the size of the form based on the details.
+            </summary>
+            <param name="g">Graphics interface.</param>
+            <param name="margin">Places a margin at the bottom of the form.</param>
+            <returns>The new maximum height of the client area.</returns>
+        </member>
+        <member name="M:Dialogs.BaseDialog.DrawMessage(System.Drawing.Graphics,System.Single)">
+            <summary>
+            Function to draw the dialog box message.
+            </summary>    /// 
+            <param name="g">Graphics interface.</param>
+            <param name="maxTextHeight">Maximum height that the text will fit into.</param>
+        </member>
+        <member name="M:Dialogs.BaseDialog.OnSizeChanged(System.EventArgs)">
+            <summary>
+            Size changed event.
+            </summary>
+            <param name="e">Event arguments.</param>
+        </member>
+        <member name="M:Dialogs.BaseDialog.OnPaint(System.Windows.Forms.PaintEventArgs)">
+            <summary>
+            Raises the <see cref="E:Paint"/> event.
+            </summary>
+            <param name="e">The <see cref="T:System.Windows.Forms.PaintEventArgs"/> instance containing the event data.</param>
+        </member>
+        <member name="M:Dialogs.BaseDialog.#ctor">
+            <summary>
+            Constructor.
+            </summary>
+        </member>
+        <member name="P:Dialogs.BaseDialog.MessageLeft">
+            <summary>
+            Property to set or return the horizontal position of the text.
+            </summary>
+        </member>
+        <member name="P:Dialogs.BaseDialog.MessageTop">
+            <summary>
+            Property to set or return the vertical position of the text.
+            </summary>
+        </member>
+        <member name="P:Dialogs.BaseDialog.MessageWidth">
+            <summary>
+            Property to set or return the maximum width of the text.
+            </summary>
+        </member>
+        <member name="P:Dialogs.BaseDialog.MessageHeight">
+            <summary>
+            Property to set or return the maximum height of the text.
+            </summary>
+        </member>
+        <member name="P:Dialogs.BaseDialog.Message">
+            <summary>
+            Property to set or return the message for the dialog.
+            </summary>
+        </member>
+        <member name="F:Dialogs.ErrorDialog.components">
+            <summary>
+            Required designer variable.
+            </summary>
+        </member>
+        <member name="M:Dialogs.ErrorDialog.Dispose(System.Boolean)">
+            <summary>
+            Clean up any resources being used.
+            </summary>
+            <param name="disposing">true if managed resources should be disposed; otherwise, false.</param>
+        </member>
+        <member name="M:Dialogs.ErrorDialog.InitializeComponent">
+            <summary>
+            Required method for Designer support - do not modify
+            the contents of this method with the code editor.
+            </summary>
+        </member>
+        <member name="M:Dialogs.ErrorDialog.detailsButton_Click(System.Object,System.EventArgs)">
+            <summary>
+            Handles the Click event of the detailsButton control.
+            </summary>
+            <param name="sender">The source of the event.</param>
+            <param name="e">The <see cref="T:System.EventArgs"/> instance containing the event data.</param>
+        </member>
+        <member name="M:Dialogs.ErrorDialog.OKButton_Click(System.Object,System.EventArgs)">
+            <summary>
+            OK button click event.
+            </summary>
+            <param name="sender">Sender of the event.</param>
+            <param name="e">Event arguments.</param>
+        </member>
+        <member name="M:Dialogs.ErrorDialog.ValidateFunctions">
+            <summary>
+            Function to validate the buttons.
+            </summary>
+        </member>
+        <member name="M:Dialogs.ErrorDialog.OnLoad(System.EventArgs)">
+            <summary>
+            Raises the <see cref="E:System.Windows.Forms.Form.Load"></see> event.
+            </summary>
+            <param name="e">An <see cref="T:System.EventArgs"></see> that contains the event data.</param>
+        </member>
+        <member name="M:Dialogs.ErrorDialog.DrawDialog(System.Drawing.Graphics)">
+            <summary>
+            Function to perform the actual drawing of the message.
+            </summary>
+            <param name="g">Graphics object to use.</param>
+        </member>
+        <member name="M:Dialogs.ErrorDialog.#ctor">
+            <summary>
+            Constructor.
+            </summary>
+        </member>
+        <member name="P:Dialogs.ErrorDialog.ErrorIcon">
+            <summary>
+            Property to return or set the icon for the error dialog.
+            </summary>
+        </member>
+        <member name="P:Dialogs.ErrorDialog.ErrorDetails">
+            <summary>
+            Property to return or set the details of the error.
+            </summary>
+        </member>
+        <member name="T:Dialogs.ConfirmationDialog">
+            <summary>
+            Dialog for confirmation.
+            </summary>
+        </member>
+        <member name="F:Dialogs.ConfirmationDialog.components">
+            <summary>
+            Required designer variable.
+            </summary>
+        </member>
+        <member name="M:Dialogs.ConfirmationDialog.Dispose(System.Boolean)">
+            <summary>
+            Clean up any resources being used.
+            </summary>
+            <param name="disposing">true if managed resources should be disposed; otherwise, false.</param>
+        </member>
+        <member name="M:Dialogs.ConfirmationDialog.InitializeComponent">
+            <summary>
+            Required method for Designer support - do not modify
+            the contents of this method with the code editor.
+            </summary>
+        </member>
+        <member name="F:Dialogs.ConfirmationDialog.buttonNo">
+            <summary>
+            
+            </summary>
+        </member>
+        <member name="F:Dialogs.ConfirmationDialog.buttonCancel">
+            <summary>
+            
+            </summary>
+        </member>
+        <member name="F:Dialogs.ConfirmationDialog._result">
+            <summary>
+            Result of the dialog.
+            </summary>
+        </member>
+        <member name="M:Dialogs.ConfirmationDialog.OnFormClosing(System.Windows.Forms.FormClosingEventArgs)">
+            <summary>
+            Raises the <see cref="E:System.Windows.Forms.Form.FormClosing"></see> event.
+            </summary>
+            <param name="e">A <see cref="T:System.Windows.Forms.FormClosingEventArgs"></see> that contains the event data.</param>
+        </member>
+        <member name="M:Dialogs.ConfirmationDialog.OKButton_Click(System.Object,System.EventArgs)">
+            <summary>
+            Handles the Click event of the OKButton control.
+            </summary>
+            <param name="sender">The source of the event.</param>
+            <param name="e">The <see cref="T:System.EventArgs"/> instance containing the event data.</param>
+        </member>
+        <member name="M:Dialogs.ConfirmationDialog.buttonCancel_Click(System.Object,System.EventArgs)">
+            <summary>
+            Handles the Click event of the buttonCancel control.
+            </summary>
+            <param name="sender">The source of the event.</param>
+            <param name="e">The <see cref="T:System.EventArgs"/> instance containing the event data.</param>
+        </member>
+        <member name="M:Dialogs.ConfirmationDialog.buttonNo_Click(System.Object,System.EventArgs)">
+            <summary>
+            Handles the Click event of the buttonNo control.
+            </summary>
+            <param name="sender">The source of the event.</param>
+            <param name="e">The <see cref="T:System.EventArgs"/> instance containing the event data.</param>
+        </member>
+        <member name="M:Dialogs.ConfirmationDialog.DrawDialog(System.Drawing.Graphics)">
+            <summary>
+            Function to perform the actual drawing of the dialog.
+            </summary>
+            <param name="g">Graphics object to use.</param>
+        </member>
+        <member name="M:Dialogs.ConfirmationDialog.OnLoad(System.EventArgs)">
+            <summary>
+            Form load event.
+            </summary>
+            <param name="e">Event arguments.</param>
+        </member>
+        <member name="M:Dialogs.ConfirmationDialog.#ctor">
+            <summary>
+            Constructor.
+            </summary>
+        </member>
+        <member name="P:Dialogs.ConfirmationDialog.ShowCancel">
+            <summary>
+            Property to set or return whether to show the cancel button.
+            </summary>
+        </member>
+        <member name="P:Dialogs.ConfirmationDialog.ConfirmationResult">
+            <summary>
+            Property to return the confirmation dialog result.
+            </summary>
+        </member>
+        <member name="T:Dialogs.ConfirmationDialogEx">
+            <summary>
+            Dialog for confirmation + plus to all option.
+            </summary>
+        </member>
+        <member name="F:Dialogs.ConfirmationDialogEx.components">
+            <summary>
+            Required designer variable.
+            </summary>
+        </member>
+        <member name="M:Dialogs.ConfirmationDialogEx.Dispose(System.Boolean)">
+            <summary>
+            Clean up any resources being used.
+            </summary>
+            <param name="disposing">true if managed resources should be disposed; otherwise, false.</param>
+        </member>
+        <member name="M:Dialogs.ConfirmationDialogEx.InitializeComponent">
+            <summary>
+            Required method for Designer support - do not modify
+            the contents of this method with the code editor.
+            </summary>
+        </member>
+        <member name="M:Dialogs.ConfirmationDialogEx.OnFormClosing(System.Windows.Forms.FormClosingEventArgs)">
+            <summary>
+            Raises the <see cref="E:System.Windows.Forms.Form.FormClosing"></see> event.
+            </summary>
+            <param name="e">A <see cref="T:System.Windows.Forms.FormClosingEventArgs"></see> that contains the event data.</param>
+        </member>
+        <member name="M:Dialogs.ConfirmationDialogEx.OnLoad(System.EventArgs)">
+            <summary>
+            Form load event.
+            </summary>
+            <param name="e">Event arguments.</param>
+        </member>
+        <member name="M:Dialogs.ConfirmationDialogEx.DrawDialog(System.Drawing.Graphics)">
+            <summary>
+            Function to perform the actual drawing of the dialog.
+            </summary>
+            <param name="g">Graphics object to use.</param>
+        </member>
+        <member name="M:Dialogs.ConfirmationDialogEx.#ctor">
+            <summary>
+            Constructor.
+            </summary>
+        </member>
+        <member name="T:Dialogs.Properties.Resources">
+            <summary>
+              A strongly-typed resource class, for looking up localized strings, etc.
+            </summary>
+        </member>
+        <member name="P:Dialogs.Properties.Resources.ResourceManager">
+            <summary>
+              Returns the cached ResourceManager instance used by this class.
+            </summary>
+        </member>
+        <member name="P:Dialogs.Properties.Resources.Culture">
+            <summary>
+              Overrides the current thread's CurrentUICulture property for all
+              resource lookups using this strongly typed resource class.
+            </summary>
+        </member>
+    </members>
+</doc>

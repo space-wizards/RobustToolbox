@@ -60,5 +60,6 @@ namespace SS3D.Atom
 
             map.compute_visibility(position.X, position.Y, this);
         }
+
     }
 }

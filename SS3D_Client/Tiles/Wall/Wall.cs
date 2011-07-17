@@ -46,7 +46,7 @@ namespace SS3D.Tiles.Wall
                 {
                     if (lighting)
                     {
-                        sideSprite.Color = System.Drawing.Color.FromArgb(20, 20, 20);
+                        sideSprite.Color = System.Drawing.Color.Black;
                     }
                     else
                     {
@@ -85,7 +85,7 @@ namespace SS3D.Tiles.Wall
                 {
                     if (lighting)
                     {
-                        sprite.Color = System.Drawing.Color.FromArgb(20, 20, 20);
+                        sprite.Color = System.Drawing.Color.Black;
                     }
                     else
                     {

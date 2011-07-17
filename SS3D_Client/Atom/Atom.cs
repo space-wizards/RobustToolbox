@@ -111,48 +111,6 @@ namespace SS3D.Atom
             sprite.SetAxis(sprite.Width / 2, sprite.Height / 2);
             drawn = true;
         }
-
-        public virtual void Render(float xTopLeft, float yTopLeft, bool lighting)
-        {
-            System.Drawing.Point tilePos = atomManager.gameState.map.GetTileArrayPositionFromWorldPosition(position);
-            sprite.SetPosition(position.X - xTopLeft, position.Y - yTopLeft);
-            if (tilePos.X >= 0 && tilePos.Y >= 0)
-            {
-                if (atomManager.gameState.map.tileArray[tilePos.X, tilePos.Y].Visible && visible)
-                {
-                    if (atomManager.gameState.map.tileArray[tilePos.X, tilePos.Y].lights.Count > 0)
-                    {
-                        if (lighting)
-                        {
-                            System.Drawing.Color col = System.Drawing.Color.Transparent;
-                            foreach (Light l in atomManager.gameState.map.tileArray[tilePos.X, tilePos.Y].lights)
-                            {
-                                col = atomManager.gameState.Blend(col, l.color, 0.5d);
-                            }
-                            sprite.Color = col;
-                        }
-                        else
-                        {
-                            sprite.Color = System.Drawing.Color.White;
-                        }
-                        sprite.Draw();
-                    }
-                    else
-                    {
-                        if (lighting)
-                        {
-                            sprite.Color = System.Drawing.Color.FromArgb(20, 20, 20);
-                        }
-                        else
-                        {
-                            sprite.Color = System.Drawing.Color.White;
-                        }
-                        sprite.Draw();
-                    }
-                }
-            }
-        }
-        
         #endregion
 
         #region network stuff
@@ -355,6 +313,47 @@ namespace SS3D.Atom
         }
 
         #endregion
+
+        public virtual void Render(float xTopLeft, float yTopLeft, bool lighting)
+        {
+            System.Drawing.Point tilePos = atomManager.gameState.map.GetTileArrayPositionFromWorldPosition(position);
+            sprite.SetPosition(position.X - xTopLeft, position.Y - yTopLeft);
+            if (tilePos.X >= 0 && tilePos.Y >= 0)
+            {
+                if (atomManager.gameState.map.tileArray[tilePos.X, tilePos.Y].Visible && visible)
+                {
+                    if (atomManager.gameState.map.tileArray[tilePos.X, tilePos.Y].lights.Count > 0)
+                    {
+                        if (lighting)
+                        {
+                            System.Drawing.Color col = System.Drawing.Color.Transparent;
+                            foreach (Light l in atomManager.gameState.map.tileArray[tilePos.X, tilePos.Y].lights)
+                            {
+                                col = atomManager.gameState.Blend(col, l.color, 0.5d);
+                            }
+                            sprite.Color = col;
+                        }
+                        else
+                        {
+                            sprite.Color = System.Drawing.Color.White;
+                        }
+                        sprite.Draw();
+                    }
+                    else
+                    {
+                        if (lighting)
+                        {
+                            sprite.Color = System.Drawing.Color.Black;
+                        }
+                        else
+                        {
+                            sprite.Color = System.Drawing.Color.White;
+                        }
+                        sprite.Draw();
+                    }
+                }
+            }
+        }
         
         #region positioning
         public virtual bool IsColliding()

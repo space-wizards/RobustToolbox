@@ -8,6 +8,8 @@ using SS3D.States;
 using MOIS;
 using Lidgren.Network;
 using Mogre;
+using GorgonLibrary;
+using GorgonLibrary.InputDevices;
 
 namespace SS3D.Modules
 {
@@ -40,13 +42,40 @@ namespace SS3D.Modules
             controlledAtom.initKeys();
             controlledAtom.attached = true;
             
-            atomManager.mEngine.Camera.DetachFromParent();
-            atomManager.mEngine.Camera.Position = new Mogre.Vector3(0, 240, -160) - newAtom.offset;
+            /*atomManager.mEngine.Camera.DetachFromParent();
+            atomManager.mEngine.Camera.Position = new Mogre.Vector3(-80, 240, -80) - newAtom.offset;
+            float scale = 3f; // Your scale here.
+
+            
+            Matrix4 p = BuildScaledOrthoMatrix(atomManager.mEngine.Window.Width / scale / -2.0f,
+                                                    atomManager.mEngine.Window.Width / scale / 2.0f,
+                                                    atomManager.mEngine.Window.Height / scale / -2.0f,
+                                                    atomManager.mEngine.Window.Height / scale / 2.0f, 0, 1000);
+
+            atomManager.mEngine.Camera.SetCustomProjectionMatrix(true, p);
+            atomManager.mEngine.Camera.ProjectionType = ProjectionType.PT_ORTHOGRAPHIC;
 
             SceneNode camNode = controlledAtom.Node.CreateChildSceneNode();
             camNode.AttachObject(atomManager.mEngine.Camera);
-            atomManager.mEngine.Camera.SetAutoTracking(true, camNode, new Mogre.Vector3(0, 32, 0));
+            atomManager.mEngine.Camera.SetAutoTracking(true, camNode, new Mogre.Vector3(0, 32, 0));*/
+        }
 
+        public Matrix4 BuildScaledOrthoMatrix(float left, float right, float bottom, float top, float near, float far)
+        {
+            float invw = 1 / (right - left);
+            float invh = 1 / (top - bottom);
+            float invd = 1 / (far - near);
+
+            Matrix4 proj = Matrix4.ZERO;
+            proj[0, 0] = 2 * invw;
+            proj[0, 3] = -(right + left) * invw;
+            proj[1, 1] = 2 * invh;
+            proj[1, 3] = -(top + bottom) * invh;
+            proj[2, 2] = -2 * invd;
+            proj[2, 3] = -(far + near) * invd;
+            proj[3, 3] = 1;
+
+            return proj;
         }
 
         public void Detach()
@@ -59,22 +88,45 @@ namespace SS3D.Modules
 
         public void KeyDown(MOIS.KeyCode k)
         {
+            ///DISABLED TO TRANSITION TO GORGON
+        /*    if (atomManager == null)
+                return;
+            if (controlledAtom == null)
+                return;
+            
+            controlledAtom.HandleKeyPressed(k);*/
+        }
+
+        public void KeyUp(MOIS.KeyCode k)
+        {
+            ///DISABLED TO TRANSITION TO GORGON
+            /*
             if (atomManager == null)
                 return;
             if (controlledAtom == null)
                 return;
-
-            controlledAtom.HandleKeyPressed(k);
+            
+            controlledAtom.HandleKeyReleased(k);*/
         }
 
-        public void KeyUp(MOIS.KeyCode k)
+        public void KeyDown(KeyboardKeys key)
         {
             if (atomManager == null)
                 return;
             if (controlledAtom == null)
                 return;
 
-            controlledAtom.HandleKeyReleased(k);
+            controlledAtom.HandleKeyPressed(key);
+        }
+
+        public void KeyUp(KeyboardKeys key)
+        {
+            if (atomManager == null)
+                return;
+            if (controlledAtom == null)
+                return;
+
+            controlledAtom.HandleKeyReleased(key);
         }
 
         #region netcode
@@ -100,12 +152,12 @@ namespace SS3D.Modules
         /// <param name="uid">a target atom's uid</param>
         public void SendVerb(string verb, ushort uid)
         {
-            NetOutgoingMessage message = runningState.mEngine.mNetworkMgr.netClient.CreateMessage();
+            NetOutgoingMessage message = runningState.prg.mNetworkMgr.netClient.CreateMessage();
             message.Write((byte)NetMessage.PlayerSessionMessage);
             message.Write((byte)PlayerSessionMessage.Verb);
             message.Write(verb);
             message.Write(uid);
-            runningState.mEngine.mNetworkMgr.SendMessage(message, NetDeliveryMethod.ReliableOrdered);
+            runningState.prg.mNetworkMgr.SendMessage(message, NetDeliveryMethod.ReliableOrdered);
         }
 
         private void HandleAttachToAtom(NetIncomingMessage message)

@@ -16,7 +16,7 @@ namespace SS3D.Modules.Network
 
     public class NetworkManager
     {
-        private OgreManager mEngine;
+        private Program prg;
         private StateManager mStateMgr;
         private TileType[,] tileArray;
         private Map.Map mMap;
@@ -58,10 +58,10 @@ namespace SS3D.Modules.Network
             if (Disconnected != null) Disconnected(this);
         }
 
-        public NetworkManager(OgreManager engine, StateManager statem)
+        public NetworkManager(Program _prg)
         {
-            mEngine = engine;
-            mStateMgr = statem;
+            prg = _prg;
+            mStateMgr = prg.mStateMgr;
 
             isConnected = false;
 

@@ -9,28 +9,7 @@
   <AnisotropicLevel>8</AnisotropicLevel>
   <NumMipmaps>8</NumMipmaps>
   <Resources>
-    <string>../../../Media/GUI/</string>
-    <string>../../../Media/GUI/HuD</string>
-    <string>../../../Media/Cursor/</string>
-    <string>../../../Media/Fonts/</string>
-    <string>../../../Media/core/</string>
-    <string>../../../Media/OgreCore.zip</string>
-    <string>../../../Media/textures/</string>
-    <string>../../../Media/Textures.zip</string>
-    <string>../../../Media/materials/</string>
-    <string>../../../Media/Materials.zip</string>
-    <string>../../../Media/models/</string>
-    <string>../../../Media/Models.zip</string>
-    <string>../../../Media/overlays/</string>
-    <string>../../../Media/Overlays.zip</string>
-    <string>../../../Media/shaders/</string>
-    <string>../../../Media/Shaders.zip</string>
   </Resources>
-  <MiyagiTrueTypeFonts>../../../Media/Fonts/TrueTypeFonts.xml</MiyagiTrueTypeFonts>
-  <MiyagiImageFonts>../../../Media/Fonts/ImageFonts.xml</MiyagiImageFonts>
   <MiyagiSkins>
-    <string>../../../Media/GUI/skins.xml</string>
-    <string>../../../Media/GUI/HuD/HudSkins.xml</string>
-    <string>../../../Media/Cursor/CursorSkin.xml</string>
   </MiyagiSkins>
 </Configuration>

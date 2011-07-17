@@ -2,11 +2,14 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using System.IO;
 
-using Mogre;
 using SS3D_shared.HelperClasses;
 using SS3D.HelperClasses;
 using Lidgren.Network;
+using GorgonLibrary;
+using GorgonLibrary.Graphics;
+using GorgonLibrary.InputDevices;
 
 namespace SS3D.Atom
 {
@@ -14,35 +17,40 @@ namespace SS3D.Atom
     {
         #region variables
         // GRAPHICS
-        public SceneNode Node;
-        public Entity Entity;
-        public string meshName = "ogrehead.mesh"; // Ogrehead is a nice default mesh. This prevents any atom from inadvertently spawning without a mesh.
         public bool updateRequired = false;
         public bool drawn = false;
-        public Mogre.Vector3 scale = Mogre.Vector3.UNIT_SCALE;
+
+        //SPRITE
+        public Sprite sprite;
+        public string spritename = "missingsprite.png";
+        private static string spritePath = "..\\..\\..\\..\\Media\\textures\\\\";
+        public Vector2D spritesize;
 
         public string name;
         public ushort uid;
         public AtomManager atomManager;
 
         // Position data
-        public Mogre.Vector3 position;
-        public Mogre.Vector3 offset = Mogre.Vector3.ZERO; // For odd models
+        public Vector2D position;
+        public Vector2D offset = Vector2D.Zero; // For odd models
         public float rotW;
         public float rotY;
         public bool positionChanged = false;
         public List<InterpolationPacket> interpolationPackets;
-        public float speed = 1.0f;
+        public float speed = 2.0f;
         public bool clipping = true;
         public bool collidable = false;
         private DateTime lastPositionUpdate;
-        private int positionUpdateRateLimit = 10; //Packets per second
+        private int positionUpdateRateLimit = 30; //Packets per second
+        private int keyUpdateRateLimit = 160; // 120 key updates per second;
+        private DateTime lastKeyUpdate;
 
+        public bool visible = true;
         public bool attached;
 
         //Input
-        public Dictionary<MOIS.KeyCode, bool> keyStates;
-        public Dictionary<MOIS.KeyCode, KeyEvent> keyHandlers;
+        public Dictionary<KeyboardKeys, bool> keyStates;
+        public Dictionary<KeyboardKeys, KeyEvent> keyHandlers;
 
         public delegate void KeyEvent(bool state);
 
@@ -54,10 +62,10 @@ namespace SS3D.Atom
         #region constructors and init
         public Atom()
         {
-            keyStates = new Dictionary<MOIS.KeyCode, bool>();
-            keyHandlers = new Dictionary<MOIS.KeyCode, KeyEvent>();
+            keyStates = new Dictionary<KeyboardKeys, bool>();
+            keyHandlers = new Dictionary<KeyboardKeys, KeyEvent>();
 
-            position = new Mogre.Vector3(160, 0, 160);
+            position = new Vector2D(160, 160);
             rotW = 1;
             rotY = 0;
 
@@ -66,14 +74,16 @@ namespace SS3D.Atom
 
         public Atom(ushort _uid, AtomManager _atomManager)
         {
-            keyStates = new Dictionary<MOIS.KeyCode, bool>();
-            keyHandlers = new Dictionary<MOIS.KeyCode, KeyEvent>();
+            keyStates = new Dictionary<KeyboardKeys, bool>();
+            keyHandlers = new Dictionary<KeyboardKeys, KeyEvent>();
 
-            position = new Mogre.Vector3(160, 0, 160);
+            position = new Vector2D(160, 160);
             rotW = 1;
             rotY = 0;
 
             interpolationPackets = new List<InterpolationPacket>();
+
+            spritesize = new Vector2D(32, 32);
 
             SetUp(_uid, _atomManager);
         }
@@ -89,30 +99,59 @@ namespace SS3D.Atom
         public virtual void Draw()
         {
             // Draw the atom into the scene. This should be called after instantiation.
-            name = "Atom" + uid;
-            SceneManager sceneManager = atomManager.mEngine.SceneMgr;
-
-            string entityName = name;
-            if (sceneManager.HasEntity(entityName))
+            //Draw Sprite
+            //sprite = new Sprite("a" + uid.ToString(), GorgonLibrary.Graphics.Image.FromFile(Environment.CurrentDirectory + "..\\..\\..\\..\\Media\\textures\\\\WallTexture.png"));
+            string fileName = spritename;
+            if(!File.Exists(Environment.CurrentDirectory + spritePath + fileName))
             {
-                sceneManager.DestroyEntity(entityName);
+                fileName = "missingsprite.png";
             }
-            if (sceneManager.HasSceneNode(entityName))
-            {
-                sceneManager.DestroySceneNode(entityName);
-            }
-            Node = sceneManager.RootSceneNode.CreateChildSceneNode(entityName);
-            Entity = sceneManager.CreateEntity(entityName, meshName);
-            Entity.QueryFlags = QueryFlags.ENTITY_ATOM;
-            Entity.UserObject = this;
-            Node.Position = position + offset;
-            Node.AttachObject(Entity);
-            //Node.SetScale(scale);
-
-            var entities = sceneManager.ToString();
+            sprite = new Sprite("a" + uid.ToString(), GorgonLibrary.Graphics.Image.FromFile(Environment.CurrentDirectory + spritePath + fileName));
+            sprite.Position = new Vector2D(position.X, position.Y);
+            sprite.SetAxis(sprite.Width / 2, sprite.Height / 2);
             drawn = true;
         }
 
+        public virtual void Render(float xTopLeft, float yTopLeft, bool lighting)
+        {
+            System.Drawing.Point tilePos = atomManager.gameState.map.GetTileArrayPositionFromWorldPosition(position);
+            sprite.SetPosition(position.X - xTopLeft, position.Y - yTopLeft);
+            if (tilePos.X >= 0 && tilePos.Y >= 0)
+            {
+                if (atomManager.gameState.map.tileArray[tilePos.X, tilePos.Y].Visible && visible)
+                {
+                    if (atomManager.gameState.map.tileArray[tilePos.X, tilePos.Y].lights.Count > 0)
+                    {
+                        if (lighting)
+                        {
+                            System.Drawing.Color col = System.Drawing.Color.Transparent;
+                            foreach (Light l in atomManager.gameState.map.tileArray[tilePos.X, tilePos.Y].lights)
+                            {
+                                col = atomManager.gameState.Blend(col, l.color, 0.5d);
+                            }
+                            sprite.Color = col;
+                        }
+                        else
+                        {
+                            sprite.Color = System.Drawing.Color.White;
+                        }
+                        sprite.Draw();
+                    }
+                    else
+                    {
+                        if (lighting)
+                        {
+                            sprite.Color = System.Drawing.Color.FromArgb(20, 20, 20);
+                        }
+                        else
+                        {
+                            sprite.Color = System.Drawing.Color.White;
+                        }
+                        sprite.Draw();
+                    }
+                }
+            }
+        }
         
         #endregion
 
@@ -159,7 +198,7 @@ namespace SS3D.Atom
             // recieved to make sure they don't greatly disagree with the client's own data.
             interpolationPackets.Add(intPacket);
 
-            if (interpolationPackets.Count > 5)
+            if (interpolationPackets.Count > 2)
             {
                 interpolationPackets.RemoveAt(0);
             }
@@ -191,9 +230,8 @@ namespace SS3D.Atom
             // This is only useful if the fucking shit is actually controlled by a player
             NetOutgoingMessage message = CreateAtomMessage();
             message.Write((byte)AtomMessage.PositionUpdate);
-            message.Write(position.x);
-            message.Write(position.y);
-            message.Write(position.z);
+            message.Write(position.X);
+            message.Write(position.Y);
             message.Write(rotW);
             message.Write(rotY);
             atomManager.networkManager.SendMessage(message, NetDeliveryMethod.ReliableUnordered);
@@ -222,7 +260,7 @@ namespace SS3D.Atom
         #endregion
 
         #region updating
-        public virtual void Update()
+        public virtual void Update(double time)
         {
             //This is where all the good stuff happens. 
 
@@ -238,6 +276,11 @@ namespace SS3D.Atom
 
         public virtual void UpdateKeys()
         {
+            //Rate limit
+            TimeSpan timeSinceLastUpdate = atomManager.now - lastKeyUpdate;
+            if (timeSinceLastUpdate.TotalMilliseconds < 1000 / keyUpdateRateLimit)
+                return;
+
             // So basically we check for active keys with handlers and execute them. This is a linq query.
             // Get all of the active keys' handlers
             var activeKeyHandlers =
@@ -260,14 +303,14 @@ namespace SS3D.Atom
                 if (state.Value == false)
                     keyStates.Remove(state.Key);
             }
-            
+            lastKeyUpdate = atomManager.now;
         }
 
         // Mobs may need to override this for animation, or they could use this.
         public virtual void UpdatePosition()
         {
-            Mogre.Vector3 difference;
-            Mogre.Vector3 fulldifference;
+            Vector2D difference;
+            Vector2D fulldifference;
             float rotW, rotY;
 
             if (interpolationPackets.Count == 0)
@@ -277,7 +320,7 @@ namespace SS3D.Atom
             }
             InterpolationPacket i = interpolationPackets[0];
 
-            if (i.startposition.x == 1234 && i.startposition.y == 1234) //This is silly, but vectors are non-nullable, so I can't do what I'd rather.
+            if (i.startposition.X == 1234 && i.startposition.Y == 1234) //This is silly, but vectors are non-nullable, so I can't do what I'd rather.
                 i.startposition = position;
 
             difference = i.position - position;
@@ -286,10 +329,10 @@ namespace SS3D.Atom
             // Set rotation. The packet may be rotation only.
             rotW = i.rotW;
             rotY = i.rotY;
-            Node.SetOrientation(rotW, 0, rotY, 0);
+            //Node.SetOrientation(rotW, 0, rotY, 0);
 
             //Check interpolation packet to see if we're close enough to the interpolation packet on the top of the stack.
-            if (difference.Length < 1)
+            if (difference.Length < 0.1)
             {
                 interpolationPackets.RemoveAt(0);
                 UpdatePosition(); // RECURSION :D - this discards interpolationpackets we don't need anymore.
@@ -300,12 +343,14 @@ namespace SS3D.Atom
 
                 //This constant should be time interval based.
                 //TODO: Make this better if it isn't good enough.
-                difference /= 5; //Position updates were lagging. This would probably be faster on a better system.
+                //difference /= 10; //Position updates were lagging. This would probably be faster on a better system.
                 //difference = fulldifference / 3;
-                position += difference;
-                Node.Position = position + offset;
+                position += difference/2;
+                //Node.Position = position + offset;
                 updateRequired = true; // This interpolation packet and probably the ones after it are still useful, so we'll update again on the next cycle.
             }
+
+            sprite.Position = new Vector2D(position.X, position.Y);
 
         }
 
@@ -314,60 +359,63 @@ namespace SS3D.Atom
         #region positioning
         public virtual bool IsColliding()
         {
-            Sphere esphere = new Sphere(Node.Position + new Mogre.Vector3(0, 20, 0) - offset, 5f);
-            foreach (AxisAlignedBox box in atomManager.gameState.map.GetSurroundingAABB(Node.Position - offset))
+            //Lets just check each corner of our sprite to see if it is in a wall tile for now.
+            System.Drawing.RectangleF myAABB = new System.Drawing.RectangleF(position.X - ((sprite.Width * sprite.UniformScale) / 2), 
+                position.Y - ((sprite.Height * sprite.UniformScale) / 2), 
+                (sprite.Width * sprite.UniformScale), 
+                (sprite.Height * sprite.UniformScale));
+
+            if (atomManager.gameState.map.GetTileTypeFromWorldPosition(myAABB.Left+1, myAABB.Top+(myAABB.Height / 2)) == TileType.Wall) // Top left
             {
-                //if (Entity.GetWorldBoundingBox().Intersects(box))
-                // TODO: Calculate this sphere based on the entity's bounding box instead of a hardcoded 5f radius.
-                if (box.Intersects(esphere))
-                {
-                    return true;
-                }
+                return true;
+            }
+            else if (atomManager.gameState.map.GetTileTypeFromWorldPosition(myAABB.Left+1, myAABB.Bottom-1) == TileType.Wall) // Bottom left
+            {
+                return true;
+            }
+            else if (atomManager.gameState.map.GetTileTypeFromWorldPosition(myAABB.Right - 1, myAABB.Top + (myAABB.Height / 2)) == TileType.Wall) // Top right
+            {
+                return true;
+            }
+            else if (atomManager.gameState.map.GetTileTypeFromWorldPosition(myAABB.Right-1, myAABB.Bottom-1) == TileType.Wall) // Bottom left
+            {
+                return true;
             }
 
             IEnumerable<Atom> atoms = from a in atomManager.atomDictionary.Values
-                                     where a.collidable == true &&
-                                     System.Math.Sqrt((position.x - a.position.x) * (position.x - a.position.x)) < 16 &&
-                                     System.Math.Sqrt((position.z - a.position.z) * (position.z - a.position.z)) < 16
-                                     select a;
-            
+                                      where
+                                      a.collidable == true &&
+                                      System.Math.Sqrt((position.X - a.position.X) * (position.X - a.position.X)) < (sprite.Width * sprite.UniformScale) &&
+                                      System.Math.Sqrt((position.Y - a.position.Y) * (position.Y - a.position.Y)) < (sprite.Height * sprite.UniformScale) &&
+                                      a.uid != uid
+                                      select a;
+
             foreach (Atom a in atoms)
             {
-                AxisAlignedBox box = a.Node._getWorldAABB();
-                if(box.Intersects(esphere))
+                System.Drawing.RectangleF box = new System.Drawing.RectangleF(a.position.X - ((a.sprite.Width * a.sprite.UniformScale) / 2), 
+                    a.position.Y - ((a.sprite.Height * a.sprite.UniformScale) / 2), 
+                    (a.sprite.Width * a.sprite.UniformScale), 
+                    (a.sprite.Height * a.sprite.UniformScale));
+
+                if (box.IntersectsWith(myAABB))
                 {
                     return true;
                 }
             }
 
             return false;
+
         }
 
-        public virtual void TranslateLocal(Mogre.Vector3 toPosition) 
+        public virtual void TranslateLocal(Vector2D toPosition) 
         {
-            Node.Translate(toPosition, Mogre.Node.TransformSpace.TS_LOCAL);
+            Vector2D oldPosition = position;
+            position += toPosition; // We move the sprite here rather than the position, as we can then use its updated AABB values.
+
             if (clipping && IsColliding())
             {
-                //Node.Position = position;
-                // BEGIN FUCKING CRAZY HACK.
-                // Sees if the node's position is inside the wall. If it is, translate the character along the x or z component of its velocity.
-                Mogre.Vector3 targetPosition = Node.Position - offset;
-                Mogre.Vector3 difference = targetPosition - position;
-                //Test X 
-                Node.Position = position + new Mogre.Vector3(difference.x, 0, 0) + offset;
-                if (IsColliding())
-                {
-                    //Test z.
-                    Node.Position = position + new Mogre.Vector3(0, 0, difference.z) + offset;
-                    if (IsColliding())
-                       Node.Position = position + offset;
-                }
-                // END FUCKING CRAZY HACK
-                position = Node.Position - offset;
+                position -= toPosition;
             }
-            else
-                position = Node.Position - offset;
-
         }
 
         //TODO: Unfuck this. 
@@ -377,30 +425,42 @@ namespace SS3D.Atom
         /* These are solely for user input, not for updating position from server. */
         public virtual void MoveForward() 
         {
-            TranslateLocal(new Mogre.Vector3(0, 0, speed));
+            TranslateLocal(new Vector2D(0, -1 * speed));
             SendPositionUpdate();
         }
 
         public virtual void MoveBack()
         {
-            TranslateLocal(new Mogre.Vector3(0,0,-1 * speed));
+            TranslateLocal(new Vector2D(0,speed));
+            SendPositionUpdate();
+        }
+
+        public virtual void MoveLeft()
+        {
+            TranslateLocal(new Vector2D(-1 * speed, 0));
+            SendPositionUpdate();
+        }
+
+        public virtual void MoveRight()
+        {
+            TranslateLocal(new Vector2D(speed, 0));
             SendPositionUpdate();
         }
 
         public virtual void TurnLeft()
         {
-            Node.Rotate(Mogre.Vector3.UNIT_Y, Mogre.Math.DegreesToRadians(2));
+            /*Node.Rotate(Mogre.Vector3.UNIT_Y, Mogre.Math.DegreesToRadians(2));
             rotW = Node.Orientation.w;
             rotY = Node.Orientation.y;
-            SendPositionUpdate();
+            SendPositionUpdate();*/
         }
 
         public virtual void TurnRight()
         {
-            Node.Rotate(Mogre.Vector3.UNIT_Y, Mogre.Math.DegreesToRadians(-2));
+           /* Node.Rotate(Mogre.Vector3.UNIT_Y, Mogre.Math.DegreesToRadians(-2));
             rotW = Node.Orientation.w;
             rotY = Node.Orientation.y;
-            SendPositionUpdate();
+            SendPositionUpdate();*/
         }
 
         #endregion
@@ -417,23 +477,23 @@ namespace SS3D.Atom
              * Example: keyHandlers.Add(MOIS.KeyCode.KC_Whatever, new KeyEvent(HandleKC_whatever));
              * To override a keyhandler, delete it and make a new one OR override the handler function 
              * BEFORE calling initKeys(). */
-            keyHandlers.Add(MOIS.KeyCode.KC_W, new KeyEvent(HandleKC_W));
-            keyHandlers.Add(MOIS.KeyCode.KC_A, new KeyEvent(HandleKC_A));
-            keyHandlers.Add(MOIS.KeyCode.KC_S, new KeyEvent(HandleKC_S));
-            keyHandlers.Add(MOIS.KeyCode.KC_D, new KeyEvent(HandleKC_D));
+            keyHandlers.Add(KeyboardKeys.W, new KeyEvent(HandleKC_W));
+            keyHandlers.Add(KeyboardKeys.A, new KeyEvent(HandleKC_A));
+            keyHandlers.Add(KeyboardKeys.S, new KeyEvent(HandleKC_S));
+            keyHandlers.Add(KeyboardKeys.D, new KeyEvent(HandleKC_D));
         }
         
-        public void HandleKeyPressed(MOIS.KeyCode k)
+        public void HandleKeyPressed(KeyboardKeys k)
         {
             SetKeyState(k, true);
         }
 
-        public void HandleKeyReleased(MOIS.KeyCode k)
+        public void HandleKeyReleased(KeyboardKeys k)
         {
             SetKeyState(k, false);
         }
 
-        protected void SetKeyState(MOIS.KeyCode k, bool state)
+        protected void SetKeyState(KeyboardKeys k, bool state)
         {
             // Check to see if we have a keyhandler for the key that's been pressed. Discard invalid keys.
             if (keyHandlers.ContainsKey(k))
@@ -467,7 +527,8 @@ namespace SS3D.Atom
         {
             //moveLeft(); // I want this to be strafe
             if (state)
-                TurnLeft();
+                MoveLeft();
+                //TurnLeft();
         }
         public virtual void HandleKC_S(bool state)
         {
@@ -478,7 +539,8 @@ namespace SS3D.Atom
         {
             //moveRight(); // I want this to be strafe
             if (state)
-                TurnRight();
+                MoveRight();
+                //TurnRight();
         }
         #endregion
 

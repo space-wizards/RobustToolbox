@@ -23,6 +23,9 @@ using Miyagi.Common.Resources;
 using Miyagi.Common.Events;
 using Miyagi.TwoD;
 
+using GorgonLibrary;
+using GorgonLibrary.InputDevices;
+
 namespace SS3D.States
 {
     public class EditorScreen : State
@@ -82,15 +85,14 @@ namespace SS3D.States
 
         public EditorScreen()
         {
-            mEngine = null;
         }
 
-        public override bool Startup(StateManager _mgr)
+        public override bool Startup(Program _prg)
         {
-            mEngine = _mgr.Engine;
-            mStateMgr = _mgr;
+            prg = _prg;
+            mStateMgr = prg.mStateMgr;
 
-            mEngine.mMiyagiSystem.GUIManager.DisposeAllGUIs();
+            /*mEngine.mMiyagiSystem.GUIManager.DisposeAllGUIs();
 
             mEngine.SceneMgr.ShadowTechnique = ShadowTechnique.SHADOWTYPE_TEXTURE_ADDITIVE_INTEGRATED;
             mEngine.SceneMgr.SetShadowTexturePixelFormat(PixelFormat.PF_FLOAT16_RGB);
@@ -102,29 +104,29 @@ namespace SS3D.States
             mEngine.SceneMgr.SetSkyBox(true, "SkyBox", 900f, true);
 
             mEngine.Camera.Position = new Mogre.Vector3(0, 300, 0);
-            mEngine.Camera.LookAt(new Mogre.Vector3(160, 64, 160));
+            mEngine.Camera.LookAt(new Mogre.Vector3(160, 64, 160));*/
 
-            currentMap = new Map(mEngine, true);
+            currentMap = new Map();
             //itemManager = new ItemManager(mEngine, currentMap, mEngine.mNetworkMgr, null);
 
             toolBar = new EditorToolbar(mStateMgr, this);
-            mEngine.mMiyagiSystem.GUIManager.GUIs.Add(toolBar);
+            //mEngine.mMiyagiSystem.GUIManager.GUIs.Add(toolBar);
 
             statusBar = new EditorStatusBar(mStateMgr, this);
-            mEngine.mMiyagiSystem.GUIManager.GUIs.Add(statusBar);
+            //mEngine.mMiyagiSystem.GUIManager.GUIs.Add(statusBar);
 
             return true;
         }
 
         public override void Shutdown()
         {
-            mEngine.mMiyagiSystem.GUIManager.DisposeAllGUIs();
+            /*mEngine.mMiyagiSystem.GUIManager.DisposeAllGUIs();
 
             if (grid != null)
                 mEngine.SceneMgr.DestroyManualObject(grid);
 
             if (gridNode != null)
-                mEngine.SceneMgr.DestroySceneNode(gridNode);
+                mEngine.SceneMgr.DestroySceneNode(gridNode);*/
         }
 
         public override void Update(long _frameTime)
@@ -132,14 +134,14 @@ namespace SS3D.States
 
             if (!isBusy)
             {
-                mEngine.SceneMgr.SkyBoxNode.Rotate(Mogre.Vector3.UNIT_Y, 0.0001f);
+                /*mEngine.SceneMgr.SkyBoxNode.Rotate(Mogre.Vector3.UNIT_Y, 0.0001f);
 
                 Point mousePos = mEngine.mMiyagiSystem.InputManager.MouseLocation;
                 Mogre.Vector2 mousePosAbs = new Vector2((float)mousePos.X / (float)mEngine.Window.Width, (float)mousePos.Y / (float)mEngine.Window.Height);
-                Mogre.Vector3 worldPos;
-                AtomBaseClass HoverObject = HelperClasses.AtomUtil.PickAtScreenPosition(mEngine, mousePosAbs, out worldPos);
+                Mogre.Vector3 worldPos;*/
+                //AtomBaseClass HoverObject = HelperClasses.AtomUtil.PickAtScreenPosition(mEngine, mousePosAbs, out worldPos);
 
-                MouseOverEntity = HoverObject;
+                //MouseOverEntity = HoverObject;
             }
 
             if (currentLoadingTracker != null)
@@ -149,22 +151,14 @@ namespace SS3D.States
                 statusBar.StatusProgressBar.Text = System.Math.Floor(currentLoadingTracker.loadingPercent).ToString() + "%";
             }
         }
-
-        public void ToggleGrid()
+        public override void FormResize()
         {
-            if (grid == null && gridNode == null)
-            {
-                grid = currentMap.CreateGrid();
-                if (grid != null)
-                {
-                    gridNode = mEngine.SceneMgr.RootSceneNode.CreateChildSceneNode("GridNode");
-                    gridNode.AttachObject(grid);
-                }
-            }
-            else
-            {
-                grid.Visible = !grid.Visible;
-            }
+            throw new NotImplementedException();
+        }
+        public override void GorgonRender()
+        {
+
+            return;
         }
 
         public void LoadMap(string mapPath)
@@ -175,12 +169,12 @@ namespace SS3D.States
             MapFile loadedMap = MapFileHandler.LoadMap(mapPath);
             this.currentMap.Shutdown();
             System.GC.Collect(); //I have no idea if that even does anything.
-            this.currentMap.LoadMap(loadedMap);
+            //this.currentMap.LoadMap(loadedMap);
             isBusy = false;
         }
 
         #region Input
-        public override void UpdateInput(Mogre.FrameEvent evt, MOIS.Keyboard keyState, MOIS.Mouse mouseState)
+        /*public override void UpdateInput(Mogre.FrameEvent evt, MOIS.Keyboard keyState, MOIS.Mouse mouseState)
         {
             if (!isBusy)
             {
@@ -201,28 +195,19 @@ namespace SS3D.States
                     mEngine.Camera.MoveRelative(new Mogre.Vector3(0, -3f, 3f));
                 }
             }
-        }
+        }*/
 
-        public override void KeyDown(MOIS.KeyEvent keyState)
-        {
-        }
-
-        public override void KeyUp(MOIS.KeyEvent keyState)
-        {
-        }
-
-        public override void MouseUp(MOIS.MouseEvent mouseState, MOIS.MouseButtonID button)
-        {
-        }
-
-        public override void MouseDown(MOIS.MouseEvent mouseState, MOIS.MouseButtonID button)
-        {
-            if (mEngine.mMiyagiSystem.GUIManager.GetTopControl() != null) return;
-        }
-
-        public override void MouseMove(MOIS.MouseEvent mouseState)
-        {
-        }
+       
+        public override void KeyDown(KeyboardInputEventArgs e)
+        { }
+        public override void KeyUp(KeyboardInputEventArgs e)
+        { }
+        public override void MouseUp(MouseInputEventArgs e)
+        { }
+        public override void MouseDown(MouseInputEventArgs e)
+        { }
+        public override void MouseMove(MouseInputEventArgs e)
+        { }
         #endregion
     }
 
@@ -369,14 +354,14 @@ namespace SS3D.States
             this.Visible = false;
             editorState.LoadMap((string)sButton.UserData); //This contains the path.
             this.Dispose();
-            mStateMgr.Engine.mMiyagiSystem.GUIManager.GUIs.Remove(this);
+            //mStateMgr.Engine.mMiyagiSystem.GUIManager.GUIs.Remove(this);
         }
 
         void cancelButton_Click(object sender, EventArgs e)
         {
             this.Pop();
             this.Dispose();
-            mStateMgr.Engine.mMiyagiSystem.GUIManager.GUIs.Remove(this);
+            //mStateMgr.Engine.mMiyagiSystem.GUIManager.GUIs.Remove(this);
         }
     }
 
@@ -404,7 +389,7 @@ namespace SS3D.States
             this.toolbarPanel = new Panel("ToolbarPanel")
             {
                 Location = new Point(0, 0),
-                Size = new Size((int)mStateMgr.Engine.mWindow.Width, 50),
+                //Size = new Size((int)mStateMgr.Engine.mWindow.Width, 50),
                 ResizeMode = ResizeModes.None,
                 Skin = MiyagiResources.Singleton.Skins["ConsolePanelSkin"]
             };
@@ -412,7 +397,7 @@ namespace SS3D.States
             this.backButton = new Button("EditBackButton")
             {
                 Size = new Size(80, 32),
-                Location = new Point((int)mStateMgr.Engine.mWindow.Width - 90, 10),
+                //Location = new Point((int)mStateMgr.Engine.mWindow.Width - 90, 10),
                 Text = "Main Menu",
                 TextStyle =
                 {
@@ -427,7 +412,7 @@ namespace SS3D.States
             this.gridButton = new Button("EditGridButton")
             {
                 Size = new Size(80, 32),
-                Location = new Point((int)mStateMgr.Engine.mWindow.Width - 180, 10),
+                //Location = new Point((int)mStateMgr.Engine.mWindow.Width - 180, 10),
                 Text = "Grid",
                 TextStyle =
                 {
@@ -489,8 +474,8 @@ namespace SS3D.States
 
         void gridButton_Click(object sender, EventArgs e)
         {
-            if (editorState.isBusy) return;
-            editorState.ToggleGrid();
+            /*if (editorState.isBusy) return;
+            editorState.ToggleGrid();*/
         }
 
         void backButton_Click(object sender, EventArgs e)
@@ -505,18 +490,18 @@ namespace SS3D.States
 
         void newButton_Click(object sender, EventArgs e)
         {
-            if (editorState.isBusy) return;
+            /*if (editorState.isBusy) return;
             editorState.isBusy = true;
             editorState.currentLoadingTracker = editorState.currentMap;
             editorState.currentMap.Shutdown();
             editorState.currentMap.InitMap(100, 100, false, true, 10);
-            editorState.isBusy = false;
+            editorState.isBusy = false;*/
         }
 
         void loadButton_Click(object sender, EventArgs e)
         {
             if (editorState.isBusy) return;
-            mStateMgr.Engine.mMiyagiSystem.GUIManager.GUIs.Add(new EditorLoadWindow(mStateMgr, editorState) { Visible = true });
+            //mStateMgr.Engine.mMiyagiSystem.GUIManager.GUIs.Add(new EditorLoadWindow(mStateMgr, editorState) { Visible = true });
         }
 
         #region Toolbar Fading
@@ -565,8 +550,8 @@ namespace SS3D.States
 
             this.BackgroundPanel = new Panel("EditorStatusBackground")
             {
-                Location = new Point(0, (int)mStateMgr.Engine.mWindow.Height - 35),
-                Size = new Size((int)mStateMgr.Engine.mWindow.Width, 35),
+                //Location = new Point(0, (int)mStateMgr.Engine.mWindow.Height - 35),
+                //Size = new Size((int)mStateMgr.Engine.mWindow.Width, 35),
                 ResizeMode = ResizeModes.None,
                 HitTestVisible = true,
                 Movable = false,
@@ -657,10 +642,10 @@ namespace SS3D.States
             {
                 Location = new Point(5,40),
                 Size = new Size(newPanel.Size.Width - 10, 30),
-                LargeChange = editorState.currentMap.StaticGeoSize,
+                /*LargeChange = editorState.currentMap.StaticGeoSize,
                 SmallChange = editorState.currentMap.StaticGeoSize,
                 Max = editorState.currentMap.StaticGeoSize * maxSize,
-                Min = editorState.currentMap.StaticGeoSize,
+                Min = editorState.currentMap.StaticGeoSize,*/
                 ThumbStyle =
                 {
                     BorderStyle =

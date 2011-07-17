@@ -6,6 +6,8 @@ using Miyagi;
 
 using Lidgren.Network;
 using SS3D.Modules.Network;
+using GorgonLibrary;
+using GorgonLibrary.InputDevices;
 
 namespace SS3D.Modules
 {
@@ -15,7 +17,8 @@ namespace SS3D.Modules
   public class StateManager
   {
 
-    private OgreManager mEngine;
+    public Program prg;
+
     public State mCurrentState
     {
         private set;
@@ -23,16 +26,11 @@ namespace SS3D.Modules
     }
     private Type mNewState;
 
-    public OgreManager Engine
-    {
-      get { return mEngine; }
-    }
-
     #region Startup , Shutdown , Constructor
-    public StateManager(OgreManager _engine)
+    public StateManager(Program _prg)
     {
         // constructor
-        mEngine = _engine;
+        prg = _prg;
         mCurrentState = null;
         mNewState = null;
     }
@@ -65,46 +63,73 @@ namespace SS3D.Modules
 
     #region Input
 
-    public void UpdateInput(FrameEvent evt, MOIS.Keyboard keyState, MOIS.Mouse mouseState)
+    /*public void UpdateInput(FrameEvent evt, MOIS.Keyboard keyState, MOIS.Mouse mouseState)
     {
         // if a state is active, call the states input update.
         if (mCurrentState != null)
             mCurrentState.UpdateInput(evt, keyState, mouseState);
     }
 
+      /// <summary>
+      /// Mogre method
+      /// </summary>
+      /// <param name="keyState"></param>
     public void KeyDown(MOIS.KeyEvent keyState)
     {
         // if a state is active, call the states keydown method.
         if (mCurrentState != null)
             mCurrentState.KeyDown(keyState);
-    }
+    }*/
 
-    public void KeyUp(MOIS.KeyEvent keyState)
+      /// <summary>
+      /// Gorgon method
+      /// </summary>
+      /// <param name="e"></param>
+    public void KeyDown(KeyboardInputEventArgs e)
+    {
+        // if a state is active, call the states keydown method.
+        if (mCurrentState != null)
+            mCurrentState.KeyDown(e);
+    }
+    /// <summary>
+    /// Gorgon method
+    /// </summary>
+    /// <param name="e"></param>
+    public void KeyUp(KeyboardInputEventArgs e)
     {
         // if a state is active, call the states keyup method.
         if (mCurrentState != null)
-            mCurrentState.KeyUp(keyState);
+            mCurrentState.KeyUp(e);
     }
-
-    public void MouseUp(MOIS.MouseEvent mouseState, MOIS.MouseButtonID button)
+    /// <summary>
+    /// Gorgon method
+    /// </summary>
+    /// <param name="e"></param>
+    public void MouseUp(MouseInputEventArgs e)
     {
         // if a state is active, call the states mouseup method.
         if (mCurrentState != null)
-            mCurrentState.MouseUp(mouseState, button);
+            mCurrentState.MouseUp(e);
     }
-
-    public void MouseDown(MOIS.MouseEvent mouseState, MOIS.MouseButtonID button)
+    /// <summary>
+    /// Gorgon method
+    /// </summary>
+    /// <param name="e"></param>
+    public void MouseDown(MouseInputEventArgs e)
     {
         // if a state is active, call the states mousedown method.
         if (mCurrentState != null)
-            mCurrentState.MouseDown(mouseState, button);
+            mCurrentState.MouseDown(e);
     }
-
-    public void MouseMove(MOIS.MouseEvent mouseState)
+    /// <summary>
+    /// Gorgon method
+    /// </summary>
+    /// <param name="e"></param>
+    public void MouseMove(MouseInputEventArgs e)
     {
         // if a state is active, call the states mousemove method.
         if (mCurrentState != null)
-            mCurrentState.MouseMove(mouseState);
+            mCurrentState.MouseMove(e);
     }
 
     #endregion
@@ -138,6 +163,7 @@ namespace SS3D.Modules
         if (mCurrentState != null)
         {
             mCurrentState.Update(_frameTime);
+            mCurrentState.GorgonRender();
         }
     }
 
@@ -176,7 +202,7 @@ namespace SS3D.Modules
 
         // if a state is active, start it up
         if (mCurrentState != null)
-            mCurrentState.Startup(this);
+            mCurrentState.Startup(prg);
     } 
     #endregion
 

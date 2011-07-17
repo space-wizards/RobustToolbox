@@ -80,6 +80,14 @@
     <StartupObject />
   </PropertyGroup>
   <ItemGroup>
+    <Reference Include="Gorgon, Version=1.1.4119.34319, Culture=neutral, PublicKeyToken=c001d94e9acbbee7, processorArchitecture=MSIL">
+      <HintPath>..\References\Release\Gorgon.dll</HintPath>
+      <SpecificVersion>False</SpecificVersion>
+    </Reference>
+    <Reference Include="GorgonFramework, Version=1.1.4119.34319, Culture=neutral, PublicKeyToken=c001d94e9acbbee7, processorArchitecture=MSIL">
+      <HintPath>..\References\Release\GorgonFramework.dll</HintPath>
+      <SpecificVersion>False</SpecificVersion>
+    </Reference>
     <Reference Include="Lidgren.Network, Version=2010.7.15.0, Culture=neutral, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
       <HintPath>..\References\$(Configuration)\Lidgren.Network.dll</HintPath>
@@ -104,9 +112,8 @@
       <HintPath>..\References\Release\Addons\Miyagi.TrueTypeFont.dll</HintPath>
     </Reference>
     <Reference Include="Mogre, Version=1.7.1.0, Culture=neutral, processorArchitecture=x86">
-      <HintPath>..\References\$(Configuration)\Mogre.dll</HintPath>
       <SpecificVersion>False</SpecificVersion>
-      <Private>True</Private>
+      <HintPath>..\References\Release\Mogre.dll</HintPath>
     </Reference>
     <Reference Include="MOIS, Version=1.1.0.0, Culture=neutral, processorArchitecture=x86">
       <SpecificVersion>False</SpecificVersion>
@@ -130,13 +137,21 @@
     <Compile Include="Atom\AtomManager.cs" />
     <Compile Include="Atom\Item\Container\Toolbox.cs" />
     <Compile Include="Atom\Item\Item.cs" />
+    <Compile Include="Atom\Item\Misc\Flashlight.cs" />
     <Compile Include="Atom\Item\Tool\Crowbar.cs" />
+    <Compile Include="Atom\Light.cs" />
     <Compile Include="Atom\Mob\HelperClasses\AnimState.cs" />
     <Compile Include="Atom\Mob\HelperClasses\Appendage.cs" />
     <Compile Include="Atom\Mob\Human.cs" />
     <Compile Include="Atom\Mob\Mob.cs" />
     <Compile Include="Atom\Object\Door\Door.cs" />
     <Compile Include="Atom\Object\Object.cs" />
+    <Compile Include="MainWindow.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="MainWindow.Designer.cs">
+      <DependentUpon>MainWindow.cs</DependentUpon>
+    </Compile>
     <Compile Include="HelperClasses\AtomUtil.cs" />
     <Compile Include="HelperClasses\CollisionTools.cs" />
     <Compile Include="HelperClasses\InterpolationPacket.cs" />
@@ -158,6 +173,7 @@
     <Compile Include="Modules\UI\Speechbubble.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="Modules\RessourceManager.cs" />
     <Compile Include="States\ConnectMenu.cs" />
     <Compile Include="States\EditorScreen.cs" />
     <Compile Include="States\GameScreen.cs" />
@@ -166,6 +182,10 @@
     <Compile Include="States\LobbyScreen.cs" />
     <Compile Include="States\Options.cs" />
     <Compile Include="States\MainMenu.cs" />
+    <Compile Include="Tiles\Floor\Floor.cs" />
+    <Compile Include="Tiles\Floor\Space.cs" />
+    <Compile Include="Tiles\Tile.cs" />
+    <Compile Include="Tiles\Wall\Wall.cs" />
   </ItemGroup>
   <ItemGroup>
     <BootstrapperPackage Include="Microsoft.Net.Client.3.5">
@@ -212,7 +232,11 @@
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </Content>
   </ItemGroup>
-  <ItemGroup />
+  <ItemGroup>
+    <EmbeddedResource Include="MainWindow.resx">
+      <DependentUpon>MainWindow.cs</DependentUpon>
+    </EmbeddedResource>
+  </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <PropertyGroup>
     <PostBuildEvent>copy "$(SolutionDir)References\$(Configuration)\*.dll" "$(ProjectDir)$(OutDir)"</PostBuildEvent>

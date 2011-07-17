@@ -83,3 +83,18 @@ public enum DoorState
     Open,
     Broken
 }
+
+public enum LightState
+{
+    Off = 0,
+    On
+}
+
+public enum LightDirection
+{
+    East = 0,
+    South,
+    West,
+    North,
+    All
+}

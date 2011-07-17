@@ -1,5 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
+using GorgonLibrary;
+using GorgonLibrary.InputDevices;
 
 namespace SS3D.Modules
 {
@@ -12,20 +14,22 @@ namespace SS3D.Modules
     {
        
     }
-    public OgreManager mEngine;
+    public Program prg;
 
-    public abstract bool Startup( StateManager _mgr );
+    public abstract bool Startup( Program _prg );
 
     public abstract void Shutdown();
 
     public abstract void Update( long _frameTime );
+    public abstract void GorgonRender();
 
-    public abstract void UpdateInput(Mogre.FrameEvent evt, MOIS.Keyboard keyState, MOIS.Mouse mouseState);
-    public abstract void KeyDown(MOIS.KeyEvent keyState);
-    public abstract void KeyUp(MOIS.KeyEvent keyState);
-    public abstract void MouseUp(MOIS.MouseEvent mouseState, MOIS.MouseButtonID button);
-    public abstract void MouseDown(MOIS.MouseEvent mouseState, MOIS.MouseButtonID button);
-    public abstract void MouseMove(MOIS.MouseEvent mouseState);
+      //GORGON
+    public abstract void KeyDown(KeyboardInputEventArgs e);
+    public abstract void KeyUp(KeyboardInputEventArgs e);
+    public abstract void MouseUp(MouseInputEventArgs e);
+    public abstract void MouseDown(MouseInputEventArgs e);
+    public abstract void MouseMove(MouseInputEventArgs e);
+    public abstract void FormResize();
 
   }
 

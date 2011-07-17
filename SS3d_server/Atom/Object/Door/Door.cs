@@ -89,6 +89,7 @@ namespace SS3d_server.Atom.Object.Door
             message.Write((byte)AtomMessage.Extended);
             message.Write((byte)status);
             SendMessageToAll(message);
+            Console.Write("state send" + status);
         }
     }
 }

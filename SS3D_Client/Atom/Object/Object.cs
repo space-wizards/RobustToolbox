@@ -13,9 +13,9 @@ namespace SS3D.Atom.Object
             collidable = true;
         }
 
-        public override void Update()
+        public override void Update(double time)
         {
-            base.Update();
+            base.Update(time);
         }
         protected override void HandleExtendedMessage(Lidgren.Network.NetIncomingMessage message)
         {

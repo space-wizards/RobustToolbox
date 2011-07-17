@@ -6,20 +6,21 @@ using Mogre;
 using SS3D_shared.HelperClasses;
 using Lidgren.Network;
 using SS3D.Atom.Mob.HelperClasses;
+using GorgonLibrary;
+using GorgonLibrary.Graphics;
 
 namespace SS3D.Atom.Item
 {
     public class Item : Atom
     {
-        public Mogre.Vector3 heldOffset = Mogre.Vector3.ZERO;           // the offset vector when held
-        public Mogre.Quaternion heldQuat = Mogre.Quaternion.IDENTITY;   // the rotation when held
+        /*public Mogre.Vector3 heldOffset = Mogre.Vector3.ZERO;           // the offset vector when held
+        public Mogre.Quaternion heldQuat = Mogre.Quaternion.IDENTITY;   // the rotation when held*/
         
 
         public Appendage holdingAppendage = null;
                 public Item()
             : base()
         {
-
         }
 
         protected override void HandleExtendedMessage(NetIncomingMessage message)
@@ -52,7 +53,15 @@ namespace SS3D.Atom.Item
 
         protected virtual void HandleDetach()
         {
-            if(holdingAppendage != null)
+            if (holdingAppendage != null)
+            {
+                Vector2D mobpos = holdingAppendage.owner.position;
+                position = mobpos;
+                holdingAppendage.attachedItem = null;
+                holdingAppendage = null;
+                visible = true;
+            }
+            /*if(holdingAppendage != null)
             {
                 holdingAppendage.owner.Entity.DetachObjectFromBone(Entity);
 
@@ -61,15 +70,18 @@ namespace SS3D.Atom.Item
                 Node.Position = position + offset;
                 Node.AttachObject(Entity);
                 holdingAppendage = null;
-            }
+            }*/
         }
 
         protected virtual void AttachTo(Mob.Mob m, Appendage a)
         {
-            Entity.DetachFromParent();
+            this.visible = false;
+            holdingAppendage = a;
+            a.attachedItem = this;
+            /*Entity.DetachFromParent();
 
             m.Entity.AttachObjectToBone(a.bone, Entity, heldQuat, heldOffset);
-            holdingAppendage = a;
+            holdingAppendage = a;*/
         }
     }
 }

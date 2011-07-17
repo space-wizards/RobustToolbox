@@ -1,612 +1,211 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Text;
-using Mogre;
 using SS3D.HelperClasses;
 using SS3D_shared;
+using SS3D.Tiles;
+using GorgonLibrary;
+using GorgonLibrary.Graphics;
 
 namespace SS3D.Modules.Map
 {
     public class Map : LoadingTracker
     {
         #region Variables
-        public BaseTile[,] tileArray; // The array holding all the tiles that make up the map
+        public Tile[,] tileArray; // The array holding all the tiles that make up the map
         public int mapWidth; // Number of tiles across the map (must be a multiple of StaticGeoSize)
         public int mapHeight; // Number of tiles up the map (must be a multiple of StaticGeoSize)
-        public int tileSpacing = 16; // Distance between tiles
-        public AxisAlignedBox[,] boundingBoxArray;
-        private bool useStaticGeo;
-
-        private OgreManager mEngine;
-        private geometryMeshManager meshManager; // Builds and stores the meshes for all floors/walls.
-
-        /* The static geometry makes up the map - all the walls and floors.
-         * It is very fast to render but cannot be moved or edited once built.
-         * It has been split into 10x10 chunks which are assigned automatically, meaning
-         * if we want to replace/change a tile, we only have to rebuild a small are rather than
-         * rebuild the thousands of tiles that make up the whole level.
-         */
-
-        public StaticGeometry[,] staticGeometry;
-        private int StaticGeoX; // The width of the array - the number of tiles / 10 rounded up.
-        private int StaticGeoZ; // Same as above.
-        public int StaticGeoSize = 10; // Size of one side of the square of tiles stored by each staticgeometry in the array.
-        private Vector2 lastCamGeoPos = Vector2.UNIT_SCALE;
-
+        public int tileSpacing = 64; // Distance between tiles
+        public Dictionary<string, Sprite> tileSprites;
+        private string floorSpriteName = "FloorTexture";
+        private string wallTopSpriteName = "WallTexture";
+        private string wallSideSpriteName = "WallSide";
+        private List<Vector2D> cardinalList;
+        private static PORTAL_INFO[] portal = new PORTAL_INFO[4];
+        public System.Drawing.Point lastVisPoint;
+        private int recCount = 0;
+        public bool needVisUpdate = false;
         #endregion
 
-        public Map(OgreManager _mEngine, bool _useStaticGeo)
+        public Map()
         {
-            mEngine = _mEngine;
-            useStaticGeo = _useStaticGeo;
-        }
-
-        public ManualObject CreateGrid(int height = 1)
-        {
-            if (tileArray == null) return null;
-
-            ManualObject grid = new ManualObject("MapGrid");
-            grid.Begin("Grid", RenderOperation.OperationTypes.OT_LINE_LIST);
-
-            Vector3 vert1 = Vector3.ZERO;
-            Vector3 vert2 = Vector3.ZERO;
-
-            float offset = tileSpacing / 2; //Used to correctly align the grid. Tiles are centered on their nodes.
-
-            ColourValue gridColor = new ColourValue(1.0f, 0f, 0f);
-
-            for (int z = 0; z < mapHeight; z++)
+            tileSprites = new Dictionary<string, Sprite>();
+            tileSprites.Add(floorSpriteName, ResMgr.Singleton.GetSprite(floorSpriteName));
+            tileSprites.Add(wallSideSpriteName, ResMgr.Singleton.GetSprite(wallSideSpriteName));
+            for (int i = 0; i < 16; i++)
             {
-                if (z == 0) continue;
-                vert1 = new Vector3(0 - offset, height, z * tileSpacing - offset);
-                vert2 = new Vector3(mapWidth * tileSpacing - offset, height, z * tileSpacing - offset);
-                grid.Position(vert1);
-                grid.Colour(gridColor);
-                grid.Position(vert2);
-                grid.Colour(gridColor);
+                tileSprites.Add(wallTopSpriteName + i, ResMgr.Singleton.GetSprite(wallTopSpriteName + i));
             }
 
-            for (int x = 0; x < mapWidth; x++)
-            {
-                if (x == 0) continue;
-                vert1 = new Vector3(x * tileSpacing - offset, height, 0 - offset);
-                vert2 = new Vector3(x * tileSpacing - offset, height, mapHeight * tileSpacing - offset);
-                grid.Position(vert1);
-                grid.Colour(gridColor);
-                grid.Position(vert2);
-                grid.Colour(gridColor);
-            }
+            cardinalList = new List<Vector2D>();
+            cardinalList.Add(new Vector2D(0, 0));
+            cardinalList.Add(new Vector2D(0, 1));
+            cardinalList.Add(new Vector2D(0, -1));
+            cardinalList.Add(new Vector2D(1, 0));
+            cardinalList.Add(new Vector2D(-1, 0));
+            cardinalList.Add(new Vector2D(1, 1));
+            cardinalList.Add(new Vector2D(-1, -1));
+            cardinalList.Add(new Vector2D(-1, 1));
+            cardinalList.Add(new Vector2D(1, -1));
+            portal[0] = new PORTAL_INFO(1, 1, 1, -1, 1, 0); // East
+            portal[1] = new PORTAL_INFO(-1, 1, 1, 1, 0, 1); // South
+            portal[2] = new PORTAL_INFO(-1, -1, -1, 1, -1, 0); // West
+            portal[3] = new PORTAL_INFO(1, -1, -1, -1, 0, -1); // North
 
-            grid.QueryFlags = SS3D_shared.HelperClasses.QueryFlags.DO_NOT_PICK;
-            grid.End();
-
-            return grid;
+            lastVisPoint = new System.Drawing.Point(0, 0);
         }
+        
 
         #region Startup / Loading
-        public bool InitMap(int width, int height, bool wallSurround, bool startBlank, int partitionSize)
-        {
-            meshManager = new geometryMeshManager();
-            meshManager.CreateMeshes();
-
-            mapWidth = width;
-            mapHeight = height;
-
-            if (useStaticGeo)
-            {
-                float geoSize = StaticGeoSize;
-
-                // Get the width and height our staticgeometry array needs to be.
-                StaticGeoX = (int)System.Math.Ceiling(width / geoSize);
-                StaticGeoZ = (int)System.Math.Ceiling(height / geoSize);
-
-                InitStaticgeometry();
-            }
-
-            // Init our tileArray.
-            tileArray = new BaseTile[mapWidth, mapHeight];
-            boundingBoxArray = new AxisAlignedBox[mapWidth, mapHeight];
-
-            loadingText = "Building Map...";
-            loadingPercent = 0;
-            mEngine.RenderUpdate();
-
-            float maxElements = (mapHeight * mapWidth);
-            float oneElement = 100f / maxElements;
-            float currCount = 0;
-
-            for (int x = 0; x < mapWidth; x++)
-            {
-                for (int z = 0; z < mapHeight; z++)
-                {
-                    // The position of the tiles scenenode.
-                    int posX = x * tileSpacing;
-                    int posZ = z * tileSpacing;
-                    if (startBlank)
-                    {
-                        tileArray[x, z] = GenerateNewTile(TileType.Space, new Vector3(posX, 0, posZ));
-                    }
-                    else if ((wallSurround && (x == 0 || (x == mapWidth - 1) || z == 0 || (z == mapHeight - 1))) || 
-                        (partitionSize > 0 && ((x > 0 && x % partitionSize == 0) || (z > 0 && z % partitionSize == 0))))
-                    {
-                        tileArray[x,z] = GenerateNewTile(TileType.Wall, new Vector3(posX, 0, posZ));  
-                    }
-                    else
-                    {
-                        tileArray[x, z] = GenerateNewTile(TileType.Floor, new Vector3(posX, 0, posZ));  
-                    }
-
-                    if (useStaticGeo)
-                    {
-                        // Get which piece of the staticGeometry array this tile belongs in (automatically
-                        // worked out when the tile is created)
-                        int GeoX = tileArray[x, z].GeoPosX;
-                        int GeoZ = tileArray[x, z].GeoPosZ;
-
-                        // Add it to the appropriate staticgeometry array.
-                        staticGeometry[GeoX, GeoZ].AddSceneNode(tileArray[x, z].Node);
-                        // Remove it from the main scene manager, otherwise it would be draw twice.
-                        //mEngine.SceneMgr.RootSceneNode.RemoveChild(tileArray[x, z].tileNode);
-                        tileArray[x, z].Node.SetVisible(false);
-                    }
-
-                    currCount += oneElement;
-                    if (currCount >= 1)
-                    {
-                        loadingPercent += maxElements > 100 ? 1 : oneElement;
-                        currCount = 0;
-                        mEngine.RenderUpdate();
-                    }
-
-                }
-            }
-
-            if (useStaticGeo)
-            {
-                // Build all the staticgeometrys.
-                BuildAllgeometry();
-            }
-            loadingText = "Map Created";
-            loadingPercent = 0;
-            mEngine.RenderUpdate();
-            return true;
-        }
-
-        public bool LoadMap(MapFile toLoad)
-        {
-            meshManager = new geometryMeshManager();
-            meshManager.CreateMeshes();
-
-            mapWidth = toLoad.TileData.width;
-            mapHeight = toLoad.TileData.height;
-
-            tileArray = new BaseTile[mapWidth, mapHeight];
-
-            float geoSize = StaticGeoSize;
-
-            StaticGeoX = (int)System.Math.Ceiling(mapWidth / geoSize);
-            StaticGeoZ = (int)System.Math.Ceiling(mapHeight / geoSize);
-
-            InitStaticgeometry();
-
-            float maxElements = toLoad.TileData.TileInfo.Count;       //Number of elements total.
-            float oneElement = 100f / toLoad.TileData.TileInfo.Count; //Value of one element.
-            float currCount = 0;                                      //Counter.
-            loadingText = "Loading Tiles...";                         //Setting the text of the inherited abstract class.
-
-            foreach (TileEntry entry in toLoad.TileData.TileInfo)
-            {   // x=x z=y , sorry about that.
-
-                int posX = entry.position.x * tileSpacing;
-                int posZ = entry.position.y * tileSpacing;
-
-                TileType type = (TileType)entry.type; //Enum is saved as int in file.
-                Type classType = type.GetClass();     //Reflection magic in the enum.
-
-                // Arguments for Turf Constructuctors : (SceneManager sceneManager, Vector3 position, int tileSpacing)
-                object[] arguments = new object[3];
-                arguments[0] = mEngine.SceneMgr;
-                arguments[1] = new Vector3(posX, 0, posZ);
-                arguments[2] = tileSpacing;
-
-                object newTile = Activator.CreateInstance(classType, arguments);      //Create new instance.
-                BaseTile newTileConv = (BaseTile)newTile;                        
-                tileArray[entry.position.x, entry.position.y] = newTileConv;          //Put instance in correct place.
-                tileArray[entry.position.x, entry.position.y].Node.SetVisible(false);
-                staticGeometry[newTileConv.GeoPosX, newTileConv.GeoPosZ].AddSceneNode(tileArray[entry.position.x, entry.position.y].Node); //Add to static geometry array.
-
-                currCount += oneElement; //Increase counter by value of one element.
-                if (currCount >= 1)      //One percent full.
-                {
-                    loadingPercent += maxElements > 100 ? 1 : oneElement; //Setting the value of the inherited class.
-                    currCount = 0;                                        //If more than 100 elements total inc by 1, else by the value of one element
-                    mEngine.RenderUpdate();//Update Engine & Render          //This allows the progress bar to move at bigger steps than 1% if needed.
-                }
-
-            }
-
-            loadingPercent = 0; //Reset all the progress bar stuff.
-            maxElements = toLoad.TileData.TileInfo.Count;
-            oneElement = 100f / maxElements;
-            currCount = 0;
-
-            loadingText = "Loading Space...";
-            mEngine.RenderUpdate();
-
-            for (int x = 0; x < mapWidth; x++)
-            {
-                for (int z = 0; z < mapHeight; z++)
-                {
-                    if (tileArray[x, z] == null) //If theres nothing in it at this point, then its space.
-                    {                            //Space tiles are not saved or loaded.
-                        int posX = x * tileSpacing;
-                        int posZ = z * tileSpacing;
-                        tileArray[x, z] = new Space(mEngine.SceneMgr, new Vector3(posX, 0, posZ), tileSpacing);
-                        tileArray[x, z].Node.SetVisible(false);
-                        staticGeometry[tileArray[x, z].GeoPosX, tileArray[x, z].GeoPosZ].AddSceneNode(tileArray[x, z].Node);
-                    }
-                    currCount += oneElement;
-                    if (currCount >= 1)
-                    {
-                        loadingPercent += maxElements > 100 ? 1 : oneElement;
-                        currCount = 0;
-                        mEngine.RenderUpdate();
-                    }
-                }
-            }
-
-            BuildAllgeometry();
-            mEngine.RenderUpdate();
-
-            loadingText = "Map loaded";
-            loadingPercent = 0;
-
-            return true;
-        }
-
-        public bool LoadMapSaverMap(int width, int height, string[,] savedArray)
-        {
-            meshManager = new geometryMeshManager();
-            meshManager.CreateMeshes();
-
-            mapWidth = width;
-            mapHeight = height;
-
-            if (useStaticGeo)
-            {
-                float geoSize = StaticGeoSize;
-                // Get the width and height our staticgeometry array needs to be.
-                StaticGeoX = (int)System.Math.Ceiling(width / geoSize);
-                StaticGeoZ = (int)System.Math.Ceiling(height / geoSize);
-
-                InitStaticgeometry();
-            }
-
-            ParseNameArray(savedArray);
-
-            if (useStaticGeo)
-            {
-                for (int x = 0; x < mapWidth; x++)
-                {
-                    for (int z = 0; z < mapHeight; z++)
-                    {
-
-                        // Get which piece of the staticGeometry array this tile belongs in (automatically
-                        // worked out when the tile is created)
-                        int GeoX = tileArray[x, z].GeoPosX;
-                        int GeoZ = tileArray[x, z].GeoPosZ;
-
-                        // Add it to the appropriate staticgeometry array.
-                        staticGeometry[GeoX, GeoZ].AddSceneNode(tileArray[x, z].Node);
-                    }
-                }
-
-                // Build all the staticgeometrys.
-                BuildAllgeometry();
-            }
-            mEngine.Update();
-            return true;
-        }
 
         public bool LoadNetworkedMap(TileType[,] networkedArray, int _mapWidth, int _mapHeight)
         {
-            meshManager = new geometryMeshManager();
-            meshManager.CreateMeshes();
-
+           
             mapWidth = _mapWidth;
             mapHeight = _mapHeight;
 
-            tileArray = new BaseTile[mapWidth, mapHeight];
+            tileArray = new Tile[mapWidth, mapHeight];
 
             loadingText = "Building Map...";
             loadingPercent = 0;
-            mEngine.RenderUpdate();
 
             float maxElements = (mapHeight * mapWidth);
             float oneElement = 100f / maxElements;
             float currCount = 0;
 
-            for (int z = 0; z < mapHeight; z++)
+            for (int y = 0; y < mapHeight; y++)
             {
                 for (int x = 0; x < mapWidth; x++)
                 {
                     int posX = x * tileSpacing;
-                    int posZ = z * tileSpacing;
+                    int posY = y * tileSpacing;
 
-                    switch (networkedArray[x, z])
+                    switch (networkedArray[x, y])
                     {
                         case TileType.Wall:
-                            tileArray[x, z] = new Wall(mEngine.SceneMgr, new Vector3(posX, 0, posZ), tileSpacing);
+                            tileArray[x, y] = GenerateNewTile(TileType.Wall, new Vector2D(posX, posY));
                             break;
                         case TileType.Floor:
-                            tileArray[x, z] = new Floor(mEngine.SceneMgr, new Vector3(posX, 0, posZ), tileSpacing);
+                            tileArray[x, y] = GenerateNewTile(TileType.Floor, new Vector2D(posX, posY));
                             break;
                         case TileType.Space:
-                            tileArray[x, z] = new Space(mEngine.SceneMgr, new Vector3(posX, 0, posZ), tileSpacing);
+                            tileArray[x, y] = GenerateNewTile(TileType.Space, new Vector2D(posX, posY));
                             break;
                         default:
                             break;
                     }
-
-                    if (useStaticGeo)
-                    {
-                        tileArray[x, z].Node.SetVisible(false);
-                    }
-
                     currCount += oneElement;
                     if (currCount >= 1)
                     {
                         loadingPercent += maxElements > 100 ? 1 : oneElement;
                         currCount = 0;
-                        mEngine.RenderUpdate();
                     }
                 }
             }
 
-
-            if (useStaticGeo)
+            for (int x = 0; x < mapWidth; x++)
             {
-                loadingText = "Initializing Static Geometry...";
-                loadingPercent = 0;
-                mEngine.RenderUpdate();
-
-                maxElements = (mapHeight * mapWidth);
-                oneElement = 100f / maxElements;
-                currCount = 0;
-
-                float geoSize = StaticGeoSize;
-                // Get the width and height our staticgeometry array needs to be.
-                StaticGeoX = (int)System.Math.Ceiling(mapWidth / geoSize);
-                StaticGeoZ = (int)System.Math.Ceiling(mapHeight / geoSize);
-
-                InitStaticgeometry();
-
-                for (int x = 0; x < mapWidth; x++)
+                for (int y = 0; y < mapHeight; y++)
                 {
-                    for (int z = 0; z < mapHeight; z++)
+                    if (tileArray[x, y].tileType == TileType.Wall)
                     {
-
-                        // Get which piece of the staticGeometry array this tile belongs in (automatically
-                        // worked out when the tile is created)
-                        int GeoX = tileArray[x, z].GeoPosX;
-                        int GeoZ = tileArray[x, z].GeoPosZ;
-
-                        // Add it to the appropriate staticgeometry array.
-                        staticGeometry[GeoX, GeoZ].AddSceneNode(tileArray[x, z].Node);
-
-                        currCount += oneElement;
-                        if (currCount >= 1)
-                        {
-                            loadingPercent += maxElements > 100 ? 1 : oneElement;
-                            currCount = 0;
-                            mEngine.RenderUpdate();
-                        }
+                        byte i = SetSprite(x, y);
+                        tileArray[x, y].SetSprites(tileSprites[wallTopSpriteName+i], tileSprites[wallSideSpriteName], i);
                     }
                 }
-
-                // Build all the staticgeometrys.
-                BuildAllgeometry();
             }
-            mEngine.Update();
             return true;
         }
 
-        private void ParseNameArray(string[,] savedArray)
-        {
-            tileArray = new BaseTile[mapWidth, mapHeight];
-
-            for (int z = 0; z < mapHeight; z++)
-            {
-                for (int x = 0; x < mapWidth; x++)
-                {
-                    int posX = x * tileSpacing;
-                    int posZ = z * tileSpacing;
-
-                    switch (savedArray[x, z])
-                    {
-                        case "wall":
-                            tileArray[x, z] = new Wall(mEngine.SceneMgr, new Vector3(posX, 0, posZ), tileSpacing);
-                            break;
-                        case "floor":
-                            tileArray[x, z] = new Floor(mEngine.SceneMgr, new Vector3(posX, 0, posZ), tileSpacing);
-                            break;
-                        default:
-                            break;
-                    }
-
-                    if (useStaticGeo)
-                    {
-                        tileArray[x, z].Node.SetVisible(false);
-                    }
-                }
-            }
-        }
-        #endregion
-
-        #region Geomap functions
-        // Initilizes the staticgeometry array, should only ever be called once when the map is being made
-        // for the first time.
-        private void InitStaticgeometry()
-        {
-            staticGeometry = new StaticGeometry[StaticGeoX, StaticGeoZ];
-            for (int i = 0; i < StaticGeoX; i++)
-            {
-                for (int j = 0; j < StaticGeoZ; j++)
-                {
-                    staticGeometry[i, j] = mEngine.SceneMgr.CreateStaticGeometry("Mapgeometry" + "0" + i + "0" + j);
-                    float halfway = tileSpacing * (StaticGeoSize / 2);
-                    float originX = (i * (StaticGeoSize * tileSpacing));
-                    float originY = 0f;
-                    float originZ = ((j + 1)* (StaticGeoSize * tileSpacing));
-                    staticGeometry[i, j].Origin = new Vector3(originX, originY, originZ);
-                    staticGeometry[i, j].RegionDimensions = new Vector3(StaticGeoSize * tileSpacing, tileSpacing * 2, StaticGeoSize * tileSpacing);
-                    staticGeometry[i, j].CastShadows = true;
-                }
-            }
-          
-        }
-
-        // Builds all the geometry in the level, should only be called once when the map is being made
-        // for the first time.
-        private void BuildAllgeometry()
-        {
-            loadingText = "Building Static Geometry...";
-            loadingPercent = 0;
-            mEngine.OneUpdate();
-
-            float maxElements = (StaticGeoX * StaticGeoZ);
-            float oneElement = 100f / maxElements;
-            float currCount = 0;
-
-            for (int i = 0; i < StaticGeoX; i++)
-            {
-                for (int j = 0; j < StaticGeoZ; j++)
-                {
-                    staticGeometry[i, j].Build();
-
-                    currCount += oneElement;
-                    if (currCount >= 1)
-                    {
-                        loadingPercent += maxElements > 100 ? 1 : oneElement;
-                        currCount = 0;
-                        mEngine.OneUpdate();
-                    }
-
-                }
-                
-            }
-        }
-
-        // Clears one part of the staticgeometry, repopulates it from the tile array and then rebuilds it.
-        // This is what should be used when a tile changes, passing in the location in the staticgeometry
-        // array that the tile lives in. (This is stored on the tile in .GeoPosX and .GeoPosZ)
-        public void RepopRebuildOnegeometry(int x, int y)
-        {
-            if (x > StaticGeoX || y > StaticGeoZ)
-                return;
-            staticGeometry[x, y].Reset();
-            for (int i = x * StaticGeoSize; i < (x + 1) * StaticGeoSize; i++)
-            {
-                for (int j = y * StaticGeoSize; j < (y + 1) * StaticGeoSize; j++)
-                {
-                    staticGeometry[x, y].AddSceneNode(tileArray[i, j].Node);
-                }
-            }
-            staticGeometry[x, y].Build();
-        }
-
-        public void ClearOnegeometry(int x, int y)
-        {
-            if (x > StaticGeoX || y > StaticGeoZ)
-                return;
-            staticGeometry[x, y].Reset();
-        }
-
-        public Vector2 GetGeoArrayPositionFromWorldPosition(Vector3 pos)
-        {
-            Vector2 geoPos = Vector2.ZERO;
-            double camPosX = pos.x;
-            double camPosZ = pos.z;
-            camPosX /= (tileSpacing * StaticGeoSize);
-            camPosZ /= (tileSpacing * StaticGeoSize);
-            camPosX = System.Math.Floor(camPosX);
-            camPosZ = System.Math.Floor(camPosZ);
-
-            geoPos.x = (float)camPosX;
-            geoPos.y = (float)camPosZ;
-
-            return geoPos;
-        }
         #endregion
 
         #region Tile helper functions
         // Returns the position of a tile in the tileArray from world coordinates
         // Returns -1,-1 if an invalid position was passed in.
-        public Vector2 GetTileArrayPositionFromWorldPosition(float x, float z)
+        public Vector2D GetTileArrayPositionFromWorldPosition(float x, float z)
         {
             if (x < 0 || z < 0)
-                return new Vector2(-1, -1);
+                return new Vector2D(-1, -1);
             if (x > mapWidth * tileSpacing || z > mapWidth * tileSpacing)
-                return new Vector2(-1, -1);
+                return new Vector2D(-1, -1);
 
             int xPos = (int)System.Math.Floor(x / tileSpacing);
             int zPos = (int)System.Math.Floor(z / tileSpacing);
 
-            return new Vector2(xPos, zPos);
+            return new Vector2D(xPos, zPos);
         }
 
-
-        private TileType GetObjectTypeFromWorldPosition(float x, float z)
+        public System.Drawing.Point GetTileArrayPositionFromWorldPosition(Vector2D pos)
         {
-            Vector2 arrayPosition = GetTileArrayPositionFromWorldPosition(x, z);
-            if (arrayPosition.x < 0 || arrayPosition.y < 0)
+            if (pos.X < 0 || pos.Y < 0)
+                return new System.Drawing.Point(-1, -1);
+            if (pos.X > mapWidth * tileSpacing || pos.Y > mapWidth * tileSpacing)
+                return new System.Drawing.Point(-1, -1);
+
+            int xPos = (int)System.Math.Floor(pos.X / tileSpacing);
+            int YPos = (int)System.Math.Floor(pos.Y / tileSpacing);
+
+            return new System.Drawing.Point(xPos, YPos);
+        }
+
+        public TileType GetTileTypeFromWorldPosition(float x, float z)
+        {
+            Vector2D arrayPosition = GetTileArrayPositionFromWorldPosition(x, z);
+            if (arrayPosition.X < 0 || arrayPosition.Y < 0)
             {
                 return TileType.None;
             }
             else
             {
-                return GetObjectTypeFromArrayPosition((int)arrayPosition.x, (int)arrayPosition.y);
+                return GetTileTypeFromArrayPosition((int)arrayPosition.X, (int)arrayPosition.Y);
             }
         }
 
-        private TileType GetObjectTypeFromWorldPosition(Vector3 pos)
+        public TileType GetTileTypeFromWorldPosition(Vector2D pos)
         {
-            Vector2 arrayPosition = GetTileArrayPositionFromWorldPosition(pos.x, pos.z);
-            if (arrayPosition.x < 0 || arrayPosition.y < 0)
+            Vector2D arrayPosition = GetTileArrayPositionFromWorldPosition(pos.X, pos.Y);
+            if (arrayPosition.X < 0 || arrayPosition.Y < 0)
             {
                 return TileType.None;
             }
             else
             {
-                return GetObjectTypeFromArrayPosition((int)arrayPosition.x, (int)arrayPosition.y);
+                return GetTileTypeFromArrayPosition((int)arrayPosition.X, (int)arrayPosition.Y);
             }
         }
 
-        private TileType GetObjectTypeFromArrayPosition(int x, int z)
+        public TileType GetTileTypeFromArrayPosition(int x, int y)
         {
-            if (x < 0 || z < 0 || x >= mapWidth || z >= mapHeight)
+            if (x < 0 || y < 0 || x >= mapWidth || y >= mapHeight)
             {
                 return TileType.None;
             }
             else
             {
-                return tileArray[x, z].TileType;
+                return tileArray[x, y].tileType;
             }
         }
+
+        public Tile GetTileAt(Vector2D pos)
+        {
+            System.Drawing.Point p = GetTileArrayPositionFromWorldPosition(pos);
+            return tileArray[p.X, p.Y];
+        }
+
 
         // Changes a tile based on its array position (get from world
         // coordinates using GetTileFromWorldPosition(int, int). Returns true if successful.
-        public bool ChangeTile(Vector2 arrayPosition, TileType newType)
+        public bool ChangeTile(Vector2D arrayPosition, TileType newType)
         {
-            int x = (int)arrayPosition.x;
-            int z = (int)arrayPosition.y;
+            int x = (int)arrayPosition.X;
+            int z = (int)arrayPosition.Y;
 
             if (x < 0 || z < 0)
                 return false;
             if (x > mapWidth || z > mapWidth)
                 return false;
-            Vector3 pos = tileArray[x, z].Node.Position;
-            BaseTile tile = GenerateNewTile(newType, pos);
+            Vector2D pos = tileArray[x, z].position;
+            Tile tile = GenerateNewTile(newType, pos);
 
             if (tile == null)
             {
@@ -614,174 +213,129 @@ namespace SS3D.Modules.Map
             }
 
             tileArray[x, z] = tile;
-            if (useStaticGeo)
-            {
-                tileArray[x, z].Node.SetVisible(false);
-                int xPos = tileArray[x, z].GeoPosX;
-                int yPos = tileArray[x, z].GeoPosZ;
-
-
-                RepopRebuildOnegeometry(xPos, yPos);
-            }
             return true;
         }
 
         public bool ChangeTile(int x, int z, TileType newType)
         {
-            Vector2 pos = new Vector2(x, z);
+            Vector2D pos = new Vector2D(x, z);
             return ChangeTile(pos, newType);
         }
 
-        public BaseTile GenerateNewTile(TileType type, Vector3 pos)
+        public Tile GenerateNewTile(TileType type, Vector2D pos)
         {
+            System.Drawing.Point p = new System.Drawing.Point();
+            p.X = (int)Math.Floor(pos.X / tileSpacing);
+            p.Y = (int)Math.Floor(pos.Y / tileSpacing);
             switch (type)
             {
                 case TileType.Space:
-                    Space space = new Space(mEngine.SceneMgr, pos, tileSpacing);
-                    return space;
+                    return new Tiles.Floor.Space(tileSprites["0"], tileSpacing, pos, p);
                 case TileType.Floor:
-                    Floor floor = new Floor(mEngine.SceneMgr, pos, tileSpacing);
-                    return floor;
+                    return new Tiles.Floor.Floor(tileSprites[floorSpriteName], tileSpacing, pos, p);
                 case TileType.Wall:
-                    Wall wall = new Wall(mEngine.SceneMgr, pos, tileSpacing);
-                    return wall;
+                    return new Tiles.Wall.Wall(tileSprites[wallTopSpriteName+"0"], tileSprites[wallSideSpriteName], tileSpacing, pos, p);
                 default:
                     return null;
             }
         }
 
-        #endregion
 
-        #region Quick collision checks
+        // Where do we have tiles around us?
+        // 0 = None
+        // 1 = North
+        // 2 = East
+        // 4 = South
+        // 8 = West
+        // So if we have one N and S, we return (N + S) or (1 + 4), so 5.
 
-        public bool CheckCollision(Vector3 pos)
+        public byte SetSprite(int x, int y)
         {
-            TileType tile = GetObjectTypeFromWorldPosition(pos);
+            byte i = 0;
 
-            if (tile == TileType.None)
+            if (GetTileTypeFromArrayPosition(x, y - 1) == TileType.Wall) // N
             {
-                return false;
+                i += 1;
             }
-            else if (tile == TileType.Wall && pos.y <= meshManager.GetWallHeight())
+            if (GetTileTypeFromArrayPosition(x + 1, y) == TileType.Wall) // E
             {
-                return true;
+                i += 2;
             }
-            else if ((tile == TileType.Floor || tile == TileType.Space) && pos.y < 0)
+            if (GetTileTypeFromArrayPosition(x, y + 1) == TileType.Wall) // S
             {
-                return true;
+                i += 4;
             }
-            else
+            if (GetTileTypeFromArrayPosition(x - 1, y) == TileType.Wall) // W
             {
-                return false;
+                i += 8;
             }
+
+            return i;
         }
 
-        public Vector3 GetPointAboveTileAt(Vector3 pos)
+        /*public List<System.Drawing.RectangleF> GetSurroundingAABB(Vector2D pos)
         {
-            TileType tile = GetObjectTypeFromWorldPosition(pos);
+            List<System.Drawing.RectangleF> AABBList = new List<System.Drawing.RectangleF>();
+            Vector2D tilePos = GetTileArrayPositionFromWorldPosition(pos.X, pos.Y);
 
-            if (tile == TileType.None)
+            foreach (Vector2D dir in cardinalList)
             {
-                return pos;
-            }
-            else if (tile == TileType.Wall)
-            {
-                return new Vector3(pos.x, meshManager.GetWallHeight(), pos.z);
-            }
-            else if ((tile == TileType.Floor || tile == TileType.Space) && pos.y < 0)
-            {
-                return new Vector3(pos.x, 0, pos.z);
-            }
-            else
-            {
-                return pos;
-            }
-        }
-
-        public float GetHeightAboveTileAt(Vector3 pos)
-        {
-            TileType tile = GetObjectTypeFromWorldPosition(pos);
-
-            if (tile == TileType.None)
-            {
-                return pos.y;
-            }
-            else if (tile == TileType.Wall)
-            {
-                return meshManager.GetWallHeight();
-            }
-            else if ((tile == TileType.Floor || tile == TileType.Space) && pos.y < 0)
-            {
-                return meshManager.GetFloorHeight();
-            }
-            else
-            {
-                return pos.y;
-            }
-        }
-
-        public TileType GetObjectTypeAt(Vector3 pos)
-        {
-            return GetObjectTypeFromWorldPosition(pos);
-        }
-
-        public bool IsFloorUnder(Vector3 pos)
-        {
-            if (GetObjectTypeFromWorldPosition(pos) == TileType.Floor)
-            {
-                return true;
-            }
-            else
-            {
-                return false;
-            }
-        }
-
-        public List<AxisAlignedBox> GetSurroundingAABB(Vector3 pos)
-        {
-            List<AxisAlignedBox> AABBList = new List<AxisAlignedBox>();
-
-            Vector2 tilePos = GetTileArrayPositionFromWorldPosition(pos.x, pos.z);
-
-            List<Vector2> cardinalList = new List<Vector2>();
-            cardinalList.Add(new Vector2(0, 0));
-            cardinalList.Add(new Vector2(0, 1));
-            cardinalList.Add(new Vector2(0, -1));
-            cardinalList.Add(new Vector2(1, 0));
-            cardinalList.Add(new Vector2(-1, 0));
-            cardinalList.Add(new Vector2(1, 1));
-            cardinalList.Add(new Vector2(-1, -1));
-            cardinalList.Add(new Vector2(-1, 1));
-            cardinalList.Add(new Vector2(1, -1));
-
-            foreach (Vector2 dir in cardinalList)
-            {
-                Vector2 checkPos = tilePos + dir;
-                if (GetObjectTypeFromArrayPosition((int)checkPos.x, (int)checkPos.y) == TileType.Wall)
+                Vector2D checkPos = pos + dir;
+                if (GetTileTypeFromArrayPosition((int)checkPos.X, (int)checkPos.Y) == TileType.Wall)
                 {
-                    AxisAlignedBox AABB = GetAABB(checkPos);
+                    System.Drawing.RectangleF AABB = GetAABB(checkPos);
                     if (AABB != null)
                     {
                         AABBList.Add(AABB);
                     }
                 }
             }
-            return AABBList;
-        }
 
-        public AxisAlignedBox GetAABB(Vector2 tilePos)
+            return AABB;
+        }*/
+
+        #endregion
+
+        #region Quick collision checks
+
+        public bool CheckCollision(Vector2D pos)
         {
-            if (tilePos.x < 0 || tilePos.x > mapWidth || tilePos.y < 0 || tilePos.y > mapHeight)
-            {
-                return null;
-            }
+            TileType tile = GetTileTypeFromWorldPosition(pos);
 
-            return tileArray[(int)tilePos.x, (int)tilePos.y].Node._getWorldAABB();
+            if (tile == TileType.None)
+            {
+                return false;
+            }
+            else if (tile == TileType.Wall)
+            {
+                return true;
+            }
+            else if ((tile == TileType.Floor || tile == TileType.Space))
+            {
+                return true;
+            }
+            else
+            {
+                return false;
+            }
         }
 
-        
+        public TileType GetObjectTypeAt(Vector2D pos)
+        {
+            return GetTileTypeFromWorldPosition(pos);
+        }
 
-
+        public bool IsFloorUnder(Vector2D pos)
+        {
+            if (GetTileTypeFromWorldPosition(pos) == TileType.Floor)
+            {
+                return true;
+            }
+            else
+            {
+                return false;
+            }
+        }
         #endregion
 
         #region Shutdown
@@ -790,68 +344,279 @@ namespace SS3D.Modules.Map
 
             loadingText = "";
             loadingPercent = 0;
-            mEngine.RenderUpdate();
 
             float maxElements;
             float oneElement;
-            float currCount = 0;
-
-            if (useStaticGeo)
-            {
-                loadingText = "Unloading Static Geometry...";
-                loadingPercent = 0;
-                mEngine.RenderUpdate();
-
-                maxElements = (StaticGeoX * StaticGeoZ);
-                oneElement = 100f / maxElements;
-                currCount = 0;
-
-                for (int i = 0; i < StaticGeoX; i++)
-                {
-                    for (int j = 0; j < StaticGeoZ; j++)
-                    {
-                        staticGeometry[i, j].Reset();
-                        currCount += oneElement;
-                        if (currCount >= 1)
-                        {
-                            loadingPercent += maxElements > 100 ? 1 : oneElement;
-                            currCount = 0;
-                            mEngine.RenderUpdate();
-                        }
-                    }
-                }
-                mEngine.SceneMgr.DestroyAllStaticGeometry();
-            }
-            mEngine.SceneMgr.DestroyAllEntities();
-
+            
             loadingText = "Unloading Map...";
             loadingPercent = 0;
-            mEngine.RenderUpdate();
 
             maxElements = (mapWidth * mapHeight);
             oneElement = 100f / maxElements;
-            currCount = 0;
-
-            for (int x = 0; x < mapWidth; x++)
-            {
-                for (int z = 0; z < mapHeight; z++)
-                {
-                    mEngine.SceneMgr.DestroySceneNode(tileArray[x, z].Node.Name);
-                    currCount += oneElement;
-                    if (currCount >= 1)
-                    {
-                        loadingPercent += maxElements > 100 ? 1 : oneElement;
-                        currCount = 0;
-                        mEngine.RenderUpdate();
-                    }
-                }
-            }
             tileArray = null;
-            meshManager = null;
-            boundingBoxArray = null;
-            staticGeometry = null;
             loadingPercent = 0;
         }
         #endregion
+
+        #region Visibility
+
+        struct PORTAL_INFO
+        {
+            // offset of portal's left corner relative to square center (doubled coordinates):
+            public int lx;
+            public int ly;
+            // offset of portal's right corner relative to square center (doubled coordinates):
+            public int rx;
+            public int ry;
+            // offset of neighboring cell relative to this cell's coordinates (not doubled):
+            public int nx;
+            public int ny;
+
+            public PORTAL_INFO(int _lx, int _ly, int _rx, int _ry, int _nx, int _ny)
+            {
+                lx = _lx;
+                ly = _ly;
+                rx = _rx;
+                ry = _ry;
+                nx = _nx;
+                ny = _ny;
+            }
+        }
+
+        #region Helper methods
+        bool is_solid(int x, int y)
+        {
+            if(tileArray[x,y].tileType == TileType.Wall)
+            {
+                return true;
+            }
+            return false;
+        }
+
+        bool is_sight_blocked(int x, int y)
+        {
+            if (tileArray[x, y].tileType == TileType.Wall || tileArray[x, y].sightBlocked)
+            {
+                return true;
+            }
+            return false;
+        }
+
+        void clear_visibility()
+        {
+            for (int x = 0; x < mapWidth; x++)
+            {
+                for (int y = 0; y < mapHeight; y++)
+                {
+                    tileArray[x, y].Visible = false;
+                }
+            }
+
+        }
+
+        void set_visible(int x, int y)
+        {
+            tileArray[x, y].Visible = true;
+        }
+
+        void set_visible(int x, int y, Atom.Light light)
+        {
+            if (!tileArray[x, y].lights.Contains(light))
+            {
+                tileArray[x, y].lights.Add(light);
+            }
+            if(!light.tiles.Contains(tileArray[x,y]))
+            {
+                light.tiles.Add(tileArray[x,y]);
+            }
+        }
+        #endregion
+
+        public void compute_visibility(int viewer_x, int viewer_y)
+        {
+            clear_visibility();
+            for (int i = 0; i < 4; ++i)
+            {
+                compute_visibility
+                (
+                    viewer_x, viewer_y,
+                    viewer_x, viewer_y,
+                    portal[i].lx, portal[i].ly,
+                    portal[i].rx, portal[i].ry
+                );
+            }
+        }
+        
+        bool a_right_of_b(int ax, int ay, int bx, int by)
+        {
+            return ax * by > ay * bx;
+        }
+        
+        void compute_visibility(int viewer_x, int viewer_y, int target_x, int target_y, int ldx, int ldy, int rdx, int rdy)
+        {
+            // Abort if we are out of bounds.
+            if (target_x < 0 || target_x >= mapWidth)
+                return;
+            if (target_y < 0 || target_y >= mapHeight)
+                return;
+
+            // This square is visible.
+            set_visible(target_x, target_y);
+
+            // A solid target square blocks all further visibility through it.
+            if (is_sight_blocked(target_x, target_y))
+                return;
+
+            // Target square center position relative to viewer:
+            int dx = 2 * (target_x - viewer_x);
+            int dy = 2 * (target_y - viewer_y);
+
+            for (int i = 0; i < 4; ++i)
+            {
+                // Relative positions of the portal's left and right endpoints:
+                int pldx = dx + portal[i].lx;
+                int pldy = dy + portal[i].ly;
+                int prdx = dx + portal[i].rx;
+                int prdy = dy + portal[i].ry;
+
+                // Clip portal against current view frustum:
+                int cldx, cldy;
+                if (a_right_of_b(ldx, ldy, pldx, pldy))
+                {
+                    cldx = ldx;
+                    cldy = ldy;
+                }
+                else
+                {
+                    cldx = pldx;
+                    cldy = pldy;
+                }
+                int crdx, crdy;
+                if (a_right_of_b(rdx, rdy, prdx, prdy))
+                {
+                    crdx = prdx;
+                    crdy = prdy;
+                }
+                else
+                {
+                    crdx = rdx;
+                    crdy = rdy;
+                }
+
+                // If we can see through the clipped portal, recurse through it.
+                if (a_right_of_b(crdx, crdy, cldx, cldy))
+                {
+                    compute_visibility
+                    (
+                        viewer_x, viewer_y,
+                        target_x + portal[i].nx, target_y + portal[i].ny,
+                        cldx, cldy,
+                        crdx, crdy
+                    );
+                }
+            }
+        }
+
+        #region Lighting methods
+        public void compute_visibility(int viewer_x, int viewer_y, Atom.Light light)
+        {
+            if (light.direction == LightDirection.All)
+            {
+                for (int i = 0; i < 4; ++i)
+                {
+                    compute_visibility
+                    (
+                        viewer_x, viewer_y,
+                        viewer_x, viewer_y,
+                        portal[i].lx, portal[i].ly,
+                        portal[i].rx, portal[i].ry,
+                        light
+                    );
+                }
+            }
+            else
+            {
+                compute_visibility
+                (
+                    viewer_x, viewer_y,
+                    viewer_x, viewer_y,
+                    portal[(int)light.direction].lx, portal[(int)light.direction].ly,
+                    portal[(int)light.direction].rx, portal[(int)light.direction].ry,
+                    light
+                );
+            }
+        }
+
+
+
+        void compute_visibility(int viewer_x, int viewer_y, int target_x, int target_y, int ldx, int ldy, int rdx, int rdy, Atom.Light light)
+        {
+            // Abort if we are out of bounds.
+            if (target_x < 0 || target_x >= mapWidth)
+                return;
+            if (target_y < 0 || target_y >= mapHeight)
+                return;
+
+            // This square is visible.
+            set_visible(target_x, target_y, light);
+
+            // A solid target square blocks all further visibility through it.
+            if (is_sight_blocked(target_x, target_y))
+                return;
+
+            // Target square center position relative to viewer:
+            int dx = 2 * (target_x - viewer_x);
+            int dy = 2 * (target_y - viewer_y);
+
+            for (int i = 0; i < 4; ++i)
+            {
+                // Relative positions of the portal's left and right endpoints:
+                int pldx = dx + portal[i].lx;
+                int pldy = dy + portal[i].ly;
+                int prdx = dx + portal[i].rx;
+                int prdy = dy + portal[i].ry;
+
+                // Clip portal against current view frustum:
+                int cldx, cldy;
+                if (a_right_of_b(ldx, ldy, pldx, pldy))
+                {
+                    cldx = ldx;
+                    cldy = ldy;
+                }
+                else
+                {
+                    cldx = pldx;
+                    cldy = pldy;
+                }
+                int crdx, crdy;
+                if (a_right_of_b(rdx, rdy, prdx, prdy))
+                {
+                    crdx = prdx;
+                    crdy = prdy;
+                }
+                else
+                {
+                    crdx = rdx;
+                    crdy = rdy;
+                }
+
+                // If we can see through the clipped portal, recurse through it.
+                if (a_right_of_b(crdx, crdy, cldx, cldy))
+                {
+                    compute_visibility
+                    (
+                        viewer_x, viewer_y,
+                        target_x + portal[i].nx, target_y + portal[i].ny,
+                        cldx, cldy,
+                        crdx, crdy,
+                        light
+                    );
+                }
+            }
+        }
+        #endregion
+
+        #endregion
+
     }
 }

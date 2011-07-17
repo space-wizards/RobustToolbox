@@ -10,6 +10,7 @@ namespace SS3D.Atom.Mob.HelperClasses
         public string bone;
         public string appendageName;
         public Mob owner;
+        public Item.Item attachedItem;
 
         public Appendage(string _bone, string _appendageName, Mob _owner)
         {

@@ -10,9 +10,10 @@ namespace SS3D.Atom.Mob
         public Human()
             : base()
         {
-            meshName = "male_new.mesh";
+            spritename = "Human.png";
+            /*meshName = "male_new.mesh";
             scale = new Mogre.Vector3(1f, 1f, 1f);
-            offset = new Mogre.Vector3(0, 0, 0);
+            offset = new Mogre.Vector3(0, 0, 0);*/
         }
 
         public override void MoveForward()

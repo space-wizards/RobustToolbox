@@ -1,4 +1,4 @@
-﻿using System;
+﻿/*using System;
 using System.IO;
 using System.Linq;
 using System.Reflection;
@@ -17,6 +17,8 @@ using Miyagi.Common.Resources;
 using Miyagi.Common.Events;
 using Miyagi.TwoD;
 
+using GorgonLibrary;
+using GorgonLibrary.InputDevices;
 
 namespace SS3D.States
 {
@@ -361,7 +363,11 @@ namespace SS3D.States
     {
     } 
     #endregion
+    public override void GorgonRender()
+    {
 
+        return;
+    }
     #region Input
     public override void UpdateInput(Mogre.FrameEvent evt, MOIS.Keyboard keyState, MOIS.Mouse mouseState)
     {
@@ -387,8 +393,20 @@ namespace SS3D.States
     {
     }
 
+    public override void KeyDown(KeyboardInputEventArgs e)
+    { }
+    public override void KeyUp(KeyboardInputEventArgs e)
+    { }
+    public override void MouseUp(MouseInputEventArgs e)
+    { }
+    public override void MouseDown(MouseInputEventArgs e)
+    { }
+    public override void MouseMove(MouseInputEventArgs e)
+    { }
+
     #endregion
 
   }
 
 }
+*/

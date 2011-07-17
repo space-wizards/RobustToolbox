@@ -69,7 +69,7 @@ namespace SS3d_server.Modules.Chat
 
             string command = args[0];
 
-            Vector3 position;
+            Vector2 position;
             Atom.Atom player;
 
             switch (command)
@@ -77,7 +77,7 @@ namespace SS3d_server.Modules.Chat
                 case "crowbar":
                     player = netServer.atomManager.GetAtom(atomID);
                     if (player == null)
-                        position = new Vector3(0, 0, 0);
+                        position = new Vector2(0, 0);
                     else
                         position = player.position;
                     netServer.atomManager.SpawnAtom("Atom.Item.Tool.Crowbar", position);                   
@@ -85,7 +85,7 @@ namespace SS3d_server.Modules.Chat
                 case "toolbox":
                     player = netServer.atomManager.GetAtom(atomID);
                     if (player == null)
-                        position = new Vector3(0, 0, 0);
+                        position = new Vector2(0, 0);
                     else
                         position = player.position;
                     netServer.atomManager.SpawnAtom("Atom.Item.Container.Toolbox", position);  

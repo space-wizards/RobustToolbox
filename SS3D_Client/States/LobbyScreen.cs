@@ -19,6 +19,8 @@ using SS3D.Modules.UI;
 using System.Collections.Generic;
 using System.Reflection;
 
+using GorgonLibrary;
+using GorgonLibrary.InputDevices;
 
 namespace SS3D.States
 {
@@ -33,29 +35,30 @@ namespace SS3D.States
 
         public LobbyScreen()
         {
-            mEngine = null;
         }
 
-        public override bool Startup(StateManager _mgr)
+        public override bool Startup(Program _prg)
         {
-            mEngine = _mgr.Engine;
-            mStateMgr = _mgr;
+            prg = _prg;
+            mStateMgr = prg.mStateMgr;
             playerController = new PlayerController(this);
 
-            mEngine.mNetworkMgr.MessageArrived += new NetworkMsgHandler(mNetworkMgr_MessageArrived);
+            prg.mNetworkMgr.MessageArrived += new NetworkMsgHandler(mNetworkMgr_MessageArrived);
 
-            CreateGUI();
- 
-            NetworkManager netMgr = mEngine.mNetworkMgr;
+            //CreateGUI();
+
+            NetworkManager netMgr = prg.mNetworkMgr;
             NetOutgoingMessage message = netMgr.netClient.CreateMessage();
             message.Write((byte)NetMessage.WelcomeMessage); //Request Welcome msg.
             netMgr.netClient.SendMessage(message, NetDeliveryMethod.ReliableOrdered);
-            mEngine.mNetworkMgr.SendClientName(ConfigManager.Singleton.Configuration.PlayerName);
-            
+            prg.mNetworkMgr.SendClientName(ConfigManager.Singleton.Configuration.PlayerName);
+
+            //BYPASS LOBBY
+            playerController.SendVerb("joingame", 0);
             return true;
         }
 
-        public void CreateGUI()
+       /* public void CreateGUI()
         {
             lobbyChat = new Chatbox("lobbyChat");
             lobbyChat.chatGUI.ZOrder = 10;
@@ -102,7 +105,7 @@ namespace SS3D.States
             mEngine.mMiyagiSystem.GUIManager.GUIs.Add(guiLobbyMenu);
 
             guiBackground.Visible = true;
-        }
+        }*/
 
         void chatTextbox_TextSubmitted(Chatbox chatbox, string text)
         {
@@ -115,6 +118,16 @@ namespace SS3D.States
             {
                 SendLobbyChat(text);
             }
+        }
+        public override void GorgonRender()
+        {
+
+            return;
+        }
+
+        public override void FormResize()
+        {
+            throw new NotImplementedException();
         }
 
         private void lobbyJoinGameButtonMouseDown(object sender, MouseButtonEventArgs e)
@@ -195,17 +208,17 @@ namespace SS3D.States
 
         public void SendLobbyChat(string text)
         {
-            NetOutgoingMessage message = mEngine.mNetworkMgr.netClient.CreateMessage();
+            NetOutgoingMessage message = prg.mNetworkMgr.netClient.CreateMessage();
             message.Write((byte)NetMessage.ChatMessage);
             message.Write((byte)ChatChannel.Lobby);
             message.Write(text);
 
-            mEngine.mNetworkMgr.SendMessage(message, NetDeliveryMethod.ReliableUnordered);
+            prg.mNetworkMgr.SendMessage(message, NetDeliveryMethod.ReliableUnordered);
         }
 
         public override void Shutdown()
         {
-            mEngine.mNetworkMgr.MessageArrived -= new NetworkMsgHandler(mNetworkMgr_MessageArrived);
+            prg.mNetworkMgr.MessageArrived -= new NetworkMsgHandler(mNetworkMgr_MessageArrived);
         }
 
         public override void Update(long _frameTime)
@@ -220,7 +233,7 @@ namespace SS3D.States
             serverMaxPlayers = msg.ReadInt32();
             string serverMapName = msg.ReadString();
             GameType gameType = (GameType)msg.ReadByte();
-            lobbyChat.AddLine("Server name: " + serverName + "\r\nMaxPlayers: " + serverMaxPlayers.ToString() + "\r\n" + welcomeString);
+            //lobbyChat.AddLine("Server name: " + serverName + "\r\nMaxPlayers: " + serverMaxPlayers.ToString() + "\r\n" + welcomeString);
         }
 
         private void HandleChatMessage(NetIncomingMessage msg)
@@ -234,29 +247,17 @@ namespace SS3D.States
         }
 
         #region Input
-        public override void UpdateInput(Mogre.FrameEvent evt, MOIS.Keyboard keyState, MOIS.Mouse mouseState)
-        {
-        }
-
-        public override void KeyDown(MOIS.KeyEvent keyState)
-        {
-        }
-
-        public override void KeyUp(MOIS.KeyEvent keyState)
-        {
-        }
-
-        public override void MouseUp(MOIS.MouseEvent mouseState, MOIS.MouseButtonID button)
-        {
-        }
-
-        public override void MouseDown(MOIS.MouseEvent mouseState, MOIS.MouseButtonID button)
-        {
-        }
-
-        public override void MouseMove(MOIS.MouseEvent mouseState)
-        {
-        } 
+ 
+        public override void KeyDown(KeyboardInputEventArgs e)
+        { }
+        public override void KeyUp(KeyboardInputEventArgs e)
+        { }
+        public override void MouseUp(MouseInputEventArgs e)
+        { }
+        public override void MouseDown(MouseInputEventArgs e)
+        { }
+        public override void MouseMove(MouseInputEventArgs e)
+        { }
         #endregion
     }
 }

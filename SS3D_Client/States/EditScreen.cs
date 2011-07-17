@@ -1,4 +1,4 @@
-﻿using System;
+﻿/*using System;
 using System.IO;
 
 
@@ -24,6 +24,8 @@ using Miyagi.Common.Resources;
 using Miyagi.Common.Events;
 using Miyagi.TwoD;
 
+using GorgonLibrary;
+using GorgonLibrary.InputDevices;
 namespace SS3D.States
 {
     public class EditScreen : State
@@ -67,7 +69,7 @@ namespace SS3D.States
             mEngine = _mgr.Engine;
             mStateMgr = _mgr;
 
-            mEngine.SceneMgr.ShadowTextureSelfShadow = true;
+            /*mEngine.SceneMgr.ShadowTextureSelfShadow = true;
             mEngine.SceneMgr.SetShadowTextureCasterMaterial("shadow_caster");
             mEngine.SceneMgr.SetShadowTexturePixelFormat(PixelFormat.PF_FLOAT16_RGB);
             mEngine.SceneMgr.ShadowCasterRenderBackFaces = false;
@@ -76,7 +78,7 @@ namespace SS3D.States
             mEngine.SceneMgr.SetSkyBox(true, "SkyBox", 900f, true);
 
             mEngine.SceneMgr.ShadowTechnique = ShadowTechnique.SHADOWTYPE_TEXTURE_ADDITIVE_INTEGRATED;
-            map = new Map(mEngine, false);
+            map = new Map();
 
             mapSaver = new MapSaver(map, mEngine);
 
@@ -88,7 +90,7 @@ namespace SS3D.States
             //itemManager = new ItemManager(mEngine, map, mEngine.mNetworkMgr, null);
 
             AddSetUpButtons();
-
+            
             return true;
         }
 
@@ -114,7 +116,7 @@ namespace SS3D.States
             //itemManager.Update();
             if (inEditor)
             {
-                Point mousePos = mEngine.mMiyagiSystem.InputManager.MouseLocation;
+                /*Point mousePos = mEngine.mMiyagiSystem.InputManager.MouseLocation;
                 Mogre.Vector2 mousePosAbs = new Vector2((float)mousePos.X / (float)mEngine.Window.Width, (float)mousePos.Y / (float)mEngine.Window.Height);
                 Mogre.Vector3 worldPos;
                 AtomBaseClass HoverObject = HelperClasses.AtomUtil.PickAtScreenPosition(mEngine, mousePosAbs, out worldPos);
@@ -162,7 +164,11 @@ namespace SS3D.States
         }
 
         #endregion
+        public override void GorgonRender()
+        {
 
+            return;
+        }
         // These are the buttons for setting up the map - whether we generate a new one,
         // or load one from a file we've previously saved.
         #region Setup Buttons
@@ -425,7 +431,7 @@ namespace SS3D.States
 
         private void NewMapButtonMouseDown(object sender, MouseButtonEventArgs e)
         {
-            int mapWidth = int.Parse(((TextBox)guiEditOptions.GetControl("setupMapWidthTextBox")).Text);
+            /*int mapWidth = int.Parse(((TextBox)guiEditOptions.GetControl("setupMapWidthTextBox")).Text);
             int mapHeight = int.Parse(((TextBox)guiEditOptions.GetControl("setupMapHeightTextBox")).Text);
             int partitionSize = int.Parse(((TextBox)guiEditOptions.GetControl("setupPartitionSizeTextBox")).Text);
             bool wallSurround = ((CheckBox)guiEditOptions.GetControl("setupWallSurroundCheckBox")).Checked;
@@ -450,7 +456,7 @@ namespace SS3D.States
 
         private void LoadMapButtonMouseDown(object sender, MouseButtonEventArgs e)
         {
-            if (mapSaver.Load(((TextBox)guiEditOptions.GetControl("setupMapNameTextBox")).Text))
+            /*if (mapSaver.Load(((TextBox)guiEditOptions.GetControl("setupMapNameTextBox")).Text))
             {
                 guiEditOptions.Visible = false;
                 map.LoadMapSaverMap(mapSaver.mapWidth, mapSaver.mapHeight, mapSaver.nameArray);
@@ -1075,7 +1081,7 @@ namespace SS3D.States
                 return;
             }
 
-            if (inEditor)
+            /*if (inEditor)
             {
                 Mogre.Vector3 worldPos;
                 AtomBaseClass SelectedObject = HelperClasses.AtomUtil.PickAtScreenPosition(mEngine, mousePosAbs, out worldPos); 
@@ -1148,7 +1154,7 @@ namespace SS3D.States
                             selectedItem = SelectedObject;
                             selectedItem.Node.ShowBoundingBox = true;
                         }
-                    }*/
+                    }
                 }
 
             }
@@ -1158,8 +1164,20 @@ namespace SS3D.States
         {
         }
 
+
+        public override void KeyDown(KeyboardInputEventArgs e)
+        { }
+        public override void KeyUp(KeyboardInputEventArgs e)
+        { }
+        public override void MouseUp(MouseInputEventArgs e)
+        { }
+        public override void MouseDown(MouseInputEventArgs e)
+        { }
+        public override void MouseMove(MouseInputEventArgs e)
+        { }
+
         #endregion
 
     }
 
-}
+}*/

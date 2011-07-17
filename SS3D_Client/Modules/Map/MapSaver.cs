@@ -108,9 +108,9 @@ namespace SS3D.Modules.Map
             {
                 for (int x = 0; x < map.mapWidth; x++)
                 {
-                    if (map.tileArray[x, y].TileType == TileType.Space) continue; //Not saving space tiles. All empty tiles default to space. see LoadMap method in Map.cs
+                    if (map.tileArray[x, y].tileType == TileType.Space) continue; //Not saving space tiles. All empty tiles default to space. see LoadMap method in Map.cs
                     TileEntry NewTileEntry = new TileEntry();
-                    NewTileEntry.type = (int)map.tileArray[x,y].TileType;
+                    NewTileEntry.type = (int)map.tileArray[x,y].tileType;
                     NewTileEntry.position = new Vec2(x, y);
                     MapToSave.TileData.TileInfo.Add(NewTileEntry);
                 }

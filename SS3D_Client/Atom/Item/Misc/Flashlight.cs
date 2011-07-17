@@ -38,18 +38,14 @@ namespace SS3D.Atom.Item.Misc
         public override void UpdatePosition()
         {
             base.UpdatePosition();
+            
             if (holdingAppendage != null)
             {
-                light.position = atomManager.gameState.map.GetTileArrayPositionFromWorldPosition(holdingAppendage.owner.position);
+                light.UpdatePosition(holdingAppendage.owner.position);
             }
             else
             {
-                light.position = atomManager.gameState.map.GetTileArrayPositionFromWorldPosition(position);
-            }
-            if (light.position != light.lastPosition)
-            {
-                light.UpdateLight();
-                light.lastPosition = light.position;
+                light.UpdatePosition(position);
             }
 
         }

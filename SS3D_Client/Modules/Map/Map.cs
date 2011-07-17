@@ -52,6 +52,7 @@ namespace SS3D.Modules.Map
             portal[2] = new PORTAL_INFO(-1, -1, -1, 1, -1, 0); // West
             portal[3] = new PORTAL_INFO(1, -1, -1, -1, 0, -1); // North
 
+
             lastVisPoint = new System.Drawing.Point(0, 0);
         }
         
@@ -537,7 +538,7 @@ namespace SS3D.Modules.Map
         #region Lighting methods
         public void compute_visibility(int viewer_x, int viewer_y, Atom.Light light)
         {
-            if (light.direction == LightDirection.All)
+            if (light.direction.Contains(LightDirection.All))
             {
                 for (int i = 0; i < 4; ++i)
                 {
@@ -553,14 +554,17 @@ namespace SS3D.Modules.Map
             }
             else
             {
-                compute_visibility
-                (
-                    viewer_x, viewer_y,
-                    viewer_x, viewer_y,
-                    portal[(int)light.direction].lx, portal[(int)light.direction].ly,
-                    portal[(int)light.direction].rx, portal[(int)light.direction].ry,
-                    light
-                );
+                foreach (LightDirection dir in light.direction)
+                {
+                    compute_visibility
+                    (
+                        viewer_x, viewer_y,
+                        viewer_x, viewer_y,
+                        portal[(int)dir].lx, portal[(int)dir].ly,
+                        portal[(int)dir].rx, portal[(int)dir].ry,
+                        light
+                    );
+                }
             }
         }
 

@@ -66,7 +66,7 @@ namespace SS3D.Tiles
                     foreach (Atom.Light l in lights)
                     {
                         double d = 1;
-                        Point p = new Point(tilePosition.X - l.position.X, tilePosition.Y - l.position.Y);
+                        Point p = new Point(tilePosition.X - l.tilePosition.X, tilePosition.Y - l.tilePosition.Y);
                         p.X *= p.X;
                         p.Y *= p.Y;
                         d = Math.Sqrt(p.X + p.Y);

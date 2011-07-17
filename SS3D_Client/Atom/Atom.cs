@@ -441,6 +441,30 @@ namespace SS3D.Atom
             SendPositionUpdate();
         }
 
+        public virtual void MoveUpLeft()
+        {
+            TranslateLocal(new Vector2D(-1 * speed, -1 * speed));
+            SendPositionUpdate();
+        }
+
+        public virtual void MoveDownLeft()
+        {
+            TranslateLocal(new Vector2D(-1 * speed, speed));
+            SendPositionUpdate();
+        }
+
+        public virtual void MoveUpRight()
+        {
+            TranslateLocal(new Vector2D(speed, -1 * speed));
+            SendPositionUpdate();
+        }
+
+        public virtual void MoveDownRight()
+        {
+            TranslateLocal(new Vector2D(speed, speed));
+            SendPositionUpdate();
+        }
+
         public virtual void TurnLeft()
         {
             /*Node.Rotate(Mogre.Vector3.UNIT_Y, Mogre.Math.DegreesToRadians(2));
@@ -497,6 +521,13 @@ namespace SS3D.Atom
             updateRequired = true;
         }
 
+        protected bool GetKeyState(KeyboardKeys k)
+        {
+            if (keyStates.ContainsKey(k) && keyStates[k])
+                return true;
+            return false;
+        }
+
         #region mouse handling
         public virtual void HandleClick()
         {
@@ -514,27 +545,31 @@ namespace SS3D.Atom
         #region key handlers
         public virtual void HandleKC_W(bool state)
         {
-            if(state)
+            if (state && GetKeyState(KeyboardKeys.A) && !GetKeyState(KeyboardKeys.D))
+                MoveUpLeft();
+            else if (state && GetKeyState(KeyboardKeys.D) && !GetKeyState(KeyboardKeys.A))
+                MoveUpRight();
+            else if (state)
                 MoveForward();
         }
         public virtual void HandleKC_A(bool state)
         {
-            //moveLeft(); // I want this to be strafe
-            if (state)
+            if (state && !GetKeyState(KeyboardKeys.W) && !GetKeyState(KeyboardKeys.S))
                 MoveLeft();
-                //TurnLeft();
         }
         public virtual void HandleKC_S(bool state)
         {
-            if (state)
+            if (state && GetKeyState(KeyboardKeys.A) && !GetKeyState(KeyboardKeys.D))
+                MoveDownLeft();
+            else if (state && GetKeyState(KeyboardKeys.D) && !GetKeyState(KeyboardKeys.A))
+                MoveDownRight();
+            else if (state)
                 MoveBack();
         }
         public virtual void HandleKC_D(bool state)
         {
-            //moveRight(); // I want this to be strafe
-            if (state)
+            if (state && !GetKeyState(KeyboardKeys.W) && !GetKeyState(KeyboardKeys.S))
                 MoveRight();
-                //TurnRight();
         }
         #endregion
 

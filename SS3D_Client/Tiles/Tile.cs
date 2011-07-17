@@ -78,7 +78,7 @@ namespace SS3D.Tiles
                 {
                     if(lighting)
                     {
-                        sprite.Color = System.Drawing.Color.FromArgb(20, 20, 20);
+                        sprite.Color = System.Drawing.Color.Black;
                     }
                     else
                     {

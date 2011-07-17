@@ -25,8 +25,15 @@ namespace SS3D.Tiles.Wall
             if (Visible && ((surroundDirs&4) == 0))
             {
                 sideSprite.SetPosition(tilePosition.X * tileSpacing - xTopLeft, tilePosition.Y * tileSpacing - yTopLeft);
-                sideSprite.Color = color;
-                ShadeCorners(sideSprite);
+                if (!lighting)
+                {
+                    sideSprite.Color = Color.White;
+                }
+                else
+                {
+                    sideSprite.Color = color;
+                    ShadeCorners(sideSprite);
+                }
                 sideSprite.Draw();
             }
         }
@@ -37,8 +44,15 @@ namespace SS3D.Tiles.Wall
             {
                 sprite.SetPosition(tilePosition.X * tileSpacing - xTopLeft, tilePosition.Y * tileSpacing - yTopLeft);
                 sprite.Position -= new Vector2D(0, tileSpacing);
-                sprite.Color = color;
-                ShadeCorners(sprite);
+                if (!lighting)
+                {
+                    sprite.Color = Color.White;
+                }
+                else
+                {
+                    sprite.Color = color;
+                    ShadeCorners(sprite);
+                }
                 sprite.Draw();
             }
         }

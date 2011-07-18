@@ -288,7 +288,7 @@ namespace SS3d_server.Tiles.Atmos
             //Toxins
             if (gasses[GasType.Toxin] > 10)
             {
-                amount = (uint)normalizeGasAmount(gasses[GasType.WVapor]);
+                amount = (uint)normalizeGasAmount(gasses[GasType.Toxin]);
                 type = (uint)GasType.Toxin << 4;
                 displayBytes.Add((byte)(amount | type));
             }

@@ -5,6 +5,7 @@ using System.Text;
 using System.IO;
 using System.Media;
 using SS3d_server.Tiles;
+using Lidgren.Network;
 
 using SS3D_shared;
 using SS3D_shared.HelperClasses;
@@ -15,16 +16,18 @@ namespace SS3d_server.Modules.Map
     {
         #region Variables
         private Tile[,] tileArray;
+        SS3DNetserver netServer;
         private int mapWidth;
         private int mapHeight;
         private string[,] nameArray;
         public int tileSpacing = 64;
         private int wallHeight = 40; // This must be the same as defined in the MeshManager.
+        DateTime lastAtmosDisplayPush;
         #endregion
 
-        public Map()
+        public Map(SS3DNetserver _netServer)
         {
-
+            netServer = _netServer;
         }
 
         #region Startup
@@ -36,6 +39,7 @@ namespace SS3d_server.Modules.Map
             }
 
             ParseNameArray();
+            InitializeAtmos();
 
             return true;
         }
@@ -94,6 +98,62 @@ namespace SS3d_server.Modules.Map
                             break;
                     }
                 }
+            }
+        }
+
+        private void InitializeAtmos()
+        {
+            for (int z = 0; z < mapHeight; z++)
+            {
+                for (int x = 0; x < mapWidth; x++)
+                {
+                    tileArray[x,z].gasCell = new Tiles.Atmos.GasCell(tileArray[x,z],x,z,tileArray, mapWidth, mapHeight);
+                }
+            }
+
+            tileArray[2, 2].gasCell.AddGas(5000, Tiles.Atmos.GasType.Oxygen);
+        }
+
+        public void UpdateAtmos()
+        {
+            for (int x = 0; x < mapWidth; x++)
+                for(int y = 0; y < mapHeight;y++)
+                {
+                    tileArray[x, y].gasCell.CalculateNextGasAmount();
+                }
+            for(int x = 0;x<mapWidth;x++)
+                for (int y = 0; y < mapHeight; y++)
+                {
+                    tileArray[x, y].gasCell.Update();
+                }
+
+            //Prepare gas display message
+            if ((DateTime.Now - lastAtmosDisplayPush).TotalMilliseconds > 333)
+            {
+                bool sendUpdate = false;
+                NetOutgoingMessage message = netServer.netServer.CreateMessage();
+                message.Write((byte)NetMessage.AtmosDisplayUpdate);
+                for (int x = 0; x < mapWidth; x++)
+                    for (int y = 0; y < mapHeight; y++)
+                    {
+                        byte[] displayBytes = tileArray[x, y].gasCell.PackDisplayBytes();
+                        if (displayBytes.Length == 0) //if there are no changes, continue.
+                            continue;
+                        sendUpdate = true;
+                        foreach (byte displayByte in displayBytes)
+                        {
+                            message.Write(x);
+                            message.Write(y);
+                            message.Write(displayByte);
+                            Console.Write("Gas update: x: " + x.ToString() + " y: " + y.ToString() + "byte: " + Convert.ToString(displayByte,2) + "\n");
+                        }
+                    }
+                if (sendUpdate)
+                {
+                    netServer.SendMessageToAll(message, NetDeliveryMethod.Unreliable);// Gas updates aren't a big deal.
+                    Console.Write("Sending Gas update\n");
+                }
+                lastAtmosDisplayPush = DateTime.Now;
             }
         }
 

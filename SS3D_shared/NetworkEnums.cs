@@ -16,7 +16,8 @@ public enum NetMessage
     ChatMessage,
     AtomManagerMessage,
     PlayerSessionMessage,
-    JoinGame
+    JoinGame,
+    AtmosDisplayUpdate,
 }
 
 public enum ItemMessage

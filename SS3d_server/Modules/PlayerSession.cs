@@ -108,6 +108,10 @@ namespace SS3d_server.Modules
                     case "joingame":
                         JoinGame();
                         break;
+                    case "toxins":
+                        //Need debugging function to add moar gas
+                        break;
+
                     default:
                         break;
                 }

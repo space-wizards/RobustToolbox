@@ -94,12 +94,12 @@ namespace SS3D.Tiles
                 sprite.SetPosition(tilePosition.X * tileSpacing - xTopLeft, tilePosition.Y * tileSpacing - yTopLeft);
                 if (!lighting)
                 {
-                    sprite.Color = Color.White;
+                    //sprite.Color = Color.White; //TESTING
                 }
                 else
                 {
-                    sprite.Color = color;
-                    ShadeCorners(sprite);
+                    //sprite.Color = color; //TESTING
+                    //ShadeCorners(sprite);
                 }
                 sprite.Draw();
             }

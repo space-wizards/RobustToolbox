@@ -42,6 +42,8 @@ namespace SS3D
 
         private Dictionary<string, Image> Images = new Dictionary<string, Image>();
 
+        private Dictionary<string, FXShader> Shaders = new Dictionary<string, FXShader>();
+
         private Dictionary<string, SpriteInfo> SpriteInfos = new Dictionary<string, SpriteInfo>();
         private Dictionary<string, Sprite> Sprites = new Dictionary<string, Sprite>();
 
@@ -74,11 +76,23 @@ namespace SS3D
 
         /// <summary>
         ///  <para>Retrieves the Image with the given key from the Resource list and returns it as a Sprite.</para>
-        ///  <para>Only use this for objects with a single instance. Returns error Sprite if not found.</para>
+        ///  <para>If a sprite has been created before using this method, it will return that Sprite. Returns error Sprite if not found.</para>
         /// </summary>
         public Sprite GetSpriteFromImage(string key)
         {
-            if (Images.ContainsKey(key)) return new Sprite(key, Images[key]);
+            if (Images.ContainsKey(key))
+            {
+                if (Sprites.ContainsKey(key))
+                {
+                    return Sprites[key];
+                }
+                else
+                {
+                    Sprite newSprite = new Sprite(key, Images[key]);
+                    Sprites.Add(key, newSprite);
+                    return newSprite;
+                }
+            }
             else return new Sprite(key + "Missing", Images["noSprite"]);
         }
 
@@ -97,6 +111,15 @@ namespace SS3D
         public SpriteInfo? GetSpriteInfo(string key)
         {
             if (SpriteInfos.ContainsKey(key)) return SpriteInfos[key];
+            else return null;
+        }
+
+        /// <summary>
+        ///  Retrieves the Shader with the given key from the Resource list. Returns null if not found.
+        /// </summary>
+        public FXShader GetShader(string key)
+        {
+            if (Shaders.ContainsKey(key)) return Shaders[key];
             else return null;
         }
 
@@ -146,7 +169,6 @@ namespace SS3D
 
         private void LoadFiles()
         {
-
 
             var ImageQuery = from FileSystemFile file in FileSystem where file.Extension.ToLower() == ".png" select file;
             foreach (FileSystemFile file in ImageQuery)
@@ -228,6 +250,19 @@ namespace SS3D
 
             }
             #endregion
+
+            var ShaderQuery = from FileSystemFile file in FileSystem where file.Extension.ToLower() == ".fx" select file;
+            foreach (FileSystemFile file in ShaderQuery)
+            {
+                FXShader loadedShader;
+
+                if (ShaderCache.Shaders.Contains(file.Filename))
+                    continue;
+                else
+                    loadedShader = FXShader.FromFileSystem(FileSystem, file.FullPath, ShaderCompileOptions.None);
+
+                if (!Shaders.ContainsKey(file.Filename)) Shaders.Add(file.Filename, loadedShader);
+            }
         }
 
     }

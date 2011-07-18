@@ -14,6 +14,7 @@ namespace SS3D.Atom.Item.Misc
         public Flashlight()
             : base()
         {
+            light_test = true;
             spritename = "Flashlight.png";
         }
 

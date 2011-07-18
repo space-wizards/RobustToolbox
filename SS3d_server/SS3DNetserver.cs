@@ -51,6 +51,7 @@ namespace SS3d_server
         GameType gameType = GameType.Game;
         
         public int framePeriod = 33; // The time (in milliseconds) between server frames
+        public DateTime lastUpdate;
 
         public float serverRate     // desired server framerate in frames per second,  backed by framePeriod
         {
@@ -81,7 +82,7 @@ namespace SS3d_server
             }
             else if (runlevel == RunLevel.Game)
             {
-                map = new Map();
+                map = new Map(this);
                 map.InitMap(serverMapName);
 
                 atomManager = new AtomManager(this);
@@ -230,8 +231,14 @@ namespace SS3d_server
         {
             if (runlevel == RunLevel.Game)
             {
-                atomManager.Update(framePeriod);
+                TimeSpan lastFrame = time - lastUpdate;
+                if (lastFrame.TotalMilliseconds > framePeriod)
+                {
+                    atomManager.Update(framePeriod);
+                    map.UpdateAtmos();
+                }
             }
+            lastUpdate = time;
         }
         #endregion
 

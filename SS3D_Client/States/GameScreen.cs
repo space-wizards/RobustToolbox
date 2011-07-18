@@ -391,6 +391,10 @@ namespace SS3D.States
             {
                 lighting = !lighting;
             }
+            if (e.Key == KeyboardKeys.F3)
+            {
+                playerController.SendVerb("toxins", 0);
+            }
             playerController.KeyDown(e.Key);
         }
         public override void KeyUp(KeyboardInputEventArgs e)

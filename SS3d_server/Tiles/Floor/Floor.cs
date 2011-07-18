@@ -11,6 +11,7 @@ namespace SS3d_server.Tiles.Floor
             : base()
         {
             tileType = TileType.Floor;
+            gasPermeable = true;
         }
 
     }

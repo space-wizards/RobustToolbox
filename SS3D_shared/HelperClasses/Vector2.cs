@@ -718,6 +718,53 @@ namespace SS3D_shared.HelperClasses
             return this.Magnitude;
         }
 
+        /// <summary>
+        /// Find the angle in radians between two vectors
+        /// </summary>
+        /// <param name="v1"></param>
+        /// <param name="v2"></param>
+        /// <returns>double angle in radians</returns>
+        public static double Angle(Vector2 v1, Vector2 v2)
+        {
+            if (v1.Magnitude == 0 || v2.Magnitude == 0)
+                throw new ArgumentException(ZERO_VECTOR_ANGLE, "this");
+            return
+            (
+               Math.Acos
+               (
+                  Normalize(v1).DotProduct(Normalize(v2))
+               )
+            );
+        }
+
+        private const string ZERO_VECTOR_ANGLE = "Cannot find an angle from a zero vector.";
+
+        public double Angle(Vector2 other)
+        {
+            return Angle(this, other);
+        }
+
+        /// <summary>
+        /// Returns dot product of two vectors
+        /// </summary>
+        /// <param name="v1"></param>
+        /// <param name="v2"></param>
+        /// <returns></returns>
+        public static double DotProduct(Vector2 v1, Vector2 v2)
+        {
+            return
+            (
+               v1.X * v2.X +
+               v1.Y * v2.Y
+            );
+        }
+
+        public double DotProduct(Vector2 other)
+        {
+            return DotProduct(this, other);
+        }
+
+
         #endregion
 
         #region Component Operations

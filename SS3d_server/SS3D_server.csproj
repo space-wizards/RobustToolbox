@@ -100,6 +100,7 @@
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="SS3DNetserver.cs" />
+    <Compile Include="Tiles\Atmos\GasCell.cs" />
     <Compile Include="Tiles\Floor\Floor.cs" />
     <Compile Include="Tiles\Floor\Space.cs" />
     <Compile Include="Tiles\Tile.cs" />

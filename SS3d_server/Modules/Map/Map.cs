@@ -111,7 +111,7 @@ namespace SS3d_server.Modules.Map
                 }
             }
 
-            tileArray[2, 2].gasCell.AddGas(5000, Tiles.Atmos.GasType.Oxygen);
+            tileArray[2, 2].gasCell.AddGas(5000, Tiles.Atmos.GasType.Toxin);
         }
 
         public void UpdateAtmos()
@@ -150,6 +150,7 @@ namespace SS3d_server.Modules.Map
                     }
                 if (sendUpdate)
                 {
+                    message.Write((byte)0); // 0 byte means end of update message
                     netServer.SendMessageToAll(message, NetDeliveryMethod.Unreliable);// Gas updates aren't a big deal.
                     Console.Write("Sending Gas update\n");
                 }

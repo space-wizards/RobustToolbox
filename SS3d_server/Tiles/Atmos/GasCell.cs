@@ -8,7 +8,7 @@ namespace SS3d_server.Tiles.Atmos
 {
     public enum GasType
     {
-        Oxygen,
+        Oxygen = 1, // MUST BE 1 FOR NETWORKING
         Toxin,
         Nitrogen,
         CO2,

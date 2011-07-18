@@ -19,6 +19,7 @@ namespace SS3D.Atom
         // GRAPHICS
         public bool updateRequired = false;
         public bool drawn = false;
+        public bool light_test = false; //TESTING
 
         //SPRITE
         public Sprite sprite;

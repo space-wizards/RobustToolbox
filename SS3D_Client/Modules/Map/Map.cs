@@ -436,18 +436,6 @@ namespace SS3D.Modules.Map
         {
             tileArray[x, y].Visible = true;
         }
-
-        void set_visible(int x, int y, Atom.Light light)
-        {
-            if (!tileArray[x, y].lights.Contains(light))
-            {
-                tileArray[x, y].lights.Add(light);
-            }
-            if(!light.tiles.Contains(tileArray[x,y]))
-            {
-                light.tiles.Add(tileArray[x,y]);
-            }
-        }
         #endregion
 
         public void compute_visibility(int viewer_x, int viewer_y)
@@ -534,109 +522,6 @@ namespace SS3D.Modules.Map
                 }
             }
         }
-
-        #region Lighting methods
-        public void compute_visibility(int viewer_x, int viewer_y, Atom.Light light)
-        {
-            if (light.direction.Contains(LightDirection.All))
-            {
-                for (int i = 0; i < 4; ++i)
-                {
-                    compute_visibility
-                    (
-                        viewer_x, viewer_y,
-                        viewer_x, viewer_y,
-                        portal[i].lx, portal[i].ly,
-                        portal[i].rx, portal[i].ry,
-                        light
-                    );
-                }
-            }
-            else
-            {
-                foreach (LightDirection dir in light.direction)
-                {
-                    compute_visibility
-                    (
-                        viewer_x, viewer_y,
-                        viewer_x, viewer_y,
-                        portal[(int)dir].lx, portal[(int)dir].ly,
-                        portal[(int)dir].rx, portal[(int)dir].ry,
-                        light
-                    );
-                }
-            }
-        }
-
-
-
-        void compute_visibility(int viewer_x, int viewer_y, int target_x, int target_y, int ldx, int ldy, int rdx, int rdy, Atom.Light light)
-        {
-            // Abort if we are out of bounds.
-            if (target_x < 0 || target_x >= mapWidth)
-                return;
-            if (target_y < 0 || target_y >= mapHeight)
-                return;
-
-            // This square is visible.
-            set_visible(target_x, target_y, light);
-
-            // A solid target square blocks all further visibility through it.
-            if (is_sight_blocked(target_x, target_y))
-                return;
-
-            // Target square center position relative to viewer:
-            int dx = 2 * (target_x - viewer_x);
-            int dy = 2 * (target_y - viewer_y);
-
-            for (int i = 0; i < 4; ++i)
-            {
-                // Relative positions of the portal's left and right endpoints:
-                int pldx = dx + portal[i].lx;
-                int pldy = dy + portal[i].ly;
-                int prdx = dx + portal[i].rx;
-                int prdy = dy + portal[i].ry;
-
-                // Clip portal against current view frustum:
-                int cldx, cldy;
-                if (a_right_of_b(ldx, ldy, pldx, pldy))
-                {
-                    cldx = ldx;
-                    cldy = ldy;
-                }
-                else
-                {
-                    cldx = pldx;
-                    cldy = pldy;
-                }
-                int crdx, crdy;
-                if (a_right_of_b(rdx, rdy, prdx, prdy))
-                {
-                    crdx = prdx;
-                    crdy = prdy;
-                }
-                else
-                {
-                    crdx = rdx;
-                    crdy = rdy;
-                }
-
-                // If we can see through the clipped portal, recurse through it.
-                if (a_right_of_b(crdx, crdy, cldx, cldy))
-                {
-                    compute_visibility
-                    (
-                        viewer_x, viewer_y,
-                        target_x + portal[i].nx, target_y + portal[i].ny,
-                        cldx, cldy,
-                        crdx, crdy,
-                        light
-                    );
-                }
-            }
-        }
-        #endregion
-
         #endregion
 
     }

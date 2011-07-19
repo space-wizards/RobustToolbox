@@ -167,6 +167,7 @@ namespace SS3D.Atom.Mob
                     a.attachedItem.UpdatePosition();
                 }
             }
+
             if (isDead)
                 return;
             

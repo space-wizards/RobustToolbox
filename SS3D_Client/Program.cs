@@ -70,7 +70,7 @@ namespace SS3D
         mNetworkMgr.UpdateNetwork();
 
         // Update the state manager - this will update the active state.
-        mStateMgr.Update(0);
+        mStateMgr.Update(e);
     }
 
     public Program()

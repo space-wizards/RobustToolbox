@@ -195,13 +195,6 @@ namespace SS3D.Modules
         mRenderingActive = false;
     }
 
-    public void OneUpdate()
-    {   //Updates Engine (render, input), state manager and network manager.
-        mNetworkMgr.UpdateNetwork();
-        Update();
-        mStateMgr.Update(0);
-    }
-
       /// <summary>
       /// Simpler updater to be used while shutting down. This avoids recursion loops with the state manager 
       /// when it changes states.

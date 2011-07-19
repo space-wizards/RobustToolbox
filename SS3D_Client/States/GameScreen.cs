@@ -35,7 +35,8 @@ namespace SS3D.States
         public DateTime now;
         private RenderImage baseTarget;
 
-        private List<Atom.Atom> light_test_list = new List<Atom.Atom>(); //TESTING
+        private List<Light> lightsLastFrame = new List<Light>();
+        private List<Light> lightsThisFrame = new List<Light>();
 
         private int screenWidthTiles = 15; // How many tiles around us do we draw?
         private int screenHeightTiles = 12;
@@ -120,7 +121,7 @@ namespace SS3D.States
             prg.mNetworkMgr.MessageArrived -= new NetworkMsgHandler(mNetworkMgr_MessageArrived);
         }
 
-        public override void Update(long _frameTime)
+        public override void Update( FrameEventArgs e )
         {
             lastUpdate = now;
             now = DateTime.Now;
@@ -206,10 +207,11 @@ namespace SS3D.States
          * and the atoms. Next we find all the atoms in view and draw them. Lastly we draw the top section of walls as they will
          * always be on top of us and atoms.
          * */
-        public override void GorgonRender()
+        public override void GorgonRender(FrameEventArgs e)
         {
 
             Gorgon.Screen.Clear(System.Drawing.Color.Black);
+
             if (playerController.controlledAtom != null)
             {
                 System.Drawing.Point centerTile = map.GetTileArrayPositionFromWorldPosition(playerController.controlledAtom.position);
@@ -227,15 +229,9 @@ namespace SS3D.States
                     map.compute_visibility(centerTile.X, centerTile.Y);
                     map.lastVisPoint = centerTile;
                 }
+
                 if (map.tileArray != null)
                 {
-                    for (int x = xStart; x < xEnd; x++)
-                    {
-                        for (int y = yStart; y < yEnd; y++)
-                        {
-                            map.tileArray[x, y].DoColour();
-                        }
-                    }
                     for (int x = xStart; x < xEnd; x++)
                     {
                         for (int y = yStart; y < yEnd; y++)
@@ -244,81 +240,18 @@ namespace SS3D.States
                             {
                                 if (y <= centerTile.Y)
                                 {
-                                    map.tileArray[x, y].Render(xTopLeft, yTopLeft, map.tileSpacing, lighting);
+                                    map.tileArray[x, y].Render(xTopLeft, yTopLeft, map.tileSpacing, lightsLastFrame);
                                 }
                             }
                             else
                             {
-                                float lightStr = 150f; //TESTING
-                                float Dist;
-                                float intensity;
-                                Vector2D screenAdjust = new Vector2D(xTopLeft, yTopLeft);
-
-                                //float intensityUL = 0;
-                                //float intensityUR = 0;
-                                //float intensityLL = 0;
-                                //float intensityLR = 0;
-
-                                map.tileArray[x, y].sprite.SetSpriteVertexColor(VertexLocations.UpperLeft, System.Drawing.Color.Black);
-                                map.tileArray[x, y].sprite.SetSpriteVertexColor(VertexLocations.UpperRight, System.Drawing.Color.Black);
-                                map.tileArray[x, y].sprite.SetSpriteVertexColor(VertexLocations.LowerLeft, System.Drawing.Color.Black);
-                                map.tileArray[x, y].sprite.SetSpriteVertexColor(VertexLocations.LowerRight, System.Drawing.Color.Black);
-
-                                //foreach(Atom.Atom light in light_test_list)
-                                //{
-
-                                //    Vector2D ULvert = map.tileArray[x, y].sprite.GetSpriteVertexPosition(VertexLocations.UpperLeft);
-                                //    Dist = (ULvert - (light.position - screenAdjust)).Length;
-                                //    intensityUL += Math.Max(lightStr - Math.Min(Dist, 254f), 0f);
-                                //    intensityUL = Math.Min(intensityUL, 254);
-                                //    map.tileArray[x, y].sprite.SetSpriteVertexColor(VertexLocations.UpperLeft, System.Drawing.Color.FromArgb((int)intensityUL, (int)intensityUL, (int)intensityUL));
-
-                                //    Vector2D URvert = map.tileArray[x, y].sprite.GetSpriteVertexPosition(VertexLocations.UpperRight);
-                                //    Dist = (URvert - (light.position - screenAdjust)).Length;
-                                //    intensityUR += Math.Max(lightStr - Math.Min(Dist, 254f), 0f);
-                                //    intensityUR = Math.Min(intensityUR, 254);
-                                //    map.tileArray[x, y].sprite.SetSpriteVertexColor(VertexLocations.UpperRight, System.Drawing.Color.FromArgb((int)intensityUR, (int)intensityUR, (int)intensityUR));
-
-                                //    Vector2D LLvert = map.tileArray[x, y].sprite.GetSpriteVertexPosition(VertexLocations.LowerLeft);
-                                //    Dist = (LLvert - (light.position - screenAdjust)).Length;
-                                //    intensityLL += Math.Max(lightStr - Math.Min(Dist, 254f), 0f);
-                                //    intensityLL = Math.Min(intensityLL, 254);
-                                //    map.tileArray[x, y].sprite.SetSpriteVertexColor(VertexLocations.LowerLeft, System.Drawing.Color.FromArgb((int)intensityLL, (int)intensityLL, (int)intensityLL));
-
-                                //    Vector2D LRvert = map.tileArray[x, y].sprite.GetSpriteVertexPosition(VertexLocations.LowerRight);
-                                //    Dist = (LRvert - (light.position - screenAdjust)).Length;
-                                //    intensityLR += Math.Max(lightStr - Math.Min(Dist, 254f), 0f);
-                                //    intensityLR = Math.Min(intensityLR, 254);
-                                //    map.tileArray[x, y].sprite.SetSpriteVertexColor(VertexLocations.LowerRight, System.Drawing.Color.FromArgb((int)intensityLR, (int)intensityLR, (int)intensityLR));
-                                //}
-
-                                Vector2D ULvert = map.tileArray[x, y].sprite.GetSpriteVertexPosition(VertexLocations.UpperLeft);
-                                Dist = (ULvert - (playerController.controlledAtom.position - screenAdjust)).Length;
-                                intensity = Math.Max(lightStr - Math.Min(Dist, 254f), 1f);
-                                map.tileArray[x, y].sprite.SetSpriteVertexColor(VertexLocations.UpperLeft, System.Drawing.Color.FromArgb((int)intensity, (int)intensity, (int)intensity));
-
-                                Vector2D URvert = map.tileArray[x, y].sprite.GetSpriteVertexPosition(VertexLocations.UpperRight);
-                                Dist = (URvert - (playerController.controlledAtom.position - screenAdjust)).Length;
-                                intensity = Math.Max(lightStr - Math.Min(Dist, 254f), 1f);
-                                map.tileArray[x, y].sprite.SetSpriteVertexColor(VertexLocations.UpperRight, System.Drawing.Color.FromArgb((int)intensity, (int)intensity, (int)intensity));
-
-                                Vector2D LLvert = map.tileArray[x, y].sprite.GetSpriteVertexPosition(VertexLocations.LowerLeft);
-                                Dist = (LLvert - (playerController.controlledAtom.position - screenAdjust)).Length;
-                                intensity = Math.Max(lightStr - Math.Min(Dist, 254f), 1f);
-                                map.tileArray[x, y].sprite.SetSpriteVertexColor(VertexLocations.LowerLeft, System.Drawing.Color.FromArgb((int)intensity, (int)intensity, (int)intensity));
-
-                                Vector2D LRvert = map.tileArray[x, y].sprite.GetSpriteVertexPosition(VertexLocations.LowerRight);
-                                Dist = (LRvert - (playerController.controlledAtom.position - screenAdjust)).Length;
-                                intensity = Math.Max(lightStr - Math.Min(Dist, 254f), 1f);
-                                map.tileArray[x, y].sprite.SetSpriteVertexColor(VertexLocations.LowerRight, System.Drawing.Color.FromArgb((int)intensity, (int)intensity, (int)intensity)); //TESTING
-
-                                map.tileArray[x, y].Render(xTopLeft, yTopLeft, map.tileSpacing, false);
+                                map.tileArray[x, y].Render(xTopLeft, yTopLeft, map.tileSpacing, lightsLastFrame);
                             }
                         }
                     }
                 }
 
-                light_test_list.Clear(); //TESTING
+                lightsThisFrame.Clear();
 
                 if (atomManager != null)
                 {
@@ -331,8 +264,8 @@ namespace SS3D.States
 
                     foreach (Atom.Atom a in atoms)
                     {
-                        if (a.light_test) light_test_list.Add(a);
-                        a.Render(xTopLeft, yTopLeft, lighting);
+                        if (a.light != null) lightsThisFrame.Add(a.light);
+                        a.Render(xTopLeft, yTopLeft, lightsLastFrame);
                     }
                 }
 
@@ -344,13 +277,13 @@ namespace SS3D.States
                         {
                             if (map.tileArray[x, y].tileType == TileType.Wall)
                             {
-                                map.tileArray[x, y].RenderTop(xTopLeft, yTopLeft, map.tileSpacing, lighting);
+                                map.tileArray[x, y].RenderTop(xTopLeft, yTopLeft, map.tileSpacing, lightsLastFrame);
                             }
                         }
                     }
                 }
 
-
+                lightsLastFrame = lightsThisFrame;
             }
             return;
         }
@@ -361,22 +294,6 @@ namespace SS3D.States
             scaleX = (float)Gorgon.CurrentClippingViewport.Width / (realScreenWidthTiles * map.tileSpacing);
             scaleY = (float)Gorgon.CurrentClippingViewport.Height / (realScreenHeightTiles * map.tileSpacing);
             screenSize = new System.Drawing.Point(Gorgon.CurrentClippingViewport.Width, Gorgon.CurrentClippingViewport.Height);
-        }
-
-        public System.Drawing.Color Blend(System.Drawing.Color color, System.Drawing.Color backColor, double amount)
-        {
-            byte r = (byte)((color.R * amount) + (backColor.R * amount));
-            byte g = (byte)((color.G * amount) + (backColor.G * amount));
-            byte b = (byte)((color.B * amount) + (backColor.B * amount));
-            return System.Drawing.Color.FromArgb(r, g, b);
-        }
-
-        public System.Drawing.Color Add(System.Drawing.Color color, System.Drawing.Color color2, double amount)
-        {
-            byte r = (byte)(color.R + (color2.R * amount));
-            byte g = (byte)(color.G + (color2.G * amount));
-            byte b = (byte)(color.B + (color2.B * amount));
-            return System.Drawing.Color.FromArgb(r, g, b);
         }
 
         #region Input

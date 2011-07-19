@@ -45,11 +45,6 @@ namespace SS3D.Atom.Object.Door
                     break;
             }
             atomManager.gameState.map.GetTileAt(position).sightBlocked = visible;
-            List<Light> lights = atomManager.gameState.map.GetTileAt(position).lights.ToList();
-            foreach (Light l in lights)
-            {
-                l.UpdateLight();
-            }
             atomManager.gameState.map.needVisUpdate = true;
             updateRequired = true;
         }

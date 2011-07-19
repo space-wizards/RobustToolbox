@@ -5,6 +5,7 @@ using System.Text;
 using System.Drawing;
 using GorgonLibrary;
 using GorgonLibrary.Graphics;
+using SS3D.Modules;
 
 namespace SS3D.Tiles.Wall
 {
@@ -20,39 +21,25 @@ namespace SS3D.Tiles.Wall
             sideSprite = _side;
         }
 
-        public override void Render(float xTopLeft, float yTopLeft, int tileSpacing, bool lighting)
+        public override void Render(float xTopLeft, float yTopLeft, int tileSpacing, List<Light> lights)
         {
             if (Visible && ((surroundDirs&4) == 0))
             {
                 sideSprite.SetPosition(tilePosition.X * tileSpacing - xTopLeft, tilePosition.Y * tileSpacing - yTopLeft);
-                if (!lighting)
-                {
-                    sideSprite.Color = Color.White;
-                }
-                else
-                {
-                    sideSprite.Color = color;
-                    ShadeCorners(sideSprite);
-                }
+                sideSprite.Color = Color.White;
+                LightManager.Singleton.ApplyLightsToSprite(lights, sideSprite, new Vector2D(xTopLeft, yTopLeft));
                 sideSprite.Draw();
             }
         }
 
-        public override void RenderTop(float xTopLeft, float yTopLeft, int tileSpacing, bool lighting)
+        public override void RenderTop(float xTopLeft, float yTopLeft, int tileSpacing, List<Light> lights)
         {
             if (Visible)
             {
                 sprite.SetPosition(tilePosition.X * tileSpacing - xTopLeft, tilePosition.Y * tileSpacing - yTopLeft);
                 sprite.Position -= new Vector2D(0, tileSpacing);
-                if (!lighting)
-                {
-                    sprite.Color = Color.White;
-                }
-                else
-                {
-                    sprite.Color = color;
-                    ShadeCorners(sprite);
-                }
+                sprite.Color = Color.White;
+                LightManager.Singleton.ApplyLightsToSprite(lights, sprite, new Vector2D(xTopLeft, yTopLeft));
                 sprite.Draw();
             }
         }

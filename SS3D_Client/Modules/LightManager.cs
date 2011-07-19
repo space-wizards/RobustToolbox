@@ -136,23 +136,27 @@ namespace SS3D.Modules
 
             foreach (Light currentLight in lights)
             {
+                //Calculate light color incident on tile
                 var ll = CalculateVertexLight(sprite, currentLight, VertexLocations.LowerLeft, screenOffset);
-                LLIntensity += ll.Length;
-                lightInfo.VertexColLowerLeft += SquareVertexLight(ll);
                 var lr = CalculateVertexLight(sprite, currentLight, VertexLocations.LowerRight, screenOffset);
-                LRIntensity += lr.Length;
-                lightInfo.VertexColLowerRight += SquareVertexLight(lr);
                 var ul = CalculateVertexLight(sprite, currentLight, VertexLocations.UpperLeft, screenOffset);
-                ULIntensity += ul.Length;
-                lightInfo.VertexColUpperLeft += SquareVertexLight(ul);
                 var ur = CalculateVertexLight(sprite, currentLight, VertexLocations.UpperRight, screenOffset);
-                URIntensity += ur.Length;
+                // Add the squared values to the compiled lightinfo values 
+                lightInfo.VertexColLowerLeft += SquareVertexLight(ll);
+                lightInfo.VertexColLowerRight += SquareVertexLight(lr);
+                lightInfo.VertexColUpperLeft += SquareVertexLight(ul);
                 lightInfo.VertexColUpperRight += SquareVertexLight(ur);
+                // Add intensity of light to the pile
+                LLIntensity += ll.Length;
+                LRIntensity += lr.Length;
+                ULIntensity += ul.Length;
+                URIntensity += ur.Length;
             }
-            LLIntensity = (float)Math.Sqrt(Math.Pow(LLIntensity, 2) / 3);
-            LRIntensity = (float)Math.Sqrt(Math.Pow(LRIntensity, 2) / 3);
-            ULIntensity = (float)Math.Sqrt(Math.Pow(ULIntensity, 2) / 3);
-            URIntensity = (float)Math.Sqrt(Math.Pow(URIntensity, 2) / 3);
+            //Munge intensity down
+            LLIntensity = (float)(LLIntensity / 1.73205081); // ALGEBRA - REPLACES (float)Math.Sqrt(Math.Pow(LLIntensity, 2) / 3);
+            LRIntensity = (float)(LRIntensity / 1.73205081);
+            ULIntensity = (float)(ULIntensity / 1.73205081);
+            URIntensity = (float)(URIntensity / 1.73205081);
             lightInfo.VertexColLowerLeft = SqrtVertexLight(lightInfo.VertexColLowerLeft); 
             lightInfo.VertexColLowerRight = SqrtVertexLight(lightInfo.VertexColLowerRight); 
             lightInfo.VertexColUpperLeft = SqrtVertexLight(lightInfo.VertexColUpperLeft);

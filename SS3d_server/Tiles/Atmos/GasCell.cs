@@ -31,6 +31,7 @@ namespace SS3d_server.Tiles.Atmos
         public Vector2 NextGasVel;
         public Dictionary<GasType, double> gasses;
         public Dictionary<GasType, double> nextGasses;
+        public Dictionary<GasType, double> lastSentGasses;
         
         //Constants
         double SourceDamping = .5;
@@ -58,12 +59,14 @@ namespace SS3d_server.Tiles.Atmos
         {
             gasses = new Dictionary<GasType, double>();
             nextGasses = new Dictionary<GasType, double>();
+            lastSentGasses = new Dictionary<GasType, double>();
             
             var gastypes = Enum.GetValues(typeof(GasType));
             foreach (GasType g in gastypes)
             {
                 gasses.Add(g, 0);
                 nextGasses.Add(g, 0);
+                lastSentGasses.Add(g, 0);
             }
             AddGas(20, GasType.Oxygen);
         }
@@ -279,18 +282,20 @@ namespace SS3d_server.Tiles.Atmos
             uint amount;
             uint type;
             //Water vapor
-            if (gasses[GasType.WVapor] > 10)
+            if (gasses[GasType.WVapor] > 10 && checkUpdateThreshold(GasType.WVapor))
             {
                 amount = (uint)normalizeGasAmount(gasses[GasType.WVapor]);
                 type = (uint)GasType.WVapor << 4;
                 displayBytes.Add((byte)(amount | type));
+                lastSentGasses[GasType.WVapor] = gasses[GasType.WVapor]; //Store the last quantity we sent.
             }
             //Toxins
-            if (gasses[GasType.Toxin] > 10)
+            if (gasses[GasType.Toxin] > 10 && checkUpdateThreshold(GasType.Toxin))
             {
                 amount = (uint)normalizeGasAmount(gasses[GasType.Toxin]);
                 type = (uint)GasType.Toxin << 4;
                 displayBytes.Add((byte)(amount | type));
+                lastSentGasses[GasType.Toxin] = gasses[GasType.Toxin];
             }
             //Generic high-pressure gas
             if(GasVel.Magnitude > 10)
@@ -306,6 +311,14 @@ namespace SS3d_server.Tiles.Atmos
 
             
             return displays;
+        }
+
+        private bool checkUpdateThreshold(GasType g, double multiplier = 1)
+        {
+            //If the delta since the last update was sent is greater than 10, send another update.
+            if(Math.Abs(normalizeGasAmount(gasses[g], multiplier) - normalizeGasAmount(lastSentGasses[g], multiplier)) >= 10)
+                return true;
+            return false;
         }
 
         /// <summary>

@@ -10,6 +10,7 @@ using Lidgren.Network;
 using GorgonLibrary;
 using GorgonLibrary.Graphics;
 using GorgonLibrary.InputDevices;
+using SS3D.Modules;
 
 namespace SS3D.Atom
 {
@@ -19,7 +20,7 @@ namespace SS3D.Atom
         // GRAPHICS
         public bool updateRequired = false;
         public bool drawn = false;
-        public bool light_test = false; //TESTING
+        public Light light;
 
         //SPRITE
         public Sprite sprite;
@@ -315,7 +316,7 @@ namespace SS3D.Atom
 
         #endregion
 
-        public virtual void Render(float xTopLeft, float yTopLeft, bool lighting)
+        public virtual void Render(float xTopLeft, float yTopLeft, List<Light> lights)
         {
             System.Drawing.Point tilePos = atomManager.gameState.map.GetTileArrayPositionFromWorldPosition(position);
             sprite.SetPosition(position.X - xTopLeft, position.Y - yTopLeft);
@@ -323,30 +324,9 @@ namespace SS3D.Atom
             {
                 if (atomManager.gameState.map.tileArray[tilePos.X, tilePos.Y].Visible && visible)
                 {
-                    if (atomManager.gameState.map.tileArray[tilePos.X, tilePos.Y].lights.Count > 0)
-                    {
-                        if (lighting)
-                        {
-                            sprite.Color = atomManager.gameState.map.tileArray[tilePos.X, tilePos.Y].color;
-                        }
-                        else
-                        {
-                            sprite.Color = System.Drawing.Color.White;
-                        }
-                        sprite.Draw();
-                    }
-                    else
-                    {
-                        if (lighting)
-                        {
-                            sprite.Color = System.Drawing.Color.Black;
-                        }
-                        else
-                        {
-                            sprite.Color = System.Drawing.Color.White;
-                        }
-                        sprite.Draw();
-                    }
+                    sprite.Color = System.Drawing.Color.White;
+                    LightManager.Singleton.ApplyLightsToSprite(lights, sprite, new Vector2D(xTopLeft, yTopLeft));
+                    sprite.Draw();
                 }
             }
         }

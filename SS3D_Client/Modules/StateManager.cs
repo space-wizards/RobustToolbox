@@ -7,6 +7,7 @@ using Miyagi;
 using Lidgren.Network;
 using SS3D.Modules.Network;
 using GorgonLibrary;
+using GorgonLibrary.Graphics;
 using GorgonLibrary.InputDevices;
 
 namespace SS3D.Modules
@@ -135,7 +136,7 @@ namespace SS3D.Modules
     #endregion
 
     #region Updates & Statechanges
-    public void Update(long _frameTime)
+    public void Update( FrameEventArgs e )
     {
         // check if a state change was requested
         if (mNewState != null)
@@ -162,8 +163,8 @@ namespace SS3D.Modules
         // if a state is active, update the active state
         if (mCurrentState != null)
         {
-            mCurrentState.Update(_frameTime);
-            mCurrentState.GorgonRender();
+            mCurrentState.Update( e );
+            mCurrentState.GorgonRender( e );
         }
     }
 

@@ -98,7 +98,7 @@ namespace SS3D.States
 
         }
 
-        public override void Update(long _frameTime)
+        public override void Update(FrameEventArgs e)
         {
             if (connecting)
             {
@@ -117,7 +117,7 @@ namespace SS3D.States
         }
         #endregion
 
-        public override void GorgonRender()
+        public override void GorgonRender(FrameEventArgs e)
         {
             Gorgon.Screen.Clear(System.Drawing.Color.Black);
             DrawStars(3, (float)Gorgon.FrameStats.FrameDrawTime / 2000);

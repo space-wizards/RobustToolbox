@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using GorgonLibrary;
+using GorgonLibrary.Graphics;
 using GorgonLibrary.InputDevices;
 
 namespace SS3D.Modules
@@ -20,8 +21,8 @@ namespace SS3D.Modules
 
     public abstract void Shutdown();
 
-    public abstract void Update( long _frameTime );
-    public abstract void GorgonRender();
+    public abstract void Update( FrameEventArgs e );
+    public abstract void GorgonRender( FrameEventArgs e );
 
       //GORGON
     public abstract void KeyDown(KeyboardInputEventArgs e);

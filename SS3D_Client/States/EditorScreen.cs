@@ -24,6 +24,7 @@ using Miyagi.Common.Events;
 using Miyagi.TwoD;
 
 using GorgonLibrary;
+using GorgonLibrary.Graphics;
 using GorgonLibrary.InputDevices;
 
 namespace SS3D.States
@@ -129,7 +130,7 @@ namespace SS3D.States
                 mEngine.SceneMgr.DestroySceneNode(gridNode);*/
         }
 
-        public override void Update(long _frameTime)
+        public override void Update(FrameEventArgs e)
         {
 
             if (!isBusy)
@@ -155,9 +156,8 @@ namespace SS3D.States
         {
             throw new NotImplementedException();
         }
-        public override void GorgonRender()
+        public override void GorgonRender(FrameEventArgs e)
         {
-
             return;
         }
 
@@ -226,125 +226,125 @@ namespace SS3D.States
             mStateMgr = _mgr;
             editorState = editScreen;
 
-            this.loadPanel = new Panel("EditorLoadPanel")
-            {
-                Location = new Point(150, 150),
-                Size = new Size(236, 300),
-                ResizeMode = ResizeModes.None,
-                Movable = true,
-                BorderStyle =
-                {
-                    Thickness = new Thickness(3, 3, 3, 3)
-                },
-                Skin = MiyagiResources.Singleton.Skins["ConsolePanelSkin"]
-            };
-            this.Controls.Add(loadPanel);
+            //this.loadPanel = new Panel("EditorLoadPanel")
+            //{
+            //    Location = new Point(150, 150),
+            //    Size = new Size(236, 300),
+            //    ResizeMode = ResizeModes.None,
+            //    Movable = true,
+            //    BorderStyle =
+            //    {
+            //        Thickness = new Thickness(3, 3, 3, 3)
+            //    },
+            //    Skin = MiyagiResources.Singleton.Skins["ConsolePanelSkin"]
+            //};
+            //this.Controls.Add(loadPanel);
 
-            loadPanel.Controls.Add(new Label("EditorLoadPanelText")
-            {
-                Location = new Point(25, 0),
-                Size = new Size(180, 30),
-                Text = "Load Map",
-                HitTestVisible = false,
-                TextStyle = 
-                {
-                    Alignment = Alignment.MiddleCenter,
-                    ForegroundColour = Colours.Black
-                }
-            });
+            //loadPanel.Controls.Add(new Label("EditorLoadPanelText")
+            //{
+            //    Location = new Point(25, 0),
+            //    Size = new Size(180, 30),
+            //    Text = "Load Map",
+            //    HitTestVisible = false,
+            //    TextStyle = 
+            //    {
+            //        Alignment = Alignment.MiddleCenter,
+            //        ForegroundColour = Colours.Black
+            //    }
+            //});
 
-            this.filePanel = new Panel("EditorFilePanel")
-            {
-                Location = new Point(25, 30),
-                Size = new Size(180, 220),
-                ResizeMode = ResizeModes.None,
-                Skin = MiyagiResources.Singleton.Skins["ConsolePanelSkin"],
-                BorderStyle =
-                {
-                    Thickness = new Thickness(3, 3, 3, 3)
-                },
-                HScrollBarStyle =
-                {
-                    ShowButtons = false,
-                    Extent = 16,
-                    BorderStyle =
-                    {
-                        Thickness = new Thickness(2, 2, 2, 2)
-                    },
-                    ThumbStyle =
-                    {
-                        BorderStyle =
-                        {
-                            Thickness = new Thickness(2, 2, 2, 2)
-                        }
-                    }
-                },
-                VScrollBarStyle =
-                {
-                    ShowButtons = false,
-                    Extent = 16,
-                    BorderStyle =
-                    {
-                        Thickness = new Thickness(2, 2, 2, 2)
-                    },
-                    ThumbStyle =
-                    {
-                        BorderStyle =
-                        {
-                            Thickness = new Thickness(2, 2, 2, 2)
-                        }
-                    }
-                },
-            };
-            loadPanel.Controls.Add(filePanel);
+            //this.filePanel = new Panel("EditorFilePanel")
+            //{
+            //    Location = new Point(25, 30),
+            //    Size = new Size(180, 220),
+            //    ResizeMode = ResizeModes.None,
+            //    Skin = MiyagiResources.Singleton.Skins["ConsolePanelSkin"],
+            //    BorderStyle =
+            //    {
+            //        Thickness = new Thickness(3, 3, 3, 3)
+            //    },
+            //    HScrollBarStyle =
+            //    {
+            //        ShowButtons = false,
+            //        Extent = 16,
+            //        BorderStyle =
+            //        {
+            //            Thickness = new Thickness(2, 2, 2, 2)
+            //        },
+            //        ThumbStyle =
+            //        {
+            //            BorderStyle =
+            //            {
+            //                Thickness = new Thickness(2, 2, 2, 2)
+            //            }
+            //        }
+            //    },
+            //    VScrollBarStyle =
+            //    {
+            //        ShowButtons = false,
+            //        Extent = 16,
+            //        BorderStyle =
+            //        {
+            //            Thickness = new Thickness(2, 2, 2, 2)
+            //        },
+            //        ThumbStyle =
+            //        {
+            //            BorderStyle =
+            //            {
+            //                Thickness = new Thickness(2, 2, 2, 2)
+            //            }
+            //        }
+            //    },
+            //};
+            //loadPanel.Controls.Add(filePanel);
 
-            cancelButton = new Button("mapCancelLoadButton")
-            {
-                Size = new Size(80, 35),
-                Location = new Point(75, filePanel.Bottom + 5),
-                Text = "Cancel",
-                TextStyle =
-                {
-                    Alignment = Alignment.MiddleCenter,
-                    ForegroundColour = Colours.Black
-                },
-                Skin = MiyagiResources.Singleton.Skins["ButtonSkinGreen"]
-            };
-            cancelButton.Click += new EventHandler(cancelButton_Click);
-            loadPanel.Controls.Add(cancelButton);
+            //cancelButton = new Button("mapCancelLoadButton")
+            //{
+            //    Size = new Size(80, 35),
+            //    Location = new Point(75, filePanel.Bottom + 5),
+            //    Text = "Cancel",
+            //    TextStyle =
+            //    {
+            //        Alignment = Alignment.MiddleCenter,
+            //        ForegroundColour = Colours.Black
+            //    },
+            //    Skin = MiyagiResources.Singleton.Skins["ButtonSkinGreen"]
+            //};
+            //cancelButton.Click += new EventHandler(cancelButton_Click);
+            //loadPanel.Controls.Add(cancelButton);
 
             populateMapList();
         }
 
         private void populateMapList()
         {
-            if (filePanel == null) return;
+            //if (filePanel == null) return;
 
-            if (!Directory.Exists(@".\Maps"))//Create the folder if its not there.
-                Directory.CreateDirectory(@".\Maps");
+            //if (!Directory.Exists(@".\Maps"))//Create the folder if its not there.
+            //    Directory.CreateDirectory(@".\Maps");
 
-            string[] mapFiles = Directory.GetFiles(@".\Maps", "*.map"); //We want a list of all map files.
-            int currY = 0;
-            foreach (string currFile in mapFiles)
-            {
-                Button newButton = new Button("mapLoadButton" + currY.ToString())
-                {
-                    Size = new Size(130, 35),
-                    Location = new Point(0, currY),
-                    Text = Path.GetFileNameWithoutExtension(currFile),
-                    TextStyle =
-                    {
-                        Alignment = Alignment.MiddleCenter,
-                        ForegroundColour = Colours.Black
-                    },
-                    Skin = MiyagiResources.Singleton.Skins["ButtonSkinGreen"]
-                };
-                newButton.UserData = currFile; //The path to the file the button represents.
-                filePanel.Controls.Add(newButton);
+            //string[] mapFiles = Directory.GetFiles(@".\Maps", "*.map"); //We want a list of all map files.
+            //int currY = 0;
+            //foreach (string currFile in mapFiles)
+            //{
+            //    Button newButton = new Button("mapLoadButton" + currY.ToString())
+            //    {
+            //        Size = new Size(130, 35),
+            //        Location = new Point(0, currY),
+            //        Text = Path.GetFileNameWithoutExtension(currFile),
+            //        TextStyle =
+            //        {
+            //            Alignment = Alignment.MiddleCenter,
+            //            ForegroundColour = Colours.Black
+            //        },
+            //        Skin = MiyagiResources.Singleton.Skins["ButtonSkinGreen"]
+            //    };
+            //    newButton.UserData = currFile; //The path to the file the button represents.
+            //    filePanel.Controls.Add(newButton);
 
-                currY += newButton.Size.Height;
-                newButton.Click += new EventHandler(loadMapFile_Click);
-            }
+            //    currY += newButton.Size.Height;
+            //    newButton.Click += new EventHandler(loadMapFile_Click);
+            //}
         }
 
         void loadMapFile_Click(object sender, EventArgs e)
@@ -386,83 +386,83 @@ namespace SS3D.States
             mStateMgr = _mgr;
             editorState = editScreen;
 
-            this.toolbarPanel = new Panel("ToolbarPanel")
-            {
-                Location = new Point(0, 0),
-                //Size = new Size((int)mStateMgr.Engine.mWindow.Width, 50),
-                ResizeMode = ResizeModes.None,
-                Skin = MiyagiResources.Singleton.Skins["ConsolePanelSkin"]
-            };
+            //this.toolbarPanel = new Panel("ToolbarPanel")
+            //{
+            //    Location = new Point(0, 0),
+            //    //Size = new Size((int)mStateMgr.Engine.mWindow.Width, 50),
+            //    ResizeMode = ResizeModes.None,
+            //    Skin = MiyagiResources.Singleton.Skins["ConsolePanelSkin"]
+            //};
 
-            this.backButton = new Button("EditBackButton")
-            {
-                Size = new Size(80, 32),
-                //Location = new Point((int)mStateMgr.Engine.mWindow.Width - 90, 10),
-                Text = "Main Menu",
-                TextStyle =
-                {
-                    Alignment = Alignment.MiddleCenter,
-                    ForegroundColour = Colours.Black
-                },
-                Skin = MiyagiResources.Singleton.Skins["ButtonSkinGreen"]
-            };
-            backButton.Click += new EventHandler(backButton_Click);
+            //this.backButton = new Button("EditBackButton")
+            //{
+            //    Size = new Size(80, 32),
+            //    //Location = new Point((int)mStateMgr.Engine.mWindow.Width - 90, 10),
+            //    Text = "Main Menu",
+            //    TextStyle =
+            //    {
+            //        Alignment = Alignment.MiddleCenter,
+            //        ForegroundColour = Colours.Black
+            //    },
+            //    Skin = MiyagiResources.Singleton.Skins["ButtonSkinGreen"]
+            //};
+            //backButton.Click += new EventHandler(backButton_Click);
 
 
-            this.gridButton = new Button("EditGridButton")
-            {
-                Size = new Size(80, 32),
-                //Location = new Point((int)mStateMgr.Engine.mWindow.Width - 180, 10),
-                Text = "Grid",
-                TextStyle =
-                {
-                    Alignment = Alignment.MiddleCenter,
-                    ForegroundColour = Colours.Black
-                },
-                Skin = MiyagiResources.Singleton.Skins["ButtonSkinGreen"]
-            };
-            gridButton.Click += new EventHandler(gridButton_Click);
+            //this.gridButton = new Button("EditGridButton")
+            //{
+            //    Size = new Size(80, 32),
+            //    //Location = new Point((int)mStateMgr.Engine.mWindow.Width - 180, 10),
+            //    Text = "Grid",
+            //    TextStyle =
+            //    {
+            //        Alignment = Alignment.MiddleCenter,
+            //        ForegroundColour = Colours.Black
+            //    },
+            //    Skin = MiyagiResources.Singleton.Skins["ButtonSkinGreen"]
+            //};
+            //gridButton.Click += new EventHandler(gridButton_Click);
 
-            this.newButton = new Button("EditNewButton")
-            {
-                Size = new Size(80, 32),
-                Location = new Point(10, 10),
-                Text = "New",
-                TextStyle =
-                {
-                    Alignment = Alignment.MiddleCenter,
-                    ForegroundColour = Colours.Black
-                },
-                Skin = MiyagiResources.Singleton.Skins["ButtonSkinGreen"]
-            };
-            newButton.Click += new EventHandler(newButton_Click);
+            //this.newButton = new Button("EditNewButton")
+            //{
+            //    Size = new Size(80, 32),
+            //    Location = new Point(10, 10),
+            //    Text = "New",
+            //    TextStyle =
+            //    {
+            //        Alignment = Alignment.MiddleCenter,
+            //        ForegroundColour = Colours.Black
+            //    },
+            //    Skin = MiyagiResources.Singleton.Skins["ButtonSkinGreen"]
+            //};
+            //newButton.Click += new EventHandler(newButton_Click);
 
-            this.loadButton = new Button("EditLoadButton")
-            {
-                Size = new Size(80, 32),
-                Location = new Point(100, 10),
-                Text = "Load",
-                TextStyle =
-                {
-                    Alignment = Alignment.MiddleCenter,
-                    ForegroundColour = Colours.Black
-                },
-                Skin = MiyagiResources.Singleton.Skins["ButtonSkinGreen"]
-            };
-            loadButton.Click += new EventHandler(loadButton_Click);
+            //this.loadButton = new Button("EditLoadButton")
+            //{
+            //    Size = new Size(80, 32),
+            //    Location = new Point(100, 10),
+            //    Text = "Load",
+            //    TextStyle =
+            //    {
+            //        Alignment = Alignment.MiddleCenter,
+            //        ForegroundColour = Colours.Black
+            //    },
+            //    Skin = MiyagiResources.Singleton.Skins["ButtonSkinGreen"]
+            //};
+            //loadButton.Click += new EventHandler(loadButton_Click);
 
-            this.saveButton = new Button("EditSaveButton")
-            {
-                Size = new Size(80, 32),
-                Location = new Point(190, 10),
-                Text = "Save",
-                TextStyle =
-                {
-                    Alignment = Alignment.MiddleCenter,
-                    ForegroundColour = Colours.Black
-                },
-                Skin = MiyagiResources.Singleton.Skins["ButtonSkinGreen"]
-            };
+            //this.saveButton = new Button("EditSaveButton")
+            //{
+            //    Size = new Size(80, 32),
+            //    Location = new Point(190, 10),
+            //    Text = "Save",
+            //    TextStyle =
+            //    {
+            //        Alignment = Alignment.MiddleCenter,
+            //        ForegroundColour = Colours.Black
+            //    },
+            //    Skin = MiyagiResources.Singleton.Skins["ButtonSkinGreen"]
+            //};
             saveButton.Click += new EventHandler(saveButton_Click);
 
             this.PopupOrientation = Orientation.Vertical;
@@ -548,58 +548,58 @@ namespace SS3D.States
             mStateMgr = _mgr;
             editorState = editScreen;
 
-            this.BackgroundPanel = new Panel("EditorStatusBackground")
-            {
-                //Location = new Point(0, (int)mStateMgr.Engine.mWindow.Height - 35),
-                //Size = new Size((int)mStateMgr.Engine.mWindow.Width, 35),
-                ResizeMode = ResizeModes.None,
-                HitTestVisible = true,
-                Movable = false,
-                Skin = MiyagiResources.Singleton.Skins["ConsolePanelSkin"]
-            };
-            this.Controls.Add(BackgroundPanel);
+            //this.BackgroundPanel = new Panel("EditorStatusBackground")
+            //{
+            //    //Location = new Point(0, (int)mStateMgr.Engine.mWindow.Height - 35),
+            //    //Size = new Size((int)mStateMgr.Engine.mWindow.Width, 35),
+            //    ResizeMode = ResizeModes.None,
+            //    HitTestVisible = true,
+            //    Movable = false,
+            //    Skin = MiyagiResources.Singleton.Skins["ConsolePanelSkin"]
+            //};
+            //this.Controls.Add(BackgroundPanel);
 
-            StatusTextLabel = new Label("EditorStatusTextLabel")
-            {
-                Location = new Point(0, 3),
-                Size = new Size(180, 30),
-                Text = "[Status]",
-                HitTestVisible = false,
-                TextStyle =
-                {
-                    Alignment = Alignment.MiddleCenter,
-                    ForegroundColour = Colours.White,
-                },
-                TextureFiltering = TextureFiltering.Anisotropic,
-            };
-            BackgroundPanel.Controls.Add(StatusTextLabel);
+            //StatusTextLabel = new Label("EditorStatusTextLabel")
+            //{
+            //    Location = new Point(0, 3),
+            //    Size = new Size(180, 30),
+            //    Text = "[Status]",
+            //    HitTestVisible = false,
+            //    TextStyle =
+            //    {
+            //        Alignment = Alignment.MiddleCenter,
+            //        ForegroundColour = Colours.White,
+            //    },
+            //    TextureFiltering = TextureFiltering.Anisotropic,
+            //};
+            //BackgroundPanel.Controls.Add(StatusTextLabel);
 
-            StatusProgressBar = new ProgressBar("EditorStatusProgressBar")
-            {
-                Location = new Point(180, 3),
-                Size = new Size(300, 30),
-                ProgressBarStyle = 
-                {
-                    Orientation = Orientation.Horizontal,
-                    Mode = ProgressBarMode.Continuous, 
-                    Offset = new Point(1,1)
-                }, 
-                Text = "0%",
-                Max = 100,
-                Min = 0,
-                HitTestVisible = false,
-                BorderStyle =
-                {
-                    Thickness = new Thickness(3, 3, 3, 3)
-                },
-                TextStyle =
-                {
-                    Alignment = Alignment.MiddleCenter,
-                    ForegroundColour = Colours.White
-                },
-                TextureFiltering = TextureFiltering.Anisotropic,
-                Skin = MiyagiResources.Singleton.Skins["ProgressBarHSkin"]
-            };
+            //StatusProgressBar = new ProgressBar("EditorStatusProgressBar")
+            //{
+            //    Location = new Point(180, 3),
+            //    Size = new Size(300, 30),
+            //    ProgressBarStyle = 
+            //    {
+            //        Orientation = Orientation.Horizontal,
+            //        Mode = ProgressBarMode.Continuous, 
+            //        Offset = new Point(1,1)
+            //    }, 
+            //    Text = "0%",
+            //    Max = 100,
+            //    Min = 0,
+            //    HitTestVisible = false,
+            //    BorderStyle =
+            //    {
+            //        Thickness = new Thickness(3, 3, 3, 3)
+            //    },
+            //    TextStyle =
+            //    {
+            //        Alignment = Alignment.MiddleCenter,
+            //        ForegroundColour = Colours.White
+            //    },
+            //    TextureFiltering = TextureFiltering.Anisotropic,
+            //    Skin = MiyagiResources.Singleton.Skins["ProgressBarHSkin"]
+            //};
             BackgroundPanel.Controls.Add(StatusProgressBar);
         }
     }
@@ -624,64 +624,64 @@ namespace SS3D.States
             mStateMgr = _mgr;
             editorState = editScreen;
 
-            this.newPanel = new Panel("EditorNewPanel")
-            {
-                Location = new Point(150, 150),
-                Size = new Size(236, 300),
-                ResizeMode = ResizeModes.None,
-                Movable = true,
-                BorderStyle =
-                {
-                    Thickness = new Thickness(3, 3, 3, 3)
-                },
-                Skin = MiyagiResources.Singleton.Skins["ConsolePanelSkin"]
-            };
-            this.Controls.Add(newPanel);
+            //this.newPanel = new Panel("EditorNewPanel")
+            //{
+            //    Location = new Point(150, 150),
+            //    Size = new Size(236, 300),
+            //    ResizeMode = ResizeModes.None,
+            //    Movable = true,
+            //    BorderStyle =
+            //    {
+            //        Thickness = new Thickness(3, 3, 3, 3)
+            //    },
+            //    Skin = MiyagiResources.Singleton.Skins["ConsolePanelSkin"]
+            //};
+            //this.Controls.Add(newPanel);
 
-            this.sliderHeight = new Slider("SliderHeight")
-            {
-                Location = new Point(5,40),
-                Size = new Size(newPanel.Size.Width - 10, 30),
-                /*LargeChange = editorState.currentMap.StaticGeoSize,
-                SmallChange = editorState.currentMap.StaticGeoSize,
-                Max = editorState.currentMap.StaticGeoSize * maxSize,
-                Min = editorState.currentMap.StaticGeoSize,*/
-                ThumbStyle =
-                {
-                    BorderStyle =
-                    {
-                        Thickness = new Thickness(2, 2, 2, 2)
-                    }
-                }, 
-                Skin = MiyagiResources.Singleton.Skins["SliderSkin"]
-            };
+            //this.sliderHeight = new Slider("SliderHeight")
+            //{
+            //    Location = new Point(5,40),
+            //    Size = new Size(newPanel.Size.Width - 10, 30),
+            //    /*LargeChange = editorState.currentMap.StaticGeoSize,
+            //    SmallChange = editorState.currentMap.StaticGeoSize,
+            //    Max = editorState.currentMap.StaticGeoSize * maxSize,
+            //    Min = editorState.currentMap.StaticGeoSize,*/
+            //    ThumbStyle =
+            //    {
+            //        BorderStyle =
+            //        {
+            //            Thickness = new Thickness(2, 2, 2, 2)
+            //        }
+            //    }, 
+            //    Skin = MiyagiResources.Singleton.Skins["SliderSkin"]
+            //};
 
-            newPanel.Controls.Add(new Label("EditorNewPanelText")
-            { 
-                Location = new Point(25, 0),
-                Size = new Size(180, 30),
-                Text = "Create Map",
-                HitTestVisible = false,
-                TextStyle =
-                {
-                    Alignment = Alignment.MiddleCenter,
-                    ForegroundColour = Colours.Black
-                },
-            });
+            //newPanel.Controls.Add(new Label("EditorNewPanelText")
+            //{ 
+            //    Location = new Point(25, 0),
+            //    Size = new Size(180, 30),
+            //    Text = "Create Map",
+            //    HitTestVisible = false,
+            //    TextStyle =
+            //    {
+            //        Alignment = Alignment.MiddleCenter,
+            //        ForegroundColour = Colours.Black
+            //    },
+            //});
 
-            cancelButton = new Button("mapCancelLoadButton")
-            {
-                Size = new Size(80, 35),
-                Location = new Point(75, newPanel.Bottom + 5),
-                Text = "Cancel",
-                TextStyle =
-                {
-                    Alignment = Alignment.MiddleCenter,
-                    ForegroundColour = Colours.Black
-                },
-                Skin = MiyagiResources.Singleton.Skins["ButtonSkinGreen"]
-            };
-            newPanel.Controls.Add(cancelButton);
+            //cancelButton = new Button("mapCancelLoadButton")
+            //{
+            //    Size = new Size(80, 35),
+            //    Location = new Point(75, newPanel.Bottom + 5),
+            //    Text = "Cancel",
+            //    TextStyle =
+            //    {
+            //        Alignment = Alignment.MiddleCenter,
+            //        ForegroundColour = Colours.Black
+            //    },
+            //    Skin = MiyagiResources.Singleton.Skins["ButtonSkinGreen"]
+            //};
+            //newPanel.Controls.Add(cancelButton);
         }
     }
 }

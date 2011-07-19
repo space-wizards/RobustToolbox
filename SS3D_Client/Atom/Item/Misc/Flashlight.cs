@@ -4,17 +4,15 @@ using System.Linq;
 using System.Text;
 using System.Drawing;
 using GorgonLibrary;
+using SS3D.Modules;
 
 namespace SS3D.Atom.Item.Misc
 {
     public class Flashlight : Item
     {
-        public Light light;
-
         public Flashlight()
             : base()
         {
-            light_test = true;
             spritename = "Flashlight.png";
         }
 
@@ -27,7 +25,7 @@ namespace SS3D.Atom.Item.Misc
             LightDirection d = (LightDirection)message.ReadByte();
             if (light == null)
             {
-                light = new Light(atomManager.gameState.map, Color.FromArgb(r, g, b), 0, LightState.On, atomManager.gameState.map.GetTileArrayPositionFromWorldPosition(position), d);
+                light = new Light(atomManager.gameState.map, Color.FromArgb(r, g, b), 190, LightState.On, atomManager.gameState.map.GetTileArrayPositionFromWorldPosition(position), d);
             }
             else
             {
@@ -48,7 +46,6 @@ namespace SS3D.Atom.Item.Misc
             {
                 light.UpdatePosition(position);
             }
-
         }
 
     }

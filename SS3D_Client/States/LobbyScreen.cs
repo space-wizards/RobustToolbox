@@ -20,6 +20,7 @@ using System.Collections.Generic;
 using System.Reflection;
 
 using GorgonLibrary;
+using GorgonLibrary.Graphics;
 using GorgonLibrary.InputDevices;
 
 namespace SS3D.States
@@ -119,7 +120,7 @@ namespace SS3D.States
                 SendLobbyChat(text);
             }
         }
-        public override void GorgonRender()
+        public override void GorgonRender(FrameEventArgs e)
         {
 
             return;
@@ -221,7 +222,7 @@ namespace SS3D.States
             prg.mNetworkMgr.MessageArrived -= new NetworkMsgHandler(mNetworkMgr_MessageArrived);
         }
 
-        public override void Update(long _frameTime)
+        public override void Update(FrameEventArgs e)
         {
         }
 

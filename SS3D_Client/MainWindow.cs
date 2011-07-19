@@ -106,7 +106,7 @@ namespace SS3D
             _skin = ResMgr.Singleton.GetGuiSkin("Interface1");
             _desktop = new Desktop(_input, _skin);
             _window = new GUIWindow("Window", Gorgon.Screen.Width / 4, Gorgon.Screen.Height / 4, Gorgon.Screen.Width - (Gorgon.Screen.Width / 4) * 2, Gorgon.Screen.Height - (Gorgon.Screen.Height / 4) * 2);
-            _desktop.Windows.Add(_window);
+            //_desktop.Windows.Add(_window);
             _window.Text = "This is a GUI window.";
 
             _desktop.ShowDesktopBackground = false;

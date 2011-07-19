@@ -42,8 +42,6 @@ namespace SS3D.Modules
 
     public class LightManager
     {
-        //Do range check on lights before applying them to sprite. if light range > some verts pos + 64(this would be the tile size) then its definitely out of range.
-
         private static LightManager singleton;
 
         public int ambientBrightness = 15;
@@ -118,10 +116,6 @@ namespace SS3D.Modules
             lightColor *= lightIntensity;
             lightColor += new Vector3D(light.brightness, light.brightness, light.brightness);
 
-            //lightColor.X.Clamp(0, 255);
-            //lightColor.Y.Clamp(0, 255); //Might want to remove those when clamping is done on the total of all lights.
-            //lightColor.Z.Clamp(0, 255);
-
             return lightColor;
         }
 
@@ -153,7 +147,7 @@ namespace SS3D.Modules
     {
         public System.Drawing.Color color = System.Drawing.Color.PapayaWhip;
         public int range = 150;
-        public int brightness = 25;
+        public int brightness = 35;
 
         public LightState state;
         public Vector2D position;

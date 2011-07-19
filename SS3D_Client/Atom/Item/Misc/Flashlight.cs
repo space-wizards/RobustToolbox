@@ -25,7 +25,7 @@ namespace SS3D.Atom.Item.Misc
             LightDirection d = (LightDirection)message.ReadByte();
             if (light == null)
             {
-                light = new Light(atomManager.gameState.map, Color.FromArgb(r, g, b), 180, LightState.On, atomManager.gameState.map.GetTileArrayPositionFromWorldPosition(position), d);
+                light = new Light(atomManager.gameState.map, Color.FromArgb(r, g, b), 190, LightState.On, atomManager.gameState.map.GetTileArrayPositionFromWorldPosition(position), d);
             }
             else
             {
@@ -46,7 +46,6 @@ namespace SS3D.Atom.Item.Misc
             {
                 light.UpdatePosition(position);
             }
-
         }
 
     }

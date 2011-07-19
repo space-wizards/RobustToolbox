@@ -132,15 +132,37 @@ namespace SS3D.Modules
 
             foreach (Light currentLight in lights)
             {
-                lightInfo.VertexColLowerLeft += CalculateVertexLight(sprite, currentLight, VertexLocations.LowerLeft, screenOffset);
-                lightInfo.VertexColLowerRight += CalculateVertexLight(sprite, currentLight, VertexLocations.LowerRight, screenOffset);
-                lightInfo.VertexColUpperLeft += CalculateVertexLight(sprite, currentLight, VertexLocations.UpperLeft, screenOffset);
-                lightInfo.VertexColUpperRight += CalculateVertexLight(sprite, currentLight, VertexLocations.UpperRight, screenOffset);
+                lightInfo.VertexColLowerLeft += SquareVertexLight(CalculateVertexLight(sprite, currentLight, VertexLocations.LowerLeft, screenOffset));
+                lightInfo.VertexColLowerRight += SquareVertexLight(CalculateVertexLight(sprite, currentLight, VertexLocations.LowerRight, screenOffset));
+                lightInfo.VertexColUpperLeft += SquareVertexLight(CalculateVertexLight(sprite, currentLight, VertexLocations.UpperLeft, screenOffset));
+                lightInfo.VertexColUpperRight += SquareVertexLight(CalculateVertexLight(sprite, currentLight, VertexLocations.UpperRight, screenOffset));
             }
+
+            lightInfo.VertexColLowerLeft = SqrtVertexLight(lightInfo.VertexColLowerLeft);
+            lightInfo.VertexColLowerRight = SqrtVertexLight(lightInfo.VertexColLowerRight);
+            lightInfo.VertexColUpperLeft = SqrtVertexLight(lightInfo.VertexColUpperLeft);
+            lightInfo.VertexColUpperRight = SqrtVertexLight(lightInfo.VertexColUpperRight);
 
             lightInfo.ClampByAmbient(ambientBrightness);
             ApplyDefinitionToSprite(sprite, lightInfo);
         }
+
+        public Vector3D SquareVertexLight(Vector3D lightColor)
+        {
+            lightColor.X *= lightColor.X;
+            lightColor.Y *= lightColor.Y;
+            lightColor.Z *= lightColor.Z;
+            return lightColor;
+        }
+
+        public Vector3D SqrtVertexLight(Vector3D lightColor)
+        {
+            lightColor.X = (float)Math.Sqrt(lightColor.X);
+            lightColor.Y = (float)Math.Sqrt(lightColor.Y);
+            lightColor.Z = (float)Math.Sqrt(lightColor.Z);
+            return lightColor;
+        }
+
     }
 
     public class Light

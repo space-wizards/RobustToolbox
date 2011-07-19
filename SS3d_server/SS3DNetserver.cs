@@ -578,7 +578,7 @@ namespace SS3d_server
                 t.Translate(new SS3D_shared.HelperClasses.Vector2(r.NextDouble() * map.GetMapWidth() * map.tileSpacing, r.NextDouble() * map.GetMapHeight() * map.tileSpacing));
             }
 
-            for (int i = 0; i < 10; i++)
+            for (int i = 0; i < 100; i++)
             {
                 f = (Atom.Item.Misc.Flashlight)atomManager.SpawnAtom("Atom.Item.Misc.Flashlight");
                 f.Translate(new SS3D_shared.HelperClasses.Vector2(r.NextDouble() * map.GetMapWidth() * map.tileSpacing, r.NextDouble() * map.GetMapHeight() * map.tileSpacing));

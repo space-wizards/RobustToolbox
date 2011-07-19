@@ -11,8 +11,8 @@ namespace SS3D.Tiles.Floor
 {
     public class Floor : Tile
     {
-        public Floor(Sprite _sprite, float size, Vector2D _position, Point _tilePosition)
-            : base(_sprite, size, _position, _tilePosition)
+        public Floor(Sprite _sprite, TileState state, float size, Vector2D _position, Point _tilePosition)
+            : base(_sprite, state, size, _position, _tilePosition)
         {
             tileType = TileType.Floor;
             name = "Floor";

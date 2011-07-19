@@ -328,9 +328,6 @@ namespace SS3d_server
                 case NetMessage.SendMap:
                     SendMap(msg.SenderConnection);
                     break;
-                case NetMessage.ChangeTile:
-                    HandleChangeTile(msg);
-                    break;
                 case NetMessage.LobbyChat:
                     HandleLobbyChat(msg);
                     break;
@@ -345,6 +342,9 @@ namespace SS3d_server
                     break;
                 case NetMessage.PlayerSessionMessage:
                     playerManager.HandleNetworkMessage(msg);
+                    break;
+                case NetMessage.MapMessage:
+                    map.HandleNetworkMessage(msg);
                     break;
                 default:
                     break;
@@ -391,7 +391,7 @@ namespace SS3d_server
             NetOutgoingMessage mapMessage = netServer.CreateMessage();
             mapMessage.Write((byte)NetMessage.SendMap);
 
-            TileType[,] mapObjectTypes = map.GetMapForSending();
+            //TileType[,] mapObjectTypes = map.GetMapForSending();
             int mapWidth = map.GetMapWidth();
             int mapHeight = map.GetMapHeight();
 
@@ -400,9 +400,11 @@ namespace SS3d_server
 
             for (int x = 0; x < mapWidth; x++)
             {
-                for (int z = 0; z < mapHeight; z++)
+                for (int y = 0; y < mapHeight; y++)
                 {
-                    mapMessage.Write((byte)mapObjectTypes[x, z]);
+                    Tiles.Tile t = map.GetTileAt(x, y);
+                    mapMessage.Write((byte)t.tileType);
+                    mapMessage.Write((byte)t.tileState);
                 }
             }
 
@@ -415,23 +417,10 @@ namespace SS3d_server
             //Todo: Preempt this with the lobby.
         }
 
-        public void HandleChangeTile(NetIncomingMessage msg)
-        {
-            Console.WriteLine(msg.SenderConnection.RemoteEndpoint.Address.ToString() + ": Tile Change Recieved");
- 
-            int x = msg.ReadInt32();
-            int z = msg.ReadInt32();
-            TileType newType = (TileType)msg.ReadByte();
-            if (map.ChangeTile(x, z, newType))
-            {
-                SendChangeTile(x, z, newType);
-            }
-        }
-
         public void SendChangeTile(int x, int z, TileType newType)
         {
             NetOutgoingMessage tileMessage = netServer.CreateMessage();
-            tileMessage.Write((byte)NetMessage.ChangeTile);
+            //tileMessage.Write((byte)NetMessage.ChangeTile);
             tileMessage.Write(x);
             tileMessage.Write(z);
             tileMessage.Write((byte)newType);
@@ -561,7 +550,10 @@ namespace SS3d_server
 
         public void AddRandomCrowbars()
         {
+            // this is just getting stupid now
             Atom.Item.Tool.Crowbar c;
+            Atom.Item.Tool.Welder g;
+            Atom.Item.Tool.Wrench e;
             Atom.Item.Container.Toolbox t;
             Atom.Object.Door.Door d;
             Atom.Item.Misc.Flashlight f;
@@ -571,6 +563,16 @@ namespace SS3d_server
             {
                 c = (Atom.Item.Tool.Crowbar)atomManager.SpawnAtom("Atom.Item.Tool.Crowbar");
                 c.Translate(new SS3D_shared.HelperClasses.Vector2(r.NextDouble() * map.GetMapWidth() * map.tileSpacing, r.NextDouble() * map.GetMapHeight() * map.tileSpacing));
+            }
+            for (int i = 0; i < 10; i++)
+            {
+                g = (Atom.Item.Tool.Welder)atomManager.SpawnAtom("Atom.Item.Tool.Welder");
+                g.Translate(new SS3D_shared.HelperClasses.Vector2(r.NextDouble() * map.GetMapWidth() * map.tileSpacing, r.NextDouble() * map.GetMapHeight() * map.tileSpacing));
+            }
+            for (int i = 0; i < 10; i++)
+            {
+                e = (Atom.Item.Tool.Wrench)atomManager.SpawnAtom("Atom.Item.Tool.Wrench");
+                e.Translate(new SS3D_shared.HelperClasses.Vector2(r.NextDouble() * map.GetMapWidth() * map.tileSpacing, r.NextDouble() * map.GetMapHeight() * map.tileSpacing));
             }
             for (int i = 0; i < 1; i++)
             {

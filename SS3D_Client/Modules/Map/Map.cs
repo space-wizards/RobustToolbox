@@ -4,6 +4,7 @@ using System.Text;
 using SS3D.HelperClasses;
 using SS3D_shared;
 using SS3D.Tiles;
+using Lidgren.Network;
 using GorgonLibrary;
 using GorgonLibrary.Graphics;
 
@@ -59,7 +60,7 @@ namespace SS3D.Modules.Map
 
         #region Startup / Loading
 
-        public bool LoadNetworkedMap(TileType[,] networkedArray, int _mapWidth, int _mapHeight)
+        public bool LoadNetworkedMap(TileType[,] networkedArray, TileState[,] networkedStates, int _mapWidth, int _mapHeight)
         {
            
             mapWidth = _mapWidth;
@@ -80,17 +81,17 @@ namespace SS3D.Modules.Map
                 {
                     int posX = x * tileSpacing;
                     int posY = y * tileSpacing;
-
+                    TileState state = networkedStates[x, y];
                     switch (networkedArray[x, y])
                     {
                         case TileType.Wall:
-                            tileArray[x, y] = GenerateNewTile(TileType.Wall, new Vector2D(posX, posY));
+                            tileArray[x, y] = GenerateNewTile(TileType.Wall,  state, new Vector2D(posX, posY));
                             break;
                         case TileType.Floor:
-                            tileArray[x, y] = GenerateNewTile(TileType.Floor, new Vector2D(posX, posY));
+                            tileArray[x, y] = GenerateNewTile(TileType.Floor, state, new Vector2D(posX, posY));
                             break;
                         case TileType.Space:
-                            tileArray[x, y] = GenerateNewTile(TileType.Space, new Vector2D(posX, posY));
+                            tileArray[x, y] = GenerateNewTile(TileType.Space, state, new Vector2D(posX, posY));
                             break;
                         default:
                             break;
@@ -133,6 +134,42 @@ namespace SS3D.Modules.Map
                 }
             }
             return true;
+        }
+
+        #endregion
+
+        #region Networking
+
+        public void HandleNetworkMessage(NetIncomingMessage message)
+        {
+            // We can only update tiles atm so lets just do that for now.
+            short x = message.ReadInt16();
+            short y = message.ReadInt16();
+            TileType type = (TileType)message.ReadByte();
+            TileState state = (TileState)message.ReadByte();
+
+            if (tileArray[x, y] == null)
+            {
+                GenerateNewTile(type, state, new Vector2D(x * tileSpacing, y * tileSpacing));
+            }
+            else
+            {
+                if (tileArray[x, y].tileType != type)
+                {
+                    Tile[] surroundTiles = tileArray[x, y].surroundingTiles;
+                    tileArray[x,y] = GenerateNewTile(type, state, new Vector2D(x * tileSpacing, y * tileSpacing));
+                    tileArray[x, y].surroundingTiles = surroundTiles;
+                    foreach (Tile T in tileArray[x, y].surroundingTiles)
+                    {
+                        T.surroundDirs = SetSprite(T.tilePosition.X, T.tilePosition.Y);
+                    }
+                    needVisUpdate = true;
+                }
+                else if (tileArray[x, y].tileState != state)
+                {
+                    tileArray[x, y].tileState = state;
+                }
+            }
         }
 
         #endregion
@@ -223,14 +260,14 @@ namespace SS3D.Modules.Map
             if (x > mapWidth || z > mapWidth)
                 return false;
             Vector2D pos = tileArray[x, z].position;
-            Tile tile = GenerateNewTile(newType, pos);
+            //Tile tile = GenerateNewTile(newType, pos);
 
-            if (tile == null)
+            /*if (tile == null)
             {
                 return false;
             }
 
-            tileArray[x, z] = tile;
+            tileArray[x, z] = tile;*/
             return true;
         }
 
@@ -240,7 +277,7 @@ namespace SS3D.Modules.Map
             return ChangeTile(pos, newType);
         }
 
-        public Tile GenerateNewTile(TileType type, Vector2D pos)
+        public Tile GenerateNewTile(TileType type, TileState state, Vector2D pos)
         {
             System.Drawing.Point p = new System.Drawing.Point();
             p.X = (int)Math.Floor(pos.X / tileSpacing);
@@ -248,11 +285,11 @@ namespace SS3D.Modules.Map
             switch (type)
             {
                 case TileType.Space:
-                    return new Tiles.Floor.Space(tileSprites["0"], tileSpacing, pos, p);
+                    return new Tiles.Floor.Space(tileSprites["0"], state, tileSpacing, pos, p);
                 case TileType.Floor:
-                    return new Tiles.Floor.Floor(tileSprites[floorSpriteName], tileSpacing, pos, p);
+                    return new Tiles.Floor.Floor(tileSprites[floorSpriteName], state, tileSpacing, pos, p);
                 case TileType.Wall:
-                    return new Tiles.Wall.Wall(tileSprites[wallTopSpriteName+"0"], tileSprites[wallSideSpriteName], tileSpacing, pos, p);
+                    return new Tiles.Wall.Wall(tileSprites[wallTopSpriteName+"0"], tileSprites[wallSideSpriteName], state, tileSpacing, pos, p);
                 default:
                     return null;
             }

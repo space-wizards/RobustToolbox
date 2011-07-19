@@ -10,8 +10,8 @@ namespace SS3D.Tiles.Floor
 {
     public class Space : Tile
     {
-        public Space(Sprite _sprite, float size, Vector2D _position, Point _tilePosition)
-            : base(_sprite, size, _position, _tilePosition)
+        public Space(Sprite _sprite, TileState state, float size, Vector2D _position, Point _tilePosition)
+            : base(_sprite, state, size, _position, _tilePosition)
         {
             tileType = TileType.Space;
             name = "Space";

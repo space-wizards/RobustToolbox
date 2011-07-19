@@ -12,8 +12,8 @@ namespace SS3D.Tiles.Wall
     public class Wall : Tile
     {
 
-        public Wall(Sprite _sprite, Sprite _side, float size, Vector2D _position, Point _tilePosition)
-            : base(_sprite, _side, size, _position, _tilePosition)
+        public Wall(Sprite _sprite, Sprite _side, TileState state, float size, Vector2D _position, Point _tilePosition)
+            : base(_sprite, _side, state, size, _position, _tilePosition)
         {
             tileType = TileType.Wall;
             name = "Wall";

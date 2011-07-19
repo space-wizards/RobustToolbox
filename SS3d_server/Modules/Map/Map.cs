@@ -45,6 +45,51 @@ namespace SS3d_server.Modules.Map
         }
         #endregion
 
+        #region Networking
+        public void HandleNetworkMessage(NetIncomingMessage message)
+        {
+            // Who clicked and on what tile.
+            Atom.Atom clicker = netServer.playerManager.GetSessionByConnection(message.SenderConnection).attachedAtom;
+            short x = message.ReadInt16();
+            short y = message.ReadInt16();
+
+            if (Vector2.Distance(clicker.position, new Vector2(x * tileSpacing + (tileSpacing / 2), y * tileSpacing + (tileSpacing / 2))) > 96)
+            {
+                return; // They were too far away to click us!
+            }
+            bool Update = false;
+            if (IsSaneArrayPosition(x, y))
+            {
+                Update = tileArray[x, y].ClickedBy(clicker);
+                if (Update)
+                {
+                    if (tileArray[x, y].tileState == TileState.Dead)
+                    {
+                        Tiles.Atmos.GasCell g = tileArray[x, y].gasCell;
+                        Tiles.Tile t = GenerateNewTile(tileArray[x, y].tileType);
+                        tileArray[x,y] = t;
+                        tileArray[x, y].gasCell = g;
+                    }
+                    NetworkUpdateTile(x, y);
+                }
+            }
+        }
+
+        public void NetworkUpdateTile(int x, int y)
+        {
+            if (!IsSaneArrayPosition(x, y))
+                return;
+
+            NetOutgoingMessage message = netServer.netServer.CreateMessage();
+            message.Write((byte)NetMessage.MapMessage);
+            message.Write((short)x);
+            message.Write((short)y);
+            message.Write((byte)tileArray[x, y].tileType);
+            message.Write((byte)tileArray[x, y].tileState);
+            netServer.SendMessageToAll(message);
+        }
+        #endregion
+
         #region Map loading/sending
         private bool LoadMap(string filename)
         {
@@ -145,14 +190,14 @@ namespace SS3d_server.Modules.Map
                             message.Write(x);
                             message.Write(y);
                             message.Write(displayByte);
-                            Console.Write("Gas update: x: " + x.ToString() + " y: " + y.ToString() + "byte: " + Convert.ToString(displayByte,2) + "\n");
+                            //Console.Write("Gas update: x: " + x.ToString() + " y: " + y.ToString() + "byte: " + Convert.ToString(displayByte,2) + "\n");
                         }
                     }
                 if (sendUpdate)
                 {
                     message.Write((byte)0); // 0 byte means end of update message
                     netServer.SendMessageToAll(message, NetDeliveryMethod.Unreliable);// Gas updates aren't a big deal.
-                    Console.Write("Sending Gas update\n");
+                    //Console.Write("Sending Gas update\n");
                 }
                 lastAtmosDisplayPush = DateTime.Now;
             }
@@ -173,6 +218,14 @@ namespace SS3d_server.Modules.Map
             return mapObjectType;
 
         }
+
+        public Tile GetTileAt(int x, int y)
+        {
+            if (!IsSaneArrayPosition(x, y))
+                return null;
+            return tileArray[x, y];
+        }
+
         #endregion
 
         #region Map altering
@@ -207,6 +260,7 @@ namespace SS3d_server.Modules.Map
             }
         }
         #endregion
+
 
 
         public int GetMapWidth()
@@ -254,7 +308,6 @@ namespace SS3d_server.Modules.Map
             }
         }
 
-
         private TileType GetObjectTypeFromWorldPosition(Vector2 pos)
         {
             Point arrayPosition = GetTileArrayPositionFromWorldPosition(pos.X, pos.Y);
@@ -278,6 +331,15 @@ namespace SS3d_server.Modules.Map
             {
                 return tileArray[x, z].tileType;
             }
+        }
+
+        public bool IsSaneArrayPosition(int x, int y)
+        {
+            if (x < 0 || y < 0)
+                return false;
+            if (x > mapWidth|| y > mapWidth)
+                return false;
+            return true;
         }
         #endregion
 

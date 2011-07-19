@@ -10,7 +10,7 @@ public enum NetMessage
     MaxPlayers,
     PlayerCount,
     SendMap,
-    ChangeTile,
+    MapMessage,
     ItemMessage, // It's something the item system needs to handle
     MobMessage,
     ChatMessage,
@@ -98,4 +98,12 @@ public enum LightDirection
     West,
     North,
     All
+}
+
+public enum TileState
+{
+    Healthy = 0,
+    Welded,
+    Wrenched,
+    Dead
 }

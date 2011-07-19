@@ -169,7 +169,7 @@ namespace SS3D.Modules.Network
         public void SendChangeTile(int x, int z, TileType newTile)
         {
             NetOutgoingMessage netMessage = netClient.CreateMessage();
-            netMessage.Write((byte)NetMessage.ChangeTile);
+            //netMessage.Write((byte)NetMessage.ChangeTile);
             netMessage.Write(x);
             netMessage.Write(z);
             netMessage.Write((byte)newTile);

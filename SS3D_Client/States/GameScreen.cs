@@ -140,8 +140,8 @@ namespace SS3D.States
                     NetMessage messageType = (NetMessage)msg.ReadByte();
                     switch (messageType)
                     {
-                        case NetMessage.ChangeTile:
-                            ChangeTile(msg);
+                        case NetMessage.MapMessage:
+                            map.HandleNetworkMessage(msg);
                             break;
                         case NetMessage.AtomManagerMessage:
                             atomManager.HandleNetworkMessage(msg);
@@ -170,27 +170,17 @@ namespace SS3D.States
             int mapHeight = msg.ReadInt32();
 
             TileType[,] tileArray = new TileType[mapWidth, mapHeight];
+            TileState[,] tileStates = new TileState[mapWidth, mapHeight];
 
             for (int x = 0; x < mapWidth; x++)
             {
-                for (int z = 0; z < mapHeight; z++)
+                for (int y = 0; y < mapHeight; y++)
                 {
-                    tileArray[x, z] = (TileType)msg.ReadByte();
+                    tileArray[x, y] = (TileType)msg.ReadByte();
+                    tileStates[x, y] = (TileState)msg.ReadByte();
                 }
             }
-            map.LoadNetworkedMap(tileArray, mapWidth, mapHeight);
-        }
-
-        private void ChangeTile(NetIncomingMessage msg)
-        {
-            if (map == null)
-            {
-                return;
-            }
-            int x = msg.ReadInt32();
-            int z = msg.ReadInt32();
-            TileType newTile = (TileType)msg.ReadByte();
-            map.ChangeTile(x, z, newTile);
+            map.LoadNetworkedMap(tileArray, tileStates, mapWidth, mapHeight);
         }
 
         #endregion
@@ -211,7 +201,9 @@ namespace SS3D.States
         {
 
             Gorgon.Screen.Clear(System.Drawing.Color.Black);
-
+            GorgonLibrary.Graphics.Viewport v = new Viewport(1, 1, 1, 1);
+            Gorgon.CurrentClippingViewport.Left = 640;
+            Gorgon.CurrentClippingViewport.Left = 640;
             if (playerController.controlledAtom != null)
             {
                 System.Drawing.Point centerTile = map.GetTileArrayPositionFromWorldPosition(playerController.controlledAtom.position);
@@ -338,6 +330,8 @@ namespace SS3D.States
         }
         public override void MouseDown(MouseInputEventArgs e)
         {
+            bool atomClicked = false;
+            
             // Convert our click from screen -> world coordinates
             Vector2D worldPosition = new Vector2D(e.Position.X + xTopLeft, e.Position.Y + yTopLeft);
             // A bounding box for our click
@@ -351,7 +345,6 @@ namespace SS3D.States
                                            System.Math.Sqrt((playerController.controlledAtom.position.Y - a.position.Y) * (playerController.controlledAtom.position.Y - a.position.Y)) < map.tileSpacing * 1.5f &&
                                            a.visible
                                            select a;
-
             // See which one our click AABB intersected with
             foreach (Atom.Atom a in atoms)
             {
@@ -359,9 +352,21 @@ namespace SS3D.States
                 if (mouseAABB.IntersectsWith(AABB))
                 {
                     a.HandleClick();
+                    atomClicked = true; // We clicked an atom so we don't want to send a turf click message too.
                 }
             }
-            
+            if (!atomClicked)
+            {
+                System.Drawing.Point clickedPoint = map.GetTileArrayPositionFromWorldPosition(worldPosition);
+                if (clickedPoint.X > 0 && clickedPoint.Y > 0)
+                {
+                    NetOutgoingMessage message = mStateMgr.prg.mNetworkMgr.netClient.CreateMessage();
+                    message.Write((byte)NetMessage.MapMessage);
+                    message.Write((short)clickedPoint.X);
+                    message.Write((short)clickedPoint.Y);
+                    mStateMgr.prg.mNetworkMgr.SendMessage(message, NetDeliveryMethod.ReliableUnordered);
+                }
+            }
         }
         public override void MouseMove(MouseInputEventArgs e)
         {

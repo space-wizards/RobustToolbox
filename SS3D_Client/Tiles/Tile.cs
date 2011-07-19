@@ -12,6 +12,7 @@ namespace SS3D.Tiles
     public abstract class Tile
     {
         public TileType tileType = TileType.None;
+        public TileState tileState = TileState.Healthy;
         public string name;
         public Sprite sprite;
         public Sprite sideSprite;
@@ -22,8 +23,9 @@ namespace SS3D.Tiles
         public byte surroundDirs = 0;
         public Tile[] surroundingTiles;
 
-        public Tile(Sprite _sprite, float size, Vector2D _position, Point _tilePosition)
+        public Tile(Sprite _sprite, TileState state, float size, Vector2D _position, Point _tilePosition)
         {
+            tileState = state;
             position = _position;
             tilePosition = _tilePosition;
             sprite = _sprite;
@@ -32,8 +34,9 @@ namespace SS3D.Tiles
             surroundingTiles = new Tile[4];
         }
 
-        public Tile(Sprite _sprite, Sprite _side, float size, Vector2D _position, Point _tilePosition)
+        public Tile(Sprite _sprite, Sprite _side, TileState state, float size, Vector2D _position, Point _tilePosition)
         {
+            tileState = state;
             position = _position;
             tilePosition = _tilePosition;
             sprite = _sprite;

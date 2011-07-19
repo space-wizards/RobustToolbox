@@ -136,27 +136,27 @@ namespace SS3D.Modules
 
             foreach (Light currentLight in lights)
             {
-                var ll = SquareVertexLight(CalculateVertexLight(sprite, currentLight, VertexLocations.LowerLeft, screenOffset));
-                LLIntensity += SqrtVertexLight(ll).Length;
-                lightInfo.VertexColLowerLeft += ll;
-                var lr = SquareVertexLight(CalculateVertexLight(sprite, currentLight, VertexLocations.LowerRight, screenOffset));
-                LRIntensity += SqrtVertexLight(lr).Length;
-                lightInfo.VertexColLowerRight += lr;
-                var ul = SquareVertexLight(CalculateVertexLight(sprite, currentLight, VertexLocations.UpperLeft, screenOffset));
-                ULIntensity += SqrtVertexLight(ul).Length;
-                lightInfo.VertexColUpperLeft += ul;
-                var ur = SquareVertexLight(CalculateVertexLight(sprite, currentLight, VertexLocations.UpperRight, screenOffset));
-                URIntensity += SqrtVertexLight(ur).Length;
-                lightInfo.VertexColUpperRight += ur;
+                var ll = CalculateVertexLight(sprite, currentLight, VertexLocations.LowerLeft, screenOffset);
+                LLIntensity += ll.Length;
+                lightInfo.VertexColLowerLeft += SquareVertexLight(ll);
+                var lr = CalculateVertexLight(sprite, currentLight, VertexLocations.LowerRight, screenOffset);
+                LRIntensity += lr.Length;
+                lightInfo.VertexColLowerRight += SquareVertexLight(lr);
+                var ul = CalculateVertexLight(sprite, currentLight, VertexLocations.UpperLeft, screenOffset);
+                ULIntensity += ul.Length;
+                lightInfo.VertexColUpperLeft += SquareVertexLight(ul);
+                var ur = CalculateVertexLight(sprite, currentLight, VertexLocations.UpperRight, screenOffset);
+                URIntensity += ur.Length;
+                lightInfo.VertexColUpperRight += SquareVertexLight(ur);
             }
             LLIntensity = (float)Math.Sqrt(Math.Pow(LLIntensity, 2) / 3);
             LRIntensity = (float)Math.Sqrt(Math.Pow(LRIntensity, 2) / 3);
             ULIntensity = (float)Math.Sqrt(Math.Pow(ULIntensity, 2) / 3);
             URIntensity = (float)Math.Sqrt(Math.Pow(URIntensity, 2) / 3);
-            lightInfo.VertexColLowerLeft = SqrtVertexLight(lightInfo.VertexColLowerLeft); // +new Vector3D(LLIntensity, LLIntensity, LLIntensity);
-            lightInfo.VertexColLowerRight = SqrtVertexLight(lightInfo.VertexColLowerRight); //+new Vector3D(LRIntensity, LRIntensity, LRIntensity);
-            lightInfo.VertexColUpperLeft = SqrtVertexLight(lightInfo.VertexColUpperLeft); //+new Vector3D(ULIntensity, ULIntensity, ULIntensity);
-            lightInfo.VertexColUpperRight = SqrtVertexLight(lightInfo.VertexColUpperRight); //+new Vector3D(URIntensity, URIntensity, URIntensity);
+            lightInfo.VertexColLowerLeft = SqrtVertexLight(lightInfo.VertexColLowerLeft); 
+            lightInfo.VertexColLowerRight = SqrtVertexLight(lightInfo.VertexColLowerRight); 
+            lightInfo.VertexColUpperLeft = SqrtVertexLight(lightInfo.VertexColUpperLeft);
+            lightInfo.VertexColUpperRight = SqrtVertexLight(lightInfo.VertexColUpperRight);
             lightInfo.VertexColLowerLeft = NormalizeLight(lightInfo.VertexColLowerLeft, LLIntensity);
             lightInfo.VertexColLowerRight = NormalizeLight(lightInfo.VertexColLowerRight, LRIntensity);
             lightInfo.VertexColUpperLeft = NormalizeLight(lightInfo.VertexColUpperLeft, ULIntensity);

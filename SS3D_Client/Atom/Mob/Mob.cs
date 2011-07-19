@@ -64,7 +64,7 @@ namespace SS3D.Atom.Mob
             animState.Loop = true;
             animState.Enabled = true;*/
 
-            sprite.UniformScale = 2f;
+            sprite.UniformScale = 1f;
             initAppendages();
         }
 

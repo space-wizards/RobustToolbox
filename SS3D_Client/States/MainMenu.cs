@@ -12,6 +12,7 @@ using Miyagi.TwoD;
 using Mogre;
 
 using GorgonLibrary;
+using GorgonLibrary.Graphics;
 using GorgonLibrary.InputDevices;
 using SS3D.Modules;
 
@@ -41,11 +42,11 @@ namespace SS3D.States
     {
     }
 
-    public override void Update(long _frameTime)
+      public override void Update(FrameEventArgs e)
     {
     } 
     #endregion
-    public override void GorgonRender()
+    public override void GorgonRender(FrameEventArgs e)
     {
 
         return;

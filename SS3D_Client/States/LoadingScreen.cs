@@ -10,6 +10,7 @@ using System.Collections.Generic;
 using System.Reflection;
 
 using GorgonLibrary;
+using GorgonLibrary.Graphics;
 using GorgonLibrary.InputDevices;
 namespace SS3D.States
 {
@@ -36,13 +37,12 @@ namespace SS3D.States
         {
         }
 
-        public override void Update(long _frameTime)
+        public override void Update(FrameEventArgs e)
         {
         }
         #endregion
-        public override void GorgonRender()
+        public override void GorgonRender(FrameEventArgs e)
         {
-
             return;
         }
         #region Input

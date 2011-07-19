@@ -139,7 +139,6 @@
     <Compile Include="Atom\Item\Item.cs" />
     <Compile Include="Atom\Item\Misc\Flashlight.cs" />
     <Compile Include="Atom\Item\Tool\Crowbar.cs" />
-    <Compile Include="Atom\Light.cs" />
     <Compile Include="Atom\Mob\HelperClasses\AnimState.cs" />
     <Compile Include="Atom\Mob\HelperClasses\Appendage.cs" />
     <Compile Include="Atom\Mob\Human.cs" />
@@ -157,6 +156,7 @@
     <Compile Include="HelperClasses\InterpolationPacket.cs" />
     <Compile Include="HelperClasses\Rect2D.cs" />
     <Compile Include="Modules\ConfigManager.cs" />
+    <Compile Include="Modules\LightManager.cs" />
     <Compile Include="Modules\Map\HealthPanel.cs" />
     <Compile Include="Modules\Map\Map.cs" />
     <Compile Include="Modules\Map\MapFile.cs" />

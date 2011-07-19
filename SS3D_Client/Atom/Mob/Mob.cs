@@ -45,6 +45,14 @@ namespace SS3D.Atom.Mob
             selectedAppendage = appendages["LeftHand"];
         }
 
+        public virtual Item.Item GetItemOnAppendage(string appendage)
+        {
+            if (!appendages.ContainsKey(appendage)) return null;
+            if (appendages[appendage] == null) return null;
+            if (appendages[appendage].attachedItem == null) return null;
+            else return appendages[appendage].attachedItem;
+        }
+
         public override void SetUp(ushort _uid, AtomManager _atomManager)
         {
             base.SetUp(_uid, _atomManager);

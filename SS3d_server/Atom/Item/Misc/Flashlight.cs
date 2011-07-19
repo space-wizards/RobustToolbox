@@ -16,6 +16,10 @@ namespace SS3d_server.Atom.Item.Misc
         {
             name = "Flashlight";
             Random r = new Random(DateTime.Now.Millisecond);
+            int milli = DateTime.Now.Millisecond;
+            while (milli == DateTime.Now.Millisecond)
+            {
+            }
             light = new Light(new Color((byte)r.Next(255), (byte)r.Next(255), (byte)r.Next(255)), (LightDirection)r.Next(3));
         }
 

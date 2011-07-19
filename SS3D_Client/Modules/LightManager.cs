@@ -153,14 +153,14 @@ namespace SS3D.Modules
             LRIntensity = (float)Math.Sqrt(Math.Pow(LRIntensity, 2) / 3);
             ULIntensity = (float)Math.Sqrt(Math.Pow(ULIntensity, 2) / 3);
             URIntensity = (float)Math.Sqrt(Math.Pow(URIntensity, 2) / 3);
-            lightInfo.VertexColLowerLeft = SqrtVertexLight(lightInfo.VertexColLowerLeft) + new Vector3D(LLIntensity,LLIntensity,LLIntensity);
-            lightInfo.VertexColLowerRight = SqrtVertexLight(lightInfo.VertexColLowerRight) + new Vector3D(LRIntensity, LRIntensity, LRIntensity);
-            lightInfo.VertexColUpperLeft = SqrtVertexLight(lightInfo.VertexColUpperLeft) + new Vector3D(ULIntensity, ULIntensity, ULIntensity);
-            lightInfo.VertexColUpperRight = SqrtVertexLight(lightInfo.VertexColUpperRight) + new Vector3D(URIntensity, URIntensity, URIntensity);
-            lightInfo.VertexColLowerLeft = NormalizeDownLight(lightInfo.VertexColLowerLeft);
-            lightInfo.VertexColLowerRight = NormalizeDownLight(lightInfo.VertexColLowerRight);
-            lightInfo.VertexColUpperLeft = NormalizeDownLight(lightInfo.VertexColUpperLeft);
-            lightInfo.VertexColUpperRight = NormalizeDownLight(lightInfo.VertexColUpperRight);
+            lightInfo.VertexColLowerLeft = SqrtVertexLight(lightInfo.VertexColLowerLeft); // +new Vector3D(LLIntensity, LLIntensity, LLIntensity);
+            lightInfo.VertexColLowerRight = SqrtVertexLight(lightInfo.VertexColLowerRight); //+new Vector3D(LRIntensity, LRIntensity, LRIntensity);
+            lightInfo.VertexColUpperLeft = SqrtVertexLight(lightInfo.VertexColUpperLeft); //+new Vector3D(ULIntensity, ULIntensity, ULIntensity);
+            lightInfo.VertexColUpperRight = SqrtVertexLight(lightInfo.VertexColUpperRight); //+new Vector3D(URIntensity, URIntensity, URIntensity);
+            lightInfo.VertexColLowerLeft = NormalizeLight(lightInfo.VertexColLowerLeft, LLIntensity);
+            lightInfo.VertexColLowerRight = NormalizeLight(lightInfo.VertexColLowerRight, LRIntensity);
+            lightInfo.VertexColUpperLeft = NormalizeLight(lightInfo.VertexColUpperLeft, ULIntensity);
+            lightInfo.VertexColUpperRight = NormalizeLight(lightInfo.VertexColUpperRight, URIntensity);
 
 
             lightInfo.ClampByAmbient(ambientBrightness);
@@ -188,14 +188,15 @@ namespace SS3D.Modules
             return new Vector3D((float)Math.Sqrt(lightColor.X), (float)Math.Sqrt(lightColor.Y), (float)Math.Sqrt(lightColor.Z));
         }
 
-        public Vector3D NormalizeDownLight(Vector3D lightColor)
+        public Vector3D NormalizeLight(Vector3D lightColor, float intensity)
         {
+            float normalizeto = Math.Min(intensity, 254);
             double maxComponent = Math.Max(lightColor.X, Math.Max(lightColor.Y, lightColor.Z));
             if (maxComponent == 0 || maxComponent <= 254)
                 return lightColor;
-            lightColor.X = lightColor.X / (float)(maxComponent / 254);
-            lightColor.Y = lightColor.Y / (float)(maxComponent / 254);
-            lightColor.Z = lightColor.Z / (float)(maxComponent / 254);
+            lightColor.X = lightColor.X / (float)(maxComponent / normalizeto);
+            lightColor.Y = lightColor.Y / (float)(maxComponent / normalizeto);
+            lightColor.Z = lightColor.Z / (float)(maxComponent / normalizeto);
             return lightColor;
         }
     }

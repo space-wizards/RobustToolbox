@@ -16,6 +16,18 @@ namespace SS3d_server.Atom.Item
             color = _color;
             direction = _direction;
         }
+
+        public void Normalize()
+        {
+            double maxComponent = Math.Max(color.r, Math.Max(color.g, color.b));
+
+            if (maxComponent == 0)
+                return;
+            color.r = (byte)(color.r / (maxComponent / 254));
+            color.g = (byte)(color.g / (maxComponent / 254));
+            color.b = (byte)(color.b / (maxComponent / 254));
+        }
+
     }
 
     public struct Color
@@ -31,5 +43,4 @@ namespace SS3d_server.Atom.Item
             b = _b;
         }
     }
-
 }

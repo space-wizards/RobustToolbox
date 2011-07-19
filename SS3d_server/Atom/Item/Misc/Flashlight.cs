@@ -21,6 +21,7 @@ namespace SS3d_server.Atom.Item.Misc
             {
             }
             light = new Light(new Color((byte)r.Next(255), (byte)r.Next(255), (byte)r.Next(255)), (LightDirection)r.Next(3));
+            light.Normalize();
         }
 
         public override void SendState(Lidgren.Network.NetConnection client)

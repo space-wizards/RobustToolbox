@@ -348,12 +348,12 @@ namespace SS3D.States
             // See which one our click AABB intersected with
             foreach (Atom.Atom a in atoms)
             {
-                System.Drawing.RectangleF AABB = new System.Drawing.RectangleF(a.position.X - (a.sprite.Width / 2), a.position.Y - (a.sprite.Height / 2), a.sprite.Width, a.sprite.Height);
-                if (mouseAABB.IntersectsWith(AABB))
+                if (a.WasClicked(mouseAABB.Location))
                 {
                     a.HandleClick();
                     atomClicked = true; // We clicked an atom so we don't want to send a turf click message too.
                 }
+                
             }
             if (!atomClicked)
             {

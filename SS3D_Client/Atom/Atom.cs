@@ -510,6 +510,22 @@ namespace SS3D.Atom
         }
 
         #region mouse handling
+        public bool WasClicked(Vector2D worldPosition)
+        {
+            System.Drawing.RectangleF AABB = new System.Drawing.RectangleF(position.X - (sprite.Width / 2), position.Y - (sprite.Height / 2), sprite.Width, sprite.Height);
+            if (!AABB.Contains(worldPosition))
+                return false;
+            System.Drawing.Point spritePosition = new System.Drawing.Point((int)(worldPosition.X - AABB.X), (int)(worldPosition.Y - AABB.Y));
+            Image.ImageLockBox imgData = sprite.Image.GetImageData();
+            imgData.Lock(false);
+            System.Drawing.Color pixColour = System.Drawing.Color.FromArgb((int)(imgData[spritePosition.X, spritePosition.Y]));
+            imgData.Dispose();
+            imgData.Unlock();
+            if (pixColour.A == 0)
+                return false;
+            return true;
+        }
+
         public virtual void HandleClick()
         {
             SendClick();

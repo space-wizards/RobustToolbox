@@ -24,8 +24,8 @@ namespace GasPropagationTest
         double y;
         public double heatEnergy = 100;
         public double nextHeatEnergy = 100;
-        public double nextGasAmount = 10;
-        public double gasAmount = 10;
+        public double nextGasAmount = 100;
+        public double gasAmount = 100;
         public bool sink = false;
         public bool blocking = false;
         bool calculated = true;
@@ -58,7 +58,8 @@ namespace GasPropagationTest
             GasVel = NextGasVel;
             NextGasVel = new Vector2(0, 0);
 
-            heatEnergy = nextHeatEnergy;
+            heatEnergy = nextHeatEnergy; // Decay heat
+            nextHeatEnergy = nextHeatEnergy * 0.99999;
 
             if (gasAmount != nextGasAmount)
             {
@@ -145,9 +146,12 @@ namespace GasPropagationTest
                         continue;
 
                     double dheat = heatEnergy - neighbor.heatEnergy;
-
                     DAmount = gasAmount - neighbor.gasAmount;
-                    if (Math.Abs(dheat) < .1 && DAmount == 0 || Math.Abs(DAmount) < 0.1)
+
+                    double chaos = (double)rand.Next(70000, 100000) / 100000; // Get a random number between .7 and 1 with 4 sig figs
+
+                    //If there's nothing to do then return
+                    if (Math.Abs(dheat) < .1 && (DAmount == 0 || Math.Abs(DAmount) < 0.1))
                     {
                         return;
                     }
@@ -155,8 +159,8 @@ namespace GasPropagationTest
 
                     ///Calculate initial flow
                     Flow = FlowConstant * DAmount;
-                    if(dheat > 1)
-                        Flow = Flow + ((gasAmount + neighbor.gasAmount) / (dheat * 8));
+                    if(dheat > 1) // Kludgy shite
+                        Flow = Flow + ((gasAmount + neighbor.gasAmount) / (dheat * 80)) * chaos;
                     Flow = Clamp(Flow, gasAmount / 8, neighbor.gasAmount / 8);
 
                     double HeatFlow = FlowConstant * dheat;
@@ -212,8 +216,7 @@ namespace GasPropagationTest
                     nextHeatEnergy -= HeatFlow;
                     neighbor.nextHeatEnergy += HeatFlow;
 
-                    double chaos = (double)rand.Next(70000, 100000)/100000; // Get a random number between .7 and 1 with 4 sig figs
-
+                    
                     //Process next velocities
                     if (Flow > 0) //Flow is to neighbor
                     {

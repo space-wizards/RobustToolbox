@@ -241,12 +241,12 @@ namespace SS3D.States
                             {
                                 if (y <= centerTile.Y)
                                 {
-                                    map.tileArray[x, y].Render(xTopLeft, yTopLeft, map.tileSpacing, lightsLastFrame);
+                                    map.tileArray[x, y].Render(xTopLeft, yTopLeft, map.tileSpacing);
                                 }
                             }
                             else
                             {
-                                map.tileArray[x, y].Render(xTopLeft, yTopLeft, map.tileSpacing, lightsLastFrame);
+                                map.tileArray[x, y].Render(xTopLeft, yTopLeft, map.tileSpacing);
                             }
                         }
                     }
@@ -265,22 +265,7 @@ namespace SS3D.States
 
                     foreach (Atom.Atom a in atoms)
                     {
-                        if (a.light != null) lightsThisFrame.Add(a.light);
-
-                        if (a is SS3D.Atom.Mob.Mob)
-                        {
-                            SS3D.Atom.Mob.Mob mob = (SS3D.Atom.Mob.Mob)a;
-
-                            if (mob.GetItemOnAppendage("LeftHand") != null)
-                                if (mob.GetItemOnAppendage("LeftHand").light != null)
-                                    lightsThisFrame.Add(mob.GetItemOnAppendage("LeftHand").light);
-
-                            if (mob.GetItemOnAppendage("RightHand") != null)
-                                if (mob.GetItemOnAppendage("RightHand").light != null)
-                                    lightsThisFrame.Add(mob.GetItemOnAppendage("RightHand").light);
-                        }
-
-                        a.Render(xTopLeft, yTopLeft, lightsLastFrame);
+                        a.Render(xTopLeft, yTopLeft);
 
                         if (gameInterface.isBuilding) //Needs to happen after rendering since rendering sets the sprite pos.
                         {
@@ -309,13 +294,11 @@ namespace SS3D.States
                         {
                             if (map.tileArray[x, y].tileType == TileType.Wall)
                             {
-                                map.tileArray[x, y].RenderTop(xTopLeft, yTopLeft, map.tileSpacing, lightsLastFrame);
+                                map.tileArray[x, y].RenderTop(xTopLeft, yTopLeft, map.tileSpacing);
                             }
                         }
                     }
                 }
-                lightsLastFrame = lightsThisFrame;
-
                 gameInterface.Draw();
             }
             return;

@@ -305,7 +305,7 @@ namespace SS3D.Atom
 
         #endregion
 
-        public virtual void Render(float xTopLeft, float yTopLeft, List<Light> lights)
+        public virtual void Render(float xTopLeft, float yTopLeft)//, List<Light> lights)
         {
             System.Drawing.Point tilePos = atomManager.gameState.map.GetTileArrayPositionFromWorldPosition(position);
             sprite.SetPosition(position.X - xTopLeft, position.Y - yTopLeft);
@@ -313,7 +313,7 @@ namespace SS3D.Atom
             {
                 if (atomManager.gameState.map.tileArray[tilePos.X, tilePos.Y].Visible && visible)
                 {
-                    LightManager.Singleton.ApplyLightsToSprite(lights, sprite, new Vector2D(xTopLeft, yTopLeft));
+                    LightManager.Singleton.ApplyLightsToSprite(atomManager.gameState.map.tileArray[tilePos.X, tilePos.Y].tileLights, sprite, new Vector2D(xTopLeft, yTopLeft));
                     sprite.Draw();
                 }
             }

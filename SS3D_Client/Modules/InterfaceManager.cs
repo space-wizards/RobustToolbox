@@ -62,6 +62,12 @@ namespace SS3D.Modules
         private bool CanPlace()
         {
             if ((gameScreen.playerController.controlledAtom.position - gameScreen.mousePosWorld).Length > buildingRange) return false;
+
+            System.Drawing.Point arrayPos = map.GetTileArrayPositionFromWorldPosition(gameScreen.mousePosWorld);
+            TileType type = map.GetTileTypeFromArrayPosition(arrayPos.X, arrayPos.Y);
+
+            if (type == TileType.Wall) return false;
+
             foreach (Atom.Atom a in atomManager.atomDictionary.Values) //This is less than optimal. Dont want to loop through everything.
             {
                 a.sprite.SetPosition(a.position.X - gameScreen.xTopLeft, a.position.Y - gameScreen.yTopLeft);
@@ -104,6 +110,11 @@ namespace SS3D.Modules
 
             if (isBuilding)
             {
+                System.Drawing.Point arrayPos = map.GetTileArrayPositionFromWorldPosition(gameScreen.mousePosWorld);
+                TileType type = map.GetTileTypeFromArrayPosition(arrayPos.X, arrayPos.Y);
+
+                if (type == TileType.Wall) buildingBlocked = true;
+
                 if (gameScreen.playerController.controlledAtom != null)
                 {
                     if ((gameScreen.playerController.controlledAtom.position - gameScreen.mousePosWorld).Length > buildingRange) 

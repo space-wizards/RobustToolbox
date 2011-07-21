@@ -10,7 +10,7 @@ namespace SS3D.Atom.Item.Tool
         public Welder()
             : base()
         {
-            spritename = "Welder.png";
+            spritename = "Welder";
         }
     }
 }

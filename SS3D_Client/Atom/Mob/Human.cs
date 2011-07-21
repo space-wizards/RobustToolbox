@@ -10,7 +10,7 @@ namespace SS3D.Atom.Mob
         public Human()
             : base()
         {
-            spritename = "Human.png";
+            spritename = "Human";
             /*meshName = "male_new.mesh";
             scale = new Mogre.Vector3(1f, 1f, 1f);
             offset = new Mogre.Vector3(0, 0, 0);*/

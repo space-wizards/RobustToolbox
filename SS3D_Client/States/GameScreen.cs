@@ -19,6 +19,8 @@ using GorgonLibrary;
 using GorgonLibrary.Graphics;
 using GorgonLibrary.InputDevices;
 
+using System.Windows.Forms;
+
 namespace SS3D.States
 {
     public class GameScreen : State
@@ -27,6 +29,8 @@ namespace SS3D.States
         private StateManager mStateMgr;
         public Map map;
         private AtomManager atomManager;
+        private GameInterfaceManager gameInterface;
+
         //private GUI guiGameScreen;
         private Chatbox gameChat;
         private ushort defaultChannel;
@@ -45,21 +49,25 @@ namespace SS3D.States
         private float realScreenHeightTiles = 0;
 
         private bool showStats = false;     // show FPS etc. panel if true
+        private bool showDebug = false;     // show AABBs & Bounding Circles on atoms.
         //private Label fpsLabel1, fpsLabel2, fpsLabel3, fpsLabel4;
 
-        private float xTopLeft = 0;
-        private float yTopLeft = 0;
+        public float xTopLeft { get; private set; }
+        public float yTopLeft { get; private set; }
 
         private float scaleX = 1.0f;
         private float scaleY = 1.0f;
 
         private System.Drawing.Point screenSize;
-        private bool lighting = true;
    
         #region Mouse/Camera stuff
         private DateTime lastRMBClick = DateTime.Now;
         private int lastMouseX = 0;
         private int lastMouseY = 0;
+
+        public Vector2D mousePosScreen = Vector2D.Zero;
+        public Vector2D mousePosWorld = Vector2D.Zero;
+
         #endregion
 
         #endregion
@@ -104,6 +112,8 @@ namespace SS3D.States
             //scaleX = (float)Gorgon.CurrentClippingViewport.Width / (realScreenWidthTiles * map.tileSpacing);
             //scaleY = (float)Gorgon.CurrentClippingViewport.Height / (realScreenHeightTiles * map.tileSpacing);
 
+            gameInterface = new GameInterfaceManager(map, atomManager, this);
+
             return true;
         }
 
@@ -113,6 +123,7 @@ namespace SS3D.States
             {
                 //baseTarget.Dispose();
             }
+            gameInterface.Shutdown();
             atomManager.Shutdown();
             map.Shutdown();
             atomManager = null; 
@@ -126,6 +137,7 @@ namespace SS3D.States
             lastUpdate = now;
             now = DateTime.Now;
             atomManager.Update();
+            gameInterface.Update();
         }
 
         private void mNetworkMgr_MessageArrived(NetworkManager netMgr, NetIncomingMessage msg)
@@ -199,11 +211,8 @@ namespace SS3D.States
          * */
         public override void GorgonRender(FrameEventArgs e)
         {
-
             Gorgon.Screen.Clear(System.Drawing.Color.Black);
-            GorgonLibrary.Graphics.Viewport v = new Viewport(1, 1, 1, 1);
-            Gorgon.CurrentClippingViewport.Left = 640;
-            Gorgon.CurrentClippingViewport.Left = 640;
+
             if (playerController.controlledAtom != null)
             {
                 System.Drawing.Point centerTile = map.GetTileArrayPositionFromWorldPosition(playerController.controlledAtom.position);
@@ -272,6 +281,23 @@ namespace SS3D.States
                         }
 
                         a.Render(xTopLeft, yTopLeft, lightsLastFrame);
+
+                        if (gameInterface.isBuilding) //Needs to happen after rendering since rendering sets the sprite pos.
+                        {
+                            a.sprite.UpdateAABB();
+
+                            if (a.sprite.AABB.IntersectsWith(gameInterface.buildingAABB))
+                            {
+                                gameInterface.buildingBlocked = true;
+                            }
+                        }
+
+                        if (showDebug)
+                        {
+                            Gorgon.Screen.Circle(a.sprite.BoundingCircle.Center.X, a.sprite.BoundingCircle.Center.Y, a.sprite.BoundingCircle.Radius, System.Drawing.Color.Orange);
+                            Gorgon.Screen.Rectangle(a.sprite.AABB.X, a.sprite.AABB.Y, a.sprite.AABB.Width, a.sprite.AABB.Height, System.Drawing.Color.Blue);
+                        }
+
                     }
                 }
 
@@ -288,8 +314,9 @@ namespace SS3D.States
                         }
                     }
                 }
-
                 lightsLastFrame = lightsThisFrame;
+
+                gameInterface.Draw(); //This needs to happen last so buildingBlocked resets properly. Sorry about that.
             }
             return;
         }
@@ -312,11 +339,16 @@ namespace SS3D.States
             }
             if (e.Key == KeyboardKeys.F2)
             {
-                lighting = !lighting;
+                showDebug = !showDebug;
             }
             if (e.Key == KeyboardKeys.F3)
             {
                 playerController.SendVerb("toxins", 0);
+            }
+            playerController.KeyDown(e.Key);
+            if (e.Key == KeyboardKeys.F4)
+            {
+                gameInterface.StartBuilding(typeof(Atom.Item.Container.Toolbox));
             }
             playerController.KeyDown(e.Key);
         }
@@ -330,13 +362,19 @@ namespace SS3D.States
         }
         public override void MouseDown(MouseInputEventArgs e)
         {
+
+            if (gameInterface.isBuilding)
+            {
+                gameInterface.PlaceBuilding();
+                return;
+            }
+
+            #region Object clicking
             bool atomClicked = false;
-            
             // Convert our click from screen -> world coordinates
             Vector2D worldPosition = new Vector2D(e.Position.X + xTopLeft, e.Position.Y + yTopLeft);
             // A bounding box for our click
             System.Drawing.RectangleF mouseAABB = new System.Drawing.RectangleF(worldPosition.X, worldPosition.Y, 1, 1);
-
 
             // Find all the atoms near us we could have clicked
             IEnumerable<Atom.Atom> atoms = from a in atomManager.atomDictionary.Values
@@ -353,8 +391,9 @@ namespace SS3D.States
                     a.HandleClick();
                     atomClicked = true; // We clicked an atom so we don't want to send a turf click message too.
                 }
-                
+
             }
+
             if (!atomClicked)
             {
                 System.Drawing.Point clickedPoint = map.GetTileArrayPositionFromWorldPosition(worldPosition);
@@ -366,11 +405,14 @@ namespace SS3D.States
                     message.Write((short)clickedPoint.Y);
                     mStateMgr.prg.mNetworkMgr.SendMessage(message, NetDeliveryMethod.ReliableUnordered);
                 }
-            }
+            } 
+            #endregion
         }
+
         public override void MouseMove(MouseInputEventArgs e)
         {
-        
+            mousePosScreen = new Vector2D(e.Position.X, e.Position.Y);
+            mousePosWorld = new Vector2D(e.Position.X + xTopLeft, e.Position.Y + yTopLeft);
         }
  
         #endregion

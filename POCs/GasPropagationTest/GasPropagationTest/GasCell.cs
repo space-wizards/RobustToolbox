@@ -22,6 +22,8 @@ namespace GasPropagationTest
         public int arrY;
         double x;
         double y;
+        public double heatEnergy = 100;
+        public double nextHeatEnergy = 100;
         public double nextGasAmount = 10;
         public double gasAmount = 10;
         public bool sink = false;
@@ -55,6 +57,8 @@ namespace GasPropagationTest
 
             GasVel = NextGasVel;
             NextGasVel = new Vector2(0, 0);
+
+            heatEnergy = nextHeatEnergy;
 
             if (gasAmount != nextGasAmount)
             {
@@ -140,15 +144,23 @@ namespace GasPropagationTest
                     if (neighbor.calculated) // TODO work out rebound
                         continue;
 
+                    double dheat = heatEnergy - neighbor.heatEnergy;
+
                     DAmount = gasAmount - neighbor.gasAmount;
-                    if (DAmount == 0 || Math.Abs(DAmount) < 0.1)
+                    if (Math.Abs(dheat) < .1 && DAmount == 0 || Math.Abs(DAmount) < 0.1)
                     {
                         return;
                     }
 
+
                     ///Calculate initial flow
                     Flow = FlowConstant * DAmount;
+                    if(dheat > 1)
+                        Flow = Flow + ((gasAmount + neighbor.gasAmount) / (dheat * 8));
                     Flow = Clamp(Flow, gasAmount / 8, neighbor.gasAmount / 8);
+
+                    double HeatFlow = FlowConstant * dheat;
+                    HeatFlow = Clamp(HeatFlow, heatEnergy / 8, neighbor.heatEnergy / 8);
 
                     //Velocity application code
                     Vector2 Dir = new Vector2(i, j);
@@ -197,6 +209,8 @@ namespace GasPropagationTest
                     nextGasAmount -= Flow;
                     neighbor.nextGasAmount += Flow;
 
+                    nextHeatEnergy -= HeatFlow;
+                    neighbor.nextHeatEnergy += HeatFlow;
 
                     double chaos = (double)rand.Next(70000, 100000)/100000; // Get a random number between .7 and 1 with 4 sig figs
 

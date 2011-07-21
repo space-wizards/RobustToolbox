@@ -111,14 +111,17 @@ namespace GasPropagationTest
         public void DataUpdate()
         {
             double Sum = 0;
+            double HeatSum = 0;
             for (int i = 0; i < 39; i++)
             {
                 for (int j = 0; j < 39; j++)
                 {
                     Sum += cellArray[i, j].gasAmount;
+                    HeatSum += cellArray[i, j].heatEnergy;
                 }
             }
 
+            totalheat.Text = HeatSum.ToString();
             totalgas.Text = Sum.ToString();
             lastDataUpdate = DateTime.Now;
         }
@@ -215,6 +218,8 @@ namespace GasPropagationTest
                 g.GasVel.X += 1000;
             else if (e.RightButton == MouseButtonState.Pressed && Keyboard.IsKeyDown(Key.RightShift))
                 g.GasVel.X += 100000;
+            else if (e.LeftButton == MouseButtonState.Pressed && Keyboard.IsKeyDown(Key.LeftCtrl))
+                g.nextHeatEnergy += 100;
             else if (e.LeftButton == MouseButtonState.Pressed)
                 g.nextGasAmount += addamount;
             else if (e.RightButton == MouseButtonState.Pressed)

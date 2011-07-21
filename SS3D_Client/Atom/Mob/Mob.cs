@@ -34,7 +34,7 @@ namespace SS3D.Atom.Mob
             : base()
         {
             //meshName = "male_new.mesh";
-            spritename = "spaceman.png";
+            spritename = "Human";
         }
 
         public virtual void initAppendages()

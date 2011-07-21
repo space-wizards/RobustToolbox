@@ -13,7 +13,7 @@ namespace SS3D.Atom.Item.Misc
         public Flashlight()
             : base()
         {
-            spritename = "Flashlight.png";
+            spritename = "Flashlight";
         }
 
         public override void HandlePush(Lidgren.Network.NetIncomingMessage message)

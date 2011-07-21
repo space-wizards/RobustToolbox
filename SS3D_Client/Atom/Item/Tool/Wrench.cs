@@ -10,7 +10,7 @@ namespace SS3D.Atom.Item.Tool
         public Wrench()
             : base()
         {
-            spritename = "Wrench.png";
+            spritename = "Wrench";
         }
     }
 }

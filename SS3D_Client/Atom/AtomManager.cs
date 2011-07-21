@@ -108,6 +108,14 @@ namespace SS3D.Atom
 
             return atomDictionary[uid]; // Why do we return it? So we can do whatever is needed easily from the calling function.
         }
+
+        public string GetSpriteName(Type type) //This is ugly but if you can think of a better way please implement it.
+        {
+            Atom atom = (Atom)Activator.CreateInstance(type);
+            string strName = atom.spritename;
+            atom = null;
+            return strName;
+        }
         
         private void HandleDeleteAtom(NetIncomingMessage message)
         {

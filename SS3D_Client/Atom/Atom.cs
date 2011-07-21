@@ -24,9 +24,7 @@ namespace SS3D.Atom
 
         //SPRITE
         public Sprite sprite;
-        public string spritename = "missingsprite.png";
-        private static string spritePath = "..\\..\\..\\..\\Media\\textures\\\\";
-        public Vector2D spritesize;
+        public string spritename = "noSprite";
 
         public string name;
         public ushort uid;
@@ -85,8 +83,6 @@ namespace SS3D.Atom
 
             interpolationPackets = new List<InterpolationPacket>();
 
-            spritesize = new Vector2D(32, 32);
-
             SetUp(_uid, _atomManager);
         }
 
@@ -100,15 +96,8 @@ namespace SS3D.Atom
 
         public virtual void Draw()
         {
-            // Draw the atom into the scene. This should be called after instantiation.
-            //Draw Sprite
-            //sprite = new Sprite("a" + uid.ToString(), GorgonLibrary.Graphics.Image.FromFile(Environment.CurrentDirectory + "..\\..\\..\\..\\Media\\textures\\\\WallTexture.png"));
-            string fileName = spritename;
-            if(!File.Exists(Environment.CurrentDirectory + spritePath + fileName))
-            {
-                fileName = "missingsprite.png";
-            }
-            sprite = new Sprite("a" + uid.ToString(), GorgonLibrary.Graphics.Image.FromFile(Environment.CurrentDirectory + spritePath + fileName));
+            //Draw the atom into the scene. This should be called after instantiation.
+            sprite = ResMgr.Singleton.GetSprite(spritename);
             sprite.Position = new Vector2D(position.X, position.Y);
             sprite.SetAxis(sprite.Width / 2, sprite.Height / 2);
             drawn = true;
@@ -324,7 +313,6 @@ namespace SS3D.Atom
             {
                 if (atomManager.gameState.map.tileArray[tilePos.X, tilePos.Y].Visible && visible)
                 {
-                    sprite.Color = System.Drawing.Color.White;
                     LightManager.Singleton.ApplyLightsToSprite(lights, sprite, new Vector2D(xTopLeft, yTopLeft));
                     sprite.Draw();
                 }

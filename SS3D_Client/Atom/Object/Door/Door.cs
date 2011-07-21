@@ -14,7 +14,7 @@ namespace SS3D.Atom.Object.Door
         public Door()
             : base()
         {
-            spritename = "Door.png";
+            spritename = "Door";
             collidable = true;
         }
 

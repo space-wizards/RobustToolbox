@@ -439,15 +439,6 @@ namespace SS3D.Modules.Map
         }
 
         #region Helper methods
-        bool is_solid(int x, int y)
-        {
-            if(tileArray[x,y].tileType == TileType.Wall)
-            {
-                return true;
-            }
-            return false;
-        }
-
         bool is_sight_blocked(int x, int y)
         {
             if (tileArray[x, y].tileType == TileType.Wall || tileArray[x, y].sightBlocked)
@@ -603,15 +594,6 @@ namespace SS3D.Modules.Map
         bool light_is_sight_blocked(int x, int y)
         {
             if (tileArray[x, y].tileType == TileType.Wall || tileArray[x, y].sightBlocked)
-            {
-                return true;
-            }
-            return false;
-        }
-
-        bool light_is_solid(int x, int y)
-        {
-            if (tileArray[x, y].tileType == TileType.Wall)
             {
                 return true;
             }

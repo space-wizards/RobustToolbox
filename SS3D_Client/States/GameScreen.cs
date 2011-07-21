@@ -316,7 +316,7 @@ namespace SS3D.States
                 }
                 lightsLastFrame = lightsThisFrame;
 
-                gameInterface.Draw(); //This needs to happen last so buildingBlocked resets properly. Sorry about that.
+                gameInterface.Draw();
             }
             return;
         }

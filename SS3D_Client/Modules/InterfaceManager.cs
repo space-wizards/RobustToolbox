@@ -36,8 +36,12 @@ namespace SS3D.Modules
 
         public System.Drawing.RectangleF buildingAABB;
 
+        private static float buildingRange = 64; //It's a bad idea to set this higher than tiles are wide.
+
         public bool isBuilding { get; private set; }
-        public bool buildingBlocked = false; //This is mainly used to color the object correctly. There will be a seperate check when placing the object.
+        public bool buildingBlocked = false;
+        public bool buildingSnapTo = true;
+        public bool buildingDrawRange = true;
 
         public GameInterfaceManager(Map.Map _map, AtomManager _atom, GameScreen _screen)
         {
@@ -57,6 +61,7 @@ namespace SS3D.Modules
 
         private bool CanPlace()
         {
+            if ((gameScreen.playerController.controlledAtom.position - gameScreen.mousePosWorld).Length > buildingRange) return false;
             foreach (Atom.Atom a in atomManager.atomDictionary.Values) //This is less than optimal. Dont want to loop through everything.
             {
                 a.sprite.SetPosition(a.position.X - gameScreen.xTopLeft, a.position.Y - gameScreen.yTopLeft);
@@ -95,8 +100,16 @@ namespace SS3D.Modules
 
         public void Update()
         {
+            buildingBlocked = false;
+
             if (isBuilding)
             {
+                if (gameScreen.playerController.controlledAtom != null)
+                {
+                    if ((gameScreen.playerController.controlledAtom.position - gameScreen.mousePosWorld).Length > buildingRange) 
+                        buildingBlocked = true;
+                }
+
                 if (buildingSprite != null)
                 {
                     buildingSprite.Position = gameScreen.mousePosScreen;
@@ -110,6 +123,11 @@ namespace SS3D.Modules
         {
             if (isBuilding)
             {
+                if (gameScreen.playerController.controlledAtom != null && buildingDrawRange)
+                {   //Is it a bird? A plane? No! It's a really fucking long line of code!
+                    Gorgon.Screen.Circle(gameScreen.playerController.controlledAtom.position.X - gameScreen.xTopLeft, gameScreen.playerController.controlledAtom.position.Y - gameScreen.yTopLeft, buildingRange, System.Drawing.Color.DarkGreen, 2f, 2f);
+                }
+
                 if (buildingSprite != null)
                 {
                     buildingSprite.Position = gameScreen.mousePosScreen;
@@ -120,13 +138,9 @@ namespace SS3D.Modules
                         buildingSprite.Color = System.Drawing.Color.Green;
 
                     buildingSprite.Opacity = 90;
-                    buildingSprite.BorderColor = System.Drawing.Color.GreenYellow;
-
                     buildingSprite.Draw();
                 }
             }
-
-            buildingBlocked = false;
         }
 
         public void Shutdown()

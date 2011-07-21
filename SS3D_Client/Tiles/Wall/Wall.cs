@@ -21,25 +21,25 @@ namespace SS3D.Tiles.Wall
             sideSprite = _side;
         }
 
-        public override void Render(float xTopLeft, float yTopLeft, int tileSpacing, List<Light> lights)
+        public override void Render(float xTopLeft, float yTopLeft, int tileSpacing)
         {
             if (Visible && ((surroundDirs&4) == 0))
             {
                 sideSprite.SetPosition(tilePosition.X * tileSpacing - xTopLeft, tilePosition.Y * tileSpacing - yTopLeft);
                 sideSprite.Color = Color.White;
-                LightManager.Singleton.ApplyLightsToSprite(lights, sideSprite, new Vector2D(xTopLeft, yTopLeft));
+                LightManager.Singleton.ApplyLightsToSprite(tileLights, sideSprite, new Vector2D(xTopLeft, yTopLeft));
                 sideSprite.Draw();
             }
         }
 
-        public override void RenderTop(float xTopLeft, float yTopLeft, int tileSpacing, List<Light> lights)
+        public override void RenderTop(float xTopLeft, float yTopLeft, int tileSpacing)
         {
             if (Visible)
             {
                 sprite.SetPosition(tilePosition.X * tileSpacing - xTopLeft, tilePosition.Y * tileSpacing - yTopLeft);
                 sprite.Position -= new Vector2D(0, tileSpacing);
                 sprite.Color = Color.White;
-                LightManager.Singleton.ApplyLightsToSprite(lights, sprite, new Vector2D(xTopLeft, yTopLeft));
+                LightManager.Singleton.ApplyLightsToSprite(tileLights, sprite, new Vector2D(xTopLeft, yTopLeft));
                 sprite.Draw();
             }
         }

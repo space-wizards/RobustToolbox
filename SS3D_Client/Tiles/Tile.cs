@@ -22,6 +22,8 @@ namespace SS3D.Tiles
         public bool sightBlocked = false; // Is something on this tile that blocks sight through it, like a door (used for lighting)
         public byte surroundDirs = 0;
         public Tile[] surroundingTiles;
+        //public Dictionary<VertexLocations, bool> vertexVisibility;
+        public List<Light> tileLights;
 
         public Tile(Sprite _sprite, TileState state, float size, Vector2D _position, Point _tilePosition)
         {
@@ -32,6 +34,7 @@ namespace SS3D.Tiles
             sprite.SetPosition(_position.X, _position.Y);
             sightBlocked = false;
             surroundingTiles = new Tile[4];
+            tileLights = new List<Light>();
         }
 
         public Tile(Sprite _sprite, Sprite _side, TileState state, float size, Vector2D _position, Point _tilePosition)
@@ -46,6 +49,7 @@ namespace SS3D.Tiles
             sideSprite.SetPosition(_position.X, _position.Y);
             sightBlocked = false;
             surroundingTiles = new Tile[4];
+            tileLights = new List<Light>();
         }
 
         public void SetSprites(Sprite _sprite, Sprite _side, byte _surroundDirs)
@@ -55,18 +59,18 @@ namespace SS3D.Tiles
             surroundDirs = _surroundDirs;
         }
 
-        public virtual void Render(float xTopLeft, float yTopLeft, int tileSpacing, List<Light> lights)
+        public virtual void Render(float xTopLeft, float yTopLeft, int tileSpacing)
         {
             if (Visible)
             {
                 sprite.Color = Color.White;
                 sprite.SetPosition(tilePosition.X * tileSpacing - xTopLeft, tilePosition.Y * tileSpacing - yTopLeft);
-                LightManager.Singleton.ApplyLightsToSprite(lights, sprite, new Vector2D(xTopLeft, yTopLeft));
+                LightManager.Singleton.ApplyLightsToSprite(tileLights, sprite, new Vector2D(xTopLeft, yTopLeft));
                 sprite.Draw();
             }
         }
 
-        public virtual void RenderTop(float xTopLeft, float yTopLeft, int tileSpacing, List<Light> lights)
+        public virtual void RenderTop(float xTopLeft, float yTopLeft, int tileSpacing)
         {
         }
     }

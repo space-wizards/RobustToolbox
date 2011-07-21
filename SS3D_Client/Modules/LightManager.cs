@@ -126,7 +126,7 @@ namespace SS3D.Modules
         {
             sprite.UpdateAABB(); //Just to be safe that the verts are in the right pos. Might want to remove this when its handled reliably by the objects.
 
-            var lightsInRange = from Light l in lights where (l.position - sprite.Position).Length <= (l.range + errorTolerance) select l;
+            var lightsInRange = from Light l in lights where (l.position - sprite.Position - screenOffset).Length <= (l.range + errorTolerance) select l;
 
             SpriteLightDefinition lightInfo = new SpriteLightDefinition();
             float LLIntensity = 0;
@@ -134,7 +134,7 @@ namespace SS3D.Modules
             float ULIntensity = 0;
             float URIntensity = 0;
 
-            foreach (Light currentLight in lights)
+            foreach (Light currentLight in lightsInRange)
             {
                 //Calculate light color incident on tile
                 var ll = CalculateVertexLight(sprite, currentLight, VertexLocations.LowerLeft, screenOffset);
@@ -216,9 +216,11 @@ namespace SS3D.Modules
         public Vector2D lastPosition;
         public Modules.Map.Map map;
         public List<LightDirection> direction;
+        public List<Tiles.Tile> tiles;
 
         public Light(Modules.Map.Map _map, System.Drawing.Color _color, int _range, LightState _state, System.Drawing.Point _position, LightDirection _direction)
         {
+            Random r = new Random();
             map = _map;
             color = _color;
             range = _range;
@@ -226,11 +228,13 @@ namespace SS3D.Modules
             lastPosition = _position;
             direction = new List<LightDirection>();
             direction.Add(_direction);
+            tiles = new List<Tiles.Tile>();
             UpdateLight();
         }
 
         public void UpdateLight()
         {
+            map.light_compute_visibility(position, this);
         }
 
         public void UpdatePosition(Vector2D newPosition)

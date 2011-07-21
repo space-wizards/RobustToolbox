@@ -32,6 +32,7 @@ namespace SS3d_server.Tiles.Atmos
         public Dictionary<GasType, double> gasses;
         public Dictionary<GasType, double> nextGasses;
         public Dictionary<GasType, double> lastSentGasses;
+        Random rand;
         
         //Constants
         double SourceDamping = .5;
@@ -53,6 +54,7 @@ namespace SS3d_server.Tiles.Atmos
             sink = attachedtile.gasSink;
             blocking = !attachedtile.gasPermeable;
             InitGas();
+            rand = new Random();
         }
 
         private void InitGas()
@@ -139,7 +141,6 @@ namespace SS3d_server.Tiles.Atmos
             
 
             GasCell neighbor;
-            Random rand = new Random();
             for (int i = -1; i <= 1; i++)
                 for (int j = -1; j <= 1; j++)
                 {

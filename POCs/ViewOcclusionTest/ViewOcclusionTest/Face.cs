@@ -74,7 +74,7 @@ namespace ViewOcclusionTest
                 canvas.Children.Remove(line);
             line = new Line();
             SetLinePoints();
-            canvas.Children.Add(line);
+            //canvas.Children.Add(line);
             Canvas.SetLeft(line, 0);
             Canvas.SetTop(line, 0);
             if (facing && over == null)
@@ -116,7 +116,7 @@ namespace ViewOcclusionTest
                     startLine.Y2 = slope * startLine.X2 + (startLine.Y1 - startLine.X1 * slope); // y = mx + b ololol
                     
                     startLine.Stroke = Brushes.Blue;
-                    canvas.Children.Add(startLine);
+                    //canvas.Children.Add(startLine);
                     Canvas.SetLeft(startLine, 0);
                     Canvas.SetTop(startLine, 0);
                     Canvas.SetZIndex(startLine, 30);
@@ -137,7 +137,7 @@ namespace ViewOcclusionTest
                         endLine.X2 = mainWindow.WindowTopLeft.X;
                     endLine.Y2 = slope * endLine.X2 + (endLine.Y1 - endLine.X1 * slope);
                     endLine.Stroke = Brushes.Red;
-                    canvas.Children.Add(endLine);
+                    //canvas.Children.Add(endLine);
                     Canvas.SetLeft(endLine, 0);
                     Canvas.SetTop(endLine, 0);
                     Canvas.SetZIndex(endLine, 30);

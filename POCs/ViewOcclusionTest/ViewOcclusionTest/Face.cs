@@ -52,15 +52,15 @@ namespace ViewOcclusionTest
 
         public void SetLinePoints()
         {
-            line.X1 = x;
-            line.Y1 = y;
-            line.X2 = next.x;
-            line.Y2 = next.y;
+            //line.X1 = x;
+            //line.Y1 = y;
+            //line.X2 = next.x;
+            //line.Y2 = next.y;
         }
 
         public void SetLineColor(Brush brush)
         {
-            line.Stroke = brush;
+            //line.Stroke = brush;
         }
 
         public void DrawLine(Point viewPoint)
@@ -71,22 +71,22 @@ namespace ViewOcclusionTest
         public void DrawLine(bool facing)
         {
             if (line != null)
-                canvas.Children.Remove(line);
-            line = new Line();
-            SetLinePoints();
+                //canvas.Children.Remove(line);
+            //line = new Line();
+            //SetLinePoints();
             //canvas.Children.Add(line);
-            Canvas.SetLeft(line, 0);
-            Canvas.SetTop(line, 0);
+            //Canvas.SetLeft(line, 0);
+            //Canvas.SetTop(line, 0);
             if (facing && over == null)
             {
-                SetLineColor(Brushes.Green);
-                Canvas.SetZIndex(line, 21);
+                //SetLineColor(Brushes.Green);
+                //Canvas.SetZIndex(line, 21);
                 //DrawViewLine(ViewLines.both);
             }
             else
             {
-                SetLineColor(Brushes.Black);
-                Canvas.SetZIndex(line, 20);
+                //SetLineColor(Brushes.Black);
+                //Canvas.SetZIndex(line, 20);
             }
         }
 
@@ -151,11 +151,11 @@ namespace ViewOcclusionTest
 
         public void RemoveLines()
         {
-            canvas.Children.Remove(line);
+            //canvas.Children.Remove(line);
             line = null;
-            canvas.Children.Remove(startLine);
+            //canvas.Children.Remove(startLine);
             startLine = null;
-            canvas.Children.Remove(endLine);
+            //canvas.Children.Remove(endLine);
             endLine = null;
         }
 

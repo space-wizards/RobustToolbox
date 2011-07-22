@@ -14,7 +14,7 @@ using System.Windows.Shapes;
 
 namespace ViewOcclusionTest
 {
-    class Face
+    public class Face
     {
         public int x;
         public int y;
@@ -81,7 +81,7 @@ namespace ViewOcclusionTest
             {
                 SetLineColor(Brushes.Green);
                 Canvas.SetZIndex(line, 21);
-                DrawViewLine(ViewLines.both);
+                //DrawViewLine(ViewLines.both);
             }
             else
             {

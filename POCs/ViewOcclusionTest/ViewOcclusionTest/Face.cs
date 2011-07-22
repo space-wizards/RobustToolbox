@@ -96,11 +96,12 @@ namespace ViewOcclusionTest
             switch (viewlines)
             {
                 case ViewLines.origin:
-                    //If its a straight line drop out?
-                    if (y - mainWindow.viewPoint.Y == 0 || x - mainWindow.viewPoint.X == 0)
-                        break;
-                    //Calculate y slope
-                    slope = (y - mainWindow.viewPoint.Y) / (x - mainWindow.viewPoint.X);
+                    if (y - mainWindow.viewPoint.Y == 0)
+                        slope = 0;
+                    else if (x - mainWindow.viewPoint.X == 0)
+                        slope = -1 * Math.Sign(y - mainWindow.viewPoint.Y) * 10000;
+                    else //Calculate y slope
+                        slope = (y - mainWindow.viewPoint.Y) / (x - mainWindow.viewPoint.X);
 
                     //Generate line
                     startLine = new Line();
@@ -121,9 +122,12 @@ namespace ViewOcclusionTest
                     Canvas.SetZIndex(startLine, 30);
                     break;
                 case ViewLines.endpoint:
-                    if (next.y - mainWindow.viewPoint.Y == 0 || next.x - mainWindow.viewPoint.X == 0)
-                        break;
-                    slope = (next.y - mainWindow.viewPoint.Y) / (next.x - mainWindow.viewPoint.X);
+                    if (next.y - mainWindow.viewPoint.Y == 0)
+                        slope = 0;
+                    else if (next.x - mainWindow.viewPoint.X == 0)
+                        slope = -1 * Math.Sign(next.y - mainWindow.viewPoint.Y) * 1000000;
+                    else //Calculate y slope
+                        slope = (next.y - mainWindow.viewPoint.Y) / (next.x - mainWindow.viewPoint.X);
                     endLine = new Line();
                     endLine.X1 = next.x;
                     endLine.Y1 = next.y;

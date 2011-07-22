@@ -113,16 +113,16 @@ namespace ViewOcclusionTest
         {
             //Faces are defined as the start point and the next adjoining face. We're only dealing with squares so no need to do lots of general poly shite.
             //The point defined per face is the right vertex of the face as if you were inside the square.
-            faceW = new Face();
+            faceW = new Face(mainWindow);
             faceW.x = x * tileSize;
             faceW.y = y * tileSize;
-            faceS = new Face();
+            faceS = new Face(mainWindow);
             faceS.x = x * tileSize;
             faceS.y = (y + 1) * tileSize;
-            faceE = new Face();
+            faceE = new Face(mainWindow);
             faceE.x = (x + 1) * tileSize;
             faceE.y = (y + 1) * tileSize;
-            faceN = new Face();
+            faceN = new Face(mainWindow);
             faceN.x = (x + 1) * tileSize;
             faceN.y = y * tileSize;
 
@@ -158,85 +158,10 @@ namespace ViewOcclusionTest
 
             if (IsInWindow)
             {
-                if (faceW.line == null)
-                {
-                    faceW.line = new Line();
-                    faceW.SetLinePoints();
-                    canvas.Children.Add(faceW.line);
-                    Canvas.SetLeft(faceW.line, 0);
-                    Canvas.SetTop(faceW.line, 0);
-                    Canvas.SetZIndex(faceW.line, 20);
-                    if (faceW.IsFacing(mainWindow.viewPoint) && faceW.over == null)
-                    {
-                        faceW.SetLineColor(Brushes.Green);
-                        Canvas.SetZIndex(faceW.line, 21);
-                    }
-                    else
-                    {
-                        faceW.SetLineColor(Brushes.Black);
-                        Canvas.SetZIndex(faceW.line, 20);
-                    }
-                }
-                if (faceS.line == null)
-                {
-                    faceS.line = new Line();
-                    faceS.SetLinePoints();
-                    canvas.Children.Add(faceS.line);
-                    Canvas.SetLeft(faceS.line, 0);
-                    Canvas.SetTop(faceS.line, 0);
-                    Canvas.SetZIndex(faceS.line, 20);
-                    if (faceS.IsFacing(mainWindow.viewPoint) && faceS.over == null)
-                    {
-                        faceS.SetLineColor(Brushes.Green);
-                        Canvas.SetZIndex(faceS.line, 21);
-                    }
-                    else
-                    {
-                        faceS.SetLineColor(Brushes.Black);
-                        Canvas.SetZIndex(faceS.line, 20);
-                    }
-                }
-
-                if (faceE.line == null)
-                {
-                    faceE.line = new Line();
-                    faceE.SetLinePoints();
-                    canvas.Children.Add(faceE.line);
-                    Canvas.SetLeft(faceE.line, 0);
-                    Canvas.SetTop(faceE.line, 0);
-                    Canvas.SetZIndex(faceE.line, 20);
-                    if (faceE.IsFacing(mainWindow.viewPoint) && faceE.over == null)
-                    {
-                        faceE.SetLineColor(Brushes.Green);
-                        Canvas.SetZIndex(faceE.line, 21);
-                    }
-                    else
-                    {
-                        faceE.SetLineColor(Brushes.Black);
-                        Canvas.SetZIndex(faceE.line, 20);
-                    }
-                }
-
-                if (faceN.line == null)
-                {
-                    faceN.line = new Line();
-                    faceN.SetLinePoints();
-                    canvas.Children.Add(faceN.line);
-                    Canvas.SetLeft(faceN.line, 0);
-                    Canvas.SetTop(faceN.line, 0);
-                    Canvas.SetZIndex(faceN.line, 20);
-                    if (faceN.IsFacing(mainWindow.viewPoint) && faceN.over == null)
-                    {
-                        faceN.SetLineColor(Brushes.Green);
-                        Canvas.SetZIndex(faceN.line, 21);
-                    }
-                    else
-                    {
-                        faceN.SetLineColor(Brushes.Black);
-                        Canvas.SetZIndex(faceN.line, 20);
-                    }
-
-                }
+                faceW.DrawLine(mainWindow.viewPoint);
+                faceS.DrawLine(mainWindow.viewPoint);
+                faceE.DrawLine(mainWindow.viewPoint);
+                faceN.DrawLine(mainWindow.viewPoint);
             }
             else
             {
@@ -249,14 +174,11 @@ namespace ViewOcclusionTest
         {
             if (!IsSolid)
                 return;
-            canvas.Children.Remove(faceW.line);
-            faceW.line = null;
-            canvas.Children.Remove(faceS.line);
-            faceS.line = null;
-            canvas.Children.Remove(faceE.line);
-            faceE.line = null;
-            canvas.Children.Remove(faceN.line);
-            faceN.line = null;
+            faceW.RemoveLines();
+            faceS.RemoveLines();
+            faceE.RemoveLines();
+            faceN.RemoveLines();
         }
+
     }
 }

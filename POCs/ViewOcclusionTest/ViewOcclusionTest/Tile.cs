@@ -162,11 +162,42 @@ namespace ViewOcclusionTest
                 faceS.DrawLine(mainWindow.viewPoint);
                 faceE.DrawLine(mainWindow.viewPoint);
                 faceN.DrawLine(mainWindow.viewPoint);
+
+                DrawViewLines();
             }
             else
             {
                 RemoveLines();
             }
+
+        }
+
+        public void DrawViewLines()
+        {
+            if(!IsSolid)
+                return;
+
+            Point vp = mainWindow.viewPoint;
+
+            //Draw endpoints.
+            if (faceW.IsFacing(vp) && !faceW.next.IsFacing(vp) && faceW.over == null && GetAdjacentFace(faceW, false) == null)
+                faceW.DrawViewLine(Face.ViewLines.endpoint);
+            if (faceS.IsFacing(vp) && !faceS.next.IsFacing(vp) && faceS.over == null && GetAdjacentFace(faceS, false) == null)
+                faceS.DrawViewLine(Face.ViewLines.endpoint);
+            if (faceE.IsFacing(vp) && !faceE.next.IsFacing(vp) && faceE.over == null && GetAdjacentFace(faceE, false) == null)
+                faceE.DrawViewLine(Face.ViewLines.endpoint);
+            if (faceN.IsFacing(vp) && !faceN.next.IsFacing(vp) && faceN.over == null && GetAdjacentFace(faceN, false) == null)
+                faceN.DrawViewLine(Face.ViewLines.endpoint);
+
+            //Draw startpoints.
+            if (faceW.IsFacing(vp) && !faceW.next.next.next.IsFacing(vp) && faceW.over == null && GetAdjacentFace(faceW, true) == null)
+                faceW.DrawViewLine(Face.ViewLines.origin);
+            if (faceS.IsFacing(vp) && !faceS.next.next.next.IsFacing(vp) && faceS.over == null && GetAdjacentFace(faceS, true) == null)
+                faceS.DrawViewLine(Face.ViewLines.origin);
+            if (faceE.IsFacing(vp) && !faceE.next.next.next.IsFacing(vp) && faceE.over == null && GetAdjacentFace(faceE, true) == null)
+                faceE.DrawViewLine(Face.ViewLines.origin);
+            if (faceN.IsFacing(vp) && !faceN.next.next.next.IsFacing(vp) && faceN.over == null && GetAdjacentFace(faceN, true) == null)
+                faceN.DrawViewLine(Face.ViewLines.origin);
 
         }
 
@@ -180,5 +211,23 @@ namespace ViewOcclusionTest
             faceN.RemoveLines();
         }
 
+        //Get the same face on the adjacent tile in either the direction of the origin or the endpoint.
+        public Face GetAdjacentFace(Face f, bool origin)
+        {
+            if (origin && f.next.next.next.over != null)
+                return f.next.next.next.over.next.next.next; //I know, this is fucking kludgy.
+            else if (!origin && f.next.over != null)
+                return f.next.over.next;
+            else
+                return null;
+        }
+
+        public enum Faces
+        {
+            west,
+            south,
+            east,
+            north
+        }
     }
 }

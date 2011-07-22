@@ -165,6 +165,53 @@ namespace ViewOcclusionTest
             endpoint,
             both
         }
+
+        //Get the same face on the adjacent tile in either the direction of the origin or the endpoint.
+        public Face GetAdjacentFace(bool origin)
+        {
+            if (origin && next.next.next.over != null)
+                return next.next.next.over.next.next.next; //I know, this is fucking kludgy.
+            else if (!origin && next.over != null)
+                return next.over.next;
+            else
+                return null;
+        }
+
+        public Polygon GetOcclusionPoly()
+        {
+            Polygon p = new Polygon();
+            PointCollection polygonPoints = new PointCollection();
+            Face checkFace = this;
+            polygonPoints.Add(new Point(x,y)); //Add start point
+            int i = 0;
+            while (checkFace.endLine == null && i < 30)
+            {
+                if (checkFace.GetAdjacentFace(false) == null)
+                    checkFace = checkFace.next;
+                else if (checkFace.GetAdjacentFace(false) != null && checkFace.GetAdjacentFace(false).over != null)
+                {
+                    checkFace = checkFace.GetAdjacentFace(false).over.next;
+                    polygonPoints.Add(new Point(checkFace.x, checkFace.y));
+                }
+                else
+                    checkFace = checkFace.GetAdjacentFace(false);
+                i++;
+            }
+            if (checkFace.endLine != null)
+            {
+                polygonPoints.Add(new Point(checkFace.endLine.X1, checkFace.endLine.Y1));
+                polygonPoints.Add(new Point(checkFace.endLine.X2, checkFace.endLine.Y2));
+            }
+            else
+                return null;
+            
+            polygonPoints.Add(new Point(startLine.X2, startLine.Y2));
+            p.Points = polygonPoints;
+            p.Stroke = Brushes.Black;
+            p.Fill = Brushes.Black;
+            
+            return p;
+        }
     }
 
     

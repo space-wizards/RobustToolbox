@@ -98,6 +98,15 @@ namespace ViewOcclusionTest
 
         public void CullViewFrustum()
         {
+            //Populate faces
+            for (int i = 0; i < arrayDims.X; i++)
+            {
+                for (int j = 0; j < arrayDims.Y; j++)
+                {
+                    tileArray[i, j].PopulateOverlapFaces();
+                }
+            }
+
             for (int i = 0; i < arrayDims.X; i++)
             {
                 for (int j = 0; j < arrayDims.Y; j++)
@@ -107,6 +116,7 @@ namespace ViewOcclusionTest
                     {
                         tileArray[i, j].IsInWindow = false;
                         tileArray[i, j].RemoveLines();
+                        tileArray[i, j].RemoveOcclusionPoly();
                     }
                     else
                     {
@@ -117,12 +127,11 @@ namespace ViewOcclusionTest
                 }
             }
 
-            //Populate faces
             for (int i = 0; i < arrayDims.X; i++)
             {
                 for (int j = 0; j < arrayDims.Y; j++)
                 {
-                    tileArray[i, j].PopulateOverlapFaces();
+                    tileArray[i, j].DrawOcclusionPoly();
                 }
             }
 

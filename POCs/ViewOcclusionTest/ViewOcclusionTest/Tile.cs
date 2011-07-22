@@ -23,6 +23,7 @@ namespace ViewOcclusionTest
         public int tileSize;
         private bool solid;
         public MainWindow mainWindow;
+        public Polygon poly;
 
         Canvas canvas;
 
@@ -180,24 +181,59 @@ namespace ViewOcclusionTest
             Point vp = mainWindow.viewPoint;
 
             //Draw endpoints.
-            if (faceW.IsFacing(vp) && !faceW.next.IsFacing(vp) && faceW.over == null && GetAdjacentFace(faceW, false) == null)
+            if (faceW.IsFacing(vp) && !faceW.next.IsFacing(vp) && faceW.over == null && faceW.GetAdjacentFace(false) == null)
                 faceW.DrawViewLine(Face.ViewLines.endpoint);
-            if (faceS.IsFacing(vp) && !faceS.next.IsFacing(vp) && faceS.over == null && GetAdjacentFace(faceS, false) == null)
+            if (faceS.IsFacing(vp) && !faceS.next.IsFacing(vp) && faceS.over == null && faceS.GetAdjacentFace(false) == null)
                 faceS.DrawViewLine(Face.ViewLines.endpoint);
-            if (faceE.IsFacing(vp) && !faceE.next.IsFacing(vp) && faceE.over == null && GetAdjacentFace(faceE, false) == null)
+            if (faceE.IsFacing(vp) && !faceE.next.IsFacing(vp) && faceE.over == null && faceE.GetAdjacentFace(false) == null)
                 faceE.DrawViewLine(Face.ViewLines.endpoint);
-            if (faceN.IsFacing(vp) && !faceN.next.IsFacing(vp) && faceN.over == null && GetAdjacentFace(faceN, false) == null)
+            if (faceN.IsFacing(vp) && !faceN.next.IsFacing(vp) && faceN.over == null && faceN.GetAdjacentFace(false) == null)
                 faceN.DrawViewLine(Face.ViewLines.endpoint);
 
             //Draw startpoints.
-            if (faceW.IsFacing(vp) && !faceW.next.next.next.IsFacing(vp) && faceW.over == null && GetAdjacentFace(faceW, true) == null)
+            if (faceW.IsFacing(vp) && !faceW.next.next.next.IsFacing(vp) && faceW.over == null && faceW.GetAdjacentFace(true) == null)
                 faceW.DrawViewLine(Face.ViewLines.origin);
-            if (faceS.IsFacing(vp) && !faceS.next.next.next.IsFacing(vp) && faceS.over == null && GetAdjacentFace(faceS, true) == null)
+            if (faceS.IsFacing(vp) && !faceS.next.next.next.IsFacing(vp) && faceS.over == null && faceS.GetAdjacentFace(true) == null)
                 faceS.DrawViewLine(Face.ViewLines.origin);
-            if (faceE.IsFacing(vp) && !faceE.next.next.next.IsFacing(vp) && faceE.over == null && GetAdjacentFace(faceE, true) == null)
+            if (faceE.IsFacing(vp) && !faceE.next.next.next.IsFacing(vp) && faceE.over == null && faceE.GetAdjacentFace(true) == null)
                 faceE.DrawViewLine(Face.ViewLines.origin);
-            if (faceN.IsFacing(vp) && !faceN.next.next.next.IsFacing(vp) && faceN.over == null && GetAdjacentFace(faceN, true) == null)
+            if (faceN.IsFacing(vp) && !faceN.next.next.next.IsFacing(vp) && faceN.over == null && faceN.GetAdjacentFace(true) == null)
                 faceN.DrawViewLine(Face.ViewLines.origin);
+
+        }
+
+        public void RemoveOcclusionPoly()
+        {
+            if (poly != null)
+            {
+                canvas.Children.Remove(poly);
+                poly = null;
+            }
+        }
+
+        public void DrawOcclusionPoly()
+        {
+            if (!IsSolid || !IsInWindow)
+                return;
+
+            RemoveOcclusionPoly();
+
+            if (faceW.startLine != null)
+                poly = faceW.GetOcclusionPoly();
+            if (faceS.startLine != null)
+                poly = faceS.GetOcclusionPoly();
+            if (faceE.startLine != null)
+                poly = faceE.GetOcclusionPoly();
+            if (faceN.startLine != null)
+                poly = faceN.GetOcclusionPoly();
+
+            if (poly != null)
+            {
+                canvas.Children.Add(poly);
+                Canvas.SetZIndex(poly, 40);
+            }
+
+
 
         }
 
@@ -211,16 +247,7 @@ namespace ViewOcclusionTest
             faceN.RemoveLines();
         }
 
-        //Get the same face on the adjacent tile in either the direction of the origin or the endpoint.
-        public Face GetAdjacentFace(Face f, bool origin)
-        {
-            if (origin && f.next.next.next.over != null)
-                return f.next.next.next.over.next.next.next; //I know, this is fucking kludgy.
-            else if (!origin && f.next.over != null)
-                return f.next.over.next;
-            else
-                return null;
-        }
+
 
         public enum Faces
         {

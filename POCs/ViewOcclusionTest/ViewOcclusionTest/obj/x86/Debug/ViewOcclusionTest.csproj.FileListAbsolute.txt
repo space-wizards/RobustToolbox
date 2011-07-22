@@ -1,0 +1,13 @@
+C:\Users\William Schaller\Desktop\ss3d-clean\POCs\ViewOcclusionTest\ViewOcclusionTest\bin\Debug\ViewOcclusionTest.exe
+C:\Users\William Schaller\Desktop\ss3d-clean\POCs\ViewOcclusionTest\ViewOcclusionTest\bin\Debug\ViewOcclusionTest.pdb
+C:\Users\William Schaller\Desktop\ss3d-clean\POCs\ViewOcclusionTest\ViewOcclusionTest\obj\x86\Debug\ResolveAssemblyReference.cache
+C:\Users\William Schaller\Desktop\ss3d-clean\POCs\ViewOcclusionTest\ViewOcclusionTest\obj\x86\Debug\MainWindow.baml
+C:\Users\William Schaller\Desktop\ss3d-clean\POCs\ViewOcclusionTest\ViewOcclusionTest\obj\x86\Debug\MainWindow.g.cs
+C:\Users\William Schaller\Desktop\ss3d-clean\POCs\ViewOcclusionTest\ViewOcclusionTest\obj\x86\Debug\App.g.cs
+C:\Users\William Schaller\Desktop\ss3d-clean\POCs\ViewOcclusionTest\ViewOcclusionTest\obj\x86\Debug\ViewOcclusionTest_MarkupCompile.cache
+C:\Users\William Schaller\Desktop\ss3d-clean\POCs\ViewOcclusionTest\ViewOcclusionTest\obj\x86\Debug\ViewOcclusionTest.g.resources
+C:\Users\William Schaller\Desktop\ss3d-clean\POCs\ViewOcclusionTest\ViewOcclusionTest\obj\x86\Debug\ViewOcclusionTest.Properties.Resources.resources
+C:\Users\William Schaller\Desktop\ss3d-clean\POCs\ViewOcclusionTest\ViewOcclusionTest\obj\x86\Debug\GenerateResource.read.1.tlog
+C:\Users\William Schaller\Desktop\ss3d-clean\POCs\ViewOcclusionTest\ViewOcclusionTest\obj\x86\Debug\GenerateResource.write.1.tlog
+C:\Users\William Schaller\Desktop\ss3d-clean\POCs\ViewOcclusionTest\ViewOcclusionTest\obj\x86\Debug\ViewOcclusionTest.exe
+C:\Users\William Schaller\Desktop\ss3d-clean\POCs\ViewOcclusionTest\ViewOcclusionTest\obj\x86\Debug\ViewOcclusionTest.pdb

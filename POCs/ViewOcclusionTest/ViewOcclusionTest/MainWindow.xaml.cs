@@ -94,6 +94,15 @@ namespace ViewOcclusionTest
 
         public void Update(object sender, EventArgs e)
         {
+            if (Keyboard.IsKeyDown(Key.A) && viewPoint.X >= 1)
+                setViewPoint(new Point(viewPoint.X - 1, viewPoint.Y));
+            if (Keyboard.IsKeyDown(Key.D) && viewPoint.X <= 650)
+                setViewPoint(new Point(viewPoint.X + 1, viewPoint.Y));
+            if (Keyboard.IsKeyDown(Key.W) && viewPoint.Y >= 1)
+                setViewPoint(new Point(viewPoint.X, viewPoint.Y - 1));
+            if (Keyboard.IsKeyDown(Key.S) && viewPoint.Y <= 650)
+                setViewPoint(new Point(viewPoint.X, viewPoint.Y + 1));
+
         }
 
         public void CullViewFrustum()

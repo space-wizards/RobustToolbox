@@ -91,6 +91,7 @@
     <Compile Include="Atom\Mob\Human.cs" />
     <Compile Include="Atom\Mob\Mob.cs" />
     <Compile Include="Atom\Object\Door\Door.cs" />
+    <Compile Include="Atom\Object\Lights\WallLight.cs" />
     <Compile Include="Atom\Object\Object.cs" />
     <Compile Include="Helper Classes\InterpolationPacket.cs" />
     <Compile Include="Helper Classes\Point.cs" />
@@ -116,7 +117,9 @@
   </ItemGroup>
   <ItemGroup>
     <None Include="app.config" />
-    <None Include="atoms.ss13" />
+    <None Include="atoms.ss13">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
     <None Include="SavedMap">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>

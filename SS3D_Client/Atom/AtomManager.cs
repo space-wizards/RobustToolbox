@@ -120,6 +120,7 @@ namespace SS3D.Atom
         private void HandleDeleteAtom(NetIncomingMessage message)
         {
             ushort uid = message.ReadUInt16();
+            atomDictionary[uid] = null;
             atomDictionary.Remove(uid);
         }
 

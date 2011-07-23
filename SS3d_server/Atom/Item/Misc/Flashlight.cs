@@ -36,5 +36,18 @@ namespace SS3d_server.Atom.Item.Misc
             msg.Write((byte)light.direction);
             SendMessageTo(msg, client);
         }
+
+        public override void SendState()
+        {
+            base.SendState();
+
+            NetOutgoingMessage msg = CreateAtomMessage();
+            msg.Write((byte)AtomMessage.Push);
+            msg.Write(light.color.r);
+            msg.Write(light.color.g);
+            msg.Write(light.color.b);
+            msg.Write((byte)light.direction);
+            SendMessageToAll(msg);
+        }
     }
 }

@@ -31,6 +31,7 @@ namespace SS3D.Atom.Item.Misc
             {
                 light.color = Color.FromArgb(r, g, b);
             }
+            UpdatePosition();
             light.UpdateLight();
         }
 

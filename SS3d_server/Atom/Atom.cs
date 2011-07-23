@@ -56,6 +56,11 @@ namespace SS3d_server.Atom
             updateRequired = true;
         }
 
+        public virtual void SendState()
+        {
+            // Sends the state to all
+        }
+
         public virtual void SendState(NetConnection client)
         {
             /// This is empty because so far the only things that need it are items.

@@ -156,10 +156,35 @@ namespace SS3d_server.Modules.Map
             return true;
         }
 
+        public void SaveMap()
+        {
+            string fileName = "SavedMap";
+
+            FileStream fs = new FileStream(fileName, FileMode.Create);
+            StreamWriter sw = new StreamWriter(fs);
+            Console.WriteLine("Saving map: W: " + mapWidth + " H: " + mapHeight);
+            sw.WriteLine(mapWidth);
+            sw.WriteLine(mapHeight);
+            
+            for (int y = 0; y < mapHeight; y++)
+            {
+                Console.Write(".");
+                for (int x = 0; x < mapWidth; x++)
+                {
+                    sw.WriteLine(tileArray[x, y].tileType.ToString());
+                }
+            }
+            Console.Write("Done!");
+
+            sw.Close();
+            fs.Close();
+        }
+
         private void NewMap()
         {
-            mapWidth = 100;
-            mapHeight = 100;
+            Console.WriteLine("***** Cannot find map. Generating blank map. *****");
+            mapWidth = 50;
+            mapHeight = 50;
             tileArray = new Tile[mapWidth, mapHeight];
             for (int x = 0; x < mapWidth; x++)
             {

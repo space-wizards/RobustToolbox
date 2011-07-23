@@ -340,7 +340,7 @@ namespace SS3D.States
             }
             if (e.Key == KeyboardKeys.F5)
             {
-                map.SaveMap();
+                playerController.SendVerb("save", 0);
             }
             playerController.KeyDown(e.Key);
         }
@@ -360,6 +360,8 @@ namespace SS3D.States
                 gameInterface.PlaceBuilding();
                 return;
             }
+            if (playerController.controlledAtom == null)
+                return;
 
             #region Object clicking
             bool atomClicked = false;

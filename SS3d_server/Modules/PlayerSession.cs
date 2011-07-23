@@ -109,9 +109,11 @@ namespace SS3d_server.Modules
                         JoinGame();
                         break;
                     case "toxins":
-                        //Need debugging function to add moar gas
+                        //Need debugging function to add more gas
+                    case "save":
+                        netServer.atomManager.SaveAtoms();
+                        netServer.map.SaveMap();
                         break;
-
                     default:
                         break;
                 }

@@ -551,7 +551,7 @@ namespace SS3d_server
         public void AddRandomCrowbars()
         {
             // this is just getting stupid now
-            Atom.Item.Tool.Crowbar c;
+            /*Atom.Item.Tool.Crowbar c;
             Atom.Item.Tool.Welder g;
             Atom.Item.Tool.Wrench e;
             Atom.Item.Container.Toolbox t;
@@ -602,7 +602,8 @@ namespace SS3d_server
             d.Translate(new SS3D_shared.HelperClasses.Vector2(592, 336));
 
             d = (Atom.Object.Door.Door)atomManager.SpawnAtom("Atom.Object.Door.Door");
-            d.Translate(new SS3D_shared.HelperClasses.Vector2(592, 432));
+            d.Translate(new SS3D_shared.HelperClasses.Vector2(592, 432));*/
+            atomManager.LoadAtoms();
         }
     }
 }

@@ -116,6 +116,7 @@
   </ItemGroup>
   <ItemGroup>
     <None Include="app.config" />
+    <None Include="atoms.ss13" />
     <None Include="SavedMap">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>

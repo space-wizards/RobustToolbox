@@ -647,9 +647,9 @@ namespace SS3D.Modules.Map
 
         void light_compute_visibility(int viewer_x, int viewer_y, int target_x, int target_y, int ldx, int ldy, int rdx, int rdy, Light light)
         {
-            if (target_x > viewer_x + 10 || target_x < viewer_x - 10)
+            if (target_x > viewer_x + (light.range / tileSpacing) + 1 || target_x < viewer_x - (light.range / tileSpacing) - 1)
                 return;
-            if (target_y > viewer_y + 10 || target_y < viewer_y - 10)
+            if (target_y > viewer_y + (light.range / tileSpacing) + 1 || target_y < viewer_y - (light.range / tileSpacing) - 1)
                 return;
             // Abort if we are out of bounds.
             if (target_x < 0 || target_x >= mapWidth)

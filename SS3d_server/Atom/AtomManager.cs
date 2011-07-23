@@ -3,6 +3,9 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Reflection;
+using System.Runtime.Serialization;
+using System.Runtime.Serialization.Formatters.Binary;
+using System.IO;
 
 using SS3D_shared;
 using SS3D_shared.HelperClasses;
@@ -133,7 +136,6 @@ namespace SS3d_server.Atom
             {
                 SendSpawnAtom(atom.uid, AtomName(atom), client);
             }
-
             ///Tell each atom to do its post-instantiation shit. Theoretically, this should all occur after each atom has
             ///been spawned and instantiated on the clientside. Network traffic wise this might be weird
             ///
@@ -141,6 +143,7 @@ namespace SS3d_server.Atom
             {
                 atom.SendState(client);
             }
+            
         }
 
         public string AtomName(object atom)
@@ -195,6 +198,46 @@ namespace SS3d_server.Atom
                 return atomDictionary[uid];
             else
                 return null;
+        }
+
+        public void SaveAtoms()
+        {
+            Stream s = File.Open("atoms.ss13", FileMode.Create);
+            BinaryFormatter f = new BinaryFormatter();
+
+            Console.WriteLine("Writing atoms to file...");
+            List<Atom> saveList = new List<Atom>();
+            foreach (Atom a in atomDictionary.Values)
+            {
+                if (a.IsChildOfType(typeof(Mob.Mob)))
+                    continue;
+                saveList.Add(a);
+                Console.Write(".");
+            }
+            f.Serialize(s, saveList);
+            Console.Write(".");
+            s.Close();
+            Console.WriteLine("Done!");
+        }
+
+        public void LoadAtoms()
+        {
+            if (!File.Exists("atoms.ss13"))
+            {
+                Console.WriteLine("***** Cannot find file atoms.ss13. Map starting empty *****");
+                return;
+            }
+
+            Stream s = new FileStream("atoms.ss13", FileMode.Open);
+            BinaryFormatter f = new BinaryFormatter();
+            List<Atom> o = (List<Atom>)f.Deserialize(s);
+            foreach (Atom a in o)
+            {
+                a.SetUp(lastUID++, this);
+                a.SerializedInit();
+                atomDictionary.Add(a.uid, a);
+            }
+            s.Close();
         }
     }
 }

@@ -2,6 +2,8 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using System.Runtime.Serialization;
+using System.Runtime.Serialization.Formatters.Binary;
 using SS3d_server.HelperClasses;
 using Lidgren.Network;
 using SS3D_shared.HelperClasses;
@@ -9,8 +11,10 @@ using SS3d_server.Atom.Extension;
 
 namespace SS3d_server.Atom
 {
-    public class Atom // SERVER SIDE
+    [Serializable()]
+    public class Atom : ISerializable  // SERVER SIDE
     {
+        
         #region variables
         // wat
         public string name;
@@ -54,6 +58,13 @@ namespace SS3d_server.Atom
             uid = _uid;
             atomManager = _atomManager;
             updateRequired = true;
+        }
+
+
+        public virtual void SerializedInit()
+        {
+            // When things are created with reflection using serialization their default constructor
+            // isn't called. Put things in here which need to be done when it's created.
         }
 
         public virtual void SendState()
@@ -337,6 +348,22 @@ namespace SS3d_server.Atom
         {
             isDead = true;
         }
+        #endregion
+
+        #region Serialization
+
+        public Atom(SerializationInfo info, StreamingContext ctxt)
+        {
+            name = (string)info.GetValue("name", typeof(string));
+            position = (Vector2)info.GetValue("position", typeof(Vector2));
+        }
+
+        public virtual void GetObjectData(SerializationInfo info, StreamingContext ctxt)
+        {
+            info.AddValue("name", name);
+            info.AddValue("position", position);
+        }
+
         #endregion
     }
 }

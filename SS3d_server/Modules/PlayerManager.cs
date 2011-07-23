@@ -32,6 +32,7 @@ namespace SS3d_server.Modules
             //Spawn the player's atom. There's probably a much better place to do this.
             Atom.Atom a = netServer.atomManager.SpawnAtom("Atom.Mob.Human");
             s.AttachToAtom(a);
+            Console.Write("2");
         }
 
         public PlayerSession GetSessionByConnection(NetConnection client)

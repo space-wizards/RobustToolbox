@@ -336,18 +336,7 @@ namespace SS3D.States
             playerController.KeyDown(e.Key);
             if (e.Key == KeyboardKeys.F4)
             {
-                //gameInterface.StartBuilding(typeof(Atom.Item.Container.Toolbox));
-                foreach (Atom.Atom f in atomManager.atomDictionary.Values)
-                {
-                    if (f is Atom.Item.Misc.Flashlight)
-                    {
-                        NetOutgoingMessage message = mStateMgr.prg.mNetworkMgr.netClient.CreateMessage();
-                        message.Write((byte)NetMessage.AtomManagerMessage);
-                        message.Write((byte)AtomManagerMessage.DeleteAtom);
-                        message.Write(f.uid);
-                        mStateMgr.prg.mNetworkMgr.SendMessage(message, NetDeliveryMethod.ReliableUnordered);
-                    }
-                }
+                gameInterface.StartBuilding(typeof(Atom.Item.Container.Toolbox));
             }
             if (e.Key == KeyboardKeys.F5)
             {

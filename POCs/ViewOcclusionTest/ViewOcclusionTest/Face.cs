@@ -224,6 +224,7 @@ namespace ViewOcclusionTest
             p.Points = polygonPoints;
             p.Stroke = Brushes.Black;
             p.Fill = Brushes.Black;
+            p.Opacity = 0.4;
             
             return p;
         }

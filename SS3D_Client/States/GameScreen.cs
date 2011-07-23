@@ -216,7 +216,8 @@ namespace SS3D.States
         public override void GorgonRender(FrameEventArgs e)
         {
             Gorgon.Screen.Clear(System.Drawing.Color.Black);
-
+            Gorgon.Screen.DefaultView.Left = 400;
+            Gorgon.Screen.DefaultView.Top = 400;
             if (playerController.controlledAtom != null)
             {
                 System.Drawing.Point centerTile = map.GetTileArrayPositionFromWorldPosition(playerController.controlledAtom.position);

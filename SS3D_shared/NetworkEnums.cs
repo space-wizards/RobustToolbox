@@ -53,6 +53,12 @@ public enum MobMessage
     Death
 }
 
+public enum MapMessage
+{
+    TurfUpdate = 0,
+    TurfClick
+}
+
 public enum MobHand
 {
     RHand = 0,

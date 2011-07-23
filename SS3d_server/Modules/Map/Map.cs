@@ -35,10 +35,12 @@ namespace SS3d_server.Modules.Map
         {
             if (!LoadMap(mapName))
             {
-                return false;
+                NewMap();
             }
-
-            ParseNameArray();
+            else
+            {
+                ParseNameArray();
+            }
             InitializeAtmos();
 
             return true;
@@ -47,6 +49,23 @@ namespace SS3d_server.Modules.Map
 
         #region Networking
         public void HandleNetworkMessage(NetIncomingMessage message)
+        {
+            MapMessage messageType = (MapMessage)message.ReadByte();
+            switch (messageType)
+            {
+                case MapMessage.TurfClick:
+                    HandleTurfClick(message);
+                    break;
+                case MapMessage.TurfUpdate:
+                    HandleTurfUpdate(message);
+                    break;
+                default:
+                    break;
+            }
+
+        }
+
+        private void HandleTurfClick(NetIncomingMessage message)
         {
             // Who clicked and on what tile.
             Atom.Atom clicker = netServer.playerManager.GetSessionByConnection(message.SenderConnection).attachedAtom;
@@ -67,11 +86,27 @@ namespace SS3d_server.Modules.Map
                     {
                         Tiles.Atmos.GasCell g = tileArray[x, y].gasCell;
                         Tiles.Tile t = GenerateNewTile(tileArray[x, y].tileType);
-                        tileArray[x,y] = t;
+                        tileArray[x, y] = t;
                         tileArray[x, y].gasCell = g;
                     }
                     NetworkUpdateTile(x, y);
                 }
+            }
+        }
+
+        private void HandleTurfUpdate(NetIncomingMessage message)
+        {
+            short x = message.ReadInt16();
+            short y = message.ReadInt16();
+            TileType type = (TileType)message.ReadByte();
+
+            if (IsSaneArrayPosition(x, y))
+            {
+                Tiles.Atmos.GasCell g = tileArray[x, y].gasCell;
+                Tile t = GenerateNewTile(type);
+                tileArray[x, y] = t;
+                tileArray[x, y].gasCell = g;
+                NetworkUpdateTile(x, y);
             }
         }
 
@@ -82,6 +117,7 @@ namespace SS3d_server.Modules.Map
 
             NetOutgoingMessage message = netServer.netServer.CreateMessage();
             message.Write((byte)NetMessage.MapMessage);
+            message.Write((byte)MapMessage.TurfUpdate);
             message.Write((short)x);
             message.Write((short)y);
             message.Write((byte)tileArray[x, y].tileType);
@@ -120,6 +156,20 @@ namespace SS3d_server.Modules.Map
             return true;
         }
 
+        private void NewMap()
+        {
+            mapWidth = 100;
+            mapHeight = 100;
+            tileArray = new Tile[mapWidth, mapHeight];
+            for (int x = 0; x < mapWidth; x++)
+            {
+                for (int y = 0; y < mapHeight; y++)
+                {
+                    tileArray[x,y] = new Tiles.Floor.Floor();
+                }
+            }
+        }
+
         private void ParseNameArray()
         {
             tileArray = new Tile[mapWidth, mapHeight];
@@ -131,12 +181,15 @@ namespace SS3d_server.Modules.Map
                     switch (nameArray[x, z])
                     {
                         case "wall":
+                        case  "Wall":
                             tileArray[x, z] = new Tiles.Wall.Wall();
                             break;
                         case "floor":
+                        case "Floor":
                             tileArray[x, z] = new Tiles.Floor.Floor();
                             break;
                         case "space":
+                        case "Space":
                             tileArray[x, z] = new Tiles.Floor.Space();
                             break;
                         default:

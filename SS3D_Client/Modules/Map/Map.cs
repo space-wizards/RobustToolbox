@@ -4,6 +4,7 @@ using System.Text;
 using SS3D.HelperClasses;
 using SS3D_shared;
 using SS3D.Tiles;
+using System.IO;
 using Lidgren.Network;
 using GorgonLibrary;
 using GorgonLibrary.Graphics;
@@ -37,6 +38,7 @@ namespace SS3D.Modules.Map
             {
                 tileSprites.Add(wallTopSpriteName + i, ResMgr.Singleton.GetSprite(wallTopSpriteName + i));
             }
+            tileSprites.Add("SpaceTexture", ResMgr.Singleton.GetSprite("SpaceTexture"));
 
             cardinalList = new List<Vector2D>();
             cardinalList.Add(new Vector2D(0, 0));
@@ -136,13 +138,47 @@ namespace SS3D.Modules.Map
             return true;
         }
 
+        public void SaveMap()
+        {
+            string fileName = "SavedMap";
+
+            FileStream fs = new FileStream(fileName, FileMode.Create);
+            StreamWriter sw = new StreamWriter(fs);
+
+            sw.WriteLine(mapWidth);
+            sw.WriteLine(mapHeight);
+
+            for (int y = 0; y < mapHeight; y++)
+            {
+                for (int x = 0; x < mapWidth; x++)
+                {
+                    sw.WriteLine(tileArray[x, y].name);
+                }
+            }
+
+            sw.Close();
+            fs.Close();
+        }
+
         #endregion
 
         #region Networking
 
         public void HandleNetworkMessage(NetIncomingMessage message)
         {
-            // We can only update tiles atm so lets just do that for now.
+            MapMessage messageType = (MapMessage)message.ReadByte();
+            switch (messageType)
+            {
+                case MapMessage.TurfUpdate:
+                    HandleTurfUpdate(message);
+                    break;
+                default:
+                    break;
+            }
+        }
+
+        private void HandleTurfUpdate(NetIncomingMessage message)
+        {
             short x = message.ReadInt16();
             short y = message.ReadInt16();
             TileType type = (TileType)message.ReadByte();
@@ -157,11 +193,16 @@ namespace SS3D.Modules.Map
                 if (tileArray[x, y].tileType != type)
                 {
                     Tile[] surroundTiles = tileArray[x, y].surroundingTiles;
-                    tileArray[x,y] = GenerateNewTile(type, state, new Vector2D(x * tileSpacing, y * tileSpacing));
+                    Light[] lightList = tileArray[x, y].tileLights.ToArray();
+                    tileArray[x, y] = GenerateNewTile(type, state, new Vector2D(x * tileSpacing, y * tileSpacing));
                     tileArray[x, y].surroundingTiles = surroundTiles;
                     foreach (Tile T in tileArray[x, y].surroundingTiles)
                     {
                         T.surroundDirs = SetSprite(T.tilePosition.X, T.tilePosition.Y);
+                    }
+                    foreach (Light l in lightList)
+                    {
+                        l.UpdateLight();
                     }
                     needVisUpdate = true;
                 }
@@ -285,7 +326,7 @@ namespace SS3D.Modules.Map
             switch (type)
             {
                 case TileType.Space:
-                    return new Tiles.Floor.Space(tileSprites["0"], state, tileSpacing, pos, p);
+                    return new Tiles.Floor.Space(tileSprites["SpaceTexture"], state, tileSpacing, pos, p);
                 case TileType.Floor:
                     return new Tiles.Floor.Floor(tileSprites[floorSpriteName], state, tileSpacing, pos, p);
                 case TileType.Wall:
@@ -487,6 +528,10 @@ namespace SS3D.Modules.Map
         
         void compute_visibility(int viewer_x, int viewer_y, int target_x, int target_y, int ldx, int ldy, int rdx, int rdy)
         {
+            if (target_x > viewer_x + 15 || target_x < viewer_x - 15)
+                return;
+            if (target_y > viewer_y + 15 || target_y < viewer_y - 15)
+                return;
             // Abort if we are out of bounds.
             if (target_x < 0 || target_x >= mapWidth)
                 return;
@@ -602,6 +647,10 @@ namespace SS3D.Modules.Map
 
         void light_compute_visibility(int viewer_x, int viewer_y, int target_x, int target_y, int ldx, int ldy, int rdx, int rdy, Light light)
         {
+            if (target_x > viewer_x + 10 || target_x < viewer_x - 10)
+                return;
+            if (target_y > viewer_y + 10 || target_y < viewer_y - 10)
+                return;
             // Abort if we are out of bounds.
             if (target_x < 0 || target_x >= mapWidth)
                 return;

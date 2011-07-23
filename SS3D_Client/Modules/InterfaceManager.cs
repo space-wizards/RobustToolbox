@@ -21,6 +21,8 @@ using GorgonLibrary;
 using GorgonLibrary.Graphics;
 using GorgonLibrary.InputDevices;
 
+using Lidgren.Network;
+
 using System.Windows.Forms;
 
 namespace SS3D.Modules
@@ -42,6 +44,7 @@ namespace SS3D.Modules
         public bool buildingBlocked = false;
         public bool buildingSnapTo = true;
         public bool buildingDrawRange = true;
+        public bool editMode = false;
 
         public GameInterfaceManager(Map.Map _map, AtomManager _atom, GameScreen _screen)
         {
@@ -61,7 +64,8 @@ namespace SS3D.Modules
 
         private bool CanPlace()
         {
-            if ((gameScreen.playerController.controlledAtom.position - gameScreen.mousePosWorld).Length > buildingRange) return false;
+            if (!editMode && (gameScreen.playerController.controlledAtom.position - gameScreen.mousePosWorld).Length > buildingRange) 
+                return false;
 
             System.Drawing.Point arrayPos = map.GetTileArrayPositionFromWorldPosition(gameScreen.mousePosWorld);
             TileType type = map.GetTileTypeFromArrayPosition(arrayPos.X, arrayPos.Y);
@@ -81,7 +85,7 @@ namespace SS3D.Modules
         {
             if (isBuilding)
             {
-                if (!buildingBlocked && CanPlace())
+                if (!editMode && !buildingBlocked && CanPlace())
                 {
                     Random rnd = new Random(DateTime.Now.Hour+DateTime.Now.Minute+DateTime.Now.Millisecond);
                     Atom.Atom newObject = (Atom.Atom)Activator.CreateInstance(buildingType); //This stuff is just for testing.
@@ -89,6 +93,17 @@ namespace SS3D.Modules
                     newObject.position = gameScreen.mousePosWorld;
                     newObject.atomManager = atomManager;
                     atomManager.atomDictionary[(ushort)rnd.Next(32000)] = newObject;
+                    CancelBuilding();
+                }
+                else if (editMode && buildingType != null)
+                {
+                    NetOutgoingMessage message = gameScreen.prg.mNetworkMgr.netClient.CreateMessage();
+                    message.Write((byte)NetMessage.AtomManagerMessage);
+                    message.Write((byte)AtomManagerMessage.SpawnAtom);
+                    message.Write(buildingType.FullName.Remove(0, 5));
+                    message.Write(gameScreen.mousePosWorld.X);
+                    message.Write(gameScreen.mousePosWorld.Y);
+                    gameScreen.prg.mNetworkMgr.SendMessage(message, NetDeliveryMethod.ReliableUnordered);
                     CancelBuilding();
                 }
             }
@@ -106,6 +121,19 @@ namespace SS3D.Modules
 
         public void Update()
         {
+            if (editMode)
+            {
+                buildingType = gameScreen.prg.GorgonForm.GetAtomSpawnType();
+                if (buildingType != null)
+                {
+                    isBuilding = true;
+                    buildingSprite = ResMgr.Singleton.GetSprite(atomManager.GetSpriteName(buildingType));
+                }
+                else
+                {
+                    CancelBuilding();
+                }
+            }
             buildingBlocked = false;
 
             if (isBuilding)
@@ -117,7 +145,7 @@ namespace SS3D.Modules
 
                 if (gameScreen.playerController.controlledAtom != null)
                 {
-                    if ((gameScreen.playerController.controlledAtom.position - gameScreen.mousePosWorld).Length > buildingRange) 
+                    if (!editMode && (gameScreen.playerController.controlledAtom.position - gameScreen.mousePosWorld).Length > buildingRange) 
                         buildingBlocked = true;
                 }
 
@@ -134,7 +162,7 @@ namespace SS3D.Modules
         {
             if (isBuilding)
             {
-                if (gameScreen.playerController.controlledAtom != null && buildingDrawRange)
+                if (gameScreen.playerController.controlledAtom != null && buildingDrawRange && !editMode)
                 {   //Is it a bird? A plane? No! It's a really fucking long line of code!
                     Gorgon.Screen.Circle(gameScreen.playerController.controlledAtom.position.X - gameScreen.xTopLeft, gameScreen.playerController.controlledAtom.position.Y - gameScreen.yTopLeft, buildingRange, System.Drawing.Color.DarkGreen, 2f, 2f);
                 }

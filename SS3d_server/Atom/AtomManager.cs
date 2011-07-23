@@ -162,6 +162,7 @@ namespace SS3d_server.Atom
             atomDictionary[uid].SetUp(uid, this);
 
             SendSpawnAtom(uid, type);
+            atomDictionary[uid].SendState();
             return atomDictionary[uid]; // Why do we return it? So we can do whatever is needed easily from the calling function.
         }
 

@@ -17,6 +17,7 @@ namespace SS3d_server.Atom
         public SS3DNetserver netServer;
 
         public Dictionary<ushort, Atom> atomDictionary;
+        private ushort lastUID = 0;
         #endregion
 
         #region instantiation
@@ -54,6 +55,15 @@ namespace SS3d_server.Atom
                 case AtomManagerMessage.Passthrough:
                     // Pass a message to the atom in question
                     PassMessage(message);
+                    break;
+                case AtomManagerMessage.SpawnAtom:
+                    string type = message.ReadString();
+                    Vector2 position = new Vector2(message.ReadFloat(), message.ReadFloat());
+                    SpawnAtom(type, position);
+                    break;
+                case AtomManagerMessage.DeleteAtom:
+                    ushort uid = message.ReadUInt16();
+                    DeleteAtom(uid);
                     break;
                 default:
                     break;
@@ -142,7 +152,7 @@ namespace SS3d_server.Atom
 
         public Atom SpawnAtom(string type)
         {
-            ushort uid = (ushort)(1 + atomDictionary.Count);
+            ushort uid = lastUID++;
 
             Assembly currentAssembly = Assembly.GetExecutingAssembly();
             Type atomType = currentAssembly.GetType("SS3d_server." + type, true);

@@ -37,7 +37,9 @@ namespace SS3D.Atom.Item.Misc
         public override void UpdatePosition()
         {
             base.UpdatePosition();
-            
+
+            if (light == null)
+                return;
             if (holdingAppendage != null)
             {
                 light.UpdatePosition(holdingAppendage.owner.position);

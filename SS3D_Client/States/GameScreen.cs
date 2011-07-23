@@ -59,6 +59,8 @@ namespace SS3D.States
         private float scaleY = 1.0f;
 
         private System.Drawing.Point screenSize;
+        public string spawnType = "";
+        private bool editMode = false;
    
         #region Mouse/Camera stuff
         private DateTime lastRMBClick = DateTime.Now;
@@ -138,6 +140,8 @@ namespace SS3D.States
             now = DateTime.Now;
             atomManager.Update();
             gameInterface.Update();
+            editMode = prg.GorgonForm.editMode;
+            gameInterface.editMode = editMode;
         }
 
         private void mNetworkMgr_MessageArrived(NetworkManager netMgr, NetIncomingMessage msg)
@@ -333,6 +337,10 @@ namespace SS3D.States
             {
                 gameInterface.StartBuilding(typeof(Atom.Item.Container.Toolbox));
             }
+            if (e.Key == KeyboardKeys.F5)
+            {
+                map.SaveMap();
+            }
             playerController.KeyDown(e.Key);
         }
         public override void KeyUp(KeyboardInputEventArgs e)
@@ -358,12 +366,16 @@ namespace SS3D.States
             Vector2D worldPosition = new Vector2D(e.Position.X + xTopLeft, e.Position.Y + yTopLeft);
             // A bounding box for our click
             System.Drawing.RectangleF mouseAABB = new System.Drawing.RectangleF(worldPosition.X, worldPosition.Y, 1, 1);
-
+            float checkDistance = map.tileSpacing * 1.5f;
             // Find all the atoms near us we could have clicked
+            if (editMode)
+            {
+                checkDistance = 500;
+            }
             IEnumerable<Atom.Atom> atoms = from a in atomManager.atomDictionary.Values
                                            where
-                                           System.Math.Sqrt((playerController.controlledAtom.position.X - a.position.X) * (playerController.controlledAtom.position.X - a.position.X)) < map.tileSpacing * 1.5f &&
-                                           System.Math.Sqrt((playerController.controlledAtom.position.Y - a.position.Y) * (playerController.controlledAtom.position.Y - a.position.Y)) < map.tileSpacing * 1.5f &&
+                                           System.Math.Sqrt((playerController.controlledAtom.position.X - a.position.X) * (playerController.controlledAtom.position.X - a.position.X)) < checkDistance &&
+                                           System.Math.Sqrt((playerController.controlledAtom.position.Y - a.position.Y) * (playerController.controlledAtom.position.Y - a.position.Y)) < checkDistance &&
                                            a.visible
                                            select a;
             // See which one our click AABB intersected with
@@ -371,7 +383,21 @@ namespace SS3D.States
             {
                 if (a.WasClicked(mouseAABB.Location))
                 {
-                    a.HandleClick();
+                    if (!editMode)
+                    {
+                        a.HandleClick();
+                    }
+                    else
+                    {
+                        if (e.Buttons == GorgonLibrary.InputDevices.MouseButtons.Right && prg.GorgonForm.GetAtomSpawnType() == null && a != playerController.controlledAtom)
+                        {
+                            NetOutgoingMessage message = mStateMgr.prg.mNetworkMgr.netClient.CreateMessage();
+                            message.Write((byte)NetMessage.AtomManagerMessage);
+                            message.Write((byte)AtomManagerMessage.DeleteAtom);
+                            message.Write(a.uid);
+                            mStateMgr.prg.mNetworkMgr.SendMessage(message, NetDeliveryMethod.ReliableUnordered);
+                        }
+                    }
                     atomClicked = true; // We clicked an atom so we don't want to send a turf click message too.
                 }
 
@@ -382,16 +408,32 @@ namespace SS3D.States
                 System.Drawing.Point clickedPoint = map.GetTileArrayPositionFromWorldPosition(worldPosition);
                 if (clickedPoint.X > 0 && clickedPoint.Y > 0)
                 {
-                    NetOutgoingMessage message = mStateMgr.prg.mNetworkMgr.netClient.CreateMessage();
-                    message.Write((byte)NetMessage.MapMessage);
-                    message.Write((short)clickedPoint.X);
-                    message.Write((short)clickedPoint.Y);
-                    mStateMgr.prg.mNetworkMgr.SendMessage(message, NetDeliveryMethod.ReliableUnordered);
+                    if (editMode)
+                    {
+                        if (prg.GorgonForm.GetTileSpawnType() != TileType.None && !gameInterface.isBuilding)
+                        {
+                            NetOutgoingMessage message = mStateMgr.prg.mNetworkMgr.netClient.CreateMessage();
+                            message.Write((byte)NetMessage.MapMessage);
+                            message.Write((byte)MapMessage.TurfUpdate);
+                            message.Write((short)clickedPoint.X);
+                            message.Write((short)clickedPoint.Y);
+                            message.Write((byte)prg.GorgonForm.GetTileSpawnType());
+                            mStateMgr.prg.mNetworkMgr.SendMessage(message, NetDeliveryMethod.ReliableUnordered);
+                        }
+                    }
+                    else
+                    {
+                        NetOutgoingMessage message = mStateMgr.prg.mNetworkMgr.netClient.CreateMessage();
+                        message.Write((byte)NetMessage.MapMessage);
+                        message.Write((byte)MapMessage.TurfClick);
+                        message.Write((short)clickedPoint.X);
+                        message.Write((short)clickedPoint.Y);
+                        mStateMgr.prg.mNetworkMgr.SendMessage(message, NetDeliveryMethod.ReliableUnordered);
+                    }
                 }
             } 
             #endregion
         }
-
         public override void MouseMove(MouseInputEventArgs e)
         {
             mousePosScreen = new Vector2D(e.Position.X, e.Position.Y);

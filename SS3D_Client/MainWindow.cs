@@ -48,6 +48,9 @@ namespace SS3D
 
         private Modules.StateManager stateMgr;
         private Program prg;
+        private Type atomSpawnType = null;
+        private TileType tileSpawnType;
+        public bool editMode = false;
 
         #endregion
 
@@ -93,6 +96,7 @@ namespace SS3D
             //_mouse.SetPositionRange(0, 0, Gorgon.CurrentClippingViewport.Width, Gorgon.CurrentClippingViewport.Height);
 
             Gorgon.SetMode(this);
+            Gorgon.AllowBackgroundRendering = true;
             Gorgon.Screen.BackgroundColor = Color.FromArgb(50, 50, 50);
             Gorgon.CurrentRenderTarget.AlphaMaskFunction = CompareFunctions.GreaterThan;
             _mouse.SetPositionRange(0, 0, Gorgon.CurrentClippingViewport.Width, Gorgon.CurrentClippingViewport.Height);
@@ -168,7 +172,8 @@ namespace SS3D
         /// <param name="e">The <see cref="GorgonLibrary.InputDevices.MouseInputEventArgs"/> instance containing the event data.</param>
         private void MouseDownEvent(object sender, MouseInputEventArgs e)
         {
-            stateMgr.MouseDown(e);
+            if(e.Position.Y > menuStrip1.Height)
+                stateMgr.MouseDown(e);
         }
 
         /// <summary>
@@ -178,7 +183,8 @@ namespace SS3D
         /// <param name="e">The <see cref="GorgonLibrary.InputDevices.MouseInputEventArgs"/> instance containing the event data.</param>
         private void MouseUpEvent(object sender, MouseInputEventArgs e)
         {
-            stateMgr.MouseUp(e);
+            if (e.Position.Y > menuStrip1.Height)
+                stateMgr.MouseUp(e);
         }
 
         /// <summary>
@@ -208,7 +214,7 @@ namespace SS3D
                 ((SS3D.States.ConnectMenu)stateMgr.mCurrentState).StartConnect();
                 connectToolStripMenuItem.Enabled = false;
                 disconnectToolStripMenuItem.Enabled = true;
-                //connectToolStripMenuItem.HideDropDown();
+                editModeToolStripMenuItem.Enabled = true;
                 menuToolStripMenuItem.HideDropDown();
             }
         }
@@ -220,7 +226,108 @@ namespace SS3D
             stateMgr.RequestStateChange(typeof(SS3D.States.ConnectMenu));
             connectToolStripMenuItem.Enabled = true;
             disconnectToolStripMenuItem.Enabled = false;
+            editModeToolStripMenuItem.Enabled = false;
+            editToolStripMenuItem.Enabled = false;
             menuToolStripMenuItem.HideDropDown();
         }
+
+        private void editModeToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            if (stateMgr.prg.mNetworkMgr.isConnected)
+            {
+                editToolStripMenuItem.Enabled = !editToolStripMenuItem.Enabled;
+                editToolStripMenuItem.Visible = !editToolStripMenuItem.Visible;
+                editMode = !editMode;
+                statusStrip1.Visible = !statusStrip1.Visible;
+            }
+        }
+
+        public Type GetAtomSpawnType()
+        {
+            return atomSpawnType;
+        }
+
+        public TileType GetTileSpawnType()
+        {
+            return tileSpawnType;
+        }
+
+        private void turfToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            atomSpawnType = null;
+            tileSpawnType = TileType.Floor;
+            toolStripStatusLabel1.Text = tileSpawnType.ToString();
+        }
+
+        private void spaceToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            tileSpawnType = TileType.Space;
+        }
+
+        private void floorToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            tileSpawnType = TileType.Floor;
+        }
+
+        private void wallToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            tileSpawnType = TileType.Wall;
+        }
+
+        private void noneToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            tileSpawnType = TileType.None;
+        }
+
+        private void crowbarToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            tileSpawnType = TileType.None;
+            atomSpawnType = typeof(Atom.Item.Tool.Crowbar);
+            toolStripStatusLabel1.Text = atomSpawnType.ToString();
+        }
+
+        private void welderToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            tileSpawnType = TileType.None;
+            atomSpawnType = typeof(Atom.Item.Tool.Welder);
+            toolStripStatusLabel1.Text = atomSpawnType.ToString();
+        }
+
+        private void wrenchToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            tileSpawnType = TileType.None;
+            atomSpawnType = typeof(Atom.Item.Tool.Wrench);
+            toolStripStatusLabel1.Text = atomSpawnType.ToString();
+        }
+
+        private void toolboxToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            tileSpawnType = TileType.None;
+            atomSpawnType = typeof(Atom.Item.Container.Toolbox);
+            toolStripStatusLabel1.Text = atomSpawnType.ToString();
+        }
+
+        private void flashlightToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            tileSpawnType = TileType.None;
+            atomSpawnType = typeof(Atom.Item.Misc.Flashlight);
+            toolStripStatusLabel1.Text = atomSpawnType.ToString();
+        }
+
+        private void doorToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            tileSpawnType = TileType.None;
+            atomSpawnType = typeof(Atom.Object.Door.Door);
+            toolStripStatusLabel1.Text = atomSpawnType.ToString();
+        }
+
+        private void noneToolStripMenuItem1_Click(object sender, EventArgs e)
+        {
+            tileSpawnType = TileType.None;
+            atomSpawnType = null;
+            toolStripStatusLabel1.Text = "Right click to delete an atom";
+        }
+
+
     }
 }

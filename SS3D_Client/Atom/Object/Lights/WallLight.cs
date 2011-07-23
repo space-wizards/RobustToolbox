@@ -32,8 +32,38 @@ namespace SS3D.Atom.Object.Lights
             {
                 light.color = Color.FromArgb(r, g, b);
             }
+           
             UpdatePosition();
             light.UpdateLight();
+        }
+
+        public override void  Render(float xTopLeft, float yTopLeft)
+        {
+ 	         
+            if (light != null)
+            {
+                switch (light.direction[0])
+                {
+                    case LightDirection.North:
+                        sprite.Rotation = 180;
+                        break;
+                    case LightDirection.East:
+                        sprite.Rotation = 270;
+                        break;
+                    case LightDirection.South:
+                        sprite.Rotation = 0;
+                        break;
+                    case LightDirection.West:
+                        sprite.Rotation = 90;
+                        break;
+                    case LightDirection.All:
+                        sprite.Rotation = 0;
+                        break;
+                    default:
+                        break;
+                }
+            }
+            base.Render(xTopLeft, yTopLeft);
         }
 
         public override void UpdatePosition()

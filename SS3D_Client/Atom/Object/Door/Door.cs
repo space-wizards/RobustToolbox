@@ -14,7 +14,7 @@ namespace SS3D.Atom.Object.Door
         public Door()
             : base()
         {
-            spritename = "Door";
+            spritename = "DoorEW";
             collidable = true;
         }
 
@@ -32,12 +32,15 @@ namespace SS3D.Atom.Object.Door
             switch (status)
             {
                 case DoorState.Closed:
+                    spritename = "DoorEW";
                     visible = true;
                     collidable = true;
+                    Draw();
                     break;
                 case DoorState.Open:
-                    visible = false;
+                    spritename = "DoorEWO";
                     collidable = false;
+                    Draw();
                     break;
                 case DoorState.Broken:
                     break;

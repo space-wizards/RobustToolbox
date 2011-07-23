@@ -243,7 +243,7 @@ namespace SS3d_server.Atom
             Vector2 dist = clicker.position - position;
 
             //If we're too far away
-            if (dist.Magnitude > 48)
+            if (dist.Magnitude > 96)
                 return;
 
 

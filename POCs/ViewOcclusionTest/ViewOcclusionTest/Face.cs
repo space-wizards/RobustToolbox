@@ -50,49 +50,10 @@ namespace ViewOcclusionTest
             return (v1x * v2y - v1y * v2x);
         }
 
-        public void SetLinePoints()
-        {
-            //line.X1 = x;
-            //line.Y1 = y;
-            //line.X2 = next.x;
-            //line.Y2 = next.y;
-        }
-
-        public void SetLineColor(Brush brush)
-        {
-            //line.Stroke = brush;
-        }
-
-        public void DrawLine(Point viewPoint)
-        {
-            DrawLine(IsFacing(viewPoint));     
-        }
-
-        public void DrawLine(bool facing)
-        {
-            if (line != null)
-                //canvas.Children.Remove(line);
-            //line = new Line();
-            //SetLinePoints();
-            //canvas.Children.Add(line);
-            //Canvas.SetLeft(line, 0);
-            //Canvas.SetTop(line, 0);
-            if (facing && over == null)
-            {
-                //SetLineColor(Brushes.Green);
-                //Canvas.SetZIndex(line, 21);
-                //DrawViewLine(ViewLines.both);
-            }
-            else
-            {
-                //SetLineColor(Brushes.Black);
-                //Canvas.SetZIndex(line, 20);
-            }
-        }
-
         public void DrawViewLine(ViewLines viewlines)
         {
             double slope;
+            double intercept;
             switch (viewlines)
             {
                 case ViewLines.origin:
@@ -108,18 +69,25 @@ namespace ViewOcclusionTest
                     startLine.X1 = x;
                     startLine.Y1 = y; //Start point
 
-
+                    intercept = startLine.Y1 - startLine.X1 * slope;
                     if (x > mainWindow.viewPoint.X)
                         startLine.X2 = mainWindow.WindowBottomRight.X;
                     else
                         startLine.X2 = mainWindow.WindowTopLeft.X;
-                    startLine.Y2 = slope * startLine.X2 + (startLine.Y1 - startLine.X1 * slope); // y = mx + b ololol
+                    startLine.Y2 = slope * startLine.X2 + intercept; // y = mx + b ololol
+
+                    //Check if the y value is outside the window bounds. if it is, set y value to window bounds and calculate x from it instead.
+                    if (startLine.Y2 > mainWindow.WindowBottomRight.Y)
+                    {
+                        startLine.Y2 = mainWindow.WindowBottomRight.Y;
+                        startLine.X2 = (startLine.Y2 - intercept) / slope;
+                    }
+                    else if (startLine.Y2 < mainWindow.WindowTopLeft.Y)
+                    {
+                        startLine.Y2 = mainWindow.WindowTopLeft.Y;
+                        startLine.X2 = (startLine.Y2 - intercept) / slope;
+                    }
                     
-                    startLine.Stroke = Brushes.Blue;
-                    //canvas.Children.Add(startLine);
-                    Canvas.SetLeft(startLine, 0);
-                    Canvas.SetTop(startLine, 0);
-                    Canvas.SetZIndex(startLine, 30);
                     break;
                 case ViewLines.endpoint:
                     if (next.y - mainWindow.viewPoint.Y == 0)
@@ -128,19 +96,30 @@ namespace ViewOcclusionTest
                         slope = -1 * Math.Sign(next.y - mainWindow.viewPoint.Y) * 1000000;
                     else //Calculate y slope
                         slope = (next.y - mainWindow.viewPoint.Y) / (next.x - mainWindow.viewPoint.X);
+
+                    //Generate line
                     endLine = new Line();
                     endLine.X1 = next.x;
                     endLine.Y1 = next.y;
+
+                    intercept = endLine.Y1 - endLine.X1 * slope;
                     if (next.x > mainWindow.viewPoint.X)
                         endLine.X2 = mainWindow.WindowBottomRight.X;
                     else
                         endLine.X2 = mainWindow.WindowTopLeft.X;
-                    endLine.Y2 = slope * endLine.X2 + (endLine.Y1 - endLine.X1 * slope);
-                    endLine.Stroke = Brushes.Red;
-                    //canvas.Children.Add(endLine);
-                    Canvas.SetLeft(endLine, 0);
-                    Canvas.SetTop(endLine, 0);
-                    Canvas.SetZIndex(endLine, 30);
+                    endLine.Y2 = slope * endLine.X2 + intercept;
+
+                    //Check if the y value is outside the window bounds. if it is, set y value to window bounds and calculate x from it instead.
+                    if (endLine.Y2 > mainWindow.WindowBottomRight.Y)
+                    {
+                        endLine.Y2 = mainWindow.WindowBottomRight.Y;
+                        endLine.X2 = (endLine.Y2 - intercept) / slope;
+                    }
+                    else if (endLine.Y2 < mainWindow.WindowTopLeft.Y)
+                    {
+                        endLine.Y2 = mainWindow.WindowTopLeft.Y;
+                        endLine.X2 = (endLine.Y2 - intercept) / slope;
+                    }
                     break;
                 case ViewLines.both:
                     DrawViewLine(ViewLines.origin);
@@ -151,11 +130,8 @@ namespace ViewOcclusionTest
 
         public void RemoveLines()
         {
-            //canvas.Children.Remove(line);
             line = null;
-            //canvas.Children.Remove(startLine);
             startLine = null;
-            //canvas.Children.Remove(endLine);
             endLine = null;
         }
 
@@ -184,7 +160,8 @@ namespace ViewOcclusionTest
             Face checkFace = this;
             polygonPoints.Add(new Point(x,y)); //Add start point
             int i = 0;
-            while (checkFace.endLine == null && i < 30)
+            //Loop through faces starting at the start line until end line is found.
+            while (checkFace.endLine == null && i < 20)
             {
                 if (checkFace.GetAdjacentFace(false) == null)
                     checkFace = checkFace.next;
@@ -197,6 +174,7 @@ namespace ViewOcclusionTest
                     checkFace = checkFace.GetAdjacentFace(false);
                 i++;
             }
+
             if (checkFace.endLine != null)
             {
                 polygonPoints.Add(new Point(checkFace.endLine.X1, checkFace.endLine.Y1));
@@ -205,7 +183,44 @@ namespace ViewOcclusionTest
             else
                 return null;
             
+            //ARTIFACT CORRECTION
+            //Do we need a corner point?
+            if (startLine.X2 == mainWindow.WindowTopLeft.X && checkFace.endLine.Y2 == mainWindow.WindowTopLeft.Y)
+                polygonPoints.Add(mainWindow.WindowTopLeft);
+            else if (checkFace.endLine.X2 == mainWindow.WindowBottomRight.X && startLine.Y2 == mainWindow.WindowTopLeft.Y)
+                polygonPoints.Add(new Point(mainWindow.WindowBottomRight.X, mainWindow.WindowTopLeft.Y));
+            else if (startLine.X2 == mainWindow.WindowBottomRight.X && checkFace.endLine.Y2 == mainWindow.WindowBottomRight.Y)
+                polygonPoints.Add(mainWindow.WindowBottomRight);
+            else if (checkFace.endLine.X2 == mainWindow.WindowTopLeft.X && startLine.Y2 == mainWindow.WindowBottomRight.Y)
+                polygonPoints.Add(new Point(mainWindow.WindowTopLeft.X, mainWindow.WindowBottomRight.Y));
+
+            //Do we need 2 corner points?
+            if (checkFace.endLine.X2 == mainWindow.WindowTopLeft.X && startLine.X2 == mainWindow.WindowBottomRight.X)
+            {
+                polygonPoints.Add(new Point(mainWindow.WindowTopLeft.X, mainWindow.WindowBottomRight.Y));
+                polygonPoints.Add(mainWindow.WindowBottomRight);
+            }
+            if (startLine.X2 == mainWindow.WindowTopLeft.X && checkFace.endLine.X2 == mainWindow.WindowBottomRight.X)
+            {
+                polygonPoints.Add(new Point(mainWindow.WindowBottomRight.X, mainWindow.WindowTopLeft.Y));
+                polygonPoints.Add(mainWindow.WindowTopLeft);
+            }
+            if (startLine.Y2 == mainWindow.WindowTopLeft.Y && checkFace.endLine.Y2 == mainWindow.WindowBottomRight.Y)
+            {
+                polygonPoints.Add(mainWindow.WindowBottomRight);
+                polygonPoints.Add(new Point(mainWindow.WindowBottomRight.X, mainWindow.WindowTopLeft.Y));
+            }
+            if (checkFace.endLine.Y2 == mainWindow.WindowTopLeft.Y && startLine.Y2 == mainWindow.WindowBottomRight.Y)
+            {
+                polygonPoints.Add(mainWindow.WindowTopLeft);
+                polygonPoints.Add(new Point(mainWindow.WindowTopLeft.X, mainWindow.WindowBottomRight.Y));
+            }
+
+
+            //And the last point to bring 'er home.
             polygonPoints.Add(new Point(startLine.X2, startLine.Y2));
+
+
             p.Points = polygonPoints;
             p.Stroke = Brushes.Black;
             p.Fill = Brushes.Black;

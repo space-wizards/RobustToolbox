@@ -159,11 +159,6 @@ namespace ViewOcclusionTest
 
             if (IsInWindow)
             {
-                faceW.DrawLine(mainWindow.viewPoint);
-                faceS.DrawLine(mainWindow.viewPoint);
-                faceE.DrawLine(mainWindow.viewPoint);
-                faceN.DrawLine(mainWindow.viewPoint);
-
                 DrawViewLines();
             }
             else

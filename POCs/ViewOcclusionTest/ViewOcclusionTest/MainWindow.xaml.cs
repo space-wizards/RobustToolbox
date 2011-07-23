@@ -95,13 +95,13 @@ namespace ViewOcclusionTest
         public void Update(object sender, EventArgs e)
         {
             if (Keyboard.IsKeyDown(Key.A) && viewPoint.X >= 1)
-                setViewPoint(new Point(viewPoint.X - 1, viewPoint.Y));
+                setViewPoint(new Point(viewPoint.X - 3, viewPoint.Y));
             if (Keyboard.IsKeyDown(Key.D) && viewPoint.X <= 650)
-                setViewPoint(new Point(viewPoint.X + 1, viewPoint.Y));
+                setViewPoint(new Point(viewPoint.X + 3, viewPoint.Y));
             if (Keyboard.IsKeyDown(Key.W) && viewPoint.Y >= 1)
-                setViewPoint(new Point(viewPoint.X, viewPoint.Y - 1));
+                setViewPoint(new Point(viewPoint.X, viewPoint.Y - 3));
             if (Keyboard.IsKeyDown(Key.S) && viewPoint.Y <= 650)
-                setViewPoint(new Point(viewPoint.X, viewPoint.Y + 1));
+                setViewPoint(new Point(viewPoint.X, viewPoint.Y + 3));
 
         }
 
@@ -154,7 +154,7 @@ namespace ViewOcclusionTest
             Canvas.SetTop(viewer, p.Y);
 
             //Set window
-            WindowTopLeft = new Point(p.X - 160, p.Y - 160);
+            WindowTopLeft = new Point(p.X - 200, p.Y - 200);
             WindowBottomRight = new Point(p.X + 160, p.Y + 160);
 
             if(!initial)

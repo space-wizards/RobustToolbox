@@ -328,6 +328,13 @@ namespace SS3D
             toolStripStatusLabel1.Text = "Right click to delete an atom";
         }
 
+        private void wallLightToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            tileSpawnType = TileType.None;
+            atomSpawnType = typeof(Atom.Object.Lights.WallLight);
+            toolStripStatusLabel1.Text = atomSpawnType.ToString();
+        }
+
 
     }
 }

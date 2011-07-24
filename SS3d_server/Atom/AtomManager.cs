@@ -62,7 +62,8 @@ namespace SS3d_server.Atom
                 case AtomManagerMessage.SpawnAtom:
                     string type = message.ReadString();
                     Vector2 position = new Vector2(message.ReadFloat(), message.ReadFloat());
-                    SpawnAtom(type, position);
+                    float rotation = message.ReadFloat();
+                    SpawnAtom(type, position, rotation);
                     break;
                 case AtomManagerMessage.DeleteAtom:
                     ushort uid = message.ReadUInt16();
@@ -175,6 +176,13 @@ namespace SS3d_server.Atom
             spawned.Translate(position);
             return spawned;
         }
+        public Atom SpawnAtom(string type, Vector2 position, float rotation)
+        {
+            Atom spawned = SpawnAtom(type);
+            spawned.Translate(position, rotation);
+            return spawned;
+        }
+
         #endregion
 
         #endregion

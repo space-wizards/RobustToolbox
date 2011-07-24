@@ -22,7 +22,7 @@ namespace SS3D.Atom.Item.Misc
             int r = (int)message.ReadByte();
             int g = (int)message.ReadByte();
             int b = (int)message.ReadByte();
-            LightDirection d = (LightDirection)message.ReadByte();
+            Direction d = (Direction)message.ReadByte();
             if (light == null)
             {
                 light = new Light(atomManager.gameState.map, Color.FromArgb(r, g, b), 190, LightState.On, atomManager.gameState.map.GetTileArrayPositionFromWorldPosition(position), d);

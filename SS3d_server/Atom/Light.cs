@@ -8,9 +8,9 @@ namespace SS3d_server.Atom.Item
     public class Light : Item
     {
         public Color color;
-        public LightDirection direction;
+        public Direction direction;
 
-        public Light(Color _color, LightDirection _direction)
+        public Light(Color _color, Direction _direction)
             : base()
         {
             color = _color;

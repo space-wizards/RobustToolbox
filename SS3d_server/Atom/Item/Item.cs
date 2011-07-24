@@ -124,8 +124,7 @@ namespace SS3d_server.Atom.Item
         public virtual void Dropped()
         {
             Vector2 droppedposition = holdingAppendage.owner.position;
-            float droppedrotW = holdingAppendage.owner.rotW;
-            float droppedrotY = holdingAppendage.owner.rotY;
+            float droppedrot = holdingAppendage.owner.rotation;
             holdingAppendage.heldItem = null;
             holdingAppendage = null;
 
@@ -134,7 +133,7 @@ namespace SS3d_server.Atom.Item
             outmessage.Write((byte)ItemMessage.Detach);
             atomManager.netServer.SendMessageToAll(outmessage);
 
-            Translate(droppedposition, droppedrotW, droppedrotY);
+            Translate(droppedposition, droppedrot);
         }
 
         public override void Push()

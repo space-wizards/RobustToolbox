@@ -36,6 +36,7 @@ namespace SS3D.Modules
         private Type buildingType;
         private Sprite buildingSprite;
         private Vector2D buildingPositionWorld;
+        private float rotation;
 
         public System.Drawing.RectangleF buildingAABB;
 
@@ -104,9 +105,10 @@ namespace SS3D.Modules
                     NetOutgoingMessage message = gameScreen.prg.mNetworkMgr.netClient.CreateMessage();
                     message.Write((byte)NetMessage.AtomManagerMessage);
                     message.Write((byte)AtomManagerMessage.SpawnAtom);
-                    message.Write(buildingType.FullName.Remove(0, 5));
+                    message.Write(buildingType.FullName.Remove(0, 5)); // This is removing the SS3D. from the start of the name
                     message.Write(buildingPositionWorld.X);
                     message.Write(buildingPositionWorld.Y);
+                    message.Write(buildingSprite.Rotation);
                     gameScreen.prg.mNetworkMgr.SendMessage(message, NetDeliveryMethod.ReliableUnordered);
                     CancelBuilding();
                 }
@@ -189,8 +191,7 @@ namespace SS3D.Modules
                         buildingPositionWorld = new Vector2D(arrayPos.X * map.tileSpacing + (buildingSprite.Width / 2), arrayPos.Y * map.tileSpacing);
                     }
                     buildingSprite.Position = buildingPositionWorld - new Vector2D(gameScreen.xTopLeft, gameScreen.yTopLeft);
-
-
+                    buildingSprite.Rotation = rotation;
                     if(buildingBlocked)
                         buildingSprite.Color = System.Drawing.Color.Red;
                     else
@@ -209,6 +210,13 @@ namespace SS3D.Modules
             gameScreen = null;
             buildingType = null;
             buildingSprite = null;
+        }
+
+        public void Rotate(float _rotation)
+        {
+            if (!isBuilding)
+                return;
+            rotation += _rotation;
         }
     }
 }

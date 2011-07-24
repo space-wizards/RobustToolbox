@@ -47,6 +47,7 @@ namespace SS3D.Atom
 
         public bool visible = true;
         public bool attached;
+        public bool snapTogrid = false; // Is this locked to the grid, eg a door / window
 
         //Input
         public Dictionary<KeyboardKeys, bool> keyStates;

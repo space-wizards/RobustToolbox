@@ -227,7 +227,7 @@ namespace SS3D
         /// <param name="e">The <see cref="GorgonLibrary.InputDevices.MouseInputEventArgs"/> instance containing the event data.</param>
         private void MouseDownEvent(object sender, MouseInputEventArgs e)
         {
-            if(e.Position.Y > menuStrip1.Height)
+            if(e.Position.Y > menuStrip1.Height || !editToolStripMenuItem.Selected)
                 stateMgr.MouseDown(e);
         }
 

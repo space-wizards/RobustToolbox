@@ -103,6 +103,7 @@ namespace SS3D.States
 
             //TODO This should go somewhere else, there should be explicit session setup and teardown at some point.
             prg.mNetworkMgr.SendClientName(ConfigManager.Singleton.Configuration.PlayerName);
+            
             baseTarget = new RenderImage("baseTarget", 800, 640, ImageBufferFormats.BufferUnknown);
             baseTarget.AlphaMaskFunction = CompareFunctions.GreaterThan;
 
@@ -121,9 +122,11 @@ namespace SS3D.States
 
         public override void Shutdown()
         {
-            if (baseTarget != null)
+            if (baseTarget != null && Gorgon.IsInitialized)
             {
-                //baseTarget.Dispose();
+                baseTarget.ForceRelease();
+                baseTarget.Dispose();
+                
             }
             gameInterface.Shutdown();
             atomManager.Shutdown();

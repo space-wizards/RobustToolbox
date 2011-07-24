@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Drawing;
+using GorgonLibrary;
 
 namespace SS3D.Atom.Object.Door
 {

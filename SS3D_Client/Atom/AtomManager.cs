@@ -124,6 +124,7 @@ namespace SS3D.Atom
             atom = null;
             return snap;
         }
+
         
         private void HandleDeleteAtom(NetIncomingMessage message)
         {

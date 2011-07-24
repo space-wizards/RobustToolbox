@@ -5,7 +5,7 @@ using System.Text;
 
 namespace SS3D.Atom.Item.Tool
 {
-    public class Wrench : Item
+    public class Wrench : Tool
     {
         public Wrench()
             : base()

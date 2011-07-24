@@ -5,12 +5,12 @@ using System.Text;
 
 namespace SS3D.Atom.Item.Tool
 {
-    public class Welder : Tool
+    public abstract class Tool : Item
     {
-        public Welder()
+        public Tool()
             : base()
         {
-            spritename = "Welder";
         }
+
     }
 }

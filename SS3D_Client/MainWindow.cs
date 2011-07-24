@@ -5,6 +5,7 @@ using System.Data;
 using System.Drawing;
 using System.Linq;
 using System.Text;
+using System.Reflection;
 using System.Windows.Forms;
 
 using System.IO;
@@ -51,6 +52,7 @@ namespace SS3D
         private Type atomSpawnType = null;
         private TileType tileSpawnType;
         public bool editMode = false;
+        private Dictionary<string, Type> atomTypes;
 
         #endregion
 
@@ -118,9 +120,62 @@ namespace SS3D
             _desktop.FocusRectangleColor = Drawing.Color.FromArgb(128, Drawing.Color.Red);
             _desktop.FocusRectangleBlend = BlendingModes.Additive;
             _desktop.FocusRectangleOutline = false;
-
+            atomTypes = new Dictionary<string, Type>();
+            Type[] typeList = GetTypes();
+            for (int i = 0; i < typeList.Length; i++)
+            {
+                atomTypes.Add(typeList[i].Name, typeList[i]);
+            }
+            PopulateEditMenu();
+            //PopulateTreeView();
             stateMgr.Startup(typeof(ConnectMenu));
         }
+
+        private Type[] GetTypes()
+        {
+            Assembly ass = Assembly.GetExecutingAssembly();
+            return ass.GetTypes().Where(t => t.IsSubclassOf(typeof(Atom.Atom))).ToArray();
+        }
+
+
+        #region Trees are fucked
+        // Trees seem to be fucked right now as they always steal focus so this is currently unusued.
+        /*private void PopulateTreeView()
+        {
+            treeView1.BeginUpdate();
+            foreach (Type t in atomTypes.Values)
+            {
+                if (t.IsAbstract && t.BaseType == typeof(Atom.Atom))
+                {
+                    TreeNode[] array = GetChildren(t);
+                    treeView1.Nodes.Add(new TreeNode(t.Name, array));
+                }
+            }
+            treeView1.EndUpdate();
+        }*/
+
+        /*private TreeNode[] GetChildren(Type t)
+        {
+            List<TreeNode> nodes = new List<TreeNode>();
+
+            foreach (Type type in atomTypes.Values)
+            {
+                if (type.IsAbstract && type.BaseType == t)
+                {
+                    TreeNode[] array = GetChildren(type);
+                    nodes.Add(new TreeNode(type.Name, array));
+                }
+                else if (!type.IsAbstract && type.BaseType == t)
+                {
+                    nodes.Add(new TreeNode(type.Name));
+                }
+            }
+
+            return nodes.ToArray();
+        }*/
+        #endregion
+
+
 
         void Gorgon_Idle(object sender, FrameEventArgs e)
         {
@@ -218,8 +273,6 @@ namespace SS3D
                 menuToolStripMenuItem.HideDropDown();
             }
         }
-
-
         private void disconnectToolStripMenuItem_Click(object sender, EventArgs e)
         {
             prg.mNetworkMgr.Disconnect();
@@ -252,6 +305,92 @@ namespace SS3D
             return tileSpawnType;
         }
 
+        #region Edit menu
+        #region Atoms
+        private void PopulateEditMenu()
+        {
+            List<ToolStripMenuItem> items = new List<ToolStripMenuItem>();
+            foreach (Type t in atomTypes.Values)
+            {
+                if (t.IsAbstract && t.BaseType == typeof(Atom.Atom))
+                {
+                    ToolStripMenuItem item = new ToolStripMenuItem(t.Name);
+                    ToolStripMenuItem[] itemItems = GetChildren(t).ToArray();
+                    item.DropDownItems.AddRange(itemItems);
+                    item.BackColor = System.Drawing.SystemColors.ActiveCaptionText;
+                    item.ForeColor = System.Drawing.SystemColors.ActiveCaption;
+                    items.Add(item);
+                }
+            }
+            atomToolStripMenuItem.DropDownItems.AddRange(items.ToArray());
+        }
+
+        private List<ToolStripMenuItem> GetChildren(Type t)
+        {
+            List<ToolStripMenuItem> menuItems = new List<ToolStripMenuItem>();
+            foreach (Type type in atomTypes.Values)
+            {
+                if (type.IsAbstract && type.BaseType == t)
+                {
+                    ToolStripMenuItem item = new ToolStripMenuItem(type.Name);
+                    ToolStripMenuItem[] itemItems = GetChildren(type).ToArray();
+                    item.DropDownItems.AddRange(itemItems);
+                    item.BackColor = System.Drawing.SystemColors.ActiveCaptionText;
+                    item.ForeColor = System.Drawing.SystemColors.ActiveCaption;
+                    menuItems.Add(item);
+                }
+                else if (!type.IsAbstract && type.BaseType == t)
+                {
+                    ToolStripMenuItem item = new ToolStripMenuItem(type.Name);
+                    item.BackColor = System.Drawing.SystemColors.ActiveCaptionText;
+                    item.ForeColor = System.Drawing.SystemColors.ActiveCaption;
+                    item.Click += new EventHandler(atomMenu_Click);
+                    menuItems.Add(item);
+                }
+            }
+            return menuItems;
+        }
+
+        private void noneToolStripMenuItem1_Click(object sender, EventArgs e)
+        {
+            tileSpawnType = TileType.None;
+            atomSpawnType = null;
+            toolStripStatusLabel1.Text = "Right click to delete an atom";
+        }
+
+        private void atomMenu_Click(object sender, EventArgs e)
+        {
+            tileSpawnType = TileType.None;
+            if (atomTypes.ContainsKey(((ToolStripDropDownItem)sender).Text))
+            {
+                atomSpawnType = atomTypes[((ToolStripDropDownItem)sender).Text];
+                toolStripStatusLabel1.Text = atomSpawnType.Name.ToString();
+            }
+            else
+            {
+                atomSpawnType = null;
+                toolStripStatusLabel1.Text = "Error: Atom '" + ((ToolStripDropDownItem)sender).Text + "' not found!";
+            }
+        }
+
+        private void toolStripTextBox2_KeyPress(object sender, KeyPressEventArgs e)
+        {
+            if (e.KeyChar == '\r')
+            {
+                tileSpawnType = TileType.None;
+                foreach (Type t in atomTypes.Values)
+                {
+                    if (t.Name == toolStripTextBox2.Text)
+                    {
+                        atomSpawnType = t;
+                        toolStripStatusLabel1.Text = atomSpawnType.ToString();
+                        break;
+                    }
+                }
+            }
+        }
+        #endregion
+        #region Tiles
         private void turfToolStripMenuItem_Click(object sender, EventArgs e)
         {
             atomSpawnType = null;
@@ -278,63 +417,7 @@ namespace SS3D
         {
             tileSpawnType = TileType.None;
         }
-
-        private void crowbarToolStripMenuItem_Click(object sender, EventArgs e)
-        {
-            tileSpawnType = TileType.None;
-            atomSpawnType = typeof(Atom.Item.Tool.Crowbar);
-            toolStripStatusLabel1.Text = atomSpawnType.ToString();
-        }
-
-        private void welderToolStripMenuItem_Click(object sender, EventArgs e)
-        {
-            tileSpawnType = TileType.None;
-            atomSpawnType = typeof(Atom.Item.Tool.Welder);
-            toolStripStatusLabel1.Text = atomSpawnType.ToString();
-        }
-
-        private void wrenchToolStripMenuItem_Click(object sender, EventArgs e)
-        {
-            tileSpawnType = TileType.None;
-            atomSpawnType = typeof(Atom.Item.Tool.Wrench);
-            toolStripStatusLabel1.Text = atomSpawnType.ToString();
-        }
-
-        private void toolboxToolStripMenuItem_Click(object sender, EventArgs e)
-        {
-            tileSpawnType = TileType.None;
-            atomSpawnType = typeof(Atom.Item.Container.Toolbox);
-            toolStripStatusLabel1.Text = atomSpawnType.ToString();
-        }
-
-        private void flashlightToolStripMenuItem_Click(object sender, EventArgs e)
-        {
-            tileSpawnType = TileType.None;
-            atomSpawnType = typeof(Atom.Item.Misc.Flashlight);
-            toolStripStatusLabel1.Text = atomSpawnType.ToString();
-        }
-
-        private void doorToolStripMenuItem_Click(object sender, EventArgs e)
-        {
-            tileSpawnType = TileType.None;
-            atomSpawnType = typeof(Atom.Object.Door.Door);
-            toolStripStatusLabel1.Text = atomSpawnType.ToString();
-        }
-
-        private void noneToolStripMenuItem1_Click(object sender, EventArgs e)
-        {
-            tileSpawnType = TileType.None;
-            atomSpawnType = null;
-            toolStripStatusLabel1.Text = "Right click to delete an atom";
-        }
-
-        private void wallLightToolStripMenuItem_Click(object sender, EventArgs e)
-        {
-            tileSpawnType = TileType.None;
-            atomSpawnType = typeof(Atom.Object.Lights.WallLight);
-            toolStripStatusLabel1.Text = atomSpawnType.ToString();
-        }
-
-
+        #endregion
+        #endregion
     }
 }

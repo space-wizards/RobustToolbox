@@ -5,17 +5,13 @@ using System.Text;
 
 namespace SS3D.Atom.Item.Tool
 {
-    public class Crowbar : Item
+    public class Crowbar : Tool
     {
 
         public Crowbar()
             : base()
         {
             spritename = "Crowbar";
-            /*meshName = "crowbar.mesh";
-            name = "Crowbar";
-            heldQuat = new Mogre.Quaternion(new Mogre.Degree(90), Mogre.Vector3.UNIT_Z);
-            heldOffset = new Mogre.Vector3(2f, 0f, 0.6f);*/
         }
     }
 }

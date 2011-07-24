@@ -336,7 +336,7 @@ namespace SS3D.States
             playerController.KeyDown(e.Key);
             if (e.Key == KeyboardKeys.F4)
             {
-                gameInterface.StartBuilding(typeof(Atom.Object.Door.Door));
+                gameInterface.StartBuilding(typeof(Atom.Item.Container.Toolbox));
             }
             if (e.Key == KeyboardKeys.F5)
             {

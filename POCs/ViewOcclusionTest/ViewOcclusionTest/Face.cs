@@ -177,7 +177,7 @@ namespace ViewOcclusionTest
                     polygonPoints.Add(new Point(checkFace.GetAdjacentFace(false).next.next.x, checkFace.GetAdjacentFace(false).next.next.y));
                     polygonPoints.Add(new Point(checkFace.GetAdjacentFace(false).next.x, checkFace.GetAdjacentFace(false).next.y));
                     checkFace = checkFace.GetAdjacentFace(false).over.next;
-                    //polygonPoints.Add(new Point(checkFace.x, checkFace.y));
+                    ///polygonPoints.Add(new Point(checkFace.x, checkFace.y));
                 }
                 else
                 {
@@ -193,6 +193,7 @@ namespace ViewOcclusionTest
                 polygonPoints.Add(new Point(checkFace.next.next.next.x, checkFace.next.next.next.y));
                 polygonPoints.Add(new Point(checkFace.next.next.x, checkFace.next.next.y));
             }
+            
             if (checkFace.endLine != null)
             {
                 polygonPoints.Add(new Point(checkFace.endLine.X1, checkFace.endLine.Y1));

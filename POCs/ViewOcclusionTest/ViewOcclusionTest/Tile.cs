@@ -206,10 +206,10 @@ namespace ViewOcclusionTest
             }
         }
 
-        public void DrawOcclusionPoly()
+        public Polygon GetOcclusionPoly()
         {
             if (!IsSolid || !IsInWindow)
-                return;
+                return null;
 
             RemoveOcclusionPoly();
 
@@ -224,10 +224,11 @@ namespace ViewOcclusionTest
 
             if (poly != null)
             {
-                canvas.Children.Add(poly);
-                Canvas.SetZIndex(poly, 40);
+                //canvas.Children.Add(poly);
+                return poly;
+                //Canvas.SetZIndex(poly, 40);
             }
-
+            return null;
 
 
         }
@@ -250,6 +251,56 @@ namespace ViewOcclusionTest
             south,
             east,
             north
+        }
+
+        public bool isInPolygon(PointCollection points)
+        {
+            return (pointsInPolygon(x * mainWindow.TileSize, y * mainWindow.TileSize, points)
+                && pointsInPolygon((x + 1) * mainWindow.TileSize, (y + 1) * mainWindow.TileSize, points)
+                && pointsInPolygon((x + 1) * mainWindow.TileSize, (y) * mainWindow.TileSize, points)
+                && pointsInPolygon((x) * mainWindow.TileSize, (y + 1) * mainWindow.TileSize, points));
+        }
+        //  Globals which should be set before calling this function:
+        //
+        //  int    polySides  =  how many corners the polygon has
+        //  float  polyX[]    =  horizontal coordinates of corners
+        //  float  polyY[]    =  vertical coordinates of corners
+        //  float  x, y       =  point to be tested
+        //
+        //  (Globals are used in this example for purposes of speed.  Change as
+        //  desired.)
+        //
+        //  The function will return YES if the point x,y is inside the polygon, or
+        //  NO if it is not.  If the point is exactly on the edge of the polygon,
+        //  then the function may return YES or NO.
+        //
+        //  Note that division by zero is avoided because the division is protected
+        //  by the "if" clause which surrounds it.
+
+        public bool pointsInPolygon(double X, double Y, PointCollection points)
+        {
+            int polySides = points.Count;
+            //double Y = y * mainWindow.TileSize;
+            //double X = x * mainWindow.TileSize;
+
+            int i, j = polySides - 1;
+            bool oddNodes = false;
+
+            for (i = 0; i < polySides; i++)
+            {
+                if ((points[i].Y < Y && points[j].Y >= Y
+                || points[j].Y < Y && points[i].Y >= Y)
+                && (points[i].X <= X || points[j].X <= X))
+                {
+                    if (points[i].X + (Y - points[i].Y) / (points[j].Y - points[i].Y) * (points[j].X - points[i].X) < X)
+                    {
+                        oddNodes = !oddNodes;
+                    }
+                }
+                j = i;
+            }
+
+            return oddNodes;
         }
     }
 }

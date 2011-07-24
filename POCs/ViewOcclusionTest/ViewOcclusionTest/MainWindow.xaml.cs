@@ -31,6 +31,8 @@ namespace ViewOcclusionTest
         public Point WindowTopLeft;
         public Point WindowBottomRight;
 
+        public List<Polygon> occlusionPolys;
+
         public MainWindow()
         {
             arrayDims = new Point(60, 60);
@@ -54,6 +56,7 @@ namespace ViewOcclusionTest
             canvas.Children.Add(viewer);
             Canvas.SetZIndex(viewer, 10);
             setViewPoint(new Point(300, 300), true);
+            occlusionPolys = new List<Polygon>();
 
             lastUpdate = DateTime.Now;
             lastDraw = DateTime.Now;
@@ -136,12 +139,50 @@ namespace ViewOcclusionTest
                 }
             }
 
-            for (int i = 0; i < arrayDims.X; i++)
+            foreach (Polygon p in occlusionPolys)
+            {
+                canvas.Children.Remove(p);
+            }
+            occlusionPolys = new List<Polygon>();
+            /*for (int i = 0; i < arrayDims.X; i++)
             {
                 for (int j = 0; j < arrayDims.Y; j++)
+                {*/
+            var solidsInWindow = from Tile t in tileArray
+                                 where t.x * TileSize < WindowBottomRight.X 
+                                 && t.x * TileSize > WindowTopLeft.X 
+                                 && t.y * TileSize < WindowBottomRight.Y 
+                                 && t.y * TileSize > WindowTopLeft.Y
+                                 orderby Math.Sqrt(Math.Pow(viewPoint.X - t.x * TileSize, 2) + Math.Pow(viewPoint.Y - t.y * TileSize, 2)) ascending
+                                 select t;
+
+            foreach (var tile in solidsInWindow)
+            {
+                bool occluded = false;
+                foreach (Polygon poly in occlusionPolys)
                 {
-                    tileArray[i, j].DrawOcclusionPoly();
+                    if (tile.isInPolygon(poly.Points))
+                    {
+                        occluded = true;
+                        continue;
+                    }
                 }
+                if (!occluded)
+                {
+                    Polygon p = tile.GetOcclusionPoly();
+                    if (p != null)
+                        occlusionPolys.Add(p);
+                }
+            }
+
+                                  
+                /*}
+            }
+*/
+            foreach (Polygon p in occlusionPolys)
+            {
+                canvas.Children.Add(p);
+                Canvas.SetZIndex(p, 40);
             }
 
         }

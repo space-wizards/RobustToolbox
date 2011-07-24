@@ -123,19 +123,11 @@ namespace ViewOcclusionTest
             {
                 for (int j = 0; j < arrayDims.Y; j++)
                 {
-                    if (i * TileSize < WindowTopLeft.X || i * TileSize > WindowBottomRight.X ||
-                        j * TileSize > WindowBottomRight.Y || j * TileSize < WindowTopLeft.Y)
-                    {
+                    
                         tileArray[i, j].IsInWindow = false;
                         tileArray[i, j].RemoveLines();
-                        tileArray[i, j].RemoveOcclusionPoly();
-                    }
-                    else
-                    {
-                        tileArray[i, j].IsInWindow = true;
-                        tileArray[i, j].RemoveLines();
-                        tileArray[i, j].DrawLines();
-                    }
+                        //tileArray[i, j].RemoveOcclusionPoly();
+
                 }
             }
 
@@ -169,6 +161,9 @@ namespace ViewOcclusionTest
                 }
                 if (!occluded)
                 {
+                    tile.IsInWindow = true;
+                    tile.RemoveLines();
+                    tile.DrawLines();
                     Polygon p = tile.GetOcclusionPoly();
                     if (p != null)
                         occlusionPolys.Add(p);

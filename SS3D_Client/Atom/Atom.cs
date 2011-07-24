@@ -313,9 +313,9 @@ namespace SS3D.Atom
             System.Drawing.Point bottomRight = atomManager.gameState.map.GetTileArrayPositionFromWorldPosition(position + sprite.Size / 2);
             sprite.SetPosition(position.X - xTopLeft, position.Y - yTopLeft);
             bool draw = false;
-            if (atomManager.gameState.map.tileArray[tilePos.X, tilePos.Y].Visible ||
-                atomManager.gameState.map.tileArray[topLeft.X, topLeft.Y].Visible ||
-                atomManager.gameState.map.tileArray[bottomRight.X, bottomRight.Y].Visible)
+            if ((tilePos.X > 0 && atomManager.gameState.map.tileArray[tilePos.X, tilePos.Y].Visible) ||
+                (topLeft.X > 0 &&atomManager.gameState.map.tileArray[topLeft.X, topLeft.Y].Visible) ||
+                (bottomRight.X > 0 && atomManager.gameState.map.tileArray[bottomRight.X, bottomRight.Y].Visible))
             {
                 draw = true;
             }

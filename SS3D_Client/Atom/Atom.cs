@@ -14,7 +14,7 @@ using SS3D.Modules;
 
 namespace SS3D.Atom
 {
-    public class Atom // CLIENT SIDE
+    public abstract class Atom // CLIENT SIDE
     {
         #region variables
         // GRAPHICS

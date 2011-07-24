@@ -139,6 +139,7 @@
     <Compile Include="Atom\Item\Item.cs" />
     <Compile Include="Atom\Item\Misc\Flashlight.cs" />
     <Compile Include="Atom\Item\Tool\Crowbar.cs" />
+    <Compile Include="Atom\Item\Tool\Tool.cs" />
     <Compile Include="Atom\Item\Tool\Welder.cs" />
     <Compile Include="Atom\Item\Tool\Wrench.cs" />
     <Compile Include="Atom\Mob\HelperClasses\AnimState.cs" />

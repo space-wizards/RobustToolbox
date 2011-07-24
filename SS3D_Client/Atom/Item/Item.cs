@@ -11,7 +11,7 @@ using GorgonLibrary.Graphics;
 
 namespace SS3D.Atom.Item
 {
-    public class Item : Atom
+    public abstract class Item : Atom
     {
         /*public Mogre.Vector3 heldOffset = Mogre.Vector3.ZERO;           // the offset vector when held
         public Mogre.Quaternion heldQuat = Mogre.Quaternion.IDENTITY;   // the rotation when held*/

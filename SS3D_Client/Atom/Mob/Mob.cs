@@ -12,7 +12,7 @@ using GorgonLibrary.InputDevices;
 
 namespace SS3D.Atom.Mob
 {
-    public class Mob : Atom
+    public abstract class Mob : Atom
     {
         
         // TODO Make these some sort of well-organized global constant

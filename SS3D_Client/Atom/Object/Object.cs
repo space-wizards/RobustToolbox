@@ -5,7 +5,7 @@ using System.Text;
 
 namespace SS3D.Atom.Object
 {
-    public class Object : Atom
+    public abstract class Object : Atom
     {
         public Object()
             : base()

@@ -163,18 +163,36 @@ namespace ViewOcclusionTest
             //Loop through faces starting at the start line until end line is found.
             while (checkFace.endLine == null && i < 20)
             {
-                if (checkFace.GetAdjacentFace(false) == null)
-                    checkFace = checkFace.next;
-                else if (checkFace.GetAdjacentFace(false) != null && checkFace.GetAdjacentFace(false).over != null)
+
+                if (checkFace.GetAdjacentFace(false) == null) // There's no adjacent face, so we'll curve around the corner to find the endline
                 {
+                    checkFace = checkFace.next;
+                    polygonPoints.Add(new Point(checkFace.next.next.x, checkFace.next.next.y)); // add the opposite face so that we can show the wall but not what's behind it.
+                }
+                else if (checkFace.GetAdjacentFace(false) != null && checkFace.GetAdjacentFace(false).over != null) // If we're in a concave corner, curve around that
+                {
+                    //Add a fuckton of points to include the wall we're occluding from
+                    polygonPoints.Add(new Point(checkFace.next.next.next.x, checkFace.next.next.next.y));
+                    polygonPoints.Add(new Point(checkFace.GetAdjacentFace(false).next.next.next.x, checkFace.GetAdjacentFace(false).next.next.next.y));
+                    polygonPoints.Add(new Point(checkFace.GetAdjacentFace(false).next.next.x, checkFace.GetAdjacentFace(false).next.next.y));
+                    polygonPoints.Add(new Point(checkFace.GetAdjacentFace(false).next.x, checkFace.GetAdjacentFace(false).next.y));
                     checkFace = checkFace.GetAdjacentFace(false).over.next;
-                    polygonPoints.Add(new Point(checkFace.x, checkFace.y));
+                    //polygonPoints.Add(new Point(checkFace.x, checkFace.y));
                 }
                 else
+                {
+                    polygonPoints.Add(new Point(checkFace.next.next.next.x, checkFace.next.next.next.y));
+                    polygonPoints.Add(new Point(checkFace.next.next.x, checkFace.next.next.y));
                     checkFace = checkFace.GetAdjacentFace(false);
+                    polygonPoints.Add(new Point(checkFace.next.next.x, checkFace.next.next.y));
+                }
                 i++;
             }
-
+            if (i == 0 && checkFace.endLine != null) // If the endline is on the same face as the start line add the backfaces to the occlusion poly
+            {
+                polygonPoints.Add(new Point(checkFace.next.next.next.x, checkFace.next.next.next.y));
+                polygonPoints.Add(new Point(checkFace.next.next.x, checkFace.next.next.y));
+            }
             if (checkFace.endLine != null)
             {
                 polygonPoints.Add(new Point(checkFace.endLine.X1, checkFace.endLine.Y1));

@@ -23,7 +23,7 @@ namespace SS3D.Atom.Object.Lights
             int r = (int)message.ReadByte();
             int g = (int)message.ReadByte();
             int b = (int)message.ReadByte();
-            LightDirection d = (LightDirection)message.ReadByte();
+            Direction d = (Direction)message.ReadByte();
             if (light == null)
             {
                 light = new Light(atomManager.gameState.map, Color.FromArgb(r, g, b), 190, LightState.On, atomManager.gameState.map.GetTileArrayPositionFromWorldPosition(position), d);
@@ -44,19 +44,19 @@ namespace SS3D.Atom.Object.Lights
             {
                 switch (light.direction[0])
                 {
-                    case LightDirection.North:
+                    case Direction.North:
                         sprite.Rotation = 180;
                         break;
-                    case LightDirection.East:
+                    case Direction.East:
                         sprite.Rotation = 270;
                         break;
-                    case LightDirection.South:
+                    case Direction.South:
                         sprite.Rotation = 0;
                         break;
-                    case LightDirection.West:
+                    case Direction.West:
                         sprite.Rotation = 90;
                         break;
-                    case LightDirection.All:
+                    case Direction.All:
                         sprite.Rotation = 0;
                         break;
                     default:

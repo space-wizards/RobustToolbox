@@ -13,26 +13,23 @@ namespace SS3D.HelperClasses
     {
         public double time;
         public Vector2D position;
-        public float rotW;
-        public float rotY;
+        public float rotation;
         public int iterations;
         public Vector2D startposition;
 
-        public InterpolationPacket(Vector2D _position, float _rotW, float _rotY, double _time)
+        public InterpolationPacket(Vector2D _position, float _rotation, double _time)
         {
             this.position = _position;
-            this.rotW = _rotW;
-            this.rotY = _rotY;
+            this.rotation = _rotation;
             this.time = _time;
             iterations = 0;
             startposition = new Vector2D(1234, 1234);
         }
 
-        public InterpolationPacket(float x, float y, float _rotW, float _rotY, double _time)
+        public InterpolationPacket(float x, float y, float _rotation, double _time)
         {
             this.position = new Vector2D(x, y);
-            this.rotW = _rotW;
-            this.rotY = _rotY;
+            this.rotation = _rotation;
             this.time = _time;
             iterations = 0;
             startposition = new Vector2D(1234, 1234);
@@ -43,8 +40,7 @@ namespace SS3D.HelperClasses
             float x = message.ReadFloat();
             float y = message.ReadFloat();
             position = new Vector2D(x, y);
-            rotW = message.ReadFloat();
-            rotY = message.ReadFloat();
+            rotation = message.ReadFloat();
             time = 0;
             iterations = 0;
             startposition = new Vector2D(1234, 1234);
@@ -54,8 +50,7 @@ namespace SS3D.HelperClasses
         {
             message.Write(position.X);
             message.Write(position.Y);
-            message.Write(rotW);
-            message.Write(rotY);
+            message.Write(rotation);
         }
 
     }

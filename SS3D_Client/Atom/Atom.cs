@@ -33,8 +33,7 @@ namespace SS3D.Atom
         // Position data
         public Vector2D position;
         public Vector2D offset = Vector2D.Zero; // For odd models
-        public float rotW;
-        public float rotY;
+        public float rotation;
         public bool positionChanged = false;
         public List<InterpolationPacket> interpolationPackets;
         public float speed = 2.0f;
@@ -67,8 +66,7 @@ namespace SS3D.Atom
             keyHandlers = new Dictionary<KeyboardKeys, KeyEvent>();
 
             position = new Vector2D(160, 160);
-            rotW = 1;
-            rotY = 0;
+            rotation = 0;
 
             interpolationPackets = new List<InterpolationPacket>();
         }
@@ -79,8 +77,7 @@ namespace SS3D.Atom
             keyHandlers = new Dictionary<KeyboardKeys, KeyEvent>();
 
             position = new Vector2D(160, 160);
-            rotW = 1;
-            rotY = 0;
+            rotation = 0;
 
             interpolationPackets = new List<InterpolationPacket>();
 
@@ -182,8 +179,7 @@ namespace SS3D.Atom
             message.Write((byte)AtomMessage.PositionUpdate);
             message.Write(position.X);
             message.Write(position.Y);
-            message.Write(rotW);
-            message.Write(rotY);
+            message.Write(rotation);
             atomManager.networkManager.SendMessage(message, NetDeliveryMethod.ReliableUnordered);
             lastPositionUpdate = DateTime.Now;
         }
@@ -261,7 +257,7 @@ namespace SS3D.Atom
         {
             Vector2D difference;
             Vector2D fulldifference;
-            float rotW, rotY;
+            float rot;
 
             if (interpolationPackets.Count == 0)
             {
@@ -277,8 +273,7 @@ namespace SS3D.Atom
             fulldifference = i.position - i.startposition;
 
             // Set rotation. The packet may be rotation only.
-            rotW = i.rotW;
-            rotY = i.rotY;
+            rotation = i.rotation;
             //Node.SetOrientation(rotW, 0, rotY, 0);
 
             //Check interpolation packet to see if we're close enough to the interpolation packet on the top of the stack.
@@ -312,6 +307,7 @@ namespace SS3D.Atom
             System.Drawing.Point topLeft = atomManager.gameState.map.GetTileArrayPositionFromWorldPosition(position - sprite.Size / 2);
             System.Drawing.Point bottomRight = atomManager.gameState.map.GetTileArrayPositionFromWorldPosition(position + sprite.Size / 2);
             sprite.SetPosition(position.X - xTopLeft, position.Y - yTopLeft);
+            sprite.Rotation = rotation;
             bool draw = false;
             if ((tilePos.X > 0 && atomManager.gameState.map.tileArray[tilePos.X, tilePos.Y].Visible) ||
                 (topLeft.X > 0 &&atomManager.gameState.map.tileArray[topLeft.X, topLeft.Y].Visible) ||

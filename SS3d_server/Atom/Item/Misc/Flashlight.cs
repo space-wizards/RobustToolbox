@@ -23,7 +23,7 @@ namespace SS3d_server.Atom.Item.Misc
             while (milli == DateTime.Now.Millisecond)
             {
             }
-            light = new Light(new Color((byte)r.Next(255), (byte)r.Next(255), (byte)r.Next(255)), (LightDirection)r.Next(3));
+            light = new Light(new Color((byte)r.Next(255), (byte)r.Next(255), (byte)r.Next(255)), (Direction)r.Next(3));
             light.Normalize();
         }
 
@@ -35,7 +35,7 @@ namespace SS3d_server.Atom.Item.Misc
             while (milli == DateTime.Now.Millisecond)
             {
             }
-            light = new Light(new Color((byte)r.Next(255), (byte)r.Next(255), (byte)r.Next(255)), (LightDirection)r.Next(3));
+            light = new Light(new Color((byte)r.Next(255), (byte)r.Next(255), (byte)r.Next(255)), (Direction)r.Next(3));
             light.Normalize();
         }
 

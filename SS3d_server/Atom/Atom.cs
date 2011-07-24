@@ -28,8 +28,7 @@ namespace SS3d_server.Atom
         // Position data
         public Vector2 position;
         public Vector2 offset;
-        public float rotW;
-        public float rotY;
+        public float rotation;
 
         public int maxHealth = 100;
         public int currentHealth = 100; // By default health is 100
@@ -46,8 +45,7 @@ namespace SS3d_server.Atom
         {
             position = new Vector2(192, 192);
             offset = new Vector2(0, 0);
-            rotW = 1;
-            rotY = 0;
+            rotation = 0;
             name = this.GetType().ToString();
 
             extensions = new List<Extension.Extension>();
@@ -150,7 +148,7 @@ namespace SS3d_server.Atom
             NetOutgoingMessage message = CreateAtomMessage();
             message.Write((byte)AtomMessage.InterpolationPacket);
 
-            InterpolationPacket i = new InterpolationPacket((float)position.X, (float)position.Y, rotW, rotY, 0); // Fuckugly
+            InterpolationPacket i = new InterpolationPacket((float)position.X, (float)position.Y, rotation, 0); // Fuckugly
             i.WriteMessage(message);
 
             /* VVVV This is the force flag. If this flag is set, the client will run the interpolation 
@@ -190,8 +188,7 @@ namespace SS3d_server.Atom
             {
                 position.X = (double)message.ReadFloat();
                 position.Y = (double)message.ReadFloat();
-                rotW = message.ReadFloat();
-                rotY = message.ReadFloat();
+                rotation = message.ReadFloat();
 
                 SendInterpolationPacket(false); // Send position updates to everyone. The client that is controlling this atom should discard this packet.
             }
@@ -211,22 +208,20 @@ namespace SS3d_server.Atom
         }
 
         // For rotation only
-        public virtual void Translate(float W, float Y)
+        public virtual void Translate(float _rotation)
         {
-            rotW = W;
-            rotY = Y;
+            rotation = _rotation;
 
             SendInterpolationPacket(false);
         }
 
         // For both movement and rotation
-        public virtual void Translate(Vector2 newPosition, float W, float Y)
+        public virtual void Translate(Vector2 newPosition, float newRotation)
         {
             position.X = newPosition.X;
             position.Y = newPosition.Y;
 
-            rotW = W;
-            rotY = Y;
+            rotation = newRotation;
 
             SendInterpolationPacket(false);
         }

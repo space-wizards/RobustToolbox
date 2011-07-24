@@ -97,7 +97,7 @@ public enum LightState
     On
 }
 
-public enum LightDirection
+public enum Direction
 {
     East = 0,
     South,

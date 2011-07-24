@@ -17,14 +17,14 @@ namespace SS3d_server.Atom.Object.Lights
             : base()
         {
             name = "WallLight";
-            light = new Item.Light(new Item.Color(200, 200, 200), LightDirection.South);
+            light = new Item.Light(new Item.Color(200, 200, 200), Direction.South);
             light.Normalize();
         }
 
         public override void SerializedInit()
         {
             base.SerializedInit();
-            light = new Item.Light(new Item.Color(200, 200, 200), LightDirection.South);
+            light = new Item.Light(new Item.Color(200, 200, 200), Direction.South);
             light.Normalize();
         }
 

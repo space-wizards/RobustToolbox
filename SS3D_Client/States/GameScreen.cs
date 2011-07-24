@@ -345,6 +345,17 @@ namespace SS3D.States
             {
                 playerController.SendVerb("save", 0);
             }
+            if (e.Key == KeyboardKeys.Left)
+            {
+                if (gameInterface.isBuilding)
+                    gameInterface.Rotate(-90);
+            }
+            else if (e.Key == KeyboardKeys.Right)
+            {
+                if (gameInterface.isBuilding)
+                    gameInterface.Rotate(90);
+            }
+
             playerController.KeyDown(e.Key);
         }
         public override void KeyUp(KeyboardInputEventArgs e)
@@ -357,7 +368,6 @@ namespace SS3D.States
         }
         public override void MouseDown(MouseInputEventArgs e)
         {
-
             if (gameInterface.isBuilding)
             {
                 gameInterface.PlaceBuilding();
@@ -369,9 +379,9 @@ namespace SS3D.States
             #region Object clicking
             bool atomClicked = false;
             // Convert our click from screen -> world coordinates
-            Vector2D worldPosition = new Vector2D(e.Position.X + xTopLeft, e.Position.Y + yTopLeft);
+            //Vector2D worldPosition = new Vector2D(e.Position.X + xTopLeft, e.Position.Y + yTopLeft);
             // A bounding box for our click
-            System.Drawing.RectangleF mouseAABB = new System.Drawing.RectangleF(worldPosition.X, worldPosition.Y, 1, 1);
+            System.Drawing.RectangleF mouseAABB = new System.Drawing.RectangleF(mousePosWorld.X, mousePosWorld.Y, 1, 1);
             float checkDistance = map.tileSpacing * 1.5f;
             // Find all the atoms near us we could have clicked
             if (editMode)
@@ -411,7 +421,7 @@ namespace SS3D.States
 
             if (!atomClicked)
             {
-                System.Drawing.Point clickedPoint = map.GetTileArrayPositionFromWorldPosition(worldPosition);
+                System.Drawing.Point clickedPoint = map.GetTileArrayPositionFromWorldPosition(mousePosWorld);
                 if (clickedPoint.X > 0 && clickedPoint.Y > 0)
                 {
                     if (editMode)

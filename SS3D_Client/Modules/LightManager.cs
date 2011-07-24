@@ -215,10 +215,10 @@ namespace SS3D.Modules
         public Vector2D position;
         public Vector2D lastPosition;
         public Modules.Map.Map map;
-        public List<LightDirection> direction;
+        public List<Direction> direction;
         public List<Tiles.Tile> tiles;
 
-        public Light(Modules.Map.Map _map, System.Drawing.Color _color, int _range, LightState _state, System.Drawing.Point _position, LightDirection _direction)
+        public Light(Modules.Map.Map _map, System.Drawing.Color _color, int _range, LightState _state, System.Drawing.Point _position, Direction _direction)
         {
             Random r = new Random();
             map = _map;
@@ -226,7 +226,7 @@ namespace SS3D.Modules
             range = _range;
             state = _state;
             lastPosition = _position;
-            direction = new List<LightDirection>();
+            direction = new List<Direction>();
             direction.Add(_direction);
             tiles = new List<Tiles.Tile>();
             UpdateLight();

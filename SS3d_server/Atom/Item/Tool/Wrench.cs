@@ -8,7 +8,7 @@ using SS3D_shared.HelperClasses;
 namespace SS3d_server.Atom.Item.Tool
 {
     [Serializable()]
-    public class Wrench : Item
+    public class Wrench : Tool
     {
         public Wrench()
             : base()

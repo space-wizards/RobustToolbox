@@ -8,7 +8,7 @@ using System.Runtime.Serialization;
 namespace SS3d_server.Atom.Item.Tool
 {
     [Serializable()]
-    public class Crowbar : Item
+    public class Crowbar : Tool
     {
         public Crowbar()
             : base()

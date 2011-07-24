@@ -347,16 +347,25 @@ namespace SS3d_server.Atom
 
         #region Serialization
 
+        public void SerializeBasicInfo(SerializationInfo info, StreamingContext ctxt)
+        {
+            name = (string)info.GetValue("name", typeof(string));
+            position = (Vector2)info.GetValue("position", typeof(Vector2));
+            rotation = (float)info.GetValue("rotation", typeof(float));
+        }
+
         public Atom(SerializationInfo info, StreamingContext ctxt)
         {
             name = (string)info.GetValue("name", typeof(string));
             position = (Vector2)info.GetValue("position", typeof(Vector2));
+            rotation = (float)info.GetValue("rotation", typeof(float));
         }
 
         public virtual void GetObjectData(SerializationInfo info, StreamingContext ctxt)
         {
             info.AddValue("name", name);
             info.AddValue("position", position);
+            info.AddValue("rotation", rotation);
         }
 
         #endregion

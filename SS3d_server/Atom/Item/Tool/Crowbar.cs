@@ -18,14 +18,12 @@ namespace SS3d_server.Atom.Item.Tool
 
         public Crowbar(SerializationInfo info, StreamingContext ctxt)
         {
-            name = (string)info.GetValue("name", typeof(string));
-            position = (Vector2)info.GetValue("position", typeof(Vector2));
+            SerializeBasicInfo(info, ctxt);
         }
 
         public override void GetObjectData(SerializationInfo info, StreamingContext ctxt)
         {
-            info.AddValue("name", name);
-            info.AddValue("position", position);
+            base.GetObjectData(info, ctxt);
         }
 
     }

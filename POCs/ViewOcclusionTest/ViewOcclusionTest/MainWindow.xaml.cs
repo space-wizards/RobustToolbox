@@ -93,6 +93,8 @@ namespace ViewOcclusionTest
 
             if (e.LeftButton == MouseButtonState.Pressed)
                 setViewPoint(p);
+            if (e.RightButton == MouseButtonState.Pressed)
+                DebugTile(e.GetPosition(this));
         }
 
         public void Update(object sender, EventArgs e)
@@ -123,11 +125,8 @@ namespace ViewOcclusionTest
             {
                 for (int j = 0; j < arrayDims.Y; j++)
                 {
-                    
                         tileArray[i, j].IsInWindow = false;
                         tileArray[i, j].RemoveLines();
-                        //tileArray[i, j].RemoveOcclusionPoly();
-
                 }
             }
 
@@ -150,6 +149,12 @@ namespace ViewOcclusionTest
 
             foreach (var tile in solidsInWindow)
             {
+                    tile.IsInWindow = true;
+                    tile.DrawLines();
+            }  
+
+            foreach (var tile in solidsInWindow)
+            {
                 bool occluded = false;
                 foreach (Polygon poly in occlusionPolys)
                 {
@@ -159,18 +164,17 @@ namespace ViewOcclusionTest
                         continue;
                     }
                 }
+                if (occluded)
+                    tile.IsInWindow = false;
                 if (!occluded)
                 {
-                    tile.IsInWindow = true;
-                    tile.RemoveLines();
-                    tile.DrawLines();
                     Polygon p = tile.GetOcclusionPoly();
                     if (p != null)
                         occlusionPolys.Add(p);
                 }
             }
 
-                                  
+                                
                 /*}
             }
 */
@@ -195,6 +199,15 @@ namespace ViewOcclusionTest
 
             if(!initial)
                 CullViewFrustum();
+        }
+
+        public void DebugTile(Point p)
+        {
+            int x = (int)Math.Round(p.X / TileSize, 0);
+            int y = (int)Math.Round(p.Y / TileSize, 0);
+            Tile t = tileArray[x, y];
+            Polygon poly = t.GetOcclusionPoly();
+            int i = 1;
         }
     }
 }

@@ -35,6 +35,7 @@ namespace SS3D.Modules
 
         private Type buildingType;
         private Sprite buildingSprite;
+        private Vector2D buildingPositionWorld;
 
         public System.Drawing.RectangleF buildingAABB;
 
@@ -43,6 +44,7 @@ namespace SS3D.Modules
         public bool isBuilding { get; private set; }
         public bool buildingBlocked = false;
         public bool buildingSnapTo = true;
+        public bool buildingSnapToGrid = false;
         public bool buildingDrawRange = true;
         public bool editMode = false;
 
@@ -60,14 +62,16 @@ namespace SS3D.Modules
             buildingType = type;
             buildingSprite = ResMgr.Singleton.GetSprite(atomManager.GetSpriteName(type));
             isBuilding = true;
+            buildingSnapToGrid = atomManager.GetSnapToGrid(type);
+            buildingPositionWorld = gameScreen.mousePosWorld;
         }
 
         private bool CanPlace()
         {
-            if (!editMode && (gameScreen.playerController.controlledAtom.position - gameScreen.mousePosWorld).Length > buildingRange) 
+            if (!editMode && (gameScreen.playerController.controlledAtom.position - buildingPositionWorld).Length > buildingRange) 
                 return false;
 
-            System.Drawing.Point arrayPos = map.GetTileArrayPositionFromWorldPosition(gameScreen.mousePosWorld);
+            System.Drawing.Point arrayPos = map.GetTileArrayPositionFromWorldPosition(buildingPositionWorld);
             TileType type = map.GetTileTypeFromArrayPosition(arrayPos.X, arrayPos.Y);
 
             if (type == TileType.Wall) return false;
@@ -90,7 +94,7 @@ namespace SS3D.Modules
                     Random rnd = new Random(DateTime.Now.Hour+DateTime.Now.Minute+DateTime.Now.Millisecond);
                     Atom.Atom newObject = (Atom.Atom)Activator.CreateInstance(buildingType); //This stuff is just for testing.
                     newObject.Draw();
-                    newObject.position = gameScreen.mousePosWorld;
+                    newObject.position = buildingPositionWorld;
                     newObject.atomManager = atomManager;
                     atomManager.atomDictionary[(ushort)rnd.Next(32000)] = newObject;
                     CancelBuilding();
@@ -101,8 +105,8 @@ namespace SS3D.Modules
                     message.Write((byte)NetMessage.AtomManagerMessage);
                     message.Write((byte)AtomManagerMessage.SpawnAtom);
                     message.Write(buildingType.FullName.Remove(0, 5));
-                    message.Write(gameScreen.mousePosWorld.X);
-                    message.Write(gameScreen.mousePosWorld.Y);
+                    message.Write(buildingPositionWorld.X);
+                    message.Write(buildingPositionWorld.Y);
                     gameScreen.prg.mNetworkMgr.SendMessage(message, NetDeliveryMethod.ReliableUnordered);
                     CancelBuilding();
                 }
@@ -121,37 +125,47 @@ namespace SS3D.Modules
 
         public void Update()
         {
+            buildingPositionWorld = gameScreen.mousePosWorld;
             if (editMode)
             {
-                buildingType = gameScreen.prg.GorgonForm.GetAtomSpawnType();
-                if (buildingType != null)
+                if (buildingType != gameScreen.prg.GorgonForm.GetAtomSpawnType())
                 {
-                    isBuilding = true;
-                    buildingSprite = ResMgr.Singleton.GetSprite(atomManager.GetSpriteName(buildingType));
-                }
-                else
-                {
-                    CancelBuilding();
+                    buildingType = gameScreen.prg.GorgonForm.GetAtomSpawnType();
+                    if (buildingType != null)
+                    {
+                        isBuilding = true;
+                        buildingSprite = ResMgr.Singleton.GetSprite(atomManager.GetSpriteName(buildingType));
+                        buildingSnapToGrid = atomManager.GetSnapToGrid(buildingType);
+                    }
+                    else
+                    {
+                        CancelBuilding();
+                    }
                 }
             }
             buildingBlocked = false;
 
             if (isBuilding)
             {
-                System.Drawing.Point arrayPos = map.GetTileArrayPositionFromWorldPosition(gameScreen.mousePosWorld);
+                System.Drawing.Point arrayPos = map.GetTileArrayPositionFromWorldPosition(buildingPositionWorld);
                 TileType type = map.GetTileTypeFromArrayPosition(arrayPos.X, arrayPos.Y);
+
+                if (buildingSnapToGrid)
+                {
+                    buildingPositionWorld = new Vector2D(arrayPos.X * 64, arrayPos.Y * 64);
+                }
 
                 if (type == TileType.Wall) buildingBlocked = true;
 
                 if (gameScreen.playerController.controlledAtom != null)
                 {
-                    if (!editMode && (gameScreen.playerController.controlledAtom.position - gameScreen.mousePosWorld).Length > buildingRange) 
+                    if (!editMode && (gameScreen.playerController.controlledAtom.position - buildingPositionWorld).Length > buildingRange) 
                         buildingBlocked = true;
                 }
 
                 if (buildingSprite != null)
                 {
-                    buildingSprite.Position = gameScreen.mousePosScreen;
+                    buildingSprite.Position = buildingPositionWorld - new Vector2D(gameScreen.xTopLeft, gameScreen.yTopLeft);
                     buildingSprite.UpdateAABB();
                     buildingAABB = buildingSprite.AABB;
                 }
@@ -169,7 +183,13 @@ namespace SS3D.Modules
 
                 if (buildingSprite != null)
                 {
-                    buildingSprite.Position = gameScreen.mousePosScreen;
+                    if (buildingSnapToGrid)
+                    {
+                        System.Drawing.Point arrayPos = map.GetTileArrayPositionFromWorldPosition(buildingPositionWorld);
+                        buildingPositionWorld = new Vector2D(arrayPos.X * map.tileSpacing + (buildingSprite.Width / 2), arrayPos.Y * map.tileSpacing);
+                    }
+                    buildingSprite.Position = buildingPositionWorld - new Vector2D(gameScreen.xTopLeft, gameScreen.yTopLeft);
+
 
                     if(buildingBlocked)
                         buildingSprite.Color = System.Drawing.Color.Red;

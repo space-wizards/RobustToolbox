@@ -16,6 +16,7 @@ namespace SS3D.Atom.Object.Door
         {
             spritename = "DoorEW";
             collidable = true;
+            snapTogrid = true;
         }
 
         protected override void HandleExtendedMessage(Lidgren.Network.NetIncomingMessage message)

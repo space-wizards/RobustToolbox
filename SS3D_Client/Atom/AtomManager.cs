@@ -116,6 +116,14 @@ namespace SS3D.Atom
             atom = null;
             return strName;
         }
+
+        public bool GetSnapToGrid(Type type)
+        {
+            Atom atom = (Atom)Activator.CreateInstance(type);
+            bool snap = atom.snapTogrid;
+            atom = null;
+            return snap;
+        }
         
         private void HandleDeleteAtom(NetIncomingMessage message)
         {

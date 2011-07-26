@@ -29,7 +29,7 @@ namespace SS3D.States
         private StateManager mStateMgr;
         public Map map;
         private AtomManager atomManager;
-        private GameInterfaceManager gameInterface;
+        private GamePlacementManager gamePlacementMgr;
 
         //private GUI guiGameScreen;
         private Chatbox gameChat;
@@ -38,12 +38,13 @@ namespace SS3D.States
         public DateTime lastUpdate;
         public DateTime now;
         private RenderImage baseTarget;
+        private Sprite baseTargetSprite;
 
         private List<Light> lightsLastFrame = new List<Light>();
         private List<Light> lightsThisFrame = new List<Light>();
 
-        private int screenWidthTiles = 15; // How many tiles around us do we draw?
-        private int screenHeightTiles = 12;
+        public int screenWidthTiles = 15; // How many tiles around us do we draw?
+        public int screenHeightTiles = 12;
 
         private float realScreenWidthTiles = 0;
         private float realScreenHeightTiles = 0;
@@ -103,9 +104,10 @@ namespace SS3D.States
 
             //TODO This should go somewhere else, there should be explicit session setup and teardown at some point.
             prg.mNetworkMgr.SendClientName(ConfigManager.Singleton.Configuration.PlayerName);
-            
-            baseTarget = new RenderImage("baseTarget", 800, 640, ImageBufferFormats.BufferUnknown);
-            baseTarget.AlphaMaskFunction = CompareFunctions.GreaterThan;
+
+            baseTarget = new RenderImage("baseTarget", Gorgon.Screen.Width, Gorgon.Screen.Height, ImageBufferFormats.BufferRGB888A8);
+            baseTargetSprite = new Sprite("baseTargetSprite", baseTarget);
+            //baseTarget.AlphaMaskFunction = CompareFunctions.GreaterThan;
 
             realScreenWidthTiles = (float)Gorgon.CurrentClippingViewport.Width / map.tileSpacing;
             realScreenHeightTiles = (float)Gorgon.CurrentClippingViewport.Height / map.tileSpacing;
@@ -115,7 +117,7 @@ namespace SS3D.States
             //scaleX = (float)Gorgon.CurrentClippingViewport.Width / (realScreenWidthTiles * map.tileSpacing);
             //scaleY = (float)Gorgon.CurrentClippingViewport.Height / (realScreenHeightTiles * map.tileSpacing);
 
-            gameInterface = new GameInterfaceManager(map, atomManager, this);
+            gamePlacementMgr = new GamePlacementManager(map, atomManager, this);
 
             return true;
         }
@@ -128,7 +130,13 @@ namespace SS3D.States
                 baseTarget.Dispose();
                 
             }
-            gameInterface.Shutdown();
+            if (baseTargetSprite != null && Gorgon.IsInitialized)
+            {
+                baseTargetSprite.Name = null;
+                baseTargetSprite.Image = null;
+                baseTargetSprite = null;
+            }
+            gamePlacementMgr.Shutdown();
             atomManager.Shutdown();
             map.Shutdown();
             atomManager = null; 
@@ -142,9 +150,9 @@ namespace SS3D.States
             lastUpdate = now;
             now = DateTime.Now;
             atomManager.Update();
-            gameInterface.Update();
+            gamePlacementMgr.Update();
             editMode = prg.GorgonForm.editMode;
-            gameInterface.editMode = editMode;
+            gamePlacementMgr.editMode = editMode;
         }
 
         private void mNetworkMgr_MessageArrived(NetworkManager netMgr, NetIncomingMessage msg)
@@ -218,7 +226,11 @@ namespace SS3D.States
          * */
         public override void GorgonRender(FrameEventArgs e)
         {
+            Gorgon.CurrentRenderTarget = baseTarget;
+
+            baseTarget.Clear(System.Drawing.Color.Black);
             Gorgon.Screen.Clear(System.Drawing.Color.Black);
+
             Gorgon.Screen.DefaultView.Left = 400;
             Gorgon.Screen.DefaultView.Top = 400;
             if (playerController.controlledAtom != null)
@@ -275,13 +287,13 @@ namespace SS3D.States
                     {
                         a.Render(xTopLeft, yTopLeft);
 
-                        if (gameInterface.isBuilding) //Needs to happen after rendering since rendering sets the sprite pos.
+                        if (gamePlacementMgr.isBuilding) //Needs to happen after rendering since rendering sets the sprite pos.
                         {
                             a.sprite.UpdateAABB();
 
-                            if (a.sprite.AABB.IntersectsWith(gameInterface.buildingAABB))
+                            if (a.sprite.AABB.IntersectsWith(gamePlacementMgr.buildingAABB))
                             {
-                                gameInterface.buildingBlocked = true;
+                                gamePlacementMgr.buildingBlocked = true;
                             }
                         }
 
@@ -307,8 +319,13 @@ namespace SS3D.States
                         }
                     }
                 }
-                gameInterface.Draw();
+                gamePlacementMgr.Draw();
             }
+            Gorgon.CurrentRenderTarget = null;
+            Gorgon.CurrentShader = ResMgr.Singleton.GetShader("bloomtest");
+            ResMgr.Singleton.GetShader("bloomtest").Parameters["_spriteImage"].SetValue(baseTarget.Image);
+            baseTargetSprite.Draw();
+            Gorgon.CurrentShader = null;
             return;
         }
 
@@ -339,22 +356,22 @@ namespace SS3D.States
             playerController.KeyDown(e.Key);
             if (e.Key == KeyboardKeys.F4)
             {
-                gameInterface.StartBuilding(typeof(Atom.Item.Container.Toolbox));
+                gamePlacementMgr.StartBuilding(typeof(Atom.Item.Container.Toolbox));
             }
             if (e.Key == KeyboardKeys.F5)
             {
                 playerController.SendVerb("save", 0);
             }
-            if (e.Key == KeyboardKeys.Left)
-            {
-                if (gameInterface.isBuilding)
-                    gameInterface.Rotate(-90);
-            }
-            else if (e.Key == KeyboardKeys.Right)
-            {
-                if (gameInterface.isBuilding)
-                    gameInterface.Rotate(90);
-            }
+            //if (e.Key == KeyboardKeys.Left)
+            //{
+            //    if (gamePlacementMgr.isBuilding)
+            //        gamePlacementMgr.Rotate(-90);
+            //}
+            //else if (e.Key == KeyboardKeys.Right)
+            //{
+            //    if (gamePlacementMgr.isBuilding)
+            //        gamePlacementMgr.Rotate(90);
+            //}
 
             playerController.KeyDown(e.Key);
         }
@@ -368,9 +385,9 @@ namespace SS3D.States
         }
         public override void MouseDown(MouseInputEventArgs e)
         {
-            if (gameInterface.isBuilding)
+            if (gamePlacementMgr.isBuilding)
             {
-                gameInterface.PlaceBuilding();
+                gamePlacementMgr.PlaceBuilding();
                 return;
             }
             if (playerController.controlledAtom == null)
@@ -426,7 +443,7 @@ namespace SS3D.States
                 {
                     if (editMode)
                     {
-                        if (prg.GorgonForm.GetTileSpawnType() != TileType.None && !gameInterface.isBuilding)
+                        if (prg.GorgonForm.GetTileSpawnType() != TileType.None && !gamePlacementMgr.isBuilding)
                         {
                             NetOutgoingMessage message = mStateMgr.prg.mNetworkMgr.netClient.CreateMessage();
                             message.Write((byte)NetMessage.MapMessage);

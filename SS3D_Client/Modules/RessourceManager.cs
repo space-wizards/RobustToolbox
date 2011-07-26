@@ -254,14 +254,21 @@ namespace SS3D
             var ShaderQuery = from FileSystemFile file in FileSystem where file.Extension.ToLower() == ".fx" select file;
             foreach (FileSystemFile file in ShaderQuery)
             {
-                FXShader loadedShader;
+                try
+                {
+                    FXShader loadedShader;
 
-                if (ShaderCache.Shaders.Contains(file.Filename))
-                    continue;
-                else
-                    loadedShader = FXShader.FromFileSystem(FileSystem, file.FullPath, ShaderCompileOptions.None);
+                    if (ShaderCache.Shaders.Contains(file.Filename))
+                        continue;
+                    else
+                        loadedShader = FXShader.FromFileSystem(FileSystem, file.FullPath, ShaderCompileOptions.None);
 
-                if (!Shaders.ContainsKey(file.Filename)) Shaders.Add(file.Filename, loadedShader);
+                    if (!Shaders.ContainsKey(file.Filename)) Shaders.Add(file.Filename, loadedShader);
+                }
+                catch (Exception EX)
+                {
+                    MessageBox.Show(EX.Message,EX.TargetSite.ToString());
+                }
             }
         }
 

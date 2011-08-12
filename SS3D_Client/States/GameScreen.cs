@@ -119,6 +119,9 @@ namespace SS3D.States
 
             gamePlacementMgr = new GamePlacementManager(map, atomManager, this);
 
+            gameChat = new Chatbox("gameChat");
+            gameChat.TextSubmitted += new Chatbox.TextSubmitHandler(chatTextbox_TextSubmitted);
+            
             return true;
         }
 
@@ -179,9 +182,9 @@ namespace SS3D.States
                         case NetMessage.SendMap:
                             RecieveMap(msg);
                             break;
-                        //case NetMessage.ChatMessage:
-                            //HandleChatMessage(msg);
-                            //break;
+                        case NetMessage.ChatMessage:
+                            HandleChatMessage(msg);
+                            break;
                         default:
                             break;
                     }
@@ -212,6 +215,36 @@ namespace SS3D.States
 
         #endregion
 
+        private void HandleChatMessage(NetIncomingMessage msg)
+        {
+            ChatChannel channel = (ChatChannel)msg.ReadByte();
+            string text = msg.ReadString();
+
+            string message = "(" + channel.ToString() + "):" + text;
+            ushort atomID = msg.ReadUInt16();
+            gameChat.AddLine(message);
+            Atom.Atom a = atomManager.GetAtom(atomID);
+            if (a != null)
+            {
+                //if (a.speechBubble == null) a.speechBubble = new SpeechBubble(mEngine, a.Entity);
+                //a.speechBubble.Show(text, 4000 + ((double)text.Length * (double)30));
+            }
+        }
+
+        void chatTextbox_TextSubmitted(Chatbox chatbox, string text)
+        {
+            SendChatMessage(text);
+        }
+
+        private void SendChatMessage(string text)
+        {
+            NetOutgoingMessage message = prg.mNetworkMgr.netClient.CreateMessage();
+            message.Write((byte)NetMessage.ChatMessage);
+            message.Write((byte)ChatChannel.Default);
+            message.Write(text);
+
+            prg.mNetworkMgr.SendMessage(message, NetDeliveryMethod.ReliableUnordered);
+        }
 
         /* What are we doing here exactly? Well:
          * First we get the tile we are stood on, and try and make this the centre of the view. However if we're too close to one edge
@@ -341,6 +374,13 @@ namespace SS3D.States
 
         public override void KeyDown(KeyboardInputEventArgs e)
         {
+            if (e.Key == KeyboardKeys.T)
+            {
+                gameChat.Active = true;
+            }
+            if (gameChat.Active)
+                return; 
+
             if (e.Key == KeyboardKeys.F1)
             {
                 Gorgon.FrameStatsVisible = !Gorgon.FrameStatsVisible;
@@ -614,21 +654,7 @@ namespace SS3D.States
           
         }*/
 
-        /*private void HandleChatMessage(NetIncomingMessage msg)
-        {
-            ChatChannel channel = (ChatChannel)msg.ReadByte();
-            string text = msg.ReadString();
 
-            string message = "(" + channel.ToString() + "):" + text;
-            ushort atomID = msg.ReadUInt16();
-            gameChat.AddLine(message);
-            Atom.Atom a = atomManager.GetAtom(atomID);
-            if (a != null)
-            {
-                /*if (a.speechBubble == null) a.speechBubble = new SpeechBubble(mEngine, a.Entity);
-                a.speechBubble.Show(text, 4000 + ((double)text.Length * (double)30));
-            }
-        }*/
 
         /*private void SendChatMessage(string text)
         {

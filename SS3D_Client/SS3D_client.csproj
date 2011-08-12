@@ -176,6 +176,7 @@
     <Compile Include="Modules\UI\Console.cs" />
     <Compile Include="Modules\UI\Chatbox.cs" />
     <Compile Include="Modules\UI\Speechbubble.cs" />
+    <Compile Include="Modules\UI\UIDesktop.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Modules\RessourceManager.cs" />

@@ -24,6 +24,7 @@ using Drawing = System.Drawing;
 
 using SS3D.States;
 using SS3D.Modules;
+using SS3D.Modules.UI;
 
 namespace SS3D
 {
@@ -43,7 +44,7 @@ namespace SS3D
 
         //Experimental GUI stuff
         private GUISkin _skin;
-        private Desktop _desktop;
+        private UIDesktop _desktop;
         private GUIWindow _window;
         //Experimental GUI stuff
 
@@ -110,7 +111,8 @@ namespace SS3D
             ResMgr.Singleton.Initialize();
 
             _skin = ResMgr.Singleton.GetGuiSkin("Interface1");
-            _desktop = new Desktop(_input, _skin);
+            UIDesktop.Initialize(_input, _skin);
+            _desktop = UIDesktop.Singleton;
             _window = new GUIWindow("Window", Gorgon.Screen.Width / 4, Gorgon.Screen.Height / 4, Gorgon.Screen.Width - (Gorgon.Screen.Width / 4) * 2, Gorgon.Screen.Height - (Gorgon.Screen.Height / 4) * 2);
             //_desktop.Windows.Add(_window);
             _window.Text = "This is a GUI window.";
@@ -120,6 +122,14 @@ namespace SS3D
             _desktop.FocusRectangleColor = Drawing.Color.FromArgb(128, Drawing.Color.Red);
             _desktop.FocusRectangleBlend = BlendingModes.Additive;
             _desktop.FocusRectangleOutline = false;
+
+            var label = new GUILabel("test");
+            label.Owner = _window;
+            label.Position = new Drawing.Point(_window.ClientArea.Width / 4, _window.ClientArea.Height - 20);
+            label.Size = new Drawing.Size(_window.ClientArea.Width - (_window.ClientArea.Width / 4) * 2, 20);
+            label.Text = "Click to close.";
+            label.TextAlignment = Alignment.Center;
+
             atomTypes = new Dictionary<string, Type>();
             Type[] typeList = GetTypes();
             for (int i = 0; i < typeList.Length; i++)
@@ -133,7 +143,7 @@ namespace SS3D
 
         private Type[] GetTypes()
         {
-            Assembly ass = Assembly.GetExecutingAssembly();
+            Assembly ass = Assembly.GetExecutingAssembly(); //LOL ASS
             return ass.GetTypes().Where(t => t.IsSubclassOf(typeof(Atom.Atom))).ToArray();
         }
 

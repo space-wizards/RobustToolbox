@@ -3,18 +3,100 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 
-using Miyagi;
-using Miyagi.UI;
-using Miyagi.UI.Controls;
-using Miyagi.Common;
-using Miyagi.Common.Data;
-using Miyagi.Common.Resources;
-using Miyagi.Common.Events;
-using Miyagi.TwoD;
+using GorgonLibrary;
+using GorgonLibrary.Framework;
+using GorgonLibrary.GUI;
+using GorgonLibrary.Graphics;
+using GorgonLibrary.Graphics.Utilities;
+using GorgonLibrary.InputDevices;
 
 namespace SS3D.Modules.UI
 {
-    class Chatbox
+    public class Chatbox
+    {
+        public delegate void TextSubmitHandler(Chatbox Chatbox, string Text);
+        private List<GUILabel> entries = new List<GUILabel>();
+
+        private GUILabel textInputLabel;
+
+        private readonly int maxLines = 20;
+        private int chatMessages = 0;
+
+        private bool active = false;
+
+        public bool Active
+        {
+            get { return active; }
+            set { active = value; }
+        }
+
+        public GUIWindow chatGUI
+        {
+            private set;
+            get;
+        }
+
+        public Chatbox(string name)
+        {
+            var desktop = UIDesktop.Singleton;
+            chatGUI = new GUIWindow(name, 5,Gorgon.Screen.Height - 210, 600, 200);
+            chatGUI.KeyDown += new KeyboardInputEvent(chatGUI_KeyDown);
+            desktop.Windows.Add(chatGUI);
+            textInputLabel = new GUILabel("inputLabel");
+            textInputLabel.Size = new System.Drawing.Size(chatGUI.ClientArea.Width - 10, 20);
+            textInputLabel.Owner = chatGUI;
+            textInputLabel.Position = new System.Drawing.Point(5, chatGUI.ClientArea.Height - 20);
+        }
+
+        public void AddLine(string message)
+        {
+            var label = new GUILabel("message" + chatMessages.ToString());
+            label.Size = new System.Drawing.Size(chatGUI.ClientArea.Width - 10, 20);
+            label.Owner = chatGUI;
+            label.Text = message;
+            entries.Add(label);
+            chatMessages++;
+            drawLines();
+        }
+
+        private void drawLines()
+        {
+            while (entries.Count > maxLines)
+                entries.RemoveAt(0);
+
+            for (int i = entries.Count - 1; i >= 0; i--)
+            {
+                entries[i].Position = new System.Drawing.Point(5, chatGUI.ClientArea.Bottom - (20 * (entries.Count - i)) - 25);
+            }
+        }
+
+        private void chatGUI_KeyDown(object sender, KeyboardInputEventArgs e)
+        {
+            var keyboard = UIDesktop.Singleton.Input.Keyboard;
+
+            if (!Active)
+                return;
+            if (e.Key == KeyboardKeys.Enter)
+            {
+                TextSubmitted(this, textInputLabel.Text);
+                textInputLabel.Text = "";
+                Active = false;
+            }
+
+            if (keyboard.KeyMappings.Contains(e.Key))
+            {
+                if (keyboard.KeyStates[KeyboardKeys.LShiftKey] == KeyState.Up && keyboard.KeyStates[KeyboardKeys.RShiftKey] == KeyState.Up)
+                    textInputLabel.Text += keyboard.KeyMappings[e.Key].Character;
+                else
+                    textInputLabel.Text += keyboard.KeyMappings[e.Key].Shifted;
+            }
+        }
+
+        public event TextSubmitHandler TextSubmitted;
+    }
+
+/*    [Obsolete]
+    class ChatboxOld
     {
         private MiyagiResources mMiyagiRes;
 
@@ -54,7 +136,7 @@ namespace SS3D.Modules.UI
             }
         }
 
-        public Chatbox(string name)
+        public ChatboxOld(string name)
         {
             mMiyagiRes = MiyagiResources.Singleton;
             chatGUI = new GUI(name);
@@ -274,5 +356,5 @@ namespace SS3D.Modules.UI
                 chatTextbox.Location = newLoc;
             }
         }
-    }
+    }//*/
 }

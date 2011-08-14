@@ -374,10 +374,6 @@ namespace SS3D.States
 
         public override void KeyDown(KeyboardInputEventArgs e)
         {
-            if (e.Key == KeyboardKeys.T)
-            {
-                gameChat.Active = true;
-            }
             if (gameChat.Active)
                 return; 
 

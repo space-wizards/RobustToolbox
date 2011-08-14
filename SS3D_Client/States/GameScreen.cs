@@ -39,6 +39,7 @@ namespace SS3D.States
         public DateTime now;
         private RenderImage baseTarget;
         private Sprite baseTargetSprite;
+        private Batch gasBatch;
         
         private List<Light> lightsLastFrame = new List<Light>();
         private List<Light> lightsThisFrame = new List<Light>();
@@ -107,6 +108,7 @@ namespace SS3D.States
 
             baseTarget = new RenderImage("baseTarget", Gorgon.Screen.Width, Gorgon.Screen.Height, ImageBufferFormats.BufferRGB888A8);
             baseTargetSprite = new Sprite("baseTargetSprite", baseTarget);
+            gasBatch = new Batch("gasBatch", 1);
             
             realScreenWidthTiles = (float)Gorgon.CurrentClippingViewport.Width / map.tileSpacing;
             realScreenHeightTiles = (float)Gorgon.CurrentClippingViewport.Height / map.tileSpacing;
@@ -286,6 +288,7 @@ namespace SS3D.States
                     map.lastVisPoint = centerTile;
                 }
 
+                gasBatch.Clear();
                 if (map.tileArray != null)
                 {
                     for (int x = xStart; x < xEnd; x++)
@@ -297,18 +300,20 @@ namespace SS3D.States
                                 if (y <= centerTile.Y)
                                 {
                                     map.tileArray[x, y].Render(xTopLeft, yTopLeft, map.tileSpacing);
-                                    map.tileArray[x, y].RenderGas(xTopLeft, yTopLeft, map.tileSpacing);
+                                    map.tileArray[x, y].RenderGas(xTopLeft, yTopLeft, map.tileSpacing, gasBatch);
                                 }
                             }
                             else
                             {
                                 map.tileArray[x, y].Render(xTopLeft, yTopLeft, map.tileSpacing);
-                                map.tileArray[x, y].RenderGas(xTopLeft, yTopLeft, map.tileSpacing);
+                                map.tileArray[x, y].RenderGas(xTopLeft, yTopLeft, map.tileSpacing, gasBatch);
                             }
                         }
                     }
                 }
 
+                if(gasBatch.Count > 0)
+                    gasBatch.Draw();
 
                 lightsThisFrame.Clear();
 

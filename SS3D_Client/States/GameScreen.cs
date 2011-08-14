@@ -39,7 +39,7 @@ namespace SS3D.States
         public DateTime now;
         private RenderImage baseTarget;
         private Sprite baseTargetSprite;
-
+        
         private List<Light> lightsLastFrame = new List<Light>();
         private List<Light> lightsThisFrame = new List<Light>();
 
@@ -107,8 +107,7 @@ namespace SS3D.States
 
             baseTarget = new RenderImage("baseTarget", Gorgon.Screen.Width, Gorgon.Screen.Height, ImageBufferFormats.BufferRGB888A8);
             baseTargetSprite = new Sprite("baseTargetSprite", baseTarget);
-            //baseTarget.AlphaMaskFunction = CompareFunctions.GreaterThan;
-
+            
             realScreenWidthTiles = (float)Gorgon.CurrentClippingViewport.Width / map.tileSpacing;
             realScreenHeightTiles = (float)Gorgon.CurrentClippingViewport.Height / map.tileSpacing;
 
@@ -172,6 +171,9 @@ namespace SS3D.States
                     {
                         case NetMessage.MapMessage:
                             map.HandleNetworkMessage(msg);
+                            break;
+                        case NetMessage.AtmosDisplayUpdate:
+                            map.HandleAtmosDisplayUpdate(msg);
                             break;
                         case NetMessage.AtomManagerMessage:
                             atomManager.HandleNetworkMessage(msg);
@@ -295,15 +297,18 @@ namespace SS3D.States
                                 if (y <= centerTile.Y)
                                 {
                                     map.tileArray[x, y].Render(xTopLeft, yTopLeft, map.tileSpacing);
+                                    map.tileArray[x, y].RenderGas(xTopLeft, yTopLeft, map.tileSpacing);
                                 }
                             }
                             else
                             {
                                 map.tileArray[x, y].Render(xTopLeft, yTopLeft, map.tileSpacing);
+                                map.tileArray[x, y].RenderGas(xTopLeft, yTopLeft, map.tileSpacing);
                             }
                         }
                     }
                 }
+
 
                 lightsThisFrame.Clear();
 

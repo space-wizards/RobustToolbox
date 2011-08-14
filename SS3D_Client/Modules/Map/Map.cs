@@ -27,6 +27,7 @@ namespace SS3D.Modules.Map
         public System.Drawing.Point lastVisPoint;
         private int recCount = 0;
         public bool needVisUpdate = false;
+        public bool loaded = false;
         #endregion
 
         public Map()
@@ -135,6 +136,8 @@ namespace SS3D.Modules.Map
 
                 }
             }
+
+            loaded = true;
             return true;
         }
 
@@ -174,6 +177,37 @@ namespace SS3D.Modules.Map
                     break;
                 default:
                     break;
+            }
+        }
+
+        public void HandleAtmosDisplayUpdate(NetIncomingMessage message)
+        {
+            if (!loaded)
+                return;
+            int count = message.ReadInt32();
+            List<AtmosRecord> records = new List<AtmosRecord>();
+            for (int i = 1; i <= count; i++)
+            {
+                records.Add(new AtmosRecord(message.ReadInt32(), message.ReadInt32(), message.ReadByte()));
+            }
+
+            foreach (AtmosRecord record in records)
+            {
+                tileArray[record.x, record.y].SetAtmosDisplay(record.display);
+            }
+        }
+
+        private struct AtmosRecord
+        {
+            public int x;
+            public int y;
+            public byte display;
+
+            public AtmosRecord(int _x, int _y, byte _display)
+            {
+                x = _x;
+                y = _y;
+                display = _display;
             }
         }
 

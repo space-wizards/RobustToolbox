@@ -414,6 +414,8 @@ namespace SS3d_server
             // Lets also send them all the items and mobs.
             atomManager.NewPlayer(connection);
             playerManager.SpawnPlayerMob(playerManager.GetSessionByConnection(connection));
+            //Send atmos state to player
+            map.SendAtmosStateTo(connection);
             //Todo: Preempt this with the lobby.
         }
 

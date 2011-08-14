@@ -6,14 +6,7 @@ using SS3D_shared.HelperClasses;
 
 namespace SS3d_server.Tiles.Atmos
 {
-    public enum GasType
-    {
-        Oxygen = 1, // MUST BE 1 FOR NETWORKING
-        Toxin,
-        Nitrogen,
-        CO2,
-        WVapor
-    }
+
     public class GasCell
     {
         Tile attachedtile;
@@ -32,6 +25,7 @@ namespace SS3d_server.Tiles.Atmos
         public Dictionary<GasType, double> gasses;
         public Dictionary<GasType, double> nextGasses;
         public Dictionary<GasType, double> lastSentGasses;
+        private double lastVelSent = 0;
         Random rand;
         
         //Constants
@@ -275,15 +269,16 @@ namespace SS3d_server.Tiles.Atmos
         /// <summary>
         /// Function to pack an array of one-byte representations of a given gas's visibility.
         /// </summary>
+        /// <param name="all">send em all anyway?</param>
         /// <returns></returns>
-        /// TODO: Fix this so that it only sends if the quantity has changed recently.
-        public byte[] PackDisplayBytes()
+        /// 
+        public byte[] PackDisplayBytes(bool all = false)
         {
             List<byte> displayBytes = new List<byte>();
             uint amount;
             uint type;
             //Water vapor
-            if (gasses[GasType.WVapor] > 10 && checkUpdateThreshold(GasType.WVapor))
+            if (gasses[GasType.WVapor] > 10 && (checkUpdateThreshold(GasType.WVapor) || all))
             {
                 amount = (uint)normalizeGasAmount(gasses[GasType.WVapor]);
                 type = (uint)GasType.WVapor << 4;
@@ -291,7 +286,7 @@ namespace SS3d_server.Tiles.Atmos
                 lastSentGasses[GasType.WVapor] = gasses[GasType.WVapor]; //Store the last quantity we sent.
             }
             //Toxins
-            if (gasses[GasType.Toxin] > 10 && checkUpdateThreshold(GasType.Toxin))
+            if (gasses[GasType.Toxin] > 10 && (checkUpdateThreshold(GasType.Toxin) || all))
             {
                 amount = (uint)normalizeGasAmount(gasses[GasType.Toxin]);
                 type = (uint)GasType.Toxin << 4;
@@ -299,25 +294,25 @@ namespace SS3d_server.Tiles.Atmos
                 lastSentGasses[GasType.Toxin] = gasses[GasType.Toxin];
             }
             //Generic high-pressure gas
-            if(GasVel.Magnitude > 10)
+            if((normalizeGasAmount(GasVel.Magnitude,20) != normalizeGasAmount(lastVelSent,20)))
             {
-                amount = (uint)normalizeGasAmount(GasVel.Magnitude);
-                type = (uint)15 << 4; // This is normally invisible gas that is at such a large pressure gradient that it has a positive index of refraction.
+                amount = (uint)normalizeGasAmount(GasVel.Magnitude,20);
+                type = (uint)GasType.HighVel << 4; // This is normally invisible gas that is at such a large pressure gradient that it has a positive index of refraction.
                 displayBytes.Add((byte)(amount | type));
+                lastVelSent = GasVel.Magnitude;
             }
-            
+
             byte[] displays = new byte[displayBytes.Count];
             for (int i = 0; i < displayBytes.Count; i++) 
                 displays[i] = displayBytes[i];
 
-            
             return displays;
         }
 
         private bool checkUpdateThreshold(GasType g, double multiplier = 1)
         {
-            //If the delta since the last update was sent is greater than 10, send another update.
-            if(Math.Abs(normalizeGasAmount(gasses[g], multiplier) - normalizeGasAmount(lastSentGasses[g], multiplier)) >= 10)
+            //If the delta since the last update was sent is greater than 2, send another update.
+            if(Math.Abs(normalizeGasAmount(gasses[g], multiplier) - normalizeGasAmount(lastSentGasses[g], multiplier)) >= 2)
                 return true;
             return false;
         }
@@ -329,6 +324,7 @@ namespace SS3d_server.Tiles.Atmos
         /// <returns></returns>
         public int normalizeGasAmount(double amount, double multiplier = 1)
         {
+            amount = amount * multiplier;
             if (amount > 150)
                 amount = 150;
             return (int)(amount / 10);

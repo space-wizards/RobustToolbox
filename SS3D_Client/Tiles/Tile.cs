@@ -73,7 +73,7 @@ namespace SS3D.Tiles
                 
             }
         }
-        public virtual void RenderGas(float xTopLeft, float yTopLeft, int tileSpacing)
+        public virtual void RenderGas(float xTopLeft, float yTopLeft, int tileSpacing, Batch gasBatch)
         {
             if (Visible && gasAmounts.Count > 0)
             {
@@ -97,7 +97,8 @@ namespace SS3D.Tiles
                             gasSprite.Color = Color.FromArgb(opacity, Color.LightBlue);
                             break;
                     }
-                    gasSprite.Draw();//UGH THIS IS SLOW AS FUCK
+                    gasBatch.AddClone(gasSprite);
+                    //gasSprite.Draw();//UGH THIS IS SLOW AS FUCK
                 }
             }
         }

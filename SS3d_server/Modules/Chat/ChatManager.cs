@@ -90,6 +90,34 @@ namespace SS3d_server.Modules.Chat
                         position = player.position;
                     netServer.atomManager.SpawnAtom("Atom.Item.Container.Toolbox", position);  
                     break;
+                case "addgas":
+                    player = netServer.atomManager.GetAtom(atomID);
+                    if (player == null)
+                        position = new Vector2(0,0);
+                    else
+                        position = player.position;
+
+                    if (args.Count > 1 && Convert.ToInt32(args[1]) > 0)
+                    {
+                        int amount = Convert.ToInt32(args[1]);
+                        netServer.map.AddGasAt(netServer.map.GetTileArrayPositionFromWorldPosition(position), GasType.Toxin, amount);
+                    }
+                    break;
+                case "gasreport":
+                    player = netServer.atomManager.GetAtom(atomID);
+                    if (player == null)
+                        position = new Vector2(0,0);
+                    else
+                        position = player.position;
+                    
+                    var p = netServer.map.GetTileArrayPositionFromWorldPosition(position);
+                    var c = netServer.map.GetTileAt(p.x, p.y).gasCell;
+                    foreach(var g in c.gasses)
+                    {
+                        netServer.chatManager.SendChatMessage(ChatChannel.Default, g.Key.ToString() + ": " + g.Value.ToString(), "GasReport", 0);
+                    }
+                    
+                    break;
                 default:
                     string message = "Command '" + command + "' not recognized.";
                     SendChatMessage(channel, message, name, atomID);

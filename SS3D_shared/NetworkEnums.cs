@@ -113,3 +113,13 @@ public enum TileState
     Wrenched,
     Dead
 }
+
+public enum GasType
+{
+    Oxygen = 1, // MUST BE 1 FOR NETWORKING
+    Toxin = 2,
+    Nitrogen = 3,
+    CO2 = 4,
+    WVapor = 5,
+    HighVel = 15
+}

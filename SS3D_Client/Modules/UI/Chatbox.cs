@@ -70,9 +70,20 @@ namespace SS3D.Modules.UI
             }
         }
 
+        /// <summary>
+        /// Processes keypresses into meaningful input
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
         private void chatGUI_KeyDown(object sender, KeyboardInputEventArgs e)
         {
             var keyboard = UIDesktop.Singleton.Input.Keyboard;
+
+            if (e.Key == KeyboardKeys.T && !Active)
+            {
+                Active = true;
+                return;
+            }
 
             if (!Active)
                 return;
@@ -81,6 +92,14 @@ namespace SS3D.Modules.UI
                 TextSubmitted(this, textInputLabel.Text);
                 textInputLabel.Text = "";
                 Active = false;
+                return;
+            }
+
+            if (e.Key == KeyboardKeys.Back)
+            {
+                if (textInputLabel.Text.Length > 0)
+                    textInputLabel.Text = textInputLabel.Text.Remove(textInputLabel.Text.Length - 1, 1);
+                return;
             }
 
             if (keyboard.KeyMappings.Contains(e.Key))

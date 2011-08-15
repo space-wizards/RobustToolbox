@@ -1,0 +1,22 @@
+﻿<Window x:Class="MapEditor.MainWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        Title="MainWindow" Height="800" Width="800">
+    <Grid>
+        <Button Content="Load Map" Height="31" HorizontalAlignment="Left" Margin="12,12,0,0" Name="loadmap_Button" VerticalAlignment="Top" Width="106" Click="loadmap_Button_Click" />
+        <Button Content="Save Map" Height="31" HorizontalAlignment="Left" Margin="124,12,0,0" Name="savemap_Button" VerticalAlignment="Top" Width="106" Click="savemap_Button_Click" />
+        <Canvas Name="canvas" Margin="12,60,0,0">
+            <Rectangle Height="12" HorizontalAlignment="Left" Margin="0,0,0,0" Name="rectangle1" Stroke="Black" VerticalAlignment="Top" Width="12" />
+            <TextBlock Height="17" HorizontalAlignment="Left" Margin="2,-1,0,0" Name="textBlock1" Text="F" VerticalAlignment="Top" Width="14" Foreground="White" />
+        </Canvas>
+        <Rectangle Height="21" HorizontalAlignment="Left" Margin="280,8,0,0" Name="Palette_floor" Stroke="Black" VerticalAlignment="Top" Width="22" Fill="LightGray" MouseDown="Palette_floor_MouseDown"/>
+        <Rectangle Height="21" HorizontalAlignment="Left" Margin="280,35,0,0" Name="Palette_none" Stroke="Black" VerticalAlignment="Top" Width="22" Fill="LightSteelBlue" MouseDown="Palette_none_MouseDown"/>
+        <Rectangle Height="21" HorizontalAlignment="Left" Margin="436,8,0,0" Name="Palette_space" Stroke="Black" VerticalAlignment="Top" Width="22" Fill="Black" MouseDown="Palette_space_MouseDown"/>
+        <Rectangle Height="21" HorizontalAlignment="Left" Margin="436,35,0,0" Name="Palette_wall" Stroke="Black" VerticalAlignment="Top" Width="22" Fill="Brown" MouseDown="Palette_wall_MouseDown"/>
+        <TextBlock Height="21" HorizontalAlignment="Left" Margin="311,9,0,0" Name="textBlock2" Text="Floor" VerticalAlignment="Top" Width="90" />
+        <TextBlock Height="21" HorizontalAlignment="Left" Margin="311,35,0,0" Name="textBlock3" Text="None" VerticalAlignment="Top" Width="90" />
+        <TextBlock Height="21" HorizontalAlignment="Left" Margin="464,9,0,0" Name="textBlock4" Text="Space" VerticalAlignment="Top" Width="90" />
+        <TextBlock Height="21" HorizontalAlignment="Left" Margin="464,35,0,0" Name="textBlock5" Text="Wall" VerticalAlignment="Top" Width="90" />
+        <Button Content="Area Select" Height="21" HorizontalAlignment="Left" Margin="524,4,0,0" Name="areaSelectButton" VerticalAlignment="Top" Width="76" Click="areaSelectButton_Click" />
+    </Grid>
+</Window>

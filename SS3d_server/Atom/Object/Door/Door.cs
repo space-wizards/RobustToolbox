@@ -64,13 +64,21 @@ namespace SS3d_server.Atom.Object.Door
         {
             base.Update(framePeriod);
 
+            //Make closed doors block gas
+            var occupiedTilePos = atomManager.netServer.map.GetTileArrayPositionFromWorldPosition(position);
+            var occupiedTile = atomManager.netServer.map.GetTileAt(occupiedTilePos.x, occupiedTilePos.y);
+
             if (status == DoorState.Closed)
             {
+                occupiedTile.gasPermeable = false;
+                occupiedTile.gasCell.blocking = true;
                 updateRequired = false;
                 timeOpen = 0;
             }
             else if (status == DoorState.Open)
             {
+                occupiedTile.gasPermeable = true;
+                occupiedTile.gasCell.blocking = false;
                 updateRequired = true;
                 timeOpen += framePeriod;
                 if (timeOpen > openLength)

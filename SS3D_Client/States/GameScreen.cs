@@ -288,7 +288,6 @@ namespace SS3D.States
                     map.lastVisPoint = centerTile;
                 }
 
-                gasBatch.Clear();
                 if (map.tileArray != null)
                 {
                     for (int x = xStart; x < xEnd; x++)
@@ -314,6 +313,8 @@ namespace SS3D.States
 
                 if(gasBatch.Count > 0)
                     gasBatch.Draw();
+                gasBatch.Clear();
+                    
 
                 lightsThisFrame.Clear();
 

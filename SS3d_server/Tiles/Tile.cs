@@ -22,6 +22,8 @@ namespace SS3d_server.Tiles
         // These return true if the tile needs to be updated over the network
         public bool ClickedBy(Atom.Atom clicker)
         {
+            if (clicker == null)
+                return false;
              if(clicker.IsChildOfType(typeof(Atom.Mob.Mob)))
              {
                  Atom.Mob.Mob mob = (Atom.Mob.Mob)clicker;

@@ -94,6 +94,20 @@ namespace SS3d_server.Modules.Map
             }
         }
 
+        private void DestroyWall(Point arrayPosition)
+        {
+            if (IsSaneArrayPosition(arrayPosition.x, arrayPosition.y))
+            {
+                var t = tileArray[arrayPosition.x, arrayPosition.y];
+                var g = t.gasCell;
+                Tiles.Tile newTile = GenerateNewTile(TileType.Floor);
+                tileArray[arrayPosition.x, arrayPosition.y] = newTile;
+                newTile.gasCell = g;
+                g.AttachToTile(newTile);
+                NetworkUpdateTile(arrayPosition.x, arrayPosition.y);
+            }                
+        }
+
         private void HandleTurfUpdate(NetIncomingMessage message)
         {
             short x = message.ReadInt16();
@@ -106,6 +120,7 @@ namespace SS3d_server.Modules.Map
                 Tile t = GenerateNewTile(type);
                 tileArray[x, y] = t;
                 tileArray[x, y].gasCell = g;
+                g.AttachToTile(t);
                 NetworkUpdateTile(x, y);
             }
         }
@@ -303,6 +318,8 @@ namespace SS3d_server.Modules.Map
             for (int x = 0; x < mapWidth; x++)
                 for (int y = 0; y < mapHeight; y++)
                 {
+                    if (tileArray[x, y].tileState == TileState.Dead && tileArray[x, y].tileType == TileType.Wall)
+                        DestroyWall(new Point(x, y));
                     tileArray[x, y].gasCell.Update();
                 }
 

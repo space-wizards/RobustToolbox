@@ -138,6 +138,26 @@ namespace SS3d_server.Tiles.Atmos
                 nextGasAmount += n;
         }
 
+        private void Diffuse(GasCell a, GasCell b)
+        {
+            foreach (var gas in a.gasses)
+            {
+                if (gas.Value > b.gasses[gas.Key])
+                {
+                    var amount = (gas.Value - b.gasses[gas.Key]) / 8;
+                    b.nextGasses[gas.Key] += amount;
+                    a.nextGasses[gas.Key] -= amount;
+                }
+                else if (b.gasses[gas.Key] > gas.Value)
+                {
+                    var amount = (b.gasses[gas.Key] - gas.Value) / 8;
+                    a.nextGasses[gas.Key] += amount;
+                    b.nextGasses[gas.Key] -= amount;
+                }
+
+            }
+        }
+
         public void CalculateNextGasAmount()
         {
             if (blocking)
@@ -161,13 +181,14 @@ namespace SS3d_server.Tiles.Atmos
 
                     if (Math.Abs(i) + Math.Abs(j) == 2) //If its a corner
                     {
-                        if (tileArray[arrX + i, 0].gasCell.blocking && tileArray[0, arrY + j].gasCell.blocking) // And it is a corner separated from us by 2 blocking walls
+                        if (tileArray[arrX + i, arrY].gasCell.blocking && tileArray[arrX, arrY + j].gasCell.blocking) // And it is a corner separated from us by 2 blocking walls
                             continue; //Don't process it. These cells are not connected.
                     }
 
                     DAmount = gasAmount - neighbor.gasAmount;
                     if (DAmount == 0 || Math.Abs(DAmount) < 0.1)
                     {
+                        Diffuse(neighbor, this);
                         return;
                     }
 

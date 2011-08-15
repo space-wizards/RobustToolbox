@@ -102,7 +102,7 @@ namespace SS3D
         public Sprite GetSprite(string key)
         {
             if (Sprites.ContainsKey(key)) return Sprites[key];
-            else return new Sprite(key + "Missing", Images["noSprite"]);
+            else return GetSpriteFromImage(key);
         }
 
         /// <summary>

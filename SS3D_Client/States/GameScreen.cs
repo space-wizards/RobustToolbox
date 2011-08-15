@@ -52,6 +52,7 @@ namespace SS3D.States
 
         private bool showStats = false;     // show FPS etc. panel if true
         private bool showDebug = false;     // show AABBs & Bounding Circles on atoms.
+        private bool telepathy = false;     // disable visiblity bounds if true
         //private Label fpsLabel1, fpsLabel2, fpsLabel3, fpsLabel4;
 
         public float xTopLeft { get; private set; }
@@ -282,10 +283,14 @@ namespace SS3D.States
                 xTopLeft = Math.Max(0, playerController.controlledAtom.position.X - ((screenWidthTiles / 2) * map.tileSpacing));
                 yTopLeft = Math.Max(0, playerController.controlledAtom.position.Y - ((screenHeightTiles / 2) * map.tileSpacing));
 
-                if (centerTile != map.lastVisPoint || map.needVisUpdate)
+                if (!telepathy && (centerTile != map.lastVisPoint || map.needVisUpdate))
                 {
                     map.compute_visibility(centerTile.X, centerTile.Y);
                     map.lastVisPoint = centerTile;
+                }
+                else
+                {
+                    map.set_all_visible();
                 }
 
                 if (map.tileArray != null)
@@ -408,6 +413,10 @@ namespace SS3D.States
             if (e.Key == KeyboardKeys.F5)
             {
                 playerController.SendVerb("save", 0);
+            }
+            if (e.Key == KeyboardKeys.F6)
+            {
+                telepathy = !telepathy;
             }
             //if (e.Key == KeyboardKeys.Left)
             //{

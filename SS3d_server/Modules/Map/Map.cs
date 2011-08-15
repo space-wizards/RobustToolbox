@@ -276,8 +276,11 @@ namespace SS3d_server.Modules.Map
                 for (int x = 0; x < mapWidth; x++)
                 {
                     tileArray[x, z].gasCell = new Tiles.Atmos.GasCell(tileArray[x, z], x, z, tileArray, mapWidth, mapHeight);
-                    tileArray[x, z].gasCell.AddGas(20, GasType.Oxygen);
-                    tileArray[x, z].gasCell.AddGas(80, GasType.Nitrogen);
+                    if (tileArray[x, z].tileType == TileType.Floor)
+                    {
+                        tileArray[x, z].gasCell.AddGas(20, GasType.Oxygen);
+                        tileArray[x, z].gasCell.AddGas(80, GasType.Nitrogen);
+                    }
                 }
             }
         }
@@ -352,7 +355,7 @@ namespace SS3d_server.Modules.Map
                         rec.pack(message);
                     }
                     netServer.SendMessageToAll(message, NetDeliveryMethod.Unreliable);// Gas updates aren't a big deal.
-                    Console.Write("Sending Gas update\n");
+                    Console.Write("Sending Gas update with " + records.Count.ToString() + " records\n");
                 }
                 lastAtmosDisplayPush = DateTime.Now;
             }

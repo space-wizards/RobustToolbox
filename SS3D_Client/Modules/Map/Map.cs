@@ -534,6 +534,17 @@ namespace SS3D.Modules.Map
             }
         }
 
+        public void set_all_visible()
+        {
+            for (int x = 0; x < mapWidth; x++)
+            {
+                for (int y = 0; y < mapHeight; y++)
+                {
+                    tileArray[x, y].Visible = true;
+                }
+            }
+        }
+
         void set_visible(int x, int y)
         {
             tileArray[x, y].Visible = true;

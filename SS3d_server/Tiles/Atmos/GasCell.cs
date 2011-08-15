@@ -64,13 +64,19 @@ namespace SS3d_server.Tiles.Atmos
                 nextGasses.Add(g, 0);
                 lastSentGasses.Add(g, 0);
             }
-            AddGas(20, GasType.Oxygen);
+            //AddGas(20, GasType.Oxygen);
         }
 
         public void Update()
         {
-            if (sink || blocking)
+            if (sink)
+            {
                 nextGasAmount = 0;
+                foreach (var g in gasses)
+                {
+                    nextGasses[g.Key] = 0;
+                }
+            }
 
             GasVel = NextGasVel;
             NextGasVel = new Vector2(0, 0);
@@ -85,6 +91,13 @@ namespace SS3d_server.Tiles.Atmos
             SetGasDisplay();
 
             calculated = false;
+        }
+
+        public void AttachToTile(Tile t)
+        {
+            attachedtile = t;
+            blocking = !attachedtile.gasPermeable;
+            sink = attachedtile.gasSink;
         }
 
         public void SetGasDisplay()
@@ -127,7 +140,6 @@ namespace SS3d_server.Tiles.Atmos
 
         public void CalculateNextGasAmount()
         {
-
             if (blocking)
                 return;
             double DAmount;
@@ -146,6 +158,12 @@ namespace SS3d_server.Tiles.Atmos
                     neighbor = tileArray[arrX+i,arrY+j].gasCell;
                     if (neighbor.calculated) // if neighbor's already been calculated, skip it
                         continue;
+
+                    if (Math.Abs(i) + Math.Abs(j) == 2) //If its a corner
+                    {
+                        if (tileArray[arrX + i, 0].gasCell.blocking && tileArray[0, arrY + j].gasCell.blocking) // And it is a corner separated from us by 2 blocking walls
+                            continue; //Don't process it. These cells are not connected.
+                    }
 
                     DAmount = gasAmount - neighbor.gasAmount;
                     if (DAmount == 0 || Math.Abs(DAmount) < 0.1)
@@ -192,9 +210,10 @@ namespace SS3d_server.Tiles.Atmos
                     //Wall destruction
                     if (neighbor.blocking)
                     {
-                        if (Flow > 500)
-                        {
+                        if (Flow > 500 && neighbor.attachedtile.tileType == TileType.Wall)
+                        {                           
                             neighbor.blocking = false; // Incident flow is > 750 so the wall is destroyed
+                            neighbor.attachedtile.tileState = TileState.Dead;
                             Flow = Flow * .75; //Dying wall takes out some of the flow.
                         }
                         else

@@ -37,11 +37,15 @@ namespace SS3D.Atom.Object.Door
                     spritename = "DoorEW";
                     visible = true;
                     collidable = true;
+                    atomManager.gameState.map.GetTileAt(position).sightBlocked = true;
+                    atomManager.gameState.map.needVisUpdate = true;
                     Draw();
                     break;
                 case DoorState.Open:
                     spritename = "DoorEWO";
                     collidable = false;
+                    atomManager.gameState.map.GetTileAt(position).sightBlocked = false;
+                    atomManager.gameState.map.needVisUpdate = true;
                     Draw();
                     break;
                 case DoorState.Broken:
@@ -49,8 +53,6 @@ namespace SS3D.Atom.Object.Door
                 default:
                     break;
             }
-            atomManager.gameState.map.GetTileAt(position).sightBlocked = visible;
-            atomManager.gameState.map.needVisUpdate = true;
             updateRequired = true;
         }
 

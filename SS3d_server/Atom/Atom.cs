@@ -343,6 +343,12 @@ namespace SS3d_server.Atom
         {
             isDead = true;
         }
+
+        public Tiles.Tile GetNearestTile()
+        {
+            Point pos = atomManager.netServer.map.GetTileArrayPositionFromWorldPosition(position);
+            return atomManager.netServer.map.GetTileAt(pos.x, pos.y);
+        }
         #endregion
 
         #region Serialization

@@ -115,6 +115,7 @@ namespace SS3D.Modules
                     message.Write(buildingType.FullName.Remove(0, 5));
                     message.Write(gameScreen.mousePosWorld.X);
                     message.Write(gameScreen.mousePosWorld.Y);
+                    message.Write(0f);//Rotation? Doesn't seem to be used, but it was bugging out the server.
                     gameScreen.prg.mNetworkMgr.SendMessage(message, NetDeliveryMethod.ReliableUnordered);
                     CancelBuilding();
                 }

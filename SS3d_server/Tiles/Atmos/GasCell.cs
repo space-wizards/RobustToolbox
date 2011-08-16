@@ -352,7 +352,7 @@ namespace SS3d_server.Tiles.Atmos
         private bool checkUpdateThreshold(GasType g, double multiplier = 1)
         {
             //If the delta since the last update was sent is greater than 2, send another update.
-            if(Math.Abs(normalizeGasAmount(gasses[g], multiplier) - normalizeGasAmount(lastSentGasses[g], multiplier)) >= 2)
+            if(Math.Abs(normalizeGasAmount(gasses[g], multiplier) - normalizeGasAmount(lastSentGasses[g], multiplier)) >= 1)
                 return true;
             return false;
         }

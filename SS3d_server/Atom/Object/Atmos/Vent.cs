@@ -40,7 +40,9 @@ namespace SS3d_server.Atom.Object.Atmos
                 {
                     if (g.nextGasses[gas.Key] != gas.Value)
                     {
-                        var gasdiff = gas.Value - g.nextGasses[gas.Key];
+                        double gasdiff = gas.Value - g.nextGasses[gas.Key];
+                        if (Math.Abs(gasdiff) < 0.2) //Don't fiddle with tiny differences.
+                            continue;
                         var gastoAdd = Math.Sign(gasdiff) * Math.Min(maxAdd, Math.Abs(gasdiff));
                         g.nextGasses[gas.Key] += gastoAdd;
                         Console.Write("Added " + gastoAdd.ToString() + " units of " + gas.Key.ToString() + "\n");

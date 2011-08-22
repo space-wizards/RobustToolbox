@@ -133,7 +133,7 @@ namespace SS3d_server.Atom
             //base.HandleClick(message);
             //Who clicked us?
             Mob.Mob clicker = (Mob.Mob)atomManager.netServer.playerManager.GetSessionByConnection(message.SenderConnection).attachedAtom;
-            if (clicker == null)
+            if (clicker == null || clicker.IsDead()) //HAHA U CANT KILL ME WHEN UR DEAD NEMORE
                 return;
 
             Clicked(clicker);

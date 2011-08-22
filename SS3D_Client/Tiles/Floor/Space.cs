@@ -17,7 +17,7 @@ namespace SS3D.Tiles.Floor
             name = "Space";
         }
 
-        public override void Render(float xTopLeft, float yTopLeft, int tileSpacing, Batch tileBatch)
+        public override void Render(float xTopLeft, float yTopLeft, int tileSpacing)
         {
             return;
         }

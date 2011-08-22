@@ -21,7 +21,7 @@ namespace SS3D.Tiles.Wall
             sideSprite = _side;
         }
 
-        public override void Render(float xTopLeft, float yTopLeft, int tileSpacing, Batch tileBatch)
+        public override void Render(float xTopLeft, float yTopLeft, int tileSpacing)
         {
             if (Visible && ((surroundDirs&4) == 0))
             {

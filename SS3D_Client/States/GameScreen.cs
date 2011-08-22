@@ -8,6 +8,7 @@ using SS3D.Modules;
 using SS3D.Modules.Map;
 using SS3D.Modules.Network;
 using SS3D.Modules.UI;
+using SS3D.Modules.UI.Components;
 using SS3D.Atom;
 
 using SS3D_shared;
@@ -31,8 +32,12 @@ namespace SS3D.States
         private AtomManager atomManager;
         private GamePlacementManager gamePlacementMgr;
 
-        //private GUI guiGameScreen;
+        //UI Vars
+        #region UI Variables
         private Chatbox gameChat;
+        private Dictionary<GuiComponent, IGuiComponent> guiComponents;
+        #endregion 
+
         private ushort defaultChannel;
         public PlayerController playerController;
         public DateTime lastUpdate;
@@ -121,8 +126,12 @@ namespace SS3D.States
 
             gamePlacementMgr = new GamePlacementManager(map, atomManager, this);
 
+            //Init GUI components
             gameChat = new Chatbox("gameChat");
             gameChat.TextSubmitted += new Chatbox.TextSubmitHandler(chatTextbox_TextSubmitted);
+
+            guiComponents = new Dictionary<GuiComponent, IGuiComponent>();
+            guiComponents.Add(GuiComponent.HealthComponent, new HumanHealthComponent());
             
             return true;
         }
@@ -374,7 +383,15 @@ namespace SS3D.States
             Gorgon.CurrentShader = ResMgr.Singleton.GetShader("bloomtest");
             ResMgr.Singleton.GetShader("bloomtest").Parameters["_spriteImage"].SetValue(baseTarget.Image);
             baseTargetSprite.Draw();
+
             Gorgon.CurrentShader = null;
+            
+            //Draw UI
+            foreach (IGuiComponent component in guiComponents.Values)
+            {
+                component.Render();
+            }
+            
             return;
         }
 

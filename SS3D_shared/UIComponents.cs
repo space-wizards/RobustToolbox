@@ -9,4 +9,9 @@ namespace SS3D_shared
     {
         HealthComponent,
     }
+
+    public enum HealthComponentMessage
+    {
+        CurrentHealth
+    }
 }

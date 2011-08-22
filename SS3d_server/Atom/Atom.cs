@@ -8,6 +8,7 @@ using SS3d_server.HelperClasses;
 using Lidgren.Network;
 using SS3D_shared.HelperClasses;
 using SS3d_server.Atom.Extension;
+using SS3d_server.Modules;
 
 namespace SS3d_server.Atom
 {
@@ -287,6 +288,17 @@ namespace SS3d_server.Atom
             name = _name;
         }
 
+        public PlayerSession GetSession()
+        {
+            if (attachedClient != null)
+            {
+                var session = atomManager.netServer.playerManager.GetSessionByConnection(attachedClient);
+                if(session != null)
+                    return session;
+            }
+            return null;
+        }
+
         /// <summary>
         /// Checks if the atom is a child / derived from the passed in type.
         /// </summary>
@@ -329,6 +341,18 @@ namespace SS3d_server.Atom
             healthmsg += " Current health: " + currentHealth.ToString() + "/" + maxHealth.ToString();//TODO SEND DAMAGE MESSAGES
             atomManager.netServer.chatManager.SendChatMessage(0, healthmsg, name, uid);
         #endif
+
+            var session = GetSession();
+            if (session != null)
+            {
+                int healthpercent = Convert.ToInt32(100 * ((decimal)currentHealth / (decimal)maxHealth));
+
+                var healthupdatemessage = session.CreateGuiMessage(SS3D_shared.GuiComponent.HealthComponent);
+                healthupdatemessage.Write((byte)SS3D_shared.HealthComponentMessage.CurrentHealth);
+                healthupdatemessage.Write(Convert.ToInt32(healthpercent));
+                SendMessageTo(healthupdatemessage, attachedClient);
+            }
+
         }
 
         public bool IsDead()

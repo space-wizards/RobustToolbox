@@ -6,6 +6,7 @@ using System.Text;
 using Lidgren.Network;
 using SS3d_server.Atom;
 using SS3d_server;
+using SS3D_shared;
 
 namespace SS3d_server.Modules
 {
@@ -168,6 +169,15 @@ namespace SS3d_server.Modules
         {
             status = SessionStatus.Disconnected;
             DetachFromAtom();
+        }
+
+        public NetOutgoingMessage CreateGuiMessage(GuiComponent gui)
+        {
+            NetOutgoingMessage m = netServer.netServer.CreateMessage();
+            m.Write((byte)NetMessage.PlayerSessionMessage);
+            m.Write((byte)PlayerSessionMessage.UIComponentMessage);
+            m.Write((byte)gui);
+            return m;
         }
     }
 }

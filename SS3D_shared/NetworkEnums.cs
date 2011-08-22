@@ -81,7 +81,8 @@ public enum PlayerSessionMessage
 {
     AttachToAtom,
     Verb,
-    JoinLobby
+    JoinLobby,
+    UIComponentMessage
 }
 
 public enum DoorState

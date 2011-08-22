@@ -35,7 +35,7 @@ namespace SS3D.States
         //UI Vars
         #region UI Variables
         private Chatbox gameChat;
-        private Dictionary<GuiComponent, IGuiComponent> guiComponents;
+        public Dictionary<GuiComponent, IGuiComponent> guiComponents;
         #endregion 
 
         private ushort defaultChannel;

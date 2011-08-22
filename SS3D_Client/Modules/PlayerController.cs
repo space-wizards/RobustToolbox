@@ -10,6 +10,7 @@ using Lidgren.Network;
 using Mogre;
 using GorgonLibrary;
 using GorgonLibrary.InputDevices;
+using SS3D_shared;
 
 namespace SS3D.Modules
 {
@@ -86,29 +87,6 @@ namespace SS3D.Modules
             controlledAtom = null;
         }
 
-        public void KeyDown(MOIS.KeyCode k)
-        {
-            ///DISABLED TO TRANSITION TO GORGON
-        /*    if (atomManager == null)
-                return;
-            if (controlledAtom == null)
-                return;
-            
-            controlledAtom.HandleKeyPressed(k);*/
-        }
-
-        public void KeyUp(MOIS.KeyCode k)
-        {
-            ///DISABLED TO TRANSITION TO GORGON
-            /*
-            if (atomManager == null)
-                return;
-            if (controlledAtom == null)
-                return;
-            
-            controlledAtom.HandleKeyReleased(k);*/
-        }
-
         public void KeyDown(KeyboardKeys key)
         {
             if (atomManager == null)
@@ -139,8 +117,27 @@ namespace SS3D.Modules
                 case PlayerSessionMessage.AttachToAtom:
                     HandleAttachToAtom(message);
                     break;
+                case PlayerSessionMessage.UIComponentMessage:
+                    HandleUIComponentMessage(message);
+                    break;
                 default:
                     break;
+            }
+        }
+
+        private void HandleUIComponentMessage(NetIncomingMessage message)
+        {
+            GuiComponent component = (GuiComponent)message.ReadByte();
+            switch (component)
+            {
+                case GuiComponent.HealthComponent:
+                    if (runningState.GetType() == System.Type.GetType("SS3D.States.GameScreen"))
+                    {
+                        GameScreen g = (GameScreen)runningState;
+                        g.guiComponents[GuiComponent.HealthComponent].HandleNetworkMessage(message);
+                    }
+                    break;
+                default:break;
             }
         }
 

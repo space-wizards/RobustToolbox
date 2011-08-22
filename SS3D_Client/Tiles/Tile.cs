@@ -25,6 +25,7 @@ namespace SS3D.Tiles
         //public Dictionary<VertexLocations, bool> vertexVisibility;
         public List<Light> tileLights;
         public Dictionary<GasType, int> gasAmounts;
+        public Sprite gasSprite;
 
         public Tile(Sprite _sprite, TileState state, float size, Vector2D _position, Point _tilePosition)
         {
@@ -37,6 +38,7 @@ namespace SS3D.Tiles
             surroundingTiles = new Tile[4];
             tileLights = new List<Light>();
             gasAmounts = new Dictionary<GasType, int>();
+            gasSprite = ResMgr.Singleton.GetSpriteFromImage("gas");
         }
 
         public Tile(Sprite _sprite, Sprite _side, TileState state, float size, Vector2D _position, Point _tilePosition)
@@ -52,7 +54,8 @@ namespace SS3D.Tiles
             sightBlocked = false;
             surroundingTiles = new Tile[4];
             tileLights = new List<Light>();
-            gasAmounts = new Dictionary<GasType, int>();
+            gasAmounts = new Dictionary<GasType, int>(); 
+            gasSprite = ResMgr.Singleton.GetSpriteFromImage("gas");    
         }
 
         public void SetSprites(Sprite _sprite, Sprite _side, byte _surroundDirs)
@@ -77,12 +80,17 @@ namespace SS3D.Tiles
         {
             if (Visible && gasAmounts.Count > 0)
             {
-                Sprite gasSprite = ResMgr.Singleton.GetSpriteFromImage("gas");
-                gasSprite.SetPosition(tilePosition.X * tileSpacing - xTopLeft, tilePosition.Y * tileSpacing - yTopLeft);
+                bool spritepositionset = false;
                 foreach (var gasAmount in gasAmounts)
                 {
                     if (gasAmount.Value <= 1) //Meh.
                         continue;
+                    if (!spritepositionset)
+                    {
+                        gasSprite.SetPosition(tilePosition.X * tileSpacing - xTopLeft, tilePosition.Y * tileSpacing - yTopLeft);
+                        spritepositionset = true;
+                    }
+                
                     int opacity = (int)Math.Floor(((double)gasAmount.Value / 15) * 255);
                     
                     switch (gasAmount.Key)

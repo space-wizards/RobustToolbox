@@ -21,5 +21,7 @@ namespace SS3D.Modules.UI
 
 
         void Render();
+
+        void HandleNetworkMessage(Lidgren.Network.NetIncomingMessage message);
     }
 }

@@ -62,15 +62,14 @@ namespace SS3D.Tiles
             surroundDirs = _surroundDirs;
         }
 
-        public virtual void Render(float xTopLeft, float yTopLeft, int tileSpacing, Batch tileBatch)
+        public virtual void Render(float xTopLeft, float yTopLeft, int tileSpacing)
         {
             if (Visible)
             {
                 sprite.Color = Color.White;
                 sprite.SetPosition(tilePosition.X * tileSpacing - xTopLeft, tilePosition.Y * tileSpacing - yTopLeft);
                 LightManager.Singleton.ApplyLightsToSprite(tileLights, sprite, new Vector2D(xTopLeft, yTopLeft));
-                //sprite.Draw();
-                tileBatch.AddClone(sprite);
+                sprite.Draw();
                 
             }
         }

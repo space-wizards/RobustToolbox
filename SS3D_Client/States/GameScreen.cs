@@ -454,7 +454,11 @@ namespace SS3D.States
         }
         public override void MouseUp(MouseInputEventArgs e)
         {
-        
+            //Forward clicks to gui components
+            foreach (var comp in guiComponents.Values)
+            {
+                comp.MouseUp(e);
+            }
         }
         public override void MouseDown(MouseInputEventArgs e)
         {
@@ -465,6 +469,12 @@ namespace SS3D.States
             }
             if (playerController.controlledAtom == null)
                 return;
+
+            //Forward clicks to gui components
+            foreach (var comp in guiComponents.Values)
+            {
+                comp.MouseDown(e);
+            }
 
             #region Object clicking
             bool atomClicked = false;

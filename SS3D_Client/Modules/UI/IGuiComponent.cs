@@ -8,6 +8,7 @@ using SS3D_shared;
 
 using GorgonLibrary;
 using GorgonLibrary.Graphics;
+using GorgonLibrary.InputDevices;
 
 namespace SS3D.Modules.UI
 {
@@ -18,9 +19,11 @@ namespace SS3D.Modules.UI
             get;
         }
 
-
         void Render();
 
         void HandleNetworkMessage(Lidgren.Network.NetIncomingMessage message);
+
+        void MouseDown(MouseInputEventArgs e);
+        void MouseUp(MouseInputEventArgs e);
     }
 }

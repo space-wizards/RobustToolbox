@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using System.Drawing;
 using SS3D_shared;
 
 using GorgonLibrary;
@@ -16,7 +17,19 @@ namespace SS3D.Modules.UI
             get;
             protected set;
         }
-        private PlayerController playerController;
+        protected PlayerController playerController;
+        protected Point position;
+        public virtual Point Position
+        {
+            get
+            {
+                return position;
+            }
+            set
+            {
+                position = value;
+            }
+        }
 
 
         public GuiComponent(PlayerController _playerController)
@@ -32,14 +45,14 @@ namespace SS3D.Modules.UI
         {
         }
 
-        public virtual void MouseDown(MouseInputEventArgs e)
+        public virtual bool MouseDown(MouseInputEventArgs e)
         {
-
+            return false;
         }
 
-        public virtual void MouseUp(MouseInputEventArgs e)
+        public virtual bool MouseUp(MouseInputEventArgs e)
         {
-
+            return false;
         }
     }
 }

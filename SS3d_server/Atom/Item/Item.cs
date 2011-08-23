@@ -98,7 +98,17 @@ namespace SS3d_server.Atom.Item
             newHolder.selectedAppendage.heldItem = this;
 
             SendAttachMessage();
+            SendAppendageUIUpdate(newHolder);
         }
+
+        public virtual void SendAppendageUIUpdate(Mob.Mob target)
+        {
+            //send a message to the new holder's UI to put in the right image
+            NetOutgoingMessage message = atomManager.netServer.playerManager.GetSessionByConnection(target.attachedClient).CreateGuiMessage(SS3D_shared.GuiComponentType.AppendagesComponent);
+            message.Write((byte)SS3D_shared.HandsComponentMessage.UpdateHandObjects);
+            atomManager.netServer.SendMessageTo(message, target.attachedClient);
+        }
+        
 
         /// <summary>
         /// Sends an attach message to the owner of the attached appendage
@@ -125,6 +135,8 @@ namespace SS3d_server.Atom.Item
         {
             Vector2 droppedposition = holdingAppendage.owner.position;
             float droppedrot = holdingAppendage.owner.rotation;
+            Mob.Mob owner = holdingAppendage.owner;
+            
             holdingAppendage.heldItem = null;
             holdingAppendage = null;
 
@@ -132,6 +144,8 @@ namespace SS3d_server.Atom.Item
             outmessage.Write((byte)AtomMessage.Extended);
             outmessage.Write((byte)ItemMessage.Detach);
             atomManager.netServer.SendMessageToAll(outmessage);
+
+            SendAppendageUIUpdate(owner);
 
             Translate(droppedposition, droppedrot);
         }

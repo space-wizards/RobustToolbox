@@ -365,6 +365,7 @@ namespace SS3d_server.Atom
 
         public virtual void Die()
         {
+            currentHealth = 0;
             isDead = true;
         }
 

@@ -8,10 +8,17 @@ namespace SS3D_shared
     public enum GuiComponentType
     {
         HealthComponent,
+        AppendagesComponent
     }
 
     public enum HealthComponentMessage
     {
         CurrentHealth
+    }
+
+    public enum HandsComponentMessage
+    {
+        SelectHand,
+        UpdateHandObjects
     }
 }

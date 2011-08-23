@@ -132,6 +132,8 @@ namespace SS3D.States
 
             guiComponents = new Dictionary<GuiComponentType, IGuiComponent>();
             guiComponents.Add(GuiComponentType.HealthComponent, new HumanHealthComponent(playerController));
+            guiComponents.Add(GuiComponentType.AppendagesComponent, new HumanHandsGui(playerController));
+            guiComponents[GuiComponentType.AppendagesComponent].Position = new System.Drawing.Point(Gorgon.Screen.Width - 190, Gorgon.Screen.Height - 99);
             
             return true;
         }
@@ -457,7 +459,8 @@ namespace SS3D.States
             //Forward clicks to gui components
             foreach (var comp in guiComponents.Values)
             {
-                comp.MouseUp(e);
+                if(comp.MouseUp(e))
+                    return;
             }
         }
         public override void MouseDown(MouseInputEventArgs e)
@@ -473,7 +476,8 @@ namespace SS3D.States
             //Forward clicks to gui components
             foreach (var comp in guiComponents.Values)
             {
-                comp.MouseDown(e);
+                if (comp.MouseDown(e))//MouseDown returns true if the click is handled by the ui component.
+                    return;
             }
 
             #region Object clicking

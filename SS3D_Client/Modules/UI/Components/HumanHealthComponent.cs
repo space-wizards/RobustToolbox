@@ -15,14 +15,13 @@ namespace SS3D.Modules.UI.Components
 {
     public class HumanHealthComponent : GuiComponent
     {
-        private Point position;
         public Point Position
         {
             get
             {
                 return position;
             }
-            private set
+            set
             {
                 position = value;
                 greenSprite.SetPosition(position.X, position.Y);
@@ -79,7 +78,7 @@ namespace SS3D.Modules.UI.Components
             healthAmount.Text = pct.ToString() + "%";
         }
 
-        public override void MouseDown(MouseInputEventArgs e)
+        public override bool MouseDown(MouseInputEventArgs e)
         {
             System.Drawing.RectangleF mouseAABB = new System.Drawing.RectangleF(e.Position.X, e.Position.Y, 1, 1);
             if (baseSprite.AABB.IntersectsWith(mouseAABB))
@@ -90,7 +89,9 @@ namespace SS3D.Modules.UI.Components
                     baseSprite = redSprite;
                 else if (baseSprite == redSprite)
                     baseSprite = greenSprite;
+                return true;
             }
+            return false;
         }
     }
 }

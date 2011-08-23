@@ -19,11 +19,17 @@ namespace SS3D.Modules.UI
             get;
         }
 
+        Point Position
+        {
+            get;
+            set;
+        }
+
         void Render();
 
         void HandleNetworkMessage(Lidgren.Network.NetIncomingMessage message);
 
-        void MouseDown(MouseInputEventArgs e);
-        void MouseUp(MouseInputEventArgs e);
+        bool MouseDown(MouseInputEventArgs e);
+        bool MouseUp(MouseInputEventArgs e);
     }
 }

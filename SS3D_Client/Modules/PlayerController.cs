@@ -137,6 +137,13 @@ namespace SS3D.Modules
                         g.guiComponents[GuiComponentType.HealthComponent].HandleNetworkMessage(message);
                     }
                     break;
+                case GuiComponentType.AppendagesComponent:
+                    if (runningState.GetType() == System.Type.GetType("SS3D.States.GameScreen"))
+                    {
+                        GameScreen g = (GameScreen)runningState;
+                        g.guiComponents[GuiComponentType.AppendagesComponent].HandleNetworkMessage(message);
+                    }
+                    break;
                 default:break;
             }
         }

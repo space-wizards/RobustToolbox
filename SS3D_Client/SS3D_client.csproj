@@ -174,11 +174,12 @@
     <Compile Include="Modules\PlayerController.cs" />
     <Compile Include="Modules\State.cs" />
     <Compile Include="Modules\StateManager.cs" />
-    <Compile Include="Modules\UI\Components\HealthComponent.cs" />
+    <Compile Include="Modules\UI\Components\HumanHealthComponent.cs" />
     <Compile Include="Modules\UI\Console.cs" />
     <Compile Include="Modules\UI\Chatbox.cs" />
+    <Compile Include="Modules\UI\GuiComponent.cs" />
     <Compile Include="Modules\UI\Speechbubble.cs" />
-    <Compile Include="Modules\UI\UIComponent.cs" />
+    <Compile Include="Modules\UI\IGuiComponent.cs" />
     <Compile Include="Modules\UI\UIDesktop.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />

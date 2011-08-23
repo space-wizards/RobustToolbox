@@ -5,7 +5,7 @@ using System.Text;
 
 namespace SS3D_shared
 {
-    public enum GuiComponent
+    public enum GuiComponentType
     {
         HealthComponent,
     }

@@ -13,10 +13,9 @@ namespace SS3D.Modules.UI
 {
     public interface IGuiComponent
     {
-        GuiComponent componentClass
+        GuiComponentType componentClass
         {
             get;
-            set;
         }
 
 

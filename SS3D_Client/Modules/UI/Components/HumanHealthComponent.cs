@@ -12,15 +12,8 @@ using SS3D_shared;
 
 namespace SS3D.Modules.UI.Components
 {
-    public class HumanHealthComponent : IGuiComponent
+    public class HumanHealthComponent : GuiComponent
     {
-        public GuiComponent componentClass
-        {
-            get;
-            set;
-        }
-
-
         private Point position;
         public Point Position
         {
@@ -40,9 +33,10 @@ namespace SS3D.Modules.UI.Components
         public GorgonLibrary.Graphics.Font healthDisplayFont;
 
 
-        public HumanHealthComponent()
+        public HumanHealthComponent(PlayerController _playerController)
+            :base(_playerController)
         {
-            componentClass = GuiComponent.HealthComponent;
+            componentClass = GuiComponentType.HealthComponent;
         
             baseSprite = ResMgr.Singleton.GetSpriteFromImage("healthgreen");
 
@@ -53,13 +47,13 @@ namespace SS3D.Modules.UI.Components
             Position = new Point(Gorgon.Screen.Width - 42, Gorgon.Screen.Height - 99);
         }
 
-        public void Render()
+        public override void Render()
         {
             baseSprite.Draw();
             healthAmount.Draw();
         }
 
-        public void HandleNetworkMessage(NetIncomingMessage message)
+        public override void HandleNetworkMessage(NetIncomingMessage message)
         {
             HealthComponentMessage messageType = (HealthComponentMessage)message.ReadByte();
             switch (messageType)

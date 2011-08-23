@@ -5,6 +5,7 @@ using System.Text;
 using System.Drawing;
 using GorgonLibrary;
 using GorgonLibrary.Graphics;
+using GorgonLibrary.InputDevices;
 
 using Lidgren.Network;
 
@@ -24,13 +25,18 @@ namespace SS3D.Modules.UI.Components
             private set
             {
                 position = value;
-                baseSprite.SetPosition(position.X, position.Y);
+                greenSprite.SetPosition(position.X, position.Y);
+                yellowSprite.SetPosition(position.X, position.Y);
+                redSprite.SetPosition(position.X, position.Y);
                 healthAmount.SetPosition(position.X + 7, position.Y + 16);
             }
         }
-        public Sprite baseSprite;
-        public TextSprite healthAmount;
-        public GorgonLibrary.Graphics.Font healthDisplayFont;
+        private Sprite baseSprite;
+        private Sprite greenSprite;
+        private Sprite yellowSprite;
+        private Sprite redSprite;
+        private TextSprite healthAmount;
+        private GorgonLibrary.Graphics.Font healthDisplayFont;
 
 
         public HumanHealthComponent(PlayerController _playerController)
@@ -38,7 +44,10 @@ namespace SS3D.Modules.UI.Components
         {
             componentClass = GuiComponentType.HealthComponent;
         
-            baseSprite = ResMgr.Singleton.GetSpriteFromImage("healthgreen");
+            greenSprite = ResMgr.Singleton.GetSpriteFromImage("healthgreen");
+            yellowSprite = ResMgr.Singleton.GetSpriteFromImage("healthyellow");
+            redSprite = ResMgr.Singleton.GetSpriteFromImage("healthred");
+            baseSprite = greenSprite;
 
             healthDisplayFont = new GorgonLibrary.Graphics.Font("Arial8pt", "Arial", 8.0f, true, true);
             healthAmount = new TextSprite("healthAmount", "100%", healthDisplayFont);
@@ -68,6 +77,20 @@ namespace SS3D.Modules.UI.Components
         public void SetHealthPercentage(int pct)
         {
             healthAmount.Text = pct.ToString() + "%";
+        }
+
+        public override void MouseDown(MouseInputEventArgs e)
+        {
+            System.Drawing.RectangleF mouseAABB = new System.Drawing.RectangleF(e.Position.X, e.Position.Y, 1, 1);
+            if (baseSprite.AABB.IntersectsWith(mouseAABB))
+            {
+                if (baseSprite == greenSprite)
+                    baseSprite = yellowSprite;
+                else if (baseSprite == yellowSprite)
+                    baseSprite = redSprite;
+                else if (baseSprite == redSprite)
+                    baseSprite = greenSprite;
+            }
         }
     }
 }

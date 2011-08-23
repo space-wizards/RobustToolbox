@@ -4,6 +4,9 @@ using System.Linq;
 using System.Text;
 using SS3D_shared;
 
+using GorgonLibrary;
+using GorgonLibrary.InputDevices;
+
 namespace SS3D.Modules.UI
 {
     public class GuiComponent : IGuiComponent
@@ -27,6 +30,16 @@ namespace SS3D.Modules.UI
 
         public virtual void HandleNetworkMessage(Lidgren.Network.NetIncomingMessage message)
         {
+        }
+
+        public virtual void MouseDown(MouseInputEventArgs e)
+        {
+
+        }
+
+        public virtual void MouseUp(MouseInputEventArgs e)
+        {
+
         }
     }
 }

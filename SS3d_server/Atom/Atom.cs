@@ -347,7 +347,7 @@ namespace SS3d_server.Atom
             {
                 int healthpercent = Convert.ToInt32(100 * ((decimal)currentHealth / (decimal)maxHealth));
 
-                var healthupdatemessage = session.CreateGuiMessage(SS3D_shared.GuiComponent.HealthComponent);
+                var healthupdatemessage = session.CreateGuiMessage(SS3D_shared.GuiComponentType.HealthComponent);
                 healthupdatemessage.Write((byte)SS3D_shared.HealthComponentMessage.CurrentHealth);
                 healthupdatemessage.Write(Convert.ToInt32(healthpercent));
                 SendMessageTo(healthupdatemessage, attachedClient);

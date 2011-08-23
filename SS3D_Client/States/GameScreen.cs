@@ -35,7 +35,7 @@ namespace SS3D.States
         //UI Vars
         #region UI Variables
         private Chatbox gameChat;
-        public Dictionary<GuiComponent, IGuiComponent> guiComponents;
+        public Dictionary<GuiComponentType, IGuiComponent> guiComponents;
         #endregion 
 
         private ushort defaultChannel;
@@ -130,8 +130,8 @@ namespace SS3D.States
             gameChat = new Chatbox("gameChat");
             gameChat.TextSubmitted += new Chatbox.TextSubmitHandler(chatTextbox_TextSubmitted);
 
-            guiComponents = new Dictionary<GuiComponent, IGuiComponent>();
-            guiComponents.Add(GuiComponent.HealthComponent, new HumanHealthComponent());
+            guiComponents = new Dictionary<GuiComponentType, IGuiComponent>();
+            guiComponents.Add(GuiComponentType.HealthComponent, new HumanHealthComponent(playerController));
             
             return true;
         }

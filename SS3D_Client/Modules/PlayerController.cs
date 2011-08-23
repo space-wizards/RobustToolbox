@@ -127,14 +127,14 @@ namespace SS3D.Modules
 
         private void HandleUIComponentMessage(NetIncomingMessage message)
         {
-            GuiComponent component = (GuiComponent)message.ReadByte();
+            GuiComponentType component = (GuiComponentType)message.ReadByte();
             switch (component)
             {
-                case GuiComponent.HealthComponent:
+                case GuiComponentType.HealthComponent:
                     if (runningState.GetType() == System.Type.GetType("SS3D.States.GameScreen"))
                     {
                         GameScreen g = (GameScreen)runningState;
-                        g.guiComponents[GuiComponent.HealthComponent].HandleNetworkMessage(message);
+                        g.guiComponents[GuiComponentType.HealthComponent].HandleNetworkMessage(message);
                     }
                     break;
                 default:break;

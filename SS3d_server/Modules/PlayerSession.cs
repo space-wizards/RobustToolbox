@@ -171,7 +171,7 @@ namespace SS3d_server.Modules
             DetachFromAtom();
         }
 
-        public NetOutgoingMessage CreateGuiMessage(GuiComponent gui)
+        public NetOutgoingMessage CreateGuiMessage(GuiComponentType gui)
         {
             NetOutgoingMessage m = netServer.netServer.CreateMessage();
             m.Write((byte)NetMessage.PlayerSessionMessage);

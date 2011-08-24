@@ -370,9 +370,9 @@ namespace SS3D.Atom
 
                 if(a.GetType() == Type.GetType("SS3D.Atom.Object.Door.Door")) //DOOR SPECIAL CASE LOL
                     box = new System.Drawing.RectangleF(a.position.X - ((a.sprite.Width * a.sprite.UniformScale) / 2),
-                    a.position.Y + ((a.sprite.Height * a.sprite.UniformScale) / 2) - 32,
+                    a.position.Y + ((a.sprite.Height * a.sprite.UniformScale) / 2) - 1,
                     (a.sprite.Width * a.sprite.UniformScale),
-                    32);
+                    1);
 
                 if (box.IntersectsWith(myAABB))
                 {

@@ -328,6 +328,7 @@ namespace SS3D.Atom
         #region positioning
         public virtual bool IsColliding()
         {
+            ///CHECK TURF COLLISIONS
             //Lets just check each corner of our sprite to see if it is in a wall tile for now.
             System.Drawing.RectangleF myAABB = new System.Drawing.RectangleF(position.X - ((sprite.Width * sprite.UniformScale) / 2), 
                 position.Y - ((sprite.Height * sprite.UniformScale) / 2), 
@@ -350,7 +351,8 @@ namespace SS3D.Atom
             {
                 return true;
             }
-
+            
+            ///CHECK ATOM COLLISIONS
             IEnumerable<Atom> atoms = from a in atomManager.atomDictionary.Values
                                       where
                                       a.collidable == true &&
@@ -365,6 +367,12 @@ namespace SS3D.Atom
                     a.position.Y - ((a.sprite.Height * a.sprite.UniformScale) / 2), 
                     (a.sprite.Width * a.sprite.UniformScale), 
                     (a.sprite.Height * a.sprite.UniformScale));
+
+                if(a.GetType() == Type.GetType("SS3D.Atom.Object.Door.Door")) //DOOR SPECIAL CASE LOL
+                    box = new System.Drawing.RectangleF(a.position.X - ((a.sprite.Width * a.sprite.UniformScale) / 2),
+                    a.position.Y + ((a.sprite.Height * a.sprite.UniformScale) / 2) - 32,
+                    (a.sprite.Width * a.sprite.UniformScale),
+                    32);
 
                 if (box.IntersectsWith(myAABB))
                 {

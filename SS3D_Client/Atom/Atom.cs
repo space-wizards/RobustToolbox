@@ -301,7 +301,8 @@ namespace SS3D.Atom
 
         #endregion
 
-        public virtual void Render(float xTopLeft, float yTopLeft)//, List<Light> lights)
+        #region Rendering
+        public virtual void Render(float xTopLeft, float yTopLeft, int Opacity = 255)//, List<Light> lights)
         {
             System.Drawing.Point tilePos = atomManager.gameState.map.GetTileArrayPositionFromWorldPosition(position);
             System.Drawing.Point topLeft = atomManager.gameState.map.GetTileArrayPositionFromWorldPosition(position - sprite.Size / 2);
@@ -320,11 +321,18 @@ namespace SS3D.Atom
                 if (draw && visible)
                 {
                     LightManager.Singleton.ApplyLightsToSprite(atomManager.gameState.map.tileArray[tilePos.X, tilePos.Y].tileLights, sprite, new Vector2D(xTopLeft, yTopLeft));
+                    sprite.Color = System.Drawing.Color.FromArgb(Opacity, sprite.Color);
                     sprite.Draw();
                 }
             }
         }
-        
+
+        public virtual void Render(float xTopLeft, float yTopLeft)
+        {
+            Render(xTopLeft, yTopLeft, 255);
+        }
+        #endregion
+
         #region positioning
         public virtual bool IsColliding()
         {
@@ -573,6 +581,37 @@ namespace SS3D.Atom
         #endregion
 
  
+        #endregion
+
+        #region utility
+        /// <summary>
+        /// Checks if the atom is a child / derived from the passed in type.
+        /// </summary>
+        /// <param name="type">Use typeof() on the type you want to check. For example, typeof(Item.Tool.Crowbar)</param>
+        /// <returns>True if a child, false otherwise.</returns>
+        public bool IsChildOfType(Type type)
+        {
+            if (this.GetType().IsSubclassOf(type))
+            {
+                return true;
+            }
+            return false;
+        }
+
+        /// <summary>
+        /// Checks if the atom is of the type passed in.
+        /// </summary>
+        /// <param name="type">Use typeof() on the type you want to check. For example, typeof(Item.Tool.Crowbar)</param>
+        /// <returns>True if is the select type, false otherwise.</returns>
+        public bool IsTypeOf(Type type)
+        {
+            if (this.GetType() == type)
+            {
+                return true;
+            }
+
+            return false;
+        }
         #endregion
     }
 }

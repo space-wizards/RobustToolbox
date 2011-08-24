@@ -380,6 +380,26 @@ namespace SS3D.States
                         }
                     }
                 }
+
+                ///Render person ghosts to have them appear behind walls. This should really be 
+                ///better thought out I think, but for now this works...
+                if (atomManager != null)
+                {
+                    IEnumerable<Atom.Atom> atoms = from a in atomManager.atomDictionary.Values
+                                                   where
+                                                   a.visible &&
+                                                   System.Math.Sqrt((playerController.controlledAtom.position.X - a.position.X) * (playerController.controlledAtom.position.X - a.position.X)) < screenHeightTiles * map.tileSpacing + 160 &&
+                                                   System.Math.Sqrt((playerController.controlledAtom.position.Y - a.position.Y) * (playerController.controlledAtom.position.Y - a.position.Y)) < screenHeightTiles * map.tileSpacing + 160
+                                                   orderby a.position.Y + ((a.sprite.Height * a.sprite.UniformScale) / 2) ascending
+                                                   where a.IsChildOfType(Type.GetType("SS3D.Atom.Mob.Mob"))
+                                                   select a;
+
+                    foreach (Atom.Atom a in atoms)
+                    {
+                        a.Render(xTopLeft, yTopLeft, 70);
+                    }
+                }
+
                 gamePlacementMgr.Draw();
             }
             Gorgon.CurrentRenderTarget = null;

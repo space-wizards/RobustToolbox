@@ -16,8 +16,8 @@ namespace SS3D.Atom.Mob
     {
         
         // TODO Make these some sort of well-organized global constant
-        public float walkSpeed = 1.0f;
-        public float runSpeed = 2.0f;
+        public float walkSpeed = 4.0f;
+        public float runSpeed = 6.0f;
 
         public bool isDead = false;
 
@@ -35,6 +35,7 @@ namespace SS3D.Atom.Mob
         {
             //meshName = "male_new.mesh";
             spritename = "Human";
+            speed = walkSpeed;
         }
 
         public virtual void initAppendages()

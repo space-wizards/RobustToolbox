@@ -46,6 +46,7 @@ namespace SS3D.States
         private Sprite baseTargetSprite;
         private Batch gasBatch;
         private Batch wallTopsBatch;
+        private Batch decalBatch;
         
         private List<Light> lightsLastFrame = new List<Light>();
         private List<Light> lightsThisFrame = new List<Light>();
@@ -120,6 +121,7 @@ namespace SS3D.States
 
             gasBatch = new Batch("gasBatch", 1);
             wallTopsBatch = new Batch("wallTopsBatch", 1);
+            decalBatch = new Batch("decalBatch", 1);
             
             realScreenWidthTiles = (float)Gorgon.CurrentClippingViewport.Width / map.tileSpacing;
             realScreenHeightTiles = (float)Gorgon.CurrentClippingViewport.Height / map.tileSpacing;
@@ -313,7 +315,7 @@ namespace SS3D.States
 
                 Tiles.Tile t;
 
-                ///RENDER TILE BASES
+                ///RENDER TILE BASES, PUT GAS SPRITES AND WALL TOP SPRITES INTO BATCHES TO RENDER LATER
 
                 for (int x = xStart; x <= xEnd; x++)
                 {
@@ -338,9 +340,14 @@ namespace SS3D.States
                         t.RenderGas(xTopLeft, yTopLeft, map.tileSpacing, gasBatch);
                         ///Render wall top sprites to wall top batch
                         t.RenderTop(xTopLeft, yTopLeft, map.tileSpacing, wallTopsBatch);
+                        t.DrawDecals(xTopLeft, yTopLeft, map.tileSpacing, decalBatch);
                     }
                 }
-                
+
+                ///Render wall tops batch
+                if (decalBatch.Count > 0)
+                    decalBatch.Draw();
+                decalBatch.Clear();
 
                 lightsThisFrame.Clear();
                 
@@ -380,12 +387,12 @@ namespace SS3D.States
                     }
                 }
 
-                ///Render gas
+                ///Render gas batch
                 if (gasBatch.Count > 0)
                     gasBatch.Draw();
                 gasBatch.Clear();
 
-                ///Render wall tops
+                ///Render wall tops batch
                 if (wallTopsBatch.Count > 0)
                     wallTopsBatch.Draw();
                 wallTopsBatch.Clear();

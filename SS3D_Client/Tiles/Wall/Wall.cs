@@ -32,6 +32,17 @@ namespace SS3D.Tiles.Wall
             }
         }
 
+        public override void DrawDecals(float xTopLeft, float yTopLeft, int tileSpacing, Batch decalBatch)
+        {
+            if ((surroundDirs & 4) == 0)
+            {
+                foreach (TileDecal d in decals)
+                {
+                    d.Draw(xTopLeft, yTopLeft, tileSpacing, decalBatch);
+                }
+            }
+        }
+
         public override void RenderTop(float xTopLeft, float yTopLeft, int tileSpacing, Batch wallTopsBatch)
         {
             if (Visible)

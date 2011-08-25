@@ -111,6 +111,9 @@ namespace SS3D.States
             prg.mNetworkMgr.SetMap(map);
             prg.mNetworkMgr.RequestMap();
 
+            //Hide the menu!
+            prg.GorgonForm.MainMenuStrip.Hide();
+
             //TODO This should go somewhere else, there should be explicit session setup and teardown at some point.
             prg.mNetworkMgr.SendClientName(ConfigManager.Singleton.Configuration.PlayerName);
 
@@ -450,8 +453,22 @@ namespace SS3D.States
         public override void KeyDown(KeyboardInputEventArgs e)
         {
             if (gameChat.Active)
-                return; 
-
+                return;
+            
+            if (e.Key == KeyboardKeys.F9)
+            {
+                if (prg.GorgonForm.MainMenuStrip.Visible)
+                {
+                    prg.GorgonForm.MainMenuStrip.Hide();
+                    prg.GorgonForm.MainMenuStrip.Visible = false;
+                }
+                else
+                {
+                    prg.GorgonForm.MainMenuStrip.Show();
+                    prg.GorgonForm.MainMenuStrip.Visible = true;
+                }
+                    
+            }
             if (e.Key == KeyboardKeys.F1)
             {
                 Gorgon.FrameStatsVisible = !Gorgon.FrameStatsVisible;

@@ -36,7 +36,7 @@ namespace SS3D.Atom
         public float rotation;
         public bool positionChanged = false;
         public List<InterpolationPacket> interpolationPackets;
-        public float speed = 2.0f;
+        public float speed = 6.0f;
         public bool clipping = true;
         public bool collidable = false;
         private DateTime lastPositionUpdate;

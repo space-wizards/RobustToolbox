@@ -85,7 +85,7 @@
             this.toolStripTextBox1});
             this.connectToolStripMenuItem.ForeColor = System.Drawing.SystemColors.ActiveCaption;
             this.connectToolStripMenuItem.Name = "connectToolStripMenuItem";
-            this.connectToolStripMenuItem.Size = new System.Drawing.Size(126, 22);
+            this.connectToolStripMenuItem.Size = new System.Drawing.Size(152, 22);
             this.connectToolStripMenuItem.Text = "Connect";
             // 
             // toolStripTextBox1
@@ -103,7 +103,7 @@
             this.disconnectToolStripMenuItem.Enabled = false;
             this.disconnectToolStripMenuItem.ForeColor = System.Drawing.SystemColors.ActiveCaption;
             this.disconnectToolStripMenuItem.Name = "disconnectToolStripMenuItem";
-            this.disconnectToolStripMenuItem.Size = new System.Drawing.Size(126, 22);
+            this.disconnectToolStripMenuItem.Size = new System.Drawing.Size(152, 22);
             this.disconnectToolStripMenuItem.Text = "Disconnect";
             this.disconnectToolStripMenuItem.Click += new System.EventHandler(this.disconnectToolStripMenuItem_Click);
             // 
@@ -113,7 +113,7 @@
             this.editModeToolStripMenuItem.Enabled = false;
             this.editModeToolStripMenuItem.ForeColor = System.Drawing.SystemColors.ActiveCaption;
             this.editModeToolStripMenuItem.Name = "editModeToolStripMenuItem";
-            this.editModeToolStripMenuItem.Size = new System.Drawing.Size(126, 22);
+            this.editModeToolStripMenuItem.Size = new System.Drawing.Size(152, 22);
             this.editModeToolStripMenuItem.Text = "Edit mode";
             this.editModeToolStripMenuItem.Click += new System.EventHandler(this.editModeToolStripMenuItem_Click);
             // 
@@ -122,7 +122,7 @@
             this.quitToolStripMenuItem.BackColor = System.Drawing.SystemColors.ActiveCaptionText;
             this.quitToolStripMenuItem.ForeColor = System.Drawing.SystemColors.ActiveCaption;
             this.quitToolStripMenuItem.Name = "quitToolStripMenuItem";
-            this.quitToolStripMenuItem.Size = new System.Drawing.Size(126, 22);
+            this.quitToolStripMenuItem.Size = new System.Drawing.Size(152, 22);
             this.quitToolStripMenuItem.Text = "Quit";
             this.quitToolStripMenuItem.Click += new System.EventHandler(this.quitToolStripMenuItem_Click);
             // 
@@ -222,9 +222,9 @@
             this.statusStrip1.Enabled = false;
             this.statusStrip1.Items.AddRange(new System.Windows.Forms.ToolStripItem[] {
             this.toolStripStatusLabel1});
-            this.statusStrip1.Location = new System.Drawing.Point(0, 708);
+            this.statusStrip1.Location = new System.Drawing.Point(0, 975);
             this.statusStrip1.Name = "statusStrip1";
-            this.statusStrip1.Size = new System.Drawing.Size(1008, 22);
+            this.statusStrip1.Size = new System.Drawing.Size(1272, 22);
             this.statusStrip1.TabIndex = 1;
             this.statusStrip1.Text = "statusStrip1";
             this.statusStrip1.Visible = false;

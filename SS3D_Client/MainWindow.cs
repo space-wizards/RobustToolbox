@@ -101,8 +101,15 @@ namespace SS3D
             Gorgon.SetMode(this);
             Gorgon.AllowBackgroundRendering = true;
             Gorgon.Screen.BackgroundColor = Color.FromArgb(50, 50, 50);
-            Gorgon.CurrentRenderTarget.AlphaMaskFunction = CompareFunctions.GreaterThan;
+
+            Gorgon.CurrentClippingViewport = new Viewport(0, 20, Gorgon.Screen.Width, Gorgon.Screen.Height - 20);
+
+            //Gorgon.CurrentRenderTarget.AlphaMaskFunction = CompareFunctions.GreaterThan;
             _mouse.SetPositionRange(0, 0, Gorgon.CurrentClippingViewport.Width, Gorgon.CurrentClippingViewport.Height);
+
+            PreciseTimer preciseTimer = new PreciseTimer();
+            Gorgon.MinimumFrameTime = PreciseTimer.FpsToMilliseconds(60);
+
 
             Gorgon.Idle += new FrameEventHandler(Gorgon_Idle);
 

@@ -30,6 +30,14 @@ namespace SS3d_server.Atom.Item
             SendAttachMessage();
         }
 
+        public override void SerializedInit()
+        {
+            base.SerializedInit();
+            rotation = 0f;
+            // When things are created with reflection using serialization their default constructor
+            // isn't called. Put things in here which need to be done when it's created.
+        }
+
         public override void Update(float framePeriod)
         {
             base.Update(framePeriod);

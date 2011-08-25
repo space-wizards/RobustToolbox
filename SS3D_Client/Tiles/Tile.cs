@@ -62,7 +62,7 @@ namespace SS3D.Tiles
             sightBlocked = false;
             decals = new List<TileDecal>();
             Random r = new Random((int)(position.X * position.Y));
-            for (int i = 0; i < r.Next(2, 16); i++)
+            for (int i = 0; i < r.Next(1, 8); i++)
             {
                 string decalname;
                 switch (i % 4)
@@ -80,7 +80,7 @@ namespace SS3D.Tiles
                         decalname = "spatter_decal4";
                         break;
                 }
-                decals.Add(new TileDecal(ResMgr.Singleton.GetSprite(decalname), new Vector2D(r.Next(5, 40), r.Next(5, 40)), this, System.Drawing.Color.FromArgb(121, 72, 2)));
+                decals.Add(new TileDecal(ResMgr.Singleton.GetSprite(decalname), new Vector2D(r.Next(5, 40), r.Next(5, 40)), this, System.Drawing.Color.Red));
             }
         }
 
@@ -178,6 +178,7 @@ namespace SS3D.Tiles
 
         public void Draw(float xTopLeft, float yTopLeft, int tileSpacing, Batch decalBatch)
         {
+            //Need to find a way to light it.
             sprite.SetPosition(tile.tilePosition.X * tileSpacing - xTopLeft + position.X, tile.tilePosition.Y * tileSpacing - yTopLeft + position.Y);
             decalBatch.AddClone(sprite);
         }

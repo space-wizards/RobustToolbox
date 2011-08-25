@@ -111,7 +111,7 @@ namespace SS3D.Tiles
             }
         }
 
-        public virtual void RenderTop(float xTopLeft, float yTopLeft, int tileSpacing)
+        public virtual void RenderTop(float xTopLeft, float yTopLeft, int tileSpacing, Batch wallTopsBatch)
         {
         }
 

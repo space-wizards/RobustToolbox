@@ -294,6 +294,7 @@ namespace SS3D.States
                 xTopLeft = Math.Max(0, playerController.controlledAtom.position.X - ((screenWidthTiles / 2) * map.tileSpacing));
                 yTopLeft = Math.Max(0, playerController.controlledAtom.position.Y - ((screenHeightTiles / 2) * map.tileSpacing));
 
+                ///COMPUTE TILE VISIBILITY
                 if (!telepathy && (centerTile != map.lastVisPoint || map.needVisUpdate))
                 {
                     map.compute_visibility(centerTile.X, centerTile.Y);
@@ -304,43 +305,46 @@ namespace SS3D.States
                     map.set_all_visible();
                 }
 
-                if (map.tileArray != null)
+                IEnumerable<Tiles.Tile> tilesInWindow = null;
+
+                if(map.tileArray != null)
+                    tilesInWindow = from Tiles.Tile t in map.tileArray
+                                    where
+                                    t.Visible &&
+                                    t.tilePosition.X >= xStart && t.tilePosition.X <= xEnd &&
+                                    t.tilePosition.Y >= yStart && t.tilePosition.Y <= yEnd
+                                    select t;
+
+                ///RENDER TILE BASES
+
+                foreach (var t in tilesInWindow)
                 {
-                    for (int x = xStart; x < xEnd; x++)
+                    if (t.tileType == TileType.Wall)
                     {
-                        for (int y = yStart; y < yEnd; y++)
+                        if (t.tilePosition.Y <= centerTile.Y)
                         {
-                            if (map.tileArray[x, y].tileType == TileType.Wall)
-                            {
-                                if (y <= centerTile.Y)
-                                {
-                                    map.tileArray[x, y].Render(xTopLeft, yTopLeft, map.tileSpacing);
-                                    map.tileArray[x, y].RenderGas(xTopLeft, yTopLeft, map.tileSpacing, gasBatch);
-                                }
-                            }
-                            else
-                            {
-                                map.tileArray[x, y].Render(xTopLeft, yTopLeft, map.tileSpacing);
-                                map.tileArray[x, y].RenderGas(xTopLeft, yTopLeft, map.tileSpacing, gasBatch);
-                            }
+                            t.Render(xTopLeft, yTopLeft, map.tileSpacing);
                         }
                     }
+                    else
+                    {
+                        t.Render(xTopLeft, yTopLeft, map.tileSpacing);
+                    }
                 }
-
-                if(gasBatch.Count > 0)
-                    gasBatch.Draw();
-                gasBatch.Clear();
-                    
+                
 
                 lightsThisFrame.Clear();
 
+                ///RENDER ATOMS
                 if (atomManager != null)
                 {
                     IEnumerable<Atom.Atom> atoms = from a in atomManager.atomDictionary.Values
                                                    where
                                                    a.visible &&
-                                                   System.Math.Sqrt((playerController.controlledAtom.position.X - a.position.X) * (playerController.controlledAtom.position.X - a.position.X)) < screenHeightTiles * map.tileSpacing + 160 &&
-                                                   System.Math.Sqrt((playerController.controlledAtom.position.Y - a.position.Y) * (playerController.controlledAtom.position.Y - a.position.Y)) < screenHeightTiles * map.tileSpacing + 160
+                                                   a.position.X / map.tileSpacing >= xStart &&
+                                                   a.position.X / map.tileSpacing <= xEnd &&
+                                                   a.position.Y / map.tileSpacing >= yStart &&
+                                                   a.position.Y / map.tileSpacing <= yEnd
                                                    orderby a.position.Y + ((a.sprite.Height * a.sprite.UniformScale) / 2) ascending
                                                    select a;
 
@@ -367,20 +371,36 @@ namespace SS3D.States
                     }
                 }
 
-                if (map.tileArray != null)
+                ///RENDER GAS
+                foreach (var t in tilesInWindow)
                 {
-                    for (int x = xStart; x < xEnd; x++)
+                    if (t.tileType == TileType.Wall)
                     {
-                        for (int y = yStart; y < yEnd; y++)
+                        if (t.tilePosition.Y <= centerTile.Y)
                         {
-                            if (map.tileArray[x, y].tileType == TileType.Wall)
-                            {
-                                map.tileArray[x, y].RenderTop(xTopLeft, yTopLeft, map.tileSpacing);
-                            }
+                            t.RenderGas(xTopLeft, yTopLeft, map.tileSpacing, gasBatch);
                         }
+                    }
+                    else
+                    {
+                       t.RenderGas(xTopLeft, yTopLeft, map.tileSpacing, gasBatch);
+                    }
+                }
+                    
+                if (gasBatch.Count > 0)
+                    gasBatch.Draw();
+                gasBatch.Clear();
+
+                ///RENDER TILE TOPS
+                foreach (var t in tilesInWindow)
+                {
+                    if (t.tileType == TileType.Wall)
+                    {
+                        t.RenderTop(xTopLeft, yTopLeft, map.tileSpacing);
                     }
                 }
 
+                ///RENDER GHOSTS
                 ///Render person ghosts to have them appear behind walls. This should really be 
                 ///better thought out I think, but for now this works...
                 if (atomManager != null)

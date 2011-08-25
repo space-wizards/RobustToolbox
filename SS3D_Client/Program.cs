@@ -66,11 +66,7 @@ namespace SS3D
 
     public void GorgonIdle(object sender, FrameEventArgs e)
     {
-        // Update networking
-        mNetworkMgr.UpdateNetwork();
 
-        // Update the state manager - this will update the active state.
-        mStateMgr.Update(e);
     }
 
     public Program()

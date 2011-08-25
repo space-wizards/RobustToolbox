@@ -45,8 +45,6 @@ namespace SS3D
         //Experimental GUI stuff
         private GUISkin _skin;
         private UIDesktop _desktop;
-        private GUIWindow _window;
-        //Experimental GUI stuff
 
         private Modules.StateManager stateMgr;
         private Program prg;
@@ -66,8 +64,31 @@ namespace SS3D
 
         private void MainWindow_Load(object sender, EventArgs e)
         {
-            Gorgon.Initialize(true, false);
+            SetupGorgon();
+            SetupInput();
+            ResMgr.Singleton.Initialize();
+            SetupDesktop();
+            SetupEditMenu();
 
+            Gorgon.Go(); //GO MUTHAFUCKA
+            stateMgr.Startup(typeof(ConnectMenu));
+        }
+
+        private void SetupGorgon()
+        {
+            Gorgon.Initialize(true, false);
+            Gorgon.SetMode(this);
+            Gorgon.AllowBackgroundRendering = true;
+            Gorgon.Screen.BackgroundColor = Color.FromArgb(50, 50, 50);
+
+            Gorgon.CurrentClippingViewport = new Viewport(0, 20, Gorgon.Screen.Width, Gorgon.Screen.Height - 20);
+            PreciseTimer preciseTimer = new PreciseTimer();
+            Gorgon.MinimumFrameTime = PreciseTimer.FpsToMilliseconds(66);
+            Gorgon.Idle += new FrameEventHandler(Gorgon_Idle);
+        }
+
+        private void SetupInput()
+        {
             _input = Input.LoadInputPlugIn(Environment.CurrentDirectory + @"\GorgonInput.DLL", "Gorgon.RawInput");
 
             // Bind the devices to this window.
@@ -85,7 +106,6 @@ namespace SS3D
             _mouse.MouseDown += new MouseInputEvent(MouseDownEvent);
             _mouse.MouseUp += new MouseInputEvent(MouseUpEvent);
             _mouse.MouseMove += new MouseInputEvent(MouseMoveEvent);
-            // _mouse.MouseWheelMove += new MouseInputEvent(MouseWheelMove);
 
             // Enable the keyboard.
             _keyboard = _input.Keyboard;
@@ -94,49 +114,23 @@ namespace SS3D
             _keyboard.KeyDown += new KeyboardInputEvent(KeyDownEvent);
             _keyboard.KeyUp += new KeyboardInputEvent(KeyUpEvent);
 
-            Cursor.Position = PointToScreen(new Point(100, 100));
-            _mouse.SetPosition(100f, 100f);
-            //_mouse.SetPositionRange(0, 0, Gorgon.CurrentClippingViewport.Width, Gorgon.CurrentClippingViewport.Height);
-
-            Gorgon.SetMode(this);
-            Gorgon.AllowBackgroundRendering = true;
-            Gorgon.Screen.BackgroundColor = Color.FromArgb(50, 50, 50);
-
-            Gorgon.CurrentClippingViewport = new Viewport(0, 20, Gorgon.Screen.Width, Gorgon.Screen.Height - 20);
-
-            //Gorgon.CurrentRenderTarget.AlphaMaskFunction = CompareFunctions.GreaterThan;
             _mouse.SetPositionRange(0, 0, Gorgon.CurrentClippingViewport.Width, Gorgon.CurrentClippingViewport.Height);
+        }
 
-            PreciseTimer preciseTimer = new PreciseTimer();
-            Gorgon.MinimumFrameTime = PreciseTimer.FpsToMilliseconds(60);
-
-
-            Gorgon.Idle += new FrameEventHandler(Gorgon_Idle);
-
-            Gorgon.Go(); //GO MUTHAFUCKA
-
-            ResMgr.Singleton.Initialize();
-
+        private void SetupDesktop()
+        {
             _skin = ResMgr.Singleton.GetGuiSkin("Interface1");
             UIDesktop.Initialize(_input, _skin);
             _desktop = UIDesktop.Singleton;
-            _window = new GUIWindow("Window", Gorgon.Screen.Width / 4, Gorgon.Screen.Height / 4, Gorgon.Screen.Width - (Gorgon.Screen.Width / 4) * 2, Gorgon.Screen.Height - (Gorgon.Screen.Height / 4) * 2);
-            //_desktop.Windows.Add(_window);
-            _window.Text = "This is a GUI window.";
-
             _desktop.ShowDesktopBackground = false;
-            _desktop.BackgroundColor = Drawing.Color.Tan;
+            _desktop.BackgroundColor = Drawing.Color.Black;
             _desktop.FocusRectangleColor = Drawing.Color.FromArgb(128, Drawing.Color.Red);
             _desktop.FocusRectangleBlend = BlendingModes.Additive;
             _desktop.FocusRectangleOutline = false;
+        }
 
-            var label = new GUILabel("test");
-            label.Owner = _window;
-            label.Position = new Drawing.Point(_window.ClientArea.Width / 4, _window.ClientArea.Height - 20);
-            label.Size = new Drawing.Size(_window.ClientArea.Width - (_window.ClientArea.Width / 4) * 2, 20);
-            label.Text = "Click to close.";
-            label.TextAlignment = Alignment.Center;
-
+        private void SetupEditMenu()
+        {
             atomTypes = new Dictionary<string, Type>();
             Type[] typeList = GetTypes();
             for (int i = 0; i < typeList.Length; i++)
@@ -144,8 +138,6 @@ namespace SS3D
                 atomTypes.Add(typeList[i].Name, typeList[i]);
             }
             PopulateEditMenu();
-            //PopulateTreeView();
-            stateMgr.Startup(typeof(ConnectMenu));
         }
 
         private Type[] GetTypes()
@@ -191,11 +183,17 @@ namespace SS3D
             return nodes.ToArray();
         }*/
         #endregion
-
-
+        
 
         void Gorgon_Idle(object sender, FrameEventArgs e)
         {
+            // Update networking
+            prg.mNetworkMgr.UpdateNetwork();
+
+            // Update the state manager - this will update the active state.
+            prg.mStateMgr.Update(e);
+
+            //Update GUI shit
             _desktop.Update(e.FrameDeltaTime);
             _desktop.Draw();
         }

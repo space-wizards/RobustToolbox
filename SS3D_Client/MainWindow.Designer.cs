@@ -71,7 +71,7 @@
             this.disconnectToolStripMenuItem,
             this.editModeToolStripMenuItem,
             this.quitToolStripMenuItem});
-            this.menuToolStripMenuItem.ForeColor = System.Drawing.SystemColors.ActiveCaption;
+            this.menuToolStripMenuItem.ForeColor = System.Drawing.SystemColors.ActiveCaptionText;
             this.menuToolStripMenuItem.Name = "menuToolStripMenuItem";
             this.menuToolStripMenuItem.Padding = new System.Windows.Forms.Padding(0);
             this.menuToolStripMenuItem.Size = new System.Drawing.Size(37, 24);
@@ -91,7 +91,7 @@
             // toolStripTextBox1
             // 
             this.toolStripTextBox1.BackColor = System.Drawing.SystemColors.MenuText;
-            this.toolStripTextBox1.ForeColor = System.Drawing.SystemColors.ActiveCaption;
+            this.toolStripTextBox1.ForeColor = System.Drawing.SystemColors.ActiveCaptionText;
             this.toolStripTextBox1.Name = "toolStripTextBox1";
             this.toolStripTextBox1.Size = new System.Drawing.Size(100, 21);
             this.toolStripTextBox1.Text = "127.0.0.1";
@@ -132,7 +132,7 @@
             this.turfToolStripMenuItem,
             this.atomToolStripMenuItem});
             this.editToolStripMenuItem.Enabled = false;
-            this.editToolStripMenuItem.ForeColor = System.Drawing.SystemColors.ActiveCaption;
+            this.editToolStripMenuItem.ForeColor = System.Drawing.SystemColors.ActiveCaptionText;
             this.editToolStripMenuItem.Name = "editToolStripMenuItem";
             this.editToolStripMenuItem.Size = new System.Drawing.Size(37, 24);
             this.editToolStripMenuItem.Text = "Edit";

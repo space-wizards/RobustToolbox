@@ -26,6 +26,7 @@ namespace SS3D.Tiles
         public List<Light> tileLights;
         public Dictionary<GasType, int> gasAmounts;
         public Sprite gasSprite;
+        public List<TileDecal> decals;
 
         public Tile(Sprite _sprite, TileState state, float size, Vector2D _position, Point _tilePosition)
         {
@@ -34,11 +35,8 @@ namespace SS3D.Tiles
             tilePosition = _tilePosition;
             sprite = _sprite;
             sprite.SetPosition(_position.X, _position.Y);
-            sightBlocked = false;
-            surroundingTiles = new Tile[4];
-            tileLights = new List<Light>();
-            gasAmounts = new Dictionary<GasType, int>();
-            gasSprite = ResMgr.Singleton.GetSpriteFromImage("gas");
+
+            Initialize();
         }
 
         public Tile(Sprite _sprite, Sprite _side, TileState state, float size, Vector2D _position, Point _tilePosition)
@@ -51,11 +49,39 @@ namespace SS3D.Tiles
 
             sideSprite = _side;
             sideSprite.SetPosition(_position.X, _position.Y);
-            sightBlocked = false;
+
+            Initialize();
+        }
+
+        public void Initialize()
+        {
+            gasSprite = ResMgr.Singleton.GetSpriteFromImage("gas");
             surroundingTiles = new Tile[4];
             tileLights = new List<Light>();
-            gasAmounts = new Dictionary<GasType, int>(); 
-            gasSprite = ResMgr.Singleton.GetSpriteFromImage("gas");    
+            gasAmounts = new Dictionary<GasType, int>();
+            sightBlocked = false;
+            decals = new List<TileDecal>();
+            Random r = new Random((int)(position.X * position.Y));
+            for (int i = 0; i < r.Next(2, 16); i++)
+            {
+                string decalname;
+                switch (i % 4)
+                {
+                    case 1:
+                        decalname = "spatter_decal";
+                        break;
+                    case 2:
+                        decalname = "spatter_decal2";
+                        break;
+                    case 3:
+                        decalname = "spatter_decal3";
+                        break;
+                    default:
+                        decalname = "spatter_decal4";
+                        break;
+                }
+                decals.Add(new TileDecal(ResMgr.Singleton.GetSprite(decalname), new Vector2D(r.Next(5, 40), r.Next(5, 40)), this, System.Drawing.Color.FromArgb(121, 72, 2)));
+            }
         }
 
         public void SetSprites(Sprite _sprite, Sprite _side, byte _surroundDirs)
@@ -73,9 +99,17 @@ namespace SS3D.Tiles
                 sprite.SetPosition(tilePosition.X * tileSpacing - xTopLeft, tilePosition.Y * tileSpacing - yTopLeft);
                 LightManager.Singleton.ApplyLightsToSprite(tileLights, sprite, new Vector2D(xTopLeft, yTopLeft));
                 sprite.Draw();
-                
             }
         }
+
+        public virtual void DrawDecals(float xTopLeft, float yTopLeft, int tileSpacing, Batch decalBatch)
+        {
+            foreach (TileDecal d in decals)
+            {
+                d.Draw(xTopLeft, yTopLeft, tileSpacing, decalBatch);
+            }
+        }
+
         public virtual void RenderGas(float xTopLeft, float yTopLeft, int tileSpacing, Batch gasBatch)
         {
             if (Visible && gasAmounts.Count > 0)
@@ -125,6 +159,27 @@ namespace SS3D.Tiles
                 gasAmounts[type] = amount;
             else
                 gasAmounts.Add(type, amount);
+        }
+    }
+
+    public class TileDecal
+    {
+        public Sprite sprite;
+        public Vector2D position; // Position relative to top left corner of tile
+        public Tile tile;
+
+        public TileDecal(Sprite _sprite, Vector2D _position, Tile _tile, System.Drawing.Color color)
+        {
+            sprite = _sprite;
+            position = _position;
+            tile = _tile;
+            sprite.Color = color;
+        }
+
+        public void Draw(float xTopLeft, float yTopLeft, int tileSpacing, Batch decalBatch)
+        {
+            sprite.SetPosition(tile.tilePosition.X * tileSpacing - xTopLeft + position.X, tile.tilePosition.Y * tileSpacing - yTopLeft + position.Y);
+            decalBatch.AddClone(sprite);
         }
     }
 }

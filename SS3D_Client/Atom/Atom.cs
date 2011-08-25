@@ -119,6 +119,7 @@ namespace SS3D.Atom
                 case AtomMessage.Extended:
                     HandleExtendedMessage(message); // This will punt unhandled messages to a virtual method so derived classes can handle them.
                     break;
+                
                 default:
                     break;
             }

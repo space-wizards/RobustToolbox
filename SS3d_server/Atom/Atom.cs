@@ -15,7 +15,7 @@ namespace SS3d_server.Atom
     [Serializable()]
     public class Atom : ISerializable  // SERVER SIDE
     {
-        
+       
         #region variables
         // wat
         public string name;

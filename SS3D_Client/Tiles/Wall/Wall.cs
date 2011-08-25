@@ -32,7 +32,7 @@ namespace SS3D.Tiles.Wall
             }
         }
 
-        public override void RenderTop(float xTopLeft, float yTopLeft, int tileSpacing)
+        public override void RenderTop(float xTopLeft, float yTopLeft, int tileSpacing, Batch wallTopsBatch)
         {
             if (Visible)
             {
@@ -40,7 +40,8 @@ namespace SS3D.Tiles.Wall
                 sprite.Position -= new Vector2D(0, tileSpacing);
                 sprite.Color = Color.White;
                 LightManager.Singleton.ApplyLightsToSprite(tileLights, sprite, new Vector2D(xTopLeft, yTopLeft));
-                sprite.Draw();
+                //sprite.Draw();
+                wallTopsBatch.AddClone(sprite);
             }
         }
     }

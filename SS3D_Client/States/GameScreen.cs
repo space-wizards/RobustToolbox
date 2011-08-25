@@ -45,6 +45,7 @@ namespace SS3D.States
         private RenderImage baseTarget;
         private Sprite baseTargetSprite;
         private Batch gasBatch;
+        private Batch wallTopsBatch;
         
         private List<Light> lightsLastFrame = new List<Light>();
         private List<Light> lightsThisFrame = new List<Light>();
@@ -113,8 +114,12 @@ namespace SS3D.States
             prg.mNetworkMgr.SendClientName(ConfigManager.Singleton.Configuration.PlayerName);
 
             baseTarget = new RenderImage("baseTarget", Gorgon.Screen.Width, Gorgon.Screen.Height, ImageBufferFormats.BufferRGB888A8);
+            
             baseTargetSprite = new Sprite("baseTargetSprite", baseTarget);
+            baseTargetSprite.DepthWriteEnabled = false;
+
             gasBatch = new Batch("gasBatch", 1);
+            wallTopsBatch = new Batch("wallTopsBatch", 1);
             
             realScreenWidthTiles = (float)Gorgon.CurrentClippingViewport.Width / map.tileSpacing;
             realScreenHeightTiles = (float)Gorgon.CurrentClippingViewport.Height / map.tileSpacing;
@@ -279,7 +284,7 @@ namespace SS3D.States
 
             baseTarget.Clear(System.Drawing.Color.Black);
             Gorgon.Screen.Clear(System.Drawing.Color.Black);
-
+            
             Gorgon.Screen.DefaultView.Left = 400;
             Gorgon.Screen.DefaultView.Top = 400;
             if (playerController.controlledAtom != null)
@@ -305,36 +310,40 @@ namespace SS3D.States
                     map.set_all_visible();
                 }
 
-                IEnumerable<Tiles.Tile> tilesInWindow = null;
 
-                if(map.tileArray != null)
-                    tilesInWindow = from Tiles.Tile t in map.tileArray
-                                    where
-                                    t.Visible &&
-                                    t.tilePosition.X >= xStart && t.tilePosition.X <= xEnd &&
-                                    t.tilePosition.Y >= yStart && t.tilePosition.Y <= yEnd
-                                    select t;
+                Tiles.Tile t;
 
                 ///RENDER TILE BASES
 
-                foreach (var t in tilesInWindow)
+                for (int x = xStart; x <= xEnd; x++)
                 {
-                    if (t.tileType == TileType.Wall)
+                    for (int y = yStart; y <= yEnd; y++)
                     {
-                        if (t.tilePosition.Y <= centerTile.Y)
+                        t = map.tileArray[x, y];
+                        if (!t.Visible)
+                            continue;
+                        if (t.tileType == TileType.Wall)
+                        {
+                            if (t.tilePosition.Y <= centerTile.Y)
+                            {
+                                t.Render(xTopLeft, yTopLeft, map.tileSpacing);
+                            }
+                        }
+                        else
                         {
                             t.Render(xTopLeft, yTopLeft, map.tileSpacing);
                         }
-                    }
-                    else
-                    {
-                        t.Render(xTopLeft, yTopLeft, map.tileSpacing);
+
+                        ///Render gas sprites to gas batch
+                        t.RenderGas(xTopLeft, yTopLeft, map.tileSpacing, gasBatch);
+                        ///Render wall top sprites to wall top batch
+                        t.RenderTop(xTopLeft, yTopLeft, map.tileSpacing, wallTopsBatch);
                     }
                 }
                 
 
                 lightsThisFrame.Clear();
-
+                
                 ///RENDER ATOMS
                 if (atomManager != null)
                 {
@@ -348,7 +357,7 @@ namespace SS3D.States
                                                    orderby a.position.Y + ((a.sprite.Height * a.sprite.UniformScale) / 2) ascending
                                                    select a;
 
-                    foreach (Atom.Atom a in atoms)
+                    foreach (Atom.Atom a in atoms.ToList())
                     {
                         a.Render(xTopLeft, yTopLeft);
 
@@ -371,35 +380,17 @@ namespace SS3D.States
                     }
                 }
 
-                ///RENDER GAS
-                foreach (var t in tilesInWindow)
-                {
-                    if (t.tileType == TileType.Wall)
-                    {
-                        if (t.tilePosition.Y <= centerTile.Y)
-                        {
-                            t.RenderGas(xTopLeft, yTopLeft, map.tileSpacing, gasBatch);
-                        }
-                    }
-                    else
-                    {
-                       t.RenderGas(xTopLeft, yTopLeft, map.tileSpacing, gasBatch);
-                    }
-                }
-                    
+                ///Render gas
                 if (gasBatch.Count > 0)
                     gasBatch.Draw();
                 gasBatch.Clear();
 
-                ///RENDER TILE TOPS
-                foreach (var t in tilesInWindow)
-                {
-                    if (t.tileType == TileType.Wall)
-                    {
-                        t.RenderTop(xTopLeft, yTopLeft, map.tileSpacing);
-                    }
-                }
-
+                ///Render wall tops
+                if (wallTopsBatch.Count > 0)
+                    wallTopsBatch.Draw();
+                wallTopsBatch.Clear();
+                
+                
                 ///RENDER GHOSTS
                 ///Render person ghosts to have them appear behind walls. This should really be 
                 ///better thought out I think, but for now this works...
@@ -407,14 +398,14 @@ namespace SS3D.States
                 {
                     IEnumerable<Atom.Atom> atoms = from a in atomManager.atomDictionary.Values
                                                    where
+                                                   a.IsChildOfType(typeof(Atom.Mob.Mob)) &&
                                                    a.visible &&
                                                    System.Math.Sqrt((playerController.controlledAtom.position.X - a.position.X) * (playerController.controlledAtom.position.X - a.position.X)) < screenHeightTiles * map.tileSpacing + 160 &&
                                                    System.Math.Sqrt((playerController.controlledAtom.position.Y - a.position.Y) * (playerController.controlledAtom.position.Y - a.position.Y)) < screenHeightTiles * map.tileSpacing + 160
                                                    orderby a.position.Y + ((a.sprite.Height * a.sprite.UniformScale) / 2) ascending
-                                                   where a.IsChildOfType(Type.GetType("SS3D.Atom.Mob.Mob"))
                                                    select a;
 
-                    foreach (Atom.Atom a in atoms)
+                    foreach (Atom.Atom a in atoms.ToList())
                     {
                         a.Render(xTopLeft, yTopLeft, 70);
                     }
@@ -422,6 +413,7 @@ namespace SS3D.States
 
                 gamePlacementMgr.Draw();
             }
+
             Gorgon.CurrentRenderTarget = null;
             Gorgon.CurrentShader = ResMgr.Singleton.GetShader("bloomtest");
             ResMgr.Singleton.GetShader("bloomtest").Parameters["_spriteImage"].SetValue(baseTarget.Image);

@@ -2,7 +2,6 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
-using Mogre;
 
 namespace SS3D_shared
 {
@@ -11,8 +10,6 @@ namespace SS3D_shared
                                //This should always be in the entities UserObject. So make sure to set it.
     {
         public AtomType AtomType = AtomType.None;
-        public SceneNode Node;
-        public Entity Entity;
         public string name;
         public ushort UID;
     }

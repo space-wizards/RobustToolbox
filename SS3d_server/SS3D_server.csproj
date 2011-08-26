@@ -133,9 +133,7 @@
   <ItemGroup />
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <PropertyGroup>
-    <PostBuildEvent>copy "$(SolutionDir)References\$(Configuration)\Lidgren*l" "$(ProjectDir)$(OutDir)"
-copy "$(SolutionDir)References\$(Configuration)\cg.dll" "$(ProjectDir)$(OutDir)"
-copy "$(SolutionDir)References\$(Configuration)\OgreMain*.dll" "$(ProjectDir)$(OutDir)"</PostBuildEvent>
+    <PostBuildEvent>copy "$(SolutionDir)References\$(Configuration)\Lidgren*l" "$(ProjectDir)$(OutDir)"</PostBuildEvent>
   </PropertyGroup>
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
        Other similar extension points exist, see Microsoft.Common.targets.

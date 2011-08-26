@@ -5,9 +5,7 @@ using System.Text;
 
 using SS3D.Atom;
 using SS3D.States;
-using MOIS;
 using Lidgren.Network;
-using Mogre;
 using GorgonLibrary;
 using GorgonLibrary.InputDevices;
 using SS3D_shared;
@@ -61,7 +59,7 @@ namespace SS3D.Modules
             atomManager.mEngine.Camera.SetAutoTracking(true, camNode, new Mogre.Vector3(0, 32, 0));*/
         }
 
-        public Matrix4 BuildScaledOrthoMatrix(float left, float right, float bottom, float top, float near, float far)
+        /*public Matrix4 BuildScaledOrthoMatrix(float left, float right, float bottom, float top, float near, float far)
         {
             float invw = 1 / (right - left);
             float invh = 1 / (top - bottom);
@@ -77,7 +75,7 @@ namespace SS3D.Modules
             proj[3, 3] = 1;
 
             return proj;
-        }
+        }*/
 
         public void Detach()
         {

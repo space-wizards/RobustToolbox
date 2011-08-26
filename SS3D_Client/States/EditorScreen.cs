@@ -13,16 +13,6 @@ using SS3D.Modules.Network;
 
 using SS3D_shared;
 
-using Miyagi;
-using Miyagi.UI;
-using Miyagi.UI.Controls;
-using Miyagi.Common;
-using Miyagi.Common.Data;
-using Miyagi.Common.Animation;
-using Miyagi.Common.Resources;
-using Miyagi.Common.Events;
-using Miyagi.TwoD;
-
 using GorgonLibrary;
 using GorgonLibrary.Graphics;
 using GorgonLibrary.InputDevices;
@@ -36,7 +26,7 @@ namespace SS3D.States
         //public ItemManager itemManager;
         public Map currentMap;
 
-        public LoadingTracker currentLoadingTracker = null;
+        //public LoadingTracker currentLoadingTracker = null;
 
         public EditorStatusBar statusBar;
         public EditorToolbar toolBar;
@@ -145,12 +135,12 @@ namespace SS3D.States
                 //MouseOverEntity = HoverObject;
             }
 
-            if (currentLoadingTracker != null)
+            /*if (currentLoadingTracker != null)
             {
                 statusBar.StatusTextLabel.Text = currentLoadingTracker.loadingText;
                 statusBar.StatusProgressBar.Value = (int)currentLoadingTracker.loadingPercent;
                 statusBar.StatusProgressBar.Text = System.Math.Floor(currentLoadingTracker.loadingPercent).ToString() + "%";
-            }
+            }*/
         }
         public override void FormResize()
         {
@@ -165,7 +155,7 @@ namespace SS3D.States
         {
             if (isBusy) return;
             isBusy = true;
-            this.currentLoadingTracker = this.currentMap;
+            //this.currentLoadingTracker = this.currentMap;
             MapFile loadedMap = MapFileHandler.LoadMap(mapPath);
             this.currentMap.Shutdown();
             System.GC.Collect(); //I have no idea if that even does anything.

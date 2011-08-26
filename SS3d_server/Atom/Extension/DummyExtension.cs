@@ -24,11 +24,11 @@ namespace SS3d_server.Atom.Extension
         }
         public override void ApplyAction(Atom a, Mob.Mob m)
         {
-            Console.Write("DummyExtension: " + a.name + " " + a.uid.ToString() + " applied to " + parentAtom.name + " " + parentAtom.uid.ToString() + "\n");
+            //Console.Write("DummyExtension: " + a.name + " " + a.uid.ToString() + " applied to " + parentAtom.name + " " + parentAtom.uid.ToString() + "\n");
         }
         public override void UsedOn(Atom target)
         {
-            Console.Write("DummyExtension: " + parentAtom.name + " " + parentAtom.uid.ToString() + " used on " + target.name + " " + target.uid.ToString() + "\n");
+            //Console.Write("DummyExtension: " + parentAtom.name + " " + parentAtom.uid.ToString() + " used on " + target.name + " " + target.uid.ToString() + "\n");
         }
     }
 }

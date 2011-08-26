@@ -2,7 +2,6 @@
 using System.Collections.Generic;
 using System.Text;
 using System.IO;
-using Mogre;
 using SS3D.HelperClasses;
 using SS3D_shared;
 //using SS3D.Modules.Items;
@@ -15,17 +14,15 @@ namespace SS3D.Modules.Map
     public class MapSaver
     {
         private Map map;
-        private OgreManager mEngine;
         private int tileSpacing;
 
         public string[,] nameArray;
         public int mapWidth;
         public int mapHeight;
 
-        public MapSaver(Map _map, OgreManager _mEngine)
+        public MapSaver(Map _map)
         {
             map = _map;
-            mEngine = _mEngine;
             tileSpacing = map.tileSpacing;
         }
 

@@ -332,18 +332,19 @@ namespace SS3D.States
                             if (t.tilePosition.Y <= centerTile.Y)
                             {
                                 t.Render(xTopLeft, yTopLeft, map.tileSpacing);
+                                t.DrawDecals(xTopLeft, yTopLeft, map.tileSpacing, decalBatch);
                             }
                         }
                         else
                         {
                             t.Render(xTopLeft, yTopLeft, map.tileSpacing);
+                            t.DrawDecals(xTopLeft, yTopLeft, map.tileSpacing, decalBatch);
                         }
 
                         ///Render gas sprites to gas batch
                         t.RenderGas(xTopLeft, yTopLeft, map.tileSpacing, gasBatch);
                         ///Render wall top sprites to wall top batch
                         t.RenderTop(xTopLeft, yTopLeft, map.tileSpacing, wallTopsBatch);
-                        t.DrawDecals(xTopLeft, yTopLeft, map.tileSpacing, decalBatch);
                     }
                 }
 

@@ -4,18 +4,7 @@ using System.Linq;
 using System.Reflection;
 using System.Collections.Generic;
 
-using Mogre;
-
 using SS3D.Modules;
-
-using Miyagi;
-using Miyagi.UI;
-using Miyagi.UI.Controls;
-using Miyagi.Common;
-using Miyagi.Common.Data;
-using Miyagi.Common.Resources;
-using Miyagi.Common.Events;
-using Miyagi.TwoD;
 
 using GorgonLibrary;
 using GorgonLibrary.Graphics;
@@ -54,6 +43,7 @@ namespace SS3D.States
             return true;
         }
 
+        /*
         void nameTextbox_LostFocus(object sender, EventArgs e)
         {
             ConfigManager.Singleton.Configuration.PlayerName = ((TextBox)sender).Text;
@@ -70,6 +60,7 @@ namespace SS3D.States
         {
             ipTextboxIP = ((TextBox)sender).Text;
         }
+        */
 
         void mNetworkMgr_Connected(Modules.Network.NetworkManager netMgr)
         {
@@ -79,10 +70,11 @@ namespace SS3D.States
 
         }
 
+        /*
         private void JoinButtonMouseDown(object sender, MouseButtonEventArgs e)
         {
             StartConnect();
-        }
+        }*/
 
         // called when join button pressed and also if autoconnecting at startup
         public void StartConnect()

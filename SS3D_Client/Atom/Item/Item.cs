@@ -2,7 +2,6 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
-using Mogre;
 using SS3D_shared.HelperClasses;
 using Lidgren.Network;
 using SS3D.Atom.Mob.HelperClasses;

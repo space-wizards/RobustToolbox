@@ -93,33 +93,6 @@
       <HintPath>..\References\$(Configuration)\Lidgren.Network.dll</HintPath>
       <Private>True</Private>
     </Reference>
-    <Reference Include="Miyagi">
-      <HintPath>..\References\$(Configuration)\Miyagi.dll</HintPath>
-      <Private>True</Private>
-    </Reference>
-    <Reference Include="Miyagi.Backend.Mogre">
-      <HintPath>..\References\$(Configuration)\Backends\Miyagi.Backend.Mogre.dll</HintPath>
-      <Private>True</Private>
-    </Reference>
-    <Reference Include="Miyagi.BitmapControl">
-      <HintPath>..\References\Release\Addons\Miyagi.BitmapControl.dll</HintPath>
-    </Reference>
-    <Reference Include="Miyagi.Plugin.Input.Mois">
-      <HintPath>..\References\$(Configuration)\Plugins\Miyagi.Plugin.Input.Mois.dll</HintPath>
-      <Private>True</Private>
-    </Reference>
-    <Reference Include="Miyagi.TrueTypeFont">
-      <HintPath>..\References\Release\Addons\Miyagi.TrueTypeFont.dll</HintPath>
-    </Reference>
-    <Reference Include="Mogre, Version=1.7.1.0, Culture=neutral, processorArchitecture=x86">
-      <SpecificVersion>False</SpecificVersion>
-      <HintPath>..\References\Release\Mogre.dll</HintPath>
-    </Reference>
-    <Reference Include="MOIS, Version=1.1.0.0, Culture=neutral, processorArchitecture=x86">
-      <SpecificVersion>False</SpecificVersion>
-      <HintPath>..\References\$(Configuration)\MOIS.dll</HintPath>
-      <Private>True</Private>
-    </Reference>
     <Reference Include="System" />
     <Reference Include="System.Core">
       <RequiredTargetFramework>3.5</RequiredTargetFramework>
@@ -157,29 +130,26 @@
       <DependentUpon>MainWindow.cs</DependentUpon>
     </Compile>
     <Compile Include="HelperClasses\AtomUtil.cs" />
-    <Compile Include="HelperClasses\CollisionTools.cs" />
+    <None Include="HelperClasses\CollisionTools.cs" />
     <Compile Include="HelperClasses\InterpolationPacket.cs" />
     <Compile Include="HelperClasses\Rect2D.cs" />
     <Compile Include="Modules\ConfigManager.cs" />
     <Compile Include="Modules\PlacementManager.cs" />
     <Compile Include="Modules\LightManager.cs" />
-    <Compile Include="Modules\Map\HealthPanel.cs" />
     <Compile Include="Modules\Map\Map.cs" />
     <Compile Include="Modules\Map\MapFile.cs" />
     <Compile Include="Modules\Map\MapSaver.cs" />
-    <Compile Include="Modules\MiyagiRessources.cs" />
     <Compile Include="Modules\Network\NetworkManager.cs" />
     <Compile Include="Modules\OgreEventArgs.cs" />
-    <Compile Include="Modules\OgreManager.cs" />
     <Compile Include="Modules\PlayerController.cs" />
     <Compile Include="Modules\State.cs" />
     <Compile Include="Modules\StateManager.cs" />
     <Compile Include="Modules\UI\Components\HumanHandsGui.cs" />
     <Compile Include="Modules\UI\Components\HumanHealthComponent.cs" />
-    <Compile Include="Modules\UI\Console.cs" />
+    <None Include="Modules\UI\Console.cs" />
     <Compile Include="Modules\UI\Chatbox.cs" />
     <Compile Include="Modules\UI\GuiComponent.cs" />
-    <Compile Include="Modules\UI\Speechbubble.cs" />
+    <None Include="Modules\UI\Speechbubble.cs" />
     <Compile Include="Modules\UI\IGuiComponent.cs" />
     <Compile Include="Modules\UI\UIDesktop.cs" />
     <Compile Include="Program.cs" />
@@ -191,7 +161,7 @@
       <DependentUpon>Resources.resx</DependentUpon>
     </Compile>
     <Compile Include="States\ConnectMenu.cs" />
-    <Compile Include="States\EditorScreen.cs" />
+    <None Include="States\EditorScreen.cs" />
     <Compile Include="States\GameScreen.cs" />
     <Compile Include="States\LoadingScreen.cs" />
     <Compile Include="States\EditScreen.cs" />

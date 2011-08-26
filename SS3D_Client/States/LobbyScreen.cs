@@ -1,15 +1,6 @@
 ﻿using System;
 
-using Mogre;
 using Lidgren.Network;
-using Miyagi;
-using Miyagi.UI;
-using Miyagi.UI.Controls;
-using Miyagi.Common;
-using Miyagi.Common.Data;
-using Miyagi.Common.Resources;
-using Miyagi.Common.Events;
-using Miyagi.TwoD;
 
 using SS3D.Modules;
 using SS3D.Modules.Map;
@@ -30,8 +21,6 @@ namespace SS3D.States
         private StateManager mStateMgr;
         private int serverMaxPlayers;
         private Chatbox lobbyChat;
-        private GUI guiBackground;
-        private GUI guiLobbyMenu;
         private PlayerController playerController;
 
         public LobbyScreen()
@@ -131,10 +120,10 @@ namespace SS3D.States
             throw new NotImplementedException();
         }
 
-        private void lobbyJoinGameButtonMouseDown(object sender, MouseButtonEventArgs e)
+        /*private void lobbyJoinGameButtonMouseDown(object sender, MouseButtonEventArgs e)
         {
             playerController.SendVerb("joingame", 0);
-        }
+        }*/
 
         void mNetworkMgr_MessageArrived(NetworkManager netMgr, NetIncomingMessage msg)
         {

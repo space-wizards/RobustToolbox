@@ -1,15 +1,6 @@
 ﻿using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using Miyagi;
-using Miyagi.UI;
-using Miyagi.UI.Controls;
-using Miyagi.Common;
-using Miyagi.Common.Data;
-using Miyagi.Common.Resources;
-using Miyagi.Common.Events;
-using Miyagi.TwoD;
-using Mogre;
 
 using GorgonLibrary;
 using GorgonLibrary.Graphics;
@@ -21,9 +12,6 @@ namespace SS3D.States
   public class MainMenu : State
   {
     private StateManager mStateMgr;
-    private GUI guiMainMenu;
-    private GUI guiBackground;
-    private Label infoLabel;
 
     public MainMenu()
     {

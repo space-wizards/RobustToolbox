@@ -1,9 +1,6 @@
 ﻿using System;
 using System.Reflection;
 
-using Mogre;
-using Miyagi;
-
 using Lidgren.Network;
 using SS3D.Modules.Network;
 using GorgonLibrary;

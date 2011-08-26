@@ -2,7 +2,6 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
-using Mogre;
 using Lidgren.Network;
 using SS3D.Atom.Mob.HelperClasses;
 
@@ -25,7 +24,7 @@ namespace SS3D.Atom.Mob
         public Appendage selectedAppendage;
 
         //Current animation state -- or at least the one we want to add some time to. This will need to become more robust.
-        public Mogre.AnimationState animState;
+        //public Mogre.AnimationState animState;
         public AnimState currentAnimState;
         
         public Dictionary<string, AnimState> animStates;

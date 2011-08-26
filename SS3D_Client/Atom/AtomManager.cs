@@ -8,7 +8,6 @@ using SS3D_shared;
 using SS3D.States;
 using SS3D.Modules;
 using Lidgren.Network;
-using Mogre;
 using SS3D.Modules.Network;
 using GorgonLibrary;
 using GorgonLibrary.Graphics;

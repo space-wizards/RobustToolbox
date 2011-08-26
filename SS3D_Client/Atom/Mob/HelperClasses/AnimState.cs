@@ -2,13 +2,12 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
-using Mogre;
 
 namespace SS3D.Atom.Mob.HelperClasses
 {
     public class AnimState
     {
-        private AnimationState animationState;
+        //private AnimationState animationState;
         public bool looping;
         public bool enabled;
         public Mob parent;
@@ -17,12 +16,12 @@ namespace SS3D.Atom.Mob.HelperClasses
         public bool tempdisabled;
         public bool final;
 
-        public AnimState(AnimationState a, Mob _parent)
+        public AnimState(/*AnimationState a, */Mob _parent)
         {
-            animationState = a;
+            //animationState = a;
             Disable();
             LoopOff();
-            length = animationState.Length;
+            //length = animationState.Length;
             timeposition = 0f;
             parent = _parent;
         }
@@ -31,15 +30,15 @@ namespace SS3D.Atom.Mob.HelperClasses
         {
             if (!enabled || tempdisabled)
                 return;
-            if (!looping && animationState.HasEnded && !final)
+            if (!looping && /*animationState.HasEnded &&*/ !final)
             {
-                animationState.TimePosition = 0;
+                //animationState.TimePosition = 0;
                 Disable();
                 parent.AnimationComplete(); // Should really use events for this, but i'm too lazy to learn that at the moment.
                 return;
             }
 
-            animationState.AddTime(time);
+            //animationState.AddTime(time);
         }
 
         public void RunOnce()
@@ -52,25 +51,25 @@ namespace SS3D.Atom.Mob.HelperClasses
         public void Enable()
         {
             enabled = true;
-            animationState.Enabled = enabled;
+            //animationState.Enabled = enabled;
         }
 
         public void Disable()
         {
             enabled = false;
-            animationState.Enabled = enabled;
+            //animationState.Enabled = enabled;
         }
 
         public void LoopOn()
         {
             looping = true;
-            animationState.Loop = looping;
+            //animationState.Loop = looping;
         }
 
         public void LoopOff()
         {
             looping = false;
-            animationState.Loop = looping;
+            //animationState.Loop = looping;
         }
     }
 }

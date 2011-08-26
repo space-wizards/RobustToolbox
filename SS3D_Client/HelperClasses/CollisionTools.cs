@@ -37,9 +37,7 @@ namespace MMOC
 {
     using System;
     using System.Collections.Generic;
-
-    using Mogre;
-
+    
     public class CollisionTools
     {
         #region Fields

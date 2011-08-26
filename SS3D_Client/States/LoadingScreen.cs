@@ -1,7 +1,5 @@
 ﻿using System;
 
-using Mogre;
-
 using SS3D.Modules;
 using SS3D.Modules.Map;
 using SS3D.Modules.Network;

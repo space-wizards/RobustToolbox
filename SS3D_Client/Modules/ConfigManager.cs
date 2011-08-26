@@ -7,10 +7,6 @@ using System.IO;
 using System.Xml;
 using System.Xml.Serialization;
 
-using Mogre;
-using Miyagi;
-using Miyagi.Common.Resources;
-
 namespace SS3D.Modules
 {
     public sealed class ConfigManager
@@ -49,7 +45,7 @@ namespace SS3D.Modules
             }
             else
             {
-                if (LogManager.Singleton != null) LogManager.Singleton.LogMessage("ConfigManager: Could not load config. File not found. " + ConfigFileLoc);
+                //if (LogManager.Singleton != null) LogManager.Singleton.LogMessage("ConfigManager: Could not load config. File not found. " + ConfigFileLoc);
             }
         }
 
@@ -57,7 +53,7 @@ namespace SS3D.Modules
         {
             if (Configuration == null)
             {
-                if (LogManager.Singleton != null) LogManager.Singleton.LogMessage("ConfigManager: Could not write config. No File loaded. " + Configuration.ToString() + " , " + ConfigFile);
+                //if (LogManager.Singleton != null) LogManager.Singleton.LogMessage("ConfigManager: Could not write config. No File loaded. " + Configuration.ToString() + " , " + ConfigFile);
                 return;
             }
             else
@@ -85,7 +81,7 @@ namespace SS3D.Modules
         public bool Fullscreen = false;
         public bool VSync = true;
         public int FSAA = 0;
-        public int TextureFiltering = (int)TextureFilterOptions.TFO_ANISOTROPIC;
+        //public int TextureFiltering = (int)TextureFilterOptions.TFO_ANISOTROPIC;
         public int AnisotropicLevel = 8;
         public int NumMipmaps = 8;
 

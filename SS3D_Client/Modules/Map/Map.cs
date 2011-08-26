@@ -11,7 +11,7 @@ using GorgonLibrary.Graphics;
 
 namespace SS3D.Modules.Map
 {
-    public class Map : LoadingTracker
+    public class Map// : LoadingTracker
     {
         #region Variables
         public Tile[,] tileArray; // The array holding all the tiles that make up the map
@@ -71,8 +71,8 @@ namespace SS3D.Modules.Map
 
             tileArray = new Tile[mapWidth, mapHeight];
 
-            loadingText = "Building Map...";
-            loadingPercent = 0;
+            //loadingText = "Building Map...";
+            //loadingPercent = 0;
 
             float maxElements = (mapHeight * mapWidth);
             float oneElement = 100f / maxElements;
@@ -102,7 +102,7 @@ namespace SS3D.Modules.Map
                     currCount += oneElement;
                     if (currCount >= 1)
                     {
-                        loadingPercent += maxElements > 100 ? 1 : oneElement;
+                        //loadingPercent += maxElements > 100 ? 1 : oneElement;
                         currCount = 0;
                     }
                 }
@@ -472,19 +472,19 @@ namespace SS3D.Modules.Map
         public void Shutdown()
         {
 
-            loadingText = "";
-            loadingPercent = 0;
+            //loadingText = "";
+            //loadingPercent = 0;
 
             float maxElements;
             float oneElement;
             
-            loadingText = "Unloading Map...";
-            loadingPercent = 0;
+            //loadingText = "Unloading Map...";
+            //loadingPercent = 0;
 
             maxElements = (mapWidth * mapHeight);
             oneElement = 100f / maxElements;
             tileArray = null;
-            loadingPercent = 0;
+            //loadingPercent = 0;
         }
         #endregion
 

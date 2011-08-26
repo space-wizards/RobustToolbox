@@ -4,8 +4,6 @@ using System.Linq;
 using System.Text;
 using SS3D_shared;
 using SS3D_shared.HelperClasses;
-
-using MMOC;
 using SS3D.Atom;
 
 // Helper class for client-side AtomBaseClass-related procedures
@@ -22,7 +20,7 @@ namespace SS3D.HelperClasses
         /// <param name="screenPos">The screen position</param>
         /// <param name="worldPos">Outputs the world position of the picked point</param>
         /// <returns>The Atom at the position, or null if none</returns>
-        public static AtomBaseClass PickAtScreenPosition(SS3D.Modules.OgreManager engine, Vector2 screenPos, out Vector2 worldPos)
+        public static AtomBaseClass PickAtScreenPosition(Vector2 screenPos, out Vector2 worldPos)
         {
             /*&Ray screenRay = engine.Camera.GetCameraToViewportRay(screenPos.x, screenPos.y);
             RaySceneQuery sceneQuery = engine.SceneMgr.CreateRayQuery(screenRay);
@@ -48,7 +46,7 @@ namespace SS3D.HelperClasses
         
         }
 
-        public static Atom.Atom PickAtScreenPosition(SS3D.Modules.OgreManager mEngine, Vector2 mousePos)
+        public static Atom.Atom PickAtScreenPosition(Vector2 mousePos)
         {
 
             /*CollisionTools ct = new CollisionTools(mEngine.SceneMgr);

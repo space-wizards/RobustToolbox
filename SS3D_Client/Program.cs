@@ -1,8 +1,6 @@
 ﻿using System;
 using System.Linq;
 
-using MOIS;
-
 using GorgonLibrary;
 using GorgonLibrary.Graphics;
 

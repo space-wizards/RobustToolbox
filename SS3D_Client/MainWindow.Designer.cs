@@ -246,7 +246,7 @@
             this.Cursor = System.Windows.Forms.Cursors.Arrow;
             this.MainMenuStrip = this.menuStrip1;
             this.Name = "MainWindow";
-            this.Text = "Form1";
+            this.Text = "Space Station 13";
             this.Load += new System.EventHandler(this.MainWindow_Load);
             this.menuStrip1.ResumeLayout(false);
             this.menuStrip1.PerformLayout();

@@ -83,7 +83,7 @@ namespace SS3D
 
             Gorgon.CurrentClippingViewport = new Viewport(0, 20, Gorgon.Screen.Width, Gorgon.Screen.Height - 20);
             PreciseTimer preciseTimer = new PreciseTimer();
-            //Gorgon.MinimumFrameTime = PreciseTimer.FpsToMilliseconds(66);
+            Gorgon.MinimumFrameTime = PreciseTimer.FpsToMilliseconds(66);
             Gorgon.Idle += new FrameEventHandler(Gorgon_Idle);
         }
 

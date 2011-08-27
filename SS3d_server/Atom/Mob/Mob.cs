@@ -11,6 +11,8 @@ namespace SS3d_server.Atom.Mob
     {
         public float walkSpeed = 1.0f;
         public float runSpeed = 2.0f;
+        public Item.Organs.BLOOD_TYPE blood_type = Item.Organs.BLOOD_TYPE.A; // Temporary
+        public List<Item.Organs.Organ> organs = new List<Item.Organs.Organ>();
 
         public Dictionary<string, HelperClasses.Appendage> appendages;
         public Appendage selectedAppendage;

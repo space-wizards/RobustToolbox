@@ -135,7 +135,7 @@ namespace SS3D_Server
                 LoadSettings();
                 netConfig.Port = serverPort;
                 var netServer = new SS3DNetServer(netConfig);
-                netServer.Start();
+                SS3DNetServer.Singleton.Start();
 
                 StartLobby();
                 StartGame();

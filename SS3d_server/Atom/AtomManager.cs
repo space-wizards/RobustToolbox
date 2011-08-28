@@ -158,7 +158,7 @@ namespace SS3D_Server.Atom
             ushort uid = lastUID++;
 
             Assembly currentAssembly = Assembly.GetExecutingAssembly();
-            Type atomType = currentAssembly.GetType("SS3d_server." + type, true);
+            Type atomType = currentAssembly.GetType("SS3D_Server." + type, true);
             object atom = Activator.CreateInstance(atomType); // Create atom of type atomType with parameters uid, this
             atomDictionary[uid] = (Atom)atom;
             

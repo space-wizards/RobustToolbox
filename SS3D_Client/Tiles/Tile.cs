@@ -112,7 +112,7 @@ namespace SS3D.Tiles
                             decalname = "spatter_decal4";
                             break;
                     }
-                    decals.Add(new TileDecal(ResMgr.Singleton.GetSprite(decalname), new Vector2D(_random.Next(0, 64), _random.Next(0, 64)), this, System.Drawing.Color.Red));
+                    decals.Add(new TileDecal(ResMgr.Singleton.GetSprite(decalname), new Vector2D(_random.Next(0, 64), _random.Next(0, 64)), this, System.Drawing.Color.FromArgb(165,6,6)));
                     break;
 
             }

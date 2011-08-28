@@ -13,11 +13,8 @@ namespace SS3d_server.Modules.Chat
 {
     public class ChatManager
     {
-        private SS3DNetserver netServer;
-        
-        public ChatManager(SS3DNetserver _netServer)
+        public ChatManager()
         {
-            netServer = _netServer;
         }
 
         public void HandleNetMessage(NetIncomingMessage message)
@@ -25,12 +22,12 @@ namespace SS3d_server.Modules.Chat
             //Read the chat message and pass it on
             ChatChannel channel = (ChatChannel)message.ReadByte();
             string text = message.ReadString();
-            string name = netServer.clientList[message.SenderConnection].playerName;
+            string name = SS3DServer.Singleton.clientList[message.SenderConnection].playerName;
             Console.Write("CHAT- Channel " + channel.ToString() +  " - Player " + name + "Message: " + text + "\n");
 
             ushort atomID = 0;
-            if(netServer.playerManager.GetSessionByConnection(message.SenderConnection).attachedAtom != null)
-                atomID = netServer.playerManager.GetSessionByConnection(message.SenderConnection).attachedAtom.uid;
+            if (SS3DServer.Singleton.playerManager.GetSessionByConnection(message.SenderConnection).attachedAtom != null)
+                atomID = SS3DServer.Singleton.playerManager.GetSessionByConnection(message.SenderConnection).attachedAtom.uid;
 
             text = text.Trim(); // Remove whitespace
             if (text[0] == '/')
@@ -44,14 +41,14 @@ namespace SS3d_server.Modules.Chat
             string fullmsg = name + ": " + text;
 
 
-            NetOutgoingMessage message = netServer.netServer.CreateMessage();
+            NetOutgoingMessage message = SS3DNetServer.Singleton.CreateMessage();
 
             message.Write((byte)NetMessage.ChatMessage);
             message.Write((byte)channel);
             message.Write(fullmsg);
             message.Write(atomID);
 
-            netServer.SendMessageToAll(message);
+            SS3DServer.Singleton.SendMessageToAll(message);
         }
 
         /// <summary>
@@ -75,23 +72,23 @@ namespace SS3d_server.Modules.Chat
             switch (command)
             {
                 case "crowbar":
-                    player = netServer.atomManager.GetAtom(atomID);
+                    player = SS3DServer.Singleton.atomManager.GetAtom(atomID);
                     if (player == null)
                         position = new Vector2(0, 0);
                     else
                         position = player.position;
-                    netServer.atomManager.SpawnAtom("Atom.Item.Tool.Crowbar", position);                   
+                    SS3DServer.Singleton.atomManager.SpawnAtom("Atom.Item.Tool.Crowbar", position);                   
                     break;
                 case "toolbox":
-                    player = netServer.atomManager.GetAtom(atomID);
+                    player = SS3DServer.Singleton.atomManager.GetAtom(atomID);
                     if (player == null)
                         position = new Vector2(0, 0);
                     else
                         position = player.position;
-                    netServer.atomManager.SpawnAtom("Atom.Item.Container.Toolbox", position);  
+                    SS3DServer.Singleton.atomManager.SpawnAtom("Atom.Item.Container.Toolbox", position);  
                     break;
                 case "addgas":
-                    player = netServer.atomManager.GetAtom(atomID);
+                    player = SS3DServer.Singleton.atomManager.GetAtom(atomID);
                     if (player == null)
                         position = new Vector2(0,0);
                     else
@@ -100,32 +97,32 @@ namespace SS3d_server.Modules.Chat
                     if (args.Count > 1 && Convert.ToInt32(args[1]) > 0)
                     {
                         int amount = Convert.ToInt32(args[1]);
-                        netServer.map.AddGasAt(netServer.map.GetTileArrayPositionFromWorldPosition(position), GasType.Toxin, amount);
+                        SS3DServer.Singleton.map.AddGasAt(SS3DServer.Singleton.map.GetTileArrayPositionFromWorldPosition(position), GasType.Toxin, amount);
                     }
                     break;
                 case "gasreport":
-                    player = netServer.atomManager.GetAtom(atomID);
+                    player = SS3DServer.Singleton.atomManager.GetAtom(atomID);
                     if (player == null)
                         position = new Vector2(0,0);
                     else
                         position = player.position;
-                    
-                    var p = netServer.map.GetTileArrayPositionFromWorldPosition(position);
-                    var c = netServer.map.GetTileAt(p.x, p.y).gasCell;
+
+                    var p = SS3DServer.Singleton.map.GetTileArrayPositionFromWorldPosition(position);
+                    var c = SS3DServer.Singleton.map.GetTileAt(p.x, p.y).gasCell;
                     foreach(var g in c.gasses)
                     {
-                        netServer.chatManager.SendChatMessage(ChatChannel.Default, g.Key.ToString() + ": " + g.Value.ToString(), "GasReport", 0);
+                        SS3DServer.Singleton.chatManager.SendChatMessage(ChatChannel.Default, g.Key.ToString() + ": " + g.Value.ToString(), "GasReport", 0);
                     }
                     
                     break;
                 case "sprayblood":
-                    player = netServer.atomManager.GetAtom(atomID);
+                    player = SS3DServer.Singleton.atomManager.GetAtom(atomID);
                     if (player == null)
                         return;
                     else
                         position = player.position;
-                    p = netServer.map.GetTileArrayPositionFromWorldPosition(position);
-                    var t = netServer.map.GetTileAt(p.x, p.y);
+                    p = SS3DServer.Singleton.map.GetTileArrayPositionFromWorldPosition(position);
+                    var t = SS3DServer.Singleton.map.GetTileAt(p.x, p.y);
                     if (args.Count > 1 && Convert.ToInt32(args[1]) > 0)
                     {
                         for (int i = 0; i <= Convert.ToInt32(args[1]); i++)

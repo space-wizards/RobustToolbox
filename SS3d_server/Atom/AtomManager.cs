@@ -11,22 +11,21 @@ using SS3D_shared;
 using SS3D_shared.HelperClasses;
 using SS3d_server.Modules.Map;
 using Lidgren.Network;
+using SS3d_server.Modules;
 
 namespace SS3d_server.Atom
 {
     public class AtomManager //SERVERSIDE
     {
         #region Vars
-        public SS3DNetserver netServer;
 
         public Dictionary<ushort, Atom> atomDictionary;
         private ushort lastUID = 0;
         #endregion
 
         #region instantiation
-        public AtomManager(SS3DNetserver _netServer)
+        public AtomManager()
         {
-            netServer = _netServer;
             atomDictionary = new Dictionary<ushort, Atom>();
         }
         #endregion
@@ -99,33 +98,33 @@ namespace SS3d_server.Atom
         #region deletion
         private void SendDeleteAtom(ushort uid)
         {
-            NetOutgoingMessage message = netServer.netServer.CreateMessage();
+            NetOutgoingMessage message = SS3DNetServer.Singleton.CreateMessage();
             message.Write((byte)NetMessage.AtomManagerMessage);
             message.Write((byte)AtomManagerMessage.DeleteAtom);
             message.Write(uid);
-            netServer.SendMessageToAll(message);
+            SS3DServer.Singleton.SendMessageToAll(message);
         }
         #endregion
 
         #region spawning
         private void SendSpawnAtom(ushort uid, string type)
         {
-            NetOutgoingMessage message = netServer.netServer.CreateMessage();
+            NetOutgoingMessage message = SS3DNetServer.Singleton.CreateMessage();
             message.Write((byte)NetMessage.AtomManagerMessage);
             message.Write((byte)AtomManagerMessage.SpawnAtom);
             message.Write(uid);
             message.Write(type);
-            netServer.SendMessageToAll(message);
+            SS3DServer.Singleton.SendMessageToAll(message);
         }
 
         private void SendSpawnAtom(ushort uid, string type, NetConnection client)
         {
-            NetOutgoingMessage message = netServer.netServer.CreateMessage();
+            NetOutgoingMessage message = SS3DNetServer.Singleton.CreateMessage();
             message.Write((byte)NetMessage.AtomManagerMessage);
             message.Write((byte)AtomManagerMessage.SpawnAtom);
             message.Write(uid);
             message.Write(type);
-            netServer.SendMessageTo(message, client);
+            SS3DServer.Singleton.SendMessageTo(message, client);
         }
 
         public void SendAllAtoms(NetConnection client)

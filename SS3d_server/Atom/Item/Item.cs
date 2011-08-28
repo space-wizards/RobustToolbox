@@ -112,9 +112,9 @@ namespace SS3d_server.Atom.Item
         public virtual void SendAppendageUIUpdate(Mob.Mob target)
         {
             //send a message to the new holder's UI to put in the right image
-            NetOutgoingMessage message = atomManager.netServer.playerManager.GetSessionByConnection(target.attachedClient).CreateGuiMessage(SS3D_shared.GuiComponentType.AppendagesComponent);
+            NetOutgoingMessage message = SS3DServer.Singleton.playerManager.GetSessionByConnection(target.attachedClient).CreateGuiMessage(SS3D_shared.GuiComponentType.AppendagesComponent);
             message.Write((byte)SS3D_shared.HandsComponentMessage.UpdateHandObjects);
-            atomManager.netServer.SendMessageTo(message, target.attachedClient);
+            SS3DServer.Singleton.SendMessageTo(message, target.attachedClient);
         }
         
 
@@ -133,7 +133,7 @@ namespace SS3d_server.Atom.Item
             outmessage.Write((byte)ItemMessage.AttachTo);
             outmessage.Write(holdingAppendage.owner.uid);
             outmessage.Write(holdingAppendage.appendageName);
-            atomManager.netServer.SendMessageToAll(outmessage);
+            SS3DServer.Singleton.SendMessageToAll(outmessage);
         }
 
         /// <summary>
@@ -151,7 +151,7 @@ namespace SS3d_server.Atom.Item
             NetOutgoingMessage outmessage = CreateAtomMessage();
             outmessage.Write((byte)AtomMessage.Extended);
             outmessage.Write((byte)ItemMessage.Detach);
-            atomManager.netServer.SendMessageToAll(outmessage);
+            SS3DServer.Singleton.SendMessageToAll(outmessage);
 
             SendAppendageUIUpdate(owner);
 

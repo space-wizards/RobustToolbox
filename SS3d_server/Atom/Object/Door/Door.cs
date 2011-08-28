@@ -65,8 +65,8 @@ namespace SS3d_server.Atom.Object.Door
             base.Update(framePeriod);
 
             //Make closed doors block gas
-            var occupiedTilePos = atomManager.netServer.map.GetTileArrayPositionFromWorldPosition(position);
-            var occupiedTile = atomManager.netServer.map.GetTileAt(occupiedTilePos.x, occupiedTilePos.y);
+            var occupiedTilePos = SS3DServer.Singleton.map.GetTileArrayPositionFromWorldPosition(position);
+            var occupiedTile = SS3DServer.Singleton.map.GetTileAt(occupiedTilePos.x, occupiedTilePos.y);
 
             if (status == DoorState.Closed)
             {

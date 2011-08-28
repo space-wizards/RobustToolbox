@@ -132,7 +132,7 @@ namespace SS3d_server.Atom
         {
             //base.HandleClick(message);
             //Who clicked us?
-            Mob.Mob clicker = (Mob.Mob)atomManager.netServer.playerManager.GetSessionByConnection(message.SenderConnection).attachedAtom;
+            Mob.Mob clicker = (Mob.Mob)SS3DServer.Singleton.playerManager.GetSessionByConnection(message.SenderConnection).attachedAtom;
             if (clicker == null || clicker.IsDead()) //HAHA U CANT KILL ME WHEN UR DEAD NEMORE
                 return;
 
@@ -156,12 +156,12 @@ namespace SS3d_server.Atom
              * packet even if it is that client's player mob. Use this in case the client has ended up somewhere bad.
              */
             message.Write(force);
-            atomManager.netServer.SendMessageToAll(message, NetDeliveryMethod.ReliableUnordered);
+            SS3DServer.Singleton.SendMessageToAll(message, NetDeliveryMethod.ReliableUnordered);
         }
 
         protected NetOutgoingMessage CreateAtomMessage()
         {
-            NetOutgoingMessage message = atomManager.netServer.netServer.CreateMessage();
+            NetOutgoingMessage message = SS3DNetServer.Singleton.CreateMessage();
             message.Write((byte)NetMessage.AtomManagerMessage);
             message.Write((byte)AtomManagerMessage.Passthrough);
             message.Write(uid);
@@ -170,12 +170,12 @@ namespace SS3d_server.Atom
 
         protected void SendMessageToAll(NetOutgoingMessage message, NetDeliveryMethod method = NetDeliveryMethod.ReliableOrdered)
         {
-            atomManager.netServer.SendMessageToAll(message, method);
+            SS3DServer.Singleton.SendMessageToAll(message, method);
         }
 
         protected void SendMessageTo(NetOutgoingMessage message, NetConnection client , NetDeliveryMethod method = NetDeliveryMethod.ReliableOrdered)
         {
-            atomManager.netServer.SendMessageTo(message, client, method);
+            SS3DServer.Singleton.SendMessageTo(message, client, method);
         }
 
         public virtual void HandlePositionUpdate(NetIncomingMessage message)
@@ -249,7 +249,7 @@ namespace SS3d_server.Atom
             else
                 ApplyAction(clicker.selectedAppendage.heldItem, clicker);
 
-            atomManager.netServer.chatManager.SendChatMessage(0, clicker.name + "(" + clicker.uid.ToString() + ")" + " clicked " + name + "(" + uid.ToString() + ")", name, uid);
+            SS3DServer.Singleton.chatManager.SendChatMessage(0, clicker.name + "(" + clicker.uid.ToString() + ")" + " clicked " + name + "(" + uid.ToString() + ")", name, uid);
         }
         #endregion
 
@@ -292,7 +292,7 @@ namespace SS3d_server.Atom
         {
             if (attachedClient != null)
             {
-                var session = atomManager.netServer.playerManager.GetSessionByConnection(attachedClient);
+                var session = SS3DServer.Singleton.playerManager.GetSessionByConnection(attachedClient);
                 if(session != null)
                     return session;
             }
@@ -339,7 +339,7 @@ namespace SS3d_server.Atom
         #if DEBUG
             string healthmsg = name + "(" + uid.ToString() + ") " + "took " + amount.ToString() + " points of damage.";
             healthmsg += " Current health: " + currentHealth.ToString() + "/" + maxHealth.ToString();//TODO SEND DAMAGE MESSAGES
-            atomManager.netServer.chatManager.SendChatMessage(0, healthmsg, name, uid);
+            SS3DServer.Singleton.chatManager.SendChatMessage(0, healthmsg, name, uid);
         #endif
 
             var session = GetSession();
@@ -371,8 +371,8 @@ namespace SS3d_server.Atom
 
         public Tiles.Tile GetNearestTile()
         {
-            Point pos = atomManager.netServer.map.GetTileArrayPositionFromWorldPosition(position);
-            return atomManager.netServer.map.GetTileAt(pos.x, pos.y);
+            Point pos = SS3DServer.Singleton.map.GetTileArrayPositionFromWorldPosition(position);
+            return SS3DServer.Singleton.map.GetTileAt(pos.x, pos.y);
         }
         #endregion
 

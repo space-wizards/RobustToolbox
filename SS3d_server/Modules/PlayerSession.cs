@@ -16,7 +16,6 @@ namespace SS3d_server.Modules
 
         public NetConnection connectedClient;
         public Atom.Atom attachedAtom;
-        private SS3DNetserver netServer;
         public string name = "";
         public enum SessionStatus
         {
@@ -28,10 +27,8 @@ namespace SS3d_server.Modules
         }
         public SessionStatus status;
 
-        public PlayerSession(NetConnection client, SS3DNetserver _netServer)
-        {
-            netServer = _netServer;
-         
+        public PlayerSession(NetConnection client)
+        {         
             if (client != null)
             {
                 connectedClient = client;
@@ -61,11 +58,11 @@ namespace SS3d_server.Modules
 
         private void SendAttachMessage()
         {
-            NetOutgoingMessage m = netServer.netServer.CreateMessage();
+            NetOutgoingMessage m = SS3DNetServer.Singleton.CreateMessage();
             m.Write((byte)NetMessage.PlayerSessionMessage);
             m.Write((byte)PlayerSessionMessage.AttachToAtom);
             m.Write(attachedAtom.uid);
-            netServer.SendMessageTo(m, connectedClient);
+            SS3DServer.Singleton.SendMessageTo(m, connectedClient);
         }
 
         public void HandleNetworkMessage(NetIncomingMessage message)
@@ -112,8 +109,8 @@ namespace SS3d_server.Modules
                     case "toxins":
                         //Need debugging function to add more gas
                     case "save":
-                        netServer.atomManager.SaveAtoms();
-                        netServer.map.SaveMap();
+                        SS3DServer.Singleton.atomManager.SaveAtoms();
+                        SS3DServer.Singleton.map.SaveMap();
                         break;
                     default:
                         break;
@@ -121,7 +118,7 @@ namespace SS3d_server.Modules
             }
             else
             {
-                var targetAtom = netServer.atomManager.GetAtom(uid);
+                var targetAtom = SS3DServer.Singleton.atomManager.GetAtom(uid);
                 targetAtom.HandleVerb(verb);
             }
         }
@@ -139,20 +136,20 @@ namespace SS3d_server.Modules
 
         public void JoinLobby()
         {
-            NetOutgoingMessage m = netServer.netServer.CreateMessage();
+            NetOutgoingMessage m = SS3DNetServer.Singleton.CreateMessage();
             m.Write((byte)NetMessage.PlayerSessionMessage);
             m.Write((byte)PlayerSessionMessage.JoinLobby);
-            netServer.SendMessageTo(m, connectedClient);
+            SS3DServer.Singleton.SendMessageTo(m, connectedClient);
             status = SessionStatus.InLobby;
         }
 
         public void JoinGame()
         {
-            if (connectedClient != null && status != SessionStatus.InGame && netServer.runlevel == SS3DNetserver.RunLevel.Game)
+            if (connectedClient != null && status != SessionStatus.InGame && SS3DServer.Singleton.runlevel == SS3DServer.RunLevel.Game)
             {
-                NetOutgoingMessage m = netServer.netServer.CreateMessage();
+                NetOutgoingMessage m = SS3DNetServer.Singleton.CreateMessage();
                 m.Write((byte)NetMessage.JoinGame);
-                netServer.SendMessageTo(m, connectedClient);
+                SS3DServer.Singleton.SendMessageTo(m, connectedClient);
 
                 status = SessionStatus.InGame;
             }
@@ -173,7 +170,7 @@ namespace SS3d_server.Modules
 
         public NetOutgoingMessage CreateGuiMessage(GuiComponentType gui)
         {
-            NetOutgoingMessage m = netServer.netServer.CreateMessage();
+            NetOutgoingMessage m = SS3DNetServer.Singleton.CreateMessage();
             m.Write((byte)NetMessage.PlayerSessionMessage);
             m.Write((byte)PlayerSessionMessage.UIComponentMessage);
             m.Write((byte)gui);

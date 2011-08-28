@@ -11,26 +11,24 @@ namespace SS3d_server.Modules
     {
         /* This class will manage connected player sessions. */
         public Dictionary<int, PlayerSession> playerSessions;
-        public SS3DNetserver netServer;
 
-        public PlayerManager(SS3DNetserver _netServer)
+        public PlayerManager()
         {
             playerSessions = new Dictionary<int, PlayerSession>();
             //We can actually query this by client connection or whatever we want using linq
 
-            netServer = _netServer;
         }
 
         public void NewSession(NetConnection client)
         {
-            PlayerSession session = new PlayerSession(client, netServer);
+            PlayerSession session = new PlayerSession(client);
             playerSessions.Add(playerSessions.Values.Count + 1, session);
         }
 
         public void SpawnPlayerMob(PlayerSession s)
         {
             //Spawn the player's atom. There's probably a much better place to do this.
-            Atom.Atom a = netServer.atomManager.SpawnAtom("Atom.Mob.Human");
+            Atom.Atom a = SS3DServer.Singleton.atomManager.SpawnAtom("Atom.Mob.Human");
             s.AttachToAtom(a);
             Console.Write("2");
         }
@@ -56,10 +54,9 @@ namespace SS3d_server.Modules
         {
             // Ends the session.
             PlayerSession session = GetSessionByConnection(client);
-            //Detach the atom and delete it.
+            //Detach the atom and (dont)delete it.
             var a = session.attachedAtom;
             session.DetachFromAtom();
-            //netServer.atomManager.DeleteAtom(a);
         }
 
         public void SendJoinGameToAll()

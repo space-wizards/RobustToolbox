@@ -24,9 +24,15 @@ namespace SS3D_Server.Modules
             get
             {
                 if (singleton == null)
-                    singleton = new LogManager();
+                    throw new TypeInitializationException("LogManager Not Initialized.", null);
                 return singleton;
             }
+        }
+
+        public static void Initialize(string _logPath)
+        {
+            singleton = new LogManager();
+            singleton.LogPath = _logPath;
         }
     }
 }

@@ -51,6 +51,7 @@ namespace SS3D_Server
         public DateTime time;   // The server current frame time
         
         #region Server Settings
+
         string dataFilename = "ServerSettings.cfg";
         Dictionary<string, string> serverSettings = new Dictionary<string, string>();
         int serverPort = 1212;
@@ -59,7 +60,7 @@ namespace SS3D_Server
         string serverWelcomeMessage = "Welcome to the server!";
         int serverMaxPlayers = 32;
         GameType gameType = GameType.Game;
-        
+
         public int framePeriod = 33; // The time (in milliseconds) between server frames
         public DateTime lastUpdate;
 
@@ -73,8 +74,31 @@ namespace SS3D_Server
         {
             runlevel = RunLevel.Init;
             singleton = this;
+
+            ConfigManager.Singleton.Initialize("./config.xml");
+            LogManager.Initialize("./log.txt");
         }
         #endregion
+
+
+        public void LoadSettings()
+        {
+            var cfgmgr = ConfigManager.Singleton;
+            serverPort = cfgmgr.Configuration.Port;
+            serverName = cfgmgr.Configuration.ServerName;
+            framePeriod = cfgmgr.Configuration.framePeriod;
+            serverMapName = cfgmgr.Configuration.serverMapName;
+            serverMaxPlayers = cfgmgr.Configuration.serverMaxPlayers;
+            gameType = cfgmgr.Configuration.gameType;
+            serverWelcomeMessage = cfgmgr.Configuration.serverWelcomeMessage;
+            Console.WriteLine("Port: " + serverPort.ToString());
+            Console.WriteLine("Name: " + serverName);
+            Console.WriteLine("Rate: " + (int)serverRate + " (" + framePeriod + " ms)");
+            Console.WriteLine("Map: " + serverMapName);
+            Console.WriteLine("Max players: " + serverMaxPlayers);
+            Console.WriteLine("Game type: " + gameType);
+            Console.WriteLine("Welcome message: " + serverWelcomeMessage);
+        }
 
         /// <summary>
         /// Controls what modules are running.
@@ -470,45 +494,6 @@ namespace SS3D_Server
             sr.Close();
             file.Close();
 
-        }
-
-        public void LoadSettings()
-        {
-            if(serverSettings.ContainsKey("Port"))
-            {
-                serverPort = int.Parse(serverSettings["Port"]);
-            }
-            Console.WriteLine("Port: " + serverPort);
-            if (serverSettings.ContainsKey("Name"))
-            {
-                serverName = serverSettings["Name"];
-            }
-            Console.WriteLine("Name: " + serverName);
-            if (serverSettings.ContainsKey("Rate"))
-            {
-                serverRate = float.Parse(serverSettings["Rate"]);
-            }
-            Console.WriteLine("Rate: " + (int)serverRate+ " ("+framePeriod+" ms)");
-            if (serverSettings.ContainsKey("MapName"))
-            {
-                serverMapName = serverSettings["MapName"];
-            }
-            Console.WriteLine("Map: " + serverMapName);
-            if (serverSettings.ContainsKey("MaxPlayers"))
-            {
-                serverMaxPlayers = int.Parse(serverSettings["MaxPlayers"]);
-            }
-            Console.WriteLine("Max players: " + serverMaxPlayers);
-            if (serverSettings.ContainsKey("GameType"))
-            {
-                gameType = (GameType)byte.Parse(serverSettings["GameType"]);
-            }
-            Console.WriteLine("Game type: " + gameType);
-            if (serverSettings.ContainsKey("WelcomeMessage"))
-            {
-                serverWelcomeMessage = serverSettings["WelcomeMessage"];
-            }
-            Console.WriteLine("Welcome message: " + serverWelcomeMessage);
         }
 
         public void WriteNewDataFile()

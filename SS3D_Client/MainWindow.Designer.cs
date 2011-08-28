@@ -46,6 +46,7 @@
             this.toolStripTextBox2 = new System.Windows.Forms.ToolStripTextBox();
             this.statusStrip1 = new System.Windows.Forms.StatusStrip();
             this.toolStripStatusLabel1 = new System.Windows.Forms.ToolStripStatusLabel();
+            this.PlayerName_TextBox = new System.Windows.Forms.ToolStripTextBox();
             this.menuStrip1.SuspendLayout();
             this.statusStrip1.SuspendLayout();
             this.SuspendLayout();
@@ -68,6 +69,7 @@
             // 
             this.menuToolStripMenuItem.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] {
             this.connectToolStripMenuItem,
+            this.PlayerName_TextBox,
             this.disconnectToolStripMenuItem,
             this.editModeToolStripMenuItem,
             this.quitToolStripMenuItem});
@@ -85,7 +87,7 @@
             this.toolStripTextBox1});
             this.connectToolStripMenuItem.ForeColor = System.Drawing.SystemColors.ActiveCaption;
             this.connectToolStripMenuItem.Name = "connectToolStripMenuItem";
-            this.connectToolStripMenuItem.Size = new System.Drawing.Size(152, 22);
+            this.connectToolStripMenuItem.Size = new System.Drawing.Size(160, 22);
             this.connectToolStripMenuItem.Text = "Connect";
             // 
             // toolStripTextBox1
@@ -103,7 +105,7 @@
             this.disconnectToolStripMenuItem.Enabled = false;
             this.disconnectToolStripMenuItem.ForeColor = System.Drawing.SystemColors.ActiveCaption;
             this.disconnectToolStripMenuItem.Name = "disconnectToolStripMenuItem";
-            this.disconnectToolStripMenuItem.Size = new System.Drawing.Size(152, 22);
+            this.disconnectToolStripMenuItem.Size = new System.Drawing.Size(160, 22);
             this.disconnectToolStripMenuItem.Text = "Disconnect";
             this.disconnectToolStripMenuItem.Click += new System.EventHandler(this.disconnectToolStripMenuItem_Click);
             // 
@@ -113,7 +115,7 @@
             this.editModeToolStripMenuItem.Enabled = false;
             this.editModeToolStripMenuItem.ForeColor = System.Drawing.SystemColors.ActiveCaption;
             this.editModeToolStripMenuItem.Name = "editModeToolStripMenuItem";
-            this.editModeToolStripMenuItem.Size = new System.Drawing.Size(152, 22);
+            this.editModeToolStripMenuItem.Size = new System.Drawing.Size(160, 22);
             this.editModeToolStripMenuItem.Text = "Edit mode";
             this.editModeToolStripMenuItem.Click += new System.EventHandler(this.editModeToolStripMenuItem_Click);
             // 
@@ -122,7 +124,7 @@
             this.quitToolStripMenuItem.BackColor = System.Drawing.SystemColors.ActiveCaptionText;
             this.quitToolStripMenuItem.ForeColor = System.Drawing.SystemColors.ActiveCaption;
             this.quitToolStripMenuItem.Name = "quitToolStripMenuItem";
-            this.quitToolStripMenuItem.Size = new System.Drawing.Size(152, 22);
+            this.quitToolStripMenuItem.Size = new System.Drawing.Size(160, 22);
             this.quitToolStripMenuItem.Text = "Quit";
             this.quitToolStripMenuItem.Click += new System.EventHandler(this.quitToolStripMenuItem_Click);
             // 
@@ -235,6 +237,13 @@
             this.toolStripStatusLabel1.Name = "toolStripStatusLabel1";
             this.toolStripStatusLabel1.Size = new System.Drawing.Size(0, 17);
             // 
+            // PlayerName_TextBox
+            // 
+            this.PlayerName_TextBox.Name = "PlayerName_TextBox";
+            this.PlayerName_TextBox.Size = new System.Drawing.Size(100, 21);
+            this.PlayerName_TextBox.Text = "George Melons";
+            this.PlayerName_TextBox.Click += new System.EventHandler(this.PlayerName_TextBox_Click);
+            // 
             // MainWindow
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
@@ -277,5 +286,6 @@
         private System.Windows.Forms.ToolStripMenuItem noneToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem noneToolStripMenuItem1;
         private System.Windows.Forms.ToolStripTextBox toolStripTextBox2;
+        private System.Windows.Forms.ToolStripTextBox PlayerName_TextBox;
     }
 }

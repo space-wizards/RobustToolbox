@@ -9,13 +9,13 @@ namespace SS3d_server
 {
     class SS3D_Server
     {
-        private SS3DNetserver server;
+        private SS3DServer server;
 
         static void Main(string[] args)
         {
             SS3D_Server main = new SS3D_Server();
             Console.WriteLine("Server -> Starting");
-            main.server = new SS3DNetserver();
+            main.server = new SS3DServer();
 
             if (main.server.Start())
             {

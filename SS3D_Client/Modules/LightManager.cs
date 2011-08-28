@@ -44,7 +44,7 @@ namespace SS3D.Modules
     {
         private static LightManager singleton;
 
-        public int ambientBrightness = 15;
+        public int ambientBrightness = 55;
 
         private const int errorTolerance = 70; //Keep this around the size of tiles. Used to find out if a light is out of range.
 
@@ -126,8 +126,8 @@ namespace SS3D.Modules
         {
             sprite.UpdateAABB(); //Just to be safe that the verts are in the right pos. Might want to remove this when its handled reliably by the objects.
 
-            //var lightsInRange = from Light l in lights where (l.position - sprite.Position - screenOffset).Length <= (l.range + errorTolerance) select l;
-            Vector3D defaultLight = new Vector3D(55, 55, 55);
+            var lightsInRange = from Light l in lights where (l.position - sprite.Position - screenOffset).Length <= (l.range + errorTolerance) select l;
+            Vector3D defaultLight = new Vector3D(ambientBrightness, ambientBrightness, ambientBrightness);
 
             SpriteLightDefinition lightInfo = new SpriteLightDefinition();
             lightInfo.VertexColLowerLeft += SquareVertexLight(defaultLight);
@@ -140,7 +140,7 @@ namespace SS3D.Modules
             float ULIntensity = defaultLight.Length;
             float URIntensity = defaultLight.Length;
 
-            foreach (Light currentLight in lights)
+            foreach (Light currentLight in lightsInRange)
             {
                 //Calculate light color incident on tile
                 var ll = CalculateVertexLight(sprite, currentLight, VertexLocations.LowerLeft, screenOffset);
@@ -174,7 +174,7 @@ namespace SS3D.Modules
             lightInfo.VertexColUpperRight = NormalizeLight(lightInfo.VertexColUpperRight, URIntensity);
 
 
-            lightInfo.ClampByAmbient(ambientBrightness);
+            //lightInfo.ClampByAmbient(ambientBrightness);
             ApplyDefinitionToSprite(sprite, lightInfo);
         }
 

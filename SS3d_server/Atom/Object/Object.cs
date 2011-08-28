@@ -4,11 +4,11 @@ using System.Linq;
 using System.Text;
 using SS3D_shared.HelperClasses;
 using Lidgren.Network;
-using SS3d_server.Atom.Mob;
-using SS3d_server.Atom.Mob.HelperClasses;
+using SS3D_Server.Atom.Mob;
+using SS3D_Server.Atom.Mob.HelperClasses;
 
 
-namespace SS3d_server.Atom.Object
+namespace SS3D_Server.Atom.Object
 {
     public class Object : Atom
     {

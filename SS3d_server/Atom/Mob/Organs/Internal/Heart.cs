@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 
-namespace SS3d_server.Atom.Item.Organs.Internal
+namespace SS3D_Server.Atom.Item.Organs.Internal
 {
     public class Heart : Internal
     {

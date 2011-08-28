@@ -5,7 +5,7 @@ using System.Text;
 using System.Runtime.Serialization;
 using SS3D_shared.HelperClasses;
 
-namespace SS3d_server.Atom.Item.Container
+namespace SS3D_Server.Atom.Item.Container
 {
     [Serializable()]
     public class Toolbox : Item

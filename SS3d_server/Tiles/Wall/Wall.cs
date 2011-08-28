@@ -3,11 +3,11 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 
-namespace SS3d_server.Tiles.Wall
+namespace SS3D_Server.Tiles.Wall
 {
     public class Wall : Tile
     {
-        public Wall(int x, int y, SS3d_server.Modules.Map.Map _map)
+        public Wall(int x, int y, SS3D_Server.Modules.Map.Map _map)
             : base(x, y, _map)
         {
             tileType = TileType.Wall;

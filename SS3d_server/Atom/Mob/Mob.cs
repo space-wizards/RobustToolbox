@@ -3,9 +3,9 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using Lidgren.Network;
-using SS3d_server.Atom.Mob.HelperClasses;
+using SS3D_Server.Atom.Mob.HelperClasses;
 
-namespace SS3d_server.Atom.Mob
+namespace SS3D_Server.Atom.Mob
 {
     public class Mob : Atom
     {

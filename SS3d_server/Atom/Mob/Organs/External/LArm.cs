@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 
-namespace SS3d_server.Atom.Item.Organs.External
+namespace SS3D_Server.Atom.Item.Organs.External
 {
     public class LArm : External
     {

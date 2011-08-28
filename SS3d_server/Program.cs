@@ -5,15 +5,15 @@ using System.Text;
 
 using Lidgren.Network;
 
-namespace SS3d_server
+namespace SS3D_Server
 {
-    class SS3D_Server
+    class EntryPoint
     {
         private SS3DServer server;
 
         static void Main(string[] args)
         {
-            SS3D_Server main = new SS3D_Server();
+            EntryPoint main = new EntryPoint();
             Console.WriteLine("Server -> Starting");
             main.server = new SS3DServer();
 

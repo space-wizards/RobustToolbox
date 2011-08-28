@@ -4,13 +4,13 @@ using System.Linq;
 using System.Text;
 using System.IO;
 using System.Media;
-using SS3d_server.Tiles;
+using SS3D_Server.Tiles;
 using Lidgren.Network;
 
 using SS3D_shared;
 using SS3D_shared.HelperClasses;
 
-namespace SS3d_server.Modules.Map
+namespace SS3D_Server.Modules.Map
 {
     public class Map
     {

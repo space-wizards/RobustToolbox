@@ -4,11 +4,11 @@ using System.Linq;
 using System.Text;
 
 using Lidgren.Network;
-using SS3d_server.Atom;
-using SS3d_server;
+using SS3D_Server.Atom;
+using SS3D_Server;
 using SS3D_shared;
 
-namespace SS3d_server.Modules
+namespace SS3D_Server.Modules
 {
     public class PlayerSession
     {

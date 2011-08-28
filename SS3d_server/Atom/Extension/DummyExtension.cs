@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 
-namespace SS3d_server.Atom.Extension
+namespace SS3D_Server.Atom.Extension
 {
     public class DummyExtension : Extension
     {

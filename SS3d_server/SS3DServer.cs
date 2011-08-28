@@ -4,18 +4,18 @@ using System.Linq;
 using System.Text;
 using System.IO;
 using System.Threading;
-using SS3d_server.Modules;
-using SS3d_server.Modules.Client;
-using SS3d_server.Modules.Map;
+using SS3D_Server.Modules;
+using SS3D_Server.Modules.Client;
+using SS3D_Server.Modules.Map;
 //using SS3d_server.Modules.Items;
 //using SS3d_server.Modules.Mobs;
-using SS3d_server.Modules.Chat;
-using SS3d_server.Atom;
+using SS3D_Server.Modules.Chat;
+using SS3D_Server.Atom;
 
 using Lidgren.Network;
 using SS3D_shared;
 
-namespace SS3d_server
+namespace SS3D_Server
 {
     public class SS3DServer
     {

@@ -4,13 +4,13 @@ using System.Linq;
 using System.Text;
 using System.Runtime.Serialization;
 using System.Runtime.Serialization.Formatters.Binary;
-using SS3d_server.HelperClasses;
+using SS3D_Server.HelperClasses;
 using Lidgren.Network;
 using SS3D_shared.HelperClasses;
-using SS3d_server.Atom.Extension;
-using SS3d_server.Modules;
+using SS3D_Server.Atom.Extension;
+using SS3D_Server.Modules;
 
-namespace SS3d_server.Atom
+namespace SS3D_Server.Atom
 {
     [Serializable()]
     public class Atom : ISerializable  // SERVER SIDE

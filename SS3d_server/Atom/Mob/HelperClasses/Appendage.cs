@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 
-namespace SS3d_server.Atom.Mob.HelperClasses
+namespace SS3D_Server.Atom.Mob.HelperClasses
 {
     public class Appendage
     {

@@ -2,11 +2,11 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
-using SS3d_server.Tiles.Atmos;
-using SS3d_server.Modules;
-using SS3d_server.Modules.Map;
+using SS3D_Server.Tiles.Atmos;
+using SS3D_Server.Modules;
+using SS3D_Server.Modules.Map;
 
-namespace SS3d_server.Tiles
+namespace SS3D_Server.Tiles
 {
     public class Tile
     {

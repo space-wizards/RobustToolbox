@@ -298,8 +298,8 @@ namespace SS3D.States
               
                 int xStart = System.Math.Max(0, centerTile.X - (screenWidthTiles / 2) - 1);
                 int yStart = System.Math.Max(0, centerTile.Y - (screenHeightTiles / 2) - 1);
-                int xEnd = System.Math.Min(xStart + screenWidthTiles + 2, map.mapWidth);
-                int yEnd = System.Math.Min(yStart + screenHeightTiles + 2, map.mapHeight);
+                int xEnd = System.Math.Min(xStart + screenWidthTiles + 2, map.mapWidth - 1);
+                int yEnd = System.Math.Min(yStart + screenHeightTiles + 2, map.mapHeight - 1);
 
                 xTopLeft = Math.Max(0, playerController.controlledAtom.position.X - ((screenWidthTiles / 2) * map.tileSpacing));
                 yTopLeft = Math.Max(0, playerController.controlledAtom.position.Y - ((screenHeightTiles / 2) * map.tileSpacing));
@@ -426,11 +426,11 @@ namespace SS3D.States
             }
 
             Gorgon.CurrentRenderTarget = null;
-            Gorgon.CurrentShader = ResMgr.Singleton.GetShader("bloomtest");
-            ResMgr.Singleton.GetShader("bloomtest").Parameters["_spriteImage"].SetValue(baseTarget.Image);
+            //Gorgon.CurrentShader = ResMgr.Singleton.GetShader("bloomtest");
+            //ResMgr.Singleton.GetShader("bloomtest").Parameters["_spriteImage"].SetValue(baseTarget.Image);
             baseTargetSprite.Draw();
 
-            Gorgon.CurrentShader = null;
+            //Gorgon.CurrentShader = null;
             
             //Draw UI
             foreach (IGuiComponent component in guiComponents.Values)

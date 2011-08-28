@@ -127,12 +127,18 @@ namespace SS3D.Modules
             sprite.UpdateAABB(); //Just to be safe that the verts are in the right pos. Might want to remove this when its handled reliably by the objects.
 
             //var lightsInRange = from Light l in lights where (l.position - sprite.Position - screenOffset).Length <= (l.range + errorTolerance) select l;
+            Vector3D defaultLight = new Vector3D(55, 55, 55);
 
             SpriteLightDefinition lightInfo = new SpriteLightDefinition();
-            float LLIntensity = 0;
-            float LRIntensity = 0;
-            float ULIntensity = 0;
-            float URIntensity = 0;
+            lightInfo.VertexColLowerLeft += SquareVertexLight(defaultLight);
+            lightInfo.VertexColLowerRight += SquareVertexLight(defaultLight);
+            lightInfo.VertexColUpperLeft += SquareVertexLight(defaultLight);
+            lightInfo.VertexColUpperRight += SquareVertexLight(defaultLight);
+
+            float LLIntensity = defaultLight.Length;
+            float LRIntensity = defaultLight.Length;
+            float ULIntensity = defaultLight.Length;
+            float URIntensity = defaultLight.Length;
 
             foreach (Light currentLight in lights)
             {
@@ -152,13 +158,14 @@ namespace SS3D.Modules
                 ULIntensity += ul.Length;
                 URIntensity += ur.Length;
             }
+
             //Munge intensity down
             LLIntensity = (float)(LLIntensity / 1.73205081); // ALGEBRA - REPLACES (float)Math.Sqrt(Math.Pow(LLIntensity, 2) / 3);
             LRIntensity = (float)(LRIntensity / 1.73205081);
             ULIntensity = (float)(ULIntensity / 1.73205081);
             URIntensity = (float)(URIntensity / 1.73205081);
-            lightInfo.VertexColLowerLeft = SqrtVertexLight(lightInfo.VertexColLowerLeft); 
-            lightInfo.VertexColLowerRight = SqrtVertexLight(lightInfo.VertexColLowerRight); 
+            lightInfo.VertexColLowerLeft = SqrtVertexLight(lightInfo.VertexColLowerLeft);
+            lightInfo.VertexColLowerRight = SqrtVertexLight(lightInfo.VertexColLowerRight);
             lightInfo.VertexColUpperLeft = SqrtVertexLight(lightInfo.VertexColUpperLeft);
             lightInfo.VertexColUpperRight = SqrtVertexLight(lightInfo.VertexColUpperRight);
             lightInfo.VertexColLowerLeft = NormalizeLight(lightInfo.VertexColLowerLeft, LLIntensity);

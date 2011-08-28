@@ -85,7 +85,7 @@ namespace SS3d_server.Modules.Map
                     if (tileArray[x, y].tileState == TileState.Dead)
                     {
                         Tiles.Atmos.GasCell g = tileArray[x, y].gasCell;
-                        Tiles.Tile t = GenerateNewTile(tileArray[x, y].tileType);
+                        Tiles.Tile t = GenerateNewTile(x, y, tileArray[x, y].tileType);
                         tileArray[x, y] = t;
                         tileArray[x, y].gasCell = g;
                     }
@@ -100,7 +100,7 @@ namespace SS3d_server.Modules.Map
             {
                 var t = tileArray[arrayPosition.x, arrayPosition.y];
                 var g = t.gasCell;
-                Tiles.Tile newTile = GenerateNewTile(TileType.Floor);
+                Tiles.Tile newTile = GenerateNewTile(arrayPosition.x, arrayPosition.y, TileType.Floor);
                 tileArray[arrayPosition.x, arrayPosition.y] = newTile;
                 newTile.gasCell = g;
                 g.AttachToTile(newTile);
@@ -117,7 +117,7 @@ namespace SS3d_server.Modules.Map
             if (IsSaneArrayPosition(x, y))
             {
                 Tiles.Atmos.GasCell g = tileArray[x, y].gasCell;
-                Tile t = GenerateNewTile(type);
+                Tile t = GenerateNewTile(x, y, type);
                 tileArray[x, y] = t;
                 tileArray[x, y].gasCell = g;
                 g.AttachToTile(t);
@@ -205,7 +205,7 @@ namespace SS3d_server.Modules.Map
             {
                 for (int y = 0; y < mapHeight; y++)
                 {
-                    tileArray[x,y] = new Tiles.Floor.Floor();
+                    tileArray[x,y] = new Tiles.Floor.Floor(x, y, this);
                 }
             }
         }
@@ -222,15 +222,15 @@ namespace SS3d_server.Modules.Map
                     {
                         case "wall":
                         case  "Wall":
-                            tileArray[x, z] = new Tiles.Wall.Wall();
+                            tileArray[x, z] = new Tiles.Wall.Wall(x, z, this);
                             break;
                         case "floor":
                         case "Floor":
-                            tileArray[x, z] = new Tiles.Floor.Floor();
+                            tileArray[x, z] = new Tiles.Floor.Floor(x, z, this);
                             break;
                         case "space":
                         case "Space":
-                            tileArray[x, z] = new Tiles.Floor.Space();
+                            tileArray[x, z] = new Tiles.Floor.Space(x, z, this);
                             break;
                         default:
                             break;
@@ -397,24 +397,24 @@ namespace SS3d_server.Modules.Map
             if (x > mapWidth || z > mapWidth)
                 return false;
 
-            Tile tile = GenerateNewTile(newType);
+            Tile tile = GenerateNewTile(x, z, newType);
 
             tileArray[x, z] = tile;
             return true;
         }
 
-        public Tile GenerateNewTile(TileType type)
+        public Tile GenerateNewTile(int x, int y, TileType type)
         {
             switch (type)
             {
                 case TileType.Space:
-                    Tiles.Floor.Space space = new Tiles.Floor.Space();
+                    Tiles.Floor.Space space = new Tiles.Floor.Space(x, y, this);
                     return space;
                 case TileType.Floor:
-                    Tiles.Floor.Floor floor = new Tiles.Floor.Floor();
+                    Tiles.Floor.Floor floor = new Tiles.Floor.Floor(x, y, this);
                     return floor;
                 case TileType.Wall:
-                    Tiles.Wall.Wall wall = new Tiles.Wall.Wall();
+                    Tiles.Wall.Wall wall = new Tiles.Wall.Wall(x, y, this);
                     return wall;
                 default:
                     return null;
@@ -422,6 +422,24 @@ namespace SS3d_server.Modules.Map
         }
         #endregion
 
+        #region networking
+        public NetOutgoingMessage CreateMapMessage(MapMessage messageType)
+        {
+            NetOutgoingMessage message = netServer.netServer.CreateMessage();
+            message.Write((byte)NetMessage.MapMessage);
+            message.Write((byte)messageType);
+            return message;
+        }
+
+        /// <summary>
+        /// Lol fuck
+        /// </summary>
+        /// <param name="message"></param>
+        public void SendMessage(NetOutgoingMessage message)
+        {
+            netServer.SendMessageToAll(message);
+        }
+        #endregion
 
 
         public int GetMapWidth()

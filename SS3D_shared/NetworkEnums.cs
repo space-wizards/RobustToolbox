@@ -56,7 +56,9 @@ public enum MobMessage
 public enum MapMessage
 {
     TurfUpdate = 0,
-    TurfClick
+    TurfClick,
+    TurfAddDecal,
+    TurfRemoveDecal
 }
 
 public enum MobHand
@@ -123,4 +125,9 @@ public enum GasType
     CO2 = 4,
     WVapor = 5,
     HighVel = 15
+}
+
+public enum DecalType
+{
+    Blood
 }

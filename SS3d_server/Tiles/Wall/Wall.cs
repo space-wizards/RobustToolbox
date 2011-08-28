@@ -7,8 +7,8 @@ namespace SS3d_server.Tiles.Wall
 {
     public class Wall : Tile
     {
-         public Wall()
-            : base()
+        public Wall(int x, int y, SS3d_server.Modules.Map.Map _map)
+            : base(x, y, _map)
         {
             tileType = TileType.Wall;
         }

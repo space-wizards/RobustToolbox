@@ -27,6 +27,7 @@ namespace SS3D.Tiles
         public Dictionary<GasType, int> gasAmounts;
         public Sprite gasSprite;
         public List<TileDecal> decals;
+        private Random _random;
 
         public Tile(Sprite _sprite, TileState state, float size, Vector2D _position, Point _tilePosition)
         {
@@ -61,27 +62,7 @@ namespace SS3D.Tiles
             gasAmounts = new Dictionary<GasType, int>();
             sightBlocked = false;
             decals = new List<TileDecal>();
-            Random r = new Random((int)(position.X * position.Y));
-            for (int i = 0; i < r.Next(1, 8); i++)
-            {
-                string decalname;
-                switch (i % 4)
-                {
-                    case 1:
-                        decalname = "spatter_decal";
-                        break;
-                    case 2:
-                        decalname = "spatter_decal2";
-                        break;
-                    case 3:
-                        decalname = "spatter_decal3";
-                        break;
-                    default:
-                        decalname = "spatter_decal4";
-                        break;
-                }
-                //decals.Add(new TileDecal(ResMgr.Singleton.GetSprite(decalname), new Vector2D(r.Next(5, 40), r.Next(5, 40)), this, System.Drawing.Color.Red));
-            }
+            _random = new Random((int)(position.X * position.Y));
         }
 
         public void SetSprites(Sprite _sprite, Sprite _side, byte _surroundDirs)
@@ -110,6 +91,32 @@ namespace SS3D.Tiles
             }
         }
 
+        public void AddDecal(DecalType type)
+        {
+            switch (type)
+            {
+                case DecalType.Blood:
+                    string decalname;
+                    switch (_random.Next(1, 4))
+                    {
+                        case 1:
+                            decalname = "spatter_decal";
+                            break;
+                        case 2:
+                            decalname = "spatter_decal2";
+                            break;
+                        case 3:
+                            decalname = "spatter_decal3";
+                            break;
+                        default:
+                            decalname = "spatter_decal4";
+                            break;
+                    }
+                    decals.Add(new TileDecal(ResMgr.Singleton.GetSprite(decalname), new Vector2D(_random.Next(0, 64), _random.Next(0, 64)), this, System.Drawing.Color.Red));
+                    break;
+
+            }
+        }
         public virtual void RenderGas(float xTopLeft, float yTopLeft, int tileSpacing, Batch gasBatch)
         {
             if (Visible && gasAmounts.Count > 0)

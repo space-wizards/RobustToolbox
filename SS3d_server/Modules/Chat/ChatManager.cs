@@ -118,6 +118,25 @@ namespace SS3d_server.Modules.Chat
                     }
                     
                     break;
+                case "sprayblood":
+                    player = netServer.atomManager.GetAtom(atomID);
+                    if (player == null)
+                        return;
+                    else
+                        position = player.position;
+                    p = netServer.map.GetTileArrayPositionFromWorldPosition(position);
+                    var t = netServer.map.GetTileAt(p.x, p.y);
+                    if (args.Count > 1 && Convert.ToInt32(args[1]) > 0)
+                    {
+                        for (int i = 0; i <= Convert.ToInt32(args[1]); i++)
+                        {
+                            t.AddDecal(DecalType.Blood);
+                        }
+                    }
+                    else
+                        t.AddDecal(DecalType.Blood);
+                        
+                    break;
                 default:
                     string message = "Command '" + command + "' not recognized.";
                     SendChatMessage(channel, message, name, atomID);

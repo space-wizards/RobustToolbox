@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using System.Drawing;
 
 using GorgonLibrary;
 using GorgonLibrary.Framework;
@@ -12,17 +13,20 @@ using GorgonLibrary.InputDevices;
 
 namespace SS3D.Modules.UI
 {
-    public class Chatbox
+    public class Chatbox : GUIWindow
     {
         public delegate void TextSubmitHandler(Chatbox Chatbox, string Text);
-        private List<GUILabel> entries = new List<GUILabel>();
+        private List<TextSprite> entries = new List<TextSprite>();
 
-        private GUILabel textInputLabel;
+        private TextSprite textInputLabel;
+        private Sprite backgroundSprite;
 
         private readonly int maxLines = 20;
         private int chatMessages = 0;
 
         private bool active = false;
+
+        private GorgonLibrary.Graphics.Font font;
 
         public bool Active
         {
@@ -30,30 +34,40 @@ namespace SS3D.Modules.UI
             set { active = value; }
         }
 
-        public GUIWindow chatGUI
-        {
-            private set;
-            get;
-        }
-
         public Chatbox(string name)
+            : base(name, 5, 5, 600, 200)
         {
             var desktop = UIDesktop.Singleton;
-            chatGUI = new GUIWindow(name, 5,Gorgon.Screen.Height - 210, 600, 200);
-            chatGUI.KeyDown += new KeyboardInputEvent(chatGUI_KeyDown);
-            desktop.Windows.Add(chatGUI);
-            textInputLabel = new GUILabel("inputLabel");
-            textInputLabel.Size = new System.Drawing.Size(chatGUI.ClientArea.Width - 10, 20);
-            textInputLabel.Owner = chatGUI;
-            textInputLabel.Position = new System.Drawing.Point(5, chatGUI.ClientArea.Height - 20);
+
+            font = GorgonLibrary.Graphics.Font.FromFile(@"..\..\..\Media\Fonts\\CALIBRI.TTF", 10);
+            backgroundSprite = ResMgr.Singleton.GetSprite("1pxwhite");
+            backgroundSprite.Color = System.Drawing.Color.FromArgb(51, 56, 64);
+            backgroundSprite.Opacity = 240;
+            backgroundSprite.Position = Position;
+            backgroundSprite.Size = Size;
+
+            KeyDown += new KeyboardInputEvent(chatGUI_KeyDown);
+            MouseDown += new MouseInputEvent(Chatbox_MouseDown);
+            HasCaption = false;
+            BackgroundColor = System.Drawing.Color.DarkGray;
+            desktop.Windows.Add(this);
+            textInputLabel = new TextSprite("inputlabel", "", font);
+            textInputLabel.Size = new System.Drawing.Size(ClientArea.Width - 10, 12);
+            textInputLabel.Position = new System.Drawing.Point(this.Position.X + 2, this.Position.Y + this.Size.Height - 10);
+            textInputLabel.Color = System.Drawing.Color.Green;
+        }
+
+        private void Chatbox_MouseDown(object sender, MouseInputEventArgs e)
+        {
+            throw new NotImplementedException();
         }
 
         public void AddLine(string message)
         {
-            var label = new GUILabel("message" + chatMessages.ToString());
-            label.Size = new System.Drawing.Size(chatGUI.ClientArea.Width - 10, 20);
-            label.Owner = chatGUI;
+            TextSprite label = new TextSprite("label" + entries.Count, "message" + chatMessages.ToString(), font);
+            label.Size = new System.Drawing.Size(ClientArea.Width - 10, 12);
             label.Text = message;
+            label.Color = System.Drawing.Color.Green;
             entries.Add(label);
             chatMessages++;
             drawLines();
@@ -61,12 +75,18 @@ namespace SS3D.Modules.UI
 
         private void drawLines()
         {
+            textInputLabel.Position = new System.Drawing.Point(this.Position.X + 4, Position.Y + WindowDimensions.Height - 20);
+            textInputLabel.Draw();
+
             while (entries.Count > maxLines)
                 entries.RemoveAt(0);
 
-            for (int i = entries.Count - 1; i >= 0; i--)
+            int start = Math.Max(0, entries.Count - 12);
+
+            for (int i = entries.Count - 1; i >= start; i--)
             {
-                entries[i].Position = new System.Drawing.Point(5, chatGUI.ClientArea.Bottom - (20 * (entries.Count - i)) - 25);
+                entries[i].Position = new System.Drawing.Point(this.Position.X + 2, this.Position.Y + this.Size.Height - (14 * (entries.Count - i)) - 26);
+                entries[i].Draw();
             }
         }
 
@@ -109,6 +129,54 @@ namespace SS3D.Modules.UI
                 else
                     textInputLabel.Text += keyboard.KeyMappings[e.Key].Shifted;
             }
+        }
+
+        protected override void Draw()
+        {
+            System.Drawing.Rectangle screenPoints;		// Screen coordinates.
+
+            if (Visible)
+            {
+                screenPoints = RectToScreen(ClientArea);
+
+                Gorgon.CurrentRenderTarget.BeginDrawing();
+
+                backgroundSprite.Draw();
+                
+                DrawNonClientArea();
+
+                drawLines();
+                
+                Gorgon.CurrentRenderTarget.EndDrawing();
+            }
+        }
+
+        private void DrawNonClientArea()
+        {
+            Vector2D nonClientPosition = Position;
+
+            if (Skin == null)
+                return;
+
+
+            Skin.Elements["Window.Border.Top.LeftCorner"].Draw(new System.Drawing.Rectangle(Position.X, Position.Y, Skin.Elements["Window.Border.Top.LeftCorner"].Dimensions.Width, Skin.Elements["Window.Border.Top.LeftCorner"].Dimensions.Height));
+            Skin.Elements["Window.Border.Top.Horizontal"].Draw(new System.Drawing.Rectangle(Position.X + Skin.Elements["Window.Border.Top.LeftCorner"].Dimensions.Width, Position.Y, WindowDimensions.Width - Skin.Elements["Window.Border.Top.RightCorner"].Dimensions.Width - Skin.Elements["Window.Border.Top.RightCorner"].Dimensions.Width, Skin.Elements["Window.Border.Top.Horizontal"].Dimensions.Height));
+            Skin.Elements["Window.Border.Top.RightCorner"].Draw(new System.Drawing.Rectangle(WindowDimensions.Right - Skin.Elements["Window.Border.Top.RightCorner"].Dimensions.Width, Position.Y, Skin.Elements["Window.Border.Top.RightCorner"].Dimensions.Width, Skin.Elements["Window.Border.Top.RightCorner"].Dimensions.Height));
+
+
+            Skin.Elements["Window.Border.Vertical.Left"].Draw(new System.Drawing.Rectangle(Position.X, DefaultCaptionHeight + Position.Y, DefaultBorderSize, WindowDimensions.Height - DefaultCaptionHeight - DefaultBorderHeight));
+            Skin.Elements["Window.Border.Vertical.Right"].Draw(new System.Drawing.Rectangle(Position.X + WindowDimensions.Width - Skin.Elements["Window.Border.Vertical.Right"].Dimensions.Width, DefaultCaptionHeight + Position.Y, DefaultBorderSize, WindowDimensions.Height - DefaultCaptionHeight - DefaultBorderHeight));
+
+            Skin.Elements["Window.Border.Middle.LeftCorner"].Draw(new System.Drawing.Rectangle(Position.X, Position.Y + WindowDimensions.Height - 16 - Skin.Elements["Window.Border.Middle.LeftCorner"].Dimensions.Height, Skin.Elements["Window.Border.Middle.LeftCorner"].Dimensions.Width, Skin.Elements["Window.Border.Middle.LeftCorner"].Dimensions.Height));
+            Skin.Elements["Window.Border.Middle.Horizontal"].Draw(new System.Drawing.Rectangle(Position.X + Skin.Elements["Window.Border.Middle.LeftCorner"].Dimensions.Width, Position.Y + WindowDimensions.Height - 16 - Skin.Elements["Window.Border.Middle.Horizontal"].Dimensions.Height, WindowDimensions.Width - Skin.Elements["Window.Border.Middle.RightCorner"].Dimensions.Width - Skin.Elements["Window.Border.Middle.LeftCorner"].Dimensions.Width, Skin.Elements["Window.Border.Middle.Horizontal"].Dimensions.Height));
+            Skin.Elements["Window.Border.Middle.RightCorner"].Draw(new System.Drawing.Rectangle(WindowDimensions.Right - Skin.Elements["Window.Border.Middle.RightCorner"].Dimensions.Width, Position.Y + WindowDimensions.Height - 16 - Skin.Elements["Window.Border.Middle.RightCorner"].Dimensions.Height, Skin.Elements["Window.Border.Middle.RightCorner"].Dimensions.Width, Skin.Elements["Window.Border.Middle.RightCorner"].Dimensions.Height));
+
+            Skin.Elements["Window.Border.Bottom.LeftCorner"].Draw(new System.Drawing.Rectangle(Position.X, Position.Y + WindowDimensions.Height - Skin.Elements["Window.Border.Bottom.LeftCorner"].Dimensions.Height, Skin.Elements["Window.Border.Bottom.LeftCorner"].Dimensions.Width, Skin.Elements["Window.Border.Bottom.LeftCorner"].Dimensions.Height));
+            Skin.Elements["Window.Border.Bottom.Horizontal"].Draw(new System.Drawing.Rectangle(Position.X + Skin.Elements["Window.Border.Bottom.LeftCorner"].Dimensions.Width, Position.Y + WindowDimensions.Height - Skin.Elements["Window.Border.Bottom.Horizontal"].Dimensions.Height, WindowDimensions.Width - Skin.Elements["Window.Border.Bottom.RightCorner"].Dimensions.Width - Skin.Elements["Window.Border.Bottom.LeftCorner"].Dimensions.Width, Skin.Elements["Window.Border.Bottom.Horizontal"].Dimensions.Height));
+            Skin.Elements["Window.Border.Bottom.RightCorner"].Draw(new System.Drawing.Rectangle(WindowDimensions.Right - Skin.Elements["Window.Border.Bottom.RightCorner"].Dimensions.Width, Position.Y + WindowDimensions.Height - Skin.Elements["Window.Border.Bottom.RightCorner"].Dimensions.Height, Skin.Elements["Window.Border.Bottom.RightCorner"].Dimensions.Width, Skin.Elements["Window.Border.Bottom.RightCorner"].Dimensions.Height));
+
+            Skin.Elements["Window.Border.Scrollbar.Vertical"].Draw(new Rectangle(Position.X + WindowDimensions.Width - Skin.Elements["Window.Border.Vertical.Right"].Dimensions.Width - Skin.Elements["Window.Border.Scrollbar.Scroll"].Dimensions.Width - Skin.Elements["Window.Border.Scrollbar.Vertical"].Dimensions.Width, Position.Y + Skin.Elements["Window.Border.Top.Horizontal"].Dimensions.Height - 1, Skin.Elements["Window.Border.Scrollbar.Vertical"].Dimensions.Width, WindowDimensions.Height - 14 - (Skin.Elements["Window.Border.Middle.Horizontal"].Dimensions.Height * 2)));
+
         }
 
         public event TextSubmitHandler TextSubmitted;

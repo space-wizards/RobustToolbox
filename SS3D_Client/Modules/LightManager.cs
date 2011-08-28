@@ -101,7 +101,7 @@ namespace SS3D.Modules
             Vector2D lightPos = light.position - screenOffset; //Making sure that they're in the same space.
 
             float distance = (vertexPos - lightPos).Length;
-            float lightIntensity = Math.Max(light.range - distance, 0);
+            float lightIntensity = (float)Math.Max(light.range - (distance/1.5), 0);
 
             if (lightIntensity == 0) return Vector3D.Zero; //Must be zero or the ambient light would increase with the number of lights. (Thats bad)
 
@@ -114,7 +114,7 @@ namespace SS3D.Modules
             lightColor.Normalize();
 
             lightColor *= lightIntensity;
-            lightColor += new Vector3D(light.brightness, light.brightness, light.brightness);
+            //lightColor += new Vector3D(light.brightness, light.brightness, light.brightness);
 
             return lightColor;
         }

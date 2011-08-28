@@ -17,9 +17,8 @@ using SS3D_shared;
 
 namespace SS3d_server
 {
-    public class SS3DNetserver
+    public class SS3DServer
     {
-        public NetServer netServer;
         private NetPeerConfiguration netConfig = new NetPeerConfiguration("SS3D_NetTag");
         public Dictionary<NetConnection, Client> clientList = new Dictionary<NetConnection, Client>();
         public Map map;
@@ -37,6 +36,17 @@ namespace SS3d_server
             Game
         }
         bool active = false;
+
+        private static SS3DServer singleton;
+        public static SS3DServer Singleton
+        {
+            get
+            {
+                if (singleton == null)
+                    throw new TypeInitializationException("Singleton not initialized.", null);
+                return singleton;
+            }
+        }
 
         public DateTime time;   // The server current frame time
         
@@ -59,9 +69,10 @@ namespace SS3d_server
             set { framePeriod = (int)(1000.0f / value); }
         }
 
-        public SS3DNetserver()
+        public SS3DServer()
         {
             runlevel = RunLevel.Init;
+            singleton = this;
         }
         #endregion
 
@@ -77,16 +88,16 @@ namespace SS3d_server
             runlevel = _runlevel;
             if (runlevel == RunLevel.Lobby)
             {
-                chatManager = new ChatManager(this);
-                playerManager = new PlayerManager(this);
+                chatManager = new ChatManager();
+                playerManager = new PlayerManager();
             }
             else if (runlevel == RunLevel.Game)
             {
-                map = new Map(this);
+                map = new Map();
                 map.InitMap(serverMapName);
 
-                atomManager = new AtomManager(this);
-                playerManager = new PlayerManager(this);
+                atomManager = new AtomManager();
+                playerManager = new PlayerManager();
             }
             
         }
@@ -99,7 +110,7 @@ namespace SS3d_server
                 LoadDataFile(dataFilename);
                 LoadSettings();
                 netConfig.Port = serverPort;
-                netServer = new NetServer(netConfig);
+                var netServer = new SS3DNetServer(netConfig);
                 netServer.Start();
 
                 StartLobby();
@@ -184,9 +195,9 @@ namespace SS3d_server
             try
             {
                 NetIncomingMessage msg;
-                while ((msg = netServer.ReadMessage()) != null)
+                while ((msg = SS3DNetServer.Singleton.ReadMessage()) != null)
                 {
-                    Console.Title = netServer.Statistics.SentBytes.ToString() + " " + netServer.Statistics.ReceivedBytes;
+                    Console.Title = SS3DNetServer.Singleton.Statistics.SentBytes.ToString() + " " + SS3DNetServer.Singleton.Statistics.ReceivedBytes;
                     switch (msg.MessageType)
                     {
                         case NetIncomingMessageType.VerboseDebugMessage:
@@ -219,7 +230,7 @@ namespace SS3d_server
                             Console.WriteLine("Unhandled type: " + msg.MessageType);
                             break;
                     }
-                    netServer.Recycle(msg);
+                    SS3DNetServer.Singleton.Recycle(msg);
                 }                
             }
             catch
@@ -259,7 +270,7 @@ namespace SS3d_server
 
         public void SendWelcomeInfo(NetConnection connection)
         {
-            NetOutgoingMessage welcomeMessage = netServer.CreateMessage();
+            NetOutgoingMessage welcomeMessage = SS3DNetServer.Singleton.CreateMessage();
             welcomeMessage.Write((byte)NetMessage.WelcomeMessage);
             welcomeMessage.Write(serverName);
             welcomeMessage.Write(serverPort);
@@ -267,18 +278,18 @@ namespace SS3d_server
             welcomeMessage.Write(serverMaxPlayers);
             welcomeMessage.Write(serverMapName);
             welcomeMessage.Write((byte)gameType);
-            netServer.SendMessage(welcomeMessage, connection, NetDeliveryMethod.ReliableOrdered);
+            SS3DNetServer.Singleton.SendMessage(welcomeMessage, connection, NetDeliveryMethod.ReliableOrdered);
             SendNewPlayerCount();
         }
 
         public void SendNewPlayerCount()
         {
-            NetOutgoingMessage playercountMessage = netServer.CreateMessage();
+            NetOutgoingMessage playercountMessage = SS3DNetServer.Singleton.CreateMessage();
             playercountMessage.Write((byte)NetMessage.PlayerCount);
             playercountMessage.Write((byte)clientList.Count);
             foreach (NetConnection conn in clientList.Keys)
             {
-                netServer.SendMessage(playercountMessage, conn, NetDeliveryMethod.ReliableOrdered);
+                SS3DNetServer.Singleton.SendMessage(playercountMessage, conn, NetDeliveryMethod.ReliableOrdered);
             }
         }
 
@@ -374,12 +385,12 @@ namespace SS3d_server
         [Obsolete]
         public void SendLobbyChat(string text)
         {
-            NetOutgoingMessage chatMessage = netServer.CreateMessage();
+            NetOutgoingMessage chatMessage = SS3DNetServer.Singleton.CreateMessage();
             chatMessage.Write((byte)NetMessage.LobbyChat);
             chatMessage.Write(text);
             foreach (NetConnection connection in clientList.Keys)
             {
-                netServer.SendMessage(chatMessage, connection, NetDeliveryMethod.ReliableOrdered);
+                SS3DNetServer.Singleton.SendMessage(chatMessage, connection, NetDeliveryMethod.ReliableOrdered);
             }
         }
 
@@ -388,7 +399,7 @@ namespace SS3d_server
         public void SendMap(NetConnection connection)
         {
             Console.WriteLine(connection.RemoteEndpoint.Address.ToString() + ": Sending map");
-            NetOutgoingMessage mapMessage = netServer.CreateMessage();
+            NetOutgoingMessage mapMessage = SS3DNetServer.Singleton.CreateMessage();
             mapMessage.Write((byte)NetMessage.SendMap);
 
             //TileType[,] mapObjectTypes = map.GetMapForSending();
@@ -408,7 +419,7 @@ namespace SS3d_server
                 }
             }
 
-            netServer.SendMessage(mapMessage, connection, NetDeliveryMethod.ReliableOrdered);
+            SS3DNetServer.Singleton.SendMessage(mapMessage, connection, NetDeliveryMethod.ReliableOrdered);
             Console.WriteLine(connection.RemoteEndpoint.Address.ToString() + ": Sending map finished with message size: " + mapMessage.LengthBytes + " bytes");
 
             // Lets also send them all the items and mobs.
@@ -421,14 +432,14 @@ namespace SS3d_server
 
         public void SendChangeTile(int x, int z, TileType newType)
         {
-            NetOutgoingMessage tileMessage = netServer.CreateMessage();
+            NetOutgoingMessage tileMessage = SS3DNetServer.Singleton.CreateMessage();
             //tileMessage.Write((byte)NetMessage.ChangeTile);
             tileMessage.Write(x);
             tileMessage.Write(z);
             tileMessage.Write((byte)newType);
             foreach(NetConnection connection in clientList.Keys)
             {
-                netServer.SendMessage(tileMessage, connection, NetDeliveryMethod.ReliableOrdered);
+                SS3DNetServer.Singleton.SendMessage(tileMessage, connection, NetDeliveryMethod.ReliableOrdered);
                 Console.WriteLine(connection.RemoteEndpoint.Address.ToString() + ": Tile Change Being Sent");
             }
         }
@@ -536,7 +547,7 @@ namespace SS3d_server
             //Console.WriteLine("Sending to all ("+i+") with size: " + message.LengthBits + " bytes");
             foreach (Client client in clientList.Values)
             {
-                netServer.SendMessage(message, client.netConnection, method);
+                SS3DNetServer.Singleton.SendMessage(message, client.netConnection, method);
             }
         }
 
@@ -547,7 +558,7 @@ namespace SS3d_server
                 return;
             }
             Console.WriteLine("Sending to one with size: " + message.LengthBytes + " bytes");
-            netServer.SendMessage(message, connection, method);
+            SS3DNetServer.Singleton.SendMessage(message, connection, method);
         }
 
         public void AddRandomCrowbars()

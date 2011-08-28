@@ -6,7 +6,7 @@ using System.Text;
 using SS3D_shared.HelperClasses;
 using Lidgren.Network;
 
-namespace SS3d_server.HelperClasses
+namespace SS3D_Server.HelperClasses
 {
     public struct InterpolationPacket
     {

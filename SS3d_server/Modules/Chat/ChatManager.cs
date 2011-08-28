@@ -9,7 +9,7 @@ using SS3D_shared.HelperClasses;
 
 //using SS3d_server.Modules.Mobs;
 
-namespace SS3d_server.Modules.Chat
+namespace SS3D_Server.Modules.Chat
 {
     public class ChatManager
     {

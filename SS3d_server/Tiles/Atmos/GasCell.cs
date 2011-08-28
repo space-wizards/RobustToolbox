@@ -4,7 +4,7 @@ using System.Linq;
 using System.Text;
 using SS3D_shared.HelperClasses;
 
-namespace SS3d_server.Tiles.Atmos
+namespace SS3D_Server.Tiles.Atmos
 {
 
     public class GasCell

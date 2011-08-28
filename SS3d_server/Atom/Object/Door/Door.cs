@@ -6,7 +6,7 @@ using Lidgren.Network;
 using SS3D_shared.HelperClasses;
 using System.Runtime.Serialization;
 
-namespace SS3d_server.Atom.Object.Door
+namespace SS3D_Server.Atom.Object.Door
 {
     [Serializable()]
     public class Door : Object

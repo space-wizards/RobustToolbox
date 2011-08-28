@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 
-namespace SS3d_server
+namespace SS3D_Server
 {
         public struct Point
         {

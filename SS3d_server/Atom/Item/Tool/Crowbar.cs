@@ -5,7 +5,7 @@ using System.Text;
 using SS3D_shared.HelperClasses;
 using System.Runtime.Serialization;
 
-namespace SS3d_server.Atom.Item.Tool
+namespace SS3D_Server.Atom.Item.Tool
 {
     [Serializable()]
     public class Crowbar : Tool

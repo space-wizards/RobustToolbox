@@ -6,7 +6,7 @@ using Lidgren.Network;
 using SS3D_shared.HelperClasses;
 using System.Runtime.Serialization;
 
-namespace SS3d_server.Atom.Item.Misc
+namespace SS3D_Server.Atom.Item.Misc
 {
     [Serializable()]
     public class Flashlight : Item

@@ -5,7 +5,7 @@ using System.Text;
 
 using Lidgren.Network;
 
-namespace SS3d_server.Modules
+namespace SS3D_Server.Modules
 {
     public class PlayerManager
     {

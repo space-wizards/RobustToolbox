@@ -8,7 +8,7 @@
     <ProjectGuid>{54B6035E-489F-4790-A033-3C0B34C6F2BD}</ProjectGuid>
     <OutputType>Exe</OutputType>
     <AppDesignerFolder>Properties</AppDesignerFolder>
-    <RootNamespace>SS3d_server</RootNamespace>
+    <RootNamespace>SS3D_Server</RootNamespace>
     <AssemblyName>SS3d_server</AssemblyName>
     <TargetFrameworkVersion>v4.0</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>

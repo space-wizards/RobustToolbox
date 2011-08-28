@@ -5,7 +5,7 @@ using System.Text;
 using System.IO;
 using Lidgren.Network;
 
-namespace SS3d_server.Modules.Client
+namespace SS3D_Server.Modules.Client
 {
     public class Client
     {

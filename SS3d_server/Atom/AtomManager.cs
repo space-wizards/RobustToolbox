@@ -9,11 +9,11 @@ using System.IO;
 
 using SS3D_shared;
 using SS3D_shared.HelperClasses;
-using SS3d_server.Modules.Map;
+using SS3D_Server.Modules.Map;
 using Lidgren.Network;
-using SS3d_server.Modules;
+using SS3D_Server.Modules;
 
-namespace SS3d_server.Atom
+namespace SS3D_Server.Atom
 {
     public class AtomManager //SERVERSIDE
     {

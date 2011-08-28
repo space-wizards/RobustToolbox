@@ -5,7 +5,7 @@ using System.Text;
 using System.Runtime.Serialization;
 using SS3D_shared.HelperClasses;
 
-namespace SS3d_server.Atom.Item.Tool
+namespace SS3D_Server.Atom.Item.Tool
 {
     [Serializable()]
     public class Wrench : Tool

@@ -175,9 +175,29 @@ namespace SS3D.Modules.Map
                 case MapMessage.TurfUpdate:
                     HandleTurfUpdate(message);
                     break;
+                case MapMessage.TurfAddDecal:
+                    HandleTurfAddDecal(message);
+                    break;
+                case MapMessage.TurfRemoveDecal:
+                    HandleTurfRemoveDecal(message);
+                    break;
                 default:
                     break;
             }
+        }
+
+        private void HandleTurfRemoveDecal(NetIncomingMessage message)
+        {
+            throw new NotImplementedException();
+        }
+
+        private void HandleTurfAddDecal(NetIncomingMessage message)
+        {
+            int x = message.ReadInt32();
+            int y = message.ReadInt32();
+            DecalType type = (DecalType)message.ReadByte();
+
+            tileArray[x, y].AddDecal(type);
         }
 
         public void HandleAtmosDisplayUpdate(NetIncomingMessage message)

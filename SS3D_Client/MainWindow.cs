@@ -70,6 +70,8 @@ namespace SS3D
             SetupDesktop();
             SetupEditMenu();
 
+            PlayerName_TextBox.Text = ConfigManager.Singleton.Configuration.PlayerName;
+
             Gorgon.Go(); //GO MUTHAFUCKA
             stateMgr.Startup(typeof(ConnectMenu));
         }
@@ -280,6 +282,8 @@ namespace SS3D
         {
             if (e.KeyChar == '\r')
             {
+                ConfigManager.Singleton.Configuration.PlayerName = PlayerName_TextBox.Text;
+                ConfigManager.Singleton.Save();
                 ((SS3D.States.ConnectMenu)stateMgr.mCurrentState).ipTextboxIP = toolStripTextBox1.Text;
                 ((SS3D.States.ConnectMenu)stateMgr.mCurrentState).StartConnect();
                 connectToolStripMenuItem.Enabled = false;
@@ -309,6 +313,8 @@ namespace SS3D
                 statusStrip1.Visible = !statusStrip1.Visible;
             }
         }
+
+
 
         public Type GetAtomSpawnType()
         {
@@ -433,6 +439,11 @@ namespace SS3D
             tileSpawnType = TileType.None;
         }
         #endregion
+
+        private void PlayerName_TextBox_Click(object sender, EventArgs e)
+        {
+
+        }
         #endregion
     }
 }

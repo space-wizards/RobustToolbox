@@ -111,6 +111,7 @@
     <Compile Include="Helper Classes\Point.cs" />
     <Compile Include="Modules\Chat\ChatManager.cs" />
     <Compile Include="Modules\Client\Client.cs" />
+    <Compile Include="Modules\ConfigManager.cs" />
     <Compile Include="Modules\LogManager.cs" />
     <Compile Include="Modules\Map\Map.cs" />
     <Compile Include="Modules\PlayerManager.cs" />
@@ -143,7 +144,11 @@
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
   </ItemGroup>
-  <ItemGroup />
+  <ItemGroup>
+    <Content Include="config.xml">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+  </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <PropertyGroup>
     <PostBuildEvent>copy "$(SolutionDir)References\$(Configuration)\Lidgren*" "$(ProjectDir)$(OutDir)"</PostBuildEvent>

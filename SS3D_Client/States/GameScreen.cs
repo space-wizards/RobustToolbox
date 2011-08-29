@@ -143,8 +143,10 @@ namespace SS3D.States
             guiComponents = new Dictionary<GuiComponentType, IGuiComponent>();
             guiComponents.Add(GuiComponentType.HealthComponent, new HumanHealthComponent(playerController));
             guiComponents.Add(GuiComponentType.AppendagesComponent, new HumanHandsGui(playerController));
+            guiComponents.Add(GuiComponentType.StatPanelComponent, new StatPanelComponent(playerController));
             guiComponents[GuiComponentType.AppendagesComponent].Position = new System.Drawing.Point(Gorgon.Screen.Width - 190, Gorgon.Screen.Height - 99);
             
+
             return true;
         }
 

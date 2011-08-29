@@ -35,7 +35,7 @@ namespace SS3D.Modules.UI
         }
 
         public Chatbox(string name)
-            : base(name, 5, 5, 600, 200)
+            : base(name, 5, Gorgon.Screen.Height - 205, 600, 200)
         {
             var desktop = UIDesktop.Singleton;
 
@@ -46,9 +46,9 @@ namespace SS3D.Modules.UI
             backgroundSprite.Position = Position;
             backgroundSprite.Size = Size;
 
+            HasCaption = false;
             KeyDown += new KeyboardInputEvent(chatGUI_KeyDown);
             MouseDown += new MouseInputEvent(Chatbox_MouseDown);
-            HasCaption = false;
             BackgroundColor = System.Drawing.Color.DarkGray;
             desktop.Windows.Add(this);
             textInputLabel = new TextSprite("inputlabel", "", font);
@@ -141,6 +141,10 @@ namespace SS3D.Modules.UI
 
                 Gorgon.CurrentRenderTarget.BeginDrawing();
 
+                backgroundSprite.Color = System.Drawing.Color.FromArgb(51, 56, 64);
+                backgroundSprite.Opacity = 240;
+                backgroundSprite.Position = Position;
+                backgroundSprite.Size = Size;
                 backgroundSprite.Draw();
                 
                 DrawNonClientArea();

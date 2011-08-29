@@ -22,6 +22,7 @@ namespace SS3D_Server.Atom.Mob
         public Mob()
             : base()
         {
+            Console.Write("MOB!");
             initAppendages();
         }
 

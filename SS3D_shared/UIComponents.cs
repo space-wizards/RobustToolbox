@@ -8,7 +8,8 @@ namespace SS3D_shared
     public enum GuiComponentType
     {
         HealthComponent,
-        AppendagesComponent
+        AppendagesComponent,
+        StatPanelComponent
     }
 
     public enum HealthComponentMessage

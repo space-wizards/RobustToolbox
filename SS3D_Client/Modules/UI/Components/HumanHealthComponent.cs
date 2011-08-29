@@ -15,7 +15,7 @@ namespace SS3D.Modules.UI.Components
 {
     public class HumanHealthComponent : GuiComponent
     {
-        public Point Position
+        public override Point Position
         {
             get
             {

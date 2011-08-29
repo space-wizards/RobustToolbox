@@ -150,6 +150,8 @@ namespace SS3D_Server.Atom
         {
             string type = atom.GetType().ToString();
             type = type.Substring(type.IndexOf(".") + 1); // Fuckugly method of stripping the assembly name of the type.
+            Console.Write(type.ToString());
+
             return type;
         }
 
@@ -166,6 +168,7 @@ namespace SS3D_Server.Atom
 
             SendSpawnAtom(uid, type);
             atomDictionary[uid].SendState();
+            
             return atomDictionary[uid]; // Why do we return it? So we can do whatever is needed easily from the calling function.
         }
 

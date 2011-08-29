@@ -103,7 +103,7 @@ namespace SS3D.States
             }
             if (ss13Text.Position.Y < Gorgon.Screen.Height / 2 - 130)
             {
-                ss13Text.Position += new Vector2D(0f, 0.5f);
+                ss13Text.Position += new Vector2D(0f, 1 * (float)Gorgon.FrameStats.FrameDrawTime / 20f);
             }
             
         }

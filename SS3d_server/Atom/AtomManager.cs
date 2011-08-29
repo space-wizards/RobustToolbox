@@ -150,7 +150,6 @@ namespace SS3D_Server.Atom
         {
             string type = atom.GetType().ToString();
             type = type.Substring(type.IndexOf(".") + 1); // Fuckugly method of stripping the assembly name of the type.
-            Console.Write(type.ToString());
 
             return type;
         }

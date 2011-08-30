@@ -26,6 +26,8 @@ namespace SS3D.Modules.UI.Components
                 base.Position = value;
             }
         }
+
+        private StatHealthComponent healthComponent;
         private Sprite backgroundSprite;
         private Sprite playerSprite;
         private TextSprite name;
@@ -51,7 +53,10 @@ namespace SS3D.Modules.UI.Components
 
             name.Position = new Vector2D(Position.X + Skin.Elements["Window.Border.Middle.LeftCorner"].Dimensions.Width + 2, Position.Y + (height / 3 * 2) + 2);
             name.Color = System.Drawing.Color.Green;
-            
+
+            Point size = new Point(width - Skin.Elements["Window.Border.Vertical.Left"].Dimensions.Width - Skin.Elements["Window.Border.Vertical.Right"].Dimensions.Width, (height / 5) - Skin.Elements["Window.Border.Middle.Horizontal"].Dimensions.Height);
+            healthComponent = new StatHealthComponent(_playerController, size);
+            healthComponent.Position = new Point(Position.X + Skin.Elements["Window.Border.Middle.LeftCorner"].Dimensions.Width, Position.Y + (height / 5 * 4));
         }
 
         private void DrawPlayer()
@@ -100,6 +105,11 @@ namespace SS3D.Modules.UI.Components
 
         }
 
+        public override void HandleNetworkMessage(NetIncomingMessage message)
+        {
+            healthComponent.HandleNetworkMessage(message);
+        }
+
         public override void Render()
         {
             if (Skin == null || playerController.controlledAtom == null)
@@ -115,6 +125,7 @@ namespace SS3D.Modules.UI.Components
             name.Draw();
 
             DrawPlayer();
+            healthComponent.Render();
 
             Skin.Elements["Window.Border.Top.LeftCorner"].Draw(new System.Drawing.Rectangle(Position.X, Position.Y, Skin.Elements["Window.Border.Top.LeftCorner"].Dimensions.Width, Skin.Elements["Window.Border.Top.LeftCorner"].Dimensions.Height));
             Skin.Elements["Window.Border.Top.Horizontal"].Draw(new System.Drawing.Rectangle(Position.X + Skin.Elements["Window.Border.Top.LeftCorner"].Dimensions.Width, Position.Y, width - Skin.Elements["Window.Border.Top.RightCorner"].Dimensions.Width - Skin.Elements["Window.Border.Top.RightCorner"].Dimensions.Width, Skin.Elements["Window.Border.Top.Horizontal"].Dimensions.Height));

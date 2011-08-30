@@ -9,7 +9,8 @@ namespace SS3D_shared
     {
         HealthComponent,
         AppendagesComponent,
-        StatPanelComponent
+        StatPanelComponent,
+        WindowComponent
     }
 
     public enum HealthComponentMessage

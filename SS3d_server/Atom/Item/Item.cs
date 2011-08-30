@@ -12,7 +12,6 @@ namespace SS3D_Server.Atom.Item
     public class Item : Atom
     {
         public Appendage holdingAppendage = null;
-        private float fallSpeed = 5.0f;
 
         public bool isWeapon = true; // By default every holdable object is usable as a weapon.
         public int damageAmount = 10; // By default each hit with an item causes 10 damage.

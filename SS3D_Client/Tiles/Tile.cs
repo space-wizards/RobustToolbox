@@ -16,6 +16,7 @@ namespace SS3D.Tiles
         public string name;
         public Sprite sprite;
         public Sprite sideSprite;
+        public Sprite lightSprite;
         public Vector2D position;
         public Point tilePosition;
         public bool Visible = false;
@@ -36,7 +37,6 @@ namespace SS3D.Tiles
             tilePosition = _tilePosition;
             sprite = _sprite;
             sprite.SetPosition(_position.X, _position.Y);
-
             Initialize();
         }
 
@@ -63,6 +63,7 @@ namespace SS3D.Tiles
             sightBlocked = false;
             decals = new List<TileDecal>();
             _random = new Random((int)(position.X * position.Y));
+            lightSprite = ResMgr.Singleton.GetSprite("white");
         }
 
         public void SetSprites(Sprite _sprite, Sprite _side, byte _surroundDirs)
@@ -78,9 +79,22 @@ namespace SS3D.Tiles
             {
                 sprite.Color = Color.White;
                 sprite.SetPosition(tilePosition.X * tileSpacing - xTopLeft, tilePosition.Y * tileSpacing - yTopLeft);
-                LightManager.Singleton.ApplyLightsToSprite(tileLights, sprite, new Vector2D(xTopLeft, yTopLeft));
+                //LightManager.Singleton.ApplyLightsToSprite(tileLights, sprite, new Vector2D(xTopLeft, yTopLeft));
                 sprite.Draw();
             }
+        }
+
+        public virtual void RenderLight(float xTopLeft, float yTopLeft, int tileSpacing)
+        {
+            if (Visible)
+            {
+                lightSprite.Color = Color.Black;
+                lightSprite.SetPosition(tilePosition.X * tileSpacing - xTopLeft, tilePosition.Y * tileSpacing - yTopLeft);
+                LightManager.Singleton.ApplyLightsToSprite(tileLights, lightSprite, new Vector2D(xTopLeft, yTopLeft));
+                lightSprite.Draw();
+
+            }
+
         }
 
         public virtual void DrawDecals(float xTopLeft, float yTopLeft, int tileSpacing, Batch decalBatch)

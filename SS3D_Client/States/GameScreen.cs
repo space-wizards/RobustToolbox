@@ -43,7 +43,9 @@ namespace SS3D.States
         public DateTime lastUpdate;
         public DateTime now;
         private RenderImage baseTarget;
+        private RenderImage lightTarget;
         private Sprite baseTargetSprite;
+        private Sprite lightTargetSprite;
         private Batch gasBatch;
         private Batch wallTopsBatch;
         private Batch decalBatch;
@@ -121,6 +123,10 @@ namespace SS3D.States
             
             baseTargetSprite = new Sprite("baseTargetSprite", baseTarget);
             baseTargetSprite.DepthWriteEnabled = false;
+
+            lightTarget = new RenderImage("lightTarget", Gorgon.Screen.Width, Gorgon.Screen.Height, ImageBufferFormats.BufferRGB888A8);
+            lightTargetSprite = new Sprite("lightTargetSprite", lightTarget);
+            lightTargetSprite.DepthWriteEnabled = false;
 
             gasBatch = new Batch("gasBatch", 1);
             wallTopsBatch = new Batch("wallTopsBatch", 1);
@@ -289,6 +295,7 @@ namespace SS3D.States
             Gorgon.CurrentRenderTarget = baseTarget;
 
             baseTarget.Clear(System.Drawing.Color.Black);
+            lightTarget.Clear(System.Drawing.Color.Black);
             Gorgon.Screen.Clear(System.Drawing.Color.Black);
             
             Gorgon.Screen.DefaultView.Left = 400;
@@ -348,6 +355,29 @@ namespace SS3D.States
                         t.RenderTop(xTopLeft, yTopLeft, map.tileSpacing, wallTopsBatch);
                     }
                 }
+
+                Gorgon.CurrentRenderTarget = lightTarget;
+                for (int x = xStart; x <= xEnd; x++)
+                {
+                    for (int y = yStart; y <= yEnd; y++)
+                    {
+                        t = map.tileArray[x, y];
+                        if (!t.Visible)
+                            continue;
+                        if (t.tileType == TileType.Wall)
+                        {
+                            if (t.tilePosition.Y <= centerTile.Y)
+                            {
+                                t.RenderLight(xTopLeft, yTopLeft, map.tileSpacing);
+                            }
+                        }
+                        else
+                        {
+                            t.RenderLight(xTopLeft, yTopLeft, map.tileSpacing);
+                        }
+                    }
+                }
+                Gorgon.CurrentRenderTarget = baseTarget;
 
                 ///Render wall tops batch
                 if (decalBatch.Count > 0)
@@ -430,6 +460,14 @@ namespace SS3D.States
             //Gorgon.CurrentShader = ResMgr.Singleton.GetShader("dummyshader");
             //ResMgr.Singleton.GetShader("bloomtest").Parameters["_spriteImage"].SetValue(baseTarget.Image);
             baseTargetSprite.Draw();
+            lightTargetSprite.BlendingMode = BlendingModes.ColorAdditive;
+            lightTargetSprite.DestinationBlend = AlphaBlendOperation.InverseSourceAlpha; // Use the alpha of the light to do bright/darkness
+            lightTargetSprite.SourceBlend = AlphaBlendOperation.DestinationColor;
+
+            Gorgon.CurrentShader = ResMgr.Singleton.GetShader("Blur");
+            //Gorgon.CurrentShader = ResMgr.Singleton.GetShader("bloomtest");
+            ResMgr.Singleton.GetShader("Blur").Parameters["blurAmount"].SetValue(5.0f);
+            lightTargetSprite.Draw();
             Gorgon.CurrentShader = null;
 
             //Gorgon.CurrentShader = null;

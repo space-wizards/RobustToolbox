@@ -33,7 +33,7 @@ namespace SS3D.Modules.UI.Components
         private GorgonLibrary.GUI.GUISkin Skin;
         private int width = 125;
         private int height = 200;
-
+        private int flickCounter = 0;
 
         public StatPanelComponent(PlayerController _playerController)
             : base(_playerController)
@@ -67,9 +67,14 @@ namespace SS3D.Modules.UI.Components
             playerSprite.Draw();
 
             bool scanSwitch = false;
-            Random r = new Random();
-            if (r.NextDouble() > 0.8)
-                scanSwitch = true;
+            if (flickCounter > 5)
+            {
+                Random r = new Random();
+                if (r.NextDouble() > 0.8)
+                    scanSwitch = true;
+                flickCounter = 0;
+            }
+            flickCounter++;
             backgroundSprite.Position = new Vector2D(Position.X + Skin.Elements["Window.Border.Vertical.Left"].Dimensions.Width, Position.Y + Skin.Elements["Window.Border.Top.Horizontal"].Dimensions.Height - 2);
             backgroundSprite.Size = new Vector2D(width - Skin.Elements["Window.Border.Vertical.Left"].Dimensions.Width - Skin.Elements["Window.Border.Vertical.Right"].Dimensions.Width, 2);
             for (int i = 0; i < ((height / 3 * 2) - Skin.Elements["Window.Border.Top.Horizontal"].Dimensions.Height - Skin.Elements["Window.Border.Bottom.Horizontal"].Dimensions.Height) / 2; i++)

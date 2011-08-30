@@ -148,6 +148,7 @@
     <Compile Include="Modules\UI\Components\HumanHealthComponent.cs" />
     <None Include="Modules\UI\Console.cs" />
     <Compile Include="Modules\UI\Chatbox.cs" />
+    <Compile Include="Modules\UI\Components\StatHealthComponent.cs" />
     <Compile Include="Modules\UI\Components\StatPanel.cs" />
     <Compile Include="Modules\UI\GuiComponent.cs" />
     <None Include="Modules\UI\Speechbubble.cs" />

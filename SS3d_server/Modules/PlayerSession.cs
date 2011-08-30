@@ -93,7 +93,6 @@ namespace SS3D_Server.Modules
             
             if (uid == 0)
             {
-                Atom.Mob.Mob m;
                 Console.WriteLine(verb);
                 switch (verb)
                 {

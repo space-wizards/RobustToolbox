@@ -26,98 +26,124 @@ namespace SS3D.Modules.UI.Components
             set
             {
                 position = value;
-                lHandSprite.Position = position;
-                lHandActiveSprite.Position = position;
-                rHandSprite.Position = new Point(position.X + 76, position.Y);
-                rHandActiveSprite.Position = rHandSprite.Position;
+                lSprite.Position = position;
+                //lHandActiveSprite.Position = position;
+                rSprite.Position = new Point(position.X + 67, position.Y);
+                //rHandActiveSprite.Position = rHandSprite.Position;
             }
         }
 
-        private Sprite lHandSprite;
-        private Sprite rHandSprite;
-        private Sprite lHandActiveSprite;
-        private Sprite rHandActiveSprite;
-        private Sprite lHandObjectSprite;
-        private Sprite rHandObjectSprite;
+        private Sprite lSprite;
+        private int lAppendageID = 0;
+        private Sprite rSprite;
+        private int rAppendageID = 1;
+        private Sprite lObjectSprite;
+        private Sprite rObjectSprite;
+        private Sprite backgroundSprite;
+        private Color inactiveColor;
 
-        private bool lHandActive = true;
-        private bool rHandActive = false;
+        private bool lActive = true;
+        private bool rActive = false;
 
         public HumanHandsGui(PlayerController _playerController)
             : base(_playerController)
         {
-            lHandSprite = ResMgr.Singleton.GetSprite("l_hand");
-            rHandSprite = ResMgr.Singleton.GetSprite("r_hand");
-            lHandActiveSprite = ResMgr.Singleton.GetSprite("l_hand_highlight");
-            rHandActiveSprite = ResMgr.Singleton.GetSprite("r_hand_highlight");
-
-
+            lSprite = ResMgr.Singleton.GetSprite("l_hand");
+            rSprite = ResMgr.Singleton.GetSprite("r_hand");
+            backgroundSprite = ResMgr.Singleton.GetSprite("1pxwhite");
+            inactiveColor = Color.FromArgb(35, 35, 35);
         }
 
-        public void ActivateLeftHand()
+        public void ChangeLeftAppendageID(int newID)
         {
-            lHandActive = true;
-            rHandActive = false;
-            playerController.SendVerb("selectlefthand",playerController.controlledAtom.uid);
-
+            Atom.Mob.Mob m = (Atom.Mob.Mob)playerController.controlledAtom;
+            if (m.appendages.ContainsKey(newID))
+                lAppendageID = newID;
         }
 
-        public void ActivateRightHand()
+        public void ChangeRightAppendageID(int newID)
         {
-            lHandActive = false;
-            rHandActive = true;
-            playerController.SendVerb("selectrighthand", playerController.controlledAtom.uid);
+            Atom.Mob.Mob m = (Atom.Mob.Mob)playerController.controlledAtom;
+            if (m.appendages.ContainsKey(newID))
+                rAppendageID = newID;
         }
 
-        public void UpdateRightHandObject()
+        public void ActivateLeft()
+        {
+            lActive = true;
+            rActive = false;
+            Atom.Mob.Mob m = (Atom.Mob.Mob)playerController.controlledAtom;
+            m.SendSelectAppendage(lAppendageID);
+        }
+
+        public void ActivateRight()
+        {
+            lActive = false;
+            rActive = true;
+            Atom.Mob.Mob m = (Atom.Mob.Mob)playerController.controlledAtom;
+            m.SendSelectAppendage(rAppendageID);
+        }
+
+        private void UpdateAppendageObjects()
         {
             if (playerController.controlledAtom == null)
                 return;
 
             var mob = (Atom.Mob.Mob)playerController.controlledAtom;
-            if (mob.appendages["RightHand"].attachedItem != null)
-                rHandObjectSprite = ResMgr.Singleton.GetSprite(mob.appendages["RightHand"].attachedItem.spritename);
+            if (mob.appendages[0].attachedItem != null)
+                lObjectSprite = ResMgr.Singleton.GetSprite(mob.appendages[lAppendageID].attachedItem.spritename);
             else
-                rHandObjectSprite = null;
-        }
+                lObjectSprite = null;
 
-        private void UpdateLeftHandObject()
-        {
-            if (playerController.controlledAtom == null)
-                return;
-
-            var mob = (Atom.Mob.Mob)playerController.controlledAtom;
-            if (mob.appendages["LeftHand"].attachedItem != null)
-                lHandObjectSprite = ResMgr.Singleton.GetSprite(mob.appendages["LeftHand"].attachedItem.spritename);
+            if (mob.appendages[1].attachedItem != null)
+                rObjectSprite = ResMgr.Singleton.GetSprite(mob.appendages[rAppendageID].attachedItem.spritename);
             else
-                lHandObjectSprite = null;
+                rObjectSprite = null;
         }
 
         public override void Render()
         {
-            if (lHandActive)
-                lHandActiveSprite.Draw();
-            else
-                lHandSprite.Draw();
+            backgroundSprite.Position = lSprite.Position;
+            backgroundSprite.Size = new Vector2D(lSprite.Position.X - (rSprite.Position.X + rSprite.Width), lSprite.Height);
+            backgroundSprite.Color = System.Drawing.Color.FromArgb(51, 56, 64);
+            backgroundSprite.Opacity = 240;
+            backgroundSprite.Draw();
 
-            if (rHandActive)
-                rHandActiveSprite.Draw();
-            else
-                rHandSprite.Draw();
-
-            if (lHandObjectSprite != null)
+            if (lActive)
             {
-                lHandObjectSprite.SetPosition(lHandSprite.Position.X + 45, lHandSprite.Position.Y + 25);
-                lHandObjectSprite.Color = System.Drawing.Color.White;
-                lHandObjectSprite.Rotation = 0f;
-                lHandObjectSprite.Draw();
+                lSprite.Color = Color.White;
+                lSprite.Draw();
             }
-            if (rHandObjectSprite != null)
+            else
             {
-                rHandObjectSprite.SetPosition(rHandSprite.Position.X + 45, rHandSprite.Position.Y + 25);
-                rHandObjectSprite.Color = System.Drawing.Color.White;
-                rHandObjectSprite.Rotation = 0f;
-                rHandObjectSprite.Draw();
+                lSprite.Color = inactiveColor;
+                lSprite.Draw();
+            }
+
+            if (rActive)
+            {
+                rSprite.Color = Color.White;
+                rSprite.Draw();
+            }
+            else
+            {
+                rSprite.Color = inactiveColor;
+                rSprite.Draw();
+            }
+
+            if (lObjectSprite != null)
+            {
+                lObjectSprite.SetPosition(lSprite.Position.X + (lSprite.Width / 3) + (lObjectSprite.Width / 4), lSprite.Position.Y + (lSprite.Height / 2) - (lObjectSprite.Height / 8));
+                lObjectSprite.Color = System.Drawing.Color.White;
+                lObjectSprite.Rotation = 0f;
+                lObjectSprite.Draw();
+            }
+            if (rObjectSprite != null)
+            {
+                rObjectSprite.SetPosition(rSprite.Position.X + ((rSprite.Width / 3) * 2) - (rObjectSprite.Width / 4), rSprite.Position.Y + (rSprite.Height / 2) - (rObjectSprite.Height / 8));
+                rObjectSprite.Color = System.Drawing.Color.White;
+                rObjectSprite.Rotation = 0f;
+                rObjectSprite.Draw();
             }
         }
 
@@ -138,13 +164,32 @@ namespace SS3D.Modules.UI.Components
 
         private void HandleUpdateHandObjects()
         {
-            UpdateLeftHandObject();
-            UpdateRightHandObject();
+            UpdateAppendageObjects();
         }
 
         private void HandleSelectHand(NetIncomingMessage message)
         {
-            throw new NotImplementedException();
+        }
+
+        public override bool MouseDown(MouseInputEventArgs e)
+        {
+            System.Drawing.RectangleF mouseAABB = new System.Drawing.RectangleF(e.Position.X, e.Position.Y, 1, 1);
+            if(mouseAABB.IntersectsWith(lSprite.AABB))
+            {
+                if (!lActive)
+                    ActivateLeft();
+                return true;
+            }
+            else if(mouseAABB.IntersectsWith(rSprite.AABB))
+            {
+                if (!rActive)
+                    ActivateRight();
+                return true;
+            }
+            else
+            {
+                return false;
+            }
         }
     }
 }

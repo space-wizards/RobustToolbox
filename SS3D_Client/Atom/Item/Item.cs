@@ -41,9 +41,9 @@ namespace SS3D.Atom.Item
         protected virtual void HandleAttachTo(NetIncomingMessage message)
         {
             ushort holderuid = message.ReadUInt16();
-            string appendagename = message.ReadString();
+            int appendageID = message.ReadInt32();
             Mob.Mob m = (Mob.Mob)atomManager.GetAtom(holderuid);
-            Appendage a = m.appendages[appendagename];
+            Appendage a = m.appendages[appendageID];
             if (a == null)
                 return; //TODO ERROR FUCK
 

@@ -20,7 +20,7 @@ namespace SS3D.Atom.Mob
 
         public bool isDead = false;
 
-        public Dictionary<string, HelperClasses.Appendage> appendages;
+        public Dictionary<int, HelperClasses.Appendage> appendages;
         public Appendage selectedAppendage;
 
         //Current animation state -- or at least the one we want to add some time to. This will need to become more robust.
@@ -39,18 +39,18 @@ namespace SS3D.Atom.Mob
 
         public virtual void initAppendages()
         {
-            appendages = new Dictionary<string, Appendage>();
-            appendages.Add("LeftHand", new Appendage("Bip001 L Hand", "LeftHand", this));
-            appendages.Add("RightHand", new Appendage("Bip001 R Hand", "RightHand", this));
-            selectedAppendage = appendages["LeftHand"];
+            appendages = new Dictionary<int, Appendage>();
+            appendages.Add(0, new Appendage("Bip001 L Hand", "LeftHand", 0, this));
+            appendages.Add(1, new Appendage("Bip001 R Hand", "RightHand", 1, this));
+            selectedAppendage = appendages[0];
         }
 
-        public virtual Item.Item GetItemOnAppendage(string appendage)
+        public virtual Item.Item GetItemOnAppendage(int appendageID)
         {
-            if (!appendages.ContainsKey(appendage)) return null;
-            if (appendages[appendage] == null) return null;
-            if (appendages[appendage].attachedItem == null) return null;
-            else return appendages[appendage].attachedItem;
+            if (!appendages.ContainsKey(appendageID)) return null;
+            if (appendages[appendageID] == null) return null;
+            if (appendages[appendageID].attachedItem == null) return null;
+            else return appendages[appendageID].attachedItem;
         }
 
         public override void SetUp(ushort _uid, AtomManager _atomManager)
@@ -178,25 +178,6 @@ namespace SS3D.Atom.Mob
 
             if (isDead)
                 return;
-            
-            /*AnimState walk = animStates["walk1"];
-            AnimState idle = animStates["idle1"];
-
-            if (interpolationPackets.Count == 0)
-            {
-                walk.Disable();
-                walk.LoopOff();
-                idle.Enable();
-                idle.LoopOn();
-            }
-            else
-            {
-                walk.Enable();
-                walk.LoopOn();
-                idle.Disable();
-                idle.LoopOff();
-            }*/
-
         }
 
         public override void HandleKC_W(bool state)
@@ -321,17 +302,29 @@ namespace SS3D.Atom.Mob
         /// <param name="message">Incoming netmessage</param>
         protected virtual void HandleSelectAppendage(NetIncomingMessage message)
         {
-            SetSelectedAppendage(message.ReadString());
+            SetSelectedAppendage(message.ReadInt32());
         }
 
         /// <summary>
         /// Sets selected appendage to the appendage named
         /// </summary>
         /// <param name="appendageName">Appendage name</param>
-        protected virtual void SetSelectedAppendage(string appendageName)
+        protected virtual void SetSelectedAppendage(int appendageID)
         {
-            if (appendages.Keys.Contains(appendageName))
-                selectedAppendage = appendages[appendageName];
+            if (appendages.Keys.Contains(appendageID))
+                selectedAppendage = appendages[appendageID];
+        }
+
+        public virtual void SendSelectAppendage(int appendageID)
+        {
+            if (!appendages.ContainsKey(appendageID))
+                return;
+
+            NetOutgoingMessage message = CreateAtomMessage();
+            message.Write((byte)AtomMessage.Extended);
+            message.Write((byte)MobMessage.SelectAppendage);
+            message.Write(appendageID);
+            SendMessage(message);
         }
 
         /// <summary>

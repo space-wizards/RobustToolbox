@@ -41,7 +41,7 @@ namespace SS3D.Modules.UI
         {
             var desktop = UIDesktop.Singleton;
 
-            font = GorgonLibrary.Graphics.Font.FromFile(@"..\..\..\Media\Fonts\\CALIBRI.TTF", 10);
+            font = ResMgr.Singleton.GetFont("CALIBRI");
             backgroundSprite = ResMgr.Singleton.GetSprite("1pxwhite");
             backgroundSprite.Color = System.Drawing.Color.FromArgb(51, 56, 64);
             backgroundSprite.Opacity = 240;

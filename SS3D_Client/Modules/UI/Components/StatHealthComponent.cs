@@ -29,6 +29,8 @@ namespace SS3D.Modules.UI.Components
 
         private Sprite backgroundSprite;
         private Sprite healthDetail;
+        private GorgonLibrary.Graphics.Font font;
+        private TextSprite healthText;
         private Color backgroundColor;
         private int health;
         public Point size;
@@ -44,6 +46,9 @@ namespace SS3D.Modules.UI.Components
         {
             backgroundSprite = ResMgr.Singleton.GetSprite("1pxwhite");
             healthDetail = ResMgr.Singleton.GetSprite("stat_health_detail");
+            font = ResMgr.Singleton.GetFont("CALIBRI");
+            healthText = new TextSprite("statHealthText", "Healthy", font);
+            healthText.Color = Color.DarkBlue;
             size = _size;
             health = 100;
             SetBackgroundColor();
@@ -73,7 +78,7 @@ namespace SS3D.Modules.UI.Components
         {
             int red = 255 - (int)Math.Round(health * 2.5f);
             int green = (int)Math.Round(health * 2.5f);
-            int blue = 0;
+            int blue = 50;
 
             backgroundColor = Color.FromArgb(red, green, blue);
         }
@@ -122,6 +127,21 @@ namespace SS3D.Modules.UI.Components
             }
         }
 
+        private void DoText()
+        {
+            healthText.Position = Position;
+            healthText.UniformScale = 0.9f;
+            if (health > 70)
+                healthText.Text = "Healthy";
+            else if (health > 30)
+                healthText.Text = "Injured";
+            else if (health > 0)
+                healthText.Text = "Critical!";
+            else
+                healthText.Text = "Deceased";
+            healthText.Draw();
+        }
+
         public override void Render()
         {
             backgroundSprite.Color = backgroundColor;
@@ -132,6 +152,8 @@ namespace SS3D.Modules.UI.Components
             
             healthDetail.Position = new Vector2D(Position.X, Position.Y);
             healthDetail.Draw();
+
+            DoText();
 
             UpdateBlip();
         }

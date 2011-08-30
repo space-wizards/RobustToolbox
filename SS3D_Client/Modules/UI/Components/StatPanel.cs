@@ -42,7 +42,7 @@ namespace SS3D.Modules.UI.Components
         {
             Position = new Point(604, Gorgon.Screen.Height - 205);
 
-            font = GorgonLibrary.Graphics.Font.FromFile(@"..\..\..\Media\Fonts\\CALIBRI.TTF", 10);
+            font = ResMgr.Singleton.GetFont("CALIBRI");
             name = new TextSprite("statpanelname", "Name", font);
             Skin = UIDesktop.Singleton.Skin;
             backgroundSprite = ResMgr.Singleton.GetSprite("1pxwhite");

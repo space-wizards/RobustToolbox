@@ -86,37 +86,40 @@ namespace SS3D.Modules.UI.Components
             }
             else
             {
-                step = size.X / 30;
+                step = size.X / 40;
             }
             backgroundSprite.Size = new Vector2D(2, 2);
             backgroundSprite.Opacity = 255;
             blipXRelative += step;
             if (blipXRelative > size.X)
                 blipXRelative = 0;
-
-            blipPosition.X = Position.X + blipXRelative;
-            if (health > 0)
+            float blipTemp = 0;
+            while (blipTemp <= blipXRelative)
             {
-                if (blipXRelative > blipStart + blipWidth || blipXRelative < blipStart)
+                blipPosition.X = Position.X + blipTemp;
+                if (health > 0)
                 {
-                    blipPosition.Y = Position.Y + (size.Y / 2);
+                    if (blipTemp > blipStart + blipWidth || blipTemp < blipStart)
+                    {
+                        blipPosition.Y = Position.Y + (size.Y / 2);
+                    }
+                    else if (blipTemp < blipStart + blipWidth / 4 || blipTemp > blipStart + ((blipWidth / 4) * 3))
+                    {
+                        blipPosition.Y--;
+                    }
+                    else
+                    {
+                        blipPosition.Y++;
+                    }
                 }
-                else if (blipXRelative < blipStart + blipWidth / 4 || blipXRelative > blipStart + ((blipWidth / 4) * 3))
-                {
-                    blipPosition.Y--;
-                }
+                backgroundSprite.Position = blipPosition;
+                if (blipTemp == blipXRelative)
+                    backgroundSprite.Color = Color.DarkBlue;
                 else
-                {
-                    blipPosition.Y++;
-                }
+                    backgroundSprite.Color = Color.Cyan;
+                backgroundSprite.Draw();
+                blipTemp += step;
             }
-
-
-
-            backgroundSprite.Position = blipPosition;
-            backgroundSprite.Color = Color.Blue;
-
-
         }
 
         public override void Render()
@@ -126,12 +129,11 @@ namespace SS3D.Modules.UI.Components
             backgroundSprite.Position = Position;
             backgroundSprite.Size = size;
             backgroundSprite.Draw();
-
+            
             healthDetail.Position = new Vector2D(Position.X, Position.Y);
             healthDetail.Draw();
 
             UpdateBlip();
-            backgroundSprite.Draw();
         }
     }
 }

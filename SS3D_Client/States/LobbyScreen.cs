@@ -233,7 +233,7 @@ namespace SS3D.States
 
             string message = "(" + channel.ToString() + "):" + text;
             ushort atomID = msg.ReadUInt16();
-            lobbyChat.AddLine(message);
+            lobbyChat.AddLine(message, channel);
         }
 
         #region Input

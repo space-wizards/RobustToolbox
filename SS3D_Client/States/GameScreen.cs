@@ -250,7 +250,7 @@ namespace SS3D.States
 
             string message = "(" + channel.ToString() + "):" + text;
             ushort atomID = msg.ReadUInt16();
-            gameChat.AddLine(message);
+            gameChat.AddLine(message, channel);
             Atom.Atom a = atomManager.GetAtom(atomID);
             if (a != null)
             {
@@ -268,7 +268,7 @@ namespace SS3D.States
         {
             NetOutgoingMessage message = prg.mNetworkMgr.netClient.CreateMessage();
             message.Write((byte)NetMessage.ChatMessage);
-            message.Write((byte)ChatChannel.Default);
+            message.Write((byte)ChatChannel.Player);
             message.Write(text);
 
             prg.mNetworkMgr.SendMessage(message, NetDeliveryMethod.ReliableUnordered);

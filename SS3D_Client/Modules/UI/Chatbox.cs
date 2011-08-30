@@ -23,6 +23,8 @@ namespace SS3D.Modules.UI
 
         private readonly int maxLines = 20;
         private int chatMessages = 0;
+        private int maxLineLength = 90;
+        private Dictionary<ChatChannel, System.Drawing.Color> chatColors;
 
         private bool active = false;
 
@@ -55,6 +57,16 @@ namespace SS3D.Modules.UI
             textInputLabel.Size = new System.Drawing.Size(ClientArea.Width - 10, 12);
             textInputLabel.Position = new System.Drawing.Point(this.Position.X + 2, this.Position.Y + this.Size.Height - 10);
             textInputLabel.Color = System.Drawing.Color.Green;
+            textInputLabel.WordWrap = true;
+
+            chatColors = new Dictionary<ChatChannel, Color>();
+            chatColors.Add(ChatChannel.Default, System.Drawing.Color.Black);
+            chatColors.Add(ChatChannel.Damage, System.Drawing.Color.Red);
+            chatColors.Add(ChatChannel.Radio, System.Drawing.Color.DarkGreen);
+            chatColors.Add(ChatChannel.Server, System.Drawing.Color.Blue);
+            chatColors.Add(ChatChannel.Player, System.Drawing.Color.Green);
+            chatColors.Add(ChatChannel.Lobby, System.Drawing.Color.White);
+            chatColors.Add(ChatChannel.Ingame, System.Drawing.Color.Green);
         }
 
         private void Chatbox_MouseDown(object sender, MouseInputEventArgs e)
@@ -62,14 +74,22 @@ namespace SS3D.Modules.UI
             throw new NotImplementedException();
         }
 
-        public void AddLine(string message)
+        public void AddLine(string message, ChatChannel channel)
         {
-            TextSprite label = new TextSprite("label" + entries.Count, "message" + chatMessages.ToString(), font);
-            label.Size = new System.Drawing.Size(ClientArea.Width - 10, 12);
-            label.Text = message;
-            label.Color = System.Drawing.Color.Green;
-            entries.Add(label);
-            chatMessages++;
+
+
+            int charCount = 0;
+            IEnumerable<string> messageSplit = message.Split(new Char[] { ' ' }, StringSplitOptions.RemoveEmptyEntries)
+                            .GroupBy(w => (charCount += w.Length + 1) / maxLineLength)
+                            .Select(g => string.Join(" ", g));
+            foreach (string str in messageSplit)
+            {
+                TextSprite label = new TextSprite("label" + entries.Count, str, font);
+                label.Size = new System.Drawing.Size(ClientArea.Width - 10, 12);
+                label.Color = chatColors[channel];
+                entries.Add(label);
+                chatMessages++;
+            }
             drawLines();
         }
 

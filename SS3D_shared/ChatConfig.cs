@@ -2,5 +2,9 @@
 {
     Default,
     Lobby,
-    Ingame
+    Ingame,
+    Server,
+    Damage,
+    Player,
+    Radio
 }

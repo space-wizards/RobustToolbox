@@ -66,6 +66,33 @@ namespace SS3D.Modules.UI.Components
             playerSprite.ImageRegion = new RectangleF(0, 0, 26, 21);
             playerSprite.Draw();
 
+            bool scanSwitch = false;
+            Random r = new Random();
+            if (r.NextDouble() > 0.8)
+                scanSwitch = true;
+            backgroundSprite.Position = new Vector2D(Position.X + Skin.Elements["Window.Border.Vertical.Left"].Dimensions.Width, Position.Y + Skin.Elements["Window.Border.Top.Horizontal"].Dimensions.Height - 2);
+            backgroundSprite.Size = new Vector2D(width - Skin.Elements["Window.Border.Vertical.Left"].Dimensions.Width - Skin.Elements["Window.Border.Vertical.Right"].Dimensions.Width, 2);
+            for (int i = 0; i < ((height / 3 * 2) - Skin.Elements["Window.Border.Top.Horizontal"].Dimensions.Height - Skin.Elements["Window.Border.Bottom.Horizontal"].Dimensions.Height) / 2; i++)
+            {
+                if (i % 2 == 0)
+                {
+                    if (scanSwitch)
+                        backgroundSprite.Color = System.Drawing.Color.White;
+                    else
+                        backgroundSprite.Color = System.Drawing.Color.DarkGray;
+                }
+                else
+                {
+                    if (scanSwitch)
+                        backgroundSprite.Color = System.Drawing.Color.DarkGray;
+                    else
+                        backgroundSprite.Color = System.Drawing.Color.White;
+                }
+                backgroundSprite.Position += new Vector2D(0, 2);
+                backgroundSprite.Opacity = 50;
+                backgroundSprite.Draw();
+            }
+
         }
 
         public override void Render()
@@ -73,7 +100,6 @@ namespace SS3D.Modules.UI.Components
             if (Skin == null || playerController.controlledAtom == null)
                 return;
 
-            backgroundSprite = ResMgr.Singleton.GetSprite("1pxwhite");
             backgroundSprite.Color = System.Drawing.Color.FromArgb(51, 56, 64);
             backgroundSprite.Opacity = 240;
             backgroundSprite.Position = Position;
@@ -103,15 +129,6 @@ namespace SS3D.Modules.UI.Components
             Skin.Elements["Window.Border.Bottom.LeftCorner"].Draw(new System.Drawing.Rectangle(Position.X, Position.Y + height - Skin.Elements["Window.Border.Bottom.LeftCorner"].Dimensions.Height, Skin.Elements["Window.Border.Bottom.LeftCorner"].Dimensions.Width, Skin.Elements["Window.Border.Bottom.LeftCorner"].Dimensions.Height));
             Skin.Elements["Window.Border.Bottom.Horizontal"].Draw(new System.Drawing.Rectangle(Position.X + Skin.Elements["Window.Border.Bottom.LeftCorner"].Dimensions.Width, Position.Y + height - Skin.Elements["Window.Border.Bottom.Horizontal"].Dimensions.Height, width - Skin.Elements["Window.Border.Bottom.RightCorner"].Dimensions.Width - Skin.Elements["Window.Border.Bottom.LeftCorner"].Dimensions.Width, Skin.Elements["Window.Border.Bottom.Horizontal"].Dimensions.Height));
             Skin.Elements["Window.Border.Bottom.RightCorner"].Draw(new System.Drawing.Rectangle(position.X + width - Skin.Elements["Window.Border.Bottom.RightCorner"].Dimensions.Width, Position.Y + height - Skin.Elements["Window.Border.Bottom.RightCorner"].Dimensions.Height, Skin.Elements["Window.Border.Bottom.RightCorner"].Dimensions.Width, Skin.Elements["Window.Border.Bottom.RightCorner"].Dimensions.Height));
-
-
-
-
-
-
-
-
-
         }
 
 

@@ -27,7 +27,7 @@ namespace SS3D.Tiles.Wall
             {
                 sideSprite.SetPosition(tilePosition.X * tileSpacing - xTopLeft, tilePosition.Y * tileSpacing - yTopLeft);
                 sideSprite.Color = Color.White;
-                LightManager.Singleton.ApplyLightsToSprite(tileLights, sideSprite, new Vector2D(xTopLeft, yTopLeft));
+                //LightManager.Singleton.ApplyLightsToSprite(tileLights, sideSprite, new Vector2D(xTopLeft, yTopLeft));
                 sideSprite.Draw();
             }
         }

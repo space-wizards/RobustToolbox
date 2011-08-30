@@ -25,7 +25,7 @@ namespace SS3D.Atom.Item.Misc
             Direction d = (Direction)message.ReadByte();
             if (light == null)
             {
-                light = new Light(atomManager.gameState.map, Color.FromArgb(r, g, b), 190, LightState.On, atomManager.gameState.map.GetTileArrayPositionFromWorldPosition(position), d);
+                light = new Light(atomManager.gameState.map, Color.FromArgb(r, g, b), 300, LightState.On, atomManager.gameState.map.GetTileArrayPositionFromWorldPosition(position), d);
             }
             else
             {

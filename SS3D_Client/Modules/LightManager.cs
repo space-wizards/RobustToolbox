@@ -68,25 +68,25 @@ namespace SS3D.Modules
         private void ApplyDefinitionToSprite(Sprite sprite, SpriteLightDefinition lightInfo)
         {
             sprite.SetSpriteVertexColor(VertexLocations.LowerLeft,
-                System.Drawing.Color.FromArgb(
+                System.Drawing.Color.FromArgb((int)(lightInfo.VertexColLowerLeft.Length * 0.575f),
                 (int)lightInfo.VertexColLowerLeft.X,
                 (int)lightInfo.VertexColLowerLeft.Y,
                 (int)lightInfo.VertexColLowerLeft.Z));
 
             sprite.SetSpriteVertexColor(VertexLocations.LowerRight,
-                System.Drawing.Color.FromArgb(
+                System.Drawing.Color.FromArgb((int)(lightInfo.VertexColLowerRight.Length * 0.575f),
                 (int)lightInfo.VertexColLowerRight.X,
                 (int)lightInfo.VertexColLowerRight.Y,
                 (int)lightInfo.VertexColLowerRight.Z));
 
             sprite.SetSpriteVertexColor(VertexLocations.UpperLeft,
-                System.Drawing.Color.FromArgb(
+                System.Drawing.Color.FromArgb((int)(lightInfo.VertexColUpperLeft.Length * 0.575f),
                 (int)lightInfo.VertexColUpperLeft.X,
                 (int)lightInfo.VertexColUpperLeft.Y,
                 (int)lightInfo.VertexColUpperLeft.Z));
 
             sprite.SetSpriteVertexColor(VertexLocations.UpperRight,
-                System.Drawing.Color.FromArgb(
+                System.Drawing.Color.FromArgb((int)(lightInfo.VertexColUpperRight.Length * 0.575f),
                 (int)lightInfo.VertexColUpperRight.X,
                 (int)lightInfo.VertexColUpperRight.Y,
                 (int)lightInfo.VertexColUpperRight.Z));

@@ -321,7 +321,7 @@ namespace SS3D.Atom
             {
                 if (draw && visible)
                 {
-                    LightManager.Singleton.ApplyLightsToSprite(atomManager.gameState.map.tileArray[tilePos.X, tilePos.Y].tileLights, sprite, new Vector2D(xTopLeft, yTopLeft));
+                    //LightManager.Singleton.ApplyLightsToSprite(atomManager.gameState.map.tileArray[tilePos.X, tilePos.Y].tileLights, sprite, new Vector2D(xTopLeft, yTopLeft));
                     sprite.Color = System.Drawing.Color.FromArgb(Opacity, sprite.Color);
                     sprite.Draw();
                 }

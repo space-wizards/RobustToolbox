@@ -14,7 +14,7 @@ namespace SS3D_Server.Atom.Mob
         public Item.Organs.BLOOD_TYPE blood_type = Item.Organs.BLOOD_TYPE.A; // Temporary
         public List<Item.Organs.Organ> organs = new List<Item.Organs.Organ>();
 
-        public Dictionary<string, HelperClasses.Appendage> appendages;
+        public Dictionary<int, HelperClasses.Appendage> appendages;
         public Appendage selectedAppendage;
 
         public string animationState = "idle";
@@ -46,12 +46,12 @@ namespace SS3D_Server.Atom.Mob
         /// </summary>
         protected virtual void initAppendages()
         {
-            appendages = new Dictionary<string,Appendage>();
-            appendages.Add("LeftHand", new HelperClasses.Appendage("LeftHand", this));
-            appendages.Add("RightHand", new HelperClasses.Appendage("RightHand", this));
-            appendages["LeftHand"].attackAnimation = "lattack";
-            appendages["RightHand"].attackAnimation = "rattack";
-            selectedAppendage = appendages["LeftHand"];
+            appendages = new Dictionary<int,Appendage>();
+            appendages.Add(0, new HelperClasses.Appendage("LeftHand", 0, this));
+            appendages.Add(1, new HelperClasses.Appendage("RightHand", 1, this));
+            appendages[0].attackAnimation = "lattack";
+            appendages[1].attackAnimation = "rattack";
+            selectedAppendage = appendages[0];
         }
 
         protected override void HandleExtendedMessage(Lidgren.Network.NetIncomingMessage message)
@@ -64,6 +64,9 @@ namespace SS3D_Server.Atom.Mob
                     break;
                 case MobMessage.DropItem:
                     HandleDropItem();
+                    break;
+                case MobMessage.SelectAppendage:
+                    SelectAppendage(message.ReadInt32());
                     break;
                 default: 
                     break;
@@ -84,10 +87,10 @@ namespace SS3D_Server.Atom.Mob
         /// Selects an appendage from the dictionary
         /// </summary>
         /// <param name="appendageName">name of appendage to select</param>
-        public virtual void SelectAppendage(string appendageName)
+        public virtual void SelectAppendage(int appendageID)
         {
-            if (appendages.Keys.Contains(appendageName))
-                selectedAppendage = appendages[appendageName];
+            if (appendages.Keys.Contains(appendageID))
+                selectedAppendage = appendages[appendageID];
             SendSelectAppendage();
         }
 
@@ -99,7 +102,7 @@ namespace SS3D_Server.Atom.Mob
             NetOutgoingMessage outmessage = CreateAtomMessage();
             outmessage.Write((byte)AtomMessage.Extended);
             outmessage.Write((byte)MobMessage.SelectAppendage);
-            outmessage.Write(selectedAppendage.appendageName);
+            outmessage.Write(selectedAppendage.ID);
             SendMessageToAll(outmessage);
         }
 

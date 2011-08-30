@@ -40,42 +40,7 @@ namespace SS3D.Modules
             controlledAtom = newAtom;
             controlledAtom.initKeys();
             controlledAtom.attached = true;
-            
-            /*atomManager.mEngine.Camera.DetachFromParent();
-            atomManager.mEngine.Camera.Position = new Mogre.Vector3(-80, 240, -80) - newAtom.offset;
-            float scale = 3f; // Your scale here.
-
-            
-            Matrix4 p = BuildScaledOrthoMatrix(atomManager.mEngine.Window.Width / scale / -2.0f,
-                                                    atomManager.mEngine.Window.Width / scale / 2.0f,
-                                                    atomManager.mEngine.Window.Height / scale / -2.0f,
-                                                    atomManager.mEngine.Window.Height / scale / 2.0f, 0, 1000);
-
-            atomManager.mEngine.Camera.SetCustomProjectionMatrix(true, p);
-            atomManager.mEngine.Camera.ProjectionType = ProjectionType.PT_ORTHOGRAPHIC;
-
-            SceneNode camNode = controlledAtom.Node.CreateChildSceneNode();
-            camNode.AttachObject(atomManager.mEngine.Camera);
-            atomManager.mEngine.Camera.SetAutoTracking(true, camNode, new Mogre.Vector3(0, 32, 0));*/
         }
-
-        /*public Matrix4 BuildScaledOrthoMatrix(float left, float right, float bottom, float top, float near, float far)
-        {
-            float invw = 1 / (right - left);
-            float invh = 1 / (top - bottom);
-            float invd = 1 / (far - near);
-
-            Matrix4 proj = Matrix4.ZERO;
-            proj[0, 0] = 2 * invw;
-            proj[0, 3] = -(right + left) * invw;
-            proj[1, 1] = 2 * invh;
-            proj[1, 3] = -(top + bottom) * invh;
-            proj[2, 2] = -2 * invd;
-            proj[2, 3] = -(far + near) * invd;
-            proj[3, 3] = 1;
-
-            return proj;
-        }*/
 
         public void Detach()
         {

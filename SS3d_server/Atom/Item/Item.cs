@@ -132,7 +132,7 @@ namespace SS3D_Server.Atom.Item
             outmessage.Write((byte)AtomMessage.Extended);
             outmessage.Write((byte)ItemMessage.AttachTo);
             outmessage.Write(holdingAppendage.owner.uid);
-            outmessage.Write(holdingAppendage.appendageName);
+            outmessage.Write(holdingAppendage.ID);
             SS3DServer.Singleton.SendMessageToAll(outmessage);
         }
 

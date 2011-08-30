@@ -89,20 +89,14 @@ namespace SS3D_Server.Modules
         public void DispatchVerb(string verb, ushort uid)
         {
             //Handle global verbs
+            Console.WriteLine(verb + " from " + uid);
+            
             if (uid == 0)
             {
                 Atom.Mob.Mob m;
-
+                Console.WriteLine(verb);
                 switch (verb)
                 {
-                    case "selectlefthand":
-                        m = (Atom.Mob.Mob)attachedAtom;
-                        m.selectedAppendage = m.appendages["LeftHand"];
-                        break;
-                    case "selectrighthand":
-                        m = (Atom.Mob.Mob)attachedAtom;
-                        m.selectedAppendage = m.appendages["RightHand"];
-                        break;
                     case "joingame":
                         JoinGame();
                         break;

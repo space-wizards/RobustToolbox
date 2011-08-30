@@ -428,9 +428,10 @@ namespace SS3D.States
             }
 
             Gorgon.CurrentRenderTarget = null;
-            //Gorgon.CurrentShader = ResMgr.Singleton.GetShader("bloomtest");
+            Gorgon.CurrentShader = ResMgr.Singleton.GetShader("dummyshader");
             //ResMgr.Singleton.GetShader("bloomtest").Parameters["_spriteImage"].SetValue(baseTarget.Image);
             baseTargetSprite.Draw();
+            Gorgon.CurrentShader = null;
 
             //Gorgon.CurrentShader = null;
             

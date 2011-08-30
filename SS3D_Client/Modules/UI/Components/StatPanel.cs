@@ -46,11 +46,6 @@ namespace SS3D.Modules.UI.Components
             name = new TextSprite("statpanelname", "Name", font);
             Skin = UIDesktop.Singleton.Skin;
             backgroundSprite = ResMgr.Singleton.GetSprite("1pxwhite");
-            backgroundSprite.Color = System.Drawing.Color.FromArgb(51, 56, 64);
-            backgroundSprite.Opacity = 240;
-            backgroundSprite.Position = Position;
-            backgroundSprite.Size = new Vector2D(width, height);
-
             name.Position = new Vector2D(Position.X + Skin.Elements["Window.Border.Middle.LeftCorner"].Dimensions.Width + 2, Position.Y + (height / 3 * 2) + 2);
             name.Color = System.Drawing.Color.Green;
 

@@ -101,6 +101,24 @@ namespace SS3D.Modules.UI.Components
                 rObjectSprite = null;
         }
 
+        public override bool KeyDown(KeyboardInputEventArgs e)
+        {
+            if (e.Key == KeyboardKeys.Tab)
+            {
+                SwitchHands();
+                return true;
+            }
+            return false;
+        }
+
+        private void SwitchHands()
+        {
+            if (lActive)
+                ActivateRight();
+            else
+                ActivateLeft();
+        }
+
         public override void Render()
         {
             backgroundSprite.Position = lSprite.Position;

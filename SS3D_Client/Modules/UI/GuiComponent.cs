@@ -54,5 +54,10 @@ namespace SS3D.Modules.UI
         {
             return false;
         }
+
+        public virtual bool KeyDown(KeyboardInputEventArgs e)
+        {
+            return false;
+        }
     }
 }

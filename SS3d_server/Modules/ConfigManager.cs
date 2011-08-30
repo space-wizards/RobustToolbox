@@ -76,6 +76,8 @@ namespace SS3D_Server.Modules
     {
         const int _Version = 1;
 
+        public string LogPath = "log.txt";
+
         public int Port = 1212;
         public string ServerName = "SS3D Server"; 
         public string serverMapName = "SavedMap";

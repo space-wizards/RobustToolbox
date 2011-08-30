@@ -76,7 +76,7 @@ namespace SS3D_Server
             singleton = this;
 
             ConfigManager.Singleton.Initialize("./config.xml");
-            LogManager.Initialize("./log.txt");
+            LogManager.Initialize(ConfigManager.Singleton.Configuration.LogPath);
         }
         #endregion
 

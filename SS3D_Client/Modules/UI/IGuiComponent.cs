@@ -31,5 +31,6 @@ namespace SS3D.Modules.UI
 
         bool MouseDown(MouseInputEventArgs e);
         bool MouseUp(MouseInputEventArgs e);
+        bool KeyDown(KeyboardInputEventArgs e);
     }
 }

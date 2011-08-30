@@ -457,7 +457,13 @@ namespace SS3D.States
         {
             if (gameChat.Active)
                 return;
-            
+
+            foreach (var comp in guiComponents.Values)
+            {
+                if (comp.KeyDown(e))//MouseDown returns true if the click is handled by the ui component.
+                    return;
+            }
+
             if (e.Key == KeyboardKeys.F9)
             {
                 if (prg.GorgonForm.MainMenuStrip.Visible)

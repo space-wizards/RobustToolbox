@@ -151,17 +151,23 @@ namespace SS3D.Modules.UI.Components
 
             if (lObjectSprite != null)
             {
-                lObjectSprite.SetPosition(lSprite.Position.X + (lSprite.Width / 3) + (lObjectSprite.Width / 4), lSprite.Position.Y + (lSprite.Height / 2) - (lObjectSprite.Height / 8));
+                lObjectSprite.SetPosition(lSprite.Position.X + 40, lSprite.Position.Y + 25);
                 lObjectSprite.Color = System.Drawing.Color.White;
                 lObjectSprite.Rotation = 0f;
+                float factor = Math.Min(50f / lObjectSprite.Width, 50f / lObjectSprite.Height);
+                lObjectSprite.UniformScale = factor;
                 lObjectSprite.Draw();
+                lObjectSprite.UniformScale = 1f;
             }
             if (rObjectSprite != null)
             {
-                rObjectSprite.SetPosition(rSprite.Position.X + ((rSprite.Width / 3) * 2) - (rObjectSprite.Width / 4), rSprite.Position.Y + (rSprite.Height / 2) - (rObjectSprite.Height / 8));
+                rObjectSprite.SetPosition(rSprite.Position.X + 60, rSprite.Position.Y + 25);
                 rObjectSprite.Color = System.Drawing.Color.White;
                 rObjectSprite.Rotation = 0f;
+                float factor = Math.Min(50f / rObjectSprite.Width, 50f / rObjectSprite.Height);
+                rObjectSprite.UniformScale = factor;
                 rObjectSprite.Draw();
+                rObjectSprite.UniformScale = 1f;
             }
         }
 

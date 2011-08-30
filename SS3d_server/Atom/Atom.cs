@@ -339,7 +339,7 @@ namespace SS3D_Server.Atom
         #if DEBUG
             string healthmsg = name + "(" + uid.ToString() + ") " + "took " + amount.ToString() + " points of damage.";
             healthmsg += " Current health: " + currentHealth.ToString() + "/" + maxHealth.ToString();//TODO SEND DAMAGE MESSAGES
-            SS3DServer.Singleton.chatManager.SendChatMessage(0, healthmsg, name, uid);
+            SS3DServer.Singleton.chatManager.SendChatMessage(ChatChannel.Damage, healthmsg, name, uid);
         #endif
 
             var session = GetSession();

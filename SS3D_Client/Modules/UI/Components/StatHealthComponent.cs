@@ -52,7 +52,7 @@ namespace SS3D.Modules.UI.Components
             size = _size;
             health = 100;
             SetBackgroundColor();
-            blipPosition = new Vector2D(Position.X, Position.Y + (size.Y / 2));
+            blipPosition = new Vector2D(Position.X, Position.Y + ((size.Y / 3) * 2));
             step = size.X / 100;
             blipXRelative = 0;
             blipHeight = size.Y / 1.2f;
@@ -106,7 +106,7 @@ namespace SS3D.Modules.UI.Components
                 {
                     if (blipTemp > blipStart + blipWidth || blipTemp < blipStart)
                     {
-                        blipPosition.Y = Position.Y + (size.Y / 2);
+                        blipPosition.Y = Position.Y + ((size.Y / 3) * 2);
                     }
                     else if (blipTemp < blipStart + blipWidth / 4 || blipTemp > blipStart + ((blipWidth / 4) * 3))
                     {
@@ -130,15 +130,15 @@ namespace SS3D.Modules.UI.Components
         private void DoText()
         {
             healthText.Position = Position;
-            healthText.UniformScale = 0.9f;
             if (health > 70)
-                healthText.Text = "Healthy";
+                healthText.Text = "HEALTHY";
             else if (health > 30)
-                healthText.Text = "Injured";
+                healthText.Text = "INJURED";
             else if (health > 0)
-                healthText.Text = "Critical!";
+                healthText.Text = "CRITICAL!";
             else
-                healthText.Text = "Deceased";
+                healthText.Text = "DECEASED";
+            healthText.Color = Color.Blue;
             healthText.Draw();
         }
 

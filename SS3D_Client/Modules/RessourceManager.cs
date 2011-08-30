@@ -49,6 +49,8 @@ namespace SS3D
 
         private Dictionary<string, GUISkin> GuiSkins = new Dictionary<string, GUISkin>();
 
+        private Dictionary<string, Font> Fonts = new Dictionary<string, Font>();
+
         private static ResMgr singleton;
 
         private ResMgr() { }
@@ -133,6 +135,15 @@ namespace SS3D
         }
 
         /// <summary>
+        ///  Retrieves the Font with the given key from the Resource list. Returns null if not found.
+        /// </summary>
+        public Font GetFont(string key)
+        {
+            if (Fonts.ContainsKey(key)) return Fonts[key];
+            else return null;
+        }
+
+        /// <summary>
         ///  Initializes the Resource Manager and caches all resources.
         /// </summary>
         public void Initialize()
@@ -181,6 +192,19 @@ namespace SS3D
                     loadedImg = Image.FromFileSystem(FileSystem, file.FullPath);
 
                 if (!Images.ContainsKey(file.Filename)) Images.Add(file.Filename, loadedImg);
+            }
+
+            var FontQuery = from FileSystemFile file in FileSystem where file.Extension.ToLower() == ".ttf" select file;
+            foreach (FileSystemFile file in FontQuery)
+            {
+                Font loadedFont;
+
+                if (FontCache.Fonts.Contains(file.Filename))
+                    loadedFont = FontCache.Fonts[file.Filename];
+                else
+                    loadedFont = Font.FromFileSystem(FileSystem, file.FullPath, 10);
+                if (!Fonts.ContainsKey(file.Filename))
+                    Fonts.Add(file.Filename, loadedFont);
             }
 
             #region TAI Loading / Parsing

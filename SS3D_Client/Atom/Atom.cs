@@ -345,7 +345,7 @@ namespace SS3D.Atom
             {
                 return true;
             }
-            else if (atomManager.gameState.map.GetTileTypeFromWorldPosition(myAABB.Left+1, myAABB.Bottom-1) == TileType.Wall) // Bottom left
+            else if (atomManager.gameState.map.GetTileTypeFromWorldPosition(myAABB.Left+1, myAABB.Bottom - myAABB.Height) == TileType.Wall) // Bottom left
             {
                 return true;
             }
@@ -353,7 +353,7 @@ namespace SS3D.Atom
             {
                 return true;
             }
-            else if (atomManager.gameState.map.GetTileTypeFromWorldPosition(myAABB.Right-1, myAABB.Bottom-1) == TileType.Wall) // Bottom left
+            else if (atomManager.gameState.map.GetTileTypeFromWorldPosition(myAABB.Right - 1, myAABB.Bottom - myAABB.Height) == TileType.Wall) // Bottom left
             {
                 return true;
             }

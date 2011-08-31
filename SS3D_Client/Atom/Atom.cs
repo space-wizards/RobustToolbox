@@ -25,6 +25,7 @@ namespace SS3D.Atom
         //SPRITE
         public Sprite sprite;
         public string spritename = "noSprite";
+        public int drawDepth = 0;
 
         public string name;
         public ushort uid;

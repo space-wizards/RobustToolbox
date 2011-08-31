@@ -384,6 +384,7 @@ namespace SS3D.States
                                                    a.position.Y / map.tileSpacing >= yStart &&
                                                    a.position.Y / map.tileSpacing <= yEnd
                                                    orderby a.position.Y + ((a.sprite.Height * a.sprite.UniformScale) / 2) ascending
+                                                   orderby a.drawDepth ascending
                                                    select a;
 
                     foreach (Atom.Atom a in atoms.ToList())
@@ -451,9 +452,9 @@ namespace SS3D.States
             lightTargetSprite.SourceBlend = AlphaBlendOperation.DestinationColor;
 
             Gorgon.CurrentShader = ResMgr.Singleton.GetShader("Blur");
-            //Gorgon.CurrentShader = ResMgr.Singleton.GetShader("bloomtest");
-            ResMgr.Singleton.GetShader("Blur").Parameters["blurAmount"].SetValue(5.0f);
+            ResMgr.Singleton.GetShader("Blur").Parameters["blurAmount"].SetValue(3.0f);
             lightTargetSprite.Draw();
+            
             Gorgon.CurrentShader = null;
             Gorgon.CurrentRenderTarget = null;
             baseTargetSprite.Draw();

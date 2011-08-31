@@ -37,6 +37,7 @@ public enum AtomManagerMessage
 {
     SpawnAtom,
     DeleteAtom,
+    SetDrawDepth,
     Passthrough
 }
 

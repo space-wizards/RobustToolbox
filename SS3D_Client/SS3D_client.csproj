@@ -123,6 +123,7 @@
     <Compile Include="Atom\Object\Door\Door.cs" />
     <Compile Include="Atom\Object\Lights\WallLight.cs" />
     <Compile Include="Atom\Object\Object.cs" />
+    <Compile Include="Atom\Object\Tables\Worktop.cs" />
     <Compile Include="MainWindow.cs">
       <SubType>Form</SubType>
     </Compile>
@@ -230,6 +231,7 @@
       <LastGenOutput>Resources.Designer.cs</LastGenOutput>
     </EmbeddedResource>
   </ItemGroup>
+  <ItemGroup />
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <PropertyGroup>
     <PostBuildEvent>copy "$(SolutionDir)References\$(Configuration)\*.dll" "$(ProjectDir)$(OutDir)"</PostBuildEvent>

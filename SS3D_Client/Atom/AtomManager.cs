@@ -74,6 +74,9 @@ namespace SS3D.Atom
                 case AtomManagerMessage.SpawnAtom:
                     HandleSpawnAtom(message);
                     break;
+                case AtomManagerMessage.SetDrawDepth:
+                    HandleDrawDepth(message);
+                    break;
                 case AtomManagerMessage.DeleteAtom:
                     HandleDeleteAtom(message); 
                     break;
@@ -84,6 +87,13 @@ namespace SS3D.Atom
                 default:
                     break;
             }
+        }
+
+        private void HandleDrawDepth(NetIncomingMessage message)
+        {
+            ushort uid = message.ReadUInt16();
+            int depth = message.ReadVariableInt32();
+            atomDictionary[uid].drawDepth = depth;
         }
 
         private void HandleSpawnAtom(NetIncomingMessage message)

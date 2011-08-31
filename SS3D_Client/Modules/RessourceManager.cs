@@ -48,8 +48,10 @@ namespace SS3D
         private Dictionary<string, Sprite> Sprites = new Dictionary<string, Sprite>();
 
         private Dictionary<string, GUISkin> GuiSkins = new Dictionary<string, GUISkin>();
+        private Dictionary<string, System.Drawing.Rectangle> GuiInfo = new Dictionary<string, System.Drawing.Rectangle>();
 
         private Dictionary<string, Font> Fonts = new Dictionary<string, Font>();
+
 
         private static ResMgr singleton;
 
@@ -74,6 +76,15 @@ namespace SS3D
         {
             if (GuiSkins.ContainsKey(key)) return GuiSkins[key];
             else return null;
+        }
+
+        /// <summary>
+        ///  Retrieves information describing a sprite from a GUI Skin. Returns an empty rectangle if not found.
+        /// </summary>
+        public System.Drawing.Rectangle GetGUIInfo(string key)
+        {
+            if (GuiInfo.ContainsKey(key)) return GuiInfo[key];
+            else return System.Drawing.Rectangle.Empty;
         }
 
         /// <summary>
@@ -176,6 +187,18 @@ namespace SS3D
                 GuiSkins.Add(guiName, newSkin);
             }
 
+            foreach (GUISkin skin in GuiSkins.Values)
+            {
+                foreach (GUIElement element in skin.Elements)
+                {
+                    if (!GuiInfo.ContainsKey(element.Name))
+                    {
+                        GuiInfo.Add(element.Name,
+                            new System.Drawing.Rectangle(element.Dimensions.X, element.Dimensions.Y,
+                                element.Dimensions.Width, element.Dimensions.Height));
+                    }
+                }
+            }
         }
 
         private void LoadFiles()

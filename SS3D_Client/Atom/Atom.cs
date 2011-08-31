@@ -339,15 +339,9 @@ namespace SS3D.Atom
         public virtual bool IsColliding()
         {
             ///CHECK TURF COLLISIONS
-            //Lets just check each corner of our sprite to see if it is in a wall tile for now.
-            /*System.Drawing.RectangleF myAABB = new System.Drawing.RectangleF(position.X - ((sprite.Width * sprite.UniformScale) / 2), 
-                position.Y - ((sprite.Height * sprite.UniformScale) / 2), 
-                (sprite.Width * sprite.UniformScale), 
-                (sprite.Height * sprite.UniformScale));*/
-
             System.Drawing.RectangleF myAABB = GetAABB();
 
-            if (atomManager.gameState.map.GetTileTypeFromWorldPosition(myAABB.Left+1, myAABB.Top+(myAABB.Height / 2)) == TileType.Wall) // Top left
+            if (atomManager.gameState.map.GetTileTypeFromWorldPosition(myAABB.Left+1, myAABB.Top) == TileType.Wall) // Top left
             {
                 return true;
             }
@@ -355,7 +349,7 @@ namespace SS3D.Atom
             {
                 return true;
             }
-            else if (atomManager.gameState.map.GetTileTypeFromWorldPosition(myAABB.Right - 1, myAABB.Top + (myAABB.Height / 2)) == TileType.Wall) // Top right
+            else if (atomManager.gameState.map.GetTileTypeFromWorldPosition(myAABB.Right - 1, myAABB.Top) == TileType.Wall) // Top right
             {
                 return true;
             }
@@ -375,18 +369,7 @@ namespace SS3D.Atom
 
             foreach (Atom a in atoms)
             {
-                /*System.Drawing.RectangleF box = new System.Drawing.RectangleF(a.position.X - ((a.sprite.Width * a.sprite.UniformScale) / 2), 
-                    a.position.Y - ((a.sprite.Height * a.sprite.UniformScale) / 2), 
-                    (a.sprite.Width * a.sprite.UniformScale), 
-                    (a.sprite.Height * a.sprite.UniformScale));*/
                 System.Drawing.RectangleF box = a.GetAABB();
-
-
-                if(a.GetType() == Type.GetType("SS3D.Atom.Object.Door.Door")) //DOOR SPECIAL CASE LOL
-                    box = new System.Drawing.RectangleF(a.position.X - ((a.sprite.Width * a.sprite.UniformScale) / 2),
-                    a.position.Y + ((a.sprite.Height * a.sprite.UniformScale) / 2) - 1,
-                    (a.sprite.Width * a.sprite.UniformScale),
-                    1);
 
                 if (box.IntersectsWith(myAABB))
                 {

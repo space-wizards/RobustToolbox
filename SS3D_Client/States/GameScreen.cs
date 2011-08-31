@@ -49,6 +49,7 @@ namespace SS3D.States
         private Batch gasBatch;
         private Batch wallTopsBatch;
         private Batch decalBatch;
+        private Batch lightMapBatch;
         
         private List<Light> lightsLastFrame = new List<Light>();
         private List<Light> lightsThisFrame = new List<Light>();
@@ -131,6 +132,7 @@ namespace SS3D.States
             gasBatch = new Batch("gasBatch", 1);
             wallTopsBatch = new Batch("wallTopsBatch", 1);
             decalBatch = new Batch("decalBatch", 1);
+            lightMapBatch = new Batch("lightMapBatch", 1);
             
             realScreenWidthTiles = (float)Gorgon.CurrentClippingViewport.Width / map.tileSpacing;
             realScreenHeightTiles = (float)Gorgon.CurrentClippingViewport.Height / map.tileSpacing;
@@ -341,12 +343,14 @@ namespace SS3D.States
                             {
                                 t.Render(xTopLeft, yTopLeft, map.tileSpacing);
                                 t.DrawDecals(xTopLeft, yTopLeft, map.tileSpacing, decalBatch);
+                                t.RenderLight(xTopLeft, yTopLeft, map.tileSpacing, lightMapBatch);
                             }
                         }
                         else
                         {
                             t.Render(xTopLeft, yTopLeft, map.tileSpacing);
                             t.DrawDecals(xTopLeft, yTopLeft, map.tileSpacing, decalBatch);
+                            t.RenderLight(xTopLeft, yTopLeft, map.tileSpacing, lightMapBatch);
                         }
 
                         ///Render gas sprites to gas batch
@@ -357,26 +361,9 @@ namespace SS3D.States
                 }
 
                 Gorgon.CurrentRenderTarget = lightTarget;
-                for (int x = xStart; x <= xEnd; x++)
-                {
-                    for (int y = yStart; y <= yEnd; y++)
-                    {
-                        t = map.tileArray[x, y];
-                        if (!t.Visible)
-                            continue;
-                        if (t.tileType == TileType.Wall)
-                        {
-                            if (t.tilePosition.Y <= centerTile.Y)
-                            {
-                                t.RenderLight(xTopLeft, yTopLeft, map.tileSpacing);
-                            }
-                        }
-                        else
-                        {
-                            t.RenderLight(xTopLeft, yTopLeft, map.tileSpacing);
-                        }
-                    }
-                }
+                if(lightMapBatch.Count > 0)
+                    lightMapBatch.Draw();
+                lightMapBatch.Clear();
                 Gorgon.CurrentRenderTarget = baseTarget;
 
                 ///Render decal batch

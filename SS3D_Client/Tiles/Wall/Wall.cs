@@ -49,8 +49,8 @@ namespace SS3D.Tiles.Wall
             {
                 sprite.SetPosition(tilePosition.X * tileSpacing - xTopLeft, tilePosition.Y * tileSpacing - yTopLeft);
                 sprite.Position -= new Vector2D(0, tileSpacing);
-                sprite.Color = Color.White;
-                LightManager.Singleton.ApplyLightsToSprite(tileLights, sprite, new Vector2D(xTopLeft, yTopLeft));
+                sprite.Color = Color.FromArgb(200,Color.White);
+                //LightManager.Singleton.ApplyLightsToSprite(tileLights, sprite, new Vector2D(xTopLeft, yTopLeft));
                 //sprite.Draw();
                 wallTopsBatch.AddClone(sprite);
             }

@@ -379,7 +379,7 @@ namespace SS3D.States
                 }
                 Gorgon.CurrentRenderTarget = baseTarget;
 
-                ///Render wall tops batch
+                ///Render decal batch
                 if (decalBatch.Count > 0)
                     decalBatch.Draw();
                 decalBatch.Clear();
@@ -436,7 +436,7 @@ namespace SS3D.States
                 ///RENDER GHOSTS
                 ///Render person ghosts to have them appear behind walls. This should really be 
                 ///better thought out I think, but for now this works...
-                if (atomManager != null)
+                /*if (atomManager != null)
                 {
                     IEnumerable<Atom.Atom> atoms = from a in atomManager.atomDictionary.Values
                                                    where
@@ -451,15 +451,14 @@ namespace SS3D.States
                     {
                         a.Render(xTopLeft, yTopLeft, 70);
                     }
-                }
+                }*/
 
                 gamePlacementMgr.Draw();
             }
 
-            Gorgon.CurrentRenderTarget = null;
+            //Gorgon.CurrentRenderTarget = baseTarget;
             //Gorgon.CurrentShader = ResMgr.Singleton.GetShader("dummyshader");
             //ResMgr.Singleton.GetShader("bloomtest").Parameters["_spriteImage"].SetValue(baseTarget.Image);
-            baseTargetSprite.Draw();
             lightTargetSprite.BlendingMode = BlendingModes.ColorAdditive;
             lightTargetSprite.DestinationBlend = AlphaBlendOperation.InverseSourceAlpha; // Use the alpha of the light to do bright/darkness
             lightTargetSprite.SourceBlend = AlphaBlendOperation.DestinationColor;
@@ -469,7 +468,9 @@ namespace SS3D.States
             ResMgr.Singleton.GetShader("Blur").Parameters["blurAmount"].SetValue(5.0f);
             lightTargetSprite.Draw();
             Gorgon.CurrentShader = null;
-
+            Gorgon.CurrentRenderTarget = null;
+            baseTargetSprite.Draw();
+            
             //Gorgon.CurrentShader = null;
             
             //Draw UI

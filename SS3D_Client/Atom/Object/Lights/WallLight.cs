@@ -26,8 +26,7 @@ namespace SS3D.Atom.Object.Lights
             Direction d = (Direction)message.ReadByte();
             if (light == null)
             {
-                light = new Light(atomManager.gameState.map, Color.FromArgb(r, g, b), 190, LightState.On, atomManager.gameState.map.GetTileArrayPositionFromWorldPosition(position), d);
-                light.range = 300;
+                light = new Light(atomManager.gameState.map, Color.FromArgb(r, g, b), 300, LightState.On, atomManager.gameState.map.GetTileArrayPositionFromWorldPosition(position), d);
             }
             else
             {

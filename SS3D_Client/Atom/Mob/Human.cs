@@ -30,9 +30,9 @@ namespace SS3D.Atom.Mob
         {
             return new System.Drawing.RectangleF(
                 position.X - (sprite.AABB.Width / 2),
-                position.Y + (sprite.AABB.Height / 2) - 1,
+                position.Y + (sprite.AABB.Height / 2) - 10,
                 sprite.AABB.Width,
-                sprite.AABB.Height);
+                20);
         }
     }
 }

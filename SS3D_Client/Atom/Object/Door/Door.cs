@@ -70,5 +70,13 @@ namespace SS3D.Atom.Object.Door
 
 
         }
+
+        public override RectangleF GetAABB()
+        {
+            return new RectangleF(position.X - ((sprite.Width * sprite.UniformScale) / 2),
+                    position.Y + ((sprite.Height * sprite.UniformScale) / 2) - 1,
+                    (sprite.Width * sprite.UniformScale),
+                    1);
+        }
     }
 }

@@ -291,7 +291,7 @@ namespace SS3D
                 }
                 catch (Exception EX)
                 {
-                    MessageBox.Show(EX.Message,EX.TargetSite.ToString());
+                    MessageBox.Show(EX.Message,file.Filename);
                 }
             }
         }

@@ -159,7 +159,7 @@ namespace SS3D_Server.Atom
             SS3DServer.Singleton.SendMessageToAll(message, NetDeliveryMethod.ReliableUnordered);
         }
 
-        protected NetOutgoingMessage CreateAtomMessage()
+        public NetOutgoingMessage CreateAtomMessage()
         {
             NetOutgoingMessage message = SS3DNetServer.Singleton.CreateMessage();
             message.Write((byte)NetMessage.AtomManagerMessage);

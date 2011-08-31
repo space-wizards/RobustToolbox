@@ -590,6 +590,8 @@ namespace SS3D.States
                                            System.Math.Sqrt((playerController.controlledAtom.position.X - a.position.X) * (playerController.controlledAtom.position.X - a.position.X)) < checkDistance &&
                                            System.Math.Sqrt((playerController.controlledAtom.position.Y - a.position.Y) * (playerController.controlledAtom.position.Y - a.position.Y)) < checkDistance &&
                                            a.visible
+                                           orderby a.position.Y + ((a.sprite.Height * a.sprite.UniformScale) / 2) ascending
+                                           orderby a.drawDepth ascending
                                            select a;
             // See which one our click AABB intersected with
             foreach (Atom.Atom a in atoms)
@@ -612,6 +614,7 @@ namespace SS3D.States
                         }
                     }
                     atomClicked = true; // We clicked an atom so we don't want to send a turf click message too.
+                    break;
                 }
 
             }

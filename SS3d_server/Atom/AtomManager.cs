@@ -186,7 +186,26 @@ namespace SS3D_Server.Atom
 
         #endregion
 
+        private void SendAtomDrawDepth(ushort uid, int depth)
+        {
+            NetOutgoingMessage message = SS3DNetServer.Singleton.CreateMessage();
+            message.Write((byte)NetMessage.AtomManagerMessage);
+            message.Write((byte)AtomManagerMessage.SetDrawDepth);
+            message.Write(uid);
+            message.WriteVariableInt32(depth);
+            SS3DServer.Singleton.SendMessageToAll(message);
+        }
         #endregion
+
+        public void DrawDepthAtom(ushort uid, int depth)
+        {
+            DrawDepthAtom(atomDictionary[uid], depth);
+        }
+
+        public void DrawDepthAtom(Atom atom, int depth)
+        {
+            SendAtomDrawDepth(atom.uid, depth);
+        }
 
         public void DeleteAtom(ushort uid)
         {

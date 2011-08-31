@@ -22,6 +22,7 @@ namespace SS3D_Server.Atom
         public ushort uid;
         public AtomManager atomManager;
         public bool updateRequired = false;
+        public int drawDepth = 0;
 
         // Extensions
         public List<Extension.Extension> extensions;

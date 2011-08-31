@@ -109,21 +109,25 @@ namespace SS3D_Server.Atom
         #region spawning
         private void SendSpawnAtom(ushort uid, string type)
         {
+            Atom atom = atomDictionary[uid];
             NetOutgoingMessage message = SS3DNetServer.Singleton.CreateMessage();
             message.Write((byte)NetMessage.AtomManagerMessage);
             message.Write((byte)AtomManagerMessage.SpawnAtom);
             message.Write(uid);
             message.Write(type);
+            message.Write(atom.drawDepth);
             SS3DServer.Singleton.SendMessageToAll(message);
         }
 
         private void SendSpawnAtom(ushort uid, string type, NetConnection client)
         {
+            Atom atom = atomDictionary[uid];
             NetOutgoingMessage message = SS3DNetServer.Singleton.CreateMessage();
             message.Write((byte)NetMessage.AtomManagerMessage);
             message.Write((byte)AtomManagerMessage.SpawnAtom);
             message.Write(uid);
             message.Write(type);
+            message.Write(atom.drawDepth);
             SS3DServer.Singleton.SendMessageTo(message, client);
         }
 
@@ -192,18 +196,19 @@ namespace SS3D_Server.Atom
             message.Write((byte)NetMessage.AtomManagerMessage);
             message.Write((byte)AtomManagerMessage.SetDrawDepth);
             message.Write(uid);
-            message.WriteVariableInt32(depth);
+            message.Write(depth);
             SS3DServer.Singleton.SendMessageToAll(message);
         }
         #endregion
 
-        public void DrawDepthAtom(ushort uid, int depth)
+        public void SetDrawDepthAtom(ushort uid, int depth)
         {
-            DrawDepthAtom(atomDictionary[uid], depth);
+            SetDrawDepthAtom(atomDictionary[uid], depth);
         }
 
-        public void DrawDepthAtom(Atom atom, int depth)
+        public void SetDrawDepthAtom(Atom atom, int depth)
         {
+            atom.drawDepth = depth;
             SendAtomDrawDepth(atom.uid, depth);
         }
 

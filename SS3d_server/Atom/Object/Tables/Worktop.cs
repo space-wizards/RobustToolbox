@@ -39,7 +39,7 @@ namespace SS3D_Server.Atom.Object.Worktop
             detachMsg.Write((byte)ItemMessage.Detach);
             SS3DServer.Singleton.SendMessageToAll(detachMsg);
 
-            atomManager.DrawDepthAtom(a, 1); //base is 0 - draw this above the table.
+            atomManager.SetDrawDepthAtom(a, 1); //base is 0 - draw this above the table.
 
             usedItem.SendAppendageUIUpdate(m);
 

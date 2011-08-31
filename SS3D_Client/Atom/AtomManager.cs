@@ -92,7 +92,7 @@ namespace SS3D.Atom
         private void HandleDrawDepth(NetIncomingMessage message)
         {
             ushort uid = message.ReadUInt16();
-            int depth = message.ReadVariableInt32();
+            int depth = message.ReadInt32();
             atomDictionary[uid].drawDepth = depth;
         }
 
@@ -100,8 +100,11 @@ namespace SS3D.Atom
         {
             ushort uid = message.ReadUInt16();
             string type = message.ReadString();
+            int drawDepth = message.ReadInt32();
 
             Atom a = SpawnAtom(uid, type);
+            a.drawDepth = drawDepth;
+
             // Tell the atom to pull its position data etc. from the server
             a.SendPullMessage();
         }

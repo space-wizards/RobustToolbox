@@ -613,10 +613,9 @@ namespace SS3D.States
             }
             IEnumerable<Atom.Atom> atoms = from a in atomManager.atomDictionary.Values
                                            where
-                                           System.Math.Sqrt((playerController.controlledAtom.position.X - a.position.X) * (playerController.controlledAtom.position.X - a.position.X)) < checkDistance &&
-                                           System.Math.Sqrt((playerController.controlledAtom.position.Y - a.position.Y) * (playerController.controlledAtom.position.Y - a.position.Y)) < checkDistance &&
+                                           (playerController.controlledAtom.position - a.position).Length < checkDistance &&
                                            a.visible
-                                           orderby a.position.Y + ((a.sprite.Height * a.sprite.UniformScale) / 2) descending
+                                           orderby (new Vector2D(a.sprite.AABB.X + (a.sprite.AABB.Width/2),a.sprite.AABB.Y + (a.sprite.AABB.Height/2)) - new Vector2D(mouseAABB.X, mouseAABB.Y)).Length descending
                                            orderby a.drawDepth descending
                                            select a;
             // See which one our click AABB intersected with

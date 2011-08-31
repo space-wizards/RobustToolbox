@@ -25,5 +25,14 @@ namespace SS3D.Atom.Mob
         {
             base.MoveBack();
         }
+
+        public override System.Drawing.RectangleF GetAABB()
+        {
+            return new System.Drawing.RectangleF(
+                position.X - (sprite.AABB.Width / 2),
+                position.Y + (sprite.AABB.Height / 2) - 1,
+                sprite.AABB.Width,
+                sprite.AABB.Height);
+        }
     }
 }

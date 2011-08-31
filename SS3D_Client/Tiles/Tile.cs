@@ -84,15 +84,15 @@ namespace SS3D.Tiles
             }
         }
 
-        public virtual void RenderLight(float xTopLeft, float yTopLeft, int tileSpacing)
+        public virtual void RenderLight(float xTopLeft, float yTopLeft, int tileSpacing, Batch lightMapBatch)
         {
             if (Visible)
             {
                 lightSprite.Color = Color.Black;
                 lightSprite.SetPosition(tilePosition.X * tileSpacing - xTopLeft, tilePosition.Y * tileSpacing - yTopLeft);
                 LightManager.Singleton.ApplyLightsToSprite(tileLights, lightSprite, new Vector2D(xTopLeft, yTopLeft));
-                lightSprite.Draw();
-
+                //lightSprite.Draw();
+                lightMapBatch.AddClone(lightSprite);
             }
 
         }

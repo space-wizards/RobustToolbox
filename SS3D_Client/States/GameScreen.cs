@@ -10,6 +10,7 @@ using SS3D.Modules.Network;
 using SS3D.Modules.UI;
 using SS3D.Modules.UI.Components;
 using SS3D.Atom;
+using SS3D.Effects;
 
 using SS3D_shared;
 
@@ -44,12 +45,16 @@ namespace SS3D.States
         public DateTime now;
         private RenderImage baseTarget;
         private RenderImage lightTarget;
+        private RenderImage lightTargetIntermediate;
         private Sprite baseTargetSprite;
         private Sprite lightTargetSprite;
+        private Sprite lightTargetIntermediateSprite;
         private Batch gasBatch;
         private Batch wallTopsBatch;
         private Batch decalBatch;
         private Batch lightMapBatch;
+        private GaussianBlur gaussianBlur;
+        public bool blendLightMap = true;
         
         private List<Light> lightsLastFrame = new List<Light>();
         private List<Light> lightsThisFrame = new List<Light>();
@@ -128,11 +133,16 @@ namespace SS3D.States
             lightTarget = new RenderImage("lightTarget", Gorgon.Screen.Width, Gorgon.Screen.Height, ImageBufferFormats.BufferRGB888A8);
             lightTargetSprite = new Sprite("lightTargetSprite", lightTarget);
             lightTargetSprite.DepthWriteEnabled = false;
+            lightTargetIntermediate = new RenderImage("lightTargetIntermediate", Gorgon.Screen.Width, Gorgon.Screen.Height, ImageBufferFormats.BufferRGB888A8);
+            lightTargetIntermediateSprite = new Sprite("lightTargetIntermediateSprite", lightTargetIntermediate);
+            lightTargetIntermediateSprite.DepthWriteEnabled = false;
 
             gasBatch = new Batch("gasBatch", 1);
             wallTopsBatch = new Batch("wallTopsBatch", 1);
             decalBatch = new Batch("decalBatch", 1);
             lightMapBatch = new Batch("lightMapBatch", 1);
+
+            gaussianBlur = new GaussianBlur();
             
             realScreenWidthTiles = (float)Gorgon.CurrentClippingViewport.Width / map.tileSpacing;
             realScreenHeightTiles = (float)Gorgon.CurrentClippingViewport.Height / map.tileSpacing;
@@ -298,6 +308,7 @@ namespace SS3D.States
 
             baseTarget.Clear(System.Drawing.Color.Black);
             lightTarget.Clear(System.Drawing.Color.Black);
+            lightTargetIntermediate.Clear(System.Drawing.Color.FromArgb(0,System.Drawing.Color.Black));
             Gorgon.Screen.Clear(System.Drawing.Color.Black);
             
             Gorgon.Screen.DefaultView.Left = 400;
@@ -444,23 +455,33 @@ namespace SS3D.States
                 gamePlacementMgr.Draw();
             }
 
-            //Gorgon.CurrentRenderTarget = baseTarget;
-            //Gorgon.CurrentShader = ResMgr.Singleton.GetShader("dummyshader");
-            //ResMgr.Singleton.GetShader("bloomtest").Parameters["_spriteImage"].SetValue(baseTarget.Image);
-            lightTargetSprite.BlendingMode = BlendingModes.ColorAdditive;
-            lightTargetSprite.DestinationBlend = AlphaBlendOperation.InverseSourceAlpha; // Use the alpha of the light to do bright/darkness
-            lightTargetSprite.SourceBlend = AlphaBlendOperation.DestinationColor;
+            lightTargetSprite.DestinationBlend = AlphaBlendOperation.Zero;
+            lightTargetSprite.SourceBlend = AlphaBlendOperation.One;
 
-            Gorgon.CurrentShader = ResMgr.Singleton.GetShader("Blur");
-            ResMgr.Singleton.GetShader("Blur").Parameters["blurAmount"].SetValue(3.0f);
-            lightTargetSprite.Draw();
+            gaussianBlur.SetSize(256.0f);
+            gaussianBlur.PerformGaussianBlur(lightTargetSprite, lightTarget);
+            gaussianBlur.SetSize(512.0f);
+            gaussianBlur.PerformGaussianBlur(lightTargetSprite, lightTarget);
+            gaussianBlur.SetSize(1024.0f);
+            gaussianBlur.PerformGaussianBlur(lightTargetSprite, lightTarget);
             
-            Gorgon.CurrentShader = null;
-            Gorgon.CurrentRenderTarget = null;
+
             baseTargetSprite.Draw();
-            
-            //Gorgon.CurrentShader = null;
-            
+
+            if (blendLightMap)
+            {
+                lightTargetSprite.DestinationBlend = AlphaBlendOperation.InverseSourceAlpha; // Use the alpha of the light to do bright/darkness
+                lightTargetSprite.SourceBlend = AlphaBlendOperation.DestinationColor;
+            }
+            else
+            {
+                lightTargetSprite.DestinationBlend = AlphaBlendOperation.Zero; // Use the alpha of the light to do bright/darkness
+                lightTargetSprite.SourceBlend = AlphaBlendOperation.One;
+            }
+            lightTargetSprite.Draw();
+
+            Gorgon.CurrentRenderTarget = null;
+            //baseTargetSprite.Draw();
             //Draw UI
             foreach (IGuiComponent component in guiComponents.Values)
             {
@@ -530,6 +551,11 @@ namespace SS3D.States
             {
                 telepathy = !telepathy;
             }
+            if (e.Key == KeyboardKeys.F7)
+            {
+                blendLightMap = !blendLightMap;
+            }
+
             //if (e.Key == KeyboardKeys.Left)
             //{
             //    if (gamePlacementMgr.isBuilding)

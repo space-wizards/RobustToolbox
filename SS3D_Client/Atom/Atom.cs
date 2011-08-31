@@ -340,10 +340,12 @@ namespace SS3D.Atom
         {
             ///CHECK TURF COLLISIONS
             //Lets just check each corner of our sprite to see if it is in a wall tile for now.
-            System.Drawing.RectangleF myAABB = new System.Drawing.RectangleF(position.X - ((sprite.Width * sprite.UniformScale) / 2), 
+            /*System.Drawing.RectangleF myAABB = new System.Drawing.RectangleF(position.X - ((sprite.Width * sprite.UniformScale) / 2), 
                 position.Y - ((sprite.Height * sprite.UniformScale) / 2), 
                 (sprite.Width * sprite.UniformScale), 
-                (sprite.Height * sprite.UniformScale));
+                (sprite.Height * sprite.UniformScale));*/
+
+            System.Drawing.RectangleF myAABB = GetAABB();
 
             if (atomManager.gameState.map.GetTileTypeFromWorldPosition(myAABB.Left+1, myAABB.Top+(myAABB.Height / 2)) == TileType.Wall) // Top left
             {
@@ -373,10 +375,12 @@ namespace SS3D.Atom
 
             foreach (Atom a in atoms)
             {
-                System.Drawing.RectangleF box = new System.Drawing.RectangleF(a.position.X - ((a.sprite.Width * a.sprite.UniformScale) / 2), 
+                /*System.Drawing.RectangleF box = new System.Drawing.RectangleF(a.position.X - ((a.sprite.Width * a.sprite.UniformScale) / 2), 
                     a.position.Y - ((a.sprite.Height * a.sprite.UniformScale) / 2), 
                     (a.sprite.Width * a.sprite.UniformScale), 
-                    (a.sprite.Height * a.sprite.UniformScale));
+                    (a.sprite.Height * a.sprite.UniformScale));*/
+                System.Drawing.RectangleF box = a.GetAABB();
+
 
                 if(a.GetType() == Type.GetType("SS3D.Atom.Object.Door.Door")) //DOOR SPECIAL CASE LOL
                     box = new System.Drawing.RectangleF(a.position.X - ((a.sprite.Width * a.sprite.UniformScale) / 2),
@@ -392,6 +396,14 @@ namespace SS3D.Atom
 
             return false;
 
+        }
+
+        public virtual System.Drawing.RectangleF GetAABB()
+        {
+            return new System.Drawing.RectangleF(position.X - (sprite.AABB.Width / 2),
+                position.Y - (sprite.AABB.Height / 2),
+                sprite.AABB.Width,
+                sprite.AABB.Height);
         }
 
         public virtual void TranslateLocal(Vector2D toPosition) 
@@ -527,7 +539,7 @@ namespace SS3D.Atom
             System.Drawing.RectangleF AABB = new System.Drawing.RectangleF(position.X - (sprite.Width / 2), position.Y - (sprite.Height / 2), sprite.Width, sprite.Height);
             if (!AABB.Contains(worldPosition))
                 return false;
-            System.Drawing.Point spritePosition = new System.Drawing.Point((int)(worldPosition.X - AABB.X), (int)(worldPosition.Y - AABB.Y));
+            System.Drawing.Point spritePosition = new System.Drawing.Point((int)(worldPosition.X - AABB.X + sprite.ImageOffset.X), (int)(worldPosition.Y - AABB.Y + sprite.ImageOffset.Y));
             Image.ImageLockBox imgData = sprite.Image.GetImageData();
             imgData.Lock(false);
             System.Drawing.Color pixColour = System.Drawing.Color.FromArgb((int)(imgData[spritePosition.X, spritePosition.Y]));

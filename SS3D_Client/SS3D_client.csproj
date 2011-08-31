@@ -81,8 +81,8 @@
   </PropertyGroup>
   <ItemGroup>
     <Reference Include="Gorgon, Version=1.1.4119.34319, Culture=neutral, PublicKeyToken=c001d94e9acbbee7, processorArchitecture=MSIL">
-      <HintPath>..\References\Release\Gorgon.dll</HintPath>
       <SpecificVersion>False</SpecificVersion>
+      <HintPath>..\References\Release\Gorgon.dll</HintPath>
     </Reference>
     <Reference Include="GorgonFramework, Version=1.1.4119.34319, Culture=neutral, PublicKeyToken=c001d94e9acbbee7, processorArchitecture=MSIL">
       <HintPath>..\References\Release\GorgonFramework.dll</HintPath>
@@ -123,6 +123,7 @@
     <Compile Include="Atom\Object\Door\Door.cs" />
     <Compile Include="Atom\Object\Lights\WallLight.cs" />
     <Compile Include="Atom\Object\Object.cs" />
+    <Compile Include="Effects\GaussianBlur.cs" />
     <Compile Include="Atom\Object\Tables\Worktop.cs" />
     <Compile Include="MainWindow.cs">
       <SubType>Form</SubType>

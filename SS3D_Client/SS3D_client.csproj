@@ -123,6 +123,7 @@
     <Compile Include="Atom\Object\Door\Door.cs" />
     <Compile Include="Atom\Object\Lights\WallLight.cs" />
     <Compile Include="Atom\Object\Object.cs" />
+    <Compile Include="Atom\Object\Wall\Glass.cs" />
     <Compile Include="Effects\GaussianBlur.cs" />
     <Compile Include="Atom\Object\Tables\Worktop.cs" />
     <Compile Include="MainWindow.cs">

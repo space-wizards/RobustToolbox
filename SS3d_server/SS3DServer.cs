@@ -51,9 +51,6 @@ namespace SS3D_Server
         public DateTime time;   // The server current frame time
         
         #region Server Settings
-
-        string dataFilename = "ServerSettings.cfg";
-        Dictionary<string, string> serverSettings = new Dictionary<string, string>();
         int serverPort = 1212;
         string serverName = "SS3D Server";
         string serverMapName = "SavedMap";
@@ -450,60 +447,6 @@ namespace SS3D_Server
                 SS3DNetServer.Singleton.SendMessage(tileMessage, connection, NetDeliveryMethod.ReliableOrdered);
                 LogManager.Log(connection.RemoteEndpoint.Address.ToString() + ": Tile Change Being Sent", LogLevel.Debug);
             }
-        }
-
-        private void LoadDataFile(string filename)
-        {
-            serverSettings = new Dictionary<string, string>();
-
-            if (!File.Exists(filename))
-            {
-                WriteNewDataFile();
-            }
-
-            FileStream file = new FileStream(filename, FileMode.Open, FileAccess.Read);
-            StreamReader sr = new StreamReader(file);
-
-            string line = sr.ReadLine();
-            while (line != null)
-            {
-                string[] args = line.Split("=".ToCharArray());
-                if (args.Length == 2 && line[0] != '#')
-                {
-                    serverSettings[args[0].Trim()] = args[1].Trim();
-                }
-                line = sr.ReadLine();
-            }
-
-            sr.Close();
-            file.Close();
-
-        }
-
-        public void WriteNewDataFile()
-        {
-            Console.WriteLine("ServerSettings.config not found. Generating default file.");
-            FileStream fs = new FileStream(dataFilename, FileMode.Create);
-            StreamWriter sw = new StreamWriter(fs);
-
-            sw.WriteLine("#Server name");
-            sw.WriteLine("Name=" + serverName);
-            sw.WriteLine("#Server Port");
-            sw.WriteLine("Port=" + serverPort);
-            sw.WriteLine("#Welcome message to send to clients on connect");
-            sw.WriteLine("WelcomeMessage=" + serverWelcomeMessage);
-            sw.WriteLine("#Game Type: 0 = Map editor, 1 = Game");
-            sw.WriteLine("GameType=" + (byte)gameType);
-            sw.WriteLine("#The name of the file containing the map to load");
-            sw.WriteLine("MapName=" + serverMapName);
-            sw.WriteLine("#The max number of players allowed");
-            sw.WriteLine("MaxPlayers=" + serverMaxPlayers);
-            sw.WriteLine("#The target server update rate in frames per second");
-            sw.WriteLine("Rate=" + serverRate);
-
-
-            sw.Close();
-            fs.Close();
         }
 
         public void SendMessageToAll(NetOutgoingMessage message, NetDeliveryMethod method = NetDeliveryMethod.ReliableOrdered)

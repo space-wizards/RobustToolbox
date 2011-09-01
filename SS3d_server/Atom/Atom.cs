@@ -106,7 +106,7 @@ namespace SS3D_Server.Atom
             {
                 case AtomMessage.Pull:
                     // Pass a message to the atom in question
-                    Push();
+                    Push(message.SenderConnection);
                     break;
                 case AtomMessage.PositionUpdate:
                     // We'll accept position packets from the client so that movement doesn't lag. There may be other special cases like this.
@@ -145,6 +145,11 @@ namespace SS3D_Server.Atom
             SendInterpolationPacket(true); // Forcibly update the position of the node.
         }
 
+        public virtual void Push(NetConnection sender)
+        {
+            SendInterpolationPacket(true, sender);
+        }
+
         public void SendInterpolationPacket(bool force)
         {
             NetOutgoingMessage message = CreateAtomMessage();
@@ -158,6 +163,21 @@ namespace SS3D_Server.Atom
              */
             message.Write(force);
             SS3DServer.Singleton.SendMessageToAll(message, NetDeliveryMethod.ReliableUnordered);
+        }
+
+        public void SendInterpolationPacket(bool force, NetConnection sender)
+        {
+            NetOutgoingMessage message = CreateAtomMessage();
+            message.Write((byte)AtomMessage.InterpolationPacket);
+
+            InterpolationPacket i = new InterpolationPacket((float)position.X, (float)position.Y, rotation, 0); // Fuckugly
+            i.WriteMessage(message);
+
+            /* VVVV This is the force flag. If this flag is set, the client will run the interpolation 
+             * packet even if it is that client's player mob. Use this in case the client has ended up somewhere bad.
+             */
+            message.Write(force);
+            SS3DServer.Singleton.SendMessageTo(message, sender, NetDeliveryMethod.ReliableUnordered);
         }
 
         public NetOutgoingMessage CreateAtomMessage()

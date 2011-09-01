@@ -23,7 +23,7 @@ namespace SS3D_Server.Modules.Chat
             ChatChannel channel = (ChatChannel)message.ReadByte();
             string text = message.ReadString();
             string name = SS3DServer.Singleton.clientList[message.SenderConnection].playerName;
-            Console.Write("CHAT- Channel " + channel.ToString() +  " - Player " + name + "Message: " + text + "\n");
+            LogManager.Log("CHAT- Channel " + channel.ToString() +  " - Player " + name + "Message: " + text + "\n");
 
             ushort atomID = 0;
             if (SS3DServer.Singleton.playerManager.GetSessionByConnection(message.SenderConnection).attachedAtom != null)

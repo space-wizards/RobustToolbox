@@ -89,11 +89,10 @@ namespace SS3D_Server.Modules
         public void DispatchVerb(string verb, ushort uid)
         {
             //Handle global verbs
-            Console.WriteLine(verb + " from " + uid);
+            LogManager.Log("Verb: " + verb + " from " + uid, LogLevel.Debug);
             
             if (uid == 0)
             {
-                Console.WriteLine(verb);
                 switch (verb)
                 {
                     case "joingame":
@@ -121,6 +120,7 @@ namespace SS3D_Server.Modules
         public void SetName(string _name)
         {
             name = _name;
+            LogManager.Log("Player set name: " + connectedClient.RemoteEndpoint.Address.ToString() + " -> " + name);
             if (attachedAtom != null)
             {
                 attachedAtom.SetName(_name);
@@ -152,6 +152,7 @@ namespace SS3D_Server.Modules
         {
             status = SessionStatus.Connected;
             //Put player in lobby immediately.
+            LogManager.Log("Player connected - " + connectedClient.RemoteEndpoint.Address.ToString());
             JoinLobby();
         }
 

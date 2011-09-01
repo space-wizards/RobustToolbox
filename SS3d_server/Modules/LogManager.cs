@@ -21,7 +21,9 @@ namespace SS3D_Server.Modules
             }
         }
 
-
+        /// <summary>
+        /// Singleton
+        /// </summary>
         private static LogManager singleton;
         public static LogManager Singleton
         {
@@ -33,14 +35,21 @@ namespace SS3D_Server.Modules
             }
         }
 
-        public static void Initialize(string _logPath)
+        /// <summary>
+        /// Initialize log
+        /// </summary>
+        /// <param name="_logPath"></param>
+        public static void Initialize(string _logPath, LogLevel logLevel = LogLevel.Information)
         {
             singleton = new LogManager();
             singleton.LogPath = _logPath;
-            singleton.currentLogLevel = LogLevel.Debug;
+            singleton.currentLogLevel = logLevel;
             singleton.Start();
         }
 
+        /// <summary>
+        /// Start logging, open the log file etc.
+        /// </summary>
         public void Start()
         {
             logStream = new StreamWriter(LogPath, true);
@@ -49,21 +58,41 @@ namespace SS3D_Server.Modules
             LogOne("LogManager started.", LogLevel.Information);
         }
 
-        public void LogOne(string Message, LogLevel logLevel)
+        /// <summary>
+        /// Log dat shit
+        /// </summary>
+        /// <param name="Message"></param>
+        /// <param name="logLevel"></param>
+        private void LogOne(string Message, LogLevel logLevel)
         {
             if (singleton == null)
                 throw new TypeInitializationException("LogManager Not Initialized.", null);
 
             if ((int)logLevel >= (int)singleton.currentLogLevel)
             {
-                logStream.WriteLine(logLevel.ToString() + ": " + Message);
-                Console.Write(logLevel.ToString() + ": " + Message + "\n");
+                string logType = logLevel.ToString();
+                if(logType == "Information")
+                    logType = "Info";
+                logStream.WriteLine(logType + ": " + Message);
+                Console.Write(logType + ": " + Message + "\n");
             }
         }
 
-        public static void Log(string Message, LogLevel logLevel)
+        /// <summary>
+        /// Log a message. Only works if the logmanager is initialized. Static method because its easier to type
+        /// </summary>
+        /// <param name="Message">the message</param>
+        /// <param name="logLevel">the level of the log item</param>
+        public static void Log(string Message, LogLevel logLevel = LogLevel.Information)
         {
-            singleton.LogOne(Message, logLevel);
+            try
+            {
+                singleton.LogOne(Message, logLevel);
+            }
+            catch (NullReferenceException e)
+            {
+                Console.WriteLine(Message);
+            }
         }
 
     }

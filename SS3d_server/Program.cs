@@ -4,6 +4,7 @@ using System.Linq;
 using System.Text;
 
 using Lidgren.Network;
+using SS3D_Server.Modules;
 
 namespace SS3D_Server
 {
@@ -14,17 +15,17 @@ namespace SS3D_Server
         static void Main(string[] args)
         {
             EntryPoint main = new EntryPoint();
-            Console.WriteLine("Server -> Starting");
+            LogManager.Log("Server -> Starting");
             main.server = new SS3DServer();
 
             if (main.server.Start())
             {
-                Console.WriteLine("Server -> Can not start server"); //Not like you'd see this, haha. Perhaps later for logging.
+                LogManager.Log("Server -> Can not start server", LogLevel.Fatal); //Not like you'd see this, haha. Perhaps later for logging.
                 Environment.Exit(0);
             }
 
             string strVersion = System.Reflection.Assembly.GetExecutingAssembly().GetName().Version.ToString();
-            Console.WriteLine("Server Version " + strVersion + " -> Ready");
+            LogManager.Log("Server Version " + strVersion + " -> Ready");
 
             main.server.MainLoop();
         }

@@ -247,26 +247,26 @@ namespace SS3D_Server.Atom
             Stream s = File.Open("atoms.ss13", FileMode.Create);
             BinaryFormatter f = new BinaryFormatter();
 
-            Console.WriteLine("Writing atoms to file...");
+            LogManager.Log("Writing atoms to file...");
             List<Atom> saveList = new List<Atom>();
             foreach (Atom a in atomDictionary.Values)
             {
                 if (a.IsChildOfType(typeof(Mob.Mob)))
                     continue;
                 saveList.Add(a);
-                Console.Write(".");
+                //Console.Write(".");
             }
             f.Serialize(s, saveList);
-            Console.Write(".");
+            //Console.Write(".");
             s.Close();
-            Console.WriteLine("Done!");
+            LogManager.Log("Done writing atoms to file.");
         }
 
         public void LoadAtoms()
         {
             if (!File.Exists("atoms.ss13"))
             {
-                Console.WriteLine("***** Cannot find file atoms.ss13. Map starting empty *****");
+                LogManager.Log("***** Cannot find file atoms.ss13. Map starting empty *****", LogLevel.Warning);
                 return;
             }
 

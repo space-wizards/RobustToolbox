@@ -30,7 +30,6 @@ namespace SS3D_Server.Modules
             //Spawn the player's atom. There's probably a much better place to do this.
             Atom.Atom a = SS3DServer.Singleton.atomManager.SpawnAtom("Atom.Mob.Human");
             s.AttachToAtom(a);
-            Console.Write("2");
         }
 
         public PlayerSession GetSessionByConnection(NetConnection client)
@@ -54,6 +53,7 @@ namespace SS3D_Server.Modules
         {
             // Ends the session.
             PlayerSession session = GetSessionByConnection(client);
+            LogManager.Log(session.name + "disconnected.", LogLevel.Information);
             //Detach the atom and (dont)delete it.
             var a = session.attachedAtom;
             session.DetachFromAtom();

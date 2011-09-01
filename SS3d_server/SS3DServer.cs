@@ -91,13 +91,13 @@ namespace SS3D_Server
             serverMaxPlayers = cfgmgr.Configuration.serverMaxPlayers;
             gameType = cfgmgr.Configuration.gameType;
             serverWelcomeMessage = cfgmgr.Configuration.serverWelcomeMessage;
-            Console.WriteLine("Port: " + serverPort.ToString());
-            Console.WriteLine("Name: " + serverName);
-            Console.WriteLine("Rate: " + (int)serverRate + " (" + framePeriod + " ms)");
-            Console.WriteLine("Map: " + serverMapName);
-            Console.WriteLine("Max players: " + serverMaxPlayers);
-            Console.WriteLine("Game type: " + gameType);
-            Console.WriteLine("Welcome message: " + serverWelcomeMessage);
+            LogManager.Log("Port: " + serverPort.ToString());
+            LogManager.Log("Name: " + serverName);
+            LogManager.Log("Rate: " + (int)serverRate + " (" + framePeriod + " ms)");
+            LogManager.Log("Map: " + serverMapName);
+            LogManager.Log("Max players: " + serverMaxPlayers);
+            LogManager.Log("Game type: " + gameType);
+            LogManager.Log("Welcome message: " + serverWelcomeMessage);
         }
 
         /// <summary>
@@ -131,7 +131,7 @@ namespace SS3D_Server
             try
             {
                 time = DateTime.Now;
-                LoadDataFile(dataFilename);
+                //LoadDataFile(dataFilename);
                 LoadSettings();
                 netConfig.Port = serverPort;
                 var netServer = new SS3DNetServer(netConfig);
@@ -145,29 +145,13 @@ namespace SS3D_Server
             }
             catch (Lidgren.Network.NetException e)
             {
-                FileStream fs = new FileStream("Server Errors.txt", FileMode.Append, FileAccess.Write);
-                StreamWriter sw = new StreamWriter(fs);
-                sw.WriteLine("----------" + DateTime.Now.ToString() + "----------");
-                sw.Write(e.Message);
-                sw.WriteLine();
-                sw.WriteLine();
-                sw.Close();
-                fs.Close();
-                Console.WriteLine(e.Message);
+                LogManager.Log(e.Message, LogLevel.Error);
                 active = false;
                 return true;
             }
             catch (Exception e)
             {
-                FileStream fs = new FileStream("Server Errors.txt", FileMode.Append, FileAccess.Write);
-                StreamWriter sw = new StreamWriter(fs);
-                sw.WriteLine("----------" + DateTime.Now.ToString() + "----------");
-                sw.Write(e.Message);
-                sw.WriteLine();
-                sw.WriteLine();
-                sw.Close();
-                fs.Close();
-                Console.WriteLine(e.Message);
+                LogManager.Log(e.Message, LogLevel.Error);
                 active = false;
                 return true;
             }
@@ -225,19 +209,19 @@ namespace SS3D_Server
                     switch (msg.MessageType)
                     {
                         case NetIncomingMessageType.VerboseDebugMessage:
-                            Console.WriteLine(msg.ReadString());
+                            LogManager.Log(msg.ReadString(), LogLevel.Debug);
                             break;
 
                         case NetIncomingMessageType.DebugMessage:
-                            Console.WriteLine(msg.ReadString());
+                            LogManager.Log(msg.ReadString(), LogLevel.Debug);
                             break;
 
                         case NetIncomingMessageType.WarningMessage:
-                            Console.WriteLine(msg.ReadString());
+                            LogManager.Log(msg.ReadString(), LogLevel.Warning);
                             break;
 
                         case NetIncomingMessageType.ErrorMessage:
-                            Console.WriteLine(msg.ReadString());
+                            LogManager.Log(msg.ReadString(), LogLevel.Error);
                             break;
 
                         case NetIncomingMessageType.Data:
@@ -251,7 +235,7 @@ namespace SS3D_Server
                             HandleStatusChanged(msg);
                             break;
                         default:
-                            Console.WriteLine("Unhandled type: " + msg.MessageType);
+                            LogManager.Log("Unhandled type: " + msg.MessageType, LogLevel.Error);
                             break;
                     }
                     SS3DNetServer.Singleton.Recycle(msg);
@@ -321,14 +305,14 @@ namespace SS3D_Server
         {
             NetConnection sender = msg.SenderConnection;
             string senderIP = sender.RemoteEndpoint.Address.ToString();
-            Console.WriteLine(senderIP + ": Status change");
+            LogManager.Log(senderIP + ": Status change");
 
             if (sender.Status == NetConnectionStatus.Connected)
             {
-                Console.WriteLine(senderIP + ": Connection request");
+                LogManager.Log(senderIP + ": Connection request");
                 if (clientList.ContainsKey(sender))
                 {
-                    Console.WriteLine(senderIP + ": Already connected");
+                    LogManager.Log(senderIP + ": Already connected", LogLevel.Error);
                     return;
                 }
                 else
@@ -340,7 +324,7 @@ namespace SS3D_Server
             }
             else if (sender.Status == NetConnectionStatus.Disconnected)
             {
-                Console.WriteLine(senderIP + ": Disconnected");
+                LogManager.Log(senderIP + ": Disconnected");
 
                 playerManager.EndSession(sender);
 
@@ -422,7 +406,7 @@ namespace SS3D_Server
         // The default 30x30 map is 900 bytes, a 100x100 one is 10,000 bytes (10kb).
         public void SendMap(NetConnection connection)
         {
-            Console.WriteLine(connection.RemoteEndpoint.Address.ToString() + ": Sending map");
+            LogManager.Log(connection.RemoteEndpoint.Address.ToString() + ": Sending map");
             NetOutgoingMessage mapMessage = SS3DNetServer.Singleton.CreateMessage();
             mapMessage.Write((byte)NetMessage.SendMap);
 
@@ -444,7 +428,7 @@ namespace SS3D_Server
             }
 
             SS3DNetServer.Singleton.SendMessage(mapMessage, connection, NetDeliveryMethod.ReliableOrdered);
-            Console.WriteLine(connection.RemoteEndpoint.Address.ToString() + ": Sending map finished with message size: " + mapMessage.LengthBytes + " bytes");
+            LogManager.Log(connection.RemoteEndpoint.Address.ToString() + ": Sending map finished with message size: " + mapMessage.LengthBytes + " bytes");
 
             // Lets also send them all the items and mobs.
             atomManager.NewPlayer(connection);
@@ -464,7 +448,7 @@ namespace SS3D_Server
             foreach(NetConnection connection in clientList.Keys)
             {
                 SS3DNetServer.Singleton.SendMessage(tileMessage, connection, NetDeliveryMethod.ReliableOrdered);
-                Console.WriteLine(connection.RemoteEndpoint.Address.ToString() + ": Tile Change Being Sent");
+                LogManager.Log(connection.RemoteEndpoint.Address.ToString() + ": Tile Change Being Sent", LogLevel.Debug);
             }
         }
 
@@ -542,7 +526,7 @@ namespace SS3D_Server
             {
                 return;
             }
-            Console.WriteLine("Sending to one with size: " + message.LengthBytes + " bytes");
+            LogManager.Log("Sending to one with size: " + message.LengthBytes + " bytes", LogLevel.Debug);
             SS3DNetServer.Singleton.SendMessage(message, connection, method);
         }
 

@@ -31,7 +31,8 @@ namespace SS3D.States
         {
             prg = _prg;
             mStateMgr = prg.mStateMgr;
-            playerController = new PlayerController(this);
+            PlayerController.Initialize(this);
+            playerController = PlayerController.Singleton;
 
             prg.mNetworkMgr.MessageArrived += new NetworkMsgHandler(mNetworkMgr_MessageArrived);
 

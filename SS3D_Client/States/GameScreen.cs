@@ -110,7 +110,8 @@ namespace SS3D.States
             map = new Map();
 
             atomManager = new AtomManager(this, prg);
-            playerController = new PlayerController(this, atomManager);
+            PlayerController.Initialize(this, atomManager);
+            playerController = PlayerController.Singleton;
             //SetUp();
             //SetUpGUI();
 

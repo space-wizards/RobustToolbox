@@ -21,6 +21,23 @@ namespace SS3D.Modules
         public AtomManager atomManager;
         public Atom.Atom controlledAtom;
 
+        private static PlayerController singleton = null;
+        public static PlayerController Singleton
+        {
+            get
+            {
+                if (singleton != null)
+                    return singleton;
+                else
+                    throw new TypeInitializationException("PlayerController singleton not initialized.", null);
+            }
+        }
+
+        public static void Initialize(State _runningState, AtomManager _atomManager = null)
+        {
+            singleton = new PlayerController(_runningState, _atomManager);
+        }
+
         public PlayerController(State _runningState, AtomManager _atomManager)
         {
             runningState = _runningState;

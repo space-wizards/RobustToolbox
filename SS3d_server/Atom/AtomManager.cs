@@ -190,6 +190,9 @@ namespace SS3D_Server.Atom
 
         #endregion
 
+        /// <summary>
+        ///  <para>Broadcasts draw depth value of atom to all connected players.</para>
+        /// </summary>
         private void SendAtomDrawDepth(ushort uid, int depth)
         {
             NetOutgoingMessage message = SS3DNetServer.Singleton.CreateMessage();
@@ -201,11 +204,17 @@ namespace SS3D_Server.Atom
         }
         #endregion
 
+        /// <summary>
+        ///  <para>Sets draw depth value of serverside instance and broadcasts draw depth value of atom to all connected players.</para>
+        /// </summary>
         public void SetDrawDepthAtom(ushort uid, int depth)
         {
             SetDrawDepthAtom(atomDictionary[uid], depth);
         }
 
+        /// <summary>
+        ///  <para>Sets draw depth value of serverside instance and broadcasts draw depth value of atom to all connected players.</para>
+        /// </summary>
         public void SetDrawDepthAtom(Atom atom, int depth)
         {
             atom.drawDepth = depth;

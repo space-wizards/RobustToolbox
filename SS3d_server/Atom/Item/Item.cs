@@ -103,6 +103,8 @@ namespace SS3D_Server.Atom.Item
             holdingAppendage = newHolder.selectedAppendage;
             //The appendage stores the item it is holding. This is probably redundant, but it is convenient.
             newHolder.selectedAppendage.heldItem = this;
+            //Set draw depth back to default - 0
+            atomManager.SetDrawDepthAtom(uid, 0);
 
             SendAttachMessage();
             SendAppendageUIUpdate(newHolder);

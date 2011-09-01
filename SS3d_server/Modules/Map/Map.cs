@@ -175,19 +175,19 @@ namespace SS3D_Server.Modules.Map
 
             FileStream fs = new FileStream(fileName, FileMode.Create);
             StreamWriter sw = new StreamWriter(fs);
-            Console.WriteLine("Saving map: W: " + mapWidth + " H: " + mapHeight);
+            LogManager.Log("Saving map: W: " + mapWidth + " H: " + mapHeight);
             sw.WriteLine(mapWidth);
             sw.WriteLine(mapHeight);
             
             for (int y = 0; y < mapHeight; y++)
             {
-                Console.Write(".");
+                //Console.Write(".");
                 for (int x = 0; x < mapWidth; x++)
                 {
                     sw.WriteLine(tileArray[x, y].tileType.ToString());
                 }
             }
-            Console.Write("Done!");
+            LogManager.Log("Done saving map.");
 
             sw.Close();
             fs.Close();
@@ -195,7 +195,7 @@ namespace SS3D_Server.Modules.Map
 
         private void NewMap()
         {
-            Console.WriteLine("***** Cannot find map. Generating blank map. *****");
+            LogManager.Log("***** Cannot find map. Generating blank map. *****", LogLevel.Warning);
             mapWidth = 50;
             mapHeight = 50;
             tileArray = new Tile[mapWidth, mapHeight];
@@ -353,7 +353,7 @@ namespace SS3D_Server.Modules.Map
                         rec.pack(message);
                     }
                     SS3DServer.Singleton.SendMessageToAll(message, NetDeliveryMethod.Unreliable);// Gas updates aren't a big deal.
-                    Console.Write("Sending Gas update with " + records.Count.ToString() + " records\n");
+                    LogManager.Log("Sending Gas update with " + records.Count.ToString() + " records\n", LogLevel.Debug);
                 }
                 lastAtmosDisplayPush = DateTime.Now;
             }
@@ -383,7 +383,7 @@ namespace SS3D_Server.Modules.Map
                 rec.pack(message);
             }
             SS3DServer.Singleton.SendMessageTo(message, client, NetDeliveryMethod.Unreliable);// Gas updates aren't a big deal.
-            Console.Write("Sending Gas update to " + SS3DServer.Singleton.playerManager.GetSessionByConnection(client).name + "\n");
+            LogManager.Log("Sending Gas update to " + SS3DServer.Singleton.playerManager.GetSessionByConnection(client).name + "\n", LogLevel.Debug);
         }
         #endregion
 

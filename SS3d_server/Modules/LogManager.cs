@@ -73,7 +73,7 @@ namespace SS3D_Server.Modules
                 string logType = logLevel.ToString();
                 if(logType == "Information")
                     logType = "Info";
-                logStream.WriteLine(logType + ": " + Message);
+                logStream.WriteLine(DateTime.Now.ToString("o") + " - " + logType + ": " + Message);
                 Console.Write(logType + ": " + Message + "\n");
             }
         }

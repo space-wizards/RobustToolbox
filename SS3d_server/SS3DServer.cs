@@ -457,10 +457,8 @@ namespace SS3D_Server
             }
             int i = clientList.Count;
             //Console.WriteLine("Sending to all ("+i+") with size: " + message.LengthBits + " bytes");
-            foreach (Client client in clientList.Values)
-            {
-                SS3DNetServer.Singleton.SendMessage(message, client.netConnection, method);
-            }
+
+            SS3DNetServer.Singleton.SendMessage(message, SS3DNetServer.Singleton.Connections, method, 0);
         }
 
         public void SendMessageTo(NetOutgoingMessage message, NetConnection connection, NetDeliveryMethod method = NetDeliveryMethod.ReliableOrdered)

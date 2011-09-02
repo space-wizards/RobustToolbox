@@ -32,12 +32,5 @@ namespace SS3D_Server.Atom.Object
                     break;
             }
         }
-
-        protected override void ApplyAction(Atom a, Mob.Mob m)
-        {
-
-        }
-
-
     }
 }

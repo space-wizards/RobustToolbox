@@ -18,7 +18,7 @@ namespace SS3D_Server.Atom.Object.Wall
         public override void Damage(int amount)
         {
             base.Damage(amount);
-            if (currentHealth / maxHealth <= 0)
+            if ((float)currentHealth / (float)maxHealth <= 0)
                 SetSpriteState(1);
 
         }

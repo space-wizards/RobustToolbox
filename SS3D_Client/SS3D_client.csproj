@@ -88,11 +88,6 @@
       <HintPath>..\References\Release\GorgonFramework.dll</HintPath>
       <SpecificVersion>False</SpecificVersion>
     </Reference>
-    <Reference Include="Lidgren.Network, Version=2010.7.15.0, Culture=neutral, processorArchitecture=MSIL">
-      <SpecificVersion>False</SpecificVersion>
-      <HintPath>..\References\$(Configuration)\Lidgren.Network.dll</HintPath>
-      <Private>True</Private>
-    </Reference>
     <Reference Include="System" />
     <Reference Include="System.Core">
       <RequiredTargetFramework>3.5</RequiredTargetFramework>
@@ -213,6 +208,10 @@
     </Content>
   </ItemGroup>
   <ItemGroup>
+    <ProjectReference Include="..\Lidgren.Network\Lidgren.Network.csproj">
+      <Project>{AE483C29-042E-4226-BA52-D247CE7676DA}</Project>
+      <Name>Lidgren.Network</Name>
+    </ProjectReference>
     <ProjectReference Include="..\SS3D_shared\SS3D_shared.csproj">
       <Project>{4229D7E3-C3AE-4C0A-B2B1-BB20911150DC}</Project>
       <Name>SS3D_shared</Name>

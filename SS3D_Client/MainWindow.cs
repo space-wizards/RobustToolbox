@@ -269,6 +269,9 @@ namespace SS3D
             // shutdown networking!!!
             base.OnFormClosing(e);
             Gorgon.Terminate();
+            prg.mStateMgr.Shutdown();
+            prg.mNetworkMgr.Disconnect();
+            prg.mNetworkMgr.ShutDown();
         }
 
         private void quitToolStripMenuItem_Click(object sender, EventArgs e)
@@ -386,6 +389,8 @@ namespace SS3D
             {
                 atomSpawnType = atomTypes[((ToolStripDropDownItem)sender).Text];
                 toolStripStatusLabel1.Text = atomSpawnType.Name.ToString();
+
+                MainMenuStrip.Hide();
             }
             else
             {
@@ -408,6 +413,8 @@ namespace SS3D
                         break;
                     }
                 }
+
+                MainMenuStrip.Hide();
             }
         }
         #endregion
@@ -417,6 +424,8 @@ namespace SS3D
             atomSpawnType = null;
             tileSpawnType = TileType.Floor;
             toolStripStatusLabel1.Text = tileSpawnType.ToString();
+
+            MainMenuStrip.Hide();
         }
 
         private void spaceToolStripMenuItem_Click(object sender, EventArgs e)

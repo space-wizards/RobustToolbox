@@ -196,9 +196,9 @@ namespace SS3D.States
             lastUpdate = now;
             now = DateTime.Now;
             atomManager.Update();
-            gamePlacementMgr.Update();
             editMode = prg.GorgonForm.editMode;
             gamePlacementMgr.editMode = editMode;
+            gamePlacementMgr.Update();
         }
 
         private void mNetworkMgr_MessageArrived(NetworkManager netMgr, NetIncomingMessage msg)
@@ -585,7 +585,7 @@ namespace SS3D.States
         }
         public override void MouseDown(MouseInputEventArgs e)
         {
-            if (gamePlacementMgr.isBuilding)
+            if (gamePlacementMgr.isBuilding && !prg.GorgonForm.MainMenuStrip.Visible)
             {
                 gamePlacementMgr.PlaceBuilding();
                 return;

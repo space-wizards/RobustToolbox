@@ -6,5 +6,6 @@
     PositionUpdate,
     Extended,
     Click,
-    SpriteState
+    SpriteState,
+    SetCollidable
 }

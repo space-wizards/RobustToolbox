@@ -19,6 +19,7 @@ namespace SS3D_Server.Atom.Object.Lights
             name = "WallLight";
             light = new Item.Light(new Item.Color(200, 200, 200), Direction.South);
             light.Normalize();
+
         }
 
         public override void SerializedInit()

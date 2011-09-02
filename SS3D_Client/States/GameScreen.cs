@@ -225,6 +225,9 @@ namespace SS3D.States
                         case NetMessage.PlayerSessionMessage:
                             playerController.HandleNetworkMessage(msg);
                             break;
+                        case NetMessage.PlacementManagerMessage:
+                            //*Sad Trombone*
+                            break;
                         case NetMessage.SendMap:
                             RecieveMap(msg);
                             break;

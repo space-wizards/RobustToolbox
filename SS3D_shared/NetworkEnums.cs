@@ -15,6 +15,7 @@ public enum NetMessage
     MobMessage,
     ChatMessage,
     AtomManagerMessage,
+    PlacementManagerMessage,
     PlayerSessionMessage,
     JoinGame,
     AtmosDisplayUpdate,
@@ -38,7 +39,13 @@ public enum AtomManagerMessage
     SpawnAtom,
     DeleteAtom,
     SetDrawDepth,
-    Passthrough
+    Passthrough,
+}
+
+public enum PlacementManagerMessage
+{
+    StartPlacement,
+    CancelPlacement
 }
 
 public enum MobMessage

@@ -80,6 +80,7 @@
     <Compile Include="Atom\Item\Item.cs" />
     <Compile Include="Atom\Mob\Mob.cs" />
     <Compile Include="Atom\Mob\Player.cs" />
+    <Compile Include="HelperClasses\BuildPermission.cs" />
     <Compile Include="HelperClasses\QueryFlags.cs" />
     <Compile Include="HelperClasses\Vector2.cs" />
     <Compile Include="ObjectTypeEnum.cs" />

@@ -24,6 +24,7 @@ namespace SS3D.Atom
 
         //SPRITE
         public Sprite sprite;
+        System.Drawing.Color defaultColor = System.Drawing.Color.White;
         public string spritename = "noSprite";
         public Dictionary<int, string> spriteNames;
         public int drawDepth = 0;
@@ -352,7 +353,7 @@ namespace SS3D.Atom
                 if (draw && visible)
                 {
                     //LightManager.Singleton.ApplyLightsToSprite(atomManager.gameState.map.tileArray[tilePos.X, tilePos.Y].tileLights, sprite, new Vector2D(xTopLeft, yTopLeft));
-                    sprite.Color = System.Drawing.Color.FromArgb(Opacity, sprite.Color);
+                    sprite.Color = System.Drawing.Color.FromArgb(Opacity, defaultColor);
                     sprite.Draw();
                 }
             }

@@ -33,7 +33,8 @@ namespace SS3D.Atom.Mob
             : base()
         {
             //meshName = "male_new.mesh";
-            spritename = "Human";
+            SetSpriteName(0, "Human");
+            SetSpriteByIndex(0);
             speed = walkSpeed;
         }
 

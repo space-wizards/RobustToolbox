@@ -15,7 +15,8 @@ namespace SS3D.Atom.Object.Door
         public Door()
             : base()
         {
-            spritename = "DoorEW";
+            SetSpriteName(0, "DoorEW");
+            SetSpriteByIndex(0);
             collidable = true;
             snapTogrid = true;
         }

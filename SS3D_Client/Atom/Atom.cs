@@ -25,6 +25,7 @@ namespace SS3D.Atom
         //SPRITE
         public Sprite sprite;
         public string spritename = "noSprite";
+        public Dictionary<int, string> spriteNames;
         public int drawDepth = 0;
 
         public string name;
@@ -63,25 +64,12 @@ namespace SS3D.Atom
         #region constructors and init
         public Atom()
         {
-            keyStates = new Dictionary<KeyboardKeys, bool>();
-            keyHandlers = new Dictionary<KeyboardKeys, KeyEvent>();
-
-            position = new Vector2D(160, 160);
-            rotation = 0;
-
-            interpolationPackets = new List<InterpolationPacket>();
+            Initialize();
         }
 
         public Atom(ushort _uid, AtomManager _atomManager)
         {
-            keyStates = new Dictionary<KeyboardKeys, bool>();
-            keyHandlers = new Dictionary<KeyboardKeys, KeyEvent>();
-
-            position = new Vector2D(160, 160);
-            rotation = 0;
-
-            interpolationPackets = new List<InterpolationPacket>();
-
+            Initialize();
             SetUp(_uid, _atomManager);
         }
 
@@ -93,6 +81,27 @@ namespace SS3D.Atom
             Draw();
         }
 
+        public virtual void Initialize()
+        {
+            keyStates = new Dictionary<KeyboardKeys, bool>();
+            keyHandlers = new Dictionary<KeyboardKeys, KeyEvent>();
+
+            position = new Vector2D(160, 160);
+            rotation = 0;
+
+            interpolationPackets = new List<InterpolationPacket>();
+            spriteNames = new Dictionary<int, string>();
+            spriteNames[0] = spritename;
+        }
+
+        public virtual void SetSpriteName(int index, string name)
+        {
+            if (spriteNames.Keys.Contains(index))
+                spriteNames[index] = name;
+            else
+                spriteNames.Add(index, name);
+        }
+
         public virtual void Draw()
         {
             //Draw the atom into the scene. This should be called after instantiation.
@@ -100,6 +109,15 @@ namespace SS3D.Atom
             sprite.Position = new Vector2D(position.X, position.Y);
             sprite.SetAxis(sprite.Width / 2, sprite.Height / 2);
             drawn = true;
+        }
+
+        public virtual void SetSpriteByIndex(int index)
+        {
+            if (spriteNames.Keys.Contains(index))
+            {
+                spritename = spriteNames[index];
+                Draw();
+            }
         }
         #endregion
 
@@ -117,6 +135,9 @@ namespace SS3D.Atom
                 case AtomMessage.InterpolationPacket:
                     HandleInterpolationPacket(message);
                     break;
+                case AtomMessage.SpriteState:
+                    HandleSpriteState(message);
+                    break;
                 case AtomMessage.Extended:
                     HandleExtendedMessage(message); // This will punt unhandled messages to a virtual method so derived classes can handle them.
                     break;
@@ -125,6 +146,12 @@ namespace SS3D.Atom
                     break;
             }
             return;
+        }
+
+        private void HandleSpriteState(NetIncomingMessage message)
+        {
+            int index = message.ReadInt32();
+            SetSpriteByIndex(index);
         }
 
         protected virtual void HandleExtendedMessage(NetIncomingMessage message)

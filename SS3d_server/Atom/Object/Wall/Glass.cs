@@ -11,7 +11,16 @@ namespace SS3D_Server.Atom.Object.Wall
         public Glass()
             : base()
         {
-            name = "worktop";
+            name = "glass";
+            damageable = true;
+        }
+
+        public override void Damage(int amount)
+        {
+            base.Damage(amount);
+            if (currentHealth / maxHealth <= 0)
+                SetSpriteState(1);
+
         }
     }
 }

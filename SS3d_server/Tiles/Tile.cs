@@ -19,6 +19,15 @@ namespace SS3D_Server.Tiles
         private int _x;
         private int _y;
 
+        public delegate void TileChangeHandler(TileType tNew);
+
+        public event TileChangeHandler TileChange; //This event will be used for wall mounted objects and
+                                                   //other things that need to react to tiles changing.
+        public void RaiseChangedEvent(TileType type)
+        {
+            if(TileChange != null) TileChange(type);
+        }
+
         public Tile(int x, int y, Map _map)
         {
             tileState = TileState.Healthy;

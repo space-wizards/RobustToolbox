@@ -12,6 +12,7 @@ using SS3D_shared.HelperClasses;
 using SS3D_Server.Modules.Map;
 using Lidgren.Network;
 using SS3D_Server.Modules;
+using SS3D_Server.Atom.Mob;
 
 namespace SS3D_Server.Atom
 {
@@ -20,6 +21,7 @@ namespace SS3D_Server.Atom
         #region Vars
 
         public Dictionary<ushort, Atom> atomDictionary;
+
         private ushort lastUID = 0;
         #endregion
 

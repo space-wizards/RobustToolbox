@@ -395,6 +395,9 @@ namespace SS3D_Server.Modules.Map
             if (x > mapWidth || z > mapWidth)
                 return false;
 
+            if (tileArray[x, z] != null) //If theres a tile, activate it's changed event.
+                tileArray[x, z].RaiseChangedEvent(newType);
+
             Tile tile = GenerateNewTile(x, z, newType);
 
             tileArray[x, z] = tile;

@@ -4,6 +4,7 @@ using System.Linq;
 using System.Text;
 using Lidgren.Network;
 using SS3D_Server.Atom.Mob.HelperClasses;
+using SS3D_shared.HelperClasses;
 
 namespace SS3D_Server.Atom.Mob
 {

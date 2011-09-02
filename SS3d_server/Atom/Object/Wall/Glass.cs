@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using System.Runtime.Serialization;
 
 namespace SS3D_Server.Atom.Object.Wall
 {
@@ -13,14 +14,29 @@ namespace SS3D_Server.Atom.Object.Wall
         {
             name = "glass";
             damageable = true;
+            collidable = true;
         }
 
         public override void Damage(int amount)
         {
             base.Damage(amount);
             if ((float)currentHealth / (float)maxHealth <= 0)
+            {
                 SetSpriteState(1);
+                collidable = false;
+                SendCollidable();
+            }
 
+        }
+
+        public Glass(SerializationInfo info, StreamingContext ctxt)
+        {
+            //SerializeBasicInfo(info, ctxt);
+        }
+
+        public override void GetObjectData(SerializationInfo info, StreamingContext ctxt)
+        {
+            //base.GetObjectData(info, ctxt);
         }
     }
 }

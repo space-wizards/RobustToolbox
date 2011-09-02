@@ -25,6 +25,7 @@ namespace SS3D_Server.Atom
         public int drawDepth = 0;
         public int spritestate = 0; //This is the sprite state so the client knows which of the atom's defined sprites to display.
         public bool damageable = false;
+        public bool collidable = false;
 
         // Extensions
         public List<Extension.Extension> extensions;
@@ -69,39 +70,6 @@ namespace SS3D_Server.Atom
             // isn't called. Put things in here which need to be done when it's created.
         }
 
-        public virtual void SendState()
-        {
-            // Sends the state to all
-            SendSpriteState();
-        }
-
-        public virtual void SendState(NetConnection client)
-        {
-            /// This is empty because so far the only things that need it are items.
-            SendSpriteState(client);
-        }
-
-        public virtual void SetSpriteState(int index)
-        {
-            spritestate = index;
-            SendSpriteState();
-        }
-        
-        public virtual void SendSpriteState()
-        {
-            NetOutgoingMessage message = CreateAtomMessage();
-            message.Write((byte)AtomMessage.SpriteState);
-            message.Write(spritestate);
-            SS3DServer.Singleton.SendMessageToAll(message);
-        }
-
-        public virtual void SendSpriteState(NetConnection client)
-        {
-            NetOutgoingMessage message = CreateAtomMessage();
-            message.Write((byte)AtomMessage.SpriteState);
-            message.Write(spritestate);
-            SS3DServer.Singleton.SendMessageTo(message, client);
-        }
 
         /// <summary>
         /// Used to cleanly destroy an atom.
@@ -223,6 +191,58 @@ namespace SS3D_Server.Atom
         protected void SendMessageTo(NetOutgoingMessage message, NetConnection client , NetDeliveryMethod method = NetDeliveryMethod.ReliableOrdered)
         {
             SS3DServer.Singleton.SendMessageTo(message, client, method);
+        }
+
+        public virtual void SendState()
+        {
+            // Sends the state to all
+            SendSpriteState();
+            SendCollidable();
+        }
+
+        public virtual void SendState(NetConnection client)
+        {
+            /// This is empty because so far the only things that need it are items.
+            SendSpriteState(client);
+            SendCollidable(client);
+        }
+
+        public virtual void SetSpriteState(int index)
+        {
+            spritestate = index;
+            SendSpriteState();
+        }
+
+        public virtual void SendSpriteState()
+        {
+            NetOutgoingMessage message = CreateAtomMessage();
+            message.Write((byte)AtomMessage.SpriteState);
+            message.Write(spritestate);
+            SS3DServer.Singleton.SendMessageToAll(message);
+        }
+
+        public virtual void SendSpriteState(NetConnection client)
+        {
+            NetOutgoingMessage message = CreateAtomMessage();
+            message.Write((byte)AtomMessage.SpriteState);
+            message.Write(spritestate);
+            SS3DServer.Singleton.SendMessageTo(message, client);
+        }
+
+        public virtual void SendCollidable()
+        {
+            NetOutgoingMessage  message = CreateAtomMessage();
+            message.Write((byte)AtomMessage.SetCollidable);
+            message.Write(collidable);
+            SS3DServer.Singleton.SendMessageToAll(message);
+        }
+
+        public virtual void SendCollidable(NetConnection client)
+        {
+            NetOutgoingMessage message = CreateAtomMessage();
+            message.Write((byte)AtomMessage.SetCollidable);
+            message.Write(collidable);
+            SS3DServer.Singleton.SendMessageTo(message, client);
         }
 
         public virtual void HandlePositionUpdate(NetIncomingMessage message)

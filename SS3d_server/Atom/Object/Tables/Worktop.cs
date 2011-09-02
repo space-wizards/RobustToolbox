@@ -17,6 +17,7 @@ namespace SS3D_Server.Atom.Object.Worktop
             : base()
         {
             name = "worktop";
+            collidable = true;
         }
 
         protected override void ApplyAction(Atom a, Mob.Mob m)

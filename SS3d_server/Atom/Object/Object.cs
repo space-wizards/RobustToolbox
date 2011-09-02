@@ -32,5 +32,11 @@ namespace SS3D_Server.Atom.Object
                     break;
             }
         }
+
+        public override void Damage(int amount)
+        {
+            if(damageable)
+                base.Damage(amount);
+        }
     }
 }

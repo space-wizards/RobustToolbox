@@ -58,7 +58,12 @@ namespace SS3D
       // Create Network Manager
       prg.mNetworkMgr = new NetworkManager(prg);
 
+      Gorgon.Idle += new FrameEventHandler(prg.GorgonIdle);
       System.Windows.Forms.Application.Run(prg.GorgonForm);
+    }
+
+    public void GorgonIdle(object sender, FrameEventArgs e)
+    {
 
     }
 

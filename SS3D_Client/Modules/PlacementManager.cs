@@ -146,9 +146,6 @@ namespace SS3D.Modules
                     CancelBuilding();
                 }
             }
-            else
-                CancelBuilding();
-
             buildingBlocked = false;
 
             if (isBuilding)

@@ -5,5 +5,6 @@
     InterpolationPacket,
     PositionUpdate,
     Extended,
-    Click
+    Click,
+    SpriteState
 }

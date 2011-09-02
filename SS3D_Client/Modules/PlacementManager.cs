@@ -11,7 +11,6 @@ using SS3D.Atom;
 
 using SS3D_shared;
 using SS3D.States;
-using SS3D.Modules.Map;
 using SS3D.Atom;
 
 using System.Collections.Generic;

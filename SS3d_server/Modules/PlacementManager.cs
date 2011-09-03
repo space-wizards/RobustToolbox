@@ -20,19 +20,42 @@ namespace SS3D_Server.Modules
 
         public List<BuildPermission> BuildPermissions = new List<BuildPermission>(); //Holds build permissions for all mobs. A list of mobs and the objects they're allowed to request and how. One permission per mob.
 
+        #region Singleton
         private static PlacementManager singleton;
 
         private PlacementManager() { }
 
         public static PlacementManager Singleton
         {
-            get 
+            get
             {
                 if (singleton == null)
                 {
                     singleton = new PlacementManager();
                 }
                 return singleton;
+            }
+        } 
+        #endregion
+
+        /// <summary>
+        ///  Handles placement related client messages.
+        /// </summary>
+        public void HandleNetMessage(NetIncomingMessage msg)
+        {
+            PlacementManagerMessage messageType = (PlacementManagerMessage)msg.ReadByte();
+
+            switch (messageType)
+            {
+                case PlacementManagerMessage.StartPlacement:
+                    break;
+                case PlacementManagerMessage.CancelPlacement:
+                    break;
+                case PlacementManagerMessage.RequestPlacement:
+                    //StartBuilding(SS3DServer.Singleton.playerManager.GetSessionByConnection(msg.SenderConnection).attachedAtom, 90, "Atom.Object.Worktop.Worktop", false, false, true, false);
+                    //StartBuilding(SS3DServer.Singleton.playerManager.GetSessionByConnection(msg.SenderConnection).attachedAtom, 90, "Tiles.Floor.Floor", false, false, true, false);
+                    StartBuilding(SS3DServer.Singleton.playerManager.GetSessionByConnection(msg.SenderConnection).attachedAtom, 90, "Atom.Item.Container.Toolbox", false, true, false, false);
+                    break;
             }
         }
 
@@ -77,7 +100,7 @@ namespace SS3D_Server.Modules
         /// <summary>
         ///  Revokes open placement Permission and cancels object placement mode.
         /// </summary>
-        public void StartBuilding(Atom.Atom mob)
+        public void CancelBuilding(Atom.Atom mob)
         {
             RevokeAllBuildPermissions(mob);
             SendPlacementCancel(mob);

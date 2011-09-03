@@ -9,6 +9,7 @@ using Lidgren.Network;
 
 using SS3D_shared;
 using SS3D_shared.HelperClasses;
+using System.Reflection;
 
 namespace SS3D_Server.Modules.Map
 {
@@ -404,8 +405,33 @@ namespace SS3D_Server.Modules.Map
             return true;
         }
 
+        public bool ChangeTile(int x, int z, Type newType)
+        {
+            if (x < 0 || z < 0)
+                return false;
+            if (x > mapWidth || z > mapWidth)
+                return false;
+
+            object[] args = new object[3];
+            args[0] = x;
+            args[1] = z;
+            args[2] = this;
+            object newTile = Activator.CreateInstance(newType, args);
+            Tile castTile = (Tile)newTile;
+
+            if (tileArray[x, z] != null)
+                tileArray[x, z].RaiseChangedEvent(castTile.tileType);
+
+            tileArray[x, z] = castTile;
+
+            return true;
+        }
+
         public Tile GenerateNewTile(int x, int y, TileType type)
         {
+            if (tileArray[x, y] != null) //If theres a tile, activate it's changed event.
+                tileArray[x, y].RaiseChangedEvent(type);
+
             switch (type)
             {
                 case TileType.Space:

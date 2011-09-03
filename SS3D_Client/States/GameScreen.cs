@@ -152,7 +152,7 @@ namespace SS3D.States
             //scaleX = (float)Gorgon.CurrentClippingViewport.Width / (realScreenWidthTiles * map.tileSpacing);
             //scaleY = (float)Gorgon.CurrentClippingViewport.Height / (realScreenHeightTiles * map.tileSpacing);
 
-            PlacementManager.Singleton.Initialize(map, atomManager, this);
+            PlacementManager.Singleton.Initialize(map, atomManager, this, prg.mNetworkMgr);
 
             //Init GUI components
             gameChat = new Chatbox("gameChat");
@@ -534,7 +534,7 @@ namespace SS3D.States
             {
                 NetOutgoingMessage message = mStateMgr.prg.mNetworkMgr.netClient.CreateMessage();
                 message.Write((byte)NetMessage.PlacementManagerMessage);
-                message.Write((byte)PlacementManagerMessage.RequestPlacement);
+                message.Write((byte)PlacementManagerMessage.DEBUG_GetPlaceable);
                 mStateMgr.prg.mNetworkMgr.SendMessage(message, NetDeliveryMethod.ReliableUnordered);
             }
             if (e.Key == KeyboardKeys.F5)
@@ -578,6 +578,12 @@ namespace SS3D.States
         }
         public override void MouseDown(MouseInputEventArgs e)
         {
+            if (PlacementManager.Singleton.active != null)
+            {
+                PlacementManager.Singleton.QueuePlacement();
+                return;
+            }
+
             if (playerController.controlledAtom == null)
                 return;
 

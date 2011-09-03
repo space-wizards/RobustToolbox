@@ -38,11 +38,11 @@ namespace SS3D.Modules
 
         Sprite previewSprite;
         Type activeType;
-        Atom.Atom snapToAtom; //The current atom for snap to similar
-        byte snapToSide;      //The current side of the current atom for snap to similar
+        Atom.Atom snapToAtom; //The current atom for snap-to-similar
+        byte snapToSide;      //The current side of the current atom for snap-to-similar. 1 Top, 2 Right, 3 Bottom, 4 Left. Unused.
         Boolean validLocation = false;
+        Boolean previewVisible = true;
 
-        Boolean snapTo = false;
         Vector2D snapToLoc = Vector2D.Zero;
 
         #region Singleton
@@ -92,11 +92,14 @@ namespace SS3D.Modules
             active = new BuildPermission();
             active.range = msg.ReadUInt16();
             active.type = msg.ReadString();
-            active.attachesToWall = msg.ReadBoolean();
-            active.snapToSimilar = msg.ReadBoolean();
-            active.snapToTiles = msg.ReadBoolean();
+            active.AlignOption = (AlignmentOptions)msg.ReadByte();
             active.placeAnywhere = msg.ReadBoolean();
 
+            SetupPlacement();
+        }
+
+        private void SetupPlacement()
+        {
             Assembly currentAssembly = Assembly.GetExecutingAssembly();
             Type atomType = currentAssembly.GetType("SS3D." + active.type);
             activeType = atomType;
@@ -107,7 +110,7 @@ namespace SS3D.Modules
         {
             if (type.IsSubclassOf(typeof(Tiles.Tile))) //Tiles need special treatment.
             {
-                return "FloorTexture";
+                return "tilebuildoverlay";
             }
             else if (type.IsSubclassOf(typeof(Atom.Atom)))
             {
@@ -123,79 +126,187 @@ namespace SS3D.Modules
         {
             if (active != null)
             {
-                if(active.snapToSimilar)
+                validLocation = true;
+                previewVisible = true;
+
+                switch (active.AlignOption)
                 {
-                    var atoms = from a in atomManager.atomDictionary.Values
-                                where a.IsTypeOf(activeType)
-                                where a.visible
-                                where (a.position - gameScreen.mousePosWorld).Length <= active.range * 2
-                                orderby (a.position - gameScreen.mousePosWorld).Length ascending
-                                select a; //Basically: Get the closest similar object.
+                    #region Align None
+                    case AlignmentOptions.AlignNone:
+                        System.Drawing.Point arrayPos = map.GetTileArrayPositionFromWorldPosition(gameScreen.mousePosWorld);
+                        TileType type = map.GetTileTypeFromArrayPosition(arrayPos.X, arrayPos.Y);
+                        if (type == TileType.Wall) validLocation = false; //TO-DO: Better way for wall-checks. See byond density.
 
-                    if (atoms.Count() > 0)
-                    {
-                        //This assumes that the last frames AABBs are useable and sorta accurate.
-                        Vector2D topConnection = new Vector2D(atoms.First().GetAABB().Location.X + atoms.First().GetAABB().Width / 2, atoms.First().GetAABB().Top - atoms.First().GetAABB().Height / 2);
-                        Vector2D bottomConnection = new Vector2D(atoms.First().GetAABB().Location.X + atoms.First().GetAABB().Width / 2, atoms.First().GetAABB().Bottom + atoms.First().GetAABB().Height / 2);
-                        Vector2D leftConnection = new Vector2D(atoms.First().GetAABB().Left - atoms.First().GetAABB().Width / 2, atoms.First().GetAABB().Location.Y + atoms.First().GetAABB().Height / 2);
-                        Vector2D rightConnection = new Vector2D(atoms.First().GetAABB().Right + atoms.First().GetAABB().Width / 2, atoms.First().GetAABB().Location.Y + atoms.First().GetAABB().Height / 2);
+                        var atomsBlocking = from a in atomManager.atomDictionary.Values
+                                            where a.collidable
+                                            where a.GetAABB().IntersectsWith(previewSprite.AABB) || a.GetAABB().IntersectsWith(new System.Drawing.RectangleF(gameScreen.mousePosWorld.X,gameScreen.mousePosWorld.Y,2,2))
+                                            select a;
 
-                        List<Vector2D> sideConnections = new List<Vector2D>();
-                        sideConnections.Add(topConnection);
-                        sideConnections.Add(bottomConnection);
-                        sideConnections.Add(leftConnection);
-                        sideConnections.Add(rightConnection);
+                        if (atomsBlocking.Any() || (gameScreen.mousePosWorld - gameScreen.playerController.controlledAtom.position).Length > active.range)
+                            validLocation = false;
+                        break; 
+                    #endregion
 
+                    #region Align Similar
+                    case AlignmentOptions.AlignSimilar:
+                        var atoms = from a in atomManager.atomDictionary.Values
+                                    where a.IsTypeOf(activeType)
+                                    where a.visible
+                                    where (a.position - gameScreen.mousePosWorld).Length <= active.range * 2
+                                    where (a.position - gameScreen.playerController.controlledAtom.position).Length <= active.range
+                                    orderby (a.position - gameScreen.mousePosWorld).Length ascending
+                                    select a; //Basically: Get the closest similar object.
 
-                        var closestSide = from Vector2D vec in sideConnections
-                                          orderby (vec - gameScreen.mousePosWorld).Length ascending
-                                          select vec;
-
-                        if (closestSide.Count() >= 0)
+                        if (atoms.Count() > 0)
                         {
-                            snapToLoc = new Vector2D(closestSide.First().X - gameScreen.xTopLeft, closestSide.First().Y - gameScreen.yTopLeft);
-                            snapTo = true;
-                        }//ELSE INVALID
+                            //This assumes that the last frames AABBs are useable and sorta accurate.
+                            Vector2D topConnection = new Vector2D(atoms.First().GetAABB().Location.X + atoms.First().GetAABB().Width / 2, atoms.First().GetAABB().Top - atoms.First().GetAABB().Height / 2);
+                            Vector2D bottomConnection = new Vector2D(atoms.First().GetAABB().Location.X + atoms.First().GetAABB().Width / 2, atoms.First().GetAABB().Bottom + atoms.First().GetAABB().Height / 2);
+                            Vector2D leftConnection = new Vector2D(atoms.First().GetAABB().Left - atoms.First().GetAABB().Width / 2, atoms.First().GetAABB().Location.Y + atoms.First().GetAABB().Height / 2);
+                            Vector2D rightConnection = new Vector2D(atoms.First().GetAABB().Right + atoms.First().GetAABB().Width / 2, atoms.First().GetAABB().Location.Y + atoms.First().GetAABB().Height / 2);
 
-                        snapToAtom = atoms.First();
+                            List<Vector2D> sideConnections = new List<Vector2D>();
+                            sideConnections.Add(topConnection);
+                            sideConnections.Add(bottomConnection);
+                            sideConnections.Add(leftConnection);
+                            sideConnections.Add(rightConnection);
 
-                    } //ELSE INVALID PLACEMENT - MAKE INVISIBLE - DISABLE
-                }
-                else if (active.snapToTiles)
-                {
-                    Tiles.Tile tile = map.GetTileAt(gameScreen.mousePosWorld);
-                    snapToLoc = new Vector2D(tile.position.X - gameScreen.xTopLeft, tile.position.Y - gameScreen.yTopLeft);
-                    snapTo = true;
+                            var closestSide = from Vector2D vec in sideConnections
+                                              where (vec - gameScreen.playerController.controlledAtom.position).Length <= active.range
+                                              orderby (vec - gameScreen.mousePosWorld).Length ascending
+                                              select vec;
+
+                            if (closestSide.Any())
+                            {
+                                snapToLoc = new Vector2D(closestSide.First().X - gameScreen.xTopLeft, closestSide.First().Y - gameScreen.yTopLeft);
+                            }
+                            else //No side in range. This shouldnt be possible if the object itself is in range.
+                            {
+                                validLocation = false;
+                                previewVisible = false;
+                            }
+                            snapToAtom = atoms.First();
+                        }
+                        else //Nothing in range.
+                        {
+                            validLocation = false;
+                            previewVisible = false;
+                        }
+                        break; 
+                    #endregion
+
+                    #region Align Wall
+                    case AlignmentOptions.AlignWall:
+                        Tiles.Tile wall = map.GetTileAt(gameScreen.mousePosWorld);
+                        if (wall.tileType == TileType.Wall) //TODO: Needs a better way of finding solid tiles. See byond density.
+                        {
+                            Vector2D Node1 = new Vector2D(gameScreen.mousePosWorld.X, wall.position.Y);//Bit ugly.
+                            Vector2D Node2 = new Vector2D(gameScreen.mousePosWorld.X, wall.position.Y + 16);
+                            Vector2D Node3 = new Vector2D(gameScreen.mousePosWorld.X, wall.position.Y + 32);
+                            Vector2D Node4 = new Vector2D(gameScreen.mousePosWorld.X, wall.position.Y + 48);
+
+                            List<Vector2D> Nodes = new List<Vector2D>();
+                            Nodes.Add(Node1);
+                            Nodes.Add(Node2);
+                            Nodes.Add(Node3);
+                            Nodes.Add(Node4);
+
+                            var closestNode = from Vector2D vec in Nodes
+                                              where (vec - gameScreen.playerController.controlledAtom.position).Length <= active.range
+                                              orderby (vec - gameScreen.mousePosWorld).Length ascending
+                                              select vec;
+
+                            if (closestNode.Any())
+                            {
+                                snapToLoc = new Vector2D(closestNode.First().X - gameScreen.xTopLeft, closestNode.First().Y - gameScreen.yTopLeft);
+                            }
+                            else //No node in range. This shouldnt be possible if the object itself is in range.
+                            {
+                                validLocation = false;
+                                previewVisible = false;
+                            }
+                        }
+                        else //Not a supported tile. Or not in range.
+                        {
+                            validLocation = false;
+                            previewVisible = false;
+                        }
+                        break;
+                    #endregion
+
+                    #region Align Tile
+                    case AlignmentOptions.AlignTile:
+                        Tiles.Tile tile = map.GetTileAt(gameScreen.mousePosWorld);
+                        snapToLoc = new Vector2D(tile.position.X + (map.tileSpacing / 2) - gameScreen.xTopLeft, tile.position.Y + (map.tileSpacing / 2) - gameScreen.yTopLeft);
+                        if((snapToLoc - gameScreen.playerController.controlledAtom.position).Length > active.range) validLocation = false;
+                        break; 
+                    #endregion
                 }
             }
         }
 
         public void Draw()
         {
-            if (previewSprite != null)
+            if (active != null)
             {
-                if (snapTo)
+                Vector2D adjusted = Vector2D.Zero;
+
+                switch (active.AlignOption)
                 {
-                    Vector2D adjusted; //TODO: Different drawing methods for the different settings. Because see below.
-
-                    //Snap to grid and snap to similar need separate handling.
-                    if (previewSprite.Axis != Vector2D.Zero) //Inconsistent center of sprites. Tiles are not centered while atoms are.
-                        //adjusted = new Vector2D(snapToLoc.X + (previewSprite.Width / 2), snapToLoc.Y + (previewSprite.Height / 2));
+                    case AlignmentOptions.AlignSimilar:
                         adjusted = snapToLoc;
-                    else
+                        break;
+                    case AlignmentOptions.AlignTile:
+                        if (previewSprite.Axis == Vector2D.Zero) //Not all sprites are centered.
+                            adjusted = new Vector2D(snapToLoc.X - (previewSprite.Width / 2), snapToLoc.Y - (previewSprite.Height / 2)); //Not centered. Draw it centered.
+                        else
+                            adjusted = snapToLoc; //Centered. Draw it where it is.
+                        break;
+                    case AlignmentOptions.AlignWall:
                         adjusted = snapToLoc;
-
-                    previewSprite.Position = adjusted;
+                        break;
+                    case AlignmentOptions.AlignNone:
+                        adjusted = gameScreen.mousePosScreen;
+                        break;
                 }
-                else previewSprite.Position = gameScreen.mousePosScreen;
 
-                previewSprite.Opacity = 90;
-                previewSprite.Draw();
+                if (previewVisible)
+                {
+                    previewSprite.Position = adjusted;
+                    previewSprite.Color = validLocation ? System.Drawing.Color.LimeGreen : System.Drawing.Color.Red;
+                    previewSprite.Opacity = 90;
+                    previewSprite.Draw();
+                    previewSprite.Color = System.Drawing.Color.White;
+                }
 
-                Gorgon.Screen.Line(snapToAtom.position.X - gameScreen.xTopLeft, snapToAtom.position.Y - gameScreen.yTopLeft, -((snapToAtom.position.X - gameScreen.xTopLeft) - snapToLoc.X), -((snapToAtom.position.Y - gameScreen.yTopLeft) - snapToLoc.Y), System.Drawing.Color.White, new Vector2D(3, 3));
-                Gorgon.Screen.FilledCircle(snapToLoc.X, snapToLoc.Y, 3, System.Drawing.Color.LimeGreen);
-                Gorgon.Screen.FilledCircle(snapToAtom.position.X - gameScreen.xTopLeft, snapToAtom.position.Y - gameScreen.yTopLeft, 3, System.Drawing.Color.LimeGreen);
+                if (gameScreen.playerController.controlledAtom != null)
+                { 
+                    Gorgon.Screen.Circle(gameScreen.playerController.controlledAtom.position.X - gameScreen.xTopLeft, gameScreen.playerController.controlledAtom.position.Y - gameScreen.yTopLeft, active.range, System.Drawing.Color.DarkBlue, 2f, 2f);
+                }
 
+                #region Debug Display
+                if (previewVisible && validLocation)
+                {
+                    switch (active.AlignOption)
+                    {
+                        case AlignmentOptions.AlignSimilar:
+                            if (snapToAtom != null)
+                            {
+                                Gorgon.Screen.Line(snapToAtom.position.X - gameScreen.xTopLeft, snapToAtom.position.Y - gameScreen.yTopLeft, -((snapToAtom.position.X - gameScreen.xTopLeft) - snapToLoc.X), -((snapToAtom.position.Y - gameScreen.yTopLeft) - snapToLoc.Y), System.Drawing.Color.White, new Vector2D(3, 3));
+                                Gorgon.Screen.FilledCircle(snapToLoc.X, snapToLoc.Y, 3, System.Drawing.Color.LimeGreen);
+                                Gorgon.Screen.FilledCircle(snapToAtom.position.X - gameScreen.xTopLeft, snapToAtom.position.Y - gameScreen.yTopLeft, 3, System.Drawing.Color.LimeGreen);
+                            }
+                            break;
+                        case AlignmentOptions.AlignTile:
+                            break;
+                        case AlignmentOptions.AlignWall:
+                            break;
+                        case AlignmentOptions.AlignNone:
+                            Gorgon.Screen.FilledCircle(snapToLoc.X, snapToLoc.Y, 3, System.Drawing.Color.LimeGreen);
+                            break;
+                    }
+                }
+                #endregion
             }
         }
     }

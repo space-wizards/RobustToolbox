@@ -85,6 +85,7 @@
     <Compile Include="HelperClasses\Vector2.cs" />
     <Compile Include="ObjectTypeEnum.cs" />
     <Compile Include="NetworkEnums.cs" />
+    <Compile Include="PlacementManagerEnums.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="ChatConfig.cs" />
     <Compile Include="UIComponents.cs" />

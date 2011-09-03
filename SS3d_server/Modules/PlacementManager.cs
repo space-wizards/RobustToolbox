@@ -52,9 +52,10 @@ namespace SS3D_Server.Modules
                 case PlacementManagerMessage.CancelPlacement:
                     break;
                 case PlacementManagerMessage.RequestPlacement:
-                    //StartBuilding(SS3DServer.Singleton.playerManager.GetSessionByConnection(msg.SenderConnection).attachedAtom, 90, "Atom.Object.Worktop.Worktop", false, false, true, false);
-                    //StartBuilding(SS3DServer.Singleton.playerManager.GetSessionByConnection(msg.SenderConnection).attachedAtom, 90, "Tiles.Floor.Floor", false, false, true, false);
-                    StartBuilding(SS3DServer.Singleton.playerManager.GetSessionByConnection(msg.SenderConnection).attachedAtom, 90, "Atom.Item.Container.Toolbox", false, true, false, false);
+                    //StartBuilding(SS3DServer.Singleton.playerManager.GetSessionByConnection(msg.SenderConnection).attachedAtom, 120, "Atom.Object.Worktop.Worktop", AlignmentOptions.AlignNone, false);
+                    //StartBuilding(SS3DServer.Singleton.playerManager.GetSessionByConnection(msg.SenderConnection).attachedAtom, 120, "Tiles.Floor.Floor", AlignmentOptions.AlignTile, false);
+                    //StartBuilding(SS3DServer.Singleton.playerManager.GetSessionByConnection(msg.SenderConnection).attachedAtom, 120, "Atom.Item.Container.Toolbox", AlignmentOptions.AlignSimilar, false);
+                    StartBuilding(SS3DServer.Singleton.playerManager.GetSessionByConnection(msg.SenderConnection).attachedAtom, 120, "Atom.Item.Container.Toolbox", AlignmentOptions.AlignWall, false);
                     break;
             }
         }
@@ -62,16 +63,14 @@ namespace SS3D_Server.Modules
         /// <summary>
         ///  Places mob in object placement mode with given settings.
         /// </summary>
-        public void SendPlacementBegin(Atom.Atom mob, ushort range, string objectType, bool attachesToWall, bool snapToSimilar, bool snapToTiles, bool placeAnywhere)
+        public void SendPlacementBegin(Atom.Atom mob, ushort range, string objectType, AlignmentOptions alignOption, bool placeAnywhere)
         {
             NetOutgoingMessage message = SS3DNetServer.Singleton.CreateMessage();
             message.Write((byte)NetMessage.PlacementManagerMessage);
             message.Write((byte)PlacementManagerMessage.StartPlacement);
             message.Write(range);
             message.Write(objectType);
-            message.Write(attachesToWall);
-            message.Write(snapToSimilar);
-            message.Write(snapToTiles);
+            message.Write((byte)alignOption);
             message.Write(placeAnywhere);
             //This looks like a large message but its just a string, ushort and a bunch of bools.
             SS3DServer.Singleton.SendMessageTo(message, mob.attachedClient, NetDeliveryMethod.ReliableOrdered);
@@ -91,10 +90,10 @@ namespace SS3D_Server.Modules
         /// <summary>
         ///  Gives Mob permission to place object and places it in object placement mode.
         /// </summary>
-        public void StartBuilding(Atom.Atom mob, ushort range, string objectType, bool attachesToWall, bool snapToSimilar, bool snapToTiles, bool placeAnywhere)
+        public void StartBuilding(Atom.Atom mob, ushort range, string objectType, AlignmentOptions alignOption, bool placeAnywhere)
         {
-            AssignBuildPermission(mob, range, objectType, attachesToWall, snapToSimilar, snapToTiles, placeAnywhere);
-            SendPlacementBegin(mob, range, objectType, attachesToWall, snapToSimilar, snapToTiles, placeAnywhere);
+            AssignBuildPermission(mob, range, objectType, alignOption, placeAnywhere);
+            SendPlacementBegin(mob, range, objectType, alignOption, placeAnywhere);
         }
 
         /// <summary>
@@ -109,16 +108,14 @@ namespace SS3D_Server.Modules
         /// <summary>
         ///  Gives a mob a permission to place a given object.
         /// </summary>
-        public void AssignBuildPermission(Atom.Atom mob, ushort range, string objectType, bool attachesToWall, bool snapToSimilar, bool snapToTiles, bool placeAnywhere)
+        public void AssignBuildPermission(Atom.Atom mob, ushort range, string objectType, AlignmentOptions alignOption, bool placeAnywhere)
         {
             BuildPermission newPermission = new BuildPermission();
-            newPermission.attachesToWall = attachesToWall;
             newPermission.mobUid = mob.uid;
             newPermission.range = range;
             newPermission.type = objectType;
-            newPermission.snapToSimilar = snapToSimilar;
+            newPermission.AlignOption = alignOption;
             newPermission.placeAnywhere = placeAnywhere;
-            newPermission.snapToTiles = snapToTiles;
 
             var mobPermissions = from BuildPermission permission in BuildPermissions
                                  where permission.mobUid == mob.uid

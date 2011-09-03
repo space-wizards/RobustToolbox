@@ -362,6 +362,9 @@ namespace SS3D_Server
                 case NetMessage.MapMessage:
                     map.HandleNetworkMessage(msg);
                     break;
+                case NetMessage.PlacementManagerMessage:
+                    PlacementManager.Singleton.HandleNetMessage(msg);
+                    break;
                 default:
                     break;
             }

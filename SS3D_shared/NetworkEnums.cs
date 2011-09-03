@@ -45,7 +45,9 @@ public enum AtomManagerMessage
 public enum PlacementManagerMessage
 {
     StartPlacement,
-    CancelPlacement
+    CancelPlacement,
+    PlacementFailed,
+    RequestPlacement
 }
 
 public enum MobMessage

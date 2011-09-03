@@ -31,7 +31,6 @@ namespace SS3D.States
         private StateManager mStateMgr;
         public Map map;
         private AtomManager atomManager;
-        private GamePlacementManager gamePlacementMgr;
 
         //UI Vars
         #region UI Variables
@@ -153,7 +152,7 @@ namespace SS3D.States
             //scaleX = (float)Gorgon.CurrentClippingViewport.Width / (realScreenWidthTiles * map.tileSpacing);
             //scaleY = (float)Gorgon.CurrentClippingViewport.Height / (realScreenHeightTiles * map.tileSpacing);
 
-            gamePlacementMgr = new GamePlacementManager(map, atomManager, this);
+            PlacementManager.Singleton.Initialize(map, atomManager, this);
 
             //Init GUI components
             gameChat = new Chatbox("gameChat");
@@ -182,7 +181,6 @@ namespace SS3D.States
                 baseTargetSprite.Image = null;
                 baseTargetSprite = null;
             }
-            gamePlacementMgr.Shutdown();
             atomManager.Shutdown();
             map.Shutdown();
             atomManager = null; 
@@ -196,9 +194,8 @@ namespace SS3D.States
             lastUpdate = now;
             now = DateTime.Now;
             atomManager.Update();
-            gamePlacementMgr.Update();
             editMode = prg.GorgonForm.editMode;
-            gamePlacementMgr.editMode = editMode;
+            PlacementManager.Singleton.Update();
         }
 
         private void mNetworkMgr_MessageArrived(NetworkManager netMgr, NetIncomingMessage msg)
@@ -226,7 +223,7 @@ namespace SS3D.States
                             playerController.HandleNetworkMessage(msg);
                             break;
                         case NetMessage.PlacementManagerMessage:
-                            //*Sad Trombone*
+                            PlacementManager.Singleton.HandleNetMessage(msg);
                             break;
                         case NetMessage.SendMap:
                             RecieveMap(msg);
@@ -406,16 +403,6 @@ namespace SS3D.States
                     {
                         a.Render(xTopLeft, yTopLeft);
 
-                        if (gamePlacementMgr.isBuilding) //Needs to happen after rendering since rendering sets the sprite pos.
-                        {
-                            a.sprite.UpdateAABB();
-
-                            if (a.sprite.AABB.IntersectsWith(gamePlacementMgr.buildingAABB))
-                            {
-                                gamePlacementMgr.buildingBlocked = true;
-                            }
-                        }
-
                         if (showDebug)
                         {
                             Gorgon.Screen.Circle(a.sprite.BoundingCircle.Center.X, a.sprite.BoundingCircle.Center.Y, a.sprite.BoundingCircle.Radius, System.Drawing.Color.Orange);
@@ -456,7 +443,7 @@ namespace SS3D.States
                     }
                 }*/
 
-                gamePlacementMgr.Draw();
+                PlacementManager.Singleton.Draw();
             }
 
             lightTargetSprite.DestinationBlend = AlphaBlendOperation.Zero;
@@ -545,7 +532,10 @@ namespace SS3D.States
             playerController.KeyDown(e.Key);
             if (e.Key == KeyboardKeys.F4)
             {
-                gamePlacementMgr.StartBuilding(typeof(Atom.Item.Container.Toolbox));
+                NetOutgoingMessage message = mStateMgr.prg.mNetworkMgr.netClient.CreateMessage();
+                message.Write((byte)NetMessage.PlacementManagerMessage);
+                message.Write((byte)PlacementManagerMessage.RequestPlacement);
+                mStateMgr.prg.mNetworkMgr.SendMessage(message, NetDeliveryMethod.ReliableUnordered);
             }
             if (e.Key == KeyboardKeys.F5)
             {
@@ -588,11 +578,6 @@ namespace SS3D.States
         }
         public override void MouseDown(MouseInputEventArgs e)
         {
-            if (gamePlacementMgr.isBuilding)
-            {
-                gamePlacementMgr.PlaceBuilding();
-                return;
-            }
             if (playerController.controlledAtom == null)
                 return;
 
@@ -655,7 +640,7 @@ namespace SS3D.States
                 {
                     if (editMode)
                     {
-                        if (prg.GorgonForm.GetTileSpawnType() != TileType.None && !gamePlacementMgr.isBuilding)
+                        if (prg.GorgonForm.GetTileSpawnType() != TileType.None)
                         {
                             NetOutgoingMessage message = mStateMgr.prg.mNetworkMgr.netClient.CreateMessage();
                             message.Write((byte)NetMessage.MapMessage);

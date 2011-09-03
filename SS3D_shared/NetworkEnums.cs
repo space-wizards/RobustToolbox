@@ -47,7 +47,8 @@ public enum PlacementManagerMessage
     StartPlacement,
     CancelPlacement,
     PlacementFailed,
-    RequestPlacement
+    RequestPlacement,
+    DEBUG_GetPlaceable
 }
 
 public enum MobMessage

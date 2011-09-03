@@ -33,8 +33,9 @@ namespace SS3D.Modules
         private Map.Map map;
         private AtomManager atomManager;
         private GameScreen gameScreen;
+        private NetworkManager networkMgr;
 
-        BuildPermission active;
+        public BuildPermission active { private set; get; }
 
         Sprite previewSprite;
         Type activeType;
@@ -42,6 +43,8 @@ namespace SS3D.Modules
         byte snapToSide;      //The current side of the current atom for snap-to-similar. 1 Top, 2 Right, 3 Bottom, 4 Left. Unused.
         Boolean validLocation = false;
         Boolean previewVisible = true;
+
+        Boolean placementQueued = false;
 
         Vector2D snapToLoc = Vector2D.Zero;
 
@@ -64,11 +67,12 @@ namespace SS3D.Modules
 
         #endregion
 
-        public void Initialize(Map.Map _map, AtomManager _atom, GameScreen _screen)
+        public void Initialize(Map.Map _map, AtomManager _atom, GameScreen _screen, NetworkManager netMgr)
         {
             map = _map;
             atomManager = _atom;
             gameScreen = _screen;
+            networkMgr = netMgr;
         }
 
         public void HandleNetMessage(NetIncomingMessage msg)
@@ -81,10 +85,24 @@ namespace SS3D.Modules
                     HandleStartPlacement(msg);
                     break;
                 case PlacementManagerMessage.CancelPlacement:
+                    CancelPlacement();
                     break;
                 case PlacementManagerMessage.PlacementFailed:
                     break;
             }
+        }
+
+        private void CancelPlacement()
+        {
+            previewSprite = null;
+            activeType = null;
+            snapToAtom = null;
+            snapToSide = 0;
+            validLocation = false;
+            previewVisible = true;
+            placementQueued = false;
+            snapToLoc = Vector2D.Zero;
+            active = null;
         }
 
         private void HandleStartPlacement(NetIncomingMessage msg)
@@ -104,6 +122,29 @@ namespace SS3D.Modules
             Type atomType = currentAssembly.GetType("SS3D." + active.type);
             activeType = atomType;
             previewSprite = ResMgr.Singleton.GetSprite(GetSpriteName(atomType));
+            placementQueued = false;
+        }
+
+        public void QueuePlacement() 
+        {   
+            //Clicking wont instantly place the object.
+            //Instead the manager will try to place it next update.
+            //This is a bit ugly but it'll work for now.
+            //With any luck this wont be noticeable at all.
+            if (placementQueued) return;
+            placementQueued = true;
+        }
+
+        private void RequestPlacement(Vector2D pos)
+        {
+            NetOutgoingMessage message = networkMgr.netClient.CreateMessage();
+            message.Write((byte)NetMessage.PlacementManagerMessage);
+            message.Write((byte)PlacementManagerMessage.RequestPlacement);
+            message.Write((byte)active.AlignOption);
+            message.Write(pos.X);
+            message.Write(pos.Y);
+            networkMgr.SendMessage(message, NetDeliveryMethod.ReliableUnordered);
+            placementQueued = false;
         }
 
         public string GetSpriteName(Type type)
@@ -144,6 +185,12 @@ namespace SS3D.Modules
 
                         if (atomsBlocking.Any() || (gameScreen.mousePosWorld - gameScreen.playerController.controlledAtom.position).Length > active.range)
                             validLocation = false;
+
+                        if (validLocation && placementQueued)
+                            RequestPlacement(gameScreen.mousePosWorld);
+                        else if(!validLocation && placementQueued)
+                            placementQueued = false;
+
                         break; 
                     #endregion
 
@@ -173,17 +220,21 @@ namespace SS3D.Modules
 
                             var closestSide = from Vector2D vec in sideConnections
                                               where (vec - gameScreen.playerController.controlledAtom.position).Length <= active.range
+                                              where map.GetTileAt(vec).tileType != TileType.Wall //TODO: Better wall check.
                                               orderby (vec - gameScreen.mousePosWorld).Length ascending
                                               select vec;
 
                             if (closestSide.Any())
                             {
                                 snapToLoc = new Vector2D(closestSide.First().X - gameScreen.xTopLeft, closestSide.First().Y - gameScreen.yTopLeft);
+                                if (validLocation && placementQueued)
+                                    RequestPlacement(closestSide.First());
                             }
                             else //No side in range. This shouldnt be possible if the object itself is in range.
                             {
                                 validLocation = false;
                                 previewVisible = false;
+                                placementQueued = false;
                             }
                             snapToAtom = atoms.First();
                         }
@@ -191,6 +242,7 @@ namespace SS3D.Modules
                         {
                             validLocation = false;
                             previewVisible = false;
+                            placementQueued = false;
                         }
                         break; 
                     #endregion
@@ -219,17 +271,21 @@ namespace SS3D.Modules
                             if (closestNode.Any())
                             {
                                 snapToLoc = new Vector2D(closestNode.First().X - gameScreen.xTopLeft, closestNode.First().Y - gameScreen.yTopLeft);
+                                if (validLocation && placementQueued)
+                                    RequestPlacement(closestNode.First());
                             }
                             else //No node in range. This shouldnt be possible if the object itself is in range.
                             {
                                 validLocation = false;
                                 previewVisible = false;
+                                placementQueued = false;
                             }
                         }
                         else //Not a supported tile. Or not in range.
                         {
                             validLocation = false;
                             previewVisible = false;
+                            placementQueued = false;
                         }
                         break;
                     #endregion
@@ -238,7 +294,13 @@ namespace SS3D.Modules
                     case AlignmentOptions.AlignTile:
                         Tiles.Tile tile = map.GetTileAt(gameScreen.mousePosWorld);
                         snapToLoc = new Vector2D(tile.position.X + (map.tileSpacing / 2) - gameScreen.xTopLeft, tile.position.Y + (map.tileSpacing / 2) - gameScreen.yTopLeft);
-                        if((snapToLoc - gameScreen.playerController.controlledAtom.position).Length > active.range) validLocation = false;
+                        if ((new Vector2D(tile.position.X + (map.tileSpacing / 2), tile.position.Y + (map.tileSpacing / 2)) - gameScreen.playerController.controlledAtom.position).Length > active.range) validLocation = false;
+
+                        if (validLocation && placementQueued)
+                            RequestPlacement(new Vector2D(tile.position.X + (map.tileSpacing / 2), tile.position.Y + (map.tileSpacing / 2)));
+                        else if (!validLocation && placementQueued)
+                            placementQueued = false;
+
                         break; 
                     #endregion
                 }

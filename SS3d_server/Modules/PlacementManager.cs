@@ -10,6 +10,7 @@ using Lidgren.Network;
 using SS3D_Server.Modules;
 using SS3D_Server.Atom.Mob;
 using SS3D_Server.Atom;
+using System.Reflection;
 
 namespace SS3D_Server.Modules
 {
@@ -52,11 +53,63 @@ namespace SS3D_Server.Modules
                 case PlacementManagerMessage.CancelPlacement:
                     break;
                 case PlacementManagerMessage.RequestPlacement:
+                    HandlePlacementRequest(msg);
+                    break;
+                case PlacementManagerMessage.DEBUG_GetPlaceable:
                     //StartBuilding(SS3DServer.Singleton.playerManager.GetSessionByConnection(msg.SenderConnection).attachedAtom, 120, "Atom.Object.Worktop.Worktop", AlignmentOptions.AlignNone, false);
                     //StartBuilding(SS3DServer.Singleton.playerManager.GetSessionByConnection(msg.SenderConnection).attachedAtom, 120, "Tiles.Floor.Floor", AlignmentOptions.AlignTile, false);
-                    //StartBuilding(SS3DServer.Singleton.playerManager.GetSessionByConnection(msg.SenderConnection).attachedAtom, 120, "Atom.Item.Container.Toolbox", AlignmentOptions.AlignSimilar, false);
-                    StartBuilding(SS3DServer.Singleton.playerManager.GetSessionByConnection(msg.SenderConnection).attachedAtom, 120, "Atom.Item.Container.Toolbox", AlignmentOptions.AlignWall, false);
+                    //StartBuilding(SS3DServer.Singleton.playerManager.GetSessionByConnection(msg.SenderConnection).attachedAtom, 120, "Atom.Object.Worktop.Worktop", AlignmentOptions.AlignTile, false);
+                    StartBuilding(SS3DServer.Singleton.playerManager.GetSessionByConnection(msg.SenderConnection).attachedAtom, 120, "Atom.Item.Container.Toolbox", AlignmentOptions.AlignSimilar, false);
+                    //StartBuilding(SS3DServer.Singleton.playerManager.GetSessionByConnection(msg.SenderConnection).attachedAtom, 120, "Atom.Item.Container.Toolbox", AlignmentOptions.AlignWall, false);
                     break;
+            }
+        }
+
+        private BuildPermission GetPermission(ushort uid, AlignmentOptions alignOpt)
+        {
+            var permission = from p in BuildPermissions
+                             where p.mobUid == uid && p.AlignOption == alignOpt
+                             select p;
+
+            if (permission.Any()) return permission.First();
+            else return null;
+        }
+
+        public void HandlePlacementRequest(NetIncomingMessage msg)
+        {
+            AlignmentOptions alignRcv = (AlignmentOptions)msg.ReadByte();
+            float xRcv = msg.ReadFloat();
+            float yRcv = msg.ReadFloat();
+            if (GetPermission(SS3DServer.Singleton.playerManager.GetSessionByConnection(msg.SenderConnection).attachedAtom.uid, alignRcv) != null)
+            {
+                //DO PLACEMENT CHECKS. Are they allowed to place this here?
+                BuildPermission permission = GetPermission(SS3DServer.Singleton.playerManager.GetSessionByConnection(msg.SenderConnection).attachedAtom.uid, alignRcv);
+                BuildPermissions.Remove(permission);
+                SendPlacementCancel(SS3DServer.Singleton.playerManager.GetSessionByConnection(msg.SenderConnection).attachedAtom);
+
+                Assembly currentAssembly = Assembly.GetExecutingAssembly();
+                Type objectType = currentAssembly.GetType("SS3D_Server." + permission.type);
+
+                if (objectType.IsSubclassOf(typeof(Tiles.Tile)))
+                {
+                    Point arrayPos = SS3D_Server.SS3DServer.Singleton.map.GetTileArrayPositionFromWorldPosition(new Vector2(xRcv, yRcv));
+                    SS3D_Server.SS3DServer.Singleton.map.ChangeTile(arrayPos.x, arrayPos.y, objectType);
+                    SS3D_Server.SS3DServer.Singleton.map.NetworkUpdateTile(arrayPos.x, arrayPos.y);
+                }
+                else
+                {
+                    SS3D_Server.SS3DServer.Singleton.atomManager.SpawnAtom(permission.type, new Vector2(xRcv, yRcv));
+                }
+
+            }
+            else //They are not allowed to request this. Send 'PlacementFailed'. TBA
+            {
+                LogManager.Log("Invalid placement request: " 
+                    + SS3DServer.Singleton.playerManager.GetSessionByConnection(msg.SenderConnection).name +
+                    " - " + SS3DServer.Singleton.playerManager.GetSessionByConnection(msg.SenderConnection).attachedAtom.uid.ToString() +
+                    " - " + alignRcv.ToString());
+
+                SendPlacementCancel(SS3DServer.Singleton.playerManager.GetSessionByConnection(msg.SenderConnection).attachedAtom);
             }
         }
 
@@ -121,10 +174,14 @@ namespace SS3D_Server.Modules
                                  where permission.mobUid == mob.uid
                                  select permission;
 
-            if (mobPermissions.Count() > 0)
+            if (mobPermissions.Count() > 0) //Already has one? Fishy! Revoke them all and cancel buildmode.
             {
                 RevokeAllBuildPermissions(mob);
                 SendPlacementCancel(mob);
+            }
+            else
+            {
+                BuildPermissions.Add(newPermission);
             }
         }
 

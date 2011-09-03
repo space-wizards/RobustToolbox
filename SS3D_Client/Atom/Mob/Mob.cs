@@ -35,6 +35,8 @@ namespace SS3D.Atom.Mob
             //meshName = "male_new.mesh";
             SetSpriteName(0, "Human");
             SetSpriteByIndex(0);
+            SetSpriteName(2, "Human2");
+            
             speed = walkSpeed;
         }
 
@@ -168,7 +170,10 @@ namespace SS3D.Atom.Mob
         /// </summary>
         public override void UpdatePosition()
         {
+            Vector2D lastPosition = position;
             base.UpdatePosition();
+            UpdateCharacterDirection(position - lastPosition);
+            
             foreach (Appendage a in appendages.Values)
             {
                 if (a.attachedItem != null)
@@ -179,6 +184,14 @@ namespace SS3D.Atom.Mob
 
             if (isDead)
                 return;
+        }
+
+        public virtual void UpdateCharacterDirection(Vector2D movementVector)
+        {
+            if (movementVector.Y > 0)
+                SetSpriteByIndex(0);
+            if (movementVector.Y < 0)
+                SetSpriteByIndex(2);
         }
 
         public override void HandleKC_W(bool state)
@@ -221,6 +234,52 @@ namespace SS3D.Atom.Mob
                 speed = runSpeed;
             else
                 speed = walkSpeed;
+        }
+
+        public override void MoveForward() // up
+        {
+            base.MoveForward();
+            SetSpriteByIndex(2);
+        }
+
+        public override void MoveBack() //Down
+        {
+            base.MoveBack();
+            SetSpriteByIndex(0);
+        }
+
+        public override void MoveLeft()
+        {
+            base.MoveLeft();
+        }
+
+        public override void MoveRight()
+        {
+            base.MoveRight();
+        }
+
+        public override void MoveUpLeft()
+        {
+            base.MoveUpLeft();
+            SetSpriteByIndex(2);
+        }
+
+        public override void MoveDownLeft()
+        {
+            base.MoveDownLeft();
+            SetSpriteByIndex(0);
+        }
+
+        public override void MoveUpRight()
+        {
+            base.MoveUpRight();
+            SetSpriteByIndex(2);
+        }
+
+        public override void MoveDownRight()
+        {
+            base.MoveDownRight();
+            SetSpriteByIndex(0);
         }
 
         protected override void HandleExtendedMessage(NetIncomingMessage message)

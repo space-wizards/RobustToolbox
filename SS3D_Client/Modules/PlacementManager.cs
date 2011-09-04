@@ -277,16 +277,24 @@ namespace SS3D.Modules
                         Tiles.Tile wall = map.GetTileAt(gameScreen.mousePosWorld);
                         if (isSolidTile(wall))
                         {
-                            Vector2D Node1 = new Vector2D(gameScreen.mousePosWorld.X, wall.position.Y);//Bit ugly.
-                            Vector2D Node2 = new Vector2D(gameScreen.mousePosWorld.X, wall.position.Y + 16);
-                            Vector2D Node3 = new Vector2D(gameScreen.mousePosWorld.X, wall.position.Y + 32);
-                            Vector2D Node4 = new Vector2D(gameScreen.mousePosWorld.X, wall.position.Y + 48);
+                            Vector2D Node1 = new Vector2D(gameScreen.mousePosWorld.X, wall.position.Y + 1);//Bit ugly.
+                            Vector2D Node2 = new Vector2D(gameScreen.mousePosWorld.X, wall.position.Y + 9);
+                            Vector2D Node3 = new Vector2D(gameScreen.mousePosWorld.X, wall.position.Y + 17);
+                            Vector2D Node4 = new Vector2D(gameScreen.mousePosWorld.X, wall.position.Y + 25);
+                            Vector2D Node5 = new Vector2D(gameScreen.mousePosWorld.X, wall.position.Y + 33);
+                            Vector2D Node6 = new Vector2D(gameScreen.mousePosWorld.X, wall.position.Y + 41);
+                            Vector2D Node7 = new Vector2D(gameScreen.mousePosWorld.X, wall.position.Y + 49);
+                            Vector2D Node8 = new Vector2D(gameScreen.mousePosWorld.X, wall.position.Y + 57);
 
                             List<Vector2D> Nodes = new List<Vector2D>();
                             Nodes.Add(Node1);
                             Nodes.Add(Node2);
                             Nodes.Add(Node3);
                             Nodes.Add(Node4);
+                            Nodes.Add(Node5);
+                            Nodes.Add(Node6);
+                            Nodes.Add(Node7);
+                            Nodes.Add(Node8);
 
                             var closestNode = from Vector2D vec in Nodes
                                               where active.placeAnywhere ? true : (vec - gameScreen.playerController.controlledAtom.position).Length <= active.range

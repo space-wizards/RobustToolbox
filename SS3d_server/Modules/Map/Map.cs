@@ -386,6 +386,19 @@ namespace SS3D_Server.Modules.Map
             SS3DServer.Singleton.SendMessageTo(message, client, NetDeliveryMethod.Unreliable);// Gas updates aren't a big deal.
             LogManager.Log("Sending Gas update to " + SS3DServer.Singleton.playerManager.GetSessionByConnection(client).name + "\n", LogLevel.Debug);
         }
+
+        /// <summary>
+        /// This function takes the gas cell from one tile and moves it to another, reconnecting all of the references in adjacent tiles.
+        /// Use this when a new tile is generated at a map location.
+        /// </summary>
+        /// <param name="fromTile">Tile to move gas information/cell from</param>
+        /// <param name="toTile">Tile to move gas information/cell to</param>
+        public void MoveGasCell(Tile fromTile, Tile toTile)
+        {
+            Tiles.Atmos.GasCell g = fromTile.gasCell;
+            toTile.gasCell = g;
+            g.AttachToTile(toTile);
+        }
         #endregion
 
         #region Map altering
@@ -399,7 +412,9 @@ namespace SS3D_Server.Modules.Map
             if (tileArray[x, z] != null) //If theres a tile, activate it's changed event.
                 tileArray[x, z].RaiseChangedEvent(newType);
 
-            Tile tile = GenerateNewTile(x, z, newType);
+            Tile tile = GenerateNewTile(x, z, newType); //Transfer the gas cell from the old tile to the new tile.
+
+            MoveGasCell(tileArray[x, z], tile);
 
             tileArray[x, z] = tile;
             return true;
@@ -421,6 +436,8 @@ namespace SS3D_Server.Modules.Map
 
             if (tileArray[x, z] != null)
                 tileArray[x, z].RaiseChangedEvent(castTile.tileType);
+
+            MoveGasCell(tileArray[x, z], castTile); //Transfer the gas cell from the old tile to the new tile.
 
             tileArray[x, z] = castTile;
 

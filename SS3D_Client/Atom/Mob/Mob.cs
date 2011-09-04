@@ -446,6 +446,7 @@ namespace SS3D.Atom.Mob
                 equippedAtoms.Add(part, null);
             }
             equippedAtoms[part] = (Item.Item)atomManager.GetAtom(id);
+            equippedAtoms[part].visible = false;
         }
 
         /// <summary>
@@ -469,6 +470,24 @@ namespace SS3D.Atom.Mob
             if (equippedAtoms.ContainsKey(part))
                 return equippedAtoms[part];
             return null;
+        }
+
+        public override void Render(float xTopLeft, float yTopLeft)
+        {
+
+            base.Render(xTopLeft, yTopLeft);
+            foreach (Atom atom in equippedAtoms.Values)
+            {
+                if (atom != null)
+                {
+                    atom.SetSpriteByIndex(GetSpriteIndex()); // Set the index to the same as the mob so it draws the correct direction
+                    atom.sprite.Position = sprite.Position;
+                    atom.sprite.Color = System.Drawing.Color.FromArgb(255, sprite.Color);
+                    atom.sprite.Draw();
+                    atom.SetSpriteByIndex(-1); // Reset the index to the on map value for the GUI and in case it's dropped
+                }
+            }
+            
         }
     }
 }

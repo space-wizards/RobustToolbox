@@ -13,8 +13,8 @@ namespace SS3D.Atom.Item.Misc
         public Flashlight()
             : base()
         {
-            SetSpriteName(0,  "Flashlight");
-            SetSpriteByIndex(0);
+            SetSpriteName(-1,  "Flashlight");
+            SetSpriteByIndex(-1);
         }
 
         public override void HandlePush(Lidgren.Network.NetIncomingMessage message)

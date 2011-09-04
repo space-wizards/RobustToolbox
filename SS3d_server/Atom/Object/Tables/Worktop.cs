@@ -18,6 +18,7 @@ namespace SS3D_Server.Atom.Object.Worktop
         {
             name = "worktop";
             collidable = true;
+            atomManager.SetDrawDepthAtom(this, -1);
         }
 
         protected override void ApplyAction(Atom a, Mob.Mob m)
@@ -55,6 +56,7 @@ namespace SS3D_Server.Atom.Object.Worktop
         public Worktop(SerializationInfo info, StreamingContext ctxt)
         {
             SerializeBasicInfo(info, ctxt);
+            atomManager.SetDrawDepthAtom(this, -1);
         }
 
         public override void GetObjectData(SerializationInfo info, StreamingContext ctxt)

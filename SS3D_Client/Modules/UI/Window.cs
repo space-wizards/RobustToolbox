@@ -33,6 +33,7 @@ namespace SS3D.Modules.UI
         private int width = 1;
         private int height = 1;
         public bool visible = true;
+        private Rectangle rect;
 
 
         public WindowComponent(PlayerController _playerController, int x, int y, int _width, int _height)
@@ -43,6 +44,27 @@ namespace SS3D.Modules.UI
             height = _height;
             backgroundSprite = ResMgr.Singleton.GetSprite("1pxwhite");
             Skin = UIDesktop.Singleton.Skin;
+            rect = new Rectangle(x, y, _width, _height);
+        }
+
+        public override bool MouseDown(MouseInputEventArgs e)
+        {
+            System.Drawing.RectangleF mouseAABB = new System.Drawing.RectangleF(e.Position.X, e.Position.Y, 1, 1);
+            if (mouseAABB.IntersectsWith(rect))
+            {
+                return true;
+            }
+            return false;
+        }
+
+        public override bool MouseUp(MouseInputEventArgs e)
+        {
+            System.Drawing.RectangleF mouseAABB = new System.Drawing.RectangleF(e.Position.X, e.Position.Y, 1, 1);
+            if (mouseAABB.IntersectsWith(rect))
+            {
+                return true;
+            }
+            return false;
         }
 
         public override void Render()

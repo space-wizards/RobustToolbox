@@ -104,6 +104,9 @@
     <Compile Include="Atom\Object\Lights\WallLight.cs" />
     <Compile Include="Atom\Object\Object.cs" />
     <Compile Include="Atom\Object\Tables\Worktop.cs" />
+    <Compile Include="Atom\Object\WallMounted\Extinguisher.cs" />
+    <Compile Include="Atom\Object\WallMounted\FireAlarm.cs" />
+    <Compile Include="Atom\Object\WallMounted\MedCabinet.cs" />
     <Compile Include="Atom\Object\WallMounted\WallMounted.cs" />
     <Compile Include="Atom\Object\Wall\Glass.cs" />
     <Compile Include="Helper Classes\InterpolationPacket.cs" />

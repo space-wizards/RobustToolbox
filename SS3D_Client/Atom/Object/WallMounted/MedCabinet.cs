@@ -2,16 +2,16 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
-using System.Drawing;
 
 namespace SS3D.Atom.Object.WallMounted
 {
-    public abstract class WallMounted : Object
+    public class MedCabinet : WallMounted
     {
-        public WallMounted()
+        public MedCabinet()
             : base()
         {
-            spritename = "worktop";
+            SetSpriteName(0, "medcabinet");
+            SetSpriteByIndex(0);
             collidable = false;
             snapTogrid = true;
         }

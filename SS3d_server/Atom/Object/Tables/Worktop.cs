@@ -54,12 +54,12 @@ namespace SS3D_Server.Atom.Object.Worktop
 
         public Worktop(SerializationInfo info, StreamingContext ctxt)
         {
-            //SerializeBasicInfo(info, ctxt);
+            SerializeBasicInfo(info, ctxt);
         }
 
         public override void GetObjectData(SerializationInfo info, StreamingContext ctxt)
         {
-            //base.GetObjectData(info, ctxt);
+            base.GetObjectData(info, ctxt);
         }
     }
 }

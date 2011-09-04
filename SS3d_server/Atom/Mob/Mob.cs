@@ -25,7 +25,6 @@ namespace SS3D_Server.Atom.Mob
         public Mob()
             : base()
         {
-            //Console.Write("MOB!");
             initAppendages();
         }
 
@@ -160,12 +159,10 @@ namespace SS3D_Server.Atom.Mob
         public virtual void UnequipItem(NetIncomingMessage message)
         {
             GUIBodyPart part = (GUIBodyPart)message.ReadByte();
-            Console.WriteLine("Unequip " + equippedAtoms[part].name);
             if (equippedAtoms.ContainsKey(part) &&
                 equippedAtoms[part] != null &&
                 selectedAppendage.heldItem == null)
             {
-                Console.WriteLine("Unequip " + equippedAtoms[part].name);
                 SendUnequipItem(part);
                 equippedAtoms[part].PickedUpBy(this);
                 equippedAtoms[part] = null;

@@ -29,6 +29,11 @@ namespace SS3D.Modules.UI
 
         void HandleNetworkMessage(Lidgren.Network.NetIncomingMessage message);
 
+        void ToggleVisible();
+        void SetVisible(bool vis);
+        bool IsVisible();
+
+
         bool MouseDown(MouseInputEventArgs e);
         bool MouseUp(MouseInputEventArgs e);
         void MouseMove(MouseInputEventArgs e);

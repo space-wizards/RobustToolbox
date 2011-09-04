@@ -30,6 +30,7 @@ namespace SS3D.Modules.UI.Components
             rect = new Rectangle(1075, 400, 180, 500);
             mousePos = Vector2D.Zero;
             window = new WindowComponent(_playerController, rect.X, rect.Y, rect.Width, rect.Height);
+            SetVisible(false);
         }
 
         // Set up all the slots for the body
@@ -71,7 +72,12 @@ namespace SS3D.Modules.UI.Components
 
         public override bool KeyDown(GorgonLibrary.InputDevices.KeyboardInputEventArgs e)
         {
-            return base.KeyDown(e);
+            if (e.Key == KeyboardKeys.I)
+            {
+                ToggleVisible();
+                return true;
+            }
+            return false;
         }
 
         public override bool MouseDown(GorgonLibrary.InputDevices.MouseInputEventArgs e)
@@ -154,6 +160,9 @@ namespace SS3D.Modules.UI.Components
 
         public override void Render()
         {
+            if (!IsVisible())
+                return;
+
             window.Render();
 
             if (inventorySlots.Count == 0 &&

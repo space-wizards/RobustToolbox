@@ -26,6 +26,8 @@ using SS3D.States;
 using SS3D.Modules;
 using SS3D.Modules.UI;
 
+using Lidgren.Network;
+
 namespace SS3D
 {
     public partial class MainWindow : Form
@@ -48,8 +50,9 @@ namespace SS3D
 
         private Modules.StateManager stateMgr;
         private Program prg;
+        private AlignmentOptions alignType = AlignmentOptions.AlignTile;
         private Type atomSpawnType = null;
-        private TileType tileSpawnType;
+        private Type tileSpawnType;
         public bool editMode = false;
         private Dictionary<string, Type> atomTypes;
 
@@ -321,7 +324,7 @@ namespace SS3D
             return atomSpawnType;
         }
 
-        public TileType GetTileSpawnType()
+        public Type GetTileSpawnType()
         {
             return tileSpawnType;
         }
@@ -374,17 +377,18 @@ namespace SS3D
 
         private void noneToolStripMenuItem1_Click(object sender, EventArgs e)
         {
-            tileSpawnType = TileType.None;
+            tileSpawnType = null;
             atomSpawnType = null;
             toolStripStatusLabel1.Text = "Right click to delete an atom";
         }
 
         private void atomMenu_Click(object sender, EventArgs e)
         {
-            tileSpawnType = TileType.None;
+            tileSpawnType = null;
             if (atomTypes.ContainsKey(((ToolStripDropDownItem)sender).Text))
             {
                 atomSpawnType = atomTypes[((ToolStripDropDownItem)sender).Text];
+                PlacementManager.Singleton.SendObjectRequestEDITMODE(atomSpawnType, alignType);
                 toolStripStatusLabel1.Text = atomSpawnType.Name.ToString();
             }
             else
@@ -398,7 +402,7 @@ namespace SS3D
         {
             if (e.KeyChar == '\r')
             {
-                tileSpawnType = TileType.None;
+                tileSpawnType = null;
                 foreach (Type t in atomTypes.Values)
                 {
                     if (t.Name == toolStripTextBox2.Text)
@@ -415,28 +419,31 @@ namespace SS3D
         private void turfToolStripMenuItem_Click(object sender, EventArgs e)
         {
             atomSpawnType = null;
-            tileSpawnType = TileType.Floor;
+            tileSpawnType = typeof(Tiles.Floor.Floor);
             toolStripStatusLabel1.Text = tileSpawnType.ToString();
         }
 
         private void spaceToolStripMenuItem_Click(object sender, EventArgs e)
         {
-            tileSpawnType = TileType.Space;
+            tileSpawnType = typeof(Tiles.Floor.Space);
+            PlacementManager.Singleton.SendObjectRequestEDITMODE(tileSpawnType, AlignmentOptions.AlignTile);
         }
 
         private void floorToolStripMenuItem_Click(object sender, EventArgs e)
         {
-            tileSpawnType = TileType.Floor;
+            tileSpawnType = typeof(Tiles.Floor.Floor);
+            PlacementManager.Singleton.SendObjectRequestEDITMODE(tileSpawnType, AlignmentOptions.AlignTile);
         }
 
         private void wallToolStripMenuItem_Click(object sender, EventArgs e)
         {
-            tileSpawnType = TileType.Wall;
+            tileSpawnType = typeof(Tiles.Wall.Wall);
+            PlacementManager.Singleton.SendObjectRequestEDITMODE(tileSpawnType, AlignmentOptions.AlignTile);
         }
 
         private void noneToolStripMenuItem_Click(object sender, EventArgs e)
         {
-            tileSpawnType = TileType.None;
+            tileSpawnType = null;
         }
         #endregion
 
@@ -445,5 +452,49 @@ namespace SS3D
 
         }
         #endregion
+
+        private void toggleEndlessToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            NetOutgoingMessage message = prg.mNetworkMgr.netClient.CreateMessage();
+            message.Write((byte)NetMessage.PlacementManagerMessage);
+            message.Write((byte)PlacementManagerMessage.EDITMODE_ToggleEndlessPlacement);
+            prg.mNetworkMgr.SendMessage(message, NetDeliveryMethod.ReliableUnordered);
+        }
+
+        private void toggleFreeToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            NetOutgoingMessage message = prg.mNetworkMgr.netClient.CreateMessage();
+            message.Write((byte)NetMessage.PlacementManagerMessage);
+            message.Write((byte)PlacementManagerMessage.EDITMODE_ToggleFreePlacement);
+            prg.mNetworkMgr.SendMessage(message, NetDeliveryMethod.ReliableUnordered);
+        }
+
+        private void toggleEditToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            NetOutgoingMessage message = prg.mNetworkMgr.netClient.CreateMessage();
+            message.Write((byte)NetMessage.PlacementManagerMessage);
+            message.Write((byte)PlacementManagerMessage.EDITMODE_ToggleEditMode);
+            prg.mNetworkMgr.SendMessage(message, NetDeliveryMethod.ReliableUnordered);
+        }
+
+        private void wallToolStripMenuItem1_Click(object sender, EventArgs e)
+        {
+            alignType = AlignmentOptions.AlignWall;
+        }
+
+        private void tileToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            alignType = AlignmentOptions.AlignTile;
+        }
+
+        private void sameTypeToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            alignType = AlignmentOptions.AlignSimilar;
+        }
+
+        private void freeToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            alignType = AlignmentOptions.AlignNone;
+        }
     }
 }

@@ -11,9 +11,7 @@ using SS3D.Atom;
 
 using SS3D_shared;
 using SS3D.States;
-using SS3D.Atom;
 
-using System.Collections.Generic;
 using System.Reflection;
 
 using GorgonLibrary;
@@ -24,7 +22,6 @@ using Lidgren.Network;
 
 using System.Windows.Forms;
 using SS3D_shared.HelperClasses;
-using SS3D.Atom;
 
 namespace SS3D.Modules
 {
@@ -92,7 +89,7 @@ namespace SS3D.Modules
             }
         }
 
-        private void CancelPlacement()
+        public void CancelPlacement()
         {
             previewSprite = null;
             activeType = null;
@@ -105,6 +102,19 @@ namespace SS3D.Modules
             active = null;
         }
 
+        public void SendObjectRequestEDITMODE(Type type, AlignmentOptions alignMode)
+        {
+            string typeStr = type.ToString();
+            typeStr = typeStr.Substring(typeStr.IndexOf(".") + 1); // Fuckugly method of stripping the assembly name of the type.
+
+            NetOutgoingMessage message = networkMgr.netClient.CreateMessage();
+            message.Write((byte)NetMessage.PlacementManagerMessage);
+            message.Write((byte)PlacementManagerMessage.EDITMODE_GetObject);
+            message.Write(typeStr);
+            message.Write((byte)alignMode);
+            networkMgr.SendMessage(message, NetDeliveryMethod.ReliableUnordered);
+        }
+
         private void HandleStartPlacement(NetIncomingMessage msg)
         {
             active = new BuildPermission();
@@ -114,6 +124,18 @@ namespace SS3D.Modules
             active.placeAnywhere = msg.ReadBoolean();
 
             SetupPlacement();
+        }
+
+        private Boolean isSolidTile(Tiles.Tile tile)
+        {
+            if (tile.tileType != TileType.Wall) return false;
+            else return true;
+        }
+
+        private Boolean isSolidTile(TileType tiletype)
+        {
+            if (tiletype != TileType.Wall) return false;
+            else return true;
         }
 
         private void SetupPlacement()
@@ -176,7 +198,8 @@ namespace SS3D.Modules
                     case AlignmentOptions.AlignNone:
                         System.Drawing.Point arrayPos = map.GetTileArrayPositionFromWorldPosition(gameScreen.mousePosWorld);
                         TileType type = map.GetTileTypeFromArrayPosition(arrayPos.X, arrayPos.Y);
-                        if (type == TileType.Wall) validLocation = false; //TO-DO: Better way for wall-checks. See byond density.
+
+                        if (isSolidTile(type)) validLocation = false;
 
                         var atomsBlocking = from a in atomManager.atomDictionary.Values
                                             where a.collidable
@@ -185,6 +208,8 @@ namespace SS3D.Modules
 
                         if (atomsBlocking.Any() || (gameScreen.mousePosWorld - gameScreen.playerController.controlledAtom.position).Length > active.range)
                             validLocation = false;
+
+                        if (active.placeAnywhere) validLocation = true;
 
                         if (validLocation && placementQueued)
                             RequestPlacement(gameScreen.mousePosWorld);
@@ -199,8 +224,8 @@ namespace SS3D.Modules
                         var atoms = from a in atomManager.atomDictionary.Values
                                     where a.IsTypeOf(activeType)
                                     where a.visible
-                                    where (a.position - gameScreen.mousePosWorld).Length <= active.range * 2
-                                    where (a.position - gameScreen.playerController.controlledAtom.position).Length <= active.range
+                                    where active.placeAnywhere ? true : (a.position - gameScreen.mousePosWorld).Length <= active.range * 2
+                                    where active.placeAnywhere ? true : (a.position - gameScreen.playerController.controlledAtom.position).Length <= active.range
                                     orderby (a.position - gameScreen.mousePosWorld).Length ascending
                                     select a; //Basically: Get the closest similar object.
 
@@ -219,8 +244,8 @@ namespace SS3D.Modules
                             sideConnections.Add(rightConnection);
 
                             var closestSide = from Vector2D vec in sideConnections
-                                              where (vec - gameScreen.playerController.controlledAtom.position).Length <= active.range
-                                              where map.GetTileAt(vec).tileType != TileType.Wall //TODO: Better wall check.
+                                              where active.placeAnywhere ? true : (vec - gameScreen.playerController.controlledAtom.position).Length <= active.range
+                                              where active.placeAnywhere ? true : !isSolidTile(map.GetTileAt(vec))
                                               orderby (vec - gameScreen.mousePosWorld).Length ascending
                                               select vec;
 
@@ -250,7 +275,7 @@ namespace SS3D.Modules
                     #region Align Wall
                     case AlignmentOptions.AlignWall:
                         Tiles.Tile wall = map.GetTileAt(gameScreen.mousePosWorld);
-                        if (wall.tileType == TileType.Wall) //TODO: Needs a better way of finding solid tiles. See byond density.
+                        if (isSolidTile(wall))
                         {
                             Vector2D Node1 = new Vector2D(gameScreen.mousePosWorld.X, wall.position.Y);//Bit ugly.
                             Vector2D Node2 = new Vector2D(gameScreen.mousePosWorld.X, wall.position.Y + 16);
@@ -264,7 +289,7 @@ namespace SS3D.Modules
                             Nodes.Add(Node4);
 
                             var closestNode = from Vector2D vec in Nodes
-                                              where (vec - gameScreen.playerController.controlledAtom.position).Length <= active.range
+                                              where active.placeAnywhere ? true : (vec - gameScreen.playerController.controlledAtom.position).Length <= active.range
                                               orderby (vec - gameScreen.mousePosWorld).Length ascending
                                               select vec;
 
@@ -294,7 +319,15 @@ namespace SS3D.Modules
                     case AlignmentOptions.AlignTile:
                         Tiles.Tile tile = map.GetTileAt(gameScreen.mousePosWorld);
                         snapToLoc = new Vector2D(tile.position.X + (map.tileSpacing / 2) - gameScreen.xTopLeft, tile.position.Y + (map.tileSpacing / 2) - gameScreen.yTopLeft);
-                        if ((new Vector2D(tile.position.X + (map.tileSpacing / 2), tile.position.Y + (map.tileSpacing / 2)) - gameScreen.playerController.controlledAtom.position).Length > active.range) validLocation = false;
+                        if ((new Vector2D(tile.position.X + (map.tileSpacing / 2), tile.position.Y + (map.tileSpacing / 2)) - gameScreen.playerController.controlledAtom.position).Length > active.range && !active.placeAnywhere) validLocation = false;
+
+                        if(activeType.IsSubclassOf(typeof(Tiles.Tile)))
+                        {//Special handling for tiles? Not right now.
+                        }
+                        else if(activeType.IsSubclassOf(typeof(Atom.Atom)))
+                        {
+                            if (isSolidTile(tile) && !active.placeAnywhere) validLocation = false;
+                        }
 
                         if (validLocation && placementQueued)
                             RequestPlacement(new Vector2D(tile.position.X + (map.tileSpacing / 2), tile.position.Y + (map.tileSpacing / 2)));
@@ -341,7 +374,7 @@ namespace SS3D.Modules
                     previewSprite.Color = System.Drawing.Color.White;
                 }
 
-                if (gameScreen.playerController.controlledAtom != null)
+                if (gameScreen.playerController.controlledAtom != null && !active.placeAnywhere)
                 { 
                     Gorgon.Screen.Circle(gameScreen.playerController.controlledAtom.position.X - gameScreen.xTopLeft, gameScreen.playerController.controlledAtom.position.Y - gameScreen.yTopLeft, active.range, System.Drawing.Color.DarkBlue, 2f, 2f);
                 }

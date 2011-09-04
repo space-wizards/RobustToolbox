@@ -19,6 +19,10 @@ namespace SS3D_Server.Modules
         //TO-DO: Expand for multiple permission per mob?
         //       Add support for multi-use placeables (tiles etc.).
 
+        private Boolean editMode = false;               //If true, clients may freely request objects.
+        private Boolean freePlacementMode = false;      //If true, most placement restrictions will be lifted.
+        private Boolean endlessPlacementMode = false;   //If true, client will not exit placement mode after placement and permission will not be removed.
+
         public List<BuildPermission> BuildPermissions = new List<BuildPermission>(); //Holds build permissions for all mobs. A list of mobs and the objects they're allowed to request and how. One permission per mob.
 
         #region Singleton
@@ -55,12 +59,20 @@ namespace SS3D_Server.Modules
                 case PlacementManagerMessage.RequestPlacement:
                     HandlePlacementRequest(msg);
                     break;
-                case PlacementManagerMessage.DEBUG_GetPlaceable:
-                    //StartBuilding(SS3DServer.Singleton.playerManager.GetSessionByConnection(msg.SenderConnection).attachedAtom, 120, "Atom.Object.Worktop.Worktop", AlignmentOptions.AlignNone, false);
-                    //StartBuilding(SS3DServer.Singleton.playerManager.GetSessionByConnection(msg.SenderConnection).attachedAtom, 120, "Tiles.Floor.Floor", AlignmentOptions.AlignTile, false);
-                    //StartBuilding(SS3DServer.Singleton.playerManager.GetSessionByConnection(msg.SenderConnection).attachedAtom, 120, "Atom.Object.Worktop.Worktop", AlignmentOptions.AlignTile, false);
-                    StartBuilding(SS3DServer.Singleton.playerManager.GetSessionByConnection(msg.SenderConnection).attachedAtom, 120, "Atom.Item.Container.Toolbox", AlignmentOptions.AlignSimilar, false);
-                    //StartBuilding(SS3DServer.Singleton.playerManager.GetSessionByConnection(msg.SenderConnection).attachedAtom, 120, "Atom.Item.Container.Toolbox", AlignmentOptions.AlignWall, false);
+                case PlacementManagerMessage.EDITMODE_ToggleEditMode: //THESE REALLY NEED ADMINCHECKS OR SOMETHING.
+                    editMode = !editMode;
+                    SS3D_Server.SS3DServer.Singleton.chatManager.SendChatMessage(ChatChannel.Server, "Edit Mode : " + (editMode ? "On" : "Off"), "", 0);
+                    break;
+                case PlacementManagerMessage.EDITMODE_ToggleEndlessPlacement:
+                    endlessPlacementMode = !endlessPlacementMode;
+                    SS3D_Server.SS3DServer.Singleton.chatManager.SendChatMessage(ChatChannel.Server, "Endless Placement Mode : " + (endlessPlacementMode ? "On" : "Off"), "", 0);
+                    break;
+                case PlacementManagerMessage.EDITMODE_ToggleFreePlacement:
+                    freePlacementMode = !freePlacementMode;
+                    SS3D_Server.SS3DServer.Singleton.chatManager.SendChatMessage(ChatChannel.Server, "Free Placement Mode : " + (freePlacementMode ? "On" : "Off"), "", 0);
+                    break;
+                case PlacementManagerMessage.EDITMODE_GetObject:
+                    if (editMode) HandleEditRequest(msg);
                     break;
             }
         }
@@ -75,6 +87,16 @@ namespace SS3D_Server.Modules
             else return null;
         }
 
+        public void HandleEditRequest(NetIncomingMessage msg)
+        {
+            //StartBuilding(SS3DServer.Singleton.playerManager.GetSessionByConnection(msg.SenderConnection).attachedAtom, 120, "Atom.Item.Container.Toolbox", AlignmentOptions.AlignSimilar, false);
+            string objectType = msg.ReadString();
+            AlignmentOptions align = (AlignmentOptions)msg.ReadByte();
+            Assembly currentAssembly = Assembly.GetExecutingAssembly();
+            Type fullType = currentAssembly.GetType("SS3D_Server." + objectType);
+            if (fullType != null) StartBuilding(SS3DServer.Singleton.playerManager.GetSessionByConnection(msg.SenderConnection).attachedAtom, 120, objectType, align, freePlacementMode);
+        }
+
         public void HandlePlacementRequest(NetIncomingMessage msg)
         {
             AlignmentOptions alignRcv = (AlignmentOptions)msg.ReadByte();
@@ -84,8 +106,12 @@ namespace SS3D_Server.Modules
             {
                 //DO PLACEMENT CHECKS. Are they allowed to place this here?
                 BuildPermission permission = GetPermission(SS3DServer.Singleton.playerManager.GetSessionByConnection(msg.SenderConnection).attachedAtom.uid, alignRcv);
-                BuildPermissions.Remove(permission);
-                SendPlacementCancel(SS3DServer.Singleton.playerManager.GetSessionByConnection(msg.SenderConnection).attachedAtom);
+
+                if (!endlessPlacementMode)
+                {
+                    BuildPermissions.Remove(permission);
+                    SendPlacementCancel(SS3DServer.Singleton.playerManager.GetSessionByConnection(msg.SenderConnection).attachedAtom);
+                }
 
                 Assembly currentAssembly = Assembly.GetExecutingAssembly();
                 Type objectType = currentAssembly.GetType("SS3D_Server." + permission.type);
@@ -174,10 +200,10 @@ namespace SS3D_Server.Modules
                                  where permission.mobUid == mob.uid
                                  select permission;
 
-            if (mobPermissions.Count() > 0) //Already has one? Fishy! Revoke them all and cancel buildmode.
+            if (mobPermissions.Any()) //Already has one? Revoke the old one and add this one.
             {
                 RevokeAllBuildPermissions(mob);
-                SendPlacementCancel(mob);
+                BuildPermissions.Add(newPermission);
             }
             else
             {
@@ -194,7 +220,7 @@ namespace SS3D_Server.Modules
                                  where permission.mobUid == mob.uid
                                  select permission;
 
-            if (mobPermissions.Count() > 0)
+            if (mobPermissions.Any())
             {
                 foreach (BuildPermission current in mobPermissions)
                 {

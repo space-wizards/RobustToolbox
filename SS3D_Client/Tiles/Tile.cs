@@ -93,7 +93,16 @@ namespace SS3D.Tiles
                 LightManager.Singleton.ApplyLightsToSprite(tileLights, lightSprite, new Vector2D(xTopLeft, yTopLeft));
                 //lightSprite.Draw();
                 lightMapBatch.AddClone(lightSprite);
+
+                if (surroundingTiles[0] != null && !surroundingTiles[0].Visible)
+                {
+                    lightSprite.Color = Color.Black;
+                    lightSprite.SetPosition(tilePosition.X * tileSpacing - xTopLeft, (tilePosition.Y - 1) * tileSpacing - yTopLeft);
+                    LightManager.Singleton.ApplyLightsToSprite(tileLights, lightSprite, new Vector2D(xTopLeft, yTopLeft));
+                    lightMapBatch.AddClone(lightSprite);
+                }
             }
+
 
         }
 

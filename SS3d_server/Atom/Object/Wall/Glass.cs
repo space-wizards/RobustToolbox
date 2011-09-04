@@ -32,6 +32,8 @@ namespace SS3D_Server.Atom.Object.Wall
         public Glass(SerializationInfo info, StreamingContext ctxt)
         {
             SerializeBasicInfo(info, ctxt);
+            damageable = true;
+            collidable = true;
         }
 
         public override void GetObjectData(SerializationInfo info, StreamingContext ctxt)

@@ -56,15 +56,17 @@ namespace SS3D.Modules.UI.Components
 
         private void DrawPlayer()
         {
-           if (playerSprite == null)
+           if (playerSprite == null && playerController.controlledAtom != null)
             {
-                playerSprite = new Sprite("statplayersprite", playerController.controlledAtom.sprite.Image);
+                playerSprite = playerController.controlledAtom.sprite;
             }
 
-            playerSprite.Position = new Vector2D(Position.X + 5, Position.Y + 35);
-            playerSprite.UniformScale = 4.5f;
-            playerSprite.ImageRegion = new RectangleF(0, 0, 26, 21);
+            playerSprite.Position = new Vector2D(position.X + width / 2, position.Y + height / 3.1f);
+            playerSprite.UniformScale = 1.5f;
+            //playerSprite.ImageRegion = new RectangleF(0, 0, 32, 20);
             playerSprite.Draw();
+
+            playerSprite.UniformScale = 1.0f;
 
             bool scanSwitch = false;
             if (flickCounter > 5)
@@ -116,7 +118,7 @@ namespace SS3D.Modules.UI.Components
             backgroundSprite.Size = new Vector2D(width, height);
             backgroundSprite.Draw();
 
-            name.Text = playerController.controlledAtom.spritename; // Name isn't currently set so this is just temporary
+            name.Text = ConfigManager.Singleton.Configuration.PlayerName; // Name isn't currently set so this is just temporary
             name.Draw();
 
             DrawPlayer();

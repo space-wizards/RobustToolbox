@@ -95,6 +95,7 @@ namespace SS3D_Server.Modules
             Assembly currentAssembly = Assembly.GetExecutingAssembly();
             Type fullType = currentAssembly.GetType("SS3D_Server." + objectType);
             if (fullType != null) StartBuilding(SS3DServer.Singleton.playerManager.GetSessionByConnection(msg.SenderConnection).attachedAtom, 120, objectType, align, freePlacementMode);
+            else SS3D_Server.SS3DServer.Singleton.chatManager.SendChatMessage(ChatChannel.Server, "Invalid Object Requested : " + "SS3D_Server." + objectType, "", 0);
         }
 
         public void HandlePlacementRequest(NetIncomingMessage msg)
@@ -221,12 +222,7 @@ namespace SS3D_Server.Modules
                                  select permission;
 
             if (mobPermissions.Any())
-            {
-                foreach (BuildPermission current in mobPermissions)
-                {
-                    BuildPermissions.Remove(current);
-                }
-            }
+                BuildPermissions.RemoveAll(x => mobPermissions.Contains(x));
         }
     }
 }

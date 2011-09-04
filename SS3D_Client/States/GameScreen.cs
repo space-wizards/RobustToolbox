@@ -330,14 +330,17 @@ namespace SS3D.States
                 yTopLeft = Math.Max(0, playerController.controlledAtom.position.Y - ((screenHeightTiles / 2) * map.tileSpacing));
 
                 ///COMPUTE TILE VISIBILITY
-                if (!telepathy && (centerTile != map.lastVisPoint || map.needVisUpdate))
+                if ((centerTile != map.lastVisPoint || map.needVisUpdate))
                 {
-                    map.compute_visibility(centerTile.X, centerTile.Y);
-                    map.lastVisPoint = centerTile;
-                }
-                else
-                {
-                    map.set_all_visible();
+                    if (!telepathy)
+                    {
+                        map.compute_visibility(centerTile.X, centerTile.Y);
+                        map.lastVisPoint = centerTile;
+                    }
+                    else
+                    {
+                        map.set_all_visible();
+                    }
                 }
 
 

@@ -416,7 +416,34 @@ namespace SS3D.States
                         }
 
                     }
+                
+                    //Render Light glows
+                    atoms = from a in atomManager.atomDictionary.Values
+                                                   where
+                                                   a.visible &&
+                                                   a.position.X / map.tileSpacing >= xStart &&
+                                                   a.position.X / map.tileSpacing <= xEnd &&
+                                                   a.position.Y / map.tileSpacing >= yStart &&
+                                                   a.position.Y / map.tileSpacing <= yEnd &&
+                                                   a.GetType().Name == "WallLight"                                                        
+                                                   orderby a.position.Y + ((a.sprite.Height * a.sprite.UniformScale) / 2) ascending
+                                                   orderby a.drawDepth ascending
+                                                   select a;
+
+                    Gorgon.CurrentRenderTarget = lightTarget;
+                    Gorgon.CurrentShader = ResMgr.Singleton.GetShader("Blur");
+                    ResMgr.Singleton.GetShader("Blur").Parameters["blurAmount"].SetValue(3.0f);
+                    foreach (Atom.Atom a in atoms.ToList())
+                    {
+                        a.sprite.BlendingMode = BlendingModes.Additive;
+                        a.Render(xTopLeft, yTopLeft);
+                        a.sprite.BlendingMode = BlendingModes.None;
+                    }
+                    Gorgon.CurrentShader = null;
+                    Gorgon.CurrentRenderTarget = baseTarget;
                 }
+
+
 
                 ///Render gas batch
                 if (gasBatch.Count > 0)

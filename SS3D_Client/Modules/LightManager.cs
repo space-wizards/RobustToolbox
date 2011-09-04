@@ -101,7 +101,7 @@ namespace SS3D.Modules
             Vector2D lightPos = light.position - screenOffset; //Making sure that they're in the same space.
 
             float distance = (vertexPos - lightPos).Length;
-            float lightIntensity = (float)Math.Max(light.range - (distance/1.5), 0);
+            float lightIntensity = (float)Math.Max((light.range - (distance/1.5)) * light.brightness, 0);
 
             if (lightIntensity == 0) return Vector3D.Zero; //Must be zero or the ambient light would increase with the number of lights. (Thats bad)
 
@@ -216,7 +216,7 @@ namespace SS3D.Modules
     {
         public System.Drawing.Color color = System.Drawing.Color.PapayaWhip;
         public int range = 150;
-        public int brightness = 35;
+        public float brightness = 1.10f;
 
         public LightState state;
         public Vector2D position;
@@ -225,7 +225,7 @@ namespace SS3D.Modules
         public List<Direction> direction;
         public List<Tiles.Tile> tiles;
 
-        public Light(Modules.Map.Map _map, System.Drawing.Color _color, int _range, LightState _state, System.Drawing.Point _position, Direction _direction)
+        public Light(Modules.Map.Map _map, System.Drawing.Color _color, int _range, LightState _state, Vector2D _position, Direction _direction)
         {
             Random r = new Random();
             map = _map;

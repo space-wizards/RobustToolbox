@@ -108,6 +108,7 @@
     <Compile Include="Atom\Object\Atmos\Vent.cs" />
     <Compile Include="Atom\Object\Door\Door.cs" />
     <Compile Include="Atom\Object\Lights\WallLight.cs" />
+    <Compile Include="Atom\Object\Locker.cs" />
     <Compile Include="Atom\Object\Object.cs" />
     <Compile Include="Atom\Object\Tables\Worktop.cs" />
     <Compile Include="Atom\Object\WallMounted\Extinguisher.cs" />

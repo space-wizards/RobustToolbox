@@ -328,7 +328,8 @@ namespace SS3D_Server.Atom
         /// <param name="m">Mob that used a on this one</param>
         protected virtual void ApplyAction(Atom a, Mob.Mob m)
         {
-            m.selectedAppendage.heldItem.UsedOn(this); //Technically this is the same fucking thing as a, but i dont want to fuck with explicit casting it.
+            if(m != null && m.selectedAppendage.heldItem != null)
+                m.selectedAppendage.heldItem.UsedOn(this); //Technically this is the same fucking thing as a, but i dont want to fuck with explicit casting it.
 
             //apply extension actions
             foreach (Extension.Extension e in extensions)

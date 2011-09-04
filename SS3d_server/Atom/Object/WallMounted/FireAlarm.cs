@@ -7,15 +7,15 @@ using System.Runtime.Serialization;
 namespace SS3D_Server.Atom.Object.WallMounted
 {
     [Serializable()]
-    public class WallMounted : Object
+    public class FireAlarm : WallMounted
     {
-        public WallMounted()
+        public FireAlarm()
             : base()
         {
-            name = "wallmountedobj";
+            name = "FireAlarm";
         }
 
-        public WallMounted(SerializationInfo info, StreamingContext ctxt)
+        public FireAlarm(SerializationInfo info, StreamingContext ctxt)
         {
             SerializeBasicInfo(info, ctxt);
         }

@@ -2,16 +2,16 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
-using System.Drawing;
 
 namespace SS3D.Atom.Object.WallMounted
 {
-    public abstract class WallMounted : Object
+    public class Extinguisher : WallMounted
     {
-        public WallMounted()
+        public Extinguisher()
             : base()
         {
-            spritename = "worktop";
+            SetSpriteName(0, "fire_extinguisher");
+            SetSpriteByIndex(0);
             collidable = false;
             snapTogrid = true;
         }

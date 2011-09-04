@@ -84,18 +84,26 @@ namespace SS3D.Modules.UI.Components
         {
             Atom.Mob.Mob m = (Atom.Mob.Mob)playerController.controlledAtom;
             // Check which slot we clicked (if any) and get the atom from in there
+            if (heldAtom == null)
+            {
+                int i = handsGUI.GetSelectedAppendage();
+                heldAtom = m.GetItemOnAppendage(i);
+                lastSlot = GUIBodyPart.None;
+            }
             foreach (ItemSlot slot in inventorySlots.Values)
             {
                 if (slot.MouseDown(e))
                 {
-                    heldAtom = m.GetEquippedAtom(slot.GetBodyPart());
-                    lastSlot = slot.GetBodyPart();
+                    if (!AttemptEquipInSlot(m, slot))
+                    {
+                        heldAtom = m.GetEquippedAtom(slot.GetBodyPart());
+                        lastSlot = slot.GetBodyPart();
+                    }
                     return true;
                 }
             }
 
-            // Otherwise see if we clicked on one of our hands and get that atom if so
-            if (handsGUI != null)
+            if (handsGUI != null) // Otherwise see if we clicked on one of our hands and get that atom if so
             {
                 if (handsGUI.MouseDown(e))
                 {
@@ -105,10 +113,11 @@ namespace SS3D.Modules.UI.Components
                     return true;
                 }
             }
+            
+
 
             return false;
         }
-
 
         public override bool MouseUp(GorgonLibrary.InputDevices.MouseInputEventArgs e)
         {
@@ -122,17 +131,7 @@ namespace SS3D.Modules.UI.Components
             {
                 if (slot.MouseUp(e))
                 {
-                    if(slot.CanAccept(heldAtom))
-                    {
-                        if (lastSlot != GUIBodyPart.None) // It came from the inventory
-                        {
-                            m.SendUnequipItem(lastSlot);
-                            lastSlot = GUIBodyPart.None;
-                        }
-                        m.SendEquipItem((Atom.Item.Item)heldAtom, slot.GetBodyPart());
-                    }
-                    heldAtom = null;
-                    return true;
+                    AttemptEquipInSlot(m, slot);
                 }
             }
 
@@ -150,6 +149,22 @@ namespace SS3D.Modules.UI.Components
             }
 
             heldAtom = null;
+            return false;
+        }
+
+        public bool AttemptEquipInSlot(Atom.Mob.Mob m, ItemSlot slot)
+        {
+            if (slot.CanAccept(heldAtom))
+            {
+                if (lastSlot != GUIBodyPart.None) // It came from the inventory
+                {
+                    m.SendUnequipItem(lastSlot);
+                    lastSlot = GUIBodyPart.None;
+                }
+                m.SendEquipItem((Atom.Item.Item)heldAtom, slot.GetBodyPart());
+                heldAtom = null;
+                return true;
+            }
             return false;
         }
 

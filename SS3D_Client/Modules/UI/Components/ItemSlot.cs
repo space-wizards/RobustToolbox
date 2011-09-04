@@ -83,6 +83,8 @@ namespace SS3D.Modules.UI.Components
         // Returns true if we're empty and can accept the atom passed in
         public bool CanAccept(Atom.Atom tryAtom)
         {
+            if (tryAtom == null)
+                return false;
             Atom.Mob.Mob m = (Atom.Mob.Mob)playerController.controlledAtom;
             if ((tryAtom.IsChildOfType(atomType) || tryAtom.IsTypeOf(atomType)) &&
                 (m.GetEquippedAtom(GetBodyPart()) == null))

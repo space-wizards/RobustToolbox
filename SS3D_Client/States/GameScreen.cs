@@ -503,6 +503,8 @@ namespace SS3D.States
                     return;
             }
 
+            if (e.Key == KeyboardKeys.Escape) PlacementManager.Singleton.CancelPlacement();
+
             if (e.Key == KeyboardKeys.F9)
             {
                 if (prg.GorgonForm.MainMenuStrip.Visible)
@@ -529,14 +531,7 @@ namespace SS3D.States
             {
                 playerController.SendVerb("toxins", 0);
             }
-            playerController.KeyDown(e.Key);
-            if (e.Key == KeyboardKeys.F4)
-            {
-                NetOutgoingMessage message = mStateMgr.prg.mNetworkMgr.netClient.CreateMessage();
-                message.Write((byte)NetMessage.PlacementManagerMessage);
-                message.Write((byte)PlacementManagerMessage.DEBUG_GetPlaceable);
-                mStateMgr.prg.mNetworkMgr.SendMessage(message, NetDeliveryMethod.ReliableUnordered);
-            }
+
             if (e.Key == KeyboardKeys.F5)
             {
                 playerController.SendVerb("save", 0);
@@ -602,10 +597,6 @@ namespace SS3D.States
             System.Drawing.RectangleF mouseAABB = new System.Drawing.RectangleF(mousePosWorld.X, mousePosWorld.Y, 1, 1);
             float checkDistance = map.tileSpacing * 1.5f;
             // Find all the atoms near us we could have clicked
-            if (editMode)
-            {
-                checkDistance = 500;
-            }
             IEnumerable<Atom.Atom> atoms = from a in atomManager.atomDictionary.Values
                                            where
                                            (playerController.controlledAtom.position - a.position).Length < checkDistance &&
@@ -644,28 +635,12 @@ namespace SS3D.States
                 System.Drawing.Point clickedPoint = map.GetTileArrayPositionFromWorldPosition(mousePosWorld);
                 if (clickedPoint.X > 0 && clickedPoint.Y > 0)
                 {
-                    if (editMode)
-                    {
-                        if (prg.GorgonForm.GetTileSpawnType() != TileType.None)
-                        {
-                            NetOutgoingMessage message = mStateMgr.prg.mNetworkMgr.netClient.CreateMessage();
-                            message.Write((byte)NetMessage.MapMessage);
-                            message.Write((byte)MapMessage.TurfUpdate);
-                            message.Write((short)clickedPoint.X);
-                            message.Write((short)clickedPoint.Y);
-                            message.Write((byte)prg.GorgonForm.GetTileSpawnType());
-                            mStateMgr.prg.mNetworkMgr.SendMessage(message, NetDeliveryMethod.ReliableUnordered);
-                        }
-                    }
-                    else
-                    {
-                        NetOutgoingMessage message = mStateMgr.prg.mNetworkMgr.netClient.CreateMessage();
-                        message.Write((byte)NetMessage.MapMessage);
-                        message.Write((byte)MapMessage.TurfClick);
-                        message.Write((short)clickedPoint.X);
-                        message.Write((short)clickedPoint.Y);
-                        mStateMgr.prg.mNetworkMgr.SendMessage(message, NetDeliveryMethod.ReliableUnordered);
-                    }
+                    NetOutgoingMessage message = mStateMgr.prg.mNetworkMgr.netClient.CreateMessage();
+                    message.Write((byte)NetMessage.MapMessage);
+                    message.Write((byte)MapMessage.TurfClick);
+                    message.Write((short)clickedPoint.X);
+                    message.Write((short)clickedPoint.Y);
+                    mStateMgr.prg.mNetworkMgr.SendMessage(message, NetDeliveryMethod.ReliableUnordered);
                 }
             } 
             #endregion

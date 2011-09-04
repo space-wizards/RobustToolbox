@@ -15,8 +15,8 @@ namespace SS3D.Modules.UI.Components
 {
     public class ItemSlot : GuiComponent
     {
-        private GUIBodyPart bodyPart;
-        private Type atomType;
+        private GUIBodyPart bodyPart; // The bodypart we reference
+        private Type atomType; // The type of atoms we can accept
         private Sprite slot;
         private TextSprite text;
 
@@ -82,6 +82,7 @@ namespace SS3D.Modules.UI.Components
             return false;
         }
 
+        // Returns true if we're empty and can accept the atom passed in
         public bool CanAccept(Atom.Atom tryAtom)
         {
             Atom.Mob.Mob m = (Atom.Mob.Mob)playerController.controlledAtom;
@@ -101,6 +102,7 @@ namespace SS3D.Modules.UI.Components
 
 
             Atom.Mob.Mob m = (Atom.Mob.Mob)playerController.controlledAtom;
+            // If we contain an atom then draw it in the appropriate place
             if (playerController.controlledAtom.IsChildOfType(typeof(Atom.Mob.Mob)))
             {
                 if (bodyPart != GUIBodyPart.None)

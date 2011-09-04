@@ -44,12 +44,10 @@ namespace SS3D_Server.Tiles
              if(clicker.IsChildOfType(typeof(Atom.Mob.Mob)))
              {
                  Atom.Mob.Mob mob = (Atom.Mob.Mob)clicker;
-                 //Console.WriteLine("recall clickby ");
                  return ClickedBy(mob.selectedAppendage.heldItem);
              }
              else if (clicker.IsChildOfType(typeof(Atom.Item.Item)))
              {
-                 //Console.WriteLine("handle item click " + tileType);
                  return HandleItemClick((Atom.Item.Item)clicker);
              }
              return false;

@@ -182,7 +182,6 @@ namespace SS3D_Server.Modules.Map
             
             for (int y = 0; y < mapHeight; y++)
             {
-                //Console.Write(".");
                 for (int x = 0; x < mapWidth; x++)
                 {
                     sw.WriteLine(tileArray[x, y].tileType.ToString());

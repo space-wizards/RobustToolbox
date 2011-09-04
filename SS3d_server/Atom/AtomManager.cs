@@ -256,10 +256,8 @@ namespace SS3D_Server.Atom
                 if (a.IsChildOfType(typeof(Mob.Mob)))
                     continue;
                 saveList.Add(a);
-                //Console.Write(".");
             }
             f.Serialize(s, saveList);
-            //Console.Write(".");
             s.Close();
             LogManager.Log("Done writing atoms to file.");
         }

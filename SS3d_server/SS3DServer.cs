@@ -73,7 +73,7 @@ namespace SS3D_Server
             singleton = this;
 
             ConfigManager.Singleton.Initialize("./config.xml");
-            LogManager.Initialize(ConfigManager.Singleton.Configuration.LogPath);
+            LogManager.Initialize(ConfigManager.Singleton.Configuration.LogPath, LogLevel.Information);
         }
         #endregion
 
@@ -175,16 +175,23 @@ namespace SS3D_Server
 
             while (Active)
             {
-                FrameStart();
-                ProcessPackets();
-                Update(framePeriod);
-                sleepTime = time.AddMilliseconds(framePeriod) - DateTime.Now;
+                try
+                {
+                    FrameStart();
+                    ProcessPackets();
+                    Update(framePeriod);
+                    sleepTime = time.AddMilliseconds(framePeriod) - DateTime.Now;
 
-                if (sleepTime.TotalMilliseconds > 0)
-                    Thread.Sleep(sleepTime);
-                //else
-                //    Console.WriteLine("Server slow by " + sleepTime.TotalMilliseconds);
-                
+                    if (sleepTime.TotalMilliseconds > 0)
+                        Thread.Sleep(sleepTime);
+                    //else
+                    //    Console.WriteLine("Server slow by " + sleepTime.TotalMilliseconds);
+                }
+                catch (Exception e)
+                {
+                    LogManager.Log(e.ToString(), LogLevel.Error);
+                    active = false;
+                }
             }
         }
         

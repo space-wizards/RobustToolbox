@@ -138,6 +138,21 @@ namespace SS3D_Server.Atom.Item
         }
 
         /// <summary>
+        /// Sends a message to detatch an atom from a limb (but not drop it)
+        /// </summary>
+        public virtual void SendDetatchMessage()
+        {
+
+            if (holdingAppendage == null)
+                return;
+
+            NetOutgoingMessage outmessage = CreateAtomMessage();
+            outmessage.Write((byte)AtomMessage.Extended);
+            outmessage.Write((byte)ItemMessage.Detach);
+            SS3DServer.Singleton.SendMessageToAll(outmessage);
+        }
+
+        /// <summary>
         /// Called when a mob drops an item
         /// </summary>
         public virtual void Dropped()
@@ -151,7 +166,7 @@ namespace SS3D_Server.Atom.Item
 
             NetOutgoingMessage outmessage = CreateAtomMessage();
             outmessage.Write((byte)AtomMessage.Extended);
-            outmessage.Write((byte)ItemMessage.Detach);
+            outmessage.Write((byte)ItemMessage.DropItem);
             SS3DServer.Singleton.SendMessageToAll(outmessage);
 
             SendAppendageUIUpdate(owner);

@@ -18,6 +18,8 @@ namespace SS3D_Server.Atom.Mob
         public Dictionary<int, HelperClasses.Appendage> appendages;
         public Appendage selectedAppendage;
 
+        public Dictionary<GUIBodyPart, Item.Item> equippedAtoms;
+
         public string animationState = "idle";
 
         public Mob()
@@ -69,6 +71,12 @@ namespace SS3D_Server.Atom.Mob
                 case MobMessage.SelectAppendage:
                     SelectAppendage(message.ReadInt32());
                     break;
+                case MobMessage.Equip:
+                    EquipItem(message);
+                    break;
+                case MobMessage.Unequip:
+                    UnequipItem(message);
+                    break;
                 default: 
                     break;
             }
@@ -104,6 +112,76 @@ namespace SS3D_Server.Atom.Mob
             outmessage.Write((byte)AtomMessage.Extended);
             outmessage.Write((byte)MobMessage.SelectAppendage);
             outmessage.Write(selectedAppendage.ID);
+            SendMessageToAll(outmessage);
+        }
+
+
+        /// <summary>
+        /// Equips an item on a mob and then sends the result to everyone
+        /// </summary>
+        public virtual void EquipItem(NetIncomingMessage message)
+        {
+            ushort id = message.ReadUInt16();
+            GUIBodyPart part = (GUIBodyPart)message.ReadByte();
+            if (equippedAtoms.ContainsKey(part) && equippedAtoms[part] == null)
+            {
+                Atom atom = atomManager.GetAtom(id);
+                if (atom.IsChildOfType(typeof(Item.Item)))
+                {
+                    equippedAtoms[part] = (Item.Item)atom;
+                    SendEquipItem(atom.uid, part);
+
+                    if (equippedAtoms[part].holdingAppendage != null)
+                    {
+                        equippedAtoms[part].SendDetatchMessage();
+                        equippedAtoms[part].holdingAppendage.heldItem = null;
+                        equippedAtoms[part].holdingAppendage = null;
+                    }
+                }
+            }
+        }
+
+        /// <summary>
+        /// Sends a message to everyone that a mob just equipped an item
+        /// </summary>
+        public virtual void SendEquipItem(ushort id, GUIBodyPart part)
+        {
+            NetOutgoingMessage outmessage = CreateAtomMessage();
+            outmessage.Write((byte)AtomMessage.Extended);
+            outmessage.Write((byte)MobMessage.Equip);
+            outmessage.Write(id);
+            outmessage.Write((byte)part);
+            SendMessageToAll(outmessage);
+        }
+
+        /// <summary>
+        /// Unequips an item from a mob, then sends the result to everyone
+        /// </summary>
+        public virtual void UnequipItem(NetIncomingMessage message)
+        {
+            GUIBodyPart part = (GUIBodyPart)message.ReadByte();
+            Console.WriteLine("Unequip " + equippedAtoms[part].name);
+            if (equippedAtoms.ContainsKey(part) &&
+                equippedAtoms[part] != null &&
+                selectedAppendage.heldItem == null)
+            {
+                Console.WriteLine("Unequip " + equippedAtoms[part].name);
+                SendUnequipItem(part);
+                equippedAtoms[part].PickedUpBy(this);
+                equippedAtoms[part] = null;
+                
+            }
+        }
+
+        /// <summary>
+        /// Sends a message to everyone saying a mob just unequipped an item
+        /// </summary>
+        public virtual void SendUnequipItem(GUIBodyPart part)
+        {
+            NetOutgoingMessage outmessage = CreateAtomMessage();
+            outmessage.Write((byte)AtomMessage.Extended);
+            outmessage.Write((byte)MobMessage.Unequip);
+            outmessage.Write((byte)part);
             SendMessageToAll(outmessage);
         }
 

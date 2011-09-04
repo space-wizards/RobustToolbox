@@ -28,6 +28,19 @@ namespace SS3D_Server.Atom.Mob
             {
                 organ.SetUp(this);
             }
+
+            if (equippedAtoms == null)
+                equippedAtoms = new Dictionary<GUIBodyPart, Item.Item>();
+
+            equippedAtoms.Add(GUIBodyPart.Ears, null);
+            equippedAtoms.Add(GUIBodyPart.Eyes, null);
+            equippedAtoms.Add(GUIBodyPart.Head, null);
+            equippedAtoms.Add(GUIBodyPart.Mask, null);
+            equippedAtoms.Add(GUIBodyPart.Inner, null);
+            equippedAtoms.Add(GUIBodyPart.Outer, null);
+            equippedAtoms.Add(GUIBodyPart.Hands, null);
+            equippedAtoms.Add(GUIBodyPart.Feet, null);
+
             base.initAppendages();
         }
 

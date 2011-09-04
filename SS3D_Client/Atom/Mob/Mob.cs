@@ -23,6 +23,8 @@ namespace SS3D.Atom.Mob
         public Dictionary<int, HelperClasses.Appendage> appendages;
         public Appendage selectedAppendage;
 
+        public Dictionary<GUIBodyPart, Item.Item> equippedAtoms;
+
         //Current animation state -- or at least the one we want to add some time to. This will need to become more robust.
         //public Mogre.AnimationState animState;
         public AnimState currentAnimState;
@@ -69,6 +71,8 @@ namespace SS3D.Atom.Mob
 
             sprite.UniformScale = 1f;
             initAppendages();
+
+            equippedAtoms = new Dictionary<GUIBodyPart, Item.Item>();
         }
 
         /// <summary>
@@ -299,6 +303,12 @@ namespace SS3D.Atom.Mob
                 case MobMessage.AnimateOnce:
                     HandleAnimateOnce(message);
                     break;
+                case MobMessage.Equip:
+                    HandleEquipItem(message);
+                    break;
+                case MobMessage.Unequip:
+                    HandleUnEquipItem(message);
+                    break;
                 default: break;
             }
         }
@@ -396,6 +406,69 @@ namespace SS3D.Atom.Mob
             message.Write((byte)AtomMessage.Extended);
             message.Write((byte)MobMessage.DropItem);
             SendMessage(message);
+        }
+
+        /// <summary>
+        /// Sends a message saying we want to equip an item
+        /// </summary>
+        public virtual void SendEquipItem(Item.Item item, GUIBodyPart part)
+        {
+            NetOutgoingMessage message = CreateAtomMessage();
+            message.Write((byte)AtomMessage.Extended);
+            message.Write((byte)MobMessage.Equip);
+            message.Write(item.uid);
+            message.Write((byte)part);
+            SendMessage(message);
+        }
+
+        /// <summary>
+        /// Sends a message saying we want to Unequip an item
+        /// </summary>
+        public virtual void SendUnequipItem(GUIBodyPart part)
+        {
+            NetOutgoingMessage message = CreateAtomMessage();
+            message.Write((byte)AtomMessage.Extended);
+            message.Write((byte)MobMessage.Unequip);
+            message.Write((byte)part);
+            SendMessage(message);
+        }
+
+        /// <summary>
+        /// Equips an item on the appropriate body part
+        /// </summary>
+        public virtual void HandleEquipItem(NetIncomingMessage message)
+        {
+            ushort id = message.ReadUInt16();
+            GUIBodyPart part = (GUIBodyPart)message.ReadByte();
+
+            if (!equippedAtoms.ContainsKey(part))
+            {
+                equippedAtoms.Add(part, null);
+            }
+            equippedAtoms[part] = (Item.Item)atomManager.GetAtom(id);
+        }
+
+        /// <summary>
+        /// Unequips an item from the appropriate body part
+        /// </summary>
+        public virtual void HandleUnEquipItem(NetIncomingMessage message)
+        {
+            GUIBodyPart part = (GUIBodyPart)message.ReadByte();
+
+            if (!equippedAtoms.ContainsKey(part))
+                return;
+
+            equippedAtoms[part] = null;
+        }
+
+        /// <summary>
+        /// Gets the atom on the passed in body part
+        /// </summary>
+        public virtual Atom GetEquippedAtom(GUIBodyPart part)
+        {
+            if (equippedAtoms.ContainsKey(part))
+                return equippedAtoms[part];
+            return null;
         }
     }
 }

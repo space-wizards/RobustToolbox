@@ -64,6 +64,8 @@ public enum MobMessage
     AnimateOnce,
     SelectAppendage,
     DropItem,
+    Equip,
+    Unequip,
     Death
 }
 
@@ -144,5 +146,18 @@ public enum GasType
 public enum DecalType
 {
     Blood
+}
+
+public enum GUIBodyPart
+{
+    None = 0,
+    Head,
+    Mask,
+    Inner,
+    Outer,
+    Hands,
+    Feet,
+    Eyes,
+    Ears
 }
 

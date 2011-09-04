@@ -159,11 +159,14 @@ namespace SS3D.States
             gameChat.TextSubmitted += new Chatbox.TextSubmitHandler(chatTextbox_TextSubmitted);
 
             guiComponents = new Dictionary<GuiComponentType, IGuiComponent>();
+            guiComponents.Add(GuiComponentType.HumanInventory, new HumanInventory(playerController));
             guiComponents.Add(GuiComponentType.AppendagesComponent, new HumanHandsGui(playerController));
             guiComponents.Add(GuiComponentType.StatPanelComponent, new StatPanelComponent(playerController));
             guiComponents[GuiComponentType.AppendagesComponent].Position = new System.Drawing.Point(Gorgon.Screen.Width - 190, Gorgon.Screen.Height - 99);
-            
 
+            HumanInventory inv = (HumanInventory)guiComponents[GuiComponentType.HumanInventory]; // ugh
+            inv.SetHandsGUI((HumanHandsGui)guiComponents[GuiComponentType.AppendagesComponent]); // ugh ugh
+            
             return true;
         }
 
@@ -649,6 +652,10 @@ namespace SS3D.States
         {
             mousePosScreen = new Vector2D(e.Position.X, e.Position.Y);
             mousePosWorld = new Vector2D(e.Position.X + xTopLeft, e.Position.Y + yTopLeft);
+            foreach (GuiComponent component in guiComponents.Values)
+            {
+                component.MouseMove(e);
+            }
         }
  
         #endregion

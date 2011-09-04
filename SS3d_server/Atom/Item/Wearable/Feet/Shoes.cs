@@ -7,6 +7,7 @@ using System.Runtime.Serialization;
 
 namespace SS3D_Server.Atom.Item.Wearable.Feet
 {
+    [Serializable()]
     public class Shoes : Feet
     {
         public Shoes()

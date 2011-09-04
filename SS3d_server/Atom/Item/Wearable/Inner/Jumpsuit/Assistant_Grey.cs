@@ -6,6 +6,7 @@ using SS3D_shared.HelperClasses;
 using System.Runtime.Serialization;
 namespace SS3D_Server.Atom.Item.Wearable.Inner.Jumpsuit
 {
+    [Serializable()]
     public class Assistant_Grey : Jumpsuit
     {
         public Assistant_Grey()

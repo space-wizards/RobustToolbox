@@ -27,9 +27,7 @@ namespace SS3D.Modules.UI.Components
             {
                 position = value;
                 lSprite.Position = position;
-                //lHandActiveSprite.Position = position;
                 rSprite.Position = new Point(position.X + 67, position.Y);
-                //rHandActiveSprite.Position = rHandSprite.Position;
             }
         }
 
@@ -82,6 +80,14 @@ namespace SS3D.Modules.UI.Components
             rActive = true;
             Atom.Mob.Mob m = (Atom.Mob.Mob)playerController.controlledAtom;
             m.SendSelectAppendage(rAppendageID);
+        }
+
+        public int GetSelectedAppendage()
+        {
+            if (lActive)
+                return lAppendageID;
+            else
+                return rAppendageID;
         }
 
         private void UpdateAppendageObjects()
@@ -149,25 +155,28 @@ namespace SS3D.Modules.UI.Components
                 rSprite.Draw();
             }
 
-            if (lObjectSprite != null)
+            if (playerController.controlledAtom == null)
+                return;
+            var mob = (Atom.Mob.Mob)playerController.controlledAtom;
+            if (mob.appendages[0].attachedItem != null)
             {
-                lObjectSprite.SetPosition(lSprite.Position.X + 40, lSprite.Position.Y + 25);
-                lObjectSprite.Color = System.Drawing.Color.White;
-                lObjectSprite.Rotation = 0f;
-                float factor = Math.Min(50f / lObjectSprite.Width, 50f / lObjectSprite.Height);
-                lObjectSprite.UniformScale = factor;
-                lObjectSprite.Draw();
-                lObjectSprite.UniformScale = 1f;
+                mob.appendages[0].attachedItem.sprite.SetPosition(lSprite.Position.X + 40, lSprite.Position.Y + 25);
+                mob.appendages[0].attachedItem.sprite.Color = System.Drawing.Color.White;
+                mob.appendages[0].attachedItem.sprite.Rotation = 0f;
+                float factor = Math.Min(50f / mob.appendages[0].attachedItem.sprite.Width, 50f / mob.appendages[0].attachedItem.sprite.Height);
+                mob.appendages[0].attachedItem.sprite.UniformScale = factor;
+                mob.appendages[0].attachedItem.sprite.Draw();
+                mob.appendages[0].attachedItem.sprite.UniformScale = 1f;
             }
-            if (rObjectSprite != null)
+            if (mob.appendages[1].attachedItem != null)
             {
-                rObjectSprite.SetPosition(rSprite.Position.X + 60, rSprite.Position.Y + 25);
-                rObjectSprite.Color = System.Drawing.Color.White;
-                rObjectSprite.Rotation = 0f;
-                float factor = Math.Min(50f / rObjectSprite.Width, 50f / rObjectSprite.Height);
-                rObjectSprite.UniformScale = factor;
-                rObjectSprite.Draw();
-                rObjectSprite.UniformScale = 1f;
+                mob.appendages[1].attachedItem.sprite.SetPosition(rSprite.Position.X + 60, rSprite.Position.Y + 25);
+                mob.appendages[1].attachedItem.sprite.Color = System.Drawing.Color.White;
+                mob.appendages[1].attachedItem.sprite.Rotation = 0f;
+                float factor = Math.Min(50f / mob.appendages[1].attachedItem.sprite.Width, 50f / mob.appendages[1].attachedItem.sprite.Height);
+                mob.appendages[1].attachedItem.sprite.UniformScale = factor;
+                mob.appendages[1].attachedItem.sprite.Draw();
+                mob.appendages[1].attachedItem.sprite.UniformScale = 1f;
             }
         }
 
@@ -176,9 +185,6 @@ namespace SS3D.Modules.UI.Components
             HandsComponentMessage messageType = (HandsComponentMessage)message.ReadByte();
             switch (messageType)
             {
-                case HandsComponentMessage.SelectHand:
-                    HandleSelectHand(message);
-                    break;
                 case HandsComponentMessage.UpdateHandObjects:
                     HandleUpdateHandObjects();
                     break;
@@ -189,10 +195,6 @@ namespace SS3D.Modules.UI.Components
         private void HandleUpdateHandObjects()
         {
             UpdateAppendageObjects();
-        }
-
-        private void HandleSelectHand(NetIncomingMessage message)
-        {
         }
 
         public override bool MouseDown(MouseInputEventArgs e)
@@ -215,5 +217,7 @@ namespace SS3D.Modules.UI.Components
                 return false;
             }
         }
+
+        
     }
 }

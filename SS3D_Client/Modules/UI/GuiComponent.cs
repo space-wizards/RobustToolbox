@@ -55,6 +55,10 @@ namespace SS3D.Modules.UI
             return false;
         }
 
+        public virtual void MouseMove(MouseInputEventArgs e)
+        {
+        }
+
         public virtual bool KeyDown(KeyboardInputEventArgs e)
         {
             return false;

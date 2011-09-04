@@ -37,7 +37,7 @@ namespace SS3D_Server.Atom.Object.Worktop
 
             NetOutgoingMessage detachMsg = usedItem.CreateAtomMessage();
             detachMsg.Write((byte)AtomMessage.Extended);
-            detachMsg.Write((byte)ItemMessage.Detach);
+            detachMsg.Write((byte)ItemMessage.DropItem);
             SS3DServer.Singleton.SendMessageToAll(detachMsg);
 
             atomManager.SetDrawDepthAtom(a, 1); //base is 0 - draw this above the table. This sets the value and sends it to all clients.

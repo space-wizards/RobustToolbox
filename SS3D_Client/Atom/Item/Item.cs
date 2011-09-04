@@ -12,10 +12,6 @@ namespace SS3D.Atom.Item
 {
     public abstract class Item : Atom
     {
-        /*public Mogre.Vector3 heldOffset = Mogre.Vector3.ZERO;           // the offset vector when held
-        public Mogre.Quaternion heldQuat = Mogre.Quaternion.IDENTITY;   // the rotation when held*/
-        
-
         public Appendage holdingAppendage = null;
                 public Item()
             : base()
@@ -31,7 +27,10 @@ namespace SS3D.Atom.Item
                     HandleAttachTo(message);
                     break;
                 case ItemMessage.Detach:
-                    HandleDetach();
+                    HandleDetatch();
+                    break;
+                case ItemMessage.DropItem:
+                    HandleDrop();
                     break;
                 default:
                     break;
@@ -50,7 +49,7 @@ namespace SS3D.Atom.Item
             AttachTo(m, a);
         }
 
-        protected virtual void HandleDetach()
+        protected virtual void HandleDrop()
         {
             if (holdingAppendage != null)
             {
@@ -60,16 +59,15 @@ namespace SS3D.Atom.Item
                 holdingAppendage = null;
                 visible = true;
             }
-            /*if(holdingAppendage != null)
-            {
-                holdingAppendage.owner.Entity.DetachObjectFromBone(Entity);
+        }
 
-                Mogre.Vector3 mobpos = holdingAppendage.owner.position;
-                position = mobpos;
-                Node.Position = position + offset;
-                Node.AttachObject(Entity);
+        public virtual void HandleDetatch()
+        {
+            if (holdingAppendage != null)
+            {
+                holdingAppendage.attachedItem = null;
                 holdingAppendage = null;
-            }*/
+            }
         }
 
         protected virtual void AttachTo(Mob.Mob m, Appendage a)
@@ -77,10 +75,6 @@ namespace SS3D.Atom.Item
             this.visible = false;
             holdingAppendage = a;
             a.attachedItem = this;
-            /*Entity.DetachFromParent();
-
-            m.Entity.AttachObjectToBone(a.bone, Entity, heldQuat, heldOffset);
-            holdingAppendage = a;*/
         }
     }
 }

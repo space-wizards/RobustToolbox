@@ -89,13 +89,12 @@ namespace SS3D_Server.Modules
 
         public void HandleEditRequest(NetIncomingMessage msg)
         {
-            //StartBuilding(SS3DServer.Singleton.playerManager.GetSessionByConnection(msg.SenderConnection).attachedAtom, 120, "Atom.Item.Container.Toolbox", AlignmentOptions.AlignSimilar, false);
             string objectType = msg.ReadString();
             AlignmentOptions align = (AlignmentOptions)msg.ReadByte();
             Assembly currentAssembly = Assembly.GetExecutingAssembly();
             Type fullType = currentAssembly.GetType("SS3D_Server." + objectType);
             if (fullType != null) StartBuilding(SS3DServer.Singleton.playerManager.GetSessionByConnection(msg.SenderConnection).attachedAtom, 120, objectType, align, freePlacementMode);
-            else SS3D_Server.SS3DServer.Singleton.chatManager.SendChatMessage(ChatChannel.Server, "Invalid Object Requested : " + "SS3D_Server." + objectType, "", 0);
+            else LogManager.Log("Invalid Object Requested : " + "SS3D_Server." + objectType);
         }
 
         public void HandlePlacementRequest(NetIncomingMessage msg)

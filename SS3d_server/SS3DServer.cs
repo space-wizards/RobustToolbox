@@ -142,13 +142,13 @@ namespace SS3D_Server
             }
             catch (Lidgren.Network.NetException e)
             {
-                LogManager.Log(e.Message, LogLevel.Error);
+                LogManager.Log(e.ToString(), LogLevel.Error);
                 active = false;
                 return true;
             }
             catch (Exception e)
             {
-                LogManager.Log(e.Message, LogLevel.Error);
+                LogManager.Log(e.ToString(), LogLevel.Error);
                 active = false;
                 return true;
             }

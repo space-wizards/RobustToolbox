@@ -27,11 +27,14 @@ namespace SS3D.Atom.Object.Lights
             Direction d = (Direction)message.ReadByte();
             if (light == null)
             {
-                light = new Light(atomManager.gameState.map, Color.FromArgb(r, g, b), 300, LightState.On, atomManager.gameState.map.GetTileArrayPositionFromWorldPosition(position), d);
+                //light = new Light(atomManager.gameState.map, Color.FromArgb(r, g, b), 300, LightState.On, atomManager.gameState.map.GetTileArrayPositionFromWorldPosition(position), d);
+                light = new Light(atomManager.gameState.map, Color.FromArgb(r, g, b), 300, LightState.On, position, d);
+                light.brightness = 1.5f;
             }
             else
             {
                 light.color = Color.FromArgb(r, g, b);
+                light.brightness = 1.5f;
             }
            
             UpdatePosition();

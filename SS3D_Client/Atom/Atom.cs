@@ -370,7 +370,7 @@ namespace SS3D.Atom
             ///CHECK TURF COLLISIONS
             System.Drawing.RectangleF myAABB = GetAABB();
 
-            if (atomManager.gameState.map.GetTileTypeFromWorldPosition(myAABB.Left+1, myAABB.Top) == TileType.Wall) // Top left
+            if (atomManager.gameState.map.GetTileTypeFromWorldPosition(myAABB.Left+1, myAABB.Bottom) == TileType.Wall) // Top left
             {
                 return true;
             }
@@ -378,7 +378,7 @@ namespace SS3D.Atom
             {
                 return true;
             }
-            else if (atomManager.gameState.map.GetTileTypeFromWorldPosition(myAABB.Right - 1, myAABB.Top) == TileType.Wall) // Top right
+            else if (atomManager.gameState.map.GetTileTypeFromWorldPosition(myAABB.Right - 1, myAABB.Bottom) == TileType.Wall) // Top right
             {
                 return true;
             }

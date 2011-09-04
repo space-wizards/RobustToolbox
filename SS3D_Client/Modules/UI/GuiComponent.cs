@@ -19,6 +19,8 @@ namespace SS3D.Modules.UI
         }
         protected PlayerController playerController;
         protected Point position;
+        private bool Visible;
+
         public virtual Point Position
         {
             get
@@ -31,14 +33,29 @@ namespace SS3D.Modules.UI
             }
         }
 
-
         public GuiComponent(PlayerController _playerController)
         {
             playerController = _playerController;
+            Visible = true;
         }
 
         public virtual void Render()
         {
+        }
+
+        public virtual void ToggleVisible()
+        {
+            Visible = !Visible;
+        }
+
+        public virtual void SetVisible(bool vis)
+        {
+            Visible = vis;
+        }
+
+        public bool IsVisible()
+        {
+            return Visible;
         }
 
         public virtual void HandleNetworkMessage(Lidgren.Network.NetIncomingMessage message)

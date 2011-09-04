@@ -573,6 +573,8 @@ namespace SS3D.States
             //Forward clicks to gui components
             foreach (var comp in guiComponents.Values)
             {
+                if (!comp.IsVisible())
+                    continue;
                 if(comp.MouseUp(e))
                     return;
             }
@@ -591,6 +593,8 @@ namespace SS3D.States
             //Forward clicks to gui components
             foreach (var comp in guiComponents.Values)
             {
+                if (!comp.IsVisible())
+                    continue;
                 if (comp.MouseDown(e))//MouseDown returns true if the click is handled by the ui component.
                     return;
             }
@@ -657,6 +661,8 @@ namespace SS3D.States
             mousePosWorld = new Vector2D(e.Position.X + xTopLeft, e.Position.Y + yTopLeft);
             foreach (GuiComponent component in guiComponents.Values)
             {
+                if (!component.IsVisible())
+                    continue;
                 component.MouseMove(e);
             }
         }

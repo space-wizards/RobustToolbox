@@ -28,9 +28,9 @@ namespace SS3D.Tiles.Wall
 
         public override void Render(float xTopLeft, float yTopLeft, int tileSpacing)
         {
-            if (surroundDirs == 3 || surroundDirs == 2) //north and east
+            if (surroundDirs == 3 || surroundDirs == 2 && !(surroundingTiles[2] != null && surroundingTiles[2].surroundingTiles[3]!= null && surroundingTiles[2].surroundingTiles[3].tileType == TileType.Wall)) //north and east
                 sideSprite = wallCorner1;
-            else if (surroundDirs == 9 || surroundDirs == 8) // north and west
+            else if (surroundDirs == 9 || surroundDirs == 8 && !(surroundingTiles[2] != null && surroundingTiles[2].surroundingTiles[1] != null && surroundingTiles[2].surroundingTiles[1].tileType == TileType.Wall)) //north and west 
                 sideSprite = wallCorner2;
             else
                 sideSprite = plainWall;

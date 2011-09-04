@@ -119,19 +119,19 @@ namespace SS3D.Modules.Map
                     }
                     if (y > 0)
                     {
-                        tileArray[x, y].surroundingTiles[0] = tileArray[x, y - 1];
+                        tileArray[x, y].surroundingTiles[0] = tileArray[x, y - 1]; //north
                     }
                     if (x < mapWidth - 1)
                     {
-                        tileArray[x, y].surroundingTiles[1] = tileArray[x + 1, y];
+                        tileArray[x, y].surroundingTiles[1] = tileArray[x + 1, y]; //east
                     }
                     if (y < mapHeight - 1)
                     {
-                        tileArray[x, y].surroundingTiles[2] = tileArray[x, y + 1];
+                        tileArray[x, y].surroundingTiles[2] = tileArray[x, y + 1]; //south
                     }
                     if (x > 0)
                     {
-                        tileArray[x, y].surroundingTiles[3] = tileArray[x - 1, y];
+                        tileArray[x, y].surroundingTiles[3] = tileArray[x - 1, y]; //west
                     }
 
                 }
@@ -694,10 +694,13 @@ namespace SS3D.Modules.Map
 
         void light_set_visible(int x, int y, Light light)
         {
-            light.tiles.Add(tileArray[x, y]);
-            if (!tileArray[x, y].tileLights.Contains(light))
+            if (!(tileArray[x, y].tileType == TileType.Wall && tileArray[x, y].position.Y > light.position.Y))
             {
-                tileArray[x, y].tileLights.Add(light);
+                light.tiles.Add(tileArray[x, y]);
+                if (!tileArray[x, y].tileLights.Contains(light))
+                {
+                    tileArray[x, y].tileLights.Add(light);
+                }
             }
         }
 

@@ -329,9 +329,6 @@ namespace SS3D_Server.Modules.Map
             if ((DateTime.Now - lastAtmosDisplayPush).TotalMilliseconds > 333)
             {
                 bool sendUpdate = false;
-                NetOutgoingMessage message = SS3DNetServer.Singleton.CreateMessage();
-                message.Write((byte)NetMessage.AtmosDisplayUpdate);
-
                 List<AtmosRecord> records = new List<AtmosRecord>();
                 for (int x = 0; x < mapWidth; x++)
                     for (int y = 0; y < mapHeight; y++)
@@ -348,15 +345,34 @@ namespace SS3D_Server.Modules.Map
 
                 if (sendUpdate)
                 {
-                    message.Write(records.Count);
-                    foreach (AtmosRecord rec in records)
-                    {
-                        rec.pack(message);
-                    }
-                    SS3DServer.Singleton.SendMessageToAll(message, NetDeliveryMethod.Unreliable);// Gas updates aren't a big deal.
-                    LogManager.Log("Sending Gas update with " + records.Count.ToString() + " records\n", LogLevel.Debug);
+                    SendAtmosUpdatePacket(records);
                 }
                 lastAtmosDisplayPush = DateTime.Now;
+            }
+        }
+
+        private void SendAtmosUpdatePacket(List<AtmosRecord> records)
+        {
+            int recordsCount = records.Count;
+            int recordsInPacket = 0;
+            int position = 0;
+            while (recordsCount > 0)
+            {
+                if (recordsCount >= 50)
+                    recordsInPacket = 50;
+                else
+                    recordsInPacket = recordsCount;
+                recordsCount -= recordsInPacket;
+                NetOutgoingMessage message = SS3DNetServer.Singleton.CreateMessage();
+                message.Write((byte)NetMessage.AtmosDisplayUpdate);
+                message.Write(recordsInPacket);
+                for (int i = 0 + position; i < recordsInPacket + position; i++)
+                {
+                    records[i].pack(message);
+                }
+                SS3DServer.Singleton.SendMessageToAll(message, NetDeliveryMethod.Unreliable);// Gas updates aren't a big deal.
+                LogManager.Log("Sending Gas update with " + recordsInPacket + " records\n", LogLevel.Debug);
+                position += recordsInPacket;
             }
         }
 

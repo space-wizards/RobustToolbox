@@ -27,6 +27,7 @@ namespace SS3D.Atom
         public string spritename = "noSprite";
         public Dictionary<int, string> spriteNames;
         public int drawDepth = 0;
+        private int index = 0;
 
         public string name;
         public ushort uid;
@@ -111,13 +112,19 @@ namespace SS3D.Atom
             drawn = true;
         }
 
-        public virtual void SetSpriteByIndex(int index)
+        public virtual void SetSpriteByIndex(int _index)
         {
-            if (spriteNames.Keys.Contains(index))
+            if (spriteNames.Keys.Contains(_index))
             {
-                spritename = spriteNames[index];
+                index = _index;
+                spritename = spriteNames[_index];
                 Draw();
             }
+        }
+
+        public int GetSpriteIndex()
+        {
+            return index;
         }
         #endregion
 

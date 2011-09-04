@@ -10,8 +10,8 @@ namespace SS3D.Atom.Item.Tool
         public Wrench()
             : base()
         {
-            SetSpriteName(0, "Wrench");
-            SetSpriteByIndex(0);
+            SetSpriteName(-1, "Wrench");
+            SetSpriteByIndex(-1);
         }
     }
 }

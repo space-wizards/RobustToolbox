@@ -58,6 +58,7 @@ namespace SS3D.Atom.Item
                 holdingAppendage.attachedItem = null;
                 holdingAppendage = null;
                 visible = true;
+                SetSpriteByIndex(-1);
             }
         }
 

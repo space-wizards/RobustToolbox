@@ -10,8 +10,8 @@ namespace SS3D.Atom.Item.Container
         public Toolbox()
             : base()
         {
-            SetSpriteName(0, "Toolbox");
-            SetSpriteByIndex(0);
+            SetSpriteName(-1, "Toolbox");
+            SetSpriteByIndex(-1);
             /*meshName = "toolbox.mesh";
             name = "Toolbox";
             heldQuat = new Mogre.Quaternion(new Mogre.Degree(90), new Mogre.Vector3(1,0,1));

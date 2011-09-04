@@ -15,15 +15,18 @@ namespace SS3D_Server.Atom.Item
 
         public bool isWeapon = true; // By default every holdable object is usable as a weapon.
         public int damageAmount = 10; // By default each hit with an item causes 10 damage.
+        
 
         public Item()
             : base()
         {
+            spritestate = -1;
             extensions.Add(new Extension.DummyExtension(this));
         }
 
         public override void SendState(NetConnection client)
         {
+            
             base.SendState(client);
 
             SendAttachMessage();

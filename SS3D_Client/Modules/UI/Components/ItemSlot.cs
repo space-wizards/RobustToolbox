@@ -34,19 +34,17 @@ namespace SS3D.Modules.UI.Components
         {
             switch (bodyPart)
             {
-                case GUIBodyPart.Ears:
-                    atomType = typeof(Atom.Item.Tool.Crowbar);
-                    break;
-                case GUIBodyPart.Eyes:
-                    atomType = typeof(Atom.Item.Tool.Welder);
-                    break;
-                case GUIBodyPart.None:
-                    atomType = typeof(Atom.Item.Item);
-                    break;
                 case GUIBodyPart.Feet:
+                    atomType = typeof(Atom.Item.Wearable.Feet.Feet);
+                    break;
+                case GUIBodyPart.Inner:
+                    atomType = typeof(Atom.Item.Wearable.Inner.Inner);
+                    break;
+                case GUIBodyPart.Ears:
+                case GUIBodyPart.Eyes:
+                case GUIBodyPart.None:
                 case GUIBodyPart.Hands:
                 case GUIBodyPart.Head:
-                case GUIBodyPart.Inner:
                 case GUIBodyPart.Mask:
                 case GUIBodyPart.Outer:
                 default:

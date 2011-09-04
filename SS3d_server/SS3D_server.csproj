@@ -83,6 +83,12 @@
     <Compile Include="Atom\Item\Tool\Tool.cs" />
     <Compile Include="Atom\Item\Tool\Welder.cs" />
     <Compile Include="Atom\Item\Tool\Wrench.cs" />
+    <Compile Include="Atom\Item\Wearable\Feet\Feet.cs" />
+    <Compile Include="Atom\Item\Wearable\Feet\Shoes.cs" />
+    <Compile Include="Atom\Item\Wearable\Inner\Inner.cs" />
+    <Compile Include="Atom\Item\Wearable\Inner\Jumpsuit\Assistant_Grey.cs" />
+    <Compile Include="Atom\Item\Wearable\Inner\Jumpsuit\Jumpsuit.cs" />
+    <Compile Include="Atom\Item\Wearable\Wearable.cs" />
     <Compile Include="Atom\Light.cs" />
     <Compile Include="Atom\Mob\HelperClasses\Appendage.cs" />
     <Compile Include="Atom\Mob\Human.cs" />

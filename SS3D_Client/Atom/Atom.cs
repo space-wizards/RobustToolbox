@@ -365,7 +365,7 @@ namespace SS3D.Atom
                 }
             }
 
-            if (speechBubble != null)
+            if (speechBubble != null && this.IsChildOfType(typeof(Mob.Mob)))
                 speechBubble.Draw(position, xTopLeft, yTopLeft, sprite);
         }
 

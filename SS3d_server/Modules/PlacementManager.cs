@@ -19,9 +19,7 @@ namespace SS3D_Server.Modules
         //TO-DO: Expand for multiple permission per mob?
         //       Add support for multi-use placeables (tiles etc.).
 
-        private Boolean editMode = false;               //If true, clients may freely request objects.
-        private Boolean freePlacementMode = false;      //If true, most placement restrictions will be lifted.
-        private Boolean endlessPlacementMode = false;   //If true, client will not exit placement mode after placement and permission will not be removed.
+        private Boolean editMode = false;               //If true, clients may freely request and place objects.
 
         public List<BuildPermission> BuildPermissions = new List<BuildPermission>(); //Holds build permissions for all mobs. A list of mobs and the objects they're allowed to request and how. One permission per mob.
 
@@ -59,17 +57,9 @@ namespace SS3D_Server.Modules
                 case PlacementManagerMessage.RequestPlacement:
                     HandlePlacementRequest(msg);
                     break;
-                case PlacementManagerMessage.EDITMODE_ToggleEditMode: //THESE REALLY NEED ADMINCHECKS OR SOMETHING.
+                case PlacementManagerMessage.EDITMODE_ToggleEditMode: //THIS REALLY NEED ADMINCHECKS OR SOMETHING.
                     editMode = !editMode;
                     SS3D_Server.SS3DServer.Singleton.chatManager.SendChatMessage(ChatChannel.Server, "Edit Mode : " + (editMode ? "On" : "Off"), "", 0);
-                    break;
-                case PlacementManagerMessage.EDITMODE_ToggleEndlessPlacement:
-                    endlessPlacementMode = !endlessPlacementMode;
-                    SS3D_Server.SS3DServer.Singleton.chatManager.SendChatMessage(ChatChannel.Server, "Endless Placement Mode : " + (endlessPlacementMode ? "On" : "Off"), "", 0);
-                    break;
-                case PlacementManagerMessage.EDITMODE_ToggleFreePlacement:
-                    freePlacementMode = !freePlacementMode;
-                    SS3D_Server.SS3DServer.Singleton.chatManager.SendChatMessage(ChatChannel.Server, "Free Placement Mode : " + (freePlacementMode ? "On" : "Off"), "", 0);
                     break;
                 case PlacementManagerMessage.EDITMODE_GetObject:
                     if (editMode) HandleEditRequest(msg);
@@ -93,7 +83,7 @@ namespace SS3D_Server.Modules
             AlignmentOptions align = (AlignmentOptions)msg.ReadByte();
             Assembly currentAssembly = Assembly.GetExecutingAssembly();
             Type fullType = currentAssembly.GetType("SS3D_Server." + objectType);
-            if (fullType != null) StartBuilding(SS3DServer.Singleton.playerManager.GetSessionByConnection(msg.SenderConnection).attachedAtom, 120, objectType, align, freePlacementMode);
+            if (fullType != null) StartBuilding(SS3DServer.Singleton.playerManager.GetSessionByConnection(msg.SenderConnection).attachedAtom, 120, objectType, align, editMode);
             else LogManager.Log("Invalid Object Requested : " + "SS3D_Server." + objectType);
         }
 
@@ -107,7 +97,7 @@ namespace SS3D_Server.Modules
                 //DO PLACEMENT CHECKS. Are they allowed to place this here?
                 BuildPermission permission = GetPermission(SS3DServer.Singleton.playerManager.GetSessionByConnection(msg.SenderConnection).attachedAtom.uid, alignRcv);
 
-                if (!endlessPlacementMode)
+                if (!editMode)
                 {
                     BuildPermissions.Remove(permission);
                     SendPlacementCancel(SS3DServer.Singleton.playerManager.GetSessionByConnection(msg.SenderConnection).attachedAtom);

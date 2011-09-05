@@ -36,11 +36,12 @@ namespace SS3D.Modules.UI
 
         public void Draw(Vector2D position, float xTopLeft, float yTopLeft, Sprite spriteToDrawAbove)
         {
+            if (spriteupdaterequired)
+                DrawBubbleSprite();
             if (millisecondsremaining <= 0)
                 return;
             millisecondsremaining -= (DateTime.Now - lastUpdate).TotalMilliseconds;
-            if (spriteupdaterequired)
-                DrawBubbleSprite();
+
             int x = (int)Math.Round(position.X - xTopLeft - (m_completeBubbleSprite.Width / 2));
             int y = (int)Math.Round(position.Y - yTopLeft - (m_completeBubbleSprite.Height) - (spriteToDrawAbove.Height / 2) - 5);
             m_completeBubbleSprite.SetPosition(x, y);
@@ -50,7 +51,6 @@ namespace SS3D.Modules.UI
 
         public void SetText(string text)
         {
-            millisecondsremaining = millisecondstolive;
             m_text = "";
             for (int i = 0; i < text.Length; i++)
             {
@@ -160,6 +160,8 @@ namespace SS3D.Modules.UI
 
             Gorgon.CurrentRenderTarget = target; // restore rendertarget
             spriteupdaterequired = false; //Sprite is now up to date
+            millisecondsremaining = millisecondstolive;
+            lastUpdate = DateTime.Now;
         }
 
         /*MiyagiSystem mMiyagiMgr;

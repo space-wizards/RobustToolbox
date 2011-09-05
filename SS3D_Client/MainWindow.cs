@@ -453,21 +453,6 @@ namespace SS3D
         }
         #endregion
 
-        private void toggleEndlessToolStripMenuItem_Click(object sender, EventArgs e)
-        {
-            NetOutgoingMessage message = prg.mNetworkMgr.netClient.CreateMessage();
-            message.Write((byte)NetMessage.PlacementManagerMessage);
-            message.Write((byte)PlacementManagerMessage.EDITMODE_ToggleEndlessPlacement);
-            prg.mNetworkMgr.SendMessage(message, NetDeliveryMethod.ReliableUnordered);
-        }
-
-        private void toggleFreeToolStripMenuItem_Click(object sender, EventArgs e)
-        {
-            NetOutgoingMessage message = prg.mNetworkMgr.netClient.CreateMessage();
-            message.Write((byte)NetMessage.PlacementManagerMessage);
-            message.Write((byte)PlacementManagerMessage.EDITMODE_ToggleFreePlacement);
-            prg.mNetworkMgr.SendMessage(message, NetDeliveryMethod.ReliableUnordered);
-        }
 
         private void toggleEditToolStripMenuItem_Click(object sender, EventArgs e)
         {

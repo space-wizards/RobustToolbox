@@ -23,8 +23,8 @@ namespace SS3D.Modules.UI
         private string m_text;
         private string m_mobname;
         private bool spriteupdaterequired = false;
-        private double secondstolive = 4;
-        private double secondsremaining = 0;
+        private double millisecondstolive = 8000;
+        private double millisecondsremaining = 0;
         private DateTime lastUpdate;
 
 
@@ -36,9 +36,9 @@ namespace SS3D.Modules.UI
 
         public void Draw(Vector2D position, float xTopLeft, float yTopLeft, Sprite spriteToDrawAbove)
         {
-            secondsremaining -= (DateTime.Now - lastUpdate).TotalMilliseconds / 1000;
-            if (secondsremaining <= 0)
+            if (millisecondsremaining <= 0)
                 return;
+            millisecondsremaining -= (DateTime.Now - lastUpdate).TotalMilliseconds;
             if (spriteupdaterequired)
                 DrawBubbleSprite();
             int x = (int)Math.Round(position.X - xTopLeft - (m_completeBubbleSprite.Width / 2));
@@ -50,7 +50,7 @@ namespace SS3D.Modules.UI
 
         public void SetText(string text)
         {
-            secondsremaining = secondstolive;
+            millisecondsremaining = millisecondstolive;
             m_text = "";
             for (int i = 0; i < text.Length; i++)
             {

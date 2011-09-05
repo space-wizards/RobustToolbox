@@ -71,7 +71,7 @@ namespace SS3D.Modules.UI.Components
             backgroundSprite.Size = new Vector2D(width, height);
             backgroundSprite.Draw();
 
-            healthComponent.Render();
+            
             Skin.Elements["Window.Border.Top.LeftCorner"].Draw(new System.Drawing.Rectangle(renderPos.X, renderPos.Y, ResMgr.Singleton.GetGUIInfo("Window.Border.Top.LeftCorner").Width, ResMgr.Singleton.GetGUIInfo("Window.Border.Top.LeftCorner").Height));
             Skin.Elements["Window.Border.Top.Horizontal"].Draw(new System.Drawing.Rectangle(renderPos.X + ResMgr.Singleton.GetGUIInfo("Window.Border.Top.LeftCorner").Width, renderPos.Y, width - ResMgr.Singleton.GetGUIInfo("Window.Border.Top.RightCorner").Width - ResMgr.Singleton.GetGUIInfo("Window.Border.Top.RightCorner").Width, ResMgr.Singleton.GetGUIInfo("Window.Border.Top.Horizontal").Height));
             Skin.Elements["Window.Border.Top.RightCorner"].Draw(new System.Drawing.Rectangle(renderPos.X + width - ResMgr.Singleton.GetGUIInfo("Window.Border.Top.RightCorner").Width, renderPos.Y, ResMgr.Singleton.GetGUIInfo("Window.Border.Top.RightCorner").Width, ResMgr.Singleton.GetGUIInfo("Window.Border.Top.RightCorner").Height));
@@ -153,7 +153,8 @@ namespace SS3D.Modules.UI.Components
                 return;
 
             renderImage.Blit(Position.X, Position.Y);
-           
+
+            healthComponent.Render();
             name.Text = ConfigManager.Singleton.Configuration.PlayerName; // Name isn't currently set so this is just temporary
             name.Draw();
 

@@ -57,6 +57,14 @@ namespace SS3D_Server.Atom.Object.Atmos
         public Vent(SerializationInfo info, StreamingContext ctxt)
         {
             SerializeBasicInfo(info, ctxt);
+            normalGasses = new Dictionary<GasType, float>();
+            var gastypes = Enum.GetValues(typeof(GasType));
+            foreach (GasType g in gastypes)
+            {
+                normalGasses.Add(g, 0);
+            }
+            normalGasses[GasType.Oxygen] = 20;
+            normalGasses[GasType.Nitrogen] = 80;
         }
 
         public override void GetObjectData(SerializationInfo info, StreamingContext ctxt)

@@ -11,6 +11,7 @@ using GorgonLibrary;
 using GorgonLibrary.Graphics;
 using GorgonLibrary.InputDevices;
 using SS3D.Modules;
+using SS3D.Modules.UI;
 
 namespace SS3D.Atom
 {

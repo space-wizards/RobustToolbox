@@ -275,8 +275,8 @@ namespace SS3D.States
             Atom.Atom a = atomManager.GetAtom(atomID);
             if (a != null)
             {
-                //if (a.speechBubble == null) a.speechBubble = new SpeechBubble(mEngine, a.Entity);
-                //a.speechBubble.Show(text, 4000 + ((double)text.Length * (double)30));
+                if (a.speechBubble == null) a.speechBubble = new SpeechBubble(a.name + a.uid.ToString());
+                a.speechBubble.SetText(text);
             }
         }
 

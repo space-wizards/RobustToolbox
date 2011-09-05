@@ -58,7 +58,7 @@ namespace SS3D.Atom
         public delegate void KeyEvent(bool state);
 
         //Misc
-        //public SpeechBubble speechBubble;
+        public SpeechBubble speechBubble;
 
         #endregion
 
@@ -363,6 +363,9 @@ namespace SS3D.Atom
                     sprite.Draw();
                 }
             }
+
+            if (speechBubble != null)
+                speechBubble.Draw(position, xTopLeft, yTopLeft, sprite);
         }
 
         public virtual void Render(float xTopLeft, float yTopLeft)

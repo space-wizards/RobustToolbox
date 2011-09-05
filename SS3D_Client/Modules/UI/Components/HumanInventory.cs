@@ -49,7 +49,7 @@ namespace SS3D.Modules.UI.Components
             {
                 inventorySlots.Add(part, new ItemSlot(playerController, part));
             }
-            
+            RenderImage r = new RenderImage("abc", 10, 10, ImageBufferFormats.BufferUnknown);
             // Position them (just temporary atm)
             int i = 0;
             foreach (ItemSlot slot in inventorySlots.Values)

@@ -20,6 +20,7 @@ namespace SS3D.Modules.UI
 
         private TextSprite textInputLabel;
         private Sprite backgroundSprite;
+        private RenderImage renderImage;
 
         private readonly int maxLines = 20;
         private int chatMessages = 0;
@@ -67,6 +68,46 @@ namespace SS3D.Modules.UI
             chatColors.Add(ChatChannel.Player, System.Drawing.Color.Green);
             chatColors.Add(ChatChannel.Lobby, System.Drawing.Color.White);
             chatColors.Add(ChatChannel.Ingame, System.Drawing.Color.Green);
+
+            renderImage = new RenderImage("chatboxRI", WindowDimensions.Width, WindowDimensions.Height, ImageBufferFormats.BufferUnknown);
+            renderImage.ClearEachFrame = ClearTargets.None;
+            PreRender();
+        }
+
+        private void PreRender()
+        {
+            Point renderPos = new Point(0, 0);
+
+            renderImage.BeginDrawing();
+            backgroundSprite.Color = System.Drawing.Color.FromArgb(51, 56, 64);
+            backgroundSprite.Opacity = 240;
+            backgroundSprite.Position = renderPos;
+            backgroundSprite.Size = Size;
+            backgroundSprite.Draw();
+
+            if (Skin == null)
+                return;
+
+            Skin.Elements["Window.Border.Top.LeftCorner"].Draw(new System.Drawing.Rectangle(renderPos.X, renderPos.Y, ResMgr.Singleton.GetGUIInfo("Window.Border.Top.LeftCorner").Width, ResMgr.Singleton.GetGUIInfo("Window.Border.Top.LeftCorner").Height));
+            Skin.Elements["Window.Border.Top.Horizontal"].Draw(new System.Drawing.Rectangle(renderPos.X + ResMgr.Singleton.GetGUIInfo("Window.Border.Top.LeftCorner").Width, renderPos.Y, WindowDimensions.Width - ResMgr.Singleton.GetGUIInfo("Window.Border.Top.RightCorner").Width - ResMgr.Singleton.GetGUIInfo("Window.Border.Top.RightCorner").Width, ResMgr.Singleton.GetGUIInfo("Window.Border.Top.Horizontal").Height));
+            Skin.Elements["Window.Border.Top.RightCorner"].Draw(new System.Drawing.Rectangle(renderPos.X + WindowDimensions.Width - ResMgr.Singleton.GetGUIInfo("Window.Border.Top.RightCorner").Width, renderPos.Y, ResMgr.Singleton.GetGUIInfo("Window.Border.Top.RightCorner").Width, ResMgr.Singleton.GetGUIInfo("Window.Border.Top.RightCorner").Height));
+
+
+            Skin.Elements["Window.Border.Vertical.Left"].Draw(new System.Drawing.Rectangle(renderPos.X, DefaultCaptionHeight + renderPos.Y, DefaultBorderSize, WindowDimensions.Height - DefaultCaptionHeight - DefaultBorderHeight));
+            Skin.Elements["Window.Border.Vertical.Right"].Draw(new System.Drawing.Rectangle(renderPos.X + WindowDimensions.Width - ResMgr.Singleton.GetGUIInfo("Window.Border.Vertical.Right").Width, DefaultCaptionHeight + renderPos.Y, DefaultBorderSize, WindowDimensions.Height - DefaultCaptionHeight - DefaultBorderHeight));
+
+            Skin.Elements["Window.Border.Middle.LeftCorner"].Draw(new System.Drawing.Rectangle(renderPos.X, renderPos.Y + WindowDimensions.Height - 16 - ResMgr.Singleton.GetGUIInfo("Window.Border.Middle.LeftCorner").Height, ResMgr.Singleton.GetGUIInfo("Window.Border.Middle.LeftCorner").Width, ResMgr.Singleton.GetGUIInfo("Window.Border.Middle.LeftCorner").Height));
+            Skin.Elements["Window.Border.Middle.Horizontal"].Draw(new System.Drawing.Rectangle(renderPos.X + ResMgr.Singleton.GetGUIInfo("Window.Border.Middle.LeftCorner").Width, renderPos.Y + WindowDimensions.Height - 16 - ResMgr.Singleton.GetGUIInfo("Window.Border.Middle.Horizontal").Height, WindowDimensions.Width - ResMgr.Singleton.GetGUIInfo("Window.Border.Middle.RightCorner").Width - ResMgr.Singleton.GetGUIInfo("Window.Border.Middle.LeftCorner").Width, ResMgr.Singleton.GetGUIInfo("Window.Border.Middle.Horizontal").Height));
+            Skin.Elements["Window.Border.Middle.RightCorner"].Draw(new System.Drawing.Rectangle(renderPos.X + WindowDimensions.Width - ResMgr.Singleton.GetGUIInfo("Window.Border.Middle.RightCorner").Width, renderPos.Y + WindowDimensions.Height - 16 - ResMgr.Singleton.GetGUIInfo("Window.Border.Middle.RightCorner").Height, ResMgr.Singleton.GetGUIInfo("Window.Border.Middle.RightCorner").Width, ResMgr.Singleton.GetGUIInfo("Window.Border.Middle.RightCorner").Height));
+
+            Skin.Elements["Window.Border.Bottom.LeftCorner"].Draw(new System.Drawing.Rectangle(renderPos.X, renderPos.Y + WindowDimensions.Height - ResMgr.Singleton.GetGUIInfo("Window.Border.Bottom.LeftCorner").Height, ResMgr.Singleton.GetGUIInfo("Window.Border.Bottom.LeftCorner").Width, ResMgr.Singleton.GetGUIInfo("Window.Border.Bottom.LeftCorner").Height));
+            Skin.Elements["Window.Border.Bottom.Horizontal"].Draw(new System.Drawing.Rectangle(renderPos.X + ResMgr.Singleton.GetGUIInfo("Window.Border.Bottom.LeftCorner").Width, renderPos.Y + WindowDimensions.Height - ResMgr.Singleton.GetGUIInfo("Window.Border.Bottom.Horizontal").Height, WindowDimensions.Width - ResMgr.Singleton.GetGUIInfo("Window.Border.Bottom.RightCorner").Width - ResMgr.Singleton.GetGUIInfo("Window.Border.Bottom.LeftCorner").Width, ResMgr.Singleton.GetGUIInfo("Window.Border.Bottom.Horizontal").Height));
+            Skin.Elements["Window.Border.Bottom.RightCorner"].Draw(new System.Drawing.Rectangle(renderPos.X + WindowDimensions.Width - ResMgr.Singleton.GetGUIInfo("Window.Border.Bottom.RightCorner").Width, renderPos.Y + WindowDimensions.Height - ResMgr.Singleton.GetGUIInfo("Window.Border.Bottom.RightCorner").Height, ResMgr.Singleton.GetGUIInfo("Window.Border.Bottom.RightCorner").Width, ResMgr.Singleton.GetGUIInfo("Window.Border.Bottom.RightCorner").Height));
+
+            Skin.Elements["Window.Border.Scrollbar.Vertical"].Draw(new Rectangle(renderPos.X + WindowDimensions.Width - ResMgr.Singleton.GetGUIInfo("Window.Border.Vertical.Right").Width - ResMgr.Singleton.GetGUIInfo("Window.Border.Scrollbar.Scroll").Width - ResMgr.Singleton.GetGUIInfo("Window.Border.Scrollbar.Vertical").Width, renderPos.Y + ResMgr.Singleton.GetGUIInfo("Window.Border.Top.Horizontal").Height - 1, ResMgr.Singleton.GetGUIInfo("Window.Border.Scrollbar.Vertical").Width, WindowDimensions.Height - 14 - (ResMgr.Singleton.GetGUIInfo("Window.Border.Middle.Horizontal").Height * 2)));
+
+            renderImage.EndDrawing();
+
         }
 
         private void Chatbox_MouseDown(object sender, MouseInputEventArgs e)
@@ -159,48 +200,19 @@ namespace SS3D.Modules.UI
             {
                 screenPoints = RectToScreen(ClientArea);
 
-                Gorgon.CurrentRenderTarget.BeginDrawing();
+                //Gorgon.CurrentRenderTarget.BeginDrawing();
 
-                backgroundSprite.Color = System.Drawing.Color.FromArgb(51, 56, 64);
-                backgroundSprite.Opacity = 240;
-                backgroundSprite.Position = Position;
-                backgroundSprite.Size = Size;
-                backgroundSprite.Draw();
-                
-                DrawNonClientArea();
+                renderImage.Blit(Position.X, Position.Y);
 
                 drawLines();
                 
-                Gorgon.CurrentRenderTarget.EndDrawing();
+                //Gorgon.CurrentRenderTarget.EndDrawing();
             }
         }
 
         private void DrawNonClientArea()
         {
-            Vector2D nonClientPosition = Position;
-
-            if (Skin == null)
-                return;
-
-
-            Skin.Elements["Window.Border.Top.LeftCorner"].Draw(new System.Drawing.Rectangle(Position.X, Position.Y, ResMgr.Singleton.GetGUIInfo("Window.Border.Top.LeftCorner").Width, ResMgr.Singleton.GetGUIInfo("Window.Border.Top.LeftCorner").Height));
-            Skin.Elements["Window.Border.Top.Horizontal"].Draw(new System.Drawing.Rectangle(Position.X + ResMgr.Singleton.GetGUIInfo("Window.Border.Top.LeftCorner").Width, Position.Y, WindowDimensions.Width - ResMgr.Singleton.GetGUIInfo("Window.Border.Top.RightCorner").Width - ResMgr.Singleton.GetGUIInfo("Window.Border.Top.RightCorner").Width, ResMgr.Singleton.GetGUIInfo("Window.Border.Top.Horizontal").Height));
-            Skin.Elements["Window.Border.Top.RightCorner"].Draw(new System.Drawing.Rectangle(WindowDimensions.Right - ResMgr.Singleton.GetGUIInfo("Window.Border.Top.RightCorner").Width, Position.Y, ResMgr.Singleton.GetGUIInfo("Window.Border.Top.RightCorner").Width, ResMgr.Singleton.GetGUIInfo("Window.Border.Top.RightCorner").Height));
-
-
-            Skin.Elements["Window.Border.Vertical.Left"].Draw(new System.Drawing.Rectangle(Position.X, DefaultCaptionHeight + Position.Y, DefaultBorderSize, WindowDimensions.Height - DefaultCaptionHeight - DefaultBorderHeight));
-            Skin.Elements["Window.Border.Vertical.Right"].Draw(new System.Drawing.Rectangle(Position.X + WindowDimensions.Width - ResMgr.Singleton.GetGUIInfo("Window.Border.Vertical.Right").Width, DefaultCaptionHeight + Position.Y, DefaultBorderSize, WindowDimensions.Height - DefaultCaptionHeight - DefaultBorderHeight));
-
-            Skin.Elements["Window.Border.Middle.LeftCorner"].Draw(new System.Drawing.Rectangle(Position.X, Position.Y + WindowDimensions.Height - 16 - ResMgr.Singleton.GetGUIInfo("Window.Border.Middle.LeftCorner").Height, ResMgr.Singleton.GetGUIInfo("Window.Border.Middle.LeftCorner").Width, ResMgr.Singleton.GetGUIInfo("Window.Border.Middle.LeftCorner").Height));
-            Skin.Elements["Window.Border.Middle.Horizontal"].Draw(new System.Drawing.Rectangle(Position.X + ResMgr.Singleton.GetGUIInfo("Window.Border.Middle.LeftCorner").Width, Position.Y + WindowDimensions.Height - 16 - ResMgr.Singleton.GetGUIInfo("Window.Border.Middle.Horizontal").Height, WindowDimensions.Width - ResMgr.Singleton.GetGUIInfo("Window.Border.Middle.RightCorner").Width - ResMgr.Singleton.GetGUIInfo("Window.Border.Middle.LeftCorner").Width, ResMgr.Singleton.GetGUIInfo("Window.Border.Middle.Horizontal").Height));
-            Skin.Elements["Window.Border.Middle.RightCorner"].Draw(new System.Drawing.Rectangle(WindowDimensions.Right - ResMgr.Singleton.GetGUIInfo("Window.Border.Middle.RightCorner").Width, Position.Y + WindowDimensions.Height - 16 - ResMgr.Singleton.GetGUIInfo("Window.Border.Middle.RightCorner").Height, ResMgr.Singleton.GetGUIInfo("Window.Border.Middle.RightCorner").Width, ResMgr.Singleton.GetGUIInfo("Window.Border.Middle.RightCorner").Height));
-
-            Skin.Elements["Window.Border.Bottom.LeftCorner"].Draw(new System.Drawing.Rectangle(Position.X, Position.Y + WindowDimensions.Height - ResMgr.Singleton.GetGUIInfo("Window.Border.Bottom.LeftCorner").Height, ResMgr.Singleton.GetGUIInfo("Window.Border.Bottom.LeftCorner").Width, ResMgr.Singleton.GetGUIInfo("Window.Border.Bottom.LeftCorner").Height));
-            Skin.Elements["Window.Border.Bottom.Horizontal"].Draw(new System.Drawing.Rectangle(Position.X + ResMgr.Singleton.GetGUIInfo("Window.Border.Bottom.LeftCorner").Width, Position.Y + WindowDimensions.Height - ResMgr.Singleton.GetGUIInfo("Window.Border.Bottom.Horizontal").Height, WindowDimensions.Width - ResMgr.Singleton.GetGUIInfo("Window.Border.Bottom.RightCorner").Width - ResMgr.Singleton.GetGUIInfo("Window.Border.Bottom.LeftCorner").Width, ResMgr.Singleton.GetGUIInfo("Window.Border.Bottom.Horizontal").Height));
-            Skin.Elements["Window.Border.Bottom.RightCorner"].Draw(new System.Drawing.Rectangle(WindowDimensions.Right - ResMgr.Singleton.GetGUIInfo("Window.Border.Bottom.RightCorner").Width, Position.Y + WindowDimensions.Height - ResMgr.Singleton.GetGUIInfo("Window.Border.Bottom.RightCorner").Height, ResMgr.Singleton.GetGUIInfo("Window.Border.Bottom.RightCorner").Width, ResMgr.Singleton.GetGUIInfo("Window.Border.Bottom.RightCorner").Height));
-
-            Skin.Elements["Window.Border.Scrollbar.Vertical"].Draw(new Rectangle(Position.X + WindowDimensions.Width - ResMgr.Singleton.GetGUIInfo("Window.Border.Vertical.Right").Width - ResMgr.Singleton.GetGUIInfo("Window.Border.Scrollbar.Scroll").Width - ResMgr.Singleton.GetGUIInfo("Window.Border.Scrollbar.Vertical").Width, Position.Y + ResMgr.Singleton.GetGUIInfo("Window.Border.Top.Horizontal").Height - 1, ResMgr.Singleton.GetGUIInfo("Window.Border.Scrollbar.Vertical").Width, WindowDimensions.Height - 14 - (ResMgr.Singleton.GetGUIInfo("Window.Border.Middle.Horizontal").Height * 2)));
-            
+                    
         }
 
         public event TextSubmitHandler TextSubmitted;

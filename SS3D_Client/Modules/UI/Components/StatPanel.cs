@@ -27,6 +27,8 @@ namespace SS3D.Modules.UI.Components
             }
         }
 
+        private RenderImage renderImage;
+
         private StatHealthComponent healthComponent;
         private Sprite backgroundSprite;
         private Sprite playerSprite;
@@ -52,6 +54,44 @@ namespace SS3D.Modules.UI.Components
             Point size = new Point(width - ResMgr.Singleton.GetGUIInfo("Window.Border.Vertical.Left").Width - ResMgr.Singleton.GetGUIInfo("Window.Border.Vertical.Right").Width, (height / 5) - ResMgr.Singleton.GetGUIInfo("Window.Border.Middle.Horizontal").Height);
             healthComponent = new StatHealthComponent(_playerController, size);
             healthComponent.Position = new Point(Position.X + ResMgr.Singleton.GetGUIInfo("Window.Border.Middle.LeftCorner").Width, Position.Y + (height / 5 * 4));
+
+            renderImage = new RenderImage("statpanelRI", width, height, ImageBufferFormats.BufferUnknown);
+            renderImage.ClearEachFrame = ClearTargets.None;
+            PreRender();
+        }
+
+        private void PreRender()
+        {
+            Point renderPos = new Point(0, 0);
+
+            renderImage.BeginDrawing();
+            backgroundSprite.Color = System.Drawing.Color.FromArgb(51, 56, 64);
+            backgroundSprite.Opacity = 240;
+            backgroundSprite.Position = renderPos;
+            backgroundSprite.Size = new Vector2D(width, height);
+            backgroundSprite.Draw();
+
+            healthComponent.Render();
+            Skin.Elements["Window.Border.Top.LeftCorner"].Draw(new System.Drawing.Rectangle(renderPos.X, renderPos.Y, ResMgr.Singleton.GetGUIInfo("Window.Border.Top.LeftCorner").Width, ResMgr.Singleton.GetGUIInfo("Window.Border.Top.LeftCorner").Height));
+            Skin.Elements["Window.Border.Top.Horizontal"].Draw(new System.Drawing.Rectangle(renderPos.X + ResMgr.Singleton.GetGUIInfo("Window.Border.Top.LeftCorner").Width, renderPos.Y, width - ResMgr.Singleton.GetGUIInfo("Window.Border.Top.RightCorner").Width - ResMgr.Singleton.GetGUIInfo("Window.Border.Top.RightCorner").Width, ResMgr.Singleton.GetGUIInfo("Window.Border.Top.Horizontal").Height));
+            Skin.Elements["Window.Border.Top.RightCorner"].Draw(new System.Drawing.Rectangle(renderPos.X + width - ResMgr.Singleton.GetGUIInfo("Window.Border.Top.RightCorner").Width, renderPos.Y, ResMgr.Singleton.GetGUIInfo("Window.Border.Top.RightCorner").Width, ResMgr.Singleton.GetGUIInfo("Window.Border.Top.RightCorner").Height));
+
+            Skin.Elements["Window.Border.Vertical.Left"].Draw(new System.Drawing.Rectangle(renderPos.X, ResMgr.Singleton.GetGUIInfo("Window.Border.Top.LeftCorner").Height + renderPos.Y, ResMgr.Singleton.GetGUIInfo("Window.Border.Vertical.Left").Width, height - ResMgr.Singleton.GetGUIInfo("Window.Border.Top.LeftCorner").Height - ResMgr.Singleton.GetGUIInfo("Window.Border.Bottom.LeftCorner").Height));
+            Skin.Elements["Window.Border.Vertical.Right"].Draw(new System.Drawing.Rectangle(renderPos.X + width - ResMgr.Singleton.GetGUIInfo("Window.Border.Vertical.Right").Width, ResMgr.Singleton.GetGUIInfo("Window.Border.Top.Horizontal").Height + renderPos.Y, ResMgr.Singleton.GetGUIInfo("Window.Border.Vertical.Right").Width, height - ResMgr.Singleton.GetGUIInfo("Window.Border.Top.RightCorner").Height - ResMgr.Singleton.GetGUIInfo("Window.Border.Bottom.RightCorner").Height));
+
+            Skin.Elements["Window.Border.Middle.LeftCorner"].Draw(new System.Drawing.Rectangle(renderPos.X, renderPos.Y + (height / 3 * 2) - ResMgr.Singleton.GetGUIInfo("Window.Border.Middle.LeftCorner").Height, ResMgr.Singleton.GetGUIInfo("Window.Border.Middle.LeftCorner").Width, ResMgr.Singleton.GetGUIInfo("Window.Border.Middle.LeftCorner").Height));
+            Skin.Elements["Window.Border.Middle.Horizontal"].Draw(new System.Drawing.Rectangle(renderPos.X + ResMgr.Singleton.GetGUIInfo("Window.Border.Middle.LeftCorner").Width, renderPos.Y + (height / 3 * 2) - ResMgr.Singleton.GetGUIInfo("Window.Border.Middle.Horizontal").Height, width - ResMgr.Singleton.GetGUIInfo("Window.Border.Middle.RightCorner").Width - ResMgr.Singleton.GetGUIInfo("Window.Border.Middle.LeftCorner").Width, ResMgr.Singleton.GetGUIInfo("Window.Border.Middle.Horizontal").Height));
+            Skin.Elements["Window.Border.Middle.RightCorner"].Draw(new System.Drawing.Rectangle(renderPos.X + width - ResMgr.Singleton.GetGUIInfo("Window.Border.Middle.RightCorner").Width, renderPos.Y + (height / 3 * 2) - ResMgr.Singleton.GetGUIInfo("Window.Border.Middle.RightCorner").Height, ResMgr.Singleton.GetGUIInfo("Window.Border.Middle.RightCorner").Width, ResMgr.Singleton.GetGUIInfo("Window.Border.Middle.RightCorner").Height));
+
+            Skin.Elements["Window.Border.Middle.LeftCorner"].Draw(new System.Drawing.Rectangle(renderPos.X, renderPos.Y + (height / 5 * 4) - ResMgr.Singleton.GetGUIInfo("Window.Border.Middle.LeftCorner").Height, ResMgr.Singleton.GetGUIInfo("Window.Border.Middle.LeftCorner").Width, ResMgr.Singleton.GetGUIInfo("Window.Border.Middle.LeftCorner").Height));
+            Skin.Elements["Window.Border.Middle.Horizontal"].Draw(new System.Drawing.Rectangle(renderPos.X + ResMgr.Singleton.GetGUIInfo("Window.Border.Middle.LeftCorner").Width, renderPos.Y + (height / 5 * 4) - ResMgr.Singleton.GetGUIInfo("Window.Border.Middle.Horizontal").Height, width - ResMgr.Singleton.GetGUIInfo("Window.Border.Middle.RightCorner").Width - ResMgr.Singleton.GetGUIInfo("Window.Border.Middle.LeftCorner").Width, ResMgr.Singleton.GetGUIInfo("Window.Border.Middle.Horizontal").Height));
+            Skin.Elements["Window.Border.Middle.RightCorner"].Draw(new System.Drawing.Rectangle(renderPos.X + width - ResMgr.Singleton.GetGUIInfo("Window.Border.Middle.RightCorner").Width, renderPos.Y + (height / 5 * 4) - ResMgr.Singleton.GetGUIInfo("Window.Border.Middle.RightCorner").Height, ResMgr.Singleton.GetGUIInfo("Window.Border.Middle.RightCorner").Width, ResMgr.Singleton.GetGUIInfo("Window.Border.Middle.RightCorner").Height));
+
+            Skin.Elements["Window.Border.Bottom.LeftCorner"].Draw(new System.Drawing.Rectangle(renderPos.X, renderPos.Y + height - ResMgr.Singleton.GetGUIInfo("Window.Border.Bottom.LeftCorner").Height, ResMgr.Singleton.GetGUIInfo("Window.Border.Bottom.LeftCorner").Width, ResMgr.Singleton.GetGUIInfo("Window.Border.Bottom.LeftCorner").Height));
+            Skin.Elements["Window.Border.Bottom.Horizontal"].Draw(new System.Drawing.Rectangle(renderPos.X + ResMgr.Singleton.GetGUIInfo("Window.Border.Bottom.LeftCorner").Width, renderPos.Y + height - ResMgr.Singleton.GetGUIInfo("Window.Border.Bottom.Horizontal").Height, width - ResMgr.Singleton.GetGUIInfo("Window.Border.Bottom.RightCorner").Width - ResMgr.Singleton.GetGUIInfo("Window.Border.Bottom.LeftCorner").Width, ResMgr.Singleton.GetGUIInfo("Window.Border.Bottom.Horizontal").Height));
+            Skin.Elements["Window.Border.Bottom.RightCorner"].Draw(new System.Drawing.Rectangle(renderPos.X + width - ResMgr.Singleton.GetGUIInfo("Window.Border.Bottom.RightCorner").Width, renderPos.Y + height - ResMgr.Singleton.GetGUIInfo("Window.Border.Bottom.RightCorner").Height, ResMgr.Singleton.GetGUIInfo("Window.Border.Bottom.RightCorner").Width, ResMgr.Singleton.GetGUIInfo("Window.Border.Bottom.RightCorner").Height));
+            renderImage.EndDrawing();
+
         }
 
         private void DrawPlayer()
@@ -112,36 +152,13 @@ namespace SS3D.Modules.UI.Components
             if (Skin == null || playerController.controlledAtom == null)
                 return;
 
-            backgroundSprite.Color = System.Drawing.Color.FromArgb(51, 56, 64);
-            backgroundSprite.Opacity = 240;
-            backgroundSprite.Position = Position;
-            backgroundSprite.Size = new Vector2D(width, height);
-            backgroundSprite.Draw();
-
+            renderImage.Blit(Position.X, Position.Y);
+           
             name.Text = ConfigManager.Singleton.Configuration.PlayerName; // Name isn't currently set so this is just temporary
             name.Draw();
 
             DrawPlayer();
-            healthComponent.Render();
-            Skin.Elements["Window.Border.Top.LeftCorner"].Draw(new System.Drawing.Rectangle(Position.X, Position.Y, ResMgr.Singleton.GetGUIInfo("Window.Border.Top.LeftCorner").Width, ResMgr.Singleton.GetGUIInfo("Window.Border.Top.LeftCorner").Height));
-            Skin.Elements["Window.Border.Top.Horizontal"].Draw(new System.Drawing.Rectangle(Position.X + ResMgr.Singleton.GetGUIInfo("Window.Border.Top.LeftCorner").Width, Position.Y, width - ResMgr.Singleton.GetGUIInfo("Window.Border.Top.RightCorner").Width - ResMgr.Singleton.GetGUIInfo("Window.Border.Top.RightCorner").Width, ResMgr.Singleton.GetGUIInfo("Window.Border.Top.Horizontal").Height));
-            Skin.Elements["Window.Border.Top.RightCorner"].Draw(new System.Drawing.Rectangle(Position.X + width - ResMgr.Singleton.GetGUIInfo("Window.Border.Top.RightCorner").Width, Position.Y, ResMgr.Singleton.GetGUIInfo("Window.Border.Top.RightCorner").Width, ResMgr.Singleton.GetGUIInfo("Window.Border.Top.RightCorner").Height));
-
-            Skin.Elements["Window.Border.Vertical.Left"].Draw(new System.Drawing.Rectangle(Position.X, ResMgr.Singleton.GetGUIInfo("Window.Border.Top.LeftCorner").Height + Position.Y, ResMgr.Singleton.GetGUIInfo("Window.Border.Vertical.Left").Width, height - ResMgr.Singleton.GetGUIInfo("Window.Border.Top.LeftCorner").Height - ResMgr.Singleton.GetGUIInfo("Window.Border.Bottom.LeftCorner").Height));
-            Skin.Elements["Window.Border.Vertical.Right"].Draw(new System.Drawing.Rectangle(Position.X + width - ResMgr.Singleton.GetGUIInfo("Window.Border.Vertical.Right").Width, ResMgr.Singleton.GetGUIInfo("Window.Border.Top.Horizontal").Height + Position.Y, ResMgr.Singleton.GetGUIInfo("Window.Border.Vertical.Right").Width, height - ResMgr.Singleton.GetGUIInfo("Window.Border.Top.RightCorner").Height - ResMgr.Singleton.GetGUIInfo("Window.Border.Bottom.RightCorner").Height));
-
-            Skin.Elements["Window.Border.Middle.LeftCorner"].Draw(new System.Drawing.Rectangle(Position.X, Position.Y + (height / 3 * 2) - ResMgr.Singleton.GetGUIInfo("Window.Border.Middle.LeftCorner").Height, ResMgr.Singleton.GetGUIInfo("Window.Border.Middle.LeftCorner").Width, ResMgr.Singleton.GetGUIInfo("Window.Border.Middle.LeftCorner").Height));
-            Skin.Elements["Window.Border.Middle.Horizontal"].Draw(new System.Drawing.Rectangle(Position.X + ResMgr.Singleton.GetGUIInfo("Window.Border.Middle.LeftCorner").Width, Position.Y + (height / 3 * 2)- ResMgr.Singleton.GetGUIInfo("Window.Border.Middle.Horizontal").Height, width - ResMgr.Singleton.GetGUIInfo("Window.Border.Middle.RightCorner").Width - ResMgr.Singleton.GetGUIInfo("Window.Border.Middle.LeftCorner").Width, ResMgr.Singleton.GetGUIInfo("Window.Border.Middle.Horizontal").Height));
-            Skin.Elements["Window.Border.Middle.RightCorner"].Draw(new System.Drawing.Rectangle(Position.X + width - ResMgr.Singleton.GetGUIInfo("Window.Border.Middle.RightCorner").Width, Position.Y + (height / 3 * 2) - ResMgr.Singleton.GetGUIInfo("Window.Border.Middle.RightCorner").Height, ResMgr.Singleton.GetGUIInfo("Window.Border.Middle.RightCorner").Width, ResMgr.Singleton.GetGUIInfo("Window.Border.Middle.RightCorner").Height));
-
-            Skin.Elements["Window.Border.Middle.LeftCorner"].Draw(new System.Drawing.Rectangle(Position.X, Position.Y + (height / 5 * 4) - ResMgr.Singleton.GetGUIInfo("Window.Border.Middle.LeftCorner").Height, ResMgr.Singleton.GetGUIInfo("Window.Border.Middle.LeftCorner").Width, ResMgr.Singleton.GetGUIInfo("Window.Border.Middle.LeftCorner").Height));
-            Skin.Elements["Window.Border.Middle.Horizontal"].Draw(new System.Drawing.Rectangle(Position.X + ResMgr.Singleton.GetGUIInfo("Window.Border.Middle.LeftCorner").Width, Position.Y + (height / 5 * 4) - ResMgr.Singleton.GetGUIInfo("Window.Border.Middle.Horizontal").Height, width - ResMgr.Singleton.GetGUIInfo("Window.Border.Middle.RightCorner").Width - ResMgr.Singleton.GetGUIInfo("Window.Border.Middle.LeftCorner").Width, ResMgr.Singleton.GetGUIInfo("Window.Border.Middle.Horizontal").Height));
-            Skin.Elements["Window.Border.Middle.RightCorner"].Draw(new System.Drawing.Rectangle(Position.X + width - ResMgr.Singleton.GetGUIInfo("Window.Border.Middle.RightCorner").Width, Position.Y + (height / 5 * 4) - ResMgr.Singleton.GetGUIInfo("Window.Border.Middle.RightCorner").Height, ResMgr.Singleton.GetGUIInfo("Window.Border.Middle.RightCorner").Width, ResMgr.Singleton.GetGUIInfo("Window.Border.Middle.RightCorner").Height));
-
-            Skin.Elements["Window.Border.Bottom.LeftCorner"].Draw(new System.Drawing.Rectangle(Position.X, Position.Y + height - ResMgr.Singleton.GetGUIInfo("Window.Border.Bottom.LeftCorner").Height, ResMgr.Singleton.GetGUIInfo("Window.Border.Bottom.LeftCorner").Width, ResMgr.Singleton.GetGUIInfo("Window.Border.Bottom.LeftCorner").Height));
-            Skin.Elements["Window.Border.Bottom.Horizontal"].Draw(new System.Drawing.Rectangle(Position.X + ResMgr.Singleton.GetGUIInfo("Window.Border.Bottom.LeftCorner").Width, Position.Y + height - ResMgr.Singleton.GetGUIInfo("Window.Border.Bottom.Horizontal").Height, width - ResMgr.Singleton.GetGUIInfo("Window.Border.Bottom.RightCorner").Width - ResMgr.Singleton.GetGUIInfo("Window.Border.Bottom.LeftCorner").Width, ResMgr.Singleton.GetGUIInfo("Window.Border.Bottom.Horizontal").Height));
-            Skin.Elements["Window.Border.Bottom.RightCorner"].Draw(new System.Drawing.Rectangle(position.X + width - ResMgr.Singleton.GetGUIInfo("Window.Border.Bottom.RightCorner").Width, Position.Y + height - ResMgr.Singleton.GetGUIInfo("Window.Border.Bottom.RightCorner").Height, ResMgr.Singleton.GetGUIInfo("Window.Border.Bottom.RightCorner").Width, ResMgr.Singleton.GetGUIInfo("Window.Border.Bottom.RightCorner").Height));
-        
+                   
              
         }
 

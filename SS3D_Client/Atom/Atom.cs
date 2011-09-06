@@ -296,7 +296,6 @@ namespace SS3D.Atom
         {
             Vector2D difference;
             Vector2D fulldifference;
-            float rot;
 
             if (interpolationPackets.Count == 0)
             {
@@ -313,7 +312,7 @@ namespace SS3D.Atom
 
             // Set rotation. The packet may be rotation only.
             rotation = i.rotation;
-            //Node.SetOrientation(rotW, 0, rotY, 0);
+
 
             //Check interpolation packet to see if we're close enough to the interpolation packet on the top of the stack.
             if (difference.Length < 0.1)

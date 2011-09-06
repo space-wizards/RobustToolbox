@@ -20,7 +20,6 @@ namespace SS3D.States
     {
         private StateManager mStateMgr;
         private int serverMaxPlayers;
-        private Chatbox lobbyChat;
         private PlayerController playerController;
 
         public LobbyScreen()
@@ -168,35 +167,6 @@ namespace SS3D.States
         {
         }
 
-        //public void clientName_OnSubmit(UiTextbox source, string the_text)
-        //{
-        //    while (the_text.Length < 3)
-        //    {
-        //        the_text += "_";
-        //    }
-        //    the_text = the_text.Replace(' ', '_');
-        //    the_text = the_text.Trim();
-        //    source.SetText(the_text);
-        //    mEngine.mNetworkMgr.SendClientName(the_text);
-        //}
-
-        //public void playButton_OnPress(UiButton source, MOIS.MouseButtonID button)
-        //{
-        //    mStateMgr.RequestStateChange(typeof(EditScreen));
-        //}
-
-        //public void menuButton_OnPress(UiButton source, MOIS.MouseButtonID button)
-        //{
-        //    mStateMgr.RequestStateChange(typeof(MainMenu));
-        //    mEngine.mNetworkMgr.Disconnect();
-        //}
-
-        //public void chatBox_OnSubmit(UiTextbox source, string the_text)
-        //{
-        //    mEngine.mNetworkMgr.SendLobbyChat(the_text);
-        //    source.SetText("");
-        //}
-
         public void SendLobbyChat(string text)
         {
             NetOutgoingMessage message = prg.mNetworkMgr.netClient.CreateMessage();
@@ -224,7 +194,6 @@ namespace SS3D.States
             serverMaxPlayers = msg.ReadInt32();
             string serverMapName = msg.ReadString();
             GameType gameType = (GameType)msg.ReadByte();
-            //lobbyChat.AddLine("Server name: " + serverName + "\r\nMaxPlayers: " + serverMaxPlayers.ToString() + "\r\n" + welcomeString);
         }
 
         private void HandleChatMessage(NetIncomingMessage msg)
@@ -234,7 +203,6 @@ namespace SS3D.States
 
             string message = "(" + channel.ToString() + "):" + text;
             ushort atomID = msg.ReadUInt16();
-            lobbyChat.AddLine(message, channel);
         }
 
         #region Input

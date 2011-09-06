@@ -38,7 +38,6 @@ namespace SS3D.States
         public Dictionary<GuiComponentType, IGuiComponent> guiComponents;
         #endregion 
 
-        private ushort defaultChannel;
         public PlayerController playerController;
         public DateTime lastUpdate;
         public DateTime now;
@@ -64,10 +63,8 @@ namespace SS3D.States
         private float realScreenWidthTiles = 0;
         private float realScreenHeightTiles = 0;
 
-        private bool showStats = false;     // show FPS etc. panel if true
         private bool showDebug = false;     // show AABBs & Bounding Circles on atoms.
         private bool telepathy = false;     // disable visiblity bounds if true
-        //private Label fpsLabel1, fpsLabel2, fpsLabel3, fpsLabel4;
 
         public float xTopLeft { get; private set; }
         public float yTopLeft { get; private set; }
@@ -81,8 +78,6 @@ namespace SS3D.States
    
         #region Mouse/Camera stuff
         private DateTime lastRMBClick = DateTime.Now;
-        private int lastMouseX = 0;
-        private int lastMouseY = 0;
 
         public Vector2D mousePosScreen = Vector2D.Zero;
         public Vector2D mousePosWorld = Vector2D.Zero;
@@ -104,15 +99,11 @@ namespace SS3D.States
             lastUpdate = DateTime.Now;
             now = DateTime.Now;
 
-            defaultChannel = 1;
-
             map = new Map();
 
             atomManager = new AtomManager(this, prg);
             PlayerController.Initialize(this, atomManager);
             playerController = PlayerController.Singleton;
-            //SetUp();
-            //SetUpGUI();
 
             prg.mNetworkMgr.MessageArrived += new NetworkMsgHandler(mNetworkMgr_MessageArrived);
 
@@ -180,15 +171,17 @@ namespace SS3D.States
             }
             if (baseTargetSprite != null && Gorgon.IsInitialized)
             {
-                baseTargetSprite.Name = null;
                 baseTargetSprite.Image = null;
                 baseTargetSprite = null;
             }
             atomManager.Shutdown();
             map.Shutdown();
+            PlacementManager.Singleton.Reset();
             atomManager = null; 
             map = null;
-            prg.mNetworkMgr.Disconnect();
+            gameChat = null;
+            UIDesktop.Singleton.Dispose();
+            prg.mNetworkMgr.Disconnect(); //FIXTHIS
             prg.mNetworkMgr.MessageArrived -= new NetworkMsgHandler(mNetworkMgr_MessageArrived);
         }
 
@@ -708,327 +701,3 @@ namespace SS3D.States
     }
 
 }
-
-#region Old / Depreciated Methods
-
-
-        /*private void SetUpGUI()
-        {
-            // The chatbox
-            gameChat = new Chatbox("gameChat");
-            mEngine.mMiyagiSystem.GUIManager.GUIs.Add(gameChat.chatGUI);
-            gameChat.chatPanel.ResizeMode = Miyagi.UI.ResizeModes.None;
-            gameChat.chatPanel.Movable = false;
-            gameChat.Transparency = 80;
-            gameChat.TextSubmitted += new Chatbox.TextSubmitHandler(chatTextbox_TextSubmitted);
-
-
-            guiGameScreen = new GUI("guiGameScreen");
-            mEngine.mMiyagiSystem.GUIManager.GUIs.Add(guiGameScreen);
-            Point screenSize = new Point((int)mEngine.Window.Width, (int)mEngine.Window.Height);
-
-            HealthPanel healthPanel = new HealthPanel(mEngine);
-            healthPanel.Initialize();
-
-            // The health background
-            Panel healthPanel = new Panel("healthPanel")
-            {
-                Size = new Size(48, 105),
-                Location = new Point(10, screenSize.Y - 115),
-                Skin = MiyagiResources.Singleton.Skins["HealthPanelSkin"],
-            };
-
-            // The actual health graphic - this will need to be changed if we do regional damage.
-            PictureBox healthBodyBox = new PictureBox("healthBodyBox")
-            {
-                Size = new Size(42, 99),
-                Location = new Point(2, 3),
-                Bitmap = (System.Drawing.Bitmap)System.Drawing.Image.FromFile("../../../Media/GUI/HuD/healthgreen.png")
-            };
-
-
-            Button leftHandButton = new Button("leftHandButton")
-            {
-                Size = new Size(70, 61),
-                Location = new Point(68, screenSize.Y - 71),
-                Skin = MiyagiResources.Singleton.Skins["LeftHandButtonSkin"],
-                TabStop = false
-            };
-            leftHandButton.MouseDown += LeftHandButtonMouseDown;
-
-            Button rightHandButton = new Button("rightHandButton")
-            {
-                Size = new Size(70, 61),
-                Location = new Point(143, screenSize.Y - 71),
-                Skin = MiyagiResources.Singleton.Skins["RightHandButtonSkin"],
-                TabStop = false
-            };
-            rightHandButton.MouseDown += RightHandButtonMouseDown;
-
-            // These two boxes contain the pictures of the item we are holding in that hand. They are set in the itemmanager
-            // when we recieve a message that we successfully picked up an item, that is why their name doesn't follow the
-            // convention.
-            PictureBox leftHandBox = new PictureBox("LHandBox")
-            {
-                Size = new Size(28, 48),
-                Location = new Point(15, 5)
-            };
-
-            PictureBox rightHandBox = new PictureBox("RHandBox")
-            {
-                Size = new Size(28, 48),
-                Location = new Point(15, 5)
-            };
-
-
-            Panel fpsPanel = new Panel("FPSPanel")
-            {
-                Size = new Size(128, 64),
-                Location = new Point(10, screenSize.Y - 200),
-            };
-
-            fpsLabel1 = new Label()
-            {
-                Size = new Size(128, 16),
-                Location = new Point(0, 0),
-                TextStyle =
-                {
-                    ForegroundColour = Colours.White
-                }
-
-            };
-            fpsPanel.Controls.Add(fpsLabel1);
-            fpsLabel2 = new Label()
-            {
-                Size = new Size(128, 16),
-                Location = new Point(0, 16),
-                TextStyle =
-                {
-                    ForegroundColour = Colours.White
-                }
-
-            };
-            fpsPanel.Controls.Add(fpsLabel2);
-            fpsLabel3 = new Label()
-            {
-                Size = new Size(128, 16),
-                Location = new Point(0, 32),
-                TextStyle =
-                {
-                    ForegroundColour = Colours.White
-                }
-
-            };
-            fpsPanel.Controls.Add(fpsLabel3);
-            fpsLabel4 = new Label()
-            {
-                Size = new Size(128, 16),
-                Location = new Point(0, 48),
-                TextStyle =
-                {
-                    ForegroundColour = Colours.White
-                }
-
-            };
-            fpsPanel.Controls.Add(fpsLabel4);
-            fpsPanel.Visible = false;
-
-            leftHandButton.Controls.Add(leftHandBox);
-            rightHandButton.Controls.Add(rightHandBox);
-                        
-            guiGameScreen.Controls.Add(healthPanel.control);
-            guiGameScreen.Controls.Add(leftHandButton);
-            guiGameScreen.Controls.Add(rightHandButton);
-            guiGameScreen.Controls.Add(fpsPanel);
-            
-          
-        }*/
-
-
-
-        /*private void SendChatMessage(string text)
-        {
-            NetOutgoingMessage message = mEngine.mNetworkMgr.netClient.CreateMessage();
-            message.Write((byte)NetMessage.ChatMessage);
-            message.Write((byte)ChatChannel.Default);
-            message.Write(text);
-
-            mEngine.mNetworkMgr.SendMessage(message, NetDeliveryMethod.ReliableUnordered);
-        }*/
-
-        /*void chatTextbox_TextSubmitted(Chatbox chatbox, string text)
-        {
-            if (text == "/dumpmap")
-            {
-                if(map != null && itemManager != null)
-                    MapFileHandler.SaveMap("./Maps/mapdump.map", map, itemManager);
-            }
-            else
-            {
-                SendChatMessage(text);
-            }
-        }*/
-
-        /*public override void KeyUp(MOIS.KeyEvent keyState)
-        {
-            playerController.KeyUp(keyState.key); // We want to pass key up events regardless of UI focus.
-            if (gameChat.HasFocus())
-            {
-                return;
-            }
-            else if (keyState.key == MOIS.KeyCode.KC_T)
-            {
-                gameChat.SetInputFocus();
-            }
-            else if (keyState.key == MOIS.KeyCode.KC_F1) // Toggle stats panel
-            {
-                showStats = !showStats;
-                //guiGameScreen.GetControl("FPSPanel").Visible = showStats;
-            }
-
-        }*/
-
-        /* public override void KeyDown(MOIS.KeyEvent keyState)
-        {
-            if (gameChat.HasFocus())
-            {
-                if (keyState.key == MOIS.KeyCode.KC_TAB)
-                    gameChat.SetInputFocus(false);
-                return;
-            }
-
-            /*if (keyState.key == MOIS.KeyCode.KC_ESCAPE)
-                mStateMgr.RequestStateChange(typeof(MainMenu));
-
-            // Pass keydown events to the PlayerController
-
-            
-            if (keyState.key == MOIS.KeyCode.KC_1)
-            {
-                guiGameScreen.GetControl("leftHandButton").Focused = true;
-                guiGameScreen.GetControl("rightHandButton").Focused = false;
-                mobManager.myMob.selectedHand = MobHand.LHand;
-            }
-            else if (keyState.key == MOIS.KeyCode.KC_2)
-            {
-                guiGameScreen.GetControl("leftHandButton").Focused = false;
-                guiGameScreen.GetControl("rightHandButton").Focused = true;
-                mobManager.myMob.selectedHand = MobHand.RHand;
-            }
-            else if (keyState.key == MOIS.KeyCode.KC_SPACE)
-            {
-                if (mobManager.myMob.selectedHand == MobHand.LHand)
-                {
-                    guiGameScreen.GetControl("leftHandButton").Focused = false;
-                    guiGameScreen.GetControl("rightHandButton").Focused = true;
-                    mobManager.myMob.selectedHand = MobHand.RHand;
-                }
-                else
-                {
-                    guiGameScreen.GetControl("leftHandButton").Focused = true;
-                    guiGameScreen.GetControl("rightHandButton").Focused = false;
-                    mobManager.myMob.selectedHand = MobHand.LHand;
-                }
-            }
-
-        }*/
-
-        /*public override void MouseDown(MOIS.MouseEvent mouseState, MOIS.MouseButtonID button)
-        {
-            if (button == MOIS.MouseButtonID.MB_Right)
-            {
-                TimeSpan clickDiff = DateTime.Now - lastRMBClick;
-                lastRMBClick = DateTime.Now;
-                if (clickDiff.TotalMilliseconds < 250)
-                {
-                    mEngine.Camera.ParentNode.ResetOrientation();
-                }
-            }
-
-            if (button == MOIS.MouseButtonID.MB_Left)
-            {
-                Point mouseLoc = mEngine.mMiyagiSystem.InputManager.MouseLocation;
-                Vector2 mousePos = new Vector2((float)mouseLoc.X, (float)mouseLoc.Y);
-                
-                //Changed this because it is simpler to use a helper class just for raycasting, and we don't need the worldpos.
-                Atom.Atom atom = HelperClasses.AtomUtil.PickAtScreenPosition(mEngine, mousePos);
-
-                if (atom != null)
-                {
-
-                    atom.HandleClick();
-                    /*switch (atom.AtomType)
-                    {
-                        case AtomType.Item:
-                            itemManager.ClickItem((Item)atom);
-                            break;
-                        case AtomType.Mob:
-                            mobManager.ClickMob((Mob)atom);
-                            break;
-                    }
-                    
-                }
-            }
-        }*/
-
-        /*public override void MouseMove(MOIS.MouseEvent mouseState)
-        {
-            // r-button camera yaw
-            if (mouseState.state.ButtonDown(MOIS.MouseButtonID.MB_Right))
-            {
-                int degree;
-                if (mouseState.state.X.rel > lastMouseX)
-                {
-                    degree = -mouseState.state.X.rel;
-                }
-                else
-                {
-                    degree = mouseState.state.X.rel;
-                }
-                mEngine.Camera.ParentNode.Yaw(Mogre.Math.DegreesToRadians(degree), Node.TransformSpace.TS_WORLD);
-                // uncomment to allow pitch control using the mouse y axis
-                mEngine.Camera.ParentNode.Pitch(Mogre.Math.DegreesToRadians(mouseState.state.Y.rel), Node.TransformSpace.TS_LOCAL);
-                
-                lastMouseX = mouseState.state.X.abs;
-            }
-
-            // mousewheel camera zoom
-            if (mouseState.state.Z.rel != 0)
-            {
-                mEngine.CameraDistance += mouseState.state.Z.rel / 6; 
-                // single mousewheel tick is 120 units, so 20 units per tick
-                mEngine.Camera.Position = new Mogre.Vector3(0, mEngine.CameraDistance, -2 * mEngine.CameraDistance / 3);
-                // Offset the camera position to deal with atom node offsets. 
-                //TODO make this less hackish
-                //mEngine.Camera.Position = mEngine.Camera.Position + playerController.controlledAtom.offset;
-           }
-        }*/
-
-        /*private void LeftHandButtonMouseDown(object sender, MouseButtonEventArgs e)
-        {
-            if (e.MouseButton == MouseButton.Left)
-            {
-                playerController.SendVerb("selectlefthand", 0);
-                //mobManager.myMob.selectedHand = MobHand.LHand;
-            }
-            else if (e.MouseButton == MouseButton.Right)
-            {
-                //itemManager.DropItem(MobHand.LHand);
-            }
-        }*/
-
-        /*private void RightHandButtonMouseDown(object sender, MouseButtonEventArgs e)
-        {
-            if (e.MouseButton == MouseButton.Left)
-            {
-                playerController.SendVerb("selectrighthand", 0);
-                //mobManager.myMob.selectedHand = MobHand.RHand;
-            }
-            else if (e.MouseButton == MouseButton.Right)
-            {
-                //itemManager.DropItem(MobHand.RHand);
-            }
-        }*/
-
-
-#endregion

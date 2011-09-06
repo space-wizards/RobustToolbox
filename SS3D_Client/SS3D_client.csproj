@@ -119,7 +119,6 @@
     <Compile Include="Atom\Item\Wearable\Inner\Jumpsuit\Assistant_Grey.cs" />
     <Compile Include="Atom\Item\Wearable\Inner\Jumpsuit\Jumpsuit.cs" />
     <Compile Include="Atom\Item\Wearable\Wearable.cs" />
-    <Compile Include="Atom\Mob\HelperClasses\AnimState.cs" />
     <Compile Include="Atom\Mob\HelperClasses\Appendage.cs" />
     <Compile Include="Atom\Mob\Human.cs" />
     <Compile Include="Atom\Mob\Mob.cs" />
@@ -141,25 +140,18 @@
     <Compile Include="MainWindow.Designer.cs">
       <DependentUpon>MainWindow.cs</DependentUpon>
     </Compile>
-    <Compile Include="HelperClasses\AtomUtil.cs" />
-    <None Include="HelperClasses\CollisionTools.cs" />
     <Compile Include="HelperClasses\InterpolationPacket.cs" />
-    <Compile Include="HelperClasses\Rect2D.cs" />
     <Compile Include="Modules\ConfigManager.cs" />
     <Compile Include="Modules\PlacementManager.cs" />
     <Compile Include="Modules\LightManager.cs" />
     <Compile Include="Modules\Map\Map.cs" />
-    <Compile Include="Modules\Map\MapFile.cs" />
-    <Compile Include="Modules\Map\MapSaver.cs" />
     <Compile Include="Modules\Network\NetworkManager.cs" />
-    <Compile Include="Modules\OgreEventArgs.cs" />
     <Compile Include="Modules\PlayerController.cs" />
     <Compile Include="Modules\State.cs" />
     <Compile Include="Modules\StateManager.cs" />
     <Compile Include="Modules\UI\Components\EditorAtomButton.cs" />
     <Compile Include="Modules\UI\Components\HumanHandsGui.cs" />
     <Compile Include="Modules\UI\Components\HumanHealthComponent.cs" />
-    <None Include="Modules\UI\Console.cs" />
     <Compile Include="Modules\UI\Chatbox.cs" />
     <Compile Include="Modules\UI\Components\HumanInventory.cs" />
     <Compile Include="Modules\UI\Components\ItemSlot.cs" />
@@ -182,12 +174,9 @@
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
     <Compile Include="States\ConnectMenu.cs" />
-    <None Include="States\EditorScreen.cs" />
     <Compile Include="States\GameScreen.cs" />
     <Compile Include="States\LoadingScreen.cs" />
-    <Compile Include="States\EditScreen.cs" />
     <Compile Include="States\LobbyScreen.cs" />
-    <Compile Include="States\Options.cs" />
     <Compile Include="States\MainMenu.cs" />
     <Compile Include="Tiles\Floor\Floor.cs" />
     <Compile Include="Tiles\Floor\Space.cs" />

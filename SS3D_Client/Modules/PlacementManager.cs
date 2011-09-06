@@ -22,7 +22,6 @@ using Lidgren.Network;
 
 using System.Windows.Forms;
 using SS3D_shared.HelperClasses;
-using SS3D_shared;
 
 namespace SS3D.Modules
 {
@@ -40,7 +39,6 @@ namespace SS3D.Modules
         Sprite previewSprite;
         Type activeType;
         Atom.Atom snapToAtom; //The current atom for snap-to-similar
-        byte snapToSide;      //The current side of the current atom for snap-to-similar. 1 Top, 2 Right, 3 Bottom, 4 Left. Unused.
         Boolean validLocation = false;
         Boolean previewVisible = true;
 
@@ -75,6 +73,17 @@ namespace SS3D.Modules
             networkMgr = netMgr;
         }
 
+        public void Reset()
+        {
+            map = null;
+            atomManager = null;
+            gameScreen = null;
+            networkMgr = null;
+            active = null;
+            snapToAtom = null;
+            previewSprite = null;
+        }
+
         public void nextRot()
         {
             rotation = (rotation + 90f) == 360 ? 0 : rotation + 90;          
@@ -102,7 +111,6 @@ namespace SS3D.Modules
             previewSprite = null;
             activeType = null;
             snapToAtom = null;
-            snapToSide = 0;
             validLocation = false;
             previewVisible = true;
             placementQueued = false;

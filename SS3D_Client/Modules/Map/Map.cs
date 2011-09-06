@@ -11,7 +11,7 @@ using GorgonLibrary.Graphics;
 
 namespace SS3D.Modules.Map
 {
-    public class Map// : LoadingTracker
+    public class Map
     {
         #region Variables
         public Tile[,] tileArray; // The array holding all the tiles that make up the map
@@ -25,7 +25,7 @@ namespace SS3D.Modules.Map
         private List<Vector2D> cardinalList;
         private static PORTAL_INFO[] portal = new PORTAL_INFO[4];
         public System.Drawing.Point lastVisPoint;
-        private int recCount = 0;
+
         public bool needVisUpdate = false;
         public bool loaded = false;
         #endregion
@@ -491,20 +491,8 @@ namespace SS3D.Modules.Map
         #region Shutdown
         public void Shutdown()
         {
-
-            //loadingText = "";
-            //loadingPercent = 0;
-
-            float maxElements;
-            float oneElement;
-            
-            //loadingText = "Unloading Map...";
-            //loadingPercent = 0;
-
-            maxElements = (mapWidth * mapHeight);
-            oneElement = 100f / maxElements;
             tileArray = null;
-            //loadingPercent = 0;
+            tileSprites = null;
         }
         #endregion
 

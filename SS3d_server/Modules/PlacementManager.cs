@@ -92,6 +92,8 @@ namespace SS3D_Server.Modules
             AlignmentOptions alignRcv = (AlignmentOptions)msg.ReadByte();
             float xRcv = msg.ReadFloat();
             float yRcv = msg.ReadFloat();
+            float rotRcv = msg.ReadFloat();
+
             if (GetPermission(SS3DServer.Singleton.playerManager.GetSessionByConnection(msg.SenderConnection).attachedAtom.uid, alignRcv) != null)
             {
                 //DO PLACEMENT CHECKS. Are they allowed to place this here?
@@ -114,7 +116,7 @@ namespace SS3D_Server.Modules
                 }
                 else
                 {
-                    SS3D_Server.SS3DServer.Singleton.atomManager.SpawnAtom(permission.type, new Vector2(xRcv, yRcv));
+                    SS3D_Server.SS3DServer.Singleton.atomManager.SpawnAtom(permission.type, new Vector2(xRcv, yRcv), rotRcv);
                 }
 
             }

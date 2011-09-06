@@ -10,6 +10,8 @@ using SS3D_shared.HelperClasses;
 using SS3D_Server.Atom.Extension;
 using SS3D_Server.Modules;
 
+using SS3D_shared;
+
 namespace SS3D_Server.Atom
 {
     [Serializable()]
@@ -26,6 +28,10 @@ namespace SS3D_Server.Atom
         public int spritestate = 0; //This is the sprite state so the client knows which of the atom's defined sprites to display.
         public bool damageable = false;
         public bool collidable = false;
+
+        public Atom[] linkedAtoms = new Atom[4]; //0 = North, 1 = East, 2 = South, 3 = West
+
+        public Tiles.Tile spawnTile; //The tile this atom spawned on. Used for wall mounted items etc.
 
         // Extensions
         public List<Extension.Extension> extensions;
@@ -63,13 +69,16 @@ namespace SS3D_Server.Atom
             updateRequired = true;
         }
 
+        public virtual void PostSpawnActions()
+        {
+            //Called after atom has been spawned and set up.
+        }
 
         public virtual void SerializedInit()
         {
             // When things are created with reflection using serialization their default constructor
             // isn't called. Put things in here which need to be done when it's created.
         }
-
 
         /// <summary>
         /// Used to cleanly destroy an atom.
@@ -79,6 +88,26 @@ namespace SS3D_Server.Atom
 
         }
         #endregion
+
+        /// <summary>
+        ///  <para>Returns linked atom for given direction if any or null if none.</para>
+        ///  <para>See GlobalConstants.cs in Shared for direction info.</para>
+        /// </summary>
+        public Atom hasLinkedAtom(byte direction)
+        {
+            switch (direction)
+            {
+                case (Constants.NORTH):
+                    break;
+                case (Constants.EAST):
+                    break;
+                case (Constants.SOUTH):
+                    break;
+                case (Constants.WEST):
+                    break;
+            }
+            return null;
+        }
 
         #region updating
         public virtual void Update(float framePeriod)

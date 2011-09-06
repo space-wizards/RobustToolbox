@@ -24,5 +24,6 @@ namespace SS3D_Server.Atom.Object.WallMounted
         {
             base.GetObjectData(info, ctxt);
         }
+
     }
 }

@@ -536,8 +536,6 @@ namespace SS3D.States
                     return;
             }
 
-            if (e.Key == KeyboardKeys.Escape) PlacementManager.Singleton.CancelPlacement();
-
             if (e.Key == KeyboardKeys.F9)
             {
                 if (prg.GorgonForm.MainMenuStrip.Visible)
@@ -617,6 +615,8 @@ namespace SS3D.States
                 }
                 else if (e.Buttons == GorgonLibrary.InputDevices.MouseButtons.Right)
                 {
+                    PlacementManager.Singleton.CancelPlacement();
+                    return;
                 }
                 else if (e.Buttons == GorgonLibrary.InputDevices.MouseButtons.Middle)
                 {

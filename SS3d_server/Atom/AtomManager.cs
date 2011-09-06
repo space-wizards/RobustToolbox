@@ -173,7 +173,7 @@ namespace SS3D_Server.Atom
 
             SendSpawnAtom(uid, type);
             atomDictionary[uid].SendState();
-            
+   
             return atomDictionary[uid]; // Why do we return it? So we can do whatever is needed easily from the calling function.
         }
 
@@ -181,15 +181,18 @@ namespace SS3D_Server.Atom
         {
             Atom spawned = SpawnAtom(type);
             spawned.Translate(position);
+            spawned.spawnTile = SS3D_Server.SS3DServer.Singleton.map.GetTileFromWorldPosition(position);
+            spawned.PostSpawnActions();
             return spawned;
         }
         public Atom SpawnAtom(string type, Vector2 position, float rotation)
         {
             Atom spawned = SpawnAtom(type);
             spawned.Translate(position, rotation);
+            spawned.spawnTile = SS3D_Server.SS3DServer.Singleton.map.GetTileFromWorldPosition(position);
+            spawned.PostSpawnActions();
             return spawned;
         }
-
         #endregion
 
         /// <summary>
@@ -277,6 +280,8 @@ namespace SS3D_Server.Atom
             {
                 a.SetUp(lastUID++, this);
                 a.SerializedInit();
+                a.spawnTile = SS3D_Server.SS3DServer.Singleton.map.GetTileFromWorldPosition(a.position);
+                a.PostSpawnActions();
                 atomDictionary.Add(a.uid, a);
             }
             s.Close();

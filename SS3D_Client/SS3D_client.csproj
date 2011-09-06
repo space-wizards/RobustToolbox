@@ -156,6 +156,7 @@
     <Compile Include="Modules\PlayerController.cs" />
     <Compile Include="Modules\State.cs" />
     <Compile Include="Modules\StateManager.cs" />
+    <Compile Include="Modules\UI\Components\EditorAtomButton.cs" />
     <Compile Include="Modules\UI\Components\HumanHandsGui.cs" />
     <Compile Include="Modules\UI\Components\HumanHealthComponent.cs" />
     <None Include="Modules\UI\Console.cs" />

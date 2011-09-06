@@ -196,7 +196,7 @@ namespace SS3D_Server.Atom
 
             SendSpawnAtom(uid, type);
             atomDictionary[uid].SendState();
-            
+   
             return atomDictionary[uid]; // Why do we return it? So we can do whatever is needed easily from the calling function.
         }
 /*
@@ -255,15 +255,18 @@ namespace SS3D_Server.Atom
         {
             Atom spawned = SpawnAtom(type);
             spawned.Translate(position);
+            spawned.spawnTile = SS3D_Server.SS3DServer.Singleton.map.GetTileFromWorldPosition(position);
+            spawned.PostSpawnActions();
             return spawned;
         }
         public Atom SpawnAtom(string type, Vector2 position, float rotation)
         {
             Atom spawned = SpawnAtom(type);
             spawned.Translate(position, rotation);
+            spawned.spawnTile = SS3D_Server.SS3DServer.Singleton.map.GetTileFromWorldPosition(position);
+            spawned.PostSpawnActions();
             return spawned;
         }
-
         #endregion
 
         /// <summary>
@@ -322,6 +325,7 @@ namespace SS3D_Server.Atom
         {
             Stream s = File.Open("atoms.ss13", FileMode.Create);
             BinaryFormatter f = new BinaryFormatter();
+            f.AssemblyFormat = System.Runtime.Serialization.Formatters.FormatterAssemblyStyle.Simple; //Stores types without assembly versions
 
             LogManager.Log("Writing atoms to file...");
             List<Atom> saveList = new List<Atom>();
@@ -346,14 +350,50 @@ namespace SS3D_Server.Atom
 
             Stream s = new FileStream("atoms.ss13", FileMode.Open);
             BinaryFormatter f = new BinaryFormatter();
+            //Specifies that we can load serialized types without versioning issues.
+            f.AssemblyFormat = System.Runtime.Serialization.Formatters.FormatterAssemblyStyle.Simple;
+            //Binder from below
+            f.Binder = new VersionConfigToNamespaceAssemblyObjectBinder();
             List<Atom> o = (List<Atom>)f.Deserialize(s);
             foreach (Atom a in o)
             {
                 a.SetUp(lastUID++, this);
                 a.SerializedInit();
+                a.spawnTile = SS3D_Server.SS3DServer.Singleton.map.GetTileFromWorldPosition(a.position);
+                a.PostSpawnActions();
                 atomDictionary.Add(a.uid, a);
             }
             s.Close();
+        }
+    }
+
+    /// <summary>
+    /// This binder will search all of the loaded assemblies to find the typename specified by the binaryformatter.
+    /// This allows us to load scripted objects from the serialized atoms file.
+    /// </summary>
+    internal sealed class VersionConfigToNamespaceAssemblyObjectBinder : SerializationBinder
+    {
+        public override Type BindToType(string assemblyName, string typeName)
+        {
+            Type typeToDeserialize = null;
+            try
+            {
+                string ToAssemblyName = assemblyName.Split(',')[0];
+                Assembly[] Assemblies = AppDomain.CurrentDomain.GetAssemblies();
+                foreach (Assembly ass in Assemblies)
+                {
+                    if (ass.FullName.Split(',')[0] == ToAssemblyName)
+                    {
+                        typeToDeserialize = ass.GetType(typeName);
+                        break;
+                    }
+                }
+            }
+            catch (System.Exception exception)
+            {
+                throw exception;
+            }
+            return typeToDeserialize;
         }
     }
 }

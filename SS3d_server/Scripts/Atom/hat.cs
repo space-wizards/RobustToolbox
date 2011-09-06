@@ -3,19 +3,20 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Runtime.Serialization;
+using SS3D_shared.HelperClasses;
 
-namespace SS3D_Server.Atom.Object.WallMounted
+namespace SS3D_Server.Atom.Item.Tool
 {
     [Serializable()]
-    public class FireAlarm : WallMounted
+    public class Hat : Tool
     {
-        public FireAlarm()
+        public Hat()
             : base()
         {
-            name = "FireAlarm";
+            name = "Hat";
         }
 
-        public FireAlarm(SerializationInfo info, StreamingContext ctxt)
+        public Hat(SerializationInfo info, StreamingContext ctxt)
         {
             SerializeBasicInfo(info, ctxt);
         }
@@ -24,6 +25,5 @@ namespace SS3D_Server.Atom.Object.WallMounted
         {
             base.GetObjectData(info, ctxt);
         }
-
     }
 }

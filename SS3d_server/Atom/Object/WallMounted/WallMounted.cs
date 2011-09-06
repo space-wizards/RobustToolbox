@@ -15,6 +15,19 @@ namespace SS3D_Server.Atom.Object.WallMounted
             name = "wallmountedobj";
         }
 
+        public override void PostSpawnActions()
+        {
+            base.PostSpawnActions();
+            spawnTile.TileChange += new Tiles.Tile.TileChangeHandler(WallChanged);
+        }
+
+        protected virtual void WallChanged(TileType tNew)
+        {
+            //Do whatever.
+            SS3D_Server.SS3DServer.Singleton.chatManager.SendChatMessage(ChatChannel.Server," ("+this.uid.ToString()+") -> Connected Wall Changed.",this.name,this.uid);
+            this.Translate(new SS3D_shared.HelperClasses.Vector2(position.X, position.Y + 64), 90); // IT FELL DOWN. DERP... Just testing.
+        }
+
         public WallMounted(SerializationInfo info, StreamingContext ctxt)
         {
             SerializeBasicInfo(info, ctxt);

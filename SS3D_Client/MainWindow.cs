@@ -127,7 +127,7 @@ namespace SS3D
             _desktop.FocusRectangleOutline = false;
         }
 
-        private void SetupEditMenu()
+        public void SetupEditMenu()
         {
             atomTypes = new Dictionary<string, Type>();
             Type[] typeList = GetTypes();

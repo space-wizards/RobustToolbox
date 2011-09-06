@@ -93,6 +93,20 @@ namespace SS3D.Effects
             ComputeOffsets(256.0f, 256.0f);
         }
 
+        public void Dispose()
+        {
+            if (intermediateTarget != null && Gorgon.IsInitialized)
+            {
+                intermediateTarget.ForceRelease();
+                intermediateTarget.Dispose();
+            }
+            if (intermediateTargetSprite != null && Gorgon.IsInitialized)
+            {
+                intermediateTargetSprite.Image = null;
+                intermediateTargetSprite = null;
+            }
+        }
+
         public void SetAmount(float amount)
         {
             ComputeKernel(7, amount);

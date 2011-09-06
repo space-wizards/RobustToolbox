@@ -81,8 +81,7 @@ namespace SS3D_Server.Modules
         {
             string objectType = msg.ReadString();
             AlignmentOptions align = (AlignmentOptions)msg.ReadByte();
-            Assembly currentAssembly = Assembly.GetExecutingAssembly();
-            Type fullType = currentAssembly.GetType("SS3D_Server." + objectType);
+            Type fullType = SS3DServer.Singleton.atomManager.GetAtomType(objectType);
             if (fullType != null) StartBuilding(SS3DServer.Singleton.playerManager.GetSessionByConnection(msg.SenderConnection).attachedAtom, 120, objectType, align, editMode);
             else LogManager.Log("Invalid Object Requested : " + "SS3D_Server." + objectType);
         }
@@ -105,8 +104,7 @@ namespace SS3D_Server.Modules
                     SendPlacementCancel(SS3DServer.Singleton.playerManager.GetSessionByConnection(msg.SenderConnection).attachedAtom);
                 }
 
-                Assembly currentAssembly = Assembly.GetExecutingAssembly();
-                Type objectType = currentAssembly.GetType("SS3D_Server." + permission.type);
+                Type objectType = SS3DServer.Singleton.atomManager.GetAtomType(permission.type);
 
                 if (objectType.IsSubclassOf(typeof(Tiles.Tile)))
                 {

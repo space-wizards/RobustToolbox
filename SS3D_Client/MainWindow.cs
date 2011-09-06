@@ -54,7 +54,7 @@ namespace SS3D
         private Type atomSpawnType = null;
         private Type tileSpawnType;
         public bool editMode = false;
-        private Dictionary<string, Type> atomTypes;
+        public Dictionary<string, Type> atomTypes;
 
         #endregion
 
@@ -331,8 +331,9 @@ namespace SS3D
 
         #region Edit menu
         #region Atoms
-        private void PopulateEditMenu()
+        public void PopulateEditMenu()
         {
+            atomToolStripMenuItem.DropDownItems.Clear();
             List<ToolStripMenuItem> items = new List<ToolStripMenuItem>();
             foreach (Type t in atomTypes.Values)
             {

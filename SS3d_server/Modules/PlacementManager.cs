@@ -81,8 +81,7 @@ namespace SS3D_Server.Modules
         {
             string objectType = msg.ReadString();
             AlignmentOptions align = (AlignmentOptions)msg.ReadByte();
-            Assembly currentAssembly = Assembly.GetExecutingAssembly();
-            Type fullType = currentAssembly.GetType("SS3D_Server." + objectType);
+            Type fullType = SS3DServer.Singleton.atomManager.GetAtomType(objectType);
             if (fullType != null) StartBuilding(SS3DServer.Singleton.playerManager.GetSessionByConnection(msg.SenderConnection).attachedAtom, 120, objectType, align, editMode);
             else LogManager.Log("Invalid Object Requested : " + "SS3D_Server." + objectType);
         }
@@ -92,6 +91,8 @@ namespace SS3D_Server.Modules
             AlignmentOptions alignRcv = (AlignmentOptions)msg.ReadByte();
             float xRcv = msg.ReadFloat();
             float yRcv = msg.ReadFloat();
+            float rotRcv = msg.ReadFloat();
+
             if (GetPermission(SS3DServer.Singleton.playerManager.GetSessionByConnection(msg.SenderConnection).attachedAtom.uid, alignRcv) != null)
             {
                 //DO PLACEMENT CHECKS. Are they allowed to place this here?
@@ -103,8 +104,7 @@ namespace SS3D_Server.Modules
                     SendPlacementCancel(SS3DServer.Singleton.playerManager.GetSessionByConnection(msg.SenderConnection).attachedAtom);
                 }
 
-                Assembly currentAssembly = Assembly.GetExecutingAssembly();
-                Type objectType = currentAssembly.GetType("SS3D_Server." + permission.type);
+                Type objectType = SS3DServer.Singleton.atomManager.GetAtomType(permission.type);
 
                 if (objectType.IsSubclassOf(typeof(Tiles.Tile)))
                 {
@@ -114,7 +114,7 @@ namespace SS3D_Server.Modules
                 }
                 else
                 {
-                    SS3D_Server.SS3DServer.Singleton.atomManager.SpawnAtom(permission.type, new Vector2(xRcv, yRcv));
+                    SS3D_Server.SS3DServer.Singleton.atomManager.SpawnAtom(permission.type, new Vector2(xRcv, yRcv), rotRcv);
                 }
 
             }

@@ -536,8 +536,6 @@ namespace SS3D.States
                     return;
             }
 
-            if (e.Key == KeyboardKeys.Escape) PlacementManager.Singleton.CancelPlacement();
-
             if (e.Key == KeyboardKeys.F9)
             {
                 if (prg.GorgonForm.MainMenuStrip.Visible)
@@ -610,8 +608,20 @@ namespace SS3D.States
         {
             if (PlacementManager.Singleton.active != null)
             {
-                PlacementManager.Singleton.QueuePlacement();
-                return;
+                if (e.Buttons == GorgonLibrary.InputDevices.MouseButtons.Left)
+                {
+                    PlacementManager.Singleton.QueuePlacement();
+                    return;
+                }
+                else if (e.Buttons == GorgonLibrary.InputDevices.MouseButtons.Right)
+                {
+                    PlacementManager.Singleton.CancelPlacement();
+                    return;
+                }
+                else if (e.Buttons == GorgonLibrary.InputDevices.MouseButtons.Middle)
+                {
+                    PlacementManager.Singleton.nextRot();
+                }
             }
 
             if (playerController.controlledAtom == null)
@@ -635,9 +645,8 @@ namespace SS3D.States
             float checkDistance = map.tileSpacing * 1.5f;
             // Find all the atoms near us we could have clicked
             IEnumerable<Atom.Atom> atoms = from a in atomManager.atomDictionary.Values
-                                           where
-                                           (playerController.controlledAtom.position - a.position).Length < checkDistance &&
-                                           a.visible
+                                           where editMode ? true : (playerController.controlledAtom.position - a.position).Length < checkDistance
+                                           where a.visible
                                            orderby (new Vector2D(a.sprite.AABB.X + (a.sprite.AABB.Width/2),a.sprite.AABB.Y + (a.sprite.AABB.Height/2)) - new Vector2D(mouseAABB.X, mouseAABB.Y)).Length descending
                                            orderby a.drawDepth descending
                                            select a;
@@ -652,7 +661,7 @@ namespace SS3D.States
                     }
                     else
                     {
-                        if (e.Buttons == GorgonLibrary.InputDevices.MouseButtons.Right && prg.GorgonForm.GetAtomSpawnType() == null && a != playerController.controlledAtom)
+                        if (e.Buttons == GorgonLibrary.InputDevices.MouseButtons.Right && a != playerController.controlledAtom)
                         {
                             NetOutgoingMessage message = mStateMgr.prg.mNetworkMgr.netClient.CreateMessage();
                             message.Write((byte)NetMessage.AtomManagerMessage);

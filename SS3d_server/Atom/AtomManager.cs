@@ -13,6 +13,7 @@ using SS3D_Server.Modules.Map;
 using Lidgren.Network;
 using SS3D_Server.Modules;
 using SS3D_Server.Atom.Mob;
+using CSScriptLibrary;
 
 namespace SS3D_Server.Atom
 {
@@ -21,6 +22,7 @@ namespace SS3D_Server.Atom
         #region Vars
 
         public Dictionary<ushort, Atom> atomDictionary;
+        private List<Module> m_loadedModules;
 
         private ushort lastUID = 0;
         #endregion
@@ -29,6 +31,27 @@ namespace SS3D_Server.Atom
         public AtomManager()
         {
             atomDictionary = new Dictionary<ushort, Atom>();
+            loadAtomScripts();
+        }
+
+        /// <summary>
+        /// Big deal method to load atom scripts, compile them, stuff the compiled modules into a list, and repopulate the edit menu.
+        /// </summary>
+        private void loadAtomScripts()
+        {
+            m_loadedModules = new List<Module>();
+            string[] filePaths = Directory.GetFiles(Directory.GetCurrentDirectory() + @"\Scripts\Atom\", "*.cs");
+            foreach (string path in filePaths)
+            {
+                var asm = CSScript.Load(path);
+                Module[] modules = asm.GetModules();
+                foreach (Module m in modules)
+                {
+                    m_loadedModules.Add(m);
+                    var types = m.GetTypes().Where(t => t.IsSubclassOf(typeof(Atom))).ToArray();
+                }
+            }
+
         }
         #endregion
 
@@ -164,8 +187,8 @@ namespace SS3D_Server.Atom
         {
             ushort uid = lastUID++;
 
-            Assembly currentAssembly = Assembly.GetExecutingAssembly();
-            Type atomType = currentAssembly.GetType("SS3D_Server." + type, true);
+            Type atomType = GetAtomType(type);
+            
             object atom = Activator.CreateInstance(atomType); // Create atom of type atomType with parameters uid, this
             atomDictionary[uid] = (Atom)atom;
             
@@ -175,6 +198,57 @@ namespace SS3D_Server.Atom
             atomDictionary[uid].SendState();
             
             return atomDictionary[uid]; // Why do we return it? So we can do whatever is needed easily from the calling function.
+        }
+/*
+                   Assembly currentAssembly = Assembly.GetExecutingAssembly();
+            Type atomType = currentAssembly.GetType("SS3D." + type);
+
+            if (atomType == null)
+            {
+                foreach (Module m in m_loadedModules)
+                {
+                    atomType = m.GetType("SS3D." + type);
+                    if (atomType != null)
+                        break;
+                }
+            }
+            if (atomType == null)
+                throw new TypeLoadException("Could not load type " + "SS3D." + type);
+            object atom = Activator.CreateInstance(atomType); // Create atom of type atomType with parameters uid, this
+         */
+
+        public Type GetAtomType(string typename)
+        {
+            Assembly currentAssembly = Assembly.GetExecutingAssembly();
+            Type atomType = currentAssembly.GetType("SS3D_Server." + typename);
+
+            if (atomType == null)
+            {
+                foreach (Module m in m_loadedModules)
+                {
+                    atomType = m.GetType("SS3D_Server." + typename);
+                    if (atomType != null)
+                        break;
+                }
+            }
+            if (atomType == null)
+                throw new TypeLoadException("Could not load type " + "SS3D_Server." + typename);
+            return atomType;
+        }
+
+        public Type[] GetAtomTypes()
+        {
+            List<Type> types = new List<Type>();
+            Assembly ass = Assembly.GetExecutingAssembly(); //LOL ASS
+            foreach (Type t in ass.GetTypes().Where(t => t.IsSubclassOf(typeof(Atom))))
+                types.Add(t);
+
+            foreach (Module m in m_loadedModules)
+            {
+                foreach (Type t in m.GetTypes().Where(t => t.IsSubclassOf(typeof(Atom))))
+                    types.Add(t);
+            }
+            return types.ToArray();
         }
 
         public Atom SpawnAtom(string type, Vector2 position)

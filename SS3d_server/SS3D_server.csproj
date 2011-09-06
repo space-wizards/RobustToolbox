@@ -58,6 +58,9 @@
     <ErrorReport>prompt</ErrorReport>
   </PropertyGroup>
   <ItemGroup>
+    <Reference Include="CSScriptLibrary">
+      <HintPath>..\References\Release\CSScriptLibrary.dll</HintPath>
+    </Reference>
     <Reference Include="System" />
     <Reference Include="System.Core">
       <RequiredTargetFramework>3.5</RequiredTargetFramework>
@@ -115,6 +118,7 @@
     <Compile Include="Atom\Object\WallMounted\FireAlarm.cs" />
     <Compile Include="Atom\Object\WallMounted\MedCabinet.cs" />
     <Compile Include="Atom\Object\WallMounted\WallMounted.cs" />
+    <Compile Include="Atom\Object\Wall\NSGlass.cs" />
     <Compile Include="Atom\Object\Wall\Glass.cs" />
     <Compile Include="Helper Classes\InterpolationPacket.cs" />
     <Compile Include="Helper Classes\Point.cs" />

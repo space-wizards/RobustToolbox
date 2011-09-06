@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Reflection;
+using System.IO;
 
 using SS3D_shared;
 using SS3D.States;
@@ -11,6 +12,8 @@ using Lidgren.Network;
 using SS3D.Modules.Network;
 using GorgonLibrary;
 using GorgonLibrary.Graphics;
+
+using CSScriptLibrary;
 
 namespace SS3D.Atom
 {
@@ -25,6 +28,7 @@ namespace SS3D.Atom
         public DateTime now;
         public DateTime lastUpdate;
         public int updateRateLimit = 200; //200 updates / second
+        private List<Module> m_loadedModules;
         #endregion
 
         #region Instantiation
@@ -34,11 +38,35 @@ namespace SS3D.Atom
             gameState = _gameState;
             networkManager = prg.mNetworkMgr;
             atomDictionary = new Dictionary<ushort, Atom>();
+            loadAtomScripts();
         }
 
         public void Shutdown()
         {
             atomDictionary.Clear(); // Dump all the atoms, we is gettin da fuck outta here bro
+        }
+
+        /// <summary>
+        /// Big deal method to load atom scripts, compile them, stuff the compiled modules into a list, and repopulate the edit menu.
+        /// </summary>
+        private void loadAtomScripts()
+        {
+            m_loadedModules = new List<Module>();
+            string[] filePaths = Directory.GetFiles(Directory.GetCurrentDirectory() + @"\Scripts\Atom\", "*.cs");
+            foreach (string path in filePaths)
+            {
+                var asm = CSScript.Load(path);
+                Module[] modules = asm.GetModules();
+                foreach (Module m in modules)
+                {
+                    m_loadedModules.Add(m);
+                    var types = m.GetTypes().Where(t => t.IsSubclassOf(typeof(Atom))).ToArray();
+                    foreach (Type t in types)
+                        prg.GorgonForm.atomTypes.Add(t.Name, t);
+                }
+            }
+            prg.GorgonForm.PopulateEditMenu();
+
         }
         #endregion
 
@@ -113,6 +141,18 @@ namespace SS3D.Atom
         {
             Assembly currentAssembly = Assembly.GetExecutingAssembly();
             Type atomType = currentAssembly.GetType("SS3D." + type);
+
+            if (atomType == null)
+            {
+                foreach (Module m in m_loadedModules)
+                {
+                    atomType = m.GetType("SS3D." + type);
+                    if (atomType != null)
+                        break;
+                }
+            }
+            if (atomType == null)
+                throw new TypeLoadException("Could not load type " + "SS3D." + type);
             object atom = Activator.CreateInstance(atomType); // Create atom of type atomType with parameters uid, this
             atomDictionary[uid] = (Atom)atom;
 
@@ -155,6 +195,40 @@ namespace SS3D.Atom
             if(atomDictionary.Keys.Contains(uid))
                 return atomDictionary[uid];
             return null;
+        }
+
+        public Type GetAtomType(string typename)
+        {
+            Assembly currentAssembly = Assembly.GetExecutingAssembly();
+            Type atomType = currentAssembly.GetType("SS3D." + typename);
+
+            if (atomType == null)
+            {
+                foreach (Module m in m_loadedModules)
+                {
+                    atomType = m.GetType("SS3D." + typename);
+                    if (atomType != null)
+                        break;
+                }
+            }
+            if (atomType == null)
+                throw new TypeLoadException("Could not load type " + "SS3D." + typename);
+            return atomType;
+        }
+
+        public Type[] GetAtomTypes()
+        {
+            List<Type> types = new List<Type>();
+            Assembly ass = Assembly.GetExecutingAssembly(); //LOL ASS
+            foreach (Type t in ass.GetTypes().Where(t => t.IsSubclassOf(typeof(Atom))))
+                types.Add(t);
+
+            foreach (Module m in m_loadedModules)
+            {
+                foreach (Type t in m.GetTypes().Where(t => t.IsSubclassOf(typeof(Atom))))
+                    types.Add(t);
+            }
+            return types.ToArray();
         }
     }
 }

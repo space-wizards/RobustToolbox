@@ -528,6 +528,12 @@ namespace SS3D_Server.Modules.Map
             return new Point(xPos, zPos);
         }
 
+        public Tile GetTileFromWorldPosition(Vector2 pos)
+        {
+            Point arrayPos = GetTileArrayPositionFromWorldPosition(pos);
+            return GetTileAt(arrayPos.x, arrayPos.y);
+        }
+
         public Point GetTileArrayPositionFromWorldPosition(Vector2 pos)
         {
             return GetTileArrayPositionFromWorldPosition(pos.X, pos.Y);

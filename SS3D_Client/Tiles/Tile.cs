@@ -21,7 +21,7 @@ namespace SS3D.Tiles
         public Point tilePosition;
         public bool Visible = false;
         public bool sightBlocked = false; // Is something on this tile that blocks sight through it, like a door (used for lighting)
-        public byte surroundDirs = 0;
+        public byte surroundDirs = 0; //north = 1 east = 2 south = 4 west = 8.
         public Tile[] surroundingTiles;
         //public Dictionary<VertexLocations, bool> vertexVisibility;
         public List<Light> tileLights;

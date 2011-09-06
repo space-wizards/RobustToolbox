@@ -20,6 +20,11 @@ namespace SS3D_Server.Atom.Object.WallMounted
             SerializeBasicInfo(info, ctxt);
         }
 
+        protected override void WallChanged(TileType tNew)
+        {
+            base.WallChanged(tNew);
+        }
+
         public override void GetObjectData(SerializationInfo info, StreamingContext ctxt)
         {
             base.GetObjectData(info, ctxt);

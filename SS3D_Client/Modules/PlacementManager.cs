@@ -32,6 +32,8 @@ namespace SS3D.Modules
         private GameScreen gameScreen;
         private NetworkManager networkMgr;
 
+        private float rotation = 0f;
+
         public BuildPermission active { private set; get; }
 
         Sprite previewSprite;
@@ -70,6 +72,11 @@ namespace SS3D.Modules
             atomManager = _atom;
             gameScreen = _screen;
             networkMgr = netMgr;
+        }
+
+        public void nextRot()
+        {
+            rotation = (rotation + 90f) == 360 ? 0 : rotation + 90;          
         }
 
         public void HandleNetMessage(NetIncomingMessage msg)
@@ -165,6 +172,7 @@ namespace SS3D.Modules
             message.Write((byte)active.AlignOption);
             message.Write(pos.X);
             message.Write(pos.Y);
+            message.Write(rotation);
             networkMgr.SendMessage(message, NetDeliveryMethod.ReliableUnordered);
             placementQueued = false;
         }
@@ -377,6 +385,7 @@ namespace SS3D.Modules
                 {
                     previewSprite.Position = adjusted;
                     previewSprite.Color = validLocation ? System.Drawing.Color.LimeGreen : System.Drawing.Color.Red;
+                    previewSprite.Rotation = rotation;
                     previewSprite.Opacity = 90;
                     previewSprite.Draw();
                     previewSprite.Color = System.Drawing.Color.White;

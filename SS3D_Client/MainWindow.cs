@@ -36,13 +36,6 @@ namespace SS3D
         private Input _input = null;								// Input devices interface.
         private Mouse _mouse = null;								// Mouse interface.
         private Keyboard _keyboard = null;							// Keyboard interface.
-        private RenderImage _backBuffer = null;						// Back buffer.
-        private float _radius = 4.0f;								// Pen radius.
-        private BlendingModes _blendMode = BlendingModes.Modulated;	// Blend mode.
-        private byte[] _backupImage = null;							// Saved image for backup when the render target goes through a mode switch.
-        private Joystick _joystick = null;							// Joystick.
-        private int _counter = 0;									// Joystick index counter.
-        private TextSprite _messageSprite = null;					// Message sprite.
 
         //Experimental GUI stuff
         private GUISkin _skin;

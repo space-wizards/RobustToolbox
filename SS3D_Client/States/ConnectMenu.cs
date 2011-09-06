@@ -19,7 +19,6 @@ namespace SS3D.States
         private Random _rnd = new Random();
         private StateManager mStateMgr;
         public string ipTextboxIP = "localhost";
-        private string name = "Player";
         private bool connecting = false;
         private DateTime connectTime;
         private float connectTimeOut = 5000f;

@@ -74,16 +74,12 @@ namespace SS3D.Modules
     [Serializable]
     public class Configuration
     {
-        const int _Version = 1;
+        const int _Version = 2;
 
         public uint DisplayWidth = 1024;
         public uint DisplayHeight = 768;
         public bool Fullscreen = false;
         public bool VSync = true;
-        public int FSAA = 0;
-        //public int TextureFiltering = (int)TextureFilterOptions.TFO_ANISOTROPIC;
-        public int AnisotropicLevel = 8;
-        public int NumMipmaps = 8;
 
         public string ResourcePack = @"..\..\..\Media\Media.gorPack";
 

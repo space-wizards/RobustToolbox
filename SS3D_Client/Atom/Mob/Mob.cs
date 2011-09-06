@@ -25,12 +25,6 @@ namespace SS3D.Atom.Mob
 
         public Dictionary<GUIBodyPart, Item.Item> equippedAtoms;
 
-        //Current animation state -- or at least the one we want to add some time to. This will need to become more robust.
-        //public Mogre.AnimationState animState;
-        public AnimState currentAnimState;
-        
-        public Dictionary<string, AnimState> animStates;
-
         public Mob()
             : base()
         {
@@ -81,8 +75,6 @@ namespace SS3D.Atom.Mob
         public override void Draw()
         {
             base.Draw();
-
-            InitAnimations();
         }
 
         public override void initKeys()
@@ -94,20 +86,6 @@ namespace SS3D.Atom.Mob
             keyHandlers.Add(KeyboardKeys.LShiftKey, new KeyEvent(HandleKC_SHIFT));
             keyHandlers.Add(KeyboardKeys.RShiftKey, new KeyEvent(HandleKC_SHIFT));
             
-        }
-        /// <summary>
-        /// Initialize dictionary of animations. Also cocks.
-        /// </summary>
-        public virtual void InitAnimations()
-        {
-            animStates = new Dictionary<string, AnimState>();
-
-            /*animStates.Add("death", new AnimState(Entity.GetAnimationState("death"), this));
-            animStates.Add("tpose", new AnimState(Entity.GetAnimationState("tpose"), this));
-            animStates.Add("walk1", new AnimState(Entity.GetAnimationState("walk1"), this));
-            animStates.Add("idle1", new AnimState(Entity.GetAnimationState("idle1"), this));
-            animStates.Add("rattack", new AnimState(Entity.GetAnimationState("rattack"), this));
-            animStates.Add("lattack", new AnimState(Entity.GetAnimationState("lattack"), this));*/
         }
 
         public virtual void SetAnimationState(string state)
@@ -153,17 +131,6 @@ namespace SS3D.Atom.Mob
         public override void Update(double time)
         {
             base.Update(time);
-
-            // Update Animation. Right now, anything animated will have to be updated in entirety every tick.
-            TimeSpan t = atomManager.gameState.now - atomManager.gameState.lastUpdate; //LOL GOT IT BACKWRDS
-            //animState.AddTime((float)t.TotalMilliseconds / 1000f);
-            var statestoupdate =
-                from astate in animStates
-                where astate.Value.enabled == true
-                select astate.Value;
-
-            foreach (AnimState a in statestoupdate)
-                a.Update((float)t.TotalMilliseconds / 1000f);
 
             //Update every tick
             updateRequired = true;

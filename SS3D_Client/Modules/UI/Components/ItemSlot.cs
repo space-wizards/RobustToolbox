@@ -19,12 +19,13 @@ namespace SS3D.Modules.UI.Components
         private Type atomType; // The type of atoms we can accept
         private Sprite slot;
         private TextSprite text;
+        private bool highlight = false;
 
         public ItemSlot(PlayerController _playerController, GUIBodyPart _bodyPart)
             : base(_playerController)
         {
             bodyPart = _bodyPart;
-            slot = ResMgr.Singleton.GetSprite("GUISlot");
+            slot = UIDesktop.Singleton.Skin.Elements["Window.InventorySlot"].GetSprite();
             text = new TextSprite("ItemSlot" + bodyPart, bodyPart.ToString(), ResMgr.Singleton.GetFont("CALIBRI"));
             position = new Point(0, 12);
             SetAtomType();
@@ -41,12 +42,28 @@ namespace SS3D.Modules.UI.Components
                     atomType = typeof(Atom.Item.Wearable.Inner.Inner);
                     break;
                 case GUIBodyPart.Ears:
+                    atomType = typeof(Atom.Item.Wearable.Ears.Ears);
+                    break;
                 case GUIBodyPart.Eyes:
-                case GUIBodyPart.None:
+                    atomType = typeof(Atom.Item.Wearable.Eyes.Eyes);
+                    break;
                 case GUIBodyPart.Hands:
+                    atomType = typeof(Atom.Item.Wearable.Hands.Hands);
+                    break;
                 case GUIBodyPart.Head:
+                    atomType = typeof(Atom.Item.Wearable.Head.Head);
+                    break;
                 case GUIBodyPart.Mask:
+                    atomType = typeof(Atom.Item.Wearable.Mask.Mask);
+                    break;
                 case GUIBodyPart.Outer:
+                    atomType = typeof(Atom.Item.Wearable.Outer.Outer);
+                    break;
+                case GUIBodyPart.Belt:
+                    atomType = typeof(Atom.Item.Wearable.Belt.Belt);
+                    break;
+                case GUIBodyPart.Back:
+                case GUIBodyPart.None:
                 default:
                     atomType = typeof(Atom.Item.Tool.Wrench);
                     break;
@@ -92,14 +109,23 @@ namespace SS3D.Modules.UI.Components
             return false;
         }
 
+        public void Highlight()
+        {
+            highlight = true;
+        }
+
         public override void Render()
         {
+            if (highlight)
+                slot.Color = Color.Orange;
             slot.Position = position;
             slot.Draw();
+            if(highlight)
+                slot.Color = Color.White;
 
             text.Position = new Point(position.X + 2, position.Y + 2);
             text.Draw();
-
+            
 
             Atom.Mob.Mob m = (Atom.Mob.Mob)playerController.controlledAtom;
             // If we contain an atom then draw it in the appropriate place
@@ -116,7 +142,7 @@ namespace SS3D.Modules.UI.Components
                     }
                 }
             }
-
+            highlight = false;
 
         }
     }

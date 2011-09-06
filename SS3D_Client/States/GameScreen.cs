@@ -329,11 +329,12 @@ namespace SS3D.States
             lightTarget.Clear(System.Drawing.Color.Black);
             lightTargetIntermediate.Clear(System.Drawing.Color.FromArgb(0,System.Drawing.Color.Black));
             Gorgon.Screen.Clear(System.Drawing.Color.Black);
-            
+
             Gorgon.Screen.DefaultView.Left = 400;
             Gorgon.Screen.DefaultView.Top = 400;
             if (playerController.controlledAtom != null)
             {
+                
                 System.Drawing.Point centerTile = map.GetTileArrayPositionFromWorldPosition(playerController.controlledAtom.position);
               
                 int xStart = System.Math.Max(0, centerTile.X - (screenWidthTiles / 2) - 1);
@@ -343,7 +344,6 @@ namespace SS3D.States
 
                 xTopLeft = Math.Max(0, playerController.controlledAtom.position.X - ((screenWidthTiles / 2) * map.tileSpacing));
                 yTopLeft = Math.Max(0, playerController.controlledAtom.position.Y - ((screenHeightTiles / 2) * map.tileSpacing));
-
                 ///COMPUTE TILE VISIBILITY
                 if ((centerTile != map.lastVisPoint || map.needVisUpdate))
                 {

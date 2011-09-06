@@ -32,6 +32,8 @@ namespace SS3D.Atom.Mob
             equippedAtoms.Add(GUIBodyPart.Outer, null);
             equippedAtoms.Add(GUIBodyPart.Hands, null);
             equippedAtoms.Add(GUIBodyPart.Feet, null);
+            equippedAtoms.Add(GUIBodyPart.Belt, null);
+            equippedAtoms.Add(GUIBodyPart.Back, null);
         }
 
         public override void MoveForward()

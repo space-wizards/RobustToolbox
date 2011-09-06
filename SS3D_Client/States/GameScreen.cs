@@ -167,13 +167,33 @@ namespace SS3D.States
             {
                 baseTarget.ForceRelease();
                 baseTarget.Dispose();
-                
             }
             if (baseTargetSprite != null && Gorgon.IsInitialized)
             {
                 baseTargetSprite.Image = null;
                 baseTargetSprite = null;
             }
+            if (lightTarget != null && Gorgon.IsInitialized)
+            {
+                lightTarget.ForceRelease();
+                lightTarget.Dispose();
+            }
+            if (lightTargetSprite != null && Gorgon.IsInitialized)
+            {
+                lightTargetSprite.Image = null;
+                lightTargetSprite = null;
+            }
+            if (lightTargetIntermediate != null && Gorgon.IsInitialized)
+            {
+                lightTargetIntermediate.ForceRelease();
+                lightTargetIntermediate.Dispose();
+            }
+            if (lightTargetIntermediateSprite != null && Gorgon.IsInitialized)
+            {
+                lightTargetIntermediateSprite.Image = null;
+                lightTargetIntermediateSprite = null;
+            }
+            gaussianBlur.Dispose();
             atomManager.Shutdown();
             map.Shutdown();
             PlacementManager.Singleton.Reset();
@@ -183,6 +203,8 @@ namespace SS3D.States
             UIDesktop.Singleton.Dispose();
             prg.mNetworkMgr.Disconnect(); //FIXTHIS
             prg.mNetworkMgr.MessageArrived -= new NetworkMsgHandler(mNetworkMgr_MessageArrived);
+            RenderTargetCache.DestroyAll();
+           
         }
 
         public override void Update( FrameEventArgs e )

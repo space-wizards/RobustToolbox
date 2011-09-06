@@ -6,6 +6,8 @@ using System.Reflection;
 using System.Runtime.Serialization;
 using System.Runtime.Serialization.Formatters.Binary;
 using System.IO;
+using System.Security;
+using System.Security.Permissions;
 
 using SS3D_shared;
 using SS3D_shared.HelperClasses;
@@ -40,10 +42,14 @@ namespace SS3D_Server.Atom
         private void loadAtomScripts()
         {
             m_loadedModules = new List<Module>();
+            PermissionSet permissions = new PermissionSet(PermissionState.None);
+            permissions.AddPermission(new SecurityPermission(SecurityPermissionFlag.Execution));
             string[] filePaths = Directory.GetFiles(Directory.GetCurrentDirectory() + @"\Scripts\Atom\", "*.cs");
             foreach (string path in filePaths)
             {
                 var asm = CSScript.Load(path);
+                
+                asm.PermissionSet.SetPermission(permissions.GetPermission(typeof(SecurityPermission)));
                 Module[] modules = asm.GetModules();
                 foreach (Module m in modules)
                 {

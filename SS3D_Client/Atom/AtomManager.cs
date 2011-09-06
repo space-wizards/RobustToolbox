@@ -14,6 +14,7 @@ using GorgonLibrary;
 using GorgonLibrary.Graphics;
 
 using CSScriptLibrary;
+using csscript;
 
 namespace SS3D.Atom
 {
@@ -55,6 +56,10 @@ namespace SS3D.Atom
         {
             m_loadedModules = new List<Module>();
             string[] filePaths = Directory.GetFiles(Directory.GetCurrentDirectory() + @"\Scripts\Atom\", "*.cs");
+
+            prg.GorgonForm.SetupEditMenu();
+            AppDomain atomDomain = AppDomain.CreateDomain("atomDomain");
+
             foreach (string path in filePaths)
             {
                 var asm = CSScript.Load(path);

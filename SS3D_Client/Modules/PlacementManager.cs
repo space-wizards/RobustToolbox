@@ -285,22 +285,21 @@ namespace SS3D.Modules
                     case AlignmentOptions.AlignWall:
                         Tiles.Tile wall = map.GetTileAt(gameScreen.mousePosWorld);
 
-                        switch ((int)rotation) //East and west are switched around because objects "attach" to the walls.
-                        {
-                            case 0:   // North = 1
-                                if ((wall.surroundDirs & Constants.NORTH) == Constants.NORTH) validLocation = false;
-                                break;
-                            case 270:  // East = 2
-                                if ((wall.surroundDirs & Constants.EAST) == Constants.EAST) validLocation = false;
-                                break;
-                            case 180: // South = 4
-                                validLocation = false; //Disabled.
-                                if ((wall.surroundDirs & Constants.SOUTH) == Constants.SOUTH) validLocation = false;
-                                break;
-                            case 90: // West = 8
-                                if ((wall.surroundDirs & Constants.WEST) == Constants.WEST) validLocation = false;
-                                break;
-                        }
+                        //switch ((int)rotation) //East and west are switched around because objects "attach" to the walls.
+                        //{
+                        //    case 0:   // North = 1
+                        //        if ((wall.surroundDirs & Constants.NORTH) == Constants.NORTH) validLocation = false;
+                        //        break;
+                        //    case 270:  // East = 2
+                        //        if ((wall.surroundDirs & Constants.EAST) == Constants.EAST) validLocation = false;
+                        //        break;
+                        //    case 180: // South = 4
+                        //        if ((wall.surroundDirs & Constants.SOUTH) == Constants.SOUTH) validLocation = false;
+                        //        break;
+                        //    case 90: // West = 8
+                        //        if ((wall.surroundDirs & Constants.WEST) == Constants.WEST) validLocation = false;
+                        //        break;
+                        //}
 
                         if (isSolidTile(wall))
                         {

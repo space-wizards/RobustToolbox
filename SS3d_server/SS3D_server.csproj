@@ -58,6 +58,9 @@
     <ErrorReport>prompt</ErrorReport>
   </PropertyGroup>
   <ItemGroup>
+    <Reference Include="CSScriptLibrary">
+      <HintPath>..\References\Release\CSScriptLibrary.dll</HintPath>
+    </Reference>
     <Reference Include="System" />
     <Reference Include="System.Core">
       <RequiredTargetFramework>3.5</RequiredTargetFramework>
@@ -129,6 +132,9 @@
     <Compile Include="Modules\SS3DNetServer.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <None Include="Scripts\Atom\hat.cs">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
     <Compile Include="SS3DServer.cs" />
     <Compile Include="Tiles\Atmos\GasCell.cs" />
     <Compile Include="Tiles\Floor\Floor.cs" />

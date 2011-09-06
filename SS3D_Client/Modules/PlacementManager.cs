@@ -148,8 +148,7 @@ namespace SS3D.Modules
 
         private void SetupPlacement()
         {
-            Assembly currentAssembly = Assembly.GetExecutingAssembly();
-            Type atomType = currentAssembly.GetType("SS3D." + active.type);
+            Type atomType = atomManager.GetAtomType(active.type);
             activeType = atomType;
             previewSprite = ResMgr.Singleton.GetSprite(GetSpriteName(atomType));
             placementQueued = false;

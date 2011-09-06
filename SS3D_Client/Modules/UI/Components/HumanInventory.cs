@@ -27,7 +27,7 @@ namespace SS3D.Modules.UI.Components
             : base(_playerController)
         {
             inventorySlots = new Dictionary<GUIBodyPart, ItemSlot>();
-            rect = new Rectangle(1075, 400, 180, 500);
+            rect = new Rectangle(1075, 300, 180, 600);
             mousePos = Vector2D.Zero;
             window = new WindowComponent(_playerController, rect.X, rect.Y, rect.Width, rect.Height);
             SetVisible(false);
@@ -43,7 +43,6 @@ namespace SS3D.Modules.UI.Components
             }
 
             Atom.Mob.Mob m = (Atom.Mob.Mob)playerController.controlledAtom;
-
             // Make one slot for each body part
             foreach (GUIBodyPart part in m.equippedAtoms.Keys)
             {
@@ -183,9 +182,12 @@ namespace SS3D.Modules.UI.Components
             if (inventorySlots.Count == 0 &&
                 playerController.controlledAtom != null)
                 SetUpSlots();
-
             foreach (ItemSlot slot in inventorySlots.Values)
+            {
+                if (slot.CanAccept(heldAtom))
+                    slot.Highlight();
                 slot.Render();
+            }
 
             if (heldAtom != null)
             {

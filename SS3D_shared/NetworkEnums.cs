@@ -156,6 +156,8 @@ public enum GUIBodyPart
     Hands,
     Feet,
     Eyes,
-    Ears
+    Ears,
+    Belt,
+    Back
 }
 

@@ -157,7 +157,6 @@ namespace SS3D.Modules.UI
             cornersprite.SetPosition(0, m_completeBubble.Height - 22);
             cornersprite.Draw();
             textSprite.Draw();
-
             Gorgon.CurrentRenderTarget = target; // restore rendertarget
             spriteupdaterequired = false; //Sprite is now up to date
             millisecondsremaining = millisecondstolive;

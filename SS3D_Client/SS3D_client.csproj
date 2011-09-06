@@ -113,11 +113,19 @@
     <Compile Include="Atom\Item\Tool\Tool.cs" />
     <Compile Include="Atom\Item\Tool\Welder.cs" />
     <Compile Include="Atom\Item\Tool\Wrench.cs" />
-    <Compile Include="Atom\Item\Wearable\Feet\Feet.cs" />
+    <Compile Include="Atom\Item\Wearable\Belt\Belt.cs" />
+    <Compile Include="Atom\Item\Wearable\Ears\Ears.cs" />
+    <Compile Include="Atom\Item\Wearable\Eyes\Eyes.cs" />
+    <Compile Include="Atom\Item\Wearable\Hands\Hands.cs" />
+    <Compile Include="Atom\Item\Wearable\Head\Head.cs" />
     <Compile Include="Atom\Item\Wearable\Feet\Shoes.cs" />
+    <Compile Include="Atom\Item\Wearable\Mask\Mask.cs" />
+    <Compile Include="Atom\Item\Wearable\Outer\Outer.cs" />
+    <Compile Include="Atom\Item\Wearable\Feet\Feet.cs" />
     <Compile Include="Atom\Item\Wearable\Inner\Inner.cs" />
     <Compile Include="Atom\Item\Wearable\Inner\Jumpsuit\Assistant_Grey.cs" />
     <Compile Include="Atom\Item\Wearable\Inner\Jumpsuit\Jumpsuit.cs" />
+    <Compile Include="Atom\Item\Wearable\Outer\Armour.cs" />
     <Compile Include="Atom\Item\Wearable\Wearable.cs" />
     <Compile Include="Atom\Mob\HelperClasses\Appendage.cs" />
     <Compile Include="Atom\Mob\Human.cs" />
@@ -134,6 +142,7 @@
     <Compile Include="Atom\Object\Wall\Glass.cs" />
     <Compile Include="Effects\GaussianBlur.cs" />
     <Compile Include="Atom\Object\Tables\Worktop.cs" />
+    <Compile Include="Effects\StarScroller.cs" />
     <Compile Include="MainWindow.cs">
       <SubType>Form</SubType>
     </Compile>

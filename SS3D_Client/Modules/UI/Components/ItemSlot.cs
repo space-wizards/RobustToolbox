@@ -20,12 +20,15 @@ namespace SS3D.Modules.UI.Components
         private Sprite slot;
         private TextSprite text;
         private bool highlight = false;
+        private Vector2D outlinePos = new Vector2D(1078, 632); // TODO: Remove magic numbers
+        private Sprite outline;
 
         public ItemSlot(PlayerController _playerController, GUIBodyPart _bodyPart)
             : base(_playerController)
         {
             bodyPart = _bodyPart;
             slot = UIDesktop.Singleton.Skin.Elements["Window.InventorySlot"].GetSprite();
+            outline = ResMgr.Singleton.GetSprite("GUI_" + bodyPart);
             text = new TextSprite("ItemSlot" + bodyPart, bodyPart.ToString(), ResMgr.Singleton.GetFont("CALIBRI"));
             position = new Point(0, 12);
             SetAtomType();
@@ -117,7 +120,12 @@ namespace SS3D.Modules.UI.Components
         public override void Render()
         {
             if (highlight)
+            {
+                outline.Position = outlinePos;
+                outline.Color = Color.Orange;
+                outline.Draw();
                 slot.Color = Color.Orange;
+            }
             slot.Position = position;
             slot.Draw();
             if(highlight)

@@ -26,6 +26,7 @@ namespace SS3D.Modules.UI.Components
         public HumanInventory(PlayerController _playerController)
             : base(_playerController)
         {
+            componentClass = SS3D_shared.GuiComponentType.HumanInventory;
             inventorySlots = new Dictionary<GUIBodyPart, ItemSlot>();
             rect = new Rectangle(1075, 300, 180, 600);
             mousePos = Vector2D.Zero;

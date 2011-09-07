@@ -191,6 +191,10 @@ namespace SS3D
             // Update the state manager - this will update the active state.
             prg.mStateMgr.Update(e);
 
+            //Update the other NEW GUI shit.
+            UiManager.Singleton.Update();
+            UiManager.Singleton.Render();
+
             //Update GUI shit
             _desktop.Update(e.FrameDeltaTime);
             _desktop.Draw();

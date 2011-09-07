@@ -44,6 +44,7 @@ namespace SS3D.Modules.UI.Components
         public StatHealthComponent(PlayerController _playerController, Point _size)
             : base(_playerController)
         {
+            //componentClass = SS3D_shared.GuiComponentType.???;
             backgroundSprite = ResMgr.Singleton.GetSprite("1pxwhite");
             healthDetail = ResMgr.Singleton.GetSprite("stat_health_detail");
             font = ResMgr.Singleton.GetFont("CALIBRI");

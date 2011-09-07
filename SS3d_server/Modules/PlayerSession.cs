@@ -165,8 +165,8 @@ namespace SS3D_Server.Modules
         public NetOutgoingMessage CreateGuiMessage(GuiComponentType gui)
         {
             NetOutgoingMessage m = SS3DNetServer.Singleton.CreateMessage();
-            m.Write((byte)NetMessage.PlayerSessionMessage);
-            m.Write((byte)PlayerSessionMessage.UIComponentMessage);
+            m.Write((byte)NetMessage.PlayerUiMessage);
+            m.Write((byte)UiManagerMessage.ComponentMessage);
             m.Write((byte)gui);
             return m;
         }

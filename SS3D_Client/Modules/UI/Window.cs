@@ -40,6 +40,7 @@ namespace SS3D.Modules.UI
         public WindowComponent(PlayerController _playerController, int x, int y, int _width, int _height)
             : base(_playerController)
         {
+            componentClass = SS3D_shared.GuiComponentType.WindowComponent;
             Position = new Point(0, 0);
             width = _width;
             height = _height;
@@ -49,7 +50,6 @@ namespace SS3D.Modules.UI
             renderImage = new RenderImage("window" + rect.ToString(), width, height, ImageBufferFormats.BufferUnknown);
             renderImage.ClearEachFrame = ClearTargets.None;
             PreRender();
-
         }
 
         private void PreRender()

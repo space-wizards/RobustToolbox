@@ -12,8 +12,12 @@ using GorgonLibrary.InputDevices;
 
 namespace SS3D.Modules.UI
 {
-    public interface IGuiComponent
+    public interface IGuiComponent : IDisposable
     {
+        /// <summary>
+        ///  <para>Defines the type of UI component.</para>
+        ///  <para>This needs to be set if you want the component to recieve network input as it is used for routing the messages to the correct components.</para>
+        /// </summary>
         GuiComponentType componentClass
         {
             get;
@@ -25,6 +29,7 @@ namespace SS3D.Modules.UI
             set;
         }
 
+        void Update();
         void Render();
 
         void HandleNetworkMessage(Lidgren.Network.NetIncomingMessage message);
@@ -33,11 +38,22 @@ namespace SS3D.Modules.UI
         void SetVisible(bool vis);
         bool IsVisible();
 
-
         bool MouseDown(MouseInputEventArgs e);
         bool MouseUp(MouseInputEventArgs e);
         void MouseMove(MouseInputEventArgs e);
         bool KeyDown(KeyboardInputEventArgs e);
-        
+
+        bool RecieveInput
+        {
+            get;
+            set;
+        }
+
+        int zDepth
+        {
+            get;
+            set;
+        }
+  
     }
 }

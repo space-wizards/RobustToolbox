@@ -21,6 +21,9 @@ namespace SS3D.Modules.UI
         protected Point position;
         private bool Visible;
 
+        public int zDepth { get; set; }
+        public bool RecieveInput { get; set; }
+
         public virtual Point Position
         {
             get
@@ -37,6 +40,12 @@ namespace SS3D.Modules.UI
         {
             playerController = _playerController;
             Visible = true;
+            zDepth = 0;
+            RecieveInput = true;
+        }
+
+        public virtual void Update()
+        {
         }
 
         public virtual void Render()
@@ -56,6 +65,11 @@ namespace SS3D.Modules.UI
         public bool IsVisible()
         {
             return Visible;
+        }
+
+        public virtual void Dispose()
+        {
+            GC.SuppressFinalize(this);
         }
 
         public virtual void HandleNetworkMessage(Lidgren.Network.NetIncomingMessage message)

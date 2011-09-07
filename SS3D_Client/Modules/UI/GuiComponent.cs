@@ -23,6 +23,7 @@ namespace SS3D.Modules.UI
 
         public int zDepth { get; set; }
         public bool RecieveInput { get; set; }
+        public bool Focus { get; set; }
 
         public virtual Point Position
         {

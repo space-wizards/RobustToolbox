@@ -33,6 +33,8 @@ namespace SS3D.Modules
         } 
         #endregion
 
+        private IGuiComponent currentFocus;
+
         /// <summary>
         ///  List of iGuiComponents. Components in this list will recieve input, updates and net messages.
         /// </summary>
@@ -60,18 +62,19 @@ namespace SS3D.Modules
             componentsToDispose = null;
         }
 
+        #region Component retrieval
         /// <summary>
         ///  Returns all components of given type.
         /// </summary>
         public IEnumerable<IGuiComponent> GetComponentsByType(Type type)
         {
-            return  from IGuiComponent comp in Components
-                    where comp.GetType() == type
-                    select comp;
+            return from IGuiComponent comp in Components
+                   where comp.GetType() == type
+                   select comp;
         }
 
         /// <summary>
-        ///  Returns the first component with a matching Type.
+        ///  Returns the first component with a matching Type or null if none.
         /// </summary>
         public IGuiComponent GetSingleComponentByType(Type componentType)
         {
@@ -81,13 +84,13 @@ namespace SS3D.Modules
         }
 
         /// <summary>
-        ///  Returns the first component with a matching GuiComponentType.
+        ///  Returns the first component with a matching GuiComponentType or null if none.
         /// </summary>
         public IGuiComponent GetSingleComponentByGuiComponentType(GuiComponentType componentType)
         {
             return (from IGuiComponent comp in Components
-                   where comp.componentClass == componentType
-                   select comp).FirstOrDefault();
+                    where comp.componentClass == componentType
+                    select comp).FirstOrDefault();
         }
 
         /// <summary>
@@ -95,10 +98,11 @@ namespace SS3D.Modules
         /// </summary>
         public IEnumerable<IGuiComponent> GetComponentsByGuiComponentType(GuiComponentType componentType)
         {
-            return  from IGuiComponent comp in Components
-                    where comp.componentClass == componentType
-                    select comp;
-        }
+            return from IGuiComponent comp in Components
+                   where comp.componentClass == componentType
+                   select comp;
+        } 
+        #endregion
 
         /// <summary>
         ///  Handles Net messages directed at the UI manager or components thereof. This must be called by the currently active state. See GameScreen.
@@ -145,12 +149,32 @@ namespace SS3D.Modules
             var renderList = from IGuiComponent comp in Components
                              where comp.IsVisible()
                              orderby comp.zDepth ascending
+                             orderby comp.Focus ascending
                              select comp;
 
             foreach (IGuiComponent component in renderList)
                 component.Render();
         } 
         #endregion
+
+        /// <summary>
+        ///  Sets focus for a component.
+        /// </summary>
+        private void SetFocus(IGuiComponent newFocus)
+        {
+            if (newFocus == currentFocus) return;
+            if (currentFocus != null)
+            {
+                currentFocus.Focus = false;
+                currentFocus = newFocus;
+                newFocus.Focus = true;
+            }
+            else
+            {
+                currentFocus = newFocus;
+                newFocus.Focus = true;
+            }
+        }
 
         #region Input
         //The game states have to feed the UI Input!!! This is to allow more flexibility.
@@ -167,13 +191,16 @@ namespace SS3D.Modules
             var inputList = from IGuiComponent comp in Components
                             where comp.RecieveInput
                             orderby comp.zDepth ascending
-                            //orderby comp.Focus descending
                             orderby comp.IsVisible() descending //Invisible controls still recieve input but after everyone else. This is mostly for the inventory and other toggleable components.
+                            orderby comp.Focus descending
                             select comp;
 
             foreach (IGuiComponent current in inputList)
-                if (current.MouseDown(e)) return true;
-
+                if (current.MouseDown(e))
+                {
+                    SetFocus(current);
+                    return true;
+                }
             return false;
         }
 
@@ -185,8 +212,8 @@ namespace SS3D.Modules
             var inputList = from IGuiComponent comp in Components
                             where comp.RecieveInput
                             orderby comp.zDepth ascending
-                            //orderby comp.Focus descending
                             orderby comp.IsVisible() descending //Invisible controls still recieve input but after everyone else. This is mostly for the inventory and other toggleable components.
+                            orderby comp.Focus descending
                             select comp;
 
             foreach (IGuiComponent current in inputList)
@@ -217,8 +244,8 @@ namespace SS3D.Modules
             var inputList = from IGuiComponent comp in Components
                             where comp.RecieveInput
                             orderby comp.zDepth ascending
-                            //orderby comp.Focus descending
                             orderby comp.IsVisible() descending //Invisible controls still recieve input but after everyone else. This is mostly for the inventory and other toggleable components.
+                            orderby comp.Focus descending
                             select comp;
 
             foreach (IGuiComponent current in inputList)

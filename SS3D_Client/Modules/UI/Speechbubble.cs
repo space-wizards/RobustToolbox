@@ -112,15 +112,16 @@ namespace SS3D.Modules.UI
             m_completeBubble.Draw(blacktriangle);
 
             //Draw the side lines
-            for (int i = 0; i < 3; i++)
+            for (int i = 0; i < 1; i++)
             {
                 m_completeBubble.Line(10, i, m_completeBubble.Width - 20, 1, System.Drawing.Color.Black);
                 m_completeBubble.Line(m_completeBubble.Width - 1 - i, 10, 1, m_completeBubble.Height - 26, System.Drawing.Color.Black);
                 m_completeBubble.Line(10, m_completeBubble.Height - 7 - i, m_completeBubble.Width - 20, 1, System.Drawing.Color.Black);
                 m_completeBubble.Line(i, 10, 1, m_completeBubble.Height - 26, System.Drawing.Color.Black);
             }
-            //Fill in the middle
-            m_completeBubble.FilledRectangle(3, 3, m_completeBubble.Width - 6, m_completeBubble.Height - 12, System.Drawing.Color.White);
+            //Fill in the middle without polluting the corners.
+            m_completeBubble.FilledRectangle(3, 1, m_completeBubble.Width - 6, m_completeBubble.Height - 8, System.Drawing.Color.White);
+            m_completeBubble.FilledRectangle(1, 3, m_completeBubble.Width - 2, m_completeBubble.Height - 12, System.Drawing.Color.White);
 
             //Draw the white triangle at the bottom.
             VertexTypeList.PositionDiffuse2DTexture1[] whitetriangle = new VertexTypeList.PositionDiffuse2DTexture1[3];

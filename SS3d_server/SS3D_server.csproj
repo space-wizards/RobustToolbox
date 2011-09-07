@@ -92,6 +92,7 @@
     <Compile Include="Atom\Item\Wearable\Feet\Feet.cs" />
     <Compile Include="Atom\Item\Wearable\Feet\Shoes.cs" />
     <Compile Include="Atom\Item\Wearable\Hands\Hands.cs" />
+    <Compile Include="Atom\Item\Wearable\Head\Helmet.cs" />
     <Compile Include="Atom\Item\Wearable\Head\Head.cs" />
     <Compile Include="Atom\Item\Wearable\Inner\Inner.cs" />
     <Compile Include="Atom\Item\Wearable\Inner\Jumpsuit\Assistant_Grey.cs" />

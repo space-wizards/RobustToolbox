@@ -17,6 +17,7 @@ public enum NetMessage
     AtomManagerMessage,
     PlacementManagerMessage,
     PlayerSessionMessage,
+    PlayerUiMessage,
     JoinGame,
     AtmosDisplayUpdate,
 }
@@ -32,6 +33,11 @@ public enum ItemMessage
     Click,
     AttachTo,
     Detach
+}
+
+public enum UiManagerMessage
+{
+    ComponentMessage
 }
 
 public enum AtomManagerMessage
@@ -98,7 +104,6 @@ public enum PlayerSessionMessage
     AttachToAtom,
     Verb,
     JoinLobby,
-    UIComponentMessage
 }
 
 public enum DoorState

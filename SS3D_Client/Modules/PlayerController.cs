@@ -91,42 +91,38 @@ namespace SS3D.Modules
         public void HandleNetworkMessage(NetIncomingMessage message)
         {
             PlayerSessionMessage messageType = (PlayerSessionMessage)message.ReadByte();
-
             switch (messageType)
             {
                 case PlayerSessionMessage.AttachToAtom:
                     HandleAttachToAtom(message);
-                    break;
-                case PlayerSessionMessage.UIComponentMessage:
-                    HandleUIComponentMessage(message);
                     break;
                 default:
                     break;
             }
         }
 
-        private void HandleUIComponentMessage(NetIncomingMessage message)
-        {
-            GuiComponentType component = (GuiComponentType)message.ReadByte();
-            switch (component)
-            {
-                case GuiComponentType.HealthComponent:
-                    if (runningState.GetType() == System.Type.GetType("SS3D.States.GameScreen"))
-                    {
-                        GameScreen g = (GameScreen)runningState;
-                        g.guiComponents[GuiComponentType.StatPanelComponent].HandleNetworkMessage(message);
-                    }
-                    break;
-                case GuiComponentType.AppendagesComponent:
-                    if (runningState.GetType() == System.Type.GetType("SS3D.States.GameScreen"))
-                    {
-                        GameScreen g = (GameScreen)runningState;
-                        g.guiComponents[GuiComponentType.AppendagesComponent].HandleNetworkMessage(message);
-                    }
-                    break;
-                default:break;
-            }
-        }
+        //private void HandleUIComponentMessage(NetIncomingMessage message)
+        //{
+        //    GuiComponentType component = (GuiComponentType)message.ReadByte();
+        //    switch (component)
+        //    {
+        //        case GuiComponentType.HealthComponent:
+        //            if (runningState.GetType() == System.Type.GetType("SS3D.States.GameScreen"))
+        //            {
+        //                GameScreen g = (GameScreen)runningState;
+        //                g.guiComponents[GuiComponentType.StatPanelComponent].HandleNetworkMessage(message);
+        //            }
+        //            break;
+        //        case GuiComponentType.AppendagesComponent:
+        //            if (runningState.GetType() == System.Type.GetType("SS3D.States.GameScreen"))
+        //            {
+        //                GameScreen g = (GameScreen)runningState;
+        //                g.guiComponents[GuiComponentType.AppendagesComponent].HandleNetworkMessage(message);
+        //            }
+        //            break;
+        //        default:break;
+        //    }
+        //}
 
         /// <summary>
         /// Verb sender

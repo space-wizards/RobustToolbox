@@ -35,7 +35,6 @@ namespace SS3D.States
         //UI Vars
         #region UI Variables
         private Chatbox gameChat;
-        public Dictionary<GuiComponentType, IGuiComponent> guiComponents;
         #endregion 
 
         public PlayerController playerController;
@@ -149,14 +148,15 @@ namespace SS3D.States
             gameChat = new Chatbox("gameChat");
             gameChat.TextSubmitted += new Chatbox.TextSubmitHandler(chatTextbox_TextSubmitted);
 
-            guiComponents = new Dictionary<GuiComponentType, IGuiComponent>();
-            guiComponents.Add(GuiComponentType.HumanInventory, new HumanInventory(playerController));
-            guiComponents.Add(GuiComponentType.AppendagesComponent, new HumanHandsGui(playerController));
-            guiComponents.Add(GuiComponentType.StatPanelComponent, new StatPanelComponent(playerController));
-            guiComponents[GuiComponentType.AppendagesComponent].Position = new System.Drawing.Point(Gorgon.Screen.Width - 190, Gorgon.Screen.Height - 99);
+            UiManager.Singleton.Components.Add(new HumanInventory(playerController));
+            UiManager.Singleton.Components.Add(new HumanHandsGui(playerController));
+            UiManager.Singleton.Components.Add(new StatPanelComponent(playerController));
 
-            HumanInventory inv = (HumanInventory)guiComponents[GuiComponentType.HumanInventory]; // ugh
-            inv.SetHandsGUI((HumanHandsGui)guiComponents[GuiComponentType.AppendagesComponent]); // ugh ugh
+            var appendagesTemp = UiManager.Singleton.GetSingleComponentByGuiComponentType(GuiComponentType.AppendagesComponent); //Better safe than sorry.
+            if (appendagesTemp != null) appendagesTemp.Position = new System.Drawing.Point(Gorgon.Screen.Width - 190, Gorgon.Screen.Height - 99);
+
+            HumanInventory invTemp = (HumanInventory)UiManager.Singleton.GetSingleComponentByGuiComponentType(GuiComponentType.HumanInventory); // ugh ugh ugh
+            if(invTemp != null) invTemp.SetHandsGUI((HumanHandsGui)UiManager.Singleton.GetSingleComponentByGuiComponentType(GuiComponentType.AppendagesComponent)); // ugh ugh ugh ugh ugh
             
             return true;
         }
@@ -199,7 +199,9 @@ namespace SS3D.States
             PlacementManager.Singleton.Reset();
             atomManager = null; 
             map = null;
+            gameChat.Dispose();
             gameChat = null;
+            UiManager.Singleton.DisposeAllComponents(); //HerpDerp. This is probably bad. Should not remove them ALL.
             UIDesktop.Singleton.Dispose();
             prg.mNetworkMgr.Disconnect(); //FIXTHIS
             prg.mNetworkMgr.MessageArrived -= new NetworkMsgHandler(mNetworkMgr_MessageArrived);
@@ -239,6 +241,9 @@ namespace SS3D.States
                             break;
                         case NetMessage.PlayerSessionMessage:
                             playerController.HandleNetworkMessage(msg);
+                            break;
+                        case NetMessage.PlayerUiMessage:
+                            UiManager.Singleton.HandleNetMessage(msg);
                             break;
                         case NetMessage.PlacementManagerMessage:
                             PlacementManager.Singleton.HandleNetMessage(msg);
@@ -521,11 +526,6 @@ namespace SS3D.States
 
             Gorgon.CurrentRenderTarget = null;
             //baseTargetSprite.Draw();
-            //Draw UI
-            foreach (IGuiComponent component in guiComponents.Values)
-            {
-                component.Render();
-            }
             
             return;
         }
@@ -545,11 +545,8 @@ namespace SS3D.States
             if (gameChat.Active)
                 return;
 
-            foreach (var comp in guiComponents.Values)
-            {
-                if (comp.KeyDown(e))//MouseDown returns true if the click is handled by the ui component.
-                    return;
-            }
+            if (UiManager.Singleton.KeyDown(e)) //KeyDown returns true if the click is handled by the ui component.
+                return;
 
             if (e.Key == KeyboardKeys.F9)
             {
@@ -610,14 +607,8 @@ namespace SS3D.States
         }
         public override void MouseUp(MouseInputEventArgs e)
         {
-            //Forward clicks to gui components
-            foreach (var comp in guiComponents.Values)
-            {
-                if (!comp.IsVisible())
-                    continue;
-                if(comp.MouseUp(e))
-                    return;
-            }
+            if (UiManager.Singleton.MouseUp(e)) //Returns True if a component handled the event.
+                return;
         }
         public override void MouseDown(MouseInputEventArgs e)
         {
@@ -642,14 +633,8 @@ namespace SS3D.States
             if (playerController.controlledAtom == null)
                 return;
 
-            //Forward clicks to gui components
-            foreach (var comp in guiComponents.Values)
-            {
-                if (!comp.IsVisible())
-                    continue;
-                if (comp.MouseDown(e))//MouseDown returns true if the click is handled by the ui component.
-                    return;
-            }
+            if (UiManager.Singleton.MouseDown(e))// MouseDown returns true if the click is handled by the ui component.
+                return;
 
             #region Object clicking
             bool atomClicked = false;
@@ -710,12 +695,7 @@ namespace SS3D.States
         {
             mousePosScreen = new Vector2D(e.Position.X, e.Position.Y);
             mousePosWorld = new Vector2D(e.Position.X + xTopLeft, e.Position.Y + yTopLeft);
-            foreach (GuiComponent component in guiComponents.Values)
-            {
-                if (!component.IsVisible())
-                    continue;
-                component.MouseMove(e);
-            }
+            UiManager.Singleton.MouseMove(e);
         }
  
         #endregion

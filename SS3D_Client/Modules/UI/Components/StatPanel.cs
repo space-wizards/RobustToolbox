@@ -42,6 +42,7 @@ namespace SS3D.Modules.UI.Components
         public StatPanelComponent(PlayerController _playerController)
             : base(_playerController)
         {
+            componentClass = SS3D_shared.GuiComponentType.StatPanelComponent;
             Position = new Point(604, Gorgon.Screen.Height - 205);
 
             font = ResMgr.Singleton.GetFont("CALIBRI");
@@ -144,7 +145,13 @@ namespace SS3D.Modules.UI.Components
 
         public override void HandleNetworkMessage(NetIncomingMessage message)
         {
-            healthComponent.HandleNetworkMessage(message);
+            GuiComponentType statPanelSubtype = (GuiComponentType)message.ReadByte();
+            switch (statPanelSubtype)
+            {
+                case GuiComponentType.HealthComponent:
+                    healthComponent.HandleNetworkMessage(message);
+                    break;
+            }
         }
 
         public override void Render()

@@ -46,6 +46,7 @@ namespace SS3D.Modules.UI.Components
         public HumanHandsGui(PlayerController _playerController)
             : base(_playerController)
         {
+            componentClass = SS3D_shared.GuiComponentType.AppendagesComponent;
             lSprite = ResMgr.Singleton.GetSprite("l_hand");
             rSprite = ResMgr.Singleton.GetSprite("r_hand");
             backgroundSprite = ResMgr.Singleton.GetSprite("1pxwhite");

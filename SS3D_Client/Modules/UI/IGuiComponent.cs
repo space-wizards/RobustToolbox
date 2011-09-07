@@ -49,6 +49,12 @@ namespace SS3D.Modules.UI
             set;
         }
 
+        bool Focus
+        {
+            get;
+            set;
+        }
+
         int zDepth
         {
             get;

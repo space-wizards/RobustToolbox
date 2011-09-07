@@ -220,6 +220,10 @@ namespace SS3D_Server.Atom.Mob
 
             DropAllItems();
             SendDeathMessage();
+            SetSpriteState(9); //Set to dead sprite lol
+            
+            rotation = 90;
+            SendInterpolationPacket(true);
             //AnimateOnce("death");
         }
 

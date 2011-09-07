@@ -32,6 +32,8 @@ namespace SS3D.Atom.Mob
             SetSpriteName(0, "Human");
             SetSpriteByIndex(0);
             SetSpriteName(2, "Human2");
+            SetSpriteName(8, "human_incap");
+            SetSpriteName(9, "human_incap_dead");
             
             speed = walkSpeed;
         }
@@ -131,6 +133,8 @@ namespace SS3D.Atom.Mob
         public override void Update(double time)
         {
             base.Update(time);
+
+
 
             //Update every tick
             updateRequired = true;

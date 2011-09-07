@@ -39,21 +39,23 @@ namespace SS3D_Server.Atom
         /// <summary>
         /// Big deal method to load atom scripts, compile them, stuff the compiled modules into a list, and repopulate the edit menu.
         /// </summary>
+        [SecuritySafeCritical]
         private void loadAtomScripts()
         {
             m_loadedModules = new List<Module>();
-            PermissionSet permissions = new PermissionSet(PermissionState.None);
-            permissions.AddPermission(new SecurityPermission(SecurityPermissionFlag.Execution));
             string[] filePaths = Directory.GetFiles(Directory.GetCurrentDirectory() + @"\Scripts\Atom\", "*.cs");
             foreach (string path in filePaths)
             {
-                var asm = CSScript.Load(path);
+                string code = File.ReadAllText(path); //Get the text of the code file so we can fuck with it if we want. 
+                string asmname = System.IO.Path.GetFileNameWithoutExtension(path);
                 
-                asm.PermissionSet.SetPermission(permissions.GetPermission(typeof(SecurityPermission)));
+
+                var asm = CSScript.LoadCode(code, asmname, false);
                 Module[] modules = asm.GetModules();
                 foreach (Module m in modules)
                 {
                     m_loadedModules.Add(m);
+                    
                     var types = m.GetTypes().Where(t => t.IsSubclassOf(typeof(Atom))).ToArray();
                 }
             }
@@ -360,7 +362,18 @@ namespace SS3D_Server.Atom
             f.AssemblyFormat = System.Runtime.Serialization.Formatters.FormatterAssemblyStyle.Simple;
             //Binder from below
             f.Binder = new VersionConfigToNamespaceAssemblyObjectBinder();
-            List<Atom> o = (List<Atom>)f.Deserialize(s);
+            List<Atom> o;
+            try
+            {
+                 o = (List<Atom>)f.Deserialize(s);
+            }
+            catch (Exception ex)
+            {
+                LogManager.Log("Failed to load atoms.ss13. Map starting empty.", LogLevel.Error);
+                LogManager.Log(ex.ToString(), LogLevel.Error);
+                s.Close();
+                return;
+            }
             foreach (Atom a in o)
             {
                 a.SetUp(lastUID++, this);
@@ -381,6 +394,7 @@ namespace SS3D_Server.Atom
     {
         public override Type BindToType(string assemblyName, string typeName)
         {
+            AppDomain.CurrentDomain.AssemblyResolve += new ResolveEventHandler(OnAssemblyResolve);
             Type typeToDeserialize = null;
             try
             {
@@ -390,7 +404,7 @@ namespace SS3D_Server.Atom
                 {
                     if (ass.FullName.Split(',')[0] == ToAssemblyName)
                     {
-                        typeToDeserialize = ass.GetType(typeName);
+                        typeToDeserialize = ass.GetType(typeName);//, true);
                         break;
                     }
                 }
@@ -399,7 +413,42 @@ namespace SS3D_Server.Atom
             {
                 throw exception;
             }
+
+            AppDomain.CurrentDomain.AssemblyResolve -= new ResolveEventHandler(OnAssemblyResolve);
             return typeToDeserialize;
         }
+
+        /// <summary>
+        /// Assembly resolver. This tries to find the exact assembly named in the current appdomain.
+        /// if it doesn't find it exactly, it will locate the assembly that has the same name and return that.
+        /// This may cause massive problems at some point.
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="reArgs"></param>
+        /// <returns></returns>
+        private System.Reflection.Assembly OnAssemblyResolve(System.Object sender, System.ResolveEventArgs reArgs)
+        {
+            foreach (System.Reflection.Assembly assembly in System.AppDomain.CurrentDomain.GetAssemblies())
+            {
+                System.Reflection.AssemblyName assemblyName = assembly.GetName();
+                // Try to resolve the exact assembly.
+                if (assemblyName.FullName == reArgs.Name)
+                {
+                    return (assembly);
+                } 
+            }
+            // Try to resolve the assembly without versions and shit since we didn't find it exactly.
+            foreach (System.Reflection.Assembly assembly in System.AppDomain.CurrentDomain.GetAssemblies())
+            {
+                System.Reflection.AssemblyName assemblyName = assembly.GetName();
+                if (assemblyName.FullName.Split(',')[0] == reArgs.Name.Split(',')[0])
+                {
+                    return (assembly);
+                }
+            }
+            return null;
+        }
     }
+
+
 }

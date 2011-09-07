@@ -33,7 +33,7 @@ namespace SS3D_Server.Atom
         public AtomManager()
         {
             atomDictionary = new Dictionary<ushort, Atom>();
-            loadAtomScripts();
+            //loadAtomScripts();
         }
 
         /// <summary>

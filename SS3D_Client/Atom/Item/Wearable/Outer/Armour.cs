@@ -11,9 +11,9 @@ namespace SS3D.Atom.Item.Wearable.Outer
         public Armour()
             : base()
         {
-            SetSpriteName(-1, "armour_front");
+            SetSpriteName(-1, "armour");
             SetSpriteName(0, "armour_front");
-            SetSpriteName(2, "armour_front");
+            SetSpriteName(2, "armour_back");
             SetSpriteByIndex(-1);
         }
 

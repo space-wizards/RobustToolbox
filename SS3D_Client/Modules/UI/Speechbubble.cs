@@ -125,12 +125,12 @@ namespace SS3D.Modules.UI
 
             //Draw the white triangle at the bottom.
             VertexTypeList.PositionDiffuse2DTexture1[] whitetriangle = new VertexTypeList.PositionDiffuse2DTexture1[3];
-            whitetriangle[0].Position.X = (m_completeBubble.Width / 2) - 7;
-            whitetriangle[1].Position.X = (m_completeBubble.Width / 2) + 7;
+            whitetriangle[0].Position.X = (m_completeBubble.Width / 2) - 9;
+            whitetriangle[1].Position.X = (m_completeBubble.Width / 2) + 9;
             whitetriangle[2].Position.X = (m_completeBubble.Width / 2);
             whitetriangle[0].Position.Y = (m_completeBubble.Height - 15);
             whitetriangle[1].Position.Y = (m_completeBubble.Height - 15);
-            whitetriangle[2].Position.Y = m_completeBubble.Height - 4;
+            whitetriangle[2].Position.Y = m_completeBubble.Height - 2;
             whitetriangle[0].TextureCoordinates.X = 0.0f;
             whitetriangle[0].TextureCoordinates.Y = 0.0f;
             whitetriangle[0].Color = System.Drawing.Color.FromArgb(255, System.Drawing.Color.White);

@@ -101,7 +101,7 @@ namespace SS3D.Modules
         }
 
         /// <summary>
-        ///  Handles Net messages directed at the UI manager or components thereof.
+        ///  Handles Net messages directed at the UI manager or components thereof. This must be called by the currently active state. See GameScreen.
         /// </summary>
         public void HandleNetMessage(NetIncomingMessage msg)
         {

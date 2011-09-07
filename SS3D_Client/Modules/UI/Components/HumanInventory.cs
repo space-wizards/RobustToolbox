@@ -22,15 +22,22 @@ namespace SS3D.Modules.UI.Components
         private Atom.Atom heldAtom;
         private GUIBodyPart lastSlot = GUIBodyPart.None;
         private Vector2D mousePos;
+        private Sprite outline;
+        private int slotWidth;
 
         public HumanInventory(PlayerController _playerController)
             : base(_playerController)
         {
             componentClass = SS3D_shared.GuiComponentType.HumanInventory;
             inventorySlots = new Dictionary<GUIBodyPart, ItemSlot>();
-            rect = new Rectangle(1075, 300, 180, 600);
+            outline = ResMgr.Singleton.GetSprite("outline");
+            slotWidth = (int)UIDesktop.Singleton.Skin.Elements["Window.InventorySlot"].Dimensions.Width;
+            int width = 48 + slotWidth + (int)outline.Width + slotWidth;
+            int height = 64 + (int)(outline.Height);
+            rect = new Rectangle(Gorgon.Screen.Width - 25 - width, 600, width, height);
             mousePos = Vector2D.Zero;
             window = new WindowComponent(_playerController, rect.X, rect.Y, rect.Width, rect.Height);
+
             SetVisible(false);
         }
 
@@ -49,12 +56,21 @@ namespace SS3D.Modules.UI.Components
             {
                 inventorySlots.Add(part, new ItemSlot(playerController, part));
             }
-            RenderImage r = new RenderImage("abc", 10, 10, ImageBufferFormats.BufferUnknown);
+
             // Position them (just temporary atm)
             int i = 0;
+            bool second = false;
             foreach (ItemSlot slot in inventorySlots.Values)
             {
-                slot.Position = new Point(rect.X + slot.Position.X + 64, rect.Y + slot.Position.Y + (i * 56));
+                if (i >= inventorySlots.Count / 2)
+                {
+                    second = true;
+                    i = 0;
+                }
+                if(!second)
+                    slot.Position = new Point(rect.X + slot.Position.X + 12, rect.Y + slot.Position.Y + (i * 56));
+                else
+                    slot.Position = new Point(rect.X + rect.Width - 12 - slotWidth, rect.Y + slot.Position.Y + (i * 56));
                 i++;
             }
         }
@@ -183,6 +199,10 @@ namespace SS3D.Modules.UI.Components
             if (inventorySlots.Count == 0 &&
                 playerController.controlledAtom != null)
                 SetUpSlots();
+
+            outline.Position = new Vector2D(rect.X + (int)(rect.Width / 2) - (int)(outline.Width / 2), rect.Y + (rect.Height / 2) - (outline.Height / 2));
+            outline.Draw();
+
             foreach (ItemSlot slot in inventorySlots.Values)
             {
                 if (slot.CanAccept(heldAtom))

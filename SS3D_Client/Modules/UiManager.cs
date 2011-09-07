@@ -153,7 +153,7 @@ namespace SS3D.Modules
         #endregion
 
         #region Input
-        //The game states have to feed the UI Input!!! This is to allow more flexibility. The default methods do this.
+        //The game states have to feed the UI Input!!! This is to allow more flexibility.
         //Maybe this should be handled in the main methods for input. But then the state wouldnt have power over
         //this and things like the chat might get difficult.
         //Other Notes: When a component returns true to an input event the loop stops and so only that control recieves the input.

@@ -7,6 +7,7 @@ using SS3D.Modules.UI;
 using SS3D_shared;
 using Lidgren.Network;
 using GorgonLibrary.InputDevices;
+using GorgonLibrary.GUI;
 
 namespace SS3D.Modules
 {
@@ -40,14 +41,18 @@ namespace SS3D.Modules
         /// </summary>
         public List<IGuiComponent> Components = new List<IGuiComponent>();
 
-        private PlayerController player;
+        public GUISkin Skin 
+        {
+            get{return GetSkin();}
+            private set{}
+        }
 
         /// <summary>
-        ///  Currently not in use.
+        ///  Returns active skin.
         /// </summary>
-        public void Initialize(PlayerController _player)
+        private GUISkin GetSkin()
         {
-            player = _player;
+            return UIDesktop.Singleton.Skin;
         }
 
         /// <summary>
@@ -156,6 +161,34 @@ namespace SS3D.Modules
                 component.Render();
         } 
         #endregion
+
+        public string GetObjectSpriteName(Type type)
+        {
+            if (type.IsSubclassOf(typeof(Tiles.Tile))) //Tiles need special treatment.
+            {
+                return "tilebuildoverlay";
+            }
+            else if (type.IsSubclassOf(typeof(Atom.Atom)))
+            {
+                Atom.Atom atom = (Atom.Atom)Activator.CreateInstance(type);
+                string strName = atom.spritename;
+                atom = null;
+                return strName;
+            }
+            return "noSprite";
+        }
+
+        public string GetAtomName(Type type)
+        {
+            if (type.IsSubclassOf(typeof(Atom.Atom)))
+            {
+                Atom.Atom atom = (Atom.Atom)Activator.CreateInstance(type);
+                string strName = atom.name;
+                atom = null;
+                return strName;
+            }
+            return "missingName";
+        }
 
         /// <summary>
         ///  Sets focus for a component.

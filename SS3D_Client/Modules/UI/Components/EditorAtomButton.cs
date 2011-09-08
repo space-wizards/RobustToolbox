@@ -32,21 +32,39 @@ namespace SS3D.Modules.UI.Components
         private TextSprite name;
         private Sprite objectSprite;
 
+        private Type associatedType;
+
+        private const int borderSize = 2;
+        private const int boxSize = 64; // 64x64
+
         private GorgonLibrary.Graphics.Font font;
 
-        public EditorAtomButton(PlayerController _playerController, string SpriteName)
-            : base(_playerController)
+        public EditorAtomButton(Type objectType)
+            : base()
         {
+            string SpriteName = UiManager.Singleton.GetObjectSpriteName(objectType);
+            string ObjectName = UiManager.Singleton.GetAtomName(objectType);
+            associatedType = objectType;
+
             objectSprite = ResMgr.Singleton.GetSprite(SpriteName);
-
             Position = new Point(0, 0);
-
             font = ResMgr.Singleton.GetFont("CALIBRI");
             name = new TextSprite("Label" + SpriteName, "Name", font);
-            //name.Position 
-            name.Color = System.Drawing.Color.Green;
+            name.Color = System.Drawing.Color.Black;
+            name.ShadowColor = System.Drawing.Color.DarkGray;
+            name.Shadowed = true;
+            name.ShadowOffset = new Vector2D(1, 1);
 
-            renderImage = new RenderImage("RI" + SpriteName, 64, 64, ImageBufferFormats.BufferUnknown);
+            name.Text = ObjectName;
+
+            for (int i = 0; i < SpriteName.Length; i++)
+            {
+                if (i > 0 && i % 9 == 0)
+                    name.Text += "\n" + SpriteName.Substring(i, 1);
+                else
+                    name.Text += SpriteName.Substring(i, 1);
+            }
+            renderImage = new RenderImage("RI" + SpriteName, boxSize, boxSize, ImageBufferFormats.BufferUnknown);
             renderImage.ClearEachFrame = ClearTargets.None;
             PreRender();
         }
@@ -56,9 +74,26 @@ namespace SS3D.Modules.UI.Components
             Point renderPos = new Point(0, 0);
 
             renderImage.BeginDrawing();
-            renderImage.Rectangle(0, 0, 64, 64, System.Drawing.Color.Black);
-            renderImage.Rectangle(2, 2, 60, 60, System.Drawing.Color.GhostWhite);
-            objectSprite.Position = new Vector2D(0 + 32, 0 + 32);
+            renderImage.FilledRectangle(0, 0, boxSize, boxSize, System.Drawing.Color.GhostWhite);
+            renderImage.FilledRectangle(borderSize, borderSize, boxSize - (2 * borderSize), boxSize - (2 * borderSize), System.Drawing.Color.DimGray);
+
+            Vector2D prevAxis = objectSprite.Axis;
+            Vector2D prevScale = objectSprite.Scale;
+
+            objectSprite.Smoothing = Smoothing.Smooth;
+            if (objectSprite.Width >= boxSize || objectSprite.Height >= boxSize) objectSprite.SetScale(0.4f, 0.4f);
+            objectSprite.SetAxis(objectSprite.Width / 2, objectSprite.Height / 2);
+            objectSprite.Position = new Vector2D((boxSize / 2f), (boxSize / 2f));
+
+            objectSprite.Draw();
+
+            objectSprite.Axis = prevAxis;
+            objectSprite.Scale = prevScale;
+            objectSprite.Smoothing = Smoothing.None;
+
+            name.Position = new Vector2D(position.X + (boxSize / 2f) - (name.Size.X / 2f), position.Y + boxSize - name.Size.Y - borderSize);
+            name.Draw();
+
             renderImage.EndDrawing();
         }
 
@@ -80,8 +115,6 @@ namespace SS3D.Modules.UI.Components
         public override void Render()
         {
             renderImage.Blit(Position.X, Position.Y);
-            name.Text = ConfigManager.Singleton.Configuration.PlayerName;
-            name.Draw();
         }
 
     }

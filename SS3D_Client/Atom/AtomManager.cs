@@ -62,10 +62,7 @@ namespace SS3D.Atom
 
             foreach (string path in filePaths)
             {
-                string code = File.ReadAllText(path);
-                string asmname = System.IO.Path.GetFileNameWithoutExtension(path);
-                var asm = CSScript.LoadCode(code, asmname, false);
-                //var asm = CSScript.Load(path);
+                var asm = CSScript.Load(path);
                 Module[] modules = asm.GetModules();
                 foreach (Module m in modules)
                 {

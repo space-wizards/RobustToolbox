@@ -37,13 +37,28 @@ namespace SS3D.Modules.UI.Components
         private Rectangle clientAreaButton;
 
         private GUIElement scrollbarButton;
+
         private TextSprite DEBUG;
+        private bool DRAW_DEBUG = false;
 
         public float stepSize { private set; get; } //How much one "step" on the bar counts as towards the actual current value.
 
         public int max = 100;            //Maximum value of the bar.
 
         public int size = 300;           //Graphical length of the bar.
+
+        public float Value
+        {
+            get
+            {
+                return actualVal;
+            }
+            set
+            {
+                actualVal = value;
+                currentPos = (int)Math.Round(value / stepSize);
+            }
+        }
 
         private bool dragging = false;   //Currently dragging the button?
 
@@ -104,7 +119,7 @@ namespace SS3D.Modules.UI.Components
             clientAreaButton = new Rectangle(new Point(position.X, position.Y + currentPos), new Size(scrollbarButton.Dimensions.Width, scrollbarButton.Dimensions.Height));
             actualSize = size - scrollbarButton.Dimensions.Height;
             stepSize = (float)max / actualSize;
-            actualVal = (currentPos * stepSize);
+            actualVal = Math.Min((int)Math.Round(currentPos * stepSize),max);
         }
 
         public override void Render()
@@ -113,8 +128,8 @@ namespace SS3D.Modules.UI.Components
             Gorgon.Screen.FilledRectangle(clientArea.X, clientArea.Y, clientArea.Width, clientArea.Height, System.Drawing.Color.DarkSlateGray);
             scrollbarButton.Draw(clientAreaButton);
             DEBUG.Position = new Vector2D(clientArea.Location.X + 10, clientArea.Location.Y);
-            DEBUG.Text = "current: " + Math.Ceiling(actualVal).ToString();
-            DEBUG.Draw();
+            DEBUG.Text = "current: " + actualVal.ToString();
+            if (DRAW_DEBUG) DEBUG.Draw();
             Gorgon.Screen.EndDrawing();
         }
 

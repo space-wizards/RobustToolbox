@@ -612,8 +612,12 @@ namespace SS3D.States
                 ScrollbarHorizontal bar = new ScrollbarHorizontal();
                 bar.Position = new System.Drawing.Point(50,50);
                 UiManager.Singleton.Components.Add(bar);
+                bar.Update();
+                bar.Value = 41;
                 ScrollbarVertical bar2 = new ScrollbarVertical();
                 bar2.Position = new System.Drawing.Point(100, 100);
+                bar2.Update();
+                bar2.Value = 98;
                 UiManager.Singleton.Components.Add(bar2);
             }
 

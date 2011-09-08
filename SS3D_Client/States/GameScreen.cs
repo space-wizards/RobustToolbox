@@ -588,22 +588,40 @@ namespace SS3D.States
                 blendLightMap = !blendLightMap;
             }
 
-            //if (e.Key == KeyboardKeys.Left)
-            //{
-            //    if (gamePlacementMgr.isBuilding)
-            //        gamePlacementMgr.Rotate(-90);
-            //}
-            //else if (e.Key == KeyboardKeys.Right)
-            //{
-            //    if (gamePlacementMgr.isBuilding)
-            //        gamePlacementMgr.Rotate(90);
-            //}
+            if (e.Key == KeyboardKeys.F8)
+            {
+                Type[] types = atomManager.GetAtomTypes();
+                System.Drawing.Point offset = System.Drawing.Point.Empty;
+                foreach (Type type in types)
+                {
+                    if (type.IsAbstract) continue;
+                    EditorAtomButton button = new EditorAtomButton(type);
+                    button.Position = offset;
+                    UiManager.Singleton.Components.Add(button);
+                    offset.X += 65;
+                    if(offset.X + 65 > Gorgon.Screen.Width)
+                    {
+                        offset.X = 0;
+                        offset.Y += 65;
+                    }
+                }
+            }
+
+            if (e.Key == KeyboardKeys.F10)
+            {
+                ScrollbarHorizontal bar = new ScrollbarHorizontal();
+                bar.Position = new System.Drawing.Point(50,50);
+                UiManager.Singleton.Components.Add(bar);
+                ScrollbarVertical bar2 = new ScrollbarVertical();
+                bar2.Position = new System.Drawing.Point(100, 100);
+                UiManager.Singleton.Components.Add(bar2);
+            }
 
             playerController.KeyDown(e.Key);
         }
         public override void KeyUp(KeyboardInputEventArgs e)
         {
-            playerController.KeyUp(e.Key); // We want to pass key up events regardless of UI focus.
+            playerController.KeyUp(e.Key);
         }
         public override void MouseUp(MouseInputEventArgs e)
         {

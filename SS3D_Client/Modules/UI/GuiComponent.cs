@@ -45,6 +45,13 @@ namespace SS3D.Modules.UI
             RecieveInput = true;
         }
 
+        public GuiComponent()
+        {
+            Visible = true;
+            zDepth = 0;
+            RecieveInput = true;
+        }
+
         public virtual void Update()
         {
         }

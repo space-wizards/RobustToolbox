@@ -158,7 +158,7 @@ namespace SS3D.Modules
         {
             Type atomType = atomManager.GetAtomType(active.type);
             activeType = atomType;
-            previewSprite = ResMgr.Singleton.GetSprite(GetSpriteName(atomType));
+            previewSprite = ResMgr.Singleton.GetSprite(UiManager.Singleton.GetObjectSpriteName(atomType));
             placementQueued = false;
         }
 
@@ -183,22 +183,6 @@ namespace SS3D.Modules
             message.Write(rotation);
             networkMgr.SendMessage(message, NetDeliveryMethod.ReliableUnordered);
             placementQueued = false;
-        }
-
-        public string GetSpriteName(Type type)
-        {
-            if (type.IsSubclassOf(typeof(Tiles.Tile))) //Tiles need special treatment.
-            {
-                return "tilebuildoverlay";
-            }
-            else if (type.IsSubclassOf(typeof(Atom.Atom)))
-            {
-                Atom.Atom atom = (Atom.Atom)Activator.CreateInstance(type);
-                string strName = atom.spritename;
-                atom = null;
-                return strName;
-            }
-            return "noSprite";
         }
 
         public void Update()

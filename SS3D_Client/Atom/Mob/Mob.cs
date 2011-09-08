@@ -447,6 +447,8 @@ namespace SS3D.Atom.Mob
         {
 
             base.Render(xTopLeft, yTopLeft);
+
+            // Lets draw all their inventory
             foreach (Atom atom in equippedAtoms.Values)
             {
                 if (atom != null)
@@ -456,6 +458,16 @@ namespace SS3D.Atom.Mob
                     atom.sprite.Color = System.Drawing.Color.FromArgb(255, sprite.Color);
                     atom.sprite.Draw();
                     atom.SetSpriteByIndex(-1); // Reset the index to the on map value for the GUI and in case it's dropped
+                }
+            }
+
+            // Lets draw their appendages
+            foreach (Appendage a in appendages.Values)
+            {
+                if (a.attachedItem != null)
+                {
+                    a.attachedItem.sprite.Position = sprite.Position + a.GetHoldPosition(GetSpriteIndex());
+                    a.attachedItem.sprite.Draw();
                 }
             }
             

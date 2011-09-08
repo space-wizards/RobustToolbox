@@ -33,6 +33,10 @@ namespace SS3D.Modules.UI.Components
         //           The latter leads to actual 1 increment steps even though the step size will be below 1.
         //           Additionally the Min value is a fixed 0 right now.
 
+        public delegate void ValueChangedHandler(int newValue);
+        public event ValueChangedHandler ValueChanged;
+        private bool RaiseEvent = false;
+
         private Rectangle clientArea;
         private Rectangle clientAreaButton;
 
@@ -40,6 +44,8 @@ namespace SS3D.Modules.UI.Components
 
         private TextSprite DEBUG;
         private bool DRAW_DEBUG = false;
+
+        public bool drawBackground = true;
 
         public float stepSize { private set; get; } //How much one "step" on the bar counts as towards the actual current value.
 
@@ -57,6 +63,7 @@ namespace SS3D.Modules.UI.Components
             {
                 actualVal = value;
                 currentPos = (int)Math.Round(value / stepSize);
+                RaiseEvent = true;
             }
         }
 
@@ -109,6 +116,7 @@ namespace SS3D.Modules.UI.Components
                 currentPos = (int)e.Position.Y - clientArea.Location.Y - (int)(scrollbarButton.Dimensions.Height / 2f);
                 currentPos = Math.Min(currentPos, (int)actualSize);
                 currentPos = Math.Max(currentPos, 0);
+                RaiseEvent = true;
             }
         }
 
@@ -120,12 +128,18 @@ namespace SS3D.Modules.UI.Components
             actualSize = size - scrollbarButton.Dimensions.Height;
             stepSize = (float)max / actualSize;
             actualVal = Math.Min((int)Math.Round(currentPos * stepSize),max);
+
+            if (ValueChanged != null && RaiseEvent) //This is a bit ugly.
+            {
+                RaiseEvent = false;
+                ValueChanged((int)actualVal);
+            }
         }
 
         public override void Render()
         {
             Gorgon.Screen.BeginDrawing();
-            Gorgon.Screen.FilledRectangle(clientArea.X, clientArea.Y, clientArea.Width, clientArea.Height, System.Drawing.Color.DarkSlateGray);
+            if(drawBackground) Gorgon.Screen.FilledRectangle(clientArea.X, clientArea.Y, clientArea.Width, clientArea.Height, System.Drawing.Color.DarkSlateGray);
             scrollbarButton.Draw(clientAreaButton);
             DEBUG.Position = new Vector2D(clientArea.Location.X + 10, clientArea.Location.Y);
             DEBUG.Text = "current: " + actualVal.ToString();

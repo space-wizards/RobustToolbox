@@ -91,6 +91,8 @@ namespace SS3D
 
         private void SetupGorgon()
         {
+            this.Size = new Drawing.Size((int)ConfigManager.Singleton.Configuration.DisplayWidth, (int)ConfigManager.Singleton.Configuration.DisplayHeight);
+            
             Gorgon.Initialize(true, false);
             Gorgon.SetMode(this);
             Gorgon.AllowBackgroundRendering = true;

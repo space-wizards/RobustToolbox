@@ -609,12 +609,13 @@ namespace SS3D.States
 
             if (e.Key == KeyboardKeys.F10)
             {
-                ScrollbarHorizontal bar = new ScrollbarHorizontal();
+                Scrollbar bar = new Scrollbar();
                 bar.Position = new System.Drawing.Point(50,50);
+                bar.Horizontal = true;
                 UiManager.Singleton.Components.Add(bar);
                 bar.Update();
                 bar.Value = 41;
-                ScrollbarVertical bar2 = new ScrollbarVertical();
+                Scrollbar bar2 = new Scrollbar();
                 bar2.Position = new System.Drawing.Point(100, 100);
                 bar2.Update();
                 bar2.Value = 98;

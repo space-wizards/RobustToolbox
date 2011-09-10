@@ -10,9 +10,7 @@ namespace SS3D.Atom.Item.Wearable.Head
         public Helmet()
             : base()
         {
-            SetSpriteName(-1, "helmet");
-            SetSpriteName(0, "helmet_front");
-            SetSpriteName(2, "helmet_back");
+            SetSpriteName(-1, "Helmet");
             SetSpriteByIndex(-1);
         }
 

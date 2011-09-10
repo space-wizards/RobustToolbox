@@ -11,9 +11,7 @@ namespace SS3D.Atom.Item.Wearable.Feet
         public Shoes()
             : base()
         {
-            SetSpriteName(-1, "shoes");
-            SetSpriteName(0, "shoes_front");
-            SetSpriteName(2, "shoes_back");
+            SetSpriteName(-1, "Shoes");
             SetSpriteByIndex(-1);
         }
 

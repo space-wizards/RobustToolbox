@@ -11,9 +11,9 @@ namespace SS3D.Atom.Object
             : base()
         {
             collidable = true;
-            SetSpriteName(0, "locker_closed");
+            SetSpriteName(0, "Locker_closed");
             SetSpriteByIndex(0);
-            SetSpriteName(1, "locker_open");
+            SetSpriteName(1, "Locker_open");
         }
     }
 }

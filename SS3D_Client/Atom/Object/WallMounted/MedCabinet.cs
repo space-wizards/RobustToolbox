@@ -10,7 +10,7 @@ namespace SS3D.Atom.Object.WallMounted
         public MedCabinet()
             : base()
         {
-            SetSpriteName(0, "medcabinet");
+            SetSpriteName(0, "Medcabinet");
             SetSpriteByIndex(0);
             collidable = false;
             snapTogrid = true;

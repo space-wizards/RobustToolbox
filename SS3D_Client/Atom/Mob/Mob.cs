@@ -32,8 +32,8 @@ namespace SS3D.Atom.Mob
             SetSpriteName(0, "Human");
             SetSpriteByIndex(0);
             SetSpriteName(2, "Human2");
-            SetSpriteName(8, "human_incap");
-            SetSpriteName(9, "human_incap_dead");
+            SetSpriteName(8, "Human_incap");
+            SetSpriteName(9, "Human_incap_dead");
             
             speed = walkSpeed;
         }
@@ -466,8 +466,12 @@ namespace SS3D.Atom.Mob
             {
                 if (a.attachedItem != null)
                 {
+                    a.attachedItem.SetSpriteByIndex(5);
+                    if (a.attachedItem.sprite.Image.Name == "noSprite")
+                        a.attachedItem.SetSpriteByIndex(-1);
                     a.attachedItem.sprite.Position = sprite.Position + a.GetHoldPosition(GetSpriteIndex());
                     a.attachedItem.sprite.Draw();
+                    a.attachedItem.SetSpriteByIndex(-1);
                 }
             }
             

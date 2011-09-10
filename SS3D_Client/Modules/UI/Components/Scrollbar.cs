@@ -13,7 +13,7 @@ using SS3D_shared;
 
 namespace SS3D.Modules.UI.Components
 {
-    public class ScrollbarHorizontal : GuiComponent
+    public class Scrollbar : GuiComponent
     {
         public override Point Position
         {
@@ -47,6 +47,8 @@ namespace SS3D.Modules.UI.Components
 
         public bool drawBackground = true;
 
+        public bool Horizontal = false;
+
         public float stepSize { private set; get; } //How much one "step" on the bar counts as towards the actual current value.
 
         public int max = 100;            //Maximum value of the bar.
@@ -74,15 +76,18 @@ namespace SS3D.Modules.UI.Components
         private int currentPos = 0;      //The current button position in relation to location of scrollbar.
         private float actualVal = 0;     //The actual value of the current button position.
 
-        public ScrollbarHorizontal()
+        public Scrollbar()
             : base()
         {
-            scrollbarButton = UiManager.Singleton.Skin.Elements["Controls.Scrollbar.Button.Vertical"];
+            if (Horizontal) scrollbarButton = UiManager.Singleton.Skin.Elements["Controls.Scrollbar.Button.Vertical"];
+            else scrollbarButton = UiManager.Singleton.Skin.Elements["Controls.Scrollbar.Button.Vertical"];
+
             DEBUG = new TextSprite("DEBUGSLIDER","Position:", ResMgr.Singleton.GetFont("CALIBRI"));
             DEBUG.Color = System.Drawing.Color.OrangeRed;
             DEBUG.ShadowColor = System.Drawing.Color.DarkBlue;
             DEBUG.Shadowed = true;
             DEBUG.ShadowOffset = new Vector2D(1, 1);
+            Update();
         }
 
         public override void HandleNetworkMessage(NetIncomingMessage message)
@@ -99,7 +104,6 @@ namespace SS3D.Modules.UI.Components
             return false;
         }
 
-        
         public override bool MouseUp(MouseInputEventArgs e)
         {
             if (dragging)
@@ -114,7 +118,8 @@ namespace SS3D.Modules.UI.Components
         {
             if (dragging)
             {
-                currentPos = (int)e.Position.X - clientArea.Location.X - (int)(scrollbarButton.Dimensions.Width / 2f);
+                if (Horizontal) currentPos = (int)e.Position.X - clientArea.Location.X - (int)(scrollbarButton.Dimensions.Width / 2f);
+                else currentPos = (int)e.Position.Y - clientArea.Location.Y - (int)(scrollbarButton.Dimensions.Height / 2f);
                 currentPos = Math.Min(currentPos, (int)actualSize);
                 currentPos = Math.Max(currentPos, 0);
                 RaiseEvent = true;
@@ -124,9 +129,19 @@ namespace SS3D.Modules.UI.Components
         public override void Update()
         {
             base.Update();
-            clientArea = new Rectangle(position, new Size(size,scrollbarButton.Dimensions.Height));
-            clientAreaButton = new Rectangle(new Point(position.X + currentPos, position.Y), new Size(scrollbarButton.Dimensions.Width, scrollbarButton.Dimensions.Height));
-            actualSize = size - scrollbarButton.Dimensions.Width;
+            if (Horizontal)
+            {
+                clientArea = new Rectangle(position, new Size(size, scrollbarButton.Dimensions.Height));
+                clientAreaButton = new Rectangle(new Point(position.X + currentPos, position.Y), new Size(scrollbarButton.Dimensions.Width, scrollbarButton.Dimensions.Height));
+                actualSize = size - scrollbarButton.Dimensions.Width;
+            }
+            else
+            {
+                clientArea = new Rectangle(position, new Size(scrollbarButton.Dimensions.Width, size));
+                clientAreaButton = new Rectangle(new Point(position.X, position.Y + currentPos), new Size(scrollbarButton.Dimensions.Width, scrollbarButton.Dimensions.Height));
+                actualSize = size - scrollbarButton.Dimensions.Height;
+            }
+
             stepSize = (float)max / actualSize;
             actualVal = Math.Min((int)Math.Round(currentPos * stepSize), max);
 
@@ -142,9 +157,9 @@ namespace SS3D.Modules.UI.Components
             Gorgon.Screen.BeginDrawing();
             if (drawBackground) Gorgon.Screen.FilledRectangle(clientArea.X, clientArea.Y, clientArea.Width, clientArea.Height, System.Drawing.Color.DarkSlateGray);
             scrollbarButton.Draw(clientAreaButton);
-            DEBUG.Position = new Vector2D(clientArea.Location.X, clientArea.Location.Y+20);
+            DEBUG.Position = new Vector2D(clientArea.Location.X + 20, clientArea.Location.Y + 20);
             DEBUG.Text = "current: " + actualVal.ToString();
-            if(DRAW_DEBUG) DEBUG.Draw();
+            if (DRAW_DEBUG) DEBUG.Draw();
             Gorgon.Screen.EndDrawing();
         }
 

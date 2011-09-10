@@ -26,7 +26,7 @@ namespace SS3D.Atom.Object.Worktop
         {
         }
 
-        public override void Update(double time)
+        public override void Update(float time)
         {
             base.Update(time);
         }

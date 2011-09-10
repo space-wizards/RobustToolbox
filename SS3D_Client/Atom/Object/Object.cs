@@ -13,7 +13,7 @@ namespace SS3D.Atom.Object
             collidable = true;
         }
 
-        public override void Update(double time)
+        public override void Update(float time)
         {
             base.Update(time);
         }

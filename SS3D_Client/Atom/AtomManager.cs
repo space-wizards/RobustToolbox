@@ -93,7 +93,7 @@ namespace SS3D.Atom
 
             foreach (Atom a in updateList)
             {
-                a.Update(timeSinceLastUpdate.TotalMilliseconds);
+                a.Update((float)timeSinceLastUpdate.TotalMilliseconds);
             }
             lastUpdate = now;
         }

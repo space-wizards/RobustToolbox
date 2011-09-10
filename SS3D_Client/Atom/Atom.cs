@@ -15,7 +15,7 @@ using SS3D.Modules.UI;
 
 namespace SS3D.Atom
 {
-    public abstract class Atom // CLIENT SIDE
+    public abstract class Atom : CGO.Entity// CLIENT SIDE
     {
         #region variables
         // GRAPHICS
@@ -35,12 +35,9 @@ namespace SS3D.Atom
         public AtomManager atomManager;
 
         // Position data
-        public Vector2D position;
         public Vector2D offset = Vector2D.Zero; // For odd models
-        public float rotation;
         public bool positionChanged = false;
         public List<InterpolationPacket> interpolationPackets;
-        public float speed = 6.0f;
         public bool clipping = true;
         public bool collidable = false;
         private DateTime lastPositionUpdate;
@@ -206,7 +203,7 @@ namespace SS3D.Atom
             // Do nothing. This should be overridden by the child.
         }
 
-        public void SendPositionUpdate()
+        public override void SendPositionUpdate()
         {
             //Rate limit
             TimeSpan timeSinceLastUpdate = DateTime.Now - lastPositionUpdate;
@@ -245,8 +242,9 @@ namespace SS3D.Atom
         #endregion
 
         #region updating
-        public virtual void Update(double time)
+        public override void Update(float time)
         {
+            base.Update(time);
             //This is where all the good stuff happens. 
 
             //If the node hasn't even been drawn into the scene, there's no point updating the fucker, is there?
@@ -428,7 +426,7 @@ namespace SS3D.Atom
                 sprite.AABB.Height);
         }
 
-        public virtual void TranslateLocal(Vector2D toPosition) 
+        public virtual void Translate(Vector2D toPosition) 
         {
             Vector2D oldPosition = position;
             position += toPosition; // We move the sprite here rather than the position, as we can then use its updated AABB values.
@@ -438,74 +436,54 @@ namespace SS3D.Atom
                 position -= toPosition;
             }
         }
-
-        //TODO: Unfuck this. 
-        /* Shouldn't really be translating the node and then backfilling the atom objects
-         * position and rotation from it. Ostaf? */
-
+        
         /* These are solely for user input, not for updating position from server. */
-        public virtual void MoveForward() 
+        public override void MoveUp() 
         {
-            TranslateLocal(new Vector2D(0, -1 * speed));
+            Translate(new Vector2D(0, -1 * speed));
             SendPositionUpdate();
         }
 
-        public virtual void MoveBack()
+        public override void MoveDown()
         {
-            TranslateLocal(new Vector2D(0,speed));
+            Translate(new Vector2D(0,speed));
             SendPositionUpdate();
         }
 
-        public virtual void MoveLeft()
+        public override void MoveLeft()
         {
-            TranslateLocal(new Vector2D(-1 * speed, 0));
+            Translate(new Vector2D(-1 * speed, 0));
             SendPositionUpdate();
         }
 
-        public virtual void MoveRight()
+        public override void MoveRight()
         {
-            TranslateLocal(new Vector2D(speed, 0));
+            Translate(new Vector2D(speed, 0));
             SendPositionUpdate();
         }
 
-        public virtual void MoveUpLeft()
+        public override void MoveUpLeft()
         {
-            TranslateLocal(new Vector2D(-1 * speed, -1 * speed));
+            Translate(new Vector2D(-1 * speed, -1 * speed));
             SendPositionUpdate();
         }
 
-        public virtual void MoveDownLeft()
+        public override void MoveDownLeft()
         {
-            TranslateLocal(new Vector2D(-1 * speed, speed));
+            Translate(new Vector2D(-1 * speed, speed));
             SendPositionUpdate();
         }
 
-        public virtual void MoveUpRight()
+        public override void MoveUpRight()
         {
-            TranslateLocal(new Vector2D(speed, -1 * speed));
+            Translate(new Vector2D(speed, -1 * speed));
             SendPositionUpdate();
         }
 
-        public virtual void MoveDownRight()
+        public override void MoveDownRight()
         {
-            TranslateLocal(new Vector2D(speed, speed));
+            Translate(new Vector2D(speed, speed));
             SendPositionUpdate();
-        }
-
-        public virtual void TurnLeft()
-        {
-            /*Node.Rotate(Mogre.Vector3.UNIT_Y, Mogre.Math.DegreesToRadians(2));
-            rotW = Node.Orientation.w;
-            rotY = Node.Orientation.y;
-            SendPositionUpdate();*/
-        }
-
-        public virtual void TurnRight()
-        {
-           /* Node.Rotate(Mogre.Vector3.UNIT_Y, Mogre.Math.DegreesToRadians(-2));
-            rotW = Node.Orientation.w;
-            rotY = Node.Orientation.y;
-            SendPositionUpdate();*/
         }
 
         #endregion
@@ -522,10 +500,10 @@ namespace SS3D.Atom
              * Example: keyHandlers.Add(MOIS.KeyCode.KC_Whatever, new KeyEvent(HandleKC_whatever));
              * To override a keyhandler, delete it and make a new one OR override the handler function 
              * BEFORE calling initKeys(). */
-            keyHandlers.Add(KeyboardKeys.W, new KeyEvent(HandleKC_W));
+            /*keyHandlers.Add(KeyboardKeys.W, new KeyEvent(HandleKC_W));
             keyHandlers.Add(KeyboardKeys.A, new KeyEvent(HandleKC_A));
             keyHandlers.Add(KeyboardKeys.S, new KeyEvent(HandleKC_S));
-            keyHandlers.Add(KeyboardKeys.D, new KeyEvent(HandleKC_D));
+            keyHandlers.Add(KeyboardKeys.D, new KeyEvent(HandleKC_D));*/
         }
         
         public void HandleKeyPressed(KeyboardKeys k)
@@ -593,7 +571,7 @@ namespace SS3D.Atom
             else if (state && GetKeyState(KeyboardKeys.D) && !GetKeyState(KeyboardKeys.A))
                 MoveUpRight();
             else if (state)
-                MoveForward();
+                MoveUp();
         }
         public virtual void HandleKC_A(bool state)
         {
@@ -607,7 +585,7 @@ namespace SS3D.Atom
             else if (state && GetKeyState(KeyboardKeys.D) && !GetKeyState(KeyboardKeys.A))
                 MoveDownRight();
             else if (state)
-                MoveBack();
+                MoveDown();
         }
         public virtual void HandleKC_D(bool state)
         {

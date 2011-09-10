@@ -130,7 +130,7 @@ namespace SS3D.Atom.Mob
                 SetAnimationState(message.ReadString());
         }
 
-        public override void Update(double time)
+        public override void Update(float time)
         {
             base.Update(time);
 
@@ -211,15 +211,15 @@ namespace SS3D.Atom.Mob
                 speed = walkSpeed;
         }
 
-        public override void MoveForward() // up
+        public override void MoveUp() // up
         {
-            base.MoveForward();
+            base.MoveUp();
             SetSpriteByIndex(2);
         }
 
-        public override void MoveBack() //Down
+        public override void MoveDown() //Down
         {
-            base.MoveBack();
+            base.MoveDown();
             SetSpriteByIndex(0);
         }
 

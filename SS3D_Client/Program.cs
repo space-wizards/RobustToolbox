@@ -16,6 +16,11 @@ using Lidgren.Network;
 using CSScriptLibrary;
 using csscript;
 
+using CGO;
+using System.CodeDom.Compiler;
+using System.IO;
+using System.CodeDom;
+
 namespace SS3D
 {
   public class Program

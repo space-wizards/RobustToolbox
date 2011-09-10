@@ -224,14 +224,12 @@ namespace SS3D_Server.Atom
 
         public virtual void SendState()
         {
-            // Sends the state to all
             SendSpriteState();
             SendCollidable();
         }
 
         public virtual void SendState(NetConnection client)
         {
-            /// This is empty because so far the only things that need it are items.
             SendSpriteState(client);
             SendCollidable(client);
         }

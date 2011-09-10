@@ -10,9 +10,7 @@ namespace SS3D.Atom.Item.Wearable.Inner.Jumpsuit
         public Assistant_Grey()
             : base()
         {
-            SetSpriteName(-1, "jumpsuit");
-            SetSpriteName(0, "jumpsuit_front");
-            SetSpriteName(2, "jumpsuit_back");
+            SetSpriteName(-1, "Jumpsuit");
             SetSpriteByIndex(-1);
         }
     }

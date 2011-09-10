@@ -16,6 +16,22 @@ namespace SS3D.Atom.Item
                 public Item()
             : base()
         {
+
+        }
+
+        public override void Draw()
+        {
+            base.Draw();
+
+            if (spriteNames[-1] != null)
+            {
+                string baseName = spriteNames[-1];
+                SetSpriteName(0, baseName + "_front");
+                SetSpriteName(1, baseName + "_right");
+                SetSpriteName(2, baseName + "_back");
+                SetSpriteName(3, baseName + "_left");
+                SetSpriteName(5, baseName + "_inhand");
+            }
         }
 
         protected override void HandleExtendedMessage(NetIncomingMessage message)

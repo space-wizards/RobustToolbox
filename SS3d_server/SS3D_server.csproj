@@ -156,6 +156,10 @@
       <Project>{AE483C29-042E-4226-BA52-D247CE7676DA}</Project>
       <Name>Lidgren.Network</Name>
     </ProjectReference>
+    <ProjectReference Include="..\SGO\SGO.csproj">
+      <Project>{A59BA08B-B934-49D1-A449-6BBDFE292C5E}</Project>
+      <Name>SGO</Name>
+    </ProjectReference>
     <ProjectReference Include="..\SS3D_shared\SS3D_shared.csproj">
       <Project>{4229D7E3-C3AE-4C0A-B2B1-BB20911150DC}</Project>
       <Name>SS3D_shared</Name>
@@ -178,6 +182,7 @@
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
   </ItemGroup>
+  <ItemGroup />
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <PropertyGroup>
     <PostBuildEvent>

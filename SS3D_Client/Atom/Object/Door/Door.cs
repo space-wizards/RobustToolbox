@@ -57,7 +57,7 @@ namespace SS3D.Atom.Object.Door
             updateRequired = true;
         }
 
-        public override void Update(double time)
+        public override void Update(float time)
         {
             base.Update(time);
             if (this.interpolationPackets.Count == 0)

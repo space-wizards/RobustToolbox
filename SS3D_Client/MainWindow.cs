@@ -28,6 +28,11 @@ using SS3D.Modules.UI;
 
 using Lidgren.Network;
 
+using CGO;
+using System.Security;
+using System.Security.Permissions;
+using ClientInput;
+
 namespace SS3D
 {
     public partial class MainWindow : Form
@@ -69,7 +74,19 @@ namespace SS3D
             PlayerName_TextBox.Text = ConfigManager.Singleton.Configuration.PlayerName;
 
             Gorgon.Go(); //GO MUTHAFUCKA
+
+            loadEntity();
             stateMgr.Startup(typeof(ConnectMenu));
+
+        }
+        
+        //[UIPermissionAttribute(SecurityAction.PermitOnly, Unrestricted = true)]
+        private void loadEntity()
+        {
+            Entity ent = new Entity();
+            SpriteComponent s = new SpriteComponent();
+            ent.AddComponent(ComponentFamily.Renderable, s);
+
         }
 
         private void SetupGorgon()
@@ -111,6 +128,7 @@ namespace SS3D
             _keyboard.Exclusive = true;
             _keyboard.KeyDown += new KeyboardInputEvent(KeyDownEvent);
             _keyboard.KeyUp += new KeyboardInputEvent(KeyUpEvent);
+            KeyBindingManager.Initialize(_keyboard);
 
             _mouse.SetPositionRange(0, 0, Gorgon.CurrentClippingViewport.Width, Gorgon.CurrentClippingViewport.Height);
         }

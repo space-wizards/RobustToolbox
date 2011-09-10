@@ -1,4 +1,5 @@
-﻿namespace SS3D
+﻿using System.Security;
+namespace SS3D
 {
     partial class MainWindow
     {

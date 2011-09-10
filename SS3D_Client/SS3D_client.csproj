@@ -96,6 +96,7 @@
       <RequiredTargetFramework>3.5</RequiredTargetFramework>
     </Reference>
     <Reference Include="System.Data" />
+    <Reference Include="System.Data.DataSetExtensions" />
     <Reference Include="System.Drawing" />
     <Reference Include="System.Windows.Forms" />
     <Reference Include="System.Xml" />
@@ -224,11 +225,22 @@
   </ItemGroup>
   <ItemGroup>
     <None Include="app.config" />
+    <Content Include="KeyBindings.xml">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
     <Content Include="plugins.cfg">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </Content>
   </ItemGroup>
   <ItemGroup>
+    <ProjectReference Include="..\CGO\CGO.csproj">
+      <Project>{6C778741-98D8-48EB-835A-293077AF0E07}</Project>
+      <Name>CGO</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\ClientInput\ClientInput.csproj">
+      <Project>{79C6662F-3BFF-4741-8E19-A3976E51D762}</Project>
+      <Name>ClientInput</Name>
+    </ProjectReference>
     <ProjectReference Include="..\Lidgren.Network\Lidgren.Network.csproj">
       <Project>{AE483C29-042E-4226-BA52-D247CE7676DA}</Project>
       <Name>Lidgren.Network</Name>

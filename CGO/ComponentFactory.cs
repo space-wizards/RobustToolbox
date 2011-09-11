@@ -22,6 +22,9 @@ namespace CGO
 
         public ComponentFactory()
         {
+            Type type = typeof(IGameObjectComponent);
+            List<Assembly> asses = AppDomain.CurrentDomain.GetAssemblies().ToList();
+            List<Type> types = asses.SelectMany(t => t.GetTypes()).Where(p => type.IsAssignableFrom(p)).ToList();
             //TODO: Go through the current app domain and get all types that derive from IGameObjectComponent.
             // There should be a type list that has all of these in this class, so instead of instantiating by
             // Type.GetType, we can just hit the type list and pull the right type.

@@ -10,7 +10,7 @@ namespace SS3D.Atom.Object.WallMounted
         public FireAlarm()
             : base()
         {
-            SetSpriteName(0, "firealarm_off");
+            SetSpriteName(0, "fire_alarm_off");
             SetSpriteByIndex(0);
             collidable = false;
             snapTogrid = true;

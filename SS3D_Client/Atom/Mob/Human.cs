@@ -10,7 +10,7 @@ namespace SS3D.Atom.Mob
         public Human()
             : base()
         {
-            SetSpriteName(0, "human");
+            SetSpriteName(0, "human_front");
             SetSpriteByIndex(0);
             /*meshName = "male_new.mesh";
             scale = new Mogre.Vector3(1f, 1f, 1f);

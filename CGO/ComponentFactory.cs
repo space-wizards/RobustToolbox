@@ -2,10 +2,11 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using System.Reflection;
 
 namespace CGO
 {
-    class ComponentFactory
+    public class ComponentFactory
     {
         private static ComponentFactory singleton;
         public static ComponentFactory Singleton
@@ -21,7 +22,28 @@ namespace CGO
 
         public ComponentFactory()
         {
+            //TODO: Go through the current app domain and get all types that derive from IGameObjectComponent.
+            // There should be a type list that has all of these in this class, so instead of instantiating by
+            // Type.GetType, we can just hit the type list and pull the right type.
+        }
 
+        public IGameObjectComponent GetComponent(Type componentType)
+        {
+            if (componentType.GetInterface("IGameObjectComponent") == null)
+                return null;
+            return (IGameObjectComponent)Activator.CreateInstance(componentType);
+        }
+
+        public IGameObjectComponent GetComponent(string componentTypeName)
+        {
+            if (componentTypeName == null || componentTypeName == "")
+                return null;
+            //Type t = Assembly.GetExecutingAssembly().GetType(componentTypeName); //Get the type
+            Type t = Type.GetType("CGO." + componentTypeName); //Get the type
+            if (t == null || t.GetInterface("IGameObjectComponent") == null)
+                return null;
+
+            return (IGameObjectComponent)Activator.CreateInstance(t); // Return an instance
         }
     }
 }

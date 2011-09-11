@@ -73,6 +73,11 @@ namespace SS3D.Modules.UI.Components
             }
         }
 
+        public void SetOutlinePosition(Vector2D pos)
+        {
+            outlinePos = pos;
+        }
+
         public GUIBodyPart GetBodyPart()
         {
             return bodyPart;

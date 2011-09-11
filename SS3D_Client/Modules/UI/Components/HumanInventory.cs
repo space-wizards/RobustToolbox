@@ -71,6 +71,7 @@ namespace SS3D.Modules.UI.Components
                     slot.Position = new Point(rect.X + slot.Position.X + 12, rect.Y + slot.Position.Y + (i * 56));
                 else
                     slot.Position = new Point(rect.X + rect.Width - 12 - slotWidth, rect.Y + slot.Position.Y + (i * 56));
+                slot.SetOutlinePosition(new Vector2D(rect.X + (int)(rect.Width / 2) - (int)(outline.Width / 2), rect.Y + (rect.Height / 2) - (outline.Height / 2)));
                 i++;
             }
         }

@@ -161,6 +161,8 @@
     <Compile Include="Modules\State.cs" />
     <Compile Include="Modules\StateManager.cs" />
     <Compile Include="Modules\UiManager.cs" />
+    <Compile Include="Modules\UI\Components\Button.cs" />
+    <Compile Include="Modules\UI\Components\Checkbox.cs" />
     <Compile Include="Modules\UI\Components\EditorAtomButton.cs" />
     <Compile Include="Modules\UI\Components\HumanHandsGui.cs" />
     <Compile Include="Modules\UI\Components\HumanHealthComponent.cs" />

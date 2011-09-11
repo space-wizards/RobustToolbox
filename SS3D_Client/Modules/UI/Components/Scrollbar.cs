@@ -33,8 +33,8 @@ namespace SS3D.Modules.UI.Components
         //           The latter leads to actual 1 increment steps even though the step size will be below 1.
         //           Additionally the Min value is a fixed 0 right now.
 
-        public delegate void ValueChangedHandler(int newValue);
-        public event ValueChangedHandler ValueChanged;
+        public delegate void ScrollbarChangedHandler(int newValue);
+        public event ScrollbarChangedHandler ValueChanged;
         private bool RaiseEvent = false;
 
         private Rectangle clientArea;

@@ -19,9 +19,9 @@ namespace SS3D.Modules.Map
         public int mapHeight; // Number of tiles up the map (must be a multiple of StaticGeoSize)
         public int tileSpacing = 64; // Distance between tiles
         public Dictionary<string, Sprite> tileSprites;
-        private string floorSpriteName = "FloorTexture";
-        private string wallTopSpriteName = "WallTexture";
-        private string wallSideSpriteName = "WallSide";
+        private string floorSpriteName = "floor_texture_";
+        private string wallTopSpriteName = "wall_texture_";
+        private string wallSideSpriteName = "wall_side_";
         private List<Vector2D> cardinalList;
         private static PORTAL_INFO[] portal = new PORTAL_INFO[4];
         public System.Drawing.Point lastVisPoint;
@@ -39,7 +39,7 @@ namespace SS3D.Modules.Map
             {
                 tileSprites.Add(wallTopSpriteName + i, ResMgr.Singleton.GetSprite(wallTopSpriteName + i));
             }
-            tileSprites.Add("SpaceTexture", ResMgr.Singleton.GetSprite("SpaceTexture"));
+            tileSprites.Add("space_texture", ResMgr.Singleton.GetSprite("space_texture"));
 
             cardinalList = new List<Vector2D>();
             cardinalList.Add(new Vector2D(0, 0));

@@ -11,8 +11,8 @@ namespace SS3D.Atom.Object.Wall
         public Glass()
             : base()
         {
-            SetSpriteName(0, "Glass");
-            SetSpriteName(1, "Glassshattered");
+            SetSpriteName(0, "glass");
+            SetSpriteName(1, "glass_shattered");
             SetSpriteByIndex(0);
             collidable = true;
             snapTogrid = true;

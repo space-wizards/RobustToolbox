@@ -10,7 +10,7 @@ namespace SS3D.Atom.Object.WallMounted
         public Extinguisher()
             : base()
         {
-            SetSpriteName(0, "Fire_extinguisher");
+            SetSpriteName(0, "fire_extinguisher");
             SetSpriteByIndex(0);
             collidable = false;
             snapTogrid = true;

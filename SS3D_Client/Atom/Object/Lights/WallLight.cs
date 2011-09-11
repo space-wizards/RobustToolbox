@@ -13,7 +13,7 @@ namespace SS3D.Atom.Object.Lights
         public WallLight()
             : base()
         {
-            SetSpriteName(0, "WallLight");
+            SetSpriteName(0, "wallLight");
             SetSpriteByIndex(0);
             collidable = false;
         }

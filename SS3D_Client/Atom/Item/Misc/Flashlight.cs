@@ -13,7 +13,7 @@ namespace SS3D.Atom.Item.Misc
         public Flashlight()
             : base()
         {
-            SetSpriteName(-1,  "Flashlight");
+            SetSpriteName(-1,  "flashlight");
             SetSpriteByIndex(-1);
         }
 

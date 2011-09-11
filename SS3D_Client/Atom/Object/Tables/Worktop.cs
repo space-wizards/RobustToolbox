@@ -12,7 +12,7 @@ namespace SS3D.Atom.Object.Worktop
         public Worktop()
             : base()
         {
-            SetSpriteName(0, "Worktop_single");
+            SetSpriteName(0, "worktop_single");
             SetSpriteByIndex(0);
             collidable = true;
             snapTogrid = true;

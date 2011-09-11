@@ -10,7 +10,7 @@ namespace SS3D.Atom.Item.Tool
         public Welder()
             : base()
         {
-            SetSpriteName(-1, "Welder");
+            SetSpriteName(-1, "welder");
             SetSpriteByIndex(-1);
         }
     }

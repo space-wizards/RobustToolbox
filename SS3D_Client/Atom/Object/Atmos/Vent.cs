@@ -10,7 +10,7 @@ namespace SS3D.Atom.Object.Atmos
         public Vent()
             : base()
         {
-            SetSpriteName(0, "Vent");
+            SetSpriteName(0, "vent");
             SetSpriteByIndex(0);
             collidable = false;
         }

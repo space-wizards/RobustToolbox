@@ -10,7 +10,7 @@ namespace SS3D.Atom.Item.Container
         public Toolbox()
             : base()
         {
-            SetSpriteName(-1, "Toolbox");
+            SetSpriteName(-1, "toolbox");
             SetSpriteByIndex(-1);
             /*meshName = "toolbox.mesh";
             name = "Toolbox";

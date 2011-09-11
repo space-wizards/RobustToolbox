@@ -29,11 +29,11 @@ namespace SS3D.Atom.Mob
             : base()
         {
             //meshName = "male_new.mesh";
-            SetSpriteName(0, "Human");
+            SetSpriteName(0, "human_front");
             SetSpriteByIndex(0);
-            SetSpriteName(2, "Human2");
-            SetSpriteName(8, "Human_incap");
-            SetSpriteName(9, "Human_incap_dead");
+            SetSpriteName(2, "human_back");
+            SetSpriteName(8, "human_incap");
+            SetSpriteName(9, "human_incap_dead");
             
             speed = walkSpeed;
         }

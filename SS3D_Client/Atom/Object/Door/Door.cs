@@ -15,7 +15,7 @@ namespace SS3D.Atom.Object.Door
         public Door()
             : base()
         {
-            SetSpriteName(0, "DoorEW");
+            SetSpriteName(0, "door_ew");
             SetSpriteByIndex(0);
             collidable = true;
             snapTogrid = true;
@@ -35,7 +35,7 @@ namespace SS3D.Atom.Object.Door
             switch (status)
             {
                 case DoorState.Closed:
-                    spritename = "DoorEW";
+                    spritename = "door_ew";
                     visible = true;
                     collidable = true;
                     atomManager.gameState.map.GetTileAt(position).sightBlocked = true;
@@ -43,7 +43,7 @@ namespace SS3D.Atom.Object.Door
                     Draw();
                     break;
                 case DoorState.Open:
-                    spritename = "DoorEWO";
+                    spritename = "door_ewo";
                     collidable = false;
                     atomManager.gameState.map.GetTileAt(position).sightBlocked = false;
                     atomManager.gameState.map.needVisUpdate = true;

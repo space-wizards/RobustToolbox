@@ -11,7 +11,7 @@ namespace SS3D.Atom.Item.Tool
         public Crowbar()
             : base()
         {
-            SetSpriteName(-1, "Crowbar");
+            SetSpriteName(-1, "crowbar");
             SetSpriteByIndex(-1);
         }
     }

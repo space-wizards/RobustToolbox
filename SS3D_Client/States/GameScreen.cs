@@ -614,17 +614,25 @@ namespace SS3D.States
                 bar.Position = new System.Drawing.Point(50,50);
                 bar.Horizontal = true;
                 UiManager.Singleton.Components.Add(bar);
-                bar.Update();
                 bar.Value = 41;
+
                 Scrollbar bar2 = new Scrollbar();
                 bar2.Position = new System.Drawing.Point(100, 100);
-                bar2.Update();
                 bar2.Value = 98;
                 UiManager.Singleton.Components.Add(bar2);
+
+                Checkbox checkbox = new Checkbox();
+                checkbox.Position = new System.Drawing.Point(75, 75);
+                UiManager.Singleton.Components.Add(checkbox);
+
+                SS3D.Modules.UI.Components.Button butt = new SS3D.Modules.UI.Components.Button("HELLO, THIS IS A BUTTON WITH A VERY LONG LABEL ON IT");
+                butt.Position = new System.Drawing.Point(125, 125);
+                UiManager.Singleton.Components.Add(butt);
             }
 
             playerController.KeyDown(e.Key);
         }
+
         public override void KeyUp(KeyboardInputEventArgs e)
         {
             playerController.KeyUp(e.Key);

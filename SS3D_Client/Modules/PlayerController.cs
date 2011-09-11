@@ -57,7 +57,7 @@ namespace SS3D.Modules
             controlledAtom = newAtom;
             controlledAtom.initKeys();
             controlledAtom.attached = true;
-            controlledAtom.AddComponent(CGO.ComponentFamily.Input, new CGO.KeyBindingInputComponent());
+            controlledAtom.AddComponent(CGO.ComponentFamily.Input, CGO.ComponentFactory.Singleton.GetComponent("KeyBindingInputComponent"));
         }
 
         public void Detach()

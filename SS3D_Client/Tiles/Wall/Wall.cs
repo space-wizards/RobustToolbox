@@ -21,9 +21,9 @@ namespace SS3D.Tiles.Wall
             name = "Wall";
             sprite = _sprite;
             sideSprite = _side;
-            plainWall = ResMgr.Singleton.GetSprite("WallSide");
-            wallCorner1 = ResMgr.Singleton.GetSprite("wallcorner");
-            wallCorner2 = ResMgr.Singleton.GetSprite("wallcorner2");
+            plainWall = ResMgr.Singleton.GetSprite("wall_side");
+            wallCorner1 = ResMgr.Singleton.GetSprite("wall_corner");
+            wallCorner2 = ResMgr.Singleton.GetSprite("wall_corner2");
         }
 
         public override void Render(float xTopLeft, float yTopLeft, int tileSpacing)

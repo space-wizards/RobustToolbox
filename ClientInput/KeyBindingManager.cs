@@ -10,14 +10,14 @@ using System.Security;
 
 namespace ClientInput
 {
-    [SecuritySafeCritical]
+    //[SecuritySafeCritical]
     public class KeyBindingManager
     {
-        [SecuritySafeCritical]
+        //[SecuritySafeCritical]
         private static KeyBindingManager singleton;
         public static KeyBindingManager Singleton
         {
-            [SecuritySafeCritical]
+            //[SecuritySafeCritical]
             get
             {
                 if (singleton == null)
@@ -27,6 +27,19 @@ namespace ClientInput
             }
             private set
             {
+            }
+        }
+
+        private bool enabled = true;
+        public bool Enabled
+        {
+            get
+            {
+                return enabled;
+            }
+            set
+            {
+                enabled = value;
             }
         }
 
@@ -65,6 +78,9 @@ namespace ClientInput
             
         }
 
+        /// <summary>
+        /// Destructor -- unbinds from the keyboard input
+        /// </summary>
         ~KeyBindingManager()
         {
             if(m_keyboard != null)
@@ -74,6 +90,10 @@ namespace ClientInput
             }
         }
 
+        /// <summary>
+        /// Sets up singleton, binds to the Keyboard device
+        /// </summary>
+        /// <param name="_keyboard"></param>
         public static void Initialize(Keyboard _keyboard)
         {
             singleton = new KeyBindingManager();
@@ -89,7 +109,7 @@ namespace ClientInput
         public void KeyDown(object sender, KeyboardInputEventArgs e)
         {
             //If the key is bound, fire the BoundKeyDown event.
-            if (BoundKeys.Keys.Contains(e.Key))
+            if (enabled && BoundKeys.Keys.Contains(e.Key))
                 BoundKeyDown(this, new BoundKeyEventArgs(KeyState.Down, BoundKeys[e.Key]));
         }
         /// <summary>
@@ -100,10 +120,13 @@ namespace ClientInput
         public void KeyUp(object sender, KeyboardInputEventArgs e)
         {
             //If the key is bound, fire the BoundKeyUp event.
-            if (BoundKeys.Keys.Contains(e.Key))
+            if (enabled && BoundKeys.Keys.Contains(e.Key))
                 BoundKeyUp(this, new BoundKeyEventArgs(KeyState.Down, BoundKeys[e.Key]));
         }
 
+        /// <summary>
+        /// Loads key bindings from KeyBindings.xml in the bin directory
+        /// </summary>
         public void LoadKeys()
         {
             XmlDocument xml = new XmlDocument();

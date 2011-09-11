@@ -21,7 +21,7 @@ namespace CGO
             {
                 return family;
             }
-            private set
+            set
             {
             }
         }
@@ -34,11 +34,15 @@ namespace CGO
         public virtual void OnRemove()
         {
             Owner = null;
+            //Send us to the manager so it knows we're dead.
+            ComponentManager.Singleton.RemoveComponent(this);
         }
 
         public virtual void OnAdd(Entity owner)
         {
             Owner = owner;
+            //Send us to the manager so it knows we're active
+            ComponentManager.Singleton.AddComponent(this);
         }
 
         public virtual void Update(float frameTime)

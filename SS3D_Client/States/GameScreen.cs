@@ -214,6 +214,7 @@ namespace SS3D.States
             lastUpdate = now;
             now = DateTime.Now;
             atomManager.Update();
+            CGO.ComponentManager.Singleton.Update(e.FrameDeltaTime);
             editMode = prg.GorgonForm.editMode;
             PlacementManager.Singleton.Update();
         }

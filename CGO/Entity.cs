@@ -46,8 +46,6 @@ namespace CGO
 
         public virtual void Update(float frameTime)
         {
-            if (components.Keys.Contains(ComponentFamily.Input))
-                components[ComponentFamily.Input].Update(frameTime);
         }
         
 #region Movement

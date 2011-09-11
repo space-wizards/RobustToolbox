@@ -45,6 +45,8 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="ComponentEnums.cs" />
+    <Compile Include="ComponentFactory.cs" />
+    <Compile Include="ComponentManager.cs" />
     <Compile Include="Entity.cs" />
     <Compile Include="GameObjectComponent.cs" />
     <Compile Include="IGameObjectComponent.cs" />

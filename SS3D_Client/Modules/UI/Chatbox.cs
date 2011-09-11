@@ -34,7 +34,11 @@ namespace SS3D.Modules.UI
         public bool Active
         {
             get { return active; }
-            set { active = value; }
+            set 
+            { 
+                active = value;
+                ClientInput.KeyBindingManager.Singleton.Enabled = !active;
+            }
         }
 
         public Chatbox(string name)

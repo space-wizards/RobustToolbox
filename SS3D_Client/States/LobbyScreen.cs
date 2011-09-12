@@ -13,14 +13,28 @@ using System.Reflection;
 using GorgonLibrary;
 using GorgonLibrary.Graphics;
 using GorgonLibrary.InputDevices;
+using SS3D.Modules.UI;
+using SS3D.Modules.UI.Components;
 
 namespace SS3D.States
 {
     public class LobbyScreen : State
     {
         private StateManager mStateMgr;
+
         private int serverMaxPlayers;
+        private string serverName;
+        private int serverPort;
+        private string welcomeString;
+        private string serverMapName;
+        private GameType gameType;
+
+
         private PlayerController playerController;
+        private Chatbox lobbyChat;
+        private Button joinButt;
+
+        TextSprite lobbyText;
 
         public LobbyScreen()
         {
@@ -35,7 +49,14 @@ namespace SS3D.States
 
             prg.mNetworkMgr.MessageArrived += new NetworkMsgHandler(mNetworkMgr_MessageArrived);
 
-            //CreateGUI();
+            lobbyChat = new Modules.UI.Chatbox("lobbyChat");
+            lobbyChat.TextSubmitted += new Modules.UI.Chatbox.TextSubmitHandler(lobbyChat_TextSubmitted);
+
+            lobbyText = new TextSprite("lobbyText", "", ResMgr.Singleton.GetFont("CALIBRI"));
+            lobbyText.Color = System.Drawing.Color.Black;
+            lobbyText.ShadowColor = System.Drawing.Color.DimGray;
+            lobbyText.Shadowed = true;
+            lobbyText.ShadowOffset = new Vector2D(1, 1);
 
             NetworkManager netMgr = prg.mNetworkMgr;
             NetOutgoingMessage message = netMgr.netClient.CreateMessage();
@@ -43,75 +64,48 @@ namespace SS3D.States
             netMgr.netClient.SendMessage(message, NetDeliveryMethod.ReliableOrdered);
             prg.mNetworkMgr.SendClientName(ConfigManager.Singleton.Configuration.PlayerName);
 
+            joinButt = new Button("Join Game");
+            joinButt.Clicked += new Button.ButtonPressHandler(joinButt_Clicked);
+
+            Gorgon.Screen.Clear();
+
             //BYPASS LOBBY
-            playerController.SendVerb("joingame", 0);
+            //playerController.SendVerb("joingame", 0);
             return true;
         }
 
-       /* public void CreateGUI()
+        void joinButt_Clicked(Button sender)
         {
-            lobbyChat = new Chatbox("lobbyChat");
-            lobbyChat.chatGUI.ZOrder = 10;
-            lobbyChat.chatPanel.ResizeMode = Miyagi.UI.ResizeModes.None;
-            lobbyChat.chatPanel.Movable = true;
-            lobbyChat.TextSubmitted += new Chatbox.TextSubmitHandler(chatTextbox_TextSubmitted);
-            
-            guiBackground = new GUI("guiBackground");
-
-            Panel guiBackgroundPanel = new Panel("mainGuiBackgroundPanel")
-            {
-                Location = new Point(0, 0),
-                Size = new Size((int)mEngine.Window.Width, (int)mEngine.Window.Height),
-                ResizeMode = ResizeModes.None,
-                Skin = MiyagiResources.Singleton.Skins["LobbyBackground"],
-                AlwaysOnTop = false,
-                TextureFiltering = TextureFiltering.Anisotropic
-            };
-            guiBackground.Controls.Add(guiBackgroundPanel);
-
-            guiBackground.ZOrder = 5;
-
-            guiLobbyMenu = new GUI("guiLobbyMenu");
-
-            Button lobbyJoinGameButton = new Button("lobbyJoinGameButton")
-            {
-                Location = new Point(580, 350),
-                Size = new Size(240, 30),
-                Skin = MiyagiResources.Singleton.Skins["ButtonStandardSkin"],
-                Text = "Join Game",
-                TextStyle =
-                {
-                    Alignment = Alignment.MiddleCenter,
-                    ForegroundColour = Colours.DarkBlue,
-                    Font = MiyagiResources.Singleton.Fonts["SpacedockStencil"]
-                }
-            };
-            lobbyJoinGameButton.MouseDown += lobbyJoinGameButtonMouseDown;
-            guiLobbyMenu.Controls.Add(lobbyJoinGameButton);
-            guiLobbyMenu.ZOrder = 11;
-
-            mEngine.mMiyagiSystem.GUIManager.GUIs.Add(guiBackground);
-            mEngine.mMiyagiSystem.GUIManager.GUIs.Add(lobbyChat.chatGUI);
-            mEngine.mMiyagiSystem.GUIManager.GUIs.Add(guiLobbyMenu);
-
-            guiBackground.Visible = true;
-        }*/
-
-        void chatTextbox_TextSubmitted(Chatbox chatbox, string text)
-        {
-            if (text == "/dumpmap")
-            {
-                /* if(map != null && itemManager != null)
-                     MapFileHandler.SaveMap("./Maps/mapdump.map", map, itemManager);*/
-            }
-            else
-            {
-                SendLobbyChat(text);
-            }
+            playerController.SendVerb("joingame", 0);
         }
+
+        void lobbyChat_TextSubmitted(Modules.UI.Chatbox Chatbox, string Text)
+        {
+            SendLobbyChat(Text);
+        }
+
         public override void GorgonRender(FrameEventArgs e)
         {
-
+            Gorgon.Screen.Clear();
+            Gorgon.Screen.FilledRectangle(5, 30, 600, 200, System.Drawing.Color.SlateGray);
+            Gorgon.Screen.FilledRectangle(625, 30, Gorgon.Screen.Width - 625 - 5, Gorgon.Screen.Height - 30 - 6, System.Drawing.Color.SlateGray);
+            lobbyText.Position = new Vector2D(10, 35);
+            lobbyText.Text = "Server: " + serverName;
+            lobbyText.Draw();
+            lobbyText.Position = new Vector2D(10, 55);
+            lobbyText.Text = "Server-Port: "+ serverPort.ToString();
+            lobbyText.Draw();
+            lobbyText.Position = new Vector2D(10, 75);
+            lobbyText.Text = "Max Players: " + serverMaxPlayers.ToString();
+            lobbyText.Draw();
+            lobbyText.Position = new Vector2D(10, 95);
+            lobbyText.Text = "Gamemode: " + gameType.ToString();
+            lobbyText.Draw();
+            lobbyText.Position = new Vector2D(10, 135);
+            lobbyText.Text = "MOTD: \n" + welcomeString;
+            lobbyText.Draw();
+            joinButt.Position = new System.Drawing.Point(Gorgon.Screen.Width - joinButt.Size.Width - 10, Gorgon.Screen.Height - joinButt.Size.Height - 10);
+            joinButt.Render();
             return;
         }
 
@@ -119,11 +113,6 @@ namespace SS3D.States
         {
             throw new NotImplementedException();
         }
-
-        /*private void lobbyJoinGameButtonMouseDown(object sender, MouseButtonEventArgs e)
-        {
-            playerController.SendVerb("joingame", 0);
-        }*/
 
         void mNetworkMgr_MessageArrived(NetworkManager netMgr, NetIncomingMessage msg)
         {
@@ -165,6 +154,7 @@ namespace SS3D.States
 
         private void AddChat(string text)
         {
+            lobbyChat.AddLine(text, ChatChannel.Lobby);
         }
 
         public void SendLobbyChat(string text)
@@ -179,30 +169,36 @@ namespace SS3D.States
 
         public override void Shutdown()
         {
+            lobbyChat.Dispose();
+            lobbyChat = null;
+            joinButt.Dispose();
+            joinButt = null;
             prg.mNetworkMgr.MessageArrived -= new NetworkMsgHandler(mNetworkMgr_MessageArrived);
         }
 
         public override void Update(FrameEventArgs e)
         {
+            joinButt.Update();
         }
 
         private void HandleWelcomeMessage(NetIncomingMessage msg)
         {
-            string serverName = msg.ReadString();
-            int serverPort = msg.ReadInt32();
-            string welcomeString = msg.ReadString();
+            serverName = msg.ReadString();
+            serverPort = msg.ReadInt32();
+            welcomeString = msg.ReadString();
             serverMaxPlayers = msg.ReadInt32();
-            string serverMapName = msg.ReadString();
-            GameType gameType = (GameType)msg.ReadByte();
+            serverMapName = msg.ReadString();
+            gameType = (GameType)msg.ReadByte();
         }
 
         private void HandleChatMessage(NetIncomingMessage msg)
         {
             ChatChannel channel = (ChatChannel)msg.ReadByte();
+            if (channel != ChatChannel.Lobby) return; //NOPE
             string text = msg.ReadString();
-
             string message = "(" + channel.ToString() + "):" + text;
             ushort atomID = msg.ReadUInt16();
+            lobbyChat.AddLine(message, ChatChannel.Lobby);
         }
 
         #region Input
@@ -214,7 +210,9 @@ namespace SS3D.States
         public override void MouseUp(MouseInputEventArgs e)
         { }
         public override void MouseDown(MouseInputEventArgs e)
-        { }
+        {
+            joinButt.MouseDown(e);
+        }
         public override void MouseMove(MouseInputEventArgs e)
         { }
         #endregion

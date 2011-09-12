@@ -40,7 +40,6 @@ namespace SS3D_Server.Modules.Chat
         {
             string fullmsg = name + ": " + text;
 
-
             NetOutgoingMessage message = SS3DNetServer.Singleton.CreateMessage();
 
             message.Write((byte)NetMessage.ChatMessage);

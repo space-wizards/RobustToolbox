@@ -27,6 +27,8 @@ namespace SS3D.Modules.UI
         private int maxLineLength = 90;
         private Dictionary<ChatChannel, System.Drawing.Color> chatColors;
 
+        private bool disposing = false;
+
         private bool active = false;
 
         private GorgonLibrary.Graphics.Font font;
@@ -121,8 +123,7 @@ namespace SS3D.Modules.UI
 
         public void AddLine(string message, ChatChannel channel)
         {
-
-
+            if (disposing) return;
             int charCount = 0;
             IEnumerable<string> messageSplit = message.Split(new Char[] { ' ' }, StringSplitOptions.RemoveEmptyEntries)
                             .GroupBy(w => (charCount += w.Length + 1) / maxLineLength)
@@ -174,7 +175,7 @@ namespace SS3D.Modules.UI
                 return;
             if (e.Key == KeyboardKeys.Enter)
             {
-                TextSubmitted(this, textInputLabel.Text);
+                if (TextSubmitted != null) TextSubmitted(this, textInputLabel.Text);
                 textInputLabel.Text = "";
                 Active = false;
                 return;
@@ -196,8 +197,28 @@ namespace SS3D.Modules.UI
             }
         }
 
+        protected override void Dispose(bool disposing)
+        {
+            Visible = false;
+            disposing = true;
+            TextSubmitted = null;
+            entries.Clear();
+            textInputLabel = null;
+            backgroundSprite = null;
+            renderImage.Dispose();
+            renderImage = null;
+            chatColors.Clear();
+            font = null;
+            base.Dispose(disposing);
+        }
+
+        private void destroy()
+        {
+        }
+
         protected override void Draw()
         {
+            if (disposing) return;
             System.Drawing.Rectangle screenPoints;		// Screen coordinates.
 
             if (Visible)

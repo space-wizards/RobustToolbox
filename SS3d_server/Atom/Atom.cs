@@ -1,16 +1,16 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
-using System.Text;
 using System.Runtime.Serialization;
 using System.Runtime.Serialization.Formatters.Binary;
-using SS3D_Server.HelperClasses;
+using System.Text;
 using Lidgren.Network;
-using SS3D_shared.HelperClasses;
 using SS3D_Server.Atom.Extension;
+using SS3D_Server.HelperClasses;
 using SS3D_Server.Modules;
-
 using SS3D_shared;
+using SS3D_shared.HelperClasses;
 
 namespace SS3D_Server.Atom
 {
@@ -428,14 +428,30 @@ namespace SS3D_Server.Atom
         /// Apply damage to the atom. All atoms have this, though not all atoms will react to their health being depleted.
         /// </summary>
         /// <param name="amount"></param>
-        public virtual void Damage(int amount)
+        public virtual void Damage(int amount, uint damager)
         {
             //Lots of room to get more complicated here
             currentHealth -= amount;
+
+            string message = atomManager.GetAtom((ushort)damager).name + " hit " + name + "! " + name + " looks ";
+            float healthpct = ((float)currentHealth / (float)maxHealth) * 100;
+            Debug.WriteLine("Health percentage: " + healthpct.ToString() + "%");
+            if (healthpct > 80)
+                message += "kinda dinged up.";
+            else if (healthpct > 50)
+                message += "unwell.";
+            else if (healthpct > 20)
+                message += "really bad!";
+            else if (healthpct > 0)
+                message += "near death.";
+            else if (healthpct <= 0)
+                message += "kinda... dead.";
+            SS3DServer.Singleton.chatManager.SendChatMessage(ChatChannel.Damage, message, "", uid);
         #if DEBUG
             string healthmsg = name + "(" + uid.ToString() + ") " + "took " + amount.ToString() + " points of damage.";
             healthmsg += " Current health: " + currentHealth.ToString() + "/" + maxHealth.ToString();//TODO SEND DAMAGE MESSAGES
-            SS3DServer.Singleton.chatManager.SendChatMessage(ChatChannel.Damage, healthmsg, name, uid);
+            LogManager.Log(healthmsg, LogLevel.Debug);
+            //SS3DServer.Singleton.chatManager.SendChatMessage(ChatChannel.Damage, healthmsg, name, uid);
         #endif
 
             var session = GetSession();

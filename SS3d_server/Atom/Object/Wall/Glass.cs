@@ -17,9 +17,9 @@ namespace SS3D_Server.Atom.Object.Wall
             collidable = true;
         }
 
-        public override void Damage(int amount)
+        public override void Damage(int amount, uint damagerId)
         {
-            base.Damage(amount);
+            base.Damage(amount, damagerId);
             if ((float)currentHealth / (float)maxHealth <= 0)
             {
                 SetSpriteState(1);

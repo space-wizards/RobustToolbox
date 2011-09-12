@@ -89,7 +89,7 @@ namespace SS3D_Server.Atom.Item
             {
                 default:
                     //By default, Atoms will do damage.
-                    target.Damage(damageAmount);
+                    target.Damage(damageAmount, this.uid);
                     //Send attack animation (this is a retarded way of doing this really)
                     holdingAppendage.AnimateAttack();
                     break;

@@ -243,9 +243,9 @@ namespace SS3D_Server.Atom.Mob
             SendMessageTo(msg, client, NetDeliveryMethod.ReliableOrdered);
         }
 
-        public override void Damage(int amount)
+        public override void Damage(int amount, uint damagerId)
         {
-            base.Damage(amount);
+            base.Damage(amount, damagerId);
 
             if (IsDead())
                 Die();

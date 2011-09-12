@@ -34,10 +34,10 @@ namespace SS3D_Server.Atom.Object
             }
         }
 
-        public override void Damage(int amount)
+        public override void Damage(int amount, uint damagerId)
         {
             if(damageable)
-                base.Damage(amount);
+                base.Damage(amount, damagerId);
         }
 
         public Object(SerializationInfo info, StreamingContext ctxt)

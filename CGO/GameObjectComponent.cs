@@ -26,9 +26,10 @@ namespace CGO
             }
         }
 
-        public virtual void RecieveMessage(CGO.MessageType type, params object[] list)
+        public virtual void RecieveMessage(object sender, CGO.MessageType type, params object[] list)
         {
-
+            if (sender == this) //Don't listen to our own messages!
+                return;
         }
 
         public virtual void OnRemove()

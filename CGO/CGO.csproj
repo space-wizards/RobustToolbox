@@ -63,6 +63,10 @@
       <Project>{79C6662F-3BFF-4741-8E19-A3976E51D762}</Project>
       <Name>ClientInput</Name>
     </ProjectReference>
+    <ProjectReference Include="..\Lidgren.Network\Lidgren.Network.csproj">
+      <Project>{AE483C29-042E-4226-BA52-D247CE7676DA}</Project>
+      <Name>Lidgren.Network</Name>
+    </ProjectReference>
   </ItemGroup>
   <ItemGroup>
     <Folder Include="Component\" />

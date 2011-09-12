@@ -43,11 +43,13 @@ namespace CGO
         public virtual void KeyDown(object sender, BoundKeyEventArgs e)
         {
             SetKeyState(e.Function, true);
+            Owner.SendMessage(this, MessageType.KeyDown, e.Function);
         }
 
         public virtual void KeyUp(object sender, BoundKeyEventArgs e)
         {
             SetKeyState(e.Function, false);
+            Owner.SendMessage(this, MessageType.KeyUp, e.Function);
         }
 
         protected void SetKeyState(KeyFunctions k, bool state)

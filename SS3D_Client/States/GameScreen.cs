@@ -297,7 +297,8 @@ namespace SS3D.States
             if (a != null)
             {
                 if (a.speechBubble == null) a.speechBubble = new SpeechBubble(a.name + a.uid.ToString());
-                a.speechBubble.SetText(text);
+                if(channel == ChatChannel.Ingame || channel == ChatChannel.Player || channel == ChatChannel.Radio)
+                    a.speechBubble.SetText(text);
             }
         }
 

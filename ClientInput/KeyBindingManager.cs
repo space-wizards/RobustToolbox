@@ -10,14 +10,12 @@ using System.Security;
 
 namespace ClientInput
 {
-    //[SecuritySafeCritical]
     public class KeyBindingManager
     {
-        //[SecuritySafeCritical]
         private static KeyBindingManager singleton;
         public static KeyBindingManager Singleton
         {
-            //[SecuritySafeCritical]
+            [SecuritySafeCritical]
             get
             {
                 if (singleton == null)

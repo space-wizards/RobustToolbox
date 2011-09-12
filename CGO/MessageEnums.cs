@@ -15,6 +15,8 @@ namespace CGO
 
     public enum MessageType
     {
-        AddComponent
+        AddComponent,
+        KeyDown,
+        KeyUp,
     }
 }

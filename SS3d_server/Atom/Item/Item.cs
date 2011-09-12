@@ -111,6 +111,7 @@ namespace SS3D_Server.Atom.Item
 
             SendAttachMessage();
             SendAppendageUIUpdate(newHolder);
+            SS3DServer.Singleton.chatManager.SendChatMessage(ChatChannel.Default, newHolder.name + " picked up the " + name + ".", "", newHolder.uid);
         }
 
         public virtual void SendAppendageUIUpdate(Mob.Mob target)

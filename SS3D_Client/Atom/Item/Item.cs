@@ -27,9 +27,9 @@ namespace SS3D.Atom.Item
             {
                 string baseName = spriteNames[-1];
                 SetSpriteName(0, baseName + "_front");
-                SetSpriteName(1, baseName + "_right");
+                SetSpriteName(1, baseName + "_side");
                 SetSpriteName(2, baseName + "_back");
-                SetSpriteName(3, baseName + "_left");
+                SetSpriteName(3, baseName + "_side");
                 SetSpriteName(5, baseName + "_inhand");
             }
         }
@@ -71,11 +71,11 @@ namespace SS3D.Atom.Item
             {
                 Vector2D mobpos = holdingAppendage.owner.position;
                 position = mobpos;
-                holdingAppendage.attachedItem = null;
-                holdingAppendage = null;
-                visible = true;
-                SetSpriteByIndex(-1);
             }
+            holdingAppendage.attachedItem = null;
+            holdingAppendage = null;
+            visible = true;
+            SetSpriteByIndex(-1);
         }
 
         public virtual void HandleDetatch()

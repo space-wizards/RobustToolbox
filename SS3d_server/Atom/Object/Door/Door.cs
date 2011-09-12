@@ -36,12 +36,14 @@ namespace SS3D_Server.Atom.Object.Door
                 else
                 {
                     status = DoorState.Open;
+                    SS3DServer.Singleton.chatManager.SendChatMessage(ChatChannel.Default, m.name + " opened the " + name + ".", "", m.uid);
                 }
                 
             }
             else if (status == DoorState.Open)
             {
                 status = DoorState.Closed;
+                SS3DServer.Singleton.chatManager.SendChatMessage(ChatChannel.Default, m.name + " closed the " + name + ".", "", m.uid);
             }
             else if (status == DoorState.Broken)
             {

@@ -343,7 +343,8 @@ namespace SS3D_Server.Atom
             else
                 ApplyAction(clicker.selectedAppendage.heldItem, clicker);
 
-            SS3DServer.Singleton.chatManager.SendChatMessage(0, clicker.name + "(" + clicker.uid.ToString() + ")" + " clicked " + name + "(" + uid.ToString() + ")", name, uid);
+            //SS3DServer.Singleton.chatManager.SendChatMessage(0, clicker.name + " touched the " + name + ".", "", uid);
+            LogManager.Log(clicker.name + "(" + clicker.uid.ToString() + ")" + " clicked " + name + "(" + uid.ToString() + ").", LogLevel.Debug);
         }
         #endregion
 

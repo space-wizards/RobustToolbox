@@ -9,11 +9,10 @@ namespace CGO
     {
         Entity Owner { get; set; }
 
-        void RecieveMessage(MessageType type, params object[] list);
+        void RecieveMessage(object sender, MessageType type, params object[] list);
         void OnRemove();
         void OnAdd(Entity owner);
         void Update(float frameTime);
-        ComponentFamily Family
-        {   get;set;}
+        ComponentFamily Family {get;set;}
     }
 }

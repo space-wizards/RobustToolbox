@@ -14,6 +14,7 @@ namespace CGO
     {
         private Dictionary<ComponentFamily, IGameObjectComponent> components;
 
+
         /// <summary>
         /// These are the only real pieces of data that the entity should have.
         /// </summary>
@@ -47,7 +48,15 @@ namespace CGO
         public virtual void Update(float frameTime)
         {
         }
-        
+
+        public void SendMessage(object sender, MessageType type, params object[] args)
+        {
+            foreach (IGameObjectComponent component in components.Values)
+            {
+                component.RecieveMessage(sender, type, args);
+            }
+        }
+
 #region Movement
         public virtual void Translate(Vector2D toPosition)
         {

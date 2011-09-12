@@ -37,6 +37,7 @@ namespace SS3D.Modules.UI
             set 
             { 
                 active = value;
+                //HACK
                 ClientInput.KeyBindingManager.Singleton.Enabled = !active;
             }
         }
@@ -65,7 +66,7 @@ namespace SS3D.Modules.UI
             textInputLabel.WordWrap = true;
 
             chatColors = new Dictionary<ChatChannel, Color>();
-            chatColors.Add(ChatChannel.Default, System.Drawing.Color.Black);
+            chatColors.Add(ChatChannel.Default, System.Drawing.Color.Gray);
             chatColors.Add(ChatChannel.Damage, System.Drawing.Color.Red);
             chatColors.Add(ChatChannel.Radio, System.Drawing.Color.DarkGreen);
             chatColors.Add(ChatChannel.Server, System.Drawing.Color.Blue);

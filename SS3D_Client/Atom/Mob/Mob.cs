@@ -31,7 +31,9 @@ namespace SS3D.Atom.Mob
             //meshName = "male_new.mesh";
             SetSpriteName(0, "human_front");
             SetSpriteByIndex(0);
+            SetSpriteName(1, "human_side");
             SetSpriteName(2, "human_back");
+            SetSpriteName(3, "human_side");
             SetSpriteName(8, "human_incap");
             SetSpriteName(9, "human_incap_dead");
             
@@ -163,10 +165,37 @@ namespace SS3D.Atom.Mob
 
         public virtual void UpdateCharacterDirection(Vector2D movementVector)
         {
-            if (movementVector.Y > 0)
+            float angle = movementVector.Angle();
+            if (movementVector == Vector2D.Zero)
+                return;
+
+            if (angle > -0.25f * Math.PI && angle < 0.25f * Math.PI)
+            {
+                SetSpriteByIndex(3);
+            }
+            else if (angle > 0.25f * Math.PI && angle < 0.75f * Math.PI)
+            {
                 SetSpriteByIndex(0);
-            if (movementVector.Y < 0)
+            }
+            else if(angle < -0.25f * Math.PI && angle > -0.75f * Math.PI)
+            {
                 SetSpriteByIndex(2);
+            }
+            else
+            {
+                SetSpriteByIndex(1);
+            }
+            
+
+             /*   
+            if (movementVector.Y > 0)
+            {
+                SetSpriteByIndex(0);
+            }
+            if (movementVector.Y < 0)
+            {
+                SetSpriteByIndex(2);
+            }*/
         }
 
         public override void HandleKC_W(bool state)
@@ -211,16 +240,21 @@ namespace SS3D.Atom.Mob
                 speed = walkSpeed;
         }
 
+        public override void Translate(Vector2D toPosition)
+        {
+            Vector2D oldPosition = position;
+            base.Translate(toPosition);
+            UpdateCharacterDirection(position - oldPosition);
+        }
+
         public override void MoveUp() // up
         {
             base.MoveUp();
-            SetSpriteByIndex(2);
         }
 
         public override void MoveDown() //Down
         {
             base.MoveDown();
-            SetSpriteByIndex(0);
         }
 
         public override void MoveLeft()
@@ -236,25 +270,21 @@ namespace SS3D.Atom.Mob
         public override void MoveUpLeft()
         {
             base.MoveUpLeft();
-            SetSpriteByIndex(2);
         }
 
         public override void MoveDownLeft()
         {
             base.MoveDownLeft();
-            SetSpriteByIndex(0);
         }
 
         public override void MoveUpRight()
         {
             base.MoveUpRight();
-            SetSpriteByIndex(2);
         }
 
         public override void MoveDownRight()
         {
             base.MoveDownRight();
-            SetSpriteByIndex(0);
         }
 
         protected override void HandleExtendedMessage(NetIncomingMessage message)
@@ -445,9 +475,15 @@ namespace SS3D.Atom.Mob
 
         public override void Render(float xTopLeft, float yTopLeft)
         {
-
+            if (GetSpriteIndex() == 3)
+            {
+                sprite.HorizontalFlip = true;
+            }
             base.Render(xTopLeft, yTopLeft);
-
+            if (GetSpriteIndex() == 3)
+            {
+                sprite.HorizontalFlip = false;
+            }
             // Lets draw all their inventory
             foreach (Atom atom in equippedAtoms.Values)
             {
@@ -456,7 +492,15 @@ namespace SS3D.Atom.Mob
                     atom.SetSpriteByIndex(GetSpriteIndex()); // Set the index to the same as the mob so it draws the correct direction
                     atom.sprite.Position = sprite.Position;
                     atom.sprite.Color = System.Drawing.Color.FromArgb(255, sprite.Color);
+                    if (GetSpriteIndex() == 3)
+                    {
+                        atom.sprite.HorizontalFlip = true;
+                    }
                     atom.sprite.Draw();
+                    if (GetSpriteIndex() == 3)
+                    {
+                        atom.sprite.HorizontalFlip = false;
+                    }
                     atom.SetSpriteByIndex(-1); // Reset the index to the on map value for the GUI and in case it's dropped
                 }
             }
@@ -470,7 +514,15 @@ namespace SS3D.Atom.Mob
                     if (a.attachedItem.sprite.Image.Name == "noSprite")
                         a.attachedItem.SetSpriteByIndex(-1);
                     a.attachedItem.sprite.Position = sprite.Position + a.GetHoldPosition(GetSpriteIndex());
+                    if (GetSpriteIndex() == 3)
+                    {
+                        a.attachedItem.sprite.HorizontalFlip = true;
+                    }
                     a.attachedItem.sprite.Draw();
+                    if (GetSpriteIndex() == 3)
+                    {
+                        a.attachedItem.sprite.HorizontalFlip = false;
+                    }
                     a.attachedItem.SetSpriteByIndex(-1);
                 }
             }

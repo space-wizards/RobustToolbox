@@ -9,6 +9,8 @@ public enum NetMessage
     WelcomeMessage,
     MaxPlayers,
     PlayerCount,
+    PlayerList,
+    JobList,
     SendMap,
     MapMessage,
     ItemMessage, // It's something the item system needs to handle

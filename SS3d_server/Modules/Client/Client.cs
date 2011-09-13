@@ -27,8 +27,5 @@ namespace SS3D_Server.Modules.Client
                 playerName = name;
             }
         }
-
-
-
     }
 }

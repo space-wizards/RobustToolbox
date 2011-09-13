@@ -18,6 +18,7 @@ namespace SS3D_Server.Modules
         public Atom.Atom attachedAtom;
         public string name = "";
         public SessionStatus status;
+        public JobDefinition assignedJob;
 
         public PlayerSession(NetConnection client)
         {         

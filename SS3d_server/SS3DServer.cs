@@ -139,6 +139,7 @@ namespace SS3D_Server
                     LogManager.Log("Job Definitions File not found.", LogLevel.Fatal);
                     Environment.Exit(1);
                 }
+                else LogManager.Log("Job Definitions Found. " + JobHandler.Singleton.JobDefinitions.Count.ToString() + " Jobs loaded.", LogLevel.Information);
 
                 netConfig.Port = serverPort;
                 var netServer = new SS3DNetServer(netConfig);
@@ -382,6 +383,9 @@ namespace SS3D_Server
                 case NetMessage.WelcomeMessage:
                     SendWelcomeInfo(msg.SenderConnection);
                     break;
+                case NetMessage.RequestJob:
+                    HandleJobRequest(msg);
+                    break;
                 case NetMessage.SendMap:
                     SendMap(msg.SenderConnection);
                     break;
@@ -415,12 +419,26 @@ namespace SS3D_Server
         
         }
 
+        public void HandleJobRequest(NetIncomingMessage msg)
+        {
+            string name = msg.ReadString();
+            var pickedJob = (from JobDefinition def in JobHandler.Singleton.JobDefinitions
+                             where def.Name == name
+                             select def).First();
+            if (pickedJob != null)
+            {
+                PlayerSession session =  playerManager.GetSessionByConnection(msg.SenderConnection);
+                session.assignedJob = pickedJob;
+            }
+        }
+
         public void HandleJobListRequest(NetIncomingMessage msg)
         {
             PlayerSession p = playerManager.GetSessionByConnection(msg.SenderConnection);
             NetOutgoingMessage JobListMessage = SS3DNetServer.Singleton.CreateMessage();
             JobListMessage.Write((byte)NetMessage.JobList);
-            JobListMessage.Write(JobHandler.Singleton.JobDefinitionsString); // DUMP THE WHOLE XML FILE IN THERE. NNGHGHGH
+            //JobListMessage.Write(JobHandler.Singleton.JobDefinitionsString); // DUMP THE WHOLE XML FILE IN THERE. NNGHGHGH
+            JobListMessage.Write(JobHandler.Singleton.GetDefinitionsString());
             SS3DNetServer.Singleton.SendMessage(JobListMessage, msg.SenderConnection, NetDeliveryMethod.ReliableOrdered); //OFF WE GO. WHEEEE.
         }
 

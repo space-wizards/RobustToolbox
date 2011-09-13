@@ -149,6 +149,29 @@ namespace SS3D_Server.Atom.Mob
         }
 
         /// <summary>
+        /// Equips an item on a mob and then sends the result to everyone
+        /// </summary>
+        public virtual void EquipItem(ushort id, GUIBodyPart targetPart)
+        {
+            if (equippedAtoms.ContainsKey(targetPart) && equippedAtoms[targetPart] == null)
+            {
+                Atom atom = atomManager.GetAtom(id);
+                if (atom.IsChildOfType(typeof(Item.Item)))
+                {
+                    equippedAtoms[targetPart] = (Item.Item)atom;
+                    SendEquipItem(atom.uid, targetPart);
+
+                    if (equippedAtoms[targetPart].holdingAppendage != null)
+                    {
+                        equippedAtoms[targetPart].SendDetatchMessage();
+                        equippedAtoms[targetPart].holdingAppendage.heldItem = null;
+                        equippedAtoms[targetPart].holdingAppendage = null;
+                    }
+                }
+            }
+        }
+
+        /// <summary>
         /// Sends a message to everyone that a mob just equipped an item
         /// </summary>
         public virtual void SendEquipItem(ushort id, GUIBodyPart part)

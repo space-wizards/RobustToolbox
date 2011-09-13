@@ -11,6 +11,7 @@ public enum NetMessage
     PlayerCount,
     PlayerList,
     JobList,
+    RequestJob,
     SendMap,
     MapMessage,
     ItemMessage, // It's something the item system needs to handle

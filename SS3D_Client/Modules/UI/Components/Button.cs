@@ -30,7 +30,7 @@ namespace SS3D.Modules.UI.Components
 
         public Size Size {get; private set;}
 
-        object UserData;
+        public object UserData;
 
         public Button(string text)
             : base()

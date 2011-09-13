@@ -4,6 +4,7 @@ using System.Linq;
 using System.Text;
 
 using Lidgren.Network;
+using SS3D_shared;
 
 namespace SS3D_Server.Modules
 {
@@ -29,6 +30,15 @@ namespace SS3D_Server.Modules
         {
             //Spawn the player's atom. There's probably a much better place to do this.
             Atom.Atom a = SS3DServer.Singleton.atomManager.SpawnAtom("Atom.Mob.Human");
+            Atom.Mob.Human human = (Atom.Mob.Human) a;
+            if (s.assignedJob != null)
+            {
+                foreach (SpawnEquipDefinition def in s.assignedJob.SpawnEquipment)
+                {
+                    Atom.Atom newItem = SS3DServer.Singleton.atomManager.SpawnAtom(def.ObjectType);
+                    human.EquipItem(newItem.uid, def.Location);
+                }
+            }
             s.AttachToAtom(a);
         }
 

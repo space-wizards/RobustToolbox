@@ -30,6 +30,7 @@ namespace SS3D.States
         private string serverMapName;
         private GameType gameType;
 
+        List<Button> jobButtons = new List<Button>();
         string DEBUG;
 
         private List<String> PlayerListStrings = new List<string>();
@@ -139,6 +140,12 @@ namespace SS3D.States
             lobbyText.Position = new Vector2D(10, 400);
             lobbyText.Text = DEBUG;
             lobbyText.Draw();
+
+            foreach (Button butt in jobButtons)
+            {
+                butt.Render();
+            }
+
             return;
         }
 
@@ -190,12 +197,27 @@ namespace SS3D.States
         {
             string jobListXML = msg.ReadString(); //READ THE WHOLE XML FILE.
             JobHandler.Singleton.LoadDefinitionsFromString(jobListXML);
-            DEBUG = "DEBUG: JOB LIST RECIEVED ->";
+            int pos = 400;
             foreach (JobDefinition definition in JobHandler.Singleton.JobDefinitions)
             {
-                DEBUG += "\n "+ definition.Name + " - " + definition.Description + " - " + definition.SpawnEquipment.ToString();
+                Button current = new Button(definition.Name);
+                current.Position = new System.Drawing.Point(5, pos);
+                current.Clicked += new Button.ButtonPressHandler(current_Clicked);
+                current.UserData = definition;
+                jobButtons.Add(current);
+                pos += 40;
             }
             return;
+        }
+
+        void current_Clicked(Button sender)
+        {
+            NetOutgoingMessage playerJobSpawnMsg = prg.mNetworkMgr.netClient.CreateMessage();
+            JobDefinition picked = (JobDefinition)sender.UserData;
+            playerJobSpawnMsg.Write((byte)NetMessage.RequestJob); //Request job.
+            playerJobSpawnMsg.Write(picked.Name);
+            prg.mNetworkMgr.netClient.SendMessage(playerJobSpawnMsg, NetDeliveryMethod.ReliableOrdered);
+            playerController.SendVerb("joingame", 0); // REMOVE THIS LATER !!!
         }
 
         private void HandlePlayerList(NetIncomingMessage msg)
@@ -243,6 +265,10 @@ namespace SS3D.States
 
         public override void Update(FrameEventArgs e)
         {
+            foreach(Button butt in jobButtons)
+            {
+                butt.Update();
+            }
             if (playerListTime.CompareTo(DateTime.Now) < 0)
             {
                 NetOutgoingMessage playerListMsg = prg.mNetworkMgr.netClient.CreateMessage();
@@ -284,6 +310,10 @@ namespace SS3D.States
         { }
         public override void MouseDown(MouseInputEventArgs e)
         {
+            foreach (Button butt in jobButtons)
+            {
+                butt.MouseDown(e);
+            }
             joinButt.MouseDown(e);
         }
         public override void MouseMove(MouseInputEventArgs e)

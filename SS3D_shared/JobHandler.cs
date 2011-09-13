@@ -44,7 +44,6 @@ namespace SS3D_shared
         #endregion
 
         public List<JobDefinition> JobDefinitions { get; private set; }
-        public string JobDefinitionsString { get; private set; }
 
         XmlSerializer Serializer = new XmlSerializer(typeof(List<JobDefinition>));
         XmlWriterSettings settings = new XmlWriterSettings();
@@ -73,19 +72,10 @@ namespace SS3D_shared
 
         public bool LoadDefinitionsFromFile(string path)
         {
-            if (File.Exists(path)) //This is all horribly inefficient because xmlreader only one in one direction.
+            if (File.Exists(path))
             {
                 XmlReader reader = XmlTextReader.Create(path); //Create reader for file.
-	            StringBuilder sb = new StringBuilder();        //Create string builder.
-	 
-	            while (reader.Read())
-	                sb.AppendLine(reader.ReadOuterXml()); //Load XML into stringbuilder.
-
-                MemoryStream definitionsMemory = new MemoryStream(UnicodeEncoding.UTF8.GetBytes(sb.ToString())); //Load string into memory Stream (wtf)
-
-                JobDefinitionsString = sb.ToString(); //Save to string.
-                JobDefinitions = (List<JobDefinition>)Serializer.Deserialize(definitionsMemory); //Deserialize from memory stream and save inside class.
-
+                JobDefinitions = (List<JobDefinition>)Serializer.Deserialize(reader); //Deserialize and save inside class.
                 return false;
             }
             else
@@ -94,13 +84,19 @@ namespace SS3D_shared
             }
         }
 
+        public string GetDefinitionsString()
+        {
+            StringWriter outStream = new StringWriter();
+            Serializer.Serialize(outStream, JobDefinitions);
+            return outStream.ToString();
+        }
+
         public bool LoadDefinitionsFromString(string data)
         {
             if (data.Length > 1) //YEP. THATS TOTALLY SAFE.
             {
-                MemoryStream definitionsMemory = new MemoryStream(UnicodeEncoding.UTF8.GetBytes(data)); //Load string into memory Stream
-                JobDefinitionsString = data;
-                JobDefinitions = (List<JobDefinition>)Serializer.Deserialize(definitionsMemory); //Deserialize from memory stream and save inside class.
+                XmlTextReader tr = new XmlTextReader(new StringReader(data));
+                JobDefinitions = (List<JobDefinition>)Serializer.Deserialize(tr); //Deserialize.
                 return false;
             }
             else

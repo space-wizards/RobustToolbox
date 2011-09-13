@@ -21,6 +21,7 @@ namespace SS3D_shared
         public List<SpawnEquipDefinition> SpawnEquipment = new List<SpawnEquipDefinition>();
         public string Name = "";
         public string Description = "";
+        public int MaxNum = 3;
     }
 
     public class JobHandler

@@ -21,6 +21,7 @@
     </SpawnEquipment>
     <Name>Security Officer</Name>
     <Description>Keeps the inhabitants of the station safe.</Description>
+	<MaxNum>3</MaxNum>
   </JobDefinition>
   <JobDefinition>
     <SpawnEquipment>
@@ -35,5 +36,6 @@
     </SpawnEquipment>
     <Name>Assistant</Name>
     <Description>Runs around the station doing nothing in particular.</Description>
+	<MaxNum>-1</MaxNum>
   </JobDefinition>
 </ArrayOfJobDefinition>

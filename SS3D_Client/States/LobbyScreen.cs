@@ -197,15 +197,15 @@ namespace SS3D.States
         {
             string jobListXML = msg.ReadString(); //READ THE WHOLE XML FILE.
             JobHandler.Singleton.LoadDefinitionsFromString(jobListXML);
-            int pos = 400;
+            int pos = 40;
             foreach (JobDefinition definition in JobHandler.Singleton.JobDefinitions)
             {
                 Button current = new Button(definition.Name);
-                current.Position = new System.Drawing.Point(5, pos);
+                current.Position = new System.Drawing.Point(640, pos);
                 current.Clicked += new Button.ButtonPressHandler(current_Clicked);
                 current.UserData = definition;
                 jobButtons.Add(current);
-                pos += 40;
+                pos += 30;
             }
             return;
         }

@@ -1,0 +1,39 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<ArrayOfJobDefinition xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+  <JobDefinition>
+    <SpawnEquipment>
+      <SpawnEquipDefinition>
+        <Location>Outer</Location>
+        <ObjectType>Atom.Item.Wearable.Outer.Armour</ObjectType>
+      </SpawnEquipDefinition>
+      <SpawnEquipDefinition>
+        <Location>Inner</Location>
+        <ObjectType>Atom.Item.Wearable.Inner.Jumpsuit.Assistant_Grey</ObjectType>
+      </SpawnEquipDefinition>
+      <SpawnEquipDefinition>
+        <Location>Head</Location>
+        <ObjectType>Atom.Item.Wearable.Head.Helmet</ObjectType>
+      </SpawnEquipDefinition>
+      <SpawnEquipDefinition>
+        <Location>Feet</Location>
+        <ObjectType>Atom.Item.Wearable.Feet.Shoes</ObjectType>
+      </SpawnEquipDefinition>
+    </SpawnEquipment>
+    <Name>Security Officer</Name>
+    <Description>Keeps the inhabitants of the station safe.</Description>
+  </JobDefinition>
+  <JobDefinition>
+    <SpawnEquipment>
+      <SpawnEquipDefinition>
+        <Location>Inner</Location>
+        <ObjectType>Atom.Item.Wearable.Inner.Jumpsuit.Assistant_Grey</ObjectType>
+      </SpawnEquipDefinition>
+      <SpawnEquipDefinition>
+        <Location>Feet</Location>
+        <ObjectType>Atom.Item.Wearable.Feet.Shoes</ObjectType>
+      </SpawnEquipDefinition>
+    </SpawnEquipment>
+    <Name>Assistant</Name>
+    <Description>Runs around the station doing nothing in particular.</Description>
+  </JobDefinition>
+</ArrayOfJobDefinition>

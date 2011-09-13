@@ -82,6 +82,8 @@
     <Compile Include="Atom\Mob\Player.cs" />
     <Compile Include="GlobalConstants.cs" />
     <Compile Include="BuildPermission.cs" />
+    <Compile Include="JobHandler.cs" />
+    <Compile Include="SessionStatusEnum.cs" />
     <Compile Include="Vector2.cs" />
     <Compile Include="ObjectTypeEnum.cs" />
     <Compile Include="NetworkEnums.cs" />

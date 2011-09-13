@@ -12,6 +12,9 @@ using SS3D_Server.Modules.Map;
 using SS3D_Server.Modules.Chat;
 using SS3D_Server.Atom;
 
+using System.IO;
+using System.IO.Compression;
+
 using Lidgren.Network;
 using SS3D_shared;
 
@@ -130,6 +133,13 @@ namespace SS3D_Server
                 time = DateTime.Now;
                 //LoadDataFile(dataFilename);
                 LoadSettings();
+
+                if (JobHandler.Singleton.LoadDefinitionsFromFile("JobDefinitions.xml"))
+                {
+                    LogManager.Log("Job Definitions File not found.", LogLevel.Fatal);
+                    Environment.Exit(1);
+                }
+
                 netConfig.Port = serverPort;
                 var netServer = new SS3DNetServer(netConfig);
                 SS3DNetServer.Singleton.Start();
@@ -274,6 +284,8 @@ namespace SS3D_Server
         {
 
         }
+
+
         
         public void HandleConnectionApproval(NetConnection sender)
         {
@@ -294,15 +306,37 @@ namespace SS3D_Server
             SendNewPlayerCount();
         }
 
+        //public void SendJobDefinitions(NetConnection target)
+        //{
+        //    Stream zipStream = new MemoryStream(ASCIIEncoding.Default.GetBytes("Test String"));
+        //    GZipStream zip = new GZipStream(
+        //}
+
         public void SendNewPlayerCount()
         {
             NetOutgoingMessage playercountMessage = SS3DNetServer.Singleton.CreateMessage();
             playercountMessage.Write((byte)NetMessage.PlayerCount);
             playercountMessage.Write((byte)clientList.Count);
-            foreach (NetConnection conn in clientList.Keys)
+            foreach (NetConnection conn in clientList.Keys) //Why is this sent to everyone?
             {
                 SS3DNetServer.Singleton.SendMessage(playercountMessage, conn, NetDeliveryMethod.ReliableOrdered);
             }
+        }
+
+        public void SendPlayerList(NetConnection connection)
+        {
+            NetOutgoingMessage playerListMessage = SS3DNetServer.Singleton.CreateMessage();
+            playerListMessage.Write((byte)NetMessage.PlayerList);
+            playerListMessage.Write((byte)clientList.Count);
+
+            foreach (NetConnection conn in clientList.Keys)
+            {
+                PlayerSession plrSession = playerManager.GetSessionByConnection(connection);
+                playerListMessage.Write(plrSession.name);
+                playerListMessage.Write((byte)plrSession.status);
+                playerListMessage.Write(clientList[conn].netConnection.AverageRoundtripTime);
+            }
+            SS3DNetServer.Singleton.SendMessage(playerListMessage, connection, NetDeliveryMethod.ReliableOrdered);
         }
 
         public void HandleStatusChanged(NetIncomingMessage msg)
@@ -351,8 +385,8 @@ namespace SS3D_Server
                 case NetMessage.SendMap:
                     SendMap(msg.SenderConnection);
                     break;
-                case NetMessage.LobbyChat:
-                    HandleLobbyChat(msg);
+                case NetMessage.PlayerList:
+                    SendPlayerList(msg.SenderConnection);
                     break;
                 case NetMessage.ClientName:
                     HandleClientName(msg);
@@ -369,6 +403,9 @@ namespace SS3D_Server
                 case NetMessage.MapMessage:
                     map.HandleNetworkMessage(msg);
                     break;
+                case NetMessage.JobList:
+                    HandleJobListRequest(msg);
+                    break;
                 case NetMessage.PlacementManagerMessage:
                     PlacementManager.Singleton.HandleNetMessage(msg);
                     break;
@@ -376,6 +413,15 @@ namespace SS3D_Server
                     break;
             }
         
+        }
+
+        public void HandleJobListRequest(NetIncomingMessage msg)
+        {
+            PlayerSession p = playerManager.GetSessionByConnection(msg.SenderConnection);
+            NetOutgoingMessage JobListMessage = SS3DNetServer.Singleton.CreateMessage();
+            JobListMessage.Write((byte)NetMessage.JobList);
+            JobListMessage.Write(JobHandler.Singleton.JobDefinitionsString); // DUMP THE WHOLE XML FILE IN THERE. NNGHGHGH
+            SS3DNetServer.Singleton.SendMessage(JobListMessage, msg.SenderConnection, NetDeliveryMethod.ReliableOrdered); //OFF WE GO. WHEEEE.
         }
 
         public void HandleClientName(NetIncomingMessage msg)
@@ -388,26 +434,6 @@ namespace SS3D_Server
             PlayerSession p = playerManager.GetSessionByConnection(msg.SenderConnection);
             p.SetName(fixedname);
        }
-
-        [Obsolete]
-        public void HandleLobbyChat(NetIncomingMessage msg)
-        {
-            string text = clientList[msg.SenderConnection].playerName + ": ";
-            text += msg.ReadString();
-            SendLobbyChat(text);
-        }
-
-        [Obsolete]
-        public void SendLobbyChat(string text)
-        {
-            NetOutgoingMessage chatMessage = SS3DNetServer.Singleton.CreateMessage();
-            chatMessage.Write((byte)NetMessage.LobbyChat);
-            chatMessage.Write(text);
-            foreach (NetConnection connection in clientList.Keys)
-            {
-                SS3DNetServer.Singleton.SendMessage(chatMessage, connection, NetDeliveryMethod.ReliableOrdered);
-            }
-        }
 
         // The size of the map being sent is almost exaclty 1 byte per tile.
         // The default 30x30 map is 900 bytes, a 100x100 one is 10,000 bytes (10kb).

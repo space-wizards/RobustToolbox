@@ -15,6 +15,7 @@ using GorgonLibrary.Graphics;
 using GorgonLibrary.InputDevices;
 using SS3D.Modules.UI;
 using SS3D.Modules.UI.Components;
+using SS3D_shared;
 
 namespace SS3D.States
 {
@@ -29,10 +30,17 @@ namespace SS3D.States
         private string serverMapName;
         private GameType gameType;
 
+        string DEBUG;
+
+        private List<String> PlayerListStrings = new List<string>();
+
 
         private PlayerController playerController;
         private Chatbox lobbyChat;
         private Button joinButt;
+
+        private const double playerListRefreshDelaySec = 3; //Time in seconds before refreshing the playerlist.
+        private DateTime playerListTime = new DateTime();
 
         TextSprite lobbyText;
 
@@ -62,7 +70,18 @@ namespace SS3D.States
             NetOutgoingMessage message = netMgr.netClient.CreateMessage();
             message.Write((byte)NetMessage.WelcomeMessage); //Request Welcome msg.
             netMgr.netClient.SendMessage(message, NetDeliveryMethod.ReliableOrdered);
-            prg.mNetworkMgr.SendClientName(ConfigManager.Singleton.Configuration.PlayerName);
+
+            prg.mNetworkMgr.SendClientName(ConfigManager.Singleton.Configuration.PlayerName); //Send name.
+
+            NetOutgoingMessage playerListMsg = netMgr.netClient.CreateMessage();
+            playerListMsg.Write((byte)NetMessage.PlayerList); //Request Playerlist.
+            netMgr.netClient.SendMessage(playerListMsg, NetDeliveryMethod.ReliableOrdered);
+
+            playerListTime = DateTime.Now.AddSeconds(playerListRefreshDelaySec);
+
+            NetOutgoingMessage jobListMsg = netMgr.netClient.CreateMessage();
+            jobListMsg.Write((byte)NetMessage.JobList); //Request Joblist.
+            netMgr.netClient.SendMessage(jobListMsg, NetDeliveryMethod.ReliableOrdered);
 
             joinButt = new Button("Join Game");
             joinButt.Clicked += new Button.ButtonPressHandler(joinButt_Clicked);
@@ -89,6 +108,7 @@ namespace SS3D.States
             Gorgon.Screen.Clear();
             Gorgon.Screen.FilledRectangle(5, 30, 600, 200, System.Drawing.Color.SlateGray);
             Gorgon.Screen.FilledRectangle(625, 30, Gorgon.Screen.Width - 625 - 5, Gorgon.Screen.Height - 30 - 6, System.Drawing.Color.SlateGray);
+            Gorgon.Screen.FilledRectangle(5, 250, 600, lobbyChat.Position.Y - 250 -25, System.Drawing.Color.SlateGray);
             lobbyText.Position = new Vector2D(10, 35);
             lobbyText.Text = "Server: " + serverName;
             lobbyText.Draw();
@@ -106,6 +126,19 @@ namespace SS3D.States
             lobbyText.Draw();
             joinButt.Position = new System.Drawing.Point(Gorgon.Screen.Width - joinButt.Size.Width - 10, Gorgon.Screen.Height - joinButt.Size.Height - 10);
             joinButt.Render();
+
+            int Pos = 255;
+            foreach (string plrStr in PlayerListStrings)
+            {
+                lobbyText.Position = new Vector2D(10, Pos);
+                lobbyText.Text = plrStr;
+                lobbyText.Draw();
+                Pos += 20;
+            }
+
+            lobbyText.Position = new Vector2D(10, 400);
+            lobbyText.Text = DEBUG;
+            lobbyText.Draw();
             return;
         }
 
@@ -129,11 +162,17 @@ namespace SS3D.States
                         case NetMessage.PlayerCount:
                             int newCount = msg.ReadByte();
                             break;
+                        case NetMessage.PlayerList:
+                            HandlePlayerList(msg);
+                            break;
                         case NetMessage.WelcomeMessage:
                             HandleWelcomeMessage(msg);
                             break;
                         case NetMessage.ChatMessage:
                             HandleChatMessage(msg);
+                            break;
+                        case NetMessage.JobList:
+                            HandleJobList(msg);
                             break;
                         case NetMessage.JoinGame:
                             HandleJoinGame();
@@ -145,6 +184,32 @@ namespace SS3D.States
                 default:
                     break;
             }
+        }
+
+        private void HandleJobList(NetIncomingMessage msg)
+        {
+            string jobListXML = msg.ReadString(); //READ THE WHOLE XML FILE.
+            JobHandler.Singleton.LoadDefinitionsFromString(jobListXML);
+            DEBUG = "DEBUG: JOB LIST RECIEVED ->";
+            foreach (JobDefinition definition in JobHandler.Singleton.JobDefinitions)
+            {
+                DEBUG += "\n "+ definition.Name + " - " + definition.Description + " - " + definition.SpawnEquipment.ToString();
+            }
+            return;
+        }
+
+        private void HandlePlayerList(NetIncomingMessage msg)
+        {
+            byte playerCount = msg.ReadByte();
+            PlayerListStrings.Clear();
+            for (int i = 0; i < playerCount; i++)
+            {
+                string currName = msg.ReadString();
+                SessionStatus currStatus = (SessionStatus)msg.ReadByte();
+                float currRoundtrip = msg.ReadFloat();
+                PlayerListStrings.Add(currName + "     Status: " + currStatus.ToString() + "     Latency: " + Math.Truncate(currRoundtrip * 1000).ToString() + " ms");
+            }
+            return;
         }
 
         private void HandleJoinGame()
@@ -178,6 +243,14 @@ namespace SS3D.States
 
         public override void Update(FrameEventArgs e)
         {
+            if (playerListTime.CompareTo(DateTime.Now) < 0)
+            {
+                NetOutgoingMessage playerListMsg = prg.mNetworkMgr.netClient.CreateMessage();
+                playerListMsg.Write((byte)NetMessage.PlayerList); //Request Playerlist.
+                prg.mNetworkMgr.netClient.SendMessage(playerListMsg, NetDeliveryMethod.ReliableOrdered);
+
+                playerListTime = DateTime.Now.AddSeconds(playerListRefreshDelaySec);
+            }
             joinButt.Update();
         }
 

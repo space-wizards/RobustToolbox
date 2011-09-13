@@ -17,14 +17,6 @@ namespace SS3D_Server.Modules
         public NetConnection connectedClient;
         public Atom.Atom attachedAtom;
         public string name = "";
-        public enum SessionStatus
-        {
-            Zombie,
-            Connected,
-            InLobby,
-            InGame,
-            Disconnected
-        }
         public SessionStatus status;
 
         public PlayerSession(NetConnection client)

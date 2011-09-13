@@ -85,6 +85,6 @@ namespace SS3D.Modules
 
         public string GuiFolder = @"..\..\..\Media\";
 
-        public string PlayerName = "George Melons";
+        public string PlayerName = "Joe Genero";
     }
 }

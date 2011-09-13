@@ -199,13 +199,12 @@ namespace SS3D.Modules.UI
 
         protected override void Dispose(bool disposing)
         {
-            Visible = false;
-            disposing = true;
+            this.disposing = true;
             TextSubmitted = null;
             entries.Clear();
             textInputLabel = null;
             backgroundSprite = null;
-            renderImage.Dispose();
+            if (renderImage != null) renderImage.Dispose();
             renderImage = null;
             chatColors.Clear();
             font = null;

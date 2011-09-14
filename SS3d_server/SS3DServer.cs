@@ -22,12 +22,15 @@ namespace SS3D_Server
         private NetPeerConfiguration netConfig = new NetPeerConfiguration("SS3D_NetTag");
         public Dictionary<NetConnection, Client> clientList = new Dictionary<NetConnection, Client>();
         public Map map;
-        //public ItemManager itemManager;
-        //public MobManager mobManager;
         public ChatManager chatManager;
         public AtomManager atomManager;
         public PlayerManager playerManager;
         public RunLevel runlevel {get;private set;}
+
+        //SAVE THIS SOMEWHERE ELSE
+        private const int game_countdown = 15;
+        private DateTime StartAt;
+        private int lastAnnounced = 0;
 
         public enum RunLevel
         {
@@ -109,8 +112,7 @@ namespace SS3D_Server
             runlevel = _runlevel;
             if (runlevel == RunLevel.Lobby)
             {
-                chatManager = new ChatManager();
-                playerManager = new PlayerManager();
+                StartAt = DateTime.Now.AddSeconds(game_countdown);
             }
             else if (runlevel == RunLevel.Game)
             {
@@ -123,7 +125,6 @@ namespace SS3D_Server
 
                 RoundManager.Singleton.CurrentGameMode.StartGame();
             }
-            
         }
 
         public bool Start()
@@ -144,6 +145,9 @@ namespace SS3D_Server
                 netConfig.Port = serverPort;
                 var netServer = new SS3DNetServer(netConfig);
                 SS3DNetServer.Singleton.Start();
+
+                chatManager = new ChatManager();
+                playerManager = new PlayerManager();
 
                 StartLobby();
                 StartGame();
@@ -169,6 +173,22 @@ namespace SS3D_Server
         {
             RoundManager.Singleton.Initialize(new Gamemode()); //Load Type from config or something.
             InitModules(RunLevel.Lobby);
+        }
+
+        public void DisposeForRestart()
+        {
+            map = null; //Implement proper disposal.
+            atomManager = null;
+            GC.Collect();
+        }
+
+        public void Restart()
+        {
+            LogManager.Log("Restarting Server...");
+            foreach (PlayerSession curr in playerManager.playerSessions.Values)
+                curr.JoinLobby();
+            DisposeForRestart();
+            StartLobby();
         }
 
         public void StartGame()
@@ -273,6 +293,19 @@ namespace SS3D_Server
                     RoundManager.Singleton.CurrentGameMode.Update();
                 }
             }
+            else if (runlevel == RunLevel.Lobby)
+            {
+                TimeSpan countdown = StartAt.Subtract(DateTime.Now);
+                if (lastAnnounced != countdown.Seconds)
+                {
+                    lastAnnounced = countdown.Seconds;
+                    chatManager.SendChatMessage(ChatChannel.Server, "Starting in " + lastAnnounced.ToString() + " seconds...", "", 0);
+                }
+                if (countdown.Seconds <= 0)
+                {
+                    StartGame();
+                }
+            }
             lastUpdate = time;
         }
         #endregion
@@ -286,8 +319,6 @@ namespace SS3D_Server
         {
 
         }
-
-
         
         public void HandleConnectionApproval(NetConnection sender)
         {
@@ -303,7 +334,6 @@ namespace SS3D_Server
             welcomeMessage.Write(serverWelcomeMessage);
             welcomeMessage.Write(serverMaxPlayers);
             welcomeMessage.Write(serverMapName);
-            //welcomeMessage.Write((byte)gameType);
             welcomeMessage.Write(RoundManager.Singleton.CurrentGameMode.Name);
             SS3DNetServer.Singleton.SendMessage(welcomeMessage, connection, NetDeliveryMethod.ReliableOrdered);
             SendNewPlayerCount();
@@ -359,7 +389,7 @@ namespace SS3D_Server
             }
             else if (sender.Status == NetConnectionStatus.Disconnected)
             {
-                LogManager.Log(senderIP + ": Disconnected");
+                LogManager.Log(senderIP + " : Disconnected");
 
                 playerManager.EndSession(sender);
 
@@ -381,6 +411,9 @@ namespace SS3D_Server
                     break;
                 case NetMessage.RequestJob:
                     HandleJobRequest(msg);
+                    break;
+                case NetMessage.ForceRestart:
+                    Restart();
                     break;
                 case NetMessage.SendMap:
                     SendMap(msg.SenderConnection);

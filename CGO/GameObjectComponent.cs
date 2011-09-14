@@ -25,16 +25,22 @@ namespace CGO
             {
             }
         }
-
+        
         public virtual void RecieveMessage(object sender, CGO.MessageType type, params object[] list)
         {
             if (sender == this) //Don't listen to our own messages!
                 return;
         }
 
+        public virtual void Shutdown()
+        {
+
+        }
+
         public virtual void OnRemove()
         {
             Owner = null;
+            Shutdown();
             //Send us to the manager so it knows we're dead.
             ComponentManager.Singleton.RemoveComponent(this);
         }

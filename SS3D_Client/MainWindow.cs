@@ -83,9 +83,9 @@ namespace SS3D
         //[UIPermissionAttribute(SecurityAction.PermitOnly, Unrestricted = true)]
         private void loadEntity()
         {
-            Entity ent = new Entity();
+            /*Entity ent = new Entity();
             SpriteComponent s = new SpriteComponent();
-            ent.AddComponent(ComponentFamily.Renderable, s);
+            ent.AddComponent(ComponentFamily.Renderable, s);*/
 
         }
 

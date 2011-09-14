@@ -110,23 +110,6 @@ namespace SS3D.Modules.Network
                 while ((msg = netClient.ReadMessage()) != null)
                 {
                     OnMessageArrived(msg);
-                    //switch (msg.MessageType)
-                    //{
-                    //    case NetIncomingMessageType.Data:
-                    //        NetMessage messageType = (NetMessage)msg.ReadByte();
-                    //        switch (messageType)
-                    //        {
-                    //            case NetMessage.SendMap:
-                    //                RecieveMap(msg);
-                    //                break;
-                    //            case NetMessage.GameType:
-                    //                SetGameType(msg);
-                    //                break;
-                    //        }
-                    //        break;
-                    //    default:
-                    //        break;
-                    //}
                     netClient.Recycle(msg);
                 }
             }
@@ -147,23 +130,6 @@ namespace SS3D.Modules.Network
             NetOutgoingMessage message = netClient.CreateMessage();
             message.Write((byte)NetMessage.SendMap);
             netClient.SendMessage(message, NetDeliveryMethod.ReliableUnordered);
-        }
-
-        public void RecieveMap(NetIncomingMessage msg)
-        {
-            mapWidth = msg.ReadInt32();
-            mapHeight = msg.ReadInt32();
-
-            tileArray = new TileType[mapWidth, mapHeight];
-
-            for (int x = 0; x < mapWidth; x++)
-            {
-                for (int z = 0; z < mapHeight; z++)
-                {
-                    tileArray[x, z] = (TileType)msg.ReadByte();
-                }
-            }
-            mapRecieved = true;
         }
 
         public void SendChangeTile(int x, int z, TileType newTile)

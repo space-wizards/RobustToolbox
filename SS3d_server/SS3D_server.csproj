@@ -133,11 +133,13 @@
     <Compile Include="Modules\Chat\ChatManager.cs" />
     <Compile Include="Modules\Client\Client.cs" />
     <Compile Include="Modules\ConfigManager.cs" />
+    <Compile Include="Modules\Gamemodes.cs" />
     <Compile Include="Modules\LogManager.cs" />
     <Compile Include="Modules\Map\Map.cs" />
     <Compile Include="Modules\PlacementManager.cs" />
     <Compile Include="Modules\PlayerManager.cs" />
     <Compile Include="Modules\PlayerSession.cs" />
+    <Compile Include="Modules\RoundManager.cs" />
     <Compile Include="Modules\SS3DNetServer.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />

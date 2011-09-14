@@ -29,7 +29,7 @@ namespace SS3D.States
         private int serverPort;
         private string welcomeString;
         private string serverMapName;
-        private GameType gameType;
+        private string gameType;
 
         List<JobSelectButton> jobButtons = new List<JobSelectButton>();
         ScrollableContainer jobButtonContainer;
@@ -128,7 +128,7 @@ namespace SS3D.States
             lobbyText.Text = "Max Players: " + serverMaxPlayers.ToString();
             lobbyText.Draw();
             lobbyText.Position = new Vector2D(10, 95);
-            lobbyText.Text = "Gamemode: " + gameType.ToString();
+            lobbyText.Text = "Gamemode: " + gameType;
             lobbyText.Draw();
             lobbyText.Position = new Vector2D(10, 135);
             lobbyText.Text = "MOTD: \n" + welcomeString;
@@ -293,7 +293,7 @@ namespace SS3D.States
             welcomeString = msg.ReadString();
             serverMaxPlayers = msg.ReadInt32();
             serverMapName = msg.ReadString();
-            gameType = (GameType)msg.ReadByte();
+            gameType = msg.ReadString();
         }
 
         private void HandleChatMessage(NetIncomingMessage msg)

@@ -13,6 +13,7 @@ namespace CGO
         void OnRemove();
         void OnAdd(Entity owner);
         void Update(float frameTime);
+        void Shutdown();
         ComponentFamily Family {get;set;}
     }
 }

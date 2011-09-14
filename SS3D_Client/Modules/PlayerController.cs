@@ -31,6 +31,10 @@ namespace SS3D.Modules
                 else
                     throw new TypeInitializationException("PlayerController singleton not initialized.", null);
             }
+            set
+            {
+                singleton = value;
+            }
         }
 
         public static void Initialize(State _runningState, AtomManager _atomManager = null)

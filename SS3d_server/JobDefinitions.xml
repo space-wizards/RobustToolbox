@@ -22,6 +22,8 @@
     <Name>Security Officer</Name>
     <Description>Keeps the inhabitants of the station safe.</Description>
 	<MaxNum>3</MaxNum>
+	<JobIcon>Controls.JobButton.None</JobIcon>
+	<Available>true</Available>
   </JobDefinition>
   <JobDefinition>
     <SpawnEquipment>
@@ -37,5 +39,24 @@
     <Name>Assistant</Name>
     <Description>Runs around the station doing nothing in particular.</Description>
 	<MaxNum>-1</MaxNum>
+	<JobIcon>Controls.JobButton.None</JobIcon>
+	<Available>true</Available>
+  </JobDefinition>
+  <JobDefinition>
+    <SpawnEquipment>
+      <SpawnEquipDefinition>
+        <Location>Inner</Location>
+        <ObjectType>Atom.Item.Wearable.Inner.Jumpsuit.Assistant_Grey</ObjectType>
+      </SpawnEquipDefinition>
+      <SpawnEquipDefinition>
+        <Location>Feet</Location>
+        <ObjectType>Atom.Item.Wearable.Feet.Shoes</ObjectType>
+      </SpawnEquipDefinition>
+    </SpawnEquipment>
+    <Name>Unavailable Job</Name>
+    <Description>You can not select this.</Description>
+	<MaxNum>-1</MaxNum>
+	<JobIcon>Controls.JobButton.None</JobIcon>
+	<Available>false</Available>
   </JobDefinition>
 </ArrayOfJobDefinition>

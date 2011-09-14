@@ -19,9 +19,11 @@ namespace SS3D_shared
     public class JobDefinition
     {
         public List<SpawnEquipDefinition> SpawnEquipment = new List<SpawnEquipDefinition>();
-        public string Name = "";
+        public string Name = "JOB_NULL";
         public string Description = "";
         public int MaxNum = 3;
+        public string JobIcon = "job-placeholder";
+        public bool Available = true;
     }
 
     public class JobHandler

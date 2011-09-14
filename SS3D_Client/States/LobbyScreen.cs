@@ -16,6 +16,7 @@ using GorgonLibrary.InputDevices;
 using SS3D.Modules.UI;
 using SS3D.Modules.UI.Components;
 using SS3D_shared;
+using System.Linq;
 
 namespace SS3D.States
 {
@@ -30,15 +31,14 @@ namespace SS3D.States
         private string serverMapName;
         private GameType gameType;
 
-        List<Button> jobButtons = new List<Button>();
-        string DEBUG;
+        List<JobSelectButton> jobButtons = new List<JobSelectButton>();
 
         private List<String> PlayerListStrings = new List<string>();
 
 
         private PlayerController playerController;
         private Chatbox lobbyChat;
-        private Button joinButt;
+        private Button joinButton;
 
         private const double playerListRefreshDelaySec = 3; //Time in seconds before refreshing the playerlist.
         private DateTime playerListTime = new DateTime();
@@ -84,8 +84,9 @@ namespace SS3D.States
             jobListMsg.Write((byte)NetMessage.JobList); //Request Joblist.
             netMgr.netClient.SendMessage(jobListMsg, NetDeliveryMethod.ReliableOrdered);
 
-            joinButt = new Button("Join Game");
-            joinButt.Clicked += new Button.ButtonPressHandler(joinButt_Clicked);
+            joinButton = new Button("Join Game");
+            joinButton.Clicked += new Button.ButtonPressHandler(joinButt_Clicked);
+            joinButton.Position = new System.Drawing.Point(605 - joinButton.Size.Width - 5, 230 - joinButton.Size.Height - 5);
 
             Gorgon.Screen.Clear();
 
@@ -125,8 +126,8 @@ namespace SS3D.States
             lobbyText.Position = new Vector2D(10, 135);
             lobbyText.Text = "MOTD: \n" + welcomeString;
             lobbyText.Draw();
-            joinButt.Position = new System.Drawing.Point(Gorgon.Screen.Width - joinButt.Size.Width - 10, Gorgon.Screen.Height - joinButt.Size.Height - 10);
-            joinButt.Render();
+          
+            joinButton.Render();
 
             int Pos = 255;
             foreach (string plrStr in PlayerListStrings)
@@ -137,13 +138,9 @@ namespace SS3D.States
                 Pos += 20;
             }
 
-            lobbyText.Position = new Vector2D(10, 400);
-            lobbyText.Text = DEBUG;
-            lobbyText.Draw();
-
-            foreach (Button butt in jobButtons)
+            foreach (JobSelectButton button in jobButtons)
             {
-                butt.Render();
+                button.Render();
             }
 
             return;
@@ -200,24 +197,24 @@ namespace SS3D.States
             int pos = 40;
             foreach (JobDefinition definition in JobHandler.Singleton.JobDefinitions)
             {
-                Button current = new Button(definition.Name);
+                JobSelectButton current = new JobSelectButton(definition.Name, definition.JobIcon);
+                current.available = definition.Available;
                 current.Position = new System.Drawing.Point(640, pos);
-                current.Clicked += new Button.ButtonPressHandler(current_Clicked);
+                current.Clicked += new JobSelectButton.JobButtonPressHandler(current_Clicked);
                 current.UserData = definition;
                 jobButtons.Add(current);
-                pos += 30;
+                pos += current.Size.Height + 5;
             }
             return;
         }
 
-        void current_Clicked(Button sender)
+        void current_Clicked(JobSelectButton sender)
         {
             NetOutgoingMessage playerJobSpawnMsg = prg.mNetworkMgr.netClient.CreateMessage();
             JobDefinition picked = (JobDefinition)sender.UserData;
             playerJobSpawnMsg.Write((byte)NetMessage.RequestJob); //Request job.
             playerJobSpawnMsg.Write(picked.Name);
             prg.mNetworkMgr.netClient.SendMessage(playerJobSpawnMsg, NetDeliveryMethod.ReliableOrdered);
-            playerController.SendVerb("joingame", 0); // REMOVE THIS LATER !!!
         }
 
         private void HandlePlayerList(NetIncomingMessage msg)
@@ -258,16 +255,16 @@ namespace SS3D.States
         {
             lobbyChat.Dispose();
             lobbyChat = null;
-            joinButt.Dispose();
-            joinButt = null;
+            joinButton.Dispose();
+            joinButton = null;
             prg.mNetworkMgr.MessageArrived -= new NetworkMsgHandler(mNetworkMgr_MessageArrived);
         }
 
         public override void Update(FrameEventArgs e)
         {
-            foreach(Button butt in jobButtons)
+            foreach (JobSelectButton button in jobButtons)
             {
-                butt.Update();
+                button.Update();
             }
             if (playerListTime.CompareTo(DateTime.Now) < 0)
             {
@@ -277,7 +274,7 @@ namespace SS3D.States
 
                 playerListTime = DateTime.Now.AddSeconds(playerListRefreshDelaySec);
             }
-            joinButt.Update();
+            joinButton.Update();
         }
 
         private void HandleWelcomeMessage(NetIncomingMessage msg)
@@ -293,7 +290,7 @@ namespace SS3D.States
         private void HandleChatMessage(NetIncomingMessage msg)
         {
             ChatChannel channel = (ChatChannel)msg.ReadByte();
-            if (channel != ChatChannel.Lobby) return; //NOPE
+            //if (channel != ChatChannel.Lobby) return; Disabling this as its not exactly optimal.
             string text = msg.ReadString();
             string message = "(" + channel.ToString() + "):" + text;
             ushort atomID = msg.ReadUInt16();
@@ -310,11 +307,23 @@ namespace SS3D.States
         { }
         public override void MouseDown(MouseInputEventArgs e)
         {
-            foreach (Button butt in jobButtons)
+            foreach (JobSelectButton button in jobButtons)
             {
-                butt.MouseDown(e);
+                if (button.MouseDown(e))
+                {
+                    button.selected = true;
+                    var otherButtons = from JobSelectButton b in jobButtons  //Change this in response to a server message instead.
+                                       where b != button                      //Right now it changes even if the server doesnt allow the selected job.
+                                       where b.selected
+                                       select b;
+                    foreach(JobSelectButton oldButton in otherButtons)
+                    {
+                        oldButton.selected = false;
+                    }
+                }
+
             }
-            joinButt.MouseDown(e);
+            joinButton.MouseDown(e);
         }
         public override void MouseMove(MouseInputEventArgs e)
         { }

@@ -63,7 +63,7 @@ namespace SS3D_Server.Modules
         {
             // Ends the session.
             PlayerSession session = GetSessionByConnection(client);
-            LogManager.Log(session.name + "disconnected.", LogLevel.Information);
+            LogManager.Log(session.name + " disconnected.", LogLevel.Information);
             //Detach the atom and (dont)delete it.
             var a = session.attachedAtom;
             session.DetachFromAtom();

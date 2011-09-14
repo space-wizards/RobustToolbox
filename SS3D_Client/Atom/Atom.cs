@@ -372,6 +372,7 @@ namespace SS3D.Atom
         }
         #endregion
 
+
         #region positioning
         public virtual bool IsColliding()
         {

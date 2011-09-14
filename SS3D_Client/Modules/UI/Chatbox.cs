@@ -204,7 +204,7 @@ namespace SS3D.Modules.UI
             entries.Clear();
             textInputLabel = null;
             backgroundSprite = null;
-            if (renderImage.Image != null) renderImage.Dispose();
+            if(renderImage != null) if (renderImage.Image != null) renderImage.Dispose(); //Fuck this statement.
             renderImage = null;
             chatColors.Clear();
             font = null;

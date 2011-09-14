@@ -23,6 +23,7 @@ public enum NetMessage
     PlayerSessionMessage,
     PlayerUiMessage,
     JoinGame,
+    ForceRestart,
     AtmosDisplayUpdate,
 }
 

@@ -271,6 +271,7 @@ namespace SS3D.States
             lobbyChat.Dispose();
             lobbyChat = null;
             prg.mNetworkMgr.MessageArrived -= new NetworkMsgHandler(mNetworkMgr_MessageArrived);
+            RenderTargetCache.DestroyAll();
         }
 
         public override void Update(FrameEventArgs e)

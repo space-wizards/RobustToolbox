@@ -205,10 +205,10 @@ namespace SS3D.States
             gameChat = null;
             UiManager.Singleton.DisposeAllComponents(); //HerpDerp. This is probably bad. Should not remove them ALL.
             UIDesktop.Singleton.Dispose();
-            prg.mNetworkMgr.Disconnect(); //FIXTHIS
+            
             prg.mNetworkMgr.MessageArrived -= new NetworkMsgHandler(mNetworkMgr_MessageArrived);
             RenderTargetCache.DestroyAll();
-           
+            GC.Collect();
         }
 
         public override void Update( FrameEventArgs e )
@@ -594,6 +594,9 @@ namespace SS3D.States
 
             if (e.Key == KeyboardKeys.F8)
             {
+                NetOutgoingMessage message = prg.mNetworkMgr.netClient.CreateMessage();
+                message.Write((byte)NetMessage.ForceRestart);
+                prg.mNetworkMgr.SendMessage(message, NetDeliveryMethod.ReliableUnordered);
             }
 
             if (e.Key == KeyboardKeys.F10)

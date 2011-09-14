@@ -44,6 +44,8 @@ namespace SS3D.Atom
 
         public void Shutdown()
         {
+            foreach (Atom a in atomDictionary.Values)
+                a.Shutdown();
             atomDictionary.Clear(); // Dump all the atoms, we is gettin da fuck outta here bro
             gameState = null;
             networkManager = null;

@@ -12,10 +12,9 @@ namespace CGO
         private Dictionary<KeyFunctions, KeyEvent> keyHandlers;
         public delegate void KeyEvent(bool state);
 
-        protected ComponentFamily family = ComponentFamily.Input;
-
         public KeyBindingInputComponent()
         {
+            family = ComponentFamily.Input;
             //Bind to the key binding manager
             KeyBindingManager.Singleton.BoundKeyDown += new KeyBindingManager.BoundKeyEventHandler(KeyDown);
             KeyBindingManager.Singleton.BoundKeyUp += new KeyBindingManager.BoundKeyEventHandler(KeyUp);
@@ -28,8 +27,9 @@ namespace CGO
             keyHandlers.Add(KeyFunctions.MoveRight, new KeyEvent(HandleMoveRight));
         }
 
-        ~KeyBindingInputComponent()
+        public override void Shutdown()
         {
+            base.Shutdown();
             KeyBindingManager.Singleton.BoundKeyDown -= new KeyBindingManager.BoundKeyEventHandler(KeyDown);
             KeyBindingManager.Singleton.BoundKeyUp -= new KeyBindingManager.BoundKeyEventHandler(KeyUp);
         }

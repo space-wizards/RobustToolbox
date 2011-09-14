@@ -26,6 +26,15 @@ namespace CGO
             components = new Dictionary<ComponentFamily, IGameObjectComponent>();
         }
         
+        public void Shutdown()
+        {
+            foreach (GameObjectComponent component in components.Values)
+            {
+                component.OnRemove();
+            }
+            components.Clear();
+        }
+        
         /// <summary>
         /// Public method to add a component to an entity.
         /// </summary>
@@ -36,13 +45,16 @@ namespace CGO
             if (components.Keys.Contains(family))
                 RemoveComponent(family);
             components.Add(family, component);
-            component.OnAdd(this);
+            component.OnAdd(this); //add the component to the component manager
         }
 
         public void RemoveComponent(ComponentFamily family)
         {
-            components[family].OnRemove();
-            components.Remove(family);
+            if (components.Keys.Contains(family))
+            {
+                components[family].OnRemove();
+                components.Remove(family); //remove the component from the component manager
+            }
         }
 
         public virtual void Update(float frameTime)

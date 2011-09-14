@@ -107,7 +107,7 @@ namespace ClientInput
         public void KeyDown(object sender, KeyboardInputEventArgs e)
         {
             //If the key is bound, fire the BoundKeyDown event.
-            if (enabled && BoundKeys.Keys.Contains(e.Key))
+            if (enabled && BoundKeys.Keys.Contains(e.Key) && BoundKeyDown != null)
                 BoundKeyDown(this, new BoundKeyEventArgs(KeyState.Down, BoundKeys[e.Key]));
         }
         /// <summary>
@@ -118,7 +118,7 @@ namespace ClientInput
         public void KeyUp(object sender, KeyboardInputEventArgs e)
         {
             //If the key is bound, fire the BoundKeyUp event.
-            if (enabled && BoundKeys.Keys.Contains(e.Key))
+            if (enabled && BoundKeys.Keys.Contains(e.Key) && BoundKeyUp != null)
                 BoundKeyUp(this, new BoundKeyEventArgs(KeyState.Down, BoundKeys[e.Key]));
         }
 

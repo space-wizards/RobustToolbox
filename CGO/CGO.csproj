@@ -47,7 +47,12 @@
     <Compile Include="ComponentEnums.cs" />
     <Compile Include="ComponentFactory.cs" />
     <Compile Include="ComponentManager.cs" />
+    <Compile Include="ComponentParameter.cs" />
     <Compile Include="Entity.cs" />
+    <Compile Include="EntityFactory.cs" />
+    <Compile Include="EntityManager.cs" />
+    <Compile Include="EntityTemplate.cs" />
+    <Compile Include="EntityTemplateDatabase.cs" />
     <Compile Include="GameObjectComponent.cs" />
     <Compile Include="IGameObjectComponent.cs" />
     <Compile Include="IMoverComponent.cs" />

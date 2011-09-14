@@ -47,6 +47,9 @@ namespace SS3D.Atom
             atomDictionary.Clear(); // Dump all the atoms, we is gettin da fuck outta here bro
             gameState = null;
             networkManager = null;
+            prg = null;
+            networkManager = null;
+            m_loadedModules = null;
         }
 
         /// <summary>

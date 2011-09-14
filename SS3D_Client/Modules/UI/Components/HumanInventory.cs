@@ -18,7 +18,6 @@ namespace SS3D.Modules.UI.Components
         private Dictionary<GUIBodyPart, ItemSlot> inventorySlots;
         private HumanHandsGui handsGUI;
         private WindowComponent window;
-        private Rectangle rect;
         private Atom.Atom heldAtom;
         private GUIBodyPart lastSlot = GUIBodyPart.None;
         private Vector2D mousePos;
@@ -34,9 +33,9 @@ namespace SS3D.Modules.UI.Components
             slotWidth = (int)UIDesktop.Singleton.Skin.Elements["Window.InventorySlot"].Dimensions.Width;
             int width = 48 + slotWidth + (int)outline.Width + slotWidth;
             int height = 64 + (int)(outline.Height);
-            rect = new Rectangle(Gorgon.Screen.Width - 25 - width, 600, width, height);
+            clientArea = new Rectangle(Gorgon.Screen.Width - 25 - width, 600, width, height);
             mousePos = Vector2D.Zero;
-            window = new WindowComponent(_playerController, rect.X, rect.Y, rect.Width, rect.Height);
+            window = new WindowComponent(_playerController, clientArea.X, clientArea.Y, clientArea.Width, clientArea.Height);
 
             SetVisible(false);
         }
@@ -68,10 +67,10 @@ namespace SS3D.Modules.UI.Components
                     i = 0;
                 }
                 if(!second)
-                    slot.Position = new Point(rect.X + slot.Position.X + 12, rect.Y + slot.Position.Y + (i * 56));
+                    slot.Position = new Point(clientArea.X + slot.Position.X + 12, clientArea.Y + slot.Position.Y + (i * 56));
                 else
-                    slot.Position = new Point(rect.X + rect.Width - 12 - slotWidth, rect.Y + slot.Position.Y + (i * 56));
-                slot.SetOutlinePosition(new Vector2D(rect.X + (int)(rect.Width / 2) - (int)(outline.Width / 2), rect.Y + (rect.Height / 2) - (outline.Height / 2)));
+                    slot.Position = new Point(clientArea.X + clientArea.Width - 12 - slotWidth, clientArea.Y + slot.Position.Y + (i * 56));
+                slot.SetOutlinePosition(new Vector2D(clientArea.X + (int)(clientArea.Width / 2) - (int)(outline.Width / 2), clientArea.Y + (clientArea.Height / 2) - (outline.Height / 2)));
                 i++;
             }
         }
@@ -201,7 +200,7 @@ namespace SS3D.Modules.UI.Components
                 playerController.controlledAtom != null)
                 SetUpSlots();
 
-            outline.Position = new Vector2D(rect.X + (int)(rect.Width / 2) - (int)(outline.Width / 2), rect.Y + (rect.Height / 2) - (outline.Height / 2));
+            outline.Position = new Vector2D(clientArea.X + (int)(clientArea.Width / 2) - (int)(outline.Width / 2), clientArea.Y + (clientArea.Height / 2) - (outline.Height / 2));
             outline.Draw();
 
             foreach (ItemSlot slot in inventorySlots.Values)

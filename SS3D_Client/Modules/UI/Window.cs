@@ -33,7 +33,6 @@ namespace SS3D.Modules.UI
         private int width = 1;
         private int height = 1;
         public bool visible = true;
-        private Rectangle rect;
         private RenderImage renderImage;
 
 
@@ -46,8 +45,8 @@ namespace SS3D.Modules.UI
             height = _height;
             backgroundSprite = ResMgr.Singleton.GetSprite("1pxwhite");
             Skin = UIDesktop.Singleton.Skin;
-            rect = new Rectangle(x, y, _width, _height);
-            renderImage = new RenderImage("window" + rect.ToString(), width, height, ImageBufferFormats.BufferUnknown);
+            clientArea = new Rectangle(x, y, _width, _height);
+            renderImage = new RenderImage("window" + clientArea.ToString(), width, height, ImageBufferFormats.BufferUnknown);
             renderImage.ClearEachFrame = ClearTargets.None;
             PreRender();
         }
@@ -77,7 +76,7 @@ namespace SS3D.Modules.UI
         public override bool MouseDown(MouseInputEventArgs e)
         {
             System.Drawing.RectangleF mouseAABB = new System.Drawing.RectangleF(e.Position.X, e.Position.Y, 1, 1);
-            if (mouseAABB.IntersectsWith(rect))
+            if (mouseAABB.IntersectsWith(clientArea))
             {
                 return true;
             }
@@ -87,11 +86,16 @@ namespace SS3D.Modules.UI
         public override bool MouseUp(MouseInputEventArgs e)
         {
             System.Drawing.RectangleF mouseAABB = new System.Drawing.RectangleF(e.Position.X, e.Position.Y, 1, 1);
-            if (mouseAABB.IntersectsWith(rect))
+            if (mouseAABB.IntersectsWith(clientArea))
             {
                 return true;
             }
             return false;
+        }
+
+        public override void Update()
+        {
+            base.Update();
         }
 
         public override void Render()
@@ -116,7 +120,7 @@ namespace SS3D.Modules.UI
             Skin.Elements["Window.Border.Bottom.Horizontal"].Draw(new System.Drawing.Rectangle(Position.X + ResMgr.Singleton.GetGUIInfo("Window.Border.Bottom.LeftCorner").Width, Position.Y + height - ResMgr.Singleton.GetGUIInfo("Window.Border.Bottom.Horizontal").Height, width - ResMgr.Singleton.GetGUIInfo("Window.Border.Bottom.RightCorner").Width - ResMgr.Singleton.GetGUIInfo("Window.Border.Bottom.LeftCorner").Width, ResMgr.Singleton.GetGUIInfo("Window.Border.Bottom.Horizontal").Height));
             Skin.Elements["Window.Border.Bottom.RightCorner"].Draw(new System.Drawing.Rectangle(position.X + width - ResMgr.Singleton.GetGUIInfo("Window.Border.Bottom.RightCorner").Width, Position.Y + height - ResMgr.Singleton.GetGUIInfo("Window.Border.Bottom.RightCorner").Height, ResMgr.Singleton.GetGUIInfo("Window.Border.Bottom.RightCorner").Width, ResMgr.Singleton.GetGUIInfo("Window.Border.Bottom.RightCorner").Height));
             */
-            renderImage.Blit(rect.X, rect.Y);
+            renderImage.Blit(clientArea.X, clientArea.Y);
             
         }
     }

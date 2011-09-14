@@ -35,8 +35,6 @@ namespace SS3D.Modules.UI.Components
         public delegate void CheckboxChangedHandler(Boolean newValue);
         public event CheckboxChangedHandler ValueChanged;
 
-        private Rectangle clientArea;
-
         public Checkbox() 
             : base()
         {

@@ -29,6 +29,12 @@ namespace SS3D.Modules.UI
             set;
         }
 
+        Rectangle ClientArea
+        {
+            get;
+            set;
+        }
+
         void Update();
         void Render();
 

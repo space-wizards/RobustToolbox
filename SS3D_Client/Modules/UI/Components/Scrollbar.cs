@@ -37,7 +37,6 @@ namespace SS3D.Modules.UI.Components
         public event ScrollbarChangedHandler ValueChanged;
         private bool RaiseEvent = false;
 
-        private Rectangle clientArea;
         private Rectangle clientAreaButton;
 
         private GUIElement scrollbarButton;
@@ -96,6 +95,7 @@ namespace SS3D.Modules.UI.Components
 
         public override bool MouseDown(MouseInputEventArgs e)
         {
+            if (!IsVisible()) return false;
             if (clientAreaButton.Contains((int)e.Position.X, (int)e.Position.Y))
             {
                 dragging = true;
@@ -106,6 +106,7 @@ namespace SS3D.Modules.UI.Components
 
         public override bool MouseUp(MouseInputEventArgs e)
         {
+
             if (dragging)
             {
                 dragging = false;
@@ -116,6 +117,7 @@ namespace SS3D.Modules.UI.Components
 
         public override void MouseMove(MouseInputEventArgs e)
         {
+            if (!IsVisible()) return;
             if (dragging)
             {
                 if (Horizontal) currentPos = (int)e.Position.X - clientArea.Location.X - (int)(scrollbarButton.Dimensions.Width / 2f);
@@ -128,6 +130,7 @@ namespace SS3D.Modules.UI.Components
 
         public override void Update()
         {
+            if (!IsVisible()) return;
             base.Update();
             if (Horizontal)
             {
@@ -154,12 +157,14 @@ namespace SS3D.Modules.UI.Components
 
         public override void Render()
         {
+            if (!IsVisible()) return;
             Gorgon.Screen.BeginDrawing();
             if (drawBackground) Gorgon.Screen.FilledRectangle(clientArea.X, clientArea.Y, clientArea.Width, clientArea.Height, System.Drawing.Color.DarkSlateGray);
             scrollbarButton.Draw(clientAreaButton);
             DEBUG.Position = new Vector2D(clientArea.Location.X + 20, clientArea.Location.Y + 20);
             DEBUG.Text = "current: " + actualVal.ToString();
             if (DRAW_DEBUG) DEBUG.Draw();
+            Gorgon.Screen.Rectangle(clientArea.X + 0, clientArea.Y + 0, clientArea.Width - 0, clientArea.Height - 0, System.Drawing.Color.Black);
             Gorgon.Screen.EndDrawing();
         }
 

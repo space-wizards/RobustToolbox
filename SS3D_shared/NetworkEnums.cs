@@ -12,6 +12,7 @@ public enum NetMessage
     PlayerList,
     JobList,
     RequestJob,
+    JobSelected,
     SendMap,
     MapMessage,
     ItemMessage, // It's something the item system needs to handle

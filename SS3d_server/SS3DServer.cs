@@ -429,6 +429,11 @@ namespace SS3D_Server
             {
                 PlayerSession session =  playerManager.GetSessionByConnection(msg.SenderConnection);
                 session.assignedJob = pickedJob;
+
+                NetOutgoingMessage JobSelectedMessage = SS3DNetServer.Singleton.CreateMessage();
+                JobSelectedMessage.Write((byte)NetMessage.JobSelected);
+                JobSelectedMessage.Write(pickedJob.Name);
+                SS3DNetServer.Singleton.SendMessage(JobSelectedMessage, msg.SenderConnection, NetDeliveryMethod.ReliableOrdered);
             }
         }
 
@@ -437,7 +442,6 @@ namespace SS3D_Server
             PlayerSession p = playerManager.GetSessionByConnection(msg.SenderConnection);
             NetOutgoingMessage JobListMessage = SS3DNetServer.Singleton.CreateMessage();
             JobListMessage.Write((byte)NetMessage.JobList);
-            //JobListMessage.Write(JobHandler.Singleton.JobDefinitionsString); // DUMP THE WHOLE XML FILE IN THERE. NNGHGHGH
             JobListMessage.Write(JobHandler.Singleton.GetDefinitionsString());
             SS3DNetServer.Singleton.SendMessage(JobListMessage, msg.SenderConnection, NetDeliveryMethod.ReliableOrdered); //OFF WE GO. WHEEEE.
         }

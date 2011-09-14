@@ -5,6 +5,9 @@ using System.Text;
 
 namespace CGO
 {
+    /// <summary>
+    /// Component Family ie. what type of component it is.
+    /// </summary>
     public enum ComponentFamily
     {
         Generic,

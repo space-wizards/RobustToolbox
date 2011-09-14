@@ -7,6 +7,9 @@ namespace CGO
 {
     public class GameObjectComponent : IGameObjectComponent
     {
+        /// <summary>
+        /// The entity that owns this component
+        /// </summary>
         private Entity m_owner;
         public Entity Owner
         {
@@ -14,6 +17,9 @@ namespace CGO
             set { m_owner = value; }
         }
 
+        /// <summary>
+        /// This is the family of the component. This should be set directly in all inherited components' constructors.
+        /// </summary>
         protected ComponentFamily family = ComponentFamily.Generic;
         public ComponentFamily Family
         {
@@ -26,17 +32,30 @@ namespace CGO
             }
         }
         
+        /// <summary>
+        /// Recieve a message from another component within the owner entity
+        /// </summary>
+        /// <param name="sender">the component that sent the message</param>
+        /// <param name="type">the message type in CGO.MessageType</param>
+        /// <param name="list">parameters list</param>
         public virtual void RecieveMessage(object sender, CGO.MessageType type, params object[] list)
         {
             if (sender == this) //Don't listen to our own messages!
                 return;
         }
 
+        /// <summary>
+        /// Base method to shut down the component. 
+        /// </summary>
         public virtual void Shutdown()
         {
 
         }
 
+        /// <summary>
+        /// Called when the component is removed from an entity.
+        /// Shuts down the component, and removes it from the ComponentManager as well.
+        /// </summary>
         public virtual void OnRemove()
         {
             Owner = null;
@@ -45,6 +64,12 @@ namespace CGO
             ComponentManager.Singleton.RemoveComponent(this);
         }
 
+        /// <summary>
+        /// Called when the component gets added to an entity. 
+        /// This adds it to the component manager as well. No component should ever be owned
+        /// by an entity without being in the ComponentManager.
+        /// </summary>
+        /// <param name="owner"></param>
         public virtual void OnAdd(Entity owner)
         {
             Owner = owner;
@@ -52,6 +77,10 @@ namespace CGO
             ComponentManager.Singleton.AddComponent(this);
         }
 
+        /// <summary>
+        /// Main method for updating the component. This is called from a big loop in Componentmanager.
+        /// </summary>
+        /// <param name="frameTime"></param>
         public virtual void Update(float frameTime)
         {
 

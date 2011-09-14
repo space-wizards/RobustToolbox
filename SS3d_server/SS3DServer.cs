@@ -7,16 +7,13 @@ using System.Threading;
 using SS3D_Server.Modules;
 using SS3D_Server.Modules.Client;
 using SS3D_Server.Modules.Map;
-//using SS3d_server.Modules.Items;
-//using SS3d_server.Modules.Mobs;
 using SS3D_Server.Modules.Chat;
 using SS3D_Server.Atom;
-
-using System.IO;
 using System.IO.Compression;
-
 using Lidgren.Network;
 using SS3D_shared;
+
+using SS3D_Server.Modules.Gamemodes;
 
 namespace SS3D_Server
 {
@@ -122,14 +119,17 @@ namespace SS3D_Server
 
                 atomManager = new AtomManager();
                 playerManager = new PlayerManager();
+                atomManager.LoadAtoms();
+
+                RoundManager.Singleton.CurrentGameMode.StartGame();
             }
             
         }
 
         public bool Start()
         {
-            try
-            {
+            //try
+            //{
                 time = DateTime.Now;
                 //LoadDataFile(dataFilename);
                 LoadSettings();
@@ -150,30 +150,30 @@ namespace SS3D_Server
                 
                 active = true;
                 return false;
-            }
-            catch (Lidgren.Network.NetException e)
-            {
-                LogManager.Log(e.ToString(), LogLevel.Error);
-                active = false;
-                return true;
-            }
-            catch (Exception e)
-            {
-                LogManager.Log(e.ToString(), LogLevel.Error);
-                active = false;
-                return true;
-            }
+            //}
+            //catch (Lidgren.Network.NetException e)
+            //{
+            //    LogManager.Log(e.ToString(), LogLevel.Error);
+            //    active = false;
+            //    return true;
+            //}
+            //catch (Exception e)
+            //{
+            //    LogManager.Log(e.ToString(), LogLevel.Error);
+            //    active = false;
+            //    return true;
+            //}
         }
 
         public void StartLobby()
         {
+            RoundManager.Singleton.Initialize(new Gamemode()); //Load Type from config or something.
             InitModules(RunLevel.Lobby);
         }
 
         public void StartGame()
         {
             InitModules(RunLevel.Game);
-            AddRandomCrowbars();
             playerManager.SendJoinGameToAll();
         }
 
@@ -270,6 +270,7 @@ namespace SS3D_Server
                 {
                     atomManager.Update(framePeriod);
                     map.UpdateAtmos();
+                    RoundManager.Singleton.CurrentGameMode.Update();
                 }
             }
             lastUpdate = time;
@@ -302,16 +303,11 @@ namespace SS3D_Server
             welcomeMessage.Write(serverWelcomeMessage);
             welcomeMessage.Write(serverMaxPlayers);
             welcomeMessage.Write(serverMapName);
-            welcomeMessage.Write((byte)gameType);
+            //welcomeMessage.Write((byte)gameType);
+            welcomeMessage.Write(RoundManager.Singleton.CurrentGameMode.Name);
             SS3DNetServer.Singleton.SendMessage(welcomeMessage, connection, NetDeliveryMethod.ReliableOrdered);
             SendNewPlayerCount();
         }
-
-        //public void SendJobDefinitions(NetConnection target)
-        //{
-        //    Stream zipStream = new MemoryStream(ASCIIEncoding.Default.GetBytes("Test String"));
-        //    GZipStream zip = new GZipStream(
-        //}
 
         public void SendNewPlayerCount()
         {
@@ -487,10 +483,11 @@ namespace SS3D_Server
 
             // Lets also send them all the items and mobs.
             atomManager.NewPlayer(connection);
-            playerManager.SpawnPlayerMob(playerManager.GetSessionByConnection(connection));
+            //playerManager.SpawnPlayerMob(playerManager.GetSessionByConnection(connection));
             //Send atmos state to player
             map.SendAtmosStateTo(connection);
             //Todo: Preempt this with the lobby.
+            RoundManager.Singleton.SpawnPlayer(playerManager.GetSessionByConnection(connection)); //SPAWN
         }
 
         public void SendChangeTile(int x, int z, TileType newType)
@@ -527,64 +524,6 @@ namespace SS3D_Server
             }
             LogManager.Log("Sending to one with size: " + message.LengthBytes + " bytes", LogLevel.Debug);
             SS3DNetServer.Singleton.SendMessage(message, connection, method);
-        }
-
-        public void AddRandomCrowbars()
-        {
-            // this is just getting stupid now
-            /*Atom.Item.Tool.Crowbar c;
-            Atom.Item.Tool.Welder g;
-            Atom.Item.Tool.Wrench e;
-            Atom.Item.Container.Toolbox t;
-            Atom.Object.Door.Door d;
-            Atom.Item.Misc.Flashlight f;
-
-            Random r = new Random();
-            for (int i = 0; i < 10; i++)
-            {
-                c = (Atom.Item.Tool.Crowbar)atomManager.SpawnAtom("Atom.Item.Tool.Crowbar");
-                c.Translate(new SS3D_shared.HelperClasses.Vector2(r.NextDouble() * map.GetMapWidth() * map.tileSpacing, r.NextDouble() * map.GetMapHeight() * map.tileSpacing));
-            }
-            for (int i = 0; i < 10; i++)
-            {
-                g = (Atom.Item.Tool.Welder)atomManager.SpawnAtom("Atom.Item.Tool.Welder");
-                g.Translate(new SS3D_shared.HelperClasses.Vector2(r.NextDouble() * map.GetMapWidth() * map.tileSpacing, r.NextDouble() * map.GetMapHeight() * map.tileSpacing));
-            }
-            for (int i = 0; i < 10; i++)
-            {
-                e = (Atom.Item.Tool.Wrench)atomManager.SpawnAtom("Atom.Item.Tool.Wrench");
-                e.Translate(new SS3D_shared.HelperClasses.Vector2(r.NextDouble() * map.GetMapWidth() * map.tileSpacing, r.NextDouble() * map.GetMapHeight() * map.tileSpacing));
-            }
-            for (int i = 0; i < 1; i++)
-            {
-                t = (Atom.Item.Container.Toolbox)atomManager.SpawnAtom("Atom.Item.Container.Toolbox");
-                t.Translate(new SS3D_shared.HelperClasses.Vector2(r.NextDouble() * map.GetMapWidth() * map.tileSpacing, r.NextDouble() * map.GetMapHeight() * map.tileSpacing));
-            }
-
-            for (int i = 0; i < 10; i++)
-            {
-                f = (Atom.Item.Misc.Flashlight)atomManager.SpawnAtom("Atom.Item.Misc.Flashlight");
-                f.Translate(new SS3D_shared.HelperClasses.Vector2(r.NextDouble() * map.GetMapWidth() * map.tileSpacing, r.NextDouble() * map.GetMapHeight() * map.tileSpacing));
-            }
-
-            f = (Atom.Item.Misc.Flashlight)atomManager.SpawnAtom("Atom.Item.Misc.Flashlight");
-            f.Translate(new SS3D_shared.HelperClasses.Vector2(2 * map.tileSpacing, 2 * map.tileSpacing));
-            f.light.color.b = 0;
-            f.light.color.g = 0;
-            f.light.color.r = 254;
-
-            d = (Atom.Object.Door.Door)atomManager.SpawnAtom("Atom.Object.Door.Door");
-            d.Translate(new SS3D_shared.HelperClasses.Vector2(304, 336));
-
-            d = (Atom.Object.Door.Door)atomManager.SpawnAtom("Atom.Object.Door.Door");
-            d.Translate(new SS3D_shared.HelperClasses.Vector2(304, 432));
-
-            d = (Atom.Object.Door.Door)atomManager.SpawnAtom("Atom.Object.Door.Door");
-            d.Translate(new SS3D_shared.HelperClasses.Vector2(592, 336));
-
-            d = (Atom.Object.Door.Door)atomManager.SpawnAtom("Atom.Object.Door.Door");
-            d.Translate(new SS3D_shared.HelperClasses.Vector2(592, 432));*/
-            atomManager.LoadAtoms();
         }
     }
 }

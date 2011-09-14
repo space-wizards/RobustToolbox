@@ -38,11 +38,11 @@ namespace SS3D_Server.Modules.Gamemodes
 
     public class Gamemode : IGameMode
     {
-        private string name;
+        private string name = "";
         public string Name { get { return name; } set { name = value; } }
 
-        private string description;
-        public string Description { get { return description; } set { name = description; } }
+        private string description = "";
+        public string Description { get { return description; } set { description = value; } }
 
         public event GameEndHandler OnGameBegin;
         public event GameUpdateHandler OnGameUpdate;

@@ -5,9 +5,16 @@ using System.Text;
 
 namespace CGO
 {
+    /// <summary>
+    /// A parameter used for instantiation of a component in an entity from a template.
+    /// </summary>
     public class ComponentParameter
     {
         private string m_memberName;
+     
+        /// <summary>
+        /// The name of the component member
+        /// </summary>
         public string MemberName
         {
             get
@@ -16,6 +23,9 @@ namespace CGO
         }
 
         private string m_parameterType;
+        /// <summary>
+        /// The type of parameter specified
+        /// </summary>
         public string ParameterType
         {
             get
@@ -24,6 +34,9 @@ namespace CGO
         }
 
         private object m_parameter;
+        /// <summary>
+        /// The parameter object
+        /// </summary>
         public object Parameter
         {
             get

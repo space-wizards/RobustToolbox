@@ -8,7 +8,13 @@ namespace CGO
 {
     public class ComponentFactory
     {
+        /// <summary>
+        /// Singleton
+        /// </summary>
         private static ComponentFactory singleton;
+        /// <summary>
+        /// Singleton
+        /// </summary>
         public static ComponentFactory Singleton
         {
             get
@@ -20,6 +26,9 @@ namespace CGO
             private set { }
         }
 
+        /// <summary>
+        /// Constructor
+        /// </summary>
         public ComponentFactory()
         {
             Type type = typeof(IGameObjectComponent);
@@ -30,6 +39,11 @@ namespace CGO
             // Type.GetType, we can just hit the type list and pull the right type.
         }
 
+        /// <summary>
+        /// Gets a new component instantiated of the specified type.
+        /// </summary>
+        /// <param name="componentType">type of component to make</param>
+        /// <returns>A GameObjectComponent</returns>
         public IGameObjectComponent GetComponent(Type componentType)
         {
             if (componentType.GetInterface("IGameObjectComponent") == null)
@@ -37,6 +51,11 @@ namespace CGO
             return (IGameObjectComponent)Activator.CreateInstance(componentType);
         }
 
+        /// <summary>
+        /// Gets a new component instantiated of the specified type.
+        /// </summary>
+        /// <param name="componentType">type of component to make</param>
+        /// <returns>A GameObjectComponent</returns>
         public IGameObjectComponent GetComponent(string componentTypeName)
         {
             if (componentTypeName == null || componentTypeName == "")

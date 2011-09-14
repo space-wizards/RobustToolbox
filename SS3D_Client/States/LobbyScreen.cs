@@ -32,13 +32,13 @@ namespace SS3D.States
         private GameType gameType;
 
         List<JobSelectButton> jobButtons = new List<JobSelectButton>();
+        ScrollableContainer jobButtonContainer;
 
         private List<String> PlayerListStrings = new List<string>();
 
 
         private PlayerController playerController;
         private Chatbox lobbyChat;
-        private Button joinButton;
 
         private const double playerListRefreshDelaySec = 3; //Time in seconds before refreshing the playerlist.
         private DateTime playerListTime = new DateTime();
@@ -55,6 +55,8 @@ namespace SS3D.States
             mStateMgr = prg.mStateMgr;
             PlayerController.Initialize(this);
             playerController = PlayerController.Singleton;
+
+            UiManager.Singleton.DisposeAllComponents();
 
             prg.mNetworkMgr.MessageArrived += new NetworkMsgHandler(mNetworkMgr_MessageArrived);
 
@@ -84,9 +86,14 @@ namespace SS3D.States
             jobListMsg.Write((byte)NetMessage.JobList); //Request Joblist.
             netMgr.netClient.SendMessage(jobListMsg, NetDeliveryMethod.ReliableOrdered);
 
-            joinButton = new Button("Join Game");
+            Button joinButton = new Button("Join Game");
             joinButton.Clicked += new Button.ButtonPressHandler(joinButt_Clicked);
             joinButton.Position = new System.Drawing.Point(605 - joinButton.Size.Width - 5, 230 - joinButton.Size.Height - 5);
+            UiManager.Singleton.Components.Add(joinButton);
+
+            jobButtonContainer = new ScrollableContainer("LobbyJobCont", new System.Drawing.Size(400, 400));
+            jobButtonContainer.Position = new System.Drawing.Point(630, 35);
+            UiManager.Singleton.Components.Add(jobButtonContainer);
 
             Gorgon.Screen.Clear();
 
@@ -126,8 +133,6 @@ namespace SS3D.States
             lobbyText.Position = new Vector2D(10, 135);
             lobbyText.Text = "MOTD: \n" + welcomeString;
             lobbyText.Draw();
-          
-            joinButton.Render();
 
             int Pos = 255;
             foreach (string plrStr in PlayerListStrings)
@@ -138,10 +143,7 @@ namespace SS3D.States
                 Pos += 20;
             }
 
-            foreach (JobSelectButton button in jobButtons)
-            {
-                button.Render();
-            }
+            UiManager.Singleton.Render();
 
             return;
         }
@@ -178,6 +180,9 @@ namespace SS3D.States
                         case NetMessage.JobList:
                             HandleJobList(msg);
                             break;
+                        case NetMessage.JobSelected:
+                            HandleJobSelected(msg);
+                            break;
                         case NetMessage.JoinGame:
                             HandleJoinGame();
                             break;
@@ -190,20 +195,29 @@ namespace SS3D.States
             }
         }
 
+        private void HandleJobSelected(NetIncomingMessage msg)
+        {
+            string jobName = msg.ReadString();
+            foreach(GuiComponent comp in jobButtonContainer.components)
+                if (((JobDefinition)((JobSelectButton)comp).UserData).Name == jobName) ((JobSelectButton)comp).selected = true; else ((JobSelectButton)comp).selected = false;
+            return;
+        }
+
         private void HandleJobList(NetIncomingMessage msg)
         {
             string jobListXML = msg.ReadString(); //READ THE WHOLE XML FILE.
             JobHandler.Singleton.LoadDefinitionsFromString(jobListXML);
-            int pos = 40;
+            int pos = 5;
+            jobButtonContainer.components.Clear(); //Properly dispose old buttons !!!!!!!
             foreach (JobDefinition definition in JobHandler.Singleton.JobDefinitions)
             {
-                JobSelectButton current = new JobSelectButton(definition.Name, definition.JobIcon);
+                JobSelectButton current = new JobSelectButton(definition.Name, definition.JobIcon, definition.Description);
                 current.available = definition.Available;
-                current.Position = new System.Drawing.Point(640, pos);
+                current.Position = new System.Drawing.Point(5, pos);
                 current.Clicked += new JobSelectButton.JobButtonPressHandler(current_Clicked);
                 current.UserData = definition;
-                jobButtons.Add(current);
-                pos += current.Size.Height + 5;
+                jobButtonContainer.components.Add(current);
+                pos += current.ClientArea.Height + 20;
             }
             return;
         }
@@ -253,19 +267,15 @@ namespace SS3D.States
 
         public override void Shutdown()
         {
+            UiManager.Singleton.DisposeAllComponents();
             lobbyChat.Dispose();
             lobbyChat = null;
-            joinButton.Dispose();
-            joinButton = null;
             prg.mNetworkMgr.MessageArrived -= new NetworkMsgHandler(mNetworkMgr_MessageArrived);
         }
 
         public override void Update(FrameEventArgs e)
         {
-            foreach (JobSelectButton button in jobButtons)
-            {
-                button.Update();
-            }
+            UiManager.Singleton.Update();
             if (playerListTime.CompareTo(DateTime.Now) < 0)
             {
                 NetOutgoingMessage playerListMsg = prg.mNetworkMgr.netClient.CreateMessage();
@@ -274,7 +284,6 @@ namespace SS3D.States
 
                 playerListTime = DateTime.Now.AddSeconds(playerListRefreshDelaySec);
             }
-            joinButton.Update();
         }
 
         private void HandleWelcomeMessage(NetIncomingMessage msg)
@@ -290,7 +299,6 @@ namespace SS3D.States
         private void HandleChatMessage(NetIncomingMessage msg)
         {
             ChatChannel channel = (ChatChannel)msg.ReadByte();
-            //if (channel != ChatChannel.Lobby) return; Disabling this as its not exactly optimal.
             string text = msg.ReadString();
             string message = "(" + channel.ToString() + "):" + text;
             ushort atomID = msg.ReadUInt16();
@@ -304,29 +312,17 @@ namespace SS3D.States
         public override void KeyUp(KeyboardInputEventArgs e)
         { }
         public override void MouseUp(MouseInputEventArgs e)
-        { }
+        {
+            UiManager.Singleton.MouseUp(e);
+        }
         public override void MouseDown(MouseInputEventArgs e)
         {
-            foreach (JobSelectButton button in jobButtons)
-            {
-                if (button.MouseDown(e))
-                {
-                    button.selected = true;
-                    var otherButtons = from JobSelectButton b in jobButtons  //Change this in response to a server message instead.
-                                       where b != button                      //Right now it changes even if the server doesnt allow the selected job.
-                                       where b.selected
-                                       select b;
-                    foreach(JobSelectButton oldButton in otherButtons)
-                    {
-                        oldButton.selected = false;
-                    }
-                }
-
-            }
-            joinButton.MouseDown(e);
+            UiManager.Singleton.MouseDown(e);
         }
         public override void MouseMove(MouseInputEventArgs e)
-        { }
+        {
+            UiManager.Singleton.MouseMove(e);
+        }
         #endregion
     }
 }

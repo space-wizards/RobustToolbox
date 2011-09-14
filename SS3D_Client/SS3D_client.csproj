@@ -170,6 +170,7 @@
     <Compile Include="Modules\UI\Components\HumanInventory.cs" />
     <Compile Include="Modules\UI\Components\ItemSlot.cs" />
     <Compile Include="Modules\UI\Components\JobSelectButton.cs" />
+    <Compile Include="Modules\UI\Components\ScrollableContainer.cs" />
     <Compile Include="Modules\UI\Components\Scrollbar.cs" />
     <Compile Include="Modules\UI\Components\StatHealthComponent.cs" />
     <Compile Include="Modules\UI\Components\StatPanel.cs" />

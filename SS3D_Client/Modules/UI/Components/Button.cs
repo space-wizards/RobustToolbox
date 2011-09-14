@@ -17,7 +17,7 @@ namespace SS3D.Modules.UI.Components
     {
         GUIElement ButtonMain;
         GUIElement ButtonLeft;
-        GUIElement ButtonRight;
+        GUIElement ButtonRight;     
 
         public TextSprite label;
 
@@ -47,6 +47,7 @@ namespace SS3D.Modules.UI.Components
 
         public override void Update()
         {
+            clientArea = new Rectangle(this.position, new Size(ButtonLeft.Dimensions.Width + ButtonMain.Dimensions.Width + ButtonRight.Dimensions.Width, ButtonMain.Dimensions.Height));
             clientAreaLeft = new Rectangle(this.position, new Size(ButtonLeft.Dimensions.Width, ButtonLeft.Dimensions.Height));
             clientAreaMain = new Rectangle(new Point(clientAreaLeft.Right, this.position.Y), new Size((int)label.Width, ButtonMain.Dimensions.Height));
             label.Position = new Point(clientAreaLeft.Right, this.position.Y);
@@ -73,7 +74,7 @@ namespace SS3D.Modules.UI.Components
 
         public override bool MouseDown(MouseInputEventArgs e)
         {
-            if (clientAreaLeft.Contains(new Point((int)e.Position.X, (int)e.Position.Y)) || clientAreaMain.Contains(new Point((int)e.Position.X, (int)e.Position.Y)) || clientAreaRight.Contains(new Point((int)e.Position.X, (int)e.Position.Y)))
+            if (clientArea.Contains(new Point((int)e.Position.X, (int)e.Position.Y)))
             {
                 if (Clicked != null) Clicked(this);
                 return true;

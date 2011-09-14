@@ -19,6 +19,7 @@ namespace SS3D.Modules.UI
         }
         protected PlayerController playerController;
         protected Point position;
+        protected Rectangle clientArea;
         private bool Visible;
 
         public int zDepth { get; set; }
@@ -34,6 +35,18 @@ namespace SS3D.Modules.UI
             set
             {
                 position = value;
+            }
+        }
+
+        public virtual Rectangle ClientArea
+        {
+            get
+            {
+                return clientArea;
+            }
+            set
+            {
+                clientArea = value;
             }
         }
 

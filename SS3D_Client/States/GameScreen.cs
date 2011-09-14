@@ -100,6 +100,8 @@ namespace SS3D.States
 
             map = new Map();
 
+            UiManager.Singleton.DisposeAllComponents();
+
             atomManager = new AtomManager(this, prg);
             PlayerController.Initialize(this, atomManager);
             playerController = PlayerController.Singleton;
@@ -592,21 +594,6 @@ namespace SS3D.States
 
             if (e.Key == KeyboardKeys.F8)
             {
-                Type[] types = atomManager.GetAtomTypes();
-                System.Drawing.Point offset = System.Drawing.Point.Empty;
-                foreach (Type type in types)
-                {
-                    if (type.IsAbstract) continue;
-                    EditorAtomButton button = new EditorAtomButton(type);
-                    button.Position = offset;
-                    UiManager.Singleton.Components.Add(button);
-                    offset.X += 65;
-                    if(offset.X + 65 > Gorgon.Screen.Width)
-                    {
-                        offset.X = 0;
-                        offset.Y += 65;
-                    }
-                }
             }
 
             if (e.Key == KeyboardKeys.F10)

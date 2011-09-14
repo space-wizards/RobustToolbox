@@ -37,7 +37,7 @@
       </SpawnEquipDefinition>
     </SpawnEquipment>
     <Name>Assistant</Name>
-    <Description>Runs around the station doing nothing in particular.</Description>
+    <Description>Runs around the station doing nothing&#13;&#10;in particular.</Description>
 	<MaxNum>-1</MaxNum>
 	<JobIcon>Controls.JobButton.None</JobIcon>
 	<Available>true</Available>

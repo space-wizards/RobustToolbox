@@ -18,40 +18,37 @@ namespace SS3D.Modules.UI.Components
         GUIElement Button;
         GUIElement Job;
 
-        public TextSprite label;
+        public TextSprite labelDesc;
 
         public delegate void JobButtonPressHandler(JobSelectButton sender);
         public event JobButtonPressHandler Clicked;
-
-        private Rectangle clientArea;
-
-        public Size Size { get; private set; }
+        private Rectangle buttonArea;
 
         public object UserData;
 
         public bool selected = false;
         public bool available = true;
 
-        public JobSelectButton(string text, string jobIcon)
+        public JobSelectButton(string text, string jobIcon , string desc)
             : base()
         {
             Button = UiManager.Singleton.Skin.Elements["Controls.JobButton"];
             Job = UiManager.Singleton.Skin.Elements[jobIcon];
 
-            label = new TextSprite("JobButtonLabel" + text, text, ResMgr.Singleton.GetFont("CALIBRI"));
-            label.Color = System.Drawing.Color.Black;
-            label.ShadowColor = System.Drawing.Color.DimGray;
-            label.Shadowed = true;
-            label.ShadowOffset = new Vector2D(1, 1);
+            labelDesc = new TextSprite("JobButtonDescLabel" + text, text + ":\n" + desc, ResMgr.Singleton.GetFont("CALIBRI"));
+            labelDesc.Color = System.Drawing.Color.Black;
+            labelDesc.ShadowColor = System.Drawing.Color.DimGray;
+            labelDesc.Shadowed = true;
+            labelDesc.ShadowOffset = new Vector2D(1, 1);
 
             Update();
         }
 
         public override void Update()
         {
-            clientArea = new Rectangle(new Point(this.position.X, this.position.Y), new Size(Button.Dimensions.Width, Button.Dimensions.Height));
-            label.Position = new Point(clientArea.Left, clientArea.Bottom -2);
-            Size = new Size(clientArea.Width, clientArea.Height + (int)label.Height);
+            buttonArea = new Rectangle(new Point(this.position.X, this.position.Y), new Size(Button.Dimensions.Width, Button.Dimensions.Height));
+            clientArea = new Rectangle(new Point(this.position.X, this.position.Y), new Size(Button.Dimensions.Width + (int)labelDesc.Width + 2, Button.Dimensions.Height));
+            labelDesc.Position = new Point(buttonArea.Right + 2, buttonArea.Top);
         }
 
         public override void Render()
@@ -64,14 +61,16 @@ namespace SS3D.Modules.UI.Components
             {
                 Button.Color = System.Drawing.Color.DarkSeaGreen;
             }
-            Button.Draw(clientArea);
-            Job.Draw(clientArea);
-            label.Draw();
+            Button.Draw(buttonArea);
+            Job.Draw(buttonArea);
+            labelDesc.Draw();
             Button.Color = System.Drawing.Color.White;
+
         }
 
         public override void Dispose()
         {
+            labelDesc = null;
             Button = null;
             Job = null;
             Clicked = null;
@@ -81,9 +80,10 @@ namespace SS3D.Modules.UI.Components
         public override bool MouseDown(MouseInputEventArgs e)
         {
             if (!available) return false;
-            if (clientArea.Contains(new Point((int)e.Position.X, (int)e.Position.Y)))
+            if (buttonArea.Contains(new Point((int)e.Position.X, (int)e.Position.Y)))
             {
                 if (Clicked != null) Clicked(this);
+                selected = true;
                 return true;
             }
             return false;

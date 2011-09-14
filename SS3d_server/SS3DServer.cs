@@ -118,7 +118,7 @@ namespace SS3D_Server
                 map.InitMap(serverMapName);
 
                 atomManager = new AtomManager();
-                playerManager = new PlayerManager();
+                //playerManager = new PlayerManager();
                 atomManager.LoadAtoms();
 
                 RoundManager.Singleton.CurrentGameMode.StartGame();

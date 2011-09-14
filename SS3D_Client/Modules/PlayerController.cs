@@ -98,6 +98,9 @@ namespace SS3D.Modules
                 case PlayerSessionMessage.AttachToAtom:
                     HandleAttachToAtom(message);
                     break;
+                case PlayerSessionMessage.JoinLobby:
+                    runningState.prg.mStateMgr.RequestStateChange(typeof(LobbyScreen));
+                    break;
                 default:
                     break;
             }

@@ -9,7 +9,13 @@ mkdir %dir%\bin
 mkdir %dir%\bin\client
 mkdir %dir%\bin\client\client
 mkdir %dir%\bin\server
-xcopy /E Media %dir%\Media\
+mkdir %dir%\Media
+copy Media\media.gorPack %dir%\Media
+copy Media\Interface1.gui %dir%\Media
+copy Media\Interface2.gui %dir%\Media
+copy Media\Interface3.gui %dir%\Media
+copy Buildfiles\* %dir%
+
 xcopy /E SS3D_Client\bin\Release\* %dir%\bin\client\client
 xcopy /E SS3d_server\bin\Release\* %dir%\bin\server
 cd %dir%

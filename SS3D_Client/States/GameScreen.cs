@@ -201,11 +201,11 @@ namespace SS3D.States
             PlacementManager.Singleton.Reset();
             atomManager = null; 
             map = null;
+            UIDesktop.Singleton.Windows.Remove(gameChat);
             gameChat.Dispose();
             gameChat = null;
             UiManager.Singleton.DisposeAllComponents(); //HerpDerp. This is probably bad. Should not remove them ALL.
             UIDesktop.Singleton.Dispose();
-            
             prg.mNetworkMgr.MessageArrived -= new NetworkMsgHandler(mNetworkMgr_MessageArrived);
             RenderTargetCache.DestroyAll();
             GC.Collect();

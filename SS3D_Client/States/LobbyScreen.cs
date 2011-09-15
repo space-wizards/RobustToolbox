@@ -268,8 +268,10 @@ namespace SS3D.States
         public override void Shutdown()
         {
             UiManager.Singleton.DisposeAllComponents();
+            UIDesktop.Singleton.Windows.Remove(lobbyChat);
             lobbyChat.Dispose();
             lobbyChat = null;
+            UIDesktop.Singleton.Dispose();
             prg.mNetworkMgr.MessageArrived -= new NetworkMsgHandler(mNetworkMgr_MessageArrived);
             RenderTargetCache.DestroyAll();
         }

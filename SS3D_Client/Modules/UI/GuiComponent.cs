@@ -26,6 +26,8 @@ namespace SS3D.Modules.UI
         public bool RecieveInput { get; set; }
         public bool Focus { get; set; }
 
+        public object UserData;
+
         public virtual Point Position
         {
             get

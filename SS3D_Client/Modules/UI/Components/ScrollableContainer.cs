@@ -43,7 +43,7 @@ namespace SS3D.Modules.UI.Components
 
         public override void Update()
         {
-            if (disposing) return;
+            if (disposing || !IsVisible()) return;
             clientArea = new Rectangle(position, new Size(clippingRI.Width, clippingRI.Height));
             scrollbarH.Position = new Point(position.X, clientArea.Bottom);
             scrollbarV.Position = new Point(clientArea.Right, position.Y);
@@ -56,11 +56,11 @@ namespace SS3D.Modules.UI.Components
                 if (component.Position.Y + component.ClientArea.Height > max_y) max_y = component.Position.Y  + component.ClientArea.Height;
             }
 
-            scrollbarH.max = (int)max_x - clientArea.Width; //Is this right? ... i dont know!
+            scrollbarH.max = (int)max_x - clientArea.Width;
             if (max_x > clippingRI.Width) scrollbarH.SetVisible(true);
             else scrollbarH.SetVisible(false);
 
-            scrollbarV.max = (int)max_y - clientArea.Height; //Is this right? ... i dont know!
+            scrollbarV.max = (int)max_y - clientArea.Height;
             if (max_y > clippingRI.Height) scrollbarV.SetVisible(true);
             else scrollbarV.SetVisible(false);
 
@@ -70,7 +70,7 @@ namespace SS3D.Modules.UI.Components
 
         public override void Render()
         {
-            if (disposing) return;
+            if (disposing || !IsVisible()) return;
             clippingRI.Clear(System.Drawing.Color.Transparent);
             clippingRI.BeginDrawing();
             foreach (GuiComponent component in components)
@@ -100,7 +100,7 @@ namespace SS3D.Modules.UI.Components
 
         public override bool MouseDown(MouseInputEventArgs e)
         {
-            if (disposing) return false;
+            if (disposing || !IsVisible()) return false;
             if (scrollbarH.MouseDown(e)) return true;
             if (scrollbarV.MouseDown(e)) return true;
 
@@ -123,7 +123,7 @@ namespace SS3D.Modules.UI.Components
 
         public override bool MouseUp(MouseInputEventArgs e)
         {
-            if (disposing) return false;
+            if (disposing || !IsVisible()) return false;
             if (scrollbarH.MouseUp(e)) return true;
             if (scrollbarV.MouseUp(e)) return true;
             return false;
@@ -131,7 +131,7 @@ namespace SS3D.Modules.UI.Components
 
         public override void MouseMove(MouseInputEventArgs e)
         {
-            if (disposing) return;
+            if (disposing || !IsVisible()) return;
             scrollbarH.MouseMove(e);
             scrollbarV.MouseMove(e);
             return;

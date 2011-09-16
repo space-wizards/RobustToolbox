@@ -88,12 +88,16 @@ namespace SS3D.States
 
             Button joinButton = new Button("Join Game");
             joinButton.Clicked += new Button.ButtonPressHandler(joinButt_Clicked);
-            joinButton.Position = new System.Drawing.Point(605 - joinButton.Size.Width - 5, 230 - joinButton.Size.Height - 5);
+            joinButton.Position = new System.Drawing.Point(605 - joinButton.ClientArea.Width - 5, 230 - joinButton.ClientArea.Height - 5);
             UiManager.Singleton.Components.Add(joinButton);
 
             jobButtonContainer = new ScrollableContainer("LobbyJobCont", new System.Drawing.Size(450, 400));
             jobButtonContainer.Position = new System.Drawing.Point(630, 35);
             UiManager.Singleton.Components.Add(jobButtonContainer);
+
+            Listbox test = new Listbox(new System.Drawing.Size(200, 200), 200, new List<string>() { "ListboxItem1", "ListboxItem2", "ListboxItem3", "ListboxItem4", "ListboxItem5", "ListboxItem6", "ListboxItem7", "ListboxItem8", "ListboxItem9", "ListboxItem10", "ListboxItem11", "ListboxItem12", "ListboxItem13", "ListboxItem14", "ListboxItem15"});
+            test.Position = new System.Drawing.Point(400, 400);
+            UiManager.Singleton.Components.Add(test);
 
             Gorgon.Screen.Clear();
 

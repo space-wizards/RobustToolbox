@@ -28,10 +28,6 @@ namespace SS3D.Modules.UI.Components
         private Rectangle clientAreaLeft;
         private Rectangle clientAreaRight;
 
-        public Size Size {get; private set;}
-
-        public object UserData;
-
         public Button(string text)
             : base()
         {
@@ -47,12 +43,12 @@ namespace SS3D.Modules.UI.Components
 
         public override void Update()
         {
-            clientArea = new Rectangle(this.position, new Size(ButtonLeft.Dimensions.Width + ButtonMain.Dimensions.Width + ButtonRight.Dimensions.Width, ButtonMain.Dimensions.Height));
+
             clientAreaLeft = new Rectangle(this.position, new Size(ButtonLeft.Dimensions.Width, ButtonLeft.Dimensions.Height));
             clientAreaMain = new Rectangle(new Point(clientAreaLeft.Right, this.position.Y), new Size((int)label.Width, ButtonMain.Dimensions.Height));
             label.Position = new Point(clientAreaLeft.Right, this.position.Y);
             clientAreaRight = new Rectangle(new Point(clientAreaMain.Right, this.position.Y), new Size(ButtonRight.Dimensions.Width, ButtonRight.Dimensions.Height));
-            Size = new Size(clientAreaLeft.Width + clientAreaMain.Width + clientAreaRight.Width, clientAreaMain.Height);
+            clientArea = new Rectangle(this.position, new Size(clientAreaLeft.Width + clientAreaMain.Width + clientAreaRight.Width, clientAreaMain.Height));
         }
 
         public override void Render()
@@ -65,6 +61,7 @@ namespace SS3D.Modules.UI.Components
 
         public override void Dispose()
         {
+            label = null;
             ButtonLeft = null;
             ButtonMain = null;
             ButtonRight = null;

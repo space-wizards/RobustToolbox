@@ -1,0 +1,145 @@
+﻿using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Text;
+using System.Drawing;
+using GorgonLibrary;
+using GorgonLibrary.Graphics;
+using GorgonLibrary.InputDevices;
+using GorgonLibrary.GUI;
+
+using Lidgren.Network;
+using SS3D_shared;
+
+namespace SS3D.Modules.UI.Components
+{
+    class Listbox : GuiComponent
+    {
+        GUIElement ListboxMain;
+        GUIElement ListboxLeft;
+        GUIElement ListboxRight;
+
+        public TextSprite selectedLabel;
+
+        private ScrollableContainer dropDown;
+        private List<string> contentStrings = new List<string>();
+
+        public delegate void ListboxPressHandler(Label item);
+        public event ListboxPressHandler ItemSelected;
+
+        public Label currentlySelected {get; private set;}
+
+        private Rectangle clientAreaMain;
+        private Rectangle clientAreaLeft;
+        private Rectangle clientAreaRight;
+
+        public int Width = 0;
+
+        public Listbox(Size dropDownSize, int width, List<string> initialOptions = null)
+            : base()
+        {
+            Width = width;
+            ListboxLeft = UiManager.Singleton.Skin.Elements["Controls.Button.Left"];
+            ListboxMain = UiManager.Singleton.Skin.Elements["Controls.Button.Body"];
+            ListboxRight = UiManager.Singleton.Skin.Elements["Controls.Button.Right"];
+
+            selectedLabel = new TextSprite("ListboxLabel", "", ResMgr.Singleton.GetFont("CALIBRI"));
+            selectedLabel.Color = System.Drawing.Color.Black;
+
+            dropDown = new ScrollableContainer("ListboxContents", dropDownSize);
+            dropDown.SetVisible(false);
+
+            if (initialOptions != null)
+            {
+                contentStrings = initialOptions;
+                RebuildList();
+            }
+
+            Update();
+        }
+
+        private void RebuildList()
+        {
+            currentlySelected = null;
+            dropDown.components.Clear();
+            int offset = 0;
+            foreach (string str in contentStrings)
+            {
+                Label newEntry = new Label(str);
+                newEntry.drawBackground = true;
+                newEntry.drawBorder = true;
+                newEntry.Position = new Point(0, offset);
+                newEntry.Update();
+                newEntry.Text.SetSize(dropDown.ClientArea.Width, newEntry.Text.Height);
+                dropDown.components.Add(newEntry);
+                offset += (int)newEntry.Text.Height;
+                newEntry.Clicked += new Label.LabelPressHandler(newEntry_Clicked);
+            }
+        }
+
+        void newEntry_Clicked(Label sender)
+        {
+            if (ItemSelected != null) ItemSelected(sender);
+            currentlySelected = sender;
+            selectedLabel.Text = sender.Text.Text;
+            dropDown.SetVisible(false);
+        }
+
+        public override void Update()
+        {
+            clientAreaLeft = new Rectangle(this.position, new Size(ListboxLeft.Dimensions.Width, ListboxLeft.Dimensions.Height));
+            clientAreaMain = new Rectangle(new Point(clientAreaLeft.Right, this.position.Y), new Size(Width, ListboxMain.Dimensions.Height));
+            selectedLabel.Position = new Point(clientAreaLeft.Right, this.position.Y);
+            clientAreaRight = new Rectangle(new Point(clientAreaMain.Right, this.position.Y), new Size(ListboxRight.Dimensions.Width, ListboxRight.Dimensions.Height));
+            clientArea = new Rectangle(this.position, new Size(clientAreaLeft.Width + clientAreaMain.Width + clientAreaRight.Width, clientAreaMain.Height));
+            dropDown.Position = new Point(clientArea.X + (int)((clientArea.Width - dropDown.ClientArea.Width) / 2f), clientArea.Bottom);
+            dropDown.Update();
+        }
+
+        public override void Render()
+        {
+            dropDown.Render();
+            ListboxLeft.Draw(clientAreaLeft);
+            ListboxMain.Draw(clientAreaMain);
+            ListboxRight.Draw(clientAreaRight);
+            selectedLabel.Draw();
+        }
+
+        public override void Dispose()
+        {
+            contentStrings.Clear();
+            dropDown.Dispose();
+            dropDown = null;
+            selectedLabel = null;
+            ListboxLeft = null;
+            ListboxMain = null;
+            ListboxRight = null;
+            ItemSelected = null;
+            GC.SuppressFinalize(this);
+        }
+
+        public override bool MouseDown(MouseInputEventArgs e)
+        {
+            if (clientArea.Contains(new Point((int)e.Position.X, (int)e.Position.Y))) //change to clientAreaRight when theres a proper skin with an arrow to the right.
+            {
+                dropDown.ToggleVisible();
+                return true;
+            }
+            else if (dropDown.MouseDown(e) == true) return true;
+            return false;
+        }
+
+        public override bool MouseUp(MouseInputEventArgs e)
+        {
+            if (dropDown.MouseUp(e) == true) return true;
+            return false;
+        }
+
+        public override void MouseMove(MouseInputEventArgs e)
+        {
+            dropDown.MouseMove(e);
+            return;
+        }
+
+    }
+}

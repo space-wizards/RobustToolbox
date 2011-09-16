@@ -24,8 +24,6 @@ namespace SS3D.Modules.UI.Components
         public event JobButtonPressHandler Clicked;
         private Rectangle buttonArea;
 
-        public object UserData;
-
         public bool selected = false;
         public bool available = true;
 

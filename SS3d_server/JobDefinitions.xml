@@ -1,5 +1,68 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <ArrayOfJobDefinition xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+
+   <JobDefinition>
+    <SpawnEquipment>
+      <SpawnEquipDefinition>
+        <Location>Inner</Location>
+        <ObjectType>Atom.Item.Wearable.Inner.Jumpsuit.Assistant_Grey</ObjectType>
+      </SpawnEquipDefinition>
+      <SpawnEquipDefinition>
+        <Location>Feet</Location>
+        <ObjectType>Atom.Item.Wearable.Feet.Shoes</ObjectType>
+      </SpawnEquipDefinition>
+    </SpawnEquipment>
+    <Name>Assistant</Name>
+    <Description>Runs around the station doing nothing&#13;&#10;in particular.</Description>
+	<MaxNum>-1</MaxNum>
+	<JobIcon>Controls.JobButton.None</JobIcon>
+	<Available>true</Available>
+  </JobDefinition>
+  
+  <JobDefinition>
+    <SpawnEquipment>
+      <SpawnEquipDefinition>
+        <Location>Inner</Location>
+        <ObjectType>Atom.Item.Wearable.Inner.Jumpsuit.Assistant_Grey</ObjectType>
+      </SpawnEquipDefinition>
+      <SpawnEquipDefinition>
+        <Location>Feet</Location>
+        <ObjectType>Atom.Item.Wearable.Feet.Shoes</ObjectType>
+      </SpawnEquipDefinition>
+    </SpawnEquipment>
+    <Name>Janitor</Name>
+    <Description>Cleans up the station and occasionally&#13;&#10;changes broken lightbulbs.</Description>
+	<MaxNum>1</MaxNum>
+	<JobIcon>Controls.JobButton.None</JobIcon>
+	<Available>true</Available>
+  </JobDefinition>
+  
+  <JobDefinition>
+    <SpawnEquipment>
+      <SpawnEquipDefinition>
+        <Location>Outer</Location>
+        <ObjectType>Atom.Item.Wearable.Outer.Armour</ObjectType>
+      </SpawnEquipDefinition>
+      <SpawnEquipDefinition>
+        <Location>Inner</Location>
+        <ObjectType>Atom.Item.Wearable.Inner.Jumpsuit.Assistant_Grey</ObjectType>
+      </SpawnEquipDefinition>
+      <SpawnEquipDefinition>
+        <Location>Head</Location>
+        <ObjectType>Atom.Item.Wearable.Head.Helmet</ObjectType>
+      </SpawnEquipDefinition>
+      <SpawnEquipDefinition>
+        <Location>Feet</Location>
+        <ObjectType>Atom.Item.Wearable.Feet.Shoes</ObjectType>
+      </SpawnEquipDefinition>
+    </SpawnEquipment>
+    <Name>Head of Security</Name>
+    <Description>Coordinates Security Officers and manages security&#13;&#10;related matters.</Description>
+	<MaxNum>3</MaxNum>
+	<JobIcon>Controls.JobButton.None</JobIcon>
+	<Available>true</Available>
+  </JobDefinition>
+  
   <JobDefinition>
     <SpawnEquipment>
       <SpawnEquipDefinition>
@@ -25,6 +88,7 @@
 	<JobIcon>Controls.JobButton.None</JobIcon>
 	<Available>true</Available>
   </JobDefinition>
+  
   <JobDefinition>
     <SpawnEquipment>
       <SpawnEquipDefinition>
@@ -36,12 +100,13 @@
         <ObjectType>Atom.Item.Wearable.Feet.Shoes</ObjectType>
       </SpawnEquipDefinition>
     </SpawnEquipment>
-    <Name>Assistant</Name>
-    <Description>Runs around the station doing nothing&#13;&#10;in particular.</Description>
-	<MaxNum>-1</MaxNum>
+    <Name>Doctor</Name>
+    <Description>Keeps the stations inhabitants healthy and alive.</Description>
+	<MaxNum>3</MaxNum>
 	<JobIcon>Controls.JobButton.None</JobIcon>
 	<Available>true</Available>
   </JobDefinition>
+  
   <JobDefinition>
     <SpawnEquipment>
       <SpawnEquipDefinition>
@@ -53,10 +118,137 @@
         <ObjectType>Atom.Item.Wearable.Feet.Shoes</ObjectType>
       </SpawnEquipDefinition>
     </SpawnEquipment>
-    <Name>Unavailable Job</Name>
-    <Description>You can not select this.</Description>
-	<MaxNum>-1</MaxNum>
+    <Name>Engineer</Name>
+    <Description>Responsible for keeping the Stations machinery&#13;&#10;running smoothly. Also repairs damage to the station.</Description>
+	<MaxNum>3</MaxNum>
+	<JobIcon>Controls.JobButton.None</JobIcon>
+	<Available>true</Available>
+  </JobDefinition>
+  
+  <JobDefinition>
+    <SpawnEquipment>
+      <SpawnEquipDefinition>
+        <Location>Inner</Location>
+        <ObjectType>Atom.Item.Wearable.Inner.Jumpsuit.Assistant_Grey</ObjectType>
+      </SpawnEquipDefinition>
+      <SpawnEquipDefinition>
+        <Location>Feet</Location>
+        <ObjectType>Atom.Item.Wearable.Feet.Shoes</ObjectType>
+      </SpawnEquipDefinition>
+    </SpawnEquipment>
+    <Name>Atmos. Technician</Name>
+    <Description>Makes sure the atmospheric systems of the station run&#13;&#10;correctly.</Description>
+	<MaxNum>3</MaxNum>
+	<JobIcon>Controls.JobButton.None</JobIcon>
+	<Available>true</Available>
+  </JobDefinition>
+  
+  <JobDefinition>
+    <SpawnEquipment>
+      <SpawnEquipDefinition>
+        <Location>Inner</Location>
+        <ObjectType>Atom.Item.Wearable.Inner.Jumpsuit.Assistant_Grey</ObjectType>
+      </SpawnEquipDefinition>
+      <SpawnEquipDefinition>
+        <Location>Feet</Location>
+        <ObjectType>Atom.Item.Wearable.Feet.Shoes</ObjectType>
+      </SpawnEquipDefinition>
+    </SpawnEquipment>
+    <Name>Geneticist</Name>
+    <Description>Researches the mysteries of the human genome.</Description>
+	<MaxNum>3</MaxNum>
+	<JobIcon>Controls.JobButton.None</JobIcon>
+	<Available>true</Available>
+  </JobDefinition>
+  
+  <JobDefinition>
+    <SpawnEquipment>
+      <SpawnEquipDefinition>
+        <Location>Inner</Location>
+        <ObjectType>Atom.Item.Wearable.Inner.Jumpsuit.Assistant_Grey</ObjectType>
+      </SpawnEquipDefinition>
+      <SpawnEquipDefinition>
+        <Location>Feet</Location>
+        <ObjectType>Atom.Item.Wearable.Feet.Shoes</ObjectType>
+      </SpawnEquipDefinition>
+    </SpawnEquipment>
+    <Name>Scientist</Name>
+    <Description>TBD</Description>
+	<MaxNum>3</MaxNum>
+	<JobIcon>Controls.JobButton.None</JobIcon>
+	<Available>true</Available>
+  </JobDefinition>
+  
+  <JobDefinition>
+    <SpawnEquipment>
+      <SpawnEquipDefinition>
+        <Location>Inner</Location>
+        <ObjectType>Atom.Item.Wearable.Inner.Jumpsuit.Assistant_Grey</ObjectType>
+      </SpawnEquipDefinition>
+      <SpawnEquipDefinition>
+        <Location>Feet</Location>
+        <ObjectType>Atom.Item.Wearable.Feet.Shoes</ObjectType>
+      </SpawnEquipDefinition>
+    </SpawnEquipment>
+    <Name>Chemist</Name>
+    <Description>Researches new chemicals or chemical compounds.</Description>
+	<MaxNum>3</MaxNum>
+	<JobIcon>Controls.JobButton.None</JobIcon>
+	<Available>true</Available>
+  </JobDefinition>
+  
+  <JobDefinition>
+    <SpawnEquipment>
+      <SpawnEquipDefinition>
+        <Location>Inner</Location>
+        <ObjectType>Atom.Item.Wearable.Inner.Jumpsuit.Assistant_Grey</ObjectType>
+      </SpawnEquipDefinition>
+      <SpawnEquipDefinition>
+        <Location>Feet</Location>
+        <ObjectType>Atom.Item.Wearable.Feet.Shoes</ObjectType>
+      </SpawnEquipDefinition>
+    </SpawnEquipment>
+    <Name>Roboticist</Name>
+    <Description>Builds robots. TBD</Description>
+	<MaxNum>3</MaxNum>
+	<JobIcon>Controls.JobButton.None</JobIcon>
+	<Available>true</Available>
+  </JobDefinition>
+  
+  <JobDefinition>
+    <SpawnEquipment>
+      <SpawnEquipDefinition>
+        <Location>Inner</Location>
+        <ObjectType>Atom.Item.Wearable.Inner.Jumpsuit.Assistant_Grey</ObjectType>
+      </SpawnEquipDefinition>
+      <SpawnEquipDefinition>
+        <Location>Feet</Location>
+        <ObjectType>Atom.Item.Wearable.Feet.Shoes</ObjectType>
+      </SpawnEquipDefinition>
+    </SpawnEquipment>
+    <Name>Captain</Name>
+    <Description>TBD</Description>
+	<MaxNum>3</MaxNum>
+	<JobIcon>Controls.JobButton.None</JobIcon>
+	<Available>true</Available>
+  </JobDefinition>
+  
+  <JobDefinition>
+    <SpawnEquipment>
+      <SpawnEquipDefinition>
+        <Location>Inner</Location>
+        <ObjectType>Atom.Item.Wearable.Inner.Jumpsuit.Assistant_Grey</ObjectType>
+      </SpawnEquipDefinition>
+      <SpawnEquipDefinition>
+        <Location>Feet</Location>
+        <ObjectType>Atom.Item.Wearable.Feet.Shoes</ObjectType>
+      </SpawnEquipDefinition>
+    </SpawnEquipment>
+    <Name>Placeholder</Name>
+    <Description>---</Description>
+	<MaxNum>0</MaxNum>
 	<JobIcon>Controls.JobButton.None</JobIcon>
 	<Available>false</Available>
   </JobDefinition>
+  
 </ArrayOfJobDefinition>

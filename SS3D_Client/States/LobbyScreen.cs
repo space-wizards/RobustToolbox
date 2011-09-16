@@ -91,7 +91,7 @@ namespace SS3D.States
             joinButton.Position = new System.Drawing.Point(605 - joinButton.Size.Width - 5, 230 - joinButton.Size.Height - 5);
             UiManager.Singleton.Components.Add(joinButton);
 
-            jobButtonContainer = new ScrollableContainer("LobbyJobCont", new System.Drawing.Size(400, 400));
+            jobButtonContainer = new ScrollableContainer("LobbyJobCont", new System.Drawing.Size(450, 400));
             jobButtonContainer.Position = new System.Drawing.Point(630, 35);
             UiManager.Singleton.Components.Add(jobButtonContainer);
 

@@ -17,8 +17,8 @@ namespace CGO
 
         public EntityManager()
         {
-            m_entityFactory = new EntityFactory();
             m_entityTemplateDatabase = new EntityTemplateDatabase();
+            m_entityFactory = new EntityFactory(m_entityTemplateDatabase);
         }
 
         /// <summary>
@@ -40,13 +40,11 @@ namespace CGO
         /// <returns>integer id of added entity</returns>
         public int CreateEntity(string templateName)
         {
-            EntityTemplate template = m_entityTemplateDatabase.GetTemplate(templateName);
-            //TODO: Throw exception here
-            if (template == null)
-                return -1;
-            Entity e = template.CreateEntity();
+            //Get the entity from the factory
+            Entity e = m_entityFactory.CreateEntity(templateName);
             if (e != null)
             {
+                //It worked, add it.
                 m_entities.Add(++lastId, e);
                 lastId++;
                 return lastId;

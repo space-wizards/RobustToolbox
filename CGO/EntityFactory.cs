@@ -7,11 +7,14 @@ namespace CGO
 {
     public class EntityFactory
     {
+        private EntityTemplateDatabase m_entityTemplateDatabase;
+
         /// <summary>
         /// Constructor
         /// </summary>
-        public EntityFactory()
+        public EntityFactory(EntityTemplateDatabase entityTemplateDatabase)
         {
+            m_entityTemplateDatabase = entityTemplateDatabase;
         }
 
         /// <summary>
@@ -21,7 +24,11 @@ namespace CGO
         /// <returns>Created Entity</returns>
         public Entity CreateEntity(string entityTemplateName)
         {
-            return null;
+            EntityTemplate template = m_entityTemplateDatabase.GetTemplate(entityTemplateName);
+            //TODO: Throw exception here
+            if (template == null)
+                return null;
+            return template.CreateEntity();
         }
     }
 }

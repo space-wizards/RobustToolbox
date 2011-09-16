@@ -7,6 +7,7 @@ using System.Security;
 using System.Reflection;
 using GorgonLibrary;
 using System.Collections;
+using Lidgren.Network;
 
 namespace CGO
 {
@@ -17,6 +18,7 @@ namespace CGO
     /// </summary>
     public class Entity
     {
+        #region Variables
         /// <summary>
         /// Holds this entity's components
         /// </summary>
@@ -28,7 +30,8 @@ namespace CGO
         /// </summary>
         public Vector2D position;
         public float rotation;
-
+        #endregion
+        #region Constructor/Destructor
         /// <summary>
         /// Constructor
         /// </summary>
@@ -48,7 +51,9 @@ namespace CGO
             }
             components.Clear();
         }
-        
+        #endregion
+
+        #region Component Manipulation
         /// <summary>
         /// Public method to add a component to an entity.
         /// Calls the component's onAdd method, which also adds it to the component manager.
@@ -79,14 +84,6 @@ namespace CGO
         }
 
         /// <summary>
-        /// Public update method for the entity. This will be useless after the atom code is refactored.
-        /// </summary>
-        /// <param name="frameTime"></param>
-        public virtual void Update(float frameTime)
-        {
-        }
-
-        /// <summary>
         /// Allows components to send messages
         /// </summary>
         /// <param name="sender">the component doing the sending</param>
@@ -99,6 +96,16 @@ namespace CGO
                 component.RecieveMessage(sender, type, args);
             }
         }
+        #endregion
+
+        /// <summary>
+        /// Public update method for the entity. This will be useless after the atom code is refactored.
+        /// </summary>
+        /// <param name="frameTime"></param>
+        public virtual void Update(float frameTime)
+        {
+        }
+
 
 #region Movement
         /// <summary>

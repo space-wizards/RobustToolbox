@@ -85,5 +85,16 @@ namespace CGO
         {
 
         }
+
+        /// <summary>
+        /// This allows setting of the component's parameters once it is instantiated.
+        /// This should basically be overridden by every inheriting component, as parameters will be different
+        /// across the board.
+        /// </summary>
+        /// <param name="parameter">ComponentParameter object describing the parameter and the value</param>
+        public virtual void SetParameter(ComponentParameter parameter)
+        {
+
+        }
     }
 }

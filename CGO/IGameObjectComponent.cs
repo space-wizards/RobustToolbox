@@ -15,5 +15,6 @@ namespace CGO
         void Update(float frameTime);
         void Shutdown();
         ComponentFamily Family {get;set;}
+        void SetParameter(ComponentParameter parameter);
     }
 }

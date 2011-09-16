@@ -45,7 +45,27 @@ namespace CGO
         /// <returns></returns>
         public Entity CreateEntity()
         {
-            return null;
+            Entity e = new Entity();
+
+            foreach (string componentname in components)
+            {
+                IGameObjectComponent component = ComponentFactory.Singleton.GetComponent(componentname);
+                if (component == null)
+                    continue; //TODO THROW ERROR
+
+                ///Get all the params in the template that apply to this component
+                var cparameters = from parameter in parameters
+                                  where parameter.Key == componentname
+                                  select parameter.Value;
+                foreach (ComponentParameter p in cparameters)
+                {
+                    ///Set the component's parameters
+                    component.SetParameter(p);
+                }
+                ///Add the component to the entity
+                e.AddComponent(component.Family, component);
+            }
+            return e;
         }
 
         /// <summary>
@@ -53,17 +73,17 @@ namespace CGO
         /// </summary>
         public void AddComponent(string componentType)
         {
-            
+            components.Add(componentType);
         }
 
         /// <summary>
-        /// Sets a parameter for a component type
+        /// Sets a parameter for a component type for this template
         /// </summary>
         /// <param name="t">The type of the component to set a parameter on</param>
         /// <param name="parameter">The parameter object</param>
         public void SetParameter(string componenttype, ComponentParameter parameter)
         {
-
+            parameters.Add(componenttype, parameter);
         }
     }
 }

@@ -30,6 +30,7 @@ namespace SS3D.Modules
     public abstract void MouseUp(MouseInputEventArgs e);
     public abstract void MouseDown(MouseInputEventArgs e);
     public abstract void MouseMove(MouseInputEventArgs e);
+    public abstract void MouseWheelMove(MouseInputEventArgs e);
     public abstract void FormResize();
 
   }

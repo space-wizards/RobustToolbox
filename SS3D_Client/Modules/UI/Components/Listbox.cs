@@ -65,24 +65,29 @@ namespace SS3D.Modules.UI.Components
             int offset = 0;
             foreach (string str in contentStrings)
             {
-                Label newEntry = new Label(str);
-                newEntry.drawBackground = true;
-                newEntry.drawBorder = true;
+                ListboxItem newEntry = new ListboxItem(str, Width);
                 newEntry.Position = new Point(0, offset);
                 newEntry.Update();
-                newEntry.Text.SetSize(dropDown.ClientArea.Width, newEntry.Text.Height);
+                newEntry.Clicked += new Label.LabelPressHandler(newEntry_Clicked);
                 dropDown.components.Add(newEntry);
                 offset += (int)newEntry.Text.Height;
-                newEntry.Clicked += new Label.LabelPressHandler(newEntry_Clicked);
             }
         }
 
         void newEntry_Clicked(Label sender)
         {
             if (ItemSelected != null) ItemSelected(sender);
+
             currentlySelected = sender;
             selectedLabel.Text = sender.Text.Text;
             dropDown.SetVisible(false);
+
+            ((ListboxItem)sender).selected = true;
+            var notSelected = from ListboxItem item in dropDown.components
+                              where item != sender
+                              select item;
+            foreach (ListboxItem curr in notSelected) curr.selected = false;
+
         }
 
         public override void Update()
@@ -141,5 +146,27 @@ namespace SS3D.Modules.UI.Components
             return;
         }
 
+    }
+
+    class ListboxItem : Label
+    {
+        private int width;
+        public bool selected = false;
+
+        public ListboxItem(string text, int _width)
+            : base(text)
+        {
+            width = _width;
+            drawBorder = true;
+            drawBackground = true;
+        }
+
+        public override void Update()
+        {
+            Text.Position = position;
+            ClientArea = new Rectangle(this.position, new Size(width, (int)Text.Height));
+            if (selected) backgroundColor = System.Drawing.Color.DarkSlateGray;
+            else backgroundColor = System.Drawing.Color.Gray;
+        }
     }
 }

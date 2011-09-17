@@ -62,8 +62,8 @@ namespace SS3D.Modules.UI.Components
             }
             set
             {
-                actualVal = value;
-                currentPos = (int)Math.Round(value / stepSize);
+                actualVal = Math.Min(max, Math.Max(value, 0));
+                currentPos = (int)Math.Round(actualVal / stepSize);
                 RaiseEvent = true;
             }
         }

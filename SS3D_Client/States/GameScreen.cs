@@ -720,7 +720,8 @@ namespace SS3D.States
             mousePosWorld = new Vector2D(e.Position.X + xTopLeft, e.Position.Y + yTopLeft);
             UiManager.Singleton.MouseMove(e);
         }
- 
+        public override void MouseWheelMove(MouseInputEventArgs e)
+        { } 
         #endregion
 
     }

@@ -132,6 +132,8 @@ namespace SS3D.States
         { }
         public override void MouseMove(MouseInputEventArgs e)
         { }
+        public override void MouseWheelMove(MouseInputEventArgs e)
+        { }
         #endregion
     }
 

@@ -330,6 +330,10 @@ namespace SS3D.States
         {
             UiManager.Singleton.MouseMove(e);
         }
+        public override void MouseWheelMove(MouseInputEventArgs e)
+        {
+            UiManager.Singleton.MouseWheelMove(e);
+        }
         #endregion
     }
 }

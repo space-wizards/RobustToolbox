@@ -123,6 +123,7 @@ namespace SS3D
             _mouse.MouseDown += new MouseInputEvent(MouseDownEvent);
             _mouse.MouseUp += new MouseInputEvent(MouseUpEvent);
             _mouse.MouseMove += new MouseInputEvent(MouseMoveEvent);
+            _mouse.MouseWheelMove += new MouseInputEvent(MouseWheelMoveEvent);
 
             // Enable the keyboard.
             _keyboard = _input.Keyboard;
@@ -246,7 +247,17 @@ namespace SS3D
         {
             stateMgr.KeyUp(e);
         }
-        
+
+        /// <summary>
+        /// Handles mouse wheel input.
+        /// </summary>
+        /// <param name="sender">The source of the event.</param>
+        /// <param name="e">The <see cref="GorgonLibrary.InputDevices.MouseInputEventArgs"/> instance containing the event data.</param>
+        private void MouseWheelMoveEvent(object sender, MouseInputEventArgs e)
+        {
+            stateMgr.MouseWheelMove(e);
+        }       
+
         /// <summary>
 		/// Handles any mouse input.
 		/// </summary>

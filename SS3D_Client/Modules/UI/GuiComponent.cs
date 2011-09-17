@@ -113,6 +113,11 @@ namespace SS3D.Modules.UI
         {
         }
 
+        public virtual bool MouseWheelMove(MouseInputEventArgs e)
+        {
+            return false;
+        }
+
         public virtual bool KeyDown(KeyboardInputEventArgs e)
         {
             return false;

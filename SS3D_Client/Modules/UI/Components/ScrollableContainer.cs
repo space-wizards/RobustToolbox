@@ -25,6 +25,8 @@ namespace SS3D.Modules.UI.Components
         float max_x = 0;
         float max_y = 0;
 
+        Scrollbar focus_scrollbar;
+
         bool disposing = false;
 
         public ScrollableContainer(string uniqueName, Size size)
@@ -98,11 +100,28 @@ namespace SS3D.Modules.UI.Components
             GC.SuppressFinalize(this);
         }
 
+        private void setFocusScrollbar()
+        {
+            if (scrollbarH.IsVisible() && !scrollbarV.IsVisible())
+                focus_scrollbar = scrollbarH;
+
+            if (!scrollbarH.IsVisible() && scrollbarV.IsVisible())
+                focus_scrollbar = scrollbarV;
+        }
+
         public override bool MouseDown(MouseInputEventArgs e)
         {
             if (disposing || !IsVisible()) return false;
-            if (scrollbarH.MouseDown(e)) return true;
-            if (scrollbarV.MouseDown(e)) return true;
+            if (scrollbarH.MouseDown(e))
+            {
+                focus_scrollbar = scrollbarH;
+                return true;
+            }
+            if (scrollbarV.MouseDown(e))
+            {
+                focus_scrollbar = scrollbarV;
+                return true;
+            }
 
             MouseInputEventArgs modArgs = new MouseInputEventArgs
                 (e.Buttons,
@@ -115,7 +134,17 @@ namespace SS3D.Modules.UI.Components
 
             foreach (GuiComponent component in components)
             {
-                if (component.MouseDown(modArgs)) return true;
+                if (component.MouseDown(modArgs))
+                {
+                    setFocusScrollbar();
+                    return true;
+                }
+            }
+
+            if (clientArea.Contains(new Point((int)e.Position.X, (int)e.Position.Y)))
+            {
+                setFocusScrollbar();
+                return true;
             }
 
             return false;
@@ -135,6 +164,12 @@ namespace SS3D.Modules.UI.Components
             scrollbarH.MouseMove(e);
             scrollbarV.MouseMove(e);
             return;
+        }
+
+        public override bool MouseWheelMove(MouseInputEventArgs e)
+        {
+            if(focus_scrollbar != null) focus_scrollbar.Value += ((Math.Sign(e.WheelDelta) * -1) * Math.Max(((focus_scrollbar.max / 20)),1));
+            return false;
         }
 
     }

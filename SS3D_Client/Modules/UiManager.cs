@@ -270,6 +270,19 @@ namespace SS3D.Modules
         }
 
         /// <summary>
+        ///  Handles MouseWheelMove event. Sent to Focused component.  Returns true if a component accepted and handled the event.
+        /// </summary>
+        public virtual void MouseWheelMove(MouseInputEventArgs e)
+        {
+            var inputTo = (from IGuiComponent comp in Components
+                            where comp.RecieveInput
+                            where comp.Focus == true
+                            select comp).FirstOrDefault();
+
+            if(inputTo != null) inputTo.MouseWheelMove(e);
+        }
+
+        /// <summary>
         ///  Handles KeyDown event. Returns true if a component accepted and handled the event.
         /// </summary>
         public virtual bool KeyDown(KeyboardInputEventArgs e)

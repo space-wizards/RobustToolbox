@@ -130,6 +130,12 @@ namespace SS3D.Modules
             mCurrentState.MouseMove(e);
     }
 
+    public void MouseWheelMove(MouseInputEventArgs e)
+    {
+        if (mCurrentState != null)
+            mCurrentState.MouseWheelMove(e);
+    }
+
     #endregion
 
     #region Updates & Statechanges

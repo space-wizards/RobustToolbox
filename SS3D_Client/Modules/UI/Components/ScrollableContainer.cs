@@ -130,26 +130,27 @@ namespace SS3D.Modules.UI.Components
                 return true;
             }
 
-            MouseInputEventArgs modArgs = new MouseInputEventArgs
-                (e.Buttons,
-                e.ShiftButtons,
-                new Vector2D(e.Position.X - position.X + scrollbarH.Value, e.Position.Y - position.Y + scrollbarV.Value),
-                e.WheelPosition,
-                e.RelativePosition,
-                e.WheelDelta,
-                e.ClickCount);
-
-            foreach (GuiComponent component in components)
-            {
-                if (component.MouseDown(modArgs))
-                {
-                    SetFocus(component);
-                    return true;
-                }
-            }
-
             if (clientArea.Contains(new Point((int)e.Position.X, (int)e.Position.Y)))
+            {
+                MouseInputEventArgs modArgs = new MouseInputEventArgs
+                    (e.Buttons,
+                    e.ShiftButtons,
+                    new Vector2D(e.Position.X - position.X + scrollbarH.Value, e.Position.Y - position.Y + scrollbarV.Value),
+                    e.WheelPosition,
+                    e.RelativePosition,
+                    e.WheelDelta,
+                    e.ClickCount);
+
+                foreach (GuiComponent component in components)
+                {
+                    if (component.MouseDown(modArgs))
+                    {
+                        SetFocus(component);
+                        return true;
+                    }
+                }
                 return true;
+            }
 
             return false;
         }

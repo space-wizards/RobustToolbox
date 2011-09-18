@@ -128,6 +128,12 @@ namespace SS3D.Modules.UI.Components
             }
         }
 
+        public override bool MouseWheelMove(MouseInputEventArgs e)
+        {
+            Value += ((Math.Sign(e.WheelDelta) * -1) * Math.Max(((max / 20)), 1));
+            return true;
+        }
+
         public override void Update()
         {
             if (!IsVisible()) return;

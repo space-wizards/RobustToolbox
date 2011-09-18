@@ -99,6 +99,10 @@ namespace SS3D.States
             test.Position = new System.Drawing.Point(400, 400);
             UiManager.Singleton.Components.Add(test);
 
+            Textbox texttest = new Textbox(200);
+            texttest.Position = new System.Drawing.Point(600, 600);
+            UiManager.Singleton.Components.Add(texttest);
+
             Gorgon.Screen.Clear();
 
             //BYPASS LOBBY
@@ -315,9 +319,12 @@ namespace SS3D.States
         #region Input
  
         public override void KeyDown(KeyboardInputEventArgs e)
-        { }
+        {
+            UiManager.Singleton.KeyDown(e);
+        }
         public override void KeyUp(KeyboardInputEventArgs e)
-        { }
+        {
+        }
         public override void MouseUp(MouseInputEventArgs e)
         {
             UiManager.Singleton.MouseUp(e);

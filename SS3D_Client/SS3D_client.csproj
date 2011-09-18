@@ -176,6 +176,7 @@
     <Compile Include="Modules\UI\Components\Scrollbar.cs" />
     <Compile Include="Modules\UI\Components\StatHealthComponent.cs" />
     <Compile Include="Modules\UI\Components\StatPanel.cs" />
+    <Compile Include="Modules\UI\Components\Textbox.cs" />
     <Compile Include="Modules\UI\GuiComponent.cs" />
     <Compile Include="Modules\UI\Speechbubble.cs" />
     <Compile Include="Modules\UI\IGuiComponent.cs" />

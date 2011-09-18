@@ -46,9 +46,9 @@ namespace SS3D.Modules.UI.Components
 
             clientAreaLeft = new Rectangle(this.position, new Size(ButtonLeft.Dimensions.Width, ButtonLeft.Dimensions.Height));
             clientAreaMain = new Rectangle(new Point(clientAreaLeft.Right, this.position.Y), new Size((int)label.Width, ButtonMain.Dimensions.Height));
-            label.Position = new Point(clientAreaLeft.Right, this.position.Y);
             clientAreaRight = new Rectangle(new Point(clientAreaMain.Right, this.position.Y), new Size(ButtonRight.Dimensions.Width, ButtonRight.Dimensions.Height));
             clientArea = new Rectangle(this.position, new Size(clientAreaLeft.Width + clientAreaMain.Width + clientAreaRight.Width, clientAreaMain.Height));
+            label.Position = new Point(clientAreaLeft.Right, this.position.Y);
         }
 
         public override void Render()

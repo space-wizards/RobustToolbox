@@ -193,9 +193,8 @@ namespace SS3D.Modules
         /// <summary>
         ///  Sets focus for a component.
         /// </summary>
-        private void SetFocus(IGuiComponent newFocus)
+        public void SetFocus(IGuiComponent newFocus)
         {
-            if (newFocus == currentFocus) return;
             if (currentFocus != null)
             {
                 currentFocus.Focus = false;
@@ -207,6 +206,24 @@ namespace SS3D.Modules
                 currentFocus = newFocus;
                 newFocus.Focus = true;
             }
+        }
+
+        /// <summary>
+        ///  Removes focus for currently focused control.
+        /// </summary>
+        public void RemoveFocus()
+        {
+            if (currentFocus == null) return;
+            currentFocus = null;
+        }
+
+        /// <summary>
+        ///  Removes focus for given control if control has focus.
+        /// </summary>
+        public void RemoveFocus(IGuiComponent remFocus)
+        {
+            if (currentFocus != remFocus) return;
+            currentFocus = null;
         }
 
         #region Input
@@ -270,7 +287,7 @@ namespace SS3D.Modules
         }
 
         /// <summary>
-        ///  Handles MouseWheelMove event. Sent to Focused component.  Returns true if a component accepted and handled the event.
+        ///  Handles MouseWheelMove event. Sent to Focused component.  Returns true if component accepted and handled the event.
         /// </summary>
         public virtual void MouseWheelMove(MouseInputEventArgs e)
         {

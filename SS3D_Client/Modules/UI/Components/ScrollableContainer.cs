@@ -25,7 +25,7 @@ namespace SS3D.Modules.UI.Components
         float max_x = 0;
         float max_y = 0;
 
-        Scrollbar focus_scrollbar;
+        IGuiComponent inner_focus;
 
         bool disposing = false;
 
@@ -100,26 +100,33 @@ namespace SS3D.Modules.UI.Components
             GC.SuppressFinalize(this);
         }
 
-        private void setFocusScrollbar()
+        private void SetFocus(IGuiComponent newFocus)
         {
-            if (scrollbarH.IsVisible() && !scrollbarV.IsVisible())
-                focus_scrollbar = scrollbarH;
-
-            if (!scrollbarH.IsVisible() && scrollbarV.IsVisible())
-                focus_scrollbar = scrollbarV;
+            if (inner_focus != null)
+            {
+                inner_focus.Focus = false;
+                inner_focus = newFocus;
+                newFocus.Focus = true;
+            }
+            else
+            {
+                inner_focus = newFocus;
+                newFocus.Focus = true;
+            }
         }
 
         public override bool MouseDown(MouseInputEventArgs e)
         {
             if (disposing || !IsVisible()) return false;
+
             if (scrollbarH.MouseDown(e))
             {
-                focus_scrollbar = scrollbarH;
+                SetFocus(scrollbarH);
                 return true;
             }
             if (scrollbarV.MouseDown(e))
             {
-                focus_scrollbar = scrollbarV;
+                SetFocus(scrollbarV);
                 return true;
             }
 
@@ -136,16 +143,13 @@ namespace SS3D.Modules.UI.Components
             {
                 if (component.MouseDown(modArgs))
                 {
-                    setFocusScrollbar();
+                    SetFocus(component);
                     return true;
                 }
             }
 
             if (clientArea.Contains(new Point((int)e.Position.X, (int)e.Position.Y)))
-            {
-                setFocusScrollbar();
                 return true;
-            }
 
             return false;
         }
@@ -155,6 +159,19 @@ namespace SS3D.Modules.UI.Components
             if (disposing || !IsVisible()) return false;
             if (scrollbarH.MouseUp(e)) return true;
             if (scrollbarV.MouseUp(e)) return true;
+
+            MouseInputEventArgs modArgs = new MouseInputEventArgs
+                (e.Buttons,
+                e.ShiftButtons,
+                new Vector2D(e.Position.X - position.X + scrollbarH.Value, e.Position.Y - position.Y + scrollbarV.Value),
+                e.WheelPosition,
+                e.RelativePosition,
+                e.WheelDelta,
+                e.ClickCount);
+
+            foreach (GuiComponent component in components)
+                component.MouseUp(modArgs);
+
             return false;
         }
 
@@ -163,14 +180,34 @@ namespace SS3D.Modules.UI.Components
             if (disposing || !IsVisible()) return;
             scrollbarH.MouseMove(e);
             scrollbarV.MouseMove(e);
+
+            MouseInputEventArgs modArgs = new MouseInputEventArgs
+                (e.Buttons,
+                e.ShiftButtons,
+                new Vector2D(e.Position.X - position.X + scrollbarH.Value, e.Position.Y - position.Y + scrollbarV.Value),
+                e.WheelPosition,
+                e.RelativePosition,
+                e.WheelDelta,
+                e.ClickCount);
+
+            foreach (GuiComponent component in components)
+                component.MouseMove(modArgs);
+
             return;
         }
 
         public override bool MouseWheelMove(MouseInputEventArgs e)
         {
-            if(focus_scrollbar != null) focus_scrollbar.Value += ((Math.Sign(e.WheelDelta) * -1) * Math.Max(((focus_scrollbar.max / 20)),1));
+            if (inner_focus != null)
+                if(inner_focus.MouseWheelMove(e)) return true;
             return false;
         }
 
+        public override bool KeyDown(KeyboardInputEventArgs e)
+        {
+            foreach (GuiComponent component in components)
+                if (component.KeyDown(e)) return true;
+            return false;
+        }
     }
 }

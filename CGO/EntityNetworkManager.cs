@@ -6,7 +6,7 @@ using Lidgren.Network;
 
 namespace CGO
 {
-    class EntityNetworkManager
+    public class EntityNetworkManager
     {
         private NetClient m_netClient;
 

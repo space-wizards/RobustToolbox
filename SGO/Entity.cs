@@ -28,6 +28,8 @@ namespace SGO
         /// </summary>
         private Dictionary<ComponentFamily, IGameObjectComponent> components;
 
+        private EntityNetworkManager m_entityNetworkManager;
+
         private int uid;
         public int Uid
         {
@@ -55,7 +57,34 @@ namespace SGO
         /// </summary>
         public Entity()
         {
+            Initialize();
+        }
+
+        /// <summary>
+        /// Constructor for realz. This one should be used eventually instead of the naked one.
+        /// </summary>
+        /// <param name="entityNetworkManager"></param>
+        public Entity(EntityNetworkManager entityNetworkManager)
+        {
+            m_entityNetworkManager = entityNetworkManager;
+            Initialize();
+        }
+
+        /// <summary>
+        /// Sets up variables and shite
+        /// </summary>
+        public void Initialize()
+        {
             components = new Dictionary<ComponentFamily, IGameObjectComponent>();
+        }
+
+        /// <summary>
+        /// Compatibility method for atoms. This should be eliminated eventually when the above naked constructor is eliminated.
+        /// </summary>
+        /// <param name="entityNetworkManager"></param>
+        public void InitializeEntityNetworking(EntityNetworkManager entityNetworkManager)
+        {
+            m_entityNetworkManager = entityNetworkManager;
         }
         
         /// <summary>

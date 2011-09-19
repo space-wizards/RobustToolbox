@@ -6,7 +6,7 @@ using Lidgren.Network;
 
 namespace SGO
 {
-    class EntityNetworkManager
+    public class EntityNetworkManager
     {
         private NetServer m_netServer;
         public EntityNetworkManager(NetServer netServer)

@@ -25,6 +25,7 @@ public enum NetMessage
     JoinGame,
     ForceRestart,
     AtmosDisplayUpdate,
+    EntityMessage,
 }
 
 public enum ItemMessage

@@ -8,6 +8,7 @@ using System.Reflection;
 using GorgonLibrary;
 using System.Collections;
 using Lidgren.Network;
+using SS3D_shared.GO;
 
 namespace CGO
 {
@@ -23,7 +24,22 @@ namespace CGO
         /// Holds this entity's components
         /// </summary>
         private Dictionary<ComponentFamily, IGameObjectComponent> components;
-
+        
+        /// <summary>
+        /// Unique entity id
+        /// </summary>
+        private int uid;
+        public int Uid
+        {
+            get
+            {
+                return uid;
+            }
+            set
+            {
+                uid = value;
+            }
+        }
 
         /// <summary>
         /// These are the only real pieces of data that the entity should have -- position and rotation.

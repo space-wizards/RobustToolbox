@@ -4,7 +4,7 @@ using System.Linq;
 using System.Text;
 using SS3D_shared.GO;
 
-namespace CGO
+namespace SGO
 {
     public interface IGameObjectComponent
     {

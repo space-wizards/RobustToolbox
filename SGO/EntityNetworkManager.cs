@@ -5,7 +5,7 @@ using System.Text;
 
 namespace SGO
 {
-    public interface IMoverComponent : IGameObjectComponent
+    class EntityNetworkManager
     {
     }
 }

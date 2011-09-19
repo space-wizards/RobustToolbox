@@ -11,11 +11,12 @@ using SS3D_Server.HelperClasses;
 using SS3D_Server.Modules;
 using SS3D_shared;
 using SS3D_shared.HelperClasses;
+using SGO;
 
 namespace SS3D_Server.Atom
 {
     [Serializable()]
-    public class Atom : ISerializable  // SERVER SIDE
+    public class Atom : Entity, ISerializable  // SERVER SIDE
     {
        
         #region variables
@@ -37,9 +38,6 @@ namespace SS3D_Server.Atom
         public List<Extension.Extension> extensions;
 
         // Position data
-        public Vector2 position;
-        public Vector2 offset;
-        public float rotation;
 
         public int maxHealth = 100;
         public int currentHealth = 100; // By default health is 100
@@ -55,7 +53,6 @@ namespace SS3D_Server.Atom
         public Atom()
         {
             position = new Vector2(192, 192);
-            offset = new Vector2(0, 0);
             rotation = 0;
             name = this.GetType().ToString();
 
@@ -490,26 +487,15 @@ namespace SS3D_Server.Atom
         #endregion
 
         #region Serialization
-
-        public void SerializeBasicInfo(SerializationInfo info, StreamingContext ctxt)
-        {
-            name = (string)info.GetValue("name", typeof(string));
-            position = (Vector2)info.GetValue("position", typeof(Vector2));
-            rotation = (float)info.GetValue("rotation", typeof(float));
-        }
-
+        
         public Atom(SerializationInfo info, StreamingContext ctxt)
         {
-            name = (string)info.GetValue("name", typeof(string));
-            position = (Vector2)info.GetValue("position", typeof(Vector2));
-            rotation = (float)info.GetValue("rotation", typeof(float));
+            SerializeBasicInfo(info, ctxt);
         }
 
-        public virtual void GetObjectData(SerializationInfo info, StreamingContext ctxt)
+        public override void GetObjectData(SerializationInfo info, StreamingContext ctxt)
         {
-            info.AddValue("name", name);
-            info.AddValue("position", position);
-            info.AddValue("rotation", rotation);
+            base.GetObjectData(info, ctxt);
         }
 
         #endregion

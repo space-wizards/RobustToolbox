@@ -82,6 +82,7 @@
     <Compile Include="Atom\Mob\Player.cs" />
     <Compile Include="GlobalConstants.cs" />
     <Compile Include="BuildPermission.cs" />
+    <Compile Include="GO\ComponentEnums.cs" />
     <Compile Include="JobHandler.cs" />
     <Compile Include="SessionStatusEnum.cs" />
     <Compile Include="Vector2.cs" />

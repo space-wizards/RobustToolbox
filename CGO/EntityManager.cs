@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using Lidgren.Network;
 
 namespace CGO
 {
@@ -12,11 +13,13 @@ namespace CGO
     {
         private EntityFactory m_entityFactory;
         private EntityTemplateDatabase m_entityTemplateDatabase;
+        private EntityNetworkManager m_entityNetworkManager;
         private Dictionary<int, Entity> m_entities;
         private int lastId = 0;
 
-        public EntityManager()
+        public EntityManager(NetClient netClient)
         {
+            m_entityNetworkManager = new EntityNetworkManager(netClient);
             m_entityTemplateDatabase = new EntityTemplateDatabase();
             m_entityFactory = new EntityFactory(m_entityTemplateDatabase);
         }
@@ -51,6 +54,16 @@ namespace CGO
             }
             //TODO: throw exception here -- something went wrong.
             return -1;
+        }
+
+        public void Shutdown()
+        {
+            throw new NotImplementedException();
+        }
+
+        public void HandleNetworkMessage(NetIncomingMessage msg)
+        {
+            throw new NotImplementedException();
         }
     }
 }

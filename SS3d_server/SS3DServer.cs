@@ -14,6 +14,7 @@ using Lidgren.Network;
 using SS3D_shared;
 
 using SS3D_Server.Modules.Gamemodes;
+using SGO;
 
 namespace SS3D_Server
 {
@@ -24,6 +25,7 @@ namespace SS3D_Server
         public Map map;
         public ChatManager chatManager;
         public AtomManager atomManager;
+        public EntityManager entityManager;
         public PlayerManager playerManager;
         public RunLevel runlevel {get;private set;}
 
@@ -120,6 +122,7 @@ namespace SS3D_Server
                 map.InitMap(serverMapName);
 
                 atomManager = new AtomManager();
+                entityManager = new EntityManager(SS3DNetServer.Singleton);
                 //playerManager = new PlayerManager();
                 atomManager.LoadAtoms();
 
@@ -441,6 +444,9 @@ namespace SS3D_Server
                     break;
                 case NetMessage.PlacementManagerMessage:
                     PlacementManager.Singleton.HandleNetMessage(msg);
+                    break;
+                case NetMessage.EntityMessage:
+                    entityManager.HandleNetworkMessage(msg);
                     break;
                 default:
                     break;

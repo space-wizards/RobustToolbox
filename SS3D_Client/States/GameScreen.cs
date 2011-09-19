@@ -22,6 +22,7 @@ using GorgonLibrary.Graphics;
 using GorgonLibrary.InputDevices;
 
 using System.Windows.Forms;
+using CGO;
 
 namespace SS3D.States
 {
@@ -31,6 +32,7 @@ namespace SS3D.States
         private StateManager mStateMgr;
         public Map map;
         private AtomManager atomManager;
+        private EntityManager entityManager;
 
         //UI Vars
         #region UI Variables
@@ -103,6 +105,7 @@ namespace SS3D.States
             UiManager.Singleton.DisposeAllComponents();
 
             atomManager = new AtomManager(this, prg);
+            entityManager = new EntityManager(prg.mNetworkMgr.netClient);
             PlayerController.Initialize(this, atomManager);
             playerController = PlayerController.Singleton;
 
@@ -197,9 +200,11 @@ namespace SS3D.States
             }
             gaussianBlur.Dispose();
             atomManager.Shutdown();
+            entityManager.Shutdown();
             map.Shutdown();
             PlacementManager.Singleton.Reset();
-            atomManager = null; 
+            atomManager = null;
+            entityManager = null;
             map = null;
             UIDesktop.Singleton.Windows.Remove(gameChat);
             gameChat.Dispose();
@@ -256,6 +261,9 @@ namespace SS3D.States
                             break;
                         case NetMessage.ChatMessage:
                             HandleChatMessage(msg);
+                            break;
+                        case NetMessage.EntityMessage:
+                            entityManager.HandleNetworkMessage(msg);
                             break;
                         default:
                             break;

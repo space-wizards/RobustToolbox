@@ -4,7 +4,7 @@ using System.Linq;
 using System.Text;
 using SS3D_shared.GO;
 
-namespace CGO
+namespace SGO
 {
     public class GameObjectComponent : IGameObjectComponent
     {
@@ -39,7 +39,7 @@ namespace CGO
         /// <param name="sender">the component that sent the message</param>
         /// <param name="type">the message type in CGO.MessageType</param>
         /// <param name="list">parameters list</param>
-        public virtual void RecieveMessage(object sender, CGO.MessageType type, params object[] list)
+        public virtual void RecieveMessage(object sender, MessageType type, params object[] list)
         {
             if (sender == this) //Don't listen to our own messages!
                 return;

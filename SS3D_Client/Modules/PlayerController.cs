@@ -9,6 +9,7 @@ using Lidgren.Network;
 using GorgonLibrary;
 using GorgonLibrary.InputDevices;
 using SS3D_shared;
+using SS3D_shared.GO;
 
 namespace SS3D.Modules
 {
@@ -61,7 +62,7 @@ namespace SS3D.Modules
             controlledAtom = newAtom;
             controlledAtom.initKeys();
             controlledAtom.attached = true;
-            controlledAtom.AddComponent(CGO.ComponentFamily.Input, CGO.ComponentFactory.Singleton.GetComponent("KeyBindingInputComponent"));
+            controlledAtom.AddComponent(ComponentFamily.Input, CGO.ComponentFactory.Singleton.GetComponent("KeyBindingInputComponent"));
         }
 
         public void Detach()
@@ -70,7 +71,7 @@ namespace SS3D.Modules
                 return;
             controlledAtom.attached = false;
             controlledAtom = null;
-            controlledAtom.RemoveComponent(CGO.ComponentFamily.Input);
+            controlledAtom.RemoveComponent(ComponentFamily.Input);
         }
 
         public void KeyDown(KeyboardKeys key)

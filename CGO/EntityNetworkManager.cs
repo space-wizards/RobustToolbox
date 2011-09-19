@@ -3,9 +3,9 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 
-namespace SGO
+namespace CGO
 {
-    public interface IMoverComponent : IGameObjectComponent
+    class EntityNetworkManager
     {
     }
 }

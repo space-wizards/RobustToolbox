@@ -271,7 +271,7 @@ namespace SS3D.States
             UIDesktop.Singleton.Windows.Remove(lobbyChat);
             lobbyChat.Dispose();
             lobbyChat = null;
-            UIDesktop.Singleton.Dispose();
+            //UIDesktop.Singleton.Dispose();
             prg.mNetworkMgr.MessageArrived -= new NetworkMsgHandler(mNetworkMgr_MessageArrived);
             RenderTargetCache.DestroyAll();
         }

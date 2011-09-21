@@ -54,7 +54,7 @@ namespace SS3D_Server.Modules
             NetOutgoingMessage m = SS3DNetServer.Singleton.CreateMessage();
             m.Write((byte)NetMessage.PlayerSessionMessage);
             m.Write((byte)PlayerSessionMessage.AttachToAtom);
-            m.Write(attachedAtom.uid);
+            m.Write(attachedAtom.Uid);
             SS3DServer.Singleton.SendMessageTo(m, connectedClient);
         }
 
@@ -76,10 +76,10 @@ namespace SS3D_Server.Modules
 
         private void HandleVerb(NetIncomingMessage message)
         {
-            DispatchVerb(message.ReadString(), message.ReadUInt16());
+            DispatchVerb(message.ReadString(), message.ReadInt32());
         }
 
-        public void DispatchVerb(string verb, ushort uid)
+        public void DispatchVerb(string verb, int uid)
         {
             //Handle global verbs
             LogManager.Log("Verb: " + verb + " from " + uid, LogLevel.Debug);

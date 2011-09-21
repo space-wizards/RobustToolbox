@@ -251,7 +251,14 @@ namespace SGO
 
         internal void HandleNetworkMessage(IncomingEntityMessage message)
         {
-            throw new NotImplementedException();
+            switch (message.messageType)
+            {
+                case EntityMessage.PositionMessage:
+
+                    break;
+                case EntityMessage.ComponentMessage:
+                    break;
+            }
         }
     }
 }

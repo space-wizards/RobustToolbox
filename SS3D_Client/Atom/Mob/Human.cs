@@ -17,7 +17,7 @@ namespace SS3D.Atom.Mob
             offset = new Mogre.Vector3(0, 0, 0);*/
         }
 
-        public override void SetUp(ushort _uid, AtomManager _atomManager)
+        public override void SetUp(int _uid, AtomManager _atomManager)
         {
             base.SetUp(_uid, _atomManager);
 

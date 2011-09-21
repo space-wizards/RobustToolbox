@@ -89,7 +89,7 @@ namespace SS3D_Server.Atom.Item
             {
                 default:
                     //By default, Atoms will do damage.
-                    target.Damage(damageAmount, this.uid);
+                    target.Damage(damageAmount, this.Uid);
                     //Send attack animation (this is a retarded way of doing this really)
                     holdingAppendage.AnimateAttack();
                     break;
@@ -107,11 +107,11 @@ namespace SS3D_Server.Atom.Item
             //The appendage stores the item it is holding. This is probably redundant, but it is convenient.
             newHolder.selectedAppendage.heldItem = this;
             //Set draw depth back to default - 0
-            atomManager.SetDrawDepthAtom(uid, 0);
+            atomManager.SetDrawDepthAtom(Uid, 0);
 
             SendAttachMessage();
             SendAppendageUIUpdate(newHolder);
-            SS3DServer.Singleton.chatManager.SendChatMessage(ChatChannel.Default, newHolder.name + " picked up the " + name + ".", "", newHolder.uid);
+            SS3DServer.Singleton.chatManager.SendChatMessage(ChatChannel.Default, newHolder.name + " picked up the " + name + ".", "", newHolder.Uid);
         }
 
         public virtual void SendAppendageUIUpdate(Mob.Mob target)
@@ -136,7 +136,7 @@ namespace SS3D_Server.Atom.Item
             NetOutgoingMessage outmessage = CreateAtomMessage();
             outmessage.Write((byte)AtomMessage.Extended);
             outmessage.Write((byte)ItemMessage.AttachTo);
-            outmessage.Write(holdingAppendage.owner.uid);
+            outmessage.Write(holdingAppendage.owner.Uid);
             outmessage.Write(holdingAppendage.ID);
             SS3DServer.Singleton.SendMessageToAll(outmessage);
         }

@@ -67,7 +67,7 @@ namespace SS3D_Server.Modules
             }
         }
 
-        private BuildPermission GetPermission(ushort uid, AlignmentOptions alignOpt)
+        private BuildPermission GetPermission(int uid, AlignmentOptions alignOpt)
         {
             var permission = from p in BuildPermissions
                              where p.mobUid == uid && p.AlignOption == alignOpt
@@ -93,10 +93,10 @@ namespace SS3D_Server.Modules
             float yRcv = msg.ReadFloat();
             float rotRcv = msg.ReadFloat();
 
-            if (GetPermission(SS3DServer.Singleton.playerManager.GetSessionByConnection(msg.SenderConnection).attachedAtom.uid, alignRcv) != null)
+            if (GetPermission(SS3DServer.Singleton.playerManager.GetSessionByConnection(msg.SenderConnection).attachedAtom.Uid, alignRcv) != null)
             {
                 //DO PLACEMENT CHECKS. Are they allowed to place this here?
-                BuildPermission permission = GetPermission(SS3DServer.Singleton.playerManager.GetSessionByConnection(msg.SenderConnection).attachedAtom.uid, alignRcv);
+                BuildPermission permission = GetPermission(SS3DServer.Singleton.playerManager.GetSessionByConnection(msg.SenderConnection).attachedAtom.Uid, alignRcv);
 
                 if (!editMode)
                 {
@@ -122,7 +122,7 @@ namespace SS3D_Server.Modules
             {
                 LogManager.Log("Invalid placement request: " 
                     + SS3DServer.Singleton.playerManager.GetSessionByConnection(msg.SenderConnection).name +
-                    " - " + SS3DServer.Singleton.playerManager.GetSessionByConnection(msg.SenderConnection).attachedAtom.uid.ToString() +
+                    " - " + SS3DServer.Singleton.playerManager.GetSessionByConnection(msg.SenderConnection).attachedAtom.Uid.ToString() +
                     " - " + alignRcv.ToString());
 
                 SendPlacementCancel(SS3DServer.Singleton.playerManager.GetSessionByConnection(msg.SenderConnection).attachedAtom);
@@ -180,14 +180,14 @@ namespace SS3D_Server.Modules
         public void AssignBuildPermission(Atom.Atom mob, ushort range, string objectType, AlignmentOptions alignOption, bool placeAnywhere)
         {
             BuildPermission newPermission = new BuildPermission();
-            newPermission.mobUid = mob.uid;
+            newPermission.mobUid = mob.Uid;
             newPermission.range = range;
             newPermission.type = objectType;
             newPermission.AlignOption = alignOption;
             newPermission.placeAnywhere = placeAnywhere;
 
             var mobPermissions = from BuildPermission permission in BuildPermissions
-                                 where permission.mobUid == mob.uid
+                                 where permission.mobUid == mob.Uid
                                  select permission;
 
             if (mobPermissions.Any()) //Already has one? Revoke the old one and add this one.
@@ -207,7 +207,7 @@ namespace SS3D_Server.Modules
         public void RevokeAllBuildPermissions(Atom.Atom mob)
         {
             var mobPermissions = from BuildPermission permission in BuildPermissions
-                                 where permission.mobUid == mob.uid
+                                 where permission.mobUid == mob.Uid
                                  select permission;
 
             if (mobPermissions.Any())

@@ -23,7 +23,7 @@ namespace SS3D_Server.Atom
     {
         #region Vars
 
-        public Dictionary<ushort, Atom> atomDictionary;
+        public Dictionary<int, Atom> atomDictionary;
         private List<Module> m_loadedModules;
 
         private ushort lastUID = 0;
@@ -32,7 +32,7 @@ namespace SS3D_Server.Atom
         #region instantiation
         public AtomManager()
         {
-            atomDictionary = new Dictionary<ushort, Atom>();
+            atomDictionary = new Dictionary<int, Atom>();
             //loadAtomScripts();
         }
 
@@ -96,7 +96,7 @@ namespace SS3D_Server.Atom
                     SpawnAtom(type, position, rotation);
                     break;
                 case AtomManagerMessage.DeleteAtom:
-                    ushort uid = message.ReadUInt16();
+                    int uid = message.ReadInt32();
                     DeleteAtom(uid);
                     break;
                 default:
@@ -108,7 +108,7 @@ namespace SS3D_Server.Atom
         private void PassMessage(NetIncomingMessage message)
         {
             // Get atom id
-            ushort uid = message.ReadUInt16();
+            int uid = message.ReadInt32();
 
             var atom = atomDictionary[uid];
             // Pass the message
@@ -127,7 +127,7 @@ namespace SS3D_Server.Atom
         #endregion
 
         #region deletion
-        private void SendDeleteAtom(ushort uid)
+        private void SendDeleteAtom(int uid)
         {
             NetOutgoingMessage message = SS3DNetServer.Singleton.CreateMessage();
             message.Write((byte)NetMessage.AtomManagerMessage);
@@ -138,7 +138,7 @@ namespace SS3D_Server.Atom
         #endregion
 
         #region spawning
-        private void SendSpawnAtom(ushort uid, string type)
+        private void SendSpawnAtom(int uid, string type)
         {
             Atom atom = atomDictionary[uid];
             NetOutgoingMessage message = SS3DNetServer.Singleton.CreateMessage();
@@ -150,7 +150,7 @@ namespace SS3D_Server.Atom
             SS3DServer.Singleton.SendMessageToAll(message);
         }
 
-        private void SendSpawnAtom(ushort uid, string type, NetConnection client)
+        private void SendSpawnAtom(int uid, string type, NetConnection client)
         {
             Atom atom = atomDictionary[uid];
             NetOutgoingMessage message = SS3DNetServer.Singleton.CreateMessage();
@@ -169,7 +169,7 @@ namespace SS3D_Server.Atom
             // This will get laggy later on.
             foreach(Atom atom in atomDictionary.Values) 
             {
-                SendSpawnAtom(atom.uid, AtomName(atom), client);
+                SendSpawnAtom(atom.Uid, AtomName(atom), client);
             }
             ///Tell each atom to do its post-instantiation shit. Theoretically, this should all occur after each atom has
             ///been spawned and instantiated on the clientside. Network traffic wise this might be weird
@@ -278,7 +278,7 @@ namespace SS3D_Server.Atom
         /// <summary>
         ///  <para>Broadcasts draw depth value of atom to all connected players.</para>
         /// </summary>
-        private void SendAtomDrawDepth(ushort uid, int depth)
+        private void SendAtomDrawDepth(int uid, int depth)
         {
             NetOutgoingMessage message = SS3DNetServer.Singleton.CreateMessage();
             message.Write((byte)NetMessage.AtomManagerMessage);
@@ -292,7 +292,7 @@ namespace SS3D_Server.Atom
         /// <summary>
         ///  <para>Sets draw depth value of serverside instance and broadcasts draw depth value of atom to all connected players.</para>
         /// </summary>
-        public void SetDrawDepthAtom(ushort uid, int depth)
+        public void SetDrawDepthAtom(int uid, int depth)
         {
             SetDrawDepthAtom(atomDictionary[uid], depth);
         }
@@ -303,10 +303,10 @@ namespace SS3D_Server.Atom
         public void SetDrawDepthAtom(Atom atom, int depth)
         {
             atom.drawDepth = depth;
-            SendAtomDrawDepth(atom.uid, depth);
+            SendAtomDrawDepth(atom.Uid, depth);
         }
 
-        public void DeleteAtom(ushort uid)
+        public void DeleteAtom(int uid)
         {
             // Delete the atom and send a delete atom message
             DeleteAtom(atomDictionary[uid]);
@@ -314,12 +314,12 @@ namespace SS3D_Server.Atom
 
         public void DeleteAtom(Atom atom)
         {
-            atomDictionary.Remove(atom.uid);
+            atomDictionary.Remove(atom.Uid);
             atom.Destruct();
-            SendDeleteAtom(atom.uid);
+            SendDeleteAtom(atom.Uid);
         }
 
-        public Atom GetAtom(ushort uid)
+        public Atom GetAtom(int uid)
         {
             if (atomDictionary.Keys.Contains(uid))
                 return atomDictionary[uid];
@@ -367,7 +367,7 @@ namespace SS3D_Server.Atom
                 a.SerializedInit();
                 a.spawnTile = SS3D_Server.SS3DServer.Singleton.map.GetTileFromWorldPosition(a.position);
                 a.PostSpawnActions();
-                atomDictionary.Add(a.uid, a);
+                atomDictionary.Add(a.Uid, a);
             }
             s.Close();
         }

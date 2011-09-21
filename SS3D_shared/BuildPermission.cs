@@ -7,7 +7,7 @@ namespace SS3D_shared.HelperClasses
 {
     public class BuildPermission
     {
-        public ushort mobUid;               //UID of mob this permission is for.
+        public int mobUid;               //UID of mob this permission is for.
         public ushort range = 0;            //Valid range from mob.
         public string type = "";            //Object name / type.
         public AlignmentOptions AlignOption = AlignmentOptions.AlignTile; //Alignment type. See enum declaration for infos.

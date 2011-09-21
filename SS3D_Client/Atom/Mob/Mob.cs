@@ -56,7 +56,7 @@ namespace SS3D.Atom.Mob
             else return appendages[appendageID].attachedItem;
         }
 
-        public override void SetUp(ushort _uid, AtomManager _atomManager)
+        public override void SetUp(int _uid, AtomManager _atomManager)
         {
             base.SetUp(_uid, _atomManager);
 
@@ -417,7 +417,7 @@ namespace SS3D.Atom.Mob
             NetOutgoingMessage message = CreateAtomMessage();
             message.Write((byte)AtomMessage.Extended);
             message.Write((byte)MobMessage.Equip);
-            message.Write(item.uid);
+            message.Write(item.Uid);
             message.Write((byte)part);
             SendMessage(message);
         }
@@ -439,7 +439,7 @@ namespace SS3D.Atom.Mob
         /// </summary>
         public virtual void HandleEquipItem(NetIncomingMessage message)
         {
-            ushort id = message.ReadUInt16();
+            int id = message.ReadInt32();
             GUIBodyPart part = (GUIBodyPart)message.ReadByte();
 
             if (!equippedAtoms.ContainsKey(part))

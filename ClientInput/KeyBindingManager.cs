@@ -7,6 +7,8 @@ using System.Xml;
 using GorgonLibrary;
 using GorgonLibrary.InputDevices;
 using System.Security;
+using SS3D_shared;
+
 
 namespace ClientInput
 {
@@ -61,7 +63,7 @@ namespace ClientInput
             }
         }
 
-        private Dictionary<KeyboardKeys, KeyFunctions> BoundKeys;
+        private Dictionary<KeyboardKeys, BoundKeyFunctions> BoundKeys;
 
         public delegate void BoundKeyEventHandler(object sender, BoundKeyEventArgs e);
 
@@ -108,7 +110,7 @@ namespace ClientInput
         {
             //If the key is bound, fire the BoundKeyDown event.
             if (enabled && BoundKeys.Keys.Contains(e.Key) && BoundKeyDown != null)
-                BoundKeyDown(this, new BoundKeyEventArgs(KeyState.Down, BoundKeys[e.Key]));
+                BoundKeyDown(this, new BoundKeyEventArgs(BoundKeyState.Down, BoundKeys[e.Key]));
         }
         /// <summary>
         /// Handles key up events from the gorgon keyboard object
@@ -119,7 +121,7 @@ namespace ClientInput
         {
             //If the key is bound, fire the BoundKeyUp event.
             if (enabled && BoundKeys.Keys.Contains(e.Key) && BoundKeyUp != null)
-                BoundKeyUp(this, new BoundKeyEventArgs(KeyState.Down, BoundKeys[e.Key]));
+                BoundKeyUp(this, new BoundKeyEventArgs(BoundKeyState.Up, BoundKeys[e.Key]));
         }
 
         /// <summary>
@@ -131,31 +133,17 @@ namespace ClientInput
             StreamReader kb = new StreamReader("KeyBindings.xml");
             xml.Load(kb);
             XmlNodeList resources = xml.SelectNodes("KeyBindings/Binding");
-            BoundKeys = new Dictionary<KeyboardKeys, KeyFunctions>();
+            BoundKeys = new Dictionary<KeyboardKeys, BoundKeyFunctions>();
             foreach (XmlNode node in resources)
             {
                 BoundKeys.Add(
-                    (KeyboardKeys)Enum.Parse(typeof(KeyboardKeys), node.Attributes["Key"].Value, false), 
-                    (KeyFunctions)Enum.Parse(typeof(KeyFunctions), node.Attributes["Function"].Value, false));
+                    (KeyboardKeys)Enum.Parse(typeof(KeyboardKeys), node.Attributes["Key"].Value, false),
+                    (BoundKeyFunctions)Enum.Parse(typeof(BoundKeyFunctions), node.Attributes["Function"].Value, false));
             }
         }
 
     }
 
-    /// <summary>
-    /// Key Bindings - each corresponds to a logical function ingame.
-    /// </summary>
-    public enum KeyFunctions
-    {
-        MoveUp,
-        MoveDown,
-        MoveLeft,
-        MoveRight,
-        SwitchHands,
-        Inventory,
-        ShowFPS,
-        Drop,
-        Run,
-    }
+
 
 }

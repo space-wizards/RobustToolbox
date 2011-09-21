@@ -36,7 +36,7 @@ namespace SS3D_Server.Modules
                 foreach (SpawnEquipDefinition def in s.assignedJob.SpawnEquipment)
                 {
                     Atom.Atom newItem = SS3DServer.Singleton.atomManager.SpawnAtom(def.ObjectType);
-                    human.EquipItem(newItem.uid, def.Location);
+                    human.EquipItem(newItem.Uid, def.Location);
                 }
             }
             s.AttachToAtom(a);

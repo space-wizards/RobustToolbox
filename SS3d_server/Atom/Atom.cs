@@ -22,7 +22,6 @@ namespace SS3D_Server.Atom
         #region variables
         // wat
         public string name;
-        public ushort uid;
         public AtomManager atomManager;
         public bool updateRequired = false;
         public int drawDepth = 0;
@@ -61,7 +60,7 @@ namespace SS3D_Server.Atom
 
         public void SetUp(ushort _uid, AtomManager _atomManager)
         {
-            uid = _uid;
+            Uid = _uid;
             atomManager = _atomManager;
             updateRequired = true;
         }
@@ -205,7 +204,7 @@ namespace SS3D_Server.Atom
             NetOutgoingMessage message = SS3DNetServer.Singleton.CreateMessage();
             message.Write((byte)NetMessage.AtomManagerMessage);
             message.Write((byte)AtomManagerMessage.Passthrough);
-            message.Write(uid);
+            message.Write(Uid);
             return message;
         }
 
@@ -341,7 +340,7 @@ namespace SS3D_Server.Atom
                 ApplyAction(clicker.selectedAppendage.heldItem, clicker);
 
             //SS3DServer.Singleton.chatManager.SendChatMessage(0, clicker.name + " touched the " + name + ".", "", uid);
-            LogManager.Log(clicker.name + "(" + clicker.uid.ToString() + ")" + " clicked " + name + "(" + uid.ToString() + ").", LogLevel.Debug);
+            LogManager.Log(clicker.name + "(" + clicker.Uid.ToString() + ")" + " clicked " + name + "(" + Uid.ToString() + ").", LogLevel.Debug);
         }
         #endregion
 
@@ -425,7 +424,7 @@ namespace SS3D_Server.Atom
         /// Apply damage to the atom. All atoms have this, though not all atoms will react to their health being depleted.
         /// </summary>
         /// <param name="amount"></param>
-        public virtual void Damage(int amount, uint damager)
+        public virtual void Damage(int amount, int damager)
         {
             //Lots of room to get more complicated here
             currentHealth -= amount;
@@ -443,9 +442,9 @@ namespace SS3D_Server.Atom
                 message += "near death.";
             else if (healthpct <= 0)
                 message += "kinda... dead.";
-            SS3DServer.Singleton.chatManager.SendChatMessage(ChatChannel.Damage, message, "", uid);
+            SS3DServer.Singleton.chatManager.SendChatMessage(ChatChannel.Damage, message, "", Uid);
         #if DEBUG
-            string healthmsg = name + "(" + uid.ToString() + ") " + "took " + amount.ToString() + " points of damage.";
+            string healthmsg = name + "(" + Uid.ToString() + ") " + "took " + amount.ToString() + " points of damage.";
             healthmsg += " Current health: " + currentHealth.ToString() + "/" + maxHealth.ToString();//TODO SEND DAMAGE MESSAGES
             LogManager.Log(healthmsg, LogLevel.Debug);
             //SS3DServer.Singleton.chatManager.SendChatMessage(ChatChannel.Damage, healthmsg, name, uid);

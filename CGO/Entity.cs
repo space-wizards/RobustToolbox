@@ -222,5 +222,10 @@ namespace CGO
         {
             throw new NotImplementedException();
         }
+
+        public void SendComponentNetworkMessage(IGameObjectComponent component, NetDeliveryMethod method, params object[] messageParams)
+        {
+            m_entityNetworkManager.SendComponentNetworkMessage(this, component.Family, NetDeliveryMethod.ReliableUnordered, messageParams);
+        }
     }
 }

@@ -2,17 +2,19 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using SS3D_shared;
 
 namespace ClientInput
 {
     public class BoundKeyEventArgs : EventArgs
     {
-      	public BoundKeyEventArgs(KeyState functionState, KeyFunctions function) {
+        public BoundKeyEventArgs(BoundKeyState functionState, BoundKeyFunctions function)
+        {
             FunctionState = functionState;
             Function = function;
 	    }
 
-        public KeyState FunctionState;
-        public KeyFunctions Function;
+        public BoundKeyState FunctionState;
+        public BoundKeyFunctions Function;
     }
 }

@@ -31,7 +31,6 @@ namespace SS3D.Atom
         private int index = 0;
 
         public string name;
-        public ushort uid;
         public AtomManager atomManager;
 
         // Position data
@@ -72,9 +71,9 @@ namespace SS3D.Atom
             SetUp(_uid, _atomManager);
         }
 
-        public virtual void SetUp(ushort _uid, AtomManager _atomManager)
+        public virtual void SetUp(int _uid, AtomManager _atomManager)
         {
-            uid = _uid;
+            Uid = _uid;
             atomManager = _atomManager;
 
             Draw();
@@ -225,7 +224,7 @@ namespace SS3D.Atom
             NetOutgoingMessage message = atomManager.networkManager.netClient.CreateMessage();
             message.Write((byte)NetMessage.AtomManagerMessage);
             message.Write((byte)AtomManagerMessage.Passthrough);
-            message.Write(uid);
+            message.Write(Uid);
             return message;
         }
 
@@ -402,7 +401,7 @@ namespace SS3D.Atom
                                       a.collidable == true &&
                                       System.Math.Sqrt((position.X - a.position.X) * (position.X - a.position.X)) < (sprite.Width * sprite.UniformScale) &&
                                       System.Math.Sqrt((position.Y - a.position.Y) * (position.Y - a.position.Y)) < (sprite.Height * sprite.UniformScale) &&
-                                      a.uid != uid
+                                      a.Uid != Uid
                                       select a;
 
             foreach (Atom a in atoms)

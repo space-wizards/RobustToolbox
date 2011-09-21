@@ -5,9 +5,5 @@ using System.Text;
 
 namespace ClientInput
 {
-    public enum KeyState
-    {
-        Up,
-        Down
-    }
+
 }

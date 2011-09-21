@@ -24,7 +24,7 @@ namespace SS3D_Server.Atom.Object.WallMounted
         protected virtual void WallChanged(TileType tNew)
         {
             //Do whatever.
-            SS3D_Server.SS3DServer.Singleton.chatManager.SendChatMessage(ChatChannel.Server," ("+this.uid.ToString()+") -> Connected Wall Changed.",this.name,this.uid);
+            SS3D_Server.SS3DServer.Singleton.chatManager.SendChatMessage(ChatChannel.Server," ("+this.Uid.ToString()+") -> Connected Wall Changed.",this.name,this.Uid);
             this.Translate(new SS3D_shared.HelperClasses.Vector2(position.X, position.Y + 64), 90); // IT FELL DOWN. DERP... Just testing.
         }
 

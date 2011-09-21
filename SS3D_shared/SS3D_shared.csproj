@@ -84,6 +84,7 @@
     <Compile Include="BuildPermission.cs" />
     <Compile Include="GO\ComponentEnums.cs" />
     <Compile Include="JobHandler.cs" />
+    <Compile Include="KeyFunctions.cs" />
     <Compile Include="SessionStatusEnum.cs" />
     <Compile Include="Vector2.cs" />
     <Compile Include="ObjectTypeEnum.cs" />

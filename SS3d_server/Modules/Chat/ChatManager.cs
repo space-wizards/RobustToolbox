@@ -25,9 +25,9 @@ namespace SS3D_Server.Modules.Chat
             string name = SS3DServer.Singleton.clientList[message.SenderConnection].playerName;
             LogManager.Log("CHAT- Channel " + channel.ToString() +  " - Player " + name + "Message: " + text + "\n");
 
-            ushort atomID = 0;
+            int atomID = 0;
             if (SS3DServer.Singleton.playerManager.GetSessionByConnection(message.SenderConnection).attachedAtom != null)
-                atomID = SS3DServer.Singleton.playerManager.GetSessionByConnection(message.SenderConnection).attachedAtom.uid;
+                atomID = SS3DServer.Singleton.playerManager.GetSessionByConnection(message.SenderConnection).attachedAtom.Uid;
 
             text = text.Trim(); // Remove whitespace
             if (text[0] == '/')
@@ -36,7 +36,7 @@ namespace SS3D_Server.Modules.Chat
                 SendChatMessage(channel, text, name, atomID);
         }
 
-        public void SendChatMessage(ChatChannel channel, string text, string name, ushort atomID)
+        public void SendChatMessage(ChatChannel channel, string text, string name, int atomID)
         {
             string fullmsg = name + ": " + text;
 
@@ -57,7 +57,7 @@ namespace SS3D_Server.Modules.Chat
         /// <param name="name">player name that sent the chat text</param>
         /// <param name="channel">channel message was recieved on</param>
         /// <param name="atomID">uid of the atom that sent the message. This will always be a player's attached atom</param>
-        private void ProcessCommand(string text, string name, ChatChannel channel, ushort atomID, NetConnection client)
+        private void ProcessCommand(string text, string name, ChatChannel channel, int atomID, NetConnection client)
         {
             List<string> args = new List<string>();
 

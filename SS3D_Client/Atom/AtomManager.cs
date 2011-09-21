@@ -25,7 +25,7 @@ namespace SS3D.Atom
         public Program prg;
         public NetworkManager networkManager;
 
-        public Dictionary<ushort, Atom> atomDictionary;
+        public Dictionary<int, Atom> atomDictionary;
         public DateTime now;
         public DateTime lastUpdate;
         public int updateRateLimit = 200; //200 updates / second
@@ -38,7 +38,7 @@ namespace SS3D.Atom
             prg = _prg;
             gameState = _gameState;
             networkManager = prg.mNetworkMgr;
-            atomDictionary = new Dictionary<ushort, Atom>();
+            atomDictionary = new Dictionary<int, Atom>();
             loadAtomScripts();
         }
 
@@ -131,14 +131,14 @@ namespace SS3D.Atom
 
         private void HandleDrawDepth(NetIncomingMessage message)
         {
-            ushort uid = message.ReadUInt16();
+            int uid = message.ReadInt32();
             int depth = message.ReadInt32();
             atomDictionary[uid].drawDepth = depth;
         }
 
         private void HandleSpawnAtom(NetIncomingMessage message)
         {
-            ushort uid = message.ReadUInt16();
+            int uid = message.ReadInt32();
             string type = message.ReadString();
             int drawDepth = message.ReadInt32();
 
@@ -149,7 +149,7 @@ namespace SS3D.Atom
             a.SendPullMessage();
         }
         
-        public Atom SpawnAtom(ushort uid, string type)
+        public Atom SpawnAtom(int uid, string type)
         {
             Assembly currentAssembly = Assembly.GetExecutingAssembly();
             Type atomType = currentAssembly.GetType("SS3D." + type);
@@ -175,7 +175,7 @@ namespace SS3D.Atom
 
         private void HandleDeleteAtom(NetIncomingMessage message)
         {
-            ushort uid = message.ReadUInt16();
+            int uid = message.ReadInt32();
             atomDictionary[uid] = null;
             atomDictionary.Remove(uid);
         }
@@ -184,7 +184,7 @@ namespace SS3D.Atom
         private void PassMessage(NetIncomingMessage message)
         {
             // Get the atom id
-            ushort uid = message.ReadUInt16();
+            int uid = message.ReadInt32();
 
             //TODO add some real error handling here. We shouldn't be getting bad messages like this, and if we are, it means we're doing something out of sequence.
             if (!atomDictionary.Keys.Contains(uid))
@@ -202,7 +202,7 @@ namespace SS3D.Atom
         }
         #endregion
 
-        public Atom GetAtom(ushort uid)
+        public Atom GetAtom(int uid)
         {
             if(atomDictionary.Keys.Contains(uid))
                 return atomDictionary[uid];

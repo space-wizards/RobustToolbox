@@ -154,7 +154,7 @@ namespace SS3D.Modules
         {
             if (atomManager == null)
                 return;
-            ushort uid = message.ReadUInt16();
+            int uid = message.ReadInt32();
             Attach(atomManager.GetAtom(uid));
         }
         #endregion

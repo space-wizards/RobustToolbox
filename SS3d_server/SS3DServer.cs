@@ -404,6 +404,10 @@ namespace SS3D_Server
             }
         }
 
+        /// <summary>
+        /// Main method for routing incoming application network messages
+        /// </summary>
+        /// <param name="msg"></param>
         public void HandleData(NetIncomingMessage msg)
         {
             NetMessage messageType = (NetMessage)msg.ReadByte();

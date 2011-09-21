@@ -34,7 +34,7 @@ namespace SS3D_Server.Atom.Object
             }
         }
 
-        public override void Damage(int amount, uint damagerId)
+        public override void Damage(int amount, int damagerId)
         {
             if(damageable)
                 base.Damage(amount, damagerId);

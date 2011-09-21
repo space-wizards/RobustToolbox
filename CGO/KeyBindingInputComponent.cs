@@ -4,13 +4,14 @@ using System.Linq;
 using System.Text;
 using ClientInput;
 using SS3D_shared.GO;
+using SS3D_shared;
 
 namespace CGO
 {
     public class KeyBindingInputComponent : GameObjectComponent
     {
-        private Dictionary<KeyFunctions, bool> keyStates;
-        private Dictionary<KeyFunctions, KeyEvent> keyHandlers;
+        private Dictionary<BoundKeyFunctions, bool> keyStates;
+        private Dictionary<BoundKeyFunctions, KeyEvent> keyHandlers;
         public delegate void KeyEvent(bool state);
 
         public KeyBindingInputComponent()
@@ -19,13 +20,13 @@ namespace CGO
             //Bind to the key binding manager
             KeyBindingManager.Singleton.BoundKeyDown += new KeyBindingManager.BoundKeyEventHandler(KeyDown);
             KeyBindingManager.Singleton.BoundKeyUp += new KeyBindingManager.BoundKeyEventHandler(KeyUp);
-            keyStates = new Dictionary<KeyFunctions, bool>();
-            keyHandlers = new Dictionary<KeyFunctions, KeyEvent>();
+            keyStates = new Dictionary<BoundKeyFunctions, bool>();
+            keyHandlers = new Dictionary<BoundKeyFunctions, KeyEvent>();
             //Set up keystates
-            keyHandlers.Add(KeyFunctions.MoveUp, new KeyEvent(HandleMoveUp));
-            keyHandlers.Add(KeyFunctions.MoveDown, new KeyEvent(HandleMoveDown));
-            keyHandlers.Add(KeyFunctions.MoveLeft, new KeyEvent(HandleMoveLeft));
-            keyHandlers.Add(KeyFunctions.MoveRight, new KeyEvent(HandleMoveRight));
+            keyHandlers.Add(BoundKeyFunctions.MoveUp, new KeyEvent(HandleMoveUp));
+            keyHandlers.Add(BoundKeyFunctions.MoveDown, new KeyEvent(HandleMoveDown));
+            keyHandlers.Add(BoundKeyFunctions.MoveLeft, new KeyEvent(HandleMoveLeft));
+            keyHandlers.Add(BoundKeyFunctions.MoveRight, new KeyEvent(HandleMoveRight));
         }
 
         public override void Shutdown()
@@ -43,17 +44,19 @@ namespace CGO
 
         public virtual void KeyDown(object sender, BoundKeyEventArgs e)
         {
+            //Owner.SendComponentNetworkMessage(this, Lidgren.Network.NetDeliveryMethod.ReliableUnordered, e.Function, e.FunctionState);
             SetKeyState(e.Function, true);
             Owner.SendMessage(this, MessageType.KeyDown, e.Function);
         }
 
         public virtual void KeyUp(object sender, BoundKeyEventArgs e)
         {
+            //Owner.SendComponentNetworkMessage(this, Lidgren.Network.NetDeliveryMethod.ReliableUnordered, e.Function, e.FunctionState);
             SetKeyState(e.Function, false);
             Owner.SendMessage(this, MessageType.KeyUp, e.Function);
         }
 
-        protected void SetKeyState(KeyFunctions k, bool state)
+        protected void SetKeyState(BoundKeyFunctions k, bool state)
         {
             // Check to see if we have a keyhandler for the key that's been pressed. Discard invalid keys.
             if (keyHandlers.ContainsKey(k))
@@ -62,7 +65,7 @@ namespace CGO
             }
         }
 
-        public bool GetKeyState(KeyFunctions k)
+        public bool GetKeyState(BoundKeyFunctions k)
         {
             if (keyStates.Keys.Contains(k))
                 return keyStates[k];
@@ -103,30 +106,30 @@ namespace CGO
 
         public virtual void HandleMoveUp(bool state)
         {
-            if (state && GetKeyState(KeyFunctions.MoveLeft) && !GetKeyState(KeyFunctions.MoveRight))
+            if (state && GetKeyState(BoundKeyFunctions.MoveLeft) && !GetKeyState(BoundKeyFunctions.MoveRight))
                 Owner.MoveUpLeft();
-            else if (state && GetKeyState(KeyFunctions.MoveRight))
+            else if (state && GetKeyState(BoundKeyFunctions.MoveRight))
                 Owner.MoveUpRight();
             else if (state)
                 Owner.MoveUp();
         }
         public virtual void HandleMoveDown(bool state)
         {
-            if (state && GetKeyState(KeyFunctions.MoveLeft) && !GetKeyState(KeyFunctions.MoveRight))
+            if (state && GetKeyState(BoundKeyFunctions.MoveLeft) && !GetKeyState(BoundKeyFunctions.MoveRight))
                 Owner.MoveDownLeft();
-            else if (state && GetKeyState(KeyFunctions.MoveRight))
+            else if (state && GetKeyState(BoundKeyFunctions.MoveRight))
                 Owner.MoveDownRight();
             else if (state)
                 Owner.MoveDown();
         }
         public virtual void HandleMoveLeft(bool state)
         {
-            if (state && !GetKeyState(KeyFunctions.MoveUp) && !GetKeyState(KeyFunctions.MoveDown))
+            if (state && !GetKeyState(BoundKeyFunctions.MoveUp) && !GetKeyState(BoundKeyFunctions.MoveDown))
                 Owner.MoveLeft();
         }
         public virtual void HandleMoveRight(bool state)
         {
-            if (state && !GetKeyState(KeyFunctions.MoveUp) && !GetKeyState(KeyFunctions.MoveDown))
+            if (state && !GetKeyState(BoundKeyFunctions.MoveUp) && !GetKeyState(BoundKeyFunctions.MoveDown))
                 Owner.MoveRight();
         }
 

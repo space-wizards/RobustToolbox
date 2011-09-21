@@ -304,7 +304,7 @@ namespace SS3D.States
             ChatChannel channel = (ChatChannel)msg.ReadByte();
             string text = msg.ReadString();
             string message = "(" + channel.ToString() + "):" + text;
-            ushort atomID = msg.ReadUInt16();
+            int atomID = msg.ReadInt32();
             lobbyChat.AddLine(message, ChatChannel.Lobby);
         }
 

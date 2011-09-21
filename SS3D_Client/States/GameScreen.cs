@@ -301,12 +301,12 @@ namespace SS3D.States
             string text = msg.ReadString();
 
             string message = "(" + channel.ToString() + "):" + text;
-            ushort atomID = msg.ReadUInt16();
+            int atomID = msg.ReadInt32();
             gameChat.AddLine(message, channel);
             Atom.Atom a = atomManager.GetAtom(atomID);
             if (a != null)
             {
-                if (a.speechBubble == null) a.speechBubble = new SpeechBubble(a.name + a.uid.ToString());
+                if (a.speechBubble == null) a.speechBubble = new SpeechBubble(a.name + a.Uid.ToString());
                 if(channel == ChatChannel.Ingame || channel == ChatChannel.Player || channel == ChatChannel.Radio)
                     a.speechBubble.SetText(text);
             }
@@ -697,7 +697,7 @@ namespace SS3D.States
                             NetOutgoingMessage message = mStateMgr.prg.mNetworkMgr.netClient.CreateMessage();
                             message.Write((byte)NetMessage.AtomManagerMessage);
                             message.Write((byte)AtomManagerMessage.DeleteAtom);
-                            message.Write(a.uid);
+                            message.Write(a.Uid);
                             mStateMgr.prg.mNetworkMgr.SendMessage(message, NetDeliveryMethod.ReliableUnordered);
                         }
                     }

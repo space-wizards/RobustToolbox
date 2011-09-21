@@ -43,7 +43,7 @@ namespace SS3D_Server.Atom.Mob
             {
                 if (equippedAtoms[part] != null)
                 {
-                    SendEquipItem(equippedAtoms[part].uid, part);
+                    SendEquipItem(equippedAtoms[part].Uid, part);
                 }
             }
 
@@ -128,7 +128,7 @@ namespace SS3D_Server.Atom.Mob
         /// </summary>
         public virtual void EquipItem(NetIncomingMessage message)
         {
-            ushort id = message.ReadUInt16();
+            int id = message.ReadInt32();
             GUIBodyPart part = (GUIBodyPart)message.ReadByte();
             if (equippedAtoms.ContainsKey(part) && equippedAtoms[part] == null)
             {
@@ -136,7 +136,7 @@ namespace SS3D_Server.Atom.Mob
                 if (atom.IsChildOfType(typeof(Item.Item)))
                 {
                     equippedAtoms[part] = (Item.Item)atom;
-                    SendEquipItem(atom.uid, part);
+                    SendEquipItem(atom.Uid, part);
 
                     if (equippedAtoms[part].holdingAppendage != null)
                     {
@@ -151,7 +151,7 @@ namespace SS3D_Server.Atom.Mob
         /// <summary>
         /// Equips an item on a mob and then sends the result to everyone
         /// </summary>
-        public virtual void EquipItem(ushort id, GUIBodyPart targetPart)
+        public virtual void EquipItem(int id, GUIBodyPart targetPart)
         {
             if (equippedAtoms.ContainsKey(targetPart) && equippedAtoms[targetPart] == null)
             {
@@ -159,7 +159,7 @@ namespace SS3D_Server.Atom.Mob
                 if (atom.IsChildOfType(typeof(Item.Item)))
                 {
                     equippedAtoms[targetPart] = (Item.Item)atom;
-                    SendEquipItem(atom.uid, targetPart);
+                    SendEquipItem(atom.Uid, targetPart);
 
                     if (equippedAtoms[targetPart].holdingAppendage != null)
                     {
@@ -174,7 +174,7 @@ namespace SS3D_Server.Atom.Mob
         /// <summary>
         /// Sends a message to everyone that a mob just equipped an item
         /// </summary>
-        public virtual void SendEquipItem(ushort id, GUIBodyPart part)
+        public virtual void SendEquipItem(int id, GUIBodyPart part)
         {
             NetOutgoingMessage outmessage = CreateAtomMessage();
             outmessage.Write((byte)AtomMessage.Extended);
@@ -266,7 +266,7 @@ namespace SS3D_Server.Atom.Mob
             SendMessageTo(msg, client, NetDeliveryMethod.ReliableOrdered);
         }
 
-        public override void Damage(int amount, uint damagerId)
+        public override void Damage(int amount, int damagerId)
         {
             base.Damage(amount, damagerId);
 

@@ -43,7 +43,6 @@
     <Compile Include="ComponentFactory.cs" />
     <Compile Include="ComponentManager.cs" />
     <Compile Include="ComponentParameter.cs" />
-    <Compile Include="Component\Input\KeyBindingInputComponent.cs" />
     <Compile Include="Entity.cs" />
     <Compile Include="EntityFactory.cs" />
     <Compile Include="EntityManager.cs" />
@@ -56,7 +55,6 @@
     <Compile Include="IInventoryComponent.cs" />
     <Compile Include="IMoverComponent.cs" />
     <Compile Include="MessageEnums.cs" />
-    <Compile Include="Component\Mover\PlayerMoverComponent.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
   <ItemGroup>
@@ -68,6 +66,10 @@
       <Project>{4229D7E3-C3AE-4C0A-B2B1-BB20911150DC}</Project>
       <Name>SS3D_shared</Name>
     </ProjectReference>
+  </ItemGroup>
+  <ItemGroup>
+    <Folder Include="Component\Input\" />
+    <Folder Include="Component\Mover\" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 

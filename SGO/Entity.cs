@@ -153,8 +153,12 @@ namespace SGO
         {
         }
 
+        #region Networking
+        
+        #endregion
 
-#region Movement
+
+        #region Movement
         /// <summary>
         /// Moves the entity to a new position in worldspace.
         /// </summary>
@@ -244,5 +248,10 @@ namespace SGO
         }
 
         #endregion
+
+        internal void HandleNetworkMessage(IncomingEntityMessage message)
+        {
+            throw new NotImplementedException();
+        }
     }
 }

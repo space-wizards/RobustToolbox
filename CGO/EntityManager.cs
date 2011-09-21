@@ -61,9 +61,15 @@ namespace CGO
             throw new NotImplementedException();
         }
 
+        /// <summary>
+        /// Handle an incoming network message by passing the message to the EntityNetworkManager 
+        /// and handling the parsed result.
+        /// </summary>
+        /// <param name="msg"></param>
         public void HandleNetworkMessage(NetIncomingMessage msg)
         {
-            throw new NotImplementedException();
+            IncomingEntityMessage message = m_entityNetworkManager.HandleEntityNetworkMessage(msg);
+            m_entities[message.uid].HandleNetworkMessage(message);
         }
     }
 }

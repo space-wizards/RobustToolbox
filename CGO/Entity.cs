@@ -218,6 +218,9 @@ namespace CGO
         public virtual void SendPositionUpdate()
         { }
 
-
+        internal void HandleNetworkMessage(IncomingEntityMessage message)
+        {
+            throw new NotImplementedException();
+        }
     }
 }

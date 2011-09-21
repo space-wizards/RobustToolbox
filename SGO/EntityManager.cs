@@ -57,9 +57,15 @@ namespace SGO
             return -1;
         }
 
+        /// <summary>
+        /// Handle an incoming network message by passing the message to the EntityNetworkManager 
+        /// and handling the parsed result.
+        /// </summary>
+        /// <param name="msg">Incoming raw network message</param>
         public void HandleNetworkMessage(NetIncomingMessage msg)
         {
-            throw new NotImplementedException();
+            IncomingEntityMessage message = m_entityNetworkManager.HandleEntityNetworkMessage(msg);
+            m_entities[message.uid].HandleNetworkMessage(message);
         }
     }
 }

@@ -44,14 +44,14 @@ namespace CGO
 
         public virtual void KeyDown(object sender, BoundKeyEventArgs e)
         {
-            //Owner.SendComponentNetworkMessage(this, Lidgren.Network.NetDeliveryMethod.ReliableUnordered, e.Function, e.FunctionState);
+            Owner.SendComponentNetworkMessage(this, Lidgren.Network.NetDeliveryMethod.ReliableUnordered, e.Function, e.FunctionState);
             SetKeyState(e.Function, true);
             Owner.SendMessage(this, MessageType.KeyDown, e.Function);
         }
 
         public virtual void KeyUp(object sender, BoundKeyEventArgs e)
         {
-            //Owner.SendComponentNetworkMessage(this, Lidgren.Network.NetDeliveryMethod.ReliableUnordered, e.Function, e.FunctionState);
+            Owner.SendComponentNetworkMessage(this, Lidgren.Network.NetDeliveryMethod.ReliableUnordered, e.Function, e.FunctionState);
             SetKeyState(e.Function, false);
             Owner.SendMessage(this, MessageType.KeyUp, e.Function);
         }

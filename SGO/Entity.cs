@@ -254,11 +254,26 @@ namespace SGO
             switch (message.messageType)
             {
                 case EntityMessage.PositionMessage:
-
                     break;
                 case EntityMessage.ComponentMessage:
+                    HandleComponentMessage((IncomingEntityComponentMessage)message.message);
                     break;
             }
         }
+
+        internal void HandleComponentMessage(IncomingEntityComponentMessage message)
+        {
+            if (components.Keys.Contains(message.componentFamily))
+            {
+                components[message.componentFamily].HandleNetworkMessage(message);
+            }
+        }
+
+        #region compatibility for atom transition
+        public void SetNetworkManager(EntityNetworkManager manager)
+        {
+            m_entityNetworkManager = manager;
+        }
+        #endregion
     }
 }

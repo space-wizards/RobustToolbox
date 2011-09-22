@@ -16,13 +16,14 @@ namespace SGO
         private EntityNetworkManager m_entityNetworkManager;
 
         private Dictionary<int, Entity> m_entities;
-        private int lastId = 0;
+        public int lastId = 0;
 
         public EntityManager(NetServer netServer)
         {
             m_entityNetworkManager = new EntityNetworkManager(netServer);
             m_entityTemplateDatabase = new EntityTemplateDatabase();
             m_entityFactory = new EntityFactory(m_entityTemplateDatabase);
+            m_entities = new Dictionary<int, Entity>();
         }
 
         /// <summary>
@@ -46,6 +47,7 @@ namespace SGO
         {
             //Get the entity from the factory
             Entity e = m_entityFactory.CreateEntity(templateName);
+            e.SetNetworkManager(m_entityNetworkManager);
             if (e != null)
             {
                 //It worked, add it.
@@ -55,6 +57,17 @@ namespace SGO
             }
             //TODO: throw exception here -- something went wrong.
             return -1;
+        }
+
+        /// <summary>
+        /// Adds an atom to the entity pool. Compatibility method.
+        /// </summary>
+        /// <param name="e">Entity to add</param>
+        public void AddAtomEntity(Entity e)
+        {
+            ///The UID has already (in theory) been set in the atom manager.
+            m_entities.Add(e.Uid, e);
+            e.SetNetworkManager(m_entityNetworkManager);
         }
 
         /// <summary>

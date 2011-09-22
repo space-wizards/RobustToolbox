@@ -121,8 +121,8 @@ namespace SS3D_Server
                 map = new Map();
                 map.InitMap(serverMapName);
 
-                atomManager = new AtomManager();
                 entityManager = new EntityManager(SS3DNetServer.Singleton);
+                atomManager = new AtomManager(entityManager);
                 //playerManager = new PlayerManager();
                 atomManager.LoadAtoms();
 

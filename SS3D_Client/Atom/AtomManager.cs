@@ -15,6 +15,7 @@ using GorgonLibrary.Graphics;
 
 using CSScriptLibrary;
 using csscript;
+using CGO;
 
 namespace SS3D.Atom
 {
@@ -30,14 +31,16 @@ namespace SS3D.Atom
         public DateTime lastUpdate;
         public int updateRateLimit = 200; //200 updates / second
         private List<Module> m_loadedModules;
+        public EntityManager m_entityManager;
         #endregion
 
         #region Instantiation
-        public AtomManager(GameScreen _gameState, Program _prg)
+        public AtomManager(GameScreen _gameState, Program _prg, EntityManager entityManager)
         {
             prg = _prg;
             gameState = _gameState;
             networkManager = prg.mNetworkMgr;
+            m_entityManager = entityManager;
             atomDictionary = new Dictionary<int, Atom>();
             loadAtomScripts();
         }
@@ -169,6 +172,7 @@ namespace SS3D.Atom
             atomDictionary[uid] = (Atom)atom;
 
             atomDictionary[uid].SetUp(uid, this);
+            m_entityManager.AddAtomEntity((Entity)atom); //Add entity to entity manager.
 
             return atomDictionary[uid]; // Why do we return it? So we can do whatever is needed easily from the calling function.
         }

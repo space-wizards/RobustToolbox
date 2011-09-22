@@ -39,10 +39,11 @@ namespace CGO
             message.Write((byte)family);
             foreach (object messageParam in messageParams)
             {
-                if (messageParam.GetType() == typeof(Enum))
+                Type t = messageParam.GetType();
+                if (messageParam.GetType().IsSubclassOf(typeof(Enum)))
                 {
                     message.Write((byte)NetworkDataType.d_enum);
-                    message.Write((byte)messageParam);
+                    message.Write((int)messageParam);//Cast to int, because enums are stored as ints anyway.
                 }
                 else if (messageParam.GetType() == typeof(bool))
                 {

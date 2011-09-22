@@ -58,7 +58,7 @@ namespace SS3D_Server.Atom
             extensions = new List<Extension.Extension>();
         }
 
-        public void SetUp(ushort _uid, AtomManager _atomManager)
+        public void SetUp(int _uid, AtomManager _atomManager)
         {
             Uid = _uid;
             atomManager = _atomManager;

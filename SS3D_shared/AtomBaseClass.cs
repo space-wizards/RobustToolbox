@@ -11,6 +11,6 @@ namespace SS3D_shared
     {
         public AtomType AtomType = AtomType.None;
         public string name;
-        public ushort UID;
+        public int UID;
     }
 }

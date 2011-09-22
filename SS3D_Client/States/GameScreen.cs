@@ -104,8 +104,8 @@ namespace SS3D.States
 
             UiManager.Singleton.DisposeAllComponents();
 
-            atomManager = new AtomManager(this, prg);
             entityManager = new EntityManager(prg.mNetworkMgr.netClient);
+            atomManager = new AtomManager(this, prg, entityManager);
             PlayerController.Initialize(this, atomManager);
             playerController = PlayerController.Singleton;
 
@@ -263,6 +263,9 @@ namespace SS3D.States
                             HandleChatMessage(msg);
                             break;
                         case NetMessage.EntityMessage:
+                            entityManager.HandleEntityNetworkMessage(msg);
+                            break;
+                        case NetMessage.EntityManagerMessage:
                             entityManager.HandleNetworkMessage(msg);
                             break;
                         default:

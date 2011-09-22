@@ -17,5 +17,6 @@ namespace SGO
         void Shutdown();
         ComponentFamily Family {get;set;}
         void SetParameter(ComponentParameter parameter);
+        void HandleNetworkMessage(IncomingEntityComponentMessage message);
     }
 }

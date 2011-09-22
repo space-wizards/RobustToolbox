@@ -16,7 +16,7 @@ namespace SGO
     public enum MessageType
     {
         AddComponent,
-        KeyDown,
-        KeyUp,
+        BoundKeyChange,
+        BoundKeyRepeat,
     }
 }

@@ -22,6 +22,7 @@ namespace CGO
             m_entityNetworkManager = new EntityNetworkManager(netClient);
             m_entityTemplateDatabase = new EntityTemplateDatabase();
             m_entityFactory = new EntityFactory(m_entityTemplateDatabase);
+            m_entities = new Dictionary<int, Entity>();
         }
 
         /// <summary>
@@ -56,6 +57,17 @@ namespace CGO
             return -1;
         }
 
+        /// <summary>
+        /// Adds an atom to the entity pool. Compatibility method.
+        /// </summary>
+        /// <param name="e">Entity to add</param>
+        public void AddAtomEntity(Entity e)
+        {
+            ///The UID has already been set by the server..
+            m_entities.Add(e.Uid, e);
+            e.SetNetworkManager(m_entityNetworkManager);
+        }
+
         public void Shutdown()
         {
             throw new NotImplementedException();
@@ -66,10 +78,15 @@ namespace CGO
         /// and handling the parsed result.
         /// </summary>
         /// <param name="msg"></param>
-        public void HandleNetworkMessage(NetIncomingMessage msg)
+        public void HandleEntityNetworkMessage(NetIncomingMessage msg)
         {
             IncomingEntityMessage message = m_entityNetworkManager.HandleEntityNetworkMessage(msg);
             m_entities[message.uid].HandleNetworkMessage(message);
+        }
+
+        public void HandleNetworkMessage(NetIncomingMessage msg)
+        {
+
         }
     }
 }

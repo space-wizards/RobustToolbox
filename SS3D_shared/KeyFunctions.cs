@@ -8,7 +8,8 @@ namespace SS3D_shared
     public enum BoundKeyState
     {
         Up,
-        Down
+        Down,
+        Repeat
     }
 
     /// <summary>

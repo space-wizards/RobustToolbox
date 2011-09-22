@@ -16,7 +16,7 @@ namespace CGO
     public enum MessageType
     {
         AddComponent,
-        KeyDown,
-        KeyUp,
+        BoundKeyChange,
+        BoundKeyRepeat,
     }
 }

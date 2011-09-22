@@ -75,10 +75,15 @@ namespace SGO
         /// and handling the parsed result.
         /// </summary>
         /// <param name="msg">Incoming raw network message</param>
-        public void HandleNetworkMessage(NetIncomingMessage msg)
+        public void HandleEntityNetworkMessage(NetIncomingMessage msg)
         {
             IncomingEntityMessage message = m_entityNetworkManager.HandleEntityNetworkMessage(msg);
             m_entities[message.uid].HandleNetworkMessage(message);
+        }
+
+        public void HandleNetworkMessage(NetIncomingMessage msg)
+        {
+
         }
     }
 }

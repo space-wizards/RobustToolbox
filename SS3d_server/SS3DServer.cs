@@ -450,6 +450,9 @@ namespace SS3D_Server
                     PlacementManager.Singleton.HandleNetMessage(msg);
                     break;
                 case NetMessage.EntityMessage:
+                    entityManager.HandleEntityNetworkMessage(msg);
+                    break;
+                case NetMessage.EntityManagerMessage:
                     entityManager.HandleNetworkMessage(msg);
                     break;
                 default:

@@ -140,7 +140,7 @@ namespace SS3D.Modules
         /// </summary>
         /// <param name="verb">the verb</param>
         /// <param name="uid">a target atom's uid</param>
-        public void SendVerb(string verb, ushort uid)
+        public void SendVerb(string verb, int uid)
         {
             NetOutgoingMessage message = runningState.prg.mNetworkMgr.netClient.CreateMessage();
             message.Write((byte)NetMessage.PlayerSessionMessage);

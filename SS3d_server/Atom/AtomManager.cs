@@ -26,7 +26,7 @@ namespace SS3D_Server.Atom
         public Dictionary<int, Atom> atomDictionary;
         private List<Module> m_loadedModules;
 
-        private ushort lastUID = 0;
+        private int lastUID = 0;
         #endregion
 
         #region instantiation
@@ -115,7 +115,7 @@ namespace SS3D_Server.Atom
             atom.HandleNetworkMessage(message);
         }
 
-        private void SendMessage(ushort uid, NetOutgoingMessage message)
+        private void SendMessage(int uid, NetOutgoingMessage message)
         {
             //Message should already have the uid attached by the atom in question. Just need to send it here.
         }
@@ -191,7 +191,7 @@ namespace SS3D_Server.Atom
 
         public Atom SpawnAtom(string type)
         {
-            ushort uid = lastUID++;
+            int uid = lastUID++;
 
             Type atomType = GetAtomType(type);
             

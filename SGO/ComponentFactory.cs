@@ -61,7 +61,7 @@ namespace SGO
             if (componentTypeName == null || componentTypeName == "")
                 return null;
             //Type t = Assembly.GetExecutingAssembly().GetType(componentTypeName); //Get the type
-            Type t = Type.GetType("CGO." + componentTypeName); //Get the type
+            Type t = Type.GetType("SGO." + componentTypeName); //Get the type
             if (t == null || t.GetInterface("IGameObjectComponent") == null)
                 return null;
 

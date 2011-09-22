@@ -23,10 +23,6 @@ namespace CGO
             keyStates = new Dictionary<BoundKeyFunctions, bool>();
             keyHandlers = new Dictionary<BoundKeyFunctions, KeyEvent>();
             //Set up keystates
-            keyHandlers.Add(BoundKeyFunctions.MoveUp, new KeyEvent(HandleMoveUp));
-            keyHandlers.Add(BoundKeyFunctions.MoveDown, new KeyEvent(HandleMoveDown));
-            keyHandlers.Add(BoundKeyFunctions.MoveLeft, new KeyEvent(HandleMoveLeft));
-            keyHandlers.Add(BoundKeyFunctions.MoveRight, new KeyEvent(HandleMoveRight));
         }
 
         public override void Shutdown()
@@ -44,25 +40,23 @@ namespace CGO
 
         public virtual void KeyDown(object sender, BoundKeyEventArgs e)
         {
-            //Owner.SendComponentNetworkMessage(this, Lidgren.Network.NetDeliveryMethod.ReliableUnordered, e.Function, e.FunctionState);
+            Owner.SendComponentNetworkMessage(this, Lidgren.Network.NetDeliveryMethod.ReliableUnordered, e.Function, e.FunctionState);
             SetKeyState(e.Function, true);
-            Owner.SendMessage(this, MessageType.KeyDown, e.Function);
+            Owner.SendMessage(this, MessageType.BoundKeyChange, e.Function, e.FunctionState);
         }
 
         public virtual void KeyUp(object sender, BoundKeyEventArgs e)
         {
-            //Owner.SendComponentNetworkMessage(this, Lidgren.Network.NetDeliveryMethod.ReliableUnordered, e.Function, e.FunctionState);
+            Owner.SendComponentNetworkMessage(this, Lidgren.Network.NetDeliveryMethod.ReliableUnordered, e.Function, e.FunctionState);
             SetKeyState(e.Function, false);
-            Owner.SendMessage(this, MessageType.KeyUp, e.Function);
+            Owner.SendMessage(this, MessageType.BoundKeyChange, e.Function, e.FunctionState);
         }
 
         protected void SetKeyState(BoundKeyFunctions k, bool state)
         {
             // Check to see if we have a keyhandler for the key that's been pressed. Discard invalid keys.
-            if (keyHandlers.ContainsKey(k))
-            {
-                keyStates[k] = state;
-            }
+            keyStates[k] = state;
+
         }
 
         public bool GetKeyState(BoundKeyFunctions k)
@@ -100,38 +94,10 @@ namespace CGO
             {
                 if (state.Value == false)
                     keyStates.Remove(state.Key);
+                else
+                    Owner.SendMessage(this, MessageType.BoundKeyRepeat, state.Key, BoundKeyState.Repeat);
             }
             //lastKeyUpdate = atomManager.now;
         }
-
-        public virtual void HandleMoveUp(bool state)
-        {
-            if (state && GetKeyState(BoundKeyFunctions.MoveLeft) && !GetKeyState(BoundKeyFunctions.MoveRight))
-                Owner.MoveUpLeft();
-            else if (state && GetKeyState(BoundKeyFunctions.MoveRight))
-                Owner.MoveUpRight();
-            else if (state)
-                Owner.MoveUp();
-        }
-        public virtual void HandleMoveDown(bool state)
-        {
-            if (state && GetKeyState(BoundKeyFunctions.MoveLeft) && !GetKeyState(BoundKeyFunctions.MoveRight))
-                Owner.MoveDownLeft();
-            else if (state && GetKeyState(BoundKeyFunctions.MoveRight))
-                Owner.MoveDownRight();
-            else if (state)
-                Owner.MoveDown();
-        }
-        public virtual void HandleMoveLeft(bool state)
-        {
-            if (state && !GetKeyState(BoundKeyFunctions.MoveUp) && !GetKeyState(BoundKeyFunctions.MoveDown))
-                Owner.MoveLeft();
-        }
-        public virtual void HandleMoveRight(bool state)
-        {
-            if (state && !GetKeyState(BoundKeyFunctions.MoveUp) && !GetKeyState(BoundKeyFunctions.MoveDown))
-                Owner.MoveRight();
-        }
-
     }
 }

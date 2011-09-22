@@ -227,5 +227,12 @@ namespace CGO
         {
             m_entityNetworkManager.SendComponentNetworkMessage(this, component.Family, NetDeliveryMethod.ReliableUnordered, messageParams);
         }
+
+        #region compatibility for atom transition
+        public void SetNetworkManager(EntityNetworkManager manager)
+        {
+            m_entityNetworkManager = manager;
+        }
+        #endregion
     }
 }

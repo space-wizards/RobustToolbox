@@ -162,7 +162,7 @@ namespace SGO
                 switch ((NetworkDataType)message.ReadByte())
                 {
                     case NetworkDataType.d_enum:
-                        messageParams.Add(message.ReadByte());
+                        messageParams.Add(message.ReadInt32()); //Cast from int, because enums are ints.
                         break;
                     case NetworkDataType.d_bool:
                         messageParams.Add(message.ReadBoolean());

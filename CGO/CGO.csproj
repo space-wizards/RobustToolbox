@@ -57,7 +57,7 @@
     <Compile Include="IGameObjectComponent.cs" />
     <Compile Include="IMoverComponent.cs" />
     <Compile Include="KeyboardInputEventArgs.cs" />
-    <Compile Include="KeyBindingInputComponent.cs" />
+    <Compile Include="Component\Input\KeyBindingInputComponent.cs" />
     <Compile Include="MessageEnums.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="RenderableComponent.cs" />

@@ -7,6 +7,8 @@ using Lidgren.Network;
 using SS3D_Server.Atom;
 using SS3D_Server;
 using SS3D_shared;
+using SS3D_shared.GO;
+using SGO;
 
 namespace SS3D_Server.Modules
 {
@@ -35,6 +37,7 @@ namespace SS3D_Server.Modules
         {
             DetachFromAtom();
             a.attachedClient = connectedClient;
+            a.AddComponent(ComponentFamily.Input, SGO.ComponentFactory.Singleton.GetComponent("KeyBindingInputComponent"));
             attachedAtom = a;
             SendAttachMessage();
         }

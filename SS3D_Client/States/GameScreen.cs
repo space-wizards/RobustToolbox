@@ -104,8 +104,8 @@ namespace SS3D.States
 
             UiManager.Singleton.DisposeAllComponents();
 
-            atomManager = new AtomManager(this, prg);
             entityManager = new EntityManager(prg.mNetworkMgr.netClient);
+            atomManager = new AtomManager(this, prg, entityManager);
             PlayerController.Initialize(this, atomManager);
             playerController = PlayerController.Singleton;
 

@@ -1,21 +1,21 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
-using System.Text;
 using System.Reflection;
 using System.Runtime.Serialization;
 using System.Runtime.Serialization.Formatters.Binary;
-using System.IO;
 using System.Security;
 using System.Security.Permissions;
-
+using System.Text;
+using CSScriptLibrary;
+using Lidgren.Network;
+using SGO;
+using SS3D_Server.Atom.Mob;
+using SS3D_Server.Modules;
+using SS3D_Server.Modules.Map;
 using SS3D_shared;
 using SS3D_shared.HelperClasses;
-using SS3D_Server.Modules.Map;
-using Lidgren.Network;
-using SS3D_Server.Modules;
-using SS3D_Server.Atom.Mob;
-using CSScriptLibrary;
 
 namespace SS3D_Server.Atom
 {
@@ -26,13 +26,27 @@ namespace SS3D_Server.Atom
         public Dictionary<int, Atom> atomDictionary;
         private List<Module> m_loadedModules;
 
-        private int lastUID = 0;
+        //private int lastUID = 0;
+        public int lastUID //Linked to entity manager to keep uids consistent.
+        {
+            get
+            {
+                return m_entityManager.lastId;
+            }
+            set
+            {
+                m_entityManager.lastId = value;
+            }
+        }
+
+        private EntityManager m_entityManager;
         #endregion
 
         #region instantiation
-        public AtomManager()
+        public AtomManager(EntityManager entityManager)
         {
             atomDictionary = new Dictionary<int, Atom>();
+            m_entityManager = entityManager;
             //loadAtomScripts();
         }
 
@@ -199,7 +213,7 @@ namespace SS3D_Server.Atom
             atomDictionary[uid] = (Atom)atom;
             
             atomDictionary[uid].SetUp(uid, this);
-
+            m_entityManager.AddAtomEntity((Entity)atom); /// Add atom to entity manager
             SendSpawnAtom(uid, type);
             atomDictionary[uid].SendState();
    

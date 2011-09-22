@@ -22,6 +22,7 @@ namespace CGO
             m_entityNetworkManager = new EntityNetworkManager(netClient);
             m_entityTemplateDatabase = new EntityTemplateDatabase();
             m_entityFactory = new EntityFactory(m_entityTemplateDatabase);
+            m_entities = new Dictionary<int, Entity>();
         }
 
         /// <summary>
@@ -54,6 +55,17 @@ namespace CGO
             }
             //TODO: throw exception here -- something went wrong.
             return -1;
+        }
+
+        /// <summary>
+        /// Adds an atom to the entity pool. Compatibility method.
+        /// </summary>
+        /// <param name="e">Entity to add</param>
+        public void AddAtomEntity(Entity e)
+        {
+            ///The UID has already been set by the server..
+            m_entities.Add(e.Uid, e);
+            e.SetNetworkManager(m_entityNetworkManager);
         }
 
         public void Shutdown()

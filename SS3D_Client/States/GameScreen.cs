@@ -263,6 +263,9 @@ namespace SS3D.States
                             HandleChatMessage(msg);
                             break;
                         case NetMessage.EntityMessage:
+                            entityManager.HandleEntityNetworkMessage(msg);
+                            break;
+                        case NetMessage.EntityManagerMessage:
                             entityManager.HandleNetworkMessage(msg);
                             break;
                         default:

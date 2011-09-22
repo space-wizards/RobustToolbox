@@ -26,6 +26,7 @@ public enum NetMessage
     ForceRestart,
     AtmosDisplayUpdate,
     EntityMessage,
+    EntityManagerMessage,
 }
 
 public enum ItemMessage

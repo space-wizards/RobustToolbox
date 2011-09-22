@@ -16,5 +16,6 @@ namespace ClientInput
 
         public BoundKeyState FunctionState;
         public BoundKeyFunctions Function;
+        public float time;
     }
 }

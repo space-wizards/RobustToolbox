@@ -16,10 +16,7 @@ namespace SGO
             BoundKeyFunctions keyFunction = (BoundKeyFunctions)message.messageParameters[0];
             BoundKeyState keyState = (BoundKeyState)message.messageParameters[1];
 
-            if (keyState == BoundKeyState.Down)
-                Owner.SendMessage(this, MessageType.KeyDown, keyFunction);
-            if (keyState == BoundKeyState.Up)
-                Owner.SendMessage(this, MessageType.KeyUp, keyFunction);
+            Owner.SendMessage(this, MessageType.BoundKeyChange, keyFunction, keyState);
         }
     }
 }

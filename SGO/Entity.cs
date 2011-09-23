@@ -269,6 +269,18 @@ namespace SGO
             }
         }
 
+        /// <summary>
+        /// Sends a message to the counterpart component on the server side
+        /// </summary>
+        /// <param name="component">Sending component</param>
+        /// <param name="method">Net Delivery Method</param>
+        /// <param name="recipient">The intended recipient netconnection (if null send to all)</param>
+        /// <param name="messageParams">Parameters</param>
+        public void SendComponentNetworkMessage(IGameObjectComponent component, NetDeliveryMethod method, NetConnection recipient, params object[] messageParams)
+        {
+            m_entityNetworkManager.SendComponentNetworkMessage(this, component.Family, NetDeliveryMethod.ReliableUnordered, recipient, messageParams);
+        }
+
         #region compatibility for atom transition
         public void SetNetworkManager(EntityNetworkManager manager)
         {

@@ -10,8 +10,8 @@ namespace SS3D_Server.Atom.Mob
 {
     public class Mob : Atom
     {
-        public float walkSpeed = 1.0f;
-        public float runSpeed = 2.0f;
+        public float walkSpeed = 400.0f;
+        public float runSpeed = 600.0f;
         public Item.Organs.BLOOD_TYPE blood_type = Item.Organs.BLOOD_TYPE.A; // Temporary
         public List<Item.Organs.Organ> organs = new List<Item.Organs.Organ>();
 

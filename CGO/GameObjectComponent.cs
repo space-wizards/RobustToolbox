@@ -96,6 +96,15 @@ namespace CGO
         public virtual void SetParameter(ComponentParameter parameter)
         {
 
+        }        
+        
+        /// <summary>
+        /// Empty method for handling incoming input messages from counterpart client components
+        /// </summary>
+        /// <param name="message">the message object</param>
+        public virtual void HandleNetworkMessage(IncomingEntityComponentMessage message)
+        {
+
         }
     }
 }

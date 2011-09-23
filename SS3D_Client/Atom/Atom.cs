@@ -12,6 +12,7 @@ using GorgonLibrary.Graphics;
 using GorgonLibrary.InputDevices;
 using SS3D.Modules;
 using SS3D.Modules.UI;
+using CGO;
 
 namespace SS3D.Atom
 {
@@ -90,6 +91,8 @@ namespace SS3D.Atom
             interpolationPackets = new List<InterpolationPacket>();
             spriteNames = new Dictionary<int, string>();
             spriteNames[0] = spritename;
+
+            AddComponent(SS3D_shared.GO.ComponentFamily.Mover, ComponentFactory.Singleton.GetComponent("NetworkMoverComponent"));
         }
 
         public virtual void SetSpriteName(int index, string name)

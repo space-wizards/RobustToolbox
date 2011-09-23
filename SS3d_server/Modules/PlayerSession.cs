@@ -39,6 +39,7 @@ namespace SS3D_Server.Modules
             a.attachedClient = connectedClient;
             //Add input component.
             a.AddComponent(ComponentFamily.Input, SGO.ComponentFactory.Singleton.GetComponent("KeyBindingInputComponent"));
+            a.AddComponent(ComponentFamily.Mover, ComponentFactory.Singleton.GetComponent("PlayerInputMoverComponent"));
             attachedAtom = a;
             SendAttachMessage();
         }
@@ -50,6 +51,7 @@ namespace SS3D_Server.Modules
                 attachedAtom.attachedClient = null;
                 attachedAtom.Die();
                 attachedAtom.RemoveComponent(ComponentFamily.Input);
+                attachedAtom.RemoveComponent(ComponentFamily.Mover);
                 attachedAtom = null;
             }
         }

@@ -209,7 +209,7 @@ namespace CGO
         /// <summary>
         /// Movement speed of the entity. This should be refactored.
         /// </summary>
-        public float speed = 6.0f;
+        public float speed = 600.0f;
 
         //FUNCTIONS TO REFACTOR AT A LATER DATE
         /// <summary>
@@ -218,11 +218,32 @@ namespace CGO
         public virtual void SendPositionUpdate()
         { }
 
-        internal void HandleNetworkMessage(IncomingEntityMessage message)
+        internal void HandleComponentMessage(IncomingEntityComponentMessage message)
         {
-            throw new NotImplementedException();
+            if (components.Keys.Contains(message.componentFamily))
+            {
+                components[message.componentFamily].HandleNetworkMessage(message);
+            }
         }
 
+        internal void HandleNetworkMessage(IncomingEntityMessage message)
+        {
+            switch (message.messageType)
+            {
+                case EntityMessage.PositionMessage:
+                    break;
+                case EntityMessage.ComponentMessage:
+                    HandleComponentMessage((IncomingEntityComponentMessage)message.message);
+                    break;
+            }
+        }
+
+        /// <summary>
+        /// Sends a message to the counterpart component on the server side
+        /// </summary>
+        /// <param name="component">Sending component</param>
+        /// <param name="method">Net Delivery Method</param>
+        /// <param name="messageParams">Parameters</param>
         public void SendComponentNetworkMessage(IGameObjectComponent component, NetDeliveryMethod method, params object[] messageParams)
         {
             m_entityNetworkManager.SendComponentNetworkMessage(this, component.Family, NetDeliveryMethod.ReliableUnordered, messageParams);

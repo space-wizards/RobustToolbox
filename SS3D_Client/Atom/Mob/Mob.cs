@@ -15,8 +15,8 @@ namespace SS3D.Atom.Mob
     {
         
         // TODO Make these some sort of well-organized global constant
-        public float walkSpeed = 4.0f;
-        public float runSpeed = 6.0f;
+        public float walkSpeed = 400.0f;
+        public float runSpeed = 600.0f;
 
         public bool isDead = false;
 

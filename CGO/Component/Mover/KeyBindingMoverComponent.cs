@@ -4,6 +4,7 @@ using System.Linq;
 using System.Text;
 using SS3D_shared;
 using SS3D_shared.GO;
+using GorgonLibrary;
 
 namespace CGO
 {
@@ -14,6 +15,11 @@ namespace CGO
         private bool MoveDown = false;
         private bool MoveLeft = false;
         private bool MoveRight = false;
+
+        public KeyBindingMoverComponent()
+        {
+            family = ComponentFamily.Mover;
+        }
 
         public override void RecieveMessage(object sender, MessageType type, params object[] list)
         {
@@ -49,27 +55,66 @@ namespace CGO
                 MoveRight = setting;
         }
 
+        /// <summary>
+        /// Update function. Processes currently pressed keys and does shit etc.
+        /// </summary>
+        /// <param name="frameTime"></param>
         public override void Update(float frameTime)
         {
             base.Update(frameTime);
 
-
             if (MoveUp && !MoveLeft && !MoveRight && !MoveDown) // Move Up
-                Owner.MoveUp();
+            {
+                Translate(new Vector2D(0,-1) * Owner.speed * frameTime);
+                //Owner.MoveUp();
+            }
             else if (MoveDown && !MoveLeft && !MoveRight && !MoveUp) // Move Down
-                Owner.MoveDown();
+            {
+                Translate(new Vector2D(0, 1) * Owner.speed * frameTime);
+                //Owner.MoveDown();
+            }
             else if (MoveLeft && !MoveRight && !MoveUp && !MoveDown) // Move Left
-                Owner.MoveLeft();
+            {
+                Translate(new Vector2D(-1, 0) * Owner.speed * frameTime);
+                //Owner.MoveLeft(); 
+            }
             else if (MoveRight && !MoveLeft && !MoveUp && !MoveDown) // Move Right
-                Owner.MoveRight();
+            {
+                Translate(new Vector2D(1, 0) * Owner.speed * frameTime);
+                //Owner.MoveRight(); 
+            }
             else if (MoveUp && MoveRight && !MoveLeft && !MoveDown) // Move Up & Right
-                Owner.MoveUpRight();
+            {
+                Translate(new Vector2D(1, -1) * Owner.speed * frameTime);
+                //Owner.MoveUpRight(); 
+            }
             else if (MoveUp && MoveLeft && !MoveRight && !MoveDown) // Move Up & Left
-                Owner.MoveUpLeft();
+            {
+                Translate(new Vector2D(-1, -1) * Owner.speed * frameTime);
+                //Owner.MoveUpLeft(); 
+            }
             else if (MoveDown && MoveRight && !MoveLeft && !MoveUp) // Move Down & Right
-                Owner.MoveDownRight();
+            {
+                Translate(new Vector2D(1, 1) * Owner.speed * frameTime);
+                //Owner.MoveDownRight(); 
+            }
             else if (MoveDown && MoveLeft && !MoveRight && !MoveUp) // Move Down & Left
-                Owner.MoveDownLeft();
+            {
+                Translate(new Vector2D(-1, 1) * Owner.speed * frameTime);
+                //Owner.MoveDownLeft(); 
+            }
+        }
+
+        public virtual void SendPositionUpdate()
+        {
+            Owner.SendComponentNetworkMessage(this, Lidgren.Network.NetDeliveryMethod.ReliableUnordered, Owner.position.X, Owner.position.Y);
+        }
+
+        public virtual void Translate(Vector2D translationVector)
+        {
+            Vector2D oldPosition = Owner.position;
+            Owner.position += translationVector; // We move the sprite here rather than the position, as we can then use its updated AABB values.
+            SendPositionUpdate();
         }
     }
 }

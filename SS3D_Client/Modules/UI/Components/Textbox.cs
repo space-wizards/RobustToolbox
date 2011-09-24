@@ -37,9 +37,9 @@ namespace SS3D.Modules.UI.Components
         public Textbox(int width)
             : base()
         {
-            TextboxLeft = UiManager.Singleton.Skin.Elements["Controls.Button.Left"];
-            TextboxMain = UiManager.Singleton.Skin.Elements["Controls.Button.Body"];
-            TextboxRight = UiManager.Singleton.Skin.Elements["Controls.Button.Right"];
+            TextboxLeft = UiManager.Singleton.Skin.Elements["Controls.Button2.Left"];
+            TextboxMain = UiManager.Singleton.Skin.Elements["Controls.Button2.Body"];
+            TextboxRight = UiManager.Singleton.Skin.Elements["Controls.Button2.Right"];
 
             Width = width;
 
@@ -56,7 +56,7 @@ namespace SS3D.Modules.UI.Components
             clientAreaMain = new Rectangle(new Point(clientAreaLeft.Right, this.position.Y), new Size(Width, TextboxMain.Dimensions.Height));
             clientAreaRight = new Rectangle(new Point(clientAreaMain.Right, this.position.Y), new Size(TextboxRight.Dimensions.Width, TextboxRight.Dimensions.Height));
             clientArea = new Rectangle(this.position, new Size(clientAreaLeft.Width + clientAreaMain.Width + clientAreaRight.Width, clientAreaMain.Height));
-            label.Position = new Point(clientAreaLeft.Right, this.position.Y);
+            label.Position = new Point(clientAreaLeft.Right, this.position.Y + (int)(clientArea.Height / 2f) - (int)(label.Height / 2f));
 
             if (Focus) label.Text = Text + "|";
             else label.Text = Text;

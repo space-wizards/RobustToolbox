@@ -53,7 +53,7 @@ namespace SS3D.Modules.UI.Components
         private void BuildList(NetIncomingMessage _msgBody)
         {
             byte playerCount = _msgBody.ReadByte();
-            int y_offset = 35;
+            int y_offset = 40;
             for (int i = 0; i < playerCount; i++)
             {
                 string name = _msgBody.ReadString();
@@ -62,7 +62,7 @@ namespace SS3D.Modules.UI.Components
                 string ip = _msgBody.ReadString();
 
                 Label line = new Label("Name: " + name + "    Status: " + status + "    Job: " + job + "    IP: " + ip);
-                line.Position = new Point(5, y_offset);
+                line.Position = new Point(5, y_offset + 5);
                 components.Add(line);
 
                 Button kickButt = new Button("Kick"); //And chew bubblegum. And im all out of gum. Get it? kickButt? HAHA. Shut up, it's funny.
@@ -78,13 +78,16 @@ namespace SS3D.Modules.UI.Components
                 banButt.UserData = ip;
                 banButt.Clicked += new Button.ButtonPressHandler(banButt_Clicked);
 
-                y_offset += 20;
+                y_offset += 35;
             }
         }
 
         void banButt_Clicked(Button sender)
         {
-            throw new System.NotImplementedException();
+            NetOutgoingMessage msg = netMgr.netClient.CreateMessage();
+            msg.Write((byte)NetMessage.RequestAdminBan);
+            msg.Write((string)sender.UserData); //ip
+            netMgr.SendMessage(msg, NetDeliveryMethod.ReliableUnordered);
         }
 
         void kickButt_Clicked(Button sender)

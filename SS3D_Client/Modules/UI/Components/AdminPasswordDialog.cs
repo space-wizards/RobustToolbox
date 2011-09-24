@@ -62,7 +62,7 @@ namespace SS3D.Modules.UI.Components
             base.Update();
             if (okayButton != null && textboxPassword != null)
             {
-                okayButton.Position = new Point((int)(size.Width / 2f) - (int)(okayButton.ClientArea.Width / 2f), (size.Height - okayButton.ClientArea.Height - 3));
+                okayButton.Position = new Point((int)(size.Width / 2f) - (int)(okayButton.ClientArea.Width / 2f), (size.Height - okayButton.ClientArea.Height - 5));
                 textboxPassword.Position = new Point((int)(size.Width / 2f) - (int)(textboxPassword.ClientArea.Width / 2f),  5);
             }
         }

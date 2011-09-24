@@ -30,7 +30,9 @@ public enum NetMessage
     RequestAdminLogin,      //Server asks client to login OR client tries to login.
     RequestAdminPlayerlist, //Client request playerlist for admin panel OR server sends it.
     RequestAdminBan,
-    RequestAdminKick
+    RequestAdminKick,
+    RequestBanList,
+    RequestUnBan,
 }
 
 public enum ItemMessage

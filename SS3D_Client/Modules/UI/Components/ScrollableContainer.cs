@@ -25,7 +25,7 @@ namespace SS3D.Modules.UI.Components
         protected float max_x = 0;
         protected float max_y = 0;
 
-        public Color BackgroundColor = Color.DimGray;
+        public Color BackgroundColor = Color.DarkGray;
         public bool DrawBackground = false;
 
         protected Size size;

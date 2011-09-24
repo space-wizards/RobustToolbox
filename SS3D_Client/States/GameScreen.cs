@@ -294,21 +294,11 @@ namespace SS3D.States
             switch (adminMsgType)
             {
                 case NetMessage.RequestAdminLogin:
-                    var openPwWindows = (from GuiComponent component in UiManager.Singleton.Components //Get rid of all curently open login windows.
-                                        where component.GetType() == typeof(AdminPasswordDialog)
-                                        select component).ToArray(); //ToArray to avoid collection changed exception.
-
-                    foreach (GuiComponent curr in openPwWindows) curr.Dispose();
-
-                    UiManager.Singleton.Components.Add(new AdminPasswordDialog(new System.Drawing.Size(200, 50), prg.mNetworkMgr)); //Create a new one.
+                    UiManager.Singleton.DisposeAllComponentsOfType(typeof(AdminPasswordDialog)); //Remove old ones.
+                    UiManager.Singleton.Components.Add(new AdminPasswordDialog(new System.Drawing.Size(200, 75), prg.mNetworkMgr)); //Create a new one.
                     break;
                 case NetMessage.RequestAdminPlayerlist:
-                    var openAdminPlListWindows = (from GuiComponent component in UiManager.Singleton.Components //See above.
-                                        where component.GetType() == typeof(AdminPlayerPanel)
-                                        select component).ToArray();
-
-                    foreach (GuiComponent curr in openAdminPlListWindows) curr.Dispose();
-
+                    UiManager.Singleton.DisposeAllComponentsOfType(typeof(AdminPlayerPanel));
                     UiManager.Singleton.Components.Add(new AdminPlayerPanel(new System.Drawing.Size(600,200), prg.mNetworkMgr, messageBody));
                     break;
             }

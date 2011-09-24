@@ -145,6 +145,8 @@ namespace SS3D_Server
                 }
                 else LogManager.Log("Job Definitions Found. " + JobHandler.Singleton.JobDefinitions.Count.ToString() + " Jobs loaded.", LogLevel.Information);
 
+                BanlistMgr.Singleton.Initialize("BanList.xml");
+
                 netConfig.Port = serverPort;
                 var netServer = new SS3DNetServer(netConfig);
                 SS3DNetServer.Singleton.Start();
@@ -383,10 +385,16 @@ namespace SS3D_Server
                     LogManager.Log(senderIP + ": Already connected", LogLevel.Error);
                     return;
                 }
-                else
+                else if (!BanlistMgr.Singleton.IsBanned(sender.RemoteEndpoint.Address.ToString()))
                 {
                     HandleConnectionApproval(sender);
                     playerManager.NewSession(sender); // TODO move this to somewhere that makes more sense.
+                }
+                else
+                {
+                    //You're banned bro.
+                    sender.Deny("You have been banned from this Server.");
+                    LogManager.Log(senderIP + ": Connection denied. User banned.");
                 }
                 // Send map
             }
@@ -464,6 +472,9 @@ namespace SS3D_Server
                 case NetMessage.RequestAdminKick:
                     HandleAdminMessage(messageType, msg);
                     break;
+                case NetMessage.RequestAdminBan:
+                    HandleAdminMessage(messageType, msg);
+                    break;
 
                 default:
                     break;
@@ -511,11 +522,26 @@ namespace SS3D_Server
                 case NetMessage.RequestAdminKick:
                     if (playerManager.GetSessionByConnection(messageBody.SenderConnection).adminPermissions.isAdmin == true)
                     {
-                        PlayerSession kickSession = playerManager.GetSessionByIp(messageBody.ReadString());
+                        string ipKick = messageBody.ReadString();
+                        PlayerSession kickSession = playerManager.GetSessionByIp(ipKick);
                         if (kickSession != null)
                         {
                             playerManager.EndSession(kickSession.connectedClient);
                             kickSession.connectedClient.Deny("Kicked by Administrator.");
+                        }
+                    }
+                    break;
+                case NetMessage.RequestAdminBan:
+                    if (playerManager.GetSessionByConnection(messageBody.SenderConnection).adminPermissions.isAdmin == true)
+                    {
+                        string ipBan = messageBody.ReadString();
+                        PlayerSession banSession = playerManager.GetSessionByIp(ipBan);
+                        if (banSession != null)
+                        {
+                            if(BanlistMgr.Singleton.IsBanned(ipBan)) return;
+                            BanlistMgr.Singleton.AddBan(ipBan, "No reason specified.");
+                            playerManager.EndSession(banSession.connectedClient);
+                            banSession.connectedClient.Deny("Banned by Administrator.");
                         }
                     }
                     break;

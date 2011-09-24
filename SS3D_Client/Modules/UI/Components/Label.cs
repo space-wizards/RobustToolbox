@@ -51,6 +51,7 @@ namespace SS3D.Modules.UI.Components
         {
             Text = null;
             Clicked = null;
+            base.Dispose();
             GC.SuppressFinalize(this);
         }
 

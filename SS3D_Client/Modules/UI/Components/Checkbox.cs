@@ -59,6 +59,7 @@ namespace SS3D.Modules.UI.Components
             checkbox = null;
             checkboxCheck = null;
             ValueChanged = null;
+            base.Dispose();
             GC.SuppressFinalize(this);
         }
 

@@ -361,7 +361,7 @@ namespace SS3D_Server
 
             foreach (NetConnection conn in clientList.Keys)
             {
-                PlayerSession plrSession = playerManager.GetSessionByConnection(connection);
+                PlayerSession plrSession = playerManager.GetSessionByConnection(conn);
                 playerListMessage.Write(plrSession.name);
                 playerListMessage.Write((byte)plrSession.status);
                 playerListMessage.Write(clientList[conn].netConnection.AverageRoundtripTime);
@@ -455,10 +455,72 @@ namespace SS3D_Server
                 case NetMessage.EntityManagerMessage:
                     entityManager.HandleNetworkMessage(msg);
                     break;
+                case NetMessage.RequestAdminLogin:
+                    HandleAdminMessage(messageType, msg);
+                    break;
+                case NetMessage.RequestAdminPlayerlist:
+                    HandleAdminMessage(messageType, msg);
+                    break;
+                case NetMessage.RequestAdminKick:
+                    HandleAdminMessage(messageType, msg);
+                    break;
+
                 default:
                     break;
             }
         
+        }
+
+        public void HandleAdminMessage(NetMessage adminMsgType, NetIncomingMessage messageBody)
+        {
+            switch (adminMsgType)
+            {
+                case NetMessage.RequestAdminLogin:
+                    string password = messageBody.ReadString();
+                    if (password == ConfigManager.Singleton.Configuration.AdminPassword)
+                    {
+                        LogManager.Log("Admin login: " + messageBody.SenderConnection.RemoteEndpoint.Address.ToString());
+                        playerManager.GetSessionByConnection(messageBody.SenderConnection).adminPermissions.isAdmin = true;
+                    }
+                    else
+                        LogManager.Log("Failed Admin login: " + messageBody.SenderConnection.RemoteEndpoint.Address.ToString() + " -> ' " + password + " '");
+                    break;
+                case NetMessage.RequestAdminPlayerlist:
+                    if (playerManager.GetSessionByConnection(messageBody.SenderConnection).adminPermissions.isAdmin == true)
+                    {
+                        NetOutgoingMessage AdminPlayerListMessage = SS3DNetServer.Singleton.CreateMessage();
+                        AdminPlayerListMessage.Write((byte)NetMessage.RequestAdminPlayerlist);
+                        AdminPlayerListMessage.Write((byte)clientList.Count);
+                        foreach (NetConnection conn in clientList.Keys)
+                        {
+                            PlayerSession plrSession = playerManager.GetSessionByConnection(conn);
+                            AdminPlayerListMessage.Write(plrSession.name);
+                            AdminPlayerListMessage.Write((byte)plrSession.status);
+                            AdminPlayerListMessage.Write(plrSession.assignedJob.Name);
+                            AdminPlayerListMessage.Write(plrSession.connectedClient.RemoteEndpoint.Address.ToString());
+                        }
+                        SS3DNetServer.Singleton.SendMessage(AdminPlayerListMessage, messageBody.SenderConnection, NetDeliveryMethod.ReliableOrdered);
+                    }
+                    else
+                    {
+                        NetOutgoingMessage LoginMessage = SS3DNetServer.Singleton.CreateMessage();
+                        LoginMessage.Write((byte)NetMessage.RequestAdminLogin);
+                        SS3DNetServer.Singleton.SendMessage(LoginMessage, messageBody.SenderConnection, NetDeliveryMethod.ReliableOrdered);
+                    }
+                    break;
+                case NetMessage.RequestAdminKick:
+                    if (playerManager.GetSessionByConnection(messageBody.SenderConnection).adminPermissions.isAdmin == true)
+                    {
+                        PlayerSession kickSession = playerManager.GetSessionByIp(messageBody.ReadString());
+                        if (kickSession != null)
+                        {
+                            playerManager.EndSession(kickSession.connectedClient);
+                            kickSession.connectedClient.Deny("Kicked by Administrator.");
+                        }
+                    }
+                    break;
+            }
+
         }
 
         public void HandleJobRequest(NetIncomingMessage msg)

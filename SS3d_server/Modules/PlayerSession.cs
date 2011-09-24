@@ -20,6 +20,8 @@ namespace SS3D_Server.Modules
         public Atom.Atom attachedAtom;
         public string name = "";
         public SessionStatus status;
+        public AdminPermissions adminPermissions;
+
         public JobDefinition assignedJob;
 
         public PlayerSession(NetConnection client)
@@ -27,6 +29,7 @@ namespace SS3D_Server.Modules
             if (client != null)
             {
                 connectedClient = client;
+                adminPermissions = new AdminPermissions();
                 OnConnect();
             }
             else

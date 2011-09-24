@@ -15,29 +15,43 @@ namespace SS3D.Modules.UI.Components
 {
     class ScrollableContainer : GuiComponent
     {
-        Scrollbar scrollbarH;
-        Scrollbar scrollbarV;
+        protected Scrollbar scrollbarH;
+        protected Scrollbar scrollbarV;
 
-        RenderImage clippingRI;
+        protected RenderImage clippingRI;
 
         public List<GuiComponent> components = new List<GuiComponent>();
 
-        float max_x = 0;
-        float max_y = 0;
+        protected float max_x = 0;
+        protected float max_y = 0;
 
-        IGuiComponent inner_focus;
+        public Color BackgroundColor = Color.DimGray;
+        public bool DrawBackground = false;
 
-        bool disposing = false;
+        protected Size size;
 
-        public ScrollableContainer(string uniqueName, Size size)
+        protected IGuiComponent inner_focus;
+
+        protected bool disposing = false;
+
+        public ScrollableContainer(string uniqueName, Size _size)
             : base()
         {
+            size = _size;
+
+            if (RenderTargetCache.Targets.Contains(uniqueName)) //Now this is an ugly hack to work around duplicate RenderImages. Have to fix this later.
+                uniqueName = uniqueName + System.Guid.NewGuid().ToString();
+
             clippingRI = new RenderImage(uniqueName, size.Width, size.Height, ImageBufferFormats.BufferRGB888A8);
-            scrollbarH = new Scrollbar();
-            scrollbarH.size = size.Width;
-            scrollbarH.Horizontal = true;
+            scrollbarH = new Scrollbar(); //If you arrived here because of a duplicate key error:
+            scrollbarH.size = size.Width; //The name for scrollable containers and all classes that inherit them
+            scrollbarH.Horizontal = true; //(Windows, dialog boxes etc) must be unique. Only one instance with a given name.
             scrollbarV = new Scrollbar();
             scrollbarV.size = size.Height;
+
+            scrollbarH.Update();
+            scrollbarV.Update();
+
             clippingRI.SourceBlend = AlphaBlendOperation.SourceAlpha;
             clippingRI.DestinationBlend = AlphaBlendOperation.InverseSourceAlpha;
             Update();
@@ -47,8 +61,15 @@ namespace SS3D.Modules.UI.Components
         {
             if (disposing || !IsVisible()) return;
             clientArea = new Rectangle(position, new Size(clippingRI.Width, clippingRI.Height));
-            scrollbarH.Position = new Point(position.X, clientArea.Bottom);
-            scrollbarV.Position = new Point(clientArea.Right, position.Y);
+            scrollbarH.Position = new Point(position.X, clientArea.Bottom - scrollbarH.ClientArea.Height);
+            scrollbarV.Position = new Point(clientArea.Right - scrollbarV.ClientArea.Width, position.Y);
+
+            if (scrollbarV.IsVisible()) scrollbarH.size = size.Width - scrollbarV.ClientArea.Width;
+            else scrollbarH.size = size.Width;
+
+            if (scrollbarH.IsVisible()) scrollbarV.size = size.Height - scrollbarH.ClientArea.Height;
+            else scrollbarV.size = size.Height;
+
             max_x = 0;
             max_y = 0;
 
@@ -58,11 +79,11 @@ namespace SS3D.Modules.UI.Components
                 if (component.Position.Y + component.ClientArea.Height > max_y) max_y = component.Position.Y  + component.ClientArea.Height;
             }
 
-            scrollbarH.max = (int)max_x - clientArea.Width;
+            scrollbarH.max = (int)max_x - clientArea.Width + scrollbarV.ClientArea.Width;
             if (max_x > clippingRI.Width) scrollbarH.SetVisible(true);
             else scrollbarH.SetVisible(false);
 
-            scrollbarV.max = (int)max_y - clientArea.Height;
+            scrollbarV.max = (int)max_y - clientArea.Height + scrollbarH.ClientArea.Height;
             if (max_y > clippingRI.Height) scrollbarV.SetVisible(true);
             else scrollbarV.SetVisible(false);
 
@@ -75,6 +96,7 @@ namespace SS3D.Modules.UI.Components
             if (disposing || !IsVisible()) return;
             clippingRI.Clear(System.Drawing.Color.Transparent);
             clippingRI.BeginDrawing();
+            if (DrawBackground) Gorgon.Screen.FilledRectangle(0, 0, clientArea.Width, clientArea.Height, BackgroundColor);
             foreach (GuiComponent component in components)
             {
                 Point oldPos = component.Position;
@@ -97,10 +119,11 @@ namespace SS3D.Modules.UI.Components
             disposing = true;
             clippingRI.Dispose();
             clippingRI = null;
+            base.Dispose();
             GC.SuppressFinalize(this);
         }
 
-        private void SetFocus(IGuiComponent newFocus)
+        protected void SetFocus(IGuiComponent newFocus)
         {
             if (inner_focus != null)
             {

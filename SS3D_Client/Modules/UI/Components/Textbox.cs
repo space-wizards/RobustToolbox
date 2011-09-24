@@ -77,6 +77,7 @@ namespace SS3D.Modules.UI.Components
             TextboxMain = null;
             TextboxRight = null;
             OnSubmit = null;
+            base.Dispose();
             GC.SuppressFinalize(this);
         }
 

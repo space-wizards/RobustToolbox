@@ -110,6 +110,7 @@ namespace SS3D.States
             playerController = PlayerController.Singleton;
 
             prg.mNetworkMgr.MessageArrived += new NetworkMsgHandler(mNetworkMgr_MessageArrived);
+            prg.mNetworkMgr.Disconnected += new NetworkStateHandler(mNetworkMgr_Disconnected);
 
             prg.mNetworkMgr.SetMap(map);
             prg.mNetworkMgr.RequestMap();
@@ -164,6 +165,11 @@ namespace SS3D.States
             if(invTemp != null) invTemp.SetHandsGUI((HumanHandsGui)UiManager.Singleton.GetSingleComponentByGuiComponentType(GuiComponentType.AppendagesComponent)); // ugh ugh ugh ugh ugh
             
             return true;
+        }
+
+        void mNetworkMgr_Disconnected(NetworkManager netMgr)
+        {
+            mStateMgr.RequestStateChange(typeof(ConnectMenu)); //Fix this. Only temporary solution.
         }
 
         public override void Shutdown()
@@ -268,11 +274,42 @@ namespace SS3D.States
                         case NetMessage.EntityManagerMessage:
                             entityManager.HandleNetworkMessage(msg);
                             break;
+                        case NetMessage.RequestAdminLogin:
+                            HandleAdminMessage(messageType, msg);
+                            break;
+                        case NetMessage.RequestAdminPlayerlist:
+                            HandleAdminMessage(messageType, msg);
+                            break;
                         default:
                             break;
                     }
                     break;
                 default:
+                    break;
+            }
+        }
+
+        public void HandleAdminMessage(NetMessage adminMsgType, NetIncomingMessage messageBody)
+        {
+            switch (adminMsgType)
+            {
+                case NetMessage.RequestAdminLogin:
+                    var openPwWindows = (from GuiComponent component in UiManager.Singleton.Components //Get rid of all curently open login windows.
+                                        where component.GetType() == typeof(AdminPasswordDialog)
+                                        select component).ToArray(); //ToArray to avoid collection changed exception.
+
+                    foreach (GuiComponent curr in openPwWindows) curr.Dispose();
+
+                    UiManager.Singleton.Components.Add(new AdminPasswordDialog(new System.Drawing.Size(200, 50), prg.mNetworkMgr)); //Create a new one.
+                    break;
+                case NetMessage.RequestAdminPlayerlist:
+                    var openAdminPlListWindows = (from GuiComponent component in UiManager.Singleton.Components //See above.
+                                        where component.GetType() == typeof(AdminPlayerPanel)
+                                        select component).ToArray();
+
+                    foreach (GuiComponent curr in openAdminPlListWindows) curr.Dispose();
+
+                    UiManager.Singleton.Components.Add(new AdminPlayerPanel(new System.Drawing.Size(600,200), prg.mNetworkMgr, messageBody));
                     break;
             }
         }
@@ -524,7 +561,6 @@ namespace SS3D.States
             gaussianBlur.SetSize(1024.0f);
             gaussianBlur.PerformGaussianBlur(lightTargetSprite, lightTarget);
             
-
             baseTargetSprite.Draw();
 
             if (blendLightMap)
@@ -610,26 +646,11 @@ namespace SS3D.States
                 prg.mNetworkMgr.SendMessage(message, NetDeliveryMethod.ReliableUnordered);
             }
 
-            if (e.Key == KeyboardKeys.F10)
+            if (e.Key == KeyboardKeys.F12)
             {
-                Scrollbar bar = new Scrollbar();
-                bar.Position = new System.Drawing.Point(50,50);
-                bar.Horizontal = true;
-                UiManager.Singleton.Components.Add(bar);
-                bar.Value = 41;
-
-                Scrollbar bar2 = new Scrollbar();
-                bar2.Position = new System.Drawing.Point(100, 100);
-                bar2.Value = 98;
-                UiManager.Singleton.Components.Add(bar2);
-
-                Checkbox checkbox = new Checkbox();
-                checkbox.Position = new System.Drawing.Point(75, 75);
-                UiManager.Singleton.Components.Add(checkbox);
-
-                SS3D.Modules.UI.Components.Button butt = new SS3D.Modules.UI.Components.Button("HELLO, THIS IS A BUTTON WITH A VERY LONG LABEL ON IT");
-                butt.Position = new System.Drawing.Point(125, 125);
-                UiManager.Singleton.Components.Add(butt);
+                NetOutgoingMessage message = prg.mNetworkMgr.netClient.CreateMessage();
+                message.Write((byte)NetMessage.RequestAdminPlayerlist);
+                prg.mNetworkMgr.SendMessage(message, NetDeliveryMethod.ReliableUnordered);
             }
 
             playerController.KeyDown(e.Key);

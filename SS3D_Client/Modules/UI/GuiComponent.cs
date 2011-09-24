@@ -92,6 +92,7 @@ namespace SS3D.Modules.UI
 
         public virtual void Dispose()
         {
+            if (UiManager.Singleton.Components.Contains(this)) UiManager.Singleton.Components.Remove(this);
             GC.SuppressFinalize(this);
         }
 

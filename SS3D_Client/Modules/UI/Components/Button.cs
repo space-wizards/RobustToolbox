@@ -66,6 +66,7 @@ namespace SS3D.Modules.UI.Components
             ButtonMain = null;
             ButtonRight = null;
             Clicked = null;
+            base.Dispose();
             GC.SuppressFinalize(this);
         }
 

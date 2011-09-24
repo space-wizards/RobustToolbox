@@ -161,6 +161,8 @@
     <Compile Include="Modules\State.cs" />
     <Compile Include="Modules\StateManager.cs" />
     <Compile Include="Modules\UiManager.cs" />
+    <Compile Include="Modules\UI\Components\AdminPasswordDialog.cs" />
+    <Compile Include="Modules\UI\Components\AdminPlayerPanel.cs" />
     <Compile Include="Modules\UI\Components\Button.cs" />
     <Compile Include="Modules\UI\Components\Checkbox.cs" />
     <Compile Include="Modules\UI\Components\EditorAtomButton.cs" />
@@ -177,6 +179,7 @@
     <Compile Include="Modules\UI\Components\StatHealthComponent.cs" />
     <Compile Include="Modules\UI\Components\StatPanel.cs" />
     <Compile Include="Modules\UI\Components\Textbox.cs" />
+    <Compile Include="Modules\UI\Components\Window.cs" />
     <Compile Include="Modules\UI\GuiComponent.cs" />
     <Compile Include="Modules\UI\Speechbubble.cs" />
     <Compile Include="Modules\UI\IGuiComponent.cs" />

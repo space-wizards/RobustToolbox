@@ -2,4 +2,5 @@
 <Configuration xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema">
   <Port>1212</Port>
   <ServerName>SS3D Server</ServerName>
+  <AdminPassword>admin123</AdminPassword>
 </Configuration>

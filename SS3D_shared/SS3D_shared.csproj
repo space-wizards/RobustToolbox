@@ -75,6 +75,7 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="AdminPermissions.cs" />
     <Compile Include="AtomBaseClass.cs" />
     <Compile Include="Atom\Atom.cs" />
     <Compile Include="Atom\Item\Item.cs" />

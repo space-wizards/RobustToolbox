@@ -72,6 +72,7 @@ namespace SS3D.Modules.UI.Components
             Button = null;
             Job = null;
             Clicked = null;
+            base.Dispose();
             GC.SuppressFinalize(this);
         }
 

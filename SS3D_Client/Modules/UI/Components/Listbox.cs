@@ -120,6 +120,7 @@ namespace SS3D.Modules.UI.Components
             ListboxMain = null;
             ListboxRight = null;
             ItemSelected = null;
+            base.Dispose();
             GC.SuppressFinalize(this);
         }
 

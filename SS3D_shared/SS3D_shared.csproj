@@ -81,6 +81,7 @@
     <Compile Include="Atom\Item\Item.cs" />
     <Compile Include="Atom\Mob\Mob.cs" />
     <Compile Include="Atom\Mob\Player.cs" />
+    <Compile Include="Banlist.cs" />
     <Compile Include="GlobalConstants.cs" />
     <Compile Include="BuildPermission.cs" />
     <Compile Include="GO\ComponentEnums.cs" />

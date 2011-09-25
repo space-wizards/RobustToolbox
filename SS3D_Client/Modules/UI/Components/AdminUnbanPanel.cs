@@ -18,34 +18,21 @@ using SS3D_shared;
 
 namespace SS3D.Modules.UI.Components
 {
-    class AdminPlayerPanel : Window
+    class AdminUnbanPanel : Window
     {
         NetworkManager netMgr;
 
-        public AdminPlayerPanel (Size _size, Network.NetworkManager _netMgr, NetIncomingMessage _msgBody)
+        public AdminUnbanPanel(Size _size, Network.NetworkManager _netMgr, Banlist _banlist)
             : base("Admin Player Panel", _size)
         {
             netMgr = _netMgr;
-            BuildList(_msgBody);
+            BuildList(_banlist);
             Button closeButton = new Button("Close");
             closeButton.Position = new Point(5, 5);
             closeButton.Clicked += new Button.ButtonPressHandler(closeButton_Clicked);
             components.Add(closeButton);
 
-            Button unbanButton = new Button("Unban");
-            unbanButton.Position = new Point(closeButton.ClientArea.Right + 10, 5);
-            unbanButton.Clicked += new Button.ButtonPressHandler(unbanButton_Clicked);
-            components.Add(unbanButton);
-
             position = new Point((int)(Gorgon.Screen.Width / 2f) - (int)(this.ClientArea.Width / 2f), (int)(Gorgon.Screen.Height / 2f) - (int)(this.ClientArea.Height / 2f));
-        }
-
-        void unbanButton_Clicked(Button sender)
-        {
-            NetOutgoingMessage msg = netMgr.netClient.CreateMessage();
-            msg.Write((byte)NetMessage.RequestBanList);
-            netMgr.SendMessage(msg, NetDeliveryMethod.ReliableUnordered);
-            this.Dispose();
         }
 
         void closeButton_Clicked(Button sender)
@@ -53,52 +40,33 @@ namespace SS3D.Modules.UI.Components
             this.Dispose();
         }
 
-        private void BuildList(NetIncomingMessage _msgBody)
+        private void BuildList(Banlist list)
         {
-            byte playerCount = _msgBody.ReadByte();
             int y_offset = 40;
-            for (int i = 0; i < playerCount; i++)
+            for (int i = 0; i < list.List.Count; i++)
             {
-                string name = _msgBody.ReadString();
-                SessionStatus status = (SessionStatus)_msgBody.ReadByte();
-                string job = _msgBody.ReadString();
-                string ip = _msgBody.ReadString();
-
-                Label line = new Label("Name: " + name + "    Status: " + status + "    Job: " + job + "    IP: " + ip);
+                Label line = new Label("IP: " + list.List[i].ip + "    Reason: " + list.List[i].reason + "    Temporary: " + list.List[i].tempBan.ToString() + "    Expires: " + list.List[i].expiresAt.ToString("d/M/yyyy HH:mm:ss"));
                 line.Position = new Point(5, y_offset + 5);
                 components.Add(line);
 
-                Button kickButt = new Button("Kick"); //And chew bubblegum. And im all out of gum. Get it? kickButt? HAHA. Shut up, it's funny.
-                kickButt.Position = new Point(line.ClientArea.Right + 10, y_offset);
-                components.Add(kickButt);
-                kickButt.UserData = ip;
-                kickButt.Clicked += new Button.ButtonPressHandler(kickButt_Clicked);
-                kickButt.Update(); //Needed so the clientarea update properly. Used for the next buttons placement.
-
-                Button banButt = new Button("Ban");
-                banButt.Position = new Point(kickButt.ClientArea.Right + 5, y_offset);
-                components.Add(banButt);
-                banButt.UserData = ip;
-                banButt.Clicked += new Button.ButtonPressHandler(banButt_Clicked);
+                Button UnbanButt = new Button("Unban");
+                UnbanButt.Position = new Point(line.ClientArea.Right + 10, y_offset);
+                components.Add(UnbanButt);
+                UnbanButt.UserData = list.List[i].ip;
+                UnbanButt.Clicked += new Button.ButtonPressHandler(UnbanButt_Clicked);
+                UnbanButt.Update();
 
                 y_offset += 35;
             }
         }
 
-        void banButt_Clicked(Button sender)
+        void UnbanButt_Clicked(Button sender)
         {
             NetOutgoingMessage msg = netMgr.netClient.CreateMessage();
-            msg.Write((byte)NetMessage.RequestAdminBan);
-            msg.Write((string)sender.UserData); //ip
+            msg.Write((byte)NetMessage.RequestAdminUnBan);
+            msg.Write((string)sender.UserData);
             netMgr.SendMessage(msg, NetDeliveryMethod.ReliableUnordered);
-        }
-
-        void kickButt_Clicked(Button sender)
-        {
-            NetOutgoingMessage msg = netMgr.netClient.CreateMessage();
-            msg.Write((byte)NetMessage.RequestAdminKick);
-            msg.Write((string)sender.UserData); //ip
-            netMgr.SendMessage(msg, NetDeliveryMethod.ReliableUnordered);
+            Dispose();
         }
 
         public override void Update()

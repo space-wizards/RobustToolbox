@@ -32,7 +32,7 @@ public enum NetMessage
     RequestAdminBan,
     RequestAdminKick,
     RequestBanList,
-    RequestUnBan,
+    RequestAdminUnBan,
 }
 
 public enum ItemMessage

@@ -8,6 +8,8 @@ using System.Xml;
 using System.Xml.Serialization;
 using Lidgren.Network;
 
+using SS3D_shared;
+
 namespace SS3D_Server.Modules
 {
     public sealed class BanlistMgr
@@ -55,6 +57,20 @@ namespace SS3D_Server.Modules
             return null;
         }
 
+        public void RemoveBanByIp(string ip)
+        {
+            var ban = (from BanEntry entry in banlist.List
+                       where entry.ip.Equals(ip)
+                       select entry).FirstOrDefault();
+
+            if (ban != null)
+            {
+                LogManager.Log("Ban Removed: " + ban.ip);
+                banlist.List.Remove(ban);
+                Save();
+            }
+        }
+
         public void AddBan(string ip, string reason, TimeSpan time)
         {
             BanEntry newEntry = new BanEntry();
@@ -64,6 +80,7 @@ namespace SS3D_Server.Modules
             newEntry.expiresAt = DateTime.Now.Add(time);
             newEntry.tempBan = true;
             banlist.List.Add(newEntry);
+            LogManager.Log("Ban Added: " + ip);
             Save();
         }
 
@@ -75,6 +92,7 @@ namespace SS3D_Server.Modules
             newEntry.bannedAt = DateTime.Now;
             newEntry.tempBan = false;
             banlist.List.Add(newEntry);
+            LogManager.Log("Ban Added: " + ip);
             Save();
         }
 
@@ -88,7 +106,7 @@ namespace SS3D_Server.Modules
                 ConfigReader.Close();
                 banlist = Config;
                 banListFile = BanListLoc;
-                LogManager.Log("Banlist loaded. "+banlist.List.Count.ToString()+" ban" + (banlist.List.Count > 1 ? "s." : "."));
+                LogManager.Log("Banlist loaded. "+banlist.List.Count.ToString()+" ban" + (banlist.List.Count != 1 ? "s." : "."));
             }
             else
             {
@@ -113,22 +131,5 @@ namespace SS3D_Server.Modules
                 ConfigWriter.Close();
             }
         }
-    }
-
-    [Serializable]
-    public class Banlist
-    {
-        const int _Version = 1;
-        public List<BanEntry> List = new List<BanEntry>();
-    }
-
-    [Serializable]
-    public class BanEntry
-    {
-        public DateTime bannedAt;
-        public DateTime expiresAt;
-        public Boolean tempBan;
-        public string ip = "0.0.0.0";
-        public string reason = "Empty Reason";
     }
 }

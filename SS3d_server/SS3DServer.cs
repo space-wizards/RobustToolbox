@@ -393,14 +393,15 @@ namespace SS3D_Server
                 else
                 {
                     //You're banned bro.
-                    sender.Deny("You have been banned from this Server.");
+                    BanEntry ban = BanlistMgr.Singleton.GetBanByIp(senderIP);
+                    sender.Disconnect("You have been banned from this Server." + Environment.NewLine + "Reason: " + ban.reason + Environment.NewLine + "Expires: " + (ban.tempBan ? ban.expiresAt.ToString("d/M/yyyy HH:mm:ss") : "Never"));
                     LogManager.Log(senderIP + ": Connection denied. User banned.");
                 }
                 // Send map
             }
             else if (sender.Status == NetConnectionStatus.Disconnected)
             {
-                LogManager.Log(senderIP + " : Disconnected");
+                LogManager.Log(senderIP + ": Disconnected");
 
                 playerManager.EndSession(sender);
 
@@ -475,7 +476,12 @@ namespace SS3D_Server
                 case NetMessage.RequestAdminBan:
                     HandleAdminMessage(messageType, msg);
                     break;
-
+                case NetMessage.RequestAdminUnBan:
+                    HandleAdminMessage(messageType, msg);
+                    break;
+                case NetMessage.RequestBanList:
+                    HandleAdminMessage(messageType, msg);
+                    break;
                 default:
                     break;
             }
@@ -527,7 +533,7 @@ namespace SS3D_Server
                         if (kickSession != null)
                         {
                             playerManager.EndSession(kickSession.connectedClient);
-                            kickSession.connectedClient.Deny("Kicked by Administrator.");
+                            kickSession.connectedClient.Disconnect("Kicked by Administrator.");
                         }
                     }
                     break;
@@ -541,8 +547,38 @@ namespace SS3D_Server
                             if(BanlistMgr.Singleton.IsBanned(ipBan)) return;
                             BanlistMgr.Singleton.AddBan(ipBan, "No reason specified.");
                             playerManager.EndSession(banSession.connectedClient);
-                            banSession.connectedClient.Deny("Banned by Administrator.");
+                            banSession.connectedClient.Disconnect("Banned by Administrator.");
                         }
+                    }
+                    break;
+                case NetMessage.RequestBanList:
+                    if (playerManager.GetSessionByConnection(messageBody.SenderConnection).adminPermissions.isAdmin == true)
+                    {
+                        NetOutgoingMessage BanListMessage = SS3DNetServer.Singleton.CreateMessage();
+                        BanListMessage.Write((byte)NetMessage.RequestBanList);
+                        BanListMessage.Write(BanlistMgr.Singleton.banlist.List.Count);
+                        for (int i = 0; i < BanlistMgr.Singleton.banlist.List.Count; i++)
+                        {
+                            BanListMessage.Write(BanlistMgr.Singleton.banlist.List[i].ip);
+                            BanListMessage.Write(BanlistMgr.Singleton.banlist.List[i].reason);
+                            BanListMessage.Write(BanlistMgr.Singleton.banlist.List[i].tempBan);
+                            int compare = BanlistMgr.Singleton.banlist.List[i].expiresAt.CompareTo(DateTime.Now);
+                            TimeSpan timeLeft;
+                            if (compare < 0)
+                                timeLeft = new TimeSpan(0);
+                            else
+                                timeLeft = BanlistMgr.Singleton.banlist.List[i].expiresAt.Subtract(DateTime.Now);
+                            uint minutesLeft = (uint)Math.Truncate(timeLeft.TotalMinutes);
+                            BanListMessage.Write(minutesLeft);
+                        }
+                        SS3DNetServer.Singleton.SendMessage(BanListMessage, messageBody.SenderConnection, NetDeliveryMethod.ReliableOrdered);
+                    }
+                    break;
+                case NetMessage.RequestAdminUnBan:
+                    if (playerManager.GetSessionByConnection(messageBody.SenderConnection).adminPermissions.isAdmin == true)
+                    {
+                        string ip = messageBody.ReadString();
+                        BanlistMgr.Singleton.RemoveBanByIp(ip);
                     }
                     break;
             }

@@ -23,7 +23,7 @@ namespace SS3D.Modules.UI.Components
         NetworkManager netMgr;
 
         public AdminUnbanPanel(Size _size, Network.NetworkManager _netMgr, Banlist _banlist)
-            : base("Admin Player Panel", _size)
+            : base("Admin UnBan Panel", _size)
         {
             netMgr = _netMgr;
             BuildList(_banlist);

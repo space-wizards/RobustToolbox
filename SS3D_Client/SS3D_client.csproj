@@ -163,8 +163,10 @@
     <Compile Include="Modules\UiManager.cs" />
     <Compile Include="Modules\UI\Components\AdminPasswordDialog.cs" />
     <Compile Include="Modules\UI\Components\AdminPlayerPanel.cs" />
+    <Compile Include="Modules\UI\Components\AdminUnbanPanel.cs" />
     <Compile Include="Modules\UI\Components\Button.cs" />
     <Compile Include="Modules\UI\Components\Checkbox.cs" />
+    <Compile Include="Modules\UI\Components\DisconnectedScreenBlocker.cs" />
     <Compile Include="Modules\UI\Components\EditorAtomButton.cs" />
     <Compile Include="Modules\UI\Components\HumanHandsGui.cs" />
     <Compile Include="Modules\UI\Components\HumanHealthComponent.cs" />

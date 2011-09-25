@@ -93,6 +93,16 @@ namespace SS3D.Modules.Network
 
         public void UpdateNetwork()
         {
+            if (isConnected)
+            {
+                NetIncomingMessage msg;
+                while ((msg = netClient.ReadMessage()) != null)
+                {
+                    OnMessageArrived(msg);
+                    netClient.Recycle(msg);
+                }
+            }
+
             if (!isConnected && netClient.ServerConnection != null)
             {
                 OnConnected();
@@ -102,16 +112,6 @@ namespace SS3D.Modules.Network
             {
                 OnDisconnected();
                 isConnected = false;
-            }
-
-            if (isConnected)
-            {
-                NetIncomingMessage msg;
-                while ((msg = netClient.ReadMessage()) != null)
-                {
-                    OnMessageArrived(msg);
-                    netClient.Recycle(msg);
-                }
             }
         }
 

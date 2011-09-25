@@ -157,6 +157,14 @@ namespace SS3D.States
         {
             switch (msg.MessageType)
             {
+                case NetIncomingMessageType.StatusChanged:
+                    NetConnectionStatus statMsg = (NetConnectionStatus)msg.ReadByte();
+                    if (statMsg == NetConnectionStatus.Disconnected)
+                    {
+                        string discMsg = msg.ReadString();
+                        UiManager.Singleton.Components.Add(new DisconnectedScreenBlocker(mStateMgr, discMsg));
+                    }
+                    break;
                 case NetIncomingMessageType.Data:
                     NetMessage messageType = (NetMessage)msg.ReadByte();
                     switch (messageType)

@@ -110,7 +110,7 @@ namespace SS3D.States
             playerController = PlayerController.Singleton;
 
             prg.mNetworkMgr.MessageArrived += new NetworkMsgHandler(mNetworkMgr_MessageArrived);
-            prg.mNetworkMgr.Disconnected += new NetworkStateHandler(mNetworkMgr_Disconnected);
+            //prg.mNetworkMgr.Disconnected += new NetworkStateHandler(mNetworkMgr_Disconnected);
 
             prg.mNetworkMgr.SetMap(map);
             prg.mNetworkMgr.RequestMap();
@@ -167,10 +167,10 @@ namespace SS3D.States
             return true;
         }
 
-        void mNetworkMgr_Disconnected(NetworkManager netMgr)
-        {
-            mStateMgr.RequestStateChange(typeof(ConnectMenu)); //Fix this. Only temporary solution.
-        }
+        //void mNetworkMgr_Disconnected(NetworkManager netMgr)
+        //{
+        //    mStateMgr.RequestStateChange(typeof(ConnectMenu)); //Fix this. Only temporary solution.
+        //}
 
         public override void Shutdown()
         {
@@ -240,6 +240,14 @@ namespace SS3D.States
             }
             switch (msg.MessageType)
             {
+                case NetIncomingMessageType.StatusChanged:
+                    NetConnectionStatus statMsg = (NetConnectionStatus)msg.ReadByte();
+                    if (statMsg == NetConnectionStatus.Disconnected)
+                    {
+                        string discMsg = msg.ReadString();
+                        UiManager.Singleton.Components.Add(new DisconnectedScreenBlocker(mStateMgr, discMsg));
+                    }
+                    break;
                 case NetIncomingMessageType.Data:
                     NetMessage messageType = (NetMessage)msg.ReadByte();
                     switch (messageType)
@@ -280,6 +288,9 @@ namespace SS3D.States
                         case NetMessage.RequestAdminPlayerlist:
                             HandleAdminMessage(messageType, msg);
                             break;
+                        case NetMessage.RequestBanList:
+                            HandleAdminMessage(messageType, msg);
+                            break;
                         default:
                             break;
                     }
@@ -300,6 +311,24 @@ namespace SS3D.States
                 case NetMessage.RequestAdminPlayerlist:
                     UiManager.Singleton.DisposeAllComponentsOfType(typeof(AdminPlayerPanel));
                     UiManager.Singleton.Components.Add(new AdminPlayerPanel(new System.Drawing.Size(600,200), prg.mNetworkMgr, messageBody));
+                    break;
+                case NetMessage.RequestBanList:
+                    Banlist banList = new Banlist();
+                    int entriesCount = messageBody.ReadInt32();
+                    for (int i = 0; i < entriesCount; i++)
+                    {
+                        string ip = messageBody.ReadString();
+                        string reason = messageBody.ReadString();
+                        bool tempBan = messageBody.ReadBoolean();
+                        uint minutesLeft = messageBody.ReadUInt32();
+                        BanEntry entry = new BanEntry();
+                        entry.reason = reason;
+                        entry.tempBan = tempBan;
+                        entry.expiresAt = DateTime.Now.AddMinutes(minutesLeft);
+                        banList.List.Add(entry);
+                    }
+                    UiManager.Singleton.DisposeAllComponentsOfType(typeof(AdminUnbanPanel));
+                    UiManager.Singleton.Components.Add(new AdminUnbanPanel(new System.Drawing.Size(620, 200), prg.mNetworkMgr, banList));
                     break;
             }
         }

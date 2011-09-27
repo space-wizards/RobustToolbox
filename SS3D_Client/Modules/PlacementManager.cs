@@ -24,6 +24,7 @@ using SS3D_shared.HelperClasses;
 using ClientResourceManager;
 using ClientMap;
 using ClientMap.Tiles;
+using ClientWindow;
 
 namespace SS3D.Modules
 {
@@ -253,7 +254,7 @@ namespace SS3D.Modules
 
                             if (closestSide.Any())
                             {
-                                snapToLoc = new Vector2D(closestSide.First().X - gameScreen.xTopLeft, closestSide.First().Y - gameScreen.yTopLeft);
+                                snapToLoc = new Vector2D(closestSide.First().X - ClientWindowData.xTopLeft, closestSide.First().Y - ClientWindowData.yTopLeft);
                                 if (validLocation && placementQueued)
                                     RequestPlacement(closestSide.First());
                             }
@@ -322,7 +323,7 @@ namespace SS3D.Modules
 
                             if (closestNode.Any())
                             {
-                                snapToLoc = new Vector2D(closestNode.First().X - gameScreen.xTopLeft, closestNode.First().Y - gameScreen.yTopLeft);
+                                snapToLoc = new Vector2D(closestNode.First().X - ClientWindowData.xTopLeft, closestNode.First().Y - ClientWindowData.yTopLeft);
                                 if (validLocation && placementQueued)
                                     RequestPlacement(closestNode.First());
                                 else if (!validLocation && placementQueued)
@@ -347,7 +348,7 @@ namespace SS3D.Modules
                     #region Align Tile
                     case AlignmentOptions.AlignTile:
                         ClientMap.Tiles.Tile tile = map.GetTileAt(gameScreen.mousePosWorld);
-                        snapToLoc = new Vector2D(tile.position.X + (map.tileSpacing / 2) - gameScreen.xTopLeft, tile.position.Y + (map.tileSpacing / 2) - gameScreen.yTopLeft);
+                        snapToLoc = new Vector2D(tile.position.X + (map.tileSpacing / 2) - ClientWindowData.xTopLeft, tile.position.Y + (map.tileSpacing / 2) - ClientWindowData.yTopLeft);
                         if ((new Vector2D(tile.position.X + (map.tileSpacing / 2), tile.position.Y + (map.tileSpacing / 2)) - gameScreen.playerController.controlledAtom.position).Length > active.range && !active.placeAnywhere) validLocation = false;
 
                         if(activeType.IsSubclassOf(typeof(ClientMap.Tiles.Tile)))
@@ -405,8 +406,8 @@ namespace SS3D.Modules
                 }
 
                 if (gameScreen.playerController.controlledAtom != null && !active.placeAnywhere)
-                { 
-                    Gorgon.Screen.Circle(gameScreen.playerController.controlledAtom.position.X - gameScreen.xTopLeft, gameScreen.playerController.controlledAtom.position.Y - gameScreen.yTopLeft, active.range, System.Drawing.Color.DarkBlue, 2f, 2f);
+                {
+                    Gorgon.Screen.Circle(gameScreen.playerController.controlledAtom.position.X - ClientWindowData.xTopLeft, gameScreen.playerController.controlledAtom.position.Y - ClientWindowData.yTopLeft, active.range, System.Drawing.Color.DarkBlue, 2f, 2f);
                 }
 
                 #region Debug Display
@@ -417,9 +418,9 @@ namespace SS3D.Modules
                         case AlignmentOptions.AlignSimilar:
                             if (snapToAtom != null)
                             {
-                                Gorgon.Screen.Line(snapToAtom.position.X - gameScreen.xTopLeft, snapToAtom.position.Y - gameScreen.yTopLeft, -((snapToAtom.position.X - gameScreen.xTopLeft) - snapToLoc.X), -((snapToAtom.position.Y - gameScreen.yTopLeft) - snapToLoc.Y), System.Drawing.Color.White, new Vector2D(3, 3));
+                                Gorgon.Screen.Line(snapToAtom.position.X - ClientWindowData.xTopLeft, snapToAtom.position.Y - ClientWindowData.yTopLeft, -((snapToAtom.position.X - ClientWindowData.xTopLeft) - snapToLoc.X), -((snapToAtom.position.Y - ClientWindowData.yTopLeft) - snapToLoc.Y), System.Drawing.Color.White, new Vector2D(3, 3));
                                 Gorgon.Screen.FilledCircle(snapToLoc.X, snapToLoc.Y, 3, System.Drawing.Color.LimeGreen);
-                                Gorgon.Screen.FilledCircle(snapToAtom.position.X - gameScreen.xTopLeft, snapToAtom.position.Y - gameScreen.yTopLeft, 3, System.Drawing.Color.LimeGreen);
+                                Gorgon.Screen.FilledCircle(snapToAtom.position.X - ClientWindowData.xTopLeft, snapToAtom.position.Y - ClientWindowData.yTopLeft, 3, System.Drawing.Color.LimeGreen);
                             }
                             break;
                         case AlignmentOptions.AlignTile:

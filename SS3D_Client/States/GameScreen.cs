@@ -25,6 +25,7 @@ using SS3D_shared;
 using ClientLighting;
 using ClientMap;
 using ClientInterfaces;
+using ClientWindow;
 
 namespace SS3D.States
 {
@@ -69,8 +70,8 @@ namespace SS3D.States
         private bool showDebug = false;     // show AABBs & Bounding Circles on atoms.
         private bool telepathy = false;     // disable visiblity bounds if true
 
-        public float xTopLeft { get; private set; }
-        public float yTopLeft { get; private set; }
+        //public float xTopLeft { get; private set; }
+        //public float yTopLeft { get; private set; }
 
         private float scaleX = 1.0f;
         private float scaleY = 1.0f;
@@ -364,8 +365,10 @@ namespace SS3D.States
                 int xEnd = System.Math.Min(xStart + screenWidthTiles + 2, map.mapWidth - 1);
                 int yEnd = System.Math.Min(yStart + screenHeightTiles + 2, map.mapHeight - 1);
 
-                xTopLeft = Math.Max(0, playerController.controlledAtom.position.X - ((screenWidthTiles / 2) * map.tileSpacing));
-                yTopLeft = Math.Max(0, playerController.controlledAtom.position.Y - ((screenHeightTiles / 2) * map.tileSpacing));
+                ClientWindowData.Singleton.UpdateViewPort(playerController.controlledAtom.position);
+
+                //xTopLeft = Math.Max(0, playerController.controlledAtom.position.X - ((screenWidthTiles / 2) * map.tileSpacing));
+                //yTopLeft = Math.Max(0, playerController.controlledAtom.position.Y - ((screenHeightTiles / 2) * map.tileSpacing));
                 ///COMPUTE TILE VISIBILITY
                 if ((centerTile != map.lastVisPoint || map.needVisUpdate))
                 {
@@ -396,22 +399,22 @@ namespace SS3D.States
                         {
                             if (t.tilePosition.Y <= centerTile.Y)
                             {
-                                t.Render(xTopLeft, yTopLeft, map.tileSpacing);
-                                t.DrawDecals(xTopLeft, yTopLeft, map.tileSpacing, decalBatch);
-                                t.RenderLight(xTopLeft, yTopLeft, map.tileSpacing, lightMapBatch);
+                                t.Render(ClientWindowData.xTopLeft, ClientWindowData.yTopLeft, map.tileSpacing);
+                                t.DrawDecals(ClientWindowData.xTopLeft, ClientWindowData.yTopLeft, map.tileSpacing, decalBatch);
+                                t.RenderLight(ClientWindowData.xTopLeft, ClientWindowData.yTopLeft, map.tileSpacing, lightMapBatch);
                             }
                         }
                         else
                         {
-                            t.Render(xTopLeft, yTopLeft, map.tileSpacing);
-                            t.DrawDecals(xTopLeft, yTopLeft, map.tileSpacing, decalBatch);
-                            t.RenderLight(xTopLeft, yTopLeft, map.tileSpacing, lightMapBatch);
+                            t.Render(ClientWindowData.xTopLeft, ClientWindowData.yTopLeft, map.tileSpacing);
+                            t.DrawDecals(ClientWindowData.xTopLeft, ClientWindowData.yTopLeft, map.tileSpacing, decalBatch);
+                            t.RenderLight(ClientWindowData.xTopLeft, ClientWindowData.yTopLeft, map.tileSpacing, lightMapBatch);
                         }
 
                         ///Render gas sprites to gas batch
-                        t.RenderGas(xTopLeft, yTopLeft, map.tileSpacing, gasBatch);
+                        t.RenderGas(ClientWindowData.xTopLeft, ClientWindowData.yTopLeft, map.tileSpacing, gasBatch);
                         ///Render wall top sprites to wall top batch
-                        t.RenderTop(xTopLeft, yTopLeft, map.tileSpacing, wallTopsBatch);
+                        t.RenderTop(ClientWindowData.xTopLeft, ClientWindowData.yTopLeft, map.tileSpacing, wallTopsBatch);
                     }
                 }
 
@@ -444,7 +447,7 @@ namespace SS3D.States
 
                     foreach (Atom.Atom a in atoms.ToList())
                     {
-                        a.Render(xTopLeft, yTopLeft);
+                        a.Render(ClientWindowData.xTopLeft, ClientWindowData.yTopLeft);
 
                         if (showDebug)
                         {
@@ -473,7 +476,7 @@ namespace SS3D.States
                     foreach (Atom.Atom a in atoms.ToList())
                     {
                         a.sprite.BlendingMode = BlendingModes.Additive;
-                        a.Render(xTopLeft, yTopLeft);
+                        a.Render(ClientWindowData.xTopLeft, ClientWindowData.yTopLeft);
                         a.sprite.BlendingMode = BlendingModes.None;
                     }
                     Gorgon.CurrentShader = null;
@@ -730,7 +733,7 @@ namespace SS3D.States
         public override void MouseMove(MouseInputEventArgs e)
         {
             mousePosScreen = new Vector2D(e.Position.X, e.Position.Y);
-            mousePosWorld = new Vector2D(e.Position.X + xTopLeft, e.Position.Y + yTopLeft);
+            mousePosWorld = new Vector2D(e.Position.X + ClientWindowData.xTopLeft, e.Position.Y + ClientWindowData.yTopLeft);
             UiManager.Singleton.MouseMove(e);
         }
         public override void MouseWheelMove(MouseInputEventArgs e)

@@ -4,6 +4,7 @@ using System.Linq;
 using System.Text;
 using GorgonLibrary;
 using GorgonLibrary.Graphics;
+using ClientResourceManager;
 
 namespace SS3D.Effects
 {

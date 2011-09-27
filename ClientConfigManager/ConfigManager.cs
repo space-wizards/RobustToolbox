@@ -7,7 +7,7 @@ using System.IO;
 using System.Xml;
 using System.Xml.Serialization;
 
-namespace SS3D.Modules
+namespace ClientConfigManager
 {
     public sealed class ConfigManager
     {

@@ -12,6 +12,7 @@ using GorgonLibrary.InputDevices;
 using Lidgren.Network;
 
 using SS3D_shared;
+using ClientResourceManager;
 
 namespace SS3D.Modules.UI.Components
 {

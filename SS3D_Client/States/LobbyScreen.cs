@@ -18,6 +18,9 @@ using SS3D.Modules.UI.Components;
 using SS3D_shared;
 using System.Linq;
 
+using ClientConfigManager;
+using ClientResourceManager;
+
 namespace SS3D.States
 {
     public class LobbyScreen : State

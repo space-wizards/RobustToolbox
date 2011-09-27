@@ -21,6 +21,8 @@ using System.CodeDom.Compiler;
 using System.IO;
 using System.CodeDom;
 
+using ClientConfigManager;
+
 namespace SS3D
 {
   public class Program

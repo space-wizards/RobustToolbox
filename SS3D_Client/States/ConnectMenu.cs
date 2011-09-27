@@ -9,6 +9,7 @@ using SS3D.Modules;
 using GorgonLibrary;
 using GorgonLibrary.Graphics;
 using GorgonLibrary.InputDevices;
+using ClientResourceManager;
 
 
 namespace SS3D.States

@@ -22,6 +22,7 @@ using Lidgren.Network;
 
 using System.Windows.Forms;
 using SS3D_shared.HelperClasses;
+using ClientResourceManager;
 
 namespace SS3D.Modules
 {

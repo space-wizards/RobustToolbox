@@ -6,6 +6,7 @@ using System.Drawing;
 using GorgonLibrary;
 using GorgonLibrary.Graphics;
 using SS3D.Modules;
+using ClientResourceManager;
 
 namespace SS3D.Tiles.Wall
 {

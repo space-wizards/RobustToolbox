@@ -5,6 +5,9 @@ using System.Text;
 
 namespace CGO
 {
+    /// <summary>
+    /// Recieves movement data from the server and updates the entity's position accordingly.
+    /// </summary>
     public class NetworkMoverComponent : GameObjectComponent
     {
         public NetworkMoverComponent()

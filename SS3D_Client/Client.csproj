@@ -152,7 +152,6 @@
       <DependentUpon>MainWindow.cs</DependentUpon>
     </Compile>
     <Compile Include="HelperClasses\InterpolationPacket.cs" />
-    <Compile Include="Modules\ConfigManager.cs" />
     <Compile Include="Modules\PlacementManager.cs" />
     <Compile Include="Modules\LightManager.cs" />
     <Compile Include="Modules\Map\Map.cs" />
@@ -184,7 +183,6 @@
     <Compile Include="Modules\UI\Window.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
-    <Compile Include="Modules\RessourceManager.cs" />
     <Compile Include="Properties\Resources.Designer.cs">
       <AutoGen>True</AutoGen>
       <DesignTime>True</DesignTime>
@@ -240,13 +238,21 @@
     </Content>
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\CGO\CGO.csproj">
+    <ProjectReference Include="..\CGO\ClientGameObject.csproj">
       <Project>{6C778741-98D8-48EB-835A-293077AF0E07}</Project>
-      <Name>CGO</Name>
+      <Name>ClientGameObject</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\ClientConfigManager\ClientConfigManager.csproj">
+      <Project>{0FA996EF-1199-47E1-9AEB-FE8858DEFB2D}</Project>
+      <Name>ClientConfigManager</Name>
     </ProjectReference>
     <ProjectReference Include="..\ClientInput\ClientInput.csproj">
       <Project>{79C6662F-3BFF-4741-8E19-A3976E51D762}</Project>
       <Name>ClientInput</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\ClientResourceManager\ClientResourceManager.csproj">
+      <Project>{37D792AE-0514-44BE-81E0-58EA28E26BB9}</Project>
+      <Name>ClientResourceManager</Name>
     </ProjectReference>
     <ProjectReference Include="..\Lidgren.Network\Lidgren.Network.csproj">
       <Project>{AE483C29-042E-4226-BA52-D247CE7676DA}</Project>

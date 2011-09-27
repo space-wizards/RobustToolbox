@@ -1,28 +1,28 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-
-using Lidgren.Network;
-
-using SS3D.Modules;
-using SS3D.Modules.Map;
-using SS3D.Modules.Network;
-using SS3D.Modules.UI;
-using SS3D.Modules.UI.Components;
-using SS3D.Atom;
-using SS3D.Effects;
-
-using SS3D_shared;
-
-using System.Collections.Generic;
 using System.Reflection;
+using System.Windows.Forms;
+
+using CGO;
+using ClientConfigManager;
+using ClientResourceManager;
 
 using GorgonLibrary;
 using GorgonLibrary.Graphics;
 using GorgonLibrary.InputDevices;
 
-using System.Windows.Forms;
-using CGO;
+using Lidgren.Network;
+
+using SS3D.Atom;
+using SS3D.Effects;
+using SS3D.Modules;
+using SS3D.Modules.Map;
+using SS3D.Modules.Network;
+using SS3D.Modules.UI;
+using SS3D.Modules.UI.Components;
+using SS3D_shared;
 
 namespace SS3D.States
 {

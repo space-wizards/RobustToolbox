@@ -16,7 +16,7 @@ namespace CGO.Component.Renderable
         public SpriteComponent()
             : base()
         {
-
+            sprites = new Dictionary<string, Sprite>();
         }
         
         public Sprite GetCurrentSprite()
@@ -57,6 +57,12 @@ namespace CGO.Component.Renderable
         {
             if (spritetoadd != null && key != "")
                 sprites.Add(key, spritetoadd);
+        }
+
+        public override void Render()
+        {
+            if(currentSprite != null)
+                currentSprite.SetPosition(Owner.position.X, Owner.position.Y);
         }
     }
 }

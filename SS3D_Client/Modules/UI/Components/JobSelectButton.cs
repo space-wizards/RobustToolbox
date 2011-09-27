@@ -7,6 +7,7 @@ using GorgonLibrary;
 using GorgonLibrary.Graphics;
 using GorgonLibrary.InputDevices;
 using GorgonLibrary.GUI;
+using ClientResourceManager;
 
 using Lidgren.Network;
 using SS3D_shared;

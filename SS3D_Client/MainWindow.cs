@@ -32,6 +32,8 @@ using CGO;
 using System.Security;
 using System.Security.Permissions;
 using ClientInput;
+using ClientConfigManager;
+using ClientResourceManager;
 
 namespace SS3D
 {

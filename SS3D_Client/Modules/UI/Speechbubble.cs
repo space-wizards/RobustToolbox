@@ -12,6 +12,7 @@ using SS3D_shared;
 
 using GorgonLibrary;
 using GorgonLibrary.Graphics;
+using ClientResourceManager;
 
 namespace SS3D.Modules.UI
 {

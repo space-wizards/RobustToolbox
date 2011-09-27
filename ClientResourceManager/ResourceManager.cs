@@ -21,11 +21,11 @@ using System.Globalization;
 
 using System.Text.RegularExpressions;
 
-using SS3D.Modules;
+using ClientConfigManager;
 
-namespace SS3D
+namespace ClientResourceManager
 {
-    struct SpriteInfo
+    public struct SpriteInfo
     {
         public string name;
         public Vector2D Offsets;
@@ -35,7 +35,7 @@ namespace SS3D
     /// <summary>
     ///  This class manages Resource loading, caching and distribution.
     /// </summary>
-    class ResMgr
+    public class ResMgr
     {
         private FileSystem FileSystem;
         private FileSystem GuiFileSystem;

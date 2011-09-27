@@ -1,19 +1,23 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 11.00
 # Visual Studio 2010
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SS3D_client", "SS3D_client\SS3D_client.csproj", "{835500C3-34D6-4329-954A-5D028D634E90}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Client", "SS3D_client\Client.csproj", "{835500C3-34D6-4329-954A-5D028D634E90}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SS3D_server", "SS3D_server\SS3D_server.csproj", "{54B6035E-489F-4790-A033-3C0B34C6F2BD}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Server", "SS3D_server\Server.csproj", "{54B6035E-489F-4790-A033-3C0B34C6F2BD}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SS3D_shared", "SS3D_shared\SS3D_shared.csproj", "{4229D7E3-C3AE-4C0A-B2B1-BB20911150DC}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Lidgren.Network", "Lidgren.Network\Lidgren.Network.csproj", "{AE483C29-042E-4226-BA52-D247CE7676DA}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CGO", "CGO\CGO.csproj", "{6C778741-98D8-48EB-835A-293077AF0E07}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ClientGameObject", "CGO\ClientGameObject.csproj", "{6C778741-98D8-48EB-835A-293077AF0E07}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SGO", "SGO\SGO.csproj", "{A59BA08B-B934-49D1-A449-6BBDFE292C5E}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ServerGameObject", "SGO\ServerGameObject.csproj", "{A59BA08B-B934-49D1-A449-6BBDFE292C5E}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ClientInput", "ClientInput\ClientInput.csproj", "{79C6662F-3BFF-4741-8E19-A3976E51D762}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ClientResourceManager", "ClientResourceManager\ClientResourceManager.csproj", "{37D792AE-0514-44BE-81E0-58EA28E26BB9}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ClientConfigManager", "ClientConfigManager\ClientConfigManager.csproj", "{0FA996EF-1199-47E1-9AEB-FE8858DEFB2D}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -49,6 +53,14 @@ Global
 		{79C6662F-3BFF-4741-8E19-A3976E51D762}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{79C6662F-3BFF-4741-8E19-A3976E51D762}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{79C6662F-3BFF-4741-8E19-A3976E51D762}.Release|Any CPU.Build.0 = Release|Any CPU
+		{37D792AE-0514-44BE-81E0-58EA28E26BB9}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{37D792AE-0514-44BE-81E0-58EA28E26BB9}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{37D792AE-0514-44BE-81E0-58EA28E26BB9}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{37D792AE-0514-44BE-81E0-58EA28E26BB9}.Release|Any CPU.Build.0 = Release|Any CPU
+		{0FA996EF-1199-47E1-9AEB-FE8858DEFB2D}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{0FA996EF-1199-47E1-9AEB-FE8858DEFB2D}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{0FA996EF-1199-47E1-9AEB-FE8858DEFB2D}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{0FA996EF-1199-47E1-9AEB-FE8858DEFB2D}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

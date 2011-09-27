@@ -6,6 +6,7 @@ using System.Drawing;
 using GorgonLibrary;
 using GorgonLibrary.Graphics;
 using GorgonLibrary.InputDevices;
+using ClientResourceManager;
 
 using Lidgren.Network;
 

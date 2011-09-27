@@ -8,6 +8,7 @@ using System.IO;
 using Lidgren.Network;
 using GorgonLibrary;
 using GorgonLibrary.Graphics;
+using ClientResourceManager;
 
 namespace SS3D.Modules.Map
 {

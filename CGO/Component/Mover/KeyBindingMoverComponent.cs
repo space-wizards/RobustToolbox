@@ -35,6 +35,10 @@ namespace CGO
             }
         }
 
+        /// <summary>
+        /// Handles a changed keystate message
+        /// </summary>
+        /// <param name="list">0 - Function, 1 - Key State</param>
         private void HandleKeyChange(params object[] list)
         {
             BoundKeyFunctions function = (BoundKeyFunctions)list[0];
@@ -110,6 +114,10 @@ namespace CGO
             Owner.SendComponentNetworkMessage(this, Lidgren.Network.NetDeliveryMethod.ReliableUnordered, Owner.position.X, Owner.position.Y);
         }
 
+        /// <summary>
+        /// Moves the entity and sends an update packet to the serverside mover component.
+        /// </summary>
+        /// <param name="translationVector"></param>
         public virtual void Translate(Vector2D translationVector)
         {
             Vector2D oldPosition = Owner.position;

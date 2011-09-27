@@ -153,8 +153,6 @@
     </Compile>
     <Compile Include="HelperClasses\InterpolationPacket.cs" />
     <Compile Include="Modules\PlacementManager.cs" />
-    <Compile Include="Modules\LightManager.cs" />
-    <Compile Include="Modules\Map\Map.cs" />
     <Compile Include="Modules\Network\NetworkManager.cs" />
     <Compile Include="Modules\PlayerController.cs" />
     <Compile Include="Modules\State.cs" />
@@ -196,10 +194,6 @@
     <Compile Include="States\LoadingScreen.cs" />
     <Compile Include="States\LobbyScreen.cs" />
     <Compile Include="States\MainMenu.cs" />
-    <Compile Include="Tiles\Floor\Floor.cs" />
-    <Compile Include="Tiles\Floor\Space.cs" />
-    <Compile Include="Tiles\Tile.cs" />
-    <Compile Include="Tiles\Wall\Wall.cs" />
   </ItemGroup>
   <ItemGroup>
     <BootstrapperPackage Include="Microsoft.Net.Client.3.5">
@@ -249,6 +243,18 @@
     <ProjectReference Include="..\ClientInput\ClientInput.csproj">
       <Project>{79C6662F-3BFF-4741-8E19-A3976E51D762}</Project>
       <Name>ClientInput</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\ClientInterfaces\ClientInterfaces.csproj">
+      <Project>{B31E7B59-7066-4186-AB18-B1BB6DE0E537}</Project>
+      <Name>ClientInterfaces</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\ClientLighting\ClientLighting.csproj">
+      <Project>{863EA571-CF15-4D7E-AC4C-69E7ED559D6E}</Project>
+      <Name>ClientLighting</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\ClientMap\ClientMap.csproj">
+      <Project>{ECC559C9-CB5C-4B71-8CF6-1F83EC64EAB4}</Project>
+      <Name>ClientMap</Name>
     </ProjectReference>
     <ProjectReference Include="..\ClientResourceManager\ClientResourceManager.csproj">
       <Project>{37D792AE-0514-44BE-81E0-58EA28E26BB9}</Project>

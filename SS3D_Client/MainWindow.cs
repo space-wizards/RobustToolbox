@@ -34,6 +34,7 @@ using System.Security.Permissions;
 using ClientInput;
 using ClientConfigManager;
 using ClientResourceManager;
+using ClientMap;
 
 namespace SS3D
 {
@@ -450,25 +451,25 @@ namespace SS3D
         private void turfToolStripMenuItem_Click(object sender, EventArgs e)
         {
             atomSpawnType = null;
-            tileSpawnType = typeof(Tiles.Floor.Floor);
+            tileSpawnType = typeof(ClientMap.Tiles.Floor.Floor);
             toolStripStatusLabel1.Text = tileSpawnType.ToString();
         }
 
         private void spaceToolStripMenuItem_Click(object sender, EventArgs e)
         {
-            tileSpawnType = typeof(Tiles.Floor.Space);
+            tileSpawnType = typeof(ClientMap.Tiles.Floor.Space);
             PlacementManager.Singleton.SendObjectRequestEDITMODE(tileSpawnType, AlignmentOptions.AlignTile);
         }
 
         private void floorToolStripMenuItem_Click(object sender, EventArgs e)
         {
-            tileSpawnType = typeof(Tiles.Floor.Floor);
+            tileSpawnType = typeof(ClientMap.Tiles.Floor.Floor);
             PlacementManager.Singleton.SendObjectRequestEDITMODE(tileSpawnType, AlignmentOptions.AlignTile);
         }
 
         private void wallToolStripMenuItem_Click(object sender, EventArgs e)
         {
-            tileSpawnType = typeof(Tiles.Wall.Wall);
+            tileSpawnType = typeof(ClientMap.Tiles.Wall.Wall);
             PlacementManager.Singleton.SendObjectRequestEDITMODE(tileSpawnType, AlignmentOptions.AlignTile);
         }
 

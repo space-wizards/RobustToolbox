@@ -117,6 +117,17 @@ namespace ClientResourceManager
             if (Sprites.ContainsKey(key)) return Sprites[key];
             else return GetSpriteFromImage(key);
         }
+        
+        /// <summary>
+        /// Checks if a sprite with the given key is in the resource list
+        /// </summary>
+        /// <param name="key">key to check</param>
+        /// <returns></returns>
+        public bool SpriteExists(string key)
+        {
+            return Sprites.ContainsKey(key);
+        }
+
 
         /// <summary>
         ///  Retrieves the SpriteInfo with the given key from the Resource list. Returns null if not found.

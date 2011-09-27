@@ -5,10 +5,15 @@ using System.Text;
 using GorgonLibrary;
 using GorgonLibrary.Graphics;
 
-namespace CGO.Component.Renderable
+namespace CGO
 {
     public interface ISpriteComponent
     {
-        Sprite GetMainSprite();
+        Sprite GetCurrentSprite();
+        Sprite GetSprite(string spriteKey);
+        List<Sprite> GetAllSprites();
+        void SetSpriteByKey(string spriteKey);
+        void AddSprite(string spriteKey);
+        void AddSprite(string key, Sprite spritetoadd);
     }
 }

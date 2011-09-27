@@ -4,7 +4,6 @@ using System.Linq;
 using System.Text;
 
 using SS3D.Modules;
-using SS3D.Modules.Map;
 using SS3D.Modules.Network;
 using SS3D.Modules.UI;
 using SS3D.Atom;
@@ -23,12 +22,14 @@ using Lidgren.Network;
 using System.Windows.Forms;
 using SS3D_shared.HelperClasses;
 using ClientResourceManager;
+using ClientMap;
+using ClientMap.Tiles;
 
 namespace SS3D.Modules
 {
     class PlacementManager
     {
-        private Map.Map map;
+        private Map map;
         private AtomManager atomManager;
         private GameScreen gameScreen;
         private NetworkManager networkMgr;
@@ -66,7 +67,7 @@ namespace SS3D.Modules
 
         #endregion
 
-        public void Initialize(Map.Map _map, AtomManager _atom, GameScreen _screen, NetworkManager netMgr)
+        public void Initialize(Map _map, AtomManager _atom, GameScreen _screen, NetworkManager netMgr)
         {
             map = _map;
             atomManager = _atom;
@@ -143,7 +144,7 @@ namespace SS3D.Modules
             SetupPlacement();
         }
 
-        private Boolean isSolidTile(Tiles.Tile tile)
+        private Boolean isSolidTile(Tile tile)
         {
             if (tile.tileType != TileType.Wall) return false;
             else return true;
@@ -275,7 +276,7 @@ namespace SS3D.Modules
 
                     #region Align Wall
                     case AlignmentOptions.AlignWall:
-                        Tiles.Tile wall = map.GetTileAt(gameScreen.mousePosWorld);
+                        Tile wall = map.GetTileAt(gameScreen.mousePosWorld);
 
                         //switch ((int)rotation) //East and west are switched around because objects "attach" to the walls.
                         //{
@@ -345,11 +346,11 @@ namespace SS3D.Modules
 
                     #region Align Tile
                     case AlignmentOptions.AlignTile:
-                        Tiles.Tile tile = map.GetTileAt(gameScreen.mousePosWorld);
+                        ClientMap.Tiles.Tile tile = map.GetTileAt(gameScreen.mousePosWorld);
                         snapToLoc = new Vector2D(tile.position.X + (map.tileSpacing / 2) - gameScreen.xTopLeft, tile.position.Y + (map.tileSpacing / 2) - gameScreen.yTopLeft);
                         if ((new Vector2D(tile.position.X + (map.tileSpacing / 2), tile.position.Y + (map.tileSpacing / 2)) - gameScreen.playerController.controlledAtom.position).Length > active.range && !active.placeAnywhere) validLocation = false;
 
-                        if(activeType.IsSubclassOf(typeof(Tiles.Tile)))
+                        if(activeType.IsSubclassOf(typeof(ClientMap.Tiles.Tile)))
                         {//Special handling for tiles? Not right now.
                         }
                         else if(activeType.IsSubclassOf(typeof(Atom.Atom)))
@@ -397,7 +398,7 @@ namespace SS3D.Modules
                 {
                     previewSprite.Position = adjusted;
                     previewSprite.Color = validLocation ? System.Drawing.Color.LimeGreen : System.Drawing.Color.Red;
-                    if (!activeType.IsSubclassOf(typeof(Tiles.Tile))) previewSprite.Rotation = rotation;
+                    if (!activeType.IsSubclassOf(typeof(ClientMap.Tiles.Tile))) previewSprite.Rotation = rotation;
                     previewSprite.Opacity = 90;
                     previewSprite.Draw();
                     previewSprite.Color = System.Drawing.Color.White;

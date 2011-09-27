@@ -5,8 +5,8 @@ using System.Text;
 
 namespace CGO
 {
-    public class RenderableComponent : GameObjectComponent, IGameObjectComponent
+    public interface IRenderableComponent
     {
-
+        void Render();
     }
 }

@@ -4,9 +4,11 @@ using System.Linq;
 using System.Text;
 using GorgonLibrary;
 using GorgonLibrary.Graphics;
-using SS3D;
+using ClientInterfaces;
+using ClientMap;
+using ClientMap.Tiles;
 
-namespace SS3D.Modules
+namespace ClientLighting
 {
     /// <summary>
     ///  <para>Describes Colors of 4 Vertices.</para>
@@ -40,7 +42,7 @@ namespace SS3D.Modules
         }
     }
 
-    public class LightManager
+    public class LightManager : ILightManager
     {
         private static LightManager singleton;
 
@@ -122,7 +124,7 @@ namespace SS3D.Modules
         /// <summary>
         ///  <para>Applies List of lights to given sprite.</para>
         /// </summary>
-        public void ApplyLightsToSprite(List<Light> lights, Sprite sprite, Vector2D screenOffset)
+        public void ApplyLightsToSprite(List<ILight> lights, Sprite sprite, Vector2D screenOffset)
         {
             sprite.UpdateAABB(); //Just to be safe that the verts are in the right pos. Might want to remove this when its handled reliably by the objects.
 
@@ -212,7 +214,7 @@ namespace SS3D.Modules
         }
     }
 
-    public class Light
+    public class Light : ILight
     {
         public System.Drawing.Color color = System.Drawing.Color.PapayaWhip;
         public int range = 150;
@@ -221,11 +223,23 @@ namespace SS3D.Modules
         public LightState state;
         public Vector2D position;
         public Vector2D lastPosition;
-        public Modules.Map.Map map;
+        public Map map;
         public List<Direction> direction;
-        public List<Tiles.Tile> tiles;
+        public List<ClientMap.Tiles.Tile> tiles;
 
-        public Light(Modules.Map.Map _map, System.Drawing.Color _color, int _range, LightState _state, Vector2D _position, Direction _direction)
+        #region ILight members
+        public Vector2D Position { get { return position; } set { position = value; } }
+        public int Range { get { return range; } set { range = value; } }
+        public void ClearTiles()
+            { tiles.Clear(); }
+        public List<object> GetTiles()
+            { return tiles.ToList<object>(); }
+        public void AddTile(object tile)
+        { tiles.Add((ClientMap.Tiles.Tile)tile); }
+
+        #endregion
+
+        public Light(Map _map, System.Drawing.Color _color, int _range, LightState _state, Vector2D _position, Direction _direction)
         {
             Random r = new Random();
             map = _map;
@@ -235,7 +249,7 @@ namespace SS3D.Modules
             lastPosition = _position;
             direction = new List<Direction>();
             direction.Add(_direction);
-            tiles = new List<Tiles.Tile>();
+            tiles = new List<ClientMap.Tiles.Tile>();
             UpdateLight();
         }
 

@@ -3,7 +3,6 @@
 using Lidgren.Network;
 
 using SS3D.Modules;
-using SS3D.Modules.Map;
 using SS3D.Modules.Network;
 using SS3D.Modules.UI;
 using SS3D.Atom;
@@ -13,6 +12,7 @@ using SS3D_shared;
 using GorgonLibrary;
 using GorgonLibrary.Graphics;
 using ClientResourceManager;
+using ClientMap;
 
 namespace SS3D.Modules.UI
 {

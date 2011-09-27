@@ -18,11 +18,13 @@ using Lidgren.Network;
 using SS3D.Atom;
 using SS3D.Effects;
 using SS3D.Modules;
-using SS3D.Modules.Map;
 using SS3D.Modules.Network;
 using SS3D.Modules.UI;
 using SS3D.Modules.UI.Components;
 using SS3D_shared;
+using ClientLighting;
+using ClientMap;
+using ClientInterfaces;
 
 namespace SS3D.States
 {
@@ -100,7 +102,7 @@ namespace SS3D.States
             lastUpdate = DateTime.Now;
             now = DateTime.Now;
 
-            map = new Map();
+            map = new Map(LightManager.Singleton);
 
             UiManager.Singleton.DisposeAllComponents();
 
@@ -379,7 +381,7 @@ namespace SS3D.States
                 }
 
 
-                Tiles.Tile t;
+                ClientMap.Tiles.Tile t;
 
                 ///RENDER TILE BASES, PUT GAS SPRITES AND WALL TOP SPRITES INTO BATCHES TO RENDER LATER
 

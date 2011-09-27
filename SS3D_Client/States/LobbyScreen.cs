@@ -3,7 +3,6 @@
 using Lidgren.Network;
 
 using SS3D.Modules;
-using SS3D.Modules.Map;
 using SS3D.Modules.Network;
 using SS3D.Modules.UI;
 
@@ -20,6 +19,7 @@ using System.Linq;
 
 using ClientConfigManager;
 using ClientResourceManager;
+using ClientMap;
 
 namespace SS3D.States
 {

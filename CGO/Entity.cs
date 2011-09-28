@@ -129,6 +129,18 @@ namespace CGO
         }
 
         /// <summary>
+        /// Returns the component in the specified family
+        /// </summary>
+        /// <param name="family">the family</param>
+        /// <returns></returns>
+        public IGameObjectComponent GetComponent(ComponentFamily family)
+        {
+            if (components.ContainsKey(family))
+                return components[family];
+            return null;
+        }
+
+        /// <summary>
         /// Allows components to send messages
         /// </summary>
         /// <param name="sender">the component doing the sending</param>

@@ -71,5 +71,17 @@ namespace CGO
                 }
             }
         }
+
+        /// <summary>
+        /// Render the renderables
+        /// </summary>
+        /// <param name="frametime">time since the last frame was rendered.</param>
+        public void Render(float frametime)
+        {
+            foreach (IRenderableComponent component in components[ComponentFamily.Renderable])
+            {
+                component.Render();
+            }
+        }
     }
 }

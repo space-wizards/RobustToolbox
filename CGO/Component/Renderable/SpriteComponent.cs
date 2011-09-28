@@ -5,8 +5,9 @@ using System.Text;
 using GorgonLibrary.Graphics;
 using GorgonLibrary;
 using ClientResourceManager;
+using ClientWindow;
 
-namespace CGO.Component.Renderable
+namespace CGO
 {
     public class SpriteComponent : RenderableComponent, ISpriteComponent
     {
@@ -61,8 +62,21 @@ namespace CGO.Component.Renderable
 
         public override void Render()
         {
-            if(currentSprite != null)
-                currentSprite.SetPosition(Owner.position.X, Owner.position.Y);
+            Vector2D RenderPos = ClientWindowData.Singleton.WorldToScreen(Owner.position);
+            if (currentSprite != null)
+            {
+                SetSpriteCenter(currentSprite, RenderPos);
+                currentSprite.Draw();
+            }
+        }
+
+        public void SetSpriteCenter(string sprite, Vector2D center)
+        {
+            SetSpriteCenter(sprites[sprite], center);
+        }
+        public void SetSpriteCenter(Sprite sprite, Vector2D center)
+        {
+            sprite.SetPosition(center.X - (currentSprite.AABB.Width / 2), center.Y - (currentSprite.AABB.Height / 2));
         }
     }
 }

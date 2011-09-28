@@ -67,7 +67,6 @@
     <Compile Include="MessageEnums.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Component\Renderable\RenderableComponent.cs" />
-    <Compile Include="SpriteComponent.cs" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\ClientInput\ClientInput.csproj">
@@ -77,6 +76,10 @@
     <ProjectReference Include="..\ClientResourceManager\ClientResourceManager.csproj">
       <Project>{37D792AE-0514-44BE-81E0-58EA28E26BB9}</Project>
       <Name>ClientResourceManager</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\ClientWindow\ClientWindow.csproj">
+      <Project>{9CFBF7F1-B939-433B-AFA1-C12EBA2565CD}</Project>
+      <Name>ClientWindow</Name>
     </ProjectReference>
     <ProjectReference Include="..\Lidgren.Network\Lidgren.Network.csproj">
       <Project>{AE483C29-042E-4226-BA52-D247CE7676DA}</Project>

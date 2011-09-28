@@ -12,5 +12,17 @@ namespace SS3D_shared
         public const byte EAST = 2;
         public const byte SOUTH = 4;
         public const byte WEST = 8;
-    }
+
+        public enum MoveDirs
+        {
+            north,
+            northeast,
+            east,
+            southeast,
+            south,
+            southwest,
+            west,
+            northwest
+        }
+    }    
 }

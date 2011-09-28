@@ -78,7 +78,12 @@ namespace CGO
         /// <param name="frametime">time since the last frame was rendered.</param>
         public void Render(float frametime)
         {
-            foreach (IRenderableComponent component in components[ComponentFamily.Renderable])
+            var renderables = from IRenderableComponent c in components[ComponentFamily.Renderable]
+                              orderby c.DrawDepth ascending
+                              orderby c.Owner.position.Y ascending
+                              select c;
+                                
+            foreach (IRenderableComponent component in renderables.ToList())
             {
                 component.Render();
             }

@@ -8,6 +8,7 @@ using SS3D.Atom.Mob.HelperClasses;
 using GorgonLibrary;
 using GorgonLibrary.Graphics;
 using GorgonLibrary.InputDevices;
+using CGO;
 
 namespace SS3D.Atom.Mob
 {
@@ -29,13 +30,18 @@ namespace SS3D.Atom.Mob
             : base()
         {
             //meshName = "male_new.mesh";
-            SetSpriteName(0, "human_front");
-            SetSpriteByIndex(0);
-            SetSpriteName(1, "human_side");
-            SetSpriteName(2, "human_back");
-            SetSpriteName(3, "human_side");
-            SetSpriteName(8, "human_incap");
-            SetSpriteName(9, "human_incap_dead");
+            //SetSpriteName(0, "human_front");
+            //SetSpriteByIndex(0);
+            //SetSpriteName(1, "human_side");
+            //SetSpriteName(2, "human_back");
+            //SetSpriteName(3, "human_side");
+            //SetSpriteName(8, "human_incap");
+            //SetSpriteName(9, "human_incap_dead");
+
+
+            SpriteComponent c = (SpriteComponent)ComponentFactory.Singleton.GetComponent("MobSpriteComponent");
+            c.SetParameter(new ComponentParameter("basename", typeof(string), "human"));
+            AddComponent(SS3D_shared.GO.ComponentFamily.Renderable, c);
             
             speed = walkSpeed;
         }

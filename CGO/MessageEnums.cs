@@ -18,5 +18,7 @@ namespace CGO
         AddComponent,
         BoundKeyChange,
         BoundKeyRepeat,
+        MoveDirection,
+        HealthStatus,
     }
 }

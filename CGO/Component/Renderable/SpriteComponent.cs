@@ -11,8 +11,9 @@ namespace CGO
 {
     public class SpriteComponent : RenderableComponent, ISpriteComponent
     {
-        Sprite currentSprite;
-        Dictionary<string, Sprite> sprites;
+        protected Sprite currentSprite;
+        protected bool flip;
+        protected Dictionary<string, Sprite> sprites;
 
         public SpriteComponent()
             : base()
@@ -36,6 +37,11 @@ namespace CGO
         public List<Sprite> GetAllSprites()
         {
             return sprites.Values.ToList();
+        }
+
+        public void ClearSprites()
+        {
+            sprites.Clear();
         }
 
         public void SetSpriteByKey(string spriteKey)
@@ -66,7 +72,10 @@ namespace CGO
             if (currentSprite != null)
             {
                 SetSpriteCenter(currentSprite, RenderPos);
+                if (flip)
+                    currentSprite.HorizontalFlip = true;
                 currentSprite.Draw();
+                currentSprite.HorizontalFlip = false;
             }
         }
 

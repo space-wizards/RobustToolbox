@@ -456,6 +456,8 @@ namespace SS3D.States
                         }
 
                     }
+
+                    ComponentManager.Singleton.Render(0);
                 
                     //Render Light glows
                     atoms = from a in atomManager.atomDictionary.Values

@@ -95,6 +95,7 @@ namespace SS3D.Atom
             spriteNames[0] = spritename;
 
             AddComponent(SS3D_shared.GO.ComponentFamily.Mover, ComponentFactory.Singleton.GetComponent("NetworkMoverComponent"));
+            AddComponent(SS3D_shared.GO.ComponentFamily.Renderable, ComponentFactory.Singleton.GetComponent("SpriteComponent"));
         }
 
         public virtual void SetSpriteName(int index, string name)

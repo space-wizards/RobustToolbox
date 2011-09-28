@@ -65,6 +65,11 @@ namespace ClientWindow
             m_viewPort = new RectangleF(m_screenTopLeft, new Size(Gorgon.Screen.Width, Gorgon.Screen.Height));
         }
 
+        /// <summary>
+        /// Updates the ScreenTopLeft and Viewport variables given a center point.
+        /// </summary>
+        /// <param name="x">Center point x</param>
+        /// <param name="y">Center point y</param>
         public void UpdateViewPort(float x, float y)
         {
             m_screenTopLeft = new Vector2D(x - Gorgon.Screen.Width / 2,
@@ -72,11 +77,19 @@ namespace ClientWindow
             m_viewPort = new RectangleF(m_screenTopLeft, new Size(Gorgon.Screen.Width, Gorgon.Screen.Height));
         }
 
+        /// <summary>
+        /// Updates the ScreenTopLeft and Viewport variables given a center point.
+        /// </summary>
+        /// <param name="center">Center point</param>
         public void UpdateViewPort(Point center)
         {
             UpdateViewPort(center.X, center.Y);
         }
 
+        /// <summary>
+        /// Updates the ScreenTopLeft and Viewport variables given a center point.
+        /// </summary>
+        /// <param name="center">Center point</param>
         public void UpdateViewPort(Vector2D center)
         {
             UpdateViewPort(center.X, center.Y);
@@ -98,6 +111,24 @@ namespace ClientWindow
                 return Singleton.ScreenTopLeft.Y;
             }
             private set { }
+        }
+
+        /// <summary>
+        /// Translates a world position to a screen position.
+        /// </summary>
+        /// <param name="position">position to translate</param>
+        public Vector2D WorldToScreen(Vector2D position)
+        {
+            return position - ScreenTopLeft;
+        }
+        
+        /// <summary>
+        /// Translates a screen position to a world position
+        /// </summary>
+        /// <param name="position">position to translate</param>
+        public Vector2D ScreenToWorld(Vector2D position)
+        {
+            return position + ScreenTopLeft;
         }
     }
 }

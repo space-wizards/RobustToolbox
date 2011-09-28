@@ -27,6 +27,10 @@ namespace CGO
 
         private EntityNetworkManager m_entityNetworkManager;
 
+        public event EntityMoveEvent OnMove;
+        public delegate void EntityMoveEvent(Vector2D toPosition);
+
+
         /// <summary>
         /// Unique entity id
         /// </summary>
@@ -229,6 +233,12 @@ namespace CGO
         /// </summary>
         public virtual void SendPositionUpdate()
         { }
+
+        public void Moved()
+        {
+            if(OnMove != null)
+                OnMove(position);
+        }
 
         internal void HandleComponentMessage(IncomingEntityComponentMessage message)
         {

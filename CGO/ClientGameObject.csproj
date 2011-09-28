@@ -50,6 +50,9 @@
     <Compile Include="ComponentParameter.cs" />
     <Compile Include="Component\Mover\KeyBindingMoverComponent.cs" />
     <Compile Include="Component\Mover\NetworkMoverComponent.cs" />
+    <Compile Include="Component\Mover\SlaveMoverComponent.cs" />
+    <Compile Include="Component\Renderable\WearableSpriteComponent.cs" />
+    <Compile Include="Component\Renderable\ItemSpriteComponent.cs" />
     <Compile Include="Component\Renderable\IRenderableComponent.cs" />
     <Compile Include="Component\Renderable\ISpriteComponent.cs" />
     <Compile Include="Component\Renderable\MobSpriteComponent.cs" />

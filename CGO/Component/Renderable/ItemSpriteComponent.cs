@@ -6,13 +6,13 @@ using SS3D_shared;
 
 namespace CGO
 {
-    public class MobSpriteComponent : SpriteComponent
+    public class ItemSpriteComponent : SpriteComponent
     {
         string basename = "";
-        public MobSpriteComponent()
+        public ItemSpriteComponent()
             : base()
         {
-            DrawDepth = 3;
+            DrawDepth = 2;
         }
 
         public override void RecieveMessage(object sender, MessageType type, params object[] list)
@@ -25,36 +25,39 @@ namespace CGO
                     switch ((Constants.MoveDirs)list[0])
                     {
                         case Constants.MoveDirs.north:
-                            SetSpriteByKey(basename + "_back");
+                            SetSpriteByKey(basename + "_inhand");
+                            flip = true;
                             break;
                         case Constants.MoveDirs.south:
-                            SetSpriteByKey(basename + "_front");
+                            SetSpriteByKey(basename + "_inhand");
                             break;
                         case Constants.MoveDirs.east:
-                            SetSpriteByKey(basename + "_side");
+                            SetSpriteByKey(basename + "_inhand_side");
                             flip = true;
                             break;
                         case Constants.MoveDirs.west:
-                            SetSpriteByKey(basename + "_side");
+                            SetSpriteByKey(basename + "_inhand_side");
                             flip = false;
                             break;
                         case Constants.MoveDirs.northeast:
-                            SetSpriteByKey(basename + "_back");
+                            SetSpriteByKey(basename + "_inhand");
                             break;
                         case Constants.MoveDirs.northwest:
-                            SetSpriteByKey(basename + "_back");
+                            SetSpriteByKey(basename + "_inhand");
                             break;
                         case Constants.MoveDirs.southeast:
-                            SetSpriteByKey(basename + "_front");
+                            SetSpriteByKey(basename + "_inhand");
                             break;
                         case Constants.MoveDirs.southwest:
-                            SetSpriteByKey(basename + "_front");
+                            SetSpriteByKey(basename + "_inhand");
                             break;
                     }
+                    DrawDepth = 4;
                     break;
-                case MessageType.HealthStatus:
-                    break; //TODO do stuff here, incap and dead.
-
+                case MessageType.ItemDetach:
+                    SetSpriteByKey(basename);
+                    DrawDepth = 2;
+                    break;
             }
         }
 
@@ -79,13 +82,11 @@ namespace CGO
         /// </summary>
         public void LoadSprites()
         {
-            AddSprite(basename + "_front");
-            AddSprite(basename + "_back");
-            AddSprite(basename + "_incap");
-            AddSprite(basename + "_side");
-            AddSprite(basename + "_dead");
+            AddSprite(basename);
+            AddSprite(basename + "_inhand");
+            AddSprite(basename + "_inhand_side");
 
-            SetSpriteByKey(basename + "_front");
+            SetSpriteByKey(basename);
         }
     }
 }

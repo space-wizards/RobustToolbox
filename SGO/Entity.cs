@@ -30,6 +30,9 @@ namespace SGO
 
         private EntityNetworkManager m_entityNetworkManager;
 
+        public event EntityMoveEvent OnMove;
+        public delegate void EntityMoveEvent(Vector2 toPosition);
+
         private int uid;
         public int Uid
         {
@@ -223,6 +226,12 @@ namespace SGO
         /// </summary>
         public virtual void SendPositionUpdate()
         { }
+
+        public void Moved()
+        {
+            if(OnMove != null)
+                OnMove(position);
+        }
 
         #region Serialization
 

@@ -18,5 +18,6 @@ namespace SGO
         AddComponent,
         BoundKeyChange,
         BoundKeyRepeat,
+        SlaveAttach,
     }
 }

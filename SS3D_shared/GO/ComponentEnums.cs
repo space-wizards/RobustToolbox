@@ -16,6 +16,7 @@ namespace SS3D_shared.GO
         Click,
         Inventory,
         Equipment,
+        Item,
         Hands,
         Tool,
         Wearable,

@@ -6,6 +6,7 @@ using SS3D_shared.HelperClasses;
 using Lidgren.Network;
 using SS3D_Server.Atom.Mob;
 using SS3D_Server.Atom.Mob.HelperClasses;
+using SGO;
 
 namespace SS3D_Server.Atom.Item
 {
@@ -110,6 +111,10 @@ namespace SS3D_Server.Atom.Item
             atomManager.SetDrawDepthAtom(Uid, 0);
 
             SendAttachMessage();
+
+            AddComponent(SS3D_shared.GO.ComponentFamily.Mover, ComponentFactory.Singleton.GetComponent("SlaveMoverComponent"));
+            SendMessage(null, MessageType.SlaveAttach, newHolder.Uid);
+
             SendAppendageUIUpdate(newHolder);
             SS3DServer.Singleton.chatManager.SendChatMessage(ChatChannel.Default, newHolder.name + " picked up the " + name + ".", "", newHolder.Uid);
         }
@@ -175,7 +180,9 @@ namespace SS3D_Server.Atom.Item
 
             SendAppendageUIUpdate(owner);
 
-            Translate(droppedposition, droppedrot);
+            RemoveComponent(SS3D_shared.GO.ComponentFamily.Mover);
+
+            //Translate(droppedposition, droppedrot);
         }
 
         public override void Push()

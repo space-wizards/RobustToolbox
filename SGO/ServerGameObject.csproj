@@ -45,6 +45,7 @@
     <Compile Include="ComponentParameter.cs" />
     <Compile Include="Component\Input\KeyBindingInputComponent.cs" />
     <Compile Include="Component\Mover\PlayerInputMoverComponent.cs" />
+    <Compile Include="Component\Mover\SlaveMoverComponent.cs" />
     <Compile Include="Component\PlayerControl\PlayerControlComponent.cs" />
     <Compile Include="Entity.cs" />
     <Compile Include="EntityFactory.cs" />

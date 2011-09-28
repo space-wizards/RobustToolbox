@@ -23,6 +23,20 @@ namespace CGO
             m_entityTemplateDatabase = new EntityTemplateDatabase();
             m_entityFactory = new EntityFactory(m_entityTemplateDatabase);
             m_entities = new Dictionary<int, Entity>();
+            Singleton = this;
+        }
+
+        private static EntityManager singleton;
+        public static EntityManager Singleton
+        {
+            get
+            {
+                if (singleton == null)
+                    throw new Exception("Singleton not initialized");
+                else return singleton;
+            }
+            set
+            { singleton = value; }
         }
 
         /// <summary>

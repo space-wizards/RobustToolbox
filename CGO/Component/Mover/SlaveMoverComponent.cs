@@ -8,31 +8,62 @@ using SS3D_shared;
 namespace CGO
 {
     /// <summary>
-    /// Recieves movement data from the server and updates the entity's position accordingly.
+    /// Mover component that responds to movement by an entity.
     /// </summary>
-    public class NetworkMoverComponent : GameObjectComponent
+    public class SlaveMoverComponent : GameObjectComponent
     {
-        private Constants.MoveDirs movedir = Constants.MoveDirs.south;
+        Entity master;
+        Constants.MoveDirs movedir = Constants.MoveDirs.south;
 
-        public NetworkMoverComponent()
+        public SlaveMoverComponent()
         {
             family = SS3D_shared.GO.ComponentFamily.Mover;
         }
 
-        public override void HandleNetworkMessage(IncomingEntityComponentMessage message)
+        public override void RecieveMessage(object sender, MessageType type, params object[] list)
         {
-            double x = (double)message.messageParameters[0];
-            double y = (double)message.messageParameters[1];
-            Translate((float)x, (float)y);
+            switch (type)
+            {
+                case MessageType.SlaveAttach:
+                    Attach((int)list[0]);
+                    break;
+            }
+
         }
 
-        private void Translate(float x, float y)
+        public override void OnRemove()
         {
-            Vector2D delta = new Vector2D(x, y) - Owner.position;
+            base.OnRemove();
+            Detach();
+        }
 
-            Owner.position.X = x;
-            Owner.position.Y = y;
-            
+        private void Attach(int uid)
+        {
+            master = EntityManager.Singleton.GetEntity(uid);
+            master.OnMove += new Entity.EntityMoveEvent(HandleOnMove);
+            Translate(master.position);
+        }
+
+        private void Detach()
+        {
+            if (master != null)
+            {
+                master.OnMove -= new Entity.EntityMoveEvent(HandleOnMove);
+                master = null;
+            }
+        }
+
+        private void HandleOnMove(Vector2D toPosition)
+        {
+            Translate(toPosition);
+        }
+
+        private void Translate(Vector2D toPosition)
+        {
+            Vector2D delta = toPosition - Owner.position;
+
+            Owner.position = toPosition;
+
             if (delta.X > 0 && delta.Y > 0)
                 SetMoveDir(Constants.MoveDirs.southeast);
             if (delta.X > 0 && delta.Y < 0)

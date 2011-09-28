@@ -7,6 +7,7 @@ using Lidgren.Network;
 using SS3D.Atom.Mob.HelperClasses;
 using GorgonLibrary;
 using GorgonLibrary.Graphics;
+using CGO;
 
 namespace SS3D.Atom.Item
 {
@@ -23,7 +24,7 @@ namespace SS3D.Atom.Item
         {
             base.Draw();
 
-            if (spriteNames[-1] != null)
+            if (spriteNames.ContainsKey(-1))
             {
                 string baseName = spriteNames[-1];
                 SetSpriteName(0, baseName + "_front");
@@ -71,6 +72,9 @@ namespace SS3D.Atom.Item
             {
                 Vector2D mobpos = holdingAppendage.owner.position;
                 position = mobpos;
+
+                AddComponent(SS3D_shared.GO.ComponentFamily.Mover, ComponentFactory.Singleton.GetComponent("NetworkMoverComponent"));
+                SendMessage(null, MessageType.ItemDetach);
             }
             holdingAppendage.attachedItem = null;
             holdingAppendage = null;
@@ -92,6 +96,8 @@ namespace SS3D.Atom.Item
             this.visible = false;
             holdingAppendage = a;
             a.attachedItem = this;
+            AddComponent(SS3D_shared.GO.ComponentFamily.Mover, ComponentFactory.Singleton.GetComponent("SlaveMoverComponent"));
+            SendMessage(null, MessageType.SlaveAttach, m.Uid);
         }
     }
 }

@@ -134,6 +134,7 @@ namespace CGO
             Vector2D oldPosition = Owner.position;
             Owner.position += translationVector; // We move the sprite here rather than the position, as we can then use its updated AABB values.
             SendPositionUpdate();
+            Owner.Moved();
         }
     }
 }

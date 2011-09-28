@@ -345,6 +345,8 @@ namespace SS3D.Atom
         #region Rendering
         public virtual void Render(float xTopLeft, float yTopLeft, int Opacity = 255)//, List<Light> lights)
         {
+            if (spritename == "noSprite")
+                return;
             System.Drawing.Point tilePos = atomManager.gameState.map.GetTileArrayPositionFromWorldPosition(position);
             System.Drawing.Point topLeft = atomManager.gameState.map.GetTileArrayPositionFromWorldPosition(position - sprite.Size / 2);
             System.Drawing.Point bottomRight = atomManager.gameState.map.GetTileArrayPositionFromWorldPosition(position + sprite.Size / 2);

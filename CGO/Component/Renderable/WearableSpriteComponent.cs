@@ -6,13 +6,13 @@ using SS3D_shared;
 
 namespace CGO
 {
-    public class MobSpriteComponent : SpriteComponent
+    public class WearableSpriteComponent : SpriteComponent
     {
         string basename = "";
-        public MobSpriteComponent()
+        public WearableSpriteComponent()
             : base()
         {
-            DrawDepth = 3;
+            DrawDepth = 2; //Floor drawdepth
         }
 
         public override void RecieveMessage(object sender, MessageType type, params object[] list)
@@ -26,6 +26,7 @@ namespace CGO
                     {
                         case Constants.MoveDirs.north:
                             SetSpriteByKey(basename + "_back");
+                            flip = true;
                             break;
                         case Constants.MoveDirs.south:
                             SetSpriteByKey(basename + "_front");
@@ -51,10 +52,12 @@ namespace CGO
                             SetSpriteByKey(basename + "_front");
                             break;
                     }
+                    DrawDepth = 4;
                     break;
-                case MessageType.HealthStatus:
-                    break; //TODO do stuff here, incap and dead.
-
+                case MessageType.ItemDetach:
+                    SetSpriteByKey(basename);
+                    DrawDepth = 2;
+                    break;
             }
         }
 
@@ -79,13 +82,12 @@ namespace CGO
         /// </summary>
         public void LoadSprites()
         {
+            AddSprite(basename);
             AddSprite(basename + "_front");
             AddSprite(basename + "_back");
-            AddSprite(basename + "_incap");
             AddSprite(basename + "_side");
-            AddSprite(basename + "_dead");
 
-            SetSpriteByKey(basename + "_front");
+            SetSpriteByKey(basename);
         }
     }
 }

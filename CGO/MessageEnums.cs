@@ -20,5 +20,7 @@ namespace CGO
         BoundKeyRepeat,
         MoveDirection,
         HealthStatus,
+        SlaveAttach,
+        ItemDetach,
     }
 }

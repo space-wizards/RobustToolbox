@@ -13,6 +13,7 @@ namespace SS3D_shared.GO
         Generic,
         Input, // Receives user input
         Mover, // Moves objects around
+        Collider, // Handles collision
         Click, // Makes an object clickable
         Inventory, // Holds entities
         Equipment, // ?

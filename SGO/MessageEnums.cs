@@ -15,6 +15,7 @@ namespace SGO
 
     public enum MessageType
     {
+        Empty,
         AddComponent,
         BoundKeyChange,
         BoundKeyRepeat,

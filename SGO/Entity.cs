@@ -139,12 +139,14 @@ namespace SGO
         /// <param name="sender">the component doing the sending</param>
         /// <param name="type">the type of message</param>
         /// <param name="args">message parameters</param>
-        public void SendMessage(object sender, MessageType type, params object[] args)
+        public ComponentReplyMessage[] SendMessage(object sender, MessageType type, params object[] args)
         {
+            List<ComponentReplyMessage> replies = new List<ComponentReplyMessage>();
             foreach (IGameObjectComponent component in components.Values)
             {
-                component.RecieveMessage(sender, type, args);
+                replies.Add(component.RecieveMessage(sender, type, args));
             }
+            return replies.ToArray();
         }
         #endregion
 
@@ -296,5 +298,23 @@ namespace SGO
             m_entityNetworkManager = manager;
         }
         #endregion
+    }
+
+    public struct ComponentReplyMessage
+    {
+        public MessageType messageType;
+        public List<object> paramsList;
+
+        public ComponentReplyMessage(MessageType _messageType, params object[] _paramsList)
+        {
+            if (_paramsList != null)
+                paramsList = _paramsList.ToList();
+            else
+                paramsList = new List<object>();
+
+            messageType = _messageType;
+        }
+
+        public static ComponentReplyMessage Null = new ComponentReplyMessage(MessageType.Empty);
     }
 }

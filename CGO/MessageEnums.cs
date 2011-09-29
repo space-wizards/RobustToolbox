@@ -15,6 +15,7 @@ namespace CGO
 
     public enum MessageType
     {
+        Empty,
         AddComponent,
         BoundKeyChange,
         BoundKeyRepeat,

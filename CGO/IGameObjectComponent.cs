@@ -10,7 +10,7 @@ namespace CGO
     {
         Entity Owner { get; set; }
 
-        void RecieveMessage(object sender, MessageType type, params object[] list);
+        ComponentReplyMessage RecieveMessage(object sender, MessageType type, params object[] list);
         void OnRemove();
         void OnAdd(Entity owner);
         void Update(float frameTime);

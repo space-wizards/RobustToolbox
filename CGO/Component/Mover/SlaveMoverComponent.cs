@@ -20,7 +20,7 @@ namespace CGO
             family = SS3D_shared.GO.ComponentFamily.Mover;
         }
 
-        public override void RecieveMessage(object sender, MessageType type, params object[] list)
+        public override ComponentReplyMessage RecieveMessage(object sender, MessageType type, params object[] list)
         {
             switch (type)
             {
@@ -29,6 +29,7 @@ namespace CGO
                     break;
             }
 
+            return ComponentReplyMessage.Null;
         }
 
         public override void OnRemove()

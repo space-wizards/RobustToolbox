@@ -23,10 +23,10 @@ namespace CGO
             family = ComponentFamily.Mover;
         }
 
-        public override void RecieveMessage(object sender, MessageType type, params object[] list)
+        public override ComponentReplyMessage RecieveMessage(object sender, MessageType type, params object[] list)
         {
             if (sender == this)
-                return;
+                return ComponentReplyMessage.Null;
             switch (type)
             {
                 case MessageType.BoundKeyChange:
@@ -35,6 +35,7 @@ namespace CGO
                 default:
                     break;
             }
+            return ComponentReplyMessage.Null;
         }
 
         /// <summary>

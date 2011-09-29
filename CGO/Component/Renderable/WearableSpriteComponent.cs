@@ -9,6 +9,7 @@ namespace CGO
     public class WearableSpriteComponent : SpriteComponent
     {
         string basename = "";
+        private bool worn = false;
         public WearableSpriteComponent()
             : base()
         {
@@ -25,31 +26,72 @@ namespace CGO
                     switch ((Constants.MoveDirs)list[0])
                     {
                         case Constants.MoveDirs.north:
-                            SetSpriteByKey(basename + "_back");
-                            flip = true;
+                            if (worn)
+                            {
+                                SetSpriteByKey(basename + "_back");
+                                flip = true;
+                            }
+                            else
+                                SetSpriteByKey(basename);
                             break;
                         case Constants.MoveDirs.south:
-                            SetSpriteByKey(basename + "_front");
+                            if (worn)
+                            {
+                                SetSpriteByKey(basename + "_front");
+                            }
+                            else
+                                SetSpriteByKey(basename);
+                            
                             break;
                         case Constants.MoveDirs.east:
-                            SetSpriteByKey(basename + "_side");
-                            flip = true;
+                            if (worn)
+                            {
+                                SetSpriteByKey(basename + "_side");
+                                flip = true;
+                            }
+                            else
+                                SetSpriteByKey(basename);
                             break;
                         case Constants.MoveDirs.west:
-                            SetSpriteByKey(basename + "_side");
-                            flip = false;
+                            if (worn)
+                            {
+                                SetSpriteByKey(basename + "_side");
+                                flip = false;
+                            }
+                            else
+                                SetSpriteByKey(basename);
                             break;
                         case Constants.MoveDirs.northeast:
-                            SetSpriteByKey(basename + "_back");
+                            if (worn)
+                            {
+                                SetSpriteByKey(basename + "_back");
+                            }
+                            else
+                                SetSpriteByKey(basename);
                             break;
                         case Constants.MoveDirs.northwest:
-                            SetSpriteByKey(basename + "_back");
+                            if (worn)
+                            {
+                                SetSpriteByKey(basename + "_back");
+                            }
+                            else
+                                SetSpriteByKey(basename);
                             break;
                         case Constants.MoveDirs.southeast:
-                            SetSpriteByKey(basename + "_front");
+                            if (worn)
+                            {
+                                SetSpriteByKey(basename + "_front");
+                            }
+                            else
+                                SetSpriteByKey(basename);
                             break;
                         case Constants.MoveDirs.southwest:
-                            SetSpriteByKey(basename + "_front");
+                            if (worn)
+                            {
+                                SetSpriteByKey(basename + "_front");
+                            }
+                            else
+                                SetSpriteByKey(basename);
                             break;
                     }
                     DrawDepth = 4;
@@ -57,6 +99,13 @@ namespace CGO
                 case MessageType.ItemDetach:
                     SetSpriteByKey(basename);
                     DrawDepth = 2;
+                    break;
+                case MessageType.ItemWorn:
+                    worn = true;
+                    DrawDepth = 4;
+                    break;
+                case MessageType.ItemUnWorn:
+                    worn = false;
                     break;
             }
         }

@@ -11,16 +11,17 @@ namespace SS3D_shared.GO
     public enum ComponentFamily
     {
         Generic,
-        Input,
-        Mover,
-        Click,
-        Inventory,
-        Equipment,
-        Item,
-        Hands,
-        Tool,
-        Wearable,
-        Health,
-        Renderable,
+        Input, // Receives user input
+        Mover, // Moves objects around
+        Click, // Makes an object clickable
+        Inventory, // Holds entities
+        Equipment, // ?
+        Mob, // Has hands, can pick stuff up and manipulate objects
+        Item, // Can be picked up, placed in inventory or held in hands
+        Hands, // ? needed -- 
+        Tool, // Can be used as a tool to apply to other entities
+        Wearable, // Can be worn on a mob
+        Health, // Has hitpoints, applies damage, organs?
+        Renderable, // Can be rendered -- sprite or particle system
     }
 }

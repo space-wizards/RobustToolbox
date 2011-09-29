@@ -22,5 +22,7 @@ namespace CGO
         HealthStatus,
         SlaveAttach,
         ItemDetach,
+        ItemWorn,
+        ItemUnWorn,
     }
 }

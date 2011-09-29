@@ -453,6 +453,7 @@ namespace SS3D.Atom.Mob
                 equippedAtoms.Add(part, null);
             }
             equippedAtoms[part] = (Item.Item)atomManager.GetAtom(id);
+            equippedAtoms[part].SendMessage(null, MessageType.ItemWorn);
             equippedAtoms[part].visible = false;
         }
 
@@ -466,6 +467,7 @@ namespace SS3D.Atom.Mob
             if (!equippedAtoms.ContainsKey(part))
                 return;
 
+            equippedAtoms[part].SendMessage(null, MessageType.ItemUnWorn);
             equippedAtoms[part] = null;
         }
 

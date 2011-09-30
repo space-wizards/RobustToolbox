@@ -39,11 +39,11 @@ namespace SGO
         /// <param name="sender">the component that sent the message</param>
         /// <param name="type">the message type in CGO.MessageType</param>
         /// <param name="list">parameters list</param>
-        public virtual ComponentReplyMessage RecieveMessage(object sender, MessageType type, params object[] list)
+        public virtual void RecieveMessage(object sender, MessageType type, List<ComponentReplyMessage> replies, params object[] list)
         {
             if (sender == this) //Don't listen to our own messages!
-                return ComponentReplyMessage.Null;
-            return ComponentReplyMessage.Null;
+                return;
+            return;
         }
 
         /// <summary>

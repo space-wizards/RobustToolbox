@@ -20,7 +20,7 @@ namespace CGO
             family = SS3D_shared.GO.ComponentFamily.Mover;
         }
 
-        public override ComponentReplyMessage RecieveMessage(object sender, MessageType type, params object[] list)
+        public override void RecieveMessage(object sender, MessageType type, List<ComponentReplyMessage> replies, params object[] list)
         {
             switch (type)
             {
@@ -29,7 +29,7 @@ namespace CGO
                     break;
             }
 
-            return ComponentReplyMessage.Null;
+            return;
         }
 
         public override void OnRemove()
@@ -90,7 +90,7 @@ namespace CGO
             if (_movedir != movedir)
             {
                 movedir = _movedir;
-                Owner.SendMessage(this, MessageType.MoveDirection, movedir);
+                Owner.SendMessage(this, MessageType.MoveDirection, null, movedir);
             }
         }
     }

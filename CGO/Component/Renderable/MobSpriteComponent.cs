@@ -15,9 +15,9 @@ namespace CGO
             DrawDepth = 3;
         }
 
-        public override ComponentReplyMessage RecieveMessage(object sender, MessageType type, params object[] list)
+        public override void RecieveMessage(object sender, MessageType type, List<ComponentReplyMessage> replies, params object[] list)
         {
-            base.RecieveMessage(sender, type, list);
+            base.RecieveMessage(sender, type, replies, list);
 
             switch (type)
             {
@@ -56,7 +56,7 @@ namespace CGO
                     break; //TODO do stuff here, incap and dead.
 
             }
-            return ComponentReplyMessage.Null;
+            return;
         }
 
         /// <summary>

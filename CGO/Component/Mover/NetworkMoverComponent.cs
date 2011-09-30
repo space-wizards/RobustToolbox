@@ -58,7 +58,7 @@ namespace CGO
             if (_movedir != movedir)
             {
                 movedir = _movedir;
-                Owner.SendMessage(this, MessageType.MoveDirection, movedir);
+                Owner.SendMessage(this, MessageType.MoveDirection, null, movedir);
             }
         }
     }

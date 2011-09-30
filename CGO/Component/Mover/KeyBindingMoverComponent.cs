@@ -23,10 +23,10 @@ namespace CGO
             family = ComponentFamily.Mover;
         }
 
-        public override ComponentReplyMessage RecieveMessage(object sender, MessageType type, params object[] list)
+        public override void RecieveMessage(object sender, MessageType type, List<ComponentReplyMessage> replies, params object[] list)
         {
             if (sender == this)
-                return ComponentReplyMessage.Null;
+                return;
             switch (type)
             {
                 case MessageType.BoundKeyChange:
@@ -35,7 +35,7 @@ namespace CGO
                 default:
                     break;
             }
-            return ComponentReplyMessage.Null;
+            return;
         }
 
         /// <summary>
@@ -117,7 +117,7 @@ namespace CGO
             if (_movedir != movedir)
             {
                 movedir = _movedir;
-                Owner.SendMessage(this, MessageType.MoveDirection, movedir);
+                Owner.SendMessage(this, MessageType.MoveDirection, null, movedir);
             }
         }
 

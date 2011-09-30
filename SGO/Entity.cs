@@ -139,14 +139,12 @@ namespace SGO
         /// <param name="sender">the component doing the sending</param>
         /// <param name="type">the type of message</param>
         /// <param name="args">message parameters</param>
-        public ComponentReplyMessage[] SendMessage(object sender, MessageType type, params object[] args)
+        public void SendMessage(object sender, MessageType type, List<ComponentReplyMessage> replies, params object[] args)
         {
-            List<ComponentReplyMessage> replies = new List<ComponentReplyMessage>();
             foreach (IGameObjectComponent component in components.Values)
             {
-                replies.Add(component.RecieveMessage(sender, type, args));
+                component.RecieveMessage(sender, type, replies, args);
             }
-            return replies.ToArray();
         }
         #endregion
 

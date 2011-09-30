@@ -74,7 +74,7 @@ namespace SS3D.Atom.Item
                 position = mobpos;
 
                 AddComponent(SS3D_shared.GO.ComponentFamily.Mover, ComponentFactory.Singleton.GetComponent("NetworkMoverComponent"));
-                SendMessage(null, MessageType.ItemDetach);
+                SendMessage(null, MessageType.ItemDetach, null);
             }
             holdingAppendage.attachedItem = null;
             holdingAppendage = null;
@@ -97,7 +97,7 @@ namespace SS3D.Atom.Item
             holdingAppendage = a;
             a.attachedItem = this;
             AddComponent(SS3D_shared.GO.ComponentFamily.Mover, ComponentFactory.Singleton.GetComponent("SlaveMoverComponent"));
-            SendMessage(null, MessageType.SlaveAttach, m.Uid);
+            SendMessage(null, MessageType.SlaveAttach, null, m.Uid);
         }
     }
 }

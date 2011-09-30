@@ -16,7 +16,7 @@ namespace SGO
             BoundKeyFunctions keyFunction = (BoundKeyFunctions)message.messageParameters[0];
             BoundKeyState keyState = (BoundKeyState)message.messageParameters[1];
 
-            Owner.SendMessage(this, MessageType.BoundKeyChange, keyFunction, keyState);
+            Owner.SendMessage(this, MessageType.BoundKeyChange, null, keyFunction, keyState);
         }
     }
 }

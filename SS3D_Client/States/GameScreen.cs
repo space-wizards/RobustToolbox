@@ -4,6 +4,7 @@ using System.IO;
 using System.Linq;
 using System.Reflection;
 using System.Windows.Forms;
+using System.Drawing;
 
 using CGO;
 using ClientConfigManager;
@@ -694,6 +695,10 @@ namespace SS3D.States
             // See which one our click AABB intersected with
             foreach (Atom.Atom a in atoms)
             {
+                ClickableComponent clickable = (ClickableComponent)a.GetComponent(SS3D_shared.GO.ComponentFamily.Click);
+                if (clickable != null)
+                    clickable.Clicked(new PointF(mouseAABB.X, mouseAABB.Y), playerController.controlledAtom.Uid);
+
                 if (a.WasClicked(mouseAABB.Location))
                 {
                     if (!editMode)

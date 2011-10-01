@@ -6,6 +6,7 @@ using GorgonLibrary.Graphics;
 using GorgonLibrary;
 using ClientResourceManager;
 using ClientWindow;
+using System.Drawing;
 
 namespace CGO
 {
@@ -42,6 +43,37 @@ namespace CGO
         public void ClearSprites()
         {
             sprites.Clear();
+        }
+
+        public override void RecieveMessage(object sender, CGO.MessageType type, List<ComponentReplyMessage> reply, params object[] list)
+        {
+            base.RecieveMessage(sender, type, reply, list);
+            if (sender == this) return;
+
+            if (type == MessageType.Clicked) //A click component is asking if we were clicked.
+            {
+                object[] replyParams = new object[1];
+                replyParams[0] = WasClicked(list);
+                reply.Add(new ComponentReplyMessage(MessageType.Clicked, replyParams));
+            }
+        }
+
+        private bool WasClicked(params object[] list)
+        {
+            if (currentSprite == null) return false;
+            PointF worldPos = (PointF)list[0];
+            // // // Almost straight copy & paste.
+            System.Drawing.RectangleF AABB = new System.Drawing.RectangleF(Owner.position.X - (currentSprite.Width / 2), Owner.position.Y - (currentSprite.Height / 2), currentSprite.Width, currentSprite.Height);
+            if (!AABB.Contains(worldPos)) return false;
+            System.Drawing.Point spritePosition = new System.Drawing.Point((int)(worldPos.X - AABB.X + currentSprite.ImageOffset.X), (int)(worldPos.Y - AABB.Y + currentSprite.ImageOffset.Y));
+            GorgonLibrary.Graphics.Image.ImageLockBox imgData = currentSprite.Image.GetImageData();
+            imgData.Lock(false);
+            System.Drawing.Color pixColour = System.Drawing.Color.FromArgb((int)(imgData[spritePosition.X, spritePosition.Y]));
+            imgData.Dispose();
+            imgData.Unlock();
+            if (pixColour.A == 0) return false;
+            // // //
+            return true;
         }
 
         public void SetSpriteByKey(string spriteKey)

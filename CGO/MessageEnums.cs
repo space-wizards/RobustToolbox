@@ -25,5 +25,6 @@ namespace CGO
         ItemDetach,
         ItemWorn,
         ItemUnWorn,
+        Clicked
     }
 }

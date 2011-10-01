@@ -20,5 +20,6 @@ namespace SGO
         BoundKeyChange,
         BoundKeyRepeat,
         SlaveAttach,
+        Click
     }
 }

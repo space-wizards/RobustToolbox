@@ -158,7 +158,7 @@
       <Project>{AE483C29-042E-4226-BA52-D247CE7676DA}</Project>
       <Name>Lidgren.Network</Name>
     </ProjectReference>
-    <ProjectReference Include="..\SGO\SGO.csproj">
+    <ProjectReference Include="..\SGO\ServerGameObject.csproj">
       <Project>{A59BA08B-B934-49D1-A449-6BBDFE292C5E}</Project>
       <Name>SGO</Name>
     </ProjectReference>

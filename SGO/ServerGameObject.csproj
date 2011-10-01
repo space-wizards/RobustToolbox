@@ -43,6 +43,7 @@
     <Compile Include="ComponentFactory.cs" />
     <Compile Include="ComponentManager.cs" />
     <Compile Include="ComponentParameter.cs" />
+    <Compile Include="Component\ClickableComponent.cs" />
     <Compile Include="Component\Input\KeyBindingInputComponent.cs" />
     <Compile Include="Component\Mover\PlayerInputMoverComponent.cs" />
     <Compile Include="Component\Mover\SlaveMoverComponent.cs" />

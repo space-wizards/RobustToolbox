@@ -15,8 +15,7 @@ namespace CGO
         }
         public RenderableComponent()
         {
-            family = SS3D_shared.GO.ComponentFamily.Renderable;
-            
+            family = SS3D_shared.GO.ComponentFamily.Renderable; 
         }
 
         public virtual void Render()

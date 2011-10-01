@@ -55,6 +55,8 @@ namespace SS3D_Server.Atom
             rotation = 0;
             name = this.GetType().ToString();
 
+            AddComponent(SS3D_shared.GO.ComponentFamily.Click, ComponentFactory.Singleton.GetComponent("ClickableComponent"));
+
             extensions = new List<Extension.Extension>();
         }
 

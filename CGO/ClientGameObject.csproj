@@ -48,6 +48,7 @@
     <Compile Include="ComponentFactory.cs" />
     <Compile Include="ComponentManager.cs" />
     <Compile Include="ComponentParameter.cs" />
+    <Compile Include="Component\ClickableComponent.cs" />
     <Compile Include="Component\Collider\ColliderComponent.cs" />
     <Compile Include="Component\Mover\KeyBindingMoverComponent.cs" />
     <Compile Include="Component\Mover\NetworkMoverComponent.cs" />

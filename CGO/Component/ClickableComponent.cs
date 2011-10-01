@@ -12,7 +12,7 @@ namespace CGO
         public ClickableComponent()
             : base()
         {
-            Family = ComponentFamily.Click;
+            family = ComponentFamily.Click;
         }
 
         public void Clicked(PointF worldPos, int userUID)

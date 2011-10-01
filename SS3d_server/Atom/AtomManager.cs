@@ -382,6 +382,7 @@ namespace SS3D_Server.Atom
                 a.spawnTile = SS3D_Server.SS3DServer.Singleton.map.GetTileFromWorldPosition(a.position);
                 a.PostSpawnActions();
                 atomDictionary.Add(a.Uid, a);
+                m_entityManager.AddAtomEntity((Entity)a);
             }
             s.Close();
         }

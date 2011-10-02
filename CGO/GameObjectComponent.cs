@@ -28,9 +28,7 @@ namespace CGO
             {
                 return family;
             }
-            set
-            {
-            }
+            set { family = value; }
         }
         
         /// <summary>

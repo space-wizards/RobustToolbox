@@ -29,8 +29,7 @@ namespace SGO
                 return family;
             }
             set
-            {
-            }
+            { family = value; }
         }
         
         /// <summary>

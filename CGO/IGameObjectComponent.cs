@@ -15,7 +15,7 @@ namespace CGO
         void OnAdd(Entity owner);
         void Update(float frameTime);
         void Shutdown();
-        ComponentFamily Family {get;set;}
+        ComponentFamily Family {get;}
         void SetParameter(ComponentParameter parameter);
         void HandleNetworkMessage(IncomingEntityComponentMessage message);
     }

@@ -29,16 +29,6 @@ namespace SS3D.Atom.Mob
         public Mob()
             : base()
         {
-            //meshName = "male_new.mesh";
-            //SetSpriteName(0, "human_front");
-            //SetSpriteByIndex(0);
-            //SetSpriteName(1, "human_side");
-            //SetSpriteName(2, "human_back");
-            //SetSpriteName(3, "human_side");
-            //SetSpriteName(8, "human_incap");
-            //SetSpriteName(9, "human_incap_dead");
-
-
             SpriteComponent c = (SpriteComponent)ComponentFactory.Singleton.GetComponent("MobSpriteComponent");
             c.SetParameter(new ComponentParameter("basename", typeof(string), "human"));
             AddComponent(SS3D_shared.GO.ComponentFamily.Renderable, c);
@@ -66,13 +56,6 @@ namespace SS3D.Atom.Mob
         {
             base.SetUp(_uid, _atomManager);
 
-            //currentAnimState = animStates["idle1"];
-            //currentAnimState.Enable();
-            //currentAnimState.LoopOn();
-            /*animState = Entity.GetAnimationState("idle1");
-            animState.Loop = true;
-            animState.Enabled = true;*/
-
             sprite.UniformScale = 1f;
             initAppendages();
 
@@ -91,51 +74,10 @@ namespace SS3D.Atom.Mob
         {
             base.initKeys();
 
-            keyHandlers.Add(KeyboardKeys.F, new KeyEvent(HandleKC_F));
             keyHandlers.Add(KeyboardKeys.Q, new KeyEvent(HandleKC_Q));
             keyHandlers.Add(KeyboardKeys.LShiftKey, new KeyEvent(HandleKC_SHIFT));
             keyHandlers.Add(KeyboardKeys.RShiftKey, new KeyEvent(HandleKC_SHIFT));
             
-        }
-
-        public virtual void SetAnimationState(string state)
-        {
-            SetAnimationState(state, false);
-        }
-
-        public virtual void SetAnimationState(string state, bool send)
-        {
-            //return;
-            //Disable old animation state.
-            //currentAnimState.Disable();
-            //currentAnimState.LoopOff();
-
-            // TODO: error checking
-            /*if (send)
-                SendAnimationState(state);
-            currentAnimState = animStates[state];
-            currentAnimState.LoopOn();
-            if (state == "tpose")
-                currentAnimState.LoopOff();
-            currentAnimState.Enable();
-            if (currentAnimState == null)
-                currentAnimState = animStates["idle1"];*/
-        }
-
-        protected virtual void SendAnimationState(string state)
-        {
-            NetOutgoingMessage message = CreateAtomMessage();
-            message.Write((byte)AtomMessage.Extended);
-            message.Write((byte)MobMessage.AnimationState);
-            message.Write(state);
-            SendMessage(message);
-        }
-
-        protected virtual void HandleAnimationState(NetIncomingMessage message)
-        {
-            //If receiving animation state updates for our own mob, discard them.
-            if(!attached)
-                SetAnimationState(message.ReadString());
         }
 
         public override void Update(float time)
@@ -193,41 +135,7 @@ namespace SS3D.Atom.Mob
             }
             
 
-             /*   
-            if (movementVector.Y > 0)
-            {
-                SetSpriteByIndex(0);
-            }
-            if (movementVector.Y < 0)
-            {
-                SetSpriteByIndex(2);
-            }*/
-        }
-
-        public override void HandleKC_W(bool state)
-        {
-            base.HandleKC_W(state);
-            if (state==true)
-                SetAnimationState("walk1", false);
-            else
-                SetAnimationState("idle1", false);
-        }
-       
-        public override void HandleKC_S(bool state)
-        {
-            base.HandleKC_S(state);
-            if (state==true)
-                SetAnimationState("walk1", false);
-            else
-                SetAnimationState("idle1", false);
-        }
-
-        public virtual void HandleKC_F(bool state)
-        {
-            if (state == true)
-                SetAnimationState("walk1", false);
-            else
-                SetAnimationState("idle1", false);
+             
         }
 
         public virtual void HandleKC_Q(bool state)
@@ -246,69 +154,16 @@ namespace SS3D.Atom.Mob
                 speed = walkSpeed;
         }
 
-        public override void Translate(Vector2D toPosition)
-        {
-            Vector2D oldPosition = position;
-            base.Translate(toPosition);
-            UpdateCharacterDirection(position - oldPosition);
-        }
-
-        public override void MoveUp() // up
-        {
-            base.MoveUp();
-        }
-
-        public override void MoveDown() //Down
-        {
-            base.MoveDown();
-        }
-
-        public override void MoveLeft()
-        {
-            base.MoveLeft();
-        }
-
-        public override void MoveRight()
-        {
-            base.MoveRight();
-        }
-
-        public override void MoveUpLeft()
-        {
-            base.MoveUpLeft();
-        }
-
-        public override void MoveDownLeft()
-        {
-            base.MoveDownLeft();
-        }
-
-        public override void MoveUpRight()
-        {
-            base.MoveUpRight();
-        }
-
-        public override void MoveDownRight()
-        {
-            base.MoveDownRight();
-        }
-
         protected override void HandleExtendedMessage(NetIncomingMessage message)
         {
             MobMessage mobMessageType = (MobMessage)message.ReadByte();
             switch (mobMessageType)
             {
-                case MobMessage.AnimationState:
-                    HandleAnimationState(message);
-                    break;
                 case MobMessage.SelectAppendage:
                     HandleSelectAppendage(message);
                     break;
                 case MobMessage.Death:
                     HandleDeath();
-                    break;
-                case MobMessage.AnimateOnce:
-                    HandleAnimateOnce(message);
                     break;
                 case MobMessage.Equip:
                     HandleEquipItem(message);
@@ -323,56 +178,12 @@ namespace SS3D.Atom.Mob
         private void HandleDeath()
         {
             isDead = true;
-            //Set death Animation
-            //SetAnimationState("death", true);
-            DeathAnimation();
 
             //Clear key handlers
             keyHandlers.Clear();
             keyStates.Clear();
         }
-
-        private void DeathAnimation()
-        {
-            /*DisableAllAnimationStates();
-            AnimState deathstate = animStates["death"];
-            deathstate.final = true;
-            deathstate.tempdisabled = false;
-            deathstate.Enable();
-            deathstate.LoopOff();*/
-        }
-
-        public void DisableAllAnimationStates()
-        {
-            /*var statestodisable =
-                from astate in animStates
-                where astate.Value.enabled == true
-                select astate.Value;
-
-            foreach (AnimState a in statestodisable)
-                a.Disable();*/
-        }
-
-        public virtual void HandleAnimateOnce(NetIncomingMessage message)
-        {
-            /*foreach (var s in animStates)
-            {
-                s.Value.tempdisabled = true;
-            }
-            AnimState state = animStates[message.ReadString()];
-
-            state.RunOnce();*/
-        }
-
-        public virtual void AnimationComplete()
-        {
-            /*foreach (var s in animStates)
-            {
-                s.Value.tempdisabled = false;
-            }*/
-        }
-
-
+        
         /// <summary>
         /// Sets selected appendage to what is contained in the message
         /// </summary>

@@ -36,16 +36,6 @@ namespace SS3D.Atom.Mob
             equippedAtoms.Add(GUIBodyPart.Back, null);
         }
 
-        public override void MoveUp()
-        {
-            base.MoveUp();
-        }
-
-        public override void MoveDown()
-        {
-            base.MoveDown();
-        }
-
         public override System.Drawing.RectangleF GetAABB()
         {
             return new System.Drawing.RectangleF(

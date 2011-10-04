@@ -6,6 +6,7 @@ using System.Drawing;
 using GorgonLibrary;
 using SS3D.Modules;
 using ClientLighting;
+using CGO;
 
 namespace SS3D.Atom.Object.Lights
 {
@@ -14,8 +15,9 @@ namespace SS3D.Atom.Object.Lights
         public WallLight()
             : base()
         {
-            SetSpriteName(0, "wall_light");
-            SetSpriteByIndex(0);
+            ISpriteComponent c = (ISpriteComponent)GetComponent(SS3D_shared.GO.ComponentFamily.Renderable);
+            c.AddSprite("wall_light");
+            c.SetSpriteByKey("wall_light");
             collidable = false;
         }
 
@@ -50,19 +52,19 @@ namespace SS3D.Atom.Object.Lights
                 switch (light.direction[0])
                 {
                     case Direction.North:
-                        sprite.Rotation = 180;
+                        //sprite.Rotation = 180;
                         break;
                     case Direction.East:
-                        sprite.Rotation = 270;
+                        //sprite.Rotation = 270;
                         break;
                     case Direction.South:
-                        sprite.Rotation = 0;
+                        //sprite.Rotation = 0;
                         break;
                     case Direction.West:
-                        sprite.Rotation = 90;
+                        //sprite.Rotation = 90;
                         break;
                     case Direction.All:
-                        sprite.Rotation = 0;
+                        //sprite.Rotation = 0;
                         break;
                     default:
                         break;

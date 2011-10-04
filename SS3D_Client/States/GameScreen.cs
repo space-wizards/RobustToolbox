@@ -442,7 +442,7 @@ namespace SS3D.States
                                                    a.position.X / map.tileSpacing <= xEnd &&
                                                    a.position.Y / map.tileSpacing >= yStart &&
                                                    a.position.Y / map.tileSpacing <= yEnd
-                                                   orderby a.position.Y + ((a.sprite.Height * a.sprite.UniformScale) / 2) ascending
+                                                   orderby a.position.Y// + ((a.sprite.Height * a.sprite.UniformScale) / 2) ascending
                                                    orderby a.drawDepth ascending
                                                    select a;
 
@@ -452,8 +452,10 @@ namespace SS3D.States
 
                         if (showDebug)
                         {
+                            /* TODO RE-ENABLE THIS BULLSHIT WITH COMPONENTS
                             Gorgon.Screen.Circle(a.sprite.BoundingCircle.Center.X, a.sprite.BoundingCircle.Center.Y, a.sprite.BoundingCircle.Radius, System.Drawing.Color.Orange);
                             Gorgon.Screen.Rectangle(a.sprite.AABB.X, a.sprite.AABB.Y, a.sprite.AABB.Width, a.sprite.AABB.Height, System.Drawing.Color.Blue);
+                             */
                         }
 
                     }
@@ -469,19 +471,19 @@ namespace SS3D.States
                                                    a.position.Y / map.tileSpacing >= yStart &&
                                                    a.position.Y / map.tileSpacing <= yEnd &&
                                                    a.GetType().Name == "WallLight"                                                        
-                                                   orderby a.position.Y + ((a.sprite.Height * a.sprite.UniformScale) / 2) ascending
+                                                   orderby a.position.Y// + ((a.sprite.Height * a.sprite.UniformScale) / 2) ascending
                                                    orderby a.drawDepth ascending
                                                    select a;
 
                     Gorgon.CurrentRenderTarget = lightTarget;
                     Gorgon.CurrentShader = ResMgr.Singleton.GetShader("Blur");
                     ResMgr.Singleton.GetShader("Blur").Parameters["blurAmount"].SetValue(3.0f);
-                    foreach (Atom.Atom a in atoms.ToList())
+                    /*foreach (Atom.Atom a in atoms.ToList())
                     {
                         a.sprite.BlendingMode = BlendingModes.Additive;
                         a.Render(ClientWindowData.xTopLeft, ClientWindowData.yTopLeft);
                         a.sprite.BlendingMode = BlendingModes.None;
-                    }
+                    }*/
                     Gorgon.CurrentShader = null;
                     Gorgon.CurrentRenderTarget = baseTarget;
                 }
@@ -689,15 +691,17 @@ namespace SS3D.States
             IEnumerable<Atom.Atom> atoms = from a in atomManager.atomDictionary.Values
                                            where editMode ? true : (playerController.controlledAtom.position - a.position).Length < checkDistance
                                            where a.visible
-                                           orderby (new Vector2D(a.sprite.AABB.X + (a.sprite.AABB.Width/2),a.sprite.AABB.Y + (a.sprite.AABB.Height/2)) - new Vector2D(mouseAABB.X, mouseAABB.Y)).Length descending
+                                           //orderby (new Vector2D(a.sprite.AABB.X + (a.sprite.AABB.Width/2),a.sprite.AABB.Y + (a.sprite.AABB.Height/2)) - new Vector2D(mouseAABB.X, mouseAABB.Y)).Length descending
                                            orderby a.drawDepth descending
                                            select a;
             // See which one our click AABB intersected with
             foreach (Atom.Atom a in atoms)
             {
+                //HACKED IN COMPONENT SHIT
                 ClickableComponent clickable = (ClickableComponent)a.GetComponent(SS3D_shared.GO.ComponentFamily.Click);
                 if (clickable != null)
                     clickable.Clicked(new PointF(mouseAABB.X, mouseAABB.Y), playerController.controlledAtom.Uid);
+                //END HACKED IN COMPONENT SHIT
 
                 if (a.WasClicked(mouseAABB.Location))
                 {

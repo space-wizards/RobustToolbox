@@ -143,6 +143,12 @@ namespace CGO
             Owner.Moved();
         }
 
+        /// <summary>
+        /// Tries to move the entity. Checks collision. If the entity _is_ colliding, move it back and return false.
+        /// </summary>
+        /// <param name="translationVector"></param>
+        /// <param name="SuppressBump"></param>
+        /// <returns></returns>
         public bool TryTranslate(Vector2D translationVector, bool SuppressBump)
         {
             Vector2D oldPosition = Owner.position;

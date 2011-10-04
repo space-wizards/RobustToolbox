@@ -181,6 +181,9 @@ namespace CGO
         public virtual void SendPositionUpdate()
         { }
 
+        public virtual void HandleClick()
+        { }
+
         public void Moved()
         {
             if(OnMove != null)

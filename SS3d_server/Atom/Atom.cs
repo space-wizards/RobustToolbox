@@ -161,6 +161,14 @@ namespace SS3D_Server.Atom
             Clicked(clicker);
         }
 
+        public override void HandleClick(int clickerID)
+        {
+            Mob.Mob clicker = (Mob.Mob)atomManager.GetAtom(clickerID);
+            if (clicker == null || clicker.IsDead())
+                return;
+            Clicked(clicker);
+        }
+
         public virtual void Push()
         {
             SendInterpolationPacket(true); // Forcibly update the position of the node.

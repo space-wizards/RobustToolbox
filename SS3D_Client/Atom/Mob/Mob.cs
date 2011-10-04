@@ -56,7 +56,7 @@ namespace SS3D.Atom.Mob
         {
             base.SetUp(_uid, _atomManager);
 
-            sprite.UniformScale = 1f;
+            //sprite.UniformScale = 1f;
             initAppendages();
 
             equippedAtoms = new Dictionary<GUIBodyPart, Item.Item>();
@@ -119,19 +119,19 @@ namespace SS3D.Atom.Mob
 
             if (angle > -0.25f * Math.PI && angle < 0.25f * Math.PI)
             {
-                SetSpriteByIndex(3);
+                //SetSpriteByIndex(3);
             }
             else if (angle > 0.25f * Math.PI && angle < 0.75f * Math.PI)
             {
-                SetSpriteByIndex(0);
+                //SetSpriteByIndex(0);
             }
             else if(angle < -0.25f * Math.PI && angle > -0.75f * Math.PI)
             {
-                SetSpriteByIndex(2);
+                //SetSpriteByIndex(2);
             }
             else
             {
-                SetSpriteByIndex(1);
+                //SetSpriteByIndex(1);
             }
             
 
@@ -296,31 +296,31 @@ namespace SS3D.Atom.Mob
         {
             if (GetSpriteIndex() == 3)
             {
-                sprite.HorizontalFlip = true;
+                //sprite.HorizontalFlip = true;
             }
             base.Render(xTopLeft, yTopLeft);
             if (GetSpriteIndex() == 3)
             {
-                sprite.HorizontalFlip = false;
+                //sprite.HorizontalFlip = false;
             }
             // Lets draw all their inventory
             foreach (Atom atom in equippedAtoms.Values)
             {
                 if (atom != null)
                 {
-                    atom.SetSpriteByIndex(GetSpriteIndex()); // Set the index to the same as the mob so it draws the correct direction
-                    atom.sprite.Position = sprite.Position;
-                    atom.sprite.Color = System.Drawing.Color.FromArgb(255, sprite.Color);
+                    //atom.SetSpriteByIndex(GetSpriteIndex()); // Set the index to the same as the mob so it draws the correct direction
+                    //atom.sprite.Position = sprite.Position;
+                    //atom.sprite.Color = System.Drawing.Color.FromArgb(255, sprite.Color);
                     if (GetSpriteIndex() == 3)
                     {
-                        atom.sprite.HorizontalFlip = true;
+                    //    atom.sprite.HorizontalFlip = true;
                     }
-                    atom.sprite.Draw();
-                    if (GetSpriteIndex() == 3)
+                    //atom.sprite.Draw();
+                    //if (GetSpriteIndex() == 3)
                     {
-                        atom.sprite.HorizontalFlip = false;
+                    //    atom.sprite.HorizontalFlip = false;
                     }
-                    atom.SetSpriteByIndex(-1); // Reset the index to the on map value for the GUI and in case it's dropped
+                    //atom.SetSpriteByIndex(-1); // Reset the index to the on map value for the GUI and in case it's dropped
                 }
             }
 
@@ -329,20 +329,20 @@ namespace SS3D.Atom.Mob
             {
                 if (a.attachedItem != null)
                 {
-                    a.attachedItem.SetSpriteByIndex(5);
-                    if (a.attachedItem.sprite.Image.Name == "noSprite")
-                        a.attachedItem.SetSpriteByIndex(-1);
-                    a.attachedItem.sprite.Position = sprite.Position + a.GetHoldPosition(GetSpriteIndex());
+                    //a.attachedItem.SetSpriteByIndex(5);
+                    //if (a.attachedItem.sprite.Image.Name == "noSprite")
+                        //a.attachedItem.SetSpriteByIndex(-1);
+                    //a.attachedItem.sprite.Position = sprite.Position + a.GetHoldPosition(GetSpriteIndex());
                     if (GetSpriteIndex() == 3)
                     {
-                        a.attachedItem.sprite.HorizontalFlip = true;
+                       // a.attachedItem.sprite.HorizontalFlip = true;
                     }
-                    a.attachedItem.sprite.Draw();
+                    //a.attachedItem.sprite.Draw();
                     if (GetSpriteIndex() == 3)
                     {
-                        a.attachedItem.sprite.HorizontalFlip = false;
+                     //   a.attachedItem.sprite.HorizontalFlip = false;
                     }
-                    a.attachedItem.SetSpriteByIndex(-1);
+                    //a.attachedItem.SetSpriteByIndex(-1);
                 }
             }
             

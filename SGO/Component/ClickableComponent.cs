@@ -21,6 +21,7 @@ namespace SGO
             {
                 List<ComponentReplyMessage> replies = new List<ComponentReplyMessage>();
                 Owner.SendMessage(this, MessageType.Click, replies, message.messageParameters[0]);
+                Owner.HandleClick((int)message.messageParameters[0]);
             }
         }
 

@@ -162,23 +162,25 @@ namespace SS3D.Modules.UI.Components
             var mob = (Atom.Mob.Mob)playerController.controlledAtom;
             if (mob.appendages[0].attachedItem != null)
             {
-                mob.appendages[0].attachedItem.sprite.SetPosition(lSprite.Position.X + 40, lSprite.Position.Y + 25);
+                //TODO RE-ENABLE HANDS GUI WITH COMPONENTS
+                /*mob.appendages[0].attachedItem.sprite.SetPosition(lSprite.Position.X + 40, lSprite.Position.Y + 25);
                 mob.appendages[0].attachedItem.sprite.Color = System.Drawing.Color.White;
                 mob.appendages[0].attachedItem.sprite.Rotation = 0f;
                 float factor = Math.Min(50f / mob.appendages[0].attachedItem.sprite.Width, 50f / mob.appendages[0].attachedItem.sprite.Height);
                 mob.appendages[0].attachedItem.sprite.UniformScale = factor;
                 mob.appendages[0].attachedItem.sprite.Draw();
-                mob.appendages[0].attachedItem.sprite.UniformScale = 1f;
+                mob.appendages[0].attachedItem.sprite.UniformScale = 1f;*/
             }
             if (mob.appendages[1].attachedItem != null)
             {
+                /*
                 mob.appendages[1].attachedItem.sprite.SetPosition(rSprite.Position.X + 60, rSprite.Position.Y + 25);
                 mob.appendages[1].attachedItem.sprite.Color = System.Drawing.Color.White;
                 mob.appendages[1].attachedItem.sprite.Rotation = 0f;
                 float factor = Math.Min(50f / mob.appendages[1].attachedItem.sprite.Width, 50f / mob.appendages[1].attachedItem.sprite.Height);
                 mob.appendages[1].attachedItem.sprite.UniformScale = factor;
                 mob.appendages[1].attachedItem.sprite.Draw();
-                mob.appendages[1].attachedItem.sprite.UniformScale = 1f;
+                mob.appendages[1].attachedItem.sprite.UniformScale = 1f;*/
             }
         }
 

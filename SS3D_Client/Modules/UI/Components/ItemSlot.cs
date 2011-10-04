@@ -150,9 +150,10 @@ namespace SS3D.Modules.UI.Components
                     Atom.Atom a = m.GetEquippedAtom(GetBodyPart());
                     if (a != null)
                     {
+                        /* TODO RE-ENABLE ITEM SLOTS WITH COMPONENTS
                         a.sprite.Position = position;
                         a.sprite.Position += new Vector2D(slot.AABB.Width / 2, slot.AABB.Height / 2);
-                        a.sprite.Draw();
+                        a.sprite.Draw();*/
                     }
                 }
             }

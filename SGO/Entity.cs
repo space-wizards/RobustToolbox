@@ -161,59 +161,8 @@ namespace SGO
         #endregion
 
 
-        #region Movement
-        /// <summary>
-        /// Moves the entity to a new position in worldspace.
-        /// </summary>
-        /// <param name="toPosition"></param>
-        public virtual void Translate(Vector2 toPosition)
-        {
-            Vector2 oldPosition = position;
-            position += toPosition; // We move the sprite here rather than the position, as we can then use its updated AABB values.
-        }
 
-        /// <summary>
-        /// Moves the entity Up
-        /// </summary>
-        public virtual void MoveUp()
-        { }
-        /// <summary>
-        /// Moves the entity Down
-        /// </summary>
-        public virtual void MoveDown()
-        { }
-        /// <summary>
-        /// Moves the entity Left
-        /// </summary>
-        public virtual void MoveLeft()
-        { }
-        /// <summary>
-        /// Moves the entity Right
-        /// </summary>
-        public virtual void MoveRight()
-        { }
-        /// <summary>
-        /// Moves the entity Up and Left
-        /// </summary>
-        public virtual void MoveUpLeft()
-        { }
-        /// <summary>
-        /// Moves the entity Up and Right
-        /// </summary>
-        public virtual void MoveUpRight()
-        { }
-        /// <summary>
-        /// Moves the entity Down and Left
-        /// </summary>
-        public virtual void MoveDownLeft()
-        { }
-        /// <summary>
-        /// Moves the entity Down and Right
-        /// </summary>
-        public virtual void MoveDownRight()
-        { }
 
-#endregion
         //VARIABLES TO REFACTOR AT A LATER DATE
         /// <summary>
         /// Movement speed of the entity. This should be refactored.
@@ -226,6 +175,8 @@ namespace SGO
         /// </summary>
         public virtual void SendPositionUpdate()
         { }
+
+        public virtual void HandleClick(int clickerID) { }
 
         public void Moved()
         {

@@ -110,9 +110,9 @@ namespace SS3D.Atom
         public virtual void Draw()
         {
             //Draw the atom into the scene. This should be called after instantiation.
-            sprite = ResMgr.Singleton.GetSprite(spritename);
-            sprite.Position = new Vector2D(position.X, position.Y);
-            sprite.SetAxis(sprite.Width / 2, sprite.Height / 2);
+            //sprite = ResMgr.Singleton.GetSprite(spritename);
+            //sprite.Position = new Vector2D(position.X, position.Y);
+            //sprite.SetAxis(sprite.Width / 2, sprite.Height / 2);
             drawn = true;
         }
 
@@ -164,7 +164,7 @@ namespace SS3D.Atom
         private void HandleSpriteState(NetIncomingMessage message)
         {
             int index = message.ReadInt32();
-            SetSpriteByIndex(index);
+            //SetSpriteByIndex(index);
         }
 
         protected virtual void HandleExtendedMessage(NetIncomingMessage message)
@@ -337,7 +337,7 @@ namespace SS3D.Atom
                 updateRequired = true; // This interpolation packet and probably the ones after it are still useful, so we'll update again on the next cycle.
             }
 
-            sprite.Position = new Vector2D(position.X, position.Y);
+            //sprite.Position = new Vector2D(position.X, position.Y);
 
         }
 
@@ -349,12 +349,12 @@ namespace SS3D.Atom
             if (spritename == "noSprite")
                 return;
             System.Drawing.Point tilePos = atomManager.gameState.map.GetTileArrayPositionFromWorldPosition(position);
-            System.Drawing.Point topLeft = atomManager.gameState.map.GetTileArrayPositionFromWorldPosition(position - sprite.Size / 2);
-            System.Drawing.Point bottomRight = atomManager.gameState.map.GetTileArrayPositionFromWorldPosition(position + sprite.Size / 2);
-            sprite.SetPosition(position.X - xTopLeft, position.Y - yTopLeft);
-            sprite.Rotation = rotation;
+            //System.Drawing.Point topLeft = atomManager.gameState.map.GetTileArrayPositionFromWorldPosition(position - sprite.Size / 2);
+            //System.Drawing.Point bottomRight = atomManager.gameState.map.GetTileArrayPositionFromWorldPosition(position + sprite.Size / 2);
+            //sprite.SetPosition(position.X - xTopLeft, position.Y - yTopLeft);
+            //sprite.Rotation = rotation;
             bool draw = false;
-            if ((tilePos.X > 0 && atomManager.gameState.map.tileArray[tilePos.X, tilePos.Y].Visible) ||
+            /*if ((tilePos.X > 0 && atomManager.gameState.map.tileArray[tilePos.X, tilePos.Y].Visible) ||
                 (topLeft.X > 0 &&atomManager.gameState.map.tileArray[topLeft.X, topLeft.Y].Visible) ||
                 (bottomRight.X > 0 && atomManager.gameState.map.tileArray[bottomRight.X, bottomRight.Y].Visible))
             {
@@ -365,13 +365,14 @@ namespace SS3D.Atom
                 if (draw && visible)
                 {
                     //LightManager.Singleton.ApplyLightsToSprite(atomManager.gameState.map.tileArray[tilePos.X, tilePos.Y].tileLights, sprite, new Vector2D(xTopLeft, yTopLeft));
-                    sprite.Color = System.Drawing.Color.FromArgb(Opacity, sprite.Color);
-                    sprite.Draw();
+                    //sprite.Color = System.Drawing.Color.FromArgb(Opacity, sprite.Color);
+                    //sprite.Draw();
                 }
             }
-
-            if (speechBubble != null && this.IsChildOfType(typeof(Mob.Mob)))
-                speechBubble.Draw(position, xTopLeft, yTopLeft, sprite);
+            */
+            //TODO INTEGRATE SPEECH BUBBLES WITH COMPONENT SYSTEM
+            /*if (speechBubble != null && this.IsChildOfType(typeof(Mob.Mob)))
+                speechBubble.Draw(position, xTopLeft, yTopLeft, sprite);*/
         }
 
         public virtual void Render(float xTopLeft, float yTopLeft)
@@ -435,6 +436,7 @@ namespace SS3D.Atom
         #region mouse handling
         public bool WasClicked(Vector2D worldPosition)
         {
+            return false; //HACKED TO DISABLE ATOM CLICKING WITHOUT COMPONENTS
             System.Drawing.RectangleF AABB = new System.Drawing.RectangleF(position.X - (sprite.Width / 2), position.Y - (sprite.Height / 2), sprite.Width, sprite.Height);
             if (!AABB.Contains(worldPosition))
                 return false;
@@ -449,7 +451,7 @@ namespace SS3D.Atom
             return true;
         }
 
-        public virtual void HandleClick()
+        public override void HandleClick()
         {
             SendClick();
         }

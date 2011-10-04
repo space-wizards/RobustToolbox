@@ -30,6 +30,7 @@ namespace CGO
         CheckCollision,
         CollisionStatus,
         GetAABB,
-        CurrentAABB
+        CurrentAABB,
+        SetSpriteBykey
     }
 }

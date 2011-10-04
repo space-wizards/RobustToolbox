@@ -67,6 +67,10 @@ namespace CGO
                 case MessageType.GetAABB:
                     reply.Add(new ComponentReplyMessage(MessageType.CurrentAABB, AABB));
                     break;
+                case MessageType.SetSpriteBykey:
+                    SetSpriteByKey((string)list[0]);
+                    break;
+                    
             }
         }
 

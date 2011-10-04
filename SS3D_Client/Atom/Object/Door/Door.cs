@@ -4,6 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Drawing;
 using GorgonLibrary;
+using CGO;
 
 namespace SS3D.Atom.Object.Door
 {
@@ -15,8 +16,10 @@ namespace SS3D.Atom.Object.Door
         public Door()
             : base()
         {
-            SetSpriteName(0, "door_ew");
-            SetSpriteByIndex(0);
+            ISpriteComponent c = (ISpriteComponent)GetComponent(SS3D_shared.GO.ComponentFamily.Renderable);
+            c.AddSprite("door_ew");
+            c.AddSprite("door_ewo");
+            c.SetSpriteByKey("door_ew");
             collidable = true;
             snapTogrid = true;
         }
@@ -35,7 +38,8 @@ namespace SS3D.Atom.Object.Door
             switch (status)
             {
                 case DoorState.Closed:
-                    spritename = "door_ew";
+                    ISpriteComponent c = (ISpriteComponent)GetComponent(SS3D_shared.GO.ComponentFamily.Renderable);
+                    c.SetSpriteByKey("door_ew");
                     visible = true;
                     collidable = true;
                     atomManager.gameState.map.GetTileAt(position).sightBlocked = true;
@@ -43,7 +47,8 @@ namespace SS3D.Atom.Object.Door
                     Draw();
                     break;
                 case DoorState.Open:
-                    spritename = "door_ewo";
+                    ISpriteComponent d = (ISpriteComponent)GetComponent(SS3D_shared.GO.ComponentFamily.Renderable);
+                    d.SetSpriteByKey("door_ewo");
                     collidable = false;
                     atomManager.gameState.map.GetTileAt(position).sightBlocked = false;
                     atomManager.gameState.map.needVisUpdate = true;

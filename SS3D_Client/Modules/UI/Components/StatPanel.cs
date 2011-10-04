@@ -99,17 +99,17 @@ namespace SS3D.Modules.UI.Components
 
         private void DrawPlayer()
         {
-           if (playerSprite == null && playerController.controlledAtom != null)
+            //TODO RE-CONNECT PLAYER SPRITES TO DISPLAY
+            if (playerSprite == null && playerController.controlledAtom != null)
             {
-                playerSprite = playerController.controlledAtom.sprite;
+                //playerSprite = playerController.controlledAtom.sprite;
             }
 
-            playerSprite.Position = new Vector2D(position.X + width / 2, position.Y + height / 3.1f);
-            playerSprite.UniformScale = 1.5f;
-            //playerSprite.ImageRegion = new RectangleF(0, 0, 32, 20);
-            playerSprite.Draw();
+            //playerSprite.Position = new Vector2D(position.X + width / 2, position.Y + height / 3.1f);
+            //playerSprite.UniformScale = 1.5f;
+            //playerSprite.Draw();
 
-            playerSprite.UniformScale = 1.0f;
+            //playerSprite.UniformScale = 1.0f;
 
             bool scanSwitch = false;
             if (flickCounter > 5)

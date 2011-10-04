@@ -4,6 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Drawing;
 using CGO;
+using GorgonLibrary;
 
 namespace SS3D.Atom.Object.Wall
 {
@@ -22,6 +23,9 @@ namespace SS3D.Atom.Object.Wall
             c.AddSprite("glass");
             c.AddSprite("glass_shattered");
             c.SetSpriteByKey("glass");
+            CollidableComponent co = (CollidableComponent)ComponentFactory.Singleton.GetComponent("CollidableComponent");
+            co.SetParameter(new ComponentParameter("TweakAABB", typeof(Vector4D), new Vector4D(48, 0, 0, 0)));
+            AddComponent(SS3D_shared.GO.ComponentFamily.Collidable, co);
         }
 
         public override RectangleF GetAABB()

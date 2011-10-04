@@ -6,21 +6,32 @@ using System.Drawing;
 using ClientInterfaces;
 using ClientServices;
 using System.Diagnostics;
+using GorgonLibrary;
 
 namespace CGO
 {
     public class CollidableComponent : GameObjectComponent, ICollidable
     {
+        /// <summary>
+        /// X - Top | Y - Right | Z - Bottom | W - Left
+        /// </summary>
+        private Vector4D tweakAABB = Vector4D.Zero;
+        private Vector4D TweakAABB
+        {
+            get { return tweakAABB; }
+            set { tweakAABB = value; }
+        }
+
         private RectangleF currentAABB;
         private RectangleF OffsetAABB
         {
             get
-            {
+            {// Return tweaked AABB
                 if (currentAABB != null)
-                    return new RectangleF(currentAABB.Left + Owner.position.X - (currentAABB.Width / 2),
-                                        currentAABB.Top + Owner.position.Y - (currentAABB.Height / 2),
-                                        currentAABB.Width,
-                                        currentAABB.Height);
+                    return new RectangleF(currentAABB.Left + Owner.position.X - (currentAABB.Width / 2) + tweakAABB.W,
+                                        currentAABB.Top + Owner.position.Y - (currentAABB.Height / 2) + tweakAABB.X,
+                                        currentAABB.Width - (tweakAABB.W - tweakAABB.Y),
+                                        currentAABB.Height - (tweakAABB.X - tweakAABB.Z));
                 else
                     return RectangleF.Empty;
             }
@@ -42,6 +53,7 @@ namespace CGO
         public override void OnAdd(Entity owner)
         {
             base.OnAdd(owner);
+            GetAABB();
             ICollisionManager cm = (ICollisionManager)ServiceManager.Singleton.GetService(ClientServiceType.CollisionManager);
             cm.AddCollidable(this);
         }
@@ -85,6 +97,30 @@ namespace CGO
             }
         }
 
+        /// <summary>
+        /// Parameter Setting
+        /// Settable params:
+        /// TweakAABB - Vector4D
+        /// </summary>
+        /// <param name="parameter"></param>
+        public override void SetParameter(ComponentParameter parameter)
+        {
+            base.SetParameter(parameter);
+
+            switch (parameter.MemberName)
+            {
+                case "TweakAABB":
+                    if (parameter.Parameter.GetType() == typeof(Vector4D))
+                    {
+                        TweakAABB = (Vector4D)parameter.Parameter; 
+                    }
+                    break;
+            }
+        }
+
+        /// <summary>
+        /// Enables collidable
+        /// </summary>
         private void EnableCollision()
         {
             collisionEnabled = true;
@@ -92,6 +128,9 @@ namespace CGO
             cm.AddCollidable(this);
         }
 
+        /// <summary>
+        /// Disables Collidable
+        /// </summary>
         private void DisableCollision()
         {
             collisionEnabled = false;

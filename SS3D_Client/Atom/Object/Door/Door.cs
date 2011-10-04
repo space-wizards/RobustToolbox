@@ -21,6 +21,7 @@ namespace SS3D.Atom.Object.Door
             c.AddSprite("door_ewo");
             c.SetSpriteByKey("door_ew");
             CollidableComponent co = (CollidableComponent)ComponentFactory.Singleton.GetComponent("CollidableComponent");
+            co.SetParameter(new ComponentParameter("TweakAABB", typeof(Vector4D), new Vector4D(63, 0, 0, 0)));
             AddComponent(SS3D_shared.GO.ComponentFamily.Collidable, co);
 
             collidable = true;

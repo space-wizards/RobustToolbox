@@ -20,6 +20,7 @@ namespace SGO
         BoundKeyChange,
         BoundKeyRepeat,
         SlaveAttach,
-        Click
+        Click,
+        SetSpriteByKey
     }
 }

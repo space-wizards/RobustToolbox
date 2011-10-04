@@ -33,9 +33,11 @@ namespace SS3D_Server.Atom.Object
 
             open = !open;
             if (open)
-                SetSpriteState(1);
+                SendMessage(null, SGO.MessageType.SetSpriteByKey, null, "locker_open");
+            //SetSpriteState(1);
             else
-                SetSpriteState(0);
+                SendMessage(null, SGO.MessageType.SetSpriteByKey, null, "locker_closed");
+                //SetSpriteState(0);
         }
     }
 }

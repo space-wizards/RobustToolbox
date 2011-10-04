@@ -6,11 +6,11 @@ using System.Security;
 // General Information about an assembly is controlled through the following 
 // set of attributes. Change these attribute values to modify the information
 // associated with an assembly.
-[assembly: AssemblyTitle("ClientInterfaces")]
+[assembly: AssemblyTitle("ClientServices")]
 [assembly: AssemblyDescription("")]
 [assembly: AssemblyConfiguration("")]
 [assembly: AssemblyCompany("")]
-[assembly: AssemblyProduct("ClientInterfaces")]
+[assembly: AssemblyProduct("ClientServices")]
 [assembly: AssemblyCopyright("Copyright ©  2011")]
 [assembly: AssemblyTrademark("")]
 [assembly: AssemblyCulture("")]
@@ -21,7 +21,7 @@ using System.Security;
 [assembly: ComVisible(false)]
 
 // The following GUID is for the ID of the typelib if this project is exposed to COM
-[assembly: Guid("34af5060-847e-4fab-9d9c-4aa310599a8f")]
+[assembly: Guid("618bf47f-6ce9-4c18-8cf5-7689951c2b2f")]
 
 // Version information for an assembly consists of the following four values:
 //

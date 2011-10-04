@@ -1,12 +1,11 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Drawing;
 using System.Linq;
-using System.Text;
+using ClientInterfaces;
+using ClientResourceManager;
 using GorgonLibrary;
 using GorgonLibrary.Graphics;
-using System.Drawing;
-using ClientResourceManager;
-using ClientInterfaces;
 
 namespace ClientMap.Tiles
 {
@@ -57,7 +56,7 @@ namespace ClientMap.Tiles
             Initialize();
         }
 
-        public void Initialize()
+        public virtual void Initialize()
         {
             gasSprite = ResMgr.Singleton.GetSpriteFromImage("gas");
             surroundingTiles = new Tile[4];
@@ -67,6 +66,8 @@ namespace ClientMap.Tiles
             decals = new List<TileDecal>();
             _random = new Random((int)(position.X * position.Y));
             lightSprite = ResMgr.Singleton.GetSprite("white");
+
+
         }
 
         public void SetSprites(Sprite _sprite, Sprite _side, byte _surroundDirs)

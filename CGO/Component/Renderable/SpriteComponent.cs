@@ -15,6 +15,13 @@ namespace CGO
         protected Sprite currentSprite;
         protected bool flip;
         protected Dictionary<string, Sprite> sprites;
+        public RectangleF AABB
+        {
+            get
+            {
+                return new RectangleF(0,0,currentSprite.AABB.Width, currentSprite.AABB.Height);
+            }
+        }
 
         public SpriteComponent()
             : base()
@@ -50,11 +57,16 @@ namespace CGO
             base.RecieveMessage(sender, type, reply, list);
             if (sender == this) return;
 
-            if (type == MessageType.Clicked) //A click component is asking if we were clicked.
+            switch (type)
             {
-                object[] replyParams = new object[1];
-                replyParams[0] = WasClicked(list);
-                reply.Add(new ComponentReplyMessage(MessageType.Clicked, replyParams));
+                case MessageType.Clicked:
+                    object[] replyParams = new object[1];
+                    replyParams[0] = WasClicked(list);
+                    reply.Add(new ComponentReplyMessage(MessageType.Clicked, replyParams));
+                    break;
+                case MessageType.GetAABB:
+                    reply.Add(new ComponentReplyMessage(MessageType.CurrentAABB, AABB));
+                    break;
             }
         }
 
@@ -79,7 +91,11 @@ namespace CGO
         public void SetSpriteByKey(string spriteKey)
         {
             if (sprites.ContainsKey(spriteKey))
+            {
                 currentSprite = sprites[spriteKey];
+                if(Owner != null)
+                    Owner.SendMessage(this, MessageType.SpriteChanged, null);
+            }
             else
                 throw new Exception("Whoops. That sprite isn't in the dictionary.");
         }

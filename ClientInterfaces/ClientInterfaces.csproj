@@ -46,10 +46,18 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="ICollidable.cs" />
+    <Compile Include="ICollider.cs" />
     <Compile Include="ICollisionManager.cs" />
     <Compile Include="ILight.cs" />
     <Compile Include="ILightManager.cs" />
+    <Compile Include="IService.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\SS3D_shared\SS3D_shared.csproj">
+      <Project>{4229D7E3-C3AE-4C0A-B2B1-BB20911150DC}</Project>
+      <Name>SS3D_shared</Name>
+    </ProjectReference>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 

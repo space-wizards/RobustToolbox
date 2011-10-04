@@ -22,6 +22,7 @@ using System.IO;
 using System.CodeDom;
 
 using ClientConfigManager;
+using ClientServices;
 
 namespace SS3D
 {
@@ -71,6 +72,9 @@ namespace SS3D
       
       // Create Network Manager
       prg.mNetworkMgr = new NetworkManager(prg);
+
+        //Initialize Services
+      ServiceManager.Singleton.AddService(new CollisionManager());
 
       Gorgon.Idle += new FrameEventHandler(prg.GorgonIdle);
       System.Windows.Forms.Application.Run(prg.GorgonForm);

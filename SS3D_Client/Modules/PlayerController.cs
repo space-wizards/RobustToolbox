@@ -64,6 +64,7 @@ namespace SS3D.Modules
             controlledAtom.attached = true;
             controlledAtom.AddComponent(ComponentFamily.Input, CGO.ComponentFactory.Singleton.GetComponent("KeyBindingInputComponent"));
             controlledAtom.AddComponent(ComponentFamily.Mover, CGO.ComponentFactory.Singleton.GetComponent("KeyBindingMoverComponent"));
+            controlledAtom.AddComponent(ComponentFamily.Collider, CGO.ComponentFactory.Singleton.GetComponent("ColliderComponent"));
         }
 
         public void Detach()
@@ -74,6 +75,7 @@ namespace SS3D.Modules
             controlledAtom = null;
             controlledAtom.RemoveComponent(ComponentFamily.Input);
             controlledAtom.RemoveComponent(ComponentFamily.Mover);
+            controlledAtom.RemoveComponent(ComponentFamily.Collider);
         }
 
         public void KeyDown(KeyboardKeys key)

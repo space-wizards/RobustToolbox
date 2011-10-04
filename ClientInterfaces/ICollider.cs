@@ -6,9 +6,8 @@ using System.Drawing;
 
 namespace ClientInterfaces
 {
-    public interface ICollidable
+    public interface ICollider
     {
         RectangleF AABB { get; }
-        void Bump();
     }
 }

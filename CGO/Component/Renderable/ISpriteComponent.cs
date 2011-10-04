@@ -4,6 +4,7 @@ using System.Linq;
 using System.Text;
 using GorgonLibrary;
 using GorgonLibrary.Graphics;
+using System.Drawing;
 
 namespace CGO
 {
@@ -15,5 +16,6 @@ namespace CGO
         void SetSpriteByKey(string spriteKey);
         void AddSprite(string spriteKey);
         void AddSprite(string key, Sprite spritetoadd);
+        RectangleF AABB { get; }
     }
 }

@@ -25,6 +25,11 @@ namespace CGO
         ItemDetach,
         ItemWorn,
         ItemUnWorn,
-        Clicked
+        Clicked,
+        SpriteChanged,
+        CheckCollision,
+        CollisionStatus,
+        GetAABB,
+        CurrentAABB
     }
 }

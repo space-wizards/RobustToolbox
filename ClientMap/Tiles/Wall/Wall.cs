@@ -7,10 +7,11 @@ using GorgonLibrary;
 using GorgonLibrary.Graphics;
 using ClientResourceManager;
 using ClientInterfaces;
+using ClientServices;
 
 namespace ClientMap.Tiles.Wall
 {
-    public class Wall : Tile
+    public class Wall : Tile, ICollidable
     {
         private Sprite plainWall;
         private Sprite wallCorner1;
@@ -25,6 +26,28 @@ namespace ClientMap.Tiles.Wall
             plainWall = ResMgr.Singleton.GetSprite("wall_side");
             wallCorner1 = ResMgr.Singleton.GetSprite("wall_corner");
             wallCorner2 = ResMgr.Singleton.GetSprite("wall_corner2");
+        }
+
+        #region ICollidable Members
+        public RectangleF AABB
+        {
+            get
+            {
+                return new RectangleF(position, sprite.Size);
+            }
+        }
+
+        public void Bump()
+        { }
+        #endregion 
+
+        public override void Initialize()
+        {
+            base.Initialize();
+
+            ICollisionManager collisionManager = (ICollisionManager)ServiceManager.Singleton.GetService(ClientServiceType.CollisionManager);
+            if (collisionManager != null)
+                collisionManager.AddCollidable(this);
         }
 
         public override void Render(float xTopLeft, float yTopLeft, int tileSpacing)

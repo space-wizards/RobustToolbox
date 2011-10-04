@@ -2,13 +2,13 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
-using System.Drawing;
+using SS3D_shared;
+
 
 namespace ClientInterfaces
 {
-    public interface ICollidable
+    public interface IService
     {
-        RectangleF AABB { get; }
-        void Bump();
+        ClientServiceType ServiceType { get; }
     }
 }

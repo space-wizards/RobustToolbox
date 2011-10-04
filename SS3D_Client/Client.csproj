@@ -152,6 +152,7 @@
       <DependentUpon>MainWindow.cs</DependentUpon>
     </Compile>
     <Compile Include="HelperClasses\InterpolationPacket.cs" />
+    <Compile Include="Modules\CollisionManager.cs" />
     <Compile Include="Modules\PlacementManager.cs" />
     <Compile Include="Modules\Network\NetworkManager.cs" />
     <Compile Include="Modules\PlayerController.cs" />
@@ -259,6 +260,10 @@
     <ProjectReference Include="..\ClientResourceManager\ClientResourceManager.csproj">
       <Project>{37D792AE-0514-44BE-81E0-58EA28E26BB9}</Project>
       <Name>ClientResourceManager</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\ClientServices\ClientServices.csproj">
+      <Project>{7F85F20C-E2B5-455D-A1CA-76ED000D25EA}</Project>
+      <Name>ClientServices</Name>
     </ProjectReference>
     <ProjectReference Include="..\ClientWindow\ClientWindow.csproj">
       <Project>{9CFBF7F1-B939-433B-AFA1-C12EBA2565CD}</Project>

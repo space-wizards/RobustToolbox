@@ -20,28 +20,33 @@ namespace SS3D.Atom.Object.Door
             c.AddSprite("door_ew");
             c.AddSprite("door_ewo");
             c.SetSpriteByKey("door_ew");
+            CollidableComponent co = (CollidableComponent)ComponentFactory.Singleton.GetComponent("CollidableComponent");
+            AddComponent(SS3D_shared.GO.ComponentFamily.Collidable, co);
+
             collidable = true;
             snapTogrid = true;
         }
 
         protected override void HandleExtendedMessage(Lidgren.Network.NetIncomingMessage message)
         {
-            laststatus = status;
-            status = (DoorState)message.ReadByte();
-            UpdateStatus();
+            UpdateStatus((DoorState)message.ReadByte());
         }
 
         // This is virtual so future doors can override it if they
         // want different things to happen depending on their status
-        public virtual void UpdateStatus()
+        public virtual void UpdateStatus(DoorState newStatus)
         {
+            if (newStatus == status)
+                return;
+            laststatus = status;
+            status = newStatus;
             switch (status)
             {
                 case DoorState.Closed:
                     ISpriteComponent c = (ISpriteComponent)GetComponent(SS3D_shared.GO.ComponentFamily.Renderable);
                     c.SetSpriteByKey("door_ew");
                     visible = true;
-                    collidable = true;
+                    SendMessage(null, MessageType.EnableCollision, null);
                     atomManager.gameState.map.GetTileAt(position).sightBlocked = true;
                     atomManager.gameState.map.needVisUpdate = true;
                     Draw();
@@ -49,7 +54,7 @@ namespace SS3D.Atom.Object.Door
                 case DoorState.Open:
                     ISpriteComponent d = (ISpriteComponent)GetComponent(SS3D_shared.GO.ComponentFamily.Renderable);
                     d.SetSpriteByKey("door_ewo");
-                    collidable = false;
+                    SendMessage(null, MessageType.DisableCollision, null);
                     atomManager.gameState.map.GetTileAt(position).sightBlocked = false;
                     atomManager.gameState.map.needVisUpdate = true;
                     Draw();
@@ -67,7 +72,7 @@ namespace SS3D.Atom.Object.Door
             base.Update(time);
             if (this.interpolationPackets.Count == 0)
             {
-                UpdateStatus();
+                //UpdateStatus();
             }
             else
             {

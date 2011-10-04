@@ -28,7 +28,14 @@ namespace CGO
         {
             sprites = new Dictionary<string, Sprite>();
         }
-        
+
+        public override void OnAdd(Entity owner)
+        {
+            base.OnAdd(owner);
+            //Send a spritechanged message so everything knows whassup.
+            Owner.SendMessage(this, MessageType.SpriteChanged, null);
+        }
+
         public Sprite GetCurrentSprite()
         {
             return currentSprite;

@@ -5,21 +5,31 @@ using System.Text;
 using System.Drawing;
 using ClientServices;
 using ClientInterfaces;
+using GorgonLibrary;
 
 namespace CGO
 {
     class ColliderComponent : GameObjectComponent
     {
+        /// <summary>
+        /// X - Top | Y - Right | Z - Bottom | W - Left
+        /// </summary>
+        private Vector4D tweakAABB = Vector4D.Zero;
+        private Vector4D TweakAABB
+        {
+            get { return tweakAABB; }
+            set { tweakAABB = value; }
+        }
+        
         private RectangleF currentAABB;
-
         private RectangleF OffsetAABB
         {
             get
-            {
-                return new RectangleF(currentAABB.Left + Owner.position.X - (currentAABB.Width / 2),
-                                        currentAABB.Top + Owner.position.Y - (currentAABB.Height / 2),
-                                        currentAABB.Width,
-                                        currentAABB.Height);
+            { // Return tweaked AABB
+                return new RectangleF(currentAABB.Left + Owner.position.X - (currentAABB.Width / 2) + tweakAABB.W,
+                                        currentAABB.Top + Owner.position.Y - (currentAABB.Height / 2) + tweakAABB.X,
+                                        currentAABB.Width - (tweakAABB.W - tweakAABB.Y),
+                                        currentAABB.Height - (tweakAABB.X - tweakAABB.Z));
             }
         }
 
@@ -48,12 +58,28 @@ namespace CGO
             return;
         }
 
+        public override void SetParameter(ComponentParameter parameter)
+        {
+            base.SetParameter(parameter);
+
+            switch (parameter.MemberName)
+            {
+                case "TweakAABB":
+                    if (parameter.Parameter.GetType() == typeof(Vector4D))
+                        TweakAABB = (Vector4D)parameter.Parameter;
+                    break;
+            }
+        }
+
         public override void OnAdd(Entity owner)
         {
             base.OnAdd(owner);
             GetAABB();
         }
 
+        /// <summary>
+        /// Gets the current AABB from the sprite component.
+        /// </summary>
         private void GetAABB()
         {
             List<ComponentReplyMessage> replies = new List<ComponentReplyMessage>();

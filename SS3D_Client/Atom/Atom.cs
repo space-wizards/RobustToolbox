@@ -382,51 +382,6 @@ namespace SS3D.Atom
 
 
         #region positioning
-        public virtual bool IsColliding()
-        {
-            ///CHECK TURF COLLISIONS
-            System.Drawing.RectangleF myAABB = GetAABB();
-
-            if (atomManager.gameState.map.GetTileTypeFromWorldPosition(myAABB.Left+1, myAABB.Bottom) == TileType.Wall) // Top left
-            {
-                return true;
-            }
-            else if (atomManager.gameState.map.GetTileTypeFromWorldPosition(myAABB.Left+1, myAABB.Bottom - myAABB.Height) == TileType.Wall) // Bottom left
-            {
-                return true;
-            }
-            else if (atomManager.gameState.map.GetTileTypeFromWorldPosition(myAABB.Right - 1, myAABB.Bottom) == TileType.Wall) // Top right
-            {
-                return true;
-            }
-            else if (atomManager.gameState.map.GetTileTypeFromWorldPosition(myAABB.Right - 1, myAABB.Bottom - myAABB.Height) == TileType.Wall) // Bottom left
-            {
-                return true;
-            }
-            
-            ///CHECK ATOM COLLISIONS
-            IEnumerable<Atom> atoms = from a in atomManager.atomDictionary.Values
-                                      where
-                                      a.collidable == true &&
-                                      System.Math.Sqrt((position.X - a.position.X) * (position.X - a.position.X)) < (sprite.Width * sprite.UniformScale) &&
-                                      System.Math.Sqrt((position.Y - a.position.Y) * (position.Y - a.position.Y)) < (sprite.Height * sprite.UniformScale) &&
-                                      a.Uid != Uid
-                                      select a;
-
-            foreach (Atom a in atoms)
-            {
-                System.Drawing.RectangleF box = a.GetAABB();
-
-                if (box.IntersectsWith(myAABB))
-                {
-                    return true;
-                }
-            }
-
-            return false;
-
-        }
-
         public virtual System.Drawing.RectangleF GetAABB()
         {
             return new System.Drawing.RectangleF(position.X - (sprite.AABB.Width / 2),
@@ -434,67 +389,6 @@ namespace SS3D.Atom
                 sprite.AABB.Width,
                 sprite.AABB.Height);
         }
-
-        public virtual void Translate(Vector2D toPosition) 
-        {
-            Vector2D oldPosition = position;
-            position += toPosition; // We move the sprite here rather than the position, as we can then use its updated AABB values.
-
-            if (clipping && IsColliding())
-            {
-                position -= toPosition;
-            }
-        }
-        
-        /* These are solely for user input, not for updating position from server. */
-        public override void MoveUp() 
-        {
-            Translate(new Vector2D(0, -1 * speed));
-            SendPositionUpdate();
-        }
-
-        public override void MoveDown()
-        {
-            Translate(new Vector2D(0,speed));
-            SendPositionUpdate();
-        }
-
-        public override void MoveLeft()
-        {
-            Translate(new Vector2D(-1 * speed, 0));
-            SendPositionUpdate();
-        }
-
-        public override void MoveRight()
-        {
-            Translate(new Vector2D(speed, 0));
-            SendPositionUpdate();
-        }
-
-        public override void MoveUpLeft()
-        {
-            Translate(new Vector2D(-1 * speed, -1 * speed));
-            SendPositionUpdate();
-        }
-
-        public override void MoveDownLeft()
-        {
-            Translate(new Vector2D(-1 * speed, speed));
-            SendPositionUpdate();
-        }
-
-        public override void MoveUpRight()
-        {
-            Translate(new Vector2D(speed, -1 * speed));
-            SendPositionUpdate();
-        }
-
-        public override void MoveDownRight()
-        {
-            Translate(new Vector2D(speed, speed));
-            SendPositionUpdate();
-        }
-
         #endregion
 
         #region input handling
@@ -509,10 +403,6 @@ namespace SS3D.Atom
              * Example: keyHandlers.Add(MOIS.KeyCode.KC_Whatever, new KeyEvent(HandleKC_whatever));
              * To override a keyhandler, delete it and make a new one OR override the handler function 
              * BEFORE calling initKeys(). */
-            /*keyHandlers.Add(KeyboardKeys.W, new KeyEvent(HandleKC_W));
-            keyHandlers.Add(KeyboardKeys.A, new KeyEvent(HandleKC_A));
-            keyHandlers.Add(KeyboardKeys.S, new KeyEvent(HandleKC_S));
-            keyHandlers.Add(KeyboardKeys.D, new KeyEvent(HandleKC_D));*/
         }
         
         public void HandleKeyPressed(KeyboardKeys k)
@@ -572,38 +462,6 @@ namespace SS3D.Atom
         }
         #endregion
 
-        #region key handlers
-        public virtual void HandleKC_W(bool state)
-        {
-            if (state && GetKeyState(KeyboardKeys.A) && !GetKeyState(KeyboardKeys.D))
-                MoveUpLeft();
-            else if (state && GetKeyState(KeyboardKeys.D) && !GetKeyState(KeyboardKeys.A))
-                MoveUpRight();
-            else if (state)
-                MoveUp();
-        }
-        public virtual void HandleKC_A(bool state)
-        {
-            if (state && !GetKeyState(KeyboardKeys.W) && !GetKeyState(KeyboardKeys.S))
-                MoveLeft();
-        }
-        public virtual void HandleKC_S(bool state)
-        {
-            if (state && GetKeyState(KeyboardKeys.A) && !GetKeyState(KeyboardKeys.D))
-                MoveDownLeft();
-            else if (state && GetKeyState(KeyboardKeys.D) && !GetKeyState(KeyboardKeys.A))
-                MoveDownRight();
-            else if (state)
-                MoveDown();
-        }
-        public virtual void HandleKC_D(bool state)
-        {
-            if (state && !GetKeyState(KeyboardKeys.W) && !GetKeyState(KeyboardKeys.S))
-                MoveRight();
-        }
-        #endregion
-
- 
         #endregion
 
         #region utility

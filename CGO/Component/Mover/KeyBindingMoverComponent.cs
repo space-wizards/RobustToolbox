@@ -132,24 +132,34 @@ namespace CGO
         /// <param name="translationVector"></param>
         public virtual void Translate(Vector2D translationVector)
         {
+            bool translated = false;
+            translated = TryTranslate(translationVector, false); //Only bump once...
+            if (!translated)
+                translated = TryTranslate(new Vector2D(translationVector.X, 0), true);
+            if (!translated)
+                translated = TryTranslate(new Vector2D(0, translationVector.Y), true);
+            if (translated)
+                SendPositionUpdate();
+            Owner.Moved();
+        }
+
+        public bool TryTranslate(Vector2D translationVector, bool SuppressBump)
+        {
             Vector2D oldPosition = Owner.position;
             Owner.position += translationVector; // We move the sprite here rather than the position, as we can then use its updated AABB values.
             //Check collision.
             var replies = new List<ComponentReplyMessage>();
-            Owner.SendMessage(this, MessageType.CheckCollision, replies);
-            if (replies.Count > 0 && replies.First().messageType == MessageType.CollisionStatus) 
+            Owner.SendMessage(this, MessageType.CheckCollision, replies, false);
+            if (replies.Count > 0 && replies.First().messageType == MessageType.CollisionStatus)
             {
                 bool colliding = (bool)replies.First().paramsList[0];
-                if (colliding)
+                if (colliding) //Collided, reset position and return false.
                 {
-                    Owner.position -= translationVector;
-                    Owner.Moved();
-                    return;
+                    Owner.position = oldPosition;
+                    return false;
                 }
             }
-
-            SendPositionUpdate();
-            Owner.Moved();
+            return true;
         }
     }
 }

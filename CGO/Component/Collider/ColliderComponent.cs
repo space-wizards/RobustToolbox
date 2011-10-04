@@ -37,7 +37,10 @@ namespace CGO
                     GetAABB();
                     break;
                 case MessageType.CheckCollision:
-                    reply.Add(CheckCollision());
+                    if (list.Count() > 0)
+                        reply.Add(CheckCollision((bool)list[0]));
+                    else
+                        reply.Add(CheckCollision());
                     break;
                     
 
@@ -63,11 +66,11 @@ namespace CGO
                 return;
         }
 
-        private ComponentReplyMessage CheckCollision()
+        private ComponentReplyMessage CheckCollision(bool SuppressBump = false)
         {
             bool isColliding = false;
             ICollisionManager collisionManager = (ICollisionManager)ServiceManager.Singleton.GetService(ClientServiceType.CollisionManager);
-            isColliding = collisionManager.IsColliding(OffsetAABB);
+            isColliding = collisionManager.IsColliding(OffsetAABB, SuppressBump);
             return new ComponentReplyMessage(MessageType.CollisionStatus, isColliding);
         }
 

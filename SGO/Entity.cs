@@ -134,6 +134,30 @@ namespace SGO
         }
 
         /// <summary>
+        /// Checks to see if a component of a certain family exists
+        /// </summary>
+        /// <param name="family">componentfamily to check</param>
+        /// <returns>true if component exists, false otherwise</returns>
+        public bool HasComponent(ComponentFamily family)
+        {
+            if (components.ContainsKey(family))
+                return true;
+            return false;
+        }
+
+        /// <summary>
+        /// Gets the component of the specified family, if it exists
+        /// </summary>
+        /// <param name="family">componentfamily to get</param>
+        /// <returns></returns>
+        public IGameObjectComponent GetComponent(ComponentFamily family)
+        {
+            if (components.ContainsKey(family))
+                return components[family];
+            return null;
+        }
+
+        /// <summary>
         /// Allows components to send messages
         /// </summary>
         /// <param name="sender">the component doing the sending</param>
@@ -155,6 +179,8 @@ namespace SGO
         public virtual void Update(float frameTime)
         {
         }
+
+
 
         #region Networking
         

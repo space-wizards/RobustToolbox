@@ -65,7 +65,7 @@ namespace SS3D.Modules
             controlledAtom.AddComponent(ComponentFamily.Input, CGO.ComponentFactory.Singleton.GetComponent("KeyBindingInputComponent"));
             controlledAtom.AddComponent(ComponentFamily.Mover, CGO.ComponentFactory.Singleton.GetComponent("KeyBindingMoverComponent"));
             controlledAtom.AddComponent(ComponentFamily.Collider, CGO.ComponentFactory.Singleton.GetComponent("ColliderComponent"));
-            controlledAtom.GetComponent(ComponentFamily.Collider).SetParameter(new CGO.ComponentParameter("TweakAABB", typeof(Vector4D), new Vector4D(55, 0, 0, 0)));
+            controlledAtom.GetComponent(ComponentFamily.Collider).SetParameter(new CGO.ComponentParameter("TweakAABB", typeof(Vector4D), new Vector4D(39, 0, 0, 0)));
         }
 
         public void Detach()

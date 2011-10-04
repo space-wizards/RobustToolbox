@@ -56,7 +56,7 @@ namespace SS3D_Server.Atom
             name = this.GetType().ToString();
 
             AddComponent(SS3D_shared.GO.ComponentFamily.Click, ComponentFactory.Singleton.GetComponent("ClickableComponent"));
-
+            AddComponent(SS3D_shared.GO.ComponentFamily.Renderable, ComponentFactory.Singleton.GetComponent("SpriteComponent"));
             extensions = new List<Extension.Extension>();
         }
 

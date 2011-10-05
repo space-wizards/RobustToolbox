@@ -27,7 +27,7 @@ namespace SGO
         /// Holds this entity's components
         /// </summary>
         private Dictionary<ComponentFamily, IGameObjectComponent> components;
-
+        
         private EntityNetworkManager m_entityNetworkManager;
 
         public event EntityMoveEvent OnMove;

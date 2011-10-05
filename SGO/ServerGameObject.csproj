@@ -43,9 +43,13 @@
     <Compile Include="ComponentFactory.cs" />
     <Compile Include="ComponentManager.cs" />
     <Compile Include="ComponentParameter.cs" />
+    <Compile Include="Component\Actor\BasicActorComponent.cs" />
     <Compile Include="Component\ClickableComponent.cs" />
+    <Compile Include="Component\Hands\HumanHandsComponent.cs" />
     <Compile Include="Component\Input\KeyBindingInputComponent.cs" />
     <Compile Include="Component\Interactable\BasicInteractableComponent.cs" />
+    <Compile Include="Component\Item\BasicItemComponent.cs" />
+    <Compile Include="Component\LargeObject\BasicLargeObjectComponent.cs" />
     <Compile Include="Component\Mover\PlayerInputMoverComponent.cs" />
     <Compile Include="Component\Mover\SlaveMoverComponent.cs" />
     <Compile Include="Component\PlayerControl\PlayerControlComponent.cs" />
@@ -74,11 +78,7 @@
       <Name>SS3D_shared</Name>
     </ProjectReference>
   </ItemGroup>
-  <ItemGroup>
-    <Folder Include="Component\Actor\" />
-    <Folder Include="Component\Hands\" />
-    <Folder Include="Component\Item\" />
-  </ItemGroup>
+  <ItemGroup />
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
        Other similar extension points exist, see Microsoft.Common.targets.

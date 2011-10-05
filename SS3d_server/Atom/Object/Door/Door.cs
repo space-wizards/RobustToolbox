@@ -5,6 +5,7 @@ using System.Text;
 using Lidgren.Network;
 using SS3D_shared.HelperClasses;
 using System.Runtime.Serialization;
+using SGO;
 
 namespace SS3D_Server.Atom.Object.Door
 {
@@ -21,6 +22,7 @@ namespace SS3D_Server.Atom.Object.Door
             : base()
         {
             name = "door";
+            AddComponent(SS3D_shared.GO.ComponentFamily.Interactable, ComponentFactory.Singleton.GetComponent("BasicInteractableComponent"));
         }
 
         protected override void ApplyAction(Atom a, Mob.Mob m)
@@ -107,6 +109,7 @@ namespace SS3D_Server.Atom.Object.Door
         public Door(SerializationInfo info, StreamingContext ctxt)
         {
             SerializeBasicInfo(info, ctxt);
+            AddComponent(SS3D_shared.GO.ComponentFamily.Interactable, ComponentFactory.Singleton.GetComponent("BasicInteractableComponent"));
         }
 
         public override void GetObjectData(SerializationInfo info, StreamingContext ctxt)

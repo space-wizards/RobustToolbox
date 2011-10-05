@@ -15,6 +15,10 @@ namespace SGO
             family = SS3D_shared.GO.ComponentFamily.Click;
         }
 
+        /// <summary>
+        /// NetMessage handler
+        /// </summary>
+        /// <param name="message"></param>
         public override void HandleNetworkMessage(IncomingEntityComponentMessage message)
         {
             if (message.componentFamily == SS3D_shared.GO.ComponentFamily.Click)
@@ -27,7 +31,5 @@ namespace SGO
                 Owner.HandleClick((int)message.messageParameters[0]);
             }
         }
-
-
     }
 }

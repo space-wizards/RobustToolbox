@@ -21,7 +21,6 @@ namespace SS3D_Server.Atom
        
         #region variables
         // wat
-        public string name;
         public AtomManager atomManager;
         public bool updateRequired = false;
         public int drawDepth = 0;

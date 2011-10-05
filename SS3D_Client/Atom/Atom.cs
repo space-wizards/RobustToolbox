@@ -33,12 +33,9 @@ namespace SS3D.Atom
         public int drawDepth = 0;
         private int index = 0;
 
-        public string name;
         public AtomManager atomManager;
 
         // Position data
-        public Vector2D offset = Vector2D.Zero; // For odd models
-        public bool positionChanged = false;
         public List<InterpolationPacket> interpolationPackets;
         public bool clipping = true;
         public bool collidable = false;

@@ -40,6 +40,7 @@ namespace SS3D_Server.Modules
             //Add input component.
             a.AddComponent(ComponentFamily.Input, SGO.ComponentFactory.Singleton.GetComponent("KeyBindingInputComponent"));
             a.AddComponent(ComponentFamily.Mover, ComponentFactory.Singleton.GetComponent("PlayerInputMoverComponent"));
+            a.AddComponent(ComponentFamily.Actor, ComponentFactory.Singleton.GetComponent("BasicActorComponent"));
             attachedAtom = a;
             SendAttachMessage();
         }
@@ -52,6 +53,7 @@ namespace SS3D_Server.Modules
                 attachedAtom.Die();
                 attachedAtom.RemoveComponent(ComponentFamily.Input);
                 attachedAtom.RemoveComponent(ComponentFamily.Mover);
+                attachedAtom.RemoveComponent(ComponentFamily.Actor);
                 attachedAtom = null;
             }
         }

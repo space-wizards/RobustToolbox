@@ -27,6 +27,8 @@ namespace CGO
 
         private EntityNetworkManager m_entityNetworkManager;
 
+        public string name;
+
         public event EntityMoveEvent OnMove;
         public delegate void EntityMoveEvent(Vector2D toPosition);
 

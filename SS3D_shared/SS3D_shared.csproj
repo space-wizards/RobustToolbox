@@ -83,6 +83,7 @@
     <Compile Include="GlobalConstants.cs" />
     <Compile Include="BuildPermission.cs" />
     <Compile Include="GO\ComponentEnums.cs" />
+    <Compile Include="GO\ItemFlags.cs" />
     <Compile Include="JobHandler.cs" />
     <Compile Include="KeyFunctions.cs" />
     <Compile Include="ServicesEnum.cs" />

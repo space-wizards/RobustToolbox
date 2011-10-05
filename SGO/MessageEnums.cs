@@ -21,6 +21,11 @@ namespace SGO
         BoundKeyRepeat,
         SlaveAttach,
         Click,
-        SetSpriteByKey
+        SetSpriteByKey,
+        IsCurrentHandEmpty,
+        ItemToItemInteraction,
+        ItemToLargeObjectInteraction,
+        EmptyHandToItemInteraction,
+        EmptyHandToLargeObjectInteraction
     }
 }

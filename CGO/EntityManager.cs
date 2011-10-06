@@ -84,7 +84,7 @@ namespace CGO
 
         public void Shutdown()
         {
-            throw new NotImplementedException();
+
         }
 
         /// <summary>

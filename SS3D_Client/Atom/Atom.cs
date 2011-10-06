@@ -24,7 +24,7 @@ namespace SS3D.Atom
         // GRAPHICS
         public bool updateRequired = false;
         public bool drawn = false;
-        public Light light;
+        //public Light light;
 
         //SPRITE
         public Sprite sprite;

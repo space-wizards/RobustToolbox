@@ -29,6 +29,7 @@ namespace SS3D_shared.GO
         Wearable, // Can be worn on a mob
         Health, // Has hitpoints, applies damage, organs?
         Renderable, // Can be rendered -- sprite or particle system
+        Light,
     }
     
     public enum ItemComponentNetMessage

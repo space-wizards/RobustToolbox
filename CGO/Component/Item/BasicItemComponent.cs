@@ -19,13 +19,13 @@ namespace CGO
                 return;
             switch ((ItemComponentNetMessage)message.messageParameters[0])
             {
-                case ItemComponentNetMessage.PickedUp:
+                case ItemComponentNetMessage.PickedUp://I've been picked up -- says the server's item component
                     Owner.SendMessage(this, MessageType.PickedUp, null);
                     Owner.AddComponent(ComponentFamily.Mover, ComponentFactory.Singleton.GetComponent("SlaveMoverComponent"));
                     Entity e = EntityManager.Singleton.GetEntity((int)message.messageParameters[1]);
                     Owner.SendMessage(this, MessageType.SlaveAttach, null, e.Uid);
                     break;
-                case ItemComponentNetMessage.Dropped:
+                case ItemComponentNetMessage.Dropped: //I've been dropped -- says the server's item component
                     Owner.AddComponent(ComponentFamily.Mover, ComponentFactory.Singleton.GetComponent("NetworkMoverComponent"));
                     Owner.SendMessage(this, MessageType.Dropped, null);
                     break;

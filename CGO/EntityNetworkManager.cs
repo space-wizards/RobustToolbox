@@ -157,7 +157,7 @@ namespace CGO
                 switch ((NetworkDataType)message.ReadByte())
                 {
                     case NetworkDataType.d_enum:
-                        messageParams.Add(message.ReadByte());
+                        messageParams.Add(message.ReadInt32());
                         break;
                     case NetworkDataType.d_bool:
                         messageParams.Add(message.ReadBoolean());

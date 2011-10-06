@@ -51,6 +51,7 @@
     <Compile Include="Component\ClickableComponent.cs" />
     <Compile Include="Component\Collidable\CollidableComponent.cs" />
     <Compile Include="Component\Collider\ColliderComponent.cs" />
+    <Compile Include="Component\Item\BasicItemComponent.cs" />
     <Compile Include="Component\Mover\KeyBindingMoverComponent.cs" />
     <Compile Include="Component\Mover\NetworkMoverComponent.cs" />
     <Compile Include="Component\Mover\SlaveMoverComponent.cs" />

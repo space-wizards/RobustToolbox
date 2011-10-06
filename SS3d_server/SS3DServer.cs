@@ -279,8 +279,9 @@ namespace SS3D_Server
                     SS3DNetServer.Singleton.Recycle(msg);
                 }                
             }
-            catch
+            catch (Exception e)
             {
+                LogManager.Log(e.ToString(), LogLevel.Error);
             }
         }
 

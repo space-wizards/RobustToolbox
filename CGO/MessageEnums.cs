@@ -33,6 +33,7 @@ namespace CGO
         CurrentAABB,
         SetSpriteBykey,
         DisableCollision,
-        EnableCollision
+        EnableCollision,
+        Dropped
     }
 }

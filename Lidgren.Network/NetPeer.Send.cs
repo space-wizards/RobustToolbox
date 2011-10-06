@@ -47,6 +47,8 @@ namespace Lidgren.Network
 			msg.m_isSent = true;
 
 			int len = NetConstants.UnfragmentedMessageHeaderSize + msg.LengthBytes; // headers + length, faster than calling msg.GetEncodedSize
+            // ** Statistics hack to enable sent packet statistics
+            m_statistics.PacketSent(len, 1);
 			if (len <= recipient.m_currentMTU)
 			{
 				Interlocked.Increment(ref msg.m_recyclingCount);
@@ -95,6 +97,8 @@ namespace Lidgren.Network
 			msg.m_isSent = true;
 
 			int len = msg.LengthBytes;
+            // ** Statistics hack to enable sent packet statistics
+            m_statistics.PacketSent(len * recipients.Count, recipients.Count);
 			if (len <= m_configuration.MaximumTransmissionUnit)
 			{
 				Interlocked.Add(ref msg.m_recyclingCount, recipients.Count);

@@ -597,7 +597,7 @@ namespace SS3D.States
             }
             if (e.Key == KeyboardKeys.F3)
             {
-                playerController.SendVerb("toxins", 0);
+                prg.NetGrapher.Toggle();
             }
 
             if (e.Key == KeyboardKeys.F5)
@@ -703,7 +703,7 @@ namespace SS3D.States
                     clickable.Clicked(new PointF(mouseAABB.X, mouseAABB.Y), playerController.controlledAtom.Uid);
                 //END HACKED IN COMPONENT SHIT
 
-                if (a.WasClicked(mouseAABB.Location))
+                /*if (a.WasClicked(mouseAABB.Location))
                 {
                     if (!editMode)
                     {
@@ -722,7 +722,7 @@ namespace SS3D.States
                     }
                     atomClicked = true; // We clicked an atom so we don't want to send a turf click message too.
                     break;
-                }
+                }*/
 
             }
 

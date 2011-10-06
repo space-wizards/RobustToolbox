@@ -42,11 +42,10 @@ namespace SGO
             //Loop through the params and write them as is proper
             foreach (object messageParam in messageParams)
             {
-                if (messageParam.GetType() == typeof(Enum))
+                if (messageParam.GetType().IsSubclassOf(typeof(Enum)))
                 {
                     message.Write((byte)NetworkDataType.d_enum);
-                    //Casting enums to bytes would fuck things up if there were more then 255 members... 
-                    message.Write((byte)messageParam);
+                    message.Write((int)messageParam);
                 }
                 else if (messageParam.GetType() == typeof(bool))
                 {

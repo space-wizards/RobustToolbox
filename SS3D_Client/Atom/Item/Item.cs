@@ -17,7 +17,7 @@ namespace SS3D.Atom.Item
                 public Item()
             : base()
         {
-
+            AddComponent(SS3D_shared.GO.ComponentFamily.Item, ComponentFactory.Singleton.GetComponent("BasicItemComponent"));
         }
 
         public override void Draw()

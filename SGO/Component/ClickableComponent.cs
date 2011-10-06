@@ -28,7 +28,7 @@ namespace SGO
                 //Who clicked us?
                 
                 //parameter 0 is id of clicker
-                Owner.HandleClick((int)message.messageParameters[0]);
+                //Owner.HandleClick((int)message.messageParameters[0]);
             }
         }
     }

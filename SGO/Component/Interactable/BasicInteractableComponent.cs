@@ -63,7 +63,7 @@ namespace SGO
         {
             // Ask if the current hand is empty
             List<ComponentReplyMessage> replies = new List<ComponentReplyMessage>();
-            Owner.SendMessage(this, MessageType.IsCurrentHandEmpty, replies);
+            actor.SendMessage(this, MessageType.IsCurrentHandEmpty, replies);
             if (replies.Count() > 0 && (bool)replies.First().paramsList[0] == true)
             {
                 DoEmptyHandInteraction(actor);
@@ -82,6 +82,10 @@ namespace SGO
         /// <param name="actor"></param>
         protected virtual void DoHeldItemInteraction(Entity actor)
         {
+            // Does this ent have an actor component(is it a mob?) if so, the actor component should mediate this interaction
+            if (Owner.HasComponent(SS3D_shared.GO.ComponentFamily.Actor))
+                Owner.SendMessage(this, MessageType.ItemToActorInteraction, null, actor);
+
             //Does this ent have an item component? That item component should mediate this interaction
             if(Owner.HasComponent(SS3D_shared.GO.ComponentFamily.Item))
                 Owner.SendMessage(this, MessageType.ItemToItemInteraction, null, actor);
@@ -97,7 +101,11 @@ namespace SGO
         /// </summary>
         /// <param name="actor"></param>
         protected virtual void DoEmptyHandInteraction(Entity actor)
-        {
+        {            
+            // Does this ent have an actor component(is it a mob?) if so, the actor component should mediate this interaction
+            if (Owner.HasComponent(SS3D_shared.GO.ComponentFamily.Actor))
+                Owner.SendMessage(this, MessageType.EmptyHandToActorInteraction, null, actor);
+            
             //If we can be picked up, do that -- ItemComponent mediates that
             if (Owner.HasComponent(SS3D_shared.GO.ComponentFamily.Item))
                 Owner.SendMessage(this, MessageType.EmptyHandToItemInteraction, null, actor);

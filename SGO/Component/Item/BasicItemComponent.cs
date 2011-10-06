@@ -8,7 +8,7 @@ namespace SGO
 {
     public class BasicItemComponent : GameObjectComponent
     {
-
+        Entity currentHolder;
 
         public BasicItemComponent()
         {
@@ -39,13 +39,21 @@ namespace SGO
         {
             Owner.RemoveComponent(ComponentFamily.Mover);
             Owner.SendComponentNetworkMessage(this, Lidgren.Network.NetDeliveryMethod.ReliableUnordered, null, ItemComponentNetMessage.Dropped);
+            currentHolder = null;
         }
 
         private void HandlePickedUp(Entity entity)
         {
+            currentHolder = entity;
             Owner.AddComponent(SS3D_shared.GO.ComponentFamily.Mover, ComponentFactory.Singleton.GetComponent("SlaveMoverComponent"));
             Owner.SendMessage(this, MessageType.SlaveAttach, null, entity.Uid);
             Owner.SendComponentNetworkMessage(this, Lidgren.Network.NetDeliveryMethod.ReliableUnordered, null, ItemComponentNetMessage.PickedUp, entity.Uid);
+        }
+
+        public override void HandleInstantiationMessage(Lidgren.Network.NetConnection netConnection)
+        {
+            if(currentHolder != null)
+                Owner.SendComponentNetworkMessage(this, Lidgren.Network.NetDeliveryMethod.ReliableUnordered, netConnection, ItemComponentNetMessage.PickedUp, currentHolder.Uid);
         }
 
         /// <summary>

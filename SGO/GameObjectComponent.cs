@@ -106,5 +106,14 @@ namespace SGO
         {
 
         }
+
+        /// <summary>
+        /// Handles a message that a client has just instantiated a component
+        /// </summary>
+        /// <param name="netConnection"></param>
+        public virtual void HandleInstantiationMessage(Lidgren.Network.NetConnection netConnection)
+        {
+
+        }
     }
 }

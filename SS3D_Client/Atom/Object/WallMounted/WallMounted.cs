@@ -11,6 +11,12 @@ namespace SS3D.Atom.Object.WallMounted
         public WallMounted()
             : base()
         {
+        }
+
+        public override void Initialize()
+        {
+            base.Initialize();
+
             spritename = "worktop";
             collidable = false;
             snapTogrid = true;

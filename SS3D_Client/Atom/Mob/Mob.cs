@@ -29,10 +29,16 @@ namespace SS3D.Atom.Mob
         public Mob()
             : base()
         {
+        }
+
+        public override void Initialize()
+        {
+            base.Initialize();
+
             SpriteComponent c = (SpriteComponent)ComponentFactory.Singleton.GetComponent("MobSpriteComponent");
             c.SetParameter(new ComponentParameter("basename", typeof(string), "human"));
             AddComponent(SS3D_shared.GO.ComponentFamily.Renderable, c);
-            
+
             speed = walkSpeed;
         }
 

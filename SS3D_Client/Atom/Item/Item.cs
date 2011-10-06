@@ -17,6 +17,12 @@ namespace SS3D.Atom.Item
                 public Item()
             : base()
         {
+            
+        }
+
+        public override void Initialize()
+        {
+            base.Initialize();
             AddComponent(SS3D_shared.GO.ComponentFamily.Item, ComponentFactory.Singleton.GetComponent("BasicItemComponent"));
         }
 

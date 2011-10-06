@@ -11,6 +11,11 @@ namespace SS3D.Atom.Item.Tool
         public Crowbar()
             : base()
         {
+        }
+
+        public override void Initialize()
+        {
+            base.Initialize();
             AddComponent(SS3D_shared.GO.ComponentFamily.Renderable, ComponentFactory.Singleton.GetComponent("ItemSpriteComponent"));
             IGameObjectComponent c = (IGameObjectComponent)GetComponent(SS3D_shared.GO.ComponentFamily.Renderable);
             c.SetParameter(new ComponentParameter("basename", typeof(string), "crowbar"));

@@ -14,6 +14,11 @@ namespace SS3D.Atom.Item.Wearable.Feet
         {
             //SetSpriteName(-1, "shoes");
             //SetSpriteByIndex(-1);
+        }
+
+        public override void Initialize()
+        {
+            base.Initialize();
             AddComponent(SS3D_shared.GO.ComponentFamily.Renderable, ComponentFactory.Singleton.GetComponent("WearableSpriteComponent"));
             IGameObjectComponent c = (IGameObjectComponent)GetComponent(SS3D_shared.GO.ComponentFamily.Renderable);
             c.SetParameter(new ComponentParameter("basename", typeof(string), "shoes"));

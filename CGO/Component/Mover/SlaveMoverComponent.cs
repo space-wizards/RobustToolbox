@@ -43,6 +43,16 @@ namespace CGO
             master = EntityManager.Singleton.GetEntity(uid);
             master.OnMove += new Entity.EntityMoveEvent(HandleOnMove);
             Translate(master.position);
+            GetMasterMoveDirection();
+        }
+
+        private void GetMasterMoveDirection()
+        {
+            List<ComponentReplyMessage> replies = new List<ComponentReplyMessage>();
+
+            master.SendMessage(this, MessageType.GetMoveDir, replies);
+            if (replies.Count > 0)
+                movedir = (Constants.MoveDirs)replies.First().paramsList[0];
         }
 
         private void Detach()

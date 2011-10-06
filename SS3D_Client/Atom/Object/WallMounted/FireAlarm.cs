@@ -11,6 +11,12 @@ namespace SS3D.Atom.Object.WallMounted
         public FireAlarm()
             : base()
         {
+        }
+
+        public override void Initialize()
+        {
+            base.Initialize();
+
             ISpriteComponent c = (ISpriteComponent)GetComponent(SS3D_shared.GO.ComponentFamily.Renderable);
             c.AddSprite("fire_alarm_off");
             c.SetSpriteByKey("fire_alarm_off");

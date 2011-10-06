@@ -223,6 +223,11 @@ namespace CGO
             m_entityNetworkManager.SendComponentNetworkMessage(this, component.Family, NetDeliveryMethod.ReliableUnordered, messageParams);
         }
 
+        public void SendComponentInstantiationMessage(IGameObjectComponent component)
+        {
+            m_entityNetworkManager.SendEntityNetworkMessage(this, EntityMessage.ComponentInstantiationMessage, component.Family);
+        }
+
         #region compatibility for atom transition
         public void SetNetworkManager(EntityNetworkManager manager)
         {

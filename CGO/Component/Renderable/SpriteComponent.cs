@@ -77,8 +77,16 @@ namespace CGO
                 case MessageType.SetSpriteBykey:
                     SetSpriteByKey((string)list[0]);
                     break;
+                case MessageType.SetDrawDepth:
+                    SetDrawDepth((int)list[0]);
+                    break;
                     
             }
+        }
+
+        protected void SetDrawDepth(int p)
+        {
+            DrawDepth = p;
         }
 
         private bool WasClicked(params object[] list)

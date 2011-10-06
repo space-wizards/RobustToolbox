@@ -20,6 +20,7 @@ namespace CGO
             switch ((ItemComponentNetMessage)message.messageParameters[0])
             {
                 case ItemComponentNetMessage.PickedUp:
+                    Owner.SendMessage(this, MessageType.PickedUp, null);
                     Owner.AddComponent(ComponentFamily.Mover, ComponentFactory.Singleton.GetComponent("SlaveMoverComponent"));
                     Entity e = EntityManager.Singleton.GetEntity((int)message.messageParameters[1]);
                     Owner.SendMessage(this, MessageType.SlaveAttach, null, e.Uid);

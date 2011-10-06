@@ -244,7 +244,16 @@ namespace SGO
                 case EntityMessage.ComponentMessage:
                     HandleComponentMessage((IncomingEntityComponentMessage)message.message);
                     break;
+                case EntityMessage.ComponentInstantiationMessage:
+                    HandleComponentInstantiationMessage(message);
+                    break;
             }
+        }
+
+        internal void HandleComponentInstantiationMessage(IncomingEntityMessage message)
+        {
+            if(HasComponent((ComponentFamily)message.message))
+                GetComponent((ComponentFamily)message.message).HandleInstantiationMessage(message.client);
         }
 
         internal void HandleComponentMessage(IncomingEntityComponentMessage message)

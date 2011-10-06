@@ -24,7 +24,13 @@ namespace ClientLighting
         public Vector2D Position { get { return position; } set { position = value; } }
         public int Range { get { return range; } set { range = value; } }
         public void ClearTiles()
-        { tiles.Clear(); }
+        {
+            foreach (ClientMap.Tiles.Tile t in tiles)
+            {
+                t.tileLights.Remove(this);
+            }
+            tiles.Clear(); 
+        }
         public List<object> GetTiles()
         { return tiles.ToList<object>(); }
         public void AddTile(object tile)

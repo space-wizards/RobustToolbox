@@ -8,28 +8,17 @@ using GorgonLibrary;
 
 namespace CGO
 {
-    public class PointLightComponent : GameObjectComponent, ILight
+    public class PointLightComponent : GameObjectComponent
     {
+        //Contains a standard light
         private Light light;
-
-        #region ILight members
-        public Vector2D Position { get { return Owner.position; } set { } }
-        public int Range { get { return light.Range; } set { light.Range = value; } }
-        public void ClearTiles()
-        { light.ClearTiles(); }
-        public List<object> GetTiles()
-        { return light.GetTiles(); }
-        public void AddTile(object tile)
-        { light.AddTile(tile); }
-        public void UpdateLight()
-        { light.UpdateLight(); }
-        #endregion
 
         public PointLightComponent()
         {
             family = SS3D_shared.GO.ComponentFamily.Light;
         }
 
+        //When added, set up the light.
         public override void OnAdd(Entity owner)
         {
             base.OnAdd(owner);
@@ -46,7 +35,7 @@ namespace CGO
         public override void OnRemove()
         {
             Owner.OnMove -= new Entity.EntityMoveEvent(OnMove);
-         
+            light.ClearTiles();
             base.OnRemove();
         }
 

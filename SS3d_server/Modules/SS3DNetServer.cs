@@ -9,7 +9,6 @@ namespace SS3D_Server.Modules
 {
     public class SS3DNetServer : NetServer
     {
-
         private static SS3DNetServer singleton;
         public static SS3DNetServer Singleton
         {

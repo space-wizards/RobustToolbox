@@ -30,4 +30,11 @@ namespace SS3D_shared.GO
         Health, // Has hitpoints, applies damage, organs?
         Renderable, // Can be rendered -- sprite or particle system
     }
+
+    public enum ItemComponentNetMessage
+    {
+        PickedUp,
+        Dropped,
+    }
+
 }

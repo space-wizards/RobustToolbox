@@ -5,6 +5,7 @@ using System.Text;
 using Lidgren.Network;
 using SS3D_Server.Atom.Mob.HelperClasses;
 using SS3D_shared.HelperClasses;
+using SGO;
 
 namespace SS3D_Server.Atom.Mob
 {
@@ -26,6 +27,7 @@ namespace SS3D_Server.Atom.Mob
             : base()
         {
             initAppendages();
+            AddComponent(SS3D_shared.GO.ComponentFamily.Hands, ComponentFactory.Singleton.GetComponent("HumanHandsComponent"));
         }
 
         public override void Destruct()

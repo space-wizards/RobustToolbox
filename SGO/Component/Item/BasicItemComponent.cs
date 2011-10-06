@@ -2,8 +2,9 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using SS3D_shared.GO;
 
-namespace SGO.Component.Item
+namespace SGO
 {
     public class BasicItemComponent : GameObjectComponent
     {
@@ -24,8 +25,27 @@ namespace SGO.Component.Item
                 case MessageType.ItemToItemInteraction:
                     HandleItemToItemInteraction((Entity)list[0]); // param 0 is the actor entity
                     break;
+                case MessageType.PickedUp:
+                    HandlePickedUp((Entity)list[0]);
+                    break;
+                case MessageType.Dropped:
+                    HandleDropped();
+                    break;
             }
 
+        }
+
+        private void HandleDropped()
+        {
+            Owner.RemoveComponent(ComponentFamily.Mover);
+            Owner.SendComponentNetworkMessage(this, Lidgren.Network.NetDeliveryMethod.ReliableUnordered, null, ItemComponentNetMessage.Dropped);
+        }
+
+        private void HandlePickedUp(Entity entity)
+        {
+            Owner.AddComponent(SS3D_shared.GO.ComponentFamily.Mover, ComponentFactory.Singleton.GetComponent("SlaveMoverComponent"));
+            Owner.SendMessage(this, MessageType.SlaveAttach, null, entity.Uid);
+            Owner.SendComponentNetworkMessage(this, Lidgren.Network.NetDeliveryMethod.ReliableUnordered, null, ItemComponentNetMessage.PickedUp, entity.Uid);
         }
 
         /// <summary>
@@ -49,6 +69,7 @@ namespace SGO.Component.Item
         protected virtual void HandleEmptyHandToItemInteraction(Entity actor)
         {
             //Pick up the item
+            actor.SendMessage(this, MessageType.PickUpItem, null, Owner);
         }
     }
 }

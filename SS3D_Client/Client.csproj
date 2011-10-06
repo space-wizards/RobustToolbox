@@ -153,6 +153,7 @@
     </Compile>
     <Compile Include="HelperClasses\InterpolationPacket.cs" />
     <Compile Include="Modules\CollisionManager.cs" />
+    <Compile Include="Modules\Network\NetworkGrapher.cs" />
     <Compile Include="Modules\PlacementManager.cs" />
     <Compile Include="Modules\Network\NetworkManager.cs" />
     <Compile Include="Modules\PlayerController.cs" />

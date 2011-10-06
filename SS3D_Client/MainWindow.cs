@@ -78,20 +78,10 @@ namespace SS3D
 
             Gorgon.Go(); //GO MUTHAFUCKA
 
-            loadEntity();
             stateMgr.Startup(typeof(ConnectMenu));
 
         }
         
-        //[UIPermissionAttribute(SecurityAction.PermitOnly, Unrestricted = true)]
-        private void loadEntity()
-        {
-            /*Entity ent = new Entity();
-            SpriteComponent s = new SpriteComponent();
-            ent.AddComponent(ComponentFamily.Renderable, s);*/
-
-        }
-
         private void SetupGorgon()
         {
             this.Size = new Drawing.Size((int)ConfigManager.Singleton.Configuration.DisplayWidth, (int)ConfigManager.Singleton.Configuration.DisplayHeight);
@@ -212,6 +202,7 @@ namespace SS3D
             // Update networking
             prg.mNetworkMgr.UpdateNetwork();
 
+
             // Update the state manager - this will update the active state.
             prg.mStateMgr.Update(e);
 
@@ -222,6 +213,8 @@ namespace SS3D
             //Update GUI shit
             _desktop.Update(e.FrameDeltaTime);
             _desktop.Draw();
+
+            prg.NetGrapher.Update();
         }
 
         void MainWindow_ResizeEnd(object sender, EventArgs e)

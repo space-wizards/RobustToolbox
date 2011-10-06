@@ -54,7 +54,7 @@ namespace CGO
                     }
                     DrawDepth = 4;
                     break;
-                case MessageType.ItemDetach:
+                case MessageType.Dropped:
                     SetSpriteByKey(basename);
                     DrawDepth = 2;
                     break;

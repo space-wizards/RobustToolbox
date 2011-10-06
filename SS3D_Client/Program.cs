@@ -42,6 +42,13 @@ namespace SS3D
         private set { networkMgr = value; }
     }
 
+    private NetworkGrapher netGrapher;
+    public NetworkGrapher NetGrapher
+    {
+        get { return netGrapher; }
+        set { netGrapher = value; }
+    }
+
     private MainWindow gorgonForm;
     public MainWindow GorgonForm
     {
@@ -55,29 +62,32 @@ namespace SS3D
     [STAThread]
     static void Main(string[] args)
     {
-      // Create main program
-      Program prg = new Program();
+        // Create main program
+        Program prg = new Program();
 
-      // Load Config.
-      ConfigManager.Singleton.Initialize("./config.xml");
+        // Load Config.
+        ConfigManager.Singleton.Initialize("./config.xml");
 
         //Load Moar types
-      prg.loadTypes();
+        prg.loadTypes();
 
-      // Create state manager
-      prg.mStateMgr = new StateManager(prg);
+        // Create state manager
+        prg.mStateMgr = new StateManager(prg);
 
-      // Create main form
-      prg.GorgonForm = new MainWindow(prg);
-      
-      // Create Network Manager
-      prg.mNetworkMgr = new NetworkManager(prg);
+        // Create main form
+        prg.GorgonForm = new MainWindow(prg);
+
+        // Create Network Manager
+        prg.mNetworkMgr = new NetworkManager(prg);
+
+        //Create Network Grapher
+        prg.NetGrapher = new NetworkGrapher(prg.mNetworkMgr);
 
         //Initialize Services
-      ServiceManager.Singleton.AddService(new CollisionManager());
+        ServiceManager.Singleton.AddService(new CollisionManager());
 
-      Gorgon.Idle += new FrameEventHandler(prg.GorgonIdle);
-      System.Windows.Forms.Application.Run(prg.GorgonForm);
+        Gorgon.Idle += new FrameEventHandler(prg.GorgonIdle);
+        System.Windows.Forms.Application.Run(prg.GorgonForm);
     }
 
     public void GorgonIdle(object sender, FrameEventArgs e)

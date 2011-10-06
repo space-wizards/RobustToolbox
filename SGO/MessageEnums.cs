@@ -26,6 +26,11 @@ namespace SGO
         ItemToItemInteraction,
         ItemToLargeObjectInteraction,
         EmptyHandToItemInteraction,
-        EmptyHandToLargeObjectInteraction
+        EmptyHandToLargeObjectInteraction,
+        ItemToActorInteraction,
+        EmptyHandToActorInteraction,
+        PickUpItem,
+        Dropped,
+        PickedUp
     }
 }

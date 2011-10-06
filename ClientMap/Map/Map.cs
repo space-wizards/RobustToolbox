@@ -12,7 +12,7 @@ using ClientMap.Tiles;
 
 namespace ClientMap
 {
-    public class Map
+    public class Map : IService
     {
         #region Variables
         public Tile[,] tileArray; // The array holding all the tiles that make up the map
@@ -27,6 +27,8 @@ namespace ClientMap
         private static PORTAL_INFO[] portal = new PORTAL_INFO[4];
         public System.Drawing.Point lastVisPoint;
         private ILightManager lightmanager;
+
+        public ClientServiceType ServiceType { get { return ClientServiceType.Map; } }
 
         public bool needVisUpdate = false;
         public bool loaded = false;

@@ -105,6 +105,7 @@ namespace SS3D.States
             now = DateTime.Now;
 
             map = new Map(LightManager.Singleton);
+            ClientServices.ServiceManager.Singleton.AddService(map);
 
             UiManager.Singleton.DisposeAllComponents();
 

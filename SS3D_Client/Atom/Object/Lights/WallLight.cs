@@ -15,6 +15,12 @@ namespace SS3D.Atom.Object.Lights
         public WallLight()
             : base()
         {
+
+        }
+
+        public override void Initialize()
+        {
+            base.Initialize();
             ISpriteComponent c = (ISpriteComponent)GetComponent(SS3D_shared.GO.ComponentFamily.Renderable);
             c.AddSprite("wall_light");
             c.SetSpriteByKey("wall_light");

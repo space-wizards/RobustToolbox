@@ -5,6 +5,7 @@ using System.Text;
 using Lidgren.Network;
 using GorgonLibrary;
 using GorgonLibrary.Graphics;
+using ClientResourceManager;
 
 namespace SS3D.Modules.Network
 {
@@ -17,13 +18,15 @@ namespace SS3D.Modules.Network
         private DateTime lastDataPointTime;
         private int maxDataPoints = 200;
 
+        TextSprite ts;
+
         private bool enabled = true;
 
         public NetworkGrapher(NetworkManager _nm)
         {
             nm = _nm;
             dataPoints = new List<NetworkStatisticsDataPoint>();
-            
+            lastDataPointTime = DateTime.Now;
         }
 
         public void Toggle()
@@ -40,6 +43,8 @@ namespace SS3D.Modules.Network
 
         public void Update()
         {
+            if(ts == null)
+                ts = new TextSprite("fucking", "", ResMgr.Singleton.GetFont("CALIBRI"));
             if (!enabled)
                 return;
             if ((DateTime.Now - lastDataPointTime).TotalMilliseconds > 200)
@@ -50,10 +55,17 @@ namespace SS3D.Modules.Network
 
         private void DrawGraph()
         {
+            int totalRecBytes = 0;
+            int totalSentBytes = 0;
+            double totalMilliseconds = 0;
             for (int i = 0; i < maxDataPoints; i++)
             {
                 if (dataPoints.Count <= i)
-                    return;
+                    continue;
+                totalMilliseconds += dataPoints[i].elapsedMilliseconds;
+                totalRecBytes += dataPoints[i].recievedBytes;
+                totalSentBytes += dataPoints[i].sentBytes;
+
                 Gorgon.CurrentRenderTarget = null;
                 //Draw recieved line
                 Gorgon.CurrentRenderTarget.Rectangle(Gorgon.CurrentRenderTarget.Width - (4 * (maxDataPoints - i)),
@@ -64,6 +76,14 @@ namespace SS3D.Modules.Network
                     Gorgon.CurrentRenderTarget.Height - (dataPoints[i].sentBytes * 0.1f), 2, (dataPoints[i].sentBytes * 0.1f),
                     System.Drawing.Color.FromArgb(180, System.Drawing.Color.Green));
             }
+            ts.Text = "up: " + Math.Round(totalSentBytes / totalMilliseconds, 6).ToString() + "kb/s";
+            ts.SetPosition(Gorgon.CurrentRenderTarget.Width - (4 * maxDataPoints) - 100,
+                Gorgon.CurrentRenderTarget.Height - 30);
+            ts.Draw();
+            ts.Text = "down: " + Math.Round(totalRecBytes / totalMilliseconds, 6).ToString() + "kb/s";
+            ts.SetPosition(Gorgon.CurrentRenderTarget.Width - (4 * maxDataPoints) - 100,
+                Gorgon.CurrentRenderTarget.Height - 60);
+            ts.Draw();
         }
 
         private void AddDataPoint()

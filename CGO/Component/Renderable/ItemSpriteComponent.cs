@@ -9,10 +9,11 @@ namespace CGO
     public class ItemSpriteComponent : SpriteComponent
     {
         string basename = "";
+        private bool IsInHand = false;
         public ItemSpriteComponent()
             : base()
         {
-            DrawDepth = 2;
+            SetDrawDepth(2);
         }
 
         public override void RecieveMessage(object sender, MessageType type, List<ComponentReplyMessage> replies, params object[] list)
@@ -22,6 +23,8 @@ namespace CGO
             switch (type)
             {
                 case MessageType.MoveDirection:
+                    if (!IsInHand)
+                        break;
                     switch ((Constants.MoveDirs)list[0])
                     {
                         case Constants.MoveDirs.north:
@@ -52,11 +55,15 @@ namespace CGO
                             SetSpriteByKey(basename + "_inhand");
                             break;
                     }
-                    DrawDepth = 4;
+                    SetDrawDepth(4);
                     break;
                 case MessageType.Dropped:
                     SetSpriteByKey(basename);
-                    DrawDepth = 2;
+                    IsInHand = false;
+                    SetDrawDepth(2);
+                    break;
+                case MessageType.PickedUp:
+                    IsInHand = true;
                     break;
             }
 

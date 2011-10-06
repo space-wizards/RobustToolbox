@@ -16,6 +16,12 @@ namespace SS3D.Atom.Object.Door
         public Door()
             : base()
         {
+            
+        }
+
+        public override void Initialize()
+        {
+            base.Initialize();
             ISpriteComponent c = (ISpriteComponent)GetComponent(SS3D_shared.GO.ComponentFamily.Renderable);
             c.AddSprite("door_ew");
             c.AddSprite("door_ewo");

@@ -34,6 +34,10 @@ namespace CGO
         SetSpriteBykey,
         DisableCollision,
         EnableCollision,
-        Dropped
+        Dropped,
+        ClientInstantiated,
+        GetMoveDir,
+        PickedUp,
+        SetDrawDepth
     }
 }

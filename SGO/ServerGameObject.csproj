@@ -50,6 +50,7 @@
     <Compile Include="Component\Interactable\BasicInteractableComponent.cs" />
     <Compile Include="Component\Item\BasicItemComponent.cs" />
     <Compile Include="Component\LargeObject\BasicLargeObjectComponent.cs" />
+    <Compile Include="Component\Mover\BasicMoverComponent.cs" />
     <Compile Include="Component\Mover\PlayerInputMoverComponent.cs" />
     <Compile Include="Component\Mover\SlaveMoverComponent.cs" />
     <Compile Include="Component\PlayerControl\PlayerControlComponent.cs" />

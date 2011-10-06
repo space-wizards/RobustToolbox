@@ -74,6 +74,7 @@ namespace CGO
             Owner = owner;
             //Send us to the manager so it knows we're active
             ComponentManager.Singleton.AddComponent(this);
+            Owner.SendComponentInstantiationMessage(this);
         }
 
         /// <summary>

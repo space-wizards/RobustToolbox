@@ -16,6 +16,11 @@ namespace SS3D.Atom.Object.Wall
             //SetSpriteName(0, "glass");
             //SetSpriteName(1, "glass_shattered");
             //SetSpriteByIndex(0);
+        }
+
+        public override void Initialize()
+        {
+            base.Initialize();
             collidable = true;
             snapTogrid = true;
 

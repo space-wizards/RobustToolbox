@@ -11,6 +11,13 @@ namespace SS3D.Atom.Object
         public Locker()
             : base()
         {
+
+        }
+
+        public override void Initialize()
+        {
+            base.Initialize();
+
             collidable = true;
             //TODO: port this shit --
             // Server side sprite name/indexing needs to be ported to use components
@@ -21,7 +28,7 @@ namespace SS3D.Atom.Object
             c.AddSprite("locker_closed");
             c.AddSprite("locker_open");
             c.SetSpriteByKey("locker_closed");
-
         }
+
     }
 }

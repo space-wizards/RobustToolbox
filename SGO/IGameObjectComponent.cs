@@ -18,5 +18,6 @@ namespace SGO
         ComponentFamily Family {get;}
         void SetParameter(ComponentParameter parameter);
         void HandleNetworkMessage(IncomingEntityComponentMessage message);
+        void HandleInstantiationMessage(Lidgren.Network.NetConnection netConnection);
     }
 }

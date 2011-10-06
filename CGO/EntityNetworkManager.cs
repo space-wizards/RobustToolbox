@@ -37,6 +37,16 @@ namespace CGO
             message.Write(sendingEntity.Uid);//Write this entity's UID
             message.Write((byte)EntityMessage.ComponentMessage);
             message.Write((byte)family);
+            PackParams(message, messageParams);
+            if (method == null)
+                method = NetDeliveryMethod.ReliableUnordered;
+
+            //Send the message
+            m_netClient.SendMessage(message, method);
+        }
+
+        private void PackParams(NetOutgoingMessage message, params object[] messageParams)
+        {
             foreach (object messageParam in messageParams)
             {
                 Type t = messageParam.GetType();
@@ -110,11 +120,21 @@ namespace CGO
                     throw new NotImplementedException("Cannot write specified type.");
                 }
             }
-            if (method == null)
-                method = NetDeliveryMethod.ReliableUnordered;
+        }
 
-            //Send the message
-            m_netClient.SendMessage(message, method);
+        /// <summary>
+        /// Sends an arbitrary entity network message
+        /// </summary>
+        /// <param name="sendingEntity">The entity the message is going from(and to, on the other end)</param>
+        /// <param name="type">Message type</param>
+        /// <param name="list">List of parameter objects</param>
+        public void SendEntityNetworkMessage(Entity sendingEntity, EntityMessage type, params object[] list)
+        {
+            NetOutgoingMessage message = CreateEntityMessage();
+            message.Write(sendingEntity.Uid);//Write this entity's UID
+            message.Write((byte)type);
+            PackParams(message, list);
+            m_netClient.SendMessage(message, NetDeliveryMethod.ReliableUnordered);
         }
 
         #endregion
@@ -142,6 +162,8 @@ namespace CGO
             }
             return IncomingEntityMessage.Null;
         }
+
+
 
         /// <summary>
         /// Handles an incoming entity component message

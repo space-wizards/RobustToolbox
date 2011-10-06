@@ -32,6 +32,9 @@ namespace CGO
                 case MessageType.BoundKeyChange:
                     HandleKeyChange(list);
                     break;
+                case MessageType.GetMoveDir:
+                    replies.Add(new ComponentReplyMessage(MessageType.MoveDirection, movedir));
+                    break;
                 default:
                     break;
             }

@@ -11,6 +11,12 @@ namespace SS3D.Atom.Object.WallMounted
         public Extinguisher()
             : base()
         {
+        }
+
+        public override void Initialize()
+        {
+            base.Initialize();
+
             ISpriteComponent c = (ISpriteComponent)GetComponent(SS3D_shared.GO.ComponentFamily.Renderable);
             c.AddSprite("fire_extinguisher");
             c.SetSpriteByKey("fire_extinguisher");

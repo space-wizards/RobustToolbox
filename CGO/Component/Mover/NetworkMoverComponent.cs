@@ -26,6 +26,16 @@ namespace CGO
             Translate((float)x, (float)y);
         }
 
+        public override void RecieveMessage(object sender, MessageType type, List<ComponentReplyMessage> reply, params object[] list)
+        {
+            switch (type)
+            {
+                case MessageType.GetMoveDir:
+                    reply.Add(new ComponentReplyMessage(MessageType.MoveDirection, movedir));
+                    break;
+            }
+        }
+
         private void Translate(float x, float y)
         {
             Vector2D delta = new Vector2D(x, y) - Owner.position;

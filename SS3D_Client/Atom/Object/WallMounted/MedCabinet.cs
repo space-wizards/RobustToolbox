@@ -11,6 +11,12 @@ namespace SS3D.Atom.Object.WallMounted
         public MedCabinet()
             : base()
         {
+        }
+
+        public override void Initialize()
+        {
+            base.Initialize();
+
             ISpriteComponent c = (ISpriteComponent)GetComponent(SS3D_shared.GO.ComponentFamily.Renderable);
             c.AddSprite("med_cabinet");
             c.SetSpriteByKey("med_cabinet");

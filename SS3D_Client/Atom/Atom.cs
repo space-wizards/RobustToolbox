@@ -62,17 +62,16 @@ namespace SS3D.Atom
         #region constructors and init
         public Atom()
         {
-            Initialize();
         }
 
         public Atom(ushort _uid, AtomManager _atomManager)
         {
-            Initialize();
             SetUp(_uid, _atomManager);
         }
 
         public virtual void SetUp(int _uid, AtomManager _atomManager)
         {
+            Initialize();
             Uid = _uid;
             atomManager = _atomManager;
 

@@ -12,32 +12,4 @@ namespace CGO
         Ignored,
         Error
     }
-
-    public enum MessageType
-    {
-        Empty,
-        AddComponent,
-        BoundKeyChange,
-        BoundKeyRepeat,
-        MoveDirection,
-        HealthStatus,
-        SlaveAttach,
-        ItemDetach,
-        ItemWorn,
-        ItemUnWorn,
-        Clicked,
-        SpriteChanged,
-        CheckCollision,
-        CollisionStatus,
-        GetAABB,
-        CurrentAABB,
-        SetSpriteBykey,
-        DisableCollision,
-        EnableCollision,
-        Dropped,
-        ClientInstantiated,
-        GetMoveDir,
-        PickedUp,
-        SetDrawDepth
-    }
 }

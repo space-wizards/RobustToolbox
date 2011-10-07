@@ -20,9 +20,9 @@ namespace CGO
             object[] arguments = new object[2];
             arguments[0] = worldPos;
             List<ComponentReplyMessage> replies = new List<ComponentReplyMessage>();
-            Owner.SendMessage(this, MessageType.Clicked, replies, arguments);
+            Owner.SendMessage(this, ComponentMessageType.Clicked, replies, arguments);
             if ((from reply in replies
-                 where reply.messageType == MessageType.Clicked
+                 where reply.messageType == ComponentMessageType.Clicked
                      && (bool)reply.paramsList[0] == true
                  select reply).Count() != 0)
             {   //FRANKENCODE.

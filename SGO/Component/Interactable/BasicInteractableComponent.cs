@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using SS3D_shared.GO;
 
 namespace SGO
 {
@@ -12,11 +13,11 @@ namespace SGO
             family = SS3D_shared.GO.ComponentFamily.Interactable;
         }
 
-        public override void RecieveMessage(object sender, MessageType type, List<ComponentReplyMessage> replies, params object[] list)
+        public override void RecieveMessage(object sender, ComponentMessageType type, List<ComponentReplyMessage> replies, params object[] list)
         {
             switch (type)
             {
-                case MessageType.Click: //We were clicked, start the interaction
+                case ComponentMessageType.Click: //We were clicked, start the interaction
                     if (list.Count() > 0)
                         HandleClick((int)list[0]);
                     break;
@@ -63,7 +64,7 @@ namespace SGO
         {
             // Ask if the current hand is empty
             List<ComponentReplyMessage> replies = new List<ComponentReplyMessage>();
-            actor.SendMessage(this, MessageType.IsCurrentHandEmpty, replies);
+            actor.SendMessage(this, ComponentMessageType.IsCurrentHandEmpty, replies);
             if (replies.Count() > 0 && (bool)replies.First().paramsList[0] == true)
             {
                 DoEmptyHandInteraction(actor);
@@ -84,15 +85,15 @@ namespace SGO
         {
             // Does this ent have an actor component(is it a mob?) if so, the actor component should mediate this interaction
             if (Owner.HasComponent(SS3D_shared.GO.ComponentFamily.Actor))
-                Owner.SendMessage(this, MessageType.ItemToActorInteraction, null, actor);
+                Owner.SendMessage(this, ComponentMessageType.ItemToActorInteraction, null, actor);
 
             //Does this ent have an item component? That item component should mediate this interaction
             if(Owner.HasComponent(SS3D_shared.GO.ComponentFamily.Item))
-                Owner.SendMessage(this, MessageType.ItemToItemInteraction, null, actor);
+                Owner.SendMessage(this, ComponentMessageType.ItemToItemInteraction, null, actor);
 
             //if not, does this ent have a largeobject component? That component should mediate this interaction.
             else if(Owner.HasComponent(SS3D_shared.GO.ComponentFamily.LargeObject))
-                Owner.SendMessage(this, MessageType.ItemToLargeObjectInteraction, null, actor);
+                Owner.SendMessage(this, ComponentMessageType.ItemToLargeObjectInteraction, null, actor);
         }
 
         /// <summary>
@@ -104,15 +105,15 @@ namespace SGO
         {            
             // Does this ent have an actor component(is it a mob?) if so, the actor component should mediate this interaction
             if (Owner.HasComponent(SS3D_shared.GO.ComponentFamily.Actor))
-                Owner.SendMessage(this, MessageType.EmptyHandToActorInteraction, null, actor);
+                Owner.SendMessage(this, ComponentMessageType.EmptyHandToActorInteraction, null, actor);
             
             //If we can be picked up, do that -- ItemComponent mediates that
             if (Owner.HasComponent(SS3D_shared.GO.ComponentFamily.Item))
-                Owner.SendMessage(this, MessageType.EmptyHandToItemInteraction, null, actor);
+                Owner.SendMessage(this, ComponentMessageType.EmptyHandToItemInteraction, null, actor);
 
             //If not, can we be used? -- LargeObject does that
             else if (Owner.HasComponent(SS3D_shared.GO.ComponentFamily.LargeObject))
-                Owner.SendMessage(this, MessageType.EmptyHandToLargeObjectInteraction, null, actor);
+                Owner.SendMessage(this, ComponentMessageType.EmptyHandToLargeObjectInteraction, null, actor);
 
         }
 

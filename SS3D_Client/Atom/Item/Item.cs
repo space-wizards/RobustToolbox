@@ -8,6 +8,7 @@ using SS3D.Atom.Mob.HelperClasses;
 using GorgonLibrary;
 using GorgonLibrary.Graphics;
 using CGO;
+using SS3D_shared.GO;
 
 namespace SS3D.Atom.Item
 {
@@ -80,7 +81,7 @@ namespace SS3D.Atom.Item
                 position = mobpos;
 
                 AddComponent(SS3D_shared.GO.ComponentFamily.Mover, ComponentFactory.Singleton.GetComponent("NetworkMoverComponent"));
-                SendMessage(null, MessageType.ItemDetach, null);
+                SendMessage(null, ComponentMessageType.ItemDetach, null);
             }
             holdingAppendage.attachedItem = null;
             holdingAppendage = null;
@@ -103,7 +104,7 @@ namespace SS3D.Atom.Item
             holdingAppendage = a;
             a.attachedItem = this;
             AddComponent(SS3D_shared.GO.ComponentFamily.Mover, ComponentFactory.Singleton.GetComponent("SlaveMoverComponent"));
-            SendMessage(null, MessageType.SlaveAttach, null, m.Uid);
+            SendMessage(null, ComponentMessageType.SlaveAttach, null, m.Uid);
         }
     }
 }

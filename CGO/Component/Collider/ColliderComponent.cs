@@ -6,6 +6,7 @@ using System.Drawing;
 using ClientServices;
 using ClientInterfaces;
 using GorgonLibrary;
+using SS3D_shared.GO;
 
 namespace CGO
 {
@@ -42,14 +43,14 @@ namespace CGO
             
         }
 
-        public override void RecieveMessage(object sender, MessageType type, List<ComponentReplyMessage> reply, params object[] list)
+        public override void RecieveMessage(object sender, ComponentMessageType type, List<ComponentReplyMessage> reply, params object[] list)
         {
             switch (type)
             {
-                case MessageType.SpriteChanged:
+                case ComponentMessageType.SpriteChanged:
                     GetAABB();
                     break;
-                case MessageType.CheckCollision:
+                case ComponentMessageType.CheckCollision:
                     if (list.Count() > 0)
                         reply.Add(CheckCollision((bool)list[0]));
                     else
@@ -86,8 +87,8 @@ namespace CGO
         private void GetAABB()
         {
             List<ComponentReplyMessage> replies = new List<ComponentReplyMessage>();
-            Owner.SendMessage(this, MessageType.GetAABB, replies);
-            if (replies.Count > 0 && replies.First().messageType == MessageType.CurrentAABB)
+            Owner.SendMessage(this, ComponentMessageType.GetAABB, replies);
+            if (replies.Count > 0 && replies.First().messageType == ComponentMessageType.CurrentAABB)
             {
                 currentAABB = (RectangleF)replies.First().paramsList[0];
             }
@@ -100,7 +101,7 @@ namespace CGO
             bool isColliding = false;
             ICollisionManager collisionManager = (ICollisionManager)ServiceManager.Singleton.GetService(ClientServiceType.CollisionManager);
             isColliding = collisionManager.IsColliding(OffsetAABB, SuppressBump);
-            return new ComponentReplyMessage(MessageType.CollisionStatus, isColliding);
+            return new ComponentReplyMessage(ComponentMessageType.CollisionStatus, isColliding);
         }
 
 

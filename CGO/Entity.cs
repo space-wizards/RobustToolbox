@@ -152,7 +152,7 @@ namespace CGO
         /// <param name="sender">the component doing the sending</param>
         /// <param name="type">the type of message</param>
         /// <param name="args">message parameters</param>
-        public void SendMessage(object sender, MessageType type, List<ComponentReplyMessage> replies, params object[] args)
+        public void SendMessage(object sender, ComponentMessageType type, List<ComponentReplyMessage> replies, params object[] args)
         {
             foreach (IGameObjectComponent component in components.Values)
             {
@@ -236,10 +236,10 @@ namespace CGO
 
     public struct ComponentReplyMessage
     {
-        public MessageType messageType;
+        public ComponentMessageType messageType;
         public List<object> paramsList;
 
-        public ComponentReplyMessage(MessageType _messageType, params object[] _paramsList)
+        public ComponentReplyMessage(ComponentMessageType _messageType, params object[] _paramsList)
         {
             if (_paramsList != null)
                 paramsList = _paramsList.ToList();
@@ -249,6 +249,6 @@ namespace CGO
             messageType = _messageType;            
         }
 
-        public static ComponentReplyMessage Null = new ComponentReplyMessage(MessageType.Empty);
+        public static ComponentReplyMessage Null = new ComponentReplyMessage(ComponentMessageType.Empty);
     }
 }

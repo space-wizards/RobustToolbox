@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using SS3D_shared.GO;
 
 namespace SGO
 {
@@ -12,15 +13,15 @@ namespace SGO
             family = SS3D_shared.GO.ComponentFamily.Collidable;
         }
 
-        public override void RecieveMessage(object sender, MessageType type, List<ComponentReplyMessage> replies, params object[] list)
+        public override void RecieveMessage(object sender, ComponentMessageType type, List<ComponentReplyMessage> replies, params object[] list)
         {
             switch (type)
             {
-                case MessageType.DisableCollision:
-                    Owner.SendComponentNetworkMessage(this, Lidgren.Network.NetDeliveryMethod.ReliableUnordered, null, MessageType.DisableCollision);
+                case ComponentMessageType.DisableCollision:
+                    Owner.SendComponentNetworkMessage(this, Lidgren.Network.NetDeliveryMethod.ReliableUnordered, null, ComponentMessageType.DisableCollision);
                     break;
-                case MessageType.EnableCollision:
-                    Owner.SendComponentNetworkMessage(this, Lidgren.Network.NetDeliveryMethod.ReliableUnordered, null, MessageType.EnableCollision);
+                case ComponentMessageType.EnableCollision:
+                    Owner.SendComponentNetworkMessage(this, Lidgren.Network.NetDeliveryMethod.ReliableUnordered, null, ComponentMessageType.EnableCollision);
                     break;
             }
         }

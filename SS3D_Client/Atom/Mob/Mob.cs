@@ -9,6 +9,7 @@ using GorgonLibrary;
 using GorgonLibrary.Graphics;
 using GorgonLibrary.InputDevices;
 using CGO;
+using SS3D_shared.GO;
 
 namespace SS3D.Atom.Mob
 {
@@ -258,7 +259,7 @@ namespace SS3D.Atom.Mob
                 equippedAtoms.Add(part, null);
             }
             equippedAtoms[part] = (Item.Item)atomManager.GetAtom(id);
-            equippedAtoms[part].SendMessage(null, MessageType.ItemWorn, null);
+            equippedAtoms[part].SendMessage(null, ComponentMessageType.ItemWorn, null);
             equippedAtoms[part].visible = false;
         }
 
@@ -272,7 +273,7 @@ namespace SS3D.Atom.Mob
             if (!equippedAtoms.ContainsKey(part))
                 return;
 
-            equippedAtoms[part].SendMessage(null, MessageType.ItemUnWorn, null);
+            equippedAtoms[part].SendMessage(null, ComponentMessageType.ItemUnWorn, null);
             equippedAtoms[part] = null;
         }
 

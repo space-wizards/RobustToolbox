@@ -27,17 +27,17 @@ namespace CGO
             currentMoveSpeed = baseMoveSpeed;
         }
 
-        public override void RecieveMessage(object sender, MessageType type, List<ComponentReplyMessage> replies, params object[] list)
+        public override void RecieveMessage(object sender, ComponentMessageType type, List<ComponentReplyMessage> replies, params object[] list)
         {
             if (sender == this)
                 return;
             switch (type)
             {
-                case MessageType.BoundKeyChange:
+                case ComponentMessageType.BoundKeyChange:
                     HandleKeyChange(list);
                     break;
-                case MessageType.GetMoveDir:
-                    replies.Add(new ComponentReplyMessage(MessageType.MoveDirection, movedir));
+                case ComponentMessageType.GetMoveDir:
+                    replies.Add(new ComponentReplyMessage(ComponentMessageType.MoveDirection, movedir));
                     break;
                 default:
                     break;
@@ -131,7 +131,7 @@ namespace CGO
             if (_movedir != movedir)
             {
                 movedir = _movedir;
-                Owner.SendMessage(this, MessageType.MoveDirection, null, movedir);
+                Owner.SendMessage(this, ComponentMessageType.MoveDirection, null, movedir);
             }
         }
 
@@ -169,8 +169,8 @@ namespace CGO
             Owner.position += translationVector; // We move the sprite here rather than the position, as we can then use its updated AABB values.
             //Check collision.
             var replies = new List<ComponentReplyMessage>();
-            Owner.SendMessage(this, MessageType.CheckCollision, replies, false);
-            if (replies.Count > 0 && replies.First().messageType == MessageType.CollisionStatus)
+            Owner.SendMessage(this, ComponentMessageType.CheckCollision, replies, false);
+            if (replies.Count > 0 && replies.First().messageType == ComponentMessageType.CollisionStatus)
             {
                 bool colliding = (bool)replies.First().paramsList[0];
                 if (colliding) //Collided, reset position and return false.

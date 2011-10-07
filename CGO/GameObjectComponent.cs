@@ -37,7 +37,7 @@ namespace CGO
         /// <param name="sender">the component that sent the message</param>
         /// <param name="type">the message type in CGO.MessageType</param>
         /// <param name="list">parameters list</param>
-        public virtual void RecieveMessage(object sender, CGO.MessageType type, List<ComponentReplyMessage> reply, params object[] list)
+        public virtual void RecieveMessage(object sender, ComponentMessageType type, List<ComponentReplyMessage> reply, params object[] list)
         {
             if (sender == this) //Don't listen to our own messages!
                 return;

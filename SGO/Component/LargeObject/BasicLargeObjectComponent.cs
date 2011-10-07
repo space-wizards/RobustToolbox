@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using SS3D_shared.GO;
 
 namespace SGO
 {
@@ -12,14 +13,14 @@ namespace SGO
             family = SS3D_shared.GO.ComponentFamily.LargeObject;
         }
 
-        public override void RecieveMessage(object sender, MessageType type, List<ComponentReplyMessage> replies, params object[] list)
+        public override void RecieveMessage(object sender, ComponentMessageType type, List<ComponentReplyMessage> replies, params object[] list)
         {
             switch (type)
             {
-                case MessageType.EmptyHandToLargeObjectInteraction:
+                case ComponentMessageType.EmptyHandToLargeObjectInteraction:
                     HandleEmptyHandToLargeObjectInteraction((Entity)list[0]);
                     break;
-                case MessageType.ItemToLargeObjectInteraction:
+                case ComponentMessageType.ItemToLargeObjectInteraction:
                     HandleItemToLargeObjectInteraction((Entity)list[0]);
                     break;
             }

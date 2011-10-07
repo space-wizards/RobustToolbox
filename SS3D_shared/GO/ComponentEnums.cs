@@ -38,4 +38,41 @@ namespace SS3D_shared.GO
         Dropped,
     }
 
+    public enum ComponentMessageType
+    {
+        Empty,
+        AddComponent,
+        BoundKeyChange,
+        BoundKeyRepeat,
+        SlaveAttach,
+        Click,
+        SetSpriteByKey,
+        IsCurrentHandEmpty,
+        ItemToItemInteraction,
+        ItemToLargeObjectInteraction,
+        EmptyHandToItemInteraction,
+        EmptyHandToLargeObjectInteraction,
+        ItemToActorInteraction,
+        EmptyHandToActorInteraction,
+        PickUpItem,
+        Dropped,
+        PickedUp,
+        DisableCollision,
+        EnableCollision,
+        MoveDirection,
+        HealthStatus,
+        ItemDetach,
+        ItemWorn,
+        ItemUnWorn,
+        Clicked,
+        SpriteChanged,
+        CheckCollision,
+        CollisionStatus,
+        GetAABB,
+        CurrentAABB,
+        ClientInstantiated,
+        GetMoveDir,
+        SetDrawDepth
+    }
+
 }

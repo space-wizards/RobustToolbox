@@ -15,20 +15,20 @@ namespace SGO
             family = SS3D_shared.GO.ComponentFamily.Item;
         }
 
-        public override void RecieveMessage(object sender, MessageType type, List<ComponentReplyMessage> replies, params object[] list)
+        public override void RecieveMessage(object sender, ComponentMessageType type, List<ComponentReplyMessage> replies, params object[] list)
         {
             switch (type)
             {
-                case MessageType.EmptyHandToItemInteraction:
+                case ComponentMessageType.EmptyHandToItemInteraction:
                     HandleEmptyHandToItemInteraction((Entity)list[0]); // param 0 is the actor entity
                     break;
-                case MessageType.ItemToItemInteraction:
+                case ComponentMessageType.ItemToItemInteraction:
                     HandleItemToItemInteraction((Entity)list[0]); // param 0 is the actor entity
                     break;
-                case MessageType.PickedUp:
+                case ComponentMessageType.PickedUp:
                     HandlePickedUp((Entity)list[0]);
                     break;
-                case MessageType.Dropped:
+                case ComponentMessageType.Dropped:
                     HandleDropped();
                     break;
             }
@@ -46,7 +46,7 @@ namespace SGO
         {
             currentHolder = entity;
             Owner.AddComponent(SS3D_shared.GO.ComponentFamily.Mover, ComponentFactory.Singleton.GetComponent("SlaveMoverComponent"));
-            Owner.SendMessage(this, MessageType.SlaveAttach, null, entity.Uid);
+            Owner.SendMessage(this, ComponentMessageType.SlaveAttach, null, entity.Uid);
             Owner.SendComponentNetworkMessage(this, Lidgren.Network.NetDeliveryMethod.ReliableUnordered, null, ItemComponentNetMessage.PickedUp, entity.Uid);
         }
 
@@ -77,7 +77,7 @@ namespace SGO
         protected virtual void HandleEmptyHandToItemInteraction(Entity actor)
         {
             //Pick up the item
-            actor.SendMessage(this, MessageType.PickUpItem, null, Owner);
+            actor.SendMessage(this, ComponentMessageType.PickUpItem, null, Owner);
         }
     }
 }

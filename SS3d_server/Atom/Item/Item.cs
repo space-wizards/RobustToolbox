@@ -7,6 +7,7 @@ using Lidgren.Network;
 using SS3D_Server.Atom.Mob;
 using SS3D_Server.Atom.Mob.HelperClasses;
 using SGO;
+using SS3D_shared.GO;
 
 namespace SS3D_Server.Atom.Item
 {
@@ -114,7 +115,7 @@ namespace SS3D_Server.Atom.Item
             SendAttachMessage();
 
             AddComponent(SS3D_shared.GO.ComponentFamily.Mover, ComponentFactory.Singleton.GetComponent("SlaveMoverComponent"));
-            SendMessage(null, MessageType.SlaveAttach, null, newHolder.Uid);
+            SendMessage(null, ComponentMessageType.SlaveAttach, null, newHolder.Uid);
 
             SendAppendageUIUpdate(newHolder);
             SS3DServer.Singleton.chatManager.SendChatMessage(ChatChannel.Default, newHolder.name + " picked up the " + name + ".", "", newHolder.Uid);

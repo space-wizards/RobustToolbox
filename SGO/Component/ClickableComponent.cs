@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using SS3D_shared.HelperClasses;
+using SS3D_shared.GO;
 
 namespace SGO
 {
@@ -24,7 +25,7 @@ namespace SGO
             if (message.componentFamily == SS3D_shared.GO.ComponentFamily.Click)
             {
                 List<ComponentReplyMessage> replies = new List<ComponentReplyMessage>();
-                Owner.SendMessage(this, MessageType.Click, replies, message.messageParameters[0]);
+                Owner.SendMessage(this, ComponentMessageType.Click, replies, message.messageParameters[0]);
                 //Who clicked us?
                 
                 //parameter 0 is id of clicker

@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using SS3D_shared;
+using SS3D_shared.GO;
 
 namespace CGO
 {
@@ -16,13 +17,13 @@ namespace CGO
             SetDrawDepth(2);
         }
 
-        public override void RecieveMessage(object sender, MessageType type, List<ComponentReplyMessage> replies, params object[] list)
+        public override void RecieveMessage(object sender, ComponentMessageType type, List<ComponentReplyMessage> replies, params object[] list)
         {
             base.RecieveMessage(sender, type, replies, list);
 
             switch (type)
             {
-                case MessageType.MoveDirection:
+                case ComponentMessageType.MoveDirection:
                     if (!IsInHand)
                         break;
                     switch ((Constants.MoveDirs)list[0])
@@ -57,12 +58,12 @@ namespace CGO
                     }
                     SetDrawDepth(4);
                     break;
-                case MessageType.Dropped:
+                case ComponentMessageType.Dropped:
                     SetSpriteByKey(basename);
                     IsInHand = false;
                     SetDrawDepth(2);
                     break;
-                case MessageType.PickedUp:
+                case ComponentMessageType.PickedUp:
                     IsInHand = true;
                     break;
             }

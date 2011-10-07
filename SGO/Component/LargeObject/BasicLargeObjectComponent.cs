@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 
-namespace SGO.Component.LargeObject
+namespace SGO
 {
     public class BasicLargeObjectComponent: GameObjectComponent
     {

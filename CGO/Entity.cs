@@ -61,7 +61,7 @@ namespace CGO
         /// </summary>
         public Entity()
         {
-            Initialize();
+            //Initialize();
         }
 
         /// <summary>
@@ -220,6 +220,9 @@ namespace CGO
 
         public void SendComponentInstantiationMessage(IGameObjectComponent component)
         {
+            if (component == null)
+                throw new Exception("Component is null");
+          
             m_entityNetworkManager.SendEntityNetworkMessage(this, EntityMessage.ComponentInstantiationMessage, component.Family);
         }
 

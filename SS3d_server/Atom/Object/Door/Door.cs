@@ -23,6 +23,10 @@ namespace SS3D_Server.Atom.Object.Door
         {
             name = "door";
             AddComponent(SS3D_shared.GO.ComponentFamily.Interactable, ComponentFactory.Singleton.GetComponent("BasicInteractableComponent"));
+            AddComponent(SS3D_shared.GO.ComponentFamily.Collidable, ComponentFactory.Singleton.GetComponent("CollidableComponent"));
+            AddComponent(SS3D_shared.GO.ComponentFamily.Interactable, ComponentFactory.Singleton.GetComponent("BasicDoorComponent"));
+            GetComponent(SS3D_shared.GO.ComponentFamily.Renderable).SetParameter(new ComponentParameter("OpenSprite", "string", "door_ewo"));
+            GetComponent(SS3D_shared.GO.ComponentFamily.Renderable).SetParameter(new ComponentParameter("ClosedSprite", "string", "door_ew"));
         }
 
         protected override void ApplyAction(Atom a, Mob.Mob m)

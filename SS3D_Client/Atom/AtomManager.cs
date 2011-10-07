@@ -42,7 +42,7 @@ namespace SS3D.Atom
             networkManager = prg.mNetworkMgr;
             m_entityManager = entityManager;
             atomDictionary = new Dictionary<int, Atom>();
-            loadAtomScripts();
+            //loadAtomScripts();
         }
 
         public void Shutdown()
@@ -62,6 +62,7 @@ namespace SS3D.Atom
         /// </summary>
         private void loadAtomScripts()
         {
+            /*
             m_loadedModules = new List<Module>();
             string[] filePaths = Directory.GetFiles(Directory.GetCurrentDirectory() + @"\Scripts\Atom\", "*.cs");
 
@@ -81,6 +82,7 @@ namespace SS3D.Atom
                 }
             }
             prg.GorgonForm.PopulateEditMenu();
+            */
 
         }
         #endregion

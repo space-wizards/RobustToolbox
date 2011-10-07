@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using SS3D_shared.GO;
 
 namespace SGO
 {
@@ -12,8 +13,9 @@ namespace SGO
         string closedSprite = "";
 
         public BasicDoorComponent()
+            :base()
         {
-            
+            family = SS3D_shared.GO.ComponentFamily.LargeObject;
         }
 
         /// <summary>
@@ -39,14 +41,14 @@ namespace SGO
             if (Open)
             {
                 Open = !Open;
-                Owner.SendMessage(this, MessageType.EnableCollision, null);
-                Owner.SendMessage(this, MessageType.SetSpriteByKey, null, closedSprite);
+                Owner.SendMessage(this, ComponentMessageType.EnableCollision, null);
+                Owner.SendMessage(this, ComponentMessageType.SetSpriteByKey, null, closedSprite);
             }
             else
             {
                 Open = !Open;
-                Owner.SendMessage(this, MessageType.DisableCollision, null);
-                Owner.SendMessage(this, MessageType.SetSpriteByKey, null, openSprite);
+                Owner.SendMessage(this, ComponentMessageType.DisableCollision, null);
+                Owner.SendMessage(this, ComponentMessageType.SetSpriteByKey, null, openSprite);
             }
         }
 

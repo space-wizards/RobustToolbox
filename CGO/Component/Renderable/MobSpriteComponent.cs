@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using SS3D_shared;
+using SS3D_shared.GO;
 
 namespace CGO
 {
@@ -15,13 +16,13 @@ namespace CGO
             DrawDepth = 3;
         }
 
-        public override void RecieveMessage(object sender, MessageType type, List<ComponentReplyMessage> replies, params object[] list)
+        public override void RecieveMessage(object sender, ComponentMessageType type, List<ComponentReplyMessage> replies, params object[] list)
         {
             base.RecieveMessage(sender, type, replies, list);
 
             switch (type)
             {
-                case MessageType.MoveDirection:
+                case ComponentMessageType.MoveDirection:
                     switch ((Constants.MoveDirs)list[0])
                     {
                         case Constants.MoveDirs.north:
@@ -52,7 +53,7 @@ namespace CGO
                             break;
                     }
                     break;
-                case MessageType.HealthStatus:
+                case ComponentMessageType.HealthStatus:
                     break; //TODO do stuff here, incap and dead.
 
             }

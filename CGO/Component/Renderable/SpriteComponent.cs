@@ -7,6 +7,7 @@ using GorgonLibrary;
 using ClientResourceManager;
 using ClientWindow;
 using System.Drawing;
+using SS3D_shared.GO;
 
 namespace CGO
 {
@@ -33,7 +34,7 @@ namespace CGO
         {
             base.OnAdd(owner);
             //Send a spritechanged message so everything knows whassup.
-            Owner.SendMessage(this, MessageType.SpriteChanged, null);
+            Owner.SendMessage(this, ComponentMessageType.SpriteChanged, null);
         }
 
         public Sprite GetCurrentSprite()
@@ -59,25 +60,35 @@ namespace CGO
             sprites.Clear();
         }
 
-        public override void RecieveMessage(object sender, CGO.MessageType type, List<ComponentReplyMessage> reply, params object[] list)
+        public override void HandleNetworkMessage(IncomingEntityComponentMessage message)
+        {
+            switch ((ComponentMessageType)message.messageParameters[0])
+            {
+                case ComponentMessageType.SetSpriteByKey:
+                    SetSpriteByKey((string)message.messageParameters[1]);
+                    break;
+            }
+        }
+
+        public override void RecieveMessage(object sender, ComponentMessageType type, List<ComponentReplyMessage> reply, params object[] list)
         {
             base.RecieveMessage(sender, type, reply, list);
             if (sender == this) return;
 
             switch (type)
             {
-                case MessageType.Clicked:
+                case ComponentMessageType.Clicked:
                     object[] replyParams = new object[1];
                     replyParams[0] = WasClicked(list);
-                    reply.Add(new ComponentReplyMessage(MessageType.Clicked, replyParams));
+                    reply.Add(new ComponentReplyMessage(ComponentMessageType.Clicked, replyParams));
                     break;
-                case MessageType.GetAABB:
-                    reply.Add(new ComponentReplyMessage(MessageType.CurrentAABB, AABB));
+                case ComponentMessageType.GetAABB:
+                    reply.Add(new ComponentReplyMessage(ComponentMessageType.CurrentAABB, AABB));
                     break;
-                case MessageType.SetSpriteBykey:
+                case ComponentMessageType.SetSpriteByKey:
                     SetSpriteByKey((string)list[0]);
                     break;
-                case MessageType.SetDrawDepth:
+                case ComponentMessageType.SetDrawDepth:
                     SetDrawDepth((int)list[0]);
                     break;
                     
@@ -113,7 +124,7 @@ namespace CGO
             {
                 currentSprite = sprites[spriteKey];
                 if(Owner != null)
-                    Owner.SendMessage(this, MessageType.SpriteChanged, null);
+                    Owner.SendMessage(this, ComponentMessageType.SpriteChanged, null);
             }
             else
                 throw new Exception("Whoops. That sprite isn't in the dictionary.");

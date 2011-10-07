@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using SS3D_shared;
+using SS3D_shared.GO;
 
 namespace SGO
 {
@@ -29,17 +30,17 @@ namespace SGO
         /// <param name="type"></param>
         /// <param name="replies"></param>
         /// <param name="list"></param>
-        public override void RecieveMessage(object sender, MessageType type, List<ComponentReplyMessage> replies, params object[] list)
+        public override void RecieveMessage(object sender, ComponentMessageType type, List<ComponentReplyMessage> replies, params object[] list)
         {
             switch (type)
             {
-                case MessageType.IsCurrentHandEmpty:
-                    replies.Add(new ComponentReplyMessage(MessageType.IsCurrentHandEmpty, IsEmpty(currentHand)));
+                case ComponentMessageType.IsCurrentHandEmpty:
+                    replies.Add(new ComponentReplyMessage(ComponentMessageType.IsCurrentHandEmpty, IsEmpty(currentHand)));
                     break;
-                case MessageType.PickUpItem:
+                case ComponentMessageType.PickUpItem:
                     Pickup((Entity)list[0]);
                     break;
-                case MessageType.BoundKeyChange:
+                case ComponentMessageType.BoundKeyChange:
                     if ((BoundKeyFunctions)list[0] == BoundKeyFunctions.Drop)
                         Drop();
                     break;
@@ -98,7 +99,7 @@ namespace SGO
             if (entity != null && IsEmpty(currentHand))
             {
                 SetEntity(currentHand, entity);
-                entity.SendMessage(this, MessageType.PickedUp, null, Owner);
+                entity.SendMessage(this, ComponentMessageType.PickedUp, null, Owner);
             }
         }
 
@@ -118,7 +119,7 @@ namespace SGO
         {
             if (!IsEmpty(hand))
             {
-                GetEntity(hand).SendMessage(this, MessageType.Dropped, null);
+                GetEntity(hand).SendMessage(this, ComponentMessageType.Dropped, null);
                 handslots.Remove(hand);
             }
         }

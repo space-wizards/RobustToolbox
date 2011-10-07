@@ -4,6 +4,7 @@ using System.Linq;
 using System.Text;
 using GorgonLibrary;
 using SS3D_shared;
+using SS3D_shared.GO;
 
 namespace CGO
 {
@@ -26,12 +27,12 @@ namespace CGO
             Translate((float)x, (float)y);
         }
 
-        public override void RecieveMessage(object sender, MessageType type, List<ComponentReplyMessage> reply, params object[] list)
+        public override void RecieveMessage(object sender, ComponentMessageType type, List<ComponentReplyMessage> reply, params object[] list)
         {
             switch (type)
             {
-                case MessageType.GetMoveDir:
-                    reply.Add(new ComponentReplyMessage(MessageType.MoveDirection, movedir));
+                case ComponentMessageType.GetMoveDir:
+                    reply.Add(new ComponentReplyMessage(ComponentMessageType.MoveDirection, movedir));
                     break;
             }
         }
@@ -68,7 +69,7 @@ namespace CGO
             if (_movedir != movedir)
             {
                 movedir = _movedir;
-                Owner.SendMessage(this, MessageType.MoveDirection, null, movedir);
+                Owner.SendMessage(this, ComponentMessageType.MoveDirection, null, movedir);
             }
         }
     }

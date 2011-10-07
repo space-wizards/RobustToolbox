@@ -13,26 +13,4 @@ namespace SGO
         Error
     }
 
-    public enum MessageType
-    {
-        Empty,
-        AddComponent,
-        BoundKeyChange,
-        BoundKeyRepeat,
-        SlaveAttach,
-        Click,
-        SetSpriteByKey,
-        IsCurrentHandEmpty,
-        ItemToItemInteraction,
-        ItemToLargeObjectInteraction,
-        EmptyHandToItemInteraction,
-        EmptyHandToLargeObjectInteraction,
-        ItemToActorInteraction,
-        EmptyHandToActorInteraction,
-        PickUpItem,
-        Dropped,
-        PickedUp,
-        DisableCollision,
-        EnableCollision
-    }
 }

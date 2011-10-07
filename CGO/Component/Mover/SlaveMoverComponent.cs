@@ -4,6 +4,7 @@ using System.Linq;
 using System.Text;
 using GorgonLibrary;
 using SS3D_shared;
+using SS3D_shared.GO;
 
 namespace CGO
 {
@@ -20,11 +21,11 @@ namespace CGO
             family = SS3D_shared.GO.ComponentFamily.Mover;
         }
 
-        public override void RecieveMessage(object sender, MessageType type, List<ComponentReplyMessage> replies, params object[] list)
+        public override void RecieveMessage(object sender, ComponentMessageType type, List<ComponentReplyMessage> replies, params object[] list)
         {
             switch (type)
             {
-                case MessageType.SlaveAttach:
+                case ComponentMessageType.SlaveAttach:
                     Attach((int)list[0]);
                     break;
             }
@@ -50,7 +51,7 @@ namespace CGO
         {
             List<ComponentReplyMessage> replies = new List<ComponentReplyMessage>();
 
-            master.SendMessage(this, MessageType.GetMoveDir, replies);
+            master.SendMessage(this, ComponentMessageType.GetMoveDir, replies);
             if (replies.Count > 0)
                 movedir = (Constants.MoveDirs)replies.First().paramsList[0];
         }
@@ -100,7 +101,7 @@ namespace CGO
             if (_movedir != movedir)
             {
                 movedir = _movedir;
-                Owner.SendMessage(this, MessageType.MoveDirection, null, movedir);
+                Owner.SendMessage(this, ComponentMessageType.MoveDirection, null, movedir);
             }
         }
     }

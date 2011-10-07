@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Runtime.Serialization;
+using SS3D_shared.GO;
 
 namespace SS3D_Server.Atom.Object
 {
@@ -33,10 +34,10 @@ namespace SS3D_Server.Atom.Object
 
             open = !open;
             if (open)
-                SendMessage(null, SGO.MessageType.SetSpriteByKey, null, "locker_open");
+                SendMessage(null, ComponentMessageType.SetSpriteByKey, null, "locker_open");
             //SetSpriteState(1);
             else
-                SendMessage(null, SGO.MessageType.SetSpriteByKey, null, "locker_closed");
+                SendMessage(null, ComponentMessageType.SetSpriteByKey, null, "locker_closed");
                 //SetSpriteState(0);
         }
     }

@@ -5,6 +5,7 @@ using System.Text;
 using System.Drawing;
 using GorgonLibrary;
 using CGO;
+using SS3D_shared.GO;
 
 namespace SS3D.Atom.Object.Door
 {
@@ -53,7 +54,7 @@ namespace SS3D.Atom.Object.Door
                     ISpriteComponent c = (ISpriteComponent)GetComponent(SS3D_shared.GO.ComponentFamily.Renderable);
                     c.SetSpriteByKey("door_ew");
                     visible = true;
-                    SendMessage(null, MessageType.EnableCollision, null);
+                    SendMessage(null, ComponentMessageType.EnableCollision, null);
                     atomManager.gameState.map.GetTileAt(position).sightBlocked = true;
                     atomManager.gameState.map.needVisUpdate = true;
                     Draw();
@@ -61,7 +62,7 @@ namespace SS3D.Atom.Object.Door
                 case DoorState.Open:
                     ISpriteComponent d = (ISpriteComponent)GetComponent(SS3D_shared.GO.ComponentFamily.Renderable);
                     d.SetSpriteByKey("door_ewo");
-                    SendMessage(null, MessageType.DisableCollision, null);
+                    SendMessage(null, ComponentMessageType.DisableCollision, null);
                     atomManager.gameState.map.GetTileAt(position).sightBlocked = false;
                     atomManager.gameState.map.needVisUpdate = true;
                     Draw();

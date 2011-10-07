@@ -7,6 +7,7 @@ using ClientInterfaces;
 using ClientServices;
 using System.Diagnostics;
 using GorgonLibrary;
+using SS3D_shared.GO;
 
 namespace CGO
 {
@@ -76,11 +77,11 @@ namespace CGO
         /// <param name="type"></param>
         /// <param name="reply"></param>
         /// <param name="list"></param>
-        public override void RecieveMessage(object sender, MessageType type, List<ComponentReplyMessage> reply, params object[] list)
+        public override void RecieveMessage(object sender, ComponentMessageType type, List<ComponentReplyMessage> reply, params object[] list)
         {
             switch (type)
             {
-                case MessageType.SpriteChanged:
+                case ComponentMessageType.SpriteChanged:
                     if (collisionEnabled)
                     {
                         GetAABB();
@@ -88,10 +89,10 @@ namespace CGO
                         cm.UpdateCollidable(this);
                     }
                     break;
-                case MessageType.DisableCollision:
+                case ComponentMessageType.DisableCollision:
                     DisableCollision();
                     break;
-                case MessageType.EnableCollision:
+                case ComponentMessageType.EnableCollision:
                     EnableCollision();
                     break;
             }
@@ -99,13 +100,13 @@ namespace CGO
 
         public override void HandleNetworkMessage(IncomingEntityComponentMessage message)
         {
-            MessageType type = (MessageType)message.messageParameters[0];
+            ComponentMessageType type = (ComponentMessageType)message.messageParameters[0];
             switch (type)
             {
-                case MessageType.EnableCollision:
+                case ComponentMessageType.EnableCollision:
                     EnableCollision();
                     break;
-                case MessageType.DisableCollision:
+                case ComponentMessageType.DisableCollision:
                     DisableCollision();
                     break;
 
@@ -159,8 +160,8 @@ namespace CGO
         private void GetAABB()
         {
             List<ComponentReplyMessage> replies = new List<ComponentReplyMessage>();
-            Owner.SendMessage(this, MessageType.GetAABB, replies);
-            if (replies.Count > 0 && replies.First().messageType == MessageType.CurrentAABB)
+            Owner.SendMessage(this, ComponentMessageType.GetAABB, replies);
+            if (replies.Count > 0 && replies.First().messageType == ComponentMessageType.CurrentAABB)
             {
                 currentAABB = (RectangleF)replies.First().paramsList[0];
             }

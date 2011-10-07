@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using SS3D_shared;
+using SS3D_shared.GO;
 
 namespace CGO
 {
@@ -16,13 +17,13 @@ namespace CGO
             DrawDepth = 2; //Floor drawdepth
         }
 
-        public override void RecieveMessage(object sender, MessageType type, List<ComponentReplyMessage> replies, params object[] list)
+        public override void RecieveMessage(object sender, ComponentMessageType type, List<ComponentReplyMessage> replies, params object[] list)
         {
             base.RecieveMessage(sender, type, replies, list);
 
             switch (type)
             {
-                case MessageType.MoveDirection:
+                case ComponentMessageType.MoveDirection:
                     switch ((Constants.MoveDirs)list[0])
                     {
                         case Constants.MoveDirs.north:
@@ -96,15 +97,15 @@ namespace CGO
                     }
                     DrawDepth = 4;
                     break;
-                case MessageType.ItemDetach:
+                case ComponentMessageType.ItemDetach:
                     SetSpriteByKey(basename);
                     DrawDepth = 2;
                     break;
-                case MessageType.ItemWorn:
+                case ComponentMessageType.ItemWorn:
                     worn = true;
                     DrawDepth = 4;
                     break;
-                case MessageType.ItemUnWorn:
+                case ComponentMessageType.ItemUnWorn:
                     worn = false;
                     break;
             }

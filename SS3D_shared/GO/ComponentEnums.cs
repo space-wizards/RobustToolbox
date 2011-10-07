@@ -75,4 +75,21 @@ namespace SS3D_shared.GO
         SetDrawDepth
     }
 
+    public enum DrawDepth
+    {
+        FloorTiles,
+        FloorObjects,
+        ItemsOnFloor,
+        MobBase,
+        MobUnderClothingLayer,
+        MobOverClothingLayer,
+        HeldItems,
+        Tables,
+        ItemsOnTables,
+        Doors,
+        Walls,
+        WallMountedItems,
+        WallTops,
+        LightOverlay
+    }
 }

@@ -79,8 +79,9 @@ namespace SS3D.Atom
             Draw();
         }
 
-        public virtual void Initialize()
+        public override void Initialize()
         {
+            base.Initialize();
             /*
             keyStates = new Dictionary<KeyboardKeys, bool>();
             keyHandlers = new Dictionary<KeyboardKeys, KeyEvent>();

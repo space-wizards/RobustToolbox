@@ -77,7 +77,7 @@ namespace CGO
         /// <summary>
         /// Sets up variables and shite
         /// </summary>
-        public void Initialize()
+        public virtual void Initialize()
         {
             components = new Dictionary<ComponentFamily, IGameObjectComponent>();
         }

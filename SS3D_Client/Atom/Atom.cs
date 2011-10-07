@@ -49,9 +49,10 @@ namespace SS3D.Atom
         public bool snapTogrid = false; // Is this locked to the grid, eg a door / window
 
         //Input
+        /*
         public Dictionary<KeyboardKeys, bool> keyStates;
         public Dictionary<KeyboardKeys, KeyEvent> keyHandlers;
-
+        */
         public delegate void KeyEvent(bool state);
 
         //Misc
@@ -80,9 +81,10 @@ namespace SS3D.Atom
 
         public virtual void Initialize()
         {
+            /*
             keyStates = new Dictionary<KeyboardKeys, bool>();
             keyHandlers = new Dictionary<KeyboardKeys, KeyEvent>();
-
+            */
             position = new Vector2D(160, 160);
             rotation = 0;
 
@@ -205,23 +207,6 @@ namespace SS3D.Atom
             // Do nothing. This should be overridden by the child.
         }
 
-        public override void SendPositionUpdate()
-        {
-            //Rate limit
-            TimeSpan timeSinceLastUpdate = DateTime.Now - lastPositionUpdate;
-            if (timeSinceLastUpdate.TotalMilliseconds < 1000 / positionUpdateRateLimit)
-                return;
-
-            // This is only useful if the fucking shit is actually controlled by a player
-            NetOutgoingMessage message = CreateAtomMessage();
-            message.Write((byte)AtomMessage.PositionUpdate);
-            message.Write(position.X);
-            message.Write(position.Y);
-            message.Write(rotation);
-            atomManager.networkManager.SendMessage(message, NetDeliveryMethod.ReliableUnordered);
-            lastPositionUpdate = DateTime.Now;
-        }
-
         protected NetOutgoingMessage CreateAtomMessage()
         {
             NetOutgoingMessage message = atomManager.networkManager.netClient.CreateMessage();
@@ -256,11 +241,12 @@ namespace SS3D.Atom
             updateRequired = false;
 
             UpdatePosition();
-            UpdateKeys();
+            //UpdateKeys();
         }
 
-        public virtual void UpdateKeys()
+        /*public virtual void UpdateKeys()
         {
+            
             //Rate limit
             TimeSpan timeSinceLastUpdate = atomManager.now - lastKeyUpdate;
             if (timeSinceLastUpdate.TotalMilliseconds < 1000 / keyUpdateRateLimit)
@@ -289,7 +275,8 @@ namespace SS3D.Atom
                     keyStates.Remove(state.Key);
             }
             lastKeyUpdate = atomManager.now;
-        }
+             
+        }*/
 
         // Mobs may need to override this for animation, or they could use this.
         public virtual void UpdatePosition()
@@ -402,18 +389,20 @@ namespace SS3D.Atom
              * BEFORE calling initKeys(). */
         }
         
+        /*
         public void HandleKeyPressed(KeyboardKeys k)
         {
-            SetKeyState(k, true);
+            //SetKeyState(k, true);
         }
 
         public void HandleKeyReleased(KeyboardKeys k)
         {
-            SetKeyState(k, false);
+            //SetKeyState(k, false);
         }
 
         protected void SetKeyState(KeyboardKeys k, bool state)
         {
+            
             // Check to see if we have a keyhandler for the key that's been pressed. Discard invalid keys.
             if (keyHandlers.ContainsKey(k))
             {
@@ -427,10 +416,10 @@ namespace SS3D.Atom
             if (keyStates.ContainsKey(k) && keyStates[k])
                 return true;
             return false;
-        }
+        }*/
 
         #region mouse handling
-        public bool WasClicked(Vector2D worldPosition)
+        /*public bool WasClicked(Vector2D worldPosition)
         {
             return false; //HACKED TO DISABLE ATOM CLICKING WITHOUT COMPONENTS
             System.Drawing.RectangleF AABB = new System.Drawing.RectangleF(position.X - (sprite.Width / 2), position.Y - (sprite.Height / 2), sprite.Width, sprite.Height);
@@ -445,19 +434,8 @@ namespace SS3D.Atom
             if (pixColour.A == 0)
                 return false;
             return true;
-        }
+        }*/
 
-        public override void HandleClick()
-        {
-            SendClick();
-        }
-
-        public void SendClick()
-        {
-            NetOutgoingMessage message = CreateAtomMessage();
-            message.Write((byte)AtomMessage.Click);
-            SendMessage(message);
-        }
         #endregion
 
         #endregion

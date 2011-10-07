@@ -39,7 +39,7 @@ namespace SS3D.Atom.Mob
             c.SetParameter(new ComponentParameter("basename", typeof(string), "human"));
             AddComponent(SS3D_shared.GO.ComponentFamily.Renderable, c);
 
-            speed = walkSpeed;
+            //speed = walkSpeed;
         }
 
         public virtual void initAppendages()
@@ -79,11 +79,6 @@ namespace SS3D.Atom.Mob
         public override void initKeys()
         {
             base.initKeys();
-
-            keyHandlers.Add(KeyboardKeys.Q, new KeyEvent(HandleKC_Q));
-            keyHandlers.Add(KeyboardKeys.LShiftKey, new KeyEvent(HandleKC_SHIFT));
-            keyHandlers.Add(KeyboardKeys.RShiftKey, new KeyEvent(HandleKC_SHIFT));
-            
         }
 
         public override void Update(float time)
@@ -152,14 +147,6 @@ namespace SS3D.Atom.Mob
                 SendDropItem();
         }
 
-        public virtual void HandleKC_SHIFT(bool state)
-        {
-            if (state == true)
-                speed = runSpeed;
-            else
-                speed = walkSpeed;
-        }
-
         protected override void HandleExtendedMessage(NetIncomingMessage message)
         {
             MobMessage mobMessageType = (MobMessage)message.ReadByte();
@@ -186,8 +173,9 @@ namespace SS3D.Atom.Mob
             isDead = true;
 
             //Clear key handlers
+            /*
             keyHandlers.Clear();
-            keyStates.Clear();
+            keyStates.Clear();*/
         }
         
         /// <summary>

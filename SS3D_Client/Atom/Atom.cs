@@ -114,7 +114,7 @@ namespace SS3D.Atom
             drawn = true;
         }
 
-        public virtual void SetSpriteByIndex(int _index)
+        /*public virtual void SetSpriteByIndex(int _index)
         {
             if (spriteNames.Keys.Contains(_index))
             {
@@ -122,12 +122,13 @@ namespace SS3D.Atom
                 spritename = spriteNames[_index];
                 Draw();
             }
-        }
+        }*/
 
+        /*
         public int GetSpriteIndex()
         {
             return index;
-        }
+        }*/
         #endregion
 
         #region network stuff
@@ -240,7 +241,7 @@ namespace SS3D.Atom
             //This lets the atom only update when it needs to. If it needs to update subsequent to this, the functions below will set that flag.
             updateRequired = false;
 
-            UpdatePosition();
+            //UpdatePosition();
             //UpdateKeys();
         }
 

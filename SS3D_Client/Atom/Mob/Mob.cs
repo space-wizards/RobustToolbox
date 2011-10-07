@@ -288,7 +288,7 @@ namespace SS3D.Atom.Mob
 
         public override void Render(float xTopLeft, float yTopLeft)
         {
-            if (GetSpriteIndex() == 3)
+            /*if (GetSpriteIndex() == 3)
             {
                 //sprite.HorizontalFlip = true;
             }
@@ -317,7 +317,7 @@ namespace SS3D.Atom.Mob
                     //atom.SetSpriteByIndex(-1); // Reset the index to the on map value for the GUI and in case it's dropped
                 }
             }
-
+            
             // Lets draw their appendages
             foreach (Appendage a in appendages.Values)
             {
@@ -339,7 +339,7 @@ namespace SS3D.Atom.Mob
                     //a.attachedItem.SetSpriteByIndex(-1);
                 }
             }
-            
+            */
         }
     }
 }

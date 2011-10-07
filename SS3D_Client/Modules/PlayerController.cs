@@ -86,7 +86,7 @@ namespace SS3D.Modules
             if (controlledAtom == null)
                 return;
 
-            controlledAtom.HandleKeyPressed(key);
+            //controlledAtom.HandleKeyPressed(key);
         }
 
         public void KeyUp(KeyboardKeys key)
@@ -96,7 +96,7 @@ namespace SS3D.Modules
             if (controlledAtom == null)
                 return;
 
-            controlledAtom.HandleKeyReleased(key);
+            //controlledAtom.HandleKeyReleased(key);
         }
 
         #region netcode

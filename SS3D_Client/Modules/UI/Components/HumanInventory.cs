@@ -160,7 +160,7 @@ namespace SS3D.Modules.UI.Components
                     if (lastSlot != GUIBodyPart.None) // It came from the inventory
                     {
                         m.SendUnequipItem(lastSlot);
-                        heldAtom.SendClick();
+                        //heldAtom.SendClick();
                     }
                 }
             }

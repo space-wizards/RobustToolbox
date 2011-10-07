@@ -174,17 +174,12 @@ namespace CGO
         /// <summary>
         /// Movement speed of the entity. This should be refactored.
         /// </summary>
-        public float speed = 600.0f;
+        //public float speed = 600.0f;
 
         //FUNCTIONS TO REFACTOR AT A LATER DATE
         /// <summary>
         /// This should be refactored to some sort of component that sends entity movement input or something.
         /// </summary>
-        public virtual void SendPositionUpdate()
-        { }
-
-        public virtual void HandleClick()
-        { }
 
         public void Moved()
         {

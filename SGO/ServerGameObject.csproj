@@ -45,11 +45,13 @@
     <Compile Include="ComponentParameter.cs" />
     <Compile Include="Component\Actor\BasicActorComponent.cs" />
     <Compile Include="Component\ClickableComponent.cs" />
+    <Compile Include="Component\Collidable\CollidableComponent.cs" />
     <Compile Include="Component\Hands\HumanHandsComponent.cs" />
     <Compile Include="Component\Input\KeyBindingInputComponent.cs" />
     <Compile Include="Component\Interactable\BasicInteractableComponent.cs" />
     <Compile Include="Component\Item\BasicItemComponent.cs" />
     <Compile Include="Component\LargeObject\BasicLargeObjectComponent.cs" />
+    <Compile Include="Component\LargeObject\BasicDoorComponent.cs" />
     <Compile Include="Component\Mover\BasicMoverComponent.cs" />
     <Compile Include="Component\Mover\PlayerInputMoverComponent.cs" />
     <Compile Include="Component\Mover\SlaveMoverComponent.cs" />

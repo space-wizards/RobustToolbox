@@ -31,6 +31,8 @@ namespace SGO
         EmptyHandToActorInteraction,
         PickUpItem,
         Dropped,
-        PickedUp
+        PickedUp,
+        DisableCollision,
+        EnableCollision
     }
 }

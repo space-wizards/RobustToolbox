@@ -97,6 +97,21 @@ namespace CGO
             }
         }
 
+        public override void HandleNetworkMessage(IncomingEntityComponentMessage message)
+        {
+            MessageType type = (MessageType)message.messageParameters[0];
+            switch (type)
+            {
+                case MessageType.EnableCollision:
+                    EnableCollision();
+                    break;
+                case MessageType.DisableCollision:
+                    DisableCollision();
+                    break;
+
+            }
+        }
+
         /// <summary>
         /// Parameter Setting
         /// Settable params:

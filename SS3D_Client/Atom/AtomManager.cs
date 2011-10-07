@@ -172,8 +172,8 @@ namespace SS3D.Atom
                 throw new TypeLoadException("Could not load type " + "SS3D." + type);
             object atom = Activator.CreateInstance(atomType); // Create atom of type atomType with parameters uid, this
             ((Atom)atom).Uid = uid;
-
             m_entityManager.AddAtomEntity((Entity)atom); //Add entity to entity manager.
+
             atomDictionary[uid] = (Atom)atom;
 
             atomDictionary[uid].SetUp(uid, this);

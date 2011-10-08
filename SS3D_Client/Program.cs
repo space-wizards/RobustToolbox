@@ -85,7 +85,7 @@ namespace SS3D
 
         //Initialize Services
         ServiceManager.Singleton.AddService(new CollisionManager());
-        ServiceManager.Singleton.AddService(ClientLighting.LightManager.Singleton);
+        ServiceManager.Singleton.AddService(ClientServices.Lighting.LightManager.Singleton);
 
         Gorgon.Idle += new FrameEventHandler(prg.GorgonIdle);
         System.Windows.Forms.Application.Run(prg.GorgonForm);

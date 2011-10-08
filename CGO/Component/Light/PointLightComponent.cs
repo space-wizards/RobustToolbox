@@ -3,8 +3,9 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using ClientInterfaces;
-using ClientLighting;
+using ClientServices.Lighting;
 using GorgonLibrary;
+using ClientServices.Map;
 
 namespace CGO
 {
@@ -23,7 +24,7 @@ namespace CGO
         {
             base.OnAdd(owner);
 
-            light = new Light((ClientMap.Map)ClientServices.ServiceManager.Singleton.GetService(ClientServiceType.Map),
+            light = new Light((Map)ClientServices.ServiceManager.Singleton.GetService(ClientServiceType.Map),
                     System.Drawing.Color.FloralWhite, 300, LightState.On, Owner.position);
             light.brightness = 1.5f;
 

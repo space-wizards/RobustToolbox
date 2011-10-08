@@ -19,7 +19,7 @@ using System.Linq;
 
 using ClientConfigManager;
 using ClientResourceManager;
-using ClientMap;
+using ClientServices.Map;
 
 namespace SS3D.States
 {

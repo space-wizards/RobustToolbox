@@ -6,7 +6,7 @@ using SS3D.States;
 using System.Collections.Generic;
 
 using SS3D_shared;
-using ClientMap;
+using ClientServices.Map;
 
 using Lidgren.Network;
 

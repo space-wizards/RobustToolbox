@@ -23,8 +23,8 @@ using SS3D.Modules.Network;
 using SS3D.Modules.UI;
 using SS3D.Modules.UI.Components;
 using SS3D_shared;
-using ClientLighting;
-using ClientMap;
+using ClientServices.Lighting;
+using ClientServices.Map;
 using ClientInterfaces;
 using ClientWindow;
 
@@ -386,7 +386,7 @@ namespace SS3D.States
                 }
 
 
-                ClientMap.Tiles.Tile t;
+                ClientServices.Map.Tiles.Tile t;
 
                 ///RENDER TILE BASES, PUT GAS SPRITES AND WALL TOP SPRITES INTO BATCHES TO RENDER LATER
 

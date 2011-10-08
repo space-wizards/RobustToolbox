@@ -22,8 +22,8 @@ using Lidgren.Network;
 using System.Windows.Forms;
 using SS3D_shared.HelperClasses;
 using ClientResourceManager;
-using ClientMap;
-using ClientMap.Tiles;
+using ClientServices.Map;
+using ClientServices.Map.Tiles;
 using ClientWindow;
 
 namespace SS3D.Modules
@@ -347,11 +347,11 @@ namespace SS3D.Modules
 
                     #region Align Tile
                     case AlignmentOptions.AlignTile:
-                        ClientMap.Tiles.Tile tile = map.GetTileAt(gameScreen.mousePosWorld);
+                        ClientServices.Map.Tiles.Tile tile = map.GetTileAt(gameScreen.mousePosWorld);
                         snapToLoc = new Vector2D(tile.position.X + (map.tileSpacing / 2) - ClientWindowData.xTopLeft, tile.position.Y + (map.tileSpacing / 2) - ClientWindowData.yTopLeft);
                         if ((new Vector2D(tile.position.X + (map.tileSpacing / 2), tile.position.Y + (map.tileSpacing / 2)) - gameScreen.playerController.controlledAtom.position).Length > active.range && !active.placeAnywhere) validLocation = false;
 
-                        if(activeType.IsSubclassOf(typeof(ClientMap.Tiles.Tile)))
+                        if (activeType.IsSubclassOf(typeof(ClientServices.Map.Tiles.Tile)))
                         {//Special handling for tiles? Not right now.
                         }
                         else if(activeType.IsSubclassOf(typeof(Atom.Atom)))
@@ -399,7 +399,7 @@ namespace SS3D.Modules
                 {
                     previewSprite.Position = adjusted;
                     previewSprite.Color = validLocation ? System.Drawing.Color.LimeGreen : System.Drawing.Color.Red;
-                    if (!activeType.IsSubclassOf(typeof(ClientMap.Tiles.Tile))) previewSprite.Rotation = rotation;
+                    if (!activeType.IsSubclassOf(typeof(ClientServices.Map.Tiles.Tile))) previewSprite.Rotation = rotation;
                     previewSprite.Opacity = 90;
                     previewSprite.Draw();
                     previewSprite.Color = System.Drawing.Color.White;

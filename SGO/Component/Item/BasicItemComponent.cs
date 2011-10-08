@@ -9,6 +9,7 @@ namespace SGO
     public class BasicItemComponent : GameObjectComponent
     {
         Entity currentHolder;
+        ItemFlag itemFlags;
 
         public BasicItemComponent()
         {

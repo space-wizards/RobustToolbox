@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
-using ClientInput;
+using ClientServices.Input;
 using SS3D_shared.GO;
 using SS3D_shared;
 

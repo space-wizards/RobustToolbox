@@ -31,7 +31,7 @@ using Lidgren.Network;
 using CGO;
 using System.Security;
 using System.Security.Permissions;
-using ClientInput;
+using ClientServices.Input;
 using ClientConfigManager;
 using ClientResourceManager;
 using ClientMap;

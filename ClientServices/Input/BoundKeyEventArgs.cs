@@ -4,7 +4,7 @@ using System.Linq;
 using System.Text;
 using SS3D_shared;
 
-namespace ClientInput
+namespace ClientServices.Input
 {
     public class BoundKeyEventArgs : EventArgs
     {

@@ -10,9 +10,9 @@ using System.Security;
 using SS3D_shared;
 
 
-namespace ClientInput
+namespace ClientServices.Input
 {
-    public class KeyBindingManager
+    public class KeyBindingManager 
     {
         private static KeyBindingManager singleton;
         public static KeyBindingManager Singleton

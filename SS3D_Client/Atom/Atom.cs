@@ -283,6 +283,7 @@ namespace SS3D.Atom
         // Mobs may need to override this for animation, or they could use this.
         public virtual void UpdatePosition()
         {
+            /*
             Vector2D difference;
             Vector2D fulldifference;
 
@@ -323,7 +324,7 @@ namespace SS3D.Atom
             }
 
             //sprite.Position = new Vector2D(position.X, position.Y);
-
+            */
         }
 
         #endregion

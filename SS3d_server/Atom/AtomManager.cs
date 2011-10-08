@@ -308,7 +308,7 @@ namespace SS3D_Server.Atom
         /// </summary>
         public void SetDrawDepthAtom(int uid, int depth)
         {
-            SetDrawDepthAtom(atomDictionary[uid], depth);
+            //SetDrawDepthAtom(atomDictionary[uid], depth);
         }
 
         /// <summary>
@@ -316,8 +316,8 @@ namespace SS3D_Server.Atom
         /// </summary>
         public void SetDrawDepthAtom(Atom atom, int depth)
         {
-            atom.drawDepth = depth;
-            SendAtomDrawDepth(atom.Uid, depth);
+            //atom.drawDepth = depth;
+            //SendAtomDrawDepth(atom.Uid, depth);
         }
 
         public void DeleteAtom(int uid)

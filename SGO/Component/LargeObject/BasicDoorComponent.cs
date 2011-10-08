@@ -11,11 +11,24 @@ namespace SGO
         bool Open = false;
         string openSprite = "";
         string closedSprite = "";
+        float openLength = 5000;
+        float timeOpen = 0;
 
         public BasicDoorComponent()
             :base()
         {
             family = SS3D_shared.GO.ComponentFamily.LargeObject;
+        }
+
+        public override void Update(float frameTime)
+        {
+            base.Update(frameTime);
+            if (Open)
+            {
+                timeOpen += frameTime;
+                if (timeOpen >= openLength)
+                    CloseDoor();
+            }
         }
 
         /// <summary>
@@ -40,16 +53,27 @@ namespace SGO
             //Apply actions
             if (Open)
             {
-                Open = !Open;
-                Owner.SendMessage(this, ComponentMessageType.EnableCollision, null);
-                Owner.SendMessage(this, ComponentMessageType.SetSpriteByKey, null, closedSprite);
+                CloseDoor();
             }
             else
             {
-                Open = !Open;
-                Owner.SendMessage(this, ComponentMessageType.DisableCollision, null);
-                Owner.SendMessage(this, ComponentMessageType.SetSpriteByKey, null, openSprite);
+                OpenDoor();
             }
+        }
+
+        private void OpenDoor()
+        {
+            Open = true;
+            Owner.SendMessage(this, ComponentMessageType.DisableCollision, null);
+            Owner.SendMessage(this, ComponentMessageType.SetSpriteByKey, null, openSprite);
+        }
+
+        private void CloseDoor()
+        {
+            Open = false;
+            timeOpen = 0;
+            Owner.SendMessage(this, ComponentMessageType.EnableCollision, null);
+            Owner.SendMessage(this, ComponentMessageType.SetSpriteByKey, null, closedSprite);
         }
 
         public override void SetParameter(ComponentParameter parameter)

@@ -23,7 +23,7 @@ namespace SS3D_Server.Atom.Object.Worktop
 
         protected override void ApplyAction(Atom a, Mob.Mob m)
         {
-            Vector2 newPos = this.position;
+            /*Vector2 newPos = this.position;
 
             Random rnd = new Random();
             int rndVarX = rnd.Next(-(int)placementVariance.X, (int)placementVariance.X); //Customize this depending on the type of sprite.
@@ -45,7 +45,7 @@ namespace SS3D_Server.Atom.Object.Worktop
 
             usedItem.SendAppendageUIUpdate(m);
 
-            usedItem.Translate(newPos, newRot);
+            usedItem.Translate(newPos, newRot);*/
         }
 
         public override void Update(float framePeriod)

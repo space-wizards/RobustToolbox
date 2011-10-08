@@ -4,6 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Runtime.Serialization;
 using SS3D_Server.Modules;
+using ServerServices;
 
 namespace SS3D_Server.Atom.Object.Atmos
 {
@@ -48,7 +49,7 @@ namespace SS3D_Server.Atom.Object.Atmos
                             continue;
                         var gastoAdd = Math.Sign(gasdiff) * Math.Min(maxAdd, Math.Abs(gasdiff));
                         g.nextGasses[gas.Key] += gastoAdd;
-                        LogManager.Log("Added " + gastoAdd.ToString() + " units of " + gas.Key.ToString() + "\n", LogLevel.Debug);
+                        LogManager.Log("Added " + gastoAdd.ToString() + " units of " + gas.Key.ToString() + "\n", ServerServices.LogLevel.Debug);
                     }
                 }
             }

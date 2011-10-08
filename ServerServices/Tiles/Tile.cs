@@ -2,11 +2,10 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
-using SS3D_Server.Tiles.Atmos;
-using SS3D_Server.Modules;
-using SS3D_Server.Modules.Map;
+using ServerServices.Tiles.Atmos;
+using ServerServices.Map;
 
-namespace SS3D_Server.Tiles
+namespace ServerServices.Tiles
 {
     public class Tile
     {
@@ -15,7 +14,7 @@ namespace SS3D_Server.Tiles
         public TileState tileState;
         public bool gasPermeable = false;
         public bool gasSink = false;
-        private Map map;
+        private Map.Map map;
         private int _x;
         private int _y;
 
@@ -28,7 +27,7 @@ namespace SS3D_Server.Tiles
             if(TileChange != null) TileChange(type);
         }
 
-        public Tile(int x, int y, Map _map)
+        public Tile(int x, int y, Map.Map _map)
         {
             tileState = TileState.Healthy;
             map = _map;
@@ -37,6 +36,7 @@ namespace SS3D_Server.Tiles
         }
 
         // These return true if the tile needs to be updated over the network
+        /*
         public bool ClickedBy(Atom.Atom clicker)
         {
             if (clicker == null)
@@ -52,6 +52,7 @@ namespace SS3D_Server.Tiles
              }
              return false;
         }
+        */ //TODO HOOK ME BACK UP WITH ENTITY SYSTEM
 
         public void AddDecal(DecalType type)
         {
@@ -62,10 +63,11 @@ namespace SS3D_Server.Tiles
             map.SendMessage(message);
         }
 
+        /*
         public virtual bool HandleItemClick(Atom.Item.Item item)
         {
             return false;
-        }
+        }*/ //TODO HOOK ME BACK UP WITH ENTITY SYSTEM
 
         
     }

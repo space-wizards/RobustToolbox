@@ -2,12 +2,13 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using ServerInterfaces;
 
 using Lidgren.Network;
 
-namespace SS3D_Server.Modules
+namespace ServerServices
 {
-    public class SS3DNetServer : NetServer
+    public class SS3DNetServer : NetServer, IService
     {
         private static SS3DNetServer singleton;
         public static SS3DNetServer Singleton
@@ -25,6 +26,21 @@ namespace SS3D_Server.Modules
             :base(netConfig)
         {
             singleton = this;
+        }
+
+        public void SendToAll(NetOutgoingMessage message)
+        {
+            SendToAll(message, NetDeliveryMethod.ReliableOrdered);
+        }
+
+        public void SendMessage(NetOutgoingMessage message, NetConnection client)
+        {
+            SendMessage(message, client, NetDeliveryMethod.ReliableOrdered);
+        }
+
+        public ServerServiceType ServiceType
+        {
+            get { return ServerServiceType.NetServer; }
         }
     }
 }

@@ -3,16 +3,17 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 
-namespace SS3D_Server.Tiles.Wall
+namespace ServerServices.Tiles.Wall
 {
     public class Wall : Tile
     {
-        public Wall(int x, int y, SS3D_Server.Modules.Map.Map _map)
+        public Wall(int x, int y, ServerServices.Map.Map _map)
             : base(x, y, _map)
         {
             tileType = TileType.Wall;
         }
 
+        /*
          public override bool HandleItemClick(Atom.Item.Item item)
          {
              TileState state = tileState;
@@ -50,5 +51,6 @@ namespace SS3D_Server.Tiles.Wall
                  return true;
              return false;
          }
+         */ //TODO HOOK THIS BACK UP WITH ENTITY SYSTEM
     }
 }

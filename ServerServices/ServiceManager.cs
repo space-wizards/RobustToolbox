@@ -5,7 +5,7 @@ using System.Text;
 using SS3D_shared;
 using ServerInterfaces;
 
-namespace ClientServices
+namespace ServerServices
 {
     /// <summary>
     /// WTF is wrong with me im gay

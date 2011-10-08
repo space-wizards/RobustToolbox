@@ -6,15 +6,17 @@ using System.IO;
 using System.Threading;
 using SS3D_Server.Modules;
 using SS3D_Server.Modules.Client;
-using SS3D_Server.Modules.Map;
+using ServerServices;
 using SS3D_Server.Modules.Chat;
 using SS3D_Server.Atom;
 using System.IO.Compression;
 using Lidgren.Network;
 using SS3D_shared;
+using ServerServices.Map;
 
 using SS3D_Server.Modules.Gamemodes;
 using SGO;
+using ServerServices.Tiles;
 
 namespace SS3D_Server
 {
@@ -147,6 +149,7 @@ namespace SS3D_Server
 
                 netConfig.Port = serverPort;
                 var netServer = new SS3DNetServer(netConfig);
+                ServiceManager.Singleton.AddService(netServer);
                 SS3DNetServer.Singleton.Start();
 
                 chatManager = new ChatManager();
@@ -520,7 +523,7 @@ namespace SS3D_Server
             {
                 for (int y = 0; y < mapHeight; y++)
                 {
-                    Tiles.Tile t = map.GetTileAt(x, y);
+                    Tile t = map.GetTileAt(x, y);
                     mapMessage.Write((byte)t.tileType);
                     mapMessage.Write((byte)t.tileState);
                 }
@@ -552,7 +555,7 @@ namespace SS3D_Server
             }
         }
 
-        public void SendMessageToAll(NetOutgoingMessage message, NetDeliveryMethod method = NetDeliveryMethod.ReliableOrdered)
+        /*public void SendMessageToAll(NetOutgoingMessage message, NetDeliveryMethod method = NetDeliveryMethod.ReliableOrdered)
         {
             if (message == null)
             {
@@ -562,9 +565,9 @@ namespace SS3D_Server
             //Console.WriteLine("Sending to all ("+i+") with size: " + message.LengthBits + " bytes");
 
             SS3DNetServer.Singleton.SendMessage(message, SS3DNetServer.Singleton.Connections, method, 0);
-        }
+        }*/
 
-        public void SendMessageTo(NetOutgoingMessage message, NetConnection connection, NetDeliveryMethod method = NetDeliveryMethod.ReliableOrdered)
+        /*public void SendMessageTo(NetOutgoingMessage message, NetConnection connection, NetDeliveryMethod method = NetDeliveryMethod.ReliableOrdered)
         {
             if (message == null || connection == null)
             {
@@ -572,6 +575,6 @@ namespace SS3D_Server
             }
             LogManager.Log("Sending to one with size: " + message.LengthBytes + " bytes", LogLevel.Debug);
             SS3DNetServer.Singleton.SendMessage(message, connection, method);
-        }
+        }*/
     }
 }

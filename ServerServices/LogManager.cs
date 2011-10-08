@@ -3,10 +3,11 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.IO;
+using ServerInterfaces;
 
-namespace SS3D_Server.Modules
+namespace ServerServices
 {
-    public class LogManager
+    public class LogManager : IService
     {
         StreamWriter logStream;
         LogLevel currentLogLevel;
@@ -95,6 +96,11 @@ namespace SS3D_Server.Modules
             }
         }
 
+
+        public ServerServiceType ServiceType
+        {
+            get { return ServerServiceType.LogManager; }
+        }
     }
 
     public enum LogLevel

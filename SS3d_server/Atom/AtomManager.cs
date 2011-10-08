@@ -13,9 +13,9 @@ using Lidgren.Network;
 using SGO;
 using SS3D_Server.Atom.Mob;
 using SS3D_Server.Modules;
-using SS3D_Server.Modules.Map;
 using SS3D_shared;
 using SS3D_shared.HelperClasses;
+using ServerServices;
 
 namespace SS3D_Server.Atom
 {
@@ -147,7 +147,7 @@ namespace SS3D_Server.Atom
             message.Write((byte)NetMessage.AtomManagerMessage);
             message.Write((byte)AtomManagerMessage.DeleteAtom);
             message.Write(uid);
-            SS3DServer.Singleton.SendMessageToAll(message);
+            SS3DNetServer.Singleton.SendToAll(message);
         }
         #endregion
 
@@ -161,7 +161,7 @@ namespace SS3D_Server.Atom
             message.Write(uid);
             message.Write(type);
             message.Write(atom.drawDepth);
-            SS3DServer.Singleton.SendMessageToAll(message);
+            SS3DNetServer.Singleton.SendToAll(message);
         }
 
         private void SendSpawnAtom(int uid, string type, NetConnection client)
@@ -173,7 +173,7 @@ namespace SS3D_Server.Atom
             message.Write(uid);
             message.Write(type);
             message.Write(atom.drawDepth);
-            SS3DServer.Singleton.SendMessageTo(message, client);
+            SS3DNetServer.Singleton.SendMessage(message, client);
         }
 
         public void SendAllAtoms(NetConnection client)
@@ -299,7 +299,7 @@ namespace SS3D_Server.Atom
             message.Write((byte)AtomManagerMessage.SetDrawDepth);
             message.Write(uid);
             message.Write(depth);
-            SS3DServer.Singleton.SendMessageToAll(message);
+            SS3DNetServer.Singleton.SendToAll(message);
         }
         #endregion
 

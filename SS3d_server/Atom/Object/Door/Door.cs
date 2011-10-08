@@ -31,7 +31,7 @@ namespace SS3D_Server.Atom.Object.Door
 
         protected override void ApplyAction(Atom a, Mob.Mob m)
         {
-            laststatus = status;
+            /*laststatus = status;
             if (status == DoorState.Closed)
             {
                 // Just as a test of item interaction, lets make a crowbar break / fix a door.
@@ -65,7 +65,7 @@ namespace SS3D_Server.Atom.Object.Door
                 UpdateState();
                 updateRequired = true;
             }
-
+            */
         }
 
         public override void Update(float framePeriod)

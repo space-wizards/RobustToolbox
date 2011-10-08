@@ -97,7 +97,7 @@ namespace SS3D.Atom.Mob
         /// </summary>
         public override void UpdatePosition()
         {
-            Vector2D lastPosition = position;
+            /*Vector2D lastPosition = position;
             base.UpdatePosition();
             UpdateCharacterDirection(position - lastPosition);
             
@@ -111,11 +111,12 @@ namespace SS3D.Atom.Mob
 
             if (isDead)
                 return;
+             */
         }
 
         public virtual void UpdateCharacterDirection(Vector2D movementVector)
         {
-            float angle = movementVector.Angle();
+            /*float angle = movementVector.Angle();
             if (movementVector == Vector2D.Zero)
                 return;
 
@@ -137,7 +138,7 @@ namespace SS3D.Atom.Mob
             }
             
 
-             
+             */
         }
 
         public virtual void HandleKC_Q(bool state)

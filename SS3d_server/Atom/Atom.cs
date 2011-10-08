@@ -130,10 +130,10 @@ namespace SS3D_Server.Atom
                     // Pass a message to the atom in question
                     Push(message.SenderConnection);
                     break;
-                case AtomMessage.PositionUpdate:
+                /*case AtomMessage.PositionUpdate:
                     // We'll accept position packets from the client so that movement doesn't lag. There may be other special cases like this.
                     HandlePositionUpdate(message);
-                    break;
+                    break;*/
                 case AtomMessage.Click:
                     HandleClick(message);
                     break;
@@ -182,7 +182,7 @@ namespace SS3D_Server.Atom
 
         public void SendInterpolationPacket(bool force)
         {
-            NetOutgoingMessage message = CreateAtomMessage();
+            /*NetOutgoingMessage message = CreateAtomMessage();
             message.Write((byte)AtomMessage.InterpolationPacket);
 
             InterpolationPacket i = new InterpolationPacket((float)position.X, (float)position.Y, rotation, 0); // Fuckugly
@@ -190,13 +190,14 @@ namespace SS3D_Server.Atom
 
             /* VVVV This is the force flag. If this flag is set, the client will run the interpolation 
              * packet even if it is that client's player mob. Use this in case the client has ended up somewhere bad.
-             */
+             *//*
             message.Write(force);
-            SS3DServer.Singleton.SendMessageToAll(message, NetDeliveryMethod.ReliableUnordered);
+            SS3DServer.Singleton.SendMessageToAll(message, NetDeliveryMethod.ReliableUnordered);*/
         }
 
         public void SendInterpolationPacket(bool force, NetConnection sender)
         {
+            /*
             NetOutgoingMessage message = CreateAtomMessage();
             message.Write((byte)AtomMessage.InterpolationPacket);
 
@@ -205,9 +206,9 @@ namespace SS3D_Server.Atom
 
             /* VVVV This is the force flag. If this flag is set, the client will run the interpolation 
              * packet even if it is that client's player mob. Use this in case the client has ended up somewhere bad.
-             */
+             *//*
             message.Write(force);
-            SS3DServer.Singleton.SendMessageTo(message, sender, NetDeliveryMethod.ReliableUnordered);
+            SS3DServer.Singleton.SendMessageTo(message, sender, NetDeliveryMethod.ReliableUnordered);*/
         }
 
         public NetOutgoingMessage CreateAtomMessage()
@@ -265,18 +266,18 @@ namespace SS3D_Server.Atom
 
         public virtual void SendCollidable()
         {
-            NetOutgoingMessage  message = CreateAtomMessage();
+            /*NetOutgoingMessage  message = CreateAtomMessage();
             message.Write((byte)AtomMessage.SetCollidable);
             message.Write(collidable);
-            SS3DServer.Singleton.SendMessageToAll(message);
+            SS3DServer.Singleton.SendMessageToAll(message);*/
         }
 
         public virtual void SendCollidable(NetConnection client)
         {
-            NetOutgoingMessage message = CreateAtomMessage();
+            /*NetOutgoingMessage message = CreateAtomMessage();
             message.Write((byte)AtomMessage.SetCollidable);
             message.Write(collidable);
-            SS3DServer.Singleton.SendMessageTo(message, client);
+            SS3DServer.Singleton.SendMessageTo(message, client);*/
         }
 
         public virtual void HandlePositionUpdate(NetIncomingMessage message)
@@ -285,7 +286,7 @@ namespace SS3D_Server.Atom
              * be able to move shit besides its associated player mob there may be 
              * cases when the client will need to move stuff around in a non-laggy 
              * way, but For now the only case I can think of is the player mob.*/
-            // Hack to accept position updates from clients
+            /*// Hack to accept position updates from clients
             if (attachedClient != null && message.SenderConnection == attachedClient && !IsDead())
             {
                 position.X = (double)message.ReadFloat();
@@ -296,7 +297,7 @@ namespace SS3D_Server.Atom
             }
             else
                 SendInterpolationPacket(true); // If its dead, it should update everyone (prevents movement after death)
-            // Discard the rest.
+            // Discard the rest.*/
         }
 
 
@@ -337,7 +338,7 @@ namespace SS3D_Server.Atom
         #region input handling
         protected virtual void Clicked(Mob.Mob clicker)
         {
-            Vector2 dist = clicker.position - position;
+            /*Vector2 dist = clicker.position - position;
 
             //If we're too far away
             if (dist.Magnitude > 96)
@@ -351,7 +352,7 @@ namespace SS3D_Server.Atom
                 ApplyAction(clicker.selectedAppendage.heldItem, clicker);
 
             //SS3DServer.Singleton.chatManager.SendChatMessage(0, clicker.name + " touched the " + name + ".", "", uid);
-            LogManager.Log(clicker.name + "(" + clicker.Uid.ToString() + ")" + " clicked " + name + "(" + Uid.ToString() + ").", LogLevel.Debug);
+            LogManager.Log(clicker.name + "(" + clicker.Uid.ToString() + ")" + " clicked " + name + "(" + Uid.ToString() + ").", LogLevel.Debug);*/
         }
         #endregion
 
@@ -363,12 +364,12 @@ namespace SS3D_Server.Atom
         /// <param name="m">Mob that used a on this one</param>
         protected virtual void ApplyAction(Atom a, Mob.Mob m)
         {
-            if(m != null && m.selectedAppendage.heldItem != null)
+            /*if(m != null && m.selectedAppendage.heldItem != null)
                 m.selectedAppendage.heldItem.UsedOn(this); //Technically this is the same fucking thing as a, but i dont want to fuck with explicit casting it.
 
             //apply extension actions
             foreach (Extension.Extension e in extensions)
-                e.ApplyAction(a, m);
+                e.ApplyAction(a, m);*/
         }
 
         /// <summary>
@@ -379,9 +380,9 @@ namespace SS3D_Server.Atom
         /// <param name="target">Atom for this atom to be used on</param>
         protected virtual void UsedOn(Atom target)
         {
-            //Apply extensions
+            /*//Apply extensions
             foreach (Extension.Extension e in extensions)
-                e.UsedOn(target);
+                e.UsedOn(target);*/
         }
         #endregion
 

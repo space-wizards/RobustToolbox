@@ -67,14 +67,14 @@ namespace SS3D_Server.Atom.Item
         /// <param name="m">The mob that has used atom a on this one.</param>
         protected override void ApplyAction(Atom a, Mob.Mob m)
         {
-            if (a == null && holdingAppendage == null) //If mob's not holding an item and this item is not being held
+            /*if (a == null && holdingAppendage == null) //If mob's not holding an item and this item is not being held
             {
                 PickedUpBy(m);
             }
             else if (a != null) // If mob's holding an item
                 base.ApplyAction(a, m);
 
-            //Otherwise do nothing.             
+            //Otherwise do nothing.     */        
         }
 
         /// <summary>
@@ -87,7 +87,7 @@ namespace SS3D_Server.Atom.Item
         /// <param name="target">The atom that this one has been used on.</param>
         protected override void UsedOn(Atom target)
         {
-            base.UsedOn(target);
+            /*base.UsedOn(target);
             switch (target.GetType().ToString())
             {
                 default:
@@ -96,7 +96,7 @@ namespace SS3D_Server.Atom.Item
                     //Send attack animation (this is a retarded way of doing this really)
                     holdingAppendage.AnimateAttack();
                     break;
-            }
+            }*/
         }
 
         /// <summary>

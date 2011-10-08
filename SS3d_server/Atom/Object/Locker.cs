@@ -30,7 +30,7 @@ namespace SS3D_Server.Atom.Object
         
         protected override void ApplyAction(Atom a, Mob.Mob m)
         {
-            base.ApplyAction(a, m);
+            /*base.ApplyAction(a, m);
 
             open = !open;
             if (open)
@@ -38,7 +38,7 @@ namespace SS3D_Server.Atom.Object
             //SetSpriteState(1);
             else
                 SendMessage(null, ComponentMessageType.SetSpriteByKey, null, "locker_closed");
-                //SetSpriteState(0);
+                //SetSpriteState(0);*/
         }
     }
 }

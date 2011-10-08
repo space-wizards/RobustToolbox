@@ -293,6 +293,7 @@ namespace SS3D_Server
                 if (lastFrame.TotalMilliseconds > framePeriod)
                 {
                     atomManager.Update(framePeriod);
+                    ComponentManager.Singleton.Update(framePeriod);
                     map.UpdateAtmos();
                     RoundManager.Singleton.CurrentGameMode.Update();
                 }

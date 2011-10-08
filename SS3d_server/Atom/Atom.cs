@@ -6,7 +6,6 @@ using System.Runtime.Serialization;
 using System.Runtime.Serialization.Formatters.Binary;
 using System.Text;
 using Lidgren.Network;
-using SS3D_Server.Atom.Extension;
 using SS3D_Server.HelperClasses;
 using SS3D_Server.Modules;
 using SS3D_shared;
@@ -36,7 +35,6 @@ namespace SS3D_Server.Atom
         public Tile spawnTile; //The tile this atom spawned on. Used for wall mounted items etc.
 
         // Extensions
-        public List<Extension.Extension> extensions;
 
         // Position data
 
@@ -61,7 +59,6 @@ namespace SS3D_Server.Atom
             AddComponent(SS3D_shared.GO.ComponentFamily.Renderable, ComponentFactory.Singleton.GetComponent("SpriteComponent"));
             AddComponent(SS3D_shared.GO.ComponentFamily.Interactable, ComponentFactory.Singleton.GetComponent("BasicInteractableComponent"));
             AddComponent(SS3D_shared.GO.ComponentFamily.Mover, ComponentFactory.Singleton.GetComponent("BasicMoverComponent"));
-            extensions = new List<Extension.Extension>();
         }
 
         public void SetUp(int _uid, AtomManager _atomManager)
@@ -116,9 +113,6 @@ namespace SS3D_Server.Atom
         {
             //Updates the atom, item, whatever. This should be called from the atom manager's update queue.
             updateRequired = false;
-
-            foreach (Extension.Extension e in extensions)
-                e.Update(framePeriod);
         }
         #endregion
 

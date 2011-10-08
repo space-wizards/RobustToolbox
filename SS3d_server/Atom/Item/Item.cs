@@ -25,7 +25,6 @@ namespace SS3D_Server.Atom.Item
             : base()
         {
             spritestate = -1;
-            extensions.Add(new Extension.DummyExtension(this));
             AddComponent(SS3D_shared.GO.ComponentFamily.Item, ComponentFactory.Singleton.GetComponent("BasicItemComponent"));
         }
 

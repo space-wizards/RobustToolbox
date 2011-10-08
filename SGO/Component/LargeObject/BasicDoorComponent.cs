@@ -3,6 +3,8 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using SS3D_shared.GO;
+using ServerServices.Map;
+using ServerServices;
 
 namespace SGO
 {
@@ -63,17 +65,28 @@ namespace SGO
 
         private void OpenDoor()
         {
+            Map map = (Map)ServiceManager.Singleton.GetService(ServerServiceType.Map);
+            var occupiedTilePos = map.GetTileArrayPositionFromWorldPosition(Owner.position);
+            var occupiedTile = map.GetTileAt(occupiedTilePos.X, occupiedTilePos.Y);
             Open = true;
             Owner.SendMessage(this, ComponentMessageType.DisableCollision, null);
             Owner.SendMessage(this, ComponentMessageType.SetSpriteByKey, null, openSprite);
+
+            occupiedTile.gasPermeable = true;
+            occupiedTile.gasCell.blocking = false;
         }
 
         private void CloseDoor()
         {
+            Map map = (Map)ServiceManager.Singleton.GetService(ServerServiceType.Map);
+            var occupiedTilePos = map.GetTileArrayPositionFromWorldPosition(Owner.position);
+            var occupiedTile = map.GetTileAt(occupiedTilePos.X, occupiedTilePos.Y);
             Open = false;
             timeOpen = 0;
             Owner.SendMessage(this, ComponentMessageType.EnableCollision, null);
             Owner.SendMessage(this, ComponentMessageType.SetSpriteByKey, null, closedSprite);
+            occupiedTile.gasPermeable = false;
+            occupiedTile.gasCell.blocking = true;
         }
 
         public override void SetParameter(ComponentParameter parameter)

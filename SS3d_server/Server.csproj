@@ -78,8 +78,6 @@
   <ItemGroup>
     <Compile Include="Atom\Atom.cs" />
     <Compile Include="Atom\AtomManager.cs" />
-    <Compile Include="Atom\Extension\DummyExtension.cs" />
-    <Compile Include="Atom\Extension\Extension.cs" />
     <Compile Include="Atom\Item\Container\Toolbox.cs" />
     <Compile Include="Atom\Item\Item.cs" />
     <Compile Include="Atom\Item\Misc\Flashlight.cs" />
@@ -189,6 +187,9 @@
   </ItemGroup>
   <ItemGroup>
     <WCFMetadata Include="Service References\" />
+  </ItemGroup>
+  <ItemGroup>
+    <Folder Include="Atom\Extension\" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <PropertyGroup>

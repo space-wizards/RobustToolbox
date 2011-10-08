@@ -13,11 +13,11 @@ namespace SS3D_Server.Atom.Object.Door
     public class Door : Object
     {
 
-        DoorState status = DoorState.Closed;
+        /*DoorState status = DoorState.Closed;
         DoorState laststatus = DoorState.Closed;
         float openLength = 5000;
         float timeOpen = 0;
-
+        */
         public Door()
             : base()
         {
@@ -68,7 +68,7 @@ namespace SS3D_Server.Atom.Object.Door
             */
         }
 
-        public override void Update(float framePeriod)
+        /*public override void Update(float framePeriod)
         {
             base.Update(framePeriod);
 
@@ -100,15 +100,15 @@ namespace SS3D_Server.Atom.Object.Door
                 updateRequired = false;
                 timeOpen = 0;
             }
-         }
+         }*/
 
-        private void UpdateState()
+        /*private void UpdateState()
         {
             NetOutgoingMessage message = CreateAtomMessage();
             message.Write((byte)AtomMessage.Extended);
             message.Write((byte)status);
             SendMessageToAll(message);
-        }
+        }*/
 
         public Door(SerializationInfo info, StreamingContext ctxt)
         {

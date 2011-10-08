@@ -11,10 +11,11 @@ using SS3D_shared;
 using SS3D_shared.HelperClasses;
 using System.Reflection;
 using System.Drawing;
+using ServerInterfaces;
 
 namespace ServerServices.Map
 {
-    public class Map
+    public class Map : IService
     {
         #region Variables
         private Tile[,] tileArray;
@@ -632,5 +633,10 @@ namespace ServerServices.Map
         }
 
         #endregion
+
+        public ServerServiceType ServiceType
+        {
+            get { return ServerServiceType.Map; }
+        }
     }
 }

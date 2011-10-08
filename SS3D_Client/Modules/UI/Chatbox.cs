@@ -41,7 +41,7 @@ namespace SS3D.Modules.UI
             { 
                 active = value;
                 //HACK
-                ClientInput.KeyBindingManager.Singleton.Enabled = !active;
+                ClientServices.Input.KeyBindingManager.Singleton.Enabled = !active;
             }
         }
 

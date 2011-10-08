@@ -242,10 +242,6 @@
       <Project>{0FA996EF-1199-47E1-9AEB-FE8858DEFB2D}</Project>
       <Name>ClientConfigManager</Name>
     </ProjectReference>
-    <ProjectReference Include="..\ClientInput\ClientInput.csproj">
-      <Project>{79C6662F-3BFF-4741-8E19-A3976E51D762}</Project>
-      <Name>ClientInput</Name>
-    </ProjectReference>
     <ProjectReference Include="..\ClientInterfaces\ClientInterfaces.csproj">
       <Project>{B31E7B59-7066-4186-AB18-B1BB6DE0E537}</Project>
       <Name>ClientInterfaces</Name>

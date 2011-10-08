@@ -154,7 +154,7 @@ namespace CGO
         /// <param name="args">message parameters</param>
         public void SendMessage(object sender, ComponentMessageType type, List<ComponentReplyMessage> replies, params object[] args)
         {
-            foreach (IGameObjectComponent component in components.Values)
+            foreach (IGameObjectComponent component in components.Values.ToArray())
             {
                 component.RecieveMessage(sender, type, replies, args);
             }

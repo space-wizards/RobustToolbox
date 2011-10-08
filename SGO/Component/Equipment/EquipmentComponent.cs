@@ -45,7 +45,5 @@ namespace SGO.Component.Equipment
         {
 
         }
-
-
     }
 }

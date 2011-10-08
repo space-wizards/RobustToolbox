@@ -46,6 +46,8 @@
     <Compile Include="Component\Actor\BasicActorComponent.cs" />
     <Compile Include="Component\ClickableComponent.cs" />
     <Compile Include="Component\Collidable\CollidableComponent.cs" />
+    <Compile Include="Component\Equipment\EquipmentComponent.cs" />
+    <Compile Include="Component\Equipment\HumanEquipmentComponent.cs" />
     <Compile Include="Component\Hands\HumanHandsComponent.cs" />
     <Compile Include="Component\Input\KeyBindingInputComponent.cs" />
     <Compile Include="Component\Interactable\BasicInteractableComponent.cs" />

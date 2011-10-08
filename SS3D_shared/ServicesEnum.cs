@@ -4,3 +4,8 @@
     LightManager,
     Map,
 }
+
+public enum ServerServiceType
+{
+
+}

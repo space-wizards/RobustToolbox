@@ -5,10 +5,10 @@ using System.Text;
 using GorgonLibrary;
 using GorgonLibrary.Graphics;
 using ClientInterfaces;
-using ClientMap;
-using ClientMap.Tiles;
+using ClientServices.Map;
+using ClientServices.Map.Tiles;
 
-namespace ClientLighting
+namespace ClientServices.Lighting
 {
     /// <summary>
     ///  <para>Describes Colors of 4 Vertices.</para>

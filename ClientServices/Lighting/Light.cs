@@ -4,9 +4,9 @@ using System.Linq;
 using System.Text;
 using ClientInterfaces;
 using GorgonLibrary;
-using ClientMap;
+using ClientServices.Map;
 
-namespace ClientLighting
+namespace ClientServices.Lighting
 {
     public class Light : ILight
     {
@@ -17,15 +17,15 @@ namespace ClientLighting
         public LightState state;
         public Vector2D position;
         public Vector2D lastPosition;
-        public Map map;
-        public List<ClientMap.Tiles.Tile> tiles;
+        public Map.Map map;
+        public List<ClientServices.Map.Tiles.Tile> tiles;
 
         #region ILight members
         public Vector2D Position { get { return position; } set { position = value; } }
         public int Range { get { return range; } set { range = value; } }
         public void ClearTiles()
         {
-            foreach (ClientMap.Tiles.Tile t in tiles)
+            foreach (ClientServices.Map.Tiles.Tile t in tiles)
             {
                 t.tileLights.Remove(this);
             }
@@ -34,11 +34,11 @@ namespace ClientLighting
         public List<object> GetTiles()
         { return tiles.ToList<object>(); }
         public void AddTile(object tile)
-        { tiles.Add((ClientMap.Tiles.Tile)tile); }
+        { tiles.Add((ClientServices.Map.Tiles.Tile)tile); }
 
         #endregion
 
-        public Light(Map _map, System.Drawing.Color _color, int _range, LightState _state, Vector2D _position)
+        public Light(Map.Map _map, System.Drawing.Color _color, int _range, LightState _state, Vector2D _position)
         {
             Random r = new Random();
             map = _map;
@@ -46,7 +46,7 @@ namespace ClientLighting
             range = _range;
             state = _state;
             lastPosition = _position;
-            tiles = new List<ClientMap.Tiles.Tile>();
+            tiles = new List<ClientServices.Map.Tiles.Tile>();
             UpdateLight();
         }
 

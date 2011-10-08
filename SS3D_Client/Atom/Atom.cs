@@ -14,7 +14,7 @@ using SS3D.Modules;
 using SS3D.Modules.UI;
 using CGO;
 using ClientResourceManager;
-using ClientLighting;
+using ClientServices.Lighting;
 
 namespace SS3D.Atom
 {

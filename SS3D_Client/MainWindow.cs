@@ -34,7 +34,8 @@ using System.Security.Permissions;
 using ClientServices.Input;
 using ClientConfigManager;
 using ClientResourceManager;
-using ClientMap;
+using ClientServices.Map;
+using ClientServices.Map.Tiles;
 
 namespace SS3D
 {
@@ -444,25 +445,25 @@ namespace SS3D
         private void turfToolStripMenuItem_Click(object sender, EventArgs e)
         {
             atomSpawnType = null;
-            tileSpawnType = typeof(ClientMap.Tiles.Floor.Floor);
+            tileSpawnType = typeof(ClientServices.Map.Tiles.Floor.Floor);
             toolStripStatusLabel1.Text = tileSpawnType.ToString();
         }
 
         private void spaceToolStripMenuItem_Click(object sender, EventArgs e)
         {
-            tileSpawnType = typeof(ClientMap.Tiles.Floor.Space);
+            tileSpawnType = typeof(ClientServices.Map.Tiles.Floor.Space);
             PlacementManager.Singleton.SendObjectRequestEDITMODE(tileSpawnType, AlignmentOptions.AlignTile);
         }
 
         private void floorToolStripMenuItem_Click(object sender, EventArgs e)
         {
-            tileSpawnType = typeof(ClientMap.Tiles.Floor.Floor);
+            tileSpawnType = typeof(ClientServices.Map.Tiles.Floor.Floor);
             PlacementManager.Singleton.SendObjectRequestEDITMODE(tileSpawnType, AlignmentOptions.AlignTile);
         }
 
         private void wallToolStripMenuItem_Click(object sender, EventArgs e)
         {
-            tileSpawnType = typeof(ClientMap.Tiles.Wall.Wall);
+            tileSpawnType = typeof(ClientServices.Map.Tiles.Wall.Wall);
             PlacementManager.Singleton.SendObjectRequestEDITMODE(tileSpawnType, AlignmentOptions.AlignTile);
         }
 

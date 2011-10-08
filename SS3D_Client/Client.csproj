@@ -246,14 +246,6 @@
       <Project>{B31E7B59-7066-4186-AB18-B1BB6DE0E537}</Project>
       <Name>ClientInterfaces</Name>
     </ProjectReference>
-    <ProjectReference Include="..\ClientLighting\ClientLighting.csproj">
-      <Project>{863EA571-CF15-4D7E-AC4C-69E7ED559D6E}</Project>
-      <Name>ClientLighting</Name>
-    </ProjectReference>
-    <ProjectReference Include="..\ClientMap\ClientMap.csproj">
-      <Project>{ECC559C9-CB5C-4B71-8CF6-1F83EC64EAB4}</Project>
-      <Name>ClientMap</Name>
-    </ProjectReference>
     <ProjectReference Include="..\ClientResourceManager\ClientResourceManager.csproj">
       <Project>{37D792AE-0514-44BE-81E0-58EA28E26BB9}</Project>
       <Name>ClientResourceManager</Name>

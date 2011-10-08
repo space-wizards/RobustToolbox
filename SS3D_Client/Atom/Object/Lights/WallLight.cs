@@ -5,7 +5,7 @@ using System.Text;
 using System.Drawing;
 using GorgonLibrary;
 using SS3D.Modules;
-using ClientLighting;
+using ClientServices.Lighting;
 using CGO;
 
 namespace SS3D.Atom.Object.Lights

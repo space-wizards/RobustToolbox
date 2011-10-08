@@ -5,6 +5,7 @@ using System.Text;
 
 using Lidgren.Network;
 using SS3D_Server.Modules;
+using ServerServices;
 
 namespace SS3D_Server
 {
@@ -20,7 +21,7 @@ namespace SS3D_Server
 
             if (main.server.Start())
             {
-                LogManager.Log("Server -> Can not start server", LogLevel.Fatal); //Not like you'd see this, haha. Perhaps later for logging.
+                LogManager.Log("Server -> Can not start server", ServerServices.LogLevel.Fatal); //Not like you'd see this, haha. Perhaps later for logging.
                 Environment.Exit(0);
             }
 

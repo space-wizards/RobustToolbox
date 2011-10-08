@@ -7,5 +7,7 @@
 
 public enum ServerServiceType
 {
+    LogManager,
+    NetServer
 
 }

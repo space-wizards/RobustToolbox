@@ -4,14 +4,15 @@ using System.Linq;
 using System.Text;
 using System.IO;
 using System.Media;
-using SS3D_Server.Tiles;
+using ServerServices.Tiles;
 using Lidgren.Network;
 
 using SS3D_shared;
 using SS3D_shared.HelperClasses;
 using System.Reflection;
+using System.Drawing;
 
-namespace SS3D_Server.Modules.Map
+namespace ServerServices.Map
 {
     public class Map
     {
@@ -53,7 +54,7 @@ namespace SS3D_Server.Modules.Map
             switch (messageType)
             {
                 case MapMessage.TurfClick:
-                    HandleTurfClick(message);
+                    //HandleTurfClick(message);
                     break;
                 case MapMessage.TurfUpdate:
                     HandleTurfUpdate(message);
@@ -64,6 +65,7 @@ namespace SS3D_Server.Modules.Map
 
         }
 
+        /*
         private void HandleTurfClick(NetIncomingMessage message)
         {
             // Who clicked and on what tile.
@@ -91,19 +93,19 @@ namespace SS3D_Server.Modules.Map
                     NetworkUpdateTile(x, y);
                 }
             }
-        }
+        }*/ // TODO HOOK ME BACK UP WITH ENTITY SYSTEM
 
         private void DestroyWall(Point arrayPosition)
         {
-            if (IsSaneArrayPosition(arrayPosition.x, arrayPosition.y))
+            if (IsSaneArrayPosition(arrayPosition.X, arrayPosition.Y))
             {
-                var t = tileArray[arrayPosition.x, arrayPosition.y];
+                var t = tileArray[arrayPosition.X, arrayPosition.Y];
                 var g = t.gasCell;
-                Tiles.Tile newTile = GenerateNewTile(arrayPosition.x, arrayPosition.y, TileType.Floor);
-                tileArray[arrayPosition.x, arrayPosition.y] = newTile;
+                Tiles.Tile newTile = GenerateNewTile(arrayPosition.X, arrayPosition.Y, TileType.Floor);
+                tileArray[arrayPosition.X, arrayPosition.Y] = newTile;
                 newTile.gasCell = g;
                 g.AttachToTile(newTile);
-                NetworkUpdateTile(arrayPosition.x, arrayPosition.y);
+                NetworkUpdateTile(arrayPosition.X, arrayPosition.Y);
             }                
         }
 
@@ -136,7 +138,7 @@ namespace SS3D_Server.Modules.Map
             message.Write((short)y);
             message.Write((byte)tileArray[x, y].tileType);
             message.Write((byte)tileArray[x, y].tileState);
-            SS3DServer.Singleton.SendMessageToAll(message);
+            SS3DNetServer.Singleton.SendToAll(message);
         }
         #endregion
 
@@ -306,7 +308,7 @@ namespace SS3D_Server.Modules.Map
 
         public void AddGasAt(Point position, GasType type, int amount)
         {
-            tileArray[position.x, position.y].gasCell.AddGas(amount, type);
+            tileArray[position.X, position.Y].gasCell.AddGas(amount, type);
         }
 
         public void UpdateAtmos()
@@ -369,7 +371,7 @@ namespace SS3D_Server.Modules.Map
                 {
                     records[i].pack(message);
                 }
-                SS3DServer.Singleton.SendMessageToAll(message, NetDeliveryMethod.Unreliable);// Gas updates aren't a big deal.
+                SS3DNetServer.Singleton.SendToAll(message, NetDeliveryMethod.Unreliable);// Gas updates aren't a big deal.
                 LogManager.Log("Sending Gas update with " + recordsInPacket + " records\n", LogLevel.Debug);
                 position += recordsInPacket;
             }
@@ -398,8 +400,8 @@ namespace SS3D_Server.Modules.Map
             {
                 rec.pack(message);
             }
-            SS3DServer.Singleton.SendMessageTo(message, client, NetDeliveryMethod.Unreliable);// Gas updates aren't a big deal.
-            LogManager.Log("Sending Gas update to " + SS3DServer.Singleton.playerManager.GetSessionByConnection(client).name + "\n", LogLevel.Debug);
+            SS3DNetServer.Singleton.SendMessage(message, client, NetDeliveryMethod.Unreliable);// Gas updates aren't a big deal.
+            //LogManager.Log("Sending Gas update to " + SS3DServer.Singleton.playerManager.GetSessionByConnection(client).name + "\n", LogLevel.Debug);
         }
 
         /// <summary>
@@ -496,7 +498,7 @@ namespace SS3D_Server.Modules.Map
         /// <param name="message"></param>
         public void SendMessage(NetOutgoingMessage message)
         {
-            SS3DServer.Singleton.SendMessageToAll(message);
+            SS3DNetServer.Singleton.SendToAll(message);
         }
         #endregion
 
@@ -531,7 +533,7 @@ namespace SS3D_Server.Modules.Map
         public Tile GetTileFromWorldPosition(Vector2 pos)
         {
             Point arrayPos = GetTileArrayPositionFromWorldPosition(pos);
-            return GetTileAt(arrayPos.x, arrayPos.y);
+            return GetTileAt(arrayPos.X, arrayPos.Y);
         }
 
         public Point GetTileArrayPositionFromWorldPosition(Vector2 pos)
@@ -542,26 +544,26 @@ namespace SS3D_Server.Modules.Map
         public TileType GetObjectTypeFromWorldPosition(float x, float z)
         {
             Point arrayPosition = GetTileArrayPositionFromWorldPosition(x, z);
-            if (arrayPosition.x < 0 || arrayPosition.y < 0)
+            if (arrayPosition.X < 0 || arrayPosition.Y < 0)
             {
                 return TileType.None;
             }
             else
             {
-                return GetObjectTypeFromArrayPosition((int)arrayPosition.x, (int)arrayPosition.y);
+                return GetObjectTypeFromArrayPosition((int)arrayPosition.X, (int)arrayPosition.Y);
             }
         }
 
         private TileType GetObjectTypeFromWorldPosition(Vector2 pos)
         {
             Point arrayPosition = GetTileArrayPositionFromWorldPosition(pos.X, pos.Y);
-            if (arrayPosition.x < 0 || arrayPosition.y < 0)
+            if (arrayPosition.Y < 0 || arrayPosition.Y < 0)
             {
                 return TileType.None;
             }
             else
             {
-                return GetObjectTypeFromArrayPosition((int)arrayPosition.x, (int)arrayPosition.y);
+                return GetObjectTypeFromArrayPosition((int)arrayPosition.X, (int)arrayPosition.Y);
             }
         }
 

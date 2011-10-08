@@ -8,6 +8,8 @@ using SS3D_Server.Atom.Mob;
 using SS3D_Server.Atom.Mob.HelperClasses;
 using SGO;
 using SS3D_shared.GO;
+using SS3D_Server.Modules;
+using ServerServices;
 
 namespace SS3D_Server.Atom.Item
 {
@@ -126,7 +128,7 @@ namespace SS3D_Server.Atom.Item
             //send a message to the new holder's UI to put in the right image
             NetOutgoingMessage message = SS3DServer.Singleton.playerManager.GetSessionByConnection(target.attachedClient).CreateGuiMessage(SS3D_shared.GuiComponentType.AppendagesComponent);
             message.Write((byte)SS3D_shared.HandsComponentMessage.UpdateHandObjects);
-            SS3DServer.Singleton.SendMessageTo(message, target.attachedClient);
+            SS3DNetServer.Singleton.SendMessage(message, target.attachedClient);
         }
         
 
@@ -145,7 +147,7 @@ namespace SS3D_Server.Atom.Item
             outmessage.Write((byte)ItemMessage.AttachTo);
             outmessage.Write(holdingAppendage.owner.Uid);
             outmessage.Write(holdingAppendage.ID);
-            SS3DServer.Singleton.SendMessageToAll(outmessage);
+            SS3DNetServer.Singleton.SendToAll(outmessage);
         }
 
         /// <summary>
@@ -160,7 +162,7 @@ namespace SS3D_Server.Atom.Item
             NetOutgoingMessage outmessage = CreateAtomMessage();
             outmessage.Write((byte)AtomMessage.Extended);
             outmessage.Write((byte)ItemMessage.Detach);
-            SS3DServer.Singleton.SendMessageToAll(outmessage);
+            SS3DNetServer.Singleton.SendToAll(outmessage);
         }
 
         /// <summary>
@@ -178,7 +180,7 @@ namespace SS3D_Server.Atom.Item
             NetOutgoingMessage outmessage = CreateAtomMessage();
             outmessage.Write((byte)AtomMessage.Extended);
             outmessage.Write((byte)ItemMessage.DropItem);
-            SS3DServer.Singleton.SendMessageToAll(outmessage);
+            SS3DNetServer.Singleton.SendToAll(outmessage);
 
             SendAppendageUIUpdate(owner);
 

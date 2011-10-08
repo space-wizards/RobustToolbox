@@ -12,6 +12,9 @@ using SS3D_Server.Modules;
 using SS3D_shared;
 using SS3D_shared.HelperClasses;
 using SGO;
+using ServerServices;
+using System.Drawing;
+using ServerServices.Tiles;
 
 namespace SS3D_Server.Atom
 {
@@ -30,7 +33,7 @@ namespace SS3D_Server.Atom
 
         public Atom[] linkedAtoms = new Atom[4]; //0 = North, 1 = East, 2 = South, 3 = West
 
-        public Tiles.Tile spawnTile; //The tile this atom spawned on. Used for wall mounted items etc.
+        public Tile spawnTile; //The tile this atom spawned on. Used for wall mounted items etc.
 
         // Extensions
         public List<Extension.Extension> extensions;
@@ -222,12 +225,12 @@ namespace SS3D_Server.Atom
 
         protected void SendMessageToAll(NetOutgoingMessage message, NetDeliveryMethod method = NetDeliveryMethod.ReliableOrdered)
         {
-            SS3DServer.Singleton.SendMessageToAll(message, method);
+            SS3DNetServer.Singleton.SendToAll(message, method);
         }
 
         protected void SendMessageTo(NetOutgoingMessage message, NetConnection client , NetDeliveryMethod method = NetDeliveryMethod.ReliableOrdered)
         {
-            SS3DServer.Singleton.SendMessageTo(message, client, method);
+            SS3DNetServer.Singleton.SendMessage(message, client, method);
         }
 
         public virtual void SendState()
@@ -253,7 +256,7 @@ namespace SS3D_Server.Atom
             NetOutgoingMessage message = CreateAtomMessage();
             message.Write((byte)AtomMessage.SpriteState);
             message.Write(spritestate);
-            SS3DServer.Singleton.SendMessageToAll(message);
+            SS3DNetServer.Singleton.SendToAll(message);
         }
 
         public virtual void SendSpriteState(NetConnection client)
@@ -261,7 +264,7 @@ namespace SS3D_Server.Atom
             NetOutgoingMessage message = CreateAtomMessage();
             message.Write((byte)AtomMessage.SpriteState);
             message.Write(spritestate);
-            SS3DServer.Singleton.SendMessageTo(message, client);
+            SS3DNetServer.Singleton.SendMessage(message, client);
         }
 
         public virtual void SendCollidable()
@@ -490,10 +493,10 @@ namespace SS3D_Server.Atom
             isDead = true;
         }
 
-        public Tiles.Tile GetNearestTile()
+        public Tile GetNearestTile()
         {
             Point pos = SS3DServer.Singleton.map.GetTileArrayPositionFromWorldPosition(position);
-            return SS3DServer.Singleton.map.GetTileAt(pos.x, pos.y);
+            return SS3DServer.Singleton.map.GetTileAt(pos.X, pos.Y);
         }
         #endregion
 

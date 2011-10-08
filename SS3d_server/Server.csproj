@@ -65,6 +65,7 @@
     <Reference Include="System.Core">
       <RequiredTargetFramework>3.5</RequiredTargetFramework>
     </Reference>
+    <Reference Include="System.Drawing" />
     <Reference Include="System.Xml.Linq">
       <RequiredTargetFramework>3.5</RequiredTargetFramework>
     </Reference>
@@ -129,34 +130,33 @@
     <Compile Include="Atom\Object\WallMounted\WallMounted.cs" />
     <Compile Include="Atom\Object\Wall\Glass.cs" />
     <Compile Include="Helper Classes\InterpolationPacket.cs" />
-    <Compile Include="Helper Classes\Point.cs" />
     <Compile Include="Modules\Chat\ChatManager.cs" />
     <Compile Include="Modules\Client\Client.cs" />
     <Compile Include="Modules\ConfigManager.cs" />
     <Compile Include="Modules\Gamemodes.cs" />
-    <Compile Include="Modules\LogManager.cs" />
-    <Compile Include="Modules\Map\Map.cs" />
     <Compile Include="Modules\PlacementManager.cs" />
     <Compile Include="Modules\PlayerManager.cs" />
     <Compile Include="Modules\PlayerSession.cs" />
     <Compile Include="Modules\RoundManager.cs" />
-    <Compile Include="Modules\SS3DNetServer.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <None Include="Scripts\Atom\hat.cs">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
     <Compile Include="SS3DServer.cs" />
-    <Compile Include="Tiles\Atmos\GasCell.cs" />
-    <Compile Include="Tiles\Floor\Floor.cs" />
-    <Compile Include="Tiles\Floor\Space.cs" />
-    <Compile Include="Tiles\Tile.cs" />
-    <Compile Include="Tiles\Wall\Wall.cs" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\Lidgren.Network\Lidgren.Network.csproj">
       <Project>{AE483C29-042E-4226-BA52-D247CE7676DA}</Project>
       <Name>Lidgren.Network</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\ServerInterfaces\ServerInterfaces.csproj">
+      <Project>{54D36F17-8D71-4DD8-8B29-12CAD489F0D9}</Project>
+      <Name>ServerInterfaces</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\ServerServices\ServerServices.csproj">
+      <Project>{765AFD37-F6EF-4CDF-9596-C3DD15974A35}</Project>
+      <Name>ServerServices</Name>
     </ProjectReference>
     <ProjectReference Include="..\SGO\ServerGameObject.csproj">
       <Project>{A59BA08B-B934-49D1-A449-6BBDFE292C5E}</Project>
@@ -187,7 +187,9 @@
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
   </ItemGroup>
-  <ItemGroup />
+  <ItemGroup>
+    <WCFMetadata Include="Service References\" />
+  </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <PropertyGroup>
     <PostBuildEvent>

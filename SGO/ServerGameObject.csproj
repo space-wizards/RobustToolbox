@@ -33,6 +33,7 @@
   <ItemGroup>
     <Reference Include="System" />
     <Reference Include="System.Core" />
+    <Reference Include="System.Drawing" />
     <Reference Include="System.Xml.Linq" />
     <Reference Include="System.Data.DataSetExtensions" />
     <Reference Include="Microsoft.CSharp" />
@@ -77,6 +78,14 @@
     <ProjectReference Include="..\Lidgren.Network\Lidgren.Network.csproj">
       <Project>{AE483C29-042E-4226-BA52-D247CE7676DA}</Project>
       <Name>Lidgren.Network</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\ServerInterfaces\ServerInterfaces.csproj">
+      <Project>{54D36F17-8D71-4DD8-8B29-12CAD489F0D9}</Project>
+      <Name>ServerInterfaces</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\ServerServices\ServerServices.csproj">
+      <Project>{765AFD37-F6EF-4CDF-9596-C3DD15974A35}</Project>
+      <Name>ServerServices</Name>
     </ProjectReference>
     <ProjectReference Include="..\SS3D_shared\SS3D_shared.csproj">
       <Project>{4229D7E3-C3AE-4C0A-B2B1-BB20911150DC}</Project>

@@ -121,6 +121,7 @@ namespace SS3D_Server
             else if (runlevel == RunLevel.Game)
             {
                 map = new Map();
+                ServiceManager.Singleton.AddService(map);
                 map.InitMap(serverMapName);
 
                 entityManager = new EntityManager(SS3DNetServer.Singleton);

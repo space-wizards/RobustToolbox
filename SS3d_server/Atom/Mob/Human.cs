@@ -10,7 +10,6 @@ namespace SS3D_Server.Atom.Mob
         public Human()
             : base()
         {
-
         }
 
         protected override void initAppendages()
@@ -54,7 +53,6 @@ namespace SS3D_Server.Atom.Mob
             }
             base.Update(framePeriod);
             updateRequired = true;
-
         }
     }
 }

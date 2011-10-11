@@ -48,9 +48,7 @@ namespace ClientServices.Lighting
 
         public int ambientBrightness = 55;
 
-        private const int errorTolerance = 70; //Keep this around the size of tiles. Used to find out if a light is out of range.
         private ClientServiceType serviceType = ClientServiceType.LightManager;
-
 
         private LightManager() { }
 
@@ -130,7 +128,7 @@ namespace ClientServices.Lighting
         {
             sprite.UpdateAABB(); //Just to be safe that the verts are in the right pos. Might want to remove this when its handled reliably by the objects.
 
-            var lightsInRange = from Light l in lights where (l.position - sprite.Position - screenOffset).Length <= (l.range + errorTolerance) select l;
+            var lightsInRange = from Light l in lights where (l.position - sprite.Position - screenOffset).Length <= (l.range * 4) select l;
             Vector3D defaultLight = new Vector3D(ambientBrightness, ambientBrightness, ambientBrightness);
 
             SpriteLightDefinition lightInfo = new SpriteLightDefinition();

@@ -39,10 +39,9 @@ namespace CGO
 
         private void Translate(float x, float y)
         {
-            Vector2D delta = new Vector2D(x, y) - Owner.position;
+            Vector2D delta = new Vector2D(x, y) - Owner.Position;
 
-            Owner.position.X = x;
-            Owner.position.Y = y;
+            Owner.Position = new Vector2D(x, y);
             
             if (delta.X > 0 && delta.Y > 0)
                 SetMoveDir(Constants.MoveDirs.southeast);

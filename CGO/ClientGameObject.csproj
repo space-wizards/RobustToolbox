@@ -51,6 +51,7 @@
     <Compile Include="Component\ClickableComponent.cs" />
     <Compile Include="Component\Collidable\CollidableComponent.cs" />
     <Compile Include="Component\Collider\ColliderComponent.cs" />
+    <Compile Include="Component\Hands\HumanHandsComponent.cs" />
     <Compile Include="Component\Item\BasicItemComponent.cs" />
     <Compile Include="Component\Light\PointLightComponent.cs" />
     <Compile Include="Component\Mover\KeyBindingMoverComponent.cs" />
@@ -105,7 +106,6 @@
   </ItemGroup>
   <ItemGroup>
     <Folder Include="Component\Actor\" />
-    <Folder Include="Component\Hands\" />
     <Folder Include="Component\Interactable\" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />

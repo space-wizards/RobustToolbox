@@ -24,7 +24,7 @@ using Drawing = System.Drawing;
 
 using SS3D.States;
 using SS3D.Modules;
-using SS3D.Modules.UI;
+using SS3D.UserInterface;
 
 using Lidgren.Network;
 
@@ -72,7 +72,7 @@ namespace SS3D
             SetupGorgon();
             SetupInput();
             ResMgr.Singleton.Initialize();
-            SetupDesktop();
+            SetupUserInterface();
             SetupEditMenu();
 
             PlayerName_TextBox.Text = ConfigManager.Singleton.Configuration.PlayerName;
@@ -80,7 +80,6 @@ namespace SS3D
             Gorgon.Go(); //GO MUTHAFUCKA
 
             stateMgr.Startup(typeof(ConnectMenu));
-
         }
         
         private void SetupGorgon()
@@ -130,7 +129,7 @@ namespace SS3D
             _mouse.SetPositionRange(0, 0, Gorgon.CurrentClippingViewport.Width, Gorgon.CurrentClippingViewport.Height);
         }
 
-        private void SetupDesktop()
+        private void SetupUserInterface()
         {
             _skin = ResMgr.Singleton.GetGuiSkin("Interface1");
             UIDesktop.Initialize(_input, _skin);
@@ -140,6 +139,8 @@ namespace SS3D
             _desktop.FocusRectangleColor = Drawing.Color.FromArgb(128, Drawing.Color.Red);
             _desktop.FocusRectangleBlend = BlendingModes.Additive;
             _desktop.FocusRectangleOutline = false;
+
+            ClientServices.ServiceManager.Singleton.AddService(UiManager.Singleton);
         }
 
         public void SetupEditMenu()
@@ -478,7 +479,6 @@ namespace SS3D
 
         }
         #endregion
-
 
         private void toggleEditToolStripMenuItem_Click(object sender, EventArgs e)
         {

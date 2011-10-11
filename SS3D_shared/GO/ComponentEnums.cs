@@ -61,6 +61,7 @@ namespace SS3D_shared.GO
         EnableCollision,
         MoveDirection,
         HealthStatus,
+        EntityChanged,
         ItemDetach,
         ItemWorn,
         ItemUnWorn,
@@ -68,11 +69,20 @@ namespace SS3D_shared.GO
         SpriteChanged,
         CheckCollision,
         CollisionStatus,
+        GetSprite,
+        CurrentSprite,
         GetAABB,
         CurrentAABB,
         ClientInstantiated,
         GetMoveDir,
+        ActiveHandChanged,
         SetDrawDepth
+    }
+
+    public enum Hand
+    {
+        Left,
+        Right
     }
 
     public enum DrawDepth

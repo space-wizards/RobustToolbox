@@ -137,7 +137,7 @@ namespace CGO
 
         public virtual void SendPositionUpdate()
         {
-            Owner.SendComponentNetworkMessage(this, Lidgren.Network.NetDeliveryMethod.ReliableUnordered, Owner.position.X, Owner.position.Y);
+            Owner.SendComponentNetworkMessage(this, Lidgren.Network.NetDeliveryMethod.ReliableUnordered, Owner.Position.X, Owner.Position.Y);
         }
 
         /// <summary>
@@ -165,8 +165,8 @@ namespace CGO
         /// <returns></returns>
         public bool TryTranslate(Vector2D translationVector, bool SuppressBump)
         {
-            Vector2D oldPosition = Owner.position;
-            Owner.position += translationVector; // We move the sprite here rather than the position, as we can then use its updated AABB values.
+            Vector2D oldPosition = Owner.Position;
+            Owner.Position += translationVector; // We move the sprite here rather than the position, as we can then use its updated AABB values.
             //Check collision.
             var replies = new List<ComponentReplyMessage>();
             Owner.SendMessage(this, ComponentMessageType.CheckCollision, replies, false);
@@ -175,7 +175,7 @@ namespace CGO
                 bool colliding = (bool)replies.First().paramsList[0];
                 if (colliding) //Collided, reset position and return false.
                 {
-                    Owner.position = oldPosition;
+                    Owner.Position = oldPosition;
                     return false;
                 }
             }

@@ -11,11 +11,6 @@ namespace SGO
     {
         private Dictionary<Hand, Entity> handslots;
         private Hand currentHand = Hand.Left;
-        public enum Hand
-        {
-            Left,
-            Right
-        }
 
         public HumanHandsComponent()
         {
@@ -87,7 +82,10 @@ namespace SGO
         private void SetEntity(Hand hand, Entity entity)
         {
             if (entity != null && IsEmpty(hand))
+            {
                 handslots.Add(hand, entity);
+                //Owner.SendComponentNetworkMessage(this, Lidgren.Network.NetDeliveryMethod.ReliableOrdered, null, ComponentMessageType.EntityChanged, entity.Uid, hand); Maybe for later use?
+            }
         }
 
         /// <summary>
@@ -99,6 +97,7 @@ namespace SGO
             if (entity != null && IsEmpty(currentHand))
             {
                 SetEntity(currentHand, entity);
+                Owner.SendComponentNetworkMessage(this, Lidgren.Network.NetDeliveryMethod.ReliableOrdered, null, ComponentMessageType.PickedUp, entity.Uid, currentHand);
                 entity.SendMessage(this, ComponentMessageType.PickedUp, null, Owner);
             }
         }
@@ -120,6 +119,7 @@ namespace SGO
             if (!IsEmpty(hand))
             {
                 GetEntity(hand).SendMessage(this, ComponentMessageType.Dropped, null);
+                Owner.SendComponentNetworkMessage(this, Lidgren.Network.NetDeliveryMethod.ReliableOrdered, null, ComponentMessageType.Dropped, GetEntity(hand).Uid, hand);
                 handslots.Remove(hand);
             }
         }

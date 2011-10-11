@@ -5,11 +5,11 @@ using System.Text;
 
 using SS3D.Modules;
 using SS3D.Modules.Network;
-using SS3D.Modules.UI;
 using SS3D.Atom;
 
 using SS3D_shared;
 using SS3D.States;
+using SS3D.HelperClasses;
 
 using System.Reflection;
 
@@ -161,7 +161,7 @@ namespace SS3D.Modules
         {
             Type atomType = atomManager.GetAtomType(active.type);
             activeType = atomType;
-            previewSprite = ResMgr.Singleton.GetSprite(UiManager.Singleton.GetObjectSpriteName(atomType));
+            previewSprite = ResMgr.Singleton.GetSprite(Utilities.GetObjectSpriteName(atomType));
             placementQueued = false;
         }
 
@@ -209,7 +209,7 @@ namespace SS3D.Modules
                                             where a.GetAABB().IntersectsWith(previewSprite.AABB) || a.GetAABB().IntersectsWith(new System.Drawing.RectangleF(gameScreen.mousePosWorld.X,gameScreen.mousePosWorld.Y,2,2))
                                             select a;
 
-                        if (atomsBlocking.Any() || (gameScreen.mousePosWorld - gameScreen.playerController.controlledAtom.position).Length > active.range)
+                        if (atomsBlocking.Any() || (gameScreen.mousePosWorld - gameScreen.playerController.controlledAtom.Position).Length > active.range)
                             validLocation = false;
 
                         if (active.placeAnywhere) validLocation = true;
@@ -227,9 +227,9 @@ namespace SS3D.Modules
                         var atoms = from a in atomManager.atomDictionary.Values
                                     where a.IsTypeOf(activeType)
                                     where a.visible
-                                    where active.placeAnywhere ? true : (a.position - gameScreen.mousePosWorld).Length <= active.range * 2
-                                    where active.placeAnywhere ? true : (a.position - gameScreen.playerController.controlledAtom.position).Length <= active.range
-                                    orderby (a.position - gameScreen.mousePosWorld).Length ascending
+                                    where active.placeAnywhere ? true : (a.Position - gameScreen.mousePosWorld).Length <= active.range * 2
+                                    where active.placeAnywhere ? true : (a.Position - gameScreen.playerController.controlledAtom.Position).Length <= active.range
+                                    orderby (a.Position - gameScreen.mousePosWorld).Length ascending
                                     select a; //Basically: Get the closest similar object.
 
                         if (atoms.Count() > 0)
@@ -247,7 +247,7 @@ namespace SS3D.Modules
                             sideConnections.Add(rightConnection);
 
                             var closestSide = from Vector2D vec in sideConnections
-                                              where active.placeAnywhere ? true : (vec - gameScreen.playerController.controlledAtom.position).Length <= active.range
+                                              where active.placeAnywhere ? true : (vec - gameScreen.playerController.controlledAtom.Position).Length <= active.range
                                               where active.placeAnywhere ? true : !isSolidTile(map.GetTileAt(vec))
                                               orderby (vec - gameScreen.mousePosWorld).Length ascending
                                               select vec;
@@ -317,7 +317,7 @@ namespace SS3D.Modules
                             Nodes.Add(Node8);
 
                             var closestNode = from Vector2D vec in Nodes
-                                              where active.placeAnywhere ? true : (vec - gameScreen.playerController.controlledAtom.position).Length <= active.range
+                                              where active.placeAnywhere ? true : (vec - gameScreen.playerController.controlledAtom.Position).Length <= active.range
                                               orderby (vec - gameScreen.mousePosWorld).Length ascending
                                               select vec;
 
@@ -349,7 +349,7 @@ namespace SS3D.Modules
                     case AlignmentOptions.AlignTile:
                         ClientServices.Map.Tiles.Tile tile = map.GetTileAt(gameScreen.mousePosWorld);
                         snapToLoc = new Vector2D(tile.position.X + (map.tileSpacing / 2) - ClientWindowData.xTopLeft, tile.position.Y + (map.tileSpacing / 2) - ClientWindowData.yTopLeft);
-                        if ((new Vector2D(tile.position.X + (map.tileSpacing / 2), tile.position.Y + (map.tileSpacing / 2)) - gameScreen.playerController.controlledAtom.position).Length > active.range && !active.placeAnywhere) validLocation = false;
+                        if ((new Vector2D(tile.position.X + (map.tileSpacing / 2), tile.position.Y + (map.tileSpacing / 2)) - gameScreen.playerController.controlledAtom.Position).Length > active.range && !active.placeAnywhere) validLocation = false;
 
                         if (activeType.IsSubclassOf(typeof(ClientServices.Map.Tiles.Tile)))
                         {//Special handling for tiles? Not right now.
@@ -407,7 +407,7 @@ namespace SS3D.Modules
 
                 if (gameScreen.playerController.controlledAtom != null && !active.placeAnywhere)
                 {
-                    Gorgon.Screen.Circle(gameScreen.playerController.controlledAtom.position.X - ClientWindowData.xTopLeft, gameScreen.playerController.controlledAtom.position.Y - ClientWindowData.yTopLeft, active.range, System.Drawing.Color.DarkBlue, 2f, 2f);
+                    Gorgon.Screen.Circle(gameScreen.playerController.controlledAtom.Position.X - ClientWindowData.xTopLeft, gameScreen.playerController.controlledAtom.Position.Y - ClientWindowData.yTopLeft, active.range, System.Drawing.Color.DarkBlue, 2f, 2f);
                 }
 
                 #region Debug Display
@@ -418,9 +418,9 @@ namespace SS3D.Modules
                         case AlignmentOptions.AlignSimilar:
                             if (snapToAtom != null)
                             {
-                                Gorgon.Screen.Line(snapToAtom.position.X - ClientWindowData.xTopLeft, snapToAtom.position.Y - ClientWindowData.yTopLeft, -((snapToAtom.position.X - ClientWindowData.xTopLeft) - snapToLoc.X), -((snapToAtom.position.Y - ClientWindowData.yTopLeft) - snapToLoc.Y), System.Drawing.Color.White, new Vector2D(3, 3));
+                                Gorgon.Screen.Line(snapToAtom.Position.X - ClientWindowData.xTopLeft, snapToAtom.Position.Y - ClientWindowData.yTopLeft, -((snapToAtom.Position.X - ClientWindowData.xTopLeft) - snapToLoc.X), -((snapToAtom.Position.Y - ClientWindowData.yTopLeft) - snapToLoc.Y), System.Drawing.Color.White, new Vector2D(3, 3));
                                 Gorgon.Screen.FilledCircle(snapToLoc.X, snapToLoc.Y, 3, System.Drawing.Color.LimeGreen);
-                                Gorgon.Screen.FilledCircle(snapToAtom.position.X - ClientWindowData.xTopLeft, snapToAtom.position.Y - ClientWindowData.yTopLeft, 3, System.Drawing.Color.LimeGreen);
+                                Gorgon.Screen.FilledCircle(snapToAtom.Position.X - ClientWindowData.xTopLeft, snapToAtom.Position.Y - ClientWindowData.yTopLeft, 3, System.Drawing.Color.LimeGreen);
                             }
                             break;
                         case AlignmentOptions.AlignTile:

@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using CGO;
 
 namespace SS3D.Atom.Mob
 {
@@ -39,8 +40,8 @@ namespace SS3D.Atom.Mob
         public override System.Drawing.RectangleF GetAABB()
         {
             return new System.Drawing.RectangleF(
-                position.X - (sprite.AABB.Width / 2),
-                position.Y,
+                Position.X - (sprite.AABB.Width / 2),
+                Position.Y,
                 sprite.AABB.Width,
                 (sprite.AABB.Height/2));
         }

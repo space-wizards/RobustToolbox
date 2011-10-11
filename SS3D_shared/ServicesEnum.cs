@@ -3,6 +3,7 @@
     CollisionManager,
     LightManager,
     Map,
+    UiManager
 }
 
 public enum ServerServiceType

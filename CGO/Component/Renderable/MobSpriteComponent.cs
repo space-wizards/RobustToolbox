@@ -4,6 +4,7 @@ using System.Linq;
 using System.Text;
 using SS3D_shared;
 using SS3D_shared.GO;
+using GorgonLibrary.Graphics;
 
 namespace CGO
 {
@@ -74,6 +75,12 @@ namespace CGO
                     LoadSprites();
                     break;
             }
+        }
+
+        protected override Sprite GetBaseSprite()
+        {
+            //return sprites[basename + "_front"];
+            return currentSprite;
         }
 
         /// <summary>

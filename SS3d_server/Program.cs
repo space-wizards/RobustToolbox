@@ -16,8 +16,8 @@ namespace SS3D_Server
         static void Main(string[] args)
         {
             EntryPoint main = new EntryPoint();
-            LogManager.Log("Server -> Starting");
             main.server = new SS3DServer();
+            LogManager.Log("Server -> Starting");
 
             if (main.server.Start())
             {

@@ -33,6 +33,13 @@ namespace SGO
             }
         }
 
+        public override void OnAdd(Entity owner)
+        {
+            base.OnAdd(owner);
+
+            SetImpermeable();
+        }
+
         /// <summary>
         /// Entry point for interactions between an item and this object
         /// Basically, the actor uses an item on this object
@@ -85,6 +92,15 @@ namespace SGO
             timeOpen = 0;
             Owner.SendMessage(this, ComponentMessageType.EnableCollision, null);
             Owner.SendMessage(this, ComponentMessageType.SetSpriteByKey, null, closedSprite);
+            occupiedTile.gasPermeable = false;
+            occupiedTile.gasCell.blocking = true;
+        }
+
+        private void SetImpermeable()
+        {
+            Map map = (Map)ServiceManager.Singleton.GetService(ServerServiceType.Map);
+            var occupiedTilePos = map.GetTileArrayPositionFromWorldPosition(Owner.position);
+            var occupiedTile = map.GetTileAt(occupiedTilePos.X, occupiedTilePos.Y);
             occupiedTile.gasPermeable = false;
             occupiedTile.gasCell.blocking = true;
         }

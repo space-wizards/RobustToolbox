@@ -36,6 +36,7 @@ namespace SS3D.Atom.Mob
         {
             base.Initialize();
 
+            AddComponent(SS3D_shared.GO.ComponentFamily.Hands, ComponentFactory.Singleton.GetComponent("HumanHandsComponent"));
             SpriteComponent c = (SpriteComponent)ComponentFactory.Singleton.GetComponent("MobSpriteComponent");
             c.SetParameter(new ComponentParameter("basename", typeof(string), "human"));
             AddComponent(SS3D_shared.GO.ComponentFamily.Renderable, c);
@@ -99,7 +100,7 @@ namespace SS3D.Atom.Mob
         {
             /*Vector2D lastPosition = position;
             base.UpdatePosition();
-            UpdateCharacterDirection(position - lastPosition);
+            UpdateCharacterDirection(Position - lastPosition);
             
             foreach (Appendage a in appendages.Values)
             {

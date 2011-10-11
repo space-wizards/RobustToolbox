@@ -25,10 +25,10 @@ namespace CGO
             base.OnAdd(owner);
 
             light = new Light((Map)ClientServices.ServiceManager.Singleton.GetService(ClientServiceType.Map),
-                    System.Drawing.Color.FloralWhite, 300, LightState.On, Owner.position);
+                    System.Drawing.Color.FloralWhite, 300, LightState.On, Owner.Position);
             light.brightness = 1.5f;
 
-            light.UpdatePosition(Owner.position);
+            light.UpdatePosition(Owner.Position);
             light.UpdateLight();
             Owner.OnMove += new Entity.EntityMoveEvent(OnMove);
         }
@@ -42,7 +42,7 @@ namespace CGO
 
         private void OnMove(Vector2D toPosition)
         {
-            light.UpdatePosition(Owner.position);
+            light.UpdatePosition(Owner.Position);
         }
 
 

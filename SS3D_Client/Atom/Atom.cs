@@ -11,14 +11,14 @@ using GorgonLibrary;
 using GorgonLibrary.Graphics;
 using GorgonLibrary.InputDevices;
 using SS3D.Modules;
-using SS3D.Modules.UI;
+using SS3D.UserInterface;
 using CGO;
 using ClientResourceManager;
 using ClientServices.Lighting;
 
 namespace SS3D.Atom
 {
-    public abstract class Atom : CGO.Entity// CLIENT SIDE
+    public abstract class Atom : CGO.Entity // CLIENT SIDE
     {
         #region variables
         // GRAPHICS
@@ -86,7 +86,7 @@ namespace SS3D.Atom
             keyStates = new Dictionary<KeyboardKeys, bool>();
             keyHandlers = new Dictionary<KeyboardKeys, KeyEvent>();
             */
-            position = new Vector2D(160, 160);
+            Position = new Vector2D(160, 160);
             rotation = 0;
 
             interpolationPackets = new List<InterpolationPacket>();
@@ -295,9 +295,9 @@ namespace SS3D.Atom
             InterpolationPacket i = interpolationPackets[0];
 
             if (i.startposition.X == 1234 && i.startposition.Y == 1234) //This is silly, but vectors are non-nullable, so I can't do what I'd rather.
-                i.startposition = position;
+                i.startposition = Position;
 
-            difference = i.position - position;
+            difference = i.position - Position;
             fulldifference = i.position - i.startposition;
 
             // Set rotation. The packet may be rotation only.
@@ -318,7 +318,7 @@ namespace SS3D.Atom
                 //TODO: Make this better if it isn't good enough.
                 //difference /= 10; //Position updates were lagging. This would probably be faster on a better system.
                 //difference = fulldifference / 3;
-                position += difference/2;
+                Position += difference/2;
                 //Node.Position = position + offset;
                 updateRequired = true; // This interpolation packet and probably the ones after it are still useful, so we'll update again on the next cycle.
             }
@@ -334,7 +334,7 @@ namespace SS3D.Atom
         {
             if (spritename == "noSprite")
                 return;
-            System.Drawing.Point tilePos = atomManager.gameState.map.GetTileArrayPositionFromWorldPosition(position);
+            System.Drawing.Point tilePos = atomManager.gameState.map.GetTileArrayPositionFromWorldPosition(Position);
             //System.Drawing.Point topLeft = atomManager.gameState.map.GetTileArrayPositionFromWorldPosition(position - sprite.Size / 2);
             //System.Drawing.Point bottomRight = atomManager.gameState.map.GetTileArrayPositionFromWorldPosition(position + sprite.Size / 2);
             //sprite.SetPosition(position.X - xTopLeft, position.Y - yTopLeft);
@@ -371,8 +371,8 @@ namespace SS3D.Atom
         #region positioning
         public virtual System.Drawing.RectangleF GetAABB()
         {
-            return new System.Drawing.RectangleF(position.X - (sprite.AABB.Width / 2),
-                position.Y - (sprite.AABB.Height / 2),
+            return new System.Drawing.RectangleF(Position.X - (sprite.AABB.Width / 2),
+                Position.Y - (sprite.AABB.Height / 2),
                 sprite.AABB.Width,
                 sprite.AABB.Height);
         }
@@ -473,5 +473,6 @@ namespace SS3D.Atom
             return false;
         }
         #endregion
+
     }
 }

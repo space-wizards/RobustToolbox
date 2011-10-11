@@ -32,7 +32,6 @@ namespace CGO
         public event EntityMoveEvent OnMove;
         public delegate void EntityMoveEvent(Vector2D toPosition);
 
-
         /// <summary>
         /// Unique entity id
         /// </summary>
@@ -52,9 +51,12 @@ namespace CGO
         /// <summary>
         /// These are the only real pieces of data that the entity should have -- position and rotation.
         /// </summary>
-        public Vector2D position;
+        private Vector2D position;
+        public Vector2D Position { get { return position; } set { position = value; } }
+
         public float rotation;
         #endregion
+
         #region Constructor/Destructor
         /// <summary>
         /// Constructor
@@ -184,7 +186,7 @@ namespace CGO
         public void Moved()
         {
             if(OnMove != null)
-                OnMove(position);
+                OnMove(Position);
         }
 
         internal void HandleComponentMessage(IncomingEntityComponentMessage message)

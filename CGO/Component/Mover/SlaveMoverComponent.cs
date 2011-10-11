@@ -43,7 +43,7 @@ namespace CGO
         {
             master = EntityManager.Singleton.GetEntity(uid);
             master.OnMove += new Entity.EntityMoveEvent(HandleOnMove);
-            Translate(master.position);
+            Translate(master.Position);
             GetMasterMoveDirection();
         }
 
@@ -72,9 +72,9 @@ namespace CGO
 
         private void Translate(Vector2D toPosition)
         {
-            Vector2D delta = toPosition - Owner.position;
+            Vector2D delta = toPosition - Owner.Position;
 
-            Owner.position = toPosition;
+            Owner.Position = toPosition;
 
             if (delta.X > 0 && delta.Y > 0)
                 SetMoveDir(Constants.MoveDirs.southeast);

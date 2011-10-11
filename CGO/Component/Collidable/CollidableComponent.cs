@@ -29,8 +29,8 @@ namespace CGO
             get
             {// Return tweaked AABB
                 if (currentAABB != null)
-                    return new RectangleF(currentAABB.Left + Owner.position.X - (currentAABB.Width / 2) + tweakAABB.W,
-                                        currentAABB.Top + Owner.position.Y - (currentAABB.Height / 2) + tweakAABB.X,
+                    return new RectangleF(currentAABB.Left + Owner.Position.X - (currentAABB.Width / 2) + tweakAABB.W,
+                                        currentAABB.Top + Owner.Position.Y - (currentAABB.Height / 2) + tweakAABB.X,
                                         currentAABB.Width - (tweakAABB.W - tweakAABB.Y),
                                         currentAABB.Height - (tweakAABB.X - tweakAABB.Z));
                 else

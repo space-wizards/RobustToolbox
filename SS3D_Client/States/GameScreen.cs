@@ -20,8 +20,7 @@ using SS3D.Atom;
 using SS3D.Effects;
 using SS3D.Modules;
 using SS3D.Modules.Network;
-using SS3D.Modules.UI;
-using SS3D.Modules.UI.Components;
+using SS3D.UserInterface;
 using SS3D_shared;
 using ClientServices.Lighting;
 using ClientServices.Map;
@@ -360,14 +359,14 @@ namespace SS3D.States
             if (playerController.controlledAtom != null)
             {
                 
-                System.Drawing.Point centerTile = map.GetTileArrayPositionFromWorldPosition(playerController.controlledAtom.position);
+                System.Drawing.Point centerTile = map.GetTileArrayPositionFromWorldPosition(playerController.controlledAtom.Position);
               
                 int xStart = System.Math.Max(0, centerTile.X - (screenWidthTiles / 2) - 1);
                 int yStart = System.Math.Max(0, centerTile.Y - (screenHeightTiles / 2) - 1);
                 int xEnd = System.Math.Min(xStart + screenWidthTiles + 2, map.mapWidth - 1);
                 int yEnd = System.Math.Min(yStart + screenHeightTiles + 2, map.mapHeight - 1);
 
-                ClientWindowData.Singleton.UpdateViewPort(playerController.controlledAtom.position);
+                ClientWindowData.Singleton.UpdateViewPort(playerController.controlledAtom.Position);
 
                 //xTopLeft = Math.Max(0, playerController.controlledAtom.position.X - ((screenWidthTiles / 2) * map.tileSpacing));
                 //yTopLeft = Math.Max(0, playerController.controlledAtom.position.Y - ((screenHeightTiles / 2) * map.tileSpacing));
@@ -439,11 +438,11 @@ namespace SS3D.States
                     IEnumerable<Atom.Atom> atoms = from a in atomManager.atomDictionary.Values
                                                    where
                                                    a.visible &&
-                                                   a.position.X / map.tileSpacing >= xStart &&
-                                                   a.position.X / map.tileSpacing <= xEnd &&
-                                                   a.position.Y / map.tileSpacing >= yStart &&
-                                                   a.position.Y / map.tileSpacing <= yEnd
-                                                   orderby a.position.Y// + ((a.sprite.Height * a.sprite.UniformScale) / 2) ascending
+                                                   a.Position.X / map.tileSpacing >= xStart &&
+                                                   a.Position.X / map.tileSpacing <= xEnd &&
+                                                   a.Position.Y / map.tileSpacing >= yStart &&
+                                                   a.Position.Y / map.tileSpacing <= yEnd
+                                                   orderby a.Position.Y// + ((a.sprite.Height * a.sprite.UniformScale) / 2) ascending
                                                    orderby a.drawDepth ascending
                                                    select a;
 
@@ -467,12 +466,12 @@ namespace SS3D.States
                     atoms = from a in atomManager.atomDictionary.Values
                                                    where
                                                    a.visible &&
-                                                   a.position.X / map.tileSpacing >= xStart &&
-                                                   a.position.X / map.tileSpacing <= xEnd &&
-                                                   a.position.Y / map.tileSpacing >= yStart &&
-                                                   a.position.Y / map.tileSpacing <= yEnd &&
+                                                   a.Position.X / map.tileSpacing >= xStart &&
+                                                   a.Position.X / map.tileSpacing <= xEnd &&
+                                                   a.Position.Y / map.tileSpacing >= yStart &&
+                                                   a.Position.Y / map.tileSpacing <= yEnd &&
                                                    a.GetType().Name == "WallLight"                                                        
-                                                   orderby a.position.Y// + ((a.sprite.Height * a.sprite.UniformScale) / 2) ascending
+                                                   orderby a.Position.Y// + ((a.sprite.Height * a.sprite.UniformScale) / 2) ascending
                                                    orderby a.drawDepth ascending
                                                    select a;
 
@@ -638,7 +637,7 @@ namespace SS3D.States
                 checkbox.Position = new System.Drawing.Point(75, 75);
                 UiManager.Singleton.Components.Add(checkbox);
 
-                SS3D.Modules.UI.Components.Button butt = new SS3D.Modules.UI.Components.Button("HELLO, THIS IS A BUTTON WITH A VERY LONG LABEL ON IT");
+                SS3D.UserInterface.Button butt = new SS3D.UserInterface.Button("HELLO, THIS IS A BUTTON WITH A VERY LONG LABEL ON IT");
                 butt.Position = new System.Drawing.Point(125, 125);
                 UiManager.Singleton.Components.Add(butt);
             }
@@ -690,7 +689,7 @@ namespace SS3D.States
             float checkDistance = map.tileSpacing * 1.5f;
             // Find all the atoms near us we could have clicked
             IEnumerable<Atom.Atom> atoms = from a in atomManager.atomDictionary.Values
-                                           where editMode ? true : (playerController.controlledAtom.position - a.position).Length < checkDistance
+                                           where editMode ? true : (playerController.controlledAtom.Position - a.Position).Length < checkDistance
                                            where a.visible
                                            //orderby (new Vector2D(a.sprite.AABB.X + (a.sprite.AABB.Width/2),a.sprite.AABB.Y + (a.sprite.AABB.Height/2)) - new Vector2D(mouseAABB.X, mouseAABB.Y)).Length descending
                                            orderby a.drawDepth descending

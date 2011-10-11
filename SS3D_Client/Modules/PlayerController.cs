@@ -10,6 +10,7 @@ using GorgonLibrary;
 using GorgonLibrary.InputDevices;
 using SS3D_shared;
 using SS3D_shared.GO;
+using CGO;
 
 namespace SS3D.Modules
 {
@@ -18,6 +19,7 @@ namespace SS3D.Modules
         /* Here's the player controller. This will handle attaching GUIS and input to controllable things.
          * Why not just attach the inputs directly? It's messy! This makes the whole thing nicely encapsulated. 
          * This class also communicates with the server to let the server control what atom it is attached to. */
+
         public State runningState;
         public AtomManager atomManager;
         public Atom.Atom controlledAtom;

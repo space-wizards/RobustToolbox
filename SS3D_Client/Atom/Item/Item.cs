@@ -77,8 +77,8 @@ namespace SS3D.Atom.Item
         {
             if (holdingAppendage != null)
             {
-                Vector2D mobpos = holdingAppendage.owner.position;
-                position = mobpos;
+                Vector2D mobpos = holdingAppendage.owner.Position;
+                Position = mobpos;
 
                 AddComponent(SS3D_shared.GO.ComponentFamily.Mover, ComponentFactory.Singleton.GetComponent("NetworkMoverComponent"));
                 SendMessage(null, ComponentMessageType.ItemDetach, null);

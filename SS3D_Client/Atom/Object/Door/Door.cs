@@ -55,7 +55,7 @@ namespace SS3D.Atom.Object.Door
                     c.SetSpriteByKey("door_ew");
                     visible = true;
                     SendMessage(null, ComponentMessageType.EnableCollision, null);
-                    atomManager.gameState.map.GetTileAt(position).sightBlocked = true;
+                    atomManager.gameState.map.GetTileAt(Position).sightBlocked = true;
                     atomManager.gameState.map.needVisUpdate = true;
                     Draw();
                     break;
@@ -63,7 +63,7 @@ namespace SS3D.Atom.Object.Door
                     ISpriteComponent d = (ISpriteComponent)GetComponent(SS3D_shared.GO.ComponentFamily.Renderable);
                     d.SetSpriteByKey("door_ewo");
                     SendMessage(null, ComponentMessageType.DisableCollision, null);
-                    atomManager.gameState.map.GetTileAt(position).sightBlocked = false;
+                    atomManager.gameState.map.GetTileAt(Position).sightBlocked = false;
                     atomManager.gameState.map.needVisUpdate = true;
                     Draw();
                     break;
@@ -92,8 +92,8 @@ namespace SS3D.Atom.Object.Door
 
         public override RectangleF GetAABB()
         {
-            return new RectangleF(position.X - ((sprite.Width * sprite.UniformScale) / 2),
-                    position.Y + ((sprite.Height * sprite.UniformScale) / 2) - 1,
+            return new RectangleF(Position.X - ((sprite.Width * sprite.UniformScale) / 2),
+                    Position.Y + ((sprite.Height * sprite.UniformScale) / 2) - 1,
                     (sprite.Width * sprite.UniformScale),
                     1);
         }

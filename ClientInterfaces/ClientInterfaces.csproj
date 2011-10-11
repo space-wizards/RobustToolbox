@@ -51,6 +51,7 @@
     <Compile Include="ILight.cs" />
     <Compile Include="ILightManager.cs" />
     <Compile Include="IService.cs" />
+    <Compile Include="IUserInterfaceManager.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
   <ItemGroup>

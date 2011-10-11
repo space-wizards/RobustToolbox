@@ -8,7 +8,7 @@ using GorgonLibrary.Graphics;
 using SS3D.Modules;
 using SS3D.States;
 using SS3D.Modules.Network;
-using SS3D.Modules.UI;
+using SS3D.UserInterface;
 
 using Lidgren;
 using Lidgren.Network;

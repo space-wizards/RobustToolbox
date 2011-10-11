@@ -85,14 +85,21 @@ namespace CGO
                 case ComponentMessageType.GetAABB:
                     reply.Add(new ComponentReplyMessage(ComponentMessageType.CurrentAABB, AABB));
                     break;
+                case ComponentMessageType.GetSprite:
+                    reply.Add(new ComponentReplyMessage(ComponentMessageType.CurrentSprite, GetBaseSprite()));
+                    break;
                 case ComponentMessageType.SetSpriteByKey:
                     SetSpriteByKey((string)list[0]);
                     break;
                 case ComponentMessageType.SetDrawDepth:
                     SetDrawDepth((int)list[0]);
                     break;
-                    
             }
+        }
+
+        protected virtual Sprite GetBaseSprite()
+        {
+            return currentSprite;
         }
 
         protected void SetDrawDepth(int p)
@@ -105,7 +112,7 @@ namespace CGO
             if (currentSprite == null) return false;
             PointF worldPos = (PointF)list[0];
             // // // Almost straight copy & paste.
-            System.Drawing.RectangleF AABB = new System.Drawing.RectangleF(Owner.position.X - (currentSprite.Width / 2), Owner.position.Y - (currentSprite.Height / 2), currentSprite.Width, currentSprite.Height);
+            System.Drawing.RectangleF AABB = new System.Drawing.RectangleF(Owner.Position.X - (currentSprite.Width / 2), Owner.Position.Y - (currentSprite.Height / 2), currentSprite.Width, currentSprite.Height);
             if (!AABB.Contains(worldPos)) return false;
             System.Drawing.Point spritePosition = new System.Drawing.Point((int)(worldPos.X - AABB.X + currentSprite.ImageOffset.X), (int)(worldPos.Y - AABB.Y + currentSprite.ImageOffset.Y));
             GorgonLibrary.Graphics.Image.ImageLockBox imgData = currentSprite.Image.GetImageData();
@@ -146,7 +153,7 @@ namespace CGO
 
         public override void Render()
         {
-            Vector2D RenderPos = ClientWindowData.Singleton.WorldToScreen(Owner.position);
+            Vector2D RenderPos = ClientWindowData.Singleton.WorldToScreen(Owner.Position);
             if (currentSprite != null)
             {
                 SetSpriteCenter(currentSprite, RenderPos);

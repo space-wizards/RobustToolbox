@@ -80,7 +80,7 @@ namespace CGO
         {
             var renderables = from IRenderableComponent c in components[ComponentFamily.Renderable]
                               orderby c.DrawDepth ascending
-                              orderby c.Owner.position.Y ascending
+                              orderby c.Owner.Position.Y ascending
                               select c;
                                 
             foreach (IRenderableComponent component in renderables.ToList())

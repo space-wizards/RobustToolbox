@@ -6,12 +6,28 @@ using System.Text;
 namespace SS3D_shared.GO
 {
     [Flags]
-    public enum ItemFlag
+    public enum ItemTypeFlag
     {
         MeleeWeapon = 1,
         Tool = 2,
         Gun = 4,
         Medical = 8,
+    }
+
+    [Flags]
+    public enum InteractsWith
+    {
+        LargeObject,
+        Actor,
+        Item
+    }
+
+    public enum ItemCapabilityType
+    {
+        MeleeWeapon,
+        Tool,
+        Gun,
+        Medical
     }
 
     public enum ToolAction

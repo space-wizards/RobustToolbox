@@ -26,6 +26,12 @@ namespace SS3D_Server.Atom.Mob
         public Mob()
             : base()
         {
+        }
+
+        public override void Initialize(bool loaded = false)
+        {
+            base.Initialize(loaded);
+
             initAppendages();
             AddComponent(SS3D_shared.GO.ComponentFamily.Hands, ComponentFactory.Singleton.GetComponent("HumanHandsComponent"));
         }

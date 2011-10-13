@@ -377,7 +377,7 @@ namespace SS3D_Server.Atom
             List<Atom> o = (List<Atom>)f.Deserialize(s);
             foreach (Atom a in o)
             {
-                a.SetUp(lastUID++, this);
+                a.SetUp(lastUID++, this, true);
                 a.SerializedInit();
                 a.spawnTile = SS3D_Server.SS3DServer.Singleton.map.GetTileFromWorldPosition(a.position);
                 a.PostSpawnActions();

@@ -51,21 +51,30 @@ namespace SS3D_Server.Atom
         #region constructors and init
         public Atom()
         {
-            position = new Vector2(192, 192);
-            rotation = 0;
-            name = this.GetType().ToString();
+        }
+
+        public void SetUp(int _uid, AtomManager _atomManager, bool loaded=false)
+        {
+            Uid = _uid;
+            atomManager = _atomManager;
+            updateRequired = true;
+
+            Initialize(loaded);
+        }
+
+        public virtual void Initialize(bool loaded=false)
+        {
+            if (!loaded)
+            {
+                position = new Vector2(192, 192);
+                rotation = 0;
+                name = this.GetType().ToString();
+            }
 
             AddComponent(SS3D_shared.GO.ComponentFamily.Click, ComponentFactory.Singleton.GetComponent("ClickableComponent"));
             AddComponent(SS3D_shared.GO.ComponentFamily.Renderable, ComponentFactory.Singleton.GetComponent("SpriteComponent"));
             AddComponent(SS3D_shared.GO.ComponentFamily.Interactable, ComponentFactory.Singleton.GetComponent("BasicInteractableComponent"));
             AddComponent(SS3D_shared.GO.ComponentFamily.Mover, ComponentFactory.Singleton.GetComponent("BasicMoverComponent"));
-        }
-
-        public void SetUp(int _uid, AtomManager _atomManager)
-        {
-            Uid = _uid;
-            atomManager = _atomManager;
-            updateRequired = true;
         }
 
         public virtual void PostSpawnActions()
@@ -77,6 +86,7 @@ namespace SS3D_Server.Atom
         {
             // When things are created with reflection using serialization their default constructor
             // isn't called. Put things in here which need to be done when it's created.
+
         }
 
         /// <summary>

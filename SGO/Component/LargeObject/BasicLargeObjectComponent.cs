@@ -17,10 +17,10 @@ namespace SGO
         {
             switch (type)
             {
-                case ComponentMessageType.EmptyHandToLargeObjectInteraction:
+                case ComponentMessageType.ReceiveEmptyHandToLargeObjectInteraction:
                     HandleEmptyHandToLargeObjectInteraction((Entity)list[0]);
                     break;
-                case ComponentMessageType.ItemToLargeObjectInteraction:
+                case ComponentMessageType.ReceiveItemToLargeObjectInteraction:
                     HandleItemToLargeObjectInteraction((Entity)list[0]);
                     break;
             }

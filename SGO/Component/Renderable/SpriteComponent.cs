@@ -18,8 +18,8 @@ namespace SGO
             switch (type)
             {
                 case ComponentMessageType.SetSpriteByKey:
-                    //We got a set sprite message. Forward it on to the clientside sprite components.
-                    Owner.SendComponentNetworkMessage(this, Lidgren.Network.NetDeliveryMethod.ReliableUnordered, null, ComponentMessageType.SetSpriteByKey, list[0]);
+                    if (Owner != null) //We got a set sprite message. Forward it on to the clientside sprite components.                    
+                        Owner.SendComponentNetworkMessage(this, Lidgren.Network.NetDeliveryMethod.ReliableUnordered, null, ComponentMessageType.SetSpriteByKey, list[0]);
                     break;
             }
         }

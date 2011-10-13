@@ -16,6 +16,11 @@ namespace SS3D_Server.Atom.Object.Atmos
             : base()
         {
             name = "Vent";
+        }
+
+        public override void Initialize(bool loaded = false)
+        {
+            base.Initialize(loaded);
             normalGasses = new Dictionary<GasType, float>();
             var gastypes = Enum.GetValues(typeof(GasType));
             foreach (GasType g in gastypes)

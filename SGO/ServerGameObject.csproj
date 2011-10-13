@@ -53,6 +53,11 @@
     <Compile Include="Component\Input\KeyBindingInputComponent.cs" />
     <Compile Include="Component\Interactable\BasicInteractableComponent.cs" />
     <Compile Include="Component\Item\BasicItemComponent.cs" />
+    <Compile Include="Component\Item\ItemCapability\GunCapability.cs" />
+    <Compile Include="Component\Item\ItemCapability\ItemCapability.cs" />
+    <Compile Include="Component\Item\ItemCapability\MedicalCapability.cs" />
+    <Compile Include="Component\Item\ItemCapability\ToolCapability.cs" />
+    <Compile Include="Component\Item\ItemCapability\MeleeWeaponCapability.cs" />
     <Compile Include="Component\LargeObject\BasicLargeObjectComponent.cs" />
     <Compile Include="Component\LargeObject\BasicDoorComponent.cs" />
     <Compile Include="Component\Mover\BasicMoverComponent.cs" />

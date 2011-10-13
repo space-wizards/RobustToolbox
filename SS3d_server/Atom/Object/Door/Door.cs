@@ -22,6 +22,12 @@ namespace SS3D_Server.Atom.Object.Door
             : base()
         {
             name = "door";
+        }
+
+        public override void Initialize(bool loaded = false)
+        {
+            base.Initialize(loaded);
+
             AddComponent(SS3D_shared.GO.ComponentFamily.Interactable, ComponentFactory.Singleton.GetComponent("BasicInteractableComponent"));
             AddComponent(SS3D_shared.GO.ComponentFamily.Collidable, ComponentFactory.Singleton.GetComponent("CollidableComponent"));
             AddComponent(SS3D_shared.GO.ComponentFamily.LargeObject, ComponentFactory.Singleton.GetComponent("BasicDoorComponent"));
@@ -113,11 +119,6 @@ namespace SS3D_Server.Atom.Object.Door
         public Door(SerializationInfo info, StreamingContext ctxt)
         {
             SerializeBasicInfo(info, ctxt);
-            AddComponent(SS3D_shared.GO.ComponentFamily.Interactable, ComponentFactory.Singleton.GetComponent("BasicInteractableComponent"));
-            AddComponent(SS3D_shared.GO.ComponentFamily.Collidable, ComponentFactory.Singleton.GetComponent("CollidableComponent"));
-            AddComponent(SS3D_shared.GO.ComponentFamily.LargeObject, ComponentFactory.Singleton.GetComponent("BasicDoorComponent"));
-            GetComponent(SS3D_shared.GO.ComponentFamily.LargeObject).SetParameter(new ComponentParameter("OpenSprite", "string", "door_ewo"));
-            GetComponent(SS3D_shared.GO.ComponentFamily.LargeObject).SetParameter(new ComponentParameter("ClosedSprite", "string", "door_ew"));
         }
 
         public override void GetObjectData(SerializationInfo info, StreamingContext ctxt)

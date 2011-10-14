@@ -39,6 +39,10 @@ namespace SGO
                     if ((BoundKeyFunctions)list[0] == BoundKeyFunctions.Drop)
                         Drop();
                     break;
+                case ComponentMessageType.GetActiveHandItem:
+                    if (!IsEmpty(currentHand))
+                        replies.Add(new ComponentReplyMessage(ComponentMessageType.ReturnActiveHandItem, handslots[currentHand]));
+                    break;
             }
         }
 

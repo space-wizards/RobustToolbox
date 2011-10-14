@@ -7,12 +7,13 @@ using Lidgren.Network;
 using SS3D_shared;
 using SS3D_shared.HelperClasses;
 using ServerServices;
+using ServerInterfaces;
 
 //using SS3d_server.Modules.Mobs;
 
 namespace SS3D_Server.Modules.Chat
 {
-    public class ChatManager
+    public class ChatManager : IService, IChatManager
     {
         public ChatManager()
         {
@@ -183,6 +184,11 @@ namespace SS3D_Server.Modules.Chat
             if (buf != "")
                 args.Add(buf);
 
+        }
+
+        public ServerServiceType ServiceType
+        {
+            get { return ServerServiceType.ChatManager; }
         }
     }
 }

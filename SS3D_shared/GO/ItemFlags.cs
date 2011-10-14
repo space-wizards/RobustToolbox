@@ -31,6 +31,24 @@ namespace SS3D_shared.GO
         Medical
     }
 
+    public enum ItemCapabilityVerb
+    {
+        Weld,
+        Wrench,
+        Pry,
+        Screw,
+        Hit,
+        Cut, 
+        Slice,
+        Pierce,
+        Bludgeon,
+        Trip,
+        Diagnose,
+        FixBruise,
+        FixCut,
+        FixBurn,
+    }
+
     public enum ToolAction
     {
         Weld,

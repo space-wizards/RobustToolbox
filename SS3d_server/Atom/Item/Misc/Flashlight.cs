@@ -5,6 +5,8 @@ using System.Text;
 using Lidgren.Network;
 using SS3D_shared.HelperClasses;
 using System.Runtime.Serialization;
+using SGO;
+using SGO.Component.Item.ItemCapability;
 
 namespace SS3D_Server.Atom.Item.Misc
 {
@@ -15,6 +17,15 @@ namespace SS3D_Server.Atom.Item.Misc
             : base()
         {
             name = "Flashlight";
+        }
+
+        public override void Initialize(bool loaded = false)
+        {
+            base.Initialize(loaded);
+
+            BasicItemComponent itemcomp = (BasicItemComponent)this.GetComponent(SS3D_shared.GO.ComponentFamily.Item);
+            ItemCapability cap = new ToolCapability();
+            itemcomp.AddCapability(cap);
         }
 
         public Flashlight(SerializationInfo info, StreamingContext ctxt)

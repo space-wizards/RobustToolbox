@@ -16,6 +16,7 @@ namespace SGO
         public BasicItemComponent()
         {
             family = SS3D_shared.GO.ComponentFamily.Item;
+            capabilities = new Dictionary<string, ItemCapability>();
         }
 
         public override void RecieveMessage(object sender, ComponentMessageType type, List<ComponentReplyMessage> replies, params object[] list)
@@ -25,7 +26,7 @@ namespace SGO
                 case ComponentMessageType.ReceiveEmptyHandToItemInteraction:
                     HandleEmptyHandToItemInteraction((Entity)list[0]); // param 0 is the actor entity
                     break;
-                case ComponentMessageType.ReceiveItemToItemInteraction: //This message means we were clicked on by an acter with an item in hand
+                case ComponentMessageType.ReceiveItemToItemInteraction: //This message means we were clicked on by an actor with an item in hand
                     HandleItemToItemInteraction((Entity)list[0]); // param 0 is the actor entity
                     break;
                 case ComponentMessageType.EnactItemToActorInteraction:
@@ -43,10 +44,30 @@ namespace SGO
                 case ComponentMessageType.Dropped:
                     HandleDropped();
                     break;
-                case ComponentMessageType.GetCapability:
+                case ComponentMessageType.ItemGetCapability:
+                    var itemcaps = GetCapability((ItemCapabilityType)list[0]);
+                    if (itemcaps != null)
+                        replies.Add(new ComponentReplyMessage(ComponentMessageType.ItemReturnCapability, itemcaps));
+                    break;
+                case ComponentMessageType.ItemGetCapabilityVerbPairs:
+                    List<KeyValuePair<ItemCapabilityType, ItemCapabilityVerb>> verbpairs = new List<KeyValuePair<ItemCapabilityType, ItemCapabilityVerb>>();
+                    foreach (var capability in capabilities.Values)
+                    {
+                        foreach (ItemCapabilityVerb verb in (from v in capability.verbs orderby v.Key descending select v.Value))
+                        {
+                            verbpairs.Add(new KeyValuePair<ItemCapabilityType, ItemCapabilityVerb>(capability.CapabilityType, verb));
+                        }
+                    }
+                    if(verbpairs.Count > 0)
+                        replies.Add(new ComponentReplyMessage(ComponentMessageType.ItemReturnCapabilityVerbPairs, verbpairs.ToLookup(v => v.Key, v => v.Value)));
+                    break;
+                case ComponentMessageType.CheckItemHasCapability:
+                    replies.Add(new ComponentReplyMessage(ComponentMessageType.ItemHasCapability, HasCapability((ItemCapabilityType)list[0])));
+                    break;
+                case ComponentMessageType.ItemGetAllCapabilities:
+                    throw new NotImplementedException();
                     break;
             }
-
         }
 
         /// <summary>
@@ -176,6 +197,38 @@ namespace SGO
             if (result.ResultStatus == ItemCapabilityQueryResult.ItemCapabilityQueryResultType.Error)
                 result.ErrorMessage = "No Result";
             return result;
+        }
+
+        private ItemCapability[] GetCapability(ItemCapabilityType type)
+        {
+            var result = ExecuteCapabilityQuery(new ItemCapabilityQuery(ItemCapabilityQuery.ItemCapabilityQueryType.GetCapability, type));
+            if(result.ResultStatus == ItemCapabilityQueryResult.ItemCapabilityQueryResultType.Success)
+                return result.Capabilities;
+            else
+                return null;
+        }
+
+        private ItemCapability[] GetAllCapabilities()
+        {
+            var result = ExecuteCapabilityQuery(new ItemCapabilityQuery(ItemCapabilityQuery.ItemCapabilityQueryType.GetAllCapabilities, ItemCapabilityType.None));
+            if (result.ResultStatus == ItemCapabilityQueryResult.ItemCapabilityQueryResultType.Empty)
+                return null;
+            else
+                return result.Capabilities;
+        }
+
+        private bool HasCapability(ItemCapabilityType type)
+        {
+            var result = ExecuteCapabilityQuery(new ItemCapabilityQuery(ItemCapabilityQuery.ItemCapabilityQueryType.HasCapability, type));
+            if (result.ResultStatus == ItemCapabilityQueryResult.ItemCapabilityQueryResultType.True)
+                return true;
+            else
+                return false;
+        }
+
+        public void AddCapability(ItemCapability cap)
+        {
+            capabilities.Add(cap.capabilityName, cap);
         }
     }
 }

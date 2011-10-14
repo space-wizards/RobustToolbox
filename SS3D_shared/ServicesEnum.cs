@@ -10,6 +10,7 @@ public enum ServerServiceType
 {
     LogManager,
     NetServer,
-    Map
+    Map,
+    ChatManager
 
 }

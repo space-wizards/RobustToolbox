@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using SS3D_shared.GO;
+using SGO.Component.Item.ItemCapability;
 
 namespace SGO
 {
@@ -31,11 +32,42 @@ namespace SGO
         /// Basically, the actor uses an item on this object
         /// </summary>
         /// <param name="actor">the actor entity</param>
-        protected virtual void HandleItemToLargeObjectInteraction(Entity actor)
+        protected void HandleItemToLargeObjectInteraction(Entity actor)
         {
             //Get the item
-            //Get item type infos to apply to this object
-            //Message item to tell it it was applied to this object
+            List<ComponentReplyMessage> replies = new List<ComponentReplyMessage>();
+            actor.SendMessage(this, ComponentMessageType.GetActiveHandItem, replies);
+
+            if(replies.Count == 0 || replies[0].messageType != ComponentMessageType.ReturnActiveHandItem)
+                return; // No item in actor's active hand. This shouldn't happen.
+
+            Entity item = (Entity)replies[0].paramsList[0];
+            replies.Clear();
+            item.SendMessage(this, ComponentMessageType.ItemGetCapabilityVerbPairs, replies);
+            if (replies.Count > 0 && replies[0].messageType == ComponentMessageType.ItemReturnCapabilityVerbPairs)
+            {
+                var verbs = (Lookup<ItemCapabilityType, ItemCapabilityVerb>)replies[0].paramsList[0];
+                if (verbs.Count == 0 || verbs == null)
+                    RecieveItemInteraction(actor, item);
+                else
+                    RecieveItemInteraction(actor, item, verbs);
+            }
+        }
+
+        /// <summary>
+        /// Recieve an item interaction. woop.
+        /// </summary>
+        /// <param name="item"></param>
+        protected virtual void RecieveItemInteraction(Entity actor, Entity item, Lookup<ItemCapabilityType, ItemCapabilityVerb> verbs)
+        {
+        }
+
+        /// <summary>
+        /// Recieve an item interaction. woop. NO VERBS D:
+        /// </summary>
+        /// <param name="item"></param>
+        protected virtual void RecieveItemInteraction(Entity actor, Entity item)
+        {
         }
 
         /// <summary>

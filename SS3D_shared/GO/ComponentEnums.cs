@@ -83,6 +83,16 @@ namespace SS3D_shared.GO
         EnactItemToActorInteraction,
         EnactItemToLargeObjectInteraction,
         GetCapability,
+        ActiveHandItem,
+        GetActiveHandItem,
+        ItemGetCapability,
+        CheckItemHasCapability,
+        ItemGetAllCapabilities,
+        ItemReturnCapability,
+        ItemHasCapability,
+        ItemGetCapabilityVerbPairs,
+        ItemReturnCapabilityVerbPairs,
+        ReturnActiveHandItem,
     }
 
     public enum Hand

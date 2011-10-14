@@ -5,6 +5,7 @@ using System.Text;
 using SS3D_shared.GO;
 using ServerServices.Map;
 using ServerServices;
+using ServerInterfaces;
 
 namespace SGO
 {
@@ -40,16 +41,19 @@ namespace SGO
             SetImpermeable();
         }
 
-        /// <summary>
-        /// Entry point for interactions between an item and this object
-        /// Basically, the actor uses an item on this object
-        /// </summary>
-        /// <param name="actor">the actor entity</param>
-        protected override void HandleItemToLargeObjectInteraction(Entity actor)
+        protected override void RecieveItemInteraction(Entity actor, Entity item, Lookup<ItemCapabilityType, ItemCapabilityVerb> verbs)
         {
-            //Get the item
-            //Get item type infos to apply to this object
-            //Message item to tell it it was applied to this object
+            base.RecieveItemInteraction(actor, item, verbs);
+
+            if (verbs[ItemCapabilityType.Tool].Contains(ItemCapabilityVerb.Pry))
+            {
+                ToggleDoor();
+            }
+            else if (verbs[ItemCapabilityType.Tool].Contains(ItemCapabilityVerb.Hit))
+            {
+                IChatManager cm = (IChatManager)ServiceManager.Singleton.GetService(ServerServiceType.ChatManager);
+                cm.SendChatMessage(ChatChannel.Default, actor.name + " hit the " + Owner.name + " with a " + item.name + ".", null, item.Uid);
+            }
         }
 
         /// <summary>
@@ -58,6 +62,11 @@ namespace SGO
         /// </summary>
         /// <param name="actor">The actor entity</param>
         protected override void HandleEmptyHandToLargeObjectInteraction(Entity actor)
+        {
+            ToggleDoor();
+        }
+
+        private void ToggleDoor()
         {
             //Apply actions
             if (Open)

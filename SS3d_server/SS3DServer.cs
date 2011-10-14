@@ -154,6 +154,7 @@ namespace SS3D_Server
                 SS3DNetServer.Singleton.Start();
 
                 chatManager = new ChatManager();
+                ServiceManager.Singleton.AddService(chatManager);
                 playerManager = new PlayerManager();
 
                 StartLobby();

@@ -10,17 +10,46 @@ namespace SGO.Component.Item.ItemCapability
     {
         public InteractsWith interactsWith; //What types of shit this interacts with
         public int priority; //Where in the stack this puppy is
-        private ItemCapabilityType capabilityType;
+        protected ItemCapabilityType capabilityType;
         public ItemCapabilityType CapabilityType
         {
             get { return capabilityType; }
             protected set { capabilityType = value; }
         }
 
+        public string capabilityName;
+
+        /// <summary>
+        /// dictionary of priority -> verb -- lower priority verbs execute first
+        /// </summary>
+        public Dictionary<int, ItemCapabilityVerb> verbs;
+
+        public ItemCapability()
+        {
+            verbs = new Dictionary<int, ItemCapabilityVerb>();
+        }
 
         public bool ApplyTo(Entity target)
         {
             throw new NotImplementedException();
+        }
+
+        public void AddVerb(int priority, ItemCapabilityVerb verb)
+        {
+            if (verbs.ContainsKey(priority)) //Shuffle the list to insert the specified verb and move the one in that spot down.
+            {
+                var tverb = verbs[priority];
+                RemoveVerb(priority);
+                AddVerb(priority, verb);
+                AddVerb(priority + 1, tverb); 
+            }
+            else
+                verbs.Add(priority, verb);
+        }
+
+        public void RemoveVerb(int priority)
+        {
+            verbs.Remove(priority);
         }
     }
 

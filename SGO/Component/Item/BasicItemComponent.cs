@@ -126,5 +126,56 @@ namespace SGO
                     break;
             }
         }
+
+        /// <summary>
+        /// Executes a query to get the capabilities of this item.
+        /// This enables us to ask things like, "is the item a tool?"
+        /// You can have items that have more than one tool capability module, and return them both via a query.
+        /// This is mostly useful for the object that is receiving an action from the item.
+        /// </summary>
+        /// <param name="query">ItemCapabilityQuery object</param>
+        /// <returns></returns>
+        protected ItemCapabilityQueryResult ExecuteCapabilityQuery(ItemCapabilityQuery query)
+        {
+            ItemCapabilityQueryResult result = new ItemCapabilityQueryResult();
+            result.ResultStatus = ItemCapabilityQueryResult.ItemCapabilityQueryResultType.Error;
+            switch (query.queryType)
+            {
+                case ItemCapabilityQuery.ItemCapabilityQueryType.GetAllCapabilities:
+                    //Get all the capabilities of the object. Not particularly useful.
+                    foreach (ItemCapability c in capabilities.Values)
+                        result.AddCapability(c);
+                    if (capabilities.Count() > 0)
+                        result.ResultStatus = ItemCapabilityQueryResult.ItemCapabilityQueryResultType.Success;
+                    else
+                        result.ResultStatus = ItemCapabilityQueryResult.ItemCapabilityQueryResultType.Empty;
+                    break;
+                case ItemCapabilityQuery.ItemCapabilityQueryType.GetCapability:
+                    //Get the capabilities that match a particular capability type
+                    var caps = from c in capabilities.Values
+                               where (c.CapabilityType == query.capabilityType)
+                               select c;
+                    foreach (ItemCapability c in caps)
+                        result.AddCapability(c);
+                    if (caps.Count() > 0)
+                        result.ResultStatus = ItemCapabilityQueryResult.ItemCapabilityQueryResultType.Success;
+                    else
+                        result.ResultStatus = ItemCapabilityQueryResult.ItemCapabilityQueryResultType.Empty;
+                    break;
+                case ItemCapabilityQuery.ItemCapabilityQueryType.HasCapability:
+                    //Check if the item has a capability of a certain type.
+                    var hascap = from c in capabilities.Values
+                                 where (c.CapabilityType == query.capabilityType)
+                                 select c;
+                    if (hascap.Count() > 0)
+                        result.ResultStatus = ItemCapabilityQueryResult.ItemCapabilityQueryResultType.True;
+                    else
+                        result.ResultStatus = ItemCapabilityQueryResult.ItemCapabilityQueryResultType.False;
+                    break;
+            }
+            if (result.ResultStatus == ItemCapabilityQueryResult.ItemCapabilityQueryResultType.Error)
+                result.ErrorMessage = "No Result";
+            return result;
+        }
     }
 }

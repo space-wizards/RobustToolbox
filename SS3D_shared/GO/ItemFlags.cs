@@ -24,6 +24,7 @@ namespace SS3D_shared.GO
 
     public enum ItemCapabilityType
     {
+        None,
         MeleeWeapon,
         Tool,
         Gun,

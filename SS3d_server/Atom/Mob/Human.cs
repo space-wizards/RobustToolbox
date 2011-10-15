@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using SGO;
 
 namespace SS3D_Server.Atom.Mob
 {
@@ -12,9 +13,16 @@ namespace SS3D_Server.Atom.Mob
         {
         }
 
+        public override void Initialize(bool loaded = false)
+        {
+            base.Initialize(loaded);
+
+            AddComponent(SS3D_shared.GO.ComponentFamily.Health, ComponentFactory.Singleton.GetComponent("HumanHealthComponent"));
+        }
+
         protected override void initAppendages()
         {
-            
+            /*
             organs.Add(new Item.Organs.External.Head());
             organs.Add(new Item.Organs.External.Torso());
             organs.Add(new Item.Organs.External.LArm());
@@ -41,16 +49,16 @@ namespace SS3D_Server.Atom.Mob
             equippedAtoms.Add(GUIBodyPart.Feet, null);
             equippedAtoms.Add(GUIBodyPart.Belt, null);
             equippedAtoms.Add(GUIBodyPart.Back, null);
-
+            */
             base.initAppendages();
         }
 
         public override void Update(float framePeriod)
         {
-            foreach(Item.Organs.Organ organ in organs)
+            /*foreach(Item.Organs.Organ organ in organs)
             {
                 organ.Process(framePeriod);
-            }
+            }*/
             base.Update(framePeriod);
             updateRequired = true;
         }

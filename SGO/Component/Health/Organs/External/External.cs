@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 
-namespace SS3D_Server.Atom.Item.Organs.External
+namespace SGO.Component.Health.Organs.External
 {
     public class External : Organ
     {
@@ -12,7 +12,7 @@ namespace SS3D_Server.Atom.Item.Organs.External
         {
         }
 
-        public override void SetUp(Mob.Mob _owner)
+        public override void SetUp(HealthComponent _owner)
         {
             base.SetUp(_owner);
         }

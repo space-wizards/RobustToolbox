@@ -93,6 +93,8 @@ namespace SS3D_shared.GO
         ItemGetCapabilityVerbPairs,
         ItemReturnCapabilityVerbPairs,
         ReturnActiveHandItem,
+        ItemUnEquipped,
+        ItemEquipped,
     }
 
     public enum Hand

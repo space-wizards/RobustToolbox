@@ -34,6 +34,8 @@ namespace SS3D_Server.Atom.Mob
 
             initAppendages();
             AddComponent(SS3D_shared.GO.ComponentFamily.Hands, ComponentFactory.Singleton.GetComponent("HumanHandsComponent"));
+            AddComponent(SS3D_shared.GO.ComponentFamily.Equipment, ComponentFactory.Singleton.GetComponent("HumanEquipmentComponent"));
+
         }
 
         public override void Destruct()
@@ -136,7 +138,7 @@ namespace SS3D_Server.Atom.Mob
         /// </summary>
         public virtual void EquipItem(NetIncomingMessage message)
         {
-            int id = message.ReadInt32();
+            /*int id = message.ReadInt32();
             GUIBodyPart part = (GUIBodyPart)message.ReadByte();
             if (equippedAtoms.ContainsKey(part) && equippedAtoms[part] == null)
             {
@@ -153,7 +155,7 @@ namespace SS3D_Server.Atom.Mob
                         equippedAtoms[part].holdingAppendage = null;
                     }
                 }
-            }
+            }*/
         }
 
         /// <summary>
@@ -161,7 +163,7 @@ namespace SS3D_Server.Atom.Mob
         /// </summary>
         public virtual void EquipItem(int id, GUIBodyPart targetPart)
         {
-            if (equippedAtoms.ContainsKey(targetPart) && equippedAtoms[targetPart] == null)
+            /*if (equippedAtoms.ContainsKey(targetPart) && equippedAtoms[targetPart] == null)
             {
                 Atom atom = atomManager.GetAtom(id);
                 if (atom.IsChildOfType(typeof(Item.Item)))
@@ -176,7 +178,7 @@ namespace SS3D_Server.Atom.Mob
                         equippedAtoms[targetPart].holdingAppendage = null;
                     }
                 }
-            }
+            }*/
         }
 
         /// <summary>

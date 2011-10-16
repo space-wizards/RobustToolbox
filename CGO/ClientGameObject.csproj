@@ -51,6 +51,8 @@
     <Compile Include="Component\ClickableComponent.cs" />
     <Compile Include="Component\Collidable\CollidableComponent.cs" />
     <Compile Include="Component\Collider\ColliderComponent.cs" />
+    <Compile Include="Component\Equipment\EquipmentComponent.cs" />
+    <Compile Include="Component\Equipment\HumanEquipmentComponent.cs" />
     <Compile Include="Component\Hands\HumanHandsComponent.cs" />
     <Compile Include="Component\Item\BasicItemComponent.cs" />
     <Compile Include="Component\Light\PointLightComponent.cs" />

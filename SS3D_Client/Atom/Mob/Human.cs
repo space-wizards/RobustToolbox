@@ -21,7 +21,7 @@ namespace SS3D.Atom.Mob
         public override void SetUp(int _uid, AtomManager _atomManager)
         {
             base.SetUp(_uid, _atomManager);
-
+            /*
             if (equippedAtoms == null)
                 equippedAtoms = new Dictionary<GUIBodyPart, Item.Item>();
 
@@ -34,7 +34,7 @@ namespace SS3D.Atom.Mob
             equippedAtoms.Add(GUIBodyPart.Ears, null);
             equippedAtoms.Add(GUIBodyPart.Head, null);
             equippedAtoms.Add(GUIBodyPart.Outer, null);
-            equippedAtoms.Add(GUIBodyPart.Back, null);
+            equippedAtoms.Add(GUIBodyPart.Back, null);*/
         }
 
         public override System.Drawing.RectangleF GetAABB()

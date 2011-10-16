@@ -31,11 +31,17 @@ namespace SS3D_shared.GO
         Renderable, // Can be rendered -- sprite or particle system
         Light,
     }
-    
+
     public enum ItemComponentNetMessage
     {
         PickedUp,
         Dropped,
+    }
+
+    public enum EquippableComponentNetMessage
+    {
+        UnEquipped,
+        Equipped,
     }
 
     public enum ComponentMessageType
@@ -95,6 +101,12 @@ namespace SS3D_shared.GO
         ReturnActiveHandItem,
         ItemUnEquipped,
         ItemEquipped,
+        EquipItem,
+        UnEquipItem,
+        UnEquipItemToFloor,
+        UnEquipItemToHand,
+        EquipItemInHand,
+        DropItemInCurrentHand,
     }
 
     public enum Hand

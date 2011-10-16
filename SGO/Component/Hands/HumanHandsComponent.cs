@@ -35,6 +35,9 @@ namespace SGO
                 case ComponentMessageType.PickUpItem:
                     Pickup((Entity)list[0]);
                     break;
+                case ComponentMessageType.DropItemInCurrentHand:
+                    Drop(currentHand);
+                    break;
                 case ComponentMessageType.BoundKeyChange:
                     if ((BoundKeyFunctions)list[0] == BoundKeyFunctions.Drop)
                         Drop();

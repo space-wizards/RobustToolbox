@@ -50,6 +50,7 @@
     <Compile Include="Component\Damageable\DamageableComponent.cs" />
     <Compile Include="Component\Equipment\EquipmentComponent.cs" />
     <Compile Include="Component\Equipment\HumanEquipmentComponent.cs" />
+    <Compile Include="Component\Equippable\EquippableComponent.cs" />
     <Compile Include="Component\Hands\HumanHandsComponent.cs" />
     <Compile Include="Component\Health\HealthComponent.cs" />
     <Compile Include="Component\Health\HumanHealthComponent.cs" />

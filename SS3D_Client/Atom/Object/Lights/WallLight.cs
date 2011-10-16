@@ -24,7 +24,9 @@ namespace SS3D.Atom.Object.Lights
             ISpriteComponent c = (ISpriteComponent)GetComponent(SS3D_shared.GO.ComponentFamily.Renderable);
             c.AddSprite("wall_light");
             c.SetSpriteByKey("wall_light");
-            AddComponent(SS3D_shared.GO.ComponentFamily.Light, ComponentFactory.Singleton.GetComponent("PointLightComponent"));
+            var lightcomponent = (GameObjectComponent)ComponentFactory.Singleton.GetComponent("PointLightComponent");
+            lightcomponent.SetParameter(new ComponentParameter("lightoffset", typeof(Vector2D), new Vector2D(0, 64)));
+            AddComponent(SS3D_shared.GO.ComponentFamily.Light, lightcomponent);
             collidable = false;
         }
     }

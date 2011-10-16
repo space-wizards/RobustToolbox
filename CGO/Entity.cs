@@ -149,6 +149,18 @@ namespace CGO
         }
 
         /// <summary>
+        /// Checks to see if a component of a certain family exists
+        /// </summary>
+        /// <param name="family">componentfamily to check</param>
+        /// <returns>true if component exists, false otherwise</returns>
+        public bool HasComponent(ComponentFamily family)
+        {
+            if (components.ContainsKey(family))
+                return true;
+            return false;
+        }
+
+        /// <summary>
         /// Allows components to send messages
         /// </summary>
         /// <param name="sender">the component doing the sending</param>
@@ -253,4 +265,6 @@ namespace CGO
 
         public static ComponentReplyMessage Null = new ComponentReplyMessage(ComponentMessageType.Empty);
     }
+
+
 }

@@ -40,6 +40,7 @@ namespace SS3D.Atom.Mob
             SpriteComponent c = (SpriteComponent)ComponentFactory.Singleton.GetComponent("MobSpriteComponent");
             c.SetParameter(new ComponentParameter("basename", typeof(string), "human"));
             AddComponent(SS3D_shared.GO.ComponentFamily.Renderable, c);
+            AddComponent(ComponentFamily.Equipment, ComponentFactory.Singleton.GetComponent("HumanEquipmentComponent"));
 
             //speed = walkSpeed;
         }

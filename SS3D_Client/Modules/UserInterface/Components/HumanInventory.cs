@@ -44,40 +44,35 @@ namespace SS3D.UserInterface
             SetVisible(false);
         }
 
-        [Obsolete("TODO: Change to new system")]
         // Set up all the slots for the body
         private void SetUpSlots()
         {
-            //inventorySlots.Clear();
-            //if (!playerController.controlledAtom.IsChildOfType(typeof(Atom.Mob.Mob)))
-            //{
-            //    return;
-            //}
+            inventorySlots.Clear();
+            if (!playerController.controlledAtom.HasComponent(SS3D_shared.GO.ComponentFamily.Equipment))
+                return;
 
-            //Atom.Mob.Mob m = (Atom.Mob.Mob)playerController.controlledAtom;
-            //// Make one slot for each body part
-            //foreach (GUIBodyPart part in m.equippedAtoms.Keys)
-            //{
-            //    inventorySlots.Add(part, new ItemSlot(playerController, part));
-            //}
-
-            //// Position them (just temporary atm)
-            //int i = 0;
-            //bool second = false;
-            //foreach (ItemSlot slot in inventorySlots.Values)
-            //{
-            //    if (i >= inventorySlots.Count / 2)
-            //    {
-            //        second = true;
-            //        i = 0;
-            //    }
-            //    if(!second)
-            //        slot.Position = new Point(clientArea.X + slot.Position.X + 12, clientArea.Y + slot.Position.Y + (i * 56));
-            //    else
-            //        slot.Position = new Point(clientArea.X + clientArea.Width - 12 - slotWidth, clientArea.Y + slot.Position.Y + (i * 56));
-            //    slot.SetOutlinePosition(new Vector2D(clientArea.X + (int)(clientArea.Width / 2) - (int)(outline.Width / 2), clientArea.Y + (clientArea.Height / 2) - (outline.Height / 2)));
-            //    i++;
-            //}
+            Entity m = (Entity)playerController.controlledAtom;
+            EquipmentComponent ec = (EquipmentComponent)m.GetComponent(SS3D_shared.GO.ComponentFamily.Equipment);
+            foreach (GUIBodyPart part in ec.activeSlots)
+            {
+                inventorySlots.Add(part, new ItemSlot(playerController, part));
+            }
+            int i = 0;
+            bool second = false;
+            foreach (ItemSlot slot in inventorySlots.Values)
+            {
+                if (i >= inventorySlots.Count / 2)
+                {
+                    second = true;
+                    i = 0;
+                }
+                if (!second)
+                    slot.Position = new Point(clientArea.X + slot.Position.X + 12, clientArea.Y + slot.Position.Y + (i * 56));
+                else
+                    slot.Position = new Point(clientArea.X + clientArea.Width - 12 - slotWidth, clientArea.Y + slot.Position.Y + (i * 56));
+                slot.SetOutlinePosition(new Vector2D(clientArea.X + (int)(clientArea.Width / 2) - (int)(outline.Width / 2), clientArea.Y + (clientArea.Height / 2) - (outline.Height / 2)));
+                i++;
+            }
         }
 
         // Set up the handsgui reference so we can interact with it

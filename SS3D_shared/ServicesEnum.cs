@@ -11,6 +11,7 @@ public enum ServerServiceType
     LogManager,
     NetServer,
     Map,
-    ChatManager
+    ChatManager,
+    PlayerManager
 
 }

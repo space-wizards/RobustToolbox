@@ -1,3 +1,4 @@
+@echo off
 if exist out goto continue
 
 :cleanup
@@ -6,9 +7,9 @@ goto gen
 :gen
 mkdir out
 cd ..\..\
-svn log --xml -r228:HEAD -v > Tools\statsvn\out\svn.log
+svn log -g --xml -v svn://games.ques.to/ss3d/ss3d/trunk > Tools\statsvn\out\svn.log
 cd Tools\statsvn\out
-java -jar ..\statsvn.jar -include "SS3D_Client/**/*.cs:SS3d_server/**/*.cs:SS3D_shared/**/*.cs" svn.log ..\..\..\
+java -jar ..\statsvn.jar -threads 5 -include "**/*.cs" svn.log ..\..\..\
 cd ..
 goto end
 

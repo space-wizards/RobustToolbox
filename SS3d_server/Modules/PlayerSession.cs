@@ -10,10 +10,11 @@ using SS3D_shared;
 using SS3D_shared.GO;
 using SGO;
 using ServerServices;
+using ServerInterfaces;
 
 namespace SS3D_Server.Modules
 {
-    public class PlayerSession
+    public class PlayerSession : IPlayerSession
     {
         /* This class represents a connected player session */
 
@@ -44,7 +45,10 @@ namespace SS3D_Server.Modules
             //Add input component.
             a.AddComponent(ComponentFamily.Input, SGO.ComponentFactory.Singleton.GetComponent("KeyBindingInputComponent"));
             a.AddComponent(ComponentFamily.Mover, ComponentFactory.Singleton.GetComponent("PlayerInputMoverComponent"));
-            a.AddComponent(ComponentFamily.Actor, ComponentFactory.Singleton.GetComponent("BasicActorComponent"));
+            BasicActorComponent actorComponent = (BasicActorComponent)ComponentFactory.Singleton.GetComponent("BasicActorComponent");
+            actorComponent.SetParameter(new ComponentParameter("playersession", typeof(IPlayerSession), this));
+            a.AddComponent(ComponentFamily.Actor, actorComponent);
+
             attachedAtom = a;
             SendAttachMessage();
         }

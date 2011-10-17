@@ -22,11 +22,11 @@ namespace SGO
             set { }
         }
 
-        private string m_parameterType;
+        private Type m_parameterType;
         /// <summary>
         /// The type of parameter specified
         /// </summary>
-        public string ParameterType
+        public Type ParameterType
         {
             get
             { return m_parameterType; }
@@ -44,7 +44,7 @@ namespace SGO
             set { }
         }
 
-        public ComponentParameter(string memberName, string parameterType, object parameter)
+        public ComponentParameter(string memberName, Type parameterType, object parameter)
         {
             m_memberName = memberName;
             m_parameterType = parameterType;

@@ -30,6 +30,7 @@ namespace SS3D_shared.GO
         Health, // Has hitpoints, applies damage, organs?
         Renderable, // Can be rendered -- sprite or particle system
         Light,
+        Damageable,
     }
 
     public enum ItemComponentNetMessage
@@ -107,6 +108,7 @@ namespace SS3D_shared.GO
         UnEquipItemToHand,
         EquipItemInHand,
         DropItemInCurrentHand,
+        Damage,
     }
 
     public enum Hand

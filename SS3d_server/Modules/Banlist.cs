@@ -7,6 +7,7 @@ using System.IO;
 using System.Xml;
 using System.Xml.Serialization;
 using Lidgren.Network;
+using ServerServices;
 
 using SS3D_shared;
 

@@ -5,6 +5,7 @@ using System.Text;
 
 using Lidgren.Network;
 using SS3D_shared;
+using ServerServices;
 
 namespace SS3D_Server.Modules
 {

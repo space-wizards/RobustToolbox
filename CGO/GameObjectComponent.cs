@@ -28,9 +28,7 @@ namespace CGO
             {
                 return family;
             }
-            set
-            {
-            }
+            set { family = value; }
         }
         
         /// <summary>
@@ -39,7 +37,7 @@ namespace CGO
         /// <param name="sender">the component that sent the message</param>
         /// <param name="type">the message type in CGO.MessageType</param>
         /// <param name="list">parameters list</param>
-        public virtual void RecieveMessage(object sender, CGO.MessageType type, params object[] list)
+        public virtual void RecieveMessage(object sender, ComponentMessageType type, List<ComponentReplyMessage> reply, params object[] list)
         {
             if (sender == this) //Don't listen to our own messages!
                 return;
@@ -76,6 +74,7 @@ namespace CGO
             Owner = owner;
             //Send us to the manager so it knows we're active
             ComponentManager.Singleton.AddComponent(this);
+            Owner.SendComponentInstantiationMessage(this);
         }
 
         /// <summary>
@@ -94,6 +93,15 @@ namespace CGO
         /// </summary>
         /// <param name="parameter">ComponentParameter object describing the parameter and the value</param>
         public virtual void SetParameter(ComponentParameter parameter)
+        {
+
+        }        
+        
+        /// <summary>
+        /// Empty method for handling incoming input messages from counterpart client components
+        /// </summary>
+        /// <param name="message">the message object</param>
+        public virtual void HandleNetworkMessage(IncomingEntityComponentMessage message)
         {
 
         }

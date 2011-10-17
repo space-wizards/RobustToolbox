@@ -1,0 +1,121 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <PropertyGroup>
+    <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
+    <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
+    <ProductVersion>8.0.30703</ProductVersion>
+    <SchemaVersion>2.0</SchemaVersion>
+    <ProjectGuid>{6C778741-98D8-48EB-835A-293077AF0E07}</ProjectGuid>
+    <OutputType>Library</OutputType>
+    <AppDesignerFolder>Properties</AppDesignerFolder>
+    <RootNamespace>CGO</RootNamespace>
+    <AssemblyName>CGO</AssemblyName>
+    <TargetFrameworkVersion>v4.0</TargetFrameworkVersion>
+    <FileAlignment>512</FileAlignment>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
+    <DebugSymbols>true</DebugSymbols>
+    <DebugType>full</DebugType>
+    <Optimize>false</Optimize>
+    <OutputPath>bin\Debug\</OutputPath>
+    <DefineConstants>DEBUG;TRACE</DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
+    <DebugType>pdbonly</DebugType>
+    <Optimize>true</Optimize>
+    <OutputPath>bin\Release\</OutputPath>
+    <DefineConstants>TRACE</DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+  </PropertyGroup>
+  <ItemGroup>
+    <Reference Include="Gorgon, Version=1.1.4119.34319, Culture=neutral, PublicKeyToken=c001d94e9acbbee7, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>..\References\Release\Gorgon.dll</HintPath>
+    </Reference>
+    <Reference Include="System" />
+    <Reference Include="System.Core" />
+    <Reference Include="System.Drawing" />
+    <Reference Include="System.Xml.Linq" />
+    <Reference Include="System.Data.DataSetExtensions" />
+    <Reference Include="Microsoft.CSharp" />
+    <Reference Include="System.Data" />
+    <Reference Include="System.Xml" />
+  </ItemGroup>
+  <ItemGroup>
+    <Compile Include="ComponentFactory.cs" />
+    <Compile Include="ComponentManager.cs" />
+    <Compile Include="ComponentParameter.cs" />
+    <Compile Include="Component\ClickableComponent.cs" />
+    <Compile Include="Component\Collidable\CollidableComponent.cs" />
+    <Compile Include="Component\Collider\ColliderComponent.cs" />
+    <Compile Include="Component\Equipment\EquipmentComponent.cs" />
+    <Compile Include="Component\Equipment\HumanEquipmentComponent.cs" />
+    <Compile Include="Component\Hands\HumanHandsComponent.cs" />
+    <Compile Include="Component\Item\BasicItemComponent.cs" />
+    <Compile Include="Component\Light\PointLightComponent.cs" />
+    <Compile Include="Component\Mover\KeyBindingMoverComponent.cs" />
+    <Compile Include="Component\Mover\NetworkMoverComponent.cs" />
+    <Compile Include="Component\Mover\SlaveMoverComponent.cs" />
+    <Compile Include="Component\Renderable\WearableSpriteComponent.cs" />
+    <Compile Include="Component\Renderable\ItemSpriteComponent.cs" />
+    <Compile Include="Component\Renderable\IRenderableComponent.cs" />
+    <Compile Include="Component\Renderable\ISpriteComponent.cs" />
+    <Compile Include="Component\Renderable\MobSpriteComponent.cs" />
+    <Compile Include="Component\Renderable\SpriteComponent.cs" />
+    <Compile Include="Entity.cs" />
+    <Compile Include="EntityFactory.cs" />
+    <Compile Include="EntityManager.cs" />
+    <Compile Include="EntityNetworkManager.cs" />
+    <Compile Include="EntityTemplate.cs" />
+    <Compile Include="EntityTemplateDatabase.cs" />
+    <Compile Include="GameObjectComponent.cs" />
+    <Compile Include="IGameObjectComponent.cs" />
+    <Compile Include="IMoverComponent.cs" />
+    <Compile Include="KeyboardInputEventArgs.cs" />
+    <Compile Include="Component\Input\KeyBindingInputComponent.cs" />
+    <Compile Include="MessageEnums.cs" />
+    <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="Component\Renderable\RenderableComponent.cs" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\ClientInterfaces\ClientInterfaces.csproj">
+      <Project>{B31E7B59-7066-4186-AB18-B1BB6DE0E537}</Project>
+      <Name>ClientInterfaces</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\ClientResourceManager\ClientResourceManager.csproj">
+      <Project>{37D792AE-0514-44BE-81E0-58EA28E26BB9}</Project>
+      <Name>ClientResourceManager</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\ClientServices\ClientServices.csproj">
+      <Project>{7F85F20C-E2B5-455D-A1CA-76ED000D25EA}</Project>
+      <Name>ClientServices</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\ClientWindow\ClientWindow.csproj">
+      <Project>{9CFBF7F1-B939-433B-AFA1-C12EBA2565CD}</Project>
+      <Name>ClientWindow</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\Lidgren.Network\Lidgren.Network.csproj">
+      <Project>{AE483C29-042E-4226-BA52-D247CE7676DA}</Project>
+      <Name>Lidgren.Network</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\SS3D_shared\SS3D_shared.csproj">
+      <Project>{4229D7E3-C3AE-4C0A-B2B1-BB20911150DC}</Project>
+      <Name>SS3D_shared</Name>
+    </ProjectReference>
+  </ItemGroup>
+  <ItemGroup>
+    <Folder Include="Component\Actor\" />
+    <Folder Include="Component\Interactable\" />
+  </ItemGroup>
+  <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
+  <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
+       Other similar extension points exist, see Microsoft.Common.targets.
+  <Target Name="BeforeBuild">
+  </Target>
+  <Target Name="AfterBuild">
+  </Target>
+  -->
+</Project>

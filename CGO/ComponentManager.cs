@@ -62,10 +62,30 @@ namespace CGO
         {
             foreach (ComponentFamily family in Enum.GetValues(typeof(ComponentFamily)))
             {
+                // Hack the update loop to allow us to render somewhere in the GameScreen render loop
+                if (family == ComponentFamily.Renderable) 
+                    continue;
                 foreach (IGameObjectComponent component in components[family])
                 {
                     component.Update(frameTime);
                 }
+            }
+        }
+
+        /// <summary>
+        /// Render the renderables
+        /// </summary>
+        /// <param name="frametime">time since the last frame was rendered.</param>
+        public void Render(float frametime)
+        {
+            var renderables = from IRenderableComponent c in components[ComponentFamily.Renderable]
+                              orderby c.DrawDepth ascending
+                              orderby c.Owner.Position.Y ascending
+                              select c;
+                                
+            foreach (IRenderableComponent component in renderables.ToList())
+            {
+                component.Render();
             }
         }
     }

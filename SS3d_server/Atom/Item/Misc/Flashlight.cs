@@ -5,67 +5,28 @@ using System.Text;
 using Lidgren.Network;
 using SS3D_shared.HelperClasses;
 using System.Runtime.Serialization;
+using SGO;
+using SGO.Component.Item.ItemCapability;
 
 namespace SS3D_Server.Atom.Item.Misc
 {
     [Serializable()]
     public class Flashlight : Item
     {
-
-        public Light light;
-
         public Flashlight()
             : base()
         {
             name = "Flashlight";
-            Random r = new Random(DateTime.Now.Millisecond);
-            int milli = DateTime.Now.Millisecond;
-            while (milli == DateTime.Now.Millisecond)
-            {
-            }
-            light = new Light(new Color((byte)r.Next(255), (byte)r.Next(255), (byte)r.Next(255)), (Direction)r.Next(3));
-            light.Normalize();
         }
 
-        public override void SerializedInit()
+        public override void Initialize(bool loaded = false)
         {
-            base.SerializedInit();
-            Random r = new Random(DateTime.Now.Millisecond);
-            int milli = DateTime.Now.Millisecond;
-            while (milli == DateTime.Now.Millisecond)
-            {
-            }
-            light = new Light(new Color((byte)r.Next(255), (byte)r.Next(255), (byte)r.Next(255)), (Direction)r.Next(3));
-            light.Normalize();
+            base.Initialize(loaded);
+
+            BasicItemComponent itemcomp = (BasicItemComponent)this.GetComponent(SS3D_shared.GO.ComponentFamily.Item);
+            ItemCapability cap = new ToolCapability();
+            itemcomp.AddCapability(cap);
         }
-
-        public override void SendState(Lidgren.Network.NetConnection client)
-        {
-            base.SendState(client);
-
-            NetOutgoingMessage msg = CreateAtomMessage();
-            msg.Write((byte)AtomMessage.Push);
-            msg.Write(light.color.r);
-            msg.Write(light.color.g);
-            msg.Write(light.color.b);
-            msg.Write((byte)light.direction);
-            SendMessageTo(msg, client);
-        }
-
-        public override void SendState()
-        {
-            base.SendState();
-
-            NetOutgoingMessage msg = CreateAtomMessage();
-            msg.Write((byte)AtomMessage.Push);
-            msg.Write(light.color.r);
-            msg.Write(light.color.g);
-            msg.Write(light.color.b);
-            msg.Write((byte)light.direction);
-            SendMessageToAll(msg);
-        }
-
-
 
         public Flashlight(SerializationInfo info, StreamingContext ctxt)
         {

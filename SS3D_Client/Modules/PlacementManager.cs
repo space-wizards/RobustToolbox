@@ -4,13 +4,12 @@ using System.Linq;
 using System.Text;
 
 using SS3D.Modules;
-using SS3D.Modules.Map;
 using SS3D.Modules.Network;
-using SS3D.Modules.UI;
 using SS3D.Atom;
 
 using SS3D_shared;
 using SS3D.States;
+using SS3D.HelperClasses;
 
 using System.Reflection;
 
@@ -22,12 +21,16 @@ using Lidgren.Network;
 
 using System.Windows.Forms;
 using SS3D_shared.HelperClasses;
+using ClientResourceManager;
+using ClientServices.Map;
+using ClientServices.Map.Tiles;
+using ClientWindow;
 
 namespace SS3D.Modules
 {
     class PlacementManager
     {
-        private Map.Map map;
+        private Map map;
         private AtomManager atomManager;
         private GameScreen gameScreen;
         private NetworkManager networkMgr;
@@ -65,7 +68,7 @@ namespace SS3D.Modules
 
         #endregion
 
-        public void Initialize(Map.Map _map, AtomManager _atom, GameScreen _screen, NetworkManager netMgr)
+        public void Initialize(Map _map, AtomManager _atom, GameScreen _screen, NetworkManager netMgr)
         {
             map = _map;
             atomManager = _atom;
@@ -142,7 +145,7 @@ namespace SS3D.Modules
             SetupPlacement();
         }
 
-        private Boolean isSolidTile(Tiles.Tile tile)
+        private Boolean isSolidTile(Tile tile)
         {
             if (tile.tileType != TileType.Wall) return false;
             else return true;
@@ -158,7 +161,7 @@ namespace SS3D.Modules
         {
             Type atomType = atomManager.GetAtomType(active.type);
             activeType = atomType;
-            previewSprite = ResMgr.Singleton.GetSprite(UiManager.Singleton.GetObjectSpriteName(atomType));
+            previewSprite = ResMgr.Singleton.GetSprite(Utilities.GetObjectSpriteName(atomType));
             placementQueued = false;
         }
 
@@ -206,7 +209,7 @@ namespace SS3D.Modules
                                             where a.GetAABB().IntersectsWith(previewSprite.AABB) || a.GetAABB().IntersectsWith(new System.Drawing.RectangleF(gameScreen.mousePosWorld.X,gameScreen.mousePosWorld.Y,2,2))
                                             select a;
 
-                        if (atomsBlocking.Any() || (gameScreen.mousePosWorld - gameScreen.playerController.controlledAtom.position).Length > active.range)
+                        if (atomsBlocking.Any() || (gameScreen.mousePosWorld - gameScreen.playerController.controlledAtom.Position).Length > active.range)
                             validLocation = false;
 
                         if (active.placeAnywhere) validLocation = true;
@@ -224,9 +227,9 @@ namespace SS3D.Modules
                         var atoms = from a in atomManager.atomDictionary.Values
                                     where a.IsTypeOf(activeType)
                                     where a.visible
-                                    where active.placeAnywhere ? true : (a.position - gameScreen.mousePosWorld).Length <= active.range * 2
-                                    where active.placeAnywhere ? true : (a.position - gameScreen.playerController.controlledAtom.position).Length <= active.range
-                                    orderby (a.position - gameScreen.mousePosWorld).Length ascending
+                                    where active.placeAnywhere ? true : (a.Position - gameScreen.mousePosWorld).Length <= active.range * 2
+                                    where active.placeAnywhere ? true : (a.Position - gameScreen.playerController.controlledAtom.Position).Length <= active.range
+                                    orderby (a.Position - gameScreen.mousePosWorld).Length ascending
                                     select a; //Basically: Get the closest similar object.
 
                         if (atoms.Count() > 0)
@@ -244,14 +247,14 @@ namespace SS3D.Modules
                             sideConnections.Add(rightConnection);
 
                             var closestSide = from Vector2D vec in sideConnections
-                                              where active.placeAnywhere ? true : (vec - gameScreen.playerController.controlledAtom.position).Length <= active.range
+                                              where active.placeAnywhere ? true : (vec - gameScreen.playerController.controlledAtom.Position).Length <= active.range
                                               where active.placeAnywhere ? true : !isSolidTile(map.GetTileAt(vec))
                                               orderby (vec - gameScreen.mousePosWorld).Length ascending
                                               select vec;
 
                             if (closestSide.Any())
                             {
-                                snapToLoc = new Vector2D(closestSide.First().X - gameScreen.xTopLeft, closestSide.First().Y - gameScreen.yTopLeft);
+                                snapToLoc = new Vector2D(closestSide.First().X - ClientWindowData.xTopLeft, closestSide.First().Y - ClientWindowData.yTopLeft);
                                 if (validLocation && placementQueued)
                                     RequestPlacement(closestSide.First());
                             }
@@ -274,7 +277,7 @@ namespace SS3D.Modules
 
                     #region Align Wall
                     case AlignmentOptions.AlignWall:
-                        Tiles.Tile wall = map.GetTileAt(gameScreen.mousePosWorld);
+                        Tile wall = map.GetTileAt(gameScreen.mousePosWorld);
 
                         //switch ((int)rotation) //East and west are switched around because objects "attach" to the walls.
                         //{
@@ -314,13 +317,13 @@ namespace SS3D.Modules
                             Nodes.Add(Node8);
 
                             var closestNode = from Vector2D vec in Nodes
-                                              where active.placeAnywhere ? true : (vec - gameScreen.playerController.controlledAtom.position).Length <= active.range
+                                              where active.placeAnywhere ? true : (vec - gameScreen.playerController.controlledAtom.Position).Length <= active.range
                                               orderby (vec - gameScreen.mousePosWorld).Length ascending
                                               select vec;
 
                             if (closestNode.Any())
                             {
-                                snapToLoc = new Vector2D(closestNode.First().X - gameScreen.xTopLeft, closestNode.First().Y - gameScreen.yTopLeft);
+                                snapToLoc = new Vector2D(closestNode.First().X - ClientWindowData.xTopLeft, closestNode.First().Y - ClientWindowData.yTopLeft);
                                 if (validLocation && placementQueued)
                                     RequestPlacement(closestNode.First());
                                 else if (!validLocation && placementQueued)
@@ -344,11 +347,11 @@ namespace SS3D.Modules
 
                     #region Align Tile
                     case AlignmentOptions.AlignTile:
-                        Tiles.Tile tile = map.GetTileAt(gameScreen.mousePosWorld);
-                        snapToLoc = new Vector2D(tile.position.X + (map.tileSpacing / 2) - gameScreen.xTopLeft, tile.position.Y + (map.tileSpacing / 2) - gameScreen.yTopLeft);
-                        if ((new Vector2D(tile.position.X + (map.tileSpacing / 2), tile.position.Y + (map.tileSpacing / 2)) - gameScreen.playerController.controlledAtom.position).Length > active.range && !active.placeAnywhere) validLocation = false;
+                        ClientServices.Map.Tiles.Tile tile = map.GetTileAt(gameScreen.mousePosWorld);
+                        snapToLoc = new Vector2D(tile.position.X + (map.tileSpacing / 2) - ClientWindowData.xTopLeft, tile.position.Y + (map.tileSpacing / 2) - ClientWindowData.yTopLeft);
+                        if ((new Vector2D(tile.position.X + (map.tileSpacing / 2), tile.position.Y + (map.tileSpacing / 2)) - gameScreen.playerController.controlledAtom.Position).Length > active.range && !active.placeAnywhere) validLocation = false;
 
-                        if(activeType.IsSubclassOf(typeof(Tiles.Tile)))
+                        if (activeType.IsSubclassOf(typeof(ClientServices.Map.Tiles.Tile)))
                         {//Special handling for tiles? Not right now.
                         }
                         else if(activeType.IsSubclassOf(typeof(Atom.Atom)))
@@ -396,15 +399,15 @@ namespace SS3D.Modules
                 {
                     previewSprite.Position = adjusted;
                     previewSprite.Color = validLocation ? System.Drawing.Color.LimeGreen : System.Drawing.Color.Red;
-                    if (!activeType.IsSubclassOf(typeof(Tiles.Tile))) previewSprite.Rotation = rotation;
+                    if (!activeType.IsSubclassOf(typeof(ClientServices.Map.Tiles.Tile))) previewSprite.Rotation = rotation;
                     previewSprite.Opacity = 90;
                     previewSprite.Draw();
                     previewSprite.Color = System.Drawing.Color.White;
                 }
 
                 if (gameScreen.playerController.controlledAtom != null && !active.placeAnywhere)
-                { 
-                    Gorgon.Screen.Circle(gameScreen.playerController.controlledAtom.position.X - gameScreen.xTopLeft, gameScreen.playerController.controlledAtom.position.Y - gameScreen.yTopLeft, active.range, System.Drawing.Color.DarkBlue, 2f, 2f);
+                {
+                    Gorgon.Screen.Circle(gameScreen.playerController.controlledAtom.Position.X - ClientWindowData.xTopLeft, gameScreen.playerController.controlledAtom.Position.Y - ClientWindowData.yTopLeft, active.range, System.Drawing.Color.DarkBlue, 2f, 2f);
                 }
 
                 #region Debug Display
@@ -415,9 +418,9 @@ namespace SS3D.Modules
                         case AlignmentOptions.AlignSimilar:
                             if (snapToAtom != null)
                             {
-                                Gorgon.Screen.Line(snapToAtom.position.X - gameScreen.xTopLeft, snapToAtom.position.Y - gameScreen.yTopLeft, -((snapToAtom.position.X - gameScreen.xTopLeft) - snapToLoc.X), -((snapToAtom.position.Y - gameScreen.yTopLeft) - snapToLoc.Y), System.Drawing.Color.White, new Vector2D(3, 3));
+                                Gorgon.Screen.Line(snapToAtom.Position.X - ClientWindowData.xTopLeft, snapToAtom.Position.Y - ClientWindowData.yTopLeft, -((snapToAtom.Position.X - ClientWindowData.xTopLeft) - snapToLoc.X), -((snapToAtom.Position.Y - ClientWindowData.yTopLeft) - snapToLoc.Y), System.Drawing.Color.White, new Vector2D(3, 3));
                                 Gorgon.Screen.FilledCircle(snapToLoc.X, snapToLoc.Y, 3, System.Drawing.Color.LimeGreen);
-                                Gorgon.Screen.FilledCircle(snapToAtom.position.X - gameScreen.xTopLeft, snapToAtom.position.Y - gameScreen.yTopLeft, 3, System.Drawing.Color.LimeGreen);
+                                Gorgon.Screen.FilledCircle(snapToAtom.Position.X - ClientWindowData.xTopLeft, snapToAtom.Position.Y - ClientWindowData.yTopLeft, 3, System.Drawing.Color.LimeGreen);
                             }
                             break;
                         case AlignmentOptions.AlignTile:

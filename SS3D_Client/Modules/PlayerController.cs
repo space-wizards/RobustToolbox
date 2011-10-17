@@ -10,6 +10,7 @@ using GorgonLibrary;
 using GorgonLibrary.InputDevices;
 using SS3D_shared;
 using SS3D_shared.GO;
+using CGO;
 
 namespace SS3D.Modules
 {
@@ -18,6 +19,7 @@ namespace SS3D.Modules
         /* Here's the player controller. This will handle attaching GUIS and input to controllable things.
          * Why not just attach the inputs directly? It's messy! This makes the whole thing nicely encapsulated. 
          * This class also communicates with the server to let the server control what atom it is attached to. */
+
         public State runningState;
         public AtomManager atomManager;
         public Atom.Atom controlledAtom;
@@ -64,6 +66,8 @@ namespace SS3D.Modules
             controlledAtom.attached = true;
             controlledAtom.AddComponent(ComponentFamily.Input, CGO.ComponentFactory.Singleton.GetComponent("KeyBindingInputComponent"));
             controlledAtom.AddComponent(ComponentFamily.Mover, CGO.ComponentFactory.Singleton.GetComponent("KeyBindingMoverComponent"));
+            controlledAtom.AddComponent(ComponentFamily.Collider, CGO.ComponentFactory.Singleton.GetComponent("ColliderComponent"));
+            controlledAtom.GetComponent(ComponentFamily.Collider).SetParameter(new CGO.ComponentParameter("TweakAABB", typeof(Vector4D), new Vector4D(39, 0, 0, 0)));
         }
 
         public void Detach()
@@ -74,6 +78,7 @@ namespace SS3D.Modules
             controlledAtom = null;
             controlledAtom.RemoveComponent(ComponentFamily.Input);
             controlledAtom.RemoveComponent(ComponentFamily.Mover);
+            controlledAtom.RemoveComponent(ComponentFamily.Collider);
         }
 
         public void KeyDown(KeyboardKeys key)
@@ -83,7 +88,7 @@ namespace SS3D.Modules
             if (controlledAtom == null)
                 return;
 
-            controlledAtom.HandleKeyPressed(key);
+            //controlledAtom.HandleKeyPressed(key);
         }
 
         public void KeyUp(KeyboardKeys key)
@@ -93,7 +98,7 @@ namespace SS3D.Modules
             if (controlledAtom == null)
                 return;
 
-            controlledAtom.HandleKeyReleased(key);
+            //controlledAtom.HandleKeyReleased(key);
         }
 
         #region netcode

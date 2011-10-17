@@ -6,12 +6,14 @@ using System.Text;
 using Lidgren.Network;
 using SS3D_shared;
 using SS3D_shared.HelperClasses;
+using ServerServices;
+using ServerInterfaces;
 
 //using SS3d_server.Modules.Mobs;
 
 namespace SS3D_Server.Modules.Chat
 {
-    public class ChatManager
+    public class ChatManager : IService, IChatManager
     {
         public ChatManager()
         {
@@ -47,7 +49,7 @@ namespace SS3D_Server.Modules.Chat
             message.Write(fullmsg);
             message.Write(atomID);
 
-            SS3DServer.Singleton.SendMessageToAll(message);
+            SS3DNetServer.Singleton.SendToAll(message);
         }
 
         /// <summary>
@@ -107,7 +109,7 @@ namespace SS3D_Server.Modules.Chat
                         position = player.position;
 
                     var p = SS3DServer.Singleton.map.GetTileArrayPositionFromWorldPosition(position);
-                    var c = SS3DServer.Singleton.map.GetTileAt(p.x, p.y).gasCell;
+                    var c = SS3DServer.Singleton.map.GetTileAt(p.X, p.Y).gasCell;
                     foreach(var g in c.gasses)
                     {
                         SS3DServer.Singleton.chatManager.SendChatMessage(ChatChannel.Default, g.Key.ToString() + ": " + g.Value.ToString(), "GasReport", 0);
@@ -121,7 +123,7 @@ namespace SS3D_Server.Modules.Chat
                     else
                         position = player.position;
                     p = SS3DServer.Singleton.map.GetTileArrayPositionFromWorldPosition(position);
-                    var t = SS3DServer.Singleton.map.GetTileAt(p.x, p.y);
+                    var t = SS3DServer.Singleton.map.GetTileAt(p.X, p.Y);
                     if (args.Count > 1 && Convert.ToInt32(args[1]) > 0)
                     {
                         for (int i = 0; i <= Convert.ToInt32(args[1]); i++)
@@ -182,6 +184,11 @@ namespace SS3D_Server.Modules.Chat
             if (buf != "")
                 args.Add(buf);
 
+        }
+
+        public ServerServiceType ServiceType
+        {
+            get { return ServerServiceType.ChatManager; }
         }
     }
 }

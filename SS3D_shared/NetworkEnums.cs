@@ -183,6 +183,7 @@ public enum EntityMessage
 {
     ComponentMessage,
     PositionMessage,
+    ComponentInstantiationMessage,
     Null,
 }
 

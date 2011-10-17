@@ -7,8 +7,6 @@ namespace SS3D.Atom.Item.Wearable
 {
     public abstract class Wearable : Item
     {
-
-
         public Wearable()
             : base()
         {

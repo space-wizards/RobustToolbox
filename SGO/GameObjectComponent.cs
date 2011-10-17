@@ -29,8 +29,7 @@ namespace SGO
                 return family;
             }
             set
-            {
-            }
+            { family = value; }
         }
         
         /// <summary>
@@ -39,10 +38,11 @@ namespace SGO
         /// <param name="sender">the component that sent the message</param>
         /// <param name="type">the message type in CGO.MessageType</param>
         /// <param name="list">parameters list</param>
-        public virtual void RecieveMessage(object sender, MessageType type, params object[] list)
+        public virtual void RecieveMessage(object sender, ComponentMessageType type, List<ComponentReplyMessage> replies, params object[] list)
         {
             if (sender == this) //Don't listen to our own messages!
                 return;
+            return;
         }
 
         /// <summary>
@@ -103,6 +103,15 @@ namespace SGO
         /// </summary>
         /// <param name="message">the message object</param>
         public virtual void HandleNetworkMessage(IncomingEntityComponentMessage message)
+        {
+
+        }
+
+        /// <summary>
+        /// Handles a message that a client has just instantiated a component
+        /// </summary>
+        /// <param name="netConnection"></param>
+        public virtual void HandleInstantiationMessage(Lidgren.Network.NetConnection netConnection)
         {
 
         }

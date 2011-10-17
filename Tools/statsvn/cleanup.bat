@@ -1,5 +1,5 @@
-del *.html
-del *.png
-del *.txt
-del *.css
-del *.log
+@echo off
+if not exist out goto END
+rmdir/s /q out
+:END
+echo Cleanup Executed successfully.

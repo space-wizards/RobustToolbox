@@ -5,12 +5,14 @@ using System.Text;
 
 using SS3D_shared;
 using SS3D_shared.HelperClasses;
-using SS3D_Server.Modules.Map;
 using Lidgren.Network;
 using SS3D_Server.Modules;
 using SS3D_Server.Atom.Mob;
 using SS3D_Server.Atom;
 using System.Reflection;
+using ServerServices;
+using System.Drawing;
+using ServerServices.Tiles;
 
 namespace SS3D_Server.Modules
 {
@@ -106,11 +108,11 @@ namespace SS3D_Server.Modules
 
                 Type objectType = SS3DServer.Singleton.atomManager.GetAtomType(permission.type);
 
-                if (objectType.IsSubclassOf(typeof(Tiles.Tile)))
+                if (objectType.IsSubclassOf(typeof(Tile)))
                 {
                     Point arrayPos = SS3D_Server.SS3DServer.Singleton.map.GetTileArrayPositionFromWorldPosition(new Vector2(xRcv, yRcv));
-                    SS3D_Server.SS3DServer.Singleton.map.ChangeTile(arrayPos.x, arrayPos.y, objectType);
-                    SS3D_Server.SS3DServer.Singleton.map.NetworkUpdateTile(arrayPos.x, arrayPos.y);
+                    SS3D_Server.SS3DServer.Singleton.map.ChangeTile(arrayPos.X, arrayPos.Y, objectType);
+                    SS3D_Server.SS3DServer.Singleton.map.NetworkUpdateTile(arrayPos.X, arrayPos.Y);
                 }
                 else
                 {
@@ -142,7 +144,7 @@ namespace SS3D_Server.Modules
             message.Write((byte)alignOption);
             message.Write(placeAnywhere);
             //This looks like a large message but its just a string, ushort and a bunch of bools.
-            SS3DServer.Singleton.SendMessageTo(message, mob.attachedClient, NetDeliveryMethod.ReliableOrdered);
+            SS3DNetServer.Singleton.SendMessage(message, mob.attachedClient, NetDeliveryMethod.ReliableOrdered);
         }
 
         /// <summary>
@@ -153,7 +155,7 @@ namespace SS3D_Server.Modules
             NetOutgoingMessage message = SS3DNetServer.Singleton.CreateMessage();
             message.Write((byte)NetMessage.PlacementManagerMessage);
             message.Write((byte)PlacementManagerMessage.CancelPlacement);
-            SS3DServer.Singleton.SendMessageTo(message, mob.attachedClient, NetDeliveryMethod.ReliableOrdered);
+            SS3DNetServer.Singleton.SendMessage(message, mob.attachedClient, NetDeliveryMethod.ReliableOrdered);
         }
 
         /// <summary>

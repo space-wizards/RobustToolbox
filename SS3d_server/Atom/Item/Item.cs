@@ -6,6 +6,10 @@ using SS3D_shared.HelperClasses;
 using Lidgren.Network;
 using SS3D_Server.Atom.Mob;
 using SS3D_Server.Atom.Mob.HelperClasses;
+using SGO;
+using SS3D_shared.GO;
+using SS3D_Server.Modules;
+using ServerServices;
 
 namespace SS3D_Server.Atom.Item
 {
@@ -21,7 +25,13 @@ namespace SS3D_Server.Atom.Item
             : base()
         {
             spritestate = -1;
-            extensions.Add(new Extension.DummyExtension(this));
+        }
+
+        public override void Initialize(bool loaded = false)
+        {
+            base.Initialize(loaded);
+
+            AddComponent(SS3D_shared.GO.ComponentFamily.Item, ComponentFactory.Singleton.GetComponent("BasicItemComponent"));
         }
 
         public override void SendState(NetConnection client)
@@ -64,14 +74,14 @@ namespace SS3D_Server.Atom.Item
         /// <param name="m">The mob that has used atom a on this one.</param>
         protected override void ApplyAction(Atom a, Mob.Mob m)
         {
-            if (a == null && holdingAppendage == null) //If mob's not holding an item and this item is not being held
+            /*if (a == null && holdingAppendage == null) //If mob's not holding an item and this item is not being held
             {
                 PickedUpBy(m);
             }
             else if (a != null) // If mob's holding an item
                 base.ApplyAction(a, m);
 
-            //Otherwise do nothing.             
+            //Otherwise do nothing.     */        
         }
 
         /// <summary>
@@ -84,7 +94,7 @@ namespace SS3D_Server.Atom.Item
         /// <param name="target">The atom that this one has been used on.</param>
         protected override void UsedOn(Atom target)
         {
-            base.UsedOn(target);
+            /*base.UsedOn(target);
             switch (target.GetType().ToString())
             {
                 default:
@@ -93,7 +103,7 @@ namespace SS3D_Server.Atom.Item
                     //Send attack animation (this is a retarded way of doing this really)
                     holdingAppendage.AnimateAttack();
                     break;
-            }
+            }*/
         }
 
         /// <summary>
@@ -110,6 +120,10 @@ namespace SS3D_Server.Atom.Item
             atomManager.SetDrawDepthAtom(Uid, 0);
 
             SendAttachMessage();
+
+            AddComponent(SS3D_shared.GO.ComponentFamily.Mover, ComponentFactory.Singleton.GetComponent("SlaveMoverComponent"));
+            SendMessage(null, ComponentMessageType.SlaveAttach, null, newHolder.Uid);
+
             SendAppendageUIUpdate(newHolder);
             SS3DServer.Singleton.chatManager.SendChatMessage(ChatChannel.Default, newHolder.name + " picked up the " + name + ".", "", newHolder.Uid);
         }
@@ -119,7 +133,7 @@ namespace SS3D_Server.Atom.Item
             //send a message to the new holder's UI to put in the right image
             NetOutgoingMessage message = SS3DServer.Singleton.playerManager.GetSessionByConnection(target.attachedClient).CreateGuiMessage(SS3D_shared.GuiComponentType.AppendagesComponent);
             message.Write((byte)SS3D_shared.HandsComponentMessage.UpdateHandObjects);
-            SS3DServer.Singleton.SendMessageTo(message, target.attachedClient);
+            SS3DNetServer.Singleton.SendMessage(message, target.attachedClient);
         }
         
 
@@ -138,7 +152,7 @@ namespace SS3D_Server.Atom.Item
             outmessage.Write((byte)ItemMessage.AttachTo);
             outmessage.Write(holdingAppendage.owner.Uid);
             outmessage.Write(holdingAppendage.ID);
-            SS3DServer.Singleton.SendMessageToAll(outmessage);
+            SS3DNetServer.Singleton.SendToAll(outmessage);
         }
 
         /// <summary>
@@ -153,7 +167,7 @@ namespace SS3D_Server.Atom.Item
             NetOutgoingMessage outmessage = CreateAtomMessage();
             outmessage.Write((byte)AtomMessage.Extended);
             outmessage.Write((byte)ItemMessage.Detach);
-            SS3DServer.Singleton.SendMessageToAll(outmessage);
+            SS3DNetServer.Singleton.SendToAll(outmessage);
         }
 
         /// <summary>
@@ -171,11 +185,13 @@ namespace SS3D_Server.Atom.Item
             NetOutgoingMessage outmessage = CreateAtomMessage();
             outmessage.Write((byte)AtomMessage.Extended);
             outmessage.Write((byte)ItemMessage.DropItem);
-            SS3DServer.Singleton.SendMessageToAll(outmessage);
+            SS3DNetServer.Singleton.SendToAll(outmessage);
 
             SendAppendageUIUpdate(owner);
 
-            Translate(droppedposition, droppedrot);
+            RemoveComponent(SS3D_shared.GO.ComponentFamily.Mover);
+
+            //Translate(droppedposition, droppedrot);
         }
 
         public override void Push()

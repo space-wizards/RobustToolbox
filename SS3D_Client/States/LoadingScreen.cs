@@ -1,7 +1,6 @@
 ﻿using System;
 
 using SS3D.Modules;
-using SS3D.Modules.Map;
 using SS3D.Modules.Network;
 
 using System.Collections.Generic;

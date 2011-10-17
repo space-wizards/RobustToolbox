@@ -5,15 +5,14 @@ using System.Text;
 using Lidgren.Network;
 using SS3D_Server.Atom.Mob.HelperClasses;
 using SS3D_shared.HelperClasses;
+using SGO;
 
 namespace SS3D_Server.Atom.Mob
 {
     public class Mob : Atom
     {
-        public float walkSpeed = 1.0f;
-        public float runSpeed = 2.0f;
-        public Item.Organs.BLOOD_TYPE blood_type = Item.Organs.BLOOD_TYPE.A; // Temporary
-        public List<Item.Organs.Organ> organs = new List<Item.Organs.Organ>();
+        public float walkSpeed = 400.0f;
+        public float runSpeed = 600.0f;
 
         public Dictionary<int, HelperClasses.Appendage> appendages;
         public Appendage selectedAppendage;
@@ -25,7 +24,16 @@ namespace SS3D_Server.Atom.Mob
         public Mob()
             : base()
         {
+        }
+
+        public override void Initialize(bool loaded = false)
+        {
+            base.Initialize(loaded);
+
             initAppendages();
+            AddComponent(SS3D_shared.GO.ComponentFamily.Hands, ComponentFactory.Singleton.GetComponent("HumanHandsComponent"));
+            AddComponent(SS3D_shared.GO.ComponentFamily.Equipment, ComponentFactory.Singleton.GetComponent("HumanEquipmentComponent"));
+
         }
 
         public override void Destruct()
@@ -128,7 +136,7 @@ namespace SS3D_Server.Atom.Mob
         /// </summary>
         public virtual void EquipItem(NetIncomingMessage message)
         {
-            int id = message.ReadInt32();
+            /*int id = message.ReadInt32();
             GUIBodyPart part = (GUIBodyPart)message.ReadByte();
             if (equippedAtoms.ContainsKey(part) && equippedAtoms[part] == null)
             {
@@ -145,7 +153,7 @@ namespace SS3D_Server.Atom.Mob
                         equippedAtoms[part].holdingAppendage = null;
                     }
                 }
-            }
+            }*/
         }
 
         /// <summary>
@@ -153,7 +161,7 @@ namespace SS3D_Server.Atom.Mob
         /// </summary>
         public virtual void EquipItem(int id, GUIBodyPart targetPart)
         {
-            if (equippedAtoms.ContainsKey(targetPart) && equippedAtoms[targetPart] == null)
+            /*if (equippedAtoms.ContainsKey(targetPart) && equippedAtoms[targetPart] == null)
             {
                 Atom atom = atomManager.GetAtom(id);
                 if (atom.IsChildOfType(typeof(Item.Item)))
@@ -168,7 +176,7 @@ namespace SS3D_Server.Atom.Mob
                         equippedAtoms[targetPart].holdingAppendage = null;
                     }
                 }
-            }
+            }*/
         }
 
         /// <summary>

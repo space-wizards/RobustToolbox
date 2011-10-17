@@ -229,6 +229,7 @@ namespace SGO
         public void AddCapability(ItemCapability cap)
         {
             capabilities.Add(cap.capabilityName, cap);
+            cap.owner = this;
         }
     }
 }

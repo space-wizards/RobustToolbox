@@ -11,6 +11,7 @@ namespace SGO.Component.Item.ItemCapability
         public InteractsWith interactsWith; //What types of shit this interacts with
         public int priority; //Where in the stack this puppy is
         protected ItemCapabilityType capabilityType;
+        public GameObjectComponent owner;
         public ItemCapabilityType CapabilityType
         {
             get { return capabilityType; }
@@ -29,9 +30,9 @@ namespace SGO.Component.Item.ItemCapability
             verbs = new Dictionary<int, ItemCapabilityVerb>();
         }
 
-        public bool ApplyTo(Entity target)
+        public virtual bool ApplyTo(Entity target)
         {
-            throw new NotImplementedException();
+            return false;
         }
 
         public void AddVerb(int priority, ItemCapabilityVerb verb)
@@ -50,6 +51,17 @@ namespace SGO.Component.Item.ItemCapability
         public void RemoveVerb(int priority)
         {
             verbs.Remove(priority);
+        }
+
+        /// <summary>
+        /// This allows setting of the component's parameters once it is instantiated.
+        /// This should basically be overridden by every inheriting component, as parameters will be different
+        /// across the board.
+        /// </summary>
+        /// <param name="parameter">ComponentParameter object describing the parameter and the value</param>
+        public virtual void SetParameter(ComponentParameter parameter)
+        {
+
         }
     }
 

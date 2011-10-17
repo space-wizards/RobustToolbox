@@ -18,6 +18,7 @@ namespace SS3D_Server.Atom.Mob
             base.Initialize(loaded);
 
             AddComponent(SS3D_shared.GO.ComponentFamily.Health, ComponentFactory.Singleton.GetComponent("HumanHealthComponent"));
+            AddComponent(SS3D_shared.GO.ComponentFamily.Damageable, ComponentFactory.Singleton.GetComponent("DamageableComponent"));
         }
 
         protected override void initAppendages()

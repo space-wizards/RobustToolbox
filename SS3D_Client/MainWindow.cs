@@ -24,14 +24,18 @@ using Drawing = System.Drawing;
 
 using SS3D.States;
 using SS3D.Modules;
-using SS3D.Modules.UI;
+using SS3D.UserInterface;
 
 using Lidgren.Network;
 
 using CGO;
 using System.Security;
 using System.Security.Permissions;
-using ClientInput;
+using ClientServices.Input;
+using ClientConfigManager;
+using ClientResourceManager;
+using ClientServices.Map;
+using ClientServices.Map.Tiles;
 
 namespace SS3D
 {
@@ -68,27 +72,16 @@ namespace SS3D
             SetupGorgon();
             SetupInput();
             ResMgr.Singleton.Initialize();
-            SetupDesktop();
+            SetupUserInterface();
             SetupEditMenu();
 
             PlayerName_TextBox.Text = ConfigManager.Singleton.Configuration.PlayerName;
 
             Gorgon.Go(); //GO MUTHAFUCKA
 
-            loadEntity();
             stateMgr.Startup(typeof(ConnectMenu));
-
         }
         
-        //[UIPermissionAttribute(SecurityAction.PermitOnly, Unrestricted = true)]
-        private void loadEntity()
-        {
-            /*Entity ent = new Entity();
-            SpriteComponent s = new SpriteComponent();
-            ent.AddComponent(ComponentFamily.Renderable, s);*/
-
-        }
-
         private void SetupGorgon()
         {
             this.Size = new Drawing.Size((int)ConfigManager.Singleton.Configuration.DisplayWidth, (int)ConfigManager.Singleton.Configuration.DisplayHeight);
@@ -136,7 +129,7 @@ namespace SS3D
             _mouse.SetPositionRange(0, 0, Gorgon.CurrentClippingViewport.Width, Gorgon.CurrentClippingViewport.Height);
         }
 
-        private void SetupDesktop()
+        private void SetupUserInterface()
         {
             _skin = ResMgr.Singleton.GetGuiSkin("Interface1");
             UIDesktop.Initialize(_input, _skin);
@@ -146,6 +139,8 @@ namespace SS3D
             _desktop.FocusRectangleColor = Drawing.Color.FromArgb(128, Drawing.Color.Red);
             _desktop.FocusRectangleBlend = BlendingModes.Additive;
             _desktop.FocusRectangleOutline = false;
+
+            ClientServices.ServiceManager.Singleton.AddService(UiManager.Singleton);
         }
 
         public void SetupEditMenu()
@@ -209,6 +204,7 @@ namespace SS3D
             // Update networking
             prg.mNetworkMgr.UpdateNetwork();
 
+
             // Update the state manager - this will update the active state.
             prg.mStateMgr.Update(e);
 
@@ -219,6 +215,8 @@ namespace SS3D
             //Update GUI shit
             _desktop.Update(e.FrameDeltaTime);
             _desktop.Draw();
+
+            prg.NetGrapher.Update();
         }
 
         void MainWindow_ResizeEnd(object sender, EventArgs e)
@@ -448,25 +446,25 @@ namespace SS3D
         private void turfToolStripMenuItem_Click(object sender, EventArgs e)
         {
             atomSpawnType = null;
-            tileSpawnType = typeof(Tiles.Floor.Floor);
+            tileSpawnType = typeof(ClientServices.Map.Tiles.Floor.Floor);
             toolStripStatusLabel1.Text = tileSpawnType.ToString();
         }
 
         private void spaceToolStripMenuItem_Click(object sender, EventArgs e)
         {
-            tileSpawnType = typeof(Tiles.Floor.Space);
+            tileSpawnType = typeof(ClientServices.Map.Tiles.Floor.Space);
             PlacementManager.Singleton.SendObjectRequestEDITMODE(tileSpawnType, AlignmentOptions.AlignTile);
         }
 
         private void floorToolStripMenuItem_Click(object sender, EventArgs e)
         {
-            tileSpawnType = typeof(Tiles.Floor.Floor);
+            tileSpawnType = typeof(ClientServices.Map.Tiles.Floor.Floor);
             PlacementManager.Singleton.SendObjectRequestEDITMODE(tileSpawnType, AlignmentOptions.AlignTile);
         }
 
         private void wallToolStripMenuItem_Click(object sender, EventArgs e)
         {
-            tileSpawnType = typeof(Tiles.Wall.Wall);
+            tileSpawnType = typeof(ClientServices.Map.Tiles.Wall.Wall);
             PlacementManager.Singleton.SendObjectRequestEDITMODE(tileSpawnType, AlignmentOptions.AlignTile);
         }
 
@@ -481,7 +479,6 @@ namespace SS3D
 
         }
         #endregion
-
 
         private void toggleEditToolStripMenuItem_Click(object sender, EventArgs e)
         {

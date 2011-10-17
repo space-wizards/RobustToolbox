@@ -11,17 +11,20 @@ using GorgonLibrary;
 using GorgonLibrary.Graphics;
 using GorgonLibrary.InputDevices;
 using SS3D.Modules;
-using SS3D.Modules.UI;
+using SS3D.UserInterface;
+using CGO;
+using ClientResourceManager;
+using ClientServices.Lighting;
 
 namespace SS3D.Atom
 {
-    public abstract class Atom : CGO.Entity// CLIENT SIDE
+    public abstract class Atom : CGO.Entity // CLIENT SIDE
     {
         #region variables
         // GRAPHICS
         public bool updateRequired = false;
         public bool drawn = false;
-        public Light light;
+        //public Light light;
 
         //SPRITE
         public Sprite sprite;
@@ -30,12 +33,9 @@ namespace SS3D.Atom
         public int drawDepth = 0;
         private int index = 0;
 
-        public string name;
         public AtomManager atomManager;
 
         // Position data
-        public Vector2D offset = Vector2D.Zero; // For odd models
-        public bool positionChanged = false;
         public List<InterpolationPacket> interpolationPackets;
         public bool clipping = true;
         public bool collidable = false;
@@ -49,9 +49,10 @@ namespace SS3D.Atom
         public bool snapTogrid = false; // Is this locked to the grid, eg a door / window
 
         //Input
+        /*
         public Dictionary<KeyboardKeys, bool> keyStates;
         public Dictionary<KeyboardKeys, KeyEvent> keyHandlers;
-
+        */
         public delegate void KeyEvent(bool state);
 
         //Misc
@@ -62,34 +63,39 @@ namespace SS3D.Atom
         #region constructors and init
         public Atom()
         {
-            Initialize();
         }
 
         public Atom(ushort _uid, AtomManager _atomManager)
         {
-            Initialize();
             SetUp(_uid, _atomManager);
         }
 
         public virtual void SetUp(int _uid, AtomManager _atomManager)
         {
+            Initialize();
             Uid = _uid;
             atomManager = _atomManager;
 
             Draw();
         }
 
-        public virtual void Initialize()
+        public override void Initialize()
         {
+            base.Initialize();
+            /*
             keyStates = new Dictionary<KeyboardKeys, bool>();
             keyHandlers = new Dictionary<KeyboardKeys, KeyEvent>();
-
-            position = new Vector2D(160, 160);
+            */
+            Position = new Vector2D(160, 160);
             rotation = 0;
 
             interpolationPackets = new List<InterpolationPacket>();
             spriteNames = new Dictionary<int, string>();
             spriteNames[0] = spritename;
+
+            AddComponent(SS3D_shared.GO.ComponentFamily.Mover, ComponentFactory.Singleton.GetComponent("NetworkMoverComponent"));
+            AddComponent(SS3D_shared.GO.ComponentFamily.Renderable, ComponentFactory.Singleton.GetComponent("SpriteComponent"));
+            AddComponent(SS3D_shared.GO.ComponentFamily.Click, ComponentFactory.Singleton.GetComponent("ClickableComponent"));
         }
 
         public virtual void SetSpriteName(int index, string name)
@@ -103,13 +109,13 @@ namespace SS3D.Atom
         public virtual void Draw()
         {
             //Draw the atom into the scene. This should be called after instantiation.
-            sprite = ResMgr.Singleton.GetSprite(spritename);
-            sprite.Position = new Vector2D(position.X, position.Y);
-            sprite.SetAxis(sprite.Width / 2, sprite.Height / 2);
+            //sprite = ResMgr.Singleton.GetSprite(spritename);
+            //sprite.Position = new Vector2D(position.X, position.Y);
+            //sprite.SetAxis(sprite.Width / 2, sprite.Height / 2);
             drawn = true;
         }
 
-        public virtual void SetSpriteByIndex(int _index)
+        /*public virtual void SetSpriteByIndex(int _index)
         {
             if (spriteNames.Keys.Contains(_index))
             {
@@ -117,12 +123,13 @@ namespace SS3D.Atom
                 spritename = spriteNames[_index];
                 Draw();
             }
-        }
+        }*/
 
+        /*
         public int GetSpriteIndex()
         {
             return index;
-        }
+        }*/
         #endregion
 
         #region network stuff
@@ -157,7 +164,7 @@ namespace SS3D.Atom
         private void HandleSpriteState(NetIncomingMessage message)
         {
             int index = message.ReadInt32();
-            SetSpriteByIndex(index);
+            //SetSpriteByIndex(index);
         }
 
         protected virtual void HandleExtendedMessage(NetIncomingMessage message)
@@ -202,23 +209,6 @@ namespace SS3D.Atom
             // Do nothing. This should be overridden by the child.
         }
 
-        public override void SendPositionUpdate()
-        {
-            //Rate limit
-            TimeSpan timeSinceLastUpdate = DateTime.Now - lastPositionUpdate;
-            if (timeSinceLastUpdate.TotalMilliseconds < 1000 / positionUpdateRateLimit)
-                return;
-
-            // This is only useful if the fucking shit is actually controlled by a player
-            NetOutgoingMessage message = CreateAtomMessage();
-            message.Write((byte)AtomMessage.PositionUpdate);
-            message.Write(position.X);
-            message.Write(position.Y);
-            message.Write(rotation);
-            atomManager.networkManager.SendMessage(message, NetDeliveryMethod.ReliableUnordered);
-            lastPositionUpdate = DateTime.Now;
-        }
-
         protected NetOutgoingMessage CreateAtomMessage()
         {
             NetOutgoingMessage message = atomManager.networkManager.netClient.CreateMessage();
@@ -252,12 +242,13 @@ namespace SS3D.Atom
             //This lets the atom only update when it needs to. If it needs to update subsequent to this, the functions below will set that flag.
             updateRequired = false;
 
-            UpdatePosition();
-            UpdateKeys();
+            //UpdatePosition();
+            //UpdateKeys();
         }
 
-        public virtual void UpdateKeys()
+        /*public virtual void UpdateKeys()
         {
+            
             //Rate limit
             TimeSpan timeSinceLastUpdate = atomManager.now - lastKeyUpdate;
             if (timeSinceLastUpdate.TotalMilliseconds < 1000 / keyUpdateRateLimit)
@@ -286,11 +277,13 @@ namespace SS3D.Atom
                     keyStates.Remove(state.Key);
             }
             lastKeyUpdate = atomManager.now;
-        }
+             
+        }*/
 
         // Mobs may need to override this for animation, or they could use this.
         public virtual void UpdatePosition()
         {
+            /*
             Vector2D difference;
             Vector2D fulldifference;
 
@@ -302,9 +295,9 @@ namespace SS3D.Atom
             InterpolationPacket i = interpolationPackets[0];
 
             if (i.startposition.X == 1234 && i.startposition.Y == 1234) //This is silly, but vectors are non-nullable, so I can't do what I'd rather.
-                i.startposition = position;
+                i.startposition = Position;
 
-            difference = i.position - position;
+            difference = i.position - Position;
             fulldifference = i.position - i.startposition;
 
             // Set rotation. The packet may be rotation only.
@@ -325,13 +318,13 @@ namespace SS3D.Atom
                 //TODO: Make this better if it isn't good enough.
                 //difference /= 10; //Position updates were lagging. This would probably be faster on a better system.
                 //difference = fulldifference / 3;
-                position += difference/2;
+                Position += difference/2;
                 //Node.Position = position + offset;
                 updateRequired = true; // This interpolation packet and probably the ones after it are still useful, so we'll update again on the next cycle.
             }
 
-            sprite.Position = new Vector2D(position.X, position.Y);
-
+            //sprite.Position = new Vector2D(position.X, position.Y);
+            */
         }
 
         #endregion
@@ -339,13 +332,15 @@ namespace SS3D.Atom
         #region Rendering
         public virtual void Render(float xTopLeft, float yTopLeft, int Opacity = 255)//, List<Light> lights)
         {
-            System.Drawing.Point tilePos = atomManager.gameState.map.GetTileArrayPositionFromWorldPosition(position);
-            System.Drawing.Point topLeft = atomManager.gameState.map.GetTileArrayPositionFromWorldPosition(position - sprite.Size / 2);
-            System.Drawing.Point bottomRight = atomManager.gameState.map.GetTileArrayPositionFromWorldPosition(position + sprite.Size / 2);
-            sprite.SetPosition(position.X - xTopLeft, position.Y - yTopLeft);
-            sprite.Rotation = rotation;
+            if (spritename == "noSprite")
+                return;
+            System.Drawing.Point tilePos = atomManager.gameState.map.GetTileArrayPositionFromWorldPosition(Position);
+            //System.Drawing.Point topLeft = atomManager.gameState.map.GetTileArrayPositionFromWorldPosition(position - sprite.Size / 2);
+            //System.Drawing.Point bottomRight = atomManager.gameState.map.GetTileArrayPositionFromWorldPosition(position + sprite.Size / 2);
+            //sprite.SetPosition(position.X - xTopLeft, position.Y - yTopLeft);
+            //sprite.Rotation = rotation;
             bool draw = false;
-            if ((tilePos.X > 0 && atomManager.gameState.map.tileArray[tilePos.X, tilePos.Y].Visible) ||
+            /*if ((tilePos.X > 0 && atomManager.gameState.map.tileArray[tilePos.X, tilePos.Y].Visible) ||
                 (topLeft.X > 0 &&atomManager.gameState.map.tileArray[topLeft.X, topLeft.Y].Visible) ||
                 (bottomRight.X > 0 && atomManager.gameState.map.tileArray[bottomRight.X, bottomRight.Y].Visible))
             {
@@ -356,13 +351,14 @@ namespace SS3D.Atom
                 if (draw && visible)
                 {
                     //LightManager.Singleton.ApplyLightsToSprite(atomManager.gameState.map.tileArray[tilePos.X, tilePos.Y].tileLights, sprite, new Vector2D(xTopLeft, yTopLeft));
-                    sprite.Color = System.Drawing.Color.FromArgb(Opacity, sprite.Color);
-                    sprite.Draw();
+                    //sprite.Color = System.Drawing.Color.FromArgb(Opacity, sprite.Color);
+                    //sprite.Draw();
                 }
             }
-
-            if (speechBubble != null && this.IsChildOfType(typeof(Mob.Mob)))
-                speechBubble.Draw(position, xTopLeft, yTopLeft, sprite);
+            */
+            //TODO INTEGRATE SPEECH BUBBLES WITH COMPONENT SYSTEM
+            /*if (speechBubble != null && this.IsChildOfType(typeof(Mob.Mob)))
+                speechBubble.Draw(position, xTopLeft, yTopLeft, sprite);*/
         }
 
         public virtual void Render(float xTopLeft, float yTopLeft)
@@ -373,119 +369,13 @@ namespace SS3D.Atom
 
 
         #region positioning
-        public virtual bool IsColliding()
-        {
-            ///CHECK TURF COLLISIONS
-            System.Drawing.RectangleF myAABB = GetAABB();
-
-            if (atomManager.gameState.map.GetTileTypeFromWorldPosition(myAABB.Left+1, myAABB.Bottom) == TileType.Wall) // Top left
-            {
-                return true;
-            }
-            else if (atomManager.gameState.map.GetTileTypeFromWorldPosition(myAABB.Left+1, myAABB.Bottom - myAABB.Height) == TileType.Wall) // Bottom left
-            {
-                return true;
-            }
-            else if (atomManager.gameState.map.GetTileTypeFromWorldPosition(myAABB.Right - 1, myAABB.Bottom) == TileType.Wall) // Top right
-            {
-                return true;
-            }
-            else if (atomManager.gameState.map.GetTileTypeFromWorldPosition(myAABB.Right - 1, myAABB.Bottom - myAABB.Height) == TileType.Wall) // Bottom left
-            {
-                return true;
-            }
-            
-            ///CHECK ATOM COLLISIONS
-            IEnumerable<Atom> atoms = from a in atomManager.atomDictionary.Values
-                                      where
-                                      a.collidable == true &&
-                                      System.Math.Sqrt((position.X - a.position.X) * (position.X - a.position.X)) < (sprite.Width * sprite.UniformScale) &&
-                                      System.Math.Sqrt((position.Y - a.position.Y) * (position.Y - a.position.Y)) < (sprite.Height * sprite.UniformScale) &&
-                                      a.Uid != Uid
-                                      select a;
-
-            foreach (Atom a in atoms)
-            {
-                System.Drawing.RectangleF box = a.GetAABB();
-
-                if (box.IntersectsWith(myAABB))
-                {
-                    return true;
-                }
-            }
-
-            return false;
-
-        }
-
         public virtual System.Drawing.RectangleF GetAABB()
         {
-            return new System.Drawing.RectangleF(position.X - (sprite.AABB.Width / 2),
-                position.Y - (sprite.AABB.Height / 2),
+            return new System.Drawing.RectangleF(Position.X - (sprite.AABB.Width / 2),
+                Position.Y - (sprite.AABB.Height / 2),
                 sprite.AABB.Width,
                 sprite.AABB.Height);
         }
-
-        public virtual void Translate(Vector2D toPosition) 
-        {
-            Vector2D oldPosition = position;
-            position += toPosition; // We move the sprite here rather than the position, as we can then use its updated AABB values.
-
-            if (clipping && IsColliding())
-            {
-                position -= toPosition;
-            }
-        }
-        
-        /* These are solely for user input, not for updating position from server. */
-        public override void MoveUp() 
-        {
-            Translate(new Vector2D(0, -1 * speed));
-            SendPositionUpdate();
-        }
-
-        public override void MoveDown()
-        {
-            Translate(new Vector2D(0,speed));
-            SendPositionUpdate();
-        }
-
-        public override void MoveLeft()
-        {
-            Translate(new Vector2D(-1 * speed, 0));
-            SendPositionUpdate();
-        }
-
-        public override void MoveRight()
-        {
-            Translate(new Vector2D(speed, 0));
-            SendPositionUpdate();
-        }
-
-        public override void MoveUpLeft()
-        {
-            Translate(new Vector2D(-1 * speed, -1 * speed));
-            SendPositionUpdate();
-        }
-
-        public override void MoveDownLeft()
-        {
-            Translate(new Vector2D(-1 * speed, speed));
-            SendPositionUpdate();
-        }
-
-        public override void MoveUpRight()
-        {
-            Translate(new Vector2D(speed, -1 * speed));
-            SendPositionUpdate();
-        }
-
-        public override void MoveDownRight()
-        {
-            Translate(new Vector2D(speed, speed));
-            SendPositionUpdate();
-        }
-
         #endregion
 
         #region input handling
@@ -500,24 +390,22 @@ namespace SS3D.Atom
              * Example: keyHandlers.Add(MOIS.KeyCode.KC_Whatever, new KeyEvent(HandleKC_whatever));
              * To override a keyhandler, delete it and make a new one OR override the handler function 
              * BEFORE calling initKeys(). */
-            /*keyHandlers.Add(KeyboardKeys.W, new KeyEvent(HandleKC_W));
-            keyHandlers.Add(KeyboardKeys.A, new KeyEvent(HandleKC_A));
-            keyHandlers.Add(KeyboardKeys.S, new KeyEvent(HandleKC_S));
-            keyHandlers.Add(KeyboardKeys.D, new KeyEvent(HandleKC_D));*/
         }
         
+        /*
         public void HandleKeyPressed(KeyboardKeys k)
         {
-            SetKeyState(k, true);
+            //SetKeyState(k, true);
         }
 
         public void HandleKeyReleased(KeyboardKeys k)
         {
-            SetKeyState(k, false);
+            //SetKeyState(k, false);
         }
 
         protected void SetKeyState(KeyboardKeys k, bool state)
         {
+            
             // Check to see if we have a keyhandler for the key that's been pressed. Discard invalid keys.
             if (keyHandlers.ContainsKey(k))
             {
@@ -531,11 +419,12 @@ namespace SS3D.Atom
             if (keyStates.ContainsKey(k) && keyStates[k])
                 return true;
             return false;
-        }
+        }*/
 
         #region mouse handling
-        public bool WasClicked(Vector2D worldPosition)
+        /*public bool WasClicked(Vector2D worldPosition)
         {
+            return false; //HACKED TO DISABLE ATOM CLICKING WITHOUT COMPONENTS
             System.Drawing.RectangleF AABB = new System.Drawing.RectangleF(position.X - (sprite.Width / 2), position.Y - (sprite.Height / 2), sprite.Width, sprite.Height);
             if (!AABB.Contains(worldPosition))
                 return false;
@@ -548,53 +437,10 @@ namespace SS3D.Atom
             if (pixColour.A == 0)
                 return false;
             return true;
-        }
+        }*/
 
-        public virtual void HandleClick()
-        {
-            SendClick();
-        }
-
-        public void SendClick()
-        {
-            NetOutgoingMessage message = CreateAtomMessage();
-            message.Write((byte)AtomMessage.Click);
-            SendMessage(message);
-        }
         #endregion
 
-        #region key handlers
-        public virtual void HandleKC_W(bool state)
-        {
-            if (state && GetKeyState(KeyboardKeys.A) && !GetKeyState(KeyboardKeys.D))
-                MoveUpLeft();
-            else if (state && GetKeyState(KeyboardKeys.D) && !GetKeyState(KeyboardKeys.A))
-                MoveUpRight();
-            else if (state)
-                MoveUp();
-        }
-        public virtual void HandleKC_A(bool state)
-        {
-            if (state && !GetKeyState(KeyboardKeys.W) && !GetKeyState(KeyboardKeys.S))
-                MoveLeft();
-        }
-        public virtual void HandleKC_S(bool state)
-        {
-            if (state && GetKeyState(KeyboardKeys.A) && !GetKeyState(KeyboardKeys.D))
-                MoveDownLeft();
-            else if (state && GetKeyState(KeyboardKeys.D) && !GetKeyState(KeyboardKeys.A))
-                MoveDownRight();
-            else if (state)
-                MoveDown();
-        }
-        public virtual void HandleKC_D(bool state)
-        {
-            if (state && !GetKeyState(KeyboardKeys.W) && !GetKeyState(KeyboardKeys.S))
-                MoveRight();
-        }
-        #endregion
-
- 
         #endregion
 
         #region utility
@@ -627,5 +473,6 @@ namespace SS3D.Atom
             return false;
         }
         #endregion
+
     }
 }

@@ -6,12 +6,14 @@ using System.Runtime.Serialization;
 using System.Runtime.Serialization.Formatters.Binary;
 using System.Text;
 using Lidgren.Network;
-using SS3D_Server.Atom.Extension;
 using SS3D_Server.HelperClasses;
 using SS3D_Server.Modules;
 using SS3D_shared;
 using SS3D_shared.HelperClasses;
 using SGO;
+using ServerServices;
+using System.Drawing;
+using ServerServices.Tiles;
 
 namespace SS3D_Server.Atom
 {
@@ -21,7 +23,6 @@ namespace SS3D_Server.Atom
        
         #region variables
         // wat
-        public string name;
         public AtomManager atomManager;
         public bool updateRequired = false;
         public int drawDepth = 0;
@@ -31,10 +32,9 @@ namespace SS3D_Server.Atom
 
         public Atom[] linkedAtoms = new Atom[4]; //0 = North, 1 = East, 2 = South, 3 = West
 
-        public Tiles.Tile spawnTile; //The tile this atom spawned on. Used for wall mounted items etc.
+        public Tile spawnTile; //The tile this atom spawned on. Used for wall mounted items etc.
 
         // Extensions
-        public List<Extension.Extension> extensions;
 
         // Position data
 
@@ -51,18 +51,30 @@ namespace SS3D_Server.Atom
         #region constructors and init
         public Atom()
         {
-            position = new Vector2(192, 192);
-            rotation = 0;
-            name = this.GetType().ToString();
-
-            extensions = new List<Extension.Extension>();
         }
 
-        public void SetUp(int _uid, AtomManager _atomManager)
+        public void SetUp(int _uid, AtomManager _atomManager, bool loaded=false)
         {
             Uid = _uid;
             atomManager = _atomManager;
             updateRequired = true;
+
+            Initialize(loaded);
+        }
+
+        public virtual void Initialize(bool loaded=false)
+        {
+            if (!loaded)
+            {
+                position = new Vector2(192, 192);
+                rotation = 0;
+                name = this.GetType().ToString();
+            }
+
+            AddComponent(SS3D_shared.GO.ComponentFamily.Click, ComponentFactory.Singleton.GetComponent("ClickableComponent"));
+            AddComponent(SS3D_shared.GO.ComponentFamily.Renderable, ComponentFactory.Singleton.GetComponent("SpriteComponent"));
+            AddComponent(SS3D_shared.GO.ComponentFamily.Interactable, ComponentFactory.Singleton.GetComponent("BasicInteractableComponent"));
+            AddComponent(SS3D_shared.GO.ComponentFamily.Mover, ComponentFactory.Singleton.GetComponent("BasicMoverComponent"));
         }
 
         public virtual void PostSpawnActions()
@@ -74,6 +86,7 @@ namespace SS3D_Server.Atom
         {
             // When things are created with reflection using serialization their default constructor
             // isn't called. Put things in here which need to be done when it's created.
+
         }
 
         /// <summary>
@@ -110,9 +123,6 @@ namespace SS3D_Server.Atom
         {
             //Updates the atom, item, whatever. This should be called from the atom manager's update queue.
             updateRequired = false;
-
-            foreach (Extension.Extension e in extensions)
-                e.Update(framePeriod);
         }
         #endregion
 
@@ -127,10 +137,10 @@ namespace SS3D_Server.Atom
                     // Pass a message to the atom in question
                     Push(message.SenderConnection);
                     break;
-                case AtomMessage.PositionUpdate:
+                /*case AtomMessage.PositionUpdate:
                     // We'll accept position packets from the client so that movement doesn't lag. There may be other special cases like this.
                     HandlePositionUpdate(message);
-                    break;
+                    break;*/
                 case AtomMessage.Click:
                     HandleClick(message);
                     break;
@@ -159,6 +169,14 @@ namespace SS3D_Server.Atom
             Clicked(clicker);
         }
 
+        public override void HandleClick(int clickerID)
+        {
+            Mob.Mob clicker = (Mob.Mob)atomManager.GetAtom(clickerID);
+            if (clicker == null || clicker.IsDead())
+                return;
+            Clicked(clicker);
+        }
+
         public virtual void Push()
         {
             SendInterpolationPacket(true); // Forcibly update the position of the node.
@@ -171,7 +189,7 @@ namespace SS3D_Server.Atom
 
         public void SendInterpolationPacket(bool force)
         {
-            NetOutgoingMessage message = CreateAtomMessage();
+            /*NetOutgoingMessage message = CreateAtomMessage();
             message.Write((byte)AtomMessage.InterpolationPacket);
 
             InterpolationPacket i = new InterpolationPacket((float)position.X, (float)position.Y, rotation, 0); // Fuckugly
@@ -179,13 +197,14 @@ namespace SS3D_Server.Atom
 
             /* VVVV This is the force flag. If this flag is set, the client will run the interpolation 
              * packet even if it is that client's player mob. Use this in case the client has ended up somewhere bad.
-             */
+             *//*
             message.Write(force);
-            SS3DServer.Singleton.SendMessageToAll(message, NetDeliveryMethod.ReliableUnordered);
+            SS3DServer.Singleton.SendMessageToAll(message, NetDeliveryMethod.ReliableUnordered);*/
         }
 
         public void SendInterpolationPacket(bool force, NetConnection sender)
         {
+            /*
             NetOutgoingMessage message = CreateAtomMessage();
             message.Write((byte)AtomMessage.InterpolationPacket);
 
@@ -194,9 +213,9 @@ namespace SS3D_Server.Atom
 
             /* VVVV This is the force flag. If this flag is set, the client will run the interpolation 
              * packet even if it is that client's player mob. Use this in case the client has ended up somewhere bad.
-             */
+             *//*
             message.Write(force);
-            SS3DServer.Singleton.SendMessageTo(message, sender, NetDeliveryMethod.ReliableUnordered);
+            SS3DServer.Singleton.SendMessageTo(message, sender, NetDeliveryMethod.ReliableUnordered);*/
         }
 
         public NetOutgoingMessage CreateAtomMessage()
@@ -210,12 +229,12 @@ namespace SS3D_Server.Atom
 
         protected void SendMessageToAll(NetOutgoingMessage message, NetDeliveryMethod method = NetDeliveryMethod.ReliableOrdered)
         {
-            SS3DServer.Singleton.SendMessageToAll(message, method);
+            SS3DNetServer.Singleton.SendToAll(message, method);
         }
 
         protected void SendMessageTo(NetOutgoingMessage message, NetConnection client , NetDeliveryMethod method = NetDeliveryMethod.ReliableOrdered)
         {
-            SS3DServer.Singleton.SendMessageTo(message, client, method);
+            SS3DNetServer.Singleton.SendMessage(message, client, method);
         }
 
         public virtual void SendState()
@@ -241,7 +260,7 @@ namespace SS3D_Server.Atom
             NetOutgoingMessage message = CreateAtomMessage();
             message.Write((byte)AtomMessage.SpriteState);
             message.Write(spritestate);
-            SS3DServer.Singleton.SendMessageToAll(message);
+            SS3DNetServer.Singleton.SendToAll(message);
         }
 
         public virtual void SendSpriteState(NetConnection client)
@@ -249,23 +268,23 @@ namespace SS3D_Server.Atom
             NetOutgoingMessage message = CreateAtomMessage();
             message.Write((byte)AtomMessage.SpriteState);
             message.Write(spritestate);
-            SS3DServer.Singleton.SendMessageTo(message, client);
+            SS3DNetServer.Singleton.SendMessage(message, client);
         }
 
         public virtual void SendCollidable()
         {
-            NetOutgoingMessage  message = CreateAtomMessage();
+            /*NetOutgoingMessage  message = CreateAtomMessage();
             message.Write((byte)AtomMessage.SetCollidable);
             message.Write(collidable);
-            SS3DServer.Singleton.SendMessageToAll(message);
+            SS3DServer.Singleton.SendMessageToAll(message);*/
         }
 
         public virtual void SendCollidable(NetConnection client)
         {
-            NetOutgoingMessage message = CreateAtomMessage();
+            /*NetOutgoingMessage message = CreateAtomMessage();
             message.Write((byte)AtomMessage.SetCollidable);
             message.Write(collidable);
-            SS3DServer.Singleton.SendMessageTo(message, client);
+            SS3DServer.Singleton.SendMessageTo(message, client);*/
         }
 
         public virtual void HandlePositionUpdate(NetIncomingMessage message)
@@ -274,7 +293,7 @@ namespace SS3D_Server.Atom
              * be able to move shit besides its associated player mob there may be 
              * cases when the client will need to move stuff around in a non-laggy 
              * way, but For now the only case I can think of is the player mob.*/
-            // Hack to accept position updates from clients
+            /*// Hack to accept position updates from clients
             if (attachedClient != null && message.SenderConnection == attachedClient && !IsDead())
             {
                 position.X = (double)message.ReadFloat();
@@ -285,7 +304,7 @@ namespace SS3D_Server.Atom
             }
             else
                 SendInterpolationPacket(true); // If its dead, it should update everyone (prevents movement after death)
-            // Discard the rest.
+            // Discard the rest.*/
         }
 
 
@@ -326,7 +345,7 @@ namespace SS3D_Server.Atom
         #region input handling
         protected virtual void Clicked(Mob.Mob clicker)
         {
-            Vector2 dist = clicker.position - position;
+            /*Vector2 dist = clicker.position - position;
 
             //If we're too far away
             if (dist.Magnitude > 96)
@@ -340,7 +359,7 @@ namespace SS3D_Server.Atom
                 ApplyAction(clicker.selectedAppendage.heldItem, clicker);
 
             //SS3DServer.Singleton.chatManager.SendChatMessage(0, clicker.name + " touched the " + name + ".", "", uid);
-            LogManager.Log(clicker.name + "(" + clicker.Uid.ToString() + ")" + " clicked " + name + "(" + Uid.ToString() + ").", LogLevel.Debug);
+            LogManager.Log(clicker.name + "(" + clicker.Uid.ToString() + ")" + " clicked " + name + "(" + Uid.ToString() + ").", LogLevel.Debug);*/
         }
         #endregion
 
@@ -352,12 +371,12 @@ namespace SS3D_Server.Atom
         /// <param name="m">Mob that used a on this one</param>
         protected virtual void ApplyAction(Atom a, Mob.Mob m)
         {
-            if(m != null && m.selectedAppendage.heldItem != null)
+            /*if(m != null && m.selectedAppendage.heldItem != null)
                 m.selectedAppendage.heldItem.UsedOn(this); //Technically this is the same fucking thing as a, but i dont want to fuck with explicit casting it.
 
             //apply extension actions
             foreach (Extension.Extension e in extensions)
-                e.ApplyAction(a, m);
+                e.ApplyAction(a, m);*/
         }
 
         /// <summary>
@@ -368,9 +387,9 @@ namespace SS3D_Server.Atom
         /// <param name="target">Atom for this atom to be used on</param>
         protected virtual void UsedOn(Atom target)
         {
-            //Apply extensions
+            /*//Apply extensions
             foreach (Extension.Extension e in extensions)
-                e.UsedOn(target);
+                e.UsedOn(target);*/
         }
         #endregion
 
@@ -478,10 +497,10 @@ namespace SS3D_Server.Atom
             isDead = true;
         }
 
-        public Tiles.Tile GetNearestTile()
+        public Tile GetNearestTile()
         {
             Point pos = SS3DServer.Singleton.map.GetTileArrayPositionFromWorldPosition(position);
-            return SS3DServer.Singleton.map.GetTileAt(pos.x, pos.y);
+            return SS3DServer.Singleton.map.GetTileAt(pos.X, pos.Y);
         }
         #endregion
 

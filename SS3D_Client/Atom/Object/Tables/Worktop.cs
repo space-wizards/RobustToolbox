@@ -4,6 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Drawing;
 using GorgonLibrary;
+using CGO;
 
 namespace SS3D.Atom.Object.Worktop
 {
@@ -12,10 +13,20 @@ namespace SS3D.Atom.Object.Worktop
         public Worktop()
             : base()
         {
-            SetSpriteName(0, "worktop_single");
-            SetSpriteByIndex(0);
+            //SetSpriteName(0, "worktop_single");
+            //SetSpriteByIndex(0);
+        }
+
+        public override void Initialize()
+        {
+            base.Initialize();
+
             collidable = true;
             snapTogrid = true;
+
+            ISpriteComponent c = (ISpriteComponent)GetComponent(SS3D_shared.GO.ComponentFamily.Renderable);
+            c.AddSprite("worktop_single");
+            c.SetSpriteByKey("worktop_single");
         }
 
         public override void HandlePush(Lidgren.Network.NetIncomingMessage message)

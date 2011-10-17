@@ -27,8 +27,11 @@ namespace SGO
         /// Holds this entity's components
         /// </summary>
         private Dictionary<ComponentFamily, IGameObjectComponent> components;
-
+        
         private EntityNetworkManager m_entityNetworkManager;
+
+        public event EntityMoveEvent OnMove;
+        public delegate void EntityMoveEvent(Vector2 toPosition);
 
         private int uid;
         public int Uid
@@ -131,16 +134,40 @@ namespace SGO
         }
 
         /// <summary>
+        /// Checks to see if a component of a certain family exists
+        /// </summary>
+        /// <param name="family">componentfamily to check</param>
+        /// <returns>true if component exists, false otherwise</returns>
+        public bool HasComponent(ComponentFamily family)
+        {
+            if (components.ContainsKey(family))
+                return true;
+            return false;
+        }
+
+        /// <summary>
+        /// Gets the component of the specified family, if it exists
+        /// </summary>
+        /// <param name="family">componentfamily to get</param>
+        /// <returns></returns>
+        public IGameObjectComponent GetComponent(ComponentFamily family)
+        {
+            if (components.ContainsKey(family))
+                return components[family];
+            return null;
+        }
+
+        /// <summary>
         /// Allows components to send messages
         /// </summary>
         /// <param name="sender">the component doing the sending</param>
         /// <param name="type">the type of message</param>
         /// <param name="args">message parameters</param>
-        public void SendMessage(object sender, MessageType type, params object[] args)
+        public void SendMessage(object sender, ComponentMessageType type, List<ComponentReplyMessage> replies, params object[] args)
         {
-            foreach (IGameObjectComponent component in components.Values)
+            foreach (IGameObjectComponent component in components.Values.ToArray())
             {
-                component.RecieveMessage(sender, type, args);
+                component.RecieveMessage(sender, type, replies, args);
             }
         }
         #endregion
@@ -153,64 +180,15 @@ namespace SGO
         {
         }
 
+
+
         #region Networking
         
         #endregion
 
 
-        #region Movement
-        /// <summary>
-        /// Moves the entity to a new position in worldspace.
-        /// </summary>
-        /// <param name="toPosition"></param>
-        public virtual void Translate(Vector2 toPosition)
-        {
-            Vector2 oldPosition = position;
-            position += toPosition; // We move the sprite here rather than the position, as we can then use its updated AABB values.
-        }
 
-        /// <summary>
-        /// Moves the entity Up
-        /// </summary>
-        public virtual void MoveUp()
-        { }
-        /// <summary>
-        /// Moves the entity Down
-        /// </summary>
-        public virtual void MoveDown()
-        { }
-        /// <summary>
-        /// Moves the entity Left
-        /// </summary>
-        public virtual void MoveLeft()
-        { }
-        /// <summary>
-        /// Moves the entity Right
-        /// </summary>
-        public virtual void MoveRight()
-        { }
-        /// <summary>
-        /// Moves the entity Up and Left
-        /// </summary>
-        public virtual void MoveUpLeft()
-        { }
-        /// <summary>
-        /// Moves the entity Up and Right
-        /// </summary>
-        public virtual void MoveUpRight()
-        { }
-        /// <summary>
-        /// Moves the entity Down and Left
-        /// </summary>
-        public virtual void MoveDownLeft()
-        { }
-        /// <summary>
-        /// Moves the entity Down and Right
-        /// </summary>
-        public virtual void MoveDownRight()
-        { }
 
-#endregion
         //VARIABLES TO REFACTOR AT A LATER DATE
         /// <summary>
         /// Movement speed of the entity. This should be refactored.
@@ -223,6 +201,14 @@ namespace SGO
         /// </summary>
         public virtual void SendPositionUpdate()
         { }
+
+        public virtual void HandleClick(int clickerID) { }
+
+        public void Moved()
+        {
+            if(OnMove != null)
+                OnMove(position);
+        }
 
         #region Serialization
 
@@ -258,7 +244,16 @@ namespace SGO
                 case EntityMessage.ComponentMessage:
                     HandleComponentMessage((IncomingEntityComponentMessage)message.message);
                     break;
+                case EntityMessage.ComponentInstantiationMessage:
+                    HandleComponentInstantiationMessage(message);
+                    break;
             }
+        }
+
+        internal void HandleComponentInstantiationMessage(IncomingEntityMessage message)
+        {
+            if(HasComponent((ComponentFamily)message.message))
+                GetComponent((ComponentFamily)message.message).HandleInstantiationMessage(message.client);
         }
 
         internal void HandleComponentMessage(IncomingEntityComponentMessage message)
@@ -269,11 +264,41 @@ namespace SGO
             }
         }
 
+        /// <summary>
+        /// Sends a message to the counterpart component on the server side
+        /// </summary>
+        /// <param name="component">Sending component</param>
+        /// <param name="method">Net Delivery Method</param>
+        /// <param name="recipient">The intended recipient netconnection (if null send to all)</param>
+        /// <param name="messageParams">Parameters</param>
+        public void SendComponentNetworkMessage(IGameObjectComponent component, NetDeliveryMethod method, NetConnection recipient, params object[] messageParams)
+        {
+            m_entityNetworkManager.SendComponentNetworkMessage(this, component.Family, NetDeliveryMethod.ReliableUnordered, recipient, messageParams);
+        }
+
         #region compatibility for atom transition
         public void SetNetworkManager(EntityNetworkManager manager)
         {
             m_entityNetworkManager = manager;
         }
         #endregion
+    }
+
+    public struct ComponentReplyMessage
+    {
+        public ComponentMessageType messageType;
+        public List<object> paramsList;
+
+        public ComponentReplyMessage(ComponentMessageType _messageType, params object[] _paramsList)
+        {
+            if (_paramsList != null)
+                paramsList = _paramsList.ToList();
+            else
+                paramsList = new List<object>();
+
+            messageType = _messageType;
+        }
+
+        public static ComponentReplyMessage Null = new ComponentReplyMessage(ComponentMessageType.Empty);
     }
 }

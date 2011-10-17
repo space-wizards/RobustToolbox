@@ -5,6 +5,7 @@ using System.Text;
 using Lidgren.Network;
 using SS3D_shared.HelperClasses;
 using System.Runtime.Serialization;
+using SGO;
 
 namespace SS3D_Server.Atom.Object.Door
 {
@@ -12,20 +13,31 @@ namespace SS3D_Server.Atom.Object.Door
     public class Door : Object
     {
 
-        DoorState status = DoorState.Closed;
+        /*DoorState status = DoorState.Closed;
         DoorState laststatus = DoorState.Closed;
         float openLength = 5000;
         float timeOpen = 0;
-
+        */
         public Door()
             : base()
         {
             name = "door";
         }
 
+        public override void Initialize(bool loaded = false)
+        {
+            base.Initialize(loaded);
+
+            AddComponent(SS3D_shared.GO.ComponentFamily.Interactable, ComponentFactory.Singleton.GetComponent("BasicInteractableComponent"));
+            AddComponent(SS3D_shared.GO.ComponentFamily.Collidable, ComponentFactory.Singleton.GetComponent("CollidableComponent"));
+            AddComponent(SS3D_shared.GO.ComponentFamily.LargeObject, ComponentFactory.Singleton.GetComponent("BasicDoorComponent"));
+            GetComponent(SS3D_shared.GO.ComponentFamily.LargeObject).SetParameter(new ComponentParameter("OpenSprite", "string", "door_ewo"));
+            GetComponent(SS3D_shared.GO.ComponentFamily.LargeObject).SetParameter(new ComponentParameter("ClosedSprite", "string", "door_ew"));
+        }
+
         protected override void ApplyAction(Atom a, Mob.Mob m)
         {
-            laststatus = status;
+            /*laststatus = status;
             if (status == DoorState.Closed)
             {
                 // Just as a test of item interaction, lets make a crowbar break / fix a door.
@@ -59,16 +71,16 @@ namespace SS3D_Server.Atom.Object.Door
                 UpdateState();
                 updateRequired = true;
             }
-
+            */
         }
 
-        public override void Update(float framePeriod)
+        /*public override void Update(float framePeriod)
         {
             base.Update(framePeriod);
 
             //Make closed doors block gas
             var occupiedTilePos = SS3DServer.Singleton.map.GetTileArrayPositionFromWorldPosition(position);
-            var occupiedTile = SS3DServer.Singleton.map.GetTileAt(occupiedTilePos.x, occupiedTilePos.y);
+            var occupiedTile = SS3DServer.Singleton.map.GetTileAt(occupiedTilePos.X, occupiedTilePos.Y);
 
             if (status == DoorState.Closed)
             {
@@ -94,15 +106,15 @@ namespace SS3D_Server.Atom.Object.Door
                 updateRequired = false;
                 timeOpen = 0;
             }
-         }
+         }*/
 
-        private void UpdateState()
+        /*private void UpdateState()
         {
             NetOutgoingMessage message = CreateAtomMessage();
             message.Write((byte)AtomMessage.Extended);
             message.Write((byte)status);
             SendMessageToAll(message);
-        }
+        }*/
 
         public Door(SerializationInfo info, StreamingContext ctxt)
         {

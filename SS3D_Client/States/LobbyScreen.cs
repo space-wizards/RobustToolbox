@@ -3,9 +3,7 @@
 using Lidgren.Network;
 
 using SS3D.Modules;
-using SS3D.Modules.Map;
 using SS3D.Modules.Network;
-using SS3D.Modules.UI;
 
 using System.Collections.Generic;
 using System.Reflection;
@@ -13,10 +11,13 @@ using System.Reflection;
 using GorgonLibrary;
 using GorgonLibrary.Graphics;
 using GorgonLibrary.InputDevices;
-using SS3D.Modules.UI;
-using SS3D.Modules.UI.Components;
+using SS3D.UserInterface;
 using SS3D_shared;
 using System.Linq;
+
+using ClientConfigManager;
+using ClientResourceManager;
+using ClientServices.Map;
 
 namespace SS3D.States
 {
@@ -60,8 +61,8 @@ namespace SS3D.States
 
             prg.mNetworkMgr.MessageArrived += new NetworkMsgHandler(mNetworkMgr_MessageArrived);
 
-            lobbyChat = new Modules.UI.Chatbox("lobbyChat");
-            lobbyChat.TextSubmitted += new Modules.UI.Chatbox.TextSubmitHandler(lobbyChat_TextSubmitted);
+            lobbyChat = new SS3D.UserInterface.Chatbox("lobbyChat");
+            lobbyChat.TextSubmitted += new SS3D.UserInterface.Chatbox.TextSubmitHandler(lobbyChat_TextSubmitted);
 
             lobbyText = new TextSprite("lobbyText", "", ResMgr.Singleton.GetFont("CALIBRI"));
             lobbyText.Color = System.Drawing.Color.Black;
@@ -107,7 +108,7 @@ namespace SS3D.States
             playerController.SendVerb("joingame", 0);
         }
 
-        void lobbyChat_TextSubmitted(Modules.UI.Chatbox Chatbox, string Text)
+        void lobbyChat_TextSubmitted(SS3D.UserInterface.Chatbox Chatbox, string Text)
         {
             SendLobbyChat(Text);
         }
@@ -162,7 +163,7 @@ namespace SS3D.States
                     if (statMsg == NetConnectionStatus.Disconnected)
                     {
                         string discMsg = msg.ReadString();
-                        UiManager.Singleton.Components.Add(new DisconnectedScreenBlocker(mStateMgr, discMsg));
+                        //UiManager.Singleton.Components.Add(new DisconnectedScreenBlocker(mStateMgr, discMsg));
                     }
                     break;
                 case NetIncomingMessageType.Data:

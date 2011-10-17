@@ -9,6 +9,7 @@ using SS3D_Server;
 using SS3D_shared;
 using SS3D_shared.GO;
 using SGO;
+using ServerServices;
 
 namespace SS3D_Server.Modules
 {
@@ -42,6 +43,8 @@ namespace SS3D_Server.Modules
             a.attachedClient = connectedClient;
             //Add input component.
             a.AddComponent(ComponentFamily.Input, SGO.ComponentFactory.Singleton.GetComponent("KeyBindingInputComponent"));
+            a.AddComponent(ComponentFamily.Mover, ComponentFactory.Singleton.GetComponent("PlayerInputMoverComponent"));
+            a.AddComponent(ComponentFamily.Actor, ComponentFactory.Singleton.GetComponent("BasicActorComponent"));
             attachedAtom = a;
             SendAttachMessage();
         }
@@ -53,6 +56,8 @@ namespace SS3D_Server.Modules
                 attachedAtom.attachedClient = null;
                 attachedAtom.Die();
                 attachedAtom.RemoveComponent(ComponentFamily.Input);
+                attachedAtom.RemoveComponent(ComponentFamily.Mover);
+                attachedAtom.RemoveComponent(ComponentFamily.Actor);
                 attachedAtom = null;
             }
         }
@@ -63,7 +68,7 @@ namespace SS3D_Server.Modules
             m.Write((byte)NetMessage.PlayerSessionMessage);
             m.Write((byte)PlayerSessionMessage.AttachToAtom);
             m.Write(attachedAtom.Uid);
-            SS3DServer.Singleton.SendMessageTo(m, connectedClient);
+            SS3DNetServer.Singleton.SendMessage(m, connectedClient);
         }
 
         public void HandleNetworkMessage(NetIncomingMessage message)
@@ -133,7 +138,7 @@ namespace SS3D_Server.Modules
             NetOutgoingMessage m = SS3DNetServer.Singleton.CreateMessage();
             m.Write((byte)NetMessage.PlayerSessionMessage);
             m.Write((byte)PlayerSessionMessage.JoinLobby);
-            SS3DServer.Singleton.SendMessageTo(m, connectedClient);
+            SS3DNetServer.Singleton.SendMessage(m, connectedClient);
             status = SessionStatus.InLobby;
         }
 
@@ -143,7 +148,7 @@ namespace SS3D_Server.Modules
             {
                 NetOutgoingMessage m = SS3DNetServer.Singleton.CreateMessage();
                 m.Write((byte)NetMessage.JoinGame);
-                SS3DServer.Singleton.SendMessageTo(m, connectedClient);
+                SS3DNetServer.Singleton.SendMessage(m, connectedClient);
 
                 status = SessionStatus.InGame;
             }

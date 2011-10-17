@@ -27,6 +27,11 @@ namespace CGO
 
         private EntityNetworkManager m_entityNetworkManager;
 
+        public string name;
+
+        public event EntityMoveEvent OnMove;
+        public delegate void EntityMoveEvent(Vector2D toPosition);
+
         /// <summary>
         /// Unique entity id
         /// </summary>
@@ -46,16 +51,19 @@ namespace CGO
         /// <summary>
         /// These are the only real pieces of data that the entity should have -- position and rotation.
         /// </summary>
-        public Vector2D position;
+        private Vector2D position;
+        public Vector2D Position { get { return position; } set { position = value; } }
+
         public float rotation;
         #endregion
+
         #region Constructor/Destructor
         /// <summary>
         /// Constructor
         /// </summary>
         public Entity()
         {
-            Initialize();
+            //Initialize();
         }
 
         /// <summary>
@@ -71,7 +79,7 @@ namespace CGO
         /// <summary>
         /// Sets up variables and shite
         /// </summary>
-        public void Initialize()
+        public virtual void Initialize()
         {
             components = new Dictionary<ComponentFamily, IGameObjectComponent>();
         }
@@ -129,16 +137,40 @@ namespace CGO
         }
 
         /// <summary>
+        /// Returns the component in the specified family
+        /// </summary>
+        /// <param name="family">the family</param>
+        /// <returns></returns>
+        public IGameObjectComponent GetComponent(ComponentFamily family)
+        {
+            if (components.ContainsKey(family))
+                return components[family];
+            return null;
+        }
+
+        /// <summary>
+        /// Checks to see if a component of a certain family exists
+        /// </summary>
+        /// <param name="family">componentfamily to check</param>
+        /// <returns>true if component exists, false otherwise</returns>
+        public bool HasComponent(ComponentFamily family)
+        {
+            if (components.ContainsKey(family))
+                return true;
+            return false;
+        }
+
+        /// <summary>
         /// Allows components to send messages
         /// </summary>
         /// <param name="sender">the component doing the sending</param>
         /// <param name="type">the type of message</param>
         /// <param name="args">message parameters</param>
-        public void SendMessage(object sender, MessageType type, params object[] args)
+        public void SendMessage(object sender, ComponentMessageType type, List<ComponentReplyMessage> replies, params object[] args)
         {
-            foreach (IGameObjectComponent component in components.Values)
+            foreach (IGameObjectComponent component in components.Values.ToArray())
             {
-                component.RecieveMessage(sender, type, args);
+                component.RecieveMessage(sender, type, replies, args);
             }
         }
         #endregion
@@ -152,80 +184,60 @@ namespace CGO
         }
 
 
-#region Movement
-        /// <summary>
-        /// Moves the entity to a new position in worldspace.
-        /// </summary>
-        /// <param name="toPosition"></param>
-        public virtual void Translate(Vector2D toPosition)
-        {
-            Vector2D oldPosition = position;
-            position += toPosition; // We move the sprite here rather than the position, as we can then use its updated AABB values.
-        }
-
-        /// <summary>
-        /// Moves the entity Up
-        /// </summary>
-        public virtual void MoveUp()
-        { }
-        /// <summary>
-        /// Moves the entity Down
-        /// </summary>
-        public virtual void MoveDown()
-        { }
-        /// <summary>
-        /// Moves the entity Left
-        /// </summary>
-        public virtual void MoveLeft()
-        { }
-        /// <summary>
-        /// Moves the entity Right
-        /// </summary>
-        public virtual void MoveRight()
-        { }
-        /// <summary>
-        /// Moves the entity Up and Left
-        /// </summary>
-        public virtual void MoveUpLeft()
-        { }
-        /// <summary>
-        /// Moves the entity Up and Right
-        /// </summary>
-        public virtual void MoveUpRight()
-        { }
-        /// <summary>
-        /// Moves the entity Down and Left
-        /// </summary>
-        public virtual void MoveDownLeft()
-        { }
-        /// <summary>
-        /// Moves the entity Down and Right
-        /// </summary>
-        public virtual void MoveDownRight()
-        { }
-
-#endregion
         //VARIABLES TO REFACTOR AT A LATER DATE
         /// <summary>
         /// Movement speed of the entity. This should be refactored.
         /// </summary>
-        public float speed = 6.0f;
+        //public float speed = 600.0f;
 
         //FUNCTIONS TO REFACTOR AT A LATER DATE
         /// <summary>
         /// This should be refactored to some sort of component that sends entity movement input or something.
         /// </summary>
-        public virtual void SendPositionUpdate()
-        { }
+
+        public void Moved()
+        {
+            if(OnMove != null)
+                OnMove(Position);
+        }
+
+        internal void HandleComponentMessage(IncomingEntityComponentMessage message)
+        {
+            if (components.Keys.Contains(message.componentFamily))
+            {
+                components[message.componentFamily].HandleNetworkMessage(message);
+            }
+        }
 
         internal void HandleNetworkMessage(IncomingEntityMessage message)
         {
-            throw new NotImplementedException();
+            switch (message.messageType)
+            {
+                case EntityMessage.PositionMessage:
+                    break;
+                case EntityMessage.ComponentMessage:
+                    HandleComponentMessage((IncomingEntityComponentMessage)message.message);
+                    break;
+            }
         }
 
+        /// <summary>
+        /// Sends a message to the counterpart component on the server side
+        /// </summary>
+        /// <param name="component">Sending component</param>
+        /// <param name="method">Net Delivery Method</param>
+        /// <param name="messageParams">Parameters</param>
         public void SendComponentNetworkMessage(IGameObjectComponent component, NetDeliveryMethod method, params object[] messageParams)
         {
             m_entityNetworkManager.SendComponentNetworkMessage(this, component.Family, NetDeliveryMethod.ReliableUnordered, messageParams);
+        }
+
+        public void SendComponentInstantiationMessage(IGameObjectComponent component)
+        {
+            if (component == null)
+                throw new Exception("Component is null");
+          
+            m_entityNetworkManager.SendEntityNetworkMessage(this, EntityMessage.ComponentInstantiationMessage, component.Family);
         }
 
         #region compatibility for atom transition
@@ -235,4 +247,24 @@ namespace CGO
         }
         #endregion
     }
+
+    public struct ComponentReplyMessage
+    {
+        public ComponentMessageType messageType;
+        public List<object> paramsList;
+
+        public ComponentReplyMessage(ComponentMessageType _messageType, params object[] _paramsList)
+        {
+            if (_paramsList != null)
+                paramsList = _paramsList.ToList();
+            else
+                paramsList = new List<object>();
+
+            messageType = _messageType;            
+        }
+
+        public static ComponentReplyMessage Null = new ComponentReplyMessage(ComponentMessageType.Empty);
+    }
+
+
 }

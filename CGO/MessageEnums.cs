@@ -12,11 +12,4 @@ namespace CGO
         Ignored,
         Error
     }
-
-    public enum MessageType
-    {
-        AddComponent,
-        BoundKeyChange,
-        BoundKeyRepeat,
-    }
 }

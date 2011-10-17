@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using SS3D_shared;
+using SS3D_shared.GO;
 
 namespace SGO
 {
@@ -16,7 +17,7 @@ namespace SGO
             BoundKeyFunctions keyFunction = (BoundKeyFunctions)message.messageParameters[0];
             BoundKeyState keyState = (BoundKeyState)message.messageParameters[1];
 
-            Owner.SendMessage(this, MessageType.BoundKeyChange, keyFunction, keyState);
+            Owner.SendMessage(this, ComponentMessageType.BoundKeyChange, null, keyFunction, keyState);
         }
     }
 }

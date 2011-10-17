@@ -42,11 +42,10 @@ namespace SGO
             //Loop through the params and write them as is proper
             foreach (object messageParam in messageParams)
             {
-                if (messageParam.GetType() == typeof(Enum))
+                if (messageParam.GetType().IsSubclassOf(typeof(Enum)))
                 {
                     message.Write((byte)NetworkDataType.d_enum);
-                    //Casting enums to bytes would fuck things up if there were more then 255 members... 
-                    message.Write((byte)messageParam);
+                    message.Write((int)messageParam);
                 }
                 else if (messageParam.GetType() == typeof(bool))
                 {
@@ -143,6 +142,9 @@ namespace SGO
                 case EntityMessage.PositionMessage:
                     //TODO: Handle position messages!
                     break;
+                case EntityMessage.ComponentInstantiationMessage:
+                    return new IncomingEntityMessage(uid, EntityMessage.ComponentInstantiationMessage, (ComponentFamily)UnPackParams(message).First(), message.SenderConnection);
+                    break;
                 default:
                     break;
             }
@@ -156,6 +158,13 @@ namespace SGO
         public IncomingEntityComponentMessage HandleEntityComponentNetworkMessage(NetIncomingMessage message)
         {
             ComponentFamily componentFamily = (ComponentFamily)message.ReadByte();
+            
+            return new IncomingEntityComponentMessage(componentFamily, UnPackParams(message));
+        }
+        #endregion
+
+        private List<object> UnPackParams(NetIncomingMessage message)
+        {
             List<object> messageParams = new List<object>();
             while (message.Position < message.LengthBits)
             {
@@ -202,10 +211,10 @@ namespace SGO
                         break;
                 }
             }
-            return new IncomingEntityComponentMessage(componentFamily, messageParams);
+            return messageParams;
         }
-        #endregion
     }
+
 
     public struct IncomingEntityComponentMessage
     {

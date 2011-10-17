@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Runtime.Serialization;
+using ServerServices.Tiles;
 
 namespace SS3D_Server.Atom.Object.WallMounted
 {
@@ -18,7 +19,7 @@ namespace SS3D_Server.Atom.Object.WallMounted
         public override void PostSpawnActions()
         {
             base.PostSpawnActions();
-            spawnTile.TileChange += new Tiles.Tile.TileChangeHandler(WallChanged);
+            spawnTile.TileChange += new Tile.TileChangeHandler(WallChanged);
         }
 
         protected virtual void WallChanged(TileType tNew)

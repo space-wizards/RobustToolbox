@@ -13,10 +13,4 @@ namespace SGO
         Error
     }
 
-    public enum MessageType
-    {
-        AddComponent,
-        BoundKeyChange,
-        BoundKeyRepeat,
-    }
 }

@@ -6,6 +6,7 @@ using SS3D.States;
 using System.Collections.Generic;
 
 using SS3D_shared;
+using ClientServices.Map;
 
 using Lidgren.Network;
 
@@ -19,7 +20,7 @@ namespace SS3D.Modules.Network
         private Program prg;
         private StateManager mStateMgr;
         private TileType[,] tileArray;
-        private Map.Map mMap;
+        private Map mMap;
         private GameType serverGameType;
         public bool mapRecieved = false;
         private int mapWidth;
@@ -69,7 +70,7 @@ namespace SS3D.Modules.Network
             netClient.Start();
         }
 
-        public void SetMap(Map.Map _map)
+        public void SetMap(Map _map)
         {
             mMap = _map;
         }

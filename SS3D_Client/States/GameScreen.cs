@@ -1,28 +1,31 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-
-using Lidgren.Network;
-
-using SS3D.Modules;
-using SS3D.Modules.Map;
-using SS3D.Modules.Network;
-using SS3D.Modules.UI;
-using SS3D.Modules.UI.Components;
-using SS3D.Atom;
-using SS3D.Effects;
-
-using SS3D_shared;
-
-using System.Collections.Generic;
 using System.Reflection;
+using System.Windows.Forms;
+using System.Drawing;
+
+using CGO;
+using ClientConfigManager;
+using ClientResourceManager;
 
 using GorgonLibrary;
 using GorgonLibrary.Graphics;
 using GorgonLibrary.InputDevices;
 
-using System.Windows.Forms;
-using CGO;
+using Lidgren.Network;
+
+using SS3D.Atom;
+using SS3D.Effects;
+using SS3D.Modules;
+using SS3D.Modules.Network;
+using SS3D.UserInterface;
+using SS3D_shared;
+using ClientServices.Lighting;
+using ClientServices.Map;
+using ClientInterfaces;
+using ClientWindow;
 
 namespace SS3D.States
 {
@@ -67,8 +70,8 @@ namespace SS3D.States
         private bool showDebug = false;     // show AABBs & Bounding Circles on atoms.
         private bool telepathy = false;     // disable visiblity bounds if true
 
-        public float xTopLeft { get; private set; }
-        public float yTopLeft { get; private set; }
+        //public float xTopLeft { get; private set; }
+        //public float yTopLeft { get; private set; }
 
         private float scaleX = 1.0f;
         private float scaleY = 1.0f;
@@ -100,7 +103,8 @@ namespace SS3D.States
             lastUpdate = DateTime.Now;
             now = DateTime.Now;
 
-            map = new Map();
+            map = new Map(LightManager.Singleton);
+            ClientServices.ServiceManager.Singleton.AddService(map);
 
             UiManager.Singleton.DisposeAllComponents();
 
@@ -245,7 +249,7 @@ namespace SS3D.States
                     if (statMsg == NetConnectionStatus.Disconnected)
                     {
                         string discMsg = msg.ReadString();
-                        UiManager.Singleton.Components.Add(new DisconnectedScreenBlocker(mStateMgr, discMsg));
+                        //UiManager.Singleton.Components.Add(new DisconnectedScreenBlocker(mStateMgr, discMsg));
                     }
                     break;
                 case NetIncomingMessageType.Data:
@@ -302,7 +306,7 @@ namespace SS3D.States
 
         public void HandleAdminMessage(NetMessage adminMsgType, NetIncomingMessage messageBody)
         {
-            switch (adminMsgType)
+            /*switch (adminMsgType)
             {
                 case NetMessage.RequestAdminLogin:
                     UiManager.Singleton.DisposeAllComponentsOfType(typeof(AdminPasswordDialog)); //Remove old ones.
@@ -330,7 +334,7 @@ namespace SS3D.States
                     UiManager.Singleton.DisposeAllComponentsOfType(typeof(AdminUnbanPanel));
                     UiManager.Singleton.Components.Add(new AdminUnbanPanel(new System.Drawing.Size(620, 200), prg.mNetworkMgr, banList));
                     break;
-            }
+            }*/
         }
 
         public void RecieveMap(NetIncomingMessage msg)
@@ -411,15 +415,17 @@ namespace SS3D.States
             if (playerController.controlledAtom != null)
             {
                 
-                System.Drawing.Point centerTile = map.GetTileArrayPositionFromWorldPosition(playerController.controlledAtom.position);
+                System.Drawing.Point centerTile = map.GetTileArrayPositionFromWorldPosition(playerController.controlledAtom.Position);
               
                 int xStart = System.Math.Max(0, centerTile.X - (screenWidthTiles / 2) - 1);
                 int yStart = System.Math.Max(0, centerTile.Y - (screenHeightTiles / 2) - 1);
                 int xEnd = System.Math.Min(xStart + screenWidthTiles + 2, map.mapWidth - 1);
                 int yEnd = System.Math.Min(yStart + screenHeightTiles + 2, map.mapHeight - 1);
 
-                xTopLeft = Math.Max(0, playerController.controlledAtom.position.X - ((screenWidthTiles / 2) * map.tileSpacing));
-                yTopLeft = Math.Max(0, playerController.controlledAtom.position.Y - ((screenHeightTiles / 2) * map.tileSpacing));
+                ClientWindowData.Singleton.UpdateViewPort(playerController.controlledAtom.Position);
+
+                //xTopLeft = Math.Max(0, playerController.controlledAtom.position.X - ((screenWidthTiles / 2) * map.tileSpacing));
+                //yTopLeft = Math.Max(0, playerController.controlledAtom.position.Y - ((screenHeightTiles / 2) * map.tileSpacing));
                 ///COMPUTE TILE VISIBILITY
                 if ((centerTile != map.lastVisPoint || map.needVisUpdate))
                 {
@@ -435,7 +441,7 @@ namespace SS3D.States
                 }
 
 
-                Tiles.Tile t;
+                ClientServices.Map.Tiles.Tile t;
 
                 ///RENDER TILE BASES, PUT GAS SPRITES AND WALL TOP SPRITES INTO BATCHES TO RENDER LATER
 
@@ -450,22 +456,22 @@ namespace SS3D.States
                         {
                             if (t.tilePosition.Y <= centerTile.Y)
                             {
-                                t.Render(xTopLeft, yTopLeft, map.tileSpacing);
-                                t.DrawDecals(xTopLeft, yTopLeft, map.tileSpacing, decalBatch);
-                                t.RenderLight(xTopLeft, yTopLeft, map.tileSpacing, lightMapBatch);
+                                t.Render(ClientWindowData.xTopLeft, ClientWindowData.yTopLeft, map.tileSpacing);
+                                t.DrawDecals(ClientWindowData.xTopLeft, ClientWindowData.yTopLeft, map.tileSpacing, decalBatch);
+                                t.RenderLight(ClientWindowData.xTopLeft, ClientWindowData.yTopLeft, map.tileSpacing, lightMapBatch);
                             }
                         }
                         else
                         {
-                            t.Render(xTopLeft, yTopLeft, map.tileSpacing);
-                            t.DrawDecals(xTopLeft, yTopLeft, map.tileSpacing, decalBatch);
-                            t.RenderLight(xTopLeft, yTopLeft, map.tileSpacing, lightMapBatch);
+                            t.Render(ClientWindowData.xTopLeft, ClientWindowData.yTopLeft, map.tileSpacing);
+                            t.DrawDecals(ClientWindowData.xTopLeft, ClientWindowData.yTopLeft, map.tileSpacing, decalBatch);
+                            t.RenderLight(ClientWindowData.xTopLeft, ClientWindowData.yTopLeft, map.tileSpacing, lightMapBatch);
                         }
 
                         ///Render gas sprites to gas batch
-                        t.RenderGas(xTopLeft, yTopLeft, map.tileSpacing, gasBatch);
+                        t.RenderGas(ClientWindowData.xTopLeft, ClientWindowData.yTopLeft, map.tileSpacing, gasBatch);
                         ///Render wall top sprites to wall top batch
-                        t.RenderTop(xTopLeft, yTopLeft, map.tileSpacing, wallTopsBatch);
+                        t.RenderTop(ClientWindowData.xTopLeft, ClientWindowData.yTopLeft, map.tileSpacing, wallTopsBatch);
                     }
                 }
 
@@ -488,48 +494,52 @@ namespace SS3D.States
                     IEnumerable<Atom.Atom> atoms = from a in atomManager.atomDictionary.Values
                                                    where
                                                    a.visible &&
-                                                   a.position.X / map.tileSpacing >= xStart &&
-                                                   a.position.X / map.tileSpacing <= xEnd &&
-                                                   a.position.Y / map.tileSpacing >= yStart &&
-                                                   a.position.Y / map.tileSpacing <= yEnd
-                                                   orderby a.position.Y + ((a.sprite.Height * a.sprite.UniformScale) / 2) ascending
+                                                   a.Position.X / map.tileSpacing >= xStart &&
+                                                   a.Position.X / map.tileSpacing <= xEnd &&
+                                                   a.Position.Y / map.tileSpacing >= yStart &&
+                                                   a.Position.Y / map.tileSpacing <= yEnd
+                                                   orderby a.Position.Y// + ((a.sprite.Height * a.sprite.UniformScale) / 2) ascending
                                                    orderby a.drawDepth ascending
                                                    select a;
 
                     foreach (Atom.Atom a in atoms.ToList())
                     {
-                        a.Render(xTopLeft, yTopLeft);
+                        a.Render(ClientWindowData.xTopLeft, ClientWindowData.yTopLeft);
 
                         if (showDebug)
                         {
+                            /* TODO RE-ENABLE THIS BULLSHIT WITH COMPONENTS
                             Gorgon.Screen.Circle(a.sprite.BoundingCircle.Center.X, a.sprite.BoundingCircle.Center.Y, a.sprite.BoundingCircle.Radius, System.Drawing.Color.Orange);
                             Gorgon.Screen.Rectangle(a.sprite.AABB.X, a.sprite.AABB.Y, a.sprite.AABB.Width, a.sprite.AABB.Height, System.Drawing.Color.Blue);
+                             */
                         }
 
                     }
+
+                    ComponentManager.Singleton.Render(0);
                 
                     //Render Light glows
                     atoms = from a in atomManager.atomDictionary.Values
                                                    where
                                                    a.visible &&
-                                                   a.position.X / map.tileSpacing >= xStart &&
-                                                   a.position.X / map.tileSpacing <= xEnd &&
-                                                   a.position.Y / map.tileSpacing >= yStart &&
-                                                   a.position.Y / map.tileSpacing <= yEnd &&
+                                                   a.Position.X / map.tileSpacing >= xStart &&
+                                                   a.Position.X / map.tileSpacing <= xEnd &&
+                                                   a.Position.Y / map.tileSpacing >= yStart &&
+                                                   a.Position.Y / map.tileSpacing <= yEnd &&
                                                    a.GetType().Name == "WallLight"                                                        
-                                                   orderby a.position.Y + ((a.sprite.Height * a.sprite.UniformScale) / 2) ascending
+                                                   orderby a.Position.Y// + ((a.sprite.Height * a.sprite.UniformScale) / 2) ascending
                                                    orderby a.drawDepth ascending
                                                    select a;
 
                     Gorgon.CurrentRenderTarget = lightTarget;
                     Gorgon.CurrentShader = ResMgr.Singleton.GetShader("Blur");
                     ResMgr.Singleton.GetShader("Blur").Parameters["blurAmount"].SetValue(3.0f);
-                    foreach (Atom.Atom a in atoms.ToList())
+                    /*foreach (Atom.Atom a in atoms.ToList())
                     {
                         a.sprite.BlendingMode = BlendingModes.Additive;
-                        a.Render(xTopLeft, yTopLeft);
+                        a.Render(ClientWindowData.xTopLeft, ClientWindowData.yTopLeft);
                         a.sprite.BlendingMode = BlendingModes.None;
-                    }
+                    }*/
                     Gorgon.CurrentShader = null;
                     Gorgon.CurrentRenderTarget = baseTarget;
                 }
@@ -642,7 +652,7 @@ namespace SS3D.States
             }
             if (e.Key == KeyboardKeys.F3)
             {
-                playerController.SendVerb("toxins", 0);
+                prg.NetGrapher.Toggle();
             }
 
             if (e.Key == KeyboardKeys.F5)
@@ -667,9 +677,24 @@ namespace SS3D.States
 
             if (e.Key == KeyboardKeys.F12)
             {
-                NetOutgoingMessage message = prg.mNetworkMgr.netClient.CreateMessage();
-                message.Write((byte)NetMessage.RequestAdminPlayerlist);
-                prg.mNetworkMgr.SendMessage(message, NetDeliveryMethod.ReliableUnordered);
+                Scrollbar bar = new Scrollbar();
+                bar.Position = new System.Drawing.Point(50,50);
+                bar.Horizontal = true;
+                UiManager.Singleton.Components.Add(bar);
+                bar.Value = 41;
+
+                Scrollbar bar2 = new Scrollbar();
+                bar2.Position = new System.Drawing.Point(100, 100);
+                bar2.Value = 98;
+                UiManager.Singleton.Components.Add(bar2);
+
+                Checkbox checkbox = new Checkbox();
+                checkbox.Position = new System.Drawing.Point(75, 75);
+                UiManager.Singleton.Components.Add(checkbox);
+
+                SS3D.UserInterface.Button butt = new SS3D.UserInterface.Button("HELLO, THIS IS A BUTTON WITH A VERY LONG LABEL ON IT");
+                butt.Position = new System.Drawing.Point(125, 125);
+                UiManager.Singleton.Components.Add(butt);
             }
 
             playerController.KeyDown(e.Key);
@@ -719,15 +744,21 @@ namespace SS3D.States
             float checkDistance = map.tileSpacing * 1.5f;
             // Find all the atoms near us we could have clicked
             IEnumerable<Atom.Atom> atoms = from a in atomManager.atomDictionary.Values
-                                           where editMode ? true : (playerController.controlledAtom.position - a.position).Length < checkDistance
+                                           where editMode ? true : (playerController.controlledAtom.Position - a.Position).Length < checkDistance
                                            where a.visible
-                                           orderby (new Vector2D(a.sprite.AABB.X + (a.sprite.AABB.Width/2),a.sprite.AABB.Y + (a.sprite.AABB.Height/2)) - new Vector2D(mouseAABB.X, mouseAABB.Y)).Length descending
+                                           //orderby (new Vector2D(a.sprite.AABB.X + (a.sprite.AABB.Width/2),a.sprite.AABB.Y + (a.sprite.AABB.Height/2)) - new Vector2D(mouseAABB.X, mouseAABB.Y)).Length descending
                                            orderby a.drawDepth descending
                                            select a;
             // See which one our click AABB intersected with
             foreach (Atom.Atom a in atoms)
             {
-                if (a.WasClicked(mouseAABB.Location))
+                //HACKED IN COMPONENT SHIT
+                ClickableComponent clickable = (ClickableComponent)a.GetComponent(SS3D_shared.GO.ComponentFamily.Click);
+                if (clickable != null)
+                    clickable.Clicked(new PointF(mouseAABB.X, mouseAABB.Y), playerController.controlledAtom.Uid);
+                //END HACKED IN COMPONENT SHIT
+
+                /*if (a.WasClicked(mouseAABB.Location))
                 {
                     if (!editMode)
                     {
@@ -746,7 +777,7 @@ namespace SS3D.States
                     }
                     atomClicked = true; // We clicked an atom so we don't want to send a turf click message too.
                     break;
-                }
+                }*/
 
             }
 
@@ -768,7 +799,7 @@ namespace SS3D.States
         public override void MouseMove(MouseInputEventArgs e)
         {
             mousePosScreen = new Vector2D(e.Position.X, e.Position.Y);
-            mousePosWorld = new Vector2D(e.Position.X + xTopLeft, e.Position.Y + yTopLeft);
+            mousePosWorld = new Vector2D(e.Position.X + ClientWindowData.xTopLeft, e.Position.Y + ClientWindowData.yTopLeft);
             UiManager.Singleton.MouseMove(e);
         }
         public override void MouseWheelMove(MouseInputEventArgs e)

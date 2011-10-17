@@ -13,9 +13,9 @@ using Lidgren.Network;
 using SGO;
 using SS3D_Server.Atom.Mob;
 using SS3D_Server.Modules;
-using SS3D_Server.Modules.Map;
 using SS3D_shared;
 using SS3D_shared.HelperClasses;
+using ServerServices;
 
 namespace SS3D_Server.Atom
 {
@@ -147,7 +147,7 @@ namespace SS3D_Server.Atom
             message.Write((byte)NetMessage.AtomManagerMessage);
             message.Write((byte)AtomManagerMessage.DeleteAtom);
             message.Write(uid);
-            SS3DServer.Singleton.SendMessageToAll(message);
+            SS3DNetServer.Singleton.SendToAll(message);
         }
         #endregion
 
@@ -161,7 +161,7 @@ namespace SS3D_Server.Atom
             message.Write(uid);
             message.Write(type);
             message.Write(atom.drawDepth);
-            SS3DServer.Singleton.SendMessageToAll(message);
+            SS3DNetServer.Singleton.SendToAll(message);
         }
 
         private void SendSpawnAtom(int uid, string type, NetConnection client)
@@ -173,7 +173,7 @@ namespace SS3D_Server.Atom
             message.Write(uid);
             message.Write(type);
             message.Write(atom.drawDepth);
-            SS3DServer.Singleton.SendMessageTo(message, client);
+            SS3DNetServer.Singleton.SendMessage(message, client);
         }
 
         public void SendAllAtoms(NetConnection client)
@@ -299,7 +299,7 @@ namespace SS3D_Server.Atom
             message.Write((byte)AtomManagerMessage.SetDrawDepth);
             message.Write(uid);
             message.Write(depth);
-            SS3DServer.Singleton.SendMessageToAll(message);
+            SS3DNetServer.Singleton.SendToAll(message);
         }
         #endregion
 
@@ -308,7 +308,7 @@ namespace SS3D_Server.Atom
         /// </summary>
         public void SetDrawDepthAtom(int uid, int depth)
         {
-            SetDrawDepthAtom(atomDictionary[uid], depth);
+            //SetDrawDepthAtom(atomDictionary[uid], depth);
         }
 
         /// <summary>
@@ -316,8 +316,8 @@ namespace SS3D_Server.Atom
         /// </summary>
         public void SetDrawDepthAtom(Atom atom, int depth)
         {
-            atom.drawDepth = depth;
-            SendAtomDrawDepth(atom.Uid, depth);
+            //atom.drawDepth = depth;
+            //SendAtomDrawDepth(atom.Uid, depth);
         }
 
         public void DeleteAtom(int uid)
@@ -377,11 +377,12 @@ namespace SS3D_Server.Atom
             List<Atom> o = (List<Atom>)f.Deserialize(s);
             foreach (Atom a in o)
             {
-                a.SetUp(lastUID++, this);
+                a.SetUp(lastUID++, this, true);
                 a.SerializedInit();
                 a.spawnTile = SS3D_Server.SS3DServer.Singleton.map.GetTileFromWorldPosition(a.position);
                 a.PostSpawnActions();
                 atomDictionary.Add(a.Uid, a);
+                m_entityManager.AddAtomEntity((Entity)a);
             }
             s.Close();
         }

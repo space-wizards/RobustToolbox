@@ -176,7 +176,7 @@ namespace SS3D.Modules
 
         public string GetObjectSpriteName(Type type)
         {
-            if (type.IsSubclassOf(typeof(Tiles.Tile))) //Tiles need special treatment.
+            if (type.IsSubclassOf(typeof(ClientServices.Map.Tiles.Tile))) //Tiles need special treatment.
             {
                 return "tilebuildoverlay";
             }

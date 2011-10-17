@@ -42,7 +42,7 @@ namespace SS3D.Atom
             networkManager = prg.mNetworkMgr;
             m_entityManager = entityManager;
             atomDictionary = new Dictionary<int, Atom>();
-            loadAtomScripts();
+            //loadAtomScripts();
         }
 
         public void Shutdown()
@@ -62,6 +62,7 @@ namespace SS3D.Atom
         /// </summary>
         private void loadAtomScripts()
         {
+            /*
             m_loadedModules = new List<Module>();
             string[] filePaths = Directory.GetFiles(Directory.GetCurrentDirectory() + @"\Scripts\Atom\", "*.cs");
 
@@ -81,6 +82,7 @@ namespace SS3D.Atom
                 }
             }
             prg.GorgonForm.PopulateEditMenu();
+            */
 
         }
         #endregion
@@ -149,7 +151,7 @@ namespace SS3D.Atom
             a.drawDepth = drawDepth;
 
             // Tell the atom to pull its position data etc. from the server
-            a.SendPullMessage();
+            //a.SendPullMessage();
         }
         
         public Atom SpawnAtom(int uid, string type)
@@ -169,10 +171,12 @@ namespace SS3D.Atom
             if (atomType == null)
                 throw new TypeLoadException("Could not load type " + "SS3D." + type);
             object atom = Activator.CreateInstance(atomType); // Create atom of type atomType with parameters uid, this
+            ((Atom)atom).Uid = uid;
+            m_entityManager.AddAtomEntity((Entity)atom); //Add entity to entity manager.
+
             atomDictionary[uid] = (Atom)atom;
 
             atomDictionary[uid].SetUp(uid, this);
-            m_entityManager.AddAtomEntity((Entity)atom); //Add entity to entity manager.
 
             return atomDictionary[uid]; // Why do we return it? So we can do whatever is needed easily from the calling function.
         }

@@ -53,6 +53,16 @@ namespace SS3D_Server.Modules
             return sessions.First(); // Should only be one session per client. Returns that session, in theory.
         }
 
+        public PlayerSession GetSessionByIp(string ip)
+        {
+            var sessions =
+                from s in playerSessions
+                where s.Value.connectedClient.RemoteEndpoint.Address.ToString().Equals(ip) //This is kinda silly. Comparing strings. Bleh.
+                select s.Value;
+
+            return sessions.First(); // Should only be one session per client. Returns that session, in theory.
+        }
+
         public void HandleNetworkMessage(NetIncomingMessage message)
         {
             // Pass message on to session
@@ -60,7 +70,7 @@ namespace SS3D_Server.Modules
             s.HandleNetworkMessage(message);
         }
 
-        internal void EndSession(NetConnection client)
+        public void EndSession(NetConnection client)
         {
             // Ends the session.
             PlayerSession session = GetSessionByConnection(client);

@@ -148,6 +148,8 @@ namespace SS3D_Server
                 }
                 else LogManager.Log("Job Definitions Found. " + JobHandler.Singleton.JobDefinitions.Count.ToString() + " Jobs loaded.", LogLevel.Information);
 
+                BanlistMgr.Singleton.Initialize("BanList.xml");
+
                 netConfig.Port = serverPort;
                 var netServer = new SS3DNetServer(netConfig);
                 ServiceManager.Singleton.AddService(netServer);
@@ -368,7 +370,7 @@ namespace SS3D_Server
 
             foreach (NetConnection conn in clientList.Keys)
             {
-                PlayerSession plrSession = playerManager.GetSessionByConnection(connection);
+                PlayerSession plrSession = playerManager.GetSessionByConnection(conn);
                 playerListMessage.Write(plrSession.name);
                 playerListMessage.Write((byte)plrSession.status);
                 playerListMessage.Write(clientList[conn].netConnection.AverageRoundtripTime);
@@ -390,16 +392,23 @@ namespace SS3D_Server
                     LogManager.Log(senderIP + ": Already connected", LogLevel.Error);
                     return;
                 }
-                else
+                else if (!BanlistMgr.Singleton.IsBanned(sender.RemoteEndpoint.Address.ToString()))
                 {
                     HandleConnectionApproval(sender);
                     playerManager.NewSession(sender); // TODO move this to somewhere that makes more sense.
+                }
+                else
+                {
+                    //You're banned bro.
+                    BanEntry ban = BanlistMgr.Singleton.GetBanByIp(senderIP);
+                    sender.Disconnect("You have been banned from this Server." + Environment.NewLine + "Reason: " + ban.reason + Environment.NewLine + "Expires: " + (ban.tempBan ? ban.expiresAt.ToString("d/M/yyyy HH:mm:ss") : "Never"));
+                    LogManager.Log(senderIP + ": Connection denied. User banned.");
                 }
                 // Send map
             }
             else if (sender.Status == NetConnectionStatus.Disconnected)
             {
-                LogManager.Log(senderIP + " : Disconnected");
+                LogManager.Log(senderIP + ": Disconnected");
 
                 playerManager.EndSession(sender);
 
@@ -462,10 +471,125 @@ namespace SS3D_Server
                 case NetMessage.EntityManagerMessage:
                     entityManager.HandleNetworkMessage(msg);
                     break;
+                case NetMessage.RequestAdminLogin:
+                    HandleAdminMessage(messageType, msg);
+                    break;
+                case NetMessage.RequestAdminPlayerlist:
+                    HandleAdminMessage(messageType, msg);
+                    break;
+                case NetMessage.RequestAdminKick:
+                    HandleAdminMessage(messageType, msg);
+                    break;
+                case NetMessage.RequestAdminBan:
+                    HandleAdminMessage(messageType, msg);
+                    break;
+                case NetMessage.RequestAdminUnBan:
+                    HandleAdminMessage(messageType, msg);
+                    break;
+                case NetMessage.RequestBanList:
+                    HandleAdminMessage(messageType, msg);
+                    break;
                 default:
                     break;
             }
         
+        }
+
+        public void HandleAdminMessage(NetMessage adminMsgType, NetIncomingMessage messageBody)
+        {
+            switch (adminMsgType)
+            {
+                case NetMessage.RequestAdminLogin:
+                    string password = messageBody.ReadString();
+                    if (password == ConfigManager.Singleton.Configuration.AdminPassword)
+                    {
+                        LogManager.Log("Admin login: " + messageBody.SenderConnection.RemoteEndpoint.Address.ToString());
+                        playerManager.GetSessionByConnection(messageBody.SenderConnection).adminPermissions.isAdmin = true;
+                    }
+                    else
+                        LogManager.Log("Failed Admin login: " + messageBody.SenderConnection.RemoteEndpoint.Address.ToString() + " -> ' " + password + " '");
+                    break;
+                case NetMessage.RequestAdminPlayerlist:
+                    if (playerManager.GetSessionByConnection(messageBody.SenderConnection).adminPermissions.isAdmin == true)
+                    {
+                        NetOutgoingMessage AdminPlayerListMessage = SS3DNetServer.Singleton.CreateMessage();
+                        AdminPlayerListMessage.Write((byte)NetMessage.RequestAdminPlayerlist);
+                        AdminPlayerListMessage.Write((byte)clientList.Count);
+                        foreach (NetConnection conn in clientList.Keys)
+                        {
+                            PlayerSession plrSession = playerManager.GetSessionByConnection(conn);
+                            AdminPlayerListMessage.Write(plrSession.name);
+                            AdminPlayerListMessage.Write((byte)plrSession.status);
+                            AdminPlayerListMessage.Write(plrSession.assignedJob.Name);
+                            AdminPlayerListMessage.Write(plrSession.connectedClient.RemoteEndpoint.Address.ToString());
+                        }
+                        SS3DNetServer.Singleton.SendMessage(AdminPlayerListMessage, messageBody.SenderConnection, NetDeliveryMethod.ReliableOrdered);
+                    }
+                    else
+                    {
+                        NetOutgoingMessage LoginMessage = SS3DNetServer.Singleton.CreateMessage();
+                        LoginMessage.Write((byte)NetMessage.RequestAdminLogin);
+                        SS3DNetServer.Singleton.SendMessage(LoginMessage, messageBody.SenderConnection, NetDeliveryMethod.ReliableOrdered);
+                    }
+                    break;
+                case NetMessage.RequestAdminKick:
+                    if (playerManager.GetSessionByConnection(messageBody.SenderConnection).adminPermissions.isAdmin == true)
+                    {
+                        string ipKick = messageBody.ReadString();
+                        PlayerSession kickSession = playerManager.GetSessionByIp(ipKick);
+                        if (kickSession != null)
+                        {
+                            playerManager.EndSession(kickSession.connectedClient);
+                            kickSession.connectedClient.Disconnect("Kicked by Administrator.");
+                        }
+                    }
+                    break;
+                case NetMessage.RequestAdminBan:
+                    if (playerManager.GetSessionByConnection(messageBody.SenderConnection).adminPermissions.isAdmin == true)
+                    {
+                        string ipBan = messageBody.ReadString();
+                        PlayerSession banSession = playerManager.GetSessionByIp(ipBan);
+                        if (banSession != null)
+                        {
+                            if(BanlistMgr.Singleton.IsBanned(ipBan)) return;
+                            BanlistMgr.Singleton.AddBan(ipBan, "No reason specified.");
+                            playerManager.EndSession(banSession.connectedClient);
+                            banSession.connectedClient.Disconnect("Banned by Administrator.");
+                        }
+                    }
+                    break;
+                case NetMessage.RequestBanList:
+                    if (playerManager.GetSessionByConnection(messageBody.SenderConnection).adminPermissions.isAdmin == true)
+                    {
+                        NetOutgoingMessage BanListMessage = SS3DNetServer.Singleton.CreateMessage();
+                        BanListMessage.Write((byte)NetMessage.RequestBanList);
+                        BanListMessage.Write(BanlistMgr.Singleton.banlist.List.Count);
+                        for (int i = 0; i < BanlistMgr.Singleton.banlist.List.Count; i++)
+                        {
+                            BanListMessage.Write(BanlistMgr.Singleton.banlist.List[i].ip);
+                            BanListMessage.Write(BanlistMgr.Singleton.banlist.List[i].reason);
+                            BanListMessage.Write(BanlistMgr.Singleton.banlist.List[i].tempBan);
+                            int compare = BanlistMgr.Singleton.banlist.List[i].expiresAt.CompareTo(DateTime.Now);
+                            TimeSpan timeLeft;
+                            if (compare < 0)
+                                timeLeft = new TimeSpan(0);
+                            else
+                                timeLeft = BanlistMgr.Singleton.banlist.List[i].expiresAt.Subtract(DateTime.Now);
+                            uint minutesLeft = (uint)Math.Truncate(timeLeft.TotalMinutes);
+                            BanListMessage.Write(minutesLeft);
+                        }
+                        SS3DNetServer.Singleton.SendMessage(BanListMessage, messageBody.SenderConnection, NetDeliveryMethod.ReliableOrdered);
+                    }
+                    break;
+                case NetMessage.RequestAdminUnBan:
+                    if (playerManager.GetSessionByConnection(messageBody.SenderConnection).adminPermissions.isAdmin == true)
+                    {
+                        string ip = messageBody.ReadString();
+                        BanlistMgr.Singleton.RemoveBanByIp(ip);
+                    }
+                    break;
+            }
+
         }
 
         public void HandleJobRequest(NetIncomingMessage msg)

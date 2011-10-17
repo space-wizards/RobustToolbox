@@ -85,5 +85,6 @@ namespace SS3D_Server.Modules
         public int serverMaxPlayers = 32;
         public GameType gameType = GameType.Game;
         public int framePeriod = 33; // The time (in milliseconds) between server frames
+        public string AdminPassword = "admin123";
     }
 }

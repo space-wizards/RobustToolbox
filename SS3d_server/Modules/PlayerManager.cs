@@ -6,13 +6,16 @@ using System.Text;
 using Lidgren.Network;
 using SS3D_shared;
 using ServerServices;
+using ServerInterfaces;
 
 namespace SS3D_Server.Modules
 {
-    public class PlayerManager
+    public class PlayerManager: IService
     {
         /* This class will manage connected player sessions. */
         public Dictionary<int, PlayerSession> playerSessions;
+
+        public ServerServiceType ServiceType { get { return ServerServiceType.PlayerManager; } }
 
         public PlayerManager()
         {
@@ -87,5 +90,6 @@ namespace SS3D_Server.Modules
                 s.JoinGame();
             }
         }
+
     }
 }

@@ -59,7 +59,7 @@ namespace SS3D_shared.GO
         Cut,
     }
 
-    public enum MeleeType
+    public enum DamageType
     {
         Hit,
         Slice,

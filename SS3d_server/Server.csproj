@@ -116,6 +116,7 @@
     <Compile Include="Atom\Object\WallMounted\WallMounted.cs" />
     <Compile Include="Atom\Object\Wall\Glass.cs" />
     <Compile Include="Helper Classes\InterpolationPacket.cs" />
+    <Compile Include="Modules\Banlist.cs" />
     <Compile Include="Modules\Chat\ChatManager.cs" />
     <Compile Include="Modules\Client\Client.cs" />
     <Compile Include="Modules\ConfigManager.cs" />

@@ -83,25 +83,29 @@ namespace SGO
         /// <param name="actor"></param>
         protected virtual void DoHeldItemInteraction(Entity actor)
         {
+            Entity actingItem = GetItemInActorHand(actor);
+            if (actingItem == null) // this should not happen
+                return;
+
             // Does this ent have an actor component(is it a mob?) if so, the actor component should mediate this interaction
             if (Owner.HasComponent(SS3D_shared.GO.ComponentFamily.Actor))
             {
                 Owner.SendMessage(this, ComponentMessageType.ReceiveItemToActorInteraction, null, actor);
-                actor.SendMessage(this, ComponentMessageType.EnactItemToActorInteraction, null, Owner);
+                actingItem.SendMessage(this, ComponentMessageType.EnactItemToActorInteraction, null, Owner);
             }
 
             //Does this ent have an item component? That item component should mediate this interaction
             else if (Owner.HasComponent(SS3D_shared.GO.ComponentFamily.Item))
             {
                 Owner.SendMessage(this, ComponentMessageType.ReceiveItemToItemInteraction, null, actor);
-                Owner.SendMessage(this, ComponentMessageType.EnactItemToItemInteraction, null, Owner);
+                actingItem.SendMessage(this, ComponentMessageType.EnactItemToItemInteraction, null, Owner);
             }
 
             //if not, does this ent have a largeobject component? That component should mediate this interaction.
             else if (Owner.HasComponent(SS3D_shared.GO.ComponentFamily.LargeObject))
             {
                 Owner.SendMessage(this, ComponentMessageType.ReceiveItemToLargeObjectInteraction, null, actor);
-                Owner.SendMessage(this, ComponentMessageType.EnactItemToLargeObjectInteraction, null, Owner);
+                actingItem.SendMessage(this, ComponentMessageType.EnactItemToLargeObjectInteraction, null, Owner);
             }
         }
 
@@ -135,6 +139,20 @@ namespace SGO
         protected virtual void DoNoHandsInteraction(Entity actor)
         {
             //LOL WTF IS THIS SHIT
+        }
+
+        protected virtual Entity GetItemInActorHand(Entity actor)
+        {
+            List<ComponentReplyMessage> replies = new List<ComponentReplyMessage>();
+            actor.SendMessage(this, ComponentMessageType.GetActiveHandItem, replies);
+            foreach (ComponentReplyMessage reply in replies)
+            {
+                if (reply.messageType == ComponentMessageType.ReturnActiveHandItem && reply.paramsList[0].GetType().IsSubclassOf(typeof(Entity))) 
+                {
+                    return (Entity)reply.paramsList[0];
+                }
+            }
+            return null;
         }
     }
 }

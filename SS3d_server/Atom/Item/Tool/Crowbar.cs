@@ -26,6 +26,12 @@ namespace SS3D_Server.Atom.Item.Tool
             ItemCapability cap = new ToolCapability();
             itemcomp.AddCapability(cap);
             cap.AddVerb(0, SS3D_shared.GO.ItemCapabilityVerb.Pry);
+
+            cap = new MeleeWeaponCapability();
+            cap.SetParameter(new ComponentParameter("damageAmount", typeof(int), 30));
+            cap.SetParameter(new ComponentParameter("damageType", typeof(string), "Bludgeon"));
+            itemcomp.AddCapability(cap);
+
             
         }
 

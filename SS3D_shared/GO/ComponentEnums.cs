@@ -109,6 +109,9 @@ namespace SS3D_shared.GO
         EquipItemInHand,
         DropItemInCurrentHand,
         Damage,
+        GetArmorValues,
+        ReturnArmorValues,
+        Die,
     }
 
     public enum Hand

@@ -182,6 +182,9 @@ namespace CGO
         {
             if (OnBump != null)
                 OnBump(this, new EventArgs());
+
+            Owner.SendMessage(this, ComponentMessageType.Bumped, null);
+            Owner.SendComponentNetworkMessage(this, Lidgren.Network.NetDeliveryMethod.ReliableUnordered, ComponentMessageType.Bumped);
         }
         #endregion
     }

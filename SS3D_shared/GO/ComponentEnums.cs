@@ -112,6 +112,9 @@ namespace SS3D_shared.GO
         GetArmorValues,
         ReturnArmorValues,
         Die,
+        Bumped,
+        CheckSpriteClick,
+        SpriteWasClicked,
     }
 
     public enum Hand

@@ -23,6 +23,19 @@ namespace SGO
             family = SS3D_shared.GO.ComponentFamily.LargeObject;
         }
 
+        public override void RecieveMessage(object sender, ComponentMessageType type, List<ComponentReplyMessage> replies, params object[] list)
+        {
+            base.RecieveMessage(sender, type, replies, list);
+
+            switch(type)
+            {
+                case ComponentMessageType.Bumped:
+                    OpenDoor();
+                    break;
+
+            }
+        }
+
         public override void Update(float frameTime)
         {
             base.Update(frameTime);

@@ -25,5 +25,17 @@ namespace SGO
                     break;
             }
         }
+
+        public override void HandleNetworkMessage(IncomingEntityComponentMessage message)
+        {
+            switch((ComponentMessageType)message.messageParameters[0])
+            {
+                case ComponentMessageType.Bumped:
+                    ///TODO check who bumped us, how far away they are, etc.
+                    Owner.SendMessage(this, ComponentMessageType.Bumped, null);
+                    break;
+
+            }
+        }
     }
 }

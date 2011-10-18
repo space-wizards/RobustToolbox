@@ -110,7 +110,7 @@
     <Compile Include="Atom\Item\Container\Toolbox.cs" />
     <Compile Include="Atom\Item\Item.cs" />
     <Compile Include="Atom\Item\Misc\Flashlight.cs" />
-    <Compile Include="Atom\Item\Tool\Crowbar.cs" />
+    <None Include="Atom\Item\Tool\Crowbar.cs" />
     <Compile Include="Atom\Item\Tool\Tool.cs" />
     <Compile Include="Atom\Item\Tool\Welder.cs" />
     <Compile Include="Atom\Item\Tool\Wrench.cs" />
@@ -154,7 +154,7 @@
     <Compile Include="HelperClasses\InterpolationPacket.cs" />
     <Compile Include="Modules\CollisionManager.cs" />
     <Compile Include="Modules\Network\NetworkGrapher.cs" />
-    <Compile Include="Modules\PlacementManager.cs" />
+    <None Include="Modules\PlacementManager.cs" />
     <Compile Include="Modules\Network\NetworkManager.cs" />
     <Compile Include="Modules\PlayerController.cs" />
     <Compile Include="Modules\State.cs" />
@@ -231,6 +231,9 @@
   </ItemGroup>
   <ItemGroup>
     <None Include="app.config" />
+    <Content Include="EntityTemplates\Crowbar.xml">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
     <Content Include="KeyBindings.xml">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </Content>

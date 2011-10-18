@@ -29,6 +29,8 @@ namespace CGO
 
         public override void RecieveMessage(object sender, ComponentMessageType type, List<ComponentReplyMessage> replies, params object[] list)
         {
+            base.RecieveMessage(sender, type, replies, list);
+
             if (sender == this)
                 return;
             switch (type)

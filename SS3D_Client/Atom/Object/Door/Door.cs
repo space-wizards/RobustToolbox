@@ -6,6 +6,8 @@ using System.Drawing;
 using GorgonLibrary;
 using CGO;
 using SS3D_shared.GO;
+using ClientServices;
+using ClientServices.Map;
 
 namespace SS3D.Atom.Object.Door
 {
@@ -48,6 +50,7 @@ namespace SS3D.Atom.Object.Door
                 return;
             laststatus = status;
             status = newStatus;
+            Map map = (Map)ServiceManager.Singleton.GetService(ClientServiceType.Map);
             switch (status)
             {
                 case DoorState.Closed:
@@ -55,16 +58,16 @@ namespace SS3D.Atom.Object.Door
                     c.SetSpriteByKey("door_ew");
                     visible = true;
                     SendMessage(null, ComponentMessageType.EnableCollision, null);
-                    atomManager.gameState.map.GetTileAt(Position).sightBlocked = true;
-                    atomManager.gameState.map.needVisUpdate = true;
+                    map.GetTileAt(Position).sightBlocked = true;
+                    map.needVisUpdate = true;
                     Draw();
                     break;
                 case DoorState.Open:
                     ISpriteComponent d = (ISpriteComponent)GetComponent(SS3D_shared.GO.ComponentFamily.Renderable);
                     d.SetSpriteByKey("door_ewo");
                     SendMessage(null, ComponentMessageType.DisableCollision, null);
-                    atomManager.gameState.map.GetTileAt(Position).sightBlocked = false;
-                    atomManager.gameState.map.needVisUpdate = true;
+                    map.GetTileAt(Position).sightBlocked = false;
+                    map.needVisUpdate = true;
                     Draw();
                     break;
                 case DoorState.Broken:

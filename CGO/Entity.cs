@@ -23,7 +23,7 @@ namespace CGO
         /// <summary>
         /// Holds this entity's components
         /// </summary>
-        private Dictionary<ComponentFamily, IGameObjectComponent> components;
+        private Dictionary<ComponentFamily, IGameObjectComponent> components = new Dictionary<ComponentFamily, IGameObjectComponent>();
 
         private EntityNetworkManager m_entityNetworkManager;
 
@@ -31,6 +31,8 @@ namespace CGO
 
         public event EntityMoveEvent OnMove;
         public delegate void EntityMoveEvent(Vector2D toPosition);
+
+        public bool initialized = false;
 
         /// <summary>
         /// Unique entity id
@@ -81,7 +83,8 @@ namespace CGO
         /// </summary>
         public virtual void Initialize()
         {
-            components = new Dictionary<ComponentFamily, IGameObjectComponent>();
+            SendMessage(this, ComponentMessageType.Initialize, null);
+            initialized = true;
         }
 
         /// <summary>

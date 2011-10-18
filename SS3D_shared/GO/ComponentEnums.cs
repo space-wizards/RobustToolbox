@@ -115,6 +115,7 @@ namespace SS3D_shared.GO
         Bumped,
         CheckSpriteClick,
         SpriteWasClicked,
+        Initialize,
     }
 
     public enum Hand

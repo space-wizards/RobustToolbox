@@ -415,7 +415,7 @@ namespace SS3D
             if (atomTypes.ContainsKey(((ToolStripDropDownItem)sender).Text))
             {
                 atomSpawnType = atomTypes[((ToolStripDropDownItem)sender).Text];
-                PlacementManager.Singleton.SendObjectRequestEDITMODE(atomSpawnType, alignType);
+                //PlacementManager.Singleton.SendObjectRequestEDITMODE(atomSpawnType, alignType);
                 toolStripStatusLabel1.Text = atomSpawnType.Name.ToString();
             }
             else
@@ -453,19 +453,19 @@ namespace SS3D
         private void spaceToolStripMenuItem_Click(object sender, EventArgs e)
         {
             tileSpawnType = typeof(ClientServices.Map.Tiles.Floor.Space);
-            PlacementManager.Singleton.SendObjectRequestEDITMODE(tileSpawnType, AlignmentOptions.AlignTile);
+            //PlacementManager.Singleton.SendObjectRequestEDITMODE(tileSpawnType, AlignmentOptions.AlignTile);
         }
 
         private void floorToolStripMenuItem_Click(object sender, EventArgs e)
         {
             tileSpawnType = typeof(ClientServices.Map.Tiles.Floor.Floor);
-            PlacementManager.Singleton.SendObjectRequestEDITMODE(tileSpawnType, AlignmentOptions.AlignTile);
+            //PlacementManager.Singleton.SendObjectRequestEDITMODE(tileSpawnType, AlignmentOptions.AlignTile);
         }
 
         private void wallToolStripMenuItem_Click(object sender, EventArgs e)
         {
             tileSpawnType = typeof(ClientServices.Map.Tiles.Wall.Wall);
-            PlacementManager.Singleton.SendObjectRequestEDITMODE(tileSpawnType, AlignmentOptions.AlignTile);
+            //PlacementManager.Singleton.SendObjectRequestEDITMODE(tileSpawnType, AlignmentOptions.AlignTile);
         }
 
         private void noneToolStripMenuItem_Click(object sender, EventArgs e)

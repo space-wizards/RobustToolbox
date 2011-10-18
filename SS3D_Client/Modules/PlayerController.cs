@@ -22,7 +22,7 @@ namespace SS3D.Modules
 
         public State runningState;
         public AtomManager atomManager;
-        public Atom.Atom controlledAtom;
+        public Entity controlledAtom;
 
         private static PlayerController singleton = null;
         public static PlayerController Singleton
@@ -57,13 +57,11 @@ namespace SS3D.Modules
             atomManager = null;
         }
 
-        public void Attach(Atom.Atom newAtom)
+        public void Attach(Entity newAtom)
         {
             if (atomManager == null)
                 return;
             controlledAtom = newAtom;
-            controlledAtom.initKeys();
-            controlledAtom.attached = true;
             controlledAtom.AddComponent(ComponentFamily.Input, CGO.ComponentFactory.Singleton.GetComponent("KeyBindingInputComponent"));
             controlledAtom.AddComponent(ComponentFamily.Mover, CGO.ComponentFactory.Singleton.GetComponent("KeyBindingMoverComponent"));
             controlledAtom.AddComponent(ComponentFamily.Collider, CGO.ComponentFactory.Singleton.GetComponent("ColliderComponent"));
@@ -74,7 +72,6 @@ namespace SS3D.Modules
         {
             if (atomManager == null)
                 return;
-            controlledAtom.attached = false;
             controlledAtom = null;
             controlledAtom.RemoveComponent(ComponentFamily.Input);
             controlledAtom.RemoveComponent(ComponentFamily.Mover);

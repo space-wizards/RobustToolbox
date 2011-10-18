@@ -23,6 +23,8 @@ namespace CGO
 
         public override void RecieveMessage(object sender, ComponentMessageType type, List<ComponentReplyMessage> replies, params object[] list)
         {
+            base.RecieveMessage(sender, type, replies, list);
+
             switch (type)
             {
                 case ComponentMessageType.SlaveAttach:

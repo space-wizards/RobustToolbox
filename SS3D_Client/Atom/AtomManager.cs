@@ -26,7 +26,7 @@ namespace SS3D.Atom
         public Program prg;
         public NetworkManager networkManager;
 
-        public Dictionary<int, Atom> atomDictionary;
+        public Dictionary<int, Entity> atomDictionary;
         public DateTime now;
         public DateTime lastUpdate;
         public int updateRateLimit = 200; //200 updates / second
@@ -41,7 +41,7 @@ namespace SS3D.Atom
             gameState = _gameState;
             networkManager = prg.mNetworkMgr;
             m_entityManager = entityManager;
-            atomDictionary = new Dictionary<int, Atom>();
+            atomDictionary = new Dictionary<int, Entity>();
             //loadAtomScripts();
         }
 
@@ -90,6 +90,7 @@ namespace SS3D.Atom
         #region Updating
         public void Update()
         {
+            /*
             now = DateTime.Now;
             //Rate limit
             TimeSpan timeSinceLastUpdate = now - lastUpdate;
@@ -105,7 +106,7 @@ namespace SS3D.Atom
             {
                 a.Update((float)timeSinceLastUpdate.TotalMilliseconds);
             }
-            lastUpdate = now;
+            lastUpdate = now;*/
         }
         #endregion
 
@@ -136,9 +137,9 @@ namespace SS3D.Atom
 
         private void HandleDrawDepth(NetIncomingMessage message)
         {
-            int uid = message.ReadInt32();
+            /*int uid = message.ReadInt32();
             int depth = message.ReadInt32();
-            atomDictionary[uid].drawDepth = depth;
+            atomDictionary[uid].drawDepth = depth;*/
         }
 
         private void HandleSpawnAtom(NetIncomingMessage message)
@@ -147,36 +148,35 @@ namespace SS3D.Atom
             string type = message.ReadString();
             int drawDepth = message.ReadInt32();
 
-            Atom a = SpawnAtom(uid, type);
-            a.drawDepth = drawDepth;
+            Entity a = SpawnAtom(uid, type);
+            //a.drawDepth = drawDepth;
 
             // Tell the atom to pull its position data etc. from the server
             //a.SendPullMessage();
         }
         
-        public Atom SpawnAtom(int uid, string type)
+        public Entity SpawnAtom(int uid, string type)
         {
             Assembly currentAssembly = Assembly.GetExecutingAssembly();
             Type atomType = currentAssembly.GetType("SS3D." + type);
-
+            Entity atom;
             if (atomType == null)
             {
-                foreach (Module m in m_loadedModules)
-                {
-                    atomType = m.GetType("SS3D." + type);
-                    if (atomType != null)
-                        break;
-                }
+                atom = m_entityManager.TryCreateAtom(type);
+                if (atom == null)
+                    throw new TypeLoadException("Could not find type " + type);
             }
-            if (atomType == null)
-                throw new TypeLoadException("Could not load type " + "SS3D." + type);
-            object atom = Activator.CreateInstance(atomType); // Create atom of type atomType with parameters uid, this
-            ((Atom)atom).Uid = uid;
-            m_entityManager.AddAtomEntity((Entity)atom); //Add entity to entity manager.
+            else
+            {
+                atom = (Entity)Activator.CreateInstance(atomType); // Create atom of type atomType with parameters uid, this
+            }
+            atom.Uid = uid;
+            m_entityManager.AddAtomEntity(atom); //Add entity to entity manager.
+            atom.Initialize();
 
-            atomDictionary[uid] = (Atom)atom;
+            atomDictionary[uid] = atom;
 
-            atomDictionary[uid].SetUp(uid, this);
+            //atomDictionary[uid].SetUp(uid, this);
 
             return atomDictionary[uid]; // Why do we return it? So we can do whatever is needed easily from the calling function.
         }
@@ -201,7 +201,7 @@ namespace SS3D.Atom
             var atom = atomDictionary[uid];
             
             // Pass the message to the atom in question.
-            atom.HandleNetworkMessage(message);
+            //atom.HandleNetworkMessage(message);
         }
 
         private void SendMessage(NetOutgoingMessage message)
@@ -210,7 +210,7 @@ namespace SS3D.Atom
         }
         #endregion
 
-        public Atom GetAtom(int uid)
+        public Entity GetAtom(int uid)
         {
             if(atomDictionary.Keys.Contains(uid))
                 return atomDictionary[uid];

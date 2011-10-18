@@ -17,17 +17,31 @@ namespace CGO
 
         public void Clicked(PointF worldPos, int userUID)
         {
-            object[] arguments = new object[2];
-            arguments[0] = worldPos;
-            List<ComponentReplyMessage> replies = new List<ComponentReplyMessage>();
-            Owner.SendMessage(this, ComponentMessageType.Clicked, replies, arguments);
-            if ((from reply in replies
-                 where reply.messageType == ComponentMessageType.Clicked
-                     && (bool)reply.paramsList[0] == true
-                 select reply).Count() != 0)
+
             {   //FRANKENCODE.
-                Owner.SendComponentNetworkMessage(this, Lidgren.Network.NetDeliveryMethod.ReliableOrdered, userUID);
+                
             }
+        }
+
+        public bool CheckClick(PointF worldPos, out int drawdepth)
+        {
+            List<ComponentReplyMessage> replies = new List<ComponentReplyMessage>();
+            Owner.SendMessage(this, ComponentMessageType.CheckSpriteClick, replies, worldPos);
+            foreach (var reply in replies)
+            {
+                if (reply.messageType == ComponentMessageType.SpriteWasClicked && (bool)reply.paramsList[0] == true)
+                {
+                    drawdepth = (int)reply.paramsList[1];
+                    return (bool)reply.paramsList[0];
+                }
+            }
+            drawdepth = -1;
+            return false;
+        }
+
+        public void DispatchClick(int userUID)
+        {
+            Owner.SendComponentNetworkMessage(this, Lidgren.Network.NetDeliveryMethod.ReliableOrdered, userUID);
         }
     }
 }

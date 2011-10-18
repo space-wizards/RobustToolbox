@@ -750,12 +750,19 @@ namespace SS3D.States
                                            orderby a.drawDepth descending
                                            select a;
             // See which one our click AABB intersected with
+            List<ClickData> clickedEntities = new List<ClickData>();
+            int drawdepthofclicked = 0;
+            PointF clickedWorldPoint = new PointF(mouseAABB.X, mouseAABB.Y);
             foreach (Atom.Atom a in atoms)
             {
                 //HACKED IN COMPONENT SHIT
                 ClickableComponent clickable = (ClickableComponent)a.GetComponent(SS3D_shared.GO.ComponentFamily.Click);
                 if (clickable != null)
-                    clickable.Clicked(new PointF(mouseAABB.X, mouseAABB.Y), playerController.controlledAtom.Uid);
+                {
+                    if (clickable.CheckClick(clickedWorldPoint, out drawdepthofclicked))
+                        clickedEntities.Add(new ClickData((Entity)a, drawdepthofclicked));
+                    //clickable.Clicked(new PointF(mouseAABB.X, mouseAABB.Y), playerController.controlledAtom.Uid);
+                }
                 //END HACKED IN COMPONENT SHIT
 
                 /*if (a.WasClicked(mouseAABB.Location))
@@ -778,7 +785,21 @@ namespace SS3D.States
                     atomClicked = true; // We clicked an atom so we don't want to send a turf click message too.
                     break;
                 }*/
+            }
 
+            if (clickedEntities.Count > 1)
+            {
+                Entity entToClick = (from cd in clickedEntities
+                                     orderby cd.drawdepth descending
+                                     orderby cd.clicked.Position.Y descending
+                                     select cd.clicked).First();
+                ClickableComponent c = (ClickableComponent)entToClick.GetComponent(SS3D_shared.GO.ComponentFamily.Click);
+                c.DispatchClick(playerController.controlledAtom.Uid);
+            }
+            else if (clickedEntities.Count == 1)
+            {
+                ClickableComponent c = (ClickableComponent)clickedEntities[0].clicked.GetComponent(SS3D_shared.GO.ComponentFamily.Click);
+                c.DispatchClick(playerController.controlledAtom.Uid);
             }
 
             if (!atomClicked)
@@ -806,6 +827,16 @@ namespace SS3D.States
         { } 
         #endregion
 
+        private struct ClickData
+        {
+            public Entity clicked;
+            public int drawdepth;
+            public ClickData(Entity _clicked, int _drawdepth)
+            {
+                clicked = _clicked;
+                drawdepth = _drawdepth;
+            }
+        }
     }
 
 }

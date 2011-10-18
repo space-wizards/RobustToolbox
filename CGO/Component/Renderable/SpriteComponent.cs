@@ -77,10 +77,8 @@ namespace CGO
 
             switch (type)
             {
-                case ComponentMessageType.Clicked:
-                    object[] replyParams = new object[1];
-                    replyParams[0] = WasClicked(list);
-                    reply.Add(new ComponentReplyMessage(ComponentMessageType.Clicked, replyParams));
+                case ComponentMessageType.CheckSpriteClick:
+                    reply.Add(new ComponentReplyMessage(ComponentMessageType.SpriteWasClicked, WasClicked((PointF)list[0]), DrawDepth));
                     break;
                 case ComponentMessageType.GetAABB:
                     reply.Add(new ComponentReplyMessage(ComponentMessageType.CurrentAABB, AABB));
@@ -107,10 +105,9 @@ namespace CGO
             DrawDepth = p;
         }
 
-        private bool WasClicked(params object[] list)
+        private bool WasClicked(PointF worldPos)
         {
             if (currentSprite == null) return false;
-            PointF worldPos = (PointF)list[0];
             // // // Almost straight copy & paste.
             System.Drawing.RectangleF AABB = new System.Drawing.RectangleF(Owner.Position.X - (currentSprite.Width / 2), Owner.Position.Y - (currentSprite.Height / 2), currentSprite.Width, currentSprite.Height);
             if (!AABB.Contains(worldPos)) return false;

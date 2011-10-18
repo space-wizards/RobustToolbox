@@ -1,0 +1,13 @@
+﻿<?xml version="1.0" encoding="utf-8" ?>
+<EntityTemplate name="Crowbar" atomname="Atom.Item.Tool.Crowbar">
+  <Components>
+    <Component name="NetworkMoverComponent"></Component>
+    <Component name="ItemSpriteComponent">
+      <Parameters>
+        <Parameter name="basename" type="string" value="crowbar" />
+      </Parameters>
+    </Component>
+    <Component name="ClickableComponent"></Component>
+    <Component name="BasicItemComponent"></Component>
+  </Components> 
+</EntityTemplate>

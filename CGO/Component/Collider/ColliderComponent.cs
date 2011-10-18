@@ -45,6 +45,8 @@ namespace CGO
 
         public override void RecieveMessage(object sender, ComponentMessageType type, List<ComponentReplyMessage> reply, params object[] list)
         {
+            base.RecieveMessage(sender, type, reply, list);
+
             switch (type)
             {
                 case ComponentMessageType.SpriteChanged:

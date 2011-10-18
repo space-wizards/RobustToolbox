@@ -41,6 +41,12 @@ namespace CGO
         {
             if (sender == this) //Don't listen to our own messages!
                 return;
+            switch(type)
+            {
+                case ComponentMessageType.Initialize:
+                    Owner.SendComponentInstantiationMessage(this);
+                    break;
+            }
         }
 
         /// <summary>
@@ -74,7 +80,8 @@ namespace CGO
             Owner = owner;
             //Send us to the manager so it knows we're active
             ComponentManager.Singleton.AddComponent(this);
-            Owner.SendComponentInstantiationMessage(this);
+            if (owner.initialized)
+                Owner.SendComponentInstantiationMessage(this);
         }
 
         /// <summary>

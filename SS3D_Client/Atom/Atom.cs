@@ -33,7 +33,7 @@ namespace SS3D.Atom
         public int drawDepth = 0;
         private int index = 0;
 
-        public AtomManager atomManager;
+        //public AtomManager atomManager;
 
         // Position data
         public List<InterpolationPacket> interpolationPackets;
@@ -72,11 +72,11 @@ namespace SS3D.Atom
 
         public virtual void SetUp(int _uid, AtomManager _atomManager)
         {
-            Initialize();
-            Uid = _uid;
-            atomManager = _atomManager;
+            //Initialize();
+            //Uid = _uid;
+            //atomManager = _atomManager;
 
-            Draw();
+            //Draw();
         }
 
         public override void Initialize()
@@ -199,9 +199,9 @@ namespace SS3D.Atom
         // Sends a message to the server to request the atom's data.
         public void SendPullMessage()
         {
-            NetOutgoingMessage message = CreateAtomMessage(); 
-            message.Write((byte)AtomMessage.Pull);
-            atomManager.networkManager.SendMessage(message, NetDeliveryMethod.ReliableUnordered);
+            //NetOutgoingMessage message = CreateAtomMessage(); 
+            //message.Write((byte)AtomMessage.Pull);
+            //atomManager.networkManager.SendMessage(message, NetDeliveryMethod.ReliableUnordered);
         }
 
         public virtual void HandlePush(NetIncomingMessage message)
@@ -209,24 +209,24 @@ namespace SS3D.Atom
             // Do nothing. This should be overridden by the child.
         }
 
-        protected NetOutgoingMessage CreateAtomMessage()
+        /*protected NetOutgoingMessage CreateAtomMessage()
         {
             NetOutgoingMessage message = atomManager.networkManager.netClient.CreateMessage();
             message.Write((byte)NetMessage.AtomManagerMessage);
             message.Write((byte)AtomManagerMessage.Passthrough);
             message.Write(Uid);
             return message;
-        }
+        }*/
 
         protected void SendMessage(NetOutgoingMessage message)
         {
             // Send messages unreliably by default
-            SendMessage(message, NetDeliveryMethod.ReliableUnordered);
+            //SendMessage(message, NetDeliveryMethod.ReliableUnordered);
         }
 
         protected void SendMessage(NetOutgoingMessage message, NetDeliveryMethod method = NetDeliveryMethod.ReliableUnordered)
         {
-            atomManager.networkManager.SendMessage(message, method);
+            //atomManager.networkManager.SendMessage(message, method);
         }
         #endregion
 
@@ -332,14 +332,14 @@ namespace SS3D.Atom
         #region Rendering
         public virtual void Render(float xTopLeft, float yTopLeft, int Opacity = 255)//, List<Light> lights)
         {
-            if (spritename == "noSprite")
-                return;
-            System.Drawing.Point tilePos = atomManager.gameState.map.GetTileArrayPositionFromWorldPosition(Position);
+            //if (spritename == "noSprite")
+                //return;
+            //System.Drawing.Point tilePos = atomManager.gameState.map.GetTileArrayPositionFromWorldPosition(Position);
             //System.Drawing.Point topLeft = atomManager.gameState.map.GetTileArrayPositionFromWorldPosition(position - sprite.Size / 2);
             //System.Drawing.Point bottomRight = atomManager.gameState.map.GetTileArrayPositionFromWorldPosition(position + sprite.Size / 2);
             //sprite.SetPosition(position.X - xTopLeft, position.Y - yTopLeft);
             //sprite.Rotation = rotation;
-            bool draw = false;
+            //bool draw = false;
             /*if ((tilePos.X > 0 && atomManager.gameState.map.tileArray[tilePos.X, tilePos.Y].Visible) ||
                 (topLeft.X > 0 &&atomManager.gameState.map.tileArray[topLeft.X, topLeft.Y].Visible) ||
                 (bottomRight.X > 0 && atomManager.gameState.map.tileArray[bottomRight.X, bottomRight.Y].Visible))

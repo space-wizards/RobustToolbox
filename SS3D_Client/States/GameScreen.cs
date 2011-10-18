@@ -152,7 +152,7 @@ namespace SS3D.States
             //scaleX = (float)Gorgon.CurrentClippingViewport.Width / (realScreenWidthTiles * map.tileSpacing);
             //scaleY = (float)Gorgon.CurrentClippingViewport.Height / (realScreenHeightTiles * map.tileSpacing);
 
-            PlacementManager.Singleton.Initialize(map, atomManager, this, prg.mNetworkMgr);
+            //PlacementManager.Singleton.Initialize(map, atomManager, this, prg.mNetworkMgr);
 
             //Init GUI components
             gameChat = new Chatbox("gameChat");
@@ -212,7 +212,7 @@ namespace SS3D.States
             atomManager.Shutdown();
             entityManager.Shutdown();
             map.Shutdown();
-            PlacementManager.Singleton.Reset();
+            //PlacementManager.Singleton.Reset();
             atomManager = null;
             entityManager = null;
             map = null;
@@ -233,7 +233,7 @@ namespace SS3D.States
             atomManager.Update();
             CGO.ComponentManager.Singleton.Update(e.FrameDeltaTime);
             editMode = prg.GorgonForm.editMode;
-            PlacementManager.Singleton.Update();
+            //PlacementManager.Singleton.Update();
         }
 
         private void mNetworkMgr_MessageArrived(NetworkManager netMgr, NetIncomingMessage msg)
@@ -272,7 +272,7 @@ namespace SS3D.States
                             UiManager.Singleton.HandleNetMessage(msg);
                             break;
                         case NetMessage.PlacementManagerMessage:
-                            PlacementManager.Singleton.HandleNetMessage(msg);
+                            //PlacementManager.Singleton.HandleNetMessage(msg);
                             break;
                         case NetMessage.SendMap:
                             RecieveMap(msg);
@@ -366,12 +366,12 @@ namespace SS3D.States
             string message = "(" + channel.ToString() + "):" + text;
             int atomID = msg.ReadInt32();
             gameChat.AddLine(message, channel);
-            Atom.Atom a = atomManager.GetAtom(atomID);
+            Entity a = atomManager.GetAtom(atomID);
             if (a != null)
             {
-                if (a.speechBubble == null) a.speechBubble = new SpeechBubble(a.name + a.Uid.ToString());
+                /*if (a.speechBubble == null) a.speechBubble = new SpeechBubble(a.name + a.Uid.ToString());
                 if(channel == ChatChannel.Ingame || channel == ChatChannel.Player || channel == ChatChannel.Radio)
-                    a.speechBubble.SetText(text);
+                    a.speechBubble.SetText(text);*/ //TODO re-enable speechbubbles
             }
         }
 
@@ -491,20 +491,20 @@ namespace SS3D.States
                 ///RENDER ATOMS
                 if (atomManager != null)
                 {
-                    IEnumerable<Atom.Atom> atoms = from a in atomManager.atomDictionary.Values
+                    IEnumerable<Entity> atoms = from a in atomManager.atomDictionary.Values
                                                    where
-                                                   a.visible &&
+                                                   //a.visible &&
                                                    a.Position.X / map.tileSpacing >= xStart &&
                                                    a.Position.X / map.tileSpacing <= xEnd &&
                                                    a.Position.Y / map.tileSpacing >= yStart &&
                                                    a.Position.Y / map.tileSpacing <= yEnd
                                                    orderby a.Position.Y// + ((a.sprite.Height * a.sprite.UniformScale) / 2) ascending
-                                                   orderby a.drawDepth ascending
+                                                   //orderby a.drawDepth ascending
                                                    select a;
 
-                    foreach (Atom.Atom a in atoms.ToList())
+                    foreach (Entity a in atoms.ToList())
                     {
-                        a.Render(ClientWindowData.xTopLeft, ClientWindowData.yTopLeft);
+                        //a.Render(ClientWindowData.xTopLeft, ClientWindowData.yTopLeft);
 
                         if (showDebug)
                         {
@@ -521,14 +521,14 @@ namespace SS3D.States
                     //Render Light glows
                     atoms = from a in atomManager.atomDictionary.Values
                                                    where
-                                                   a.visible &&
+                                                   //a.visible &&
                                                    a.Position.X / map.tileSpacing >= xStart &&
                                                    a.Position.X / map.tileSpacing <= xEnd &&
                                                    a.Position.Y / map.tileSpacing >= yStart &&
                                                    a.Position.Y / map.tileSpacing <= yEnd &&
                                                    a.GetType().Name == "WallLight"                                                        
                                                    orderby a.Position.Y// + ((a.sprite.Height * a.sprite.UniformScale) / 2) ascending
-                                                   orderby a.drawDepth ascending
+                                                   //orderby a.drawDepth ascending
                                                    select a;
 
                     Gorgon.CurrentRenderTarget = lightTarget;
@@ -577,7 +577,7 @@ namespace SS3D.States
                     }
                 }*/
 
-                PlacementManager.Singleton.Draw();
+                //PlacementManager.Singleton.Draw();
             }
 
             lightTargetSprite.DestinationBlend = AlphaBlendOperation.Zero;
@@ -711,7 +711,7 @@ namespace SS3D.States
         }
         public override void MouseDown(MouseInputEventArgs e)
         {
-            if (PlacementManager.Singleton.active != null)
+            /*if (PlacementManager.Singleton.active != null)
             {
                 if (e.Buttons == GorgonLibrary.InputDevices.MouseButtons.Left)
                 {
@@ -727,7 +727,7 @@ namespace SS3D.States
                 {
                     PlacementManager.Singleton.nextRot();
                 }
-            }
+            }*/
 
             if (playerController.controlledAtom == null)
                 return;
@@ -743,17 +743,17 @@ namespace SS3D.States
             System.Drawing.RectangleF mouseAABB = new System.Drawing.RectangleF(mousePosWorld.X, mousePosWorld.Y, 1, 1);
             float checkDistance = map.tileSpacing * 1.5f;
             // Find all the atoms near us we could have clicked
-            IEnumerable<Atom.Atom> atoms = from a in atomManager.atomDictionary.Values
+            IEnumerable<Entity> atoms = from a in atomManager.atomDictionary.Values
                                            where editMode ? true : (playerController.controlledAtom.Position - a.Position).Length < checkDistance
-                                           where a.visible
+                                           //where a.visible
                                            //orderby (new Vector2D(a.sprite.AABB.X + (a.sprite.AABB.Width/2),a.sprite.AABB.Y + (a.sprite.AABB.Height/2)) - new Vector2D(mouseAABB.X, mouseAABB.Y)).Length descending
-                                           orderby a.drawDepth descending
+                                           //orderby a.drawDepth descending
                                            select a;
             // See which one our click AABB intersected with
             List<ClickData> clickedEntities = new List<ClickData>();
             int drawdepthofclicked = 0;
             PointF clickedWorldPoint = new PointF(mouseAABB.X, mouseAABB.Y);
-            foreach (Atom.Atom a in atoms)
+            foreach (Entity a in atoms)
             {
                 //HACKED IN COMPONENT SHIT
                 ClickableComponent clickable = (ClickableComponent)a.GetComponent(SS3D_shared.GO.ComponentFamily.Click);

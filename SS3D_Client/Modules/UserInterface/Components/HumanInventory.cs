@@ -177,10 +177,10 @@ namespace SS3D.UserInterface
             {
                 if (lastSlot != GUIBodyPart.None) // It came from the inventory
                 {
-                    m.SendUnequipItem(lastSlot);
+                    //m.SendUnequipItem(lastSlot);
                     lastSlot = GUIBodyPart.None;
                 }
-                m.SendEquipItem((Atom.Item.Item)heldAtom, slot.GetBodyPart());
+                //m.SendEquipItem((Atom.Item.Item)heldAtom, slot.GetBodyPart());
                 heldAtom = null;
                 return true;
             }

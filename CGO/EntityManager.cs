@@ -82,6 +82,22 @@ namespace CGO
             e.SetNetworkManager(m_entityNetworkManager);
         }
 
+        /// <summary>
+        /// Returns an entity created using an atom name.
+        /// </summary>
+        /// <param name="atomName"></param>
+        /// <returns></returns>
+        public Entity TryCreateAtom(string atomName)
+        {
+            EntityTemplate template = m_entityTemplateDatabase.GetTemplateByAtomName(atomName);
+            if (template != null)
+            {
+                Entity e = template.CreateEntity();
+                return e;
+            }
+            return null;
+        }
+
         public void Shutdown()
         {
 

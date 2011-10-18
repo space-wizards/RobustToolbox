@@ -29,6 +29,8 @@ namespace CGO
 
         public override void RecieveMessage(object sender, ComponentMessageType type, List<ComponentReplyMessage> reply, params object[] list)
         {
+            base.RecieveMessage(sender, type, reply, list);
+
             switch (type)
             {
                 case ComponentMessageType.GetMoveDir:
@@ -36,7 +38,7 @@ namespace CGO
                     break;
             }
         }
-
+        
         private void Translate(float x, float y)
         {
             Vector2D delta = new Vector2D(x, y) - Owner.Position;

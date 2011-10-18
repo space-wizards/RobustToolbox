@@ -148,20 +148,20 @@ namespace SS3D.UserInterface
 
             Entity m = (Entity)playerController.controlledAtom;
             // If we contain an atom then draw it in the appropriate place
-            if (playerController.controlledAtom.IsChildOfType(typeof(Atom.Mob.Mob)))
+            /*if (playerController.controlledAtom.IsChildOfType(typeof(Atom.Mob.Mob)))
             {
                 if (bodyPart != GUIBodyPart.None)
                 {
                     //Atom.Atom a = m.GetEquippedAtom(GetBodyPart());
                     //if (a != null)
                     //{
-                        /* TODO RE-ENABLE ITEM SLOTS WITH COMPONENTS
+                         
                         a.sprite.Position = position;
                         a.sprite.Position += new Vector2D(slot.AABB.Width / 2, slot.AABB.Height / 2);
-                        a.sprite.Draw();*/
+                        a.sprite.Draw();
                     //}
                 }
-            }
+            }*/ //TODO RE-ENABLE ITEM SLOTS WITH COMPONENTS
             highlight = false;
 
         }

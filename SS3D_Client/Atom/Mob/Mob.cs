@@ -22,11 +22,6 @@ namespace SS3D.Atom.Mob
 
         public bool isDead = false;
 
-        public Dictionary<int, HelperClasses.Appendage> appendages;
-        public Appendage selectedAppendage;
-
-        public Dictionary<GUIBodyPart, Item.Item> equippedAtoms;
-
         public Mob()
             : base()
         {
@@ -43,32 +38,6 @@ namespace SS3D.Atom.Mob
             AddComponent(ComponentFamily.Equipment, ComponentFactory.Singleton.GetComponent("HumanEquipmentComponent"));
 
             //speed = walkSpeed;
-        }
-
-        public virtual void initAppendages()
-        {
-            appendages = new Dictionary<int, Appendage>();
-            appendages.Add(0, new Appendage("Bip001 L Hand", "LeftHand", 0, this));
-            appendages.Add(1, new Appendage("Bip001 R Hand", "RightHand", 1, this));
-            selectedAppendage = appendages[0];
-        }
-
-        public virtual Item.Item GetItemOnAppendage(int appendageID)
-        {
-            if (!appendages.ContainsKey(appendageID)) return null;
-            if (appendages[appendageID] == null) return null;
-            if (appendages[appendageID].attachedItem == null) return null;
-            else return appendages[appendageID].attachedItem;
-        }
-
-        public override void SetUp(int _uid, AtomManager _atomManager)
-        {
-            base.SetUp(_uid, _atomManager);
-
-            //sprite.UniformScale = 1f;
-            initAppendages();
-
-            equippedAtoms = new Dictionary<GUIBodyPart, Item.Item>();
         }
 
         /// <summary>
@@ -143,30 +112,13 @@ namespace SS3D.Atom.Mob
              */
         }
 
-        public virtual void HandleKC_Q(bool state)
-        {
-            if (state == true)
-                return;
-            else
-                SendDropItem();
-        }
-
         protected override void HandleExtendedMessage(NetIncomingMessage message)
         {
             MobMessage mobMessageType = (MobMessage)message.ReadByte();
             switch (mobMessageType)
             {
-                case MobMessage.SelectAppendage:
-                    HandleSelectAppendage(message);
-                    break;
                 case MobMessage.Death:
                     HandleDeath();
-                    break;
-                case MobMessage.Equip:
-                    HandleEquipItem(message);
-                    break;
-                case MobMessage.Unequip:
-                    HandleUnEquipItem(message);
                     break;
                 default: break;
             }
@@ -182,113 +134,8 @@ namespace SS3D.Atom.Mob
             keyStates.Clear();*/
         }
         
-        /// <summary>
-        /// Sets selected appendage to what is contained in the message
-        /// </summary>
-        /// <param name="message">Incoming netmessage</param>
-        protected virtual void HandleSelectAppendage(NetIncomingMessage message)
-        {
-            SetSelectedAppendage(message.ReadInt32());
-        }
 
-        /// <summary>
-        /// Sets selected appendage to the appendage named
-        /// </summary>
-        /// <param name="appendageName">Appendage name</param>
-        protected virtual void SetSelectedAppendage(int appendageID)
-        {
-            if (appendages.Keys.Contains(appendageID))
-                selectedAppendage = appendages[appendageID];
-        }
-
-        public virtual void SendSelectAppendage(int appendageID)
-        {
-            if (!appendages.ContainsKey(appendageID))
-                return;
-
-            NetOutgoingMessage message = CreateAtomMessage();
-            message.Write((byte)AtomMessage.Extended);
-            message.Write((byte)MobMessage.SelectAppendage);
-            message.Write(appendageID);
-            SendMessage(message);
-        }
-
-        /// <summary>
-        /// Sends a message to drop the item in the currently selected appendage
-        /// </summary>
-        protected virtual void SendDropItem()
-        {
-            NetOutgoingMessage message = CreateAtomMessage();
-            message.Write((byte)AtomMessage.Extended);
-            message.Write((byte)MobMessage.DropItem);
-            SendMessage(message);
-        }
-
-        /// <summary>
-        /// Sends a message saying we want to equip an item
-        /// </summary>
-        public virtual void SendEquipItem(Item.Item item, GUIBodyPart part)
-        {
-            NetOutgoingMessage message = CreateAtomMessage();
-            message.Write((byte)AtomMessage.Extended);
-            message.Write((byte)MobMessage.Equip);
-            message.Write(item.Uid);
-            message.Write((byte)part);
-            SendMessage(message);
-        }
-
-        /// <summary>
-        /// Sends a message saying we want to Unequip an item
-        /// </summary>
-        public virtual void SendUnequipItem(GUIBodyPart part)
-        {
-            NetOutgoingMessage message = CreateAtomMessage();
-            message.Write((byte)AtomMessage.Extended);
-            message.Write((byte)MobMessage.Unequip);
-            message.Write((byte)part);
-            SendMessage(message);
-        }
-
-        /// <summary>
-        /// Equips an item on the appropriate body part
-        /// </summary>
-        public virtual void HandleEquipItem(NetIncomingMessage message)
-        {
-            int id = message.ReadInt32();
-            GUIBodyPart part = (GUIBodyPart)message.ReadByte();
-
-            if (!equippedAtoms.ContainsKey(part))
-            {
-                equippedAtoms.Add(part, null);
-            }
-            equippedAtoms[part] = (Item.Item)atomManager.GetAtom(id);
-            equippedAtoms[part].SendMessage(null, ComponentMessageType.ItemWorn, null);
-            equippedAtoms[part].visible = false;
-        }
-
-        /// <summary>
-        /// Unequips an item from the appropriate body part
-        /// </summary>
-        public virtual void HandleUnEquipItem(NetIncomingMessage message)
-        {
-            GUIBodyPart part = (GUIBodyPart)message.ReadByte();
-
-            if (!equippedAtoms.ContainsKey(part))
-                return;
-
-            equippedAtoms[part].SendMessage(null, ComponentMessageType.ItemUnWorn, null);
-            equippedAtoms[part] = null;
-        }
-
-        /// <summary>
-        /// Gets the atom on the passed in body part
-        /// </summary>
-        public virtual Atom GetEquippedAtom(GUIBodyPart part)
-        {
-            if (equippedAtoms.ContainsKey(part))
-                return equippedAtoms[part];
-            return null;
-        }
+        
 
         public override void Render(float xTopLeft, float yTopLeft)
         {

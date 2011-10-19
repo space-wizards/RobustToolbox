@@ -1,0 +1,15 @@
+﻿<?xml version="1.0" encoding="utf-8" ?>
+<EntityTemplates>
+  <EntityTemplate name="Toolbox" atomname="Atom.Item.Container.Toolbox">
+    <Components>
+      <Component name="NetworkMoverComponent"></Component>
+      <Component name="ItemSpriteComponent">
+        <Parameters>
+          <Parameter name="basename" type="string" value="toolbox_r" />
+        </Parameters>
+      </Component>
+      <Component name="ClickableComponent"></Component>
+      <Component name="BasicItemComponent"></Component>
+    </Components>
+  </EntityTemplate>
+</EntityTemplates>

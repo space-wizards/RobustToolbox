@@ -8,6 +8,7 @@ using SS3D_shared;
 using SS3D_shared.HelperClasses;
 using ServerServices;
 using ServerInterfaces;
+using SGO;
 
 //using SS3d_server.Modules.Mobs;
 
@@ -68,10 +69,20 @@ namespace SS3D_Server.Modules.Chat
             string command = args[0];
 
             Vector2 position;
-            Atom.Atom player;
+            Entity player;
 
             switch (command)
             {
+                case "spawnatom":
+                    player = EntityManager.Singleton.GetEntity(atomID);
+                    if (player == null)
+                        position = new Vector2(160, 160);
+                    else
+                        position = player.position;
+                    SS3DServer.Singleton.atomManager.SpawnAtom(args[1], position);
+                    break;
+                case "spawnentity":
+                    break;
                 case "crowbar":
                     player = SS3DServer.Singleton.atomManager.GetAtom(atomID);
                     if (player == null)

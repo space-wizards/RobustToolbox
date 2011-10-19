@@ -13,6 +13,7 @@ using System.Reflection;
 using ServerServices;
 using System.Drawing;
 using ServerServices.Tiles;
+using SGO;
 
 namespace SS3D_Server.Modules
 {
@@ -134,7 +135,7 @@ namespace SS3D_Server.Modules
         /// <summary>
         ///  Places mob in object placement mode with given settings.
         /// </summary>
-        public void SendPlacementBegin(Atom.Atom mob, ushort range, string objectType, AlignmentOptions alignOption, bool placeAnywhere)
+        public void SendPlacementBegin(Entity mob, ushort range, string objectType, AlignmentOptions alignOption, bool placeAnywhere)
         {
             NetOutgoingMessage message = SS3DNetServer.Singleton.CreateMessage();
             message.Write((byte)NetMessage.PlacementManagerMessage);
@@ -144,24 +145,30 @@ namespace SS3D_Server.Modules
             message.Write((byte)alignOption);
             message.Write(placeAnywhere);
             //This looks like a large message but its just a string, ushort and a bunch of bools.
-            SS3DNetServer.Singleton.SendMessage(message, mob.attachedClient, NetDeliveryMethod.ReliableOrdered);
+            List<ComponentReplyMessage> replies = new List<ComponentReplyMessage>();
+            mob.SendMessage(this, SS3D_shared.GO.ComponentMessageType.GetActorConnection, replies);
+            if (replies.Count > 0 && replies[0].messageType == SS3D_shared.GO.ComponentMessageType.ReturnActorConnection)
+                SS3DNetServer.Singleton.SendMessage(message, (NetConnection)replies[0].paramsList[0], NetDeliveryMethod.ReliableOrdered);
         }
 
         /// <summary>
         ///  Cancels object placement mode for given mob.
         /// </summary>
-        public void SendPlacementCancel(Atom.Atom mob)
+        public void SendPlacementCancel(Entity mob)
         {
             NetOutgoingMessage message = SS3DNetServer.Singleton.CreateMessage();
             message.Write((byte)NetMessage.PlacementManagerMessage);
             message.Write((byte)PlacementManagerMessage.CancelPlacement);
-            SS3DNetServer.Singleton.SendMessage(message, mob.attachedClient, NetDeliveryMethod.ReliableOrdered);
+            List<ComponentReplyMessage> replies = new List<ComponentReplyMessage>();
+            mob.SendMessage(this, SS3D_shared.GO.ComponentMessageType.GetActorConnection, replies);
+            if(replies.Count > 0 && replies[0].messageType == SS3D_shared.GO.ComponentMessageType.ReturnActorConnection)
+                SS3DNetServer.Singleton.SendMessage(message, (NetConnection)replies[0].paramsList[0], NetDeliveryMethod.ReliableOrdered);
         }
 
         /// <summary>
         ///  Gives Mob permission to place object and places it in object placement mode.
         /// </summary>
-        public void StartBuilding(Atom.Atom mob, ushort range, string objectType, AlignmentOptions alignOption, bool placeAnywhere)
+        public void StartBuilding(Entity mob, ushort range, string objectType, AlignmentOptions alignOption, bool placeAnywhere)
         {
             AssignBuildPermission(mob, range, objectType, alignOption, placeAnywhere);
             SendPlacementBegin(mob, range, objectType, alignOption, placeAnywhere);
@@ -170,7 +177,7 @@ namespace SS3D_Server.Modules
         /// <summary>
         ///  Revokes open placement Permission and cancels object placement mode.
         /// </summary>
-        public void CancelBuilding(Atom.Atom mob)
+        public void CancelBuilding(Entity mob)
         {
             RevokeAllBuildPermissions(mob);
             SendPlacementCancel(mob);
@@ -179,7 +186,7 @@ namespace SS3D_Server.Modules
         /// <summary>
         ///  Gives a mob a permission to place a given object.
         /// </summary>
-        public void AssignBuildPermission(Atom.Atom mob, ushort range, string objectType, AlignmentOptions alignOption, bool placeAnywhere)
+        public void AssignBuildPermission(Entity mob, ushort range, string objectType, AlignmentOptions alignOption, bool placeAnywhere)
         {
             BuildPermission newPermission = new BuildPermission();
             newPermission.mobUid = mob.Uid;
@@ -206,7 +213,7 @@ namespace SS3D_Server.Modules
         /// <summary>
         ///  Removes all building Permissions for given mob.
         /// </summary>
-        public void RevokeAllBuildPermissions(Atom.Atom mob)
+        public void RevokeAllBuildPermissions(Entity mob)
         {
             var mobPermissions = from BuildPermission permission in BuildPermissions
                                  where permission.mobUid == mob.Uid

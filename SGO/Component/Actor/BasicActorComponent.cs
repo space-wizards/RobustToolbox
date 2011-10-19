@@ -25,5 +25,17 @@ namespace SGO
                     break;
             }
         }
+
+        public override void RecieveMessage(object sender, SS3D_shared.GO.ComponentMessageType type, List<ComponentReplyMessage> replies, params object[] list)
+        {
+            base.RecieveMessage(sender, type, replies, list);
+
+            switch(type)
+            {
+                case SS3D_shared.GO.ComponentMessageType.GetActorConnection:
+                    replies.Add(new ComponentReplyMessage(SS3D_shared.GO.ComponentMessageType.ReturnActorConnection, playerSession.ConnectedClient));
+                    break;
+            }
+        }
     }
 }

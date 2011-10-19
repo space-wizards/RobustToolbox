@@ -82,6 +82,13 @@ namespace SS3D_Server.Modules.Chat
                     SS3DServer.Singleton.atomManager.SpawnAtom(args[1], position);
                     break;
                 case "spawnentity":
+                    player = EntityManager.Singleton.GetEntity(atomID);
+                    if (player == null)
+                        position = new Vector2(160, 160);
+                    else
+                        position = player.position;
+                    Entity spawned = EntityManager.Singleton.SpawnEntity(args[1]);
+                    spawned.Translate(position);
                     break;
                 case "crowbar":
                     player = SS3DServer.Singleton.atomManager.GetAtom(atomID);

@@ -187,6 +187,12 @@ public enum EntityMessage
     Null,
 }
 
+public enum EntityManagerMessage
+{
+    SpawnEntity,
+    DeleteEntity
+}
+
 public enum NetworkDataType
 {
     d_enum,

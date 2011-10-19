@@ -14,6 +14,7 @@ namespace CGO
         private EntityFactory m_entityFactory;
         private EntityTemplateDatabase m_entityTemplateDatabase;
         private EntityNetworkManager m_entityNetworkManager;
+
         private Dictionary<int, Entity> m_entities;
         private int lastId = 0;
 
@@ -60,6 +61,7 @@ namespace CGO
         {
             //Get the entity from the factory
             Entity e = m_entityFactory.CreateEntity(templateName);
+            e.SetNetworkManager(m_entityNetworkManager);
             if (e != null)
             {
                 //It worked, add it.

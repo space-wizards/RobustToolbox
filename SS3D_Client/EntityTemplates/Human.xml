@@ -1,15 +1,16 @@
 ﻿<?xml version="1.0" encoding="utf-8" ?>
-<EntityTemplate name="HumanMob" atomname="Atom.Mob.Human">
-  <Components>
-    <Component name="NetworkMoverComponent"></Component>
-    <Component name="MobSpriteComponent">
-      <Parameters>
-        <Parameter name="basename" type="string" value="human" />
-      </Parameters>
-    </Component>
-    <Component name="ClickableComponent"></Component>
-    <Component name="HumanEquipmentComponent"></Component>
-    <Component name="HumanHandsComponent"></Component>
-    
-  </Components>
-</EntityTemplate>
+<EntityTemplates>
+  <EntityTemplate name="HumanMob" atomname="Atom.Mob.Human">
+    <Components>
+      <Component name="NetworkMoverComponent"></Component>
+      <Component name="MobSpriteComponent">
+        <Parameters>
+          <Parameter name="basename" type="string" value="human" />
+        </Parameters>
+      </Component>
+      <Component name="ClickableComponent"></Component>
+      <Component name="HumanEquipmentComponent"></Component>
+      <Component name="HumanHandsComponent"></Component>
+    </Components>
+  </EntityTemplate>
+</EntityTemplates>

@@ -31,7 +31,7 @@ namespace CGO
         /// <param name="path">path to xml file</param>
         public void LoadTemplateFromXML(string path)
         {
-            XDocument tmp = XDocument.Load(path);
+            XElement tmp = XDocument.Load(path).Element("EntityTemplates");
             var templates = tmp.Elements("EntityTemplate");
             foreach (XElement e in templates)
             {

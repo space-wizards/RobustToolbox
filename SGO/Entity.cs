@@ -26,7 +26,7 @@ namespace SGO
         /// <summary>
         /// Holds this entity's components
         /// </summary>
-        private Dictionary<ComponentFamily, IGameObjectComponent> components;
+        private Dictionary<ComponentFamily, IGameObjectComponent> components = new Dictionary<ComponentFamily, IGameObjectComponent>();
         
         private EntityNetworkManager m_entityNetworkManager;
 
@@ -76,10 +76,8 @@ namespace SGO
         /// <summary>
         /// Sets up variables and shite
         /// </summary>
-        public void Initialize()
-        {
-            components = new Dictionary<ComponentFamily, IGameObjectComponent>();
-        }
+        public virtual void Initialize(bool loaded = false)
+        {     }
 
         /// <summary>
         /// Compatibility method for atoms. This should be eliminated eventually when the above naked constructor is eliminated.
@@ -180,7 +178,17 @@ namespace SGO
         {
         }
 
+        public void Translate(Vector2 toPosition)
+        {
+            position = toPosition;
+            Moved();
+        }
 
+        public void Translate(Vector2 toPosition, float toRotation)
+        {
+            rotation = toRotation;
+            Translate(toPosition);
+        }
 
         #region Networking
         

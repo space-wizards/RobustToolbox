@@ -62,8 +62,10 @@ namespace SS3D_Server.Atom
             Initialize(loaded);
         }
 
-        public virtual void Initialize(bool loaded=false)
+        public override void Initialize(bool loaded=false)
         {
+            base.Initialize(loaded);
+
             if (!loaded)
             {
                 position = new Vector2(192, 192);

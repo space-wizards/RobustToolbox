@@ -116,6 +116,8 @@ namespace SS3D_shared.GO
         CheckSpriteClick,
         SpriteWasClicked,
         Initialize,
+        ReturnActorConnection,
+        GetActorConnection,
     }
 
     public enum Hand

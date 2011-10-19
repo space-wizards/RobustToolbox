@@ -23,7 +23,7 @@ namespace SS3D_Server.Atom
     {
         #region Vars
 
-        public Dictionary<int, Atom> atomDictionary;
+        public Dictionary<int, Entity> atomDictionary;
         private List<Module> m_loadedModules;
 
         //private int lastUID = 0;
@@ -45,7 +45,7 @@ namespace SS3D_Server.Atom
         #region instantiation
         public AtomManager(EntityManager entityManager)
         {
-            atomDictionary = new Dictionary<int, Atom>();
+            atomDictionary = new Dictionary<int, Entity>();
             m_entityManager = entityManager;
             //loadAtomScripts();
         }
@@ -78,7 +78,7 @@ namespace SS3D_Server.Atom
         #region updating
         public void Update(float framePeriod)
         {
-            // Using LINQ to find atoms that have flagged themselves as needing an update.
+            /*// Using LINQ to find atoms that have flagged themselves as needing an update.
             // TODO: Modify to add an update queue that will run updates for atoms that need it on a time schedule
             var updateList =
                 from atom in atomDictionary
@@ -89,7 +89,7 @@ namespace SS3D_Server.Atom
             foreach (Atom a in updateList)
             {
                 a.Update(framePeriod);
-            }
+            }*/
         }
         #endregion
 
@@ -126,7 +126,7 @@ namespace SS3D_Server.Atom
 
             var atom = atomDictionary[uid];
             // Pass the message
-            atom.HandleNetworkMessage(message);
+            //atom.HandleNetworkMessage(message);
         }
 
         private void SendMessage(int uid, NetOutgoingMessage message)
@@ -154,25 +154,27 @@ namespace SS3D_Server.Atom
         #region spawning
         private void SendSpawnAtom(int uid, string type)
         {
-            Atom atom = atomDictionary[uid];
+            Entity atom = atomDictionary[uid];
             NetOutgoingMessage message = SS3DNetServer.Singleton.CreateMessage();
             message.Write((byte)NetMessage.AtomManagerMessage);
             message.Write((byte)AtomManagerMessage.SpawnAtom);
             message.Write(uid);
             message.Write(type);
-            message.Write(atom.drawDepth);
+            //message.Write(atom.drawDepth);
+            message.Write(0);
             SS3DNetServer.Singleton.SendToAll(message);
         }
 
         private void SendSpawnAtom(int uid, string type, NetConnection client)
         {
-            Atom atom = atomDictionary[uid];
+            Entity atom = atomDictionary[uid];
             NetOutgoingMessage message = SS3DNetServer.Singleton.CreateMessage();
             message.Write((byte)NetMessage.AtomManagerMessage);
             message.Write((byte)AtomManagerMessage.SpawnAtom);
             message.Write(uid);
             message.Write(type);
-            message.Write(atom.drawDepth);
+            //message.Write(atom.drawDepth);
+            message.Write(0);
             SS3DNetServer.Singleton.SendMessage(message, client);
         }
 
@@ -203,21 +205,25 @@ namespace SS3D_Server.Atom
             return type;
         }
 
-        public Atom SpawnAtom(string type)
+        public Entity SpawnAtom(string type)
         {
             int uid = lastUID++;
 
             Type atomType = GetAtomType(type);
-            
-            object atom = Activator.CreateInstance(atomType); // Create atom of type atomType with parameters uid, this
-            atomDictionary[uid] = (Atom)atom;
-            
-            atomDictionary[uid].SetUp(uid, this);
+
+            if (atomType == null)
+                return null; //BAIL OUT NO ATOM FOUND FUCK FUCK FUCK
+            Entity atom = (Entity)Activator.CreateInstance(atomType); // Create atom of type atomType with parameters uid, this
+            atomDictionary[uid] = atom;
+
+            atom.Uid = uid;
+            //atomDictionary[uid].SetUp(uid, this);
             m_entityManager.AddAtomEntity((Entity)atom); /// Add atom to entity manager
+            atom.Initialize();
             SendSpawnAtom(uid, type);
-            atomDictionary[uid].SendState();
+            //atomDictionary[uid].SendState();
    
-            return atomDictionary[uid]; // Why do we return it? So we can do whatever is needed easily from the calling function.
+            return atom; // Why do we return it? So we can do whatever is needed easily from the calling function.
         }
 /*
                    Assembly currentAssembly = Assembly.GetExecutingAssembly();
@@ -244,15 +250,8 @@ namespace SS3D_Server.Atom
 
             if (atomType == null)
             {
-                foreach (Module m in m_loadedModules)
-                {
-                    atomType = m.GetType("SS3D_Server." + typename);
-                    if (atomType != null)
-                        break;
-                }
+                return null;
             }
-            if (atomType == null)
-                throw new TypeLoadException("Could not load type " + "SS3D_Server." + typename);
             return atomType;
         }
 
@@ -271,20 +270,24 @@ namespace SS3D_Server.Atom
             return types.ToArray();
         }
 
-        public Atom SpawnAtom(string type, Vector2 position)
+        public Entity SpawnAtom(string type, Vector2 position)
         {
-            Atom spawned = SpawnAtom(type);
+            Entity spawned = SpawnAtom(type);
+            if (spawned == null)
+                return null;
             spawned.Translate(position);
-            spawned.spawnTile = SS3D_Server.SS3DServer.Singleton.map.GetTileFromWorldPosition(position);
-            spawned.PostSpawnActions();
+            //spawned.spawnTile = SS3D_Server.SS3DServer.Singleton.map.GetTileFromWorldPosition(position);
+            //spawned.PostSpawnActions();
             return spawned;
         }
-        public Atom SpawnAtom(string type, Vector2 position, float rotation)
+        public Entity SpawnAtom(string type, Vector2 position, float rotation)
         {
-            Atom spawned = SpawnAtom(type);
+            Entity spawned = SpawnAtom(type);
+            if (spawned == null)
+                return null;
             spawned.Translate(position, rotation);
-            spawned.spawnTile = SS3D_Server.SS3DServer.Singleton.map.GetTileFromWorldPosition(position);
-            spawned.PostSpawnActions();
+            //spawned.spawnTile = SS3D_Server.SS3DServer.Singleton.map.GetTileFromWorldPosition(position);
+            //spawned.PostSpawnActions();
             return spawned;
         }
         #endregion
@@ -326,14 +329,14 @@ namespace SS3D_Server.Atom
             DeleteAtom(atomDictionary[uid]);
         }
 
-        public void DeleteAtom(Atom atom)
+        public void DeleteAtom(Entity atom)
         {
             atomDictionary.Remove(atom.Uid);
-            atom.Destruct();
+            atom.Shutdown();
             SendDeleteAtom(atom.Uid);
         }
 
-        public Atom GetAtom(int uid)
+        public Entity GetAtom(int uid)
         {
             if (atomDictionary.Keys.Contains(uid))
                 return atomDictionary[uid];
@@ -374,16 +377,18 @@ namespace SS3D_Server.Atom
             f.AssemblyFormat = System.Runtime.Serialization.Formatters.FormatterAssemblyStyle.Simple;
             //Binder from below
             f.Binder = new VersionConfigToNamespaceAssemblyObjectBinder();
-            List<Atom> o = (List<Atom>)f.Deserialize(s);
-            foreach (Atom a in o)
+            /*List<Entity> o = (List<Entity>)f.Deserialize(s);
+            foreach (Entity a in o)
             {
-                a.SetUp(lastUID++, this, true);
-                a.SerializedInit();
-                a.spawnTile = SS3D_Server.SS3DServer.Singleton.map.GetTileFromWorldPosition(a.position);
-                a.PostSpawnActions();
+                //a.SetUp(lastUID++, this, true);
+                m_entityManager.AddAtomEntity(a);
+                a.Initialize();
+                //a.SerializedInit();
+                //a.spawnTile = SS3D_Server.SS3DServer.Singleton.map.GetTileFromWorldPosition(a.position);
+                //a.PostSpawnActions();
                 atomDictionary.Add(a.Uid, a);
-                m_entityManager.AddAtomEntity((Entity)a);
-            }
+                //m_entityManager.AddAtomEntity((Entity)a);
+            }*/
             s.Close();
         }
     }

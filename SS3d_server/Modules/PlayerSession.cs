@@ -19,7 +19,8 @@ namespace SS3D_Server.Modules
         /* This class represents a connected player session */
 
         public NetConnection connectedClient;
-        public Atom.Atom attachedAtom;
+        public NetConnection ConnectedClient { get { return connectedClient; } }
+        public Entity attachedAtom;
         public string name = "";
         public SessionStatus status;
         public AdminPermissions adminPermissions;
@@ -38,10 +39,10 @@ namespace SS3D_Server.Modules
                 status = SessionStatus.Zombie;
         }
 
-        public void AttachToAtom(Atom.Atom a)
+        public void AttachToAtom(Entity a)
         {
             DetachFromAtom();
-            a.attachedClient = connectedClient;
+            //a.attachedClient = connectedClient;
             //Add input component.
             a.AddComponent(ComponentFamily.Input, SGO.ComponentFactory.Singleton.GetComponent("KeyBindingInputComponent"));
             a.AddComponent(ComponentFamily.Mover, ComponentFactory.Singleton.GetComponent("PlayerInputMoverComponent"));
@@ -57,8 +58,8 @@ namespace SS3D_Server.Modules
         {
             if (attachedAtom != null)
             {
-                attachedAtom.attachedClient = null;
-                attachedAtom.Die();
+                //attachedAtom.attachedClient = null;
+                //attachedAtom.Die();
                 attachedAtom.RemoveComponent(ComponentFamily.Input);
                 attachedAtom.RemoveComponent(ComponentFamily.Mover);
                 attachedAtom.RemoveComponent(ComponentFamily.Actor);
@@ -121,7 +122,7 @@ namespace SS3D_Server.Modules
             else
             {
                 var targetAtom = SS3DServer.Singleton.atomManager.GetAtom(uid);
-                targetAtom.HandleVerb(verb);
+                //targetAtom.HandleVerb(verb);
             }
         }
 
@@ -133,7 +134,7 @@ namespace SS3D_Server.Modules
             LogManager.Log("Player set name: " + connectedClient.RemoteEndpoint.Address.ToString() + " -> " + name);
             if (attachedAtom != null)
             {
-                attachedAtom.SetName(_name);
+                attachedAtom.name = _name;
             }
         }
 

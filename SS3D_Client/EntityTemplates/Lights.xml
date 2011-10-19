@@ -1,0 +1,33 @@
+﻿<?xml version="1.0" encoding="utf-8" ?>
+<EntityTemplates>
+  <EntityTemplate name="WallLight" atomname="Atom.Object.Lights.WallLight">
+    <Components>
+      <Component name="NetworkMoverComponent"></Component>
+      <Component name="SpriteComponent">
+        <Parameters>
+          <Parameter name="addsprite" type="string" value="wall_light" />
+        </Parameters>
+      </Component>
+      <Component name="ClickableComponent"></Component>
+      <Component name="PointLightComponent">
+        <Parameters>
+          <Parameter name="lightoffsetx" type="float" value="0" />
+          <Parameter name="lightoffsety" type="float" value="64" />
+        </Parameters>
+      </Component>
+    </Components>
+  </EntityTemplate>
+  <EntityTemplate name="FlashLight" atomname="Atom.Item.Misc.Flashlight">
+    <Components>
+      <Component name="NetworkMoverComponent"></Component>
+      <Component name="ItemSpriteComponent">
+        <Parameters>
+          <Parameter name="basename" type="string" value="flashlight" />
+        </Parameters>
+      </Component>
+      <Component name="ClickableComponent"></Component>
+      <Component name="BasicItemComponent"></Component>
+      <Component name="PointLightComponent"></Component>
+    </Components>
+  </EntityTemplate>
+</EntityTemplates>

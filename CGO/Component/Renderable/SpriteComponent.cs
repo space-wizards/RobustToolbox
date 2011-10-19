@@ -140,12 +140,27 @@ namespace CGO
                 throw new Exception("That sprite is already added.");
             if (ResMgr.Singleton.SpriteExists(spriteKey))
                 AddSprite(spriteKey, ResMgr.Singleton.GetSprite(spriteKey));
+
+            //If there's only one sprite, and the current sprite is explicitly not set, then lets go ahead and set our sprite.
+            if (sprites.Count == 1)
+                SetSpriteByKey(sprites.Keys.First());
         }
 
         public void AddSprite(string key, Sprite spritetoadd)
         {
             if (spritetoadd != null && key != "")
                 sprites.Add(key, spritetoadd);
+        }
+
+        public override void SetParameter(ComponentParameter parameter)
+        {
+            base.SetParameter(parameter);
+            switch(parameter.MemberName)
+            {
+                case "addsprite":
+                    AddSprite((string)parameter.Parameter);
+                    break;
+            }
         }
 
         public override void Render()

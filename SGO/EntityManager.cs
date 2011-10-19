@@ -84,6 +84,11 @@ namespace SGO
             e.SetNetworkManager(m_entityNetworkManager);
         }
 
+        public void Shutdown()
+        {
+
+        }
+
         /// <summary>
         /// Handle an incoming network message by passing the message to the EntityNetworkManager 
         /// and handling the parsed result.

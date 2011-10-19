@@ -2,6 +2,9 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using System.Xml;
+using System.IO;
+using System.Xml.Linq;
 
 namespace SGO
 {
@@ -12,15 +15,30 @@ namespace SGO
         public EntityTemplateDatabase()
         {
             m_templates = new Dictionary<string, EntityTemplate>();
+            LoadAllTemplates();
+        }
+
+        private void LoadAllTemplates()
+        {
+            string[] templatePaths = Directory.GetFiles(@"EntityTemplates");
+            foreach (string path in templatePaths)
+                LoadTemplateFromXML(path);
         }
 
         /// <summary>
         /// Load entity templates from an xml file
         /// </summary>
         /// <param name="path">path to xml file</param>
-        public void LoadTemplatesFromXML(string path)
+        public void LoadTemplateFromXML(string path)
         {
-
+            XElement tmp = XDocument.Load(path).Element("EntityTemplates");
+            var templates = tmp.Elements("EntityTemplate");
+            foreach (XElement e in templates)
+            {
+                EntityTemplate newTemplate = new EntityTemplate();
+                newTemplate.LoadFromXML(e);
+                AddTemplate(newTemplate);
+            }
         }
 
         /// <summary>
@@ -29,7 +47,7 @@ namespace SGO
         /// <param name="template">the template to add</param>
         public void AddTemplate(EntityTemplate template)
         {
-
+            m_templates.Add(template.Name, template);
         }
 
         /// <summary>
@@ -39,7 +57,11 @@ namespace SGO
         /// <returns></returns>
         public EntityTemplate GetTemplate(string templatename)
         {
+            if (m_templates.ContainsKey(templatename))
+                return m_templates[templatename];
             return null;
         }
+
+
     }
 }

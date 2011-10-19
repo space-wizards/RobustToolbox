@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using Lidgren.Network;
+using System.Xml.Linq;
 
 namespace SGO
 {
@@ -27,6 +28,7 @@ namespace SGO
             m_entities = new Dictionary<int, Entity>();
             m_netServer = netServer;
             Singleton = this;
+            LoadEntities();
         }
 
         private static EntityManager singleton;
@@ -41,6 +43,37 @@ namespace SGO
             set
             { singleton = value; }
         }
+
+        /// <summary>
+        /// Load all entities from SavedEntities.xml
+        /// </summary>
+        public void LoadEntities()
+        {
+            XElement tmp = XDocument.Load("SavedEntities.xml").Element("SavedEntities");
+            var SavedEntities = tmp.Descendants("SavedEntity");
+            foreach (XElement e in SavedEntities)
+            {
+                LoadEntity(e);
+            }
+        }
+
+        public void LoadEntity(XElement e)
+        {
+            float X = float.Parse(e.Attribute("X").Value);
+            float Y = float.Parse(e.Attribute("Y").Value);
+            string template = e.Attribute("template").Value;
+            Entity ent = SpawnEntity(template);
+            ent.Translate(new SS3D_shared.HelperClasses.Vector2(X, Y));
+        }
+
+        public void SendEntities(NetConnection client)
+        {
+            foreach (Entity e in m_entities.Values)
+            {
+                SendSpawnEntity(e, client);
+            }
+        }
+
 
         /// <summary>
         /// Returns an entity by id
@@ -97,6 +130,16 @@ namespace SGO
             message.Write(e.name);
             message.Write(e.Uid);
             m_netServer.SendToAll(message, NetDeliveryMethod.ReliableUnordered);
+        }
+
+        private void SendSpawnEntity(Entity e, NetConnection client)
+        {
+            NetOutgoingMessage message = m_netServer.CreateMessage();
+            message.Write((byte)NetMessage.EntityManagerMessage);
+            message.Write((int)EntityManagerMessage.SpawnEntity);
+            message.Write(e.name);
+            message.Write(e.Uid);
+            m_netServer.SendMessage(message, client, NetDeliveryMethod.ReliableUnordered);
         }
 
         /// <summary>

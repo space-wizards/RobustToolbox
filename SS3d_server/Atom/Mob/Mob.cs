@@ -47,13 +47,14 @@ namespace SS3D_Server.Atom.Mob
         {
             base.SendState(client);
 
+            /*
             foreach(GUIBodyPart part in equippedAtoms.Keys)
             {
                 if (equippedAtoms[part] != null)
                 {
                     SendEquipItem(equippedAtoms[part].Uid, part);
                 }
-            }
+            }*/ //TODO FIX TO WORK WITH EQUIPMENTCOMPONENT OR WHATEVER
 
             if (IsDead())
                 SendDeathMessage(client);

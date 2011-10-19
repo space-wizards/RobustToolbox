@@ -14,6 +14,7 @@ namespace SGO
         private EntityFactory m_entityFactory;
         private EntityTemplateDatabase m_entityTemplateDatabase;
         private EntityNetworkManager m_entityNetworkManager;
+        private NetServer m_netServer;
 
         private Dictionary<int, Entity> m_entities;
         public int lastId = 0;
@@ -24,6 +25,7 @@ namespace SGO
             m_entityTemplateDatabase = new EntityTemplateDatabase();
             m_entityFactory = new EntityFactory(m_entityTemplateDatabase);
             m_entities = new Dictionary<int, Entity>();
+            m_netServer = netServer;
             Singleton = this;
         }
 
@@ -73,6 +75,30 @@ namespace SGO
             return -1;
         }
 
+        public Entity SpawnEntity(string EntityType)
+        {
+            Entity e = m_entityFactory.CreateEntity(EntityType);
+            if (e != null)
+            {
+                e.SetNetworkManager(m_entityNetworkManager);
+                e.Uid = lastId++;
+                m_entities.Add(e.Uid, e);
+                e.Initialize();
+                SendSpawnEntity(e);
+            }
+            return e;
+        }
+
+        private void SendSpawnEntity(Entity e)
+        {
+            NetOutgoingMessage message = m_netServer.CreateMessage();
+            message.Write((byte)NetMessage.EntityManagerMessage);
+            message.Write((int)EntityManagerMessage.SpawnEntity);
+            message.Write(e.name);
+            message.Write(e.Uid);
+            m_netServer.SendToAll(message, NetDeliveryMethod.ReliableUnordered);
+        }
+
         /// <summary>
         /// Adds an atom to the entity pool. Compatibility method.
         /// </summary>
@@ -100,9 +126,16 @@ namespace SGO
             m_entities[message.uid].HandleNetworkMessage(message);
         }
 
+        #region Entity Manager Networking
         public void HandleNetworkMessage(NetIncomingMessage msg)
         {
+            EntityManagerMessage type = (EntityManagerMessage)msg.ReadInt32();
+            switch(type)
+            {
 
+            }
         }
+        #endregion
+        
     }
 }

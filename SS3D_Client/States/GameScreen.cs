@@ -743,17 +743,19 @@ namespace SS3D.States
             System.Drawing.RectangleF mouseAABB = new System.Drawing.RectangleF(mousePosWorld.X, mousePosWorld.Y, 1, 1);
             float checkDistance = map.tileSpacing * 1.5f;
             // Find all the atoms near us we could have clicked
-            IEnumerable<Entity> atoms = from a in atomManager.atomDictionary.Values
+            IEnumerable<Entity> entities = EntityManager.Singleton.GetEntitiesInRange(playerController.controlledAtom.Position, checkDistance);
+                
+                /*from a in atomManager.atomDictionary.Values
                                            where editMode ? true : (playerController.controlledAtom.Position - a.Position).Length < checkDistance
                                            //where a.visible
                                            //orderby (new Vector2D(a.sprite.AABB.X + (a.sprite.AABB.Width/2),a.sprite.AABB.Y + (a.sprite.AABB.Height/2)) - new Vector2D(mouseAABB.X, mouseAABB.Y)).Length descending
                                            //orderby a.drawDepth descending
-                                           select a;
+                                           select a;*/
             // See which one our click AABB intersected with
             List<ClickData> clickedEntities = new List<ClickData>();
             int drawdepthofclicked = 0;
             PointF clickedWorldPoint = new PointF(mouseAABB.X, mouseAABB.Y);
-            foreach (Entity a in atoms)
+            foreach (Entity a in entities)
             {
                 //HACKED IN COMPONENT SHIT
                 ClickableComponent clickable = (ClickableComponent)a.GetComponent(SS3D_shared.GO.ComponentFamily.Click);

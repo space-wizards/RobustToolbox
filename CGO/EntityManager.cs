@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using Lidgren.Network;
+using GorgonLibrary;
 
 namespace CGO
 {
@@ -14,6 +15,7 @@ namespace CGO
         private EntityFactory m_entityFactory;
         private EntityTemplateDatabase m_entityTemplateDatabase;
         private EntityNetworkManager m_entityNetworkManager;
+        private NetClient m_netClient;
 
         private Dictionary<int, Entity> m_entities;
         private int lastId = 0;
@@ -24,6 +26,7 @@ namespace CGO
             m_entityTemplateDatabase = new EntityTemplateDatabase();
             m_entityFactory = new EntityFactory(m_entityTemplateDatabase);
             m_entities = new Dictionary<int, Entity>();
+            m_netClient = netClient;
             Singleton = this;
         }
 
@@ -61,16 +64,41 @@ namespace CGO
         {
             //Get the entity from the factory
             Entity e = m_entityFactory.CreateEntity(templateName);
-            e.SetNetworkManager(m_entityNetworkManager);
             if (e != null)
             {
                 //It worked, add it.
+                e.SetNetworkManager(m_entityNetworkManager);
                 m_entities.Add(++lastId, e);
                 lastId++;
                 return lastId;
             }
             //TODO: throw exception here -- something went wrong.
             return -1;
+        }
+
+        private void SpawnEntity(string EntityType, int Uid)
+        {
+            Entity e = m_entityFactory.CreateEntity(EntityType);
+            if (e != null)
+            {
+                e.SetNetworkManager(m_entityNetworkManager);
+                e.Uid = Uid;
+                m_entities.Add(Uid, e);
+                lastId = Uid;
+                e.Initialize();
+            }
+        }
+
+        public Entity[] GetEntitiesInRange(Vector2D position, float Range)
+        {
+            var entities = from e in m_entities.Values
+                           where (position - e.Position).Length < Range
+                           //where a.visible
+                           //orderby (new Vector2D(a.sprite.AABB.X + (a.sprite.AABB.Width/2),a.sprite.AABB.Y + (a.sprite.AABB.Height/2)) - new Vector2D(mouseAABB.X, mouseAABB.Y)).Length descending
+                           //orderby a.drawDepth descending
+                           select e;
+
+            return entities.ToArray();
         }
 
         /// <summary>
@@ -116,9 +144,22 @@ namespace CGO
             m_entities[message.uid].HandleNetworkMessage(message);
         }
 
+        #region Entity Manager Networking
         public void HandleNetworkMessage(NetIncomingMessage msg)
         {
-
+            EntityManagerMessage type = (EntityManagerMessage)msg.ReadInt32();
+            switch(type)
+            {
+                case EntityManagerMessage.SpawnEntity:
+                    string EntityType = msg.ReadString();
+                    int Uid = msg.ReadInt32();
+                    SpawnEntity(EntityType, Uid);
+                    break;
+                case EntityManagerMessage.DeleteEntity:
+                    break;
+            }
         }
+
+        #endregion
     }
 }

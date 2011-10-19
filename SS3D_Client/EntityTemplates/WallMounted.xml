@@ -1,0 +1,36 @@
+﻿<?xml version="1.0" encoding="utf-8" ?>
+<EntityTemplates>
+  <EntityTemplate name="Extinguisher" atomname="Atom.Object.WallMounted.Extinguisher">
+    <Components>
+      <Component name="NetworkMoverComponent"></Component>
+      <Component name="SpriteComponent">
+        <Parameters>
+          <Parameter name="addsprite" type="string" value="fire_extinguisher" />
+        </Parameters>
+      </Component>
+      <Component name="ClickableComponent"></Component>
+    </Components>
+  </EntityTemplate>
+  <EntityTemplate name="FireAlarm" atomname="Atom.Object.WallMounted.FireAlarm">
+    <Components>
+      <Component name="NetworkMoverComponent"></Component>
+      <Component name="SpriteComponent">
+        <Parameters>
+          <Parameter name="addsprite" type="string" value="fire_alarm_off" />
+        </Parameters>
+      </Component>
+      <Component name="ClickableComponent"></Component>
+    </Components>
+  </EntityTemplate>
+  <EntityTemplate name="MedCabinet" atomname="Atom.Object.WallMounted.MedCabinet">
+    <Components>
+      <Component name="NetworkMoverComponent"></Component>
+      <Component name="SpriteComponent">
+        <Parameters>
+          <Parameter name="addsprite" type="string" value="med_cabinet" />
+        </Parameters>
+      </Component>
+      <Component name="ClickableComponent"></Component>
+    </Components>
+  </EntityTemplate>
+</EntityTemplates>

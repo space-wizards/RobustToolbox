@@ -133,6 +133,30 @@ namespace CGO
                         TweakAABB = (Vector4D)parameter.Parameter; 
                     }
                     break;
+                case "TweakAABBtop":
+                    if (parameter.Parameter.GetType() == typeof(string))
+                    {
+                        tweakAABB.X = float.Parse((string)parameter.Parameter);
+                    }
+                    break;
+                case "TweakAABBright":
+                    if (parameter.Parameter.GetType() == typeof(string))
+                    {
+                        tweakAABB.Y = float.Parse((string)parameter.Parameter);
+                    }
+                    break;
+                case "TweakAABBbottom":
+                    if (parameter.Parameter.GetType() == typeof(string))
+                    {
+                        tweakAABB.Z = float.Parse((string)parameter.Parameter);
+                    }
+                    break;
+                case "TweakAABBleft":
+                    if (parameter.Parameter.GetType() == typeof(string))
+                    {
+                        tweakAABB.W = float.Parse((string)parameter.Parameter);
+                    }
+                    break;
             }
         }
 

@@ -22,7 +22,7 @@ namespace SS3D.UserInterface
         private Dictionary<GUIBodyPart, ItemSlot> inventorySlots;
         private HumanHandsGui handsGUI;
         private WindowComponent window;
-        private Atom.Atom heldAtom;
+        private Entity heldAtom;
         private GUIBodyPart lastSlot = GUIBodyPart.None;
         private Vector2D mousePos;
         private Sprite outline;
@@ -171,7 +171,7 @@ namespace SS3D.UserInterface
             return false;
         }
 
-        public bool AttemptEquipInSlot(Atom.Mob.Mob m, ItemSlot slot)
+        public bool AttemptEquipInSlot(Entity m, ItemSlot slot)
         {
             if (slot.CanAccept(heldAtom))
             {
@@ -215,8 +215,8 @@ namespace SS3D.UserInterface
 
             if (heldAtom != null)
             {
-                heldAtom.sprite.Position = mousePos;
-                heldAtom.sprite.Draw();
+                //heldAtom.sprite.Position = mousePos;
+                //heldAtom.sprite.Draw();
             }
         }
     }

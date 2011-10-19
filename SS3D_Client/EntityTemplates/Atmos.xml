@@ -1,0 +1,14 @@
+﻿<?xml version="1.0" encoding="utf-8" ?>
+<EntityTemplates>
+  <EntityTemplate name="Vent" atomname="Atom.Object.Atmos.Vent">
+    <Components>
+      <Component name="NetworkMoverComponent"></Component>
+      <Component name="SpriteComponent">
+        <Parameters>
+          <Parameter name="addsprite" type="string" value="vent" />
+        </Parameters>
+      </Component>
+      <Component name="ClickableComponent"></Component>
+    </Components>
+  </EntityTemplate>
+</EntityTemplates>

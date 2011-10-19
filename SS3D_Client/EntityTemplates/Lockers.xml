@@ -1,0 +1,15 @@
+﻿<?xml version="1.0" encoding="utf-8" ?>
+<EntityTemplates>
+  <EntityTemplate name="Locker" atomname="Atom.Object.Locker">
+    <Components>
+      <Component name="NetworkMoverComponent"></Component>
+      <Component name="SpriteComponent">
+        <Parameters>
+          <Parameter name="addsprite" type="string" value="locker_closed" />
+          <Parameter name="addsprite" type="string" value="locker_open" />
+        </Parameters>
+      </Component>
+      <Component name="ClickableComponent"></Component>
+    </Components>
+  </EntityTemplate>
+</EntityTemplates>

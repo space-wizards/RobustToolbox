@@ -47,7 +47,7 @@ namespace SS3D.Atom
 
         public void Shutdown()
         {
-            foreach (Atom a in atomDictionary.Values)
+            foreach (Entity a in atomDictionary.Values)
                 a.Shutdown();
             atomDictionary.Clear(); // Dump all the atoms, we is gettin da fuck outta here bro
             gameState = null;
@@ -217,6 +217,7 @@ namespace SS3D.Atom
             return null;
         }
 
+        /*
         public Type GetAtomType(string typename)
         {
             Assembly currentAssembly = Assembly.GetExecutingAssembly();
@@ -249,6 +250,6 @@ namespace SS3D.Atom
                     types.Add(t);
             }
             return types.ToArray();
-        }
+        }*/ //Old script system stuff
     }
 }

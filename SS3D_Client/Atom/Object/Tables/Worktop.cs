@@ -47,9 +47,9 @@ namespace SS3D.Atom.Object.Worktop
             base.Render(xTopLeft, yTopLeft);
         }
 
-        public override void UpdatePosition()
+        /*public override void UpdatePosition()
         {
             base.UpdatePosition();
-        }
+        }*/
     }
 }

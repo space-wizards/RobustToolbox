@@ -660,6 +660,7 @@ namespace SS3D_Server
 
             // Lets also send them all the items and mobs.
             atomManager.NewPlayer(connection);
+            EntityManager.Singleton.SendEntities(connection);
             //playerManager.SpawnPlayerMob(playerManager.GetSessionByConnection(connection));
             //Send atmos state to player
             map.SendAtmosStateTo(connection);

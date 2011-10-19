@@ -31,19 +31,19 @@ namespace SGO
             SendPositionUpdate();
         }
 
-        public void SendPositionUpdate()
+        public void SendPositionUpdate(bool forced = false)
         {
-            Owner.SendComponentNetworkMessage(this, Lidgren.Network.NetDeliveryMethod.ReliableUnordered, null, Owner.position.X, Owner.position.Y);
+            Owner.SendComponentNetworkMessage(this, Lidgren.Network.NetDeliveryMethod.ReliableUnordered, null, Owner.position.X, Owner.position.Y, forced);
         }
 
-        public void SendPositionUpdate(NetConnection client)
+        public void SendPositionUpdate(NetConnection client,bool forced = false)
         {
-            Owner.SendComponentNetworkMessage(this, Lidgren.Network.NetDeliveryMethod.ReliableUnordered, client, Owner.position.X, Owner.position.Y);
+            Owner.SendComponentNetworkMessage(this, Lidgren.Network.NetDeliveryMethod.ReliableUnordered, client, Owner.position.X, Owner.position.Y, forced);
         }
 
         public override void HandleInstantiationMessage(NetConnection netConnection)
         {
-            SendPositionUpdate(netConnection);
+            SendPositionUpdate(netConnection, true);
         }
     }
 }

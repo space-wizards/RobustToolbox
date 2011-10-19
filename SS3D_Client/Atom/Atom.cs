@@ -281,9 +281,9 @@ namespace SS3D.Atom
         }*/
 
         // Mobs may need to override this for animation, or they could use this.
-        public virtual void UpdatePosition()
+        /*public virtual void UpdatePosition()
         {
-            /*
+            
             Vector2D difference;
             Vector2D fulldifference;
 
@@ -324,8 +324,8 @@ namespace SS3D.Atom
             }
 
             //sprite.Position = new Vector2D(position.X, position.Y);
-            */
-        }
+            
+        }*/
 
         #endregion
 
@@ -384,13 +384,6 @@ namespace SS3D.Atom
          * a watermelon and make the player I hate with the fire of a million burning suns become that
          * melon. Awesome.
          */
-        public virtual void initKeys()
-        {
-            /* Set up key handlers (we don't need to do this unless a playercontroller attaches.)
-             * Example: keyHandlers.Add(MOIS.KeyCode.KC_Whatever, new KeyEvent(HandleKC_whatever));
-             * To override a keyhandler, delete it and make a new one OR override the handler function 
-             * BEFORE calling initKeys(). */
-        }
         
         /*
         public void HandleKeyPressed(KeyboardKeys k)

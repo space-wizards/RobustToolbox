@@ -15,13 +15,6 @@ namespace SS3D.Atom.Mob
 {
     public abstract class Mob : Atom
     {
-        
-        // TODO Make these some sort of well-organized global constant
-        public float walkSpeed = 400.0f;
-        public float runSpeed = 600.0f;
-
-        public bool isDead = false;
-
         public Mob()
             : base()
         {
@@ -47,12 +40,7 @@ namespace SS3D.Atom.Mob
         {
             base.Draw();
         }
-
-        public override void initKeys()
-        {
-            base.initKeys();
-        }
-
+        
         public override void Update(float time)
         {
             base.Update(time);
@@ -66,9 +54,9 @@ namespace SS3D.Atom.Mob
         /// <summary>
         /// Override to handle walk animations
         /// </summary>
-        public override void UpdatePosition()
+        /*public override void UpdatePosition()
         {
-            /*Vector2D lastPosition = position;
+            Vector2D lastPosition = position;
             base.UpdatePosition();
             UpdateCharacterDirection(Position - lastPosition);
             
@@ -82,8 +70,8 @@ namespace SS3D.Atom.Mob
 
             if (isDead)
                 return;
-             */
-        }
+             
+        }*/
 
         public virtual void UpdateCharacterDirection(Vector2D movementVector)
         {
@@ -126,7 +114,6 @@ namespace SS3D.Atom.Mob
 
         private void HandleDeath()
         {
-            isDead = true;
 
             //Clear key handlers
             /*

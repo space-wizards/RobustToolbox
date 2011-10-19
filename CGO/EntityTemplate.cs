@@ -141,6 +141,8 @@ namespace CGO
                     return typeof(string);
                 case "int":
                     return typeof(int);
+                case "float":
+                    return typeof(float);
                 default:
                     return null;
             }

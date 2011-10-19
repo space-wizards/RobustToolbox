@@ -42,36 +42,36 @@ namespace SS3D.UserInterface
             switch (bodyPart)
             {
                 case GUIBodyPart.Feet:
-                    atomType = typeof(Atom.Item.Wearable.Feet.Feet);
+                    //atomType = typeof(Atom.Item.Wearable.Feet.Feet);
                     break;
                 case GUIBodyPart.Inner:
-                    atomType = typeof(Atom.Item.Wearable.Inner.Inner);
+                    //atomType = typeof(Atom.Item.Wearable.Inner.Inner);
                     break;
                 case GUIBodyPart.Ears:
-                    atomType = typeof(Atom.Item.Wearable.Ears.Ears);
+                    //atomType = typeof(Atom.Item.Wearable.Ears.Ears);
                     break;
                 case GUIBodyPart.Eyes:
-                    atomType = typeof(Atom.Item.Wearable.Eyes.Eyes);
+                    //atomType = typeof(Atom.Item.Wearable.Eyes.Eyes);
                     break;
                 case GUIBodyPart.Hands:
-                    atomType = typeof(Atom.Item.Wearable.Hands.Hands);
+                    //atomType = typeof(Atom.Item.Wearable.Hands.Hands);
                     break;
                 case GUIBodyPart.Head:
-                    atomType = typeof(Atom.Item.Wearable.Head.Head);
+                    //atomType = typeof(Atom.Item.Wearable.Head.Head);
                     break;
                 case GUIBodyPart.Mask:
-                    atomType = typeof(Atom.Item.Wearable.Mask.Mask);
+                    //atomType = typeof(Atom.Item.Wearable.Mask.Mask);
                     break;
                 case GUIBodyPart.Outer:
-                    atomType = typeof(Atom.Item.Wearable.Outer.Outer);
+                    //atomType = typeof(Atom.Item.Wearable.Outer.Outer);
                     break;
                 case GUIBodyPart.Belt:
-                    atomType = typeof(Atom.Item.Wearable.Belt.Belt);
+                    //atomType = typeof(Atom.Item.Wearable.Belt.Belt);
                     break;
                 case GUIBodyPart.Back:
                 case GUIBodyPart.None:
                 default:
-                    atomType = typeof(Atom.Item.Tool.Wrench);
+                    atomType = typeof(Entity);
                     break;
             }
         }

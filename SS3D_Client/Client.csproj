@@ -109,11 +109,11 @@
     <Compile Include="Atom\AtomManager.cs" />
     <Compile Include="Atom\Item\Container\Toolbox.cs" />
     <Compile Include="Atom\Item\Item.cs" />
-    <Compile Include="Atom\Item\Misc\Flashlight.cs" />
+    <None Include="Atom\Item\Misc\Flashlight.cs" />
     <None Include="Atom\Item\Tool\Crowbar.cs" />
     <Compile Include="Atom\Item\Tool\Tool.cs" />
-    <Compile Include="Atom\Item\Tool\Welder.cs" />
-    <Compile Include="Atom\Item\Tool\Wrench.cs" />
+    <None Include="Atom\Item\Tool\Welder.cs" />
+    <None Include="Atom\Item\Tool\Wrench.cs" />
     <Compile Include="Atom\Item\Wearable\Belt\Belt.cs" />
     <Compile Include="Atom\Item\Wearable\Ears\Ears.cs" />
     <Compile Include="Atom\Item\Wearable\Eyes\Eyes.cs" />
@@ -134,7 +134,7 @@
     <Compile Include="Atom\Mob\Mob.cs" />
     <Compile Include="Atom\Object\Atmos\Vent.cs" />
     <Compile Include="Atom\Object\Door\Door.cs" />
-    <Compile Include="Atom\Object\Lights\WallLight.cs" />
+    <None Include="Atom\Object\Lights\WallLight.cs" />
     <Compile Include="Atom\Object\Locker.cs" />
     <Compile Include="Atom\Object\Object.cs" />
     <Compile Include="Atom\Object\WallMounted\Extinguisher.cs" />
@@ -231,6 +231,9 @@
   </ItemGroup>
   <ItemGroup>
     <None Include="app.config" />
+    <Content Include="EntityTemplates\Lights.xml">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
     <Content Include="EntityTemplates\Tools.xml">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>

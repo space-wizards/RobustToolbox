@@ -1,0 +1,51 @@
+﻿<?xml version="1.0" encoding="utf-8" ?>
+<EntityTemplates>
+  <EntityTemplate name="Shoes" atomname="Atom.Item.Wearable.Feet.Shoes">
+    <Components>
+      <Component name="NetworkMoverComponent"></Component>
+      <Component name="WearableSpriteComponent">
+        <Parameters>
+          <Parameter name="basename" type="string" value="shoes" />
+        </Parameters>
+      </Component>
+      <Component name="ClickableComponent"></Component>
+      <Component name="BasicItemComponent"></Component>
+    </Components>
+  </EntityTemplate>
+  <EntityTemplate name="Helmet" atomname="Atom.Item.Wearable.Head.Helmet">
+    <Components>
+      <Component name="NetworkMoverComponent"></Component>
+      <Component name="WearableSpriteComponent">
+        <Parameters>
+          <Parameter name="basename" type="string" value="helmet" />
+        </Parameters>
+      </Component>
+      <Component name="ClickableComponent"></Component>
+      <Component name="BasicItemComponent"></Component>
+    </Components>
+  </EntityTemplate>
+  <EntityTemplate name="Jumpsuit" atomname="Atom.Item.Wearable.Inner.Jumpsuit.Assistant_Grey">
+    <Components>
+      <Component name="NetworkMoverComponent"></Component>
+      <Component name="WearableSpriteComponent">
+        <Parameters>
+          <Parameter name="basename" type="string" value="jumpsuit" />
+        </Parameters>
+      </Component>
+      <Component name="ClickableComponent"></Component>
+      <Component name="BasicItemComponent"></Component>
+    </Components>
+  </EntityTemplate>
+  <EntityTemplate name="Armour" atomname="Atom.Item.Wearable.Outer.Armour">
+    <Components>
+      <Component name="NetworkMoverComponent"></Component>
+      <Component name="WearableSpriteComponent">
+        <Parameters>
+          <Parameter name="basename" type="string" value="armour" />
+        </Parameters>
+      </Component>
+      <Component name="ClickableComponent"></Component>
+      <Component name="BasicItemComponent"></Component>
+    </Components>
+  </EntityTemplate>
+</EntityTemplates>

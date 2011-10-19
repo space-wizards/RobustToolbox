@@ -1,0 +1,20 @@
+﻿<?xml version="1.0" encoding="utf-8" ?>
+<EntityTemplates>
+  <EntityTemplate name="Glass" atomname="Atom.Object.Wall.Glass">
+    <Components>
+      <Component name="NetworkMoverComponent"></Component>
+      <Component name="SpriteComponent">
+        <Parameters>
+          <Parameter name="addsprite" type="string" value="glass" />
+          <Parameter name="addsprite" type="string" value="glass_shattered" />
+        </Parameters>
+      </Component>
+      <Component name="ClickableComponent"></Component>
+      <Component name="CollidableComponent">
+        <Parameters>
+          <Parameter name="TweakAABBtop" type="float" value="48" />
+        </Parameters>
+      </Component>"
+    </Components>
+  </EntityTemplate>
+</EntityTemplates>

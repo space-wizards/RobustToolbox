@@ -110,7 +110,7 @@ namespace SS3D.UserInterface
 
         [Obsolete("TODO: Change to new system")]
         // Returns true if we're empty and can accept the atom passed in
-        public bool CanAccept(Atom.Atom tryAtom)
+        public bool CanAccept(Entity tryAtom)
         {
             //if (tryAtom == null)
             //    return false;

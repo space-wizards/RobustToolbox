@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using GorgonLibrary;
+using CGO;
 
 namespace SS3D.Atom.Mob.HelperClasses
 {
@@ -11,7 +12,7 @@ namespace SS3D.Atom.Mob.HelperClasses
         public string bone;
         public string appendageName;
         public Mob owner;
-        public Item.Item attachedItem;
+        public Entity attachedItem;
         public int ID;
         public Vector2D holdPosition;
 

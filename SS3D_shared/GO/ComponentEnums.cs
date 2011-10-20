@@ -45,6 +45,12 @@ namespace SS3D_shared.GO
         UnEquipped,
         Equipped,
     }
+    
+    public enum EquipmentComponentNetMessage
+    {
+        ItemEquipped,
+        ItemUnEquipped
+    }
 
     public enum ComponentMessageType
     {
@@ -122,6 +128,8 @@ namespace SS3D_shared.GO
         GetWearLoc,
         ReturnWearLoc,
         EquipItemToPart,
+        GetItemInEquipmentSlot,
+        ReturnItemInEquipmentSlot,
     }
 
     public enum Hand

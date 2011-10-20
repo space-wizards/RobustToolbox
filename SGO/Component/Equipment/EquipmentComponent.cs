@@ -63,6 +63,7 @@ namespace SGO
             {
                 equippedEntities.Add(part, e);
                 e.SendMessage(this, SS3D_shared.GO.ComponentMessageType.ItemEquipped, null, Owner);
+                Owner.SendComponentNetworkMessage(this, Lidgren.Network.NetDeliveryMethod.ReliableUnordered, null, EquipmentComponentNetMessage.ItemEquipped, part, e.Uid);
             }
         }
 
@@ -89,6 +90,7 @@ namespace SGO
             if (!IsEmpty(part)) //If the part is not empty
             {
                 equippedEntities[part].SendMessage(this, SS3D_shared.GO.ComponentMessageType.ItemUnEquipped, null);
+                Owner.SendComponentNetworkMessage(this, Lidgren.Network.NetDeliveryMethod.ReliableUnordered, null, EquipmentComponentNetMessage.ItemUnEquipped, part, equippedEntities[part].Uid);
                 equippedEntities.Remove(part);
             }
         }
@@ -111,9 +113,8 @@ namespace SGO
         {
             foreach (Entity e in equippedEntities.Values)
             {
-                e.SendMessage(this, SS3D_shared.GO.ComponentMessageType.ItemUnEquipped, null);
+                UnEquipEntity(e);
             }
-            equippedEntities.Clear();
         }
 
         private Entity GetEntity(GUIBodyPart part)

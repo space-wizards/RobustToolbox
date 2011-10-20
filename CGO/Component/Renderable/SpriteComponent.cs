@@ -105,7 +105,7 @@ namespace CGO
             DrawDepth = p;
         }
 
-        private bool WasClicked(PointF worldPos)
+        protected virtual bool WasClicked(PointF worldPos)
         {
             if (currentSprite == null) return false;
             // // // Almost straight copy & paste.

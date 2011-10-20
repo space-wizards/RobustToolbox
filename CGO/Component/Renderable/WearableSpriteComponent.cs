@@ -135,6 +135,11 @@ namespace CGO
             return sprites[basename];
         }
 
+        protected override bool WasClicked(System.Drawing.PointF worldPos)
+        {
+            return base.WasClicked(worldPos) && !worn;
+        }
+
         /// <summary>
         /// Load the mob sprites given the base name of the sprites.
         /// </summary>

@@ -34,8 +34,10 @@ namespace SS3D.UserInterface
         }
 
         private Sprite lSprite;
+        private Entity lEntity;
         private int lAppendageID = 0;
         private Sprite rSprite;
+        private Entity rEntity;
         private int rAppendageID = 1;
         private Sprite lObjectSprite;
         private Sprite rObjectSprite;
@@ -75,6 +77,7 @@ namespace SS3D.UserInterface
             if (hands.HandSlots.Keys.Contains(Hand.Left))
             {
                 Entity EntityL = hands.HandSlots[Hand.Left];
+                lEntity = EntityL;
                 lObjectSprite = Utilities.GetSpriteComponentSprite(EntityL);
             }
             else lObjectSprite = null;
@@ -82,6 +85,7 @@ namespace SS3D.UserInterface
             if (hands.HandSlots.Keys.Contains(Hand.Right))
             {
                 Entity EntityR = hands.HandSlots[Hand.Right];
+                rEntity = EntityR;
                 rObjectSprite = Utilities.GetSpriteComponentSprite(EntityR);
             }
             else rObjectSprite = null;
@@ -172,6 +176,13 @@ namespace SS3D.UserInterface
                 return false;
         }
 
-        
+        public Entity GetActiveHandItem()
+        {
+            if (lActive && lEntity != null)
+                return lEntity;
+            if (rActive && rEntity != null)
+                return rEntity;
+            return null;
+        }
     }
 }

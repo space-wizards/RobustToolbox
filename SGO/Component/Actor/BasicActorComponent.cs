@@ -23,6 +23,9 @@ namespace SGO
                     if (parameter.ParameterType == typeof(IPlayerSession))
                         playerSession = (IPlayerSession)parameter.Parameter;
                     break;
+                default:
+                    base.SetParameter(parameter);
+                    break;
             }
         }
 

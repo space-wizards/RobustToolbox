@@ -4,6 +4,7 @@ using System.Linq;
 using System.Text;
 using SS3D_shared.GO;
 using SGO.Component.Item.ItemCapability;
+using System.Xml.Linq;
 
 namespace SGO
 {
@@ -230,6 +231,43 @@ namespace SGO
         {
             capabilities.Add(cap.capabilityName, cap);
             cap.owner = this;
+        }
+
+        public override void HandleExtendedParameters(System.Xml.Linq.XElement extendedParameters)
+        {
+            foreach (XElement itemcapability in extendedParameters.Descendants("ItemCapability"))
+            {
+                IEnumerable<XElement> Verbs = itemcapability.Descendants("ItemCapabilityVerb");
+                IEnumerable<XElement> Parameters = itemcapability.Descendants("ItemCapabilityParameter");
+                ItemCapability cap = null;
+                switch(itemcapability.Attribute("name").Value)
+                {
+                    case "MeleeWeaponCapability":
+                        cap = new MeleeWeaponCapability();
+                        break;
+                    case "ToolCapability":
+                        cap = new ToolCapability();
+                        break;
+                    case "GunCapability":
+                        cap = new GunCapability();
+                        break;
+                    case "MedicalCapability":
+                        cap = new MedicalCapability();
+                        break;
+                }
+
+                if (cap == null)
+                    return;
+                foreach (XElement verb in Verbs)
+                {
+                    cap.AddVerb(int.Parse(verb.Attribute("priority").Value), (ItemCapabilityVerb)Enum.Parse(typeof(ItemCapabilityVerb), verb.Attribute("name").Value));
+                }
+                foreach (XElement parameter in Parameters)
+                {
+                    cap.SetParameter(new ComponentParameter(parameter.Attribute("name").Value, typeof(string), parameter.Attribute("value").Value));
+                }
+                AddCapability(cap);
+            }
         }
     }
 }

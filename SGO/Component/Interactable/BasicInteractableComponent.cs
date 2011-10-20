@@ -147,7 +147,7 @@ namespace SGO
             actor.SendMessage(this, ComponentMessageType.GetActiveHandItem, replies);
             foreach (ComponentReplyMessage reply in replies)
             {
-                if (reply.messageType == ComponentMessageType.ReturnActiveHandItem && reply.paramsList[0].GetType().IsSubclassOf(typeof(Entity))) 
+                if (reply.messageType == ComponentMessageType.ReturnActiveHandItem && (reply.paramsList[0].GetType().IsSubclassOf(typeof(Entity)) || reply.paramsList[0].GetType() == typeof(Entity))) 
                 {
                     return (Entity)reply.paramsList[0];
                 }

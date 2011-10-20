@@ -78,9 +78,9 @@
   <ItemGroup>
     <Compile Include="Atom\Atom.cs" />
     <Compile Include="Atom\AtomManager.cs" />
-    <Compile Include="Atom\Item\Container\Toolbox.cs" />
+    <None Include="Atom\Item\Container\Toolbox.cs" />
     <Compile Include="Atom\Item\Item.cs" />
-    <Compile Include="Atom\Item\Misc\Flashlight.cs" />
+    <None Include="Atom\Item\Misc\Flashlight.cs" />
     <Compile Include="Atom\Item\Tool\Crowbar.cs" />
     <Compile Include="Atom\Item\Tool\Tool.cs" />
     <Compile Include="Atom\Item\Tool\Welder.cs" />
@@ -106,7 +106,7 @@
     <Compile Include="Atom\Mob\Mob.cs" />
     <Compile Include="Atom\Object\Atmos\Vent.cs" />
     <Compile Include="Atom\Object\Door\Door.cs" />
-    <Compile Include="Atom\Object\Lights\WallLight.cs" />
+    <None Include="Atom\Object\Lights\WallLight.cs" />
     <Compile Include="Atom\Object\Locker.cs" />
     <Compile Include="Atom\Object\Object.cs" />
     <Compile Include="Atom\Object\Tables\Worktop.cs" />
@@ -171,6 +171,12 @@
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
     <Content Include="EntityTemplates\Containers.xml">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="EntityTemplates\Lights.xml">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="EntityTemplates\Tools.xml">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
     <Content Include="JobDefinitions.xml">

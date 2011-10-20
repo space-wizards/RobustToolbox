@@ -665,7 +665,7 @@ namespace SS3D_Server
             //Send atmos state to player
             map.SendAtmosStateTo(connection);
             //Todo: Preempt this with the lobby.
-            RoundManager.Singleton.SpawnPlayer(playerManager.GetSessionByConnection(connection)); //SPAWN
+            RoundManager.Singleton.SpawnPlayer(playerManager.GetSessionByConnection(connection)); //SPAWN PLAYER
         }
 
         public void SendChangeTile(int x, int z, TileType newType)

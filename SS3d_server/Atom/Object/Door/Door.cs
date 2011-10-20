@@ -35,7 +35,7 @@ namespace SS3D_Server.Atom.Object.Door
             GetComponent(SS3D_shared.GO.ComponentFamily.LargeObject).SetParameter(new ComponentParameter("ClosedSprite", typeof(string), "door_ew"));
         }
 
-        protected override void ApplyAction(Atom a, Mob.Mob m)
+        protected override void ApplyAction(Atom a, Entity m)
         {
             /*laststatus = status;
             if (status == DoorState.Closed)

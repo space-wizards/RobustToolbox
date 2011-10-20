@@ -21,8 +21,11 @@ namespace SGO
         {
             switch (type)
             {
-                case ComponentMessageType.EquipItem: //Equip an entity straight up.
+                case ComponentMessageType.EquipItemToPart: //Equip an entity straight up.
                     EquipEntity((GUIBodyPart)list[0], (Entity)list[1]);
+                    break;
+                case ComponentMessageType.EquipItem:
+                    EquipEntity((Entity)list[0]);
                     break;
                 case ComponentMessageType.EquipItemInHand: //Move an entity from a hand to an equipment slot
                     if (!Owner.HasComponent(SS3D_shared.GO.ComponentFamily.Hands))
@@ -59,7 +62,18 @@ namespace SGO
             if (IsItem(e) && IsEmpty(part) && e != null && activeSlots.Contains(part)) //If the part is empty, the part exists on this mob, and the entity specified is not null
             {
                 equippedEntities.Add(part, e);
-                e.SendMessage(this, SS3D_shared.GO.ComponentMessageType.ItemEquipped, null);
+                e.SendMessage(this, SS3D_shared.GO.ComponentMessageType.ItemEquipped, null, Owner);
+            }
+        }
+
+        private void EquipEntity(Entity e)
+        {
+            if (e.HasComponent(ComponentFamily.Equippable))
+            {
+                List<ComponentReplyMessage> replies = new List<ComponentReplyMessage>();
+                e.SendMessage(this, ComponentMessageType.GetWearLoc, replies);
+                if (replies.Count > 0 && replies[0].messageType == ComponentMessageType.ReturnWearLoc)
+                    EquipEntity((GUIBodyPart)replies[0].paramsList[0], e);
             }
         }
 

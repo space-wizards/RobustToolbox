@@ -5,8 +5,6 @@ using System.Text;
 using System.Runtime.Serialization;
 using SS3D_shared.HelperClasses;
 using Lidgren.Network;
-using SS3D_Server.Atom.Mob;
-using SS3D_Server.Atom.Mob.HelperClasses;
 
 
 namespace SS3D_Server.Atom.Object

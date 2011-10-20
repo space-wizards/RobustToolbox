@@ -11,7 +11,6 @@ using System.Text;
 using CSScriptLibrary;
 using Lidgren.Network;
 using SGO;
-using SS3D_Server.Atom.Mob;
 using SS3D_Server.Modules;
 using SS3D_shared;
 using SS3D_shared.HelperClasses;
@@ -354,7 +353,7 @@ namespace SS3D_Server.Atom
             List<Atom> saveList = new List<Atom>();
             foreach (Atom a in atomDictionary.Values)
             {
-                if (a.IsChildOfType(typeof(Mob.Mob)))
+                if (a.IsChildOfType(typeof(Entity)))
                     continue;
                 saveList.Add(a);
             }

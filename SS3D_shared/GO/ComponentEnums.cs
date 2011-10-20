@@ -31,6 +31,7 @@ namespace SS3D_shared.GO
         Renderable, // Can be rendered -- sprite or particle system
         Light,
         Damageable,
+        Equippable,
     }
 
     public enum ItemComponentNetMessage
@@ -118,6 +119,9 @@ namespace SS3D_shared.GO
         Initialize,
         ReturnActorConnection,
         GetActorConnection,
+        GetWearLoc,
+        ReturnWearLoc,
+        EquipItemToPart,
     }
 
     public enum Hand

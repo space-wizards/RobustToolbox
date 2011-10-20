@@ -164,19 +164,19 @@ namespace SS3D_Server.Atom
         {
             //base.HandleClick(message);
             //Who clicked us?
-            Mob.Mob clicker = (Mob.Mob)SS3DServer.Singleton.playerManager.GetSessionByConnection(message.SenderConnection).attachedAtom;
-            if (clicker == null || clicker.IsDead()) //HAHA U CANT KILL ME WHEN UR DEAD NEMORE
+            Entity clicker = (Entity)SS3DServer.Singleton.playerManager.GetSessionByConnection(message.SenderConnection).attachedAtom;
+            /*if (clicker == null || clicker.IsDead()) //HAHA U CANT KILL ME WHEN UR DEAD NEMORE
                 return;
 
-            Clicked(clicker);
+            Clicked(clicker);*/
         }
 
         public override void HandleClick(int clickerID)
         {
-            Mob.Mob clicker = (Mob.Mob)atomManager.GetAtom(clickerID);
+            /*Entity clicker = (Entity)atomManager.GetAtom(clickerID);
             if (clicker == null || clicker.IsDead())
                 return;
-            Clicked(clicker);
+            Clicked(clicker);*/
         }
 
         public virtual void Push()
@@ -345,7 +345,7 @@ namespace SS3D_Server.Atom
         #endregion
 
         #region input handling
-        protected virtual void Clicked(Mob.Mob clicker)
+        protected virtual void Clicked(Entity clicker)
         {
             /*Vector2 dist = clicker.position - position;
 
@@ -371,7 +371,7 @@ namespace SS3D_Server.Atom
         /// </summary>
         /// <param name="a">Atom that has been used on this one</param>
         /// <param name="m">Mob that used a on this one</param>
-        protected virtual void ApplyAction(Atom a, Mob.Mob m)
+        protected virtual void ApplyAction(Atom a, Entity m)
         {
             /*if(m != null && m.selectedAppendage.heldItem != null)
                 m.selectedAppendage.heldItem.UsedOn(this); //Technically this is the same fucking thing as a, but i dont want to fuck with explicit casting it.

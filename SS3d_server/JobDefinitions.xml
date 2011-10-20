@@ -5,11 +5,11 @@
     <SpawnEquipment>
       <SpawnEquipDefinition>
         <Location>Inner</Location>
-        <ObjectType>Atom.Item.Wearable.Inner.Jumpsuit.Assistant_Grey</ObjectType>
+        <ObjectType>Assistant_Grey</ObjectType>
       </SpawnEquipDefinition>
       <SpawnEquipDefinition>
         <Location>Feet</Location>
-        <ObjectType>Atom.Item.Wearable.Feet.Shoes</ObjectType>
+        <ObjectType>Shoes</ObjectType>
       </SpawnEquipDefinition>
     </SpawnEquipment>
     <Name>Assistant</Name>
@@ -23,11 +23,11 @@
     <SpawnEquipment>
       <SpawnEquipDefinition>
         <Location>Inner</Location>
-        <ObjectType>Atom.Item.Wearable.Inner.Jumpsuit.Assistant_Grey</ObjectType>
+        <ObjectType>Assistant_Grey</ObjectType>
       </SpawnEquipDefinition>
       <SpawnEquipDefinition>
         <Location>Feet</Location>
-        <ObjectType>Atom.Item.Wearable.Feet.Shoes</ObjectType>
+        <ObjectType>Shoes</ObjectType>
       </SpawnEquipDefinition>
     </SpawnEquipment>
     <Name>Janitor</Name>
@@ -41,19 +41,19 @@
     <SpawnEquipment>
       <SpawnEquipDefinition>
         <Location>Outer</Location>
-        <ObjectType>Atom.Item.Wearable.Outer.Armour</ObjectType>
+        <ObjectType>Armour</ObjectType>
       </SpawnEquipDefinition>
       <SpawnEquipDefinition>
         <Location>Inner</Location>
-        <ObjectType>Atom.Item.Wearable.Inner.Jumpsuit.Assistant_Grey</ObjectType>
+        <ObjectType>Assistant_Grey</ObjectType>
       </SpawnEquipDefinition>
       <SpawnEquipDefinition>
         <Location>Head</Location>
-        <ObjectType>Atom.Item.Wearable.Head.Helmet</ObjectType>
+        <ObjectType>Helmet</ObjectType>
       </SpawnEquipDefinition>
       <SpawnEquipDefinition>
         <Location>Feet</Location>
-        <ObjectType>Atom.Item.Wearable.Feet.Shoes</ObjectType>
+        <ObjectType>Shoes</ObjectType>
       </SpawnEquipDefinition>
     </SpawnEquipment>
     <Name>Head of Security</Name>
@@ -67,19 +67,19 @@
     <SpawnEquipment>
       <SpawnEquipDefinition>
         <Location>Outer</Location>
-        <ObjectType>Atom.Item.Wearable.Outer.Armour</ObjectType>
+        <ObjectType>Armour</ObjectType>
       </SpawnEquipDefinition>
       <SpawnEquipDefinition>
         <Location>Inner</Location>
-        <ObjectType>Atom.Item.Wearable.Inner.Jumpsuit.Assistant_Grey</ObjectType>
+        <ObjectType>Assistant_Grey</ObjectType>
       </SpawnEquipDefinition>
       <SpawnEquipDefinition>
         <Location>Head</Location>
-        <ObjectType>Atom.Item.Wearable.Head.Helmet</ObjectType>
+        <ObjectType>Helmet</ObjectType>
       </SpawnEquipDefinition>
       <SpawnEquipDefinition>
         <Location>Feet</Location>
-        <ObjectType>Atom.Item.Wearable.Feet.Shoes</ObjectType>
+        <ObjectType>Shoes</ObjectType>
       </SpawnEquipDefinition>
     </SpawnEquipment>
     <Name>Security Officer</Name>
@@ -93,11 +93,11 @@
     <SpawnEquipment>
       <SpawnEquipDefinition>
         <Location>Inner</Location>
-        <ObjectType>Atom.Item.Wearable.Inner.Jumpsuit.Assistant_Grey</ObjectType>
+        <ObjectType>Assistant_Grey</ObjectType>
       </SpawnEquipDefinition>
       <SpawnEquipDefinition>
         <Location>Feet</Location>
-        <ObjectType>Atom.Item.Wearable.Feet.Shoes</ObjectType>
+        <ObjectType>Shoes</ObjectType>
       </SpawnEquipDefinition>
     </SpawnEquipment>
     <Name>Doctor</Name>
@@ -111,11 +111,11 @@
     <SpawnEquipment>
       <SpawnEquipDefinition>
         <Location>Inner</Location>
-        <ObjectType>Atom.Item.Wearable.Inner.Jumpsuit.Assistant_Grey</ObjectType>
+        <ObjectType>Assistant_Grey</ObjectType>
       </SpawnEquipDefinition>
       <SpawnEquipDefinition>
         <Location>Feet</Location>
-        <ObjectType>Atom.Item.Wearable.Feet.Shoes</ObjectType>
+        <ObjectType>Shoes</ObjectType>
       </SpawnEquipDefinition>
     </SpawnEquipment>
     <Name>Engineer</Name>
@@ -129,11 +129,11 @@
     <SpawnEquipment>
       <SpawnEquipDefinition>
         <Location>Inner</Location>
-        <ObjectType>Atom.Item.Wearable.Inner.Jumpsuit.Assistant_Grey</ObjectType>
+        <ObjectType>Assistant_Grey</ObjectType>
       </SpawnEquipDefinition>
       <SpawnEquipDefinition>
         <Location>Feet</Location>
-        <ObjectType>Atom.Item.Wearable.Feet.Shoes</ObjectType>
+        <ObjectType>Shoes</ObjectType>
       </SpawnEquipDefinition>
     </SpawnEquipment>
     <Name>Atmos. Technician</Name>
@@ -147,11 +147,11 @@
     <SpawnEquipment>
       <SpawnEquipDefinition>
         <Location>Inner</Location>
-        <ObjectType>Atom.Item.Wearable.Inner.Jumpsuit.Assistant_Grey</ObjectType>
+        <ObjectType>Assistant_Grey</ObjectType>
       </SpawnEquipDefinition>
       <SpawnEquipDefinition>
         <Location>Feet</Location>
-        <ObjectType>Atom.Item.Wearable.Feet.Shoes</ObjectType>
+        <ObjectType>Shoes</ObjectType>
       </SpawnEquipDefinition>
     </SpawnEquipment>
     <Name>Geneticist</Name>
@@ -165,11 +165,11 @@
     <SpawnEquipment>
       <SpawnEquipDefinition>
         <Location>Inner</Location>
-        <ObjectType>Atom.Item.Wearable.Inner.Jumpsuit.Assistant_Grey</ObjectType>
+        <ObjectType>Assistant_Grey</ObjectType>
       </SpawnEquipDefinition>
       <SpawnEquipDefinition>
         <Location>Feet</Location>
-        <ObjectType>Atom.Item.Wearable.Feet.Shoes</ObjectType>
+        <ObjectType>Shoes</ObjectType>
       </SpawnEquipDefinition>
     </SpawnEquipment>
     <Name>Scientist</Name>
@@ -183,11 +183,11 @@
     <SpawnEquipment>
       <SpawnEquipDefinition>
         <Location>Inner</Location>
-        <ObjectType>Atom.Item.Wearable.Inner.Jumpsuit.Assistant_Grey</ObjectType>
+        <ObjectType>Assistant_Grey</ObjectType>
       </SpawnEquipDefinition>
       <SpawnEquipDefinition>
         <Location>Feet</Location>
-        <ObjectType>Atom.Item.Wearable.Feet.Shoes</ObjectType>
+        <ObjectType>Shoes</ObjectType>
       </SpawnEquipDefinition>
     </SpawnEquipment>
     <Name>Chemist</Name>
@@ -201,11 +201,11 @@
     <SpawnEquipment>
       <SpawnEquipDefinition>
         <Location>Inner</Location>
-        <ObjectType>Atom.Item.Wearable.Inner.Jumpsuit.Assistant_Grey</ObjectType>
+        <ObjectType>Assistant_Grey</ObjectType>
       </SpawnEquipDefinition>
       <SpawnEquipDefinition>
         <Location>Feet</Location>
-        <ObjectType>Atom.Item.Wearable.Feet.Shoes</ObjectType>
+        <ObjectType>Shoes</ObjectType>
       </SpawnEquipDefinition>
     </SpawnEquipment>
     <Name>Roboticist</Name>
@@ -219,11 +219,11 @@
     <SpawnEquipment>
       <SpawnEquipDefinition>
         <Location>Inner</Location>
-        <ObjectType>Atom.Item.Wearable.Inner.Jumpsuit.Assistant_Grey</ObjectType>
+        <ObjectType>Assistant_Grey</ObjectType>
       </SpawnEquipDefinition>
       <SpawnEquipDefinition>
         <Location>Feet</Location>
-        <ObjectType>Atom.Item.Wearable.Feet.Shoes</ObjectType>
+        <ObjectType>Shoes</ObjectType>
       </SpawnEquipDefinition>
     </SpawnEquipment>
     <Name>Captain</Name>
@@ -237,11 +237,11 @@
     <SpawnEquipment>
       <SpawnEquipDefinition>
         <Location>Inner</Location>
-        <ObjectType>Atom.Item.Wearable.Inner.Jumpsuit.Assistant_Grey</ObjectType>
+        <ObjectType>Assistant_Grey</ObjectType>
       </SpawnEquipDefinition>
       <SpawnEquipDefinition>
         <Location>Feet</Location>
-        <ObjectType>Atom.Item.Wearable.Feet.Shoes</ObjectType>
+        <ObjectType></ObjectType>
       </SpawnEquipDefinition>
     </SpawnEquipment>
     <Name>Placeholder</Name>

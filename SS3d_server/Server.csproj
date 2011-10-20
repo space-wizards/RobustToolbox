@@ -79,31 +79,31 @@
     <Compile Include="Atom\Atom.cs" />
     <Compile Include="Atom\AtomManager.cs" />
     <None Include="Atom\Item\Container\Toolbox.cs" />
-    <Compile Include="Atom\Item\Item.cs" />
+    <None Include="Atom\Item\Item.cs" />
     <None Include="Atom\Item\Misc\Flashlight.cs" />
-    <Compile Include="Atom\Item\Tool\Crowbar.cs" />
-    <Compile Include="Atom\Item\Tool\Tool.cs" />
-    <Compile Include="Atom\Item\Tool\Welder.cs" />
-    <Compile Include="Atom\Item\Tool\Wrench.cs" />
-    <Compile Include="Atom\Item\Wearable\Belt\Belt.cs" />
-    <Compile Include="Atom\Item\Wearable\Ears\Ears.cs" />
-    <Compile Include="Atom\Item\Wearable\Eyes\Eyes.cs" />
-    <Compile Include="Atom\Item\Wearable\Feet\Feet.cs" />
-    <Compile Include="Atom\Item\Wearable\Feet\Shoes.cs" />
-    <Compile Include="Atom\Item\Wearable\Hands\Hands.cs" />
-    <Compile Include="Atom\Item\Wearable\Head\Helmet.cs" />
-    <Compile Include="Atom\Item\Wearable\Head\Head.cs" />
-    <Compile Include="Atom\Item\Wearable\Inner\Inner.cs" />
-    <Compile Include="Atom\Item\Wearable\Inner\Jumpsuit\Assistant_Grey.cs" />
-    <Compile Include="Atom\Item\Wearable\Inner\Jumpsuit\Jumpsuit.cs" />
-    <Compile Include="Atom\Item\Wearable\Mask\Mask.cs" />
-    <Compile Include="Atom\Item\Wearable\Outer\Outer.cs" />
-    <Compile Include="Atom\Item\Wearable\Outer\Armour.cs" />
-    <Compile Include="Atom\Item\Wearable\Wearable.cs" />
-    <Compile Include="Atom\Light.cs" />
-    <Compile Include="Atom\Mob\HelperClasses\Appendage.cs" />
-    <Compile Include="Atom\Mob\Human.cs" />
-    <Compile Include="Atom\Mob\Mob.cs" />
+    <None Include="Atom\Item\Tool\Crowbar.cs" />
+    <None Include="Atom\Item\Tool\Tool.cs" />
+    <None Include="Atom\Item\Tool\Welder.cs" />
+    <None Include="Atom\Item\Tool\Wrench.cs" />
+    <None Include="Atom\Item\Wearable\Belt\Belt.cs" />
+    <None Include="Atom\Item\Wearable\Ears\Ears.cs" />
+    <None Include="Atom\Item\Wearable\Eyes\Eyes.cs" />
+    <None Include="Atom\Item\Wearable\Feet\Feet.cs" />
+    <None Include="Atom\Item\Wearable\Feet\Shoes.cs" />
+    <None Include="Atom\Item\Wearable\Hands\Hands.cs" />
+    <None Include="Atom\Item\Wearable\Head\Helmet.cs" />
+    <None Include="Atom\Item\Wearable\Head\Head.cs" />
+    <None Include="Atom\Item\Wearable\Inner\Inner.cs" />
+    <None Include="Atom\Item\Wearable\Inner\Jumpsuit\Assistant_Grey.cs" />
+    <None Include="Atom\Item\Wearable\Inner\Jumpsuit\Jumpsuit.cs" />
+    <None Include="Atom\Item\Wearable\Mask\Mask.cs" />
+    <None Include="Atom\Item\Wearable\Outer\Outer.cs" />
+    <None Include="Atom\Item\Wearable\Outer\Armour.cs" />
+    <None Include="Atom\Item\Wearable\Wearable.cs" />
+    <None Include="Atom\Light.cs" />
+    <None Include="Atom\Mob\HelperClasses\Appendage.cs" />
+    <None Include="Atom\Mob\Human.cs" />
+    <None Include="Atom\Mob\Mob.cs" />
     <Compile Include="Atom\Object\Atmos\Vent.cs" />
     <Compile Include="Atom\Object\Door\Door.cs" />
     <None Include="Atom\Object\Lights\WallLight.cs" />
@@ -170,10 +170,16 @@
     <Content Include="config.xml">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
+    <Content Include="EntityTemplates\Clothing.xml">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
     <Content Include="EntityTemplates\Containers.xml">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
     <Content Include="EntityTemplates\Lights.xml">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="EntityTemplates\Mobs.xml">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
     <Content Include="EntityTemplates\Tools.xml">

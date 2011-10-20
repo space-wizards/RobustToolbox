@@ -102,11 +102,11 @@ namespace CGO
                     SetSpriteByKey(basename);
                     DrawDepth = 2;
                     break;
-                case ComponentMessageType.ItemWorn:
+                case ComponentMessageType.ItemEquipped:
                     worn = true;
                     DrawDepth = 4;
                     break;
-                case ComponentMessageType.ItemUnWorn:
+                case ComponentMessageType.ItemUnEquipped:
                     worn = false;
                     break;
             }

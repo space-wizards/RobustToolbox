@@ -6,6 +6,7 @@ using SS3D_shared.GO;
 using ServerServices.Map;
 using ServerServices;
 using ServerInterfaces;
+using SS3D_shared.HelperClasses;
 
 namespace SGO
 {
@@ -50,8 +51,20 @@ namespace SGO
         public override void OnAdd(Entity owner)
         {
             base.OnAdd(owner);
+            Owner.OnMove += new Entity.EntityMoveEvent(OnMove);
+        }
 
-            SetImpermeable();
+        public override void OnRemove()
+        {
+            base.OnRemove();
+
+            Owner.OnMove -= new Entity.EntityMoveEvent(OnMove);
+        }
+
+        private void OnMove(Vector2 newPosition, Vector2 oldPosition)
+        {
+            SetPermeable(oldPosition);
+            SetImpermeable(newPosition);
         }
 
         protected override void RecieveItemInteraction(Entity actor, Entity item, Lookup<ItemCapabilityType, ItemCapabilityVerb> verbs)
@@ -125,6 +138,24 @@ namespace SGO
             var occupiedTile = map.GetTileAt(occupiedTilePos.X, occupiedTilePos.Y);
             occupiedTile.gasPermeable = false;
             occupiedTile.gasCell.blocking = true;
+        }
+
+        private void SetImpermeable(Vector2 position)
+        {
+            Map map = (Map)ServiceManager.Singleton.GetService(ServerServiceType.Map);
+            var occupiedTilePos = map.GetTileArrayPositionFromWorldPosition(position);
+            var occupiedTile = map.GetTileAt(occupiedTilePos.X, occupiedTilePos.Y);
+            occupiedTile.gasPermeable = false;
+            occupiedTile.gasCell.blocking = true;
+        }
+
+        private void SetPermeable(Vector2 position)
+        {
+            Map map = (Map)ServiceManager.Singleton.GetService(ServerServiceType.Map);
+            var occupiedTilePos = map.GetTileArrayPositionFromWorldPosition(position);
+            var occupiedTile = map.GetTileAt(occupiedTilePos.X, occupiedTilePos.Y);
+            occupiedTile.gasPermeable = true;
+            occupiedTile.gasCell.blocking = false;
         }
 
         public override void SetParameter(ComponentParameter parameter)

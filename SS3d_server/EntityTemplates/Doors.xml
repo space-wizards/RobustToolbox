@@ -1,0 +1,18 @@
+﻿<?xml version="1.0" encoding="utf-8" ?>
+<EntityTemplates>
+  <EntityTemplate name="Door">
+    <Components>
+      <Component name="ClickableComponent"></Component>
+      <Component name="SpriteComponent"></Component>
+      <Component name="BasicInteractableComponent"></Component>
+      <Component name="BasicMoverComponent"></Component>
+      <Component name="CollidableComponent"></Component>
+      <Component name="BasicDoorComponent">
+        <Parameters>
+          <Parameter name="OpenSprite" type="string" value="door_ewo" />
+          <Parameter name="ClosedSprite" type="string" value="door_ew" />
+        </Parameters>
+      </Component>
+    </Components>
+  </EntityTemplate>
+</EntityTemplates>

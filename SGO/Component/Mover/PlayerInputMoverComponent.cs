@@ -26,8 +26,9 @@ namespace SGO
 
         public void Translate(double x, double y)
         {
+            Vector2 oldPosition = Owner.position;
             Owner.position = new Vector2(x, y);
-            Owner.Moved();
+            Owner.Moved(oldPosition);
             SendPositionUpdate();
         }
 

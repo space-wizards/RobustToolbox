@@ -30,8 +30,10 @@ namespace SGO
         
         private EntityNetworkManager m_entityNetworkManager;
 
+        public EntityTemplate template;
+
         public event EntityMoveEvent OnMove;
-        public delegate void EntityMoveEvent(Vector2 toPosition);
+        public delegate void EntityMoveEvent(Vector2 toPosition, Vector2 fromPosition);
 
         private int uid;
         public int Uid
@@ -180,8 +182,9 @@ namespace SGO
 
         public void Translate(Vector2 toPosition)
         {
+            Vector2 oldPosition = position;
             position = toPosition;
-            Moved();
+            Moved(oldPosition);
         }
 
         public void Translate(Vector2 toPosition, float toRotation)
@@ -212,10 +215,10 @@ namespace SGO
 
         public virtual void HandleClick(int clickerID) { }
 
-        public void Moved()
+        public void Moved(Vector2 fromPosition)
         {
             if(OnMove != null)
-                OnMove(position);
+                OnMove(position, fromPosition);
         }
 
         #region Serialization

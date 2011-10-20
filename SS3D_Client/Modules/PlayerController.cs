@@ -159,7 +159,7 @@ namespace SS3D.Modules
             if (atomManager == null)
                 return;
             int uid = message.ReadInt32();
-            Attach(atomManager.GetAtom(uid));
+            Attach(EntityManager.Singleton.GetEntity(uid));
         }
         #endregion
 

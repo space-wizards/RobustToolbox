@@ -5,6 +5,7 @@ using System.Text;
 using Lidgren.Network;
 using SS3D_shared.HelperClasses;
 using System.Runtime.Serialization;
+using SGO;
 
 namespace SS3D_Server.Atom.Object.Worktop
 {
@@ -21,7 +22,7 @@ namespace SS3D_Server.Atom.Object.Worktop
             //atomManager.SetDrawDepthAtom(this, -1);
         }
 
-        protected override void ApplyAction(Atom a, Mob.Mob m)
+        protected override void ApplyAction(Atom a, Entity m)
         {
             /*Vector2 newPos = this.position;
 

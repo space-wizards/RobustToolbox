@@ -34,13 +34,17 @@ namespace SS3D_Server.Modules
         public void SpawnPlayerMob(PlayerSession s)
         {
             //Spawn the player's atom. There's probably a much better place to do this.
-            Entity a = SS3DServer.Singleton.atomManager.SpawnAtom("Atom.Mob.Human");
+            Entity a = EntityManager.Singleton.SpawnEntity("HumanMob");
             Entity human = a;
+            a.Translate(new SS3D_shared.HelperClasses.Vector2(160, 160));
             if (s.assignedJob != null)
             {
                 foreach (SpawnEquipDefinition def in s.assignedJob.SpawnEquipment)
                 {
-                    Entity newItem = SS3DServer.Singleton.atomManager.SpawnAtom(def.ObjectType);
+                    //Entity newItem = SS3DServer.Singleton.atomManager.SpawnAtom(def.ObjectType);
+                    Entity newItem = EntityManager.Singleton.SpawnEntity(def.ObjectType);
+                    newItem.Translate(human.position); //This is not neccessary once the equipment component is built.
+                    human.SendMessage(this, SS3D_shared.GO.ComponentMessageType.EquipItem, null, newItem);
                     //human.EquipItem(newItem.Uid, def.Location); //TODO EQUIP SPAWN ITEMS
                 }
             }

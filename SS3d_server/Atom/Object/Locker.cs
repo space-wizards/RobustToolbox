@@ -4,6 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Runtime.Serialization;
 using SS3D_shared.GO;
+using SGO;
 
 namespace SS3D_Server.Atom.Object
 {
@@ -28,7 +29,7 @@ namespace SS3D_Server.Atom.Object
         }
 
         
-        protected override void ApplyAction(Atom a, Mob.Mob m)
+        protected override void ApplyAction(Atom a, Entity m)
         {
             /*base.ApplyAction(a, m);
 

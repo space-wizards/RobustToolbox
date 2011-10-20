@@ -11,6 +11,11 @@ namespace SGO
         private Entity currentWearer;
         public GUIBodyPart wearloc;
 
+        public EquippableComponent()
+        {
+            family = ComponentFamily.Equippable;
+        }
+
         public override void RecieveMessage(object sender, SS3D_shared.GO.ComponentMessageType type, List<ComponentReplyMessage> replies, params object[] list)
         {
             switch (type)
@@ -21,12 +26,15 @@ namespace SGO
                 case ComponentMessageType.ItemUnEquipped:
                     HandleUnEquipped();
                     break;
+                case ComponentMessageType.GetWearLoc:
+                    replies.Add(new ComponentReplyMessage(ComponentMessageType.ReturnWearLoc, wearloc));
+                    break;
             }
         }
 
         private void HandleUnEquipped()
         {
-            Owner.RemoveComponent(ComponentFamily.Mover);
+            Owner.AddComponent(SS3D_shared.GO.ComponentFamily.Mover, ComponentFactory.Singleton.GetComponent("BasicMoverComponent"));
             Owner.SendComponentNetworkMessage(this, Lidgren.Network.NetDeliveryMethod.ReliableUnordered, null, EquippableComponentNetMessage.UnEquipped);
             currentWearer = null;
         }
@@ -37,6 +45,18 @@ namespace SGO
             Owner.AddComponent(SS3D_shared.GO.ComponentFamily.Mover, ComponentFactory.Singleton.GetComponent("SlaveMoverComponent"));
             Owner.SendMessage(this, ComponentMessageType.SlaveAttach, null, entity.Uid);
             Owner.SendComponentNetworkMessage(this, Lidgren.Network.NetDeliveryMethod.ReliableUnordered, null, EquippableComponentNetMessage.Equipped, entity.Uid);
+        }
+
+        public override void SetParameter(ComponentParameter parameter)
+        {
+            base.SetParameter(parameter);
+
+            switch(parameter.MemberName)
+            {
+                case "wearloc":
+                    wearloc = (GUIBodyPart)Enum.Parse(typeof(GUIBodyPart), (string)parameter.Parameter);
+                    break;
+            }
         }
     }
 }

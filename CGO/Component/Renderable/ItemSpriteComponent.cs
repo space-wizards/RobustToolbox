@@ -103,5 +103,10 @@ namespace CGO
 
             SetSpriteByKey(basename);
         }
+
+        protected override bool WasClicked(System.Drawing.PointF worldPos)
+        {
+            return base.WasClicked(worldPos) && !IsInHand;
+        }
     }
 }

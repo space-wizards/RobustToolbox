@@ -22,7 +22,7 @@ namespace SS3D.UserInterface
         private Dictionary<GUIBodyPart, ItemSlot> inventorySlots;
         private HumanHandsGui handsGUI;
         private WindowComponent window;
-        private Entity heldAtom;
+        private Entity heldEntity;
         private GUIBodyPart lastSlot = GUIBodyPart.None;
         private Vector2D mousePos;
         private Sprite outline;
@@ -99,38 +99,36 @@ namespace SS3D.UserInterface
         [Obsolete("TODO: Change to new system")]
         public override bool MouseDown(GorgonLibrary.InputDevices.MouseInputEventArgs e)
         {
-            //Atom.Mob.Mob m = (Atom.Mob.Mob)playerController.controlledAtom;
+            Entity m = playerController.controlledAtom;
             //// Check which slot we clicked (if any) and get the atom from in there
-            //if (heldAtom == null)
-            //{
-            //    //USE COMPONENT
-            //    int i = handsGUI.a;
-            //    heldAtom = m.GetItemOnAppendage(i);
-            //    lastSlot = GUIBodyPart.None;
-            //}
-            //foreach (ItemSlot slot in inventorySlots.Values)
-            //{
-            //    if (slot.MouseDown(e))
-            //    {
+            if (heldEntity == null)
+            {
+                heldEntity = handsGUI.GetActiveHandItem();
+                lastSlot = GUIBodyPart.None;
+            }
+            foreach (ItemSlot slot in inventorySlots.Values)
+            {
+                if (slot.MouseDown(e))
+                {
             //        if (!AttemptEquipInSlot(m, slot))
             //        {
             //            heldAtom = m.GetEquippedAtom(slot.GetBodyPart());
             //            lastSlot = slot.GetBodyPart();
             //        }
             //        return true;
-            //    }
-            //}
+                }
+            }
 
-            //if (handsGUI != null) // Otherwise see if we clicked on one of our hands and get that atom if so
-            //{
-            //    if (handsGUI.MouseDown(e))
-            //    {
-            //        int i = handsGUI.GetSelectedAppendage();
+            if (handsGUI != null) // Otherwise see if we clicked on one of our hands and get that atom if so
+            {
+                if (handsGUI.MouseDown(e))
+                {
+                    //int i = handsGUI.GetSelectedAppendage();
             //        heldAtom = m.GetItemOnAppendage(i);
             //        lastSlot = GUIBodyPart.None;
             //        return true;
-            //    }
-            //}
+                }
+            }
             
 
 
@@ -140,7 +138,7 @@ namespace SS3D.UserInterface
         [Obsolete("TODO: Change to new system")]
         public override bool MouseUp(GorgonLibrary.InputDevices.MouseInputEventArgs e)
         {
-            if (heldAtom == null)
+            if (heldEntity == null)
                 return false;
             Entity m = (Entity)playerController.controlledAtom;
 
@@ -167,13 +165,13 @@ namespace SS3D.UserInterface
                 }
             }
 
-            heldAtom = null;
+            heldEntity = null;
             return false;
         }
 
         public bool AttemptEquipInSlot(Entity m, ItemSlot slot)
         {
-            if (slot.CanAccept(heldAtom))
+            if (slot.CanAccept(heldEntity))
             {
                 if (lastSlot != GUIBodyPart.None) // It came from the inventory
                 {
@@ -181,7 +179,7 @@ namespace SS3D.UserInterface
                     lastSlot = GUIBodyPart.None;
                 }
                 //m.SendEquipItem((Atom.Item.Item)heldAtom, slot.GetBodyPart());
-                heldAtom = null;
+                heldEntity = null;
                 return true;
             }
             return false;
@@ -208,12 +206,12 @@ namespace SS3D.UserInterface
 
             foreach (ItemSlot slot in inventorySlots.Values)
             {
-                if (slot.CanAccept(heldAtom))
+                if (slot.CanAccept(heldEntity))
                     slot.Highlight();
                 slot.Render();
             }
 
-            if (heldAtom != null)
+            if (heldEntity != null)
             {
                 //heldAtom.sprite.Position = mousePos;
                 //heldAtom.sprite.Draw();

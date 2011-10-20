@@ -35,6 +35,8 @@ namespace SGO.Component.Item.ItemCapability
                 case "damageAmount":
                     if (parameter.ParameterType == typeof(int))
                         damageAmount = (int)parameter.Parameter;
+                    if (parameter.ParameterType == typeof(string))
+                        damageAmount = int.Parse((string)parameter.Parameter);
                     break;
                 case "damageType":
                     if (parameter.ParameterType == typeof(string))

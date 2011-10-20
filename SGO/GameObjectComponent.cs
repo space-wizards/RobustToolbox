@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using SS3D_shared.GO;
+using System.Xml.Linq;
 
 namespace SGO
 {
@@ -95,7 +96,12 @@ namespace SGO
         /// <param name="parameter">ComponentParameter object describing the parameter and the value</param>
         public virtual void SetParameter(ComponentParameter parameter)
         {
-
+            switch(parameter.MemberName)
+            {
+                case "ExtendedParameters":
+                    HandleExtendedParameters((XElement)parameter.Parameter);
+                    break;
+            }
         }
 
         /// <summary>
@@ -112,6 +118,11 @@ namespace SGO
         /// </summary>
         /// <param name="netConnection"></param>
         public virtual void HandleInstantiationMessage(Lidgren.Network.NetConnection netConnection)
+        {
+
+        }
+
+        public virtual void HandleExtendedParameters(XElement extendedParameters)
         {
 
         }

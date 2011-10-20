@@ -17,7 +17,7 @@
       </Component>
     </Components>
   </EntityTemplate>
-  <EntityTemplate name="FlashLight" atomname="Atom.Item.Misc.Flashlight">
+  <EntityTemplate name="Flashlight" atomname="Atom.Item.Misc.Flashlight">
     <Components>
       <Component name="NetworkMoverComponent"></Component>
       <Component name="ItemSpriteComponent">

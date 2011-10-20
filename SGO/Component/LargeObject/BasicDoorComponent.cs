@@ -139,6 +139,9 @@ namespace SGO
                 case "ClosedSprite":
                     closedSprite = (string)parameter.Parameter;
                     break;
+                default:
+                    base.SetParameter(parameter);
+                    break;
             }
         }
     }

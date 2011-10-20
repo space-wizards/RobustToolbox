@@ -1,0 +1,44 @@
+﻿<?xml version="1.0" encoding="utf-8" ?>
+<EntityTemplates>
+	<EntityTemplate name="Crowbar">
+		<Components>
+			<Component name="ClickableComponent"></Component>
+			<Component name="SpriteComponent"></Component>
+			<Component name="BasicInteractableComponent"></Component>
+			<Component name="BasicMoverComponent"></Component>
+			<Component name="BasicItemComponent">
+				<ExtendedParameters>
+					<ItemCapability name="MeleeWeaponCapability">
+						<ItemCapabilityParameters>
+							<ItemCapabilityParameter name="damageAmount" type="int" value="30" />
+							<ItemCapabilityParameter name="damageType" type="string" value="Bludgeon" />
+						</ItemCapabilityParameters>
+					</ItemCapability>
+					<ItemCapability name="ToolCapability">
+						<ItemCapabilityVerbs>
+							<ItemCapabilityVerb name="Pry" priority="0" />
+						</ItemCapabilityVerbs>
+					</ItemCapability>
+				</ExtendedParameters>
+			</Component>
+		</Components>
+	</EntityTemplate>
+	<EntityTemplate name="Welder">
+		<Components>
+			<Component name="ClickableComponent"></Component>
+			<Component name="SpriteComponent"></Component>
+			<Component name="BasicInteractableComponent"></Component>
+			<Component name="BasicMoverComponent"></Component>
+			<Component name="BasicItemComponent"></Component>
+		</Components>
+	</EntityTemplate>
+	<EntityTemplate name="Wrench">
+		<Components>
+			<Component name="ClickableComponent"></Component>
+			<Component name="SpriteComponent"></Component>
+			<Component name="BasicInteractableComponent"></Component>
+			<Component name="BasicMoverComponent"></Component>
+			<Component name="BasicItemComponent"></Component>
+		</Components>
+	</EntityTemplate>
+</EntityTemplates>

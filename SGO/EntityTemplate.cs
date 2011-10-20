@@ -112,6 +112,10 @@ namespace SGO
                                                  );
                 }
 
+                if (t_component.Element("ExtendedParameters") != null)
+                {
+                    parameters[componentname].Add(new ComponentParameter("ExtendedParameters", typeof(XElement), t_component.Element("ExtendedParameters")));
+                }
             }
         }
 

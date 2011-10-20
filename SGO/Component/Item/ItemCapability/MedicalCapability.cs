@@ -5,7 +5,7 @@ using System.Text;
 
 namespace SGO.Component.Item.ItemCapability
 {
-    public class MedicalCapability
+    public class MedicalCapability : ItemCapability
     {
     }
 }

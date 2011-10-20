@@ -62,8 +62,32 @@ namespace SGO
             float X = float.Parse(e.Attribute("X").Value);
             float Y = float.Parse(e.Attribute("Y").Value);
             string template = e.Attribute("template").Value;
+            string name = e.Attribute("name").Value;
             Entity ent = SpawnEntity(template);
+            ent.name = name;
             ent.Translate(new SS3D_shared.HelperClasses.Vector2(X, Y));
+        }
+
+        public void SaveEntities()
+        {
+            //List<XElement> entities = new List<XElement>();
+            var entities = from e in m_entities.Values
+                           where e.template.Name != "HumanMob"
+                            select ToXML(e);
+
+            XDocument saveFile = new XDocument(new XElement("SavedEntities", entities.ToArray()));
+            saveFile.Save("SavedEntities.xml");
+            
+        }
+
+        private XElement ToXML(Entity e)
+        {
+            XElement el = new XElement("SavedEntity", 
+                new XAttribute("X", e.position.X.ToString()),
+                new XAttribute("Y", e.position.Y.ToString()),
+                new XAttribute("template", e.template.Name),
+                new XAttribute("name", e.name));
+            return el;
         }
 
         public void SendEntities(NetConnection client)

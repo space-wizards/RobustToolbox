@@ -51,15 +51,16 @@ namespace SGO
             }
         }
 
-        private void HandleOnMove(Vector2 toPosition)
+        private void HandleOnMove(Vector2 toPosition, Vector2 fromPosition)
         {
             Translate(toPosition);
         }
 
         public void Translate(Vector2 toPosition)
         {
+            Vector2 oldPosition = Owner.position;
             Owner.position = toPosition;
-            Owner.Moved();
+            Owner.Moved(oldPosition);
         }
     }
 }

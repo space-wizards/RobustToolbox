@@ -15,5 +15,48 @@ namespace CGO
         {
             family = ComponentFamily.Equipment;
         }
+
+        public override void HandleNetworkMessage(IncomingEntityComponentMessage message)
+        {
+            switch((EquipmentComponentNetMessage)message.messageParameters[0])
+            {
+                case EquipmentComponentNetMessage.ItemEquipped:
+                    EquipItem((GUIBodyPart)message.messageParameters[1], (int)message.messageParameters[2]);
+                    break;
+                case EquipmentComponentNetMessage.ItemUnEquipped:
+                    UnEquipItem((GUIBodyPart)message.messageParameters[1], (int)message.messageParameters[2]);
+                    break;
+            }
+        }
+
+        public override void RecieveMessage(object sender, ComponentMessageType type, List<ComponentReplyMessage> reply, params object[] list)
+        {
+            base.RecieveMessage(sender, type, reply, list);
+
+            switch(type)
+            {
+                case ComponentMessageType.GetItemInEquipmentSlot:
+                    if (!IsEmpty((GUIBodyPart)list[0]))
+                        reply.Add(new ComponentReplyMessage(ComponentMessageType.ReturnItemInEquipmentSlot, equippedEntities[(GUIBodyPart)list[0]]));
+                    break;
+            }
+        }
+
+        private void EquipItem(GUIBodyPart part, int uid)
+        {
+            equippedEntities.Add(part, EntityManager.Singleton.GetEntity(uid));
+        }
+
+        private void UnEquipItem(GUIBodyPart part, int uid)
+        {
+            equippedEntities.Remove(part);
+        }
+
+        private bool IsEmpty(GUIBodyPart part)
+        {
+            if (equippedEntities.ContainsKey(part))
+                return false;
+            return true;
+        }
     }
 }

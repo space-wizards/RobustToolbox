@@ -147,6 +147,23 @@ namespace SS3D.UserInterface
             
 
             Entity m = (Entity)playerController.controlledAtom;
+
+            if (bodyPart != GUIBodyPart.None)
+            {
+                List<ComponentReplyMessage> replies = new List<ComponentReplyMessage>();
+                m.SendMessage(this, SS3D_shared.GO.ComponentMessageType.GetItemInEquipmentSlot, replies, bodyPart);
+                if (replies.Count > 0 && replies[0].messageType == SS3D_shared.GO.ComponentMessageType.ReturnItemInEquipmentSlot)
+                {
+                    if ((Entity)replies[0].paramsList[0] != null)
+                    {
+                        Sprite s = HelperClasses.Utilities.GetSpriteComponentSprite((Entity)replies[0].paramsList[0]);
+                        s.Position = position;
+                        s.Position += new Vector2D(slot.AABB.Width / 2, slot.AABB.Height / 2);
+                        s.Draw();
+                    }
+                }
+                
+            }
             // If we contain an atom then draw it in the appropriate place
             /*if (playerController.controlledAtom.IsChildOfType(typeof(Atom.Mob.Mob)))
             {

@@ -70,50 +70,24 @@ namespace SS3D_Server.Modules.Chat
 
             Vector2 position;
             Entity player;
+            player = EntityManager.Singleton.GetEntity(atomID);
+            if (player == null)
+                position = new Vector2(160, 160);
+            else
+                position = player.position;
 
             switch (command)
             {
-                case "spawnatom":
-                    player = EntityManager.Singleton.GetEntity(atomID);
-                    if (player == null)
-                        position = new Vector2(160, 160);
-                    else
-                        position = player.position;
-                    SS3DServer.Singleton.atomManager.SpawnAtom(args[1], position);
-                    break;
                 case "spawnentity":
-                    player = EntityManager.Singleton.GetEntity(atomID);
-                    if (player == null)
-                        position = new Vector2(160, 160);
-                    else
-                        position = player.position;
-                    Entity spawned = EntityManager.Singleton.SpawnEntity(args[1]);
-                    if(spawned != null)
-                        spawned.Translate(position);
+                    Entity spawned = EntityManager.Singleton.SpawnEntity(args[1], position);
                     break;
                 case "crowbar":
-                    player = SS3DServer.Singleton.atomManager.GetAtom(atomID);
-                    if (player == null)
-                        position = new Vector2(0, 0);
-                    else
-                        position = player.position;
-                    SS3DServer.Singleton.atomManager.SpawnAtom("Atom.Item.Tool.Crowbar", position);                   
+                    EntityManager.Singleton.SpawnEntity("Crowbar", position);                   
                     break;
                 case "toolbox":
-                    player = SS3DServer.Singleton.atomManager.GetAtom(atomID);
-                    if (player == null)
-                        position = new Vector2(0, 0);
-                    else
-                        position = player.position;
-                    SS3DServer.Singleton.atomManager.SpawnAtom("Atom.Item.Container.Toolbox", position);  
+                    EntityManager.Singleton.SpawnEntity("Toolbox", position);  
                     break;
                 case "addgas":
-                    player = SS3DServer.Singleton.atomManager.GetAtom(atomID);
-                    if (player == null)
-                        position = new Vector2(0,0);
-                    else
-                        position = player.position;
-
                     if (args.Count > 1 && Convert.ToInt32(args[1]) > 0)
                     {
                         int amount = Convert.ToInt32(args[1]);
@@ -121,11 +95,6 @@ namespace SS3D_Server.Modules.Chat
                     }
                     break;
                 case "gasreport":
-                    player = SS3DServer.Singleton.atomManager.GetAtom(atomID);
-                    if (player == null)
-                        position = new Vector2(0,0);
-                    else
-                        position = player.position;
 
                     var p = SS3DServer.Singleton.map.GetTileArrayPositionFromWorldPosition(position);
                     var c = SS3DServer.Singleton.map.GetTileAt(p.X, p.Y).gasCell;
@@ -136,7 +105,6 @@ namespace SS3D_Server.Modules.Chat
                     
                     break;
                 case "sprayblood":
-                    player = SS3DServer.Singleton.atomManager.GetAtom(atomID);
                     if (player == null)
                         return;
                     else

@@ -26,7 +26,7 @@ namespace SS3D_Server
         public Dictionary<NetConnection, Client> clientList = new Dictionary<NetConnection, Client>();
         public Map map;
         public ChatManager chatManager;
-        public AtomManager atomManager;
+        //public AtomManager atomManager;
         public EntityManager entityManager;
         public PlayerManager playerManager;
         public RunLevel runlevel {get;private set;}
@@ -125,9 +125,9 @@ namespace SS3D_Server
                 map.InitMap(serverMapName);
 
                 entityManager = new EntityManager(SS3DNetServer.Singleton);
-                atomManager = new AtomManager(entityManager);
+                //atomManager = new AtomManager(entityManager);
                 //playerManager = new PlayerManager();
-                atomManager.LoadAtoms();
+                //atomManager.LoadAtoms();
 
                 RoundManager.Singleton.CurrentGameMode.StartGame();
             }
@@ -188,7 +188,7 @@ namespace SS3D_Server
         public void DisposeForRestart()
         {
             map = null; //Implement proper disposal.
-            atomManager = null;
+            //atomManager = null;
             GC.Collect();
         }
 
@@ -299,7 +299,7 @@ namespace SS3D_Server
                 TimeSpan lastFrame = time - lastUpdate;
                 if (lastFrame.TotalMilliseconds > framePeriod)
                 {
-                    atomManager.Update(framePeriod);
+                    //atomManager.Update(framePeriod);
                     ComponentManager.Singleton.Update(framePeriod);
                     map.UpdateAtmos();
                     RoundManager.Singleton.CurrentGameMode.Update();
@@ -451,7 +451,7 @@ namespace SS3D_Server
                     chatManager.HandleNetMessage(msg);
                     break;
                 case NetMessage.AtomManagerMessage:
-                    atomManager.HandleNetworkMessage(msg);
+                    //atomManager.HandleNetworkMessage(msg);
                     break;
                 case NetMessage.PlayerSessionMessage:
                     playerManager.HandleNetworkMessage(msg);
@@ -659,7 +659,7 @@ namespace SS3D_Server
             LogManager.Log(connection.RemoteEndpoint.Address.ToString() + ": Sending map finished with message size: " + mapMessage.LengthBytes + " bytes");
 
             // Lets also send them all the items and mobs.
-            atomManager.NewPlayer(connection);
+            //atomManager.NewPlayer(connection);
             EntityManager.Singleton.SendEntities(connection);
             //playerManager.SpawnPlayerMob(playerManager.GetSessionByConnection(connection));
             //Send atmos state to player

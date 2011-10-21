@@ -109,12 +109,12 @@
     <None Include="Atom\Object\Lights\WallLight.cs" />
     <Compile Include="Atom\Object\Locker.cs" />
     <Compile Include="Atom\Object\Object.cs" />
-    <Compile Include="Atom\Object\Tables\Worktop.cs" />
-    <Compile Include="Atom\Object\WallMounted\Extinguisher.cs" />
-    <Compile Include="Atom\Object\WallMounted\FireAlarm.cs" />
-    <Compile Include="Atom\Object\WallMounted\MedCabinet.cs" />
-    <Compile Include="Atom\Object\WallMounted\WallMounted.cs" />
-    <Compile Include="Atom\Object\Wall\Glass.cs" />
+    <None Include="Atom\Object\Tables\Worktop.cs" />
+    <None Include="Atom\Object\WallMounted\Extinguisher.cs" />
+    <None Include="Atom\Object\WallMounted\FireAlarm.cs" />
+    <None Include="Atom\Object\WallMounted\MedCabinet.cs" />
+    <None Include="Atom\Object\WallMounted\WallMounted.cs" />
+    <None Include="Atom\Object\Wall\Glass.cs" />
     <Compile Include="Helper Classes\InterpolationPacket.cs" />
     <Compile Include="Modules\Banlist.cs" />
     <Compile Include="Modules\Chat\ChatManager.cs" />
@@ -179,6 +179,9 @@
     <Content Include="EntityTemplates\Doors.xml">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
+    <Content Include="EntityTemplates\GlassWalls.xml">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
     <Content Include="EntityTemplates\Lights.xml">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
@@ -186,6 +189,12 @@
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
     <Content Include="EntityTemplates\Tools.xml">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="EntityTemplates\Tables.xml">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="EntityTemplates\Wallmounted.xml">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
     <Content Include="JobDefinitions.xml">

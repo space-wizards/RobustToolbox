@@ -1,0 +1,13 @@
+﻿<?xml version="1.0" encoding="utf-8" ?>
+<EntityTemplates>
+  <EntityTemplate name="Glass">
+    <Components>
+      <Component name="ClickableComponent"></Component>
+      <Component name="SpriteComponent"></Component>
+      <Component name="BasicInteractableComponent"></Component>
+      <Component name="BasicMoverComponent"></Component>
+      <Component name="BasicLargeObjectComponent"></Component>
+      <Component name="CollidableComponent"></Component>
+    </Components>
+  </EntityTemplate>
+</EntityTemplates>

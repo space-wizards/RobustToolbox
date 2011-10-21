@@ -1,0 +1,30 @@
+﻿<?xml version="1.0" encoding="utf-8" ?>
+<EntityTemplates>
+  <EntityTemplate name="Extinguisher">
+    <Components>
+      <Component name="ClickableComponent"></Component>
+      <Component name="SpriteComponent"></Component>
+      <Component name="BasicInteractableComponent"></Component>
+      <Component name="BasicMoverComponent"></Component>
+      <Component name="BasicLargeObjectComponent"></Component>
+    </Components>
+  </EntityTemplate>
+  <EntityTemplate name="FireAlarm">
+    <Components>
+      <Component name="ClickableComponent"></Component>
+      <Component name="SpriteComponent"></Component>
+      <Component name="BasicInteractableComponent"></Component>
+      <Component name="BasicMoverComponent"></Component>
+      <Component name="BasicLargeObjectComponent"></Component>
+    </Components>
+  </EntityTemplate>
+  <EntityTemplate name="MedCabinet">
+    <Components>
+      <Component name="ClickableComponent"></Component>
+      <Component name="SpriteComponent"></Component>
+      <Component name="BasicInteractableComponent"></Component>
+      <Component name="BasicMoverComponent"></Component>
+      <Component name="BasicLargeObjectComponent"></Component>
+    </Components>
+  </EntityTemplate>
+</EntityTemplates>

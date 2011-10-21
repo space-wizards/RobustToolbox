@@ -122,7 +122,7 @@ namespace SS3D_Server.Modules
             }
             else
             {
-                var targetAtom = SS3DServer.Singleton.atomManager.GetAtom(uid);
+                //var targetAtom = SS3DServer.Singleton.atomManager.GetAtom(uid);
                 //targetAtom.HandleVerb(verb);
             }
         }

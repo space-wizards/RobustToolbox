@@ -4,6 +4,7 @@ using System.Linq;
 using System.Text;
 using Lidgren.Network;
 using System.Xml.Linq;
+using SS3D_shared.HelperClasses;
 
 namespace SGO
 {
@@ -143,6 +144,16 @@ namespace SGO
                 e.Initialize();
                 SendSpawnEntity(e);
             }
+            return e;
+        }
+
+        public Entity SpawnEntity(string EntityType, Vector2 position)
+        {
+            Entity e = SpawnEntity(EntityType);
+            if (e == null)
+                return null;
+
+            e.Translate(position);
             return e;
         }
 

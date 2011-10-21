@@ -81,11 +81,12 @@ namespace SS3D_Server.Modules
 
         public void HandleEditRequest(NetIncomingMessage msg)
         {
-            string objectType = msg.ReadString();
+            //TODO RE-ENABLE
+            /*string objectType = msg.ReadString();
             AlignmentOptions align = (AlignmentOptions)msg.ReadByte();
             Type fullType = SS3DServer.Singleton.atomManager.GetAtomType(objectType);
             if (fullType != null) StartBuilding(SS3DServer.Singleton.playerManager.GetSessionByConnection(msg.SenderConnection).attachedAtom, 120, objectType, align, editMode);
-            else LogManager.Log("Invalid Object Requested : " + "SS3D_Server." + objectType);
+            else LogManager.Log("Invalid Object Requested : " + "SS3D_Server." + objectType);*/ 
         }
 
         public void HandlePlacementRequest(NetIncomingMessage msg)
@@ -105,8 +106,8 @@ namespace SS3D_Server.Modules
                     BuildPermissions.Remove(permission);
                     SendPlacementCancel(SS3DServer.Singleton.playerManager.GetSessionByConnection(msg.SenderConnection).attachedAtom);
                 }
-
-                Type objectType = SS3DServer.Singleton.atomManager.GetAtomType(permission.type);
+                 //TODO RE-ENABLE
+                /*Type objectType = SS3DServer.Singleton.atomManager.GetAtomType(permission.type);
 
                 if (objectType.IsSubclassOf(typeof(Tile)))
                 {
@@ -115,10 +116,10 @@ namespace SS3D_Server.Modules
                     SS3D_Server.SS3DServer.Singleton.map.NetworkUpdateTile(arrayPos.X, arrayPos.Y);
                 }
                 else
-                {
-                    SS3D_Server.SS3DServer.Singleton.atomManager.SpawnAtom(permission.type, new Vector2(xRcv, yRcv), rotRcv);
+                { //TODO RE-ENABLE
+                    //SS3D_Server.SS3DServer.Singleton.atomManager.SpawnAtom(permission.type, new Vector2(xRcv, yRcv), rotRcv);
                 }
-
+                */
             }
             else //They are not allowed to request this. Send 'PlacementFailed'. TBA
             {

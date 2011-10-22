@@ -183,6 +183,18 @@ namespace SS3D.UserInterface
         #endregion
 
         /// <summary>
+        ///  Disposes all components of the given type.
+        /// </summary>
+        public void DisposeAllComponentsOfType(Type type)
+        {
+            var componentsOfType = (from GuiComponent component in Components
+                                    where component.GetType() == type
+                                    select component).ToArray();
+
+            foreach (GuiComponent current in componentsOfType) current.Dispose();
+        }
+
+        /// <summary>
         ///  Sets focus for a component.
         /// </summary>
         public void SetFocus(IGuiComponent newFocus)

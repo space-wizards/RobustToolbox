@@ -12,10 +12,11 @@ using GorgonLibrary;
 using GorgonLibrary.Graphics;
 using GorgonLibrary.InputDevices;
 using GorgonLibrary.GUI;
-using SS3D.Modules.UI;
-
+using SS3D.UserInterface;
 using Lidgren.Network;
 using SS3D_shared;
+using SS3D.Modules;
+using SS3D.Modules.Network;
 
 namespace SS3D.UserInterface
 {
@@ -24,9 +25,9 @@ namespace SS3D.UserInterface
 
         Textbox textboxPassword;
         Button okayButton;
-        Network.NetworkManager netMgr;
+        NetworkManager netMgr;
 
-        public AdminPasswordDialog(Size _size, Network.NetworkManager _netMgr)
+        public AdminPasswordDialog(Size _size, NetworkManager _netMgr)
             : base("Admin Login", _size)
         {
             netMgr = _netMgr;

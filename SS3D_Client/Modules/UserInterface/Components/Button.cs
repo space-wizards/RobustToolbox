@@ -7,7 +7,7 @@ using GorgonLibrary;
 using GorgonLibrary.Graphics;
 using GorgonLibrary.InputDevices;
 using GorgonLibrary.GUI;
-
+using SS3D.UserInterface;
 using Lidgren.Network;
 using SS3D_shared;
 using ClientResourceManager;
@@ -32,9 +32,9 @@ namespace SS3D.UserInterface
         public Button(string text)
             : base()
         {
-            ButtonLeft = UiManager.Singleton.Skin.Elements["Controls.Button.Left"];
-            ButtonMain = UiManager.Singleton.Skin.Elements["Controls.Button.Body"];
-            ButtonRight = UiManager.Singleton.Skin.Elements["Controls.Button.Right"];
+            ButtonLeft = UiManager.Singleton.Skin.Elements["Controls.Button2.Left"];
+            ButtonMain = UiManager.Singleton.Skin.Elements["Controls.Button2.Body"];
+            ButtonRight = UiManager.Singleton.Skin.Elements["Controls.Button2.Right"];
 
             label = new TextSprite("ButtonLabel" + text, text, ResMgr.Singleton.GetFont("CALIBRI"));
             label.Color = System.Drawing.Color.Black;
@@ -49,7 +49,7 @@ namespace SS3D.UserInterface
             clientAreaMain = new Rectangle(new Point(clientAreaLeft.Right, this.position.Y), new Size((int)label.Width, ButtonMain.Dimensions.Height));
             clientAreaRight = new Rectangle(new Point(clientAreaMain.Right, this.position.Y), new Size(ButtonRight.Dimensions.Width, ButtonRight.Dimensions.Height));
             clientArea = new Rectangle(this.position, new Size(clientAreaLeft.Width + clientAreaMain.Width + clientAreaRight.Width, clientAreaMain.Height));
-            label.Position = new Point(clientAreaLeft.Right, this.position.Y);
+            label.Position = new Point(clientAreaLeft.Right, this.position.Y + (int)(clientArea.Height / 2f) - (int)(label.Height / 2f));
         }
 
         public override void Render()
@@ -67,6 +67,7 @@ namespace SS3D.UserInterface
             ButtonMain = null;
             ButtonRight = null;
             Clicked = null;
+            base.Dispose();
             GC.SuppressFinalize(this);
         }
 

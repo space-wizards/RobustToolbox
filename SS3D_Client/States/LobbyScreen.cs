@@ -14,7 +14,7 @@ using GorgonLibrary.InputDevices;
 using SS3D.UserInterface;
 using SS3D_shared;
 using System.Linq;
-
+using SS3D.UserInterface;
 using ClientConfigManager;
 using ClientResourceManager;
 using ClientServices.Map;
@@ -163,7 +163,7 @@ namespace SS3D.States
                     if (statMsg == NetConnectionStatus.Disconnected)
                     {
                         string discMsg = msg.ReadString();
-                        //UiManager.Singleton.Components.Add(new DisconnectedScreenBlocker(mStateMgr, discMsg));
+                        UiManager.Singleton.Components.Add(new DisconnectedScreenBlocker(mStateMgr, discMsg));
                     }
                     break;
                 case NetIncomingMessageType.Data:

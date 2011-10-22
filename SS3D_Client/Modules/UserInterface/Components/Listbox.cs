@@ -7,10 +7,10 @@ using GorgonLibrary;
 using GorgonLibrary.Graphics;
 using GorgonLibrary.InputDevices;
 using GorgonLibrary.GUI;
-using ClientResourceManager;
-
+using SS3D.UserInterface;
 using Lidgren.Network;
 using SS3D_shared;
+using ClientResourceManager;
 
 namespace SS3D.UserInterface
 {
@@ -40,9 +40,9 @@ namespace SS3D.UserInterface
             : base()
         {
             Width = width;
-            ListboxLeft = UiManager.Singleton.Skin.Elements["Controls.Button.Left"];
-            ListboxMain = UiManager.Singleton.Skin.Elements["Controls.Button.Body"];
-            ListboxRight = UiManager.Singleton.Skin.Elements["Controls.Button.Right"];
+            ListboxLeft = UiManager.Singleton.Skin.Elements["Controls.Button2.Left"];
+            ListboxMain = UiManager.Singleton.Skin.Elements["Controls.Button2.Body"];
+            ListboxRight = UiManager.Singleton.Skin.Elements["Controls.Button2.Right"];
 
             selectedLabel = new TextSprite("ListboxLabel", "", ResMgr.Singleton.GetFont("CALIBRI"));
             selectedLabel.Color = System.Drawing.Color.Black;
@@ -95,9 +95,9 @@ namespace SS3D.UserInterface
         {
             clientAreaLeft = new Rectangle(this.position, new Size(ListboxLeft.Dimensions.Width, ListboxLeft.Dimensions.Height));
             clientAreaMain = new Rectangle(new Point(clientAreaLeft.Right, this.position.Y), new Size(Width, ListboxMain.Dimensions.Height));
-            selectedLabel.Position = new Point(clientAreaLeft.Right, this.position.Y);
             clientAreaRight = new Rectangle(new Point(clientAreaMain.Right, this.position.Y), new Size(ListboxRight.Dimensions.Width, ListboxRight.Dimensions.Height));
             clientArea = new Rectangle(this.position, new Size(clientAreaLeft.Width + clientAreaMain.Width + clientAreaRight.Width, clientAreaMain.Height));
+            selectedLabel.Position = new Point(clientAreaLeft.Right, this.position.Y + (int)(clientArea.Height / 2f) - (int)(selectedLabel.Height / 2f));
             dropDown.Position = new Point(clientArea.X + (int)((clientArea.Width - dropDown.ClientArea.Width) / 2f), clientArea.Bottom);
             dropDown.Update();
         }
@@ -121,6 +121,7 @@ namespace SS3D.UserInterface
             ListboxMain = null;
             ListboxRight = null;
             ItemSelected = null;
+            base.Dispose();
             GC.SuppressFinalize(this);
         }
 

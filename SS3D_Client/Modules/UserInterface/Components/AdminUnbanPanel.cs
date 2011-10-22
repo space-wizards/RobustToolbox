@@ -18,11 +18,11 @@ using SS3D_shared;
 
 namespace SS3D.UserInterface
 {
-    class AdminUnbanPanel : GuiComponent
+    class AdminUnbanPanel : Window
     {
         NetworkManager netMgr;
 
-        public AdminUnbanPanel(Size _size, Network.NetworkManager _netMgr, Banlist _banlist)
+        public AdminUnbanPanel(Size _size, NetworkManager _netMgr, Banlist _banlist)
             : base("Admin UnBan Panel", _size)
         {
             netMgr = _netMgr;

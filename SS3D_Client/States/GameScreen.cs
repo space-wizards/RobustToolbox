@@ -26,6 +26,7 @@ using ClientServices.Lighting;
 using ClientServices.Map;
 using ClientInterfaces;
 using ClientWindow;
+using SS3D.UserInterface;
 
 namespace SS3D.States
 {
@@ -249,7 +250,7 @@ namespace SS3D.States
                     if (statMsg == NetConnectionStatus.Disconnected)
                     {
                         string discMsg = msg.ReadString();
-                        //UiManager.Singleton.Components.Add(new DisconnectedScreenBlocker(mStateMgr, discMsg));
+                        UiManager.Singleton.Components.Add(new DisconnectedScreenBlocker(mStateMgr, discMsg));
                     }
                     break;
                 case NetIncomingMessageType.Data:
@@ -306,7 +307,7 @@ namespace SS3D.States
 
         public void HandleAdminMessage(NetMessage adminMsgType, NetIncomingMessage messageBody)
         {
-            /*switch (adminMsgType)
+            switch (adminMsgType)
             {
                 case NetMessage.RequestAdminLogin:
                     UiManager.Singleton.DisposeAllComponentsOfType(typeof(AdminPasswordDialog)); //Remove old ones.
@@ -334,7 +335,7 @@ namespace SS3D.States
                     UiManager.Singleton.DisposeAllComponentsOfType(typeof(AdminUnbanPanel));
                     UiManager.Singleton.Components.Add(new AdminUnbanPanel(new System.Drawing.Size(620, 200), prg.mNetworkMgr, banList));
                     break;
-            }*/
+            }
         }
 
         public void RecieveMap(NetIncomingMessage msg)
@@ -677,24 +678,9 @@ namespace SS3D.States
 
             if (e.Key == KeyboardKeys.F12)
             {
-                Scrollbar bar = new Scrollbar();
-                bar.Position = new System.Drawing.Point(50,50);
-                bar.Horizontal = true;
-                UiManager.Singleton.Components.Add(bar);
-                bar.Value = 41;
-
-                Scrollbar bar2 = new Scrollbar();
-                bar2.Position = new System.Drawing.Point(100, 100);
-                bar2.Value = 98;
-                UiManager.Singleton.Components.Add(bar2);
-
-                Checkbox checkbox = new Checkbox();
-                checkbox.Position = new System.Drawing.Point(75, 75);
-                UiManager.Singleton.Components.Add(checkbox);
-
-                SS3D.UserInterface.Button butt = new SS3D.UserInterface.Button("HELLO, THIS IS A BUTTON WITH A VERY LONG LABEL ON IT");
-                butt.Position = new System.Drawing.Point(125, 125);
-                UiManager.Singleton.Components.Add(butt);
+                NetOutgoingMessage message = prg.mNetworkMgr.netClient.CreateMessage();
+                message.Write((byte)NetMessage.RequestAdminPlayerlist);
+                prg.mNetworkMgr.SendMessage(message, NetDeliveryMethod.ReliableUnordered);
             }
 
             playerController.KeyDown(e.Key);

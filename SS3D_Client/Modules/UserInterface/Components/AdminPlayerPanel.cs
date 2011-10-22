@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
-
+using SS3D.UserInterface;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -22,7 +22,7 @@ namespace SS3D.UserInterface
     {
         NetworkManager netMgr;
 
-        public AdminPlayerPanel (Size _size, Network.NetworkManager _netMgr, NetIncomingMessage _msgBody)
+        public AdminPlayerPanel (Size _size, NetworkManager _netMgr, NetIncomingMessage _msgBody)
             : base("Admin Player Panel", _size)
         {
             netMgr = _netMgr;

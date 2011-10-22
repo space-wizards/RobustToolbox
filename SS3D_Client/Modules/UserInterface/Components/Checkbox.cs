@@ -7,7 +7,7 @@ using GorgonLibrary;
 using GorgonLibrary.Graphics;
 using GorgonLibrary.InputDevices;
 using GorgonLibrary.GUI;
-
+using SS3D.UserInterface;
 using Lidgren.Network;
 using SS3D_shared;
 
@@ -59,6 +59,7 @@ namespace SS3D.UserInterface
             checkbox = null;
             checkboxCheck = null;
             ValueChanged = null;
+            base.Dispose();
             GC.SuppressFinalize(this);
         }
 

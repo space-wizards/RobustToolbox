@@ -16,7 +16,8 @@ using SS3D.Modules.Network;
 using Lidgren.Network;
 using SS3D_shared;
 using SS3D.States;
-
+using SS3D.Modules;
+using SS3D.UserInterface;
 
 namespace SS3D.UserInterface
 {

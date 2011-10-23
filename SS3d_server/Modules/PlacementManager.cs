@@ -7,7 +7,6 @@ using SS3D_shared;
 using SS3D_shared.HelperClasses;
 using Lidgren.Network;
 using SS3D_Server.Modules;
-using SS3D_Server.Atom;
 using System.Reflection;
 using ServerServices;
 using System.Drawing;

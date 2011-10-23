@@ -8,7 +8,6 @@ using SS3D_Server.Modules;
 using SS3D_Server.Modules.Client;
 using ServerServices;
 using SS3D_Server.Modules.Chat;
-using SS3D_Server.Atom;
 using System.IO.Compression;
 using Lidgren.Network;
 using SS3D_shared;

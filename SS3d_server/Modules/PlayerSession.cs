@@ -4,7 +4,6 @@ using System.Linq;
 using System.Text;
 
 using Lidgren.Network;
-using SS3D_Server.Atom;
 using SS3D_Server;
 using SS3D_shared;
 using SS3D_shared.GO;

@@ -76,8 +76,8 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="Atom\Atom.cs" />
-    <Compile Include="Atom\AtomManager.cs" />
+    <None Include="Atom\Atom.cs" />
+    <None Include="Atom\AtomManager.cs" />
     <None Include="Atom\Item\Container\Toolbox.cs" />
     <None Include="Atom\Item\Item.cs" />
     <None Include="Atom\Item\Misc\Flashlight.cs" />
@@ -104,11 +104,11 @@
     <None Include="Atom\Mob\HelperClasses\Appendage.cs" />
     <None Include="Atom\Mob\Human.cs" />
     <None Include="Atom\Mob\Mob.cs" />
-    <Compile Include="Atom\Object\Atmos\Vent.cs" />
+    <None Include="Atom\Object\Atmos\Vent.cs" />
     <None Include="Atom\Object\Door\Door.cs" />
     <None Include="Atom\Object\Lights\WallLight.cs" />
-    <Compile Include="Atom\Object\Locker.cs" />
-    <Compile Include="Atom\Object\Object.cs" />
+    <None Include="Atom\Object\Locker.cs" />
+    <None Include="Atom\Object\Object.cs" />
     <None Include="Atom\Object\Tables\Worktop.cs" />
     <None Include="Atom\Object\WallMounted\Extinguisher.cs" />
     <None Include="Atom\Object\WallMounted\FireAlarm.cs" />

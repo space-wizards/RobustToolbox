@@ -156,8 +156,9 @@ namespace SS3D
 
         private Type[] GetTypes()
         {
-            Assembly ass = Assembly.GetExecutingAssembly(); //LOL ASS
-            return ass.GetTypes().Where(t => t.IsSubclassOf(typeof(Atom.Atom))).ToArray();
+            //Assembly ass = Assembly.GetExecutingAssembly(); //LOL ASS
+            //return ass.GetTypes().Where(t => t.IsSubclassOf(typeof(Atom.Atom))).ToArray();
+            return new Type[0];
         }
 
 
@@ -363,7 +364,7 @@ namespace SS3D
             List<ToolStripMenuItem> items = new List<ToolStripMenuItem>();
             foreach (Type t in atomTypes.Values)
             {
-                if (t.IsAbstract && t.BaseType == typeof(Atom.Atom))
+                /*if (t.IsAbstract && t.BaseType == typeof(Atom.Atom))
                 {
                     ToolStripMenuItem item = new ToolStripMenuItem(t.Name);
                     ToolStripMenuItem[] itemItems = GetChildren(t).ToArray();
@@ -371,7 +372,7 @@ namespace SS3D
                     item.BackColor = System.Drawing.SystemColors.ActiveCaptionText;
                     item.ForeColor = System.Drawing.SystemColors.ActiveCaption;
                     items.Add(item);
-                }
+                }*/
             }
             atomToolStripMenuItem.DropDownItems.AddRange(items.ToArray());
         }

@@ -16,7 +16,6 @@ using GorgonLibrary.InputDevices;
 
 using Lidgren.Network;
 
-using SS3D.Atom;
 using SS3D.Effects;
 using SS3D.Modules;
 using SS3D.Modules.Network;
@@ -35,7 +34,7 @@ namespace SS3D.States
         #region Variables
         private StateManager mStateMgr;
         public Map map;
-        private AtomManager atomManager;
+        //private AtomManager atomManager;
         private EntityManager entityManager;
 
         //UI Vars
@@ -110,8 +109,8 @@ namespace SS3D.States
             UiManager.Singleton.DisposeAllComponents();
 
             entityManager = new EntityManager(prg.mNetworkMgr.netClient);
-            atomManager = new AtomManager(this, prg, entityManager);
-            PlayerController.Initialize(this, atomManager);
+            //atomManager = new AtomManager(this, prg, entityManager);
+            PlayerController.Initialize(this);
             playerController = PlayerController.Singleton;
 
             prg.mNetworkMgr.MessageArrived += new NetworkMsgHandler(mNetworkMgr_MessageArrived);
@@ -210,11 +209,11 @@ namespace SS3D.States
                 lightTargetIntermediateSprite = null;
             }
             gaussianBlur.Dispose();
-            atomManager.Shutdown();
+            //atomManager.Shutdown();
             entityManager.Shutdown();
             map.Shutdown();
             //PlacementManager.Singleton.Reset();
-            atomManager = null;
+            //atomManager = null;
             entityManager = null;
             map = null;
             UIDesktop.Singleton.Windows.Remove(gameChat);
@@ -231,7 +230,7 @@ namespace SS3D.States
         {
             lastUpdate = now;
             now = DateTime.Now;
-            atomManager.Update();
+            //atomManager.Update();
             CGO.ComponentManager.Singleton.Update(e.FrameDeltaTime);
             editMode = prg.GorgonForm.editMode;
             //PlacementManager.Singleton.Update();
@@ -264,7 +263,7 @@ namespace SS3D.States
                             map.HandleAtmosDisplayUpdate(msg);
                             break;
                         case NetMessage.AtomManagerMessage:
-                            atomManager.HandleNetworkMessage(msg);
+                            //atomManager.HandleNetworkMessage(msg);
                             break;
                         case NetMessage.PlayerSessionMessage:
                             playerController.HandleNetworkMessage(msg);
@@ -367,7 +366,7 @@ namespace SS3D.States
             string message = "(" + channel.ToString() + "):" + text;
             int atomID = msg.ReadInt32();
             gameChat.AddLine(message, channel);
-            Entity a = atomManager.GetAtom(atomID);
+            Entity a = EntityManager.Singleton.GetEntity(atomID);
             if (a != null)
             {
                 /*if (a.speechBubble == null) a.speechBubble = new SpeechBubble(a.name + a.Uid.ToString());
@@ -488,64 +487,9 @@ namespace SS3D.States
                 decalBatch.Clear();
 
                 lightsThisFrame.Clear();
-                
-                ///RENDER ATOMS
-                if (atomManager != null)
-                {
-                    IEnumerable<Entity> atoms = from a in atomManager.atomDictionary.Values
-                                                   where
-                                                   //a.visible &&
-                                                   a.Position.X / map.tileSpacing >= xStart &&
-                                                   a.Position.X / map.tileSpacing <= xEnd &&
-                                                   a.Position.Y / map.tileSpacing >= yStart &&
-                                                   a.Position.Y / map.tileSpacing <= yEnd
-                                                   orderby a.Position.Y// + ((a.sprite.Height * a.sprite.UniformScale) / 2) ascending
-                                                   //orderby a.drawDepth ascending
-                                                   select a;
 
-                    foreach (Entity a in atoms.ToList())
-                    {
-                        //a.Render(ClientWindowData.xTopLeft, ClientWindowData.yTopLeft);
-
-                        if (showDebug)
-                        {
-                            /* TODO RE-ENABLE THIS BULLSHIT WITH COMPONENTS
-                            Gorgon.Screen.Circle(a.sprite.BoundingCircle.Center.X, a.sprite.BoundingCircle.Center.Y, a.sprite.BoundingCircle.Radius, System.Drawing.Color.Orange);
-                            Gorgon.Screen.Rectangle(a.sprite.AABB.X, a.sprite.AABB.Y, a.sprite.AABB.Width, a.sprite.AABB.Height, System.Drawing.Color.Blue);
-                             */
-                        }
-
-                    }
-
-                    ComponentManager.Singleton.Render(0);
-                
-                    //Render Light glows
-                    atoms = from a in atomManager.atomDictionary.Values
-                                                   where
-                                                   //a.visible &&
-                                                   a.Position.X / map.tileSpacing >= xStart &&
-                                                   a.Position.X / map.tileSpacing <= xEnd &&
-                                                   a.Position.Y / map.tileSpacing >= yStart &&
-                                                   a.Position.Y / map.tileSpacing <= yEnd &&
-                                                   a.GetType().Name == "WallLight"                                                        
-                                                   orderby a.Position.Y// + ((a.sprite.Height * a.sprite.UniformScale) / 2) ascending
-                                                   //orderby a.drawDepth ascending
-                                                   select a;
-
-                    Gorgon.CurrentRenderTarget = lightTarget;
-                    Gorgon.CurrentShader = ResMgr.Singleton.GetShader("Blur");
-                    ResMgr.Singleton.GetShader("Blur").Parameters["blurAmount"].SetValue(3.0f);
-                    /*foreach (Atom.Atom a in atoms.ToList())
-                    {
-                        a.sprite.BlendingMode = BlendingModes.Additive;
-                        a.Render(ClientWindowData.xTopLeft, ClientWindowData.yTopLeft);
-                        a.sprite.BlendingMode = BlendingModes.None;
-                    }*/
-                    Gorgon.CurrentShader = null;
-                    Gorgon.CurrentRenderTarget = baseTarget;
-                }
-
-
+                //Render renderable components
+                ComponentManager.Singleton.Render(0);
 
                 ///Render gas batch
                 if (gasBatch.Count > 0)

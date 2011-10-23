@@ -105,8 +105,8 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="Atom\Atom.cs" />
-    <Compile Include="Atom\AtomManager.cs" />
+    <None Include="Atom\Atom.cs" />
+    <None Include="Atom\AtomManager.cs" />
     <None Include="Atom\Item\Container\Toolbox.cs" />
     <None Include="Atom\Item\Item.cs" />
     <None Include="Atom\Item\Misc\Flashlight.cs" />

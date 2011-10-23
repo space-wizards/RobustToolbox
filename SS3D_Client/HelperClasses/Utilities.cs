@@ -21,25 +21,25 @@ namespace SS3D.HelperClasses
             {
                 return "tilebuildoverlay";
             }
-            else if (type.IsSubclassOf(typeof(Atom.Atom)))
+            /*else if (type.IsSubclassOf(typeof(Atom.Atom)))
             {
                 Atom.Atom atom = (Atom.Atom)Activator.CreateInstance(type);
                 string strName = atom.spritename;
                 atom = null;
                 return strName;
-            }
+            }*/
             return "noSprite";
         }
 
         public static string GetAtomName(Type type)
         {
-            if (type.IsSubclassOf(typeof(Atom.Atom)))
+            /*if (type.IsSubclassOf(typeof(Atom.Atom)))
             {
                 Atom.Atom atom = (Atom.Atom)Activator.CreateInstance(type);
                 string strName = atom.name;
                 atom = null;
                 return strName;
-            }
+            }*/
             return "missingName"; 
         }
 

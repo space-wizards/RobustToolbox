@@ -5,7 +5,6 @@ using Lidgren.Network;
 using SS3D.Modules;
 using SS3D.Modules.Network;
 using SS3D.UserInterface;
-using SS3D.Atom;
 
 using SS3D_shared;
 

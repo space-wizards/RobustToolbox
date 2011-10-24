@@ -1,6 +1,6 @@
 ﻿<?xml version="1.0" encoding="utf-8" ?>
 <EntityTemplates>
-  <EntityTemplate name="Locker" atomname="Atom.Object.Locker">
+  <EntityTemplate name="Locker">
     <Components>
       <Component name="NetworkMoverComponent"></Component>
       <Component name="SpriteComponent">

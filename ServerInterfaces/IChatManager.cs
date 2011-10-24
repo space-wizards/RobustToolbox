@@ -7,6 +7,6 @@ namespace ServerInterfaces
 {
     public interface IChatManager
     {
-        void SendChatMessage(ChatChannel channel, string text, string name, int atomID);
+        void SendChatMessage(ChatChannel channel, string text, string name, int entityID);
     }
 }

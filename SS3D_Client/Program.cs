@@ -67,10 +67,7 @@ namespace SS3D
 
         // Load Config.
         ConfigManager.Singleton.Initialize("./config.xml");
-
-        //Load Moar types
-        prg.loadTypes();
-
+        
         // Create state manager
         prg.mStateMgr = new StateManager(prg);
 
@@ -95,29 +92,7 @@ namespace SS3D
     {
 
     }
-
-    public void loadTypes()
-    {
-        /*var asm = CSScript.Load("hat.cs");
-        Module[] modules = asm.GetModules();
-        Type blah = null;
-        foreach (Module module in modules)
-        {
-            if(module.GetType("SS3D.Atom.Item.Tool.Hat") != null)
-                blah = module.GetType("SS3D.Atom.Item.Tool.Hat");
-        }
-
-        Atom.Atom atom;
-
-        if(blah != null)
-            atom = (Atom.Atom)Activator.CreateInstance(blah);
-        //Type atomType = asm.GetModules().GetType("SS3D.Atom.Item.Tool.Hat");
-        //object atom = Activator.CreateInstance(atomType); // Create atom of type atomType with parameters uid, this
-        //AsmHelper script = new AsmHelper(Asm);
-        //var poo = script.CreateObject("SS3D.Atom.Item.Tool.Hat");
-        */
-    }
-
+      
     public Program()
     {
         //Constructor

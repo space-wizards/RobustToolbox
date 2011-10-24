@@ -33,21 +33,6 @@ namespace CGO
         }
 
         /// <summary>
-        /// Name of the entity template in relation to old atom name.
-        /// THIS WILL BE OBSOLETED
-        /// </summary>
-        private string m_atomname;
-        public string AtomName
-        {
-            get
-            { return m_atomname; }
-            set
-            { m_atomname = value; }
-        }
-
-
-
-        /// <summary>
         /// Default constructor
         /// </summary>
         public EntityTemplate()
@@ -105,7 +90,6 @@ namespace CGO
         public void LoadFromXML(XElement templateElement)
         {
             Name = templateElement.Attribute("name").Value;
-            AtomName = templateElement.Attribute("atomname").Value;
 
             var t_components = templateElement.Element("Components").Elements();
             //Parse components

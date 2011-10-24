@@ -1,6 +1,6 @@
 ﻿<?xml version="1.0" encoding="utf-8" ?>
 <EntityTemplates>
-  <EntityTemplate name="Door" atomname="Atom.Object.Door.Door">
+  <EntityTemplate name="Door">
     <Components>
       <Component name="NetworkMoverComponent"></Component>
       <Component name="SpriteComponent">

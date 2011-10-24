@@ -18,7 +18,6 @@ public enum NetMessage
     ItemMessage, // It's something the item system needs to handle
     MobMessage,
     ChatMessage,
-    AtomManagerMessage,
     PlacementManagerMessage,
     PlayerSessionMessage,
     PlayerUiMessage,
@@ -51,14 +50,6 @@ public enum ItemMessage
 public enum UiManagerMessage
 {
     ComponentMessage
-}
-
-public enum AtomManagerMessage
-{
-    SpawnAtom,
-    DeleteAtom,
-    SetDrawDepth,
-    Passthrough,
 }
 
 public enum PlacementManagerMessage

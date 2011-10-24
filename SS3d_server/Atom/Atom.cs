@@ -162,21 +162,10 @@ namespace SS3D_Server.Atom
 
         protected virtual void HandleClick(NetIncomingMessage message)
         {
-            //base.HandleClick(message);
-            //Who clicked us?
-            Entity clicker = (Entity)SS3DServer.Singleton.playerManager.GetSessionByConnection(message.SenderConnection).attachedAtom;
-            /*if (clicker == null || clicker.IsDead()) //HAHA U CANT KILL ME WHEN UR DEAD NEMORE
-                return;
-
-            Clicked(clicker);*/
         }
 
         public override void HandleClick(int clickerID)
         {
-            /*Entity clicker = (Entity)atomManager.GetAtom(clickerID);
-            if (clicker == null || clicker.IsDead())
-                return;
-            Clicked(clicker);*/
         }
 
         public virtual void Push()

@@ -1,6 +1,6 @@
 ﻿<?xml version="1.0" encoding="utf-8" ?>
 <EntityTemplates>
-  <EntityTemplate name="Shoes" atomname="Atom.Item.Wearable.Feet.Shoes">
+  <EntityTemplate name="Shoes">
     <Components>
       <Component name="NetworkMoverComponent"></Component>
       <Component name="WearableSpriteComponent">
@@ -13,7 +13,7 @@
       <Component name="EquippableComponent"></Component>
     </Components>
   </EntityTemplate>
-  <EntityTemplate name="Helmet" atomname="Atom.Item.Wearable.Head.Helmet">
+  <EntityTemplate name="Helmet">
     <Components>
       <Component name="NetworkMoverComponent"></Component>
       <Component name="WearableSpriteComponent">
@@ -26,7 +26,7 @@
       <Component name="EquippableComponent"></Component>
     </Components>
   </EntityTemplate>
-  <EntityTemplate name="Assistant_Grey" atomname="Atom.Item.Wearable.Inner.Jumpsuit.Assistant_Grey">
+  <EntityTemplate name="Assistant_Grey">
     <Components>
       <Component name="NetworkMoverComponent"></Component>
       <Component name="WearableSpriteComponent">
@@ -39,7 +39,7 @@
       <Component name="EquippableComponent"></Component>
     </Components>
   </EntityTemplate>
-  <EntityTemplate name="Armour" atomname="Atom.Item.Wearable.Outer.Armour">
+  <EntityTemplate name="Armour">
     <Components>
       <Component name="NetworkMoverComponent"></Component>
       <Component name="WearableSpriteComponent">

@@ -34,7 +34,6 @@ namespace SS3D.States
         #region Variables
         private StateManager mStateMgr;
         public Map map;
-        //private AtomManager atomManager;
         private EntityManager entityManager;
 
         //UI Vars
@@ -109,7 +108,6 @@ namespace SS3D.States
             UiManager.Singleton.DisposeAllComponents();
 
             entityManager = new EntityManager(prg.mNetworkMgr.netClient);
-            //atomManager = new AtomManager(this, prg, entityManager);
             PlayerController.Initialize(this);
             playerController = PlayerController.Singleton;
 
@@ -209,11 +207,9 @@ namespace SS3D.States
                 lightTargetIntermediateSprite = null;
             }
             gaussianBlur.Dispose();
-            //atomManager.Shutdown();
             entityManager.Shutdown();
             map.Shutdown();
             //PlacementManager.Singleton.Reset();
-            //atomManager = null;
             entityManager = null;
             map = null;
             UIDesktop.Singleton.Windows.Remove(gameChat);
@@ -230,7 +226,7 @@ namespace SS3D.States
         {
             lastUpdate = now;
             now = DateTime.Now;
-            //atomManager.Update();
+
             CGO.ComponentManager.Singleton.Update(e.FrameDeltaTime);
             editMode = prg.GorgonForm.editMode;
             //PlacementManager.Singleton.Update();
@@ -261,9 +257,6 @@ namespace SS3D.States
                             break;
                         case NetMessage.AtmosDisplayUpdate:
                             map.HandleAtmosDisplayUpdate(msg);
-                            break;
-                        case NetMessage.AtomManagerMessage:
-                            //atomManager.HandleNetworkMessage(msg);
                             break;
                         case NetMessage.PlayerSessionMessage:
                             playerController.HandleNetworkMessage(msg);
@@ -501,27 +494,6 @@ namespace SS3D.States
                     wallTopsBatch.Draw();
                 wallTopsBatch.Clear();
                 
-                
-                ///RENDER GHOSTS
-                ///Render person ghosts to have them appear behind walls. This should really be 
-                ///better thought out I think, but for now this works...
-                /*if (atomManager != null)
-                {
-                    IEnumerable<Atom.Atom> atoms = from a in atomManager.atomDictionary.Values
-                                                   where
-                                                   a.IsChildOfType(typeof(Atom.Mob.Mob)) &&
-                                                   a.visible &&
-                                                   System.Math.Sqrt((playerController.controlledAtom.position.X - a.position.X) * (playerController.controlledAtom.position.X - a.position.X)) < screenHeightTiles * map.tileSpacing + 160 &&
-                                                   System.Math.Sqrt((playerController.controlledAtom.position.Y - a.position.Y) * (playerController.controlledAtom.position.Y - a.position.Y)) < screenHeightTiles * map.tileSpacing + 160
-                                                   orderby a.position.Y + ((a.sprite.Height * a.sprite.UniformScale) / 2) ascending
-                                                   select a;
-
-                    foreach (Atom.Atom a in atoms.ToList())
-                    {
-                        a.Render(xTopLeft, yTopLeft, 70);
-                    }
-                }*/
-
                 //PlacementManager.Singleton.Draw();
             }
 
@@ -675,48 +647,19 @@ namespace SS3D.States
             // Find all the atoms near us we could have clicked
             IEnumerable<Entity> entities = EntityManager.Singleton.GetEntitiesInRange(playerController.controlledAtom.Position, checkDistance);
                 
-                /*from a in atomManager.atomDictionary.Values
-                                           where editMode ? true : (playerController.controlledAtom.Position - a.Position).Length < checkDistance
-                                           //where a.visible
-                                           //orderby (new Vector2D(a.sprite.AABB.X + (a.sprite.AABB.Width/2),a.sprite.AABB.Y + (a.sprite.AABB.Height/2)) - new Vector2D(mouseAABB.X, mouseAABB.Y)).Length descending
-                                           //orderby a.drawDepth descending
-                                           select a;*/
             // See which one our click AABB intersected with
             List<ClickData> clickedEntities = new List<ClickData>();
             int drawdepthofclicked = 0;
             PointF clickedWorldPoint = new PointF(mouseAABB.X, mouseAABB.Y);
             foreach (Entity a in entities)
             {
-                //HACKED IN COMPONENT SHIT
                 ClickableComponent clickable = (ClickableComponent)a.GetComponent(SS3D_shared.GO.ComponentFamily.Click);
                 if (clickable != null)
                 {
                     if (clickable.CheckClick(clickedWorldPoint, out drawdepthofclicked))
                         clickedEntities.Add(new ClickData((Entity)a, drawdepthofclicked));
-                    //clickable.Clicked(new PointF(mouseAABB.X, mouseAABB.Y), playerController.controlledAtom.Uid);
                 }
-                //END HACKED IN COMPONENT SHIT
 
-                /*if (a.WasClicked(mouseAABB.Location))
-                {
-                    if (!editMode)
-                    {
-                        a.HandleClick();
-                    }
-                    else
-                    {
-                        if (e.Buttons == GorgonLibrary.InputDevices.MouseButtons.Right && a != playerController.controlledAtom)
-                        {
-                            NetOutgoingMessage message = mStateMgr.prg.mNetworkMgr.netClient.CreateMessage();
-                            message.Write((byte)NetMessage.AtomManagerMessage);
-                            message.Write((byte)AtomManagerMessage.DeleteAtom);
-                            message.Write(a.Uid);
-                            mStateMgr.prg.mNetworkMgr.SendMessage(message, NetDeliveryMethod.ReliableUnordered);
-                        }
-                    }
-                    atomClicked = true; // We clicked an atom so we don't want to send a turf click message too.
-                    break;
-                }*/
             }
 
             if (clickedEntities.Count > 1)

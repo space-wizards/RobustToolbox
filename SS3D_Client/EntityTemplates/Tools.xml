@@ -1,6 +1,6 @@
 ﻿<?xml version="1.0" encoding="utf-8" ?>
 <EntityTemplates>
-  <EntityTemplate name="Wrench" atomname="Atom.Item.Tool.Wrench">
+  <EntityTemplate name="Wrench">
     <Components>
       <Component name="NetworkMoverComponent"></Component>
       <Component name="ItemSpriteComponent">
@@ -12,7 +12,7 @@
       <Component name="BasicItemComponent"></Component>
     </Components>
   </EntityTemplate>
-  <EntityTemplate name="Welder" atomname="Atom.Item.Tool.Welder">
+  <EntityTemplate name="Welder">
     <Components>
       <Component name="NetworkMoverComponent"></Component>
       <Component name="ItemSpriteComponent">
@@ -24,7 +24,7 @@
       <Component name="BasicItemComponent"></Component>
     </Components>
   </EntityTemplate>
-  <EntityTemplate name="Crowbar" atomname="Atom.Item.Tool.Crowbar">
+  <EntityTemplate name="Crowbar">
     <Components>
       <Component name="NetworkMoverComponent"></Component>
       <Component name="ItemSpriteComponent">

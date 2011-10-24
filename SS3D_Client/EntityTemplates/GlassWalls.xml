@@ -1,6 +1,6 @@
 ﻿<?xml version="1.0" encoding="utf-8" ?>
 <EntityTemplates>
-  <EntityTemplate name="Glass" atomname="Atom.Object.Wall.Glass">
+  <EntityTemplate name="Glass">
     <Components>
       <Component name="NetworkMoverComponent"></Component>
       <Component name="SpriteComponent">

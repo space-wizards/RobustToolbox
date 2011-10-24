@@ -1,6 +1,6 @@
 ﻿<?xml version="1.0" encoding="utf-8" ?>
 <EntityTemplates>
-  <EntityTemplate name="HumanMob" atomname="Atom.Mob.Human">
+  <EntityTemplate name="HumanMob">
     <Components>
       <Component name="NetworkMoverComponent"></Component>
       <Component name="MobSpriteComponent">

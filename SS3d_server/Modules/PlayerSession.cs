@@ -111,18 +111,12 @@ namespace SS3D_Server.Modules
                     case "toxins":
                         //Need debugging function to add more gas
                     case "save":
-                        //SS3DServer.Singleton.atomManager.SaveAtoms();
                         EntityManager.Singleton.SaveEntities();
                         SS3DServer.Singleton.map.SaveMap();
                         break;
                     default:
                         break;
                 }
-            }
-            else
-            {
-                //var targetAtom = SS3DServer.Singleton.atomManager.GetAtom(uid);
-                //targetAtom.HandleVerb(verb);
             }
         }
 

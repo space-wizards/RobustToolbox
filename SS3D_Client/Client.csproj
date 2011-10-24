@@ -194,9 +194,6 @@
       <DesignTime>True</DesignTime>
       <DependentUpon>Resources.resx</DependentUpon>
     </Compile>
-    <None Include="Scripts\Atom\hat.cs">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </None>
     <Compile Include="States\ConnectMenu.cs" />
     <Compile Include="States\GameScreen.cs" />
     <Compile Include="States\LoadingScreen.cs" />

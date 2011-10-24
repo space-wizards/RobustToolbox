@@ -1,6 +1,6 @@
 ﻿<?xml version="1.0" encoding="utf-8" ?>
 <EntityTemplates>
-  <EntityTemplate name="Worktop" atomname="Atom.Object.Worktop.Worktop">
+  <EntityTemplate name="Worktop">
     <Components>
       <Component name="NetworkMoverComponent"></Component>
       <Component name="SpriteComponent">

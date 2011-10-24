@@ -41,11 +41,9 @@ namespace SS3D_Server.Modules
             {
                 foreach (SpawnEquipDefinition def in s.assignedJob.SpawnEquipment)
                 {
-                    //Entity newItem = SS3DServer.Singleton.atomManager.SpawnAtom(def.ObjectType);
                     Entity newItem = EntityManager.Singleton.SpawnEntity(def.ObjectType);
                     newItem.Translate(human.position); //This is not neccessary once the equipment component is built.
                     human.SendMessage(this, SS3D_shared.GO.ComponentMessageType.EquipItem, null, newItem);
-                    //human.EquipItem(newItem.Uid, def.Location); //TODO EQUIP SPAWN ITEMS
                 }
             }
             s.AttachToAtom(a);

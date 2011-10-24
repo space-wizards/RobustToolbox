@@ -1,6 +1,6 @@
 ﻿<?xml version="1.0" encoding="utf-8" ?>
 <EntityTemplates>
-  <EntityTemplate name="Toolbox" atomname="Atom.Item.Container.Toolbox">
+  <EntityTemplate name="Toolbox">
     <Components>
       <Component name="NetworkMoverComponent"></Component>
       <Component name="ItemSpriteComponent">

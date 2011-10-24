@@ -20,7 +20,6 @@ namespace SS3D.Modules
          * This class also communicates with the server to let the server control what atom it is attached to. */
 
         public State runningState;
-        //public AtomManager atomManager;
         public Entity controlledAtom;
 
         private static PlayerController singleton = null;
@@ -47,13 +46,10 @@ namespace SS3D.Modules
         public PlayerController(State _runningState)
         {
             runningState = _runningState;
-            //atomManager = _atomManager;
         }
 
         public void Attach(Entity newAtom)
         {
-            //if (atomManager == null)
-            //    return;
             controlledAtom = newAtom;
             controlledAtom.AddComponent(ComponentFamily.Input, CGO.ComponentFactory.Singleton.GetComponent("KeyBindingInputComponent"));
             controlledAtom.AddComponent(ComponentFamily.Mover, CGO.ComponentFactory.Singleton.GetComponent("KeyBindingMoverComponent"));
@@ -63,8 +59,6 @@ namespace SS3D.Modules
 
         public void Detach()
         {
-            //if (atomManager == null)
-            //    return;
             controlledAtom = null;
             controlledAtom.RemoveComponent(ComponentFamily.Input);
             controlledAtom.RemoveComponent(ComponentFamily.Mover);
@@ -73,22 +67,14 @@ namespace SS3D.Modules
 
         public void KeyDown(KeyboardKeys key)
         {
-            //if (atomManager == null)
-            //    return;
             if (controlledAtom == null)
                 return;
-
-            //controlledAtom.HandleKeyPressed(key);
         }
 
         public void KeyUp(KeyboardKeys key)
         {
-            //if (atomManager == null)
-            //    return;
             if (controlledAtom == null)
                 return;
-
-            //controlledAtom.HandleKeyReleased(key);
         }
 
         #region netcode
@@ -149,8 +135,6 @@ namespace SS3D.Modules
 
         private void HandleAttachToAtom(NetIncomingMessage message)
         {
-            //if (atomManager == null)
-                //return;
             int uid = message.ReadInt32();
             Attach(EntityManager.Singleton.GetEntity(uid));
         }

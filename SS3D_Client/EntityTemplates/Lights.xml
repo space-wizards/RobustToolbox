@@ -1,6 +1,6 @@
 ﻿<?xml version="1.0" encoding="utf-8" ?>
 <EntityTemplates>
-  <EntityTemplate name="WallLight" atomname="Atom.Object.Lights.WallLight">
+  <EntityTemplate name="WallLight">
     <Components>
       <Component name="NetworkMoverComponent"></Component>
       <Component name="SpriteComponent">
@@ -17,7 +17,7 @@
       </Component>
     </Components>
   </EntityTemplate>
-  <EntityTemplate name="Flashlight" atomname="Atom.Item.Misc.Flashlight">
+  <EntityTemplate name="Flashlight">
     <Components>
       <Component name="NetworkMoverComponent"></Component>
       <Component name="ItemSpriteComponent">

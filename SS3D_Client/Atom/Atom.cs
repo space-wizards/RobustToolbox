@@ -32,9 +32,7 @@ namespace SS3D.Atom
         public Dictionary<int, string> spriteNames;
         public int drawDepth = 0;
         private int index = 0;
-
-        //public AtomManager atomManager;
-
+        
         // Position data
         public List<InterpolationPacket> interpolationPackets;
         public bool clipping = true;

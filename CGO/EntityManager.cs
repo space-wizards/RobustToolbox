@@ -93,9 +93,6 @@ namespace CGO
         {
             var entities = from e in m_entities.Values
                            where (position - e.Position).Length < Range
-                           //where a.visible
-                           //orderby (new Vector2D(a.sprite.AABB.X + (a.sprite.AABB.Width/2),a.sprite.AABB.Y + (a.sprite.AABB.Height/2)) - new Vector2D(mouseAABB.X, mouseAABB.Y)).Length descending
-                           //orderby a.drawDepth descending
                            select e;
 
             return entities.ToArray();
@@ -110,22 +107,6 @@ namespace CGO
             ///The UID has already been set by the server..
             m_entities.Add(e.Uid, e);
             e.SetNetworkManager(m_entityNetworkManager);
-        }
-
-        /// <summary>
-        /// Returns an entity created using an atom name.
-        /// </summary>
-        /// <param name="atomName"></param>
-        /// <returns></returns>
-        public Entity TryCreateAtom(string atomName)
-        {
-            EntityTemplate template = m_entityTemplateDatabase.GetTemplateByAtomName(atomName);
-            if (template != null)
-            {
-                Entity e = template.CreateEntity();
-                return e;
-            }
-            return null;
         }
 
         public void Shutdown()

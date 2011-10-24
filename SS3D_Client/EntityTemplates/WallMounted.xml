@@ -1,6 +1,6 @@
 ﻿<?xml version="1.0" encoding="utf-8" ?>
 <EntityTemplates>
-  <EntityTemplate name="Extinguisher" atomname="Atom.Object.WallMounted.Extinguisher">
+  <EntityTemplate name="Extinguisher">
     <Components>
       <Component name="NetworkMoverComponent"></Component>
       <Component name="SpriteComponent">
@@ -11,7 +11,7 @@
       <Component name="ClickableComponent"></Component>
     </Components>
   </EntityTemplate>
-  <EntityTemplate name="FireAlarm" atomname="Atom.Object.WallMounted.FireAlarm">
+  <EntityTemplate name="FireAlarm">
     <Components>
       <Component name="NetworkMoverComponent"></Component>
       <Component name="SpriteComponent">
@@ -22,7 +22,7 @@
       <Component name="ClickableComponent"></Component>
     </Components>
   </EntityTemplate>
-  <EntityTemplate name="MedCabinet" atomname="Atom.Object.WallMounted.MedCabinet">
+  <EntityTemplate name="MedCabinet">
     <Components>
       <Component name="NetworkMoverComponent"></Component>
       <Component name="SpriteComponent">

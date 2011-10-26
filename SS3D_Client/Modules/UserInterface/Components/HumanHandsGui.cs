@@ -89,6 +89,17 @@ namespace SS3D.UserInterface
                 rObjectSprite = Utilities.GetSpriteComponentSprite(EntityR);
             }
             else rObjectSprite = null;
+
+            if(hands.currentHand == Hand.Left)
+            {
+                lActive = true;
+                rActive = false;
+            }
+            else if (hands.currentHand == Hand.Right)
+                {
+                    lActive = false;
+                    rActive = true;
+                }
         }
 
         public override void Render()
@@ -164,13 +175,17 @@ namespace SS3D.UserInterface
         public override bool MouseDown(MouseInputEventArgs e)
         {
             System.Drawing.RectangleF mouseAABB = new System.Drawing.RectangleF(e.Position.X, e.Position.Y, 1, 1);
+            Entity m = (Entity)playerController.controlledAtom;
+            HumanHandsComponent ec = (HumanHandsComponent)m.GetComponent(SS3D_shared.GO.ComponentFamily.Hands);
             if(mouseAABB.IntersectsWith(lSprite.AABB))
             {
-                return false;
+                ec.SendSwitchHands(Hand.Left);
+                return true;
             }
             else if(mouseAABB.IntersectsWith(rSprite.AABB))
             {
-                return false;
+                ec.SendSwitchHands(Hand.Right);
+                return true;
             }
             else
                 return false;
@@ -178,10 +193,11 @@ namespace SS3D.UserInterface
 
         public Entity GetActiveHandItem()
         {
-            if (lActive && lEntity != null)
-                return lEntity;
-            if (rActive && rEntity != null)
-                return rEntity;
+            var entity = (Entity)playerController.controlledAtom;
+            HumanHandsComponent hands = (HumanHandsComponent)entity.GetComponent(ComponentFamily.Hands);
+
+            if(hands.HandSlots.ContainsKey(hands.currentHand) && hands.HandSlots[hands.currentHand] != null)
+                return hands.HandSlots[hands.currentHand];
             return null;
         }
     }

@@ -53,6 +53,9 @@ namespace CGO
                     item = EntityManager.Singleton.GetEntity(entityUID);
                     handslots.Add(usedHand, item);
                     break;
+                case ComponentMessageType.ActiveHandChanged:
+                    SwitchHandTo((Hand)message.messageParameters[1]);
+                    break;
             }
 
             IUserInterfaceManager UIManager = (IUserInterfaceManager)ServiceManager.Singleton.GetService(ClientServiceType.UiManager);
@@ -61,6 +64,16 @@ namespace CGO
                 throw new NullReferenceException("No UI Manager Service found.");
 
             UIManager.ComponentUpdate(GuiComponentType.AppendagesComponent);
+        }
+
+        public void SendSwitchHands(Hand hand)
+        {
+            Owner.SendComponentNetworkMessage(this, Lidgren.Network.NetDeliveryMethod.ReliableOrdered, ComponentMessageType.ActiveHandChanged, hand);
+        }
+
+        private void SwitchHandTo(Hand hand)
+        {
+            currentHand = hand;
         }
     }
 }

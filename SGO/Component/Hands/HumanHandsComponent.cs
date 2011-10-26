@@ -42,8 +42,12 @@ namespace SGO
                     Drop(currentHand);
                     break;
                 case ComponentMessageType.BoundKeyChange:
-                    if ((BoundKeyFunctions)list[0] == BoundKeyFunctions.Drop)
+                    if ((BoundKeyFunctions)list[0] == BoundKeyFunctions.Drop && (BoundKeyState)list[1] == BoundKeyState.Up)
                         Drop();
+                    if ((BoundKeyFunctions)list[0] == BoundKeyFunctions.SwitchHands && (BoundKeyState)list[1] == BoundKeyState.Up)
+                    {
+                        SwitchHands();
+                    }
                     break;
                 case ComponentMessageType.GetActiveHandItem:
                     if (!IsEmpty(currentHand))
@@ -74,9 +78,9 @@ namespace SGO
         private void SwitchHands()
         {
             if (currentHand == Hand.Left)
-                currentHand = Hand.Right;
+                SwitchHandsTo(Hand.Right);
             else
-                currentHand = Hand.Left;
+                SwitchHandsTo(Hand.Left);
         }
 
         private void SwitchHandsTo(Hand hand)

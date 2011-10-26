@@ -27,6 +27,8 @@ namespace CGO
 
         private EntityNetworkManager m_entityNetworkManager;
 
+        public EntityTemplate template;
+
         public string name;
 
         public event EntityMoveEvent OnMove;

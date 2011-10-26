@@ -108,18 +108,17 @@ namespace SS3D.UserInterface
             return false;
         }
 
-        [Obsolete("TODO: Change to new system")]
         // Returns true if we're empty and can accept the atom passed in
-        public bool CanAccept(Entity tryAtom)
+        public bool CanAccept(Entity entity)
         {
-            //if (tryAtom == null)
-            //    return false;
+            if (entity == null || entity.HasComponent(SS3D_shared.GO.ComponentFamily.Equippable))
+                return false;
             //Atom.Mob.Mob m = (Atom.Mob.Mob)playerController.controlledAtom;
             //if ((tryAtom.IsChildOfType(atomType) || tryAtom.IsTypeOf(atomType)) &&
             //    (m.GetEquippedAtom(GetBodyPart()) == null))
             //    return true;
             //return false;
-            return false;
+            return true;
         }
 
         public void Highlight()

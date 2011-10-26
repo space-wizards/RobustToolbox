@@ -42,6 +42,33 @@ namespace CGO
             }
         }
 
+        public void DispatchEquip(int uid)
+        {
+            Owner.SendComponentNetworkMessage(this, Lidgren.Network.NetDeliveryMethod.ReliableOrdered, ComponentMessageType.EquipItem, uid);
+        }
+
+        public void DispatchEquipToPart(int uid, GUIBodyPart part)
+        {
+            Owner.SendComponentNetworkMessage(this, Lidgren.Network.NetDeliveryMethod.ReliableOrdered, ComponentMessageType.EquipItemToPart, uid, part);
+        }
+
+        public void DispatchEquipFromHand()
+        {
+            Owner.SendComponentNetworkMessage(this, Lidgren.Network.NetDeliveryMethod.ReliableOrdered, ComponentMessageType.EquipItemInHand);
+        }
+
+        public void DispatchUnEquipToHand(int uid)
+        {
+            Owner.SendComponentNetworkMessage(this, Lidgren.Network.NetDeliveryMethod.ReliableOrdered, ComponentMessageType.UnEquipItemToHand, uid);
+        }
+
+        public void DispatchUnEquipToFloor(int uid)
+        {
+            Owner.SendComponentNetworkMessage(this, Lidgren.Network.NetDeliveryMethod.ReliableOrdered, ComponentMessageType.UnEquipItemToFloor, uid);
+        }
+
+
+
         private void EquipItem(GUIBodyPart part, int uid)
         {
             equippedEntities.Add(part, EntityManager.Singleton.GetEntity(uid));

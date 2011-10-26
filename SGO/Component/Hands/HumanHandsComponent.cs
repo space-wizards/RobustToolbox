@@ -29,6 +29,9 @@ namespace SGO
         {
             switch (type)
             {
+                case ComponentMessageType.ActiveHandChanged:
+                    SwitchHandsTo((Hand)list[0]);
+                    break;
                 case ComponentMessageType.IsCurrentHandEmpty:
                     replies.Add(new ComponentReplyMessage(ComponentMessageType.IsCurrentHandEmpty, IsEmpty(currentHand)));
                     break;
@@ -49,6 +52,21 @@ namespace SGO
             }
         }
 
+        public override void HandleNetworkMessage(IncomingEntityComponentMessage message)
+        {
+            if (message.componentFamily == ComponentFamily.Hands)
+            {
+                ComponentMessageType type = (ComponentMessageType)message.messageParameters[0];
+                List<ComponentReplyMessage> replies = new List<ComponentReplyMessage>();
+                switch (type)
+                {
+                    case ComponentMessageType.ActiveHandChanged:
+                        Owner.SendMessage(this, type, null, message.messageParameters[1]);
+                        break;
+                }
+            }
+        }
+
 
         /// <summary>
         /// Change the currently selected hand
@@ -59,6 +77,13 @@ namespace SGO
                 currentHand = Hand.Right;
             else
                 currentHand = Hand.Left;
+        }
+
+        private void SwitchHandsTo(Hand hand)
+        {
+            currentHand = hand;
+            Owner.SendComponentNetworkMessage(this, Lidgren.Network.NetDeliveryMethod.ReliableOrdered, null, ComponentMessageType.ActiveHandChanged, hand);
+
         }
 
         /// <summary>

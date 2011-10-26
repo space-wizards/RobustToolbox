@@ -99,7 +99,9 @@ namespace SS3D.UserInterface
         [Obsolete("TODO: Change to new system")]
         public override bool MouseDown(GorgonLibrary.InputDevices.MouseInputEventArgs e)
         {
-            Entity m = playerController.controlledAtom;
+            Entity m = (Entity)playerController.controlledAtom;
+            EquipmentComponent ec = (EquipmentComponent)m.GetComponent(SS3D_shared.GO.ComponentFamily.Equipment);
+            HumanHandsComponent hh = (HumanHandsComponent)m.GetComponent(SS3D_shared.GO.ComponentFamily.Hands);
             //// Check which slot we clicked (if any) and get the atom from in there
             if (heldEntity == null)
             {
@@ -110,12 +112,15 @@ namespace SS3D.UserInterface
             {
                 if (slot.MouseDown(e))
                 {
-            //        if (!AttemptEquipInSlot(m, slot))
-            //        {
-            //            heldAtom = m.GetEquippedAtom(slot.GetBodyPart());
-            //            lastSlot = slot.GetBodyPart();
-            //        }
-            //        return true;
+                    if (!AttemptEquipInSlot(m, slot))
+                    {
+                        if (ec.equippedEntities.ContainsKey(slot.GetBodyPart()))
+                        {
+                            heldEntity = ec.equippedEntities[slot.GetBodyPart()];
+                            lastSlot = slot.GetBodyPart();
+                        }
+                    }
+                    return true;
                 }
             }
 
@@ -123,15 +128,14 @@ namespace SS3D.UserInterface
             {
                 if (handsGUI.MouseDown(e))
                 {
-                    //int i = handsGUI.GetSelectedAppendage();
-            //        heldAtom = m.GetItemOnAppendage(i);
-            //        lastSlot = GUIBodyPart.None;
-            //        return true;
+                    if (hh.HandSlots.ContainsKey(hh.currentHand))
+                    {
+                        heldEntity = hh.HandSlots[hh.currentHand];
+                        lastSlot = GUIBodyPart.None;
+                        return true;
+                    }
                 }
             }
-            
-
-
             return false;
         }
 
@@ -141,6 +145,7 @@ namespace SS3D.UserInterface
             if (heldEntity == null)
                 return false;
             Entity m = (Entity)playerController.controlledAtom;
+            EquipmentComponent ec = (EquipmentComponent)m.GetComponent(SS3D_shared.GO.ComponentFamily.Equipment);
 
             // Check which slot we released the mouse on, and equip the item there
             // (remembering to unequip it from wherever it came from)
@@ -148,7 +153,10 @@ namespace SS3D.UserInterface
             {
                 if (slot.MouseUp(e))
                 {
-                    //AttemptEquipInSlot(m, slot);
+                    if (lastSlot == GUIBodyPart.None)
+                        ec.DispatchEquipFromHand();
+                    else
+                        ec.DispatchEquip(heldEntity.Uid);
                 }
             }
 
@@ -159,8 +167,7 @@ namespace SS3D.UserInterface
                 {
                     if (lastSlot != GUIBodyPart.None) // It came from the inventory
                     {
-                        //m.SendUnequipItem(lastSlot);
-                        //heldAtom.SendClick();
+                        ec.DispatchUnEquipToHand(heldEntity.Uid);
                     }
                 }
             }
@@ -175,10 +182,8 @@ namespace SS3D.UserInterface
             {
                 if (lastSlot != GUIBodyPart.None) // It came from the inventory
                 {
-                    //m.SendUnequipItem(lastSlot);
                     lastSlot = GUIBodyPart.None;
                 }
-                //m.SendEquipItem((Atom.Item.Item)heldAtom, slot.GetBodyPart());
                 heldEntity = null;
                 return true;
             }
@@ -213,8 +218,9 @@ namespace SS3D.UserInterface
 
             if (heldEntity != null)
             {
-                //heldAtom.sprite.Position = mousePos;
-                //heldAtom.sprite.Draw();
+                Sprite s = SS3D.HelperClasses.Utilities.GetSpriteComponentSprite(heldEntity);
+                s.Position = mousePos;
+                s.Draw();
             }
         }
     }

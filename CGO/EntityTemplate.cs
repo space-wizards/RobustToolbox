@@ -65,6 +65,7 @@ namespace CGO
                 e.AddComponent(component.Family, component);
             }
             e.name = Name;
+            e.template = this;
             return e;
         }
 

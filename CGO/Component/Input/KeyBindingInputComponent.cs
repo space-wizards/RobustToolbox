@@ -40,6 +40,8 @@ namespace CGO
 
         public virtual void KeyDown(object sender, BoundKeyEventArgs e)
         {
+            if (GetKeyState(e.Function))
+                return; //Don't repeat keys that are already down.
             Owner.SendComponentNetworkMessage(this, Lidgren.Network.NetDeliveryMethod.ReliableUnordered, e.Function, e.FunctionState);
             SetKeyState(e.Function, true);
             Owner.SendMessage(this, ComponentMessageType.BoundKeyChange, null, e.Function, e.FunctionState);

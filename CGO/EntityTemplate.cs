@@ -41,6 +41,18 @@ namespace CGO
         }
 
         /// <summary>
+        /// Attempts to retrieve and return the name of the basesprite of this Template.
+        /// </summary>
+        /// <returns></returns>
+        public IEnumerable<ComponentParameter> GetBaseSpriteParamaters() 
+        {
+            var spriteLists = from para in parameters.Values
+                              let spriteArgs = para.Where(arg => arg.MemberName == "basename" || arg.MemberName == "addsprite")
+                              select spriteArgs;
+            return spriteLists.SelectMany(x => x);
+        }
+
+        /// <summary>
         /// Creates an entity from this template
         /// </summary>
         /// <returns></returns>

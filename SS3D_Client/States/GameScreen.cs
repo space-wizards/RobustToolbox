@@ -25,7 +25,6 @@ using ClientServices.Lighting;
 using ClientServices.Map;
 using ClientInterfaces;
 using ClientWindow;
-using SS3D.UserInterface;
 
 namespace SS3D.States
 {
@@ -150,7 +149,7 @@ namespace SS3D.States
             //scaleX = (float)Gorgon.CurrentClippingViewport.Width / (realScreenWidthTiles * map.tileSpacing);
             //scaleY = (float)Gorgon.CurrentClippingViewport.Height / (realScreenHeightTiles * map.tileSpacing);
 
-            //PlacementManager.Singleton.Initialize(map, atomManager, this, prg.mNetworkMgr);
+            PlacementManager.Singleton.Initialize(prg.mNetworkMgr);
 
             //Init GUI components
             gameChat = new Chatbox("gameChat");
@@ -229,7 +228,7 @@ namespace SS3D.States
 
             CGO.ComponentManager.Singleton.Update(e.FrameDeltaTime);
             editMode = prg.GorgonForm.editMode;
-            //PlacementManager.Singleton.Update();
+            PlacementManager.Singleton.Update(mousePosWorld, mousePosScreen);
         }
 
         private void mNetworkMgr_MessageArrived(NetworkManager netMgr, NetIncomingMessage msg)
@@ -494,7 +493,7 @@ namespace SS3D.States
                     wallTopsBatch.Draw();
                 wallTopsBatch.Clear();
                 
-                //PlacementManager.Singleton.Draw();
+                PlacementManager.Singleton.Render();
             }
 
             lightTargetSprite.DestinationBlend = AlphaBlendOperation.Zero;
@@ -592,6 +591,29 @@ namespace SS3D.States
                 prg.mNetworkMgr.SendMessage(message, NetDeliveryMethod.ReliableUnordered);
             }
 
+            if (e.Key == KeyboardKeys.F11)
+            {
+
+                UiManager.Singleton.DisposeAllComponentsOfType(typeof(EntitySpawnPanel)); //Remove old ones.
+                UiManager.Singleton.Components.Add(new EntitySpawnPanel(new System.Drawing.Size(300, 400))); //Create a new one.
+
+                //SS3D_shared.HelperClasses.PlacementInformation placementInfo = new SS3D_shared.HelperClasses.PlacementInformation();
+                //placementInfo.AlignOption = AlignmentOptions.AlignNone;
+                //placementInfo.entityType = "Worktop";
+                //placementInfo.isTile = false;
+                //placementInfo.range = 30;
+
+                //PlacementManager.Singleton.BeginPlacing(placementInfo);
+
+                //foreach (EntityTemplate temp in entityManager.TemplateDB.Templates.Values)
+                //{
+                //    foreach (ComponentParameter para in temp.GetBaseSpriteParamaters())
+                //    {
+                //        MessageBox.Show((string)para.Parameter);
+                //    }
+                //}
+            }
+
             if (e.Key == KeyboardKeys.F12)
             {
                 NetOutgoingMessage message = prg.mNetworkMgr.netClient.CreateMessage();
@@ -613,29 +635,30 @@ namespace SS3D.States
         }
         public override void MouseDown(MouseInputEventArgs e)
         {
-            /*if (PlacementManager.Singleton.active != null)
-            {
-                if (e.Buttons == GorgonLibrary.InputDevices.MouseButtons.Left)
-                {
-                    PlacementManager.Singleton.QueuePlacement();
-                    return;
-                }
-                else if (e.Buttons == GorgonLibrary.InputDevices.MouseButtons.Right)
-                {
-                    PlacementManager.Singleton.CancelPlacement();
-                    return;
-                }
-                else if (e.Buttons == GorgonLibrary.InputDevices.MouseButtons.Middle)
-                {
-                    PlacementManager.Singleton.nextRot();
-                }
-            }*/
-
             if (playerController.controlledAtom == null)
                 return;
 
-            if (UiManager.Singleton.MouseDown(e))// MouseDown returns true if the click is handled by the ui component.
+            if (UiManager.Singleton.MouseDown(e))
+                // MouseDown returns true if the click is handled by the ui component.
                 return;
+
+            if (PlacementManager.Singleton.is_active)
+            {
+                if (e.Buttons == GorgonLibrary.InputDevices.MouseButtons.Left)
+                {
+                    PlacementManager.Singleton.RequestPlacement();
+                    return;
+                }
+                //else if (e.Buttons == GorgonLibrary.InputDevices.MouseButtons.Right)
+                //{
+                //    PlacementManager.Singleton.CancelPlacement();
+                //    return;
+                //}
+                //else if (e.Buttons == GorgonLibrary.InputDevices.MouseButtons.Middle)
+                //{
+                //    PlacementManager.Singleton.nextRot();
+                //}
+            }
 
             #region Object clicking
             bool atomClicked = false;

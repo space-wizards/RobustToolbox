@@ -56,6 +56,7 @@ namespace SGO
         public string name;
 
         #endregion
+
         #region Constructor/Destructor
         /// <summary>
         /// Constructor
@@ -196,9 +197,6 @@ namespace SGO
         #region Networking
         
         #endregion
-
-
-
 
         //VARIABLES TO REFACTOR AT A LATER DATE
         /// <summary>

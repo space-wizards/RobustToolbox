@@ -125,7 +125,7 @@ namespace SGO
             if (e != null)
             {
                 //It worked, add it.
-                m_entities.Add(++lastId, e);
+                m_entities.Add(lastId + 1, e);
                 lastId++;
                 return lastId;
             }

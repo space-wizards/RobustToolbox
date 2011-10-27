@@ -24,19 +24,139 @@ using ClientResourceManager;
 using ClientServices.Map;
 using ClientServices.Map.Tiles;
 using ClientWindow;
+using System.Drawing;
+
+using CGO;
 
 namespace SS3D.Modules
 {
     class PlacementManager
     {
         private Sprite current_sprite;
-        private CollidableAABB current_AABB;
-        private BuildPermission current_permission;
         private float current_rotation;
+        private EntityTemplate current_template;
+        private PlacementInformation current_permission;
+
+        private Vector2D current_loc_screen = Vector2D.Zero;
+        private Vector2D current_loc_world = Vector2D.Zero;
 
         public Boolean is_active { private set; get; }
 
         private NetworkManager network_manager;
+
+        #region Singleton
+        private static PlacementManager singleton;
+
+        private PlacementManager() { }
+
+        public static PlacementManager Singleton
+        {
+            get
+            {
+                if (singleton == null)
+                {
+                    singleton = new PlacementManager();
+                }
+                return singleton;
+            }
+        }
+
+        #endregion
+
+        public void Initialize(NetworkManager netMgr)
+        {
+            network_manager = netMgr;
+            Clear();
+        }
+
+        public void Clear()
+        {
+            current_sprite = null;
+            current_rotation = 0;
+            current_template = null;
+            current_permission = null;
+            current_loc_screen = Vector2D.Zero;
+            current_loc_world = Vector2D.Zero;
+            is_active = false;
+        }
+
+        public void BeginPlacing(PlacementInformation info)
+        {
+            current_permission = info;
+
+            if (info.isTile)
+                BeginPlacing(info.tileType);
+            else
+                BeginPlacing(info.entityType);
+        }
+
+        private void BeginPlacing(string templateName)
+        {
+            EntityTemplate template = EntityManager.Singleton.TemplateDB.GetTemplate(templateName);
+            if (template == null) return;
+
+            ComponentParameter spriteParam = template.GetBaseSpriteParamaters().FirstOrDefault(); //Will break if states not ordered correctly.
+            if (spriteParam == null) return;
+
+            string spriteName = (string)spriteParam.Parameter;
+            Sprite sprite = ResMgr.Singleton.GetSprite(spriteName);
+
+            current_sprite = sprite;
+            current_template = template;
+            current_rotation = 0;
+
+            is_active = true;
+        }
+
+        private void BeginPlacing(TileType tileType)
+        {
+            is_active = true;
+        }
+
+        public void RequestPlacement()
+        {
+            if(current_permission == null) return;
+
+            NetOutgoingMessage message = network_manager.netClient.CreateMessage();
+
+            message.Write((byte)NetMessage.PlacementManagerMessage);
+            message.Write((byte)PlacementManagerMessage.RequestPlacement);
+            message.Write((byte)AlignmentOptions.AlignNone);
+
+            message.Write(current_permission.isTile);
+
+            if (current_permission.isTile) message.Write((int)current_permission.tileType);
+            else message.Write(current_permission.entityType);
+
+            message.Write(current_loc_world.X);
+            message.Write(current_loc_world.Y);
+            message.Write(current_rotation);
+
+            network_manager.SendMessage(message, NetDeliveryMethod.ReliableUnordered);
+        }
+
+        public void Update(Vector2D mouseWorld, Vector2D mouseScreen)
+        {
+            if (current_sprite == null) return; //Temporary.
+
+            Vector2D adjusted_loc_screen = mouseScreen;
+            adjusted_loc_screen.X -= (float)(current_sprite.Width / 2f);
+            adjusted_loc_screen.Y -= (float)(current_sprite.Height / 2f);
+            current_loc_screen = adjusted_loc_screen;
+
+            Vector2D adjusted_loc_world = mouseWorld;
+            current_loc_world = mouseWorld;
+        }
+
+        public void Render()
+        {
+            if (current_sprite != null)
+            {
+                current_sprite.Position = current_loc_screen;
+                current_sprite.Draw();
+            }
+        }
+            
     }
 
     //class PlacementManager

@@ -30,5 +30,15 @@ namespace CGO
                 return null;
             return template.CreateEntity();
         }
+
+        /// <summary>
+        /// Retrieves template with given name from db
+        /// </summary>
+        /// <param name="entityTemplateName">name of the template</param>
+        /// <returns>Template</returns>
+        public EntityTemplate GetTemplate(string entityTemplateName)
+        {
+            return m_entityTemplateDatabase.GetTemplate(entityTemplateName);
+        }
     }
 }

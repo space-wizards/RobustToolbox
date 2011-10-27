@@ -17,6 +17,8 @@ namespace CGO
         private EntityNetworkManager m_entityNetworkManager;
         private NetClient m_netClient;
 
+        public EntityTemplateDatabase TemplateDB { get { return m_entityTemplateDatabase; } }
+
         private Dictionary<int, Entity> m_entities;
         private int lastId = 0;
 
@@ -78,6 +80,7 @@ namespace CGO
 
         private void SpawnEntity(string EntityType, int Uid)
         {
+
             Entity e = m_entityFactory.CreateEntity(EntityType);
             if (e != null)
             {

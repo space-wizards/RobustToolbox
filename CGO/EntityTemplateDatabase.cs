@@ -12,6 +12,8 @@ namespace CGO
     {
         private Dictionary<string, EntityTemplate> m_templates;
 
+        public Dictionary<string, EntityTemplate> Templates { get { return m_templates; } }
+
         public EntityTemplateDatabase()
         {
             m_templates = new Dictionary<string, EntityTemplate>();

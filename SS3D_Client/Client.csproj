@@ -166,7 +166,8 @@
     <Compile Include="Modules\UserInterface\Components\Button.cs" />
     <Compile Include="Modules\UserInterface\Components\Chatbox.cs" />
     <Compile Include="Modules\UserInterface\Components\Checkbox.cs" />
-    <Compile Include="Modules\UserInterface\Components\EditorAtomButton.cs" />
+    <Compile Include="Modules\UserInterface\Components\EntitySpawnPanel.cs" />
+    <Compile Include="Modules\UserInterface\Components\EntitySpawnSelectButton.cs" />
     <Compile Include="Modules\UserInterface\Components\GuiComponent.cs" />
     <Compile Include="Modules\UserInterface\Components\DisconnectedScreenBlocker.cs" />
     <Compile Include="Modules\UserInterface\Components\HumanHandsGui.cs" />
@@ -252,6 +253,7 @@
     </Content>
     <Content Include="EntityTemplates\Tables.xml">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      <SubType>Designer</SubType>
     </Content>
     <Content Include="EntityTemplates\Tools.xml">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>

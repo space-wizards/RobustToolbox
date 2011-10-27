@@ -58,7 +58,7 @@ namespace CGO
         /// <returns>A GameObjectComponent</returns>
         public IGameObjectComponent GetComponent(string componentTypeName)
         {
-            if (componentTypeName == null || componentTypeName == "")
+            if (string.IsNullOrWhiteSpace(componentTypeName))
                 return null;
             //Type t = Assembly.GetExecutingAssembly().GetType(componentTypeName); //Get the type
             Type t = Type.GetType("CGO." + componentTypeName); //Get the type
@@ -66,6 +66,18 @@ namespace CGO
                 return null;
 
             return (IGameObjectComponent)Activator.CreateInstance(t); // Return an instance
+        }
+
+        /// <summary>
+        /// Gets a component type from given name.
+        /// </summary>
+        /// <param name="componentType">Name of component type required.</param>
+        /// <returns>A component Type</returns>
+        public Type GetComponentType(string componentTypeName)
+        {
+            if (string.IsNullOrWhiteSpace(componentTypeName))
+                return null;
+            return Type.GetType("CGO." + componentTypeName, false);
         }
     }
 }

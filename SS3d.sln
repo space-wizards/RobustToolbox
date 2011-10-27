@@ -1,6 +1,6 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 11.00
-# Visual Studio 2010
+# Visual C# Express 2010
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Client", "SS3D_client\Client.csproj", "{835500C3-34D6-4329-954A-5D028D634E90}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Server", "SS3D_server\Server.csproj", "{54B6035E-489F-4790-A033-3C0B34C6F2BD}"
@@ -26,12 +26,6 @@ EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ServerServices", "ServerServices\ServerServices.csproj", "{765AFD37-F6EF-4CDF-9596-C3DD15974A35}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ServerInterfaces", "ServerInterfaces\ServerInterfaces.csproj", "{54D36F17-8D71-4DD8-8B29-12CAD489F0D9}"
-EndProject
-Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{A06E14B0-1C84-4B9D-ADA5-CF16179A4718}"
-	ProjectSection(SolutionItems) = preProject
-		XMLSchemas\EntityTemplates.xsd = XMLSchemas\EntityTemplates.xsd
-		XMLSchemas\KeyBindings.xsd = XMLSchemas\KeyBindings.xsd
-	EndProjectSection
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

@@ -78,7 +78,7 @@ namespace CGO
             return -1;
         }
 
-        private void SpawnEntity(string EntityType, int Uid)
+        private Entity SpawnEntity(string EntityType, int Uid)
         {
 
             Entity e = m_entityFactory.CreateEntity(EntityType);
@@ -89,7 +89,9 @@ namespace CGO
                 m_entities.Add(Uid, e);
                 lastId = Uid;
                 e.Initialize();
+                return e;
             }
+            return null;
         }
 
         public Entity[] GetEntitiesInRange(Vector2D position, float Range)
@@ -136,8 +138,10 @@ namespace CGO
             {
                 case EntityManagerMessage.SpawnEntity:
                     string EntityType = msg.ReadString();
+                    string EntityName = msg.ReadString();
                     int Uid = msg.ReadInt32();
-                    SpawnEntity(EntityType, Uid);
+                    Entity e = SpawnEntity(EntityType, Uid);
+                    e.name = EntityName;
                     break;
                 case EntityManagerMessage.DeleteEntity:
                     break;

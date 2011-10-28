@@ -36,4 +36,16 @@
       <Component name="BasicItemComponent"></Component>
     </Components>
   </EntityTemplate>
+  <EntityTemplate name="Mop">
+    <Components>
+      <Component name="NetworkMoverComponent"></Component>
+      <Component name="ItemSpriteComponent">
+        <Parameters>
+          <Parameter name="basename" type="string" value="mop" />
+        </Parameters>
+      </Component>
+      <Component name="ClickableComponent"></Component>
+      <Component name="BasicItemComponent"></Component>
+    </Components>
+  </EntityTemplate>
 </EntityTemplates>

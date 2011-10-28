@@ -26,33 +26,23 @@ namespace SS3D.UserInterface
         public EntitySpawnPanel(Size _size)
             : base("Entity Spawn Panel", _size)
         {
-            Button closeButton = new Button("Close");
-            closeButton.Position = new Point(5, 5);
-            closeButton.Clicked += new Button.ButtonPressHandler(closeButton_Clicked);
-            components.Add(closeButton);
-
-            Button clearButton = new Button("Deselect");
-            clearButton.Position = new Point(80, 5);
-            clearButton.Clicked += new Button.ButtonPressHandler(clearButton_Clicked);
-            components.Add(clearButton);
-
             BuildEntityList();
-
             position = new Point((int)(Gorgon.Screen.Width / 2f) - (int)(this.ClientArea.Width / 2f), (int)(Gorgon.Screen.Height / 2f) - (int)(this.ClientArea.Height / 2f));
+            PlacementManager.Singleton.PlacementCanceled += new PlacementManager.PlacementCanceledHandler(PlacementMgr_PlacementCanceled);
         }
 
-        void clearButton_Clicked(Button sender)
+        void PlacementMgr_PlacementCanceled(PlacementManager mgr)
         {
             foreach (GuiComponent curr in components)
                 if (curr.GetType() == typeof(EntitySpawnSelectButton))
                     ((EntitySpawnSelectButton)curr).selected = false;
-
-            PlacementManager.Singleton.Clear();
         }
 
         private void BuildEntityList()
         {
-            int y_offset = 40;
+            int max_width = 0;
+            int y_offset = 5;
+
             foreach (KeyValuePair<string, EntityTemplate> entry in EntityManager.Singleton.TemplateDB.Templates)
             {
                 EntitySpawnSelectButton newButton = new EntitySpawnSelectButton(entry.Value, entry.Key);
@@ -61,28 +51,36 @@ namespace SS3D.UserInterface
                 newButton.Update();
                 y_offset += 5 + newButton.ClientArea.Height;
                 newButton.Clicked += new EntitySpawnSelectButton.EntitySpawnSelectPress(newButton_Clicked);
+                if (newButton.ClientArea.Width > max_width) max_width = newButton.ClientArea.Width;
             }
+
+            foreach (GuiComponent curr in components)
+                if (curr.GetType() == typeof(EntitySpawnSelectButton))
+                    ((EntitySpawnSelectButton)curr).fixed_width = max_width;
         }
 
         void newButton_Clicked(EntitySpawnSelectButton sender, EntityTemplate template, string templateName)
         {
+            if (sender.selected)
+            {
+                sender.selected = false;
+                PlacementManager.Singleton.Clear();
+                return;
+            }
+
             foreach (GuiComponent curr in components)
                 if (curr.GetType() == typeof(EntitySpawnSelectButton))
                     ((EntitySpawnSelectButton)curr).selected = false;
 
             PlacementInformation newObjInfo = new PlacementInformation();
-            newObjInfo.AlignOption = AlignmentOptions.AlignNone;
+
+            newObjInfo.placementOption = PlacementOption.Freeform;
             newObjInfo.entityType = templateName;
             newObjInfo.isTile = false;
 
             sender.selected = true;
 
             PlacementManager.Singleton.BeginPlacing(newObjInfo);
-        }
-
-        void closeButton_Clicked(Button sender)
-        {
-            this.Dispose();
         }
 
         public override void Update()
@@ -100,6 +98,7 @@ namespace SS3D.UserInterface
         public override void Dispose()
         {
             if (disposing) return;
+            PlacementManager.Singleton.PlacementCanceled -= new PlacementManager.PlacementCanceledHandler(PlacementMgr_PlacementCanceled);
             base.Dispose();
         }
 

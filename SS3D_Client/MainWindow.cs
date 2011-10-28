@@ -52,7 +52,7 @@ namespace SS3D
 
         private Modules.StateManager stateMgr;
         private Program prg;
-        private AlignmentOptions alignType = AlignmentOptions.AlignTile;
+        private PlacementOption alignType = PlacementOption.AlignTile;
         private Type atomSpawnType = null;
         private Type tileSpawnType;
         public bool editMode = false;
@@ -491,22 +491,22 @@ namespace SS3D
 
         private void wallToolStripMenuItem1_Click(object sender, EventArgs e)
         {
-            alignType = AlignmentOptions.AlignWall;
+            alignType = PlacementOption.AlignWall;
         }
 
         private void tileToolStripMenuItem_Click(object sender, EventArgs e)
         {
-            alignType = AlignmentOptions.AlignTile;
+            alignType = PlacementOption.AlignTile;
         }
 
         private void sameTypeToolStripMenuItem_Click(object sender, EventArgs e)
         {
-            alignType = AlignmentOptions.AlignSimilar;
+            alignType = PlacementOption.AlignSimilar;
         }
 
         private void freeToolStripMenuItem_Click(object sender, EventArgs e)
         {
-            alignType = AlignmentOptions.AlignNone;
+            alignType = PlacementOption.AlignNone;
         }
     }
 }

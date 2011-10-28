@@ -68,10 +68,10 @@ namespace SS3D_Server.Modules
             }
         }
 
-        private PlacementInformation GetPermission(int uid, AlignmentOptions alignOpt)
+        private PlacementInformation GetPermission(int uid, PlacementOption alignOpt)
         {
             var permission = from p in BuildPermissions
-                             where p.mobUid == uid && p.AlignOption == alignOpt
+                             where p.mobUid == uid && p.placementOption == alignOpt
                              select p;
 
             if (permission.Any()) return permission.First();
@@ -90,7 +90,7 @@ namespace SS3D_Server.Modules
 
         public void HandlePlacementRequest(NetIncomingMessage msg)
         {
-            AlignmentOptions alignRcv = (AlignmentOptions)msg.ReadByte();
+            PlacementOption alignRcv = (PlacementOption)msg.ReadByte();
 
             Boolean isTile = msg.ReadBoolean();
 
@@ -159,7 +159,7 @@ namespace SS3D_Server.Modules
         /// <summary>
         ///  Places mob in entity placement mode with given settings.
         /// </summary>
-        public void SendPlacementBegin(Entity mob, ushort range, string objectType, AlignmentOptions alignOption)
+        public void SendPlacementBegin(Entity mob, ushort range, string objectType, PlacementOption alignOption)
         {
             NetOutgoingMessage message = SS3DNetServer.Singleton.CreateMessage();
             message.Write((byte)NetMessage.PlacementManagerMessage);
@@ -178,7 +178,7 @@ namespace SS3D_Server.Modules
         /// <summary>
         ///  Places mob in entity placement mode with given settings.
         /// </summary>
-        public void SendPlacementBegin(Entity mob, ushort range, TileType tileType, AlignmentOptions alignOption)
+        public void SendPlacementBegin(Entity mob, ushort range, TileType tileType, PlacementOption alignOption)
         {
             NetOutgoingMessage message = SS3DNetServer.Singleton.CreateMessage();
             message.Write((byte)NetMessage.PlacementManagerMessage);
@@ -211,7 +211,7 @@ namespace SS3D_Server.Modules
         /// <summary>
         ///  Gives Mob permission to place entity and places it in object placement mode.
         /// </summary>
-        public void StartBuilding(Entity mob, ushort range, string objectType, AlignmentOptions alignOption)
+        public void StartBuilding(Entity mob, ushort range, string objectType, PlacementOption alignOption)
         {
             AssignBuildPermission(mob, range, objectType, alignOption);
             SendPlacementBegin(mob, range, objectType, alignOption);
@@ -220,7 +220,7 @@ namespace SS3D_Server.Modules
         /// <summary>
         ///  Gives Mob permission to place tile and places it in object placement mode.
         /// </summary>
-        public void StartBuilding(Entity mob, ushort range, TileType tileType, AlignmentOptions alignOption)
+        public void StartBuilding(Entity mob, ushort range, TileType tileType, PlacementOption alignOption)
         {
             AssignBuildPermission(mob, range, tileType, alignOption);
             SendPlacementBegin(mob, range, tileType, alignOption);
@@ -238,14 +238,14 @@ namespace SS3D_Server.Modules
         /// <summary>
         ///  Gives a mob a permission to place a given Entity.
         /// </summary>
-        public void AssignBuildPermission(Entity mob, ushort range, string objectType, AlignmentOptions alignOption)
+        public void AssignBuildPermission(Entity mob, ushort range, string objectType, PlacementOption alignOption)
         {
             PlacementInformation newPermission = new PlacementInformation();
             newPermission.mobUid = mob.Uid;
             newPermission.range = range;
             newPermission.isTile = false;
             newPermission.entityType = objectType;
-            newPermission.AlignOption = alignOption;
+            newPermission.placementOption = alignOption;
 
             var mobPermissions = from PlacementInformation permission in BuildPermissions
                                  where permission.mobUid == mob.Uid
@@ -265,14 +265,14 @@ namespace SS3D_Server.Modules
         /// <summary>
         ///  Gives a mob a permission to place a given Tile.
         /// </summary>
-        public void AssignBuildPermission(Entity mob, ushort range, TileType tileType, AlignmentOptions alignOption)
+        public void AssignBuildPermission(Entity mob, ushort range, TileType tileType, PlacementOption alignOption)
         {
             PlacementInformation newPermission = new PlacementInformation();
             newPermission.mobUid = mob.Uid;
             newPermission.range = range;
             newPermission.isTile = true;
             newPermission.tileType = tileType;
-            newPermission.AlignOption = alignOption;
+            newPermission.placementOption = alignOption;
 
             var mobPermissions = from PlacementInformation permission in BuildPermissions
                                  where permission.mobUid == mob.Uid

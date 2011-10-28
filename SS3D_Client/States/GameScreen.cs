@@ -228,7 +228,7 @@ namespace SS3D.States
 
             CGO.ComponentManager.Singleton.Update(e.FrameDeltaTime);
             editMode = prg.GorgonForm.editMode;
-            PlacementManager.Singleton.Update(mousePosWorld, mousePosScreen);
+            PlacementManager.Singleton.Update(mousePosScreen, map);
         }
 
         private void mNetworkMgr_MessageArrived(NetworkManager netMgr, NetIncomingMessage msg)
@@ -595,7 +595,7 @@ namespace SS3D.States
             {
 
                 UiManager.Singleton.DisposeAllComponentsOfType(typeof(EntitySpawnPanel)); //Remove old ones.
-                UiManager.Singleton.Components.Add(new EntitySpawnPanel(new System.Drawing.Size(300, 400))); //Create a new one.
+                UiManager.Singleton.Components.Add(new EntitySpawnPanel(new System.Drawing.Size(200, 400))); //Create a new one.
 
                 //SS3D_shared.HelperClasses.PlacementInformation placementInfo = new SS3D_shared.HelperClasses.PlacementInformation();
                 //placementInfo.AlignOption = AlignmentOptions.AlignNone;
@@ -649,11 +649,11 @@ namespace SS3D.States
                     PlacementManager.Singleton.RequestPlacement();
                     return;
                 }
-                //else if (e.Buttons == GorgonLibrary.InputDevices.MouseButtons.Right)
-                //{
-                //    PlacementManager.Singleton.CancelPlacement();
-                //    return;
-                //}
+                else if (e.Buttons == GorgonLibrary.InputDevices.MouseButtons.Right)
+                {
+                    PlacementManager.Singleton.Clear();
+                    return;
+                }
                 //else if (e.Buttons == GorgonLibrary.InputDevices.MouseButtons.Middle)
                 //{
                 //    PlacementManager.Singleton.nextRot();
@@ -715,14 +715,18 @@ namespace SS3D.States
             } 
             #endregion
         }
+
         public override void MouseMove(MouseInputEventArgs e)
         {
             mousePosScreen = new Vector2D(e.Position.X, e.Position.Y);
             mousePosWorld = new Vector2D(e.Position.X + ClientWindowData.xTopLeft, e.Position.Y + ClientWindowData.yTopLeft);
             UiManager.Singleton.MouseMove(e);
         }
+
         public override void MouseWheelMove(MouseInputEventArgs e)
-        { } 
+        {
+            UiManager.Singleton.MouseWheelMove(e);
+        } 
         #endregion
 
         private struct ClickData

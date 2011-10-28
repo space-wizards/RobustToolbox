@@ -52,6 +52,19 @@
       <Component name="EquippableComponent"></Component>
     </Components>
   </EntityTemplate>
+  <EntityTemplate name="Medical_Suit">
+    <Components>
+      <Component name="NetworkMoverComponent"></Component>
+      <Component name="WearableSpriteComponent">
+        <Parameters>
+          <Parameter name="basename" type="string" value="medicsuit" />
+        </Parameters>
+      </Component>
+      <Component name="ClickableComponent"></Component>
+      <Component name="BasicItemComponent"></Component>
+      <Component name="EquippableComponent"></Component>
+    </Components>
+  </EntityTemplate>
   <EntityTemplate name="Armour">
     <Components>
       <Component name="NetworkMoverComponent"></Component>

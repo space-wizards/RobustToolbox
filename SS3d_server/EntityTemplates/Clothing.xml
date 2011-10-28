@@ -42,6 +42,20 @@
       </Component>
     </Components>
   </EntityTemplate>
+  <EntityTemplate name="Medical_Suit">
+    <Components>
+      <Component name="ClickableComponent"></Component>
+      <Component name="SpriteComponent"></Component>
+      <Component name="BasicInteractableComponent"></Component>
+      <Component name="BasicMoverComponent"></Component>
+      <Component name="BasicItemComponent"></Component>
+      <Component name="EquippableComponent">
+        <Parameters>
+          <Parameter name="wearloc" type="string" value="Inner" />
+        </Parameters>
+      </Component>
+    </Components>
+  </EntityTemplate>
   <EntityTemplate name="Helmet">
     <Components>
       <Component name="ClickableComponent"></Component>

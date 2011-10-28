@@ -172,6 +172,7 @@
     </Content>
     <Content Include="EntityTemplates\Clothing.xml">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      <SubType>Designer</SubType>
     </Content>
     <Content Include="EntityTemplates\Containers.xml">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
@@ -190,6 +191,7 @@
     </Content>
     <Content Include="EntityTemplates\Tools.xml">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      <SubType>Designer</SubType>
     </Content>
     <Content Include="EntityTemplates\Tables.xml">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>

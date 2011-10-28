@@ -42,10 +42,10 @@ namespace CGO
                     LightOffset = (Vector2D)parameter.Parameter;
                     break;
                 case "lightoffsetx":
-                    LightOffset.X = float.Parse((string)parameter.Parameter);
+                    LightOffset.X = float.Parse((string)parameter.Parameter, System.Globalization.CultureInfo.InvariantCulture);
                     break;
                 case "lightoffsety":
-                    LightOffset.Y = float.Parse((string)parameter.Parameter);
+                    LightOffset.Y = float.Parse((string)parameter.Parameter, System.Globalization.CultureInfo.InvariantCulture);
                     break;
             }
         }

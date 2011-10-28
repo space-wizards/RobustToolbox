@@ -5,6 +5,7 @@ using System.Text;
 using Lidgren.Network;
 using System.Xml.Linq;
 using SS3D_shared.HelperClasses;
+using System.Globalization;
 
 namespace SGO
 {
@@ -60,8 +61,8 @@ namespace SGO
 
         public void LoadEntity(XElement e)
         {
-            float X = float.Parse(e.Attribute("X").Value);
-            float Y = float.Parse(e.Attribute("Y").Value);
+            float X = float.Parse(e.Attribute("X").Value, CultureInfo.InvariantCulture);
+            float Y = float.Parse(e.Attribute("Y").Value, CultureInfo.InvariantCulture);
             string template = e.Attribute("template").Value;
             string name = e.Attribute("name").Value;
             Entity ent = SpawnEntity(template);

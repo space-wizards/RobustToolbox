@@ -1,11 +1,11 @@
 ﻿public enum PlacementOption
 {
     /// <summary>
-    ///  Does not snap-to anything.
+    ///  Does not snap-to anything. Can not be used on walls.
     /// </summary>
     AlignNone = 0,
     /// <summary>
-    ///  Snaps to similar, nearby objects.
+    ///  Snaps to similar, nearby objects. Can not be used on walls.
     /// </summary>
     AlignSimilar,
     /// <summary>
@@ -18,11 +18,11 @@
     AlignWall,
 
     /// <summary>
-    ///  Does not snap-to anything. Range not limited. Requires admin.
+    ///  Does not snap-to anything. Can not be used on walls. Range not limited. Requires admin.
     /// </summary>
     AlignNoneFree,
     /// <summary>
-    ///  Snaps to similar, nearby objects. Range not limited. Requires admin.
+    ///  Snaps to similar, nearby objects. Can not be used on walls. Range not limited. Requires admin.
     /// </summary>
     AlignSimilarFree,
     /// <summary>

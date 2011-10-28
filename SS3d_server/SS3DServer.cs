@@ -513,6 +513,7 @@ namespace SS3D_Server
                             AdminPlayerListMessage.Write((byte)plrSession.status);
                             AdminPlayerListMessage.Write(plrSession.assignedJob.Name);
                             AdminPlayerListMessage.Write(plrSession.connectedClient.RemoteEndpoint.Address.ToString());
+                            AdminPlayerListMessage.Write(plrSession.adminPermissions.isAdmin);
                         }
                         SS3DNetServer.Singleton.SendMessage(AdminPlayerListMessage, messageBody.SenderConnection, NetDeliveryMethod.ReliableOrdered);
                     }

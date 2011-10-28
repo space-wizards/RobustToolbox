@@ -454,6 +454,28 @@ namespace ClientServices.Map
 
         #region Quick collision checks
 
+        public bool IsSolidTile(Vector2D pos)
+        {
+            TileType tile = GetTileTypeFromWorldPosition(pos);
+
+            if (tile == TileType.None)
+            {
+                return false;
+            }
+            else if (tile == TileType.Wall)
+            {
+                return true;
+            }
+            else if ((tile == TileType.Floor || tile == TileType.Space))
+            {
+                return false;
+            }
+            else
+            {
+                return false;
+            }
+        }
+
         public bool CheckCollision(Vector2D pos)
         {
             TileType tile = GetTileTypeFromWorldPosition(pos);

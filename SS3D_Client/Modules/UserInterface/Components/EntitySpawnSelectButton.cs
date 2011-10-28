@@ -35,6 +35,8 @@ namespace SS3D.UserInterface
 
         public Boolean selected = false;
 
+        public int fixed_width = -1;
+
         public delegate void EntitySpawnSelectPress(EntitySpawnSelectButton sender, EntityTemplate template, string templateName);
         public event EntitySpawnSelectPress Clicked;
 
@@ -78,7 +80,7 @@ namespace SS3D.UserInterface
             base.Update();
             objectSprite.Position = new Vector2D(Position.X + 5, Position.Y + 5);
             name.Position = new Vector2D(objectSprite.Position.X + objectSprite.Width + 5, objectSprite.Position.Y);
-            ClientArea = new Rectangle(Position, new Size((int)objectSprite.Width + (int)name.Width + 15, ((int)objectSprite.Height > (int)name.Height ? (int)objectSprite.Height : ((int)name.Height + 5)) + 10));
+            ClientArea = new Rectangle(Position, new Size(fixed_width != -1 ? fixed_width : ((int)objectSprite.Width + (int)name.Width + 15), ((int)objectSprite.Height > (int)name.Height ? (int)objectSprite.Height : ((int)name.Height + 5)) + 10));
         }
 
         public override void Render()

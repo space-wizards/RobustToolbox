@@ -28,13 +28,23 @@ namespace SS3D.UserInterface
         public Color TitleColor1 = Color.SlateGray;
         public Color TitleColor2 = Color.DarkSlateGray;
 
+        private SimpleImageButton closeButton;
+        public Boolean closeButtonVisible = true;
+
         public Window(string windowTitle, Size _size)
             : base(windowTitle, _size)
         {
+            closeButton = new SimpleImageButton("closewindow");
+            closeButton.Clicked += new SimpleImageButton.SimpleImageButtonPressHandler(closeButton_Clicked);
             title = new Label(windowTitle);
             gradient = new GradientBox();
             DrawBackground = true;
             Update();
+        }
+
+        void closeButton_Clicked(SimpleImageButton sender)
+        {
+            this.Dispose();
         }
 
         public override void Update()
@@ -46,11 +56,13 @@ namespace SS3D.UserInterface
             title.Position = new Point(ClientArea.X + 3, y_pos + titleBuffer);
             titleArea = new Rectangle(ClientArea.X, y_pos, ClientArea.Width, title.ClientArea.Height + (2 * titleBuffer));
             title.Update();
+            closeButton.Position = new Point(titleArea.Right - 5 - closeButton.ClientArea.Width, titleArea.Y + (int)(titleArea.Height / 2f) - (int)(closeButton.ClientArea.Height / 2f));
             Rectangle gradientArea = titleArea;
             gradient.ClientArea = gradientArea;
             gradient.Color1 = TitleColor1;
             gradient.Color2 = TitleColor2;
             gradient.Update();
+            closeButton.Update();
         }
 
         public override void Render()
@@ -60,6 +72,7 @@ namespace SS3D.UserInterface
             Gorgon.Screen.Rectangle(titleArea.X, titleArea.Y, titleArea.Width, titleArea.Height, Color.Black);
             base.Render();
             title.Render();
+            if(closeButtonVisible) closeButton.Render();
         }
 
         public override void Dispose()
@@ -71,6 +84,9 @@ namespace SS3D.UserInterface
         public override bool MouseDown(MouseInputEventArgs e)
         {
             if (disposing || !IsVisible()) return false;
+
+            if (closeButton.MouseDown(e)) return true;
+
             if (base.MouseDown(e)) return true;
 
             if (titleArea.Contains((int)e.Position.X, (int)e.Position.Y))

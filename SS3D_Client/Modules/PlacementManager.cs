@@ -25,7 +25,8 @@ using ClientServices.Map;
 using ClientServices.Map.Tiles;
 using ClientWindow;
 using System.Drawing;
-
+using ClientInterfaces;
+using ClientServices;
 using CGO;
 
 namespace SS3D.Modules
@@ -43,6 +44,11 @@ namespace SS3D.Modules
         public Boolean is_active { private set; get; }
 
         private NetworkManager network_manager;
+
+        private Boolean validPosition = false;
+
+        public delegate void PlacementCanceledHandler(PlacementManager mgr);
+        public event PlacementCanceledHandler PlacementCanceled;
 
         #region Singleton
         private static PlacementManager singleton;
@@ -78,6 +84,7 @@ namespace SS3D.Modules
             current_loc_screen = Vector2D.Zero;
             current_loc_world = Vector2D.Zero;
             is_active = false;
+            if(PlacementCanceled != null) PlacementCanceled(this);
         }
 
         public void BeginPlacing(PlacementInformation info)
@@ -85,12 +92,12 @@ namespace SS3D.Modules
             current_permission = info;
 
             if (info.isTile)
-                BeginPlacing(info.tileType);
+                PreparePlacement(info.tileType);
             else
-                BeginPlacing(info.entityType);
+                PreparePlacement(info.entityType);
         }
 
-        private void BeginPlacing(string templateName)
+        private void PreparePlacement(string templateName)
         {
             EntityTemplate template = EntityManager.Singleton.TemplateDB.GetTemplate(templateName);
             if (template == null) return;
@@ -108,7 +115,7 @@ namespace SS3D.Modules
             is_active = true;
         }
 
-        private void BeginPlacing(TileType tileType)
+        private void PreparePlacement(TileType tileType)
         {
             is_active = true;
         }
@@ -116,12 +123,13 @@ namespace SS3D.Modules
         public void RequestPlacement()
         {
             if(current_permission == null) return;
+            if (!validPosition) return;
 
             NetOutgoingMessage message = network_manager.netClient.CreateMessage();
 
             message.Write((byte)NetMessage.PlacementManagerMessage);
             message.Write((byte)PlacementManagerMessage.RequestPlacement);
-            message.Write((byte)AlignmentOptions.AlignNone);
+            message.Write((byte)PlacementOption.AlignNone);
 
             message.Write(current_permission.isTile);
 
@@ -135,25 +143,69 @@ namespace SS3D.Modules
             network_manager.SendMessage(message, NetDeliveryMethod.ReliableUnordered);
         }
 
-        public void Update(Vector2D mouseWorld, Vector2D mouseScreen)
+        public void Update(Vector2D mouseScreen, Map currentMap)
         {
-            if (current_sprite == null) return; //Temporary.
+            if (currentMap == null) return;
 
             Vector2D adjusted_loc_screen = mouseScreen;
-            adjusted_loc_screen.X -= (float)(current_sprite.Width / 2f);
-            adjusted_loc_screen.Y -= (float)(current_sprite.Height / 2f);
             current_loc_screen = adjusted_loc_screen;
 
-            Vector2D adjusted_loc_world = mouseWorld;
-            current_loc_world = mouseWorld;
+            Vector2D adjusted_loc_world = new Vector2D(mouseScreen.X + ClientWindowData.xTopLeft, mouseScreen.Y + ClientWindowData.yTopLeft);
+            current_loc_world = adjusted_loc_world;
+
+            validPosition = true;
+
+            if (current_permission != null)
+            {
+                if (current_permission.placementOption == PlacementOption.AlignNone || current_permission.placementOption == PlacementOption.AlignNoneFree)
+                {
+                    ICollisionManager collisionService = (ICollisionManager)ServiceManager.Singleton.GetService(ClientServiceType.CollisionManager);
+
+                    //current_sprite.Position = new Vector2D(current_loc_screen.X - (current_sprite.Width / 2f), current_loc_screen.Y - (current_sprite.Height / 2f));
+                    //current_sprite.UpdateAABB();
+
+                    //if (collisionService.IsColliding(current_sprite.AABB, true)) validPosition = false;
+
+                    if (currentMap.IsSolidTile(current_loc_world)) validPosition = false;
+
+                    if (current_permission.placementOption == PlacementOption.AlignNone) //AlignNoneFree does not check for range.
+                        if ((PlayerController.Singleton.controlledAtom.Position - current_loc_world).Length > current_permission.range) validPosition = false;
+                }
+                else if (current_permission.placementOption == PlacementOption.AlignSimilar || current_permission.placementOption == PlacementOption.AlignSimilarFree)
+                {
+                }
+                else if (current_permission.placementOption == PlacementOption.AlignTile || current_permission.placementOption == PlacementOption.AlignTileFree)
+                {
+                }
+                else if (current_permission.placementOption == PlacementOption.AlignWall || current_permission.placementOption == PlacementOption.AlignWallFree)
+                {
+                }
+                else if (current_permission.placementOption == PlacementOption.Freeform)
+                {
+                    validPosition = true;
+                }
+            }
         }
 
         public void Render()
         {
             if (current_sprite != null)
             {
-                current_sprite.Position = current_loc_screen;
+                current_sprite.Color = validPosition ? Color.ForestGreen : Color.IndianRed;
+                current_sprite.Position = new Vector2D(current_loc_screen.X - (current_sprite.Width / 2f), current_loc_screen.Y - (current_sprite.Height / 2f)); //Centering the sprite on the cursor.
                 current_sprite.Draw();
+                current_sprite.Color = Color.White;
+            }
+
+            if (current_permission != null)
+            {
+                if (current_permission.placementOption == PlacementOption.AlignNone    ||
+                    current_permission.placementOption == PlacementOption.AlignSimilar ||
+                    current_permission.placementOption == PlacementOption.AlignTile    ||
+                    current_permission.placementOption == PlacementOption.AlignWall)   //If it uses range, show the range.
+                {
+                    Gorgon.Screen.Circle(PlayerController.Singleton.controlledAtom.Position.X - ClientWindowData.xTopLeft, PlayerController.Singleton.controlledAtom.Position.Y - ClientWindowData.yTopLeft, current_permission.range, Color.DeepSkyBlue, new Vector2D(2, 2));
+                }
             }
         }
             

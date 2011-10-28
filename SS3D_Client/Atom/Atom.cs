@@ -28,7 +28,7 @@ namespace SS3D.Atom
 
         //SPRITE
         public Sprite sprite;
-        public string spritename = "noSprite";
+        public string spritename = "nosprite";
         public Dictionary<int, string> spriteNames;
         public int drawDepth = 0;
         private int index = 0;
@@ -330,7 +330,7 @@ namespace SS3D.Atom
         #region Rendering
         public virtual void Render(float xTopLeft, float yTopLeft, int Opacity = 255)//, List<Light> lights)
         {
-            //if (spritename == "noSprite")
+            //if (spritename == "nosprite")
                 //return;
             //System.Drawing.Point tilePos = atomManager.gameState.map.GetTileArrayPositionFromWorldPosition(Position);
             //System.Drawing.Point topLeft = atomManager.gameState.map.GetTileArrayPositionFromWorldPosition(position - sprite.Size / 2);

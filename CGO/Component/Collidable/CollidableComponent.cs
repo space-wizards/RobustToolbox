@@ -136,25 +136,25 @@ namespace CGO
                 case "TweakAABBtop":
                     if (parameter.Parameter.GetType() == typeof(string))
                     {
-                        tweakAABB.X = float.Parse((string)parameter.Parameter);
+                        tweakAABB.X = float.Parse((string)parameter.Parameter, System.Globalization.CultureInfo.InvariantCulture);
                     }
                     break;
                 case "TweakAABBright":
                     if (parameter.Parameter.GetType() == typeof(string))
                     {
-                        tweakAABB.Y = float.Parse((string)parameter.Parameter);
+                        tweakAABB.Y = float.Parse((string)parameter.Parameter, System.Globalization.CultureInfo.InvariantCulture);
                     }
                     break;
                 case "TweakAABBbottom":
                     if (parameter.Parameter.GetType() == typeof(string))
                     {
-                        tweakAABB.Z = float.Parse((string)parameter.Parameter);
+                        tweakAABB.Z = float.Parse((string)parameter.Parameter, System.Globalization.CultureInfo.InvariantCulture);
                     }
                     break;
                 case "TweakAABBleft":
                     if (parameter.Parameter.GetType() == typeof(string))
                     {
-                        tweakAABB.W = float.Parse((string)parameter.Parameter);
+                        tweakAABB.W = float.Parse((string)parameter.Parameter, System.Globalization.CultureInfo.InvariantCulture);
                     }
                     break;
             }

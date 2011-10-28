@@ -63,9 +63,11 @@ namespace SS3D.UserInterface
                 SessionStatus status = (SessionStatus)_msgBody.ReadByte();
                 string job = _msgBody.ReadString();
                 string ip = _msgBody.ReadString();
+                Boolean isAdmin = _msgBody.ReadBoolean();
 
                 Label line = new Label("Name: " + name + "    Status: " + status + "    Job: " + job + "    IP: " + ip);
                 line.Position = new Point(5, y_offset + 5);
+                line.Text.Color = isAdmin ? Color.DarkCyan: Color.Black;
                 components.Add(line);
 
                 Button kickButt = new Button("Kick"); //And chew bubblegum. And im all out of gum. Get it? kickButt? HAHA. Shut up, it's funny.

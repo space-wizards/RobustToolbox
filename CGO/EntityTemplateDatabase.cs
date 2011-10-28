@@ -63,15 +63,5 @@ namespace CGO
                 return m_templates[templatename];
             return null;
         }
-        /*
-        public EntityTemplate GetTemplateByAtomName(string templatename)
-        {
-            var temps = from t in m_templates.Values
-                        where t.AtomName == templatename
-                        select t;
-            if (temps.Count() > 0)
-                return temps.First();
-            return null;
-        }*/
     }
 }

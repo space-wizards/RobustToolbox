@@ -23,7 +23,7 @@
     <SpawnEquipment>
       <SpawnEquipDefinition>
         <Location>Inner</Location>
-        <ObjectType>Assistant_Grey</ObjectType>
+        <ObjectType>Janitor_Suit</ObjectType>
       </SpawnEquipDefinition>
       <SpawnEquipDefinition>
         <Location>Feet</Location>

@@ -19,7 +19,7 @@ namespace SGO
         private NetServer m_netServer;
 
         private Dictionary<int, Entity> m_entities;
-        public int lastId = 0;
+        public int nextId = 0;
 
         public EntityManager(NetServer netServer)
         {
@@ -125,9 +125,8 @@ namespace SGO
             if (e != null)
             {
                 //It worked, add it.
-                m_entities.Add(lastId + 1, e);
-                lastId++;
-                return lastId;
+                m_entities.Add(++nextId, e);
+                return nextId;
             }
             //TODO: throw exception here -- something went wrong.
             return -1;
@@ -139,7 +138,7 @@ namespace SGO
             if (e != null)
             {
                 e.SetNetworkManager(m_entityNetworkManager);
-                e.Uid = lastId++;
+                e.Uid = nextId++;
                 m_entities.Add(e.Uid, e);
                 e.Initialize();
                 SendSpawnEntity(e);
@@ -162,6 +161,7 @@ namespace SGO
             NetOutgoingMessage message = m_netServer.CreateMessage();
             message.Write((byte)NetMessage.EntityManagerMessage);
             message.Write((int)EntityManagerMessage.SpawnEntity);
+            message.Write(e.template.Name);
             message.Write(e.name);
             message.Write(e.Uid);
             m_netServer.SendToAll(message, NetDeliveryMethod.ReliableUnordered);
@@ -172,6 +172,7 @@ namespace SGO
             NetOutgoingMessage message = m_netServer.CreateMessage();
             message.Write((byte)NetMessage.EntityManagerMessage);
             message.Write((int)EntityManagerMessage.SpawnEntity);
+            message.Write(e.template.Name);
             message.Write(e.name);
             message.Write(e.Uid);
             m_netServer.SendMessage(message, client, NetDeliveryMethod.ReliableUnordered);

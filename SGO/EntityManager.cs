@@ -164,7 +164,7 @@ namespace SGO
             message.Write(e.template.Name);
             message.Write(e.name);
             message.Write(e.Uid);
-            m_netServer.SendToAll(message, NetDeliveryMethod.ReliableUnordered);
+            m_netServer.SendToAll(message, NetDeliveryMethod.ReliableOrdered);
         }
 
         private void SendSpawnEntity(Entity e, NetConnection client)
@@ -175,7 +175,7 @@ namespace SGO
             message.Write(e.template.Name);
             message.Write(e.name);
             message.Write(e.Uid);
-            m_netServer.SendMessage(message, client, NetDeliveryMethod.ReliableUnordered);
+            m_netServer.SendMessage(message, client, NetDeliveryMethod.ReliableOrdered);
         }
 
         /// <summary>

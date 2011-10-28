@@ -136,8 +136,11 @@ namespace SGO
             Map map = (Map)ServiceManager.Singleton.GetService(ServerServiceType.Map);
             var occupiedTilePos = map.GetTileArrayPositionFromWorldPosition(Owner.position);
             var occupiedTile = map.GetTileAt(occupiedTilePos.X, occupiedTilePos.Y);
-            occupiedTile.gasPermeable = false;
-            occupiedTile.gasCell.blocking = true;
+            if (occupiedTile != null)
+            {
+                occupiedTile.gasPermeable = false;
+                occupiedTile.gasCell.blocking = true;
+            }
         }
 
         private void SetImpermeable(Vector2 position)
@@ -145,8 +148,11 @@ namespace SGO
             Map map = (Map)ServiceManager.Singleton.GetService(ServerServiceType.Map);
             var occupiedTilePos = map.GetTileArrayPositionFromWorldPosition(position);
             var occupiedTile = map.GetTileAt(occupiedTilePos.X, occupiedTilePos.Y);
-            occupiedTile.gasPermeable = false;
-            occupiedTile.gasCell.blocking = true;
+            if (occupiedTile != null)
+            {
+                occupiedTile.gasPermeable = false;
+                occupiedTile.gasCell.blocking = true;
+            }
         }
 
         private void SetPermeable(Vector2 position)
@@ -154,8 +160,11 @@ namespace SGO
             Map map = (Map)ServiceManager.Singleton.GetService(ServerServiceType.Map);
             var occupiedTilePos = map.GetTileArrayPositionFromWorldPosition(position);
             var occupiedTile = map.GetTileAt(occupiedTilePos.X, occupiedTilePos.Y);
-            occupiedTile.gasPermeable = true;
-            occupiedTile.gasCell.blocking = false;
+            if (occupiedTile != null)
+            {
+                occupiedTile.gasPermeable = true;
+                occupiedTile.gasCell.blocking = false;
+            }
         }
 
         public override void SetParameter(ComponentParameter parameter)

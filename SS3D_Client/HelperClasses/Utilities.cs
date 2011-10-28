@@ -28,7 +28,7 @@ namespace SS3D.HelperClasses
                 atom = null;
                 return strName;
             }*/
-            return "noSprite";
+            return "nosprite";
         }
 
         public static string GetAtomName(Type type)

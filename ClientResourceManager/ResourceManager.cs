@@ -106,7 +106,7 @@ namespace ClientResourceManager
                     return newSprite;
                 }
             }
-            else return new Sprite(key + "Missing", Images["noSprite"]);
+            else return new Sprite(key + "Missing", Images["nosprite"]);
         }
 
         /// <summary>
@@ -114,6 +114,7 @@ namespace ClientResourceManager
         /// </summary>
         public Sprite GetSprite(string key)
         {
+            key = key.ToLowerInvariant();
             if (Sprites.ContainsKey(key)) return Sprites[key];
             else return GetSpriteFromImage(key);
         }
@@ -134,6 +135,7 @@ namespace ClientResourceManager
         /// </summary>
         public SpriteInfo? GetSpriteInfo(string key)
         {
+            key = key.ToLowerInvariant();
             if (SpriteInfos.ContainsKey(key)) return SpriteInfos[key];
             else return null;
         }
@@ -152,8 +154,9 @@ namespace ClientResourceManager
         /// </summary>
         public Image GetImage(string key)
         {
+            key = key.ToLowerInvariant();
             if (Images.ContainsKey(key)) return Images[key];
-            else return Images["noSprite"];
+            else return Images["nosprite"];
         }
 
         /// <summary>
@@ -220,12 +223,14 @@ namespace ClientResourceManager
             {
                 Image loadedImg;
 
-                if (ImageCache.Images.Contains(file.Filename))
-                    loadedImg = ImageCache.Images[file.Filename];
-                else
-                    loadedImg = Image.FromFileSystem(FileSystem, file.FullPath);
+                string iName = file.Filename.ToLowerInvariant();
 
-                if (!Images.ContainsKey(file.Filename)) Images.Add(file.Filename, loadedImg);
+                if (ImageCache.Images.Contains(iName))
+                    loadedImg = ImageCache.Images[iName];
+                else
+                    loadedImg = Image.FromFileSystem(FileSystem, file.FullPath.ToLowerInvariant());
+
+                if (!Images.ContainsKey(iName)) Images.Add(iName, loadedImg);
             }
 
             var FontQuery = from FileSystemFile file in FileSystem where file.Extension.ToLower() == ".ttf" select file;
@@ -260,7 +265,7 @@ namespace ClientResourceManager
                     //Split first part by tabs - its the original filepath & filename , two tabs and then the name of the atlas texture.
                     //So we end up with fullPath[0] being the original path and fullPath[2] being the name of the atlas texture. fullPath[1] is an empty string between the 2 tabs.
 
-                    string originalName = Path.GetFileNameWithoutExtension(fullPath[0]);
+                    string originalName = Path.GetFileNameWithoutExtension(fullPath[0]).ToLowerInvariant();
                     //The name of the original picture without extension, before it became part of the atlas. 
                     //This will be the name we can find this under in our Resource lists.
 

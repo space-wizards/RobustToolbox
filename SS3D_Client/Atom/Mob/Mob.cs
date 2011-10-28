@@ -162,7 +162,7 @@ namespace SS3D.Atom.Mob
                 if (a.attachedItem != null)
                 {
                     //a.attachedItem.SetSpriteByIndex(5);
-                    //if (a.attachedItem.sprite.Image.Name == "noSprite")
+                    //if (a.attachedItem.sprite.Image.Name == "nosprite")
                         //a.attachedItem.SetSpriteByIndex(-1);
                     //a.attachedItem.sprite.Position = sprite.Position + a.GetHoldPosition(GetSpriteIndex());
                     if (GetSpriteIndex() == 3)

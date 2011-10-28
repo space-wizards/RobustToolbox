@@ -171,15 +171,20 @@ namespace SS3D.Modules
                     if (current_permission.placementOption == PlacementOption.AlignNone) //AlignNoneFree does not check for range.
                         if ((PlayerController.Singleton.controlledAtom.Position - current_loc_world).Length > current_permission.range) validPosition = false;
                 }
-                else if (current_permission.placementOption == PlacementOption.AlignSimilar || current_permission.placementOption == PlacementOption.AlignSimilarFree)
-                {
-                }
-                else if (current_permission.placementOption == PlacementOption.AlignTile || current_permission.placementOption == PlacementOption.AlignTileFree)
-                {
-                }
-                else if (current_permission.placementOption == PlacementOption.AlignWall || current_permission.placementOption == PlacementOption.AlignWallFree)
-                {
-                }
+
+                //Other Placement Options?
+                //(V)(;,,;)(V)
+                //Why not Zoidberg?
+
+                //else if (current_permission.placementOption == PlacementOption.AlignSimilar || current_permission.placementOption == PlacementOption.AlignSimilarFree)
+                //{
+                //}
+                //else if (current_permission.placementOption == PlacementOption.AlignTile || current_permission.placementOption == PlacementOption.AlignTileFree)
+                //{
+                //}
+                //else if (current_permission.placementOption == PlacementOption.AlignWall || current_permission.placementOption == PlacementOption.AlignWallFree)
+                //{
+                //}
                 else if (current_permission.placementOption == PlacementOption.Freeform)
                 {
                     validPosition = true;

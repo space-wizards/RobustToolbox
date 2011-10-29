@@ -147,47 +147,131 @@ namespace SS3D.Modules
         {
             if (currentMap == null) return;
 
-            Vector2D adjusted_loc_screen = mouseScreen;
-            current_loc_screen = adjusted_loc_screen;
+            current_loc_screen = mouseScreen;
 
-            Vector2D adjusted_loc_world = new Vector2D(mouseScreen.X + ClientWindowData.xTopLeft, mouseScreen.Y + ClientWindowData.yTopLeft);
-            current_loc_world = adjusted_loc_world;
+            current_loc_world = new Vector2D(mouseScreen.X + ClientWindowData.xTopLeft, mouseScreen.Y + ClientWindowData.yTopLeft);
 
             validPosition = true;
 
             if (current_permission != null)
             {
+                RectangleF spriteRectWorld = new RectangleF(current_loc_world.X - (current_sprite.Width / 2f), current_loc_world.Y - (current_sprite.Height / 2f), current_sprite.Width, current_sprite.Height);
+
                 if (current_permission.placementOption == PlacementOption.AlignNone || current_permission.placementOption == PlacementOption.AlignNoneFree)
                 {
-                    ICollisionManager collisionService = (ICollisionManager)ServiceManager.Singleton.GetService(ClientServiceType.CollisionManager);
+                    CollisionManager collisionMgr = (CollisionManager)ServiceManager.Singleton.GetService(ClientServiceType.CollisionManager);
+                    if (collisionMgr.IsColliding(spriteRectWorld, true)) validPosition = false;
 
-                    //current_sprite.Position = new Vector2D(current_loc_screen.X - (current_sprite.Width / 2f), current_loc_screen.Y - (current_sprite.Height / 2f));
-                    //current_sprite.UpdateAABB();
-
-                    //if (collisionService.IsColliding(current_sprite.AABB, true)) validPosition = false;
-
-                    if (currentMap.IsSolidTile(current_loc_world)) validPosition = false;
+                    if (currentMap.IsSolidTile(current_loc_world)) validPosition = false; //HANDLE CURSOR OUTSIDE MAP
 
                     if (current_permission.placementOption == PlacementOption.AlignNone) //AlignNoneFree does not check for range.
                         if ((PlayerController.Singleton.controlledAtom.Position - current_loc_world).Length > current_permission.range) validPosition = false;
                 }
 
-                //Other Placement Options?
-                //(V)(;,,;)(V)
-                //Why not Zoidberg?
+                else if (current_permission.placementOption == PlacementOption.AlignSimilar || current_permission.placementOption == PlacementOption.AlignSimilarFree)
+                {
+                    //Align to similar if nearby found else free
+                    if (currentMap.IsSolidTile(current_loc_world)) validPosition = false; //HANDLE CURSOR OUTSIDE MAP
 
-                //else if (current_permission.placementOption == PlacementOption.AlignSimilar || current_permission.placementOption == PlacementOption.AlignSimilarFree)
-                //{
-                //}
-                //else if (current_permission.placementOption == PlacementOption.AlignTile || current_permission.placementOption == PlacementOption.AlignTileFree)
-                //{
-                //}
-                //else if (current_permission.placementOption == PlacementOption.AlignWall || current_permission.placementOption == PlacementOption.AlignWallFree)
-                //{
-                //}
+                    if (current_permission.placementOption == PlacementOption.AlignSimilar)
+                        if ((PlayerController.Singleton.controlledAtom.Position - current_loc_world).Length > current_permission.range) validPosition = false;
+
+                    float snapToRange = 50;
+                    Entity[] nearbyEntities = EntityManager.Singleton.GetEntitiesInRange(current_loc_world, snapToRange);
+
+                    var snapToEntities = from Entity ent in nearbyEntities
+                                         where ent.template == current_template
+                                         orderby (ent.Position - current_loc_world).Length ascending
+                                         select ent;
+
+                    if (snapToEntities.Any())
+                    {
+                        Entity closestEnt = snapToEntities.First();
+                        List<ComponentReplyMessage> replies = new List<ComponentReplyMessage>();
+                        closestEnt.SendMessage(this, SS3D_shared.GO.ComponentMessageType.GetSprite, replies);
+
+                        if(replies.Any(x => x.messageType == SS3D_shared.GO.ComponentMessageType.CurrentSprite))
+                        {
+                            Sprite closestSprite = (Sprite)replies.Find(x => x.messageType == SS3D_shared.GO.ComponentMessageType.CurrentSprite).paramsList[0]; //This is scary.
+
+                            RectangleF closestRect = new RectangleF(closestEnt.Position.X - closestSprite.Width / 2f, closestEnt.Position.Y - closestSprite.Height / 2f, closestSprite.Width, closestSprite.Height);
+
+                            List<Vector2D> sides = new List<Vector2D>();
+                            sides.Add(new Vector2D(closestRect.X + (closestRect.Width / 2f), closestRect.Top - current_sprite.Height / 2f));
+                            sides.Add(new Vector2D(closestRect.X + (closestRect.Width / 2f), closestRect.Bottom + current_sprite.Height / 2f));
+                            sides.Add(new Vector2D(closestRect.Left - current_sprite.Width / 2f, closestRect.Y + (closestRect.Height / 2f)));
+                            sides.Add(new Vector2D(closestRect.Right + current_sprite.Width / 2f, closestRect.Y + (closestRect.Height / 2f)));
+
+                            var orderedSides = from Vector2D side in sides
+                                               orderby (side - current_loc_world).Length ascending
+                                               select side;
+
+                            Vector2D closestSide = orderedSides.First();
+
+                            current_loc_world = closestSide;
+                            current_loc_screen = new Vector2D(closestSide.X - ClientWindowData.xTopLeft, closestSide.Y - ClientWindowData.yTopLeft);
+                        }
+                    }
+
+                    spriteRectWorld = new RectangleF(current_loc_world.X - (current_sprite.Width / 2f), current_loc_world.Y - (current_sprite.Height / 2f), current_sprite.Width, current_sprite.Height);
+                    CollisionManager collisionMgr = (CollisionManager)ServiceManager.Singleton.GetService(ClientServiceType.CollisionManager);
+                    if (collisionMgr.IsColliding(spriteRectWorld, true)) validPosition = false;
+                }
+
+                else if (current_permission.placementOption == PlacementOption.AlignTileAny || //DONT LOOK AT ME. IM HIDEOUS. Gonna replace this with flags later.
+                         current_permission.placementOption == PlacementOption.AlignTileAnyFree ||
+                         current_permission.placementOption == PlacementOption.AlignTileEmpty ||
+                         current_permission.placementOption == PlacementOption.AlignTileEmptyFree ||
+                         current_permission.placementOption == PlacementOption.AlignTileNonSolid ||
+                         current_permission.placementOption == PlacementOption.AlignTileNonSolidFree ||
+                         current_permission.placementOption == PlacementOption.AlignTileSolid ||
+                         current_permission.placementOption == PlacementOption.AlignTileSolidFree)
+                {
+                    if (current_permission.placementOption == PlacementOption.AlignTileAny ||
+                        current_permission.placementOption == PlacementOption.AlignTileEmpty ||
+                        current_permission.placementOption == PlacementOption.AlignTileNonSolid ||
+                        current_permission.placementOption == PlacementOption.AlignTileSolid)
+                        if ((PlayerController.Singleton.controlledAtom.Position - current_loc_world).Length > current_permission.range) validPosition = false;
+
+                    if (current_permission.placementOption == PlacementOption.AlignTileNonSolid || current_permission.placementOption == PlacementOption.AlignTileNonSolidFree)
+                        if (currentMap.IsSolidTile(current_loc_world)) validPosition = false;
+
+                    if (current_permission.placementOption == PlacementOption.AlignTileSolid || current_permission.placementOption == PlacementOption.AlignTileSolidFree)
+                        if (!currentMap.IsSolidTile(current_loc_world)) validPosition = false;
+
+                    if (current_permission.placementOption == PlacementOption.AlignTileEmpty || current_permission.placementOption == PlacementOption.AlignTileEmptyFree)
+                        validPosition = validPosition; //TBA.
+
+                    //CHECK FOR BLOCKING OBJECTS
+
+
+                    if (validPosition)
+                    {
+                        Tile currentTile = currentMap.GetTileAt(current_loc_world);
+                        if (currentTile != null)
+                        {
+                            current_loc_world = currentTile.position + new Vector2D(currentMap.tileSpacing / 2f, currentMap.tileSpacing / 2f);
+                            current_loc_screen = new Vector2D(current_loc_world.X - ClientWindowData.xTopLeft, current_loc_world.Y - ClientWindowData.yTopLeft);
+
+                            spriteRectWorld = new RectangleF(current_loc_world.X - (current_sprite.Width / 2f), current_loc_world.Y - (current_sprite.Height / 2f), current_sprite.Width, current_sprite.Height);
+                            CollisionManager collisionMgr = (CollisionManager)ServiceManager.Singleton.GetService(ClientServiceType.CollisionManager);
+                            if (collisionMgr.IsColliding(spriteRectWorld, true)) validPosition = false; //This also includes walls. Meaning that even when set to solid only this will be unplacable. Fix this.
+                        }
+                        else validPosition = false;
+                    }
+
+                }
+                else if (current_permission.placementOption == PlacementOption.AlignWall || current_permission.placementOption == PlacementOption.AlignWallFree)
+                {
+                    //Wall mounting mode?
+                    //(V)(;,,;)(V)
+                    //Why not Zoidberg?
+
+                    //In all seriousness. I removed this until im done with it because im a jerk.
+                }
                 else if (current_permission.placementOption == PlacementOption.Freeform)
                 {
-                    validPosition = true;
+                    validPosition = true; //Herpderp
                 }
             }
         }
@@ -206,7 +290,10 @@ namespace SS3D.Modules
             {
                 if (current_permission.placementOption == PlacementOption.AlignNone    ||
                     current_permission.placementOption == PlacementOption.AlignSimilar ||
-                    current_permission.placementOption == PlacementOption.AlignTile    ||
+                    current_permission.placementOption == PlacementOption.AlignTileAny ||
+                    current_permission.placementOption == PlacementOption.AlignTileEmpty ||
+                    current_permission.placementOption == PlacementOption.AlignTileNonSolid ||
+                    current_permission.placementOption == PlacementOption.AlignTileSolid ||
                     current_permission.placementOption == PlacementOption.AlignWall)   //If it uses range, show the range.
                 {
                     Gorgon.Screen.Circle(PlayerController.Singleton.controlledAtom.Position.X - ClientWindowData.xTopLeft, PlayerController.Singleton.controlledAtom.Position.Y - ClientWindowData.yTopLeft, current_permission.range, Color.DeepSkyBlue, new Vector2D(2, 2));

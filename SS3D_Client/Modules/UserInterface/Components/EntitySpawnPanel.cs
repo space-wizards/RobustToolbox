@@ -74,8 +74,9 @@ namespace SS3D.UserInterface
 
             PlacementInformation newObjInfo = new PlacementInformation();
 
-            newObjInfo.placementOption = PlacementOption.Freeform;
+            newObjInfo.placementOption = PlacementOption.AlignSimilarFree;
             newObjInfo.entityType = templateName;
+            newObjInfo.range = 400;
             newObjInfo.isTile = false;
 
             sender.selected = true;

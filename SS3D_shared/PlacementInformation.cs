@@ -15,6 +15,6 @@ namespace SS3D_shared.HelperClasses
         public string entityType = "";                                    //Object name / type. If not tile.
         public TileType tileType = TileType.None;                         //Tile Type if tile.
 
-        public PlacementOption placementOption = PlacementOption.AlignTile; //Alignment type. See enum declaration for infos.
+        public PlacementOption placementOption = PlacementOption.AlignNone; //Alignment type. See enum declaration for infos.
     }
 }

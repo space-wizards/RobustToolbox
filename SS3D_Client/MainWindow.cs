@@ -52,7 +52,7 @@ namespace SS3D
 
         private Modules.StateManager stateMgr;
         private Program prg;
-        private PlacementOption alignType = PlacementOption.AlignTile;
+        private PlacementOption alignType = PlacementOption.AlignNone;
         private Type atomSpawnType = null;
         private Type tileSpawnType;
         public bool editMode = false;
@@ -496,7 +496,7 @@ namespace SS3D
 
         private void tileToolStripMenuItem_Click(object sender, EventArgs e)
         {
-            alignType = PlacementOption.AlignTile;
+            alignType = PlacementOption.AlignNone;
         }
 
         private void sameTypeToolStripMenuItem_Click(object sender, EventArgs e)

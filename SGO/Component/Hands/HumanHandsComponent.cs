@@ -133,8 +133,8 @@ namespace SGO
             if (entity != null && IsEmpty(currentHand))
             {
                 SetEntity(currentHand, entity);
-                Owner.SendComponentNetworkMessage(this, Lidgren.Network.NetDeliveryMethod.ReliableOrdered, null, ComponentMessageType.PickedUp, entity.Uid, currentHand);
-                entity.SendMessage(this, ComponentMessageType.PickedUp, null, Owner);
+                Owner.SendComponentNetworkMessage(this, Lidgren.Network.NetDeliveryMethod.ReliableOrdered, null, ComponentMessageType.HandsPickedUpItem, entity.Uid, currentHand);
+                entity.SendMessage(this, ComponentMessageType.PickedUp, null, Owner, currentHand);
             }
         }
 
@@ -155,7 +155,7 @@ namespace SGO
             if (!IsEmpty(hand))
             {
                 GetEntity(hand).SendMessage(this, ComponentMessageType.Dropped, null);
-                Owner.SendComponentNetworkMessage(this, Lidgren.Network.NetDeliveryMethod.ReliableOrdered, null, ComponentMessageType.Dropped, GetEntity(hand).Uid, hand);
+                Owner.SendComponentNetworkMessage(this, Lidgren.Network.NetDeliveryMethod.ReliableOrdered, null, ComponentMessageType.HandsDroppedItem, GetEntity(hand).Uid, hand);
                 handslots.Remove(hand);
             }
         }

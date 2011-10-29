@@ -41,16 +41,18 @@ namespace CGO
                     else
                         handslots.Add(usedHand, item);
                     break;
-                case(ComponentMessageType.Dropped):
+                case(ComponentMessageType.HandsDroppedItem):
                     entityUID = (int)message.messageParameters[1];
                     usedHand = (Hand)message.messageParameters[2];
                     item = EntityManager.Singleton.GetEntity(entityUID);
+                    //item.SendMessage(this, ComponentMessageType.Dropped, null);
                     handslots.Remove(usedHand);
                     break;
-                case(ComponentMessageType.PickedUp):
+                case(ComponentMessageType.HandsPickedUpItem):
                     entityUID = (int)message.messageParameters[1];
                     usedHand = (Hand)message.messageParameters[2];
                     item = EntityManager.Singleton.GetEntity(entityUID);
+                    //item.SendMessage(this, ComponentMessageType.PickedUp, null, usedHand);
                     handslots.Add(usedHand, item);
                     break;
                 case ComponentMessageType.ActiveHandChanged:

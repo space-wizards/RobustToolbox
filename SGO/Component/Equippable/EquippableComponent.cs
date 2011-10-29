@@ -44,7 +44,7 @@ namespace SGO
             currentWearer = entity;
             Owner.AddComponent(SS3D_shared.GO.ComponentFamily.Mover, ComponentFactory.Singleton.GetComponent("SlaveMoverComponent"));
             Owner.SendMessage(this, ComponentMessageType.SlaveAttach, null, entity.Uid);
-            Owner.SendComponentNetworkMessage(this, Lidgren.Network.NetDeliveryMethod.ReliableUnordered, null, EquippableComponentNetMessage.Equipped, entity.Uid);
+            Owner.SendComponentNetworkMessage(this, Lidgren.Network.NetDeliveryMethod.ReliableUnordered, null, EquippableComponentNetMessage.Equipped, entity.Uid, wearloc);
         }
 
         public override void SetParameter(ComponentParameter parameter)

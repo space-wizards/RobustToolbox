@@ -8,6 +8,7 @@ namespace CGO
 {
     public class BasicItemComponent : GameObjectComponent
     {
+        Hand holdingHand = Hand.None;
         public BasicItemComponent()
         {
             family = ComponentFamily.Item;
@@ -20,9 +21,11 @@ namespace CGO
             switch ((ItemComponentNetMessage)message.messageParameters[0])
             {
                 case ItemComponentNetMessage.PickedUp://I've been picked up -- says the server's item component
-                    Owner.SendMessage(this, ComponentMessageType.PickedUp, null);
                     Owner.AddComponent(ComponentFamily.Mover, ComponentFactory.Singleton.GetComponent("SlaveMoverComponent"));
                     Entity e = EntityManager.Singleton.GetEntity((int)message.messageParameters[1]);
+                    Hand h = (Hand)message.messageParameters[2];
+                    Owner.SendMessage(this, ComponentMessageType.PickedUp, null, h);
+                    
                     Owner.SendMessage(this, ComponentMessageType.SlaveAttach, null, e.Uid);
                     break;
                 case ItemComponentNetMessage.Dropped: //I've been dropped -- says the server's item component

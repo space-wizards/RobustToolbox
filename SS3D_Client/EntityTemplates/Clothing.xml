@@ -65,6 +65,32 @@
       <Component name="EquippableComponent"></Component>
     </Components>
   </EntityTemplate>
+  <EntityTemplate name="Biosuit">
+    <Components>
+      <Component name="NetworkMoverComponent"></Component>
+      <Component name="WearableSpriteComponent">
+        <Parameters>
+          <Parameter name="basename" type="string" value="biosuit" />
+        </Parameters>
+      </Component>
+      <Component name="ClickableComponent"></Component>
+      <Component name="BasicItemComponent"></Component>
+      <Component name="EquippableComponent"></Component>
+    </Components>
+  </EntityTemplate>
+  <EntityTemplate name="Surgicalgown">
+    <Components>
+      <Component name="NetworkMoverComponent"></Component>
+      <Component name="WearableSpriteComponent">
+        <Parameters>
+          <Parameter name="basename" type="string" value="surgicalgown" />
+        </Parameters>
+      </Component>
+      <Component name="ClickableComponent"></Component>
+      <Component name="BasicItemComponent"></Component>
+      <Component name="EquippableComponent"></Component>
+    </Components>
+  </EntityTemplate>
   <EntityTemplate name="Armour">
     <Components>
       <Component name="NetworkMoverComponent"></Component>

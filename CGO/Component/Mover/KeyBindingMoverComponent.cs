@@ -97,42 +97,42 @@ namespace CGO
             if (MoveUp && !MoveLeft && !MoveRight && !MoveDown) // Move Up
             {
                 Translate(new Vector2D(0, -1) * currentMoveSpeed * frameTime);
-                SetMoveDir(Constants.MoveDirs.north);
+                //SetMoveDir(Constants.MoveDirs.north);
             }
             else if (MoveDown && !MoveLeft && !MoveRight && !MoveUp) // Move Down
             {
                 Translate(new Vector2D(0, 1) * currentMoveSpeed * frameTime);
-                SetMoveDir(Constants.MoveDirs.south);
+                //SetMoveDir(Constants.MoveDirs.south);
             }
             else if (MoveLeft && !MoveRight && !MoveUp && !MoveDown) // Move Left
             {
                 Translate(new Vector2D(-1, 0) * currentMoveSpeed * frameTime);
-                SetMoveDir(Constants.MoveDirs.west);
+                //SetMoveDir(Constants.MoveDirs.west);
             }
             else if (MoveRight && !MoveLeft && !MoveUp && !MoveDown) // Move Right
             {
                 Translate(new Vector2D(1, 0) * currentMoveSpeed * frameTime);
-                SetMoveDir(Constants.MoveDirs.east);
+                //SetMoveDir(Constants.MoveDirs.east);
             }
             else if (MoveUp && MoveRight && !MoveLeft && !MoveDown) // Move Up & Right
             {
                 Translate(new Vector2D(0.7071f, -0.7071f) * currentMoveSpeed * frameTime);
-                SetMoveDir(Constants.MoveDirs.northeast);
+                //SetMoveDir(Constants.MoveDirs.northeast);
             }
             else if (MoveUp && MoveLeft && !MoveRight && !MoveDown) // Move Up & Left
             {
                 Translate(new Vector2D(-0.7071f, -0.7071f) * currentMoveSpeed * frameTime);
-                SetMoveDir(Constants.MoveDirs.northwest);
+                //SetMoveDir(Constants.MoveDirs.northwest);
             }
             else if (MoveDown && MoveRight && !MoveLeft && !MoveUp) // Move Down & Right
             {
                 Translate(new Vector2D(0.7071f, 0.7071f) * currentMoveSpeed * frameTime);
-                SetMoveDir(Constants.MoveDirs.southeast);
+                //SetMoveDir(Constants.MoveDirs.southeast);
             }
             else if (MoveDown && MoveLeft && !MoveRight && !MoveUp) // Move Down & Left
             {
                 Translate(new Vector2D(-0.7071f, 0.7071f) * currentMoveSpeed * frameTime);
-                SetMoveDir(Constants.MoveDirs.southwest);
+                //SetMoveDir(Constants.MoveDirs.southwest);
             }
         }
 
@@ -182,6 +182,7 @@ namespace CGO
         /// <param name="translationVector"></param>
         public virtual void Translate(Vector2D translationVector)
         {
+            Vector2D oldPos = Owner.Position;
             bool translated = false;
             translated = TryTranslate(translationVector, false); //Only bump once...
             if (!translated)
@@ -189,7 +190,27 @@ namespace CGO
             if (!translated)
                 translated = TryTranslate(new Vector2D(0, translationVector.Y), true);
             if (translated)
+            {
+                Vector2D delta = Owner.Position - oldPos;
+                if (delta.X > 0 && delta.Y > 0)
+                    SetMoveDir(Constants.MoveDirs.southeast);
+                if (delta.X > 0 && delta.Y < 0)
+                    SetMoveDir(Constants.MoveDirs.northeast);
+                if (delta.X < 0 && delta.Y > 0)
+                    SetMoveDir(Constants.MoveDirs.southwest);
+                if (delta.X < 0 && delta.Y < 0)
+                    SetMoveDir(Constants.MoveDirs.northwest);
+                if (delta.X > 0 && delta.Y == 0)
+                    SetMoveDir(Constants.MoveDirs.east);
+                if (delta.X < 0 && delta.Y == 0)
+                    SetMoveDir(Constants.MoveDirs.west);
+                if (delta.Y > 0 && delta.X == 0)
+                    SetMoveDir(Constants.MoveDirs.south);
+                if (delta.Y < 0 && delta.X == 0)
+                    SetMoveDir(Constants.MoveDirs.north);
+
                 SendPositionUpdate();
+            }
             Owner.Moved();
         }
 

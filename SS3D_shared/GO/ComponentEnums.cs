@@ -130,12 +130,16 @@ namespace SS3D_shared.GO
         EquipItemToPart,
         GetItemInEquipmentSlot,
         ReturnItemInEquipmentSlot,
+        SetWornDrawDepth,
+        HandsPickedUpItem,
+        HandsDroppedItem,
     }
 
     public enum Hand
     {
         Left,
-        Right
+        Right,
+        None
     }
 
     public enum DrawDepth
@@ -145,7 +149,9 @@ namespace SS3D_shared.GO
         ItemsOnFloor,
         MobBase,
         MobUnderClothingLayer,
+        MobUnderAccessoryLayer,
         MobOverClothingLayer,
+        MobOverAccessoryLayer,
         HeldItems,
         Tables,
         ItemsOnTables,

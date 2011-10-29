@@ -12,10 +12,11 @@ namespace CGO
     {
         string basename = "";
         private bool IsInHand = false;
+        private Hand holdingHand = Hand.None;
         public ItemSpriteComponent()
             : base()
         {
-            SetDrawDepth(2);
+            SetDrawDepth(DrawDepth.FloorObjects);
         }
 
         public override void RecieveMessage(object sender, ComponentMessageType type, List<ComponentReplyMessage> replies, params object[] list)
@@ -30,42 +31,83 @@ namespace CGO
                     switch ((Constants.MoveDirs)list[0])
                     {
                         case Constants.MoveDirs.north:
-                            SetSpriteByKey(basename + "_inhand");
-                            flip = true;
+                            if (SpriteExists(basename + "_inhand_back"))
+                                SetSpriteByKey(basename + "_inhand_back");
+                            else
+                                SetSpriteByKey(basename + "_inhand");
+                            if (holdingHand == Hand.Left)
+                                flip = false;
+                            else
+                                flip = true;
                             break;
                         case Constants.MoveDirs.south:
                             SetSpriteByKey(basename + "_inhand");
+                            if (holdingHand == Hand.Left)
+                                flip = true;
+                            else
+                                flip = false;
                             break;
                         case Constants.MoveDirs.east:
+                            if (holdingHand == Hand.Left)
+                                SetDrawDepth(DrawDepth.FloorObjects);
+                            else
+                                SetDrawDepth(DrawDepth.HeldItems);
                             SetSpriteByKey(basename + "_inhand_side");
                             flip = true;
                             break;
                         case Constants.MoveDirs.west:
+                            if (holdingHand == Hand.Right)
+                                SetDrawDepth(DrawDepth.FloorObjects);
+                            else
+                                SetDrawDepth(DrawDepth.HeldItems);
                             SetSpriteByKey(basename + "_inhand_side");
                             flip = false;
                             break;
                         case Constants.MoveDirs.northeast:
-                            SetSpriteByKey(basename + "_inhand");
+                            if (SpriteExists(basename + "_inhand_back"))
+                                SetSpriteByKey(basename + "_inhand_back");
+                            else
+                                SetSpriteByKey(basename + "_inhand");
+                            if (holdingHand == Hand.Left)
+                                flip = false;
+                            else
+                                flip = true;
                             break;
                         case Constants.MoveDirs.northwest:
-                            SetSpriteByKey(basename + "_inhand");
+                            if (SpriteExists(basename + "_inhand_back"))
+                                SetSpriteByKey(basename + "_inhand_back");
+                            else
+                                SetSpriteByKey(basename + "_inhand");
+                            if (holdingHand == Hand.Left)
+                                flip = false;
+                            else
+                                flip = true;
                             break;
                         case Constants.MoveDirs.southeast:
                             SetSpriteByKey(basename + "_inhand");
+                            if (holdingHand == Hand.Right)
+                                flip = false;
+                            else
+                                flip = true;
                             break;
                         case Constants.MoveDirs.southwest:
                             SetSpriteByKey(basename + "_inhand");
+                            if (holdingHand == Hand.Right)
+                                flip = false;
+                            else
+                                flip = true;
                             break;
                     }
-                    SetDrawDepth(4);
                     break;
                 case ComponentMessageType.Dropped:
                     SetSpriteByKey(basename);
                     IsInHand = false;
-                    SetDrawDepth(2);
+                    SetDrawDepth(DrawDepth.FloorObjects);
+                    holdingHand = Hand.None;
                     break;
                 case ComponentMessageType.PickedUp:
                     IsInHand = true;
+                    holdingHand = (Hand)list[0];
                     break;
             }
 
@@ -100,6 +142,8 @@ namespace CGO
             AddSprite(basename);
             AddSprite(basename + "_inhand");
             AddSprite(basename + "_inhand_side");
+            if (ClientResourceManager.ResMgr.Singleton.SpriteExists(basename + "inhand_back"))
+                AddSprite(basename + "_inhand_back");
 
             SetSpriteByKey(basename);
         }

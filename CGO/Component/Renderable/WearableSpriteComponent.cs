@@ -12,10 +12,11 @@ namespace CGO
     {
         string basename = "";
         private bool worn = false;
+        private DrawDepth wornDrawDepth = SS3D_shared.GO.DrawDepth.MobOverClothingLayer;
         public WearableSpriteComponent()
             : base()
         {
-            DrawDepth = 2; //Floor drawdepth
+            DrawDepth = DrawDepth.FloorObjects; //Floor drawdepth
         }
 
         public override void RecieveMessage(object sender, ComponentMessageType type, List<ComponentReplyMessage> replies, params object[] list)
@@ -96,18 +97,21 @@ namespace CGO
                                 SetSpriteByKey(basename);
                             break;
                     }
-                    DrawDepth = 4;
+                    DrawDepth = wornDrawDepth;
                     break;
                 case ComponentMessageType.ItemDetach:
                     SetSpriteByKey(basename);
-                    DrawDepth = 2;
+                    DrawDepth = DrawDepth.FloorObjects;
                     break;
                 case ComponentMessageType.ItemEquipped:
                     worn = true;
-                    DrawDepth = 4;
+                    DrawDepth = wornDrawDepth;
                     break;
                 case ComponentMessageType.ItemUnEquipped:
                     worn = false;
+                    break;
+                case ComponentMessageType.SetWornDrawDepth:
+                    wornDrawDepth = (DrawDepth)list[0];
                     break;
             }
 

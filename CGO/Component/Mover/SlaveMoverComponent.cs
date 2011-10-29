@@ -55,7 +55,10 @@ namespace CGO
 
             master.SendMessage(this, ComponentMessageType.GetMoveDir, replies);
             if (replies.Count > 0)
+            {
                 movedir = (Constants.MoveDirs)replies.First().paramsList[0];
+                Owner.SendMessage(this, ComponentMessageType.MoveDirection, null, movedir);
+            }
         }
 
         private void Detach()

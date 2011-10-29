@@ -90,7 +90,7 @@ namespace CGO
                     SetSpriteByKey((string)list[0]);
                     break;
                 case ComponentMessageType.SetDrawDepth:
-                    SetDrawDepth((int)list[0]);
+                    SetDrawDepth((DrawDepth)list[0]);
                     break;
             }
         }
@@ -100,7 +100,7 @@ namespace CGO
             return currentSprite;
         }
 
-        protected void SetDrawDepth(int p)
+        protected void SetDrawDepth(DrawDepth p)
         {
             DrawDepth = p;
         }
@@ -150,6 +150,13 @@ namespace CGO
         {
             if (spritetoadd != null && key != "")
                 sprites.Add(key, spritetoadd);
+        }
+
+        public bool SpriteExists(string key)
+        {
+            if (sprites.ContainsKey(key))
+                return true;
+            return false;
         }
 
         public override void SetParameter(ComponentParameter parameter)

@@ -11,6 +11,7 @@ namespace SGO
     public class BasicItemComponent : GameObjectComponent
     {
         private Entity currentHolder;
+        private Hand holdingHand;
 
         private Dictionary<string, ItemCapability> capabilities;
 
@@ -40,7 +41,7 @@ namespace SGO
                     ApplyTo((Entity)list[0], InteractsWith.LargeObject);
                     break;
                 case ComponentMessageType.PickedUp:
-                    HandlePickedUp((Entity)list[0]);
+                    HandlePickedUp((Entity)list[0], (Hand)list[1]);
                     break;
                 case ComponentMessageType.Dropped:
                     HandleDropped();
@@ -89,18 +90,19 @@ namespace SGO
             currentHolder = null;
         }
 
-        private void HandlePickedUp(Entity entity)
+        private void HandlePickedUp(Entity entity, Hand _holdingHand)
         {
             currentHolder = entity;
+            holdingHand = _holdingHand;
             Owner.AddComponent(SS3D_shared.GO.ComponentFamily.Mover, ComponentFactory.Singleton.GetComponent("SlaveMoverComponent"));
             Owner.SendMessage(this, ComponentMessageType.SlaveAttach, null, entity.Uid);
-            Owner.SendComponentNetworkMessage(this, Lidgren.Network.NetDeliveryMethod.ReliableUnordered, null, ItemComponentNetMessage.PickedUp, entity.Uid);
+            Owner.SendComponentNetworkMessage(this, Lidgren.Network.NetDeliveryMethod.ReliableUnordered, null, ItemComponentNetMessage.PickedUp, entity.Uid, holdingHand);
         }
 
         public override void HandleInstantiationMessage(Lidgren.Network.NetConnection netConnection)
         {
             if(currentHolder != null)
-                Owner.SendComponentNetworkMessage(this, Lidgren.Network.NetDeliveryMethod.ReliableUnordered, netConnection, ItemComponentNetMessage.PickedUp, currentHolder.Uid);
+                Owner.SendComponentNetworkMessage(this, Lidgren.Network.NetDeliveryMethod.ReliableUnordered, netConnection, ItemComponentNetMessage.PickedUp, currentHolder.Uid, holdingHand);
         }
 
         /// <summary>

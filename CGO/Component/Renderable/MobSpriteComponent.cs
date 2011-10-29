@@ -14,7 +14,7 @@ namespace CGO
         public MobSpriteComponent()
             : base()
         {
-            DrawDepth = 3;
+            DrawDepth = DrawDepth.MobBase;
         }
 
         public override void RecieveMessage(object sender, ComponentMessageType type, List<ComponentReplyMessage> replies, params object[] list)

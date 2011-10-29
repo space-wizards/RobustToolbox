@@ -78,6 +78,45 @@
       <Component name="EquippableComponent"></Component>
     </Components>
   </EntityTemplate>
+  <EntityTemplate name="Gloves_Surgical">
+    <Components>
+      <Component name="NetworkMoverComponent"></Component>
+      <Component name="WearableSpriteComponent">
+        <Parameters>
+          <Parameter name="basename" type="string" value="gloves_surgical" />
+        </Parameters>
+      </Component>
+      <Component name="ClickableComponent"></Component>
+      <Component name="BasicItemComponent"></Component>
+      <Component name="EquippableComponent"></Component>
+    </Components>
+  </EntityTemplate>
+  <EntityTemplate name="Shoes_Medical">
+    <Components>
+      <Component name="NetworkMoverComponent"></Component>
+      <Component name="WearableSpriteComponent">
+        <Parameters>
+          <Parameter name="basename" type="string" value="medshoes" />
+        </Parameters>
+      </Component>
+      <Component name="ClickableComponent"></Component>
+      <Component name="BasicItemComponent"></Component>
+      <Component name="EquippableComponent"></Component>
+    </Components>
+  </EntityTemplate>
+  <EntityTemplate name="Mask_Surgical">
+    <Components>
+      <Component name="NetworkMoverComponent"></Component>
+      <Component name="WearableSpriteComponent">
+        <Parameters>
+          <Parameter name="basename" type="string" value="surgicalmask" />
+        </Parameters>
+      </Component>
+      <Component name="ClickableComponent"></Component>
+      <Component name="BasicItemComponent"></Component>
+      <Component name="EquippableComponent"></Component>
+    </Components>
+  </EntityTemplate>
   <EntityTemplate name="Surgicalgown">
     <Components>
       <Component name="NetworkMoverComponent"></Component>

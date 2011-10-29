@@ -113,7 +113,6 @@ namespace SGO
             Open = true;
             Owner.SendMessage(this, ComponentMessageType.DisableCollision, null);
             Owner.SendMessage(this, ComponentMessageType.SetSpriteByKey, null, openSprite);
-
             occupiedTile.gasPermeable = true;
             occupiedTile.gasCell.blocking = false;
         }
@@ -136,11 +135,8 @@ namespace SGO
             Map map = (Map)ServiceManager.Singleton.GetService(ServerServiceType.Map);
             var occupiedTilePos = map.GetTileArrayPositionFromWorldPosition(Owner.position);
             var occupiedTile = map.GetTileAt(occupiedTilePos.X, occupiedTilePos.Y);
-            if (occupiedTile != null)
-            {
-                occupiedTile.gasPermeable = false;
-                occupiedTile.gasCell.blocking = true;
-            }
+            occupiedTile.gasPermeable = false;
+            occupiedTile.gasCell.blocking = true;
         }
 
         private void SetImpermeable(Vector2 position)
@@ -148,11 +144,8 @@ namespace SGO
             Map map = (Map)ServiceManager.Singleton.GetService(ServerServiceType.Map);
             var occupiedTilePos = map.GetTileArrayPositionFromWorldPosition(position);
             var occupiedTile = map.GetTileAt(occupiedTilePos.X, occupiedTilePos.Y);
-            if (occupiedTile != null)
-            {
-                occupiedTile.gasPermeable = false;
-                occupiedTile.gasCell.blocking = true;
-            }
+            occupiedTile.gasPermeable = false;
+            occupiedTile.gasCell.blocking = true;
         }
 
         private void SetPermeable(Vector2 position)
@@ -160,11 +153,8 @@ namespace SGO
             Map map = (Map)ServiceManager.Singleton.GetService(ServerServiceType.Map);
             var occupiedTilePos = map.GetTileArrayPositionFromWorldPosition(position);
             var occupiedTile = map.GetTileAt(occupiedTilePos.X, occupiedTilePos.Y);
-            if (occupiedTile != null)
-            {
-                occupiedTile.gasPermeable = true;
-                occupiedTile.gasCell.blocking = false;
-            }
+            occupiedTile.gasPermeable = true;
+            occupiedTile.gasCell.blocking = false;
         }
 
         public override void SetParameter(ComponentParameter parameter)

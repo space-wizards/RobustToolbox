@@ -344,6 +344,7 @@ namespace ClientServices.Map
 
         public Tile GetTileAt(Vector2D pos)
         {
+            if (pos.X < 0 || pos.Y < 0) return null;
             System.Drawing.Point p = GetTileArrayPositionFromWorldPosition(pos);
             return tileArray[p.X, p.Y];
         }
@@ -457,6 +458,8 @@ namespace ClientServices.Map
         public bool IsSolidTile(Vector2D pos)
         {
             TileType tile = GetTileTypeFromWorldPosition(pos);
+
+            if (tile == null) return false; //Hack. This happens when its outside the map.
 
             if (tile == TileType.None)
             {

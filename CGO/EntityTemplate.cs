@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Xml.Linq;
+using SS3D_shared;
 
 namespace CGO
 {
@@ -15,10 +16,26 @@ namespace CGO
         /// This holds a list of the component types the entity will be instantiated with.
         /// </summary>
         private List<string> components = new List<string>();
+
         /// <summary>
         /// This holds a dictionary linking parameter objects to components
         /// </summary>
         private Dictionary<string, List<ComponentParameter>> parameters = new Dictionary<string,List<ComponentParameter>>();
+
+        /// <summary>
+        /// The Placement mode used for client-initiated placement. This is used for admin and editor placement. The serverside version controls what type the server assigns in normal gameplay.
+        /// </summary>
+        public PlacementOption placementMode { get; private set; }
+
+        /// <summary>
+        /// Offset that is added to the position when placing. (if any). Client only.
+        /// </summary>
+        public KeyValuePair<int, int> placementOffset { get; private set; }
+
+        /// <summary>
+        /// The different mounting points on walls. (If any).
+        /// </summary>
+        public List<int> mountingPoints { get; private set; }
 
         /// <summary>
         /// Name of the entity template eg. "HumanMob"
@@ -37,7 +54,6 @@ namespace CGO
         /// </summary>
         public EntityTemplate()
         {
-
         }
 
         /// <summary>
@@ -125,6 +141,40 @@ namespace CGO
                                                  );
                 }
 
+            }
+
+            var t_placementprops = templateElement.Element("PlacementProperties");
+            //Load Placement properties.
+            if (t_placementprops != null)
+            {
+                XElement modeElement = t_placementprops.Element("PlacementMode");
+                XElement offsetElement = t_placementprops.Element("PlacementOffset");
+                XElement mNodesElement = t_placementprops.Element("PlacementNodes");
+
+                if (modeElement != null)
+                {
+                    string modeName = modeElement.Attribute("type").Value;
+                    this.placementMode = (PlacementOption)Enum.Parse(typeof(PlacementOption), modeName);
+                }
+                else
+                    this.placementMode = PlacementOption.AlignNoneFree;
+
+                if (offsetElement != null)
+                {
+                    int xOffset = int.Parse(offsetElement.Attribute("offsetX").Value);
+                    int yOffset = int.Parse(offsetElement.Attribute("offsetY").Value);
+                    this.placementOffset = new KeyValuePair<int, int>(xOffset, yOffset);
+                }
+
+                if (mNodesElement != null)
+                {
+                    mountingPoints = new List<int>();
+                    foreach (XElement e_Node in mNodesElement.Elements("PlacementNode"))
+                    {
+                        int nodeHeight = int.Parse(e_Node.Attribute("nodeHeight").Value);
+                        this.mountingPoints.Add(nodeHeight);
+                    }
+                }
             }
         }
 

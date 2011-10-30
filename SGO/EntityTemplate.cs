@@ -21,6 +21,16 @@ namespace SGO
         private Dictionary<string, List<ComponentParameter>> parameters = new Dictionary<string, List<ComponentParameter>>();
 
         /// <summary>
+        /// The Placement mode used for server-initiated placement. This is used for placement during normal gameplay. The clientside version controls the placement type for editor and admin spawning.
+        /// </summary>
+        public PlacementOption placementMode { get; private set; }
+
+        /// <summary>
+        /// The Range this entity can be placed from.
+        /// </summary>
+        public int placementRange { get; private set; }
+
+        /// <summary>
         /// Name of the entity template eg. "HumanMob"
         /// </summary>
         private string m_name;
@@ -117,6 +127,30 @@ namespace SGO
                 {
                     parameters[componentname].Add(new ComponentParameter("ExtendedParameters", typeof(XElement), t_component.Element("ExtendedParameters")));
                 }
+            }
+
+            var t_placementprops = templateElement.Element("PlacementProperties");
+            //Load Placement properties.
+            if (t_placementprops != null)
+            {
+                XElement modeElement = t_placementprops.Element("PlacementMode");
+                XElement rangeElement = t_placementprops.Element("PlacementRange");
+
+                if (modeElement != null)
+                {
+                    string modeName = modeElement.Attribute("type").Value;
+                    this.placementMode = (PlacementOption)Enum.Parse(typeof(PlacementOption), modeName);
+                }
+                else
+                    this.placementMode = PlacementOption.AlignNone;
+
+                if (rangeElement != null)
+                {
+                    int range = int.Parse(rangeElement.Attribute("value").Value);
+                    this.placementRange = range;
+                }
+                else
+                    this.placementRange = 200;
             }
         }
 

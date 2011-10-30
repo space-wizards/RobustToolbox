@@ -265,7 +265,6 @@
     <Content Include="EntityTemplates\WallMounted.xml">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
-    <Content Include="EntityTemplates\MedicalItems.xml" />
     <Content Include="KeyBindings.xml">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </Content>

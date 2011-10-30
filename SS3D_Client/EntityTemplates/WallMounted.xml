@@ -10,6 +10,15 @@
       </Component>
       <Component name="ClickableComponent"></Component>
     </Components>
+    <PlacementProperties>
+      <PlacementMode type="AlignWallFree"></PlacementMode>
+      <PlacementOffset offsetX="0" offsetY="0"></PlacementOffset>
+      <PlacementNodes>
+        <PlacementNode nodeHeight="18"></PlacementNode>
+        <PlacementNode nodeHeight="26"></PlacementNode>
+        <PlacementNode nodeHeight="32"></PlacementNode>
+      </PlacementNodes>
+    </PlacementProperties>
   </EntityTemplate>
   <EntityTemplate name="FireAlarm">
     <Components>
@@ -21,6 +30,15 @@
       </Component>
       <Component name="ClickableComponent"></Component>
     </Components>
+    <PlacementProperties>
+      <PlacementMode type="AlignWallFree"></PlacementMode>
+      <PlacementOffset offsetX="0" offsetY="0"></PlacementOffset>
+      <PlacementNodes>
+        <PlacementNode nodeHeight="5"></PlacementNode>
+        <PlacementNode nodeHeight="10"></PlacementNode>
+        <PlacementNode nodeHeight="15"></PlacementNode>
+      </PlacementNodes>
+    </PlacementProperties>
   </EntityTemplate>
   <EntityTemplate name="MedCabinet">
     <Components>
@@ -32,5 +50,9 @@
       </Component>
       <Component name="ClickableComponent"></Component>
     </Components>
+    <PlacementProperties>
+      <PlacementMode type="AlignWallFree"></PlacementMode>
+      <PlacementOffset offsetX="0" offsetY="0"></PlacementOffset>
+    </PlacementProperties>
   </EntityTemplate>
 </EntityTemplates>

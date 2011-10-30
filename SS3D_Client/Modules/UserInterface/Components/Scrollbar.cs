@@ -64,7 +64,7 @@ namespace SS3D.UserInterface
             set
             {
                 actualVal = Math.Min(max, Math.Max(value, 0));
-                currentPos = (int)Math.Round(actualVal / stepSize);
+                currentPos = (int)Math.Max(Math.Round(actualVal / stepSize),0);
                 RaiseEvent = true;
             }
         }

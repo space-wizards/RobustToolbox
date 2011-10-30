@@ -58,6 +58,12 @@ namespace SS3D.UserInterface
             Update();
         }
 
+        public void ResetScrollbars()
+        {
+            if (scrollbarH.IsVisible()) scrollbarH.Value = 0;
+            if (scrollbarV.IsVisible()) scrollbarV.Value = 0;
+        }
+
         public override void Update()
         {
             if (disposing || !IsVisible()) return;

@@ -80,6 +80,7 @@ namespace SS3D.UserInterface
             int y_offset = 5;
 
             entityList.components.Clear();
+            entityList.ResetScrollbars();
 
             if (searchStr == null)
                 foreach (KeyValuePair<string, EntityTemplate> entry in EntityManager.Singleton.TemplateDB.Templates)

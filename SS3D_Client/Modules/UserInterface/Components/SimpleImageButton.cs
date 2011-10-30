@@ -30,6 +30,7 @@ namespace SS3D.UserInterface
 
         public override void Update()
         {
+            buttonSprite.Position = Position;
             clientArea = new Rectangle(Position, new Size((int)buttonSprite.AABB.Width, (int)buttonSprite.AABB.Height));
         }
 

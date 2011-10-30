@@ -24,6 +24,7 @@ namespace SS3D.UserInterface
     class EntitySpawnPanel : Window
     {
         ScrollableContainer entityList;
+        Label clearLabel;
         Textbox entSearchTextbox;
 
         public EntitySpawnPanel(Size _size)
@@ -41,11 +42,12 @@ namespace SS3D.UserInterface
             entSearchTextbox.OnSubmit += new Textbox.TextSubmitHandler(entSearchTextbox_OnSubmit);
             components.Add(entSearchTextbox);
 
-            Label clearLabel = new Label("[Clear Filter]");
+            clearLabel = new Label("[Clear Filter]");
             clearLabel.drawBackground = true;
-            clearLabel.Position = new Point(210, 55);
             clearLabel.drawBorder = true;
+            clearLabel.Position = new Point(210, 55);
             clearLabel.Clicked += new Label.LabelPressHandler(clearLabel_Clicked);
+            clearLabel.backgroundColor = Color.Gray;
             components.Add(clearLabel);
 
             BuildEntityList();
@@ -56,6 +58,7 @@ namespace SS3D.UserInterface
 
         void clearLabel_Clicked(Label sender)
         {
+            clearLabel.backgroundColor = Color.Gray;
             BuildEntityList();
         }
 
@@ -78,7 +81,7 @@ namespace SS3D.UserInterface
 
             entityList.components.Clear();
 
-            if(searchStr == null)
+            if (searchStr == null)
                 foreach (KeyValuePair<string, EntityTemplate> entry in EntityManager.Singleton.TemplateDB.Templates)
                 {
                     EntitySpawnSelectButton newButton = new EntitySpawnSelectButton(entry.Value, entry.Key);
@@ -90,6 +93,8 @@ namespace SS3D.UserInterface
                     if (newButton.ClientArea.Width > max_width) max_width = newButton.ClientArea.Width;
                 }
             else
+            {
+                clearLabel.backgroundColor = Color.LightGray;
                 foreach (KeyValuePair<string, EntityTemplate> entry in EntityManager.Singleton.TemplateDB.Templates.Where(x => x.Value.Name.ToLower().Contains(searchStr.ToLower())))
                 {
                     EntitySpawnSelectButton newButton = new EntitySpawnSelectButton(entry.Value, entry.Key);
@@ -100,6 +105,7 @@ namespace SS3D.UserInterface
                     newButton.Clicked += new EntitySpawnSelectButton.EntitySpawnSelectPress(newButton_Clicked);
                     if (newButton.ClientArea.Width > max_width) max_width = newButton.ClientArea.Width;
                 }
+            }
 
             foreach (GuiComponent curr in entityList.components)
                 if (curr.GetType() == typeof(EntitySpawnSelectButton))

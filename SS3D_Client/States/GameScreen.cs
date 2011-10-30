@@ -595,7 +595,7 @@ namespace SS3D.States
             {
 
                 UiManager.Singleton.DisposeAllComponentsOfType(typeof(EntitySpawnPanel)); //Remove old ones.
-                UiManager.Singleton.Components.Add(new EntitySpawnPanel(new System.Drawing.Size(200, 400))); //Create a new one.
+                UiManager.Singleton.Components.Add(new EntitySpawnPanel(new System.Drawing.Size(350, 410))); //Create a new one.
 
                 //SS3D_shared.HelperClasses.PlacementInformation placementInfo = new SS3D_shared.HelperClasses.PlacementInformation();
                 //placementInfo.AlignOption = AlignmentOptions.AlignNone;
@@ -646,7 +646,7 @@ namespace SS3D.States
             {
                 if (e.Buttons == GorgonLibrary.InputDevices.MouseButtons.Left)
                 {
-                    PlacementManager.Singleton.RequestPlacement();
+                    PlacementManager.Singleton.HandlePlacement();
                     return;
                 }
                 else if (e.Buttons == GorgonLibrary.InputDevices.MouseButtons.Right)
@@ -691,11 +691,24 @@ namespace SS3D.States
                                      orderby cd.drawdepth descending
                                      orderby cd.clicked.Position.Y descending
                                      select cd.clicked).First();
+
+                if (PlacementManager.Singleton.eraser && PlacementManager.Singleton.is_active)
+                {
+                    PlacementManager.Singleton.HandleDeletion(entToClick);
+                    return;
+                }
+
                 ClickableComponent c = (ClickableComponent)entToClick.GetComponent(SS3D_shared.GO.ComponentFamily.Click);
                 c.DispatchClick(playerController.controlledAtom.Uid);
             }
             else if (clickedEntities.Count == 1)
             {
+                if (PlacementManager.Singleton.eraser && PlacementManager.Singleton.is_active)
+                {
+                    PlacementManager.Singleton.HandleDeletion(clickedEntities[0].clicked);
+                    return;
+                }
+
                 ClickableComponent c = (ClickableComponent)clickedEntities[0].clicked.GetComponent(SS3D_shared.GO.ComponentFamily.Click);
                 c.DispatchClick(playerController.controlledAtom.Uid);
             }

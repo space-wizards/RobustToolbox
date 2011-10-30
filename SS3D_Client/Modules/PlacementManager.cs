@@ -43,6 +43,8 @@ namespace SS3D.Modules
 
         public Boolean is_active { private set; get; }
 
+        public Boolean eraser { private set; get; }
+
         private NetworkManager network_manager;
 
         private Boolean validPosition = false;
@@ -72,6 +74,7 @@ namespace SS3D.Modules
         public void Initialize(NetworkManager netMgr)
         {
             network_manager = netMgr;
+            eraser = false;
             Clear();
         }
 
@@ -83,12 +86,39 @@ namespace SS3D.Modules
             current_permission = null;
             current_loc_screen = Vector2D.Zero;
             current_loc_world = Vector2D.Zero;
+            if (PlacementCanceled != null && is_active && !eraser) PlacementCanceled(this);
             is_active = false;
-            if(PlacementCanceled != null) PlacementCanceled(this);
+            eraser = false;
+        }
+
+        public void HandlePlacement()
+        {
+            if (is_active && !eraser)
+                RequestPlacement();
+        }
+
+        public void HandleDeletion(Entity ent)
+        {
+            if (is_active && eraser)
+            {
+                NetOutgoingMessage message = network_manager.netClient.CreateMessage();
+                message.Write((byte)NetMessage.RequestEntityDeletion);
+                message.Write((int)ent.Uid);
+                network_manager.SendMessage(message, NetDeliveryMethod.ReliableUnordered);
+            }
+        }
+
+        public void BeginErasing()
+        {
+            Clear();
+            is_active = true;
+            eraser = true;
         }
 
         public void BeginPlacing(PlacementInformation info)
         {
+            Clear();
+
             current_permission = info;
 
             if (info.isTile)
@@ -120,7 +150,7 @@ namespace SS3D.Modules
             is_active = true;
         }
 
-        public void RequestPlacement()
+        private void RequestPlacement()
         {
             if (current_permission == null) return;
             if (!validPosition) return;

@@ -32,6 +32,7 @@ public enum NetMessage
     RequestAdminKick,
     RequestBanList,
     RequestAdminUnBan,
+    RequestEntityDeletion  //Client asks to delete entity. Used for editing. Requires admin.
 }
 
 public enum ItemMessage

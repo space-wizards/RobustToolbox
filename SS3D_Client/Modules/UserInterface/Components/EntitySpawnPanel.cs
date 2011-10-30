@@ -23,38 +23,85 @@ namespace SS3D.UserInterface
 {
     class EntitySpawnPanel : Window
     {
+        ScrollableContainer entityList;
+        Textbox entSearchTextbox;
+
         public EntitySpawnPanel(Size _size)
             : base("Entity Spawn Panel", _size)
         {
+            entityList = new ScrollableContainer("entspawnlist", new Size(200, 400));
+            entityList.Position = new Point(5, 5);
+
+            Label searchLabel = new Label("Entity Search:");
+            searchLabel.Position = new Point(210, 0);
+            components.Add(searchLabel);
+
+            entSearchTextbox = new Textbox(125);
+            entSearchTextbox.Position = new Point(210, 20);
+            entSearchTextbox.OnSubmit += new Textbox.TextSubmitHandler(entSearchTextbox_OnSubmit);
+            components.Add(entSearchTextbox);
+
+            Label clearLabel = new Label("[Clear Filter]");
+            clearLabel.drawBackground = true;
+            clearLabel.Position = new Point(210, 55);
+            clearLabel.drawBorder = true;
+            clearLabel.Clicked += new Label.LabelPressHandler(clearLabel_Clicked);
+            components.Add(clearLabel);
+
             BuildEntityList();
+
             position = new Point((int)(Gorgon.Screen.Width / 2f) - (int)(this.ClientArea.Width / 2f), (int)(Gorgon.Screen.Height / 2f) - (int)(this.ClientArea.Height / 2f));
             PlacementManager.Singleton.PlacementCanceled += new PlacementManager.PlacementCanceledHandler(PlacementMgr_PlacementCanceled);
         }
 
+        void clearLabel_Clicked(Label sender)
+        {
+            BuildEntityList();
+        }
+
+        void entSearchTextbox_OnSubmit(string text)
+        {
+            BuildEntityList(text);
+        }
+
         void PlacementMgr_PlacementCanceled(PlacementManager mgr)
         {
-            foreach (GuiComponent curr in components)
+            foreach (GuiComponent curr in entityList.components)
                 if (curr.GetType() == typeof(EntitySpawnSelectButton))
                     ((EntitySpawnSelectButton)curr).selected = false;
         }
 
-        private void BuildEntityList()
+        private void BuildEntityList(string searchStr = null)
         {
             int max_width = 0;
             int y_offset = 5;
 
-            foreach (KeyValuePair<string, EntityTemplate> entry in EntityManager.Singleton.TemplateDB.Templates)
-            {
-                EntitySpawnSelectButton newButton = new EntitySpawnSelectButton(entry.Value, entry.Key);
-                components.Add(newButton);
-                newButton.Position = new Point(5, y_offset);
-                newButton.Update();
-                y_offset += 5 + newButton.ClientArea.Height;
-                newButton.Clicked += new EntitySpawnSelectButton.EntitySpawnSelectPress(newButton_Clicked);
-                if (newButton.ClientArea.Width > max_width) max_width = newButton.ClientArea.Width;
-            }
+            entityList.components.Clear();
 
-            foreach (GuiComponent curr in components)
+            if(searchStr == null)
+                foreach (KeyValuePair<string, EntityTemplate> entry in EntityManager.Singleton.TemplateDB.Templates)
+                {
+                    EntitySpawnSelectButton newButton = new EntitySpawnSelectButton(entry.Value, entry.Key);
+                    entityList.components.Add(newButton);
+                    newButton.Position = new Point(5, y_offset);
+                    newButton.Update();
+                    y_offset += 5 + newButton.ClientArea.Height;
+                    newButton.Clicked += new EntitySpawnSelectButton.EntitySpawnSelectPress(newButton_Clicked);
+                    if (newButton.ClientArea.Width > max_width) max_width = newButton.ClientArea.Width;
+                }
+            else
+                foreach (KeyValuePair<string, EntityTemplate> entry in EntityManager.Singleton.TemplateDB.Templates.Where(x => x.Value.Name.ToLower().Contains(searchStr.ToLower())))
+                {
+                    EntitySpawnSelectButton newButton = new EntitySpawnSelectButton(entry.Value, entry.Key);
+                    entityList.components.Add(newButton);
+                    newButton.Position = new Point(5, y_offset);
+                    newButton.Update();
+                    y_offset += 5 + newButton.ClientArea.Height;
+                    newButton.Clicked += new EntitySpawnSelectButton.EntitySpawnSelectPress(newButton_Clicked);
+                    if (newButton.ClientArea.Width > max_width) max_width = newButton.ClientArea.Width;
+                }
+
+            foreach (GuiComponent curr in entityList.components)
                 if (curr.GetType() == typeof(EntitySpawnSelectButton))
                     ((EntitySpawnSelectButton)curr).fixed_width = max_width;
         }
@@ -68,7 +115,7 @@ namespace SS3D.UserInterface
                 return;
             }
 
-            foreach (GuiComponent curr in components)
+            foreach (GuiComponent curr in entityList.components)
                 if (curr.GetType() == typeof(EntitySpawnSelectButton))
                     ((EntitySpawnSelectButton)curr).selected = false;
 
@@ -79,21 +126,27 @@ namespace SS3D.UserInterface
             newObjInfo.range = 400;
             newObjInfo.isTile = false;
 
-            sender.selected = true;
-
             PlacementManager.Singleton.BeginPlacing(newObjInfo);
+
+            sender.selected = true; //This needs to be last.
         }
 
         public override void Update()
         {
             if (disposing || !IsVisible()) return;
             base.Update();
+            if (entityList != null)
+            {
+                entityList.Position = new Point(clientArea.X + 5, clientArea.Y + 5);
+                entityList.Update();
+            }
         }
 
         public override void Render()
         {
             if (disposing || !IsVisible()) return;
             base.Render();
+            entityList.Render();
         }
 
         public override void Dispose()
@@ -101,11 +154,13 @@ namespace SS3D.UserInterface
             if (disposing) return;
             PlacementManager.Singleton.PlacementCanceled -= new PlacementManager.PlacementCanceledHandler(PlacementMgr_PlacementCanceled);
             base.Dispose();
+            entityList.Dispose();
         }
 
         public override bool MouseDown(MouseInputEventArgs e)
         {
             if (disposing || !IsVisible()) return false;
+            if (entityList.MouseDown(e)) return true;
             if (base.MouseDown(e)) return true;
             return false;
         }
@@ -113,6 +168,7 @@ namespace SS3D.UserInterface
         public override bool MouseUp(MouseInputEventArgs e)
         {
             if (disposing || !IsVisible()) return false;
+            if (entityList.MouseUp(e)) return true;
             if (base.MouseUp(e)) return true;
             return false;
         }
@@ -120,18 +176,21 @@ namespace SS3D.UserInterface
         public override void MouseMove(MouseInputEventArgs e)
         {
             if (disposing || !IsVisible()) return;
+            entityList.MouseMove(e);
             base.MouseMove(e);
             return;
         }
 
         public override bool MouseWheelMove(MouseInputEventArgs e)
         {
+            if (entityList.MouseWheelMove(e)) return true;
             if (base.MouseWheelMove(e)) return true;
             return false;
         }
 
         public override bool KeyDown(KeyboardInputEventArgs e)
         {
+            if (entityList.KeyDown(e)) return true;
             if (base.KeyDown(e)) return true;
             return false;
         }

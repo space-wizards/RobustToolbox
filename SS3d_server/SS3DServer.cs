@@ -480,6 +480,9 @@ namespace SS3D_Server
                 case NetMessage.RequestBanList:
                     HandleAdminMessage(messageType, msg);
                     break;
+                case NetMessage.RequestEntityDeletion:
+                    HandleAdminMessage(messageType, msg);
+                    break;
                 default:
                     break;
             }
@@ -490,6 +493,13 @@ namespace SS3D_Server
         {
             switch (adminMsgType)
             {
+                case NetMessage.RequestEntityDeletion:
+                    int entID = messageBody.ReadInt32();
+                    if (playerManager.GetSessionByConnection(messageBody.SenderConnection).adminPermissions.isAdmin)
+                    {
+                        //NO WAY TO DELETE ENTITIES. SAD TROMBONE.
+                    }
+                    break;
                 case NetMessage.RequestAdminLogin:
                     string password = messageBody.ReadString();
                     if (password == ConfigManager.Singleton.Configuration.AdminPassword)

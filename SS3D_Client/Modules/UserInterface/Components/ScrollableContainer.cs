@@ -62,8 +62,9 @@ namespace SS3D.UserInterface
         {
             if (disposing || !IsVisible()) return;
             clientArea = new Rectangle(position, new Size(clippingRI.Width, clippingRI.Height));
-            scrollbarH.Position = new Point(position.X, clientArea.Bottom - scrollbarH.ClientArea.Height);
-            scrollbarV.Position = new Point(clientArea.Right - scrollbarV.ClientArea.Width, position.Y);
+
+            scrollbarH.Position = new Point(clientArea.X, clientArea.Bottom - scrollbarH.ClientArea.Height);
+            scrollbarV.Position = new Point(clientArea.Right - scrollbarV.ClientArea.Width, clientArea.Y);
 
             if (scrollbarV.IsVisible()) scrollbarH.size = size.Width - scrollbarV.ClientArea.Width;
             else scrollbarH.size = size.Width;
@@ -107,10 +108,10 @@ namespace SS3D.UserInterface
                 component.Position = oldPos;
                 component.Update();
             }
-            clippingRI.EndDrawing();
-            clippingRI.Blit(position.X, position.Y);
             scrollbarH.Render();
             scrollbarV.Render();
+            clippingRI.EndDrawing();
+            clippingRI.Blit(position.X, position.Y);
             Gorgon.Screen.Rectangle(clientArea.X, clientArea.Y, clientArea.Width, clientArea.Height, System.Drawing.Color.Black);
         }
 

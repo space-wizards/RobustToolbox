@@ -212,7 +212,6 @@ namespace SGO
             EntityManagerMessage type = (EntityManagerMessage)msg.ReadInt32();
             switch(type)
             {
-
             }
         }
         #endregion

@@ -8,6 +8,10 @@
       <Component name="BasicMoverComponent"></Component>
       <Component name="BasicLargeObjectComponent"></Component>
     </Components>
+    <PlacementProperties>
+      <PlacementMode type="AlignWall"></PlacementMode>
+      <PlacementRange value="200"></PlacementRange>
+    </PlacementProperties>
   </EntityTemplate>
   <EntityTemplate name="FireAlarm">
     <Components>
@@ -17,6 +21,10 @@
       <Component name="BasicMoverComponent"></Component>
       <Component name="BasicLargeObjectComponent"></Component>
     </Components>
+    <PlacementProperties>
+      <PlacementMode type="AlignWall"></PlacementMode>
+      <PlacementRange value="180"></PlacementRange>
+    </PlacementProperties>
   </EntityTemplate>
   <EntityTemplate name="MedCabinet">
     <Components>
@@ -26,5 +34,8 @@
       <Component name="BasicMoverComponent"></Component>
       <Component name="BasicLargeObjectComponent"></Component>
     </Components>
+    <PlacementProperties>
+      <PlacementMode type="AlignWall"></PlacementMode>
+    </PlacementProperties>
   </EntityTemplate>
 </EntityTemplates>

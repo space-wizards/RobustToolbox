@@ -28,6 +28,7 @@ namespace CGO
                 case ComponentMessageType.MoveDirection:
                     if (!IsInHand)
                         break;
+                    SetDrawDepth(DrawDepth.HeldItems);
                     switch ((Constants.MoveDirs)list[0])
                     {
                         case Constants.MoveDirs.north:
@@ -142,7 +143,7 @@ namespace CGO
             AddSprite(basename);
             AddSprite(basename + "_inhand");
             AddSprite(basename + "_inhand_side");
-            if (ClientResourceManager.ResMgr.Singleton.SpriteExists(basename + "inhand_back"))
+            if (ClientResourceManager.ResMgr.Singleton.SpriteExists(basename + "_inhand_back"))
                 AddSprite(basename + "_inhand_back");
 
             SetSpriteByKey(basename);

@@ -1,6 +1,6 @@
 ﻿<?xml version="1.0" encoding="utf-8" ?>
 <EntityTemplates>
-  <EntityTemplate name="Door">
+  <EntityTemplate name="Locker">
     <Components>
       <Component name="ClickableComponent"></Component>
       <Component name="SpriteComponent"></Component>
@@ -9,10 +9,10 @@
       <Component name="CollidableComponent"></Component>
       <Component name="BasicDoorComponent">
         <Parameters>
-          <Parameter name="OpenSprite" type="string" value="door_ewo" />
-          <Parameter name="ClosedSprite" type="string" value="door_ew" />
-          <Parameter name="OpenOnBump" type="string" value="true" />
-          <Parameter name="AutoCloseInterval" type="string" value="5000" />
+          <Parameter name="OpenSprite" type="string" value="locker_open" />
+          <Parameter name="ClosedSprite" type="string" value="locker_closed" />
+          <Parameter name="OpenOnBump" type="string" value="false" />
+          <Parameter name="AutoCloseInterval" type="string" value="0" />
         </Parameters>
       </Component>
     </Components>

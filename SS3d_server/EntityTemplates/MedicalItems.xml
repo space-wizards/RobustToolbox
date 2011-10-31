@@ -1,0 +1,66 @@
+﻿<?xml version="1.0" encoding="utf-8" ?>
+<EntityTemplates>
+  <EntityTemplate name="Forceps">
+    <Components>
+      <Component name="ClickableComponent"></Component>
+      <Component name="SpriteComponent"></Component>
+      <Component name="BasicInteractableComponent"></Component>
+      <Component name="BasicMoverComponent"></Component>
+      <Component name="BasicItemComponent"></Component>
+    </Components>
+  </EntityTemplate>
+  <EntityTemplate name="Medical_Scanner">
+    <Components>
+      <Component name="ClickableComponent"></Component>
+      <Component name="SpriteComponent"></Component>
+      <Component name="BasicInteractableComponent"></Component>
+      <Component name="BasicMoverComponent"></Component>
+      <Component name="BasicItemComponent"></Component>
+    </Components>
+  </EntityTemplate>
+  <EntityTemplate name="Medical_Saw">
+    <Components>
+      <Component name="ClickableComponent"></Component>
+      <Component name="SpriteComponent"></Component>
+      <Component name="BasicInteractableComponent"></Component>
+      <Component name="BasicMoverComponent"></Component>
+      <Component name="BasicItemComponent"></Component>
+    </Components>
+  </EntityTemplate>
+  <EntityTemplate name="Scalpel">
+    <Components>
+      <Component name="ClickableComponent"></Component>
+      <Component name="SpriteComponent"></Component>
+      <Component name="BasicInteractableComponent"></Component>
+      <Component name="BasicMoverComponent"></Component>
+      <Component name="BasicItemComponent"></Component>
+    </Components>
+  </EntityTemplate>
+  <EntityTemplate name="SyringeGun">
+    <Components>
+      <Component name="ClickableComponent"></Component>
+      <Component name="SpriteComponent"></Component>
+      <Component name="BasicInteractableComponent"></Component>
+      <Component name="BasicMoverComponent"></Component>
+      <Component name="BasicItemComponent"></Component>
+    </Components>
+  </EntityTemplate>
+  <EntityTemplate name="Medical_Vial">
+    <Components>
+      <Component name="ClickableComponent"></Component>
+      <Component name="SpriteComponent"></Component>
+      <Component name="BasicInteractableComponent"></Component>
+      <Component name="BasicMoverComponent"></Component>
+      <Component name="BasicItemComponent"></Component>
+    </Components>
+  </EntityTemplate>
+  <EntityTemplate name="Medical_Vial_2">
+    <Components>
+      <Component name="ClickableComponent"></Component>
+      <Component name="SpriteComponent"></Component>
+      <Component name="BasicInteractableComponent"></Component>
+      <Component name="BasicMoverComponent"></Component>
+      <Component name="BasicItemComponent"></Component>
+    </Components>
+  </EntityTemplate>
+</EntityTemplates>

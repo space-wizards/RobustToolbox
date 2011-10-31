@@ -17,6 +17,8 @@ namespace SGO
         string closedSprite = "";
         float openLength = 5000;
         float timeOpen = 0;
+        bool openonbump = false;
+        bool autoclose = true;
 
         public BasicDoorComponent()
             :base()
@@ -31,7 +33,8 @@ namespace SGO
             switch(type)
             {
                 case ComponentMessageType.Bumped:
-                    OpenDoor();
+                    if(openonbump)
+                        OpenDoor();
                     break;
 
             }
@@ -40,7 +43,7 @@ namespace SGO
         public override void Update(float frameTime)
         {
             base.Update(frameTime);
-            if (Open)
+            if (Open && autoclose)
             {
                 timeOpen += frameTime;
                 if (timeOpen >= openLength)
@@ -168,6 +171,25 @@ namespace SGO
                     break;
                 case "ClosedSprite":
                     closedSprite = (string)parameter.Parameter;
+                    break;
+                case "OpenOnBump":
+                    if ((string)parameter.Parameter == "true")
+                        openonbump = true;
+                    else
+                        openonbump = false;
+                    break;
+                case "AutoCloseInterval":
+                    int autocloseinterval;
+                    if (int.TryParse((string)parameter.Parameter, out autocloseinterval))
+                    {
+                        if (autocloseinterval == 0)
+                            autoclose = false;
+                        else
+                        {
+                            autoclose = true;
+                            openLength = autocloseinterval;
+                        }
+                    }
                     break;
                 default:
                     base.SetParameter(parameter);

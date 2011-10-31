@@ -10,6 +10,8 @@ namespace SS3D_shared.HelperClasses
         public int mobUid;                                                //UID of mob this permission is for.
         public ushort range = 0;                                          //Valid range from mob.
 
+        public int uses = 1;                                              //How many objects of this type may be placed.
+
         public Boolean isTile = false;
 
         public string entityType = "";                                    //Object name / type. If not tile.

@@ -73,7 +73,6 @@ namespace SS3D
             SetupInput();
             ResMgr.Singleton.Initialize();
             SetupUserInterface();
-            SetupEditMenu();
 
             PlayerName_TextBox.Text = ConfigManager.Singleton.Configuration.PlayerName;
 
@@ -142,63 +141,6 @@ namespace SS3D
 
             ClientServices.ServiceManager.Singleton.AddService(UiManager.Singleton);
         }
-
-        public void SetupEditMenu()
-        {
-            atomTypes = new Dictionary<string, Type>();
-            Type[] typeList = GetTypes();
-            for (int i = 0; i < typeList.Length; i++)
-            {
-                atomTypes.Add(typeList[i].Name, typeList[i]);
-            }
-            PopulateEditMenu();
-        }
-
-        private Type[] GetTypes()
-        {
-            //Assembly ass = Assembly.GetExecutingAssembly(); //LOL ASS
-            //return ass.GetTypes().Where(t => t.IsSubclassOf(typeof(Atom.Atom))).ToArray();
-            return new Type[0];
-        }
-
-
-        #region Trees are fucked
-        // Trees seem to be fucked right now as they always steal focus so this is currently unusued.
-        /*private void PopulateTreeView()
-        {
-            treeView1.BeginUpdate();
-            foreach (Type t in atomTypes.Values)
-            {
-                if (t.IsAbstract && t.BaseType == typeof(Atom.Atom))
-                {
-                    TreeNode[] array = GetChildren(t);
-                    treeView1.Nodes.Add(new TreeNode(t.Name, array));
-                }
-            }
-            treeView1.EndUpdate();
-        }*/
-
-        /*private TreeNode[] GetChildren(Type t)
-        {
-            List<TreeNode> nodes = new List<TreeNode>();
-
-            foreach (Type type in atomTypes.Values)
-            {
-                if (type.IsAbstract && type.BaseType == t)
-                {
-                    TreeNode[] array = GetChildren(type);
-                    nodes.Add(new TreeNode(type.Name, array));
-                }
-                else if (!type.IsAbstract && type.BaseType == t)
-                {
-                    nodes.Add(new TreeNode(type.Name));
-                }
-            }
-
-            return nodes.ToArray();
-        }*/
-        #endregion
-        
 
         void Gorgon_Idle(object sender, FrameEventArgs e)
         {
@@ -274,7 +216,7 @@ namespace SS3D
         /// <param name="e">The <see cref="GorgonLibrary.InputDevices.MouseInputEventArgs"/> instance containing the event data.</param>
         private void MouseDownEvent(object sender, MouseInputEventArgs e)
         {
-            if(e.Position.Y > menuStrip1.Height || !editToolStripMenuItem.Selected)
+            if(e.Position.Y > menuStrip1.Height)
                 stateMgr.MouseDown(e);
         }
 
@@ -318,7 +260,6 @@ namespace SS3D
                 ((SS3D.States.ConnectMenu)stateMgr.mCurrentState).StartConnect();
                 connectToolStripMenuItem.Enabled = false;
                 disconnectToolStripMenuItem.Enabled = true;
-                editModeToolStripMenuItem.Enabled = true;
                 menuToolStripMenuItem.HideDropDown();
             }
         }
@@ -328,23 +269,8 @@ namespace SS3D
             stateMgr.RequestStateChange(typeof(SS3D.States.ConnectMenu));
             connectToolStripMenuItem.Enabled = true;
             disconnectToolStripMenuItem.Enabled = false;
-            editModeToolStripMenuItem.Enabled = false;
-            editToolStripMenuItem.Enabled = false;
             menuToolStripMenuItem.HideDropDown();
         }
-
-        private void editModeToolStripMenuItem_Click(object sender, EventArgs e)
-        {
-            if (stateMgr.prg.mNetworkMgr.isConnected)
-            {
-                editToolStripMenuItem.Enabled = !editToolStripMenuItem.Enabled;
-                editToolStripMenuItem.Visible = !editToolStripMenuItem.Visible;
-                editMode = !editMode;
-                statusStrip1.Visible = !statusStrip1.Visible;
-            }
-        }
-
-
 
         public Type GetAtomSpawnType()
         {
@@ -356,93 +282,7 @@ namespace SS3D
             return tileSpawnType;
         }
 
-        #region Edit menu
-        #region Atoms
-        public void PopulateEditMenu()
-        {
-            atomToolStripMenuItem.DropDownItems.Clear();
-            List<ToolStripMenuItem> items = new List<ToolStripMenuItem>();
-            foreach (Type t in atomTypes.Values)
-            {
-                /*if (t.IsAbstract && t.BaseType == typeof(Atom.Atom))
-                {
-                    ToolStripMenuItem item = new ToolStripMenuItem(t.Name);
-                    ToolStripMenuItem[] itemItems = GetChildren(t).ToArray();
-                    item.DropDownItems.AddRange(itemItems);
-                    item.BackColor = System.Drawing.SystemColors.ActiveCaptionText;
-                    item.ForeColor = System.Drawing.SystemColors.ActiveCaption;
-                    items.Add(item);
-                }*/
-            }
-            atomToolStripMenuItem.DropDownItems.AddRange(items.ToArray());
-        }
 
-        private List<ToolStripMenuItem> GetChildren(Type t)
-        {
-            List<ToolStripMenuItem> menuItems = new List<ToolStripMenuItem>();
-            foreach (Type type in atomTypes.Values)
-            {
-                if (type.IsAbstract && type.BaseType == t)
-                {
-                    ToolStripMenuItem item = new ToolStripMenuItem(type.Name);
-                    ToolStripMenuItem[] itemItems = GetChildren(type).ToArray();
-                    item.DropDownItems.AddRange(itemItems);
-                    item.BackColor = System.Drawing.SystemColors.ActiveCaptionText;
-                    item.ForeColor = System.Drawing.SystemColors.ActiveCaption;
-                    menuItems.Add(item);
-                }
-                else if (!type.IsAbstract && type.BaseType == t)
-                {
-                    ToolStripMenuItem item = new ToolStripMenuItem(type.Name);
-                    item.BackColor = System.Drawing.SystemColors.ActiveCaptionText;
-                    item.ForeColor = System.Drawing.SystemColors.ActiveCaption;
-                    item.Click += new EventHandler(atomMenu_Click);
-                    menuItems.Add(item);
-                }
-            }
-            return menuItems;
-        }
-
-        private void noneToolStripMenuItem1_Click(object sender, EventArgs e)
-        {
-            tileSpawnType = null;
-            atomSpawnType = null;
-            toolStripStatusLabel1.Text = "Right click to delete an atom";
-        }
-
-        private void atomMenu_Click(object sender, EventArgs e)
-        {
-            tileSpawnType = null;
-            if (atomTypes.ContainsKey(((ToolStripDropDownItem)sender).Text))
-            {
-                atomSpawnType = atomTypes[((ToolStripDropDownItem)sender).Text];
-                //PlacementManager.Singleton.SendObjectRequestEDITMODE(atomSpawnType, alignType);
-                toolStripStatusLabel1.Text = atomSpawnType.Name.ToString();
-            }
-            else
-            {
-                atomSpawnType = null;
-                toolStripStatusLabel1.Text = "Error: Atom '" + ((ToolStripDropDownItem)sender).Text + "' not found!";
-            }
-        }
-
-        private void toolStripTextBox2_KeyPress(object sender, KeyPressEventArgs e)
-        {
-            if (e.KeyChar == '\r')
-            {
-                tileSpawnType = null;
-                foreach (Type t in atomTypes.Values)
-                {
-                    if (t.Name == toolStripTextBox2.Text)
-                    {
-                        atomSpawnType = t;
-                        toolStripStatusLabel1.Text = atomSpawnType.ToString();
-                        break;
-                    }
-                }
-            }
-        }
-        #endregion
         #region Tiles
         private void turfToolStripMenuItem_Click(object sender, EventArgs e)
         {
@@ -478,35 +318,6 @@ namespace SS3D
         private void PlayerName_TextBox_Click(object sender, EventArgs e)
         {
 
-        }
-        #endregion
-
-        private void toggleEditToolStripMenuItem_Click(object sender, EventArgs e)
-        {
-            NetOutgoingMessage message = prg.mNetworkMgr.netClient.CreateMessage();
-            message.Write((byte)NetMessage.PlacementManagerMessage);
-            message.Write((byte)PlacementManagerMessage.EDITMODE_ToggleEditMode);
-            prg.mNetworkMgr.SendMessage(message, NetDeliveryMethod.ReliableUnordered);
-        }
-
-        private void wallToolStripMenuItem1_Click(object sender, EventArgs e)
-        {
-            alignType = PlacementOption.AlignWall;
-        }
-
-        private void tileToolStripMenuItem_Click(object sender, EventArgs e)
-        {
-            alignType = PlacementOption.AlignNone;
-        }
-
-        private void sameTypeToolStripMenuItem_Click(object sender, EventArgs e)
-        {
-            alignType = PlacementOption.AlignSimilar;
-        }
-
-        private void freeToolStripMenuItem_Click(object sender, EventArgs e)
-        {
-            alignType = PlacementOption.AlignNone;
         }
     }
 }

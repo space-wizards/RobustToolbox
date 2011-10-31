@@ -35,23 +35,7 @@ namespace SS3D
             this.toolStripTextBox1 = new System.Windows.Forms.ToolStripTextBox();
             this.PlayerName_TextBox = new System.Windows.Forms.ToolStripTextBox();
             this.disconnectToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
-            this.editModeToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.quitToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
-            this.editToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
-            this.turfToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
-            this.noneToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
-            this.spaceToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
-            this.floorToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
-            this.wallToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
-            this.atomToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
-            this.noneToolStripMenuItem1 = new System.Windows.Forms.ToolStripMenuItem();
-            this.toolStripTextBox2 = new System.Windows.Forms.ToolStripTextBox();
-            this.toggleEditToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
-            this.alignmentModeToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
-            this.wallToolStripMenuItem1 = new System.Windows.Forms.ToolStripMenuItem();
-            this.tileToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
-            this.sameTypeToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
-            this.freeToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.statusStrip1 = new System.Windows.Forms.StatusStrip();
             this.toolStripStatusLabel1 = new System.Windows.Forms.ToolStripStatusLabel();
             this.menuStrip1.SuspendLayout();
@@ -63,8 +47,7 @@ namespace SS3D
             this.menuStrip1.BackColor = System.Drawing.Color.Silver;
             this.menuStrip1.GripMargin = new System.Windows.Forms.Padding(0);
             this.menuStrip1.Items.AddRange(new System.Windows.Forms.ToolStripItem[] {
-            this.menuToolStripMenuItem,
-            this.editToolStripMenuItem});
+            this.menuToolStripMenuItem});
             this.menuStrip1.Location = new System.Drawing.Point(0, 0);
             this.menuStrip1.Name = "menuStrip1";
             this.menuStrip1.Padding = new System.Windows.Forms.Padding(0);
@@ -78,7 +61,6 @@ namespace SS3D
             this.connectToolStripMenuItem,
             this.PlayerName_TextBox,
             this.disconnectToolStripMenuItem,
-            this.editModeToolStripMenuItem,
             this.quitToolStripMenuItem});
             this.menuToolStripMenuItem.ForeColor = System.Drawing.SystemColors.ActiveCaptionText;
             this.menuToolStripMenuItem.Name = "menuToolStripMenuItem";
@@ -123,16 +105,6 @@ namespace SS3D
             this.disconnectToolStripMenuItem.Text = "Disconnect";
             this.disconnectToolStripMenuItem.Click += new System.EventHandler(this.disconnectToolStripMenuItem_Click);
             // 
-            // editModeToolStripMenuItem
-            // 
-            this.editModeToolStripMenuItem.BackColor = System.Drawing.SystemColors.ActiveCaptionText;
-            this.editModeToolStripMenuItem.Enabled = false;
-            this.editModeToolStripMenuItem.ForeColor = System.Drawing.SystemColors.ActiveCaption;
-            this.editModeToolStripMenuItem.Name = "editModeToolStripMenuItem";
-            this.editModeToolStripMenuItem.Size = new System.Drawing.Size(160, 22);
-            this.editModeToolStripMenuItem.Text = "Edit mode";
-            this.editModeToolStripMenuItem.Click += new System.EventHandler(this.editModeToolStripMenuItem_Click);
-            // 
             // quitToolStripMenuItem
             // 
             this.quitToolStripMenuItem.BackColor = System.Drawing.SystemColors.ActiveCaptionText;
@@ -141,157 +113,6 @@ namespace SS3D
             this.quitToolStripMenuItem.Size = new System.Drawing.Size(160, 22);
             this.quitToolStripMenuItem.Text = "Quit";
             this.quitToolStripMenuItem.Click += new System.EventHandler(this.quitToolStripMenuItem_Click);
-            // 
-            // editToolStripMenuItem
-            // 
-            this.editToolStripMenuItem.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] {
-            this.turfToolStripMenuItem,
-            this.atomToolStripMenuItem,
-            this.toggleEditToolStripMenuItem,
-            this.alignmentModeToolStripMenuItem});
-            this.editToolStripMenuItem.Enabled = false;
-            this.editToolStripMenuItem.ForeColor = System.Drawing.SystemColors.ActiveCaptionText;
-            this.editToolStripMenuItem.Name = "editToolStripMenuItem";
-            this.editToolStripMenuItem.Size = new System.Drawing.Size(39, 24);
-            this.editToolStripMenuItem.Text = "Edit";
-            this.editToolStripMenuItem.Visible = false;
-            // 
-            // turfToolStripMenuItem
-            // 
-            this.turfToolStripMenuItem.BackColor = System.Drawing.SystemColors.ActiveCaptionText;
-            this.turfToolStripMenuItem.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] {
-            this.noneToolStripMenuItem,
-            this.spaceToolStripMenuItem,
-            this.floorToolStripMenuItem,
-            this.wallToolStripMenuItem});
-            this.turfToolStripMenuItem.ForeColor = System.Drawing.SystemColors.ActiveCaption;
-            this.turfToolStripMenuItem.Name = "turfToolStripMenuItem";
-            this.turfToolStripMenuItem.Size = new System.Drawing.Size(164, 22);
-            this.turfToolStripMenuItem.Text = "Turf";
-            this.turfToolStripMenuItem.Click += new System.EventHandler(this.turfToolStripMenuItem_Click);
-            // 
-            // noneToolStripMenuItem
-            // 
-            this.noneToolStripMenuItem.BackColor = System.Drawing.SystemColors.ActiveCaptionText;
-            this.noneToolStripMenuItem.ForeColor = System.Drawing.SystemColors.ActiveCaption;
-            this.noneToolStripMenuItem.Name = "noneToolStripMenuItem";
-            this.noneToolStripMenuItem.Size = new System.Drawing.Size(105, 22);
-            this.noneToolStripMenuItem.Text = "None";
-            this.noneToolStripMenuItem.Click += new System.EventHandler(this.noneToolStripMenuItem_Click);
-            // 
-            // spaceToolStripMenuItem
-            // 
-            this.spaceToolStripMenuItem.BackColor = System.Drawing.SystemColors.ActiveCaptionText;
-            this.spaceToolStripMenuItem.ForeColor = System.Drawing.SystemColors.ActiveCaption;
-            this.spaceToolStripMenuItem.Name = "spaceToolStripMenuItem";
-            this.spaceToolStripMenuItem.Size = new System.Drawing.Size(105, 22);
-            this.spaceToolStripMenuItem.Text = "Space";
-            this.spaceToolStripMenuItem.Click += new System.EventHandler(this.spaceToolStripMenuItem_Click);
-            // 
-            // floorToolStripMenuItem
-            // 
-            this.floorToolStripMenuItem.BackColor = System.Drawing.SystemColors.ActiveCaptionText;
-            this.floorToolStripMenuItem.ForeColor = System.Drawing.SystemColors.ActiveCaption;
-            this.floorToolStripMenuItem.Name = "floorToolStripMenuItem";
-            this.floorToolStripMenuItem.Size = new System.Drawing.Size(105, 22);
-            this.floorToolStripMenuItem.Text = "Floor";
-            this.floorToolStripMenuItem.Click += new System.EventHandler(this.floorToolStripMenuItem_Click);
-            // 
-            // wallToolStripMenuItem
-            // 
-            this.wallToolStripMenuItem.BackColor = System.Drawing.SystemColors.ActiveCaptionText;
-            this.wallToolStripMenuItem.ForeColor = System.Drawing.SystemColors.ActiveCaption;
-            this.wallToolStripMenuItem.Name = "wallToolStripMenuItem";
-            this.wallToolStripMenuItem.Size = new System.Drawing.Size(105, 22);
-            this.wallToolStripMenuItem.Text = "Wall";
-            this.wallToolStripMenuItem.Click += new System.EventHandler(this.wallToolStripMenuItem_Click);
-            // 
-            // atomToolStripMenuItem
-            // 
-            this.atomToolStripMenuItem.BackColor = System.Drawing.SystemColors.ActiveCaptionText;
-            this.atomToolStripMenuItem.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] {
-            this.noneToolStripMenuItem1,
-            this.toolStripTextBox2});
-            this.atomToolStripMenuItem.ForeColor = System.Drawing.SystemColors.ActiveCaption;
-            this.atomToolStripMenuItem.Name = "atomToolStripMenuItem";
-            this.atomToolStripMenuItem.Size = new System.Drawing.Size(164, 22);
-            this.atomToolStripMenuItem.Text = "Atom";
-            // 
-            // noneToolStripMenuItem1
-            // 
-            this.noneToolStripMenuItem1.BackColor = System.Drawing.SystemColors.ActiveCaptionText;
-            this.noneToolStripMenuItem1.ForeColor = System.Drawing.SystemColors.ActiveCaption;
-            this.noneToolStripMenuItem1.Name = "noneToolStripMenuItem1";
-            this.noneToolStripMenuItem1.Size = new System.Drawing.Size(160, 22);
-            this.noneToolStripMenuItem1.Text = "None";
-            this.noneToolStripMenuItem1.Click += new System.EventHandler(this.noneToolStripMenuItem1_Click);
-            // 
-            // toolStripTextBox2
-            // 
-            this.toolStripTextBox2.BackColor = System.Drawing.SystemColors.MenuText;
-            this.toolStripTextBox2.ForeColor = System.Drawing.SystemColors.InactiveCaption;
-            this.toolStripTextBox2.Name = "toolStripTextBox2";
-            this.toolStripTextBox2.Size = new System.Drawing.Size(100, 23);
-            this.toolStripTextBox2.Text = "Atom name";
-            this.toolStripTextBox2.KeyPress += new System.Windows.Forms.KeyPressEventHandler(this.toolStripTextBox2_KeyPress);
-            // 
-            // toggleEditToolStripMenuItem
-            // 
-            this.toggleEditToolStripMenuItem.BackColor = System.Drawing.SystemColors.ActiveCaptionText;
-            this.toggleEditToolStripMenuItem.ForeColor = System.Drawing.SystemColors.ActiveCaption;
-            this.toggleEditToolStripMenuItem.Name = "toggleEditToolStripMenuItem";
-            this.toggleEditToolStripMenuItem.Size = new System.Drawing.Size(164, 22);
-            this.toggleEditToolStripMenuItem.Text = "Toggle Edit";
-            this.toggleEditToolStripMenuItem.Click += new System.EventHandler(this.toggleEditToolStripMenuItem_Click);
-            // 
-            // alignmentModeToolStripMenuItem
-            // 
-            this.alignmentModeToolStripMenuItem.BackColor = System.Drawing.SystemColors.ActiveCaptionText;
-            this.alignmentModeToolStripMenuItem.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] {
-            this.wallToolStripMenuItem1,
-            this.tileToolStripMenuItem,
-            this.sameTypeToolStripMenuItem,
-            this.freeToolStripMenuItem});
-            this.alignmentModeToolStripMenuItem.ForeColor = System.Drawing.SystemColors.ActiveCaption;
-            this.alignmentModeToolStripMenuItem.Name = "alignmentModeToolStripMenuItem";
-            this.alignmentModeToolStripMenuItem.Size = new System.Drawing.Size(164, 22);
-            this.alignmentModeToolStripMenuItem.Text = "Alignment Mode";
-            // 
-            // wallToolStripMenuItem1
-            // 
-            this.wallToolStripMenuItem1.BackColor = System.Drawing.SystemColors.ActiveCaptionText;
-            this.wallToolStripMenuItem1.ForeColor = System.Drawing.SystemColors.ActiveCaption;
-            this.wallToolStripMenuItem1.Name = "wallToolStripMenuItem1";
-            this.wallToolStripMenuItem1.Size = new System.Drawing.Size(132, 22);
-            this.wallToolStripMenuItem1.Text = "Wall";
-            this.wallToolStripMenuItem1.Click += new System.EventHandler(this.wallToolStripMenuItem1_Click);
-            // 
-            // tileToolStripMenuItem
-            // 
-            this.tileToolStripMenuItem.BackColor = System.Drawing.SystemColors.ActiveCaptionText;
-            this.tileToolStripMenuItem.ForeColor = System.Drawing.SystemColors.ActiveCaption;
-            this.tileToolStripMenuItem.Name = "tileToolStripMenuItem";
-            this.tileToolStripMenuItem.Size = new System.Drawing.Size(132, 22);
-            this.tileToolStripMenuItem.Text = "Tile";
-            this.tileToolStripMenuItem.Click += new System.EventHandler(this.tileToolStripMenuItem_Click);
-            // 
-            // sameTypeToolStripMenuItem
-            // 
-            this.sameTypeToolStripMenuItem.BackColor = System.Drawing.SystemColors.ActiveCaptionText;
-            this.sameTypeToolStripMenuItem.ForeColor = System.Drawing.SystemColors.ActiveCaption;
-            this.sameTypeToolStripMenuItem.Name = "sameTypeToolStripMenuItem";
-            this.sameTypeToolStripMenuItem.Size = new System.Drawing.Size(132, 22);
-            this.sameTypeToolStripMenuItem.Text = "Same Type";
-            this.sameTypeToolStripMenuItem.Click += new System.EventHandler(this.sameTypeToolStripMenuItem_Click);
-            // 
-            // freeToolStripMenuItem
-            // 
-            this.freeToolStripMenuItem.BackColor = System.Drawing.SystemColors.ActiveCaptionText;
-            this.freeToolStripMenuItem.ForeColor = System.Drawing.SystemColors.ActiveCaption;
-            this.freeToolStripMenuItem.Name = "freeToolStripMenuItem";
-            this.freeToolStripMenuItem.Size = new System.Drawing.Size(132, 22);
-            this.freeToolStripMenuItem.Text = "Free";
-            this.freeToolStripMenuItem.Click += new System.EventHandler(this.freeToolStripMenuItem_Click);
             // 
             // statusStrip1
             // 
@@ -341,24 +162,8 @@ namespace SS3D
         private System.Windows.Forms.ToolStripMenuItem disconnectToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem quitToolStripMenuItem;
         private System.Windows.Forms.ToolStripTextBox toolStripTextBox1;
-        private System.Windows.Forms.ToolStripMenuItem editModeToolStripMenuItem;
-        private System.Windows.Forms.ToolStripMenuItem editToolStripMenuItem;
-        private System.Windows.Forms.ToolStripMenuItem turfToolStripMenuItem;
-        private System.Windows.Forms.ToolStripMenuItem atomToolStripMenuItem;
         private System.Windows.Forms.StatusStrip statusStrip1;
         private System.Windows.Forms.ToolStripStatusLabel toolStripStatusLabel1;
-        private System.Windows.Forms.ToolStripMenuItem spaceToolStripMenuItem;
-        private System.Windows.Forms.ToolStripMenuItem floorToolStripMenuItem;
-        private System.Windows.Forms.ToolStripMenuItem wallToolStripMenuItem;
-        private System.Windows.Forms.ToolStripMenuItem noneToolStripMenuItem;
-        private System.Windows.Forms.ToolStripMenuItem noneToolStripMenuItem1;
-        private System.Windows.Forms.ToolStripTextBox toolStripTextBox2;
         private System.Windows.Forms.ToolStripTextBox PlayerName_TextBox;
-        private System.Windows.Forms.ToolStripMenuItem toggleEditToolStripMenuItem;
-        private System.Windows.Forms.ToolStripMenuItem alignmentModeToolStripMenuItem;
-        private System.Windows.Forms.ToolStripMenuItem wallToolStripMenuItem1;
-        private System.Windows.Forms.ToolStripMenuItem tileToolStripMenuItem;
-        private System.Windows.Forms.ToolStripMenuItem sameTypeToolStripMenuItem;
-        private System.Windows.Forms.ToolStripMenuItem freeToolStripMenuItem;
     }
 }

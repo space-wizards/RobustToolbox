@@ -27,6 +27,9 @@ namespace SS3D.UserInterface
         public System.Drawing.Color borderColor = System.Drawing.Color.Black;
         public System.Drawing.Color backgroundColor = System.Drawing.Color.Gray;
 
+        public int fixed_width = -1;
+        public int fixed_height = -1;
+
         public Label(string text)
             : base()
         {
@@ -38,7 +41,7 @@ namespace SS3D.UserInterface
         public override void Update()
         {
             Text.Position = position;
-            ClientArea = new Rectangle(this.position, new Size((int)Text.Width, (int)Text.Height));
+            ClientArea = new Rectangle(this.position, new Size(fixed_width == -1 ? (int)Text.Width : fixed_width, fixed_height == -1 ? (int)Text.Height : fixed_height));
         }
 
         public override void Render()

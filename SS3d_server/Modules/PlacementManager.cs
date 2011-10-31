@@ -58,13 +58,6 @@ namespace SS3D_Server.Modules
                 case PlacementManagerMessage.RequestPlacement:
                     HandlePlacementRequest(msg);
                     break;
-                case PlacementManagerMessage.EDITMODE_ToggleEditMode: //THIS REALLY NEED ADMINCHECKS OR SOMETHING.
-                    editMode = !editMode;
-                    SS3D_Server.SS3DServer.Singleton.chatManager.SendChatMessage(ChatChannel.Server, "Edit Mode : " + (editMode ? "On" : "Off"), "", 0);
-                    break;
-                case PlacementManagerMessage.EDITMODE_GetObject:
-                    if (editMode) HandleEditRequest(msg);
-                    break;
             }
         }
 
@@ -76,16 +69,6 @@ namespace SS3D_Server.Modules
 
             if (permission.Any()) return permission.First();
             else return null;
-        }
-
-        public void HandleEditRequest(NetIncomingMessage msg)
-        {
-            //TODO RE-ENABLE
-            /*string objectType = msg.ReadString();
-            AlignmentOptions align = (AlignmentOptions)msg.ReadByte();
-            Type fullType = SS3DServer.Singleton.atomManager.GetAtomType(objectType);
-            if (fullType != null) StartBuilding(SS3DServer.Singleton.playerManager.GetSessionByConnection(msg.SenderConnection).attachedAtom, 120, objectType, align, editMode);
-            else LogManager.Log("Invalid Object Requested : " + "SS3D_Server." + objectType);*/ 
         }
 
         public void HandlePlacementRequest(NetIncomingMessage msg)
@@ -104,11 +87,31 @@ namespace SS3D_Server.Modules
             float yRcv = msg.ReadFloat();
             float rotRcv = msg.ReadFloat();
 
-            PlacementInformation permission = GetPermission(SS3DServer.Singleton.playerManager.GetSessionByConnection(msg.SenderConnection).attachedAtom.Uid, alignRcv);
+            PlayerSession session = SS3DServer.Singleton.playerManager.GetSessionByConnection(msg.SenderConnection);
+            PlacementInformation permission = GetPermission(session.attachedAtom.Uid, alignRcv);
             Boolean isAdmin = SS3DServer.Singleton.playerManager.GetSessionByConnection(msg.SenderConnection).adminPermissions.isAdmin;
 
             if (permission != null || true) //isAdmin)
             {
+                if (permission != null)
+                {
+                    if(permission.uses > 0)
+                    {
+                        permission.uses--;
+                        if (permission.uses <= 0)
+                        {
+                            BuildPermissions.Remove(permission);
+                            SendPlacementCancel(session.attachedAtom);
+                        }
+                    }
+                    else
+                    {
+                        BuildPermissions.Remove(permission);
+                        SendPlacementCancel(session.attachedAtom);
+                        return;
+                    }
+                }
+
                 if (!isTile)
                 {
                     Entity created = EntityManager.Singleton.SpawnEntity(entityTemplateName, new Vector2(xRcv, yRcv));
@@ -116,44 +119,20 @@ namespace SS3D_Server.Modules
                 }
                 else
                 {
-                    //Tile here
+                    Point arrayPos = SS3D_Server.SS3DServer.Singleton.map.GetTileArrayPositionFromWorldPosition(new Vector2(xRcv, yRcv));
+                    SS3D_Server.SS3DServer.Singleton.map.ChangeTile(arrayPos.X, arrayPos.Y, tileType);
+                    SS3D_Server.SS3DServer.Singleton.map.NetworkUpdateTile(arrayPos.X, arrayPos.Y);
                 }
             }
+            else //They are not allowed to request this. Send 'PlacementFailed'. TBA
+            {
+                LogManager.Log("Invalid placement request: "
+                    + SS3DServer.Singleton.playerManager.GetSessionByConnection(msg.SenderConnection).name +
+                    " - " + SS3DServer.Singleton.playerManager.GetSessionByConnection(msg.SenderConnection).attachedAtom.Uid.ToString() +
+                    " - " + alignRcv.ToString());
 
-            //if (GetPermission(SS3DServer.Singleton.playerManager.GetSessionByConnection(msg.SenderConnection).attachedAtom.Uid, alignRcv) != null)
-            //{
-            //    //DO PLACEMENT CHECKS. Are they allowed to place this here?
-            //    PlacementInformation permission = GetPermission(SS3DServer.Singleton.playerManager.GetSessionByConnection(msg.SenderConnection).attachedAtom.Uid, alignRcv);
-
-            //    if (!editMode)
-            //    {
-            //        BuildPermissions.Remove(permission);
-            //        SendPlacementCancel(SS3DServer.Singleton.playerManager.GetSessionByConnection(msg.SenderConnection).attachedAtom);
-            //    }
-            //     //TODO RE-ENABLE
-            //    /*Type objectType = SS3DServer.Singleton.atomManager.GetAtomType(permission.type);
-
-            //    if (objectType.IsSubclassOf(typeof(Tile)))
-            //    {
-            //        Point arrayPos = SS3D_Server.SS3DServer.Singleton.map.GetTileArrayPositionFromWorldPosition(new Vector2(xRcv, yRcv));
-            //        SS3D_Server.SS3DServer.Singleton.map.ChangeTile(arrayPos.X, arrayPos.Y, objectType);
-            //        SS3D_Server.SS3DServer.Singleton.map.NetworkUpdateTile(arrayPos.X, arrayPos.Y);
-            //    }
-            //    else
-            //    { //TODO RE-ENABLE
-            //        //SS3D_Server.SS3DServer.Singleton.atomManager.SpawnAtom(permission.type, new Vector2(xRcv, yRcv), rotRcv);
-            //    }
-            //    */
-            //}
-            //else //They are not allowed to request this. Send 'PlacementFailed'. TBA
-            //{
-            //    LogManager.Log("Invalid placement request: " 
-            //        + SS3DServer.Singleton.playerManager.GetSessionByConnection(msg.SenderConnection).name +
-            //        " - " + SS3DServer.Singleton.playerManager.GetSessionByConnection(msg.SenderConnection).attachedAtom.Uid.ToString() +
-            //        " - " + alignRcv.ToString());
-
-            //    SendPlacementCancel(SS3DServer.Singleton.playerManager.GetSessionByConnection(msg.SenderConnection).attachedAtom);
-            //}
+                SendPlacementCancel(SS3DServer.Singleton.playerManager.GetSessionByConnection(msg.SenderConnection).attachedAtom);
+            }
         }
 
         /// <summary>
@@ -176,7 +155,7 @@ namespace SS3D_Server.Modules
         }
 
         /// <summary>
-        ///  Places mob in entity placement mode with given settings.
+        ///  Places mob in tile placement mode with given settings.
         /// </summary>
         public void SendPlacementBegin(Entity mob, ushort range, TileType tileType, PlacementOption alignOption)
         {

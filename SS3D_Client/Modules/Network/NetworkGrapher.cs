@@ -20,7 +20,7 @@ namespace SS3D.Modules.Network
 
         TextSprite ts;
 
-        private bool enabled = true;
+        private bool enabled = false;
 
         public NetworkGrapher(NetworkManager _nm)
         {

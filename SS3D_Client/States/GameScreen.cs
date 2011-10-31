@@ -264,7 +264,7 @@ namespace SS3D.States
                             UiManager.Singleton.HandleNetMessage(msg);
                             break;
                         case NetMessage.PlacementManagerMessage:
-                            //PlacementManager.Singleton.HandleNetMessage(msg);
+                            PlacementManager.Singleton.HandleNetMessage(msg);
                             break;
                         case NetMessage.SendMap:
                             RecieveMap(msg);
@@ -591,27 +591,16 @@ namespace SS3D.States
                 prg.mNetworkMgr.SendMessage(message, NetDeliveryMethod.ReliableUnordered);
             }
 
+            if (e.Key == KeyboardKeys.F10)
+            {
+                UiManager.Singleton.DisposeAllComponentsOfType(typeof(TileSpawnPanel)); //Remove old ones.
+                UiManager.Singleton.Components.Add(new TileSpawnPanel(new System.Drawing.Size(350, 410))); //Create a new one.
+            }
+
             if (e.Key == KeyboardKeys.F11)
             {
-
                 UiManager.Singleton.DisposeAllComponentsOfType(typeof(EntitySpawnPanel)); //Remove old ones.
                 UiManager.Singleton.Components.Add(new EntitySpawnPanel(new System.Drawing.Size(350, 410))); //Create a new one.
-
-                //SS3D_shared.HelperClasses.PlacementInformation placementInfo = new SS3D_shared.HelperClasses.PlacementInformation();
-                //placementInfo.AlignOption = AlignmentOptions.AlignNone;
-                //placementInfo.entityType = "Worktop";
-                //placementInfo.isTile = false;
-                //placementInfo.range = 30;
-
-                //PlacementManager.Singleton.BeginPlacing(placementInfo);
-
-                //foreach (EntityTemplate temp in entityManager.TemplateDB.Templates.Values)
-                //{
-                //    foreach (ComponentParameter para in temp.GetBaseSpriteParamaters())
-                //    {
-                //        MessageBox.Show((string)para.Parameter);
-                //    }
-                //}
             }
 
             if (e.Key == KeyboardKeys.F12)

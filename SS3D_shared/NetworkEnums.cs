@@ -58,9 +58,7 @@ public enum PlacementManagerMessage
     StartPlacement,
     CancelPlacement,
     PlacementFailed,
-    RequestPlacement,
-    EDITMODE_GetObject,
-    EDITMODE_ToggleEditMode
+    RequestPlacement
 }
 
 public enum MobMessage

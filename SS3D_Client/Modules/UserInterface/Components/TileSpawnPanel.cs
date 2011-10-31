@@ -21,26 +21,26 @@ using SS3D_shared.HelperClasses;
 
 namespace SS3D.UserInterface
 {
-    class EntitySpawnPanel : Window
+    class TileSpawnPanel : Window
     {
-        ScrollableContainer entityList;
+        ScrollableContainer tileList;
         Label clearLabel;
-        Textbox entSearchTextbox;
+        Textbox tileSearchTextbox;
 
-        public EntitySpawnPanel(Size _size)
-            : base("Entity Spawn Panel", _size)
+        public TileSpawnPanel(Size _size)
+            : base("Tile Spawn Panel", _size)
         {
-            entityList = new ScrollableContainer("entspawnlist", new Size(200, 400));
-            entityList.Position = new Point(5, 5);
+            tileList = new ScrollableContainer("tilespawnlist", new Size(200, 400));
+            tileList.Position = new Point(5, 5);
 
-            Label searchLabel = new Label("Entity Search:");
+            Label searchLabel = new Label("Tile Search:");
             searchLabel.Position = new Point(210, 0);
             components.Add(searchLabel);
 
-            entSearchTextbox = new Textbox(125);
-            entSearchTextbox.Position = new Point(210, 20);
-            entSearchTextbox.OnSubmit += new Textbox.TextSubmitHandler(entSearchTextbox_OnSubmit);
-            components.Add(entSearchTextbox);
+            tileSearchTextbox = new Textbox(125);
+            tileSearchTextbox.Position = new Point(210, 20);
+            tileSearchTextbox.OnSubmit += new Textbox.TextSubmitHandler(tileSearchTextbox_OnSubmit);
+            components.Add(tileSearchTextbox);
 
             clearLabel = new Label("[Clear Filter]");
             clearLabel.drawBackground = true;
@@ -50,7 +50,7 @@ namespace SS3D.UserInterface
             clearLabel.backgroundColor = Color.Gray;
             components.Add(clearLabel);
 
-            BuildEntityList();
+            BuildTileList();
 
             position = new Point((int)(Gorgon.Screen.Width / 2f) - (int)(this.ClientArea.Width / 2f), (int)(Gorgon.Screen.Height / 2f) - (int)(this.ClientArea.Height / 2f));
             PlacementManager.Singleton.PlacementCanceled += new PlacementManager.PlacementCanceledHandler(PlacementMgr_PlacementCanceled);
@@ -59,85 +59,79 @@ namespace SS3D.UserInterface
         void clearLabel_Clicked(Label sender)
         {
             clearLabel.backgroundColor = Color.Gray;
-            BuildEntityList();
+            BuildTileList();
         }
 
-        void entSearchTextbox_OnSubmit(string text)
+        void tileSearchTextbox_OnSubmit(string text)
         {
-            BuildEntityList(text);
+            BuildTileList(text);
         }
 
         void PlacementMgr_PlacementCanceled(PlacementManager mgr)
         {
-            foreach (GuiComponent curr in entityList.components)
-                if (curr.GetType() == typeof(EntitySpawnSelectButton))
-                    ((EntitySpawnSelectButton)curr).selected = false;
+            foreach (GuiComponent curr in tileList.components)
+                if (curr.GetType() == typeof(Label))
+                    ((Label)curr).backgroundColor = Color.Gray;
         }
 
-        private void BuildEntityList(string searchStr = null)
+        private void BuildTileList(string searchStr = null)
         {
             int max_width = 0;
             int y_offset = 5;
 
-            entityList.components.Clear();
-            entityList.ResetScrollbars();
+            tileList.components.Clear();
+            tileList.ResetScrollbars();
 
-            List<KeyValuePair<string, EntityTemplate>> templates = (searchStr == null) ? 
-                EntityManager.Singleton.TemplateDB.Templates.ToList() : 
-                EntityManager.Singleton.TemplateDB.Templates.Where(x => x.Value.Name.ToLower().Contains(searchStr.ToLower())).ToList();
+            List<string> typeNames = (searchStr == null) ? 
+                Enum.GetNames(typeof(TileType)).ToList() :
+                Enum.GetNames(typeof(TileType)).Where(x => x.ToLower().Contains(searchStr.ToLower())).ToList();
         
-
             if (searchStr != null) clearLabel.backgroundColor = Color.LightGray;
 
-            foreach (KeyValuePair<string, EntityTemplate> entry in templates)
+            foreach (string entry in typeNames)
             {
-                EntitySpawnSelectButton newButton = new EntitySpawnSelectButton(entry.Value, entry.Key);
-                entityList.components.Add(newButton);
-                newButton.Position = new Point(5, y_offset);
-                newButton.Update();
-                y_offset += 5 + newButton.ClientArea.Height;
-                newButton.Clicked += new EntitySpawnSelectButton.EntitySpawnSelectPress(newButton_Clicked);
-                if (newButton.ClientArea.Width > max_width) max_width = newButton.ClientArea.Width;
+                Label tileLabel = new Label(entry);
+                tileList.components.Add(tileLabel);
+                tileLabel.Position = new Point(5, y_offset);
+                tileLabel.drawBackground = true;
+                tileLabel.drawBorder = true;
+                tileLabel.Update();
+                y_offset += 5 + tileLabel.ClientArea.Height;
+                tileLabel.Clicked += new Label.LabelPressHandler(tileLabel_Clicked);
+                if (tileLabel.ClientArea.Width > max_width) max_width = tileLabel.ClientArea.Width;
             }
 
-            foreach (GuiComponent curr in entityList.components)
-                if (curr.GetType() == typeof(EntitySpawnSelectButton))
-                    ((EntitySpawnSelectButton)curr).fixed_width = max_width;
+            foreach (GuiComponent curr in tileList.components)
+                if (curr.GetType() == typeof(Label))
+                    ((Label)curr).fixed_width = max_width;
         }
 
-        void newButton_Clicked(EntitySpawnSelectButton sender, EntityTemplate template, string templateName)
+        void tileLabel_Clicked(Label sender)
         {
-            if (sender.selected)
-            {
-                sender.selected = false;
-                PlacementManager.Singleton.Clear();
-                return;
-            }
-
-            foreach (GuiComponent curr in entityList.components)
-                if (curr.GetType() == typeof(EntitySpawnSelectButton))
-                    ((EntitySpawnSelectButton)curr).selected = false;
+            foreach (GuiComponent curr in tileList.components)
+                if (curr.GetType() == typeof(Label))
+                    ((Label)curr).backgroundColor = Color.Gray;
 
             PlacementInformation newObjInfo = new PlacementInformation();
 
-            newObjInfo.placementOption = template.placementMode;
-            newObjInfo.entityType = templateName;
+            newObjInfo.placementOption = PlacementOption.AlignTileAnyFree;
+            newObjInfo.tileType = (TileType)Enum.Parse(typeof(TileType), sender.Text.Text, true);
             newObjInfo.range = 400;
-            newObjInfo.isTile = false;
+            newObjInfo.isTile = true;
 
             PlacementManager.Singleton.BeginPlacing(newObjInfo);
 
-            sender.selected = true; //This needs to be last.
+            sender.backgroundColor = Color.ForestGreen;
         }
 
         public override void Update()
         {
             if (disposing || !IsVisible()) return;
             base.Update();
-            if (entityList != null)
+            if (tileList != null)
             {
-                entityList.Position = new Point(clientArea.X + 5, clientArea.Y + 5);
-                entityList.Update();
+                tileList.Position = new Point(clientArea.X + 5, clientArea.Y + 5);
+                tileList.Update();
             }
         }
 
@@ -145,7 +139,7 @@ namespace SS3D.UserInterface
         {
             if (disposing || !IsVisible()) return;
             base.Render();
-            entityList.Render();
+            tileList.Render();
         }
 
         public override void Dispose()
@@ -153,13 +147,13 @@ namespace SS3D.UserInterface
             if (disposing) return;
             PlacementManager.Singleton.PlacementCanceled -= new PlacementManager.PlacementCanceledHandler(PlacementMgr_PlacementCanceled);
             base.Dispose();
-            entityList.Dispose();
+            tileList.Dispose();
         }
 
         public override bool MouseDown(MouseInputEventArgs e)
         {
             if (disposing || !IsVisible()) return false;
-            if (entityList.MouseDown(e)) return true;
+            if (tileList.MouseDown(e)) return true;
             if (base.MouseDown(e)) return true;
             return false;
         }
@@ -167,7 +161,7 @@ namespace SS3D.UserInterface
         public override bool MouseUp(MouseInputEventArgs e)
         {
             if (disposing || !IsVisible()) return false;
-            if (entityList.MouseUp(e)) return true;
+            if (tileList.MouseUp(e)) return true;
             if (base.MouseUp(e)) return true;
             return false;
         }
@@ -175,21 +169,21 @@ namespace SS3D.UserInterface
         public override void MouseMove(MouseInputEventArgs e)
         {
             if (disposing || !IsVisible()) return;
-            entityList.MouseMove(e);
+            tileList.MouseMove(e);
             base.MouseMove(e);
             return;
         }
 
         public override bool MouseWheelMove(MouseInputEventArgs e)
         {
-            if (entityList.MouseWheelMove(e)) return true;
+            if (tileList.MouseWheelMove(e)) return true;
             if (base.MouseWheelMove(e)) return true;
             return false;
         }
 
         public override bool KeyDown(KeyboardInputEventArgs e)
         {
-            if (entityList.KeyDown(e)) return true;
+            if (tileList.KeyDown(e)) return true;
             if (base.KeyDown(e)) return true;
             return false;
         }

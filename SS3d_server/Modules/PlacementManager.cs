@@ -115,7 +115,8 @@ namespace SS3D_Server.Modules
                 if (!isTile)
                 {
                     Entity created = EntityManager.Singleton.SpawnEntity(entityTemplateName, new Vector2(xRcv, yRcv));
-                    created.Translate(new Vector2(xRcv, yRcv), rotRcv);
+                    if(created != null)
+                        created.Translate(new Vector2(xRcv, yRcv), rotRcv);
                 }
                 else
                 {

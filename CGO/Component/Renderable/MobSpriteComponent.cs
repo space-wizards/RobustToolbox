@@ -11,6 +11,7 @@ namespace CGO
     public class MobSpriteComponent : SpriteComponent
     {
         string basename = "";
+        SpeechBubble speechBubble;
         public MobSpriteComponent()
             : base()
         {
@@ -56,6 +57,14 @@ namespace CGO
                     break;
                 case ComponentMessageType.HealthStatus:
                     break; //TODO do stuff here, incap and dead.
+                case ComponentMessageType.EntitySaidSomething:
+                    ChatChannel channel = (ChatChannel)list[0];
+                    string text = (string)list[1];
+                    if (speechBubble == null) speechBubble = new SpeechBubble(Owner.name + Owner.Uid.ToString());
+                    if(channel == ChatChannel.Ingame || channel == ChatChannel.Player || channel == ChatChannel.Radio)
+                        speechBubble.SetText(text);
+                    //TODO re-enable speechbubbles
+                    break;
 
             }
             return;
@@ -95,6 +104,14 @@ namespace CGO
             AddSprite(basename + "_dead");
 
             SetSpriteByKey(basename + "_front");
+        }
+
+        public override void Render()
+        {
+            base.Render();
+
+            if (speechBubble != null)
+                speechBubble.Draw(Owner.Position, ClientWindow.ClientWindowData.xTopLeft, ClientWindow.ClientWindowData.yTopLeft, currentSprite);
         }
     }
 }

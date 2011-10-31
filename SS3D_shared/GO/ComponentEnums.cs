@@ -133,6 +133,7 @@ namespace SS3D_shared.GO
         SetWornDrawDepth,
         HandsPickedUpItem,
         HandsDroppedItem,
+        EntitySaidSomething,
     }
 
     public enum Hand

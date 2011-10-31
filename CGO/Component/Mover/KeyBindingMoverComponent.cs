@@ -97,42 +97,34 @@ namespace CGO
             if (MoveUp && !MoveLeft && !MoveRight && !MoveDown) // Move Up
             {
                 Translate(new Vector2D(0, -1) * currentMoveSpeed * frameTime);
-                //SetMoveDir(Constants.MoveDirs.north);
             }
             else if (MoveDown && !MoveLeft && !MoveRight && !MoveUp) // Move Down
             {
                 Translate(new Vector2D(0, 1) * currentMoveSpeed * frameTime);
-                //SetMoveDir(Constants.MoveDirs.south);
             }
             else if (MoveLeft && !MoveRight && !MoveUp && !MoveDown) // Move Left
             {
                 Translate(new Vector2D(-1, 0) * currentMoveSpeed * frameTime);
-                //SetMoveDir(Constants.MoveDirs.west);
             }
             else if (MoveRight && !MoveLeft && !MoveUp && !MoveDown) // Move Right
             {
                 Translate(new Vector2D(1, 0) * currentMoveSpeed * frameTime);
-                //SetMoveDir(Constants.MoveDirs.east);
             }
             else if (MoveUp && MoveRight && !MoveLeft && !MoveDown) // Move Up & Right
             {
                 Translate(new Vector2D(0.7071f, -0.7071f) * currentMoveSpeed * frameTime);
-                //SetMoveDir(Constants.MoveDirs.northeast);
             }
             else if (MoveUp && MoveLeft && !MoveRight && !MoveDown) // Move Up & Left
             {
                 Translate(new Vector2D(-0.7071f, -0.7071f) * currentMoveSpeed * frameTime);
-                //SetMoveDir(Constants.MoveDirs.northwest);
             }
             else if (MoveDown && MoveRight && !MoveLeft && !MoveUp) // Move Down & Right
             {
                 Translate(new Vector2D(0.7071f, 0.7071f) * currentMoveSpeed * frameTime);
-                //SetMoveDir(Constants.MoveDirs.southeast);
             }
             else if (MoveDown && MoveLeft && !MoveRight && !MoveUp) // Move Down & Left
             {
                 Translate(new Vector2D(-0.7071f, 0.7071f) * currentMoveSpeed * frameTime);
-                //SetMoveDir(Constants.MoveDirs.southwest);
             }
         }
 

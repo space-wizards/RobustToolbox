@@ -361,6 +361,7 @@ namespace SS3D.States
             Entity a = EntityManager.Singleton.GetEntity(atomID);
             if (a != null)
             {
+                a.SendMessage(this, SS3D_shared.GO.ComponentMessageType.EntitySaidSomething, null, channel, text);
                 /*if (a.speechBubble == null) a.speechBubble = new SpeechBubble(a.name + a.Uid.ToString());
                 if(channel == ChatChannel.Ingame || channel == ChatChannel.Player || channel == ChatChannel.Radio)
                     a.speechBubble.SetText(text);*/ //TODO re-enable speechbubbles

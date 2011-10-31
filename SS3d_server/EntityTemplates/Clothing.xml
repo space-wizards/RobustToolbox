@@ -140,6 +140,34 @@
       </Component>
     </Components>
   </EntityTemplate>
+  <EntityTemplate name="BlueGloves">
+    <Components>
+      <Component name="ClickableComponent"></Component>
+      <Component name="SpriteComponent"></Component>
+      <Component name="BasicInteractableComponent"></Component>
+      <Component name="BasicMoverComponent"></Component>
+      <Component name="BasicItemComponent"></Component>
+      <Component name="EquippableComponent">
+        <Parameters>
+          <Parameter name="wearloc" type="string" value="Hands" />
+        </Parameters>
+      </Component>
+    </Components>
+  </EntityTemplate>
+  <EntityTemplate name="Galoshes">
+    <Components>
+      <Component name="ClickableComponent"></Component>
+      <Component name="SpriteComponent"></Component>
+      <Component name="BasicInteractableComponent"></Component>
+      <Component name="BasicMoverComponent"></Component>
+      <Component name="BasicItemComponent"></Component>
+      <Component name="EquippableComponent">
+        <Parameters>
+          <Parameter name="wearloc" type="string" value="Feet" />
+        </Parameters>
+      </Component>
+    </Components>
+  </EntityTemplate>
   <EntityTemplate name="Shoes">
     <Components>
       <Component name="ClickableComponent"></Component>

@@ -84,4 +84,28 @@
       <Component name="BasicItemComponent"></Component>
     </Components>
   </EntityTemplate>
+  <EntityTemplate name="Medkit_Red">
+    <Components>
+      <Component name="NetworkMoverComponent"></Component>
+      <Component name="ItemSpriteComponent">
+        <Parameters>
+          <Parameter name="basename" type="string" value="medkit_r" />
+        </Parameters>
+      </Component>
+      <Component name="ClickableComponent"></Component>
+      <Component name="BasicItemComponent"></Component>
+    </Components>
+  </EntityTemplate>
+  <EntityTemplate name="Medkit_White">
+    <Components>
+      <Component name="NetworkMoverComponent"></Component>
+      <Component name="ItemSpriteComponent">
+        <Parameters>
+          <Parameter name="basename" type="string" value="medkit_w" />
+        </Parameters>
+      </Component>
+      <Component name="ClickableComponent"></Component>
+      <Component name="BasicItemComponent"></Component>
+    </Components>
+  </EntityTemplate>
 </EntityTemplates>

@@ -1,0 +1,87 @@
+﻿<?xml version="1.0" encoding="utf-8" ?>
+<EntityTemplates>
+  <EntityTemplate name="Forceps">
+    <Components>
+      <Component name="NetworkMoverComponent"></Component>
+      <Component name="ItemSpriteComponent">
+        <Parameters>
+          <Parameter name="basename" type="string" value="forceps" />
+        </Parameters>
+      </Component>
+      <Component name="ClickableComponent"></Component>
+      <Component name="BasicItemComponent"></Component>
+    </Components>
+  </EntityTemplate>
+  <EntityTemplate name="Medical_Scanner">
+    <Components>
+      <Component name="NetworkMoverComponent"></Component>
+      <Component name="ItemSpriteComponent">
+        <Parameters>
+          <Parameter name="basename" type="string" value="medscanner" />
+        </Parameters>
+      </Component>
+      <Component name="ClickableComponent"></Component>
+      <Component name="BasicItemComponent"></Component>
+    </Components>
+  </EntityTemplate>
+  <EntityTemplate name="Medical_Saw">
+    <Components>
+      <Component name="NetworkMoverComponent"></Component>
+      <Component name="ItemSpriteComponent">
+        <Parameters>
+          <Parameter name="basename" type="string" value="saw" />
+        </Parameters>
+      </Component>
+      <Component name="ClickableComponent"></Component>
+      <Component name="BasicItemComponent"></Component>
+    </Components>
+  </EntityTemplate>
+  <EntityTemplate name="Scalpel">
+    <Components>
+      <Component name="NetworkMoverComponent"></Component>
+      <Component name="ItemSpriteComponent">
+        <Parameters>
+          <Parameter name="basename" type="string" value="scalpel" />
+        </Parameters>
+      </Component>
+      <Component name="ClickableComponent"></Component>
+      <Component name="BasicItemComponent"></Component>
+    </Components>
+  </EntityTemplate>
+  <EntityTemplate name="SyringeGun">
+    <Components>
+      <Component name="NetworkMoverComponent"></Component>
+      <Component name="ItemSpriteComponent">
+        <Parameters>
+          <Parameter name="basename" type="string" value="syringegun" />
+        </Parameters>
+      </Component>
+      <Component name="ClickableComponent"></Component>
+      <Component name="BasicItemComponent"></Component>
+    </Components>
+  </EntityTemplate>
+  <EntityTemplate name="Medical_Vial">
+    <Components>
+      <Component name="NetworkMoverComponent"></Component>
+      <Component name="ItemSpriteComponent">
+        <Parameters>
+          <Parameter name="basename" type="string" value="vial" />
+        </Parameters>
+      </Component>
+      <Component name="ClickableComponent"></Component>
+      <Component name="BasicItemComponent"></Component>
+    </Components>
+  </EntityTemplate>
+  <EntityTemplate name="Medical_Vial_2">
+    <Components>
+      <Component name="NetworkMoverComponent"></Component>
+      <Component name="ItemSpriteComponent">
+        <Parameters>
+          <Parameter name="basename" type="string" value="vial_2" />
+        </Parameters>
+      </Component>
+      <Component name="ClickableComponent"></Component>
+      <Component name="BasicItemComponent"></Component>
+    </Components>
+  </EntityTemplate>
+</EntityTemplates>

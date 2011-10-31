@@ -10,6 +10,11 @@
         </Parameters>
       </Component>
       <Component name="ClickableComponent"></Component>
+      <Component name="CollidableComponent">
+        <Parameters>
+          <Parameter name="TweakAABBtop" type="float" value="48" />
+        </Parameters>
+      </Component>
     </Components>
   </EntityTemplate>
 </EntityTemplates>

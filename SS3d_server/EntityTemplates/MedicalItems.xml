@@ -54,6 +54,15 @@
       <Component name="BasicItemComponent"></Component>
     </Components>
   </EntityTemplate>
+  <EntityTemplate name="Medical_Vial_2">
+    <Components>
+      <Component name="ClickableComponent"></Component>
+      <Component name="SpriteComponent"></Component>
+      <Component name="BasicInteractableComponent"></Component>
+      <Component name="BasicMoverComponent"></Component>
+      <Component name="BasicItemComponent"></Component>
+    </Components>
+  </EntityTemplate>
   <EntityTemplate name="Medkit_Red">
     <Components>
       <Component name="ClickableComponent"></Component>

@@ -19,6 +19,8 @@ namespace SS3D.UserInterface
         public delegate void SimpleImageButtonPressHandler(SimpleImageButton sender);
         public event SimpleImageButtonPressHandler Clicked;
 
+        public Color Color = Color.White;
+
         private Sprite buttonSprite;
 
         public SimpleImageButton(string spriteName)
@@ -36,8 +38,10 @@ namespace SS3D.UserInterface
 
         public override void Render()
         {
+            buttonSprite.Color = Color;
             buttonSprite.Position = Position;
             buttonSprite.Draw();
+            buttonSprite.Color = Color.White;
         }
 
         public override void Dispose()

@@ -26,6 +26,7 @@ namespace SS3D.UserInterface
         ScrollableContainer entityList;
         Label clearLabel;
         Textbox entSearchTextbox;
+        SimpleImageButton eraserButton;
 
         public EntitySpawnPanel(Size _size)
             : base("Entity Spawn Panel", _size)
@@ -50,10 +51,21 @@ namespace SS3D.UserInterface
             clearLabel.backgroundColor = Color.Gray;
             components.Add(clearLabel);
 
+            eraserButton = new SimpleImageButton("erasericon");
+            //eraserButton.Position = new Point(clearLabel.ClientArea.Right + 5, clearLabel.ClientArea.Top); Clientarea not updating properly. FIX THIS
+            eraserButton.Position = new Point(clearLabel.Position.X + clearLabel.ClientArea.Width + 5, clearLabel.Position.Y);
+            eraserButton.Clicked += new SimpleImageButton.SimpleImageButtonPressHandler(eraserButton_Clicked);
+            components.Add(eraserButton);
+
             BuildEntityList();
 
             position = new Point((int)(Gorgon.Screen.Width / 2f) - (int)(this.ClientArea.Width / 2f), (int)(Gorgon.Screen.Height / 2f) - (int)(this.ClientArea.Height / 2f));
             PlacementManager.Singleton.PlacementCanceled += new PlacementManager.PlacementCanceledHandler(PlacementMgr_PlacementCanceled);
+        }
+
+        void eraserButton_Clicked(SimpleImageButton sender)
+        {
+            PlacementManager.Singleton.ToggleEraser();
         }
 
         void clearLabel_Clicked(Label sender)
@@ -144,6 +156,7 @@ namespace SS3D.UserInterface
         public override void Render()
         {
             if (disposing || !IsVisible()) return;
+            eraserButton.Color = PlacementManager.Singleton.eraser ? Color.Tomato : Color.White;
             base.Render();
             entityList.Render();
         }

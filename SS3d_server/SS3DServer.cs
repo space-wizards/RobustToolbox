@@ -495,9 +495,10 @@ namespace SS3D_Server
             {
                 case NetMessage.RequestEntityDeletion:
                     int entID = messageBody.ReadInt32();
-                    if (playerManager.GetSessionByConnection(messageBody.SenderConnection).adminPermissions.isAdmin)
+                    if (playerManager.GetSessionByConnection(messageBody.SenderConnection).adminPermissions.isAdmin || true) //TEMPORARY. REMOVE THE 'TRUE' LATER ON. !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
                     {
-                        //NO WAY TO DELETE ENTITIES. SAD TROMBONE.
+                        Entity delEnt = entityManager.GetEntity(entID);
+                        if (delEnt != null) entityManager.DeleteEntity(delEnt);
                     }
                     break;
                 case NetMessage.RequestAdminLogin:

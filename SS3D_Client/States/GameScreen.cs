@@ -632,7 +632,7 @@ namespace SS3D.States
                 // MouseDown returns true if the click is handled by the ui component.
                 return;
 
-            if (PlacementManager.Singleton.is_active)
+            if (PlacementManager.Singleton.is_active && !PlacementManager.Singleton.eraser)
             {
                 if (e.Buttons == GorgonLibrary.InputDevices.MouseButtons.Left)
                 {

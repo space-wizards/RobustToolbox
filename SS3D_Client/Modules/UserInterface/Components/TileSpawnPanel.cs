@@ -82,9 +82,9 @@ namespace SS3D.UserInterface
             tileList.components.Clear();
             tileList.ResetScrollbars();
 
-            List<string> typeNames = (searchStr == null) ? 
-                Enum.GetNames(typeof(TileType)).ToList() :
-                Enum.GetNames(typeof(TileType)).Where(x => x.ToLower().Contains(searchStr.ToLower())).ToList();
+            List<string> typeNames = (searchStr == null) ?
+                Enum.GetNames(typeof(TileType)).Where(x => x.ToLower() != "none").ToList() :
+                Enum.GetNames(typeof(TileType)).Where(x => x.ToLower().Contains(searchStr.ToLower()) && x.ToLower() != "none").ToList();
         
             if (searchStr != null) clearLabel.backgroundColor = Color.LightGray;
 

@@ -85,8 +85,8 @@ namespace SGO
         private XElement ToXML(Entity e)
         {
             XElement el = new XElement("SavedEntity", 
-                new XAttribute("X", e.position.X.ToString()),
-                new XAttribute("Y", e.position.Y.ToString()),
+                new XAttribute("X", e.position.X.ToString(CultureInfo.InvariantCulture)),
+                new XAttribute("Y", e.position.Y.ToString(CultureInfo.InvariantCulture)),
                 new XAttribute("template", e.template.Name),
                 new XAttribute("name", e.name));
             return el;
@@ -177,6 +177,21 @@ namespace SGO
             message.Write(e.name);
             message.Write(e.Uid);
             m_netServer.SendMessage(message, client, NetDeliveryMethod.ReliableOrdered);
+        }
+
+        /// <summary>
+        /// Shuts-down and removes given Entity. This is also broadcast to all clients.
+        /// </summary>
+        /// <param name="e">Entity to remove</param>
+        public void DeleteEntity(Entity e)
+        {
+            e.Shutdown();
+            NetOutgoingMessage message = m_netServer.CreateMessage();
+            message.Write((byte)NetMessage.EntityManagerMessage);
+            message.Write((int)EntityManagerMessage.DeleteEntity);
+            message.Write(e.Uid);
+            m_netServer.SendToAll(message, NetDeliveryMethod.ReliableOrdered);
+            m_entities.Remove(e.Uid);
         }
 
         /// <summary>

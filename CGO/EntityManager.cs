@@ -144,6 +144,13 @@ namespace CGO
                     e.name = EntityName;
                     break;
                 case EntityManagerMessage.DeleteEntity:
+                    int dUid = msg.ReadInt32();
+                    Entity ent = GetEntity(dUid);
+                    if (ent != null)
+                    {
+                        ent.Shutdown();
+                        m_entities.Remove(dUid);
+                    }
                     break;
             }
         }

@@ -139,11 +139,14 @@ namespace SS3D.Modules
             }
         }
 
-        public void BeginErasing()
+        public void ToggleEraser()
         {
-            Clear();
-            is_active = true;
-            eraser = true;
+            if (!eraser && !is_active)
+            {
+                is_active = true;
+                eraser = true;
+            }
+            else Clear();
         }
 
         public void BeginPlacing(PlacementInformation info)

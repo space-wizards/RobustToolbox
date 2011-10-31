@@ -143,4 +143,30 @@
       <Component name="EquippableComponent"></Component>
     </Components>
   </EntityTemplate>
+  <EntityTemplate name="BlueGloves">
+    <Components>
+      <Component name="NetworkMoverComponent"></Component>
+      <Component name="WearableSpriteComponent">
+        <Parameters>
+          <Parameter name="basename" type="string" value="bluegloves" />
+        </Parameters>
+      </Component>
+      <Component name="ClickableComponent"></Component>
+      <Component name="BasicItemComponent"></Component>
+      <Component name="EquippableComponent"></Component>
+    </Components>
+  </EntityTemplate>
+  <EntityTemplate name="Galoshes">
+    <Components>
+      <Component name="NetworkMoverComponent"></Component>
+      <Component name="WearableSpriteComponent">
+        <Parameters>
+          <Parameter name="basename" type="string" value="galoshes" />
+        </Parameters>
+      </Component>
+      <Component name="ClickableComponent"></Component>
+      <Component name="BasicItemComponent"></Component>
+      <Component name="EquippableComponent"></Component>
+    </Components>
+  </EntityTemplate>
 </EntityTemplates>

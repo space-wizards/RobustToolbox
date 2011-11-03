@@ -67,6 +67,9 @@ namespace CGO
                 case ComponentMessageType.SetSpriteByKey:
                     SetSpriteByKey((string)message.messageParameters[1]);
                     break;
+                case ComponentMessageType.SetDrawDepth:
+                    SetDrawDepth((DrawDepth)message.messageParameters[1]);
+                    break;
             }
         }
 

@@ -24,8 +24,7 @@ namespace CGO
                     Owner.AddComponent(ComponentFamily.Mover, ComponentFactory.Singleton.GetComponent("SlaveMoverComponent"));
                     Entity e = EntityManager.Singleton.GetEntity((int)message.messageParameters[1]);
                     Hand h = (Hand)message.messageParameters[2];
-                    Owner.SendMessage(this, ComponentMessageType.PickedUp, null, h);
-                    
+                    Owner.SendMessage(this, ComponentMessageType.PickedUp, null, h); 
                     Owner.SendMessage(this, ComponentMessageType.SlaveAttach, null, e.Uid);
                     break;
                 case ItemComponentNetMessage.Dropped: //I've been dropped -- says the server's item component

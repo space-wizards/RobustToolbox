@@ -60,8 +60,8 @@ namespace SGO
                             verbpairs.Add(new KeyValuePair<ItemCapabilityType, ItemCapabilityVerb>(capability.CapabilityType, verb));
                         }
                     }
-                    if(verbpairs.Count > 0)
-                        replies.Add(new ComponentReplyMessage(ComponentMessageType.ItemReturnCapabilityVerbPairs, verbpairs.ToLookup(v => v.Key, v => v.Value)));
+                    //if(verbpairs.Count > 0)
+                    replies.Add(new ComponentReplyMessage(ComponentMessageType.ItemReturnCapabilityVerbPairs, verbpairs.ToLookup(v => v.Key, v => v.Value)));
                     break;
                 case ComponentMessageType.CheckItemHasCapability:
                     replies.Add(new ComponentReplyMessage(ComponentMessageType.ItemHasCapability, HasCapability((ItemCapabilityType)list[0])));
@@ -86,6 +86,7 @@ namespace SGO
         private void HandleDropped()
         {
             Owner.RemoveComponent(ComponentFamily.Mover);
+            Owner.AddComponent(SS3D_shared.GO.ComponentFamily.Mover, ComponentFactory.Singleton.GetComponent("BasicMoverComponent"));
             Owner.SendComponentNetworkMessage(this, Lidgren.Network.NetDeliveryMethod.ReliableUnordered, null, ItemComponentNetMessage.Dropped);
             currentHolder = null;
         }

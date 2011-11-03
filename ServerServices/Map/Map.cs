@@ -427,8 +427,8 @@ namespace ServerServices.Map
             if (x > mapWidth || z > mapWidth)
                 return false;
 
-            if (tileArray[x, z] != null) //If theres a tile, activate it's changed event.
-                tileArray[x, z].RaiseChangedEvent(newType);
+            //if (tileArray[x, z] != null) //If theres a tile, activate it's changed event.
+            //    tileArray[x, z].RaiseChangedEvent(newType);
 
             Tile tile = GenerateNewTile(x, z, newType); //Transfer the gas cell from the old tile to the new tile.
 

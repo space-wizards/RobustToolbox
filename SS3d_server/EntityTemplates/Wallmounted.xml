@@ -7,6 +7,7 @@
       <Component name="BasicInteractableComponent"></Component>
       <Component name="BasicMoverComponent"></Component>
       <Component name="BasicLargeObjectComponent"></Component>
+      <Component name="WallMountedComponent"></Component>
     </Components>
     <PlacementProperties>
       <PlacementMode type="AlignWall"></PlacementMode>
@@ -20,6 +21,7 @@
       <Component name="BasicInteractableComponent"></Component>
       <Component name="BasicMoverComponent"></Component>
       <Component name="BasicLargeObjectComponent"></Component>
+      <Component name="WallMountedComponent"></Component>
     </Components>
     <PlacementProperties>
       <PlacementMode type="AlignWall"></PlacementMode>
@@ -33,6 +35,7 @@
       <Component name="BasicInteractableComponent"></Component>
       <Component name="BasicMoverComponent"></Component>
       <Component name="BasicLargeObjectComponent"></Component>
+      <Component name="WallMountedComponent"></Component>
     </Components>
     <PlacementProperties>
       <PlacementMode type="AlignWall"></PlacementMode>

@@ -185,6 +185,7 @@ namespace SGO
         {
             Vector2 oldPosition = position;
             position = toPosition;
+            SendPositionUpdate();
             Moved(oldPosition);
         }
 
@@ -209,7 +210,9 @@ namespace SGO
         /// This should be refactored to some sort of component that sends entity movement input or something.
         /// </summary>
         public virtual void SendPositionUpdate()
-        { }
+        {
+            SendMessage(this, ComponentMessageType.SendPositionUpdate, null);
+        }
 
         public virtual void HandleClick(int clickerID) { }
 

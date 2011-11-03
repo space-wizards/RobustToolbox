@@ -4,6 +4,7 @@ using System.Linq;
 using System.Text;
 using SS3D_shared.HelperClasses;
 using Lidgren.Network;
+using SS3D_shared.GO;
 
 namespace SGO
 {
@@ -12,6 +13,17 @@ namespace SGO
         public BasicMoverComponent()
         {
             family = SS3D_shared.GO.ComponentFamily.Mover;
+        }
+
+        public override void RecieveMessage(object sender, ComponentMessageType type, List<ComponentReplyMessage> replies, params object[] list)
+        {
+            switch (type)
+            {
+                case ComponentMessageType.SendPositionUpdate:
+                    SendPositionUpdate(true);
+                    break;
+            }
+            return;
         }
 
         public void Translate(double x, double y)

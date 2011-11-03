@@ -45,6 +45,8 @@
     <Compile Include="ComponentManager.cs" />
     <Compile Include="ComponentParameter.cs" />
     <Compile Include="Component\Actor\BasicActorComponent.cs" />
+    <Compile Include="Component\WorktopComponent.cs" />
+    <Compile Include="Component\WallMountedComponent.cs" />
     <Compile Include="Component\ClickableComponent.cs" />
     <Compile Include="Component\Collidable\CollidableComponent.cs" />
     <Compile Include="Component\Damageable\DamageableComponent.cs" />

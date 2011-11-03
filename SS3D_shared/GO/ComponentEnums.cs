@@ -32,6 +32,7 @@ namespace SS3D_shared.GO
         Light,
         Damageable,
         Equippable,
+        WallMounted //Provides methods to react to changing tiles. Intended for wall mounted objects.
     }
 
     public enum ItemComponentNetMessage
@@ -134,6 +135,7 @@ namespace SS3D_shared.GO
         HandsPickedUpItem,
         HandsDroppedItem,
         EntitySaidSomething,
+        SendPositionUpdate, //makes mover component send position update to clients.
     }
 
     public enum Hand

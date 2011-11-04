@@ -147,7 +147,6 @@ namespace SS3D
             // Update networking
             prg.mNetworkMgr.UpdateNetwork();
 
-
             // Update the state manager - this will update the active state.
             prg.mStateMgr.Update(e);
 

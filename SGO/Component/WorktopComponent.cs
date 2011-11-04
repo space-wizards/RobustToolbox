@@ -29,9 +29,10 @@ namespace SGO
 
         private void PlaceItem(Entity actor, Entity item)
         {
+            Random rnd = new Random();
             actor.SendMessage(this, ComponentMessageType.DropItemInCurrentHand, null); //Should drop item that was used on us? Maybe add more precise message later.
             item.SendMessage(this, ComponentMessageType.SetDrawDepth, null, (int)DrawDepth.ItemsOnTables);
-            item.Translate(Owner.position);
+            item.Translate(Owner.position + new Vector2(rnd.Next(-28, 28),rnd.Next(-28, 15)) );
         }
 
         protected override void RecieveItemInteraction(Entity actor, Entity item, Lookup<ItemCapabilityType, ItemCapabilityVerb> verbs)

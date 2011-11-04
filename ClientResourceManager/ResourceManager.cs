@@ -23,14 +23,10 @@ using System.Text.RegularExpressions;
 
 using ClientConfigManager;
 
+using ICSharpCode.SharpZipLib;
+
 namespace ClientResourceManager
 {
-    public struct SpriteInfo
-    {
-        public string name;
-        public Vector2D Offsets;
-        public Vector2D Size;
-    }
 
     /// <summary>
     ///  This class manages Resource loading, caching and distribution.

@@ -179,6 +179,7 @@
     </Content>
     <Content Include="EntityTemplates\Doors.xml">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      <SubType>Designer</SubType>
     </Content>
     <Content Include="EntityTemplates\GlassWalls.xml">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
@@ -204,6 +205,7 @@
     </Content>
     <Content Include="EntityTemplates\Tables.xml">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      <SubType>Designer</SubType>
     </Content>
     <Content Include="EntityTemplates\Wallmounted.xml">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>

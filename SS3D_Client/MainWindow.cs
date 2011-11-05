@@ -102,7 +102,8 @@ namespace SS3D
             _input.Bind(this);
 
             // Enable the mouse.
-            Cursor = Cursors.Cross;
+            //Cursor = Cursors.Cross;
+            Cursor.Hide();
 
             this.ResizeEnd += new EventHandler(MainWindow_ResizeEnd);
 

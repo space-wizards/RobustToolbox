@@ -40,7 +40,7 @@ namespace SS3D.UserInterface
 
         private Rectangle clientAreaButton;
 
-        private GUIElement scrollbarButton;
+        private Sprite scrollbarButton;
 
         private TextSprite DEBUG;
         private bool DRAW_DEBUG = false;
@@ -79,8 +79,8 @@ namespace SS3D.UserInterface
         public Scrollbar()
             : base()
         {
-            if (Horizontal) scrollbarButton = UiManager.Singleton.Skin.Elements["Controls.Scrollbar.Button.Vertical"];
-            else scrollbarButton = UiManager.Singleton.Skin.Elements["Controls.Scrollbar.Button.Vertical"];
+            if (Horizontal) scrollbarButton = ResMgr.Singleton.GetSprite("scrollbutton_h");
+            else scrollbarButton = ResMgr.Singleton.GetSprite("scrollbutton_v");
 
             DEBUG = new TextSprite("DEBUGSLIDER","Position:", ResMgr.Singleton.GetFont("CALIBRI"));
             DEBUG.Color = System.Drawing.Color.OrangeRed;
@@ -121,8 +121,8 @@ namespace SS3D.UserInterface
             if (!IsVisible()) return;
             if (dragging)
             {
-                if (Horizontal) currentPos = (int)e.Position.X - clientArea.Location.X - (int)(scrollbarButton.Dimensions.Width / 2f);
-                else currentPos = (int)e.Position.Y - clientArea.Location.Y - (int)(scrollbarButton.Dimensions.Height / 2f);
+                if (Horizontal) currentPos = (int)e.Position.X - clientArea.Location.X - (int)(scrollbarButton.Width / 2f);
+                else currentPos = (int)e.Position.Y - clientArea.Location.Y - (int)(scrollbarButton.Height / 2f);
                 currentPos = Math.Min(currentPos, (int)actualSize);
                 currentPos = Math.Max(currentPos, 0);
                 RaiseEvent = true;
@@ -141,15 +141,15 @@ namespace SS3D.UserInterface
             base.Update();
             if (Horizontal)
             {
-                clientArea = new Rectangle(position, new Size(size, scrollbarButton.Dimensions.Height));
-                clientAreaButton = new Rectangle(new Point(position.X + currentPos, position.Y), new Size(scrollbarButton.Dimensions.Width, scrollbarButton.Dimensions.Height));
-                actualSize = size - scrollbarButton.Dimensions.Width;
+                clientArea = new Rectangle(position, new Size(size, (int)scrollbarButton.Height));
+                clientAreaButton = new Rectangle(new Point(position.X + currentPos, position.Y), new Size((int)scrollbarButton.Width, (int)scrollbarButton.Height));
+                actualSize = size - (int)scrollbarButton.Width;
             }
             else
             {
-                clientArea = new Rectangle(position, new Size(scrollbarButton.Dimensions.Width, size));
-                clientAreaButton = new Rectangle(new Point(position.X, position.Y + currentPos), new Size(scrollbarButton.Dimensions.Width, scrollbarButton.Dimensions.Height));
-                actualSize = size - scrollbarButton.Dimensions.Height;
+                clientArea = new Rectangle(position, new Size((int)scrollbarButton.Width, size));
+                clientAreaButton = new Rectangle(new Point(position.X, position.Y + currentPos), new Size((int)scrollbarButton.Width, (int)scrollbarButton.Height));
+                actualSize = size - (int)scrollbarButton.Height;
             }
 
             stepSize = (float)max / actualSize;

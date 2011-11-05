@@ -10,7 +10,7 @@ using GorgonLibrary;
 using GorgonLibrary.Graphics;
 using GorgonLibrary.InputDevices;
 using ClientResourceManager;
-
+using SS3D.UserInterface;
 
 namespace SS3D.States
 {
@@ -106,7 +106,7 @@ namespace SS3D.States
             {
                 ss13Text.Position += new Vector2D(0f, 1 * (float)Gorgon.FrameStats.FrameDrawTime / 20f);
             }
-            
+            UiManager.Singleton.Update();
         }
 
         #endregion
@@ -115,26 +115,38 @@ namespace SS3D.States
         {
             starScroller.Render(0,0);
             ss13Text.Draw();
-
+            UiManager.Singleton.Render();
             return;
         }
         public override void FormResize()
         {
         }
+
         #region Input
 
         public override void KeyDown(KeyboardInputEventArgs e)
-        { }
+        {
+            UiManager.Singleton.KeyDown(e);
+        }
         public override void KeyUp(KeyboardInputEventArgs e)
-        { }
+        {
+        }
         public override void MouseUp(MouseInputEventArgs e)
-        { }
+        {
+            UiManager.Singleton.MouseUp(e);
+        }
         public override void MouseDown(MouseInputEventArgs e)
-        { }
+        {
+            UiManager.Singleton.MouseDown(e);
+        }
         public override void MouseMove(MouseInputEventArgs e)
-        { }
+        {
+            UiManager.Singleton.MouseMove(e);
+        }
         public override void MouseWheelMove(MouseInputEventArgs e)
-        { }
+        {
+            UiManager.Singleton.MouseWheelMove(e);
+        }
         #endregion
     }
 

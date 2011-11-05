@@ -35,10 +35,10 @@ namespace SS3D.UserInterface
 
         private Sprite lSprite;
         private Entity lEntity;
-        private int lAppendageID = 0;
+
         private Sprite rSprite;
         private Entity rEntity;
-        private int rAppendageID = 1;
+
         private Sprite lObjectSprite;
         private Sprite rObjectSprite;
         private Sprite backgroundSprite;
@@ -104,11 +104,9 @@ namespace SS3D.UserInterface
 
         public override void Render()
         {
-            backgroundSprite.Position = lSprite.Position;
-            backgroundSprite.Size = new Vector2D(lSprite.Position.X - (rSprite.Position.X + rSprite.Width), lSprite.Height);
             backgroundSprite.Color = System.Drawing.Color.FromArgb(51, 56, 64);
             backgroundSprite.Opacity = 240;
-            backgroundSprite.Draw();
+            backgroundSprite.Draw(new Rectangle(new Point((int)lSprite.Position.X, (int)lSprite.Position.Y), new Size((int)(lSprite.Width + rSprite.Width) - 33, (int)lSprite.Height)));
 
             if (lActive)
             {
@@ -175,16 +173,18 @@ namespace SS3D.UserInterface
         public override bool MouseDown(MouseInputEventArgs e)
         {
             System.Drawing.RectangleF mouseAABB = new System.Drawing.RectangleF(e.Position.X, e.Position.Y, 1, 1);
-            Entity m = (Entity)playerController.controlledAtom;
-            HumanHandsComponent ec = (HumanHandsComponent)m.GetComponent(SS3D_shared.GO.ComponentFamily.Hands);
+
+            Entity playerEntity = (Entity)playerController.controlledAtom;
+            HumanHandsComponent equipComponent = (HumanHandsComponent)playerEntity.GetComponent(SS3D_shared.GO.ComponentFamily.Hands);
+
             if(mouseAABB.IntersectsWith(lSprite.AABB))
             {
-                ec.SendSwitchHands(Hand.Left);
+                equipComponent.SendSwitchHands(Hand.Left);
                 return true;
             }
             else if(mouseAABB.IntersectsWith(rSprite.AABB))
             {
-                ec.SendSwitchHands(Hand.Right);
+                equipComponent.SendSwitchHands(Hand.Right);
                 return true;
             }
             else

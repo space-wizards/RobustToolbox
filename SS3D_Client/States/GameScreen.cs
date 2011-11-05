@@ -154,6 +154,7 @@ namespace SS3D.States
             //Init GUI components
             gameChat = new Chatbox("gameChat");
             gameChat.TextSubmitted += new Chatbox.TextSubmitHandler(chatTextbox_TextSubmitted);
+            UiManager.Singleton.Components.Add(gameChat);
 
             UiManager.Singleton.Components.Add(new HumanInventory(playerController));
             UiManager.Singleton.Components.Add(new HumanHandsGui(playerController));
@@ -211,11 +212,7 @@ namespace SS3D.States
             //PlacementManager.Singleton.Reset();
             entityManager = null;
             map = null;
-            UIDesktop.Singleton.Windows.Remove(gameChat);
-            gameChat.Dispose();
-            gameChat = null;
             UiManager.Singleton.DisposeAllComponents(); //HerpDerp. This is probably bad. Should not remove them ALL.
-            UIDesktop.Singleton.Dispose();
             prg.mNetworkMgr.MessageArrived -= new NetworkMsgHandler(mNetworkMgr_MessageArrived);
             RenderTargetCache.DestroyAll();
             GC.Collect();
@@ -539,9 +536,6 @@ namespace SS3D.States
 
         public override void KeyDown(KeyboardInputEventArgs e)
         {
-            if (gameChat.Active)
-                return;
-
             if (UiManager.Singleton.KeyDown(e)) //KeyDown returns true if the click is handled by the ui component.
                 return;
 

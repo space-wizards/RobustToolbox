@@ -16,8 +16,8 @@ namespace SS3D.UserInterface
 {
     class JobSelectButton : GuiComponent
     {
-        GUIElement Button;
-        GUIElement Job;
+        Sprite Button;
+        Sprite Job;
 
         public TextSprite labelDesc;
 
@@ -31,8 +31,8 @@ namespace SS3D.UserInterface
         public JobSelectButton(string text, string jobIcon , string desc)
             : base()
         {
-            Button = UiManager.Singleton.Skin.Elements["Controls.JobButton"];
-            Job = UiManager.Singleton.Skin.Elements[jobIcon];
+            Button = ResMgr.Singleton.GetSprite("job_button");
+            Job = ResMgr.Singleton.GetSprite(jobIcon);
 
             labelDesc = new TextSprite("JobButtonDescLabel" + text, text + ":\n" + desc, ResMgr.Singleton.GetFont("CALIBRI"));
             labelDesc.Color = System.Drawing.Color.Black;
@@ -45,8 +45,8 @@ namespace SS3D.UserInterface
 
         public override void Update()
         {
-            buttonArea = new Rectangle(new Point(this.position.X, this.position.Y), new Size(Button.Dimensions.Width, Button.Dimensions.Height));
-            clientArea = new Rectangle(new Point(this.position.X, this.position.Y), new Size(Button.Dimensions.Width + (int)labelDesc.Width + 2, Button.Dimensions.Height));
+            buttonArea = new Rectangle(new Point(this.position.X, this.position.Y), new Size((int)Button.Width, (int)Button.Height));
+            clientArea = new Rectangle(new Point(this.position.X, this.position.Y), new Size((int)Button.Width + (int)labelDesc.Width + 2, (int)Button.Height));
             labelDesc.Position = new Point(buttonArea.Right + 2, buttonArea.Top);
         }
 

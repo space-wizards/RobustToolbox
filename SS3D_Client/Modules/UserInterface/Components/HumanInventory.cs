@@ -21,10 +21,11 @@ namespace SS3D.UserInterface
     {
         private Dictionary<GUIBodyPart, ItemSlot> inventorySlots;
         private HumanHandsGui handsGUI;
-        private WindowComponent window;
+
         private Entity heldEntity;
         private GUIBodyPart lastSlot = GUIBodyPart.None;
         private Vector2D mousePos;
+
         private Sprite outline;
         private int slotWidth;
 
@@ -34,12 +35,14 @@ namespace SS3D.UserInterface
             componentClass = SS3D_shared.GuiComponentType.HumanInventory;
             inventorySlots = new Dictionary<GUIBodyPart, ItemSlot>();
             outline = ResMgr.Singleton.GetSprite("outline");
-            slotWidth = (int)UIDesktop.Singleton.Skin.Elements["Window.InventorySlot"].Dimensions.Width;
+
+            slotWidth = (int)ResMgr.Singleton.GetSprite("slot").Width;
+
             int width = 48 + slotWidth + (int)outline.Width + slotWidth;
             int height = 64 + (int)(outline.Height);
-            clientArea = new Rectangle(Gorgon.Screen.Width - 25 - width, 600, width, height);
+
+            clientArea = new Rectangle(Gorgon.Screen.Width - 25 - width, 590, width, height);
             mousePos = Vector2D.Zero;
-            window = new WindowComponent(_playerController, clientArea.X, clientArea.Y, clientArea.Width, clientArea.Height);
 
             SetVisible(false);
         }
@@ -51,9 +54,9 @@ namespace SS3D.UserInterface
             if (!playerController.controlledAtom.HasComponent(SS3D_shared.GO.ComponentFamily.Equipment))
                 return;
 
-            Entity m = (Entity)playerController.controlledAtom;
-            EquipmentComponent ec = (EquipmentComponent)m.GetComponent(SS3D_shared.GO.ComponentFamily.Equipment);
-            foreach (GUIBodyPart part in ec.activeSlots)
+            Entity playerEntity = (Entity)playerController.controlledAtom;
+            EquipmentComponent equipComponent = (EquipmentComponent)playerEntity.GetComponent(SS3D_shared.GO.ComponentFamily.Equipment);
+            foreach (GUIBodyPart part in equipComponent.activeSlots)
             {
                 inventorySlots.Add(part, new ItemSlot(playerController, part));
             }
@@ -99,9 +102,9 @@ namespace SS3D.UserInterface
         [Obsolete("TODO: Change to new system")]
         public override bool MouseDown(GorgonLibrary.InputDevices.MouseInputEventArgs e)
         {
-            Entity m = (Entity)playerController.controlledAtom;
-            EquipmentComponent ec = (EquipmentComponent)m.GetComponent(SS3D_shared.GO.ComponentFamily.Equipment);
-            HumanHandsComponent hh = (HumanHandsComponent)m.GetComponent(SS3D_shared.GO.ComponentFamily.Hands);
+            Entity playerEntity = (Entity)playerController.controlledAtom;
+            EquipmentComponent equipComponent = (EquipmentComponent)playerEntity.GetComponent(SS3D_shared.GO.ComponentFamily.Equipment);
+            HumanHandsComponent humanHandComponent = (HumanHandsComponent)playerEntity.GetComponent(SS3D_shared.GO.ComponentFamily.Hands);
             //// Check which slot we clicked (if any) and get the atom from in there
             if (heldEntity == null)
             {
@@ -112,11 +115,11 @@ namespace SS3D.UserInterface
             {
                 if (slot.MouseDown(e))
                 {
-                    if (!AttemptEquipInSlot(m, slot))
+                    if (!AttemptEquipInSlot(playerEntity, slot))
                     {
-                        if (ec.equippedEntities.ContainsKey(slot.GetBodyPart()))
+                        if (equipComponent.equippedEntities.ContainsKey(slot.GetBodyPart()))
                         {
-                            heldEntity = ec.equippedEntities[slot.GetBodyPart()];
+                            heldEntity = equipComponent.equippedEntities[slot.GetBodyPart()];
                             lastSlot = slot.GetBodyPart();
                         }
                     }
@@ -128,9 +131,9 @@ namespace SS3D.UserInterface
             {
                 if (handsGUI.MouseDown(e))
                 {
-                    if (hh.HandSlots.ContainsKey(hh.currentHand))
+                    if (humanHandComponent.HandSlots.ContainsKey(humanHandComponent.currentHand))
                     {
-                        heldEntity = hh.HandSlots[hh.currentHand];
+                        heldEntity = humanHandComponent.HandSlots[humanHandComponent.currentHand];
                         lastSlot = GUIBodyPart.None;
                         return true;
                     }
@@ -144,8 +147,9 @@ namespace SS3D.UserInterface
         {
             if (heldEntity == null)
                 return false;
-            Entity m = (Entity)playerController.controlledAtom;
-            EquipmentComponent ec = (EquipmentComponent)m.GetComponent(SS3D_shared.GO.ComponentFamily.Equipment);
+
+            Entity playerEntity = (Entity)playerController.controlledAtom;
+            EquipmentComponent ec = (EquipmentComponent)playerEntity.GetComponent(SS3D_shared.GO.ComponentFamily.Equipment);
 
             // Check which slot we released the mouse on, and equip the item there
             // (remembering to unequip it from wherever it came from)
@@ -200,7 +204,9 @@ namespace SS3D.UserInterface
             if (!IsVisible())
                 return;
 
-            window.Render();
+            Gorgon.Screen.FilledRectangle(clientArea.X + 1, clientArea.Y + 1, clientArea.Width - 2, clientArea.Height - 2, System.Drawing.Color.FromArgb(51, 56, 64));
+            Gorgon.Screen.Rectangle(clientArea.X, clientArea.Y, clientArea.Width, clientArea.Height, Color.Black);
+
 
             if (inventorySlots.Count == 0 &&
                 playerController.controlledAtom != null)

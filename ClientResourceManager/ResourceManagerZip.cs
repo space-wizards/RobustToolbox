@@ -32,7 +32,7 @@ using Font = GorgonLibrary.Graphics.Font;
 
 namespace ClientResourceManager
 {
-    class ZipDataPool
+    public class ResMgr
     {
         private const int zipBufferSize = 4096;
         private readonly List<string> supportedImageExtensions = new List<string> { ".png" };
@@ -43,24 +43,53 @@ namespace ClientResourceManager
         private Dictionary<string, SpriteInfo> SpriteInfos = new Dictionary<string, SpriteInfo>();
         private Dictionary<string, Sprite> Sprites = new Dictionary<string, Sprite>();
 
+        private Dictionary<string, GUIElement> createdGuiElements = new Dictionary<string, GUIElement>();
+
+        //  LEGACY METHOD.
         /// <summary>
-        ///  <para>Clears all ressource lists</para>
+        ///  Retrieves information describing a Gorgon ui element. Returns an empty rectangle if not found.
         /// </summary>
-        public void ClearLists()
+        public System.Drawing.Rectangle GetGUIInfo(string key)
         {
-            Images.Clear();
-            Shaders.Clear();
-            Fonts.Clear();
-            SpriteInfos.Clear();
-            Sprites.Clear();
+            if (createdGuiElements.ContainsKey(key))
+            {
+                return new Rectangle(createdGuiElements[key].Dimensions.X, createdGuiElements[key].Dimensions.Y, createdGuiElements[key].Dimensions.Width, createdGuiElements[key].Dimensions.Height);
+            }
+            else
+            {
+                GUIElement tryCreate = GetGUIElement(key);
+                if(tryCreate != null)
+                {
+                    return new Rectangle(tryCreate.Dimensions.X, tryCreate.Dimensions.Y, tryCreate.Dimensions.Width, tryCreate.Dimensions.Height);
+                }
+                else return System.Drawing.Rectangle.Empty;
+            }
         }
 
-        #region Ressource Loading
+        #region Singleton
+        private static ResMgr singleton;
+
+        private ResMgr() { }
+
+        public static ResMgr Singleton
+        {
+            get
+            {
+                if (singleton == null)
+                {
+                    singleton = new ResMgr();
+                }
+                return singleton;
+            }
+        } 
+        #endregion
+
+        #region Resource Loading & Disposal
 
         /// <summary>
-        ///  <para>Loads all Ressources from given Zip into the respective Ressource Lists and Caches</para>
+        ///  <para>Loads all Resources from given Zip into the respective Resource Lists and Caches</para>
         /// </summary>
-        public void LoadRessourceZip(string zipPath, string password = null)
+        public void LoadResourceZip(string zipPath, string password = null)
         {
             if (!File.Exists(zipPath)) throw new FileNotFoundException("Specified Zip does not exist: " + zipPath);
 
@@ -119,9 +148,9 @@ namespace ClientResourceManager
         /// </summary>
         private Image LoadImageFrom(ZipFile zipFile, ZipEntry imageEntry)
         {
-            string ressourceName = Path.GetFileNameWithoutExtension(imageEntry.Name).ToLowerInvariant();
+            string ResourceName = Path.GetFileNameWithoutExtension(imageEntry.Name).ToLowerInvariant();
 
-            if (ImageCache.Images.Contains(ressourceName))
+            if (ImageCache.Images.Contains(ResourceName))
                 return null;
 
             byte[] byteBuffer = new byte[zipBufferSize];
@@ -133,7 +162,7 @@ namespace ClientResourceManager
             StreamUtils.Copy(zipStream, memStream, byteBuffer);
             memStream.Position = 0;
 
-            Image loadedImg = Image.FromStream(ressourceName, memStream, (int)memStream.Length);
+            Image loadedImg = Image.FromStream(ResourceName, memStream, (int)memStream.Length);
 
             memStream.Close();
             zipStream.Close();
@@ -148,9 +177,9 @@ namespace ClientResourceManager
         /// </summary>
         private FXShader LoadShaderFrom(ZipFile zipFile, ZipEntry shaderEntry)
         {
-            string ressourceName = Path.GetFileNameWithoutExtension(shaderEntry.Name).ToLowerInvariant();
+            string ResourceName = Path.GetFileNameWithoutExtension(shaderEntry.Name).ToLowerInvariant();
 
-            if (ShaderCache.Shaders.Contains(ressourceName))
+            if (ShaderCache.Shaders.Contains(ResourceName))
                 return null;
 
             byte[] byteBuffer = new byte[zipBufferSize];
@@ -162,7 +191,7 @@ namespace ClientResourceManager
             StreamUtils.Copy(zipStream, memStream, byteBuffer);
             memStream.Position = 0;
 
-            FXShader loadedShader = FXShader.FromStream(ressourceName, memStream, ShaderCompileOptions.None, (int)memStream.Length, false);
+            FXShader loadedShader = FXShader.FromStream(ResourceName, memStream, ShaderCompileOptions.None, (int)memStream.Length, false);
 
             memStream.Close();
             zipStream.Close();
@@ -177,9 +206,9 @@ namespace ClientResourceManager
         /// </summary>
         private Font LoadFontFrom(ZipFile zipFile, ZipEntry fontEntry)
         {
-            string ressourceName = Path.GetFileNameWithoutExtension(fontEntry.Name).ToLowerInvariant();
+            string ResourceName = Path.GetFileNameWithoutExtension(fontEntry.Name).ToLowerInvariant();
 
-            if (FontCache.Fonts.Contains(ressourceName))
+            if (FontCache.Fonts.Contains(ResourceName))
                 return null;
 
             byte[] byteBuffer = new byte[zipBufferSize];
@@ -191,7 +220,7 @@ namespace ClientResourceManager
             StreamUtils.Copy(zipStream, memStream, byteBuffer);
             memStream.Position = 0;
 
-            Font loadedFont = Font.FromStream(ressourceName, memStream, (int)memStream.Length, 10, true);
+            Font loadedFont = Font.FromStream(ResourceName, memStream, (int)memStream.Length, 10, false);
 
             memStream.Close();
             zipStream.Close();
@@ -206,7 +235,7 @@ namespace ClientResourceManager
         /// </summary>
         private List<Sprite> LoadSpritesFrom(ZipFile zipFile, ZipEntry taiEntry)
         {
-            string ressourceName = Path.GetFileNameWithoutExtension(taiEntry.Name).ToLowerInvariant();
+            string ResourceName = Path.GetFileNameWithoutExtension(taiEntry.Name).ToLowerInvariant();
 
             List<Sprite> loadedSprites = new List<Sprite>();
 
@@ -283,11 +312,44 @@ namespace ClientResourceManager
             }
 
             return loadedSprites;
-        } 
+        }
+
+        /// <summary>
+        ///  <para>Clears all Resource lists</para>
+        /// </summary>
+        public void ClearLists()
+        {
+            Images.Clear();
+            Shaders.Clear();
+            Fonts.Clear();
+            SpriteInfos.Clear();
+            Sprites.Clear();
+        }
 
         #endregion
 
-        #region Ressource Retrieval
+        #region Resource Retrieval
+
+        /// <summary>
+        ///  Creates and retrieves Sprite or Image as Gorgon UI Element.
+        /// </summary>
+        public GUIElement GetGUIElement(string key)
+        {
+            key = key.ToLowerInvariant();
+
+            if (createdGuiElements.ContainsKey(key)) return createdGuiElements[key];
+
+            Sprite sprite;
+
+            if (Sprites.ContainsKey(key)) sprite = Sprites[key];
+            else sprite = GetSpriteFromImage(key);
+
+            GUIElement newElement = new GUIElement(key, sprite);
+
+            if(!createdGuiElements.ContainsKey(key)) createdGuiElements.Add(key, newElement);
+
+            return newElement;
+        }
 
         /// <summary>
         ///  <para>Retrieves the Image with the given key from the Resource list and returns it as a Sprite.</para>
@@ -295,6 +357,7 @@ namespace ClientResourceManager
         /// </summary>
         public Sprite GetSpriteFromImage(string key)
         {
+            key = key.ToLowerInvariant();
             if (Images.ContainsKey(key))
             {
                 if (Sprites.ContainsKey(key))
@@ -308,32 +371,47 @@ namespace ClientResourceManager
                     return newSprite;
                 }
             }
-            else return new Sprite(key + "Missing", Images["nosprite"]);
+            else return Sprites["nosprite"];
         }
 
         /// <summary>
-        ///  Retrieves the Sprite with the given key from the Resource list. Returns error Sprite if not found.
+        ///  Retrieves the Sprite with the given key from the Resource List. Returns error Sprite if not found.
         /// </summary>
         public Sprite GetSprite(string key)
         {
             key = key.ToLowerInvariant();
-            if (Sprites.ContainsKey(key)) return Sprites[key];
+            if (Sprites.ContainsKey(key))
+            {
+                Sprites[key].Color = Color.White;
+                return Sprites[key];
+            }
             else return GetSpriteFromImage(key);
         }
 
         /// <summary>
-        /// Checks if a sprite with the given key is in the resource list
+        /// Checks if a sprite with the given key is in the Resource List.
         /// </summary>
         /// <param name="key">key to check</param>
         /// <returns></returns>
         public bool SpriteExists(string key)
         {
+            key = key.ToLowerInvariant();
             return Sprites.ContainsKey(key);
         }
 
+        /// <summary>
+        /// Checks if an Image with the given key is in the Resource List.
+        /// </summary>
+        /// <param name="key">key to check</param>
+        /// <returns></returns>
+        public bool ImageExists(string key)
+        {
+            key = key.ToLowerInvariant();
+            return Images.ContainsKey(key);
+        }
 
         /// <summary>
-        ///  Retrieves the SpriteInfo with the given key from the Resource list. Returns null if not found.
+        ///  Retrieves the SpriteInfo with the given key from the Resource List. Returns null if not found.
         /// </summary>
         public SpriteInfo? GetSpriteInfo(string key)
         {
@@ -343,16 +421,17 @@ namespace ClientResourceManager
         }
 
         /// <summary>
-        ///  Retrieves the Shader with the given key from the Resource list. Returns null if not found.
+        ///  Retrieves the Shader with the given key from the Resource List. Returns null if not found.
         /// </summary>
         public FXShader GetShader(string key)
         {
+            key = key.ToLowerInvariant();
             if (Shaders.ContainsKey(key)) return Shaders[key];
             else return null;
         }
 
         /// <summary>
-        ///  Retrieves the Image with the given key from the Resource list. Returns error Image if not found.
+        ///  Retrieves the Image with the given key from the Resource List. Returns error Image if not found.
         /// </summary>
         public Image GetImage(string key)
         {
@@ -362,10 +441,11 @@ namespace ClientResourceManager
         }
 
         /// <summary>
-        ///  Retrieves the Font with the given key from the Resource list. Returns null if not found.
+        ///  Retrieves the Font with the given key from the Resource List. Returns null if not found.
         /// </summary>
         public Font GetFont(string key)
         {
+            key = key.ToLowerInvariant();
             if (Fonts.ContainsKey(key)) return Fonts[key];
             else return null;
         }

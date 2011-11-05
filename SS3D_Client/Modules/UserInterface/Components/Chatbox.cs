@@ -14,12 +14,14 @@ using ClientResourceManager;
 
 namespace SS3D.UserInterface
 {
-    public class Chatbox : GUIWindow
+    public class Chatbox : GuiComponent
     {
         public delegate void TextSubmitHandler(Chatbox Chatbox, string Text);
-        private List<TextSprite> entries = new List<TextSprite>();
+        public event TextSubmitHandler TextSubmitted;
 
-        private TextSprite textInputLabel;
+        private List<Label> entries = new List<Label>();
+
+        private Label textInputLabel;
         private Sprite backgroundSprite;
         private RenderImage renderImage;
 
@@ -37,8 +39,8 @@ namespace SS3D.UserInterface
         public bool Active
         {
             get { return active; }
-            set 
-            { 
+            set
+            {
                 active = value;
                 //HACK
                 ClientServices.Input.KeyBindingManager.Singleton.Enabled = !active;
@@ -46,27 +48,20 @@ namespace SS3D.UserInterface
         }
 
         public Chatbox(string name)
-            : base(name, 5, Gorgon.Screen.Height - 205, 600, 200)
+            : base()
         {
-            var desktop = UIDesktop.Singleton;
+            ClientArea = new Rectangle(5, Gorgon.Screen.Height - 205, 600, 200); //!!! Use this instead of Window Dimensions
+            Position = new Point(5, Gorgon.Screen.Height - 205);
 
             font = ResMgr.Singleton.GetFont("CALIBRI");
-            backgroundSprite = ResMgr.Singleton.GetSprite("1pxwhite");
-            backgroundSprite.Color = System.Drawing.Color.FromArgb(51, 56, 64);
-            backgroundSprite.Opacity = 240;
-            backgroundSprite.Position = Position;
-            backgroundSprite.Size = Size;
 
-            HasCaption = false;
-            KeyDown += new KeyboardInputEvent(chatGUI_KeyDown);
-            MouseDown += new MouseInputEvent(Chatbox_MouseDown);
-            BackgroundColor = System.Drawing.Color.DarkGray;
-            desktop.Windows.Add(this);
-            textInputLabel = new TextSprite("inputlabel", "", font);
-            textInputLabel.Size = new System.Drawing.Size(ClientArea.Width - 10, 12);
-            textInputLabel.Position = new System.Drawing.Point(this.Position.X + 2, this.Position.Y + this.Size.Height - 10);
-            textInputLabel.Color = System.Drawing.Color.Green;
-            textInputLabel.WordWrap = true;
+            backgroundSprite = ResMgr.Singleton.GetSprite("1pxwhite");
+
+            textInputLabel = new Label("");
+            textInputLabel.Text.Size = new System.Drawing.Size(ClientArea.Width - 10, 12);
+            textInputLabel.Position = new System.Drawing.Point(this.Position.X + 2, this.Position.Y + this.ClientArea.Size.Height - 10);
+            textInputLabel.Text.Color = System.Drawing.Color.Green;
+            textInputLabel.Text.WordWrap = true;
 
             chatColors = new Dictionary<ChatChannel, Color>();
             chatColors.Add(ChatChannel.Default, System.Drawing.Color.Gray);
@@ -77,8 +72,9 @@ namespace SS3D.UserInterface
             chatColors.Add(ChatChannel.Lobby, System.Drawing.Color.White);
             chatColors.Add(ChatChannel.Ingame, System.Drawing.Color.Green);
 
-            renderImage = new RenderImage("chatboxRI", WindowDimensions.Width, WindowDimensions.Height, ImageBufferFormats.BufferUnknown);
+            renderImage = new RenderImage("chatboxRI", this.ClientArea.Size.Width, this.ClientArea.Size.Height, ImageBufferFormats.BufferUnknown);
             renderImage.ClearEachFrame = ClearTargets.None;
+
             PreRender();
         }
 
@@ -89,37 +85,42 @@ namespace SS3D.UserInterface
             renderImage.BeginDrawing();
             backgroundSprite.Color = System.Drawing.Color.FromArgb(51, 56, 64);
             backgroundSprite.Opacity = 240;
-            backgroundSprite.Position = renderPos;
-            backgroundSprite.Size = Size;
-            backgroundSprite.Draw();
+            backgroundSprite.Draw(new Rectangle(renderPos, new Size(clientArea.Width, clientArea.Height)));
 
-            if (Skin == null)
-                return;
+            Sprite corner_top_left = ResMgr.Singleton.GetSprite("corner_top_left");
+            corner_top_left.Draw(new Rectangle(renderPos.X, renderPos.Y, (int)corner_top_left.Width, (int)corner_top_left.Height));
 
-            Skin.Elements["Window.Border.Top.LeftCorner"].Draw(new System.Drawing.Rectangle(renderPos.X, renderPos.Y, ResMgr.Singleton.GetGUIInfo("Window.Border.Top.LeftCorner").Width, ResMgr.Singleton.GetGUIInfo("Window.Border.Top.LeftCorner").Height));
-            Skin.Elements["Window.Border.Top.Horizontal"].Draw(new System.Drawing.Rectangle(renderPos.X + ResMgr.Singleton.GetGUIInfo("Window.Border.Top.LeftCorner").Width, renderPos.Y, WindowDimensions.Width - ResMgr.Singleton.GetGUIInfo("Window.Border.Top.RightCorner").Width - ResMgr.Singleton.GetGUIInfo("Window.Border.Top.RightCorner").Width, ResMgr.Singleton.GetGUIInfo("Window.Border.Top.Horizontal").Height));
-            Skin.Elements["Window.Border.Top.RightCorner"].Draw(new System.Drawing.Rectangle(renderPos.X + WindowDimensions.Width - ResMgr.Singleton.GetGUIInfo("Window.Border.Top.RightCorner").Width, renderPos.Y, ResMgr.Singleton.GetGUIInfo("Window.Border.Top.RightCorner").Width, ResMgr.Singleton.GetGUIInfo("Window.Border.Top.RightCorner").Height));
+            Sprite corner_top_right = ResMgr.Singleton.GetSprite("corner_top_right");
+            corner_top_right.Draw(new Rectangle(renderPos.X + ClientArea.Width - (int)corner_top_right.Width, renderPos.Y, (int)corner_top_right.Width, (int)corner_top_right.Height));
 
-            Skin.Elements["Window.Border.Vertical.Left"].Draw(new System.Drawing.Rectangle(renderPos.X, DefaultCaptionHeight + renderPos.Y, DefaultBorderSize, WindowDimensions.Height - DefaultCaptionHeight - DefaultBorderHeight));
-            Skin.Elements["Window.Border.Vertical.Right"].Draw(new System.Drawing.Rectangle(renderPos.X + WindowDimensions.Width - ResMgr.Singleton.GetGUIInfo("Window.Border.Vertical.Right").Width, DefaultCaptionHeight + renderPos.Y, DefaultBorderSize, WindowDimensions.Height - DefaultCaptionHeight - DefaultBorderHeight));
+            Sprite border_top = ResMgr.Singleton.GetSprite("border_top");
+            border_top.Draw(new Rectangle(renderPos.X + (int)corner_top_left.Width, renderPos.Y, ClientArea.Width - (int)corner_top_left.Width - (int)corner_top_right.Width, (int)border_top.Height));
 
-            Skin.Elements["Window.Border.Middle.LeftCorner"].Draw(new System.Drawing.Rectangle(renderPos.X, renderPos.Y + WindowDimensions.Height - 16 - ResMgr.Singleton.GetGUIInfo("Window.Border.Middle.LeftCorner").Height, ResMgr.Singleton.GetGUIInfo("Window.Border.Middle.LeftCorner").Width, ResMgr.Singleton.GetGUIInfo("Window.Border.Middle.LeftCorner").Height));
-            Skin.Elements["Window.Border.Middle.Horizontal"].Draw(new System.Drawing.Rectangle(renderPos.X + ResMgr.Singleton.GetGUIInfo("Window.Border.Middle.LeftCorner").Width, renderPos.Y + WindowDimensions.Height - 16 - ResMgr.Singleton.GetGUIInfo("Window.Border.Middle.Horizontal").Height, WindowDimensions.Width - ResMgr.Singleton.GetGUIInfo("Window.Border.Middle.RightCorner").Width - ResMgr.Singleton.GetGUIInfo("Window.Border.Middle.LeftCorner").Width, ResMgr.Singleton.GetGUIInfo("Window.Border.Middle.Horizontal").Height));
-            Skin.Elements["Window.Border.Middle.RightCorner"].Draw(new System.Drawing.Rectangle(renderPos.X + WindowDimensions.Width - ResMgr.Singleton.GetGUIInfo("Window.Border.Middle.RightCorner").Width, renderPos.Y + WindowDimensions.Height - 16 - ResMgr.Singleton.GetGUIInfo("Window.Border.Middle.RightCorner").Height, ResMgr.Singleton.GetGUIInfo("Window.Border.Middle.RightCorner").Width, ResMgr.Singleton.GetGUIInfo("Window.Border.Middle.RightCorner").Height));
+            Sprite corner_bottom_left = ResMgr.Singleton.GetSprite("corner_bottom_left");
+            corner_bottom_left.Draw(new Rectangle(renderPos.X, renderPos.Y + ClientArea.Height - (int)corner_bottom_left.Height, (int)corner_bottom_left.Width, (int)corner_bottom_left.Height));
 
-            Skin.Elements["Window.Border.Bottom.LeftCorner"].Draw(new System.Drawing.Rectangle(renderPos.X, renderPos.Y + WindowDimensions.Height - ResMgr.Singleton.GetGUIInfo("Window.Border.Bottom.LeftCorner").Height, ResMgr.Singleton.GetGUIInfo("Window.Border.Bottom.LeftCorner").Width, ResMgr.Singleton.GetGUIInfo("Window.Border.Bottom.LeftCorner").Height));
-            Skin.Elements["Window.Border.Bottom.Horizontal"].Draw(new System.Drawing.Rectangle(renderPos.X + ResMgr.Singleton.GetGUIInfo("Window.Border.Bottom.LeftCorner").Width, renderPos.Y + WindowDimensions.Height - ResMgr.Singleton.GetGUIInfo("Window.Border.Bottom.Horizontal").Height, WindowDimensions.Width - ResMgr.Singleton.GetGUIInfo("Window.Border.Bottom.RightCorner").Width - ResMgr.Singleton.GetGUIInfo("Window.Border.Bottom.LeftCorner").Width, ResMgr.Singleton.GetGUIInfo("Window.Border.Bottom.Horizontal").Height));
-            Skin.Elements["Window.Border.Bottom.RightCorner"].Draw(new System.Drawing.Rectangle(renderPos.X + WindowDimensions.Width - ResMgr.Singleton.GetGUIInfo("Window.Border.Bottom.RightCorner").Width, renderPos.Y + WindowDimensions.Height - ResMgr.Singleton.GetGUIInfo("Window.Border.Bottom.RightCorner").Height, ResMgr.Singleton.GetGUIInfo("Window.Border.Bottom.RightCorner").Width, ResMgr.Singleton.GetGUIInfo("Window.Border.Bottom.RightCorner").Height));
+            Sprite corner_bottom_right = ResMgr.Singleton.GetSprite("corner_bottom_right");
+            corner_bottom_right.Draw(new Rectangle(renderPos.X + ClientArea.Width - (int)corner_bottom_right.Width, renderPos.Y + ClientArea.Height - (int)corner_bottom_right.Height, (int)corner_bottom_right.Width, (int)corner_bottom_right.Height));
 
-            Skin.Elements["Window.Border.Scrollbar.Vertical"].Draw(new Rectangle(renderPos.X + WindowDimensions.Width - ResMgr.Singleton.GetGUIInfo("Window.Border.Vertical.Right").Width - ResMgr.Singleton.GetGUIInfo("Window.Border.Scrollbar.Scroll").Width - ResMgr.Singleton.GetGUIInfo("Window.Border.Scrollbar.Vertical").Width, renderPos.Y + ResMgr.Singleton.GetGUIInfo("Window.Border.Top.Horizontal").Height - 1, ResMgr.Singleton.GetGUIInfo("Window.Border.Scrollbar.Vertical").Width, WindowDimensions.Height - 14 - (ResMgr.Singleton.GetGUIInfo("Window.Border.Middle.Horizontal").Height * 2)));
+            Sprite border_left = ResMgr.Singleton.GetSprite("border_left");
+            border_left.Draw(new Rectangle(renderPos.X, renderPos.Y + (int)corner_top_left.Height, (int)border_left.Width, ClientArea.Height - (int)corner_bottom_left.Height - (int)corner_top_left.Height));
+
+            Sprite border_right = ResMgr.Singleton.GetSprite("border_right");
+            border_right.Draw(new Rectangle(renderPos.X + ClientArea.Width - (int)border_right.Width, renderPos.Y + (int)corner_top_right.Height, (int)border_right.Width, ClientArea.Height - (int)corner_bottom_right.Height - (int)corner_top_right.Height));
+
+            Sprite border_bottom = ResMgr.Singleton.GetSprite("border_bottom");
+            border_bottom.Draw(new Rectangle(renderPos.X + (int)corner_top_left.Width, renderPos.Y + ClientArea.Height - (int)border_bottom.Height, ClientArea.Width - (int)corner_bottom_left.Width - (int)corner_bottom_right.Width, (int)border_bottom.Height));
+
+            Sprite corner_middle_left = ResMgr.Singleton.GetSprite("corner_middle_left");
+            corner_middle_left.Draw(new Rectangle(renderPos.X, renderPos.Y + ClientArea.Height - 16 - (int)corner_middle_left.Height, (int)corner_middle_left.Width, (int)corner_middle_left.Height));
+
+            Sprite corner_middle_right = ResMgr.Singleton.GetSprite("corner_middle_right");
+            corner_middle_right.Draw(new Rectangle(renderPos.X + ClientArea.Width - (int)corner_middle_right.Width, renderPos.Y + ClientArea.Height - 16 - (int)corner_middle_right.Height, (int)corner_middle_right.Width, (int)corner_middle_right.Height));
+
+            Sprite border_middle = ResMgr.Singleton.GetSprite("border_middle_h");
+            border_middle.Draw(new Rectangle(renderPos.X + (int)corner_middle_left.Width, renderPos.Y + ClientArea.Height - 16 - (int)border_middle.Height, ClientArea.Width - (int)corner_middle_left.Width - (int)corner_middle_right.Width, (int)border_middle.Height));
 
             renderImage.EndDrawing();
-
-        }
-
-        private void Chatbox_MouseDown(object sender, MouseInputEventArgs e)
-        {
-            throw new NotImplementedException();
         }
 
         public void AddLine(string message, ChatChannel channel)
@@ -129,21 +130,23 @@ namespace SS3D.UserInterface
             IEnumerable<string> messageSplit = message.Split(new Char[] { ' ' }, StringSplitOptions.RemoveEmptyEntries)
                             .GroupBy(w => (charCount += w.Length + 1) / maxLineLength)
                             .Select(g => string.Join(" ", g));
+
             foreach (string str in messageSplit)
             {
-                TextSprite label = new TextSprite("label" + entries.Count, str, font);
-                label.Size = new System.Drawing.Size(ClientArea.Width - 10, 12);
-                label.Color = chatColors[channel];
+                Label label = new Label(str);
+                label.Text.Size = new System.Drawing.Size(ClientArea.Width - 10, 12);
+                label.Text.Color = chatColors[channel];
                 entries.Add(label);
                 chatMessages++;
             }
+
             drawLines();
         }
 
         private void drawLines()
         {
-            textInputLabel.Position = new System.Drawing.Point(this.Position.X + 4, Position.Y + WindowDimensions.Height - 20);
-            textInputLabel.Draw();
+            textInputLabel.Position = new System.Drawing.Point(this.ClientArea.X + 4, ClientArea.Y + ClientArea.Height - 20);
+            textInputLabel.Render();
 
             while (entries.Count > maxLines)
                 entries.RemoveAt(0);
@@ -152,357 +155,78 @@ namespace SS3D.UserInterface
 
             for (int i = entries.Count - 1; i >= start; i--)
             {
-                entries[i].Position = new System.Drawing.Point(this.Position.X + 2, this.Position.Y + this.Size.Height - (14 * (entries.Count - i)) - 26);
-                entries[i].Draw();
+                entries[i].Position = new System.Drawing.Point(this.ClientArea.X + 2, this.ClientArea.Y + this.ClientArea.Height - (14 * (entries.Count - i)) - 26);
+                entries[i].Render();
             }
         }
 
-        /// <summary>
-        /// Processes keypresses into meaningful input
-        /// </summary>
-        /// <param name="sender"></param>
-        /// <param name="e"></param>
-        private void chatGUI_KeyDown(object sender, KeyboardInputEventArgs e)
+        public override bool KeyDown(KeyboardInputEventArgs e)
         {
-            var keyboard = UIDesktop.Singleton.Input.Keyboard;
-
             if (e.Key == KeyboardKeys.T && !Active)
             {
+                UiManager.Singleton.SetFocus(this);
                 Active = true;
-                return;
+                return true;
             }
 
             if (!Active)
-                return;
+                return false;
+
             if (e.Key == KeyboardKeys.Enter)
             {
-                if (TextSubmitted != null) TextSubmitted(this, textInputLabel.Text);
-                textInputLabel.Text = "";
+                if (TextSubmitted != null) TextSubmitted(this, textInputLabel.Text.Text);
+                textInputLabel.Text.Text = "";
                 Active = false;
-                return;
+                return true;
             }
 
             if (e.Key == KeyboardKeys.Back)
             {
-                if (textInputLabel.Text.Length > 0)
-                    textInputLabel.Text = textInputLabel.Text.Remove(textInputLabel.Text.Length - 1, 1);
-                return;
+                if (textInputLabel.Text.Text.Length > 0)
+                    textInputLabel.Text.Text = textInputLabel.Text.Text.Remove(textInputLabel.Text.Text.Length - 1, 1);
+                return true;
             }
 
-            if (keyboard.KeyMappings.Contains(e.Key))
+            if (char.IsLetterOrDigit(e.CharacterMapping.Character) || char.IsPunctuation(e.CharacterMapping.Character) || char.IsWhiteSpace(e.CharacterMapping.Character))
             {
-                if (keyboard.KeyStates[KeyboardKeys.LShiftKey] == KeyState.Up && keyboard.KeyStates[KeyboardKeys.RShiftKey] == KeyState.Up)
-                    textInputLabel.Text += keyboard.KeyMappings[e.Key].Character;
+                if (e.Shift)
+                    textInputLabel.Text.Text += e.CharacterMapping.Shifted;
                 else
-                    textInputLabel.Text += keyboard.KeyMappings[e.Key].Shifted;
+                    textInputLabel.Text.Text += e.CharacterMapping.Character;
             }
+            return true;
         }
 
-        protected override void Dispose(bool disposing)
+        public override void Dispose()
         {
             this.disposing = true;
             TextSubmitted = null;
             entries.Clear();
             textInputLabel = null;
             backgroundSprite = null;
-            if(renderImage != null) if (renderImage.Image != null) renderImage.Dispose(); //Fuck this statement.
+            if (renderImage != null) if (renderImage.Image != null) renderImage.Dispose(); //Fuck this statement.
             renderImage = null;
             chatColors.Clear();
             font = null;
-            base.Dispose(disposing);
+            base.Dispose();
         }
 
-        private void destroy()
+        public override void Update()
         {
+            base.Update();
+            textInputLabel.Update();
+            foreach (Label l in entries) l.Update();
         }
 
-        protected override void Draw()
+        public override void Render()
         {
             if (disposing) return;
-            System.Drawing.Rectangle screenPoints;		// Screen coordinates.
 
-            if (Visible)
+            if (this.IsVisible())
             {
-                screenPoints = RectToScreen(ClientArea);
-
-                //Gorgon.CurrentRenderTarget.BeginDrawing();
-
-                renderImage.Blit(Position.X, Position.Y);
-
+                renderImage.Blit(ClientArea.X, ClientArea.Y);
                 drawLines();
-                
-                //Gorgon.CurrentRenderTarget.EndDrawing();
             }
         }
-
-        private void DrawNonClientArea()
-        {
-                    
-        }
-
-        public event TextSubmitHandler TextSubmitted;
     }
-
-/*    [Obsolete]
-    class ChatboxOld
-    {
-        private MiyagiResources mMiyagiRes;
-
-        public Panel chatPanel
-        {
-            private set;
-            get;
-        }
-
-        private TextBox chatTextbox;
-
-        public GUI chatGUI
-        {
-            private set;
-            get;
-        }
-
-        public delegate void TextSubmitHandler(Chatbox Chatbox, string Text);
-
-        private List<Label> entries = new List<Label>();
-
-        private int currentYpos = 0;
-        private readonly int maxLines = 20;
-        private int transparency = 1;
-
-        public int Transparency
-        {
-            get
-            {
-                return transparency;
-            }
-
-            set
-            {
-                transparency = Math.Min(Math.Max(value,1), 100);
-                chatGUI.Fade((float)transparency * 0.01f, (float)transparency * 0.01f, 1); //Since we don't have direct access to that :(
-            }
-        }
-
-        public ChatboxOld(string name)
-        {
-            mMiyagiRes = MiyagiResources.Singleton;
-            chatGUI = new GUI(name);
-
-            this.chatPanel = new Panel(name+"Panel")
-            {
-                TabStop = false,
-                TabIndex = 0,
-                Size = new Size(400, 150),
-                Location = new Point(0, 0),
-                MinSize = new Size(100, 100),
-                AlwaysOnTop = false,
-                ResizeThreshold = new Thickness(3),
-                Padding = new Thickness(2, 2, 2, 2),
-                BorderStyle =
-                {
-                    Thickness = new Thickness(3, 3, 3, 3)
-                },
-                HScrollBarStyle =
-                {
-                    ShowButtons = false,
-                    Extent = 16,
-                    BorderStyle =
-                    {
-                        Thickness = new Thickness(2, 2, 2, 2)
-                    },
-                    ThumbStyle =
-                    {
-                        BorderStyle =
-                        {
-                            Thickness = new Thickness(2, 2, 2, 2)
-                        }
-                    }
-                },
-                VScrollBarStyle =
-                {
-                    ShowButtons = false,
-                    Extent = 16,
-                    BorderStyle =
-                    {
-                        Thickness = new Thickness(2, 2, 2, 2)
-                    },
-                    ThumbStyle =
-                    {
-                        BorderStyle =
-                        {
-                            Thickness = new Thickness(2, 2, 2, 2)
-                        }
-                    }
-                },
-                TextureFiltering = Miyagi.Common.TextureFiltering.Anisotropic,
-                Skin = MiyagiResources.Singleton.Skins["ConsolePanelSkin"]
-            };
-            chatPanel.SizeChanged += new EventHandler(chatPanel_SizeChanged);
-            chatPanel.LocationChanged += new EventHandler<ChangedValueEventArgs<Point>>(chatPanel_LocationChanged);
-
-            this.chatTextbox = new TextBox("ChatTextbox")
-            {
-                Size = new Size(400, 30),
-                Location = new Point(0, 150),
-                Padding = new Thickness(5, 3, 5, 3),
-                AlwaysOnTop = false,
-                DefocusOnSubmit = false,
-                BorderStyle =
-                {
-                    Thickness = new Thickness(3, 3, 3, 3)
-                },
-                TextStyle =
-                {
-                    Offset = new Point(0, 3),
-                    Alignment = Alignment.MiddleLeft,
-                    ForegroundColour = Colours.White
-                },
-                TextBoxStyle =
-                {
-                    CaretStyle =
-                    {
-                        Size = new Size(2, 16),
-                        Colour = Colours.White
-                    }
-                },
-                Skin = MiyagiResources.Singleton.Skins["ConsoleTextBoxSkin"],
-                TextureFiltering = Miyagi.Common.TextureFiltering.Anisotropic,
-                ClearTextOnSubmit = true
-            };
-
-            chatTextbox.Submit += new EventHandler<ValueEventArgs<string>>(chatTextbox_Submit);
-
-            chatGUI.Controls.Add(chatPanel);
-            chatGUI.Controls.Add(chatTextbox);
-
-            chatGUI.ZOrder = 10;
-        }
-
-
-        public void SetInputFocus(bool focus = true)
-        {
-            chatTextbox.Focused = focus;
-        }
-
-        public bool HasFocus()
-        {
-            return chatTextbox.Focused;
-        }
-
-        public event TextSubmitHandler TextSubmitted;
-
-        private void chatTextbox_Submit(object sender, ValueEventArgs<string> e)
-        {
-            if (string.IsNullOrWhiteSpace(e.Data)) return;
-            TextSubmitted(this, e.Data);
-            //chatTextbox.Focused = false;
-        }
-
-        public void AddLine(string text)
-        {
-            var label = new Label
-            {
-                Location = new Point(0, currentYpos),
-                Text = text,
-                AutoSize = true,
-                TextureFiltering = Miyagi.Common.TextureFiltering.Anisotropic,
-                TextStyle =
-                {
-                    ForegroundColour = Colours.LightGrey
-                }
-            };
-            label.SuccessfulHitTest += (s, e) => e.Cancel = true;
-            this.chatPanel.Controls.Add(label);
-
-            #region Workaround for a bug
-            if (!chatGUI.Visible)
-            {
-                chatGUI.Visible = true;
-                this.currentYpos += label.Size.Height;
-                chatGUI.Visible = false;
-            }
-            else this.currentYpos += label.Size.Height; 
-            #endregion
-
-            this.entries.Add(label);
-            if (entries.Count > maxLines) Trim();
-            chatPanel.ScrollToBottom();
-        }
-
-        public void AddLine(string text, Colour colour)
-        {
-            var label = new Label
-            {
-                Location = new Point(0, currentYpos),
-                Text = text,
-                AutoSize = true,
-                TextureFiltering = Miyagi.Common.TextureFiltering.Anisotropic,
-                TextStyle =
-                {
-                    ForegroundColour = colour
-                }
-            };
-            label.SuccessfulHitTest += (s, e) => e.Cancel = true;
-            this.chatPanel.Controls.Add(label);
-
-            #region Workaround for a bug
-            if (!chatGUI.Visible)
-            {
-                chatGUI.Visible = true;
-                this.currentYpos += label.Size.Height;
-                chatGUI.Visible = false;
-            }
-            else this.currentYpos += label.Size.Height; 
-            #endregion
-
-            this.entries.Add(label);
-            if (entries.Count > maxLines) Trim();
-            chatPanel.ScrollToBottom();
-        }
-
-        void Trim()
-        {
-            if (entries.Count < 2) return;
-            entries[1].Location = new Point(0, 0);
-            Label toDelete = entries[0];
-            entries.RemoveAt(0);
-            currentYpos -= toDelete.Size.Height;
-            toDelete.Dispose();
-            for (int i = 0; i < entries.Count; i++)
-            {
-                entries[i].Location = (i != 0) ? new Point(0, entries[i - 1].Location.Y + entries[i - 1].Size.Height) : new Point(0, 0);
-            }
-        }
-
-        void Clear()
-        {
-            foreach (Label lbl in entries)
-            {
-                lbl.Dispose();
-            }
-            currentYpos = 0;
-            chatPanel.ScrollToTop();
-        }
-
-        void chatPanel_LocationChanged(object sender, ChangedValueEventArgs<Point> e)
-        {
-            if (chatTextbox != null)
-            {
-                Point newLoc = new Point(chatPanel.Location.X, chatPanel.Location.Y + chatPanel.Size.Height);
-                chatTextbox.Location = newLoc;
-            }
-        }
-
-        void chatPanel_SizeChanged(object sender, EventArgs e)
-        {
-            if (chatTextbox != null)
-            {
-                Size newSize = new Size(chatPanel.Size.Width, 30);
-                Point newLoc = new Point(chatPanel.Location.X, chatPanel.Location.Y + chatPanel.Size.Height);
-                chatTextbox.Size = newSize;
-                chatTextbox.Location = newLoc;
-            }
-        }
-    }//*/
 }

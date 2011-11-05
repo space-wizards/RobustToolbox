@@ -15,7 +15,7 @@
     <Name>Assistant</Name>
     <Description>Runs around the station doing nothing&#13;&#10;in particular.</Description>
 	<MaxNum>-1</MaxNum>
-	<JobIcon>Controls.JobButton.None</JobIcon>
+	<JobIcon>job_button_none</JobIcon>
 	<Available>true</Available>
   </JobDefinition>
   
@@ -33,7 +33,7 @@
     <Name>Janitor</Name>
     <Description>Cleans up the station and occasionally&#13;&#10;changes broken lightbulbs.</Description>
 	<MaxNum>1</MaxNum>
-	<JobIcon>Controls.JobButton.None</JobIcon>
+	<JobIcon>job_button_none</JobIcon>
 	<Available>true</Available>
   </JobDefinition>
   
@@ -59,7 +59,7 @@
     <Name>Head of Security</Name>
     <Description>Coordinates Security Officers and manages security&#13;&#10;related matters.</Description>
 	<MaxNum>3</MaxNum>
-	<JobIcon>Controls.JobButton.None</JobIcon>
+	<JobIcon>job_button_none</JobIcon>
 	<Available>true</Available>
   </JobDefinition>
   
@@ -85,7 +85,7 @@
     <Name>Security Officer</Name>
     <Description>Keeps the inhabitants of the station safe.</Description>
 	<MaxNum>3</MaxNum>
-	<JobIcon>Controls.JobButton.None</JobIcon>
+	<JobIcon>job_button_none</JobIcon>
 	<Available>true</Available>
   </JobDefinition>
   
@@ -103,7 +103,7 @@
     <Name>Doctor</Name>
     <Description>Keeps the stations inhabitants healthy and alive.</Description>
 	<MaxNum>3</MaxNum>
-	<JobIcon>Controls.JobButton.None</JobIcon>
+	<JobIcon>job_button_none</JobIcon>
 	<Available>true</Available>
   </JobDefinition>
   
@@ -121,7 +121,7 @@
     <Name>Engineer</Name>
     <Description>Responsible for keeping the Stations machinery&#13;&#10;running smoothly. Also repairs damage to the station.</Description>
 	<MaxNum>3</MaxNum>
-	<JobIcon>Controls.JobButton.None</JobIcon>
+	<JobIcon>job_button_none</JobIcon>
 	<Available>true</Available>
   </JobDefinition>
   
@@ -139,7 +139,7 @@
     <Name>Atmos. Technician</Name>
     <Description>Makes sure the atmospheric systems of the station run&#13;&#10;correctly.</Description>
 	<MaxNum>3</MaxNum>
-	<JobIcon>Controls.JobButton.None</JobIcon>
+	<JobIcon>job_button_none</JobIcon>
 	<Available>true</Available>
   </JobDefinition>
   
@@ -157,7 +157,7 @@
     <Name>Geneticist</Name>
     <Description>Researches the mysteries of the human genome.</Description>
 	<MaxNum>3</MaxNum>
-	<JobIcon>Controls.JobButton.None</JobIcon>
+	<JobIcon>job_button_none</JobIcon>
 	<Available>true</Available>
   </JobDefinition>
   
@@ -175,7 +175,7 @@
     <Name>Scientist</Name>
     <Description>TBD</Description>
 	<MaxNum>3</MaxNum>
-	<JobIcon>Controls.JobButton.None</JobIcon>
+	<JobIcon>job_button_none</JobIcon>
 	<Available>true</Available>
   </JobDefinition>
   
@@ -193,7 +193,7 @@
     <Name>Chemist</Name>
     <Description>Researches new chemicals or chemical compounds.</Description>
 	<MaxNum>3</MaxNum>
-	<JobIcon>Controls.JobButton.None</JobIcon>
+	<JobIcon>job_button_none</JobIcon>
 	<Available>true</Available>
   </JobDefinition>
   
@@ -211,7 +211,7 @@
     <Name>Roboticist</Name>
     <Description>Builds robots. TBD</Description>
 	<MaxNum>3</MaxNum>
-	<JobIcon>Controls.JobButton.None</JobIcon>
+	<JobIcon>job_button_none</JobIcon>
 	<Available>true</Available>
   </JobDefinition>
   
@@ -229,7 +229,7 @@
     <Name>Captain</Name>
     <Description>TBD</Description>
 	<MaxNum>3</MaxNum>
-	<JobIcon>Controls.JobButton.None</JobIcon>
+	<JobIcon>job_button_none</JobIcon>
 	<Available>true</Available>
   </JobDefinition>
   
@@ -247,7 +247,7 @@
     <Name>Placeholder</Name>
     <Description>---</Description>
 	<MaxNum>0</MaxNum>
-	<JobIcon>Controls.JobButton.None</JobIcon>
+	<JobIcon>job_button_none</JobIcon>
 	<Available>false</Available>
   </JobDefinition>
   

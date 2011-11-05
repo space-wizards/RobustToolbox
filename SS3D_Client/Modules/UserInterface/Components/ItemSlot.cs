@@ -145,7 +145,7 @@ namespace SS3D.UserInterface
             slot.Draw();
 
             if (highlight)
-                text.Text.Color = Color.Silver;
+                text.Text.Color = Color.Orange;
             else
                 text.Text.Color = Color.White;
 

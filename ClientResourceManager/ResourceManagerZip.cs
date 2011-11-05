@@ -43,29 +43,6 @@ namespace ClientResourceManager
         private Dictionary<string, SpriteInfo> SpriteInfos = new Dictionary<string, SpriteInfo>();
         private Dictionary<string, Sprite> Sprites = new Dictionary<string, Sprite>();
 
-        private Dictionary<string, GUIElement> createdGuiElements = new Dictionary<string, GUIElement>();
-
-        //  LEGACY METHOD.
-        /// <summary>
-        ///  Retrieves information describing a Gorgon ui element. Returns an empty rectangle if not found.
-        /// </summary>
-        public System.Drawing.Rectangle GetGUIInfo(string key)
-        {
-            if (createdGuiElements.ContainsKey(key))
-            {
-                return new Rectangle(createdGuiElements[key].Dimensions.X, createdGuiElements[key].Dimensions.Y, createdGuiElements[key].Dimensions.Width, createdGuiElements[key].Dimensions.Height);
-            }
-            else
-            {
-                GUIElement tryCreate = GetGUIElement(key);
-                if(tryCreate != null)
-                {
-                    return new Rectangle(tryCreate.Dimensions.X, tryCreate.Dimensions.Y, tryCreate.Dimensions.Width, tryCreate.Dimensions.Height);
-                }
-                else return System.Drawing.Rectangle.Empty;
-            }
-        }
-
         #region Singleton
         private static ResMgr singleton;
 
@@ -329,27 +306,6 @@ namespace ClientResourceManager
         #endregion
 
         #region Resource Retrieval
-
-        /// <summary>
-        ///  Creates and retrieves Sprite or Image as Gorgon UI Element.
-        /// </summary>
-        public GUIElement GetGUIElement(string key)
-        {
-            key = key.ToLowerInvariant();
-
-            if (createdGuiElements.ContainsKey(key)) return createdGuiElements[key];
-
-            Sprite sprite;
-
-            if (Sprites.ContainsKey(key)) sprite = Sprites[key];
-            else sprite = GetSpriteFromImage(key);
-
-            GUIElement newElement = new GUIElement(key, sprite);
-
-            if(!createdGuiElements.ContainsKey(key)) createdGuiElements.Add(key, newElement);
-
-            return newElement;
-        }
 
         /// <summary>
         ///  <para>Retrieves the Image with the given key from the Resource list and returns it as a Sprite.</para>

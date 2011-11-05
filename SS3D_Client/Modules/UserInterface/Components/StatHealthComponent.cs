@@ -30,8 +30,9 @@ namespace SS3D.UserInterface
 
         private Sprite backgroundSprite;
         private Sprite healthDetail;
-        private GorgonLibrary.Graphics.Font font;
-        private TextSprite healthText;
+
+        private Label healthText;
+
         private Color backgroundColor;
         private int health;
         public Point size;
@@ -48,9 +49,8 @@ namespace SS3D.UserInterface
             //componentClass = SS3D_shared.GuiComponentType.???;
             backgroundSprite = ResMgr.Singleton.GetSprite("1pxwhite");
             healthDetail = ResMgr.Singleton.GetSprite("stat_health_detail");
-            font = ResMgr.Singleton.GetFont("CALIBRI");
-            healthText = new TextSprite("statHealthText", "Healthy", font);
-            healthText.Color = Color.DarkBlue;
+            healthText = new Label("Healthy");
+            healthText.Text.Color = Color.DarkBlue;
             size = _size;
             health = 100;
             SetBackgroundColor();
@@ -60,7 +60,7 @@ namespace SS3D.UserInterface
             blipHeight = size.Y / 1.2f;
             blipWidth = size.X / 4;
             blipStart = size.X / 3;
-            healthDetail.Position = new Vector2D(Position.X + 1, Position.Y + 1);
+            healthDetail.Position = new Vector2D(Position.X, Position.Y);
         }
 
         public override void HandleNetworkMessage(NetIncomingMessage message)
@@ -95,15 +95,17 @@ namespace SS3D.UserInterface
             {
                 step = size.X / 40;
             }
-            backgroundSprite.Size = new Vector2D(2, 2);
-            backgroundSprite.Opacity = 255;
+
             blipXRelative += step;
+
             if (blipXRelative > size.X)
                 blipXRelative = 0;
             float blipTemp = 0;
+
             while (blipTemp <= blipXRelative)
             {
                 blipPosition.X = Position.X + blipTemp;
+
                 if (health > 0)
                 {
                     if (blipTemp > blipStart + blipWidth || blipTemp < blipStart)
@@ -119,12 +121,15 @@ namespace SS3D.UserInterface
                         blipPosition.Y++;
                     }
                 }
-                backgroundSprite.Position = blipPosition;
+
                 if (blipTemp == blipXRelative)
-                    backgroundSprite.Color = Color.DarkBlue;
+                    backgroundSprite.Color = Color.White;
                 else
                     backgroundSprite.Color = Color.Cyan;
-                backgroundSprite.Draw();
+
+                backgroundSprite.Opacity = 130;
+                backgroundSprite.Draw(new Rectangle((int)blipPosition.X, (int)blipPosition.Y, 2, 2));
+
                 blipTemp += step;
             }
         }
@@ -132,25 +137,28 @@ namespace SS3D.UserInterface
         private void DoText()
         {
             healthText.Position = Position;
+
             if (health > 70)
-                healthText.Text = "HEALTHY";
+                healthText.Text.Text = "HEALTHY";
             else if (health > 30)
-                healthText.Text = "INJURED";
+                healthText.Text.Text = "INJURED";
             else if (health > 0)
-                healthText.Text = "CRITICAL!";
+                healthText.Text.Text = "CRITICAL!";
             else
-                healthText.Text = "DECEASED";
-            healthText.Color = Color.Blue;
-            healthText.Draw();
+                healthText.Text.Text = "DECEASED";
+
+            healthText.Text.Color = Color.Blue;
+
+            healthText.Update();
+            healthText.Render();
         }
 
         public override void Render()
         {
             backgroundSprite.Color = backgroundColor;
-            backgroundSprite.Opacity = 240;
-            backgroundSprite.Position = Position;
-            backgroundSprite.Size = size;
-            backgroundSprite.Draw();
+            backgroundSprite.Opacity = 125;
+
+            backgroundSprite.Draw(new Rectangle(Position, new Size(size.X, size.Y) ) );
             
             healthDetail.Position = new Vector2D(Position.X, Position.Y);
             healthDetail.Draw();

@@ -46,10 +46,6 @@ namespace SS3D
         private Mouse _mouse = null;								// Mouse interface.
         private Keyboard _keyboard = null;							// Keyboard interface.
 
-        //Experimental GUI stuff
-        private GUISkin _skin;
-        private UIDesktop _desktop;
-
         private Modules.StateManager stateMgr;
         private Program prg;
         private PlacementOption alignType = PlacementOption.AlignNone;
@@ -71,7 +67,9 @@ namespace SS3D
         {
             SetupGorgon();
             SetupInput();
-            ResMgr.Singleton.Initialize();
+
+            ResMgr.Singleton.LoadResourceZip(@"..\\..\\..\\Media\\ResourcePack.zip");
+
             SetupUserInterface();
 
             PlayerName_TextBox.Text = ConfigManager.Singleton.Configuration.PlayerName;
@@ -130,15 +128,6 @@ namespace SS3D
 
         private void SetupUserInterface()
         {
-            _skin = ResMgr.Singleton.GetGuiSkin("Interface1");
-            UIDesktop.Initialize(_input, _skin);
-            _desktop = UIDesktop.Singleton;
-            _desktop.ShowDesktopBackground = false;
-            _desktop.BackgroundColor = Drawing.Color.Black;
-            _desktop.FocusRectangleColor = Drawing.Color.FromArgb(128, Drawing.Color.Red);
-            _desktop.FocusRectangleBlend = BlendingModes.Additive;
-            _desktop.FocusRectangleOutline = false;
-
             ClientServices.ServiceManager.Singleton.AddService(UiManager.Singleton);
         }
 
@@ -154,10 +143,6 @@ namespace SS3D
             UiManager.Singleton.Update();
             UiManager.Singleton.Render();
 
-            //Update GUI shit
-            _desktop.Update(e.FrameDeltaTime);
-            _desktop.Draw();
-
             prg.NetGrapher.Update();
         }
 
@@ -166,8 +151,6 @@ namespace SS3D
             _mouse.SetPositionRange(0, 0, Gorgon.CurrentClippingViewport.Width, Gorgon.CurrentClippingViewport.Height);
             stateMgr.mCurrentState.FormResize();
         }
-
-
 
          /// <summary>
 		/// Handles any keydown events.

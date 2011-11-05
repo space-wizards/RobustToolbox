@@ -16,9 +16,9 @@ namespace SS3D.UserInterface
 {
     class Textbox : GuiComponent
     {
-        GUIElement TextboxMain;
-        GUIElement TextboxLeft;
-        GUIElement TextboxRight;
+        Sprite TextboxMain;
+        Sprite TextboxLeft;
+        Sprite TextboxRight;
 
         public TextSprite label;
 
@@ -38,9 +38,9 @@ namespace SS3D.UserInterface
         public Textbox(int width)
             : base()
         {
-            TextboxLeft = UiManager.Singleton.Skin.Elements["Controls.Button2.Left"];
-            TextboxMain = UiManager.Singleton.Skin.Elements["Controls.Button2.Body"];
-            TextboxRight = UiManager.Singleton.Skin.Elements["Controls.Button2.Right"];
+            TextboxLeft = ResMgr.Singleton.GetSprite("button_left");
+            TextboxMain = ResMgr.Singleton.GetSprite("button_middle");
+            TextboxRight = ResMgr.Singleton.GetSprite("button_right");
 
             Width = width;
 
@@ -53,9 +53,9 @@ namespace SS3D.UserInterface
         public override void Update()
         {
 
-            clientAreaLeft = new Rectangle(this.position, new Size(TextboxLeft.Dimensions.Width, TextboxLeft.Dimensions.Height));
-            clientAreaMain = new Rectangle(new Point(clientAreaLeft.Right, this.position.Y), new Size(Width, TextboxMain.Dimensions.Height));
-            clientAreaRight = new Rectangle(new Point(clientAreaMain.Right, this.position.Y), new Size(TextboxRight.Dimensions.Width, TextboxRight.Dimensions.Height));
+            clientAreaLeft = new Rectangle(this.position, new Size((int)TextboxLeft.Width, (int)TextboxLeft.Height));
+            clientAreaMain = new Rectangle(new Point(clientAreaLeft.Right, this.position.Y), new Size(Width, (int)TextboxMain.Height));
+            clientAreaRight = new Rectangle(new Point(clientAreaMain.Right, this.position.Y), new Size((int)TextboxRight.Width, (int)TextboxRight.Height));
             clientArea = new Rectangle(this.position, new Size(clientAreaLeft.Width + clientAreaMain.Width + clientAreaRight.Width, clientAreaMain.Height));
             label.Position = new Point(clientAreaLeft.Right, this.position.Y + (int)(clientArea.Height / 2f) - (int)(label.Height / 2f));
 

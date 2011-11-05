@@ -16,9 +16,9 @@ namespace SS3D.UserInterface
 {
     class Button : GuiComponent
     {
-        GUIElement ButtonMain;
-        GUIElement ButtonLeft;
-        GUIElement ButtonRight;     
+        Sprite ButtonMain;
+        Sprite ButtonLeft;
+        Sprite ButtonRight;     
 
         public TextSprite label;
 
@@ -32,9 +32,9 @@ namespace SS3D.UserInterface
         public Button(string text)
             : base()
         {
-            ButtonLeft = UiManager.Singleton.Skin.Elements["Controls.Button2.Left"];
-            ButtonMain = UiManager.Singleton.Skin.Elements["Controls.Button2.Body"];
-            ButtonRight = UiManager.Singleton.Skin.Elements["Controls.Button2.Right"];
+            ButtonLeft = ResMgr.Singleton.GetSprite("button_left");
+            ButtonMain = ResMgr.Singleton.GetSprite("button_middle");
+            ButtonRight = ResMgr.Singleton.GetSprite("button_right");
 
             label = new TextSprite("ButtonLabel" + text, text, ResMgr.Singleton.GetFont("CALIBRI"));
             label.Color = System.Drawing.Color.Black;
@@ -45,9 +45,9 @@ namespace SS3D.UserInterface
         public override void Update()
         {
 
-            clientAreaLeft = new Rectangle(this.position, new Size(ButtonLeft.Dimensions.Width, ButtonLeft.Dimensions.Height));
-            clientAreaMain = new Rectangle(new Point(clientAreaLeft.Right, this.position.Y), new Size((int)label.Width, ButtonMain.Dimensions.Height));
-            clientAreaRight = new Rectangle(new Point(clientAreaMain.Right, this.position.Y), new Size(ButtonRight.Dimensions.Width, ButtonRight.Dimensions.Height));
+            clientAreaLeft = new Rectangle(this.position, new Size((int)ButtonLeft.Width, (int)ButtonLeft.Height));
+            clientAreaMain = new Rectangle(new Point(clientAreaLeft.Right, this.position.Y), new Size((int)label.Width, (int)ButtonMain.Height));
+            clientAreaRight = new Rectangle(new Point(clientAreaMain.Right, this.position.Y), new Size((int)ButtonRight.Width, (int)ButtonRight.Height));
             clientArea = new Rectangle(this.position, new Size(clientAreaLeft.Width + clientAreaMain.Width + clientAreaRight.Width, clientAreaMain.Height));
             label.Position = new Point(clientAreaLeft.Right, this.position.Y + (int)(clientArea.Height / 2f) - (int)(label.Height / 2f));
         }

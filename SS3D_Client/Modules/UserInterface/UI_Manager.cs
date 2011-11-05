@@ -6,9 +6,14 @@ using System.Text;
 using SS3D.UserInterface;
 using SS3D_shared;
 using Lidgren.Network;
+
 using GorgonLibrary.InputDevices;
 using GorgonLibrary.GUI;
+using GorgonLibrary;
+using GorgonLibrary.Graphics;
+
 using ClientInterfaces;
+using ClientResourceManager;
 
 namespace SS3D.UserInterface
 {
@@ -37,6 +42,9 @@ namespace SS3D.UserInterface
 
         private IGuiComponent currentFocus;
 
+        private Vector2D mousePos = Vector2D.Zero;
+        private Sprite cursorSprite;
+
         public ClientServiceType ServiceType { get { return ClientServiceType.UiManager; } }
 
         [Obsolete("Temporary. Fix this.")]
@@ -50,20 +58,6 @@ namespace SS3D.UserInterface
         ///  List of iGuiComponents. Components in this list will recieve input, updates and net messages.
         /// </summary>
         public List<IGuiComponent> Components = new List<IGuiComponent>();
-
-        public GUISkin Skin 
-        {
-            get{return GetSkin();}
-            private set{}
-        }
-
-        /// <summary>
-        ///  Returns active skin.
-        /// </summary>
-        private GUISkin GetSkin()
-        {
-            return UIDesktop.Singleton.Skin;
-        }
 
         /// <summary>
         ///  Disposes all components and clears component list. Components need to implement their own Dispose method.
@@ -179,6 +173,10 @@ namespace SS3D.UserInterface
 
             foreach (IGuiComponent component in renderList)
                 component.Render();
+
+            if (cursorSprite == null) cursorSprite = ResMgr.Singleton.GetSprite("cursor");
+            cursorSprite.Position = mousePos;
+            cursorSprite.Draw();
         } 
         #endregion
 
@@ -281,6 +279,8 @@ namespace SS3D.UserInterface
         /// </summary>
         public virtual void MouseMove(MouseInputEventArgs e)
         {
+            mousePos = e.Position;
+
             var inputList = from IGuiComponent comp in Components
                             where comp.RecieveInput
                             orderby comp.zDepth ascending

@@ -21,7 +21,7 @@ namespace SS3D.UserInterface
         private GUIBodyPart bodyPart; // The bodypart we reference
         private Type atomType; // The type of atoms we can accept
         private Sprite slot;
-        private TextSprite text;
+        private Label text;
         private bool highlight = false;
         private Vector2D outlinePos = new Vector2D(1078, 632); // TODO: Remove magic numbers
         private Sprite outline;
@@ -30,9 +30,9 @@ namespace SS3D.UserInterface
             : base(_playerController)
         {
             bodyPart = _bodyPart;
-            slot = UIDesktop.Singleton.Skin.Elements["Window.InventorySlot"].GetSprite();
+            slot = ResMgr.Singleton.GetSprite("slot");
             outline = ResMgr.Singleton.GetSprite("GUI_" + bodyPart);
-            text = new TextSprite("ItemSlot" + bodyPart, bodyPart.ToString(), ResMgr.Singleton.GetFont("CALIBRI"));
+            text = new Label(bodyPart.ToString());
             position = new Point(0, 12);
             SetAtomType();
         }
@@ -136,15 +136,25 @@ namespace SS3D.UserInterface
                 outline.Draw();
                 slot.Color = Color.Orange;
             }
+            else
+            {
+                slot.Color = Color.White;
+            }
+
             slot.Position = position;
             slot.Draw();
-            if(highlight)
-                slot.Color = Color.White;
+
+            if (highlight)
+                text.Text.Color = Color.Silver;
+            else
+                text.Text.Color = Color.White;
 
             text.Position = new Point(position.X + 2, position.Y + 2);
-            text.Draw();
+            text.Text.ShadowColor = Color.Black;
+            text.Text.Shadowed = true;
+            text.Text.ShadowOffset = new Vector2D(1, 1);
+            text.Update();
             
-
             Entity m = (Entity)playerController.controlledAtom;
 
             if (bodyPart != GUIBodyPart.None)
@@ -157,12 +167,15 @@ namespace SS3D.UserInterface
                     {
                         Sprite s = HelperClasses.Utilities.GetSpriteComponentSprite((Entity)replies[0].paramsList[0]);
                         s.Position = position;
-                        s.Position += new Vector2D(slot.AABB.Width / 2, slot.AABB.Height / 2);
+                        s.Position += new Vector2D(slot.Width / 2f - s.Width / 2f, slot.Height / 2f - s.Height / 2f);
                         s.Draw();
                     }
                 }
                 
             }
+
+            text.Render();
+
             // If we contain an atom then draw it in the appropriate place
             /*if (playerController.controlledAtom.IsChildOfType(typeof(Atom.Mob.Mob)))
             {
@@ -179,7 +192,6 @@ namespace SS3D.UserInterface
                 }
             }*/ //TODO RE-ENABLE ITEM SLOTS WITH COMPONENTS
             highlight = false;
-
         }
     }
 }

@@ -10,13 +10,14 @@ using GorgonLibrary.GUI;
 using SS3D.UserInterface;
 using Lidgren.Network;
 using SS3D_shared;
+using ClientResourceManager;
 
 namespace SS3D.UserInterface
 {
     class Checkbox : GuiComponent
     {
-        GUIElement checkbox;
-        GUIElement checkboxCheck;
+        Sprite checkbox;
+        Sprite checkboxCheck;
 
         private Boolean value = false;
         public Boolean Value
@@ -38,14 +39,14 @@ namespace SS3D.UserInterface
         public Checkbox() 
             : base()
         {
-            checkbox = UiManager.Singleton.Skin.Elements["Controls.CheckBox.Box"];
-            checkboxCheck = UiManager.Singleton.Skin.Elements["Controls.CheckBox.Check"];
+            checkbox = ResMgr.Singleton.GetSprite("nosprite");
+            checkboxCheck = ResMgr.Singleton.GetSprite("nosprite");
             Update();
         }
 
         public override void Update()
         {
-            clientArea = new Rectangle(this.position, new Size(checkbox.Dimensions.Width, checkbox.Dimensions.Height));
+            clientArea = new Rectangle(this.position, new Size((int)checkbox.Width, (int)checkbox.Height));
         }
 
         public override void Render()

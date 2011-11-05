@@ -64,6 +64,8 @@ namespace SS3D.States
             lobbyChat = new SS3D.UserInterface.Chatbox("lobbyChat");
             lobbyChat.TextSubmitted += new SS3D.UserInterface.Chatbox.TextSubmitHandler(lobbyChat_TextSubmitted);
 
+            UiManager.Singleton.Components.Add(lobbyChat);
+
             lobbyText = new TextSprite("lobbyText", "", ResMgr.Singleton.GetFont("CALIBRI"));
             lobbyText.Color = System.Drawing.Color.Black;
             lobbyText.ShadowColor = System.Drawing.Color.DimGray;
@@ -277,9 +279,6 @@ namespace SS3D.States
         public override void Shutdown()
         {
             UiManager.Singleton.DisposeAllComponents();
-            UIDesktop.Singleton.Windows.Remove(lobbyChat);
-            lobbyChat.Dispose();
-            lobbyChat = null;
             //UIDesktop.Singleton.Dispose();
             prg.mNetworkMgr.MessageArrived -= new NetworkMsgHandler(mNetworkMgr_MessageArrived);
             RenderTargetCache.DestroyAll();

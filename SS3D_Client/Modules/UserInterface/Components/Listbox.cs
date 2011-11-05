@@ -16,9 +16,9 @@ namespace SS3D.UserInterface
 {
     class Listbox : GuiComponent
     {
-        GUIElement ListboxMain;
-        GUIElement ListboxLeft;
-        GUIElement ListboxRight;
+        Sprite ListboxMain;
+        Sprite ListboxLeft;
+        Sprite ListboxRight;
 
         public TextSprite selectedLabel;
 
@@ -40,9 +40,9 @@ namespace SS3D.UserInterface
             : base()
         {
             Width = width;
-            ListboxLeft = UiManager.Singleton.Skin.Elements["Controls.Button2.Left"];
-            ListboxMain = UiManager.Singleton.Skin.Elements["Controls.Button2.Body"];
-            ListboxRight = UiManager.Singleton.Skin.Elements["Controls.Button2.Right"];
+            ListboxLeft = ResMgr.Singleton.GetSprite("button_left");
+            ListboxMain = ResMgr.Singleton.GetSprite("button_middle");
+            ListboxRight = ResMgr.Singleton.GetSprite("button_right");
 
             selectedLabel = new TextSprite("ListboxLabel", "", ResMgr.Singleton.GetFont("CALIBRI"));
             selectedLabel.Color = System.Drawing.Color.Black;
@@ -93,9 +93,9 @@ namespace SS3D.UserInterface
 
         public override void Update()
         {
-            clientAreaLeft = new Rectangle(this.position, new Size(ListboxLeft.Dimensions.Width, ListboxLeft.Dimensions.Height));
-            clientAreaMain = new Rectangle(new Point(clientAreaLeft.Right, this.position.Y), new Size(Width, ListboxMain.Dimensions.Height));
-            clientAreaRight = new Rectangle(new Point(clientAreaMain.Right, this.position.Y), new Size(ListboxRight.Dimensions.Width, ListboxRight.Dimensions.Height));
+            clientAreaLeft = new Rectangle(this.position, new Size((int)ListboxLeft.Width, (int)ListboxLeft.Height));
+            clientAreaMain = new Rectangle(new Point(clientAreaLeft.Right, this.position.Y), new Size(Width, (int)ListboxMain.Height));
+            clientAreaRight = new Rectangle(new Point(clientAreaMain.Right, this.position.Y), new Size((int)ListboxRight.Width, (int)ListboxRight.Height));
             clientArea = new Rectangle(this.position, new Size(clientAreaLeft.Width + clientAreaMain.Width + clientAreaRight.Width, clientAreaMain.Height));
             selectedLabel.Position = new Point(clientAreaLeft.Right, this.position.Y + (int)(clientArea.Height / 2f) - (int)(selectedLabel.Height / 2f));
             dropDown.Position = new Point(clientArea.X + (int)((clientArea.Width - dropDown.ClientArea.Width) / 2f), clientArea.Bottom);

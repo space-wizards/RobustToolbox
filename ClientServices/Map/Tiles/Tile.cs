@@ -58,7 +58,7 @@ namespace ClientServices.Map.Tiles
 
         public virtual void Initialize()
         {
-            gasSprite = ResMgr.Singleton.GetSpriteFromImage("gas");
+            gasSprite = ResMgr.Singleton.GetSprite("gas");
             surroundingTiles = new Tile[4];
             tileLights = new List<ILight>();
             gasAmounts = new Dictionary<GasType, int>();

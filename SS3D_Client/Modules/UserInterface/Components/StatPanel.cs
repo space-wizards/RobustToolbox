@@ -117,13 +117,13 @@ namespace SS3D.UserInterface
             toDraw.Opacity = 80;
             toDraw.Draw(new Rectangle(new Point(Position.X + 6, Position.Y + 6), new Size((int)toDraw.Width, (int)toDraw.Height)));
 
-            if (rnd.Next(0, 60) == 1) noiseStep = 1;
+            if (rnd.Next(0, 90) == 1) noiseStep = 1;
 
             if (noiseStep > 0)
             {
-                Sprite noise = ResMgr.Singleton.GetSprite(noiseStep == 1 ? "noise_statpanel0" : "noise_statpanel1");
+                Sprite noise = ResMgr.Singleton.GetSprite((noiseStep % 2) == 0 ? "noise_statpanel0" : "noise_statpanel1");
                 noiseStep++;
-                if (noiseStep == 3) noiseStep = 0;
+                if (noiseStep == 10) noiseStep = 0;
                 noise.Opacity = 40;
                 noise.Draw(new Rectangle(new Point(Position.X + 6, Position.Y + 6), new Size((int)noise.Width, (int)noise.Height)));
             }

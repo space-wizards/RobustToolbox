@@ -42,7 +42,10 @@ namespace SS3D.UserInterface
         private int height = 200;
 
         private int flickCounter = 0;
+        private int noiseStep = 0;
         private bool flick = false;
+
+        private Random rnd = new Random();
 
         private Sprite flickSprite0;
         private Sprite flickSprite1;
@@ -109,10 +112,22 @@ namespace SS3D.UserInterface
                 flickCounter = 0;
             }
             flickCounter++;
-    
-            Sprite toDraw = (flick ? flickSprite1 : flickSprite0);
-            toDraw.Opacity = 160;
-            toDraw.Draw(new Rectangle(new Point(Position.X + 5, Position.Y + 5), new Size((int)toDraw.Width, (int)toDraw.Height)));
+
+            Sprite toDraw = (flick ? flickSprite0 : flickSprite1);
+            toDraw.Opacity = 80;
+            toDraw.Draw(new Rectangle(new Point(Position.X + 6, Position.Y + 6), new Size((int)toDraw.Width, (int)toDraw.Height)));
+
+            if (rnd.Next(0, 60) == 1) noiseStep = 1;
+
+            if (noiseStep > 0)
+            {
+                Sprite noise = ResMgr.Singleton.GetSprite(noiseStep == 1 ? "noise_statpanel0" : "noise_statpanel1");
+                noiseStep++;
+                if (noiseStep == 3) noiseStep = 0;
+                noise.Opacity = 40;
+                noise.Draw(new Rectangle(new Point(Position.X + 6, Position.Y + 6), new Size((int)noise.Width, (int)noise.Height)));
+            }
+
         }
 
         public override void HandleNetworkMessage(NetIncomingMessage message)

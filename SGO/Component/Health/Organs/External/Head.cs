@@ -15,15 +15,10 @@ namespace SGO.Component.Health.Organs.External
 
         public override void SetUp(HealthComponent _owner)
         {
-            max_blood = 100;
+            max_blood = 20;
             normalChildNumber = 1;
             masterConnectionType = typeof(Torso);
             base.SetUp(_owner);
-        }
-
-        public override void HeartBeat()
-        {
-            return;
         }
     }
 }

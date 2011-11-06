@@ -18,7 +18,7 @@ namespace SGO.Component.Health.Organs.Internal
 
         public override void SetUp(HealthComponent _owner)
         {
-            max_blood = 100;
+            max_blood = 0;
             masterConnectionType = typeof(Organs.External.Torso);
             base.SetUp(_owner);
         }

@@ -26,7 +26,6 @@ namespace SGO
                     /// Who damaged, how much, what type
                     ApplyDamage((Entity)list[0], (int)list[1], (DamageType)list[2]);
                     break;
-
             }
         }
 
@@ -39,7 +38,6 @@ namespace SGO
                 Owner.SendMessage(this, ComponentMessageType.Die, null);
                 IChatManager cm = (IChatManager)ServiceManager.Singleton.GetService(ServerServiceType.ChatManager);
                 cm.SendChatMessage(ChatChannel.Default, Owner.name + " has died.", null, Owner.Uid);
-
             }
         }
 
@@ -63,6 +61,8 @@ namespace SGO
         {
             throw new NotImplementedException();
         }
+
+
 
     }
 }

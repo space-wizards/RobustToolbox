@@ -183,6 +183,9 @@ namespace SS3D_Server
 
         public void DisposeForRestart()
         {
+            entityManager.Shutdown();
+            entityManager = null;
+            map.Shutdown();
             map = null; //Implement proper disposal.
             GC.Collect();
         }

@@ -46,6 +46,16 @@ namespace CGO
         }
 
         /// <summary>
+        /// Disposes all entities and clears all lists.
+        /// </summary>
+        public void FlushEntities()
+        {
+            foreach (Entity e in m_entities.Values)
+                e.Shutdown();
+            m_entities.Clear();
+        }
+
+        /// <summary>
         /// Returns an entity by id
         /// </summary>
         /// <param name="eid">entity id</param>
@@ -116,7 +126,10 @@ namespace CGO
 
         public void Shutdown()
         {
-
+            FlushEntities();
+            m_entityFactory = null;
+            m_entityTemplateDatabase = null;
+            m_entityNetworkManager = null;
         }
 
         /// <summary>

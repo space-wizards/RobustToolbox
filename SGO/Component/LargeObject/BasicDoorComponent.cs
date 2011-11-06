@@ -59,9 +59,8 @@ namespace SGO
 
         public override void OnRemove()
         {
-            base.OnRemove();
-
             Owner.OnMove -= new Entity.EntityMoveEvent(OnMove);
+            base.OnRemove();
         }
 
         private void OnMove(Vector2 newPosition, Vector2 oldPosition)

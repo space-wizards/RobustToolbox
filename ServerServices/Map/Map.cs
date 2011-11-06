@@ -503,6 +503,11 @@ namespace ServerServices.Map
         }
         #endregion
 
+        public void Shutdown()
+        {
+            ServiceManager.Singleton.RemoveService(this);
+            tileArray = null;
+        }
 
         public int GetMapWidth()
         {

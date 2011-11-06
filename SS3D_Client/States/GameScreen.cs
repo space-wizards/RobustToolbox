@@ -209,7 +209,6 @@ namespace SS3D.States
             gaussianBlur.Dispose();
             entityManager.Shutdown();
             map.Shutdown();
-            //PlacementManager.Singleton.Reset();
             entityManager = null;
             map = null;
             UiManager.Singleton.DisposeAllComponents(); //HerpDerp. This is probably bad. Should not remove them ALL.
@@ -715,6 +714,7 @@ namespace SS3D.States
 
         public override void MouseMove(MouseInputEventArgs e)
         {
+            float distanceToPrev = (mousePosScreen - new Vector2D(e.Position.X, e.Position.Y)).Length;
             mousePosScreen = new Vector2D(e.Position.X, e.Position.Y);
             mousePosWorld = new Vector2D(e.Position.X + ClientWindowData.xTopLeft, e.Position.Y + ClientWindowData.yTopLeft);
             UiManager.Singleton.MouseMove(e);

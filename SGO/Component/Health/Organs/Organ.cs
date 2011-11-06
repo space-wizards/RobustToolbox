@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using SS3D_shared.HelperClasses;
+using SS3D_shared.GO;
 using System.Runtime.Serialization;
 
 namespace SGO.Component.Health.Organs
@@ -18,6 +19,7 @@ namespace SGO.Component.Health.Organs
         public int normalChildNumber;
         public Blood blood;
         public float max_blood = 0.0f; // The max amount of blood this organ can contain
+        private bool heartBeat = false;
 
 
         public Organ()
@@ -57,36 +59,69 @@ namespace SGO.Component.Health.Organs
 
         public virtual void Process(float frametime)
         {
+            heartBeat = false;
             if (owner == null)
                 return;
             return;
-
         }
 
         public virtual void HeartBeat()
         {
+            if (heartBeat)
+                return;
+            heartBeat = true;
+
             if (normalChildNumber > 0)
             {
-                float shareBlood = ((blood.amount / max_blood) * (max_blood / 10)) / normalChildNumber;
-                foreach (Organ organ in externalChildren)
-                {
-                    organ.HeartBeat();
-                    if (organ.blood.amount < organ.max_blood)
-                    {
-                        float amount = Math.Min(organ.max_blood, organ.blood.amount - shareBlood) - organ.blood.amount;
-                        if (organ.blood.CanRecieve(blood))
-                            organ.blood.amount += amount;
-                        else
-                            organ.blood.amount -= amount;
-                        blood.amount -= amount;
-                    }
-                }
+
                 if (normalChildNumber < externalChildren.Count)
                 {
-                    blood.amount = Math.Max(0, blood.amount - (shareBlood * (2 * normalChildNumber - externalChildren.Count)));
+                    float lostBlood = ((blood.amount / max_blood) * (max_blood / 10)) / normalChildNumber;
+                    blood.amount = Math.Max(0, blood.amount - (lostBlood * (2 * normalChildNumber - externalChildren.Count)));
+                }
+                foreach (Organ organ in externalChildren)
+                {
+                    if (!organ.heartBeat)
+                    {
+                        organ.HeartBeat();
+                        ShareBloodWith(organ);
+                    }
                 }
             }
         }
 
+        public virtual void Damage(Entity damager, int damAmount, DamageType damType)
+        {
+            RemoveBlood(damAmount);
+        }
+
+        public void RemoveBlood(float amount)
+        {
+            blood.amount = Math.Max(0, blood.amount - amount);
+        }
+
+        public void AddBlood(float amount)
+        {
+            blood.amount = Math.Min(max_blood, blood.amount + amount);
+        }
+
+        private void ShareBloodWith(Organ organ)
+        {
+            float myFactor = blood.amount / max_blood;
+            float organFactor = organ.blood.amount / organ.max_blood;
+            float missing = max_blood - blood.amount;
+            if (myFactor < organFactor) // We need to take blood
+            {
+                float amount = Math.Min(missing, organ.blood.amount * ((organFactor - myFactor) / normalChildNumber));
+                AddBlood(amount);
+                organ.RemoveBlood(amount);
+            }
+            else // We need to give blood
+            {
+                float amount = Math.Min(missing, blood.amount * (( myFactor - organFactor) / normalChildNumber));
+                RemoveBlood(amount);
+                organ.AddBlood(amount);
+            }
+        }
     }
 }

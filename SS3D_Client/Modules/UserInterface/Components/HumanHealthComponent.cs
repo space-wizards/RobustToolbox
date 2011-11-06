@@ -3,12 +3,17 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Drawing;
+using System.Reflection;
+using SS3D.HelperClasses;
 using GorgonLibrary;
 using GorgonLibrary.Graphics;
 using GorgonLibrary.InputDevices;
-using ClientResourceManager;
 using SS3D.Modules;
 using Lidgren.Network;
+using CGO;
+using SS3D_shared.GO;
+using SS3D_shared;
+using ClientResourceManager;
 
 using SS3D_shared;
 
@@ -62,21 +67,12 @@ namespace SS3D.UserInterface
             healthAmount.Draw();
         }
 
-        public override void HandleNetworkMessage(NetIncomingMessage message)
+        public override void Update()
         {
-            HealthComponentMessage messageType = (HealthComponentMessage)message.ReadByte();
-            switch (messageType)
-            {
-                case HealthComponentMessage.CurrentHealth:
-                    SetHealthPercentage(message.ReadInt32());
-                    break;
-                default: break;
-            }
-        }
+            var entity = (Entity)playerController.controlledAtom;
+            HealthComponent comp = (HealthComponent)entity.GetComponent(ComponentFamily.Health);
+            healthAmount.Text = comp.GetHealth().ToString();
 
-        public void SetHealthPercentage(int pct)
-        {
-            healthAmount.Text = pct.ToString() + "%";
         }
 
         public override bool MouseDown(MouseInputEventArgs e)

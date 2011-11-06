@@ -3,12 +3,17 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Drawing;
+using System.Reflection;
+using SS3D.HelperClasses;
 using GorgonLibrary;
 using GorgonLibrary.Graphics;
 using GorgonLibrary.InputDevices;
-using ClientResourceManager;
 using SS3D.Modules;
 using Lidgren.Network;
+using CGO;
+using SS3D_shared.GO;
+using SS3D_shared;
+using ClientResourceManager;
 
 using SS3D_shared;
 
@@ -34,7 +39,7 @@ namespace SS3D.UserInterface
         private Label healthText;
 
         private Color backgroundColor;
-        private int health;
+        private float health;
         public Point size;
         private float step;
         private Vector2D blipPosition;
@@ -61,19 +66,6 @@ namespace SS3D.UserInterface
             blipWidth = size.X / 4;
             blipStart = size.X / 3;
             healthDetail.Position = new Vector2D(Position.X, Position.Y);
-        }
-
-        public override void HandleNetworkMessage(NetIncomingMessage message)
-        {
-            HealthComponentMessage messageType = (HealthComponentMessage)message.ReadByte();
-            switch (messageType)
-            {
-                case HealthComponentMessage.CurrentHealth:
-                    health = message.ReadInt32();
-                    SetBackgroundColor();
-                    break;
-                default: break;
-            }
         }
 
         private void SetBackgroundColor()
@@ -134,18 +126,30 @@ namespace SS3D.UserInterface
             }
         }
 
+        public override void Update()
+        {
+
+        }
+
         private void DoText()
         {
+            var entity = (Entity)playerController.controlledAtom;
+            if (entity.HasComponent(ComponentFamily.Damageable))
+            {
+                HealthComponent comp = (HealthComponent)entity.GetComponent(ComponentFamily.Damageable);
+                health = comp.GetHealth();
+            }
+
             healthText.Position = Position;
 
             if (health > 70)
-                healthText.Text.Text = "HEALTHY";
+                healthText.Text.Text = "HEALTHY: " + health.ToString();
             else if (health > 30)
-                healthText.Text.Text = "INJURED";
+                healthText.Text.Text = "INJURED: " + health.ToString();
             else if (health > 0)
-                healthText.Text.Text = "CRITICAL!";
+                healthText.Text.Text = "CRITICAL: " + health.ToString();
             else
-                healthText.Text.Text = "DECEASED";
+                healthText.Text.Text = "DECEASED: " + health.ToString();
 
             healthText.Text.Color = Color.Blue;
 

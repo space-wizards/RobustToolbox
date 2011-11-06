@@ -42,5 +42,10 @@ namespace SGO.Component.Health.Organs.Internal
             base.Process(frametime);
         }
 
+        public override void Damage(Entity damager, int damAmount, SS3D_shared.GO.DamageType damType)
+        {
+            return;
+        }
+
     }
 }

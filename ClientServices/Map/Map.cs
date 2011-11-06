@@ -522,6 +522,7 @@ namespace ClientServices.Map
         #region Shutdown
         public void Shutdown()
         {
+            ClientServices.ServiceManager.Singleton.RemoveService(this);
             tileArray = null;
             tileSprites = null;
         }

@@ -207,7 +207,20 @@ namespace SGO
 
         public void Shutdown()
         {
+            FlushEntities();
+            m_entityFactory = null;
+            m_entityTemplateDatabase = null;
+            m_entityNetworkManager = null;
+        }
 
+        /// <summary>
+        /// Disposes all entities and clears all lists.
+        /// </summary>
+        public void FlushEntities()
+        {
+            foreach (Entity e in m_entities.Values)
+                e.Shutdown();
+            m_entities.Clear();
         }
 
         /// <summary>

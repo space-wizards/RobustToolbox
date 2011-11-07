@@ -6,15 +6,6 @@ using System.Text;
 namespace SS3D_shared.GO
 {
     [Flags]
-    public enum ItemTypeFlag
-    {
-        MeleeWeapon = 1,
-        Tool = 2,
-        Gun = 4,
-        Medical = 8,
-    }
-
-    [Flags]
     public enum InteractsWith
     {
         LargeObject,
@@ -47,18 +38,10 @@ namespace SS3D_shared.GO
         FixBruise,
         FixCut,
         FixBurn,
+        Mop,
+        Clean
     }
-
-    public enum ToolAction
-    {
-        Weld,
-        Wrench,
-        Pry,
-        Screw,
-        Hit,
-        Cut,
-    }
-
+    
     public enum DamageType
     {
         Hit,
@@ -74,13 +57,5 @@ namespace SS3D_shared.GO
         Beam,
         EnergyBall,
         Flame
-    }
-
-    public enum HealAction
-    {
-        Diagnose,
-        FixBruise,
-        FixCut,
-        FixBurn,
     }
 }

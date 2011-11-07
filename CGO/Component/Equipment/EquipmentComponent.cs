@@ -71,6 +71,10 @@ namespace CGO
 
         private void EquipItem(GUIBodyPart part, int uid)
         {
+            if (!IsEmpty(part)) // Uh oh we are confused about something! But it's better to just do what the server says
+            {
+                UnEquipItem(part, equippedEntities[part].Uid);
+            }
             equippedEntities.Add(part, EntityManager.Singleton.GetEntity(uid));
         }
 

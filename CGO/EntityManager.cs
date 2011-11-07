@@ -16,6 +16,7 @@ namespace CGO
         private EntityTemplateDatabase m_entityTemplateDatabase;
         private EntityNetworkManager m_entityNetworkManager;
         private NetClient m_netClient;
+        private bool initialized = false;
 
         public EntityTemplateDatabase TemplateDB { get { return m_entityTemplateDatabase; } }
 
@@ -98,7 +99,8 @@ namespace CGO
                 e.Uid = Uid;
                 m_entities.Add(Uid, e);
                 lastId = Uid;
-                //e.Initialize();
+                if(initialized)
+                    e.Initialize();
                 return e;
             }
             return null;
@@ -175,6 +177,7 @@ namespace CGO
         {
             foreach (Entity e in m_entities.Values)
                 e.Initialize();
+            initialized = true;
         }
 
         #endregion

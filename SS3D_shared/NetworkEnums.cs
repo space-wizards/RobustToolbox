@@ -180,7 +180,8 @@ public enum EntityMessage
 public enum EntityManagerMessage
 {
     SpawnEntity,
-    DeleteEntity
+    DeleteEntity,
+    InitializeEntities
 }
 
 public enum NetworkDataType

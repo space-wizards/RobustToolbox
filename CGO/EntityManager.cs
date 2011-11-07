@@ -98,7 +98,7 @@ namespace CGO
                 e.Uid = Uid;
                 m_entities.Add(Uid, e);
                 lastId = Uid;
-                e.Initialize();
+                //e.Initialize();
                 return e;
             }
             return null;
@@ -165,7 +165,16 @@ namespace CGO
                         m_entities.Remove(dUid);
                     }
                     break;
+                case EntityManagerMessage.InitializeEntities:
+                    InitializeEntities();
+                    break;
             }
+        }
+
+        private void InitializeEntities()
+        {
+            foreach (Entity e in m_entities.Values)
+                e.Initialize();
         }
 
         #endregion

@@ -67,6 +67,19 @@ namespace SGO
             }
         }
 
+        public override void HandleInstantiationMessage(Lidgren.Network.NetConnection netConnection)
+        {
+            foreach (GUIBodyPart p in equippedEntities.Keys)
+            {
+                if(!IsEmpty(p))
+                {
+                    Entity e = equippedEntities[p];
+                    e.SendMessage(this, SS3D_shared.GO.ComponentMessageType.ItemEquipped, null, Owner);
+                    Owner.SendComponentNetworkMessage(this, Lidgren.Network.NetDeliveryMethod.ReliableUnordered, netConnection, EquipmentComponentNetMessage.ItemEquipped, p, e.Uid);
+                }
+            }
+        }
+
         // Equips Entity e to Part part
         private void EquipEntityToPart(GUIBodyPart part, Entity e)
         {

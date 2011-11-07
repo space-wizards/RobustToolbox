@@ -6,7 +6,16 @@
       <Component name="SpriteComponent"></Component>
       <Component name="BasicInteractableComponent"></Component>
       <Component name="BasicMoverComponent"></Component>
-      <Component name="BasicItemComponent"></Component>
+      <Component name="BasicItemComponent">
+        <ExtendedParameters>
+          <ItemCapability name="MeleeWeaponCapability">
+            <ItemCapabilityParameters>
+              <ItemCapabilityParameter name="damageAmount" type="int" value="1" />
+              <ItemCapabilityParameter name="damageType" type="string" value="Pierce" />
+            </ItemCapabilityParameters>
+          </ItemCapability>
+        </ExtendedParameters>
+      </Component>
     </Components>
   </EntityTemplate>
   <EntityTemplate name="Medical_Scanner">
@@ -15,7 +24,16 @@
       <Component name="SpriteComponent"></Component>
       <Component name="BasicInteractableComponent"></Component>
       <Component name="BasicMoverComponent"></Component>
-      <Component name="BasicItemComponent"></Component>
+      <Component name="BasicItemComponent">
+        <ExtendedParameters>
+          <ItemCapability name="MeleeWeaponCapability">
+            <ItemCapabilityParameters>
+              <ItemCapabilityParameter name="damageAmount" type="int" value="3" />
+              <ItemCapabilityParameter name="damageType" type="string" value="Bludgeon" />
+            </ItemCapabilityParameters>
+          </ItemCapability>
+        </ExtendedParameters>
+      </Component>
     </Components>
   </EntityTemplate>
   <EntityTemplate name="Medical_Saw">
@@ -24,7 +42,16 @@
       <Component name="SpriteComponent"></Component>
       <Component name="BasicInteractableComponent"></Component>
       <Component name="BasicMoverComponent"></Component>
-      <Component name="BasicItemComponent"></Component>
+      <Component name="BasicItemComponent">
+        <ExtendedParameters>
+          <ItemCapability name="MeleeWeaponCapability">
+            <ItemCapabilityParameters>
+              <ItemCapabilityParameter name="damageAmount" type="int" value="10" />
+              <ItemCapabilityParameter name="damageType" type="string" value="Slice" />
+            </ItemCapabilityParameters>
+          </ItemCapability>
+        </ExtendedParameters>
+      </Component>
     </Components>
   </EntityTemplate>
   <EntityTemplate name="Scalpel">
@@ -33,7 +60,16 @@
       <Component name="SpriteComponent"></Component>
       <Component name="BasicInteractableComponent"></Component>
       <Component name="BasicMoverComponent"></Component>
-      <Component name="BasicItemComponent"></Component>
+      <Component name="BasicItemComponent">
+        <ExtendedParameters>
+          <ItemCapability name="MeleeWeaponCapability">
+            <ItemCapabilityParameters>
+              <ItemCapabilityParameter name="damageAmount" type="int" value="15" />
+              <ItemCapabilityParameter name="damageType" type="string" value="Pierce" />
+            </ItemCapabilityParameters>
+          </ItemCapability>
+        </ExtendedParameters>
+      </Component>
     </Components>
   </EntityTemplate>
   <EntityTemplate name="SyringeGun">
@@ -42,7 +78,16 @@
       <Component name="SpriteComponent"></Component>
       <Component name="BasicInteractableComponent"></Component>
       <Component name="BasicMoverComponent"></Component>
-      <Component name="BasicItemComponent"></Component>
+      <Component name="BasicItemComponent">
+        <ExtendedParameters>
+          <ItemCapability name="MeleeWeaponCapability">
+            <ItemCapabilityParameters>
+              <ItemCapabilityParameter name="damageAmount" type="int" value="10" />
+              <ItemCapabilityParameter name="damageType" type="string" value="Bludgeon" />
+            </ItemCapabilityParameters>
+          </ItemCapability>
+        </ExtendedParameters>
+      </Component>
     </Components>
   </EntityTemplate>
   <EntityTemplate name="Medical_Vial">
@@ -51,7 +96,16 @@
       <Component name="SpriteComponent"></Component>
       <Component name="BasicInteractableComponent"></Component>
       <Component name="BasicMoverComponent"></Component>
-      <Component name="BasicItemComponent"></Component>
+      <Component name="BasicItemComponent">
+        <ExtendedParameters>
+          <ItemCapability name="MeleeWeaponCapability">
+            <ItemCapabilityParameters>
+              <ItemCapabilityParameter name="damageAmount" type="int" value="1" />
+              <ItemCapabilityParameter name="damageType" type="string" value="Bludgeon" />
+            </ItemCapabilityParameters>
+          </ItemCapability>
+        </ExtendedParameters>
+      </Component>
     </Components>
   </EntityTemplate>
   <EntityTemplate name="Medical_Vial_2">
@@ -60,7 +114,16 @@
       <Component name="SpriteComponent"></Component>
       <Component name="BasicInteractableComponent"></Component>
       <Component name="BasicMoverComponent"></Component>
-      <Component name="BasicItemComponent"></Component>
+      <Component name="BasicItemComponent">
+        <ExtendedParameters>
+          <ItemCapability name="MeleeWeaponCapability">
+            <ItemCapabilityParameters>
+              <ItemCapabilityParameter name="damageAmount" type="int" value="1" />
+              <ItemCapabilityParameter name="damageType" type="string" value="Bludgeon" />
+            </ItemCapabilityParameters>
+          </ItemCapability>
+        </ExtendedParameters>
+      </Component>
     </Components>
   </EntityTemplate>
   <EntityTemplate name="Medkit_Red">
@@ -69,7 +132,16 @@
       <Component name="SpriteComponent"></Component>
       <Component name="BasicInteractableComponent"></Component>
       <Component name="BasicMoverComponent"></Component>
-      <Component name="BasicItemComponent"></Component>
+      <Component name="BasicItemComponent">
+        <ExtendedParameters>
+          <ItemCapability name="MeleeWeaponCapability">
+            <ItemCapabilityParameters>
+              <ItemCapabilityParameter name="damageAmount" type="int" value="15" />
+              <ItemCapabilityParameter name="damageType" type="string" value="Bludgeon" />
+            </ItemCapabilityParameters>
+          </ItemCapability>
+        </ExtendedParameters>
+      </Component>
     </Components>
   </EntityTemplate>
   <EntityTemplate name="Medkit_White">
@@ -78,7 +150,16 @@
       <Component name="SpriteComponent"></Component>
       <Component name="BasicInteractableComponent"></Component>
       <Component name="BasicMoverComponent"></Component>
-      <Component name="BasicItemComponent"></Component>
+      <Component name="BasicItemComponent">
+        <ExtendedParameters>
+          <ItemCapability name="MeleeWeaponCapability">
+            <ItemCapabilityParameters>
+              <ItemCapabilityParameter name="damageAmount" type="int" value="15" />
+              <ItemCapabilityParameter name="damageType" type="string" value="Bludgeon" />
+            </ItemCapabilityParameters>
+          </ItemCapability>
+        </ExtendedParameters>
+      </Component>
     </Components>
   </EntityTemplate>
 </EntityTemplates>

@@ -10,7 +10,7 @@
 				<ExtendedParameters>
 					<ItemCapability name="MeleeWeaponCapability">
 						<ItemCapabilityParameters>
-							<ItemCapabilityParameter name="damageAmount" type="int" value="30" />
+							<ItemCapabilityParameter name="damageAmount" type="int" value="20" />
 							<ItemCapabilityParameter name="damageType" type="string" value="Bludgeon" />
 						</ItemCapabilityParameters>
 					</ItemCapability>
@@ -29,7 +29,21 @@
 			<Component name="SpriteComponent"></Component>
 			<Component name="BasicInteractableComponent"></Component>
 			<Component name="BasicMoverComponent"></Component>
-			<Component name="BasicItemComponent"></Component>
+			<Component name="BasicItemComponent">
+        <ExtendedParameters>
+          <ItemCapability name="MeleeWeaponCapability">
+            <ItemCapabilityParameters>
+              <ItemCapabilityParameter name="damageAmount" type="int" value="8" />
+              <ItemCapabilityParameter name="damageType" type="string" value="Bludgeon" />
+            </ItemCapabilityParameters>
+          </ItemCapability>
+          <ItemCapability name="ToolCapability">
+            <ItemCapabilityVerbs>
+              <ItemCapabilityVerb name="Weld" priority="0" />
+            </ItemCapabilityVerbs>
+          </ItemCapability>
+        </ExtendedParameters>
+      </Component>
 		</Components>
 	</EntityTemplate>
 	<EntityTemplate name="Wrench">
@@ -38,7 +52,21 @@
 			<Component name="SpriteComponent"></Component>
 			<Component name="BasicInteractableComponent"></Component>
 			<Component name="BasicMoverComponent"></Component>
-			<Component name="BasicItemComponent"></Component>
+			<Component name="BasicItemComponent">
+        <ExtendedParameters>
+          <ItemCapability name="MeleeWeaponCapability">
+            <ItemCapabilityParameters>
+              <ItemCapabilityParameter name="damageAmount" type="int" value="20" />
+              <ItemCapabilityParameter name="damageType" type="string" value="Bludgeon" />
+            </ItemCapabilityParameters>
+          </ItemCapability>
+          <ItemCapability name="ToolCapability">
+            <ItemCapabilityVerbs>
+              <ItemCapabilityVerb name="Wrench" priority="0" />
+            </ItemCapabilityVerbs>
+          </ItemCapability>
+        </ExtendedParameters>
+      </Component>
 		</Components>
 	</EntityTemplate>
 	<EntityTemplate name="Mop">
@@ -47,7 +75,21 @@
 			<Component name="SpriteComponent"></Component>
 			<Component name="BasicInteractableComponent"></Component>
 			<Component name="BasicMoverComponent"></Component>
-			<Component name="BasicItemComponent"></Component>
+			<Component name="BasicItemComponent">
+        <ExtendedParameters>
+          <ItemCapability name="MeleeWeaponCapability">
+            <ItemCapabilityParameters>
+              <ItemCapabilityParameter name="damageAmount" type="int" value="10" />
+              <ItemCapabilityParameter name="damageType" type="string" value="Bludgeon" />
+            </ItemCapabilityParameters>
+          </ItemCapability>
+          <ItemCapability name="ToolCapability">
+            <ItemCapabilityVerbs>
+              <ItemCapabilityVerb name="Mop" priority="0" />
+            </ItemCapabilityVerbs>
+          </ItemCapability>
+        </ExtendedParameters>
+      </Component>
 		</Components>
 	</EntityTemplate>
 </EntityTemplates>

@@ -98,6 +98,7 @@ namespace SGO
             {
                 SendSpawnEntity(e, client);
             }
+            SendEntityManagerInit(client);
         }
 
 
@@ -166,6 +167,14 @@ namespace SGO
             message.Write(e.name);
             message.Write(e.Uid);
             m_netServer.SendToAll(message, NetDeliveryMethod.ReliableOrdered);
+        }
+
+        private void SendEntityManagerInit(NetConnection client)
+        {
+            NetOutgoingMessage message = m_netServer.CreateMessage();
+            message.Write((byte)NetMessage.EntityManagerMessage);
+            message.Write((int)EntityManagerMessage.InitializeEntities);
+            m_netServer.SendMessage(message, client, NetDeliveryMethod.ReliableOrdered);
         }
 
         private void SendSpawnEntity(Entity e, NetConnection client)

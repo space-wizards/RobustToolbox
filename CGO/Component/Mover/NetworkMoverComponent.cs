@@ -49,23 +49,25 @@ namespace CGO
             base.Update(frameTime);
             if (interpolating)
             {
+                movedtime = movedtime + frameTime;
                 Vector2D delta = targetPosition - Owner.Position;
                 if (movedtime >= movetime)
                 {
-                    targetPosition = Owner.Position;
-                    startPosition = Owner.Position;
+                    //targetPosition = Owner.Position;
+                    Owner.Position = targetPosition;
+                    //startPosition = Owner.Position;
+                    startPosition = targetPosition;
                     interpolating = false;
                     //movedtime = 0;
                 }
                 else
                 {
-                    movedtime = movedtime + frameTime;
                     float X = Ease(movedtime, startPosition.X, targetPosition.X, movetime);
                     float Y = Ease(movedtime, startPosition.Y, targetPosition.Y, movetime);
                     Owner.Position = new Vector2D(X, Y);
-                    Owner.Moved();
                 }
 
+                Owner.Moved();
             }
         }
         

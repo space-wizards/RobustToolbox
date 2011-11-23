@@ -57,6 +57,7 @@
     <Compile Include="Component\Equippable\EquippableComponent.cs" />
     <Compile Include="Component\Hands\HumanHandsComponent.cs" />
     <Compile Include="Component\Damageable\Health\HealthComponent.cs" />
+    <Compile Include="Component\Input\ContextMenuComponent.cs" />
     <Compile Include="Component\Item\BasicItemComponent.cs" />
     <Compile Include="Component\Light\PointLightComponent.cs" />
     <Compile Include="Component\Mover\KeyBindingMoverComponent.cs" />
@@ -69,6 +70,7 @@
     <Compile Include="Component\Renderable\ISpriteComponent.cs" />
     <Compile Include="Component\Renderable\MobSpriteComponent.cs" />
     <Compile Include="Component\Renderable\SpriteComponent.cs" />
+    <Compile Include="ContextMenuEntry.cs" />
     <Compile Include="Entity.cs" />
     <Compile Include="EntityFactory.cs" />
     <Compile Include="EntityManager.cs" />

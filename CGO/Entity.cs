@@ -188,6 +188,20 @@ namespace CGO
         {
         }
 
+        /// <summary>
+        /// Requests Description string from components and returns it. If no component answers, returns default description from template.
+        /// </summary>
+        public string GetDescriptionString() //This needs to go here since it can not be bound to any single component.
+        {
+            List<ComponentReplyMessage> replies = new List<ComponentReplyMessage>();
+
+            this.SendMessage(this, ComponentMessageType.GetDescriptionString, replies);
+
+            if (replies.Any())
+                return (string)replies.First(x => x.messageType == ComponentMessageType.GetDescriptionString).paramsList[0]; //If you dont answer with a string then fuck you.
+            else
+                return this.template.Description;
+        }
 
         //VARIABLES TO REFACTOR AT A LATER DATE
         /// <summary>

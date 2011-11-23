@@ -613,7 +613,7 @@ namespace SS3D.States
         }
         public override void MouseUp(MouseInputEventArgs e)
         {
-            if (UiManager.Singleton.MouseUp(e)) //Returns True if a component handled the event.
+            if (UiManager.Singleton.MouseUp(e))
                 return;
         }
         public override void MouseDown(MouseInputEventArgs e)
@@ -644,7 +644,6 @@ namespace SS3D.States
             }
 
             #region Object clicking
-            bool atomClicked = false;
             // Convert our click from screen -> world coordinates
             //Vector2D worldPosition = new Vector2D(e.Position.X + xTopLeft, e.Position.Y + yTopLeft);
             // A bounding box for our click
@@ -668,12 +667,12 @@ namespace SS3D.States
 
             }
 
-            if (clickedEntities.Count > 1)
+            if (clickedEntities.Any())
             {
                 Entity entToClick = (from cd in clickedEntities
                                      orderby cd.drawdepth descending
                                      orderby cd.clicked.Position.Y descending
-                                     select cd.clicked).First();
+                                     select cd.clicked).Last();
 
                 if (PlacementManager.Singleton.eraser && PlacementManager.Singleton.is_active)
                 {
@@ -681,22 +680,18 @@ namespace SS3D.States
                     return;
                 }
 
-                ClickableComponent c = (ClickableComponent)entToClick.GetComponent(SS3D_shared.GO.ComponentFamily.Click);
-                c.DispatchClick(playerController.controlledAtom.Uid);
-            }
-            else if (clickedEntities.Count == 1)
-            {
-                if (PlacementManager.Singleton.eraser && PlacementManager.Singleton.is_active)
+                if (e.Buttons == GorgonLibrary.InputDevices.MouseButtons.Left)
                 {
-                    PlacementManager.Singleton.HandleDeletion(clickedEntities[0].clicked);
+                    ClickableComponent c = (ClickableComponent)entToClick.GetComponent(SS3D_shared.GO.ComponentFamily.Click);
+                    c.DispatchClick(playerController.controlledAtom.Uid);
+                }
+                else if (e.Buttons == GorgonLibrary.InputDevices.MouseButtons.Right)
+                {
+                    UiManager.Singleton.Components.Add( new SS3D.UserInterface.ContextMenu(entToClick, mousePosScreen, true) );
                     return;
                 }
-
-                ClickableComponent c = (ClickableComponent)clickedEntities[0].clicked.GetComponent(SS3D_shared.GO.ComponentFamily.Click);
-                c.DispatchClick(playerController.controlledAtom.Uid);
             }
-
-            if (!atomClicked)
+            else
             {
                 System.Drawing.Point clickedPoint = map.GetTileArrayPositionFromWorldPosition(mousePosWorld);
                 if (clickedPoint.X > 0 && clickedPoint.Y > 0)

@@ -156,11 +156,9 @@ namespace SGO
 
         private Type translateType(string typeName)
         {
-            switch (typeName)
+            switch (typeName.ToLowerInvariant())
             {
                 case "string":
-                    return typeof(string);
-                case "String":
                     return typeof(string);
                 case "int":
                     return typeof(int);

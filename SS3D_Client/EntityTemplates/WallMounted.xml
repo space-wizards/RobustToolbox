@@ -49,6 +49,11 @@
         </Parameters>
       </Component>
       <Component name="ClickableComponent"></Component>
+      <Component name="ContextMenuComponent">
+        <Parameters>
+          <Parameter name="addentry" type="string" value="Name=Test 123 Entry;IconName=context_bluepoint;Message=nope" />
+        </Parameters>
+      </Component>
     </Components>
     <PlacementProperties>
       <PlacementMode type="AlignWallFree"></PlacementMode>

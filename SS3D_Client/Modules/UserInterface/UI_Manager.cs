@@ -14,6 +14,8 @@ using GorgonLibrary.Graphics;
 
 using ClientInterfaces;
 using ClientResourceManager;
+using CGO;
+
 
 namespace SS3D.UserInterface
 {
@@ -70,6 +72,7 @@ namespace SS3D.UserInterface
                 current.Dispose();
             componentsToDispose = null;
         }
+
 
         /// <summary>
         ///  Calls the custom Update Method for Components. This allows components to update ui elements if they implement the the needed method.

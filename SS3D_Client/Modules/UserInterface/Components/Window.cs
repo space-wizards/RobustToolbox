@@ -23,7 +23,7 @@ namespace SS3D.UserInterface
         private bool dragging = false;
         private Vector2D draggingOffset = new Vector2D();
 
-        private const int titleBuffer = 2;
+        private const int titleBuffer = 1;
 
         public Color TitleColor1 = Color.SlateGray;
         public Color TitleColor2 = Color.DarkSlateGray;

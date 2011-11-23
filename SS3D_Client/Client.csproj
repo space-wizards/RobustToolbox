@@ -166,6 +166,8 @@
     <Compile Include="Modules\UserInterface\Components\Button.cs" />
     <Compile Include="Modules\UserInterface\Components\Chatbox.cs" />
     <Compile Include="Modules\UserInterface\Components\Checkbox.cs" />
+    <Compile Include="Modules\UserInterface\Components\ContextMenu.cs" />
+    <Compile Include="Modules\UserInterface\Components\ExamineWindow.cs" />
     <Compile Include="Modules\UserInterface\Components\TileSpawnPanel.cs" />
     <Compile Include="Modules\UserInterface\Components\SimpleImageButton.cs" />
     <Compile Include="Modules\UserInterface\Components\EntitySpawnPanel.cs" />
@@ -269,6 +271,7 @@
     </Content>
     <Content Include="EntityTemplates\WallMounted.xml">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      <SubType>Designer</SubType>
     </Content>
     <Content Include="KeyBindings.xml">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>

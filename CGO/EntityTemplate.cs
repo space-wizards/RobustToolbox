@@ -38,6 +38,13 @@ namespace CGO
         public List<int> mountingPoints { get; private set; }
 
         /// <summary>
+        /// Description for the entity. Used by default examine handlers.
+        /// </summary>
+        public string Description { get {return description;} private set{description = value;} }
+
+        private string description = "There is nothing special about this object.";
+
+        /// <summary>
         /// Name of the entity template eg. "HumanMob"
         /// </summary>
         private string m_name;
@@ -92,6 +99,7 @@ namespace CGO
                 ///Add the component to the entity
                 e.AddComponent(component.Family, component);
             }
+
             e.name = Name;
             e.template = this;
             return e;
@@ -133,8 +141,10 @@ namespace CGO
                 foreach (XElement t_componentParameter in t_componentParameters)
                 {
                     Type paramtype = translateType(t_componentParameter.Attribute("type").Value);
+
                     if (paramtype == null)
                         break; //TODO THROW ERROR
+
                     parameters[componentname].Add(new ComponentParameter(t_componentParameter.Attribute("name").Value, 
                                                                          paramtype, 
                                                                          t_componentParameter.Attribute("value").Value)
@@ -176,15 +186,16 @@ namespace CGO
                     }
                 }
             }
+
+            var t_description = templateElement.Element("Description");
+            if (t_description != null) description = t_description.Attribute("string").Value;
         }
 
         private Type translateType(string typeName)
         {
-            switch(typeName)
+            switch(typeName.ToLowerInvariant())
             {
                 case "string":
-                    return typeof(string);
-                case "String":
                     return typeof(string);
                 case "int":
                     return typeof(int);

@@ -50,6 +50,7 @@
     <Compile Include="ComponentParameter.cs" />
     <Compile Include="Component\ClickableComponent.cs" />
     <Compile Include="Component\Collidable\CollidableComponent.cs" />
+    <Compile Include="Component\Collidable\TriggerableComponent.cs" />
     <Compile Include="Component\Collider\ColliderComponent.cs" />
     <Compile Include="Component\Damageable\DamageableComponent.cs" />
     <Compile Include="Component\Equipment\EquipmentComponent.cs" />

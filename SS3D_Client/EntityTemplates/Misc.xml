@@ -1,0 +1,19 @@
+﻿<?xml version="1.0" encoding="utf-8" ?>
+<EntityTemplates>
+  <EntityTemplate name="Puddle">
+    <Components>
+      <Component name="NetworkMoverComponent"></Component>
+      <Component name="SpriteComponent">
+        <Parameters>
+          <Parameter name="addsprite" type="string" value="Puddle" />
+        </Parameters>
+      </Component>
+      <Component name="ClickableComponent"></Component>
+      <Component name="TriggerableComponent">
+        <Parameters>
+          <Parameter name="TweakAABBtop" type="float" value="30" />
+        </Parameters>
+      </Component>
+    </Components>
+  </EntityTemplate>
+</EntityTemplates>

@@ -16,6 +16,10 @@ namespace ClientServices.Map.Tiles.Wall
         private Sprite plainWall;
         private Sprite wallCorner1;
         private Sprite wallCorner2;
+        public bool IsHardCollidable
+        {
+            get { return true; }
+        }
         public Wall(Sprite _sprite, Sprite _side, TileState state, float size, Vector2D _position, Point _tilePosition, ILightManager _lightManager)
             : base(_sprite, _side, state, size, _position, _tilePosition, _lightManager)
         {

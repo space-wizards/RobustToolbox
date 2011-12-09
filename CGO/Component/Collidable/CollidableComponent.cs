@@ -41,6 +41,7 @@ namespace CGO
         public event EventHandler OnBump;
 
         private bool collisionEnabled = true;
+        protected bool isHardCollidable = true;
 
         public CollidableComponent()
         {
@@ -212,6 +213,10 @@ namespace CGO
             Owner.SendMessage(this, ComponentMessageType.Bumped, null);
             Owner.SendComponentNetworkMessage(this, Lidgren.Network.NetDeliveryMethod.ReliableUnordered, ComponentMessageType.Bumped);
         }
+
+
+        public bool IsHardCollidable
+        { get { return isHardCollidable; } }
         #endregion
     }
 }

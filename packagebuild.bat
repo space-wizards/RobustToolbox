@@ -10,10 +10,7 @@ mkdir %dir%\bin\client
 mkdir %dir%\bin\client\client
 mkdir %dir%\bin\server
 mkdir %dir%\Media
-copy Media\media.gorPack %dir%\Media
-copy Media\Interface1.gui %dir%\Media
-copy Media\Interface2.gui %dir%\Media
-copy Media\Interface3.gui %dir%\Media
+copy Media\ResourcePack.zip %dir%\Media
 copy Buildfiles\* %dir%
 
 xcopy /E SS3D_Client\bin\Release\* %dir%\bin\client\client

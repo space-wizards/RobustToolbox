@@ -45,6 +45,7 @@
     <Compile Include="ComponentManager.cs" />
     <Compile Include="ComponentParameter.cs" />
     <Compile Include="Component\Actor\BasicActorComponent.cs" />
+    <Compile Include="Component\Think\ThinkHostComponent.cs" />
     <Compile Include="Component\WorktopComponent.cs" />
     <Compile Include="Component\WallMountedComponent.cs" />
     <Compile Include="Component\ClickableComponent.cs" />

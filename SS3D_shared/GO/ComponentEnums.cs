@@ -33,7 +33,9 @@ namespace SS3D_shared.GO
         Damageable,
         Equippable,
         WallMounted, //Provides methods to react to changing tiles. Intended for wall mounted objects.
-        ContextMenu
+        ContextMenu,
+        Think, // Holds more specific scripts that need to respond to event messages
+
     }
 
     public enum ItemComponentNetMessage

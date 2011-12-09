@@ -74,7 +74,11 @@ namespace SS3D.Modules
             {
                 if (AABB.collidable.AABB.IntersectsWith(collider))
                 {
-                    collided = true;
+                    if (AABB.IsHardCollider) //If the collider is supposed to prevent movement
+                    {
+                        collided = true;
+                    }
+
                     if (!suppressBump)
                         AABB.collidable.Bump();
                 }
@@ -280,10 +284,12 @@ namespace SS3D.Modules
     {
         public ICollidable collidable;
         public CollidablePoint[] points;
+        public bool IsHardCollider;
 
         public CollidableAABB(ICollidable _collidable)
         {
             collidable = _collidable;
+            IsHardCollider = collidable.IsHardCollidable;
             points = new CollidablePoint[4];
             float Top = collidable.AABB.Top;
             float Bottom = collidable.AABB.Bottom;

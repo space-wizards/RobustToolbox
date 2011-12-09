@@ -153,7 +153,7 @@ namespace SS3D.States
 
         public override void FormResize()
         {
-            throw new NotImplementedException();
+            //throw new NotImplementedException();
         }
 
         void mNetworkMgr_MessageArrived(NetworkManager netMgr, NetIncomingMessage msg)

@@ -35,11 +35,13 @@ namespace SS3D.UserInterface
 
         private StatHealthComponent healthComponent;
         private Sprite backgroundSprite;
-        private Sprite playerSprite;
+
         private Label name;
         private GorgonLibrary.Graphics.Font font;
         private int width = 125;
         private int height = 200;
+
+        private TargetingDummy targetArea = new TargetingDummy();
 
         private int flickCounter = 0;
         private int noiseStep = 0;
@@ -89,23 +91,37 @@ namespace SS3D.UserInterface
             statPanelBorder.Draw(new Rectangle(renderPos.X, renderPos.Y, (int)width, (int)height));
 
             renderImage.EndDrawing();
+        }
 
+        public override bool MouseDown(MouseInputEventArgs e)
+        {
+            return targetArea.MouseDown(e);
+        }
+
+        public override void Update()
+        {
+            base.Update();
+            targetArea.Update();
         }
 
         private void DrawPlayer()
         {
-            //TODO RE-CONNECT PLAYER SPRITES TO DISPLAY
-            if (playerSprite == null && playerController.controlledAtom != null)
-            {
-                playerSprite = Utilities.GetSpriteComponentSprite(playerController.controlledAtom);
-            }
+            ////TODO RE-CONNECT PLAYER SPRITES TO DISPLAY
+            //if (playerSprite == null && playerController.controlledAtom != null)
+            //{
+            //    playerSprite = Utilities.GetSpriteComponentSprite(playerController.controlledAtom);
+            //}
 
-            playerSprite.UniformScale = 1.5f;
-            playerSprite.Position = new Vector2D(position.X + (width / 2f) - (playerSprite.ScaledWidth / 2f), position.Y + 5);
-            playerSprite.Draw();
+            //playerSprite.UniformScale = 1.5f;
+            //playerSprite.Position = new Vector2D(position.X + (width / 2f) - (playerSprite.ScaledWidth / 2f), position.Y + 5);
+            //playerSprite.Draw();
 
-            playerSprite.UniformScale = 1.0f;
+            //playerSprite.UniformScale = 1.0f;
 
+            targetArea.Position = new Point(position.X + (int)(width / 2f) - (int)(targetArea.ClientArea.Width / 2f), position.Y + 15);
+            targetArea.Render();
+
+            #region noise
             if (flickCounter > 5)
             {
                 flick = !flick;
@@ -126,7 +142,8 @@ namespace SS3D.UserInterface
                 if (noiseStep == 10) noiseStep = 0;
                 noise.Opacity = 40;
                 noise.Draw(new Rectangle(new Point(Position.X + 6, Position.Y + 6), new Size((int)noise.Width, (int)noise.Height)));
-            }
+            } 
+            #endregion
 
         }
 

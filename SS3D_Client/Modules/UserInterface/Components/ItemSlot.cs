@@ -13,6 +13,7 @@ using GorgonLibrary.InputDevices;
 using ClientResourceManager;
 using CGO;
 using SS3D.Modules;
+using SS3D;
 
 namespace SS3D.UserInterface
 {
@@ -165,7 +166,7 @@ namespace SS3D.UserInterface
                 {
                     if ((Entity)replies[0].paramsList[0] != null)
                     {
-                        Sprite s = HelperClasses.Utilities.GetSpriteComponentSprite((Entity)replies[0].paramsList[0]);
+                        Sprite s = Utilities.GetSpriteComponentSprite((Entity)replies[0].paramsList[0]);
                         s.Position = position;
                         s.Position += new Vector2D(slot.Width / 2f - s.Width / 2f, slot.Height / 2f - s.Height / 2f);
                         s.Draw();

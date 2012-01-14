@@ -70,7 +70,7 @@ namespace SS3D
             // 
             // connectToolStripMenuItem
             // 
-            this.connectToolStripMenuItem.BackColor = System.Drawing.SystemColors.ActiveCaptionText;
+            this.connectToolStripMenuItem.BackColor = System.Drawing.SystemColors.Menu;
             this.connectToolStripMenuItem.DisplayStyle = System.Windows.Forms.ToolStripItemDisplayStyle.Text;
             this.connectToolStripMenuItem.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] {
             this.toolStripTextBox1});
@@ -81,7 +81,7 @@ namespace SS3D
             // 
             // toolStripTextBox1
             // 
-            this.toolStripTextBox1.BackColor = System.Drawing.SystemColors.MenuText;
+            this.toolStripTextBox1.BackColor = System.Drawing.SystemColors.Window;
             this.toolStripTextBox1.ForeColor = System.Drawing.SystemColors.ActiveCaptionText;
             this.toolStripTextBox1.Name = "toolStripTextBox1";
             this.toolStripTextBox1.Size = new System.Drawing.Size(100, 23);
@@ -93,11 +93,10 @@ namespace SS3D
             this.PlayerName_TextBox.Name = "PlayerName_TextBox";
             this.PlayerName_TextBox.Size = new System.Drawing.Size(100, 23);
             this.PlayerName_TextBox.Text = "George Melons";
-            this.PlayerName_TextBox.Click += new System.EventHandler(this.PlayerName_TextBox_Click);
             // 
             // disconnectToolStripMenuItem
             // 
-            this.disconnectToolStripMenuItem.BackColor = System.Drawing.SystemColors.ActiveCaptionText;
+            this.disconnectToolStripMenuItem.BackColor = System.Drawing.SystemColors.Menu;
             this.disconnectToolStripMenuItem.Enabled = false;
             this.disconnectToolStripMenuItem.ForeColor = System.Drawing.SystemColors.ActiveCaption;
             this.disconnectToolStripMenuItem.Name = "disconnectToolStripMenuItem";
@@ -107,7 +106,7 @@ namespace SS3D
             // 
             // quitToolStripMenuItem
             // 
-            this.quitToolStripMenuItem.BackColor = System.Drawing.SystemColors.ActiveCaptionText;
+            this.quitToolStripMenuItem.BackColor = System.Drawing.SystemColors.Menu;
             this.quitToolStripMenuItem.ForeColor = System.Drawing.SystemColors.ActiveCaption;
             this.quitToolStripMenuItem.Name = "quitToolStripMenuItem";
             this.quitToolStripMenuItem.Size = new System.Drawing.Size(160, 22);
@@ -144,6 +143,7 @@ namespace SS3D
             this.MainMenuStrip = this.menuStrip1;
             this.Name = "MainWindow";
             this.Text = "Space Station 13";
+            this.FormClosing += new System.Windows.Forms.FormClosingEventHandler(this.MainWindow_FormClosing);
             this.Load += new System.EventHandler(this.MainWindow_Load);
             this.menuStrip1.ResumeLayout(false);
             this.menuStrip1.PerformLayout();

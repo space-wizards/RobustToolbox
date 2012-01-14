@@ -2,11 +2,6 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
-using SS3D.UserInterface;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
 using System.Drawing;
 using GorgonLibrary;
 using GorgonLibrary.Graphics;
@@ -15,6 +10,7 @@ using GorgonLibrary.GUI;
 using SS3D.Modules.Network;
 using Lidgren.Network;
 using SS3D_shared;
+using SS3D.UserInterface;
 
 namespace SS3D.UserInterface
 {

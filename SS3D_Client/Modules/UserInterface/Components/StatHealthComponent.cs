@@ -15,8 +15,6 @@ using SS3D_shared.GO;
 using SS3D_shared;
 using ClientResourceManager;
 
-using SS3D_shared;
-
 namespace SS3D.UserInterface
 {
     public class StatHealthComponent : GuiComponent

@@ -41,26 +41,55 @@ namespace SS3D
 {
     public partial class MainWindow : Form
     {
-        #region Variables.
+        #region Fields
         private Input _input = null;								// Input devices interface.
         private Mouse _mouse = null;								// Mouse interface.
         private Keyboard _keyboard = null;							// Keyboard interface.
-
-        private Modules.StateManager stateMgr;
+        private StateManager stateMgr;
         private Program prg;
         private PlacementOption alignType = PlacementOption.AlignNone;
         private Type atomSpawnType = null;
         private Type tileSpawnType;
         public bool editMode = false;
         public Dictionary<string, Type> atomTypes;
-
         #endregion
 
+        #region Properties
+        public Type GetAtomSpawnType()
+        {
+            return atomSpawnType;
+        }
+
+        public Type GetTileSpawnType()
+        {
+            return tileSpawnType;
+        }
+        #endregion
+
+        #region Methods
+        #region Constructors
         public MainWindow(Program _prg)
         {
             prg = _prg;
             stateMgr = prg.mStateMgr;
             InitializeComponent();
+        }
+        #endregion
+
+        #region EventHandlers
+        private void Gorgon_Idle(object sender, FrameEventArgs e)
+        {
+            // Update networking
+            prg.mNetworkMgr.UpdateNetwork();
+
+            // Update the state manager - this will update the active state.
+            prg.mStateMgr.Update(e);
+
+            //Update the other NEW GUI shit.
+            UiManager.Singleton.Update();
+            UiManager.Singleton.Render();
+
+            prg.NetGrapher.Update();
         }
 
         private void MainWindow_Load(object sender, EventArgs e)
@@ -78,11 +107,116 @@ namespace SS3D
 
             stateMgr.Startup(typeof(ConnectMenu));
         }
-        
+
+        void MainWindow_ResizeEnd(object sender, EventArgs e)
+        {
+            _mouse.SetPositionRange(0, 0, Gorgon.CurrentClippingViewport.Width, Gorgon.CurrentClippingViewport.Height);
+            stateMgr.mCurrentState.FormResize();
+        }
+
+        private void MainWindow_FormClosing(object sender, FormClosingEventArgs e)
+        {
+            if (disconnectToolStripMenuItem.Enabled) { prg.mNetworkMgr.Disconnect(); }
+        }
+
+        /// <summary>
+        /// Handles any keydown events.
+        /// </summary>
+        /// <param name="sender">The source of the event.</param>
+        /// <param name="e">The <see cref="GorgonLibrary.InputDevices.KeyboardInputEventArgs"/> instance containing the event data.</param>
+        private void KeyDownEvent(object sender, KeyboardInputEventArgs e)
+        {
+            stateMgr.KeyDown(e);
+        }
+
+        /// <summary>
+        /// Handles any keyup events.
+        /// </summary>
+        /// <param name="sender">The source of the event.</param>
+        /// <param name="e">The <see cref="GorgonLibrary.InputDevices.KeyboardInputEventArgs"/> instance containing the event data.</param>
+        private void KeyUpEvent(object sender, KeyboardInputEventArgs e)
+        {
+            stateMgr.KeyUp(e);
+        }
+
+        /// <summary>
+        /// Handles mouse wheel input.
+        /// </summary>
+        /// <param name="sender">The source of the event.</param>
+        /// <param name="e">The <see cref="GorgonLibrary.InputDevices.MouseInputEventArgs"/> instance containing the event data.</param>
+        private void MouseWheelMoveEvent(object sender, MouseInputEventArgs e)
+        {
+            stateMgr.MouseWheelMove(e);
+        }
+
+        /// <summary>
+        /// Handles any mouse input.
+        /// </summary>
+        /// <param name="sender">The source of the event.</param>
+        /// <param name="e">The <see cref="GorgonLibrary.InputDevices.MouseInputEventArgs"/> instance containing the event data.</param>
+        private void MouseMoveEvent(object sender, MouseInputEventArgs e)
+        {
+            stateMgr.MouseMove(e);
+        }
+
+        /// <summary>
+        /// Handles any mouse input.
+        /// </summary>
+        /// <param name="sender">The source of the event.</param>
+        /// <param name="e">The <see cref="GorgonLibrary.InputDevices.MouseInputEventArgs"/> instance containing the event data.</param>
+        private void MouseDownEvent(object sender, MouseInputEventArgs e)
+        {
+            if (e.Position.Y > menuStrip1.Height)
+                stateMgr.MouseDown(e);
+        }
+
+        /// <summary>
+        /// Handles any mouse input.
+        /// </summary>
+        /// <param name="sender">The source of the event.</param>
+        /// <param name="e">The <see cref="GorgonLibrary.InputDevices.MouseInputEventArgs"/> instance containing the event data.</param>
+        private void MouseUpEvent(object sender, MouseInputEventArgs e)
+        {
+            if (e.Position.Y > menuStrip1.Height)
+                stateMgr.MouseUp(e);
+        }
+
+        private void quitToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            Gorgon.Terminate();
+            stateMgr.Shutdown();
+            Environment.Exit(0);
+        }
+
+        private void toolStripTextBox1_KeyPress(object sender, KeyPressEventArgs e)
+        {
+            if (e.KeyChar == '\r')
+            {
+                ConfigManager.Singleton.Configuration.PlayerName = PlayerName_TextBox.Text;
+                ConfigManager.Singleton.Save();
+                ((SS3D.States.ConnectMenu)stateMgr.mCurrentState).ipTextboxIP = toolStripTextBox1.Text;
+                ((SS3D.States.ConnectMenu)stateMgr.mCurrentState).StartConnect();
+                connectToolStripMenuItem.Enabled = false;
+                disconnectToolStripMenuItem.Enabled = true;
+                menuToolStripMenuItem.HideDropDown();
+            }
+        }
+
+        private void disconnectToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            prg.mNetworkMgr.Disconnect();
+            stateMgr.RequestStateChange(typeof(SS3D.States.ConnectMenu));
+            connectToolStripMenuItem.Enabled = true;
+            disconnectToolStripMenuItem.Enabled = false;
+            menuToolStripMenuItem.HideDropDown();
+        }
+        #endregion
+
+        #region Private
         private void SetupGorgon()
         {
             this.Size = new Drawing.Size((int)ConfigManager.Singleton.Configuration.DisplayWidth, (int)ConfigManager.Singleton.Configuration.DisplayHeight);
-            
+
             Gorgon.Initialize(true, false);
             Gorgon.SetMode(this);
             Gorgon.AllowBackgroundRendering = true;
@@ -131,140 +265,11 @@ namespace SS3D
         {
             ClientServices.ServiceManager.Singleton.AddService(UiManager.Singleton);
         }
+        #endregion
 
-        void Gorgon_Idle(object sender, FrameEventArgs e)
-        {
-            // Update networking
-            prg.mNetworkMgr.UpdateNetwork();
-
-            // Update the state manager - this will update the active state.
-            prg.mStateMgr.Update(e);
-
-            //Update the other NEW GUI shit.
-            UiManager.Singleton.Update();
-            UiManager.Singleton.Render();
-
-            prg.NetGrapher.Update();
-        }
-
-        void MainWindow_ResizeEnd(object sender, EventArgs e)
-        {
-            _mouse.SetPositionRange(0, 0, Gorgon.CurrentClippingViewport.Width, Gorgon.CurrentClippingViewport.Height);
-            stateMgr.mCurrentState.FormResize();
-        }
-
-         /// <summary>
-		/// Handles any keydown events.
-		/// </summary>
-		/// <param name="sender">The source of the event.</param>
-		/// <param name="e">The <see cref="GorgonLibrary.InputDevices.KeyboardInputEventArgs"/> instance containing the event data.</param>
-        private void KeyDownEvent(object sender, KeyboardInputEventArgs e)
-        {
-            stateMgr.KeyDown(e);
-        }
-        /// <summary>
-        /// Handles any keyup events.
-        /// </summary>
-        /// <param name="sender">The source of the event.</param>
-        /// <param name="e">The <see cref="GorgonLibrary.InputDevices.KeyboardInputEventArgs"/> instance containing the event data.</param>
-        private void KeyUpEvent(object sender, KeyboardInputEventArgs e)
-        {
-            stateMgr.KeyUp(e);
-        }
-
-        /// <summary>
-        /// Handles mouse wheel input.
-        /// </summary>
-        /// <param name="sender">The source of the event.</param>
-        /// <param name="e">The <see cref="GorgonLibrary.InputDevices.MouseInputEventArgs"/> instance containing the event data.</param>
-        private void MouseWheelMoveEvent(object sender, MouseInputEventArgs e)
-        {
-            stateMgr.MouseWheelMove(e);
-        }       
-
-        /// <summary>
-		/// Handles any mouse input.
-		/// </summary>
-		/// <param name="sender">The source of the event.</param>
-		/// <param name="e">The <see cref="GorgonLibrary.InputDevices.MouseInputEventArgs"/> instance containing the event data.</param>
-        private void MouseMoveEvent(object sender, MouseInputEventArgs e)
-        {
-            stateMgr.MouseMove(e);
-        }
-
-        /// <summary>
-        /// Handles any mouse input.
-        /// </summary>
-        /// <param name="sender">The source of the event.</param>
-        /// <param name="e">The <see cref="GorgonLibrary.InputDevices.MouseInputEventArgs"/> instance containing the event data.</param>
-        private void MouseDownEvent(object sender, MouseInputEventArgs e)
-        {
-            if(e.Position.Y > menuStrip1.Height)
-                stateMgr.MouseDown(e);
-        }
-
-        /// <summary>
-        /// Handles any mouse input.
-        /// </summary>
-        /// <param name="sender">The source of the event.</param>
-        /// <param name="e">The <see cref="GorgonLibrary.InputDevices.MouseInputEventArgs"/> instance containing the event data.</param>
-        private void MouseUpEvent(object sender, MouseInputEventArgs e)
-        {
-            if (e.Position.Y > menuStrip1.Height)
-                stateMgr.MouseUp(e);
-        }
-
-        /// <summary>
-        /// Handles the FormClosing event of the MainForm control.
-        /// </summary>
-        /// <param name="sender">The source of the event.</param>
-        /// <param name="e">The <see cref="System.Windows.Forms.FormClosingEventArgs"/> instance containing the event data.</param>
-        protected override void OnFormClosing(FormClosingEventArgs e)
-        {
-            // shutdown networking!!!
-            base.OnFormClosing(e);
-            Gorgon.Terminate();
-        }
-
-        private void quitToolStripMenuItem_Click(object sender, EventArgs e)
-        {
-            Gorgon.Terminate();
-            stateMgr.Shutdown();
-            Environment.Exit(0);
-        }
-
-        private void toolStripTextBox1_KeyPress(object sender, KeyPressEventArgs e)
-        {
-            if (e.KeyChar == '\r')
-            {
-                ConfigManager.Singleton.Configuration.PlayerName = PlayerName_TextBox.Text;
-                ConfigManager.Singleton.Save();
-                ((SS3D.States.ConnectMenu)stateMgr.mCurrentState).ipTextboxIP = toolStripTextBox1.Text;
-                ((SS3D.States.ConnectMenu)stateMgr.mCurrentState).StartConnect();
-                connectToolStripMenuItem.Enabled = false;
-                disconnectToolStripMenuItem.Enabled = true;
-                menuToolStripMenuItem.HideDropDown();
-            }
-        }
-        private void disconnectToolStripMenuItem_Click(object sender, EventArgs e)
-        {
-            prg.mNetworkMgr.Disconnect();
-            stateMgr.RequestStateChange(typeof(SS3D.States.ConnectMenu));
-            connectToolStripMenuItem.Enabled = true;
-            disconnectToolStripMenuItem.Enabled = false;
-            menuToolStripMenuItem.HideDropDown();
-        }
-
-        public Type GetAtomSpawnType()
-        {
-            return atomSpawnType;
-        }
-
-        public Type GetTileSpawnType()
-        {
-            return tileSpawnType;
-        }
-
+        #region Public
+        #endregion
+        #endregion
 
         #region Tiles
         private void turfToolStripMenuItem_Click(object sender, EventArgs e)
@@ -297,10 +302,5 @@ namespace SS3D
             tileSpawnType = null;
         }
         #endregion
-
-        private void PlayerName_TextBox_Click(object sender, EventArgs e)
-        {
-
-        }
     }
 }

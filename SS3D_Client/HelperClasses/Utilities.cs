@@ -6,10 +6,6 @@ using GorgonLibrary;
 using GorgonLibrary.Graphics;
 using CGO;
 using SS3D_shared.GO;
-using GorgonLibrary;
-using GorgonLibrary.Graphics;
-using CGO;
-using SS3D_shared.GO;
 using System.Drawing;
 
 static class Utilities

@@ -167,6 +167,8 @@
     <Compile Include="Modules\UserInterface\Components\Chatbox.cs" />
     <Compile Include="Modules\UserInterface\Components\Checkbox.cs" />
     <Compile Include="Modules\UserInterface\Components\ContextMenu.cs" />
+    <Compile Include="Modules\UserInterface\Components\TargetingDummyElement.cs" />
+    <Compile Include="Modules\UserInterface\Components\TargetingDummy.cs" />
     <Compile Include="Modules\UserInterface\Components\ExamineWindow.cs" />
     <Compile Include="Modules\UserInterface\Components\TileSpawnPanel.cs" />
     <Compile Include="Modules\UserInterface\Components\SimpleImageButton.cs" />

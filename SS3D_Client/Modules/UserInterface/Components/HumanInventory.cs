@@ -224,7 +224,7 @@ namespace SS3D.UserInterface
 
             if (heldEntity != null)
             {
-                Sprite s = SS3D.HelperClasses.Utilities.GetSpriteComponentSprite(heldEntity);
+                Sprite s = Utilities.GetSpriteComponentSprite(heldEntity);
                 s.Position = mousePos;
                 s.Draw();
             }

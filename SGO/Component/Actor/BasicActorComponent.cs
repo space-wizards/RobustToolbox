@@ -38,6 +38,9 @@ namespace SGO
                 case SS3D_shared.GO.ComponentMessageType.GetActorConnection:
                     replies.Add(new ComponentReplyMessage(SS3D_shared.GO.ComponentMessageType.ReturnActorConnection, playerSession.ConnectedClient));
                     break;
+                case SS3D_shared.GO.ComponentMessageType.GetActorSession:
+                    replies.Add(new ComponentReplyMessage(SS3D_shared.GO.ComponentMessageType.ReturnActorSession, playerSession));
+                    break;
             }
         }
     }

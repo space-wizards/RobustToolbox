@@ -3,6 +3,8 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using SS3D_shared.GO;
+using ServerInterfaces;
+using SS3D_shared;
 
 namespace SGO.Component.Item.ItemCapability
 {
@@ -18,11 +20,22 @@ namespace SGO.Component.Item.ItemCapability
             interactsWith = InteractsWith.Actor | InteractsWith.LargeObject;
         }
 
-        public override bool ApplyTo(Entity target)
+        public override bool ApplyTo(Entity target, Entity sourceActor)
         {
+            BodyPart targetedArea = BodyPart.torso;
+
+            List<ComponentReplyMessage> replies = new List<ComponentReplyMessage>();
+            sourceActor.SendMessage(this, SS3D_shared.GO.ComponentMessageType.GetActorSession, replies);
+            if (replies.Count > 0 && replies[0].messageType == SS3D_shared.GO.ComponentMessageType.ReturnActorSession)
+            {
+                IPlayerSession session = (IPlayerSession)replies[0].paramsList[0];
+                targetedArea = session.TargetedArea;
+            }
+            else throw new NotImplementedException("Actor has no session or No actor component that returns a session"); //BEEPBOOP
+
             if (target.HasComponent(SS3D_shared.GO.ComponentFamily.Damageable))
             {
-                target.SendMessage(this, ComponentMessageType.Damage, null, owner.Owner, damageAmount, damType);
+                target.SendMessage(this, ComponentMessageType.Damage, null, owner.Owner, damageAmount, damType, targetedArea);
                 return true;
             }
             return false;

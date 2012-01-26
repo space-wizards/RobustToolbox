@@ -158,7 +158,7 @@ namespace SS3D.States
 
             UiManager.Singleton.Components.Add(new HumanInventory(playerController));
             UiManager.Singleton.Components.Add(new HumanHandsGui(playerController));
-            UiManager.Singleton.Components.Add(new StatPanelComponent(playerController));
+            UiManager.Singleton.Components.Add(new StatPanelComponent(playerController, prg.mNetworkMgr));
 
             var appendagesTemp = UiManager.Singleton.GetSingleComponentByGuiComponentType(GuiComponentType.AppendagesComponent); //Better safe than sorry.
             if (appendagesTemp != null) appendagesTemp.Position = new System.Drawing.Point(Gorgon.Screen.Width - 190, Gorgon.Screen.Height - 99);

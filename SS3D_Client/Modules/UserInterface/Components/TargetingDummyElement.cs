@@ -11,6 +11,7 @@ using SS3D.UserInterface;
 using Lidgren.Network;
 using SS3D_shared;
 using ClientResourceManager;
+using SS3D.Modules;
 
 namespace SS3D.UserInterface
 {
@@ -19,16 +20,32 @@ namespace SS3D.UserInterface
         public delegate void TargetingDummyElementPressHandler(TargetingDummyElement sender);
         public event TargetingDummyElementPressHandler Clicked;
 
+        public float maxHealth = 0;
+        public float currHealth = 0;
+        public BodyPart myPart;
+
         private Sprite elementSprite;
 
         private Boolean selected = false;
         private Point click_pos;
 
-        public TargetingDummyElement(string spriteName, BodyPart part)
-            : base()
+
+        public TargetingDummyElement(string spriteName, BodyPart part, PlayerController controller)
+            : base(controller)
         {
+            myPart = part;
             elementSprite = ResMgr.Singleton.GetSprite(spriteName);
             Update();
+        }
+
+        public void Select()
+        {
+            selected = true;
+        }
+
+        public bool isSelected()
+        {
+            return selected;
         }
 
         public void ClearSelected()
@@ -44,7 +61,18 @@ namespace SS3D.UserInterface
 
         public override void Render()
         {
-            elementSprite.Color = selected ? Color.DarkRed : Color.White;
+            //elementSprite.Color = selected ? Color.DarkRed : Color.White;
+            float healthPct = currHealth / maxHealth;
+            Color healthCol = Color.WhiteSmoke;
+
+            if (healthPct > 0.75) healthCol = Color.DarkGreen;
+            else if (healthPct > 0.50) healthCol = Color.Yellow;
+            else if (healthPct > 0.25) healthCol = Color.DarkOrange;
+            else if (healthPct > 0) healthCol = Color.Red;
+            else healthCol = Color.Black;
+
+            elementSprite.Color = healthCol;
+
             elementSprite.Position = Position;
             elementSprite.Draw();
             elementSprite.Color = Color.White;

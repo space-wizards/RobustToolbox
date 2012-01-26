@@ -27,17 +27,19 @@ namespace SGO
             SendHealthUpdate(netConnection);
         }
 
-        public override void RecieveMessage(object sender, SS3D_shared.GO.ComponentMessageType type, List<ComponentReplyMessage> replies, params object[] list)
+        public override void RecieveMessage(object sender, ComponentMessageType type, List<ComponentReplyMessage> replies, params object[] list)
         {
             switch (type)
             {
-                case SS3D_shared.GO.ComponentMessageType.Damage:
-                    /// Who damaged, how much, what type
+                case ComponentMessageType.Damage:
                     ApplyDamage((Entity)list[0], (int)list[1], (DamageType)list[2]);
                     break;
                 case ComponentMessageType.GetCurrentHealth:
-                    ComponentReplyMessage reply2 = new ComponentReplyMessage(ComponentMessageType.CurrentLocationDamage, GetHealth(), GetMaxHealth());
+                    ComponentReplyMessage reply2 = new ComponentReplyMessage(ComponentMessageType.CurrentHealth, GetHealth(), GetMaxHealth());
                     replies.Add(reply2);
+                    break;
+                default:
+                    base.RecieveMessage(sender, type, replies, list);
                     break;
             }
         }

@@ -107,6 +107,7 @@ public enum PlayerSessionMessage
     AttachToAtom,
     Verb,
     JoinLobby,
+    SetTargetArea
 }
 
 public enum DoorState

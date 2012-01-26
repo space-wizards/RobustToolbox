@@ -70,7 +70,7 @@ namespace SGO
             }
         }
 
-        public override void RecieveMessage(object sender, SS3D_shared.GO.ComponentMessageType type, List<ComponentReplyMessage> replies, params object[] list)
+        public override void RecieveMessage(object sender, ComponentMessageType type, List<ComponentReplyMessage> replies, params object[] list)
         {
             switch (type)
             {
@@ -79,12 +79,12 @@ namespace SGO
                     if (damageZones.Exists(x => x.location == location))
                     {
                         DamageLocation dmgLoc = damageZones.First(x => x.location == location);
-                        ComponentReplyMessage reply1 = new ComponentReplyMessage(ComponentMessageType.CurrentLocationDamage, location, dmgLoc.UpdateTotalHealth(), dmgLoc.maxHealth);
+                        ComponentReplyMessage reply1 = new ComponentReplyMessage(ComponentMessageType.CurrentLocationHealth, location, dmgLoc.UpdateTotalHealth(), dmgLoc.maxHealth);
                         replies.Add(reply1);
                     }
                     break;
                 case ComponentMessageType.GetCurrentHealth:
-                    ComponentReplyMessage reply2 = new ComponentReplyMessage(ComponentMessageType.CurrentLocationDamage, GetHealth(), GetMaxHealth());
+                    ComponentReplyMessage reply2 = new ComponentReplyMessage(ComponentMessageType.CurrentHealth, GetHealth(), GetMaxHealth());
                     replies.Add(reply2);
                     break;
                 case ComponentMessageType.Damage:
@@ -92,6 +92,9 @@ namespace SGO
                         ApplyDamage((Entity)list[0], (int)list[1], (DamageType)list[2], (BodyPart)list[3]);
                     else//We dont have a target location
                         ApplyDamage((Entity)list[0], (int)list[1], (DamageType)list[2]);
+                    break;
+                default:
+                    base.RecieveMessage(sender, type, replies, list);
                     break;
             }
         }
@@ -109,6 +112,11 @@ namespace SGO
         protected override void SendHealthUpdate()
         {
             SendHealthUpdate(null);
+        }
+
+        public override void Update(float frameTime)
+        {
+            base.Update(frameTime);
         }
 
         protected override void SendHealthUpdate(NetConnection client)

@@ -11,23 +11,29 @@ using SS3D.UserInterface;
 using Lidgren.Network;
 using SS3D_shared;
 using ClientResourceManager;
+using CGO;
+using SS3D_shared.GO;
+using SS3D.Modules;
+using SS3D.Modules.Network;
 
 namespace SS3D.UserInterface
 {
     class TargetingDummy : GuiComponent
     {
         List<TargetingDummyElement> elements = new List<TargetingDummyElement>();
+        private NetworkManager netMgr;
 
-        public TargetingDummy()
-            : base()
+        public TargetingDummy(PlayerController controller, NetworkManager _netMgr)
+            : base(controller)
         {
-            TargetingDummyElement head = new TargetingDummyElement("dummy_head", BodyPart.head);
-            TargetingDummyElement torso = new TargetingDummyElement("dummy_torso", BodyPart.torso);
-            TargetingDummyElement groin = new TargetingDummyElement("dummy_groin", BodyPart.groin);
-            TargetingDummyElement arm_l = new TargetingDummyElement("dummy_arm_l", BodyPart.arm_l);
-            TargetingDummyElement arm_r = new TargetingDummyElement("dummy_arm_r", BodyPart.arm_r);
-            TargetingDummyElement leg_l = new TargetingDummyElement("dummy_leg_l", BodyPart.leg_l);
-            TargetingDummyElement leg_r = new TargetingDummyElement("dummy_leg_r", BodyPart.leg_r);
+            netMgr = _netMgr;
+            TargetingDummyElement head = new TargetingDummyElement("dummy_head", BodyPart.head, controller);
+            TargetingDummyElement torso = new TargetingDummyElement("dummy_torso", BodyPart.torso, controller);
+            TargetingDummyElement groin = new TargetingDummyElement("dummy_groin", BodyPart.groin, controller);
+            TargetingDummyElement arm_l = new TargetingDummyElement("dummy_arm_l", BodyPart.arm_l, controller);
+            TargetingDummyElement arm_r = new TargetingDummyElement("dummy_arm_r", BodyPart.arm_r, controller);
+            TargetingDummyElement leg_l = new TargetingDummyElement("dummy_leg_l", BodyPart.leg_l, controller);
+            TargetingDummyElement leg_r = new TargetingDummyElement("dummy_leg_r", BodyPart.leg_r, controller);
             elements.Add(head);
             elements.Add(torso);
             elements.Add(groin);
@@ -47,13 +53,37 @@ namespace SS3D.UserInterface
 
         void Selected(TargetingDummyElement sender)
         {
+            //Send server targeted location
+            NetOutgoingMessage msg = netMgr.netClient.CreateMessage();
+            msg.Write((byte)NetMessage.PlayerSessionMessage);
+            msg.Write((byte)PlayerSessionMessage.SetTargetArea);
+            msg.Write((byte)sender.myPart);
+            netMgr.SendMessage(msg, NetDeliveryMethod.ReliableOrdered);
         }
 
         public override void Update()
         {
+            Entity entity;
+
+            if (playerController != null)
+                entity = (Entity)playerController.controlledAtom;
+            else
+                entity = null;
+
             clientArea = new Rectangle(Position, new Size((int)elements[0].ClientArea.Width, (int)elements[0].ClientArea.Height));
             foreach (TargetingDummyElement current in elements)
             {
+                if (entity != null && entity.HasComponent(ComponentFamily.Damageable))
+                {
+                    List<ComponentReplyMessage> replies = new List<ComponentReplyMessage>();
+                    entity.SendMessage(this, ComponentMessageType.GetCurrentLocationHealth, replies, current.myPart);
+                    if (replies.Any(x => x.messageType == ComponentMessageType.CurrentLocationHealth))
+                    {
+                        ComponentReplyMessage reply = replies.First(x => x.messageType == ComponentMessageType.CurrentLocationHealth);
+                        current.currHealth = (int)reply.paramsList[1];
+                        current.maxHealth = (int)reply.paramsList[2];
+                    }
+                }
                 current.Position = this.Position;
                 current.Update();
             }
@@ -78,6 +108,10 @@ namespace SS3D.UserInterface
         {
             if (!clientArea.Contains(new Point((int)e.Position.X, (int)e.Position.Y))) return false;
 
+            TargetingDummyElement prevSelection = (from element in elements
+                                                   where element.isSelected()
+                                                   select element).FirstOrDefault();
+
             foreach (TargetingDummyElement toClear in elements) toClear.ClearSelected();
 
             foreach (TargetingDummyElement current in elements.ToArray()) //To array because list order changes in loop.
@@ -90,6 +124,8 @@ namespace SS3D.UserInterface
                     return true;
                 }
             }
+
+            if (prevSelection != null) prevSelection.Select();
 
             return false;
         }

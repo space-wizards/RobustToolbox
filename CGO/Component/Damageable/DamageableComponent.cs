@@ -20,13 +20,16 @@ namespace CGO
             family = ComponentFamily.Damageable;
         }
 
-        public override void RecieveMessage(object sender, SS3D_shared.GO.ComponentMessageType type, List<ComponentReplyMessage> replies, params object[] list)
+        public override void RecieveMessage(object sender, ComponentMessageType type, List<ComponentReplyMessage> replies, params object[] list)
         {
             switch (type)
             {
                 case ComponentMessageType.GetCurrentHealth:
-                    ComponentReplyMessage reply2 = new ComponentReplyMessage(ComponentMessageType.CurrentLocationDamage, isDead ? 0 : 1, 1); //HANDLE THIS CORRECTLY
+                    ComponentReplyMessage reply2 = new ComponentReplyMessage(ComponentMessageType.CurrentHealth, isDead ? 0 : 1, 1); //HANDLE THIS CORRECTLY
                     replies.Add(reply2);
+                    break;
+                default:
+                    base.RecieveMessage(sender, type, replies, list);
                     break;
             }
         }

@@ -213,6 +213,7 @@
     </Content>
     <Content Include="EntityTemplates\Misc.xml">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      <SubType>Designer</SubType>
     </Content>
     <Content Include="JobDefinitions.xml">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>

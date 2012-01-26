@@ -23,6 +23,7 @@ namespace SS3D_Server.Modules
         public string name = "";
         public SessionStatus status;
         public AdminPermissions adminPermissions;
+        public BodyPart targetedArea = BodyPart.torso;
 
         public JobDefinition assignedJob;
 
@@ -85,6 +86,10 @@ namespace SS3D_Server.Modules
                     break;
                 case PlayerSessionMessage.JoinLobby:
                     JoinLobby();
+                    break;
+                case PlayerSessionMessage.SetTargetArea:
+                    BodyPart selected = (BodyPart)message.ReadByte();
+                    targetedArea = selected;
                     break;
                 default:
                     break;

@@ -177,7 +177,6 @@
     <Compile Include="Modules\UserInterface\Components\GuiComponent.cs" />
     <Compile Include="Modules\UserInterface\Components\DisconnectedScreenBlocker.cs" />
     <Compile Include="Modules\UserInterface\Components\HumanHandsGui.cs" />
-    <Compile Include="Modules\UserInterface\Components\HumanHealthComponent.cs" />
     <Compile Include="Modules\UserInterface\Components\HumanInventory.cs" />
     <Compile Include="Modules\UserInterface\Components\IGuiComponent.cs" />
     <Compile Include="Modules\UserInterface\Components\ItemSlot.cs" />

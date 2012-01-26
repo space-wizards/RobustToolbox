@@ -14,6 +14,7 @@ using SS3D_shared;
 using ClientConfigManager;
 using ClientResourceManager;
 using SS3D.HelperClasses;
+using SS3D.Modules.Network;
 
 namespace SS3D.UserInterface
 {
@@ -41,7 +42,7 @@ namespace SS3D.UserInterface
         private int width = 125;
         private int height = 200;
 
-        private TargetingDummy targetArea = new TargetingDummy();
+        private TargetingDummy targetArea;
 
         private int flickCounter = 0;
         private int noiseStep = 0;
@@ -52,9 +53,11 @@ namespace SS3D.UserInterface
         private Sprite flickSprite0;
         private Sprite flickSprite1;
 
-        public StatPanelComponent(PlayerController _playerController)
+        public StatPanelComponent(PlayerController _playerController, NetworkManager _netMgr)
             : base(_playerController)
         {
+            targetArea = new TargetingDummy(_playerController, _netMgr);
+
             componentClass = SS3D_shared.GuiComponentType.StatPanelComponent;
 
             Position = new Point(604, Gorgon.Screen.Height - 205);

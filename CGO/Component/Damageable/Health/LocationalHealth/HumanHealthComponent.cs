@@ -32,7 +32,7 @@ namespace CGO
             }
         }
 
-        public override void RecieveMessage(object sender, SS3D_shared.GO.ComponentMessageType type, List<ComponentReplyMessage> replies, params object[] list)
+        public override void RecieveMessage(object sender, ComponentMessageType type, List<ComponentReplyMessage> replies, params object[] list)
         {
             switch (type)
             {
@@ -41,13 +41,16 @@ namespace CGO
                     if (damageZones.Exists(x => x.location == location))
                     {
                         DamageLocation dmgLoc = damageZones.First(x => x.location == location);
-                        ComponentReplyMessage reply1 = new ComponentReplyMessage(ComponentMessageType.CurrentLocationDamage, location, dmgLoc.UpdateTotalHealth(), dmgLoc.maxHealth);
+                        ComponentReplyMessage reply1 = new ComponentReplyMessage(ComponentMessageType.CurrentLocationHealth, location, dmgLoc.UpdateTotalHealth(), dmgLoc.maxHealth);
                         replies.Add(reply1);
                     }
                     break;
                 case ComponentMessageType.GetCurrentHealth:
-                    ComponentReplyMessage reply2 = new ComponentReplyMessage(ComponentMessageType.CurrentLocationDamage, GetHealth(), GetMaxHealth());
+                    ComponentReplyMessage reply2 = new ComponentReplyMessage(ComponentMessageType.CurrentHealth, GetHealth(), GetMaxHealth());
                     replies.Add(reply2);
+                    break;
+                default:
+                    base.RecieveMessage(sender, type, replies, list);
                     break;
             }
         }

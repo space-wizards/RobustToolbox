@@ -19,11 +19,14 @@ namespace SS3D_Server.Modules
 
         public NetConnection connectedClient;
         public NetConnection ConnectedClient { get { return connectedClient; } }
+
         public Entity attachedAtom;
         public string name = "";
         public SessionStatus status;
         public AdminPermissions adminPermissions;
+
         public BodyPart targetedArea = BodyPart.torso;
+        public BodyPart TargetedArea { get { return targetedArea; } }
 
         public JobDefinition assignedJob;
 

@@ -91,21 +91,21 @@ namespace SGO
             if (Owner.HasComponent(SS3D_shared.GO.ComponentFamily.Actor))
             {
                 Owner.SendMessage(this, ComponentMessageType.ReceiveItemToActorInteraction, null, actor);
-                actingItem.SendMessage(this, ComponentMessageType.EnactItemToActorInteraction, null, Owner);
+                actingItem.SendMessage(this, ComponentMessageType.EnactItemToActorInteraction, null, Owner, actor);
             }
 
             //Does this ent have an item component? That item component should mediate this interaction
             else if (Owner.HasComponent(SS3D_shared.GO.ComponentFamily.Item))
             {
                 Owner.SendMessage(this, ComponentMessageType.ReceiveItemToItemInteraction, null, actor);
-                actingItem.SendMessage(this, ComponentMessageType.EnactItemToItemInteraction, null, Owner);
+                actingItem.SendMessage(this, ComponentMessageType.EnactItemToItemInteraction, null, Owner, actor);
             }
 
             //if not, does this ent have a largeobject component? That component should mediate this interaction.
             else if (Owner.HasComponent(SS3D_shared.GO.ComponentFamily.LargeObject))
             {
                 Owner.SendMessage(this, ComponentMessageType.ReceiveItemToLargeObjectInteraction, null, actor);
-                actingItem.SendMessage(this, ComponentMessageType.EnactItemToLargeObjectInteraction, null, Owner);
+                actingItem.SendMessage(this, ComponentMessageType.EnactItemToLargeObjectInteraction, null, Owner, actor);
             }
         }
 

@@ -30,7 +30,7 @@ namespace SGO.Component.Item.ItemCapability
             verbs = new Dictionary<int, ItemCapabilityVerb>();
         }
 
-        public virtual bool ApplyTo(Entity target)
+        public virtual bool ApplyTo(Entity target, Entity sourceActor)
         {
             return false;
         }

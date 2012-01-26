@@ -26,19 +26,19 @@ namespace SGO
             switch (type)
             {
                 case ComponentMessageType.ReceiveEmptyHandToItemInteraction:
-                    HandleEmptyHandToItemInteraction((Entity)list[0]); // param 0 is the actor entity
+                    HandleEmptyHandToItemInteraction((Entity)list[0]); // param 0 is the actor entity, param 1 is the source actor entity
                     break;
                 case ComponentMessageType.ReceiveItemToItemInteraction: //This message means we were clicked on by an actor with an item in hand
-                    HandleItemToItemInteraction((Entity)list[0]); // param 0 is the actor entity
+                    HandleItemToItemInteraction((Entity)list[0]); // param 0 is the actor entity, param 1 is the source actor entity
                     break;
                 case ComponentMessageType.EnactItemToActorInteraction:
-                    ApplyTo((Entity)list[0], InteractsWith.Actor);
+                    ApplyTo((Entity)list[0], InteractsWith.Actor, (Entity)list[1]);
                     break;
                 case ComponentMessageType.EnactItemToItemInteraction:
-                    ApplyTo((Entity)list[0], InteractsWith.Item);
+                    ApplyTo((Entity)list[0], InteractsWith.Item, (Entity)list[1]);
                     break;
                 case ComponentMessageType.EnactItemToLargeObjectInteraction:
-                    ApplyTo((Entity)list[0], InteractsWith.LargeObject);
+                    ApplyTo((Entity)list[0], InteractsWith.LargeObject, (Entity)list[1]);
                     break;
                 case ComponentMessageType.PickedUp:
                     HandlePickedUp((Entity)list[0], (Hand)list[1]);
@@ -77,10 +77,10 @@ namespace SGO
         /// </summary>
         /// <param name="targetEntity">Target entity</param>
         /// <param name="targetType">Type of entity, Item, LargeObject, or Actor</param>
-        protected virtual void ApplyTo(Entity targetEntity, InteractsWith targetType)
+        protected virtual void ApplyTo(Entity targetEntity, InteractsWith targetType, Entity sourceActor)
         {
             //can be overridden in children to sort of bypass the capability system if needed.
-            ApplyCapabilities(targetEntity, targetType);
+            ApplyCapabilities(targetEntity, targetType, sourceActor);
         }
 
         private void HandleDropped()
@@ -138,7 +138,7 @@ namespace SGO
         /// ApplyTo returns true if it successfully interacted with the target, false if not.
         /// </summary>
         /// <param name="target">Target entity for interaction</param>
-        protected virtual void ApplyCapabilities(Entity target, InteractsWith targetType)
+        protected virtual void ApplyCapabilities(Entity target, InteractsWith targetType, Entity sourceActor)
         {
             var capstoapply = from c in capabilities.Values
                               where (c.interactsWith & targetType) == targetType
@@ -147,7 +147,7 @@ namespace SGO
                               
             foreach (ItemCapability capability in capstoapply)
             {
-                if (capability.ApplyTo(target))
+                if (capability.ApplyTo(target, sourceActor))
                     break;
             }
         }

@@ -132,6 +132,7 @@ namespace SS3D.UserInterface
         private void DoText()
         {
             var entity = (Entity)playerController.controlledAtom;
+
             if (entity.HasComponent(ComponentFamily.Damageable))
             {
                 HealthComponent comp = (HealthComponent)entity.GetComponent(ComponentFamily.Damageable);

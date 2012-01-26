@@ -4,6 +4,7 @@ using System.Linq;
 using System.Text;
 using SS3D_shared.GO;
 using System.Xml.Linq;
+using Lidgren.Network;
 
 namespace SGO
 {
@@ -108,7 +109,7 @@ namespace SGO
         /// Empty method for handling incoming input messages from counterpart client components
         /// </summary>
         /// <param name="message">the message object</param>
-        public virtual void HandleNetworkMessage(IncomingEntityComponentMessage message)
+        public virtual void HandleNetworkMessage(IncomingEntityComponentMessage message, NetConnection client)
         {
 
         }

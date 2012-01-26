@@ -254,7 +254,7 @@ namespace SGO
                 case EntityMessage.PositionMessage:
                     break;
                 case EntityMessage.ComponentMessage:
-                    HandleComponentMessage((IncomingEntityComponentMessage)message.message);
+                    HandleComponentMessage((IncomingEntityComponentMessage)message.message, message.client);
                     break;
                 case EntityMessage.ComponentInstantiationMessage:
                     HandleComponentInstantiationMessage(message);
@@ -268,11 +268,11 @@ namespace SGO
                 GetComponent((ComponentFamily)message.message).HandleInstantiationMessage(message.client);
         }
 
-        internal void HandleComponentMessage(IncomingEntityComponentMessage message)
+        internal void HandleComponentMessage(IncomingEntityComponentMessage message, NetConnection client)
         {
             if (components.Keys.Contains(message.componentFamily))
             {
-                components[message.componentFamily].HandleNetworkMessage(message);
+                components[message.componentFamily].HandleNetworkMessage(message, client);
             }
         }
 

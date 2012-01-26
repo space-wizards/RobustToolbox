@@ -69,9 +69,8 @@ namespace SS3D.UserInterface
         public override void Update()
         {
             var entity = (Entity)playerController.controlledAtom;
-            HealthComponent comp = (HealthComponent)entity.GetComponent(ComponentFamily.Health);
+            HealthComponent comp = (HealthComponent)entity.GetComponent(ComponentFamily.Damageable);
             healthAmount.Text = comp.GetHealth().ToString();
-
         }
 
         public override bool MouseDown(MouseInputEventArgs e)

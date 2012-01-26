@@ -44,11 +44,14 @@ namespace SS3D_shared.GO
     
     public enum DamageType
     {
-        Hit,
-        Slice,
-        Pierce,
-        Bludgeon,
-        Trip
+        Piercing,
+        Bludgeoning,
+        Slashing,
+        Toxin,
+        Burn,
+        Freeze,
+        Suffocation,
+        Untyped
     }
 
     public enum GunType

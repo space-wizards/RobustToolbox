@@ -9,7 +9,7 @@ namespace SGO.Component.Item.ItemCapability
     public class MeleeWeaponCapability : ItemCapability
     {
         public int damageAmount = 10;
-        public DamageType damType = DamageType.Hit;
+        public DamageType damType = DamageType.Bludgeoning;
 
         public MeleeWeaponCapability()
         {
@@ -41,9 +41,9 @@ namespace SGO.Component.Item.ItemCapability
                 case "damageType":
                     if (parameter.ParameterType == typeof(string))
                     {
-                        //Try to parse it. Set to hit damagetype if parsing fails
+                        //Try to parse it. Set to Bludgeoning damagetype if parsing fails
                         if(!Enum.TryParse<DamageType>((string)parameter.Parameter, true, out damType))
-                            damType = DamageType.Hit;
+                            damType = DamageType.Bludgeoning;
                     }
                     else if (parameter.ParameterType == typeof(DamageType))
                     {

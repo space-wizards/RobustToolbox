@@ -2,11 +2,14 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using SGO.Component.Think.ThinkComponent;
 
 namespace SGO
 {
     public class ThinkHostComponent : GameObjectComponent
     {
+        private List<IThinkComponent> ThinkComponents = new List<IThinkComponent>();
+
         public ThinkHostComponent()
         {
             family = SS3D_shared.GO.ComponentFamily.Think;
@@ -23,9 +26,53 @@ namespace SGO
             }
         }
 
+        public override void SetParameter(ComponentParameter parameter)
+        {
+            base.SetParameter(parameter);
+
+            switch(parameter.MemberName)
+            {
+                case "LoadThinkComponent":
+                    IThinkComponent c = GetThinkComponent((string)parameter.Parameter);
+                    if (c == null)
+                        break;
+                    ThinkComponents.Add(c);
+                    break;
+            }
+        }
+
         public void OnBump(object sender, params object[] list)
         {
-            ServerServices.LogManager.Log("Bumped!");
+            foreach (IThinkComponent c in ThinkComponents)
+            {
+                c.OnBump(sender, list);
+            }
+        }
+
+        public override void Update(float frameTime)
+        {
+            base.Update(frameTime);
+
+            foreach (IThinkComponent c in ThinkComponents)
+            {
+                c.Update(frameTime);
+            }
+        }
+
+        /// <summary>
+        /// Gets a new component instantiated of the specified type.
+        /// </summary>
+        /// <param name="componentType">type of component to make</param>
+        /// <returns>A GameObjectComponent</returns>
+        public IThinkComponent GetThinkComponent(string componentTypeName)
+        {
+            if (componentTypeName == null || componentTypeName == "")
+                return null;
+            Type t = Type.GetType("SGO.Component.Think.ThinkComponent." + componentTypeName); //Get the type
+            if (t == null || t.GetInterface("IThinkComponent") == null)
+                return null;
+
+            return (IThinkComponent)Activator.CreateInstance(t); // Return an instance
         }
 
     }

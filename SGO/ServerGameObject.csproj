@@ -45,7 +45,10 @@
     <Compile Include="ComponentManager.cs" />
     <Compile Include="ComponentParameter.cs" />
     <Compile Include="Component\Actor\BasicActorComponent.cs" />
+    <Compile Include="Component\Think\ThinkComponent\IThinkComponent.cs" />
     <Compile Include="Component\Damageable\Health\LocationalHealth\DamageLocation.cs" />
+    <Compile Include="Component\Think\ThinkComponent\PuddleThinkComponent.cs" />
+    <Compile Include="Component\Think\ThinkComponent\ThinkComponent.cs" />
     <Compile Include="Component\Damageable\Health\LocationalHealth\HumanHealthComponent.cs" />
     <Compile Include="Component\Think\ThinkHostComponent.cs" />
     <Compile Include="Component\WorktopComponent.cs" />

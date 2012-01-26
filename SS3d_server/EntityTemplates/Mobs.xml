@@ -9,7 +9,6 @@
       <Component name="HumanEquipmentComponent"></Component>
       <Component name="HumanHandsComponent"></Component>
       <Component name="HumanHealthComponent"></Component>
-      <Component name="DamageableComponent"></Component>
     </Components>
   </EntityTemplate>
 </EntityTemplates>

@@ -4,6 +4,7 @@ using System.Linq;
 using System.Text;
 using SS3D_shared;
 using SS3D_shared.GO;
+using Lidgren.Network;
 
 namespace SGO
 {
@@ -12,7 +13,7 @@ namespace SGO
     /// </summary>
     public class KeyBindingInputComponent : GameObjectComponent
     {
-        public override void HandleNetworkMessage(IncomingEntityComponentMessage message)
+        public override void HandleNetworkMessage(IncomingEntityComponentMessage message, NetConnection client)
         {
             BoundKeyFunctions keyFunction = (BoundKeyFunctions)message.messageParameters[0];
             BoundKeyState keyState = (BoundKeyState)message.messageParameters[1];

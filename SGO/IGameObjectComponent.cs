@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using SS3D_shared.GO;
+using Lidgren.Network;
 
 namespace SGO
 {
@@ -17,7 +18,7 @@ namespace SGO
         void Shutdown();
         ComponentFamily Family {get;}
         void SetParameter(ComponentParameter parameter);
-        void HandleNetworkMessage(IncomingEntityComponentMessage message);
+        void HandleNetworkMessage(IncomingEntityComponentMessage message, NetConnection client);
         void HandleInstantiationMessage(Lidgren.Network.NetConnection netConnection);
     }
 }

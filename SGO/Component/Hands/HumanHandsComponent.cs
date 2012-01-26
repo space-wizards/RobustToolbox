@@ -4,6 +4,7 @@ using System.Linq;
 using System.Text;
 using SS3D_shared;
 using SS3D_shared.GO;
+using Lidgren.Network;
 
 namespace SGO
 {
@@ -56,7 +57,7 @@ namespace SGO
             }
         }
 
-        public override void HandleNetworkMessage(IncomingEntityComponentMessage message)
+        public override void HandleNetworkMessage(IncomingEntityComponentMessage message, NetConnection client)
         {
             if (message.componentFamily == ComponentFamily.Hands)
             {

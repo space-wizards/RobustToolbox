@@ -2,27 +2,50 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using SS3D_shared.GO;
+using SS3D_shared;
+using System.Drawing;
+using ClientServices;
+using ClientInterfaces;
 
 namespace CGO
 {
-    public class DamageableComponent : GameObjectComponent
-    {
-        private float maxHealth = 100;
-        private float currentHealth = 100;
+    public class DamageableComponent : GameObjectComponent //The basic Damageable component does not recieve health updates from the server and doesnt know what its health is.
+    {                                                      //Used for things that are binary. Either broken or not broken. (windows?)
+        protected bool isDead = false;
+
         public DamageableComponent()
             : base()
         {
-            family = SS3D_shared.GO.ComponentFamily.Damageable;
+            family = ComponentFamily.Damageable;
         }
 
-        public virtual float GetHealth()
+        public override void RecieveMessage(object sender, SS3D_shared.GO.ComponentMessageType type, List<ComponentReplyMessage> replies, params object[] list)
         {
-            return currentHealth;
+            switch (type)
+            {
+                case ComponentMessageType.GetCurrentHealth:
+                    ComponentReplyMessage reply2 = new ComponentReplyMessage(ComponentMessageType.CurrentLocationDamage, isDead ? 0 : 1, 1); //HANDLE THIS CORRECTLY
+                    replies.Add(reply2);
+                    break;
+            }
         }
 
-        public float GetMaxHealth()
+        public override void HandleNetworkMessage(IncomingEntityComponentMessage message)
         {
-            return maxHealth;
+            ComponentMessageType type = (ComponentMessageType)message.messageParameters[0];
+
+            switch (type)
+            {
+                case (ComponentMessageType.HealthStatus):
+                    bool newIsDeadState = (bool)message.messageParameters[1];
+
+                    if(newIsDeadState == true && isDead == false)
+                        Owner.SendMessage(this, ComponentMessageType.Die, null);
+
+                    isDead = newIsDeadState;
+                    break;
+            }
         }
     }
 }

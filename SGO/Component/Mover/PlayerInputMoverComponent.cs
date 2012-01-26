@@ -19,7 +19,7 @@ namespace SGO
         /// Handles position messages. that should be it.
         /// </summary>
         /// <param name="message"></param>
-        public override void HandleNetworkMessage(IncomingEntityComponentMessage message)
+        public override void HandleNetworkMessage(IncomingEntityComponentMessage message, NetConnection client)
         {
             Translate(Convert.ToDouble((float)message.messageParameters[0]), Convert.ToDouble((float)message.messageParameters[1]));
         }

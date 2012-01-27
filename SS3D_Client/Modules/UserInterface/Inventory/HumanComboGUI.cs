@@ -53,6 +53,8 @@ namespace SS3D.UserInterface
 
         private bool showTabbedWindow = false;
 
+        TextSprite txtDbg = new TextSprite("comboDlgDbg", "Combo Debug", ResMgr.Singleton.GetFont("CALIBRI"));
+
         Sprite combo_BG;
         SimpleImageButton combo_close;
         SimpleImageButton combo_open;
@@ -147,6 +149,13 @@ namespace SS3D.UserInterface
                 tab_health.Render();
                 tab_equip.Render();
                 tab_craft.Render();
+
+                txtDbg.Position = new Vector2D(position.X + 20, position.Y + 15);
+                txtDbg.Color = Color.NavajoWhite;
+                if (currentTab == 1) txtDbg.Text = "Equipment";
+                if (currentTab == 2) txtDbg.Text = "Health";
+                if (currentTab == 3) txtDbg.Text = "Crafting";
+                txtDbg.Draw();
             }
             combo_open.Render();
 
@@ -157,6 +166,7 @@ namespace SS3D.UserInterface
             hand_r_bg.Draw(); //Change to something more sane.
             if (rightHand.entity != null && rightHand.heldSprite != null) 
                 rightHand.heldSprite.Draw(new Rectangle((int)hand_r_bg.Position.X + (int)((hand_r_bg.AABB.Width / 4f) * 3 - rightHand.heldSprite.AABB.Width / 2f), (int)hand_r_bg.Position.Y + (int)(hand_r_bg.AABB.Height / 2f - rightHand.heldSprite.AABB.Height / 2f), (int)rightHand.heldSprite.AABB.Width, (int)rightHand.heldSprite.AABB.Height));
+
         }
 
         public override void Update()
@@ -174,7 +184,7 @@ namespace SS3D.UserInterface
             combo_close.Update();
 
             Point tab_equip_pos = position;
-            tab_equip_pos.Offset(-26, 76); //Magic photoshop ruler numbers.
+            tab_equip_pos.Offset(-26 , 76); //Magic photoshop ruler numbers.
             tab_equip.Position = tab_equip_pos;
             tab_equip.Color = currentTab == 1 ? Color.White : col_inactive;
             tab_equip.Update();

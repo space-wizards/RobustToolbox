@@ -49,7 +49,27 @@ static class Utilities
             return Sprite;
         }
         return null;
-    }            
+    }
+
+    public static bool SpritePixelHit(Sprite toCheck, Vector2D clickPos)
+    {
+        PointF clickPoint = new PointF(clickPos.X, clickPos.Y);
+        if (!toCheck.AABB.Contains(clickPoint)) return false;
+
+        Point spritePosition = new Point((int)clickPos.X - (int)toCheck.Position.X + (int)toCheck.ImageOffset.X, (int)clickPos.Y - (int)toCheck.Position.Y + (int)toCheck.ImageOffset.Y);
+
+        GorgonLibrary.Graphics.Image.ImageLockBox imgData = toCheck.Image.GetImageData();
+
+        imgData.Lock(false);
+        Color pixColour = System.Drawing.Color.FromArgb((int)(imgData[spritePosition.X, spritePosition.Y]));
+        imgData.Dispose();
+        imgData.Unlock();
+
+        if (pixColour.A != 0)
+            return true;
+        else
+            return false;
+    } 
 }
 
 class ColorInterpolator

@@ -120,8 +120,10 @@ namespace SS3D.UserInterface
             switch (messageType)
             {
                 case ComboGuiMessage.UpdateHands:
+                    UpdateHandIcons();
                     break;
-                default: break;
+                default: 
+                    break;
             }
         }
 
@@ -131,7 +133,8 @@ namespace SS3D.UserInterface
 
             switch (messageType)
             {
-                default: break;
+                default: 
+                    break;
             }
         }
 
@@ -146,8 +149,14 @@ namespace SS3D.UserInterface
                 tab_craft.Render();
             }
             combo_open.Render();
+
             hand_l_bg.Draw();
-            hand_r_bg.Draw();
+            if (leftHand.entity != null && leftHand.heldSprite != null) 
+                leftHand.heldSprite.Draw(new Rectangle((int)hand_l_bg.Position.X + (int)(hand_l_bg.AABB.Width / 4f - leftHand.heldSprite.AABB.Width / 2f), (int)hand_l_bg.Position.Y + (int)(hand_l_bg.AABB.Height / 2f - leftHand.heldSprite.AABB.Height / 2f), (int)leftHand.heldSprite.AABB.Width, (int)leftHand.heldSprite.AABB.Height));
+
+            hand_r_bg.Draw(); //Change to something more sane.
+            if (rightHand.entity != null && rightHand.heldSprite != null) 
+                rightHand.heldSprite.Draw(new Rectangle((int)hand_r_bg.Position.X + (int)((hand_r_bg.AABB.Width / 4f) * 3 - rightHand.heldSprite.AABB.Width / 2f), (int)hand_r_bg.Position.Y + (int)(hand_r_bg.AABB.Height / 2f - rightHand.heldSprite.AABB.Height / 2f), (int)rightHand.heldSprite.AABB.Width, (int)rightHand.heldSprite.AABB.Height));
         }
 
         public override void Update()
@@ -155,7 +164,7 @@ namespace SS3D.UserInterface
             combo_BG.Position = position;
 
             Point combo_open_pos = position;
-            combo_open_pos.Offset((int)(combo_BG.Width - combo_open.ClientArea.Width), (int)combo_BG.Height);
+            combo_open_pos.Offset((int)(combo_BG.Width - combo_open.ClientArea.Width), (int)combo_BG.Height - 1);
             combo_open.Position = combo_open_pos;
             combo_open.Update();
 
@@ -176,7 +185,6 @@ namespace SS3D.UserInterface
             tab_health.Color = currentTab == 2 ? Color.White : col_inactive;
             tab_health.Update();
             
-
             Point tab_craft_pos = tab_health_pos;
             tab_craft_pos.Offset(0, 3 + tab_health.ClientArea.Height);
             tab_craft.Position = tab_craft_pos;
@@ -184,13 +192,67 @@ namespace SS3D.UserInterface
             tab_craft.Update();
 
             Point hands_pos = position;
-            hands_pos.Offset(0, (int)combo_BG.Height);
+            hands_pos.Offset(1, (int)combo_BG.Height);
             hand_l_bg.Position = hands_pos;
             hand_r_bg.Position = hands_pos;
+
+            if (playerController.controlledAtom == null)
+                return;
+
+            #region Hands UI
+            var entity = (Entity)playerController.controlledAtom;
+            HumanHandsComponent hands = (HumanHandsComponent)entity.GetComponent(ComponentFamily.Hands);
+
+            if (hands.currentHand == Hand.Left)
+            {
+                hand_l_bg.Color = Color.White;
+                hand_r_bg.Color = col_inactive;
+            }
+            else
+            {
+                hand_r_bg.Color = Color.White;
+                hand_l_bg.Color = col_inactive;
+            } 
+            #endregion
         }
 
         public override void Dispose()
         {
+        }
+
+        public void UpdateHandIcons()
+        {
+            if (playerController.controlledAtom == null)
+                return;
+
+            var entity = (Entity)playerController.controlledAtom;
+            HumanHandsComponent hands = (HumanHandsComponent)entity.GetComponent(ComponentFamily.Hands);
+
+            if (hands == null) return;
+
+            if (hands.HandSlots.Keys.Contains(Hand.Left))
+            {
+                Entity EntityL = hands.HandSlots[Hand.Left];
+                leftHand.entity = EntityL;
+                leftHand.heldSprite = Utilities.GetSpriteComponentSprite(EntityL);
+            }
+            else
+            {
+                leftHand.entity = null;
+                leftHand.heldSprite = null;
+            }
+
+            if (hands.HandSlots.Keys.Contains(Hand.Right))
+            {
+                Entity EntityR = hands.HandSlots[Hand.Right];
+                rightHand.entity = EntityR;
+                rightHand.heldSprite = Utilities.GetSpriteComponentSprite(EntityR);
+            }
+            else
+            {
+                rightHand.entity = null;
+                rightHand.heldSprite = null;
+            }
         }
 
         public override bool MouseDown(MouseInputEventArgs e)
@@ -204,7 +266,31 @@ namespace SS3D.UserInterface
                 if (tab_health.MouseDown(e)) return true;
                 if (tab_craft.MouseDown(e)) return true;
             }
+
+            #region Hands UI, Switching
+            if (Utilities.SpritePixelHit(hand_l_bg, e.Position))
+            {
+                SendSwitchHandTo(Hand.Left);
+                return true;
+            }
+
+            if (Utilities.SpritePixelHit(hand_r_bg, e.Position))
+            {
+                SendSwitchHandTo(Hand.Right);
+                return true;
+            }
+
+            #endregion
+
+
             return false;
+        }
+
+        private void SendSwitchHandTo(Hand hand)
+        {
+            Entity playerEntity = (Entity)playerController.controlledAtom;
+            HumanHandsComponent equipComponent = (HumanHandsComponent)playerEntity.GetComponent(ComponentFamily.Hands);
+            equipComponent.SendSwitchHands(hand);
         }
 
         public override bool MouseUp(MouseInputEventArgs e)

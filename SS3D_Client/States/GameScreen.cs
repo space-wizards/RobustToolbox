@@ -159,7 +159,8 @@ namespace SS3D.States
             //UiManager.Singleton.Components.Add(new HumanInventory(playerController));
             //UiManager.Singleton.Components.Add(new HumanHandsGui(playerController));
             HumanComboGUI combo = new HumanComboGUI(playerController);
-            combo.Position = new Point(800, 300);
+            combo.Update();
+            combo.Position = new Point(Gorgon.Screen.Width - combo.ClientArea.Width - 3, Gorgon.Screen.Height - combo.ClientArea.Height - 3);
             UiManager.Singleton.Components.Add(combo);
             UiManager.Singleton.Components.Add(new StatPanelComponent(playerController, prg.mNetworkMgr));
 

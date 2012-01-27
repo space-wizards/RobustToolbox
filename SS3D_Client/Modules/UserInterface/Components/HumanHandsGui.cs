@@ -157,18 +157,6 @@ namespace SS3D.UserInterface
             }
         }
 
-        public override void HandleNetworkMessage(NetIncomingMessage message)
-        {
-            HandsComponentMessage messageType = (HandsComponentMessage)message.ReadByte();
-            switch (messageType)
-            {
-                case HandsComponentMessage.UpdateHandObjects:
-                    UpdateVisibleObjects();
-                    break;
-                default: break;
-            }
-        }
-
         [Obsolete("TODO: Reimplement Drag & Drop + inventory interaction")]
         public override bool MouseDown(MouseInputEventArgs e)
         {

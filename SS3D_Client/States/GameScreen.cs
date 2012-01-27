@@ -156,15 +156,18 @@ namespace SS3D.States
             gameChat.TextSubmitted += new Chatbox.TextSubmitHandler(chatTextbox_TextSubmitted);
             UiManager.Singleton.Components.Add(gameChat);
 
-            UiManager.Singleton.Components.Add(new HumanInventory(playerController));
-            UiManager.Singleton.Components.Add(new HumanHandsGui(playerController));
+            //UiManager.Singleton.Components.Add(new HumanInventory(playerController));
+            //UiManager.Singleton.Components.Add(new HumanHandsGui(playerController));
+            HumanComboGUI combo = new HumanComboGUI(playerController);
+            combo.Position = new Point(800, 300);
+            UiManager.Singleton.Components.Add(combo);
             UiManager.Singleton.Components.Add(new StatPanelComponent(playerController, prg.mNetworkMgr));
 
-            var appendagesTemp = UiManager.Singleton.GetSingleComponentByGuiComponentType(GuiComponentType.AppendagesComponent); //Better safe than sorry.
-            if (appendagesTemp != null) appendagesTemp.Position = new System.Drawing.Point(Gorgon.Screen.Width - 190, Gorgon.Screen.Height - 99);
+            //var appendagesTemp = UiManager.Singleton.GetSingleComponentByGuiComponentType(GuiComponentType.AppendagesComponent); //Better safe than sorry.
+            //if (appendagesTemp != null) appendagesTemp.Position = new System.Drawing.Point(Gorgon.Screen.Width - 190, Gorgon.Screen.Height - 99);
 
-            HumanInventory invTemp = (HumanInventory)UiManager.Singleton.GetSingleComponentByGuiComponentType(GuiComponentType.HumanInventory); // ugh ugh ugh
-            if(invTemp != null) invTemp.SetHandsGUI((HumanHandsGui)UiManager.Singleton.GetSingleComponentByGuiComponentType(GuiComponentType.AppendagesComponent)); // ugh ugh ugh ugh ugh
+            //HumanInventory invTemp = (HumanInventory)UiManager.Singleton.GetSingleComponentByGuiComponentType(GuiComponentType.HumanInventory); // ugh ugh ugh
+            //if(invTemp != null) invTemp.SetHandsGUI((HumanHandsGui)UiManager.Singleton.GetSingleComponentByGuiComponentType(GuiComponentType.AppendagesComponent)); // ugh ugh ugh ugh ugh
             
             return true;
         }

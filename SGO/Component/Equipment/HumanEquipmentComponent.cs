@@ -11,16 +11,16 @@ namespace SGO
             : base()
         {
             //These shit lines allow the fucking shit to be added to the shit
-            activeSlots.Add(GUIBodyPart.Back);
-            activeSlots.Add(GUIBodyPart.Belt);
-            activeSlots.Add(GUIBodyPart.Ears);
-            activeSlots.Add(GUIBodyPart.Eyes);
-            activeSlots.Add(GUIBodyPart.Feet);
-            activeSlots.Add(GUIBodyPart.Hands);
-            activeSlots.Add(GUIBodyPart.Head);
-            activeSlots.Add(GUIBodyPart.Inner);
-            activeSlots.Add(GUIBodyPart.Mask);
-            activeSlots.Add(GUIBodyPart.Outer);
+            activeSlots.Add(EquipmentSlot.Back);
+            activeSlots.Add(EquipmentSlot.Belt);
+            activeSlots.Add(EquipmentSlot.Ears);
+            activeSlots.Add(EquipmentSlot.Eyes);
+            activeSlots.Add(EquipmentSlot.Feet);
+            activeSlots.Add(EquipmentSlot.Hands);
+            activeSlots.Add(EquipmentSlot.Head);
+            activeSlots.Add(EquipmentSlot.Inner);
+            activeSlots.Add(EquipmentSlot.Mask);
+            activeSlots.Add(EquipmentSlot.Outer);
         }
     }
 }

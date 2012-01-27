@@ -36,10 +36,15 @@ namespace SGO
 
         protected void ApplyDamage(Entity damager, int damageamount, DamageType damType, BodyPart targetLocation)
         {
+            int actualDamage = damageamount - GetArmorValue(damType);
+
+            if (GetHealth() - actualDamage < 0) //No negative total health.
+                actualDamage = (int)GetHealth();
+
             if (damageZones.Exists(x => x.location == targetLocation))
             {
                 DamageLocation dmgLoc = damageZones.First(x => x.location == targetLocation);
-                dmgLoc.AddDamage(damType, damageamount - GetArmorValue(damType));
+                dmgLoc.AddDamage(damType, actualDamage);
             }
 
             currentHealth = GetHealth();

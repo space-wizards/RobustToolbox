@@ -19,11 +19,11 @@ namespace SS3D.UserInterface
 {
     public class HumanInventory : GuiComponent
     {
-        private Dictionary<GUIBodyPart, ItemSlot> inventorySlots;
+        private Dictionary<EquipmentSlot, GuiItemSlot> inventorySlots;
         private HumanHandsGui handsGUI;
 
         private Entity heldEntity;
-        private GUIBodyPart lastSlot = GUIBodyPart.None;
+        private EquipmentSlot lastSlot = EquipmentSlot.None;
         private Vector2D mousePos;
 
         private Sprite outline;
@@ -33,7 +33,7 @@ namespace SS3D.UserInterface
             : base(_playerController)
         {
             componentClass = SS3D_shared.GuiComponentType.HumanInventory;
-            inventorySlots = new Dictionary<GUIBodyPart, ItemSlot>();
+            inventorySlots = new Dictionary<EquipmentSlot, GuiItemSlot>();
             outline = ResMgr.Singleton.GetSprite("outline");
 
             slotWidth = (int)ResMgr.Singleton.GetSprite("slot").Width;
@@ -56,13 +56,13 @@ namespace SS3D.UserInterface
 
             Entity playerEntity = (Entity)playerController.controlledAtom;
             EquipmentComponent equipComponent = (EquipmentComponent)playerEntity.GetComponent(SS3D_shared.GO.ComponentFamily.Equipment);
-            foreach (GUIBodyPart part in equipComponent.activeSlots)
+            foreach (EquipmentSlot part in equipComponent.activeSlots)
             {
-                inventorySlots.Add(part, new ItemSlot(playerController, part));
+                inventorySlots.Add(part, new GuiItemSlot(playerController, part));
             }
             int i = 0;
             bool second = false;
-            foreach (ItemSlot slot in inventorySlots.Values)
+            foreach (GuiItemSlot slot in inventorySlots.Values)
             {
                 if (i >= inventorySlots.Count / 2)
                 {
@@ -109,9 +109,9 @@ namespace SS3D.UserInterface
             if (heldEntity == null)
             {
                 heldEntity = handsGUI.GetActiveHandItem();
-                lastSlot = GUIBodyPart.None;
+                lastSlot = EquipmentSlot.None;
             }
-            foreach (ItemSlot slot in inventorySlots.Values)
+            foreach (GuiItemSlot slot in inventorySlots.Values)
             {
                 if (slot.MouseDown(e))
                 {
@@ -134,7 +134,7 @@ namespace SS3D.UserInterface
                     if (humanHandComponent.HandSlots.ContainsKey(humanHandComponent.currentHand))
                     {
                         heldEntity = humanHandComponent.HandSlots[humanHandComponent.currentHand];
-                        lastSlot = GUIBodyPart.None;
+                        lastSlot = EquipmentSlot.None;
                         return true;
                     }
                 }
@@ -153,11 +153,11 @@ namespace SS3D.UserInterface
 
             // Check which slot we released the mouse on, and equip the item there
             // (remembering to unequip it from wherever it came from)
-            foreach (ItemSlot slot in inventorySlots.Values)
+            foreach (GuiItemSlot slot in inventorySlots.Values)
             {
                 if (slot.MouseUp(e))
                 {
-                    if (lastSlot == GUIBodyPart.None)
+                    if (lastSlot == EquipmentSlot.None)
                         ec.DispatchEquipFromHand();
                     else
                         ec.DispatchEquip(heldEntity.Uid);
@@ -169,7 +169,7 @@ namespace SS3D.UserInterface
             {
                 if (handsGUI.MouseDown(e))
                 {
-                    if (lastSlot != GUIBodyPart.None) // It came from the inventory
+                    if (lastSlot != EquipmentSlot.None) // It came from the inventory
                     {
                         ec.DispatchUnEquipToHand(heldEntity.Uid);
                     }
@@ -180,13 +180,13 @@ namespace SS3D.UserInterface
             return false;
         }
 
-        public bool AttemptEquipInSlot(Entity m, ItemSlot slot)
+        public bool AttemptEquipInSlot(Entity m, GuiItemSlot slot)
         {
             if (slot.CanAccept(heldEntity))
             {
-                if (lastSlot != GUIBodyPart.None) // It came from the inventory
+                if (lastSlot != EquipmentSlot.None) // It came from the inventory
                 {
-                    lastSlot = GUIBodyPart.None;
+                    lastSlot = EquipmentSlot.None;
                 }
                 heldEntity = null;
                 return true;
@@ -215,7 +215,7 @@ namespace SS3D.UserInterface
             outline.Position = new Vector2D(clientArea.X + (int)(clientArea.Width / 2) - (int)(outline.Width / 2), clientArea.Y + (clientArea.Height / 2) - (outline.Height / 2));
             outline.Draw();
 
-            foreach (ItemSlot slot in inventorySlots.Values)
+            foreach (GuiItemSlot slot in inventorySlots.Values)
             {
                 if (slot.CanAccept(heldEntity))
                     slot.Highlight();

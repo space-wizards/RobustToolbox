@@ -9,8 +9,8 @@ namespace SGO
 {
     public class EquipmentComponent : GameObjectComponent
     {
-        protected Dictionary<GUIBodyPart, Entity> equippedEntities = new Dictionary<GUIBodyPart,Entity>();
-        protected List<GUIBodyPart> activeSlots = new List<GUIBodyPart>();
+        protected Dictionary<EquipmentSlot, Entity> equippedEntities = new Dictionary<EquipmentSlot,Entity>();
+        protected List<EquipmentSlot> activeSlots = new List<EquipmentSlot>();
 
         public EquipmentComponent()
         {
@@ -22,7 +22,7 @@ namespace SGO
             switch (type)
             {
                 case ComponentMessageType.EquipItemToPart: //Equip an entity straight up.
-                    EquipEntityToPart((GUIBodyPart)list[0], (Entity)list[1]);
+                    EquipEntityToPart((EquipmentSlot)list[0], (Entity)list[1]);
                     break;
                 case ComponentMessageType.EquipItem:
                     EquipEntity((Entity)list[0]);
@@ -70,7 +70,7 @@ namespace SGO
 
         public override void HandleInstantiationMessage(Lidgren.Network.NetConnection netConnection)
         {
-            foreach (GUIBodyPart p in equippedEntities.Keys)
+            foreach (EquipmentSlot p in equippedEntities.Keys)
             {
                 if(!IsEmpty(p))
                 {
@@ -82,7 +82,7 @@ namespace SGO
         }
 
         // Equips Entity e to Part part
-        private void EquipEntityToPart(GUIBodyPart part, Entity e)
+        private void EquipEntityToPart(EquipmentSlot part, Entity e)
         {
             if (CanEquip(e)) //If the part is empty, the part exists on this mob, and the entity specified is not null
             {
@@ -101,7 +101,7 @@ namespace SGO
                 e.SendMessage(this, ComponentMessageType.GetWearLoc, replies);
                 if (replies.Count > 0 && replies[0].messageType == ComponentMessageType.ReturnWearLoc)
                 {
-                    EquipEntityToPart((GUIBodyPart)replies[0].paramsList[0], e);
+                    EquipEntityToPart((EquipmentSlot)replies[0].paramsList[0], e);
                 }
             }
         }
@@ -126,7 +126,7 @@ namespace SGO
         }
 
         // Unequips the entity from Part part
-        private void UnEquipEntity(GUIBodyPart part)
+        private void UnEquipEntity(EquipmentSlot part)
         {
             if (!IsEmpty(part)) //If the part is not empty
             {
@@ -146,7 +146,7 @@ namespace SGO
         // Unequips entity e 
         private void UnEquipEntity(Entity e)
         {
-            GUIBodyPart key;
+            EquipmentSlot key;
             foreach (var kvp in equippedEntities)
             {
                 if(kvp.Value == e)
@@ -174,7 +174,7 @@ namespace SGO
             return false;
         }
 
-        private Entity GetEntity(GUIBodyPart part)
+        private Entity GetEntity(EquipmentSlot part)
         {
             if (!IsEmpty(part))
                 return equippedEntities[part];
@@ -182,7 +182,7 @@ namespace SGO
                 return null;
         }
 
-        private bool IsEmpty(GUIBodyPart part)
+        private bool IsEmpty(EquipmentSlot part)
         {
             if (equippedEntities.ContainsKey(part))
                 return false;
@@ -198,7 +198,7 @@ namespace SGO
             e.SendMessage(this, ComponentMessageType.GetWearLoc, replies);
             if (replies.Count > 0 && replies[0].messageType == ComponentMessageType.ReturnWearLoc)
             {
-                if (IsItem(e) && IsEmpty((GUIBodyPart)replies[0].paramsList[0]) && e != null && activeSlots.Contains((GUIBodyPart)replies[0].paramsList[0]))
+                if (IsItem(e) && IsEmpty((EquipmentSlot)replies[0].paramsList[0]) && e != null && activeSlots.Contains((EquipmentSlot)replies[0].paramsList[0]))
                 {
                     return true;
                 }

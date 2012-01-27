@@ -8,8 +8,8 @@ namespace CGO
 {
     public class EquipmentComponent : GameObjectComponent
     {
-        public Dictionary<GUIBodyPart, Entity> equippedEntities = new Dictionary<GUIBodyPart, Entity>();
-        public List<GUIBodyPart> activeSlots = new List<GUIBodyPart>();
+        public Dictionary<EquipmentSlot, Entity> equippedEntities = new Dictionary<EquipmentSlot, Entity>();
+        public List<EquipmentSlot> activeSlots = new List<EquipmentSlot>();
 
         public EquipmentComponent()
         {
@@ -21,10 +21,10 @@ namespace CGO
             switch((EquipmentComponentNetMessage)message.messageParameters[0])
             {
                 case EquipmentComponentNetMessage.ItemEquipped:
-                    EquipItem((GUIBodyPart)message.messageParameters[1], (int)message.messageParameters[2]);
+                    EquipItem((EquipmentSlot)message.messageParameters[1], (int)message.messageParameters[2]);
                     break;
                 case EquipmentComponentNetMessage.ItemUnEquipped:
-                    UnEquipItem((GUIBodyPart)message.messageParameters[1], (int)message.messageParameters[2]);
+                    UnEquipItem((EquipmentSlot)message.messageParameters[1], (int)message.messageParameters[2]);
                     break;
             }
         }
@@ -36,8 +36,8 @@ namespace CGO
             switch(type)
             {
                 case ComponentMessageType.GetItemInEquipmentSlot:
-                    if (!IsEmpty((GUIBodyPart)list[0]))
-                        reply.Add(new ComponentReplyMessage(ComponentMessageType.ReturnItemInEquipmentSlot, equippedEntities[(GUIBodyPart)list[0]]));
+                    if (!IsEmpty((EquipmentSlot)list[0]))
+                        reply.Add(new ComponentReplyMessage(ComponentMessageType.ReturnItemInEquipmentSlot, equippedEntities[(EquipmentSlot)list[0]]));
                     break;
             }
         }
@@ -47,7 +47,7 @@ namespace CGO
             Owner.SendComponentNetworkMessage(this, Lidgren.Network.NetDeliveryMethod.ReliableOrdered, ComponentMessageType.EquipItem, uid);
         }
 
-        public void DispatchEquipToPart(int uid, GUIBodyPart part)
+        public void DispatchEquipToPart(int uid, EquipmentSlot part)
         {
             Owner.SendComponentNetworkMessage(this, Lidgren.Network.NetDeliveryMethod.ReliableOrdered, ComponentMessageType.EquipItemToPart, uid, part);
         }
@@ -67,9 +67,7 @@ namespace CGO
             Owner.SendComponentNetworkMessage(this, Lidgren.Network.NetDeliveryMethod.ReliableOrdered, ComponentMessageType.UnEquipItemToFloor, uid);
         }
 
-
-
-        private void EquipItem(GUIBodyPart part, int uid)
+        private void EquipItem(EquipmentSlot part, int uid)
         {
             if (!IsEmpty(part)) // Uh oh we are confused about something! But it's better to just do what the server says
             {
@@ -78,12 +76,12 @@ namespace CGO
             equippedEntities.Add(part, EntityManager.Singleton.GetEntity(uid));
         }
 
-        private void UnEquipItem(GUIBodyPart part, int uid)
+        private void UnEquipItem(EquipmentSlot part, int uid)
         {
             equippedEntities.Remove(part);
         }
 
-        private bool IsEmpty(GUIBodyPart part)
+        private bool IsEmpty(EquipmentSlot part)
         {
             if (equippedEntities.ContainsKey(part))
                 return false;

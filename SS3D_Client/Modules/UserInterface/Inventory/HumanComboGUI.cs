@@ -206,6 +206,8 @@ namespace SS3D.UserInterface
             hand_l_bg.Position = hands_pos;
             hand_r_bg.Position = hands_pos;
 
+            this.ClientArea = new Rectangle((int)position.X, (int)position.Y, (int)combo_BG.AABB.Width, (int)combo_BG.AABB.Height + (int)combo_open.ClientArea.Height);
+
             if (playerController.controlledAtom == null)
                 return;
 

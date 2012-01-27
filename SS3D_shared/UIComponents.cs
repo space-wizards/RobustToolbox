@@ -11,23 +11,13 @@ namespace SS3D_shared
         AppendagesComponent,
         StatPanelComponent,
         WindowComponent,
+        ComboGUI,
         HumanInventory
     }
 
-    public enum HealthComponentMessage
+    public enum ComboGuiMessage
     {
-        CurrentHealth
-    }
-
-    public enum InventoryComponentMessage
-    {
-        Equip,
-        Unequip
-    }
-
-    public enum HandsComponentMessage
-    {
-        SelectHand,
-        UpdateHandObjects
+        UpdateHands,
+        SelectHand
     }
 }

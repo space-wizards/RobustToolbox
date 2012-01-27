@@ -9,7 +9,7 @@ namespace SGO
     public class EquippableComponent : GameObjectComponent
     {
         private Entity currentWearer;
-        public GUIBodyPart wearloc;
+        public EquipmentSlot wearloc;
 
         public EquippableComponent()
         {
@@ -54,7 +54,7 @@ namespace SGO
             switch(parameter.MemberName)
             {
                 case "wearloc":
-                    wearloc = (GUIBodyPart)Enum.Parse(typeof(GUIBodyPart), (string)parameter.Parameter);
+                    wearloc = (EquipmentSlot)Enum.Parse(typeof(EquipmentSlot), (string)parameter.Parameter);
                     break;
             }
         }

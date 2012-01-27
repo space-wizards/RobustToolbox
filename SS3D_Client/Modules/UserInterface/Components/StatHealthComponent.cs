@@ -133,22 +133,24 @@ namespace SS3D.UserInterface
         {
             var entity = (Entity)playerController.controlledAtom;
 
+            float healthPct = 0;
+            healthText.Text.Text = "???";
+
             if (entity.HasComponent(ComponentFamily.Damageable))
             {
                 HealthComponent comp = (HealthComponent)entity.GetComponent(ComponentFamily.Damageable);
                 health = comp.GetHealth();
+
+                healthPct = comp.GetHealth() / comp.GetMaxHealth();
+
+                if (healthPct > 0.75) healthText.Text.Text = "HEALTHY: " + health.ToString();
+                else if (healthPct > 0.50) healthText.Text.Text = "INJURED: " + health.ToString();
+                else if (healthPct > 0.25) healthText.Text.Text = "WOUNDED: " + health.ToString();
+                else if (healthPct > 0) healthText.Text.Text = "CRITICAL: " + health.ToString();
+                else healthText.Text.Text = "DECEASED: " + health.ToString();
             }
 
             healthText.Position = Position;
-
-            if (health > 70)
-                healthText.Text.Text = "HEALTHY: " + health.ToString();
-            else if (health > 30)
-                healthText.Text.Text = "INJURED: " + health.ToString();
-            else if (health > 0)
-                healthText.Text.Text = "CRITICAL: " + health.ToString();
-            else
-                healthText.Text.Text = "DECEASED: " + health.ToString();
 
             healthText.Text.Color = Color.Blue;
 

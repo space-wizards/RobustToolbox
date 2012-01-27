@@ -65,7 +65,7 @@ namespace CGO
             if (UIManager == null)
                 throw new NullReferenceException("No UI Manager Service found.");
 
-            UIManager.ComponentUpdate(GuiComponentType.AppendagesComponent);
+            UIManager.ComponentUpdate(GuiComponentType.ComboGUI, ComboGuiMessage.UpdateHands);
         }
 
         public void SendSwitchHands(Hand hand)

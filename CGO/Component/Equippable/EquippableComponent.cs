@@ -20,7 +20,7 @@ namespace CGO
             switch((EquippableComponentNetMessage)message.messageParameters[0])
             {
                 case EquippableComponentNetMessage.Equipped:
-                    EquippedBy((int)message.messageParameters[1], (GUIBodyPart)message.messageParameters[2]);
+                    EquippedBy((int)message.messageParameters[1], (EquipmentSlot)message.messageParameters[2]);
                     break;
                 case EquippableComponentNetMessage.UnEquipped:
                     UnEquipped();
@@ -28,41 +28,41 @@ namespace CGO
             }
         }
 
-        private void EquippedBy(int uid, GUIBodyPart wearloc)
+        private void EquippedBy(int uid, EquipmentSlot wearloc)
         {
             Owner.SendMessage(this, ComponentMessageType.ItemEquipped, null);
             Owner.AddComponent(ComponentFamily.Mover, ComponentFactory.Singleton.GetComponent("SlaveMoverComponent"));
             Owner.SendMessage(this, ComponentMessageType.SlaveAttach, null, uid);
             switch(wearloc)
             {
-                case GUIBodyPart.Back:
+                case EquipmentSlot.Back:
                     SendDrawDepth(DrawDepth.MobOverAccessoryLayer);
                     break;
-                case GUIBodyPart.Belt:
+                case EquipmentSlot.Belt:
                     SendDrawDepth(DrawDepth.MobUnderAccessoryLayer);
                     break;
-                case GUIBodyPart.Ears:
+                case EquipmentSlot.Ears:
                     SendDrawDepth(DrawDepth.MobUnderAccessoryLayer);
                     break;
-                case GUIBodyPart.Eyes:
+                case EquipmentSlot.Eyes:
                     SendDrawDepth(DrawDepth.MobUnderAccessoryLayer);
                     break;
-                case GUIBodyPart.Feet:
+                case EquipmentSlot.Feet:
                     SendDrawDepth(DrawDepth.MobUnderClothingLayer);
                     break;
-                case GUIBodyPart.Hands:
+                case EquipmentSlot.Hands:
                     SendDrawDepth(DrawDepth.MobOverAccessoryLayer);
                     break;
-                case GUIBodyPart.Head:
+                case EquipmentSlot.Head:
                     SendDrawDepth(DrawDepth.MobOverClothingLayer);
                     break;
-                case GUIBodyPart.Inner:
+                case EquipmentSlot.Inner:
                     SendDrawDepth(DrawDepth.MobUnderClothingLayer);
                     break;
-                case GUIBodyPart.Mask:
+                case EquipmentSlot.Mask:
                     SendDrawDepth(DrawDepth.MobUnderAccessoryLayer);
                     break;
-                case GUIBodyPart.Outer:
+                case EquipmentSlot.Outer:
                     SendDrawDepth(DrawDepth.MobOverClothingLayer);
                     break;
             }

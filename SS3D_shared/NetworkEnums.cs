@@ -155,7 +155,7 @@ public enum DecalType
     Blood
 }
 
-public enum GUIBodyPart
+public enum EquipmentSlot
 {
     None = 0,
     Head,

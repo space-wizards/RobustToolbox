@@ -49,13 +49,6 @@ namespace SS3D.UserInterface
 
         public ClientServiceType ServiceType { get { return ClientServiceType.UiManager; } }
 
-        [Obsolete("Temporary. Fix this.")]
-        public void UpdateComponent()
-        {
-            HumanHandsGui handsGui = (HumanHandsGui)GetComponentsByType(typeof(HumanHandsGui)).First();
-            handsGui.UpdateVisibleObjects();
-        }
-
         /// <summary>
         ///  List of iGuiComponents. Components in this list will recieve input, updates and net messages.
         /// </summary>

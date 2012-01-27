@@ -11,7 +11,7 @@ namespace SS3D_shared
     [Serializable]
     public struct SpawnEquipDefinition
     {
-        public GUIBodyPart Location { get; set; }
+        public EquipmentSlot Location { get; set; }
         public string ObjectType { get; set; }
     }
 
@@ -58,10 +58,10 @@ namespace SS3D_shared
             JobDefinition templateDef = new JobDefinition();
             templateDef.Name = "Security Officer";
             templateDef.Description = "Keeps the inhabitants of the station safe.";
-            templateDef.SpawnEquipment.Add(new SpawnEquipDefinition(){Location = GUIBodyPart.Outer, ObjectType = "Atom.Item.Wearable.Outer.Armour"});
-            templateDef.SpawnEquipment.Add(new SpawnEquipDefinition() { Location = GUIBodyPart.Inner, ObjectType = "Atom.Item.Wearable.Inner.Jumpsuit.Assistant_Grey" });
-            templateDef.SpawnEquipment.Add(new SpawnEquipDefinition() { Location = GUIBodyPart.Head, ObjectType = "Atom.Item.Wearable.Head.Helmet" });
-            templateDef.SpawnEquipment.Add(new SpawnEquipDefinition() { Location = GUIBodyPart.Feet, ObjectType = "Atom.Item.Wearable.Feet.Shoes" });
+            templateDef.SpawnEquipment.Add(new SpawnEquipDefinition(){Location = EquipmentSlot.Outer, ObjectType = "Atom.Item.Wearable.Outer.Armour"});
+            templateDef.SpawnEquipment.Add(new SpawnEquipDefinition() { Location = EquipmentSlot.Inner, ObjectType = "Atom.Item.Wearable.Inner.Jumpsuit.Assistant_Grey" });
+            templateDef.SpawnEquipment.Add(new SpawnEquipDefinition() { Location = EquipmentSlot.Head, ObjectType = "Atom.Item.Wearable.Head.Helmet" });
+            templateDef.SpawnEquipment.Add(new SpawnEquipDefinition() { Location = EquipmentSlot.Feet, ObjectType = "Atom.Item.Wearable.Feet.Shoes" });
 
             JobDefinitionsTemplate.Add(templateDef);
 

@@ -17,9 +17,9 @@ using SS3D;
 
 namespace SS3D.UserInterface
 {
-    public class ItemSlot : GuiComponent
+    public class GuiItemSlot : GuiComponent
     {
-        private GUIBodyPart bodyPart; // The bodypart we reference
+        private EquipmentSlot bodyPart; // The bodypart we reference
         private Type atomType; // The type of atoms we can accept
         private Sprite slot;
         private Label text;
@@ -27,7 +27,7 @@ namespace SS3D.UserInterface
         private Vector2D outlinePos = new Vector2D(1078, 632); // TODO: Remove magic numbers
         private Sprite outline;
 
-        public ItemSlot(PlayerController _playerController, GUIBodyPart _bodyPart)
+        public GuiItemSlot(PlayerController _playerController, EquipmentSlot _bodyPart)
             : base(_playerController)
         {
             bodyPart = _bodyPart;
@@ -42,35 +42,35 @@ namespace SS3D.UserInterface
         {
             switch (bodyPart)
             {
-                case GUIBodyPart.Feet:
+                case EquipmentSlot.Feet:
                     //atomType = typeof(Atom.Item.Wearable.Feet.Feet);
                     break;
-                case GUIBodyPart.Inner:
+                case EquipmentSlot.Inner:
                     //atomType = typeof(Atom.Item.Wearable.Inner.Inner);
                     break;
-                case GUIBodyPart.Ears:
+                case EquipmentSlot.Ears:
                     //atomType = typeof(Atom.Item.Wearable.Ears.Ears);
                     break;
-                case GUIBodyPart.Eyes:
+                case EquipmentSlot.Eyes:
                     //atomType = typeof(Atom.Item.Wearable.Eyes.Eyes);
                     break;
-                case GUIBodyPart.Hands:
+                case EquipmentSlot.Hands:
                     //atomType = typeof(Atom.Item.Wearable.Hands.Hands);
                     break;
-                case GUIBodyPart.Head:
+                case EquipmentSlot.Head:
                     //atomType = typeof(Atom.Item.Wearable.Head.Head);
                     break;
-                case GUIBodyPart.Mask:
+                case EquipmentSlot.Mask:
                     //atomType = typeof(Atom.Item.Wearable.Mask.Mask);
                     break;
-                case GUIBodyPart.Outer:
+                case EquipmentSlot.Outer:
                     //atomType = typeof(Atom.Item.Wearable.Outer.Outer);
                     break;
-                case GUIBodyPart.Belt:
+                case EquipmentSlot.Belt:
                     //atomType = typeof(Atom.Item.Wearable.Belt.Belt);
                     break;
-                case GUIBodyPart.Back:
-                case GUIBodyPart.None:
+                case EquipmentSlot.Back:
+                case EquipmentSlot.None:
                 default:
                     atomType = typeof(Entity);
                     break;
@@ -82,7 +82,7 @@ namespace SS3D.UserInterface
             outlinePos = pos;
         }
 
-        public GUIBodyPart GetBodyPart()
+        public EquipmentSlot GetBodyPart()
         {
             return bodyPart;
         }
@@ -158,7 +158,7 @@ namespace SS3D.UserInterface
             
             Entity m = (Entity)playerController.controlledAtom;
 
-            if (bodyPart != GUIBodyPart.None)
+            if (bodyPart != EquipmentSlot.None)
             {
                 List<ComponentReplyMessage> replies = new List<ComponentReplyMessage>();
                 m.SendMessage(this, SS3D_shared.GO.ComponentMessageType.GetItemInEquipmentSlot, replies, bodyPart);

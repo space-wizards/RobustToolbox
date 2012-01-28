@@ -78,6 +78,12 @@ namespace CGO
             Owner.SendComponentNetworkMessage(this, Lidgren.Network.NetDeliveryMethod.ReliableOrdered, ComponentMessageType.DropEntityInHand, ent.Uid);
         }
 
+        public bool IsHandEmpty(Hand hand)
+        {
+            if (handslots.ContainsKey(hand)) return false;
+            else return true;
+        }
+
         public void SendDropFromHand(Hand hand)
         {
             Owner.SendComponentNetworkMessage(this, Lidgren.Network.NetDeliveryMethod.ReliableOrdered, ComponentMessageType.DropItemInHand, hand);

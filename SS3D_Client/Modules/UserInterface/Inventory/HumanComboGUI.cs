@@ -66,6 +66,7 @@ namespace SS3D.UserInterface
         private bool showTabbedWindow = false;
 
         TextSprite txtDbg = new TextSprite("comboDlgDbg", "Combo Debug", ResMgr.Singleton.GetFont("CALIBRI"));
+        TextSprite healthText = new TextSprite("healthText", "", ResMgr.Singleton.GetFont("CALIBRI"));
 
         Sprite combo_BG;
         SimpleImageButton combo_close;
@@ -243,6 +244,7 @@ namespace SS3D.UserInterface
                         }
                     case (2): //Health tab
                         {
+                            healthText.Draw();
                             break;
                         }
                     case (3): //Craft tab
@@ -307,52 +309,94 @@ namespace SS3D.UserInterface
 
             this.ClientArea = new Rectangle((int)position.X, (int)position.Y, (int)combo_BG.AABB.Width, (int)combo_BG.AABB.Height + (int)combo_open.ClientArea.Height);
 
-            //Only set position for topmost 2 slots directly. Rest uses these to position themselves.
-            Point slot_left_start = position;
-            slot_left_start.Offset(28, 40);
-            slot_head.Position = slot_left_start;
-            slot_head.Update();
+            switch (currentTab)
+            {
+                case (1): //Equip tab
+                    {
+                        //Only set position for topmost 2 slots directly. Rest uses these to position themselves.
+                        Point slot_left_start = position;
+                        slot_left_start.Offset(28, 40);
+                        slot_head.Position = slot_left_start;
+                        slot_head.Update();
 
-            Point slot_right_start = position;
-            slot_right_start.Offset((int)(combo_BG.AABB.Width - slot_mask.ClientArea.Width - 28), 40);
-            slot_mask.Position = slot_right_start;
-            slot_mask.Update();
+                        Point slot_right_start = position;
+                        slot_right_start.Offset((int)(combo_BG.AABB.Width - slot_mask.ClientArea.Width - 28), 40);
+                        slot_mask.Position = slot_right_start;
+                        slot_mask.Update();
 
-            int vert_spacing = 6 + slot_head.ClientArea.Height;
+                        int vert_spacing = 6 + slot_head.ClientArea.Height;
 
-            //Left Side - head, eyes, outer, hands, feet
-            slot_left_start.Offset(0, vert_spacing);
-            slot_eyes.Position = slot_left_start;
-            slot_eyes.Update();
+                        //Left Side - head, eyes, outer, hands, feet
+                        slot_left_start.Offset(0, vert_spacing);
+                        slot_eyes.Position = slot_left_start;
+                        slot_eyes.Update();
 
-            slot_left_start.Offset(0, vert_spacing);
-            slot_outer.Position = slot_left_start;
-            slot_outer.Update();
+                        slot_left_start.Offset(0, vert_spacing);
+                        slot_outer.Position = slot_left_start;
+                        slot_outer.Update();
 
-            slot_left_start.Offset(0, vert_spacing);
-            slot_hands.Position = slot_left_start;
-            slot_hands.Update();
+                        slot_left_start.Offset(0, vert_spacing);
+                        slot_hands.Position = slot_left_start;
+                        slot_hands.Update();
 
-            slot_left_start.Offset(0, vert_spacing);
-            slot_feet.Position = slot_left_start;
-            slot_feet.Update();
+                        slot_left_start.Offset(0, vert_spacing);
+                        slot_feet.Position = slot_left_start;
+                        slot_feet.Update();
 
-            //Right Side - mask, ears, inner, belt, back
-            slot_right_start.Offset(0, vert_spacing);
-            slot_ears.Position = slot_right_start;
-            slot_ears.Update();
+                        //Right Side - mask, ears, inner, belt, back
+                        slot_right_start.Offset(0, vert_spacing);
+                        slot_ears.Position = slot_right_start;
+                        slot_ears.Update();
 
-            slot_right_start.Offset(0, vert_spacing);
-            slot_inner.Position = slot_right_start;
-            slot_inner.Update();
+                        slot_right_start.Offset(0, vert_spacing);
+                        slot_inner.Position = slot_right_start;
+                        slot_inner.Update();
 
-            slot_right_start.Offset(0, vert_spacing);
-            slot_belt.Position = slot_right_start;
-            slot_belt.Update();
+                        slot_right_start.Offset(0, vert_spacing);
+                        slot_belt.Position = slot_right_start;
+                        slot_belt.Update();
 
-            slot_right_start.Offset(0, vert_spacing);
-            slot_back.Position = slot_right_start;
-            slot_back.Update();
+                        slot_right_start.Offset(0, vert_spacing);
+                        slot_back.Position = slot_right_start;
+                        slot_back.Update();
+                        break;
+                    }
+                case (2): //Health tab
+                    {
+                        string healthStr = "";
+
+                        if (playerController.controlledAtom == null)
+                            return;
+
+                        var playerEnt = (Entity)playerController.controlledAtom;
+                        HumanHealthComponent healthcomp = (HumanHealthComponent)playerEnt.GetComponent(ComponentFamily.Damageable); //Unsafe cast. Might not be human health comp.
+
+                        foreach (DamageLocation loc in healthcomp.damageZones)
+                        {
+                            healthStr += loc.location.ToString() + "   --   ";
+
+                            float healthPct = (float)loc.currentHealth / (float)loc.maxHealth;
+
+                            if (healthPct > 0.75) healthStr += "HEALTHY (" + loc.currentHealth.ToString() + " / " + loc.maxHealth.ToString() + ")" + Environment.NewLine;
+                            else if (healthPct > 0.50) healthStr += "INJURED (" + loc.currentHealth.ToString() + " / " + loc.maxHealth.ToString() + ")" + Environment.NewLine;
+                            else if (healthPct > 0.25) healthStr += "WOUNDED (" + loc.currentHealth.ToString() + " / " + loc.maxHealth.ToString() + ")" + Environment.NewLine;
+                            else if (healthPct > 0) healthStr += "CRITICAL (" + loc.currentHealth.ToString() + " / " + loc.maxHealth.ToString() + ")" + Environment.NewLine;
+                            else healthStr += "CRIPPLED (" + loc.currentHealth.ToString() + " / " + loc.maxHealth.ToString() + ")" + Environment.NewLine;
+                        }
+
+                        healthStr += Environment.NewLine + "Total Health : " + healthcomp.GetHealth().ToString() + " / " + healthcomp.GetHealth().ToString();
+
+                        healthText.Text = healthStr;
+                        healthText.Color = Color.FloralWhite;
+                        healthText.Position = new Vector2D(position.X + 40, position.Y + 40);
+
+                        break;
+                    }
+                case (3): //Craft tab
+                    {
+                        break;
+                    }
+            }
 
             #region Hands UI
             if (playerController.controlledAtom == null)

@@ -46,7 +46,19 @@ namespace SS3D.UserInterface
         #endregion
 
         #region Inventory UI
-        private Dictionary<EquipmentSlot, GuiItemSlot> inventorySlots = new Dictionary<EquipmentSlot,GuiItemSlot>(); 
+        private Dictionary<EquipmentSlot, GuiItemSlot> inventorySlots = new Dictionary<EquipmentSlot,GuiItemSlot>();
+
+        InventorySlotUi slot_head; 
+        InventorySlotUi slot_eyes; 
+        InventorySlotUi slot_outer; 
+        InventorySlotUi slot_hands; 
+        InventorySlotUi slot_feet; 
+
+        InventorySlotUi slot_mask;
+        InventorySlotUi slot_ears;
+        InventorySlotUi slot_inner;
+        InventorySlotUi slot_belt;
+        InventorySlotUi slot_back;
         #endregion
 
         private byte currentTab = 1; //1 = Inventory, 2 = Health, 3 = Crafting
@@ -66,6 +78,8 @@ namespace SS3D.UserInterface
         Sprite hand_l_bg;
         Sprite hand_r_bg;
 
+        Sprite equip_BG;
+
         Color col_inactive = Color.FromArgb(255, 90, 90, 90);
 
         public HumanComboGUI(PlayerController _playerController)
@@ -75,6 +89,8 @@ namespace SS3D.UserInterface
 
             leftHand.hand = Hand.Left;
             rightHand.hand = Hand.Right;
+
+            equip_BG = ResMgr.Singleton.GetSprite("outline");
 
             combo_BG = ResMgr.Singleton.GetSprite("combo_bg");
             combo_close = new SimpleImageButton("button_closecombo");
@@ -94,6 +110,73 @@ namespace SS3D.UserInterface
 
             combo_close.Clicked += new SimpleImageButton.SimpleImageButtonPressHandler(combo_close_Clicked);
             combo_open.Clicked += new SimpleImageButton.SimpleImageButtonPressHandler(combo_open_Clicked);
+
+            //Left Side - head, eyes, outer, hands, feet
+            slot_head = new InventorySlotUi(EquipmentSlot.Head, _playerController);
+            slot_head.Dropped += new InventorySlotUi.InventorySlotUiDropHandler(slot_Dropped);
+
+            slot_eyes = new InventorySlotUi(EquipmentSlot.Eyes, _playerController);
+            slot_eyes.Dropped += new InventorySlotUi.InventorySlotUiDropHandler(slot_Dropped);
+
+            slot_outer = new InventorySlotUi(EquipmentSlot.Outer, _playerController);
+            slot_outer.Dropped += new InventorySlotUi.InventorySlotUiDropHandler(slot_Dropped);
+
+            slot_hands = new InventorySlotUi(EquipmentSlot.Hands, _playerController);
+            slot_hands.Dropped += new InventorySlotUi.InventorySlotUiDropHandler(slot_Dropped);
+
+            slot_feet = new InventorySlotUi(EquipmentSlot.Feet, _playerController);
+            slot_feet.Dropped += new InventorySlotUi.InventorySlotUiDropHandler(slot_Dropped);
+
+
+            //Right Side - mask, ears, inner, belt, back
+            slot_mask = new InventorySlotUi(EquipmentSlot.Mask, _playerController);
+            slot_mask.Dropped += new InventorySlotUi.InventorySlotUiDropHandler(slot_Dropped);
+
+            slot_ears = new InventorySlotUi(EquipmentSlot.Ears, _playerController);
+            slot_ears.Dropped += new InventorySlotUi.InventorySlotUiDropHandler(slot_Dropped);
+
+            slot_inner = new InventorySlotUi(EquipmentSlot.Inner, _playerController);
+            slot_inner.Dropped += new InventorySlotUi.InventorySlotUiDropHandler(slot_Dropped);
+
+            slot_belt = new InventorySlotUi(EquipmentSlot.Belt, _playerController);
+            slot_belt.Dropped += new InventorySlotUi.InventorySlotUiDropHandler(slot_Dropped);
+
+            slot_back = new InventorySlotUi(EquipmentSlot.Back, _playerController);
+            slot_back.Dropped += new InventorySlotUi.InventorySlotUiDropHandler(slot_Dropped);
+
+        }
+
+        void slot_Dropped(InventorySlotUi sender, Entity dropped)
+        {
+            UiManager.Singleton.dragInfo.Reset();
+
+            if (sender.currentEntity == dropped) return; //Dropped from us to us.
+
+            if (playerController.controlledAtom == null)
+                return;
+
+            var entity = (Entity)playerController.controlledAtom;
+
+            EquipmentComponent equipment = (EquipmentComponent)entity.GetComponent(ComponentFamily.Equipment);
+            HumanHandsComponent hands = (HumanHandsComponent)entity.GetComponent(ComponentFamily.Hands);
+
+            if (hands == null || entity == null) return;
+
+            if (hands.HandSlots.ContainsValue(dropped)) //Comes from one of our hands. 
+            {                //THIS NEEDS BETTER HANDLING. SERVER SHOULD AUTOMATICALLY REMOVE OBJECTS FROM HANDS WHEN EQUIPPED (So we can just equip them here without worrying about hands).//BZZZ
+                Hand containingHand = hands.HandSlots.First(x => x.Value == dropped).Key;
+
+                if (containingHand != hands.currentHand)
+                    SendSwitchHandTo(containingHand);
+
+                equipment.DispatchEquipFromHand();
+            }
+            else //Comes from somewhere else. Not sure what somewhere could be. Maybe another slot? If we have items that can go in diff slots? Need to remember to unequip it from that something before equipping. Unless server does. See above.
+            {
+                equipment.DispatchEquipToPart(dropped.Uid, sender.assignedSlot);
+            }
+
+            //This will autmatically equip items to their proper slot if dropped on a wrong one. Server does that. Oh well.
         }
 
         void tab_Clicked(SimpleImageButton sender)
@@ -156,6 +239,37 @@ namespace SS3D.UserInterface
                 if (currentTab == 2) txtDbg.Text = "Health";
                 if (currentTab == 3) txtDbg.Text = "Crafting";
                 txtDbg.Draw();
+
+                switch (currentTab)
+                {
+                    case (1): //Equip tab
+                        {
+                            equip_BG.Draw();
+
+                            //Left Side - head, eyes, outer, hands, feet
+                            slot_head.Render();
+                            slot_eyes.Render();
+                            slot_outer.Render();
+                            slot_hands.Render();
+                            slot_feet.Render();
+
+                            //Right Side - mask, ears, inner, belt, back
+                            slot_mask.Render();
+                            slot_ears.Render();
+                            slot_inner.Render();
+                            slot_belt.Render();
+                            slot_back.Render();
+                            break;
+                        }
+                    case (2): //Health tab
+                        {
+                            break;
+                        }
+                    case (3): //Craft tab
+                        {
+                            break;
+                        }
+                }
             }
             combo_open.Render();
 
@@ -172,6 +286,11 @@ namespace SS3D.UserInterface
         public override void Update()
         {
             combo_BG.Position = position;
+
+            Point equip_bg_pos = position;
+            equip_BG.Position = position;
+            equip_bg_pos.Offset((int)(combo_BG.AABB.Width / 2f - equip_BG.AABB.Width / 2f), 40);
+            equip_BG.Position = equip_bg_pos;
 
             Point combo_open_pos = position;
             combo_open_pos.Offset((int)(combo_BG.Width - combo_open.ClientArea.Width), (int)combo_BG.Height - 1);
@@ -208,10 +327,57 @@ namespace SS3D.UserInterface
 
             this.ClientArea = new Rectangle((int)position.X, (int)position.Y, (int)combo_BG.AABB.Width, (int)combo_BG.AABB.Height + (int)combo_open.ClientArea.Height);
 
+            //Only set position for topmost 2 slots directly. Rest uses these to position themselves.
+            Point slot_left_start = position;
+            slot_left_start.Offset(28, 40);
+            slot_head.Position = slot_left_start;
+            slot_head.Update();
+
+            Point slot_right_start = position;
+            slot_right_start.Offset((int)(combo_BG.AABB.Width - slot_mask.ClientArea.Width - 28), 40);
+            slot_mask.Position = slot_right_start;
+            slot_mask.Update();
+
+            int vert_spacing = 6 + slot_head.ClientArea.Height;
+
+            //Left Side - head, eyes, outer, hands, feet
+            slot_left_start.Offset(0, vert_spacing);
+            slot_eyes.Position = slot_left_start;
+            slot_eyes.Update();
+
+            slot_left_start.Offset(0, vert_spacing);
+            slot_outer.Position = slot_left_start;
+            slot_outer.Update();
+
+            slot_left_start.Offset(0, vert_spacing);
+            slot_hands.Position = slot_left_start;
+            slot_hands.Update();
+
+            slot_left_start.Offset(0, vert_spacing);
+            slot_feet.Position = slot_left_start;
+            slot_feet.Update();
+
+            //Right Side - mask, ears, inner, belt, back
+            slot_right_start.Offset(0, vert_spacing);
+            slot_ears.Position = slot_right_start;
+            slot_ears.Update();
+
+            slot_right_start.Offset(0, vert_spacing);
+            slot_inner.Position = slot_right_start;
+            slot_inner.Update();
+
+            slot_right_start.Offset(0, vert_spacing);
+            slot_belt.Position = slot_right_start;
+            slot_belt.Update();
+
+            slot_right_start.Offset(0, vert_spacing);
+            slot_back.Position = slot_right_start;
+            slot_back.Update();
+
+            #region Hands UI
             if (playerController.controlledAtom == null)
                 return;
 
-            #region Hands UI
             var entity = (Entity)playerController.controlledAtom;
             HumanHandsComponent hands = (HumanHandsComponent)entity.GetComponent(ComponentFamily.Hands);
 
@@ -280,20 +446,74 @@ namespace SS3D.UserInterface
             }
 
             #region Hands UI, Switching
-            if (Utilities.SpritePixelHit(hand_l_bg, e.Position))
+            var entity = (Entity)playerController.controlledAtom;
+            HumanHandsComponent hands = (HumanHandsComponent)entity.GetComponent(ComponentFamily.Hands);
+            if (e.Buttons == MouseButtons.Right)
             {
-                SendSwitchHandTo(Hand.Left);
-                return true;
-            }
+                if (Utilities.SpritePixelHit(hand_l_bg, e.Position))
+                {
+                    SendSwitchHandTo(Hand.Left);
+                    return true;
+                }
 
-            if (Utilities.SpritePixelHit(hand_r_bg, e.Position))
+                if (Utilities.SpritePixelHit(hand_r_bg, e.Position))
+                {
+                    SendSwitchHandTo(Hand.Right);
+                    return true;
+                }
+            }
+            else if (e.Buttons == MouseButtons.Left)
             {
-                SendSwitchHandTo(Hand.Right);
-                return true;
-            }
+                if (Utilities.SpritePixelHit(hand_l_bg, e.Position))
+                {
+                    if (hands.HandSlots.Keys.Contains(Hand.Left))
+                    {
+                        Entity EntityL = hands.HandSlots[Hand.Left];
+                        UiManager.Singleton.dragInfo.StartDrag(EntityL);
+                    }
+                    return true;
+                }
 
+                if (Utilities.SpritePixelHit(hand_r_bg, e.Position))
+                {
+                    if (hands.HandSlots.Keys.Contains(Hand.Right))
+                    {
+                        Entity EntityR = hands.HandSlots[Hand.Right];
+                        UiManager.Singleton.dragInfo.StartDrag(EntityR);
+                    }
+                    return true;
+                }
+            }
             #endregion
 
+            switch (currentTab)
+            {
+                case (1): //Equip tab
+                    {
+                        //Left Side - head, eyes, outer, hands, feet
+                        if (slot_head.MouseDown(e)) return true;
+                        if (slot_eyes.MouseDown(e)) return true;
+                        if (slot_outer.MouseDown(e)) return true;
+                        if (slot_hands.MouseDown(e)) return true;
+                        if (slot_feet.MouseDown(e)) return true;
+
+                        //Right Side - mask, ears, inner, belt, back
+                        if (slot_mask.MouseDown(e)) return true;
+                        if (slot_ears.MouseDown(e)) return true;
+                        if (slot_inner.MouseDown(e)) return true;
+                        if (slot_belt.MouseDown(e)) return true;
+                        if (slot_back.MouseDown(e)) return true;
+                        break;
+                    }
+                case (2): //Health tab
+                    {
+                        break;
+                    }
+                case (3): //Craft tab
+                    {
+                        break;
+                    }
+            }
 
             return false;
         }
@@ -307,12 +527,105 @@ namespace SS3D.UserInterface
 
         public override bool MouseUp(MouseInputEventArgs e)
         {
-            RectangleF mouseAABB = new RectangleF(e.Position.X, e.Position.Y, 1, 1);
+            PointF mouseAABB = new PointF(e.Position.X, e.Position.Y);
+
+            if (UiManager.Singleton.dragInfo.isEntity && UiManager.Singleton.dragInfo.dragEntity != null)
+            {
+                if (playerController.controlledAtom == null)
+                    return false;
+
+                var entity = (Entity)playerController.controlledAtom;
+
+                EquipmentComponent equipment = (EquipmentComponent)entity.GetComponent(ComponentFamily.Equipment);
+                HumanHandsComponent hands = (HumanHandsComponent)entity.GetComponent(ComponentFamily.Hands);
+
+                if (hands == null || entity == null) return false;
+
+                if (Utilities.SpritePixelHit(hand_l_bg, e.Position)) //Needs better handling, Server should automatically unequip items from equip component when equiped to hand. //BZZZ
+                {
+                    if (!hands.HandSlots.ContainsKey(Hand.Left)) //Is it empty? Wont contain it if the slot is empty.
+                    {
+                        if (hands.currentHand != Hand.Left) SendSwitchHandTo(Hand.Left);
+                        equipment.DispatchUnEquipToHand(UiManager.Singleton.dragInfo.dragEntity.Uid);
+                        UiManager.Singleton.dragInfo.Reset();
+                        return true;
+                    }
+                }
+
+                if (Utilities.SpritePixelHit(hand_r_bg, e.Position))
+                {
+                    if (!hands.HandSlots.ContainsKey(Hand.Right))
+                    {
+                        if (hands.currentHand != Hand.Right) SendSwitchHandTo(Hand.Right);
+                        equipment.DispatchUnEquipToHand(UiManager.Singleton.dragInfo.dragEntity.Uid);
+                        UiManager.Singleton.dragInfo.Reset();
+                        return true;
+                    }
+                }
+            }
+
+            switch (currentTab)
+            {
+                case (1): //Equip tab
+                    {
+                        //Left Side - head, eyes, outer, hands, feet
+                        if (slot_head.MouseUp(e)) return true;
+                        if (slot_eyes.MouseUp(e)) return true;
+                        if (slot_outer.MouseUp(e)) return true;
+                        if (slot_hands.MouseUp(e)) return true;
+                        if (slot_feet.MouseUp(e)) return true;
+
+                        //Right Side - mask, ears, inner, belt, back
+                        if (slot_mask.MouseUp(e)) return true;
+                        if (slot_ears.MouseUp(e)) return true;
+                        if (slot_inner.MouseUp(e)) return true;
+                        if (slot_belt.MouseUp(e)) return true;
+                        if (slot_back.MouseUp(e)) return true;
+                        break;
+                    }
+                case (2): //Health tab
+                    {
+                        break;
+                    }
+                case (3): //Craft tab
+                    {
+                        break;
+                    }
+            }
+
             return false;
         }
 
         public override void MouseMove(MouseInputEventArgs e)
-        {
+        {      
+            switch (currentTab)
+            {
+                case (1): //Equip tab
+                    {
+                        //Left Side - head, eyes, outer, hands, feet
+                        slot_head.MouseMove(e);
+                        slot_eyes.MouseMove(e);
+                        slot_outer.MouseMove(e);
+                        slot_hands.MouseMove(e);
+                        slot_feet.MouseMove(e);
+
+                        //Right Side - mask, ears, inner, belt, back
+                        slot_mask.MouseMove(e);
+                        slot_ears.MouseMove(e);
+                        slot_inner.MouseMove(e);
+                        slot_belt.MouseMove(e);
+                        slot_back.MouseMove(e);
+                        break;
+                    }
+                case (2): //Health tab
+                    {
+                        break;
+                    }
+                case (3): //Craft tab
+                    {
+                        break;
+                    }
+            }
         }
 
         public override bool KeyDown(KeyboardInputEventArgs e)

@@ -207,7 +207,6 @@ namespace SS3D.UserInterface
             Gorgon.Screen.FilledRectangle(clientArea.X + 1, clientArea.Y + 1, clientArea.Width - 2, clientArea.Height - 2, System.Drawing.Color.FromArgb(51, 56, 64));
             Gorgon.Screen.Rectangle(clientArea.X, clientArea.Y, clientArea.Width, clientArea.Height, Color.Black);
 
-
             if (inventorySlots.Count == 0 &&
                 playerController.controlledAtom != null)
                 SetUpSlots();

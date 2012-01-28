@@ -17,13 +17,13 @@ namespace SGO
         public HumanHealthComponent()
             : base()
         {
-            damageZones.Add(new DamageLocation(BodyPart.arm_l, 50));
-            damageZones.Add(new DamageLocation(BodyPart.arm_r, 50));
-            damageZones.Add(new DamageLocation(BodyPart.groin, 50));
-            damageZones.Add(new DamageLocation(BodyPart.head, 50));
-            damageZones.Add(new DamageLocation(BodyPart.leg_l, 50));
-            damageZones.Add(new DamageLocation(BodyPart.leg_r, 50));
-            damageZones.Add(new DamageLocation(BodyPart.torso, 100));
+            damageZones.Add(new DamageLocation(BodyPart.Left_Arm, 50));
+            damageZones.Add(new DamageLocation(BodyPart.Right_Arm, 50));
+            damageZones.Add(new DamageLocation(BodyPart.Groin, 50));
+            damageZones.Add(new DamageLocation(BodyPart.Head, 50));
+            damageZones.Add(new DamageLocation(BodyPart.Left_Leg, 50));
+            damageZones.Add(new DamageLocation(BodyPart.Right_Leg, 50));
+            damageZones.Add(new DamageLocation(BodyPart.Torso, 100));
 
             this.maxHealth = damageZones.Sum(x => x.maxHealth);
             this.currentHealth = this.maxHealth;
@@ -55,12 +55,12 @@ namespace SGO
 
         protected override void ApplyDamage(Entity damager, int damageamount, DamageType damType)
         {
-            ApplyDamage(damager, damageamount, damType, BodyPart.torso); //Apply randomly instead of chest only
+            ApplyDamage(damager, damageamount, damType, BodyPart.Torso); //Apply randomly instead of chest only
         }
 
         protected override void ApplyDamage(int p)
         {
-            ApplyDamage(Owner, p, DamageType.Untyped, BodyPart.torso); ; //Apply randomly instead of chest only
+            ApplyDamage(Owner, p, DamageType.Untyped, BodyPart.Torso); ; //Apply randomly instead of chest only
         }
 
         public override void HandleNetworkMessage(IncomingEntityComponentMessage message, NetConnection client)

@@ -49,6 +49,8 @@ namespace SS3D.UserInterface
 
         public ClientServiceType ServiceType { get { return ClientServiceType.UiManager; } }
 
+        public DragDropInfo dragInfo = new DragDropInfo();
+
         /// <summary>
         ///  List of iGuiComponents. Components in this list will recieve input, updates and net messages.
         /// </summary>
@@ -170,7 +172,11 @@ namespace SS3D.UserInterface
             foreach (IGuiComponent component in renderList)
                 component.Render();
 
-            if (cursorSprite == null) cursorSprite = ResMgr.Singleton.GetSprite("cursor");
+            if (dragInfo.dragSprite != null)
+                cursorSprite = dragInfo.dragSprite;
+            else
+                cursorSprite = ResMgr.Singleton.GetSprite("cursor");
+
             cursorSprite.Position = mousePos;
             cursorSprite.Draw();
         } 
@@ -266,6 +272,9 @@ namespace SS3D.UserInterface
 
             foreach (IGuiComponent current in inputList)
                 if (current.MouseUp(e)) return true;
+
+            if (dragInfo.dragSprite != null || dragInfo.dragEntity != null) //Drag & dropped into nothing or invalid. Remove dragged obj.
+                dragInfo.Reset();
 
             return false;
         }

@@ -25,7 +25,7 @@ namespace SS3D_Server.Modules
         public SessionStatus status;
         public AdminPermissions adminPermissions;
 
-        public BodyPart targetedArea = BodyPart.torso;
+        public BodyPart targetedArea = BodyPart.Torso;
         public BodyPart TargetedArea { get { return targetedArea; } }
 
         public JobDefinition assignedJob;

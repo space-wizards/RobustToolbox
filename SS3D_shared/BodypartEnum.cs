@@ -7,12 +7,12 @@ namespace SS3D_shared
 {
     public enum BodyPart
     {
-        head,
-        torso,
-        groin,
-        arm_l,
-        arm_r,
-        leg_l,
-        leg_r
+        Head,
+        Torso,
+        Groin,
+        Left_Arm,
+        Right_Arm,
+        Left_Leg,
+        Right_Leg
     }
 }

@@ -192,6 +192,7 @@
     <Compile Include="Modules\UserInterface\Components\Textbox.cs" />
     <Compile Include="Modules\UserInterface\Components\Window.cs" />
     <Compile Include="Modules\UserInterface\Inventory\HumanComboGUI.cs" />
+    <Compile Include="Modules\UserInterface\Inventory\InventorySlotUi.cs" />
     <Compile Include="Modules\UserInterface\UI_Manager.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />

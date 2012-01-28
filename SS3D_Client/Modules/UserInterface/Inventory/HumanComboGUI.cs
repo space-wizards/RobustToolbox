@@ -384,7 +384,7 @@ namespace SS3D.UserInterface
                             else healthStr += "CRIPPLED (" + loc.currentHealth.ToString() + " / " + loc.maxHealth.ToString() + ")" + Environment.NewLine;
                         }
 
-                        healthStr += Environment.NewLine + "Total Health : " + healthcomp.GetHealth().ToString() + " / " + healthcomp.GetHealth().ToString();
+                        healthStr += Environment.NewLine + "Total Health : " + healthcomp.GetHealth().ToString() + " / " + healthcomp.GetMaxHealth().ToString();
 
                         healthText.Text = healthStr;
                         healthText.Color = Color.FloralWhite;

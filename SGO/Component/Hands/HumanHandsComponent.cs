@@ -36,11 +36,25 @@ namespace SGO
                 case ComponentMessageType.IsCurrentHandEmpty:
                     replies.Add(new ComponentReplyMessage(ComponentMessageType.IsCurrentHandEmpty, IsEmpty(currentHand)));
                     break;
+                case ComponentMessageType.IsHandEmpty:
+                    replies.Add(new ComponentReplyMessage(ComponentMessageType.IsHandEmptyReply, IsEmpty((Hand)list[0])));
+                    break;
                 case ComponentMessageType.PickUpItem:
                     Pickup((Entity)list[0]);
                     break;
+                case ComponentMessageType.PickUpItemToHand:
+                    Pickup((Entity)list[0], (Hand)list[1]);
+                    break;
                 case ComponentMessageType.DropItemInCurrentHand:
                     Drop(currentHand);
+                    break;
+                case ComponentMessageType.DropItemInHand:
+                    Hand hand = (Hand)list[0];
+                    Drop(hand);
+                    break;
+                case ComponentMessageType.DropEntityInHand:
+                    Entity ent = (Entity)list[0];
+                    Drop(ent);
                     break;
                 case ComponentMessageType.BoundKeyChange:
                     if ((BoundKeyFunctions)list[0] == BoundKeyFunctions.Drop && (BoundKeyState)list[1] == BoundKeyState.Up)
@@ -66,6 +80,12 @@ namespace SGO
                 switch (type)
                 {
                     case ComponentMessageType.ActiveHandChanged:
+                        Owner.SendMessage(this, type, null, message.messageParameters[1]);
+                        break;
+                    case ComponentMessageType.DropEntityInHand:
+                        Owner.SendMessage(this, type, null, EntityManager.Singleton.GetEntity((int)message.messageParameters[1]));
+                        break;
+                    case ComponentMessageType.DropItemInHand:
                         Owner.SendMessage(this, type, null, message.messageParameters[1]);
                         break;
                 }
@@ -133,9 +153,29 @@ namespace SGO
         {
             if (entity != null && IsEmpty(currentHand))
             {
+                if (Owner.HasComponent(ComponentFamily.Equipment))
+                    Owner.SendMessage(this, ComponentMessageType.UnEquipItemToFloor, null, entity);
+
                 SetEntity(currentHand, entity);
                 Owner.SendComponentNetworkMessage(this, Lidgren.Network.NetDeliveryMethod.ReliableOrdered, null, ComponentMessageType.HandsPickedUpItem, entity.Uid, currentHand);
                 entity.SendMessage(this, ComponentMessageType.PickedUp, null, Owner, currentHand);
+            }
+        }
+
+        /// <summary>
+        /// Put the specified entity in the specified hand
+        /// </summary>
+        /// <param name="entity"></param>
+        private void Pickup(Entity entity, Hand hand)
+        {
+            if (entity != null && IsEmpty(hand))
+            {
+                if (Owner.HasComponent(ComponentFamily.Equipment))
+                    Owner.SendMessage(this, ComponentMessageType.UnEquipItemToFloor, null, entity);
+
+                SetEntity(hand, entity);
+                Owner.SendComponentNetworkMessage(this, Lidgren.Network.NetDeliveryMethod.ReliableOrdered, null, ComponentMessageType.HandsPickedUpItem, entity.Uid, hand);
+                entity.SendMessage(this, ComponentMessageType.PickedUp, null, Owner, hand);
             }
         }
 
@@ -160,6 +200,20 @@ namespace SGO
                 handslots.Remove(hand);
             }
         }
+
+        /// <summary>
+        /// Drop an entity.
+        /// </summary>
+        /// <param name="hand"></param>
+        private void Drop(Entity ent)
+        {
+            if (handslots.ContainsValue(ent))
+            {
+                Hand holding = handslots.First(x => x.Value == ent).Key;
+                Drop(holding);
+            }
+        }
+
 
         private void DropAll()
         {

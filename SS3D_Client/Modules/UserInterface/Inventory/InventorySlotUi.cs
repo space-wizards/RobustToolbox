@@ -117,10 +117,25 @@ namespace SS3D.UserInterface
         {
             if (clientArea.Contains(new Point((int)e.Position.X, (int)e.Position.Y)))
             {
-                if (currentEntity == null && UiManager.Singleton.dragInfo.isEntity && UiManager.Singleton.dragInfo.dragEntity != null)
+                if (playerController.controlledAtom == null)
+                    return false;
+
+                var entity = (Entity)playerController.controlledAtom;
+                EquipmentComponent equipment = (EquipmentComponent)entity.GetComponent(ComponentFamily.Equipment);
+
+                if (currentEntity == UiManager.Singleton.dragInfo.dragEntity) //Dropped from us to us. (Try to) unequip it to active hand.
                 {
-                    if (Dropped != null) Dropped(this, UiManager.Singleton.dragInfo.dragEntity);
+                    UiManager.Singleton.dragInfo.Reset();
+                    equipment.DispatchUnEquipToHand(currentEntity.Uid);
                     return true;
+                }
+                else
+                {
+                    if (currentEntity == null && UiManager.Singleton.dragInfo.isEntity && UiManager.Singleton.dragInfo.dragEntity != null)
+                    {
+                        if (Dropped != null) Dropped(this, UiManager.Singleton.dragInfo.dragEntity);
+                        return true;
+                    }
                 }
             }
             return false;

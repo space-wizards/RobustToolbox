@@ -38,6 +38,11 @@ namespace SGO
                         return; //TODO REAL ERROR MESSAGE OR SOME FUCK SHIT
                     UnEquipEntityToHand((Entity)list[0]);
                     break;
+                case ComponentMessageType.UnEquipItemToSpecifiedHand: //remove an entity from a slot and put it in the current hand slot.
+                    if (!Owner.HasComponent(SS3D_shared.GO.ComponentFamily.Hands))
+                        return; //TODO REAL ERROR MESSAGE OR SOME FUCK SHIT
+                    UnEquipEntityToHand((Entity)list[0], (Hand)list[1]);
+                    break;
             }
         }
 
@@ -47,7 +52,7 @@ namespace SGO
             {
                 ComponentMessageType type = (ComponentMessageType)message.messageParameters[0];
                 List<ComponentReplyMessage> replies = new List<ComponentReplyMessage>();
-                switch(type)
+                switch(type) //Why does this send messages to itself THIS IS DUMB AND WILL BREAK THINGS. BZZZ
                 {
                     case ComponentMessageType.EquipItem:
                         Owner.SendMessage(this, type, replies, EntityManager.Singleton.GetEntity((int)message.messageParameters[1]));
@@ -63,6 +68,9 @@ namespace SGO
                         break;
                     case ComponentMessageType.UnEquipItemToHand:
                         Owner.SendMessage(this, type, replies, EntityManager.Singleton.GetEntity((int)message.messageParameters[1]));
+                        break;
+                    case ComponentMessageType.UnEquipItemToSpecifiedHand:
+                        Owner.SendMessage(this, type, replies, EntityManager.Singleton.GetEntity((int)message.messageParameters[1]), (Hand)message.messageParameters[2]);
                         break;
                 }
             }
@@ -84,8 +92,14 @@ namespace SGO
         // Equips Entity e to Part part
         private void EquipEntityToPart(EquipmentSlot part, Entity e)
         {
+            if (equippedEntities.ContainsValue(e)) //Its already equipped? Unequip first. This shouldnt happen.
+                UnEquipEntity(e);
+
             if (CanEquip(e)) //If the part is empty, the part exists on this mob, and the entity specified is not null
             {
+                if (Owner.HasComponent(ComponentFamily.Hands))
+                    Owner.SendMessage(this, ComponentMessageType.DropEntityInHand, null, e);
+
                 equippedEntities.Add(part, e);
                 e.SendMessage(this, SS3D_shared.GO.ComponentMessageType.ItemEquipped, null, Owner);
                 Owner.SendComponentNetworkMessage(this, Lidgren.Network.NetDeliveryMethod.ReliableUnordered, null, EquipmentComponentNetMessage.ItemEquipped, part, e.Uid);
@@ -95,12 +109,18 @@ namespace SGO
         // Equips Entity e and automatically finds the appropriate part
         private void EquipEntity(Entity e)
         {
+            if(equippedEntities.ContainsValue(e)) //Its already equipped? Unequip first. This shouldnt happen.
+                UnEquipEntity(e);
+
             if (CanEquip(e))
             {
                 List<ComponentReplyMessage> replies = new List<ComponentReplyMessage>();
                 e.SendMessage(this, ComponentMessageType.GetWearLoc, replies);
                 if (replies.Count > 0 && replies[0].messageType == ComponentMessageType.ReturnWearLoc)
                 {
+                    if (Owner.HasComponent(ComponentFamily.Hands))
+                        Owner.SendMessage(this, ComponentMessageType.DropEntityInHand, null, e);
+
                     EquipEntityToPart((EquipmentSlot)replies[0].paramsList[0], e);
                 }
             }
@@ -139,8 +159,20 @@ namespace SGO
         private void UnEquipEntityToHand(Entity e)
         {
             UnEquipEntity(e);
-            HumanHandsComponent hh = (HumanHandsComponent)Owner.GetComponent(ComponentFamily.Hands);
+            //HumanHandsComponent hh = (HumanHandsComponent)Owner.GetComponent(ComponentFamily.Hands);
             Owner.SendMessage(this, ComponentMessageType.PickUpItem, null, e);
+        }
+
+        private void UnEquipEntityToHand(Entity e, Hand h)
+        {
+            List<ComponentReplyMessage> replies = new List<ComponentReplyMessage>();
+            HumanHandsComponent hands = (HumanHandsComponent)Owner.GetComponent(ComponentFamily.Hands);
+            Owner.SendMessage(this, ComponentMessageType.IsHandEmpty, replies, h);
+            if (replies.Exists(x => x.messageType == ComponentMessageType.IsHandEmptyReply && (bool)x.paramsList[0]))
+            {
+                UnEquipEntity(e);
+                Owner.SendMessage(this, ComponentMessageType.PickUpItemToHand, null, e, h);
+            }
         }
 
         // Unequips entity e 

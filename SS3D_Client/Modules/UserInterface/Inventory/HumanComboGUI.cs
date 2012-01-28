@@ -127,7 +127,6 @@ namespace SS3D.UserInterface
             slot_feet = new InventorySlotUi(EquipmentSlot.Feet, _playerController);
             slot_feet.Dropped += new InventorySlotUi.InventorySlotUiDropHandler(slot_Dropped);
 
-
             //Right Side - mask, ears, inner, belt, back
             slot_mask = new InventorySlotUi(EquipmentSlot.Mask, _playerController);
             slot_mask.Dropped += new InventorySlotUi.InventorySlotUiDropHandler(slot_Dropped);
@@ -150,33 +149,14 @@ namespace SS3D.UserInterface
         {
             UiManager.Singleton.dragInfo.Reset();
 
-            if (sender.currentEntity == dropped) return; //Dropped from us to us.
-
             if (playerController.controlledAtom == null)
                 return;
 
             var entity = (Entity)playerController.controlledAtom;
 
             EquipmentComponent equipment = (EquipmentComponent)entity.GetComponent(ComponentFamily.Equipment);
-            HumanHandsComponent hands = (HumanHandsComponent)entity.GetComponent(ComponentFamily.Hands);
 
-            if (hands == null || entity == null) return;
-
-            if (hands.HandSlots.ContainsValue(dropped)) //Comes from one of our hands. 
-            {                //THIS NEEDS BETTER HANDLING. SERVER SHOULD AUTOMATICALLY REMOVE OBJECTS FROM HANDS WHEN EQUIPPED (So we can just equip them here without worrying about hands).//BZZZ
-                Hand containingHand = hands.HandSlots.First(x => x.Value == dropped).Key;
-
-                if (containingHand != hands.currentHand)
-                    SendSwitchHandTo(containingHand);
-
-                equipment.DispatchEquipFromHand();
-            }
-            else //Comes from somewhere else. Not sure what somewhere could be. Maybe another slot? If we have items that can go in diff slots? Need to remember to unequip it from that something before equipping. Unless server does. See above.
-            {
-                equipment.DispatchEquipToPart(dropped.Uid, sender.assignedSlot);
-            }
-
-            //This will autmatically equip items to their proper slot if dropped on a wrong one. Server does that. Oh well.
+            equipment.DispatchEquip(dropped.Uid); //Serverside equip component will equip and remove from hands.
         }
 
         void tab_Clicked(SimpleImageButton sender)
@@ -541,12 +521,19 @@ namespace SS3D.UserInterface
 
                 if (hands == null || entity == null) return false;
 
-                if (Utilities.SpritePixelHit(hand_l_bg, e.Position)) //Needs better handling, Server should automatically unequip items from equip component when equiped to hand. //BZZZ
+                if (Utilities.SpritePixelHit(hand_l_bg, e.Position))
                 {
-                    if (!hands.HandSlots.ContainsKey(Hand.Left)) //Is it empty? Wont contain it if the slot is empty.
+                    if (!hands.HandSlots.ContainsKey(Hand.Left)) 
                     {
-                        if (hands.currentHand != Hand.Left) SendSwitchHandTo(Hand.Left);
-                        equipment.DispatchUnEquipToHand(UiManager.Singleton.dragInfo.dragEntity.Uid);
+                        if (hands.HandSlots.ContainsValue(UiManager.Singleton.dragInfo.dragEntity))
+                        {
+                            if (hands.HandSlots.First(x => x.Value == UiManager.Singleton.dragInfo.dragEntity).Key == Hand.Left) //From me to me, ignore.
+                                return false;
+                            else
+                                hands.SendDropEntity(UiManager.Singleton.dragInfo.dragEntity); //Other hand to me.
+
+                        }
+                        equipment.DispatchUnEquipItemToSpecifiedHand(UiManager.Singleton.dragInfo.dragEntity.Uid, Hand.Left);
                         UiManager.Singleton.dragInfo.Reset();
                         return true;
                     }
@@ -556,8 +543,15 @@ namespace SS3D.UserInterface
                 {
                     if (!hands.HandSlots.ContainsKey(Hand.Right))
                     {
-                        if (hands.currentHand != Hand.Right) SendSwitchHandTo(Hand.Right);
-                        equipment.DispatchUnEquipToHand(UiManager.Singleton.dragInfo.dragEntity.Uid);
+                        if (hands.HandSlots.ContainsValue(UiManager.Singleton.dragInfo.dragEntity))
+                        {
+                            if (hands.HandSlots.First(x => x.Value == UiManager.Singleton.dragInfo.dragEntity).Key == Hand.Right) //From me to me, ignore.
+                                return false;
+                            else
+                                hands.SendDropEntity(UiManager.Singleton.dragInfo.dragEntity); //Other hand to me.
+
+                        }
+                        equipment.DispatchUnEquipItemToSpecifiedHand(UiManager.Singleton.dragInfo.dragEntity.Uid, Hand.Right);
                         UiManager.Singleton.dragInfo.Reset();
                         return true;
                     }
@@ -581,6 +575,20 @@ namespace SS3D.UserInterface
                         if (slot_inner.MouseUp(e)) return true;
                         if (slot_belt.MouseUp(e)) return true;
                         if (slot_back.MouseUp(e)) return true;
+
+                        if (combo_BG.AABB.Contains(mouseAABB) && UiManager.Singleton.dragInfo.isEntity && UiManager.Singleton.dragInfo.dragEntity != null)
+                        { //Should be refined to only trigger in the equip area. Equip it if they drop it anywhere on the thing. This might make the slots obsolete if we keep it.
+                            if (playerController.controlledAtom == null)
+                                return false;
+
+                            var entity = (Entity)playerController.controlledAtom;
+
+                            EquipmentComponent equipment = (EquipmentComponent)entity.GetComponent(ComponentFamily.Equipment);
+                            equipment.DispatchEquip(UiManager.Singleton.dragInfo.dragEntity.Uid);
+                            UiManager.Singleton.dragInfo.Reset();
+                            return true;
+                        }
+
                         break;
                     }
                 case (2): //Health tab

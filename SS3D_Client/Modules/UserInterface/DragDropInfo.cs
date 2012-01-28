@@ -15,9 +15,31 @@ using CGO;
 
 namespace SS3D
 {
-    class DragDropInfo
+    public class DragDropInfo
     {
-        Entity dragEntity;
-        bool isEntity = true;
+        public Entity dragEntity { get; private set; }
+        public Sprite dragSprite { get; private set; }
+        public bool isEntity { get; private set;}
+        //Ability
+
+        public void Reset()
+        {
+            dragEntity = null;
+            dragSprite = null;
+            isEntity = true;
+            //Ability
+        }
+
+        public void StartDrag(Entity ent)
+        {
+            dragEntity = ent;
+            dragSprite = Utilities.GetSpriteComponentSprite(ent);
+            isEntity = true;
+        }
+
+        //public void StartDrag(Ability ab)
+        //{
+        //    isEntity = false;
+        //}
     }
 }

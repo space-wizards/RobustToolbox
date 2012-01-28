@@ -27,13 +27,13 @@ namespace SS3D.UserInterface
             : base(controller)
         {
             netMgr = _netMgr;
-            TargetingDummyElement head = new TargetingDummyElement("dummy_head", BodyPart.head, controller);
-            TargetingDummyElement torso = new TargetingDummyElement("dummy_torso", BodyPart.torso, controller);
-            TargetingDummyElement groin = new TargetingDummyElement("dummy_groin", BodyPart.groin, controller);
-            TargetingDummyElement arm_l = new TargetingDummyElement("dummy_arm_l", BodyPart.arm_l, controller);
-            TargetingDummyElement arm_r = new TargetingDummyElement("dummy_arm_r", BodyPart.arm_r, controller);
-            TargetingDummyElement leg_l = new TargetingDummyElement("dummy_leg_l", BodyPart.leg_l, controller);
-            TargetingDummyElement leg_r = new TargetingDummyElement("dummy_leg_r", BodyPart.leg_r, controller);
+            TargetingDummyElement head = new TargetingDummyElement("dummy_head", BodyPart.Head, controller);
+            TargetingDummyElement torso = new TargetingDummyElement("dummy_torso", BodyPart.Torso, controller);
+            TargetingDummyElement groin = new TargetingDummyElement("dummy_groin", BodyPart.Groin, controller);
+            TargetingDummyElement arm_l = new TargetingDummyElement("dummy_arm_l", BodyPart.Left_Arm, controller);
+            TargetingDummyElement arm_r = new TargetingDummyElement("dummy_arm_r", BodyPart.Right_Arm, controller);
+            TargetingDummyElement leg_l = new TargetingDummyElement("dummy_leg_l", BodyPart.Left_Leg, controller);
+            TargetingDummyElement leg_r = new TargetingDummyElement("dummy_leg_r", BodyPart.Right_Leg, controller);
             elements.Add(head);
             elements.Add(torso);
             elements.Add(groin);

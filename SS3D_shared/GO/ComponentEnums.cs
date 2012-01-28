@@ -141,6 +141,7 @@ namespace SS3D_shared.GO
         EquipItemToPart,
         GetItemInEquipmentSlot,
         ReturnItemInEquipmentSlot,
+        ItemSlotEmpty,
         SetWornDrawDepth,
         HandsPickedUpItem,
         HandsDroppedItem,

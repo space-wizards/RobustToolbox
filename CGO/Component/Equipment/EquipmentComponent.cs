@@ -38,6 +38,8 @@ namespace CGO
                 case ComponentMessageType.GetItemInEquipmentSlot:
                     if (!IsEmpty((EquipmentSlot)list[0]))
                         reply.Add(new ComponentReplyMessage(ComponentMessageType.ReturnItemInEquipmentSlot, equippedEntities[(EquipmentSlot)list[0]]));
+                    else
+                        reply.Add(new ComponentReplyMessage(ComponentMessageType.ItemSlotEmpty));
                     break;
             }
         }
@@ -81,7 +83,7 @@ namespace CGO
             equippedEntities.Remove(part);
         }
 
-        private bool IsEmpty(EquipmentSlot part)
+        public bool IsEmpty(EquipmentSlot part)
         {
             if (equippedEntities.ContainsKey(part))
                 return false;

@@ -22,7 +22,7 @@ namespace SGO.Component.Item.ItemCapability
 
         public override bool ApplyTo(Entity target, Entity sourceActor)
         {
-            BodyPart targetedArea = BodyPart.torso;
+            BodyPart targetedArea = BodyPart.Torso;
 
             List<ComponentReplyMessage> replies = new List<ComponentReplyMessage>();
             sourceActor.SendMessage(this, SS3D_shared.GO.ComponentMessageType.GetActorSession, replies);

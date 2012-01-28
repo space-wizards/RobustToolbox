@@ -55,22 +55,26 @@ namespace SGO
                 switch(type) //Why does this send messages to itself THIS IS DUMB AND WILL BREAK THINGS. BZZZ
                 {
                     case ComponentMessageType.EquipItem:
-                        Owner.SendMessage(this, type, replies, EntityManager.Singleton.GetEntity((int)message.messageParameters[1]));
+                        EquipEntity(EntityManager.Singleton.GetEntity((int)message.messageParameters[1]));
                         break;
                     case ComponentMessageType.EquipItemInHand:
-                        Owner.SendMessage(this, type, replies, null);
+                        EquipEntityInHand();
                         break;
                     case ComponentMessageType.EquipItemToPart:
-                        Owner.SendMessage(this, type, replies, message.messageParameters[2], EntityManager.Singleton.GetEntity((int)message.messageParameters[1]));
+                        EquipEntityToPart((EquipmentSlot)message.messageParameters[1], EntityManager.Singleton.GetEntity((int)message.messageParameters[2]));
                         break;
                     case ComponentMessageType.UnEquipItemToFloor:
-                        Owner.SendMessage(this, type, replies, EntityManager.Singleton.GetEntity((int)message.messageParameters[1]));
+                        UnEquipEntity(EntityManager.Singleton.GetEntity((int)message.messageParameters[1]));
                         break;
                     case ComponentMessageType.UnEquipItemToHand:
-                        Owner.SendMessage(this, type, replies, EntityManager.Singleton.GetEntity((int)message.messageParameters[1]));
+                        if (!Owner.HasComponent(SS3D_shared.GO.ComponentFamily.Hands))
+                            return; //TODO REAL ERROR MESSAGE OR SOME FUCK SHIT
+                        UnEquipEntityToHand(EntityManager.Singleton.GetEntity((int)message.messageParameters[1]));
                         break;
                     case ComponentMessageType.UnEquipItemToSpecifiedHand:
-                        Owner.SendMessage(this, type, replies, EntityManager.Singleton.GetEntity((int)message.messageParameters[1]), (Hand)message.messageParameters[2]);
+                        if (!Owner.HasComponent(SS3D_shared.GO.ComponentFamily.Hands))
+                            return; //TODO REAL ERROR MESSAGE OR SOME FUCK SHIT
+                        UnEquipEntityToHand(EntityManager.Singleton.GetEntity((int)message.messageParameters[1]), (Hand)message.messageParameters[2]);
                         break;
                 }
             }

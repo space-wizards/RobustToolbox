@@ -64,6 +64,11 @@ namespace CGO
             Owner.SendComponentNetworkMessage(this, Lidgren.Network.NetDeliveryMethod.ReliableOrdered, ComponentMessageType.UnEquipItemToHand, uid);
         }
 
+        public void DispatchUnEquipItemToSpecifiedHand(int uid, Hand hand)
+        {
+            Owner.SendComponentNetworkMessage(this, Lidgren.Network.NetDeliveryMethod.ReliableOrdered, ComponentMessageType.UnEquipItemToSpecifiedHand, uid, hand);
+        }
+
         public void DispatchUnEquipToFloor(int uid)
         {
             Owner.SendComponentNetworkMessage(this, Lidgren.Network.NetDeliveryMethod.ReliableOrdered, ComponentMessageType.UnEquipItemToFloor, uid);

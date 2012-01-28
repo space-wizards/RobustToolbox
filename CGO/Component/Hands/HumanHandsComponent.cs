@@ -73,6 +73,16 @@ namespace CGO
             Owner.SendComponentNetworkMessage(this, Lidgren.Network.NetDeliveryMethod.ReliableOrdered, ComponentMessageType.ActiveHandChanged, hand);
         }
 
+        public void SendDropEntity(Entity ent)
+        {
+            Owner.SendComponentNetworkMessage(this, Lidgren.Network.NetDeliveryMethod.ReliableOrdered, ComponentMessageType.DropEntityInHand, ent.Uid);
+        }
+
+        public void SendDropFromHand(Hand hand)
+        {
+            Owner.SendComponentNetworkMessage(this, Lidgren.Network.NetDeliveryMethod.ReliableOrdered, ComponentMessageType.DropItemInHand, hand);
+        }
+
         private void SwitchHandTo(Hand hand)
         {
             currentHand = hand;

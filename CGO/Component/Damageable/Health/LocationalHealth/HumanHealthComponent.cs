@@ -13,7 +13,7 @@ namespace CGO
     public class HumanHealthComponent : HealthComponent //Behaves like health component but tracks damage of individual zones.
     {                                                   //Useful for mobs.
 
-        protected List<DamageLocation> damageZones = new List<DamageLocation>();
+        public List<DamageLocation> damageZones = new List<DamageLocation>(); //makes this protected again.
 
         public HumanHealthComponent()
             :base()

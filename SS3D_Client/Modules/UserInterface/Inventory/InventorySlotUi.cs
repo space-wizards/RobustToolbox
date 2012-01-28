@@ -123,7 +123,7 @@ namespace SS3D.UserInterface
                 var entity = (Entity)playerController.controlledAtom;
                 EquipmentComponent equipment = (EquipmentComponent)entity.GetComponent(ComponentFamily.Equipment);
 
-                if (currentEntity == UiManager.Singleton.dragInfo.dragEntity) //Dropped from us to us. (Try to) unequip it to active hand.
+                if (currentEntity != null && currentEntity == UiManager.Singleton.dragInfo.dragEntity) //Dropped from us to us. (Try to) unequip it to active hand.
                 {
                     UiManager.Singleton.dragInfo.Reset();
                     equipment.DispatchUnEquipToHand(currentEntity.Uid);

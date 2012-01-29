@@ -10,7 +10,7 @@ namespace SGO
 {
     public class BasicItemComponent : GameObjectComponent
     {
-        private Entity currentHolder;
+        public Entity currentHolder { get; private set; }
         private Hand holdingHand;
 
         private Dictionary<string, ItemCapability> capabilities;
@@ -129,7 +129,6 @@ namespace SGO
             //Pick up the item
             actor.SendMessage(this, ComponentMessageType.PickUpItem, null, Owner);
         }
-
 
         /// <summary>
         /// Apply this item's capabilities to a target entity

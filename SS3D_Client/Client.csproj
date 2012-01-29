@@ -177,10 +177,7 @@
     <Compile Include="Modules\UserInterface\Components\EntitySpawnSelectButton.cs" />
     <Compile Include="Modules\UserInterface\Components\GuiComponent.cs" />
     <Compile Include="Modules\UserInterface\Components\DisconnectedScreenBlocker.cs" />
-    <Compile Include="Modules\UserInterface\Components\HumanHandsGui.cs" />
-    <Compile Include="Modules\UserInterface\Components\HumanInventory.cs" />
     <Compile Include="Modules\UserInterface\Components\IGuiComponent.cs" />
-    <Compile Include="Modules\UserInterface\Components\ItemSlot.cs" />
     <Compile Include="Modules\UserInterface\Components\JobSelectButton.cs" />
     <Compile Include="Modules\UserInterface\Components\Label.cs" />
     <Compile Include="Modules\UserInterface\Components\Listbox.cs" />
@@ -192,6 +189,8 @@
     <Compile Include="Modules\UserInterface\Components\Textbox.cs" />
     <Compile Include="Modules\UserInterface\Components\Window.cs" />
     <Compile Include="Modules\UserInterface\Inventory\HumanComboGUI.cs" />
+    <Compile Include="Modules\UserInterface\Inventory\EquipmentSlotUi.cs" />
+    <Compile Include="Modules\UserInterface\Inventory\InventoryViewer.cs" />
     <Compile Include="Modules\UserInterface\Inventory\InventorySlotUi.cs" />
     <Compile Include="Modules\UserInterface\UI_Manager.cs" />
     <Compile Include="Program.cs" />

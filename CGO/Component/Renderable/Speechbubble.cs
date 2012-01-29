@@ -23,7 +23,6 @@ namespace CGO
         private double millisecondsremaining = 0;
         private DateTime lastUpdate;
 
-
         public SpeechBubble(string mobname)
         {
             m_mobname = mobname;

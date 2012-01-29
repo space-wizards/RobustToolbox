@@ -21,6 +21,9 @@ namespace SGO
         {
             switch (type)
             {
+                case ComponentMessageType.DisassociateEntity:
+                    UnEquipEntity((Entity)list[0]);
+                    break;
                 case ComponentMessageType.EquipItemToPart: //Equip an entity straight up.
                     EquipEntityToPart((EquipmentSlot)list[0], (Entity)list[1]);
                     break;
@@ -101,8 +104,7 @@ namespace SGO
 
             if (CanEquip(e)) //If the part is empty, the part exists on this mob, and the entity specified is not null
             {
-                if (Owner.HasComponent(ComponentFamily.Hands))
-                    Owner.SendMessage(this, ComponentMessageType.DropEntityInHand, null, e);
+                RemoveFromOtherComps(e);
 
                 equippedEntities.Add(part, e);
                 e.SendMessage(this, SS3D_shared.GO.ComponentMessageType.ItemEquipped, null, Owner);
@@ -122,8 +124,7 @@ namespace SGO
                 e.SendMessage(this, ComponentMessageType.GetWearLoc, replies);
                 if (replies.Count > 0 && replies[0].messageType == ComponentMessageType.ReturnWearLoc)
                 {
-                    if (Owner.HasComponent(ComponentFamily.Hands))
-                        Owner.SendMessage(this, ComponentMessageType.DropEntityInHand, null, e);
+                    RemoveFromOtherComps(e);
 
                     EquipEntityToPart((EquipmentSlot)replies[0].paramsList[0], e);
                 }
@@ -142,8 +143,7 @@ namespace SGO
             Owner.SendMessage(this, ComponentMessageType.GetActiveHandItem, reps);
             if (reps.Count > 0 && reps[0].messageType == ComponentMessageType.ReturnActiveHandItem && CanEquip((Entity)reps[0].paramsList[0]))
             {
-                //Remove from hand
-                Owner.SendMessage(this, ComponentMessageType.DropItemInCurrentHand, null);
+                RemoveFromOtherComps((Entity)reps[0].paramsList[0]);
                 //Equip
                 EquipEntity((Entity)reps[0].paramsList[0]);
             }
@@ -223,6 +223,15 @@ namespace SGO
             if (equippedEntities.ContainsKey(part))
                 return false;
             return true;
+        }
+
+        private void RemoveFromOtherComps(Entity entity)
+        {
+            Entity holder = null;
+            if (entity.HasComponent(ComponentFamily.Item)) holder = ((BasicItemComponent)entity.GetComponent(ComponentFamily.Item)).currentHolder;
+            if (holder == null && entity.HasComponent(ComponentFamily.Equippable)) holder = ((EquippableComponent)entity.GetComponent(ComponentFamily.Equippable)).currentWearer;
+            if (holder != null) holder.SendMessage(this, ComponentMessageType.DisassociateEntity, null, entity);
+            else Owner.SendMessage(this, ComponentMessageType.DisassociateEntity, null, entity);
         }
 
         private bool CanEquip(Entity e)

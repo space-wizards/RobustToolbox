@@ -20,77 +20,39 @@ namespace SS3D.UserInterface
 {
     class InventorySlotUi : GuiComponent
     {
-        public delegate void InventorySlotUiDropHandler(InventorySlotUi sender, Entity dropped);
-        public event InventorySlotUiDropHandler Dropped;
+        public Entity containingEntity = null;
+        private Sprite entSprite = null;
+        private Sprite slotSprite = null;
 
-        public EquipmentSlot assignedSlot { get; private set; }
-        public Entity currentEntity { get; private set; }
+        private Color currCol = Color.White;
 
-        private Color color = Color.White;
+        public delegate void InventoryClickHandler(InventorySlotUi sender);
+        public event InventoryClickHandler Clicked;
 
-        private Sprite buttonSprite;
-        private Sprite currentEntSprite;
-
-        private TextSprite text;
-
-        private PlayerController playerControler;
-
-        public InventorySlotUi(EquipmentSlot slot, PlayerController controler)
-            : base(controler)
+        public InventorySlotUi(Entity containingEnt)
+            : base()
         {
-            assignedSlot = slot;
-            playerControler = controler;
-            buttonSprite = ResMgr.Singleton.GetSprite("slot");
-            text = new TextSprite(slot.ToString() + "UIElementSlot", slot.ToString(), ResMgr.Singleton.GetFont("CALIBRI"));
-            text.ShadowColor = Color.Black;
-            text.ShadowOffset = new Vector2D(1, 1);
-            text.Shadowed = true;
-            text.Color = Color.White;
-            Update();
+            containingEntity = containingEnt;
+            if (containingEntity != null) entSprite = Utilities.GetSpriteComponentSprite(containingEntity);
+            slotSprite = ResMgr.Singleton.GetSprite("slot");
         }
 
         public override void Update()
         {
-            buttonSprite.Position = Position;
-            clientArea = new Rectangle(Position, new Size((int)buttonSprite.AABB.Width, (int)buttonSprite.AABB.Height));
-
-            text.Position = position;
-
-            if (playerController.controlledAtom == null)
-                return;
-
-            var entity = (Entity)playerController.controlledAtom;
-            EquipmentComponent equipment = (EquipmentComponent)entity.GetComponent(ComponentFamily.Equipment);
-
-            if (equipment.equippedEntities.ContainsKey(assignedSlot))
-            {
-                currentEntity = equipment.equippedEntities[assignedSlot];
-                currentEntSprite = Utilities.GetSpriteComponentSprite(currentEntity);
-            }
-            else
-            {
-                currentEntity = null;
-                currentEntSprite = null;
-            } 
+            clientArea = new Rectangle(position, new Size((int)slotSprite.AABB.Width, (int)slotSprite.AABB.Height));
         }
 
         public override void Render()
         {
-            buttonSprite.Color = color;
-            buttonSprite.Position = Position;
-            buttonSprite.Draw();
-            buttonSprite.Color = Color.White;
-
-            if (currentEntSprite != null && currentEntity != null)
-                currentEntSprite.Draw(new Rectangle((int)(position.X + buttonSprite.AABB.Width / 2f - currentEntSprite.AABB.Width / 2f), (int)(position.Y + buttonSprite.AABB.Height / 2f - currentEntSprite.AABB.Height / 2f), (int)currentEntSprite.Width, (int)currentEntSprite.Height));
-
-            text.Draw();
+            slotSprite.Color = currCol;
+            slotSprite.Draw(new Rectangle(position, new Size((int)slotSprite.AABB.Width, (int)slotSprite.AABB.Height)));
+            if (entSprite != null) 
+                entSprite.Draw(new Rectangle((int)(position.X + slotSprite.AABB.Width / 2f - entSprite.AABB.Width / 2f), (int)(position.Y + slotSprite.AABB.Height / 2f - entSprite.AABB.Height / 2f), (int)entSprite.Width, (int)entSprite.Height));
+            slotSprite.Color = Color.White;
         }
 
         public override void Dispose()
         {
-            buttonSprite = null;
-            Dropped = null;
             base.Dispose();
             GC.SuppressFinalize(this);
         }
@@ -99,15 +61,7 @@ namespace SS3D.UserInterface
         {
             if (clientArea.Contains(new Point((int)e.Position.X, (int)e.Position.Y)))
             {
-                if (playerController.controlledAtom == null)
-                    return false;
-
-                var entity = (Entity)playerController.controlledAtom;
-                EquipmentComponent equipment = (EquipmentComponent)entity.GetComponent(ComponentFamily.Equipment);
-
-                if (equipment.equippedEntities.ContainsKey(assignedSlot))
-                    UiManager.Singleton.dragInfo.StartDrag(equipment.equippedEntities[assignedSlot]);
-
+                if (Clicked != null) Clicked(this);
                 return true;
             }
             return false;
@@ -117,27 +71,7 @@ namespace SS3D.UserInterface
         {
             if (clientArea.Contains(new Point((int)e.Position.X, (int)e.Position.Y)))
             {
-                if (playerController.controlledAtom == null)
-                    return false;
-
-                var entity = (Entity)playerController.controlledAtom;
-                EquipmentComponent equipment = (EquipmentComponent)entity.GetComponent(ComponentFamily.Equipment);
-                HumanHandsComponent hands = (HumanHandsComponent)entity.GetComponent(ComponentFamily.Hands);
-
-                if (currentEntity != null && currentEntity == UiManager.Singleton.dragInfo.dragEntity && hands.IsHandEmpty(hands.currentHand)) //Dropped from us to us. (Try to) unequip it to active hand.
-                {
-                    UiManager.Singleton.dragInfo.Reset();
-                    equipment.DispatchUnEquipToHand(currentEntity.Uid);
-                    return true;
-                }
-                else
-                {
-                    if (currentEntity == null && UiManager.Singleton.dragInfo.isEntity && UiManager.Singleton.dragInfo.dragEntity != null)
-                    {
-                        if (Dropped != null) Dropped(this, UiManager.Singleton.dragInfo.dragEntity);
-                        return true;
-                    }
-                }
+                return true;
             }
             return false;
         }
@@ -145,21 +79,10 @@ namespace SS3D.UserInterface
         public override void MouseMove(MouseInputEventArgs e)
         {
             if (clientArea.Contains(new Point((int)e.Position.X, (int)e.Position.Y)))
-                color = Color.LightSteelBlue;
+                currCol = Color.LightSteelBlue;
             else
-                color = Color.White;
-        }
-
-        private bool IsEmpty()
-        {
-            if (playerController.controlledAtom == null)
-                return false;
-
-            var entity = (Entity)playerController.controlledAtom;
-            EquipmentComponent equipment = (EquipmentComponent)entity.GetComponent(ComponentFamily.Equipment);
-
-            if (equipment.IsEmpty(assignedSlot)) return true;
-            else return false;
+                currCol = Color.White;
+            
         }
     }
 }

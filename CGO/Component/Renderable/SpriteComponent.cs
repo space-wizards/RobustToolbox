@@ -16,6 +16,8 @@ namespace CGO
         protected Sprite currentSprite;
         protected bool flip;
         protected Dictionary<string, Sprite> sprites;
+        protected bool visible = true;
+
         public RectangleF AABB
         {
             get
@@ -28,6 +30,7 @@ namespace CGO
             : base()
         {
             sprites = new Dictionary<string, Sprite>();
+            family = ComponentFamily.Renderable;
         }
 
         public override void OnAdd(Entity owner)
@@ -64,6 +67,9 @@ namespace CGO
         {
             switch ((ComponentMessageType)message.messageParameters[0])
             {
+                case ComponentMessageType.SetVisible:
+                    visible = (bool)message.messageParameters[1];
+                    break;
                 case ComponentMessageType.SetSpriteByKey:
                     SetSpriteByKey((string)message.messageParameters[1]);
                     break;
@@ -110,7 +116,7 @@ namespace CGO
 
         protected virtual bool WasClicked(PointF worldPos)
         {
-            if (currentSprite == null) return false;
+            if (currentSprite == null || !visible) return false;
             // // // Almost straight copy & paste.
             System.Drawing.RectangleF AABB = new System.Drawing.RectangleF(Owner.Position.X - (currentSprite.Width / 2), Owner.Position.Y - (currentSprite.Height / 2), currentSprite.Width, currentSprite.Height);
             if (!AABB.Contains(worldPos)) return false;
@@ -175,6 +181,7 @@ namespace CGO
 
         public override void Render()
         {
+            if (!visible) return;
             Vector2D RenderPos = ClientWindowData.Singleton.WorldToScreen(Owner.Position);
             if (currentSprite != null)
             {

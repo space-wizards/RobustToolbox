@@ -374,7 +374,7 @@ namespace SS3D.UserInterface
 
                         if (inventory != null)
                         {
-                            inventory.Position = new Point(position.X + 10, position.Y + 315);
+                            inventory.Position = new Point(position.X + 12, position.Y + 315);
                             inventory.Update();
                         }
                         break;

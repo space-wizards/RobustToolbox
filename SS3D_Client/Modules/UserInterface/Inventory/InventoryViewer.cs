@@ -64,7 +64,7 @@ namespace SS3D.UserInterface
                 invContainer.components.Add(slot);
 
                 curr_x++;
-                if (curr_x > 5)
+                if (curr_x >= 5)
                 {
                     curr_x = 0;
                     curr_y++;
@@ -80,7 +80,7 @@ namespace SS3D.UserInterface
                 invContainer.components.Add(slot);
 
                 curr_x++;
-                if (curr_x > 5)
+                if (curr_x >= 5)
                 {
                     curr_x = 0;
                     curr_y++;
@@ -126,6 +126,7 @@ namespace SS3D.UserInterface
         public override bool MouseUp(MouseInputEventArgs e)
         {
             //If dropped on container add to inventory.
+            if (invContainer.MouseUp(e)) return true;
             if (invContainer.ClientArea.Contains(new Point((int)e.Position.X, (int)e.Position.Y)) && UiManager.Singleton.dragInfo.isEntity && UiManager.Singleton.dragInfo.dragEntity != null)
             {
                 if (!component.ContainsEntity(UiManager.Singleton.dragInfo.dragEntity))

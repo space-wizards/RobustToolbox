@@ -11,7 +11,8 @@
       <Component name="ClickableComponent"></Component>
       <Component name="HumanEquipmentComponent"></Component>
       <Component name="HumanHandsComponent"></Component>
-      <Component name="HumanHealthComponent"></Component>  
-      </Components>
+      <Component name="HumanHealthComponent"></Component>
+      <Component name="InventoryComponent"></Component>
+    </Components>
   </EntityTemplate>
 </EntityTemplates>

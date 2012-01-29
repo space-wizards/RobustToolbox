@@ -8,7 +8,7 @@ namespace SGO
 {
     public class EquippableComponent : GameObjectComponent
     {
-        private Entity currentWearer;
+        public Entity currentWearer { get; private set; }
         public EquipmentSlot wearloc;
 
         public EquippableComponent()

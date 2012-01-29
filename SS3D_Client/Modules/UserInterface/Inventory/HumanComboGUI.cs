@@ -46,19 +46,21 @@ namespace SS3D.UserInterface
         #endregion
 
         #region Inventory UI
-        private Dictionary<EquipmentSlot, GuiItemSlot> inventorySlots = new Dictionary<EquipmentSlot,GuiItemSlot>();
+        private Dictionary<EquipmentSlot, EquipmentSlotUi> equipmentSlots = new Dictionary<EquipmentSlot, EquipmentSlotUi>();
 
-        InventorySlotUi slot_head; 
-        InventorySlotUi slot_eyes; 
-        InventorySlotUi slot_outer; 
-        InventorySlotUi slot_hands; 
-        InventorySlotUi slot_feet; 
+        EquipmentSlotUi slot_head; 
+        EquipmentSlotUi slot_eyes; 
+        EquipmentSlotUi slot_outer; 
+        EquipmentSlotUi slot_hands; 
+        EquipmentSlotUi slot_feet; 
 
-        InventorySlotUi slot_mask;
-        InventorySlotUi slot_ears;
-        InventorySlotUi slot_inner;
-        InventorySlotUi slot_belt;
-        InventorySlotUi slot_back;
+        EquipmentSlotUi slot_mask;
+        EquipmentSlotUi slot_ears;
+        EquipmentSlotUi slot_inner;
+        EquipmentSlotUi slot_belt;
+        EquipmentSlotUi slot_back;
+
+        InventoryViewer inventory;
         #endregion
 
         private byte currentTab = 1; //1 = Inventory, 2 = Health, 3 = Crafting
@@ -113,40 +115,40 @@ namespace SS3D.UserInterface
             combo_open.Clicked += new SimpleImageButton.SimpleImageButtonPressHandler(combo_open_Clicked);
 
             //Left Side - head, eyes, outer, hands, feet
-            slot_head = new InventorySlotUi(EquipmentSlot.Head, _playerController);
-            slot_head.Dropped += new InventorySlotUi.InventorySlotUiDropHandler(slot_Dropped);
+            slot_head = new EquipmentSlotUi(EquipmentSlot.Head, _playerController);
+            slot_head.Dropped += new EquipmentSlotUi.InventorySlotUiDropHandler(slot_Dropped);
 
-            slot_eyes = new InventorySlotUi(EquipmentSlot.Eyes, _playerController);
-            slot_eyes.Dropped += new InventorySlotUi.InventorySlotUiDropHandler(slot_Dropped);
+            slot_eyes = new EquipmentSlotUi(EquipmentSlot.Eyes, _playerController);
+            slot_eyes.Dropped += new EquipmentSlotUi.InventorySlotUiDropHandler(slot_Dropped);
 
-            slot_outer = new InventorySlotUi(EquipmentSlot.Outer, _playerController);
-            slot_outer.Dropped += new InventorySlotUi.InventorySlotUiDropHandler(slot_Dropped);
+            slot_outer = new EquipmentSlotUi(EquipmentSlot.Outer, _playerController);
+            slot_outer.Dropped += new EquipmentSlotUi.InventorySlotUiDropHandler(slot_Dropped);
 
-            slot_hands = new InventorySlotUi(EquipmentSlot.Hands, _playerController);
-            slot_hands.Dropped += new InventorySlotUi.InventorySlotUiDropHandler(slot_Dropped);
+            slot_hands = new EquipmentSlotUi(EquipmentSlot.Hands, _playerController);
+            slot_hands.Dropped += new EquipmentSlotUi.InventorySlotUiDropHandler(slot_Dropped);
 
-            slot_feet = new InventorySlotUi(EquipmentSlot.Feet, _playerController);
-            slot_feet.Dropped += new InventorySlotUi.InventorySlotUiDropHandler(slot_Dropped);
+            slot_feet = new EquipmentSlotUi(EquipmentSlot.Feet, _playerController);
+            slot_feet.Dropped += new EquipmentSlotUi.InventorySlotUiDropHandler(slot_Dropped);
 
             //Right Side - mask, ears, inner, belt, back
-            slot_mask = new InventorySlotUi(EquipmentSlot.Mask, _playerController);
-            slot_mask.Dropped += new InventorySlotUi.InventorySlotUiDropHandler(slot_Dropped);
+            slot_mask = new EquipmentSlotUi(EquipmentSlot.Mask, _playerController);
+            slot_mask.Dropped += new EquipmentSlotUi.InventorySlotUiDropHandler(slot_Dropped);
 
-            slot_ears = new InventorySlotUi(EquipmentSlot.Ears, _playerController);
-            slot_ears.Dropped += new InventorySlotUi.InventorySlotUiDropHandler(slot_Dropped);
+            slot_ears = new EquipmentSlotUi(EquipmentSlot.Ears, _playerController);
+            slot_ears.Dropped += new EquipmentSlotUi.InventorySlotUiDropHandler(slot_Dropped);
 
-            slot_inner = new InventorySlotUi(EquipmentSlot.Inner, _playerController);
-            slot_inner.Dropped += new InventorySlotUi.InventorySlotUiDropHandler(slot_Dropped);
+            slot_inner = new EquipmentSlotUi(EquipmentSlot.Inner, _playerController);
+            slot_inner.Dropped += new EquipmentSlotUi.InventorySlotUiDropHandler(slot_Dropped);
 
-            slot_belt = new InventorySlotUi(EquipmentSlot.Belt, _playerController);
-            slot_belt.Dropped += new InventorySlotUi.InventorySlotUiDropHandler(slot_Dropped);
+            slot_belt = new EquipmentSlotUi(EquipmentSlot.Belt, _playerController);
+            slot_belt.Dropped += new EquipmentSlotUi.InventorySlotUiDropHandler(slot_Dropped);
 
-            slot_back = new InventorySlotUi(EquipmentSlot.Back, _playerController);
-            slot_back.Dropped += new InventorySlotUi.InventorySlotUiDropHandler(slot_Dropped);
+            slot_back = new EquipmentSlotUi(EquipmentSlot.Back, _playerController);
+            slot_back.Dropped += new EquipmentSlotUi.InventorySlotUiDropHandler(slot_Dropped);
 
         }
 
-        void slot_Dropped(InventorySlotUi sender, Entity dropped)
+        void slot_Dropped(EquipmentSlotUi sender, Entity dropped)
         {
             UiManager.Singleton.dragInfo.Reset();
 
@@ -240,6 +242,8 @@ namespace SS3D.UserInterface
                             slot_inner.Render();
                             slot_belt.Render();
                             slot_back.Render();
+
+                            if (inventory != null) inventory.Render();
                             break;
                         }
                     case (2): //Health tab
@@ -267,6 +271,14 @@ namespace SS3D.UserInterface
 
         public override void Update()
         {
+            if(inventory == null && playerController != null) //Gotta do this here because the vars are null in the constructor.
+                if(playerController.controlledAtom != null)
+                    if (playerController.controlledAtom.HasComponent(ComponentFamily.Inventory))
+                    {
+                        InventoryComponent invComp = (InventoryComponent)playerController.controlledAtom.GetComponent(ComponentFamily.Inventory);
+                        inventory = new InventoryViewer(invComp, playerController);
+                    }
+
             combo_BG.Position = position;
 
             Point equip_bg_pos = position;
@@ -359,6 +371,12 @@ namespace SS3D.UserInterface
                         slot_right_start.Offset(0, vert_spacing);
                         slot_back.Position = slot_right_start;
                         slot_back.Update();
+
+                        if (inventory != null)
+                        {
+                            inventory.Position = new Point(position.X + 10, position.Y + 315);
+                            inventory.Update();
+                        }
                         break;
                     }
                 case (2): //Health tab
@@ -527,6 +545,8 @@ namespace SS3D.UserInterface
                         if (slot_inner.MouseDown(e)) return true;
                         if (slot_belt.MouseDown(e)) return true;
                         if (slot_back.MouseDown(e)) return true;
+
+                        if (inventory != null) if(inventory.MouseDown(e)) return true;
                         break;
                     }
                 case (2): //Health tab
@@ -620,6 +640,8 @@ namespace SS3D.UserInterface
                         if (slot_belt.MouseUp(e)) return true;
                         if (slot_back.MouseUp(e)) return true;
 
+                        if (inventory != null) if (inventory.MouseUp(e)) return true;
+
                         if (combo_BG.AABB.Contains(mouseAABB) && UiManager.Singleton.dragInfo.isEntity && UiManager.Singleton.dragInfo.dragEntity != null)
                         { //Should be refined to only trigger in the equip area. Equip it if they drop it anywhere on the thing. This might make the slots obsolete if we keep it.
                             if (playerController.controlledAtom == null)
@@ -667,6 +689,8 @@ namespace SS3D.UserInterface
                         slot_inner.MouseMove(e);
                         slot_belt.MouseMove(e);
                         slot_back.MouseMove(e);
+
+                        if (inventory != null) inventory.MouseMove(e);
                         break;
                     }
                 case (2): //Health tab

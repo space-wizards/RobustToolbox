@@ -61,6 +61,7 @@
     <Compile Include="Component\Hands\HumanHandsComponent.cs" />
     <Compile Include="Component\Damageable\Health\HealthComponent.cs" />
     <Compile Include="Component\Input\ContextMenuComponent.cs" />
+    <Compile Include="Component\Inventory\Inventory.cs" />
     <Compile Include="Component\Item\BasicItemComponent.cs" />
     <Compile Include="Component\Light\PointLightComponent.cs" />
     <Compile Include="Component\Mover\KeyBindingMoverComponent.cs" />

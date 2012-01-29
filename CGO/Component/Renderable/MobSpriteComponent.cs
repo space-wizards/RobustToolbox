@@ -108,6 +108,8 @@ namespace CGO
 
         public override void Render()
         {
+            if (!visible) return;
+
             base.Render();
 
             if (speechBubble != null)

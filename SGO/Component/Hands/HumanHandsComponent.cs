@@ -30,6 +30,10 @@ namespace SGO
         {
             switch (type)
             {
+                case ComponentMessageType.DisassociateEntity:
+                    Entity entDrop = (Entity)list[0];
+                    Drop(entDrop);
+                    break;
                 case ComponentMessageType.ActiveHandChanged:
                     SwitchHandsTo((Hand)list[0]);
                     break;
@@ -153,8 +157,7 @@ namespace SGO
         {
             if (entity != null && IsEmpty(currentHand))
             {
-                if (Owner.HasComponent(ComponentFamily.Equipment))
-                    Owner.SendMessage(this, ComponentMessageType.UnEquipItemToFloor, null, entity);
+                RemoveFromOtherComps(entity);
 
                 SetEntity(currentHand, entity);
                 Owner.SendComponentNetworkMessage(this, Lidgren.Network.NetDeliveryMethod.ReliableOrdered, null, ComponentMessageType.HandsPickedUpItem, entity.Uid, currentHand);
@@ -170,8 +173,7 @@ namespace SGO
         {
             if (entity != null && IsEmpty(hand))
             {
-                if (Owner.HasComponent(ComponentFamily.Equipment))
-                    Owner.SendMessage(this, ComponentMessageType.UnEquipItemToFloor, null, entity);
+                RemoveFromOtherComps(entity);
 
                 SetEntity(hand, entity);
                 Owner.SendComponentNetworkMessage(this, Lidgren.Network.NetDeliveryMethod.ReliableOrdered, null, ComponentMessageType.HandsPickedUpItem, entity.Uid, hand);
@@ -185,6 +187,15 @@ namespace SGO
         private void Drop()
         {
             Drop(currentHand);    
+        }
+
+        private void RemoveFromOtherComps(Entity entity)
+        {
+            Entity holder = null;
+            if (entity.HasComponent(ComponentFamily.Item)) holder = ((BasicItemComponent)entity.GetComponent(ComponentFamily.Item)).currentHolder;
+            if (holder == null && entity.HasComponent(ComponentFamily.Equippable)) holder = ((EquippableComponent)entity.GetComponent(ComponentFamily.Equippable)).currentWearer;
+            if (holder != null) holder.SendMessage(this, ComponentMessageType.DisassociateEntity, null, entity);
+            else Owner.SendMessage(this, ComponentMessageType.DisassociateEntity, null, entity);
         }
 
         /// <summary>

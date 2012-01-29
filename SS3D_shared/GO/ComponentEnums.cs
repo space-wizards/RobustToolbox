@@ -19,10 +19,10 @@ namespace SS3D_shared.GO
         Actor, // Allows an entity to interact with interactables
         Interactable, // Allows an entity to be interacted with.
         Intent,
-        Inventory, // Holds entities
         Equipment, // ?
         Mob, // Has hands, can pick stuff up and manipulate objects
         Item, // Can be picked up, placed in inventory or held in hands
+        Inventory, //Holds entities
         LargeObject, // Can't be picked up, may or may not be able to move, can be interacted with
         Hands, // ? needed -- 
         Tool, // Can be used as a tool to apply to other entities
@@ -58,6 +58,12 @@ namespace SS3D_shared.GO
 
     public enum ComponentMessageType
     {
+        DisassociateEntity, //All components that can hold entities must respond to this by dropping the entity to the floor and removing all references. They will also need to send this message when they aquire an entity so other components relinquish control of it.
+        InventoryAdd,
+        InventoryRemove,
+        InventorySetSize,
+        InventoryInformation,
+        InventoryUpdateRequired,
         Empty,
         AddComponent,
         BoundKeyChange,
@@ -65,6 +71,7 @@ namespace SS3D_shared.GO
         SlaveAttach,
         Click,
         SetSpriteByKey,
+        SetVisible,
         IsCurrentHandEmpty,
         IsHandEmpty,
         IsHandEmptyReply,

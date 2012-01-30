@@ -198,6 +198,7 @@
     </Content>
     <Content Include="EntityTemplates\Mobs.xml">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      <SubType>Designer</SubType>
     </Content>
     <Content Include="EntityTemplates\Tools.xml">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>

@@ -11,7 +11,7 @@
       <Component name="HumanHealthComponent"></Component>
       <Component name="InventoryComponent">
         <ExtendedParameters>
-          <InventoryProperties InventorySize="20"></InventoryProperties>
+          <InventoryProperties inventorySize="20"></InventoryProperties>
         </ExtendedParameters>
       </Component>
     </Components>

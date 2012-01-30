@@ -50,9 +50,10 @@
       </Component>
       <Component name="ClickableComponent"></Component>
       <Component name="ContextMenuComponent">
-        <Parameters>
-          <Parameter name="addentry" type="string" value="Name=Test 123 Entry;IconName=context_bluepoint;Message=nope" />
-        </Parameters>
+        <ExtendedParameters>
+          <ContextEntry name="Test123" icon="context_bluepoint" message="null"></ContextEntry>
+          <ContextEntry name="Test456" icon="context_bluepoint" message="null"></ContextEntry>
+        </ExtendedParameters>
       </Component>
     </Components>
     <PlacementProperties>

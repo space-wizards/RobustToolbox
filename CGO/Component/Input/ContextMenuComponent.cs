@@ -5,6 +5,7 @@ using System.Text;
 using SS3D_shared.GO;
 using System.Text;
 using System.Text.RegularExpressions;
+using System.Xml.Linq;
 
 namespace CGO
 {
@@ -77,40 +78,30 @@ namespace CGO
             base.Update(frameTime);
         }
 
-        public override void SetParameter(ComponentParameter parameter)
+        public override void HandleExtendedParameters(XElement extendedParameters)
         {
-            switch (parameter.MemberName.ToLowerInvariant())
+            foreach (XElement param in extendedParameters.Descendants("ContextEntry"))
             {
-                case "addentry":
-                    ContextMenuEntry newEntry = new ContextMenuEntry();
+                string name = "NULL";
+                string icon = "NULL";
+                string message = "NULL";
 
-                    string[] splitParam = Regex.Split((string)parameter.Parameter, ";");
-                    if (splitParam.Count() != 3) throw new ArgumentException("Context Entry Missing Parameter.");
+                if (param.Attribute("name") != null)
+                    name = param.Attribute("name").Value;
 
-                    foreach (string current in splitParam)
-                    {
-                        string[] splitSub = Regex.Split(current, "=");
-                        if (splitSub.Count() != 2) throw new ArgumentException("Malformed Context-Entry Parameter : '" + current + "'");
+                if (param.Attribute("icon") != null)
+                    icon = param.Attribute("icon").Value;
 
-                        switch (splitSub[0].ToLowerInvariant())
-                        {
-                            case "name":
-                                newEntry.entryName = splitSub[1];
-                                break;
+                if (param.Attribute("message") != null)
+                    message = param.Attribute("message").Value;
 
-                            case "iconname":
-                                newEntry.iconName = splitSub[1];
-                                break;
+                ContextMenuEntry newEntry = new ContextMenuEntry();
+                newEntry.entryName = name;
+                newEntry.iconName = icon;
+                newEntry.componentMessage = message;
 
-                            case "message":
-                                newEntry.componentMessage = splitSub[1];
-                                break;
-                        }
-                    }
-                    entries.Add(newEntry);
-                    break;
+                entries.Add(newEntry);
             }
-            return;
         }
 
         public override void HandleNetworkMessage(IncomingEntityComponentMessage message)

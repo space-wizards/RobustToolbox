@@ -219,7 +219,7 @@ namespace SS3D.UserInterface
                 txtDbg.Position = new Vector2D(position.X + 20, position.Y + 15);
                 txtDbg.Color = Color.NavajoWhite;
                 if (currentTab == 1) txtDbg.Text = "Equipment";
-                if (currentTab == 2) txtDbg.Text = "Health";
+                if (currentTab == 2) txtDbg.Text = "Status";
                 if (currentTab == 3) txtDbg.Text = "Crafting";
                 txtDbg.Draw();
 

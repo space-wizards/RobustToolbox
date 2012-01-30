@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using SS3D_shared.GO;
+using System.Xml.Linq;
 
 namespace CGO
 {
@@ -101,8 +102,18 @@ namespace CGO
         /// <param name="parameter">ComponentParameter object describing the parameter and the value</param>
         public virtual void SetParameter(ComponentParameter parameter)
         {
+            switch (parameter.MemberName)
+            {
+                case "ExtendedParameters":
+                    HandleExtendedParameters((XElement)parameter.Parameter);
+                    break;
+            }
+        }
 
-        }        
+        public virtual void HandleExtendedParameters(XElement extendedParameters)
+        {
+
+        }
         
         /// <summary>
         /// Empty method for handling incoming input messages from counterpart client components

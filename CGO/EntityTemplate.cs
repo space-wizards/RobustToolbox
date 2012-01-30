@@ -151,6 +151,10 @@ namespace CGO
                                                  );
                 }
 
+                if (t_component.Element("ExtendedParameters") != null)
+                {
+                    parameters[componentname].Add(new ComponentParameter("ExtendedParameters", typeof(XElement), t_component.Element("ExtendedParameters")));
+                }
             }
 
             var t_placementprops = templateElement.Element("PlacementProperties");

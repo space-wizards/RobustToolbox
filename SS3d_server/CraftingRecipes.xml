@@ -6,7 +6,7 @@
         <string>Helmet</string>
         <string>Gloves_Surgical</string>
       </components>
-      <secondsToCreate>5</secondsToCreate>
+      <secondsToCreate>10</secondsToCreate>
       <result>Biosuit</result>
     </CraftingEntry>
   </List>

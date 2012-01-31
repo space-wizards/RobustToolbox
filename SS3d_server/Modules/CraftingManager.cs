@@ -173,15 +173,13 @@ namespace SS3D_Server.Modules
 
                         if (hasEntityInInventory(craftingTicket.sourceEntity, craftingTicket.component1) && hasEntityInInventory(craftingTicket.sourceEntity, craftingTicket.component2))
                         {
-                            /*int newUid = EntityManager.Singleton.CreateEntity(craftingTicket.result);
-                            Entity newEnt = EntityManager.Singleton.GetEntity(newUid);*/
                             Entity newEnt = EntityManager.Singleton.SpawnEntity(craftingTicket.result);
                             sendCraftSuccess(craftingTicket.sourceConnection, newEnt.name);
-                            craftingTicket.sourceEntity.SendMessage(this, ComponentMessageType.DisassociateEntity, null, craftingTicket.component1);
-                            craftingTicket.sourceEntity.SendMessage(this, ComponentMessageType.DisassociateEntity, null, craftingTicket.component2);
+                            //craftingTicket.sourceEntity.SendMessage(this, ComponentMessageType.DisassociateEntity, null, craftingTicket.component1);
+                            //craftingTicket.sourceEntity.SendMessage(this, ComponentMessageType.DisassociateEntity, null, craftingTicket.component2);
                             craftingTicket.sourceEntity.SendMessage(this, ComponentMessageType.InventoryAdd, null, newEnt);
-                            //EntityManager.Singleton.DeleteEntity(craftingTicket.component1);
-                            //EntityManager.Singleton.DeleteEntity(craftingTicket.component2);
+                            EntityManager.Singleton.DeleteEntity(craftingTicket.component1); //This might be unsafe and MIGHt leave behind references. Gotta check that later.
+                            EntityManager.Singleton.DeleteEntity(craftingTicket.component2);
                         }
                         else
                             sendCraftMissing(craftingTicket.sourceConnection);

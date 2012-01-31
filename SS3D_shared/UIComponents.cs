@@ -18,6 +18,10 @@ namespace SS3D_shared
     public enum ComboGuiMessage
     {
         UpdateHands,
-        SelectHand
+        SelectHand,
+        CancelCraftBar,
+        ShowCraftBar,
+        CraftNeedInventorySpace,
+        CraftNoRecipe
     }
 }

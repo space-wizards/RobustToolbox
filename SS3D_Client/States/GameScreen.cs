@@ -158,7 +158,7 @@ namespace SS3D.States
             combo.Position = new Point(Gorgon.Screen.Width - combo.ClientArea.Width - 3, Gorgon.Screen.Height - combo.ClientArea.Height - 3);
             UiManager.Singleton.Components.Add(combo);
             UiManager.Singleton.Components.Add(new StatPanelComponent(playerController, prg.mNetworkMgr));
-            
+
             return true;
         }
 

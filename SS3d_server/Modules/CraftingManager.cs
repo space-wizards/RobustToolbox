@@ -173,8 +173,9 @@ namespace SS3D_Server.Modules
 
                         if (hasEntityInInventory(craftingTicket.sourceEntity, craftingTicket.component1) && hasEntityInInventory(craftingTicket.sourceEntity, craftingTicket.component2))
                         {
-                            int newUid = EntityManager.Singleton.CreateEntity(craftingTicket.result);
-                            Entity newEnt = EntityManager.Singleton.GetEntity(newUid);
+                            /*int newUid = EntityManager.Singleton.CreateEntity(craftingTicket.result);
+                            Entity newEnt = EntityManager.Singleton.GetEntity(newUid);*/
+                            Entity newEnt = EntityManager.Singleton.SpawnEntity(craftingTicket.result);
                             sendCraftSuccess(craftingTicket.sourceConnection, newEnt.name);
                             craftingTicket.sourceEntity.SendMessage(this, ComponentMessageType.DisassociateEntity, null, craftingTicket.component1);
                             craftingTicket.sourceEntity.SendMessage(this, ComponentMessageType.DisassociateEntity, null, craftingTicket.component2);

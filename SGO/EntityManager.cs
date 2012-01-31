@@ -119,7 +119,7 @@ namespace SGO
         /// </summary>
         /// <param name="templateName">name of entity template to execute</param>
         /// <returns>integer id of added entity</returns>
-        public int CreateEntity(string templateName)
+        private int CreateEntity(string templateName)
         {
             //Get the entity from the factory
             Entity e = m_entityFactory.CreateEntity(templateName);

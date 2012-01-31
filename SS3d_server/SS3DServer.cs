@@ -252,6 +252,7 @@ namespace SS3D_Server
                 while ((msg = SS3DNetServer.Singleton.ReadMessage()) != null)
                 {
                     Console.Title = SS3DNetServer.Singleton.Statistics.SentBytes.ToString() + " " + SS3DNetServer.Singleton.Statistics.ReceivedBytes;
+
                     switch (msg.MessageType)
                     {
                         case NetIncomingMessageType.VerboseDebugMessage:
@@ -429,6 +430,9 @@ namespace SS3D_Server
             NetMessage messageType = (NetMessage)msg.ReadByte();
             switch (messageType)
             {
+                case NetMessage.CraftMessage:
+                    CraftingManager.Singleton.HandleNetMessage(msg);
+                    break;
                 case NetMessage.WelcomeMessage:
                     SendWelcomeInfo(msg.SenderConnection);
                     break;

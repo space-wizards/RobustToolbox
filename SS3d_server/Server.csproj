@@ -172,7 +172,7 @@
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
     <Content Include="CraftingRecipes.xml">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </Content>
     <Content Include="EntityTemplates\Clothing.xml">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>

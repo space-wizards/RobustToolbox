@@ -9,9 +9,9 @@ namespace CGO
 {
     public class InventoryComponent : GameObjectComponent
     {
-        List<Entity> containedEntities = new List<Entity>();
+        public List<Entity> containedEntities { get; private set; }
 
-        int maxSlots = 5;
+        public int maxSlots { get; private set; }
 
         public delegate void InventoryComponentUpdateHandler(InventoryComponent sender, int maxSlots, List<Entity> entities);
         public event InventoryComponentUpdateHandler Changed;
@@ -22,6 +22,7 @@ namespace CGO
         public InventoryComponent()
         {
             family = ComponentFamily.Inventory;
+            containedEntities = new List<Entity>();
         }
 
         public override void HandleNetworkMessage(IncomingEntityComponentMessage message)

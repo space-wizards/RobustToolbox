@@ -16,6 +16,7 @@ public enum NetMessage
     SendMap,
     MapMessage,
     ItemMessage, // It's something the item system needs to handle
+    CraftMessage,
     MobMessage,
     ChatMessage,
     PlacementManagerMessage,
@@ -46,6 +47,11 @@ public enum ItemMessage
     Click,
     AttachTo,
     Detach
+}
+
+public enum CraftMessage
+{
+    StartCraft
 }
 
 public enum UiManagerMessage

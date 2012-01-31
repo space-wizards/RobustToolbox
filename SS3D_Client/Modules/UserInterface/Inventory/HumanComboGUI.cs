@@ -11,6 +11,7 @@ using GorgonLibrary.InputDevices;
 using SS3D.Modules;
 using Lidgren.Network;
 using CGO;
+using SS3D.Modules.Network;
 using SS3D_shared.GO;
 using SS3D_shared;
 using ClientResourceManager;
@@ -68,6 +69,7 @@ namespace SS3D.UserInterface
         private CraftSlotUi craftSlot2;
         private SimpleImageButton craftButton;
         private Timer_Bar craftTimer;
+        private TextSprite craftStatus = new TextSprite("craftText", "Status:", ResMgr.Singleton.GetFont("CALIBRI"));
         #endregion
 
         private byte currentTab = 1; //1 = Inventory, 2 = Health, 3 = Crafting
@@ -92,9 +94,13 @@ namespace SS3D.UserInterface
 
         Color col_inactive = Color.FromArgb(255, 90, 90, 90);
 
-        public HumanComboGUI(PlayerController _playerController)
+        private NetworkManager netMgr;
+
+        public HumanComboGUI(PlayerController _playerController, NetworkManager _netMgr)
             : base(_playerController)
         {
+            netMgr = _netMgr;
+
             componentClass = GuiComponentType.ComboGUI;
 
             leftHand.hand = Hand.Left;
@@ -163,7 +169,28 @@ namespace SS3D.UserInterface
 
         void craftButton_Clicked(SimpleImageButton sender)
         {
-            craftTimer = new Timer_Bar(new Size(200,15), new TimeSpan(0,0,0,10));
+            //craftTimer = new Timer_Bar(new Size(200,15), new TimeSpan(0,0,0,10));
+            if (craftSlot1.containingEntity == null || craftSlot2.containingEntity == null) return;
+
+            if (playerController != null)
+                if (playerController.controlledAtom != null)
+                    if (playerController.controlledAtom.HasComponent(ComponentFamily.Inventory))
+                    {
+                        InventoryComponent invComp = (InventoryComponent)playerController.controlledAtom.GetComponent(ComponentFamily.Inventory);
+                        if (invComp.containedEntities.Count >= invComp.maxSlots)
+                        {
+                            craftStatus.Text = "Status: Not enough Space";
+                            craftStatus.Color = Color.DarkRed;
+                            return;
+                        }
+                    }
+
+            NetOutgoingMessage msg = netMgr.netClient.CreateMessage();
+            msg.Write((byte)NetMessage.CraftMessage);
+            msg.Write((byte)CraftMessage.StartCraft);
+            msg.Write((int)craftSlot1.containingEntity.Uid);
+            msg.Write((int)craftSlot2.containingEntity.Uid);
+            netMgr.SendMessage(msg, NetDeliveryMethod.ReliableUnordered);
         }
 
         void slot_Dropped(EquipmentSlotUi sender, Entity dropped)
@@ -185,16 +212,34 @@ namespace SS3D.UserInterface
             if (sender == tab_equip) currentTab = 1;
             if (sender == tab_health) currentTab = 2;
             if (sender == tab_craft) currentTab = 3;
+            craftStatus.Text = "Status:"; //Handle the resetting better.
+            craftStatus.Color = Color.White;
         }
 
         void combo_open_Clicked(SimpleImageButton sender)
         {
             showTabbedWindow = !showTabbedWindow;
+            craftStatus.Text = "Status:";
+            craftStatus.Color = Color.White;
         }
 
         void combo_close_Clicked(SimpleImageButton sender)
         {
             showTabbedWindow = false;
+            craftStatus.Text = "Status:";
+            craftStatus.Color = Color.White;
+        }
+
+        public override bool KeyDown(KeyboardInputEventArgs e)
+        {
+            if (e.Key == KeyboardKeys.I)
+            {
+                showTabbedWindow = !showTabbedWindow; 
+                craftStatus.Text = "Status:";
+                craftStatus.Color = Color.White;
+                return true;
+            }
+            return false;
         }
 
         public override void ComponentUpdate(params object[] args)
@@ -219,7 +264,55 @@ namespace SS3D.UserInterface
 
             switch (messageType)
             {
-                default: 
+                case ComboGuiMessage.CancelCraftBar:
+                    if(craftTimer != null)
+                    {
+                        craftTimer.Dispose();
+                        craftTimer = null;
+                    }
+                    craftStatus.Text = "Status: Canceled."; //Temp to debug.
+                    craftStatus.Color = Color.DarkRed;
+                    break;
+                case ComboGuiMessage.ShowCraftBar:
+                    int seconds = message.ReadInt32();
+                    craftTimer = new Timer_Bar(new Size(150,15), new TimeSpan(0,0,0,seconds));
+                    craftStatus.Text = "Status: Crafting...";
+                    craftStatus.Color = Color.LightSteelBlue;
+                    break;
+                case ComboGuiMessage.CraftNoRecipe:
+                    craftStatus.Text = "Status: There is no such Recipe.";
+                    craftStatus.Color = Color.DarkRed;
+                    break;
+                case ComboGuiMessage.CraftNeedInventorySpace:
+                    if(craftTimer != null)
+                    {
+                        craftTimer.Dispose();
+                        craftTimer = null;
+                    }
+                    craftStatus.Text = "Status: Not enough Space";
+                    craftStatus.Color = Color.DarkRed;
+                    break;
+                case ComboGuiMessage.CraftItemsMissing:
+                    if (craftTimer != null)
+                    {
+                        craftTimer.Dispose();
+                        craftTimer = null;
+                    }
+                    craftSlot1.ResetEntity();
+                    craftSlot2.ResetEntity();
+                    craftStatus.Text = "Status: Items missing.";
+                    craftStatus.Color = Color.DarkRed;
+                    break;
+                case ComboGuiMessage.CraftSuccess:
+                    if (craftTimer != null)
+                    {
+                        craftTimer.Dispose();
+                        craftTimer = null;
+                    }
+                    craftSlot1.ResetEntity();
+                    craftSlot2.ResetEntity();
+                    craftStatus.Text = "Status: You create '"+message.ReadString()+"'";
+                    craftStatus.Color = Color.Green;
                     break;
             }
         }
@@ -245,6 +338,7 @@ namespace SS3D.UserInterface
                 {
                     case (1): //Equip tab
                         {
+                            #region Equip
                             equip_BG.Draw();
 
                             //Left Side - head, eyes, outer, hands, feet
@@ -262,21 +356,27 @@ namespace SS3D.UserInterface
                             slot_back.Render();
 
                             if (inventory != null) inventory.Render();
-                            break;
+                            break; 
+                            #endregion
                         }
                     case (2): //Health tab
                         {
+                            #region Status
                             healthText.Draw();
-                            break;
+                            break; 
+                            #endregion
                         }
                     case (3): //Craft tab
                         {
+                            #region Crafting
                             if (craftTimer != null) craftTimer.Render();
                             if (inventory != null) inventory.Render();
                             craftSlot1.Render();
                             craftSlot2.Render();
-                            craftButton.Render();
+                            craftButton.Render(); 
+                            craftStatus.Draw();
                             break;
+                            #endregion
                         }
                 }
             }
@@ -348,6 +448,7 @@ namespace SS3D.UserInterface
             {
                 case (1): //Equip tab
                     {
+                        #region Equip
                         //Only set position for topmost 2 slots directly. Rest uses these to position themselves.
                         Point slot_left_start = position;
                         slot_left_start.Offset(28, 40);
@@ -400,10 +501,12 @@ namespace SS3D.UserInterface
                             inventory.Position = new Point(position.X + 12, position.Y + 315);
                             inventory.Update();
                         }
-                        break;
+                        break; 
+                        #endregion
                     }
                 case (2): //Health tab
                     {
+                        #region Status
                         string healthStr = "";
 
                         if (playerController.controlledAtom == null)
@@ -431,10 +534,12 @@ namespace SS3D.UserInterface
                         healthText.Color = Color.FloralWhite;
                         healthText.Position = new Vector2D(position.X + 40, position.Y + 40);
 
-                        break;
+                        break; 
+                        #endregion
                     }
                 case (3): //Craft tab
                     {
+                        #region Crafting
                         craftSlot1.Position = new Point(position.X + 40, position.Y + 70);
                         craftSlot1.Update();
 
@@ -446,12 +551,15 @@ namespace SS3D.UserInterface
 
                         if (craftTimer != null) craftTimer.Position = new Point(position.X + (int)(clientArea.Width / 2f) - (int)(craftTimer.ClientArea.Width / 2f), position.Y + 250);
 
+                        craftStatus.Position = new Vector2D(position.X + 40, position.Y + 40);
+
                         if (inventory != null)
                         {
                             inventory.Position = new Point(position.X + 12, position.Y + 315);
                             inventory.Update();
                         }
-                        break;
+                        break; 
+                        #endregion
                     }   
             }
 
@@ -519,7 +627,9 @@ namespace SS3D.UserInterface
         public override bool MouseDown(MouseInputEventArgs e)
         {
             RectangleF mouseAABB = new RectangleF(e.Position.X, e.Position.Y, 1, 1);
+
             if (combo_open.MouseDown(e)) return true;
+
             if (showTabbedWindow)
             {
                 if (combo_close.MouseDown(e)) return true;
@@ -573,6 +683,7 @@ namespace SS3D.UserInterface
             {
                 case (1): //Equip tab
                     {
+                        #region Equip
                         //Left Side - head, eyes, outer, hands, feet
                         if (slot_head.MouseDown(e)) return true;
                         if (slot_eyes.MouseDown(e)) return true;
@@ -587,21 +698,26 @@ namespace SS3D.UserInterface
                         if (slot_belt.MouseDown(e)) return true;
                         if (slot_back.MouseDown(e)) return true;
 
-                        if (inventory != null) if(inventory.MouseDown(e)) return true;
-                        break;
+                        if (inventory != null) if (inventory.MouseDown(e)) return true;
+                        break; 
+                        #endregion
                     }
                 case (2): //Health tab
                     {
-                        break;
+                        #region Status
+                        break; 
+                        #endregion
                     }
                 case (3): //Craft tab
                     {
+                        #region Crafting
                         if (craftTimer != null) if (craftTimer.MouseDown(e)) return true;
                         if (craftSlot1.MouseDown(e)) return true;
                         if (craftSlot2.MouseDown(e)) return true;
                         if (craftButton.MouseDown(e)) return true;
                         if (inventory != null) if (inventory.MouseDown(e)) return true;
-                        break;
+                        break; 
+                        #endregion
                     }
             }
 
@@ -621,6 +737,7 @@ namespace SS3D.UserInterface
 
             if (UiManager.Singleton.dragInfo.isEntity && UiManager.Singleton.dragInfo.dragEntity != null)
             {
+                #region Hands
                 if (playerController.controlledAtom == null)
                     return false;
 
@@ -633,7 +750,7 @@ namespace SS3D.UserInterface
 
                 if (Utilities.SpritePixelHit(hand_l_bg, e.Position))
                 {
-                    if (!hands.HandSlots.ContainsKey(Hand.Left)) 
+                    if (!hands.HandSlots.ContainsKey(Hand.Left))
                     {
                         if (hands.HandSlots.ContainsValue(UiManager.Singleton.dragInfo.dragEntity))
                         {
@@ -665,13 +782,15 @@ namespace SS3D.UserInterface
                         UiManager.Singleton.dragInfo.Reset();
                         return true;
                     }
-                }
+                } 
+                #endregion
             }
 
             switch (currentTab)
             {
                 case (1): //Equip tab
                     {
+                        #region Equip
                         //Left Side - head, eyes, outer, hands, feet
                         if (slot_head.MouseUp(e)) return true;
                         if (slot_eyes.MouseUp(e)) return true;
@@ -701,14 +820,18 @@ namespace SS3D.UserInterface
                             return true;
                         }
 
-                        break;
+                        break; 
+                        #endregion
                     }
                 case (2): //Health tab
                     {
-                        break;
+                        #region Status
+                        break; 
+                        #endregion
                     }
                 case (3): //Craft tab
                     {
+                        #region Crafting
                         if (craftTimer != null) if (craftTimer.MouseUp(e)) return true;
                         if (craftSlot1.MouseUp(e))
                         {
@@ -723,7 +846,8 @@ namespace SS3D.UserInterface
                         if (craftButton.MouseUp(e)) return true;
 
                         if (inventory != null) if (inventory.MouseUp(e)) return true;
-                        break;
+                        break; 
+                        #endregion
                     }
             }
 
@@ -736,6 +860,7 @@ namespace SS3D.UserInterface
             {
                 case (1): //Equip tab
                     {
+                        #region Equip
                         //Left Side - head, eyes, outer, hands, feet
                         slot_head.MouseMove(e);
                         slot_eyes.MouseMove(e);
@@ -751,33 +876,28 @@ namespace SS3D.UserInterface
                         slot_back.MouseMove(e);
 
                         if (inventory != null) inventory.MouseMove(e);
-                        break;
+                        break; 
+                        #endregion
                     }
                 case (2): //Health tab
                     {
-                        break;
+                        #region Status
+                        break; 
+                        #endregion
                     }
                 case (3): //Craft tab
                     {
+                        #region Crafting
                         if (craftTimer != null) craftTimer.MouseMove(e);
                         craftSlot1.MouseMove(e);
                         craftSlot2.MouseMove(e);
                         craftButton.MouseMove(e);
 
                         if (inventory != null) inventory.MouseMove(e);
-                        break;
+                        break; 
+                        #endregion
                     }
             }
-        }
-
-        public override bool KeyDown(KeyboardInputEventArgs e)
-        {
-            if (e.Key == KeyboardKeys.I)
-            {
-                showTabbedWindow = !showTabbedWindow;
-                return true;
-            }
-            return false;
         }
     }
 }

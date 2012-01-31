@@ -82,6 +82,7 @@
     <Compile Include="Atom\Mob\Mob.cs" />
     <Compile Include="Atom\Mob\Player.cs" />
     <Compile Include="Banlist.cs" />
+    <Compile Include="CSharpExtensions.cs" />
     <Compile Include="GlobalConstants.cs" />
     <Compile Include="PlacementInformation.cs" />
     <Compile Include="GO\ComponentEnums.cs" />

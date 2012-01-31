@@ -22,6 +22,8 @@ namespace SS3D_shared
         CancelCraftBar,
         ShowCraftBar,
         CraftNeedInventorySpace,
+        CraftSuccess,
+        CraftItemsMissing,
         CraftNoRecipe
     }
 }

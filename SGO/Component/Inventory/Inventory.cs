@@ -11,13 +11,14 @@ namespace SGO
 {
     public class InventoryComponent : GameObjectComponent
     {
-        List<Entity> containedEntities = new List<Entity>();
+        public List<Entity> containedEntities { get; private set; }
 
-        int maxSlots = 5;
+        public int maxSlots { get; private set; }
 
         public InventoryComponent()
         {
             family = SS3D_shared.GO.ComponentFamily.Inventory;
+            containedEntities = new List<Entity>();
         }
 
         public override void HandleNetworkMessage(IncomingEntityComponentMessage message, NetConnection client)
@@ -67,6 +68,12 @@ namespace SGO
                     maxSlots = (int)list[0];
                     break;
             }
+        }
+
+        public bool containsEntity(Entity entity)
+        {
+            if (containedEntities.Contains(entity)) return true;
+            else return false;
         }
 
         public override void HandleInstantiationMessage(Lidgren.Network.NetConnection netConnection)

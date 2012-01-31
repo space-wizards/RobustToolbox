@@ -3,11 +3,11 @@
   <List>
     <CraftingEntry>
       <components>
-        <string>null1</string>
-        <string>null2</string>
+        <string>Helmet</string>
+        <string>Gloves_Surgical</string>
       </components>
       <secondsToCreate>5</secondsToCreate>
-      <result>NULL</result>
+      <result>Biosuit</result>
     </CraftingEntry>
   </List>
 </CraftRecipes>

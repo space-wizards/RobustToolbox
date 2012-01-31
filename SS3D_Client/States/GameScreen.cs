@@ -153,7 +153,7 @@ namespace SS3D.States
             gameChat.TextSubmitted += new Chatbox.TextSubmitHandler(chatTextbox_TextSubmitted);
             UiManager.Singleton.Components.Add(gameChat);
 
-            HumanComboGUI combo = new HumanComboGUI(playerController);
+            HumanComboGUI combo = new HumanComboGUI(playerController, prg.mNetworkMgr);
             combo.Update();
             combo.Position = new Point(Gorgon.Screen.Width - combo.ClientArea.Width - 3, Gorgon.Screen.Height - combo.ClientArea.Height - 3);
             UiManager.Singleton.Components.Add(combo);

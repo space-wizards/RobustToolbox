@@ -74,9 +74,11 @@ namespace SS3D.UserInterface
         /// </summary>
         public void ComponentUpdate(GuiComponentType componentType, params object[] args)
         {
-            (from IGuiComponent comp in Components
-            where comp.componentClass == componentType
-            select comp).FirstOrDefault().ComponentUpdate(args);
+            IGuiComponent firstOrDefault = (from IGuiComponent comp in Components
+                                  where comp.componentClass == componentType
+                                  select comp).FirstOrDefault();
+            if (firstOrDefault != null)
+                firstOrDefault.ComponentUpdate(args);
         }
 
         #region Component retrieval

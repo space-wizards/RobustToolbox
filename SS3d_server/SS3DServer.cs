@@ -155,6 +155,8 @@ namespace SS3D_Server
                 ServiceManager.Singleton.AddService(chatManager);
                 playerManager = new PlayerManager();
 
+                CraftingManager.Singleton.Initialize("CraftingRecipes.xml", netServer, playerManager);
+
                 StartLobby();
                 StartGame();
                 
@@ -219,6 +221,7 @@ namespace SS3D_Server
                     FrameStart();
                     ProcessPackets();
                     Update(framePeriod);
+                    CraftingManager.Singleton.Update();
                     sleepTime = time.AddMilliseconds(framePeriod) - DateTime.Now;
 
                     if (sleepTime.TotalMilliseconds > 0)

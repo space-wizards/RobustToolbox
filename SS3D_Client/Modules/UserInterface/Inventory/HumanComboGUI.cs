@@ -63,6 +63,13 @@ namespace SS3D.UserInterface
         InventoryViewer inventory;
         #endregion
 
+        #region Crafting UI
+        private CraftSlotUi craftSlot1;
+        private CraftSlotUi craftSlot2;
+        private SimpleImageButton craftButton;
+        private Timer_Bar craftTimer;
+        #endregion
+
         private byte currentTab = 1; //1 = Inventory, 2 = Health, 3 = Crafting
 
         private bool showTabbedWindow = false;
@@ -146,6 +153,17 @@ namespace SS3D.UserInterface
             slot_back = new EquipmentSlotUi(EquipmentSlot.Back, _playerController);
             slot_back.Dropped += new EquipmentSlotUi.InventorySlotUiDropHandler(slot_Dropped);
 
+            craftSlot1 = new CraftSlotUi();
+            craftSlot2 = new CraftSlotUi();
+
+            craftButton = new SimpleImageButton("wrenchbutt");
+            craftButton.Clicked += new SimpleImageButton.SimpleImageButtonPressHandler(craftButton_Clicked);
+
+        }
+
+        void craftButton_Clicked(SimpleImageButton sender)
+        {
+            craftTimer = new Timer_Bar(new Size(200,15), new TimeSpan(0,0,0,10));
         }
 
         void slot_Dropped(EquipmentSlotUi sender, Entity dropped)
@@ -253,6 +271,11 @@ namespace SS3D.UserInterface
                         }
                     case (3): //Craft tab
                         {
+                            if (craftTimer != null) craftTimer.Render();
+                            if (inventory != null) inventory.Render();
+                            craftSlot1.Render();
+                            craftSlot2.Render();
+                            craftButton.Render();
                             break;
                         }
                 }
@@ -412,9 +435,27 @@ namespace SS3D.UserInterface
                     }
                 case (3): //Craft tab
                     {
+                        craftSlot1.Position = new Point(position.X + 40, position.Y + 70);
+                        craftSlot1.Update();
+
+                        craftSlot2.Position = new Point(position.X + clientArea.Width - craftSlot2.ClientArea.Width - 40, position.Y + 70);
+                        craftSlot2.Update();
+
+                        craftButton.Position = new Point(position.X + (int)(clientArea.Width / 2f) - (int)(craftButton.ClientArea.Width / 2f), position.Y + 70);
+                        craftButton.Update();
+
+                        if (craftTimer != null) craftTimer.Position = new Point(position.X + (int)(clientArea.Width / 2f) - (int)(craftTimer.ClientArea.Width / 2f), position.Y + 250);
+
+                        if (inventory != null)
+                        {
+                            inventory.Position = new Point(position.X + 12, position.Y + 315);
+                            inventory.Update();
+                        }
                         break;
-                    }
+                    }   
             }
+
+            if (craftTimer != null) craftTimer.Update(); //Needs to update even when its not on the crafting tab so it continues to count.
 
             #region Hands UI
             if (playerController.controlledAtom == null)
@@ -555,6 +596,11 @@ namespace SS3D.UserInterface
                     }
                 case (3): //Craft tab
                     {
+                        if (craftTimer != null) if (craftTimer.MouseDown(e)) return true;
+                        if (craftSlot1.MouseDown(e)) return true;
+                        if (craftSlot2.MouseDown(e)) return true;
+                        if (craftButton.MouseDown(e)) return true;
+                        if (inventory != null) if (inventory.MouseDown(e)) return true;
                         break;
                     }
             }
@@ -663,6 +709,20 @@ namespace SS3D.UserInterface
                     }
                 case (3): //Craft tab
                     {
+                        if (craftTimer != null) if (craftTimer.MouseUp(e)) return true;
+                        if (craftSlot1.MouseUp(e))
+                        {
+                            if (craftSlot2.containingEntity == craftSlot1.containingEntity) craftSlot2.ResetEntity();
+                            return true;
+                        }
+                        if (craftSlot2.MouseUp(e))
+                        {
+                            if (craftSlot1.containingEntity == craftSlot2.containingEntity) craftSlot1.ResetEntity();
+                            return true;
+                        }
+                        if (craftButton.MouseUp(e)) return true;
+
+                        if (inventory != null) if (inventory.MouseUp(e)) return true;
                         break;
                     }
             }
@@ -699,6 +759,12 @@ namespace SS3D.UserInterface
                     }
                 case (3): //Craft tab
                     {
+                        if (craftTimer != null) craftTimer.MouseMove(e);
+                        craftSlot1.MouseMove(e);
+                        craftSlot2.MouseMove(e);
+                        craftButton.MouseMove(e);
+
+                        if (inventory != null) inventory.MouseMove(e);
                         break;
                     }
             }

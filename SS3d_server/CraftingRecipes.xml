@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8"?>
+<CraftRecipes xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+  <List>
+    <CraftingEntry>
+      <components>
+        <string>null1</string>
+        <string>null2</string>
+      </components>
+      <secondsToCreate>5</secondsToCreate>
+      <result>NULL</result>
+    </CraftingEntry>
+  </List>
+</CraftRecipes>

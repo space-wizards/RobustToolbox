@@ -160,6 +160,8 @@
     <Compile Include="Modules\State.cs" />
     <Compile Include="Modules\StateManager.cs" />
     <Compile Include="HelperClasses\Utilities.cs" />
+    <Compile Include="Modules\UserInterface\Components\TimerBar.cs" />
+    <Compile Include="Modules\UserInterface\Components\ProgressBar.cs" />
     <Compile Include="Modules\UserInterface\DragDropInfo.cs" />
     <Compile Include="Modules\UserInterface\Components\AdminPasswordDialog.cs" />
     <Compile Include="Modules\UserInterface\Components\AdminPlayerPanel.cs" />
@@ -188,6 +190,7 @@
     <Compile Include="Modules\UserInterface\Components\StatPanel.cs" />
     <Compile Include="Modules\UserInterface\Components\Textbox.cs" />
     <Compile Include="Modules\UserInterface\Components\Window.cs" />
+    <Compile Include="Modules\UserInterface\Inventory\CraftSlotUi.cs" />
     <Compile Include="Modules\UserInterface\Inventory\HumanComboGUI.cs" />
     <Compile Include="Modules\UserInterface\Inventory\EquipmentSlotUi.cs" />
     <Compile Include="Modules\UserInterface\Inventory\InventoryViewer.cs" />

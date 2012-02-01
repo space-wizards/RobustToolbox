@@ -98,6 +98,15 @@ namespace SS3D_Server.Modules
             Entity compo1Ent = EntityManager.Singleton.GetEntity(compo1Uid);
             Entity compo2Ent = EntityManager.Singleton.GetEntity(compo2Uid);
 
+            foreach (var ticket in craftingTickets)
+            {
+                if(ticket.sourceConnection == msg.SenderConnection && ticket.sourceEntity == playerManager.GetSessionByConnection(msg.SenderConnection).attachedAtom)
+                {
+                    sendAlreadyCrafting(msg.SenderConnection);
+                    return;
+                }
+            }
+
             if (compo1Ent == null || compo2Ent == null) return;
 
             if(isValidRecipe(compo1Ent.template.Name, compo2Ent.template.Name))
@@ -139,14 +148,29 @@ namespace SS3D_Server.Modules
             netServer.SendMessage(inventoyFullMsg, connection, NetDeliveryMethod.ReliableUnordered);
         }
 
-        private void sendCraftSuccess(NetConnection connection, string result)
+        private void sendAlreadyCrafting(NetConnection connection)
+        {
+            NetOutgoingMessage busyMsg = SS3DNetServer.Singleton.CreateMessage();
+            busyMsg.Write((byte)NetMessage.PlayerUiMessage);
+            busyMsg.Write((byte)UiManagerMessage.ComponentMessage);
+            busyMsg.Write((byte)GuiComponentType.ComboGUI);
+            busyMsg.Write((byte)ComboGuiMessage.CraftAlreadyCrafting);
+            netServer.SendMessage(busyMsg, connection, NetDeliveryMethod.ReliableUnordered);
+        }
+
+        private void sendCraftSuccess(NetConnection connection, Entity result, CraftingTicket ticket)
         {
             NetOutgoingMessage successMsg = SS3DNetServer.Singleton.CreateMessage();
             successMsg.Write((byte)NetMessage.PlayerUiMessage);
             successMsg.Write((byte)UiManagerMessage.ComponentMessage);
             successMsg.Write((byte)GuiComponentType.ComboGUI);
             successMsg.Write((byte)ComboGuiMessage.CraftSuccess);
-            successMsg.Write((string)result);
+            successMsg.Write((string)ticket.component1.template.Name);
+            successMsg.Write((string)ticket.component1.name);
+            successMsg.Write((string)ticket.component2.template.Name);
+            successMsg.Write((string)ticket.component2.name);
+            successMsg.Write((string)result.template.Name);
+            successMsg.Write((string)result.name);
             netServer.SendMessage(successMsg, connection, NetDeliveryMethod.ReliableUnordered);
             removeTicketByConnection(connection); //Better placement for this.
         }
@@ -174,7 +198,7 @@ namespace SS3D_Server.Modules
                         if (hasEntityInInventory(craftingTicket.sourceEntity, craftingTicket.component1) && hasEntityInInventory(craftingTicket.sourceEntity, craftingTicket.component2))
                         {
                             Entity newEnt = EntityManager.Singleton.SpawnEntity(craftingTicket.result);
-                            sendCraftSuccess(craftingTicket.sourceConnection, newEnt.name);
+                            sendCraftSuccess(craftingTicket.sourceConnection, newEnt, craftingTicket);
                             //craftingTicket.sourceEntity.SendMessage(this, ComponentMessageType.DisassociateEntity, null, craftingTicket.component1);
                             //craftingTicket.sourceEntity.SendMessage(this, ComponentMessageType.DisassociateEntity, null, craftingTicket.component2);
                             craftingTicket.sourceEntity.SendMessage(this, ComponentMessageType.InventoryAdd, null, newEnt);

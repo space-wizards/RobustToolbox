@@ -43,10 +43,10 @@ namespace SS3D.UserInterface
                 uniqueName = uniqueName + System.Guid.NewGuid().ToString();
 
             clippingRI = new RenderImage(uniqueName, size.Width, size.Height, ImageBufferFormats.BufferRGB888A8);
-            scrollbarH = new Scrollbar(); //If you arrived here because of a duplicate key error:
+            scrollbarH = new Scrollbar(true); //If you arrived here because of a duplicate key error:
             scrollbarH.size = size.Width; //The name for scrollable containers and all classes that inherit them
-            scrollbarH.Horizontal = true; //(Windows, dialog boxes etc) must be unique. Only one instance with a given name.
-            scrollbarV = new Scrollbar();
+                                             //(Windows, dialog boxes etc) must be unique. Only one instance with a given name.
+            scrollbarV = new Scrollbar(false);
             scrollbarV.size = size.Height;
 
             scrollbarH.Update();

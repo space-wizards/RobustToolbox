@@ -55,9 +55,22 @@ namespace CGO
             if (Changed != null) Changed(this, maxSlots, containedEntities);
         }
 
-        public bool ContainsEntity(Entity e)
+        public bool containsEntity(Entity entity)
         {
-            return containedEntities.Contains(e);
+            if (containedEntities.Contains(entity)) return true;
+            else return false;
+        }
+
+        public bool containsEntity(string templatename)
+        {
+            if (containedEntities.Exists(x => x.template.Name == templatename)) return true;
+            else return false;
+        }
+
+        public Entity getEntity(string templatename)
+        {
+            if (containedEntities.Exists(x => x.template.Name == templatename)) return containedEntities.First(x => x.template.Name == templatename);
+            else return null;
         }
 
         public void SendRequestListing()

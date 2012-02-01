@@ -24,6 +24,7 @@ namespace SS3D_shared
         CraftNeedInventorySpace,
         CraftSuccess,
         CraftItemsMissing,
+        CraftAlreadyCrafting,
         CraftNoRecipe
     }
 }

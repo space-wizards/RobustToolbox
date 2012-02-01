@@ -160,6 +160,7 @@
     <Compile Include="Modules\State.cs" />
     <Compile Include="Modules\StateManager.cs" />
     <Compile Include="HelperClasses\Utilities.cs" />
+    <Compile Include="Modules\UserInterface\Components\BlueprintButton.cs" />
     <Compile Include="Modules\UserInterface\Components\TimerBar.cs" />
     <Compile Include="Modules\UserInterface\Components\ProgressBar.cs" />
     <Compile Include="Modules\UserInterface\DragDropInfo.cs" />

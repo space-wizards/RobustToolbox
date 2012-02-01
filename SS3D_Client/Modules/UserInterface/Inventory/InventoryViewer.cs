@@ -129,7 +129,7 @@ namespace SS3D.UserInterface
             if (invContainer.MouseUp(e)) return true;
             if (invContainer.ClientArea.Contains(new Point((int)e.Position.X, (int)e.Position.Y)) && UiManager.Singleton.dragInfo.isEntity && UiManager.Singleton.dragInfo.dragEntity != null)
             {
-                if (!component.ContainsEntity(UiManager.Singleton.dragInfo.dragEntity))
+                if (!component.containsEntity(UiManager.Singleton.dragInfo.dragEntity))
                 {
                     component.SendInventoryAdd(UiManager.Singleton.dragInfo.dragEntity);
                     UiManager.Singleton.dragInfo.Reset();

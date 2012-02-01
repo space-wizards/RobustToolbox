@@ -69,7 +69,9 @@ namespace SS3D.UserInterface
         private CraftSlotUi craftSlot2;
         private SimpleImageButton craftButton;
         private Timer_Bar craftTimer;
-        private TextSprite craftStatus = new TextSprite("craftText", "Status:", ResMgr.Singleton.GetFont("CALIBRI"));
+        private TextSprite craftStatus = new TextSprite("craftText", "Status", ResMgr.Singleton.GetFont("CALIBRI"));
+        private ScrollableContainer blueprints;
+        private int blueprintsOffset = 0;
         #endregion
 
         private byte currentTab = 1; //1 = Inventory, 2 = Health, 3 = Crafting
@@ -165,6 +167,11 @@ namespace SS3D.UserInterface
             craftButton = new SimpleImageButton("wrenchbutt");
             craftButton.Clicked += new SimpleImageButton.SimpleImageButtonPressHandler(craftButton_Clicked);
 
+            craftStatus.ShadowColor = Color.DimGray;
+            craftStatus.ShadowOffset = new Vector2D(1,1);
+            craftStatus.Shadowed = true;
+
+            blueprints = new ScrollableContainer("blueprintCont", new Size(210, 100));
         }
 
         void craftButton_Clicked(SimpleImageButton sender)
@@ -212,21 +219,21 @@ namespace SS3D.UserInterface
             if (sender == tab_equip) currentTab = 1;
             if (sender == tab_health) currentTab = 2;
             if (sender == tab_craft) currentTab = 3;
-            craftStatus.Text = "Status:"; //Handle the resetting better.
+            craftStatus.Text = "Status"; //Handle the resetting better.
             craftStatus.Color = Color.White;
         }
 
         void combo_open_Clicked(SimpleImageButton sender)
         {
             showTabbedWindow = !showTabbedWindow;
-            craftStatus.Text = "Status:";
+            craftStatus.Text = "Status";
             craftStatus.Color = Color.White;
         }
 
         void combo_close_Clicked(SimpleImageButton sender)
         {
             showTabbedWindow = false;
-            craftStatus.Text = "Status:";
+            craftStatus.Text = "Status";
             craftStatus.Color = Color.White;
         }
 
@@ -235,7 +242,7 @@ namespace SS3D.UserInterface
             if (e.Key == KeyboardKeys.I)
             {
                 showTabbedWindow = !showTabbedWindow; 
-                craftStatus.Text = "Status:";
+                craftStatus.Text = "Status";
                 craftStatus.Color = Color.White;
                 return true;
             }
@@ -275,7 +282,7 @@ namespace SS3D.UserInterface
                     break;
                 case ComboGuiMessage.ShowCraftBar:
                     int seconds = message.ReadInt32();
-                    craftTimer = new Timer_Bar(new Size(150,15), new TimeSpan(0,0,0,seconds));
+                    craftTimer = new Timer_Bar(new Size(210,15), new TimeSpan(0,0,0,seconds));
                     craftStatus.Text = "Status: Crafting...";
                     craftStatus.Color = Color.LightSteelBlue;
                     break;
@@ -311,10 +318,70 @@ namespace SS3D.UserInterface
                     }
                     craftSlot1.ResetEntity();
                     craftSlot2.ResetEntity();
-                    craftStatus.Text = "Status: You create '"+message.ReadString()+"'";
-                    craftStatus.Color = Color.Green;
+                    addBlueprint(message);
+                    break;
+                case ComboGuiMessage.CraftAlreadyCrafting:
+                    craftStatus.Text = "Status: You are already working on an item.";
+                    craftStatus.Color = Color.DarkRed;
                     break;
             }
+        }
+
+        private void addBlueprint(NetIncomingMessage message)
+        {
+            string compo1Temp = message.ReadString();
+            string compo1Name = message.ReadString();
+            string compo2Temp = message.ReadString();
+            string compo2Name = message.ReadString();
+            string resultTemp = message.ReadString();
+            string resultName = message.ReadString();
+
+            craftStatus.Text = "Status: You successfully create '" + resultName + "'";
+            craftStatus.Color = Color.Green;
+
+            foreach (BlueprintButton bpbutt in blueprints.components)
+            {
+                List<string> req = new List<string>();
+                req.Add(compo1Temp);
+                req.Add(compo2Temp);
+                if (req.Exists(x => x.ToLowerInvariant() == bpbutt.compo1.ToLowerInvariant())) req.Remove(req.First(x => x.ToLowerInvariant() == bpbutt.compo1.ToLowerInvariant()));
+                if (req.Exists(x => x.ToLowerInvariant() == bpbutt.compo2.ToLowerInvariant())) req.Remove(req.First(x => x.ToLowerInvariant() == bpbutt.compo2.ToLowerInvariant()));
+                if (!req.Any()) return;
+            }
+
+            BlueprintButton newBpb = new BlueprintButton(compo1Temp, compo1Name, compo2Temp, compo2Name, resultTemp, resultName);
+            newBpb.Update();
+
+            newBpb.Clicked += new BlueprintButton.BlueprintButtonPressHandler(blueprint_Clicked);
+
+            newBpb.Position = new Point(0, blueprintsOffset);
+            blueprintsOffset += newBpb.ClientArea.Height;
+
+            blueprints.components.Add(newBpb);
+        }
+
+        void blueprint_Clicked(BlueprintButton sender)
+        {
+            //craftTimer = new Timer_Bar(new Size(200,15), new TimeSpan(0,0,0,10));
+            if (playerController != null)
+                if (playerController.controlledAtom != null)
+                    if (playerController.controlledAtom.HasComponent(ComponentFamily.Inventory))
+                    {
+                        InventoryComponent invComp = (InventoryComponent)playerController.controlledAtom.GetComponent(ComponentFamily.Inventory);
+                        if (!invComp.containsEntity(sender.compo1) || !invComp.containsEntity(sender.compo2))
+                        {
+                            craftStatus.Text = "Status: You do not have the required items.";
+                            craftStatus.Color = Color.DarkRed;
+                            return;
+                        }
+                        else
+                        {
+                            craftSlot1.SetEntity(invComp.getEntity(sender.compo1));
+                            craftSlot2.SetEntity(invComp.getEntity(sender.compo2));
+
+                            craftButton_Clicked(null); //This is pretty dumb but i hate duplicate code.
+                        }
+                    }
         }
 
         public override void Render()
@@ -375,6 +442,7 @@ namespace SS3D.UserInterface
                             craftSlot2.Render();
                             craftButton.Render(); 
                             craftStatus.Draw();
+                            blueprints.Render();
                             break;
                             #endregion
                         }
@@ -540,18 +608,21 @@ namespace SS3D.UserInterface
                 case (3): //Craft tab
                     {
                         #region Crafting
-                        craftSlot1.Position = new Point(position.X + 40, position.Y + 70);
+                        craftSlot1.Position = new Point(position.X + 40, position.Y + 80);
                         craftSlot1.Update();
 
-                        craftSlot2.Position = new Point(position.X + clientArea.Width - craftSlot2.ClientArea.Width - 40, position.Y + 70);
+                        craftSlot2.Position = new Point(position.X + clientArea.Width - craftSlot2.ClientArea.Width - 40, position.Y + 80);
                         craftSlot2.Update();
 
                         craftButton.Position = new Point(position.X + (int)(clientArea.Width / 2f) - (int)(craftButton.ClientArea.Width / 2f), position.Y + 70);
                         craftButton.Update();
 
-                        if (craftTimer != null) craftTimer.Position = new Point(position.X + (int)(clientArea.Width / 2f) - (int)(craftTimer.ClientArea.Width / 2f), position.Y + 250);
+                        if (craftTimer != null) craftTimer.Position = new Point(position.X + (int)(clientArea.Width / 2f) - (int)(craftTimer.ClientArea.Width / 2f), position.Y + 155);
 
-                        craftStatus.Position = new Vector2D(position.X + 40, position.Y + 40);
+                        craftStatus.Position = new Vector2D(position.X + (int)(clientArea.Width / 2f) - (int)(craftStatus.Width / 2f), position.Y + 40);
+
+                        blueprints.Position = new Point(position.X + 40, position.Y + 180);
+                        blueprints.Update();
 
                         if (inventory != null)
                         {
@@ -715,7 +786,9 @@ namespace SS3D.UserInterface
                         if (craftSlot1.MouseDown(e)) return true;
                         if (craftSlot2.MouseDown(e)) return true;
                         if (craftButton.MouseDown(e)) return true;
+                        if (blueprints.MouseDown(e)) return true;
                         if (inventory != null) if (inventory.MouseDown(e)) return true;
+
                         break; 
                         #endregion
                     }
@@ -844,7 +917,7 @@ namespace SS3D.UserInterface
                             return true;
                         }
                         if (craftButton.MouseUp(e)) return true;
-
+                        if (blueprints.MouseUp(e)) return true;
                         if (inventory != null) if (inventory.MouseUp(e)) return true;
                         break; 
                         #endregion
@@ -892,7 +965,7 @@ namespace SS3D.UserInterface
                         craftSlot1.MouseMove(e);
                         craftSlot2.MouseMove(e);
                         craftButton.MouseMove(e);
-
+                        blueprints.MouseMove(e);
                         if (inventory != null) inventory.MouseMove(e);
                         break; 
                         #endregion

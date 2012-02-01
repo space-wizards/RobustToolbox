@@ -76,9 +76,10 @@ namespace SS3D.UserInterface
         private int currentPos = 0;      //The current button position in relation to location of scrollbar.
         private float actualVal = 0;     //The actual value of the current button position.
 
-        public Scrollbar()
+        public Scrollbar(bool _Horizontal)
             : base()
         {
+            Horizontal = _Horizontal;
             if (Horizontal) scrollbarButton = ResMgr.Singleton.GetSprite("scrollbutton_h");
             else scrollbarButton = ResMgr.Singleton.GetSprite("scrollbutton_v");
 

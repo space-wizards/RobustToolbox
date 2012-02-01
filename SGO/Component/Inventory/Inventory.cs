@@ -76,6 +76,12 @@ namespace SGO
             else return false;
         }
 
+        public bool containsEntity(string templatename)
+        {
+            if (containedEntities.Exists(x => x.template.Name == templatename)) return true;
+            else return false;
+        }
+
         public override void HandleInstantiationMessage(Lidgren.Network.NetConnection netConnection)
         {
         }

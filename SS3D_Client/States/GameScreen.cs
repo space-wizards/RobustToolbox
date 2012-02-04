@@ -86,6 +86,11 @@ namespace SS3D.States
 
         #endregion
 
+        private Vector2D WindowOrigin
+        {
+            get { return ClientWindowData.Singleton.ScreenOrigin; }
+        }
+
         #endregion
 
         public GameScreen()
@@ -438,22 +443,22 @@ namespace SS3D.States
                         {
                             if (t.tilePosition.Y <= centerTile.Y)
                             {
-                                t.Render(ClientWindowData.xTopLeft, ClientWindowData.yTopLeft, map.tileSpacing);
-                                t.DrawDecals(ClientWindowData.xTopLeft, ClientWindowData.yTopLeft, map.tileSpacing, decalBatch);
-                                t.RenderLight(ClientWindowData.xTopLeft, ClientWindowData.yTopLeft, map.tileSpacing, lightMapBatch);
+                                t.Render(WindowOrigin.X, WindowOrigin.Y, map.tileSpacing);
+                                t.DrawDecals(WindowOrigin.X, WindowOrigin.Y, map.tileSpacing, decalBatch);
+                                t.RenderLight(WindowOrigin.X, WindowOrigin.Y, map.tileSpacing, lightMapBatch);
                             }
                         }
                         else
                         {
-                            t.Render(ClientWindowData.xTopLeft, ClientWindowData.yTopLeft, map.tileSpacing);
-                            t.DrawDecals(ClientWindowData.xTopLeft, ClientWindowData.yTopLeft, map.tileSpacing, decalBatch);
-                            t.RenderLight(ClientWindowData.xTopLeft, ClientWindowData.yTopLeft, map.tileSpacing, lightMapBatch);
+                            t.Render(WindowOrigin.X, WindowOrigin.Y, map.tileSpacing);
+                            t.DrawDecals(WindowOrigin.X, WindowOrigin.Y, map.tileSpacing, decalBatch);
+                            t.RenderLight(WindowOrigin.X, WindowOrigin.Y, map.tileSpacing, lightMapBatch);
                         }
 
                         ///Render gas sprites to gas batch
-                        t.RenderGas(ClientWindowData.xTopLeft, ClientWindowData.yTopLeft, map.tileSpacing, gasBatch);
+                        t.RenderGas(WindowOrigin.X, WindowOrigin.Y, map.tileSpacing, gasBatch);
                         ///Render wall top sprites to wall top batch
-                        t.RenderTop(ClientWindowData.xTopLeft, ClientWindowData.yTopLeft, map.tileSpacing, wallTopsBatch);
+                        t.RenderTop(WindowOrigin.X, WindowOrigin.Y, map.tileSpacing, wallTopsBatch);
                     }
                 }
 
@@ -704,7 +709,7 @@ namespace SS3D.States
         {
             float distanceToPrev = (mousePosScreen - new Vector2D(e.Position.X, e.Position.Y)).Length;
             mousePosScreen = new Vector2D(e.Position.X, e.Position.Y);
-            mousePosWorld = new Vector2D(e.Position.X + ClientWindowData.xTopLeft, e.Position.Y + ClientWindowData.yTopLeft);
+            mousePosWorld = new Vector2D(e.Position.X + WindowOrigin.X, e.Position.Y + WindowOrigin.Y);
             UiManager.Singleton.MouseMove(e);
         }
 

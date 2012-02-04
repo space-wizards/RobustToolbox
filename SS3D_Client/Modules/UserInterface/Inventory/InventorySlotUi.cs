@@ -10,9 +10,8 @@ using GorgonLibrary.GUI;
 using SS3D.UserInterface;
 using Lidgren.Network;
 using SS3D_shared;
-using CGO;
 using SS3D_shared.GO;
-using SS3D_shared;
+using CGO;
 using ClientResourceManager;
 using SS3D.Modules;
 

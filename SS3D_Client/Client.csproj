@@ -186,7 +186,6 @@
     <Compile Include="Modules\UserInterface\Components\Listbox.cs" />
     <Compile Include="Modules\UserInterface\Components\ScrollableContainer.cs" />
     <Compile Include="Modules\UserInterface\Components\Scrollbar.cs" />
-    <Compile Include="Modules\UserInterface\Components\Speechbubble.cs" />
     <Compile Include="Modules\UserInterface\Components\StatHealthComponent.cs" />
     <Compile Include="Modules\UserInterface\Components\StatPanel.cs" />
     <Compile Include="Modules\UserInterface\Components\Textbox.cs" />

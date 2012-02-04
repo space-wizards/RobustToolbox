@@ -131,21 +131,11 @@ namespace CGO
             _bubbleRender.Clear(Color.Transparent);
 
             //Draw black triangle at the bottom.
-            var blacktriangle = new VertexTypeList.PositionDiffuse2DTexture1[3];
-            blacktriangle[0].Position.X = (_bubbleRender.Width / 2) - 10;
-            blacktriangle[1].Position.X = (_bubbleRender.Width / 2) + 10;
-            blacktriangle[2].Position.X = (_bubbleRender.Width / 2);
-            blacktriangle[0].Position.Y = _bubbleRender.Height - 15;
-            blacktriangle[1].Position.Y = _bubbleRender.Height - 15;
-            blacktriangle[2].Position.Y = _bubbleRender.Height;
-            blacktriangle[0].TextureCoordinates = Vector2D.Zero;
-            blacktriangle[0].Color = Color.Black;
-            blacktriangle[1].TextureCoordinates = Vector2D.Zero;
-            blacktriangle[1].Color = Color.Black;
-            blacktriangle[2].TextureCoordinates = Vector2D.Zero;
-            blacktriangle[2].Color = Color.Black;
-            _bubbleRender.Draw(blacktriangle);
-            
+            var pointOneBlack = new Vector2D((_bubbleRender.Width/2) - 10, _bubbleRender.Height - 10);
+            var pointTwoBlack = new Vector2D((_bubbleRender.Width/2) + 10, _bubbleRender.Height - 10);
+            var pointThreeBlack = new Vector2D((_bubbleRender.Width / 2), _bubbleRender.Height);
+            _bubbleRender.FilledTriangle(pointOneBlack, pointTwoBlack, pointThreeBlack, Color.Black);
+
             //Draw the side lines
             _bubbleRender.Line(10, 0, _bubbleRender.Width - 20, 1, Color.Black);
             _bubbleRender.Line(_bubbleRender.Width - 1, 10, 1, _bubbleRender.Height - 26, Color.Black);
@@ -157,20 +147,10 @@ namespace CGO
             _bubbleRender.FilledRectangle(1, 3, _bubbleRender.Width - 2, _bubbleRender.Height - 12, Color.White);
 
             //Draw the white triangle at the bottom.
-            var whiteTriangle = new VertexTypeList.PositionDiffuse2DTexture1[3];
-            whiteTriangle[0].Position.X = (_bubbleRender.Width / 2) - 8;
-            whiteTriangle[1].Position.X = (_bubbleRender.Width / 2) + 8;
-            whiteTriangle[2].Position.X = (_bubbleRender.Width / 2);
-            whiteTriangle[0].Position.Y = _bubbleRender.Height - 15;
-            whiteTriangle[1].Position.Y = _bubbleRender.Height - 15;
-            whiteTriangle[2].Position.Y = _bubbleRender.Height - 2;
-            whiteTriangle[0].TextureCoordinates = Vector2D.Zero;
-            whiteTriangle[0].Color = Color.White;
-            whiteTriangle[1].TextureCoordinates = Vector2D.Zero;
-            whiteTriangle[1].Color = Color.White;
-            whiteTriangle[2].TextureCoordinates = Vector2D.Zero;
-            whiteTriangle[2].Color = Color.White;
-            _bubbleRender.Draw(whiteTriangle);
+            var pointOneWhite = pointOneBlack + new Vector2D(1, 0);
+            var pointTwoWhite = pointTwoBlack - new Vector2D(1, 0);
+            var pointThreeWhite = pointThreeBlack - new Vector2D(0, 1);
+            _bubbleRender.FilledTriangle(pointOneWhite, pointTwoWhite, pointThreeWhite, Color.White);
 
             //Draw the corners.
             cornerSprite.SourceBlend = AlphaBlendOperation.One;

@@ -1,17 +1,17 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
 using SS3D_shared;
 using SS3D_shared.GO;
 using GorgonLibrary.Graphics;
+using ClientWindow;
 
 namespace CGO
 {
     public class MobSpriteComponent : SpriteComponent
     {
-        string basename = "";
-        SpeechBubble speechBubble;
+        string _basename;
+        SpeechBubble _speechBubble;
+
         public MobSpriteComponent()
             : base()
         {
@@ -28,46 +28,48 @@ namespace CGO
                     switch ((Constants.MoveDirs)list[0])
                     {
                         case Constants.MoveDirs.north:
-                            SetSpriteByKey(basename + "_back");
+                            SetSpriteByKey(_basename + "_back");
                             break;
                         case Constants.MoveDirs.south:
-                            SetSpriteByKey(basename + "_front");
+                            SetSpriteByKey(_basename + "_front");
                             break;
                         case Constants.MoveDirs.east:
-                            SetSpriteByKey(basename + "_side");
+                            SetSpriteByKey(_basename + "_side");
                             flip = true;
                             break;
                         case Constants.MoveDirs.west:
-                            SetSpriteByKey(basename + "_side");
+                            SetSpriteByKey(_basename + "_side");
                             flip = false;
                             break;
                         case Constants.MoveDirs.northeast:
-                            SetSpriteByKey(basename + "_back");
+                            SetSpriteByKey(_basename + "_back");
                             break;
                         case Constants.MoveDirs.northwest:
-                            SetSpriteByKey(basename + "_back");
+                            SetSpriteByKey(_basename + "_back");
                             break;
                         case Constants.MoveDirs.southeast:
-                            SetSpriteByKey(basename + "_front");
+                            SetSpriteByKey(_basename + "_front");
                             break;
                         case Constants.MoveDirs.southwest:
-                            SetSpriteByKey(basename + "_front");
+                            SetSpriteByKey(_basename + "_front");
                             break;
                     }
                     break;
                 case ComponentMessageType.HealthStatus:
                     break; //TODO do stuff here, incap and dead.
                 case ComponentMessageType.EntitySaidSomething:
-                    ChatChannel channel = (ChatChannel)list[0];
-                    string text = (string)list[1];
-                    if (speechBubble == null) speechBubble = new SpeechBubble(Owner.name + Owner.Uid.ToString());
-                    if(channel == ChatChannel.Ingame || channel == ChatChannel.Player || channel == ChatChannel.Radio)
-                        speechBubble.SetText(text);
-                    //TODO re-enable speechbubbles
+                    ChatChannel channel;
+                    if (Enum.TryParse(list[0].ToString(), true, out channel))
+                    {
+                        var text = list[1].ToString();
+                        
+                        if (channel == ChatChannel.Ingame || channel == ChatChannel.Player || channel == ChatChannel.Radio)
+                        {
+                            (_speechBubble ?? (_speechBubble = new SpeechBubble(Owner.name + Owner.Uid))).SetText(text);
+                        }
+                    }
                     break;
-
             }
-            return;
         }
 
         /// <summary>
@@ -80,7 +82,7 @@ namespace CGO
             switch (parameter.MemberName)
             {
                 case "basename":
-                    basename = (string)parameter.Parameter;
+                    _basename = (string)parameter.Parameter;
                     LoadSprites();
                     break;
             }
@@ -97,13 +99,13 @@ namespace CGO
         /// </summary>
         public void LoadSprites()
         {
-            AddSprite(basename + "_front");
-            AddSprite(basename + "_back");
-            AddSprite(basename + "_incap");
-            AddSprite(basename + "_side");
-            AddSprite(basename + "_dead");
+            AddSprite(_basename + "_front");
+            AddSprite(_basename + "_back");
+            AddSprite(_basename + "_incap");
+            AddSprite(_basename + "_side");
+            AddSprite(_basename + "_dead");
 
-            SetSpriteByKey(basename + "_front");
+            SetSpriteByKey(_basename + "_front");
         }
 
         public override void Render()
@@ -112,8 +114,8 @@ namespace CGO
 
             base.Render();
 
-            if (speechBubble != null)
-                speechBubble.Draw(Owner.Position, ClientWindow.ClientWindowData.xTopLeft, ClientWindow.ClientWindowData.yTopLeft, currentSprite);
+            if (_speechBubble != null)
+                _speechBubble.Draw(Owner.Position, ClientWindowData.Singleton.ScreenOrigin, currentSprite);
         }
     }
 }

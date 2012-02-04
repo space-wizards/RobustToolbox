@@ -12,12 +12,7 @@ namespace CGO
         /// <summary>
         /// The entity that owns this component
         /// </summary>
-        private Entity m_owner;
-        public Entity Owner
-        {
-            get { return m_owner; }
-            set { m_owner = value; }
-        }
+        public Entity Owner { get; set; }
 
         /// <summary>
         /// This is the family of the component. This should be set directly in all inherited components' constructors.
@@ -25,10 +20,7 @@ namespace CGO
         protected ComponentFamily family = ComponentFamily.Generic;
         public ComponentFamily Family
         {
-            get
-            {
-                return family;
-            }
+            get { return family; }
             set { family = value; }
         }
         

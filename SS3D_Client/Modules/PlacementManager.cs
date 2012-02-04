@@ -215,7 +215,7 @@ namespace SS3D.Modules
 
             current_loc_screen = mouseScreen;
 
-            current_loc_world = new Vector2D(mouseScreen.X + ClientWindowData.xTopLeft, mouseScreen.Y + ClientWindowData.yTopLeft);
+            current_loc_world = new Vector2D(mouseScreen.X + ClientWindowData.Singleton.ScreenOrigin.X, mouseScreen.Y + ClientWindowData.Singleton.ScreenOrigin.Y);
 
             validPosition = true;
 
@@ -290,7 +290,7 @@ namespace SS3D.Modules
                             Vector2D closestSide = (from Vector2D side in sides orderby (side - current_loc_world).Length ascending select side).First();
 
                             current_loc_world = closestSide;
-                            current_loc_screen = new Vector2D(closestSide.X - ClientWindowData.xTopLeft, closestSide.Y - ClientWindowData.yTopLeft);
+                            current_loc_screen = new Vector2D(closestSide.X - ClientWindowData.Singleton.ScreenOrigin.X, closestSide.Y - ClientWindowData.Singleton.ScreenOrigin.Y);
                         }
                     }
 
@@ -333,7 +333,7 @@ namespace SS3D.Modules
                             if (current_permission.isTile)
                             {
                                 current_loc_world = (currentTile.position + new Vector2D(currentMap.tileSpacing / 2f, currentMap.tileSpacing / 2f));
-                                current_loc_screen = new Vector2D(current_loc_world.X - ClientWindowData.xTopLeft, current_loc_world.Y - ClientWindowData.yTopLeft);
+                                current_loc_screen = new Vector2D(current_loc_world.X - ClientWindowData.Singleton.ScreenOrigin.X, current_loc_world.Y - ClientWindowData.Singleton.ScreenOrigin.Y);
 
                                 //TileRectWorld = new RectangleF(current_loc_world.X - (current_sprite.Width / 2f), current_loc_world.Y - (current_sprite.Height / 2f), current_sprite.Width, current_sprite.Height);
                                 //CollisionManager collisionMgr = (CollisionManager)ServiceManager.Singleton.GetService(ClientServiceType.CollisionManager);
@@ -342,7 +342,7 @@ namespace SS3D.Modules
                             else
                             {
                                 current_loc_world = (currentTile.position + new Vector2D(currentMap.tileSpacing / 2f, currentMap.tileSpacing / 2f)) + new Vector2D(current_template.placementOffset.Key, current_template.placementOffset.Value);
-                                current_loc_screen = new Vector2D(current_loc_world.X - ClientWindowData.xTopLeft, current_loc_world.Y - ClientWindowData.yTopLeft);
+                                current_loc_screen = new Vector2D(current_loc_world.X - ClientWindowData.Singleton.ScreenOrigin.X, current_loc_world.Y - ClientWindowData.Singleton.ScreenOrigin.Y);
 
                                 spriteRectWorld = new RectangleF(current_loc_world.X - (current_sprite.Width / 2f), current_loc_world.Y - (current_sprite.Height / 2f), current_sprite.Width, current_sprite.Height);
                                 CollisionManager collisionMgr = (CollisionManager)ServiceManager.Singleton.GetService(ClientServiceType.CollisionManager);
@@ -394,7 +394,7 @@ namespace SS3D.Modules
                                                 select node).First();
 
                         current_loc_world = Vector2D.Add(closestNode, new Vector2D(current_template.placementOffset.Key, current_template.placementOffset.Value));
-                        current_loc_screen = new Vector2D(current_loc_world.X - ClientWindowData.xTopLeft, current_loc_world.Y - ClientWindowData.yTopLeft);
+                        current_loc_screen = new Vector2D(current_loc_world.X - ClientWindowData.Singleton.ScreenOrigin.X, current_loc_world.Y - ClientWindowData.Singleton.ScreenOrigin.Y);
 
                         if (current_permission.placementOption == PlacementOption.AlignWall)
                             if ((PlayerController.Singleton.controlledAtom.Position - current_loc_world).Length > current_permission.range) validPosition = false;
@@ -429,7 +429,12 @@ namespace SS3D.Modules
                     current_permission.placementOption == PlacementOption.AlignTileSolid ||
                     current_permission.placementOption == PlacementOption.AlignWall)   //If it uses range, show the range.
                 {
-                    Gorgon.Screen.Circle(PlayerController.Singleton.controlledAtom.Position.X - ClientWindowData.xTopLeft, PlayerController.Singleton.controlledAtom.Position.Y - ClientWindowData.yTopLeft, current_permission.range, Color.DeepSkyBlue, new Vector2D(2, 2));
+                    Gorgon.Screen.Circle(
+                        PlayerController.Singleton.controlledAtom.Position.X - ClientWindowData.Singleton.ScreenOrigin.X,
+                        PlayerController.Singleton.controlledAtom.Position.Y - ClientWindowData.Singleton.ScreenOrigin.Y,
+                        current_permission.range,
+                        Color.DeepSkyBlue,
+                        new Vector2D(2, 2));
                 }
             }
         }

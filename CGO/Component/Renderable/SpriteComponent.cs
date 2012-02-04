@@ -182,15 +182,14 @@ namespace CGO
         public override void Render()
         {
             if (!visible) return;
-            Vector2D RenderPos = ClientWindowData.Singleton.WorldToScreen(Owner.Position);
-            if (currentSprite != null)
-            {
-                SetSpriteCenter(currentSprite, RenderPos);
-                if (flip)
-                    currentSprite.HorizontalFlip = true;
-                currentSprite.Draw();
-                currentSprite.HorizontalFlip = false;
-            }
+            if (currentSprite == null) return;
+
+            var renderPos = ClientWindowData.Singleton.WorldToScreen(Owner.Position);
+            SetSpriteCenter(currentSprite, renderPos);
+
+            currentSprite.HorizontalFlip = flip;
+            currentSprite.Draw();
+            currentSprite.HorizontalFlip = false;
         }
 
         public void SetSpriteCenter(string sprite, Vector2D center)

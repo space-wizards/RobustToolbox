@@ -7,7 +7,7 @@ using ClientInterfaces;
 using ClientServices;
 using System.Diagnostics;
 using GorgonLibrary;
-using SS3D_shared.GO;
+using SS13_Shared.GO;
 
 namespace CGO
 {
@@ -45,7 +45,7 @@ namespace CGO
 
         public CollidableComponent()
         {
-            family = SS3D_shared.GO.ComponentFamily.Collidable;
+            family = SS13_Shared.GO.ComponentFamily.Collidable;
         }
 
         /// <summary>

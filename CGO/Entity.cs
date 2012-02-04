@@ -8,7 +8,7 @@ using System.Reflection;
 using GorgonLibrary;
 using System.Collections;
 using Lidgren.Network;
-using SS3D_shared.GO;
+using SS13_Shared.GO;
 
 namespace CGO
 {
@@ -90,7 +90,7 @@ namespace CGO
         }
 
         /// <summary>
-        /// Compatibility method for atoms. This should be eliminated eventually when the above naked constructor is eliminated.
+        /// Compatibility method for entity. This should be eliminated eventually when the above naked constructor is eliminated.
         /// </summary>
         /// <param name="entityNetworkManager"></param>
         public void InitializeEntityNetworking(EntityNetworkManager entityNetworkManager)
@@ -181,14 +181,6 @@ namespace CGO
         #endregion
 
         /// <summary>
-        /// Public update method for the entity. This will be useless after the atom code is refactored.
-        /// </summary>
-        /// <param name="frameTime"></param>
-        public virtual void Update(float frameTime)
-        {
-        }
-
-        /// <summary>
         /// Requests Description string from components and returns it. If no component answers, returns default description from template.
         /// </summary>
         public string GetDescriptionString() //This needs to go here since it can not be bound to any single component.
@@ -259,7 +251,7 @@ namespace CGO
             m_entityNetworkManager.SendEntityNetworkMessage(this, EntityMessage.ComponentInstantiationMessage, component.Family);
         }
 
-        #region compatibility for atom transition
+        #region compatibility for entity transition
         public void SetNetworkManager(EntityNetworkManager manager)
         {
             m_entityNetworkManager = manager;

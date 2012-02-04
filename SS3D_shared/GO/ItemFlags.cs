@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 
-namespace SS3D_shared.GO
+namespace SS13_Shared.GO
 {
     [Flags]
     public enum InteractsWith

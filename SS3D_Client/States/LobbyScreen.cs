@@ -2,8 +2,8 @@
 
 using Lidgren.Network;
 
-using SS3D.Modules;
-using SS3D.Modules.Network;
+using SS13.Modules;
+using SS13.Modules.Network;
 
 using System.Collections.Generic;
 using System.Reflection;
@@ -11,14 +11,14 @@ using System.Reflection;
 using GorgonLibrary;
 using GorgonLibrary.Graphics;
 using GorgonLibrary.InputDevices;
-using SS3D.UserInterface;
-using SS3D_shared;
+using SS13.UserInterface;
+using SS13_Shared;
 using System.Linq;
 using ClientConfigManager;
 using ClientResourceManager;
 using ClientServices.Map;
 
-namespace SS3D.States
+namespace SS13.States
 {
     public class LobbyScreen : State
     {
@@ -60,8 +60,8 @@ namespace SS3D.States
 
             prg.mNetworkMgr.MessageArrived += new NetworkMsgHandler(mNetworkMgr_MessageArrived);
 
-            lobbyChat = new SS3D.UserInterface.Chatbox("lobbyChat");
-            lobbyChat.TextSubmitted += new SS3D.UserInterface.Chatbox.TextSubmitHandler(lobbyChat_TextSubmitted);
+            lobbyChat = new SS13.UserInterface.Chatbox("lobbyChat");
+            lobbyChat.TextSubmitted += new SS13.UserInterface.Chatbox.TextSubmitHandler(lobbyChat_TextSubmitted);
 
             UiManager.Singleton.Components.Add(lobbyChat);
 
@@ -109,7 +109,7 @@ namespace SS3D.States
             playerController.SendVerb("joingame", 0);
         }
 
-        void lobbyChat_TextSubmitted(SS3D.UserInterface.Chatbox Chatbox, string Text)
+        void lobbyChat_TextSubmitted(SS13.UserInterface.Chatbox Chatbox, string Text)
         {
             SendLobbyChat(Text);
         }
@@ -311,7 +311,6 @@ namespace SS3D.States
             ChatChannel channel = (ChatChannel)msg.ReadByte();
             string text = msg.ReadString();
             string message = "(" + channel.ToString() + "):" + text;
-            int atomID = msg.ReadInt32();
             lobbyChat.AddLine(message, ChatChannel.Lobby);
         }
 

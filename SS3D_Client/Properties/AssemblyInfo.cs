@@ -6,11 +6,11 @@ using System.Security;
 // General Information about an assembly is controlled through the following 
 // set of attributes. Change these attribute values to modify the information
 // associated with an assembly.
-[assembly: AssemblyTitle( "SpaceStation3D" )]
+[assembly: AssemblyTitle("SpaceStation13")]
 [assembly: AssemblyDescription( "___" )]
 [assembly: AssemblyConfiguration( "" )]
 [assembly: AssemblyCompany( "___" )]
-[assembly: AssemblyProduct("SpaceStation3D")]
+[assembly: AssemblyProduct("SpaceStation13")]
 [assembly: AssemblyCopyright( "___" )]
 [assembly: AssemblyTrademark( "" )]
 [assembly: AssemblyCulture( "" )]

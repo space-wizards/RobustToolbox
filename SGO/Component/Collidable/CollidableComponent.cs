@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
-using SS3D_shared.GO;
+using SS13_Shared.GO;
 using Lidgren.Network;
 
 namespace SGO
@@ -11,7 +11,7 @@ namespace SGO
     {
         public CollidableComponent()
         {
-            family = SS3D_shared.GO.ComponentFamily.Collidable;
+            family = SS13_Shared.GO.ComponentFamily.Collidable;
         }
 
         public override void RecieveMessage(object sender, ComponentMessageType type, List<ComponentReplyMessage> replies, params object[] list)

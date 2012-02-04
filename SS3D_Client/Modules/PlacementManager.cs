@@ -3,12 +3,12 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 
-using SS3D.Modules;
-using SS3D.Modules.Network;
+using SS13.Modules;
+using SS13.Modules.Network;
 
-using SS3D_shared;
-using SS3D.States;
-using SS3D.HelperClasses;
+using SS13_Shared;
+using SS13.States;
+using SS13.HelperClasses;
 
 using System.Reflection;
 
@@ -19,7 +19,7 @@ using GorgonLibrary.InputDevices;
 using Lidgren.Network;
 
 using System.Windows.Forms;
-using SS3D_shared.HelperClasses;
+using SS13_Shared.HelperClasses;
 using ClientResourceManager;
 using ClientServices.Map;
 using ClientServices.Map.Tiles;
@@ -29,7 +29,7 @@ using ClientInterfaces;
 using ClientServices;
 using CGO;
 
-namespace SS3D.Modules
+namespace SS13.Modules
 {
     class PlacementManager
     {
@@ -238,7 +238,7 @@ namespace SS3D.Modules
                     if (currentMap.IsSolidTile(current_loc_world)) validPosition = false; //HANDLE CURSOR OUTSIDE MAP
 
                     if (current_permission.placementOption == PlacementOption.AlignNone) //AlignNoneFree does not check for range.
-                        if ((PlayerController.Singleton.controlledAtom.Position - current_loc_world).Length > current_permission.range) validPosition = false;
+                        if ((PlayerController.Singleton.ControlledEntity.Position - current_loc_world).Length > current_permission.range) validPosition = false;
                 } 
                 #endregion
 
@@ -255,7 +255,7 @@ namespace SS3D.Modules
                     if (currentMap.IsSolidTile(current_loc_world)) validPosition = false; //HANDLE CURSOR OUTSIDE MAP
 
                     if (current_permission.placementOption == PlacementOption.AlignSimilar)
-                        if ((PlayerController.Singleton.controlledAtom.Position - current_loc_world).Length > current_permission.range) validPosition = false;
+                        if ((PlayerController.Singleton.ControlledEntity.Position - current_loc_world).Length > current_permission.range) validPosition = false;
 
                     float snapToRange = 55;
                     Entity[] nearbyEntities = EntityManager.Singleton.GetEntitiesInRange(current_loc_world, snapToRange);
@@ -269,11 +269,11 @@ namespace SS3D.Modules
                     {
                         Entity closestEnt = snapToEntities.First();
                         List<ComponentReplyMessage> replies = new List<ComponentReplyMessage>();
-                        closestEnt.SendMessage(this, SS3D_shared.GO.ComponentMessageType.GetSprite, replies);
+                        closestEnt.SendMessage(this, SS13_Shared.GO.ComponentMessageType.GetSprite, replies);
 
-                        //if(replies.Any(x => x.messageType == SS3D_shared.GO.ComponentMessageType.CurrentSprite))
+                        //if(replies.Any(x => x.messageType == SS13_Shared.GO.ComponentMessageType.CurrentSprite))
                         //{
-                        //    Sprite closestSprite = (Sprite)replies.Find(x => x.messageType == SS3D_shared.GO.ComponentMessageType.CurrentSprite).paramsList[0]; //This is safer but slower.
+                        //    Sprite closestSprite = (Sprite)replies.Find(x => x.messageType == SS13_Shared.GO.ComponentMessageType.CurrentSprite).paramsList[0]; //This is safer but slower.
 
                         if (replies.Any())
                         {
@@ -314,7 +314,7 @@ namespace SS3D.Modules
                         current_permission.placementOption == PlacementOption.AlignTileEmpty ||
                         current_permission.placementOption == PlacementOption.AlignTileNonSolid ||
                         current_permission.placementOption == PlacementOption.AlignTileSolid)
-                        if ((PlayerController.Singleton.controlledAtom.Position - current_loc_world).Length > current_permission.range) validPosition = false;
+                        if ((PlayerController.Singleton.ControlledEntity.Position - current_loc_world).Length > current_permission.range) validPosition = false;
 
                     if (current_permission.placementOption == PlacementOption.AlignTileNonSolid || current_permission.placementOption == PlacementOption.AlignTileNonSolidFree)
                         if (currentMap.IsSolidTile(current_loc_world)) validPosition = false;
@@ -370,7 +370,7 @@ namespace SS3D.Modules
                     if (!currentMap.IsSolidTile(current_loc_world)) validPosition = false;
 
                     if (current_permission.placementOption == PlacementOption.AlignWall)
-                        if ((PlayerController.Singleton.controlledAtom.Position - current_loc_world).Length > current_permission.range) validPosition = false;
+                        if ((PlayerController.Singleton.ControlledEntity.Position - current_loc_world).Length > current_permission.range) validPosition = false;
 
                     if (validPosition)
                     {
@@ -397,7 +397,7 @@ namespace SS3D.Modules
                         current_loc_screen = new Vector2D(current_loc_world.X - ClientWindowData.Singleton.ScreenOrigin.X, current_loc_world.Y - ClientWindowData.Singleton.ScreenOrigin.Y);
 
                         if (current_permission.placementOption == PlacementOption.AlignWall)
-                            if ((PlayerController.Singleton.controlledAtom.Position - current_loc_world).Length > current_permission.range) validPosition = false;
+                            if ((PlayerController.Singleton.ControlledEntity.Position - current_loc_world).Length > current_permission.range) validPosition = false;
                     }
                 } 
                 #endregion
@@ -430,8 +430,8 @@ namespace SS3D.Modules
                     current_permission.placementOption == PlacementOption.AlignWall)   //If it uses range, show the range.
                 {
                     Gorgon.Screen.Circle(
-                        PlayerController.Singleton.controlledAtom.Position.X - ClientWindowData.Singleton.ScreenOrigin.X,
-                        PlayerController.Singleton.controlledAtom.Position.Y - ClientWindowData.Singleton.ScreenOrigin.Y,
+                        PlayerController.Singleton.ControlledEntity.Position.X - ClientWindowData.Singleton.ScreenOrigin.X,
+                        PlayerController.Singleton.ControlledEntity.Position.Y - ClientWindowData.Singleton.ScreenOrigin.Y,
                         current_permission.range,
                         Color.DeepSkyBlue,
                         new Vector2D(2, 2));

@@ -8,7 +8,7 @@ namespace CGO
     public interface IRenderableComponent
     {
         void Render();
-        SS3D_shared.GO.DrawDepth DrawDepth { get; set; }
+        SS13_Shared.GO.DrawDepth DrawDepth { get; set; }
         Entity Owner { get; set; }
     }
 }

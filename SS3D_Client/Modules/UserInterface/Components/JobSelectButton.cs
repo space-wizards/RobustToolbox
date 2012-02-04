@@ -10,9 +10,9 @@ using GorgonLibrary.GUI;
 using ClientResourceManager;
 
 using Lidgren.Network;
-using SS3D_shared;
+using SS13_Shared;
 
-namespace SS3D.UserInterface
+namespace SS13.UserInterface
 {
     class JobSelectButton : GuiComponent
     {

@@ -17,7 +17,7 @@ namespace CGO
 
         public PointLightComponent()
         {
-            family = SS3D_shared.GO.ComponentFamily.Light;
+            family = SS13_Shared.GO.ComponentFamily.Light;
         }
 
         //When added, set up the light.

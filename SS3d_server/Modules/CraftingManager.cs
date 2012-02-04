@@ -7,14 +7,14 @@ using System.IO;
 using System.Xml;
 using System.Xml.Serialization;
 using Lidgren.Network;
-using SS3D_shared.GO;
+using SS13_Shared.GO;
 using ServerServices;
 using SGO;
-using SS3D_shared;
+using SS13_Shared;
 
 using System.Timers;
 
-namespace SS3D_Server.Modules
+namespace SS13_Server.Modules
 {
     [Serializable]
     public class CraftRecipes
@@ -100,7 +100,7 @@ namespace SS3D_Server.Modules
 
             foreach (var ticket in craftingTickets)
             {
-                if(ticket.sourceConnection == msg.SenderConnection && ticket.sourceEntity == playerManager.GetSessionByConnection(msg.SenderConnection).attachedAtom)
+                if(ticket.sourceConnection == msg.SenderConnection && ticket.sourceEntity == playerManager.GetSessionByConnection(msg.SenderConnection).attachedEntity)
                 {
                     sendAlreadyCrafting(msg.SenderConnection);
                     return;
@@ -111,14 +111,14 @@ namespace SS3D_Server.Modules
 
             if(isValidRecipe(compo1Ent.template.Name, compo2Ent.template.Name))
             {
-                if (hasFreeInventorySlots(playerManager.GetSessionByConnection(msg.SenderConnection).attachedAtom))
-                    BeginCrafting(compo1Ent, compo2Ent, playerManager.GetSessionByConnection(msg.SenderConnection).attachedAtom, msg.SenderConnection);
+                if (hasFreeInventorySlots(playerManager.GetSessionByConnection(msg.SenderConnection).attachedEntity))
+                    BeginCrafting(compo1Ent, compo2Ent, playerManager.GetSessionByConnection(msg.SenderConnection).attachedEntity, msg.SenderConnection);
                 else
                     sendInventoryFull(msg.SenderConnection);
             }
             else
             {
-                NetOutgoingMessage failCraftMsg = SS3DNetServer.Singleton.CreateMessage();
+                NetOutgoingMessage failCraftMsg = SS13NetServer.Singleton.CreateMessage();
                 failCraftMsg.Write((byte)NetMessage.PlayerUiMessage);
                 failCraftMsg.Write((byte)UiManagerMessage.ComponentMessage);
                 failCraftMsg.Write((byte)GuiComponentType.ComboGUI);
@@ -129,7 +129,7 @@ namespace SS3D_Server.Modules
 
         private void sendCancelCraft(NetConnection connection)
         {
-            NetOutgoingMessage cancelCraftMsg = SS3DNetServer.Singleton.CreateMessage();
+            NetOutgoingMessage cancelCraftMsg = SS13NetServer.Singleton.CreateMessage();
             cancelCraftMsg.Write((byte)NetMessage.PlayerUiMessage);
             cancelCraftMsg.Write((byte)UiManagerMessage.ComponentMessage);
             cancelCraftMsg.Write((byte)GuiComponentType.ComboGUI);
@@ -140,7 +140,7 @@ namespace SS3D_Server.Modules
 
         private void sendInventoryFull(NetConnection connection)
         {
-            NetOutgoingMessage inventoyFullMsg = SS3DNetServer.Singleton.CreateMessage();
+            NetOutgoingMessage inventoyFullMsg = SS13NetServer.Singleton.CreateMessage();
             inventoyFullMsg.Write((byte)NetMessage.PlayerUiMessage);
             inventoyFullMsg.Write((byte)UiManagerMessage.ComponentMessage);
             inventoyFullMsg.Write((byte)GuiComponentType.ComboGUI);
@@ -150,7 +150,7 @@ namespace SS3D_Server.Modules
 
         private void sendAlreadyCrafting(NetConnection connection)
         {
-            NetOutgoingMessage busyMsg = SS3DNetServer.Singleton.CreateMessage();
+            NetOutgoingMessage busyMsg = SS13NetServer.Singleton.CreateMessage();
             busyMsg.Write((byte)NetMessage.PlayerUiMessage);
             busyMsg.Write((byte)UiManagerMessage.ComponentMessage);
             busyMsg.Write((byte)GuiComponentType.ComboGUI);
@@ -160,7 +160,7 @@ namespace SS3D_Server.Modules
 
         private void sendCraftSuccess(NetConnection connection, Entity result, CraftingTicket ticket)
         {
-            NetOutgoingMessage successMsg = SS3DNetServer.Singleton.CreateMessage();
+            NetOutgoingMessage successMsg = SS13NetServer.Singleton.CreateMessage();
             successMsg.Write((byte)NetMessage.PlayerUiMessage);
             successMsg.Write((byte)UiManagerMessage.ComponentMessage);
             successMsg.Write((byte)GuiComponentType.ComboGUI);
@@ -177,7 +177,7 @@ namespace SS3D_Server.Modules
 
         private void sendCraftMissing(NetConnection connection)
         {
-            NetOutgoingMessage missingMsg = SS3DNetServer.Singleton.CreateMessage();
+            NetOutgoingMessage missingMsg = SS13NetServer.Singleton.CreateMessage();
             missingMsg.Write((byte)NetMessage.PlayerUiMessage);
             missingMsg.Write((byte)UiManagerMessage.ComponentMessage);
             missingMsg.Write((byte)GuiComponentType.ComboGUI);
@@ -192,7 +192,7 @@ namespace SS3D_Server.Modules
             {
                 if(craftingTicket.doneAt.Subtract(DateTime.Now).Ticks <= 0)
                 {
-                    if (hasFreeInventorySlots(playerManager.GetSessionByConnection(craftingTicket.sourceConnection).attachedAtom))
+                    if (hasFreeInventorySlots(playerManager.GetSessionByConnection(craftingTicket.sourceConnection).attachedEntity))
                         //sendCancelCraft(craftingTicket.sourceConnection); //Possible problem if they disconnect while crafting. FIX THIS!!!!!!!!!!!!
 
                         if (hasEntityInInventory(craftingTicket.sourceEntity, craftingTicket.component1) && hasEntityInInventory(craftingTicket.sourceEntity, craftingTicket.component2))
@@ -257,7 +257,7 @@ namespace SS3D_Server.Modules
 
             craftingTickets.Add(newTicket);
 
-            NetOutgoingMessage startCraftMsg = SS3DNetServer.Singleton.CreateMessage(); //Not starcraft. sorry.
+            NetOutgoingMessage startCraftMsg = SS13NetServer.Singleton.CreateMessage(); //Not starcraft. sorry.
             startCraftMsg.Write((byte)NetMessage.PlayerUiMessage);
             startCraftMsg.Write((byte)UiManagerMessage.ComponentMessage);
             startCraftMsg.Write((byte)GuiComponentType.ComboGUI);
@@ -267,7 +267,7 @@ namespace SS3D_Server.Modules
             netServer.SendMessage(startCraftMsg, sourceConnection, NetDeliveryMethod.ReliableUnordered);
         }
 
-        public void Initialize(string craftingListLoc, SS3DNetServer _netServer, PlayerManager _playerManager)
+        public void Initialize(string craftingListLoc, SS13NetServer _netServer, PlayerManager _playerManager)
         {
             netServer = _netServer;
             playerManager = _playerManager;

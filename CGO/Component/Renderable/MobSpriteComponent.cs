@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
-using SS3D_shared;
-using SS3D_shared.GO;
+using SS13_Shared;
+using SS13_Shared.GO;
 using GorgonLibrary.Graphics;
 using ClientWindow;
 

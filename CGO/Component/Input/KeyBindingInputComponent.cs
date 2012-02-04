@@ -3,8 +3,8 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using ClientServices.Input;
-using SS3D_shared.GO;
-using SS3D_shared;
+using SS13_Shared.GO;
+using SS13_Shared;
 
 namespace CGO
 {
@@ -71,7 +71,7 @@ namespace CGO
         public virtual void UpdateKeys(float frameTime)
         {
             //Rate limit
-            /*TimeSpan timeSinceLastUpdate = atomManager.now - lastKeyUpdate;
+            /*TimeSpan timeSinceLastUpdate = entityManager.now - lastKeyUpdate;
             if (timeSinceLastUpdate.TotalMilliseconds < 1000 / keyUpdateRateLimit)
                 return;*/
 
@@ -99,7 +99,7 @@ namespace CGO
                 else
                     Owner.SendMessage(this, ComponentMessageType.BoundKeyRepeat, null, state.Key, BoundKeyState.Repeat);
             }
-            //lastKeyUpdate = atomManager.now;
+            //lastKeyUpdate = entityManager.now;
         }
     }
 }

@@ -2,12 +2,12 @@
 using System.Reflection;
 
 using Lidgren.Network;
-using SS3D.Modules.Network;
+using SS13.Modules.Network;
 using GorgonLibrary;
 using GorgonLibrary.Graphics;
 using GorgonLibrary.InputDevices;
 
-namespace SS3D.Modules
+namespace SS13.Modules
 {
   /************************************************************************/
   /* state manager for program states                                     */

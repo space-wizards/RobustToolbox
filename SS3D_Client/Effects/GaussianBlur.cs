@@ -6,7 +6,7 @@ using GorgonLibrary;
 using GorgonLibrary.Graphics;
 using ClientResourceManager;
 
-namespace SS3D.Effects
+namespace SS13.Effects
 {
     class GaussianBlur
     {

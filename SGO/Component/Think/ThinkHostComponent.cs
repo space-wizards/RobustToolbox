@@ -12,15 +12,15 @@ namespace SGO
 
         public ThinkHostComponent()
         {
-            family = SS3D_shared.GO.ComponentFamily.Think;
+            family = SS13_Shared.GO.ComponentFamily.Think;
         }
 
-        public override void RecieveMessage(object sender, SS3D_shared.GO.ComponentMessageType type, List<ComponentReplyMessage> replies, params object[] list)
+        public override void RecieveMessage(object sender, SS13_Shared.GO.ComponentMessageType type, List<ComponentReplyMessage> replies, params object[] list)
         {
             base.RecieveMessage(sender, type, replies, list);
             switch(type)
             {
-                case SS3D_shared.GO.ComponentMessageType.Bumped:
+                case SS13_Shared.GO.ComponentMessageType.Bumped:
                     OnBump(sender, list);
                     break;
             }

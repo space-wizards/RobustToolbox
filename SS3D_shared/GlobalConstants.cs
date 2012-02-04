@@ -4,7 +4,7 @@ using System.Linq;
 using System.Text;
 
 
-namespace SS3D_shared
+namespace SS13_Shared
 {
     public static class Constants
     {

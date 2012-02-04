@@ -8,8 +8,8 @@
     <ProjectGuid>{4229D7E3-C3AE-4C0A-B2B1-BB20911150DC}</ProjectGuid>
     <OutputType>Library</OutputType>
     <AppDesignerFolder>Properties</AppDesignerFolder>
-    <RootNamespace>SS3D_shared</RootNamespace>
-    <AssemblyName>SS3D_shared</AssemblyName>
+    <RootNamespace>SS13_Shared</RootNamespace>
+    <AssemblyName>SS13_Shared</AssemblyName>
     <TargetFrameworkVersion>v4.0</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
     <FileUpgradeFlags>
@@ -77,10 +77,6 @@
   <ItemGroup>
     <Compile Include="AdminPermissions.cs" />
     <Compile Include="AtomBaseClass.cs" />
-    <Compile Include="Atom\Atom.cs" />
-    <Compile Include="Atom\Item\Item.cs" />
-    <Compile Include="Atom\Mob\Mob.cs" />
-    <Compile Include="Atom\Mob\Player.cs" />
     <Compile Include="Banlist.cs" />
     <Compile Include="CSharpExtensions.cs" />
     <Compile Include="GlobalConstants.cs" />
@@ -99,9 +95,6 @@
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="ChatConfig.cs" />
     <Compile Include="UIComponents.cs" />
-  </ItemGroup>
-  <ItemGroup>
-    <Content Include="Atom\readme.txt" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\Lidgren.Network\Lidgren.Network.csproj">

@@ -4,19 +4,19 @@ using System.Linq;
 using System.Reflection;
 using System.Collections.Generic;
 
-using SS3D.Modules;
+using SS13.Modules;
 
 using GorgonLibrary;
 using GorgonLibrary.Graphics;
 using GorgonLibrary.InputDevices;
 using ClientResourceManager;
-using SS3D.UserInterface;
+using SS13.UserInterface;
 
-namespace SS3D.States
+namespace SS13.States
 {
     public class ConnectMenu : State
     {
-        private SS3D.Effects.StarScroller starScroller;
+        private SS13.Effects.StarScroller starScroller;
 
         private StateManager mStateMgr;
         public string ipTextboxIP = "localhost";

@@ -3,15 +3,15 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Drawing;
-using SS3D_shared;
-using SS3D.Modules;
+using SS13_Shared;
+using SS13.Modules;
 using CGO;
 using GorgonLibrary;
 using GorgonLibrary.InputDevices;
 using GorgonLibrary.Graphics;
 using ClientResourceManager;
 
-namespace SS3D.UserInterface
+namespace SS13.UserInterface
 {
     public class ContextMenu : GuiComponent
     {
@@ -29,10 +29,10 @@ namespace SS3D.UserInterface
             List<ContextMenuEntry> entries = new List<ContextMenuEntry>();
             List<ComponentReplyMessage> replies = new List<ComponentReplyMessage>();
 
-            entity.SendMessage(this, SS3D_shared.GO.ComponentMessageType.ContextGetEntries, replies);
+            entity.SendMessage(this, SS13_Shared.GO.ComponentMessageType.ContextGetEntries, replies);
 
             if (replies.Any())
-                entries = (List<ContextMenuEntry>)replies.First(x => x.messageType == SS3D_shared.GO.ComponentMessageType.ContextGetEntries).paramsList[0];
+                entries = (List<ContextMenuEntry>)replies.First(x => x.messageType == SS13_Shared.GO.ComponentMessageType.ContextGetEntries).paramsList[0];
 
             if (showExamine)
             {
@@ -67,7 +67,7 @@ namespace SS3D.UserInterface
                 UiManager.Singleton.Components.Add(newExamine);
                 newExamine.Position = new Point(clientArea.X, clientArea.Y);
             }
-            else OwningEntity.SendMessage(this, SS3D_shared.GO.ComponentMessageType.ContextMessage, null, (string)sender.UserData);
+            else OwningEntity.SendMessage(this, SS13_Shared.GO.ComponentMessageType.ContextMessage, null, (string)sender.UserData);
         }
 
         public override void Update()

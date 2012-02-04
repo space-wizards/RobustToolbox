@@ -8,10 +8,10 @@ using Lidgren.Network;
 
 namespace ServerServices
 {
-    public class SS3DNetServer : NetServer, IService
+    public class SS13NetServer : NetServer, IService
     {
-        private static SS3DNetServer singleton;
-        public static SS3DNetServer Singleton
+        private static SS13NetServer singleton;
+        public static SS13NetServer Singleton
         {
             get
             {
@@ -22,7 +22,7 @@ namespace ServerServices
             }
         }
 
-        public SS3DNetServer(NetPeerConfiguration netConfig)
+        public SS13NetServer(NetPeerConfiguration netConfig)
             :base(netConfig)
         {
             singleton = this;

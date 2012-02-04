@@ -4,7 +4,7 @@ using System.Linq;
 using System.Text;
 using Lidgren.Network;
 using System.Xml.Linq;
-using SS3D_shared.HelperClasses;
+using SS13_Shared.HelperClasses;
 using System.Globalization;
 
 namespace SGO
@@ -67,7 +67,7 @@ namespace SGO
             string name = e.Attribute("name").Value;
             Entity ent = SpawnEntity(template);
             ent.name = name;
-            ent.Translate(new SS3D_shared.HelperClasses.Vector2(X, Y));
+            ent.Translate(new SS13_Shared.HelperClasses.Vector2(X, Y));
         }
 
         public void SaveEntities()
@@ -201,17 +201,6 @@ namespace SGO
             message.Write(e.Uid);
             m_netServer.SendToAll(message, NetDeliveryMethod.ReliableOrdered);
             m_entities.Remove(e.Uid);
-        }
-
-        /// <summary>
-        /// Adds an atom to the entity pool. Compatibility method.
-        /// </summary>
-        /// <param name="e">Entity to add</param>
-        public void AddAtomEntity(Entity e)
-        {
-            ///The UID has already (in theory) been set in the atom manager.
-            m_entities.Add(e.Uid, e);
-            e.SetNetworkManager(m_entityNetworkManager);
         }
 
         public void Shutdown()

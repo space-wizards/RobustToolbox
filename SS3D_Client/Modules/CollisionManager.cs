@@ -4,9 +4,9 @@ using System.Linq;
 using System.Text;
 using System.Drawing;
 using ClientInterfaces;
-using SS3D_shared;
+using SS13_Shared;
 
-namespace SS3D.Modules
+namespace SS13.Modules
 {
     //Its the bucket list!
     /// <summary>

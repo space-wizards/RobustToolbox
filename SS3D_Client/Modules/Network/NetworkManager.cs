@@ -1,16 +1,16 @@
 ﻿using System;
 using System.Text;
 
-using SS3D.Modules;
-using SS3D.States;
+using SS13.Modules;
+using SS13.States;
 using System.Collections.Generic;
 
-using SS3D_shared;
+using SS13_Shared;
 using ClientServices.Map;
 
 using Lidgren.Network;
 
-namespace SS3D.Modules.Network
+namespace SS13.Modules.Network
 {
     public delegate void NetworkMsgHandler(NetworkManager netMgr, NetIncomingMessage msg);
     public delegate void NetworkStateHandler(NetworkManager netMgr);
@@ -25,7 +25,7 @@ namespace SS3D.Modules.Network
         public bool mapRecieved = false;
         private int mapWidth;
         private int mapHeight;
-        private string serverName = "SS3D Server";
+        private string serverName = "SS13 Server";
 
         public bool isConnected 
         { 
@@ -39,7 +39,7 @@ namespace SS3D.Modules.Network
             private set;
         }
 
-        private NetPeerConfiguration netConfig = new NetPeerConfiguration("SS3D_NetTag");
+        private NetPeerConfiguration netConfig = new NetPeerConfiguration("SS13_NetTag");
 
         public event NetworkMsgHandler MessageArrived;  //Called when we recieve a new message.
         protected virtual void OnMessageArrived(NetIncomingMessage msg)

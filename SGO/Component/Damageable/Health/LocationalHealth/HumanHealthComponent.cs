@@ -2,8 +2,8 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
-using SS3D_shared;
-using SS3D_shared.GO;
+using SS13_Shared;
+using SS13_Shared.GO;
 using ServerServices;
 using ServerInterfaces;
 using Lidgren.Network;

@@ -16,17 +16,17 @@ using GorgonLibrary.InputDevices;
 
 using Lidgren.Network;
 
-using SS3D.Effects;
-using SS3D.Modules;
-using SS3D.Modules.Network;
-using SS3D.UserInterface;
-using SS3D_shared;
+using SS13.Effects;
+using SS13.Modules;
+using SS13.Modules.Network;
+using SS13.UserInterface;
+using SS13_Shared;
 using ClientServices.Lighting;
 using ClientServices.Map;
 using ClientInterfaces;
 using ClientWindow;
 
-namespace SS3D.States
+namespace SS13.States
 {
     public class GameScreen : State
     {
@@ -65,7 +65,7 @@ namespace SS3D.States
         private float realScreenWidthTiles = 0;
         private float realScreenHeightTiles = 0;
 
-        private bool showDebug = false;     // show AABBs & Bounding Circles on atoms.
+        private bool showDebug = false;     // show AABBs & Bounding Circles on Entities.
         private bool telepathy = false;     // disable visiblity bounds if true
 
         //public float xTopLeft { get; private set; }
@@ -350,12 +350,12 @@ namespace SS3D.States
             string text = msg.ReadString();
 
             string message = "(" + channel.ToString() + "):" + text;
-            int atomID = msg.ReadInt32();
+            int entityId = msg.ReadInt32();
             gameChat.AddLine(message, channel);
-            Entity a = EntityManager.Singleton.GetEntity(atomID);
+            Entity a = EntityManager.Singleton.GetEntity(entityId);
             if (a != null)
             {
-                a.SendMessage(this, SS3D_shared.GO.ComponentMessageType.EntitySaidSomething, null, channel, text);
+                a.SendMessage(this, SS13_Shared.GO.ComponentMessageType.EntitySaidSomething, null, channel, text);
                 /*if (a.speechBubble == null) a.speechBubble = new SpeechBubble(a.name + a.Uid.ToString());
                 if(channel == ChatChannel.Ingame || channel == ChatChannel.Player || channel == ChatChannel.Radio)
                     a.speechBubble.SetText(text);*/ //TODO re-enable speechbubbles
@@ -385,8 +385,8 @@ namespace SS3D.States
          * Then we see if we've moved a tile recently or a flag has been set on the map that we need to update the visibility (a door 
          * opened for example).
          * We then loop through all the tiles, and draw the floor and the sides of the walls, as they will always be under us
-         * and the atoms. Next we find all the atoms in view and draw them. Lastly we draw the top section of walls as they will
-         * always be on top of us and atoms.
+         * and the entities. Next we find all the entities in view and draw them. Lastly we draw the top section of walls as they will
+         * always be on top of us and entities.
          * */
         public override void GorgonRender(FrameEventArgs e)
         {
@@ -399,20 +399,20 @@ namespace SS3D.States
 
             Gorgon.Screen.DefaultView.Left = 400;
             Gorgon.Screen.DefaultView.Top = 400;
-            if (playerController.controlledAtom != null)
+            if (playerController.ControlledEntity != null)
             {
                 
-                System.Drawing.Point centerTile = map.GetTileArrayPositionFromWorldPosition(playerController.controlledAtom.Position);
+                System.Drawing.Point centerTile = map.GetTileArrayPositionFromWorldPosition(playerController.ControlledEntity.Position);
               
                 int xStart = System.Math.Max(0, centerTile.X - (screenWidthTiles / 2) - 1);
                 int yStart = System.Math.Max(0, centerTile.Y - (screenHeightTiles / 2) - 1);
                 int xEnd = System.Math.Min(xStart + screenWidthTiles + 2, map.mapWidth - 1);
                 int yEnd = System.Math.Min(yStart + screenHeightTiles + 2, map.mapHeight - 1);
 
-                ClientWindowData.Singleton.UpdateViewPort(playerController.controlledAtom.Position);
+                ClientWindowData.Singleton.UpdateViewPort(playerController.ControlledEntity.Position);
 
-                //xTopLeft = Math.Max(0, playerController.controlledAtom.position.X - ((screenWidthTiles / 2) * map.tileSpacing));
-                //yTopLeft = Math.Max(0, playerController.controlledAtom.position.Y - ((screenHeightTiles / 2) * map.tileSpacing));
+                //xTopLeft = Math.Max(0, playerController.controlledEntity.position.X - ((screenWidthTiles / 2) * map.tileSpacing));
+                //yTopLeft = Math.Max(0, playerController.controlledEntity.position.Y - ((screenHeightTiles / 2) * map.tileSpacing));
                 ///COMPUTE TILE VISIBILITY
                 if ((centerTile != map.lastVisPoint || map.needVisUpdate))
                 {
@@ -616,7 +616,7 @@ namespace SS3D.States
         }
         public override void MouseDown(MouseInputEventArgs e)
         {
-            if (playerController.controlledAtom == null)
+            if (playerController.ControlledEntity == null)
                 return;
 
             if (UiManager.Singleton.MouseDown(e))
@@ -645,10 +645,10 @@ namespace SS3D.States
             // Convert our click from screen -> world coordinates
             //Vector2D worldPosition = new Vector2D(e.Position.X + xTopLeft, e.Position.Y + yTopLeft);
             // A bounding box for our click
-            System.Drawing.RectangleF mouseAABB = new System.Drawing.RectangleF(mousePosWorld.X, mousePosWorld.Y, 1, 1);
+            System.Drawing.RectangleF mouseAABB = new RectangleF(mousePosWorld.X, mousePosWorld.Y, 1, 1);
             float checkDistance = map.tileSpacing * 1.5f;
-            // Find all the atoms near us we could have clicked
-            IEnumerable<Entity> entities = EntityManager.Singleton.GetEntitiesInRange(playerController.controlledAtom.Position, checkDistance);
+            // Find all the entities near us we could have clicked
+            IEnumerable<Entity> entities = EntityManager.Singleton.GetEntitiesInRange(playerController.ControlledEntity.Position, checkDistance);
                 
             // See which one our click AABB intersected with
             List<ClickData> clickedEntities = new List<ClickData>();
@@ -656,7 +656,7 @@ namespace SS3D.States
             PointF clickedWorldPoint = new PointF(mouseAABB.X, mouseAABB.Y);
             foreach (Entity a in entities)
             {
-                ClickableComponent clickable = (ClickableComponent)a.GetComponent(SS3D_shared.GO.ComponentFamily.Click);
+                ClickableComponent clickable = (ClickableComponent)a.GetComponent(SS13_Shared.GO.ComponentFamily.Click);
                 if (clickable != null)
                 {
                     if (clickable.CheckClick(clickedWorldPoint, out drawdepthofclicked))
@@ -680,12 +680,12 @@ namespace SS3D.States
 
                 if (e.Buttons == GorgonLibrary.InputDevices.MouseButtons.Left)
                 {
-                    ClickableComponent c = (ClickableComponent)entToClick.GetComponent(SS3D_shared.GO.ComponentFamily.Click);
-                    c.DispatchClick(playerController.controlledAtom.Uid);
+                    ClickableComponent c = (ClickableComponent)entToClick.GetComponent(SS13_Shared.GO.ComponentFamily.Click);
+                    c.DispatchClick(playerController.ControlledEntity.Uid);
                 }
                 else if (e.Buttons == GorgonLibrary.InputDevices.MouseButtons.Right)
                 {
-                    UiManager.Singleton.Components.Add( new SS3D.UserInterface.ContextMenu(entToClick, mousePosScreen, true) );
+                    UiManager.Singleton.Components.Add( new SS13.UserInterface.ContextMenu(entToClick, mousePosScreen, true) );
                     return;
                 }
             }

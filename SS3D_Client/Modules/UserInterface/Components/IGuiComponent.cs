@@ -4,13 +4,13 @@ using System.Linq;
 using System.Text;
 using System.Drawing;
 
-using SS3D_shared;
+using SS13_Shared;
 
 using GorgonLibrary;
 using GorgonLibrary.Graphics;
 using GorgonLibrary.InputDevices;
 
-namespace SS3D.UserInterface
+namespace SS13.UserInterface
 {
     public interface IGuiComponent : IDisposable
     {

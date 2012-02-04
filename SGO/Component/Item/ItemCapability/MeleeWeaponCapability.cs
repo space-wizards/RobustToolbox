@@ -2,9 +2,9 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
-using SS3D_shared.GO;
+using SS13_Shared.GO;
 using ServerInterfaces;
-using SS3D_shared;
+using SS13_Shared;
 
 namespace SGO.Component.Item.ItemCapability
 {
@@ -15,7 +15,7 @@ namespace SGO.Component.Item.ItemCapability
 
         public MeleeWeaponCapability()
         {
-            CapabilityType = SS3D_shared.GO.ItemCapabilityType.MeleeWeapon;
+            CapabilityType = SS13_Shared.GO.ItemCapabilityType.MeleeWeapon;
             capabilityName = "MeleeCapability";
             interactsWith = InteractsWith.Actor | InteractsWith.LargeObject;
         }
@@ -25,15 +25,15 @@ namespace SGO.Component.Item.ItemCapability
             BodyPart targetedArea = BodyPart.Torso;
 
             List<ComponentReplyMessage> replies = new List<ComponentReplyMessage>();
-            sourceActor.SendMessage(this, SS3D_shared.GO.ComponentMessageType.GetActorSession, replies);
-            if (replies.Count > 0 && replies[0].messageType == SS3D_shared.GO.ComponentMessageType.ReturnActorSession)
+            sourceActor.SendMessage(this, SS13_Shared.GO.ComponentMessageType.GetActorSession, replies);
+            if (replies.Count > 0 && replies[0].messageType == SS13_Shared.GO.ComponentMessageType.ReturnActorSession)
             {
                 IPlayerSession session = (IPlayerSession)replies[0].paramsList[0];
                 targetedArea = session.TargetedArea;
             }
             else throw new NotImplementedException("Actor has no session or No actor component that returns a session"); //BEEPBOOP
 
-            if (target.HasComponent(SS3D_shared.GO.ComponentFamily.Damageable))
+            if (target.HasComponent(SS13_Shared.GO.ComponentFamily.Damageable))
             {
                 target.SendMessage(this, ComponentMessageType.Damage, null, owner.Owner, damageAmount, damType, targetedArea);
                 return true;

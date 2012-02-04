@@ -111,9 +111,9 @@
       <Project>{AE483C29-042E-4226-BA52-D247CE7676DA}</Project>
       <Name>Lidgren.Network</Name>
     </ProjectReference>
-    <ProjectReference Include="..\SS3D_shared\SS3D_shared.csproj">
+    <ProjectReference Include="..\SS3D_shared\SS13_Shared.csproj">
       <Project>{4229D7E3-C3AE-4C0A-B2B1-BB20911150DC}</Project>
-      <Name>SS3D_shared</Name>
+      <Name>SS13_Shared</Name>
     </ProjectReference>
   </ItemGroup>
   <ItemGroup>

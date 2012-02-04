@@ -9,9 +9,9 @@ using System.Xml.Serialization;
 using Lidgren.Network;
 using ServerServices;
 
-using SS3D_shared;
+using SS13_Shared;
 
-namespace SS3D_Server.Modules
+namespace SS13_Server.Modules
 {
     public sealed class BanlistMgr
     {

@@ -1,7 +1,7 @@
 ﻿using System;
 
-using SS3D.Modules;
-using SS3D.Modules.Network;
+using SS13.Modules;
+using SS13.Modules.Network;
 
 using System.Collections.Generic;
 using System.Reflection;
@@ -9,7 +9,7 @@ using System.Reflection;
 using GorgonLibrary;
 using GorgonLibrary.Graphics;
 using GorgonLibrary.InputDevices;
-namespace SS3D.States
+namespace SS13.States
 {
     public class LoadingScreen : State
     {

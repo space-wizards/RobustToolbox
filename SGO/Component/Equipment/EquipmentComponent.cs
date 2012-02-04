@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
-using SS3D_shared.GO;
+using SS13_Shared.GO;
 using Lidgren.Network;
 
 namespace SGO
@@ -17,7 +17,7 @@ namespace SGO
             family = ComponentFamily.Equipment;
         }
 
-        public override void RecieveMessage(object sender, SS3D_shared.GO.ComponentMessageType type, List<ComponentReplyMessage> replies, params object[] list)
+        public override void RecieveMessage(object sender, SS13_Shared.GO.ComponentMessageType type, List<ComponentReplyMessage> replies, params object[] list)
         {
             switch (type)
             {
@@ -37,12 +37,12 @@ namespace SGO
                     UnEquipEntity((Entity)list[0]);
                     break;
                 case ComponentMessageType.UnEquipItemToHand: //remove an entity from a slot and put it in the current hand slot.
-                    if (!Owner.HasComponent(SS3D_shared.GO.ComponentFamily.Hands))
+                    if (!Owner.HasComponent(SS13_Shared.GO.ComponentFamily.Hands))
                         return; //TODO REAL ERROR MESSAGE OR SOME FUCK SHIT
                     UnEquipEntityToHand((Entity)list[0]);
                     break;
                 case ComponentMessageType.UnEquipItemToSpecifiedHand: //remove an entity from a slot and put it in the current hand slot.
-                    if (!Owner.HasComponent(SS3D_shared.GO.ComponentFamily.Hands))
+                    if (!Owner.HasComponent(SS13_Shared.GO.ComponentFamily.Hands))
                         return; //TODO REAL ERROR MESSAGE OR SOME FUCK SHIT
                     UnEquipEntityToHand((Entity)list[0], (Hand)list[1]);
                     break;
@@ -70,12 +70,12 @@ namespace SGO
                         UnEquipEntity(EntityManager.Singleton.GetEntity((int)message.messageParameters[1]));
                         break;
                     case ComponentMessageType.UnEquipItemToHand:
-                        if (!Owner.HasComponent(SS3D_shared.GO.ComponentFamily.Hands))
+                        if (!Owner.HasComponent(SS13_Shared.GO.ComponentFamily.Hands))
                             return; //TODO REAL ERROR MESSAGE OR SOME FUCK SHIT
                         UnEquipEntityToHand(EntityManager.Singleton.GetEntity((int)message.messageParameters[1]));
                         break;
                     case ComponentMessageType.UnEquipItemToSpecifiedHand:
-                        if (!Owner.HasComponent(SS3D_shared.GO.ComponentFamily.Hands))
+                        if (!Owner.HasComponent(SS13_Shared.GO.ComponentFamily.Hands))
                             return; //TODO REAL ERROR MESSAGE OR SOME FUCK SHIT
                         UnEquipEntityToHand(EntityManager.Singleton.GetEntity((int)message.messageParameters[1]), (Hand)message.messageParameters[2]);
                         break;
@@ -90,7 +90,7 @@ namespace SGO
                 if(!IsEmpty(p))
                 {
                     Entity e = equippedEntities[p];
-                    e.SendMessage(this, SS3D_shared.GO.ComponentMessageType.ItemEquipped, null, Owner);
+                    e.SendMessage(this, SS13_Shared.GO.ComponentMessageType.ItemEquipped, null, Owner);
                     Owner.SendComponentNetworkMessage(this, Lidgren.Network.NetDeliveryMethod.ReliableUnordered, netConnection, EquipmentComponentNetMessage.ItemEquipped, p, e.Uid);
                 }
             }
@@ -107,7 +107,7 @@ namespace SGO
                 RemoveFromOtherComps(e);
 
                 equippedEntities.Add(part, e);
-                e.SendMessage(this, SS3D_shared.GO.ComponentMessageType.ItemEquipped, null, Owner);
+                e.SendMessage(this, SS13_Shared.GO.ComponentMessageType.ItemEquipped, null, Owner);
                 Owner.SendComponentNetworkMessage(this, Lidgren.Network.NetDeliveryMethod.ReliableUnordered, null, EquipmentComponentNetMessage.ItemEquipped, part, e.Uid);
             }
         }
@@ -134,7 +134,7 @@ namespace SGO
         // Equips whatever we currently have in our active hand
         private void EquipEntityInHand()
         {
-            if (!Owner.HasComponent(SS3D_shared.GO.ComponentFamily.Hands))
+            if (!Owner.HasComponent(SS13_Shared.GO.ComponentFamily.Hands))
             {
                 return; //TODO REAL ERROR MESSAGE OR SOME FUCK SHIT
             }
@@ -154,7 +154,7 @@ namespace SGO
         {
             if (!IsEmpty(part)) //If the part is not empty
             {
-                equippedEntities[part].SendMessage(this, SS3D_shared.GO.ComponentMessageType.ItemUnEquipped, null);
+                equippedEntities[part].SendMessage(this, SS13_Shared.GO.ComponentMessageType.ItemUnEquipped, null);
                 Owner.SendComponentNetworkMessage(this, Lidgren.Network.NetDeliveryMethod.ReliableUnordered, null, EquipmentComponentNetMessage.ItemUnEquipped, part, equippedEntities[part].Uid);
                 equippedEntities.Remove(part);
             }
@@ -205,7 +205,7 @@ namespace SGO
 
         private bool IsItem(Entity e)
         {
-            if (e.HasComponent(SS3D_shared.GO.ComponentFamily.Item)) //We can only equip items derp
+            if (e.HasComponent(SS13_Shared.GO.ComponentFamily.Item)) //We can only equip items derp
                 return true;
             return false;
         }

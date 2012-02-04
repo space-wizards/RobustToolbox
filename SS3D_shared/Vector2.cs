@@ -23,7 +23,7 @@ using System.Globalization;
 /// Mixed product function implemented
 /// </Changes>
 /// 
-namespace SS3D_shared.HelperClasses
+namespace SS13_Shared.HelperClasses
 {
 
     [Serializable]

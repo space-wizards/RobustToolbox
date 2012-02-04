@@ -3,8 +3,8 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using GorgonLibrary;
-using SS3D_shared;
-using SS3D_shared.GO;
+using SS13_Shared;
+using SS13_Shared.GO;
 
 namespace CGO
 {
@@ -18,7 +18,7 @@ namespace CGO
 
         public SlaveMoverComponent()
         {
-            family = SS3D_shared.GO.ComponentFamily.Mover;
+            family = SS13_Shared.GO.ComponentFamily.Mover;
         }
 
         public override void RecieveMessage(object sender, ComponentMessageType type, List<ComponentReplyMessage> replies, params object[] list)

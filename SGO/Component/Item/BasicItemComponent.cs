@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
-using SS3D_shared.GO;
+using SS13_Shared.GO;
 using SGO.Component.Item.ItemCapability;
 using System.Xml.Linq;
 
@@ -17,7 +17,7 @@ namespace SGO
 
         public BasicItemComponent()
         {
-            family = SS3D_shared.GO.ComponentFamily.Item;
+            family = SS13_Shared.GO.ComponentFamily.Item;
             capabilities = new Dictionary<string, ItemCapability>();
         }
 
@@ -86,7 +86,7 @@ namespace SGO
         private void HandleDropped()
         {
             Owner.RemoveComponent(ComponentFamily.Mover);
-            Owner.AddComponent(SS3D_shared.GO.ComponentFamily.Mover, ComponentFactory.Singleton.GetComponent("BasicMoverComponent"));
+            Owner.AddComponent(SS13_Shared.GO.ComponentFamily.Mover, ComponentFactory.Singleton.GetComponent("BasicMoverComponent"));
             Owner.SendComponentNetworkMessage(this, Lidgren.Network.NetDeliveryMethod.ReliableUnordered, null, ItemComponentNetMessage.Dropped);
             currentHolder = null;
         }
@@ -95,7 +95,7 @@ namespace SGO
         {
             currentHolder = entity;
             holdingHand = _holdingHand;
-            Owner.AddComponent(SS3D_shared.GO.ComponentFamily.Mover, ComponentFactory.Singleton.GetComponent("SlaveMoverComponent"));
+            Owner.AddComponent(SS13_Shared.GO.ComponentFamily.Mover, ComponentFactory.Singleton.GetComponent("SlaveMoverComponent"));
             Owner.SendMessage(this, ComponentMessageType.SlaveAttach, null, entity.Uid);
             Owner.SendComponentNetworkMessage(this, Lidgren.Network.NetDeliveryMethod.ReliableUnordered, null, ItemComponentNetMessage.PickedUp, entity.Uid, holdingHand);
         }

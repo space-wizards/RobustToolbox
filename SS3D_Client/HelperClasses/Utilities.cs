@@ -5,7 +5,7 @@ using System.Text;
 using GorgonLibrary;
 using GorgonLibrary.Graphics;
 using CGO;
-using SS3D_shared.GO;
+using SS13_Shared.GO;
 using System.Drawing;
 
 static class Utilities
@@ -16,26 +16,7 @@ static class Utilities
         {
             return "tilebuildoverlay";
         }
-        /*else if (type.IsSubclassOf(typeof(Atom.Atom)))
-        {
-            Atom.Atom atom = (Atom.Atom)Activator.CreateInstance(type);
-            string strName = atom.spritename;
-            atom = null;
-            return strName;
-        }*/
         return "nosprite";
-    }
-
-    public static string GetAtomName(Type type)
-    {
-        /*if (type.IsSubclassOf(typeof(Atom.Atom)))
-        {
-            Atom.Atom atom = (Atom.Atom)Activator.CreateInstance(type);
-            string strName = atom.name;
-            atom = null;
-            return strName;
-        }*/
-        return "missingName"; 
     }
 
     public static Sprite GetSpriteComponentSprite(Entity entity)

@@ -5,10 +5,10 @@ using System.Reflection;
 using GorgonLibrary;
 using GorgonLibrary.Graphics;
 
-using SS3D.Modules;
-using SS3D.States;
-using SS3D.Modules.Network;
-using SS3D.UserInterface;
+using SS13.Modules;
+using SS13.States;
+using SS13.Modules.Network;
+using SS13.UserInterface;
 
 using Lidgren;
 using Lidgren.Network;
@@ -24,7 +24,7 @@ using System.CodeDom;
 using ClientConfigManager;
 using ClientServices;
 
-namespace SS3D
+namespace SS13
 {
   public class Program
   {

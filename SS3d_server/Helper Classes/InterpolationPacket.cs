@@ -3,10 +3,10 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 
-using SS3D_shared.HelperClasses;
+using SS13_Shared.HelperClasses;
 using Lidgren.Network;
 
-namespace SS3D_Server.HelperClasses
+namespace SS13_Server.HelperClasses
 {
     public struct InterpolationPacket
     {

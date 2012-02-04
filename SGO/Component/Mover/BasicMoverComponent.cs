@@ -2,9 +2,9 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
-using SS3D_shared.HelperClasses;
+using SS13_Shared.HelperClasses;
 using Lidgren.Network;
-using SS3D_shared.GO;
+using SS13_Shared.GO;
 
 namespace SGO
 {
@@ -12,7 +12,7 @@ namespace SGO
     {
         public BasicMoverComponent()
         {
-            family = SS3D_shared.GO.ComponentFamily.Mover;
+            family = SS13_Shared.GO.ComponentFamily.Mover;
         }
 
         public override void RecieveMessage(object sender, ComponentMessageType type, List<ComponentReplyMessage> replies, params object[] list)

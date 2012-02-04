@@ -4,19 +4,19 @@ using System.Linq;
 using System.Text;
 using System.Drawing;
 using System.Reflection;
-using SS3D.HelperClasses;
+using SS13.HelperClasses;
 using GorgonLibrary;
 using GorgonLibrary.Graphics;
 using GorgonLibrary.InputDevices;
-using SS3D.Modules;
+using SS13.Modules;
 using Lidgren.Network;
 using CGO;
-using SS3D.Modules.Network;
-using SS3D_shared.GO;
-using SS3D_shared;
+using SS13.Modules.Network;
+using SS13_Shared.GO;
+using SS13_Shared;
 using ClientResourceManager;
 
-namespace SS3D.UserInterface
+namespace SS13.UserInterface
 {
     public struct UiHandInfo
     {
@@ -180,10 +180,10 @@ namespace SS3D.UserInterface
             if (craftSlot1.containingEntity == null || craftSlot2.containingEntity == null) return;
 
             if (playerController != null)
-                if (playerController.controlledAtom != null)
-                    if (playerController.controlledAtom.HasComponent(ComponentFamily.Inventory))
+                if (playerController.ControlledEntity != null)
+                    if (playerController.ControlledEntity.HasComponent(ComponentFamily.Inventory))
                     {
-                        InventoryComponent invComp = (InventoryComponent)playerController.controlledAtom.GetComponent(ComponentFamily.Inventory);
+                        InventoryComponent invComp = (InventoryComponent)playerController.ControlledEntity.GetComponent(ComponentFamily.Inventory);
                         if (invComp.containedEntities.Count >= invComp.maxSlots)
                         {
                             craftStatus.Text = "Status: Not enough Space";
@@ -204,10 +204,10 @@ namespace SS3D.UserInterface
         {
             UiManager.Singleton.dragInfo.Reset();
 
-            if (playerController.controlledAtom == null)
+            if (playerController.ControlledEntity == null)
                 return;
 
-            var entity = (Entity)playerController.controlledAtom;
+            var entity = (Entity)playerController.ControlledEntity;
 
             EquipmentComponent equipment = (EquipmentComponent)entity.GetComponent(ComponentFamily.Equipment);
 
@@ -364,10 +364,10 @@ namespace SS3D.UserInterface
         {
             //craftTimer = new Timer_Bar(new Size(200,15), new TimeSpan(0,0,0,10));
             if (playerController != null)
-                if (playerController.controlledAtom != null)
-                    if (playerController.controlledAtom.HasComponent(ComponentFamily.Inventory))
+                if (playerController.ControlledEntity != null)
+                    if (playerController.ControlledEntity.HasComponent(ComponentFamily.Inventory))
                     {
-                        InventoryComponent invComp = (InventoryComponent)playerController.controlledAtom.GetComponent(ComponentFamily.Inventory);
+                        InventoryComponent invComp = (InventoryComponent)playerController.ControlledEntity.GetComponent(ComponentFamily.Inventory);
                         if (!invComp.containsEntity(sender.compo1) || !invComp.containsEntity(sender.compo2))
                         {
                             craftStatus.Text = "Status: You do not have the required items.";
@@ -463,10 +463,10 @@ namespace SS3D.UserInterface
         public override void Update()
         {
             if(inventory == null && playerController != null) //Gotta do this here because the vars are null in the constructor.
-                if(playerController.controlledAtom != null)
-                    if (playerController.controlledAtom.HasComponent(ComponentFamily.Inventory))
+                if(playerController.ControlledEntity != null)
+                    if (playerController.ControlledEntity.HasComponent(ComponentFamily.Inventory))
                     {
-                        InventoryComponent invComp = (InventoryComponent)playerController.controlledAtom.GetComponent(ComponentFamily.Inventory);
+                        InventoryComponent invComp = (InventoryComponent)playerController.ControlledEntity.GetComponent(ComponentFamily.Inventory);
                         inventory = new InventoryViewer(invComp, playerController);
                     }
 
@@ -577,10 +577,10 @@ namespace SS3D.UserInterface
                         #region Status
                         string healthStr = "";
 
-                        if (playerController.controlledAtom == null)
+                        if (playerController.ControlledEntity == null)
                             return;
 
-                        var playerEnt = (Entity)playerController.controlledAtom;
+                        var playerEnt = (Entity)playerController.ControlledEntity;
                         HumanHealthComponent healthcomp = (HumanHealthComponent)playerEnt.GetComponent(ComponentFamily.Damageable); //Unsafe cast. Might not be human health comp.
 
                         foreach (DamageLocation loc in healthcomp.damageZones)
@@ -637,10 +637,10 @@ namespace SS3D.UserInterface
             if (craftTimer != null) craftTimer.Update(); //Needs to update even when its not on the crafting tab so it continues to count.
 
             #region Hands UI
-            if (playerController.controlledAtom == null)
+            if (playerController.ControlledEntity == null)
                 return;
 
-            var entity = (Entity)playerController.controlledAtom;
+            var entity = (Entity)playerController.ControlledEntity;
             HumanHandsComponent hands = (HumanHandsComponent)entity.GetComponent(ComponentFamily.Hands);
 
             if (hands.currentHand == Hand.Left)
@@ -662,10 +662,10 @@ namespace SS3D.UserInterface
 
         public void UpdateHandIcons()
         {
-            if (playerController.controlledAtom == null)
+            if (playerController.ControlledEntity == null)
                 return;
 
-            var entity = (Entity)playerController.controlledAtom;
+            var entity = (Entity)playerController.ControlledEntity;
             HumanHandsComponent hands = (HumanHandsComponent)entity.GetComponent(ComponentFamily.Hands);
 
             if (hands == null) return;
@@ -710,7 +710,7 @@ namespace SS3D.UserInterface
             }
 
             #region Hands UI, Switching
-            var entity = (Entity)playerController.controlledAtom;
+            var entity = (Entity)playerController.ControlledEntity;
             HumanHandsComponent hands = (HumanHandsComponent)entity.GetComponent(ComponentFamily.Hands);
             if (e.Buttons == MouseButtons.Right)
             {
@@ -799,7 +799,7 @@ namespace SS3D.UserInterface
 
         private void SendSwitchHandTo(Hand hand)
         {
-            Entity playerEntity = (Entity)playerController.controlledAtom;
+            Entity playerEntity = (Entity)playerController.ControlledEntity;
             HumanHandsComponent equipComponent = (HumanHandsComponent)playerEntity.GetComponent(ComponentFamily.Hands);
             equipComponent.SendSwitchHands(hand);
         }
@@ -811,10 +811,10 @@ namespace SS3D.UserInterface
             if (UiManager.Singleton.dragInfo.isEntity && UiManager.Singleton.dragInfo.dragEntity != null)
             {
                 #region Hands
-                if (playerController.controlledAtom == null)
+                if (playerController.ControlledEntity == null)
                     return false;
 
-                var entity = (Entity)playerController.controlledAtom;
+                var entity = (Entity)playerController.ControlledEntity;
 
                 EquipmentComponent equipment = (EquipmentComponent)entity.GetComponent(ComponentFamily.Equipment);
                 HumanHandsComponent hands = (HumanHandsComponent)entity.GetComponent(ComponentFamily.Hands);
@@ -882,10 +882,10 @@ namespace SS3D.UserInterface
 
                         if (combo_BG.AABB.Contains(mouseAABB) && UiManager.Singleton.dragInfo.isEntity && UiManager.Singleton.dragInfo.dragEntity != null)
                         { //Should be refined to only trigger in the equip area. Equip it if they drop it anywhere on the thing. This might make the slots obsolete if we keep it.
-                            if (playerController.controlledAtom == null)
+                            if (playerController.ControlledEntity == null)
                                 return false;
 
-                            var entity = (Entity)playerController.controlledAtom;
+                            var entity = (Entity)playerController.ControlledEntity;
 
                             EquipmentComponent equipment = (EquipmentComponent)entity.GetComponent(ComponentFamily.Equipment);
                             equipment.DispatchEquip(UiManager.Singleton.dragInfo.dragEntity.Uid);

@@ -7,11 +7,11 @@ using GorgonLibrary;
 using GorgonLibrary.Graphics;
 using GorgonLibrary.InputDevices;
 using GorgonLibrary.GUI;
-using SS3D.Modules.Network;
+using SS13.Modules.Network;
 using Lidgren.Network;
-using SS3D_shared;
+using SS13_Shared;
 
-namespace SS3D.UserInterface
+namespace SS13.UserInterface
 {
     class AdminUnbanPanel : Window
     {

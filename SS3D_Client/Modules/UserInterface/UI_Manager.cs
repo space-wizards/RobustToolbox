@@ -3,8 +3,8 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 
-using SS3D.UserInterface;
-using SS3D_shared;
+using SS13.UserInterface;
+using SS13_Shared;
 using Lidgren.Network;
 
 using GorgonLibrary.InputDevices;
@@ -17,7 +17,7 @@ using ClientResourceManager;
 using CGO;
 
 
-namespace SS3D.UserInterface
+namespace SS13.UserInterface
 {
     /// <summary>
     ///  Manages UI Components. This includes input, rendering, updates and net messages.

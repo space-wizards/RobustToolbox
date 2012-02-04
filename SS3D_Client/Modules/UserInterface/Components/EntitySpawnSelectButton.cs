@@ -8,13 +8,13 @@ using GorgonLibrary.Graphics;
 using GorgonLibrary.InputDevices;
 using ClientResourceManager;
 
-using SS3D.HelperClasses;
+using SS13.HelperClasses;
 
 using Lidgren.Network;
 using CGO;
-using SS3D_shared;
+using SS13_Shared;
 
-namespace SS3D.UserInterface
+namespace SS13.UserInterface
 {
     public class EntitySpawnSelectButton : GuiComponent
     {

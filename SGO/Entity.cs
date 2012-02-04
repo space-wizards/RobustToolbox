@@ -7,9 +7,9 @@ using System.Security;
 using System.Reflection;
 using System.Collections;
 using Lidgren.Network;
-using SS3D_shared;
-using SS3D_shared.HelperClasses;
-using SS3D_shared.GO;
+using SS13_Shared;
+using SS13_Shared.HelperClasses;
+using SS13_Shared.GO;
 using System.Runtime.Serialization;
 
 namespace SGO
@@ -82,15 +82,6 @@ namespace SGO
         public virtual void Initialize(bool loaded = false)
         {     }
 
-        /// <summary>
-        /// Compatibility method for atoms. This should be eliminated eventually when the above naked constructor is eliminated.
-        /// </summary>
-        /// <param name="entityNetworkManager"></param>
-        public void InitializeEntityNetworking(EntityNetworkManager entityNetworkManager)
-        {
-            m_entityNetworkManager = entityNetworkManager;
-        }
-        
         /// <summary>
         /// Shuts down the entity gracefully for removal.
         /// </summary>
@@ -172,14 +163,6 @@ namespace SGO
             }
         }
         #endregion
-
-        /// <summary>
-        /// Public update method for the entity. This will be useless after the atom code is refactored.
-        /// </summary>
-        /// <param name="frameTime"></param>
-        public virtual void Update(float frameTime)
-        {
-        }
 
         public void Translate(Vector2 toPosition)
         {
@@ -288,7 +271,7 @@ namespace SGO
             m_entityNetworkManager.SendComponentNetworkMessage(this, component.Family, NetDeliveryMethod.ReliableUnordered, recipient, messageParams);
         }
 
-        #region compatibility for atom transition
+        #region compatibility for atom transition -- ???
         public void SetNetworkManager(EntityNetworkManager manager)
         {
             m_entityNetworkManager = manager;

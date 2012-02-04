@@ -161,8 +161,8 @@ namespace CGO
             whiteTriangle[0].Position.X = (_bubbleRender.Width / 2) - 8;
             whiteTriangle[1].Position.X = (_bubbleRender.Width / 2) + 8;
             whiteTriangle[2].Position.X = (_bubbleRender.Width / 2);
-            whiteTriangle[0].Position.Y = _bubbleRender.Width - 15;
-            whiteTriangle[1].Position.Y = _bubbleRender.Width - 15;
+            whiteTriangle[0].Position.Y = _bubbleRender.Height - 15;
+            whiteTriangle[1].Position.Y = _bubbleRender.Height - 15;
             whiteTriangle[2].Position.Y = _bubbleRender.Height - 2;
             whiteTriangle[0].TextureCoordinates = Vector2D.Zero;
             whiteTriangle[0].Color = Color.White;

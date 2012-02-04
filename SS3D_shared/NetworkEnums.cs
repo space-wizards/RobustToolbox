@@ -110,7 +110,7 @@ public enum ClientStatus
 
 public enum PlayerSessionMessage
 {
-    AttachToAtom,
+    AttachToEntity,
     Verb,
     JoinLobby,
     SetTargetArea

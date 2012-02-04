@@ -7,15 +7,15 @@ namespace CGO
 {
     public class RenderableComponent : GameObjectComponent, IGameObjectComponent, IRenderableComponent
     {
-        private SS3D_shared.GO.DrawDepth m_drawDepth;
-        public SS3D_shared.GO.DrawDepth DrawDepth
+        private SS13_Shared.GO.DrawDepth m_drawDepth;
+        public SS13_Shared.GO.DrawDepth DrawDepth
         {
             get { return m_drawDepth; }
             set { m_drawDepth = value; }
         }
         public RenderableComponent()
         {
-            family = SS3D_shared.GO.ComponentFamily.Renderable; 
+            family = SS13_Shared.GO.ComponentFamily.Renderable; 
         }
 
         public virtual void Render()

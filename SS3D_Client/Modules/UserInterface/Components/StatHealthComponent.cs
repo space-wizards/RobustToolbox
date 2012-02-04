@@ -4,18 +4,18 @@ using System.Linq;
 using System.Text;
 using System.Drawing;
 using System.Reflection;
-using SS3D.HelperClasses;
+using SS13.HelperClasses;
 using GorgonLibrary;
 using GorgonLibrary.Graphics;
 using GorgonLibrary.InputDevices;
-using SS3D.Modules;
+using SS13.Modules;
 using Lidgren.Network;
 using CGO;
-using SS3D_shared.GO;
-using SS3D_shared;
+using SS13_Shared.GO;
+using SS13_Shared;
 using ClientResourceManager;
 
-namespace SS3D.UserInterface
+namespace SS13.UserInterface
 {
     public class StatHealthComponent : GuiComponent
     {
@@ -49,7 +49,7 @@ namespace SS3D.UserInterface
         public StatHealthComponent(PlayerController _playerController, Point _size)
             : base(_playerController)
         {
-            //componentClass = SS3D_shared.GuiComponentType.???;
+            //componentClass = SS13_Shared.GuiComponentType.???;
             backgroundSprite = ResMgr.Singleton.GetSprite("1pxwhite");
             healthDetail = ResMgr.Singleton.GetSprite("stat_health_detail");
             healthText = new Label("Healthy");
@@ -131,7 +131,7 @@ namespace SS3D.UserInterface
 
         private void DoText()
         {
-            var entity = (Entity)playerController.controlledAtom;
+            var entity = (Entity)playerController.ControlledEntity;
 
             float healthPct = 0;
             healthText.Text.Text = "???";

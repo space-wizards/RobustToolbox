@@ -7,15 +7,15 @@ using GorgonLibrary;
 using GorgonLibrary.Graphics;
 using GorgonLibrary.InputDevices;
 using GorgonLibrary.GUI;
-using SS3D.UserInterface;
+using SS13.UserInterface;
 using Lidgren.Network;
-using SS3D_shared;
-using SS3D_shared.GO;
+using SS13_Shared;
+using SS13_Shared.GO;
 using CGO;
 using ClientResourceManager;
-using SS3D.Modules;
+using SS13.Modules;
 
-namespace SS3D.UserInterface
+namespace SS13.UserInterface
 {
     class EquipmentSlotUi : GuiComponent
     {
@@ -55,10 +55,10 @@ namespace SS3D.UserInterface
 
             text.Position = position;
 
-            if (playerController.controlledAtom == null)
+            if (playerController.ControlledEntity == null)
                 return;
 
-            var entity = (Entity)playerController.controlledAtom;
+            var entity = (Entity)playerController.ControlledEntity;
             EquipmentComponent equipment = (EquipmentComponent)entity.GetComponent(ComponentFamily.Equipment);
 
             if (equipment.equippedEntities.ContainsKey(assignedSlot))
@@ -98,10 +98,10 @@ namespace SS3D.UserInterface
         {
             if (clientArea.Contains(new Point((int)e.Position.X, (int)e.Position.Y)))
             {
-                if (playerController.controlledAtom == null)
+                if (playerController.ControlledEntity == null)
                     return false;
 
-                var entity = (Entity)playerController.controlledAtom;
+                var entity = (Entity)playerController.ControlledEntity;
                 EquipmentComponent equipment = (EquipmentComponent)entity.GetComponent(ComponentFamily.Equipment);
 
                 if (equipment.equippedEntities.ContainsKey(assignedSlot))
@@ -116,10 +116,10 @@ namespace SS3D.UserInterface
         {
             if (clientArea.Contains(new Point((int)e.Position.X, (int)e.Position.Y)))
             {
-                if (playerController.controlledAtom == null)
+                if (playerController.ControlledEntity == null)
                     return false;
 
-                var entity = (Entity)playerController.controlledAtom;
+                var entity = (Entity)playerController.ControlledEntity;
                 EquipmentComponent equipment = (EquipmentComponent)entity.GetComponent(ComponentFamily.Equipment);
                 HumanHandsComponent hands = (HumanHandsComponent)entity.GetComponent(ComponentFamily.Hands);
 
@@ -151,10 +151,10 @@ namespace SS3D.UserInterface
 
         private bool IsEmpty()
         {
-            if (playerController.controlledAtom == null)
+            if (playerController.ControlledEntity == null)
                 return false;
 
-            var entity = (Entity)playerController.controlledAtom;
+            var entity = (Entity)playerController.ControlledEntity;
             EquipmentComponent equipment = (EquipmentComponent)entity.GetComponent(ComponentFamily.Equipment);
 
             if (equipment.IsEmpty(assignedSlot)) return true;

@@ -1,79 +1,74 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-
-using SS3D.States;
+using SS13.States;
 using Lidgren.Network;
 using GorgonLibrary;
 using GorgonLibrary.InputDevices;
-using SS3D_shared;
-using SS3D_shared.GO;
+using SS13_Shared.GO;
 using CGO;
 
-namespace SS3D.Modules
+namespace SS13.Modules
 {
     public class PlayerController
     {
         /* Here's the player controller. This will handle attaching GUIS and input to controllable things.
          * Why not just attach the inputs directly? It's messy! This makes the whole thing nicely encapsulated. 
-         * This class also communicates with the server to let the server control what atom it is attached to. */
+         * This class also communicates with the server to let the server control what entity it is attached to. */
 
-        public State runningState;
-        public Entity controlledAtom;
+        public State RunningState { get; private set; }
+        public Entity ControlledEntity { get; private set; }
 
-        private static PlayerController singleton = null;
+        private static PlayerController _singleton;
         public static PlayerController Singleton
         {
             get
             {
-                if (singleton != null)
-                    return singleton;
+                if (_singleton != null)
+                    return _singleton;
                 else
                     throw new TypeInitializationException("PlayerController singleton not initialized.", null);
             }
             set
             {
-                singleton = value;
+                _singleton = value;
             }
         }
 
         public static void Initialize(State _runningState)
         {
-            singleton = new PlayerController(_runningState);
+            _singleton = new PlayerController(_runningState);
         }
 
         public PlayerController(State _runningState)
         {
-            runningState = _runningState;
+            RunningState = _runningState;
         }
 
-        public void Attach(Entity newAtom)
+        public void Attach(Entity newEntity)
         {
-            controlledAtom = newAtom;
-            controlledAtom.AddComponent(ComponentFamily.Input, CGO.ComponentFactory.Singleton.GetComponent("KeyBindingInputComponent"));
-            controlledAtom.AddComponent(ComponentFamily.Mover, CGO.ComponentFactory.Singleton.GetComponent("KeyBindingMoverComponent"));
-            controlledAtom.AddComponent(ComponentFamily.Collider, CGO.ComponentFactory.Singleton.GetComponent("ColliderComponent"));
-            controlledAtom.GetComponent(ComponentFamily.Collider).SetParameter(new CGO.ComponentParameter("TweakAABB", typeof(Vector4D), new Vector4D(39, 0, 0, 0)));
+            ControlledEntity = newEntity;
+            ControlledEntity.AddComponent(ComponentFamily.Input, CGO.ComponentFactory.Singleton.GetComponent("KeyBindingInputComponent"));
+            ControlledEntity.AddComponent(ComponentFamily.Mover, CGO.ComponentFactory.Singleton.GetComponent("KeyBindingMoverComponent"));
+            ControlledEntity.AddComponent(ComponentFamily.Collider, CGO.ComponentFactory.Singleton.GetComponent("ColliderComponent"));
+            ControlledEntity.GetComponent(ComponentFamily.Collider).SetParameter(new CGO.ComponentParameter("TweakAABB", typeof(Vector4D), new Vector4D(39, 0, 0, 0)));
         }
 
         public void Detach()
         {
-            controlledAtom = null;
-            controlledAtom.RemoveComponent(ComponentFamily.Input);
-            controlledAtom.RemoveComponent(ComponentFamily.Mover);
-            controlledAtom.RemoveComponent(ComponentFamily.Collider);
+            ControlledEntity = null;
+            ControlledEntity.RemoveComponent(ComponentFamily.Input);
+            ControlledEntity.RemoveComponent(ComponentFamily.Mover);
+            ControlledEntity.RemoveComponent(ComponentFamily.Collider);
         }
 
         public void KeyDown(KeyboardKeys key)
         {
-            if (controlledAtom == null)
+            if (ControlledEntity == null)
                 return;
         }
 
         public void KeyUp(KeyboardKeys key)
         {
-            if (controlledAtom == null)
+            if (ControlledEntity == null)
                 return;
         }
 
@@ -83,11 +78,11 @@ namespace SS3D.Modules
             PlayerSessionMessage messageType = (PlayerSessionMessage)message.ReadByte();
             switch (messageType)
             {
-                case PlayerSessionMessage.AttachToAtom:
-                    HandleAttachToAtom(message);
+                case PlayerSessionMessage.AttachToEntity:
+                    HandleAttachToEntity(message);
                     break;
                 case PlayerSessionMessage.JoinLobby:
-                    runningState.prg.mStateMgr.RequestStateChange(typeof(LobbyScreen));
+                    RunningState.prg.mStateMgr.RequestStateChange(typeof(LobbyScreen));
                     break;
                 default:
                     break;
@@ -100,14 +95,14 @@ namespace SS3D.Modules
         //    switch (component)
         //    {
         //        case GuiComponentType.HealthComponent:
-        //            if (runningState.GetType() == System.Type.GetType("SS3D.States.GameScreen"))
+        //            if (runningState.GetType() == System.Type.GetType("SS13.States.GameScreen"))
         //            {
         //                GameScreen g = (GameScreen)runningState;
         //                g.guiComponents[GuiComponentType.StatPanelComponent].HandleNetworkMessage(message);
         //            }
         //            break;
         //        case GuiComponentType.AppendagesComponent:
-        //            if (runningState.GetType() == System.Type.GetType("SS3D.States.GameScreen"))
+        //            if (runningState.GetType() == System.Type.GetType("SS13.States.GameScreen"))
         //            {
         //                GameScreen g = (GameScreen)runningState;
         //                g.guiComponents[GuiComponentType.AppendagesComponent].HandleNetworkMessage(message);
@@ -122,18 +117,18 @@ namespace SS3D.Modules
         /// If UID is 0, it means its a global verb.
         /// </summary>
         /// <param name="verb">the verb</param>
-        /// <param name="uid">a target atom's uid</param>
+        /// <param name="uid">a target entity's uid</param>
         public void SendVerb(string verb, int uid)
         {
-            NetOutgoingMessage message = runningState.prg.mNetworkMgr.netClient.CreateMessage();
+            NetOutgoingMessage message = RunningState.prg.mNetworkMgr.netClient.CreateMessage();
             message.Write((byte)NetMessage.PlayerSessionMessage);
             message.Write((byte)PlayerSessionMessage.Verb);
             message.Write(verb);
             message.Write(uid);
-            runningState.prg.mNetworkMgr.SendMessage(message, NetDeliveryMethod.ReliableOrdered);
+            RunningState.prg.mNetworkMgr.SendMessage(message, NetDeliveryMethod.ReliableOrdered);
         }
 
-        private void HandleAttachToAtom(NetIncomingMessage message)
+        private void HandleAttachToEntity(NetIncomingMessage message)
         {
             int uid = message.ReadInt32();
             Attach(EntityManager.Singleton.GetEntity(uid));

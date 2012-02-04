@@ -6,17 +6,17 @@ using System.Drawing;
 using GorgonLibrary;
 using GorgonLibrary.Graphics;
 using GorgonLibrary.InputDevices;
-using SS3D.Modules;
+using SS13.Modules;
 using Lidgren.Network;
 using CGO;
-using SS3D_shared.GO;
-using SS3D_shared;
+using SS13_Shared.GO;
+using SS13_Shared;
 using ClientConfigManager;
 using ClientResourceManager;
-using SS3D.HelperClasses;
-using SS3D.Modules.Network;
+using SS13.HelperClasses;
+using SS13.Modules.Network;
 
-namespace SS3D.UserInterface
+namespace SS13.UserInterface
 {
     public class StatPanelComponent : GuiComponent
     {
@@ -58,7 +58,7 @@ namespace SS3D.UserInterface
         {
             targetArea = new TargetingDummy(_playerController, _netMgr);
 
-            componentClass = SS3D_shared.GuiComponentType.StatPanelComponent;
+            componentClass = SS13_Shared.GuiComponentType.StatPanelComponent;
 
             Position = new Point(604, Gorgon.Screen.Height - 205);
 
@@ -110,9 +110,9 @@ namespace SS3D.UserInterface
         private void DrawPlayer()
         {
             ////TODO RE-CONNECT PLAYER SPRITES TO DISPLAY
-            //if (playerSprite == null && playerController.controlledAtom != null)
+            //if (playerSprite == null && playerController.controlledEntity != null)
             //{
-            //    playerSprite = Utilities.GetSpriteComponentSprite(playerController.controlledAtom);
+            //    playerSprite = Utilities.GetSpriteComponentSprite(playerController.controlledEntity);
             //}
 
             //playerSprite.UniformScale = 1.5f;
@@ -163,7 +163,7 @@ namespace SS3D.UserInterface
 
         public override void Render()
         {
-            if (playerController.controlledAtom == null)
+            if (playerController.ControlledEntity == null)
                 return;
 
             renderImage.Blit(Position.X, Position.Y);

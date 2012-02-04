@@ -7,8 +7,8 @@ using System.Media;
 using ServerServices.Tiles;
 using Lidgren.Network;
 
-using SS3D_shared;
-using SS3D_shared.HelperClasses;
+using SS13_Shared;
+using SS13_Shared.HelperClasses;
 using System.Reflection;
 using System.Drawing;
 using ServerInterfaces;
@@ -70,7 +70,7 @@ namespace ServerServices.Map
         private void HandleTurfClick(NetIncomingMessage message)
         {
             // Who clicked and on what tile.
-            Atom.Atom clicker = SS3DServer.Singleton.playerManager.GetSessionByConnection(message.SenderConnection).attachedAtom;
+            Atom.Atom clicker = SS13Server.Singleton.playerManager.GetSessionByConnection(message.SenderConnection).attachedAtom;
             short x = message.ReadInt16();
             short y = message.ReadInt16();
 
@@ -132,14 +132,14 @@ namespace ServerServices.Map
             if (!IsSaneArrayPosition(x, y))
                 return;
 
-            NetOutgoingMessage message = SS3DNetServer.Singleton.CreateMessage();
+            NetOutgoingMessage message = SS13NetServer.Singleton.CreateMessage();
             message.Write((byte)NetMessage.MapMessage);
             message.Write((byte)MapMessage.TurfUpdate);
             message.Write((short)x);
             message.Write((short)y);
             message.Write((byte)tileArray[x, y].tileType);
             message.Write((byte)tileArray[x, y].tileState);
-            SS3DNetServer.Singleton.SendToAll(message);
+            SS13NetServer.Singleton.SendToAll(message);
         }
         #endregion
 
@@ -365,14 +365,14 @@ namespace ServerServices.Map
                 else
                     recordsInPacket = recordsCount;
                 recordsCount -= recordsInPacket;
-                NetOutgoingMessage message = SS3DNetServer.Singleton.CreateMessage();
+                NetOutgoingMessage message = SS13NetServer.Singleton.CreateMessage();
                 message.Write((byte)NetMessage.AtmosDisplayUpdate);
                 message.Write(recordsInPacket);
                 for (int i = 0 + position; i < recordsInPacket + position; i++)
                 {
                     records[i].pack(message);
                 }
-                SS3DNetServer.Singleton.SendToAll(message, NetDeliveryMethod.Unreliable);// Gas updates aren't a big deal.
+                SS13NetServer.Singleton.SendToAll(message, NetDeliveryMethod.Unreliable);// Gas updates aren't a big deal.
                 LogManager.Log("Sending Gas update with " + recordsInPacket + " records\n", LogLevel.Debug);
                 position += recordsInPacket;
             }
@@ -380,7 +380,7 @@ namespace ServerServices.Map
 
         public void SendAtmosStateTo(NetConnection client)
         {
-            NetOutgoingMessage message = SS3DNetServer.Singleton.CreateMessage();
+            NetOutgoingMessage message = SS13NetServer.Singleton.CreateMessage();
             message.Write((byte)NetMessage.AtmosDisplayUpdate);
 
             List<AtmosRecord> records = new List<AtmosRecord>();
@@ -401,8 +401,8 @@ namespace ServerServices.Map
             {
                 rec.pack(message);
             }
-            SS3DNetServer.Singleton.SendMessage(message, client, NetDeliveryMethod.Unreliable);// Gas updates aren't a big deal.
-            //LogManager.Log("Sending Gas update to " + SS3DServer.Singleton.playerManager.GetSessionByConnection(client).name + "\n", LogLevel.Debug);
+            SS13NetServer.Singleton.SendMessage(message, client, NetDeliveryMethod.Unreliable);// Gas updates aren't a big deal.
+            //LogManager.Log("Sending Gas update to " + SS13Server.Singleton.playerManager.GetSessionByConnection(client).name + "\n", LogLevel.Debug);
         }
 
         /// <summary>
@@ -487,7 +487,7 @@ namespace ServerServices.Map
         #region networking
         public NetOutgoingMessage CreateMapMessage(MapMessage messageType)
         {
-            NetOutgoingMessage message = SS3DNetServer.Singleton.CreateMessage();
+            NetOutgoingMessage message = SS13NetServer.Singleton.CreateMessage();
             message.Write((byte)NetMessage.MapMessage);
             message.Write((byte)messageType);
             return message;
@@ -499,7 +499,7 @@ namespace ServerServices.Map
         /// <param name="message"></param>
         public void SendMessage(NetOutgoingMessage message)
         {
-            SS3DNetServer.Singleton.SendToAll(message);
+            SS13NetServer.Singleton.SendToAll(message);
         }
         #endregion
 

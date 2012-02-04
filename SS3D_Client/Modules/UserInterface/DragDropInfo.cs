@@ -10,10 +10,10 @@ using GorgonLibrary.Graphics;
 using GorgonLibrary.Graphics.Utilities;
 using GorgonLibrary.InputDevices;
 using ClientResourceManager;
-using SS3D.Modules;
+using SS13.Modules;
 using CGO;
 
-namespace SS3D
+namespace SS13
 {
     public class DragDropInfo
     {

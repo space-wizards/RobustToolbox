@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
-using SS3D_shared.GO;
+using SS13_Shared.GO;
 using SGO.Component.Item.ItemCapability;
 using System.Xml.Linq;
 using Lidgren.Network;
@@ -17,7 +17,7 @@ namespace SGO
 
         public InventoryComponent()
         {
-            family = SS3D_shared.GO.ComponentFamily.Inventory;
+            family = SS13_Shared.GO.ComponentFamily.Inventory;
             containedEntities = new List<Entity>();
         }
 

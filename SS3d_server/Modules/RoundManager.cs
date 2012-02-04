@@ -2,11 +2,11 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
-using SS3D_Server.Modules.Gamemodes;
-using SS3D_Server.Modules;
-using SS3D_Server;
+using SS13_Server.Modules.Gamemodes;
+using SS13_Server.Modules;
+using SS13_Server;
 
-namespace SS3D_Server.Modules
+namespace SS13_Server.Modules
 {
     class RoundManager
     {

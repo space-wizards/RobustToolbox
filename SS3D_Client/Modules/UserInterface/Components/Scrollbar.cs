@@ -9,10 +9,10 @@ using GorgonLibrary.InputDevices;
 using GorgonLibrary.GUI;
 
 using Lidgren.Network;
-using SS3D_shared;
+using SS13_Shared;
 using ClientResourceManager;
 
-namespace SS3D.UserInterface
+namespace SS13.UserInterface
 {
     public class Scrollbar : GuiComponent
     {

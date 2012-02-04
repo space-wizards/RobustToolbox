@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 
-namespace SS3D_shared
+namespace SS13_Shared
 {
     public enum GuiComponentType
     {

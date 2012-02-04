@@ -5,11 +5,11 @@ using System.Runtime.InteropServices;
 // General Information about an assembly is controlled through the following 
 // set of attributes. Change these attribute values to modify the information
 // associated with an assembly.
-[assembly: AssemblyTitle("SS3D_server")]
+[assembly: AssemblyTitle("SS13_Server")]
 [assembly: AssemblyDescription("")]
 [assembly: AssemblyConfiguration("")]
 [assembly: AssemblyCompany("___")]
-[assembly: AssemblyProduct("SS3d_server")]
+[assembly: AssemblyProduct("SS13_Server")]
 [assembly: AssemblyCopyright("___")]
 [assembly: AssemblyTrademark("")]
 [assembly: AssemblyCulture("")]

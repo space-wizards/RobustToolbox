@@ -7,13 +7,13 @@ using GorgonLibrary;
 using GorgonLibrary.Graphics;
 using GorgonLibrary.InputDevices;
 using GorgonLibrary.GUI;
-using SS3D.UserInterface;
+using SS13.UserInterface;
 using Lidgren.Network;
-using SS3D_shared;
-using SS3D.Modules;
-using SS3D.Modules.Network;
+using SS13_Shared;
+using SS13.Modules;
+using SS13.Modules.Network;
 
-namespace SS3D.UserInterface
+namespace SS13.UserInterface
 {
     class AdminPasswordDialog : Window
     {

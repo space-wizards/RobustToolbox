@@ -6,7 +6,7 @@ using System.Drawing;
 using ClientServices;
 using ClientInterfaces;
 using GorgonLibrary;
-using SS3D_shared.GO;
+using SS13_Shared.GO;
 
 namespace CGO
 {

@@ -8,8 +8,8 @@
     <ProjectGuid>{54B6035E-489F-4790-A033-3C0B34C6F2BD}</ProjectGuid>
     <OutputType>Exe</OutputType>
     <AppDesignerFolder>Properties</AppDesignerFolder>
-    <RootNamespace>SS3D_Server</RootNamespace>
-    <AssemblyName>SS3d_server</AssemblyName>
+    <RootNamespace>SS13_Server</RootNamespace>
+    <AssemblyName>SS13_Server</AssemblyName>
     <TargetFrameworkVersion>v4.0</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
     <StartupObject>
@@ -76,45 +76,6 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
-    <None Include="Atom\Atom.cs" />
-    <None Include="Atom\AtomManager.cs" />
-    <None Include="Atom\Item\Container\Toolbox.cs" />
-    <None Include="Atom\Item\Item.cs" />
-    <None Include="Atom\Item\Misc\Flashlight.cs" />
-    <None Include="Atom\Item\Tool\Crowbar.cs" />
-    <None Include="Atom\Item\Tool\Tool.cs" />
-    <None Include="Atom\Item\Tool\Welder.cs" />
-    <None Include="Atom\Item\Tool\Wrench.cs" />
-    <None Include="Atom\Item\Wearable\Belt\Belt.cs" />
-    <None Include="Atom\Item\Wearable\Ears\Ears.cs" />
-    <None Include="Atom\Item\Wearable\Eyes\Eyes.cs" />
-    <None Include="Atom\Item\Wearable\Feet\Feet.cs" />
-    <None Include="Atom\Item\Wearable\Feet\Shoes.cs" />
-    <None Include="Atom\Item\Wearable\Hands\Hands.cs" />
-    <None Include="Atom\Item\Wearable\Head\Helmet.cs" />
-    <None Include="Atom\Item\Wearable\Head\Head.cs" />
-    <None Include="Atom\Item\Wearable\Inner\Inner.cs" />
-    <None Include="Atom\Item\Wearable\Inner\Jumpsuit\Assistant_Grey.cs" />
-    <None Include="Atom\Item\Wearable\Inner\Jumpsuit\Jumpsuit.cs" />
-    <None Include="Atom\Item\Wearable\Mask\Mask.cs" />
-    <None Include="Atom\Item\Wearable\Outer\Outer.cs" />
-    <None Include="Atom\Item\Wearable\Outer\Armour.cs" />
-    <None Include="Atom\Item\Wearable\Wearable.cs" />
-    <None Include="Atom\Light.cs" />
-    <None Include="Atom\Mob\HelperClasses\Appendage.cs" />
-    <None Include="Atom\Mob\Human.cs" />
-    <None Include="Atom\Mob\Mob.cs" />
-    <None Include="Atom\Object\Atmos\Vent.cs" />
-    <None Include="Atom\Object\Door\Door.cs" />
-    <None Include="Atom\Object\Lights\WallLight.cs" />
-    <None Include="Atom\Object\Locker.cs" />
-    <None Include="Atom\Object\Object.cs" />
-    <None Include="Atom\Object\Tables\Worktop.cs" />
-    <None Include="Atom\Object\WallMounted\Extinguisher.cs" />
-    <None Include="Atom\Object\WallMounted\FireAlarm.cs" />
-    <None Include="Atom\Object\WallMounted\MedCabinet.cs" />
-    <None Include="Atom\Object\WallMounted\WallMounted.cs" />
-    <None Include="Atom\Object\Wall\Glass.cs" />
     <Compile Include="Helper Classes\InterpolationPacket.cs" />
     <Compile Include="Modules\Banlist.cs" />
     <Compile Include="Modules\Chat\ChatManager.cs" />
@@ -128,9 +89,6 @@
     <Compile Include="Modules\RoundManager.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
-    <None Include="Scripts\Atom\hat.cs">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </None>
     <Compile Include="SS3DServer.cs" />
   </ItemGroup>
   <ItemGroup>
@@ -148,11 +106,11 @@
     </ProjectReference>
     <ProjectReference Include="..\SGO\ServerGameObject.csproj">
       <Project>{A59BA08B-B934-49D1-A449-6BBDFE292C5E}</Project>
-      <Name>SGO</Name>
+      <Name>ServerGameObject</Name>
     </ProjectReference>
-    <ProjectReference Include="..\SS3D_shared\SS3D_shared.csproj">
+    <ProjectReference Include="..\SS3D_shared\SS13_Shared.csproj">
       <Project>{4229D7E3-C3AE-4C0A-B2B1-BB20911150DC}</Project>
-      <Name>SS3D_shared</Name>
+      <Name>SS13_Shared</Name>
     </ProjectReference>
   </ItemGroup>
   <ItemGroup>
@@ -232,7 +190,7 @@
     <WCFMetadata Include="Service References\" />
   </ItemGroup>
   <ItemGroup>
-    <Folder Include="Atom\Extension\" />
+    <Folder Include="Scripts\" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <PropertyGroup>

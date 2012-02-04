@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
-using SS3D_shared.HelperClasses;
+using SS13_Shared.HelperClasses;
 using Lidgren.Network;
 
 namespace SGO
@@ -12,7 +12,7 @@ namespace SGO
     {
         public PlayerInputMoverComponent()
         {
-            family = SS3D_shared.GO.ComponentFamily.Mover;
+            family = SS13_Shared.GO.ComponentFamily.Mover;
         }
 
         /// <summary>

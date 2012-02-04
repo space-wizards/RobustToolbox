@@ -7,7 +7,7 @@ using System.Xml;
 using GorgonLibrary;
 using GorgonLibrary.InputDevices;
 using System.Security;
-using SS3D_shared;
+using SS13_Shared;
 
 
 namespace ClientServices.Input

@@ -7,7 +7,7 @@ using Lidgren.Network;
 using GorgonLibrary;
 using GorgonLibrary.Graphics;
 
-namespace SS3D.HelperClasses
+namespace SS13.HelperClasses
 {
     public struct InterpolationPacket
     {

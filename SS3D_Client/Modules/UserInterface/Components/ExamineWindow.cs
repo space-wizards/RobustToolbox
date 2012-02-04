@@ -7,12 +7,12 @@ using GorgonLibrary;
 using GorgonLibrary.Graphics;
 using GorgonLibrary.InputDevices;
 using GorgonLibrary.GUI;
-using SS3D.UserInterface;
+using SS13.UserInterface;
 using Lidgren.Network;
-using SS3D_shared;
+using SS13_Shared;
 using CGO;
 
-namespace SS3D.UserInterface
+namespace SS13.UserInterface
 {
     class ExamineWindow : Window
     {
@@ -28,13 +28,13 @@ namespace SS3D.UserInterface
             this.components.Add(entDesc);
 
             List<ComponentReplyMessage> replies = new List<ComponentReplyMessage>();
-            entity.SendMessage(entity, SS3D_shared.GO.ComponentMessageType.GetSprite, replies);
+            entity.SendMessage(entity, SS13_Shared.GO.ComponentMessageType.GetSprite, replies);
 
             this.SetVisible(true);
 
             if (replies.Any())
             {
-                entSprite = (Sprite)replies.First(x => x.messageType == SS3D_shared.GO.ComponentMessageType.CurrentSprite).paramsList[0];
+                entSprite = (Sprite)replies.First(x => x.messageType == SS13_Shared.GO.ComponentMessageType.CurrentSprite).paramsList[0];
                 entDesc.Position = new Point(10, (int)entSprite.Height + entDesc.ClientArea.Height + 10);
             }
             else

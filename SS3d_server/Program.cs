@@ -4,22 +4,22 @@ using System.Linq;
 using System.Text;
 
 using Lidgren.Network;
-using SS3D_Server.Modules;
+using SS13_Server.Modules;
 using ServerServices;
 
-namespace SS3D_Server
+namespace SS13_Server
 {
     class EntryPoint
     {
-        private SS3DServer server;
+        private SS13Server _server;
 
         static void Main(string[] args)
         {
             EntryPoint main = new EntryPoint();
-            main.server = new SS3DServer();
+            main._server = new SS13Server();
             LogManager.Log("Server -> Starting");
 
-            if (main.server.Start())
+            if (main._server.Start())
             {
                 LogManager.Log("Server -> Can not start server", ServerServices.LogLevel.Fatal); //Not like you'd see this, haha. Perhaps later for logging.
                 Environment.Exit(0);
@@ -28,7 +28,7 @@ namespace SS3D_Server
             string strVersion = System.Reflection.Assembly.GetExecutingAssembly().GetName().Version.ToString();
             LogManager.Log("Server Version " + strVersion + " -> Ready");
 
-            main.server.MainLoop();
+            main._server.MainLoop();
         }
 
 

@@ -2,8 +2,8 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
-using SS3D_shared;
-using SS3D_shared.GO;
+using SS13_Shared;
+using SS13_Shared.GO;
 using GorgonLibrary.Graphics;
 
 namespace CGO
@@ -12,7 +12,7 @@ namespace CGO
     {
         string basename = "";
         private bool worn = false;
-        private DrawDepth wornDrawDepth = SS3D_shared.GO.DrawDepth.MobOverClothingLayer;
+        private DrawDepth wornDrawDepth = SS13_Shared.GO.DrawDepth.MobOverClothingLayer;
         public WearableSpriteComponent()
             : base()
         {

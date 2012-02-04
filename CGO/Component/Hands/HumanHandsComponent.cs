@@ -2,8 +2,8 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
-using SS3D_shared.GO;
-using SS3D_shared;
+using SS13_Shared.GO;
+using SS13_Shared;
 using System.Drawing;
 using ClientServices;
 using ClientInterfaces;

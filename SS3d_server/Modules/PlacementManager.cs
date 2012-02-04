@@ -3,17 +3,17 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 
-using SS3D_shared;
-using SS3D_shared.HelperClasses;
+using SS13_Shared;
+using SS13_Shared.HelperClasses;
 using Lidgren.Network;
-using SS3D_Server.Modules;
+using SS13_Server.Modules;
 using System.Reflection;
 using ServerServices;
 using System.Drawing;
 using ServerServices.Tiles;
 using SGO;
 
-namespace SS3D_Server.Modules
+namespace SS13_Server.Modules
 {
     class PlacementManager
     {
@@ -87,9 +87,9 @@ namespace SS3D_Server.Modules
             float yRcv = msg.ReadFloat();
             float rotRcv = msg.ReadFloat();
 
-            PlayerSession session = SS3DServer.Singleton.playerManager.GetSessionByConnection(msg.SenderConnection);
-            PlacementInformation permission = GetPermission(session.attachedAtom.Uid, alignRcv);
-            Boolean isAdmin = SS3DServer.Singleton.playerManager.GetSessionByConnection(msg.SenderConnection).adminPermissions.isAdmin;
+            PlayerSession session = SS13Server.Singleton.playerManager.GetSessionByConnection(msg.SenderConnection);
+            PlacementInformation permission = GetPermission(session.attachedEntity.Uid, alignRcv);
+            Boolean isAdmin = SS13Server.Singleton.playerManager.GetSessionByConnection(msg.SenderConnection).adminPermissions.isAdmin;
 
             if (permission != null || true) //isAdmin)
             {
@@ -101,13 +101,13 @@ namespace SS3D_Server.Modules
                         if (permission.uses <= 0)
                         {
                             BuildPermissions.Remove(permission);
-                            SendPlacementCancel(session.attachedAtom);
+                            SendPlacementCancel(session.attachedEntity);
                         }
                     }
                     else
                     {
                         BuildPermissions.Remove(permission);
-                        SendPlacementCancel(session.attachedAtom);
+                        SendPlacementCancel(session.attachedEntity);
                         return;
                     }
                 }
@@ -120,19 +120,19 @@ namespace SS3D_Server.Modules
                 }
                 else
                 {
-                    Point arrayPos = SS3D_Server.SS3DServer.Singleton.map.GetTileArrayPositionFromWorldPosition(new Vector2(xRcv, yRcv));
-                    SS3D_Server.SS3DServer.Singleton.map.ChangeTile(arrayPos.X, arrayPos.Y, tileType);
-                    SS3D_Server.SS3DServer.Singleton.map.NetworkUpdateTile(arrayPos.X, arrayPos.Y);
+                    Point arrayPos = SS13_Server.SS13Server.Singleton.map.GetTileArrayPositionFromWorldPosition(new Vector2(xRcv, yRcv));
+                    SS13_Server.SS13Server.Singleton.map.ChangeTile(arrayPos.X, arrayPos.Y, tileType);
+                    SS13_Server.SS13Server.Singleton.map.NetworkUpdateTile(arrayPos.X, arrayPos.Y);
                 }
             }
             else //They are not allowed to request this. Send 'PlacementFailed'. TBA
             {
                 LogManager.Log("Invalid placement request: "
-                    + SS3DServer.Singleton.playerManager.GetSessionByConnection(msg.SenderConnection).name +
-                    " - " + SS3DServer.Singleton.playerManager.GetSessionByConnection(msg.SenderConnection).attachedAtom.Uid.ToString() +
+                    + SS13Server.Singleton.playerManager.GetSessionByConnection(msg.SenderConnection).name +
+                    " - " + SS13Server.Singleton.playerManager.GetSessionByConnection(msg.SenderConnection).attachedEntity.Uid.ToString() +
                     " - " + alignRcv.ToString());
 
-                SendPlacementCancel(SS3DServer.Singleton.playerManager.GetSessionByConnection(msg.SenderConnection).attachedAtom);
+                SendPlacementCancel(SS13Server.Singleton.playerManager.GetSessionByConnection(msg.SenderConnection).attachedEntity);
             }
         }
 
@@ -141,7 +141,7 @@ namespace SS3D_Server.Modules
         /// </summary>
         public void SendPlacementBegin(Entity mob, ushort range, string objectType, PlacementOption alignOption)
         {
-            NetOutgoingMessage message = SS3DNetServer.Singleton.CreateMessage();
+            NetOutgoingMessage message = SS13NetServer.Singleton.CreateMessage();
             message.Write((byte)NetMessage.PlacementManagerMessage);
             message.Write((byte)PlacementManagerMessage.StartPlacement);
             message.Write(range);
@@ -150,9 +150,9 @@ namespace SS3D_Server.Modules
             message.Write((byte)alignOption);
 
             List<ComponentReplyMessage> replies = new List<ComponentReplyMessage>();
-            mob.SendMessage(this, SS3D_shared.GO.ComponentMessageType.GetActorConnection, replies);
-            if (replies.Count > 0 && replies[0].messageType == SS3D_shared.GO.ComponentMessageType.ReturnActorConnection)
-                SS3DNetServer.Singleton.SendMessage(message, (NetConnection)replies[0].paramsList[0], NetDeliveryMethod.ReliableOrdered);
+            mob.SendMessage(this, SS13_Shared.GO.ComponentMessageType.GetActorConnection, replies);
+            if (replies.Count > 0 && replies[0].messageType == SS13_Shared.GO.ComponentMessageType.ReturnActorConnection)
+                SS13NetServer.Singleton.SendMessage(message, (NetConnection)replies[0].paramsList[0], NetDeliveryMethod.ReliableOrdered);
         }
 
         /// <summary>
@@ -160,7 +160,7 @@ namespace SS3D_Server.Modules
         /// </summary>
         public void SendPlacementBegin(Entity mob, ushort range, TileType tileType, PlacementOption alignOption)
         {
-            NetOutgoingMessage message = SS3DNetServer.Singleton.CreateMessage();
+            NetOutgoingMessage message = SS13NetServer.Singleton.CreateMessage();
             message.Write((byte)NetMessage.PlacementManagerMessage);
             message.Write((byte)PlacementManagerMessage.StartPlacement);
             message.Write(range);
@@ -169,9 +169,9 @@ namespace SS3D_Server.Modules
             message.Write((byte)alignOption);
 
             List<ComponentReplyMessage> replies = new List<ComponentReplyMessage>();
-            mob.SendMessage(this, SS3D_shared.GO.ComponentMessageType.GetActorConnection, replies);
-            if (replies.Count > 0 && replies[0].messageType == SS3D_shared.GO.ComponentMessageType.ReturnActorConnection)
-                SS3DNetServer.Singleton.SendMessage(message, (NetConnection)replies[0].paramsList[0], NetDeliveryMethod.ReliableOrdered);
+            mob.SendMessage(this, SS13_Shared.GO.ComponentMessageType.GetActorConnection, replies);
+            if (replies.Count > 0 && replies[0].messageType == SS13_Shared.GO.ComponentMessageType.ReturnActorConnection)
+                SS13NetServer.Singleton.SendMessage(message, (NetConnection)replies[0].paramsList[0], NetDeliveryMethod.ReliableOrdered);
         }
 
         /// <summary>
@@ -179,13 +179,13 @@ namespace SS3D_Server.Modules
         /// </summary>
         public void SendPlacementCancel(Entity mob)
         {
-            NetOutgoingMessage message = SS3DNetServer.Singleton.CreateMessage();
+            NetOutgoingMessage message = SS13NetServer.Singleton.CreateMessage();
             message.Write((byte)NetMessage.PlacementManagerMessage);
             message.Write((byte)PlacementManagerMessage.CancelPlacement);
             List<ComponentReplyMessage> replies = new List<ComponentReplyMessage>();
-            mob.SendMessage(this, SS3D_shared.GO.ComponentMessageType.GetActorConnection, replies);
-            if(replies.Count > 0 && replies[0].messageType == SS3D_shared.GO.ComponentMessageType.ReturnActorConnection)
-                SS3DNetServer.Singleton.SendMessage(message, (NetConnection)replies[0].paramsList[0], NetDeliveryMethod.ReliableOrdered);
+            mob.SendMessage(this, SS13_Shared.GO.ComponentMessageType.GetActorConnection, replies);
+            if(replies.Count > 0 && replies[0].messageType == SS13_Shared.GO.ComponentMessageType.ReturnActorConnection)
+                SS13NetServer.Singleton.SendMessage(message, (NetConnection)replies[0].paramsList[0], NetDeliveryMethod.ReliableOrdered);
         }
 
         /// <summary>

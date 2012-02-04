@@ -4,12 +4,12 @@ using System.Linq;
 using System.Text;
 
 using Lidgren.Network;
-using SS3D_shared;
+using SS13_Shared;
 using ServerServices;
 using ServerInterfaces;
 using SGO;
 
-namespace SS3D_Server.Modules
+namespace SS13_Server.Modules
 {
     public class PlayerManager: IService
     {
@@ -33,20 +33,20 @@ namespace SS3D_Server.Modules
 
         public void SpawnPlayerMob(PlayerSession s)
         {
-            //Spawn the player's atom. There's probably a much better place to do this.
-            Entity a = EntityManager.Singleton.SpawnEntity("HumanMob");
-            Entity human = a;
-            a.Translate(new SS3D_shared.HelperClasses.Vector2(160, 160));
+            //Spawn the player's entity. There's probably a much better place to do this.
+            var a = EntityManager.Singleton.SpawnEntity("HumanMob");
+            var human = a;
+            a.Translate(new SS13_Shared.HelperClasses.Vector2(160, 160));
             if (s.assignedJob != null)
             {
                 foreach (SpawnEquipDefinition def in s.assignedJob.SpawnEquipment)
                 {
-                    Entity newItem = EntityManager.Singleton.SpawnEntity(def.ObjectType);
+                    var newItem = EntityManager.Singleton.SpawnEntity(def.ObjectType);
                     newItem.Translate(human.position); //This is not neccessary once the equipment component is built.
-                    human.SendMessage(this, SS3D_shared.GO.ComponentMessageType.EquipItem, null, newItem);
+                    human.SendMessage(this, SS13_Shared.GO.ComponentMessageType.EquipItem, null, newItem);
                 }
             }
-            s.AttachToAtom(a);
+            s.AttachToEntity(a);
         }
 
         public PlayerSession GetSessionByConnection(NetConnection client)
@@ -81,14 +81,14 @@ namespace SS3D_Server.Modules
             // Ends the session.
             PlayerSession session = GetSessionByConnection(client);
             LogManager.Log(session.name + " disconnected.", LogLevel.Information);
-            //Detach the atom and (dont)delete it.
-            var a = session.attachedAtom;
-            session.DetachFromAtom();
+            //Detach the entity and (dont)delete it.
+            var a = session.attachedEntity;
+            session.DetachFromEntity();
         }
 
         public void SendJoinGameToAll()
         {
-            foreach( PlayerSession s in playerSessions.Values)
+            foreach (var s in playerSessions.Values)
             {
                 s.JoinGame();
             }

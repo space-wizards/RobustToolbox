@@ -7,7 +7,7 @@ using GorgonLibrary;
 using GorgonLibrary.Graphics;
 using ClientResourceManager;
 
-namespace SS3D.Modules.Network
+namespace SS13.Modules.Network
 {
     public class NetworkGrapher
     {

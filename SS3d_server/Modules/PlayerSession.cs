@@ -4,14 +4,14 @@ using System.Linq;
 using System.Text;
 
 using Lidgren.Network;
-using SS3D_Server;
-using SS3D_shared;
-using SS3D_shared.GO;
+using SS13_Server;
+using SS13_Shared;
+using SS13_Shared.GO;
 using SGO;
 using ServerServices;
 using ServerInterfaces;
 
-namespace SS3D_Server.Modules
+namespace SS13_Server.Modules
 {
     public class PlayerSession : IPlayerSession
     {
@@ -20,7 +20,7 @@ namespace SS3D_Server.Modules
         public NetConnection connectedClient;
         public NetConnection ConnectedClient { get { return connectedClient; } }
 
-        public Entity attachedAtom;
+        public Entity attachedEntity;
         public string name = "";
         public SessionStatus status;
         public AdminPermissions adminPermissions;
@@ -42,41 +42,38 @@ namespace SS3D_Server.Modules
                 status = SessionStatus.Zombie;
         }
 
-        public void AttachToAtom(Entity a)
+        public void AttachToEntity(Entity a)
         {
-            DetachFromAtom();
+            DetachFromEntity();
             //a.attachedClient = connectedClient;
             //Add input component.
             a.AddComponent(ComponentFamily.Input, SGO.ComponentFactory.Singleton.GetComponent("KeyBindingInputComponent"));
             a.AddComponent(ComponentFamily.Mover, ComponentFactory.Singleton.GetComponent("PlayerInputMoverComponent"));
-            BasicActorComponent actorComponent = (BasicActorComponent)ComponentFactory.Singleton.GetComponent("BasicActorComponent");
+            var actorComponent = (BasicActorComponent)ComponentFactory.Singleton.GetComponent("BasicActorComponent");
             actorComponent.SetParameter(new ComponentParameter("playersession", typeof(IPlayerSession), this));
             a.AddComponent(ComponentFamily.Actor, actorComponent);
 
-            attachedAtom = a;
+            attachedEntity = a;
             SendAttachMessage();
         }
 
-        public void DetachFromAtom()
+        public void DetachFromEntity()
         {
-            if (attachedAtom != null)
-            {
-                //attachedAtom.attachedClient = null;
-                //attachedAtom.Die();
-                attachedAtom.RemoveComponent(ComponentFamily.Input);
-                attachedAtom.RemoveComponent(ComponentFamily.Mover);
-                attachedAtom.RemoveComponent(ComponentFamily.Actor);
-                attachedAtom = null;
-            }
+            if (attachedEntity == null) return;
+
+            attachedEntity.RemoveComponent(ComponentFamily.Input);
+            attachedEntity.RemoveComponent(ComponentFamily.Mover);
+            attachedEntity.RemoveComponent(ComponentFamily.Actor);
+            attachedEntity = null;
         }
 
         private void SendAttachMessage()
         {
-            NetOutgoingMessage m = SS3DNetServer.Singleton.CreateMessage();
+            NetOutgoingMessage m = SS13NetServer.Singleton.CreateMessage();
             m.Write((byte)NetMessage.PlayerSessionMessage);
-            m.Write((byte)PlayerSessionMessage.AttachToAtom);
-            m.Write(attachedAtom.Uid);
-            SS3DNetServer.Singleton.SendMessage(m, connectedClient);
+            m.Write((byte)PlayerSessionMessage.AttachToEntity);
+            m.Write(attachedEntity.Uid);
+            SS13NetServer.Singleton.SendMessage(m, connectedClient);
         }
 
         public void HandleNetworkMessage(NetIncomingMessage message)
@@ -120,7 +117,7 @@ namespace SS3D_Server.Modules
                         //Need debugging function to add more gas
                     case "save":
                         EntityManager.Singleton.SaveEntities();
-                        SS3DServer.Singleton.map.SaveMap();
+                        SS13Server.Singleton.map.SaveMap();
                         break;
                     default:
                         break;
@@ -134,28 +131,28 @@ namespace SS3D_Server.Modules
         {
             name = _name;
             LogManager.Log("Player set name: " + connectedClient.RemoteEndpoint.Address.ToString() + " -> " + name);
-            if (attachedAtom != null)
+            if (attachedEntity != null)
             {
-                attachedAtom.name = _name;
+                attachedEntity.name = _name;
             }
         }
 
         public void JoinLobby()
         {
-            NetOutgoingMessage m = SS3DNetServer.Singleton.CreateMessage();
+            NetOutgoingMessage m = SS13NetServer.Singleton.CreateMessage();
             m.Write((byte)NetMessage.PlayerSessionMessage);
             m.Write((byte)PlayerSessionMessage.JoinLobby);
-            SS3DNetServer.Singleton.SendMessage(m, connectedClient);
+            SS13NetServer.Singleton.SendMessage(m, connectedClient);
             status = SessionStatus.InLobby;
         }
 
         public void JoinGame()
         {
-            if (connectedClient != null && status != SessionStatus.InGame && SS3DServer.Singleton.runlevel == SS3DServer.RunLevel.Game)
+            if (connectedClient != null && status != SessionStatus.InGame && SS13Server.Singleton.runlevel == SS13Server.RunLevel.Game)
             {
-                NetOutgoingMessage m = SS3DNetServer.Singleton.CreateMessage();
+                NetOutgoingMessage m = SS13NetServer.Singleton.CreateMessage();
                 m.Write((byte)NetMessage.JoinGame);
-                SS3DNetServer.Singleton.SendMessage(m, connectedClient);
+                SS13NetServer.Singleton.SendMessage(m, connectedClient);
 
                 status = SessionStatus.InGame;
             }
@@ -172,12 +169,12 @@ namespace SS3D_Server.Modules
         public void OnDisconnect()
         {
             status = SessionStatus.Disconnected;
-            DetachFromAtom();
+            DetachFromEntity();
         }
 
         public NetOutgoingMessage CreateGuiMessage(GuiComponentType gui)
         {
-            NetOutgoingMessage m = SS3DNetServer.Singleton.CreateMessage();
+            NetOutgoingMessage m = SS13NetServer.Singleton.CreateMessage();
             m.Write((byte)NetMessage.PlayerUiMessage);
             m.Write((byte)UiManagerMessage.ComponentMessage);
             m.Write((byte)gui);

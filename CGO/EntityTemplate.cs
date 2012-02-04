@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Xml.Linq;
-using SS3D_shared;
+using SS13_Shared;
 
 namespace CGO
 {

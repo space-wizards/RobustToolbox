@@ -2,11 +2,11 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
-using SS3D_shared.GO;
+using SS13_Shared.GO;
 using ServerServices.Map;
 using ServerServices;
 using ServerInterfaces;
-using SS3D_shared.HelperClasses;
+using SS13_Shared.HelperClasses;
 
 namespace SGO
 {
@@ -15,7 +15,7 @@ namespace SGO
         public WorktopComponent()
             :base()
         {
-            family = SS3D_shared.GO.ComponentFamily.LargeObject;
+            family = SS13_Shared.GO.ComponentFamily.LargeObject;
         }
 
         public override void RecieveMessage(object sender, ComponentMessageType type, List<ComponentReplyMessage> replies, params object[] list)

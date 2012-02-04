@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
-using SS3D_shared.GO;
+using SS13_Shared.GO;
 
 namespace SGO
 {
@@ -16,7 +16,7 @@ namespace SGO
             family = ComponentFamily.Equippable;
         }
 
-        public override void RecieveMessage(object sender, SS3D_shared.GO.ComponentMessageType type, List<ComponentReplyMessage> replies, params object[] list)
+        public override void RecieveMessage(object sender, SS13_Shared.GO.ComponentMessageType type, List<ComponentReplyMessage> replies, params object[] list)
         {
             switch (type)
             {
@@ -34,7 +34,7 @@ namespace SGO
 
         private void HandleUnEquipped()
         {
-            Owner.AddComponent(SS3D_shared.GO.ComponentFamily.Mover, ComponentFactory.Singleton.GetComponent("BasicMoverComponent"));
+            Owner.AddComponent(SS13_Shared.GO.ComponentFamily.Mover, ComponentFactory.Singleton.GetComponent("BasicMoverComponent"));
             Owner.SendComponentNetworkMessage(this, Lidgren.Network.NetDeliveryMethod.ReliableUnordered, null, EquippableComponentNetMessage.UnEquipped);
             currentWearer = null;
         }
@@ -42,7 +42,7 @@ namespace SGO
         private void HandleEquipped(Entity entity)
         {
             currentWearer = entity;
-            Owner.AddComponent(SS3D_shared.GO.ComponentFamily.Mover, ComponentFactory.Singleton.GetComponent("SlaveMoverComponent"));
+            Owner.AddComponent(SS13_Shared.GO.ComponentFamily.Mover, ComponentFactory.Singleton.GetComponent("SlaveMoverComponent"));
             Owner.SendMessage(this, ComponentMessageType.SlaveAttach, null, entity.Uid);
             Owner.SendComponentNetworkMessage(this, Lidgren.Network.NetDeliveryMethod.ReliableUnordered, null, EquippableComponentNetMessage.Equipped, entity.Uid, wearloc);
         }

@@ -4,7 +4,7 @@ using GorgonLibrary;
 using GorgonLibrary.Graphics;
 using GorgonLibrary.InputDevices;
 
-namespace SS3D.Modules
+namespace SS13.Modules
 {
   /************************************************************************/
   /* base class for program states                                        */

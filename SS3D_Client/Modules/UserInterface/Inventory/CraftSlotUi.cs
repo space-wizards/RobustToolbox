@@ -7,15 +7,15 @@ using GorgonLibrary;
 using GorgonLibrary.Graphics;
 using GorgonLibrary.InputDevices;
 using GorgonLibrary.GUI;
-using SS3D.UserInterface;
+using SS13.UserInterface;
 using Lidgren.Network;
-using SS3D_shared;
-using SS3D_shared.GO;
+using SS13_Shared;
+using SS13_Shared.GO;
 using CGO;
 using ClientResourceManager;
-using SS3D.Modules;
+using SS13.Modules;
 
-namespace SS3D.UserInterface
+namespace SS13.UserInterface
 {
     class CraftSlotUi : GuiComponent
     {

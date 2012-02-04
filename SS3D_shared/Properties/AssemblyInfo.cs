@@ -6,11 +6,11 @@ using System.Security;
 // General Information about an assembly is controlled through the following 
 // set of attributes. Change these attribute values to modify the information
 // associated with an assembly.
-[assembly: AssemblyTitle("SS3D_shared")]
+[assembly: AssemblyTitle("SS13_Shared")]
 [assembly: AssemblyDescription("")]
 [assembly: AssemblyConfiguration("")]
 [assembly: AssemblyCompany("___")]
-[assembly: AssemblyProduct("SS3D_shared")]
+[assembly: AssemblyProduct("SS13_Shared")]
 [assembly: AssemblyCopyright("___")]
 [assembly: AssemblyTrademark("")]
 [assembly: AssemblyCulture("")]

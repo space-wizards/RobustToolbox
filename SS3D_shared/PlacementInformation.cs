@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 
-namespace SS3D_shared.HelperClasses
+namespace SS13_Shared.HelperClasses
 {
     public class PlacementInformation
     {

@@ -12,7 +12,7 @@ using GorgonLibrary.Graphics.Utilities;
 using GorgonLibrary.InputDevices;
 using ClientResourceManager;
 
-namespace SS3D.UserInterface
+namespace SS13.UserInterface
 {
     public class Chatbox : GuiComponent
     {

@@ -2,8 +2,8 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
-using SS3D_shared.HelperClasses;
-using SS3D_shared.GO;
+using SS13_Shared.HelperClasses;
+using SS13_Shared.GO;
 using Lidgren.Network;
 
 namespace SGO
@@ -14,7 +14,7 @@ namespace SGO
         public ClickableComponent()
             :base()
         {
-            family = SS3D_shared.GO.ComponentFamily.Click;
+            family = SS13_Shared.GO.ComponentFamily.Click;
         }
 
         /// <summary>
@@ -23,7 +23,7 @@ namespace SGO
         /// <param name="message"></param>
         public override void HandleNetworkMessage(IncomingEntityComponentMessage message, NetConnection client)
         {
-            if (message.componentFamily == SS3D_shared.GO.ComponentFamily.Click)
+            if (message.componentFamily == SS13_Shared.GO.ComponentFamily.Click)
             {
                 List<ComponentReplyMessage> replies = new List<ComponentReplyMessage>();
                 Owner.SendMessage(this, ComponentMessageType.Click, replies, message.messageParameters[0]);

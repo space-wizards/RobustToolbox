@@ -4,24 +4,24 @@ using System.Linq;
 using System.Text;
 using System.IO;
 using System.Threading;
-using SS3D_Server.Modules;
-using SS3D_Server.Modules.Client;
+using SS13_Server.Modules;
+using SS13_Server.Modules.Client;
 using ServerServices;
-using SS3D_Server.Modules.Chat;
+using SS13_Server.Modules.Chat;
 using System.IO.Compression;
 using Lidgren.Network;
-using SS3D_shared;
+using SS13_Shared;
 using ServerServices.Map;
 
-using SS3D_Server.Modules.Gamemodes;
+using SS13_Server.Modules.Gamemodes;
 using SGO;
 using ServerServices.Tiles;
 
-namespace SS3D_Server
+namespace SS13_Server
 {
-    public class SS3DServer
+    public class SS13Server
     {
-        private NetPeerConfiguration netConfig = new NetPeerConfiguration("SS3D_NetTag");
+        private NetPeerConfiguration netConfig = new NetPeerConfiguration("SS13_NetTag");
         public Dictionary<NetConnection, Client> clientList = new Dictionary<NetConnection, Client>();
         public Map map;
         public ChatManager chatManager;
@@ -42,8 +42,8 @@ namespace SS3D_Server
         }
         bool active = false;
 
-        private static SS3DServer singleton;
-        public static SS3DServer Singleton
+        private static SS13Server singleton;
+        public static SS13Server Singleton
         {
             get
             {
@@ -57,7 +57,7 @@ namespace SS3D_Server
         
         #region Server Settings
         int serverPort = 1212;
-        string serverName = "SS3D Server";
+        string serverName = "SS13 Server";
         string serverMapName = "SavedMap";
         string serverWelcomeMessage = "Welcome to the server!";
         int serverMaxPlayers = 32;
@@ -72,7 +72,7 @@ namespace SS3D_Server
             set { framePeriod = (int)(1000.0f / value); }
         }
 
-        public SS3DServer()
+        public SS13Server()
         {
             runlevel = RunLevel.Init;
             singleton = this;
@@ -122,7 +122,7 @@ namespace SS3D_Server
                 ServiceManager.Singleton.AddService(map);
                 map.InitMap(serverMapName);
 
-                entityManager = new EntityManager(SS3DNetServer.Singleton);
+                entityManager = new EntityManager(SS13NetServer.Singleton);
                 //playerManager = new PlayerManager();
 
                 RoundManager.Singleton.CurrentGameMode.StartGame();
@@ -147,9 +147,9 @@ namespace SS3D_Server
                 BanlistMgr.Singleton.Initialize("BanList.xml");
 
                 netConfig.Port = serverPort;
-                var netServer = new SS3DNetServer(netConfig);
+                var netServer = new SS13NetServer(netConfig);
                 ServiceManager.Singleton.AddService(netServer);
-                SS3DNetServer.Singleton.Start();
+                SS13NetServer.Singleton.Start();
 
                 chatManager = new ChatManager();
                 ServiceManager.Singleton.AddService(chatManager);
@@ -249,9 +249,9 @@ namespace SS3D_Server
             try
             {
                 NetIncomingMessage msg;
-                while ((msg = SS3DNetServer.Singleton.ReadMessage()) != null)
+                while ((msg = SS13NetServer.Singleton.ReadMessage()) != null)
                 {
-                    Console.Title = SS3DNetServer.Singleton.Statistics.SentBytes.ToString() + " " + SS3DNetServer.Singleton.Statistics.ReceivedBytes;
+                    Console.Title = SS13NetServer.Singleton.Statistics.SentBytes.ToString() + " " + SS13NetServer.Singleton.Statistics.ReceivedBytes;
 
                     switch (msg.MessageType)
                     {
@@ -285,7 +285,7 @@ namespace SS3D_Server
                             LogManager.Log("Unhandled type: " + msg.MessageType, LogLevel.Error);
                             break;
                     }
-                    SS3DNetServer.Singleton.Recycle(msg);
+                    SS13NetServer.Singleton.Recycle(msg);
                 }                
             }
             catch (Exception e)
@@ -340,7 +340,7 @@ namespace SS3D_Server
 
         public void SendWelcomeInfo(NetConnection connection)
         {
-            NetOutgoingMessage welcomeMessage = SS3DNetServer.Singleton.CreateMessage();
+            NetOutgoingMessage welcomeMessage = SS13NetServer.Singleton.CreateMessage();
             welcomeMessage.Write((byte)NetMessage.WelcomeMessage);
             welcomeMessage.Write(serverName);
             welcomeMessage.Write(serverPort);
@@ -348,24 +348,24 @@ namespace SS3D_Server
             welcomeMessage.Write(serverMaxPlayers);
             welcomeMessage.Write(serverMapName);
             welcomeMessage.Write(RoundManager.Singleton.CurrentGameMode.Name);
-            SS3DNetServer.Singleton.SendMessage(welcomeMessage, connection, NetDeliveryMethod.ReliableOrdered);
+            SS13NetServer.Singleton.SendMessage(welcomeMessage, connection, NetDeliveryMethod.ReliableOrdered);
             SendNewPlayerCount();
         }
 
         public void SendNewPlayerCount()
         {
-            NetOutgoingMessage playercountMessage = SS3DNetServer.Singleton.CreateMessage();
+            NetOutgoingMessage playercountMessage = SS13NetServer.Singleton.CreateMessage();
             playercountMessage.Write((byte)NetMessage.PlayerCount);
             playercountMessage.Write((byte)clientList.Count);
             foreach (NetConnection conn in clientList.Keys) //Why is this sent to everyone?
             {
-                SS3DNetServer.Singleton.SendMessage(playercountMessage, conn, NetDeliveryMethod.ReliableOrdered);
+                SS13NetServer.Singleton.SendMessage(playercountMessage, conn, NetDeliveryMethod.ReliableOrdered);
             }
         }
 
         public void SendPlayerList(NetConnection connection)
         {
-            NetOutgoingMessage playerListMessage = SS3DNetServer.Singleton.CreateMessage();
+            NetOutgoingMessage playerListMessage = SS13NetServer.Singleton.CreateMessage();
             playerListMessage.Write((byte)NetMessage.PlayerList);
             playerListMessage.Write((byte)clientList.Count);
 
@@ -376,7 +376,7 @@ namespace SS3D_Server
                 playerListMessage.Write((byte)plrSession.status);
                 playerListMessage.Write(clientList[conn].netConnection.AverageRoundtripTime);
             }
-            SS3DNetServer.Singleton.SendMessage(playerListMessage, connection, NetDeliveryMethod.ReliableOrdered);
+            SS13NetServer.Singleton.SendMessage(playerListMessage, connection, NetDeliveryMethod.ReliableOrdered);
         }
 
         public void HandleStatusChanged(NetIncomingMessage msg)
@@ -524,7 +524,7 @@ namespace SS3D_Server
                 case NetMessage.RequestAdminPlayerlist:
                     if (playerManager.GetSessionByConnection(messageBody.SenderConnection).adminPermissions.isAdmin == true)
                     {
-                        NetOutgoingMessage AdminPlayerListMessage = SS3DNetServer.Singleton.CreateMessage();
+                        NetOutgoingMessage AdminPlayerListMessage = SS13NetServer.Singleton.CreateMessage();
                         AdminPlayerListMessage.Write((byte)NetMessage.RequestAdminPlayerlist);
                         AdminPlayerListMessage.Write((byte)clientList.Count);
                         foreach (NetConnection conn in clientList.Keys)
@@ -536,13 +536,13 @@ namespace SS3D_Server
                             AdminPlayerListMessage.Write(plrSession.connectedClient.RemoteEndpoint.Address.ToString());
                             AdminPlayerListMessage.Write(plrSession.adminPermissions.isAdmin);
                         }
-                        SS3DNetServer.Singleton.SendMessage(AdminPlayerListMessage, messageBody.SenderConnection, NetDeliveryMethod.ReliableOrdered);
+                        SS13NetServer.Singleton.SendMessage(AdminPlayerListMessage, messageBody.SenderConnection, NetDeliveryMethod.ReliableOrdered);
                     }
                     else
                     {
-                        NetOutgoingMessage LoginMessage = SS3DNetServer.Singleton.CreateMessage();
+                        NetOutgoingMessage LoginMessage = SS13NetServer.Singleton.CreateMessage();
                         LoginMessage.Write((byte)NetMessage.RequestAdminLogin);
-                        SS3DNetServer.Singleton.SendMessage(LoginMessage, messageBody.SenderConnection, NetDeliveryMethod.ReliableOrdered);
+                        SS13NetServer.Singleton.SendMessage(LoginMessage, messageBody.SenderConnection, NetDeliveryMethod.ReliableOrdered);
                     }
                     break;
                 case NetMessage.RequestAdminKick:
@@ -574,7 +574,7 @@ namespace SS3D_Server
                 case NetMessage.RequestBanList:
                     if (playerManager.GetSessionByConnection(messageBody.SenderConnection).adminPermissions.isAdmin == true)
                     {
-                        NetOutgoingMessage BanListMessage = SS3DNetServer.Singleton.CreateMessage();
+                        NetOutgoingMessage BanListMessage = SS13NetServer.Singleton.CreateMessage();
                         BanListMessage.Write((byte)NetMessage.RequestBanList);
                         BanListMessage.Write(BanlistMgr.Singleton.banlist.List.Count);
                         for (int i = 0; i < BanlistMgr.Singleton.banlist.List.Count; i++)
@@ -591,7 +591,7 @@ namespace SS3D_Server
                             uint minutesLeft = (uint)Math.Truncate(timeLeft.TotalMinutes);
                             BanListMessage.Write(minutesLeft);
                         }
-                        SS3DNetServer.Singleton.SendMessage(BanListMessage, messageBody.SenderConnection, NetDeliveryMethod.ReliableOrdered);
+                        SS13NetServer.Singleton.SendMessage(BanListMessage, messageBody.SenderConnection, NetDeliveryMethod.ReliableOrdered);
                     }
                     break;
                 case NetMessage.RequestAdminUnBan:
@@ -616,20 +616,20 @@ namespace SS3D_Server
                 PlayerSession session =  playerManager.GetSessionByConnection(msg.SenderConnection);
                 session.assignedJob = pickedJob;
 
-                NetOutgoingMessage JobSelectedMessage = SS3DNetServer.Singleton.CreateMessage();
+                NetOutgoingMessage JobSelectedMessage = SS13NetServer.Singleton.CreateMessage();
                 JobSelectedMessage.Write((byte)NetMessage.JobSelected);
                 JobSelectedMessage.Write(pickedJob.Name);
-                SS3DNetServer.Singleton.SendMessage(JobSelectedMessage, msg.SenderConnection, NetDeliveryMethod.ReliableOrdered);
+                SS13NetServer.Singleton.SendMessage(JobSelectedMessage, msg.SenderConnection, NetDeliveryMethod.ReliableOrdered);
             }
         }
 
         public void HandleJobListRequest(NetIncomingMessage msg)
         {
             PlayerSession p = playerManager.GetSessionByConnection(msg.SenderConnection);
-            NetOutgoingMessage JobListMessage = SS3DNetServer.Singleton.CreateMessage();
+            NetOutgoingMessage JobListMessage = SS13NetServer.Singleton.CreateMessage();
             JobListMessage.Write((byte)NetMessage.JobList);
             JobListMessage.Write(JobHandler.Singleton.GetDefinitionsString());
-            SS3DNetServer.Singleton.SendMessage(JobListMessage, msg.SenderConnection, NetDeliveryMethod.ReliableOrdered); //OFF WE GO. WHEEEE.
+            SS13NetServer.Singleton.SendMessage(JobListMessage, msg.SenderConnection, NetDeliveryMethod.ReliableOrdered); //OFF WE GO. WHEEEE.
         }
 
         public void HandleClientName(NetIncomingMessage msg)
@@ -648,7 +648,7 @@ namespace SS3D_Server
         public void SendMap(NetConnection connection)
         {
             LogManager.Log(connection.RemoteEndpoint.Address.ToString() + ": Sending map");
-            NetOutgoingMessage mapMessage = SS3DNetServer.Singleton.CreateMessage();
+            NetOutgoingMessage mapMessage = SS13NetServer.Singleton.CreateMessage();
             mapMessage.Write((byte)NetMessage.SendMap);
 
             //TileType[,] mapObjectTypes = map.GetMapForSending();
@@ -668,7 +668,7 @@ namespace SS3D_Server
                 }
             }
 
-            SS3DNetServer.Singleton.SendMessage(mapMessage, connection, NetDeliveryMethod.ReliableOrdered);
+            SS13NetServer.Singleton.SendMessage(mapMessage, connection, NetDeliveryMethod.ReliableOrdered);
             LogManager.Log(connection.RemoteEndpoint.Address.ToString() + ": Sending map finished with message size: " + mapMessage.LengthBytes + " bytes");
 
             // Lets also send them all the items and mobs.
@@ -682,14 +682,14 @@ namespace SS3D_Server
 
         public void SendChangeTile(int x, int z, TileType newType)
         {
-            NetOutgoingMessage tileMessage = SS3DNetServer.Singleton.CreateMessage();
+            NetOutgoingMessage tileMessage = SS13NetServer.Singleton.CreateMessage();
             //tileMessage.Write((byte)NetMessage.ChangeTile);
             tileMessage.Write(x);
             tileMessage.Write(z);
             tileMessage.Write((byte)newType);
             foreach(NetConnection connection in clientList.Keys)
             {
-                SS3DNetServer.Singleton.SendMessage(tileMessage, connection, NetDeliveryMethod.ReliableOrdered);
+                SS13NetServer.Singleton.SendMessage(tileMessage, connection, NetDeliveryMethod.ReliableOrdered);
                 LogManager.Log(connection.RemoteEndpoint.Address.ToString() + ": Tile Change Being Sent", LogLevel.Debug);
             }
         }
@@ -703,7 +703,7 @@ namespace SS3D_Server
             int i = clientList.Count;
             //Console.WriteLine("Sending to all ("+i+") with size: " + message.LengthBits + " bytes");
 
-            SS3DNetServer.Singleton.SendMessage(message, SS3DNetServer.Singleton.Connections, method, 0);
+            SS13NetServer.Singleton.SendMessage(message, SS13NetServer.Singleton.Connections, method, 0);
         }*/
 
         /*public void SendMessageTo(NetOutgoingMessage message, NetConnection connection, NetDeliveryMethod method = NetDeliveryMethod.ReliableOrdered)
@@ -713,7 +713,7 @@ namespace SS3D_Server
                 return;
             }
             LogManager.Log("Sending to one with size: " + message.LengthBytes + " bytes", LogLevel.Debug);
-            SS3DNetServer.Singleton.SendMessage(message, connection, method);
+            SS13NetServer.Singleton.SendMessage(message, connection, method);
         }*/
     }
 }

@@ -6,7 +6,7 @@ using System.Xml;
 using System.Xml.Serialization;
 using System.IO;
 
-namespace SS3D_shared
+namespace SS13_Shared
 {
     [Serializable]
     public struct SpawnEquipDefinition
@@ -51,27 +51,27 @@ namespace SS3D_shared
         XmlSerializer Serializer = new XmlSerializer(typeof(List<JobDefinition>));
         XmlWriterSettings settings = new XmlWriterSettings();
 
-        public void CreateTemplate()
-        {
-            List<JobDefinition> JobDefinitionsTemplate = new List<JobDefinition>();
+        //public void CreateTemplate()
+        //{
+        //    List<JobDefinition> JobDefinitionsTemplate = new List<JobDefinition>();
 
-            JobDefinition templateDef = new JobDefinition();
-            templateDef.Name = "Security Officer";
-            templateDef.Description = "Keeps the inhabitants of the station safe.";
-            templateDef.SpawnEquipment.Add(new SpawnEquipDefinition(){Location = EquipmentSlot.Outer, ObjectType = "Atom.Item.Wearable.Outer.Armour"});
-            templateDef.SpawnEquipment.Add(new SpawnEquipDefinition() { Location = EquipmentSlot.Inner, ObjectType = "Atom.Item.Wearable.Inner.Jumpsuit.Assistant_Grey" });
-            templateDef.SpawnEquipment.Add(new SpawnEquipDefinition() { Location = EquipmentSlot.Head, ObjectType = "Atom.Item.Wearable.Head.Helmet" });
-            templateDef.SpawnEquipment.Add(new SpawnEquipDefinition() { Location = EquipmentSlot.Feet, ObjectType = "Atom.Item.Wearable.Feet.Shoes" });
+        //    JobDefinition templateDef = new JobDefinition();
+        //    templateDef.Name = "Security Officer";
+        //    templateDef.Description = "Keeps the inhabitants of the station safe.";
+        //    templateDef.SpawnEquipment.Add(new SpawnEquipDefinition(){Location = EquipmentSlot.Outer, ObjectType = "Atom.Item.Wearable.Outer.Armour"});
+        //    templateDef.SpawnEquipment.Add(new SpawnEquipDefinition() { Location = EquipmentSlot.Inner, ObjectType = "Atom.Item.Wearable.Inner.Jumpsuit.Assistant_Grey" });
+        //    templateDef.SpawnEquipment.Add(new SpawnEquipDefinition() { Location = EquipmentSlot.Head, ObjectType = "Atom.Item.Wearable.Head.Helmet" });
+        //    templateDef.SpawnEquipment.Add(new SpawnEquipDefinition() { Location = EquipmentSlot.Feet, ObjectType = "Atom.Item.Wearable.Feet.Shoes" });
 
-            JobDefinitionsTemplate.Add(templateDef);
+        //    JobDefinitionsTemplate.Add(templateDef);
 
-            XmlWriterSettings settings = new XmlWriterSettings();
-            settings.Indent = true;
-            settings.OmitXmlDeclaration = false;
+        //    XmlWriterSettings settings = new XmlWriterSettings();
+        //    settings.Indent = true;
+        //    settings.OmitXmlDeclaration = false;
 
-            XmlWriter writer = XmlTextWriter.Create("JobDefinitions.xml", settings);
-            Serializer.Serialize(writer, JobDefinitionsTemplate);
-        }
+        //    XmlWriter writer = XmlTextWriter.Create("JobDefinitions.xml", settings);
+        //    Serializer.Serialize(writer, JobDefinitionsTemplate);
+        //}
 
         public bool LoadDefinitionsFromFile(string path)
         {

@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using Lidgren.Network;
-using SS3D_shared.GO;
+using SS13_Shared.GO;
 
 namespace SGO
 {
@@ -132,23 +132,22 @@ namespace SGO
         /// <returns></returns>
         public IncomingEntityMessage HandleEntityNetworkMessage(NetIncomingMessage message)
         {
-            int uid = message.ReadInt32();
-            EntityMessage messageType = (EntityMessage)message.ReadByte();
+            var uid = message.ReadInt32();
+            var messageType = (EntityMessage)message.ReadByte();
+            IncomingEntityMessage incomingEntityMessage = IncomingEntityMessage.Null;
             switch (messageType)
             {
                 case EntityMessage.ComponentMessage:
-                    return new IncomingEntityMessage(uid, EntityMessage.ComponentMessage, HandleEntityComponentNetworkMessage(message), message.SenderConnection);
+                    incomingEntityMessage = new IncomingEntityMessage(uid, EntityMessage.ComponentMessage, HandleEntityComponentNetworkMessage(message), message.SenderConnection);
                     break;
                 case EntityMessage.PositionMessage:
                     //TODO: Handle position messages!
                     break;
                 case EntityMessage.ComponentInstantiationMessage:
-                    return new IncomingEntityMessage(uid, EntityMessage.ComponentInstantiationMessage, (ComponentFamily)UnPackParams(message).First(), message.SenderConnection);
-                    break;
-                default:
+                    incomingEntityMessage = new IncomingEntityMessage(uid, EntityMessage.ComponentInstantiationMessage, (ComponentFamily)UnPackParams(message).First(), message.SenderConnection);
                     break;
             }
-            return IncomingEntityMessage.Null;
+            return incomingEntityMessage;
         }
 
         /// <summary>

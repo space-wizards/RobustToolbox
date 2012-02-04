@@ -1,37 +1,23 @@
 ﻿using System;
-using System.IO;
-using System.Linq;
-using System.Reflection;
-using System.Collections.Generic;
-
-using SS3D.Modules;
-
+using System.Drawing;
 using GorgonLibrary;
-using GorgonLibrary.Graphics;
-using GorgonLibrary.InputDevices;
 
-namespace SS3D.Effects
+namespace SS13.Effects
 {
     public class StarScroller
     {
-        private SS3D.Effects.StarScroller.Star[,] _stars;
-        private Random _rnd = new Random();
-
-        public StarScroller()
-        {
-            MakeStars();
-        }
-
-        public struct Star
+        private struct Star
         {
             /// <summary>
             /// Position of the star.
             /// </summary>
             public Vector2D Position;
+
             /// <summary>
             /// Magnitude of the star.
             /// </summary>
-            public System.Drawing.Color Magnitude;
+            public Color Magnitude;
+
             /// <summary>
             /// Vertical delta.
             /// </summary>
@@ -42,12 +28,20 @@ namespace SS3D.Effects
             /// </summary>
             /// <param name="position">Position of the star.</param>
             /// <param name="magnitude">Magnitude of the star.</param>
-            public Star(Vector2D position, System.Drawing.Color magnitude)
+            public Star(Vector2D position, Color magnitude)
             {
                 Position = position;
                 Magnitude = magnitude;
-                VDelta = 0;
+                VDelta = 0.0f;
             }
+        }
+
+        private Star[,] _stars;
+        private Random _rnd = new Random();
+
+        public StarScroller()
+        {
+            MakeStars();
         }
 
         private void MakeStars()

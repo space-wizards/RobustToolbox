@@ -115,17 +115,6 @@ namespace CGO
             return entities.ToArray();
         }
 
-        /// <summary>
-        /// Adds an atom to the entity pool. Compatibility method.
-        /// </summary>
-        /// <param name="e">Entity to add</param>
-        public void AddAtomEntity(Entity e)
-        {
-            ///The UID has already been set by the server..
-            m_entities.Add(e.Uid, e);
-            e.SetNetworkManager(m_entityNetworkManager);
-        }
-
         public void Shutdown()
         {
             FlushEntities();

@@ -7,7 +7,7 @@ using System.IO;
 using System.Xml;
 using System.Xml.Serialization;
 
-namespace SS3D_Server.Modules
+namespace SS13_Server.Modules
 {
     public sealed class ConfigManager
     {
@@ -79,7 +79,7 @@ namespace SS3D_Server.Modules
         public string LogPath = "log.txt";
 
         public int Port = 1212;
-        public string ServerName = "SS3D Server"; 
+        public string ServerName = "SS13 Server"; 
         public string serverMapName = "SavedMap";
         public string serverWelcomeMessage = "Welcome to the server!";
         public int serverMaxPlayers = 32;

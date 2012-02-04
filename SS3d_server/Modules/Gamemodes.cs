@@ -3,11 +3,11 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 
-using SS3D_Server.Modules.Gamemodes;
-using SS3D_Server.Modules;
-using SS3D_Server;
+using SS13_Server.Modules.Gamemodes;
+using SS13_Server.Modules;
+using SS13_Server;
 
-namespace SS3D_Server.Modules.Gamemodes
+namespace SS13_Server.Modules.Gamemodes
 {
     public delegate void GameBeginHandler(IGameMode origin);
     public delegate void GameUpdateHandler(IGameMode origin);
@@ -48,11 +48,11 @@ namespace SS3D_Server.Modules.Gamemodes
         public event GameUpdateHandler OnGameUpdate;
         public event GameEndHandler OnGameEnd;      
 
-        private SS3DServer server;
+        private SS13Server server;
 
         public Gamemode()
         {
-            server = SS3D_Server.SS3DServer.Singleton;
+            server = SS13_Server.SS13Server.Singleton;
             Name = "Gamemode";
             Description = "This is an empty Gamemode";
         }

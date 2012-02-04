@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
-using SS3D_shared.GO;
+using SS13_Shared.GO;
 
 namespace CGO
 {
@@ -10,7 +10,7 @@ namespace CGO
     {
         public EquippableComponent()
         {
-            family = SS3D_shared.GO.ComponentFamily.Equippable;
+            family = SS13_Shared.GO.ComponentFamily.Equippable;
         }
 
         public override void HandleNetworkMessage(IncomingEntityComponentMessage message)
@@ -68,7 +68,7 @@ namespace CGO
             }
         }
 
-        private void SendDrawDepth(SS3D_shared.GO.DrawDepth dd)
+        private void SendDrawDepth(SS13_Shared.GO.DrawDepth dd)
         {
             Owner.SendMessage(this, ComponentMessageType.SetWornDrawDepth, null, dd);
         }

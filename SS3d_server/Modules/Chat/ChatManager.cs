@@ -4,15 +4,13 @@ using System.Linq;
 using System.Text;
 
 using Lidgren.Network;
-using SS3D_shared;
-using SS3D_shared.HelperClasses;
+using SS13_Shared;
+using SS13_Shared.HelperClasses;
 using ServerServices;
 using ServerInterfaces;
 using SGO;
 
-//using SS3d_server.Modules.Mobs;
-
-namespace SS3D_Server.Modules.Chat
+namespace SS13_Server.Modules.Chat
 {
     public class ChatManager : IService, IChatManager
     {
@@ -25,32 +23,32 @@ namespace SS3D_Server.Modules.Chat
             //Read the chat message and pass it on
             ChatChannel channel = (ChatChannel)message.ReadByte();
             string text = message.ReadString();
-            string name = SS3DServer.Singleton.clientList[message.SenderConnection].playerName;
+            string name = SS13Server.Singleton.clientList[message.SenderConnection].playerName;
             LogManager.Log("CHAT- Channel " + channel.ToString() +  " - Player " + name + "Message: " + text + "\n");
 
-            int atomID = 0;
-            if (SS3DServer.Singleton.playerManager.GetSessionByConnection(message.SenderConnection).attachedAtom != null)
-                atomID = SS3DServer.Singleton.playerManager.GetSessionByConnection(message.SenderConnection).attachedAtom.Uid;
+            int entityId = 0;
+            if (SS13Server.Singleton.playerManager.GetSessionByConnection(message.SenderConnection).attachedEntity != null)
+                entityId = SS13Server.Singleton.playerManager.GetSessionByConnection(message.SenderConnection).attachedEntity.Uid;
 
             text = text.Trim(); // Remove whitespace
             if (text[0] == '/')
-                ProcessCommand(text, name, channel, atomID, message.SenderConnection);
+                ProcessCommand(text, name, channel, entityId, message.SenderConnection);
             else
-                SendChatMessage(channel, text, name, atomID);
+                SendChatMessage(channel, text, name, entityId);
         }
 
-        public void SendChatMessage(ChatChannel channel, string text, string name, int atomID)
+        public void SendChatMessage(ChatChannel channel, string text, string name, int entityId)
         {
             string fullmsg = name + ": " + text;
 
-            NetOutgoingMessage message = SS3DNetServer.Singleton.CreateMessage();
+            NetOutgoingMessage message = SS13NetServer.Singleton.CreateMessage();
 
             message.Write((byte)NetMessage.ChatMessage);
             message.Write((byte)channel);
             message.Write(fullmsg);
-            message.Write(atomID);
+            message.Write(entityId);
 
-            SS3DNetServer.Singleton.SendToAll(message);
+            SS13NetServer.Singleton.SendToAll(message);
         }
 
         /// <summary>
@@ -59,8 +57,8 @@ namespace SS3D_Server.Modules.Chat
         /// <param name="text">chat text</param>
         /// <param name="name">player name that sent the chat text</param>
         /// <param name="channel">channel message was recieved on</param>
-        /// <param name="atomID">uid of the atom that sent the message. This will always be a player's attached atom</param>
-        private void ProcessCommand(string text, string name, ChatChannel channel, int atomID, NetConnection client)
+        /// <param name="entityId">uid of the entity that sent the message. This will always be a player's attached entity</param>
+        private void ProcessCommand(string text, string name, ChatChannel channel, int entityId, NetConnection client)
         {
             List<string> args = new List<string>();
 
@@ -70,7 +68,7 @@ namespace SS3D_Server.Modules.Chat
 
             Vector2 position;
             Entity player;
-            player = EntityManager.Singleton.GetEntity(atomID);
+            player = EntityManager.Singleton.GetEntity(entityId);
             if (player == null)
                 position = new Vector2(160, 160);
             else
@@ -91,16 +89,16 @@ namespace SS3D_Server.Modules.Chat
                     if (args.Count > 1 && Convert.ToInt32(args[1]) > 0)
                     {
                         int amount = Convert.ToInt32(args[1]);
-                        SS3DServer.Singleton.map.AddGasAt(SS3DServer.Singleton.map.GetTileArrayPositionFromWorldPosition(position), GasType.Toxin, amount);
+                        SS13Server.Singleton.map.AddGasAt(SS13Server.Singleton.map.GetTileArrayPositionFromWorldPosition(position), GasType.Toxin, amount);
                     }
                     break;
                 case "gasreport":
 
-                    var p = SS3DServer.Singleton.map.GetTileArrayPositionFromWorldPosition(position);
-                    var c = SS3DServer.Singleton.map.GetTileAt(p.X, p.Y).gasCell;
+                    var p = SS13Server.Singleton.map.GetTileArrayPositionFromWorldPosition(position);
+                    var c = SS13Server.Singleton.map.GetTileAt(p.X, p.Y).gasCell;
                     foreach(var g in c.gasses)
                     {
-                        SS3DServer.Singleton.chatManager.SendChatMessage(ChatChannel.Default, g.Key.ToString() + ": " + g.Value.ToString(), "GasReport", 0);
+                        SS13Server.Singleton.chatManager.SendChatMessage(ChatChannel.Default, g.Key.ToString() + ": " + g.Value.ToString(), "GasReport", 0);
                     }
                     
                     break;
@@ -109,8 +107,8 @@ namespace SS3D_Server.Modules.Chat
                         return;
                     else
                         position = player.position;
-                    p = SS3DServer.Singleton.map.GetTileArrayPositionFromWorldPosition(position);
-                    var t = SS3DServer.Singleton.map.GetTileAt(p.X, p.Y);
+                    p = SS13Server.Singleton.map.GetTileArrayPositionFromWorldPosition(position);
+                    var t = SS13Server.Singleton.map.GetTileAt(p.X, p.Y);
                     if (args.Count > 1 && Convert.ToInt32(args[1]) > 0)
                     {
                         for (int i = 0; i <= Convert.ToInt32(args[1]); i++)
@@ -124,7 +122,7 @@ namespace SS3D_Server.Modules.Chat
                     break;
                 default:
                     string message = "Command '" + command + "' not recognized.";
-                    SendChatMessage(channel, message, name, atomID);
+                    SendChatMessage(channel, message, name, entityId);
                     break;
             }
         }

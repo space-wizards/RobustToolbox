@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
-using SS3D_shared.GO;
+using SS13_Shared.GO;
 using Lidgren.Network;
 
 namespace SGO
@@ -28,7 +28,7 @@ namespace SGO
 
         public SpriteComponent()
         {
-            family = SS3D_shared.GO.ComponentFamily.Renderable;
+            family = SS13_Shared.GO.ComponentFamily.Renderable;
         }
 
         public override void HandleInstantiationMessage(NetConnection netConnection)

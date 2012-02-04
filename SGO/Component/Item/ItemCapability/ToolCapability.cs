@@ -9,8 +9,8 @@ namespace SGO.Component.Item.ItemCapability
     {
         public ToolCapability()
         {
-            CapabilityType = SS3D_shared.GO.ItemCapabilityType.Tool;
-            verbs.Add(0, SS3D_shared.GO.ItemCapabilityVerb.Hit);
+            CapabilityType = SS13_Shared.GO.ItemCapabilityType.Tool;
+            verbs.Add(0, SS13_Shared.GO.ItemCapabilityVerb.Hit);
             capabilityName = "ToolCapability";
         }
     }

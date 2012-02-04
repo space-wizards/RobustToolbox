@@ -22,9 +22,9 @@ using GorgonLibrary.Graphics.Utilities;
 
 using Drawing = System.Drawing;
 
-using SS3D.States;
-using SS3D.Modules;
-using SS3D.UserInterface;
+using SS13.States;
+using SS13.Modules;
+using SS13.UserInterface;
 
 using Lidgren.Network;
 
@@ -37,7 +37,7 @@ using ClientResourceManager;
 using ClientServices.Map;
 using ClientServices.Map.Tiles;
 
-namespace SS3D
+namespace SS13
 {
     public partial class MainWindow : Form
     {
@@ -48,18 +48,11 @@ namespace SS3D
         private StateManager stateMgr;
         private Program prg;
         private PlacementOption alignType = PlacementOption.AlignNone;
-        private Type atomSpawnType = null;
         private Type tileSpawnType;
         public bool editMode = false;
-        public Dictionary<string, Type> atomTypes;
         #endregion
 
         #region Properties
-        public Type GetAtomSpawnType()
-        {
-            return atomSpawnType;
-        }
-
         public Type GetTileSpawnType()
         {
             return tileSpawnType;
@@ -194,8 +187,8 @@ namespace SS3D
             {
                 ConfigManager.Singleton.Configuration.PlayerName = PlayerName_TextBox.Text;
                 ConfigManager.Singleton.Save();
-                ((SS3D.States.ConnectMenu)stateMgr.mCurrentState).ipTextboxIP = toolStripTextBox1.Text;
-                ((SS3D.States.ConnectMenu)stateMgr.mCurrentState).StartConnect();
+                ((SS13.States.ConnectMenu)stateMgr.mCurrentState).ipTextboxIP = toolStripTextBox1.Text;
+                ((SS13.States.ConnectMenu)stateMgr.mCurrentState).StartConnect();
                 connectToolStripMenuItem.Enabled = false;
                 disconnectToolStripMenuItem.Enabled = true;
                 menuToolStripMenuItem.HideDropDown();
@@ -205,7 +198,7 @@ namespace SS3D
         private void disconnectToolStripMenuItem_Click(object sender, EventArgs e)
         {
             prg.mNetworkMgr.Disconnect();
-            stateMgr.RequestStateChange(typeof(SS3D.States.ConnectMenu));
+            stateMgr.RequestStateChange(typeof(SS13.States.ConnectMenu));
             connectToolStripMenuItem.Enabled = true;
             disconnectToolStripMenuItem.Enabled = false;
             menuToolStripMenuItem.HideDropDown();
@@ -274,7 +267,6 @@ namespace SS3D
         #region Tiles
         private void turfToolStripMenuItem_Click(object sender, EventArgs e)
         {
-            atomSpawnType = null;
             tileSpawnType = typeof(ClientServices.Map.Tiles.Floor.Floor);
             toolStripStatusLabel1.Text = tileSpawnType.ToString();
         }

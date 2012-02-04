@@ -8,8 +8,8 @@
     <ProjectGuid>{835500C3-34D6-4329-954A-5D028D634E90}</ProjectGuid>
     <OutputType>WinExe</OutputType>
     <AppDesignerFolder>Properties</AppDesignerFolder>
-    <RootNamespace>SS3D</RootNamespace>
-    <AssemblyName>SpaceStation3D</AssemblyName>
+    <RootNamespace>SS13</RootNamespace>
+    <AssemblyName>SpaceStation13</AssemblyName>
     <TargetFrameworkVersion>v4.0</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
     <IsWebBootstrapper>false</IsWebBootstrapper>
@@ -105,45 +105,7 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
-    <None Include="Atom\Atom.cs" />
-    <None Include="Atom\AtomManager.cs" />
-    <None Include="Atom\Item\Container\Toolbox.cs" />
-    <None Include="Atom\Item\Item.cs" />
-    <None Include="Atom\Item\Misc\Flashlight.cs" />
-    <None Include="Atom\Item\Tool\Crowbar.cs" />
-    <None Include="Atom\Item\Tool\Tool.cs" />
-    <None Include="Atom\Item\Tool\Welder.cs" />
-    <None Include="Atom\Item\Tool\Wrench.cs" />
-    <None Include="Atom\Item\Wearable\Belt\Belt.cs" />
-    <None Include="Atom\Item\Wearable\Ears\Ears.cs" />
-    <None Include="Atom\Item\Wearable\Eyes\Eyes.cs" />
-    <None Include="Atom\Item\Wearable\Hands\Hands.cs" />
-    <None Include="Atom\Item\Wearable\Head\Head.cs" />
-    <None Include="Atom\Item\Wearable\Feet\Shoes.cs" />
-    <None Include="Atom\Item\Wearable\Head\Helmet.cs" />
-    <None Include="Atom\Item\Wearable\Mask\Mask.cs" />
-    <None Include="Atom\Item\Wearable\Outer\Outer.cs" />
-    <None Include="Atom\Item\Wearable\Feet\Feet.cs" />
-    <None Include="Atom\Item\Wearable\Inner\Inner.cs" />
-    <None Include="Atom\Item\Wearable\Inner\Jumpsuit\Assistant_Grey.cs" />
-    <None Include="Atom\Item\Wearable\Inner\Jumpsuit\Jumpsuit.cs" />
-    <None Include="Atom\Item\Wearable\Outer\Armour.cs" />
-    <None Include="Atom\Item\Wearable\Wearable.cs" />
-    <None Include="Atom\Mob\HelperClasses\Appendage.cs" />
-    <None Include="Atom\Mob\Human.cs" />
-    <None Include="Atom\Mob\Mob.cs" />
-    <None Include="Atom\Object\Atmos\Vent.cs" />
-    <None Include="Atom\Object\Door\Door.cs" />
-    <None Include="Atom\Object\Lights\WallLight.cs" />
-    <None Include="Atom\Object\Locker.cs" />
-    <None Include="Atom\Object\Object.cs" />
-    <None Include="Atom\Object\WallMounted\Extinguisher.cs" />
-    <None Include="Atom\Object\WallMounted\FireAlarm.cs" />
-    <None Include="Atom\Object\WallMounted\MedCabinet.cs" />
-    <None Include="Atom\Object\WallMounted\WallMounted.cs" />
-    <None Include="Atom\Object\Wall\Glass.cs" />
     <Compile Include="Effects\GaussianBlur.cs" />
-    <None Include="Atom\Object\Tables\Worktop.cs" />
     <Compile Include="Effects\StarScroller.cs" />
     <Compile Include="MainWindow.cs">
       <SubType>Form</SubType>
@@ -318,9 +280,9 @@
       <Project>{AE483C29-042E-4226-BA52-D247CE7676DA}</Project>
       <Name>Lidgren.Network</Name>
     </ProjectReference>
-    <ProjectReference Include="..\SS3D_shared\SS3D_shared.csproj">
+    <ProjectReference Include="..\SS3D_shared\SS13_Shared.csproj">
       <Project>{4229D7E3-C3AE-4C0A-B2B1-BB20911150DC}</Project>
-      <Name>SS3D_shared</Name>
+      <Name>SS13_Shared</Name>
       <Private>True</Private>
     </ProjectReference>
   </ItemGroup>

@@ -5,9 +5,9 @@ using System.Linq;
 using GorgonLibrary;
 using GorgonLibrary.Graphics;
 using GorgonLibrary.InputDevices;
-using SS3D.Modules;
+using SS13.Modules;
 
-namespace SS3D.States
+namespace SS13.States
 {
   public class MainMenu : State
   {

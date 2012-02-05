@@ -1,18 +1,19 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Text;
+using ClientServices.Lighting;
+using ClientServices.Resources;
 using SS13_Shared;
 using System.IO;
 using Lidgren.Network;
 using GorgonLibrary;
 using GorgonLibrary.Graphics;
-using ClientResourceManager;
 using ClientInterfaces;
 using ClientServices.Map.Tiles;
 
 namespace ClientServices.Map
 {
-    public class Map : IService
+    public class MapManager : IService
     {
         #region Variables
         public Tile[,] tileArray; // The array holding all the tiles that make up the map
@@ -26,24 +27,29 @@ namespace ClientServices.Map
         private List<Vector2D> cardinalList;
         private static PORTAL_INFO[] portal = new PORTAL_INFO[4];
         public System.Drawing.Point lastVisPoint;
-        private ILightManager lightmanager;
-
-        public ClientServiceType ServiceType { get { return ClientServiceType.Map; } }
+        private ILightManager _lightManager;
 
         public bool needVisUpdate = false;
         public bool loaded = false;
+
+        private IServiceManager _serviceManager;
+        private ResourceManager _resourceManager;
         #endregion
 
-        public Map(ILightManager _lightManager)
+        public MapManager(IServiceManager serviceManager)
         {
+            _serviceManager = serviceManager;
+            _resourceManager = serviceManager.GetService<ResourceManager>();
+            _lightManager = serviceManager.GetService<LightManager>();
+
             tileSprites = new Dictionary<string, Sprite>();
-            tileSprites.Add(floorSpriteName, ResMgr.Singleton.GetSprite(floorSpriteName));
-            tileSprites.Add(wallSideSpriteName, ResMgr.Singleton.GetSprite(wallSideSpriteName));
+            tileSprites.Add(floorSpriteName, _resourceManager.GetSprite(floorSpriteName));
+            tileSprites.Add(wallSideSpriteName, _resourceManager.GetSprite(wallSideSpriteName));
             for (int i = 0; i < 16; i++)
             {
-                tileSprites.Add(wallTopSpriteName + i, ResMgr.Singleton.GetSprite(wallTopSpriteName + i));
+                tileSprites.Add(wallTopSpriteName + i, _resourceManager.GetSprite(wallTopSpriteName + i));
             }
-            tileSprites.Add("space_texture", ResMgr.Singleton.GetSprite("space_texture"));
+            tileSprites.Add("space_texture", _resourceManager.GetSprite("space_texture"));
 
             cardinalList = new List<Vector2D>();
             cardinalList.Add(new Vector2D(0, 0));
@@ -62,11 +68,8 @@ namespace ClientServices.Map
 
 
             lastVisPoint = new System.Drawing.Point(0, 0);
-
-            lightmanager = _lightManager;
         }
         
-
         #region Startup / Loading
 
         public bool LoadNetworkedMap(TileType[,] networkedArray, TileState[,] networkedStates, int _mapWidth, int _mapHeight)
@@ -387,11 +390,11 @@ namespace ClientServices.Map
             switch (type)
             {
                 case TileType.Space:
-                    return new Tiles.Floor.Space(tileSprites["space_texture"], state, tileSpacing, pos, p, lightmanager);
+                    return new Tiles.Floor.Space(tileSprites["space_texture"], state, tileSpacing, pos, p, _lightManager, _resourceManager);
                 case TileType.Floor:
-                    return new Tiles.Floor.Floor(tileSprites[floorSpriteName], state, tileSpacing, pos, p, lightmanager);
+                    return new Tiles.Floor.Floor(tileSprites[floorSpriteName], state, tileSpacing, pos, p, _lightManager, _resourceManager);
                 case TileType.Wall:
-                    return new Tiles.Wall.Wall(tileSprites[wallTopSpriteName + "0"], tileSprites[wallSideSpriteName], state, tileSpacing, pos, p, lightmanager);
+                    return new Tiles.Wall.Wall(tileSprites[wallTopSpriteName + "0"], tileSprites[wallSideSpriteName], state, tileSpacing, pos, p, _lightManager, _resourceManager);
                 default:
                     return null;
             }
@@ -522,7 +525,7 @@ namespace ClientServices.Map
         #region Shutdown
         public void Shutdown()
         {
-            ClientServices.ServiceManager.Singleton.RemoveService(this);
+            _serviceManager.Unregister<MapManager>();
             tileArray = null;
             tileSprites = null;
         }

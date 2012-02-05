@@ -3,11 +3,10 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Drawing;
+using ClientServices.Resources;
 using GorgonLibrary;
 using GorgonLibrary.Graphics;
 using GorgonLibrary.InputDevices;
-using ClientResourceManager;
-
 using SS13.HelperClasses;
 
 using Lidgren.Network;
@@ -52,9 +51,9 @@ namespace SS13.UserInterface
             associatedTemplate = entityTemplate;
             associatedTemplateName = templateName;
 
-            objectSprite = ResMgr.Singleton.GetSprite(SpriteName);
+            objectSprite = ResourceManager.GetSprite(SpriteName);
 
-            font = ResMgr.Singleton.GetFont("CALIBRI");
+            font = ResourceManager.GetFont("CALIBRI");
             name = new TextSprite("Label" + SpriteName, "Name", font);
             name.Color = System.Drawing.Color.Black;
             name.Text = ObjectName;

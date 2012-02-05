@@ -10,7 +10,6 @@ using GorgonLibrary.GUI;
 using SS13.UserInterface;
 using Lidgren.Network;
 using SS13_Shared;
-using ClientResourceManager;
 using System.Diagnostics;
 
 namespace SS13.UserInterface

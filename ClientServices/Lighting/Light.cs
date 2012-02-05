@@ -17,7 +17,7 @@ namespace ClientServices.Lighting
         public LightState state;
         public Vector2D position;
         public Vector2D lastPosition;
-        public Map.Map map;
+        public Map.MapManager map;
         public List<ClientServices.Map.Tiles.Tile> tiles;
 
         #region ILight members
@@ -38,7 +38,7 @@ namespace ClientServices.Lighting
 
         #endregion
 
-        public Light(Map.Map _map, System.Drawing.Color _color, int _range, LightState _state, Vector2D _position)
+        public Light(Map.MapManager _map, System.Drawing.Color _color, int _range, LightState _state, Vector2D _position)
         {
             Random r = new Random();
             map = _map;

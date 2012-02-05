@@ -3,6 +3,9 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Drawing;
+using ClientServices;
+using ClientServices.Resources;
+using ClientServices.Configuration;
 using GorgonLibrary;
 using GorgonLibrary.Graphics;
 using GorgonLibrary.InputDevices;
@@ -11,10 +14,9 @@ using Lidgren.Network;
 using CGO;
 using SS13_Shared.GO;
 using SS13_Shared;
-using ClientConfigManager;
-using ClientResourceManager;
 using SS13.HelperClasses;
 using SS13.Modules.Network;
+
 
 namespace SS13.UserInterface
 {
@@ -62,10 +64,10 @@ namespace SS13.UserInterface
 
             Position = new Point(604, Gorgon.Screen.Height - 205);
 
-            font = ResMgr.Singleton.GetFont("CALIBRI");
+            font = ResourceManager.GetFont("CALIBRI");
             name = new Label("Name");
 
-            backgroundSprite = ResMgr.Singleton.GetSprite("1pxwhite");
+            backgroundSprite = ResourceManager.GetSprite("1pxwhite");
             name.Position = new Point(Position.X + 5, Position.Y + 126);
             name.Text.Color = System.Drawing.Color.Green;
 
@@ -73,8 +75,8 @@ namespace SS13.UserInterface
             healthComponent = new StatHealthComponent(_playerController, size);
             healthComponent.Position = new Point(Position.X + 5, Position.Y + 158); //Photoshop ruler numbers.
 
-            flickSprite0 = ResMgr.Singleton.GetSprite("scanline_statpanel0");
-            flickSprite1 = ResMgr.Singleton.GetSprite("scanline_statpanel1");
+            flickSprite0 = ResourceManager.GetSprite("scanline_statpanel0");
+            flickSprite1 = ResourceManager.GetSprite("scanline_statpanel1");
 
             renderImage = new RenderImage("statpanelRI", width, height, ImageBufferFormats.BufferUnknown);
             renderImage.ClearEachFrame = ClearTargets.None;
@@ -90,7 +92,7 @@ namespace SS13.UserInterface
             backgroundSprite.Opacity = 240;
             backgroundSprite.Draw(new Rectangle(renderPos, new Size(width, height)));
 
-            Sprite statPanelBorder = ResMgr.Singleton.GetSprite("stat_panel");
+            Sprite statPanelBorder = ResourceManager.GetSprite("stat_panel");
             statPanelBorder.Draw(new Rectangle(renderPos.X, renderPos.Y, (int)width, (int)height));
 
             renderImage.EndDrawing();
@@ -140,7 +142,7 @@ namespace SS13.UserInterface
 
             if (noiseStep > 0)
             {
-                Sprite noise = ResMgr.Singleton.GetSprite((noiseStep % 2) == 0 ? "noise_statpanel0" : "noise_statpanel1");
+                Sprite noise = ResourceManager.GetSprite((noiseStep % 2) == 0 ? "noise_statpanel0" : "noise_statpanel1");
                 noiseStep++;
                 if (noiseStep == 10) noiseStep = 0;
                 noise.Opacity = 40;
@@ -170,7 +172,7 @@ namespace SS13.UserInterface
 
             healthComponent.Render();
 
-            name.Text.Text = ConfigManager.Singleton.Configuration.PlayerName;
+            name.Text.Text = ServiceManager.Singleton.GetService<ConfigurationManager>().Configuration.PlayerName;
 
             name.Update();
             name.Render();

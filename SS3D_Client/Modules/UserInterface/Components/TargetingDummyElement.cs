@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Drawing;
+using ClientServices.Resources;
 using GorgonLibrary;
 using GorgonLibrary.Graphics;
 using GorgonLibrary.InputDevices;
@@ -10,7 +11,6 @@ using GorgonLibrary.GUI;
 using SS13.UserInterface;
 using Lidgren.Network;
 using SS13_Shared;
-using ClientResourceManager;
 using SS13.Modules;
 
 namespace SS13.UserInterface
@@ -34,7 +34,7 @@ namespace SS13.UserInterface
             : base(controller)
         {
             myPart = part;
-            elementSprite = ResMgr.Singleton.GetSprite(spriteName);
+            elementSprite = ResourceManager.GetSprite(spriteName);
             Update();
         }
 

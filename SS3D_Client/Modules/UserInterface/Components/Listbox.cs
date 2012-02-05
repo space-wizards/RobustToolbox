@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Drawing;
+using ClientServices.Resources;
 using GorgonLibrary;
 using GorgonLibrary.Graphics;
 using GorgonLibrary.InputDevices;
@@ -10,7 +11,6 @@ using GorgonLibrary.GUI;
 using SS13.UserInterface;
 using Lidgren.Network;
 using SS13_Shared;
-using ClientResourceManager;
 
 namespace SS13.UserInterface
 {
@@ -40,11 +40,11 @@ namespace SS13.UserInterface
             : base()
         {
             Width = width;
-            ListboxLeft = ResMgr.Singleton.GetSprite("button_left");
-            ListboxMain = ResMgr.Singleton.GetSprite("button_middle");
-            ListboxRight = ResMgr.Singleton.GetSprite("button_right");
+            ListboxLeft = ResourceManager.GetSprite("button_left");
+            ListboxMain = ResourceManager.GetSprite("button_middle");
+            ListboxRight = ResourceManager.GetSprite("button_right");
 
-            selectedLabel = new TextSprite("ListboxLabel", "", ResMgr.Singleton.GetFont("CALIBRI"));
+            selectedLabel = new TextSprite("ListboxLabel", "", ResourceManager.GetFont("CALIBRI"));
             selectedLabel.Color = System.Drawing.Color.Black;
 
             dropDown = new ScrollableContainer("ListboxContents", dropDownSize);

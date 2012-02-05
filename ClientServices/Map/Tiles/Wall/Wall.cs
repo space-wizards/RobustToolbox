@@ -3,11 +3,13 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Drawing;
+using ClientServices.Collision;
+using ClientServices.Resources;
 using GorgonLibrary;
 using GorgonLibrary.Graphics;
-using ClientResourceManager;
 using ClientInterfaces;
 using ClientServices;
+using SS13_Shared;
 
 namespace ClientServices.Map.Tiles.Wall
 {
@@ -16,20 +18,23 @@ namespace ClientServices.Map.Tiles.Wall
         private Sprite plainWall;
         private Sprite wallCorner1;
         private Sprite wallCorner2;
+
         public bool IsHardCollidable
         {
             get { return true; }
         }
-        public Wall(Sprite _sprite, Sprite _side, TileState state, float size, Vector2D _position, Point _tilePosition, ILightManager _lightManager)
-            : base(_sprite, _side, state, size, _position, _tilePosition, _lightManager)
+
+        public Wall(Sprite _sprite, Sprite _side, TileState state, float size, Vector2D _position, Point _tilePosition, ILightManager _lightManager, ResourceManager resourceManager)
+            : base(_sprite, _side, state, size, _position, _tilePosition, _lightManager, resourceManager)
         {
             tileType = TileType.Wall;
             name = "Wall";
             sprite = _sprite;
             sideSprite = _side;
-            plainWall = ResMgr.Singleton.GetSprite("wall_side");
-            wallCorner1 = ResMgr.Singleton.GetSprite("wall_corner");
-            wallCorner2 = ResMgr.Singleton.GetSprite("wall_corner2");
+
+            plainWall = resourceManager.GetSprite("wall_side");
+            wallCorner1 = resourceManager.GetSprite("wall_corner");
+            wallCorner2 = resourceManager.GetSprite("wall_corner2");
         }
 
         #region ICollidable Members
@@ -49,7 +54,7 @@ namespace ClientServices.Map.Tiles.Wall
         {
             base.Initialize();
 
-            ICollisionManager collisionManager = (ICollisionManager)ServiceManager.Singleton.GetService(ClientServiceType.CollisionManager);
+            var collisionManager = ServiceManager.Singleton.GetService<CollisionManager>();
             if (collisionManager != null)
                 collisionManager.AddCollidable(this);
         }

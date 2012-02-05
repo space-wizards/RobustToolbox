@@ -2,9 +2,10 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using ClientServices;
+using ClientServices.Resources;
 using GorgonLibrary;
 using GorgonLibrary.Graphics;
-using ClientResourceManager;
 
 namespace SS13.Effects
 {
@@ -88,7 +89,7 @@ namespace SS13.Effects
             intermediateTarget = new RenderImage("gaussianIntermediateTarget", Gorgon.Screen.Width, Gorgon.Screen.Height, ImageBufferFormats.BufferRGB888A8);
             intermediateTargetSprite = new Sprite("gaussianIntermediateTargetSprite", intermediateTarget);
 
-            shader = ResMgr.Singleton.GetShader("GaussianBlur");
+            shader = ServiceManager.Singleton.GetService<ResourceManager>().GetShader("GaussianBlur");
             ComputeKernel(7, 5.0f);
             //ComputeOffsets(Gorgon.Screen.Width, Gorgon.Screen.Height);
             ComputeOffsets(256.0f, 256.0f);

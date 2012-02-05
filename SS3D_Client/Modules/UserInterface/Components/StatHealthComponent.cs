@@ -4,6 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Drawing;
 using System.Reflection;
+using ClientServices.Resources;
 using SS13.HelperClasses;
 using GorgonLibrary;
 using GorgonLibrary.Graphics;
@@ -13,7 +14,6 @@ using Lidgren.Network;
 using CGO;
 using SS13_Shared.GO;
 using SS13_Shared;
-using ClientResourceManager;
 
 namespace SS13.UserInterface
 {
@@ -50,8 +50,8 @@ namespace SS13.UserInterface
             : base(_playerController)
         {
             //componentClass = SS13_Shared.GuiComponentType.???;
-            backgroundSprite = ResMgr.Singleton.GetSprite("1pxwhite");
-            healthDetail = ResMgr.Singleton.GetSprite("stat_health_detail");
+            backgroundSprite = ResourceManager.GetSprite("1pxwhite");
+            healthDetail = ResourceManager.GetSprite("stat_health_detail");
             healthText = new Label("Healthy");
             healthText.Text.Color = Color.DarkBlue;
             size = _size;

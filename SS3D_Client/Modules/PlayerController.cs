@@ -82,7 +82,7 @@ namespace SS13.Modules
                     HandleAttachToEntity(message);
                     break;
                 case PlayerSessionMessage.JoinLobby:
-                    RunningState.prg.mStateMgr.RequestStateChange(typeof(LobbyScreen));
+                    RunningState.Program.StateManager.RequestStateChange(typeof(LobbyScreen));
                     break;
                 default:
                     break;
@@ -120,12 +120,12 @@ namespace SS13.Modules
         /// <param name="uid">a target entity's uid</param>
         public void SendVerb(string verb, int uid)
         {
-            NetOutgoingMessage message = RunningState.prg.mNetworkMgr.netClient.CreateMessage();
+            NetOutgoingMessage message = RunningState.Program.NetworkManager.netClient.CreateMessage();
             message.Write((byte)NetMessage.PlayerSessionMessage);
             message.Write((byte)PlayerSessionMessage.Verb);
             message.Write(verb);
             message.Write(uid);
-            RunningState.prg.mNetworkMgr.SendMessage(message, NetDeliveryMethod.ReliableOrdered);
+            RunningState.Program.NetworkManager.SendMessage(message, NetDeliveryMethod.ReliableOrdered);
         }
 
         private void HandleAttachToEntity(NetIncomingMessage message)

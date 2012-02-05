@@ -1,22 +1,21 @@
 ﻿using System;
-
+using ClientServices;
+using ClientServices.Resources;
+using ClientServices.Configuration;
 using Lidgren.Network;
 
 using SS13.Modules;
 using SS13.Modules.Network;
 
 using System.Collections.Generic;
-using System.Reflection;
 
 using GorgonLibrary;
 using GorgonLibrary.Graphics;
 using GorgonLibrary.InputDevices;
 using SS13.UserInterface;
 using SS13_Shared;
-using System.Linq;
-using ClientConfigManager;
-using ClientResourceManager;
 using ClientServices.Map;
+using SS13.HelperClasses;
 
 namespace SS13.States
 {
@@ -45,57 +44,61 @@ namespace SS13.States
 
         TextSprite lobbyText;
 
+        private UiManager _uiManager;
+
         public LobbyScreen()
         {
         }
 
-        public override bool Startup(Program _prg)
+        public override bool Startup(Program program)
         {
-            prg = _prg;
-            mStateMgr = prg.mStateMgr;
+            Program = program;
+            mStateMgr = program.StateManager;
             PlayerController.Initialize(this);
             playerController = PlayerController.Singleton;
 
-            UiManager.Singleton.DisposeAllComponents();
+            _uiManager = ServiceManager.Singleton.GetService<UiManager>();
 
-            prg.mNetworkMgr.MessageArrived += new NetworkMsgHandler(mNetworkMgr_MessageArrived);
+            _uiManager.DisposeAllComponents();
+
+            Program.NetworkManager.MessageArrived += new NetworkMsgHandler(mNetworkMgr_MessageArrived);
 
             lobbyChat = new SS13.UserInterface.Chatbox("lobbyChat");
             lobbyChat.TextSubmitted += new SS13.UserInterface.Chatbox.TextSubmitHandler(lobbyChat_TextSubmitted);
 
-            UiManager.Singleton.Components.Add(lobbyChat);
+            _uiManager.Components.Add(lobbyChat);
 
-            lobbyText = new TextSprite("lobbyText", "", ResMgr.Singleton.GetFont("CALIBRI"));
+            lobbyText = new TextSprite("lobbyText", "", ServiceManager.Singleton.GetService<ResourceManager>().GetFont("CALIBRI"));
             lobbyText.Color = System.Drawing.Color.Black;
             lobbyText.ShadowColor = System.Drawing.Color.DimGray;
             lobbyText.Shadowed = true;
             lobbyText.ShadowOffset = new Vector2D(1, 1);
 
-            NetworkManager netMgr = prg.mNetworkMgr;
-            NetOutgoingMessage message = netMgr.netClient.CreateMessage();
+            var netMgr = program.NetworkManager;
+            var message = netMgr.netClient.CreateMessage();
             message.Write((byte)NetMessage.WelcomeMessage); //Request Welcome msg.
             netMgr.netClient.SendMessage(message, NetDeliveryMethod.ReliableOrdered);
 
-            prg.mNetworkMgr.SendClientName(ConfigManager.Singleton.Configuration.PlayerName); //Send name.
+            Program.NetworkManager.SendClientName(ServiceManager.Singleton.GetService<ConfigurationManager>().Configuration.PlayerName); //Send name.
 
-            NetOutgoingMessage playerListMsg = netMgr.netClient.CreateMessage();
+            var playerListMsg = netMgr.netClient.CreateMessage();
             playerListMsg.Write((byte)NetMessage.PlayerList); //Request Playerlist.
             netMgr.netClient.SendMessage(playerListMsg, NetDeliveryMethod.ReliableOrdered);
 
             playerListTime = DateTime.Now.AddSeconds(playerListRefreshDelaySec);
 
-            NetOutgoingMessage jobListMsg = netMgr.netClient.CreateMessage();
+            var jobListMsg = netMgr.netClient.CreateMessage();
             jobListMsg.Write((byte)NetMessage.JobList); //Request Joblist.
             netMgr.netClient.SendMessage(jobListMsg, NetDeliveryMethod.ReliableOrdered);
 
-            Button joinButton = new Button("Join Game");
+            var joinButton = new Button("Join Game");
             joinButton.Clicked += new Button.ButtonPressHandler(joinButt_Clicked);
             joinButton.Position = new System.Drawing.Point(605 - joinButton.ClientArea.Width - 5, 230 - joinButton.ClientArea.Height - 5);
-            UiManager.Singleton.Components.Add(joinButton);
+            _uiManager.Components.Add(joinButton);
 
             jobButtonContainer = new ScrollableContainer("LobbyJobCont", new System.Drawing.Size(450, 400));
             jobButtonContainer.Position = new System.Drawing.Point(630, 35);
-            UiManager.Singleton.Components.Add(jobButtonContainer);
+            _uiManager.Components.Add(jobButtonContainer);
 
             Gorgon.Screen.Clear();
 
@@ -109,7 +112,7 @@ namespace SS13.States
             playerController.SendVerb("joingame", 0);
         }
 
-        void lobbyChat_TextSubmitted(SS13.UserInterface.Chatbox Chatbox, string Text)
+        void lobbyChat_TextSubmitted(Chatbox Chatbox, string Text)
         {
             SendLobbyChat(Text);
         }
@@ -145,7 +148,7 @@ namespace SS13.States
                 Pos += 20;
             }
 
-            UiManager.Singleton.Render();
+            _uiManager.Render();
 
             return;
         }
@@ -164,7 +167,7 @@ namespace SS13.States
                     if (statMsg == NetConnectionStatus.Disconnected)
                     {
                         string discMsg = msg.ReadString();
-                        UiManager.Singleton.Components.Add(new DisconnectedScreenBlocker(mStateMgr, discMsg));
+                        _uiManager.Components.Add(new DisconnectedScreenBlocker(mStateMgr, discMsg));
                     }
                     break;
                 case NetIncomingMessageType.Data:
@@ -234,11 +237,11 @@ namespace SS13.States
 
         void current_Clicked(JobSelectButton sender)
         {
-            NetOutgoingMessage playerJobSpawnMsg = prg.mNetworkMgr.netClient.CreateMessage();
+            NetOutgoingMessage playerJobSpawnMsg = Program.NetworkManager.netClient.CreateMessage();
             JobDefinition picked = (JobDefinition)sender.UserData;
             playerJobSpawnMsg.Write((byte)NetMessage.RequestJob); //Request job.
             playerJobSpawnMsg.Write(picked.Name);
-            prg.mNetworkMgr.netClient.SendMessage(playerJobSpawnMsg, NetDeliveryMethod.ReliableOrdered);
+            Program.NetworkManager.netClient.SendMessage(playerJobSpawnMsg, NetDeliveryMethod.ReliableOrdered);
         }
 
         private void HandlePlayerList(NetIncomingMessage msg)
@@ -267,30 +270,30 @@ namespace SS13.States
 
         public void SendLobbyChat(string text)
         {
-            NetOutgoingMessage message = prg.mNetworkMgr.netClient.CreateMessage();
+            NetOutgoingMessage message = Program.NetworkManager.netClient.CreateMessage();
             message.Write((byte)NetMessage.ChatMessage);
             message.Write((byte)ChatChannel.Lobby);
             message.Write(text);
 
-            prg.mNetworkMgr.SendMessage(message, NetDeliveryMethod.ReliableUnordered);
+            Program.NetworkManager.SendMessage(message, NetDeliveryMethod.ReliableUnordered);
         }
 
         public override void Shutdown()
         {
-            UiManager.Singleton.DisposeAllComponents();
+            _uiManager.DisposeAllComponents();
             //UIDesktop.Singleton.Dispose();
-            prg.mNetworkMgr.MessageArrived -= new NetworkMsgHandler(mNetworkMgr_MessageArrived);
+            Program.NetworkManager.MessageArrived -= new NetworkMsgHandler(mNetworkMgr_MessageArrived);
             RenderTargetCache.DestroyAll();
         }
 
         public override void Update(FrameEventArgs e)
         {
-            UiManager.Singleton.Update();
+            _uiManager.Update();
             if (playerListTime.CompareTo(DateTime.Now) < 0)
             {
-                NetOutgoingMessage playerListMsg = prg.mNetworkMgr.netClient.CreateMessage();
+                NetOutgoingMessage playerListMsg = Program.NetworkManager.netClient.CreateMessage();
                 playerListMsg.Write((byte)NetMessage.PlayerList); //Request Playerlist.
-                prg.mNetworkMgr.netClient.SendMessage(playerListMsg, NetDeliveryMethod.ReliableOrdered);
+                Program.NetworkManager.netClient.SendMessage(playerListMsg, NetDeliveryMethod.ReliableOrdered);
 
                 playerListTime = DateTime.Now.AddSeconds(playerListRefreshDelaySec);
             }
@@ -318,26 +321,26 @@ namespace SS13.States
  
         public override void KeyDown(KeyboardInputEventArgs e)
         {
-            UiManager.Singleton.KeyDown(e);
+            _uiManager.KeyDown(e);
         }
         public override void KeyUp(KeyboardInputEventArgs e)
         {
         }
         public override void MouseUp(MouseInputEventArgs e)
         {
-            UiManager.Singleton.MouseUp(e);
+            _uiManager.MouseUp(e);
         }
         public override void MouseDown(MouseInputEventArgs e)
         {
-            UiManager.Singleton.MouseDown(e);
+            _uiManager.MouseDown(e);
         }
         public override void MouseMove(MouseInputEventArgs e)
         {
-            UiManager.Singleton.MouseMove(e);
+            _uiManager.MouseMove(e);
         }
         public override void MouseWheelMove(MouseInputEventArgs e)
         {
-            UiManager.Singleton.MouseWheelMove(e);
+            _uiManager.MouseWheelMove(e);
         }
         #endregion
     }

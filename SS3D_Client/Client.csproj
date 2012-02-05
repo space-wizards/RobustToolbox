@@ -114,7 +114,6 @@
       <DependentUpon>MainWindow.cs</DependentUpon>
     </Compile>
     <Compile Include="HelperClasses\InterpolationPacket.cs" />
-    <Compile Include="Modules\CollisionManager.cs" />
     <Compile Include="Modules\Network\NetworkGrapher.cs" />
     <Compile Include="Modules\PlacementManager.cs" />
     <Compile Include="Modules\Network\NetworkManager.cs" />
@@ -167,9 +166,7 @@
     </Compile>
     <Compile Include="States\ConnectMenu.cs" />
     <Compile Include="States\GameScreen.cs" />
-    <Compile Include="States\LoadingScreen.cs" />
     <Compile Include="States\LobbyScreen.cs" />
-    <Compile Include="States\MainMenu.cs" />
   </ItemGroup>
   <ItemGroup>
     <BootstrapperPackage Include="Microsoft.Net.Client.3.5">
@@ -256,17 +253,9 @@
       <Project>{6C778741-98D8-48EB-835A-293077AF0E07}</Project>
       <Name>ClientGameObject</Name>
     </ProjectReference>
-    <ProjectReference Include="..\ClientConfigManager\ClientConfigManager.csproj">
-      <Project>{0FA996EF-1199-47E1-9AEB-FE8858DEFB2D}</Project>
-      <Name>ClientConfigManager</Name>
-    </ProjectReference>
     <ProjectReference Include="..\ClientInterfaces\ClientInterfaces.csproj">
       <Project>{B31E7B59-7066-4186-AB18-B1BB6DE0E537}</Project>
       <Name>ClientInterfaces</Name>
-    </ProjectReference>
-    <ProjectReference Include="..\ClientResourceManager\ClientResourceManager.csproj">
-      <Project>{37D792AE-0514-44BE-81E0-58EA28E26BB9}</Project>
-      <Name>ClientResourceManager</Name>
     </ProjectReference>
     <ProjectReference Include="..\ClientServices\ClientServices.csproj">
       <Project>{7F85F20C-E2B5-455D-A1CA-76ED000D25EA}</Project>

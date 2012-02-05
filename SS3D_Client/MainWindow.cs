@@ -1,116 +1,121 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.ComponentModel;
-using System.Data;
 using System.Drawing;
-using System.Linq;
-using System.Text;
-using System.Reflection;
 using System.Windows.Forms;
-
-using System.IO;
-using System.Xml;
-using System.Xml.Serialization;
-
+using ClientServices;
+using ClientServices.Configuration;
+using ClientServices.Resources;
 using GorgonLibrary;
 using GorgonLibrary.Graphics;
 using GorgonLibrary.InputDevices;
-using GorgonLibrary.FileSystems;
-using GorgonLibrary.Framework;
-using GorgonLibrary.GUI;
-using GorgonLibrary.Graphics.Utilities;
-
-using Drawing = System.Drawing;
-
 using SS13.States;
 using SS13.Modules;
 using SS13.UserInterface;
-
-using Lidgren.Network;
-
-using CGO;
-using System.Security;
-using System.Security.Permissions;
 using ClientServices.Input;
-using ClientConfigManager;
-using ClientResourceManager;
-using ClientServices.Map;
-using ClientServices.Map.Tiles;
 
 namespace SS13
 {
     public partial class MainWindow : Form
     {
         #region Fields
-        private Input _input = null;								// Input devices interface.
-        private Mouse _mouse = null;								// Mouse interface.
-        private Keyboard _keyboard = null;							// Keyboard interface.
-        private StateManager stateMgr;
-        private Program prg;
-        private PlacementOption alignType = PlacementOption.AlignNone;
-        private Type tileSpawnType;
-        public bool editMode = false;
+
+        private readonly Program _program;
+        private readonly StateManager _stateManager;
+        private Input _input;
+        
         #endregion
 
         #region Properties
-        public Type GetTileSpawnType()
-        {
-            return tileSpawnType;
-        }
+
+        public bool EditMode { get; set; }
+
         #endregion
 
         #region Methods
+
         #region Constructors
-        public MainWindow(Program _prg)
+
+        public MainWindow(Program program)
         {
-            prg = _prg;
-            stateMgr = prg.mStateMgr;
+            _program = program;
+            _stateManager = _program.StateManager;
             InitializeComponent();
         }
+
         #endregion
 
         #region EventHandlers
-        private void Gorgon_Idle(object sender, FrameEventArgs e)
+
+        private void GorgonIdle(object sender, FrameEventArgs e)
         {
-            // Update networking
-            prg.mNetworkMgr.UpdateNetwork();
+            _program.NetworkManager.UpdateNetwork();
 
-            // Update the state manager - this will update the active state.
-            prg.mStateMgr.Update(e);
+            _stateManager.Update(e);
 
-            //Update the other NEW GUI shit.
-            UiManager.Singleton.Update();
-            UiManager.Singleton.Render();
+            ServiceManager.Singleton.GetService<UiManager>().Update();
+            ServiceManager.Singleton.GetService<UiManager>().Render();
 
-            prg.NetGrapher.Update();
+            _program.NetGrapher.Update();
         }
 
-        private void MainWindow_Load(object sender, EventArgs e)
+        private void MainWindowLoad(object sender, EventArgs e)
         {
             SetupGorgon();
             SetupInput();
 
-            ResMgr.Singleton.LoadResourceZip(@"..\\..\\..\\Media\\ResourcePack.zip");
+            // Load Resources.
+            ServiceManager.Singleton.Register<ResourceManager>();
+            ServiceManager.Singleton.GetService<ResourceManager>().LoadResourceZip(@"..\\..\\..\\Media\\ResourcePack.zip");
 
-            SetupUserInterface();
+            PlayerName_TextBox.Text = ServiceManager.Singleton.GetService<ConfigurationManager>().Configuration.PlayerName;
 
-            PlayerName_TextBox.Text = ConfigManager.Singleton.Configuration.PlayerName;
+            Gorgon.Go();
 
-            Gorgon.Go(); //GO MUTHAFUCKA
-
-            stateMgr.Startup(typeof(ConnectMenu));
+            _stateManager.Startup(typeof(ConnectMenu));
         }
 
-        void MainWindow_ResizeEnd(object sender, EventArgs e)
+        private void MainWindowResizeEnd(object sender, EventArgs e)
         {
-            _mouse.SetPositionRange(0, 0, Gorgon.CurrentClippingViewport.Width, Gorgon.CurrentClippingViewport.Height);
-            stateMgr.mCurrentState.FormResize();
+            _input.Mouse.SetPositionRange(0, 0, Gorgon.CurrentClippingViewport.Width, Gorgon.CurrentClippingViewport.Height);
+            _stateManager.CurrentState.FormResize();
         }
 
-        private void MainWindow_FormClosing(object sender, FormClosingEventArgs e)
+        private void MainWindowFormClosing(object sender, FormClosingEventArgs e)
         {
-            if (disconnectToolStripMenuItem.Enabled) { prg.mNetworkMgr.Disconnect(); }
+            if (disconnectToolStripMenuItem.Enabled) { _program.NetworkManager.Disconnect(); }
         }
+
+        private void QuitToolStripMenuItemClick(object sender, EventArgs e)
+        {
+            Gorgon.Terminate();
+            _stateManager.Shutdown();
+            Environment.Exit(0);
+        }
+
+        private void ToolStripTextBox1KeyPress(object sender, KeyPressEventArgs e)
+        {
+            if (e.KeyChar != '\r') return;
+
+            ServiceManager.Singleton.GetService<ConfigurationManager>().Configuration.PlayerName = PlayerName_TextBox.Text;
+            ServiceManager.Singleton.GetService<ConfigurationManager>().Save();
+
+            ((ConnectMenu)_stateManager.CurrentState).IpAddress = toolStripTextBox1.Text;
+            ((ConnectMenu)_stateManager.CurrentState).StartConnect();
+
+            connectToolStripMenuItem.Enabled = false;
+            disconnectToolStripMenuItem.Enabled = true;
+            menuToolStripMenuItem.HideDropDown();
+        }
+
+        private void DisconnectToolStripMenuItemClick(object sender, EventArgs e)
+        {
+            _program.NetworkManager.Disconnect();
+            _stateManager.RequestStateChange(typeof(ConnectMenu));
+            connectToolStripMenuItem.Enabled = true;
+            disconnectToolStripMenuItem.Enabled = false;
+            menuToolStripMenuItem.HideDropDown();
+        }
+
+        #region Input Handling
 
         /// <summary>
         /// Handles any keydown events.
@@ -119,7 +124,7 @@ namespace SS13
         /// <param name="e">The <see cref="GorgonLibrary.InputDevices.KeyboardInputEventArgs"/> instance containing the event data.</param>
         private void KeyDownEvent(object sender, KeyboardInputEventArgs e)
         {
-            stateMgr.KeyDown(e);
+            _stateManager.KeyDown(e);
         }
 
         /// <summary>
@@ -129,7 +134,7 @@ namespace SS13
         /// <param name="e">The <see cref="GorgonLibrary.InputDevices.KeyboardInputEventArgs"/> instance containing the event data.</param>
         private void KeyUpEvent(object sender, KeyboardInputEventArgs e)
         {
-            stateMgr.KeyUp(e);
+            _stateManager.KeyUp(e);
         }
 
         /// <summary>
@@ -139,7 +144,7 @@ namespace SS13
         /// <param name="e">The <see cref="GorgonLibrary.InputDevices.MouseInputEventArgs"/> instance containing the event data.</param>
         private void MouseWheelMoveEvent(object sender, MouseInputEventArgs e)
         {
-            stateMgr.MouseWheelMove(e);
+            _stateManager.MouseWheelMove(e);
         }
 
         /// <summary>
@@ -149,7 +154,7 @@ namespace SS13
         /// <param name="e">The <see cref="GorgonLibrary.InputDevices.MouseInputEventArgs"/> instance containing the event data.</param>
         private void MouseMoveEvent(object sender, MouseInputEventArgs e)
         {
-            stateMgr.MouseMove(e);
+            _stateManager.MouseMove(e);
         }
 
         /// <summary>
@@ -160,7 +165,7 @@ namespace SS13
         private void MouseDownEvent(object sender, MouseInputEventArgs e)
         {
             if (e.Position.Y > menuStrip1.Height)
-                stateMgr.MouseDown(e);
+                _stateManager.MouseDown(e);
         }
 
         /// <summary>
@@ -171,128 +176,58 @@ namespace SS13
         private void MouseUpEvent(object sender, MouseInputEventArgs e)
         {
             if (e.Position.Y > menuStrip1.Height)
-                stateMgr.MouseUp(e);
+                _stateManager.MouseUp(e);
         }
 
-        private void quitToolStripMenuItem_Click(object sender, EventArgs e)
-        {
-            Gorgon.Terminate();
-            stateMgr.Shutdown();
-            Environment.Exit(0);
-        }
-
-        private void toolStripTextBox1_KeyPress(object sender, KeyPressEventArgs e)
-        {
-            if (e.KeyChar == '\r')
-            {
-                ConfigManager.Singleton.Configuration.PlayerName = PlayerName_TextBox.Text;
-                ConfigManager.Singleton.Save();
-                ((SS13.States.ConnectMenu)stateMgr.mCurrentState).ipTextboxIP = toolStripTextBox1.Text;
-                ((SS13.States.ConnectMenu)stateMgr.mCurrentState).StartConnect();
-                connectToolStripMenuItem.Enabled = false;
-                disconnectToolStripMenuItem.Enabled = true;
-                menuToolStripMenuItem.HideDropDown();
-            }
-        }
-
-        private void disconnectToolStripMenuItem_Click(object sender, EventArgs e)
-        {
-            prg.mNetworkMgr.Disconnect();
-            stateMgr.RequestStateChange(typeof(SS13.States.ConnectMenu));
-            connectToolStripMenuItem.Enabled = true;
-            disconnectToolStripMenuItem.Enabled = false;
-            menuToolStripMenuItem.HideDropDown();
-        }
         #endregion
 
-        #region Private
+        #endregion
+
+        #region Privates
+
         private void SetupGorgon()
         {
-            this.Size = new Drawing.Size((int)ConfigManager.Singleton.Configuration.DisplayWidth, (int)ConfigManager.Singleton.Configuration.DisplayHeight);
+            var configuration = ServiceManager.Singleton.GetService<ConfigurationManager>().Configuration;
+            Size = new Size((int)configuration.DisplayWidth, (int)configuration.DisplayHeight);
 
             Gorgon.Initialize(true, false);
             Gorgon.SetMode(this);
             Gorgon.AllowBackgroundRendering = true;
             Gorgon.Screen.BackgroundColor = Color.FromArgb(50, 50, 50);
-
             Gorgon.CurrentClippingViewport = new Viewport(0, 20, Gorgon.Screen.Width, Gorgon.Screen.Height - 20);
-            PreciseTimer preciseTimer = new PreciseTimer();
+
             Gorgon.MinimumFrameTime = PreciseTimer.FpsToMilliseconds(66);
-            Gorgon.Idle += new FrameEventHandler(Gorgon_Idle);
+            Gorgon.Idle += new FrameEventHandler(GorgonIdle);
         }
 
         private void SetupInput()
         {
             _input = Input.LoadInputPlugIn(Environment.CurrentDirectory + @"\GorgonInput.DLL", "Gorgon.RawInput");
-
-            // Bind the devices to this window.
             _input.Bind(this);
 
-            // Enable the mouse.
-            //Cursor = Cursors.Cross;
             Cursor.Hide();
 
-            this.ResizeEnd += new EventHandler(MainWindow_ResizeEnd);
+            ResizeEnd += MainWindowResizeEnd;
 
-            _mouse = _input.Mouse;
-            _mouse.Enabled = true;
-            _mouse.Exclusive = false;
-            _mouse.AllowBackground = false;
-            _mouse.MouseDown += new MouseInputEvent(MouseDownEvent);
-            _mouse.MouseUp += new MouseInputEvent(MouseUpEvent);
-            _mouse.MouseMove += new MouseInputEvent(MouseMoveEvent);
-            _mouse.MouseWheelMove += new MouseInputEvent(MouseWheelMoveEvent);
+            _input.Mouse.Enabled = true;
+            _input.Mouse.Exclusive = false;
+            _input.Mouse.AllowBackground = false;
+            _input.Mouse.MouseDown += MouseDownEvent;
+            _input.Mouse.MouseUp += MouseUpEvent;
+            _input.Mouse.MouseMove += MouseMoveEvent;
+            _input.Mouse.MouseWheelMove += MouseWheelMoveEvent;
 
-            // Enable the keyboard.
-            _keyboard = _input.Keyboard;
-            _keyboard.Enabled = true;
-            _keyboard.Exclusive = true;
-            _keyboard.KeyDown += new KeyboardInputEvent(KeyDownEvent);
-            _keyboard.KeyUp += new KeyboardInputEvent(KeyUpEvent);
-            KeyBindingManager.Initialize(_keyboard);
+            _input.Keyboard.Enabled = true;
+            _input.Keyboard.Exclusive = true;
+            _input.Keyboard.KeyDown += KeyDownEvent;
+            _input.Keyboard.KeyUp += KeyUpEvent;
+            KeyBindingManager.Initialize(_input.Keyboard);
 
-            _mouse.SetPositionRange(0, 0, Gorgon.CurrentClippingViewport.Width, Gorgon.CurrentClippingViewport.Height);
+            _input.Mouse.SetPositionRange(0, 0, Gorgon.CurrentClippingViewport.Width, Gorgon.CurrentClippingViewport.Height);
         }
 
-        private void SetupUserInterface()
-        {
-            ClientServices.ServiceManager.Singleton.AddService(UiManager.Singleton);
-        }
         #endregion
 
-        #region Public
-        #endregion
-        #endregion
-
-        #region Tiles
-        private void turfToolStripMenuItem_Click(object sender, EventArgs e)
-        {
-            tileSpawnType = typeof(ClientServices.Map.Tiles.Floor.Floor);
-            toolStripStatusLabel1.Text = tileSpawnType.ToString();
-        }
-
-        private void spaceToolStripMenuItem_Click(object sender, EventArgs e)
-        {
-            tileSpawnType = typeof(ClientServices.Map.Tiles.Floor.Space);
-            //PlacementManager.Singleton.SendObjectRequestEDITMODE(tileSpawnType, AlignmentOptions.AlignTile);
-        }
-
-        private void floorToolStripMenuItem_Click(object sender, EventArgs e)
-        {
-            tileSpawnType = typeof(ClientServices.Map.Tiles.Floor.Floor);
-            //PlacementManager.Singleton.SendObjectRequestEDITMODE(tileSpawnType, AlignmentOptions.AlignTile);
-        }
-
-        private void wallToolStripMenuItem_Click(object sender, EventArgs e)
-        {
-            tileSpawnType = typeof(ClientServices.Map.Tiles.Wall.Wall);
-            //PlacementManager.Singleton.SendObjectRequestEDITMODE(tileSpawnType, AlignmentOptions.AlignTile);
-        }
-
-        private void noneToolStripMenuItem_Click(object sender, EventArgs e)
-        {
-            tileSpawnType = null;
-        }
         #endregion
     }
 }

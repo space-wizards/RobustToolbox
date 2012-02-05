@@ -1,17 +1,12 @@
-﻿public enum ClientServiceType
+﻿namespace SS13_Shared
 {
-    CollisionManager,
-    LightManager,
-    Map,
-    UiManager
-}
+    public enum ServerServiceType
+    {
+        LogManager,
+        NetServer,
+        Map,
+        ChatManager,
+        PlayerManager
 
-public enum ServerServiceType
-{
-    LogManager,
-    NetServer,
-    Map,
-    ChatManager,
-    PlayerManager
-
+    }
 }

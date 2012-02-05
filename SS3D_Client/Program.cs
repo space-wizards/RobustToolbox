@@ -1,103 +1,57 @@
 ﻿using System;
-using System.Linq;
-using System.Reflection;
-
-using GorgonLibrary;
-using GorgonLibrary.Graphics;
-
+using ClientServices.Resources;
 using SS13.Modules;
-using SS13.States;
 using SS13.Modules.Network;
-using SS13.UserInterface;
-
-using Lidgren;
-using Lidgren.Network;
-
-using CSScriptLibrary;
-using csscript;
-
-using CGO;
-using System.CodeDom.Compiler;
-using System.IO;
-using System.CodeDom;
-
-using ClientConfigManager;
 using ClientServices;
+using ClientServices.Configuration;
+using ClientServices.Lighting;
+using ClientServices.Collision;
+using SS13.UserInterface;
 
 namespace SS13
 {
   public class Program
   {
-    private StateManager stateMgr;
-    public StateManager mStateMgr
-    { 
-        get { return stateMgr; }
-        private set { stateMgr = value; }
-    }
+      public StateManager StateManager { get; private set; }
 
-    private NetworkManager networkMgr;
-    public NetworkManager mNetworkMgr
-    {
-        get { return networkMgr; }
-        private set { networkMgr = value; }
-    }
+      public NetworkManager NetworkManager { get; private set; }
 
-    private NetworkGrapher netGrapher;
-    public NetworkGrapher NetGrapher
-    {
-        get { return netGrapher; }
-        set { netGrapher = value; }
-    }
+      public NetworkGrapher NetGrapher { get; set; }
 
-    private MainWindow gorgonForm;
-    public MainWindow GorgonForm
-    {
-        get { return gorgonForm; }
-        private set { gorgonForm = value; }
-    }
+      public MainWindow GorgonForm { get; private set; }
 
-    /************************************************************************/
+      /************************************************************************/
     /* program starts here                                                  */
     /************************************************************************/
     [STAThread]
     static void Main(string[] args)
     {
         // Create main program
-        Program prg = new Program();
+        var program = new Program();
 
         // Load Config.
-        ConfigManager.Singleton.Initialize("./config.xml");
+        ServiceManager.Singleton.Register<ConfigurationManager>();
+        ServiceManager.Singleton.GetService<ConfigurationManager>().Initialize("./config.xml");
         
         // Create state manager
-        prg.mStateMgr = new StateManager(prg);
+        program.StateManager = new StateManager(program);
 
         // Create main form
-        prg.GorgonForm = new MainWindow(prg);
+        program.GorgonForm = new MainWindow(program);
 
         // Create Network Manager
-        prg.mNetworkMgr = new NetworkManager(prg);
+        program.NetworkManager = new NetworkManager(program);
 
         //Create Network Grapher
-        prg.NetGrapher = new NetworkGrapher(prg.mNetworkMgr);
+        program.NetGrapher = new NetworkGrapher(program.NetworkManager);
 
         //Initialize Services
-        ServiceManager.Singleton.AddService(new CollisionManager());
-        ServiceManager.Singleton.AddService(ClientServices.Lighting.LightManager.Singleton);
+        ServiceManager.Singleton.Register<CollisionManager>();
+        ServiceManager.Singleton.Register<LightManager>();
+        ServiceManager.Singleton.Register<UiManager>();
 
-        Gorgon.Idle += new FrameEventHandler(prg.GorgonIdle);
-        System.Windows.Forms.Application.Run(prg.GorgonForm);
+        System.Windows.Forms.Application.Run(program.GorgonForm);
     }
-
-    public void GorgonIdle(object sender, FrameEventArgs e)
-    {
-
-    }
-      
-    public Program()
-    {
-        //Constructor
-    }
-
   }
 
 }

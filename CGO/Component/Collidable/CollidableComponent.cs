@@ -6,7 +6,9 @@ using System.Drawing;
 using ClientInterfaces;
 using ClientServices;
 using System.Diagnostics;
+using ClientServices.Collision;
 using GorgonLibrary;
+using SS13_Shared;
 using SS13_Shared.GO;
 
 namespace CGO
@@ -45,7 +47,7 @@ namespace CGO
 
         public CollidableComponent()
         {
-            family = SS13_Shared.GO.ComponentFamily.Collidable;
+            family = ComponentFamily.Collidable;
         }
 
         /// <summary>
@@ -56,7 +58,7 @@ namespace CGO
         {
             base.OnAdd(owner);
             GetAABB();
-            ICollisionManager cm = (ICollisionManager)ServiceManager.Singleton.GetService(ClientServiceType.CollisionManager);
+            ICollisionManager cm = ServiceManager.Singleton.GetService<CollisionManager>();
             cm.AddCollidable(this);
         }
 
@@ -66,7 +68,7 @@ namespace CGO
         public override void OnRemove()
         {
             base.OnRemove();
-            ICollisionManager cm = (ICollisionManager)ServiceManager.Singleton.GetService(ClientServiceType.CollisionManager);
+            ICollisionManager cm = ServiceManager.Singleton.GetService<CollisionManager>();
             cm.RemoveCollidable(this);
         }
 
@@ -88,7 +90,7 @@ namespace CGO
                     if (collisionEnabled)
                     {
                         GetAABB();
-                        ICollisionManager cm = (ICollisionManager)ServiceManager.Singleton.GetService(ClientServiceType.CollisionManager);
+                        ICollisionManager cm = ServiceManager.Singleton.GetService<CollisionManager>();
                         cm.UpdateCollidable(this);
                     }
                     break;
@@ -167,7 +169,7 @@ namespace CGO
         private void EnableCollision()
         {
             collisionEnabled = true;
-            ICollisionManager cm = (ICollisionManager)ServiceManager.Singleton.GetService(ClientServiceType.CollisionManager);
+            ICollisionManager cm = ServiceManager.Singleton.GetService<CollisionManager>();
             cm.AddCollidable(this);
         }
 
@@ -177,7 +179,7 @@ namespace CGO
         private void DisableCollision()
         {
             collisionEnabled = false;
-            ICollisionManager cm = (ICollisionManager)ServiceManager.Singleton.GetService(ClientServiceType.CollisionManager);
+            ICollisionManager cm = ServiceManager.Singleton.GetService<CollisionManager>();
             cm.RemoveCollidable(this);
         }
 

@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Drawing;
+using ClientServices.Resources;
 using GorgonLibrary;
 using GorgonLibrary.Graphics;
 using GorgonLibrary.InputDevices;
@@ -10,7 +11,6 @@ using GorgonLibrary.GUI;
 using SS13.UserInterface;
 using Lidgren.Network;
 using SS13_Shared;
-using ClientResourceManager;
 
 namespace SS13.UserInterface
 {
@@ -39,8 +39,8 @@ namespace SS13.UserInterface
         public Checkbox() 
             : base()
         {
-            checkbox = ResMgr.Singleton.GetSprite("nosprite");
-            checkboxCheck = ResMgr.Singleton.GetSprite("nosprite");
+            checkbox = ResourceManager.GetSprite("nosprite");
+            checkboxCheck = ResourceManager.GetSprite("nosprite");
             Update();
         }
 

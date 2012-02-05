@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Drawing;
+using ClientServices.Resources;
 using GorgonLibrary;
 using GorgonLibrary.Graphics;
 using GorgonLibrary.InputDevices;
@@ -12,7 +13,6 @@ using Lidgren.Network;
 using SS13_Shared;
 using SS13_Shared.GO;
 using CGO;
-using ClientResourceManager;
 using SS13.Modules;
 
 namespace SS13.UserInterface
@@ -33,7 +33,7 @@ namespace SS13.UserInterface
         {
             containingEntity = containingEnt;
             if (containingEntity != null) entSprite = Utilities.GetSpriteComponentSprite(containingEntity);
-            slotSprite = ResMgr.Singleton.GetSprite("slot");
+            slotSprite = ResourceManager.GetSprite("slot");
         }
 
         public override void Update()

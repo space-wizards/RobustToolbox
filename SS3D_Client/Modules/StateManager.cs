@@ -14,30 +14,25 @@ namespace SS13.Modules
   /************************************************************************/
   public class StateManager
   {
+    public Program Program { get; set; }
 
-    public Program prg;
+    public State CurrentState { get; private set; }
 
-    public State mCurrentState
-    {
-        private set;
-        get;
-    }
-    private Type mNewState;
+    private Type _newState;
 
     #region Startup , Shutdown , Constructor
-    public StateManager(Program _prg)
+    public StateManager(Program program)
     {
-        // constructor
-        prg = _prg;
-        mCurrentState = null;
-        mNewState = null;
+        Program = program;
+        CurrentState = null;
+        _newState = null;
     }
 
     public bool Startup(Type _firstState)
     {
         // start up and initialize the first state        
         // can't start up the state manager again if it's already running
-        if (mCurrentState != null || mNewState != null)
+        if (CurrentState != null || _newState != null)
             return false;
 
         // initialize with first state
@@ -51,11 +46,11 @@ namespace SS13.Modules
     public void Shutdown()
     {
         // if a state is active, shut down the state to clean up
-        if (mCurrentState != null)
+        if (CurrentState != null)
             SwitchToNewState(null);
 
         // make sure any pending state change request is reset
-        mNewState = null;
+        _newState = null;
     } 
     #endregion
 
@@ -86,8 +81,8 @@ namespace SS13.Modules
     public void KeyDown(KeyboardInputEventArgs e)
     {
         // if a state is active, call the states keydown method.
-        if (mCurrentState != null)
-            mCurrentState.KeyDown(e);
+        if (CurrentState != null)
+            CurrentState.KeyDown(e);
     }
     /// <summary>
     /// Gorgon method
@@ -96,8 +91,8 @@ namespace SS13.Modules
     public void KeyUp(KeyboardInputEventArgs e)
     {
         // if a state is active, call the states keyup method.
-        if (mCurrentState != null)
-            mCurrentState.KeyUp(e);
+        if (CurrentState != null)
+            CurrentState.KeyUp(e);
     }
     /// <summary>
     /// Gorgon method
@@ -106,8 +101,8 @@ namespace SS13.Modules
     public void MouseUp(MouseInputEventArgs e)
     {
         // if a state is active, call the states mouseup method.
-        if (mCurrentState != null)
-            mCurrentState.MouseUp(e);
+        if (CurrentState != null)
+            CurrentState.MouseUp(e);
     }
     /// <summary>
     /// Gorgon method
@@ -116,8 +111,8 @@ namespace SS13.Modules
     public void MouseDown(MouseInputEventArgs e)
     {
         // if a state is active, call the states mousedown method.
-        if (mCurrentState != null)
-            mCurrentState.MouseDown(e);
+        if (CurrentState != null)
+            CurrentState.MouseDown(e);
     }
     /// <summary>
     /// Gorgon method
@@ -126,14 +121,14 @@ namespace SS13.Modules
     public void MouseMove(MouseInputEventArgs e)
     {
         // if a state is active, call the states mousemove method.
-        if (mCurrentState != null)
-            mCurrentState.MouseMove(e);
+        if (CurrentState != null)
+            CurrentState.MouseMove(e);
     }
 
     public void MouseWheelMove(MouseInputEventArgs e)
     {
-        if (mCurrentState != null)
-            mCurrentState.MouseWheelMove(e);
+        if (CurrentState != null)
+            CurrentState.MouseWheelMove(e);
     }
 
     #endregion
@@ -142,12 +137,12 @@ namespace SS13.Modules
     public void Update( FrameEventArgs e )
     {
         // check if a state change was requested
-        if (mNewState != null)
+        if (_newState != null)
         {
             State newState = null;
 
             // use reflection to get new state class default constructor
-            ConstructorInfo constructor = mNewState.GetConstructor(Type.EmptyTypes);
+            ConstructorInfo constructor = _newState.GetConstructor(Type.EmptyTypes);
 
             // try to create an object from the requested state class
             if (constructor != null)
@@ -160,31 +155,31 @@ namespace SS13.Modules
                 SwitchToNewState(newState);
 
             // reset state change request until next state change is requested
-            mNewState = null;
+            _newState = null;
         }
 
         // if a state is active, update the active state
-        if (mCurrentState != null)
+        if (CurrentState != null)
         {
-            mCurrentState.Update( e );
-            mCurrentState.GorgonRender( e );
+            CurrentState.Update( e );
+            CurrentState.GorgonRender( e );
         }
     }
 
-    public bool RequestStateChange(Type _newState)
+    public bool RequestStateChange(Type newState)
     {
         // set next state that should be switched to, returns false if invalid
 
         // new state class must be derived from base class "State"
-        if (_newState == null || !_newState.IsSubclassOf(typeof(State)))
+        if (newState == null || !newState.IsSubclassOf(typeof(State)))
             return false;
 
         // don't change the state if the requested state class matches the current state
-        if (mCurrentState != null && mCurrentState.GetType() == _newState)
+        if (CurrentState != null && CurrentState.GetType() == newState)
             return false;
 
         // store type of new state class to request a state change
-        mNewState = _newState;
+        _newState = newState;
 
         // OK
         return true;
@@ -198,15 +193,15 @@ namespace SS13.Modules
     {
         //change from one state to another state 
         //if a state is active, shut it down
-        if (mCurrentState != null)
-            mCurrentState.Shutdown();
+        if (CurrentState != null)
+            CurrentState.Shutdown();
 
         // switch to the new state, might be null if no new state should be activated
-        mCurrentState = _newState;
+        CurrentState = _newState;
 
         // if a state is active, start it up
-        if (mCurrentState != null)
-            mCurrentState.Startup(prg);
+        if (CurrentState != null)
+            CurrentState.Startup(Program);
     } 
     #endregion
 

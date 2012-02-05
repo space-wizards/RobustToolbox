@@ -9,7 +9,6 @@ using GorgonLibrary.GUI;
 using GorgonLibrary.Graphics;
 using GorgonLibrary.Graphics.Utilities;
 using GorgonLibrary.InputDevices;
-using ClientResourceManager;
 using SS13.Modules;
 using CGO;
 

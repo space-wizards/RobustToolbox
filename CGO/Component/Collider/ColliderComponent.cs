@@ -5,7 +5,9 @@ using System.Text;
 using System.Drawing;
 using ClientServices;
 using ClientInterfaces;
+using ClientServices.Collision;
 using GorgonLibrary;
+using SS13_Shared;
 using SS13_Shared.GO;
 
 namespace CGO
@@ -101,7 +103,7 @@ namespace CGO
         private ComponentReplyMessage CheckCollision(bool SuppressBump = false)
         {
             bool isColliding = false;
-            ICollisionManager collisionManager = (ICollisionManager)ServiceManager.Singleton.GetService(ClientServiceType.CollisionManager);
+            var collisionManager = ServiceManager.Singleton.GetService<CollisionManager>();
             isColliding = collisionManager.IsColliding(OffsetAABB, SuppressBump);
             return new ComponentReplyMessage(ComponentMessageType.CollisionStatus, isColliding);
         }

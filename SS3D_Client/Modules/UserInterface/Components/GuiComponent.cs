@@ -3,9 +3,11 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Drawing;
+using ClientInterfaces;
+using ClientServices;
 using SS13_Shared;
 using SS13.Modules;
-
+using ClientServices.Resources;
 using GorgonLibrary;
 using GorgonLibrary.InputDevices;
 
@@ -18,6 +20,7 @@ namespace SS13.UserInterface
             get;
             protected set;
         }
+
         protected PlayerController playerController;
         protected Point position;
         protected Rectangle clientArea;
@@ -26,6 +29,8 @@ namespace SS13.UserInterface
         public int zDepth { get; set; }
         public bool RecieveInput { get; set; }
         public bool Focus { get; set; }
+        public ResourceManager ResourceManager { get; private set; }
+        public UiManager UiManager { get; private set; }
 
         public object UserData;
 
@@ -59,6 +64,8 @@ namespace SS13.UserInterface
             Visible = true;
             zDepth = 0;
             RecieveInput = true;
+            ResourceManager = ServiceManager.Singleton.GetService<ResourceManager>();
+            UiManager = ServiceManager.Singleton.GetService<UiManager>();
         }
 
         public GuiComponent()
@@ -66,6 +73,8 @@ namespace SS13.UserInterface
             Visible = true;
             zDepth = 0;
             RecieveInput = true;
+            ResourceManager = ServiceManager.Singleton.GetService<ResourceManager>();
+            UiManager = ServiceManager.Singleton.GetService<UiManager>();
         }
 
         public virtual void ComponentUpdate(params object[] args)

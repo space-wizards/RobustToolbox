@@ -2,10 +2,11 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using ClientServices;
+using ClientServices.Resources;
 using Lidgren.Network;
 using GorgonLibrary;
 using GorgonLibrary.Graphics;
-using ClientResourceManager;
 
 namespace SS13.Modules.Network
 {
@@ -44,7 +45,7 @@ namespace SS13.Modules.Network
         public void Update()
         {
             if(ts == null)
-                ts = new TextSprite("fucking", "", ResMgr.Singleton.GetFont("CALIBRI"));
+                ts = new TextSprite("fucking", "", ServiceManager.Singleton.GetService<ResourceManager>().GetFont("CALIBRI"));
             if (!enabled)
                 return;
             if ((DateTime.Now - lastDataPointTime).TotalMilliseconds > 200)

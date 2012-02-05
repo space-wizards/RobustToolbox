@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
-
+using ClientServices.Resources;
 using SS13.UserInterface;
 using SS13_Shared;
 using Lidgren.Network;
@@ -13,7 +13,6 @@ using GorgonLibrary;
 using GorgonLibrary.Graphics;
 
 using ClientInterfaces;
-using ClientResourceManager;
 using CGO;
 
 
@@ -22,34 +21,20 @@ namespace SS13.UserInterface
     /// <summary>
     ///  Manages UI Components. This includes input, rendering, updates and net messages.
     /// </summary>
-    class UiManager : IUserInterfaceManager
+    public class UiManager : IUserInterfaceManager
     {
-        #region Singleton
-        private static UiManager singleton;
-
-        private UiManager() { }
-
-        public static UiManager Singleton
-        {
-            get
-            {
-                if (singleton == null)
-                {
-                    singleton = new UiManager();
-                }
-                return singleton;
-            }
-        } 
-        #endregion
-
         private IGuiComponent currentFocus;
+        private IServiceManager _serviceManager;
 
         private Vector2D mousePos = Vector2D.Zero;
         private Sprite cursorSprite;
 
-        public ClientServiceType ServiceType { get { return ClientServiceType.UiManager; } }
-
         public DragDropInfo dragInfo = new DragDropInfo();
+
+        public UiManager(IServiceManager serviceManager)
+        {
+            _serviceManager = serviceManager;
+        }
 
         /// <summary>
         ///  List of iGuiComponents. Components in this list will recieve input, updates and net messages.
@@ -128,7 +113,7 @@ namespace SS13.UserInterface
         /// </summary>
         public void HandleNetMessage(NetIncomingMessage msg)
         {
-            UiManagerMessage uiMsg = (UiManagerMessage) msg.ReadByte();
+            var uiMsg = (UiManagerMessage) msg.ReadByte();
             switch (uiMsg)
             {
                 case UiManagerMessage.ComponentMessage:
@@ -142,7 +127,7 @@ namespace SS13.UserInterface
         /// </summary>
         public void HandleComponentMessage(NetIncomingMessage msg)
         {
-            GuiComponentType component = (GuiComponentType)msg.ReadByte();
+            var component = (GuiComponentType)msg.ReadByte();
             var targetComponents = GetComponentsByGuiComponentType(component);
             foreach(IGuiComponent current in targetComponents)
                 current.HandleNetworkMessage(msg);
@@ -177,7 +162,7 @@ namespace SS13.UserInterface
             if (dragInfo.dragSprite != null)
                 cursorSprite = dragInfo.dragSprite;
             else
-                cursorSprite = ResMgr.Singleton.GetSprite("cursor");
+                cursorSprite = _serviceManager.GetService<ResourceManager>().GetSprite("cursor");
 
             cursorSprite.Position = mousePos;
             cursorSprite.Draw();

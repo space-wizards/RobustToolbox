@@ -1,16 +1,9 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
 using System.Drawing;
-using GorgonLibrary;
+using ClientServices;
+using ClientServices.Resources;
 using GorgonLibrary.Graphics;
 using GorgonLibrary.InputDevices;
-using GorgonLibrary.GUI;
-using SS13.UserInterface;
-using Lidgren.Network;
-using SS13_Shared;
-using ClientResourceManager;
 
 namespace SS13.UserInterface
 {
@@ -26,7 +19,7 @@ namespace SS13.UserInterface
         public SimpleImageButton(string spriteName)
             : base()
         {
-            buttonSprite = ResMgr.Singleton.GetSprite(spriteName);
+            buttonSprite = ServiceManager.Singleton.GetService<ResourceManager>().GetSprite(spriteName);
             Update();
         }
 

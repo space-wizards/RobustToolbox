@@ -2,9 +2,10 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using ClientServices;
+using ClientServices.Resources;
 using GorgonLibrary.Graphics;
 using GorgonLibrary;
-using ClientResourceManager;
 using ClientWindow;
 using System.Drawing;
 using SS13_Shared.GO;
@@ -147,8 +148,8 @@ namespace CGO
         {
             if (sprites.ContainsKey(spriteKey))
                 throw new Exception("That sprite is already added.");
-            if (ResMgr.Singleton.SpriteExists(spriteKey))
-                AddSprite(spriteKey, ResMgr.Singleton.GetSprite(spriteKey));
+            if (ServiceManager.Singleton.GetService<ResourceManager>().SpriteExists(spriteKey))
+                AddSprite(spriteKey, ServiceManager.Singleton.GetService<ResourceManager>().GetSprite(spriteKey));
 
             //If there's only one sprite, and the current sprite is explicitly not set, then lets go ahead and set our sprite.
             if (sprites.Count == 1)

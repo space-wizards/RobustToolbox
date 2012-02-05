@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Drawing;
+using ClientServices;
 using GorgonLibrary;
 using GorgonLibrary.Graphics;
 using GorgonLibrary.InputDevices;
@@ -27,7 +28,7 @@ namespace SS13.UserInterface
             :base()
         {
             stateMgr = _stateMgr;
-            UiManager.Singleton.DisposeAllComponents();
+            ServiceManager.Singleton.GetService<UiManager>().DisposeAllComponents();
             message = new Label(msg);
             mainMenuButton = new Button("Main Menu");
             mainMenuButton.Clicked += new Button.ButtonPressHandler(mainMenuButton_Clicked);

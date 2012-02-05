@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Drawing;
+using ClientServices.Resources;
 using GorgonLibrary;
 using GorgonLibrary.Graphics;
 using GorgonLibrary.InputDevices;
@@ -10,7 +11,6 @@ using GorgonLibrary.GUI;
 using SS13.UserInterface;
 using Lidgren.Network;
 using SS13_Shared;
-using ClientResourceManager;
 
 namespace SS13.UserInterface
 {
@@ -40,7 +40,7 @@ namespace SS13.UserInterface
         public Progress_Bar(Size _size)
             : base()
         {
-            Text = new TextSprite("ProgressBarText", "", ResMgr.Singleton.GetFont("CALIBRI"));
+            Text = new TextSprite("ProgressBarText", "", ResourceManager.GetFont("CALIBRI"));
             Text.Color = Color.Black;
             Text.ShadowColor = Color.DimGray;
             Text.ShadowOffset = new Vector2D(1,1);

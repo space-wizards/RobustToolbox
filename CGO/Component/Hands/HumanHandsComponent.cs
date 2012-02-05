@@ -60,12 +60,7 @@ namespace CGO
                     break;
             }
 
-            IUserInterfaceManager UIManager = (IUserInterfaceManager)ServiceManager.Singleton.GetService(ClientServiceType.UiManager);
-
-            if (UIManager == null)
-                throw new NullReferenceException("No UI Manager Service found.");
-
-            UIManager.ComponentUpdate(GuiComponentType.ComboGUI, ComboGuiMessage.UpdateHands);
+            ServiceManager.Singleton.GetUiManager().ComponentUpdate(GuiComponentType.ComboGUI, ComboGuiMessage.UpdateHands);
         }
 
         public void SendSwitchHands(Hand hand)

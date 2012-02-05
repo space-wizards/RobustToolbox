@@ -1,54 +1,85 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
 using ClientInterfaces;
-using SS13_Shared;
+using ClientServices.Exceptions;
 
 namespace ClientServices
 {
-    /// <summary>
-    /// WTF is wrong with me im gay
-    /// </summary>
-    public class ServiceManager
+    public class ServiceManager : IServiceManager
     {
-        Dictionary<ClientServiceType, IService> services;
+        private readonly Dictionary<Type, IService> _services;
 
-        private static ServiceManager singleton;
+        private static ServiceManager _singleton;
         public static ServiceManager Singleton
         {
-            get {
-                if (singleton == null)
-                    singleton = new ServiceManager();
-                return singleton;
-            }
+            get { return _singleton ?? (_singleton = new ServiceManager()); }
         }
 
         public ServiceManager()
         {
-            services = new Dictionary<ClientServiceType, IService>();
+            _services = new Dictionary<Type, IService>();
         }
 
-        public void AddService(IService service)
+        public void Register<T>() where T : IService
         {
-            if (services.ContainsKey(service.ServiceType))
-                return;
-            else
-                services.Add(service.ServiceType, service);
+            if (_services.ContainsKey(typeof(T)))
+            {
+                throw new ExistingClientServiceException(typeof(T));
+            }
+
+            var service = (T)Activator.CreateInstance(typeof(T), new object[] { this });
+
+            _services.Add(typeof(T), service);
         }
 
-        public void RemoveService(IService service)
+        public void Unregister<T>() where T : IService
         {
-            if(services.ContainsKey(service.ServiceType))
-                services.Remove(service.ServiceType);
+            if (_services.ContainsKey(typeof(T)))
+            {
+                _services.Remove(typeof(T));
+            }
         }
 
-        public IService GetService(ClientServiceType serviceType)
+        public T GetService<T>()
         {
-            if (services.ContainsKey(serviceType))
-                return services[serviceType];
-            else
-                return null;
+            if (!_services.ContainsKey(typeof(T)))
+            {
+                throw new UnregisteredClientServiceException(typeof (T));
+            }
+
+            return (T) _services[typeof (T)];
+        }
+
+        /// <summary>
+        /// Custom function for retrieving the UiManager directly.
+        /// Required currently due to UiManager requirement in some
+        /// GOCs. The GOCs assembly references the ClientServices and
+        /// ClientInterfaces, but not the Client where the UiManager
+        /// resides. Referencing the Client would cause a circular 
+        /// dependecy. Need to consider moving UiManager and related
+        /// GuiComponents to ClientServices to clean this up further.
+        /// </summary>
+        /// <returns></returns>
+        public IUserInterfaceManager GetUiManager()
+        {
+            return _services.Values.OfType<IUserInterfaceManager>().FirstOrDefault();
+        }
+
+        public void Update()
+        {
+            foreach (var service in _services.Values.OfType<IUpdates>())
+            {
+                service.Update();
+            }
+        }
+
+        public void Render()
+        {
+            foreach (var service in _services.Values.OfType<IRenders>())
+            {
+                service.Render();
+            }
         }
     }
 }

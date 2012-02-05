@@ -1,9 +1,10 @@
 ﻿using System;
 using System.Drawing;
 using System.Text;
+using ClientServices;
+using ClientServices.Resources;
 using GorgonLibrary;
 using GorgonLibrary.Graphics;
-using ClientResourceManager;
 
 namespace CGO
 {
@@ -64,8 +65,8 @@ namespace CGO
             _textSprite = new TextSprite
                 (
                     "chatBubbleTextSprite_" + _mobName,
-                    String.Empty, 
-                    ResMgr.Singleton.GetFont("CALIBRI")
+                    String.Empty,
+                    ServiceManager.Singleton.GetService<ResourceManager>().GetFont("CALIBRI")
                 )
                               {
                                   Color = Color.Black,
@@ -120,7 +121,7 @@ namespace CGO
         private void DrawBubbleSprite()
         {
             var originalTarget = Gorgon.CurrentRenderTarget;
-            var cornerSprite = ResMgr.Singleton.GetSprite("corners");
+            var cornerSprite = ServiceManager.Singleton.GetService<ResourceManager>().GetSprite("corners");
 
             //Set up dimensions
             _bubbleRender.SetDimensions((int)_textSprite.Size.X + 10, (int)_textSprite.Size.Y + 10);

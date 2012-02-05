@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Drawing;
+using ClientServices.Resources;
 using GorgonLibrary;
 using GorgonLibrary.Graphics;
 using GorgonLibrary.InputDevices;
@@ -10,7 +11,6 @@ using GorgonLibrary.GUI;
 using SS13.UserInterface;
 using Lidgren.Network;
 using SS13_Shared;
-using ClientResourceManager;
 
 namespace SS13.UserInterface
 {
@@ -38,13 +38,13 @@ namespace SS13.UserInterface
         public Textbox(int width)
             : base()
         {
-            TextboxLeft = ResMgr.Singleton.GetSprite("button_left");
-            TextboxMain = ResMgr.Singleton.GetSprite("button_middle");
-            TextboxRight = ResMgr.Singleton.GetSprite("button_right");
+            TextboxLeft = ResourceManager.GetSprite("button_left");
+            TextboxMain = ResourceManager.GetSprite("button_middle");
+            TextboxRight = ResourceManager.GetSprite("button_right");
 
             Width = width;
 
-            label = new TextSprite("Textbox", "", ResMgr.Singleton.GetFont("CALIBRI"));
+            label = new TextSprite("Textbox", "", ResourceManager.GetFont("CALIBRI"));
             label.Color = System.Drawing.Color.Black;
 
             Update();

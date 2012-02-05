@@ -3,9 +3,11 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using ClientInterfaces;
+using ClientServices;
 using ClientServices.Lighting;
 using GorgonLibrary;
 using ClientServices.Map;
+using SS13_Shared;
 
 namespace CGO
 {
@@ -25,13 +27,12 @@ namespace CGO
         {
             base.OnAdd(owner);
 
-            light = new Light((Map)ClientServices.ServiceManager.Singleton.GetService(ClientServiceType.Map),
-                    System.Drawing.Color.FloralWhite, 300, LightState.On, Owner.Position);
-            light.brightness = 1.5f;
+            light = new Light(ServiceManager.Singleton.GetService<MapManager>(),
+                              System.Drawing.Color.FloralWhite, 300, LightState.On, Owner.Position) {brightness = 1.5f};
 
             light.UpdatePosition(Owner.Position + LightOffset);
             light.UpdateLight();
-            Owner.OnMove += new Entity.EntityMoveEvent(OnMove);
+            Owner.OnMove += OnMove;
         }
 
         public override void SetParameter(ComponentParameter parameter)

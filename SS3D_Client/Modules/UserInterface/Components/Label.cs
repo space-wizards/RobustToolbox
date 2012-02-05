@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Drawing;
+using ClientServices.Resources;
 using GorgonLibrary;
 using GorgonLibrary.Graphics;
 using GorgonLibrary.InputDevices;
@@ -10,7 +11,6 @@ using GorgonLibrary.GUI;
 using SS13.UserInterface;
 using Lidgren.Network;
 using SS13_Shared;
-using ClientResourceManager;
 
 namespace SS13.UserInterface
 {
@@ -33,7 +33,7 @@ namespace SS13.UserInterface
         public Label(string text)
             : base()
         {
-            Text = new TextSprite("Label" + text, text, ResMgr.Singleton.GetFont("CALIBRI"));
+            Text = new TextSprite("Label" + text, text, ResourceManager.GetFont("CALIBRI"));
             Text.Color = System.Drawing.Color.Black;
             Update();
         }

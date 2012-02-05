@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Drawing;
 using System.Linq;
 using ClientInterfaces;
-using ClientResourceManager;
+using ClientServices.Resources;
 using GorgonLibrary;
 using GorgonLibrary.Graphics;
 
@@ -29,20 +29,24 @@ namespace ClientServices.Map.Tiles
         public Sprite gasSprite;
         public List<TileDecal> decals;
         private Random _random;
-        private ILightManager lightManager;
+        private ILightManager _lightManager;
+        private ResourceManager _resourceManager;
 
-        public Tile(Sprite _sprite, TileState state, float size, Vector2D _position, Point _tilePosition, ILightManager _lightManager)
+        protected Tile(Sprite _sprite, TileState state, float size, Vector2D _position, Point _tilePosition, ILightManager lightManager, ResourceManager resourceManager)
         {
             tileState = state;
             position = _position;
             tilePosition = _tilePosition;
             sprite = _sprite;
             sprite.SetPosition(_position.X, _position.Y);
-            lightManager = _lightManager;
+
+            _lightManager = lightManager;
+            _resourceManager = resourceManager;
+
             Initialize();
         }
 
-        public Tile(Sprite _sprite, Sprite _side, TileState state, float size, Vector2D _position, Point _tilePosition, ILightManager _lightManager)
+        protected Tile(Sprite _sprite, Sprite _side, TileState state, float size, Vector2D _position, Point _tilePosition, ILightManager lightManager, ResourceManager resourceManager)
         {
             tileState = state;
             position = _position;
@@ -52,20 +56,23 @@ namespace ClientServices.Map.Tiles
 
             sideSprite = _side;
             sideSprite.SetPosition(_position.X, _position.Y);
-            lightManager = _lightManager;
+
+            _lightManager = lightManager;
+            _resourceManager = resourceManager;
+
             Initialize();
         }
 
         public virtual void Initialize()
         {
-            gasSprite = ResMgr.Singleton.GetSprite("gas");
+            gasSprite = _resourceManager.GetSprite("gas");
             surroundingTiles = new Tile[4];
             tileLights = new List<ILight>();
             gasAmounts = new Dictionary<GasType, int>();
             sightBlocked = false;
             decals = new List<TileDecal>();
             _random = new Random((int)(position.X * position.Y));
-            lightSprite = ResMgr.Singleton.GetSprite("white");
+            lightSprite = _resourceManager.GetSprite("white");
 
 
         }
@@ -94,7 +101,7 @@ namespace ClientServices.Map.Tiles
             {
                 lightSprite.Color = Color.Black;
                 lightSprite.SetPosition(tilePosition.X * tileSpacing - xTopLeft, tilePosition.Y * tileSpacing - yTopLeft);
-                lightManager.ApplyLightsToSprite(tileLights, lightSprite, new Vector2D(xTopLeft, yTopLeft));
+                _lightManager.ApplyLightsToSprite(tileLights, lightSprite, new Vector2D(xTopLeft, yTopLeft));
                 //lightSprite.Draw();
                 lightMapBatch.AddClone(lightSprite);
 
@@ -102,7 +109,7 @@ namespace ClientServices.Map.Tiles
                 {
                     lightSprite.Color = Color.Black;
                     lightSprite.SetPosition(tilePosition.X * tileSpacing - xTopLeft, (tilePosition.Y - 1) * tileSpacing - yTopLeft);
-                    lightManager.ApplyLightsToSprite(tileLights, lightSprite, new Vector2D(xTopLeft, yTopLeft));
+                    _lightManager.ApplyLightsToSprite(tileLights, lightSprite, new Vector2D(xTopLeft, yTopLeft));
                     lightMapBatch.AddClone(lightSprite);
                 }
             }
@@ -139,7 +146,7 @@ namespace ClientServices.Map.Tiles
                             decalname = "spatter_decal4";
                             break;
                     }
-                    decals.Add(new TileDecal(ResMgr.Singleton.GetSprite(decalname), new Vector2D(_random.Next(0, 64), _random.Next(0, 64)), this, System.Drawing.Color.FromArgb(165,6,6)));
+                    decals.Add(new TileDecal(_resourceManager.GetSprite(decalname), new Vector2D(_random.Next(0, 64), _random.Next(0, 64)), this, System.Drawing.Color.FromArgb(165, 6, 6)));
                     break;
 
             }

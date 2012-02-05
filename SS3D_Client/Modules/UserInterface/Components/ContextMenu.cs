@@ -3,13 +3,13 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Drawing;
+using ClientServices.Resources;
 using SS13_Shared;
 using SS13.Modules;
 using CGO;
 using GorgonLibrary;
 using GorgonLibrary.InputDevices;
 using GorgonLibrary.Graphics;
-using ClientResourceManager;
 
 namespace SS13.UserInterface
 {
@@ -64,7 +64,7 @@ namespace SS13.UserInterface
             if ((string)sender.UserData == "examine")
             {
                 ExamineWindow newExamine = new ExamineWindow(new Size(300, 200), OwningEntity);
-                UiManager.Singleton.Components.Add(newExamine);
+                UiManager.Components.Add(newExamine);
                 newExamine.Position = new Point(clientArea.X, clientArea.Y);
             }
             else OwningEntity.SendMessage(this, SS13_Shared.GO.ComponentMessageType.ContextMessage, null, (string)sender.UserData);
@@ -73,7 +73,7 @@ namespace SS13.UserInterface
         public override void Update()
         {
             base.Update();
-            UiManager.Singleton.SetFocus(this);
+            UiManager.SetFocus(this);
             foreach (ContextMenuButton button in buttons)
                 button.Update();
         }
@@ -94,8 +94,8 @@ namespace SS13.UserInterface
             buttons.Clear();
             OwningEntity = null;
 
-            UiManager.Singleton.RemoveFocus();
-            UiManager.Singleton.Components.Remove(this);
+            UiManager.RemoveFocus();
+            UiManager.Components.Remove(this);
 
             base.Dispose();
         }
@@ -147,7 +147,7 @@ namespace SS13.UserInterface
         {
             this.UserData = entry.componentMessage;
             Size = size;
-            iconSprite = ResMgr.Singleton.GetSprite(entry.iconName);
+            iconSprite = ResourceManager.GetSprite(entry.iconName);
             textLabel = new Label(entry.entryName);
             textLabel.Update();
         }

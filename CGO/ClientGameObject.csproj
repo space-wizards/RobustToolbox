@@ -95,10 +95,6 @@
       <Project>{B31E7B59-7066-4186-AB18-B1BB6DE0E537}</Project>
       <Name>ClientInterfaces</Name>
     </ProjectReference>
-    <ProjectReference Include="..\ClientResourceManager\ClientResourceManager.csproj">
-      <Project>{37D792AE-0514-44BE-81E0-58EA28E26BB9}</Project>
-      <Name>ClientResourceManager</Name>
-    </ProjectReference>
     <ProjectReference Include="..\ClientServices\ClientServices.csproj">
       <Project>{7F85F20C-E2B5-455D-A1CA-76ED000D25EA}</Project>
       <Name>ClientServices</Name>

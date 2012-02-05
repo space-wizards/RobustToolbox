@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Drawing;
+using ClientServices.Resources;
 using GorgonLibrary;
 using GorgonLibrary.Graphics;
 using GorgonLibrary.InputDevices;
@@ -10,7 +11,6 @@ using GorgonLibrary.GUI;
 using SS13.UserInterface;
 using Lidgren.Network;
 using SS13_Shared;
-using ClientResourceManager;
 
 namespace SS13.UserInterface
 {
@@ -45,9 +45,9 @@ namespace SS13.UserInterface
             result = res;
             resultName = resname;
 
-            icon = ResMgr.Singleton.GetSprite("blueprint");
+            icon = ResourceManager.GetSprite("blueprint");
 
-            label = new TextSprite("blueprinttext", "", ResMgr.Singleton.GetFont("CALIBRI"));
+            label = new TextSprite("blueprinttext", "", ResourceManager.GetFont("CALIBRI"));
             label.Color = Color.GhostWhite;
 
             label.ShadowColor = Color.DimGray;

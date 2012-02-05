@@ -7,9 +7,7 @@ using System.Windows.Forms;
 using System.Drawing;
 
 using CGO;
-using ClientConfigManager;
-using ClientResourceManager;
-
+using ClientServices;
 using GorgonLibrary;
 using GorgonLibrary.Graphics;
 using GorgonLibrary.InputDevices;
@@ -23,6 +21,7 @@ using SS13.UserInterface;
 using SS13_Shared;
 using ClientServices.Lighting;
 using ClientServices.Map;
+using ClientServices.Configuration;
 using ClientInterfaces;
 using ClientWindow;
 
@@ -31,9 +30,10 @@ namespace SS13.States
     public class GameScreen : State
     {
         #region Variables
-        private StateManager mStateMgr;
-        public Map map;
-        private EntityManager entityManager;
+        private StateManager _stateMgr;
+        public MapManager map;
+        private EntityManager _entityManager;
+        private UiManager _uiManager;
 
         //UI Vars
         #region UI Variables
@@ -100,32 +100,33 @@ namespace SS13.States
         #region Startup, Shutdown, Update
         public override bool Startup(Program _prg)
         {
-            prg = _prg;
-            mStateMgr = prg.mStateMgr;
+            Program = _prg;
+            _stateMgr = Program.StateManager;
+            _uiManager = ServiceManager.Singleton.GetService<UiManager>();
 
             lastUpdate = DateTime.Now;
             now = DateTime.Now;
 
-            map = new Map(LightManager.Singleton);
-            ClientServices.ServiceManager.Singleton.AddService(map);
+            ServiceManager.Singleton.Register<MapManager>();
+            map = ServiceManager.Singleton.GetService<MapManager>();
 
-            UiManager.Singleton.DisposeAllComponents();
+            _uiManager.DisposeAllComponents();
 
-            entityManager = new EntityManager(prg.mNetworkMgr.netClient);
+            _entityManager = new EntityManager(Program.NetworkManager.netClient);
             PlayerController.Initialize(this);
             playerController = PlayerController.Singleton;
 
-            prg.mNetworkMgr.MessageArrived += new NetworkMsgHandler(mNetworkMgr_MessageArrived);
+            Program.NetworkManager.MessageArrived += new NetworkMsgHandler(mNetworkMgr_MessageArrived);
             //prg.mNetworkMgr.Disconnected += new NetworkStateHandler(mNetworkMgr_Disconnected);
 
-            prg.mNetworkMgr.SetMap(map);
-            prg.mNetworkMgr.RequestMap();
+            Program.NetworkManager.SetMap(map);
+            Program.NetworkManager.RequestMap();
 
             //Hide the menu!
-            prg.GorgonForm.MainMenuStrip.Hide();
+            Program.GorgonForm.MainMenuStrip.Hide();
 
             //TODO This should go somewhere else, there should be explicit session setup and teardown at some point.
-            prg.mNetworkMgr.SendClientName(ConfigManager.Singleton.Configuration.PlayerName);
+            Program.NetworkManager.SendClientName(ServiceManager.Singleton.GetService<ConfigurationManager>().Configuration.PlayerName);
 
             baseTarget = new RenderImage("baseTarget", Gorgon.Screen.Width, Gorgon.Screen.Height, ImageBufferFormats.BufferRGB888A8);
             
@@ -151,18 +152,18 @@ namespace SS13.States
 
             screenSize = new System.Drawing.Point(Gorgon.CurrentClippingViewport.Width, Gorgon.CurrentClippingViewport.Height);
 
-            PlacementManager.Singleton.Initialize(prg.mNetworkMgr);
+            PlacementManager.Singleton.Initialize(Program.NetworkManager);
 
             //Init GUI components
             gameChat = new Chatbox("gameChat");
             gameChat.TextSubmitted += new Chatbox.TextSubmitHandler(chatTextbox_TextSubmitted);
-            UiManager.Singleton.Components.Add(gameChat);
+            _uiManager.Components.Add(gameChat);
 
-            HumanComboGUI combo = new HumanComboGUI(playerController, prg.mNetworkMgr);
+            HumanComboGUI combo = new HumanComboGUI(playerController, Program.NetworkManager);
             combo.Update();
             combo.Position = new Point(Gorgon.Screen.Width - combo.ClientArea.Width - 3, Gorgon.Screen.Height - combo.ClientArea.Height - 3);
-            UiManager.Singleton.Components.Add(combo);
-            UiManager.Singleton.Components.Add(new StatPanelComponent(playerController, prg.mNetworkMgr));
+            _uiManager.Components.Add(combo);
+            _uiManager.Components.Add(new StatPanelComponent(playerController, Program.NetworkManager));
 
             return true;
         }
@@ -205,12 +206,12 @@ namespace SS13.States
                 lightTargetIntermediateSprite = null;
             }
             gaussianBlur.Dispose();
-            entityManager.Shutdown();
+            _entityManager.Shutdown();
             map.Shutdown();
-            entityManager = null;
+            _entityManager = null;
             map = null;
-            UiManager.Singleton.DisposeAllComponents(); //HerpDerp. This is probably bad. Should not remove them ALL.
-            prg.mNetworkMgr.MessageArrived -= new NetworkMsgHandler(mNetworkMgr_MessageArrived);
+            _uiManager.DisposeAllComponents(); //HerpDerp. This is probably bad. Should not remove them ALL.
+            Program.NetworkManager.MessageArrived -= new NetworkMsgHandler(mNetworkMgr_MessageArrived);
             RenderTargetCache.DestroyAll();
             GC.Collect();
         }
@@ -221,7 +222,7 @@ namespace SS13.States
             now = DateTime.Now;
 
             CGO.ComponentManager.Singleton.Update(e.FrameDeltaTime);
-            editMode = prg.GorgonForm.editMode;
+            editMode = Program.GorgonForm.EditMode;
             PlacementManager.Singleton.Update(mousePosScreen, map);
         }
 
@@ -238,7 +239,7 @@ namespace SS13.States
                     if (statMsg == NetConnectionStatus.Disconnected)
                     {
                         string discMsg = msg.ReadString();
-                        UiManager.Singleton.Components.Add(new DisconnectedScreenBlocker(mStateMgr, discMsg));
+                        _uiManager.Components.Add(new DisconnectedScreenBlocker(_stateMgr, discMsg));
                     }
                     break;
                 case NetIncomingMessageType.Data:
@@ -255,7 +256,7 @@ namespace SS13.States
                             playerController.HandleNetworkMessage(msg);
                             break;
                         case NetMessage.PlayerUiMessage:
-                            UiManager.Singleton.HandleNetMessage(msg);
+                            _uiManager.HandleNetMessage(msg);
                             break;
                         case NetMessage.PlacementManagerMessage:
                             PlacementManager.Singleton.HandleNetMessage(msg);
@@ -267,10 +268,10 @@ namespace SS13.States
                             HandleChatMessage(msg);
                             break;
                         case NetMessage.EntityMessage:
-                            entityManager.HandleEntityNetworkMessage(msg);
+                            _entityManager.HandleEntityNetworkMessage(msg);
                             break;
                         case NetMessage.EntityManagerMessage:
-                            entityManager.HandleNetworkMessage(msg);
+                            _entityManager.HandleNetworkMessage(msg);
                             break;
                         case NetMessage.RequestAdminLogin:
                             HandleAdminMessage(messageType, msg);
@@ -295,12 +296,12 @@ namespace SS13.States
             switch (adminMsgType)
             {
                 case NetMessage.RequestAdminLogin:
-                    UiManager.Singleton.DisposeAllComponentsOfType(typeof(AdminPasswordDialog)); //Remove old ones.
-                    UiManager.Singleton.Components.Add(new AdminPasswordDialog(new System.Drawing.Size(200, 75), prg.mNetworkMgr)); //Create a new one.
+                    _uiManager.DisposeAllComponentsOfType(typeof(AdminPasswordDialog)); //Remove old ones.
+                    _uiManager.Components.Add(new AdminPasswordDialog(new System.Drawing.Size(200, 75), Program.NetworkManager)); //Create a new one.
                     break;
                 case NetMessage.RequestAdminPlayerlist:
-                    UiManager.Singleton.DisposeAllComponentsOfType(typeof(AdminPlayerPanel));
-                    UiManager.Singleton.Components.Add(new AdminPlayerPanel(new System.Drawing.Size(600,200), prg.mNetworkMgr, messageBody));
+                    _uiManager.DisposeAllComponentsOfType(typeof(AdminPlayerPanel));
+                    _uiManager.Components.Add(new AdminPlayerPanel(new System.Drawing.Size(600, 200), Program.NetworkManager, messageBody));
                     break;
                 case NetMessage.RequestBanList:
                     Banlist banList = new Banlist();
@@ -317,8 +318,8 @@ namespace SS13.States
                         entry.expiresAt = DateTime.Now.AddMinutes(minutesLeft);
                         banList.List.Add(entry);
                     }
-                    UiManager.Singleton.DisposeAllComponentsOfType(typeof(AdminUnbanPanel));
-                    UiManager.Singleton.Components.Add(new AdminUnbanPanel(new System.Drawing.Size(620, 200), prg.mNetworkMgr, banList));
+                    _uiManager.DisposeAllComponentsOfType(typeof(AdminUnbanPanel));
+                    _uiManager.Components.Add(new AdminUnbanPanel(new System.Drawing.Size(620, 200), Program.NetworkManager, banList));
                     break;
             }
         }
@@ -369,12 +370,12 @@ namespace SS13.States
 
         private void SendChatMessage(string text)
         {
-            NetOutgoingMessage message = prg.mNetworkMgr.netClient.CreateMessage();
+            NetOutgoingMessage message = Program.NetworkManager.netClient.CreateMessage();
             message.Write((byte)NetMessage.ChatMessage);
             message.Write((byte)ChatChannel.Player);
             message.Write(text);
 
-            prg.mNetworkMgr.SendMessage(message, NetDeliveryMethod.ReliableUnordered);
+            Program.NetworkManager.SendMessage(message, NetDeliveryMethod.ReliableUnordered);
         }
 
         /* What are we doing here exactly? Well:
@@ -533,20 +534,20 @@ namespace SS13.States
 
         public override void KeyDown(KeyboardInputEventArgs e)
         {
-            if (UiManager.Singleton.KeyDown(e)) //KeyDown returns true if the click is handled by the ui component.
+            if (_uiManager.KeyDown(e)) //KeyDown returns true if the click is handled by the ui component.
                 return;
 
             if (e.Key == KeyboardKeys.F9)
             {
-                if (prg.GorgonForm.MainMenuStrip.Visible)
+                if (Program.GorgonForm.MainMenuStrip.Visible)
                 {
-                    prg.GorgonForm.MainMenuStrip.Hide();
-                    prg.GorgonForm.MainMenuStrip.Visible = false;
+                    Program.GorgonForm.MainMenuStrip.Hide();
+                    Program.GorgonForm.MainMenuStrip.Visible = false;
                 }
                 else
                 {
-                    prg.GorgonForm.MainMenuStrip.Show();
-                    prg.GorgonForm.MainMenuStrip.Visible = true;
+                    Program.GorgonForm.MainMenuStrip.Show();
+                    Program.GorgonForm.MainMenuStrip.Visible = true;
                 }
                     
             }
@@ -560,7 +561,7 @@ namespace SS13.States
             }
             if (e.Key == KeyboardKeys.F3)
             {
-                prg.NetGrapher.Toggle();
+                Program.NetGrapher.Toggle();
             }
 
             if (e.Key == KeyboardKeys.F5)
@@ -578,28 +579,28 @@ namespace SS13.States
 
             if (e.Key == KeyboardKeys.F8)
             {
-                NetOutgoingMessage message = prg.mNetworkMgr.netClient.CreateMessage();
+                NetOutgoingMessage message = Program.NetworkManager.netClient.CreateMessage();
                 message.Write((byte)NetMessage.ForceRestart);
-                prg.mNetworkMgr.SendMessage(message, NetDeliveryMethod.ReliableUnordered);
+                Program.NetworkManager.SendMessage(message, NetDeliveryMethod.ReliableUnordered);
             }
 
             if (e.Key == KeyboardKeys.F10)
             {
-                UiManager.Singleton.DisposeAllComponentsOfType(typeof(TileSpawnPanel)); //Remove old ones.
-                UiManager.Singleton.Components.Add(new TileSpawnPanel(new System.Drawing.Size(350, 410))); //Create a new one.
+               _uiManager.DisposeAllComponentsOfType(typeof(TileSpawnPanel)); //Remove old ones.
+               _uiManager.Components.Add(new TileSpawnPanel(new System.Drawing.Size(350, 410))); //Create a new one.
             }
 
             if (e.Key == KeyboardKeys.F11)
             {
-                UiManager.Singleton.DisposeAllComponentsOfType(typeof(EntitySpawnPanel)); //Remove old ones.
-                UiManager.Singleton.Components.Add(new EntitySpawnPanel(new System.Drawing.Size(350, 410))); //Create a new one.
+                _uiManager.DisposeAllComponentsOfType(typeof(EntitySpawnPanel)); //Remove old ones.
+                _uiManager.Components.Add(new EntitySpawnPanel(new System.Drawing.Size(350, 410))); //Create a new one.
             }
 
             if (e.Key == KeyboardKeys.F12)
             {
-                NetOutgoingMessage message = prg.mNetworkMgr.netClient.CreateMessage();
+                NetOutgoingMessage message = Program.NetworkManager.netClient.CreateMessage();
                 message.Write((byte)NetMessage.RequestAdminPlayerlist);
-                prg.mNetworkMgr.SendMessage(message, NetDeliveryMethod.ReliableUnordered);
+                Program.NetworkManager.SendMessage(message, NetDeliveryMethod.ReliableUnordered);
             }
 
             playerController.KeyDown(e.Key);
@@ -611,15 +612,14 @@ namespace SS13.States
         }
         public override void MouseUp(MouseInputEventArgs e)
         {
-            if (UiManager.Singleton.MouseUp(e))
-                return;
+            _uiManager.MouseUp(e);
         }
         public override void MouseDown(MouseInputEventArgs e)
         {
             if (playerController.ControlledEntity == null)
                 return;
 
-            if (UiManager.Singleton.MouseDown(e))
+            if (_uiManager.MouseDown(e))
                 // MouseDown returns true if the click is handled by the ui component.
                 return;
 
@@ -685,7 +685,7 @@ namespace SS13.States
                 }
                 else if (e.Buttons == GorgonLibrary.InputDevices.MouseButtons.Right)
                 {
-                    UiManager.Singleton.Components.Add( new SS13.UserInterface.ContextMenu(entToClick, mousePosScreen, true) );
+                    _uiManager.Components.Add( new SS13.UserInterface.ContextMenu(entToClick, mousePosScreen, true) );
                     return;
                 }
             }
@@ -694,12 +694,12 @@ namespace SS13.States
                 System.Drawing.Point clickedPoint = map.GetTileArrayPositionFromWorldPosition(mousePosWorld);
                 if (clickedPoint.X > 0 && clickedPoint.Y > 0)
                 {
-                    NetOutgoingMessage message = mStateMgr.prg.mNetworkMgr.netClient.CreateMessage();
+                    NetOutgoingMessage message = _stateMgr.Program.NetworkManager.netClient.CreateMessage();
                     message.Write((byte)NetMessage.MapMessage);
                     message.Write((byte)MapMessage.TurfClick);
                     message.Write((short)clickedPoint.X);
                     message.Write((short)clickedPoint.Y);
-                    mStateMgr.prg.mNetworkMgr.SendMessage(message, NetDeliveryMethod.ReliableUnordered);
+                    _stateMgr.Program.NetworkManager.SendMessage(message, NetDeliveryMethod.ReliableUnordered);
                 }
             } 
             #endregion
@@ -710,12 +710,12 @@ namespace SS13.States
             float distanceToPrev = (mousePosScreen - new Vector2D(e.Position.X, e.Position.Y)).Length;
             mousePosScreen = new Vector2D(e.Position.X, e.Position.Y);
             mousePosWorld = new Vector2D(e.Position.X + WindowOrigin.X, e.Position.Y + WindowOrigin.Y);
-            UiManager.Singleton.MouseMove(e);
+            _uiManager.MouseMove(e);
         }
 
         public override void MouseWheelMove(MouseInputEventArgs e)
         {
-            UiManager.Singleton.MouseWheelMove(e);
+            _uiManager.MouseWheelMove(e);
         } 
         #endregion
 

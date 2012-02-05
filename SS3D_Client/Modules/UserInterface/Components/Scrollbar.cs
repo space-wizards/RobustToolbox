@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Drawing;
+using ClientServices.Resources;
 using GorgonLibrary;
 using GorgonLibrary.Graphics;
 using GorgonLibrary.InputDevices;
@@ -10,7 +11,6 @@ using GorgonLibrary.GUI;
 
 using Lidgren.Network;
 using SS13_Shared;
-using ClientResourceManager;
 
 namespace SS13.UserInterface
 {
@@ -80,10 +80,10 @@ namespace SS13.UserInterface
             : base()
         {
             Horizontal = _Horizontal;
-            if (Horizontal) scrollbarButton = ResMgr.Singleton.GetSprite("scrollbutton_h");
-            else scrollbarButton = ResMgr.Singleton.GetSprite("scrollbutton_v");
+            if (Horizontal) scrollbarButton = ResourceManager.GetSprite("scrollbutton_h");
+            else scrollbarButton = ResourceManager.GetSprite("scrollbutton_v");
 
-            DEBUG = new TextSprite("DEBUGSLIDER","Position:", ResMgr.Singleton.GetFont("CALIBRI"));
+            DEBUG = new TextSprite("DEBUGSLIDER","Position:", ResourceManager.GetFont("CALIBRI"));
             DEBUG.Color = System.Drawing.Color.OrangeRed;
             DEBUG.ShadowColor = System.Drawing.Color.DarkBlue;
             DEBUG.Shadowed = true;

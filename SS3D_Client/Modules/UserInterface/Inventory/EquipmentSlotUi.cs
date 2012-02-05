@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Drawing;
+using ClientServices.Resources;
 using GorgonLibrary;
 using GorgonLibrary.Graphics;
 using GorgonLibrary.InputDevices;
@@ -12,7 +13,6 @@ using Lidgren.Network;
 using SS13_Shared;
 using SS13_Shared.GO;
 using CGO;
-using ClientResourceManager;
 using SS13.Modules;
 
 namespace SS13.UserInterface
@@ -39,8 +39,8 @@ namespace SS13.UserInterface
         {
             assignedSlot = slot;
             playerControler = controler;
-            buttonSprite = ResMgr.Singleton.GetSprite("slot");
-            text = new TextSprite(slot.ToString() + "UIElementSlot", slot.ToString(), ResMgr.Singleton.GetFont("CALIBRI"));
+            buttonSprite = ResourceManager.GetSprite("slot");
+            text = new TextSprite(slot.ToString() + "UIElementSlot", slot.ToString(), ResourceManager.GetFont("CALIBRI"));
             text.ShadowColor = Color.Black;
             text.ShadowOffset = new Vector2D(1, 1);
             text.Shadowed = true;
@@ -105,7 +105,7 @@ namespace SS13.UserInterface
                 EquipmentComponent equipment = (EquipmentComponent)entity.GetComponent(ComponentFamily.Equipment);
 
                 if (equipment.equippedEntities.ContainsKey(assignedSlot))
-                    UiManager.Singleton.dragInfo.StartDrag(equipment.equippedEntities[assignedSlot]);
+                    UiManager.dragInfo.StartDrag(equipment.equippedEntities[assignedSlot]);
 
                 return true;
             }
@@ -123,17 +123,17 @@ namespace SS13.UserInterface
                 EquipmentComponent equipment = (EquipmentComponent)entity.GetComponent(ComponentFamily.Equipment);
                 HumanHandsComponent hands = (HumanHandsComponent)entity.GetComponent(ComponentFamily.Hands);
 
-                if (currentEntity != null && currentEntity == UiManager.Singleton.dragInfo.dragEntity && hands.IsHandEmpty(hands.currentHand)) //Dropped from us to us. (Try to) unequip it to active hand.
+                if (currentEntity != null && currentEntity == UiManager.dragInfo.dragEntity && hands.IsHandEmpty(hands.currentHand)) //Dropped from us to us. (Try to) unequip it to active hand.
                 {
-                    UiManager.Singleton.dragInfo.Reset();
+                    UiManager.dragInfo.Reset();
                     equipment.DispatchUnEquipToHand(currentEntity.Uid);
                     return true;
                 }
                 else
                 {
-                    if (currentEntity == null && UiManager.Singleton.dragInfo.isEntity && UiManager.Singleton.dragInfo.dragEntity != null)
+                    if (currentEntity == null && UiManager.dragInfo.isEntity && UiManager.dragInfo.dragEntity != null)
                     {
-                        if (Dropped != null) Dropped(this, UiManager.Singleton.dragInfo.dragEntity);
+                        if (Dropped != null) Dropped(this, UiManager.dragInfo.dragEntity);
                         return true;
                     }
                 }

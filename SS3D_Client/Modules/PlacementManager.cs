@@ -2,7 +2,8 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
-
+using ClientServices.Collision;
+using ClientServices.Resources;
 using SS13.Modules;
 using SS13.Modules.Network;
 
@@ -20,7 +21,6 @@ using Lidgren.Network;
 
 using System.Windows.Forms;
 using SS13_Shared.HelperClasses;
-using ClientResourceManager;
 using ClientServices.Map;
 using ClientServices.Map.Tiles;
 using ClientWindow;
@@ -170,7 +170,7 @@ namespace SS13.Modules
             if (spriteParam == null) return;
 
             string spriteName = (string)spriteParam.Parameter;
-            Sprite sprite = ResMgr.Singleton.GetSprite(spriteName);
+            Sprite sprite = ServiceManager.Singleton.GetService<ResourceManager>().GetSprite(spriteName);
 
             current_sprite = sprite;
             current_template = template;
@@ -181,7 +181,7 @@ namespace SS13.Modules
 
         private void PreparePlacement(TileType tileType)
         {
-            current_sprite = ResMgr.Singleton.GetSprite("tilebuildoverlay");
+            current_sprite = ServiceManager.Singleton.GetService<ResourceManager>().GetSprite("tilebuildoverlay");
 
             is_active = true;
         }
@@ -209,7 +209,7 @@ namespace SS13.Modules
             network_manager.SendMessage(message, NetDeliveryMethod.ReliableUnordered);
         }
 
-        public void Update(Vector2D mouseScreen, Map currentMap)
+        public void Update(Vector2D mouseScreen, MapManager currentMap)
         {
             if (currentMap == null) return;
 
@@ -232,7 +232,7 @@ namespace SS13.Modules
                         return;
                     }
 
-                    CollisionManager collisionMgr = (CollisionManager)ServiceManager.Singleton.GetService(ClientServiceType.CollisionManager);
+                    var collisionMgr = ServiceManager.Singleton.GetService<CollisionManager>();
                     if (collisionMgr.IsColliding(spriteRectWorld, true)) validPosition = false;
 
                     if (currentMap.IsSolidTile(current_loc_world)) validPosition = false; //HANDLE CURSOR OUTSIDE MAP
@@ -295,7 +295,7 @@ namespace SS13.Modules
                     }
 
                     spriteRectWorld = new RectangleF(current_loc_world.X - (current_sprite.Width / 2f), current_loc_world.Y - (current_sprite.Height / 2f), current_sprite.Width, current_sprite.Height);
-                    CollisionManager collisionMgr = (CollisionManager)ServiceManager.Singleton.GetService(ClientServiceType.CollisionManager);
+                    var collisionMgr = ServiceManager.Singleton.GetService<CollisionManager>();
                     if (collisionMgr.IsColliding(spriteRectWorld, true)) validPosition = false;
                 }
                 #endregion
@@ -345,7 +345,7 @@ namespace SS13.Modules
                                 current_loc_screen = new Vector2D(current_loc_world.X - ClientWindowData.Singleton.ScreenOrigin.X, current_loc_world.Y - ClientWindowData.Singleton.ScreenOrigin.Y);
 
                                 spriteRectWorld = new RectangleF(current_loc_world.X - (current_sprite.Width / 2f), current_loc_world.Y - (current_sprite.Height / 2f), current_sprite.Width, current_sprite.Height);
-                                CollisionManager collisionMgr = (CollisionManager)ServiceManager.Singleton.GetService(ClientServiceType.CollisionManager);
+                                var collisionMgr = ServiceManager.Singleton.GetService<CollisionManager>();
                                 if (collisionMgr.IsColliding(spriteRectWorld, true)) validPosition = false; //This also includes walls. Meaning that even when set to solid only this will be unplacable. Fix this.
                             }
                         }

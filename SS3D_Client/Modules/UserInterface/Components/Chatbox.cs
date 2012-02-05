@@ -3,14 +3,14 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Drawing;
-
+using ClientServices;
+using ClientServices.Resources;
 using GorgonLibrary;
 using GorgonLibrary.Framework;
 using GorgonLibrary.GUI;
 using GorgonLibrary.Graphics;
 using GorgonLibrary.Graphics.Utilities;
 using GorgonLibrary.InputDevices;
-using ClientResourceManager;
 
 namespace SS13.UserInterface
 {
@@ -53,9 +53,9 @@ namespace SS13.UserInterface
             ClientArea = new Rectangle(5, Gorgon.Screen.Height - 205, 600, 200); //!!! Use this instead of Window Dimensions
             Position = new Point(5, Gorgon.Screen.Height - 205);
 
-            font = ResMgr.Singleton.GetFont("CALIBRI");
+            font = ResourceManager.GetFont("CALIBRI");
 
-            backgroundSprite = ResMgr.Singleton.GetSprite("1pxwhite");
+            backgroundSprite = ResourceManager.GetSprite("1pxwhite");
 
             textInputLabel = new Label("");
             textInputLabel.Text.Size = new System.Drawing.Size(ClientArea.Width - 10, 12);
@@ -87,37 +87,37 @@ namespace SS13.UserInterface
             backgroundSprite.Opacity = 240;
             backgroundSprite.Draw(new Rectangle(renderPos, new Size(clientArea.Width, clientArea.Height)));
 
-            Sprite corner_top_left = ResMgr.Singleton.GetSprite("corner_top_left");
+            Sprite corner_top_left = ResourceManager.GetSprite("corner_top_left");
             corner_top_left.Draw(new Rectangle(renderPos.X, renderPos.Y, (int)corner_top_left.Width, (int)corner_top_left.Height));
 
-            Sprite corner_top_right = ResMgr.Singleton.GetSprite("corner_top_right");
+            Sprite corner_top_right = ResourceManager.GetSprite("corner_top_right");
             corner_top_right.Draw(new Rectangle(renderPos.X + ClientArea.Width - (int)corner_top_right.Width, renderPos.Y, (int)corner_top_right.Width, (int)corner_top_right.Height));
 
-            Sprite border_top = ResMgr.Singleton.GetSprite("border_top");
+            Sprite border_top = ResourceManager.GetSprite("border_top");
             border_top.Draw(new Rectangle(renderPos.X + (int)corner_top_left.Width, renderPos.Y, ClientArea.Width - (int)corner_top_left.Width - (int)corner_top_right.Width, (int)border_top.Height));
 
-            Sprite corner_bottom_left = ResMgr.Singleton.GetSprite("corner_bottom_left");
+            Sprite corner_bottom_left = ResourceManager.GetSprite("corner_bottom_left");
             corner_bottom_left.Draw(new Rectangle(renderPos.X, renderPos.Y + ClientArea.Height - (int)corner_bottom_left.Height, (int)corner_bottom_left.Width, (int)corner_bottom_left.Height));
 
-            Sprite corner_bottom_right = ResMgr.Singleton.GetSprite("corner_bottom_right");
+            Sprite corner_bottom_right = ResourceManager.GetSprite("corner_bottom_right");
             corner_bottom_right.Draw(new Rectangle(renderPos.X + ClientArea.Width - (int)corner_bottom_right.Width, renderPos.Y + ClientArea.Height - (int)corner_bottom_right.Height, (int)corner_bottom_right.Width, (int)corner_bottom_right.Height));
 
-            Sprite border_left = ResMgr.Singleton.GetSprite("border_left");
+            Sprite border_left = ResourceManager.GetSprite("border_left");
             border_left.Draw(new Rectangle(renderPos.X, renderPos.Y + (int)corner_top_left.Height, (int)border_left.Width, ClientArea.Height - (int)corner_bottom_left.Height - (int)corner_top_left.Height));
 
-            Sprite border_right = ResMgr.Singleton.GetSprite("border_right");
+            Sprite border_right = ResourceManager.GetSprite("border_right");
             border_right.Draw(new Rectangle(renderPos.X + ClientArea.Width - (int)border_right.Width, renderPos.Y + (int)corner_top_right.Height, (int)border_right.Width, ClientArea.Height - (int)corner_bottom_right.Height - (int)corner_top_right.Height));
 
-            Sprite border_bottom = ResMgr.Singleton.GetSprite("border_bottom");
+            Sprite border_bottom = ResourceManager.GetSprite("border_bottom");
             border_bottom.Draw(new Rectangle(renderPos.X + (int)corner_top_left.Width, renderPos.Y + ClientArea.Height - (int)border_bottom.Height, ClientArea.Width - (int)corner_bottom_left.Width - (int)corner_bottom_right.Width, (int)border_bottom.Height));
 
-            Sprite corner_middle_left = ResMgr.Singleton.GetSprite("corner_middle_left");
+            Sprite corner_middle_left = ResourceManager.GetSprite("corner_middle_left");
             corner_middle_left.Draw(new Rectangle(renderPos.X, renderPos.Y + ClientArea.Height - 16 - (int)corner_middle_left.Height, (int)corner_middle_left.Width, (int)corner_middle_left.Height));
 
-            Sprite corner_middle_right = ResMgr.Singleton.GetSprite("corner_middle_right");
+            Sprite corner_middle_right = ResourceManager.GetSprite("corner_middle_right");
             corner_middle_right.Draw(new Rectangle(renderPos.X + ClientArea.Width - (int)corner_middle_right.Width, renderPos.Y + ClientArea.Height - 16 - (int)corner_middle_right.Height, (int)corner_middle_right.Width, (int)corner_middle_right.Height));
 
-            Sprite border_middle = ResMgr.Singleton.GetSprite("border_middle_h");
+            Sprite border_middle = ResourceManager.GetSprite("border_middle_h");
             border_middle.Draw(new Rectangle(renderPos.X + (int)corner_middle_left.Width, renderPos.Y + ClientArea.Height - 16 - (int)border_middle.Height, ClientArea.Width - (int)corner_middle_left.Width - (int)corner_middle_right.Width, (int)border_middle.Height));
 
             renderImage.EndDrawing();
@@ -164,7 +164,7 @@ namespace SS13.UserInterface
         {
             if (e.Key == KeyboardKeys.T && !Active)
             {
-                UiManager.Singleton.SetFocus(this);
+                ServiceManager.Singleton.GetService<UiManager>().SetFocus(this);
                 Active = true;
                 return true;
             }

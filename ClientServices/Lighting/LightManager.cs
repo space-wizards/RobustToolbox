@@ -7,6 +7,7 @@ using GorgonLibrary.Graphics;
 using ClientInterfaces;
 using ClientServices.Map;
 using ClientServices.Map.Tiles;
+using SS13_Shared;
 
 namespace ClientServices.Lighting
 {
@@ -44,24 +45,12 @@ namespace ClientServices.Lighting
 
     public class LightManager : ILightManager, IService
     {
-        private static LightManager singleton;
-
         public int ambientBrightness = 55;
+        private IServiceManager _serviceManager;
 
-        private ClientServiceType serviceType = ClientServiceType.LightManager;
-
-        private LightManager() { }
-
-        public static LightManager Singleton
+        public LightManager(IServiceManager serviceManager)
         {
-            get 
-            {
-                if (singleton == null)
-                {
-                    singleton = new LightManager();
-                }
-                return singleton;
-            }
+            _serviceManager = serviceManager;
         }
 
         /// <summary>
@@ -211,11 +200,6 @@ namespace ClientServices.Lighting
             lightColor.Y = lightColor.Y / (float)(maxComponent / normalizeto);
             lightColor.Z = lightColor.Z / (float)(maxComponent / normalizeto);
             return lightColor;
-        }
-
-        public ClientServiceType ServiceType
-        {
-            get { return serviceType; }
         }
     }
 

@@ -1,12 +1,10 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
 using System.Drawing;
 using ClientInterfaces;
-using SS13_Shared;
 
-namespace SS13.Modules
+namespace ClientServices.Collision
 {
     //Its the bucket list!
     /// <summary>
@@ -18,7 +16,7 @@ namespace SS13.Modules
         private Dictionary<Point, int> bucketIndex; //Indexed in 256-pixel blocks - 0 = 0, 1 = 256, 2 = 512 etc
         private Dictionary<int, CollidableBucket> buckets; // each bucket represents a 256x256 block of pixelspace
         private List<CollidableAABB> aabbs;
-        private ClientServiceType serviceType = ClientServiceType.CollisionManager;
+        private IServiceManager _serviceManager;
 
         private int lastIndex = 0;
 
@@ -27,8 +25,9 @@ namespace SS13.Modules
         /// <summary>
         /// Constructor
         /// </summary>
-        public CollisionManager()
+        public CollisionManager(IServiceManager serviceManager)
         {
+            _serviceManager = serviceManager;
             bucketIndex = new Dictionary<Point, int>();
             buckets = new Dictionary<int, CollidableBucket>();
             aabbs = new List<CollidableAABB>();
@@ -128,13 +127,6 @@ namespace SS13.Modules
         {
             RemoveCollidable(collidable);
             AddCollidable(collidable);
-        }
-        #endregion
-
-        #region IService Members
-        public ClientServiceType ServiceType
-        {
-            get { return serviceType; }
         }
         #endregion
 

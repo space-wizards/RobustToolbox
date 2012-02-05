@@ -3,120 +3,98 @@ using System.IO;
 using System.Linq;
 using System.Reflection;
 using System.Collections.Generic;
-
+using ClientServices;
+using ClientServices.Resources;
 using SS13.Modules;
 
 using GorgonLibrary;
 using GorgonLibrary.Graphics;
 using GorgonLibrary.InputDevices;
-using ClientResourceManager;
 using SS13.UserInterface;
+using SS13.Effects;
 
 namespace SS13.States
 {
     public class ConnectMenu : State
     {
-        private SS13.Effects.StarScroller starScroller;
+        #region Fields
 
-        private StateManager mStateMgr;
-        public string ipTextboxIP = "localhost";
-        private bool connecting = false;
-        private DateTime connectTime;
-        private float connectTimeOut = 5000f;
-        private Sprite ss13Text;
+        private const float ConnectTimeOut = 5000.0f;
 
-        public ConnectMenu()
-        {
-        }
+        private StarScroller _starScroller;
+        private DateTime _connectTime;
+        private Sprite _ss13Text;
+        private bool _isConnecting;
+        private UiManager _uiManager;
+
+        #endregion
+
+        #region Properties
+
+        public string IpAddress { get; set; }
+
+        #endregion
 
         #region Startup, Shutdown, Update
-        public override bool Startup(Program _prg)
+        public override bool Startup(Program program)
         {
-            prg = _prg;
-            mStateMgr = prg.mStateMgr;
+            Program = program;
+            Program.NetworkManager.Disconnect();
+            Program.NetworkManager.Connected += OnConnected;
+            _starScroller = new StarScroller();
 
-            prg.mNetworkMgr.Disconnect();
-            prg.mNetworkMgr.Connected += new Modules.Network.NetworkStateHandler(mNetworkMgr_Connected);
-            starScroller = new Effects.StarScroller();
-
-            ss13Text = ResMgr.Singleton.GetSpriteFromImage("ss13text");
-            ss13Text.Position = new Vector2D(Gorgon.Screen.Width / 2 - (475 / 2), -140); 
+            _uiManager = ServiceManager.Singleton.GetService<UiManager>();
+            _ss13Text = ServiceManager.Singleton.GetService<ResourceManager>().GetSpriteFromImage("ss13text");
+            _ss13Text.Position = new Vector2D(Gorgon.Screen.Width / 2 - (475 / 2), -140); 
             return true;
         }
 
-        /*
-        void nameTextbox_LostFocus(object sender, EventArgs e)
+        private void OnConnected(Modules.Network.NetworkManager netMgr)
         {
-            ConfigManager.Singleton.Configuration.PlayerName = ((TextBox)sender).Text;
-            ConfigManager.Singleton.Save();
+            _isConnecting = false;
+            Program.StateManager.RequestStateChange(typeof(LobbyScreen));
         }
 
-        void nameTextbox_Submit(object sender, ValueEventArgs<string> e)
-        {
-            ConfigManager.Singleton.Configuration.PlayerName = ((TextBox)sender).Text;
-            ConfigManager.Singleton.Save();
-        }
-
-        private void ipTextBoxChanged(object sender, Miyagi.Common.Events.TextEventArgs e)
-        {
-            ipTextboxIP = ((TextBox)sender).Text;
-        }
-        */
-
-        void mNetworkMgr_Connected(Modules.Network.NetworkManager netMgr)
-        {
-            connecting = false;
-            //Send client name
-            mStateMgr.RequestStateChange(typeof(LobbyScreen));
-
-        }
-
-        /*
-        private void JoinButtonMouseDown(object sender, MouseButtonEventArgs e)
-        {
-            StartConnect();
-        }*/
-
-        // called when join button pressed and also if autoconnecting at startup
         public void StartConnect()
         {
-            connectTime = DateTime.Now;
-            connecting = true;
-            prg.mNetworkMgr.ConnectTo(ipTextboxIP);
+            _connectTime = DateTime.Now;
+            _isConnecting = true;
+            Program.NetworkManager.ConnectTo(IpAddress);
         }
 
         public override void Shutdown()
         {
-            prg.mNetworkMgr.Connected -= new Modules.Network.NetworkStateHandler(mNetworkMgr_Connected);
-            starScroller = null;
+            Program.NetworkManager.Connected -= OnConnected;
+            _starScroller = null;
         }
 
         public override void Update(FrameEventArgs e)
         {
-            if (connecting)
+            if (_isConnecting)
             {
-                TimeSpan dif = DateTime.Now - connectTime;
-                if (dif.TotalMilliseconds > connectTimeOut)
+                var dif = DateTime.Now - _connectTime;
+                if (dif.TotalMilliseconds > ConnectTimeOut)
                 {
-                    connecting = false;
-                    prg.mNetworkMgr.Disconnect();
+                    _isConnecting = false;
+                    Program.NetworkManager.Disconnect();
                 }
             }
-            if (ss13Text.Position.Y < Gorgon.Screen.Height / 2 - 130)
+
+            if (_ss13Text.Position.Y < Gorgon.Screen.Height / 2 - 130)
             {
-                ss13Text.Position += new Vector2D(0f, 1 * (float)Gorgon.FrameStats.FrameDrawTime / 20f);
+                _ss13Text.Position += new Vector2D(0f, 1 * (float)Gorgon.FrameStats.FrameDrawTime / 20f);
             }
-            UiManager.Singleton.Update();
+
+            _uiManager.Update();
         }
 
         #endregion
 
         public override void GorgonRender(FrameEventArgs e)
         {
-            starScroller.Render(0,0);
-            ss13Text.Draw();
-            UiManager.Singleton.Render();
-            return;
+            _starScroller.Render(0,0);
+            _ss13Text.Draw();
+            _uiManager.Render();
         }
         public override void FormResize()
         {
@@ -126,26 +104,27 @@ namespace SS13.States
 
         public override void KeyDown(KeyboardInputEventArgs e)
         {
-            UiManager.Singleton.KeyDown(e);
+            _uiManager.KeyDown(e);
         }
         public override void KeyUp(KeyboardInputEventArgs e)
         {
+
         }
         public override void MouseUp(MouseInputEventArgs e)
         {
-            UiManager.Singleton.MouseUp(e);
+            _uiManager.MouseUp(e);
         }
         public override void MouseDown(MouseInputEventArgs e)
         {
-            UiManager.Singleton.MouseDown(e);
+            _uiManager.MouseDown(e);
         }
         public override void MouseMove(MouseInputEventArgs e)
         {
-            UiManager.Singleton.MouseMove(e);
+            _uiManager.MouseMove(e);
         }
         public override void MouseWheelMove(MouseInputEventArgs e)
         {
-            UiManager.Singleton.MouseWheelMove(e);
+            _uiManager.MouseWheelMove(e);
         }
         #endregion
     }

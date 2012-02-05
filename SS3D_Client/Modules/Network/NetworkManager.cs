@@ -20,7 +20,7 @@ namespace SS13.Modules.Network
         private Program prg;
         private StateManager mStateMgr;
         private TileType[,] tileArray;
-        private Map mMap;
+        private MapManager mMap;
         private GameType serverGameType;
         public bool mapRecieved = false;
         private int mapWidth;
@@ -62,7 +62,7 @@ namespace SS13.Modules.Network
         public NetworkManager(Program _prg)
         {
             prg = _prg;
-            mStateMgr = prg.mStateMgr;
+            mStateMgr = prg.StateManager;
 
             isConnected = false;
 
@@ -70,7 +70,7 @@ namespace SS13.Modules.Network
             netClient.Start();
         }
 
-        public void SetMap(Map _map)
+        public void SetMap(MapManager _map)
         {
             mMap = _map;
         }

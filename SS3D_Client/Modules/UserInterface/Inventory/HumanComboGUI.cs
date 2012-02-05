@@ -4,6 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Drawing;
 using System.Reflection;
+using ClientServices.Resources;
 using SS13.HelperClasses;
 using GorgonLibrary;
 using GorgonLibrary.Graphics;
@@ -14,7 +15,6 @@ using CGO;
 using SS13.Modules.Network;
 using SS13_Shared.GO;
 using SS13_Shared;
-using ClientResourceManager;
 
 namespace SS13.UserInterface
 {
@@ -69,7 +69,7 @@ namespace SS13.UserInterface
         private CraftSlotUi craftSlot2;
         private SimpleImageButton craftButton;
         private Timer_Bar craftTimer;
-        private TextSprite craftStatus = new TextSprite("craftText", "Status", ResMgr.Singleton.GetFont("CALIBRI"));
+        private TextSprite craftStatus;
         private ScrollableContainer blueprints;
         private int blueprintsOffset = 0;
         #endregion
@@ -78,8 +78,8 @@ namespace SS13.UserInterface
 
         private bool showTabbedWindow = false;
 
-        TextSprite txtDbg = new TextSprite("comboDlgDbg", "Combo Debug", ResMgr.Singleton.GetFont("CALIBRI"));
-        TextSprite healthText = new TextSprite("healthText", "", ResMgr.Singleton.GetFont("CALIBRI"));
+        private TextSprite txtDbg;
+        private TextSprite healthText;
 
         Sprite combo_BG;
         SimpleImageButton combo_close;
@@ -108,23 +108,24 @@ namespace SS13.UserInterface
             leftHand.hand = Hand.Left;
             rightHand.hand = Hand.Right;
 
-            equip_BG = ResMgr.Singleton.GetSprite("outline");
+            equip_BG = ResourceManager.GetSprite("outline");
 
-            combo_BG = ResMgr.Singleton.GetSprite("combo_bg");
+            combo_BG = ResourceManager.GetSprite("combo_bg");
             combo_close = new SimpleImageButton("button_closecombo");
             combo_open = new SimpleImageButton("button_inv");
 
             tab_equip = new SimpleImageButton("tab_equip");
             tab_equip.Clicked += new SimpleImageButton.SimpleImageButtonPressHandler(tab_Clicked);
 
+            healthText = new TextSprite("healthText", "", ResourceManager.GetFont("CALIBRI"));
             tab_health = new SimpleImageButton("tab_health");
             tab_health.Clicked += new SimpleImageButton.SimpleImageButtonPressHandler(tab_Clicked);
 
             tab_craft = new SimpleImageButton("tab_craft");
             tab_craft.Clicked += new SimpleImageButton.SimpleImageButtonPressHandler(tab_Clicked);
 
-            hand_l_bg = ResMgr.Singleton.GetSprite("hand_l");
-            hand_r_bg = ResMgr.Singleton.GetSprite("hand_r");
+            hand_l_bg = ResourceManager.GetSprite("hand_l");
+            hand_r_bg = ResourceManager.GetSprite("hand_r");
 
             combo_close.Clicked += new SimpleImageButton.SimpleImageButtonPressHandler(combo_close_Clicked);
             combo_open.Clicked += new SimpleImageButton.SimpleImageButtonPressHandler(combo_open_Clicked);
@@ -161,12 +162,15 @@ namespace SS13.UserInterface
             slot_back = new EquipmentSlotUi(EquipmentSlot.Back, _playerController);
             slot_back.Dropped += new EquipmentSlotUi.InventorySlotUiDropHandler(slot_Dropped);
 
+            txtDbg = new TextSprite("comboDlgDbg", "Combo Debug", ResourceManager.GetFont("CALIBRI"));
+
             craftSlot1 = new CraftSlotUi();
             craftSlot2 = new CraftSlotUi();
 
             craftButton = new SimpleImageButton("wrenchbutt");
             craftButton.Clicked += new SimpleImageButton.SimpleImageButtonPressHandler(craftButton_Clicked);
 
+            craftStatus = new TextSprite("craftText", "Status", ResourceManager.GetFont("CALIBRI"));
             craftStatus.ShadowColor = Color.DimGray;
             craftStatus.ShadowOffset = new Vector2D(1,1);
             craftStatus.Shadowed = true;
@@ -202,7 +206,7 @@ namespace SS13.UserInterface
 
         void slot_Dropped(EquipmentSlotUi sender, Entity dropped)
         {
-            UiManager.Singleton.dragInfo.Reset();
+            UiManager.dragInfo.Reset();
 
             if (playerController.ControlledEntity == null)
                 return;
@@ -733,7 +737,7 @@ namespace SS13.UserInterface
                     if (hands.HandSlots.Keys.Contains(Hand.Left))
                     {
                         Entity EntityL = hands.HandSlots[Hand.Left];
-                        UiManager.Singleton.dragInfo.StartDrag(EntityL);
+                        UiManager.dragInfo.StartDrag(EntityL);
                     }
                     return true;
                 }
@@ -743,7 +747,7 @@ namespace SS13.UserInterface
                     if (hands.HandSlots.Keys.Contains(Hand.Right))
                     {
                         Entity EntityR = hands.HandSlots[Hand.Right];
-                        UiManager.Singleton.dragInfo.StartDrag(EntityR);
+                        UiManager.dragInfo.StartDrag(EntityR);
                     }
                     return true;
                 }
@@ -808,7 +812,7 @@ namespace SS13.UserInterface
         {
             PointF mouseAABB = new PointF(e.Position.X, e.Position.Y);
 
-            if (UiManager.Singleton.dragInfo.isEntity && UiManager.Singleton.dragInfo.dragEntity != null)
+            if (UiManager.dragInfo.isEntity && UiManager.dragInfo.dragEntity != null)
             {
                 #region Hands
                 if (playerController.ControlledEntity == null)
@@ -825,16 +829,16 @@ namespace SS13.UserInterface
                 {
                     if (!hands.HandSlots.ContainsKey(Hand.Left))
                     {
-                        if (hands.HandSlots.ContainsValue(UiManager.Singleton.dragInfo.dragEntity))
+                        if (hands.HandSlots.ContainsValue(UiManager.dragInfo.dragEntity))
                         {
-                            if (hands.HandSlots.First(x => x.Value == UiManager.Singleton.dragInfo.dragEntity).Key == Hand.Left) //From me to me, ignore.
+                            if (hands.HandSlots.First(x => x.Value == UiManager.dragInfo.dragEntity).Key == Hand.Left) //From me to me, ignore.
                                 return false;
                             else
-                                hands.SendDropEntity(UiManager.Singleton.dragInfo.dragEntity); //Other hand to me.
+                                hands.SendDropEntity(UiManager.dragInfo.dragEntity); //Other hand to me.
 
                         }
-                        equipment.DispatchUnEquipItemToSpecifiedHand(UiManager.Singleton.dragInfo.dragEntity.Uid, Hand.Left);
-                        UiManager.Singleton.dragInfo.Reset();
+                        equipment.DispatchUnEquipItemToSpecifiedHand(UiManager.dragInfo.dragEntity.Uid, Hand.Left);
+                        UiManager.dragInfo.Reset();
                         return true;
                     }
                 }
@@ -843,16 +847,16 @@ namespace SS13.UserInterface
                 {
                     if (!hands.HandSlots.ContainsKey(Hand.Right))
                     {
-                        if (hands.HandSlots.ContainsValue(UiManager.Singleton.dragInfo.dragEntity))
+                        if (hands.HandSlots.ContainsValue(UiManager.dragInfo.dragEntity))
                         {
-                            if (hands.HandSlots.First(x => x.Value == UiManager.Singleton.dragInfo.dragEntity).Key == Hand.Right) //From me to me, ignore.
+                            if (hands.HandSlots.First(x => x.Value == UiManager.dragInfo.dragEntity).Key == Hand.Right) //From me to me, ignore.
                                 return false;
                             else
-                                hands.SendDropEntity(UiManager.Singleton.dragInfo.dragEntity); //Other hand to me.
+                                hands.SendDropEntity(UiManager.dragInfo.dragEntity); //Other hand to me.
 
                         }
-                        equipment.DispatchUnEquipItemToSpecifiedHand(UiManager.Singleton.dragInfo.dragEntity.Uid, Hand.Right);
-                        UiManager.Singleton.dragInfo.Reset();
+                        equipment.DispatchUnEquipItemToSpecifiedHand(UiManager.dragInfo.dragEntity.Uid, Hand.Right);
+                        UiManager.dragInfo.Reset();
                         return true;
                     }
                 } 
@@ -880,7 +884,7 @@ namespace SS13.UserInterface
 
                         if (inventory != null) if (inventory.MouseUp(e)) return true;
 
-                        if (combo_BG.AABB.Contains(mouseAABB) && UiManager.Singleton.dragInfo.isEntity && UiManager.Singleton.dragInfo.dragEntity != null)
+                        if (combo_BG.AABB.Contains(mouseAABB) && UiManager.dragInfo.isEntity && UiManager.dragInfo.dragEntity != null)
                         { //Should be refined to only trigger in the equip area. Equip it if they drop it anywhere on the thing. This might make the slots obsolete if we keep it.
                             if (playerController.ControlledEntity == null)
                                 return false;
@@ -888,8 +892,8 @@ namespace SS13.UserInterface
                             var entity = (Entity)playerController.ControlledEntity;
 
                             EquipmentComponent equipment = (EquipmentComponent)entity.GetComponent(ComponentFamily.Equipment);
-                            equipment.DispatchEquip(UiManager.Singleton.dragInfo.dragEntity.Uid);
-                            UiManager.Singleton.dragInfo.Reset();
+                            equipment.DispatchEquip(UiManager.dragInfo.dragEntity.Uid);
+                            UiManager.dragInfo.Reset();
                             return true;
                         }
 

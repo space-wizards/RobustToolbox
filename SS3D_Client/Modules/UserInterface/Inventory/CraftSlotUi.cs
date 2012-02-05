@@ -3,6 +3,8 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Drawing;
+using ClientServices;
+using ClientServices.Resources;
 using GorgonLibrary;
 using GorgonLibrary.Graphics;
 using GorgonLibrary.InputDevices;
@@ -12,7 +14,6 @@ using Lidgren.Network;
 using SS13_Shared;
 using SS13_Shared.GO;
 using CGO;
-using ClientResourceManager;
 using SS13.Modules;
 
 namespace SS13.UserInterface
@@ -31,7 +32,7 @@ namespace SS13.UserInterface
         public CraftSlotUi()
             : base()
         {
-            slotSprite = ResMgr.Singleton.GetSprite("slot");
+            slotSprite = ServiceManager.Singleton.GetService<ResourceManager>().GetSprite("slot");
         }
 
         public void SetEntity(Entity ent)
@@ -80,10 +81,10 @@ namespace SS13.UserInterface
         {
             if (clientArea.Contains(new Point((int)e.Position.X, (int)e.Position.Y)))
             {
-                if(UiManager.Singleton.dragInfo.isEntity && UiManager.Singleton.dragInfo.dragEntity != null)
+                if(UiManager.dragInfo.isEntity && UiManager.dragInfo.dragEntity != null)
                 {
-                    SetEntity(UiManager.Singleton.dragInfo.dragEntity);
-                    UiManager.Singleton.dragInfo.Reset();
+                    SetEntity(UiManager.dragInfo.dragEntity);
+                    UiManager.dragInfo.Reset();
                     return true;
                 }
             }

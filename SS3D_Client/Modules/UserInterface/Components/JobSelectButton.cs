@@ -3,12 +3,12 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Drawing;
+using ClientServices;
+using ClientServices.Resources;
 using GorgonLibrary;
 using GorgonLibrary.Graphics;
 using GorgonLibrary.InputDevices;
 using GorgonLibrary.GUI;
-using ClientResourceManager;
-
 using Lidgren.Network;
 using SS13_Shared;
 
@@ -31,10 +31,12 @@ namespace SS13.UserInterface
         public JobSelectButton(string text, string jobIcon , string desc)
             : base()
         {
-            Button = ResMgr.Singleton.GetSprite("job_button");
-            Job = ResMgr.Singleton.GetSprite(jobIcon);
+            var resourceManager = ServiceManager.Singleton.GetService<ResourceManager>();
 
-            labelDesc = new TextSprite("JobButtonDescLabel" + text, text + ":\n" + desc, ResMgr.Singleton.GetFont("CALIBRI"));
+            Button = resourceManager.GetSprite("job_button");
+            Job = resourceManager.GetSprite(jobIcon);
+
+            labelDesc = new TextSprite("JobButtonDescLabel" + text, text + ":\n" + desc, resourceManager.GetFont("CALIBRI"));
             labelDesc.Color = System.Drawing.Color.Black;
             labelDesc.ShadowColor = System.Drawing.Color.DimGray;
             labelDesc.Shadowed = true;

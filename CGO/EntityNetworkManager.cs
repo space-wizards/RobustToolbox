@@ -2,22 +2,24 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using ClientInterfaces.Network;
 using Lidgren.Network;
+using SS13_Shared;
 using SS13_Shared.GO;
 
 namespace CGO
 {
     public class EntityNetworkManager
     {
-        private NetClient m_netClient;
-        public EntityNetworkManager(NetClient netClient)
+        private readonly INetworkManager _networkManager;
+        public EntityNetworkManager(INetworkManager networkManager)
         {
-            m_netClient = netClient;
+            _networkManager = networkManager;
         }
 
         public NetOutgoingMessage CreateEntityMessage()
         {
-            NetOutgoingMessage message = m_netClient.CreateMessage();
+            NetOutgoingMessage message = _networkManager.CreateMessage();
             message.Write((byte)NetMessage.EntityMessage);
             return message;
         }
@@ -31,18 +33,16 @@ namespace CGO
         /// <param name="family">Family of the component sending the message</param>
         /// <param name="method">Net delivery method -- if null, defaults to NetDeliveryMethod.ReliableUnordered</param>
         /// <param name="messageParams">Parameters of the message</param>
-        public void SendComponentNetworkMessage(Entity sendingEntity, ComponentFamily family, NetDeliveryMethod method, params object[] messageParams)
+        public void SendComponentNetworkMessage(Entity sendingEntity, ComponentFamily family, NetDeliveryMethod method = NetDeliveryMethod.ReliableUnordered, params object[] messageParams)
         {
-            NetOutgoingMessage message = CreateEntityMessage();
+            var message = CreateEntityMessage();
             message.Write(sendingEntity.Uid);//Write this entity's UID
             message.Write((byte)EntityMessage.ComponentMessage);
             message.Write((byte)family);
             PackParams(message, messageParams);
-            if (method == null)
-                method = NetDeliveryMethod.ReliableUnordered;
 
             //Send the message
-            m_netClient.SendMessage(message, method);
+            _networkManager.SendMessage(message, method);
         }
 
         private void PackParams(NetOutgoingMessage message, params object[] messageParams)
@@ -134,7 +134,7 @@ namespace CGO
             message.Write(sendingEntity.Uid);//Write this entity's UID
             message.Write((byte)type);
             PackParams(message, list);
-            m_netClient.SendMessage(message, NetDeliveryMethod.ReliableUnordered);
+            _networkManager.SendMessage(message, NetDeliveryMethod.ReliableUnordered);
         }
 
         #endregion
@@ -147,23 +147,21 @@ namespace CGO
         /// <returns>An IncomingEntityMessage object</returns>
         public IncomingEntityMessage HandleEntityNetworkMessage(NetIncomingMessage message)
         {
-            int uid = message.ReadInt32();
-            EntityMessage messageType = (EntityMessage)message.ReadByte();
+            var uid = message.ReadInt32();
+            var messageType = (EntityMessage)message.ReadByte();
+            var result = IncomingEntityMessage.Null;
+
             switch (messageType)
             {
                 case EntityMessage.ComponentMessage:
-                    return new IncomingEntityMessage(uid, EntityMessage.ComponentMessage, HandleEntityComponentNetworkMessage(message));
+                    result = new IncomingEntityMessage(uid, EntityMessage.ComponentMessage, HandleEntityComponentNetworkMessage(message));
                     break;
                 case EntityMessage.PositionMessage:
                     //TODO: Handle position messages!
                     break;
-                default:
-                    break;
             }
-            return IncomingEntityMessage.Null;
+            return result;
         }
-
-
 
         /// <summary>
         /// Handles an incoming entity component message
@@ -224,38 +222,5 @@ namespace CGO
         #endregion
     }
 
-    /// <summary>
-    /// This struct stores a network message from an entity component.
-    /// </summary>
-    public struct IncomingEntityComponentMessage
-    {
-        public ComponentFamily componentFamily;
-        public List<object> messageParameters;
 
-        public IncomingEntityComponentMessage(ComponentFamily _componentFamily, List<object> _messageParameters)
-        {
-            componentFamily = _componentFamily;
-            messageParameters = _messageParameters;
-        }
-    }
-
-    /// <summary>
-    /// This struct stores a network message from an entity
-    /// </summary>
-    public struct IncomingEntityMessage
-    {
-        public int uid;
-        public EntityMessage messageType;
-        public object message;
-
-        public IncomingEntityMessage(int _uid, EntityMessage _messageType, object _message)
-        {
-            uid = _uid;
-            messageType = _messageType;
-            message = _message;
-        }
-
-        public static IncomingEntityMessage Null = new IncomingEntityMessage(0, EntityMessage.Null, null);
-
-    }
 }

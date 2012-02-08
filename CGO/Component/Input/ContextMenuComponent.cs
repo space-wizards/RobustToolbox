@@ -2,7 +2,8 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
-using System.Text.RegularExpressions;
+using ClientInterfaces.GOC;
+using SS13_Shared;
 using SS13_Shared.GO;
 using System.Xml.Linq;
 
@@ -57,26 +58,6 @@ namespace CGO
             entries.Add(entry);
         }
 
-        public override void Shutdown()
-        {
-            base.Shutdown();
-        }
-
-        public override void OnRemove()
-        {
-            base.OnRemove();
-        }
-
-        public override void OnAdd(Entity owner)
-        {
-            base.OnAdd(owner);
-        }
-
-        public override void Update(float frameTime)
-        {
-            base.Update(frameTime);
-        }
-
         public override void HandleExtendedParameters(XElement extendedParameters)
         {
             foreach (XElement param in extendedParameters.Descendants("ContextEntry"))
@@ -94,7 +75,7 @@ namespace CGO
                 if (param.Attribute("message") != null)
                     message = param.Attribute("message").Value;
 
-                ContextMenuEntry newEntry = new ContextMenuEntry();
+                var newEntry = new ContextMenuEntry();
                 newEntry.entryName = name;
                 newEntry.iconName = icon;
                 newEntry.componentMessage = message;

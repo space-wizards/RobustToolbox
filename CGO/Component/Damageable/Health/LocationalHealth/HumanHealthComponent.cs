@@ -1,34 +1,24 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Linq;
-using System.Text;
 using SS13_Shared.GO;
 using SS13_Shared;
-using System.Drawing;
-using ClientServices;
-using ClientInterfaces;
 
-namespace CGO
+namespace CGO.Component.Damageable.Health.LocationalHealth
 {
     public class HumanHealthComponent : HealthComponent //Behaves like health component but tracks damage of individual zones.
     {                                                   //Useful for mobs.
 
-        public List<DamageLocation> damageZones = new List<DamageLocation>(); //makes this protected again.
-
-        public HumanHealthComponent()
-            :base()
-        {
-        }
+        public List<DamageLocation> DamageZones = new List<DamageLocation>(); //makes this protected again.
 
         public override void HandleNetworkMessage(IncomingEntityComponentMessage message)
         {
-            ComponentMessageType type = (ComponentMessageType)message.messageParameters[0];
+            var type = (ComponentMessageType)message.MessageParameters[0];
 
             switch (type)
             {
                 case (ComponentMessageType.HealthStatus):
-                   HandleHealthUpdate(message);
-                   break;
+                    HandleHealthUpdate(message);
+                    break;
             }
         }
 
@@ -37,16 +27,16 @@ namespace CGO
             switch (type)
             {
                 case ComponentMessageType.GetCurrentLocationHealth:
-                    BodyPart location = (BodyPart)list[0];
-                    if (damageZones.Exists(x => x.location == location))
+                    var location = (BodyPart)list[0];
+                    if (DamageZones.Exists(x => x.location == location))
                     {
-                        DamageLocation dmgLoc = damageZones.First(x => x.location == location);
-                        ComponentReplyMessage reply1 = new ComponentReplyMessage(ComponentMessageType.CurrentLocationHealth, location, dmgLoc.UpdateTotalHealth(), dmgLoc.maxHealth);
+                        var dmgLoc = DamageZones.First(x => x.location == location);
+                        var reply1 = new ComponentReplyMessage(ComponentMessageType.CurrentLocationHealth, location, dmgLoc.UpdateTotalHealth(), dmgLoc.maxHealth);
                         replies.Add(reply1);
                     }
                     break;
                 case ComponentMessageType.GetCurrentHealth:
-                    ComponentReplyMessage reply2 = new ComponentReplyMessage(ComponentMessageType.CurrentHealth, GetHealth(), GetMaxHealth());
+                    var reply2 = new ComponentReplyMessage(ComponentMessageType.CurrentHealth, GetHealth(), GetMaxHealth());
                     replies.Add(reply2);
                     break;
                 default:
@@ -57,19 +47,19 @@ namespace CGO
 
         public void HandleHealthUpdate(IncomingEntityComponentMessage msg)
         {
-            BodyPart part = (BodyPart)msg.messageParameters[1];
-            int dmgCount = (int)msg.messageParameters[2];
-            int maxHP = (int)msg.messageParameters[3];
+            var part = (BodyPart)msg.MessageParameters[1];
+            var dmgCount = (int)msg.MessageParameters[2];
+            var maxHP = (int)msg.MessageParameters[3];
 
-            if (damageZones.Exists(x => x.location == part))
+            if (DamageZones.Exists(x => x.location == part))
             {
-                var existingZone = damageZones.First(x => x.location == part);
+                var existingZone = DamageZones.First(x => x.location == part);
                 existingZone.maxHealth = maxHP;
 
-                for (int i = 0; i < dmgCount; i++)
+                for (var i = 0; i < dmgCount; i++)
                 {
-                    DamageType type = (DamageType)msg.messageParameters[4 + (i * 2)]; //Retrieve data from message in pairs starting at 4
-                    int amount = (int)msg.messageParameters[5 + (i * 2)];
+                    var type = (DamageType)msg.MessageParameters[4 + (i * 2)]; //Retrieve data from message in pairs starting at 4
+                    var amount = (int)msg.MessageParameters[5 + (i * 2)];
 
                     if (existingZone.damageIndex.ContainsKey(type))
                         existingZone.damageIndex[type] = amount;
@@ -82,12 +72,12 @@ namespace CGO
             else
             {
                 var newZone = new DamageLocation(part, maxHP, maxHP);
-                damageZones.Add(newZone);
+                DamageZones.Add(newZone);
 
-                for (int i = 0; i < dmgCount; i++)
+                for (var i = 0; i < dmgCount; i++)
                 {
-                    DamageType type = (DamageType)msg.messageParameters[4 + (i * 2)]; //Retrieve data from message in pairs starting at 4
-                    int amount = (int)msg.messageParameters[5 + (i * 2)];
+                    var type = (DamageType)msg.MessageParameters[4 + (i * 2)]; //Retrieve data from message in pairs starting at 4
+                    var amount = (int)msg.MessageParameters[5 + (i * 2)];
 
                     if (newZone.damageIndex.ContainsKey(type))
                         newZone.damageIndex[type] = amount;
@@ -98,19 +88,19 @@ namespace CGO
                 newZone.UpdateTotalHealth();
             }
 
-            maxHealth = GetMaxHealth();
-            health = GetHealth();
-            if (health <= 0) isDead = true; //Need better logic here.
+            MaxHealth = GetMaxHealth();
+            Health = GetHealth();
+            if (Health <= 0) IsDead = true; //Need better logic here.
         }
 
         public override float GetMaxHealth()
         {
-            return damageZones.Sum(x => x.maxHealth);
+            return DamageZones.Sum(x => x.maxHealth);
         }
 
         public override float GetHealth()
         {
-            return damageZones.Sum(x => x.UpdateTotalHealth());
+            return DamageZones.Sum(x => x.UpdateTotalHealth());
         }
     }
 }

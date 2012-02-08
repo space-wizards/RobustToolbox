@@ -1,5 +1,7 @@
 ﻿using System.Collections.Generic;
 using System.Linq;
+using ClientInterfaces.GOC;
+using SS13_Shared;
 using SS13_Shared.GO;
 using Lidgren.Network;
 
@@ -7,11 +9,11 @@ namespace CGO
 {
     public class InventoryComponent : GameObjectComponent
     {
-        public List<Entity> containedEntities { get; private set; }
+        public List<IEntity> containedEntities { get; private set; }
 
         public int maxSlots { get; private set; }
 
-        public delegate void InventoryComponentUpdateHandler(InventoryComponent sender, int maxSlots, List<Entity> entities);
+        public delegate void InventoryComponentUpdateHandler(InventoryComponent sender, int maxSlots, List<IEntity> entities);
         public event InventoryComponentUpdateHandler Changed;
 
         public delegate void InventoryUpdateRequiredHandler(InventoryComponent sender);
@@ -20,12 +22,12 @@ namespace CGO
         public InventoryComponent()
         {
             family = ComponentFamily.Inventory;
-            containedEntities = new List<Entity>();
+            containedEntities = new List<IEntity>();
         }
 
         public override void HandleNetworkMessage(IncomingEntityComponentMessage message)
         {
-            switch ((ComponentMessageType)message.messageParameters[0])
+            switch ((ComponentMessageType)message.MessageParameters[0])
             {
                 case ComponentMessageType.InventoryInformation:
                     UnpackListing(message);
@@ -38,37 +40,34 @@ namespace CGO
 
         private void UnpackListing(IncomingEntityComponentMessage msg)
         {
-            maxSlots = (int)msg.messageParameters[1];
+            maxSlots = (int)msg.MessageParameters[1];
 
             containedEntities.Clear();
 
-            for (int i = 0; i < (int)msg.messageParameters[2]; i++)
+            for (int i = 0; i < (int)msg.MessageParameters[2]; i++)
             {
-                int msgPos = 3 + i;
-                Entity ent = EntityManager.Singleton.GetEntity((int)msg.messageParameters[msgPos]);
-                if (ent != null)
-                    containedEntities.Add(ent);
+                var msgPos = 3 + i;
+                var entity = EntityManager.Singleton.GetEntity((int)msg.MessageParameters[msgPos]);
+                if (entity != null)
+                    containedEntities.Add(entity);
             }
 
             if (Changed != null) Changed(this, maxSlots, containedEntities);
         }
 
-        public bool containsEntity(Entity entity)
+        public bool ContainsEntity(IEntity entity)
         {
-            if (containedEntities.Contains(entity)) return true;
-            else return false;
+            return containedEntities.Contains(entity);
         }
 
-        public bool containsEntity(string templatename)
+        public bool ContainsEntity(string templatename)
         {
-            if (containedEntities.Exists(x => x.template.Name == templatename)) return true;
-            else return false;
+            return containedEntities.Exists(x => x.Template.Name == templatename);
         }
 
-        public Entity getEntity(string templatename)
+        public IEntity GetEntity(string templatename)
         {
-            if (containedEntities.Exists(x => x.template.Name == templatename)) return containedEntities.First(x => x.template.Name == templatename);
-            else return null;
+            return containedEntities.Exists(x => x.Template.Name == templatename) ? containedEntities.First(x => x.Template.Name == templatename) : null;
         }
 
         public void SendRequestListing()
@@ -76,12 +75,12 @@ namespace CGO
             Owner.SendComponentNetworkMessage(this, NetDeliveryMethod.ReliableUnordered, ComponentMessageType.InventoryInformation);
         }
 
-        public void SendInventoryAdd(Entity ent)
+        public void SendInventoryAdd(IEntity ent)
         {
             Owner.SendComponentNetworkMessage(this, NetDeliveryMethod.ReliableUnordered, ComponentMessageType.InventoryAdd, ent.Uid);
         }
 
-        public void SendInventoryRemove(Entity ent)
+        public void SendInventoryRemove(IEntity ent)
         {
             Owner.SendComponentNetworkMessage(this, NetDeliveryMethod.ReliableUnordered, ComponentMessageType.InventoryRemove, ent.Uid);
         }

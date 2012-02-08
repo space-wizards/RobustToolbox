@@ -1,66 +1,65 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Linq;
-using System.Text;
+using ClientInterfaces.GOC;
+using ClientInterfaces.UserInterface;
+using SS13.IoC;
 using SS13_Shared.GO;
 using SS13_Shared;
-using System.Drawing;
-using ClientServices;
 using ClientInterfaces;
 
-namespace CGO
+namespace CGO.Component.Hands
 {
     public class HumanHandsComponent : GameObjectComponent
     {
-        private Dictionary<Hand, Entity> handslots;
-        public Dictionary<Hand, Entity> HandSlots { get { return handslots; } private set { handslots = value; } }
+        private Dictionary<Hand, IEntity> handslots;
+        public Dictionary<Hand, IEntity> HandSlots { get { return handslots; } private set { handslots = value; } }
         public Hand currentHand { get; private set; }
 
         public HumanHandsComponent()
             : base()
         {
             family = ComponentFamily.Hands;
-            handslots = new Dictionary<Hand, Entity>();
+            handslots = new Dictionary<Hand, IEntity>();
         }
 
         public override void HandleNetworkMessage(IncomingEntityComponentMessage message)
         {
-            ComponentMessageType type = (ComponentMessageType)message.messageParameters[0];
-            int entityUID;
+            var type = (ComponentMessageType)message.MessageParameters[0];
+            int entityUid;
             Hand usedHand;
-            Entity item;
+            IEntity item;
 
             switch(type)
             {
                 case(ComponentMessageType.EntityChanged): //This is not sent atm. Commented out serverside for later use.
-                    entityUID = (int)message.messageParameters[1];
-                    usedHand = (Hand)message.messageParameters[2];
-                    item = EntityManager.Singleton.GetEntity(entityUID);
+                    entityUid = (int)message.MessageParameters[1];
+                    usedHand = (Hand)message.MessageParameters[2];
+                    item = EntityManager.Singleton.GetEntity(entityUid);
                     if (handslots.Keys.Contains(usedHand))
                         handslots[usedHand] = item;          
                     else
                         handslots.Add(usedHand, item);
                     break;
                 case(ComponentMessageType.HandsDroppedItem):
-                    entityUID = (int)message.messageParameters[1];
-                    usedHand = (Hand)message.messageParameters[2];
-                    item = EntityManager.Singleton.GetEntity(entityUID);
+                    entityUid = (int)message.MessageParameters[1];
+                    usedHand = (Hand)message.MessageParameters[2];
+                    item = EntityManager.Singleton.GetEntity(entityUid);
                     //item.SendMessage(this, ComponentMessageType.Dropped, null);
                     handslots.Remove(usedHand);
                     break;
                 case(ComponentMessageType.HandsPickedUpItem):
-                    entityUID = (int)message.messageParameters[1];
-                    usedHand = (Hand)message.messageParameters[2];
-                    item = EntityManager.Singleton.GetEntity(entityUID);
+                    entityUid = (int)message.MessageParameters[1];
+                    usedHand = (Hand)message.MessageParameters[2];
+                    item = EntityManager.Singleton.GetEntity(entityUid);
                     //item.SendMessage(this, ComponentMessageType.PickedUp, null, usedHand);
                     handslots.Add(usedHand, item);
                     break;
                 case ComponentMessageType.ActiveHandChanged:
-                    SwitchHandTo((Hand)message.messageParameters[1]);
+                    SwitchHandTo((Hand)message.MessageParameters[1]);
                     break;
             }
 
-            ServiceManager.Singleton.GetUiManager().ComponentUpdate(GuiComponentType.ComboGUI, ComboGuiMessage.UpdateHands);
+            IoCManager.Resolve<IUserInterfaceManager>().ComponentUpdate(GuiComponentType.ComboGui, ComboGuiMessage.UpdateHands);
         }
 
         public void SendSwitchHands(Hand hand)
@@ -68,7 +67,7 @@ namespace CGO
             Owner.SendComponentNetworkMessage(this, Lidgren.Network.NetDeliveryMethod.ReliableOrdered, ComponentMessageType.ActiveHandChanged, hand);
         }
 
-        public void SendDropEntity(Entity ent)
+        public void SendDropEntity(IEntity ent)
         {
             Owner.SendComponentNetworkMessage(this, Lidgren.Network.NetDeliveryMethod.ReliableOrdered, ComponentMessageType.DropEntityInHand, ent.Uid);
         }

@@ -10,8 +10,9 @@ namespace ClientServices.Configuration
         public uint DisplayHeight = 768;
         public bool Fullscreen = false;
         public bool VSync = true;
-        public string ResourcePack = @"..\..\..\Media\Media.gorPack";
-        public string GuiFolder = @"..\..\..\Media\";
+        public string ResourcePack = @"..\..\..\Media\ResourcePack.zip";
+        public string ResourcePassword;
         public string PlayerName = "Joe Genero";
+        public string ServerAddress = "127.0.0.1";
     }
 }

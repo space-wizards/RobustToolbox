@@ -91,6 +91,9 @@
       <HintPath>..\References\Release\GorgonFramework.dll</HintPath>
       <SpecificVersion>False</SpecificVersion>
     </Reference>
+    <Reference Include="SS13.IoC">
+      <HintPath>..\SS13.IoC\bin\Release\SS13.IoC.dll</HintPath>
+    </Reference>
     <Reference Include="System" />
     <Reference Include="System.Core">
       <RequiredTargetFramework>3.5</RequiredTargetFramework>
@@ -105,58 +108,12 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="Effects\GaussianBlur.cs" />
-    <Compile Include="Effects\StarScroller.cs" />
     <Compile Include="MainWindow.cs">
       <SubType>Form</SubType>
     </Compile>
     <Compile Include="MainWindow.Designer.cs">
       <DependentUpon>MainWindow.cs</DependentUpon>
     </Compile>
-    <Compile Include="HelperClasses\InterpolationPacket.cs" />
-    <Compile Include="Modules\Network\NetworkGrapher.cs" />
-    <Compile Include="Modules\PlacementManager.cs" />
-    <Compile Include="Modules\Network\NetworkManager.cs" />
-    <Compile Include="Modules\PlayerController.cs" />
-    <Compile Include="Modules\State.cs" />
-    <Compile Include="Modules\StateManager.cs" />
-    <Compile Include="HelperClasses\Utilities.cs" />
-    <Compile Include="Modules\UserInterface\Components\BlueprintButton.cs" />
-    <Compile Include="Modules\UserInterface\Components\TimerBar.cs" />
-    <Compile Include="Modules\UserInterface\Components\ProgressBar.cs" />
-    <Compile Include="Modules\UserInterface\DragDropInfo.cs" />
-    <Compile Include="Modules\UserInterface\Components\AdminPasswordDialog.cs" />
-    <Compile Include="Modules\UserInterface\Components\AdminPlayerPanel.cs" />
-    <Compile Include="Modules\UserInterface\Components\AdminUnbanPanel.cs" />
-    <Compile Include="Modules\UserInterface\Components\Button.cs" />
-    <Compile Include="Modules\UserInterface\Components\Chatbox.cs" />
-    <Compile Include="Modules\UserInterface\Components\Checkbox.cs" />
-    <Compile Include="Modules\UserInterface\Components\ContextMenu.cs" />
-    <Compile Include="Modules\UserInterface\Components\TargetingDummyElement.cs" />
-    <Compile Include="Modules\UserInterface\Components\TargetingDummy.cs" />
-    <Compile Include="Modules\UserInterface\Components\ExamineWindow.cs" />
-    <Compile Include="Modules\UserInterface\Components\TileSpawnPanel.cs" />
-    <Compile Include="Modules\UserInterface\Components\SimpleImageButton.cs" />
-    <Compile Include="Modules\UserInterface\Components\EntitySpawnPanel.cs" />
-    <Compile Include="Modules\UserInterface\Components\EntitySpawnSelectButton.cs" />
-    <Compile Include="Modules\UserInterface\Components\GuiComponent.cs" />
-    <Compile Include="Modules\UserInterface\Components\DisconnectedScreenBlocker.cs" />
-    <Compile Include="Modules\UserInterface\Components\IGuiComponent.cs" />
-    <Compile Include="Modules\UserInterface\Components\JobSelectButton.cs" />
-    <Compile Include="Modules\UserInterface\Components\Label.cs" />
-    <Compile Include="Modules\UserInterface\Components\Listbox.cs" />
-    <Compile Include="Modules\UserInterface\Components\ScrollableContainer.cs" />
-    <Compile Include="Modules\UserInterface\Components\Scrollbar.cs" />
-    <Compile Include="Modules\UserInterface\Components\StatHealthComponent.cs" />
-    <Compile Include="Modules\UserInterface\Components\StatPanel.cs" />
-    <Compile Include="Modules\UserInterface\Components\Textbox.cs" />
-    <Compile Include="Modules\UserInterface\Components\Window.cs" />
-    <Compile Include="Modules\UserInterface\Inventory\CraftSlotUi.cs" />
-    <Compile Include="Modules\UserInterface\Inventory\HumanComboGUI.cs" />
-    <Compile Include="Modules\UserInterface\Inventory\EquipmentSlotUi.cs" />
-    <Compile Include="Modules\UserInterface\Inventory\InventoryViewer.cs" />
-    <Compile Include="Modules\UserInterface\Inventory\InventorySlotUi.cs" />
-    <Compile Include="Modules\UserInterface\UI_Manager.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Properties\Resources.Designer.cs">
@@ -164,9 +121,6 @@
       <DesignTime>True</DesignTime>
       <DependentUpon>Resources.resx</DependentUpon>
     </Compile>
-    <Compile Include="States\ConnectMenu.cs" />
-    <Compile Include="States\GameScreen.cs" />
-    <Compile Include="States\LobbyScreen.cs" />
   </ItemGroup>
   <ItemGroup>
     <BootstrapperPackage Include="Microsoft.Net.Client.3.5">

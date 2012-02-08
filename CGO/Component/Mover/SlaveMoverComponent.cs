@@ -1,7 +1,6 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Linq;
-using System.Text;
+using ClientInterfaces.GOC;
 using GorgonLibrary;
 using SS13_Shared;
 using SS13_Shared.GO;
@@ -13,7 +12,7 @@ namespace CGO
     /// </summary>
     public class SlaveMoverComponent : GameObjectComponent
     {
-        Entity master;
+        IEntity master;
         Constants.MoveDirs movedir = Constants.MoveDirs.south;
 
         public SlaveMoverComponent()
@@ -44,7 +43,7 @@ namespace CGO
         private void Attach(int uid)
         {
             master = EntityManager.Singleton.GetEntity(uid);
-            master.OnMove += new Entity.EntityMoveEvent(HandleOnMove);
+            master.OnMove += HandleOnMove;
             Translate(master.Position);
             GetMasterMoveDirection();
         }
@@ -56,7 +55,7 @@ namespace CGO
             master.SendMessage(this, ComponentMessageType.GetMoveDir, replies);
             if (replies.Count > 0)
             {
-                movedir = (Constants.MoveDirs)replies.First().paramsList[0];
+                movedir = (Constants.MoveDirs)replies.First().ParamsList[0];
                 Owner.SendMessage(this, ComponentMessageType.MoveDirection, null, movedir);
             }
         }
@@ -65,14 +64,14 @@ namespace CGO
         {
             if (master != null)
             {
-                master.OnMove -= new Entity.EntityMoveEvent(HandleOnMove);
+                master.OnMove -= HandleOnMove;
                 master = null;
             }
         }
 
-        private void HandleOnMove(Vector2D toPosition)
+        private void HandleOnMove(object sender, VectorEventArgs args)
         {
-            Translate(toPosition);
+            Translate(args.Vector2D);
         }
 
         private void Translate(Vector2D toPosition)

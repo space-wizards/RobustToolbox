@@ -1,21 +1,14 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
+﻿using SS13_Shared.GO;
 
 namespace CGO
 {
-    public class RenderableComponent : GameObjectComponent, IGameObjectComponent, IRenderableComponent
+    public class RenderableComponent : GameObjectComponent, IRenderableComponent
     {
-        private SS13_Shared.GO.DrawDepth m_drawDepth;
-        public SS13_Shared.GO.DrawDepth DrawDepth
-        {
-            get { return m_drawDepth; }
-            set { m_drawDepth = value; }
-        }
+        public DrawDepth DrawDepth { get; set; }
+
         public RenderableComponent()
         {
-            family = SS13_Shared.GO.ComponentFamily.Renderable; 
+            family = ComponentFamily.Renderable; 
         }
 
         public virtual void Render()

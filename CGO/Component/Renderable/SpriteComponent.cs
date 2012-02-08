@@ -1,13 +1,14 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
-using ClientServices;
-using ClientServices.Resources;
+using ClientInterfaces;
+using ClientInterfaces.GOC;
 using GorgonLibrary.Graphics;
 using GorgonLibrary;
 using ClientWindow;
 using System.Drawing;
+using SS13.IoC;
+using SS13_Shared;
 using SS13_Shared.GO;
 
 namespace CGO
@@ -28,13 +29,12 @@ namespace CGO
         }
 
         public SpriteComponent()
-            : base()
         {
             sprites = new Dictionary<string, Sprite>();
             family = ComponentFamily.Renderable;
         }
 
-        public override void OnAdd(Entity owner)
+        public override void OnAdd(IEntity owner)
         {
             base.OnAdd(owner);
             //Send a spritechanged message so everything knows whassup.
@@ -66,16 +66,16 @@ namespace CGO
 
         public override void HandleNetworkMessage(IncomingEntityComponentMessage message)
         {
-            switch ((ComponentMessageType)message.messageParameters[0])
+            switch ((ComponentMessageType)message.MessageParameters[0])
             {
                 case ComponentMessageType.SetVisible:
-                    visible = (bool)message.messageParameters[1];
+                    visible = (bool)message.MessageParameters[1];
                     break;
                 case ComponentMessageType.SetSpriteByKey:
-                    SetSpriteByKey((string)message.messageParameters[1]);
+                    SetSpriteByKey((string)message.MessageParameters[1]);
                     break;
                 case ComponentMessageType.SetDrawDepth:
-                    SetDrawDepth((DrawDepth)message.messageParameters[1]);
+                    SetDrawDepth((DrawDepth)message.MessageParameters[1]);
                     break;
             }
         }
@@ -148,8 +148,8 @@ namespace CGO
         {
             if (sprites.ContainsKey(spriteKey))
                 throw new Exception("That sprite is already added.");
-            if (ServiceManager.Singleton.GetService<ResourceManager>().SpriteExists(spriteKey))
-                AddSprite(spriteKey, ServiceManager.Singleton.GetService<ResourceManager>().GetSprite(spriteKey));
+            if (IoCManager.Resolve<IResourceManager>().SpriteExists(spriteKey))
+                AddSprite(spriteKey, IoCManager.Resolve<IResourceManager>().GetSprite(spriteKey));
 
             //If there's only one sprite, and the current sprite is explicitly not set, then lets go ahead and set our sprite.
             if (sprites.Count == 1)

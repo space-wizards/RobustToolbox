@@ -65,7 +65,7 @@ namespace CGO
                         
                         if (channel == ChatChannel.Ingame || channel == ChatChannel.Player || channel == ChatChannel.Radio)
                         {
-                            (_speechBubble ?? (_speechBubble = new SpeechBubble(Owner.name + Owner.Uid))).SetText(text);
+                            (_speechBubble ?? (_speechBubble = new SpeechBubble(Owner.Name + Owner.Uid))).SetText(text);
                         }
                     }
                     break;

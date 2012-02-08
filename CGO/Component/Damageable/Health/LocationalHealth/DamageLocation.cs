@@ -1,14 +1,8 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
+﻿using System.Collections.Generic;
 using SS13_Shared.GO;
 using SS13_Shared;
-using System.Drawing;
-using ClientServices;
-using ClientInterfaces;
 
-namespace CGO
+namespace CGO.Component.Damageable.Health.LocationalHealth
 {
     public class DamageLocation
     {

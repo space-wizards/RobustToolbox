@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using ClientInterfaces.GOC;
 using SS13_Shared.GO;
 
 namespace CGO

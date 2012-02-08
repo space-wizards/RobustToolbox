@@ -4,6 +4,7 @@ using System.Linq;
 using System.Text;
 using System.IO;
 using Lidgren.Network;
+using SS13_Shared;
 
 namespace SS13_Server.Modules.Client
 {

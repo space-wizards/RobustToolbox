@@ -22,13 +22,13 @@ namespace SGO.Component.Item.ItemCapability
 
         public override bool ApplyTo(Entity target, Entity sourceActor)
         {
-            BodyPart targetedArea = BodyPart.Torso;
+            var targetedArea = BodyPart.Torso;
 
-            List<ComponentReplyMessage> replies = new List<ComponentReplyMessage>();
+            var replies = new List<ComponentReplyMessage>();
             sourceActor.SendMessage(this, SS13_Shared.GO.ComponentMessageType.GetActorSession, replies);
-            if (replies.Count > 0 && replies[0].messageType == SS13_Shared.GO.ComponentMessageType.ReturnActorSession)
+            if (replies.Count > 0 && replies[0].MessageType == SS13_Shared.GO.ComponentMessageType.ReturnActorSession)
             {
-                IPlayerSession session = (IPlayerSession)replies[0].paramsList[0];
+                IPlayerSession session = (IPlayerSession)replies[0].ParamsList[0];
                 targetedArea = session.TargetedArea;
             }
             else throw new NotImplementedException("Actor has no session or No actor component that returns a session"); //BEEPBOOP

@@ -1,14 +1,13 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
+﻿using System.Collections.Generic;
+using ClientInterfaces.GOC;
+using SS13_Shared;
 using SS13_Shared.GO;
 
 namespace CGO
 {
     public class EquipmentComponent : GameObjectComponent
     {
-        public Dictionary<EquipmentSlot, Entity> equippedEntities = new Dictionary<EquipmentSlot, Entity>();
+        public Dictionary<EquipmentSlot, IEntity> equippedEntities = new Dictionary<EquipmentSlot, IEntity>();
         public List<EquipmentSlot> activeSlots = new List<EquipmentSlot>();
 
         public EquipmentComponent()
@@ -18,13 +17,13 @@ namespace CGO
 
         public override void HandleNetworkMessage(IncomingEntityComponentMessage message)
         {
-            switch((EquipmentComponentNetMessage)message.messageParameters[0])
+            switch ((EquipmentComponentNetMessage)message.MessageParameters[0])
             {
                 case EquipmentComponentNetMessage.ItemEquipped:
-                    EquipItem((EquipmentSlot)message.messageParameters[1], (int)message.messageParameters[2]);
+                    EquipItem((EquipmentSlot)message.MessageParameters[1], (int)message.MessageParameters[2]);
                     break;
                 case EquipmentComponentNetMessage.ItemUnEquipped:
-                    UnEquipItem((EquipmentSlot)message.messageParameters[1], (int)message.messageParameters[2]);
+                    UnEquipItem((EquipmentSlot)message.MessageParameters[1], (int)message.MessageParameters[2]);
                     break;
             }
         }

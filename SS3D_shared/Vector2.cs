@@ -1,8 +1,8 @@
 ﻿#region Imports
 
 using System;
-using System.Xml.Serialization;			// for various Xml attributes
-using System.Globalization;
+using System.Xml.Serialization;
+// for various Xml attributes
 
 #endregion
 
@@ -23,7 +23,7 @@ using System.Globalization;
 /// Mixed product function implemented
 /// </Changes>
 /// 
-namespace SS13_Shared.HelperClasses
+namespace SS13_Shared
 {
 
     [Serializable]

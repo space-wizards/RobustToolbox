@@ -1,8 +1,7 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Linq;
-using System.Text;
-using ClientServices.Input;
+using ClientInterfaces.Input;
+using SS13.IoC;
 using SS13_Shared.GO;
 using SS13_Shared;
 
@@ -18,8 +17,9 @@ namespace CGO
         {
             family = ComponentFamily.Input;
             //Bind to the key binding manager
-            KeyBindingManager.Singleton.BoundKeyDown += new KeyBindingManager.BoundKeyEventHandler(KeyDown);
-            KeyBindingManager.Singleton.BoundKeyUp += new KeyBindingManager.BoundKeyEventHandler(KeyUp);
+            var keyBindingManager = IoCManager.Resolve<IKeyBindingManager>();
+            keyBindingManager.BoundKeyDown += KeyDown;
+            keyBindingManager.BoundKeyUp += KeyUp;
             keyStates = new Dictionary<BoundKeyFunctions, bool>();
             keyHandlers = new Dictionary<BoundKeyFunctions, KeyEvent>();
             //Set up keystates
@@ -28,8 +28,9 @@ namespace CGO
         public override void Shutdown()
         {
             base.Shutdown();
-            KeyBindingManager.Singleton.BoundKeyDown -= new KeyBindingManager.BoundKeyEventHandler(KeyDown);
-            KeyBindingManager.Singleton.BoundKeyUp -= new KeyBindingManager.BoundKeyEventHandler(KeyUp);
+            var keyBindingManager = IoCManager.Resolve<IKeyBindingManager>();
+            keyBindingManager.BoundKeyDown -= KeyDown;
+            keyBindingManager.BoundKeyUp -= KeyUp;
         }
 
         public override void Update(float frameTime)

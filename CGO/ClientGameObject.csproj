@@ -35,19 +35,18 @@
       <SpecificVersion>False</SpecificVersion>
       <HintPath>..\References\Release\Gorgon.dll</HintPath>
     </Reference>
+    <Reference Include="SS13.IoC">
+      <HintPath>..\SS13.IoC\bin\Release\SS13.IoC.dll</HintPath>
+    </Reference>
     <Reference Include="System" />
     <Reference Include="System.Core" />
     <Reference Include="System.Drawing" />
     <Reference Include="System.Xml.Linq" />
-    <Reference Include="System.Data.DataSetExtensions" />
-    <Reference Include="Microsoft.CSharp" />
-    <Reference Include="System.Data" />
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
     <Compile Include="ComponentFactory.cs" />
     <Compile Include="ComponentManager.cs" />
-    <Compile Include="ComponentParameter.cs" />
     <Compile Include="Component\ClickableComponent.cs" />
     <Compile Include="Component\Collidable\CollidableComponent.cs" />
     <Compile Include="Component\Collidable\TriggerableComponent.cs" />
@@ -82,8 +81,6 @@
     <Compile Include="EntityTemplate.cs" />
     <Compile Include="EntityTemplateDatabase.cs" />
     <Compile Include="GameObjectComponent.cs" />
-    <Compile Include="IGameObjectComponent.cs" />
-    <Compile Include="IMoverComponent.cs" />
     <Compile Include="KeyboardInputEventArgs.cs" />
     <Compile Include="Component\Input\KeyBindingInputComponent.cs" />
     <Compile Include="MessageEnums.cs" />
@@ -94,10 +91,6 @@
     <ProjectReference Include="..\ClientInterfaces\ClientInterfaces.csproj">
       <Project>{B31E7B59-7066-4186-AB18-B1BB6DE0E537}</Project>
       <Name>ClientInterfaces</Name>
-    </ProjectReference>
-    <ProjectReference Include="..\ClientServices\ClientServices.csproj">
-      <Project>{7F85F20C-E2B5-455D-A1CA-76ED000D25EA}</Project>
-      <Name>ClientServices</Name>
     </ProjectReference>
     <ProjectReference Include="..\ClientWindow\ClientWindow.csproj">
       <Project>{9CFBF7F1-B939-433B-AFA1-C12EBA2565CD}</Project>

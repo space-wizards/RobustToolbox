@@ -31,6 +31,12 @@
     <WarningLevel>4</WarningLevel>
   </PropertyGroup>
   <ItemGroup>
+    <Reference Include="CGO">
+      <HintPath>..\CGO\bin\Release\CGO.dll</HintPath>
+    </Reference>
+    <Reference Include="ClientWindow">
+      <HintPath>..\ClientWindow\bin\Release\ClientWindow.dll</HintPath>
+    </Reference>
     <Reference Include="Gorgon, Version=1.1.4119.34319, Culture=neutral, PublicKeyToken=c001d94e9acbbee7, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
       <HintPath>..\References\Release\Gorgon.dll</HintPath>
@@ -56,12 +62,16 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="AssemblyReference.cs" />
     <Compile Include="Collision\CollisionManager.cs" />
     <Compile Include="Configuration\ConfigurationManager.cs" />
     <Compile Include="Configuration\Configuration.cs" />
     <Compile Include="Exceptions\ExistingClientServiceException.cs" />
     <Compile Include="Exceptions\UnregisteredClientServiceException.cs" />
-    <Compile Include="Input\BoundKeyEventArgs.cs" />
+    <Compile Include="Helpers\GaussianBlur.cs" />
+    <Compile Include="Helpers\InterpolationPacket.cs" />
+    <Compile Include="Helpers\StarScroller.cs" />
+    <Compile Include="Helpers\Utilities.cs" />
     <Compile Include="Input\KeyBindingManager.cs" />
     <Compile Include="Input\KeyBindings.Designer.cs">
       <DependentUpon>KeyBindings.xsd</DependentUpon>
@@ -71,13 +81,56 @@
     <Compile Include="Lighting\Light.cs" />
     <Compile Include="Lighting\LightManager.cs" />
     <Compile Include="Map\MapManager.cs" />
+    <Compile Include="Network\NetworkGrapher.cs" />
+    <Compile Include="Network\NetworkManager.cs" />
+    <Compile Include="Placement\PlacementManager.cs" />
+    <Compile Include="Player\PlayerManager.cs" />
     <Compile Include="Resources\ResourceManagerZip.cs" />
-    <Compile Include="ServiceManager.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Map\Tiles\Floor\Floor.cs" />
     <Compile Include="Map\Tiles\Floor\Space.cs" />
     <Compile Include="Map\Tiles\Tile.cs" />
     <Compile Include="Map\Tiles\Wall\Wall.cs" />
+    <Compile Include="State\State.cs" />
+    <Compile Include="State\StateManager.cs" />
+    <Compile Include="State\States\ConnectMenu.cs" />
+    <Compile Include="State\States\GameScreen.cs" />
+    <Compile Include="State\States\LobbyScreen.cs" />
+    <Compile Include="UserInterface\Components\AdminPasswordDialog.cs" />
+    <Compile Include="UserInterface\Components\AdminPlayerPanel.cs" />
+    <Compile Include="UserInterface\Components\AdminUnbanPanel.cs" />
+    <Compile Include="UserInterface\Components\BlueprintButton.cs" />
+    <Compile Include="UserInterface\Components\Button.cs" />
+    <Compile Include="UserInterface\Components\Chatbox.cs" />
+    <Compile Include="UserInterface\Components\Checkbox.cs" />
+    <Compile Include="UserInterface\Components\ContextMenu.cs" />
+    <Compile Include="UserInterface\Components\DisconnectedScreenBlocker.cs" />
+    <Compile Include="UserInterface\Components\EntitySpawnPanel.cs" />
+    <Compile Include="UserInterface\Components\EntitySpawnSelectButton.cs" />
+    <Compile Include="UserInterface\Components\ExamineWindow.cs" />
+    <Compile Include="UserInterface\Components\GuiComponent.cs" />
+    <Compile Include="UserInterface\Components\JobSelectButton.cs" />
+    <Compile Include="UserInterface\Components\Label.cs" />
+    <Compile Include="UserInterface\Components\Listbox.cs" />
+    <Compile Include="UserInterface\Components\ProgressBar.cs" />
+    <Compile Include="UserInterface\Components\ScrollableContainer.cs" />
+    <Compile Include="UserInterface\Components\Scrollbar.cs" />
+    <Compile Include="UserInterface\Components\SimpleImageButton.cs" />
+    <Compile Include="UserInterface\Components\StatHealthComponent.cs" />
+    <Compile Include="UserInterface\Components\StatPanel.cs" />
+    <Compile Include="UserInterface\Components\TargetingDummy.cs" />
+    <Compile Include="UserInterface\Components\TargetingDummyElement.cs" />
+    <Compile Include="UserInterface\Components\Textbox.cs" />
+    <Compile Include="UserInterface\Components\TileSpawnPanel.cs" />
+    <Compile Include="UserInterface\Components\TimerBar.cs" />
+    <Compile Include="UserInterface\Components\Window.cs" />
+    <Compile Include="UserInterface\DragDropInfo.cs" />
+    <Compile Include="UserInterface\Inventory\CraftSlotUi.cs" />
+    <Compile Include="UserInterface\Inventory\EquipmentSlotUi.cs" />
+    <Compile Include="UserInterface\Inventory\HumanComboGUI.cs" />
+    <Compile Include="UserInterface\Inventory\InventorySlotUi.cs" />
+    <Compile Include="UserInterface\Inventory\InventoryViewer.cs" />
+    <Compile Include="UserInterface\UserInterfaceManager.cs" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\ClientInterfaces\ClientInterfaces.csproj">

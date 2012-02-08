@@ -1,16 +1,16 @@
 ﻿using System;
 using System.Drawing;
 using System.Windows.Forms;
-using ClientServices;
-using ClientServices.Configuration;
-using ClientServices.Resources;
+using ClientInterfaces;
+using ClientInterfaces.Input;
+using ClientInterfaces.Network;
+using ClientInterfaces.State;
+using ClientInterfaces.UserInterface;
+using ClientServices.State.States;
 using GorgonLibrary;
 using GorgonLibrary.Graphics;
 using GorgonLibrary.InputDevices;
-using SS13.States;
-using SS13.Modules;
-using SS13.UserInterface;
-using ClientServices.Input;
+using SS13.IoC;
 
 namespace SS13
 {
@@ -18,8 +18,10 @@ namespace SS13
     {
         #region Fields
 
-        private readonly Program _program;
-        private readonly StateManager _stateManager;
+        private IStateManager _stateManager;
+        private IConfigurationManager _configurationManager;
+        private INetworkManager _networkManager;
+        private INetworkGrapher _netGrapher;
         private Input _input;
         
         #endregion
@@ -34,10 +36,8 @@ namespace SS13
 
         #region Constructors
 
-        public MainWindow(Program program)
+        public MainWindow()
         {
-            _program = program;
-            _stateManager = _program.StateManager;
             InitializeComponent();
         }
 
@@ -47,30 +47,31 @@ namespace SS13
 
         private void GorgonIdle(object sender, FrameEventArgs e)
         {
-            _program.NetworkManager.UpdateNetwork();
-
+            _networkManager.UpdateNetwork();
             _stateManager.Update(e);
 
-            ServiceManager.Singleton.GetService<UiManager>().Update();
-            ServiceManager.Singleton.GetService<UiManager>().Render();
+            IoCManager.Resolve<IUserInterfaceManager>().Update();
+            IoCManager.Resolve<IUserInterfaceManager>().Render();
 
-            _program.NetGrapher.Update();
+            _netGrapher.Update();
         }
 
         private void MainWindowLoad(object sender, EventArgs e)
         {
+            _configurationManager = IoCManager.Resolve<IConfigurationManager>();
+
             SetupGorgon();
             SetupInput();
 
-            // Load Resources.
-            ServiceManager.Singleton.Register<ResourceManager>();
-            ServiceManager.Singleton.GetService<ResourceManager>().LoadResourceZip(@"..\\..\\..\\Media\\ResourcePack.zip");
+            _networkManager = IoCManager.Resolve<INetworkManager>();
+            _netGrapher = IoCManager.Resolve<INetworkGrapher>();
+            _stateManager = IoCManager.Resolve<IStateManager>();
 
-            PlayerName_TextBox.Text = ServiceManager.Singleton.GetService<ConfigurationManager>().Configuration.PlayerName;
+            PlayerName_TextBox.Text = _configurationManager.GetPlayerName();
 
             Gorgon.Go();
 
-            _stateManager.Startup(typeof(ConnectMenu));
+            _stateManager.RequestStateChange<ConnectMenu>();
         }
 
         private void MainWindowResizeEnd(object sender, EventArgs e)
@@ -81,13 +82,12 @@ namespace SS13
 
         private void MainWindowFormClosing(object sender, FormClosingEventArgs e)
         {
-            if (disconnectToolStripMenuItem.Enabled) { _program.NetworkManager.Disconnect(); }
+            if (disconnectToolStripMenuItem.Enabled) {_networkManager.Disconnect(); }
         }
 
         private void QuitToolStripMenuItemClick(object sender, EventArgs e)
         {
             Gorgon.Terminate();
-            _stateManager.Shutdown();
             Environment.Exit(0);
         }
 
@@ -95,8 +95,8 @@ namespace SS13
         {
             if (e.KeyChar != '\r') return;
 
-            ServiceManager.Singleton.GetService<ConfigurationManager>().Configuration.PlayerName = PlayerName_TextBox.Text;
-            ServiceManager.Singleton.GetService<ConfigurationManager>().Save();
+            _configurationManager.SetPlayerName(PlayerName_TextBox.Text);
+            _configurationManager.SetServerAddress(toolStripTextBox1.Text);
 
             ((ConnectMenu)_stateManager.CurrentState).IpAddress = toolStripTextBox1.Text;
             ((ConnectMenu)_stateManager.CurrentState).StartConnect();
@@ -108,8 +108,8 @@ namespace SS13
 
         private void DisconnectToolStripMenuItemClick(object sender, EventArgs e)
         {
-            _program.NetworkManager.Disconnect();
-            _stateManager.RequestStateChange(typeof(ConnectMenu));
+            _networkManager.Disconnect();
+            _stateManager.RequestStateChange<ConnectMenu>();
             connectToolStripMenuItem.Enabled = true;
             disconnectToolStripMenuItem.Enabled = false;
             menuToolStripMenuItem.HideDropDown();
@@ -125,6 +125,25 @@ namespace SS13
         private void KeyDownEvent(object sender, KeyboardInputEventArgs e)
         {
             _stateManager.KeyDown(e);
+
+            switch (e.Key)
+            {
+                case KeyboardKeys.F9:
+                    if (MainMenuStrip.Visible)
+                    {
+                        MainMenuStrip.Hide();
+                        MainMenuStrip.Visible = false;
+                    }
+                    else
+                    {
+                        MainMenuStrip.Show();
+                        MainMenuStrip.Visible = true;
+                    }
+                    break;
+                case KeyboardKeys.F3:
+                    IoCManager.Resolve<INetworkGrapher>().Toggle();
+                    break;
+            }
         }
 
         /// <summary>
@@ -187,8 +206,9 @@ namespace SS13
 
         private void SetupGorgon()
         {
-            var configuration = ServiceManager.Singleton.GetService<ConfigurationManager>().Configuration;
-            Size = new Size((int)configuration.DisplayWidth, (int)configuration.DisplayHeight);
+            var displayWidth = _configurationManager.GetDisplayWidth();
+            var displayHeight = _configurationManager.GetDisplayHeight();
+            Size = new Size((int)displayWidth, (int)displayHeight);
 
             Gorgon.Initialize(true, false);
             Gorgon.SetMode(this);
@@ -197,7 +217,7 @@ namespace SS13
             Gorgon.CurrentClippingViewport = new Viewport(0, 20, Gorgon.Screen.Width, Gorgon.Screen.Height - 20);
 
             Gorgon.MinimumFrameTime = PreciseTimer.FpsToMilliseconds(66);
-            Gorgon.Idle += new FrameEventHandler(GorgonIdle);
+            Gorgon.Idle += GorgonIdle;
         }
 
         private void SetupInput()
@@ -221,7 +241,7 @@ namespace SS13
             _input.Keyboard.Exclusive = true;
             _input.Keyboard.KeyDown += KeyDownEvent;
             _input.Keyboard.KeyUp += KeyUpEvent;
-            KeyBindingManager.Initialize(_input.Keyboard);
+            IoCManager.Resolve<IKeyBindingManager>().Initialize(_input.Keyboard);
 
             _input.Mouse.SetPositionRange(0, 0, Gorgon.CurrentClippingViewport.Width, Gorgon.CurrentClippingViewport.Height);
         }

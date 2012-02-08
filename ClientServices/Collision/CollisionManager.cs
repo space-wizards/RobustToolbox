@@ -11,12 +11,11 @@ namespace ClientServices.Collision
     /// Here's what is happening here. Each collidable AABB added to this manager gets tossed into 
     /// a "bucket". The buckets are subdivisions of the world space in 256-unit blocks. 
     /// </summary>
-    public class CollisionManager : ICollisionManager, IService
+    public class CollisionManager : ICollisionManager
     {
         private Dictionary<Point, int> bucketIndex; //Indexed in 256-pixel blocks - 0 = 0, 1 = 256, 2 = 512 etc
         private Dictionary<int, CollidableBucket> buckets; // each bucket represents a 256x256 block of pixelspace
         private List<CollidableAABB> aabbs;
-        private IServiceManager _serviceManager;
 
         private int lastIndex = 0;
 
@@ -25,9 +24,8 @@ namespace ClientServices.Collision
         /// <summary>
         /// Constructor
         /// </summary>
-        public CollisionManager(IServiceManager serviceManager)
+        public CollisionManager()
         {
-            _serviceManager = serviceManager;
             bucketIndex = new Dictionary<Point, int>();
             buckets = new Dictionary<int, CollidableBucket>();
             aabbs = new List<CollidableAABB>();

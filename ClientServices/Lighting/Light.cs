@@ -1,24 +1,25 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Drawing;
 using System.Linq;
-using System.Text;
 using ClientInterfaces;
+using ClientServices.Map.Tiles;
 using GorgonLibrary;
-using ClientServices.Map;
+using SS13_Shared;
 
 namespace ClientServices.Lighting
 {
     public class Light : ILight
     {
-        public System.Drawing.Color color = System.Drawing.Color.PapayaWhip;
+        public Color color = Color.PapayaWhip;
         public int range = 150;
-        public float brightness = 1.10f;
+        public float Brightness { get; set; }
 
         public LightState state;
         public Vector2D position;
         public Vector2D lastPosition;
-        public Map.MapManager map;
-        public List<ClientServices.Map.Tiles.Tile> tiles;
+        private readonly IMapManager _mapManager;
+        public List<Tile> tiles;
 
         #region ILight members
         public Vector2D Position { get { return position; } set { position = value; } }
@@ -38,21 +39,21 @@ namespace ClientServices.Lighting
 
         #endregion
 
-        public Light(Map.MapManager _map, System.Drawing.Color _color, int _range, LightState _state, Vector2D _position)
+        public Light(IMapManager map, Color _color, int _range, LightState _state, Vector2D _position)
         {
-            Random r = new Random();
-            map = _map;
+            _mapManager = map;
             color = _color;
             range = _range;
             state = _state;
             lastPosition = _position;
-            tiles = new List<ClientServices.Map.Tiles.Tile>();
+            tiles = new List<Tile>();
+            Brightness = 1.10f;
             UpdateLight();
         }
 
         public void UpdateLight()
         {
-            map.light_compute_visibility(position, this);
+            _mapManager.LightComputeVisibility(position, this);
         }
 
         public void UpdatePosition(Vector2D newPosition)

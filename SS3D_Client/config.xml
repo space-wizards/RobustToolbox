@@ -4,12 +4,5 @@
   <DisplayHeight>1024</DisplayHeight>
   <Fullscreen>false</Fullscreen>
   <VSync>true</VSync>
-  <FSAA>0</FSAA>
-  <TextureFiltering>3</TextureFiltering>
-  <AnisotropicLevel>8</AnisotropicLevel>
-  <NumMipmaps>8</NumMipmaps>
-  <Resources>
-  </Resources>
-  <MiyagiSkins>
-  </MiyagiSkins>
+  <ResourcePack>..\..\..\Media\ResourcePack.zip</ResourcePack>
 </Configuration>

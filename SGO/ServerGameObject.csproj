@@ -43,7 +43,6 @@
   <ItemGroup>
     <Compile Include="ComponentFactory.cs" />
     <Compile Include="ComponentManager.cs" />
-    <Compile Include="ComponentParameter.cs" />
     <Compile Include="Component\Actor\BasicActorComponent.cs" />
     <Compile Include="Component\Inventory\Inventory.cs" />
     <Compile Include="Component\Think\ThinkComponent\IThinkComponent.cs" />

@@ -1,7 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
+﻿using ClientInterfaces.GOC;
 
 namespace CGO
 {
@@ -9,6 +6,6 @@ namespace CGO
     {
         void Render();
         SS13_Shared.GO.DrawDepth DrawDepth { get; set; }
-        Entity Owner { get; set; }
+        IEntity Owner { get; set; }
     }
 }

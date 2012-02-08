@@ -7,7 +7,6 @@ using SS13_Shared.GO;
 using ServerServices.Map;
 using ServerServices;
 using ServerInterfaces;
-using SS13_Shared.HelperClasses;
 
 namespace SGO
 {

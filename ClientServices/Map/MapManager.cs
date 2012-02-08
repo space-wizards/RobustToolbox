@@ -1,7 +1,10 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Drawing;
 using System.Text;
 using ClientServices.Lighting;
+using ClientServices.Map.Tiles.Floor;
+using ClientServices.Map.Tiles.Wall;
 using ClientServices.Resources;
 using SS13_Shared;
 using System.IO;
@@ -13,7 +16,7 @@ using ClientServices.Map.Tiles;
 
 namespace ClientServices.Map
 {
-    public class MapManager : IService
+    public class MapManager : IMapManager
     {
         #region Variables
         public Tile[,] tileArray; // The array holding all the tiles that make up the map
@@ -26,21 +29,21 @@ namespace ClientServices.Map
         private string wallSideSpriteName = "wall_side";
         private List<Vector2D> cardinalList;
         private static PORTAL_INFO[] portal = new PORTAL_INFO[4];
-        public System.Drawing.Point lastVisPoint;
-        private ILightManager _lightManager;
+        public Point lastVisPoint;
 
         public bool needVisUpdate = false;
         public bool loaded = false;
 
-        private IServiceManager _serviceManager;
-        private ResourceManager _resourceManager;
+        private readonly IResourceManager _resourceManager;
+        private readonly ILightManager _lightManager;
+        private readonly ICollisionManager _collisionManager;
         #endregion
 
-        public MapManager(IServiceManager serviceManager)
+        public MapManager(IResourceManager resourceManager, ILightManager lightManager, ICollisionManager collisionManager)
         {
-            _serviceManager = serviceManager;
-            _resourceManager = serviceManager.GetService<ResourceManager>();
-            _lightManager = serviceManager.GetService<LightManager>();
+            _resourceManager = resourceManager;
+            _lightManager = lightManager;
+            _collisionManager = collisionManager;
 
             tileSprites = new Dictionary<string, Sprite>();
             tileSprites.Add(floorSpriteName, _resourceManager.GetSprite(floorSpriteName));
@@ -121,7 +124,7 @@ namespace ClientServices.Map
             {
                 for (int y = 0; y < mapHeight; y++)
                 {
-                    if (tileArray[x, y].tileType == TileType.Wall)
+                    if (tileArray[x, y].TileType == TileType.Wall)
                     {
                         byte i = SetSprite(x, y);
                         tileArray[x, y].SetSprites(tileSprites[wallTopSpriteName+i], tileSprites[wallSideSpriteName], i);
@@ -253,7 +256,7 @@ namespace ClientServices.Map
             }
             else
             {
-                if (tileArray[x, y].tileType != type)
+                if (tileArray[x, y].TileType != type)
                 {
                     Tile[] surroundTiles = tileArray[x, y].surroundingTiles;
                     ILight[] lightList = tileArray[x, y].tileLights.ToArray();
@@ -261,7 +264,7 @@ namespace ClientServices.Map
                     tileArray[x, y].surroundingTiles = surroundTiles;
                     foreach (Tile T in tileArray[x, y].surroundingTiles)
                     {
-                        T.surroundDirs = SetSprite(T.tilePosition.X, T.tilePosition.Y);
+                        T.surroundDirs = SetSprite(T.TilePosition.X, T.TilePosition.Y);
                     }
                     foreach (ILight l in lightList)
                     {
@@ -288,23 +291,23 @@ namespace ClientServices.Map
             if (x > mapWidth * tileSpacing || z > mapWidth * tileSpacing)
                 return new Vector2D(-1, -1);
 
-            int xPos = (int)System.Math.Floor(x / tileSpacing);
-            int zPos = (int)System.Math.Floor(z / tileSpacing);
+            var xPos = (int)Math.Floor(x / tileSpacing);
+            var zPos = (int)Math.Floor(z / tileSpacing);
 
             return new Vector2D(xPos, zPos);
         }
 
-        public System.Drawing.Point GetTileArrayPositionFromWorldPosition(Vector2D pos)
+        public Point GetTileArrayPositionFromWorldPosition(Vector2D pos)
         {
             if (pos.X < 0 || pos.Y < 0)
                 return new System.Drawing.Point(-1, -1);
             if (pos.X > mapWidth * tileSpacing || pos.Y > mapWidth * tileSpacing)
                 return new System.Drawing.Point(-1, -1);
 
-            int xPos = (int)System.Math.Floor(pos.X / tileSpacing);
-            int YPos = (int)System.Math.Floor(pos.Y / tileSpacing);
+            var xPos = (int)Math.Floor(pos.X / tileSpacing);
+            var yPos = (int)Math.Floor(pos.Y / tileSpacing);
 
-            return new System.Drawing.Point(xPos, YPos);
+            return new Point(xPos, yPos);
         }
 
         public TileType GetTileTypeFromWorldPosition(float x, float z)
@@ -341,15 +344,15 @@ namespace ClientServices.Map
             }
             else
             {
-                return tileArray[x, y].tileType;
+                return tileArray[x, y].TileType;
             }
         }
 
-        public Tile GetTileAt(Vector2D pos)
+        public ITile GetTileAt(Vector2D pos)
         {
             if (pos.X < 0 || pos.Y < 0) return null;
-            System.Drawing.Point p = GetTileArrayPositionFromWorldPosition(pos);
-            return tileArray[p.X, p.Y];
+            var p = GetTileArrayPositionFromWorldPosition(pos);
+            return tileArray[(int)p.X, (int)p.Y];
         }
 
 
@@ -364,7 +367,7 @@ namespace ClientServices.Map
                 return false;
             if (x > mapWidth || z > mapWidth)
                 return false;
-            Vector2D pos = tileArray[x, z].position;
+            Vector2D pos = tileArray[x, z].Position;
             //Tile tile = GenerateNewTile(newType, pos);
 
             /*if (tile == null)
@@ -378,23 +381,24 @@ namespace ClientServices.Map
 
         public bool ChangeTile(int x, int z, TileType newType)
         {
-            Vector2D pos = new Vector2D(x, z);
+            var pos = new Vector2D(x, z);
             return ChangeTile(pos, newType);
         }
 
         public Tile GenerateNewTile(TileType type, TileState state, Vector2D pos)
         {
-            System.Drawing.Point p = new System.Drawing.Point();
-            p.X = (int)Math.Floor(pos.X / tileSpacing);
-            p.Y = (int)Math.Floor(pos.Y / tileSpacing);
+            var p = new Point((int) Math.Floor(pos.X / tileSpacing), (int) Math.Floor(pos.Y / tileSpacing));
+
             switch (type)
             {
                 case TileType.Space:
-                    return new Tiles.Floor.Space(tileSprites["space_texture"], state, tileSpacing, pos, p, _lightManager, _resourceManager);
+                    return new Space(tileSprites["space_texture"], state, tileSpacing, pos, p, _lightManager, _resourceManager);
                 case TileType.Floor:
-                    return new Tiles.Floor.Floor(tileSprites[floorSpriteName], state, tileSpacing, pos, p, _lightManager, _resourceManager);
+                    return new Floor(tileSprites[floorSpriteName], state, tileSpacing, pos, p, _lightManager, _resourceManager);
                 case TileType.Wall:
-                    return new Tiles.Wall.Wall(tileSprites[wallTopSpriteName + "0"], tileSprites[wallSideSpriteName], state, tileSpacing, pos, p, _lightManager, _resourceManager);
+                    var wall = new Wall(tileSprites[wallTopSpriteName + "0"], tileSprites[wallSideSpriteName], state, tileSpacing, pos, p, _lightManager, _resourceManager);
+                    _collisionManager.AddCollidable(wall);
+                    return wall;
                 default:
                     return null;
             }
@@ -431,6 +435,21 @@ namespace ClientServices.Map
             }
 
             return i;
+        }
+
+        public int GetTileSpacing()
+        {
+            return tileSpacing;
+        }
+
+        public int GetMapWidth()
+        {
+            return mapWidth;
+        }
+
+        public int GetMapHeight()
+        {
+            return mapHeight;
         }
 
         /*public List<System.Drawing.RectangleF> GetSurroundingAABB(Vector2D pos)
@@ -525,7 +544,6 @@ namespace ClientServices.Map
         #region Shutdown
         public void Shutdown()
         {
-            _serviceManager.Unregister<MapManager>();
             tileArray = null;
             tileSprites = null;
         }
@@ -557,49 +575,49 @@ namespace ClientServices.Map
         }
 
         #region Helper methods
-        bool is_sight_blocked(int x, int y)
+        bool IsSightBlocked(int x, int y)
         {
-            if (tileArray[x, y].tileType == TileType.Wall || tileArray[x, y].sightBlocked)
+            if (tileArray[x, y].TileType == TileType.Wall || tileArray[x, y].sightBlocked)
             {
                 return true;
             }
             return false;
         }
 
-        void clear_visibility()
+        void ClearVisibility()
         {
-            for (int x = 0; x < mapWidth; x++)
+            for (var x = 0; x < mapWidth; x++)
             {
-                for (int y = 0; y < mapHeight; y++)
+                for (var y = 0; y < mapHeight; y++)
                 {
                     tileArray[x, y].Visible = false;
                 }
             }
         }
 
-        public void set_all_visible()
+        public void SetAllVisible()
         {
-            for (int x = 0; x < mapWidth; x++)
+            for (var x = 0; x < mapWidth; x++)
             {
-                for (int y = 0; y < mapHeight; y++)
+                for (var y = 0; y < mapHeight; y++)
                 {
                     tileArray[x, y].Visible = true;
                 }
             }
         }
 
-        void set_visible(int x, int y)
+        void SetVisible(int x, int y)
         {
             tileArray[x, y].Visible = true;
         }
         #endregion
 
-        public void compute_visibility(int viewer_x, int viewer_y)
+        public void ComputeVisibility(int viewer_x, int viewer_y)
         {
-            clear_visibility();
-            for (int i = 0; i < 4; ++i)
+            ClearVisibility();
+            for (var i = 0; i < 4; ++i)
             {
-                compute_visibility
+                ComputeVisibility
                 (
                     viewer_x, viewer_y,
                     viewer_x, viewer_y,
@@ -614,7 +632,7 @@ namespace ClientServices.Map
             return ax * by > ay * bx;
         }
         
-        void compute_visibility(int viewer_x, int viewer_y, int target_x, int target_y, int ldx, int ldy, int rdx, int rdy)
+        void ComputeVisibility(int viewer_x, int viewer_y, int target_x, int target_y, int ldx, int ldy, int rdx, int rdy)
         {
             if (target_x > viewer_x + 15 || target_x < viewer_x - 15)
                 return;
@@ -627,10 +645,10 @@ namespace ClientServices.Map
                 return;
 
             // This square is visible.
-            set_visible(target_x, target_y);
+            SetVisible(target_x, target_y);
 
             // A solid target square blocks all further visibility through it.
-            if (is_sight_blocked(target_x, target_y))
+            if (IsSightBlocked(target_x, target_y))
                 return;
 
             // Target square center position relative to viewer:
@@ -672,7 +690,7 @@ namespace ClientServices.Map
                 // If we can see through the clipped portal, recurse through it.
                 if (a_right_of_b(crdx, crdy, cldx, cldy))
                 {
-                    compute_visibility
+                    ComputeVisibility
                     (
                         viewer_x, viewer_y,
                         target_x + portal[i].nx, target_y + portal[i].ny,
@@ -683,22 +701,36 @@ namespace ClientServices.Map
             }
         }
 
+        public Point GetLastVisiblePoint()
+        {
+            return lastVisPoint;
+        }
+
+        public void SetLastVisiblePoint(Point point)
+        {
+            lastVisPoint = point;
+        }
+
+        public bool NeedVisibilityUpdate()
+        {
+            return needVisUpdate;
+        }
+
 
 #endregion
 
-
-        #region Lighting shit
-        public void light_compute_visibility(Vector2D lightPos, ILight light)
+        #region Lighting
+        public void LightComputeVisibility(Vector2D lightPos, ILight light)
         {
-            light_clear_visibility(light);
-            System.Drawing.Point lightArrayPos = GetTileArrayPositionFromWorldPosition(lightPos);
+            LightClearVisibility(light);
+            var lightArrayPos = GetTileArrayPositionFromWorldPosition(lightPos);
 
             for (int i = 0; i < 4; ++i)
             {
-                light_compute_visibility
+                LightComputeVisibility
                 (
-                    lightArrayPos.X, lightArrayPos.Y,
-                    lightArrayPos.X, lightArrayPos.Y,
+                    (int)lightArrayPos.X, (int)lightArrayPos.Y,
+                    (int)lightArrayPos.X, (int)lightArrayPos.Y,
                     portal[i].lx, portal[i].ly,
                     portal[i].rx, portal[i].ry,
                     light
@@ -706,7 +738,7 @@ namespace ClientServices.Map
             }
         }
 
-        public void light_clear_visibility(ILight light)
+        public void LightClearVisibility(ILight light)
         {
             foreach (Tile T in light.GetTiles())
             {
@@ -717,7 +749,7 @@ namespace ClientServices.Map
 
         void light_set_visible(int x, int y, ILight light)
         {
-            if (!(tileArray[x, y].tileType == TileType.Wall && tileArray[x, y].position.Y > light.Position.Y))
+            if (!(tileArray[x, y].TileType == TileType.Wall && tileArray[x, y].Position.Y > light.Position.Y))
             {
                 light.AddTile(tileArray[x, y]);
                 if (!tileArray[x, y].tileLights.Contains(light))
@@ -729,14 +761,14 @@ namespace ClientServices.Map
 
         bool light_is_sight_blocked(int x, int y)
         {
-            if (tileArray[x, y].tileType == TileType.Wall || tileArray[x, y].sightBlocked)
+            if (tileArray[x, y].TileType == TileType.Wall || tileArray[x, y].sightBlocked)
             {
                 return true;
             }
             return false;
         }
 
-        void light_compute_visibility(int viewer_x, int viewer_y, int target_x, int target_y, int ldx, int ldy, int rdx, int rdy, ILight light)
+        void LightComputeVisibility(int viewer_x, int viewer_y, int target_x, int target_y, int ldx, int ldy, int rdx, int rdy, ILight light)
         {
             if (target_x > viewer_x + (light.Range / tileSpacing) + 1 || target_x < viewer_x - (light.Range / tileSpacing) - 1)
                 return;
@@ -752,7 +784,7 @@ namespace ClientServices.Map
             light_set_visible(target_x, target_y, light);
 
             // A solid target square blocks all further visibility through it.
-            if (is_sight_blocked(target_x, target_y))
+            if (IsSightBlocked(target_x, target_y))
                 return;
 
             // Target square center position relative to viewer:
@@ -794,7 +826,7 @@ namespace ClientServices.Map
                 // If we can see through the clipped portal, recurse through it.
                 if (a_right_of_b(crdx, crdy, cldx, cldy))
                 {
-                    light_compute_visibility
+                    LightComputeVisibility
                     (
                         viewer_x, viewer_y,
                         target_x + portal[i].nx, target_y + portal[i].ny,

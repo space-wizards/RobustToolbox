@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Drawing;
 using System.Linq;
 using System.Text;
 using GorgonLibrary;
@@ -43,15 +44,9 @@ namespace ClientServices.Lighting
         }
     }
 
-    public class LightManager : ILightManager, IService
+    public class LightManager : ILightManager
     {
         public int ambientBrightness = 55;
-        private IServiceManager _serviceManager;
-
-        public LightManager(IServiceManager serviceManager)
-        {
-            _serviceManager = serviceManager;
-        }
 
         /// <summary>
         ///  <para>Applies Color Definitions to the Vertices of a Sprite.</para>
@@ -91,12 +86,12 @@ namespace ClientServices.Lighting
             Vector2D vertexPos = sprite.GetSpriteVertexPosition(vertex);
             Vector2D lightPos = light.position - screenOffset; //Making sure that they're in the same space.
 
-            float distance = (vertexPos - lightPos).Length;
-            float lightIntensity = (float)Math.Max((light.range - (distance/1.5)) * light.brightness, 0);
+            var distance = (vertexPos - lightPos).Length;
+            var lightIntensity = (float)Math.Max((light.range - (distance/1.5)) * light.Brightness, 0);
 
             if (lightIntensity == 0) return Vector3D.Zero; //Must be zero or the ambient light would increase with the number of lights. (Thats bad)
 
-            Vector3D lightColor =
+            var lightColor =
                 new Vector3D(
                     light.color.R,
                     light.color.G,
@@ -177,6 +172,7 @@ namespace ClientServices.Lighting
             max.Z = Math.Max(lightColor1.Z, lightColor2.Z);
             return max;
         }
+
         public Vector3D SquareVertexLight(Vector3D lightColor)
         {
             lightColor.X *= lightColor.X;
@@ -200,6 +196,11 @@ namespace ClientServices.Lighting
             lightColor.Y = lightColor.Y / (float)(maxComponent / normalizeto);
             lightColor.Z = lightColor.Z / (float)(maxComponent / normalizeto);
             return lightColor;
+        }
+
+        public ILight CreateLight(IMapManager mapManager, Color color, int range, LightState lightState, Vector2D position)
+        {
+            return new Light(mapManager, color, range, lightState, position);
         }
     }
 

@@ -1,20 +1,13 @@
 ﻿using System.IO;
 using System.Xml.Serialization;
 using ClientInterfaces;
-using SS13_Shared;
 
 namespace ClientServices.Configuration
 {
-    public sealed class ConfigurationManager : IService
+    public sealed class ConfigurationManager : IConfigurationManager
     {
         public Configuration Configuration { get; private set; }
         private string _configFile;
-        private IServiceManager _serviceManager;
-
-        public ConfigurationManager(IServiceManager serviceManager)
-        {
-            _serviceManager = serviceManager;
-        }
 
         public void Initialize(string configFile)
         {
@@ -33,7 +26,7 @@ namespace ClientServices.Configuration
             }
         }
 
-        public void Save()
+        private void Save()
         {
             if (Configuration == null)
             {
@@ -47,6 +40,43 @@ namespace ClientServices.Configuration
                 configWriter.Flush();
                 configWriter.Close();
             }
+        }
+
+        public void SetPlayerName(string name)
+        {
+            Configuration.PlayerName = name;
+            Save();
+        }
+
+        public string GetPlayerName()
+        {
+            return Configuration.PlayerName;
+        }
+
+        public void SetServerAddress(string address)
+        {
+            Configuration.ServerAddress = address;
+            Save();
+        }
+
+        public string GetResourcePath()
+        {
+            return Configuration.ResourcePack;
+        }
+
+        public string GetResourcePassword()
+        {
+            return Configuration.ResourcePassword;
+        }
+
+        public uint GetDisplayWidth()
+        {
+            return Configuration.DisplayWidth;
+        }
+
+        public uint GetDisplayHeight()
+        {
+            return Configuration.DisplayHeight;
         }
     }
 }

@@ -8,7 +8,6 @@ using System.Reflection;
 using System.Collections;
 using Lidgren.Network;
 using SS13_Shared;
-using SS13_Shared.HelperClasses;
 using SS13_Shared.GO;
 using System.Runtime.Serialization;
 
@@ -277,23 +276,5 @@ namespace SGO
             m_entityNetworkManager = manager;
         }
         #endregion
-    }
-
-    public struct ComponentReplyMessage
-    {
-        public ComponentMessageType messageType;
-        public List<object> paramsList;
-
-        public ComponentReplyMessage(ComponentMessageType _messageType, params object[] _paramsList)
-        {
-            if (_paramsList != null)
-                paramsList = _paramsList.ToList();
-            else
-                paramsList = new List<object>();
-
-            messageType = _messageType;
-        }
-
-        public static ComponentReplyMessage Null = new ComponentReplyMessage(ComponentMessageType.Empty);
     }
 }

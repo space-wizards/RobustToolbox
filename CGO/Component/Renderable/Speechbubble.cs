@@ -1,10 +1,10 @@
 ﻿using System;
 using System.Drawing;
 using System.Text;
-using ClientServices;
-using ClientServices.Resources;
+using ClientInterfaces;
 using GorgonLibrary;
 using GorgonLibrary.Graphics;
+using SS13.IoC;
 
 namespace CGO
 {
@@ -44,6 +44,12 @@ namespace CGO
         /// Rebuilt upon text change.
         /// </summary>
         private readonly Sprite _bubbleSprite;
+
+        /// <summary>
+        /// Reference to Resource Manager service to prevent
+        /// calling IoCManager every time speechbubble is drawn.
+        /// </summary>
+        private readonly IResourceManager _resourceManager;
         
         /// <summary>
         /// Holder for last time the sprite was
@@ -60,13 +66,14 @@ namespace CGO
 
         public SpeechBubble(string mobname)
         {
+            _resourceManager = IoCManager.Resolve<IResourceManager>();
             _mobName = mobname;
             _buildTime = DateTime.Now;
             _textSprite = new TextSprite
                 (
                     "chatBubbleTextSprite_" + _mobName,
                     String.Empty,
-                    ServiceManager.Singleton.GetService<ResourceManager>().GetFont("CALIBRI")
+                    _resourceManager.GetFont("CALIBRI")
                 )
                               {
                                   Color = Color.Black,
@@ -121,7 +128,7 @@ namespace CGO
         private void DrawBubbleSprite()
         {
             var originalTarget = Gorgon.CurrentRenderTarget;
-            var cornerSprite = ServiceManager.Singleton.GetService<ResourceManager>().GetSprite("corners");
+            var cornerSprite = _resourceManager.GetSprite("corners");
 
             //Set up dimensions
             _bubbleRender.SetDimensions((int)_textSprite.Size.X + 10, (int)_textSprite.Size.Y + 10);

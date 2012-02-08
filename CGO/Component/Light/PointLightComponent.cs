@@ -1,12 +1,7 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using ClientInterfaces;
-using ClientServices;
-using ClientServices.Lighting;
+﻿using ClientInterfaces;
+using ClientInterfaces.GOC;
 using GorgonLibrary;
-using ClientServices.Map;
+using SS13.IoC;
 using SS13_Shared;
 
 namespace CGO
@@ -14,8 +9,8 @@ namespace CGO
     public class PointLightComponent : GameObjectComponent
     {
         //Contains a standard light
-        private Light light;
-        private Vector2D LightOffset = new Vector2D(0,0);
+        private ILight _light;
+        private Vector2D _lightOffset = new Vector2D(0,0);
 
         public PointLightComponent()
         {
@@ -23,15 +18,17 @@ namespace CGO
         }
 
         //When added, set up the light.
-        public override void OnAdd(Entity owner)
+        public override void OnAdd(IEntity owner)
         {
             base.OnAdd(owner);
 
-            light = new Light(ServiceManager.Singleton.GetService<MapManager>(),
-                              System.Drawing.Color.FloralWhite, 300, LightState.On, Owner.Position) {brightness = 1.5f};
+            _light = IoCManager.Resolve<ILightManager>().CreateLight(IoCManager.Resolve<IMapManager>(),
+                                                                     System.Drawing.Color.FloralWhite, 300,
+                                                                     LightState.On, Owner.Position);
+            _light.Brightness = 1.5f;
 
-            light.UpdatePosition(Owner.Position + LightOffset);
-            light.UpdateLight();
+            _light.UpdatePosition(Owner.Position + _lightOffset);
+            _light.UpdateLight();
             Owner.OnMove += OnMove;
         }
 
@@ -40,27 +37,27 @@ namespace CGO
             switch (parameter.MemberName)
             {
                 case "lightoffset":
-                    LightOffset = (Vector2D)parameter.Parameter;
+                    _lightOffset = (Vector2D)parameter.Parameter;
                     break;
                 case "lightoffsetx":
-                    LightOffset.X = float.Parse((string)parameter.Parameter, System.Globalization.CultureInfo.InvariantCulture);
+                    _lightOffset.X = float.Parse((string)parameter.Parameter, System.Globalization.CultureInfo.InvariantCulture);
                     break;
                 case "lightoffsety":
-                    LightOffset.Y = float.Parse((string)parameter.Parameter, System.Globalization.CultureInfo.InvariantCulture);
+                    _lightOffset.Y = float.Parse((string)parameter.Parameter, System.Globalization.CultureInfo.InvariantCulture);
                     break;
             }
         }
 
         public override void OnRemove()
         {
-            Owner.OnMove -= new Entity.EntityMoveEvent(OnMove);
-            light.ClearTiles();
+            Owner.OnMove -= OnMove;
+            _light.ClearTiles();
             base.OnRemove();
         }
 
-        private void OnMove(Vector2D toPosition)
+        private void OnMove(object sender, VectorEventArgs args)
         {
-            light.UpdatePosition(Owner.Position + LightOffset);
+            _light.UpdatePosition(Owner.Position + _lightOffset);
         }
 
 

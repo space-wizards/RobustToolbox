@@ -8,6 +8,7 @@ using GorgonLibrary.Graphics;
 using System.Globalization;
 using System.Drawing;
 using System.Text.RegularExpressions;
+using GorgonLibrary.Sprites;
 using ICSharpCode.SharpZipLib.Core;
 using ICSharpCode.SharpZipLib.Zip;
 using Font = GorgonLibrary.Graphics.Font;
@@ -15,22 +16,23 @@ using Image = GorgonLibrary.Graphics.Image;
 
 namespace ClientServices.Resources
 {
-    public class ResourceManager : IService
+    public class ResourceManager : IResourceManager
     {
         private const int zipBufferSize = 4096;
         private readonly List<string> supportedImageExtensions = new List<string> { ".png" };
 
-        private Dictionary<string, Image> Images = new Dictionary<string, Image>();
-        private Dictionary<string, FXShader> Shaders = new Dictionary<string, FXShader>();
-        private Dictionary<string, Font> Fonts = new Dictionary<string, Font>();
-        private Dictionary<string, SpriteInfo> SpriteInfos = new Dictionary<string, SpriteInfo>();
-        private Dictionary<string, Sprite> Sprites = new Dictionary<string, Sprite>();
+        private readonly Dictionary<string, Image> _images = new Dictionary<string, Image>();
+        private readonly Dictionary<string, FXShader> _shaders = new Dictionary<string, FXShader>();
+        private readonly Dictionary<string, Font> _fonts = new Dictionary<string, Font>();
+        private readonly Dictionary<string, SpriteInfo> _spriteInfos = new Dictionary<string, SpriteInfo>();
+        private readonly Dictionary<string, Sprite> _sprites = new Dictionary<string, Sprite>();
 
-        private IServiceManager _serviceManager;
+        private readonly IConfigurationManager _configurationManager;
 
-        public ResourceManager(IServiceManager serviceManager)
+        public ResourceManager(IConfigurationManager configurationManager)
         {
-            _serviceManager = serviceManager;
+            _configurationManager = configurationManager;
+            LoadResourceZip();
         }
 
         #region Resource Loading & Disposal
@@ -38,12 +40,14 @@ namespace ClientServices.Resources
         /// <summary>
         ///  <para>Loads all Resources from given Zip into the respective Resource Lists and Caches</para>
         /// </summary>
-        public void LoadResourceZip(string zipPath, string password = null)
+        public void LoadResourceZip()
         {
+            var zipPath = _configurationManager.GetResourcePath();
+            var password = _configurationManager.GetResourcePassword();
             if (!File.Exists(zipPath)) throw new FileNotFoundException("Specified Zip does not exist: " + zipPath);
 
-            FileStream zipFileStream = File.OpenRead(zipPath);
-            ZipFile zipFile = new ZipFile(zipFileStream);
+            var zipFileStream = File.OpenRead(zipPath);
+            var zipFile = new ZipFile(zipFileStream);
 
             if (!string.IsNullOrWhiteSpace(password)) zipFile.Password = password;
 
@@ -52,13 +56,13 @@ namespace ClientServices.Resources
                              orderby supportedImageExtensions.Contains(Path.GetExtension(e.Name).ToLowerInvariant()) descending //Loading images first so the TAI files that come after can be loaded correctly.
                              select e;
 
-            foreach (ZipEntry entry in filesInZip)
+            foreach (var entry in filesInZip)
             {
                 if (supportedImageExtensions.Contains(Path.GetExtension(entry.Name).ToLowerInvariant()))
                 {
-                    Image loadedImg = LoadImageFrom(zipFile, entry);
+                    var loadedImg = LoadImageFrom(zipFile, entry);
                     if (loadedImg == null) continue;
-                    else Images.Add(loadedImg.Name, loadedImg);
+                    else _images.Add(loadedImg.Name, loadedImg);
                 }
                 else
                 {
@@ -67,19 +71,19 @@ namespace ClientServices.Resources
                         case ".fx":
                             FXShader loadedShader = LoadShaderFrom(zipFile, entry);
                             if (loadedShader == null) continue;
-                            else Shaders.Add(loadedShader.Name, loadedShader);
+                            else _shaders.Add(loadedShader.Name, loadedShader);
                             break;
 
                         case ".tai":
-                            List<Sprite> loadedSprites = LoadSpritesFrom(zipFile, entry);
-                            foreach (Sprite current in loadedSprites)
-                                if (!Sprites.ContainsKey(current.Name)) Sprites.Add(current.Name, current);
+                            var loadedSprites = LoadSpritesFrom(zipFile, entry);
+                            foreach (var current in loadedSprites.Where(current => !_sprites.ContainsKey(current.Name)))
+                                _sprites.Add(current.Name, current);
                             break;
 
                         case ".ttf":
-                            Font loadedFont = LoadFontFrom(zipFile, entry);
+                            var loadedFont = LoadFontFrom(zipFile, entry);
                             if (loadedFont == null) continue;
-                            else Fonts.Add(loadedFont.Name, loadedFont);
+                            else _fonts.Add(loadedFont.Name, loadedFont);
                             break;
                     }
                 }
@@ -182,23 +186,23 @@ namespace ClientServices.Resources
         /// <summary>
         ///  <para>Loads TAI from given Zip-File and Entry and creates & loads Sprites from it.</para>
         /// </summary>
-        private List<Sprite> LoadSpritesFrom(ZipFile zipFile, ZipEntry taiEntry)
+        private IEnumerable<Sprite> LoadSpritesFrom(ZipFile zipFile, ZipEntry taiEntry)
         {
             string ResourceName = Path.GetFileNameWithoutExtension(taiEntry.Name).ToLowerInvariant();
 
-            List<Sprite> loadedSprites = new List<Sprite>();
+            var loadedSprites = new List<Sprite>();
 
-            byte[] byteBuffer = new byte[zipBufferSize];
+            var byteBuffer = new byte[zipBufferSize];
 
-            Stream zipStream = zipFile.GetInputStream(taiEntry); //Will throw exception is missing or wrong password. Handle this.
+            var zipStream = zipFile.GetInputStream(taiEntry); //Will throw exception is missing or wrong password. Handle this.
 
-            MemoryStream memStream = new MemoryStream();
+            var memStream = new MemoryStream();
 
             StreamUtils.Copy(zipStream, memStream, byteBuffer);
             memStream.Position = 0;
 
-            StreamReader taiReader = new StreamReader(memStream, true);
-            String loadedTAI = taiReader.ReadToEnd();
+            var taiReader = new StreamReader(memStream, true);
+            var loadedTAI = taiReader.ReadToEnd();
 
             memStream.Close();
             zipStream.Close();
@@ -229,8 +233,8 @@ namespace ClientServices.Resources
 
                 Image atlasTex = ImageCache.Images[splitResourceName[0]]; //Grab the image for the sprite from the cache.
 
-                SpriteInfo info = new SpriteInfo();
-                info.name = originalName;
+                var info = new SpriteInfo();
+                info.Name = originalName;
 
                 float offsetX = 0;
                 float offsetY = 0;
@@ -255,7 +259,7 @@ namespace ClientServices.Resources
                 info.Offsets = new Vector2D((float)Math.Round(offsetX * (float)atlasTex.Width, 1), (float)Math.Round(offsetY * (float)atlasTex.Height, 1));
                 info.Size = new Vector2D((float)Math.Round(sizeX * (float)atlasTex.Width, 1), (float)Math.Round(sizeY * (float)atlasTex.Height, 1));
 
-                if (!SpriteInfos.ContainsKey(originalName)) SpriteInfos.Add(originalName, info);
+                if (!_spriteInfos.ContainsKey(originalName)) _spriteInfos.Add(originalName, info);
 
                 loadedSprites.Add(new Sprite(originalName, atlasTex, info.Offsets, info.Size));
             }
@@ -268,11 +272,11 @@ namespace ClientServices.Resources
         /// </summary>
         public void ClearLists()
         {
-            Images.Clear();
-            Shaders.Clear();
-            Fonts.Clear();
-            SpriteInfos.Clear();
-            Sprites.Clear();
+            _images.Clear();
+            _shaders.Clear();
+            _fonts.Clear();
+            _spriteInfos.Clear();
+            _sprites.Clear();
         }
 
         #endregion
@@ -286,20 +290,20 @@ namespace ClientServices.Resources
         public Sprite GetSpriteFromImage(string key)
         {
             key = key.ToLowerInvariant();
-            if (Images.ContainsKey(key))
+            if (_images.ContainsKey(key))
             {
-                if (Sprites.ContainsKey(key))
+                if (_sprites.ContainsKey(key))
                 {
-                    return Sprites[key];
+                    return _sprites[key];
                 }
                 else
                 {
-                    Sprite newSprite = new Sprite(key, Images[key]);
-                    Sprites.Add(key, newSprite);
+                    Sprite newSprite = new Sprite(key, _images[key]);
+                    _sprites.Add(key, newSprite);
                     return newSprite;
                 }
             }
-            else return Sprites["nosprite"];
+            else return _sprites["nosprite"];
         }
 
         /// <summary>
@@ -308,10 +312,10 @@ namespace ClientServices.Resources
         public Sprite GetSprite(string key)
         {
             key = key.ToLowerInvariant();
-            if (Sprites.ContainsKey(key))
+            if (_sprites.ContainsKey(key))
             {
-                Sprites[key].Color = Color.White;
-                return Sprites[key];
+                _sprites[key].Color = Color.White;
+                return _sprites[key];
             }
             else return GetSpriteFromImage(key);
         }
@@ -324,7 +328,7 @@ namespace ClientServices.Resources
         public bool SpriteExists(string key)
         {
             key = key.ToLowerInvariant();
-            return Sprites.ContainsKey(key);
+            return _sprites.ContainsKey(key);
         }
 
         /// <summary>
@@ -335,16 +339,16 @@ namespace ClientServices.Resources
         public bool ImageExists(string key)
         {
             key = key.ToLowerInvariant();
-            return Images.ContainsKey(key);
+            return _images.ContainsKey(key);
         }
-
+      
         /// <summary>
         ///  Retrieves the SpriteInfo with the given key from the Resource List. Returns null if not found.
         /// </summary>
         public SpriteInfo? GetSpriteInfo(string key)
         {
             key = key.ToLowerInvariant();
-            if (SpriteInfos.ContainsKey(key)) return SpriteInfos[key];
+            if (_spriteInfos.ContainsKey(key)) return _spriteInfos[key];
             else return null;
         }
 
@@ -354,7 +358,7 @@ namespace ClientServices.Resources
         public FXShader GetShader(string key)
         {
             key = key.ToLowerInvariant();
-            if (Shaders.ContainsKey(key)) return Shaders[key];
+            if (_shaders.ContainsKey(key)) return _shaders[key];
             else return null;
         }
 
@@ -364,8 +368,8 @@ namespace ClientServices.Resources
         public Image GetImage(string key)
         {
             key = key.ToLowerInvariant();
-            if (Images.ContainsKey(key)) return Images[key];
-            else return Images["nosprite"];
+            if (_images.ContainsKey(key)) return _images[key];
+            else return _images["nosprite"];
         }
 
         /// <summary>
@@ -374,17 +378,10 @@ namespace ClientServices.Resources
         public Font GetFont(string key)
         {
             key = key.ToLowerInvariant();
-            if (Fonts.ContainsKey(key)) return Fonts[key];
+            if (_fonts.ContainsKey(key)) return _fonts[key];
             else return null;
         }
 
         #endregion
-    }
-
-    public struct SpriteInfo
-    {
-        public string name;
-        public Vector2D Offsets;
-        public Vector2D Size;
     }
 }

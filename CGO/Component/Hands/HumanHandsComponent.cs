@@ -5,21 +5,18 @@ using ClientInterfaces.UserInterface;
 using SS13.IoC;
 using SS13_Shared.GO;
 using SS13_Shared;
-using ClientInterfaces;
 
-namespace CGO.Component.Hands
+namespace CGO
 {
     public class HumanHandsComponent : GameObjectComponent
     {
-        private Dictionary<Hand, IEntity> handslots;
-        public Dictionary<Hand, IEntity> HandSlots { get { return handslots; } private set { handslots = value; } }
-        public Hand currentHand { get; private set; }
+        public Dictionary<Hand, IEntity> HandSlots { get; private set; }
+        public Hand CurrentHand { get; private set; }
 
         public HumanHandsComponent()
-            : base()
         {
             family = ComponentFamily.Hands;
-            handslots = new Dictionary<Hand, IEntity>();
+            HandSlots = new Dictionary<Hand, IEntity>();
         }
 
         public override void HandleNetworkMessage(IncomingEntityComponentMessage message)
@@ -35,24 +32,24 @@ namespace CGO.Component.Hands
                     entityUid = (int)message.MessageParameters[1];
                     usedHand = (Hand)message.MessageParameters[2];
                     item = EntityManager.Singleton.GetEntity(entityUid);
-                    if (handslots.Keys.Contains(usedHand))
-                        handslots[usedHand] = item;          
+                    if (HandSlots.Keys.Contains(usedHand))
+                        HandSlots[usedHand] = item;          
                     else
-                        handslots.Add(usedHand, item);
+                        HandSlots.Add(usedHand, item);
                     break;
                 case(ComponentMessageType.HandsDroppedItem):
                     entityUid = (int)message.MessageParameters[1];
                     usedHand = (Hand)message.MessageParameters[2];
                     item = EntityManager.Singleton.GetEntity(entityUid);
                     //item.SendMessage(this, ComponentMessageType.Dropped, null);
-                    handslots.Remove(usedHand);
+                    HandSlots.Remove(usedHand);
                     break;
                 case(ComponentMessageType.HandsPickedUpItem):
                     entityUid = (int)message.MessageParameters[1];
                     usedHand = (Hand)message.MessageParameters[2];
                     item = EntityManager.Singleton.GetEntity(entityUid);
                     //item.SendMessage(this, ComponentMessageType.PickedUp, null, usedHand);
-                    handslots.Add(usedHand, item);
+                    HandSlots.Add(usedHand, item);
                     break;
                 case ComponentMessageType.ActiveHandChanged:
                     SwitchHandTo((Hand)message.MessageParameters[1]);
@@ -74,8 +71,7 @@ namespace CGO.Component.Hands
 
         public bool IsHandEmpty(Hand hand)
         {
-            if (handslots.ContainsKey(hand)) return false;
-            else return true;
+            return !HandSlots.ContainsKey(hand);
         }
 
         public void SendDropFromHand(Hand hand)
@@ -85,7 +81,7 @@ namespace CGO.Component.Hands
 
         private void SwitchHandTo(Hand hand)
         {
-            currentHand = hand;
+            CurrentHand = hand;
         }
     }
 }

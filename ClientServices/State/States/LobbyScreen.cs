@@ -44,7 +44,7 @@ namespace ClientServices.State.States
 
             NetworkManager.MessageArrived += NetworkManagerMessageArrived;
 
-            _lobbyChat = new Chatbox(ResourceManager, UserInterfaceManager);
+            _lobbyChat = new Chatbox(ResourceManager, UserInterfaceManager, KeyBindingManager);
             _lobbyChat.TextSubmitted += LobbyChatTextSubmitted;
 
             UserInterfaceManager.AddComponent(_lobbyChat);

@@ -1,6 +1,6 @@
 ﻿using System;
 using System.Drawing;
-using CGO.Component.Damageable.Health;
+using CGO;
 using ClientInterfaces;
 using ClientInterfaces.Player;
 using GorgonLibrary;

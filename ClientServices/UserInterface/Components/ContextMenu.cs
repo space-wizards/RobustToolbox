@@ -1,6 +1,7 @@
 ﻿using System.Collections.Generic;
 using System.Linq;
 using System.Drawing;
+using CGO;
 using ClientInterfaces;
 using ClientInterfaces.GOC;
 using ClientInterfaces.UserInterface;
@@ -35,7 +36,7 @@ namespace ClientServices.UserInterface.Components
 
             if (showExamine)
             {
-                var examineButton = new ContextMenuButton(new ContextMenuEntry { componentMessage = "examine", entryName = "Examine", iconName = "context_eye" }, _buttonSize, _resourceManager);
+                var examineButton = new ContextMenuButton(new ContextMenuEntry { ComponentMessage = "examine", EntryName = "Examine", IconName = "context_eye" }, _buttonSize, _resourceManager);
                 examineButton.Selected += ContextSelected;
                 _buttons.Add(examineButton);
                 examineButton.Update();
@@ -145,11 +146,11 @@ namespace ClientServices.UserInterface.Components
         {
             _resourceManager = resourceManager;
 
-            UserData = entry.componentMessage;
+            UserData = entry.ComponentMessage;
             Size = size;
             _currentColor = Color.Gray;
-            _iconSprite = _resourceManager.GetSprite(entry.iconName);
-            _textLabel = new Label(entry.entryName, _resourceManager);
+            _iconSprite = _resourceManager.GetSprite(entry.IconName);
+            _textLabel = new Label(entry.EntryName, _resourceManager);
             _textLabel.Update();
         }
 

@@ -18,7 +18,7 @@ namespace ClientServices.UserInterface.Components
         private readonly IUserInterfaceManager _userInterfaceManager;
         private readonly IKeyBindingManager _keyBindingManager;
 
-        public delegate void TextSubmitHandler(Chatbox Chatbox, string Text);
+        public delegate void TextSubmitHandler(Chatbox chatbox, string text);
         public event TextSubmitHandler TextSubmitted;
 
         private readonly List<Label> _entries = new List<Label>();
@@ -46,10 +46,11 @@ namespace ClientServices.UserInterface.Components
             }
         }
 
-        public Chatbox(IResourceManager resourceManager, IUserInterfaceManager userInterfaceManager)
+        public Chatbox(IResourceManager resourceManager, IUserInterfaceManager userInterfaceManager, IKeyBindingManager keyBindingManager)
         {
             _resourceManager = resourceManager;
             _userInterfaceManager = userInterfaceManager;
+            _keyBindingManager = keyBindingManager;
             
             ClientArea = new Rectangle(5, Gorgon.Screen.Height - 205, 600, 200); //!!! Use this instead of Window Dimensions
             Position = new Point(5, Gorgon.Screen.Height - 205);

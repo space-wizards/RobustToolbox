@@ -260,8 +260,7 @@ namespace ClientServices.UserInterface
                             orderby comp.Focus descending
                             select comp;
 
-            foreach (IGuiComponent current in inputList)
-                if (current.MouseUp(e)) return true;
+            if (inputList.Any(current => current.MouseUp(e))) { return true; }
 
             if (DragInfo.DragSprite != null || DragInfo.DragEntity != null) //Drag & dropped into nothing or invalid. Remove dragged obj.
                 DragInfo.Reset();
@@ -310,10 +309,7 @@ namespace ClientServices.UserInterface
                             orderby comp.Focus descending
                             select comp;
 
-            foreach (IGuiComponent current in inputList)
-                if (current.KeyDown(e)) return true;
-
-            return false;
+            return inputList.Any(current => current.KeyDown(e));
         } 
         #endregion
     }

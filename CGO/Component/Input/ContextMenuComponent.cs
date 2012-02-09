@@ -1,8 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using ClientInterfaces.GOC;
 using SS13_Shared;
 using SS13_Shared.GO;
 using System.Xml.Linq;
@@ -45,12 +42,12 @@ namespace CGO
 
         public void RemoveEntryByName(string name)
         {
-            entries.RemoveAll(x => x.entryName.Equals(name, StringComparison.InvariantCultureIgnoreCase));
+            entries.RemoveAll(x => x.EntryName.Equals(name, StringComparison.InvariantCultureIgnoreCase));
         }
 
         public void RemoveEntryByMessage(string message)
         {
-            entries.RemoveAll(x => x.componentMessage.Equals(message, StringComparison.InvariantCultureIgnoreCase));
+            entries.RemoveAll(x => x.ComponentMessage.Equals(message, StringComparison.InvariantCultureIgnoreCase));
         }
 
         public void AddEntry(ContextMenuEntry entry)
@@ -76,9 +73,9 @@ namespace CGO
                     message = param.Attribute("message").Value;
 
                 var newEntry = new ContextMenuEntry();
-                newEntry.entryName = name;
-                newEntry.iconName = icon;
-                newEntry.componentMessage = message;
+                newEntry.EntryName = name;
+                newEntry.IconName = icon;
+                newEntry.ComponentMessage = message;
 
                 entries.Add(newEntry);
             }

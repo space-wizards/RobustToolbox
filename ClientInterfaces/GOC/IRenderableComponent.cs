@@ -1,11 +1,11 @@
-﻿using ClientInterfaces.GOC;
+﻿using SS13_Shared.GO;
 
-namespace CGO
+namespace ClientInterfaces.GOC
 {
     public interface IRenderableComponent
     {
         void Render();
-        SS13_Shared.GO.DrawDepth DrawDepth { get; set; }
+        DrawDepth DrawDepth { get; set; }
         IEntity Owner { get; set; }
     }
 }

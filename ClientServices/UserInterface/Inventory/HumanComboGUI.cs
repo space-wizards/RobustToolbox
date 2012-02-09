@@ -2,8 +2,6 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Drawing;
-using CGO.Component.Damageable.Health.LocationalHealth;
-using CGO.Component.Hands;
 using ClientInterfaces;
 using ClientInterfaces.GOC;
 using ClientInterfaces.Network;
@@ -241,6 +239,7 @@ namespace ClientServices.UserInterface.Inventory
                 _craftStatus.Color = Color.White;
                 return true;
             }
+
             return false;
         }
 
@@ -633,7 +632,7 @@ namespace ClientServices.UserInterface.Inventory
             var entity = _playerManager.ControlledEntity;
             var hands = (HumanHandsComponent)entity.GetComponent(ComponentFamily.Hands);
 
-            if (hands.currentHand == Hand.Left)
+            if (hands.CurrentHand == Hand.Left)
             {
                 _handLBg.Color = Color.White;
                 _handRBg.Color = _inactiveColor;
@@ -701,41 +700,40 @@ namespace ClientServices.UserInterface.Inventory
             #region Hands UI, Switching
             var entity = _playerManager.ControlledEntity;
             var hands = (HumanHandsComponent)entity.GetComponent(ComponentFamily.Hands);
-            if (e.Buttons == MouseButtons.Right)
+            switch (e.Buttons)
             {
-                if (Utilities.SpritePixelHit(_handLBg, e.Position))
-                {
-                    SendSwitchHandTo(Hand.Left);
-                    return true;
-                }
-
-                if (Utilities.SpritePixelHit(_handRBg, e.Position))
-                {
-                    SendSwitchHandTo(Hand.Right);
-                    return true;
-                }
-            }
-            else if (e.Buttons == MouseButtons.Left)
-            {
-                if (Utilities.SpritePixelHit(_handLBg, e.Position))
-                {
-                    if (hands.HandSlots.Keys.Contains(Hand.Left))
+                case MouseButtons.Right:
+                    if (Utilities.SpritePixelHit(_handLBg, e.Position))
                     {
-                        var entityL = hands.HandSlots[Hand.Left];
-                        _userInterfaceManager.DragInfo.StartDrag(entityL);
+                        SendSwitchHandTo(Hand.Left);
+                        return true;
                     }
-                    return true;
-                }
-
-                if (Utilities.SpritePixelHit(_handRBg, e.Position))
-                {
-                    if (hands.HandSlots.Keys.Contains(Hand.Right))
+                    if (Utilities.SpritePixelHit(_handRBg, e.Position))
                     {
-                        var entityR = hands.HandSlots[Hand.Right];
-                        _userInterfaceManager.DragInfo.StartDrag(entityR);
+                        SendSwitchHandTo(Hand.Right);
+                        return true;
                     }
-                    return true;
-                }
+                    break;
+                case MouseButtons.Left:
+                    if (Utilities.SpritePixelHit(_handLBg, e.Position))
+                    {
+                        if (hands.HandSlots.Keys.Contains(Hand.Left))
+                        {
+                            var entityL = hands.HandSlots[Hand.Left];
+                            _userInterfaceManager.DragInfo.StartDrag(entityL);
+                        }
+                        return true;
+                    }
+                    if (Utilities.SpritePixelHit(_handRBg, e.Position))
+                    {
+                        if (hands.HandSlots.Keys.Contains(Hand.Right))
+                        {
+                            var entityR = hands.HandSlots[Hand.Right];
+                            _userInterfaceManager.DragInfo.StartDrag(entityR);
+                        }
+                        return true;
+                    }
+                    break;
             }
             #endregion
 

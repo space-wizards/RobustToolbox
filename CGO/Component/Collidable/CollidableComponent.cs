@@ -9,7 +9,7 @@ using SS13.IoC;
 using SS13_Shared;
 using SS13_Shared.GO;
 
-namespace CGO.Component.Collidable
+namespace CGO
 {
     public class CollidableComponent : GameObjectComponent, ICollidable
     {

@@ -7,7 +7,7 @@ namespace CGO
     {
         public EquippableComponent()
         {
-            family = SS13_Shared.GO.ComponentFamily.Equippable;
+            family = ComponentFamily.Equippable;
         }
 
         public override void HandleNetworkMessage(IncomingEntityComponentMessage message)

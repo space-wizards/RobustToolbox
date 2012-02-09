@@ -1,8 +1,6 @@
 ﻿using System.Collections.Generic;
 using ClientInterfaces.GOC;
 using SS13_Shared;
-using ClientInterfaces.GOC;
-using SS13_Shared;
 using SS13_Shared.GO;
 using System.Xml.Linq;
 

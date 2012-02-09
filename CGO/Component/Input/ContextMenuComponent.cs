@@ -8,7 +8,7 @@ namespace CGO
 {
     public class ContextMenuComponent : GameObjectComponent
     {
-        private List<ContextMenuEntry> entries = new List<ContextMenuEntry>();
+        private readonly List<ContextMenuEntry> _entries = new List<ContextMenuEntry>();
 
         public ContextMenuComponent()
         {
@@ -33,7 +33,7 @@ namespace CGO
                     break;
 
                 case ComponentMessageType.ContextGetEntries:
-                    ComponentReplyMessage compReply = new ComponentReplyMessage(ComponentMessageType.ContextGetEntries,entries);
+                    ComponentReplyMessage compReply = new ComponentReplyMessage(ComponentMessageType.ContextGetEntries,_entries);
                     reply.Add(compReply);
                     break;
             }
@@ -42,17 +42,17 @@ namespace CGO
 
         public void RemoveEntryByName(string name)
         {
-            entries.RemoveAll(x => x.EntryName.Equals(name, StringComparison.InvariantCultureIgnoreCase));
+            _entries.RemoveAll(x => x.EntryName.Equals(name, StringComparison.InvariantCultureIgnoreCase));
         }
 
         public void RemoveEntryByMessage(string message)
         {
-            entries.RemoveAll(x => x.ComponentMessage.Equals(message, StringComparison.InvariantCultureIgnoreCase));
+            _entries.RemoveAll(x => x.ComponentMessage.Equals(message, StringComparison.InvariantCultureIgnoreCase));
         }
 
         public void AddEntry(ContextMenuEntry entry)
         {
-            entries.Add(entry);
+            _entries.Add(entry);
         }
 
         public override void HandleExtendedParameters(XElement extendedParameters)
@@ -77,7 +77,7 @@ namespace CGO
                 newEntry.IconName = icon;
                 newEntry.ComponentMessage = message;
 
-                entries.Add(newEntry);
+                _entries.Add(newEntry);
             }
         }
 

@@ -3,7 +3,7 @@ using System.Linq;
 using SS13_Shared.GO;
 using SS13_Shared;
 
-namespace CGO.Component.Damageable.Health.LocationalHealth
+namespace CGO
 {
     public class HumanHealthComponent : HealthComponent //Behaves like health component but tracks damage of individual zones.
     {                                                   //Useful for mobs.
@@ -28,10 +28,10 @@ namespace CGO.Component.Damageable.Health.LocationalHealth
             {
                 case ComponentMessageType.GetCurrentLocationHealth:
                     var location = (BodyPart)list[0];
-                    if (DamageZones.Exists(x => x.location == location))
+                    if (DamageZones.Exists(x => x.Location == location))
                     {
-                        var dmgLoc = DamageZones.First(x => x.location == location);
-                        var reply1 = new ComponentReplyMessage(ComponentMessageType.CurrentLocationHealth, location, dmgLoc.UpdateTotalHealth(), dmgLoc.maxHealth);
+                        var dmgLoc = DamageZones.First(x => x.Location == location);
+                        var reply1 = new ComponentReplyMessage(ComponentMessageType.CurrentLocationHealth, location, dmgLoc.UpdateTotalHealth(), dmgLoc.MaxHealth);
                         replies.Add(reply1);
                     }
                     break;
@@ -51,20 +51,20 @@ namespace CGO.Component.Damageable.Health.LocationalHealth
             var dmgCount = (int)msg.MessageParameters[2];
             var maxHP = (int)msg.MessageParameters[3];
 
-            if (DamageZones.Exists(x => x.location == part))
+            if (DamageZones.Exists(x => x.Location == part))
             {
-                var existingZone = DamageZones.First(x => x.location == part);
-                existingZone.maxHealth = maxHP;
+                var existingZone = DamageZones.First(x => x.Location == part);
+                existingZone.MaxHealth = maxHP;
 
                 for (var i = 0; i < dmgCount; i++)
                 {
                     var type = (DamageType)msg.MessageParameters[4 + (i * 2)]; //Retrieve data from message in pairs starting at 4
                     var amount = (int)msg.MessageParameters[5 + (i * 2)];
 
-                    if (existingZone.damageIndex.ContainsKey(type))
-                        existingZone.damageIndex[type] = amount;
+                    if (existingZone.DamageIndex.ContainsKey(type))
+                        existingZone.DamageIndex[type] = amount;
                     else
-                        existingZone.damageIndex.Add(type, amount);
+                        existingZone.DamageIndex.Add(type, amount);
                 }
 
                 existingZone.UpdateTotalHealth();
@@ -79,10 +79,10 @@ namespace CGO.Component.Damageable.Health.LocationalHealth
                     var type = (DamageType)msg.MessageParameters[4 + (i * 2)]; //Retrieve data from message in pairs starting at 4
                     var amount = (int)msg.MessageParameters[5 + (i * 2)];
 
-                    if (newZone.damageIndex.ContainsKey(type))
-                        newZone.damageIndex[type] = amount;
+                    if (newZone.DamageIndex.ContainsKey(type))
+                        newZone.DamageIndex[type] = amount;
                     else
-                        newZone.damageIndex.Add(type, amount);
+                        newZone.DamageIndex.Add(type, amount);
                 }
 
                 newZone.UpdateTotalHealth();
@@ -95,7 +95,7 @@ namespace CGO.Component.Damageable.Health.LocationalHealth
 
         public override float GetMaxHealth()
         {
-            return DamageZones.Sum(x => x.maxHealth);
+            return DamageZones.Sum(x => x.MaxHealth);
         }
 
         public override float GetHealth()

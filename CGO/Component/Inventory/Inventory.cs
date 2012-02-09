@@ -9,9 +9,9 @@ namespace CGO
 {
     public class InventoryComponent : GameObjectComponent
     {
-        public List<IEntity> containedEntities { get; private set; }
+        public List<IEntity> ContainedEntities { get; private set; }
 
-        public int maxSlots { get; private set; }
+        public int MaxSlots { get; private set; }
 
         public delegate void InventoryComponentUpdateHandler(InventoryComponent sender, int maxSlots, List<IEntity> entities);
         public event InventoryComponentUpdateHandler Changed;
@@ -22,7 +22,7 @@ namespace CGO
         public InventoryComponent()
         {
             family = ComponentFamily.Inventory;
-            containedEntities = new List<IEntity>();
+            ContainedEntities = new List<IEntity>();
         }
 
         public override void HandleNetworkMessage(IncomingEntityComponentMessage message)
@@ -40,34 +40,34 @@ namespace CGO
 
         private void UnpackListing(IncomingEntityComponentMessage msg)
         {
-            maxSlots = (int)msg.MessageParameters[1];
+            MaxSlots = (int)msg.MessageParameters[1];
 
-            containedEntities.Clear();
+            ContainedEntities.Clear();
 
             for (int i = 0; i < (int)msg.MessageParameters[2]; i++)
             {
                 var msgPos = 3 + i;
                 var entity = EntityManager.Singleton.GetEntity((int)msg.MessageParameters[msgPos]);
                 if (entity != null)
-                    containedEntities.Add(entity);
+                    ContainedEntities.Add(entity);
             }
 
-            if (Changed != null) Changed(this, maxSlots, containedEntities);
+            if (Changed != null) Changed(this, MaxSlots, ContainedEntities);
         }
 
         public bool ContainsEntity(IEntity entity)
         {
-            return containedEntities.Contains(entity);
+            return ContainedEntities.Contains(entity);
         }
 
         public bool ContainsEntity(string templatename)
         {
-            return containedEntities.Exists(x => x.Template.Name == templatename);
+            return ContainedEntities.Exists(x => x.Template.Name == templatename);
         }
 
         public IEntity GetEntity(string templatename)
         {
-            return containedEntities.Exists(x => x.Template.Name == templatename) ? containedEntities.First(x => x.Template.Name == templatename) : null;
+            return ContainedEntities.Exists(x => x.Template.Name == templatename) ? ContainedEntities.First(x => x.Template.Name == templatename) : null;
         }
 
         public void SendRequestListing()

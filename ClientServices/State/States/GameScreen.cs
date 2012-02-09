@@ -400,7 +400,7 @@ namespace ClientServices.State.States
                 {
                     for (var y = yStart; y <= yEnd; y++)
                     {
-                        t = MapManager.GetTileAt(new Vector2D(x, y)); 
+                        t = MapManager.GetTileAt(x, y); 
                         if (!t.Visible)
                             continue;
                         if (t.TileType == TileType.Wall)

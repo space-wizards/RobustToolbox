@@ -15,6 +15,7 @@ namespace ClientInterfaces
         void HandleNetworkMessage(NetIncomingMessage message);
         void HandleAtmosDisplayUpdate(NetIncomingMessage message);
         ITile GetTileAt(Vector2D pos);
+        ITile GetTileAt(int x, int y);
         bool LoadNetworkedMap(TileType[,] networkedArray, TileState[,] networkedStates, int _mapWidth, int _mapHeight);
         Vector2D GetTileArrayPositionFromWorldPosition(float x, float z);
         Point GetTileArrayPositionFromWorldPosition(Vector2D pos);

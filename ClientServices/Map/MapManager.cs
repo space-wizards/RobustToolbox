@@ -355,6 +355,12 @@ namespace ClientServices.Map
             return tileArray[(int)p.X, (int)p.Y];
         }
 
+        public ITile GetTileAt(int x, int y)
+        {
+            if (x < 0 || y < 0) return null;
+            return tileArray[x, y];
+        }
+
 
         // Changes a tile based on its array position (get from world
         // coordinates using GetTileFromWorldPosition(int, int). Returns true if successful.

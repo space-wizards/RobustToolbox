@@ -24,7 +24,7 @@ namespace ClientInterfaces
         Point GetLastVisiblePoint();
         bool NeedVisibilityUpdate();
         void SetLastVisiblePoint(Point point);
-        void ComputeVisibility(int viewer_x, int viewer_y);
+        void ComputeVisibility(int viewerX, int viewerY);
         void SetAllVisible();
     }
 }

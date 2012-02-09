@@ -83,7 +83,7 @@ namespace CGO
                               orderby c.Owner.Position.Y ascending
                               select c;
                                 
-            foreach (IRenderableComponent component in renderables.ToList())
+            foreach (var component in renderables.ToList())
             {
                 component.Render();
             }

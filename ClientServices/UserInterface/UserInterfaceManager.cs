@@ -53,7 +53,7 @@ namespace ClientServices.UserInterface
         {
             var componentsOfType = (from IGuiComponent component in _components
                                     where component.GetType() == typeof (T)
-                                    select component);
+                                    select component).ToList();
 
             foreach (var current in componentsOfType)
             {
@@ -174,7 +174,7 @@ namespace ClientServices.UserInterface
                              orderby comp.Focus ascending
                              select comp;
 
-            foreach (IGuiComponent component in renderList)
+            foreach (var component in renderList)
                 component.Render();
 
             _cursorSprite = DragInfo.DragSprite ?? _resourceManager.GetSprite("cursor");

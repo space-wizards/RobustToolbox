@@ -38,6 +38,8 @@ namespace SS13
 
         public MainWindow()
         {
+            IoCManager.Resolve<IConfigurationManager>().Initialize("./config.xml");
+
             InitializeComponent();
         }
 

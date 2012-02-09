@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using Lidgren.Network;
+using SS13_Shared;
 using SS13_Shared.GO;
 
 namespace SGO

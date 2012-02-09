@@ -1,36 +1,25 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using SS13_Shared.GO;
+﻿using System.Collections.Generic;
 using SS13_Shared;
-using System.Drawing;
-using ClientServices;
-using ClientInterfaces;
+using SS13_Shared.GO;
 
 namespace CGO
 {
     public class HealthComponent : DamageableComponent //Behaves like the damageable component but recieves updates about its health.
     {                                                  //Useful for objects that need to show different stages of damage clientside.
-        protected float health = 0f;
-        protected float maxHealth = 0f;
-
-        public HealthComponent()
-            :base()
-        {
-        }
+        protected float Health ;
+        protected float MaxHealth;
 
         public override void HandleNetworkMessage(IncomingEntityComponentMessage message)
         {
-            ComponentMessageType type = (ComponentMessageType)message.messageParameters[0];
+            var type = (ComponentMessageType)message.MessageParameters[0];
 
             switch (type)
             {
                 case (ComponentMessageType.HealthStatus):
-                   health = (float)message.messageParameters[1];
-                   maxHealth = (float)message.messageParameters[2];
-                   if (GetHealth() <= 0) isDead = true;
-                   break;
+                    Health = (float)message.MessageParameters[1];
+                    MaxHealth = (float)message.MessageParameters[2];
+                    if (GetHealth() <= 0) IsDead = true;
+                    break;
             }
         }
 
@@ -39,7 +28,7 @@ namespace CGO
             switch (type)
             {
                 case ComponentMessageType.GetCurrentHealth:
-                    ComponentReplyMessage reply2 = new ComponentReplyMessage(ComponentMessageType.CurrentHealth, GetHealth(), GetMaxHealth());
+                    var reply2 = new ComponentReplyMessage(ComponentMessageType.CurrentHealth, GetHealth(), GetMaxHealth());
                     replies.Add(reply2);
                     break;
                 default:
@@ -50,12 +39,12 @@ namespace CGO
 
         public virtual float GetMaxHealth()
         {
-            return maxHealth;
+            return MaxHealth;
         }
 
         public virtual float GetHealth()
         {
-            return health;
+            return Health;
         }
     }
 }

@@ -1,13 +1,11 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
 using System.Drawing;
 using ClientInterfaces;
-using ClientServices;
-using System.Diagnostics;
-using ClientServices.Collision;
+using ClientInterfaces.GOC;
 using GorgonLibrary;
+using SS13.IoC;
 using SS13_Shared;
 using SS13_Shared.GO;
 
@@ -54,11 +52,11 @@ namespace CGO
         /// OnAdd override -- gets the AABB from the sprite component and sends it to the collision manager.
         /// </summary>
         /// <param name="owner"></param>
-        public override void OnAdd(Entity owner)
+        public override void OnAdd(IEntity owner)
         {
             base.OnAdd(owner);
             GetAABB();
-            ICollisionManager cm = ServiceManager.Singleton.GetService<CollisionManager>();
+            var cm = IoCManager.Resolve<ICollisionManager>();
             cm.AddCollidable(this);
         }
 
@@ -68,7 +66,7 @@ namespace CGO
         public override void OnRemove()
         {
             base.OnRemove();
-            ICollisionManager cm = ServiceManager.Singleton.GetService<CollisionManager>();
+            var cm = IoCManager.Resolve<ICollisionManager>();
             cm.RemoveCollidable(this);
         }
 
@@ -90,7 +88,7 @@ namespace CGO
                     if (collisionEnabled)
                     {
                         GetAABB();
-                        ICollisionManager cm = ServiceManager.Singleton.GetService<CollisionManager>();
+                        var cm = IoCManager.Resolve<ICollisionManager>();
                         cm.UpdateCollidable(this);
                     }
                     break;
@@ -105,7 +103,7 @@ namespace CGO
 
         public override void HandleNetworkMessage(IncomingEntityComponentMessage message)
         {
-            ComponentMessageType type = (ComponentMessageType)message.messageParameters[0];
+            ComponentMessageType type = (ComponentMessageType)message.MessageParameters[0];
             switch (type)
             {
                 case ComponentMessageType.EnableCollision:
@@ -169,7 +167,7 @@ namespace CGO
         private void EnableCollision()
         {
             collisionEnabled = true;
-            ICollisionManager cm = ServiceManager.Singleton.GetService<CollisionManager>();
+            var cm = IoCManager.Resolve<ICollisionManager>();
             cm.AddCollidable(this);
         }
 
@@ -179,7 +177,7 @@ namespace CGO
         private void DisableCollision()
         {
             collisionEnabled = false;
-            ICollisionManager cm = ServiceManager.Singleton.GetService<CollisionManager>();
+            var cm = IoCManager.Resolve<ICollisionManager>();
             cm.RemoveCollidable(this);
         }
 
@@ -190,9 +188,9 @@ namespace CGO
         {
             List<ComponentReplyMessage> replies = new List<ComponentReplyMessage>();
             Owner.SendMessage(this, ComponentMessageType.GetAABB, replies);
-            if (replies.Count > 0 && replies.First().messageType == ComponentMessageType.CurrentAABB)
+            if (replies.Count > 0 && replies.First().MessageType == ComponentMessageType.CurrentAABB)
             {
-                currentAABB = (RectangleF)replies.First().paramsList[0];
+                currentAABB = (RectangleF)replies.First().ParamsList[0];
             }
             else
                 return;

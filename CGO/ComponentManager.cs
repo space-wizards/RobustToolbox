@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
+using ClientInterfaces.GOC;
 using SS13_Shared.GO;
 
 namespace CGO
@@ -83,7 +83,7 @@ namespace CGO
                               orderby c.Owner.Position.Y ascending
                               select c;
                                 
-            foreach (IRenderableComponent component in renderables.ToList())
+            foreach (var component in renderables.ToList())
             {
                 component.Render();
             }

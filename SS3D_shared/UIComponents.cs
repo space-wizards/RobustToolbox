@@ -1,9 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-
-namespace SS13_Shared
+﻿namespace SS13_Shared
 {
     public enum GuiComponentType
     {
@@ -11,7 +6,7 @@ namespace SS13_Shared
         AppendagesComponent,
         StatPanelComponent,
         WindowComponent,
-        ComboGUI,
+        ComboGui,
         HumanInventory
     }
 

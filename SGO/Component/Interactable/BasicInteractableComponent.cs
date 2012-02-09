@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using SS13_Shared;
 using SS13_Shared.GO;
 
 namespace SGO
@@ -65,11 +66,11 @@ namespace SGO
             // Ask if the current hand is empty
             List<ComponentReplyMessage> replies = new List<ComponentReplyMessage>();
             actor.SendMessage(this, ComponentMessageType.IsCurrentHandEmpty, replies);
-            if (replies.Count() > 0 && (bool)replies.First().paramsList[0] == true)
+            if (replies.Count() > 0 && (bool)replies.First().ParamsList[0] == true)
             {
                 DoEmptyHandInteraction(actor);
             }
-            else if (replies.Count() > 0 && (bool)replies.First().paramsList[0] == false)
+            else if (replies.Count() > 0 && (bool)replies.First().ParamsList[0] == false)
             {
                 DoHeldItemInteraction(actor);
             }
@@ -147,9 +148,9 @@ namespace SGO
             actor.SendMessage(this, ComponentMessageType.GetActiveHandItem, replies);
             foreach (ComponentReplyMessage reply in replies)
             {
-                if (reply.messageType == ComponentMessageType.ReturnActiveHandItem && (reply.paramsList[0].GetType().IsSubclassOf(typeof(Entity)) || reply.paramsList[0].GetType() == typeof(Entity))) 
+                if (reply.MessageType == ComponentMessageType.ReturnActiveHandItem && (reply.ParamsList[0].GetType().IsSubclassOf(typeof(Entity)) || reply.ParamsList[0].GetType() == typeof(Entity))) 
                 {
-                    return (Entity)reply.paramsList[0];
+                    return (Entity)reply.ParamsList[0];
                 }
             }
             return null;

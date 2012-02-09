@@ -1,7 +1,6 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
+﻿using System.Collections.Generic;
+using ClientInterfaces.GOC;
+using SS13_Shared;
 using SS13_Shared.GO;
 using System.Xml.Linq;
 
@@ -12,7 +11,7 @@ namespace CGO
         /// <summary>
         /// The entity that owns this component
         /// </summary>
-        public Entity Owner { get; set; }
+        public IEntity Owner { get; set; }
 
         /// <summary>
         /// This is the family of the component. This should be set directly in all inherited components' constructors.
@@ -68,13 +67,13 @@ namespace CGO
         /// by an entity without being in the ComponentManager.
         /// </summary>
         /// <param name="owner"></param>
-        public virtual void OnAdd(Entity owner)
+        public virtual void OnAdd(IEntity owner)
         {
             Owner = owner;
             //Send us to the manager so it knows we're active
             ComponentManager.Singleton.AddComponent(this);
-            if (owner.initialized)
-                Owner.SendComponentInstantiationMessage(this);
+            if (owner.Initialized)
+                owner.SendComponentInstantiationMessage(this);
         }
 
         /// <summary>

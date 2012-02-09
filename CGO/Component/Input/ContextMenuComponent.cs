@@ -1,8 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Text.RegularExpressions;
+using SS13_Shared;
 using SS13_Shared.GO;
 using System.Xml.Linq;
 
@@ -10,7 +8,7 @@ namespace CGO
 {
     public class ContextMenuComponent : GameObjectComponent
     {
-        private List<ContextMenuEntry> entries = new List<ContextMenuEntry>();
+        private readonly List<ContextMenuEntry> _entries = new List<ContextMenuEntry>();
 
         public ContextMenuComponent()
         {
@@ -35,7 +33,7 @@ namespace CGO
                     break;
 
                 case ComponentMessageType.ContextGetEntries:
-                    ComponentReplyMessage compReply = new ComponentReplyMessage(ComponentMessageType.ContextGetEntries,entries);
+                    ComponentReplyMessage compReply = new ComponentReplyMessage(ComponentMessageType.ContextGetEntries,_entries);
                     reply.Add(compReply);
                     break;
             }
@@ -44,37 +42,17 @@ namespace CGO
 
         public void RemoveEntryByName(string name)
         {
-            entries.RemoveAll(x => x.entryName.Equals(name, StringComparison.InvariantCultureIgnoreCase));
+            _entries.RemoveAll(x => x.EntryName.Equals(name, StringComparison.InvariantCultureIgnoreCase));
         }
 
         public void RemoveEntryByMessage(string message)
         {
-            entries.RemoveAll(x => x.componentMessage.Equals(message, StringComparison.InvariantCultureIgnoreCase));
+            _entries.RemoveAll(x => x.ComponentMessage.Equals(message, StringComparison.InvariantCultureIgnoreCase));
         }
 
         public void AddEntry(ContextMenuEntry entry)
         {
-            entries.Add(entry);
-        }
-
-        public override void Shutdown()
-        {
-            base.Shutdown();
-        }
-
-        public override void OnRemove()
-        {
-            base.OnRemove();
-        }
-
-        public override void OnAdd(Entity owner)
-        {
-            base.OnAdd(owner);
-        }
-
-        public override void Update(float frameTime)
-        {
-            base.Update(frameTime);
+            _entries.Add(entry);
         }
 
         public override void HandleExtendedParameters(XElement extendedParameters)
@@ -94,12 +72,12 @@ namespace CGO
                 if (param.Attribute("message") != null)
                     message = param.Attribute("message").Value;
 
-                ContextMenuEntry newEntry = new ContextMenuEntry();
-                newEntry.entryName = name;
-                newEntry.iconName = icon;
-                newEntry.componentMessage = message;
+                var newEntry = new ContextMenuEntry();
+                newEntry.EntryName = name;
+                newEntry.IconName = icon;
+                newEntry.ComponentMessage = message;
 
-                entries.Add(newEntry);
+                _entries.Add(newEntry);
             }
         }
 

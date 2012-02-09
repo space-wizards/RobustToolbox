@@ -121,7 +121,7 @@ namespace SS13_Server.Modules
                 NetOutgoingMessage failCraftMsg = SS13NetServer.Singleton.CreateMessage();
                 failCraftMsg.Write((byte)NetMessage.PlayerUiMessage);
                 failCraftMsg.Write((byte)UiManagerMessage.ComponentMessage);
-                failCraftMsg.Write((byte)GuiComponentType.ComboGUI);
+                failCraftMsg.Write((byte)GuiComponentType.ComboGui);
                 failCraftMsg.Write((byte)ComboGuiMessage.CraftNoRecipe);
                 netServer.SendMessage(failCraftMsg, msg.SenderConnection, NetDeliveryMethod.ReliableUnordered);
             }
@@ -132,7 +132,7 @@ namespace SS13_Server.Modules
             NetOutgoingMessage cancelCraftMsg = SS13NetServer.Singleton.CreateMessage();
             cancelCraftMsg.Write((byte)NetMessage.PlayerUiMessage);
             cancelCraftMsg.Write((byte)UiManagerMessage.ComponentMessage);
-            cancelCraftMsg.Write((byte)GuiComponentType.ComboGUI);
+            cancelCraftMsg.Write((byte)GuiComponentType.ComboGui);
             cancelCraftMsg.Write((byte)ComboGuiMessage.CancelCraftBar);
             netServer.SendMessage(cancelCraftMsg, connection, NetDeliveryMethod.ReliableUnordered);
             removeTicketByConnection(connection); //Better placement for this.
@@ -143,7 +143,7 @@ namespace SS13_Server.Modules
             NetOutgoingMessage inventoyFullMsg = SS13NetServer.Singleton.CreateMessage();
             inventoyFullMsg.Write((byte)NetMessage.PlayerUiMessage);
             inventoyFullMsg.Write((byte)UiManagerMessage.ComponentMessage);
-            inventoyFullMsg.Write((byte)GuiComponentType.ComboGUI);
+            inventoyFullMsg.Write((byte)GuiComponentType.ComboGui);
             inventoyFullMsg.Write((byte)ComboGuiMessage.CraftNeedInventorySpace);
             netServer.SendMessage(inventoyFullMsg, connection, NetDeliveryMethod.ReliableUnordered);
         }
@@ -153,7 +153,7 @@ namespace SS13_Server.Modules
             NetOutgoingMessage busyMsg = SS13NetServer.Singleton.CreateMessage();
             busyMsg.Write((byte)NetMessage.PlayerUiMessage);
             busyMsg.Write((byte)UiManagerMessage.ComponentMessage);
-            busyMsg.Write((byte)GuiComponentType.ComboGUI);
+            busyMsg.Write((byte)GuiComponentType.ComboGui);
             busyMsg.Write((byte)ComboGuiMessage.CraftAlreadyCrafting);
             netServer.SendMessage(busyMsg, connection, NetDeliveryMethod.ReliableUnordered);
         }
@@ -163,7 +163,7 @@ namespace SS13_Server.Modules
             NetOutgoingMessage successMsg = SS13NetServer.Singleton.CreateMessage();
             successMsg.Write((byte)NetMessage.PlayerUiMessage);
             successMsg.Write((byte)UiManagerMessage.ComponentMessage);
-            successMsg.Write((byte)GuiComponentType.ComboGUI);
+            successMsg.Write((byte)GuiComponentType.ComboGui);
             successMsg.Write((byte)ComboGuiMessage.CraftSuccess);
             successMsg.Write((string)ticket.component1.template.Name);
             successMsg.Write((string)ticket.component1.name);
@@ -180,7 +180,7 @@ namespace SS13_Server.Modules
             NetOutgoingMessage missingMsg = SS13NetServer.Singleton.CreateMessage();
             missingMsg.Write((byte)NetMessage.PlayerUiMessage);
             missingMsg.Write((byte)UiManagerMessage.ComponentMessage);
-            missingMsg.Write((byte)GuiComponentType.ComboGUI);
+            missingMsg.Write((byte)GuiComponentType.ComboGui);
             missingMsg.Write((byte)ComboGuiMessage.CraftItemsMissing);
             netServer.SendMessage(missingMsg, connection, NetDeliveryMethod.ReliableUnordered);
             removeTicketByConnection(connection); //Better placement for this.
@@ -260,7 +260,7 @@ namespace SS13_Server.Modules
             NetOutgoingMessage startCraftMsg = SS13NetServer.Singleton.CreateMessage(); //Not starcraft. sorry.
             startCraftMsg.Write((byte)NetMessage.PlayerUiMessage);
             startCraftMsg.Write((byte)UiManagerMessage.ComponentMessage);
-            startCraftMsg.Write((byte)GuiComponentType.ComboGUI);
+            startCraftMsg.Write((byte)GuiComponentType.ComboGui);
             startCraftMsg.Write((byte)ComboGuiMessage.ShowCraftBar);
             startCraftMsg.Write(recipe.secondsToCreate);
 

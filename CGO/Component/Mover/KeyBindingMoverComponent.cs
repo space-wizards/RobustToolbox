@@ -29,9 +29,9 @@ namespace CGO
 
         public override void HandleNetworkMessage(IncomingEntityComponentMessage message)
         {
-            double x = (double)message.messageParameters[0];
-            double y = (double)message.messageParameters[1];
-            if((bool)message.messageParameters[2]) //"forced" parameter -- if true forces position update
+            double x = (double)message.MessageParameters[0];
+            double y = (double)message.MessageParameters[1];
+            if((bool)message.MessageParameters[2]) //"forced" parameter -- if true forces position update
             plainTranslate((float)x, (float)y);
         }
 
@@ -219,9 +219,9 @@ namespace CGO
             //Check collision.
             var replies = new List<ComponentReplyMessage>();
             Owner.SendMessage(this, ComponentMessageType.CheckCollision, replies, false);
-            if (replies.Count > 0 && replies.First().messageType == ComponentMessageType.CollisionStatus)
+            if (replies.Count > 0 && replies.First().MessageType == ComponentMessageType.CollisionStatus)
             {
-                bool colliding = (bool)replies.First().paramsList[0];
+                bool colliding = (bool)replies.First().ParamsList[0];
                 if (colliding) //Collided, reset position and return false.
                 {
                     Owner.Position = oldPosition;

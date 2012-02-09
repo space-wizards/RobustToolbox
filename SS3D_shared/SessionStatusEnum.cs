@@ -1,8 +1,11 @@
-﻿public enum SessionStatus
+﻿namespace SS13_Shared
 {
-    Zombie,
-    Connected,
-    InLobby,
-    InGame,
-    Disconnected
+    public enum SessionStatus
+    {
+        Zombie,
+        Connected,
+        InLobby,
+        InGame,
+        Disconnected
+    }
 }

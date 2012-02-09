@@ -1,7 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
+﻿using SS13_Shared;
 using SS13_Shared.GO;
 
 namespace CGO
@@ -10,17 +7,17 @@ namespace CGO
     {
         public EquippableComponent()
         {
-            family = SS13_Shared.GO.ComponentFamily.Equippable;
+            family = ComponentFamily.Equippable;
         }
 
         public override void HandleNetworkMessage(IncomingEntityComponentMessage message)
         {
             //base.HandleNetworkMessage(message);
 
-            switch((EquippableComponentNetMessage)message.messageParameters[0])
+            switch((EquippableComponentNetMessage)message.MessageParameters[0])
             {
                 case EquippableComponentNetMessage.Equipped:
-                    EquippedBy((int)message.messageParameters[1], (EquipmentSlot)message.messageParameters[2]);
+                    EquippedBy((int)message.MessageParameters[1], (EquipmentSlot)message.MessageParameters[2]);
                     break;
                 case EquippableComponentNetMessage.UnEquipped:
                     UnEquipped();

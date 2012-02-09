@@ -1,16 +1,10 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
-
 using SS13_Shared;
-using SS13_Shared.HelperClasses;
 using Lidgren.Network;
-using SS13_Server.Modules;
-using System.Reflection;
 using ServerServices;
 using System.Drawing;
-using ServerServices.Tiles;
 using SGO;
 
 namespace SS13_Server.Modules
@@ -19,9 +13,6 @@ namespace SS13_Server.Modules
     {
         //TO-DO: Expand for multiple permission per mob?
         //       Add support for multi-use placeables (tiles etc.).
-
-        private Boolean editMode = false;               //If true, clients may freely request and place objects.
-
         public List<PlacementInformation> BuildPermissions = new List<PlacementInformation>(); //Holds build permissions for all mobs. A list of mobs and the objects they're allowed to request and how. One permission per mob.
 
         #region Singleton
@@ -47,7 +38,7 @@ namespace SS13_Server.Modules
         /// </summary>
         public void HandleNetMessage(NetIncomingMessage msg)
         {
-            PlacementManagerMessage messageType = (PlacementManagerMessage)msg.ReadByte();
+            var messageType = (PlacementManagerMessage)msg.ReadByte();
 
             switch (messageType)
             {
@@ -64,7 +55,7 @@ namespace SS13_Server.Modules
         private PlacementInformation GetPermission(int uid, PlacementOption alignOpt)
         {
             var permission = from p in BuildPermissions
-                             where p.mobUid == uid && p.placementOption == alignOpt
+                             where p.MobUid == uid && p.PlacementOption == alignOpt
                              select p;
 
             if (permission.Any()) return permission.First();
@@ -95,10 +86,10 @@ namespace SS13_Server.Modules
             {
                 if (permission != null)
                 {
-                    if(permission.uses > 0)
+                    if(permission.Uses > 0)
                     {
-                        permission.uses--;
-                        if (permission.uses <= 0)
+                        permission.Uses--;
+                        if (permission.Uses <= 0)
                         {
                             BuildPermissions.Remove(permission);
                             SendPlacementCancel(session.attachedEntity);
@@ -141,7 +132,7 @@ namespace SS13_Server.Modules
         /// </summary>
         public void SendPlacementBegin(Entity mob, ushort range, string objectType, PlacementOption alignOption)
         {
-            NetOutgoingMessage message = SS13NetServer.Singleton.CreateMessage();
+            var message = SS13NetServer.Singleton.CreateMessage();
             message.Write((byte)NetMessage.PlacementManagerMessage);
             message.Write((byte)PlacementManagerMessage.StartPlacement);
             message.Write(range);
@@ -149,10 +140,10 @@ namespace SS13_Server.Modules
             message.Write(objectType);
             message.Write((byte)alignOption);
 
-            List<ComponentReplyMessage> replies = new List<ComponentReplyMessage>();
+            var replies = new List<ComponentReplyMessage>();
             mob.SendMessage(this, SS13_Shared.GO.ComponentMessageType.GetActorConnection, replies);
-            if (replies.Count > 0 && replies[0].messageType == SS13_Shared.GO.ComponentMessageType.ReturnActorConnection)
-                SS13NetServer.Singleton.SendMessage(message, (NetConnection)replies[0].paramsList[0], NetDeliveryMethod.ReliableOrdered);
+            if (replies.Count > 0 && replies[0].MessageType == SS13_Shared.GO.ComponentMessageType.ReturnActorConnection)
+                SS13NetServer.Singleton.SendMessage(message, (NetConnection)replies[0].ParamsList[0], NetDeliveryMethod.ReliableOrdered);
         }
 
         /// <summary>
@@ -160,7 +151,7 @@ namespace SS13_Server.Modules
         /// </summary>
         public void SendPlacementBegin(Entity mob, ushort range, TileType tileType, PlacementOption alignOption)
         {
-            NetOutgoingMessage message = SS13NetServer.Singleton.CreateMessage();
+            var message = SS13NetServer.Singleton.CreateMessage();
             message.Write((byte)NetMessage.PlacementManagerMessage);
             message.Write((byte)PlacementManagerMessage.StartPlacement);
             message.Write(range);
@@ -168,10 +159,10 @@ namespace SS13_Server.Modules
             message.Write((int)tileType);
             message.Write((byte)alignOption);
 
-            List<ComponentReplyMessage> replies = new List<ComponentReplyMessage>();
+            var replies = new List<ComponentReplyMessage>();
             mob.SendMessage(this, SS13_Shared.GO.ComponentMessageType.GetActorConnection, replies);
-            if (replies.Count > 0 && replies[0].messageType == SS13_Shared.GO.ComponentMessageType.ReturnActorConnection)
-                SS13NetServer.Singleton.SendMessage(message, (NetConnection)replies[0].paramsList[0], NetDeliveryMethod.ReliableOrdered);
+            if (replies.Count > 0 && replies[0].MessageType == SS13_Shared.GO.ComponentMessageType.ReturnActorConnection)
+                SS13NetServer.Singleton.SendMessage(message, (NetConnection)replies[0].ParamsList[0], NetDeliveryMethod.ReliableOrdered);
         }
 
         /// <summary>
@@ -179,13 +170,13 @@ namespace SS13_Server.Modules
         /// </summary>
         public void SendPlacementCancel(Entity mob)
         {
-            NetOutgoingMessage message = SS13NetServer.Singleton.CreateMessage();
+            var message = SS13NetServer.Singleton.CreateMessage();
             message.Write((byte)NetMessage.PlacementManagerMessage);
             message.Write((byte)PlacementManagerMessage.CancelPlacement);
-            List<ComponentReplyMessage> replies = new List<ComponentReplyMessage>();
+            var replies = new List<ComponentReplyMessage>();
             mob.SendMessage(this, SS13_Shared.GO.ComponentMessageType.GetActorConnection, replies);
-            if(replies.Count > 0 && replies[0].messageType == SS13_Shared.GO.ComponentMessageType.ReturnActorConnection)
-                SS13NetServer.Singleton.SendMessage(message, (NetConnection)replies[0].paramsList[0], NetDeliveryMethod.ReliableOrdered);
+            if (replies.Count > 0 && replies[0].MessageType == SS13_Shared.GO.ComponentMessageType.ReturnActorConnection)
+                SS13NetServer.Singleton.SendMessage(message, (NetConnection)replies[0].ParamsList[0], NetDeliveryMethod.ReliableOrdered);
         }
 
         /// <summary>
@@ -221,14 +212,14 @@ namespace SS13_Server.Modules
         public void AssignBuildPermission(Entity mob, ushort range, string objectType, PlacementOption alignOption)
         {
             PlacementInformation newPermission = new PlacementInformation();
-            newPermission.mobUid = mob.Uid;
-            newPermission.range = range;
-            newPermission.isTile = false;
-            newPermission.entityType = objectType;
-            newPermission.placementOption = alignOption;
+            newPermission.MobUid = mob.Uid;
+            newPermission.Range = range;
+            newPermission.IsTile = false;
+            newPermission.EntityType = objectType;
+            newPermission.PlacementOption = alignOption;
 
             var mobPermissions = from PlacementInformation permission in BuildPermissions
-                                 where permission.mobUid == mob.Uid
+                                 where permission.MobUid == mob.Uid
                                  select permission;
 
             if (mobPermissions.Any()) //Already has one? Revoke the old one and add this one.
@@ -248,14 +239,14 @@ namespace SS13_Server.Modules
         public void AssignBuildPermission(Entity mob, ushort range, TileType tileType, PlacementOption alignOption)
         {
             PlacementInformation newPermission = new PlacementInformation();
-            newPermission.mobUid = mob.Uid;
-            newPermission.range = range;
-            newPermission.isTile = true;
-            newPermission.tileType = tileType;
-            newPermission.placementOption = alignOption;
+            newPermission.MobUid = mob.Uid;
+            newPermission.Range = range;
+            newPermission.IsTile = true;
+            newPermission.TileType = tileType;
+            newPermission.PlacementOption = alignOption;
 
             var mobPermissions = from PlacementInformation permission in BuildPermissions
-                                 where permission.mobUid == mob.Uid
+                                 where permission.MobUid == mob.Uid
                                  select permission;
 
             if (mobPermissions.Any()) //Already has one? Revoke the old one and add this one.
@@ -275,7 +266,7 @@ namespace SS13_Server.Modules
         public void RevokeAllBuildPermissions(Entity mob)
         {
             var mobPermissions = from PlacementInformation permission in BuildPermissions
-                                 where permission.mobUid == mob.Uid
+                                 where permission.MobUid == mob.Uid
                                  select permission;
 
             if (mobPermissions.Any())

@@ -35,6 +35,9 @@
       <SpecificVersion>False</SpecificVersion>
       <HintPath>..\References\Release\Gorgon.dll</HintPath>
     </Reference>
+    <Reference Include="Lidgren.Network">
+      <HintPath>..\Lidgren.Network\bin\Release\Lidgren.Network.dll</HintPath>
+    </Reference>
     <Reference Include="System" />
     <Reference Include="System.Core" />
     <Reference Include="System.Drawing" />
@@ -45,17 +48,32 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="ICollidable.cs" />
-    <Compile Include="ICollider.cs" />
-    <Compile Include="ICollisionManager.cs" />
-    <Compile Include="ILight.cs" />
-    <Compile Include="ILightManager.cs" />
-    <Compile Include="IRenders.cs" />
-    <Compile Include="IService.cs" />
-    <Compile Include="IServiceManager.cs" />
-    <Compile Include="IUpdates.cs" />
-    <Compile Include="IUserInterfaceManager.cs" />
+    <Compile Include="Collision\ICollidable.cs" />
+    <Compile Include="Collision\ICollider.cs" />
+    <Compile Include="Collision\ICollisionManager.cs" />
+    <Compile Include="Configuration\IConfigurationManager.cs" />
+    <Compile Include="GOC\IEntity.cs" />
+    <Compile Include="GOC\IEntityTemplate.cs" />
+    <Compile Include="GOC\IGameObjectComponent.cs" />
+    <Compile Include="GOC\IMoverComponent.cs" />
+    <Compile Include="GOC\IRenderableComponent.cs" />
+    <Compile Include="GOC\ISpriteComponent.cs" />
+    <Compile Include="Input\IKeyBindingManager.cs" />
+    <Compile Include="Placement\IPlacementManager.cs" />
+    <Compile Include="Lighting\ILight.cs" />
+    <Compile Include="Lighting\ILightManager.cs" />
+    <Compile Include="Map\IMapManager.cs" />
+    <Compile Include="Player\IPlayerManager.cs" />
+    <Compile Include="Resource\IResourceManager.cs" />
+    <Compile Include="Map\ITile.cs" />
+    <Compile Include="UserInterface\IDragDropInfo.cs" />
+    <Compile Include="UserInterface\IGuiComponent.cs" />
+    <Compile Include="UserInterface\IUserInterfaceManager.cs" />
+    <Compile Include="Network\INetworkGrapher.cs" />
+    <Compile Include="Network\INetworkManager.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="State\IState.cs" />
+    <Compile Include="State\IStateManager.cs" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\SS3D_shared\SS13_Shared.csproj">

@@ -4,7 +4,7 @@ using System.Linq;
 using System.Text;
 using Lidgren.Network;
 using System.Xml.Linq;
-using SS13_Shared.HelperClasses;
+using SS13_Shared;
 using System.Globalization;
 
 namespace SGO
@@ -67,7 +67,7 @@ namespace SGO
             string name = e.Attribute("name").Value;
             Entity ent = SpawnEntity(template);
             ent.name = name;
-            ent.Translate(new SS13_Shared.HelperClasses.Vector2(X, Y));
+            ent.Translate(new Vector2(X, Y));
         }
 
         public void SaveEntities()
@@ -235,9 +235,10 @@ namespace SGO
         #region Entity Manager Networking
         public void HandleNetworkMessage(NetIncomingMessage msg)
         {
-            EntityManagerMessage type = (EntityManagerMessage)msg.ReadInt32();
+            var type = (EntityManagerMessage)msg.ReadInt32();
             switch(type)
             {
+
             }
         }
         #endregion

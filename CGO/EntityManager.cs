@@ -1,9 +1,11 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
+using ClientInterfaces.GOC;
+using ClientInterfaces.Network;
 using Lidgren.Network;
 using GorgonLibrary;
+using SS13_Shared;
 
 namespace CGO
 {
@@ -15,21 +17,19 @@ namespace CGO
         private EntityFactory m_entityFactory;
         private EntityTemplateDatabase m_entityTemplateDatabase;
         private EntityNetworkManager m_entityNetworkManager;
-        private NetClient m_netClient;
         private bool initialized = false;
 
         public EntityTemplateDatabase TemplateDB { get { return m_entityTemplateDatabase; } }
 
-        private Dictionary<int, Entity> m_entities;
+        private Dictionary<int, IEntity> m_entities;
         private int lastId = 0;
 
-        public EntityManager(NetClient netClient)
+        public EntityManager(INetworkManager networkManager)
         {
-            m_entityNetworkManager = new EntityNetworkManager(netClient);
+            m_entityNetworkManager = new EntityNetworkManager(networkManager);
             m_entityTemplateDatabase = new EntityTemplateDatabase();
             m_entityFactory = new EntityFactory(m_entityTemplateDatabase);
-            m_entities = new Dictionary<int, Entity>();
-            m_netClient = netClient;
+            m_entities = new Dictionary<int, IEntity>();
             Singleton = this;
         }
 
@@ -61,7 +61,7 @@ namespace CGO
         /// </summary>
         /// <param name="eid">entity id</param>
         /// <returns>Entity or null if entity id doesn't exist</returns>
-        public Entity GetEntity(int eid)
+        public IEntity GetEntity(int eid)
         {
             if (m_entities.Keys.Contains(eid))
                 return m_entities[eid];
@@ -89,16 +89,16 @@ namespace CGO
             return -1;
         }
 
-        private Entity SpawnEntity(string EntityType, int Uid)
+        private IEntity SpawnEntity(string entityType, int uid)
         {
 
-            Entity e = m_entityFactory.CreateEntity(EntityType);
+            var e = m_entityFactory.CreateEntity(entityType);
             if (e != null)
             {
                 e.SetNetworkManager(m_entityNetworkManager);
-                e.Uid = Uid;
-                m_entities.Add(Uid, e);
-                lastId = Uid;
+                e.Uid = uid;
+                m_entities.Add(uid, e);
+                lastId = uid;
                 if(initialized)
                     e.Initialize();
                 return e;
@@ -106,7 +106,7 @@ namespace CGO
             return null;
         }
 
-        public Entity[] GetEntitiesInRange(Vector2D position, float Range)
+        public IEntity[] GetEntitiesInRange(Vector2D position, float Range)
         {
             var entities = from e in m_entities.Values
                            where (position - e.Position).Length < Range
@@ -130,26 +130,26 @@ namespace CGO
         /// <param name="msg"></param>
         public void HandleEntityNetworkMessage(NetIncomingMessage msg)
         {
-            IncomingEntityMessage message = m_entityNetworkManager.HandleEntityNetworkMessage(msg);
-            m_entities[message.uid].HandleNetworkMessage(message);
+            var message = m_entityNetworkManager.HandleEntityNetworkMessage(msg);
+            m_entities[message.Uid].HandleNetworkMessage(message);
         }
 
         #region Entity Manager Networking
         public void HandleNetworkMessage(NetIncomingMessage msg)
         {
-            EntityManagerMessage type = (EntityManagerMessage)msg.ReadInt32();
+            var type = (EntityManagerMessage)msg.ReadInt32();
             switch(type)
             {
                 case EntityManagerMessage.SpawnEntity:
-                    string EntityType = msg.ReadString();
-                    string EntityName = msg.ReadString();
-                    int Uid = msg.ReadInt32();
-                    Entity e = SpawnEntity(EntityType, Uid);
-                    e.name = EntityName;
+                    var entityType = msg.ReadString();
+                    var entityName = msg.ReadString();
+                    var uid = msg.ReadInt32();
+                    var e = SpawnEntity(entityType, uid);
+                    e.Name = entityName;
                     break;
                 case EntityManagerMessage.DeleteEntity:
-                    int dUid = msg.ReadInt32();
-                    Entity ent = GetEntity(dUid);
+                    var dUid = msg.ReadInt32();
+                    var ent = GetEntity(dUid);
                     if (ent != null)
                     {
                         ent.Shutdown();
@@ -164,7 +164,7 @@ namespace CGO
 
         private void InitializeEntities()
         {
-            foreach (Entity e in m_entities.Values)
+            foreach (var e in m_entities.Values)
                 e.Initialize();
             initialized = true;
         }

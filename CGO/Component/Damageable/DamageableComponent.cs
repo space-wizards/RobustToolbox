@@ -1,18 +1,12 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using SS13_Shared.GO;
+﻿using System.Collections.Generic;
 using SS13_Shared;
-using System.Drawing;
-using ClientServices;
-using ClientInterfaces;
+using SS13_Shared.GO;
 
 namespace CGO
 {
     public class DamageableComponent : GameObjectComponent //The basic Damageable component does not recieve health updates from the server and doesnt know what its health is.
     {                                                      //Used for things that are binary. Either broken or not broken. (windows?)
-        protected bool isDead = false;
+        protected bool IsDead;
 
         public DamageableComponent()
             : base()
@@ -25,7 +19,7 @@ namespace CGO
             switch (type)
             {
                 case ComponentMessageType.GetCurrentHealth:
-                    ComponentReplyMessage reply2 = new ComponentReplyMessage(ComponentMessageType.CurrentHealth, isDead ? 0 : 1, 1); //HANDLE THIS CORRECTLY
+                    var reply2 = new ComponentReplyMessage(ComponentMessageType.CurrentHealth, IsDead ? 0 : 1, 1); //HANDLE THIS CORRECTLY
                     replies.Add(reply2);
                     break;
                 default:
@@ -36,17 +30,17 @@ namespace CGO
 
         public override void HandleNetworkMessage(IncomingEntityComponentMessage message)
         {
-            ComponentMessageType type = (ComponentMessageType)message.messageParameters[0];
+            var type = (ComponentMessageType)message.MessageParameters[0];
 
             switch (type)
             {
                 case (ComponentMessageType.HealthStatus):
-                    bool newIsDeadState = (bool)message.messageParameters[1];
+                    var newIsDeadState = (bool)message.MessageParameters[1];
 
-                    if(newIsDeadState == true && isDead == false)
+                    if(newIsDeadState == true && IsDead == false)
                         Owner.SendMessage(this, ComponentMessageType.Die, null);
 
-                    isDead = newIsDeadState;
+                    IsDead = newIsDeadState;
                     break;
             }
         }

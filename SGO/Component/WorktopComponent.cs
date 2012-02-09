@@ -2,11 +2,11 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using SS13_Shared;
 using SS13_Shared.GO;
 using ServerServices.Map;
 using ServerServices;
 using ServerInterfaces;
-using SS13_Shared.HelperClasses;
 
 namespace SGO
 {

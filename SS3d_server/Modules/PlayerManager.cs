@@ -27,7 +27,7 @@ namespace SS13_Server.Modules
 
         public void NewSession(NetConnection client)
         {
-            PlayerSession session = new PlayerSession(client);
+            var session = new PlayerSession(client);
             playerSessions.Add(playerSessions.Values.Count + 1, session);
         }
 
@@ -36,12 +36,11 @@ namespace SS13_Server.Modules
             //Spawn the player's entity. There's probably a much better place to do this.
             var a = EntityManager.Singleton.SpawnEntity("HumanMob");
             var human = a;
-            a.Translate(new SS13_Shared.HelperClasses.Vector2(160, 160));
+            a.Translate(new Vector2(160, 160));
             if (s.assignedJob != null)
             {
-                foreach (SpawnEquipDefinition def in s.assignedJob.SpawnEquipment)
+                foreach (var newItem in s.assignedJob.SpawnEquipment.Select(def => EntityManager.Singleton.SpawnEntity(def.ObjectType)))
                 {
-                    var newItem = EntityManager.Singleton.SpawnEntity(def.ObjectType);
                     newItem.Translate(human.position); //This is not neccessary once the equipment component is built.
                     human.SendMessage(this, SS13_Shared.GO.ComponentMessageType.EquipItem, null, newItem);
                 }
@@ -79,7 +78,7 @@ namespace SS13_Server.Modules
         public void EndSession(NetConnection client)
         {
             // Ends the session.
-            PlayerSession session = GetSessionByConnection(client);
+            var session = GetSessionByConnection(client);
             LogManager.Log(session.name + " disconnected.", LogLevel.Information);
             //Detach the entity and (dont)delete it.
             var a = session.attachedEntity;

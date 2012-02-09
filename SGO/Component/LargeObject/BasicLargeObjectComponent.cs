@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using SS13_Shared;
 using SS13_Shared.GO;
 using SGO.Component.Item.ItemCapability;
 
@@ -35,18 +36,18 @@ namespace SGO
         protected void HandleItemToLargeObjectInteraction(Entity actor)
         {
             //Get the item
-            List<ComponentReplyMessage> replies = new List<ComponentReplyMessage>();
+            var replies = new List<ComponentReplyMessage>();
             actor.SendMessage(this, ComponentMessageType.GetActiveHandItem, replies);
 
-            if(replies.Count == 0 || replies[0].messageType != ComponentMessageType.ReturnActiveHandItem)
+            if(replies.Count == 0 || replies[0].MessageType != ComponentMessageType.ReturnActiveHandItem)
                 return; // No item in actor's active hand. This shouldn't happen.
 
-            Entity item = (Entity)replies[0].paramsList[0];
+            var item = (Entity)replies[0].ParamsList[0];
             replies.Clear();
             item.SendMessage(this, ComponentMessageType.ItemGetCapabilityVerbPairs, replies);
-            if (replies.Count > 0 && replies[0].messageType == ComponentMessageType.ItemReturnCapabilityVerbPairs)
+            if (replies.Count > 0 && replies[0].MessageType == ComponentMessageType.ItemReturnCapabilityVerbPairs)
             {
-                var verbs = (Lookup<ItemCapabilityType, ItemCapabilityVerb>)replies[0].paramsList[0];
+                var verbs = (Lookup<ItemCapabilityType, ItemCapabilityVerb>)replies[0].ParamsList[0];
                 if (verbs.Count == 0 || verbs == null)
                     RecieveItemInteraction(actor, item);
                 else

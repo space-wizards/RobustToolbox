@@ -1,12 +1,10 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Linq;
-using System.Text;
 using System.Drawing;
-using ClientServices;
 using ClientInterfaces;
-using ClientServices.Collision;
+using ClientInterfaces.GOC;
 using GorgonLibrary;
+using SS13.IoC;
 using SS13_Shared;
 using SS13_Shared.GO;
 
@@ -79,7 +77,7 @@ namespace CGO
             }
         }
 
-        public override void OnAdd(Entity owner)
+        public override void OnAdd(IEntity owner)
         {
             base.OnAdd(owner);
             GetAABB();
@@ -92,9 +90,9 @@ namespace CGO
         {
             List<ComponentReplyMessage> replies = new List<ComponentReplyMessage>();
             Owner.SendMessage(this, ComponentMessageType.GetAABB, replies);
-            if (replies.Count > 0 && replies.First().messageType == ComponentMessageType.CurrentAABB)
+            if (replies.Count > 0 && replies.First().MessageType == ComponentMessageType.CurrentAABB)
             {
-                currentAABB = (RectangleF)replies.First().paramsList[0];
+                currentAABB = (RectangleF)replies.First().ParamsList[0];
             }
             else
                 return;
@@ -103,7 +101,7 @@ namespace CGO
         private ComponentReplyMessage CheckCollision(bool SuppressBump = false)
         {
             bool isColliding = false;
-            var collisionManager = ServiceManager.Singleton.GetService<CollisionManager>();
+            var collisionManager = IoCManager.Resolve<ICollisionManager>();
             isColliding = collisionManager.IsColliding(OffsetAABB, SuppressBump);
             return new ComponentReplyMessage(ComponentMessageType.CollisionStatus, isColliding);
         }

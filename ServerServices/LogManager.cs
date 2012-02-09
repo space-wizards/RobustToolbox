@@ -91,7 +91,7 @@ namespace ServerServices
             {
                 singleton.LogOne(Message, logLevel);
             }
-            catch (NullReferenceException e)
+            catch (NullReferenceException)
             {
                 Console.WriteLine(Message);
             }

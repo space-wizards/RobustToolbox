@@ -1,9 +1,6 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using ClientServices;
-using ClientServices.Resources;
+﻿using System.Collections.Generic;
+using ClientInterfaces;
+using SS13.IoC;
 using SS13_Shared;
 using SS13_Shared.GO;
 using GorgonLibrary.Graphics;
@@ -145,7 +142,7 @@ namespace CGO
             AddSprite(basename);
             AddSprite(basename + "_inhand");
             AddSprite(basename + "_inhand_side");
-            if (ServiceManager.Singleton.GetService<ResourceManager>().SpriteExists(basename + "_inhand_back"))
+            if (IoCManager.Resolve<IResourceManager>().SpriteExists(basename + "_inhand_back"))
                 AddSprite(basename + "_inhand_back");
 
             SetSpriteByKey(basename);

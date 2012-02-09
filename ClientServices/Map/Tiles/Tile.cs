@@ -6,20 +6,21 @@ using ClientInterfaces;
 using ClientServices.Resources;
 using GorgonLibrary;
 using GorgonLibrary.Graphics;
+using SS13_Shared;
 
 namespace ClientServices.Map.Tiles
 {
-    public abstract class Tile
+    public abstract class Tile : ITile
     {
-        public TileType tileType = TileType.None;
+        public TileType TileType { get; protected set; }
         public TileState tileState = TileState.Healthy;
         public string name;
-        public Sprite sprite;
+        protected Sprite Sprite;
         public Sprite sideSprite;
         public Sprite lightSprite;
-        public Vector2D position;
-        public Point tilePosition;
-        public bool Visible = false;
+        public Vector2D Position { get; protected set; }
+        public Point TilePosition { get; protected set; }
+        public bool Visible { get; set; }
         public bool sightBlocked = false; // Is something on this tile that blocks sight through it, like a door (used for lighting)
         public byte surroundDirs = 0; //north = 1 east = 2 south = 4 west = 8.
         public Tile[] surroundingTiles;
@@ -29,16 +30,17 @@ namespace ClientServices.Map.Tiles
         public Sprite gasSprite;
         public List<TileDecal> decals;
         private Random _random;
-        private ILightManager _lightManager;
-        private ResourceManager _resourceManager;
+        private readonly ILightManager _lightManager;
+        private readonly IResourceManager _resourceManager;
 
-        protected Tile(Sprite _sprite, TileState state, float size, Vector2D _position, Point _tilePosition, ILightManager lightManager, ResourceManager resourceManager)
+        protected Tile(Sprite sprite, TileState state, float size, Vector2D position, Point tilePosition, ILightManager lightManager, IResourceManager resourceManager)
         {
+            TileType = TileType.None;
             tileState = state;
-            position = _position;
-            tilePosition = _tilePosition;
-            sprite = _sprite;
-            sprite.SetPosition(_position.X, _position.Y);
+            Position = position;
+            TilePosition = tilePosition;
+            Sprite = sprite;
+            Sprite.SetPosition(position.X, position.Y);
 
             _lightManager = lightManager;
             _resourceManager = resourceManager;
@@ -46,13 +48,14 @@ namespace ClientServices.Map.Tiles
             Initialize();
         }
 
-        protected Tile(Sprite _sprite, Sprite _side, TileState state, float size, Vector2D _position, Point _tilePosition, ILightManager lightManager, ResourceManager resourceManager)
+        protected Tile(Sprite sprite, Sprite _side, TileState state, float size, Vector2D _position, Point _tilePosition, ILightManager lightManager, IResourceManager resourceManager)
         {
+            TileType = TileType.None;
             tileState = state;
-            position = _position;
-            tilePosition = _tilePosition;
-            sprite = _sprite;
-            sprite.SetPosition(_position.X, _position.Y);
+            Position = _position;
+            TilePosition = _tilePosition;
+            Sprite = sprite;
+            Sprite.SetPosition(_position.X, _position.Y);
 
             sideSprite = _side;
             sideSprite.SetPosition(_position.X, _position.Y);
@@ -71,7 +74,7 @@ namespace ClientServices.Map.Tiles
             gasAmounts = new Dictionary<GasType, int>();
             sightBlocked = false;
             decals = new List<TileDecal>();
-            _random = new Random((int)(position.X * position.Y));
+            _random = new Random((int)(Position.X * Position.Y));
             lightSprite = _resourceManager.GetSprite("white");
 
 
@@ -79,7 +82,7 @@ namespace ClientServices.Map.Tiles
 
         public void SetSprites(Sprite _sprite, Sprite _side, byte _surroundDirs)
         {
-            sprite = _sprite;
+            Sprite = _sprite;
             sideSprite = _side;
             surroundDirs = _surroundDirs;
         }
@@ -88,10 +91,9 @@ namespace ClientServices.Map.Tiles
         {
             if (Visible)
             {
-                sprite.Color = Color.White;
-                sprite.SetPosition(tilePosition.X * tileSpacing - xTopLeft, tilePosition.Y * tileSpacing - yTopLeft);
-                //LightManager.Singleton.ApplyLightsToSprite(tileLights, sprite, new Vector2D(xTopLeft, yTopLeft));
-                sprite.Draw();
+                Sprite.Color = Color.White;
+                Sprite.SetPosition(TilePosition.X * tileSpacing - xTopLeft, TilePosition.Y * tileSpacing - yTopLeft);
+                Sprite.Draw();
             }
         }
 
@@ -100,15 +102,14 @@ namespace ClientServices.Map.Tiles
             if (Visible)
             {
                 lightSprite.Color = Color.Black;
-                lightSprite.SetPosition(tilePosition.X * tileSpacing - xTopLeft, tilePosition.Y * tileSpacing - yTopLeft);
+                lightSprite.SetPosition(TilePosition.X * tileSpacing - xTopLeft, TilePosition.Y * tileSpacing - yTopLeft);
                 _lightManager.ApplyLightsToSprite(tileLights, lightSprite, new Vector2D(xTopLeft, yTopLeft));
-                //lightSprite.Draw();
                 lightMapBatch.AddClone(lightSprite);
 
                 if (surroundingTiles[0] != null && !surroundingTiles[0].Visible)
                 {
                     lightSprite.Color = Color.Black;
-                    lightSprite.SetPosition(tilePosition.X * tileSpacing - xTopLeft, (tilePosition.Y - 1) * tileSpacing - yTopLeft);
+                    lightSprite.SetPosition(TilePosition.X * tileSpacing - xTopLeft, (TilePosition.Y - 1) * tileSpacing - yTopLeft);
                     _lightManager.ApplyLightsToSprite(tileLights, lightSprite, new Vector2D(xTopLeft, yTopLeft));
                     lightMapBatch.AddClone(lightSprite);
                 }
@@ -151,6 +152,7 @@ namespace ClientServices.Map.Tiles
 
             }
         }
+
         public virtual void RenderGas(float xTopLeft, float yTopLeft, int tileSpacing, Batch gasBatch)
         {
             if (Visible && gasAmounts.Count > 0)
@@ -158,11 +160,11 @@ namespace ClientServices.Map.Tiles
                 bool spritepositionset = false;
                 foreach (var gasAmount in gasAmounts)
                 {
-                    if (gasAmount.Value <= 1) //Meh.
+                    if (gasAmount.Value <= 1)
                         continue;
                     if (!spritepositionset)
                     {
-                        gasSprite.SetPosition(tilePosition.X * tileSpacing - xTopLeft, tilePosition.Y * tileSpacing - yTopLeft);
+                        gasSprite.SetPosition(TilePosition.X * tileSpacing - xTopLeft, TilePosition.Y * tileSpacing - yTopLeft);
                         spritepositionset = true;
                     }
                 
@@ -220,7 +222,7 @@ namespace ClientServices.Map.Tiles
         public void Draw(float xTopLeft, float yTopLeft, int tileSpacing, Batch decalBatch)
         {
             //Need to find a way to light it.
-            sprite.SetPosition(tile.tilePosition.X * tileSpacing - xTopLeft + position.X, tile.tilePosition.Y * tileSpacing - yTopLeft + position.Y);
+            sprite.SetPosition(tile.TilePosition.X * tileSpacing - xTopLeft + position.X, tile.TilePosition.Y * tileSpacing - yTopLeft + position.Y);
             decalBatch.AddClone(sprite);
         }
     }

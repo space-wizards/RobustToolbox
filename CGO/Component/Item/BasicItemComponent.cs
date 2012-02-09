@@ -1,7 +1,7 @@
 ﻿using SS13_Shared;
 using SS13_Shared.GO;
 
-namespace CGO.Component.Item
+namespace CGO
 {
     public class BasicItemComponent : GameObjectComponent
     {

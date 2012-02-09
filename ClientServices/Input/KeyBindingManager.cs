@@ -7,7 +7,6 @@ using GorgonLibrary.InputDevices;
 using ClientInterfaces.Input;
 using SS13_Shared;
 
-
 namespace ClientServices.Input
 {
     public class KeyBindingManager : IKeyBindingManager
@@ -44,11 +43,10 @@ namespace ClientServices.Input
         /// </summary>
         ~KeyBindingManager()
         {
-            if(_keyboard != null)
-            {
-                _keyboard.KeyDown -= KeyDown;
-                _keyboard.KeyUp -= KeyUp;
-            }
+            if (_keyboard == null) return;
+
+            _keyboard.KeyDown -= KeyDown;
+            _keyboard.KeyUp -= KeyUp;
         }
 
         /// <summary>
@@ -57,9 +55,9 @@ namespace ClientServices.Input
         /// <param name="keyboard"></param>
         public void Initialize(Keyboard keyboard)
         {
+            Enabled = true;
             Keyboard = keyboard;
             LoadKeys();
-           
         }
 
         /// <summary>

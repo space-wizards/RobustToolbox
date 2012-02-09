@@ -56,6 +56,8 @@
     <Compile Include="GOC\IEntityTemplate.cs" />
     <Compile Include="GOC\IGameObjectComponent.cs" />
     <Compile Include="GOC\IMoverComponent.cs" />
+    <Compile Include="GOC\IRenderableComponent.cs" />
+    <Compile Include="GOC\ISpriteComponent.cs" />
     <Compile Include="Input\IKeyBindingManager.cs" />
     <Compile Include="Placement\IPlacementManager.cs" />
     <Compile Include="Lighting\ILight.cs" />

@@ -20,6 +20,7 @@ namespace ClientInterfaces.GOC
         IGameObjectComponent GetComponent(ComponentFamily family);
         bool HasComponent(ComponentFamily family);
         string GetDescriptionString();
+        void Initialize();
         void Moved();
         void Shutdown();
         void SendMessage(object sender, ComponentMessageType type, List<ComponentReplyMessage> replies, params object[] args);

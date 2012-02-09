@@ -1,12 +1,8 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using GorgonLibrary;
+﻿using System.Collections.Generic;
 using GorgonLibrary.Graphics;
 using System.Drawing;
 
-namespace CGO
+namespace ClientInterfaces.GOC
 {
     public interface ISpriteComponent
     {

@@ -1,4 +1,5 @@
-﻿using SS13_Shared.GO;
+﻿using ClientInterfaces.GOC;
+using SS13_Shared.GO;
 
 namespace CGO
 {

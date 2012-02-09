@@ -1,6 +1,9 @@
-﻿public struct ContextMenuEntry
+﻿namespace CGO
 {
-    public string iconName;
-    public string entryName;
-    public string componentMessage;
+    public struct ContextMenuEntry
+    {
+        public string IconName;
+        public string EntryName;
+        public string ComponentMessage;
+    }
 }

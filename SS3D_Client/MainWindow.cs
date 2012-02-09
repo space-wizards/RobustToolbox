@@ -129,16 +129,7 @@ namespace SS13
             switch (e.Key)
             {
                 case KeyboardKeys.F9:
-                    if (MainMenuStrip.Visible)
-                    {
-                        MainMenuStrip.Hide();
-                        MainMenuStrip.Visible = false;
-                    }
-                    else
-                    {
-                        MainMenuStrip.Show();
-                        MainMenuStrip.Visible = true;
-                    }
+                    MainMenuStrip.Visible = !MainMenuStrip.Visible;
                     break;
                 case KeyboardKeys.F3:
                     IoCManager.Resolve<INetworkGrapher>().Toggle();

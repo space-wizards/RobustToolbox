@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Drawing;
-using CGO.Component.Hands;
 using ClientInterfaces;
 using ClientInterfaces.GOC;
 using ClientInterfaces.Player;
@@ -129,7 +128,7 @@ namespace ClientServices.UserInterface.Inventory
                 var equipment = (EquipmentComponent)entity.GetComponent(ComponentFamily.Equipment);
                 var hands = (HumanHandsComponent)entity.GetComponent(ComponentFamily.Hands);
 
-                if (CurrentEntity != null && CurrentEntity == _userInterfaceManager.DragInfo.DragEntity && hands.IsHandEmpty(hands.currentHand)) //Dropped from us to us. (Try to) unequip it to active hand.
+                if (CurrentEntity != null && CurrentEntity == _userInterfaceManager.DragInfo.DragEntity && hands.IsHandEmpty(hands.CurrentHand)) //Dropped from us to us. (Try to) unequip it to active hand.
                 {
                     _userInterfaceManager.DragInfo.Reset();
                     equipment.DispatchUnEquipToHand(CurrentEntity.Uid);

@@ -126,7 +126,7 @@ namespace ClientServices.State.States
             _screenSize = new System.Drawing.Point(Gorgon.CurrentClippingViewport.Width, Gorgon.CurrentClippingViewport.Height);
 
             //Init GUI components
-            _gameChat = new Chatbox(ResourceManager, UserInterfaceManager);
+            _gameChat = new Chatbox(ResourceManager, UserInterfaceManager, KeyBindingManager);
             _gameChat.TextSubmitted += ChatTextboxTextSubmitted;
             UserInterfaceManager.AddComponent(_gameChat);
 

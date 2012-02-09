@@ -1,6 +1,4 @@
 ﻿using System;
-using ClientInterfaces;
-using SS13.IoC;
 
 namespace SS13
 {
@@ -10,11 +8,8 @@ namespace SS13
     /* program starts here                                                  */
     /************************************************************************/
     [STAThread]
-    static void Main(string[] args)
+    static void Main()
     {
-        // Load Config.
-        IoCManager.Resolve<IConfigurationManager>().Initialize("./config.xml");
-        
         System.Windows.Forms.Application.Run(new MainWindow());
     }
   }

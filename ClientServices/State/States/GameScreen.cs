@@ -101,7 +101,7 @@ namespace ClientServices.State.States
 
             NetworkManager.RequestMap();
 
-            //TODO This should go somewhere else, there should be explicit session setup and teardown at some point.
+            // TODO This should go somewhere else, there should be explicit session setup and teardown at some point.
             NetworkManager.SendClientName(ConfigurationManager.GetPlayerName());
 
             _baseTarget = new RenderImage("baseTarget", Gorgon.Screen.Width, Gorgon.Screen.Height, ImageBufferFormats.BufferRGB888A8);
@@ -123,7 +123,7 @@ namespace ClientServices.State.States
             _realScreenWidthTiles = (float)Gorgon.CurrentClippingViewport.Width / MapManager.GetTileSpacing();
             _realScreenHeightTiles = (float)Gorgon.CurrentClippingViewport.Height / MapManager.GetTileSpacing();
 
-            _screenSize = new System.Drawing.Point(Gorgon.CurrentClippingViewport.Width, Gorgon.CurrentClippingViewport.Height);
+            _screenSize = new Point(Gorgon.CurrentClippingViewport.Width, Gorgon.CurrentClippingViewport.Height);
 
             //Init GUI components
             _gameChat = new Chatbox(ResourceManager, UserInterfaceManager, KeyBindingManager);
@@ -368,16 +368,16 @@ namespace ClientServices.State.States
                 
                 var centerTile = MapManager.GetTileArrayPositionFromWorldPosition(PlayerManager.ControlledEntity.Position);
               
-                int xStart = Math.Max(0, centerTile.X - (ScreenWidthTiles / 2) - 1);
-                int yStart = Math.Max(0, centerTile.Y - (ScreenHeightTiles / 2) - 1);
-                int xEnd = Math.Min(xStart + ScreenWidthTiles + 2, MapManager.GetMapWidth() - 1);
-                int yEnd = Math.Min(yStart + ScreenHeightTiles + 2, MapManager.GetMapHeight() - 1);
+                var xStart = Math.Max(0, centerTile.X - (ScreenWidthTiles / 2) - 1);
+                var yStart = Math.Max(0, centerTile.Y - (ScreenHeightTiles / 2) - 1);
+                var xEnd = Math.Min(xStart + ScreenWidthTiles + 2, MapManager.GetMapWidth() - 1);
+                var yEnd = Math.Min(yStart + ScreenHeightTiles + 2, MapManager.GetMapHeight() - 1);
 
                 ClientWindowData.Singleton.UpdateViewPort(PlayerManager.ControlledEntity.Position);
 
                 //xTopLeft = Math.Max(0, playerController.controlledEntity.position.X - ((screenWidthTiles / 2) * map.tileSpacing));
                 //yTopLeft = Math.Max(0, playerController.controlledEntity.position.Y - ((screenHeightTiles / 2) * map.tileSpacing));
-                ///COMPUTE TILE VISIBILITY
+                // COMPUTE TILE VISIBILITY
                 if ((centerTile != MapManager.GetLastVisiblePoint() || MapManager.NeedVisibilityUpdate()))
                 {
                     if (!_telepathy)
@@ -391,16 +391,13 @@ namespace ClientServices.State.States
                     }
                 }
 
-
-                ITile t;
-
-                ///RENDER TILE BASES, PUT GAS SPRITES AND WALL TOP SPRITES INTO BATCHES TO RENDER LATER
+                // RENDER TILE BASES, PUT GAS SPRITES AND WALL TOP SPRITES INTO BATCHES TO RENDER LATER
 
                 for (var x = xStart; x <= xEnd; x++)
                 {
                     for (var y = yStart; y <= yEnd; y++)
                     {
-                        t = MapManager.GetTileAt(x, y); 
+                        var t = MapManager.GetTileAt(x, y); 
                         if (!t.Visible)
                             continue;
                         if (t.TileType == TileType.Wall)
@@ -419,9 +416,9 @@ namespace ClientServices.State.States
                             t.RenderLight(WindowOrigin.X, WindowOrigin.Y, MapManager.GetTileSpacing(), _lightMapBatch);
                         }
 
-                        ///Render gas sprites to gas batch
+                        // Render gas sprites to gas batch
                         t.RenderGas(WindowOrigin.X, WindowOrigin.Y, MapManager.GetTileSpacing(), _gasBatch);
-                        ///Render wall top sprites to wall top batch
+                        // Render wall top sprites to wall top batch
                         t.RenderTop(WindowOrigin.X, WindowOrigin.Y, MapManager.GetTileSpacing(), _wallTopsBatch);
                     }
                 }
@@ -432,7 +429,7 @@ namespace ClientServices.State.States
                 _lightMapBatch.Clear();
                 Gorgon.CurrentRenderTarget = _baseTarget;
 
-                ///Render decal batch
+                // Render decal batch
                 if (_decalBatch.Count > 0)
                     _decalBatch.Draw();
                 _decalBatch.Clear();
@@ -442,12 +439,12 @@ namespace ClientServices.State.States
                 //Render renderable components
                 ComponentManager.Singleton.Render(0);
 
-                ///Render gas batch
+                // Render gas batch
                 if (_gasBatch.Count > 0)
                     _gasBatch.Draw();
                 _gasBatch.Clear();
 
-                ///Render wall tops batch
+                // Render wall tops batch
                 if (_wallTopsBatch.Count > 0)
                     _wallTopsBatch.Draw();
                 _wallTopsBatch.Clear();
@@ -480,17 +477,14 @@ namespace ClientServices.State.States
             _lightTargetSprite.Draw();
 
             Gorgon.CurrentRenderTarget = null;
-            //baseTargetSprite.Draw();
-            
-            return;
         }
 
         // Not currently used.
         public void FormResize()
         {
-            _scaleX = (float)Gorgon.CurrentClippingViewport.Width / (_realScreenWidthTiles * MapManager.GetTileSpacing());
-            _scaleY = (float)Gorgon.CurrentClippingViewport.Height / (_realScreenHeightTiles * MapManager.GetTileSpacing());
-            _screenSize = new System.Drawing.Point(Gorgon.CurrentClippingViewport.Width, Gorgon.CurrentClippingViewport.Height);
+            _scaleX = Gorgon.CurrentClippingViewport.Width / (_realScreenWidthTiles * MapManager.GetTileSpacing());
+            _scaleY = Gorgon.CurrentClippingViewport.Height / (_realScreenHeightTiles * MapManager.GetTileSpacing());
+            _screenSize = new Point(Gorgon.CurrentClippingViewport.Width, Gorgon.CurrentClippingViewport.Height);
         }
 
         #region Input
@@ -565,20 +559,15 @@ namespace ClientServices.State.States
 
             if (PlacementManager.IsActive && !PlacementManager.Eraser)
             {
-                if (e.Buttons == GorgonLibrary.InputDevices.MouseButtons.Left)
+                switch (e.Buttons)
                 {
-                    PlacementManager.HandlePlacement();
-                    return;
+                    case MouseButtons.Left:
+                        PlacementManager.HandlePlacement();
+                        return;
+                    case MouseButtons.Right:
+                        PlacementManager.Clear();
+                        return;
                 }
-                else if (e.Buttons == GorgonLibrary.InputDevices.MouseButtons.Right)
-                {
-                    PlacementManager.Clear();
-                    return;
-                }
-                //else if (e.Buttons == GorgonLibrary.InputDevices.MouseButtons.Middle)
-                //{
-                //    PlacementManager.Singleton.nextRot();
-                //}
             }
 
             #region Object clicking
@@ -586,7 +575,7 @@ namespace ClientServices.State.States
             //Vector2D worldPosition = new Vector2D(e.Position.X + xTopLeft, e.Position.Y + yTopLeft);
             // A bounding box for our click
             var mouseAABB = new RectangleF(MousePosWorld.X, MousePosWorld.Y, 1, 1);
-            float checkDistance = MapManager.GetTileSpacing() * 1.5f;
+            var checkDistance = MapManager.GetTileSpacing() * 1.5f;
             // Find all the entities near us we could have clicked
             var entities = EntityManager.Singleton.GetEntitiesInRange(PlayerManager.ControlledEntity.Position, checkDistance);
                 
@@ -595,7 +584,7 @@ namespace ClientServices.State.States
             var clickedWorldPoint = new PointF(mouseAABB.X, mouseAABB.Y);
             foreach (var entity in entities)
             {
-                var clickable = (ClickableComponent)entity.GetComponent(SS13_Shared.GO.ComponentFamily.Click);
+                var clickable = (ClickableComponent)entity.GetComponent(ComponentFamily.Click);
                 if (clickable == null) continue;
                 int drawdepthofclicked;
                 if (clickable.CheckClick(clickedWorldPoint, out drawdepthofclicked))
@@ -646,7 +635,7 @@ namespace ClientServices.State.States
 
         public void MouseMove(MouseInputEventArgs e)
         {
-            float distanceToPrev = (MousePosScreen - new Vector2D(e.Position.X, e.Position.Y)).Length;
+            var distanceToPrev = (MousePosScreen - new Vector2D(e.Position.X, e.Position.Y)).Length;
             MousePosScreen = new Vector2D(e.Position.X, e.Position.Y);
             MousePosWorld = new Vector2D(e.Position.X + WindowOrigin.X, e.Position.Y + WindowOrigin.Y);
             UserInterfaceManager.MouseMove(e);

@@ -80,16 +80,12 @@
     <StartupObject />
   </PropertyGroup>
   <ItemGroup>
-    <Reference Include="CSScriptLibrary">
-      <HintPath>..\References\Release\CSScriptLibrary.dll</HintPath>
+    <Reference Include="ClientServices">
+      <HintPath>..\ClientServices\bin\Release\ClientServices.dll</HintPath>
     </Reference>
     <Reference Include="Gorgon, Version=1.1.4119.34319, Culture=neutral, PublicKeyToken=c001d94e9acbbee7, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
       <HintPath>..\References\Release\Gorgon.dll</HintPath>
-    </Reference>
-    <Reference Include="GorgonFramework, Version=1.1.4119.34319, Culture=neutral, PublicKeyToken=c001d94e9acbbee7, processorArchitecture=MSIL">
-      <HintPath>..\References\Release\GorgonFramework.dll</HintPath>
-      <SpecificVersion>False</SpecificVersion>
     </Reference>
     <Reference Include="SS13.IoC">
       <HintPath>..\SS13.IoC\bin\Release\SS13.IoC.dll</HintPath>
@@ -98,14 +94,8 @@
     <Reference Include="System.Core">
       <RequiredTargetFramework>3.5</RequiredTargetFramework>
     </Reference>
-    <Reference Include="System.Data" />
-    <Reference Include="System.Data.DataSetExtensions" />
     <Reference Include="System.Drawing" />
     <Reference Include="System.Windows.Forms" />
-    <Reference Include="System.Xml" />
-    <Reference Include="System.Xml.Linq">
-      <RequiredTargetFramework>3.5</RequiredTargetFramework>
-    </Reference>
   </ItemGroup>
   <ItemGroup>
     <Compile Include="MainWindow.cs">
@@ -203,30 +193,9 @@
     </Content>
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\CGO\ClientGameObject.csproj">
-      <Project>{6C778741-98D8-48EB-835A-293077AF0E07}</Project>
-      <Name>ClientGameObject</Name>
-    </ProjectReference>
     <ProjectReference Include="..\ClientInterfaces\ClientInterfaces.csproj">
       <Project>{B31E7B59-7066-4186-AB18-B1BB6DE0E537}</Project>
       <Name>ClientInterfaces</Name>
-    </ProjectReference>
-    <ProjectReference Include="..\ClientServices\ClientServices.csproj">
-      <Project>{7F85F20C-E2B5-455D-A1CA-76ED000D25EA}</Project>
-      <Name>ClientServices</Name>
-    </ProjectReference>
-    <ProjectReference Include="..\ClientWindow\ClientWindow.csproj">
-      <Project>{9CFBF7F1-B939-433B-AFA1-C12EBA2565CD}</Project>
-      <Name>ClientWindow</Name>
-    </ProjectReference>
-    <ProjectReference Include="..\Lidgren.Network\Lidgren.Network.csproj">
-      <Project>{AE483C29-042E-4226-BA52-D247CE7676DA}</Project>
-      <Name>Lidgren.Network</Name>
-    </ProjectReference>
-    <ProjectReference Include="..\SS3D_shared\SS13_Shared.csproj">
-      <Project>{4229D7E3-C3AE-4C0A-B2B1-BB20911150DC}</Project>
-      <Name>SS13_Shared</Name>
-      <Private>True</Private>
     </ProjectReference>
   </ItemGroup>
   <ItemGroup>

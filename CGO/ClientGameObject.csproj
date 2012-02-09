@@ -1,7 +1,7 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <Project ToolsVersion="4.0" DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <PropertyGroup>
-    <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
+    <Configuration Condition=" '$(Configuration)' == '' ">Release</Configuration>
     <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
     <ProductVersion>8.0.30703</ProductVersion>
     <SchemaVersion>2.0</SchemaVersion>
@@ -34,9 +34,6 @@
     <Reference Include="Gorgon, Version=1.1.4119.34319, Culture=neutral, PublicKeyToken=c001d94e9acbbee7, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
       <HintPath>..\References\Release\Gorgon.dll</HintPath>
-    </Reference>
-    <Reference Include="SS13.IoC">
-      <HintPath>..\SS13.IoC\bin\Release\SS13.IoC.dll</HintPath>
     </Reference>
     <Reference Include="System" />
     <Reference Include="System.Core" />
@@ -95,6 +92,10 @@
     <ProjectReference Include="..\Lidgren.Network\Lidgren.Network.csproj">
       <Project>{AE483C29-042E-4226-BA52-D247CE7676DA}</Project>
       <Name>Lidgren.Network</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\SS13.IoC\SS13.IoC.csproj">
+      <Project>{3401031F-35A7-4AE5-8B64-CAFDCB929F0E}</Project>
+      <Name>SS13.IoC</Name>
     </ProjectReference>
     <ProjectReference Include="..\SS3D_shared\SS13_Shared.csproj">
       <Project>{4229D7E3-C3AE-4C0A-B2B1-BB20911150DC}</Project>

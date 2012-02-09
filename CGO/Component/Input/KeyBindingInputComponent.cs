@@ -9,8 +9,8 @@ namespace CGO
 {
     public class KeyBindingInputComponent : GameObjectComponent
     {
-        private Dictionary<BoundKeyFunctions, bool> keyStates;
-        private Dictionary<BoundKeyFunctions, KeyEvent> keyHandlers;
+        private readonly Dictionary<BoundKeyFunctions, bool> _keyStates;
+        private readonly Dictionary<BoundKeyFunctions, KeyEvent> _keyHandlers;
         public delegate void KeyEvent(bool state);
 
         public KeyBindingInputComponent()
@@ -20,8 +20,8 @@ namespace CGO
             var keyBindingManager = IoCManager.Resolve<IKeyBindingManager>();
             keyBindingManager.BoundKeyDown += KeyDown;
             keyBindingManager.BoundKeyUp += KeyUp;
-            keyStates = new Dictionary<BoundKeyFunctions, bool>();
-            keyHandlers = new Dictionary<BoundKeyFunctions, KeyEvent>();
+            _keyStates = new Dictionary<BoundKeyFunctions, bool>();
+            _keyHandlers = new Dictionary<BoundKeyFunctions, KeyEvent>();
             //Set up keystates
         }
 
@@ -58,14 +58,14 @@ namespace CGO
         protected void SetKeyState(BoundKeyFunctions k, bool state)
         {
             // Check to see if we have a keyhandler for the key that's been pressed. Discard invalid keys.
-            keyStates[k] = state;
+            _keyStates[k] = state;
 
         }
 
         public bool GetKeyState(BoundKeyFunctions k)
         {
-            if (keyStates.Keys.Contains(k))
-                return keyStates[k];
+            if (_keyStates.Keys.Contains(k))
+                return _keyStates[k];
             return false;
         }
 
@@ -79,8 +79,8 @@ namespace CGO
             // So basically we check for active keys with handlers and execute them. This is a linq query.
             // Get all of the active keys' handlers
             var activeKeyHandlers =
-                from keyState in keyStates
-                join handler in keyHandlers on keyState.Key equals handler.Key
+                from keyState in _keyStates
+                join handler in _keyHandlers on keyState.Key equals handler.Key
                 select new { evt = handler.Value, state = keyState.Value };
 
             //Execute the bastards!
@@ -93,10 +93,10 @@ namespace CGO
             }
 
             //Delete false states from the dictionary so they don't get reprocessed and fuck up other stuff. 
-            foreach (var state in keyStates.ToList())
+            foreach (var state in _keyStates.ToList())
             {
                 if (state.Value == false)
-                    keyStates.Remove(state.Key);
+                    _keyStates.Remove(state.Key);
                 else
                     Owner.SendMessage(this, ComponentMessageType.BoundKeyRepeat, null, state.Key, BoundKeyState.Repeat);
             }

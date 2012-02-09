@@ -2,7 +2,7 @@
 using SS13_Shared;
 using SS13_Shared.GO;
 
-namespace CGO.Component.Damageable.Health
+namespace CGO
 {
     public class HealthComponent : DamageableComponent //Behaves like the damageable component but recieves updates about its health.
     {                                                  //Useful for objects that need to show different stages of damage clientside.

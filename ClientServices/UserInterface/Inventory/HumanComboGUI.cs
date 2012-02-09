@@ -177,7 +177,7 @@ namespace ClientServices.UserInterface.Inventory
                     if (_playerManager.ControlledEntity.HasComponent(ComponentFamily.Inventory))
                     {
                         var invComp = (InventoryComponent)_playerManager.ControlledEntity.GetComponent(ComponentFamily.Inventory);
-                        if (invComp.containedEntities.Count >= invComp.maxSlots)
+                        if (invComp.ContainedEntities.Count >= invComp.MaxSlots)
                         {
                             _craftStatus.Text = "Status: Not enough Space";
                             _craftStatus.Color = Color.DarkRed;
@@ -574,15 +574,15 @@ namespace ClientServices.UserInterface.Inventory
 
                         foreach (var loc in healthcomp.DamageZones)
                         {
-                            healthStr += loc.location + "   --   ";
+                            healthStr += loc.Location + "   --   ";
 
-                            var healthPct = loc.currentHealth / (float)loc.maxHealth;
+                            var healthPct = loc.CurrentHealth / (float)loc.MaxHealth;
 
-                            if (healthPct > 0.75) healthStr += "HEALTHY (" + loc.currentHealth + " / " + loc.maxHealth + ")" + Environment.NewLine;
-                            else if (healthPct > 0.50) healthStr += "INJURED (" + loc.currentHealth + " / " + loc.maxHealth + ")" + Environment.NewLine;
-                            else if (healthPct > 0.25) healthStr += "WOUNDED (" + loc.currentHealth + " / " + loc.maxHealth + ")" + Environment.NewLine;
-                            else if (healthPct > 0) healthStr += "CRITICAL (" + loc.currentHealth + " / " + loc.maxHealth + ")" + Environment.NewLine;
-                            else healthStr += "CRIPPLED (" + loc.currentHealth+ " / " + loc.maxHealth + ")" + Environment.NewLine;
+                            if (healthPct > 0.75) healthStr += "HEALTHY (" + loc.CurrentHealth + " / " + loc.MaxHealth + ")" + Environment.NewLine;
+                            else if (healthPct > 0.50) healthStr += "INJURED (" + loc.CurrentHealth + " / " + loc.MaxHealth + ")" + Environment.NewLine;
+                            else if (healthPct > 0.25) healthStr += "WOUNDED (" + loc.CurrentHealth + " / " + loc.MaxHealth + ")" + Environment.NewLine;
+                            else if (healthPct > 0) healthStr += "CRITICAL (" + loc.CurrentHealth + " / " + loc.MaxHealth + ")" + Environment.NewLine;
+                            else healthStr += "CRIPPLED (" + loc.CurrentHealth + " / " + loc.MaxHealth + ")" + Environment.NewLine;
                         }
 
                         healthStr += Environment.NewLine + "Total Health : " + healthcomp.GetHealth() + " / " + healthcomp.GetMaxHealth();

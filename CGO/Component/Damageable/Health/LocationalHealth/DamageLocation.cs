@@ -1,34 +1,32 @@
 ﻿using System.Collections.Generic;
+using System.Linq;
 using SS13_Shared.GO;
 using SS13_Shared;
 
-namespace CGO.Component.Damageable.Health.LocationalHealth
+namespace CGO
 {
     public class DamageLocation
     {
-        public BodyPart location;
-        public int maxHealth;
-        public int currentHealth;
+        public BodyPart Location;
+        public int MaxHealth;
+        public int CurrentHealth;
 
-        public Dictionary<DamageType, int> damageIndex = new Dictionary<DamageType, int>();
+        public Dictionary<DamageType, int> DamageIndex = new Dictionary<DamageType, int>();
 
         public DamageLocation(BodyPart myPart, int maxHealth, int currHealth)
         {
-            location = myPart;
-            this.maxHealth = maxHealth;
-            this.currentHealth = currHealth;
+            Location = myPart;
+            MaxHealth = maxHealth;
+            CurrentHealth = currHealth;
         }
 
         public int UpdateTotalHealth()
         {
-            int updatedHealth = maxHealth;
+            var updatedHealth = DamageIndex.Aggregate(MaxHealth, (current, curr) => current - curr.Value);
 
-            foreach (KeyValuePair<DamageType, int> curr in damageIndex)
-                updatedHealth -= curr.Value;
+            CurrentHealth = updatedHealth;
 
-            currentHealth = updatedHealth;
-
-            return currentHealth;
+            return CurrentHealth;
         }
     }
 }

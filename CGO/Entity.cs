@@ -1,13 +1,10 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
-using System.IO;
-using System.Security;
-using System.Reflection;
+using ClientInterfaces.GOC;
 using GorgonLibrary;
-using System.Collections;
 using Lidgren.Network;
+using SS13_Shared;
 using SS13_Shared.GO;
 
 namespace CGO
@@ -17,7 +14,7 @@ namespace CGO
     /// Should not contain any game logic whatsoever other than entity movement functions and 
     /// component management functions.
     /// </summary>
-    public class Entity
+    public class Entity : IEntity
     {
         #region Variables
         /// <summary>
@@ -27,36 +24,20 @@ namespace CGO
 
         private EntityNetworkManager m_entityNetworkManager;
 
-        public EntityTemplate template;
+        public IEntityTemplate Template { get; set; }
 
-        public string name;
+        public string Name { get; set; }
 
-        public event EntityMoveEvent OnMove;
-        public delegate void EntityMoveEvent(Vector2D toPosition);
+        public event EventHandler<VectorEventArgs> OnMove;
 
-        public bool initialized = false;
+        public bool Initialized { get; set; }
 
-        /// <summary>
-        /// Unique entity id
-        /// </summary>
-        private int uid;
-        public int Uid
-        {
-            get
-            {
-                return uid;
-            }
-            set
-            {
-                uid = value;
-            }
-        }
+        public int Uid { get; set; }
 
         /// <summary>
         /// These are the only real pieces of data that the entity should have -- position and rotation.
         /// </summary>
-        private Vector2D position;
-        public Vector2D Position { get { return position; } set { position = value; } }
+        public Vector2D Position { get; set; }
 
         public float rotation;
         #endregion
@@ -86,7 +67,7 @@ namespace CGO
         public virtual void Initialize()
         {
             SendMessage(this, ComponentMessageType.Initialize, null);
-            initialized = true;
+            Initialized = true;
         }
 
         /// <summary>
@@ -103,7 +84,7 @@ namespace CGO
         /// </summary>
         public void Shutdown()
         {
-            foreach (GameObjectComponent component in components.Values)
+            foreach (var component in components.Values)
             {
                 component.OnRemove();
             }
@@ -160,9 +141,7 @@ namespace CGO
         /// <returns>true if component exists, false otherwise</returns>
         public bool HasComponent(ComponentFamily family)
         {
-            if (components.ContainsKey(family))
-                return true;
-            return false;
+            return components.ContainsKey(family);
         }
 
         /// <summary>
@@ -185,14 +164,14 @@ namespace CGO
         /// </summary>
         public string GetDescriptionString() //This needs to go here since it can not be bound to any single component.
         {
-            List<ComponentReplyMessage> replies = new List<ComponentReplyMessage>();
+            var replies = new List<ComponentReplyMessage>();
 
             this.SendMessage(this, ComponentMessageType.GetDescriptionString, replies);
 
             if (replies.Any())
-                return (string)replies.First(x => x.messageType == ComponentMessageType.GetDescriptionString).paramsList[0]; //If you dont answer with a string then fuck you.
+                return (string)replies.First(x => x.MessageType == ComponentMessageType.GetDescriptionString).ParamsList[0]; //If you dont answer with a string then fuck you.
             else
-                return this.template.Description;
+                return this.Template.Description;
         }
 
         //VARIABLES TO REFACTOR AT A LATER DATE
@@ -209,25 +188,25 @@ namespace CGO
         public void Moved()
         {
             if(OnMove != null)
-                OnMove(Position);
+                OnMove(this, new VectorEventArgs(Position));
         }
 
         internal void HandleComponentMessage(IncomingEntityComponentMessage message)
         {
-            if (components.Keys.Contains(message.componentFamily))
+            if (components.Keys.Contains(message.ComponentFamily))
             {
-                components[message.componentFamily].HandleNetworkMessage(message);
+                components[message.ComponentFamily].HandleNetworkMessage(message);
             }
         }
 
-        internal void HandleNetworkMessage(IncomingEntityMessage message)
+        public void HandleNetworkMessage(IncomingEntityMessage message)
         {
-            switch (message.messageType)
+            switch (message.MessageType)
             {
                 case EntityMessage.PositionMessage:
                     break;
                 case EntityMessage.ComponentMessage:
-                    HandleComponentMessage((IncomingEntityComponentMessage)message.message);
+                    HandleComponentMessage((IncomingEntityComponentMessage)message.Message);
                     break;
             }
         }
@@ -258,24 +237,4 @@ namespace CGO
         }
         #endregion
     }
-
-    public struct ComponentReplyMessage
-    {
-        public ComponentMessageType messageType;
-        public List<object> paramsList;
-
-        public ComponentReplyMessage(ComponentMessageType _messageType, params object[] _paramsList)
-        {
-            if (_paramsList != null)
-                paramsList = _paramsList.ToList();
-            else
-                paramsList = new List<object>();
-
-            messageType = _messageType;            
-        }
-
-        public static ComponentReplyMessage Null = new ComponentReplyMessage(ComponentMessageType.Empty);
-    }
-
-
 }

@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using SS13_Shared;
 using SS13_Shared.GO;
 using ServerServices;
 using ServerInterfaces;
@@ -98,17 +99,9 @@ namespace SGO
         protected virtual int GetArmorValue(DamageType damType)
         {
             //TODO do armor by damagetype
-            int armorvalues = 0;
-            List<ComponentReplyMessage> replies = new List<ComponentReplyMessage>();
+            var replies = new List<ComponentReplyMessage>();
             Owner.SendMessage(this, ComponentMessageType.GetArmorValues, replies, damType);
-            foreach (ComponentReplyMessage reply in replies)
-            {
-                if (reply.messageType == ComponentMessageType.ReturnArmorValues && reply.paramsList[0].GetType() == typeof(int))
-                {
-                    armorvalues += (int)reply.paramsList[0];
-                }
-            }
-            return armorvalues;
+            return replies.Where(reply => reply.MessageType == ComponentMessageType.ReturnArmorValues && reply.ParamsList[0] is int).Sum(reply => (int) reply.ParamsList[0]);
         }
 
         protected virtual void ApplyDamage(int p)

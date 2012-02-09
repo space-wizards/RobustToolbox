@@ -1,10 +1,7 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Xml;
+﻿using System.Collections.Generic;
 using System.IO;
 using System.Xml.Linq;
+using SS13_Shared;
 
 namespace CGO
 {
@@ -38,7 +35,7 @@ namespace CGO
             foreach (XElement e in templates)
             {
                 EntityTemplate newTemplate = new EntityTemplate();
-                newTemplate.LoadFromXML(e);
+                newTemplate.LoadFromXml(e);
                 AddTemplate(newTemplate);
             }
         }

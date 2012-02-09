@@ -1,8 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
 using System.Xml.Linq;
+using ClientInterfaces.GOC;
 using SS13_Shared;
 
 namespace CGO
@@ -10,57 +10,49 @@ namespace CGO
     /// <summary>
     /// This class holds a template for an entity -- the entity name, components, and parameters the entity will be instantiated with.
     /// </summary>
-    public class EntityTemplate
+    public class EntityTemplate : IEntityTemplate
     {
         /// <summary>
         /// This holds a list of the component types the entity will be instantiated with.
         /// </summary>
-        private List<string> components = new List<string>();
+        private readonly List<string> _components = new List<string>();
 
         /// <summary>
         /// This holds a dictionary linking parameter objects to components
         /// </summary>
-        private Dictionary<string, List<ComponentParameter>> parameters = new Dictionary<string,List<ComponentParameter>>();
+        private readonly Dictionary<string, List<ComponentParameter>> _parameters = new Dictionary<string,List<ComponentParameter>>();
 
         /// <summary>
         /// The Placement mode used for client-initiated placement. This is used for admin and editor placement. The serverside version controls what type the server assigns in normal gameplay.
         /// </summary>
-        public PlacementOption placementMode { get; private set; }
+        public PlacementOption PlacementMode { get; private set; }
 
         /// <summary>
         /// Offset that is added to the position when placing. (if any). Client only.
         /// </summary>
-        public KeyValuePair<int, int> placementOffset { get; private set; }
+        public KeyValuePair<int, int> PlacementOffset { get; private set; }
 
         /// <summary>
         /// The different mounting points on walls. (If any).
         /// </summary>
-        public List<int> mountingPoints { get; private set; }
+        public List<int> MountingPoints { get; private set; }
 
         /// <summary>
         /// Description for the entity. Used by default examine handlers.
         /// </summary>
-        public string Description { get {return description;} private set{description = value;} }
-
-        private string description = "There is nothing special about this object.";
+        public string Description { get ; private set; }
 
         /// <summary>
         /// Name of the entity template eg. "HumanMob"
         /// </summary>
-        private string m_name;
-        public string Name
-        {
-            get
-            { return m_name; }
-            set
-            { m_name = value; }
-        }
+        public string Name { get; set; }
 
         /// <summary>
         /// Default constructor
         /// </summary>
         public EntityTemplate()
         {
+            Description = "There is nothing special about this object.";
         }
 
         /// <summary>
@@ -69,7 +61,7 @@ namespace CGO
         /// <returns></returns>
         public IEnumerable<ComponentParameter> GetBaseSpriteParamaters() 
         {
-            var spriteLists = from para in parameters.Values
+            var spriteLists = from para in _parameters.Values
                               let spriteArgs = para.Where(arg => arg.MemberName == "basename" || arg.MemberName == "addsprite")
                               select spriteArgs;
             return spriteLists.SelectMany(x => x);
@@ -81,27 +73,27 @@ namespace CGO
         /// <returns></returns>
         public Entity CreateEntity()
         {
-            Entity e = new Entity();
+            var e = new Entity();
 
-            foreach (string componentname in components)
+            foreach (var componentname in _components)
             {
-                IGameObjectComponent component = ComponentFactory.Singleton.GetComponent(componentname);
+                var component = ComponentFactory.Singleton.GetComponent(componentname);
                 if (component == null)
                     continue; //TODO THROW ERROR
 
-                ///Get all the params in the template that apply to this component
-                var cparameters = parameters[componentname];
-                foreach (ComponentParameter p in cparameters)
+                // Get all the params in the template that apply to this component
+                var cparameters = _parameters[componentname];
+                foreach (var p in cparameters)
                 {
-                    ///Set the component's parameters
+                    // Set the component's parameters
                     component.SetParameter(p);
                 }
-                ///Add the component to the entity
+                // Add the component to the entity
                 e.AddComponent(component.Family, component);
             }
 
-            e.name = Name;
-            e.template = this;
+            e.Name = Name;
+            e.Template = this;
             return e;
         }
 
@@ -110,50 +102,50 @@ namespace CGO
         /// </summary>
         public void AddComponent(string componentType)
         {
-            components.Add(componentType);
+            _components.Add(componentType);
         }
 
         /// <summary>
         /// Sets a parameter for a component type for this template
         /// </summary>
-        /// <param name="t">The type of the component to set a parameter on</param>
+        /// <param name="componentType">The type of the component to set a parameter on</param>
         /// <param name="parameter">The parameter object</param>
-        public void SetParameter(string componenttype, ComponentParameter parameter)
+        public void SetParameter(string componentType, ComponentParameter parameter)
         {
-            if(parameters.ContainsKey(componenttype))
-            parameters[componenttype].Add(parameter);
+            if(_parameters.ContainsKey(componentType))
+            _parameters[componentType].Add(parameter);
         }
 
-        public void LoadFromXML(XElement templateElement)
+        public void LoadFromXml(XElement templateElement)
         {
             Name = templateElement.Attribute("name").Value;
 
-            var t_components = templateElement.Element("Components").Elements();
+            var tComponents = templateElement.Element("Components").Elements();
             //Parse components
-            foreach (XElement t_component in t_components)
+            foreach (var tComponent in tComponents)
             {
-                string componentname = t_component.Attribute("name").Value;
-                components.Add(componentname);
-                parameters.Add(componentname, new List<ComponentParameter>());
-                var t_componentParameters = from t_param in t_component.Descendants("Parameter")
-                                            select t_param;
+                string componentname = tComponent.Attribute("name").Value;
+                _components.Add(componentname);
+                _parameters.Add(componentname, new List<ComponentParameter>());
+                var tComponentParameters = from tParam in tComponent.Descendants("Parameter")
+                                            select tParam;
                 //Parse component parameters
-                foreach (XElement t_componentParameter in t_componentParameters)
+                foreach (var tComponentParameter in tComponentParameters)
                 {
-                    Type paramtype = translateType(t_componentParameter.Attribute("type").Value);
+                    Type paramtype = TranslateType(tComponentParameter.Attribute("type").Value);
 
                     if (paramtype == null)
                         break; //TODO THROW ERROR
 
-                    parameters[componentname].Add(new ComponentParameter(t_componentParameter.Attribute("name").Value, 
+                    _parameters[componentname].Add(new ComponentParameter(tComponentParameter.Attribute("name").Value, 
                                                                          paramtype, 
-                                                                         t_componentParameter.Attribute("value").Value)
+                                                                         tComponentParameter.Attribute("value").Value)
                                                  );
                 }
 
-                if (t_component.Element("ExtendedParameters") != null)
+                if (tComponent.Element("ExtendedParameters") != null)
                 {
-                    parameters[componentname].Add(new ComponentParameter("ExtendedParameters", typeof(XElement), t_component.Element("ExtendedParameters")));
+                    _parameters[componentname].Add(new ComponentParameter("ExtendedParameters", typeof(XElement), tComponent.Element("ExtendedParameters")));
                 }
             }
 
@@ -168,34 +160,34 @@ namespace CGO
                 if (modeElement != null)
                 {
                     string modeName = modeElement.Attribute("type").Value;
-                    this.placementMode = (PlacementOption)Enum.Parse(typeof(PlacementOption), modeName);
+                    this.PlacementMode = (PlacementOption)Enum.Parse(typeof(PlacementOption), modeName);
                 }
                 else
-                    this.placementMode = PlacementOption.AlignNoneFree;
+                    this.PlacementMode = PlacementOption.AlignNoneFree;
 
                 if (offsetElement != null)
                 {
                     int xOffset = int.Parse(offsetElement.Attribute("offsetX").Value);
                     int yOffset = int.Parse(offsetElement.Attribute("offsetY").Value);
-                    this.placementOffset = new KeyValuePair<int, int>(xOffset, yOffset);
+                    this.PlacementOffset = new KeyValuePair<int, int>(xOffset, yOffset);
                 }
 
                 if (mNodesElement != null)
                 {
-                    mountingPoints = new List<int>();
-                    foreach (XElement e_Node in mNodesElement.Elements("PlacementNode"))
+                    MountingPoints = new List<int>();
+                    foreach (var eNode in mNodesElement.Elements("PlacementNode"))
                     {
-                        int nodeHeight = int.Parse(e_Node.Attribute("nodeHeight").Value);
-                        this.mountingPoints.Add(nodeHeight);
+                        var nodeHeight = int.Parse(eNode.Attribute("nodeHeight").Value);
+                        MountingPoints.Add(nodeHeight);
                     }
                 }
             }
 
-            var t_description = templateElement.Element("Description");
-            if (t_description != null) description = t_description.Attribute("string").Value;
+            var tDescription = templateElement.Element("Description");
+            if (tDescription != null) Description = tDescription.Attribute("string").Value;
         }
 
-        private Type translateType(string typeName)
+        private static Type TranslateType(string typeName)
         {
             switch(typeName.ToLowerInvariant())
             {

@@ -1,7 +1,5 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
+﻿using System.Collections.Generic;
+using SS13_Shared;
 using SS13_Shared.GO;
 using System.Drawing;
 
@@ -29,10 +27,10 @@ namespace CGO
             Owner.SendMessage(this, ComponentMessageType.CheckSpriteClick, replies, worldPos);
             foreach (var reply in replies)
             {
-                if (reply.messageType == ComponentMessageType.SpriteWasClicked && (bool)reply.paramsList[0] == true)
+                if (reply.MessageType == ComponentMessageType.SpriteWasClicked && (bool)reply.ParamsList[0] == true)
                 {
-                    drawdepth = (int)reply.paramsList[1];
-                    return (bool)reply.paramsList[0];
+                    drawdepth = (int)reply.ParamsList[1];
+                    return (bool)reply.ParamsList[0];
                 }
             }
             drawdepth = -1;

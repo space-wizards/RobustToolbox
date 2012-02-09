@@ -6,6 +6,7 @@ using System.Text;
 using System.IO;
 using System.Xml;
 using System.Xml.Serialization;
+using SS13_Shared;
 
 namespace SS13_Server.Modules
 {

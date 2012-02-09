@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using SS13_Shared;
 using SS13_Shared.GO;
 using Lidgren.Network;
 
@@ -120,13 +121,13 @@ namespace SGO
 
             if (CanEquip(e))
             {
-                List<ComponentReplyMessage> replies = new List<ComponentReplyMessage>();
+                var replies = new List<ComponentReplyMessage>();
                 e.SendMessage(this, ComponentMessageType.GetWearLoc, replies);
-                if (replies.Count > 0 && replies[0].messageType == ComponentMessageType.ReturnWearLoc)
+                if (replies.Count > 0 && replies[0].MessageType == ComponentMessageType.ReturnWearLoc)
                 {
                     RemoveFromOtherComps(e);
 
-                    EquipEntityToPart((EquipmentSlot)replies[0].paramsList[0], e);
+                    EquipEntityToPart((EquipmentSlot)replies[0].ParamsList[0], e);
                 }
             }
         }
@@ -138,14 +139,14 @@ namespace SGO
             {
                 return; //TODO REAL ERROR MESSAGE OR SOME FUCK SHIT
             }
-            List<ComponentReplyMessage> reps = new List<ComponentReplyMessage>();
+            var reps = new List<ComponentReplyMessage>();
             //Get the item in the hand
             Owner.SendMessage(this, ComponentMessageType.GetActiveHandItem, reps);
-            if (reps.Count > 0 && reps[0].messageType == ComponentMessageType.ReturnActiveHandItem && CanEquip((Entity)reps[0].paramsList[0]))
+            if (reps.Count > 0 && reps[0].MessageType == ComponentMessageType.ReturnActiveHandItem && CanEquip((Entity)reps[0].ParamsList[0]))
             {
-                RemoveFromOtherComps((Entity)reps[0].paramsList[0]);
+                RemoveFromOtherComps((Entity)reps[0].ParamsList[0]);
                 //Equip
-                EquipEntity((Entity)reps[0].paramsList[0]);
+                EquipEntity((Entity)reps[0].ParamsList[0]);
             }
         }
 
@@ -169,10 +170,10 @@ namespace SGO
 
         private void UnEquipEntityToHand(Entity e, Hand h)
         {
-            List<ComponentReplyMessage> replies = new List<ComponentReplyMessage>();
-            HumanHandsComponent hands = (HumanHandsComponent)Owner.GetComponent(ComponentFamily.Hands);
+            var replies = new List<ComponentReplyMessage>();
+            var hands = (HumanHandsComponent)Owner.GetComponent(ComponentFamily.Hands);
             Owner.SendMessage(this, ComponentMessageType.IsHandEmpty, replies, h);
-            if (replies.Exists(x => x.messageType == ComponentMessageType.IsHandEmptyReply && (bool)x.paramsList[0]))
+            if (replies.Exists(x => x.MessageType == ComponentMessageType.IsHandEmptyReply && (bool)x.ParamsList[0]))
             {
                 UnEquipEntity(e);
                 Owner.SendMessage(this, ComponentMessageType.PickUpItemToHand, null, e, h);
@@ -239,11 +240,11 @@ namespace SGO
             if(!e.HasComponent(ComponentFamily.Equippable))
                 return false;
 
-            List<ComponentReplyMessage> replies = new List<ComponentReplyMessage>();
+            var replies = new List<ComponentReplyMessage>();
             e.SendMessage(this, ComponentMessageType.GetWearLoc, replies);
-            if (replies.Count > 0 && replies[0].messageType == ComponentMessageType.ReturnWearLoc)
+            if (replies.Count > 0 && replies[0].MessageType == ComponentMessageType.ReturnWearLoc)
             {
-                if (IsItem(e) && IsEmpty((EquipmentSlot)replies[0].paramsList[0]) && e != null && activeSlots.Contains((EquipmentSlot)replies[0].paramsList[0]))
+                if (IsItem(e) && IsEmpty((EquipmentSlot)replies[0].ParamsList[0]) && e != null && activeSlots.Contains((EquipmentSlot)replies[0].ParamsList[0]))
                 {
                     return true;
                 }

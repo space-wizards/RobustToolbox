@@ -27,8 +27,8 @@ namespace CGO
 
         public override void HandleNetworkMessage(IncomingEntityComponentMessage message)
         {
-            double x = (double)message.messageParameters[0];
-            double y = (double)message.messageParameters[1];
+            double x = (double)message.MessageParameters[0];
+            double y = (double)message.MessageParameters[1];
             Translate((float)x, (float)y);
         }
 

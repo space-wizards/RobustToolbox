@@ -24316,5 +24316,11 @@
         <member name="F:GorgonLibrary.Graphics.FontShadowDirection.LowerRight">
             <summary>Lower right corner.</summary>
         </member>
+        <member name="T:GorgonLibrary.Sprites.SpriteInfo">
+            <summary>
+            Struct to hold assorted sprite related information,
+            such as the name, offsets, and size.
+            </summary>
+        </member>
     </members>
 </doc>

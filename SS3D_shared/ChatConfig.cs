@@ -1,10 +1,13 @@
-﻿public enum ChatChannel
+﻿namespace SS13_Shared
 {
-    Default,
-    Lobby,
-    Ingame,
-    Server,
-    Damage,
-    Player,
-    Radio
+    public enum ChatChannel
+    {
+        Default,
+        Lobby,
+        Ingame,
+        Server,
+        Damage,
+        Player,
+        Radio
+    }
 }

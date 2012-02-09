@@ -1,8 +1,5 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using SS13_Shared.HelperClasses;
+﻿using System.Collections.Generic;
+using SS13_Shared;
 using SS13_Shared.GO;
 using Lidgren.Network;
 
@@ -25,7 +22,7 @@ namespace SGO
         {
             if (message.componentFamily == SS13_Shared.GO.ComponentFamily.Click)
             {
-                List<ComponentReplyMessage> replies = new List<ComponentReplyMessage>();
+                var replies = new List<ComponentReplyMessage>();
                 Owner.SendMessage(this, ComponentMessageType.Click, replies, message.messageParameters[0]);
                 //Who clicked us?
                 

@@ -58,6 +58,7 @@ namespace SS13_Shared.GO
 
     public enum ComponentMessageType
     {
+        Null,
         DisassociateEntity, //All components that can hold entities must respond to this by dropping the entity to the floor and removing all references. They will also need to send this message when they aquire an entity so other components relinquish control of it.
         InventoryAdd,
         InventoryRemove,

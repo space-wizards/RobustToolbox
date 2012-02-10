@@ -4,6 +4,8 @@ using ClientInterfaces.Network;
 using Lidgren.Network;
 using SS13_Shared;
 using SS13_Shared.GO;
+using SS13.IoC;
+using ClientInterfaces.MessageLogging;
 
 namespace CGO
 {
@@ -38,6 +40,13 @@ namespace CGO
             message.Write((byte)EntityMessage.ComponentMessage);
             message.Write((byte)family);
             PackParams(message, messageParams);
+
+            #if MESSAGEDEBUG
+            //Log the message
+            IMessageLogger logger = IoCManager.Resolve<IMessageLogger>();
+            logger.LogOutgoingComponentNetMessage(sendingEntity.Uid, family, messageParams);
+            #endif
+            
 
             //Send the message
             _networkManager.SendMessage(message, method);
@@ -152,7 +161,14 @@ namespace CGO
             switch (messageType)
             {
                 case EntityMessage.ComponentMessage:
-                    result = new IncomingEntityMessage(uid, EntityMessage.ComponentMessage, HandleEntityComponentNetworkMessage(message));
+                    var messageContent = HandleEntityComponentNetworkMessage(message);
+                    result = new IncomingEntityMessage(uid, EntityMessage.ComponentMessage, messageContent);
+
+#if MESSAGEDEBUG
+                    //Log the message
+                    IMessageLogger logger = IoCManager.Resolve<IMessageLogger>();
+                    logger.LogIncomingComponentNetMessage(result.Uid, result.MessageType, messageContent.ComponentFamily, messageContent.MessageParameters.ToArray());
+#endif
                     break;
                 case EntityMessage.PositionMessage:
                     //TODO: Handle position messages!

@@ -6,6 +6,8 @@ using GorgonLibrary;
 using Lidgren.Network;
 using SS13_Shared;
 using SS13_Shared.GO;
+using ClientInterfaces.MessageLogging;
+using SS13.IoC;
 
 namespace CGO
 {
@@ -152,6 +154,23 @@ namespace CGO
         /// <param name="args">message parameters</param>
         public void SendMessage(object sender, ComponentMessageType type, List<ComponentReplyMessage> replies, params object[] args)
         {
+            
+#if MESSAGEDEBUG
+            var senderfamily = ComponentFamily.Generic;
+            var uid = 0;
+            var sendertype = "";
+            if(sender.GetType().IsAssignableFrom(typeof(IGameObjectComponent)))
+            {
+                var realsender = (GameObjectComponent)sender;
+                senderfamily = realsender.Family;
+
+                uid = realsender.Owner.Uid;
+                sendertype = realsender.GetType().ToString();
+            }
+            //Log the message
+            IMessageLogger logger = IoCManager.Resolve<IMessageLogger>();
+            logger.LogComponentMessage(uid, senderfamily, sendertype, type);
+#endif
             foreach (IGameObjectComponent component in components.Values.ToArray())
             {
                 component.RecieveMessage(sender, type, replies, args);

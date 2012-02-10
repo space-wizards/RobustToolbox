@@ -2,9 +2,9 @@
 using System.Collections.Generic;
 using System.Linq;
 using ClientInterfaces.GOC;
+using ClientServices.Map.Tiles;
 using GorgonLibrary;
 using GorgonLibrary.Graphics;
-using CGO;
 using SS13_Shared;
 using SS13_Shared.GO;
 using System.Drawing;
@@ -15,11 +15,7 @@ namespace ClientServices.Helpers
     {
         public static string GetObjectSpriteName(Type type)
         {
-            if (type.IsSubclassOf(typeof(ClientServices.Map.Tiles.Tile)))
-            {
-                return "tilebuildoverlay";
-            }
-            return "nosprite";
+            return type.IsSubclassOf(typeof(Tile)) ? "tilebuildoverlay" : "nosprite";
         }
 
         public static Sprite GetSpriteComponentSprite(IEntity entity)
@@ -69,7 +65,7 @@ namespace ClientServices.Helpers
             {
                 throw new ArgumentOutOfRangeException("lambda");
             }
-            Color color = Color.FromArgb(
+            var color = Color.FromArgb(
                 InterpolateComponent(endPoint1, endPoint2, lambda, RedSelector),
                 InterpolateComponent(endPoint1, endPoint2, lambda, GreenSelector),
                 InterpolateComponent(endPoint1, endPoint2, lambda, BlueSelector)

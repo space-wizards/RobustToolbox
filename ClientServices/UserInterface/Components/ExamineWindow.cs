@@ -18,7 +18,7 @@ namespace ClientServices.UserInterface.Components
             : base(entity.Name, size, resourceManager)
         {
             _resourceManager = resourceManager;
-            _entityDescription = new Label(entity.GetDescriptionString(), _resourceManager);
+            _entityDescription = new Label(entity.GetDescriptionString(), "CALIBRI", _resourceManager);
 
             components.Add(_entityDescription);
 

@@ -150,7 +150,7 @@ namespace ClientServices.UserInterface.Components
             Size = size;
             _currentColor = Color.Gray;
             _iconSprite = _resourceManager.GetSprite(entry.IconName);
-            _textLabel = new Label(entry.EntryName, _resourceManager);
+            _textLabel = new Label(entry.EntryName, "CALIBRI", _resourceManager);
             _textLabel.Update();
         }
 

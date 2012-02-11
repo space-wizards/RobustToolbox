@@ -56,7 +56,7 @@ namespace ClientServices.UserInterface.Components
                 var ip = message.ReadString();
                 var isAdmin = message.ReadBoolean();
 
-                var line = new Label("Name: " + name + "    Status: " + status + "    Job: " + job + "    IP: " + ip, _resourceManager)
+                var line = new Label("Name: " + name + "    Status: " + status + "    Job: " + job + "    IP: " + ip, "CALIBRI", _resourceManager)
                                {
                                    Position = new Point(5, yOffset + 5),
                                    Text = {Color = isAdmin ? Color.DarkCyan : Color.Black}

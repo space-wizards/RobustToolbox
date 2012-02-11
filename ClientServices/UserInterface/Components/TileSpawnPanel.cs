@@ -27,7 +27,7 @@ namespace ClientServices.UserInterface.Components
 
             _tileList = new ScrollableContainer("tilespawnlist", new Size(200, 400), _resourceManager) { Position = new Point(5, 5) };
 
-            Label searchLabel = new Label("Tile Search:", _resourceManager);
+            Label searchLabel = new Label("Tile Search:", "CALIBRI", _resourceManager);
             searchLabel.Position = new Point(210, 0);
             components.Add(searchLabel);
 
@@ -36,7 +36,7 @@ namespace ClientServices.UserInterface.Components
             _tileSearchTextbox.OnSubmit += tileSearchTextbox_OnSubmit;
             components.Add(_tileSearchTextbox);
 
-            _clearLabel = new Label("[Clear Filter]", _resourceManager)
+            _clearLabel = new Label("[Clear Filter]", "CALIBRI", _resourceManager)
                               {
                                   DrawBackground = true,
                                   DrawBorder = true,
@@ -86,7 +86,7 @@ namespace ClientServices.UserInterface.Components
 
             foreach (string entry in typeNames)
             {
-                var tileLabel = new Label(entry, _resourceManager);
+                var tileLabel = new Label(entry, "CALIBRI", _resourceManager);
                 _tileList.components.Add(tileLabel);
                 tileLabel.Position = new Point(5, y_offset);
                 tileLabel.DrawBackground = true;

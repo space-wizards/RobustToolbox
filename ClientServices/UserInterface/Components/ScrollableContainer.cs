@@ -85,11 +85,11 @@ namespace ClientServices.UserInterface.Components
                 if (component.Position.Y + component.ClientArea.Height > max_y) max_y = component.Position.Y  + component.ClientArea.Height;
             }
 
-            scrollbarH.max = (int)max_x - ClientArea.Width + scrollbarV.ClientArea.Width;
+            scrollbarH.max = (int)max_x - ClientArea.Width + (max_y > clippingRI.Height ? scrollbarV.ClientArea.Width : 0);
             if (max_x > clippingRI.Width) scrollbarH.SetVisible(true);
             else scrollbarH.SetVisible(false);
 
-            scrollbarV.max = (int)max_y - ClientArea.Height + scrollbarH.ClientArea.Height;
+            scrollbarV.max = (int)max_y - ClientArea.Height + (max_x > clippingRI.Width ? scrollbarH.ClientArea.Height : 0);
             if (max_y > clippingRI.Height) scrollbarV.SetVisible(true);
             else scrollbarV.SetVisible(false);
 
@@ -112,10 +112,10 @@ namespace ClientServices.UserInterface.Components
                 component.Position = oldPos;
                 component.Update();
             }
-            scrollbarH.Render();
-            scrollbarV.Render();
             clippingRI.EndDrawing();
             clippingRI.Blit(Position.X, Position.Y);
+            scrollbarH.Render();
+            scrollbarV.Render();
             Gorgon.Screen.Rectangle(ClientArea.X, ClientArea.Y, ClientArea.Width, ClientArea.Height, System.Drawing.Color.Black);
         }
 

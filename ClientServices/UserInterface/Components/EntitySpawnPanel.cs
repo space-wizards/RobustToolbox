@@ -29,14 +29,14 @@ namespace ClientServices.UserInterface.Components
 
             _entityList = new ScrollableContainer("entspawnlist", new Size(200, 400), _resourceManager) {Position = new Point(5, 5)};
 
-            var searchLabel = new Label("Entity Search:", _resourceManager) {Position = new Point(210, 0)};
+            var searchLabel = new Label("Entity Search:", "CALIBRI", _resourceManager) { Position = new Point(210, 0) };
             components.Add(searchLabel);
 
             _entSearchTextbox = new Textbox(125, _resourceManager) {Position = new Point(210, 20)};
             _entSearchTextbox.OnSubmit += entSearchTextbox_OnSubmit;
             components.Add(_entSearchTextbox);
 
-            _clearLabel = new Label("[Clear Filter]", _resourceManager)
+            _clearLabel = new Label("[Clear Filter]", "CALIBRI", _resourceManager)
                              {
                                  DrawBackground = true,
                                  DrawBorder = true,

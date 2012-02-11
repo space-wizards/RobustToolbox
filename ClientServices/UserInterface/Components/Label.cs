@@ -25,11 +25,11 @@ namespace ClientServices.UserInterface.Components
         public int FixedWidth = -1;
         public int FixedHeight = -1;
 
-        public Label(string text, IResourceManager resourceManager)
+        public Label(string text, string font, IResourceManager resourceManager)
         {
             _resourceManager = resourceManager;
 
-            Text = new TextSprite("Label" + text, text, _resourceManager.GetFont("CALIBRI")) {Color = Color.Black};
+            Text = new TextSprite("Label" + text, text, _resourceManager.GetFont(font)) {Color = Color.Black};
 
             Update();
         }

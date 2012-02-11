@@ -31,7 +31,7 @@ namespace ClientServices.UserInterface.Components
             _resourceManager = resourceManager;
             closeButton = new SimpleImageButton("closewindow", _resourceManager);
             closeButton.Clicked += CloseButtonClicked;
-            title = new Label(windowTitle, _resourceManager);
+            title = new Label(windowTitle, "CALIBRI", _resourceManager);
             gradient = new GradientBox();
             DrawBackground = true;
             Update();

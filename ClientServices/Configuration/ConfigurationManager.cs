@@ -42,6 +42,13 @@ namespace ClientServices.Configuration
             }
         }
 
+        public void SetResolution(uint width, uint height)
+        {
+            Configuration.DisplayWidth = width;
+            Configuration.DisplayHeight = height;
+            Save();
+        }
+
         public void SetPlayerName(string name)
         {
             Configuration.PlayerName = name;
@@ -51,6 +58,17 @@ namespace ClientServices.Configuration
         public string GetPlayerName()
         {
             return Configuration.PlayerName;
+        }
+
+        public bool GetFullscreen()
+        {
+            return Configuration.Fullscreen;
+        }
+
+        public void SetFullscreen(bool fullscreen)
+        {
+            Configuration.Fullscreen = fullscreen;
+            Save();
         }
 
         public void SetServerAddress(string address)

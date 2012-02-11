@@ -61,7 +61,7 @@ namespace ClientServices.UserInterface.Components
 
             _backgroundSprite = _resourceManager.GetSprite("1pxwhite");
 
-            _textInputLabel = new Label("", _resourceManager)
+            _textInputLabel = new Label("", "CALIBRI", _resourceManager)
                                 {
                                     Text =
                                         {
@@ -195,7 +195,7 @@ namespace ClientServices.UserInterface.Components
 
             var messageSplit = CheckInboundMessage(message);
 
-            foreach (var label in messageSplit.Select(part => new Label(part, _resourceManager)
+            foreach (var label in messageSplit.Select(part => new Label(part, "CALIBRI", _resourceManager)
                                                                   {
                                                                       Text =
                                                                           {

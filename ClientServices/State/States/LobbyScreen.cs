@@ -75,12 +75,12 @@ namespace ClientServices.State.States
 
             var joinButton = new Button("Join Game", ResourceManager);
             joinButton.Clicked += JoinButtonClicked;
-            joinButton.Position = new System.Drawing.Point(605 - joinButton.ClientArea.Width - 5, 230 - joinButton.ClientArea.Height - 5);
+            joinButton.Position = new System.Drawing.Point(605 - joinButton.ClientArea.Width - 5, 200 - joinButton.ClientArea.Height - 5);
             UserInterfaceManager.AddComponent(joinButton);
 
             _jobButtonContainer = new ScrollableContainer("LobbyJobCont", new System.Drawing.Size(450, 400), ResourceManager)
                                      {
-                                         Position = new System.Drawing.Point(630, 35)
+                                         Position = new System.Drawing.Point(630, 10)
                                      };
 
             UserInterfaceManager.AddComponent(_jobButtonContainer);
@@ -101,26 +101,26 @@ namespace ClientServices.State.States
         public void GorgonRender(FrameEventArgs e)
         {
             Gorgon.Screen.Clear();
-            Gorgon.Screen.FilledRectangle(5, 30, 600, 200, System.Drawing.Color.SlateGray);
-            Gorgon.Screen.FilledRectangle(625, 30, Gorgon.Screen.Width - 625 - 5, Gorgon.Screen.Height - 30 - 6, System.Drawing.Color.SlateGray);
-            Gorgon.Screen.FilledRectangle(5, 250, 600, _lobbyChat.Position.Y - 250 -25, System.Drawing.Color.SlateGray);
-            _lobbyText.Position = new Vector2D(10, 35);
+            Gorgon.Screen.FilledRectangle(5, 5, 600, 200, System.Drawing.Color.SlateGray);
+            Gorgon.Screen.FilledRectangle(625, 5, Gorgon.Screen.Width - 625 - 5, Gorgon.Screen.Height - 5 - 6, System.Drawing.Color.SlateGray);
+            Gorgon.Screen.FilledRectangle(5, 220, 600, _lobbyChat.Position.Y - 250 - 5, System.Drawing.Color.SlateGray);
+            _lobbyText.Position = new Vector2D(10, 10);
             _lobbyText.Text = "Server: " + _serverName;
             _lobbyText.Draw();
-            _lobbyText.Position = new Vector2D(10, 55);
+            _lobbyText.Position = new Vector2D(10, 30);
             _lobbyText.Text = "Server-Port: "+ _serverPort;
             _lobbyText.Draw();
-            _lobbyText.Position = new Vector2D(10, 75);
+            _lobbyText.Position = new Vector2D(10, 50);
             _lobbyText.Text = "Max Players: " + _serverMaxPlayers;
             _lobbyText.Draw();
-            _lobbyText.Position = new Vector2D(10, 95);
+            _lobbyText.Position = new Vector2D(10, 70);
             _lobbyText.Text = "Gamemode: " + _gameType;
             _lobbyText.Draw();
-            _lobbyText.Position = new Vector2D(10, 135);
+            _lobbyText.Position = new Vector2D(10, 110);
             _lobbyText.Text = "MOTD: \n" + _welcomeString;
             _lobbyText.Draw();
 
-            var pos = 255;
+            var pos = 225;
             foreach (var plrStr in _playerListStrings)
             {
                 _lobbyText.Position = new Vector2D(10, pos);

@@ -36,7 +36,7 @@ namespace ClientServices.UserInterface.Components
 
             _backgroundSprite = _resourceManager.GetSprite("1pxwhite");
             _healthDetailSprite = _resourceManager.GetSprite("stat_health_detail");
-            _healthText = new Label("Healthy", _resourceManager) {Text = {Color = Color.DarkBlue}};
+            _healthText = new Label("Healthy", "CALIBRI", _resourceManager) { Text = { Color = Color.DarkBlue } };
             Size = size;
             _health = 100;
             SetBackgroundColor();

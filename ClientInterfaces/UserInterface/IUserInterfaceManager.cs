@@ -13,6 +13,7 @@ namespace ClientInterfaces.UserInterface
         void ComponentUpdate(GuiComponentType type, params object[] args);
         void DisposeAllComponents();
         void DisposeAllComponents<T>();
+        void ResizeComponents();
         void SetFocus(IGuiComponent newFocus);
         void RemoveFocus();
         void Update();

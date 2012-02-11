@@ -311,5 +311,10 @@ namespace ClientServices.UserInterface.Components
             _renderImage.Blit(ClientArea.X, ClientArea.Y);
             DrawLines();
         }
+
+        public override void Resize()
+        {
+            PreRender();
+        }
     }
 }

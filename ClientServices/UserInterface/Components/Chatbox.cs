@@ -16,6 +16,10 @@ namespace ClientServices.UserInterface.Components
 {
     public class Chatbox : GuiComponent
     {
+        private const int MaxHistory = 20;
+        private const int MaxLines = 20;
+        private const int MaxLinePixelLength = 585;
+
         private readonly IResourceManager _resourceManager;
         private readonly IUserInterfaceManager _userInterfaceManager;
         private readonly IKeyBindingManager _keyBindingManager;
@@ -23,22 +27,20 @@ namespace ClientServices.UserInterface.Components
         public delegate void TextSubmitHandler(Chatbox chatbox, string text);
         public event TextSubmitHandler TextSubmitted;
 
-        private readonly List<Label> _entries = new List<Label>();
-        private readonly StringBuilder _currentInputText;
+        private readonly IList<Label> _entries = new List<Label>();
+        private readonly IList<String> _inputHistory = new List<String>();
+        private readonly StringBuilder _currentInputText = new StringBuilder();
+        private readonly Dictionary<ChatChannel, Color> _chatColors;
 
         private Label _textInputLabel;
         private Sprite _backgroundSprite;
         private RenderImage _renderImage;
 
-        private const int MaxLines = 20;
-        private const int MaxLineLength = 90;
-        private const int MaxLinePixelLength = 585;
-        private readonly Dictionary<ChatChannel, Color> _chatColors;
-
+        private string _inputTemp;
+        private int _inputIndex = -1;
         private bool _disposing;
         private bool _active;
-
-        public bool Active
+        private bool Active
         {
             get { return _active; }
             set
@@ -53,8 +55,6 @@ namespace ClientServices.UserInterface.Components
             _resourceManager = resourceManager;
             _userInterfaceManager = userInterfaceManager;
             _keyBindingManager = keyBindingManager;
-
-            _currentInputText = new StringBuilder();
             
             ClientArea = new Rectangle(5, Gorgon.Screen.Height - 205, 600, 200); //!!! Use this instead of Window Dimensions
             Position = new Point(5, Gorgon.Screen.Height - 205);
@@ -260,13 +260,60 @@ namespace ClientServices.UserInterface.Components
             if (e.Key == KeyboardKeys.Enter)
             {
                 if (TextSubmitted != null && !String.IsNullOrWhiteSpace(_currentInputText.ToString()))
+                {
                     TextSubmitted(this, _currentInputText.ToString());
+                    _inputHistory.Insert(0, _currentInputText.ToString());
 
+                    while (_inputHistory.Count() > MaxHistory)
+                    {
+                        _inputHistory.RemoveAt(MaxHistory);
+                    }
+                }
+
+                _inputIndex = -1;
                 _currentInputText.Clear();
-                _textInputLabel.Text.Text = "";
 
                 Active = false;
                 return true;
+            }
+
+            if (e.Key == KeyboardKeys.Up)
+            {
+                if (_inputIndex == -1 && _inputHistory.Any())
+                {
+                    _inputTemp = _currentInputText.ToString();
+                    _inputIndex++;
+                }
+                else if(_inputIndex + 1 < _inputHistory.Count())
+                {
+                    _inputIndex++;
+                }
+
+
+                if (_inputIndex != -1)
+                {
+                    _currentInputText.Clear();
+                    _currentInputText.Append(_inputHistory[_inputIndex]);
+                }
+
+                return true;
+            }
+
+            if (e.Key == KeyboardKeys.Down)
+            {
+                if (_inputIndex == 0)
+                {
+                    _currentInputText.Clear();
+                    _currentInputText.Append(_inputTemp);
+                    _inputTemp = "";
+                    _inputIndex--;
+                }
+                else if (_inputIndex != -1)
+                {
+                    _inputIndex--;
+                    _currentInputText.Clear();
+                    _currentInputText.Append(_inputHistory[_inputIndex]);
+                }
             }
 
             if (e.Key == KeyboardKeys.Back)

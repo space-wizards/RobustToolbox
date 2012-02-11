@@ -23,7 +23,7 @@ namespace ClientServices.UserInterface.Components
         private Rectangle _clientAreaLeft;
         private Rectangle _clientAreaRight;
 
-        public string Text;
+        public string Text = "";
         public bool ClearOnSubmit = true;
         public bool ClearFocusOnSubmit = true;
         public int MaxCharacters = 20;
@@ -32,9 +32,9 @@ namespace ClientServices.UserInterface.Components
         public Textbox(int width, IResourceManager resourceManager)
         {
             _resourceManager = resourceManager;
-            _textboxLeft = _resourceManager.GetSprite("button_left");
-            _textboxMain = _resourceManager.GetSprite("button_middle");
-            _textboxRight = _resourceManager.GetSprite("button_right");
+            _textboxLeft = _resourceManager.GetSprite("text_left");
+            _textboxMain = _resourceManager.GetSprite("text_middle");
+            _textboxRight = _resourceManager.GetSprite("text_right");
 
             Width = width;
 

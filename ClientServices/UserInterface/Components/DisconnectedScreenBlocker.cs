@@ -24,7 +24,7 @@ namespace ClientServices.UserInterface.Components
             _userInterfaceManager = userInterfaceManager;
             _userInterfaceManager.DisposeAllComponents();
 
-            _message = new Label(message, _resourceManager);
+            _message = new Label(message, "CALIBRI", _resourceManager);
             _mainMenuButton = new Button("Main Menu", _resourceManager);
             _mainMenuButton.Clicked += MainMenuButtonClicked;
             _mainMenuButton.Label.Color = Color.WhiteSmoke;

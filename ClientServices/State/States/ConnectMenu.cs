@@ -5,6 +5,9 @@ using ClientServices.Helpers;
 using GorgonLibrary;
 using GorgonLibrary.Graphics;
 using GorgonLibrary.InputDevices;
+using System.Drawing;
+using ClientServices.UserInterface.Components;
+using Lidgren.Network;
 
 namespace ClientServices.State.States
 {
@@ -14,34 +17,87 @@ namespace ClientServices.State.States
 
         private const float ConnectTimeOut = 5000.0f;
 
-        private StarScroller _starScroller;
         private DateTime _connectTime;
-        private Sprite _ss13Text;
         private bool _isConnecting;
+        private Sprite _background;
+
+        private readonly Label _connectbtt;
+        private readonly Textbox _connecttxt;
+
+        private readonly Label _optionsbtt;
+
+        private readonly Label _exitbtt;
 
         #endregion
 
         #region Properties
-
-        public string IpAddress { get; set; }
-
         #endregion
 
         public ConnectMenu(IDictionary<Type, object> managers)
             : base(managers)
         {
-            
+            _background = ResourceManager.GetSprite("mainbg");
+            _background.Smoothing = Smoothing.Smooth;
+
+            _connectbtt = new Label("Connect", "CALIBRI", ResourceManager);
+            _connectbtt.DrawBorder = true;
+            _connectbtt.Clicked += new Label.LabelPressHandler(_connectbtt_Clicked);
+
+            _optionsbtt = new Label("Options", "CALIBRI", ResourceManager);
+            _optionsbtt.DrawBorder = true;
+            _optionsbtt.Clicked += new Label.LabelPressHandler(_optionsbtt_Clicked);
+
+            _exitbtt = new Label("Exit", "CALIBRI", ResourceManager);
+            _exitbtt.DrawBorder = true;
+            _exitbtt.Clicked += new Label.LabelPressHandler(_exitbtt_Clicked);
+
+            _connecttxt = new Textbox(100, ResourceManager);
+            _connecttxt.OnSubmit += new Textbox.TextSubmitHandler(_connecttxt_OnSubmit);
+            _connecttxt.Text = "localhost";
+        }
+
+        void _exitbtt_Clicked(Label sender)
+        {
+            Environment.Exit(0);
+        }
+
+        void _optionsbtt_Clicked(Label sender)
+        {
+            if (_isConnecting)
+            {
+                _isConnecting = false;
+                NetworkManager.Disconnect();
+            }
+
+            StateManager.RequestStateChange<OptionsMenu>();
+        }
+
+        void _connectbtt_Clicked(Label sender)
+        {
+            if (!_isConnecting)
+                StartConnect(_connecttxt.Text);
+            else
+            {
+                _isConnecting = false;
+                NetworkManager.Disconnect();
+            }
+        }
+
+        void _connecttxt_OnSubmit(string text)
+        {
+            StartConnect(text);
         }
 
         #region Startup, Shutdown, Update
         public void Startup()
-        {
+        {         
             NetworkManager.Disconnect();
             NetworkManager.Connected += OnConnected;
 
-            _starScroller = new StarScroller();
-            _ss13Text = ResourceManager.GetSpriteFromImage("ss13text");
-            _ss13Text.Position = new Vector2D(Gorgon.Screen.Width / 2 - (475 / 2), -140); 
+            UserInterfaceManager.AddComponent(_connecttxt);
+            UserInterfaceManager.AddComponent(_optionsbtt);
+            UserInterfaceManager.AddComponent(_connectbtt);
+            UserInterfaceManager.AddComponent(_exitbtt);
         }
 
         private void OnConnected(object sender, EventArgs e)
@@ -50,21 +106,38 @@ namespace ClientServices.State.States
             StateManager.RequestStateChange<LobbyScreen>();
         }
 
-        public void StartConnect()
+        public void StartConnect(string IP)
         {
-            _connectTime = DateTime.Now;
-            _isConnecting = true;
-            NetworkManager.ConnectTo(IpAddress);
+            if (!_isConnecting)
+            {
+                if (NetUtility.Resolve(IP) == null)
+                    throw new InvalidOperationException("Not a valid Address.");
+
+                _connectTime = DateTime.Now;
+                _isConnecting = true;
+                NetworkManager.ConnectTo(IP);
+            }
         }
 
         public void Shutdown()
         {
             NetworkManager.Connected -= OnConnected;
-            _starScroller = null;
+
+            UserInterfaceManager.RemoveComponent(_connecttxt);
+            UserInterfaceManager.RemoveComponent(_optionsbtt);
+            UserInterfaceManager.RemoveComponent(_connectbtt);
+            UserInterfaceManager.RemoveComponent(_exitbtt);
         }
 
         public void Update(FrameEventArgs e)
         {
+            _connecttxt.Position = new Point(Gorgon.Screen.Width - (int)(Gorgon.Screen.Width / 4f) - _connecttxt.ClientArea.Width, (int)(Gorgon.Screen.Height / 2.7f));
+            _connectbtt.Position = new Point(_connecttxt.Position.X, _connecttxt.Position.Y + _connecttxt.ClientArea.Height + 2);
+            _optionsbtt.Position = new Point(_connectbtt.Position.X, _connectbtt.Position.Y + _connectbtt.ClientArea.Height + 10);
+            _exitbtt.Position = new Point(_optionsbtt.Position.X, _optionsbtt.Position.Y + _optionsbtt.ClientArea.Height + 10);
+
+            _connectbtt.Text.Text = _isConnecting ? "Cancel" : "Connect";
+
             if (_isConnecting)
             {
                 var dif = DateTime.Now - _connectTime;
@@ -74,12 +147,6 @@ namespace ClientServices.State.States
                     NetworkManager.Disconnect();
                 }
             }
-
-            if (_ss13Text.Position.Y < Gorgon.Screen.Height / 2 - 130)
-            {
-                _ss13Text.Position += new Vector2D(0f, 1 * (float)Gorgon.FrameStats.FrameDrawTime / 20f);
-            }
-
             UserInterfaceManager.Update();
         }
 
@@ -87,8 +154,7 @@ namespace ClientServices.State.States
 
         public void GorgonRender(FrameEventArgs e)
         {
-            _starScroller.Render(0,0);
-            _ss13Text.Draw();
+            _background.Draw(new Rectangle(0, 0, Gorgon.Screen.Width, Gorgon.Screen.Height));
             UserInterfaceManager.Render();
         }
         public void FormResize()
@@ -103,7 +169,6 @@ namespace ClientServices.State.States
         }
         public void KeyUp(KeyboardInputEventArgs e)
         {
-
         }
         public void MouseUp(MouseInputEventArgs e)
         {

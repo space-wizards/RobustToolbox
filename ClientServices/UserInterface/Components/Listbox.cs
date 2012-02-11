@@ -56,6 +56,33 @@ namespace ClientServices.UserInterface.Components
             Update();
         }
 
+        public void AddItem(string str)
+        {
+            contentStrings.Add(str);
+            RebuildList();
+        }
+
+        public void RemoveItem(string str)
+        {
+            if (contentStrings.Contains(str))
+            {
+                contentStrings.Remove(str);
+                RebuildList();
+            }
+        }
+
+        public void SelectItem(string str, bool raiseEvent = false)
+        {
+            var selLabel = (from a in dropDown.components
+                            where a.GetType() == typeof(ListboxItem)
+                            let b = (ListboxItem)a
+                            where b.Text.Text.ToLowerInvariant() == str.ToLowerInvariant()
+                            select b).FirstOrDefault();
+
+            if (selLabel != null)
+                SetItem(selLabel, raiseEvent);
+        }
+
         private void RebuildList()
         {
             currentlySelected = null;
@@ -74,18 +101,22 @@ namespace ClientServices.UserInterface.Components
 
         void newEntry_Clicked(Label sender)
         {
-            if (ItemSelected != null) ItemSelected(sender);
+            SetItem(sender, true);
+        }
 
-            currentlySelected = sender;
-            selectedLabel.Text = sender.Text.Text;
+        private void SetItem(Label toSet, bool raiseEvent = false)
+        {
+            if (ItemSelected != null && raiseEvent) ItemSelected(toSet);
+
+            currentlySelected = toSet;
+            selectedLabel.Text = toSet.Text.Text;
             dropDown.SetVisible(false);
 
-            ((ListboxItem)sender).Selected = true;
+            ((ListboxItem)toSet).Selected = true;
             var notSelected = from ListboxItem item in dropDown.components
-                              where item != sender
+                              where item != toSet
                               select item;
             foreach (ListboxItem curr in notSelected) curr.Selected = false;
-
         }
 
         public override void Update()
@@ -152,7 +183,7 @@ namespace ClientServices.UserInterface.Components
         public bool Selected;
 
         public ListboxItem(string text, int width, IResourceManager resourceManager)
-            : base(text, resourceManager)
+            : base(text, "CALIBRI", resourceManager)
         {
             _width = width;
             DrawBorder = true;

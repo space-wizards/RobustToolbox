@@ -40,7 +40,7 @@ namespace ClientServices.UserInterface.Components
             {
                 var line = new Label("IP: " + entry.ip + "\tReason: " + entry.reason +
                                      "\tTemporary: " + entry.tempBan + "\tExpires: " +
-                                     entry.expiresAt.ToString("d/M/yyyy HH:mm:ss"), _resourceManager)
+                                     entry.expiresAt.ToString("d/M/yyyy HH:mm:ss"), "CALIBRI", _resourceManager)
                                {Position = new Point(5, yOffset + 5)};
 
                 components.Add(line);

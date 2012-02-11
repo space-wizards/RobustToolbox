@@ -46,7 +46,7 @@ namespace ClientServices.UserInterface.Components
 
             Position = new Point(604, Gorgon.Screen.Height - 205);
 
-            _name = new Label("Name", _resourceManager) {Text = {Text = playerName}};
+            _name = new Label("Name", "CALIBRI", _resourceManager) { Text = { Text = playerName } };
 
             _backgroundSprite = _resourceManager.GetSprite("1pxwhite");
             _name.Position = new Point(Position.X + 5, Position.Y + 126);

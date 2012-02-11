@@ -28,8 +28,6 @@ namespace SS13
 
         #region Properties
 
-        public bool EditMode { get; set; }
-
         #endregion
 
         #region Methods
@@ -69,7 +67,7 @@ namespace SS13
             _netGrapher = IoCManager.Resolve<INetworkGrapher>();
             _stateManager = IoCManager.Resolve<IStateManager>();
 
-            PlayerName_TextBox.Text = _configurationManager.GetPlayerName();
+            //PlayerName_TextBox.Text = _configurationManager.GetPlayerName();
 
             Gorgon.Go();
 
@@ -82,39 +80,10 @@ namespace SS13
             _stateManager.CurrentState.FormResize();
         }
 
-        private void MainWindowFormClosing(object sender, FormClosingEventArgs e)
-        {
-            if (disconnectToolStripMenuItem.Enabled) {_networkManager.Disconnect(); }
-        }
-
         private void QuitToolStripMenuItemClick(object sender, EventArgs e)
         {
             Gorgon.Terminate();
             Environment.Exit(0);
-        }
-
-        private void ToolStripTextBox1KeyPress(object sender, KeyPressEventArgs e)
-        {
-            if (e.KeyChar != '\r') return;
-
-            _configurationManager.SetPlayerName(PlayerName_TextBox.Text);
-            _configurationManager.SetServerAddress(toolStripTextBox1.Text);
-
-            ((ConnectMenu)_stateManager.CurrentState).IpAddress = toolStripTextBox1.Text;
-            ((ConnectMenu)_stateManager.CurrentState).StartConnect();
-
-            connectToolStripMenuItem.Enabled = false;
-            disconnectToolStripMenuItem.Enabled = true;
-            menuToolStripMenuItem.HideDropDown();
-        }
-
-        private void DisconnectToolStripMenuItemClick(object sender, EventArgs e)
-        {
-            _networkManager.Disconnect();
-            _stateManager.RequestStateChange<ConnectMenu>();
-            connectToolStripMenuItem.Enabled = true;
-            disconnectToolStripMenuItem.Enabled = false;
-            menuToolStripMenuItem.HideDropDown();
         }
 
         #region Input Handling
@@ -130,9 +99,6 @@ namespace SS13
 
             switch (e.Key)
             {
-                case KeyboardKeys.F9:
-                    MainMenuStrip.Visible = !MainMenuStrip.Visible;
-                    break;
                 case KeyboardKeys.F3:
                     IoCManager.Resolve<INetworkGrapher>().Toggle();
                     break;
@@ -176,8 +142,7 @@ namespace SS13
         /// <param name="e">The <see cref="GorgonLibrary.InputDevices.MouseInputEventArgs"/> instance containing the event data.</param>
         private void MouseDownEvent(object sender, MouseInputEventArgs e)
         {
-            if (e.Position.Y > menuStrip1.Height)
-                _stateManager.MouseDown(e);
+             _stateManager.MouseDown(e);
         }
 
         /// <summary>
@@ -187,8 +152,7 @@ namespace SS13
         /// <param name="e">The <see cref="GorgonLibrary.InputDevices.MouseInputEventArgs"/> instance containing the event data.</param>
         private void MouseUpEvent(object sender, MouseInputEventArgs e)
         {
-            if (e.Position.Y > menuStrip1.Height)
-                _stateManager.MouseUp(e);
+            _stateManager.MouseUp(e);
         }
 
         #endregion
@@ -202,12 +166,14 @@ namespace SS13
             var displayWidth = _configurationManager.GetDisplayWidth();
             var displayHeight = _configurationManager.GetDisplayHeight();
             Size = new Size((int)displayWidth, (int)displayHeight);
+            bool fullscreen = _configurationManager.GetFullscreen();
 
             Gorgon.Initialize(true, false);
-            Gorgon.SetMode(this);
+            //Gorgon.SetMode(this);
+            Gorgon.SetMode(this, (int)displayWidth, (int)displayHeight, Gorgon.DesktopVideoMode.Format, !fullscreen, false, false, Gorgon.DesktopVideoMode.RefreshRate);
             Gorgon.AllowBackgroundRendering = true;
             Gorgon.Screen.BackgroundColor = Color.FromArgb(50, 50, 50);
-            Gorgon.CurrentClippingViewport = new Viewport(0, 20, Gorgon.Screen.Width, Gorgon.Screen.Height - 20);
+            Gorgon.CurrentClippingViewport = new Viewport(0, 0, Gorgon.Screen.Width, Gorgon.Screen.Height);
             Gorgon.DeviceReset += MainWindowResizeEnd;
             Gorgon.MinimumFrameTime = PreciseTimer.FpsToMilliseconds(66);
             Gorgon.Idle += GorgonIdle;

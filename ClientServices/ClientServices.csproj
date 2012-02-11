@@ -106,6 +106,7 @@
     <Compile Include="State\State.cs" />
     <Compile Include="State\StateManager.cs" />
     <Compile Include="State\States\ConnectMenu.cs" />
+    <Compile Include="State\States\OptionsMenu.cs" />
     <Compile Include="State\States\GameScreen.cs" />
     <Compile Include="State\States\LobbyScreen.cs" />
     <Compile Include="UserInterface\Components\AdminPasswordDialog.cs" />

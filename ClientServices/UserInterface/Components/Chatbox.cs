@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Drawing;
 using System.Text;
+using System.Text.RegularExpressions;
 using ClientInterfaces;
 using ClientInterfaces.Input;
 using ClientInterfaces.UserInterface;
@@ -132,14 +133,67 @@ namespace ClientServices.UserInterface.Components
             _renderImage.EndDrawing();
         }
 
+        private IEnumerable<string> CheckInboundMessage(string message)
+        {
+            var lineList = new List<string>();
+
+            if (_textInputLabel.Text.MeasureLine(message) < MaxLinePixelLength)
+            {
+                lineList.Add(message);
+                return lineList;
+            }
+
+            var match = Regex.Match(message, @"^\[.+\]\s.+\:\s", RegexOptions.Singleline);
+            var header = match.ToString();
+            message = message.Substring(match.Length);
+
+            var stringChunks = message.Split(new[] {' ', '-'}).ToList();
+            var totalChunks = stringChunks.Count();
+            var i = 0;
+
+            lineList.Add(header);
+
+            while (_textInputLabel.Text.MeasureLine(lineList[i]) < MaxLinePixelLength)
+            {
+                if (!stringChunks.Any()) break;
+
+                if (_textInputLabel.Text.MeasureLine(lineList[i] + stringChunks.First()) < MaxLinePixelLength)
+                {
+                    lineList[i] += stringChunks.First() + " ";
+                    stringChunks.RemoveAt(0);
+                }
+                else if ((i == 0 && totalChunks == stringChunks.Count()) ||
+                    (lineList[i] == " " && _textInputLabel.Text.MeasureLine(stringChunks.First() + " ") > MaxLinePixelLength) ||
+                    (_textInputLabel.Text.MeasureLine(lineList[i]) < MaxLinePixelLength && _textInputLabel.Text.MeasureLine(stringChunks.First() + " ") > MaxLinePixelLength))
+                {
+                    var largeWordChars = stringChunks.First().ToList();
+                    stringChunks.RemoveAt(0);
+
+                    while (_textInputLabel.Text.MeasureLine(lineList[i] + largeWordChars.First() + "-") < MaxLinePixelLength)
+                    {
+                        lineList[i] += largeWordChars.First();
+                        largeWordChars.RemoveAt(0);
+                    }
+
+                    lineList[i] += "-";
+                    lineList.Add(" " + new string(largeWordChars.ToArray()) + " ");
+                    i++;
+                }
+                else
+                {
+                    lineList.Add(" ");
+                    i++;
+                }
+            }
+
+            return lineList;
+        }
+
         public void AddLine(string message, ChatChannel channel)
         {
             if (_disposing) return;
 
-            var charCount = 0;
-            var messageSplit = message.Split(new[] { ' ' }, StringSplitOptions.RemoveEmptyEntries)
-                            .GroupBy(w => (charCount += w.Length + 1) / MaxLineLength)
-                            .Select(g => string.Join(" ", g));
+            var messageSplit = CheckInboundMessage(message);
 
             foreach (var label in messageSplit.Select(part => new Label(part, _resourceManager)
                                                                   {
@@ -205,9 +259,12 @@ namespace ClientServices.UserInterface.Components
 
             if (e.Key == KeyboardKeys.Enter)
             {
-                if (TextSubmitted != null) TextSubmitted(this, _currentInputText.ToString());
+                if (TextSubmitted != null && !String.IsNullOrWhiteSpace(_currentInputText.ToString()))
+                    TextSubmitted(this, _currentInputText.ToString());
+
                 _currentInputText.Clear();
                 _textInputLabel.Text.Text = "";
+
                 Active = false;
                 return true;
             }

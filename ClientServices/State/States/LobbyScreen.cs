@@ -288,7 +288,7 @@ namespace ClientServices.State.States
         {
             var channel = (ChatChannel)msg.ReadByte();
             string text = msg.ReadString();
-            string message = "(" + channel.ToString() + "):" + text;
+            string message = "[" + channel + "] " + text;
             _lobbyChat.AddLine(message, ChatChannel.Lobby);
         }
 

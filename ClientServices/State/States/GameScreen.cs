@@ -317,7 +317,7 @@ namespace ClientServices.State.States
             var channel = (ChatChannel)msg.ReadByte();
             var text = msg.ReadString();
 
-            var message = "(" + channel.ToString() + "):" + text;
+            var message = "[" + channel + "] " + text;
             var entityId = msg.ReadInt32();
             _gameChat.AddLine(message, channel);
             var a = EntityManager.Singleton.GetEntity(entityId);

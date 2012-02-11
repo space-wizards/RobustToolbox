@@ -77,7 +77,7 @@ namespace ClientServices.UserInterface
         /// </summary>
         public void ComponentUpdate(GuiComponentType componentType, params object[] args)
         {
-            IGuiComponent firstOrDefault = (from IGuiComponent comp in _components
+            var firstOrDefault = (from IGuiComponent comp in _components
                                   where comp.ComponentClass == componentType
                                   select comp).FirstOrDefault();
             if (firstOrDefault != null)
@@ -218,6 +218,14 @@ namespace ClientServices.UserInterface
         {
             if (_currentFocus != remFocus) return;
             _currentFocus = null;
+        }
+
+        public void ResizeComponents()
+        {
+            foreach (var guiComponent in _components)
+            {
+                guiComponent.Resize();
+            }
         }
 
         #region Input

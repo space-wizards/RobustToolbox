@@ -92,6 +92,11 @@ namespace ClientServices.UserInterface.Components
             _targetArea.Update();
         }
 
+        public override void Resize()
+        {
+            PreRender();
+        }
+
         private void DrawPlayer()
         {
             ////TODO RE-CONNECT PLAYER SPRITES TO DISPLAY

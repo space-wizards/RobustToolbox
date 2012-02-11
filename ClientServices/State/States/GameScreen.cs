@@ -485,6 +485,7 @@ namespace ClientServices.State.States
             _scaleX = Gorgon.CurrentClippingViewport.Width / (_realScreenWidthTiles * MapManager.GetTileSpacing());
             _scaleY = Gorgon.CurrentClippingViewport.Height / (_realScreenHeightTiles * MapManager.GetTileSpacing());
             _screenSize = new Point(Gorgon.CurrentClippingViewport.Width, Gorgon.CurrentClippingViewport.Height);
+            UserInterfaceManager.ResizeComponents();
         }
 
         #region Input

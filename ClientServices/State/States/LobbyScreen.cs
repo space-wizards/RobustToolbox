@@ -134,7 +134,7 @@ namespace ClientServices.State.States
 
         public void FormResize()
         {
-            //throw new NotImplementedException();
+            UserInterfaceManager.ResizeComponents();
         }
 
         void NetworkManagerMessageArrived(object sender, IncomingNetworkMessageArgs args)

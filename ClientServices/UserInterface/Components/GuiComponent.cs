@@ -35,6 +35,11 @@ namespace ClientServices.UserInterface.Components
         {
         }
 
+        public virtual void Resize()
+        {
+            
+        }
+
         public virtual void ToggleVisible()
         {
             _visible = !_visible;

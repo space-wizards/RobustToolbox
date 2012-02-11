@@ -20,6 +20,7 @@ namespace ClientInterfaces.UserInterface
 
         void Update();
         void Render();
+        void Resize();
 
         void HandleNetworkMessage(NetIncomingMessage message);
 

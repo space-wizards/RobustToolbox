@@ -13,9 +13,13 @@ namespace CGO
         private readonly Dictionary<BoundKeyFunctions, KeyEvent> _keyHandlers;
         public delegate void KeyEvent(bool state);
 
+        public override ComponentFamily Family
+        {
+            get { return ComponentFamily.Input; }
+        }
+
         public KeyBindingInputComponent()
         {
-            family = ComponentFamily.Input;
             //Bind to the key binding manager
             var keyBindingManager = IoCManager.Resolve<IKeyBindingManager>();
             keyBindingManager.BoundKeyDown += KeyDown;

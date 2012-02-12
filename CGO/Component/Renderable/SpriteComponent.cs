@@ -32,7 +32,6 @@ namespace CGO
         public SpriteComponent()
         {
             sprites = new Dictionary<string, Sprite>();
-            family = ComponentFamily.Renderable;
         }
 
         public override void OnAdd(IEntity owner)

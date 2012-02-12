@@ -7,12 +7,12 @@ namespace CGO
 {
     public class EquipmentComponent : GameObjectComponent
     {
-        public Dictionary<EquipmentSlot, IEntity> equippedEntities = new Dictionary<EquipmentSlot, IEntity>();
-        public List<EquipmentSlot> activeSlots = new List<EquipmentSlot>();
+        public Dictionary<EquipmentSlot, IEntity> EquippedEntities = new Dictionary<EquipmentSlot, IEntity>();
+        public List<EquipmentSlot> ActiveSlots = new List<EquipmentSlot>();
 
-        public EquipmentComponent()
+        public override ComponentFamily Family
         {
-            family = ComponentFamily.Equipment;
+            get { return ComponentFamily.Equipment; }
         }
 
         public override void HandleNetworkMessage(IncomingEntityComponentMessage message)
@@ -35,10 +35,10 @@ namespace CGO
             switch(type)
             {
                 case ComponentMessageType.GetItemInEquipmentSlot:
-                    if (!IsEmpty((EquipmentSlot)list[0]))
-                        reply.Add(new ComponentReplyMessage(ComponentMessageType.ReturnItemInEquipmentSlot, equippedEntities[(EquipmentSlot)list[0]]));
-                    else
-                        reply.Add(new ComponentReplyMessage(ComponentMessageType.ItemSlotEmpty));
+                    reply.Add(!IsEmpty((EquipmentSlot) list[0])
+                                  ? new ComponentReplyMessage(ComponentMessageType.ReturnItemInEquipmentSlot,
+                                                              EquippedEntities[(EquipmentSlot) list[0]])
+                                  : new ComponentReplyMessage(ComponentMessageType.ItemSlotEmpty));
                     break;
             }
         }
@@ -77,19 +77,19 @@ namespace CGO
         {
             if (!IsEmpty(part)) // Uh oh we are confused about something! But it's better to just do what the server says
             {
-                UnEquipItem(part, equippedEntities[part].Uid);
+                UnEquipItem(part, EquippedEntities[part].Uid);
             }
-            equippedEntities.Add(part, EntityManager.Singleton.GetEntity(uid));
+            EquippedEntities.Add(part, EntityManager.Singleton.GetEntity(uid));
         }
 
         private void UnEquipItem(EquipmentSlot part, int uid)
         {
-            equippedEntities.Remove(part);
+            EquippedEntities.Remove(part);
         }
 
         public bool IsEmpty(EquipmentSlot part)
         {
-            if (equippedEntities.ContainsKey(part))
+            if (EquippedEntities.ContainsKey(part))
                 return false;
             return true;
         }

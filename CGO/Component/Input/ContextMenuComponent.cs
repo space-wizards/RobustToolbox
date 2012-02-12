@@ -10,9 +10,9 @@ namespace CGO
     {
         private readonly List<ContextMenuEntry> _entries = new List<ContextMenuEntry>();
 
-        public ContextMenuComponent()
+        public override ComponentFamily Family
         {
-            family = ComponentFamily.ContextMenu;
+            get { return ComponentFamily.ContextMenu; }
         }
         
         public override void RecieveMessage(object sender, ComponentMessageType type, List<ComponentReplyMessage> reply, params object[] list)
@@ -33,7 +33,7 @@ namespace CGO
                     break;
 
                 case ComponentMessageType.ContextGetEntries:
-                    ComponentReplyMessage compReply = new ComponentReplyMessage(ComponentMessageType.ContextGetEntries,_entries);
+                    var compReply = new ComponentReplyMessage(ComponentMessageType.ContextGetEntries,_entries);
                     reply.Add(compReply);
                     break;
             }
@@ -57,11 +57,11 @@ namespace CGO
 
         public override void HandleExtendedParameters(XElement extendedParameters)
         {
-            foreach (XElement param in extendedParameters.Descendants("ContextEntry"))
+            foreach (var param in extendedParameters.Descendants("ContextEntry"))
             {
-                string name = "NULL";
-                string icon = "NULL";
-                string message = "NULL";
+                var name = "NULL";
+                var icon = "NULL";
+                var message = "NULL";
 
                 if (param.Attribute("name") != null)
                     name = param.Attribute("name").Value;
@@ -72,10 +72,12 @@ namespace CGO
                 if (param.Attribute("message") != null)
                     message = param.Attribute("message").Value;
 
-                var newEntry = new ContextMenuEntry();
-                newEntry.EntryName = name;
-                newEntry.IconName = icon;
-                newEntry.ComponentMessage = message;
+                var newEntry = new ContextMenuEntry
+                                   {
+                                       EntryName = name,
+                                       IconName = icon,
+                                       ComponentMessage = message
+                                   };
 
                 _entries.Add(newEntry);
             }

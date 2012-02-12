@@ -1,10 +1,10 @@
-﻿using ClientInterfaces;
-using ClientInterfaces.GOC;
+﻿using ClientInterfaces.GOC;
 using ClientInterfaces.Lighting;
 using ClientInterfaces.Map;
 using GorgonLibrary;
 using SS13.IoC;
 using SS13_Shared;
+using SS13_Shared.GO;
 
 namespace CGO
 {
@@ -14,9 +14,9 @@ namespace CGO
         private ILight _light;
         private Vector2D _lightOffset = new Vector2D(0,0);
 
-        public PointLightComponent()
+        public override ComponentFamily Family
         {
-            family = SS13_Shared.GO.ComponentFamily.Light;
+            get { return ComponentFamily.Light; }
         }
 
         //When added, set up the light.

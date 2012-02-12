@@ -5,9 +5,9 @@ namespace CGO
 {
     public class EquippableComponent : GameObjectComponent
     {
-        public EquippableComponent()
+        public override ComponentFamily Family
         {
-            family = ComponentFamily.Equippable;
+            get { return ComponentFamily.Equippable; }
         }
 
         public override void HandleNetworkMessage(IncomingEntityComponentMessage message)

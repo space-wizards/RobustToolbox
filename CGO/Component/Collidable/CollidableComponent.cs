@@ -14,6 +14,11 @@ namespace CGO
 {
     public class CollidableComponent : GameObjectComponent, ICollidable
     {
+        public override ComponentFamily Family
+        {
+            get { return ComponentFamily.Collidable; }
+        }
+
         /// <summary>
         /// X - Top | Y - Right | Z - Bottom | W - Left
         /// </summary>
@@ -43,11 +48,6 @@ namespace CGO
 
         private bool collisionEnabled = true;
         protected bool isHardCollidable = true;
-
-        public CollidableComponent()
-        {
-            family = ComponentFamily.Collidable;
-        }
 
         /// <summary>
         /// OnAdd override -- gets the AABB from the sprite component and sends it to the collision manager.

@@ -6,7 +6,7 @@ using System.Xml.Linq;
 
 namespace CGO
 {
-    public class GameObjectComponent : IGameObjectComponent
+    public abstract class GameObjectComponent : IGameObjectComponent
     {
         /// <summary>
         /// The entity that owns this component
@@ -14,20 +14,16 @@ namespace CGO
         public IEntity Owner { get; set; }
 
         /// <summary>
-        /// This is the family of the component. This should be set directly in all inherited components' constructors.
+        /// This is the family of the component. This is required to be set on all inheriting components.
         /// </summary>
-        protected ComponentFamily family = ComponentFamily.Generic;
-        public ComponentFamily Family
-        {
-            get { return family; }
-            set { family = value; }
-        }
-        
+        public abstract ComponentFamily Family { get; }
+
         /// <summary>
         /// Recieve a message from another component within the owner entity
         /// </summary>
         /// <param name="sender">the component that sent the message</param>
         /// <param name="type">the message type in CGO.MessageType</param>
+        /// <param name="reply"></param>
         /// <param name="list">parameters list</param>
         public virtual void RecieveMessage(object sender, ComponentMessageType type, List<ComponentReplyMessage> reply, params object[] list)
         {

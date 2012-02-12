@@ -1,7 +1,5 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Linq;
-using System.Text;
 using SS13_Shared;
 using SS13_Shared.GO;
 using GorgonLibrary;
@@ -11,28 +9,35 @@ namespace CGO
     //Moves an entity based on key binding input
     public class KeyBindingMoverComponent : GameObjectComponent
     {
-        private bool MoveUp = false;
-        private bool MoveDown = false;
-        private bool MoveLeft = false;
-        private bool MoveRight = false;
-        private float baseMoveSpeed = 300f;
-        private float fastMoveSpeed = 500f;
-        private float currentMoveSpeed;
+        private const float BaseMoveSpeed = 300f;
+        private const float FastMoveSpeed = 500f;
 
-        private Constants.MoveDirs movedir = Constants.MoveDirs.south;
+        private float _currentMoveSpeed;
+
+        private bool _moveUp;
+        private bool _moveDown;
+        private bool _moveLeft;
+        private bool _moveRight;
+
+        private Constants.MoveDirs _movedir;
+
+        public override ComponentFamily Family
+        {
+            get { return ComponentFamily.Mover; }
+        }
 
         public KeyBindingMoverComponent()
         {
-            family = ComponentFamily.Mover;
-            currentMoveSpeed = baseMoveSpeed;
+            _currentMoveSpeed = BaseMoveSpeed;
+            _movedir = Constants.MoveDirs.south;
         }
 
         public override void HandleNetworkMessage(IncomingEntityComponentMessage message)
         {
-            double x = (double)message.MessageParameters[0];
-            double y = (double)message.MessageParameters[1];
+            var x = (double)message.MessageParameters[0];
+            var y = (double)message.MessageParameters[1];
             if((bool)message.MessageParameters[2]) //"forced" parameter -- if true forces position update
-            plainTranslate((float)x, (float)y);
+            PlainTranslate((float)x, (float)y);
         }
 
         public override void RecieveMessage(object sender, ComponentMessageType type, List<ComponentReplyMessage> replies, params object[] list)
@@ -47,12 +52,9 @@ namespace CGO
                     HandleKeyChange(list);
                     break;
                 case ComponentMessageType.GetMoveDir:
-                    replies.Add(new ComponentReplyMessage(ComponentMessageType.MoveDirection, movedir));
-                    break;
-                default:
+                    replies.Add(new ComponentReplyMessage(ComponentMessageType.MoveDirection, _movedir));
                     break;
             }
-            return;
         }
 
         /// <summary>
@@ -61,28 +63,21 @@ namespace CGO
         /// <param name="list">0 - Function, 1 - Key State</param>
         private void HandleKeyChange(params object[] list)
         {
-            BoundKeyFunctions function = (BoundKeyFunctions)list[0];
-            BoundKeyState state = (BoundKeyState)list[1];
-            bool setting = false;
-            if (state == BoundKeyState.Down)
-                setting = true;
-            if (state == BoundKeyState.Up)
-                setting = false;
+            var function = (BoundKeyFunctions)list[0];
+            var state = (BoundKeyState)list[1];
+            var setting = state == BoundKeyState.Down;
 
             if (function == BoundKeyFunctions.MoveDown)
-                MoveDown = setting;
+                _moveDown = setting;
             if (function == BoundKeyFunctions.MoveUp)
-                MoveUp = setting;
+                _moveUp = setting;
             if (function == BoundKeyFunctions.MoveLeft)
-                MoveLeft = setting;
+                _moveLeft = setting;
             if (function == BoundKeyFunctions.MoveRight)
-                MoveRight = setting;
+                _moveRight = setting;
             if (function == BoundKeyFunctions.Run)
             {
-                if (setting)
-                    currentMoveSpeed = fastMoveSpeed;
-                else
-                    currentMoveSpeed = baseMoveSpeed;
+                _currentMoveSpeed = setting ? FastMoveSpeed : BaseMoveSpeed;
             }
         }
 
@@ -94,47 +89,46 @@ namespace CGO
         {
             base.Update(frameTime);
             
-            if (MoveUp && !MoveLeft && !MoveRight && !MoveDown) // Move Up
+            if (_moveUp && !_moveLeft && !_moveRight && !_moveDown) // Move Up
             {
-                Translate(new Vector2D(0, -1) * currentMoveSpeed * frameTime);
+                Translate(new Vector2D(0, -1) * _currentMoveSpeed * frameTime);
             }
-            else if (MoveDown && !MoveLeft && !MoveRight && !MoveUp) // Move Down
+            else if (_moveDown && !_moveLeft && !_moveRight && !_moveUp) // Move Down
             {
-                Translate(new Vector2D(0, 1) * currentMoveSpeed * frameTime);
+                Translate(new Vector2D(0, 1) * _currentMoveSpeed * frameTime);
             }
-            else if (MoveLeft && !MoveRight && !MoveUp && !MoveDown) // Move Left
+            else if (_moveLeft && !_moveRight && !_moveUp && !_moveDown) // Move Left
             {
-                Translate(new Vector2D(-1, 0) * currentMoveSpeed * frameTime);
+                Translate(new Vector2D(-1, 0) * _currentMoveSpeed * frameTime);
             }
-            else if (MoveRight && !MoveLeft && !MoveUp && !MoveDown) // Move Right
+            else if (_moveRight && !_moveLeft && !_moveUp && !_moveDown) // Move Right
             {
-                Translate(new Vector2D(1, 0) * currentMoveSpeed * frameTime);
+                Translate(new Vector2D(1, 0) * _currentMoveSpeed * frameTime);
             }
-            else if (MoveUp && MoveRight && !MoveLeft && !MoveDown) // Move Up & Right
+            else if (_moveUp && _moveRight && !_moveLeft && !_moveDown) // Move Up & Right
             {
-                Translate(new Vector2D(0.7071f, -0.7071f) * currentMoveSpeed * frameTime);
+                Translate(new Vector2D(0.7071f, -0.7071f) * _currentMoveSpeed * frameTime);
             }
-            else if (MoveUp && MoveLeft && !MoveRight && !MoveDown) // Move Up & Left
+            else if (_moveUp && _moveLeft && !_moveRight && !_moveDown) // Move Up & Left
             {
-                Translate(new Vector2D(-0.7071f, -0.7071f) * currentMoveSpeed * frameTime);
+                Translate(new Vector2D(-0.7071f, -0.7071f) * _currentMoveSpeed * frameTime);
             }
-            else if (MoveDown && MoveRight && !MoveLeft && !MoveUp) // Move Down & Right
+            else if (_moveDown && _moveRight && !_moveLeft && !_moveUp) // Move Down & Right
             {
-                Translate(new Vector2D(0.7071f, 0.7071f) * currentMoveSpeed * frameTime);
+                Translate(new Vector2D(0.7071f, 0.7071f) * _currentMoveSpeed * frameTime);
             }
-            else if (MoveDown && MoveLeft && !MoveRight && !MoveUp) // Move Down & Left
+            else if (_moveDown && _moveLeft && !_moveRight && !_moveUp) // Move Down & Left
             {
-                Translate(new Vector2D(-0.7071f, 0.7071f) * currentMoveSpeed * frameTime);
+                Translate(new Vector2D(-0.7071f, 0.7071f) * _currentMoveSpeed * frameTime);
             }
         }
 
-        private void SetMoveDir(Constants.MoveDirs _movedir)
+        private void SetMoveDir(Constants.MoveDirs movedir)
         {
-            if (_movedir != movedir)
-            {
-                movedir = _movedir;
-                Owner.SendMessage(this, ComponentMessageType.MoveDirection, null, movedir);
-            }
+            if (movedir == _movedir) return;
+
+            _movedir = movedir;
+            Owner.SendMessage(this, ComponentMessageType.MoveDirection, null, _movedir);
         }
 
         public virtual void SendPositionUpdate()
@@ -142,9 +136,9 @@ namespace CGO
             Owner.SendComponentNetworkMessage(this, Lidgren.Network.NetDeliveryMethod.ReliableUnordered, Owner.Position.X, Owner.Position.Y);
         }
 
-        public void plainTranslate(float x, float y)
+        public void PlainTranslate(float x, float y)
         {
-            Vector2D delta = new Vector2D(x, y) - Owner.Position;
+            var delta = new Vector2D(x, y) - Owner.Position;
 
             Owner.Position = new Vector2D(x, y);
             
@@ -174,16 +168,16 @@ namespace CGO
         /// <param name="translationVector"></param>
         public virtual void Translate(Vector2D translationVector)
         {
-            Vector2D oldPos = Owner.Position;
-            bool translated = false;
-            translated = TryTranslate(translationVector, false); //Only bump once...
+            var oldPos = Owner.Position;
+
+            var translated = TryTranslate(translationVector, false); //Only bump once...
             if (!translated)
                 translated = TryTranslate(new Vector2D(translationVector.X, 0), true);
             if (!translated)
                 translated = TryTranslate(new Vector2D(0, translationVector.Y), true);
             if (translated)
             {
-                Vector2D delta = Owner.Position - oldPos;
+                var delta = Owner.Position - oldPos;
                 if (delta.X > 0 && delta.Y > 0)
                     SetMoveDir(Constants.MoveDirs.southeast);
                 if (delta.X > 0 && delta.Y < 0)
@@ -210,18 +204,18 @@ namespace CGO
         /// Tries to move the entity. Checks collision. If the entity _is_ colliding, move it back and return false.
         /// </summary>
         /// <param name="translationVector"></param>
-        /// <param name="SuppressBump"></param>
+        /// <param name="suppressBump"></param>
         /// <returns></returns>
-        public bool TryTranslate(Vector2D translationVector, bool SuppressBump)
+        public bool TryTranslate(Vector2D translationVector, bool suppressBump)
         {
-            Vector2D oldPosition = Owner.Position;
+            var oldPosition = Owner.Position;
             Owner.Position += translationVector; // We move the sprite here rather than the position, as we can then use its updated AABB values.
             //Check collision.
             var replies = new List<ComponentReplyMessage>();
             Owner.SendMessage(this, ComponentMessageType.CheckCollision, replies, false);
             if (replies.Count > 0 && replies.First().MessageType == ComponentMessageType.CollisionStatus)
             {
-                bool colliding = (bool)replies.First().ParamsList[0];
+                var colliding = (bool)replies.First().ParamsList[0];
                 if (colliding) //Collided, reset position and return false.
                 {
                     Owner.Position = oldPosition;

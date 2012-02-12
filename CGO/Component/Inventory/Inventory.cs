@@ -19,9 +19,13 @@ namespace CGO
         public delegate void InventoryUpdateRequiredHandler(InventoryComponent sender);
         public event InventoryUpdateRequiredHandler UpdateRequired;
 
+        public override ComponentFamily Family
+        {
+            get { return ComponentFamily.Inventory; }
+        }
+
         public InventoryComponent()
         {
-            family = ComponentFamily.Inventory;
             ContainedEntities = new List<IEntity>();
         }
 

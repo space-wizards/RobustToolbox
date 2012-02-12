@@ -1,4 +1,5 @@
 ﻿using System.Collections.Generic;
+using System.Linq;
 using SS13_Shared;
 using SS13_Shared.GO;
 using System.Drawing;
@@ -7,32 +8,22 @@ namespace CGO
 {
     public class ClickableComponent : GameObjectComponent
     {
-        public ClickableComponent()
-            : base()
+        public override ComponentFamily Family
         {
-            family = ComponentFamily.Click;
-        }
-
-        public void Clicked(PointF worldPos, int userUID)
-        {
-
-            {   //FRANKENCODE.
-                
-            }
+            get { return ComponentFamily.Click; }
         }
 
         public bool CheckClick(PointF worldPos, out int drawdepth)
         {
-            List<ComponentReplyMessage> replies = new List<ComponentReplyMessage>();
+            var replies = new List<ComponentReplyMessage>();
             Owner.SendMessage(this, ComponentMessageType.CheckSpriteClick, replies, worldPos);
-            foreach (var reply in replies)
+
+            foreach (var reply in replies.Where(reply => reply.MessageType == ComponentMessageType.SpriteWasClicked && (bool)reply.ParamsList[0]))
             {
-                if (reply.MessageType == ComponentMessageType.SpriteWasClicked && (bool)reply.ParamsList[0] == true)
-                {
-                    drawdepth = (int)reply.ParamsList[1];
-                    return (bool)reply.ParamsList[0];
-                }
+                drawdepth = (int)reply.ParamsList[1];
+                return (bool)reply.ParamsList[0];
             }
+
             drawdepth = -1;
             return false;
         }

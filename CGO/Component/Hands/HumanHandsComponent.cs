@@ -13,9 +13,13 @@ namespace CGO
         public Dictionary<Hand, IEntity> HandSlots { get; private set; }
         public Hand CurrentHand { get; private set; }
 
+        public override ComponentFamily Family
+        {
+            get { return ComponentFamily.Hands; }
+        }
+
         public HumanHandsComponent()
         {
-            family = ComponentFamily.Hands;
             HandSlots = new Dictionary<Hand, IEntity>();
         }
 
@@ -38,9 +42,9 @@ namespace CGO
                         HandSlots.Add(usedHand, item);
                     break;
                 case(ComponentMessageType.HandsDroppedItem):
-                    entityUid = (int)message.MessageParameters[1];
+                    //entityUid = (int)message.MessageParameters[1];
                     usedHand = (Hand)message.MessageParameters[2];
-                    item = EntityManager.Singleton.GetEntity(entityUid);
+                    //item = EntityManager.Singleton.GetEntity(entityUid);
                     //item.SendMessage(this, ComponentMessageType.Dropped, null);
                     HandSlots.Remove(usedHand);
                     break;

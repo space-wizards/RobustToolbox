@@ -12,12 +12,12 @@ namespace CGO
     /// </summary>
     public class SlaveMoverComponent : GameObjectComponent
     {
-        IEntity master;
-        Constants.MoveDirs movedir = Constants.MoveDirs.south;
+        private IEntity _master;
+        private Constants.MoveDirs _movedir = Constants.MoveDirs.south;
 
-        public SlaveMoverComponent()
+        public override ComponentFamily Family
         {
-            family = SS13_Shared.GO.ComponentFamily.Mover;
+            get { return ComponentFamily.Mover; }
         }
 
         public override void RecieveMessage(object sender, ComponentMessageType type, List<ComponentReplyMessage> replies, params object[] list)
@@ -30,8 +30,6 @@ namespace CGO
                     Attach((int)list[0]);
                     break;
             }
-
-            return;
         }
 
         public override void OnRemove()
@@ -42,31 +40,30 @@ namespace CGO
 
         private void Attach(int uid)
         {
-            master = EntityManager.Singleton.GetEntity(uid);
-            master.OnMove += HandleOnMove;
-            Translate(master.Position);
+            _master = EntityManager.Singleton.GetEntity(uid);
+            _master.OnMove += HandleOnMove;
+            Translate(_master.Position);
             GetMasterMoveDirection();
         }
 
         private void GetMasterMoveDirection()
         {
-            List<ComponentReplyMessage> replies = new List<ComponentReplyMessage>();
+            var replies = new List<ComponentReplyMessage>();
 
-            master.SendMessage(this, ComponentMessageType.GetMoveDir, replies);
-            if (replies.Count > 0)
-            {
-                movedir = (Constants.MoveDirs)replies.First().ParamsList[0];
-                Owner.SendMessage(this, ComponentMessageType.MoveDirection, null, movedir);
-            }
+            _master.SendMessage(this, ComponentMessageType.GetMoveDir, replies);
+
+            if (!replies.Any()) return;
+
+            _movedir = (Constants.MoveDirs)replies.First().ParamsList[0];
+            Owner.SendMessage(this, ComponentMessageType.MoveDirection, null, _movedir);
         }
 
         private void Detach()
         {
-            if (master != null)
-            {
-                master.OnMove -= HandleOnMove;
-                master = null;
-            }
+            if (_master == null) return;
+
+            _master.OnMove -= HandleOnMove;
+            _master = null;
         }
 
         private void HandleOnMove(object sender, VectorEventArgs args)
@@ -100,13 +97,12 @@ namespace CGO
             Owner.Moved();
         }
 
-        private void SetMoveDir(Constants.MoveDirs _movedir)
+        private void SetMoveDir(Constants.MoveDirs movedir)
         {
-            if (_movedir != movedir)
-            {
-                movedir = _movedir;
-                Owner.SendMessage(this, ComponentMessageType.MoveDirection, null, movedir);
-            }
+            if (movedir == _movedir) return;
+
+            _movedir = movedir;
+            Owner.SendMessage(this, ComponentMessageType.MoveDirection, null, _movedir);
         }
     }
 }

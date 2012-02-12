@@ -4,6 +4,7 @@ using System.Drawing;
 using ClientInterfaces;
 using ClientInterfaces.GOC;
 using ClientInterfaces.Placement;
+using ClientInterfaces.Resource;
 using GorgonLibrary;
 using GorgonLibrary.InputDevices;
 using CGO;

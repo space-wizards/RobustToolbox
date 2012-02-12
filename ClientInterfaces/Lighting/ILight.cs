@@ -1,15 +1,12 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
+﻿using System.Collections.Generic;
 using GorgonLibrary;
 
-namespace ClientInterfaces
+namespace ClientInterfaces.Lighting
 {
     public interface ILight
     {
         float Brightness { get; set; }
-        Vector2D Position { get; set; }
+        Vector2D Position { get; }
         int Range { get; set; }
         List<object> GetTiles();
         void ClearTiles();

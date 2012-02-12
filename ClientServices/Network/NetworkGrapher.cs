@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using ClientInterfaces;
 using ClientInterfaces.Network;
+using ClientInterfaces.Resource;
 using GorgonLibrary;
 using GorgonLibrary.Graphics;
 

@@ -1,7 +1,7 @@
 ﻿using GorgonLibrary.Graphics;
 using GorgonLibrary.Sprites;
 
-namespace ClientInterfaces
+namespace ClientInterfaces.Resource
 {
     public interface IResourceManager
     {

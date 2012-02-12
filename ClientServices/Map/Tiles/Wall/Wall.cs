@@ -1,4 +1,7 @@
 ﻿using System.Drawing;
+using ClientInterfaces.Collision;
+using ClientInterfaces.Lighting;
+using ClientInterfaces.Resource;
 using GorgonLibrary;
 using GorgonLibrary.Graphics;
 using ClientInterfaces;

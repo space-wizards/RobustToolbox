@@ -1,5 +1,6 @@
 ﻿using System.Collections.Generic;
 using ClientInterfaces;
+using ClientInterfaces.Resource;
 using SS13.IoC;
 using SS13_Shared;
 using SS13_Shared.GO;

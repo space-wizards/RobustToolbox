@@ -1,10 +1,13 @@
 ﻿using System;
 using System.Collections.Generic;
 using ClientInterfaces;
+using ClientInterfaces.Configuration;
 using ClientInterfaces.Input;
+using ClientInterfaces.Map;
 using ClientInterfaces.Network;
 using ClientInterfaces.Placement;
 using ClientInterfaces.Player;
+using ClientInterfaces.Resource;
 using ClientInterfaces.State;
 using ClientInterfaces.UserInterface;
 

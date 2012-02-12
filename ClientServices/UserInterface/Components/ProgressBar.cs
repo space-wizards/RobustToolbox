@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Drawing;
 using ClientInterfaces;
+using ClientInterfaces.Resource;
 using GorgonLibrary;
 using GorgonLibrary.Graphics;
 using GorgonLibrary.InputDevices;

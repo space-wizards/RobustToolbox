@@ -3,6 +3,7 @@ using System.Linq;
 using System.Drawing;
 using ClientInterfaces;
 using ClientInterfaces.GOC;
+using ClientInterfaces.Resource;
 using GorgonLibrary.Graphics;
 using SS13_Shared;
 

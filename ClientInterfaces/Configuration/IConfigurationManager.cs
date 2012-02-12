@@ -1,4 +1,4 @@
-﻿namespace ClientInterfaces
+﻿namespace ClientInterfaces.Configuration
 {
     public interface IConfigurationManager
     {

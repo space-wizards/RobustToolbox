@@ -2,6 +2,7 @@
 using System.Drawing;
 using System.Text;
 using ClientInterfaces;
+using ClientInterfaces.Resource;
 using GorgonLibrary;
 using GorgonLibrary.Graphics;
 using SS13.IoC;

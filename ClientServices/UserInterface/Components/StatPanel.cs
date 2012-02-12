@@ -3,6 +3,7 @@ using System.Drawing;
 using ClientInterfaces;
 using ClientInterfaces.Network;
 using ClientInterfaces.Player;
+using ClientInterfaces.Resource;
 using GorgonLibrary;
 using GorgonLibrary.Graphics;
 using GorgonLibrary.InputDevices;

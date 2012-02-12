@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Drawing;
 using System.Windows.Forms;
-using ClientInterfaces;
+using ClientInterfaces.Configuration;
 using ClientInterfaces.Input;
 using ClientInterfaces.Network;
 using ClientInterfaces.State;

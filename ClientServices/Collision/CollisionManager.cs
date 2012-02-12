@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Drawing;
 using ClientInterfaces;
+using ClientInterfaces.Collision;
 
 namespace ClientServices.Collision
 {
@@ -13,22 +14,22 @@ namespace ClientServices.Collision
     /// </summary>
     public class CollisionManager : ICollisionManager
     {
-        private Dictionary<Point, int> bucketIndex; //Indexed in 256-pixel blocks - 0 = 0, 1 = 256, 2 = 512 etc
-        private Dictionary<int, CollidableBucket> buckets; // each bucket represents a 256x256 block of pixelspace
-        private List<CollidableAABB> aabbs;
+        private const int BucketSize = 256;
 
-        private int lastIndex = 0;
+        private readonly Dictionary<Point, int> _bucketIndex; //Indexed in 256-pixel blocks - 0 = 0, 1 = 256, 2 = 512 etc
+        private readonly Dictionary<int, CollidableBucket> _buckets; // each bucket represents a 256x256 block of pixelspace
+        private readonly List<CollidableAABB> _aabbs;
 
-        private const int bucketSize = 256;
+        private int _lastIndex;
 
         /// <summary>
         /// Constructor
         /// </summary>
         public CollisionManager()
         {
-            bucketIndex = new Dictionary<Point, int>();
-            buckets = new Dictionary<int, CollidableBucket>();
-            aabbs = new List<CollidableAABB>();
+            _bucketIndex = new Dictionary<Point, int>();
+            _buckets = new Dictionary<int, CollidableBucket>();
+            _aabbs = new List<CollidableAABB>();
         }
 
         #region ICollisionManager members
@@ -36,7 +37,7 @@ namespace ClientServices.Collision
         /// returns true if collider intersects a collidable under management.
         /// </summary>
         /// <param name="collider">Rectangle to check for collision</param>
-        /// <param name="bump">If true, don't run the Bump() func on the objects that are hit</param>
+        /// <param name="suppressBump">If true, don't run the Bump() func on the objects that are hit</param>
         /// <returns></returns>
         public bool IsColliding(RectangleF collider, bool suppressBump = false)
         {
@@ -45,40 +46,31 @@ namespace ClientServices.Collision
                                   new PointF(collider.Right, collider.Bottom),
                                   new PointF(collider.Left, collider.Bottom)
                               };
-            List<CollidableBucket> buckets = new List<CollidableBucket>();
-
+            
             //Get the buckets that correspond to the collider's points.
-            foreach (PointF point in points)
-            {
-                buckets.Add(GetBucket(point));
-            }
-            buckets = buckets.Distinct().ToList();
+            var buckets = points.Select(GetBucket).Distinct().ToList();
 
             //Get all of the points
-            List<CollidablePoint> cpoints = new List<CollidablePoint>();
-            foreach (CollidableBucket bucket in buckets)
+            var cpoints = new List<CollidablePoint>();
+            foreach (var bucket in buckets)
             {
                 cpoints.AddRange(bucket.GetPoints());
             }
 
             //Expand points to distinct AABBs
-            List<CollidableAABB> AABBs = (from cp in cpoints
-                                          select cp.parentAABB).Distinct().ToList();
+            var aabBs = (cpoints.Select(cp => cp.ParentAABB)).Distinct().ToList();
 
             //try all of the AABBs against the target rect.
-            bool collided = false;
-            foreach (CollidableAABB AABB in AABBs)
+            var collided = false;
+            foreach (var aabb in aabBs.Where(aabb => aabb.Collidable.AABB.IntersectsWith(collider)))
             {
-                if (AABB.collidable.AABB.IntersectsWith(collider))
+                if (aabb.IsHardCollider) //If the collider is supposed to prevent movement
                 {
-                    if (AABB.IsHardCollider) //If the collider is supposed to prevent movement
-                    {
-                        collided = true;
-                    }
-
-                    if (!suppressBump)
-                        AABB.collidable.Bump();
+                    collided = true;
                 }
+
+                if (!suppressBump)
+                    aabb.Collidable.Bump();
             }
             return collided;
         }
@@ -89,12 +81,12 @@ namespace ClientServices.Collision
         /// <param name="collidable"></param>
         public void AddCollidable(ICollidable collidable)
         {
-            CollidableAABB c = new CollidableAABB(collidable);
-            foreach (CollidablePoint p in c.points)
+            var c = new CollidableAABB(collidable);
+            foreach (CollidablePoint p in c.Points)
             {
                 AddPoint(p);
             }
-            aabbs.Add(c);
+            _aabbs.Add(c);
         }
 
         /// <summary>
@@ -103,18 +95,13 @@ namespace ClientServices.Collision
         /// <param name="collidable"></param>
         public void RemoveCollidable(ICollidable collidable)
         {
-            var aabb = from a in aabbs
-                       where a.collidable == collidable
-                       select a;
+            var ourAABB = _aabbs.FirstOrDefault(a => a.Collidable == collidable);
 
-            if (aabb.Count() == 0)
-                return;
-            CollidableAABB ourAABB = aabb.First();
-            foreach (CollidablePoint p in ourAABB.points)
+            foreach (var p in ourAABB.Points)
             {
                 RemovePoint(p);
             }
-            aabbs.Remove(ourAABB);
+            _aabbs.Remove(ourAABB);
         }
 
         /// <summary>
@@ -134,7 +121,7 @@ namespace ClientServices.Collision
         /// <param name="point"></param>
         private void AddPoint(CollidablePoint point)
         {
-            CollidableBucket b = GetBucket(point.coordinates);
+            var b = GetBucket(point.Coordinates);
             b.AddPoint(point);
         }
 
@@ -144,7 +131,7 @@ namespace ClientServices.Collision
         /// <param name="point"></param>
         private void RemovePoint(CollidablePoint point)
         {
-            CollidableBucket b = GetBucket(point.coordinates);
+            CollidableBucket b = GetBucket(point.Coordinates);
             b.RemovePoint(point);
         }
 
@@ -155,10 +142,7 @@ namespace ClientServices.Collision
         /// <returns></returns>
         private CollidableBucket GetBucket(Point coordinate)
         {
-            if (bucketIndex.ContainsKey(GetBucketCoordinate(coordinate)))
-                return buckets[bucketIndex[GetBucketCoordinate(coordinate)]];
-            else
-                return CreateBucket(GetBucketCoordinate(coordinate));
+            return _bucketIndex.ContainsKey(GetBucketCoordinate(coordinate)) ? _buckets[_bucketIndex[GetBucketCoordinate(coordinate)]] : CreateBucket(GetBucketCoordinate(coordinate));
         }
 
         /// <summary>
@@ -171,35 +155,31 @@ namespace ClientServices.Collision
             return GetBucket(GetBucketCoordinate(coordinate));
         }
 
-        private Point GetBucketCoordinate(PointF coordinate)
+        private static Point GetBucketCoordinate(PointF coordinate)
         {
-            int x = (int)Math.Floor(coordinate.X / bucketSize);
-            int y = (int)Math.Floor(coordinate.Y / bucketSize);
+            var x = (int)Math.Floor(coordinate.X / BucketSize);
+            var y = (int)Math.Floor(coordinate.Y / BucketSize);
             return new Point(x, y);
         }
 
-        private Point GetBucketCoordinate(Point coordinate)
+        private static Point GetBucketCoordinate(Point coordinate)
         {
-            int x = (int)Math.Floor((decimal)coordinate.X / bucketSize);
-            int y = (int)Math.Floor((decimal)coordinate.Y / bucketSize);
+            var x = (int)Math.Floor((decimal)coordinate.X / BucketSize);
+            var y = (int)Math.Floor((decimal)coordinate.Y / BucketSize);
             return new Point(x, y);
         }
 
         private CollidableBucket CreateBucket(Point coordinate)
         {
-            if (bucketIndex.ContainsKey(coordinate))
-                return buckets[bucketIndex[GetBucketCoordinate(coordinate)]];
-            else
-            {
-                CollidableBucket b = new CollidableBucket(lastIndex, coordinate);
-                buckets.Add(lastIndex, b);
-                bucketIndex.Add(coordinate, lastIndex);
-                lastIndex++;
-                return b;
-            }
+            if (_bucketIndex.ContainsKey(coordinate))
+                return _buckets[_bucketIndex[GetBucketCoordinate(coordinate)]];
+
+            var b = new CollidableBucket(_lastIndex, coordinate);
+            _buckets.Add(_lastIndex, b);
+            _bucketIndex.Add(coordinate, _lastIndex);
+            _lastIndex++;
+            return b;
         }
-
-
     }
 
     /// <summary>
@@ -207,15 +187,15 @@ namespace ClientServices.Collision
     /// </summary>
     internal class CollidableBucket
     {
-        private int index;
-        private Point coordinates;
-        private List<CollidablePoint> points;
+        private int _index;
+        private Point _coordinates;
+        private readonly List<CollidablePoint> _points;
 
-        public CollidableBucket(int _index, Point _coordinates)
+        public CollidableBucket(int index, Point coordinates)
         {
-            index = _index;
-            coordinates = _coordinates;
-            points = new List<CollidablePoint>();
+            _index = index;
+            _coordinates = coordinates;
+            _points = new List<CollidablePoint>();
         }
 
         /// <summary>
@@ -224,7 +204,7 @@ namespace ClientServices.Collision
         /// <param name="point"></param>
         public void AddPoint(CollidablePoint point)
         {
-            points.Add(point);
+            _points.Add(point);
         }
 
         /// <summary>
@@ -233,13 +213,13 @@ namespace ClientServices.Collision
         /// <param name="point"></param>
         public void RemovePoint(CollidablePoint point)
         {
-            if(points.Contains(point))
-                points.Remove(point);
+            if(_points.Contains(point))
+                _points.Remove(point);
         }
 
         public IEnumerable<CollidablePoint> GetPoints()
         {
-            return points;
+            return _points;
         }
     }
 
@@ -248,14 +228,14 @@ namespace ClientServices.Collision
     /// </summary>
     internal struct CollidablePoint
     {
-        public CollidablePointIndex index;
-        public PointF coordinates;
-        public CollidableAABB parentAABB;
-        public CollidablePoint(CollidablePointIndex _index, PointF _coordinates, CollidableAABB _parentAABB)
+        public CollidablePointIndex Index;
+        public PointF Coordinates;
+        public CollidableAABB ParentAABB;
+        public CollidablePoint(CollidablePointIndex index, PointF coordinates, CollidableAABB parentAABB)
         {
-            index = _index;
-            coordinates = _coordinates;
-            parentAABB = _parentAABB;
+            Index = index;
+            Coordinates = coordinates;
+            ParentAABB = parentAABB;
         }
     }
 
@@ -272,23 +252,23 @@ namespace ClientServices.Collision
     /// </summary>
     internal struct CollidableAABB
     {
-        public ICollidable collidable;
-        public CollidablePoint[] points;
+        public ICollidable Collidable;
+        public CollidablePoint[] Points;
         public bool IsHardCollider;
 
-        public CollidableAABB(ICollidable _collidable)
+        public CollidableAABB(ICollidable collidable)
         {
-            collidable = _collidable;
-            IsHardCollider = collidable.IsHardCollidable;
-            points = new CollidablePoint[4];
-            float Top = collidable.AABB.Top;
-            float Bottom = collidable.AABB.Bottom;
-            float Left = collidable.AABB.Left;
-            float Right = collidable.AABB.Right;
-            points[0] = new CollidablePoint(CollidablePointIndex.TopLeft, new PointF(Left, Top), this);
-            points[1] = new CollidablePoint(CollidablePointIndex.TopRight, new PointF(Right, Top), this);
-            points[2] = new CollidablePoint(CollidablePointIndex.BottomRight, new PointF(Right, Bottom), this);
-            points[3] = new CollidablePoint(CollidablePointIndex.BottomLeft, new PointF(Left, Bottom), this);
+            Collidable = collidable;
+            IsHardCollider = Collidable.IsHardCollidable;
+            Points = new CollidablePoint[4];
+            var top = Collidable.AABB.Top;
+            var bottom = Collidable.AABB.Bottom;
+            var left = Collidable.AABB.Left;
+            var right = Collidable.AABB.Right;
+            Points[0] = new CollidablePoint(CollidablePointIndex.TopLeft, new PointF(left, top), this);
+            Points[1] = new CollidablePoint(CollidablePointIndex.TopRight, new PointF(right, top), this);
+            Points[2] = new CollidablePoint(CollidablePointIndex.BottomRight, new PointF(right, bottom), this);
+            Points[3] = new CollidablePoint(CollidablePointIndex.BottomLeft, new PointF(left, bottom), this);
         }
     }
 }

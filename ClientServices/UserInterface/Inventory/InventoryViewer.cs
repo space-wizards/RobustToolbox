@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Drawing;
 using ClientInterfaces;
 using ClientInterfaces.GOC;
+using ClientInterfaces.Resource;
 using ClientInterfaces.UserInterface;
 using ClientServices.UserInterface.Components;
 using GorgonLibrary.InputDevices;

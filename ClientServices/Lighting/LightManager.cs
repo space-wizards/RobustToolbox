@@ -2,12 +2,11 @@
 using System.Collections.Generic;
 using System.Drawing;
 using System.Linq;
-using System.Text;
+using ClientInterfaces.Lighting;
+using ClientInterfaces.Map;
 using GorgonLibrary;
 using GorgonLibrary.Graphics;
 using ClientInterfaces;
-using ClientServices.Map;
-using ClientServices.Map.Tiles;
 using SS13_Shared;
 
 namespace ClientServices.Lighting
@@ -84,18 +83,18 @@ namespace ClientServices.Lighting
         private Vector3D CalculateVertexLight(Sprite sprite, Light light, VertexLocations vertex, Vector2D screenOffset)
         {
             Vector2D vertexPos = sprite.GetSpriteVertexPosition(vertex);
-            Vector2D lightPos = light.position - screenOffset; //Making sure that they're in the same space.
+            Vector2D lightPos = light.Position - screenOffset; //Making sure that they're in the same space.
 
             var distance = (vertexPos - lightPos).Length;
-            var lightIntensity = (float)Math.Max((light.range - (distance/1.5)) * light.Brightness, 0);
+            var lightIntensity = (float)Math.Max((light.Range - (distance/1.5)) * light.Brightness, 0);
 
             if (lightIntensity == 0) return Vector3D.Zero; //Must be zero or the ambient light would increase with the number of lights. (Thats bad)
 
             var lightColor =
                 new Vector3D(
-                    light.color.R,
-                    light.color.G,
-                    light.color.B);
+                    light.Color.R,
+                    light.Color.G,
+                    light.Color.B);
 
             lightColor.Normalize();
 
@@ -112,7 +111,7 @@ namespace ClientServices.Lighting
         {
             sprite.UpdateAABB(); //Just to be safe that the verts are in the right pos. Might want to remove this when its handled reliably by the objects.
 
-            var lightsInRange = from Light l in lights where (l.position - sprite.Position - screenOffset).Length <= (l.range * 4) select l;
+            var lightsInRange = from Light l in lights where (l.Position - sprite.Position - screenOffset).Length <= (l.Range * 4) select l;
             Vector3D defaultLight = new Vector3D(ambientBrightness, ambientBrightness, ambientBrightness);
 
             SpriteLightDefinition lightInfo = new SpriteLightDefinition();

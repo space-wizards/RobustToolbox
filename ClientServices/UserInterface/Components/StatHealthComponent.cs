@@ -3,6 +3,7 @@ using System.Drawing;
 using CGO;
 using ClientInterfaces;
 using ClientInterfaces.Player;
+using ClientInterfaces.Resource;
 using GorgonLibrary;
 using GorgonLibrary.Graphics;
 using SS13_Shared.GO;

@@ -48,6 +48,7 @@ namespace ClientServices.State.States
 
             var modes = from v in Gorgon.CurrentDriver.VideoModes
                         where v.Height * v.Width >= 786432 //Shitty way to limit it to 1024 * 748 upwards.
+                        orderby v.Height * v.Width ascending
                         select v;
 
             foreach (VideoMode vm in modes)

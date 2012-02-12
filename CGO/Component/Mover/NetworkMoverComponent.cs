@@ -20,15 +20,15 @@ namespace CGO
         float movetime = 0.100f; // Milliseconds it should take to move.
         float movedtime = 0; // Amount of time we've been moving since the last update packet.
 
-        public NetworkMoverComponent()
+        public override ComponentFamily Family
         {
-            family = SS13_Shared.GO.ComponentFamily.Mover;
+            get { return ComponentFamily.Mover; }
         }
 
         public override void HandleNetworkMessage(IncomingEntityComponentMessage message)
         {
-            double x = (double)message.MessageParameters[0];
-            double y = (double)message.MessageParameters[1];
+            var x = (double)message.MessageParameters[0];
+            var y = (double)message.MessageParameters[1];
             Translate((float)x, (float)y);
         }
 

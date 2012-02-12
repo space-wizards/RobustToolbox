@@ -8,10 +8,9 @@ namespace CGO
     {                                                      //Used for things that are binary. Either broken or not broken. (windows?)
         protected bool IsDead;
 
-        public DamageableComponent()
-            : base()
+        public override ComponentFamily Family
         {
-            family = ComponentFamily.Damageable;
+            get { return ComponentFamily.Damageable; }
         }
 
         public override void RecieveMessage(object sender, ComponentMessageType type, List<ComponentReplyMessage> replies, params object[] list)

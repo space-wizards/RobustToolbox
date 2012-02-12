@@ -7,9 +7,9 @@ namespace CGO
     {
         public DrawDepth DrawDepth { get; set; }
 
-        public RenderableComponent()
+        public override ComponentFamily Family
         {
-            family = ComponentFamily.Renderable; 
+            get { return ComponentFamily.Renderable; }
         }
 
         public virtual void Render()

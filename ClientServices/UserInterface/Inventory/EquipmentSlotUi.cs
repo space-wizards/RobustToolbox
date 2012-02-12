@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Drawing;
-using ClientInterfaces;
 using ClientInterfaces.GOC;
 using ClientInterfaces.Player;
 using ClientInterfaces.Resource;
@@ -67,9 +66,9 @@ namespace ClientServices.UserInterface.Inventory
             var entity = _playerManager.ControlledEntity;
             var equipment = (EquipmentComponent)entity.GetComponent(ComponentFamily.Equipment);
 
-            if (equipment.equippedEntities.ContainsKey(AssignedSlot))
+            if (equipment.EquippedEntities.ContainsKey(AssignedSlot))
             {
-                CurrentEntity = equipment.equippedEntities[AssignedSlot];
+                CurrentEntity = equipment.EquippedEntities[AssignedSlot];
                 _currentEntSprite = Utilities.GetSpriteComponentSprite(CurrentEntity);
             }
             else
@@ -110,8 +109,8 @@ namespace ClientServices.UserInterface.Inventory
                 var entity = _playerManager.ControlledEntity;
                 var equipment = (EquipmentComponent)entity.GetComponent(ComponentFamily.Equipment);
 
-                if (equipment.equippedEntities.ContainsKey(AssignedSlot))
-                    _userInterfaceManager.DragInfo.StartDrag(equipment.equippedEntities[AssignedSlot]);
+                if (equipment.EquippedEntities.ContainsKey(AssignedSlot))
+                    _userInterfaceManager.DragInfo.StartDrag(equipment.EquippedEntities[AssignedSlot]);
 
                 return true;
             }

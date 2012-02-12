@@ -5,14 +5,14 @@ namespace CGO
 {
     public class BasicItemComponent : GameObjectComponent
     {
-        public BasicItemComponent()
+        public override ComponentFamily Family
         {
-            family = ComponentFamily.Item;
+            get { return ComponentFamily.Item; }
         }
 
         public override void HandleNetworkMessage(IncomingEntityComponentMessage message)
         {
-            if (message.ComponentFamily != family)
+            if (message.ComponentFamily != Family)
                 return;
             switch ((ItemComponentNetMessage)message.MessageParameters[0])
             {

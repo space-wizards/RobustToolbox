@@ -5,19 +5,18 @@ namespace CGO
     public class HumanEquipmentComponent : EquipmentComponent
     {
         public HumanEquipmentComponent()
-            : base()
         {
             //These shit lines allow the fucking shit to be added to the shit
-            activeSlots.Add(EquipmentSlot.Back);
-            activeSlots.Add(EquipmentSlot.Belt);
-            activeSlots.Add(EquipmentSlot.Ears);
-            activeSlots.Add(EquipmentSlot.Eyes);
-            activeSlots.Add(EquipmentSlot.Feet);
-            activeSlots.Add(EquipmentSlot.Hands);
-            activeSlots.Add(EquipmentSlot.Head);
-            activeSlots.Add(EquipmentSlot.Inner);
-            activeSlots.Add(EquipmentSlot.Mask);
-            activeSlots.Add(EquipmentSlot.Outer);
+            ActiveSlots.Add(EquipmentSlot.Back);
+            ActiveSlots.Add(EquipmentSlot.Belt);
+            ActiveSlots.Add(EquipmentSlot.Ears);
+            ActiveSlots.Add(EquipmentSlot.Eyes);
+            ActiveSlots.Add(EquipmentSlot.Feet);
+            ActiveSlots.Add(EquipmentSlot.Hands);
+            ActiveSlots.Add(EquipmentSlot.Head);
+            ActiveSlots.Add(EquipmentSlot.Inner);
+            ActiveSlots.Add(EquipmentSlot.Mask);
+            ActiveSlots.Add(EquipmentSlot.Outer);
         }
     }
 }

@@ -1,7 +1,6 @@
 ﻿using System.Collections.Generic;
 using System.Linq;
 using System.Drawing;
-using ClientInterfaces;
 using ClientInterfaces.Collision;
 using ClientInterfaces.GOC;
 using GorgonLibrary;
@@ -13,6 +12,11 @@ namespace CGO
 {
     class ColliderComponent : GameObjectComponent
     {
+        public override ComponentFamily Family
+        {
+            get { return ComponentFamily.Collider; }
+        }
+
         /// <summary>
         /// X - Top | Y - Right | Z - Bottom | W - Left
         /// </summary>
@@ -38,12 +42,6 @@ namespace CGO
             }
         }
 
-        public ColliderComponent()
-            : base()
-        { 
-            
-        }
-
         public override void RecieveMessage(object sender, ComponentMessageType type, List<ComponentReplyMessage> reply, params object[] list)
         {
             base.RecieveMessage(sender, type, reply, list);
@@ -54,15 +52,11 @@ namespace CGO
                     GetAABB();
                     break;
                 case ComponentMessageType.CheckCollision:
-                    if (list.Count() > 0)
-                        reply.Add(CheckCollision((bool)list[0]));
-                    else
-                        reply.Add(CheckCollision());
+                    reply.Add(list.Any() ? CheckCollision((bool) list[0]) : CheckCollision());
                     break;
                     
 
             }
-            return;
         }
 
         public override void SetParameter(ComponentParameter parameter)

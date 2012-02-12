@@ -33,8 +33,8 @@ namespace ClientServices.UserInterface.Components
         public Checkbox(IResourceManager resourceManager)
         {
             _resourceManager = resourceManager;
-            checkbox = _resourceManager.GetSprite("nosprite");
-            checkboxCheck = _resourceManager.GetSprite("nosprite");
+            checkbox = _resourceManager.GetSprite("checkbox0");
+            checkboxCheck = _resourceManager.GetSprite("checkbox1");
             Update();
         }
 

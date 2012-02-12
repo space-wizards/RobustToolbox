@@ -26,7 +26,7 @@ namespace ClientServices.State.States
         private readonly Checkbox _chkfullscreen;
         private readonly Label _lblfullscreen;
 
-        private Dictionary<string, VideoMode> vmList = new Dictionary<string, VideoMode>();
+        private Dictionary<string, KeyValuePair<uint, uint>> vmList = new Dictionary<string, KeyValuePair<uint, uint>>();
 
         #endregion
 
@@ -47,19 +47,21 @@ namespace ClientServices.State.States
             _reslistbox.ItemSelected += new Listbox.ListboxPressHandler(_reslistbox_ItemSelected);
 
             var modes = from v in Gorgon.CurrentDriver.VideoModes
-                        where v.Bpp == 32
                         where v.Height * v.Width >= 786432 //Shitty way to limit it to 1024 * 748 upwards.
                         select v;
 
             foreach (VideoMode vm in modes)
             {
-                vmList.Add(GetVmString(vm), vm);
-                _reslistbox.AddItem(GetVmString(vm));
+                if(!vmList.ContainsKey(GetVmString(vm)))
+                {
+                    vmList.Add(GetVmString(vm), new KeyValuePair<uint, uint>((uint)vm.Width, (uint)vm.Height));
+                    _reslistbox.AddItem(GetVmString(vm));
+                }
             }
 
-            if (vmList.Any(x => x.Value == Gorgon.CurrentVideoMode)) //Window border reduces actual size of gorgon render window. So this doesnt work.
+            if (vmList.Any(x => x.Value.Key == Gorgon.Screen.Width && x.Value.Value == Gorgon.Screen.Height))
             {
-                var curr = vmList.FirstOrDefault(x => x.Value == Gorgon.CurrentVideoMode);
+                var curr = vmList.FirstOrDefault(x => x.Value.Key == Gorgon.Screen.Width && x.Value.Value == Gorgon.Screen.Height);
                 _reslistbox.SelectItem(curr.Key, false);
             }
 
@@ -86,7 +88,7 @@ namespace ClientServices.State.States
 
         private void ApplyVideoMode()
         {
-            Gorgon.SetMode(Gorgon.Screen.Owner, (int)ConfigurationManager.GetDisplayWidth(), (int)ConfigurationManager.GetDisplayHeight(), Gorgon.DesktopVideoMode.Format, ConfigurationManager.GetFullscreen(), false, false, Gorgon.DesktopVideoMode.RefreshRate);
+            Gorgon.SetMode(Gorgon.Screen.OwnerForm, (int)ConfigurationManager.GetDisplayWidth(), (int)ConfigurationManager.GetDisplayHeight(), Gorgon.DesktopVideoMode.Format, ConfigurationManager.GetFullscreen(), false, false, Gorgon.DesktopVideoMode.RefreshRate);
         }
 
         void _reslistbox_ItemSelected(Label item)
@@ -94,13 +96,13 @@ namespace ClientServices.State.States
             if (vmList.ContainsKey(item.Text.Text))
             {
                 var sel = vmList[item.Text.Text];
-                ConfigurationManager.SetResolution((uint)sel.Width, (uint)sel.Height);
+                ConfigurationManager.SetResolution((uint)sel.Key, (uint)sel.Value);
             }
         }
 
         private string GetVmString(VideoMode vm)
         {
-            return vm.Width.ToString() + "x" + vm.Height.ToString() + " @ " + vm.RefreshRate.ToString() + " Hz";
+            return vm.Width.ToString() + "x" + vm.Height.ToString();
         }
 
         void _exitbtt_Clicked(Label sender)

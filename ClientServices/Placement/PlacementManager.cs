@@ -1,10 +1,13 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using ClientInterfaces.Collision;
 using ClientInterfaces.GOC;
+using ClientInterfaces.Map;
 using ClientInterfaces.Network;
 using ClientInterfaces.Placement;
 using ClientInterfaces.Player;
+using ClientInterfaces.Resource;
 using ClientWindow;
 using GorgonLibrary;
 using GorgonLibrary.Graphics;

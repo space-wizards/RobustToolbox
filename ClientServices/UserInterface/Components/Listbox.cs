@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Drawing;
 using ClientInterfaces;
+using ClientInterfaces.Resource;
 using GorgonLibrary.Graphics;
 using GorgonLibrary.InputDevices;
 
@@ -12,44 +13,42 @@ namespace ClientServices.UserInterface.Components
     {
         private readonly IResourceManager _resourceManager;
 
-        Sprite ListboxMain;
-        Sprite ListboxLeft;
-        Sprite ListboxRight;
+        private readonly List<string> _contentStrings = new List<string>();
+        private readonly int _width;
 
-        public TextSprite selectedLabel;
+        private Sprite _listboxMain;
+        private Sprite _listboxLeft;
+        private Sprite _listboxRight;
+        private TextSprite _selectedLabel;
+        private ScrollableContainer _dropDown;
 
-        private ScrollableContainer dropDown;
-        private List<string> contentStrings = new List<string>();
+        private Rectangle _clientAreaMain;
+        private Rectangle _clientAreaLeft;
+        private Rectangle _clientAreaRight;
 
         public delegate void ListboxPressHandler(Label item);
         public event ListboxPressHandler ItemSelected;
 
-        public Label currentlySelected {get; private set;}
-
-        private Rectangle clientAreaMain;
-        private Rectangle clientAreaLeft;
-        private Rectangle clientAreaRight;
-
-        public int Width;
+        public Label CurrentlySelected { get; private set; }
 
         public Listbox(Size dropDownSize, int width, IResourceManager resourceManager, List<string> initialOptions = null)
         {
             _resourceManager = resourceManager;
 
-            Width = width;
-            ListboxLeft = _resourceManager.GetSprite("button_left");
-            ListboxMain = _resourceManager.GetSprite("button_middle");
-            ListboxRight = _resourceManager.GetSprite("button_right");
+            _width = width;
+            _listboxLeft = _resourceManager.GetSprite("button_left");
+            _listboxMain = _resourceManager.GetSprite("button_middle");
+            _listboxRight = _resourceManager.GetSprite("button_right");
 
-            selectedLabel = new TextSprite("ListboxLabel", "", _resourceManager.GetFont("CALIBRI"));
-            selectedLabel.Color = System.Drawing.Color.Black;
+            _selectedLabel = new TextSprite("ListboxLabel", "", _resourceManager.GetFont("CALIBRI"))
+                                 {Color = Color.Black};
 
-            dropDown = new ScrollableContainer("ListboxContents", dropDownSize, _resourceManager);
-            dropDown.SetVisible(false);
+            _dropDown = new ScrollableContainer("ListboxContents", dropDownSize, _resourceManager);
+            _dropDown.SetVisible(false);
 
             if (initialOptions != null)
             {
-                contentStrings = initialOptions;
+                _contentStrings = initialOptions;
                 RebuildList();
             }
 
@@ -58,22 +57,21 @@ namespace ClientServices.UserInterface.Components
 
         public void AddItem(string str)
         {
-            contentStrings.Add(str);
+            _contentStrings.Add(str);
             RebuildList();
         }
 
         public void RemoveItem(string str)
         {
-            if (contentStrings.Contains(str))
-            {
-                contentStrings.Remove(str);
-                RebuildList();
-            }
+            if (!_contentStrings.Contains(str)) return;
+
+            _contentStrings.Remove(str);
+            RebuildList();
         }
 
         public void SelectItem(string str, bool raiseEvent = false)
         {
-            var selLabel = (from a in dropDown.components
+            var selLabel = (from a in _dropDown.components
                             where a.GetType() == typeof(ListboxItem)
                             let b = (ListboxItem)a
                             where b.Text.Text.ToLowerInvariant() == str.ToLowerInvariant()
@@ -85,21 +83,20 @@ namespace ClientServices.UserInterface.Components
 
         private void RebuildList()
         {
-            currentlySelected = null;
-            dropDown.components.Clear();
-            int offset = 0;
-            foreach (string str in contentStrings)
+            CurrentlySelected = null;
+            _dropDown.components.Clear();
+            var offset = 0;
+            foreach (var newEntry in _contentStrings.Select(str => new ListboxItem(str, _width, _resourceManager)))
             {
-                ListboxItem newEntry = new ListboxItem(str, Width, _resourceManager);
                 newEntry.Position = new Point(0, offset);
                 newEntry.Update();
-                newEntry.Clicked += new Label.LabelPressHandler(newEntry_Clicked);
-                dropDown.components.Add(newEntry);
-                offset += (int)newEntry.Text.Height;
+                newEntry.Clicked += NewEntryClicked;
+                _dropDown.components.Add(newEntry);
+                offset += (int) newEntry.Text.Height;
             }
         }
 
-        void newEntry_Clicked(Label sender)
+        void NewEntryClicked(Label sender)
         {
             SetItem(sender, true);
         }
@@ -108,46 +105,46 @@ namespace ClientServices.UserInterface.Components
         {
             if (ItemSelected != null && raiseEvent) ItemSelected(toSet);
 
-            currentlySelected = toSet;
-            selectedLabel.Text = toSet.Text.Text;
-            dropDown.SetVisible(false);
+            CurrentlySelected = toSet;
+            _selectedLabel.Text = toSet.Text.Text;
+            _dropDown.SetVisible(false);
 
             ((ListboxItem)toSet).Selected = true;
-            var notSelected = from ListboxItem item in dropDown.components
+            var notSelected = from ListboxItem item in _dropDown.components
                               where item != toSet
                               select item;
-            foreach (ListboxItem curr in notSelected) curr.Selected = false;
+            foreach (var curr in notSelected) curr.Selected = false;
         }
 
-        public override void Update()
+        public override sealed void Update()
         {
-            clientAreaLeft = new Rectangle(this.Position, new Size((int)ListboxLeft.Width, (int)ListboxLeft.Height));
-            clientAreaMain = new Rectangle(new Point(clientAreaLeft.Right, this.Position.Y), new Size(Width, (int)ListboxMain.Height));
-            clientAreaRight = new Rectangle(new Point(clientAreaMain.Right, this.Position.Y), new Size((int)ListboxRight.Width, (int)ListboxRight.Height));
-            ClientArea = new Rectangle(this.Position, new Size(clientAreaLeft.Width + clientAreaMain.Width + clientAreaRight.Width, clientAreaMain.Height));
-            selectedLabel.Position = new Point(clientAreaLeft.Right, this.Position.Y + (int)(ClientArea.Height / 2f) - (int)(selectedLabel.Height / 2f));
-            dropDown.Position = new Point(ClientArea.X + (int)((ClientArea.Width - dropDown.ClientArea.Width) / 2f), ClientArea.Bottom);
-            dropDown.Update();
+            _clientAreaLeft = new Rectangle(Position, new Size((int)_listboxLeft.Width, (int)_listboxLeft.Height));
+            _clientAreaMain = new Rectangle(new Point(_clientAreaLeft.Right, Position.Y), new Size(_width, (int)_listboxMain.Height));
+            _clientAreaRight = new Rectangle(new Point(_clientAreaMain.Right, Position.Y), new Size((int)_listboxRight.Width, (int)_listboxRight.Height));
+            ClientArea = new Rectangle(Position, new Size(_clientAreaLeft.Width + _clientAreaMain.Width + _clientAreaRight.Width, _clientAreaMain.Height));
+            _selectedLabel.Position = new Point(_clientAreaLeft.Right, Position.Y + (int)(ClientArea.Height / 2f) - (int)(_selectedLabel.Height / 2f));
+            _dropDown.Position = new Point(ClientArea.X + (int)((ClientArea.Width - _dropDown.ClientArea.Width) / 2f), ClientArea.Bottom);
+            _dropDown.Update();
         }
 
         public override void Render()
         {
-            dropDown.Render();
-            ListboxLeft.Draw(clientAreaLeft);
-            ListboxMain.Draw(clientAreaMain);
-            ListboxRight.Draw(clientAreaRight);
-            selectedLabel.Draw();
+            _dropDown.Render();
+            _listboxLeft.Draw(_clientAreaLeft);
+            _listboxMain.Draw(_clientAreaMain);
+            _listboxRight.Draw(_clientAreaRight);
+            _selectedLabel.Draw();
         }
 
         public override void Dispose()
         {
-            contentStrings.Clear();
-            dropDown.Dispose();
-            dropDown = null;
-            selectedLabel = null;
-            ListboxLeft = null;
-            ListboxMain = null;
-            ListboxRight = null;
+            _contentStrings.Clear();
+            _dropDown.Dispose();
+            _dropDown = null;
+            _selectedLabel = null;
+            _listboxLeft = null;
+            _listboxMain = null;
+            _listboxRight = null;
             ItemSelected = null;
             base.Dispose();
             GC.SuppressFinalize(this);
@@ -157,24 +154,22 @@ namespace ClientServices.UserInterface.Components
         {
             if (ClientArea.Contains(new Point((int)e.Position.X, (int)e.Position.Y))) //change to clientAreaRight when theres a proper skin with an arrow to the right.
             {
-                dropDown.ToggleVisible();
+                _dropDown.ToggleVisible();
                 return true;
             }
-            else if (dropDown.MouseDown(e) == true) return true;
-            return false;
+
+            return _dropDown.MouseDown(e);
         }
 
         public override bool MouseUp(MouseInputEventArgs e)
         {
-            if (dropDown.MouseUp(e) == true) return true;
-            return false;
+            return _dropDown.MouseUp(e);
         }
 
         public override void MouseMove(MouseInputEventArgs e)
         {
-            dropDown.MouseMove(e);
+            _dropDown.MouseMove(e);
         }
-
     }
 
     class ListboxItem : Label

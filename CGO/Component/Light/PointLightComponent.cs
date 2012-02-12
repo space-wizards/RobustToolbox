@@ -1,5 +1,7 @@
 ﻿using ClientInterfaces;
 using ClientInterfaces.GOC;
+using ClientInterfaces.Lighting;
+using ClientInterfaces.Map;
 using GorgonLibrary;
 using SS13.IoC;
 using SS13_Shared;

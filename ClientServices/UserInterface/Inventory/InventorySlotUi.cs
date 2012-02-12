@@ -2,6 +2,7 @@
 using System.Drawing;
 using ClientInterfaces;
 using ClientInterfaces.GOC;
+using ClientInterfaces.Resource;
 using ClientServices.Helpers;
 using ClientServices.UserInterface.Components;
 using GorgonLibrary.Graphics;

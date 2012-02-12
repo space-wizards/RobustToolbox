@@ -1,10 +1,13 @@
 ﻿using System;
 using System.Collections.Generic;
 using ClientInterfaces;
+using ClientInterfaces.Configuration;
 using ClientInterfaces.Input;
+using ClientInterfaces.Map;
 using ClientInterfaces.Network;
 using ClientInterfaces.Placement;
 using ClientInterfaces.Player;
+using ClientInterfaces.Resource;
 using ClientInterfaces.State;
 using ClientInterfaces.UserInterface;
 using GorgonLibrary.Graphics;
@@ -13,15 +16,12 @@ using SS13_Shared;
 
 namespace ClientServices.State
 {
-    /************************************************************************/
-    /* state manager for program states                                     */
-    /************************************************************************/
-
     public class StateManager : IStateManager
     {
-        public IState CurrentState { get; private set; }
         private readonly Dictionary<Type, IState> _loadedStates;
         private readonly Dictionary<Type, object> _managers;
+
+        public IState CurrentState { get; private set; }
 
         #region Constructor
 
@@ -51,57 +51,32 @@ namespace ClientServices.State
 
         #region Input
 
-        /// <summary>
-        /// Gorgon method
-        /// </summary>
-        /// <param name="e"></param>
         public void KeyDown(KeyboardInputEventArgs e)
         {
-            // if a state is active, call the states keydown method.
             if (CurrentState != null)
                 CurrentState.KeyDown(e);
         }
 
-        /// <summary>
-        /// Gorgon method
-        /// </summary>
-        /// <param name="e"></param>
         public void KeyUp(KeyboardInputEventArgs e)
         {
-            // if a state is active, call the states keyup method.
             if (CurrentState != null)
                 CurrentState.KeyUp(e);
         }
 
-        /// <summary>
-        /// Gorgon method
-        /// </summary>
-        /// <param name="e"></param>
         public void MouseUp(MouseInputEventArgs e)
         {
-            // if a state is active, call the states mouseup method.
             if (CurrentState != null)
                 CurrentState.MouseUp(e);
         }
 
-        /// <summary>
-        /// Gorgon method
-        /// </summary>
-        /// <param name="e"></param>
         public void MouseDown(MouseInputEventArgs e)
         {
-            // if a state is active, call the states mousedown method.
             if (CurrentState != null)
                 CurrentState.MouseDown(e);
         }
 
-        /// <summary>
-        /// Gorgon method
-        /// </summary>
-        /// <param name="e"></param>
         public void MouseMove(MouseInputEventArgs e)
         {
-            // if a state is active, call the states mousemove method.
             if (CurrentState != null)
                 CurrentState.MouseMove(e);
         }
@@ -126,7 +101,6 @@ namespace ClientServices.State
 
         public void RequestStateChange<T>() where T : IState
         {
-            // don't change the state if the requested state class matches the current state
             if (CurrentState == null || CurrentState.GetType() != typeof(T))
                 SwitchToState<T>();
         }

@@ -2,6 +2,7 @@
 using System.Linq;
 using System.Drawing;
 using ClientInterfaces;
+using ClientInterfaces.Collision;
 using ClientInterfaces.GOC;
 using GorgonLibrary;
 using SS13.IoC;

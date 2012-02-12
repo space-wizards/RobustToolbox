@@ -1,5 +1,6 @@
 ﻿using System;
 using ClientInterfaces;
+using ClientInterfaces.Resource;
 using GorgonLibrary;
 using GorgonLibrary.Graphics;
 
@@ -7,25 +8,15 @@ namespace ClientServices.Helpers
 {
     class GaussianBlur
     {
-        private FXShader shader;
+        private readonly FXShader _shader;
 
-        Sprite intermediateTargetSprite;
-        RenderImage intermediateTarget;
-
-        private int radius;
-        private float amount;
-        private float sigma;
-        private float[] kernel;
-        private Vector4D[] offsetsHoriz;
-        private Vector4D[] offsetsVert;
+        Sprite _intermediateTargetSprite;
+        readonly RenderImage _intermediateTarget;
 
         /// <summary>
         /// Returns the radius of the Gaussian blur filter kernel in pixels.
         /// </summary>
-        public int Radius
-        {
-            get { return radius; }
-        }
+        public int Radius { get; private set; }
 
         /// <summary>
         /// Returns the blur amount. This value is used to calculate the
@@ -33,46 +24,31 @@ namespace ClientServices.Helpers
         /// property are 2 and 3. 2 will give a more blurred result whilst 3
         /// will give a less blurred result with sharper details.
         /// </summary>
-        public float Amount
-        {
-            get { return amount; }
-        }
+        public float Amount { get; private set; }
 
         /// <summary>
         /// Returns the Gaussian blur filter's standard deviation.
         /// </summary>
-        public float Sigma
-        {
-            get { return sigma; }
-        }
+        public float Sigma { get; private set; }
 
         /// <summary>
         /// Returns the Gaussian blur filter kernel matrix. Note that the
         /// kernel returned is for a 1D Gaussian blur filter kernel matrix
         /// intended to be used in a two pass Gaussian blur operation.
         /// </summary>
-        public float[] Kernel
-        {
-            get { return kernel; }
-        }
+        public float[] Kernel { get; private set; }
 
         /// <summary>
         /// Returns the texture offsets used for the horizontal Gaussian blur
         /// pass.
         /// </summary>
-        public Vector4D[] TextureOffsetsX
-        {
-            get { return offsetsHoriz; }
-        }
+        public Vector4D[] TextureOffsetsX { get; private set; }
 
         /// <summary>
         /// Returns the texture offsets used for the vertical Gaussian blur
         /// pass.
         /// </summary>
-        public Vector4D[] TextureOffsetsY
-        {
-            get { return offsetsVert; }
-        }
+        public Vector4D[] TextureOffsetsY { get; private set; }
 
         private readonly IResourceManager _resourceManager;
 
@@ -86,10 +62,10 @@ namespace ClientServices.Helpers
         {
             _resourceManager = resourceManager;
 
-            intermediateTarget = new RenderImage("gaussianIntermediateTarget", Gorgon.Screen.Width, Gorgon.Screen.Height, ImageBufferFormats.BufferRGB888A8);
-            intermediateTargetSprite = new Sprite("gaussianIntermediateTargetSprite", intermediateTarget);
+            _intermediateTarget = new RenderImage("gaussianIntermediateTarget", Gorgon.Screen.Width, Gorgon.Screen.Height, ImageBufferFormats.BufferRGB888A8);
+            _intermediateTargetSprite = new Sprite("gaussianIntermediateTargetSprite", _intermediateTarget);
 
-            shader = _resourceManager.GetShader("GaussianBlur");
+            _shader = _resourceManager.GetShader("GaussianBlur");
             ComputeKernel(7, 5.0f);
             //ComputeOffsets(Gorgon.Screen.Width, Gorgon.Screen.Height);
             ComputeOffsets(256.0f, 256.0f);
@@ -97,15 +73,15 @@ namespace ClientServices.Helpers
 
         public void Dispose()
         {
-            if (intermediateTarget != null && Gorgon.IsInitialized)
+            if (_intermediateTarget != null && Gorgon.IsInitialized)
             {
-                intermediateTarget.ForceRelease();
-                intermediateTarget.Dispose();
+                _intermediateTarget.ForceRelease();
+                _intermediateTarget.Dispose();
             }
-            if (intermediateTargetSprite != null && Gorgon.IsInitialized)
+            if (_intermediateTargetSprite != null && Gorgon.IsInitialized)
             {
-                intermediateTargetSprite.Image = null;
-                intermediateTargetSprite = null;
+                _intermediateTargetSprite.Image = null;
+                _intermediateTargetSprite = null;
             }
         }
 
@@ -129,29 +105,27 @@ namespace ClientServices.Helpers
         /// <param name="blurAmount">Used to calculate sigma.</param>
         public void ComputeKernel(int blurRadius, float blurAmount)
         {
-            radius = blurRadius;
-            amount = blurAmount;
+            Radius = blurRadius;
+            Amount = blurAmount;
 
-            kernel = null;
-            kernel = new float[radius * 2 + 1];
-            sigma = radius / amount;
+            Kernel = null;
+            Kernel = new float[Radius * 2 + 1];
+            Sigma = Radius / Amount;
 
-            float twoSigmaSquare = 2.0f * sigma * sigma;
-            float sigmaRoot = (float)Math.Sqrt(twoSigmaSquare * Math.PI);
-            float total = 0.0f;
-            float distance = 0.0f;
-            int index = 0;
+            var twoSigmaSquare = 2.0f * Sigma * Sigma;
+            var sigmaRoot = (float)Math.Sqrt(twoSigmaSquare * Math.PI);
+            var total = 0.0f;
 
-            for (int i = -radius; i <= radius; ++i)
+            for (var i = -Radius; i <= Radius; ++i)
             {
-                distance = i * i;
-                index = i + radius;
-                kernel[index] = (float)Math.Exp(-distance / twoSigmaSquare) / sigmaRoot;
-                total += kernel[index];
+                float distance = i * i;
+                var index = i + Radius;
+                Kernel[index] = (float)Math.Exp(-distance / twoSigmaSquare) / sigmaRoot;
+                total += Kernel[index];
             }
 
-            for (int i = 0; i < kernel.Length; ++i)
-                kernel[i] /= total;
+            for (var i = 0; i < Kernel.Length; ++i)
+                Kernel[i] /= total;
         }
 
         /// <summary>
@@ -167,64 +141,47 @@ namespace ClientServices.Helpers
         /// <param name="textureHeight">The texture height in pixels.</param>
         public void ComputeOffsets(float textureWidth, float textureHeight)
         {
-            offsetsHoriz = null;
-            offsetsHoriz = new Vector4D[radius * 2 + 1];
+            TextureOffsetsX = null;
+            TextureOffsetsX = new Vector4D[Radius * 2 + 1];
 
-            offsetsVert = null;
-            offsetsVert = new Vector4D[radius * 2 + 1];
+            TextureOffsetsY = null;
+            TextureOffsetsY = new Vector4D[Radius * 2 + 1];
 
-            int index = 0;
-            float xOffset = 1.0f / textureWidth;
-            float yOffset = 1.0f / textureHeight;
+            var xOffset = 1.0f / textureWidth;
+            var yOffset = 1.0f / textureHeight;
 
-            for (int i = -radius; i <= radius; ++i)
+            for (var i = -Radius; i <= Radius; ++i)
             {
-                index = i + radius;
-                offsetsHoriz[index] = new Vector4D(i * xOffset, 0.0f, 0.0f, 0.0f);
-                offsetsVert[index] = new Vector4D(0.0f, i * yOffset, 0.0f, 0.0f);
+                var index = i + Radius;
+                TextureOffsetsX[index] = new Vector4D(i * xOffset, 0.0f, 0.0f, 0.0f);
+                TextureOffsetsY[index] = new Vector4D(0.0f, i * yOffset, 0.0f, 0.0f);
             }
         }
 
-        /// <summary>
-        /// Performs the Gaussian blur operation on the source texture image.
-        /// The Gaussian blur is performed in two passes: a horizontal blur
-        /// pass followed by a vertical blur pass. The output from the first
-        /// pass is rendered to renderTarget1. The output from the second pass
-        /// is rendered to renderTarget2. The dimensions of the blurred texture
-        /// is therefore equal to the dimensions of renderTarget2.
-        /// </summary>
-        /// <param name="srcTexture">The source image to blur.</param>
-        /// <param name="renderTarget1">Stores the output from the horizontal blur pass.</param>
-        /// <param name="renderTarget2">Stores the output from the vertical blur pass.</param>
-        /// <param name="spriteBatch">Used to draw quads for the blur passes.</param>
-        /// <returns>The resulting Gaussian blurred image.</returns>
-        public void PerformGaussianBlur(Sprite SourceSprite, RenderImage SourceImage)
+        public void PerformGaussianBlur(Sprite sourceSprite, RenderImage sourceImage)
         {
             // Perform horizontal Gaussian blur.
-            intermediateTarget.Clear(System.Drawing.Color.FromArgb(0, System.Drawing.Color.Black));
+            _intermediateTarget.Clear(System.Drawing.Color.FromArgb(0, System.Drawing.Color.Black));
             //game.GraphicsDevice.SetRenderTarget(renderTarget1);
-            Gorgon.CurrentRenderTarget = intermediateTarget;
-            Gorgon.CurrentShader = shader;
+            Gorgon.CurrentRenderTarget = _intermediateTarget;
+            Gorgon.CurrentShader = _shader;
 
-            shader.Parameters["weights"].SetValue(kernel);
-            shader.Parameters["colorMapTexture"].SetValue(SourceImage);
-            shader.Parameters["offsets"].SetValue(offsetsHoriz);
+            _shader.Parameters["weights"].SetValue(Kernel);
+            _shader.Parameters["colorMapTexture"].SetValue(sourceImage);
+            _shader.Parameters["offsets"].SetValue(TextureOffsetsX);
 
-            SourceSprite.Draw();
+            sourceSprite.Draw();
 
             // Perform vertical Gaussian blur.
-            Gorgon.CurrentRenderTarget = SourceImage;
+            Gorgon.CurrentRenderTarget = sourceImage;
             
-            shader.Parameters["colorMapTexture"].SetValue(intermediateTarget);
-            shader.Parameters["offsets"].SetValue(offsetsVert);
+            _shader.Parameters["colorMapTexture"].SetValue(_intermediateTarget);
+            _shader.Parameters["offsets"].SetValue(TextureOffsetsY);
 
-            intermediateTargetSprite.Draw();
+            _intermediateTargetSprite.Draw();
 
             Gorgon.CurrentShader = null;
             Gorgon.CurrentRenderTarget = null;
-
-            // Return the Gaussian blurred texture.
-
         }
     }
 }

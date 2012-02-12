@@ -1,9 +1,10 @@
 ﻿using System.Drawing;
+using ClientInterfaces.Lighting;
 using GorgonLibrary;
 using Lidgren.Network;
 using SS13_Shared;
 
-namespace ClientInterfaces
+namespace ClientInterfaces.Map
 {
     public interface IMapManager
     {

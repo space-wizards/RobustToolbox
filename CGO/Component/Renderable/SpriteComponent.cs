@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using ClientInterfaces;
 using ClientInterfaces.GOC;
+using ClientInterfaces.Resource;
 using GorgonLibrary.Graphics;
 using GorgonLibrary;
 using ClientWindow;

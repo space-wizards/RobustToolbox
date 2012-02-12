@@ -6,6 +6,7 @@ using System.Text;
 using System.Text.RegularExpressions;
 using ClientInterfaces;
 using ClientInterfaces.Input;
+using ClientInterfaces.Resource;
 using ClientInterfaces.UserInterface;
 using GorgonLibrary;
 using GorgonLibrary.Graphics;
@@ -67,8 +68,7 @@ namespace ClientServices.UserInterface.Components
                                         {
                                             Size = new Size(ClientArea.Width - 10, 12),
                                             Color = Color.Green
-                                        },
-                                    Position = new Point(Position.X + 2, Position.Y + ClientArea.Size.Height - 10),
+                                        }
                                 };
 
             _chatColors = new Dictionary<ChatChannel, Color>

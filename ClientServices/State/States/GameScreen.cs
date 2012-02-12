@@ -6,7 +6,6 @@ using CGO;
 using ClientInterfaces.GOC;
 using ClientInterfaces.State;
 using ClientServices.Helpers;
-using ClientServices.Network;
 using ClientServices.UserInterface.Components;
 using ClientServices.UserInterface.Inventory;
 using ClientWindow;
@@ -16,7 +15,6 @@ using GorgonLibrary.InputDevices;
 using Lidgren.Network;
 using SS13_Shared;
 using ClientServices.Lighting;
-using ClientInterfaces;
 using SS13_Shared.GO;
 
 namespace ClientServices.State.States

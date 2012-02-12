@@ -1,6 +1,10 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Drawing;
+using ClientInterfaces.Collision;
+using ClientInterfaces.Lighting;
+using ClientInterfaces.Map;
+using ClientInterfaces.Resource;
 using ClientServices.Map.Tiles.Floor;
 using ClientServices.Map.Tiles.Wall;
 using SS13_Shared;
@@ -709,7 +713,7 @@ namespace ClientServices.Map
             LightClearVisibility(light);
             var lightArrayPos = GetTileArrayPositionFromWorldPosition(lightPos);
 
-            for (int i = 0; i < 4; ++i)
+            for (var i = 0; i < 4; ++i)
             {
                 LightComputeVisibility
                 (

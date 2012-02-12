@@ -1,5 +1,6 @@
 ﻿using System;
 using ClientInterfaces.GOC;
+using ClientInterfaces.Map;
 using GorgonLibrary;
 using Lidgren.Network;
 using SS13_Shared;

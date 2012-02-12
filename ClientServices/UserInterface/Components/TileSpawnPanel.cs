@@ -1,10 +1,9 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Linq;
 using System.Drawing;
 using ClientInterfaces;
 using ClientInterfaces.Placement;
-using ClientServices.Placement;
+using ClientInterfaces.Resource;
 using GorgonLibrary;
 using GorgonLibrary.InputDevices;
 using SS13_Shared;
@@ -27,12 +26,10 @@ namespace ClientServices.UserInterface.Components
 
             _tileList = new ScrollableContainer("tilespawnlist", new Size(200, 400), _resourceManager) { Position = new Point(5, 5) };
 
-            Label searchLabel = new Label("Tile Search:", "CALIBRI", _resourceManager);
-            searchLabel.Position = new Point(210, 0);
+            var searchLabel = new Label("Tile Search:", "CALIBRI", _resourceManager) { Position = new Point(210, 0) };
             components.Add(searchLabel);
 
-            _tileSearchTextbox = new Textbox(125, _resourceManager);
-            _tileSearchTextbox.Position = new Point(210, 20);
+            _tileSearchTextbox = new Textbox(125, _resourceManager) { Position = new Point(210, 20) };
             _tileSearchTextbox.OnSubmit += tileSearchTextbox_OnSubmit;
             components.Add(_tileSearchTextbox);
 
@@ -43,7 +40,7 @@ namespace ClientServices.UserInterface.Components
                                   Position = new Point(210, 55)
                               };
 
-            _clearLabel.Clicked += clearLabel_Clicked;
+            _clearLabel.Clicked += ClearLabelClicked;
             _clearLabel.BackgroundColor = Color.Gray;
             components.Add(_clearLabel);
 
@@ -53,7 +50,7 @@ namespace ClientServices.UserInterface.Components
             _placementManager.PlacementCanceled += PlacementManagerPlacementCanceled;
         }
 
-        void clearLabel_Clicked(Label sender)
+        void ClearLabelClicked(Label sender)
         {
             _clearLabel.BackgroundColor = Color.Gray;
             BuildTileList();
@@ -72,13 +69,13 @@ namespace ClientServices.UserInterface.Components
 
         private void BuildTileList(string searchStr = null)
         {
-            int max_width = 0;
-            int y_offset = 5;
+            var maxWidth = 0;
+            var yOffset = 5;
 
             _tileList.components.Clear();
             _tileList.ResetScrollbars();
 
-            List<string> typeNames = (searchStr == null) ?
+            var typeNames = (searchStr == null) ?
                 Enum.GetNames(typeof(TileType)).Where(x => x.ToLower() != "none").ToList() :
                 Enum.GetNames(typeof(TileType)).Where(x => x.ToLower().Contains(searchStr.ToLower()) && x.ToLower() != "none").ToList();
         
@@ -88,32 +85,31 @@ namespace ClientServices.UserInterface.Components
             {
                 var tileLabel = new Label(entry, "CALIBRI", _resourceManager);
                 _tileList.components.Add(tileLabel);
-                tileLabel.Position = new Point(5, y_offset);
+                tileLabel.Position = new Point(5, yOffset);
                 tileLabel.DrawBackground = true;
                 tileLabel.DrawBorder = true;
                 tileLabel.Update();
-                y_offset += 5 + tileLabel.ClientArea.Height;
-                tileLabel.Clicked += new Label.LabelPressHandler(tileLabel_Clicked);
-                if (tileLabel.ClientArea.Width > max_width) max_width = tileLabel.ClientArea.Width;
+                yOffset += 5 + tileLabel.ClientArea.Height;
+                tileLabel.Clicked += TileLabelClicked;
+                if (tileLabel.ClientArea.Width > maxWidth) maxWidth = tileLabel.ClientArea.Width;
             }
 
-            foreach (GuiComponent curr in _tileList.components)
-                if (curr.GetType() == typeof(Label))
-                    ((Label)curr).FixedWidth = max_width;
+            foreach (var curr in _tileList.components.Where(curr => curr.GetType() == typeof(Label)))
+                ((Label)curr).FixedWidth = maxWidth;
         }
 
-        void tileLabel_Clicked(Label sender)
+        void TileLabelClicked(Label sender)
         {
-            foreach (GuiComponent curr in _tileList.components)
-                if (curr.GetType() == typeof(Label))
-                    ((Label)curr).BackgroundColor = Color.Gray;
+            foreach (var curr in _tileList.components.Where(curr => curr.GetType() == typeof(Label)))
+                ((Label)curr).BackgroundColor = Color.Gray;
 
-            var newObjInfo = new PlacementInformation();
-
-            newObjInfo.PlacementOption = PlacementOption.AlignTileAnyFree;
-            newObjInfo.TileType = (TileType)Enum.Parse(typeof(TileType), sender.Text.Text, true);
-            newObjInfo.Range = 400;
-            newObjInfo.IsTile = true;
+            var newObjInfo = new PlacementInformation
+                                 {
+                                     PlacementOption = PlacementOption.AlignTileAnyFree,
+                                     TileType = (TileType) Enum.Parse(typeof (TileType), sender.Text.Text, true),
+                                     Range = 400,
+                                     IsTile = true
+                                 };
 
             _placementManager.BeginPlacing(newObjInfo);
 
@@ -167,7 +163,6 @@ namespace ClientServices.UserInterface.Components
             if (disposing || !IsVisible()) return;
             _tileList.MouseMove(e);
             base.MouseMove(e);
-            return;
         }
 
         public override bool MouseWheelMove(MouseInputEventArgs e)

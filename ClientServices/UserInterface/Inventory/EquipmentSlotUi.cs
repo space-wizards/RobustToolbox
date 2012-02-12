@@ -3,6 +3,7 @@ using System.Drawing;
 using ClientInterfaces;
 using ClientInterfaces.GOC;
 using ClientInterfaces.Player;
+using ClientInterfaces.Resource;
 using ClientInterfaces.UserInterface;
 using ClientServices.Helpers;
 using ClientServices.UserInterface.Components;

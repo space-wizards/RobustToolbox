@@ -1,4 +1,6 @@
-﻿using ClientServices.Resources;
+﻿using ClientInterfaces.Lighting;
+using ClientInterfaces.Resource;
+using ClientServices.Resources;
 using GorgonLibrary;
 using GorgonLibrary.Graphics;
 using System.Drawing;

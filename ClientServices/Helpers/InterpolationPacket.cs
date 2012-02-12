@@ -5,47 +5,46 @@ namespace ClientServices.Helpers
 {
     public struct InterpolationPacket
     {
-        public double time;
-        public Vector2D position;
-        public float rotation;
-        public int iterations;
-        public Vector2D startposition;
+        public double Time;
+        public Vector2D Position;
+        public float Rotation;
+        public int Iterations;
+        public Vector2D Startposition;
 
-        public InterpolationPacket(Vector2D _position, float _rotation, double _time)
+        public InterpolationPacket(Vector2D position, float rotation, double time)
         {
-            this.position = _position;
-            this.rotation = _rotation;
-            this.time = _time;
-            iterations = 0;
-            startposition = new Vector2D(1234, 1234);
+            Position = position;
+            Rotation = rotation;
+            Time = time;
+            Iterations = 0;
+            Startposition = new Vector2D(1234, 1234);
         }
 
-        public InterpolationPacket(float x, float y, float _rotation, double _time)
+        public InterpolationPacket(float x, float y, float rotation, double time)
         {
-            this.position = new Vector2D(x, y);
-            this.rotation = _rotation;
-            this.time = _time;
-            iterations = 0;
-            startposition = new Vector2D(1234, 1234);
+            Position = new Vector2D(x, y);
+            Rotation = rotation;
+            Time = time;
+            Iterations = 0;
+            Startposition = new Vector2D(1234, 1234);
         }
 
         public InterpolationPacket(NetIncomingMessage message)
         {
-            float x = message.ReadFloat();
-            float y = message.ReadFloat();
-            position = new Vector2D(x, y);
-            rotation = message.ReadFloat();
-            time = 0;
-            iterations = 0;
-            startposition = new Vector2D(1234, 1234);
+            var x = message.ReadFloat();
+            var y = message.ReadFloat();
+            Position = new Vector2D(x, y);
+            Rotation = message.ReadFloat();
+            Time = 0;
+            Iterations = 0;
+            Startposition = new Vector2D(1234, 1234);
         }
 
         public void WriteMessage(NetOutgoingMessage message)
         {
-            message.Write(position.X);
-            message.Write(position.Y);
-            message.Write(rotation);
+            message.Write(Position.X);
+            message.Write(Position.Y);
+            message.Write(Rotation);
         }
-
     }
 }

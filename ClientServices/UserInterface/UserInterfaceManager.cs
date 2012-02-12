@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using ClientInterfaces.Resource;
 using ClientInterfaces.UserInterface;
 using SS13_Shared;
 using Lidgren.Network;

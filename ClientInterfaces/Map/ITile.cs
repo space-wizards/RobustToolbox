@@ -3,7 +3,7 @@ using GorgonLibrary;
 using GorgonLibrary.Graphics;
 using SS13_Shared;
 
-namespace ClientInterfaces
+namespace ClientInterfaces.Map
 {
     public interface ITile
     {

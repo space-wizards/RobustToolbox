@@ -1,5 +1,6 @@
 ﻿using System.Drawing;
 using ClientInterfaces;
+using ClientInterfaces.Resource;
 using ClientInterfaces.State;
 using ClientInterfaces.UserInterface;
 using ClientServices.State.States;

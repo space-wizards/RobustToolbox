@@ -1,10 +1,6 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Drawing;
+﻿using System.Drawing;
 
-namespace ClientInterfaces
+namespace ClientInterfaces.Collision
 {
     public interface ICollisionManager
     {

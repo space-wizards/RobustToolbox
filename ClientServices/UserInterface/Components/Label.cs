@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Drawing;
 using ClientInterfaces;
+using ClientInterfaces.Resource;
 using GorgonLibrary;
 using GorgonLibrary.Graphics;
 using GorgonLibrary.InputDevices;
@@ -16,11 +17,13 @@ namespace ClientServices.UserInterface.Components
         public delegate void LabelPressHandler(Label sender);
         public event LabelPressHandler Clicked;
 
-        public bool DrawBorder;
-        public bool DrawBackground;
+        public bool DrawBorder { get; set; }
+        public bool DrawBackground { get; set; }
+        public bool DrawTextHighlight { get; set; }
 
         public Color BorderColor = Color.Black;
         public Color BackgroundColor = Color.Gray;
+        public Color HighlightColor = Color.Gray;
 
         public int FixedWidth = -1;
         public int FixedHeight = -1;
@@ -43,6 +46,7 @@ namespace ClientServices.UserInterface.Components
         public override void Render()
         {
             if (DrawBackground) Gorgon.Screen.FilledRectangle(ClientArea.X, ClientArea.Y, ClientArea.Width, ClientArea.Height, BackgroundColor);
+            if (DrawTextHighlight) Gorgon.Screen.FilledRectangle(Text.Position.X + 1, Text.Position.Y + 4, Text.Width, Text.Height - 9, BackgroundColor);
             if (DrawBorder) Gorgon.Screen.Rectangle(ClientArea.X, ClientArea.Y, ClientArea.Width, ClientArea.Height, BorderColor);
             Text.Draw();
         }

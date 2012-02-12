@@ -77,8 +77,6 @@
     <Compile Include="Collision\CollisionManager.cs" />
     <Compile Include="Configuration\ConfigurationManager.cs" />
     <Compile Include="Configuration\Configuration.cs" />
-    <Compile Include="Exceptions\ExistingClientServiceException.cs" />
-    <Compile Include="Exceptions\UnregisteredClientServiceException.cs" />
     <Compile Include="Helpers\GaussianBlur.cs" />
     <Compile Include="Helpers\InterpolationPacket.cs" />
     <Compile Include="Helpers\StarScroller.cs" />

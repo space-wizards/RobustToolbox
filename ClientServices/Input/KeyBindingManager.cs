@@ -49,10 +49,6 @@ namespace ClientServices.Input
             _keyboard.KeyUp -= KeyUp;
         }
 
-        /// <summary>
-        /// Sets up singleton, binds to the Keyboard device
-        /// </summary>
-        /// <param name="keyboard"></param>
         public void Initialize(Keyboard keyboard)
         {
             Enabled = true;
@@ -60,33 +56,21 @@ namespace ClientServices.Input
             LoadKeys();
         }
 
-        /// <summary>
-        /// Handles key down events from the gorgon keyboard object
-        /// </summary>
-        /// <param name="sender"></param>
-        /// <param name="e"></param>
-        public void KeyDown(object sender, KeyboardInputEventArgs e)
+        private void KeyDown(object sender, KeyboardInputEventArgs e)
         {
             //If the key is bound, fire the BoundKeyDown event.
             if (Enabled && _boundKeys.Keys.Contains(e.Key) && BoundKeyDown != null)
                 BoundKeyDown(this, new BoundKeyEventArgs(BoundKeyState.Down, _boundKeys[e.Key]));
         }
-        /// <summary>
-        /// Handles key up events from the gorgon keyboard object
-        /// </summary>
-        /// <param name="sender"></param>
-        /// <param name="e"></param>
-        public void KeyUp(object sender, KeyboardInputEventArgs e)
+
+        private void KeyUp(object sender, KeyboardInputEventArgs e)
         {
             //If the key is bound, fire the BoundKeyUp event.
             if (Enabled && _boundKeys.Keys.Contains(e.Key) && BoundKeyUp != null)
                 BoundKeyUp(this, new BoundKeyEventArgs(BoundKeyState.Up, _boundKeys[e.Key]));
         }
 
-        /// <summary>
-        /// Loads key bindings from KeyBindings.xml in the bin directory
-        /// </summary>
-        public void LoadKeys()
+        private void LoadKeys()
         {
             var xml = new XmlDocument();
             var kb = new StreamReader("KeyBindings.xml");
@@ -101,9 +85,5 @@ namespace ClientServices.Input
                         (BoundKeyFunctions)Enum.Parse(typeof(BoundKeyFunctions), node.Attributes["Function"].Value, false));
                 }
         }
-
     }
-
-
-
 }

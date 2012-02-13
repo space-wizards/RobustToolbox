@@ -29,7 +29,7 @@ namespace ClientServices.UserInterface.Components
             unbanButton.Clicked += UnbanButtonClicked;
             components.Add(unbanButton);
 
-            Position = new Point((int)(Gorgon.Screen.Width / 2f) - (int)(ClientArea.Width / 2f), (int)(Gorgon.Screen.Height / 2f) - (int)(ClientArea.Height / 2f));
+            Position = new Point((int)(Gorgon.CurrentRenderTarget.Width / 2f) - (int)(ClientArea.Width / 2f), (int)(Gorgon.CurrentRenderTarget.Height / 2f) - (int)(ClientArea.Height / 2f));
         }
 
         void UnbanButtonClicked(Button sender)
@@ -65,13 +65,13 @@ namespace ClientServices.UserInterface.Components
 
                 components.Add(line);
 
-                var kickButton = new Button("Kick", _resourceManager) { Position = new Point(line.ClientArea.Right + 10, yOffset) };
+                var kickButton = new Button("Kick", _resourceManager) { Position = new Point(line.ClientArea.Right + 10, yOffset + (int)(line.ClientArea.Height / 3f)) };
                 components.Add(kickButton);
                 kickButton.UserData = ip;
                 kickButton.Clicked += KickButtonClicked;
                 kickButton.Update();
 
-                var banButt = new Button("Ban", _resourceManager) { Position = new Point(kickButton.ClientArea.Right + 5, yOffset) };
+                var banButt = new Button("Ban", _resourceManager) { Position = new Point(kickButton.ClientArea.Right + 5, yOffset + (int)(line.ClientArea.Height / 3f)) };
                 components.Add(banButt);
                 banButt.UserData = ip;
                 banButt.Clicked += BanButtonClicked;

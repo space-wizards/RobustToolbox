@@ -89,6 +89,10 @@ namespace ClientServices.UserInterface.Components
                 dragging = true;
                 return true;
             }
+            else if (ClientArea.Contains((int)e.Position.X, (int)e.Position.Y))
+            {
+                return true;
+            }
             return false;
         }
 
@@ -152,14 +156,12 @@ namespace ClientServices.UserInterface.Components
         public override void Render()
         {
             if (!IsVisible()) return;
-            Gorgon.Screen.BeginDrawing();
-            if (drawBackground) Gorgon.Screen.FilledRectangle(ClientArea.X, ClientArea.Y, ClientArea.Width, ClientArea.Height, System.Drawing.Color.DarkSlateGray);
+            if (drawBackground) Gorgon.CurrentRenderTarget.FilledRectangle(ClientArea.X, ClientArea.Y, ClientArea.Width, ClientArea.Height, System.Drawing.Color.DarkSlateGray);
             scrollbarButton.Draw(clientAreaButton);
             DEBUG.Position = new Vector2D(ClientArea.Location.X + 20, ClientArea.Location.Y + 20);
             DEBUG.Text = "current: " + actualVal.ToString();
             if (DRAW_DEBUG) DEBUG.Draw();
-            Gorgon.Screen.Rectangle(ClientArea.X + 0, ClientArea.Y + 0, ClientArea.Width - 0, ClientArea.Height - 0, System.Drawing.Color.Black);
-            Gorgon.Screen.EndDrawing();
+            Gorgon.CurrentRenderTarget.Rectangle(ClientArea.X + 0, ClientArea.Y + 0, ClientArea.Width - 0, ClientArea.Height - 0, System.Drawing.Color.Black);
         }
 
     }

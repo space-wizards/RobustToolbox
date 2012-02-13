@@ -39,15 +39,15 @@ namespace ClientServices.UserInterface.Components
 
         public override void Update()
         {
-            _message.Position = new Point((int)(Gorgon.Screen.Width / 2f - _message.ClientArea.Width / 2f), (int)(Gorgon.Screen.Height / 2f - _message.ClientArea.Height / 2f) - 50);
+            _message.Position = new Point((int)(Gorgon.CurrentRenderTarget.Width / 2f - _message.ClientArea.Width / 2f), (int)(Gorgon.CurrentRenderTarget.Height / 2f - _message.ClientArea.Height / 2f) - 50);
             _message.Update();
-            _mainMenuButton.Position = new Point((int)(Gorgon.Screen.Width / 2f - _message.ClientArea.Width / 2f), _message.ClientArea.Bottom + 20);
+            _mainMenuButton.Position = new Point((int)(Gorgon.CurrentRenderTarget.Width / 2f - _message.ClientArea.Width / 2f), _message.ClientArea.Bottom + 20);
             _mainMenuButton.Update();
         }
 
         public override void Render()
         {
-            Gorgon.Screen.FilledRectangle(0,0,Gorgon.Screen.Width, Gorgon.Screen.Height, Color.Black);
+            Gorgon.CurrentRenderTarget.FilledRectangle(0,0,Gorgon.CurrentRenderTarget.Width, Gorgon.CurrentRenderTarget.Height, Color.Black);
             _message.Render();
             _mainMenuButton.Render();
         }

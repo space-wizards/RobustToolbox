@@ -7,6 +7,7 @@ using GorgonLibrary;
 using GorgonLibrary.Graphics;
 using GorgonLibrary.InputDevices;
 using SS13_Shared;
+using System.Drawing;
 
 namespace ClientServices.State.States
 {
@@ -74,6 +75,7 @@ namespace ClientServices.State.States
             NetworkManager.SendMessage(jobListMsg, NetDeliveryMethod.ReliableOrdered);
 
             var joinButton = new Button("Join Game", ResourceManager);
+            joinButton.mouseOverColor = Color.LightSteelBlue;
             joinButton.Clicked += JoinButtonClicked;
             joinButton.Position = new System.Drawing.Point(605 - joinButton.ClientArea.Width - 5, 200 - joinButton.ClientArea.Height - 5);
             UserInterfaceManager.AddComponent(joinButton);
@@ -85,7 +87,7 @@ namespace ClientServices.State.States
 
             UserInterfaceManager.AddComponent(_jobButtonContainer);
 
-            Gorgon.Screen.Clear();
+            Gorgon.CurrentRenderTarget.Clear();
         }
 
         void JoinButtonClicked(Button sender)
@@ -100,10 +102,10 @@ namespace ClientServices.State.States
 
         public void GorgonRender(FrameEventArgs e)
         {
-            Gorgon.Screen.Clear();
-            Gorgon.Screen.FilledRectangle(5, 5, 600, 200, System.Drawing.Color.SlateGray);
-            Gorgon.Screen.FilledRectangle(625, 5, Gorgon.Screen.Width - 625 - 5, Gorgon.Screen.Height - 5 - 6, System.Drawing.Color.SlateGray);
-            Gorgon.Screen.FilledRectangle(5, 220, 600, _lobbyChat.Position.Y - 250 - 5, System.Drawing.Color.SlateGray);
+            Gorgon.CurrentRenderTarget.Clear();
+            Gorgon.CurrentRenderTarget.FilledRectangle(5, 5, 600, 200, System.Drawing.Color.SlateGray);
+            Gorgon.CurrentRenderTarget.FilledRectangle(625, 5, Gorgon.CurrentRenderTarget.Width - 625 - 5, Gorgon.CurrentRenderTarget.Height - 5 - 6, System.Drawing.Color.SlateGray);
+            Gorgon.CurrentRenderTarget.FilledRectangle(5, 220, 600, _lobbyChat.Position.Y - 250 - 5, System.Drawing.Color.SlateGray);
             _lobbyText.Position = new Vector2D(10, 10);
             _lobbyText.Text = "Server: " + _serverName;
             _lobbyText.Draw();

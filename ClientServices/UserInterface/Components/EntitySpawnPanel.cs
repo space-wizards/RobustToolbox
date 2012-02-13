@@ -29,6 +29,7 @@ namespace ClientServices.UserInterface.Components
             _placementManager = placementManager;
 
             _entityList = new ScrollableContainer("entspawnlist", new Size(200, 400), _resourceManager) {Position = new Point(5, 5)};
+            components.Add(_entityList);
 
             var searchLabel = new Label("Entity Search:", "CALIBRI", _resourceManager) { Position = new Point(210, 0) };
             components.Add(searchLabel);
@@ -59,7 +60,7 @@ namespace ClientServices.UserInterface.Components
 
             BuildEntityList();
 
-            Position = new Point((int)(Gorgon.Screen.Width / 2f) - (int)(ClientArea.Width / 2f), (int)(Gorgon.Screen.Height / 2f) - (int)(ClientArea.Height / 2f));
+            Position = new Point((int)(Gorgon.CurrentRenderTarget.Width / 2f) - (int)(ClientArea.Width / 2f), (int)(Gorgon.CurrentRenderTarget.Height / 2f) - (int)(ClientArea.Height / 2f));
             _placementManager.PlacementCanceled += PlacementManagerPlacementCanceled;
         }
 
@@ -144,11 +145,6 @@ namespace ClientServices.UserInterface.Components
         {
             if (disposing || !IsVisible()) return;
             base.Update();
-            if (_entityList != null)
-            {
-                _entityList.Position = new Point(ClientArea.X + 5, ClientArea.Y + 5);
-                _entityList.Update();
-            }
         }
 
         public override void Render()
@@ -156,7 +152,6 @@ namespace ClientServices.UserInterface.Components
             if (disposing || !IsVisible()) return;
             _eraserButton.Color = _placementManager.Eraser ? Color.Tomato : Color.White;
             base.Render();
-            _entityList.Render();
         }
 
         public override void Dispose()
@@ -170,7 +165,6 @@ namespace ClientServices.UserInterface.Components
         public override bool MouseDown(MouseInputEventArgs e)
         {
             if (disposing || !IsVisible()) return false;
-            if (_entityList.MouseDown(e)) return true;
             if (base.MouseDown(e)) return true;
             return false;
         }
@@ -178,7 +172,6 @@ namespace ClientServices.UserInterface.Components
         public override bool MouseUp(MouseInputEventArgs e)
         {
             if (disposing || !IsVisible()) return false;
-            if (_entityList.MouseUp(e)) return true;
             if (base.MouseUp(e)) return true;
             return false;
         }
@@ -186,20 +179,17 @@ namespace ClientServices.UserInterface.Components
         public override void MouseMove(MouseInputEventArgs e)
         {
             if (disposing || !IsVisible()) return;
-            _entityList.MouseMove(e);
             base.MouseMove(e);
         }
 
         public override bool MouseWheelMove(MouseInputEventArgs e)
         {
-            if (_entityList.MouseWheelMove(e)) return true;
             if (base.MouseWheelMove(e)) return true;
             return false;
         }
 
         public override bool KeyDown(KeyboardInputEventArgs e)
         {
-            if (_entityList.KeyDown(e)) return true;
             if (base.KeyDown(e)) return true;
             return false;
         }

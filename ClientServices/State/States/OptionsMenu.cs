@@ -43,7 +43,7 @@ namespace ClientServices.State.States
             _lblfullscreen = new Label("Fullscreen", "CALIBRI", ResourceManager);
             _chkfullscreen.ValueChanged += new Checkbox.CheckboxChangedHandler(_chkfullscreen_ValueChanged);
 
-            _reslistbox = new Listbox(new Size(150, 250), 150, ResourceManager);
+            _reslistbox = new Listbox(250, 150, ResourceManager);
             _reslistbox.ItemSelected += new Listbox.ListboxPressHandler(_reslistbox_ItemSelected);
 
             var modes = from v in Gorgon.CurrentDriver.VideoModes

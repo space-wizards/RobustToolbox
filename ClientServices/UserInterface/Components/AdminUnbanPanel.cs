@@ -26,7 +26,7 @@ namespace ClientServices.UserInterface.Components
             closeButton.Clicked += CloseButtonClicked;
             components.Add(closeButton);
 
-            Position = new Point((int)(Gorgon.Screen.Width / 2f) - (int)(ClientArea.Width / 2f), (int)(Gorgon.Screen.Height / 2f) - (int)(ClientArea.Height / 2f));
+            Position = new Point((int)(Gorgon.CurrentRenderTarget.Width / 2f) - (int)(ClientArea.Width / 2f), (int)(Gorgon.CurrentRenderTarget.Height / 2f) - (int)(ClientArea.Height / 2f));
         }
 
         void CloseButtonClicked(Button sender)
@@ -45,8 +45,7 @@ namespace ClientServices.UserInterface.Components
                                {Position = new Point(5, yOffset + 5)};
 
                 components.Add(line);
-                var unbanButton = new Button("Unban", _resourceManager)
-                                      {Position = new Point(line.ClientArea.Right + 10, yOffset)};
+                var unbanButton = new Button("Unban", _resourceManager) { Position = new Point(line.ClientArea.Right + 10, yOffset + (int)(line.ClientArea.Height / 3f)) };
 
                 components.Add(unbanButton);
                 unbanButton.UserData = entry.ip;

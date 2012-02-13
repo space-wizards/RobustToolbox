@@ -45,9 +45,9 @@ namespace ClientServices.UserInterface.Components
 
         public override void Render()
         {
-            if (DrawBackground) Gorgon.Screen.FilledRectangle(ClientArea.X, ClientArea.Y, ClientArea.Width, ClientArea.Height, BackgroundColor);
-            if (DrawTextHighlight) Gorgon.Screen.FilledRectangle(Text.Position.X + 1, Text.Position.Y + 4, Text.Width, Text.Height - 9, BackgroundColor);
-            if (DrawBorder) Gorgon.Screen.Rectangle(ClientArea.X, ClientArea.Y, ClientArea.Width, ClientArea.Height, BorderColor);
+            if (DrawBackground) Gorgon.CurrentRenderTarget.FilledRectangle(ClientArea.X, ClientArea.Y, ClientArea.Width, ClientArea.Height, BackgroundColor);
+            if (DrawTextHighlight) Gorgon.CurrentRenderTarget.FilledRectangle(Text.Position.X + 1, Text.Position.Y + 4, Text.Width, Text.Height - 9, BackgroundColor);
+            if (DrawBorder) Gorgon.CurrentRenderTarget.Rectangle(ClientArea.X, ClientArea.Y, ClientArea.Width, ClientArea.Height, BorderColor);
             Text.Draw();
         }
 

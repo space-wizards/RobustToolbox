@@ -103,7 +103,7 @@ namespace ClientServices.UserInterface.Components
             if (disposing || !IsVisible()) return;
             clippingRI.Clear(System.Drawing.Color.Transparent);
             clippingRI.BeginDrawing();
-            if (DrawBackground) Gorgon.Screen.FilledRectangle(0, 0, ClientArea.Width, ClientArea.Height, BackgroundColor);
+            if (DrawBackground) Gorgon.CurrentRenderTarget.FilledRectangle(0, 0, ClientArea.Width, ClientArea.Height, BackgroundColor);
             foreach (GuiComponent component in components)
             {
                 Point oldPos = component.Position;
@@ -117,7 +117,7 @@ namespace ClientServices.UserInterface.Components
             clippingRI.Blit(Position.X, Position.Y);
             scrollbarH.Render();
             scrollbarV.Render();
-            Gorgon.Screen.Rectangle(ClientArea.X, ClientArea.Y, ClientArea.Width, ClientArea.Height, System.Drawing.Color.Black);
+            Gorgon.CurrentRenderTarget.Rectangle(ClientArea.X, ClientArea.Y, ClientArea.Width, ClientArea.Height, System.Drawing.Color.Black);
         }
 
         public override void Dispose()

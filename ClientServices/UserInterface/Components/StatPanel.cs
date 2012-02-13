@@ -45,7 +45,7 @@ namespace ClientServices.UserInterface.Components
 
             ComponentClass = GuiComponentType.StatPanelComponent;
 
-            Position = new Point(604, Gorgon.Screen.Height - 205);
+            Position = new Point(604, Gorgon.CurrentRenderTarget.Height - 205);
 
             _name = new Label("Name", "CALIBRI", _resourceManager) { Text = { Text = playerName } };
 

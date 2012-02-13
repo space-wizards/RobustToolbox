@@ -401,11 +401,11 @@ namespace ClientServices.Placement
                     _currentPermission.PlacementOption == PlacementOption.AlignTileSolid ||
                     _currentPermission.PlacementOption == PlacementOption.AlignWall)   //If it uses range, show the range.
                 {
-                    Gorgon.Screen.Circle(
+                    Gorgon.CurrentRenderTarget.Circle(
                         _playerManager.ControlledEntity.Position.X - ClientWindowData.Singleton.ScreenOrigin.X,
                         _playerManager.ControlledEntity.Position.Y - ClientWindowData.Singleton.ScreenOrigin.Y,
                         _currentPermission.Range,
-                        Color.DeepSkyBlue,
+                        Color.White,
                         new Vector2D(2, 2));
                 }
             }

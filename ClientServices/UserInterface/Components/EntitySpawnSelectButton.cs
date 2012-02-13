@@ -72,8 +72,8 @@ namespace ClientServices.UserInterface.Components
 
         public override void Render()
         {
-            Gorgon.Screen.FilledRectangle(ClientArea.X, ClientArea.Y, ClientArea.Width, ClientArea.Height, selected ? Color.ForestGreen : Color.FloralWhite);
-            Gorgon.Screen.Rectangle(ClientArea.X, ClientArea.Y, ClientArea.Width, ClientArea.Height, Color.Black);
+            Gorgon.CurrentRenderTarget.FilledRectangle(ClientArea.X, ClientArea.Y, ClientArea.Width, ClientArea.Height, selected ? Color.ForestGreen : Color.FloralWhite);
+            Gorgon.CurrentRenderTarget.Rectangle(ClientArea.X, ClientArea.Y, ClientArea.Width, ClientArea.Height, Color.Black);
             objectSprite.Draw();
             name.Draw();
         }

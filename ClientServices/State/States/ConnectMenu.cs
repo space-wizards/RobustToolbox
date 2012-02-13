@@ -154,7 +154,7 @@ namespace ClientServices.State.States
 
         public void GorgonRender(FrameEventArgs e)
         {
-            _background.Draw(new Rectangle(0, 0, Gorgon.Screen.Width, Gorgon.Screen.Height));
+            _background.Draw(new Rectangle(0, 0, Gorgon.CurrentRenderTarget.Width, Gorgon.CurrentRenderTarget.Height));
             UserInterfaceManager.Render();
         }
         public void FormResize()

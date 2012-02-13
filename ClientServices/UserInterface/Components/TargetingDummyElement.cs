@@ -70,9 +70,9 @@ namespace ClientServices.UserInterface.Components
 
             if (!_selected) return;
 
-            Gorgon.Screen.Circle(Position.X + _clickPoint.X, Position.Y + _clickPoint.Y, 5, Color.Black);
-            Gorgon.Screen.Circle(Position.X + _clickPoint.X, Position.Y + _clickPoint.Y, 4, Color.DarkRed);
-            Gorgon.Screen.Circle(Position.X + _clickPoint.X, Position.Y + _clickPoint.Y, 3, Color.Black);
+            Gorgon.CurrentRenderTarget.Circle(Position.X + _clickPoint.X, Position.Y + _clickPoint.Y, 5, Color.Black);
+            Gorgon.CurrentRenderTarget.Circle(Position.X + _clickPoint.X, Position.Y + _clickPoint.Y, 4, Color.DarkRed);
+            Gorgon.CurrentRenderTarget.Circle(Position.X + _clickPoint.X, Position.Y + _clickPoint.Y, 3, Color.Black);
         }
 
         public override void Dispose()

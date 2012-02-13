@@ -57,8 +57,8 @@ namespace ClientServices.UserInterface.Components
             _userInterfaceManager = userInterfaceManager;
             _keyBindingManager = keyBindingManager;
             
-            ClientArea = new Rectangle(5, Gorgon.Screen.Height - 205, 600, 200); //!!! Use this instead of Window Dimensions
-            Position = new Point(5, Gorgon.Screen.Height - 205);
+            ClientArea = new Rectangle(5, Gorgon.CurrentRenderTarget.Height - 205, 600, 200); //!!! Use this instead of Window Dimensions
+            Position = new Point(5, Gorgon.CurrentRenderTarget.Height - 205);
 
             _backgroundSprite = _resourceManager.GetSprite("1pxwhite");
 

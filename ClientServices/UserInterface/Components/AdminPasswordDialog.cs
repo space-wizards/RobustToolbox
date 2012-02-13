@@ -26,10 +26,11 @@ namespace ClientServices.UserInterface.Components
             _textboxPassword = new Textbox((int)(size.Width / 2f), _resourceManager);
             _okayButton = new Button("Submit", _resourceManager);
             _okayButton.Clicked += OkayButtonClicked;
+            _okayButton.mouseOverColor = Color.LightSkyBlue;
             _textboxPassword.OnSubmit += textboxPassword_OnSubmit;
             components.Add(_textboxPassword);
             components.Add(_okayButton);
-            Position = new Point((int)(Gorgon.Screen.Width / 2f) - (int)(ClientArea.Width / 2f), (int)(Gorgon.Screen.Height / 2f) - (int)(ClientArea.Height / 2f));
+            Position = new Point((int)(Gorgon.CurrentRenderTarget.Width / 2f) - (int)(ClientArea.Width / 2f), (int)(Gorgon.CurrentRenderTarget.Height / 2f) - (int)(ClientArea.Height / 2f));
         }
 
         void textboxPassword_OnSubmit(string text)

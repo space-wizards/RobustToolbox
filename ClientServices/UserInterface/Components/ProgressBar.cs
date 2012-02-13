@@ -61,9 +61,9 @@ namespace ClientServices.UserInterface.Components
             percent = (float)(val - min) / (float)(max - min);
             float barWidth = (float)Size.Width * percent;
 
-            Gorgon.Screen.FilledRectangle(ClientArea.X, ClientArea.Y, ClientArea.Width, ClientArea.Height, backgroundColor);
-            Gorgon.Screen.FilledRectangle(ClientArea.X, ClientArea.Y, barWidth, ClientArea.Height, barColor);
-            Gorgon.Screen.Rectangle(ClientArea.X, ClientArea.Y, ClientArea.Width, ClientArea.Height, borderColor);
+            Gorgon.CurrentRenderTarget.FilledRectangle(ClientArea.X, ClientArea.Y, ClientArea.Width, ClientArea.Height, backgroundColor);
+            Gorgon.CurrentRenderTarget.FilledRectangle(ClientArea.X, ClientArea.Y, barWidth, ClientArea.Height, barColor);
+            Gorgon.CurrentRenderTarget.Rectangle(ClientArea.X, ClientArea.Y, ClientArea.Width, ClientArea.Height, borderColor);
 
             Text.Draw();
         }

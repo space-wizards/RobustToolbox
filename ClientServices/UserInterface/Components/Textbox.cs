@@ -4,6 +4,7 @@ using ClientInterfaces;
 using ClientInterfaces.Resource;
 using GorgonLibrary.Graphics;
 using GorgonLibrary.InputDevices;
+using System.Diagnostics;
 
 namespace ClientServices.UserInterface.Components
 {
@@ -24,11 +25,25 @@ namespace ClientServices.UserInterface.Components
         private Rectangle _clientAreaLeft;
         private Rectangle _clientAreaRight;
 
-        public string Text = "";
+        public string Text
+        {
+            get { return text; }
+            set
+            {
+                text = value;
+                SetVisibleText();
+            }
+        }
+
+        private string text = "";
+        private string displayText = "";
+
         public bool ClearOnSubmit = true;
         public bool ClearFocusOnSubmit = true;
         public int MaxCharacters = 20;
         public int Width;
+
+        private byte blinkCount = 0; //Look at this shitty framerate dependant blinking bar. What a load of shit. I dont care!
 
         public Textbox(int width, IResourceManager resourceManager)
         {
@@ -50,11 +65,13 @@ namespace ClientServices.UserInterface.Components
             _clientAreaLeft = new Rectangle(Position, new Size((int)_textboxLeft.Width, (int)_textboxLeft.Height));
             _clientAreaMain = new Rectangle(new Point(_clientAreaLeft.Right, Position.Y), new Size(Width, (int)_textboxMain.Height));
             _clientAreaRight = new Rectangle(new Point(_clientAreaMain.Right, Position.Y), new Size((int)_textboxRight.Width, (int)_textboxRight.Height));
-            ClientArea = new Rectangle(Position, new Size(_clientAreaLeft.Width + _clientAreaMain.Width + _clientAreaRight.Width, _clientAreaMain.Height));
+            ClientArea = new Rectangle(Position, new Size(_clientAreaLeft.Width + _clientAreaMain.Width + _clientAreaRight.Width, Math.Max(Math.Max(_clientAreaLeft.Height,_clientAreaRight.Height), _clientAreaMain.Height)));
             Label.Position = new Point(_clientAreaLeft.Right, Position.Y + (int)(ClientArea.Height / 2f) - (int)(Label.Height / 2f));
 
-            if (Focus) Label.Text = Text + "|";
-            else Label.Text = Text;
+            if (Focus) Label.Text = displayText + (blinkCount++ < 100 ? "|" : "");
+            else Label.Text = displayText;
+
+            if (blinkCount > 150) blinkCount = 0;
         }
 
         public override void Render()
@@ -102,6 +119,7 @@ namespace ClientServices.UserInterface.Components
             if (e.Key == KeyboardKeys.Back && Text.Length >= 1)
             {
                 Text = Text.Substring(0, Text.Length - 1);
+                SetVisibleText();
                 return true;
             }
 
@@ -111,20 +129,40 @@ namespace ClientServices.UserInterface.Components
                 if (e.Shift)
                 {
                     Text += e.CharacterMapping.Shifted;
+                    SetVisibleText();
                 }
                 else
                 {
                     Text += e.CharacterMapping.Character;
+                    SetVisibleText();
                 }
                 return true;
             }
             return false;
         }
 
+        private void SetVisibleText()
+        {
+            displayText = "";
+
+            int index = 0;
+            bool done = false;
+
+            while (Label.MeasureLine(displayText + "|") < _clientAreaMain.Width && !done)
+            {
+                displayText = Text.Substring(Text.Length - index, index);
+                if (++index > Text.Length) done = true;
+            }
+        }
+
         private void Submit()
         {
             if (OnSubmit != null) OnSubmit(Text);
-            if (ClearOnSubmit) Text = string.Empty;
+            if (ClearOnSubmit)
+            {
+                Text = string.Empty;
+                displayText = string.Empty;
+            }
             if (ClearFocusOnSubmit) Focus = false;
         }
     }

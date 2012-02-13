@@ -31,7 +31,7 @@ namespace ClientServices.UserInterface.Components
 
         public Label CurrentlySelected { get; private set; }
 
-        public Listbox(Size dropDownSize, int width, IResourceManager resourceManager, List<string> initialOptions = null)
+        public Listbox(int dropDownLength, int width, IResourceManager resourceManager, List<string> initialOptions = null)
         {
             _resourceManager = resourceManager;
 
@@ -43,7 +43,7 @@ namespace ClientServices.UserInterface.Components
             _selectedLabel = new TextSprite("ListboxLabel", "", _resourceManager.GetFont("CALIBRI"))
                                  {Color = Color.Black};
 
-            _dropDown = new ScrollableContainer("ListboxContents", dropDownSize, _resourceManager);
+            _dropDown = new ScrollableContainer("ListboxContents", new Size(width, dropDownLength), _resourceManager);
             _dropDown.SetVisible(false);
 
             if (initialOptions != null)
@@ -121,7 +121,7 @@ namespace ClientServices.UserInterface.Components
             _clientAreaLeft = new Rectangle(Position, new Size((int)_listboxLeft.Width, (int)_listboxLeft.Height));
             _clientAreaMain = new Rectangle(new Point(_clientAreaLeft.Right, Position.Y), new Size(_width, (int)_listboxMain.Height));
             _clientAreaRight = new Rectangle(new Point(_clientAreaMain.Right, Position.Y), new Size((int)_listboxRight.Width, (int)_listboxRight.Height));
-            ClientArea = new Rectangle(Position, new Size(_clientAreaLeft.Width + _clientAreaMain.Width + _clientAreaRight.Width, _clientAreaMain.Height));
+            ClientArea = new Rectangle(Position, new Size(_clientAreaLeft.Width + _clientAreaMain.Width + _clientAreaRight.Width, Math.Max(Math.Max(_clientAreaLeft.Height,_clientAreaRight.Height), _clientAreaMain.Height)));
             _selectedLabel.Position = new Point(_clientAreaLeft.Right, Position.Y + (int)(ClientArea.Height / 2f) - (int)(_selectedLabel.Height / 2f));
             _dropDown.Position = new Point(ClientArea.X + (int)((ClientArea.Width - _dropDown.ClientArea.Width) / 2f), ClientArea.Bottom);
             _dropDown.Update();

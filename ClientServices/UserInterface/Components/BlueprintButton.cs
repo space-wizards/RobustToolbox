@@ -65,7 +65,7 @@ namespace ClientServices.UserInterface.Components
 
         public override void Render()
         {
-            if (_bgcol != Color.Transparent) Gorgon.Screen.FilledRectangle(ClientArea.X, ClientArea.Y, ClientArea.Width, ClientArea.Height, _bgcol);
+            if (_bgcol != Color.Transparent) Gorgon.CurrentRenderTarget.FilledRectangle(ClientArea.X, ClientArea.Y, ClientArea.Width, ClientArea.Height, _bgcol);
             _icon.Draw();
             Label.Draw();
         }

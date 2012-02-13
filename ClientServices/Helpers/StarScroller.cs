@@ -71,7 +71,7 @@ namespace ClientServices.Helpers
             // Draw the stars.
             for (var i = 0; i < _stars.Length / 4; i++)
             {
-                Gorgon.Screen.SetPoint((int)_stars[i, layer].Position.X, (int)_stars[i, layer].Position.Y, _stars[i, layer].Magnitude);
+                Gorgon.CurrentRenderTarget.SetPoint((int)_stars[i, layer].Position.X, (int)_stars[i, layer].Position.Y, _stars[i, layer].Magnitude);
 
                 // Move the stars down.
                 _stars[i, layer].Position.Y += _stars[i, layer].VDelta * deltaTime;
@@ -84,7 +84,7 @@ namespace ClientServices.Helpers
 
         public void Render(float xTopleft, float yTopleft)
         {
-            Gorgon.Screen.Clear(Color.Black);
+            Gorgon.CurrentRenderTarget.Clear(Color.Black);
             DrawStars(3, (float)Gorgon.FrameStats.FrameDrawTime / 2000);
             DrawStars(2, (float)Gorgon.FrameStats.FrameDrawTime / 2000);
             for (int layer = 1; layer >= 0; layer--)

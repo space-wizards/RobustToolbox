@@ -259,7 +259,7 @@ namespace ClientServices.State.States
             {
                 case NetMessage.RequestAdminLogin:
                     UserInterfaceManager.DisposeAllComponents<AdminPasswordDialog>(); //Remove old ones.
-                    UserInterfaceManager.AddComponent(new AdminPasswordDialog(new Size(200, 75), NetworkManager, ResourceManager)); //Create a new one.
+                    UserInterfaceManager.AddComponent(new AdminPasswordDialog(new Size(200, 50), NetworkManager, ResourceManager)); //Create a new one.
                     break;
                 case NetMessage.RequestAdminPlayerlist:
                     UserInterfaceManager.DisposeAllComponents<AdminPlayerPanel>();

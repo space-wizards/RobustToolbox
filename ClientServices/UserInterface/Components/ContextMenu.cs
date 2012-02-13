@@ -84,7 +84,7 @@ namespace ClientServices.UserInterface.Components
             base.Render();
             foreach (var button in _buttons)
                 button.Render();
-            Gorgon.Screen.Rectangle(ClientArea.X, ClientArea.Y, ClientArea.Width, ClientArea.Height, Color.Black);
+            Gorgon.CurrentRenderTarget.Rectangle(ClientArea.X, ClientArea.Y, ClientArea.Width, ClientArea.Height, Color.Black);
         }
 
         public override void Dispose()
@@ -167,7 +167,7 @@ namespace ClientServices.UserInterface.Components
         {
             base.Render();
             var iconRect = new Rectangle(ClientArea.X + 3, ClientArea.Y + (int)(ClientArea.Height / 2f) - (int)(_iconSprite.Height / 2f), (int)_iconSprite.Width, (int)_iconSprite.Height);
-            Gorgon.Screen.FilledRectangle(ClientArea.X, ClientArea.Y, ClientArea.Width, ClientArea.Height, _currentColor);
+            Gorgon.CurrentRenderTarget.FilledRectangle(ClientArea.X, ClientArea.Y, ClientArea.Width, ClientArea.Height, _currentColor);
             _textLabel.Render();
             _iconSprite.Draw(iconRect);
         }

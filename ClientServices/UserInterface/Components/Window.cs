@@ -65,7 +65,7 @@ namespace ClientServices.UserInterface.Components
         {
             if (disposing || !IsVisible()) return;
             gradient.Render();
-            Gorgon.Screen.Rectangle(titleArea.X, titleArea.Y, titleArea.Width, titleArea.Height, Color.Black);
+            Gorgon.CurrentRenderTarget.Rectangle(titleArea.X, titleArea.Y, titleArea.Width, titleArea.Height, Color.Black);
             base.Render();
             title.Render();
             if(closeButtonVisible) closeButton.Render();
@@ -168,8 +168,8 @@ namespace ClientServices.UserInterface.Components
 
         public override void Render()
         {
-            Gorgon.Screen.FilledRectangle(ClientArea.X, ClientArea.Y, ClientArea.Width, ClientArea.Height, Color.White); //Not sure why this is needed.
-            Gorgon.Screen.Draw(box);
+            Gorgon.CurrentRenderTarget.FilledRectangle(ClientArea.X, ClientArea.Y, ClientArea.Width, ClientArea.Height, Color.White); //Not sure why this is needed.
+            Gorgon.CurrentRenderTarget.Draw(box);
         }
     }
 }

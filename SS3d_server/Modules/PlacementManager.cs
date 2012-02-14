@@ -78,9 +78,9 @@ namespace SS13_Server.Modules
             float yRcv = msg.ReadFloat();
             float rotRcv = msg.ReadFloat();
 
-            PlayerSession session = SS13Server.Singleton.playerManager.GetSessionByConnection(msg.SenderConnection);
+            PlayerSession session = SS13Server.Singleton.PlayerManager.GetSessionByConnection(msg.SenderConnection);
             PlacementInformation permission = GetPermission(session.attachedEntity.Uid, alignRcv);
-            Boolean isAdmin = SS13Server.Singleton.playerManager.GetSessionByConnection(msg.SenderConnection).adminPermissions.isAdmin;
+            Boolean isAdmin = SS13Server.Singleton.PlayerManager.GetSessionByConnection(msg.SenderConnection).adminPermissions.isAdmin;
 
             if (permission != null || true) //isAdmin)
             {
@@ -111,19 +111,19 @@ namespace SS13_Server.Modules
                 }
                 else
                 {
-                    Point arrayPos = SS13_Server.SS13Server.Singleton.map.GetTileArrayPositionFromWorldPosition(new Vector2(xRcv, yRcv));
-                    SS13_Server.SS13Server.Singleton.map.ChangeTile(arrayPos.X, arrayPos.Y, tileType);
-                    SS13_Server.SS13Server.Singleton.map.NetworkUpdateTile(arrayPos.X, arrayPos.Y);
+                    Point arrayPos = SS13_Server.SS13Server.Singleton.Map.GetTileArrayPositionFromWorldPosition(new Vector2(xRcv, yRcv));
+                    SS13_Server.SS13Server.Singleton.Map.ChangeTile(arrayPos.X, arrayPos.Y, tileType);
+                    SS13_Server.SS13Server.Singleton.Map.NetworkUpdateTile(arrayPos.X, arrayPos.Y);
                 }
             }
             else //They are not allowed to request this. Send 'PlacementFailed'. TBA
             {
                 LogManager.Log("Invalid placement request: "
-                    + SS13Server.Singleton.playerManager.GetSessionByConnection(msg.SenderConnection).name +
-                    " - " + SS13Server.Singleton.playerManager.GetSessionByConnection(msg.SenderConnection).attachedEntity.Uid.ToString() +
+                    + SS13Server.Singleton.PlayerManager.GetSessionByConnection(msg.SenderConnection).name +
+                    " - " + SS13Server.Singleton.PlayerManager.GetSessionByConnection(msg.SenderConnection).attachedEntity.Uid.ToString() +
                     " - " + alignRcv.ToString());
 
-                SendPlacementCancel(SS13Server.Singleton.playerManager.GetSessionByConnection(msg.SenderConnection).attachedEntity);
+                SendPlacementCancel(SS13Server.Singleton.PlayerManager.GetSessionByConnection(msg.SenderConnection).attachedEntity);
             }
         }
 

@@ -14,22 +14,21 @@ namespace CGO
     /// </summary>
     public class EntityManager
     {
-        private EntityFactory m_entityFactory;
-        private EntityTemplateDatabase m_entityTemplateDatabase;
-        private EntityNetworkManager m_entityNetworkManager;
-        private bool initialized = false;
+        private readonly Dictionary<int, IEntity> _entities;
 
-        public EntityTemplateDatabase TemplateDB { get { return m_entityTemplateDatabase; } }
+        private EntityFactory _entityFactory;
+        private EntityNetworkManager _entityNetworkManager;
+        private bool _initialized;
+        private int _lastId;
 
-        private Dictionary<int, IEntity> m_entities;
-        private int lastId = 0;
+        public EntityTemplateDatabase TemplateDb { get; private set; }
 
         public EntityManager(INetworkManager networkManager)
         {
-            m_entityNetworkManager = new EntityNetworkManager(networkManager);
-            m_entityTemplateDatabase = new EntityTemplateDatabase();
-            m_entityFactory = new EntityFactory(m_entityTemplateDatabase);
-            m_entities = new Dictionary<int, IEntity>();
+            _entityNetworkManager = new EntityNetworkManager(networkManager);
+            TemplateDb = new EntityTemplateDatabase();
+            _entityFactory = new EntityFactory(TemplateDb);
+            _entities = new Dictionary<int, IEntity>();
             Singleton = this;
         }
 
@@ -38,9 +37,9 @@ namespace CGO
         {
             get
             {
-                if (singleton == null)
-                    throw new Exception("Singleton not initialized");
-                else return singleton;
+                if (singleton == null) throw new Exception("Singleton not initialized");
+
+                return singleton;
             }
             set
             { singleton = value; }
@@ -51,9 +50,9 @@ namespace CGO
         /// </summary>
         public void FlushEntities()
         {
-            foreach (Entity e in m_entities.Values)
+            foreach (Entity e in _entities.Values)
                 e.Shutdown();
-            m_entities.Clear();
+            _entities.Clear();
         }
 
         /// <summary>
@@ -63,9 +62,7 @@ namespace CGO
         /// <returns>Entity or null if entity id doesn't exist</returns>
         public IEntity GetEntity(int eid)
         {
-            if (m_entities.Keys.Contains(eid))
-                return m_entities[eid];
-            return null;
+            return _entities.Keys.Contains(eid) ? _entities[eid] : null;
         }
 
         /// <summary>
@@ -76,14 +73,13 @@ namespace CGO
         public int CreateEntity(string templateName)
         {
             //Get the entity from the factory
-            Entity e = m_entityFactory.CreateEntity(templateName);
+            var e = _entityFactory.CreateEntity(templateName, _entityNetworkManager);
             if (e != null)
             {
                 //It worked, add it.
-                e.SetNetworkManager(m_entityNetworkManager);
-                m_entities.Add(++lastId, e);
-                lastId++;
-                return lastId;
+                _entities.Add(++_lastId, e);
+                _lastId++;
+                return _lastId;
             }
             //TODO: throw exception here -- something went wrong.
             return -1;
@@ -92,14 +88,13 @@ namespace CGO
         private IEntity SpawnEntity(string entityType, int uid)
         {
 
-            var e = m_entityFactory.CreateEntity(entityType);
+            var e = _entityFactory.CreateEntity(entityType, _entityNetworkManager);
             if (e != null)
             {
-                e.SetNetworkManager(m_entityNetworkManager);
                 e.Uid = uid;
-                m_entities.Add(uid, e);
-                lastId = uid;
-                if(initialized)
+                _entities.Add(uid, e);
+                _lastId = uid;
+                if(_initialized)
                     e.Initialize();
                 return e;
             }
@@ -108,7 +103,7 @@ namespace CGO
 
         public IEntity[] GetEntitiesInRange(Vector2D position, float Range)
         {
-            var entities = from e in m_entities.Values
+            var entities = from e in _entities.Values
                            where (position - e.Position).Length < Range
                            select e;
 
@@ -118,9 +113,9 @@ namespace CGO
         public void Shutdown()
         {
             FlushEntities();
-            m_entityFactory = null;
-            m_entityTemplateDatabase = null;
-            m_entityNetworkManager = null;
+            _entityFactory = null;
+            TemplateDb = null;
+            _entityNetworkManager = null;
         }
 
         /// <summary>
@@ -130,8 +125,8 @@ namespace CGO
         /// <param name="msg"></param>
         public void HandleEntityNetworkMessage(NetIncomingMessage msg)
         {
-            var message = m_entityNetworkManager.HandleEntityNetworkMessage(msg);
-            m_entities[message.Uid].HandleNetworkMessage(message);
+            var message = _entityNetworkManager.HandleEntityNetworkMessage(msg);
+            _entities[message.Uid].HandleNetworkMessage(message);
         }
 
         #region Entity Manager Networking
@@ -153,7 +148,7 @@ namespace CGO
                     if (ent != null)
                     {
                         ent.Shutdown();
-                        m_entities.Remove(dUid);
+                        _entities.Remove(dUid);
                     }
                     break;
                 case EntityManagerMessage.InitializeEntities:
@@ -164,9 +159,9 @@ namespace CGO
 
         private void InitializeEntities()
         {
-            foreach (var e in m_entities.Values)
+            foreach (var e in _entities.Values)
                 e.Initialize();
-            initialized = true;
+            _initialized = true;
         }
 
         #endregion

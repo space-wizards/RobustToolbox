@@ -6,8 +6,6 @@ using GorgonLibrary;
 using Lidgren.Network;
 using SS13_Shared;
 using SS13_Shared.GO;
-using ClientInterfaces.MessageLogging;
-using SS13.IoC;
 
 namespace CGO
 {
@@ -22,9 +20,9 @@ namespace CGO
         /// <summary>
         /// Holds this entity's components
         /// </summary>
-        private Dictionary<ComponentFamily, IGameObjectComponent> components = new Dictionary<ComponentFamily, IGameObjectComponent>();
+        private readonly Dictionary<ComponentFamily, IGameObjectComponent> _components = new Dictionary<ComponentFamily, IGameObjectComponent>();
 
-        private EntityNetworkManager m_entityNetworkManager;
+        private EntityNetworkManager _entityNetworkManager;
 
         public IEntityTemplate Template { get; set; }
 
@@ -41,25 +39,17 @@ namespace CGO
         /// </summary>
         public Vector2D Position { get; set; }
 
-        public float rotation;
+        public float Rotation;
         #endregion
 
         #region Constructor/Destructor
-        /// <summary>
-        /// Constructor
-        /// </summary>
-        public Entity()
-        {
-            //Initialize();
-        }
-
         /// <summary>
         /// Constructor for realz. This one should be used eventually instead of the naked one.
         /// </summary>
         /// <param name="entityNetworkManager"></param>
         public Entity(EntityNetworkManager entityNetworkManager)
         {
-            m_entityNetworkManager = entityNetworkManager;
+            _entityNetworkManager = entityNetworkManager;
             Initialize();
         }
 
@@ -73,24 +63,15 @@ namespace CGO
         }
 
         /// <summary>
-        /// Compatibility method for entity. This should be eliminated eventually when the above naked constructor is eliminated.
-        /// </summary>
-        /// <param name="entityNetworkManager"></param>
-        public void InitializeEntityNetworking(EntityNetworkManager entityNetworkManager)
-        {
-            m_entityNetworkManager = entityNetworkManager;
-        }
-        
-        /// <summary>
         /// Shuts down the entity gracefully for removal.
         /// </summary>
         public void Shutdown()
         {
-            foreach (var component in components.Values)
+            foreach (var component in _components.Values)
             {
                 component.OnRemove();
             }
-            components.Clear();
+            _components.Clear();
         }
         #endregion
 
@@ -103,9 +84,9 @@ namespace CGO
         /// <param name="component">The component.</param>
         public void AddComponent(ComponentFamily family, IGameObjectComponent component)
         {
-            if (components.Keys.Contains(family))
-                RemoveComponent(family);
-            components.Add(family, component);
+            if (_components.Keys.Contains(family)) RemoveComponent(family);
+
+            _components.Add(family, component);
             component.OnAdd(this); 
         }
 
@@ -117,10 +98,10 @@ namespace CGO
         /// <param name="family"></param>
         public void RemoveComponent(ComponentFamily family)
         {
-            if (components.Keys.Contains(family))
+            if (_components.Keys.Contains(family))
             {
-                components[family].OnRemove();
-                components.Remove(family); 
+                _components[family].OnRemove();
+                _components.Remove(family); 
             }
         }
 
@@ -131,9 +112,7 @@ namespace CGO
         /// <returns></returns>
         public IGameObjectComponent GetComponent(ComponentFamily family)
         {
-            if (components.ContainsKey(family))
-                return components[family];
-            return null;
+            return _components.ContainsKey(family) ? _components[family] : null;
         }
 
         /// <summary>
@@ -143,7 +122,7 @@ namespace CGO
         /// <returns>true if component exists, false otherwise</returns>
         public bool HasComponent(ComponentFamily family)
         {
-            return components.ContainsKey(family);
+            return _components.ContainsKey(family);
         }
 
         /// <summary>
@@ -171,7 +150,7 @@ namespace CGO
             IMessageLogger logger = IoCManager.Resolve<IMessageLogger>();
             logger.LogComponentMessage(uid, senderfamily, sendertype, type);
 #endif
-            foreach (IGameObjectComponent component in components.Values.ToArray())
+            foreach (var component in _components.Values.ToArray())
             {
                 component.RecieveMessage(sender, type, replies, args);
             }
@@ -185,19 +164,12 @@ namespace CGO
         {
             var replies = new List<ComponentReplyMessage>();
 
-            this.SendMessage(this, ComponentMessageType.GetDescriptionString, replies);
+            SendMessage(this, ComponentMessageType.GetDescriptionString, replies);
 
-            if (replies.Any())
-                return (string)replies.First(x => x.MessageType == ComponentMessageType.GetDescriptionString).ParamsList[0]; //If you dont answer with a string then fuck you.
-            else
-                return this.Template.Description;
+            if (replies.Any()) return (string)replies.First(x => x.MessageType == ComponentMessageType.GetDescriptionString).ParamsList[0]; //If you dont answer with a string then fuck you.
+            
+            return Template.Description;
         }
-
-        //VARIABLES TO REFACTOR AT A LATER DATE
-        /// <summary>
-        /// Movement speed of the entity. This should be refactored.
-        /// </summary>
-        //public float speed = 600.0f;
 
         //FUNCTIONS TO REFACTOR AT A LATER DATE
         /// <summary>
@@ -206,15 +178,14 @@ namespace CGO
 
         public void Moved()
         {
-            if(OnMove != null)
-                OnMove(this, new VectorEventArgs(Position));
+            if(OnMove != null) OnMove(this, new VectorEventArgs(Position));
         }
 
         internal void HandleComponentMessage(IncomingEntityComponentMessage message)
         {
-            if (components.Keys.Contains(message.ComponentFamily))
+            if (_components.Keys.Contains(message.ComponentFamily))
             {
-                components[message.ComponentFamily].HandleNetworkMessage(message);
+                _components[message.ComponentFamily].HandleNetworkMessage(message);
             }
         }
 
@@ -238,7 +209,7 @@ namespace CGO
         /// <param name="messageParams">Parameters</param>
         public void SendComponentNetworkMessage(IGameObjectComponent component, NetDeliveryMethod method, params object[] messageParams)
         {
-            m_entityNetworkManager.SendComponentNetworkMessage(this, component.Family, NetDeliveryMethod.ReliableUnordered, messageParams);
+            _entityNetworkManager.SendComponentNetworkMessage(this, component.Family, NetDeliveryMethod.ReliableUnordered, messageParams);
         }
 
         public void SendComponentInstantiationMessage(IGameObjectComponent component)
@@ -246,14 +217,7 @@ namespace CGO
             if (component == null)
                 throw new Exception("Component is null");
           
-            m_entityNetworkManager.SendEntityNetworkMessage(this, EntityMessage.ComponentInstantiationMessage, component.Family);
+            _entityNetworkManager.SendEntityNetworkMessage(this, EntityMessage.ComponentInstantiationMessage, component.Family);
         }
-
-        #region compatibility for entity transition
-        public void SetNetworkManager(EntityNetworkManager manager)
-        {
-            m_entityNetworkManager = manager;
-        }
-        #endregion
     }
 }

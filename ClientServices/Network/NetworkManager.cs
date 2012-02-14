@@ -7,18 +7,17 @@ namespace ClientServices.Network
 {
     public class NetworkManager : INetworkManager
     {
-        private GameType _serverGameType;
-        public bool MapRecieved;
         private const string ServerName = "SS13 Server";
+        private readonly NetPeerConfiguration _netConfig = new NetPeerConfiguration("SS13_NetTag");
+        private GameType _serverGameType;
+        private NetClient _netClient;
 
         public bool IsConnected { get; private set; }
-        private NetClient _netClient;
+        
         public NetPeerStatistics CurrentStatistics
         {
             get { return _netClient.Statistics; }
         }
-
-        private readonly NetPeerConfiguration _netConfig = new NetPeerConfiguration("SS13_NetTag");
 
         public event EventHandler<IncomingNetworkMessageArgs> MessageArrived;  //Called when we recieve a new message.
         protected virtual void OnMessageArrived(NetIncomingMessage message)
@@ -121,7 +120,7 @@ namespace ClientServices.Network
 
         public void SendClientName(string name)
         {
-            NetOutgoingMessage message = _netClient.CreateMessage();
+            var message = _netClient.CreateMessage();
             message.Write((byte)NetMessage.ClientName);
             message.Write(name);
             _netClient.SendMessage(message, NetDeliveryMethod.ReliableOrdered);
@@ -138,12 +137,7 @@ namespace ClientServices.Network
         public NetIncomingMessage GetNetworkUpdate()
         {
             NetIncomingMessage msg;
-            if((msg = _netClient.ReadMessage()) != null)
-            {
-                return msg;
-            }
-
-            return null;
+            return (msg = _netClient.ReadMessage()) != null ? msg : null;
         }
 
         public string GetServerName()

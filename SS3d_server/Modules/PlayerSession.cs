@@ -1,10 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-
-using Lidgren.Network;
-using SS13_Server;
+﻿using Lidgren.Network;
 using SS13_Shared;
 using SS13_Shared.GO;
 using SGO;
@@ -78,7 +72,7 @@ namespace SS13_Server.Modules
 
         public void HandleNetworkMessage(NetIncomingMessage message)
         {
-            PlayerSessionMessage messageType = (PlayerSessionMessage)message.ReadByte();
+            var messageType = (PlayerSessionMessage)message.ReadByte();
             switch (messageType)
             {
                 case PlayerSessionMessage.Verb:
@@ -88,10 +82,8 @@ namespace SS13_Server.Modules
                     JoinLobby();
                     break;
                 case PlayerSessionMessage.SetTargetArea:
-                    BodyPart selected = (BodyPart)message.ReadByte();
+                    var selected = (BodyPart)message.ReadByte();
                     targetedArea = selected;
-                    break;
-                default:
                     break;
             }
         }
@@ -117,9 +109,7 @@ namespace SS13_Server.Modules
                         //Need debugging function to add more gas
                     case "save":
                         EntityManager.Singleton.SaveEntities();
-                        SS13Server.Singleton.map.SaveMap();
-                        break;
-                    default:
+                        SS13Server.Singleton.Map.SaveMap();
                         break;
                 }
             }
@@ -130,7 +120,7 @@ namespace SS13_Server.Modules
         public void SetName(string _name)
         {
             name = _name;
-            LogManager.Log("Player set name: " + connectedClient.RemoteEndpoint.Address.ToString() + " -> " + name);
+            LogManager.Log("Player set name: " + connectedClient.RemoteEndpoint.Address + " -> " + name);
             if (attachedEntity != null)
             {
                 attachedEntity.name = _name;
@@ -139,7 +129,7 @@ namespace SS13_Server.Modules
 
         public void JoinLobby()
         {
-            NetOutgoingMessage m = SS13NetServer.Singleton.CreateMessage();
+            var m = SS13NetServer.Singleton.CreateMessage();
             m.Write((byte)NetMessage.PlayerSessionMessage);
             m.Write((byte)PlayerSessionMessage.JoinLobby);
             SS13NetServer.Singleton.SendMessage(m, connectedClient);
@@ -148,9 +138,9 @@ namespace SS13_Server.Modules
 
         public void JoinGame()
         {
-            if (connectedClient != null && status != SessionStatus.InGame && SS13Server.Singleton.runlevel == SS13Server.RunLevel.Game)
+            if (connectedClient != null && status != SessionStatus.InGame && SS13Server.Singleton.Runlevel == SS13Server.RunLevel.Game)
             {
-                NetOutgoingMessage m = SS13NetServer.Singleton.CreateMessage();
+                var m = SS13NetServer.Singleton.CreateMessage();
                 m.Write((byte)NetMessage.JoinGame);
                 SS13NetServer.Singleton.SendMessage(m, connectedClient);
 
@@ -162,7 +152,7 @@ namespace SS13_Server.Modules
         {
             status = SessionStatus.Connected;
             //Put player in lobby immediately.
-            LogManager.Log("Player connected - " + connectedClient.RemoteEndpoint.Address.ToString());
+            LogManager.Log("Player connected - " + connectedClient.RemoteEndpoint.Address);
             JoinLobby();
         }
 

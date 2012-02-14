@@ -93,7 +93,6 @@ namespace ClientServices.State.States
             UserInterfaceManager.DisposeAllComponents();
 
             _entityManager = new EntityManager(NetworkManager);
-            PlayerManager.SetState(this);
 
             NetworkManager.MessageArrived += NetworkManagerMessageArrived;
 
@@ -175,7 +174,6 @@ namespace ClientServices.State.States
             _gaussianBlur.Dispose();
             _entityManager.Shutdown();
             MapManager.Shutdown();
-            _entityManager = null;
             UserInterfaceManager.DisposeAllComponents(); //HerpDerp. This is probably bad. Should not remove them ALL.
             NetworkManager.MessageArrived -= NetworkManagerMessageArrived;
             RenderTargetCache.DestroyAll();

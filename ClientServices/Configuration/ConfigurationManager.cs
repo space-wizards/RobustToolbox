@@ -1,6 +1,5 @@
 ﻿using System.IO;
 using System.Xml.Serialization;
-using ClientInterfaces;
 using ClientInterfaces.Configuration;
 
 namespace ClientServices.Configuration
@@ -96,6 +95,11 @@ namespace ClientServices.Configuration
         public uint GetDisplayHeight()
         {
             return Configuration.DisplayHeight;
+        }
+
+        public string GetServerAddress()
+        {
+            return Configuration.ServerAddress;
         }
     }
 }

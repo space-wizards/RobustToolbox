@@ -59,7 +59,7 @@ namespace SS13_Server.Modules.Gamemodes
 
         public virtual void SpawnPlayer(PlayerSession player) //Called by SendMap() after sending everything.
         {                                                     //This should be handled differently!!!.
-            server.playerManager.SpawnPlayerMob(player);
+            server.PlayerManager.SpawnPlayerMob(player);
         }
 
         public virtual void StartGame() //Called by InitModules() for Game state.

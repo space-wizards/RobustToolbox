@@ -95,8 +95,8 @@ namespace ClientServices.UserInterface.Components
             _entityList.ResetScrollbars();
 
             var templates = (searchStr == null) ? 
-                EntityManager.Singleton.TemplateDB.Templates.ToList() : 
-                EntityManager.Singleton.TemplateDB.Templates.Where(x => x.Value.Name.ToLower().Contains(searchStr.ToLower())).ToList();
+                EntityManager.Singleton.TemplateDb.Templates.ToList() : 
+                EntityManager.Singleton.TemplateDb.Templates.Where(x => x.Value.Name.ToLower().Contains(searchStr.ToLower())).ToList();
         
 
             if (searchStr != null) _clearLabel.BackgroundColor = Color.LightGray;

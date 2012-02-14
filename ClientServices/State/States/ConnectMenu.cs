@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using ClientInterfaces.State;
-using ClientServices.Helpers;
 using GorgonLibrary;
 using GorgonLibrary.Graphics;
 using GorgonLibrary.InputDevices;
@@ -17,16 +16,14 @@ namespace ClientServices.State.States
 
         private const float ConnectTimeOut = 5000.0f;
 
+        private readonly Sprite _background;
+        private readonly Label _connectButton;
+        private readonly Textbox _connectTextbox;
+        private readonly Label _optionsButton;
+        private readonly Label _exitButton;
+
         private DateTime _connectTime;
         private bool _isConnecting;
-        private Sprite _background;
-
-        private readonly Label _connectbtt;
-        private readonly Textbox _connecttxt;
-
-        private readonly Label _optionsbtt;
-
-        private readonly Label _exitbtt;
 
         #endregion
 
@@ -39,29 +36,25 @@ namespace ClientServices.State.States
             _background = ResourceManager.GetSprite("mainbg");
             _background.Smoothing = Smoothing.Smooth;
 
-            _connectbtt = new Label("Connect", "CALIBRI", ResourceManager);
-            _connectbtt.DrawBorder = true;
-            _connectbtt.Clicked += new Label.LabelPressHandler(_connectbtt_Clicked);
+            _connectButton = new Label("Connect", "CALIBRI", ResourceManager) { DrawBorder = true };
+            _connectButton.Clicked += ConnectButtonClicked;
 
-            _optionsbtt = new Label("Options", "CALIBRI", ResourceManager);
-            _optionsbtt.DrawBorder = true;
-            _optionsbtt.Clicked += new Label.LabelPressHandler(_optionsbtt_Clicked);
+            _optionsButton = new Label("Options", "CALIBRI", ResourceManager) { DrawBorder = true };
+            _optionsButton.Clicked += OptionsButtonClicked;
 
-            _exitbtt = new Label("Exit", "CALIBRI", ResourceManager);
-            _exitbtt.DrawBorder = true;
-            _exitbtt.Clicked += new Label.LabelPressHandler(_exitbtt_Clicked);
+            _exitButton = new Label("Exit", "CALIBRI", ResourceManager) { DrawBorder = true };
+            _exitButton.Clicked += ExitButtonClicked;
 
-            _connecttxt = new Textbox(100, ResourceManager);
-            _connecttxt.OnSubmit += new Textbox.TextSubmitHandler(_connecttxt_OnSubmit);
-            _connecttxt.Text = "localhost";
+            _connectTextbox = new Textbox(100, ResourceManager) { Text = ConfigurationManager.GetServerAddress() };
+            _connectTextbox.OnSubmit += ConnectTextboxOnSubmit;
         }
 
-        void _exitbtt_Clicked(Label sender)
+        private static void ExitButtonClicked(Label sender)
         {
             Environment.Exit(0);
         }
 
-        void _optionsbtt_Clicked(Label sender)
+        private void OptionsButtonClicked(Label sender)
         {
             if (_isConnecting)
             {
@@ -72,10 +65,10 @@ namespace ClientServices.State.States
             StateManager.RequestStateChange<OptionsMenu>();
         }
 
-        void _connectbtt_Clicked(Label sender)
+        private void ConnectButtonClicked(Label sender)
         {
             if (!_isConnecting)
-                StartConnect(_connecttxt.Text);
+                StartConnect(_connectTextbox.Text);
             else
             {
                 _isConnecting = false;
@@ -83,7 +76,7 @@ namespace ClientServices.State.States
             }
         }
 
-        void _connecttxt_OnSubmit(string text)
+        private void ConnectTextboxOnSubmit(string text)
         {
             StartConnect(text);
         }
@@ -94,10 +87,10 @@ namespace ClientServices.State.States
             NetworkManager.Disconnect();
             NetworkManager.Connected += OnConnected;
 
-            UserInterfaceManager.AddComponent(_connecttxt);
-            UserInterfaceManager.AddComponent(_optionsbtt);
-            UserInterfaceManager.AddComponent(_connectbtt);
-            UserInterfaceManager.AddComponent(_exitbtt);
+            UserInterfaceManager.AddComponent(_connectTextbox);
+            UserInterfaceManager.AddComponent(_optionsButton);
+            UserInterfaceManager.AddComponent(_connectButton);
+            UserInterfaceManager.AddComponent(_exitButton);
         }
 
         private void OnConnected(object sender, EventArgs e)
@@ -106,37 +99,36 @@ namespace ClientServices.State.States
             StateManager.RequestStateChange<LobbyScreen>();
         }
 
-        public void StartConnect(string IP)
+        public void StartConnect(string address)
         {
-            if (!_isConnecting)
-            {
-                if (NetUtility.Resolve(IP) == null)
-                    throw new InvalidOperationException("Not a valid Address.");
+            if (_isConnecting) return;
 
-                _connectTime = DateTime.Now;
-                _isConnecting = true;
-                NetworkManager.ConnectTo(IP);
-            }
+            if (NetUtility.Resolve(address) == null)
+                throw new InvalidOperationException("Not a valid Address.");
+
+            _connectTime = DateTime.Now;
+            _isConnecting = true;
+            NetworkManager.ConnectTo(address);
         }
 
         public void Shutdown()
         {
             NetworkManager.Connected -= OnConnected;
 
-            UserInterfaceManager.RemoveComponent(_connecttxt);
-            UserInterfaceManager.RemoveComponent(_optionsbtt);
-            UserInterfaceManager.RemoveComponent(_connectbtt);
-            UserInterfaceManager.RemoveComponent(_exitbtt);
+            UserInterfaceManager.RemoveComponent(_connectTextbox);
+            UserInterfaceManager.RemoveComponent(_optionsButton);
+            UserInterfaceManager.RemoveComponent(_connectButton);
+            UserInterfaceManager.RemoveComponent(_exitButton);
         }
 
         public void Update(FrameEventArgs e)
         {
-            _connecttxt.Position = new Point(Gorgon.Screen.Width - (int)(Gorgon.Screen.Width / 4f) - _connecttxt.ClientArea.Width, (int)(Gorgon.Screen.Height / 2.7f));
-            _connectbtt.Position = new Point(_connecttxt.Position.X, _connecttxt.Position.Y + _connecttxt.ClientArea.Height + 2);
-            _optionsbtt.Position = new Point(_connectbtt.Position.X, _connectbtt.Position.Y + _connectbtt.ClientArea.Height + 10);
-            _exitbtt.Position = new Point(_optionsbtt.Position.X, _optionsbtt.Position.Y + _optionsbtt.ClientArea.Height + 10);
+            _connectTextbox.Position = new Point(Gorgon.Screen.Width - (int)(Gorgon.Screen.Width / 4f) - _connectTextbox.ClientArea.Width, (int)(Gorgon.Screen.Height / 2.7f));
+            _connectButton.Position = new Point(_connectTextbox.Position.X, _connectTextbox.Position.Y + _connectTextbox.ClientArea.Height + 2);
+            _optionsButton.Position = new Point(_connectButton.Position.X, _connectButton.Position.Y + _connectButton.ClientArea.Height + 10);
+            _exitButton.Position = new Point(_optionsButton.Position.X, _optionsButton.Position.Y + _optionsButton.ClientArea.Height + 10);
 
-            _connectbtt.Text.Text = _isConnecting ? "Cancel" : "Connect";
+            _connectButton.Text.Text = _isConnecting ? "Cancel" : "Connect";
 
             if (_isConnecting)
             {
@@ -157,6 +149,7 @@ namespace ClientServices.State.States
             _background.Draw(new Rectangle(0, 0, Gorgon.CurrentRenderTarget.Width, Gorgon.CurrentRenderTarget.Height));
             UserInterfaceManager.Render();
         }
+
         public void FormResize()
         {
         }

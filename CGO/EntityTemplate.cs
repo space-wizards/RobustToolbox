@@ -71,9 +71,9 @@ namespace CGO
         /// Creates an entity from this template
         /// </summary>
         /// <returns></returns>
-        public Entity CreateEntity()
+        public Entity CreateEntity(EntityNetworkManager entityNetworkManager)
         {
-            var e = new Entity();
+            var e = new Entity(entityNetworkManager);
 
             foreach (var componentname in _components)
             {

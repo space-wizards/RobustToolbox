@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using ClientInterfaces;
 using ClientInterfaces.Configuration;
 using ClientInterfaces.Input;
 using ClientInterfaces.Map;
@@ -157,7 +156,7 @@ namespace ClientServices.State
 
         private void HandleStateChange(object sender, TypeEventArgs args)
         {
-            if ((args.Type as IState) != null)
+            if (args.Type.GetInterface("IState") != null)
             {
                 RequestStateChange(args.Type);
             }

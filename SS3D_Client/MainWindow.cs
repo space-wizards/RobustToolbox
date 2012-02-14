@@ -22,6 +22,7 @@ namespace SS13
         private IConfigurationManager _configurationManager;
         private INetworkManager _networkManager;
         private INetworkGrapher _netGrapher;
+        private IUserInterfaceManager _userInterfaceManager;
         private Input _input;
         
         #endregion
@@ -50,8 +51,8 @@ namespace SS13
             _networkManager.UpdateNetwork();
             _stateManager.Update(e);
 
-            IoCManager.Resolve<IUserInterfaceManager>().Update();
-            IoCManager.Resolve<IUserInterfaceManager>().Render();
+            _userInterfaceManager.Update();
+            _userInterfaceManager.Render();
 
             _netGrapher.Update();
         }
@@ -66,8 +67,7 @@ namespace SS13
             _networkManager = IoCManager.Resolve<INetworkManager>();
             _netGrapher = IoCManager.Resolve<INetworkGrapher>();
             _stateManager = IoCManager.Resolve<IStateManager>();
-
-            //PlayerName_TextBox.Text = _configurationManager.GetPlayerName();
+            _userInterfaceManager = IoCManager.Resolve<IUserInterfaceManager>();
 
             Gorgon.Go();
 
@@ -78,12 +78,6 @@ namespace SS13
         {
             _input.Mouse.SetPositionRange(0, 0, Gorgon.CurrentClippingViewport.Width, Gorgon.CurrentClippingViewport.Height);
             _stateManager.CurrentState.FormResize();
-        }
-
-        private void QuitToolStripMenuItemClick(object sender, EventArgs e)
-        {
-            Gorgon.Terminate();
-            Environment.Exit(0);
         }
 
         #region Input Handling
@@ -165,8 +159,8 @@ namespace SS13
         {
             var displayWidth = _configurationManager.GetDisplayWidth();
             var displayHeight = _configurationManager.GetDisplayHeight();
+            var fullscreen = _configurationManager.GetFullscreen();
             Size = new Size((int)displayWidth, (int)displayHeight);
-            bool fullscreen = _configurationManager.GetFullscreen();
 
             Gorgon.Initialize(true, false);
             //Gorgon.SetMode(this);

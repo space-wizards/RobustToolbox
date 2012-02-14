@@ -17,13 +17,11 @@
         /// </summary>
         /// <param name="entityTemplateName">name of the template</param>
         /// <returns>Created Entity</returns>
-        public Entity CreateEntity(string entityTemplateName)
+        public Entity CreateEntity(string entityTemplateName, EntityNetworkManager entityNetworkManager)
         {
-            EntityTemplate template = m_entityTemplateDatabase.GetTemplate(entityTemplateName);
+            var template = m_entityTemplateDatabase.GetTemplate(entityTemplateName);
             //TODO: Throw exception here
-            if (template == null)
-                return null;
-            return template.CreateEntity();
+            return template == null ? null : template.CreateEntity(entityNetworkManager);
         }
 
         /// <summary>

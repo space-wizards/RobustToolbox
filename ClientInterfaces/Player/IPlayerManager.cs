@@ -1,6 +1,5 @@
 ﻿using System;
 using ClientInterfaces.GOC;
-using ClientInterfaces.State;
 using GorgonLibrary.InputDevices;
 using Lidgren.Network;
 using SS13_Shared;
@@ -15,7 +14,6 @@ namespace ClientInterfaces.Player
 
         void Attach(IEntity newEntity);
         void Detach();
-        void SetState(IState state);
         void SendVerb(string verb, int uid);
         void KeyDown(KeyboardKeys key);
         void KeyUp(KeyboardKeys key);

@@ -11,24 +11,21 @@ using System.Drawing;
 
 namespace ClientServices.State.States
 {
-    public class LobbyScreen :State, IState
+    public class LobbyScreen : State, IState
     {
+        private const double PlayerListRefreshDelaySec = 3; //Time in seconds before refreshing the playerlist.
+
+        private readonly List<String> _playerListStrings = new List<string>();
         private int _serverMaxPlayers;
-        private string _serverName;
         private int _serverPort;
+        private string _serverName;
         private string _welcomeString;
         private string _gameType;
         private string _serverMapName;
 
-        ScrollableContainer _jobButtonContainer;
-
-        private readonly List<String> _playerListStrings = new List<string>();
-
+        private ScrollableContainer _jobButtonContainer;
         private Chatbox _lobbyChat;
-
-        private const double PlayerListRefreshDelaySec = 3; //Time in seconds before refreshing the playerlist.
         private DateTime _playerListTime;
-
         private TextSprite _lobbyText;
 
         public LobbyScreen(IDictionary<Type, object> managers)
@@ -39,8 +36,6 @@ namespace ClientServices.State.States
 
         public void Startup()
         {
-            PlayerManager.SetState(this);
-
             UserInterfaceManager.DisposeAllComponents();
 
             NetworkManager.MessageArrived += NetworkManagerMessageArrived;
@@ -52,8 +47,8 @@ namespace ClientServices.State.States
 
             _lobbyText = new TextSprite("lobbyText", "", ResourceManager.GetFont("CALIBRI"))
                             {
-                                Color = System.Drawing.Color.Black,
-                                ShadowColor = System.Drawing.Color.DimGray,
+                                Color = Color.Black,
+                                ShadowColor = Color.DimGray,
                                 Shadowed = true,
                                 ShadowOffset = new Vector2D(1, 1)
                             };
@@ -73,16 +68,16 @@ namespace ClientServices.State.States
             var jobListMsg = NetworkManager.CreateMessage();
             jobListMsg.Write((byte)NetMessage.JobList); //Request Joblist.
             NetworkManager.SendMessage(jobListMsg, NetDeliveryMethod.ReliableOrdered);
-
-            var joinButton = new Button("Join Game", ResourceManager);
-            joinButton.mouseOverColor = Color.LightSteelBlue;
+            
+            var joinButton = new Button("Join Game", ResourceManager) { mouseOverColor = Color.LightSteelBlue };
+            joinButton.Position = new Point(605 - joinButton.ClientArea.Width - 5, 200 - joinButton.ClientArea.Height - 5);
             joinButton.Clicked += JoinButtonClicked;
-            joinButton.Position = new System.Drawing.Point(605 - joinButton.ClientArea.Width - 5, 200 - joinButton.ClientArea.Height - 5);
+            
             UserInterfaceManager.AddComponent(joinButton);
 
-            _jobButtonContainer = new ScrollableContainer("LobbyJobCont", new System.Drawing.Size(450, 400), ResourceManager)
+            _jobButtonContainer = new ScrollableContainer("LobbyJobCont", new Size(450, 400), ResourceManager)
                                      {
-                                         Position = new System.Drawing.Point(630, 10)
+                                         Position = new Point(630, 10)
                                      };
 
             UserInterfaceManager.AddComponent(_jobButtonContainer);
@@ -103,9 +98,9 @@ namespace ClientServices.State.States
         public void GorgonRender(FrameEventArgs e)
         {
             Gorgon.CurrentRenderTarget.Clear();
-            Gorgon.CurrentRenderTarget.FilledRectangle(5, 5, 600, 200, System.Drawing.Color.SlateGray);
-            Gorgon.CurrentRenderTarget.FilledRectangle(625, 5, Gorgon.CurrentRenderTarget.Width - 625 - 5, Gorgon.CurrentRenderTarget.Height - 5 - 6, System.Drawing.Color.SlateGray);
-            Gorgon.CurrentRenderTarget.FilledRectangle(5, 220, 600, _lobbyChat.Position.Y - 250 - 5, System.Drawing.Color.SlateGray);
+            Gorgon.CurrentRenderTarget.FilledRectangle(5, 5, 600, 200, Color.SlateGray);
+            Gorgon.CurrentRenderTarget.FilledRectangle(625, 5, Gorgon.CurrentRenderTarget.Width - 625 - 5, Gorgon.CurrentRenderTarget.Height - 5 - 6, Color.SlateGray);
+            Gorgon.CurrentRenderTarget.FilledRectangle(5, 220, 600, _lobbyChat.Position.Y - 250 - 5, Color.SlateGray);
             _lobbyText.Position = new Vector2D(10, 10);
             _lobbyText.Text = "Server: " + _serverName;
             _lobbyText.Draw();
@@ -161,7 +156,7 @@ namespace ClientServices.State.States
                             AddChat(text);
                             break;
                         case NetMessage.PlayerCount:
-                            var newCount = message.ReadByte();
+                            //var newCount = message.ReadByte();
                             break;
                         case NetMessage.PlayerList:
                             HandlePlayerList(message);
@@ -204,7 +199,7 @@ namespace ClientServices.State.States
                 var current = new JobSelectButton(definition.Name, definition.JobIcon, definition.Description, ResourceManager)
                                   {
                                       Available = definition.Available,
-                                      Position = new System.Drawing.Point(5, pos)
+                                      Position = new Point(5, pos)
                                   };
 
                 current.Clicked += CurrentClicked;
@@ -232,7 +227,7 @@ namespace ClientServices.State.States
                 var currName = msg.ReadString();
                 var currStatus = (SessionStatus)msg.ReadByte();
                 var currRoundtrip = msg.ReadFloat();
-                _playerListStrings.Add(currName + "\tStatus: " + currStatus + "\tLatency: " + Math.Truncate(currRoundtrip * 1000) + " ms");
+                _playerListStrings.Add(currName + "\t\tStatus: " + currStatus + "\t\tLatency: " + Math.Truncate(currRoundtrip * 1000) + " ms");
             }
         }
 

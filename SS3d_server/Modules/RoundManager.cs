@@ -1,10 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using SS13_Server.Modules.Gamemodes;
-using SS13_Server.Modules;
-using SS13_Server;
+﻿using SS13_Server.Modules.Gamemodes;
 
 namespace SS13_Server.Modules
 {
@@ -30,23 +24,21 @@ namespace SS13_Server.Modules
         } 
         #endregion
 
-        private IGameMode currentGameMode;
+        public IGameMode CurrentGameMode { get; private set; }
 
-        public IGameMode CurrentGameMode { get { return currentGameMode; } private set { currentGameMode = value; } }
-
-        private bool ready = false;
+        private bool _ready;
 
         public void Initialize(IGameMode gamemode) //Called by StartLobby() before InitModules.
         {
-            currentGameMode = gamemode;
-            ready = true;
+            CurrentGameMode = gamemode;
+            _ready = true;
         }
 
         public void SpawnPlayer(PlayerSession player)
         {
-            if (!ready) return;
-            currentGameMode.SpawnPlayer(player);
-            currentGameMode.PlayerJoined(player);
+            if (!_ready) return;
+            CurrentGameMode.SpawnPlayer(player);
+            CurrentGameMode.PlayerJoined(player);
         }
     }
 }

@@ -22,12 +22,12 @@ namespace SS13_Server.Modules.Chat
             //Read the chat message and pass it on
             ChatChannel channel = (ChatChannel)message.ReadByte();
             string text = message.ReadString();
-            string name = SS13Server.Singleton.clientList[message.SenderConnection].playerName;
+            string name = SS13Server.Singleton.ClientList[message.SenderConnection].playerName;
             LogManager.Log("CHAT- Channel " + channel.ToString() +  " - Player " + name + "Message: " + text + "\n");
 
             int entityId = 0;
-            if (SS13Server.Singleton.playerManager.GetSessionByConnection(message.SenderConnection).attachedEntity != null)
-                entityId = SS13Server.Singleton.playerManager.GetSessionByConnection(message.SenderConnection).attachedEntity.Uid;
+            if (SS13Server.Singleton.PlayerManager.GetSessionByConnection(message.SenderConnection).attachedEntity != null)
+                entityId = SS13Server.Singleton.PlayerManager.GetSessionByConnection(message.SenderConnection).attachedEntity.Uid;
 
             text = text.Trim(); // Remove whitespace
             if (text[0] == '/')
@@ -88,16 +88,16 @@ namespace SS13_Server.Modules.Chat
                     if (args.Count > 1 && Convert.ToInt32(args[1]) > 0)
                     {
                         int amount = Convert.ToInt32(args[1]);
-                        SS13Server.Singleton.map.AddGasAt(SS13Server.Singleton.map.GetTileArrayPositionFromWorldPosition(position), GasType.Toxin, amount);
+                        SS13Server.Singleton.Map.AddGasAt(SS13Server.Singleton.Map.GetTileArrayPositionFromWorldPosition(position), GasType.Toxin, amount);
                     }
                     break;
                 case "gasreport":
 
-                    var p = SS13Server.Singleton.map.GetTileArrayPositionFromWorldPosition(position);
-                    var c = SS13Server.Singleton.map.GetTileAt(p.X, p.Y).gasCell;
+                    var p = SS13Server.Singleton.Map.GetTileArrayPositionFromWorldPosition(position);
+                    var c = SS13Server.Singleton.Map.GetTileAt(p.X, p.Y).gasCell;
                     foreach(var g in c.gasses)
                     {
-                        SS13Server.Singleton.chatManager.SendChatMessage(ChatChannel.Default, g.Key.ToString() + ": " + g.Value.ToString(), "GasReport", 0);
+                        SS13Server.Singleton.ChatManager.SendChatMessage(ChatChannel.Default, g.Key.ToString() + ": " + g.Value.ToString(), "GasReport", 0);
                     }
                     
                     break;
@@ -106,8 +106,8 @@ namespace SS13_Server.Modules.Chat
                         return;
                     else
                         position = player.position;
-                    p = SS13Server.Singleton.map.GetTileArrayPositionFromWorldPosition(position);
-                    var t = SS13Server.Singleton.map.GetTileAt(p.X, p.Y);
+                    p = SS13Server.Singleton.Map.GetTileArrayPositionFromWorldPosition(position);
+                    var t = SS13Server.Singleton.Map.GetTileAt(p.X, p.Y);
                     if (args.Count > 1 && Convert.ToInt32(args[1]) > 0)
                     {
                         for (int i = 0; i <= Convert.ToInt32(args[1]); i++)

@@ -137,7 +137,7 @@ namespace ClientServices.Placement
 
         private void PreparePlacement(string templateName)
         {
-            var template = EntityManager.Singleton.TemplateDB.GetTemplate(templateName);
+            var template = EntityManager.Singleton.TemplateDb.GetTemplate(templateName);
             if (template == null) return;
 
             var spriteParam = template.GetBaseSpriteParamaters().FirstOrDefault(); //Will break if states not ordered correctly.

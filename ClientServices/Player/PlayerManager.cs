@@ -20,7 +20,6 @@ namespace ClientServices.Player
         /* Here's the player controller. This will handle attaching GUIS and input to controllable things.
          * Why not just attach the inputs directly? It's messy! This makes the whole thing nicely encapsulated. 
          * This class also communicates with the server to let the server control what entity it is attached to. */
-        private IState _currentState;
 
         public event EventHandler<TypeEventArgs> RequestedStateSwitch;
 
@@ -48,21 +47,14 @@ namespace ClientServices.Player
             ControlledEntity = null;
         }
 
-        public void SetState(IState state)
-        {
-            _currentState = state;
-        }
-
         public void KeyDown(KeyboardKeys key)
         {
-            if (ControlledEntity == null)
-                return;
+
         }
 
         public void KeyUp(KeyboardKeys key)
         {
-            if (ControlledEntity == null)
-                return;
+
         }
 
         #region netcode
@@ -78,6 +70,7 @@ namespace ClientServices.Player
                     if (RequestedStateSwitch != null)
                     {
                         RequestedStateSwitch(this, new TypeEventArgs(typeof(LobbyScreen)));
+                        Detach();
                     }
                     break;
             }

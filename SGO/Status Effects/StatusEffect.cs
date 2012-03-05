@@ -25,7 +25,7 @@ namespace SGO
 
         public StatusEffectFamily family = StatusEffectFamily.None;
 
-        public StatusEffect(uint _uid, Entity _affected, uint duration = 0) //Do not add more parameters to the constructors or bad things happen.
+        public StatusEffect(uint _uid, Entity _affected, uint duration = 0, params object[] arguments) //Do not add more parameters to the constructors or bad things happen.
         {
             uid = _uid;
             affected = _affected;

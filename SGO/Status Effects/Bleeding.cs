@@ -37,7 +37,7 @@ namespace SGO
         public override void OnRemove()
         {
             bleedDmgTimer.Stop();
-            bleedEntTimer.Restart();
+            bleedEntTimer.Stop();
         }
 
         public override void OnUpdate()

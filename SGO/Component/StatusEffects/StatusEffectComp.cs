@@ -43,7 +43,7 @@ namespace SGO
             }
         }
 
-        public void AddEffect(string typeName, uint duration = 0)
+        public void AddEffect(string typeName, uint duration = 0, params object[] arguments)
         {
             Type t = Type.GetType("SGO." + typeName);
             if (t == null || !t.IsSubclassOf(typeof(StatusEffect))) return;

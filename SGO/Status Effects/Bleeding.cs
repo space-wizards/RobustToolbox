@@ -18,8 +18,8 @@ namespace SGO
         Stopwatch bleedDmgTimer = new Stopwatch();
         Stopwatch bleedEntTimer = new Stopwatch();
 
-        public Bleeding(uint _uid, Entity _affected, uint duration = 0)
-            : base(_uid, _affected, duration)
+        public Bleeding(uint _uid, Entity _affected, uint duration = 0, params object[] arguments)
+            : base(_uid, _affected, duration, arguments)
         {
             isDebuff = true;
             isUnique = true;

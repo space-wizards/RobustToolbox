@@ -67,6 +67,11 @@ namespace ClientServices.UserInterface.Components
             PreRender();
         }
 
+        public override void ComponentUpdate(params object[] args)
+        {
+            _targetArea.UpdateHealthIcon();
+        }
+
         private void PreRender()
         {
             var renderPos = new Point(0, 0);
@@ -100,18 +105,6 @@ namespace ClientServices.UserInterface.Components
 
         private void DrawPlayer()
         {
-            ////TODO RE-CONNECT PLAYER SPRITES TO DISPLAY
-            //if (playerSprite == null && playerController.controlledEntity != null)
-            //{
-            //    playerSprite = Utilities.GetSpriteComponentSprite(playerController.controlledEntity);
-            //}
-
-            //playerSprite.UniformScale = 1.5f;
-            //playerSprite.Position = new Vector2D(position.X + (width / 2f) - (playerSprite.ScaledWidth / 2f), position.Y + 5);
-            //playerSprite.Draw();
-
-            //playerSprite.UniformScale = 1.0f;
-
             _targetArea.Position = new Point(Position.X + (int)(Width / 2f) - (int)(_targetArea.ClientArea.Width / 2f), Position.Y + 15);
             _targetArea.Render();
 
@@ -138,7 +131,6 @@ namespace ClientServices.UserInterface.Components
                 noise.Draw(new Rectangle(new Point(Position.X + 6, Position.Y + 6), new Size((int)noise.Width, (int)noise.Height)));
             } 
             #endregion
-
         }
 
         public override void HandleNetworkMessage(NetIncomingMessage message)

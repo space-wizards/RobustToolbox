@@ -43,6 +43,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SS13.IoC", "SS13.IoC\SS13.I
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MessagingProfiler", "MessagingProfiler\MessagingProfiler.csproj", "{3D1ACB1A-28DC-45A1-842E-AA5F2C120278}"
 EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Other", "Other", "{0E16F7BE-EB96-4EA3-9077-591BAB4A7214}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -375,5 +377,9 @@ Global
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(NestedProjects) = preSolution
+		{F5690746-73FD-46E5-8213-56F5853A843C} = {0E16F7BE-EB96-4EA3-9077-591BAB4A7214}
+		{2A99B768-083D-4709-AEB8-791D4D4C6696} = {0E16F7BE-EB96-4EA3-9077-591BAB4A7214}
 	EndGlobalSection
 EndGlobal

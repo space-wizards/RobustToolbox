@@ -84,6 +84,7 @@
     <Compile Include="Component\Renderable\ItemSpriteComponent.cs" />
     <Compile Include="Component\Renderable\MobSpriteComponent.cs" />
     <Compile Include="Component\Renderable\SpriteComponent.cs" />
+    <Compile Include="Component\StatusEffects\StatusEffectComp.cs" />
     <Compile Include="ContextMenuEntry.cs" />
     <Compile Include="Entity.cs" />
     <Compile Include="EntityFactory.cs" />
@@ -95,6 +96,8 @@
     <Compile Include="Component\Input\KeyBindingInputComponent.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Component\Renderable\RenderableComponent.cs" />
+    <Compile Include="Status Effects\ExampleEffect.cs" />
+    <Compile Include="Status Effects\StatusEffect.cs" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\ClientInterfaces\ClientInterfaces.csproj">

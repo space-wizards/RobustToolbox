@@ -50,6 +50,7 @@ namespace ClientServices.UserInterface.Components
             legL.Clicked += Selected;
             legR.Clicked += Selected;
             Update();
+            UpdateHealthIcon();
         }
 
         void Selected(TargetingDummyElement sender)
@@ -62,11 +63,12 @@ namespace ClientServices.UserInterface.Components
             _networkManager.SendMessage(msg, NetDeliveryMethod.ReliableOrdered);
         }
 
-        public override sealed void Update()
+        public void UpdateHealthIcon()
         {
             var entity = _playerManager.ControlledEntity;
 
-            ClientArea = new Rectangle(Position, new Size(_elements[0].ClientArea.Width, _elements[0].ClientArea.Height));
+            if (entity == null) return;
+
             foreach (var current in _elements)
             {
                 if (entity != null && entity.HasComponent(ComponentFamily.Damageable))
@@ -80,6 +82,14 @@ namespace ClientServices.UserInterface.Components
                         current.MaxHealth = (int)reply.ParamsList[2];
                     }
                 }
+            }
+        }
+
+        public override sealed void Update()
+        {
+            ClientArea = new Rectangle(Position, new Size(_elements[0].ClientArea.Width, _elements[0].ClientArea.Height));
+            foreach (var current in _elements)
+            {
                 current.Position = Position;
                 current.Update();
             }

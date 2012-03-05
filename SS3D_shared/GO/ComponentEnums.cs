@@ -35,7 +35,7 @@ namespace SS13_Shared.GO
         WallMounted, //Provides methods to react to changing tiles. Intended for wall mounted objects.
         ContextMenu,
         Think, // Holds more specific scripts that need to respond to event messages
-
+        StatusEffects //Holds and manages status effects.
     }
 
     public enum ItemComponentNetMessage
@@ -165,7 +165,9 @@ namespace SS13_Shared.GO
         ContextRemove,
         ContextGetEntries,
         ContextMessage, //Sent when context menu option is clicked.
-        GetDescriptionString //Sent when description is requested and when answer is sent.
+        GetDescriptionString, //Sent when description is requested and when answer is sent.
+        AddStatusEffect,
+        RemoveStatusEffect,
     }
 
     public enum Hand
@@ -193,5 +195,15 @@ namespace SS13_Shared.GO
         WallMountedItems,
         WallTops,
         LightOverlay
+    }
+
+    public enum StatusEffectFamily
+    {
+        None,
+        Root,
+        Stun,
+        Snare,
+        Dot,
+        Hot
     }
 }

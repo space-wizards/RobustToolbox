@@ -9,6 +9,7 @@
       <Component name="HumanEquipmentComponent"></Component>
       <Component name="HumanHandsComponent"></Component>
       <Component name="HumanHealthComponent"></Component>
+      <Component name="StatusEffectComp"></Component>
       <Component name="InventoryComponent">
         <ExtendedParameters>
           <InventoryProperties inventorySize="20"></InventoryProperties>

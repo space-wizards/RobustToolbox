@@ -36,6 +36,11 @@ namespace SGO.Component.Item.ItemCapability
             if (target.HasComponent(SS13_Shared.GO.ComponentFamily.Damageable))
             {
                 target.SendMessage(this, ComponentMessageType.Damage, null, owner.Owner, damageAmount, damType, targetedArea);
+                if (target.HasComponent(ComponentFamily.StatusEffects)) //Use component messages instead. TODO - WOOP WOOP REMOVE THIS.
+                {
+                    StatusEffectComp statComp = (StatusEffectComp)target.GetComponent(ComponentFamily.StatusEffects);
+                    statComp.AddEffect("ExampleEffect");
+                }
                 return true;
             }
             return false;

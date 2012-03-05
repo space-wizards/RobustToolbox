@@ -203,7 +203,7 @@ namespace SS13_Shared.GO
         Root,
         Stun,
         Snare,
-        Dot,
-        Hot
+        Damage,
+        Healing
     }
 }

@@ -23,6 +23,8 @@ namespace ClientServices.UserInterface.Components
         private IEntity assignedEnt;
         private List<StatusEffectButton> buttons = new List<StatusEffectButton>();
 
+        private bool dragging = false;
+
         public StatusEffectBar(IResourceManager resourceManager, IPlayerManager playerManager)
         {
             _resourceManager = resourceManager;
@@ -80,18 +82,17 @@ namespace ClientServices.UserInterface.Components
 
             if (buttons.Count > 0)
             {
-                int curr_row_count = 0;
-                int curr_row_num = 0;
-
                 const int spacing = 3;
+                const int max_per_row = 5;
+
+                int curr_row_count = 0;
+                int curr_row_num = 0;  
 
                 int x_off = spacing;
                 int y_off = spacing;
 
                 int max_x = 0;
                 int max_y = 0;
-
-                const int max_per_row = 5;
 
                 foreach (StatusEffectButton button in buttons)
                 {
@@ -124,8 +125,10 @@ namespace ClientServices.UserInterface.Components
 
         public override void Render()
         {
-            Gorgon.CurrentRenderTarget.Circle(Position.X, Position.Y, 3, Color.Salmon);
-            Gorgon.CurrentRenderTarget.Rectangle(ClientArea.X, ClientArea.Y, ClientArea.Width, ClientArea.Height, Color.RoyalBlue);
+            if(buttons.Count > 0) Gorgon.CurrentRenderTarget.Rectangle(ClientArea.X, ClientArea.Y, ClientArea.Width, ClientArea.Height, Color.DimGray);
+
+            Gorgon.CurrentRenderTarget.Circle(Position.X, Position.Y, 3, Color.White);
+            Gorgon.CurrentRenderTarget.Circle(Position.X, Position.Y, 2, Color.Gray);
 
             foreach (StatusEffectButton button in buttons)
                 button.Render();
@@ -142,19 +145,37 @@ namespace ClientServices.UserInterface.Components
 
         public override bool MouseDown(MouseInputEventArgs e)
         {
+            Vector2D mousePoint = new Vector2D((int)e.Position.X, (int)e.Position.Y);
+
+            if ((mousePoint - new Vector2D(this.Position.X, this.Position.Y)).Length <= 3)
+                dragging = true;
+
             return false;
         }
 
         public override bool MouseUp(MouseInputEventArgs e)
         {
-            return false;
+            if (dragging)
+            {
+                dragging = false;
+                return true;
+            }
+            else
+                return false;
         }
 
         public override void MouseMove(MouseInputEventArgs e)
         {
-            foreach (StatusEffectButton button in buttons)
+            if (dragging)
             {
-                button.MouseMove(e);
+                this.Position = new Point((int)e.Position.X, (int)e.Position.Y); 
+            }
+            else
+            {
+                foreach (StatusEffectButton button in buttons)
+                {
+                    button.MouseMove(e);
+                }
             }
         }
     }

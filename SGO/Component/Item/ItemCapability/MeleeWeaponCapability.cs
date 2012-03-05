@@ -39,7 +39,7 @@ namespace SGO.Component.Item.ItemCapability
                 if (target.HasComponent(ComponentFamily.StatusEffects)) //Use component messages instead. TODO - WOOP WOOP REMOVE THIS.
                 {
                     StatusEffectComp statComp = (StatusEffectComp)target.GetComponent(ComponentFamily.StatusEffects);
-                    statComp.AddEffect("ExampleEffect");
+                    statComp.AddEffect("Bleeding");
                 }
                 return true;
             }

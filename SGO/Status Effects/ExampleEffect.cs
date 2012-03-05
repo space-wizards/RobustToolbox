@@ -17,11 +17,11 @@ namespace SGO
         public ExampleEffect(uint _uid, Entity _affected)  //Do not add more parameters to the constructors or bad things happen.
             : base(_uid, _affected)
         {
-            expiresAt = DateTime.Now.AddSeconds(5);
+            expiresAt = DateTime.Now.AddSeconds(10);
             doesExpire = true;
             isDebuff = false;
             isUnique = false;
-            family = StatusEffectFamily.Dot;
+            family = StatusEffectFamily.None;
         }
 
         public override void OnAdd()

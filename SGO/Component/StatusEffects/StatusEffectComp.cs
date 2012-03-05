@@ -52,7 +52,15 @@ namespace SGO
 
             StatusEffect newEffect = (StatusEffect)Activator.CreateInstance(t, new object[] { nextUid, this.Owner });
 
-            if (newEffect.isUnique && HasEffect(typeName)) return;
+            if (newEffect.isUnique && HasEffect(typeName))
+            {
+                //if (newEffect.doesExpire) //Its unique but has a duration. Refresh duration. TODO: Update client.
+                //{
+                //    StatusEffect oldEffect = Effects.FirstOrDefault(x => x.GetType() == t);
+                //    if (oldEffect != null) oldEffect.expiresAt = newEffect.expiresAt;
+                //}
+                return;
+            }
 
             Effects.Add(newEffect);
             newEffect.OnAdd();

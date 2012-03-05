@@ -35,7 +35,7 @@ namespace ClientServices.UserInterface.Components
 
             timeLeft = new TextSprite("timeleft"+_assigned.uid.ToString()+_assigned.name, "", _resourceManager.GetFont("CALIBRI"));
             timeLeft.Color = Color.White;
-            timeLeft.ShadowColor = Color.Black;
+            timeLeft.ShadowColor = Color.Gray;
             timeLeft.ShadowOffset = new Vector2D(1, 1);
             timeLeft.Shadowed = true;
 
@@ -52,7 +52,12 @@ namespace ClientServices.UserInterface.Components
             {
                 string leftStr = Math.Truncate(assignedEffect.expiresAt.Subtract(DateTime.Now).TotalSeconds).ToString();
                 timeLeft.Text = leftStr;
-                timeLeft.Position = new Vector2D(this.Position.X + 4, this.Position.Y + 12);
+                int x_pos = 16 - (int)(timeLeft.Width / 2f);
+
+                if (assignedEffect.isDebuff) timeLeft.Color = Color.Red;
+                else timeLeft.Color = Color.ForestGreen;
+
+                timeLeft.Position = new Vector2D(this.Position.X + x_pos, this.Position.Y + 15);
             }
 
             ClientArea = new Rectangle(Position, new Size((int)_buttonSprite.AABB.Width, (int)_buttonSprite.AABB.Height));
@@ -78,7 +83,7 @@ namespace ClientServices.UserInterface.Components
                 string leftStr = Math.Truncate(assignedEffect.expiresAt.Subtract(DateTime.Now).TotalSeconds).ToString();
 
                 string tooltipStr = assignedEffect.name + 
-                    (assignedEffect.family != StatusEffectFamily.None ? Environment.NewLine + Environment.NewLine + assignedEffect.family.ToString() : "") + Environment.NewLine + Environment.NewLine + 
+                    (assignedEffect.family != StatusEffectFamily.None ?  Environment.NewLine + "(" + assignedEffect.family.ToString() + ")" : "") + Environment.NewLine + Environment.NewLine + 
                     assignedEffect.description + Environment.NewLine + Environment.NewLine + 
                     leftStr + " sec";
 
@@ -100,11 +105,7 @@ namespace ClientServices.UserInterface.Components
 
         public override bool MouseDown(MouseInputEventArgs e)
         {
-            if (ClientArea.Contains(new Point((int)e.Position.X, (int)e.Position.Y)))
-            {
-                return true;
-            }
-            return false;
+                return false;
         }
 
         public override bool MouseUp(MouseInputEventArgs e)

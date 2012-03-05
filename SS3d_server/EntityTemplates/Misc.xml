@@ -12,4 +12,12 @@
       </Component>
     </Components>
   </EntityTemplate>
+  <EntityTemplate name="Blood">
+    <Components>
+      <Component name="ClickableComponent"></Component>
+      <Component name="SpriteComponent"></Component>
+      <Component name="BasicMoverComponent"></Component>
+      <Component name="BasicInteractableComponent"></Component>
+    </Components>
+  </EntityTemplate>
 </EntityTemplates>

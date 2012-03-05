@@ -9,17 +9,18 @@ using System.Collections;
 using Lidgren.Network;
 using SS13_Shared;
 using SS13_Shared.GO;
+using System.Diagnostics;
 
 namespace SGO
 {
-    public class ExampleEffect : StatusEffect
+    public class Rooted : StatusEffect
     {
-        public ExampleEffect(uint _uid, Entity _affected, uint duration = 0)  //Do not add more parameters to the constructors or bad things happen.
+        public Rooted(uint _uid, Entity _affected, uint duration = 0)
             : base(_uid, _affected, duration)
         {
-            isDebuff = false;
-            isUnique = false;
-            family = StatusEffectFamily.None;
+            isDebuff = true;
+            isUnique = true;
+            family = StatusEffectFamily.Root;
         }
 
         public override void OnAdd()

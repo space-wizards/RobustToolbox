@@ -84,8 +84,8 @@ namespace ClientServices.UserInterface.Components
 
                 string tooltipStr = assignedEffect.name + 
                     (assignedEffect.family != StatusEffectFamily.None ?  Environment.NewLine + "(" + assignedEffect.family.ToString() + ")" : "") + Environment.NewLine + Environment.NewLine + 
-                    assignedEffect.description + Environment.NewLine + Environment.NewLine + 
-                    leftStr + " sec";
+                    assignedEffect.description + 
+                    (assignedEffect.doesExpire ? Environment.NewLine + Environment.NewLine + leftStr + " sec" : "");
 
                 tooltip.Text = tooltipStr;
                 float x_pos = (tooltipPos.X + 10 + tooltip.Width + 5) > Gorgon.Screen.Width ? 0 - tooltip.Width - 10 : 10 + 5;

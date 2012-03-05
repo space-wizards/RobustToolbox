@@ -132,6 +132,10 @@ namespace ClientServices.State.States
             combo.Position = new Point(Gorgon.Screen.Width - combo.ClientArea.Width - 3, Gorgon.Screen.Height - combo.ClientArea.Height - 3);
             UserInterfaceManager.AddComponent(combo);
             UserInterfaceManager.AddComponent(new StatPanelComponent(ConfigurationManager.GetPlayerName(), PlayerManager, NetworkManager, ResourceManager));
+
+            var statusBar = new StatusEffectBar(ResourceManager, PlayerManager);
+            statusBar.Position = new Point(Gorgon.Screen.Width - 200, 10);
+            UserInterfaceManager.AddComponent(statusBar);
         }
 
         //void mNetworkMgr_Disconnected(NetworkManager netMgr)

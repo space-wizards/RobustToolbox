@@ -123,7 +123,7 @@ namespace ClientServices.UserInterface.Components
                 return true;
             }
 
-            if (char.IsLetterOrDigit(e.CharacterMapping.Character))
+            if (char.IsLetterOrDigit(e.CharacterMapping.Character) || char.IsPunctuation(e.CharacterMapping.Character))
             {
                 if (Text.Length == MaxCharacters) return false;
                 if (e.Shift)
@@ -144,15 +144,10 @@ namespace ClientServices.UserInterface.Components
         private void SetVisibleText()
         {
             displayText = "";
+            int index = -1;
 
-            int index = 0;
-            bool done = false;
-
-            while (Label.MeasureLine(displayText + "|") < _clientAreaMain.Width && !done)
-            {
+            while (Label.MeasureLine(displayText + "|") < _clientAreaMain.Width && ++index <= Text.Length)
                 displayText = Text.Substring(Text.Length - index, index);
-                if (++index > Text.Length) done = true;
-            }
         }
 
         private void Submit()

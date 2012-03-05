@@ -116,6 +116,8 @@
     <Compile Include="UserInterface\Components\Chatbox.cs" />
     <Compile Include="UserInterface\Components\Checkbox.cs" />
     <Compile Include="UserInterface\Components\ContextMenu.cs" />
+    <Compile Include="UserInterface\Components\StatusEffectBar.cs" />
+    <Compile Include="UserInterface\Components\StatusEffectButton.cs" />
     <Compile Include="UserInterface\Components\DisconnectedScreenBlocker.cs" />
     <Compile Include="UserInterface\Components\EntitySpawnPanel.cs" />
     <Compile Include="UserInterface\Components\EntitySpawnSelectButton.cs" />

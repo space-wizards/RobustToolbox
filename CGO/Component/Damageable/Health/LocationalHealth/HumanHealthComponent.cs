@@ -1,5 +1,9 @@
 ﻿using System.Collections.Generic;
 using System.Linq;
+using ClientInterfaces.GOC;
+using ClientInterfaces.UserInterface;
+using ClientInterfaces.Player;
+using SS13.IoC;
 using SS13_Shared.GO;
 using SS13_Shared;
 
@@ -91,6 +95,9 @@ namespace CGO
             MaxHealth = GetMaxHealth();
             Health = GetHealth();
             if (Health <= 0) IsDead = true; //Need better logic here.
+
+            if(IoCManager.Resolve<IPlayerManager>().ControlledEntity.Uid == Owner.Uid)
+                IoCManager.Resolve<IUserInterfaceManager>().ComponentUpdate(GuiComponentType.StatPanelComponent);
         }
 
         public override float GetMaxHealth()

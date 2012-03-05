@@ -43,14 +43,14 @@ namespace SGO
             }
         }
 
-        public void AddEffect(string typeName)
+        public void AddEffect(string typeName, uint duration = 0)
         {
             Type t = Type.GetType("SGO." + typeName);
             if (t == null || !t.IsSubclassOf(typeof(StatusEffect))) return;
 
             uint nextUid = uidCurr++; //Increases uid even if adding fails due to effect being unique. fix.
 
-            StatusEffect newEffect = (StatusEffect)Activator.CreateInstance(t, new object[] { nextUid, this.Owner });
+            StatusEffect newEffect = (StatusEffect)Activator.CreateInstance(t, new object[] { nextUid, this.Owner, duration });
 
             if (newEffect.isUnique && HasEffect(typeName))
             {

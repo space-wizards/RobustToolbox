@@ -18,11 +18,9 @@ namespace SGO
         Stopwatch bleedDmgTimer = new Stopwatch();
         Stopwatch bleedEntTimer = new Stopwatch();
 
-        public Bleeding(uint _uid, Entity _affected)
-            : base(_uid, _affected)
+        public Bleeding(uint _uid, Entity _affected, uint duration = 0)
+            : base(_uid, _affected, duration)
         {
-            expiresAt = DateTime.Now.AddSeconds(10);
-            doesExpire = true;
             isDebuff = true;
             isUnique = true;
             family = StatusEffectFamily.Damage;
@@ -48,7 +46,7 @@ namespace SGO
                 affected.SendMessage(this, ComponentMessageType.Damage, null, affected, 1, DamageType.Slashing, BodyPart.Torso);
             }
 
-            if (bleedEntTimer.ElapsedMilliseconds >= 2000)
+            if (bleedEntTimer.ElapsedMilliseconds >= 1500)
             {
                 bleedEntTimer.Restart();
                 EntityManager.Singleton.SpawnEntity("Blood", affected.position);

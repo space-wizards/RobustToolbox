@@ -20,9 +20,12 @@ namespace CGO
             get { return ComponentFamily.Mover; }
         }
 
-        public override void RecieveMessage(object sender, ComponentMessageType type, List<ComponentReplyMessage> replies, params object[] list)
+        public override ComponentReplyMessage RecieveMessage(object sender, ComponentMessageType type, params object[] list)
         {
-            base.RecieveMessage(sender, type, replies, list);
+            ComponentReplyMessage reply = base.RecieveMessage(sender, type, list);
+
+            if (sender == this) //Don't listen to our own messages!
+                return ComponentReplyMessage.Empty;
 
             switch (type)
             {
@@ -30,6 +33,8 @@ namespace CGO
                     Attach((int)list[0]);
                     break;
             }
+
+            return reply;
         }
 
         public override void OnRemove()
@@ -55,7 +60,7 @@ namespace CGO
             if (!replies.Any()) return;
 
             _movedir = (Constants.MoveDirs)replies.First().ParamsList[0];
-            Owner.SendMessage(this, ComponentMessageType.MoveDirection, null, _movedir);
+            Owner.SendMessage(this, ComponentMessageType.MoveDirection, _movedir);
         }
 
         private void Detach()
@@ -102,7 +107,7 @@ namespace CGO
             if (movedir == _movedir) return;
 
             _movedir = movedir;
-            Owner.SendMessage(this, ComponentMessageType.MoveDirection, null, _movedir);
+            Owner.SendMessage(this, ComponentMessageType.MoveDirection, _movedir);
         }
     }
 }

@@ -19,9 +19,12 @@ namespace CGO
             DrawDepth = DrawDepth.FloorObjects; //Floor drawdepth
         }
 
-        public override void RecieveMessage(object sender, ComponentMessageType type, List<ComponentReplyMessage> replies, params object[] list)
+        public override ComponentReplyMessage RecieveMessage(object sender, ComponentMessageType type, params object[] list)
         {
-            base.RecieveMessage(sender, type, replies, list);
+            var reply = base.RecieveMessage(sender, type, list);
+
+            if (sender == this) //Don't listen to our own messages!
+                return ComponentReplyMessage.Empty;
 
             switch (type)
             {
@@ -115,7 +118,7 @@ namespace CGO
                     break;
             }
 
-            return;
+            return reply;
         }
 
         /// <summary>

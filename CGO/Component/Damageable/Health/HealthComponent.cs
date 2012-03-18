@@ -23,18 +23,21 @@ namespace CGO
             }
         }
 
-        public override void RecieveMessage(object sender, ComponentMessageType type, List<ComponentReplyMessage> replies, params object[] list)
+        public override ComponentReplyMessage RecieveMessage(object sender, ComponentMessageType type, params object[] list)
         {
+            var reply = base.RecieveMessage(sender, type, list);
+
+            if (sender == this) //Don't listen to our own messages!
+                return ComponentReplyMessage.Empty;
+
             switch (type)
             {
                 case ComponentMessageType.GetCurrentHealth:
-                    var reply2 = new ComponentReplyMessage(ComponentMessageType.CurrentHealth, GetHealth(), GetMaxHealth());
-                    replies.Add(reply2);
-                    break;
-                default:
-                    base.RecieveMessage(sender, type, replies, list);
+                    reply = new ComponentReplyMessage(ComponentMessageType.CurrentHealth, GetHealth(), GetMaxHealth());
                     break;
             }
+
+            return reply;
         }
 
         public virtual float GetMaxHealth()

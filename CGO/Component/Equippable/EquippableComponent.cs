@@ -27,9 +27,9 @@ namespace CGO
 
         private void EquippedBy(int uid, EquipmentSlot wearloc)
         {
-            Owner.SendMessage(this, ComponentMessageType.ItemEquipped, null);
+            Owner.SendMessage(this, ComponentMessageType.ItemEquipped);
             Owner.AddComponent(ComponentFamily.Mover, ComponentFactory.Singleton.GetComponent("SlaveMoverComponent"));
-            Owner.SendMessage(this, ComponentMessageType.SlaveAttach, null, uid);
+            Owner.SendMessage(this, ComponentMessageType.SlaveAttach, uid);
             switch(wearloc)
             {
                 case EquipmentSlot.Back:
@@ -67,12 +67,12 @@ namespace CGO
 
         private void SendDrawDepth(SS13_Shared.GO.DrawDepth dd)
         {
-            Owner.SendMessage(this, ComponentMessageType.SetWornDrawDepth, null, dd);
+            Owner.SendMessage(this, ComponentMessageType.SetWornDrawDepth, dd);
         }
 
         private void UnEquipped()
         {
-            Owner.SendMessage(this, ComponentMessageType.ItemUnEquipped, null);
+            Owner.SendMessage(this, ComponentMessageType.ItemUnEquipped);
             Owner.AddComponent(ComponentFamily.Mover, ComponentFactory.Singleton.GetComponent("NetworkMoverComponent"));
         }
     }

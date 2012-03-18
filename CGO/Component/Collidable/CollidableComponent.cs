@@ -79,9 +79,12 @@ namespace CGO
         /// <param name="type"></param>
         /// <param name="reply"></param>
         /// <param name="list"></param>
-        public override void RecieveMessage(object sender, ComponentMessageType type, List<ComponentReplyMessage> reply, params object[] list)
+        public override ComponentReplyMessage RecieveMessage(object sender, ComponentMessageType type, params object[] list)
         {
-            base.RecieveMessage(sender, type, reply, list);
+            var reply = base.RecieveMessage(sender, type, list);
+
+            if (sender == this) //Don't listen to our own messages!
+                return ComponentReplyMessage.Empty;
 
             switch (type)
             {
@@ -100,6 +103,8 @@ namespace CGO
                     EnableCollision();
                     break;
             }
+
+            return reply;
         }
 
         public override void HandleNetworkMessage(IncomingEntityComponentMessage message)
@@ -211,7 +216,7 @@ namespace CGO
             if (OnBump != null)
                 OnBump(this, new EventArgs());
 
-            Owner.SendMessage(this, ComponentMessageType.Bumped, null);
+            Owner.SendMessage(this, ComponentMessageType.Bumped);
             Owner.SendComponentNetworkMessage(this, Lidgren.Network.NetDeliveryMethod.ReliableUnordered, ComponentMessageType.Bumped);
         }
 

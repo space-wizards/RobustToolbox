@@ -68,7 +68,7 @@ namespace ClientServices.UserInterface.Components
                 _userInterfaceManager.AddComponent(newExamine);
                 newExamine.Position = new Point(ClientArea.X, ClientArea.Y);
             }
-            else _owningEntity.SendMessage(this, SS13_Shared.GO.ComponentMessageType.ContextMessage, null, (string)sender.UserData);
+            else _owningEntity.SendMessage(this, SS13_Shared.GO.ComponentMessageType.ContextMessage, (string)sender.UserData);
         }
 
         public override void Update()

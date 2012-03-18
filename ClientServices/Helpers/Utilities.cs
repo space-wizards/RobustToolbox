@@ -21,7 +21,7 @@ namespace ClientServices.Helpers
         public static Sprite GetSpriteComponentSprite(IEntity entity)
         {
             var replies = new List<ComponentReplyMessage>();
-            entity.SendMessage(entity, ComponentMessageType.GetSprite, replies, null);
+            entity.SendMessage(entity, ComponentMessageType.GetSprite, replies);
             if (replies.Any(l => l.MessageType == ComponentMessageType.CurrentSprite))
             {
                 var spriteMsg = replies.First(l => l.MessageType == ComponentMessageType.CurrentSprite);

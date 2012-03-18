@@ -323,7 +323,7 @@ namespace ClientServices.State.States
             var a = EntityManager.Singleton.GetEntity(entityId);
             if (a != null)
             {
-                a.SendMessage(this, ComponentMessageType.EntitySaidSomething, null, channel, text);
+                a.SendMessage(this, ComponentMessageType.EntitySaidSomething, channel, text);
             }
         }
 

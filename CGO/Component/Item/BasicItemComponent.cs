@@ -20,12 +20,12 @@ namespace CGO
                     Owner.AddComponent(ComponentFamily.Mover, ComponentFactory.Singleton.GetComponent("SlaveMoverComponent"));
                     var e = EntityManager.Singleton.GetEntity((int)message.MessageParameters[1]);
                     var h = (Hand)message.MessageParameters[2];
-                    Owner.SendMessage(this, ComponentMessageType.PickedUp, null, h); 
-                    Owner.SendMessage(this, ComponentMessageType.SlaveAttach, null, e.Uid);
+                    Owner.SendMessage(this, ComponentMessageType.PickedUp, h); 
+                    Owner.SendMessage(this, ComponentMessageType.SlaveAttach, e.Uid);
                     break;
                 case ItemComponentNetMessage.Dropped: //I've been dropped -- says the server's item component
                     Owner.AddComponent(ComponentFamily.Mover, ComponentFactory.Singleton.GetComponent("NetworkMoverComponent"));
-                    Owner.SendMessage(this, ComponentMessageType.Dropped, null);
+                    Owner.SendMessage(this, ComponentMessageType.Dropped);
                     break;
             }
         }

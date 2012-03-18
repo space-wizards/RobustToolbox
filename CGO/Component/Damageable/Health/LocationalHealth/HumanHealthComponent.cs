@@ -26,8 +26,13 @@ namespace CGO
             }
         }
 
-        public override void RecieveMessage(object sender, ComponentMessageType type, List<ComponentReplyMessage> replies, params object[] list)
+        public override ComponentReplyMessage RecieveMessage(object sender, ComponentMessageType type, params object[] list)
         {
+            var reply = base.RecieveMessage(sender, type, list);
+
+            if (sender == this) //Don't listen to our own messages!
+                return ComponentReplyMessage.Empty;
+
             switch (type)
             {
                 case ComponentMessageType.GetCurrentLocationHealth:
@@ -35,18 +40,15 @@ namespace CGO
                     if (DamageZones.Exists(x => x.Location == location))
                     {
                         var dmgLoc = DamageZones.First(x => x.Location == location);
-                        var reply1 = new ComponentReplyMessage(ComponentMessageType.CurrentLocationHealth, location, dmgLoc.UpdateTotalHealth(), dmgLoc.MaxHealth);
-                        replies.Add(reply1);
+                        reply = new ComponentReplyMessage(ComponentMessageType.CurrentLocationHealth, location, dmgLoc.UpdateTotalHealth(), dmgLoc.MaxHealth);
                     }
                     break;
                 case ComponentMessageType.GetCurrentHealth:
-                    var reply2 = new ComponentReplyMessage(ComponentMessageType.CurrentHealth, GetHealth(), GetMaxHealth());
-                    replies.Add(reply2);
-                    break;
-                default:
-                    base.RecieveMessage(sender, type, replies, list);
+                    reply = new ComponentReplyMessage(ComponentMessageType.CurrentHealth, GetHealth(), GetMaxHealth());
                     break;
             }
+
+            return reply;
         }
 
         public void HandleHealthUpdate(IncomingEntityComponentMessage msg)

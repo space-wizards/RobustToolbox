@@ -15,12 +15,12 @@ namespace CGO
             get { return ComponentFamily.ContextMenu; }
         }
         
-        public override void RecieveMessage(object sender, ComponentMessageType type, List<ComponentReplyMessage> reply, params object[] list)
+        public override ComponentReplyMessage RecieveMessage(object sender, ComponentMessageType type, params object[] list)
         {
-            base.RecieveMessage(sender, type, reply, list);
+            ComponentReplyMessage reply = base.RecieveMessage(sender, type, list);
 
             if (sender == this) //Don't listen to our own messages!
-                return;
+                return ComponentReplyMessage.Empty;
 
             switch (type)
             {
@@ -33,11 +33,11 @@ namespace CGO
                     break;
 
                 case ComponentMessageType.ContextGetEntries:
-                    var compReply = new ComponentReplyMessage(ComponentMessageType.ContextGetEntries,_entries);
-                    reply.Add(compReply);
+                    reply = new ComponentReplyMessage(ComponentMessageType.ContextGetEntries,_entries);
                     break;
             }
-            
+
+            return reply;
         }
 
         public void RemoveEntryByName(string name)

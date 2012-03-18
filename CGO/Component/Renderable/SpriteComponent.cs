@@ -38,7 +38,7 @@ namespace CGO
         {
             base.OnAdd(owner);
             //Send a spritechanged message so everything knows whassup.
-            Owner.SendMessage(this, ComponentMessageType.SpriteChanged, null);
+            Owner.SendMessage(this, ComponentMessageType.SpriteChanged);
         }
 
         public Sprite GetCurrentSprite()
@@ -80,21 +80,23 @@ namespace CGO
             }
         }
 
-        public override void RecieveMessage(object sender, ComponentMessageType type, List<ComponentReplyMessage> reply, params object[] list)
+        public override ComponentReplyMessage RecieveMessage(object sender, ComponentMessageType type, params object[] list)
         {
-            base.RecieveMessage(sender, type, reply, list);
-            if (sender == this) return;
+            var reply = base.RecieveMessage(sender, type, list);
+
+            if (sender == this) //Don't listen to our own messages!
+                return ComponentReplyMessage.Empty;
 
             switch (type)
             {
                 case ComponentMessageType.CheckSpriteClick:
-                    reply.Add(new ComponentReplyMessage(ComponentMessageType.SpriteWasClicked, WasClicked((PointF)list[0]), DrawDepth));
+                    reply = new ComponentReplyMessage(ComponentMessageType.SpriteWasClicked, WasClicked((PointF)list[0]), DrawDepth);
                     break;
                 case ComponentMessageType.GetAABB:
-                    reply.Add(new ComponentReplyMessage(ComponentMessageType.CurrentAABB, AABB));
+                    reply = new ComponentReplyMessage(ComponentMessageType.CurrentAABB, AABB);
                     break;
                 case ComponentMessageType.GetSprite:
-                    reply.Add(new ComponentReplyMessage(ComponentMessageType.CurrentSprite, GetBaseSprite()));
+                    reply = new ComponentReplyMessage(ComponentMessageType.CurrentSprite, GetBaseSprite());
                     break;
                 case ComponentMessageType.SetSpriteByKey:
                     SetSpriteByKey((string)list[0]);
@@ -103,6 +105,8 @@ namespace CGO
                     SetDrawDepth((DrawDepth)list[0]);
                     break;
             }
+
+            return reply;
         }
 
         protected virtual Sprite GetBaseSprite()
@@ -138,7 +142,7 @@ namespace CGO
             {
                 currentSprite = sprites[spriteKey];
                 if(Owner != null)
-                    Owner.SendMessage(this, ComponentMessageType.SpriteChanged, null);
+                    Owner.SendMessage(this, ComponentMessageType.SpriteChanged);
             }
             else
                 throw new Exception("Whoops. That sprite isn't in the dictionary.");

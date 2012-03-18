@@ -32,16 +32,21 @@ namespace CGO
             Translate((float)x, (float)y);
         }
 
-        public override void RecieveMessage(object sender, ComponentMessageType type, List<ComponentReplyMessage> reply, params object[] list)
+        public override ComponentReplyMessage RecieveMessage(object sender, ComponentMessageType type, params object[] list)
         {
-            base.RecieveMessage(sender, type, reply, list);
+            var reply = base.RecieveMessage(sender, type, list);
+
+            if (sender == this) //Don't listen to our own messages!
+                return ComponentReplyMessage.Empty;
 
             switch (type)
             {
                 case ComponentMessageType.GetMoveDir:
-                    reply.Add(new ComponentReplyMessage(ComponentMessageType.MoveDirection, movedir));
+                    reply = new ComponentReplyMessage(ComponentMessageType.MoveDirection, movedir);
                     break;
             }
+
+            return reply;
         }
 
         public override void Update(float frameTime)
@@ -119,7 +124,7 @@ namespace CGO
             if (_movedir != movedir)
             {
                 movedir = _movedir;
-                Owner.SendMessage(this, ComponentMessageType.MoveDirection, null, movedir);
+                Owner.SendMessage(this, ComponentMessageType.MoveDirection, movedir);
             }
         }
     }

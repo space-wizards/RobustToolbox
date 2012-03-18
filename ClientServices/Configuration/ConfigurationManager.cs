@@ -101,5 +101,10 @@ namespace ClientServices.Configuration
         {
             return Configuration.ServerAddress;
         }
+
+        public bool GetMessageLogging()
+        {
+            return Configuration.MessageLogging;
+        }
     }
 }

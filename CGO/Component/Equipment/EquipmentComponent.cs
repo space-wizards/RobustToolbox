@@ -28,19 +28,24 @@ namespace CGO
             }
         }
 
-        public override void RecieveMessage(object sender, ComponentMessageType type, List<ComponentReplyMessage> reply, params object[] list)
+        public override ComponentReplyMessage RecieveMessage(object sender, ComponentMessageType type, params object[] list)
         {
-            base.RecieveMessage(sender, type, reply, list);
+            ComponentReplyMessage reply = base.RecieveMessage(sender, type, list);
+
+            if (sender == this) //Don't listen to our own messages!
+                return ComponentReplyMessage.Empty;
 
             switch(type)
             {
                 case ComponentMessageType.GetItemInEquipmentSlot:
-                    reply.Add(!IsEmpty((EquipmentSlot) list[0])
+                    reply = !IsEmpty((EquipmentSlot) list[0])
                                   ? new ComponentReplyMessage(ComponentMessageType.ReturnItemInEquipmentSlot,
                                                               EquippedEntities[(EquipmentSlot) list[0]])
-                                  : new ComponentReplyMessage(ComponentMessageType.ItemSlotEmpty));
+                                  : new ComponentReplyMessage(ComponentMessageType.ItemSlotEmpty);
                     break;
             }
+
+            return reply;
         }
 
         public void DispatchEquip(int uid)

@@ -40,21 +40,22 @@ namespace CGO
             PlainTranslate((float)x, (float)y);
         }
 
-        public override void RecieveMessage(object sender, ComponentMessageType type, List<ComponentReplyMessage> replies, params object[] list)
+        public override ComponentReplyMessage RecieveMessage(object sender, ComponentMessageType type, params object[] list)
         {
-            base.RecieveMessage(sender, type, replies, list);
+            var reply = base.RecieveMessage(sender, type, list);
 
-            if (sender == this)
-                return;
+            if (sender == this) //Don't listen to our own messages!
+                return ComponentReplyMessage.Empty;
             switch (type)
             {
                 case ComponentMessageType.BoundKeyChange:
                     HandleKeyChange(list);
                     break;
                 case ComponentMessageType.GetMoveDir:
-                    replies.Add(new ComponentReplyMessage(ComponentMessageType.MoveDirection, _movedir));
+                    reply = new ComponentReplyMessage(ComponentMessageType.MoveDirection, _movedir);
                     break;
             }
+            return reply;
         }
 
         /// <summary>
@@ -128,7 +129,7 @@ namespace CGO
             if (movedir == _movedir) return;
 
             _movedir = movedir;
-            Owner.SendMessage(this, ComponentMessageType.MoveDirection, null, _movedir);
+            Owner.SendMessage(this, ComponentMessageType.MoveDirection, _movedir);
         }
 
         public virtual void SendPositionUpdate()

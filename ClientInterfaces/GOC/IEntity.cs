@@ -24,8 +24,11 @@ namespace ClientInterfaces.GOC
         void Moved();
         void Shutdown();
         void SendMessage(object sender, ComponentMessageType type, List<ComponentReplyMessage> replies, params object[] args);
+        void SendMessage(object sender, ComponentMessageType type, params object[] args);
+        ComponentReplyMessage SendMessage(object sender, ComponentFamily family, ComponentMessageType type, params object[] args);
         void SendComponentNetworkMessage(IGameObjectComponent component, NetDeliveryMethod method, params object[] messageParams);
         void SendComponentInstantiationMessage(IGameObjectComponent component);
         void HandleNetworkMessage(IncomingEntityMessage message);
+
     }
 }

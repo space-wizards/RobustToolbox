@@ -8,6 +8,7 @@ using SS13_Shared;
 using SS13_Shared.GO;
 using ClientInterfaces.MessageLogging;
 using SS13.IoC;
+using ClientInterfaces.Configuration;
 
 namespace CGO
 {
@@ -36,6 +37,8 @@ namespace CGO
 
         public int Uid { get; set; }
 
+        private bool _messageProfiling;
+
         /// <summary>
         /// These are the only real pieces of data that the entity should have -- position and rotation.
         /// </summary>
@@ -53,6 +56,9 @@ namespace CGO
         {
             _entityNetworkManager = entityNetworkManager;
             Initialize();
+
+            var cfg = IoCManager.Resolve<IConfigurationManager>();
+            _messageProfiling = cfg.GetMessageLogging();
         }
 
         /// <summary>
@@ -60,7 +66,7 @@ namespace CGO
         /// </summary>
         public virtual void Initialize()
         {
-            SendMessage(this, ComponentMessageType.Initialize, null);
+            SendMessage(this, ComponentMessageType.Initialize);
             Initialized = true;
         }
 
@@ -135,10 +141,52 @@ namespace CGO
         /// <param name="args">message parameters</param>
         public void SendMessage(object sender, ComponentMessageType type, List<ComponentReplyMessage> replies, params object[] args)
         {
+            LogComponentMessage(sender, type, args);
+         
+            foreach (var component in _components.Values.ToArray())
+            {
+                if (replies != null)
+                {
+                    var reply = component.RecieveMessage(sender, type, args);
+                    if (reply.MessageType != ComponentMessageType.Empty)
+                        replies.Add(reply);
+                }
+                else
+                    component.RecieveMessage(sender, type, args);
+            }
+        }
+
+        public void SendMessage(object sender, ComponentMessageType type, params object[] args)
+        {
+            LogComponentMessage(sender, type, args);
+
+            foreach (var component in _components.Values.ToArray())
+            {
+                component.RecieveMessage(sender, type, args);
+            }
+        }
+
+        public ComponentReplyMessage SendMessage(object sender, ComponentFamily family, ComponentMessageType type, params object[] args)
+        {
+            LogComponentMessage(sender, type, args);
+
+            return GetComponent(family).RecieveMessage(sender, type, args);
+        }
+
+        /// <summary>
+        /// Logs a component message to the messaging profiler
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="type"></param>
+        /// <param name="args"></param>
+        private void LogComponentMessage(object sender, ComponentMessageType type, params object[] args)
+        {
+            if (!_messageProfiling)
+                return;
             var senderfamily = ComponentFamily.Generic;
             var uid = 0;
             var sendertype = "";
-            if(sender.GetType().IsAssignableFrom(typeof(IGameObjectComponent)))
+            if (sender.GetType().IsAssignableFrom(typeof(IGameObjectComponent)))
             {
                 var realsender = (GameObjectComponent)sender;
                 senderfamily = realsender.Family;
@@ -149,12 +197,8 @@ namespace CGO
             //Log the message
             IMessageLogger logger = IoCManager.Resolve<IMessageLogger>();
             logger.LogComponentMessage(uid, senderfamily, sendertype, type);
-
-            foreach (var component in _components.Values.ToArray())
-            {
-                component.RecieveMessage(sender, type, replies, args);
-            }
         }
+
         #endregion
 
         /// <summary>

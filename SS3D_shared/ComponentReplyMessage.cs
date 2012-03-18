@@ -15,6 +15,6 @@ namespace SS13_Shared
             MessageType = messageType;
         }
 
-        public static ComponentReplyMessage Null = new ComponentReplyMessage(ComponentMessageType.Empty);
+        public static ComponentReplyMessage Empty = new ComponentReplyMessage(ComponentMessageType.Empty);
     }
 }

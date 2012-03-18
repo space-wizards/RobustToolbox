@@ -663,9 +663,12 @@ namespace ClientServices.UserInterface.Inventory
 
             if (hands.HandSlots.Keys.Contains(Hand.Left))
             {
-                var entityL = hands.HandSlots[Hand.Left];
-                LeftHand.Entity = entityL;
-                LeftHand.HeldSprite = Utilities.GetSpriteComponentSprite(entityL);
+                if(LeftHand.Entity == null || LeftHand.Entity.Uid != hands.HandSlots[Hand.Left].Uid)
+                {
+                    var entityL = hands.HandSlots[Hand.Left];
+                    LeftHand.Entity = entityL;
+                    LeftHand.HeldSprite = Utilities.GetSpriteComponentSprite(entityL);
+                }
             }
             else
             {
@@ -675,9 +678,12 @@ namespace ClientServices.UserInterface.Inventory
 
             if (hands.HandSlots.Keys.Contains(Hand.Right))
             {
-                var entityR = hands.HandSlots[Hand.Right];
-                RightHand.Entity = entityR;
-                RightHand.HeldSprite = Utilities.GetSpriteComponentSprite(entityR);
+                if (RightHand.Entity == null || RightHand.Entity.Uid != hands.HandSlots[Hand.Right].Uid)
+                {
+                    var entityR = hands.HandSlots[Hand.Right];
+                    RightHand.Entity = entityR;
+                    RightHand.HeldSprite = Utilities.GetSpriteComponentSprite(entityR);
+                }
             }
             else
             {

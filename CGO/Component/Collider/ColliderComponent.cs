@@ -42,9 +42,12 @@ namespace CGO
             }
         }
 
-        public override void RecieveMessage(object sender, ComponentMessageType type, List<ComponentReplyMessage> reply, params object[] list)
+        public override ComponentReplyMessage RecieveMessage(object sender, ComponentMessageType type, params object[] list)
         {
-            base.RecieveMessage(sender, type, reply, list);
+            ComponentReplyMessage reply = base.RecieveMessage(sender, type, list);
+
+            if (sender == this) //Don't listen to our own messages!
+                return ComponentReplyMessage.Empty;
 
             switch (type)
             {
@@ -52,11 +55,11 @@ namespace CGO
                     GetAABB();
                     break;
                 case ComponentMessageType.CheckCollision:
-                    reply.Add(list.Any() ? CheckCollision((bool) list[0]) : CheckCollision());
+                    reply = list.Any() ? CheckCollision((bool) list[0]) : CheckCollision();
                     break;
-                    
-
             }
+
+            return reply;
         }
 
         public override void SetParameter(ComponentParameter parameter)

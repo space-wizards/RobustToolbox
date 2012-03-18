@@ -89,8 +89,13 @@ namespace CGO
             Owner.SendComponentNetworkMessage(this, NetDeliveryMethod.ReliableUnordered, ComponentMessageType.InventoryRemove, ent.Uid);
         }
 
-        public override void RecieveMessage(object sender, ComponentMessageType type, List<ComponentReplyMessage> replies, params object[] list)
+        public override ComponentReplyMessage RecieveMessage(object sender, ComponentMessageType type, params object[] list)
         {
+            var reply = base.RecieveMessage(sender, type, list);
+
+            if (sender == this) //Don't listen to our own messages!
+                return ComponentReplyMessage.Empty;
+
             switch (type)
             {
                 case ComponentMessageType.InventoryInformation:
@@ -105,6 +110,8 @@ namespace CGO
                     SendInventoryRemove((Entity)list[0]);
                     break;
             }
+
+            return reply;
         }
     }
 }

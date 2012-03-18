@@ -18,6 +18,7 @@ namespace CGO
         /// </summary>
         public abstract ComponentFamily Family { get; }
 
+        /*
         /// <summary>
         /// Recieve a message from another component within the owner entity
         /// </summary>
@@ -35,6 +36,22 @@ namespace CGO
                     Owner.SendComponentInstantiationMessage(this);
                     break;
             }
+        }*/
+
+        public virtual ComponentReplyMessage RecieveMessage(object sender, ComponentMessageType type, params object[] list)
+        {
+            var reply = ComponentReplyMessage.Empty;
+
+            if (sender == this) //Don't listen to our own messages!
+                return reply;
+            switch (type)
+            {
+                case ComponentMessageType.Initialize:
+                    Owner.SendComponentInstantiationMessage(this);
+                    break;
+            }
+
+            return reply;
         }
 
         /// <summary>

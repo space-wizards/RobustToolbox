@@ -68,8 +68,11 @@ namespace ClientServices.UserInterface.Inventory
 
             if (equipment.EquippedEntities.ContainsKey(AssignedSlot))
             {
-                CurrentEntity = equipment.EquippedEntities[AssignedSlot];
-                _currentEntSprite = Utilities.GetSpriteComponentSprite(CurrentEntity);
+                if ((CurrentEntity == null || CurrentEntity.Uid != equipment.EquippedEntities[AssignedSlot].Uid))
+                {
+                    CurrentEntity = equipment.EquippedEntities[AssignedSlot];
+                    _currentEntSprite = Utilities.GetSpriteComponentSprite(CurrentEntity);
+                }
             }
             else
             {

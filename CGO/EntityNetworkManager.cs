@@ -6,15 +6,19 @@ using SS13_Shared;
 using SS13_Shared.GO;
 using SS13.IoC;
 using ClientInterfaces.MessageLogging;
+using ClientInterfaces.Configuration;
 
 namespace CGO
 {
     public class EntityNetworkManager
     {
         private readonly INetworkManager _networkManager;
+        private bool _messageProfiling;
+
         public EntityNetworkManager(INetworkManager networkManager)
         {
             _networkManager = networkManager;
+            _messageProfiling = IoCManager.Resolve<IConfigurationManager>().GetMessageLogging();
         }
 
         public NetOutgoingMessage CreateEntityMessage()
@@ -41,9 +45,11 @@ namespace CGO
             message.Write((byte)family);
             PackParams(message, messageParams);
 
-            //Log the message
-            IMessageLogger logger = IoCManager.Resolve<IMessageLogger>();
-            logger.LogOutgoingComponentNetMessage(sendingEntity.Uid, family, messageParams);
+            if (_messageProfiling)
+            {//Log the message
+                IMessageLogger logger = IoCManager.Resolve<IMessageLogger>();
+                logger.LogOutgoingComponentNetMessage(sendingEntity.Uid, family, messageParams);
+            }
             
             //Send the message
             _networkManager.SendMessage(message, method);
@@ -161,9 +167,12 @@ namespace CGO
                     var messageContent = HandleEntityComponentNetworkMessage(message);
                     result = new IncomingEntityMessage(uid, EntityMessage.ComponentMessage, messageContent);
 
-                    //Log the message
-                    IMessageLogger logger = IoCManager.Resolve<IMessageLogger>();
-                    logger.LogIncomingComponentNetMessage(result.Uid, result.MessageType, messageContent.ComponentFamily, messageContent.MessageParameters.ToArray());
+                    if (_messageProfiling)
+                    {
+                        //Log the message
+                        IMessageLogger logger = IoCManager.Resolve<IMessageLogger>();
+                        logger.LogIncomingComponentNetMessage(result.Uid, result.MessageType, messageContent.ComponentFamily, messageContent.MessageParameters.ToArray());
+                    }
 
                     break;
                 case EntityMessage.PositionMessage:

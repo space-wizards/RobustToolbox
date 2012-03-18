@@ -49,14 +49,14 @@ namespace CGO
                 return; //Don't repeat keys that are already down.
             Owner.SendComponentNetworkMessage(this, Lidgren.Network.NetDeliveryMethod.ReliableUnordered, e.Function, e.FunctionState);
             SetKeyState(e.Function, true);
-            Owner.SendMessage(this, ComponentMessageType.BoundKeyChange, null, e.Function, e.FunctionState);
+            Owner.SendMessage(this, ComponentMessageType.BoundKeyChange, e.Function, e.FunctionState);
         }
 
         public virtual void KeyUp(object sender, BoundKeyEventArgs e)
         {
             Owner.SendComponentNetworkMessage(this, Lidgren.Network.NetDeliveryMethod.ReliableUnordered, e.Function, e.FunctionState);
             SetKeyState(e.Function, false);
-            Owner.SendMessage(this, ComponentMessageType.BoundKeyChange, null, e.Function, e.FunctionState);
+            Owner.SendMessage(this, ComponentMessageType.BoundKeyChange, e.Function, e.FunctionState);
         }
 
         protected void SetKeyState(BoundKeyFunctions k, bool state)
@@ -102,7 +102,7 @@ namespace CGO
                 if (state.Value == false)
                     _keyStates.Remove(state.Key);
                 else
-                    Owner.SendMessage(this, ComponentMessageType.BoundKeyRepeat, null, state.Key, BoundKeyState.Repeat);
+                    Owner.SendMessage(this, ComponentMessageType.BoundKeyRepeat, state.Key, BoundKeyState.Repeat);
             }
             //lastKeyUpdate = entityManager.now;
         }

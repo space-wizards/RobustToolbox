@@ -13,18 +13,21 @@ namespace CGO
             get { return ComponentFamily.Damageable; }
         }
 
-        public override void RecieveMessage(object sender, ComponentMessageType type, List<ComponentReplyMessage> replies, params object[] list)
+        public override ComponentReplyMessage RecieveMessage(object sender, ComponentMessageType type, params object[] list)
         {
+            var reply = base.RecieveMessage(sender, type, list);
+
+            if (sender == this) //Don't listen to our own messages!
+                return ComponentReplyMessage.Empty;
+            
             switch (type)
             {
                 case ComponentMessageType.GetCurrentHealth:
-                    var reply2 = new ComponentReplyMessage(ComponentMessageType.CurrentHealth, IsDead ? 0 : 1, 1); //HANDLE THIS CORRECTLY
-                    replies.Add(reply2);
-                    break;
-                default:
-                    base.RecieveMessage(sender, type, replies, list);
+                    reply = new ComponentReplyMessage(ComponentMessageType.CurrentHealth, IsDead ? 0 : 1, 1); //HANDLE THIS CORRECTLY
                     break;
             }
+
+            return reply;
         }
 
         public override void HandleNetworkMessage(IncomingEntityComponentMessage message)
@@ -37,7 +40,7 @@ namespace CGO
                     var newIsDeadState = (bool)message.MessageParameters[1];
 
                     if(newIsDeadState == true && IsDead == false)
-                        Owner.SendMessage(this, ComponentMessageType.Die, null);
+                        Owner.SendMessage(this, ComponentMessageType.Die);
 
                     IsDead = newIsDeadState;
                     break;

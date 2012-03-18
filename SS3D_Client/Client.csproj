@@ -238,7 +238,7 @@
   </ItemGroup>
   <ItemGroup>
     <Content Include="config.xml">
-      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
   </ItemGroup>
   <ItemGroup>

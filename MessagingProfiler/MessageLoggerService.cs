@@ -24,11 +24,17 @@ namespace MessagingProfiler
 
         //TODO add reply logging
         [OperationContract]
-        void LogServerComponentMessage(int uid, int senderFamily, string senderType, int componentMessageType);
+        void LogServerComponentMessage(int senderid, int senderFamily, string senderType, int componentMessageType);
+
+        //[OperationContract]
+        //void LogServerComponentReplyMessage(int replierid, int replierFamily, string replierType);
 
         //TODO add reply logging
         [OperationContract]
-        void LogClientComponentMessage(int uid, int senderFamily, string senderType, int componentMessageType);
+        void LogClientComponentMessage(int senderid, int senderFamily, string senderType, int componentMessageType);
+
+        //[OperationContract]
+        //void LogClientComponentReplyMessage(int replierid, int replierFamily, string replierType);
     }
 
     public class MessageLoggerService : IMessageLoggerService
@@ -91,5 +97,6 @@ namespace MessagingProfiler
             i.messageType = (ComponentMessageType)componentMessageType;
             LogHolder.Singleton.LogItems.Add(i);
         }
+
     }
 }

@@ -13,5 +13,6 @@ namespace ClientServices.Configuration
         public string ResourcePassword;
         public string PlayerName = "Joe Genero";
         public string ServerAddress = "127.0.0.1";
+        public bool MessageLogging = false;
     }
 }

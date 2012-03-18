@@ -14,5 +14,6 @@
         uint GetDisplayWidth();
         uint GetDisplayHeight();
         string GetServerAddress();
+        bool GetMessageLogging();
     }
 }

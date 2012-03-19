@@ -18,7 +18,7 @@ namespace ClientServices.UserInterface.Inventory
         private readonly InventoryComponent _inventoryComponent;
         private readonly ScrollableContainer _inventoryContainer;
 
-        public InventoryViewer(InventoryComponent assignedCompo,IUserInterfaceManager userInterfaceManager, IResourceManager resourceManager)
+        public InventoryViewer(InventoryComponent assignedCompo, IUserInterfaceManager userInterfaceManager, IResourceManager resourceManager)
         {
             _userInterfaceManager = userInterfaceManager;
             _resourceManager = resourceManager;
@@ -129,7 +129,7 @@ namespace ClientServices.UserInterface.Inventory
         {
             //If dropped on container add to inventory.
             if (_inventoryContainer.MouseUp(e)) return true;
-            if (_inventoryContainer.ClientArea.Contains(new Point((int)e.Position.X, (int)e.Position.Y)) && _userInterfaceManager.DragInfo.IsEntity && _userInterfaceManager.DragInfo.DragEntity != null)
+            if (_inventoryContainer.ClientArea.Contains(new Point((int)e.Position.X, (int)e.Position.Y)) && _userInterfaceManager.DragInfo.IsEntity && _userInterfaceManager.DragInfo.IsActive)
             {
                 if (!_inventoryComponent.ContainsEntity(_userInterfaceManager.DragInfo.DragEntity))
                 {

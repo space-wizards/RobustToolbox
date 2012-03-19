@@ -77,7 +77,7 @@ namespace ClientServices.UserInterface.Inventory
         {
             if (ClientArea.Contains(new Point((int)e.Position.X, (int)e.Position.Y)))
             {
-                if (_userInterfaceManager.DragInfo.IsEntity && _userInterfaceManager.DragInfo.DragEntity != null)
+                if (_userInterfaceManager.DragInfo.IsEntity && _userInterfaceManager.DragInfo.IsActive)
                 {
                     SetEntity(_userInterfaceManager.DragInfo.DragEntity);
                     _userInterfaceManager.DragInfo.Reset();

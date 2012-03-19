@@ -7,7 +7,8 @@ namespace ClientInterfaces.UserInterface
     {
         IEntity DragEntity { get; }
         Sprite DragSprite { get; }
-        bool IsEntity { get;}
+        bool IsEntity { get; }
+        bool IsActive { get; }
 
         void Reset();
 

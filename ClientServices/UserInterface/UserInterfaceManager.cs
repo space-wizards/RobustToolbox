@@ -9,6 +9,7 @@ using GorgonLibrary.InputDevices;
 using GorgonLibrary;
 using GorgonLibrary.Graphics;
 using ClientInterfaces;
+using CGO;
 
 namespace ClientServices.UserInterface
 {
@@ -23,6 +24,27 @@ namespace ClientServices.UserInterface
         private Sprite _cursorSprite;
 
         public IDragDropInfo DragInfo { get; private set; }
+
+        public PlayerAction targetingAction = null;
+
+        public void StartTargeting(PlayerAction act)
+        {
+            if (act.targetType == PlayerActionTargetType.None) return;
+            if (DragInfo.IsActive) DragInfo.Reset();
+            targetingAction = act;
+        }
+
+        public void SelectTarget(object target)
+        {
+            if (targetingAction == null) return;
+            targetingAction.Use(target);
+            CancelTargeting();
+        }
+
+        public void CancelTargeting()
+        {
+            targetingAction = null;
+        }
 
         /// <summary>
         ///  List of iGuiComponents. Components in this list will recieve input, updates and net messages.
@@ -178,8 +200,14 @@ namespace ClientServices.UserInterface
             foreach (var component in renderList)
                 component.Render();
 
-            _cursorSprite = DragInfo.DragSprite ?? _resourceManager.GetSprite("cursor");
-
+            if (targetingAction != null)
+            {
+                _cursorSprite = _resourceManager.GetSprite("cursor_target");
+            }
+            else
+            {
+                _cursorSprite = DragInfo.DragSprite != null && DragInfo.IsActive ? DragInfo.DragSprite :  _resourceManager.GetSprite("cursor");
+            }
             _cursorSprite.Position = _mousePos;
             _cursorSprite.Draw();
         } 
@@ -271,7 +299,7 @@ namespace ClientServices.UserInterface
 
             if (inputList.Any(current => current.MouseUp(e))) { return true; }
 
-            if (DragInfo.DragSprite != null || DragInfo.DragEntity != null) //Drag & dropped into nothing or invalid. Remove dragged obj.
+            if (DragInfo.IsActive) //Drag & dropped into nothing or invalid. Remove dragged obj.
                 DragInfo.Reset();
 
             return false;

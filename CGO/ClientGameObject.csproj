@@ -79,6 +79,7 @@
     <Compile Include="Component\Mover\KeyBindingMoverComponent.cs" />
     <Compile Include="Component\Mover\NetworkMoverComponent.cs" />
     <Compile Include="Component\Mover\SlaveMoverComponent.cs" />
+    <Compile Include="Component\PlayerActionComp\PlayerActionCompC.cs" />
     <Compile Include="Component\Renderable\Speechbubble.cs" />
     <Compile Include="Component\Renderable\WearableSpriteComponent.cs" />
     <Compile Include="Component\Renderable\ItemSpriteComponent.cs" />
@@ -94,6 +95,8 @@
     <Compile Include="EntityTemplateDatabase.cs" />
     <Compile Include="GameObjectComponent.cs" />
     <Compile Include="Component\Input\KeyBindingInputComponent.cs" />
+    <Compile Include="PlayerActions\ExampleAction.cs" />
+    <Compile Include="PlayerActions\PlayerActionC.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Component\Renderable\RenderableComponent.cs" />
     <Compile Include="Status Effects\Bleeding.cs" />

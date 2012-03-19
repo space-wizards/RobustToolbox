@@ -61,6 +61,7 @@
     <Compile Include="ComponentManager.cs" />
     <Compile Include="Component\Actor\BasicActorComponent.cs" />
     <Compile Include="Component\Inventory\Inventory.cs" />
+    <Compile Include="Component\PlayerActionComp\PlayerActionCompS.cs" />
     <Compile Include="Component\StatusEffects\StatusEffectComp.cs" />
     <Compile Include="Component\Think\ThinkComponent\IThinkComponent.cs" />
     <Compile Include="Component\Damageable\Health\LocationalHealth\DamageLocation.cs" />
@@ -105,6 +106,8 @@
     <Compile Include="IInventoryComponent.cs" />
     <Compile Include="IMoverComponent.cs" />
     <Compile Include="MessageEnums.cs" />
+    <Compile Include="PlayerActions\ExampleAction.cs" />
+    <Compile Include="PlayerActions\PlayerActionS.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Status Effects\Bleeding.cs" />
     <Compile Include="Status Effects\Rooted.cs" />

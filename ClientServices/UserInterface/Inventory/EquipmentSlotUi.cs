@@ -138,7 +138,7 @@ namespace ClientServices.UserInterface.Inventory
                     return true;
                 }
 
-                if (CurrentEntity == null && _userInterfaceManager.DragInfo.IsEntity && _userInterfaceManager.DragInfo.DragEntity != null)
+                if (CurrentEntity == null && _userInterfaceManager.DragInfo.IsEntity && _userInterfaceManager.DragInfo.IsActive)
                 {
                     if (Dropped != null) Dropped(this, _userInterfaceManager.DragInfo.DragEntity);
                     return true;

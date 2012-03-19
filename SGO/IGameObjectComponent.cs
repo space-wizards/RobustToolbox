@@ -9,7 +9,7 @@ namespace SGO
     {
         Entity Owner { get; set; }
 
-        void RecieveMessage(object sender, ComponentMessageType type, List<ComponentReplyMessage> replies, params object[] list);
+        ComponentReplyMessage RecieveMessage(object sender, ComponentMessageType type, params object[] list);
         void OnRemove();
         void OnAdd(Entity owner);
         void Update(float frameTime);

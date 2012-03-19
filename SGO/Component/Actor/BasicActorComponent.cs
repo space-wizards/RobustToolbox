@@ -30,19 +30,24 @@ namespace SGO
             }
         }
 
-        public override void RecieveMessage(object sender, SS13_Shared.GO.ComponentMessageType type, List<ComponentReplyMessage> replies, params object[] list)
+        public override ComponentReplyMessage RecieveMessage(object sender, SS13_Shared.GO.ComponentMessageType type, params object[] list)
         {
-            base.RecieveMessage(sender, type, replies, list);
+            var reply = base.RecieveMessage(sender, type, list);
+
+            if (sender == this)
+                return ComponentReplyMessage.Empty;
 
             switch(type)
             {
                 case SS13_Shared.GO.ComponentMessageType.GetActorConnection:
-                    replies.Add(new ComponentReplyMessage(SS13_Shared.GO.ComponentMessageType.ReturnActorConnection, playerSession.ConnectedClient));
+                    reply = new ComponentReplyMessage(SS13_Shared.GO.ComponentMessageType.ReturnActorConnection, playerSession.ConnectedClient);
                     break;
                 case SS13_Shared.GO.ComponentMessageType.GetActorSession:
-                    replies.Add(new ComponentReplyMessage(SS13_Shared.GO.ComponentMessageType.ReturnActorSession, playerSession));
+                    reply = new ComponentReplyMessage(SS13_Shared.GO.ComponentMessageType.ReturnActorSession, playerSession);
                     break;
             }
+
+            return reply;
         }
     }
 }

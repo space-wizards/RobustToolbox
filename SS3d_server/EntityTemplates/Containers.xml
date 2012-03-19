@@ -6,7 +6,16 @@
       <Component name="SpriteComponent"></Component>
       <Component name="BasicInteractableComponent"></Component>
       <Component name="BasicMoverComponent"></Component>
-      <Component name="BasicItemComponent"></Component>
+      <Component name="BasicItemComponent">
+				<ExtendedParameters>
+					<ItemCapability name="MeleeWeaponCapability">
+						<ItemCapabilityParameters>
+							<ItemCapabilityParameter name="damageAmount" type="int" value="20" />
+							<ItemCapabilityParameter name="damageType" type="string" value="Bludgeon" />
+						</ItemCapabilityParameters>
+					</ItemCapability>
+				</ExtendedParameters>
+		</Component>
     </Components>
   </EntityTemplate>
 </EntityTemplates>

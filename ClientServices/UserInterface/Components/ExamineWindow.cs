@@ -6,6 +6,7 @@ using ClientInterfaces.GOC;
 using ClientInterfaces.Resource;
 using GorgonLibrary.Graphics;
 using SS13_Shared;
+using SS13_Shared.GO;
 
 namespace ClientServices.UserInterface.Components
 {
@@ -23,14 +24,13 @@ namespace ClientServices.UserInterface.Components
 
             components.Add(_entityDescription);
 
-            var replies = new List<ComponentReplyMessage>();
-            entity.SendMessage(entity, SS13_Shared.GO.ComponentMessageType.GetSprite, replies);
+            var reply = entity.SendMessage(entity, ComponentFamily.Renderable, ComponentMessageType.GetSprite);
 
             SetVisible(true);
 
-            if (replies.Any())
+            if (reply.MessageType == ComponentMessageType.CurrentSprite)
             {
-                _entitySprite = (Sprite)replies.First(x => x.MessageType == SS13_Shared.GO.ComponentMessageType.CurrentSprite).ParamsList[0];
+                _entitySprite = (Sprite)reply.ParamsList[0];
                 _entityDescription.Position = new Point(10, (int)_entitySprite.Height + _entityDescription.ClientArea.Height + 10);
             }
             else

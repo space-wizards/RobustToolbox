@@ -18,8 +18,13 @@ namespace SGO
             family = ComponentFamily.Equipment;
         }
 
-        public override void RecieveMessage(object sender, SS13_Shared.GO.ComponentMessageType type, List<ComponentReplyMessage> replies, params object[] list)
+        public override ComponentReplyMessage RecieveMessage(object sender, SS13_Shared.GO.ComponentMessageType type, params object[] list)
         {
+            var reply = base.RecieveMessage(sender, type, list);
+
+            if (sender == this)
+                return ComponentReplyMessage.Empty;
+
             switch (type)
             {
                 case ComponentMessageType.DisassociateEntity:
@@ -39,15 +44,17 @@ namespace SGO
                     break;
                 case ComponentMessageType.UnEquipItemToHand: //remove an entity from a slot and put it in the current hand slot.
                     if (!Owner.HasComponent(SS13_Shared.GO.ComponentFamily.Hands))
-                        return; //TODO REAL ERROR MESSAGE OR SOME FUCK SHIT
+                        break; //TODO REAL ERROR MESSAGE OR SOME FUCK SHIT
                     UnEquipEntityToHand((Entity)list[0]);
                     break;
                 case ComponentMessageType.UnEquipItemToSpecifiedHand: //remove an entity from a slot and put it in the current hand slot.
                     if (!Owner.HasComponent(SS13_Shared.GO.ComponentFamily.Hands))
-                        return; //TODO REAL ERROR MESSAGE OR SOME FUCK SHIT
+                        break; //TODO REAL ERROR MESSAGE OR SOME FUCK SHIT
                     UnEquipEntityToHand((Entity)list[0], (Hand)list[1]);
                     break;
             }
+
+            return reply;
         }
 
         public override void HandleNetworkMessage(IncomingEntityComponentMessage message, NetConnection client)
@@ -91,7 +98,7 @@ namespace SGO
                 if(!IsEmpty(p))
                 {
                     Entity e = equippedEntities[p];
-                    e.SendMessage(this, SS13_Shared.GO.ComponentMessageType.ItemEquipped, null, Owner);
+                    e.SendMessage(this, SS13_Shared.GO.ComponentMessageType.ItemEquipped, Owner);
                     Owner.SendComponentNetworkMessage(this, Lidgren.Network.NetDeliveryMethod.ReliableUnordered, netConnection, EquipmentComponentNetMessage.ItemEquipped, p, e.Uid);
                 }
             }
@@ -108,7 +115,7 @@ namespace SGO
                 RemoveFromOtherComps(e);
 
                 equippedEntities.Add(part, e);
-                e.SendMessage(this, SS13_Shared.GO.ComponentMessageType.ItemEquipped, null, Owner);
+                e.SendMessage(this, SS13_Shared.GO.ComponentMessageType.ItemEquipped, Owner);
                 Owner.SendComponentNetworkMessage(this, Lidgren.Network.NetDeliveryMethod.ReliableUnordered, null, EquipmentComponentNetMessage.ItemEquipped, part, e.Uid);
             }
         }
@@ -121,13 +128,11 @@ namespace SGO
 
             if (CanEquip(e))
             {
-                var replies = new List<ComponentReplyMessage>();
-                e.SendMessage(this, ComponentMessageType.GetWearLoc, replies);
-                if (replies.Count > 0 && replies[0].MessageType == ComponentMessageType.ReturnWearLoc)
+                var reply = e.SendMessage(this, ComponentFamily.Equippable, ComponentMessageType.GetWearLoc);
+                if(reply.MessageType == ComponentMessageType.ReturnWearLoc)
                 {
                     RemoveFromOtherComps(e);
-
-                    EquipEntityToPart((EquipmentSlot)replies[0].ParamsList[0], e);
+                    EquipEntityToPart((EquipmentSlot)reply.ParamsList[0], e);
                 }
             }
         }
@@ -139,14 +144,13 @@ namespace SGO
             {
                 return; //TODO REAL ERROR MESSAGE OR SOME FUCK SHIT
             }
-            var reps = new List<ComponentReplyMessage>();
             //Get the item in the hand
-            Owner.SendMessage(this, ComponentMessageType.GetActiveHandItem, reps);
-            if (reps.Count > 0 && reps[0].MessageType == ComponentMessageType.ReturnActiveHandItem && CanEquip((Entity)reps[0].ParamsList[0]))
+            var reply = Owner.SendMessage(this, ComponentFamily.Hands, ComponentMessageType.GetActiveHandItem);
+            if (reply.MessageType == ComponentMessageType.ReturnActiveHandItem && CanEquip((Entity)reply.ParamsList[0]))
             {
-                RemoveFromOtherComps((Entity)reps[0].ParamsList[0]);
+                RemoveFromOtherComps((Entity)reply.ParamsList[0]);
                 //Equip
-                EquipEntity((Entity)reps[0].ParamsList[0]);
+                EquipEntity((Entity)reply.ParamsList[0]);
             }
         }
 
@@ -155,7 +159,7 @@ namespace SGO
         {
             if (!IsEmpty(part)) //If the part is not empty
             {
-                equippedEntities[part].SendMessage(this, SS13_Shared.GO.ComponentMessageType.ItemUnEquipped, null);
+                equippedEntities[part].SendMessage(this, SS13_Shared.GO.ComponentMessageType.ItemUnEquipped);
                 Owner.SendComponentNetworkMessage(this, Lidgren.Network.NetDeliveryMethod.ReliableUnordered, null, EquipmentComponentNetMessage.ItemUnEquipped, part, equippedEntities[part].Uid);
                 equippedEntities.Remove(part);
             }
@@ -165,18 +169,17 @@ namespace SGO
         {
             UnEquipEntity(e);
             //HumanHandsComponent hh = (HumanHandsComponent)Owner.GetComponent(ComponentFamily.Hands);
-            Owner.SendMessage(this, ComponentMessageType.PickUpItem, null, e);
+            Owner.SendMessage(this, ComponentMessageType.PickUpItem, e);
         }
 
         private void UnEquipEntityToHand(Entity e, Hand h)
         {
-            var replies = new List<ComponentReplyMessage>();
             var hands = (HumanHandsComponent)Owner.GetComponent(ComponentFamily.Hands);
-            Owner.SendMessage(this, ComponentMessageType.IsHandEmpty, replies, h);
-            if (replies.Exists(x => x.MessageType == ComponentMessageType.IsHandEmptyReply && (bool)x.ParamsList[0]))
+            var reply = Owner.SendMessage(this, ComponentFamily.Hands, ComponentMessageType.IsHandEmpty, h);
+            if (reply.MessageType == ComponentMessageType.IsHandEmptyReply && (bool)reply.ParamsList[0])
             {
                 UnEquipEntity(e);
-                Owner.SendMessage(this, ComponentMessageType.PickUpItemToHand, null, e, h);
+                Owner.SendMessage(this, ComponentMessageType.PickUpItemToHand, e, h);
             }
         }
 
@@ -231,8 +234,8 @@ namespace SGO
             Entity holder = null;
             if (entity.HasComponent(ComponentFamily.Item)) holder = ((BasicItemComponent)entity.GetComponent(ComponentFamily.Item)).currentHolder;
             if (holder == null && entity.HasComponent(ComponentFamily.Equippable)) holder = ((EquippableComponent)entity.GetComponent(ComponentFamily.Equippable)).currentWearer;
-            if (holder != null) holder.SendMessage(this, ComponentMessageType.DisassociateEntity, null, entity);
-            else Owner.SendMessage(this, ComponentMessageType.DisassociateEntity, null, entity);
+            if (holder != null) holder.SendMessage(this, ComponentMessageType.DisassociateEntity, entity);
+            else Owner.SendMessage(this, ComponentMessageType.DisassociateEntity, entity);
         }
 
         private bool CanEquip(Entity e)
@@ -240,11 +243,10 @@ namespace SGO
             if(!e.HasComponent(ComponentFamily.Equippable))
                 return false;
 
-            var replies = new List<ComponentReplyMessage>();
-            e.SendMessage(this, ComponentMessageType.GetWearLoc, replies);
-            if (replies.Count > 0 && replies[0].MessageType == ComponentMessageType.ReturnWearLoc)
+            var reply = e.SendMessage(this, ComponentFamily.Equippable, ComponentMessageType.GetWearLoc);
+            if (reply.MessageType == ComponentMessageType.ReturnWearLoc)
             {
-                if (IsItem(e) && IsEmpty((EquipmentSlot)replies[0].ParamsList[0]) && e != null && activeSlots.Contains((EquipmentSlot)replies[0].ParamsList[0]))
+                if (IsItem(e) && IsEmpty((EquipmentSlot)reply.ParamsList[0]) && e != null && activeSlots.Contains((EquipmentSlot)reply.ParamsList[0]))
                 {
                     return true;
                 }

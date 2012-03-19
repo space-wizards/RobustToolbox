@@ -15,8 +15,13 @@ namespace SGO
             family = SS13_Shared.GO.ComponentFamily.LargeObject;
         }
 
-        public override void RecieveMessage(object sender, ComponentMessageType type, List<ComponentReplyMessage> replies, params object[] list)
+        public override ComponentReplyMessage RecieveMessage(object sender, ComponentMessageType type, params object[] list)
         {
+            var reply = base.RecieveMessage(sender, type, list);
+
+            if (sender == this)
+                return ComponentReplyMessage.Empty;
+
             switch (type)
             {
                 case ComponentMessageType.ReceiveEmptyHandToLargeObjectInteraction:
@@ -26,6 +31,8 @@ namespace SGO
                     HandleItemToLargeObjectInteraction((Entity)list[0]);
                     break;
             }
+
+            return reply;
         }
 
         /// <summary>
@@ -36,18 +43,17 @@ namespace SGO
         protected void HandleItemToLargeObjectInteraction(Entity actor)
         {
             //Get the item
-            var replies = new List<ComponentReplyMessage>();
-            actor.SendMessage(this, ComponentMessageType.GetActiveHandItem, replies);
+            var reply = actor.SendMessage(this, ComponentFamily.Hands, ComponentMessageType.GetActiveHandItem);
 
-            if(replies.Count == 0 || replies[0].MessageType != ComponentMessageType.ReturnActiveHandItem)
+            if(reply.MessageType != ComponentMessageType.ReturnActiveHandItem)
                 return; // No item in actor's active hand. This shouldn't happen.
 
-            var item = (Entity)replies[0].ParamsList[0];
-            replies.Clear();
-            item.SendMessage(this, ComponentMessageType.ItemGetCapabilityVerbPairs, replies);
-            if (replies.Count > 0 && replies[0].MessageType == ComponentMessageType.ItemReturnCapabilityVerbPairs)
+            var item = (Entity)reply.ParamsList[0];
+
+            reply = item.SendMessage(this, ComponentFamily.Item, ComponentMessageType.ItemGetCapabilityVerbPairs);
+            if (reply.MessageType == ComponentMessageType.ItemReturnCapabilityVerbPairs)
             {
-                var verbs = (Lookup<ItemCapabilityType, ItemCapabilityVerb>)replies[0].ParamsList[0];
+                var verbs = (Lookup<ItemCapabilityType, ItemCapabilityVerb>)reply.ParamsList[0];
                 if (verbs.Count == 0 || verbs == null)
                     RecieveItemInteraction(actor, item);
                 else

@@ -43,7 +43,7 @@ namespace SGO
             if (bleedDmgTimer.ElapsedMilliseconds >= 300)
             {
                 bleedDmgTimer.Restart();
-                affected.SendMessage(this, ComponentMessageType.Damage, null, affected, 1, DamageType.Slashing, BodyPart.Torso);
+                affected.SendMessage(this, ComponentMessageType.Damage, affected, 1, DamageType.Slashing, BodyPart.Torso);
             }
 
             if (bleedEntTimer.ElapsedMilliseconds >= 1500)

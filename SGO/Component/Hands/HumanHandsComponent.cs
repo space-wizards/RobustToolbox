@@ -26,8 +26,13 @@ namespace SGO
         /// <param name="type"></param>
         /// <param name="replies"></param>
         /// <param name="list"></param>
-        public override void RecieveMessage(object sender, ComponentMessageType type, List<ComponentReplyMessage> replies, params object[] list)
+        public override ComponentReplyMessage RecieveMessage(object sender, ComponentMessageType type, params object[] list)
         {
+            var reply = base.RecieveMessage(sender, type, list);
+
+            if (sender == this)
+                return ComponentReplyMessage.Empty;
+
             switch (type)
             {
                 case ComponentMessageType.DisassociateEntity:
@@ -38,10 +43,10 @@ namespace SGO
                     SwitchHandsTo((Hand)list[0]);
                     break;
                 case ComponentMessageType.IsCurrentHandEmpty:
-                    replies.Add(new ComponentReplyMessage(ComponentMessageType.IsCurrentHandEmpty, IsEmpty(currentHand)));
+                    reply = new ComponentReplyMessage(ComponentMessageType.IsCurrentHandEmpty, IsEmpty(currentHand));
                     break;
                 case ComponentMessageType.IsHandEmpty:
-                    replies.Add(new ComponentReplyMessage(ComponentMessageType.IsHandEmptyReply, IsEmpty((Hand)list[0])));
+                    reply = new ComponentReplyMessage(ComponentMessageType.IsHandEmptyReply, IsEmpty((Hand)list[0]));
                     break;
                 case ComponentMessageType.PickUpItem:
                     Pickup((Entity)list[0]);
@@ -70,9 +75,11 @@ namespace SGO
                     break;
                 case ComponentMessageType.GetActiveHandItem:
                     if (!IsEmpty(currentHand))
-                        replies.Add(new ComponentReplyMessage(ComponentMessageType.ReturnActiveHandItem, handslots[currentHand]));
+                        reply = new ComponentReplyMessage(ComponentMessageType.ReturnActiveHandItem, handslots[currentHand]);
                     break;
             }
+
+            return reply;
         }
 
         public override void HandleNetworkMessage(IncomingEntityComponentMessage message, NetConnection client)
@@ -84,13 +91,13 @@ namespace SGO
                 switch (type)
                 {
                     case ComponentMessageType.ActiveHandChanged:
-                        Owner.SendMessage(this, type, null, message.messageParameters[1]);
+                        Owner.SendMessage(this, type, message.messageParameters[1]);
                         break;
                     case ComponentMessageType.DropEntityInHand:
-                        Owner.SendMessage(this, type, null, EntityManager.Singleton.GetEntity((int)message.messageParameters[1]));
+                        Owner.SendMessage(this, type, EntityManager.Singleton.GetEntity((int)message.messageParameters[1]));
                         break;
                     case ComponentMessageType.DropItemInHand:
-                        Owner.SendMessage(this, type, null, message.messageParameters[1]);
+                        Owner.SendMessage(this, type, message.messageParameters[1]);
                         break;
                 }
             }
@@ -161,7 +168,7 @@ namespace SGO
 
                 SetEntity(currentHand, entity);
                 Owner.SendComponentNetworkMessage(this, Lidgren.Network.NetDeliveryMethod.ReliableOrdered, null, ComponentMessageType.HandsPickedUpItem, entity.Uid, currentHand);
-                entity.SendMessage(this, ComponentMessageType.PickedUp, null, Owner, currentHand);
+                entity.SendMessage(this, ComponentMessageType.PickedUp, Owner, currentHand);
             }
         }
 
@@ -177,7 +184,7 @@ namespace SGO
 
                 SetEntity(hand, entity);
                 Owner.SendComponentNetworkMessage(this, Lidgren.Network.NetDeliveryMethod.ReliableOrdered, null, ComponentMessageType.HandsPickedUpItem, entity.Uid, hand);
-                entity.SendMessage(this, ComponentMessageType.PickedUp, null, Owner, hand);
+                entity.SendMessage(this, ComponentMessageType.PickedUp, Owner, hand);
             }
         }
 
@@ -194,8 +201,8 @@ namespace SGO
             Entity holder = null;
             if (entity.HasComponent(ComponentFamily.Item)) holder = ((BasicItemComponent)entity.GetComponent(ComponentFamily.Item)).currentHolder;
             if (holder == null && entity.HasComponent(ComponentFamily.Equippable)) holder = ((EquippableComponent)entity.GetComponent(ComponentFamily.Equippable)).currentWearer;
-            if (holder != null) holder.SendMessage(this, ComponentMessageType.DisassociateEntity, null, entity);
-            else Owner.SendMessage(this, ComponentMessageType.DisassociateEntity, null, entity);
+            if (holder != null) holder.SendMessage(this, ComponentMessageType.DisassociateEntity, entity);
+            else Owner.SendMessage(this, ComponentMessageType.DisassociateEntity, entity);
         }
 
         /// <summary>
@@ -206,7 +213,7 @@ namespace SGO
         {
             if (!IsEmpty(hand))
             {
-                GetEntity(hand).SendMessage(this, ComponentMessageType.Dropped, null);
+                GetEntity(hand).SendMessage(this, ComponentMessageType.Dropped);
                 Owner.SendComponentNetworkMessage(this, Lidgren.Network.NetDeliveryMethod.ReliableOrdered, null, ComponentMessageType.HandsDroppedItem, GetEntity(hand).Uid, hand);
                 handslots.Remove(hand);
             }

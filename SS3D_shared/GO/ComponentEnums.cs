@@ -27,7 +27,7 @@ namespace SS13_Shared.GO
         Hands, // ? needed -- 
         Tool, // Can be used as a tool to apply to other entities
         Wearable, // Can be worn on a mob
-        Health, // Has hitpoints, applies damage, organs?
+        //Health, // Has hitpoints, applies damage, organs? NOT IN USE
         Renderable, // Can be rendered -- sprite or particle system
         Light,
         Damageable,

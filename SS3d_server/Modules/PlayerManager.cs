@@ -42,7 +42,7 @@ namespace SS13_Server.Modules
                 foreach (var newItem in s.assignedJob.SpawnEquipment.Select(def => EntityManager.Singleton.SpawnEntity(def.ObjectType)))
                 {
                     newItem.Translate(human.position); //This is not neccessary once the equipment component is built.
-                    human.SendMessage(this, SS13_Shared.GO.ComponentMessageType.EquipItem, null, newItem);
+                    human.SendMessage(this, SS13_Shared.GO.ComponentMessageType.EquipItem, newItem);
                 }
             }
             s.AttachToEntity(a);

@@ -192,11 +192,10 @@ namespace CGO
         /// </summary>
         private void GetAABB()
         {
-            List<ComponentReplyMessage> replies = new List<ComponentReplyMessage>();
-            Owner.SendMessage(this, ComponentMessageType.GetAABB, replies);
-            if (replies.Count > 0 && replies.First().MessageType == ComponentMessageType.CurrentAABB)
+            var reply = Owner.SendMessage(this, ComponentFamily.Renderable, ComponentMessageType.GetAABB);
+            if (reply.MessageType == ComponentMessageType.CurrentAABB)
             {
-                currentAABB = (RectangleF)replies.First().ParamsList[0];
+                currentAABB = (RectangleF)reply.ParamsList[0];
             }
             else
                 return;

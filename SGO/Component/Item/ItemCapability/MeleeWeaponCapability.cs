@@ -24,18 +24,17 @@ namespace SGO.Component.Item.ItemCapability
         {
             var targetedArea = BodyPart.Torso;
 
-            var replies = new List<ComponentReplyMessage>();
-            sourceActor.SendMessage(this, SS13_Shared.GO.ComponentMessageType.GetActorSession, replies);
-            if (replies.Count > 0 && replies[0].MessageType == SS13_Shared.GO.ComponentMessageType.ReturnActorSession)
+            var reply = sourceActor.SendMessage(this, ComponentFamily.Actor, SS13_Shared.GO.ComponentMessageType.GetActorSession);
+            if (reply.MessageType == SS13_Shared.GO.ComponentMessageType.ReturnActorSession)
             {
-                IPlayerSession session = (IPlayerSession)replies[0].ParamsList[0];
+                IPlayerSession session = (IPlayerSession)reply.ParamsList[0];
                 targetedArea = session.TargetedArea;
             }
             else throw new NotImplementedException("Actor has no session or No actor component that returns a session"); //BEEPBOOP
 
             if (target.HasComponent(SS13_Shared.GO.ComponentFamily.Damageable))
             {
-                target.SendMessage(this, ComponentMessageType.Damage, null, owner.Owner, damageAmount, damType, targetedArea);
+                target.SendMessage(this, ComponentMessageType.Damage, owner.Owner, damageAmount, damType, targetedArea);
                 return true;
             }
             return false;

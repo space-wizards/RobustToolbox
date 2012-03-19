@@ -6,6 +6,7 @@ using Lidgren.Network;
 using ServerServices;
 using System.Drawing;
 using SGO;
+using SS13_Shared.GO;
 
 namespace SS13_Server.Modules
 {
@@ -140,10 +141,9 @@ namespace SS13_Server.Modules
             message.Write(objectType);
             message.Write((byte)alignOption);
 
-            var replies = new List<ComponentReplyMessage>();
-            mob.SendMessage(this, SS13_Shared.GO.ComponentMessageType.GetActorConnection, replies);
-            if (replies.Count > 0 && replies[0].MessageType == SS13_Shared.GO.ComponentMessageType.ReturnActorConnection)
-                SS13NetServer.Singleton.SendMessage(message, (NetConnection)replies[0].ParamsList[0], NetDeliveryMethod.ReliableOrdered);
+            var reply = mob.SendMessage(this, ComponentFamily.Actor, ComponentMessageType.GetActorConnection);
+            if (reply.MessageType == ComponentMessageType.ReturnActorConnection)
+                SS13NetServer.Singleton.SendMessage(message, (NetConnection)reply.ParamsList[0], NetDeliveryMethod.ReliableOrdered);
         }
 
         /// <summary>
@@ -159,10 +159,9 @@ namespace SS13_Server.Modules
             message.Write((int)tileType);
             message.Write((byte)alignOption);
 
-            var replies = new List<ComponentReplyMessage>();
-            mob.SendMessage(this, SS13_Shared.GO.ComponentMessageType.GetActorConnection, replies);
-            if (replies.Count > 0 && replies[0].MessageType == SS13_Shared.GO.ComponentMessageType.ReturnActorConnection)
-                SS13NetServer.Singleton.SendMessage(message, (NetConnection)replies[0].ParamsList[0], NetDeliveryMethod.ReliableOrdered);
+            var reply = mob.SendMessage(this, ComponentFamily.Actor,ComponentMessageType.GetActorConnection);
+            if (reply.MessageType == ComponentMessageType.ReturnActorConnection)
+                SS13NetServer.Singleton.SendMessage(message, (NetConnection)reply.ParamsList[0], NetDeliveryMethod.ReliableOrdered);
         }
 
         /// <summary>
@@ -173,10 +172,10 @@ namespace SS13_Server.Modules
             var message = SS13NetServer.Singleton.CreateMessage();
             message.Write((byte)NetMessage.PlacementManagerMessage);
             message.Write((byte)PlacementManagerMessage.CancelPlacement);
-            var replies = new List<ComponentReplyMessage>();
-            mob.SendMessage(this, SS13_Shared.GO.ComponentMessageType.GetActorConnection, replies);
-            if (replies.Count > 0 && replies[0].MessageType == SS13_Shared.GO.ComponentMessageType.ReturnActorConnection)
-                SS13NetServer.Singleton.SendMessage(message, (NetConnection)replies[0].ParamsList[0], NetDeliveryMethod.ReliableOrdered);
+
+            var reply = mob.SendMessage(this, ComponentFamily.Actor, ComponentMessageType.GetActorConnection);
+            if (reply.MessageType == ComponentMessageType.ReturnActorConnection)
+                SS13NetServer.Singleton.SendMessage(message, (NetConnection)reply.ParamsList[0], NetDeliveryMethod.ReliableOrdered);
         }
 
         /// <summary>

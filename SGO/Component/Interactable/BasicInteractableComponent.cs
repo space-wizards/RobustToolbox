@@ -14,8 +14,13 @@ namespace SGO
             family = SS13_Shared.GO.ComponentFamily.Interactable;
         }
 
-        public override void RecieveMessage(object sender, ComponentMessageType type, List<ComponentReplyMessage> replies, params object[] list)
+        public override ComponentReplyMessage RecieveMessage(object sender, ComponentMessageType type, params object[] list)
         {
+            var reply = base.RecieveMessage(sender, type, list);
+
+            if (sender == this)
+                return ComponentReplyMessage.Empty;
+
             switch (type)
             {
                 case ComponentMessageType.Click: //We were clicked, start the interaction
@@ -25,6 +30,7 @@ namespace SGO
 
             }
 
+            return reply;
         }
 
         /// <summary>
@@ -64,13 +70,12 @@ namespace SGO
         protected virtual void DoHandsInteraction(Entity actor)
         {
             // Ask if the current hand is empty
-            List<ComponentReplyMessage> replies = new List<ComponentReplyMessage>();
-            actor.SendMessage(this, ComponentMessageType.IsCurrentHandEmpty, replies);
-            if (replies.Count() > 0 && (bool)replies.First().ParamsList[0] == true)
+            var reply = actor.SendMessage(this, ComponentFamily.Hands, ComponentMessageType.IsCurrentHandEmpty);
+            if (reply.MessageType != ComponentMessageType.Empty && (bool)reply.ParamsList[0] == true)
             {
                 DoEmptyHandInteraction(actor);
             }
-            else if (replies.Count() > 0 && (bool)replies.First().ParamsList[0] == false)
+            else if (reply.MessageType != ComponentMessageType.Empty && (bool)reply.ParamsList[0] == false)
             {
                 DoHeldItemInteraction(actor);
             }
@@ -91,22 +96,22 @@ namespace SGO
             // Does this ent have an actor component(is it a mob?) if so, the actor component should mediate this interaction
             if (Owner.HasComponent(SS13_Shared.GO.ComponentFamily.Actor))
             {
-                Owner.SendMessage(this, ComponentMessageType.ReceiveItemToActorInteraction, null, actor);
-                actingItem.SendMessage(this, ComponentMessageType.EnactItemToActorInteraction, null, Owner, actor);
+                Owner.SendMessage(this, ComponentMessageType.ReceiveItemToActorInteraction, actor);
+                actingItem.SendMessage(this, ComponentMessageType.EnactItemToActorInteraction, Owner, actor);
             }
 
             //Does this ent have an item component? That item component should mediate this interaction
             else if (Owner.HasComponent(SS13_Shared.GO.ComponentFamily.Item))
             {
-                Owner.SendMessage(this, ComponentMessageType.ReceiveItemToItemInteraction, null, actor);
-                actingItem.SendMessage(this, ComponentMessageType.EnactItemToItemInteraction, null, Owner, actor);
+                Owner.SendMessage(this, ComponentMessageType.ReceiveItemToItemInteraction, actor);
+                actingItem.SendMessage(this, ComponentMessageType.EnactItemToItemInteraction, Owner, actor);
             }
 
             //if not, does this ent have a largeobject component? That component should mediate this interaction.
             else if (Owner.HasComponent(SS13_Shared.GO.ComponentFamily.LargeObject))
             {
-                Owner.SendMessage(this, ComponentMessageType.ReceiveItemToLargeObjectInteraction, null, actor);
-                actingItem.SendMessage(this, ComponentMessageType.EnactItemToLargeObjectInteraction, null, Owner, actor);
+                Owner.SendMessage(this, ComponentMessageType.ReceiveItemToLargeObjectInteraction, actor);
+                actingItem.SendMessage(this, ComponentMessageType.EnactItemToLargeObjectInteraction, Owner, actor);
             }
         }
 
@@ -119,15 +124,15 @@ namespace SGO
         {            
             // Does this ent have an actor component(is it a mob?) if so, the actor component should mediate this interaction
             if (Owner.HasComponent(SS13_Shared.GO.ComponentFamily.Actor))
-                Owner.SendMessage(this, ComponentMessageType.ReceiveEmptyHandToActorInteraction, null, actor);
+                Owner.SendMessage(this, ComponentMessageType.ReceiveEmptyHandToActorInteraction, actor);
             
             //If we can be picked up, do that -- ItemComponent mediates that
             else if (Owner.HasComponent(SS13_Shared.GO.ComponentFamily.Item))
-                Owner.SendMessage(this, ComponentMessageType.ReceiveEmptyHandToItemInteraction, null, actor);
+                Owner.SendMessage(this, ComponentMessageType.ReceiveEmptyHandToItemInteraction, actor);
 
             //If not, can we be used? -- LargeObject does that
             else if (Owner.HasComponent(SS13_Shared.GO.ComponentFamily.LargeObject))
-                Owner.SendMessage(this, ComponentMessageType.ReceiveEmptyHandToLargeObjectInteraction, null, actor);
+                Owner.SendMessage(this, ComponentMessageType.ReceiveEmptyHandToLargeObjectInteraction, actor);
 
             
         }
@@ -144,15 +149,12 @@ namespace SGO
 
         protected virtual Entity GetItemInActorHand(Entity actor)
         {
-            List<ComponentReplyMessage> replies = new List<ComponentReplyMessage>();
-            actor.SendMessage(this, ComponentMessageType.GetActiveHandItem, replies);
-            foreach (ComponentReplyMessage reply in replies)
+            var reply = actor.SendMessage(this, ComponentFamily.Hands, ComponentMessageType.GetActiveHandItem);
+            if (reply.MessageType == ComponentMessageType.ReturnActiveHandItem && (reply.ParamsList[0].GetType().IsSubclassOf(typeof(Entity)) || reply.ParamsList[0].GetType() == typeof(Entity))) 
             {
-                if (reply.MessageType == ComponentMessageType.ReturnActiveHandItem && (reply.ParamsList[0].GetType().IsSubclassOf(typeof(Entity)) || reply.ParamsList[0].GetType() == typeof(Entity))) 
-                {
-                    return (Entity)reply.ParamsList[0];
-                }
+                return (Entity)reply.ParamsList[0];
             }
+
             return null;
         }
     }

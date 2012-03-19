@@ -43,8 +43,13 @@ namespace SGO
             Owner.SendComponentNetworkMessage(this, Lidgren.Network.NetDeliveryMethod.ReliableUnordered, connection, ComponentMessageType.SetVisible, visible);
         }
 
-        public override void RecieveMessage(object sender, ComponentMessageType type, List<ComponentReplyMessage> replies, params object[] list)
+        public override ComponentReplyMessage RecieveMessage(object sender, ComponentMessageType type, params object[] list)
         {
+            var reply = base.RecieveMessage(sender, type, list);
+
+            if (sender == this)
+                return ComponentReplyMessage.Empty;
+
             switch (type)
             {
                 case ComponentMessageType.SetSpriteByKey:
@@ -59,6 +64,8 @@ namespace SGO
                         Owner.SendComponentNetworkMessage(this, Lidgren.Network.NetDeliveryMethod.ReliableUnordered, null, ComponentMessageType.SetDrawDepth, list[0]);
                     break;
             }
+
+            return reply;
         }
     }
 }

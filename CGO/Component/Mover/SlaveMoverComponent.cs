@@ -53,14 +53,13 @@ namespace CGO
 
         private void GetMasterMoveDirection()
         {
-            var replies = new List<ComponentReplyMessage>();
+            var reply = _master.SendMessage(this, ComponentFamily.Mover, ComponentMessageType.GetMoveDir);
 
-            _master.SendMessage(this, ComponentMessageType.GetMoveDir, replies);
-
-            if (!replies.Any()) return;
-
-            _movedir = (Constants.MoveDirs)replies.First().ParamsList[0];
-            Owner.SendMessage(this, ComponentMessageType.MoveDirection, _movedir);
+            if (reply.MessageType == ComponentMessageType.MoveDirection)
+            {
+                _movedir = (Constants.MoveDirs)reply.ParamsList[0];
+                Owner.SendMessage(this, ComponentMessageType.MoveDirection, _movedir);
+            }
         }
 
         private void Detach()

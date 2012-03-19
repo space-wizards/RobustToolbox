@@ -75,8 +75,13 @@ namespace SGO
             }
         }
 
-        public override void RecieveMessage(object sender, ComponentMessageType type, List<ComponentReplyMessage> replies, params object[] list)
+        public override ComponentReplyMessage RecieveMessage(object sender, ComponentMessageType type, params object[] list)
         {
+            var reply = base.RecieveMessage(sender, type, list);
+
+            if (sender == this)
+                return ComponentReplyMessage.Empty;
+
             switch (type)
             {
                 case ComponentMessageType.GetCurrentLocationHealth:
@@ -85,12 +90,12 @@ namespace SGO
                     {
                         DamageLocation dmgLoc = damageZones.First(x => x.location == location);
                         ComponentReplyMessage reply1 = new ComponentReplyMessage(ComponentMessageType.CurrentLocationHealth, location, dmgLoc.UpdateTotalHealth(), dmgLoc.maxHealth);
-                        replies.Add(reply1);
+                        reply = reply1;
                     }
                     break;
                 case ComponentMessageType.GetCurrentHealth:
                     ComponentReplyMessage reply2 = new ComponentReplyMessage(ComponentMessageType.CurrentHealth, GetHealth(), GetMaxHealth());
-                    replies.Add(reply2);
+                    reply = reply2;
                     break;
                 case ComponentMessageType.Damage:
                     if(list.Count() > 3) //We also have a target location
@@ -98,10 +103,9 @@ namespace SGO
                     else//We dont have a target location
                         ApplyDamage((Entity)list[0], (int)list[1], (DamageType)list[2]);
                     break;
-                default:
-                    base.RecieveMessage(sender, type, replies, list);
-                    break;
             }
+
+            return reply;
         }
 
         public override float GetMaxHealth()

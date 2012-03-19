@@ -17,8 +17,13 @@ namespace SGO
             family = ComponentFamily.Equippable;
         }
 
-        public override void RecieveMessage(object sender, SS13_Shared.GO.ComponentMessageType type, List<ComponentReplyMessage> replies, params object[] list)
+        public override ComponentReplyMessage RecieveMessage(object sender, SS13_Shared.GO.ComponentMessageType type, params object[] list)
         {
+            var reply = base.RecieveMessage(sender, type, list);
+
+            if (sender == this)
+                return ComponentReplyMessage.Empty;
+
             switch (type)
             {
                 case ComponentMessageType.ItemEquipped:
@@ -28,9 +33,11 @@ namespace SGO
                     HandleUnEquipped();
                     break;
                 case ComponentMessageType.GetWearLoc:
-                    replies.Add(new ComponentReplyMessage(ComponentMessageType.ReturnWearLoc, wearloc));
+                    reply = new ComponentReplyMessage(ComponentMessageType.ReturnWearLoc, wearloc);
                     break;
             }
+
+            return reply;
         }
 
         private void HandleUnEquipped()
@@ -44,7 +51,7 @@ namespace SGO
         {
             currentWearer = entity;
             Owner.AddComponent(SS13_Shared.GO.ComponentFamily.Mover, ComponentFactory.Singleton.GetComponent("SlaveMoverComponent"));
-            Owner.SendMessage(this, ComponentMessageType.SlaveAttach, null, entity.Uid);
+            Owner.SendMessage(this, ComponentMessageType.SlaveAttach, entity.Uid);
             Owner.SendComponentNetworkMessage(this, Lidgren.Network.NetDeliveryMethod.ReliableUnordered, null, EquippableComponentNetMessage.Equipped, entity.Uid, wearloc);
         }
 

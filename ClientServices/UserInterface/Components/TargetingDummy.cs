@@ -73,11 +73,9 @@ namespace ClientServices.UserInterface.Components
             {
                 if (entity != null && entity.HasComponent(ComponentFamily.Damageable))
                 {
-                    var replies = new List<ComponentReplyMessage>();
-                    entity.SendMessage(this, ComponentMessageType.GetCurrentLocationHealth, replies, current.BodyPart);
-                    if (replies.Any(x => x.MessageType == ComponentMessageType.CurrentLocationHealth))
+                    var reply = entity.SendMessage(this, ComponentFamily.Damageable, ComponentMessageType.GetCurrentLocationHealth, current.BodyPart);
+                    if (reply.MessageType == ComponentMessageType.CurrentLocationHealth)
                     {
-                        var reply = replies.First(x => x.MessageType == ComponentMessageType.CurrentLocationHealth);
                         current.CurrentHealth = (int)reply.ParamsList[1];
                         current.MaxHealth = (int)reply.ParamsList[2];
                     }

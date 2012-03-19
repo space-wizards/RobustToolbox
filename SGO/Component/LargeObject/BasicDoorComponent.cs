@@ -26,9 +26,12 @@ namespace SGO
             family = SS13_Shared.GO.ComponentFamily.LargeObject;
         }
 
-        public override void RecieveMessage(object sender, ComponentMessageType type, List<ComponentReplyMessage> replies, params object[] list)
+        public override ComponentReplyMessage RecieveMessage(object sender, ComponentMessageType type, params object[] list)
         {
-            base.RecieveMessage(sender, type, replies, list);
+            var reply = base.RecieveMessage(sender, type, list);
+
+            if (sender == this)
+                return ComponentReplyMessage.Empty;
 
             switch(type)
             {
@@ -38,6 +41,8 @@ namespace SGO
                     break;
 
             }
+
+            return reply;
         }
 
         public override void Update(float frameTime)
@@ -113,8 +118,8 @@ namespace SGO
             var occupiedTilePos = map.GetTileArrayPositionFromWorldPosition(Owner.position);
             var occupiedTile = map.GetTileAt(occupiedTilePos.X, occupiedTilePos.Y);
             Open = true;
-            Owner.SendMessage(this, ComponentMessageType.DisableCollision, null);
-            Owner.SendMessage(this, ComponentMessageType.SetSpriteByKey, null, openSprite);
+            Owner.SendMessage(this, ComponentMessageType.DisableCollision);
+            Owner.SendMessage(this, ComponentMessageType.SetSpriteByKey, openSprite);
             occupiedTile.gasPermeable = true;
             occupiedTile.gasCell.blocking = false;
         }
@@ -126,8 +131,8 @@ namespace SGO
             var occupiedTile = map.GetTileAt(occupiedTilePos.X, occupiedTilePos.Y);
             Open = false;
             timeOpen = 0;
-            Owner.SendMessage(this, ComponentMessageType.EnableCollision, null);
-            Owner.SendMessage(this, ComponentMessageType.SetSpriteByKey, null, closedSprite);
+            Owner.SendMessage(this, ComponentMessageType.EnableCollision);
+            Owner.SendMessage(this, ComponentMessageType.SetSpriteByKey, closedSprite);
             occupiedTile.gasPermeable = false;
             occupiedTile.gasCell.blocking = true;
         }

@@ -15,15 +15,20 @@ namespace SGO
             family = SS13_Shared.GO.ComponentFamily.Mover;
         }
 
-        public override void RecieveMessage(object sender, ComponentMessageType type, List<ComponentReplyMessage> replies, params object[] list)
+        public override ComponentReplyMessage RecieveMessage(object sender, ComponentMessageType type, params object[] list)
         {
+            var reply = base.RecieveMessage(sender, type, list);
+
+            if (sender == this)
+                return ComponentReplyMessage.Empty;
+
             switch (type)
             {
                 case ComponentMessageType.SendPositionUpdate:
                     SendPositionUpdate(true);
                     break;
             }
-            return;
+            return reply;
         }
 
         public void Translate(double x, double y)

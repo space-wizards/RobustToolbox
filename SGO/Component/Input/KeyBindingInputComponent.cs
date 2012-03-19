@@ -13,12 +13,17 @@ namespace SGO
     /// </summary>
     public class KeyBindingInputComponent : GameObjectComponent
     {
+        public KeyBindingInputComponent()
+        {
+            family = ComponentFamily.Input;
+        }
+
         public override void HandleNetworkMessage(IncomingEntityComponentMessage message, NetConnection client)
         {
             BoundKeyFunctions keyFunction = (BoundKeyFunctions)message.messageParameters[0];
             BoundKeyState keyState = (BoundKeyState)message.messageParameters[1];
 
-            Owner.SendMessage(this, ComponentMessageType.BoundKeyChange, null, keyFunction, keyState);
+            Owner.SendMessage(this, ComponentMessageType.BoundKeyChange, keyFunction, keyState);
         }
     }
 }

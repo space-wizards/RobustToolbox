@@ -26,9 +26,14 @@ namespace SGO
             base.HandleNetworkMessage(message, client);
         }
 
-        public override void RecieveMessage(object sender, ComponentMessageType type, List<ComponentReplyMessage> replies, params object[] list)
+        public override ComponentReplyMessage RecieveMessage(object sender, ComponentMessageType type, params object[] list)
         {
-            base.RecieveMessage(sender, type, replies, list);
+            var reply = base.RecieveMessage(sender, type, list);
+
+            if (sender == this)
+                return ComponentReplyMessage.Empty;
+
+            return reply;
         }
 
         public override void Update(float frameTime)

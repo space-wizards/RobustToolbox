@@ -47,6 +47,7 @@ namespace MessagingProfiler
             i.entityMessageType = (EntityMessage)entityMessageType;
             i.componentFamily = (ComponentFamily)componentFamily;
             i.parameters = parameters;
+            i.logMessageType = LogItem.LogMessageType.ServerRecievedNetMessage;
             LogHolder.Singleton.LogItems.Add(i);
         }
 
@@ -56,6 +57,7 @@ namespace MessagingProfiler
             i.clientID = clientUID;
             i.entityID = uid;
             i.parameters = parameters;
+            i.logMessageType = LogItem.LogMessageType.ServerSentNetMessage;
             LogHolder.Singleton.LogItems.Add(i);
         }
 
@@ -66,6 +68,7 @@ namespace MessagingProfiler
             i.entityMessageType = (EntityMessage)entityMessageType;
             i.componentFamily = (ComponentFamily)componentFamily;
             i.parameters = parameters;
+            i.logMessageType = LogItem.LogMessageType.ClientRecievedNetMessage;
             LogHolder.Singleton.LogItems.Add(i);
         }
 
@@ -75,6 +78,7 @@ namespace MessagingProfiler
             i.entityID = uid;
             i.componentFamily = (ComponentFamily)family;
             i.parameters = parameters;
+            i.logMessageType = LogItem.LogMessageType.ClientSentNetMessage;
             LogHolder.Singleton.LogItems.Add(i);
         }
 
@@ -85,6 +89,7 @@ namespace MessagingProfiler
             i.componentFamily = (ComponentFamily)senderFamily;
             i.senderType = senderType;
             i.messageType = (ComponentMessageType)componentMessageType;
+            i.logMessageType = LogItem.LogMessageType.ClientComponentMessage;
             LogHolder.Singleton.LogItems.Add(i);
         }
 
@@ -95,6 +100,8 @@ namespace MessagingProfiler
             i.componentFamily = (ComponentFamily)senderFamily;
             i.senderType = senderType;
             i.messageType = (ComponentMessageType)componentMessageType;
+            i.logMessageType = LogItem.LogMessageType.ClientComponentMessage;
+            
             LogHolder.Singleton.LogItems.Add(i);
         }
 

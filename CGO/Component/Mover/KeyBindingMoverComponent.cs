@@ -212,11 +212,10 @@ namespace CGO
             var oldPosition = Owner.Position;
             Owner.Position += translationVector; // We move the sprite here rather than the position, as we can then use its updated AABB values.
             //Check collision.
-            var replies = new List<ComponentReplyMessage>();
-            Owner.SendMessage(this, ComponentMessageType.CheckCollision, replies, false);
-            if (replies.Count > 0 && replies.First().MessageType == ComponentMessageType.CollisionStatus)
+            var reply = Owner.SendMessage(this, ComponentFamily.Collider, ComponentMessageType.CheckCollision, false);
+            if (reply.MessageType == ComponentMessageType.CollisionStatus)
             {
-                var colliding = (bool)replies.First().ParamsList[0];
+                var colliding = (bool)reply.ParamsList[0];
                 if (colliding) //Collided, reset position and return false.
                 {
                     Owner.Position = oldPosition;

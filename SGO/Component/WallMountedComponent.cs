@@ -20,16 +20,6 @@ namespace SGO
             family = SS13_Shared.GO.ComponentFamily.WallMounted;
         }
 
-        public override ComponentReplyMessage RecieveMessage(object sender, ComponentMessageType type, params object[] list)
-        {
-            var reply = base.RecieveMessage(sender, type, list);
-
-            if (sender == this)
-                return ComponentReplyMessage.Empty;
-
-            return reply;
-        }
-
         public override void Update(float frameTime)
         {
             base.Update(frameTime);

@@ -65,7 +65,6 @@ namespace SGO
                         if (ent != null)
                         {
                             toDo.OnUse(ent);
-                            SetCooldown(toDo);
                         }
                         else
                             return; //Invalid target. Send fail later?
@@ -74,7 +73,6 @@ namespace SGO
                     {
                         PointF trg = new PointF((float)message.messageParameters[3], (float)message.messageParameters[4]);
                         toDo.OnUse(trg);
-                        SetCooldown(toDo);
                     }
                 }
                
@@ -86,7 +84,7 @@ namespace SGO
             }
         }
 
-        private void SetCooldown(PlayerAction act)
+        public void StartCooldown(PlayerAction act)
         {
             if (act.cooldownSeconds == 0) return;
             act.cooldownExpires = DateTime.Now.AddSeconds(act.cooldownSeconds);
@@ -152,7 +150,7 @@ namespace SGO
 
             uint nextUid = uidCurr++; //Increases uid even if adding fails due to effect being unique. fix.
 
-            PlayerAction newAction = (PlayerAction)Activator.CreateInstance(t, new object[] { nextUid });
+            PlayerAction newAction = (PlayerAction)Activator.CreateInstance(t, new object[] { nextUid, this });
 
             Actions.Add(newAction);
 

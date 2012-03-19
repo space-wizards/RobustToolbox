@@ -116,6 +116,8 @@
     <Compile Include="UserInterface\Components\Chatbox.cs" />
     <Compile Include="UserInterface\Components\Checkbox.cs" />
     <Compile Include="UserInterface\Components\ContextMenu.cs" />
+    <Compile Include="UserInterface\Components\PlayerActionsWindow.cs" />
+    <Compile Include="UserInterface\Components\PlayerActionButton.cs" />
     <Compile Include="UserInterface\Components\StatusEffectBar.cs" />
     <Compile Include="UserInterface\Components\StatusEffectButton.cs" />
     <Compile Include="UserInterface\Components\DisconnectedScreenBlocker.cs" />
@@ -162,6 +164,10 @@
     <ProjectReference Include="..\Lidgren.Network\Lidgren.Network.csproj">
       <Project>{AE483C29-042E-4226-BA52-D247CE7676DA}</Project>
       <Name>Lidgren.Network</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\SS13.IoC\SS13.IoC.csproj">
+      <Project>{3401031F-35A7-4AE5-8B64-CAFDCB929F0E}</Project>
+      <Name>SS13.IoC</Name>
     </ProjectReference>
     <ProjectReference Include="..\SS3D_shared\SS13_Shared.csproj">
       <Project>{4229D7E3-C3AE-4C0A-B2B1-BB20911150DC}</Project>

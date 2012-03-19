@@ -802,7 +802,7 @@ namespace ClientServices.UserInterface.Inventory
         {
             var mouseAABB = new PointF(e.Position.X, e.Position.Y);
 
-            if (_userInterfaceManager.DragInfo.IsEntity && _userInterfaceManager.DragInfo.DragEntity != null)
+            if (_userInterfaceManager.DragInfo.IsEntity && _userInterfaceManager.DragInfo.IsActive)
             {
                 #region Hands
                 if (_playerManager.ControlledEntity == null)
@@ -873,7 +873,7 @@ namespace ClientServices.UserInterface.Inventory
 
                         if (_inventory != null) if (_inventory.MouseUp(e)) return true;
 
-                        if (_comboBg.AABB.Contains(mouseAABB) && _userInterfaceManager.DragInfo.IsEntity && _userInterfaceManager.DragInfo.DragEntity != null)
+                        if (_comboBg.AABB.Contains(mouseAABB) && _userInterfaceManager.DragInfo.IsEntity && _userInterfaceManager.DragInfo.IsActive)
                         { //Should be refined to only trigger in the equip area. Equip it if they drop it anywhere on the thing. This might make the slots obsolete if we keep it.
                             if (_playerManager.ControlledEntity == null)
                                 return false;

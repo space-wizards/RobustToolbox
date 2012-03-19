@@ -111,6 +111,7 @@
     <Compile Include="BoundKeyEventArgs.cs" />
     <Compile Include="ComponentParameter.cs" />
     <Compile Include="ComponentReplyMessage.cs" />
+    <Compile Include="PlayerActionEnum.cs" />
     <Compile Include="EntityBaseClass.cs" />
     <Compile Include="Banlist.cs" />
     <Compile Include="CSharpExtensions.cs" />

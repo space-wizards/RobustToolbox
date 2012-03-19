@@ -189,6 +189,9 @@ namespace ClientServices.State.States
             LastUpdate = Now;
             Now = DateTime.Now;
 
+            if (PlacementManager.IsActive && (UserInterfaceManager.DragInfo.IsActive || ((UserInterface.UserInterfaceManager)UserInterfaceManager).targetingAction != null))
+                PlacementManager.Clear(); //Cludgy hack. I don't care. Just want to get this working. Fuck all those interfaces.
+
             ComponentManager.Singleton.Update(e.FrameDeltaTime);
             PlacementManager.Update(MousePosScreen, MapManager);
         }
@@ -521,6 +524,13 @@ namespace ClientServices.State.States
                 message.Write((byte)NetMessage.ForceRestart);
                 NetworkManager.SendMessage(message, NetDeliveryMethod.ReliableUnordered);
             }
+            if (e.Key == KeyboardKeys.F9)
+            {
+                UserInterfaceManager.DisposeAllComponents<PlayerActionsWindow>(); //Remove old ones.
+                PlayerActionComp actComp = (PlayerActionComp)PlayerManager.ControlledEntity.GetComponent(ComponentFamily.PlayerActions);
+                if(actComp != null)
+                    UserInterfaceManager.AddComponent(new PlayerActionsWindow(new Size(150, 150), ResourceManager, (UserInterface.UserInterfaceManager)UserInterfaceManager, actComp)); //Create a new one.
+            }
             if (e.Key == KeyboardKeys.F10)
             {
                 UserInterfaceManager.DisposeAllComponents<TileSpawnPanel>(); //Remove old ones.
@@ -592,6 +602,8 @@ namespace ClientServices.State.States
                     clickedEntities.Add(new ClickData(entity, drawdepthofclicked));
             }
 
+            UserInterface.UserInterfaceManager UiMgr = ((UserInterface.UserInterfaceManager)UserInterfaceManager);
+
             if (clickedEntities.Any())
             {
                 var entToClick = (from cd in clickedEntities
@@ -609,27 +621,56 @@ namespace ClientServices.State.States
                 {
                     case MouseButtons.Left:
                         {
-                            var c = (ClickableComponent)entToClick.GetComponent(ComponentFamily.Click);
-                            c.DispatchClick(PlayerManager.ControlledEntity.Uid);
+                            if (UiMgr.targetingAction != null && (UiMgr.targetingAction.targetType == PlayerActionTargetType.Any || UiMgr.targetingAction.targetType == PlayerActionTargetType.Other))
+                                UiMgr.SelectTarget((Entity)entToClick);
+                            else
+                            {
+                                var c = (ClickableComponent)entToClick.GetComponent(ComponentFamily.Click);
+                                c.DispatchClick(PlayerManager.ControlledEntity.Uid);
+                            }
                         }
                         break;
+
                     case MouseButtons.Right:
-                        UserInterfaceManager.AddComponent(new ContextMenu(entToClick, MousePosScreen, ResourceManager, UserInterfaceManager) );
+                        if (UiMgr.targetingAction != null)
+                            UiMgr.CancelTargeting();
+                        else
+                            UserInterfaceManager.AddComponent(new ContextMenu(entToClick, MousePosScreen, ResourceManager, UserInterfaceManager));
                         break;
                 }
             }
             else
             {
-                var clickedPoint = MapManager.GetTileArrayPositionFromWorldPosition(MousePosWorld);
-                if (clickedPoint.X > 0 && clickedPoint.Y > 0)
+                switch (e.Buttons)
                 {
-                    NetOutgoingMessage message = NetworkManager.CreateMessage();
-                    message.Write((byte)NetMessage.MapMessage);
-                    message.Write((byte)MapMessage.TurfClick);
-                    message.Write((short)clickedPoint.X);
-                    message.Write((short)clickedPoint.Y);
-                    NetworkManager.SendMessage(message, NetDeliveryMethod.ReliableUnordered);
-                }
+                    case MouseButtons.Left:
+                        {
+                            if (UiMgr.targetingAction != null && UiMgr.targetingAction.targetType == PlayerActionTargetType.Point)
+                            {
+                                UiMgr.SelectTarget(new PointF(MousePosWorld.X, MousePosWorld.Y));
+                            }
+                            else
+                            {
+                                var clickedPoint = MapManager.GetTileArrayPositionFromWorldPosition(MousePosWorld);
+                                if (clickedPoint.X > 0 && clickedPoint.Y > 0)
+                                {
+                                    NetOutgoingMessage message = NetworkManager.CreateMessage();
+                                    message.Write((byte)NetMessage.MapMessage);
+                                    message.Write((byte)MapMessage.TurfClick);
+                                    message.Write((short)clickedPoint.X);
+                                    message.Write((short)clickedPoint.Y);
+                                    NetworkManager.SendMessage(message, NetDeliveryMethod.ReliableUnordered);
+                                }
+                            }
+                            break;
+                        }
+                    case MouseButtons.Right:
+                        {
+                            if (UiMgr.targetingAction != null)
+                                UiMgr.CancelTargeting();
+                            break;
+                        }
+            }
             } 
             #endregion
         }

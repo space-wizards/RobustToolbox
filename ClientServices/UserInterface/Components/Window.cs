@@ -10,20 +10,20 @@ namespace ClientServices.UserInterface.Components
 {
     class Window : ScrollableContainer
     {
-        private readonly IResourceManager _resourceManager;
-        private Label title;
-        private Rectangle titleArea;
-        private GradientBox gradient;
+        protected readonly IResourceManager _resourceManager;
+        protected Label title;
+        protected Rectangle titleArea;
+        protected GradientBox gradient;
 
-        private bool dragging = false;
-        private Vector2D draggingOffset = new Vector2D();
+        protected bool dragging = false;
+        protected Vector2D draggingOffset = new Vector2D();
 
-        private const int titleBuffer = 1;
+        protected const int titleBuffer = 1;
 
         public Color TitleColor1 = Color.SlateGray;
         public Color TitleColor2 = Color.DarkSlateGray;
 
-        private SimpleImageButton closeButton;
+        protected SimpleImageButton closeButton;
         public Boolean closeButtonVisible = true;
 
         public Window(string windowTitle, Size size, IResourceManager resourceManager)

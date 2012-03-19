@@ -22,17 +22,22 @@ namespace SGO
         public uint cooldownSeconds = 10;
         public DateTime cooldownExpires;
 
-        public PlayerAction(uint _uid)
+        protected PlayerActionComp parent;
+
+        public PlayerAction(uint _uid, PlayerActionComp _parent)
         {
+            parent = _parent;
             uid = _uid;
         }
 
         public virtual void OnUse(PointF targetPoint)
         {
+            parent.StartCooldown(this);
         }
 
         public virtual void OnUse(Entity targetEnt)
         {
+            parent.StartCooldown(this);
         }
     }
 }

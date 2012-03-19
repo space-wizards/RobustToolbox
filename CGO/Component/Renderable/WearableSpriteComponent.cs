@@ -35,7 +35,7 @@ namespace CGO
                             if (worn)
                             {
                                 SetSpriteByKey(basename + "_back");
-                                flip = true;
+                                flip = false;
                             }
                             else
                                 SetSpriteByKey(basename);
@@ -44,6 +44,7 @@ namespace CGO
                             if (worn)
                             {
                                 SetSpriteByKey(basename + "_front");
+                                flip = false;
                             }
                             else
                                 SetSpriteByKey(basename);
@@ -71,6 +72,7 @@ namespace CGO
                             if (worn)
                             {
                                 SetSpriteByKey(basename + "_back");
+                                flip = false;
                             }
                             else
                                 SetSpriteByKey(basename);
@@ -79,6 +81,7 @@ namespace CGO
                             if (worn)
                             {
                                 SetSpriteByKey(basename + "_back");
+                                flip = false;
                             }
                             else
                                 SetSpriteByKey(basename);
@@ -87,6 +90,7 @@ namespace CGO
                             if (worn)
                             {
                                 SetSpriteByKey(basename + "_front");
+                                flip = false;
                             }
                             else
                                 SetSpriteByKey(basename);
@@ -95,6 +99,7 @@ namespace CGO
                             if (worn)
                             {
                                 SetSpriteByKey(basename + "_front");
+                                flip = false;
                             }
                             else
                                 SetSpriteByKey(basename);

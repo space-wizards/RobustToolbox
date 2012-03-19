@@ -32,9 +32,11 @@ namespace CGO
                     {
                         case Constants.MoveDirs.north:
                             SetSpriteByKey(_basename + "_back");
+                            flip = false;
                             break;
                         case Constants.MoveDirs.south:
                             SetSpriteByKey(_basename + "_front");
+                            flip = false;
                             break;
                         case Constants.MoveDirs.east:
                             SetSpriteByKey(_basename + "_side");
@@ -46,15 +48,19 @@ namespace CGO
                             break;
                         case Constants.MoveDirs.northeast:
                             SetSpriteByKey(_basename + "_back");
+                            flip = false;
                             break;
                         case Constants.MoveDirs.northwest:
                             SetSpriteByKey(_basename + "_back");
+                            flip = false;
                             break;
                         case Constants.MoveDirs.southeast:
                             SetSpriteByKey(_basename + "_front");
+                            flip = false;
                             break;
                         case Constants.MoveDirs.southwest:
                             SetSpriteByKey(_basename + "_front");
+                            flip = false;
                             break;
                     }
                     break;

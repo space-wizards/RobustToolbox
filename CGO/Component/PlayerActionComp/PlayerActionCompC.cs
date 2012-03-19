@@ -130,11 +130,6 @@ namespace CGO
             }
         }
 
-        public override ComponentReplyMessage RecieveMessage(object sender, ComponentMessageType type, params object[] list)
-        {
-            return base.RecieveMessage(sender, type, list);
-        }
-
         public override void Update(float frameTime)
         {
             base.Update(frameTime);

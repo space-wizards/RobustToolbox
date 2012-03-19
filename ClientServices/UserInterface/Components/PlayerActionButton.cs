@@ -34,10 +34,13 @@ namespace ClientServices.UserInterface.Components
 
         private IUserInterfaceManager UiMgr;
 
+        private double cooldownLeft = 0;
+
         public PlayerActionButton(IPlayerAction _assigned, IResourceManager resourceManager)
         {
             UiMgr = IoCManager.Resolve<IUserInterfaceManager>();
             _resourceManager = resourceManager;
+
             _buttonSprite = _resourceManager.GetSprite(_assigned.Icon);
             assignedAction = _assigned;
             Color = Color.White;
@@ -56,13 +59,12 @@ namespace ClientServices.UserInterface.Components
 
         public override sealed void Update()
         {
-            double cdLeft = Math.Truncate(assignedAction.CooldownExpires.Subtract(DateTime.Now).TotalSeconds);
-            string leftStr = cdLeft.ToString();
+            cooldownLeft = Math.Truncate(assignedAction.CooldownExpires.Subtract(DateTime.Now).TotalSeconds);
 
             _buttonSprite.Position = Position;
-            if (cdLeft > 0)
+            if (cooldownLeft > 0)
             {
-                timeLeft.Text = leftStr;
+                timeLeft.Text = cooldownLeft.ToString();
                 int x_pos = (int)(ClientArea.Width / 2f) - (int)(timeLeft.Width / 2f);
                 int y_pos = (int)(ClientArea.Height / 2f) - (int)(timeLeft.Height / 2f);
                 timeLeft.Position = new Vector2D(this.Position.X + x_pos, this.Position.Y + y_pos);
@@ -77,9 +79,7 @@ namespace ClientServices.UserInterface.Components
 
         public override void Render()
         {
-            double cdLeft = Math.Truncate(assignedAction.CooldownExpires.Subtract(DateTime.Now).TotalSeconds);
-
-            if (cdLeft > 0) Color = Color.DarkGray;
+            if (cooldownLeft > 0) Color = Color.DarkGray;
             else Color = Color.White;
 
             _buttonSprite.Color = Color;
@@ -94,13 +94,10 @@ namespace ClientServices.UserInterface.Components
         {
             if (showTooltip)
             {
-                double cdLeft = Math.Truncate(assignedAction.CooldownExpires.Subtract(DateTime.Now).TotalSeconds);
-                string leftStr = cdLeft.ToString();
-
                 string tooltipStr = assignedAction.Name + 
                     Environment.NewLine + Environment.NewLine +
                     assignedAction.Description +
-                    (cdLeft > 0 ? Environment.NewLine + Environment.NewLine + "Cooldown : " + leftStr + " sec" : "");
+                    (cooldownLeft > 0 ? Environment.NewLine + Environment.NewLine + "Cooldown : " + cooldownLeft.ToString() + " sec" : "");
 
                 tooltip.Text = tooltipStr;
                 float x_pos = (tooltipPos.X + 10 + tooltip.Width + 5 + offset.X) > Gorgon.Screen.Width ? 0 - tooltip.Width - 10 : 10 + 5;

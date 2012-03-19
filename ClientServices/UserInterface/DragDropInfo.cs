@@ -5,6 +5,8 @@ using ClientServices.Helpers;
 using GorgonLibrary.Graphics;
 using SS13.IoC;
 using ClientInterfaces.Resource;
+using ClientInterfaces.UserInterface;
+using ClientInterfaces.Placement;
 
 namespace ClientServices.UserInterface
 {
@@ -32,6 +34,10 @@ namespace ClientServices.UserInterface
         public void StartDrag(IEntity entity)
         {
             Reset();
+
+            IoCManager.Resolve<IUserInterfaceManager>().CancelTargeting();
+            IoCManager.Resolve<IPlacementManager>().Clear();
+
             DragEntity = entity;
             DragSprite = Utilities.GetSpriteComponentSprite(entity);
             IsEntity = true;

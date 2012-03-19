@@ -15,7 +15,7 @@ namespace ClientInterfaces.GOC
         string Icon { get; }
         string Name { get; }
         string Description { get; }
-        DateTime CooldownExpires { get; }
+        DateTime CooldownExpires { get; set; }
         uint Uid { get; }
     }
 }

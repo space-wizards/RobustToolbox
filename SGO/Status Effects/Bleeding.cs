@@ -49,7 +49,7 @@ namespace SGO
             if (bleedEntTimer.ElapsedMilliseconds >= 1500)
             {
                 bleedEntTimer.Restart();
-                EntityManager.Singleton.SpawnEntity("Blood", affected.position);
+                EntityManager.Singleton.SpawnEntityAt("Blood", affected.position);
             }
         }
     }

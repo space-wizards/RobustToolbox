@@ -2,12 +2,14 @@
 using System.Drawing;
 using ClientInterfaces;
 using ClientInterfaces.Resource;
+using ClientInterfaces.GOC;
 using GorgonLibrary.Graphics;
 using GorgonLibrary.InputDevices;
 using CGO;
 using GorgonLibrary;
 using SS13_Shared.GO;
-using ClientInterfaces;
+using ClientInterfaces.UserInterface;
+using SS13.IoC;
 
 namespace ClientServices.UserInterface.Components
 {
@@ -18,7 +20,7 @@ namespace ClientServices.UserInterface.Components
 
         private DateTime mouseOverStart;
 
-        private PlayerAction assignedAction;
+        private IPlayerAction assignedAction;
 
         private TextSprite timeLeft;
 
@@ -30,23 +32,23 @@ namespace ClientServices.UserInterface.Components
         private bool showTooltip = false;
         private Point tooltipPos = new Point();
 
-        private UserInterfaceManager UiMgr;
+        private IUserInterfaceManager UiMgr;
 
-        public PlayerActionButton(PlayerAction _assigned, IResourceManager resourceManager, UserInterfaceManager userInterfaceManager)
+        public PlayerActionButton(IPlayerAction _assigned, IResourceManager resourceManager)
         {
-            UiMgr = userInterfaceManager;
+            UiMgr = IoCManager.Resolve<IUserInterfaceManager>();
             _resourceManager = resourceManager;
-            _buttonSprite = _resourceManager.GetSprite(_assigned.icon);
+            _buttonSprite = _resourceManager.GetSprite(_assigned.Icon);
             assignedAction = _assigned;
             Color = Color.White;
 
-            timeLeft = new TextSprite("cooldown"+_assigned.uid.ToString()+_assigned.name, "", _resourceManager.GetFont("CALIBRI"));
-            timeLeft.Color = Color.White;
-            timeLeft.ShadowColor = Color.Gray;
+            timeLeft = new TextSprite("cooldown"+_assigned.Uid.ToString()+_assigned.Name, "", _resourceManager.GetFont("CALIBRI"));
+            timeLeft.Color = Color.NavajoWhite;
+            timeLeft.ShadowColor = Color.Black;
             timeLeft.ShadowOffset = new Vector2D(1, 1);
             timeLeft.Shadowed = true;
 
-            tooltip = new TextSprite("tooltipAct" + _assigned.uid.ToString() + _assigned.name, "", _resourceManager.GetFont("CALIBRI"));
+            tooltip = new TextSprite("tooltipAct" + _assigned.Uid.ToString() + _assigned.Name, "", _resourceManager.GetFont("CALIBRI"));
             tooltip.Color = Color.Black;
 
             Update();
@@ -54,7 +56,7 @@ namespace ClientServices.UserInterface.Components
 
         public override sealed void Update()
         {
-            double cdLeft = Math.Truncate(assignedAction.cooldownExpires.Subtract(DateTime.Now).TotalSeconds);
+            double cdLeft = Math.Truncate(assignedAction.CooldownExpires.Subtract(DateTime.Now).TotalSeconds);
             string leftStr = cdLeft.ToString();
 
             _buttonSprite.Position = Position;
@@ -63,7 +65,6 @@ namespace ClientServices.UserInterface.Components
                 timeLeft.Text = leftStr;
                 int x_pos = (int)(ClientArea.Width / 2f) - (int)(timeLeft.Width / 2f);
                 int y_pos = (int)(ClientArea.Height / 2f) - (int)(timeLeft.Height / 2f);
-                timeLeft.Color = Color.Red;
                 timeLeft.Position = new Vector2D(this.Position.X + x_pos, this.Position.Y + y_pos);
             }
             else timeLeft.Text = string.Empty;
@@ -76,7 +77,7 @@ namespace ClientServices.UserInterface.Components
 
         public override void Render()
         {
-            double cdLeft = Math.Truncate(assignedAction.cooldownExpires.Subtract(DateTime.Now).TotalSeconds);
+            double cdLeft = Math.Truncate(assignedAction.CooldownExpires.Subtract(DateTime.Now).TotalSeconds);
 
             if (cdLeft > 0) Color = Color.DarkGray;
             else Color = Color.White;
@@ -93,12 +94,12 @@ namespace ClientServices.UserInterface.Components
         {
             if (showTooltip)
             {
-                double cdLeft = Math.Truncate(assignedAction.cooldownExpires.Subtract(DateTime.Now).TotalSeconds);
+                double cdLeft = Math.Truncate(assignedAction.CooldownExpires.Subtract(DateTime.Now).TotalSeconds);
                 string leftStr = cdLeft.ToString();
 
-                string tooltipStr = assignedAction.name + 
+                string tooltipStr = assignedAction.Name + 
                     Environment.NewLine + Environment.NewLine +
-                    assignedAction.description +
+                    assignedAction.Description +
                     (cdLeft > 0 ? Environment.NewLine + Environment.NewLine + "Cooldown : " + leftStr + " sec" : "");
 
                 tooltip.Text = tooltipStr;
@@ -122,22 +123,11 @@ namespace ClientServices.UserInterface.Components
             return false;
         }
 
-        public void UseAction()
-        {
-            if (assignedAction.cooldownExpires.Subtract(DateTime.Now).TotalSeconds > 0) return;
-            if (assignedAction.targetType == SS13_Shared.PlayerActionTargetType.None)
-                assignedAction.Use(null);
-            else
-            {
-                UiMgr.StartTargeting(assignedAction);
-            }
-        }
-
         public override bool MouseUp(MouseInputEventArgs e)
         {
             if (ClientArea.Contains(new Point((int)e.Position.X, (int)e.Position.Y)))
             {
-                UseAction();
+                assignedAction.Activate();
                 return true;
             }
             return false;
@@ -147,10 +137,9 @@ namespace ClientServices.UserInterface.Components
         {
             if (ClientArea.Contains(new Point((int)e.Position.X, (int)e.Position.Y)))
             {
-                DragDropInfo draginfo = (DragDropInfo)UiMgr.DragInfo; //God fucking damn those interfaces everywhere.
                 if (e.Buttons == MouseButtons.Left)
                 {
-                    draginfo.StartDrag(assignedAction);
+                    UiMgr.DragInfo.StartDrag(assignedAction);
                 }
                 else
                 {

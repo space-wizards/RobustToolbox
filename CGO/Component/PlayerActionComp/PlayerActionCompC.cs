@@ -63,14 +63,14 @@ namespace CGO
 
         private void SetCooldown(uint uid, uint seconds)
         {
-            PlayerAction toSet = Actions.FirstOrDefault(x => x.uid == uid);
+            PlayerAction toSet = Actions.FirstOrDefault(x => x.Uid == uid);
             if (toSet != null)
                 toSet.cooldownExpires = DateTime.Now.AddSeconds(seconds);
         }
 
         private void CheckFullUpdate(uint checksum) //This should never happen. This just exists in case it desynchs.
         {
-            long sum = Actions.Sum(x => x.uid) * Actions.Count; //Absolutely not perfect or safe. If this causes problems later (unlikely) we can still change it.
+            long sum = Actions.Sum(x => x.Uid) * Actions.Count; //Absolutely not perfect or safe. If this causes problems later (unlikely) we can still change it.
             if (sum != checksum) Owner.SendComponentNetworkMessage(this, Lidgren.Network.NetDeliveryMethod.ReliableUnordered, ComponentMessageType.RequestActionList);
         }
 
@@ -81,30 +81,30 @@ namespace CGO
             double cdLeft = action.cooldownExpires.Subtract(DateTime.Now).TotalSeconds;
             if (cdLeft > 0) return;
 
-            switch (action.targetType)
+            switch (action.TargetType)
             {
                 case PlayerActionTargetType.Any:
                     {
                         Entity trg = (Entity)target;
-                        Owner.SendComponentNetworkMessage(this, Lidgren.Network.NetDeliveryMethod.ReliableUnordered, ComponentMessageType.DoAction, action.uid, action.targetType, trg.Uid);
+                        Owner.SendComponentNetworkMessage(this, Lidgren.Network.NetDeliveryMethod.ReliableUnordered, ComponentMessageType.DoAction, action.Uid, action.TargetType, trg.Uid);
                         break;
                     }
                 case PlayerActionTargetType.None:
                     {
-                        Owner.SendComponentNetworkMessage(this, Lidgren.Network.NetDeliveryMethod.ReliableUnordered, ComponentMessageType.DoAction, action.uid, action.targetType, Owner.Uid);
+                        Owner.SendComponentNetworkMessage(this, Lidgren.Network.NetDeliveryMethod.ReliableUnordered, ComponentMessageType.DoAction, action.Uid, action.TargetType, Owner.Uid);
                         break;
                     }
                 case PlayerActionTargetType.Other:
                     {
                         Entity trg = (Entity)target;
                         if (trg == Owner) return;
-                        Owner.SendComponentNetworkMessage(this, Lidgren.Network.NetDeliveryMethod.ReliableUnordered, ComponentMessageType.DoAction, action.uid, action.targetType, trg.Uid);
+                        Owner.SendComponentNetworkMessage(this, Lidgren.Network.NetDeliveryMethod.ReliableUnordered, ComponentMessageType.DoAction, action.Uid, action.TargetType, trg.Uid);
                         break;
                     }
                 case PlayerActionTargetType.Point:
                     {
                         PointF trg = (PointF)target;
-                        Owner.SendComponentNetworkMessage(this, Lidgren.Network.NetDeliveryMethod.ReliableUnordered, ComponentMessageType.DoAction, action.uid, action.targetType, trg.X, trg.Y);
+                        Owner.SendComponentNetworkMessage(this, Lidgren.Network.NetDeliveryMethod.ReliableUnordered, ComponentMessageType.DoAction, action.Uid, action.TargetType, trg.X, trg.Y);
                         break;
                     }
             }
@@ -151,7 +151,7 @@ namespace CGO
 
         private void RemoveAction(uint uid) //Don't manually use this clientside. The server adds and removes what is needed.
         {
-            PlayerAction toRemove = Actions.FirstOrDefault(x => x.uid == uid);
+            PlayerAction toRemove = Actions.FirstOrDefault(x => x.Uid == uid);
             if (toRemove != null)
             {
                 Actions.Remove(toRemove);

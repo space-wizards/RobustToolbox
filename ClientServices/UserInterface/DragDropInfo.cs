@@ -12,7 +12,7 @@ namespace ClientServices.UserInterface
     {
         public IEntity DragEntity { get; private set; }
         public Sprite DragSprite { get; private set; }
-        public PlayerAction DragAction { get; private set; }
+        public IPlayerAction DragAction { get; private set; }
         public bool IsEntity { get; private set;}
         public bool IsActive { get { return Active(); } }
 
@@ -37,11 +37,11 @@ namespace ClientServices.UserInterface
             IsEntity = true;
         }
 
-        public void StartDrag(PlayerAction action)
+        public void StartDrag(IPlayerAction action)
         {
             Reset();
             DragAction = action;
-            DragSprite = IoCManager.Resolve<IResourceManager>().GetSprite(action.icon);
+            DragSprite = IoCManager.Resolve<IResourceManager>().GetSprite(action.Icon);
             IsEntity = false;
         }
     }

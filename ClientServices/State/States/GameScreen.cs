@@ -189,11 +189,13 @@ namespace ClientServices.State.States
             LastUpdate = Now;
             Now = DateTime.Now;
 
-            if (PlacementManager.IsActive && (UserInterfaceManager.DragInfo.IsActive || ((UserInterface.UserInterfaceManager)UserInterfaceManager).targetingAction != null))
-                PlacementManager.Clear(); //Cludgy hack. I don't care. Just want to get this working. Fuck all those interfaces.
+            if (PlacementManager.IsActive && (UserInterfaceManager.DragInfo.IsActive || ((UserInterface.UserInterfaceManager)UserInterfaceManager).currentTargetingAction != null))
+                PlacementManager.Clear();
 
             ComponentManager.Singleton.Update(e.FrameDeltaTime);
             PlacementManager.Update(MousePosScreen, MapManager);
+
+            MousePosWorld = new Vector2D(MousePosScreen.X + WindowOrigin.X, MousePosScreen.Y + WindowOrigin.Y);
         }
 
         private void NetworkManagerMessageArrived(object sender, IncomingNetworkMessageArgs args)
@@ -529,7 +531,7 @@ namespace ClientServices.State.States
                 UserInterfaceManager.DisposeAllComponents<PlayerActionsWindow>(); //Remove old ones.
                 PlayerActionComp actComp = (PlayerActionComp)PlayerManager.ControlledEntity.GetComponent(ComponentFamily.PlayerActions);
                 if(actComp != null)
-                    UserInterfaceManager.AddComponent(new PlayerActionsWindow(new Size(150, 150), ResourceManager, (UserInterface.UserInterfaceManager)UserInterfaceManager, actComp)); //Create a new one.
+                    UserInterfaceManager.AddComponent(new PlayerActionsWindow(new Size(150, 150), ResourceManager, actComp)); //Create a new one.
             }
             if (e.Key == KeyboardKeys.F10)
             {
@@ -602,8 +604,6 @@ namespace ClientServices.State.States
                     clickedEntities.Add(new ClickData(entity, drawdepthofclicked));
             }
 
-            UserInterface.UserInterfaceManager UiMgr = ((UserInterface.UserInterfaceManager)UserInterfaceManager);
-
             if (clickedEntities.Any())
             {
                 var entToClick = (from cd in clickedEntities
@@ -621,8 +621,8 @@ namespace ClientServices.State.States
                 {
                     case MouseButtons.Left:
                         {
-                            if (UiMgr.targetingAction != null && (UiMgr.targetingAction.targetType == PlayerActionTargetType.Any || UiMgr.targetingAction.targetType == PlayerActionTargetType.Other))
-                                UiMgr.SelectTarget((Entity)entToClick);
+                            if (UserInterfaceManager.currentTargetingAction != null && (UserInterfaceManager.currentTargetingAction.TargetType == PlayerActionTargetType.Any || UserInterfaceManager.currentTargetingAction.TargetType == PlayerActionTargetType.Other))
+                                UserInterfaceManager.SelectTarget((Entity)entToClick);
                             else
                             {
                                 var c = (ClickableComponent)entToClick.GetComponent(ComponentFamily.Click);
@@ -632,8 +632,8 @@ namespace ClientServices.State.States
                         break;
 
                     case MouseButtons.Right:
-                        if (UiMgr.targetingAction != null)
-                            UiMgr.CancelTargeting();
+                        if (UserInterfaceManager.currentTargetingAction != null)
+                            UserInterfaceManager.CancelTargeting();
                         else
                             UserInterfaceManager.AddComponent(new ContextMenu(entToClick, MousePosScreen, ResourceManager, UserInterfaceManager));
                         break;
@@ -645,9 +645,9 @@ namespace ClientServices.State.States
                 {
                     case MouseButtons.Left:
                         {
-                            if (UiMgr.targetingAction != null && UiMgr.targetingAction.targetType == PlayerActionTargetType.Point)
+                            if (UserInterfaceManager.currentTargetingAction != null && UserInterfaceManager.currentTargetingAction.TargetType == PlayerActionTargetType.Point)
                             {
-                                UiMgr.SelectTarget(new PointF(MousePosWorld.X, MousePosWorld.Y));
+                                UserInterfaceManager.SelectTarget(new PointF(MousePosWorld.X, MousePosWorld.Y));
                             }
                             else
                             {
@@ -666,8 +666,8 @@ namespace ClientServices.State.States
                         }
                     case MouseButtons.Right:
                         {
-                            if (UiMgr.targetingAction != null)
-                                UiMgr.CancelTargeting();
+                            if (UserInterfaceManager.currentTargetingAction != null)
+                                UserInterfaceManager.CancelTargeting();
                             break;
                         }
             }

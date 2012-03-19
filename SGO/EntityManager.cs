@@ -96,7 +96,7 @@ namespace SGO
         {
             foreach (Entity e in m_entities.Values)
             {
-                SendSpawnEntity(e, client);
+                SendSpawnEntityAtPosition(e, client);
             }
             SendEntityManagerInit(client);
         }
@@ -134,7 +134,7 @@ namespace SGO
             return -1;
         }
 
-        public Entity SpawnEntity(string EntityType)
+        public Entity SpawnEntity(string EntityType, bool send = true)
         {
             Entity e = m_entityFactory.CreateEntity(EntityType);
             if (e != null)
@@ -143,30 +143,25 @@ namespace SGO
                 e.Uid = nextId++;
                 m_entities.Add(e.Uid, e);
                 e.Initialize();
-                SendSpawnEntity(e);
+                if(send) SendSpawnEntity(e);
             }
+            return e;
+        }
+
+        private Entity SpawnEntityAt(string EntityType, Vector2 position)
+        {
+            var e = SpawnEntity(EntityType, false);
+            e.Translate(position);
+            SendSpawnEntityAtPosition(e);
             return e;
         }
 
         public Entity SpawnEntity(string EntityType, Vector2 position)
         {
-            Entity e = SpawnEntity(EntityType);
+            Entity e = SpawnEntityAt(EntityType, position);
             if (e == null)
                 return null;
-
-            e.Translate(position);
             return e;
-        }
-
-        private void SendSpawnEntity(Entity e)
-        {
-            NetOutgoingMessage message = m_netServer.CreateMessage();
-            message.Write((byte)NetMessage.EntityManagerMessage);
-            message.Write((int)EntityManagerMessage.SpawnEntity);
-            message.Write(e.template.Name);
-            message.Write(e.name);
-            message.Write(e.Uid);
-            m_netServer.SendToAll(message, NetDeliveryMethod.ReliableOrdered);
         }
 
         private void SendEntityManagerInit(NetConnection client)
@@ -177,7 +172,7 @@ namespace SGO
             m_netServer.SendMessage(message, client, NetDeliveryMethod.ReliableOrdered);
         }
 
-        private void SendSpawnEntity(Entity e, NetConnection client)
+        private void SendSpawnEntity(Entity e, NetConnection client = null)
         {
             NetOutgoingMessage message = m_netServer.CreateMessage();
             message.Write((byte)NetMessage.EntityManagerMessage);
@@ -185,7 +180,26 @@ namespace SGO
             message.Write(e.template.Name);
             message.Write(e.name);
             message.Write(e.Uid);
-            m_netServer.SendMessage(message, client, NetDeliveryMethod.ReliableOrdered);
+            if (client != null)
+                m_netServer.SendMessage(message, client, NetDeliveryMethod.ReliableOrdered);
+            else
+                m_netServer.SendToAll(message, NetDeliveryMethod.ReliableOrdered);
+        }
+
+        private void SendSpawnEntityAtPosition(Entity e, NetConnection client = null)
+        {
+            NetOutgoingMessage message = m_netServer.CreateMessage();
+            message.Write((byte)NetMessage.EntityManagerMessage);
+            message.Write((int)EntityManagerMessage.SpawnEntityAtPosition);
+            message.Write(e.template.Name);
+            message.Write(e.name);
+            message.Write(e.Uid);
+            message.Write(e.position.X); // SENT AS DOUBLES...
+            message.Write(e.position.Y); // CONVERTED TO FLOATS ON CLIENT SIDE
+            if (client != null)
+                m_netServer.SendMessage(message, client, NetDeliveryMethod.ReliableOrdered);
+            else
+                m_netServer.SendToAll(message, NetDeliveryMethod.ReliableOrdered);
         }
 
         /// <summary>

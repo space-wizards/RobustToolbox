@@ -87,7 +87,6 @@ namespace CGO
 
         private IEntity SpawnEntity(string entityType, int uid)
         {
-
             var e = _entityFactory.CreateEntity(entityType, _entityNetworkManager);
             if (e != null)
             {
@@ -99,6 +98,13 @@ namespace CGO
                 return e;
             }
             return null;
+        }
+
+        private IEntity SpawnEntityAt(string entityType, int uid, Vector2D position)
+        {
+            var e = SpawnEntity(entityType, uid);
+            e.Position = position;
+            return e;
         }
 
         public IEntity[] GetEntitiesInRange(Vector2D position, float Range)
@@ -136,11 +142,10 @@ namespace CGO
             switch(type)
             {
                 case EntityManagerMessage.SpawnEntity:
-                    var entityType = msg.ReadString();
-                    var entityName = msg.ReadString();
-                    var uid = msg.ReadInt32();
-                    var e = SpawnEntity(entityType, uid);
-                    e.Name = entityName;
+                    HandleSpawnEntity(msg);
+                    break;
+                case EntityManagerMessage.SpawnEntityAtPosition:
+                    HandleSpawnEntityAtPosition(msg);
                     break;
                 case EntityManagerMessage.DeleteEntity:
                     var dUid = msg.ReadInt32();
@@ -155,6 +160,25 @@ namespace CGO
                     InitializeEntities();
                     break;
             }
+        }
+
+        private void HandleSpawnEntity(NetIncomingMessage msg)
+        {
+            var entityType = msg.ReadString();
+            var entityName = msg.ReadString();
+            var uid = msg.ReadInt32();
+            var e = SpawnEntity(entityType, uid);
+            e.Name = entityName;
+        }
+
+        private void HandleSpawnEntityAtPosition(NetIncomingMessage msg)
+        {
+            var entityType = msg.ReadString();
+            var entityName = msg.ReadString();
+            var uid = msg.ReadInt32();
+            var pos = new Vector2D((float)msg.ReadDouble(), (float)msg.ReadDouble());
+            var e = SpawnEntityAt(entityType, uid, pos);
+            e.Name = entityName;
         }
 
         private void InitializeEntities()

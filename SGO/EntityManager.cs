@@ -148,7 +148,7 @@ namespace SGO
             return e;
         }
 
-        private Entity SpawnEntityAt(string EntityType, Vector2 position)
+        public Entity SpawnEntityAt(string EntityType, Vector2 position)
         {
             var e = SpawnEntity(EntityType, false);
             e.Translate(position);

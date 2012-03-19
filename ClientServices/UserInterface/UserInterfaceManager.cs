@@ -11,6 +11,8 @@ using GorgonLibrary.Graphics;
 using ClientInterfaces;
 using CGO;
 using ClientInterfaces.GOC;
+using ClientInterfaces.Placement;
+using SS13.IoC;
 
 namespace ClientServices.UserInterface
 {
@@ -38,7 +40,10 @@ namespace ClientServices.UserInterface
         public void StartTargeting(IPlayerAction act)
         {
             if (act.TargetType == PlayerActionTargetType.None) return;
-            if (DragInfo.IsActive) DragInfo.Reset();
+
+            IoCManager.Resolve<IPlacementManager>().Clear();
+            DragInfo.Reset();
+
             targetingAction = act;
         }
 

@@ -189,9 +189,6 @@ namespace ClientServices.State.States
             LastUpdate = Now;
             Now = DateTime.Now;
 
-            if (PlacementManager.IsActive && (UserInterfaceManager.DragInfo.IsActive || ((UserInterface.UserInterfaceManager)UserInterfaceManager).currentTargetingAction != null))
-                PlacementManager.Clear();
-
             ComponentManager.Singleton.Update(e.FrameDeltaTime);
             PlacementManager.Update(MousePosScreen, MapManager);
 

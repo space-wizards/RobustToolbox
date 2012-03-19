@@ -16,6 +16,8 @@ using SS13_Shared;
 using System.Drawing;
 using ClientInterfaces;
 using CGO;
+using SS13.IoC;
+using ClientInterfaces.UserInterface;
 
 namespace ClientServices.Placement
 {
@@ -126,6 +128,9 @@ namespace ClientServices.Placement
         public void BeginPlacing(PlacementInformation info)
         {
             Clear();
+
+            IoCManager.Resolve<IUserInterfaceManager>().CancelTargeting();
+            IoCManager.Resolve<IUserInterfaceManager>().DragInfo.Reset();
 
             _currentPermission = info;
 

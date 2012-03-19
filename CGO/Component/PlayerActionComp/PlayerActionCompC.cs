@@ -17,7 +17,7 @@ namespace CGO
         public delegate void PlayerActionsChangedHandler(PlayerActionComp sender);
         public event PlayerActionsChangedHandler Changed;
 
-        public List<PlayerAction> Actions = new List<PlayerAction>();
+        public List<IPlayerAction> Actions = new List<IPlayerAction>();
 
         public override void HandleNetworkMessage(IncomingEntityComponentMessage message)
         {
@@ -63,9 +63,9 @@ namespace CGO
 
         private void SetCooldown(uint uid, uint seconds)
         {
-            PlayerAction toSet = Actions.FirstOrDefault(x => x.Uid == uid);
+            IPlayerAction toSet = Actions.FirstOrDefault(x => x.Uid == uid);
             if (toSet != null)
-                toSet.cooldownExpires = DateTime.Now.AddSeconds(seconds);
+                toSet.CooldownExpires = DateTime.Now.AddSeconds(seconds);
         }
 
         private void CheckFullUpdate(uint checksum) //This should never happen. This just exists in case it desynchs.
@@ -74,11 +74,11 @@ namespace CGO
             if (sum != checksum) Owner.SendComponentNetworkMessage(this, Lidgren.Network.NetDeliveryMethod.ReliableUnordered, ComponentMessageType.RequestActionList);
         }
 
-        public void SendDoAction(PlayerAction action, object target)
+        public void SendDoAction(IPlayerAction action, object target)
         {
             if (!Actions.Contains(action)) return;
 
-            double cdLeft = action.cooldownExpires.Subtract(DateTime.Now).TotalSeconds;
+            double cdLeft = action.CooldownExpires.Subtract(DateTime.Now).TotalSeconds;
             if (cdLeft > 0) return;
 
             switch (action.TargetType)
@@ -151,7 +151,7 @@ namespace CGO
 
         private void RemoveAction(uint uid) //Don't manually use this clientside. The server adds and removes what is needed.
         {
-            PlayerAction toRemove = Actions.FirstOrDefault(x => x.Uid == uid);
+            IPlayerAction toRemove = Actions.FirstOrDefault(x => x.Uid == uid);
             if (toRemove != null)
             {
                 Actions.Remove(toRemove);
@@ -161,7 +161,7 @@ namespace CGO
 
         public bool HasAction(string typeName)
         {
-            foreach (PlayerAction act in Actions)
+            foreach (IPlayerAction act in Actions)
                 if (act.GetType().Name.Equals(typeName, StringComparison.InvariantCultureIgnoreCase))
                     return true;
 

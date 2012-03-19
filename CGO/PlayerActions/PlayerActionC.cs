@@ -29,8 +29,8 @@ namespace CGO
         protected String icon = "action_none";
         public String Icon { get { return icon; } }
 
-        public DateTime cooldownExpires;
-        public DateTime CooldownExpires { get { return cooldownExpires; } }
+        protected DateTime cooldownExpires;
+        public DateTime CooldownExpires { get { return cooldownExpires; } set { cooldownExpires = value; } }
 
         private PlayerActionComp parent;
 

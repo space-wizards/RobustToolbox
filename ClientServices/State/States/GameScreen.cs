@@ -127,6 +127,10 @@ namespace ClientServices.State.States
             _gameChat.TextSubmitted += ChatTextboxTextSubmitted;
             UserInterfaceManager.AddComponent(_gameChat);
 
+            var hotbar = new Hotbar(ResourceManager);
+            hotbar.Position = new Point(5, 650);
+            UserInterfaceManager.AddComponent(hotbar);
+
             var combo = new HumanComboGui(PlayerManager, NetworkManager, ResourceManager, UserInterfaceManager);
             combo.Update();
             combo.Position = new Point(Gorgon.Screen.Width - combo.ClientArea.Width - 3, Gorgon.Screen.Height - combo.ClientArea.Height - 3);

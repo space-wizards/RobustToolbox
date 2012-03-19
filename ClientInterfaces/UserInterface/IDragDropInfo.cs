@@ -6,6 +6,7 @@ namespace ClientInterfaces.UserInterface
     public interface IDragDropInfo
     {
         IEntity DragEntity { get; }
+        IPlayerAction DragAction { get; }
         Sprite DragSprite { get; }
         bool IsEntity { get; }
         bool IsActive { get; }

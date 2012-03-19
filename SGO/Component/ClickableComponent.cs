@@ -22,12 +22,7 @@ namespace SGO
         {
             if (message.componentFamily == SS13_Shared.GO.ComponentFamily.Click)
             {
-                var replies = new List<ComponentReplyMessage>();
-                Owner.SendMessage(this, ComponentMessageType.Click, replies, message.messageParameters[0]);
-                //Who clicked us?
-                
-                //parameter 0 is id of clicker
-                //Owner.HandleClick((int)message.messageParameters[0]);
+                Owner.SendMessage(this, ComponentMessageType.Click, message.messageParameters[0]);
             }
         }
     }

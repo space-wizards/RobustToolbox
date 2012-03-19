@@ -16,15 +16,21 @@ namespace SGO
             family = SS13_Shared.GO.ComponentFamily.Think;
         }
 
-        public override void RecieveMessage(object sender, SS13_Shared.GO.ComponentMessageType type, List<ComponentReplyMessage> replies, params object[] list)
+        public override ComponentReplyMessage RecieveMessage(object sender, SS13_Shared.GO.ComponentMessageType type, params object[] list)
         {
-            base.RecieveMessage(sender, type, replies, list);
-            switch(type)
+            var reply = base.RecieveMessage(sender, type, list);
+
+            if (sender == this)
+                return ComponentReplyMessage.Empty; 
+            
+            switch (type)
             {
                 case SS13_Shared.GO.ComponentMessageType.Bumped:
                     OnBump(sender, list);
                     break;
             }
+
+            return reply;
         }
 
         public override void SetParameter(ComponentParameter parameter)

@@ -15,7 +15,7 @@ using Lidgren.Network;
 using SS13_Shared;
 using System.Drawing;
 using ClientInterfaces;
-using CGO;
+using CGO;using SS13_Shared.GO;
 using SS13.IoC;
 using ClientInterfaces.UserInterface;
 
@@ -246,16 +246,15 @@ namespace ClientServices.Placement
                     if (snapToEntities.Any())
                     {
                         var closestEntity = snapToEntities.First();
-                        var replies = new List<ComponentReplyMessage>();
-                        closestEntity.SendMessage(this, SS13_Shared.GO.ComponentMessageType.GetSprite, replies);
+                        var reply = closestEntity.SendMessage(this, ComponentFamily.Renderable, ComponentMessageType.GetSprite);
 
                         //if(replies.Any(x => x.messageType == SS13_Shared.GO.ComponentMessageType.CurrentSprite))
                         //{
                         //    Sprite closestSprite = (Sprite)replies.Find(x => x.messageType == SS13_Shared.GO.ComponentMessageType.CurrentSprite).paramsList[0]; //This is safer but slower.
 
-                        if (replies.Any())
+                        if (reply.MessageType == ComponentMessageType.CurrentSprite)
                         {
-                            var closestSprite = (Sprite)replies.First().ParamsList[0]; //This is faster but kinda unsafe.
+                            var closestSprite = (Sprite)reply.ParamsList[0]; //This is faster but kinda unsafe.
 
                             var closestRect = new RectangleF(closestEntity.Position.X - closestSprite.Width / 2f, closestEntity.Position.Y - closestSprite.Height / 2f, closestSprite.Width, closestSprite.Height);
 

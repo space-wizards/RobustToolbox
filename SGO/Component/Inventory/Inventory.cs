@@ -44,8 +44,13 @@ namespace SGO
             }
         }
 
-        public override void RecieveMessage(object sender, ComponentMessageType type, List<ComponentReplyMessage> replies, params object[] list)
+        public override ComponentReplyMessage RecieveMessage(object sender, ComponentMessageType type, params object[] list)
         {
+            var reply = base.RecieveMessage(sender, type, list);
+
+            if (sender == this)
+                return ComponentReplyMessage.Empty;
+
             switch (type)
             {
                 case ComponentMessageType.DisassociateEntity:
@@ -61,14 +66,15 @@ namespace SGO
                     break;
 
                 case ComponentMessageType.InventoryInformation:
-                    ComponentReplyMessage reply = new ComponentReplyMessage(ComponentMessageType.InventoryInformation, maxSlots, containedEntities);
-                    replies.Add(reply);
+                    reply = new ComponentReplyMessage(ComponentMessageType.InventoryInformation, maxSlots, containedEntities);
                     break;
 
                 case ComponentMessageType.InventorySetSize:
                     maxSlots = (int)list[0];
                     break;
             }
+
+            return reply;
         }
 
         public bool containsEntity(Entity entity)
@@ -122,8 +128,8 @@ namespace SGO
                 Entity holder = null;
                 if (entity.HasComponent(ComponentFamily.Item)) holder = ((BasicItemComponent)entity.GetComponent(ComponentFamily.Item)).currentHolder;
                 if (holder == null && entity.HasComponent(ComponentFamily.Equippable)) holder = ((EquippableComponent)entity.GetComponent(ComponentFamily.Equippable)).currentWearer;
-                if (holder != null) holder.SendMessage(this, ComponentMessageType.DisassociateEntity, null, entity);
-                else Owner.SendMessage(this, ComponentMessageType.DisassociateEntity, null, entity);
+                if (holder != null) holder.SendMessage(this, ComponentMessageType.DisassociateEntity, entity);
+                else Owner.SendMessage(this, ComponentMessageType.DisassociateEntity, entity);
 
                 containedEntities.Add(entity);
 
@@ -145,14 +151,14 @@ namespace SGO
 
         private void HandleAdded(Entity entity)
         {
-            entity.SendMessage(this, ComponentMessageType.PickedUp, null, Owner, Hand.None);
-            entity.SendMessage(this, ComponentMessageType.SetVisible, null, false);
+            entity.SendMessage(this, ComponentMessageType.PickedUp, Owner, Hand.None);
+            entity.SendMessage(this, ComponentMessageType.SetVisible, false);
         }
 
         private void HandleRemoved(Entity entity)
         {
-            entity.SendMessage(this, ComponentMessageType.Dropped, null);
-            entity.SendMessage(this, ComponentMessageType.SetVisible, null, true);
+            entity.SendMessage(this, ComponentMessageType.Dropped);
+            entity.SendMessage(this, ComponentMessageType.SetVisible, true);
         }
     }
 }

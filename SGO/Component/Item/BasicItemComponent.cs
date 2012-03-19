@@ -22,8 +22,13 @@ namespace SGO
             capabilities = new Dictionary<string, ItemCapability>();
         }
 
-        public override void RecieveMessage(object sender, ComponentMessageType type, List<ComponentReplyMessage> replies, params object[] list)
+        public override ComponentReplyMessage RecieveMessage(object sender, ComponentMessageType type, params object[] list)
         {
+            var reply = base.RecieveMessage(sender, type, list);
+
+            if (sender == this)
+                return ComponentReplyMessage.Empty;
+
             switch (type)
             {
                 case ComponentMessageType.ReceiveEmptyHandToItemInteraction:
@@ -50,7 +55,7 @@ namespace SGO
                 case ComponentMessageType.ItemGetCapability:
                     var itemcaps = GetCapability((ItemCapabilityType)list[0]);
                     if (itemcaps != null)
-                        replies.Add(new ComponentReplyMessage(ComponentMessageType.ItemReturnCapability, itemcaps));
+                        reply = new ComponentReplyMessage(ComponentMessageType.ItemReturnCapability, itemcaps);
                     break;
                 case ComponentMessageType.ItemGetCapabilityVerbPairs:
                     List<KeyValuePair<ItemCapabilityType, ItemCapabilityVerb>> verbpairs = new List<KeyValuePair<ItemCapabilityType, ItemCapabilityVerb>>();
@@ -62,15 +67,17 @@ namespace SGO
                         }
                     }
                     //if(verbpairs.Count > 0)
-                    replies.Add(new ComponentReplyMessage(ComponentMessageType.ItemReturnCapabilityVerbPairs, verbpairs.ToLookup(v => v.Key, v => v.Value)));
+                    reply = new ComponentReplyMessage(ComponentMessageType.ItemReturnCapabilityVerbPairs, verbpairs.ToLookup(v => v.Key, v => v.Value));
                     break;
                 case ComponentMessageType.CheckItemHasCapability:
-                    replies.Add(new ComponentReplyMessage(ComponentMessageType.ItemHasCapability, HasCapability((ItemCapabilityType)list[0])));
+                    reply = new ComponentReplyMessage(ComponentMessageType.ItemHasCapability, HasCapability((ItemCapabilityType)list[0]));
                     break;
                 case ComponentMessageType.ItemGetAllCapabilities:
                     throw new NotImplementedException();
                     break;
             }
+
+            return reply;
         }
 
         /// <summary>
@@ -97,7 +104,7 @@ namespace SGO
             currentHolder = entity;
             holdingHand = _holdingHand;
             Owner.AddComponent(SS13_Shared.GO.ComponentFamily.Mover, ComponentFactory.Singleton.GetComponent("SlaveMoverComponent"));
-            Owner.SendMessage(this, ComponentMessageType.SlaveAttach, null, entity.Uid);
+            Owner.SendMessage(this, ComponentMessageType.SlaveAttach, entity.Uid);
             Owner.SendComponentNetworkMessage(this, Lidgren.Network.NetDeliveryMethod.ReliableUnordered, null, ItemComponentNetMessage.PickedUp, entity.Uid, holdingHand);
         }
 
@@ -128,7 +135,7 @@ namespace SGO
         protected virtual void HandleEmptyHandToItemInteraction(Entity actor)
         {
             //Pick up the item
-            actor.SendMessage(this, ComponentMessageType.PickUpItem, null, Owner);
+            actor.SendMessage(this, ComponentMessageType.PickUpItem, Owner);
         }
 
         /// <summary>

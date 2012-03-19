@@ -45,18 +45,22 @@ namespace SGO
             }
         }
 
-        public override void RecieveMessage(object sender, ComponentMessageType type, List<ComponentReplyMessage> replies, params object[] list)
+        public override ComponentReplyMessage RecieveMessage(object sender, ComponentMessageType type, params object[] list)
         {
+            var reply = base.RecieveMessage(sender, type, list);
+
+            if (sender == this)
+                return ComponentReplyMessage.Empty;
+
             switch (type)
             {
                 case ComponentMessageType.GetCurrentHealth:
                     ComponentReplyMessage reply2 = new ComponentReplyMessage(ComponentMessageType.CurrentHealth, GetHealth(), GetMaxHealth());
-                    replies.Add(reply2);
-                    break;
-                default:
-                    base.RecieveMessage(sender, type, replies, list);
+                    reply = reply2;
                     break;
             }
+
+            return reply;
         }
 
         protected override void ApplyDamage(int p)

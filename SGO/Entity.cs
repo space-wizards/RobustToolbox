@@ -25,7 +25,7 @@ namespace SGO
         /// <summary>
         /// Holds this entity's components
         /// </summary>
-        private Dictionary<ComponentFamily, IGameObjectComponent> components = new Dictionary<ComponentFamily, IGameObjectComponent>();
+        private Dictionary<ComponentFamily, IGameObjectComponent> _components = new Dictionary<ComponentFamily, IGameObjectComponent>();
         
         private EntityNetworkManager m_entityNetworkManager;
 
@@ -86,11 +86,11 @@ namespace SGO
         /// </summary>
         public void Shutdown()
         {
-            foreach (GameObjectComponent component in components.Values)
+            foreach (GameObjectComponent component in _components.Values)
             {
                 component.OnRemove();
             }
-            components.Clear();
+            _components.Clear();
         }
         #endregion
 
@@ -103,9 +103,9 @@ namespace SGO
         /// <param name="component">The component.</param>
         public void AddComponent(ComponentFamily family, IGameObjectComponent component)
         {
-            if (components.Keys.Contains(family))
+            if (_components.Keys.Contains(family))
                 RemoveComponent(family);
-            components.Add(family, component);
+            _components.Add(family, component);
             component.OnAdd(this); 
         }
 
@@ -117,10 +117,10 @@ namespace SGO
         /// <param name="family"></param>
         public void RemoveComponent(ComponentFamily family)
         {
-            if (components.Keys.Contains(family))
+            if (_components.Keys.Contains(family))
             {
-                components[family].OnRemove();
-                components.Remove(family); 
+                _components[family].OnRemove();
+                _components.Remove(family); 
             }
         }
 
@@ -131,7 +131,7 @@ namespace SGO
         /// <returns>true if component exists, false otherwise</returns>
         public bool HasComponent(ComponentFamily family)
         {
-            if (components.ContainsKey(family))
+            if (_components.ContainsKey(family))
                 return true;
             return false;
         }
@@ -143,8 +143,8 @@ namespace SGO
         /// <returns></returns>
         public IGameObjectComponent GetComponent(ComponentFamily family)
         {
-            if (components.ContainsKey(family))
-                return components[family];
+            if (_components.ContainsKey(family))
+                return _components[family];
             return null;
         }
 
@@ -156,11 +156,41 @@ namespace SGO
         /// <param name="args">message parameters</param>
         public void SendMessage(object sender, ComponentMessageType type, List<ComponentReplyMessage> replies, params object[] args)
         {
-            foreach (IGameObjectComponent component in components.Values.ToArray())
+            //LogComponentMessage(sender, type, args);
+
+            foreach (var component in _components.Values.ToArray())
             {
-                component.RecieveMessage(sender, type, replies, args);
+                if (replies != null)
+                {
+                    var reply = component.RecieveMessage(sender, type, args);
+                    if (reply.MessageType != ComponentMessageType.Empty)
+                        replies.Add(reply);
+                }
+                else
+                    component.RecieveMessage(sender, type, args);
             }
         }
+
+        public void SendMessage(object sender, ComponentMessageType type, params object[] args)
+        {
+            //LogComponentMessage(sender, type, args);
+
+            foreach (var component in _components.Values.ToArray())
+            {
+                component.RecieveMessage(sender, type, args);
+            }
+        }
+
+        public ComponentReplyMessage SendMessage(object sender, ComponentFamily family, ComponentMessageType type, params object[] args)
+        {
+            //LogComponentMessage(sender, type, args);
+
+            if (HasComponent(family))
+                return GetComponent(family).RecieveMessage(sender, type, args);
+            else
+                return ComponentReplyMessage.Empty;
+        }
+
         #endregion
 
         public void Translate(Vector2 toPosition)
@@ -193,7 +223,7 @@ namespace SGO
         /// </summary>
         public virtual void SendPositionUpdate()
         {
-            SendMessage(this, ComponentMessageType.SendPositionUpdate, null);
+            SendMessage(this, ComponentMessageType.SendPositionUpdate);
         }
 
         public virtual void HandleClick(int clickerID) { }
@@ -252,9 +282,9 @@ namespace SGO
 
         internal void HandleComponentMessage(IncomingEntityComponentMessage message, NetConnection client)
         {
-            if (components.Keys.Contains(message.componentFamily))
+            if (_components.Keys.Contains(message.componentFamily))
             {
-                components[message.componentFamily].HandleNetworkMessage(message, client);
+                _components[message.componentFamily].HandleNetworkMessage(message, client);
             }
         }
 

@@ -16,6 +16,17 @@ namespace MessagingProfiler
         public string senderType { get; set; }
         public ComponentMessageType messageType { get; set; }
         public object[] parameters { get; set; }
+        public enum LogMessageType
+        {
+            None,
+            ClientComponentMessage,
+            ClientRecievedNetMessage,
+            ClientSentNetMessage,
+            ServerComponentMessage,
+            ServerRecievedNetMessage,
+            ServerSentNetMessage
+        }
+        public LogMessageType logMessageType { get; set; }
 
         public LogItem()
         {
@@ -26,6 +37,7 @@ namespace MessagingProfiler
             senderType = "";
             messageType = ComponentMessageType.Null;
             parameters = null;
+            logMessageType = LogMessageType.None;
         }
     }
 }

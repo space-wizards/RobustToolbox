@@ -18,11 +18,6 @@ namespace SGO
             family = SS13_Shared.GO.ComponentFamily.LargeObject;
         }
 
-        public override void RecieveMessage(object sender, ComponentMessageType type, List<ComponentReplyMessage> replies, params object[] list)
-        {
-            base.RecieveMessage(sender, type, replies, list);
-        }
-
         public override void Update(float frameTime)
         {
         }
@@ -30,8 +25,8 @@ namespace SGO
         private void PlaceItem(Entity actor, Entity item)
         {
             Random rnd = new Random();
-            actor.SendMessage(this, ComponentMessageType.DropItemInCurrentHand, null); //Should drop item that was used on us? Maybe add more precise message later.
-            item.SendMessage(this, ComponentMessageType.SetDrawDepth, null, (int)DrawDepth.ItemsOnTables);
+            actor.SendMessage(this, ComponentMessageType.DropItemInCurrentHand); //Should drop item that was used on us? Maybe add more precise message later.
+            item.SendMessage(this, ComponentMessageType.SetDrawDepth, (int)DrawDepth.ItemsOnTables);
             item.Translate(Owner.position + new Vector2(rnd.Next(-28, 28),rnd.Next(-28, 15)) );
         }
 

@@ -201,7 +201,7 @@ namespace SS13_Server.Modules
                             sendCraftSuccess(craftingTicket.sourceConnection, newEnt, craftingTicket);
                             //craftingTicket.sourceEntity.SendMessage(this, ComponentMessageType.DisassociateEntity, null, craftingTicket.component1);
                             //craftingTicket.sourceEntity.SendMessage(this, ComponentMessageType.DisassociateEntity, null, craftingTicket.component2);
-                            craftingTicket.sourceEntity.SendMessage(this, ComponentMessageType.InventoryAdd, null, newEnt);
+                            craftingTicket.sourceEntity.SendMessage(this, ComponentMessageType.InventoryAdd, newEnt);
                             EntityManager.Singleton.DeleteEntity(craftingTicket.component1); //This might be unsafe and MIGHt leave behind references. Gotta check that later.
                             EntityManager.Singleton.DeleteEntity(craftingTicket.component2);
                         }

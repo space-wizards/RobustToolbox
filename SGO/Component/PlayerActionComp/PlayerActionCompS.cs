@@ -120,11 +120,6 @@ namespace SGO
             Owner.SendComponentNetworkMessage(this, NetDeliveryMethod.ReliableUnordered, client, message);
         }
 
-        public override void RecieveMessage(object sender, ComponentMessageType type, List<ComponentReplyMessage> replies, params object[] list)
-        {
-            base.RecieveMessage(sender, type, replies, list);
-        }
-
         public override void Update(float frameTime)
         {
             base.Update(frameTime);

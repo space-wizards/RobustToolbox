@@ -28,8 +28,13 @@ namespace SGO
             SendHealthUpdate(netConnection);
         }
 
-        public override void RecieveMessage(object sender, ComponentMessageType type, List<ComponentReplyMessage> replies, params object[] list)
+        public override ComponentReplyMessage RecieveMessage(object sender, ComponentMessageType type, params object[] list)
         {
+            var reply = base.RecieveMessage(sender, type, list);
+
+            if (sender == this)
+                return ComponentReplyMessage.Empty;
+
             switch (type)
             {
                 case ComponentMessageType.Damage:
@@ -37,12 +42,11 @@ namespace SGO
                     break;
                 case ComponentMessageType.GetCurrentHealth:
                     ComponentReplyMessage reply2 = new ComponentReplyMessage(ComponentMessageType.CurrentHealth, GetHealth(), GetMaxHealth());
-                    replies.Add(reply2);
-                    break;
-                default:
-                    base.RecieveMessage(sender, type, replies, list);
+                    reply = reply2;
                     break;
             }
+
+            return reply;
         }
 
         public override void HandleNetworkMessage(IncomingEntityComponentMessage message, NetConnection client)
@@ -79,7 +83,7 @@ namespace SGO
                 if (isDead == false)
                 {
                     isDead = true;
-                    Owner.SendMessage(this, ComponentMessageType.Die, null);
+                    Owner.SendMessage(this, ComponentMessageType.Die);
                 }
 
                 Owner.SendComponentNetworkMessage(this, Lidgren.Network.NetDeliveryMethod.ReliableOrdered, client != null ? client : null, ComponentMessageType.HealthStatus, isDead);

@@ -170,7 +170,10 @@ namespace CGO
         {
             LogComponentMessage(sender, type, args);
 
-            return GetComponent(family).RecieveMessage(sender, type, args);
+            if (HasComponent(family))
+                return GetComponent(family).RecieveMessage(sender, type, args);
+            else
+                return ComponentReplyMessage.Empty;
         }
 
         /// <summary>
@@ -186,9 +189,10 @@ namespace CGO
             var senderfamily = ComponentFamily.Generic;
             var uid = 0;
             var sendertype = "";
-            if (sender.GetType().IsAssignableFrom(typeof(IGameObjectComponent)))
+            //if (sender.GetType().IsAssignableFrom(typeof(IGameObjectComponent)))
+            if (typeof(IGameObjectComponent).IsAssignableFrom(sender.GetType()))
             {
-                var realsender = (GameObjectComponent)sender;
+                var realsender = (IGameObjectComponent)sender;
                 senderfamily = realsender.Family;
 
                 uid = realsender.Owner.Uid;

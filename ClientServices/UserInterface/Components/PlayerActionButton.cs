@@ -20,7 +20,7 @@ namespace ClientServices.UserInterface.Components
 
         private DateTime mouseOverStart;
 
-        private IPlayerAction assignedAction;
+        public IPlayerAction assignedAction;
 
         private TextSprite timeLeft;
 

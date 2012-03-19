@@ -188,7 +188,8 @@
     {
         SpawnEntity,
         DeleteEntity,
-        InitializeEntities
+        InitializeEntities,
+        SpawnEntityAtPosition
     }
 
     public enum NetworkDataType

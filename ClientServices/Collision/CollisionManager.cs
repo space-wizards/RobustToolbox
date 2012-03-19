@@ -97,6 +97,9 @@ namespace ClientServices.Collision
         {
             var ourAABB = _aabbs.FirstOrDefault(a => a.Collidable == collidable);
 
+            if (ourAABB.Collidable == null)
+                return;
+
             foreach (var p in ourAABB.Points)
             {
                 RemovePoint(p);

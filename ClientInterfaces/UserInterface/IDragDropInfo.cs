@@ -13,5 +13,6 @@ namespace ClientInterfaces.UserInterface
         void Reset();
 
         void StartDrag(IEntity entity);
+        void StartDrag(IPlayerAction action);
     }
 }

@@ -9,18 +9,21 @@ using SS13_Shared;
 using CGO;
 using System.Collections;
 using System.Collections.Generic;
+using System.Linq;
+using SS13.IoC;
+using ClientInterfaces.UserInterface;
 
 namespace ClientServices.UserInterface.Components
 {
     class PlayerActionsWindow : Window
     {
         PlayerActionComp assignedComp;
-        UserInterfaceManager uiMgr;
+        IUserInterfaceManager uiMgr;
 
-        public PlayerActionsWindow(Size size, IResourceManager resourceManager, UserInterfaceManager _UiMgr, PlayerActionComp _assignedComp)
+        public PlayerActionsWindow(Size size, IResourceManager resourceManager, PlayerActionComp _assignedComp)
             : base("Player Abilities", size, resourceManager)
         {
-            uiMgr = _UiMgr;
+            uiMgr = IoCManager.Resolve<IUserInterfaceManager>();
             assignedComp = _assignedComp;
             assignedComp.Changed += new PlayerActionComp.PlayerActionsChangedHandler(assignedComp_Changed);
             Position = new Point((int)(Gorgon.CurrentRenderTarget.Width / 2f) - (int)(ClientArea.Width / 2f), (int)(Gorgon.CurrentRenderTarget.Height / 2f) - (int)(ClientArea.Height / 2f));
@@ -40,10 +43,14 @@ namespace ClientServices.UserInterface.Components
             int pos_y = 10;
             foreach (PlayerAction act in assignedComp.Actions)
             {
-                PlayerActionButton newButt = new PlayerActionButton(act, _resourceManager, uiMgr);
+                PlayerActionButton newButt = new PlayerActionButton(act, _resourceManager);
                 newButt.Position = new Point(10, pos_y);
                 newButt.Update();
+                Label newLabel = new Label(act.Name, "CALIBRI", _resourceManager);
+                newLabel.Update();
+                newLabel.Position = new Point(10 + newButt.ClientArea.Width + 5, pos_y + (int)(newButt.ClientArea.Height / 2f) - (int)(newLabel.ClientArea.Height / 2f));
                 components.Add(newButt);
+                components.Add(newLabel);
                 pos_y += 5 + newButt.ClientArea.Height;
             }
         }
@@ -59,7 +66,7 @@ namespace ClientServices.UserInterface.Components
             if (disposing || !IsVisible()) return;
             base.Render();
 
-            foreach (PlayerActionButton actButt in components)
+            foreach (PlayerActionButton actButt in (from A in components where A is PlayerActionButton select A))
                 actButt.DrawTooltip(Position);
         }
 

@@ -10,6 +10,7 @@ using GorgonLibrary;
 using GorgonLibrary.Graphics;
 using ClientInterfaces;
 using CGO;
+using ClientInterfaces.GOC;
 
 namespace ClientServices.UserInterface
 {
@@ -25,15 +26,25 @@ namespace ClientServices.UserInterface
 
         public IDragDropInfo DragInfo { get; private set; }
 
-        public PlayerAction targetingAction = null;
+        /// <summary>
+        ///  Currently targeting action.
+        /// </summary>
+        private IPlayerAction targetingAction = null;
+        public IPlayerAction currentTargetingAction { get { return targetingAction; } }
 
-        public void StartTargeting(PlayerAction act)
+        /// <summary>
+        ///  Enters targeting mode for given action.
+        /// </summary>
+        public void StartTargeting(IPlayerAction act)
         {
-            if (act.targetType == PlayerActionTargetType.None) return;
+            if (act.TargetType == PlayerActionTargetType.None) return;
             if (DragInfo.IsActive) DragInfo.Reset();
             targetingAction = act;
         }
 
+        /// <summary>
+        ///  Passes target to currently active action (and tells it to activate). Also ends targeting mode.
+        /// </summary>
         public void SelectTarget(object target)
         {
             if (targetingAction == null) return;
@@ -41,6 +52,9 @@ namespace ClientServices.UserInterface
             CancelTargeting();
         }
 
+        /// <summary>
+        ///  Cancels targeting mode.
+        /// </summary>
         public void CancelTargeting()
         {
             targetingAction = null;

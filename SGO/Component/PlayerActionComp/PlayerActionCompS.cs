@@ -145,22 +145,21 @@ namespace SGO
             else return null;
         }
 
-        public void AddAction(string typeName)
+        public uint? AddAction(string typeName)
         {
             Type t = Type.GetType("SGO." + typeName);
-            if (t == null || !t.IsSubclassOf(typeof(PlayerAction))) return;
+            if (t == null || !t.IsSubclassOf(typeof(PlayerAction))) return null;
 
             uint nextUid = uidCurr++; //Increases uid even if adding fails due to effect being unique. fix.
 
             PlayerAction newAction = (PlayerAction)Activator.CreateInstance(t, new object[] { nextUid });
 
-            //if (HasAction(typeName))
-            //    return;
-
             Actions.Add(newAction);
 
             if(GetMyOwnerConnection() != null)
                 Owner.SendComponentNetworkMessage(this, NetDeliveryMethod.ReliableUnordered, GetMyOwnerConnection(), ComponentMessageType.AddAction, typeName, nextUid);
+
+            return nextUid;
         }
 
         public void RemoveAction(uint uid)

@@ -18,7 +18,7 @@ namespace CGO
                 case (ComponentMessageType.HealthStatus):
                     Health = (float)message.MessageParameters[1];
                     MaxHealth = (float)message.MessageParameters[2];
-                    if (GetHealth() <= 0) IsDead = true;
+                    if (GetHealth() <= 0) Die();
                     break;
             }
         }

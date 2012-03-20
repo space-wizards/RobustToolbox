@@ -175,7 +175,12 @@ namespace SS13_Shared.GO
         FailAction,
         RequestActionList,
         GetActionChecksum,
-        DoAction
+        DoAction,
+        Incapacitated,
+        NotIncapacitated,
+        WearerIsDead,
+        Live,
+        WearerIsAlive
     }
 
     public enum Hand

@@ -82,8 +82,7 @@ namespace SGO
             {
                 if (isDead == false)
                 {
-                    isDead = true;
-                    Owner.SendMessage(this, ComponentMessageType.Die);
+                    Die();
                 }
 
                 Owner.SendComponentNetworkMessage(this, Lidgren.Network.NetDeliveryMethod.ReliableOrdered, client != null ? client : null, ComponentMessageType.HealthStatus, isDead);
@@ -111,6 +110,13 @@ namespace SGO
         protected virtual void ApplyDamage(int p)
         {
             ApplyDamage(null, p, DamageType.Untyped);
+        }
+
+        protected virtual void Die()
+        {
+            if (!isDead) isDead = true;
+
+            Owner.SendMessage(this, ComponentMessageType.Die);
         }
     }
 }

@@ -10,7 +10,7 @@ namespace CGO
 {
     public class WearableSpriteComponent : SpriteComponent
     {
-        string basename = "";
+        private string _basename = "";
         private bool worn = false;
         private DrawDepth wornDrawDepth = SS13_Shared.GO.DrawDepth.MobOverClothingLayer;
         public WearableSpriteComponent()
@@ -34,81 +34,90 @@ namespace CGO
                         case Constants.MoveDirs.north:
                             if (worn)
                             {
-                                SetSpriteByKey(basename + "_back");
+                                SetSpriteByKey(_basename + "_back");
                                 flip = false;
                             }
                             else
-                                SetSpriteByKey(basename);
+                                SetSpriteByKey(_basename);
                             break;
                         case Constants.MoveDirs.south:
                             if (worn)
                             {
-                                SetSpriteByKey(basename + "_front");
+                                SetSpriteByKey(_basename + "_front");
                                 flip = false;
                             }
                             else
-                                SetSpriteByKey(basename);
+                                SetSpriteByKey(_basename);
                             
                             break;
                         case Constants.MoveDirs.east:
                             if (worn)
                             {
-                                SetSpriteByKey(basename + "_side");
+                                SetSpriteByKey(_basename + "_side");
                                 flip = true;
                             }
                             else
-                                SetSpriteByKey(basename);
+                                SetSpriteByKey(_basename);
                             break;
                         case Constants.MoveDirs.west:
                             if (worn)
                             {
-                                SetSpriteByKey(basename + "_side");
+                                SetSpriteByKey(_basename + "_side");
                                 flip = false;
                             }
                             else
-                                SetSpriteByKey(basename);
+                                SetSpriteByKey(_basename);
                             break;
                         case Constants.MoveDirs.northeast:
                             if (worn)
                             {
-                                SetSpriteByKey(basename + "_back");
+                                SetSpriteByKey(_basename + "_back");
                                 flip = false;
                             }
                             else
-                                SetSpriteByKey(basename);
+                                SetSpriteByKey(_basename);
                             break;
                         case Constants.MoveDirs.northwest:
                             if (worn)
                             {
-                                SetSpriteByKey(basename + "_back");
+                                SetSpriteByKey(_basename + "_back");
                                 flip = false;
                             }
                             else
-                                SetSpriteByKey(basename);
+                                SetSpriteByKey(_basename);
                             break;
                         case Constants.MoveDirs.southeast:
                             if (worn)
                             {
-                                SetSpriteByKey(basename + "_front");
+                                SetSpriteByKey(_basename + "_front");
                                 flip = false;
                             }
                             else
-                                SetSpriteByKey(basename);
+                                SetSpriteByKey(_basename);
                             break;
                         case Constants.MoveDirs.southwest:
                             if (worn)
                             {
-                                SetSpriteByKey(basename + "_front");
+                                SetSpriteByKey(_basename + "_front");
                                 flip = false;
                             }
                             else
-                                SetSpriteByKey(basename);
+                                SetSpriteByKey(_basename);
                             break;
                     }
                     DrawDepth = wornDrawDepth;
                     break;
+                case ComponentMessageType.Incapacitated:
+                case ComponentMessageType.WearerIsDead:
+                    SetSpriteByKey(_basename + "_incap");
+                    flip = false;
+                    break; //TODO do stuff here, incap and dead.
+                case ComponentMessageType.NotIncapacitated:
+                    SetSpriteByKey(_basename + "_incap");
+                    flip = false;
+                    break;
                 case ComponentMessageType.ItemDetach:
-                    SetSpriteByKey(basename);
+                    SetSpriteByKey(_basename);
                     DrawDepth = DrawDepth.FloorObjects;
                     break;
                 case ComponentMessageType.ItemEquipped:
@@ -136,7 +145,7 @@ namespace CGO
             switch (parameter.MemberName)
             {
                 case "basename":
-                    basename = (string)parameter.Parameter;
+                    _basename = (string)parameter.Parameter;
                     LoadSprites();
                     break;
             }
@@ -144,7 +153,7 @@ namespace CGO
 
         protected override Sprite GetBaseSprite()
         {
-            return sprites[basename];
+            return sprites[_basename];
         }
 
         protected override bool WasClicked(System.Drawing.PointF worldPos)
@@ -157,12 +166,13 @@ namespace CGO
         /// </summary>
         public void LoadSprites()
         {
-            AddSprite(basename);
-            AddSprite(basename + "_front");
-            AddSprite(basename + "_back");
-            AddSprite(basename + "_side");
+            AddSprite(_basename);
+            AddSprite(_basename + "_front");
+            AddSprite(_basename + "_back");
+            AddSprite(_basename + "_side");
+            AddSprite(_basename + "_incap");
 
-            SetSpriteByKey(basename);
+            SetSpriteByKey(_basename);
         }
     }
 }

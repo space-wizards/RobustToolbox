@@ -96,7 +96,7 @@ namespace CGO
 
             MaxHealth = GetMaxHealth();
             Health = GetHealth();
-            if (Health <= 0) IsDead = true; //Need better logic here.
+            if (Health <= 0) Die(); //Need better logic here.
 
             if(IoCManager.Resolve<IPlayerManager>().ControlledEntity.Uid == Owner.Uid)
                 IoCManager.Resolve<IUserInterfaceManager>().ComponentUpdate(GuiComponentType.StatPanelComponent);

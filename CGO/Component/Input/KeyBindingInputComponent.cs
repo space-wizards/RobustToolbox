@@ -12,6 +12,7 @@ namespace CGO
         private readonly Dictionary<BoundKeyFunctions, bool> _keyStates;
         private readonly Dictionary<BoundKeyFunctions, KeyEvent> _keyHandlers;
         public delegate void KeyEvent(bool state);
+        private bool _enabled = true;
 
         public override ComponentFamily Family
         {
@@ -29,6 +30,26 @@ namespace CGO
             //Set up keystates
         }
 
+        public override ComponentReplyMessage RecieveMessage(object sender, ComponentMessageType type, params object[] list)
+        {
+            var reply = base.RecieveMessage(sender, type, list);
+
+            if (sender == this)
+                return ComponentReplyMessage.Empty;
+
+            switch (type)
+            {
+                case ComponentMessageType.Die:
+                    Disable();
+                    break;
+                case ComponentMessageType.Live:
+                    Enable();
+                    break;
+            }
+
+            return reply;
+        }
+
         public override void Shutdown()
         {
             base.Shutdown();
@@ -40,12 +61,31 @@ namespace CGO
         public override void Update(float frameTime)
         {
             base.Update(frameTime);
-            UpdateKeys(frameTime);
+            if(_enabled)
+                UpdateKeys(frameTime);
+        }
+
+        private void Enable()
+        {
+            _enabled = true;
+        }
+
+        private void Disable()
+        {
+            _enabled = false;
+
+            //Remove all active key states and send keyup messages for them.
+            foreach (var state in _keyStates.ToList())
+            {
+                Owner.SendComponentNetworkMessage(this, Lidgren.Network.NetDeliveryMethod.ReliableUnordered, state.Key, BoundKeyState.Up);
+                Owner.SendMessage(this, ComponentMessageType.BoundKeyChange, state.Key, BoundKeyState.Up);
+                _keyStates.Remove(state.Key);
+            }
         }
 
         public virtual void KeyDown(object sender, BoundKeyEventArgs e)
         {
-            if (GetKeyState(e.Function))
+            if (!_enabled || GetKeyState(e.Function))
                 return; //Don't repeat keys that are already down.
             Owner.SendComponentNetworkMessage(this, Lidgren.Network.NetDeliveryMethod.ReliableUnordered, e.Function, e.FunctionState);
             SetKeyState(e.Function, true);
@@ -54,6 +94,8 @@ namespace CGO
 
         public virtual void KeyUp(object sender, BoundKeyEventArgs e)
         {
+            if (!_enabled)
+                return;
             Owner.SendComponentNetworkMessage(this, Lidgren.Network.NetDeliveryMethod.ReliableUnordered, e.Function, e.FunctionState);
             SetKeyState(e.Function, false);
             Owner.SendMessage(this, ComponentMessageType.BoundKeyChange, e.Function, e.FunctionState);

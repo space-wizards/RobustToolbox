@@ -39,12 +39,18 @@ namespace CGO
                 case (ComponentMessageType.HealthStatus):
                     var newIsDeadState = (bool)message.MessageParameters[1];
 
-                    if(newIsDeadState == true && IsDead == false)
-                        Owner.SendMessage(this, ComponentMessageType.Die);
+                    if (newIsDeadState == true && IsDead == false)
+                        Die();
 
-                    IsDead = newIsDeadState;
                     break;
             }
+        }
+
+        protected virtual void Die()
+        {
+            if (!IsDead) IsDead = true;
+
+            Owner.SendMessage(this, ComponentMessageType.Die);
         }
     }
 }

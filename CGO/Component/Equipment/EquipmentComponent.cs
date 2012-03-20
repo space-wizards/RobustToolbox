@@ -43,6 +43,18 @@ namespace CGO
                                                               EquippedEntities[(EquipmentSlot) list[0]])
                                   : new ComponentReplyMessage(ComponentMessageType.ItemSlotEmpty);
                     break;
+                case ComponentMessageType.Die:
+                    foreach (var entity in EquippedEntities.Values)
+                    {
+                        entity.SendMessage(this, ComponentMessageType.WearerIsDead);
+                    }
+                    break;
+                case ComponentMessageType.Live:
+                    foreach (var entity in EquippedEntities.Values)
+                    {
+                        entity.SendMessage(this, ComponentMessageType.WearerIsAlive);
+                    }
+                    break;
             }
 
             return reply;

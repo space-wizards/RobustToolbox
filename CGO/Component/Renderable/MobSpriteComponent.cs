@@ -64,8 +64,18 @@ namespace CGO
                             break;
                     }
                     break;
-                case ComponentMessageType.HealthStatus:
-                    break; //TODO do stuff here, incap and dead.
+                case ComponentMessageType.Incapacitated:
+                    SetSpriteByKey(_basename + "_incap");
+                    flip = false;
+                    break;
+                case ComponentMessageType.NotIncapacitated:
+                    SetSpriteByKey(_basename + "_incap");
+                    flip = false;
+                    break;
+                case ComponentMessageType.Die:
+                    SetSpriteByKey(_basename + "_incap_dead");
+                    flip = false;
+                    break;
                 case ComponentMessageType.EntitySaidSomething:
                     ChatChannel channel;
                     if (Enum.TryParse(list[0].ToString(), true, out channel))
@@ -114,7 +124,7 @@ namespace CGO
             AddSprite(_basename + "_back");
             AddSprite(_basename + "_incap");
             AddSprite(_basename + "_side");
-            AddSprite(_basename + "_dead");
+            AddSprite(_basename + "_incap_dead");
 
             SetSpriteByKey(_basename + "_front");
         }

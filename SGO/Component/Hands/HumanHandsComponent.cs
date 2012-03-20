@@ -77,6 +77,9 @@ namespace SGO
                     if (!IsEmpty(currentHand))
                         reply = new ComponentReplyMessage(ComponentMessageType.ReturnActiveHandItem, handslots[currentHand]);
                     break;
+                case ComponentMessageType.Die:
+                    DropAll();
+                    break;
             }
 
             return reply;

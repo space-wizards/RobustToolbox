@@ -66,9 +66,10 @@ namespace CGO
         /// </summary>
         public override void OnRemove()
         {
-            base.OnRemove();
             var cm = IoCManager.Resolve<ICollisionManager>();
             cm.RemoveCollidable(this);
+
+            base.OnRemove();
         }
 
         /// <summary>

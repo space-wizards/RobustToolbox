@@ -94,6 +94,8 @@ namespace ClientServices.State.States
 
             _entityManager = new EntityManager(NetworkManager);
 
+            MapManager.Init();
+
             NetworkManager.MessageArrived += NetworkManagerMessageArrived;
 
             NetworkManager.RequestMap();

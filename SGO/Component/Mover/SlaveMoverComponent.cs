@@ -36,15 +36,21 @@ namespace SGO
 
         public override void OnRemove()
         {
-            base.OnRemove();
             Detach();
+            base.OnRemove();
         }
 
         private void Attach(int uid)
         {
             master = EntityManager.Singleton.GetEntity(uid);
+            master.OnShutdown += new Entity.ShutdownEvent(master_OnShutdown);
             master.OnMove += new Entity.EntityMoveEvent(HandleOnMove);
             Translate(master.position);
+        }
+
+        void master_OnShutdown(Entity e)
+        {
+            Detach();
         }
 
         private void Detach()

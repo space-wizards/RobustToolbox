@@ -39,6 +39,9 @@ namespace CGO
 
         private bool _messageProfiling;
 
+        public delegate void ShutdownEvent(Entity e);
+        public event ShutdownEvent OnShutdown;
+
         /// <summary>
         /// These are the only real pieces of data that the entity should have -- position and rotation.
         /// </summary>

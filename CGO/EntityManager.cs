@@ -131,6 +131,14 @@ namespace CGO
         /// <param name="msg"></param>
         public void HandleEntityNetworkMessage(NetIncomingMessage msg)
         {
+            /**
+             * IF we haven't loaded all of the entities yet we should ignore messages.
+             * BUT we might still need some of those messages at some point, because they
+             * may be important once we're initialized.
+             * TODO: Write a message caching func.
+             */
+            if (!_initialized) 
+                return;
             var message = _entityNetworkManager.HandleEntityNetworkMessage(msg);
             _entities[message.Uid].HandleNetworkMessage(message);
         }

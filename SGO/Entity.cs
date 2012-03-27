@@ -34,6 +34,9 @@ namespace SGO
         public event EntityMoveEvent OnMove;
         public delegate void EntityMoveEvent(Vector2 toPosition, Vector2 fromPosition);
 
+        public delegate void ShutdownEvent(Entity e);
+        public event ShutdownEvent OnShutdown;
+
         private int uid;
         public int Uid
         {

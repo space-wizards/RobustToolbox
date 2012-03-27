@@ -27,5 +27,6 @@ namespace ClientInterfaces.Map
         void SetLastVisiblePoint(Point point);
         void ComputeVisibility(int viewerX, int viewerY);
         void SetAllVisible();
+        void Init();
     }
 }

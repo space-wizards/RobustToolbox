@@ -34,6 +34,7 @@ namespace ClientServices.Map
 
         private bool _needVisUpdate;
         private bool _loaded;
+        private bool _initialized;
 
         private readonly IResourceManager _resourceManager;
         private readonly ILightManager _lightManager;
@@ -46,17 +47,7 @@ namespace ClientServices.Map
             _lightManager = lightManager;
             _collisionManager = collisionManager;
 
-            _tileSprites = new Dictionary<string, Sprite>
-                               {
-                                   {FloorSpriteName, _resourceManager.GetSprite(FloorSpriteName)},
-                                   {WallSideSpriteName, _resourceManager.GetSprite(WallSideSpriteName)}
-                               };
-
-            for (var i = 0; i < 16; i++)
-            {
-                _tileSprites.Add(WallTopSpriteName + i, _resourceManager.GetSprite(WallTopSpriteName + i));
-            }
-            _tileSprites.Add("space_texture", _resourceManager.GetSprite("space_texture"));
+            Init();
 
             _cardinalList = new List<Vector2D>
                                 {
@@ -75,12 +66,29 @@ namespace ClientServices.Map
             Portal[1] = new PortalInfo(-1, 1, 1, 1, 0, 1); // South
             Portal[2] = new PortalInfo(-1, -1, -1, 1, -1, 0); // West
             Portal[3] = new PortalInfo(1, -1, -1, -1, 0, -1); // North
-
-
+            
             _lastVisPoint = new Point(0, 0);
         }
         
         #region Startup / Loading
+        public void Init()
+        {
+            if (!_initialized)
+            {
+                _tileSprites = new Dictionary<string, Sprite>
+                                   {
+                                       {FloorSpriteName, _resourceManager.GetSprite(FloorSpriteName)},
+                                       {WallSideSpriteName, _resourceManager.GetSprite(WallSideSpriteName)}
+                                   };
+                for (var i = 0; i < 16; i++)
+                {
+                    _tileSprites.Add(WallTopSpriteName + i, _resourceManager.GetSprite(WallTopSpriteName + i));
+                }
+                _tileSprites.Add("space_texture", _resourceManager.GetSprite("space_texture"));
+            }
+            _initialized = true;
+        }
+
 
         public bool LoadNetworkedMap(TileType[,] networkedArray, TileState[,] networkedStates, int mapWidth, int mapHeight)
         {
@@ -534,6 +542,7 @@ namespace ClientServices.Map
         {
             _tileArray = null;
             _tileSprites = null;
+            _initialized = false;
         }
         #endregion
 

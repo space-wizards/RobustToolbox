@@ -39,8 +39,8 @@ namespace CGO
 
         public override void OnRemove()
         {
-            base.OnRemove();
             Detach();
+            base.OnRemove();
         }
 
         private void Attach(int uid)

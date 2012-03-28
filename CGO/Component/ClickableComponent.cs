@@ -15,10 +15,9 @@ namespace CGO
 
         public bool CheckClick(PointF worldPos, out int drawdepth)
         {
-            var replies = new List<ComponentReplyMessage>();
-            Owner.SendMessage(this, ComponentMessageType.CheckSpriteClick, replies, worldPos);
+            var reply = Owner.SendMessage(this, ComponentFamily.Renderable, ComponentMessageType.CheckSpriteClick, worldPos);
 
-            foreach (var reply in replies.Where(reply => reply.MessageType == ComponentMessageType.SpriteWasClicked && (bool)reply.ParamsList[0]))
+            if (reply.MessageType == ComponentMessageType.SpriteWasClicked && (bool)reply.ParamsList[0])
             {
                 drawdepth = (int)reply.ParamsList[1];
                 return (bool)reply.ParamsList[0];

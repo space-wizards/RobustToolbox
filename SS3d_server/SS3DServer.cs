@@ -354,10 +354,12 @@ namespace SS13_Server
             NetOutgoingMessage playercountMessage = SS13NetServer.Singleton.CreateMessage();
             playercountMessage.Write((byte)NetMessage.PlayerCount);
             playercountMessage.Write((byte)ClientList.Count);
+            SS13NetServer.Singleton.SendToAll(playercountMessage);
+            /*
             foreach (NetConnection conn in ClientList.Keys) //Why is this sent to everyone?
             {
                 SS13NetServer.Singleton.SendMessage(playercountMessage, conn, NetDeliveryMethod.ReliableOrdered);
-            }
+            }*/
         }
 
         public void SendPlayerList(NetConnection connection)

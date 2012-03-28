@@ -3,5 +3,5 @@
   <Port>1212</Port>
   <ServerName>SS13 Server</ServerName>
   <AdminPassword>admin123</AdminPassword>
-  <MessageLogging>false</MessageLogging>
+  <MessageLogging>true</MessageLogging>
 </PersistentConfiguration>

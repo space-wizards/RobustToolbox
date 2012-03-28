@@ -32,10 +32,13 @@ public interface IMessageLoggerService
     void LogClientOutgoingNetMessage(int uid, int family, object[] parameters);
     
     [System.ServiceModel.OperationContractAttribute(Action="http://tempuri.org/IMessageLoggerService/LogServerComponentMessage", ReplyAction="http://tempuri.org/IMessageLoggerService/LogServerComponentMessageResponse")]
-    void LogServerComponentMessage(int uid, int senderFamily, string senderType, int componentMessageType);
+    void LogServerComponentMessage(int senderid, int senderFamily, string senderType, int componentMessageType);
     
     [System.ServiceModel.OperationContractAttribute(Action="http://tempuri.org/IMessageLoggerService/LogClientComponentMessage", ReplyAction="http://tempuri.org/IMessageLoggerService/LogClientComponentMessageResponse")]
-    void LogClientComponentMessage(int uid, int senderFamily, string senderType, int componentMessageType);
+    void LogClientComponentMessage(int senderid, int senderFamily, string senderType, int componentMessageType);
+    
+    [System.ServiceModel.OperationContractAttribute(Action="http://tempuri.org/IMessageLoggerService/ServiceStatus", ReplyAction="http://tempuri.org/IMessageLoggerService/ServiceStatusResponse")]
+    bool ServiceStatus();
 }
 
 [System.CodeDom.Compiler.GeneratedCodeAttribute("System.ServiceModel", "4.0.0.0")]
@@ -92,13 +95,18 @@ public partial class MessageLoggerServiceClient : System.ServiceModel.ClientBase
         base.Channel.LogClientOutgoingNetMessage(uid, family, parameters);
     }
     
-    public void LogServerComponentMessage(int uid, int senderFamily, string senderType, int componentMessageType)
+    public void LogServerComponentMessage(int senderid, int senderFamily, string senderType, int componentMessageType)
     {
-        base.Channel.LogServerComponentMessage(uid, senderFamily, senderType, componentMessageType);
+        base.Channel.LogServerComponentMessage(senderid, senderFamily, senderType, componentMessageType);
     }
     
-    public void LogClientComponentMessage(int uid, int senderFamily, string senderType, int componentMessageType)
+    public void LogClientComponentMessage(int senderid, int senderFamily, string senderType, int componentMessageType)
     {
-        base.Channel.LogClientComponentMessage(uid, senderFamily, senderType, componentMessageType);
+        base.Channel.LogClientComponentMessage(senderid, senderFamily, senderType, componentMessageType);
+    }
+    
+    public bool ServiceStatus()
+    {
+        return base.Channel.ServiceStatus();
     }
 }

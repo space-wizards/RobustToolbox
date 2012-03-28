@@ -5,18 +5,53 @@ using System.Text;
 using SS13_Shared;
 using ServerInterfaces;
 using ServerInterfaces.MessageLogging;
+using System.Timers;
 
 namespace ServerServices.MessageLogging
 {
-    public class MessageLogger: IMessageLogger, IService
+    public class MessageLogger : IMessageLogger, IService
     {
         private MessageLoggerServiceClient _loggerServiceClient;
         private bool _logging;
+        private static Timer _pingTimer;
 
         public MessageLogger(IConfigManager _configurationManager)
         {
             _logging = _configurationManager.MessageLogging;
             _loggerServiceClient = new MessageLoggerServiceClient("NetNamedPipeBinding_IMessageLoggerService");
+            if(_logging)
+            {
+                Ping();
+                _pingTimer = new Timer(5000);
+                _pingTimer.Elapsed += new ElapsedEventHandler(CheckServer);
+                _pingTimer.Enabled = true;
+            }
+        }
+
+        public static void CheckServer(object source, ElapsedEventArgs e)
+        {
+            ServiceManager.Singleton.Resolve<IMessageLogger>().Ping();
+        }
+
+        /// <summary>
+        /// Check to see if the server is still running 
+        /// </summary>
+        public void Ping()
+        {
+            bool failed = false;
+            try
+            {
+                var up = _loggerServiceClient.ServiceStatus();
+            }
+            catch(System.ServiceModel.CommunicationException e)
+            {
+                failed = true;
+            }
+            finally
+            {
+                if (failed)
+                    _logging = false;
+            }
         }
 
         public void LogOutgoingComponentNetMessage(long clientUID, int uid, SS13_Shared.GO.ComponentFamily family, object[] parameters)

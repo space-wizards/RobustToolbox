@@ -91,7 +91,7 @@ namespace MessagingProfiler
             i.ComponentFamily = (ComponentFamily)senderFamily;
             i.SenderType = senderType;
             i.MessageType = (ComponentMessageType)componentMessageType;
-            i.MessageSource = LogItem.LogMessageType.ClientComponentMessage;
+            i.MessageSource = LogItem.LogMessageType.ServerComponentMessage;
             LogHolder.Singleton.LogItems.Add(i);
         }
 

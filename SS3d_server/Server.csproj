@@ -112,7 +112,6 @@
     <Compile Include="Modules\Banlist.cs" />
     <Compile Include="Modules\Chat\ChatManager.cs" />
     <Compile Include="Modules\Client\Client.cs" />
-    <Compile Include="Modules\ConfigManager.cs" />
     <Compile Include="Modules\CraftingManager.cs" />
     <Compile Include="Modules\Gamemodes.cs" />
     <Compile Include="Modules\PlacementManager.cs" />

@@ -10,6 +10,9 @@ using Lidgren.Network;
 using SS13_Shared;
 using SS13_Shared.GO;
 using System.Runtime.Serialization;
+using ServerServices;
+using ServerInterfaces;
+using ServerInterfaces.MessageLogging;
 
 namespace SGO
 {
@@ -33,6 +36,8 @@ namespace SGO
 
         public event EntityMoveEvent OnMove;
         public delegate void EntityMoveEvent(Vector2 toPosition, Vector2 fromPosition);
+
+        private bool _messageProfiling;
 
         public delegate void ShutdownEvent(Entity e);
         public event ShutdownEvent OnShutdown;
@@ -82,7 +87,9 @@ namespace SGO
         /// Sets up variables and shite
         /// </summary>
         public virtual void Initialize(bool loaded = false)
-        {     }
+        {
+            _messageProfiling = ServiceManager.Singleton.Resolve<IConfigManager>().MessageLogging;
+        }
 
         /// <summary>
         /// Shuts down the entity gracefully for removal.
@@ -159,7 +166,7 @@ namespace SGO
         /// <param name="args">message parameters</param>
         public void SendMessage(object sender, ComponentMessageType type, List<ComponentReplyMessage> replies, params object[] args)
         {
-            //LogComponentMessage(sender, type, args);
+            LogComponentMessage(sender, type, args);
 
             foreach (var component in _components.Values.ToArray())
             {
@@ -176,7 +183,7 @@ namespace SGO
 
         public void SendMessage(object sender, ComponentMessageType type, params object[] args)
         {
-            //LogComponentMessage(sender, type, args);
+            LogComponentMessage(sender, type, args);
 
             foreach (var component in _components.Values.ToArray())
             {
@@ -186,7 +193,7 @@ namespace SGO
 
         public ComponentReplyMessage SendMessage(object sender, ComponentFamily family, ComponentMessageType type, params object[] args)
         {
-            //LogComponentMessage(sender, type, args);
+            LogComponentMessage(sender, type, args);
 
             if (HasComponent(family))
                 return GetComponent(family).RecieveMessage(sender, type, args);
@@ -194,6 +201,36 @@ namespace SGO
                 return ComponentReplyMessage.Empty;
         }
 
+        /// <summary>
+        /// Logs a component message to the messaging profiler
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="type"></param>
+        /// <param name="args"></param>
+        private void LogComponentMessage(object sender, ComponentMessageType type, params object[] args)
+        {
+            if (!_messageProfiling)
+                return;
+            var senderfamily = ComponentFamily.Generic;
+            var uid = 0;
+            var sendertype = "";
+            //if (sender.GetType().IsAssignableFrom(typeof(IGameObjectComponent)))
+            if (typeof(IGameObjectComponent).IsAssignableFrom(sender.GetType()))
+            {
+                var realsender = (IGameObjectComponent)sender;
+                senderfamily = realsender.Family;
+
+                uid = realsender.Owner.Uid;
+                sendertype = realsender.GetType().ToString();
+            }
+            else
+            {
+                sendertype = sender.GetType().ToString();
+            }
+            //Log the message
+            IMessageLogger logger = ServiceManager.Singleton.Resolve<IMessageLogger>();
+            logger.LogComponentMessage(uid, senderfamily, sendertype, type);
+        }
         #endregion
 
         public void Translate(Vector2 toPosition)

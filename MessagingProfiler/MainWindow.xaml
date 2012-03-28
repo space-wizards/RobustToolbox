@@ -12,6 +12,7 @@
                 <DataGridTextColumn Header="Eid" Binding="{Binding EntityId}"/>
                 <DataGridTextColumn Header="Ent Message Type" Binding="{Binding EntityMessageType}"/>
                 <DataGridTextColumn Header="CFamily" Binding="{Binding ComponentFamily}"/>
+                <DataGridTextColumn Header="Sendertype" Binding="{Binding SenderType}"/>
                 <DataGridTextColumn Header="MsgType" Binding="{Binding MessageType}"/>
                 <DataGridTextColumn Header="Source" Binding="{Binding MessageSource}"/>
             </DataGrid.Columns>

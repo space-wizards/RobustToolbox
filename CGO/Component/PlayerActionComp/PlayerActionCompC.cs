@@ -124,8 +124,8 @@ namespace CGO
 
             for (int i = 0; i < numPacks; i++)
             {
-                uint uid = (uint)message.MessageParameters[(i*2) + 2];
-                string typeName = (string)message.MessageParameters[(i*2) + 3];
+                uint uid = (uint)message.MessageParameters[2 + (i * 2)];
+                string typeName = (string)message.MessageParameters[3 + (i * 2)];
                 AddAction(typeName, uid);
             }
         }

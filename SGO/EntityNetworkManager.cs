@@ -5,15 +5,21 @@ using System.Text;
 using Lidgren.Network;
 using SS13_Shared;
 using SS13_Shared.GO;
+using ServerServices;
+using ServerInterfaces;
+using ServerInterfaces.MessageLogging;
 
 namespace SGO
 {
     public class EntityNetworkManager
     {
         private NetServer m_netServer;
+        private bool _messageProfiling;
+
         public EntityNetworkManager(NetServer netServer)
         {
             m_netServer = netServer;
+            _messageProfiling = ServiceManager.Singleton.Resolve<IConfigManager>().MessageLogging;
         }
 
         public NetOutgoingMessage CreateEntityMessage()
@@ -48,62 +54,62 @@ namespace SGO
                     message.Write((byte)NetworkDataType.d_enum);
                     message.Write((int)messageParam);
                 }
-                else if (messageParam.GetType() == typeof(bool))
+                else if (messageParam is bool)
                 {
                     message.Write((byte)NetworkDataType.d_bool);
                     message.Write((bool)messageParam);
                 }
-                else if (messageParam.GetType() == typeof(byte))
+                else if (messageParam is byte)
                 {
                     message.Write((byte)NetworkDataType.d_byte);
                     message.Write((byte)messageParam);
                 }
-                else if (messageParam.GetType() == typeof(sbyte))
+                else if (messageParam is sbyte)
                 {
                     message.Write((byte)NetworkDataType.d_sbyte);
                     message.Write((sbyte)messageParam);
                 }
-                else if (messageParam.GetType() == typeof(ushort))
+                else if (messageParam is ushort)
                 {
                     message.Write((byte)NetworkDataType.d_ushort);
                     message.Write((ushort)messageParam);
                 }
-                else if (messageParam.GetType() == typeof(short))
+                else if (messageParam is short)
                 {
                     message.Write((byte)NetworkDataType.d_short);
                     message.Write((short)messageParam);
                 }
-                else if (messageParam.GetType() == typeof(int))
+                else if (messageParam is int)
                 {
                     message.Write((byte)NetworkDataType.d_int);
                     message.Write((int)messageParam);
                 }
-                else if (messageParam.GetType() == typeof(uint))
+                else if (messageParam is uint)
                 {
                     message.Write((byte)NetworkDataType.d_uint);
                     message.Write((uint)messageParam);
                 }
-                else if (messageParam.GetType() == typeof(ulong))
+                else if (messageParam is ulong)
                 {
                     message.Write((byte)NetworkDataType.d_ulong);
                     message.Write((ulong)messageParam);
                 }
-                else if (messageParam.GetType() == typeof(long))
+                else if (messageParam is long)
                 {
                     message.Write((byte)NetworkDataType.d_long);
                     message.Write((long)messageParam);
                 }
-                else if (messageParam.GetType() == typeof(float))
+                else if (messageParam is float)
                 {
                     message.Write((byte)NetworkDataType.d_float);
                     message.Write((float)messageParam);
                 }
-                else if (messageParam.GetType() == typeof(double))
+                else if (messageParam is double)
                 {
                     message.Write((byte)NetworkDataType.d_double);
                     message.Write((double)messageParam);
                 }
-                else if (messageParam.GetType() == typeof(string))
+                else if (messageParam is string)
                 {
                     message.Write((byte)NetworkDataType.d_string);
                     message.Write((string)messageParam);
@@ -121,6 +127,46 @@ namespace SGO
                 m_netServer.SendToAll(message, method);
             else
                 m_netServer.SendMessage(message, recipient, method);
+
+            if(_messageProfiling)
+            {
+                var logger = ServiceManager.Singleton.Resolve<IMessageLogger>();
+                logger.LogOutgoingComponentNetMessage(
+                    (recipient==null)?0:recipient.RemoteUniqueIdentifier,
+                    sendingEntity.Uid,
+                    family,
+                    PackParamsForLog(messageParams));
+                    
+            }
+        }
+
+        private object[] PackParamsForLog(params object[] messageParams)
+        {
+            var parameters = new List<object>();
+            foreach (object messageParam in messageParams)
+            {
+                if (messageParam.GetType().IsSubclassOf(typeof(Enum)))
+                {
+                    parameters.Add((int)messageParam);
+                }
+                else if (messageParam is int 
+                    || messageParam is uint 
+                    || messageParam is short 
+                    || messageParam is ushort
+                    || messageParam is long
+                    || messageParam is ulong
+                    || messageParam is bool
+                    || messageParam is float
+                    || messageParam is double
+                    || messageParam is byte
+                    || messageParam is sbyte
+                    || messageParam is string)
+                {
+                    parameters.Add(messageParam);
+                }
+            }
+
+            return parameters.ToArray();
         }
 
         #endregion
@@ -148,6 +194,30 @@ namespace SGO
                     incomingEntityMessage = new IncomingEntityMessage(uid, EntityMessage.ComponentInstantiationMessage, (ComponentFamily)UnPackParams(message).First(), message.SenderConnection);
                     break;
             }
+
+            if (_messageProfiling)
+            {
+                var logger = ServiceManager.Singleton.Resolve<IMessageLogger>();
+
+                if(messageType == EntityMessage.ComponentMessage)
+                {
+                    var messageContent = (IncomingEntityComponentMessage) incomingEntityMessage.message;
+                    logger.LogIncomingComponentNetMessage(message.SenderConnection.RemoteUniqueIdentifier,
+                                                          uid,
+                                                          messageType, 
+                                                          messageContent.componentFamily,
+                                                          PackParamsForLog(messageContent.messageParameters.ToArray()));
+                }
+                else if(messageType == EntityMessage.ComponentInstantiationMessage)
+                {
+                    logger.LogIncomingComponentNetMessage(message.SenderConnection.RemoteUniqueIdentifier,
+                        uid,
+                        messageType,
+                        (ComponentFamily)incomingEntityMessage.message,
+                        new object[0]);
+                }
+            }
+
             return incomingEntityMessage;
         }
 

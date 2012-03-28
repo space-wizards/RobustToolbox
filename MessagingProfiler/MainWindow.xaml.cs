@@ -79,10 +79,10 @@ namespace MessagingProfiler
             {
                 if (_booleanFilter == "any")
                 {
-                    if (i.EntityMessageType == _entityMessageFilter
-                        || i.ComponentFamily == _componentFamilyFilter
-                        || i.MessageSource == _logMessageTypeFilter
-                        || i.MessageType == _componentMessageTypeFilter)
+                    if ((i.EntityMessageType == _entityMessageFilter && _entityMessageFilter != EntityMessage.Null)
+                        || (i.ComponentFamily == _componentFamilyFilter && _componentFamilyFilter != ComponentFamily.Null)
+                        || (i.MessageSource == _logMessageTypeFilter && _logMessageTypeFilter != LogItem.LogMessageType.None)
+                        || (i.MessageType == _componentMessageTypeFilter && _componentMessageTypeFilter != ComponentMessageType.Null))
                         selected = true;
                 }
                 else

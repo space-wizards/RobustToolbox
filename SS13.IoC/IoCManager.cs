@@ -15,7 +15,6 @@ namespace SS13.IoC
         {
             ServiceTypes = new List<Type>();
             ServiceTypes.AddRange(Assembly.LoadFrom("ClientServices.dll").GetTypes());
-
         }
 
         public static T Resolve<T>()

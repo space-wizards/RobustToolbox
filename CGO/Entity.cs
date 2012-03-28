@@ -201,6 +201,10 @@ namespace CGO
                 uid = realsender.Owner.Uid;
                 sendertype = realsender.GetType().ToString();
             }
+            else
+            {
+                sendertype = sender.GetType().ToString();
+            }
             //Log the message
             IMessageLogger logger = IoCManager.Resolve<IMessageLogger>();
             logger.LogComponentMessage(uid, senderfamily, sendertype, type);

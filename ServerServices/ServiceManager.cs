@@ -50,5 +50,11 @@ namespace ServerServices
             else
                 return null;
         }
+
+        public T Resolve<T>()
+        {
+            var service = services.First(findservice => typeof (T).IsAssignableFrom(findservice.Value.GetType()));
+            return (T) service.Value;
+        }
     }
 }

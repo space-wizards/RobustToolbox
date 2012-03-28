@@ -8,9 +8,12 @@ using ServerServices;
 using SS13_Server.Modules.Chat;
 using Lidgren.Network;
 using SS13_Shared;
+using ServerServices.Configuration;
 using ServerServices.Map;
 using SS13_Server.Modules.Gamemodes;
 using SGO;
+using ServerInterfaces;
+using ServerServices.MessageLogging;
 
 namespace SS13_Server
 {
@@ -72,22 +75,22 @@ namespace SS13_Server
             Runlevel = RunLevel.Init;
             _singleton = this;
 
-            ConfigManager.Singleton.Initialize("./config.xml");
-            LogManager.Initialize(ConfigManager.Singleton.Configuration.LogPath);
+            ServiceManager.Singleton.AddService(new ConfigManager("./config.xml"));
+            LogManager.Initialize(ServiceManager.Singleton.Resolve<IConfigManager>().LogPath);
         }
         #endregion
 
 
         public void LoadSettings()
         {
-            var cfgmgr = ConfigManager.Singleton;
-            _serverPort = cfgmgr.Configuration.Port;
-            _serverName = cfgmgr.Configuration.ServerName;
-            FramePeriod = cfgmgr.Configuration.framePeriod;
-            _serverMapName = cfgmgr.Configuration.serverMapName;
-            _serverMaxPlayers = cfgmgr.Configuration.serverMaxPlayers;
-            _gameType = cfgmgr.Configuration.gameType;
-            _serverWelcomeMessage = cfgmgr.Configuration.serverWelcomeMessage;
+            var cfgmgr = ServiceManager.Singleton.Resolve<IConfigManager>();
+            _serverPort = cfgmgr.Port;
+            _serverName = cfgmgr.ServerName;
+            FramePeriod = cfgmgr.FramePeriod;
+            _serverMapName = cfgmgr.ServerMapName;
+            _serverMaxPlayers = cfgmgr.ServerMaxPlayers;
+            _gameType = cfgmgr.GameType;
+            _serverWelcomeMessage = cfgmgr.ServerWelcomeMessage;
             LogManager.Log("Port: " + _serverPort);
             LogManager.Log("Name: " + _serverName);
             LogManager.Log("Rate: " + (int)ServerRate + " (" + FramePeriod + " ms)");
@@ -148,6 +151,7 @@ namespace SS13_Server
 
                 ChatManager = new ChatManager();
                 ServiceManager.Singleton.AddService(ChatManager);
+                ServiceManager.Singleton.AddService(new MessageLogger(ServiceManager.Singleton.Resolve<IConfigManager>()));
                 PlayerManager = new PlayerManager();
 
                 CraftingManager.Singleton.Initialize("CraftingRecipes.xml", netServer, PlayerManager);
@@ -501,7 +505,7 @@ namespace SS13_Server
                     break;
                 case NetMessage.RequestAdminLogin:
                     var password = messageBody.ReadString();
-                    if (password == ConfigManager.Singleton.Configuration.AdminPassword)
+                    if (password == ServiceManager.Singleton.Resolve<IConfigManager>().AdminPassword)
                     {
                         LogManager.Log("Admin login: " + messageBody.SenderConnection.RemoteEndpoint.Address);
                         PlayerManager.GetSessionByConnection(messageBody.SenderConnection).adminPermissions.isAdmin = true;

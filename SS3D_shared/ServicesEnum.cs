@@ -6,7 +6,9 @@
         NetServer,
         Map,
         ChatManager,
-        PlayerManager
+        PlayerManager,
+        ConfigManager,
+        MessageLogger
 
     }
 }

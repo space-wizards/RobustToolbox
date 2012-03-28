@@ -48,8 +48,9 @@ namespace CGO
 
         protected virtual void Die()
         {
-            if (!IsDead) IsDead = true;
-
+            if (IsDead) return;
+            
+            IsDead = true;
             Owner.SendMessage(this, ComponentMessageType.Die);
         }
     }

@@ -10,6 +10,7 @@ namespace SS13_Shared.GO
     /// </summary>
     public enum ComponentFamily
     {
+        Null,   //For message logger use
         Generic,
         Input, // Receives user input
         Mover, // Moves objects around

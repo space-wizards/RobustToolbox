@@ -9,13 +9,14 @@ namespace MessagingProfiler
 {
     public class LogItem
     {
-        public long clientID { get; set; }
-        public int entityID { get; set; }
-        public EntityMessage entityMessageType { get; set; }
-        public ComponentFamily componentFamily { get; set; }
-        public string senderType { get; set; }
-        public ComponentMessageType messageType { get; set; }
-        public object[] parameters { get; set; }
+        public int LogItemId { get; set; }
+        public long ClientId { get; set; }
+        public int EntityId { get; set; }
+        public EntityMessage EntityMessageType { get; set; }
+        public ComponentFamily ComponentFamily { get; set; }
+        public string SenderType { get; set; }
+        public ComponentMessageType MessageType { get; set; }
+        public object[] Parameters { get; set; }
         public enum LogMessageType
         {
             None,
@@ -26,18 +27,19 @@ namespace MessagingProfiler
             ServerRecievedNetMessage,
             ServerSentNetMessage
         }
-        public LogMessageType logMessageType { get; set; }
+        public LogMessageType MessageSource { get; set; }
 
         public LogItem()
         {
-            clientID = 0;
-            entityID = 0;
-            entityMessageType = EntityMessage.Null;
-            componentFamily = ComponentFamily.Generic;
-            senderType = "";
-            messageType = ComponentMessageType.Null;
-            parameters = null;
-            logMessageType = LogMessageType.None;
+            LogItemId = LogHolder.Singleton.NextId;
+            ClientId = 0;
+            EntityId = 0;
+            EntityMessageType = EntityMessage.Null;
+            ComponentFamily = ComponentFamily.Generic;
+            SenderType = "";
+            MessageType = ComponentMessageType.Null;
+            Parameters = null;
+            MessageSource = LogMessageType.None;
         }
     }
 }

@@ -9,6 +9,12 @@ namespace MessagingProfiler
     public class LogHolder
     {
         public ObservableCollection<LogItem> LogItems = new ObservableCollection<LogItem>();
+        private object _lock;
+        private int _nextId = 0;
+        public int NextId
+        {
+            get { return _nextId++; }
+        }
 
         public static LogHolder Singleton
         {
@@ -22,5 +28,13 @@ namespace MessagingProfiler
             {}
         }
         private static LogHolder _singleton;
+
+        public void Add(LogItem i)
+        {
+            lock (_lock)
+            {
+                LogItems.Add(i);
+            }
+        }
     }
 }

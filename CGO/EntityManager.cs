@@ -21,6 +21,8 @@ namespace CGO
         private bool _initialized;
         private int _lastId;
 
+        private Queue<IncomingEntityMessage> MessageBuffer = new Queue<IncomingEntityMessage>();
+
         public EntityTemplateDatabase TemplateDb { get; private set; }
 
         public EntityManager(INetworkManager networkManager)
@@ -124,6 +126,24 @@ namespace CGO
             _entityNetworkManager = null;
         }
 
+        private void ProcessMsgBuffer()
+        {
+            if (!MessageBuffer.Any()) return;
+
+            while (MessageBuffer.Any())
+            {
+                IncomingEntityMessage entMsg = MessageBuffer.Dequeue();
+                _entities[entMsg.Uid].HandleNetworkMessage(entMsg);
+            }
+
+            MessageBuffer.Clear(); //Should be empty at this point anyway.
+        }
+
+        private IncomingEntityMessage ProcessNetMessage(NetIncomingMessage msg)
+        {
+            return _entityNetworkManager.HandleEntityNetworkMessage(msg);
+        }
+
         /// <summary>
         /// Handle an incoming network message by passing the message to the EntityNetworkManager 
         /// and handling the parsed result.
@@ -131,16 +151,14 @@ namespace CGO
         /// <param name="msg"></param>
         public void HandleEntityNetworkMessage(NetIncomingMessage msg)
         {
-            /**
-             * IF we haven't loaded all of the entities yet we should ignore messages.
-             * BUT we might still need some of those messages at some point, because they
-             * may be important once we're initialized.
-             * TODO: Write a message caching func.
-             */
-            if (!_initialized) 
+            if (!_initialized)
+            {
+                MessageBuffer.Enqueue(ProcessNetMessage(msg));
                 return;
-            var message = _entityNetworkManager.HandleEntityNetworkMessage(msg);
-            _entities[message.Uid].HandleNetworkMessage(message);
+            }
+
+            IncomingEntityMessage entMsg = ProcessNetMessage(msg);
+            _entities[entMsg.Uid].HandleNetworkMessage(entMsg);
         }
 
         #region Entity Manager Networking
@@ -194,6 +212,7 @@ namespace CGO
             foreach (var e in _entities.Values)
                 e.Initialize();
             _initialized = true;
+            ProcessMsgBuffer();
         }
 
         #endregion

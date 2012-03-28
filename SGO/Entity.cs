@@ -39,6 +39,8 @@ namespace SGO
 
         private bool _messageProfiling;
 
+        private bool _initialized = false;
+
         public delegate void ShutdownEvent(Entity e);
         public event ShutdownEvent OnShutdown;
 
@@ -60,35 +62,35 @@ namespace SGO
         /// </summary>
         public Vector2 position;
         public float rotation;
-        public string name;
+        private string _name;
+        public string Name
+        {
+            get { return _name; }
+            set { 
+                _name = value;
+                SendNameUpdate();
+            }
+        }
 
         #endregion
 
         #region Constructor/Destructor
         /// <summary>
-        /// Constructor
-        /// </summary>
-        public Entity()
-        {
-            Initialize();
-        }
-
-        /// <summary>
-        /// Constructor for realz. This one should be used eventually instead of the naked one.
+        /// Constructor.
         /// </summary>
         /// <param name="entityNetworkManager"></param>
         public Entity(EntityNetworkManager entityNetworkManager)
         {
             m_entityNetworkManager = entityNetworkManager;
-            Initialize();
+            _messageProfiling = ServiceManager.Singleton.Resolve<IConfigManager>().MessageLogging;
         }
 
         /// <summary>
         /// Sets up variables and shite
         /// </summary>
-        public virtual void Initialize(bool loaded = false)
+        public void Initialize(bool loaded = false)
         {
-            _messageProfiling = ServiceManager.Singleton.Resolve<IConfigManager>().MessageLogging;
+            _initialized = true;
         }
 
         /// <summary>
@@ -248,7 +250,15 @@ namespace SGO
         }
 
         #region Networking
-        
+        private void SendNameUpdate()
+        {
+            if (!_initialized)
+                return;
+            var message = m_entityNetworkManager.CreateEntityMessage();
+            message.Write((int)EntityMessage.NameUpdate);
+            message.Write(Name);
+            m_entityNetworkManager.SendToAll(message);
+        }        
         #endregion
 
         //VARIABLES TO REFACTOR AT A LATER DATE
@@ -278,21 +288,21 @@ namespace SGO
 
         public void SerializeBasicInfo(SerializationInfo info, StreamingContext ctxt)
         {
-            name = (string)info.GetValue("name", typeof(string));
+            Name = (string)info.GetValue("name", typeof(string));
             position = (Vector2)info.GetValue("position", typeof(Vector2));
             rotation = (float)info.GetValue("rotation", typeof(float));
         }
 
         public Entity(SerializationInfo info, StreamingContext ctxt)
         {
-            name = (string)info.GetValue("name", typeof(string));
+            Name = (string)info.GetValue("name", typeof(string));
             position = (Vector2)info.GetValue("position", typeof(Vector2));
             rotation = (float)info.GetValue("rotation", typeof(float));
         }
 
         public virtual void GetObjectData(SerializationInfo info, StreamingContext ctxt)
         {
-            info.AddValue("name", name);
+            info.AddValue("name", Name);
             info.AddValue("position", position);
             info.AddValue("rotation", rotation);
         }
@@ -337,14 +347,9 @@ namespace SGO
         /// <param name="messageParams">Parameters</param>
         public void SendComponentNetworkMessage(IGameObjectComponent component, NetDeliveryMethod method, NetConnection recipient, params object[] messageParams)
         {
+            if (!_initialized)
+                return;
             m_entityNetworkManager.SendComponentNetworkMessage(this, component.Family, NetDeliveryMethod.ReliableUnordered, recipient, messageParams);
         }
-
-        #region compatibility for atom transition -- ???
-        public void SetNetworkManager(EntityNetworkManager manager)
-        {
-            m_entityNetworkManager = manager;
-        }
-        #endregion
     }
 }

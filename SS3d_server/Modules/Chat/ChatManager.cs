@@ -76,13 +76,13 @@ namespace SS13_Server.Modules.Chat
             switch (command)
             {
                 case "spawnentity":
-                    Entity spawned = EntityManager.Singleton.SpawnEntity(args[1], position);
+                    Entity spawned = EntityManager.Singleton.SpawnEntityAt(args[1], position);
                     break;
                 case "crowbar":
-                    EntityManager.Singleton.SpawnEntity("Crowbar", position);                   
+                    EntityManager.Singleton.SpawnEntityAt("Crowbar", position);                   
                     break;
                 case "toolbox":
-                    EntityManager.Singleton.SpawnEntity("Toolbox", position);  
+                    EntityManager.Singleton.SpawnEntityAt("Toolbox", position);  
                     break;
                 case "addgas":
                     if (args.Count > 1 && Convert.ToInt32(args[1]) > 0)

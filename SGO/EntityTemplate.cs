@@ -55,9 +55,9 @@ namespace SGO
         /// Creates an entity from this template
         /// </summary>
         /// <returns></returns>
-        public Entity CreateEntity()
+        public Entity CreateEntity(EntityNetworkManager entityNetworkManager)
         {
-            Entity e = new Entity();
+            Entity e = new Entity(entityNetworkManager);
 
             foreach (string componentname in components)
             {
@@ -75,7 +75,7 @@ namespace SGO
                 ///Add the component to the entity
                 e.AddComponent(component.Family, component);
             }
-            e.name = Name;
+            e.Name = Name;
             e.template = this;
             return e;
         }

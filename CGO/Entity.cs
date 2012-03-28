@@ -253,6 +253,9 @@ namespace CGO
                 case EntityMessage.ComponentMessage:
                     HandleComponentMessage((IncomingEntityComponentMessage)message.Message);
                     break;
+                case EntityMessage.NameUpdate:
+                    Name = message.Message as string;
+                    break;
             }
         }
 

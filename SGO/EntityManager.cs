@@ -26,7 +26,7 @@ namespace SGO
         {
             m_entityNetworkManager = new EntityNetworkManager(netServer);
             m_entityTemplateDatabase = new EntityTemplateDatabase();
-            m_entityFactory = new EntityFactory(m_entityTemplateDatabase);
+            m_entityFactory = new EntityFactory(m_entityTemplateDatabase, m_entityNetworkManager);
             m_entities = new Dictionary<int, Entity>();
             m_netServer = netServer;
             Singleton = this;
@@ -66,7 +66,7 @@ namespace SGO
             string template = e.Attribute("template").Value;
             string name = e.Attribute("name").Value;
             Entity ent = SpawnEntity(template);
-            ent.name = name;
+            ent.Name = name;
             ent.Translate(new Vector2(X, Y));
         }
 
@@ -88,7 +88,7 @@ namespace SGO
                 new XAttribute("X", e.position.X.ToString(CultureInfo.InvariantCulture)),
                 new XAttribute("Y", e.position.Y.ToString(CultureInfo.InvariantCulture)),
                 new XAttribute("template", e.template.Name),
-                new XAttribute("name", e.name));
+                new XAttribute("name", e.Name));
             return el;
         }
 
@@ -117,29 +117,13 @@ namespace SGO
         /// <summary>
         /// Creates an entity and adds it to the entity dictionary
         /// </summary>
-        /// <param name="templateName">name of entity template to execute</param>
-        /// <returns>integer id of added entity</returns>
-        private int CreateEntity(string templateName)
-        {
-            //Get the entity from the factory
-            Entity e = m_entityFactory.CreateEntity(templateName);
-            e.SetNetworkManager(m_entityNetworkManager);
-            if (e != null)
-            {
-                //It worked, add it.
-                m_entities.Add(++nextId, e);
-                return nextId;
-            }
-            //TODO: throw exception here -- something went wrong.
-            return -1;
-        }
-
+        /// <param name="EntityType">name of entity template to execute</param>
+        /// <returns>spawned entity</returns>
         public Entity SpawnEntity(string EntityType, bool send = true)
         {
             Entity e = m_entityFactory.CreateEntity(EntityType);
             if (e != null)
             {
-                e.SetNetworkManager(m_entityNetworkManager);
                 e.Uid = nextId++;
                 m_entities.Add(e.Uid, e);
                 e.Initialize();
@@ -148,19 +132,17 @@ namespace SGO
             return e;
         }
 
+        /// <summary>
+        /// Spawns an entity at a specific position
+        /// </summary>
+        /// <param name="EntityType"></param>
+        /// <param name="position"></param>
+        /// <returns></returns>
         public Entity SpawnEntityAt(string EntityType, Vector2 position)
         {
             var e = SpawnEntity(EntityType, false);
             e.Translate(position);
             SendSpawnEntityAtPosition(e);
-            return e;
-        }
-
-        public Entity SpawnEntity(string EntityType, Vector2 position)
-        {
-            Entity e = SpawnEntityAt(EntityType, position);
-            if (e == null)
-                return null;
             return e;
         }
 
@@ -178,7 +160,7 @@ namespace SGO
             message.Write((byte)NetMessage.EntityManagerMessage);
             message.Write((int)EntityManagerMessage.SpawnEntity);
             message.Write(e.template.Name);
-            message.Write(e.name);
+            message.Write(e.Name);
             message.Write(e.Uid);
             if (client != null)
                 m_netServer.SendMessage(message, client, NetDeliveryMethod.ReliableOrdered);
@@ -192,7 +174,7 @@ namespace SGO
             message.Write((byte)NetMessage.EntityManagerMessage);
             message.Write((int)EntityManagerMessage.SpawnEntityAtPosition);
             message.Write(e.template.Name);
-            message.Write(e.name);
+            message.Write(e.Name);
             message.Write(e.Uid);
             message.Write(e.position.X); // SENT AS DOUBLES...
             message.Write(e.position.Y); // CONVERTED TO FLOATS ON CLIENT SIDE

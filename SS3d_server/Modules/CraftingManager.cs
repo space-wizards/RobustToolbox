@@ -166,11 +166,11 @@ namespace SS13_Server.Modules
             successMsg.Write((byte)GuiComponentType.ComboGui);
             successMsg.Write((byte)ComboGuiMessage.CraftSuccess);
             successMsg.Write((string)ticket.component1.template.Name);
-            successMsg.Write((string)ticket.component1.name);
+            successMsg.Write((string)ticket.component1.Name);
             successMsg.Write((string)ticket.component2.template.Name);
-            successMsg.Write((string)ticket.component2.name);
+            successMsg.Write((string)ticket.component2.Name);
             successMsg.Write((string)result.template.Name);
-            successMsg.Write((string)result.name);
+            successMsg.Write((string)result.Name);
             netServer.SendMessage(successMsg, connection, NetDeliveryMethod.ReliableUnordered);
             removeTicketByConnection(connection); //Better placement for this.
         }

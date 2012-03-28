@@ -96,7 +96,7 @@ namespace SGO
         {
             base.HandleInstantiationMessage(netConnection);
 
-            if (GetMyOwnerConnection() != null)
+            if (GetMyOwnerConnection() != null && GetMyOwnerConnection() == netConnection)
             {
                 AddAction("ExampleAction"); //This is a terrible place for this and only exists for testing. REMOVE THIS.
                 SendFullListing(GetMyOwnerConnection());

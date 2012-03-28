@@ -35,6 +35,9 @@ namespace MessagingProfiler
 
         //[OperationContract]
         //void LogClientComponentReplyMessage(int replierid, int replierFamily, string replierType);
+
+        [OperationContract]
+        bool ServiceStatus();
     }
 
     [ServiceBehavior(InstanceContextMode = InstanceContextMode.PerCall,
@@ -107,5 +110,9 @@ namespace MessagingProfiler
             LogHolder.Singleton.LogItems.Add(i);
         }
 
+        public bool ServiceStatus()
+        {
+            return true;
+        }
     }
 }

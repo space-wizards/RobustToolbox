@@ -4,6 +4,8 @@ using System.Linq;
 using System.Text;
 using ClientInterfaces.MessageLogging;
 using ClientInterfaces.Configuration;
+using SS13.IoC;
+using System.Timers;
 
 namespace ClientServices.MessageLogging
 {
@@ -11,11 +13,45 @@ namespace ClientServices.MessageLogging
     {
         private MessageLoggerServiceClient _loggerServiceClient;
         private bool _logging;
+        private static Timer _pingTimer;
 
         public MessageLogger(IConfigurationManager _configurationManager)
         {
             _logging = _configurationManager.GetMessageLogging();
             _loggerServiceClient = new MessageLoggerServiceClient("NetNamedPipeBinding_IMessageLoggerService");
+            if (_logging)
+            {
+                Ping();
+                _pingTimer = new Timer(5000);
+                _pingTimer.Elapsed += new ElapsedEventHandler(CheckServer);
+                _pingTimer.Enabled = true;
+            }
+        }
+
+        public static void CheckServer(object source, ElapsedEventArgs e)
+        {
+            IoCManager.Resolve<IMessageLogger>().Ping();
+        }
+
+        /// <summary>
+        /// Check to see if the server is still running 
+        /// </summary>
+        public void Ping()
+        {
+            bool failed = false;
+            try
+            {
+                var up = _loggerServiceClient.ServiceStatus();
+            }
+            catch (System.ServiceModel.CommunicationException e)
+            {
+                failed = true;
+            }
+            finally
+            {
+                if (failed)
+                    _logging = false;
+            }
         }
 
         public void LogOutgoingComponentNetMessage(int uid, SS13_Shared.GO.ComponentFamily family, object[] parameters)

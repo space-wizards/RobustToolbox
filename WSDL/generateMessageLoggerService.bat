@@ -10,6 +10,9 @@ del /Q ..\ClientServices\MessageLogging\MessageLoggerService.cs
 del /Q ..\ServerServices\MessageLogging\MessageLoggerService.cs
 goto generate
 :generate
+start ..\MessagingProfiler\bin\Release\MessagingProfiler.exe
+echo Please press enter once the messaging profiler app has loaded.
+pause
 echo Generating new service interface code and config files...
 svcutil /language:c# /out:MessageLoggerService.cs /config:app.config net.pipe://MessageLoggerService > log.txt
 goto copyOutput

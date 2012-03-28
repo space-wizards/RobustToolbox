@@ -106,7 +106,7 @@ namespace SS13_Server.Modules
 
                 if (!isTile)
                 {
-                    Entity created = EntityManager.Singleton.SpawnEntity(entityTemplateName, new Vector2(xRcv, yRcv));
+                    Entity created = EntityManager.Singleton.SpawnEntityAt(entityTemplateName, new Vector2(xRcv, yRcv));
                     if(created != null)
                         created.Translate(new Vector2(xRcv, yRcv), rotRcv);
                 }

@@ -85,7 +85,7 @@ namespace SGO
             else if (verbs[ItemCapabilityType.Tool].Contains(ItemCapabilityVerb.Hit))
             {
                 IChatManager cm = (IChatManager)ServiceManager.Singleton.GetService(ServerServiceType.ChatManager);
-                cm.SendChatMessage(ChatChannel.Default, actor.name + " hit the " + Owner.name + " with a " + item.name + ".", null, item.Uid);
+                cm.SendChatMessage(ChatChannel.Default, actor.Name + " hit the " + Owner.Name + " with a " + item.Name + ".", null, item.Uid);
             }
         }
 

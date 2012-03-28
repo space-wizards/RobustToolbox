@@ -8,13 +8,15 @@ namespace SGO
     public class EntityFactory
     {
         private EntityTemplateDatabase m_entityTemplateDatabase;
+        private EntityNetworkManager m_entityNetworkManager;
 
         /// <summary>
         /// Constructor
         /// </summary>
-        public EntityFactory(EntityTemplateDatabase entityTemplateDatabase)
+        public EntityFactory(EntityTemplateDatabase entityTemplateDatabase, EntityNetworkManager entityNetworkManager)
         {
             m_entityTemplateDatabase = entityTemplateDatabase;
+            m_entityNetworkManager = entityNetworkManager;
         }
 
         /// <summary>
@@ -28,7 +30,9 @@ namespace SGO
             //TODO: Throw exception here
             if (template == null)
                 return null;
-            return template.CreateEntity();
+            var entity = template.CreateEntity(m_entityNetworkManager);
+            entity.Initialize();
+            return entity;
         }
     }
 }

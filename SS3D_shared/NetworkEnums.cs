@@ -182,6 +182,7 @@
         PositionMessage,
         ComponentInstantiationMessage,
         Null,
+        NameUpdate,
     }
 
     public enum EntityManagerMessage

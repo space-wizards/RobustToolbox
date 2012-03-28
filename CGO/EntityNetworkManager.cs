@@ -178,6 +178,9 @@ namespace CGO
                 case EntityMessage.PositionMessage:
                     //TODO: Handle position messages!
                     break;
+                case EntityMessage.NameUpdate:
+                    result = new IncomingEntityMessage(uid, EntityMessage.NameUpdate, message.ReadString());
+                    break;
             }
             return result;
         }

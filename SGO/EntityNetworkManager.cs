@@ -29,6 +29,11 @@ namespace SGO
             return message;
         }
 
+        public void SendToAll(NetOutgoingMessage message, NetDeliveryMethod method = NetDeliveryMethod.ReliableOrdered)
+        {
+            m_netServer.SendToAll(message, method);
+        }
+
         #region Sending
         /// <summary>
         /// Allows a component owned by this entity to send a message to a counterpart component on the

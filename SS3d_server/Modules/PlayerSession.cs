@@ -48,6 +48,8 @@ namespace SS13_Server.Modules
             a.AddComponent(ComponentFamily.Actor, actorComponent);
 
             attachedEntity = a;
+
+            SetEntityName();
             SendAttachMessage();
         }
 
@@ -121,9 +123,14 @@ namespace SS13_Server.Modules
         {
             name = _name;
             LogManager.Log("Player set name: " + connectedClient.RemoteEndpoint.Address + " -> " + name);
-            if (attachedEntity != null)
+            SetEntityName();
+        }
+
+        private void SetEntityName()
+        {
+            if(name != null && attachedEntity != null)
             {
-                attachedEntity.name = _name;
+                attachedEntity.Name = name;
             }
         }
 

@@ -97,6 +97,7 @@ namespace SGO
             foreach (Entity e in m_entities.Values)
             {
                 SendSpawnEntityAtPosition(e, client);
+                e.FireNetworkedJoinSpawn(client);
             }
             SendEntityManagerInit(client);
         }
@@ -128,6 +129,7 @@ namespace SGO
                 m_entities.Add(e.Uid, e);
                 e.Initialize();
                 if(send) SendSpawnEntity(e);
+                if(send) e.FireNetworkedSpawn();
             }
             return e;
         }
@@ -143,6 +145,7 @@ namespace SGO
             var e = SpawnEntity(EntityType, false);
             e.Translate(position);
             SendSpawnEntityAtPosition(e);
+            e.FireNetworkedSpawn();
             return e;
         }
 

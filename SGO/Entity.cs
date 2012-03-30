@@ -7,6 +7,7 @@ using System.Security;
 using System.Reflection;
 using System.Collections;
 using Lidgren.Network;
+using SS13.IoC;
 using SS13_Shared;
 using SS13_Shared.GO;
 using System.Runtime.Serialization;
@@ -359,6 +360,11 @@ namespace SGO
             if (!_initialized)
                 return;
             m_entityNetworkManager.SendComponentNetworkMessage(this, component.Family, NetDeliveryMethod.ReliableUnordered, recipient, messageParams);
+        }
+
+        public void Emote(string emote)
+        {
+            IoCManager.Resolve<IChatManager>().SendChatMessage(ChatChannel.Emote, emote, Name, Uid);
         }
     }
 }

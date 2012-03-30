@@ -47,10 +47,71 @@ namespace SGO
                 dmgLoc.AddDamage(damType, actualDamage);
             }
 
+            TriggerBleeding(damageamount, damType, targetLocation);
+
             currentHealth = GetHealth();
             maxHealth = GetMaxHealth();
 
             SendHealthUpdate();
+        }
+
+        /// <summary>
+        /// Triggers bleeding if the damage is enough to warrant it.
+        /// </summary>
+        /// <param name="damageAmount"></param>
+        /// <param name="damageType"></param>
+        /// <param name="targetLocation"></param>
+        protected void TriggerBleeding(int damageAmount, DamageType damageType, BodyPart targetLocation)
+        {
+            if (damageAmount < 1)
+                return;
+            double prob = (0.1f * damageAmount);
+            switch(damageType)
+            {
+                case DamageType.Toxin:
+                case DamageType.Burn: 
+                case DamageType.Untyped:
+                case DamageType.Suffocation:
+                case DamageType.Freeze:
+                    prob = 0;
+                    break;
+                case DamageType.Piercing:
+                    prob *= 1.1f;
+                    break;
+                case DamageType.Slashing:
+                    prob *= 1.5f;
+                    break;
+                case DamageType.Bludgeoning:
+                    prob *= 0.7f;
+                    break;
+            }
+
+            switch (targetLocation)
+            {
+                case BodyPart.Groin:
+                    prob *= 0.9f;
+                    break;
+                case BodyPart.Left_Arm:
+                case BodyPart.Right_Arm:
+                    prob *= 0.6f;
+                    break;
+                case BodyPart.Right_Leg:
+                case BodyPart.Left_Leg:
+                    prob *= 1f;
+                    break;
+                case BodyPart.Head:
+                    prob *= 1.2f;
+                    break;
+                case BodyPart.Torso:
+                    prob *= 1.1f;
+                    break;
+            }
+
+            if (prob > 1)
+            {
+                var statuscomp = (StatusEffectComp) Owner.GetComponent(ComponentFamily.StatusEffects);
+                statuscomp.AddEffect("Bleeding", Convert.ToUInt32(prob * 10));
+            }
         }
 
         protected override void ApplyDamage(Entity damager, int damageamount, DamageType damType)

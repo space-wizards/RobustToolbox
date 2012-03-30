@@ -8,6 +8,7 @@
         Server,
         Damage,
         Player,
-        Radio
+        Radio,
+        Emote
     }
 }

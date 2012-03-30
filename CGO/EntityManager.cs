@@ -124,6 +124,7 @@ namespace CGO
             _entityFactory = null;
             TemplateDb = null;
             _entityNetworkManager = null;
+            _initialized = false;
         }
 
         private void ProcessMsgBuffer()

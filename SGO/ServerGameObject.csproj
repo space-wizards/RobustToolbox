@@ -127,6 +127,10 @@
       <Project>{765AFD37-F6EF-4CDF-9596-C3DD15974A35}</Project>
       <Name>ServerServices</Name>
     </ProjectReference>
+    <ProjectReference Include="..\SS13.IoC\SS13.IoC.csproj">
+      <Project>{3401031F-35A7-4AE5-8B64-CAFDCB929F0E}</Project>
+      <Name>SS13.IoC</Name>
+    </ProjectReference>
     <ProjectReference Include="..\SS3D_shared\SS13_Shared.csproj">
       <Project>{4229D7E3-C3AE-4C0A-B2B1-BB20911150DC}</Project>
       <Name>SS13_Shared</Name>

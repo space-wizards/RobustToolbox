@@ -324,9 +324,20 @@ namespace ClientServices.State.States
         {
             var channel = (ChatChannel)msg.ReadByte();
             var text = msg.ReadString();
-
-            var message = "[" + channel + "] " + text;
             var entityId = msg.ReadInt32();
+            string message;
+            switch (channel)
+            {
+                case ChatChannel.Emote:
+                    message = _entityManager.GetEntity(entityId).Name + " " + text;
+                    break;
+                case ChatChannel.Damage:
+                    message = text;
+                    break;
+                default:
+                    message = "[" + channel + "] " + text;
+                    break;
+            }
             _gameChat.AddLine(message, channel);
             var a = EntityManager.Singleton.GetEntity(entityId);
             if (a != null)

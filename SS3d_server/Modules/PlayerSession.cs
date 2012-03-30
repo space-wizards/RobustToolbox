@@ -48,9 +48,8 @@ namespace SS13_Server.Modules
             a.AddComponent(ComponentFamily.Actor, actorComponent);
 
             attachedEntity = a;
-
-            SetEntityName();
             SendAttachMessage();
+            SetAttachedEntityName();
         }
 
         public void DetachFromEntity()
@@ -123,10 +122,10 @@ namespace SS13_Server.Modules
         {
             name = _name;
             LogManager.Log("Player set name: " + connectedClient.RemoteEndpoint.Address + " -> " + name);
-            SetEntityName();
+            SetAttachedEntityName();
         }
 
-        private void SetEntityName()
+        private void SetAttachedEntityName()
         {
             if(name != null && attachedEntity != null)
             {
@@ -134,6 +133,11 @@ namespace SS13_Server.Modules
             }
         }
 
+        private void ResetAttachedEntityName()
+        {
+            attachedEntity.Name = attachedEntity.template.Name;
+        }
+        
         public void JoinLobby()
         {
             var m = SS13NetServer.Singleton.CreateMessage();

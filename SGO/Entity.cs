@@ -21,8 +21,7 @@ namespace SGO
     /// Should not contain any game logic whatsoever other than entity movement functions and 
     /// component management functions.
     /// </summary>
-    [Serializable()]
-    public class Entity : ISerializable
+    public class Entity
     {
         #region Variables
         /// <summary>
@@ -43,6 +42,12 @@ namespace SGO
 
         public delegate void ShutdownEvent(Entity e);
         public event ShutdownEvent OnShutdown;
+
+        public delegate void NetworkedSpawnEvent();
+        public event NetworkedSpawnEvent OnNetworkedSpawn;
+
+        public delegate void NetworkedOnJoinSpawnEvent(NetConnection client);
+        public event NetworkedOnJoinSpawnEvent OnNetworkedJoinSpawn;
 
         private int uid;
         public int Uid
@@ -83,6 +88,18 @@ namespace SGO
         {
             m_entityNetworkManager = entityNetworkManager;
             _messageProfiling = ServiceManager.Singleton.Resolve<IConfigManager>().MessageLogging;
+            OnNetworkedJoinSpawn += SendNameUpdate;
+            OnNetworkedSpawn += SendNameUpdate;
+        }
+
+        public void FireNetworkedJoinSpawn(NetConnection client)
+        {
+            OnNetworkedJoinSpawn(client);
+        }
+
+        public void FireNetworkedSpawn()
+        {
+            OnNetworkedSpawn();
         }
 
         /// <summary>
@@ -252,13 +269,29 @@ namespace SGO
         #region Networking
         private void SendNameUpdate()
         {
-            if (!_initialized)
+            if (!_initialized || Name == null)
                 return;
-            var message = m_entityNetworkManager.CreateEntityMessage();
-            message.Write((int)EntityMessage.NameUpdate);
-            message.Write(Name);
+            var message = CreateNameUpdateMessage();
             m_entityNetworkManager.SendToAll(message);
         }        
+
+        private void SendNameUpdate(NetConnection client)
+        {
+            if (!_initialized || Name == null)
+                return;
+            var message = CreateNameUpdateMessage();
+            m_entityNetworkManager.SendMessage(message, client);
+        }
+
+        private NetOutgoingMessage CreateNameUpdateMessage()
+        {
+            var message = m_entityNetworkManager.CreateEntityMessage();
+            message.Write(Uid);//Write this entity's UID
+            message.Write((byte)EntityMessage.NameUpdate);
+            message.Write(Name);
+            return message;
+        }
+
         #endregion
 
         //VARIABLES TO REFACTOR AT A LATER DATE
@@ -284,30 +317,6 @@ namespace SGO
                 OnMove(position, fromPosition);
         }
 
-        #region Serialization
-
-        public void SerializeBasicInfo(SerializationInfo info, StreamingContext ctxt)
-        {
-            Name = (string)info.GetValue("name", typeof(string));
-            position = (Vector2)info.GetValue("position", typeof(Vector2));
-            rotation = (float)info.GetValue("rotation", typeof(float));
-        }
-
-        public Entity(SerializationInfo info, StreamingContext ctxt)
-        {
-            Name = (string)info.GetValue("name", typeof(string));
-            position = (Vector2)info.GetValue("position", typeof(Vector2));
-            rotation = (float)info.GetValue("rotation", typeof(float));
-        }
-
-        public virtual void GetObjectData(SerializationInfo info, StreamingContext ctxt)
-        {
-            info.AddValue("name", Name);
-            info.AddValue("position", position);
-            info.AddValue("rotation", rotation);
-        }
-
-        #endregion
 
         internal void HandleNetworkMessage(IncomingEntityMessage message)
         {

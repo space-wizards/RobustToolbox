@@ -128,6 +128,8 @@ namespace CGO
 
         private void ProcessMsgBuffer()
         {
+            if (!_initialized)
+                return;
             if (!MessageBuffer.Any()) return;
 
             while (MessageBuffer.Any())
@@ -153,12 +155,15 @@ namespace CGO
         {
             if (!_initialized)
             {
-                MessageBuffer.Enqueue(ProcessNetMessage(msg));
-                return;
+                var emsg = ProcessNetMessage(msg);
+                if (emsg.MessageType != EntityMessage.Null)
+                    MessageBuffer.Enqueue(emsg);
             }
-
-            IncomingEntityMessage entMsg = ProcessNetMessage(msg);
-            _entities[entMsg.Uid].HandleNetworkMessage(entMsg);
+            else
+            {
+                IncomingEntityMessage entMsg = ProcessNetMessage(msg);
+                _entities[entMsg.Uid].HandleNetworkMessage(entMsg);
+            }
         }
 
         #region Entity Manager Networking

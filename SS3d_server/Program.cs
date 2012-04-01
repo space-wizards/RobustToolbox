@@ -1,11 +1,5 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-
-using Lidgren.Network;
-using SS13_Server.Modules;
-using ServerServices;
+using ServerServices.Log;
 
 namespace SS13_Server
 {
@@ -21,7 +15,7 @@ namespace SS13_Server
 
             if (main._server.Start())
             {
-                LogManager.Log("Server -> Can not start server", ServerServices.LogLevel.Fatal); //Not like you'd see this, haha. Perhaps later for logging.
+                LogManager.Log("Server -> Can not start server", LogLevel.Fatal); //Not like you'd see this, haha. Perhaps later for logging.
                 Environment.Exit(0);
             }
 

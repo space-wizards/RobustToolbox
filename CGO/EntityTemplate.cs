@@ -4,6 +4,7 @@ using System.Linq;
 using System.Xml.Linq;
 using ClientInterfaces.GOC;
 using SS13_Shared;
+using SS13_Shared.GO;
 
 namespace CGO
 {

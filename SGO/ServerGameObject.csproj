@@ -62,6 +62,7 @@
     <Compile Include="Component\Actor\BasicActorComponent.cs" />
     <Compile Include="Component\EntityStats\EntityStatsCompS.cs" />
     <Compile Include="Component\Inventory\Inventory.cs" />
+    <Compile Include="Component\Objectives\ObjectivesComponent.cs" />
     <Compile Include="Component\PlayerActionComp\PlayerActionCompS.cs" />
     <Compile Include="Component\StatusEffects\StatusEffectComp.cs" />
     <Compile Include="Component\Think\ThinkComponent\IThinkComponent.cs" />

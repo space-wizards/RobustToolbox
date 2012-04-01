@@ -17,17 +17,6 @@ namespace SGO
         {
         }
 
-        public override void  Update(float frameTime)
-        {
- 	        base.Update(frameTime);
-        }
-
-        protected override void ApplyDamage(Entity damager, int damageamount, DamageType damType)
-        {
-            base.ApplyDamage(damager, damageamount, damType);
-            SendHealthUpdate();
-        }
-
         public override void HandleInstantiationMessage(NetConnection netConnection)
         {
             SendHealthUpdate(netConnection);

@@ -9,7 +9,7 @@ using ClientInterfaces.UserInterface;
 using GorgonLibrary;
 using GorgonLibrary.InputDevices;
 using GorgonLibrary.Graphics;
-using SS13_Shared;
+using SS13_Shared.GO;
 
 namespace ClientServices.UserInterface.Components
 {

@@ -62,6 +62,12 @@
     <Compile Include="IoCManager.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\ServerInterfaces\ServerInterfaces.csproj">
+      <Project>{54D36F17-8D71-4DD8-8B29-12CAD489F0D9}</Project>
+      <Name>ServerInterfaces</Name>
+    </ProjectReference>
+  </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
        Other similar extension points exist, see Microsoft.Common.targets.

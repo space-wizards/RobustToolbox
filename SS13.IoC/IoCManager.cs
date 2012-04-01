@@ -14,7 +14,10 @@ namespace SS13.IoC
         static IoCManager()
         {
             ServiceTypes = new List<Type>();
-            ServiceTypes.AddRange(Assembly.LoadFrom("ClientServices.dll").GetTypes());
+            if (Assembly.GetEntryAssembly().GetName().Name == "SpaceStation13")
+                ServiceTypes.AddRange(Assembly.LoadFrom("ClientServices.dll").GetTypes());
+            else if (Assembly.GetEntryAssembly().GetName().Name == "SS13_Server")
+                ServiceTypes.AddRange(Assembly.LoadFrom("ServerServices.dll").GetTypes());
         }
 
         public static T Resolve<T>()

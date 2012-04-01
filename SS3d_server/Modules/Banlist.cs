@@ -10,6 +10,7 @@ using Lidgren.Network;
 using ServerServices;
 
 using SS13_Shared;
+using ServerServices.Log;
 
 namespace SS13_Server.Modules
 {

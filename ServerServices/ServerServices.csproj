@@ -59,7 +59,7 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Configuration\ConfigManager.cs" />
-    <Compile Include="LogManager.cs" />
+    <Compile Include="Log\LogManager.cs" />
     <Compile Include="Map\Map.cs" />
     <Compile Include="MessageLogging\MessageLogger.cs" />
     <Compile Include="MessageLogging\MessageLoggerService.cs" />

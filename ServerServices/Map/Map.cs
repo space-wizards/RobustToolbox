@@ -7,6 +7,7 @@ using Lidgren.Network;
 using SS13_Shared;
 using System.Drawing;
 using ServerInterfaces;
+using ServerServices.Log;
 
 namespace ServerServices.Map
 {

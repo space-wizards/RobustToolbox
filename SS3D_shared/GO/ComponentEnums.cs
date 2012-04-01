@@ -182,7 +182,8 @@ namespace SS13_Shared.GO
         NotIncapacitated,
         WearerIsDead,
         Live,
-        WearerIsAlive
+        WearerIsAlive,
+        KilledEntity
     }
 
     public enum Hand

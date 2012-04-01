@@ -1,6 +1,6 @@
 ﻿using System;
 
-namespace SS13_Shared
+namespace SS13_Shared.GO
 {
     /// <summary>
     /// A parameter used for instantiation of a component in an entity from a template.

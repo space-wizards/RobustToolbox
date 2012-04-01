@@ -14,6 +14,7 @@ using SS13_Server.Modules.Gamemodes;
 using SGO;
 using ServerInterfaces;
 using ServerServices.MessageLogging;
+using ServerServices.Log;
 
 namespace SS13_Server
 {

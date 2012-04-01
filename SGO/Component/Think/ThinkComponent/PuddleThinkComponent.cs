@@ -1,8 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using SS13_Shared.GO;
+﻿using ServerServices.Log;
 
 namespace SGO.Component.Think.ThinkComponent
 {
@@ -11,7 +7,7 @@ namespace SGO.Component.Think.ThinkComponent
         public override void OnBump(object sender, params object[] list)
         {
             base.OnBump(sender, list);
-            ServerServices.LogManager.Log("Puddle Bumped!");
+            LogManager.Log("Puddle Bumped!");
         }
     }
 }

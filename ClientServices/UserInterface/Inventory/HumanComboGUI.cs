@@ -62,11 +62,29 @@ namespace ClientServices.UserInterface.Inventory
         private int _blueprintsOffset;
         #endregion
 
+        #region Status UI
+        private readonly TextSprite _txtResBlunt;
+        private readonly TextSprite _txtResBurn;
+        private readonly TextSprite _txtResFreeze;
+        private readonly TextSprite _txtResPierce;
+        private readonly TextSprite _txtResShock;
+        private readonly TextSprite _txtResSlash;
+        private readonly TextSprite _txtResTox;
+
+        private readonly Sprite _sprResBlunt;
+        private readonly Sprite _sprResBurn;
+        private readonly Sprite _sprResFreeze;
+        private readonly Sprite _sprResPierce;
+        private readonly Sprite _sprResShock;
+        private readonly Sprite _sprResSlash;
+        private readonly Sprite _sprResTox; 
+        #endregion
+
         private byte _currentTab = 1; //1 = Inventory, 2 = Health, 3 = Crafting
         private bool _showTabbedWindow;
 
         private readonly TextSprite _txtDbg;
-        private readonly TextSprite _healthText;
+
         private readonly Sprite _comboBg;
         private readonly SimpleImageButton _comboClose;
         private readonly SimpleImageButton _comboOpen;
@@ -96,6 +114,24 @@ namespace ClientServices.UserInterface.Inventory
             LeftHand.Hand = Hand.Left;
             RightHand.Hand = Hand.Right;
 
+            #region Status UI
+            _txtResBlunt = new TextSprite("txtResBlunt", "Blunt : 0", _resourceManager.GetFont("CALIBRI"));
+            _txtResBurn = new TextSprite("txtResBurn", "Burn : 0", _resourceManager.GetFont("CALIBRI"));
+            _txtResFreeze = new TextSprite("txtResFreeze", "Freeze : 0", _resourceManager.GetFont("CALIBRI"));
+            _txtResPierce = new TextSprite("txtResPierce", "Pierce : 0", _resourceManager.GetFont("CALIBRI"));
+            _txtResShock = new TextSprite("txtResShock", "Shock : 0", _resourceManager.GetFont("CALIBRI"));
+            _txtResSlash = new TextSprite("txtResSlash", "Slash : 0", _resourceManager.GetFont("CALIBRI"));
+            _txtResTox = new TextSprite("txtResTox", "Toxin : 0", _resourceManager.GetFont("CALIBRI"));
+
+            _sprResBlunt = _resourceManager.GetSprite("res_blunt");
+            _sprResBurn = _resourceManager.GetSprite("res_burn");
+            _sprResFreeze = _resourceManager.GetSprite("res_freeze");
+            _sprResPierce = _resourceManager.GetSprite("res_pierce");
+            _sprResShock = _resourceManager.GetSprite("res_shock");
+            _sprResSlash = _resourceManager.GetSprite("res_slash");
+            _sprResTox = _resourceManager.GetSprite("res_tox");
+            #endregion
+
             _equipBg = _resourceManager.GetSprite("outline");
 
             _comboBg = _resourceManager.GetSprite("combo_bg");
@@ -105,7 +141,6 @@ namespace ClientServices.UserInterface.Inventory
             _tabEquip = new SimpleImageButton("tab_equip", _resourceManager);
             _tabEquip.Clicked += TabClicked;
 
-            _healthText = new TextSprite("healthText", "", _resourceManager.GetFont("CALIBRI"));
             _tabHealth = new SimpleImageButton("tab_health", _resourceManager);
             _tabHealth.Clicked += TabClicked;
 
@@ -419,7 +454,21 @@ namespace ClientServices.UserInterface.Inventory
                     case (2): //Health tab
                         {
                             #region Status
-                            _healthText.Draw();
+                            _sprResBlunt.Draw();
+                            _sprResPierce.Draw();
+                            _sprResSlash.Draw();
+                            _sprResBurn.Draw();
+                            _sprResFreeze.Draw();
+                            _sprResShock.Draw();
+                            _sprResTox.Draw();
+
+                            _txtResBlunt.Draw();
+                            _txtResPierce.Draw();
+                            _txtResSlash.Draw();
+                            _txtResBurn.Draw();
+                            _txtResFreeze.Draw();
+                            _txtResShock.Draw();
+                            _txtResTox.Draw();
                             break; 
                             #endregion
                         }
@@ -565,33 +614,37 @@ namespace ClientServices.UserInterface.Inventory
                 case (2): //Health tab
                     {
                         #region Status
-                        var healthStr = "";
+                        var resLinePos = new Point(Position.X + 30, Position.Y + 40);
 
-                        if (_playerManager == null || _playerManager.ControlledEntity == null)
-                            return;
+                        const int txtOffX = 16;
+                        const int txtOffY = -4;
 
-                        var playerEnt = _playerManager.ControlledEntity;
-                        var healthcomp = (HumanHealthComponent)playerEnt.GetComponent(ComponentFamily.Damageable); //Unsafe cast. Might not be human health comp.
+                        _sprResBlunt.Position = resLinePos;
+                        _txtResBlunt.Position = new Vector2D(resLinePos.X + txtOffX, resLinePos.Y + txtOffY);
+                        resLinePos.Offset(0, 20);
 
-                        foreach (var loc in healthcomp.DamageZones)
-                        {
-                            healthStr += loc.Location + "   --   ";
+                        _sprResPierce.Position = resLinePos;
+                        _txtResPierce.Position = new Vector2D(resLinePos.X + txtOffX, resLinePos.Y + txtOffY);
+                        resLinePos.Offset(0, 20);
 
-                            var healthPct = loc.CurrentHealth / (float)loc.MaxHealth;
+                        _sprResSlash.Position = resLinePos;
+                        _txtResSlash.Position = new Vector2D(resLinePos.X + txtOffX, resLinePos.Y + txtOffY);
+                        resLinePos.Offset(0, 20);
 
-                            if (healthPct > 0.75) healthStr += "HEALTHY (" + loc.CurrentHealth + " / " + loc.MaxHealth + ")" + Environment.NewLine;
-                            else if (healthPct > 0.50) healthStr += "INJURED (" + loc.CurrentHealth + " / " + loc.MaxHealth + ")" + Environment.NewLine;
-                            else if (healthPct > 0.25) healthStr += "WOUNDED (" + loc.CurrentHealth + " / " + loc.MaxHealth + ")" + Environment.NewLine;
-                            else if (healthPct > 0) healthStr += "CRITICAL (" + loc.CurrentHealth + " / " + loc.MaxHealth + ")" + Environment.NewLine;
-                            else healthStr += "CRIPPLED (" + loc.CurrentHealth + " / " + loc.MaxHealth + ")" + Environment.NewLine;
-                        }
+                        _sprResBurn.Position = resLinePos;
+                        _txtResBurn.Position = new Vector2D(resLinePos.X + txtOffX, resLinePos.Y + txtOffY);
+                        resLinePos.Offset(0, 20);
 
-                        healthStr += Environment.NewLine + "Total Health : " + healthcomp.GetHealth() + " / " + healthcomp.GetMaxHealth();
+                        _sprResFreeze.Position = resLinePos;
+                        _txtResFreeze.Position = new Vector2D(resLinePos.X + txtOffX, resLinePos.Y + txtOffY);
+                        resLinePos.Offset(0, 20);
 
-                        _healthText.Text = healthStr;
-                        _healthText.Color = Color.FloralWhite;
-                        _healthText.Position = new Vector2D(Position.X + 40, Position.Y + 40);
+                        _sprResShock.Position = resLinePos;
+                        _txtResShock.Position = new Vector2D(resLinePos.X + txtOffX, resLinePos.Y + txtOffY);
+                        resLinePos.Offset(0, 20);
 
+                        _sprResTox.Position = resLinePos;
+                        _txtResTox.Position = new Vector2D(resLinePos.X + txtOffX, resLinePos.Y + txtOffY);
                         break; 
                         #endregion
                     }

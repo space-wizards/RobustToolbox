@@ -51,6 +51,7 @@ namespace SS13_Shared.GO
         Burn,
         Freeze,
         Suffocation,
+        Shock,
         Untyped
     }
 

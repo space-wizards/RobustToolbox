@@ -27,6 +27,9 @@ namespace SS13_Server
         public PlayerManager PlayerManager;
         public RunLevel Runlevel {get; private set;}
 
+        // The servers current frame time
+        public DateTime Time;   
+
         //SAVE THIS SOMEWHERE ELSE
         private const int GameCountdown = 15;
         private DateTime _startAt;
@@ -50,8 +53,6 @@ namespace SS13_Server
                 return _singleton;
             }
         }
-
-        public DateTime Time;   // The server current frame time
         
         #region Server Settings
         private int _serverPort = 1212;
@@ -79,7 +80,6 @@ namespace SS13_Server
             LogManager.Initialize(ServiceManager.Singleton.Resolve<IConfigManager>().LogPath);
         }
         #endregion
-
 
         public void LoadSettings()
         {
@@ -121,7 +121,6 @@ namespace SS13_Server
                 Map.InitMap(_serverMapName);
 
                 EntityManager = new EntityManager(SS13NetServer.Singleton);
-                //playerManager = new PlayerManager();
 
                 RoundManager.Singleton.CurrentGameMode.StartGame();
             }
@@ -129,10 +128,8 @@ namespace SS13_Server
 
         public bool Start()
         {
-            //try
-            //{
                 Time = DateTime.Now;
-                //LoadDataFile(dataFilename);
+
                 LoadSettings();
 
                 if (JobHandler.Singleton.LoadDefinitionsFromFile("JobDefinitions.xml"))
@@ -161,25 +158,18 @@ namespace SS13_Server
                 
                 _active = true;
                 return false;
-            //}
-            //catch (Lidgren.Network.NetException e)
-            //{
-            //    LogManager.Log(e.ToString(), LogLevel.Error);
-            //    active = false;
-            //    return true;
-            //}
-            //catch (Exception e)
-            //{
-            //    LogManager.Log(e.ToString(), LogLevel.Error);
-            //    active = false;
-            //    return true;
-            //}
         }
 
         public void StartLobby()
         {
-            RoundManager.Singleton.Initialize(new Gamemode()); //Load Type from config or something.
-            InitModules();
+            RoundManager.Singleton.Initialize(new Gamemode());
+            InitModules(RunLevel.Lobby);
+        }
+
+        public void StartGame()
+        {
+            InitModules(RunLevel.Game);
+            PlayerManager.SendJoinGameToAll();
         }
 
         public void DisposeForRestart()
@@ -200,12 +190,6 @@ namespace SS13_Server
             StartLobby();
         }
 
-        public void StartGame()
-        {
-            InitModules(RunLevel.Game);
-            PlayerManager.SendJoinGameToAll();
-        }
-
         #region server mainloop
         
         // The main server loop
@@ -215,16 +199,15 @@ namespace SS13_Server
             {
                 try
                 {
-                    FrameStart();
-                    ProcessPackets();
-                    Update(FramePeriod);
-                    CraftingManager.Singleton.Update();
-                    var sleepTime = Time.AddMilliseconds(FramePeriod) - DateTime.Now;
+                    Time = DateTime.Now;
 
+                    ProcessPackets();
+
+                    Update(FramePeriod);
+
+                    var sleepTime = Time.AddMilliseconds(FramePeriod) - DateTime.Now;
                     if (sleepTime.TotalMilliseconds > 0)
                         Thread.Sleep(sleepTime);
-                    //else
-                    //    Console.WriteLine("Server slow by " + sleepTime.TotalMilliseconds);
                 }
                 catch (Exception e)
                 {
@@ -232,13 +215,6 @@ namespace SS13_Server
                     _active = false;
                 }
             }
-        }
-        
-
-        // called at the start of each server frame
-        public void FrameStart()
-        {
-            Time = DateTime.Now;
         }
 
         public void ProcessPackets()
@@ -301,6 +277,7 @@ namespace SS13_Server
                     ComponentManager.Singleton.Update(framePeriod);
                     Map.UpdateAtmos();
                     RoundManager.Singleton.CurrentGameMode.Update();
+                    CraftingManager.Singleton.Update();
                 }
             }
             else if (Runlevel == RunLevel.Lobby)
@@ -323,11 +300,6 @@ namespace SS13_Server
         public bool Active
         {
             get { return _active; }
-        }
-
-        public void ShutDown()
-        {
-
         }
         
         public void HandleConnectionApproval(NetConnection sender)
@@ -355,11 +327,6 @@ namespace SS13_Server
             playercountMessage.Write((byte)NetMessage.PlayerCount);
             playercountMessage.Write((byte)ClientList.Count);
             SS13NetServer.Singleton.SendToAll(playercountMessage);
-            /*
-            foreach (NetConnection conn in ClientList.Keys) //Why is this sent to everyone?
-            {
-                SS13NetServer.Singleton.SendMessage(playercountMessage, conn, NetDeliveryMethod.ReliableOrdered);
-            }*/
         }
 
         public void SendPlayerList(NetConnection connection)
@@ -614,7 +581,6 @@ namespace SS13_Server
 
         public void HandleJobListRequest(NetIncomingMessage msg)
         {
-            //var p = PlayerManager.GetSessionByConnection(msg.SenderConnection);
             var jobListMessage = SS13NetServer.Singleton.CreateMessage();
             jobListMessage.Write((byte)NetMessage.JobList);
             jobListMessage.Write(JobHandler.Singleton.GetDefinitionsString());
@@ -661,9 +627,10 @@ namespace SS13_Server
 
             // Lets also send them all the items and mobs.
             EntityManager.Singleton.SendEntities(connection);
-            //playerManager.SpawnPlayerMob(playerManager.GetSessionByConnection(connection));
+
             //Send atmos state to player
             Map.SendAtmosStateTo(connection);
+
             //Todo: Preempt this with the lobby.
             RoundManager.Singleton.SpawnPlayer(PlayerManager.GetSessionByConnection(connection)); //SPAWN PLAYER
         }
@@ -681,27 +648,5 @@ namespace SS13_Server
                 LogManager.Log(connection.RemoteEndpoint.Address + ": Tile Change Being Sent", LogLevel.Debug);
             }
         }
-
-        /*public void SendMessageToAll(NetOutgoingMessage message, NetDeliveryMethod method = NetDeliveryMethod.ReliableOrdered)
-        {
-            if (message == null)
-            {
-                return;
-            }
-            int i = clientList.Count;
-            //Console.WriteLine("Sending to all ("+i+") with size: " + message.LengthBits + " bytes");
-
-            SS13NetServer.Singleton.SendMessage(message, SS13NetServer.Singleton.Connections, method, 0);
-        }*/
-
-        /*public void SendMessageTo(NetOutgoingMessage message, NetConnection connection, NetDeliveryMethod method = NetDeliveryMethod.ReliableOrdered)
-        {
-            if (message == null || connection == null)
-            {
-                return;
-            }
-            LogManager.Log("Sending to one with size: " + message.LengthBytes + " bytes", LogLevel.Debug);
-            SS13NetServer.Singleton.SendMessage(message, connection, method);
-        }*/
     }
 }

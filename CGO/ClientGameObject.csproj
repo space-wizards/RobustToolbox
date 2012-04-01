@@ -67,6 +67,7 @@
     <Compile Include="Component\Damageable\DamageableComponent.cs" />
     <Compile Include="Component\Damageable\Health\LocationalHealth\DamageLocation.cs" />
     <Compile Include="Component\Damageable\Health\LocationalHealth\HumanHealthComponent.cs" />
+    <Compile Include="Component\EntityStats\EntityStatsCompC.cs" />
     <Compile Include="Component\Equipment\EquipmentComponent.cs" />
     <Compile Include="Component\Equipment\HumanEquipmentComponent.cs" />
     <Compile Include="Component\Equippable\EquippableComponent.cs" />

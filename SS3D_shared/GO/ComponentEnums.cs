@@ -37,7 +37,8 @@ namespace SS13_Shared.GO
         ContextMenu,
         Think, // Holds more specific scripts that need to respond to event messages
         StatusEffects, //Holds and manages status effects.
-        PlayerActions //Holds and manages player actions (abilities).
+        PlayerActions, //Holds and manages player actions (abilities).
+        EntityStats, //Holds stats an entity provides. Also Manages request concerning stats.
     }
 
     public enum ItemComponentNetMessage

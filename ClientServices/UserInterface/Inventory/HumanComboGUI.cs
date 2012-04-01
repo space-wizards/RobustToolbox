@@ -614,34 +614,35 @@ namespace ClientServices.UserInterface.Inventory
                 case (2): //Health tab
                     {
                         #region Status
-                        var resLinePos = new Point(Position.X + 30, Position.Y + 40);
+                        var resLinePos = new Point(Position.X + 35, Position.Y + 70);
 
                         const int txtOffX = 16;
                         const int txtOffY = -4;
+                        const int nxtOffY = 27;
 
                         _sprResBlunt.Position = resLinePos;
                         _txtResBlunt.Position = new Vector2D(resLinePos.X + txtOffX, resLinePos.Y + txtOffY);
-                        resLinePos.Offset(0, 20);
+                        resLinePos.Offset(0, nxtOffY);
 
                         _sprResPierce.Position = resLinePos;
                         _txtResPierce.Position = new Vector2D(resLinePos.X + txtOffX, resLinePos.Y + txtOffY);
-                        resLinePos.Offset(0, 20);
+                        resLinePos.Offset(0, nxtOffY);
 
                         _sprResSlash.Position = resLinePos;
                         _txtResSlash.Position = new Vector2D(resLinePos.X + txtOffX, resLinePos.Y + txtOffY);
-                        resLinePos.Offset(0, 20);
+                        resLinePos.Offset(0, nxtOffY);
 
                         _sprResBurn.Position = resLinePos;
                         _txtResBurn.Position = new Vector2D(resLinePos.X + txtOffX, resLinePos.Y + txtOffY);
-                        resLinePos.Offset(0, 20);
+                        resLinePos.Offset(0, nxtOffY);
 
                         _sprResFreeze.Position = resLinePos;
                         _txtResFreeze.Position = new Vector2D(resLinePos.X + txtOffX, resLinePos.Y + txtOffY);
-                        resLinePos.Offset(0, 20);
+                        resLinePos.Offset(0, nxtOffY);
 
                         _sprResShock.Position = resLinePos;
                         _txtResShock.Position = new Vector2D(resLinePos.X + txtOffX, resLinePos.Y + txtOffY);
-                        resLinePos.Offset(0, 20);
+                        resLinePos.Offset(0, nxtOffY);
 
                         _sprResTox.Position = resLinePos;
                         _txtResTox.Position = new Vector2D(resLinePos.X + txtOffX, resLinePos.Y + txtOffY);

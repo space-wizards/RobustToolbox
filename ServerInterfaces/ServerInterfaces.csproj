@@ -60,6 +60,8 @@
     <Compile Include="MessageLogging\IMessageLogger.cs" />
     <Compile Include="IPlayerSession.cs" />
     <Compile Include="IService.cs" />
+    <Compile Include="Objectives\IObjective.cs" />
+    <Compile Include="Objectives\IObjectiveSet.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
   <ItemGroup>

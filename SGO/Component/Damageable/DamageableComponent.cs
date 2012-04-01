@@ -14,6 +14,8 @@ namespace SGO
     {
         public float maxHealth = 100;
         public float currentHealth = 100;
+        private List<DamageHistoryItem> _damageHistory = new List<DamageHistoryItem>(); 
+
 
         protected bool isDead = false;
 
@@ -95,6 +97,7 @@ namespace SGO
             {
                 int damagetoapply = Math.Max(damageamount - GetArmorValue(damType), 0); //No negative damage right now
                 currentHealth -= damagetoapply;
+                DamagedBy(damager, damageamount, damType);
             }
             SendHealthUpdate();
         }
@@ -116,7 +119,32 @@ namespace SGO
         {
             if (!isDead) isDead = true;
 
+            //Send a message that whatever last damaged us killed us. 
+            _damageHistory.Last().Damager.SendMessage(this, ComponentMessageType.KilledEntity, this);
+
             Owner.SendMessage(this, ComponentMessageType.Die);
+        }
+
+        protected void DamagedBy(Entity damager, int amount, DamageType damType)
+        {
+            _damageHistory.Add(new DamageHistoryItem(damager, amount, damType));
+        }
+
+    }
+
+    public struct DamageHistoryItem
+    {
+        public Entity Damager;
+        public int Amount;
+        public DamageType DamType;
+        public DateTime When;
+
+        public DamageHistoryItem(Entity damager, int amount, DamageType damType)
+        {
+            Damager = damager;
+            Amount = amount;
+            DamType = damType;
+            When = DateTime.Now;
         }
     }
 }

@@ -1,4 +1,5 @@
 ﻿using System.Collections.Generic;
+using SS13_Shared.GO;
 using SS13_Shared;
 
 namespace ClientInterfaces.GOC

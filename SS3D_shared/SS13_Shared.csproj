@@ -111,6 +111,7 @@
     <Compile Include="BoundKeyEventArgs.cs" />
     <Compile Include="GO\ComponentParameter.cs" />
     <Compile Include="GO\ComponentReplyMessage.cs" />
+    <Compile Include="GO\Server\ServerDelegates.cs" />
     <Compile Include="Objectives\ObjectiveParameterType.cs" />
     <Compile Include="Objectives\ObjectiveType.cs" />
     <Compile Include="PlayerActionEnum.cs" />
@@ -127,6 +128,7 @@
     <Compile Include="JobHandler.cs" />
     <Compile Include="KeyFunctions.cs" />
     <Compile Include="ProfilerEnums.cs" />
+    <Compile Include="ServerEnums\RunLevel.cs" />
     <Compile Include="ServicesEnum.cs" />
     <Compile Include="SessionStatusEnum.cs" />
     <Compile Include="BodypartEnum.cs" />

@@ -1,12 +1,10 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
+using Lidgren.Network;
 using SS13_Shared;
 using SS13_Shared.GO;
-using ServerServices;
-using ServerInterfaces;
-using Lidgren.Network;
+using ServerInterfaces.GameObject;
 
 namespace SGO
 {
@@ -15,7 +13,6 @@ namespace SGO
         protected List<DamageLocation> damageZones = new List<DamageLocation>();
 
         public HumanHealthComponent()
-            : base()
         {
             damageZones.Add(new DamageLocation(BodyPart.Left_Arm, 50));
             damageZones.Add(new DamageLocation(BodyPart.Right_Arm, 50));
@@ -34,14 +31,14 @@ namespace SGO
             SendHealthUpdate(netConnection);
         }
 
-        protected void ApplyDamage(Entity damager, int damageamount, DamageType damType, BodyPart targetLocation)
+        protected void ApplyDamage(IEntity damager, int damageamount, DamageType damType, BodyPart targetLocation)
         {
             DamagedBy(damager, damageamount, damType);
 
             int actualDamage = damageamount - GetArmorValue(damType);
 
             if (GetHealth() - actualDamage < 0) //No negative total health.
-                actualDamage = (int)GetHealth();
+                actualDamage = (int) GetHealth();
 
             if (damageZones.Exists(x => x.location == targetLocation))
             {
@@ -67,11 +64,11 @@ namespace SGO
         {
             if (damageAmount < 1)
                 return;
-            double prob = (0.1f * damageAmount);
-            switch(damageType)
+            double prob = (0.1f*damageAmount);
+            switch (damageType)
             {
                 case DamageType.Toxin:
-                case DamageType.Burn: 
+                case DamageType.Burn:
                 case DamageType.Untyped:
                 case DamageType.Suffocation:
                 case DamageType.Freeze:
@@ -112,23 +109,24 @@ namespace SGO
             if (prob > 1)
             {
                 var statuscomp = (StatusEffectComp) Owner.GetComponent(ComponentFamily.StatusEffects);
-                statuscomp.AddEffect("Bleeding", Convert.ToUInt32(prob * 10));
+                statuscomp.AddEffect("Bleeding", Convert.ToUInt32(prob*10));
             }
         }
 
-        protected override void ApplyDamage(Entity damager, int damageamount, DamageType damType)
+        protected override void ApplyDamage(IEntity damager, int damageamount, DamageType damType)
         {
             ApplyDamage(damager, damageamount, damType, BodyPart.Torso); //Apply randomly instead of chest only
         }
 
         protected override void ApplyDamage(int p)
         {
-            ApplyDamage(Owner, p, DamageType.Untyped, BodyPart.Torso); ; //Apply randomly instead of chest only
+            ApplyDamage(Owner, p, DamageType.Untyped, BodyPart.Torso);
+            ; //Apply randomly instead of chest only
         }
 
         public override void HandleNetworkMessage(IncomingEntityComponentMessage message, NetConnection client)
         {
-            ComponentMessageType type = (ComponentMessageType)message.messageParameters[0];
+            var type = (ComponentMessageType) message.MessageParameters[0];
 
             switch (type)
             {
@@ -138,9 +136,10 @@ namespace SGO
             }
         }
 
-        public override ComponentReplyMessage RecieveMessage(object sender, ComponentMessageType type, params object[] list)
+        public override ComponentReplyMessage RecieveMessage(object sender, ComponentMessageType type,
+                                                             params object[] list)
         {
-            var reply = base.RecieveMessage(sender, type, list);
+            ComponentReplyMessage reply = base.RecieveMessage(sender, type, list);
 
             if (sender == this)
                 return ComponentReplyMessage.Empty;
@@ -148,23 +147,25 @@ namespace SGO
             switch (type)
             {
                 case ComponentMessageType.GetCurrentLocationHealth:
-                    BodyPart location = (BodyPart)list[0];
+                    var location = (BodyPart) list[0];
                     if (damageZones.Exists(x => x.location == location))
                     {
                         DamageLocation dmgLoc = damageZones.First(x => x.location == location);
-                        ComponentReplyMessage reply1 = new ComponentReplyMessage(ComponentMessageType.CurrentLocationHealth, location, dmgLoc.UpdateTotalHealth(), dmgLoc.maxHealth);
+                        var reply1 = new ComponentReplyMessage(ComponentMessageType.CurrentLocationHealth, location,
+                                                               dmgLoc.UpdateTotalHealth(), dmgLoc.maxHealth);
                         reply = reply1;
                     }
                     break;
                 case ComponentMessageType.GetCurrentHealth:
-                    ComponentReplyMessage reply2 = new ComponentReplyMessage(ComponentMessageType.CurrentHealth, GetHealth(), GetMaxHealth());
+                    var reply2 = new ComponentReplyMessage(ComponentMessageType.CurrentHealth, GetHealth(),
+                                                           GetMaxHealth());
                     reply = reply2;
                     break;
                 case ComponentMessageType.Damage:
-                    if(list.Count() > 3) //We also have a target location
-                        ApplyDamage((Entity)list[0], (int)list[1], (DamageType)list[2], (BodyPart)list[3]);
-                    else//We dont have a target location
-                        ApplyDamage((Entity)list[0], (int)list[1], (DamageType)list[2]);
+                    if (list.Count() > 3) //We also have a target location
+                        ApplyDamage((Entity) list[0], (int) list[1], (DamageType) list[2], (BodyPart) list[3]);
+                    else //We dont have a target location
+                        ApplyDamage((Entity) list[0], (int) list[1], (DamageType) list[2]);
                     break;
             }
 
@@ -185,22 +186,23 @@ namespace SGO
         {
             SendHealthUpdate(null);
         }
-        
+
         protected override void SendHealthUpdate(NetConnection client)
         {
             foreach (DamageLocation loc in damageZones)
             {
-                List<object> newUp = new List<object>();
+                var newUp = new List<object>();
                 newUp.Add(ComponentMessageType.HealthStatus);
                 newUp.Add(loc.location);
                 newUp.Add(loc.damageIndex.Count);
                 newUp.Add(loc.maxHealth);
-                foreach (KeyValuePair<DamageType, int> damagePair in loc.damageIndex)
+                foreach (var damagePair in loc.damageIndex)
                 {
                     newUp.Add(damagePair.Key);
                     newUp.Add(damagePair.Value);
                 }
-                Owner.SendComponentNetworkMessage(this, Lidgren.Network.NetDeliveryMethod.ReliableOrdered, client != null ? client : null, newUp.ToArray());
+                Owner.SendComponentNetworkMessage(this, NetDeliveryMethod.ReliableOrdered,
+                                                  client != null ? client : null, newUp.ToArray());
             }
         }
     }

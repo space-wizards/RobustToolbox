@@ -1,49 +1,38 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
+﻿using System.Xml.Linq;
+using Lidgren.Network;
 using SS13_Shared;
 using SS13_Shared.GO;
-using System.Xml.Linq;
-using Lidgren.Network;
+using ServerInterfaces.GameObject;
 
 namespace SGO
 {
     public class GameObjectComponent : IGameObjectComponent
     {
         /// <summary>
-        /// The entity that owns this component
-        /// </summary>
-        private Entity m_owner;
-        public Entity Owner
-        {
-            get { return m_owner; }
-            set { m_owner = value; }
-        }
-
-        /// <summary>
         /// This is the family of the component. This should be set directly in all inherited components' constructors.
         /// </summary>
         protected ComponentFamily family = ComponentFamily.Generic;
+
+        #region IGameObjectComponent Members
+
+        public IEntity Owner { get; set; }
+
         public ComponentFamily Family
         {
-            get
-            {
-                return family;
-            }
-            set
-            { family = value; }
+            get { return family; }
+            set { family = value; }
         }
-        
+
         /// <summary>
         /// Recieve a message from another component within the owner entity
         /// </summary>
         /// <param name="sender">the component that sent the message</param>
         /// <param name="type">the message type in CGO.MessageType</param>
         /// <param name="list">parameters list</param>
-        public virtual ComponentReplyMessage RecieveMessage(object sender, ComponentMessageType type, params object[] list)
+        public virtual ComponentReplyMessage RecieveMessage(object sender, ComponentMessageType type,
+                                                            params object[] list)
         {
-            var reply = ComponentReplyMessage.Empty;
+            ComponentReplyMessage reply = ComponentReplyMessage.Empty;
 
             if (sender == this) //Don't listen to our own messages!
                 return ComponentReplyMessage.Empty;
@@ -55,7 +44,6 @@ namespace SGO
         /// </summary>
         public virtual void Shutdown()
         {
-
         }
 
         /// <summary>
@@ -76,7 +64,7 @@ namespace SGO
         /// by an entity without being in the ComponentManager.
         /// </summary>
         /// <param name="owner"></param>
-        public virtual void OnAdd(Entity owner)
+        public virtual void OnAdd(IEntity owner)
         {
             Owner = owner;
             //Send us to the manager so it knows we're active
@@ -89,7 +77,6 @@ namespace SGO
         /// <param name="frameTime"></param>
         public virtual void Update(float frameTime)
         {
-
         }
 
         /// <summary>
@@ -100,10 +87,10 @@ namespace SGO
         /// <param name="parameter">ComponentParameter object describing the parameter and the value</param>
         public virtual void SetParameter(ComponentParameter parameter)
         {
-            switch(parameter.MemberName)
+            switch (parameter.MemberName)
             {
                 case "ExtendedParameters":
-                    HandleExtendedParameters((XElement)parameter.Parameter);
+                    HandleExtendedParameters((XElement) parameter.Parameter);
                     break;
             }
         }
@@ -114,21 +101,20 @@ namespace SGO
         /// <param name="message">the message object</param>
         public virtual void HandleNetworkMessage(IncomingEntityComponentMessage message, NetConnection client)
         {
-
         }
 
         /// <summary>
         /// Handles a message that a client has just instantiated a component
         /// </summary>
         /// <param name="netConnection"></param>
-        public virtual void HandleInstantiationMessage(Lidgren.Network.NetConnection netConnection)
+        public virtual void HandleInstantiationMessage(NetConnection netConnection)
         {
-
         }
+
+        #endregion
 
         public virtual void HandleExtendedParameters(XElement extendedParameters)
         {
-
         }
     }
 }

@@ -21,7 +21,7 @@ namespace CGO
         private bool _initialized;
         private int _lastId;
 
-        private Queue<IncomingEntityMessage> MessageBuffer = new Queue<IncomingEntityMessage>();
+        private Queue<ClientIncomingEntityMessage> MessageBuffer = new Queue<ClientIncomingEntityMessage>();
 
         public EntityTemplateDatabase TemplateDb { get; private set; }
 
@@ -135,14 +135,14 @@ namespace CGO
 
             while (MessageBuffer.Any())
             {
-                IncomingEntityMessage entMsg = MessageBuffer.Dequeue();
+                ClientIncomingEntityMessage entMsg = MessageBuffer.Dequeue();
                 _entities[entMsg.Uid].HandleNetworkMessage(entMsg);
             }
 
             MessageBuffer.Clear(); //Should be empty at this point anyway.
         }
 
-        private IncomingEntityMessage ProcessNetMessage(NetIncomingMessage msg)
+        private ClientIncomingEntityMessage ProcessNetMessage(NetIncomingMessage msg)
         {
             return _entityNetworkManager.HandleEntityNetworkMessage(msg);
         }
@@ -162,7 +162,7 @@ namespace CGO
             }
             else
             {
-                IncomingEntityMessage entMsg = ProcessNetMessage(msg);
+                ClientIncomingEntityMessage entMsg = ProcessNetMessage(msg);
                 _entities[entMsg.Uid].HandleNetworkMessage(entMsg);
             }
         }

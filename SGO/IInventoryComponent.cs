@@ -1,11 +1,6 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-
-namespace SGO
+﻿namespace SGO
 {
-    interface IInventoryComponent
+    internal interface IInventoryComponent
     {
     }
 }

@@ -8,6 +8,8 @@ using SS13_Shared;
 using System.Drawing;
 using ServerInterfaces;
 using ServerServices.Log;
+using SS13.IoC;
+using ServerInterfaces.Network;
 
 namespace ServerServices.Map
 {
@@ -128,14 +130,14 @@ namespace ServerServices.Map
             if (!IsSaneArrayPosition(x, y))
                 return;
 
-            NetOutgoingMessage message = SS13NetServer.Singleton.CreateMessage();
+            NetOutgoingMessage message = IoCManager.Resolve<ISS13NetServer>().CreateMessage();
             message.Write((byte)NetMessage.MapMessage);
             message.Write((byte)MapMessage.TurfUpdate);
             message.Write((short)x);
             message.Write((short)y);
             message.Write((byte)tileArray[x, y].tileType);
             message.Write((byte)tileArray[x, y].tileState);
-            SS13NetServer.Singleton.SendToAll(message);
+            IoCManager.Resolve<ISS13NetServer>().SendToAll(message);
         }
         #endregion
 
@@ -361,14 +363,14 @@ namespace ServerServices.Map
                 else
                     recordsInPacket = recordsCount;
                 recordsCount -= recordsInPacket;
-                NetOutgoingMessage message = SS13NetServer.Singleton.CreateMessage();
+                NetOutgoingMessage message = IoCManager.Resolve<ISS13NetServer>().CreateMessage();
                 message.Write((byte)NetMessage.AtmosDisplayUpdate);
                 message.Write(recordsInPacket);
                 for (int i = 0 + position; i < recordsInPacket + position; i++)
                 {
                     records[i].pack(message);
                 }
-                SS13NetServer.Singleton.SendToAll(message, NetDeliveryMethod.Unreliable);// Gas updates aren't a big deal.
+                IoCManager.Resolve<ISS13NetServer>().SendToAll(message, NetDeliveryMethod.Unreliable);// Gas updates aren't a big deal.
                 LogManager.Log("Sending Gas update with " + recordsInPacket + " records\n", LogLevel.Debug);
                 position += recordsInPacket;
             }
@@ -376,7 +378,7 @@ namespace ServerServices.Map
 
         public void SendAtmosStateTo(NetConnection client)
         {
-            NetOutgoingMessage message = SS13NetServer.Singleton.CreateMessage();
+            NetOutgoingMessage message = IoCManager.Resolve<ISS13NetServer>().CreateMessage();
             message.Write((byte)NetMessage.AtmosDisplayUpdate);
 
             List<AtmosRecord> records = new List<AtmosRecord>();
@@ -397,7 +399,7 @@ namespace ServerServices.Map
             {
                 rec.pack(message);
             }
-            SS13NetServer.Singleton.SendMessage(message, client, NetDeliveryMethod.Unreliable);// Gas updates aren't a big deal.
+            IoCManager.Resolve<ISS13NetServer>().SendMessage(message, client, NetDeliveryMethod.Unreliable);// Gas updates aren't a big deal.
             //LogManager.Log("Sending Gas update to " + SS13Server.Singleton.playerManager.GetSessionByConnection(client).name + "\n", LogLevel.Debug);
         }
 
@@ -483,7 +485,7 @@ namespace ServerServices.Map
         #region networking
         public NetOutgoingMessage CreateMapMessage(MapMessage messageType)
         {
-            NetOutgoingMessage message = SS13NetServer.Singleton.CreateMessage();
+            NetOutgoingMessage message = IoCManager.Resolve<ISS13NetServer>().CreateMessage();
             message.Write((byte)NetMessage.MapMessage);
             message.Write((byte)messageType);
             return message;
@@ -495,7 +497,7 @@ namespace ServerServices.Map
         /// <param name="message"></param>
         public void SendMessage(NetOutgoingMessage message)
         {
-            SS13NetServer.Singleton.SendToAll(message);
+            IoCManager.Resolve<ISS13NetServer>().SendToAll(message);
         }
         #endregion
 

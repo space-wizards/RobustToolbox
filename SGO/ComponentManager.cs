@@ -1,24 +1,14 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
 using SS13_Shared.GO;
+using ServerInterfaces.GameObject;
 
 namespace SGO
 {
     public class ComponentManager
     {
         private static ComponentManager singleton;
-        public static ComponentManager Singleton
-        {
-            get
-            {
-                if (singleton == null)
-                    singleton = new ComponentManager();
-                return singleton;
-            }
-            private set { }
-        }
+
         /// <summary>
         /// Dictionary of components -- this is the master list.
         /// </summary>
@@ -30,10 +20,21 @@ namespace SGO
         public ComponentManager()
         {
             components = new Dictionary<ComponentFamily, List<IGameObjectComponent>>();
-            foreach (ComponentFamily family in Enum.GetValues(typeof(ComponentFamily)))
+            foreach (ComponentFamily family in Enum.GetValues(typeof (ComponentFamily)))
             {
                 components.Add(family, new List<IGameObjectComponent>());
             }
+        }
+
+        public static ComponentManager Singleton
+        {
+            get
+            {
+                if (singleton == null)
+                    singleton = new ComponentManager();
+                return singleton;
+            }
+            private set { }
         }
 
         /// <summary>
@@ -60,7 +61,7 @@ namespace SGO
         /// <param name="frameTime">Time since the last frame was rendered.</param>
         public void Update(float frameTime)
         {
-            foreach (ComponentFamily family in Enum.GetValues(typeof(ComponentFamily)))
+            foreach (ComponentFamily family in Enum.GetValues(typeof (ComponentFamily)))
             {
                 foreach (IGameObjectComponent component in components[family])
                 {

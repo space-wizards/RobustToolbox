@@ -4,49 +4,53 @@ using System.Linq;
 using Lidgren.Network;
 using SS13_Shared;
 using ServerInterfaces;
-using SGO;
+using ServerInterfaces.GameObject;
 using ServerServices.Log;
+using ServerInterfaces.Player;
 
-namespace SS13_Server.Modules
+namespace ServerServices.Player
 {
-    public class PlayerManager: IService
+    public class PlayerManager: IPlayerManager
     {
         /* This class will manage connected player sessions. */
         public Dictionary<int, PlayerSession> playerSessions;
-
-        public ServerServiceType ServiceType { get { return ServerServiceType.PlayerManager; } }
+        public ISS13Server server;
 
         public PlayerManager()
         {
             playerSessions = new Dictionary<int, PlayerSession>();
             //We can actually query this by client connection or whatever we want using linq
+        }
 
+        public void Initialize(ISS13Server _server)
+        {
+            server = _server;
         }
 
         public void NewSession(NetConnection client)
         {
-            var session = new PlayerSession(client);
+            var session = new PlayerSession(client, this);
             playerSessions.Add(playerSessions.Values.Count + 1, session);
         }
 
-        public void SpawnPlayerMob(PlayerSession s)
+        public void SpawnPlayerMob(IPlayerSession s)
         {
             //Spawn the player's entity. There's probably a much better place to do this.
-            var a = EntityManager.Singleton.SpawnEntity("HumanMob");
+            IEntity a = server.EntityManager.SpawnEntity("HumanMob");
             var human = a;
             a.Translate(new Vector2(160, 160));
             if (s.assignedJob != null)
             {
-                foreach (var newItem in s.assignedJob.SpawnEquipment.Select(def => EntityManager.Singleton.SpawnEntity(def.ObjectType)))
+                foreach (var newItem in s.assignedJob.SpawnEquipment.Select(def => server.EntityManager.SpawnEntity(def.ObjectType)))
                 {
-                    newItem.Translate(human.position); //This is not neccessary once the equipment component is built.
+                    newItem.Translate(human.Position); //This is not neccessary once the equipment component is built.
                     human.SendMessage(this, SS13_Shared.GO.ComponentMessageType.EquipItem, newItem);
                 }
             }
             s.AttachToEntity(a);
         }
 
-        public PlayerSession GetSessionByConnection(NetConnection client)
+        public IPlayerSession GetSessionByConnection(NetConnection client)
         {
             var sessions =
                 from s in playerSessions
@@ -56,7 +60,7 @@ namespace SS13_Server.Modules
             return sessions.First(); // Should only be one session per client. Returns that session, in theory.
         }
 
-        public PlayerSession GetSessionByIp(string ip)
+        public IPlayerSession GetSessionByIp(string ip)
         {
             var sessions =
                 from s in playerSessions
@@ -69,7 +73,7 @@ namespace SS13_Server.Modules
         public void HandleNetworkMessage(NetIncomingMessage message)
         {
             // Pass message on to session
-            PlayerSession s = GetSessionByConnection(message.SenderConnection);
+            IPlayerSession s = GetSessionByConnection(message.SenderConnection);
             s.HandleNetworkMessage(message);
         }
 
@@ -88,6 +92,14 @@ namespace SS13_Server.Modules
             foreach (var s in playerSessions.Values)
             {
                 s.JoinGame();
+            }
+        }
+
+        public void SendJoinLobbyToAll()
+        {
+            foreach(var s in playerSessions.Values)
+            {
+                s.JoinLobby();
             }
         }
 

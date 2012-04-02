@@ -7,6 +7,12 @@ using ServerServices;
 using System.Drawing;
 using SGO;
 using SS13_Shared.GO;
+using ServerServices.Log;
+using SS13.IoC;
+using ServerInterfaces.Network;
+using ServerInterfaces;
+using ServerInterfaces.Player;
+using ServerInterfaces.GameObject;
 
 namespace SS13_Server.Modules
 {
@@ -79,9 +85,9 @@ namespace SS13_Server.Modules
             float yRcv = msg.ReadFloat();
             float rotRcv = msg.ReadFloat();
 
-            PlayerSession session = SS13Server.Singleton.PlayerManager.GetSessionByConnection(msg.SenderConnection);
+            IPlayerSession session = IoCManager.Resolve<IPlayerManager>().GetSessionByConnection(msg.SenderConnection);
             PlacementInformation permission = GetPermission(session.attachedEntity.Uid, alignRcv);
-            Boolean isAdmin = SS13Server.Singleton.PlayerManager.GetSessionByConnection(msg.SenderConnection).adminPermissions.isAdmin;
+            Boolean isAdmin = IoCManager.Resolve<IPlayerManager>().GetSessionByConnection(msg.SenderConnection).adminPermissions.isAdmin;
 
             if (permission != null || true) //isAdmin)
             {
@@ -106,7 +112,7 @@ namespace SS13_Server.Modules
 
                 if (!isTile)
                 {
-                    Entity created = EntityManager.Singleton.SpawnEntityAt(entityTemplateName, new Vector2(xRcv, yRcv));
+                    IEntity created = EntityManager.Singleton.SpawnEntityAt(entityTemplateName, new Vector2(xRcv, yRcv));
                     if(created != null)
                         created.Translate(new Vector2(xRcv, yRcv), rotRcv);
                 }
@@ -120,20 +126,20 @@ namespace SS13_Server.Modules
             else //They are not allowed to request this. Send 'PlacementFailed'. TBA
             {
                 LogManager.Log("Invalid placement request: "
-                    + SS13Server.Singleton.PlayerManager.GetSessionByConnection(msg.SenderConnection).name +
-                    " - " + SS13Server.Singleton.PlayerManager.GetSessionByConnection(msg.SenderConnection).attachedEntity.Uid.ToString() +
+                    + IoCManager.Resolve<IPlayerManager>().GetSessionByConnection(msg.SenderConnection).name +
+                    " - " + IoCManager.Resolve<IPlayerManager>().GetSessionByConnection(msg.SenderConnection).attachedEntity.Uid.ToString() +
                     " - " + alignRcv.ToString());
 
-                SendPlacementCancel(SS13Server.Singleton.PlayerManager.GetSessionByConnection(msg.SenderConnection).attachedEntity);
+                SendPlacementCancel(IoCManager.Resolve<IPlayerManager>().GetSessionByConnection(msg.SenderConnection).attachedEntity);
             }
         }
 
         /// <summary>
         ///  Places mob in entity placement mode with given settings.
         /// </summary>
-        public void SendPlacementBegin(Entity mob, ushort range, string objectType, PlacementOption alignOption)
+        public void SendPlacementBegin(IEntity mob, ushort range, string objectType, PlacementOption alignOption)
         {
-            var message = SS13NetServer.Singleton.CreateMessage();
+            var message = IoCManager.Resolve<ISS13NetServer>().CreateMessage();
             message.Write((byte)NetMessage.PlacementManagerMessage);
             message.Write((byte)PlacementManagerMessage.StartPlacement);
             message.Write(range);
@@ -143,15 +149,15 @@ namespace SS13_Server.Modules
 
             var reply = mob.SendMessage(this, ComponentFamily.Actor, ComponentMessageType.GetActorConnection);
             if (reply.MessageType == ComponentMessageType.ReturnActorConnection)
-                SS13NetServer.Singleton.SendMessage(message, (NetConnection)reply.ParamsList[0], NetDeliveryMethod.ReliableOrdered);
+                IoCManager.Resolve<ISS13NetServer>().SendMessage(message, (NetConnection)reply.ParamsList[0], NetDeliveryMethod.ReliableOrdered);
         }
 
         /// <summary>
         ///  Places mob in tile placement mode with given settings.
         /// </summary>
-        public void SendPlacementBegin(Entity mob, ushort range, TileType tileType, PlacementOption alignOption)
+        public void SendPlacementBegin(IEntity mob, ushort range, TileType tileType, PlacementOption alignOption)
         {
-            var message = SS13NetServer.Singleton.CreateMessage();
+            var message = IoCManager.Resolve<ISS13NetServer>().CreateMessage();
             message.Write((byte)NetMessage.PlacementManagerMessage);
             message.Write((byte)PlacementManagerMessage.StartPlacement);
             message.Write(range);
@@ -161,27 +167,27 @@ namespace SS13_Server.Modules
 
             var reply = mob.SendMessage(this, ComponentFamily.Actor,ComponentMessageType.GetActorConnection);
             if (reply.MessageType == ComponentMessageType.ReturnActorConnection)
-                SS13NetServer.Singleton.SendMessage(message, (NetConnection)reply.ParamsList[0], NetDeliveryMethod.ReliableOrdered);
+                IoCManager.Resolve<ISS13NetServer>().SendMessage(message, (NetConnection)reply.ParamsList[0], NetDeliveryMethod.ReliableOrdered);
         }
 
         /// <summary>
         ///  Cancels object placement mode for given mob.
         /// </summary>
-        public void SendPlacementCancel(Entity mob)
+        public void SendPlacementCancel(IEntity mob)
         {
-            var message = SS13NetServer.Singleton.CreateMessage();
+            var message = IoCManager.Resolve<ISS13NetServer>().CreateMessage();
             message.Write((byte)NetMessage.PlacementManagerMessage);
             message.Write((byte)PlacementManagerMessage.CancelPlacement);
 
             var reply = mob.SendMessage(this, ComponentFamily.Actor, ComponentMessageType.GetActorConnection);
             if (reply.MessageType == ComponentMessageType.ReturnActorConnection)
-                SS13NetServer.Singleton.SendMessage(message, (NetConnection)reply.ParamsList[0], NetDeliveryMethod.ReliableOrdered);
+                IoCManager.Resolve<ISS13NetServer>().SendMessage(message, (NetConnection)reply.ParamsList[0], NetDeliveryMethod.ReliableOrdered);
         }
 
         /// <summary>
         ///  Gives Mob permission to place entity and places it in object placement mode.
         /// </summary>
-        public void StartBuilding(Entity mob, ushort range, string objectType, PlacementOption alignOption)
+        public void StartBuilding(IEntity mob, ushort range, string objectType, PlacementOption alignOption)
         {
             AssignBuildPermission(mob, range, objectType, alignOption);
             SendPlacementBegin(mob, range, objectType, alignOption);
@@ -190,7 +196,7 @@ namespace SS13_Server.Modules
         /// <summary>
         ///  Gives Mob permission to place tile and places it in object placement mode.
         /// </summary>
-        public void StartBuilding(Entity mob, ushort range, TileType tileType, PlacementOption alignOption)
+        public void StartBuilding(IEntity mob, ushort range, TileType tileType, PlacementOption alignOption)
         {
             AssignBuildPermission(mob, range, tileType, alignOption);
             SendPlacementBegin(mob, range, tileType, alignOption);
@@ -199,7 +205,7 @@ namespace SS13_Server.Modules
         /// <summary>
         ///  Revokes open placement Permission and cancels object placement mode.
         /// </summary>
-        public void CancelBuilding(Entity mob)
+        public void CancelBuilding(IEntity mob)
         {
             RevokeAllBuildPermissions(mob);
             SendPlacementCancel(mob);
@@ -208,7 +214,7 @@ namespace SS13_Server.Modules
         /// <summary>
         ///  Gives a mob a permission to place a given Entity.
         /// </summary>
-        public void AssignBuildPermission(Entity mob, ushort range, string objectType, PlacementOption alignOption)
+        public void AssignBuildPermission(IEntity mob, ushort range, string objectType, PlacementOption alignOption)
         {
             PlacementInformation newPermission = new PlacementInformation();
             newPermission.MobUid = mob.Uid;
@@ -235,7 +241,7 @@ namespace SS13_Server.Modules
         /// <summary>
         ///  Gives a mob a permission to place a given Tile.
         /// </summary>
-        public void AssignBuildPermission(Entity mob, ushort range, TileType tileType, PlacementOption alignOption)
+        public void AssignBuildPermission(IEntity mob, ushort range, TileType tileType, PlacementOption alignOption)
         {
             PlacementInformation newPermission = new PlacementInformation();
             newPermission.MobUid = mob.Uid;
@@ -262,7 +268,7 @@ namespace SS13_Server.Modules
         /// <summary>
         ///  Removes all building Permissions for given mob.
         /// </summary>
-        public void RevokeAllBuildPermissions(Entity mob)
+        public void RevokeAllBuildPermissions(IEntity mob)
         {
             var mobPermissions = from PlacementInformation permission in BuildPermissions
                                  where permission.MobUid == mob.Uid

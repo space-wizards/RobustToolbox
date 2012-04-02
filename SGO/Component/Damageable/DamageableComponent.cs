@@ -1,26 +1,23 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
+using Lidgren.Network;
 using SS13_Shared;
 using SS13_Shared.GO;
-using ServerServices;
-using ServerInterfaces;
-using Lidgren.Network;
+using ServerInterfaces.GameObject;
 
 namespace SGO
 {
     public class DamageableComponent : GameObjectComponent
     {
-        public float maxHealth = 100;
+        private readonly List<DamageHistoryItem> _damageHistory = new List<DamageHistoryItem>();
         public float currentHealth = 100;
-        private List<DamageHistoryItem> _damageHistory = new List<DamageHistoryItem>(); 
 
 
-        protected bool isDead = false;
+        protected bool isDead;
+        public float maxHealth = 100;
 
         public DamageableComponent()
-            :base()
         {
             family = ComponentFamily.Damageable;
         }
@@ -30,9 +27,10 @@ namespace SGO
             SendHealthUpdate(netConnection);
         }
 
-        public override ComponentReplyMessage RecieveMessage(object sender, ComponentMessageType type, params object[] list)
+        public override ComponentReplyMessage RecieveMessage(object sender, ComponentMessageType type,
+                                                             params object[] list)
         {
-            var reply = base.RecieveMessage(sender, type, list);
+            ComponentReplyMessage reply = base.RecieveMessage(sender, type, list);
 
             if (sender == this)
                 return ComponentReplyMessage.Empty;
@@ -40,10 +38,11 @@ namespace SGO
             switch (type)
             {
                 case ComponentMessageType.Damage:
-                    ApplyDamage((Entity)list[0], (int)list[1], (DamageType)list[2]);
+                    ApplyDamage((Entity) list[0], (int) list[1], (DamageType) list[2]);
                     break;
                 case ComponentMessageType.GetCurrentHealth:
-                    ComponentReplyMessage reply2 = new ComponentReplyMessage(ComponentMessageType.CurrentHealth, GetHealth(), GetMaxHealth());
+                    var reply2 = new ComponentReplyMessage(ComponentMessageType.CurrentHealth, GetHealth(),
+                                                           GetMaxHealth());
                     reply = reply2;
                     break;
             }
@@ -53,7 +52,7 @@ namespace SGO
 
         public override void HandleNetworkMessage(IncomingEntityComponentMessage message, NetConnection client)
         {
-            ComponentMessageType type = (ComponentMessageType)message.messageParameters[0];
+            var type = (ComponentMessageType) message.MessageParameters[0];
 
             switch (type)
             {
@@ -87,13 +86,15 @@ namespace SGO
                     Die();
                 }
 
-                Owner.SendComponentNetworkMessage(this, Lidgren.Network.NetDeliveryMethod.ReliableOrdered, client != null ? client : null, ComponentMessageType.HealthStatus, isDead);
+                Owner.SendComponentNetworkMessage(this, NetDeliveryMethod.ReliableOrdered,
+                                                  client != null ? client : null, ComponentMessageType.HealthStatus,
+                                                  isDead);
             }
         }
 
-        protected virtual void ApplyDamage(Entity damager, int damageamount, DamageType damType)
+        protected virtual void ApplyDamage(IEntity damager, int damageamount, DamageType damType)
         {
-            if(!isDead)
+            if (!isDead)
             {
                 int damagetoapply = Math.Max(damageamount - GetArmorValue(damType), 0); //No negative damage right now
                 currentHealth -= damagetoapply;
@@ -107,7 +108,10 @@ namespace SGO
             //TODO do armor by damagetype
             var replies = new List<ComponentReplyMessage>();
             Owner.SendMessage(this, ComponentMessageType.GetArmorValues, replies, damType);
-            return replies.Where(reply => reply.MessageType == ComponentMessageType.ReturnArmorValues && reply.ParamsList[0] is int).Sum(reply => (int) reply.ParamsList[0]);
+            return
+                replies.Where(
+                    reply => reply.MessageType == ComponentMessageType.ReturnArmorValues && reply.ParamsList[0] is int).
+                    Sum(reply => (int) reply.ParamsList[0]);
         }
 
         protected virtual void ApplyDamage(int p)
@@ -125,21 +129,20 @@ namespace SGO
             Owner.SendMessage(this, ComponentMessageType.Die);
         }
 
-        protected void DamagedBy(Entity damager, int amount, DamageType damType)
+        protected void DamagedBy(IEntity damager, int amount, DamageType damType)
         {
             _damageHistory.Add(new DamageHistoryItem(damager, amount, damType));
         }
-
     }
 
     public struct DamageHistoryItem
     {
-        public Entity Damager;
         public int Amount;
         public DamageType DamType;
+        public IEntity Damager;
         public DateTime When;
 
-        public DamageHistoryItem(Entity damager, int amount, DamageType damType)
+        public DamageHistoryItem(IEntity damager, int amount, DamageType damType)
         {
             Damager = damager;
             Amount = amount;

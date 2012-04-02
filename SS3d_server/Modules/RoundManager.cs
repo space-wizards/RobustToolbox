@@ -1,4 +1,6 @@
 ﻿using SS13_Server.Modules.Gamemodes;
+using ServerInterfaces;
+using ServerInterfaces.Player;
 
 namespace SS13_Server.Modules
 {
@@ -34,7 +36,7 @@ namespace SS13_Server.Modules
             _ready = true;
         }
 
-        public void SpawnPlayer(PlayerSession player)
+        public void SpawnPlayer(IPlayerSession player)
         {
             if (!_ready) return;
             CurrentGameMode.SpawnPlayer(player);

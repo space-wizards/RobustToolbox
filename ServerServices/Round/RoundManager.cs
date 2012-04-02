@@ -1,31 +1,11 @@
-﻿using SS13_Server.Modules.Gamemodes;
-using ServerInterfaces;
-using ServerInterfaces.Player;
+﻿using ServerInterfaces.Player;
+using ServerInterfaces.GameMode;
+using ServerInterfaces.Round;
 
 namespace SS13_Server.Modules
 {
-    class RoundManager
+    class RoundManager : IRoundManager
     {
-        #region Singleton
-        static readonly RoundManager singleton = new RoundManager();
-
-        static RoundManager()
-        {
-        }
-
-        RoundManager()
-        {
-        }
-
-        public static RoundManager Singleton
-        {
-            get
-            {
-                return singleton;
-            }
-        } 
-        #endregion
-
         public IGameMode CurrentGameMode { get; private set; }
 
         private bool _ready;

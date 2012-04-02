@@ -1,28 +1,18 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.IO;
-using System.Security;
-using System.Reflection;
-using System.Collections;
-using Lidgren.Network;
-using SS13_Shared;
-using SS13_Shared.GO;
 using System.Drawing;
+using SS13_Shared;
 
 namespace SGO
 {
     public class PlayerAction
     {
-        public readonly uint uid = 0;
+        public readonly uint uid;
 
-        public PlayerActionTargetType targetType = PlayerActionTargetType.Any;
-
-        public uint cooldownSeconds = 10;
         public DateTime cooldownExpires;
+        public uint cooldownSeconds = 10;
 
         protected PlayerActionComp parent;
+        public PlayerActionTargetType targetType = PlayerActionTargetType.Any;
 
         public PlayerAction(uint _uid, PlayerActionComp _parent)
         {

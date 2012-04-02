@@ -1,8 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using SS13_Shared;
+﻿using SS13_Shared;
 using SS13_Shared.GO;
 
 namespace SGO
@@ -12,15 +8,17 @@ namespace SGO
     /// </summary>
     public class SlaveMoverComponent : GameObjectComponent
     {
-        Entity master;
+        private Entity master;
+
         public SlaveMoverComponent()
         {
-            family = SS13_Shared.GO.ComponentFamily.Mover;
+            family = ComponentFamily.Mover;
         }
 
-        public override ComponentReplyMessage RecieveMessage(object sender, ComponentMessageType type, params object[] list)
+        public override ComponentReplyMessage RecieveMessage(object sender, ComponentMessageType type,
+                                                             params object[] list)
         {
-            var reply = base.RecieveMessage(sender, type, list);
+            ComponentReplyMessage reply = base.RecieveMessage(sender, type, list);
 
             if (sender == this)
                 return ComponentReplyMessage.Empty;
@@ -28,7 +26,7 @@ namespace SGO
             switch (type)
             {
                 case ComponentMessageType.SlaveAttach:
-                    Attach((int)list[0]);
+                    Attach((int) list[0]);
                     break;
             }
             return reply;
@@ -43,12 +41,12 @@ namespace SGO
         private void Attach(int uid)
         {
             master = EntityManager.Singleton.GetEntity(uid);
-            master.OnShutdown += new Entity.ShutdownEvent(master_OnShutdown);
-            master.OnMove += new Entity.EntityMoveEvent(HandleOnMove);
+            master.OnShutdown += master_OnShutdown;
+            master.OnMove += HandleOnMove;
             Translate(master.position);
         }
 
-        void master_OnShutdown(Entity e)
+        private void master_OnShutdown(Entity e)
         {
             Detach();
         }
@@ -57,7 +55,7 @@ namespace SGO
         {
             if (master != null)
             {
-                master.OnMove -= new Entity.EntityMoveEvent(HandleOnMove);
+                master.OnMove -= HandleOnMove;
                 master = null;
             }
         }

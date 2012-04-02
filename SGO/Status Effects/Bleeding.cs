@@ -1,22 +1,13 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.IO;
-using System.Security;
-using System.Reflection;
-using System.Collections;
-using Lidgren.Network;
+﻿using System.Diagnostics;
 using SS13_Shared;
 using SS13_Shared.GO;
-using System.Diagnostics;
 
 namespace SGO
 {
     public class Bleeding : StatusEffect
     {
-        Stopwatch bleedDmgTimer = new Stopwatch();
-        Stopwatch bleedEntTimer = new Stopwatch();
+        private readonly Stopwatch bleedDmgTimer = new Stopwatch();
+        private readonly Stopwatch bleedEntTimer = new Stopwatch();
 
         public Bleeding(uint _uid, Entity _affected, uint duration = 0, params object[] arguments)
             : base(_uid, _affected, duration, arguments)

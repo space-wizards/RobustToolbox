@@ -1,30 +1,30 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
-using SS13_Shared;
-using SS13_Shared.GO;
-using SGO.Component.Item.ItemCapability;
 using System.Xml.Linq;
+using Lidgren.Network;
+using SGO.Component.Item.ItemCapability;
+using SS13_Shared.GO;
 
 namespace SGO
 {
     public class BasicItemComponent : GameObjectComponent
     {
-        public Entity currentHolder { get; private set; }
+        private readonly Dictionary<string, ItemCapability> capabilities;
         private Hand holdingHand;
-
-        private Dictionary<string, ItemCapability> capabilities;
 
         public BasicItemComponent()
         {
-            family = SS13_Shared.GO.ComponentFamily.Item;
+            family = ComponentFamily.Item;
             capabilities = new Dictionary<string, ItemCapability>();
         }
 
-        public override ComponentReplyMessage RecieveMessage(object sender, ComponentMessageType type, params object[] list)
+        public Entity currentHolder { get; private set; }
+
+        public override ComponentReplyMessage RecieveMessage(object sender, ComponentMessageType type,
+                                                             params object[] list)
         {
-            var reply = base.RecieveMessage(sender, type, list);
+            ComponentReplyMessage reply = base.RecieveMessage(sender, type, list);
 
             if (sender == this)
                 return ComponentReplyMessage.Empty;
@@ -32,45 +32,53 @@ namespace SGO
             switch (type)
             {
                 case ComponentMessageType.ReceiveEmptyHandToItemInteraction:
-                    HandleEmptyHandToItemInteraction((Entity)list[0]); // param 0 is the actor entity, param 1 is the source actor entity
+                    HandleEmptyHandToItemInteraction((Entity) list[0]);
+                        // param 0 is the actor entity, param 1 is the source actor entity
                     break;
-                case ComponentMessageType.ReceiveItemToItemInteraction: //This message means we were clicked on by an actor with an item in hand
-                    HandleItemToItemInteraction((Entity)list[0]); // param 0 is the actor entity, param 1 is the source actor entity
+                case ComponentMessageType.ReceiveItemToItemInteraction:
+                    //This message means we were clicked on by an actor with an item in hand
+                    HandleItemToItemInteraction((Entity) list[0]);
+                        // param 0 is the actor entity, param 1 is the source actor entity
                     break;
                 case ComponentMessageType.EnactItemToActorInteraction:
-                    ApplyTo((Entity)list[0], InteractsWith.Actor, (Entity)list[1]);
+                    ApplyTo((Entity) list[0], InteractsWith.Actor, (Entity) list[1]);
                     break;
                 case ComponentMessageType.EnactItemToItemInteraction:
-                    ApplyTo((Entity)list[0], InteractsWith.Item, (Entity)list[1]);
+                    ApplyTo((Entity) list[0], InteractsWith.Item, (Entity) list[1]);
                     break;
                 case ComponentMessageType.EnactItemToLargeObjectInteraction:
-                    ApplyTo((Entity)list[0], InteractsWith.LargeObject, (Entity)list[1]);
+                    ApplyTo((Entity) list[0], InteractsWith.LargeObject, (Entity) list[1]);
                     break;
                 case ComponentMessageType.PickedUp:
-                    HandlePickedUp((Entity)list[0], (Hand)list[1]);
+                    HandlePickedUp((Entity) list[0], (Hand) list[1]);
                     break;
                 case ComponentMessageType.Dropped:
                     HandleDropped();
                     break;
                 case ComponentMessageType.ItemGetCapability:
-                    var itemcaps = GetCapability((ItemCapabilityType)list[0]);
+                    ItemCapability[] itemcaps = GetCapability((ItemCapabilityType) list[0]);
                     if (itemcaps != null)
                         reply = new ComponentReplyMessage(ComponentMessageType.ItemReturnCapability, itemcaps);
                     break;
                 case ComponentMessageType.ItemGetCapabilityVerbPairs:
-                    List<KeyValuePair<ItemCapabilityType, ItemCapabilityVerb>> verbpairs = new List<KeyValuePair<ItemCapabilityType, ItemCapabilityVerb>>();
-                    foreach (var capability in capabilities.Values)
+                    var verbpairs = new List<KeyValuePair<ItemCapabilityType, ItemCapabilityVerb>>();
+                    foreach (ItemCapability capability in capabilities.Values)
                     {
-                        foreach (ItemCapabilityVerb verb in (from v in capability.verbs orderby v.Key descending select v.Value))
+                        foreach (
+                            ItemCapabilityVerb verb in
+                                (from v in capability.verbs orderby v.Key descending select v.Value))
                         {
-                            verbpairs.Add(new KeyValuePair<ItemCapabilityType, ItemCapabilityVerb>(capability.CapabilityType, verb));
+                            verbpairs.Add(
+                                new KeyValuePair<ItemCapabilityType, ItemCapabilityVerb>(capability.CapabilityType, verb));
                         }
                     }
                     //if(verbpairs.Count > 0)
-                    reply = new ComponentReplyMessage(ComponentMessageType.ItemReturnCapabilityVerbPairs, verbpairs.ToLookup(v => v.Key, v => v.Value));
+                    reply = new ComponentReplyMessage(ComponentMessageType.ItemReturnCapabilityVerbPairs,
+                                                      verbpairs.ToLookup(v => v.Key, v => v.Value));
                     break;
                 case ComponentMessageType.CheckItemHasCapability:
-                    reply = new ComponentReplyMessage(ComponentMessageType.ItemHasCapability, HasCapability((ItemCapabilityType)list[0]));
+                    reply = new ComponentReplyMessage(ComponentMessageType.ItemHasCapability,
+                                                      HasCapability((ItemCapabilityType) list[0]));
                     break;
                 case ComponentMessageType.ItemGetAllCapabilities:
                     throw new NotImplementedException();
@@ -94,8 +102,9 @@ namespace SGO
         private void HandleDropped()
         {
             Owner.RemoveComponent(ComponentFamily.Mover);
-            Owner.AddComponent(SS13_Shared.GO.ComponentFamily.Mover, ComponentFactory.Singleton.GetComponent("BasicMoverComponent"));
-            Owner.SendComponentNetworkMessage(this, Lidgren.Network.NetDeliveryMethod.ReliableUnordered, null, ItemComponentNetMessage.Dropped);
+            Owner.AddComponent(ComponentFamily.Mover, ComponentFactory.Singleton.GetComponent("BasicMoverComponent"));
+            Owner.SendComponentNetworkMessage(this, NetDeliveryMethod.ReliableUnordered, null,
+                                              ItemComponentNetMessage.Dropped);
             currentHolder = null;
         }
 
@@ -103,15 +112,17 @@ namespace SGO
         {
             currentHolder = entity;
             holdingHand = _holdingHand;
-            Owner.AddComponent(SS13_Shared.GO.ComponentFamily.Mover, ComponentFactory.Singleton.GetComponent("SlaveMoverComponent"));
+            Owner.AddComponent(ComponentFamily.Mover, ComponentFactory.Singleton.GetComponent("SlaveMoverComponent"));
             Owner.SendMessage(this, ComponentMessageType.SlaveAttach, entity.Uid);
-            Owner.SendComponentNetworkMessage(this, Lidgren.Network.NetDeliveryMethod.ReliableUnordered, null, ItemComponentNetMessage.PickedUp, entity.Uid, holdingHand);
+            Owner.SendComponentNetworkMessage(this, NetDeliveryMethod.ReliableUnordered, null,
+                                              ItemComponentNetMessage.PickedUp, entity.Uid, holdingHand);
         }
 
-        public override void HandleInstantiationMessage(Lidgren.Network.NetConnection netConnection)
+        public override void HandleInstantiationMessage(NetConnection netConnection)
         {
-            if(currentHolder != null)
-                Owner.SendComponentNetworkMessage(this, Lidgren.Network.NetDeliveryMethod.ReliableUnordered, netConnection, ItemComponentNetMessage.PickedUp, currentHolder.Uid, holdingHand);
+            if (currentHolder != null)
+                Owner.SendComponentNetworkMessage(this, NetDeliveryMethod.ReliableUnordered, netConnection,
+                                                  ItemComponentNetMessage.PickedUp, currentHolder.Uid, holdingHand);
         }
 
         /// <summary>
@@ -147,11 +158,11 @@ namespace SGO
         /// <param name="target">Target entity for interaction</param>
         protected virtual void ApplyCapabilities(Entity target, InteractsWith targetType, Entity sourceActor)
         {
-            var capstoapply = from c in capabilities.Values
-                              where (c.interactsWith & targetType) == targetType
-                              orderby c.priority descending
-                              select c;
-                              
+            IOrderedEnumerable<ItemCapability> capstoapply = from c in capabilities.Values
+                                                             where (c.interactsWith & targetType) == targetType
+                                                             orderby c.priority descending
+                                                             select c;
+
             foreach (ItemCapability capability in capstoapply)
             {
                 if (capability.ApplyTo(target, sourceActor))
@@ -169,7 +180,7 @@ namespace SGO
         /// <returns></returns>
         protected ItemCapabilityQueryResult ExecuteCapabilityQuery(ItemCapabilityQuery query)
         {
-            ItemCapabilityQueryResult result = new ItemCapabilityQueryResult();
+            var result = new ItemCapabilityQueryResult();
             result.ResultStatus = ItemCapabilityQueryResult.ItemCapabilityQueryResultType.Error;
             switch (query.queryType)
             {
@@ -184,9 +195,9 @@ namespace SGO
                     break;
                 case ItemCapabilityQuery.ItemCapabilityQueryType.GetCapability:
                     //Get the capabilities that match a particular capability type
-                    var caps = from c in capabilities.Values
-                               where (c.CapabilityType == query.capabilityType)
-                               select c;
+                    IEnumerable<ItemCapability> caps = from c in capabilities.Values
+                                                       where (c.CapabilityType == query.capabilityType)
+                                                       select c;
                     foreach (ItemCapability c in caps)
                         result.AddCapability(c);
                     if (caps.Count() > 0)
@@ -196,9 +207,9 @@ namespace SGO
                     break;
                 case ItemCapabilityQuery.ItemCapabilityQueryType.HasCapability:
                     //Check if the item has a capability of a certain type.
-                    var hascap = from c in capabilities.Values
-                                 where (c.CapabilityType == query.capabilityType)
-                                 select c;
+                    IEnumerable<ItemCapability> hascap = from c in capabilities.Values
+                                                         where (c.CapabilityType == query.capabilityType)
+                                                         select c;
                     if (hascap.Count() > 0)
                         result.ResultStatus = ItemCapabilityQueryResult.ItemCapabilityQueryResultType.True;
                     else
@@ -212,8 +223,10 @@ namespace SGO
 
         private ItemCapability[] GetCapability(ItemCapabilityType type)
         {
-            var result = ExecuteCapabilityQuery(new ItemCapabilityQuery(ItemCapabilityQuery.ItemCapabilityQueryType.GetCapability, type));
-            if(result.ResultStatus == ItemCapabilityQueryResult.ItemCapabilityQueryResultType.Success)
+            ItemCapabilityQueryResult result =
+                ExecuteCapabilityQuery(new ItemCapabilityQuery(
+                                           ItemCapabilityQuery.ItemCapabilityQueryType.GetCapability, type));
+            if (result.ResultStatus == ItemCapabilityQueryResult.ItemCapabilityQueryResultType.Success)
                 return result.Capabilities;
             else
                 return null;
@@ -221,7 +234,10 @@ namespace SGO
 
         private ItemCapability[] GetAllCapabilities()
         {
-            var result = ExecuteCapabilityQuery(new ItemCapabilityQuery(ItemCapabilityQuery.ItemCapabilityQueryType.GetAllCapabilities, ItemCapabilityType.None));
+            ItemCapabilityQueryResult result =
+                ExecuteCapabilityQuery(
+                    new ItemCapabilityQuery(ItemCapabilityQuery.ItemCapabilityQueryType.GetAllCapabilities,
+                                            ItemCapabilityType.None));
             if (result.ResultStatus == ItemCapabilityQueryResult.ItemCapabilityQueryResultType.Empty)
                 return null;
             else
@@ -230,7 +246,9 @@ namespace SGO
 
         private bool HasCapability(ItemCapabilityType type)
         {
-            var result = ExecuteCapabilityQuery(new ItemCapabilityQuery(ItemCapabilityQuery.ItemCapabilityQueryType.HasCapability, type));
+            ItemCapabilityQueryResult result =
+                ExecuteCapabilityQuery(new ItemCapabilityQuery(
+                                           ItemCapabilityQuery.ItemCapabilityQueryType.HasCapability, type));
             if (result.ResultStatus == ItemCapabilityQueryResult.ItemCapabilityQueryResultType.True)
                 return true;
             else
@@ -243,14 +261,14 @@ namespace SGO
             cap.owner = this;
         }
 
-        public override void HandleExtendedParameters(System.Xml.Linq.XElement extendedParameters)
+        public override void HandleExtendedParameters(XElement extendedParameters)
         {
             foreach (XElement itemcapability in extendedParameters.Descendants("ItemCapability"))
             {
                 IEnumerable<XElement> Verbs = itemcapability.Descendants("ItemCapabilityVerb");
                 IEnumerable<XElement> Parameters = itemcapability.Descendants("ItemCapabilityParameter");
                 ItemCapability cap = null;
-                switch(itemcapability.Attribute("name").Value)
+                switch (itemcapability.Attribute("name").Value)
                 {
                     case "MeleeWeaponCapability":
                         cap = new MeleeWeaponCapability();
@@ -270,11 +288,14 @@ namespace SGO
                     return;
                 foreach (XElement verb in Verbs)
                 {
-                    cap.AddVerb(int.Parse(verb.Attribute("priority").Value), (ItemCapabilityVerb)Enum.Parse(typeof(ItemCapabilityVerb), verb.Attribute("name").Value));
+                    cap.AddVerb(int.Parse(verb.Attribute("priority").Value),
+                                (ItemCapabilityVerb)
+                                Enum.Parse(typeof (ItemCapabilityVerb), verb.Attribute("name").Value));
                 }
                 foreach (XElement parameter in Parameters)
                 {
-                    cap.SetParameter(new ComponentParameter(parameter.Attribute("name").Value, typeof(string), parameter.Attribute("value").Value));
+                    cap.SetParameter(new ComponentParameter(parameter.Attribute("name").Value, typeof (string),
+                                                            parameter.Attribute("value").Value));
                 }
                 AddCapability(cap);
             }

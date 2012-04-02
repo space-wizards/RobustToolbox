@@ -17,11 +17,6 @@ namespace SGO
             family = ComponentFamily.StatusEffects;
         }
 
-        public override void HandleNetworkMessage(IncomingEntityComponentMessage message, NetConnection client)
-        {
-            base.HandleNetworkMessage(message, client);
-        }
-
         public override void Update(float frameTime)
         {
             base.Update(frameTime);

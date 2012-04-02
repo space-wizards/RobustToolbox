@@ -15,6 +15,7 @@ namespace SGO
         
         protected bool isDead;
         public float maxHealth = 100;
+        private List<DamageHistoryItem> _damageHistory = new List<DamageHistoryItem>(); 
 
         public DamageableComponent()
         {

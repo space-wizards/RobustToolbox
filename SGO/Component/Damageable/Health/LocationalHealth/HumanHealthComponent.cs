@@ -22,8 +22,13 @@ namespace SGO
             damageZones.Add(new DamageLocation(BodyPart.Right_Leg, 50));
             damageZones.Add(new DamageLocation(BodyPart.Torso, 100));
 
-            maxHealth = damageZones.Sum(x => x.maxHealth);
-            currentHealth = maxHealth;
+            this.maxHealth = damageZones.Sum(x => x.maxHealth);
+            this.currentHealth = this.maxHealth;
+        }
+
+        public override void Update(float frameTime)
+        {
+            base.Update(frameTime);
         }
 
         public override void HandleInstantiationMessage(NetConnection netConnection)
@@ -35,7 +40,7 @@ namespace SGO
         {
             DamagedBy(damager, damageamount, damType);
 
-            int actualDamage = damageamount - GetArmorValue(damType);
+            int actualDamage = Math.Max(damageamount - GetArmor(damType), 0);
 
             if (GetHealth() - actualDamage < 0) //No negative total health.
                 actualDamage = (int) GetHealth();

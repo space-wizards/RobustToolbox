@@ -67,26 +67,6 @@ namespace CGO
             return _entities.Keys.Contains(eid) ? _entities[eid] : null;
         }
 
-        /// <summary>
-        /// Creates an entity and adds it to the entity dictionary
-        /// </summary>
-        /// <param name="templateName">name of entity template to execute</param>
-        /// <returns>integer id of added entity</returns>
-        public int CreateEntity(string templateName)
-        {
-            //Get the entity from the factory
-            var e = _entityFactory.CreateEntity(templateName, _entityNetworkManager);
-            if (e != null)
-            {
-                //It worked, add it.
-                _entities.Add(++_lastId, e);
-                _lastId++;
-                return _lastId;
-            }
-            //TODO: throw exception here -- something went wrong.
-            return -1;
-        }
-
         private IEntity SpawnEntity(string entityType, int uid)
         {
             var e = _entityFactory.CreateEntity(entityType, _entityNetworkManager);

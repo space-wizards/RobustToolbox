@@ -1,27 +1,23 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Linq;
-using System.Text;
-using SS13_Shared.GO;
 using SS13_Shared;
-using ServerServices;
-using ServerInterfaces;
+using SS13_Shared.GO;
 
 namespace SGO
 {
     public class DamageLocation
     {
-        public BodyPart location;
-        public int maxHealth;
         public int currentHealth;
 
         public Dictionary<DamageType, int> damageIndex = new Dictionary<DamageType, int>();
+        public BodyPart location;
+        public int maxHealth;
 
         public DamageLocation(BodyPart myPart, int maxHealth)
         {
             location = myPart;
             this.maxHealth = maxHealth;
-            this.currentHealth = maxHealth;
+            currentHealth = maxHealth;
         }
 
         public void AddDamage(DamageType type, int amount)
@@ -50,7 +46,7 @@ namespace SGO
         {
             int updatedHealth = maxHealth;
 
-            foreach (KeyValuePair<DamageType, int> curr in damageIndex)
+            foreach (var curr in damageIndex)
                 updatedHealth -= curr.Value;
 
             currentHealth = updatedHealth;

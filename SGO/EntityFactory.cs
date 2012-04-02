@@ -1,14 +1,11 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
+﻿using ServerInterfaces.GameObject;
 
 namespace SGO
 {
     public class EntityFactory
     {
-        private EntityTemplateDatabase m_entityTemplateDatabase;
-        private EntityNetworkManager m_entityNetworkManager;
+        private readonly EntityNetworkManager m_entityNetworkManager;
+        private readonly EntityTemplateDatabase m_entityTemplateDatabase;
 
         /// <summary>
         /// Constructor
@@ -24,14 +21,13 @@ namespace SGO
         /// </summary>
         /// <param name="entityTemplateName">name of the template</param>
         /// <returns>Created Entity</returns>
-        public Entity CreateEntity(string entityTemplateName)
+        public IEntity CreateEntity(string entityTemplateName)
         {
             EntityTemplate template = m_entityTemplateDatabase.GetTemplate(entityTemplateName);
             //TODO: Throw exception here
             if (template == null)
                 return null;
-            var entity = template.CreateEntity(m_entityNetworkManager);
-            entity.Initialize();
+            IEntity entity = template.CreateEntity(m_entityNetworkManager);
             return entity;
         }
     }

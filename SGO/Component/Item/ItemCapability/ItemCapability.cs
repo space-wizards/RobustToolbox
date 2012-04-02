@@ -1,25 +1,16 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Linq;
-using System.Text;
-using SS13_Shared;
 using SS13_Shared.GO;
 
 namespace SGO.Component.Item.ItemCapability
 {
     public class ItemCapability
     {
-        public InteractsWith interactsWith; //What types of shit this interacts with
-        public int priority; //Where in the stack this puppy is
-        protected ItemCapabilityType capabilityType;
-        public GameObjectComponent owner;
-        public ItemCapabilityType CapabilityType
-        {
-            get { return capabilityType; }
-            protected set { capabilityType = value; }
-        }
-
         public string capabilityName;
+        protected ItemCapabilityType capabilityType;
+        public InteractsWith interactsWith; //What types of shit this interacts with
+        public GameObjectComponent owner;
+        public int priority; //Where in the stack this puppy is
 
         /// <summary>
         /// dictionary of priority -> verb -- lower priority verbs execute first
@@ -31,6 +22,12 @@ namespace SGO.Component.Item.ItemCapability
             verbs = new Dictionary<int, ItemCapabilityVerb>();
         }
 
+        public ItemCapabilityType CapabilityType
+        {
+            get { return capabilityType; }
+            protected set { capabilityType = value; }
+        }
+
         public virtual bool ApplyTo(Entity target, Entity sourceActor)
         {
             return false;
@@ -38,12 +35,13 @@ namespace SGO.Component.Item.ItemCapability
 
         public void AddVerb(int priority, ItemCapabilityVerb verb)
         {
-            if (verbs.ContainsKey(priority)) //Shuffle the list to insert the specified verb and move the one in that spot down.
+            if (verbs.ContainsKey(priority))
+                //Shuffle the list to insert the specified verb and move the one in that spot down.
             {
-                var tverb = verbs[priority];
+                ItemCapabilityVerb tverb = verbs[priority];
                 RemoveVerb(priority);
                 AddVerb(priority, verb);
-                AddVerb(priority + 1, tverb); 
+                AddVerb(priority + 1, tverb);
             }
             else
                 verbs.Add(priority, verb);
@@ -62,7 +60,6 @@ namespace SGO.Component.Item.ItemCapability
         /// <param name="parameter">ComponentParameter object describing the parameter and the value</param>
         public virtual void SetParameter(ComponentParameter parameter)
         {
-
         }
     }
 
@@ -71,19 +68,24 @@ namespace SGO.Component.Item.ItemCapability
     /// </summary>
     public struct ItemCapabilityQuery
     {
-        public ItemCapabilityQueryType queryType;
-        public ItemCapabilityType capabilityType;
-        public ItemCapabilityQuery(ItemCapabilityQueryType _queryType, ItemCapabilityType _capabilityType)
-        {
-            queryType = _queryType;
-            capabilityType = _capabilityType;
-        }
+        #region ItemCapabilityQueryType enum
 
         public enum ItemCapabilityQueryType
         {
             HasCapability,
             GetCapability,
             GetAllCapabilities,
+        }
+
+        #endregion
+
+        public ItemCapabilityType capabilityType;
+        public ItemCapabilityQueryType queryType;
+
+        public ItemCapabilityQuery(ItemCapabilityQueryType _queryType, ItemCapabilityType _capabilityType)
+        {
+            queryType = _queryType;
+            capabilityType = _capabilityType;
         }
     }
 
@@ -92,27 +94,39 @@ namespace SGO.Component.Item.ItemCapability
     /// </summary>
     public class ItemCapabilityQueryResult
     {
+        #region ItemCapabilityQueryResultType enum
+
+        /// <summary>
+        /// Types of results
+        /// </summary>
+        public enum ItemCapabilityQueryResultType
+        {
+            True,
+            False,
+            Success,
+            Empty,
+            Error,
+            Null
+        }
+
+        #endregion
+
         private ItemCapabilityQueryResultType resultStatus;
+        private ItemCapability[] returnedCapabilities;
+
         public ItemCapabilityQueryResultType ResultStatus
         {
-            get 
-            { 
-                if(resultStatus == null)
+            get
+            {
+                if (resultStatus == null)
                     return ItemCapabilityQueryResultType.Null;
-                else 
+                else
                     return resultStatus;
             }
             set { resultStatus = value; }
         }
 
-        private string errorMessage;
-        public string ErrorMessage
-        {
-            get { return errorMessage; }
-            set { errorMessage = value; }
-        }
-
-        private ItemCapability[] returnedCapabilities;
+        public string ErrorMessage { get; set; }
 
         public ItemCapability[] Capabilities
         {
@@ -125,22 +139,9 @@ namespace SGO.Component.Item.ItemCapability
         /// <param name="cap"></param>
         public void AddCapability(ItemCapability cap)
         {
-            var retcap = returnedCapabilities.ToList();
+            List<ItemCapability> retcap = returnedCapabilities.ToList();
             retcap.Add(cap);
             returnedCapabilities = retcap.ToArray();
-        }
-        
-        /// <summary>
-        /// Types of results
-        /// </summary>
-        public enum ItemCapabilityQueryResultType
-        {
-            True,
-            False,
-            Success,
-            Empty,
-            Error,
-            Null
         }
     }
 }

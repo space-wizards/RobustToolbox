@@ -1,31 +1,35 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
 using Lidgren.Network;
+using SS13.IoC;
 using SS13_Shared;
 using SS13_Shared.GO;
-using ServerServices;
-using ServerInterfaces;
+using ServerInterfaces.Configuration;
+using ServerInterfaces.GameObject;
 using ServerInterfaces.MessageLogging;
+using ServerInterfaces.Network;
+using ServerServices;
 
 namespace SGO
 {
-    public class EntityNetworkManager
+    public class EntityNetworkManager : IEntityNetworkManager
     {
-        private NetServer m_netServer;
-        private bool _messageProfiling;
+        private readonly bool _messageProfiling;
+        private readonly ISS13NetServer m_netServer;
 
-        public EntityNetworkManager(NetServer netServer)
+        public EntityNetworkManager(ISS13NetServer netServer)
         {
             m_netServer = netServer;
-            _messageProfiling = ServiceManager.Singleton.Resolve<IConfigManager>().MessageLogging;
+            _messageProfiling = IoCManager.Resolve<IConfigurationManager>().MessageLogging;
         }
+
+        #region IEntityNetworkManager Members
 
         public NetOutgoingMessage CreateEntityMessage()
         {
             NetOutgoingMessage message = m_netServer.CreateMessage();
-            message.Write((byte)NetMessage.EntityMessage);
+            message.Write((byte) NetMessage.EntityMessage);
             return message;
         }
 
@@ -34,12 +38,16 @@ namespace SGO
             m_netServer.SendToAll(message, method);
         }
 
-        public void SendMessage(NetOutgoingMessage message, NetConnection recipient, NetDeliveryMethod method = NetDeliveryMethod.ReliableOrdered)
+        public void SendMessage(NetOutgoingMessage message, NetConnection recipient,
+                                NetDeliveryMethod method = NetDeliveryMethod.ReliableOrdered)
         {
             m_netServer.SendMessage(message, recipient, method);
         }
 
+        #endregion
+
         #region Sending
+
         /// <summary>
         /// Allows a component owned by this entity to send a message to a counterpart component on the
         /// counterpart entities on all clients.
@@ -49,88 +57,86 @@ namespace SGO
         /// <param name="method">Net delivery method -- if null, defaults to NetDeliveryMethod.ReliableUnordered</param>
         /// <param name="recipient">Client connection to send to. If null, send to all.</param>
         /// <param name="messageParams">Parameters of the message</param>
-        public void SendComponentNetworkMessage(Entity sendingEntity, ComponentFamily family, NetDeliveryMethod method,
-            NetConnection recipient, params object[] messageParams)
+        public void SendComponentNetworkMessage(IEntity sendingEntity, ComponentFamily family, NetDeliveryMethod method,
+                                                NetConnection recipient, params object[] messageParams)
         {
             NetOutgoingMessage message = CreateEntityMessage();
-            message.Write(sendingEntity.Uid);//Write this entity's UID
-            message.Write((byte)EntityMessage.ComponentMessage);
-            message.Write((byte)family);
+            message.Write(sendingEntity.Uid); //Write this entity's UID
+            message.Write((byte) EntityMessage.ComponentMessage);
+            message.Write((byte) family);
             //Loop through the params and write them as is proper
             foreach (object messageParam in messageParams)
             {
-                if (messageParam.GetType().IsSubclassOf(typeof(Enum)))
+                if (messageParam.GetType().IsSubclassOf(typeof (Enum)))
                 {
-                    message.Write((byte)NetworkDataType.d_enum);
-                    message.Write((int)messageParam);
+                    message.Write((byte) NetworkDataType.d_enum);
+                    message.Write((int) messageParam);
                 }
                 else if (messageParam is bool)
                 {
-                    message.Write((byte)NetworkDataType.d_bool);
-                    message.Write((bool)messageParam);
+                    message.Write((byte) NetworkDataType.d_bool);
+                    message.Write((bool) messageParam);
                 }
                 else if (messageParam is byte)
                 {
-                    message.Write((byte)NetworkDataType.d_byte);
-                    message.Write((byte)messageParam);
+                    message.Write((byte) NetworkDataType.d_byte);
+                    message.Write((byte) messageParam);
                 }
                 else if (messageParam is sbyte)
                 {
-                    message.Write((byte)NetworkDataType.d_sbyte);
-                    message.Write((sbyte)messageParam);
+                    message.Write((byte) NetworkDataType.d_sbyte);
+                    message.Write((sbyte) messageParam);
                 }
                 else if (messageParam is ushort)
                 {
-                    message.Write((byte)NetworkDataType.d_ushort);
-                    message.Write((ushort)messageParam);
+                    message.Write((byte) NetworkDataType.d_ushort);
+                    message.Write((ushort) messageParam);
                 }
                 else if (messageParam is short)
                 {
-                    message.Write((byte)NetworkDataType.d_short);
-                    message.Write((short)messageParam);
+                    message.Write((byte) NetworkDataType.d_short);
+                    message.Write((short) messageParam);
                 }
                 else if (messageParam is int)
                 {
-                    message.Write((byte)NetworkDataType.d_int);
-                    message.Write((int)messageParam);
+                    message.Write((byte) NetworkDataType.d_int);
+                    message.Write((int) messageParam);
                 }
                 else if (messageParam is uint)
                 {
-                    message.Write((byte)NetworkDataType.d_uint);
-                    message.Write((uint)messageParam);
+                    message.Write((byte) NetworkDataType.d_uint);
+                    message.Write((uint) messageParam);
                 }
                 else if (messageParam is ulong)
                 {
-                    message.Write((byte)NetworkDataType.d_ulong);
-                    message.Write((ulong)messageParam);
+                    message.Write((byte) NetworkDataType.d_ulong);
+                    message.Write((ulong) messageParam);
                 }
                 else if (messageParam is long)
                 {
-                    message.Write((byte)NetworkDataType.d_long);
-                    message.Write((long)messageParam);
+                    message.Write((byte) NetworkDataType.d_long);
+                    message.Write((long) messageParam);
                 }
                 else if (messageParam is float)
                 {
-                    message.Write((byte)NetworkDataType.d_float);
-                    message.Write((float)messageParam);
+                    message.Write((byte) NetworkDataType.d_float);
+                    message.Write((float) messageParam);
                 }
                 else if (messageParam is double)
                 {
-                    message.Write((byte)NetworkDataType.d_double);
-                    message.Write((double)messageParam);
+                    message.Write((byte) NetworkDataType.d_double);
+                    message.Write((double) messageParam);
                 }
                 else if (messageParam is string)
                 {
-                    message.Write((byte)NetworkDataType.d_string);
-                    message.Write((string)messageParam);
+                    message.Write((byte) NetworkDataType.d_string);
+                    message.Write((string) messageParam);
                 }
                 else
                 {
                     throw new NotImplementedException("Cannot write specified type.");
                 }
             }
-            if(method == null)
-                method = NetDeliveryMethod.ReliableUnordered;
 
             //Send the message
             if (recipient == null)
@@ -138,15 +144,14 @@ namespace SGO
             else
                 m_netServer.SendMessage(message, recipient, method);
 
-            if(_messageProfiling)
+            if (_messageProfiling)
             {
-                var logger = ServiceManager.Singleton.Resolve<IMessageLogger>();
+                var logger = IoCManager.Resolve<IMessageLogger>();
                 logger.LogOutgoingComponentNetMessage(
-                    (recipient==null)?0:recipient.RemoteUniqueIdentifier,
+                    (recipient == null) ? 0 : recipient.RemoteUniqueIdentifier,
                     sendingEntity.Uid,
                     family,
                     PackParamsForLog(messageParams));
-                    
             }
         }
 
@@ -155,22 +160,22 @@ namespace SGO
             var parameters = new List<object>();
             foreach (object messageParam in messageParams)
             {
-                if (messageParam.GetType().IsSubclassOf(typeof(Enum)))
+                if (messageParam.GetType().IsSubclassOf(typeof (Enum)))
                 {
-                    parameters.Add((int)messageParam);
+                    parameters.Add((int) messageParam);
                 }
-                else if (messageParam is int 
-                    || messageParam is uint 
-                    || messageParam is short 
-                    || messageParam is ushort
-                    || messageParam is long
-                    || messageParam is ulong
-                    || messageParam is bool
-                    || messageParam is float
-                    || messageParam is double
-                    || messageParam is byte
-                    || messageParam is sbyte
-                    || messageParam is string)
+                else if (messageParam is int
+                         || messageParam is uint
+                         || messageParam is short
+                         || messageParam is ushort
+                         || messageParam is long
+                         || messageParam is ulong
+                         || messageParam is bool
+                         || messageParam is float
+                         || messageParam is double
+                         || messageParam is byte
+                         || messageParam is sbyte
+                         || messageParam is string)
                 {
                     parameters.Add(messageParam);
                 }
@@ -182,49 +187,56 @@ namespace SGO
         #endregion
 
         #region Receiving
+
         /// <summary>
         /// Handles an incoming entity message
         /// </summary>
         /// <param name="message"></param>
         /// <returns></returns>
-        public IncomingEntityMessage HandleEntityNetworkMessage(NetIncomingMessage message)
+        public ServerIncomingEntityMessage HandleEntityNetworkMessage(NetIncomingMessage message)
         {
-            var uid = message.ReadInt32();
-            var messageType = (EntityMessage)message.ReadByte();
-            IncomingEntityMessage incomingEntityMessage = IncomingEntityMessage.Null;
+            int uid = message.ReadInt32();
+            var messageType = (EntityMessage) message.ReadByte();
+            ServerIncomingEntityMessage incomingEntityMessage = ServerIncomingEntityMessage.Null;
             switch (messageType)
             {
                 case EntityMessage.ComponentMessage:
-                    incomingEntityMessage = new IncomingEntityMessage(uid, EntityMessage.ComponentMessage, HandleEntityComponentNetworkMessage(message), message.SenderConnection);
+                    incomingEntityMessage = new ServerIncomingEntityMessage(uid, EntityMessage.ComponentMessage,
+                                                                            HandleEntityComponentNetworkMessage(message),
+                                                                            message.SenderConnection);
                     break;
                 case EntityMessage.PositionMessage:
                     //TODO: Handle position messages!
                     break;
                 case EntityMessage.ComponentInstantiationMessage:
-                    incomingEntityMessage = new IncomingEntityMessage(uid, EntityMessage.ComponentInstantiationMessage, (ComponentFamily)UnPackParams(message).First(), message.SenderConnection);
+                    incomingEntityMessage = new ServerIncomingEntityMessage(uid,
+                                                                            EntityMessage.ComponentInstantiationMessage,
+                                                                            (ComponentFamily)
+                                                                            UnPackParams(message).First(),
+                                                                            message.SenderConnection);
                     break;
             }
 
             if (_messageProfiling)
             {
-                var logger = ServiceManager.Singleton.Resolve<IMessageLogger>();
+                var logger = IoCManager.Resolve<IMessageLogger>();
 
-                if(messageType == EntityMessage.ComponentMessage)
+                if (messageType == EntityMessage.ComponentMessage)
                 {
                     var messageContent = (IncomingEntityComponentMessage) incomingEntityMessage.message;
                     logger.LogIncomingComponentNetMessage(message.SenderConnection.RemoteUniqueIdentifier,
                                                           uid,
-                                                          messageType, 
-                                                          messageContent.componentFamily,
-                                                          PackParamsForLog(messageContent.messageParameters.ToArray()));
+                                                          messageType,
+                                                          messageContent.ComponentFamily,
+                                                          PackParamsForLog(messageContent.MessageParameters.ToArray()));
                 }
-                else if(messageType == EntityMessage.ComponentInstantiationMessage)
+                else if (messageType == EntityMessage.ComponentInstantiationMessage)
                 {
                     logger.LogIncomingComponentNetMessage(message.SenderConnection.RemoteUniqueIdentifier,
-                        uid,
-                        messageType,
-                        (ComponentFamily)incomingEntityMessage.message,
-                        new object[0]);
+                                                          uid,
+                                                          messageType,
+                                                          (ComponentFamily) incomingEntityMessage.message,
+                                                          new object[0]);
                 }
             }
 
@@ -237,18 +249,19 @@ namespace SGO
         /// <param name="message"></param>
         public IncomingEntityComponentMessage HandleEntityComponentNetworkMessage(NetIncomingMessage message)
         {
-            ComponentFamily componentFamily = (ComponentFamily)message.ReadByte();
-            
+            var componentFamily = (ComponentFamily) message.ReadByte();
+
             return new IncomingEntityComponentMessage(componentFamily, UnPackParams(message));
         }
+
         #endregion
 
         private List<object> UnPackParams(NetIncomingMessage message)
         {
-            List<object> messageParams = new List<object>();
+            var messageParams = new List<object>();
             while (message.Position < message.LengthBits)
             {
-                switch ((NetworkDataType)message.ReadByte())
+                switch ((NetworkDataType) message.ReadByte())
                 {
                     case NetworkDataType.d_enum:
                         messageParams.Add(message.ReadInt32()); //Cast from int, because enums are ints.
@@ -293,37 +306,5 @@ namespace SGO
             }
             return messageParams;
         }
-    }
-
-
-    public struct IncomingEntityComponentMessage
-    {
-        public ComponentFamily componentFamily;
-        public List<object> messageParameters;
-
-        public IncomingEntityComponentMessage(ComponentFamily _componentFamily, List<object> _messageParameters)
-        {
-            componentFamily = _componentFamily;
-            messageParameters = _messageParameters;
-        }
-    }
-
-    public struct IncomingEntityMessage
-    {
-        public int uid;
-        public EntityMessage messageType;
-        public object message;
-        public NetConnection client;
-
-        public IncomingEntityMessage(int _uid, EntityMessage _messageType, object _message, NetConnection _client)
-        {
-            uid = _uid;
-            messageType = _messageType;
-            message = _message;
-            client = _client;
-        }
-
-        public static IncomingEntityMessage Null = new IncomingEntityMessage(0, EntityMessage.Null, null, null);
-
     }
 }

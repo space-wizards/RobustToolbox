@@ -7,10 +7,15 @@ using Lidgren.Network;
 using SS13_Shared;
 using System.Drawing;
 using ServerInterfaces;
+using ServerServices.Log;
+using SS13.IoC;
+using ServerInterfaces.Network;
+using ServerInterfaces.Map;
+using ServerInterfaces.Tiles;
 
 namespace ServerServices.Map
 {
-    public class Map : IService
+    public class Map : IMap
     {
         #region Variables
         private Tile[,] tileArray;
@@ -97,7 +102,7 @@ namespace ServerServices.Map
             {
                 var t = tileArray[arrayPosition.X, arrayPosition.Y];
                 var g = t.gasCell;
-                Tiles.Tile newTile = GenerateNewTile(arrayPosition.X, arrayPosition.Y, TileType.Floor);
+                var newTile = GenerateNewTile(arrayPosition.X, arrayPosition.Y, TileType.Floor) as Tile;
                 tileArray[arrayPosition.X, arrayPosition.Y] = newTile;
                 newTile.gasCell = g;
                 g.AttachToTile(newTile);
@@ -114,8 +119,8 @@ namespace ServerServices.Map
             if (IsSaneArrayPosition(x, y))
             {
                 Tiles.Atmos.GasCell g = tileArray[x, y].gasCell;
-                Tile t = GenerateNewTile(x, y, type);
-                tileArray[x, y] = t;
+                var t = GenerateNewTile(x, y, type) as Tile;
+                tileArray[x, y] = t as Tile;
                 tileArray[x, y].gasCell = g;
                 g.AttachToTile(t);
                 NetworkUpdateTile(x, y);
@@ -127,14 +132,14 @@ namespace ServerServices.Map
             if (!IsSaneArrayPosition(x, y))
                 return;
 
-            NetOutgoingMessage message = SS13NetServer.Singleton.CreateMessage();
+            NetOutgoingMessage message = IoCManager.Resolve<ISS13NetServer>().CreateMessage();
             message.Write((byte)NetMessage.MapMessage);
             message.Write((byte)MapMessage.TurfUpdate);
             message.Write((short)x);
             message.Write((short)y);
             message.Write((byte)tileArray[x, y].tileType);
             message.Write((byte)tileArray[x, y].tileState);
-            SS13NetServer.Singleton.SendToAll(message);
+            IoCManager.Resolve<ISS13NetServer>().SendToAll(message);
         }
         #endregion
 
@@ -254,7 +259,7 @@ namespace ServerServices.Map
 
         }
 
-        public Tile GetTileAt(int x, int y)
+        public ITile GetTileAt(int x, int y)
         {
             if (!IsSaneArrayPosition(x, y))
                 return null;
@@ -360,14 +365,14 @@ namespace ServerServices.Map
                 else
                     recordsInPacket = recordsCount;
                 recordsCount -= recordsInPacket;
-                NetOutgoingMessage message = SS13NetServer.Singleton.CreateMessage();
+                NetOutgoingMessage message = IoCManager.Resolve<ISS13NetServer>().CreateMessage();
                 message.Write((byte)NetMessage.AtmosDisplayUpdate);
                 message.Write(recordsInPacket);
                 for (int i = 0 + position; i < recordsInPacket + position; i++)
                 {
                     records[i].pack(message);
                 }
-                SS13NetServer.Singleton.SendToAll(message, NetDeliveryMethod.Unreliable);// Gas updates aren't a big deal.
+                IoCManager.Resolve<ISS13NetServer>().SendToAll(message, NetDeliveryMethod.Unreliable);// Gas updates aren't a big deal.
                 LogManager.Log("Sending Gas update with " + recordsInPacket + " records\n", LogLevel.Debug);
                 position += recordsInPacket;
             }
@@ -375,7 +380,7 @@ namespace ServerServices.Map
 
         public void SendAtmosStateTo(NetConnection client)
         {
-            NetOutgoingMessage message = SS13NetServer.Singleton.CreateMessage();
+            NetOutgoingMessage message = IoCManager.Resolve<ISS13NetServer>().CreateMessage();
             message.Write((byte)NetMessage.AtmosDisplayUpdate);
 
             List<AtmosRecord> records = new List<AtmosRecord>();
@@ -396,7 +401,7 @@ namespace ServerServices.Map
             {
                 rec.pack(message);
             }
-            SS13NetServer.Singleton.SendMessage(message, client, NetDeliveryMethod.Unreliable);// Gas updates aren't a big deal.
+            IoCManager.Resolve<ISS13NetServer>().SendMessage(message, client, NetDeliveryMethod.Unreliable);// Gas updates aren't a big deal.
             //LogManager.Log("Sending Gas update to " + SS13Server.Singleton.playerManager.GetSessionByConnection(client).name + "\n", LogLevel.Debug);
         }
 
@@ -406,11 +411,11 @@ namespace ServerServices.Map
         /// </summary>
         /// <param name="fromTile">Tile to move gas information/cell from</param>
         /// <param name="toTile">Tile to move gas information/cell to</param>
-        public void MoveGasCell(Tile fromTile, Tile toTile)
+        public void MoveGasCell(ITile fromTile, ITile toTile)
         {
-            Tiles.Atmos.GasCell g = fromTile.gasCell;
-            toTile.gasCell = g;
-            g.AttachToTile(toTile);
+            Tiles.Atmos.GasCell g = (fromTile as Tile).gasCell;
+            (toTile as Tile).gasCell = g;
+            g.AttachToTile((toTile as Tile));
         }
         #endregion
 
@@ -425,7 +430,7 @@ namespace ServerServices.Map
             //if (tileArray[x, z] != null) //If theres a tile, activate it's changed event.
             //    tileArray[x, z].RaiseChangedEvent(newType);
 
-            Tile tile = GenerateNewTile(x, z, newType); //Transfer the gas cell from the old tile to the new tile.
+            Tile tile = GenerateNewTile(x, z, newType) as Tile; //Transfer the gas cell from the old tile to the new tile.
 
             MoveGasCell(tileArray[x, z], tile);
 
@@ -457,7 +462,7 @@ namespace ServerServices.Map
             return true;
         }
 
-        public Tile GenerateNewTile(int x, int y, TileType type)
+        public ITile GenerateNewTile(int x, int y, TileType type)
         {
             if (tileArray[x, y] != null) //If theres a tile, activate it's changed event.
                 tileArray[x, y].RaiseChangedEvent(type);
@@ -482,7 +487,7 @@ namespace ServerServices.Map
         #region networking
         public NetOutgoingMessage CreateMapMessage(MapMessage messageType)
         {
-            NetOutgoingMessage message = SS13NetServer.Singleton.CreateMessage();
+            NetOutgoingMessage message = IoCManager.Resolve<ISS13NetServer>().CreateMessage();
             message.Write((byte)NetMessage.MapMessage);
             message.Write((byte)messageType);
             return message;
@@ -494,13 +499,13 @@ namespace ServerServices.Map
         /// <param name="message"></param>
         public void SendMessage(NetOutgoingMessage message)
         {
-            SS13NetServer.Singleton.SendToAll(message);
+            IoCManager.Resolve<ISS13NetServer>().SendToAll(message);
         }
         #endregion
 
         public void Shutdown()
         {
-            ServiceManager.Singleton.RemoveService(this);
+            //ServiceManager.Singleton.RemoveService(this);
             tileArray = null;
         }
 
@@ -531,7 +536,7 @@ namespace ServerServices.Map
             return new Point(xPos, zPos);
         }
 
-        public Tile GetTileFromWorldPosition(Vector2 pos)
+        public ITile GetTileFromWorldPosition(Vector2 pos)
         {
             Point arrayPos = GetTileArrayPositionFromWorldPosition(pos);
             return GetTileAt(arrayPos.X, arrayPos.Y);
@@ -634,9 +639,5 @@ namespace ServerServices.Map
 
         #endregion
 
-        public ServerServiceType ServiceType
-        {
-            get { return ServerServiceType.Map; }
-        }
     }
 }

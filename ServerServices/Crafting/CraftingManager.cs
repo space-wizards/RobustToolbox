@@ -1,20 +1,20 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-
 using System.IO;
-using System.Xml;
-using System.Xml.Serialization;
+using System.Linq;
 using Lidgren.Network;
-using SS13_Shared.GO;
-using ServerServices;
-using SGO;
+using ServerInterfaces.Crafting;
+using ServerInterfaces.GameObject;
+using ServerInterfaces.Network;
+using ServerInterfaces.Player;
+using ServerServices.Log;
+using SS13.IoC;
 using SS13_Shared;
+using SS13_Shared.GO;
+using ServerInterfaces;
+using SS13_Shared.GO.Crafting;
 
-using System.Timers;
-
-namespace SS13_Server.Modules
+namespace ServerServices.Crafting
 {
     [Serializable]
     public class CraftRecipes
@@ -23,49 +23,30 @@ namespace SS13_Server.Modules
         public List<CraftingEntry> List = new List<CraftingEntry>();
     }
 
-    [Serializable]
-    public class CraftingEntry
-    {
-        public List<string> components = new List<string>();
-        public int secondsToCreate = 5;
-        public string result = "NULL";
-    }
-
     public struct CraftingTicket
     {
         public DateTime doneAt;
-        public Entity sourceEntity;
-        public Entity component1;
-        public Entity component2;
+        public IEntity sourceEntity;
+        public IEntity component1;
+        public IEntity component2;
         public NetConnection sourceConnection;
         public string result;
     }
 
-    public sealed class CraftingManager
+    public sealed class CraftingManager : ICraftingManager
     {
         public CraftRecipes recipes = new CraftRecipes();
         private string craftingListFile;
-        private NetServer netServer;
-        private PlayerManager playerManager;
+        private ISS13NetServer _netServer;
+        private IPlayerManager _playerManager;
+        private ISS13Server _serverMain;
 
         List<CraftingTicket> craftingTickets = new List<CraftingTicket>(); 
 
-        static readonly CraftingManager singleton = new CraftingManager();
-
-        static CraftingManager()
+        public CraftingManager(IPlayerManager PlayerManager, ISS13NetServer NetServer) 
         {
-        }
-
-        CraftingManager()
-        {
-        }
-
-        public static CraftingManager Singleton
-        {
-            get
-            {
-                return singleton;
-            }
+            _netServer = NetServer;
+            _playerManager = PlayerManager;
         }
 
         public void removeTicketByConnection(NetConnection connection)
@@ -95,12 +76,12 @@ namespace SS13_Server.Modules
             int compo1Uid = msg.ReadInt32();
             int compo2Uid = msg.ReadInt32();
 
-            Entity compo1Ent = EntityManager.Singleton.GetEntity(compo1Uid);
-            Entity compo2Ent = EntityManager.Singleton.GetEntity(compo2Uid);
+            IEntity compo1Ent = _serverMain.EntityManager.GetEntity(compo1Uid);
+            IEntity compo2Ent = _serverMain.EntityManager.GetEntity(compo2Uid);
 
             foreach (var ticket in craftingTickets)
             {
-                if(ticket.sourceConnection == msg.SenderConnection && ticket.sourceEntity == playerManager.GetSessionByConnection(msg.SenderConnection).attachedEntity)
+                if(ticket.sourceConnection == msg.SenderConnection && ticket.sourceEntity == _playerManager.GetSessionByConnection(msg.SenderConnection).attachedEntity)
                 {
                     sendAlreadyCrafting(msg.SenderConnection);
                     return;
@@ -109,80 +90,80 @@ namespace SS13_Server.Modules
 
             if (compo1Ent == null || compo2Ent == null) return;
 
-            if(isValidRecipe(compo1Ent.template.Name, compo2Ent.template.Name))
+            if(isValidRecipe(compo1Ent.Template.Name, compo2Ent.Template.Name))
             {
-                if (hasFreeInventorySlots(playerManager.GetSessionByConnection(msg.SenderConnection).attachedEntity))
-                    BeginCrafting(compo1Ent, compo2Ent, playerManager.GetSessionByConnection(msg.SenderConnection).attachedEntity, msg.SenderConnection);
+                if (hasFreeInventorySlots(_playerManager.GetSessionByConnection(msg.SenderConnection).attachedEntity))
+                    BeginCrafting(compo1Ent, compo2Ent, _playerManager.GetSessionByConnection(msg.SenderConnection).attachedEntity, msg.SenderConnection);
                 else
                     sendInventoryFull(msg.SenderConnection);
             }
             else
             {
-                NetOutgoingMessage failCraftMsg = SS13NetServer.Singleton.CreateMessage();
+                NetOutgoingMessage failCraftMsg = IoCManager.Resolve<ISS13NetServer>().CreateMessage();
                 failCraftMsg.Write((byte)NetMessage.PlayerUiMessage);
                 failCraftMsg.Write((byte)UiManagerMessage.ComponentMessage);
                 failCraftMsg.Write((byte)GuiComponentType.ComboGui);
                 failCraftMsg.Write((byte)ComboGuiMessage.CraftNoRecipe);
-                netServer.SendMessage(failCraftMsg, msg.SenderConnection, NetDeliveryMethod.ReliableUnordered);
+                _netServer.SendMessage(failCraftMsg, msg.SenderConnection, NetDeliveryMethod.ReliableUnordered);
             }
         }
 
         private void sendCancelCraft(NetConnection connection)
         {
-            NetOutgoingMessage cancelCraftMsg = SS13NetServer.Singleton.CreateMessage();
+            NetOutgoingMessage cancelCraftMsg = IoCManager.Resolve<ISS13NetServer>().CreateMessage();
             cancelCraftMsg.Write((byte)NetMessage.PlayerUiMessage);
             cancelCraftMsg.Write((byte)UiManagerMessage.ComponentMessage);
             cancelCraftMsg.Write((byte)GuiComponentType.ComboGui);
             cancelCraftMsg.Write((byte)ComboGuiMessage.CancelCraftBar);
-            netServer.SendMessage(cancelCraftMsg, connection, NetDeliveryMethod.ReliableUnordered);
+            _netServer.SendMessage(cancelCraftMsg, connection, NetDeliveryMethod.ReliableUnordered);
             removeTicketByConnection(connection); //Better placement for this.
         }
 
         private void sendInventoryFull(NetConnection connection)
         {
-            NetOutgoingMessage inventoyFullMsg = SS13NetServer.Singleton.CreateMessage();
+            NetOutgoingMessage inventoyFullMsg = IoCManager.Resolve<ISS13NetServer>().CreateMessage();
             inventoyFullMsg.Write((byte)NetMessage.PlayerUiMessage);
             inventoyFullMsg.Write((byte)UiManagerMessage.ComponentMessage);
             inventoyFullMsg.Write((byte)GuiComponentType.ComboGui);
             inventoyFullMsg.Write((byte)ComboGuiMessage.CraftNeedInventorySpace);
-            netServer.SendMessage(inventoyFullMsg, connection, NetDeliveryMethod.ReliableUnordered);
+            _netServer.SendMessage(inventoyFullMsg, connection, NetDeliveryMethod.ReliableUnordered);
         }
 
         private void sendAlreadyCrafting(NetConnection connection)
         {
-            NetOutgoingMessage busyMsg = SS13NetServer.Singleton.CreateMessage();
+            NetOutgoingMessage busyMsg = IoCManager.Resolve<ISS13NetServer>().CreateMessage();
             busyMsg.Write((byte)NetMessage.PlayerUiMessage);
             busyMsg.Write((byte)UiManagerMessage.ComponentMessage);
             busyMsg.Write((byte)GuiComponentType.ComboGui);
             busyMsg.Write((byte)ComboGuiMessage.CraftAlreadyCrafting);
-            netServer.SendMessage(busyMsg, connection, NetDeliveryMethod.ReliableUnordered);
+            _netServer.SendMessage(busyMsg, connection, NetDeliveryMethod.ReliableUnordered);
         }
 
-        private void sendCraftSuccess(NetConnection connection, Entity result, CraftingTicket ticket)
+        private void sendCraftSuccess(NetConnection connection, IEntity result, CraftingTicket ticket)
         {
-            NetOutgoingMessage successMsg = SS13NetServer.Singleton.CreateMessage();
+            NetOutgoingMessage successMsg = IoCManager.Resolve<ISS13NetServer>().CreateMessage();
             successMsg.Write((byte)NetMessage.PlayerUiMessage);
             successMsg.Write((byte)UiManagerMessage.ComponentMessage);
             successMsg.Write((byte)GuiComponentType.ComboGui);
             successMsg.Write((byte)ComboGuiMessage.CraftSuccess);
-            successMsg.Write((string)ticket.component1.template.Name);
+            successMsg.Write((string)ticket.component1.Template.Name);
             successMsg.Write((string)ticket.component1.Name);
-            successMsg.Write((string)ticket.component2.template.Name);
+            successMsg.Write((string)ticket.component2.Template.Name);
             successMsg.Write((string)ticket.component2.Name);
-            successMsg.Write((string)result.template.Name);
+            successMsg.Write((string)result.Template.Name);
             successMsg.Write((string)result.Name);
-            netServer.SendMessage(successMsg, connection, NetDeliveryMethod.ReliableUnordered);
+            _netServer.SendMessage(successMsg, connection, NetDeliveryMethod.ReliableUnordered);
             removeTicketByConnection(connection); //Better placement for this.
         }
 
         private void sendCraftMissing(NetConnection connection)
         {
-            NetOutgoingMessage missingMsg = SS13NetServer.Singleton.CreateMessage();
+            NetOutgoingMessage missingMsg = IoCManager.Resolve<ISS13NetServer>().CreateMessage();
             missingMsg.Write((byte)NetMessage.PlayerUiMessage);
             missingMsg.Write((byte)UiManagerMessage.ComponentMessage);
             missingMsg.Write((byte)GuiComponentType.ComboGui);
             missingMsg.Write((byte)ComboGuiMessage.CraftItemsMissing);
-            netServer.SendMessage(missingMsg, connection, NetDeliveryMethod.ReliableUnordered);
+            _netServer.SendMessage(missingMsg, connection, NetDeliveryMethod.ReliableUnordered);
             removeTicketByConnection(connection); //Better placement for this.
         }
 
@@ -192,18 +173,18 @@ namespace SS13_Server.Modules
             {
                 if(craftingTicket.doneAt.Subtract(DateTime.Now).Ticks <= 0)
                 {
-                    if (hasFreeInventorySlots(playerManager.GetSessionByConnection(craftingTicket.sourceConnection).attachedEntity))
+                    if (hasFreeInventorySlots(_playerManager.GetSessionByConnection(craftingTicket.sourceConnection).attachedEntity))
                         //sendCancelCraft(craftingTicket.sourceConnection); //Possible problem if they disconnect while crafting. FIX THIS!!!!!!!!!!!!
 
                         if (hasEntityInInventory(craftingTicket.sourceEntity, craftingTicket.component1) && hasEntityInInventory(craftingTicket.sourceEntity, craftingTicket.component2))
                         {
-                            Entity newEnt = EntityManager.Singleton.SpawnEntity(craftingTicket.result);
+                            IEntity newEnt = _serverMain.EntityManager.SpawnEntity(craftingTicket.result);
                             sendCraftSuccess(craftingTicket.sourceConnection, newEnt, craftingTicket);
                             //craftingTicket.sourceEntity.SendMessage(this, ComponentMessageType.DisassociateEntity, null, craftingTicket.component1);
                             //craftingTicket.sourceEntity.SendMessage(this, ComponentMessageType.DisassociateEntity, null, craftingTicket.component2);
                             craftingTicket.sourceEntity.SendMessage(this, ComponentMessageType.InventoryAdd, newEnt);
-                            EntityManager.Singleton.DeleteEntity(craftingTicket.component1); //This might be unsafe and MIGHt leave behind references. Gotta check that later.
-                            EntityManager.Singleton.DeleteEntity(craftingTicket.component2);
+                            _serverMain.EntityManager.DeleteEntity(craftingTicket.component1); //This might be unsafe and MIGHt leave behind references. Gotta check that later.
+                            _serverMain.EntityManager.DeleteEntity(craftingTicket.component2);
                         }
                         else
                             sendCraftMissing(craftingTicket.sourceConnection);
@@ -215,16 +196,16 @@ namespace SS13_Server.Modules
             }
         }
 
-        private bool hasEntityInInventory(Entity container, Entity toSearch)
+        private bool hasEntityInInventory(IEntity container, IEntity toSearch)
         {
-            InventoryComponent compo = (InventoryComponent)container.GetComponent(ComponentFamily.Inventory);
+            var compo = (IInventoryComponent)container.GetComponent(ComponentFamily.Inventory);
             if (compo.containsEntity(toSearch)) return true;
             else return false;
         }
 
-        private bool hasFreeInventorySlots(Entity entity)
+        private bool hasFreeInventorySlots(IEntity entity)
         {
-            InventoryComponent compo = (InventoryComponent) entity.GetComponent(ComponentFamily.Inventory);
+            var compo = (IInventoryComponent) entity.GetComponent(ComponentFamily.Inventory);
             if (compo.containedEntities.Count >= compo.maxSlots) return false;
             else return true;
         }
@@ -241,10 +222,10 @@ namespace SS13_Server.Modules
             return null;
         }
 
-        public void BeginCrafting(Entity compo1, Entity compo2, Entity source, NetConnection sourceConnection) //Check for components and remove.
+        public void BeginCrafting(IEntity compo1, IEntity compo2, IEntity source, NetConnection sourceConnection) //Check for components and remove.
         {
-            if (!isValidRecipe(compo1.template.Name, compo2.template.Name)) return;
-            CraftingEntry recipe = getRecipe(compo1.template.Name, compo2.template.Name);
+            if (!isValidRecipe(compo1.Template.Name, compo2.Template.Name)) return;
+            CraftingEntry recipe = getRecipe(compo1.Template.Name, compo2.Template.Name);
             CraftingTicket newTicket = new CraftingTicket();
             if(recipe.components.Count < 2) return;
 
@@ -257,20 +238,19 @@ namespace SS13_Server.Modules
 
             craftingTickets.Add(newTicket);
 
-            NetOutgoingMessage startCraftMsg = SS13NetServer.Singleton.CreateMessage(); //Not starcraft. sorry.
+            NetOutgoingMessage startCraftMsg = IoCManager.Resolve<ISS13NetServer>().CreateMessage(); //Not starcraft. sorry.
             startCraftMsg.Write((byte)NetMessage.PlayerUiMessage);
             startCraftMsg.Write((byte)UiManagerMessage.ComponentMessage);
             startCraftMsg.Write((byte)GuiComponentType.ComboGui);
             startCraftMsg.Write((byte)ComboGuiMessage.ShowCraftBar);
             startCraftMsg.Write(recipe.secondsToCreate);
 
-            netServer.SendMessage(startCraftMsg, sourceConnection, NetDeliveryMethod.ReliableUnordered);
+            _netServer.SendMessage(startCraftMsg, sourceConnection, NetDeliveryMethod.ReliableUnordered);
         }
 
-        public void Initialize(string craftingListLoc, SS13NetServer _netServer, PlayerManager _playerManager)
+        public void Initialize(string craftingListLoc, ISS13Server server)
         {
-            netServer = _netServer;
-            playerManager = _playerManager;
+            _serverMain = server;
 
             if (File.Exists(craftingListLoc))
             {

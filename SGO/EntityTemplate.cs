@@ -4,60 +4,47 @@ using System.Linq;
 using System.Xml.Linq;
 using SS13_Shared;
 using SS13_Shared.GO;
+using ServerInterfaces.GameObject;
 
 namespace SGO
 {
     /// <summary>
     /// This class holds a template for an entity -- the entity name, components, and parameters the entity will be instantiated with.
     /// </summary>
-    public class EntityTemplate
+    public class EntityTemplate : IEntityTemplate
     {
         /// <summary>
         /// This holds a list of the component types the entity will be instantiated with.
         /// </summary>
-        private List<string> components = new List<string>();
+        private readonly List<string> components = new List<string>();
+
         /// <summary>
         /// This holds a dictionary linking parameter objects to 
         /// </summary>
-        private Dictionary<string, List<ComponentParameter>> parameters = new Dictionary<string, List<ComponentParameter>>();
+        private readonly Dictionary<string, List<ComponentParameter>> parameters =
+            new Dictionary<string, List<ComponentParameter>>();
+
+        #region IEntityTemplate Members
 
         /// <summary>
         /// The Placement mode used for server-initiated placement. This is used for placement during normal gameplay. The clientside version controls the placement type for editor and admin spawning.
         /// </summary>
-        public PlacementOption placementMode { get; private set; }
+        public PlacementOption PlacementMode { get; private set; }
 
         /// <summary>
         /// The Range this entity can be placed from.
         /// </summary>
-        public int placementRange { get; private set; }
+        public int PlacementRange { get; private set; }
 
-        /// <summary>
-        /// Name of the entity template eg. "HumanMob"
-        /// </summary>
-        private string m_name;
-        public string Name
-        {
-            get
-            { return m_name; }
-            set
-            { m_name = value; }
-        }
-        
-        /// <summary>
-        /// Default constructor
-        /// </summary>
-        public EntityTemplate()
-        {
-
-        }
+        public string Name { get; set; }
 
         /// <summary>
         /// Creates an entity from this template
         /// </summary>
         /// <returns></returns>
-        public Entity CreateEntity(EntityNetworkManager entityNetworkManager)
+        public IEntity CreateEntity(IEntityNetworkManager entityNetworkManager)
         {
-            Entity e = new Entity(entityNetworkManager);
+            var e = new Entity(entityNetworkManager);
 
             foreach (string componentname in components)
             {
@@ -66,7 +53,7 @@ namespace SGO
                     continue; //TODO THROW ERROR
 
                 ///Get all the params in the template that apply to this component
-                var cparameters = parameters[componentname];
+                List<ComponentParameter> cparameters = parameters[componentname];
                 foreach (ComponentParameter p in cparameters)
                 {
                     ///Set the component's parameters
@@ -76,7 +63,7 @@ namespace SGO
                 e.AddComponent(component.Family, component);
             }
             e.Name = Name;
-            e.template = this;
+            e.Template = this;
             return e;
         }
 
@@ -103,15 +90,15 @@ namespace SGO
         {
             Name = templateElement.Attribute("name").Value;
 
-            var t_components = templateElement.Element("Components").Elements();
+            IEnumerable<XElement> t_components = templateElement.Element("Components").Elements();
             //Parse components
             foreach (XElement t_component in t_components)
             {
                 string componentname = t_component.Attribute("name").Value;
                 components.Add(componentname);
                 parameters.Add(componentname, new List<ComponentParameter>());
-                var t_componentParameters = from t_param in t_component.Descendants("Parameter")
-                                            select t_param;
+                IEnumerable<XElement> t_componentParameters = from t_param in t_component.Descendants("Parameter")
+                                                              select t_param;
                 //Parse component parameters
                 foreach (XElement t_componentParameter in t_componentParameters)
                 {
@@ -121,16 +108,17 @@ namespace SGO
                     parameters[componentname].Add(new ComponentParameter(t_componentParameter.Attribute("name").Value,
                                                                          paramtype,
                                                                          t_componentParameter.Attribute("value").Value)
-                                                 );
+                        );
                 }
 
                 if (t_component.Element("ExtendedParameters") != null)
                 {
-                    parameters[componentname].Add(new ComponentParameter("ExtendedParameters", typeof(XElement), t_component.Element("ExtendedParameters")));
+                    parameters[componentname].Add(new ComponentParameter("ExtendedParameters", typeof (XElement),
+                                                                         t_component.Element("ExtendedParameters")));
                 }
             }
 
-            var t_placementprops = templateElement.Element("PlacementProperties");
+            XElement t_placementprops = templateElement.Element("PlacementProperties");
             //Load Placement properties.
             if (t_placementprops != null)
             {
@@ -140,31 +128,33 @@ namespace SGO
                 if (modeElement != null)
                 {
                     string modeName = modeElement.Attribute("type").Value;
-                    this.placementMode = (PlacementOption)Enum.Parse(typeof(PlacementOption), modeName);
+                    PlacementMode = (PlacementOption) Enum.Parse(typeof (PlacementOption), modeName);
                 }
                 else
-                    this.placementMode = PlacementOption.AlignNone;
+                    PlacementMode = PlacementOption.AlignNone;
 
                 if (rangeElement != null)
                 {
                     int range = int.Parse(rangeElement.Attribute("value").Value);
-                    this.placementRange = range;
+                    PlacementRange = range;
                 }
                 else
-                    this.placementRange = 200;
+                    PlacementRange = 200;
             }
         }
+
+        #endregion
 
         private Type translateType(string typeName)
         {
             switch (typeName.ToLowerInvariant())
             {
                 case "string":
-                    return typeof(string);
+                    return typeof (string);
                 case "int":
-                    return typeof(int);
+                    return typeof (int);
                 case "float":
-                    return typeof(float);
+                    return typeof (float);
                 default:
                     return null;
             }

@@ -16,6 +16,7 @@
           <InventoryProperties inventorySize="20"></InventoryProperties>
         </ExtendedParameters>
       </Component>
+      <Component name="EntityStatsComp"></Component>
     </Components>
   </EntityTemplate>
 </EntityTemplates>

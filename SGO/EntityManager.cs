@@ -196,12 +196,13 @@ namespace SGO
         /// <param name="EntityType"></param>
         /// <param name="position"></param>
         /// <returns></returns>
-        public IEntity SpawnEntityAt(string EntityType, Vector2 position)
+        public IEntity SpawnEntityAt(string EntityType, Vector2 position, bool send = true)
         {
             IEntity e = SpawnEntity(EntityType, false);
             e.Translate(position);
-            SendSpawnEntityAtPosition(e);
-            e.FireNetworkedSpawn();
+            if (send) SendSpawnEntityAtPosition(e);
+            if (send) e.Initialize();
+            if (send) e.FireNetworkedSpawn();
             return e;
         }
 

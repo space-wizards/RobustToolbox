@@ -141,6 +141,7 @@ namespace SS13_Server
             IoCManager.Resolve<IChatManager>().Initialize(this);
             IoCManager.Resolve<IPlayerManager>().Initialize(this);
             IoCManager.Resolve<ICraftingManager>().Initialize("CraftingRecipes.xml", this);
+            IoCManager.Resolve<IPlacementManager>().Initialize(this);
 
 
             StartLobby();

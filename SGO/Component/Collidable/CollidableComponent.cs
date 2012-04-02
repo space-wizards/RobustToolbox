@@ -22,11 +22,11 @@ namespace SGO
             switch (type)
             {
                 case ComponentMessageType.DisableCollision:
-                    Owner.SendComponentNetworkMessage(this, NetDeliveryMethod.ReliableUnordered, null,
+                    Owner.SendComponentNetworkMessage(this, NetDeliveryMethod.ReliableOrdered, null,
                                                       ComponentMessageType.DisableCollision);
                     break;
                 case ComponentMessageType.EnableCollision:
-                    Owner.SendComponentNetworkMessage(this, NetDeliveryMethod.ReliableUnordered, null,
+                    Owner.SendComponentNetworkMessage(this, NetDeliveryMethod.ReliableOrdered, null,
                                                       ComponentMessageType.EnableCollision);
                     break;
             }

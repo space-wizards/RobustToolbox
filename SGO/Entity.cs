@@ -297,7 +297,8 @@ namespace SGO
         /// </summary>
         public virtual void SendPositionUpdate()
         {
-            SendMessage(this, ComponentMessageType.SendPositionUpdate);
+            if(_initialized)
+                SendMessage(this, ComponentMessageType.SendPositionUpdate);
         }
 
         public virtual void HandleClick(int clickerID)

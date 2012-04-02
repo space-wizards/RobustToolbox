@@ -11,8 +11,7 @@ namespace ServerInterfaces.GameObject
         void SendEntities(NetConnection connection);
         void SaveEntities();
         IEntity SpawnEntity(string template, bool send = true);
+        IEntity SpawnEntityAt(string entityTemplateName, SS13_Shared.Vector2 vector2, bool send = true);
         IComponentFactory ComponentFactory { get; }
-
-        IEntity SpawnEntityAt(string entityTemplateName, SS13_Shared.Vector2 vector2);
     }
 }

@@ -135,7 +135,7 @@ namespace SGO
                 containedEntities.Add(entity);
 
                 HandleAdded(entity);
-                Owner.SendComponentNetworkMessage(this, NetDeliveryMethod.ReliableUnordered, null,
+                Owner.SendComponentNetworkMessage(this, NetDeliveryMethod.ReliableOrdered, null,
                                                   ComponentMessageType.InventoryUpdateRequired);
             }
         }
@@ -148,7 +148,7 @@ namespace SGO
                 containedEntities.Remove(entity);
             }
             HandleRemoved(entity);
-            Owner.SendComponentNetworkMessage(this, NetDeliveryMethod.ReliableUnordered, null,
+            Owner.SendComponentNetworkMessage(this, NetDeliveryMethod.ReliableOrdered, null,
                                               ComponentMessageType.InventoryUpdateRequired);
         }
 

@@ -137,8 +137,6 @@ namespace SGO
                     throw new NotImplementedException("Cannot write specified type.");
                 }
             }
-            if (method == null)
-                method = NetDeliveryMethod.ReliableUnordered;
 
             //Send the message
             if (recipient == null)

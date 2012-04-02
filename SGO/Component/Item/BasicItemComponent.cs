@@ -103,7 +103,7 @@ namespace SGO
         {
             Owner.RemoveComponent(ComponentFamily.Mover);
             Owner.AddComponent(ComponentFamily.Mover, ComponentFactory.Singleton.GetComponent("BasicMoverComponent"));
-            Owner.SendComponentNetworkMessage(this, NetDeliveryMethod.ReliableUnordered, null,
+            Owner.SendComponentNetworkMessage(this, NetDeliveryMethod.ReliableOrdered, null,
                                               ItemComponentNetMessage.Dropped);
             currentHolder = null;
         }
@@ -114,14 +114,14 @@ namespace SGO
             holdingHand = _holdingHand;
             Owner.AddComponent(ComponentFamily.Mover, ComponentFactory.Singleton.GetComponent("SlaveMoverComponent"));
             Owner.SendMessage(this, ComponentMessageType.SlaveAttach, entity.Uid);
-            Owner.SendComponentNetworkMessage(this, NetDeliveryMethod.ReliableUnordered, null,
+            Owner.SendComponentNetworkMessage(this, NetDeliveryMethod.ReliableOrdered, null,
                                               ItemComponentNetMessage.PickedUp, entity.Uid, holdingHand);
         }
 
         public override void HandleInstantiationMessage(NetConnection netConnection)
         {
             if (currentHolder != null)
-                Owner.SendComponentNetworkMessage(this, NetDeliveryMethod.ReliableUnordered, netConnection,
+                Owner.SendComponentNetworkMessage(this, NetDeliveryMethod.ReliableOrdered, netConnection,
                                                   ItemComponentNetMessage.PickedUp, currentHolder.Uid, holdingHand);
         }
 

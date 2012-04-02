@@ -96,14 +96,13 @@ namespace SGO
                 switch (type)
                 {
                     case ComponentMessageType.ActiveHandChanged:
-                        Owner.SendMessage(this, type, message.MessageParameters[1]);
+                        SwitchHandsTo((Hand)message.MessageParameters[1]);
                         break;
                     case ComponentMessageType.DropEntityInHand:
-                        Owner.SendMessage(this, type,
-                                          EntityManager.Singleton.GetEntity((int) message.MessageParameters[1]));
+                        Drop((Entity)EntityManager.Singleton.GetEntity((int) message.MessageParameters[1]));
                         break;
                     case ComponentMessageType.DropItemInHand:
-                        Owner.SendMessage(this, type, message.MessageParameters[1]);
+                        Drop((Hand)message.MessageParameters[1]);
                         break;
                 }
             }

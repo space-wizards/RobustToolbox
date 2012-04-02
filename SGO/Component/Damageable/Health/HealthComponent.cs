@@ -22,6 +22,17 @@ namespace SGO
             SendHealthUpdate(netConnection);
         }
 
+        protected override void ApplyDamage(Entity damager, int damageamount, DamageType damType)
+        {
+            base.ApplyDamage(damager, damageamount, damType);
+            SendHealthUpdate();
+        }
+
+        public override void Update(float frameTime)
+        {
+            base.Update(frameTime);
+        }
+
         public override void HandleNetworkMessage(IncomingEntityComponentMessage message, NetConnection client)
         {
             ComponentMessageType type = (ComponentMessageType)message.messageParameters[0];

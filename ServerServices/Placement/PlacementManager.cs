@@ -3,42 +3,30 @@ using System.Collections.Generic;
 using System.Linq;
 using SS13_Shared;
 using Lidgren.Network;
-using ServerServices;
 using System.Drawing;
-using SGO;
 using SS13_Shared.GO;
+using ServerInterfaces.Placement;
 using ServerServices.Log;
 using SS13.IoC;
 using ServerInterfaces.Network;
-using ServerInterfaces;
 using ServerInterfaces.Player;
 using ServerInterfaces.GameObject;
+using ServerInterfaces;
+using ServerInterfaces.Map;
 
-namespace SS13_Server.Modules
+namespace ServerServices.Placement
 {
-    class PlacementManager
+    public class PlacementManager : IPlacementManager
     {
         //TO-DO: Expand for multiple permission per mob?
         //       Add support for multi-use placeables (tiles etc.).
         public List<PlacementInformation> BuildPermissions = new List<PlacementInformation>(); //Holds build permissions for all mobs. A list of mobs and the objects they're allowed to request and how. One permission per mob.
+        private ISS13Server _server;
 
-        #region Singleton
-        private static PlacementManager singleton;
-
-        private PlacementManager() { }
-
-        public static PlacementManager Singleton
+        public void Initialize(ISS13Server server)
         {
-            get
-            {
-                if (singleton == null)
-                {
-                    singleton = new PlacementManager();
-                }
-                return singleton;
-            }
-        } 
-        #endregion
+            _server = server;
+        }
 
         /// <summary>
         ///  Handles placement related client messages.
@@ -112,15 +100,15 @@ namespace SS13_Server.Modules
 
                 if (!isTile)
                 {
-                    IEntity created = EntityManager.Singleton.SpawnEntityAt(entityTemplateName, new Vector2(xRcv, yRcv));
+                    IEntity created = _server.EntityManager.SpawnEntityAt(entityTemplateName, new Vector2(xRcv, yRcv));
                     if(created != null)
                         created.Translate(new Vector2(xRcv, yRcv), rotRcv);
                 }
                 else
                 {
-                    Point arrayPos = SS13_Server.SS13Server.Singleton.Map.GetTileArrayPositionFromWorldPosition(new Vector2(xRcv, yRcv));
-                    SS13_Server.SS13Server.Singleton.Map.ChangeTile(arrayPos.X, arrayPos.Y, tileType);
-                    SS13_Server.SS13Server.Singleton.Map.NetworkUpdateTile(arrayPos.X, arrayPos.Y);
+                    Point arrayPos = IoCManager.Resolve<IMap>().GetTileArrayPositionFromWorldPosition(new Vector2(xRcv, yRcv));
+                    IoCManager.Resolve<IMap>().ChangeTile(arrayPos.X, arrayPos.Y, tileType);
+                    IoCManager.Resolve<IMap>().NetworkUpdateTile(arrayPos.X, arrayPos.Y);
                 }
             }
             else //They are not allowed to request this. Send 'PlacementFailed'. TBA

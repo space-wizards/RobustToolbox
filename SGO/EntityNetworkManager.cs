@@ -148,7 +148,7 @@ namespace SGO
 
             if (_messageProfiling)
             {
-                var logger = ServiceManager.Singleton.Resolve<IMessageLogger>();
+                var logger = IoCManager.Resolve<IMessageLogger>();
                 logger.LogOutgoingComponentNetMessage(
                     (recipient == null) ? 0 : recipient.RemoteUniqueIdentifier,
                     sendingEntity.Uid,
@@ -221,7 +221,7 @@ namespace SGO
 
             if (_messageProfiling)
             {
-                var logger = ServiceManager.Singleton.Resolve<IMessageLogger>();
+                var logger = IoCManager.Resolve<IMessageLogger>();
 
                 if (messageType == EntityMessage.ComponentMessage)
                 {

@@ -1,6 +1,7 @@
 ﻿using Lidgren.Network;
 using ServerInterfaces.GameObject;
 using SS13_Shared.ServerEnums;
+using ServerInterfaces.Map;
 namespace ServerInterfaces
 {
     public interface ISS13Server
@@ -10,5 +11,7 @@ namespace ServerInterfaces
         void SaveMap();
         void SaveEntities();
         RunLevel Runlevel { get; }
+
+        IMap GetMap();
     }
 }

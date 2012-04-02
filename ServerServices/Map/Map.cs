@@ -10,10 +10,12 @@ using ServerInterfaces;
 using ServerServices.Log;
 using SS13.IoC;
 using ServerInterfaces.Network;
+using ServerInterfaces.Map;
+using ServerInterfaces.Tiles;
 
 namespace ServerServices.Map
 {
-    public class Map : IService
+    public class Map : IMap
     {
         #region Variables
         private Tile[,] tileArray;
@@ -100,7 +102,7 @@ namespace ServerServices.Map
             {
                 var t = tileArray[arrayPosition.X, arrayPosition.Y];
                 var g = t.gasCell;
-                Tiles.Tile newTile = GenerateNewTile(arrayPosition.X, arrayPosition.Y, TileType.Floor);
+                var newTile = GenerateNewTile(arrayPosition.X, arrayPosition.Y, TileType.Floor) as Tile;
                 tileArray[arrayPosition.X, arrayPosition.Y] = newTile;
                 newTile.gasCell = g;
                 g.AttachToTile(newTile);
@@ -117,8 +119,8 @@ namespace ServerServices.Map
             if (IsSaneArrayPosition(x, y))
             {
                 Tiles.Atmos.GasCell g = tileArray[x, y].gasCell;
-                Tile t = GenerateNewTile(x, y, type);
-                tileArray[x, y] = t;
+                var t = GenerateNewTile(x, y, type) as Tile;
+                tileArray[x, y] = t as Tile;
                 tileArray[x, y].gasCell = g;
                 g.AttachToTile(t);
                 NetworkUpdateTile(x, y);
@@ -257,7 +259,7 @@ namespace ServerServices.Map
 
         }
 
-        public Tile GetTileAt(int x, int y)
+        public ITile GetTileAt(int x, int y)
         {
             if (!IsSaneArrayPosition(x, y))
                 return null;
@@ -409,11 +411,11 @@ namespace ServerServices.Map
         /// </summary>
         /// <param name="fromTile">Tile to move gas information/cell from</param>
         /// <param name="toTile">Tile to move gas information/cell to</param>
-        public void MoveGasCell(Tile fromTile, Tile toTile)
+        public void MoveGasCell(ITile fromTile, ITile toTile)
         {
-            Tiles.Atmos.GasCell g = fromTile.gasCell;
-            toTile.gasCell = g;
-            g.AttachToTile(toTile);
+            Tiles.Atmos.GasCell g = (fromTile as Tile).gasCell;
+            (toTile as Tile).gasCell = g;
+            g.AttachToTile((toTile as Tile));
         }
         #endregion
 
@@ -428,7 +430,7 @@ namespace ServerServices.Map
             //if (tileArray[x, z] != null) //If theres a tile, activate it's changed event.
             //    tileArray[x, z].RaiseChangedEvent(newType);
 
-            Tile tile = GenerateNewTile(x, z, newType); //Transfer the gas cell from the old tile to the new tile.
+            Tile tile = GenerateNewTile(x, z, newType) as Tile; //Transfer the gas cell from the old tile to the new tile.
 
             MoveGasCell(tileArray[x, z], tile);
 
@@ -460,7 +462,7 @@ namespace ServerServices.Map
             return true;
         }
 
-        public Tile GenerateNewTile(int x, int y, TileType type)
+        public ITile GenerateNewTile(int x, int y, TileType type)
         {
             if (tileArray[x, y] != null) //If theres a tile, activate it's changed event.
                 tileArray[x, y].RaiseChangedEvent(type);
@@ -503,7 +505,7 @@ namespace ServerServices.Map
 
         public void Shutdown()
         {
-            ServiceManager.Singleton.RemoveService(this);
+            //ServiceManager.Singleton.RemoveService(this);
             tileArray = null;
         }
 
@@ -534,7 +536,7 @@ namespace ServerServices.Map
             return new Point(xPos, zPos);
         }
 
-        public Tile GetTileFromWorldPosition(Vector2 pos)
+        public ITile GetTileFromWorldPosition(Vector2 pos)
         {
             Point arrayPos = GetTileArrayPositionFromWorldPosition(pos);
             return GetTileAt(arrayPos.X, arrayPos.Y);
@@ -637,9 +639,5 @@ namespace ServerServices.Map
 
         #endregion
 
-        public ServerServiceType ServiceType
-        {
-            get { return ServerServiceType.Map; }
-        }
     }
 }

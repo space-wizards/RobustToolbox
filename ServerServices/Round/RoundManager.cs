@@ -2,7 +2,7 @@
 using ServerInterfaces.GameMode;
 using ServerInterfaces.Round;
 
-namespace SS13_Server.Modules
+namespace ServerServices.Round
 {
     class RoundManager : IRoundManager
     {

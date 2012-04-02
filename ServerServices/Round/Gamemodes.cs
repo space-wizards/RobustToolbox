@@ -1,17 +1,9 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-
-using SS13_Server.Modules.Gamemodes;
-using SS13_Server.Modules;
-using SS13_Server;
-using ServerInterfaces;
-using ServerInterfaces.Player;
+﻿using ServerInterfaces.Player;
 using SS13.IoC;
 using ServerInterfaces.GameMode;
+using ServerInterfaces;
 
-namespace SS13_Server.Modules.Gamemodes
+namespace ServerServices.Round
 {
     public class Gamemode : IGameMode
     {
@@ -25,11 +17,11 @@ namespace SS13_Server.Modules.Gamemodes
         public event GameUpdateHandler OnGameUpdate;
         public event GameEndHandler OnGameEnd;      
 
-        private SS13Server server;
+        private ISS13Server _server;
 
-        public Gamemode()
+        public Gamemode(ISS13Server server)
         {
-            server = SS13_Server.SS13Server.Singleton;
+            _server = server;
             Name = "Gamemode";
             Description = "This is an empty Gamemode";
         }

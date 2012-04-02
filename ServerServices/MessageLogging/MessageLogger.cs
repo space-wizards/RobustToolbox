@@ -6,6 +6,7 @@ using SS13_Shared;
 using ServerInterfaces;
 using ServerInterfaces.MessageLogging;
 using System.Timers;
+using ServerInterfaces.Configuration;
 
 namespace ServerServices.MessageLogging
 {
@@ -15,7 +16,7 @@ namespace ServerServices.MessageLogging
         private bool _logging;
         private static Timer _pingTimer;
 
-        public MessageLogger(IConfigManager _configurationManager)
+        public MessageLogger(IConfigurationManager _configurationManager)
         {
             _logging = _configurationManager.MessageLogging;
             _loggerServiceClient = new MessageLoggerServiceClient("NetNamedPipeBinding_IMessageLoggerService");
@@ -23,7 +24,7 @@ namespace ServerServices.MessageLogging
             {
                 Ping();
                 _pingTimer = new Timer(5000);
-                _pingTimer.Elapsed += new ElapsedEventHandler(CheckServer);
+                _pingTimer.Elapsed += CheckServer;
                 _pingTimer.Enabled = true;
             }
         }

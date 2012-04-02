@@ -151,21 +151,21 @@ namespace CGO
 
         #region Receiving
         /// <summary>
-        /// Converts a raw NetIncomingMessage to an IncomingEntityMessage object
+        /// Converts a raw NetIncomingMessage to an ClientIncomingEntityMessage object
         /// </summary>
         /// <param name="message">raw network message</param>
-        /// <returns>An IncomingEntityMessage object</returns>
-        public IncomingEntityMessage HandleEntityNetworkMessage(NetIncomingMessage message)
+        /// <returns>An ClientIncomingEntityMessage object</returns>
+        public ClientIncomingEntityMessage HandleEntityNetworkMessage(NetIncomingMessage message)
         {
             var uid = message.ReadInt32();
             var messageType = (EntityMessage)message.ReadByte();
-            var result = IncomingEntityMessage.Null;
+            var result = ClientIncomingEntityMessage.Null;
 
             switch (messageType)
             {
                 case EntityMessage.ComponentMessage:
                     var messageContent = HandleEntityComponentNetworkMessage(message);
-                    result = new IncomingEntityMessage(uid, EntityMessage.ComponentMessage, messageContent);
+                    result = new ClientIncomingEntityMessage(uid, EntityMessage.ComponentMessage, messageContent);
 
                     if (_messageProfiling)
                     {
@@ -179,7 +179,7 @@ namespace CGO
                     //TODO: Handle position messages!
                     break;
                 case EntityMessage.NameUpdate:
-                    result = new IncomingEntityMessage(uid, EntityMessage.NameUpdate, message.ReadString());
+                    result = new ClientIncomingEntityMessage(uid, EntityMessage.NameUpdate, message.ReadString());
                     break;
             }
             return result;

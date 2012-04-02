@@ -1,17 +1,16 @@
-﻿using System.Collections.Generic;
-using SS13_Shared;
+﻿using SS13_Shared;
 using SS13_Shared.GO;
 using Lidgren.Network;
 
-namespace SGO
+namespace ServerInterfaces.GameObject
 {
     public interface IGameObjectComponent
     {
-        Entity Owner { get; set; }
+        IEntity Owner { get; set; }
 
         ComponentReplyMessage RecieveMessage(object sender, ComponentMessageType type, params object[] list);
         void OnRemove();
-        void OnAdd(Entity owner);
+        void OnAdd(IEntity owner);
         void Update(float frameTime);
         void Shutdown();
         ComponentFamily Family {get;}

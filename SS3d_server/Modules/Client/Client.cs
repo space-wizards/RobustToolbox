@@ -5,28 +5,20 @@ using System.Text;
 using System.IO;
 using Lidgren.Network;
 using SS13_Shared;
+using ServerInterfaces;
 
 namespace SS13_Server.Modules.Client
 {
-    public class Client
+    public class Client: IClient
     {
-        public NetConnection netConnection;
-        public string playerName = "Player";
-        public ClientStatus status;
-        public ushort mobID;
+        public NetConnection NetConnection { get; private set; }
+        public string PlayerName { get; set; }
+        public ClientStatus Status { get; set; }
+        public ushort MobID { get; set; }
 
         public Client(NetConnection connection)
         {
-            netConnection = connection;
-        }
-
-        public void SetName(string name)
-        {
-            name = name.Trim();
-            if (name.Length >= 3)
-            {
-                playerName = name;
-            }
+            NetConnection = connection;
         }
     }
 }

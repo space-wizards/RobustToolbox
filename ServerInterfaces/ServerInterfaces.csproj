@@ -55,13 +55,23 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="IChatManager.cs" />
-    <Compile Include="IConfigManager.cs" />
+    <Compile Include="Chat\IChatManager.cs" />
+    <Compile Include="Configuration\IConfigurationManager.cs" />
+    <Compile Include="GameObject\IComponentFactory.cs" />
+    <Compile Include="GameObject\IEntity.cs" />
+    <Compile Include="GameObject\IEntityManager.cs" />
+    <Compile Include="GameObject\IEntityNetworkManager.cs" />
+    <Compile Include="GameObject\IGameObjectComponent.cs" />
+    <Compile Include="IClient.cs" />
+    <Compile Include="GameObject\IEntityTemplate.cs" />
+    <Compile Include="ISS13Server.cs" />
     <Compile Include="MessageLogging\IMessageLogger.cs" />
-    <Compile Include="IPlayerSession.cs" />
+    <Compile Include="Player\IPlayerSession.cs" />
     <Compile Include="IService.cs" />
+    <Compile Include="Network\ISS13NetServer.cs" />
     <Compile Include="Objectives\IObjective.cs" />
     <Compile Include="Objectives\IObjectiveSet.cs" />
+    <Compile Include="Player\IPlayerManager.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
   <ItemGroup>

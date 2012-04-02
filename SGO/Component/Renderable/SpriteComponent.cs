@@ -1,21 +1,20 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using SS13_Shared;
+﻿using Lidgren.Network;
 using SS13_Shared.GO;
-using Lidgren.Network;
 
 namespace SGO
 {
     public class SpriteComponent : GameObjectComponent
     {
+        private bool visible = true;
+
+        public SpriteComponent()
+        {
+            family = ComponentFamily.Renderable;
+        }
+
         public bool Visible
         {
-            get
-            {
-                return visible;
-            }
+            get { return visible; }
 
             set
             {
@@ -23,13 +22,6 @@ namespace SGO
                 visible = value;
                 SendVisible(null);
             }
-        }
-
-        private bool visible = true;
-
-        public SpriteComponent()
-        {
-            family = SS13_Shared.GO.ComponentFamily.Renderable;
         }
 
         public override void HandleInstantiationMessage(NetConnection netConnection)
@@ -40,12 +32,14 @@ namespace SGO
 
         private void SendVisible(NetConnection connection)
         {
-            Owner.SendComponentNetworkMessage(this, Lidgren.Network.NetDeliveryMethod.ReliableUnordered, connection, ComponentMessageType.SetVisible, visible);
+            Owner.SendComponentNetworkMessage(this, NetDeliveryMethod.ReliableUnordered, connection,
+                                              ComponentMessageType.SetVisible, visible);
         }
 
-        public override ComponentReplyMessage RecieveMessage(object sender, ComponentMessageType type, params object[] list)
+        public override ComponentReplyMessage RecieveMessage(object sender, ComponentMessageType type,
+                                                             params object[] list)
         {
-            var reply = base.RecieveMessage(sender, type, list);
+            ComponentReplyMessage reply = base.RecieveMessage(sender, type, list);
 
             if (sender == this)
                 return ComponentReplyMessage.Empty;
@@ -53,15 +47,18 @@ namespace SGO
             switch (type)
             {
                 case ComponentMessageType.SetSpriteByKey:
-                    if (Owner != null) //We got a set sprite message. Forward it on to the clientside sprite components.                    
-                        Owner.SendComponentNetworkMessage(this, Lidgren.Network.NetDeliveryMethod.ReliableUnordered, null, ComponentMessageType.SetSpriteByKey, list[0]);
+                    if (Owner != null)
+                        //We got a set sprite message. Forward it on to the clientside sprite components.                    
+                        Owner.SendComponentNetworkMessage(this, NetDeliveryMethod.ReliableUnordered, null,
+                                                          ComponentMessageType.SetSpriteByKey, list[0]);
                     break;
                 case ComponentMessageType.SetVisible:
-                    Visible = (bool)list[0];
+                    Visible = (bool) list[0];
                     break;
                 case ComponentMessageType.SetDrawDepth:
-                    if (Owner != null)                  
-                        Owner.SendComponentNetworkMessage(this, Lidgren.Network.NetDeliveryMethod.ReliableUnordered, null, ComponentMessageType.SetDrawDepth, list[0]);
+                    if (Owner != null)
+                        Owner.SendComponentNetworkMessage(this, NetDeliveryMethod.ReliableUnordered, null,
+                                                          ComponentMessageType.SetDrawDepth, list[0]);
                     break;
             }
 

@@ -58,15 +58,18 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="Configuration\ConfigManager.cs" />
+    <Compile Include="Chat\ChatManager.cs" />
+    <Compile Include="Configuration\ConfigurationManager.cs" />
     <Compile Include="Log\LogManager.cs" />
     <Compile Include="Map\Map.cs" />
     <Compile Include="MessageLogging\MessageLogger.cs" />
     <Compile Include="MessageLogging\MessageLoggerService.cs" />
     <Compile Include="Configuration\PersistentConfiguration.cs" />
+    <Compile Include="Player\PlayerManager.cs" />
+    <Compile Include="Player\PlayerSession.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="ServiceManager.cs" />
-    <Compile Include="SS3DNetServer.cs" />
+    <Compile Include="Network\SS3DNetServer.cs" />
     <Compile Include="Tiles\Atmos\GasCell.cs" />
     <Compile Include="Tiles\Floor\Floor.cs" />
     <Compile Include="Tiles\Floor\Space.cs" />
@@ -81,6 +84,10 @@
     <ProjectReference Include="..\ServerInterfaces\ServerInterfaces.csproj">
       <Project>{54D36F17-8D71-4DD8-8B29-12CAD489F0D9}</Project>
       <Name>ServerInterfaces</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\SS13.IoC\SS13.IoC.csproj">
+      <Project>{3401031F-35A7-4AE5-8B64-CAFDCB929F0E}</Project>
+      <Name>SS13.IoC</Name>
     </ProjectReference>
     <ProjectReference Include="..\SS3D_shared\SS13_Shared.csproj">
       <Project>{4229D7E3-C3AE-4C0A-B2B1-BB20911150DC}</Project>

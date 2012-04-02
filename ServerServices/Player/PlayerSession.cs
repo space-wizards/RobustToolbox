@@ -1,31 +1,40 @@
 ﻿using Lidgren.Network;
 using SS13_Shared;
 using SS13_Shared.GO;
-using SGO;
 using ServerServices;
 using ServerInterfaces;
+using ServerServices.Log;
+using SS13.IoC;
+using ServerInterfaces.Network;
+using ServerInterfaces.GameObject;
+using SS13_Shared.ServerEnums;
+using ServerInterfaces.Player;
 
-namespace SS13_Server.Modules
+namespace ServerServices.Player
 {
     public class PlayerSession : IPlayerSession
     {
         /* This class represents a connected player session */
 
-        public NetConnection connectedClient;
+        public NetConnection connectedClient { get; private set; }
         public NetConnection ConnectedClient { get { return connectedClient; } }
+        private PlayerManager _playerManager;
 
-        public Entity attachedEntity;
-        public string name = "";
-        public SessionStatus status;
-        public AdminPermissions adminPermissions;
+        public IEntity attachedEntity { get; set; }
+        public string name { get; set; }
+        public SessionStatus status { get; set; }
+        public AdminPermissions adminPermissions { get; set; }
 
         public BodyPart targetedArea = BodyPart.Torso;
         public BodyPart TargetedArea { get { return targetedArea; } }
 
-        public JobDefinition assignedJob;
+        public JobDefinition assignedJob { get; set; }
 
-        public PlayerSession(NetConnection client)
-        {         
+        public PlayerSession(NetConnection client, PlayerManager playerManager)
+        {
+            _playerManager = playerManager;
+            name = "";
+
             if (client != null)
             {
                 connectedClient = client;
@@ -36,14 +45,14 @@ namespace SS13_Server.Modules
                 status = SessionStatus.Zombie;
         }
 
-        public void AttachToEntity(Entity a)
+        public void AttachToEntity(IEntity a)
         {
             DetachFromEntity();
             //a.attachedClient = connectedClient;
             //Add input component.
-            a.AddComponent(ComponentFamily.Input, SGO.ComponentFactory.Singleton.GetComponent("KeyBindingInputComponent"));
-            a.AddComponent(ComponentFamily.Mover, ComponentFactory.Singleton.GetComponent("PlayerInputMoverComponent"));
-            var actorComponent = (BasicActorComponent)ComponentFactory.Singleton.GetComponent("BasicActorComponent");
+            a.AddComponent(ComponentFamily.Input, _playerManager.server.EntityManager.ComponentFactory.GetComponent("KeyBindingInputComponent"));
+            a.AddComponent(ComponentFamily.Mover, _playerManager.server.EntityManager.ComponentFactory.GetComponent("PlayerInputMoverComponent"));
+            var actorComponent = _playerManager.server.EntityManager.ComponentFactory.GetComponent("BasicActorComponent");
             actorComponent.SetParameter(new ComponentParameter("playersession", typeof(IPlayerSession), this));
             a.AddComponent(ComponentFamily.Actor, actorComponent);
 
@@ -64,11 +73,11 @@ namespace SS13_Server.Modules
 
         private void SendAttachMessage()
         {
-            NetOutgoingMessage m = SS13NetServer.Singleton.CreateMessage();
+            NetOutgoingMessage m = IoCManager.Resolve<ISS13NetServer>().CreateMessage();
             m.Write((byte)NetMessage.PlayerSessionMessage);
             m.Write((byte)PlayerSessionMessage.AttachToEntity);
             m.Write(attachedEntity.Uid);
-            SS13NetServer.Singleton.SendMessage(m, connectedClient);
+            IoCManager.Resolve<ISS13NetServer>().SendMessage(m, connectedClient);
         }
 
         public void HandleNetworkMessage(NetIncomingMessage message)
@@ -109,8 +118,8 @@ namespace SS13_Server.Modules
                     case "toxins":
                         //Need debugging function to add more gas
                     case "save":
-                        EntityManager.Singleton.SaveEntities();
-                        SS13Server.Singleton.Map.SaveMap();
+                        _playerManager.server.SaveEntities();
+                        _playerManager.server.SaveMap();
                         break;
                 }
             }
@@ -135,25 +144,25 @@ namespace SS13_Server.Modules
 
         private void ResetAttachedEntityName()
         {
-            attachedEntity.Name = attachedEntity.template.Name;
+            attachedEntity.Name = attachedEntity.Template.Name;
         }
         
         public void JoinLobby()
         {
-            var m = SS13NetServer.Singleton.CreateMessage();
+            var m = IoCManager.Resolve<ISS13NetServer>().CreateMessage();
             m.Write((byte)NetMessage.PlayerSessionMessage);
             m.Write((byte)PlayerSessionMessage.JoinLobby);
-            SS13NetServer.Singleton.SendMessage(m, connectedClient);
+            IoCManager.Resolve<ISS13NetServer>().SendMessage(m, connectedClient);
             status = SessionStatus.InLobby;
         }
 
         public void JoinGame()
         {
-            if (connectedClient != null && status != SessionStatus.InGame && SS13Server.Singleton.Runlevel == SS13Server.RunLevel.Game)
+            if (connectedClient != null && status != SessionStatus.InGame && _playerManager.server.Runlevel == RunLevel.Game)
             {
-                var m = SS13NetServer.Singleton.CreateMessage();
+                var m = IoCManager.Resolve<ISS13NetServer>().CreateMessage();
                 m.Write((byte)NetMessage.JoinGame);
-                SS13NetServer.Singleton.SendMessage(m, connectedClient);
+                IoCManager.Resolve<ISS13NetServer>().SendMessage(m, connectedClient);
 
                 status = SessionStatus.InGame;
             }
@@ -175,7 +184,7 @@ namespace SS13_Server.Modules
 
         public NetOutgoingMessage CreateGuiMessage(GuiComponentType gui)
         {
-            NetOutgoingMessage m = SS13NetServer.Singleton.CreateMessage();
+            NetOutgoingMessage m = IoCManager.Resolve<ISS13NetServer>().CreateMessage();
             m.Write((byte)NetMessage.PlayerUiMessage);
             m.Write((byte)UiManagerMessage.ComponentMessage);
             m.Write((byte)gui);

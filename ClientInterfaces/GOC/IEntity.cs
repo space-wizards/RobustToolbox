@@ -28,7 +28,7 @@ namespace ClientInterfaces.GOC
         ComponentReplyMessage SendMessage(object sender, ComponentFamily family, ComponentMessageType type, params object[] args);
         void SendComponentNetworkMessage(IGameObjectComponent component, NetDeliveryMethod method, params object[] messageParams);
         void SendComponentInstantiationMessage(IGameObjectComponent component);
-        void HandleNetworkMessage(IncomingEntityMessage message);
+        void HandleNetworkMessage(ClientIncomingEntityMessage message);
 
     }
 }

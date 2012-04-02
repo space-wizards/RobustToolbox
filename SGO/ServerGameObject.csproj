@@ -104,7 +104,6 @@
     <Compile Include="EntityTemplateDatabase.cs" />
     <Compile Include="GameObjectComponent.cs" />
     <Compile Include="GameObjectComponentEnum.cs" />
-    <Compile Include="IGameObjectComponent.cs" />
     <Compile Include="IInventoryComponent.cs" />
     <Compile Include="IMoverComponent.cs" />
     <Compile Include="MessageEnums.cs" />

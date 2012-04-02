@@ -5,27 +5,28 @@ using System.Threading;
 using SS13_Server.Modules;
 using SS13_Server.Modules.Client;
 using ServerServices;
-using SS13_Server.Modules.Chat;
 using Lidgren.Network;
 using SS13_Shared;
-using ServerServices.Configuration;
 using ServerServices.Map;
 using SS13_Server.Modules.Gamemodes;
 using SGO;
 using ServerInterfaces;
-using ServerServices.MessageLogging;
 using ServerServices.Log;
+using SS13.IoC;
+using ServerInterfaces.Configuration;
+using ServerInterfaces.Network;
+using ServerInterfaces.Chat;
+using ServerInterfaces.GameObject;
+using ServerInterfaces.Player;
+using SS13_Shared.ServerEnums;
 
 namespace SS13_Server
 {
-    public class SS13Server
+    public class SS13Server: ISS13Server
     {
-        private readonly NetPeerConfiguration _netConfig = new NetPeerConfiguration("SS13_NetTag");
-        public Dictionary<NetConnection, Client> ClientList = new Dictionary<NetConnection, Client>();
+        public Dictionary<NetConnection, IClient> ClientList = new Dictionary<NetConnection, IClient>();
         public Map Map;
-        public ChatManager ChatManager;
-        public EntityManager EntityManager;
-        public PlayerManager PlayerManager;
+        public IEntityManager EntityManager { get; private set; }
         public RunLevel Runlevel {get; private set;}
 
         // The servers current frame time
@@ -36,13 +37,6 @@ namespace SS13_Server
         private DateTime _startAt;
         private int _lastAnnounced;
         private bool _active;
-
-        public enum RunLevel
-        {
-            Init,
-            Lobby,
-            Game
-        }
 
         private static SS13Server _singleton;
         public static SS13Server Singleton
@@ -77,14 +71,14 @@ namespace SS13_Server
             Runlevel = RunLevel.Init;
             _singleton = this;
 
-            ServiceManager.Singleton.AddService(new ConfigManager("./config.xml"));
-            LogManager.Initialize(ServiceManager.Singleton.Resolve<IConfigManager>().LogPath);
+            IoCManager.Resolve<IConfigurationManager>().Initialize("./config.xml");
+            LogManager.Initialize(IoCManager.Resolve<IConfigurationManager>().LogPath);
         }
         #endregion
 
         public void LoadSettings()
         {
-            var cfgmgr = ServiceManager.Singleton.Resolve<IConfigManager>();
+            var cfgmgr = IoCManager.Resolve<IConfigurationManager>();
             _serverPort = cfgmgr.Port;
             _serverName = cfgmgr.ServerName;
             FramePeriod = cfgmgr.FramePeriod;
@@ -121,7 +115,7 @@ namespace SS13_Server
                 ServiceManager.Singleton.AddService(Map);
                 Map.InitMap(_serverMapName);
 
-                EntityManager = new EntityManager(SS13NetServer.Singleton);
+                EntityManager = new EntityManager(IoCManager.Resolve<ISS13NetServer>());
 
                 RoundManager.Singleton.CurrentGameMode.StartGame();
             }
@@ -142,17 +136,11 @@ namespace SS13_Server
 
                 BanlistMgr.Singleton.Initialize("BanList.xml");
 
-                _netConfig.Port = _serverPort;
-                var netServer = new SS13NetServer(_netConfig);
-                ServiceManager.Singleton.AddService(netServer);
-                SS13NetServer.Singleton.Start();
+                IoCManager.Resolve<ISS13NetServer>().Start();
+                IoCManager.Resolve<IChatManager>().Initialize(this);
+                IoCManager.Resolve<IPlayerManager>().Initialize(this);
 
-                ChatManager = new ChatManager();
-                ServiceManager.Singleton.AddService(ChatManager);
-                ServiceManager.Singleton.AddService(new MessageLogger(ServiceManager.Singleton.Resolve<IConfigManager>()));
-                PlayerManager = new PlayerManager();
-
-                CraftingManager.Singleton.Initialize("CraftingRecipes.xml", netServer, PlayerManager);
+                CraftingManager.Singleton.Initialize("CraftingRecipes.xml", IoCManager.Resolve<ISS13NetServer>(), IoCManager.Resolve<IPlayerManager>());
 
                 StartLobby();
                 StartGame();
@@ -170,7 +158,7 @@ namespace SS13_Server
         public void StartGame()
         {
             InitModules(RunLevel.Game);
-            PlayerManager.SendJoinGameToAll();
+            IoCManager.Resolve<IPlayerManager>().SendJoinGameToAll();
         }
 
         public void DisposeForRestart()
@@ -185,8 +173,7 @@ namespace SS13_Server
         public void Restart()
         {
             LogManager.Log("Restarting Server...");
-            foreach (var curr in PlayerManager.playerSessions.Values)
-                curr.JoinLobby();
+            IoCManager.Resolve<IPlayerManager>().SendJoinLobbyToAll();
             DisposeForRestart();
             StartLobby();
         }
@@ -223,9 +210,9 @@ namespace SS13_Server
             try
             {
                 NetIncomingMessage msg;
-                while ((msg = SS13NetServer.Singleton.ReadMessage()) != null)
+                while ((msg = IoCManager.Resolve<ISS13NetServer>().ReadMessage()) != null)
                 {
-                    Console.Title = SS13NetServer.Singleton.Statistics.SentBytes + " " + SS13NetServer.Singleton.Statistics.ReceivedBytes;
+                    Console.Title = IoCManager.Resolve<ISS13NetServer>().Statistics.SentBytes + " " + IoCManager.Resolve<ISS13NetServer>().Statistics.ReceivedBytes;
 
                     switch (msg.MessageType)
                     {
@@ -259,7 +246,7 @@ namespace SS13_Server
                             LogManager.Log("Unhandled type: " + msg.MessageType, LogLevel.Error);
                             break;
                     }
-                    SS13NetServer.Singleton.Recycle(msg);
+                    IoCManager.Resolve<ISS13NetServer>().Recycle(msg);
                 }                
             }
             catch (Exception e)
@@ -287,7 +274,7 @@ namespace SS13_Server
                 if (_lastAnnounced != countdown.Seconds)
                 {
                     _lastAnnounced = countdown.Seconds;
-                    ChatManager.SendChatMessage(ChatChannel.Server, "Starting in " + _lastAnnounced + " seconds...", "", 0);
+                    IoCManager.Resolve<IChatManager>().SendChatMessage(ChatChannel.Server, "Starting in " + _lastAnnounced + " seconds...", "", 0);
                 }
                 if (countdown.Seconds <= 0)
                 {
@@ -310,7 +297,7 @@ namespace SS13_Server
 
         public void SendWelcomeInfo(NetConnection connection)
         {
-            NetOutgoingMessage welcomeMessage = SS13NetServer.Singleton.CreateMessage();
+            NetOutgoingMessage welcomeMessage = IoCManager.Resolve<ISS13NetServer>().CreateMessage();
             welcomeMessage.Write((byte)NetMessage.WelcomeMessage);
             welcomeMessage.Write(_serverName);
             welcomeMessage.Write(_serverPort);
@@ -318,32 +305,32 @@ namespace SS13_Server
             welcomeMessage.Write(_serverMaxPlayers);
             welcomeMessage.Write(_serverMapName);
             welcomeMessage.Write(RoundManager.Singleton.CurrentGameMode.Name);
-            SS13NetServer.Singleton.SendMessage(welcomeMessage, connection, NetDeliveryMethod.ReliableOrdered);
+            IoCManager.Resolve<ISS13NetServer>().SendMessage(welcomeMessage, connection, NetDeliveryMethod.ReliableOrdered);
             SendNewPlayerCount();
         }
 
         public void SendNewPlayerCount()
         {
-            NetOutgoingMessage playercountMessage = SS13NetServer.Singleton.CreateMessage();
+            NetOutgoingMessage playercountMessage = IoCManager.Resolve<ISS13NetServer>().CreateMessage();
             playercountMessage.Write((byte)NetMessage.PlayerCount);
             playercountMessage.Write((byte)ClientList.Count);
-            SS13NetServer.Singleton.SendToAll(playercountMessage);
+            IoCManager.Resolve<ISS13NetServer>().SendToAll(playercountMessage);
         }
 
         public void SendPlayerList(NetConnection connection)
         {
-            NetOutgoingMessage playerListMessage = SS13NetServer.Singleton.CreateMessage();
+            NetOutgoingMessage playerListMessage = IoCManager.Resolve<ISS13NetServer>().CreateMessage();
             playerListMessage.Write((byte)NetMessage.PlayerList);
             playerListMessage.Write((byte)ClientList.Count);
 
             foreach (NetConnection conn in ClientList.Keys)
             {
-                PlayerSession plrSession = PlayerManager.GetSessionByConnection(conn);
+                IPlayerSession plrSession = IoCManager.Resolve<IPlayerManager>().GetSessionByConnection(conn);
                 playerListMessage.Write(plrSession.name);
                 playerListMessage.Write((byte)plrSession.status);
-                playerListMessage.Write(ClientList[conn].netConnection.AverageRoundtripTime);
+                playerListMessage.Write(ClientList[conn].NetConnection.AverageRoundtripTime);
             }
-            SS13NetServer.Singleton.SendMessage(playerListMessage, connection, NetDeliveryMethod.ReliableOrdered);
+            IoCManager.Resolve<ISS13NetServer>().SendMessage(playerListMessage, connection, NetDeliveryMethod.ReliableOrdered);
         }
 
         public void HandleStatusChanged(NetIncomingMessage msg)
@@ -364,7 +351,7 @@ namespace SS13_Server
                     if (!BanlistMgr.Singleton.IsBanned(sender.RemoteEndpoint.Address.ToString()))
                     {
                         HandleConnectionApproval(sender);
-                        PlayerManager.NewSession(sender); // TODO move this to somewhere that makes more sense.
+                        IoCManager.Resolve<IPlayerManager>().NewSession(sender); // TODO move this to somewhere that makes more sense.
                     }
                     else
                     {
@@ -376,7 +363,7 @@ namespace SS13_Server
                     break;
                 case NetConnectionStatus.Disconnected:
                     LogManager.Log(senderIp + ": Disconnected");
-                    PlayerManager.EndSession(sender);
+                    IoCManager.Resolve<IPlayerManager>().EndSession(sender);
                     if (ClientList.ContainsKey(sender))
                     {
                         ClientList.Remove(sender);
@@ -416,10 +403,10 @@ namespace SS13_Server
                     HandleClientName(msg);
                     break;
                 case NetMessage.ChatMessage:
-                    ChatManager.HandleNetMessage(msg);
+                    IoCManager.Resolve<IChatManager>().HandleNetMessage(msg);
                     break;
                 case NetMessage.PlayerSessionMessage:
-                    PlayerManager.HandleNetworkMessage(msg);
+                    IoCManager.Resolve<IPlayerManager>().HandleNetworkMessage(msg);
                     break;
                 case NetMessage.MapMessage:
                     Map.HandleNetworkMessage(msg);
@@ -467,7 +454,7 @@ namespace SS13_Server
             {
                 case NetMessage.RequestEntityDeletion:
                     var entId = messageBody.ReadInt32();
-                    if (PlayerManager.GetSessionByConnection(messageBody.SenderConnection).adminPermissions.isAdmin || true) //TEMPORARY. REMOVE THE 'TRUE' LATER ON. !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+                    if (IoCManager.Resolve<IPlayerManager>().GetSessionByConnection(messageBody.SenderConnection).adminPermissions.isAdmin || true) //TEMPORARY. REMOVE THE 'TRUE' LATER ON. !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
                     {
                         var delEnt = EntityManager.GetEntity(entId);
                         if (delEnt != null) EntityManager.DeleteEntity(delEnt);
@@ -475,21 +462,21 @@ namespace SS13_Server
                     break;
                 case NetMessage.RequestAdminLogin:
                     var password = messageBody.ReadString();
-                    if (password == ServiceManager.Singleton.Resolve<IConfigManager>().AdminPassword)
+                    if (password == IoCManager.Resolve<IConfigurationManager>().AdminPassword)
                     {
                         LogManager.Log("Admin login: " + messageBody.SenderConnection.RemoteEndpoint.Address);
-                        PlayerManager.GetSessionByConnection(messageBody.SenderConnection).adminPermissions.isAdmin = true;
+                        IoCManager.Resolve<IPlayerManager>().GetSessionByConnection(messageBody.SenderConnection).adminPermissions.isAdmin = true;
                     }
                     else
                         LogManager.Log("Failed Admin login: " + messageBody.SenderConnection.RemoteEndpoint.Address + " -> ' " + password + " '");
                     break;
                 case NetMessage.RequestAdminPlayerlist:
-                    if (PlayerManager.GetSessionByConnection(messageBody.SenderConnection).adminPermissions.isAdmin)
+                    if (IoCManager.Resolve<IPlayerManager>().GetSessionByConnection(messageBody.SenderConnection).adminPermissions.isAdmin)
                     {
-                        var adminPlayerListMessage = SS13NetServer.Singleton.CreateMessage();
+                        var adminPlayerListMessage = IoCManager.Resolve<ISS13NetServer>().CreateMessage();
                         adminPlayerListMessage.Write((byte)NetMessage.RequestAdminPlayerlist);
                         adminPlayerListMessage.Write((byte)ClientList.Count);
-                        foreach (var plrSession in ClientList.Keys.Select(conn => PlayerManager.GetSessionByConnection(conn)))
+                        foreach (var plrSession in ClientList.Keys.Select(conn => IoCManager.Resolve<IPlayerManager>().GetSessionByConnection(conn)))
                         {
                             adminPlayerListMessage.Write(plrSession.name);
                             adminPlayerListMessage.Write((byte)plrSession.status);
@@ -497,45 +484,45 @@ namespace SS13_Server
                             adminPlayerListMessage.Write(plrSession.connectedClient.RemoteEndpoint.Address.ToString());
                             adminPlayerListMessage.Write(plrSession.adminPermissions.isAdmin);
                         }
-                        SS13NetServer.Singleton.SendMessage(adminPlayerListMessage, messageBody.SenderConnection, NetDeliveryMethod.ReliableOrdered);
+                        IoCManager.Resolve<ISS13NetServer>().SendMessage(adminPlayerListMessage, messageBody.SenderConnection, NetDeliveryMethod.ReliableOrdered);
                     }
                     else
                     {
-                        var loginMessage = SS13NetServer.Singleton.CreateMessage();
+                        var loginMessage = IoCManager.Resolve<ISS13NetServer>().CreateMessage();
                         loginMessage.Write((byte)NetMessage.RequestAdminLogin);
-                        SS13NetServer.Singleton.SendMessage(loginMessage, messageBody.SenderConnection, NetDeliveryMethod.ReliableOrdered);
+                        IoCManager.Resolve<ISS13NetServer>().SendMessage(loginMessage, messageBody.SenderConnection, NetDeliveryMethod.ReliableOrdered);
                     }
                     break;
                 case NetMessage.RequestAdminKick:
-                    if (PlayerManager.GetSessionByConnection(messageBody.SenderConnection).adminPermissions.isAdmin)
+                    if (IoCManager.Resolve<IPlayerManager>().GetSessionByConnection(messageBody.SenderConnection).adminPermissions.isAdmin)
                     {
                         var ipKick = messageBody.ReadString();
-                        var kickSession = PlayerManager.GetSessionByIp(ipKick);
+                        var kickSession = IoCManager.Resolve<IPlayerManager>().GetSessionByIp(ipKick);
                         if (kickSession != null)
                         {
-                            PlayerManager.EndSession(kickSession.connectedClient);
+                            IoCManager.Resolve<IPlayerManager>().EndSession(kickSession.connectedClient);
                             kickSession.connectedClient.Disconnect("Kicked by Administrator.");
                         }
                     }
                     break;
                 case NetMessage.RequestAdminBan:
-                    if (PlayerManager.GetSessionByConnection(messageBody.SenderConnection).adminPermissions.isAdmin)
+                    if (IoCManager.Resolve<IPlayerManager>().GetSessionByConnection(messageBody.SenderConnection).adminPermissions.isAdmin)
                     {
                         var ipBan = messageBody.ReadString();
-                        var banSession = PlayerManager.GetSessionByIp(ipBan);
+                        var banSession = IoCManager.Resolve<IPlayerManager>().GetSessionByIp(ipBan);
                         if (banSession != null)
                         {
                             if (BanlistMgr.Singleton.IsBanned(ipBan)) return;
                             BanlistMgr.Singleton.AddBan(ipBan, "No reason specified.");
-                            PlayerManager.EndSession(banSession.connectedClient);
+                            IoCManager.Resolve<IPlayerManager>().EndSession(banSession.connectedClient);
                             banSession.connectedClient.Disconnect("Banned by Administrator.");
                         }
                     }
                     break;
                 case NetMessage.RequestBanList:
-                    if (PlayerManager.GetSessionByConnection(messageBody.SenderConnection).adminPermissions.isAdmin)
+                    if (IoCManager.Resolve<IPlayerManager>().GetSessionByConnection(messageBody.SenderConnection).adminPermissions.isAdmin)
                     {
-                        var banListMessage = SS13NetServer.Singleton.CreateMessage();
+                        var banListMessage = IoCManager.Resolve<ISS13NetServer>().CreateMessage();
                         banListMessage.Write((byte)NetMessage.RequestBanList);
                         banListMessage.Write(BanlistMgr.Singleton.banlist.List.Count);
                         foreach (var t in BanlistMgr.Singleton.banlist.List)
@@ -548,11 +535,11 @@ namespace SS13_Server
                             var minutesLeft = (uint)Math.Truncate(timeLeft.TotalMinutes);
                             banListMessage.Write(minutesLeft);
                         }
-                        SS13NetServer.Singleton.SendMessage(banListMessage, messageBody.SenderConnection, NetDeliveryMethod.ReliableOrdered);
+                        IoCManager.Resolve<ISS13NetServer>().SendMessage(banListMessage, messageBody.SenderConnection, NetDeliveryMethod.ReliableOrdered);
                     }
                     break;
                 case NetMessage.RequestAdminUnBan:
-                    if (PlayerManager.GetSessionByConnection(messageBody.SenderConnection).adminPermissions.isAdmin)
+                    if (IoCManager.Resolve<IPlayerManager>().GetSessionByConnection(messageBody.SenderConnection).adminPermissions.isAdmin)
                     {
                         var ip = messageBody.ReadString();
                         BanlistMgr.Singleton.RemoveBanByIp(ip);
@@ -571,31 +558,31 @@ namespace SS13_Server
 
             if (pickedJob == null) return;
 
-            var session =  PlayerManager.GetSessionByConnection(msg.SenderConnection);
+            var session = IoCManager.Resolve<IPlayerManager>().GetSessionByConnection(msg.SenderConnection);
             session.assignedJob = pickedJob;
 
-            var jobSelectedMessage = SS13NetServer.Singleton.CreateMessage();
+            var jobSelectedMessage = IoCManager.Resolve<ISS13NetServer>().CreateMessage();
             jobSelectedMessage.Write((byte)NetMessage.JobSelected);
             jobSelectedMessage.Write(pickedJob.Name);
-            SS13NetServer.Singleton.SendMessage(jobSelectedMessage, msg.SenderConnection, NetDeliveryMethod.ReliableOrdered);
+            IoCManager.Resolve<ISS13NetServer>().SendMessage(jobSelectedMessage, msg.SenderConnection, NetDeliveryMethod.ReliableOrdered);
         }
 
         public void HandleJobListRequest(NetIncomingMessage msg)
         {
-            var jobListMessage = SS13NetServer.Singleton.CreateMessage();
+            var jobListMessage = IoCManager.Resolve<ISS13NetServer>().CreateMessage();
             jobListMessage.Write((byte)NetMessage.JobList);
             jobListMessage.Write(JobHandler.Singleton.GetDefinitionsString());
-            SS13NetServer.Singleton.SendMessage(jobListMessage, msg.SenderConnection, NetDeliveryMethod.ReliableOrdered);
+            IoCManager.Resolve<ISS13NetServer>().SendMessage(jobListMessage, msg.SenderConnection, NetDeliveryMethod.ReliableOrdered);
         }
 
         public void HandleClientName(NetIncomingMessage msg)
         {
             var name = msg.ReadString();
-            ClientList[msg.SenderConnection].SetName(name);
+            ClientList[msg.SenderConnection].PlayerName = name;
             var fixedname = name.Trim();
             if (fixedname.Length < 3)
                 fixedname = "Player";
-            var p = PlayerManager.GetSessionByConnection(msg.SenderConnection);
+            var p = IoCManager.Resolve<IPlayerManager>().GetSessionByConnection(msg.SenderConnection);
             p.SetName(fixedname);
        }
 
@@ -604,7 +591,7 @@ namespace SS13_Server
         public void SendMap(NetConnection connection)
         {
             LogManager.Log(connection.RemoteEndpoint.Address + ": Sending map");
-            var mapMessage = SS13NetServer.Singleton.CreateMessage();
+            var mapMessage = IoCManager.Resolve<ISS13NetServer>().CreateMessage();
             mapMessage.Write((byte)NetMessage.SendMap);
 
             var mapWidth = Map.GetMapWidth();
@@ -623,31 +610,46 @@ namespace SS13_Server
                 }
             }
 
-            SS13NetServer.Singleton.SendMessage(mapMessage, connection, NetDeliveryMethod.ReliableOrdered);
+            IoCManager.Resolve<ISS13NetServer>().SendMessage(mapMessage, connection, NetDeliveryMethod.ReliableOrdered);
             LogManager.Log(connection.RemoteEndpoint.Address + ": Sending map finished with message size: " + mapMessage.LengthBytes + " bytes");
 
             // Lets also send them all the items and mobs.
-            EntityManager.Singleton.SendEntities(connection);
+            EntityManager.SendEntities(connection);
 
             //Send atmos state to player
             Map.SendAtmosStateTo(connection);
 
             //Todo: Preempt this with the lobby.
-            RoundManager.Singleton.SpawnPlayer(PlayerManager.GetSessionByConnection(connection)); //SPAWN PLAYER
+            RoundManager.Singleton.SpawnPlayer(IoCManager.Resolve<IPlayerManager>().GetSessionByConnection(connection)); //SPAWN PLAYER
         }
 
         public void SendChangeTile(int x, int z, TileType newType)
         {
-            NetOutgoingMessage tileMessage = SS13NetServer.Singleton.CreateMessage();
+            NetOutgoingMessage tileMessage = IoCManager.Resolve<ISS13NetServer>().CreateMessage();
             //tileMessage.Write((byte)NetMessage.ChangeTile);
             tileMessage.Write(x);
             tileMessage.Write(z);
             tileMessage.Write((byte)newType);
             foreach(var connection in ClientList.Keys)
             {
-                SS13NetServer.Singleton.SendMessage(tileMessage, connection, NetDeliveryMethod.ReliableOrdered);
+                IoCManager.Resolve<ISS13NetServer>().SendMessage(tileMessage, connection, NetDeliveryMethod.ReliableOrdered);
                 LogManager.Log(connection.RemoteEndpoint.Address + ": Tile Change Being Sent", LogLevel.Debug);
             }
+        }
+
+        public IClient GetClient(NetConnection clientConnection)
+        {
+            return ClientList[clientConnection];
+        }
+
+        public void SaveMap()
+        {
+            Map.SaveMap();
+        }
+
+        public void SaveEntities()
+        {
+            EntityManager.SaveEntities();
         }
     }
 }

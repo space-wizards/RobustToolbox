@@ -6,6 +6,9 @@ using System.Text;
 using SS13_Server.Modules.Gamemodes;
 using SS13_Server.Modules;
 using SS13_Server;
+using ServerInterfaces;
+using ServerInterfaces.Player;
+using SS13.IoC;
 
 namespace SS13_Server.Modules.Gamemodes
 {
@@ -22,14 +25,14 @@ namespace SS13_Server.Modules.Gamemodes
         event GameUpdateHandler OnGameUpdate;//Raised when the Game updates.
         event GameEndHandler OnGameEnd;      //Raised when the Game ends.
 
-        void PlayerJoined(PlayerSession player); //Called when a player joins the round.
-        void PlayerLeft(PlayerSession player);   //Called when a player leaves the round.
-        void PlayerDied(PlayerSession player);   //Called when a player dies.
+        void PlayerJoined(IPlayerSession player); //Called when a player joins the round.
+        void PlayerLeft(IPlayerSession player);   //Called when a player leaves the round.
+        void PlayerDied(IPlayerSession player);   //Called when a player dies.
 
         void StartGame();    //Starts the gamemode. But not the actual round.
                              //StartGame() -> WarmUp time or something -> OnGameBegin.
 
-        void SpawnPlayer(PlayerSession player); //Spawn a Player.
+        void SpawnPlayer(IPlayerSession player); //Spawn a Player.
 
         void Begin();        //Called after StartGame(). Raises OnGameBegin. Assign objectives etc here.
         void Update();       //Called regulary. Raises OnGameUpdate. Update Gamemode logic here.
@@ -57,9 +60,9 @@ namespace SS13_Server.Modules.Gamemodes
             Description = "This is an empty Gamemode";
         }
 
-        public virtual void SpawnPlayer(PlayerSession player) //Called by SendMap() after sending everything.
+        public virtual void SpawnPlayer(IPlayerSession player) //Called by SendMap() after sending everything.
         {                                                     //This should be handled differently!!!.
-            server.PlayerManager.SpawnPlayerMob(player);
+            IoCManager.Resolve<IPlayerManager>().SpawnPlayerMob(player);
         }
 
         public virtual void StartGame() //Called by InitModules() for Game state.
@@ -67,15 +70,15 @@ namespace SS13_Server.Modules.Gamemodes
             Begin();
         }
 
-        public virtual void PlayerJoined(PlayerSession player)
+        public virtual void PlayerJoined(IPlayerSession player)
         {
         }
 
-        public virtual void PlayerLeft(PlayerSession player) //Not Called right now
+        public virtual void PlayerLeft(IPlayerSession player) //Not Called right now
         {
         }
 
-        public virtual void PlayerDied(PlayerSession player) //Not Called right now
+        public virtual void PlayerDied(IPlayerSession player) //Not Called right now
         {
         }
 

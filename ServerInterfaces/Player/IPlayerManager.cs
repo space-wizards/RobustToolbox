@@ -20,5 +20,7 @@ namespace ServerInterfaces.Player
         void HandleNetworkMessage(NetIncomingMessage msg);
 
         IPlayerSession GetSessionByIp(string ipKick);
+
+        void DetachAll();
     }
 }

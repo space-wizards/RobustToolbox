@@ -28,7 +28,6 @@ namespace SGO
             if (template == null)
                 return null;
             IEntity entity = template.CreateEntity(m_entityNetworkManager);
-            entity.Initialize();
             return entity;
         }
     }

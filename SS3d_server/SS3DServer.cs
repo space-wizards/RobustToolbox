@@ -164,6 +164,7 @@ namespace SS13_Server
 
         public void DisposeForRestart()
         {
+            IoCManager.Resolve<IPlayerManager>().DetachAll();
             EntityManager.Shutdown();
             EntityManager = null;
             IoCManager.Resolve<IMap>().Shutdown();

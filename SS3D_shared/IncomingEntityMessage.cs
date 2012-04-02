@@ -1,4 +1,5 @@
-﻿using Lidgren.Network;
+﻿using System;
+using Lidgren.Network;
 namespace SS13_Shared
 {
     public struct ClientIncomingEntityMessage
@@ -6,12 +7,18 @@ namespace SS13_Shared
         public int Uid;
         public EntityMessage MessageType;
         public object Message;
+        public ushort Expires;
+        public DateTime ReceivedTime;
+        public DateTime LastProcessingAttempt;
 
         public ClientIncomingEntityMessage(int uid, EntityMessage messageType, object message)
         {
             Uid = uid;
             MessageType = messageType;
             Message = message;
+            Expires = 30;
+            LastProcessingAttempt = DateTime.Now;
+            ReceivedTime = DateTime.Now;
         }
 
         public static ClientIncomingEntityMessage Null = new ClientIncomingEntityMessage(0, EntityMessage.Null, null);

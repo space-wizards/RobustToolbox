@@ -277,7 +277,7 @@ namespace SGO
             if (!_initialized)
                 return;
             m_entityNetworkManager.SendComponentNetworkMessage(this, component.Family,
-                                                               NetDeliveryMethod.ReliableUnordered, recipient,
+                                                               method, recipient,
                                                                messageParams);
         }
 

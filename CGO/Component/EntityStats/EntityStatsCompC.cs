@@ -7,6 +7,8 @@ using System;
 using System.Text;
 using System.Reflection;
 using ClientInterfaces.GOC;
+using Lidgren;
+using Lidgren.Network;
 
 namespace CGO
 {
@@ -14,22 +16,37 @@ namespace CGO
     {
         public override ComponentFamily Family { get { return ComponentFamily.EntityStats; } }
 
+        Dictionary<DamageType, int> armorStats = new Dictionary<DamageType, int>();
+
         public override void HandleNetworkMessage(IncomingEntityComponentMessage message)
         {
             var type = (ComponentMessageType)message.MessageParameters[0];
 
             switch (type)
             {
-                case (ComponentMessageType.AddStatusEffect):
-                    break;
-
-                case (ComponentMessageType.RemoveStatusEffect):
+                case (ComponentMessageType.ReturnArmorValues):
+                    if (!armorStats.Keys.Contains((DamageType)message.MessageParameters[1]))
+                        armorStats.Add((DamageType)message.MessageParameters[1], (int)message.MessageParameters[2]);
+                    else
+                        armorStats[(DamageType)message.MessageParameters[1]] = (int)message.MessageParameters[2];
                     break;
 
                 default:
                     base.HandleNetworkMessage(message);
                     break;
             }
+        }
+
+        public void PullFullUpdate() //Add proper message for this.
+        {
+            foreach (var curr in Enum.GetValues(typeof(DamageType))) 
+                Owner.SendComponentNetworkMessage(this, NetDeliveryMethod.ReliableUnordered, ComponentMessageType.GetArmorValues, (int)curr);
+        }
+
+        public int GetArmorValue(DamageType damType)
+        {
+            if (armorStats.ContainsKey(damType)) return armorStats[damType];
+            else return 0;
         }
 
         public override void Update(float frameTime)

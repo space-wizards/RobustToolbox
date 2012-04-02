@@ -60,6 +60,7 @@
   <ItemGroup>
     <Compile Include="Chat\ChatManager.cs" />
     <Compile Include="Configuration\ConfigurationManager.cs" />
+    <Compile Include="Crafting\CraftingManager.cs" />
     <Compile Include="Log\LogManager.cs" />
     <Compile Include="Map\Map.cs" />
     <Compile Include="MessageLogging\MessageLogger.cs" />
@@ -68,6 +69,7 @@
     <Compile Include="Player\PlayerManager.cs" />
     <Compile Include="Player\PlayerSession.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="Round\RoundManager.cs" />
     <Compile Include="ServiceManager.cs" />
     <Compile Include="Network\SS3DNetServer.cs" />
     <Compile Include="Tiles\Atmos\GasCell.cs" />
@@ -97,6 +99,7 @@
   <ItemGroup>
     <None Include="MessageLogging\messageLoggerService.config" />
   </ItemGroup>
+  <ItemGroup />
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
        Other similar extension points exist, see Microsoft.Common.targets.

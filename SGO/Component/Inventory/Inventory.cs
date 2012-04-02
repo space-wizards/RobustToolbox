@@ -7,7 +7,7 @@ using ServerInterfaces.GameObject;
 
 namespace SGO
 {
-    public class InventoryComponent : GameObjectComponent
+    public class InventoryComponent : GameObjectComponent,IInventoryComponent
     {
         public InventoryComponent()
         {

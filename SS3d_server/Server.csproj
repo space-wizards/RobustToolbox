@@ -111,10 +111,8 @@
     <Compile Include="Helper Classes\InterpolationPacket.cs" />
     <Compile Include="Modules\Banlist.cs" />
     <Compile Include="Modules\Client\Client.cs" />
-    <Compile Include="Modules\CraftingManager.cs" />
     <Compile Include="Modules\Gamemodes.cs" />
     <Compile Include="Modules\PlacementManager.cs" />
-    <Compile Include="Modules\RoundManager.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="SS3DServer.cs" />

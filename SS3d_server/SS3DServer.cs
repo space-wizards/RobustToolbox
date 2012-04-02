@@ -19,6 +19,8 @@ using ServerInterfaces.Chat;
 using ServerInterfaces.GameObject;
 using ServerInterfaces.Player;
 using SS13_Shared.ServerEnums;
+using ServerInterfaces.Crafting;
+using ServerInterfaces.Round;
 
 namespace SS13_Server
 {
@@ -117,41 +119,41 @@ namespace SS13_Server
 
                 EntityManager = new EntityManager(IoCManager.Resolve<ISS13NetServer>());
 
-                RoundManager.Singleton.CurrentGameMode.StartGame();
+                IoCManager.Resolve<IRoundManager>().CurrentGameMode.StartGame();
             }
         }
 
         public bool Start()
         {
-                Time = DateTime.Now;
+            Time = DateTime.Now;
 
-                LoadSettings();
+            LoadSettings();
 
-                if (JobHandler.Singleton.LoadDefinitionsFromFile("JobDefinitions.xml"))
-                {
-                    LogManager.Log("Job Definitions File not found.", LogLevel.Fatal);
-                    Environment.Exit(1);
-                }
-                else LogManager.Log("Job Definitions Found. " + JobHandler.Singleton.JobDefinitions.Count + " Jobs loaded.");
+            if (JobHandler.Singleton.LoadDefinitionsFromFile("JobDefinitions.xml"))
+            {
+                LogManager.Log("Job Definitions File not found.", LogLevel.Fatal);
+                Environment.Exit(1);
+            }
+            else LogManager.Log("Job Definitions Found. " + JobHandler.Singleton.JobDefinitions.Count + " Jobs loaded.");
 
-                BanlistMgr.Singleton.Initialize("BanList.xml");
+            BanlistMgr.Singleton.Initialize("BanList.xml");
 
-                IoCManager.Resolve<ISS13NetServer>().Start();
-                IoCManager.Resolve<IChatManager>().Initialize(this);
-                IoCManager.Resolve<IPlayerManager>().Initialize(this);
+            IoCManager.Resolve<ISS13NetServer>().Start();
+            IoCManager.Resolve<IChatManager>().Initialize(this);
+            IoCManager.Resolve<IPlayerManager>().Initialize(this);
+            IoCManager.Resolve<ICraftingManager>().Initialize("CraftingRecipes.xml", this);
 
-                CraftingManager.Singleton.Initialize("CraftingRecipes.xml", IoCManager.Resolve<ISS13NetServer>(), IoCManager.Resolve<IPlayerManager>());
 
-                StartLobby();
-                StartGame();
+            StartLobby();
+            StartGame();
                 
-                _active = true;
-                return false;
+            _active = true;
+            return false;
         }
 
         public void StartLobby()
         {
-            RoundManager.Singleton.Initialize(new Gamemode());
+            IoCManager.Resolve<IRoundManager>().Initialize(new Gamemode());
             InitModules(RunLevel.Lobby);
         }
 
@@ -264,8 +266,8 @@ namespace SS13_Server
                 {
                     ComponentManager.Singleton.Update(framePeriod);
                     Map.UpdateAtmos();
-                    RoundManager.Singleton.CurrentGameMode.Update();
-                    CraftingManager.Singleton.Update();
+                    IoCManager.Resolve<IRoundManager>().CurrentGameMode.Update();
+                    IoCManager.Resolve<ICraftingManager>().Update();
                 }
             }
             else if (Runlevel == RunLevel.Lobby)
@@ -304,7 +306,7 @@ namespace SS13_Server
             welcomeMessage.Write(_serverWelcomeMessage);
             welcomeMessage.Write(_serverMaxPlayers);
             welcomeMessage.Write(_serverMapName);
-            welcomeMessage.Write(RoundManager.Singleton.CurrentGameMode.Name);
+            welcomeMessage.Write(IoCManager.Resolve<IRoundManager>().CurrentGameMode.Name);
             IoCManager.Resolve<ISS13NetServer>().SendMessage(welcomeMessage, connection, NetDeliveryMethod.ReliableOrdered);
             SendNewPlayerCount();
         }
@@ -382,7 +384,7 @@ namespace SS13_Server
             switch (messageType)
             {
                 case NetMessage.CraftMessage:
-                    CraftingManager.Singleton.HandleNetMessage(msg);
+                    IoCManager.Resolve<ICraftingManager>().HandleNetMessage(msg);
                     break;
                 case NetMessage.WelcomeMessage:
                     SendWelcomeInfo(msg.SenderConnection);
@@ -620,7 +622,7 @@ namespace SS13_Server
             Map.SendAtmosStateTo(connection);
 
             //Todo: Preempt this with the lobby.
-            RoundManager.Singleton.SpawnPlayer(IoCManager.Resolve<IPlayerManager>().GetSessionByConnection(connection)); //SPAWN PLAYER
+            IoCManager.Resolve<IRoundManager>().SpawnPlayer(IoCManager.Resolve<IPlayerManager>().GetSessionByConnection(connection)); //SPAWN PLAYER
         }
 
         public void SendChangeTile(int x, int z, TileType newType)

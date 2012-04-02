@@ -57,11 +57,14 @@
   <ItemGroup>
     <Compile Include="Chat\IChatManager.cs" />
     <Compile Include="Configuration\IConfigurationManager.cs" />
+    <Compile Include="Crafting\ICraftingManager.cs" />
+    <Compile Include="GameMode\IGameMode.cs" />
     <Compile Include="GameObject\IComponentFactory.cs" />
     <Compile Include="GameObject\IEntity.cs" />
     <Compile Include="GameObject\IEntityManager.cs" />
     <Compile Include="GameObject\IEntityNetworkManager.cs" />
     <Compile Include="GameObject\IGameObjectComponent.cs" />
+    <Compile Include="GameObject\IInventoryComponent.cs" />
     <Compile Include="IClient.cs" />
     <Compile Include="GameObject\IEntityTemplate.cs" />
     <Compile Include="ISS13Server.cs" />
@@ -73,6 +76,7 @@
     <Compile Include="Objectives\IObjectiveSet.cs" />
     <Compile Include="Player\IPlayerManager.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="Round\IRoundManager.cs" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\Lidgren.Network\Lidgren.Network.csproj">

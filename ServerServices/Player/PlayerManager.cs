@@ -103,5 +103,13 @@ namespace ServerServices.Player
             }
         }
 
+        public void DetachAll()
+        {
+            foreach(var s in playerSessions.Values)
+            {
+                s.DetachFromEntity();
+            }
+        }
+
     }
 }

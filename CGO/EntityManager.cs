@@ -132,12 +132,23 @@ namespace CGO
             if (!_initialized)
                 return;
             if (!MessageBuffer.Any()) return;
+            var misses = new List<ClientIncomingEntityMessage>();
 
             while (MessageBuffer.Any())
             {
                 ClientIncomingEntityMessage entMsg = MessageBuffer.Dequeue();
-                _entities[entMsg.Uid].HandleNetworkMessage(entMsg);
+                if(!_entities.ContainsKey(entMsg.Uid))
+                {
+                    entMsg.LastProcessingAttempt = DateTime.Now;
+                    if((entMsg.LastProcessingAttempt - entMsg.ReceivedTime).TotalSeconds > entMsg.Expires)
+                        misses.Add(entMsg);
+                }
+                else
+                    _entities[entMsg.Uid].HandleNetworkMessage(entMsg);
             }
+
+            foreach(var miss in misses) 
+                MessageBuffer.Enqueue(miss);
 
             MessageBuffer.Clear(); //Should be empty at this point anyway.
         }
@@ -162,8 +173,12 @@ namespace CGO
             }
             else
             {
+                ProcessMsgBuffer();
                 ClientIncomingEntityMessage entMsg = ProcessNetMessage(msg);
-                _entities[entMsg.Uid].HandleNetworkMessage(entMsg);
+                if(!_entities.ContainsKey(entMsg.Uid))
+                    MessageBuffer.Enqueue(entMsg);
+                else
+                    _entities[entMsg.Uid].HandleNetworkMessage(entMsg);
             }
         }
 
@@ -218,7 +233,6 @@ namespace CGO
             foreach (var e in _entities.Values)
                 e.Initialize();
             _initialized = true;
-            ProcessMsgBuffer();
         }
 
         #endregion

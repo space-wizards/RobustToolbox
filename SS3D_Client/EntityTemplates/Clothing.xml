@@ -24,6 +24,7 @@
       <Component name="ClickableComponent"></Component>
       <Component name="BasicItemComponent"></Component>
       <Component name="EquippableComponent"></Component>
+      <Component name="EntityStatsComp"></Component>
     </Components>
   </EntityTemplate>
   <EntityTemplate name="Assistant_Grey">
@@ -76,6 +77,7 @@
       <Component name="ClickableComponent"></Component>
       <Component name="BasicItemComponent"></Component>
       <Component name="EquippableComponent"></Component>
+      <Component name="EntityStatsComp"></Component>
     </Components>
   </EntityTemplate>
   <EntityTemplate name="Gloves_Surgical">
@@ -141,6 +143,7 @@
       <Component name="ClickableComponent"></Component>
       <Component name="BasicItemComponent"></Component>
       <Component name="EquippableComponent"></Component>
+      <Component name="EntityStatsComp"></Component>
     </Components>
   </EntityTemplate>
   <EntityTemplate name="BlueGloves">

@@ -1,6 +1,7 @@
 ﻿using Lidgren.Network;
 using SS13_Shared;
 using SS13_Shared.GO;
+using ServerInterfaces.GameObject;
 
 namespace SGO
 {
@@ -11,6 +12,12 @@ namespace SGO
             SendHealthUpdate(netConnection);
         }
 
+        protected override void ApplyDamage(IEntity damager, int damageamount, DamageType damType)
+        {
+            base.ApplyDamage(damager, damageamount, damType);
+            SendHealthUpdate();
+        }
+        
         public override void HandleNetworkMessage(IncomingEntityComponentMessage message, NetConnection client)
         {
             var type = (ComponentMessageType) message.MessageParameters[0];

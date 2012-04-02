@@ -9,7 +9,7 @@ namespace SGO
     public class EquipmentComponent : GameObjectComponent
     {
         protected List<EquipmentSlot> activeSlots = new List<EquipmentSlot>();
-        protected Dictionary<EquipmentSlot, IEntity> equippedEntities = new Dictionary<EquipmentSlot, IEntity>();
+        public Dictionary<EquipmentSlot, IEntity> equippedEntities = new Dictionary<EquipmentSlot, IEntity>();
 
         public EquipmentComponent()
         {

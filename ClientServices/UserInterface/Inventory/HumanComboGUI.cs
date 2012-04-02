@@ -246,7 +246,16 @@ namespace ClientServices.UserInterface.Inventory
         void TabClicked(SimpleImageButton sender)
         {
             if (sender == _tabEquip) _currentTab = 1;
-            if (sender == _tabHealth) _currentTab = 2;
+            if (sender == _tabHealth)
+            {
+                if (_playerManager.ControlledEntity != null) //TEMPORARY SOLUTION.
+                {
+                    var resEntity = _playerManager.ControlledEntity;
+                    var entStats = (EntityStatsComp)resEntity.GetComponent(ComponentFamily.EntityStats);
+                    entStats.PullFullUpdate();
+                }
+                _currentTab = 2;
+            }
             if (sender == _tabCraft) _currentTab = 3;
             _craftStatus.Text = "Status"; //Handle the resetting better.
             _craftStatus.Color = Color.White;
@@ -620,32 +629,47 @@ namespace ClientServices.UserInterface.Inventory
                         const int txtOffY = -4;
                         const int nxtOffY = 27;
 
+                        EntityStatsComp entStats = null;
+
+                        if (_playerManager.ControlledEntity != null)
+                        {
+                            var resEntity = _playerManager.ControlledEntity;
+                            entStats = (EntityStatsComp)resEntity.GetComponent(ComponentFamily.EntityStats);
+                        }
+
                         _sprResBlunt.Position = resLinePos;
                         _txtResBlunt.Position = new Vector2D(resLinePos.X + txtOffX, resLinePos.Y + txtOffY);
+                        _txtResBlunt.Text = "Blunt : " + (entStats != null ? entStats.GetArmorValue(DamageType.Bludgeoning).ToString() : "0");
                         resLinePos.Offset(0, nxtOffY);
 
                         _sprResPierce.Position = resLinePos;
                         _txtResPierce.Position = new Vector2D(resLinePos.X + txtOffX, resLinePos.Y + txtOffY);
+                        _txtResPierce.Text = "Pierce : " + (entStats != null ? entStats.GetArmorValue(DamageType.Piercing).ToString() : "0");
                         resLinePos.Offset(0, nxtOffY);
 
                         _sprResSlash.Position = resLinePos;
                         _txtResSlash.Position = new Vector2D(resLinePos.X + txtOffX, resLinePos.Y + txtOffY);
+                        _txtResSlash.Text = "Slash : " + (entStats != null ? entStats.GetArmorValue(DamageType.Slashing).ToString() : "0");
                         resLinePos.Offset(0, nxtOffY);
 
                         _sprResBurn.Position = resLinePos;
                         _txtResBurn.Position = new Vector2D(resLinePos.X + txtOffX, resLinePos.Y + txtOffY);
+                        _txtResBurn.Text = "Burn : " + (entStats != null ? entStats.GetArmorValue(DamageType.Burn).ToString() : "0");
                         resLinePos.Offset(0, nxtOffY);
 
                         _sprResFreeze.Position = resLinePos;
                         _txtResFreeze.Position = new Vector2D(resLinePos.X + txtOffX, resLinePos.Y + txtOffY);
+                        _txtResFreeze.Text = "Freeze : " + (entStats != null ? entStats.GetArmorValue(DamageType.Freeze).ToString() : "0");
                         resLinePos.Offset(0, nxtOffY);
 
                         _sprResShock.Position = resLinePos;
                         _txtResShock.Position = new Vector2D(resLinePos.X + txtOffX, resLinePos.Y + txtOffY);
+                        _txtResShock.Text = "Shock : " + (entStats != null ? entStats.GetArmorValue(DamageType.Shock).ToString() : "0");
                         resLinePos.Offset(0, nxtOffY);
 
                         _sprResTox.Position = resLinePos;
                         _txtResTox.Position = new Vector2D(resLinePos.X + txtOffX, resLinePos.Y + txtOffY);
+                        _txtResTox.Text = "Toxin : " + (entStats != null ? entStats.GetArmorValue(DamageType.Toxin).ToString() : "0");
                         break; 
                         #endregion
                     }

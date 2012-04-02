@@ -1,15 +1,21 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Linq;
+using System.Text;
 using SS13_Shared;
 using SS13_Shared.GO;
+using ServerServices.Map;
+using ServerServices;
+using ServerInterfaces;
 
 namespace SGO
 {
     public class WorktopComponent : BasicLargeObjectComponent
     {
         public WorktopComponent()
+            :base()
         {
-            family = ComponentFamily.LargeObject;
+            family = SS13_Shared.GO.ComponentFamily.LargeObject;
         }
 
         public override void Update(float frameTime)
@@ -18,15 +24,13 @@ namespace SGO
 
         private void PlaceItem(Entity actor, Entity item)
         {
-            var rnd = new Random();
-            actor.SendMessage(this, ComponentMessageType.DropItemInCurrentHand);
-                //Should drop item that was used on us? Maybe add more precise message later.
-            item.SendMessage(this, ComponentMessageType.SetDrawDepth, (int) DrawDepth.ItemsOnTables);
-            item.Translate(Owner.position + new Vector2(rnd.Next(-28, 28), rnd.Next(-28, 15)));
+            Random rnd = new Random();
+            actor.SendMessage(this, ComponentMessageType.DropItemInCurrentHand); //Should drop item that was used on us? Maybe add more precise message later.
+            item.SendMessage(this, ComponentMessageType.SetDrawDepth, (int)DrawDepth.ItemsOnTables);
+            item.Translate(Owner.position + new Vector2(rnd.Next(-28, 28),rnd.Next(-28, 15)) );
         }
 
-        protected override void RecieveItemInteraction(Entity actor, Entity item,
-                                                       Lookup<ItemCapabilityType, ItemCapabilityVerb> verbs)
+        protected override void RecieveItemInteraction(Entity actor, Entity item, Lookup<ItemCapabilityType, ItemCapabilityVerb> verbs)
         {
             base.RecieveItemInteraction(actor, item, verbs);
 

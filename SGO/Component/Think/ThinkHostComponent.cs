@@ -7,24 +7,23 @@ namespace SGO
 {
     public class ThinkHostComponent : GameObjectComponent
     {
-        private readonly List<IThinkComponent> ThinkComponents = new List<IThinkComponent>();
+        private List<IThinkComponent> ThinkComponents = new List<IThinkComponent>();
 
         public ThinkHostComponent()
         {
-            family = ComponentFamily.Think;
+            family = SS13_Shared.GO.ComponentFamily.Think;
         }
 
-        public override ComponentReplyMessage RecieveMessage(object sender, ComponentMessageType type,
-                                                             params object[] list)
+        public override ComponentReplyMessage RecieveMessage(object sender, SS13_Shared.GO.ComponentMessageType type, params object[] list)
         {
-            ComponentReplyMessage reply = base.RecieveMessage(sender, type, list);
+            var reply = base.RecieveMessage(sender, type, list);
 
             if (sender == this)
-                return ComponentReplyMessage.Empty;
-
+                return ComponentReplyMessage.Empty; 
+            
             switch (type)
             {
-                case ComponentMessageType.Bumped:
+                case SS13_Shared.GO.ComponentMessageType.Bumped:
                     OnBump(sender, list);
                     break;
             }
@@ -36,10 +35,10 @@ namespace SGO
         {
             base.SetParameter(parameter);
 
-            switch (parameter.MemberName)
+            switch(parameter.MemberName)
             {
                 case "LoadThinkComponent":
-                    IThinkComponent c = GetThinkComponent((string) parameter.Parameter);
+                    IThinkComponent c = GetThinkComponent((string)parameter.Parameter);
                     if (c == null)
                         break;
                     ThinkComponents.Add(c);
@@ -78,7 +77,8 @@ namespace SGO
             if (t == null || t.GetInterface("IThinkComponent") == null)
                 return null;
 
-            return (IThinkComponent) Activator.CreateInstance(t); // Return an instance
+            return (IThinkComponent)Activator.CreateInstance(t); // Return an instance
         }
+
     }
 }

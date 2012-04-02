@@ -1,4 +1,7 @@
 ﻿using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Text;
 using Lidgren.Network;
 using SS13_Shared;
 using SS13_Shared.GO;
@@ -10,7 +13,7 @@ namespace SGO
     {
         public PlayerInputMoverComponent()
         {
-            family = ComponentFamily.Mover;
+            family = SS13_Shared.GO.ComponentFamily.Mover;
         }
 
         /// <summary>
@@ -22,14 +25,11 @@ namespace SGO
             bool shouldMove = true;
             if (Owner.HasComponent(ComponentFamily.StatusEffects))
             {
-                var statComp = (StatusEffectComp) Owner.GetComponent(ComponentFamily.StatusEffects);
-                if (statComp.HasFamily(StatusEffectFamily.Root) || statComp.HasFamily(StatusEffectFamily.Stun))
-                    shouldMove = false;
+                StatusEffectComp statComp = (StatusEffectComp)Owner.GetComponent(ComponentFamily.StatusEffects);
+                if (statComp.HasFamily(StatusEffectFamily.Root) || statComp.HasFamily(StatusEffectFamily.Stun)) shouldMove = false;
             }
 
-            if (shouldMove)
-                Translate(Convert.ToDouble((float) message.messageParameters[0]),
-                          Convert.ToDouble((float) message.messageParameters[1]));
+            if (shouldMove) Translate(Convert.ToDouble((float)message.messageParameters[0]), Convert.ToDouble((float)message.messageParameters[1]));
             else SendPositionUpdate(true); //Tried to move even though they cant. Lets pin that fucker down.
         }
 
@@ -43,14 +43,12 @@ namespace SGO
 
         public void SendPositionUpdate(bool forced = false)
         {
-            Owner.SendComponentNetworkMessage(this, NetDeliveryMethod.ReliableUnordered, null, Owner.position.X,
-                                              Owner.position.Y, forced);
+            Owner.SendComponentNetworkMessage(this, Lidgren.Network.NetDeliveryMethod.ReliableUnordered, null, Owner.position.X, Owner.position.Y, forced);
         }
 
-        public void SendPositionUpdate(NetConnection client, bool forced = false)
+        public void SendPositionUpdate(NetConnection client,bool forced = false)
         {
-            Owner.SendComponentNetworkMessage(this, NetDeliveryMethod.ReliableUnordered, client, Owner.position.X,
-                                              Owner.position.Y, forced);
+            Owner.SendComponentNetworkMessage(this, Lidgren.Network.NetDeliveryMethod.ReliableUnordered, client, Owner.position.X, Owner.position.Y, forced);
         }
 
         public override void HandleInstantiationMessage(NetConnection netConnection)

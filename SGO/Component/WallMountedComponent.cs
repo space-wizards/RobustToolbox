@@ -1,19 +1,23 @@
-﻿using System.Drawing;
+﻿using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Text;
 using SS13_Shared;
 using SS13_Shared.GO;
-using ServerServices;
 using ServerServices.Map;
-using ServerServices.Tiles;
+using ServerServices;
+using ServerInterfaces;
 
 namespace SGO
 {
     public class WallMountedComponent : GameObjectComponent
     {
-        protected Tile linkedTile;
+        protected ServerServices.Tiles.Tile linkedTile;
 
         public WallMountedComponent()
+            :base()
         {
-            family = ComponentFamily.WallMounted;
+            family = SS13_Shared.GO.ComponentFamily.WallMounted;
         }
 
         public override void Update(float frameTime)
@@ -24,28 +28,28 @@ namespace SGO
         public override void OnAdd(Entity owner)
         {
             base.OnAdd(owner);
-            Owner.OnMove += OnMove;
+            Owner.OnMove += new Entity.EntityMoveEvent(OnMove);
         }
 
         public override void OnRemove()
         {
-            Owner.OnMove -= OnMove;
+            Owner.OnMove -= new Entity.EntityMoveEvent(OnMove);
             base.OnRemove();
         }
 
         private void OnMove(Vector2 newPosition, Vector2 oldPosition)
         {
-            var map = (Map) ServiceManager.Singleton.GetService(ServerServiceType.Map);
+            Map map = (Map)ServiceManager.Singleton.GetService(ServerServiceType.Map);
 
-            Point tilePositionOld = map.GetTileArrayPositionFromWorldPosition(oldPosition);
-            Tile previousTile = map.GetTileAt(tilePositionOld.X, tilePositionOld.Y);
+            System.Drawing.Point tilePositionOld = map.GetTileArrayPositionFromWorldPosition(oldPosition);
+            ServerServices.Tiles.Tile previousTile = map.GetTileAt(tilePositionOld.X, tilePositionOld.Y);
 
-            previousTile.TileChange -= TileChanged;
+            previousTile.TileChange -= new ServerServices.Tiles.Tile.TileChangeHandler(TileChanged);
 
-            Point tilePositionNew = map.GetTileArrayPositionFromWorldPosition(newPosition);
-            Tile currentTile = map.GetTileAt(tilePositionNew.X, tilePositionNew.Y);
+            System.Drawing.Point tilePositionNew = map.GetTileArrayPositionFromWorldPosition(newPosition);
+            ServerServices.Tiles.Tile currentTile = map.GetTileAt(tilePositionNew.X, tilePositionNew.Y);
 
-            currentTile.TileChange += TileChanged;
+            currentTile.TileChange += new ServerServices.Tiles.Tile.TileChangeHandler(TileChanged);
 
             linkedTile = currentTile;
         }

@@ -1,5 +1,7 @@
 ﻿using System;
-using Lidgren.Network;
+using System.Collections.Generic;
+using System.Linq;
+using System.Text;
 using SS13_Shared;
 using SS13_Shared.GO;
 
@@ -7,6 +9,7 @@ namespace SGO
 {
     public class EquippableComponent : GameObjectComponent
     {
+        public Entity currentWearer { get; private set; }
         public EquipmentSlot wearloc;
 
         public EquippableComponent()
@@ -14,12 +17,9 @@ namespace SGO
             family = ComponentFamily.Equippable;
         }
 
-        public Entity currentWearer { get; private set; }
-
-        public override ComponentReplyMessage RecieveMessage(object sender, ComponentMessageType type,
-                                                             params object[] list)
+        public override ComponentReplyMessage RecieveMessage(object sender, SS13_Shared.GO.ComponentMessageType type, params object[] list)
         {
-            ComponentReplyMessage reply = base.RecieveMessage(sender, type, list);
+            var reply = base.RecieveMessage(sender, type, list);
 
             if (sender == this)
                 return ComponentReplyMessage.Empty;
@@ -27,7 +27,7 @@ namespace SGO
             switch (type)
             {
                 case ComponentMessageType.ItemEquipped:
-                    HandleEquipped((Entity) list[0]);
+                    HandleEquipped((Entity)list[0]);
                     break;
                 case ComponentMessageType.ItemUnEquipped:
                     HandleUnEquipped();
@@ -42,29 +42,27 @@ namespace SGO
 
         private void HandleUnEquipped()
         {
-            Owner.AddComponent(ComponentFamily.Mover, ComponentFactory.Singleton.GetComponent("BasicMoverComponent"));
-            Owner.SendComponentNetworkMessage(this, NetDeliveryMethod.ReliableUnordered, null,
-                                              EquippableComponentNetMessage.UnEquipped);
+            Owner.AddComponent(SS13_Shared.GO.ComponentFamily.Mover, ComponentFactory.Singleton.GetComponent("BasicMoverComponent"));
+            Owner.SendComponentNetworkMessage(this, Lidgren.Network.NetDeliveryMethod.ReliableUnordered, null, EquippableComponentNetMessage.UnEquipped);
             currentWearer = null;
         }
 
         private void HandleEquipped(Entity entity)
         {
             currentWearer = entity;
-            Owner.AddComponent(ComponentFamily.Mover, ComponentFactory.Singleton.GetComponent("SlaveMoverComponent"));
+            Owner.AddComponent(SS13_Shared.GO.ComponentFamily.Mover, ComponentFactory.Singleton.GetComponent("SlaveMoverComponent"));
             Owner.SendMessage(this, ComponentMessageType.SlaveAttach, entity.Uid);
-            Owner.SendComponentNetworkMessage(this, NetDeliveryMethod.ReliableUnordered, null,
-                                              EquippableComponentNetMessage.Equipped, entity.Uid, wearloc);
+            Owner.SendComponentNetworkMessage(this, Lidgren.Network.NetDeliveryMethod.ReliableUnordered, null, EquippableComponentNetMessage.Equipped, entity.Uid, wearloc);
         }
 
         public override void SetParameter(ComponentParameter parameter)
         {
             base.SetParameter(parameter);
 
-            switch (parameter.MemberName)
+            switch(parameter.MemberName)
             {
                 case "wearloc":
-                    wearloc = (EquipmentSlot) Enum.Parse(typeof (EquipmentSlot), (string) parameter.Parameter);
+                    wearloc = (EquipmentSlot)Enum.Parse(typeof(EquipmentSlot), (string)parameter.Parameter);
                     break;
             }
         }

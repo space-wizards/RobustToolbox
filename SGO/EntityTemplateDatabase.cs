@@ -1,4 +1,8 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Text;
+using System.Xml;
 using System.IO;
 using System.Xml.Linq;
 
@@ -6,7 +10,7 @@ namespace SGO
 {
     public class EntityTemplateDatabase
     {
-        private readonly Dictionary<string, EntityTemplate> m_templates;
+        private Dictionary<string, EntityTemplate> m_templates;
 
         public EntityTemplateDatabase()
         {
@@ -28,10 +32,10 @@ namespace SGO
         public void LoadTemplateFromXML(string path)
         {
             XElement tmp = XDocument.Load(path).Element("EntityTemplates");
-            IEnumerable<XElement> templates = tmp.Elements("EntityTemplate");
+            var templates = tmp.Elements("EntityTemplate");
             foreach (XElement e in templates)
             {
-                var newTemplate = new EntityTemplate();
+                EntityTemplate newTemplate = new EntityTemplate();
                 newTemplate.LoadFromXML(e);
                 AddTemplate(newTemplate);
             }
@@ -57,5 +61,7 @@ namespace SGO
                 return m_templates[templatename];
             return null;
         }
+
+
     }
 }

@@ -1,34 +1,38 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Xml.Linq;
-using Lidgren.Network;
+﻿using System.Collections.Generic;
+using SS13_Shared;
 using SS13_Shared.GO;
+using Lidgren.Network;
+using System.Linq;
+using System.Text;
+using System.Reflection;
+using System;
+using System.Xml.Linq;
+using System.Xml;
 
 namespace SGO
 {
     public class EntityStatsComp : GameObjectComponent
     {
-        private readonly Dictionary<DamageType, int> armorStats = new Dictionary<DamageType, int>();
+        Dictionary<DamageType, int> armorStats = new Dictionary<DamageType, int>();
 
         public EntityStatsComp()
+            : base()
         {
             family = ComponentFamily.EntityStats;
 
-            foreach (object dmgType in Enum.GetValues(typeof (DamageType)))
+            foreach(var dmgType in Enum.GetValues(typeof(DamageType)))
             {
-                if (!armorStats.Keys.Contains((DamageType) dmgType))
-                    armorStats.Add((DamageType) dmgType, 0);
+                if (!armorStats.Keys.Contains((DamageType)dmgType))
+                    armorStats.Add((DamageType)dmgType, 0);
             }
         }
 
-        public override ComponentReplyMessage RecieveMessage(object sender, ComponentMessageType type,
-                                                             params object[] list)
+        public override ComponentReplyMessage RecieveMessage(object sender, ComponentMessageType type, params object[] list)
         {
             switch (type)
             {
                 case ComponentMessageType.GetArmorValues:
-                    var dmgType = (DamageType) list[0];
+                    var dmgType = (DamageType)list[0];
                     return new ComponentReplyMessage(ComponentMessageType.ReturnArmorValues, GetArmorValue(dmgType));
 
                 default:
@@ -38,14 +42,11 @@ namespace SGO
 
         public override void HandleNetworkMessage(IncomingEntityComponentMessage message, NetConnection client)
         {
-            var type = (ComponentMessageType) message.messageParameters[0];
+            var type = (ComponentMessageType)message.messageParameters[0];
             switch (type)
             {
                 case (ComponentMessageType.GetArmorValues): //Add message for sending complete listing.
-                    Owner.SendComponentNetworkMessage(this, NetDeliveryMethod.ReliableUnordered, client,
-                                                      ComponentMessageType.ReturnArmorValues,
-                                                      (int) ((DamageType) message.messageParameters[1]),
-                                                      GetArmorValue((DamageType) message.messageParameters[1]));
+                    Owner.SendComponentNetworkMessage(this, NetDeliveryMethod.ReliableUnordered, client, ComponentMessageType.ReturnArmorValues, (int)((DamageType)message.messageParameters[1]), GetArmorValue((DamageType)message.messageParameters[1]));
                     break;
 
                 default:
@@ -59,12 +60,11 @@ namespace SGO
             base.Update(frameTime);
         }
 
-        public override void HandleExtendedParameters(XElement extendedParameters)
+        public override void HandleExtendedParameters(System.Xml.Linq.XElement extendedParameters)
         {
             foreach (XElement entityStat in extendedParameters.Descendants("EntityArmor"))
             {
-                var type = (DamageType) Enum.Parse(typeof (DamageType), entityStat.Attribute("type").Value, true);
-                    //Add check for parsing. Handle exceptions if invalid name.
+                DamageType type = (DamageType)Enum.Parse(typeof(DamageType), entityStat.Attribute("type").Value, true); //Add check for parsing. Handle exceptions if invalid name.
                 int value = int.Parse(entityStat.Attribute("value").Value); //See comment above.
 
                 armorStats[type] = value;
@@ -83,12 +83,12 @@ namespace SGO
         {
             int armorVal = 0;
 
-            var eqComp = (EquipmentComponent) Owner.GetComponent(ComponentFamily.Equipment);
+            EquipmentComponent eqComp = (EquipmentComponent)Owner.GetComponent(ComponentFamily.Equipment);
             if (eqComp != null)
             {
                 foreach (Entity ent in eqComp.equippedEntities.Values)
                 {
-                    var entStatComp = (EntityStatsComp) ent.GetComponent(ComponentFamily.EntityStats);
+                    EntityStatsComp entStatComp = (EntityStatsComp)ent.GetComponent(ComponentFamily.EntityStats);
                     if (entStatComp != null)
                         armorVal += entStatComp.GetArmorValue(damType);
                 }

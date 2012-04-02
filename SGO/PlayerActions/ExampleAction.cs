@@ -1,4 +1,15 @@
-﻿using SS13_Shared.GO;
+﻿using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Text;
+using System.IO;
+using System.Security;
+using System.Reflection;
+using System.Collections;
+using Lidgren.Network;
+using SS13_Shared;
+using SS13_Shared.GO;
+using System.Drawing;
 
 namespace SGO
 {
@@ -13,7 +24,7 @@ namespace SGO
         {
             if (targetEnt.HasComponent(ComponentFamily.StatusEffects)) //Use component messages instead.
             {
-                var statComp = (StatusEffectComp) targetEnt.GetComponent(ComponentFamily.StatusEffects);
+                StatusEffectComp statComp = (StatusEffectComp)targetEnt.GetComponent(ComponentFamily.StatusEffects);
                 statComp.AddEffect("Bleeding", 10);
                 parent.StartCooldown(this);
             }

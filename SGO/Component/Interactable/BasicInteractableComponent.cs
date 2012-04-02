@@ -1,4 +1,8 @@
-﻿using System.Linq;
+﻿using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Text;
+using SS13_Shared;
 using SS13_Shared.GO;
 
 namespace SGO
@@ -7,13 +11,12 @@ namespace SGO
     {
         public BasicInteractableComponent()
         {
-            family = ComponentFamily.Interactable;
+            family = SS13_Shared.GO.ComponentFamily.Interactable;
         }
 
-        public override ComponentReplyMessage RecieveMessage(object sender, ComponentMessageType type,
-                                                             params object[] list)
+        public override ComponentReplyMessage RecieveMessage(object sender, ComponentMessageType type, params object[] list)
         {
-            ComponentReplyMessage reply = base.RecieveMessage(sender, type, list);
+            var reply = base.RecieveMessage(sender, type, list);
 
             if (sender == this)
                 return ComponentReplyMessage.Empty;
@@ -22,8 +25,9 @@ namespace SGO
             {
                 case ComponentMessageType.Click: //We were clicked, start the interaction
                     if (list.Count() > 0)
-                        HandleClick((int) list[0]);
+                        HandleClick((int)list[0]);
                     break;
+
             }
 
             return reply;
@@ -36,8 +40,7 @@ namespace SGO
         private void HandleClick(int actorID)
         {
             Entity actor = EntityManager.Singleton.GetEntity(actorID);
-            if (actor == null || !actor.HasComponent(ComponentFamily.Actor))
-                // if actor is null or doesnt have actor component
+            if (actor == null || !actor.HasComponent(SS13_Shared.GO.ComponentFamily.Actor)) // if actor is null or doesnt have actor component
                 return; // whoops bail out.
             DoInteraction(actor);
         }
@@ -50,14 +53,12 @@ namespace SGO
         {
             //Determine what kind of interaction this is
             //Does the actor have hands?
-            if (actor.HasComponent(ComponentFamily.Hands))
-            {
-                // Actor has hands.
+            if (actor.HasComponent(SS13_Shared.GO.ComponentFamily.Hands))
+            { // Actor has hands.
                 DoHandsInteraction(actor);
             }
             else
-            {
-                // Actor doesn't have hands. All we can do is headbutt?
+            { // Actor doesn't have hands. All we can do is headbutt?
                 DoNoHandsInteraction(actor);
             }
         }
@@ -69,16 +70,16 @@ namespace SGO
         protected virtual void DoHandsInteraction(Entity actor)
         {
             // Ask if the current hand is empty
-            ComponentReplyMessage reply = actor.SendMessage(this, ComponentFamily.Hands,
-                                                            ComponentMessageType.IsCurrentHandEmpty);
-            if (reply.MessageType != ComponentMessageType.Empty && (bool) reply.ParamsList[0])
+            var reply = actor.SendMessage(this, ComponentFamily.Hands, ComponentMessageType.IsCurrentHandEmpty);
+            if (reply.MessageType != ComponentMessageType.Empty && (bool)reply.ParamsList[0] == true)
             {
                 DoEmptyHandInteraction(actor);
             }
-            else if (reply.MessageType != ComponentMessageType.Empty && (bool) reply.ParamsList[0] == false)
+            else if (reply.MessageType != ComponentMessageType.Empty && (bool)reply.ParamsList[0] == false)
             {
                 DoHeldItemInteraction(actor);
             }
+            
         }
 
         /// <summary>
@@ -93,21 +94,21 @@ namespace SGO
                 return;
 
             // Does this ent have an actor component(is it a mob?) if so, the actor component should mediate this interaction
-            if (Owner.HasComponent(ComponentFamily.Actor))
+            if (Owner.HasComponent(SS13_Shared.GO.ComponentFamily.Actor))
             {
                 Owner.SendMessage(this, ComponentMessageType.ReceiveItemToActorInteraction, actor);
                 actingItem.SendMessage(this, ComponentMessageType.EnactItemToActorInteraction, Owner, actor);
             }
 
-                //Does this ent have an item component? That item component should mediate this interaction
-            else if (Owner.HasComponent(ComponentFamily.Item))
+            //Does this ent have an item component? That item component should mediate this interaction
+            else if (Owner.HasComponent(SS13_Shared.GO.ComponentFamily.Item))
             {
                 Owner.SendMessage(this, ComponentMessageType.ReceiveItemToItemInteraction, actor);
                 actingItem.SendMessage(this, ComponentMessageType.EnactItemToItemInteraction, Owner, actor);
             }
 
-                //if not, does this ent have a largeobject component? That component should mediate this interaction.
-            else if (Owner.HasComponent(ComponentFamily.LargeObject))
+            //if not, does this ent have a largeobject component? That component should mediate this interaction.
+            else if (Owner.HasComponent(SS13_Shared.GO.ComponentFamily.LargeObject))
             {
                 Owner.SendMessage(this, ComponentMessageType.ReceiveItemToLargeObjectInteraction, actor);
                 actingItem.SendMessage(this, ComponentMessageType.EnactItemToLargeObjectInteraction, Owner, actor);
@@ -120,18 +121,20 @@ namespace SGO
         /// </summary>
         /// <param name="actor"></param>
         protected virtual void DoEmptyHandInteraction(Entity actor)
-        {
+        {            
             // Does this ent have an actor component(is it a mob?) if so, the actor component should mediate this interaction
-            if (Owner.HasComponent(ComponentFamily.Actor))
+            if (Owner.HasComponent(SS13_Shared.GO.ComponentFamily.Actor))
                 Owner.SendMessage(this, ComponentMessageType.ReceiveEmptyHandToActorInteraction, actor);
             
-                //If we can be picked up, do that -- ItemComponent mediates that
-            else if (Owner.HasComponent(ComponentFamily.Item))
+            //If we can be picked up, do that -- ItemComponent mediates that
+            else if (Owner.HasComponent(SS13_Shared.GO.ComponentFamily.Item))
                 Owner.SendMessage(this, ComponentMessageType.ReceiveEmptyHandToItemInteraction, actor);
 
-                //If not, can we be used? -- LargeObject does that
-            else if (Owner.HasComponent(ComponentFamily.LargeObject))
+            //If not, can we be used? -- LargeObject does that
+            else if (Owner.HasComponent(SS13_Shared.GO.ComponentFamily.LargeObject))
                 Owner.SendMessage(this, ComponentMessageType.ReceiveEmptyHandToLargeObjectInteraction, actor);
+
+            
         }
 
         /// <summary>
@@ -146,13 +149,10 @@ namespace SGO
 
         protected virtual Entity GetItemInActorHand(Entity actor)
         {
-            ComponentReplyMessage reply = actor.SendMessage(this, ComponentFamily.Hands,
-                                                            ComponentMessageType.GetActiveHandItem);
-            if (reply.MessageType == ComponentMessageType.ReturnActiveHandItem &&
-                (reply.ParamsList[0].GetType().IsSubclassOf(typeof (Entity)) ||
-                 reply.ParamsList[0].GetType() == typeof (Entity)))
+            var reply = actor.SendMessage(this, ComponentFamily.Hands, ComponentMessageType.GetActiveHandItem);
+            if (reply.MessageType == ComponentMessageType.ReturnActiveHandItem && (reply.ParamsList[0].GetType().IsSubclassOf(typeof(Entity)) || reply.ParamsList[0].GetType() == typeof(Entity))) 
             {
-                return (Entity) reply.ParamsList[0];
+                return (Entity)reply.ParamsList[0];
             }
 
             return null;

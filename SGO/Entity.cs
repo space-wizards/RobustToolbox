@@ -1,12 +1,19 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Linq;
+using System.Text;
+using System.IO;
+using System.Security;
+using System.Reflection;
+using System.Collections;
 using Lidgren.Network;
 using SS13.IoC;
 using SS13_Shared;
 using SS13_Shared.GO;
+using System.Runtime.Serialization;
+using ServerServices;
 using ServerInterfaces;
 using ServerInterfaces.MessageLogging;
-using ServerServices;
 
 namespace SGO
 {
@@ -18,63 +25,62 @@ namespace SGO
     public class Entity
     {
         #region Variables
-
-        #region Delegates
-
-        public delegate void EntityMoveEvent(Vector2 toPosition, Vector2 fromPosition);
-
-        public delegate void NetworkedOnJoinSpawnEvent(NetConnection client);
-
-        public delegate void NetworkedSpawnEvent();
-
-        public delegate void ShutdownEvent(Entity e);
-
-        #endregion
-
         /// <summary>
         /// Holds this entity's components
         /// </summary>
-        private readonly Dictionary<ComponentFamily, IGameObjectComponent> _components =
-            new Dictionary<ComponentFamily, IGameObjectComponent>();
+        private Dictionary<ComponentFamily, IGameObjectComponent> _components = new Dictionary<ComponentFamily, IGameObjectComponent>();
+        
+        private EntityNetworkManager m_entityNetworkManager;
 
-        private readonly bool _messageProfiling;
+        public EntityTemplate template;
 
-        private readonly EntityNetworkManager m_entityNetworkManager;
-        private bool _initialized;
-        private string _name;
+        public event EntityMoveEvent OnMove;
+        public delegate void EntityMoveEvent(Vector2 toPosition, Vector2 fromPosition);
+
+        private bool _messageProfiling;
+
+        private bool _initialized = false;
+
+        public delegate void ShutdownEvent(Entity e);
+        public event ShutdownEvent OnShutdown;
+
+        public delegate void NetworkedSpawnEvent();
+        public event NetworkedSpawnEvent OnNetworkedSpawn;
+
+        public delegate void NetworkedOnJoinSpawnEvent(NetConnection client);
+        public event NetworkedOnJoinSpawnEvent OnNetworkedJoinSpawn;
+
+        private int uid;
+        public int Uid
+        {
+            get
+            {
+                return uid;
+            }
+            set
+            {
+                uid = value;
+            }
+        }
 
         /// <summary>
         /// These are the only real pieces of data that the entity should have -- position and rotation.
         /// </summary>
         public Vector2 position;
-
         public float rotation;
-
-        public EntityTemplate template;
-        public int Uid { get; set; }
-
+        private string _name;
         public string Name
         {
             get { return _name; }
-            set
-            {
+            set { 
                 _name = value;
                 SendNameUpdate();
             }
         }
 
-        public event EntityMoveEvent OnMove;
-
-        public event ShutdownEvent OnShutdown;
-
-        public event NetworkedSpawnEvent OnNetworkedSpawn;
-
-        public event NetworkedOnJoinSpawnEvent OnNetworkedJoinSpawn;
-
         #endregion
 
         #region Constructor/Destructor
-
         /// <summary>
         /// Constructor.
         /// </summary>
@@ -116,11 +122,9 @@ namespace SGO
             }
             _components.Clear();
         }
-
         #endregion
 
         #region Component Manipulation
-
         /// <summary>
         /// Public method to add a component to an entity.
         /// Calls the component's onAdd method, which also adds it to the component manager.
@@ -132,7 +136,7 @@ namespace SGO
             if (_components.Keys.Contains(family))
                 RemoveComponent(family);
             _components.Add(family, component);
-            component.OnAdd(this);
+            component.OnAdd(this); 
         }
 
         /// <summary>
@@ -146,7 +150,7 @@ namespace SGO
             if (_components.Keys.Contains(family))
             {
                 _components[family].OnRemove();
-                _components.Remove(family);
+                _components.Remove(family); 
             }
         }
 
@@ -180,16 +184,15 @@ namespace SGO
         /// <param name="sender">the component doing the sending</param>
         /// <param name="type">the type of message</param>
         /// <param name="args">message parameters</param>
-        public void SendMessage(object sender, ComponentMessageType type, List<ComponentReplyMessage> replies,
-                                params object[] args)
+        public void SendMessage(object sender, ComponentMessageType type, List<ComponentReplyMessage> replies, params object[] args)
         {
             LogComponentMessage(sender, type, args);
 
-            foreach (IGameObjectComponent component in _components.Values.ToArray())
+            foreach (var component in _components.Values.ToArray())
             {
                 if (replies != null)
                 {
-                    ComponentReplyMessage reply = component.RecieveMessage(sender, type, args);
+                    var reply = component.RecieveMessage(sender, type, args);
                     if (reply.MessageType != ComponentMessageType.Empty)
                         replies.Add(reply);
                 }
@@ -202,14 +205,13 @@ namespace SGO
         {
             LogComponentMessage(sender, type, args);
 
-            foreach (IGameObjectComponent component in _components.Values.ToArray())
+            foreach (var component in _components.Values.ToArray())
             {
                 component.RecieveMessage(sender, type, args);
             }
         }
 
-        public ComponentReplyMessage SendMessage(object sender, ComponentFamily family, ComponentMessageType type,
-                                                 params object[] args)
+        public ComponentReplyMessage SendMessage(object sender, ComponentFamily family, ComponentMessageType type, params object[] args)
         {
             LogComponentMessage(sender, type, args);
 
@@ -229,13 +231,13 @@ namespace SGO
         {
             if (!_messageProfiling)
                 return;
-            ComponentFamily senderfamily = ComponentFamily.Generic;
-            int uid = 0;
-            string sendertype = "";
+            var senderfamily = ComponentFamily.Generic;
+            var uid = 0;
+            var sendertype = "";
             //if (sender.GetType().IsAssignableFrom(typeof(IGameObjectComponent)))
-            if (typeof (IGameObjectComponent).IsAssignableFrom(sender.GetType()))
+            if (typeof(IGameObjectComponent).IsAssignableFrom(sender.GetType()))
             {
-                var realsender = (IGameObjectComponent) sender;
+                var realsender = (IGameObjectComponent)sender;
                 senderfamily = realsender.Family;
 
                 uid = realsender.Owner.Uid;
@@ -246,16 +248,10 @@ namespace SGO
                 sendertype = sender.GetType().ToString();
             }
             //Log the message
-            var logger = ServiceManager.Singleton.Resolve<IMessageLogger>();
+            IMessageLogger logger = ServiceManager.Singleton.Resolve<IMessageLogger>();
             logger.LogComponentMessage(uid, senderfamily, sendertype, type);
         }
-
         #endregion
-
-        /// <summary>
-        /// Movement speed of the entity. This should be refactored.
-        /// </summary>
-        public float speed = 6.0f;
 
         public void Translate(Vector2 toPosition)
         {
@@ -271,7 +267,39 @@ namespace SGO
             Translate(toPosition);
         }
 
+        #region Networking
+        private void SendNameUpdate()
+        {
+            if (!_initialized || Name == null)
+                return;
+            var message = CreateNameUpdateMessage();
+            m_entityNetworkManager.SendToAll(message);
+        }        
+
+        private void SendNameUpdate(NetConnection client)
+        {
+            if (!_initialized || Name == null)
+                return;
+            var message = CreateNameUpdateMessage();
+            m_entityNetworkManager.SendMessage(message, client);
+        }
+
+        private NetOutgoingMessage CreateNameUpdateMessage()
+        {
+            var message = m_entityNetworkManager.CreateEntityMessage();
+            message.Write(Uid);//Write this entity's UID
+            message.Write((byte)EntityMessage.NameUpdate);
+            message.Write(Name);
+            return message;
+        }
+
+        #endregion
+
         //VARIABLES TO REFACTOR AT A LATER DATE
+        /// <summary>
+        /// Movement speed of the entity. This should be refactored.
+        /// </summary>
+        public float speed = 6.0f;
 
         //FUNCTIONS TO REFACTOR AT A LATER DATE
         /// <summary>
@@ -282,13 +310,11 @@ namespace SGO
             SendMessage(this, ComponentMessageType.SendPositionUpdate);
         }
 
-        public virtual void HandleClick(int clickerID)
-        {
-        }
+        public virtual void HandleClick(int clickerID) { }
 
         public void Moved(Vector2 fromPosition)
         {
-            if (OnMove != null)
+            if(OnMove != null)
                 OnMove(position, fromPosition);
         }
 
@@ -300,7 +326,7 @@ namespace SGO
                 case EntityMessage.PositionMessage:
                     break;
                 case EntityMessage.ComponentMessage:
-                    HandleComponentMessage((IncomingEntityComponentMessage) message.message, message.client);
+                    HandleComponentMessage((IncomingEntityComponentMessage)message.message, message.client);
                     break;
                 case EntityMessage.ComponentInstantiationMessage:
                     HandleComponentInstantiationMessage(message);
@@ -310,8 +336,8 @@ namespace SGO
 
         internal void HandleComponentInstantiationMessage(IncomingEntityMessage message)
         {
-            if (HasComponent((ComponentFamily) message.message))
-                GetComponent((ComponentFamily) message.message).HandleInstantiationMessage(message.client);
+            if(HasComponent((ComponentFamily)message.message))
+                GetComponent((ComponentFamily)message.message).HandleInstantiationMessage(message.client);
         }
 
         internal void HandleComponentMessage(IncomingEntityComponentMessage message, NetConnection client)
@@ -329,48 +355,16 @@ namespace SGO
         /// <param name="method">Net Delivery Method</param>
         /// <param name="recipient">The intended recipient netconnection (if null send to all)</param>
         /// <param name="messageParams">Parameters</param>
-        public void SendComponentNetworkMessage(IGameObjectComponent component, NetDeliveryMethod method,
-                                                NetConnection recipient, params object[] messageParams)
+        public void SendComponentNetworkMessage(IGameObjectComponent component, NetDeliveryMethod method, NetConnection recipient, params object[] messageParams)
         {
             if (!_initialized)
                 return;
-            m_entityNetworkManager.SendComponentNetworkMessage(this, component.Family,
-                                                               NetDeliveryMethod.ReliableUnordered, recipient,
-                                                               messageParams);
+            m_entityNetworkManager.SendComponentNetworkMessage(this, component.Family, NetDeliveryMethod.ReliableUnordered, recipient, messageParams);
         }
 
         public void Emote(string emote)
         {
             IoCManager.Resolve<IChatManager>().SendChatMessage(ChatChannel.Emote, emote, Name, Uid);
         }
-
-        #region Networking
-
-        private void SendNameUpdate()
-        {
-            if (!_initialized || Name == null)
-                return;
-            NetOutgoingMessage message = CreateNameUpdateMessage();
-            m_entityNetworkManager.SendToAll(message);
-        }
-
-        private void SendNameUpdate(NetConnection client)
-        {
-            if (!_initialized || Name == null)
-                return;
-            NetOutgoingMessage message = CreateNameUpdateMessage();
-            m_entityNetworkManager.SendMessage(message, client);
-        }
-
-        private NetOutgoingMessage CreateNameUpdateMessage()
-        {
-            NetOutgoingMessage message = m_entityNetworkManager.CreateEntityMessage();
-            message.Write(Uid); //Write this entity's UID
-            message.Write((byte) EntityMessage.NameUpdate);
-            message.Write(Name);
-            return message;
-        }
-
-        #endregion
     }
 }

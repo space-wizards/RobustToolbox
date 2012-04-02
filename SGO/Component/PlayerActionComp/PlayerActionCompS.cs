@@ -1,27 +1,31 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Drawing;
-using System.Linq;
-using Lidgren.Network;
+﻿using System.Collections.Generic;
 using SS13_Shared;
 using SS13_Shared.GO;
+using Lidgren.Network;
+using System.Linq;
+using System.Text;
+using System.Reflection;
+using System;
 using ServerInterfaces;
+using System.Drawing;
 
 namespace SGO
 {
     public class PlayerActionComp : GameObjectComponent
     {
+        private uint uidCurr = 0;
+
         public List<PlayerAction> Actions = new List<PlayerAction>();
-        private uint uidCurr;
 
         public PlayerActionComp()
+            : base()
         {
-            family = ComponentFamily.PlayerActions;
+            family = SS13_Shared.GO.ComponentFamily.PlayerActions;
         }
 
         public override void HandleNetworkMessage(IncomingEntityComponentMessage message, NetConnection client)
         {
-            var type = (ComponentMessageType) message.messageParameters[0];
+            var type = (ComponentMessageType)message.messageParameters[0];
 
             switch (type)
             {
@@ -30,9 +34,7 @@ namespace SGO
                     break;
 
                 case (ComponentMessageType.GetActionChecksum):
-                    Owner.SendComponentNetworkMessage(this, NetDeliveryMethod.ReliableUnordered, client,
-                                                      ComponentMessageType.GetActionChecksum,
-                                                      (uint) (Actions.Sum(x => x.uid)*Actions.Count));
+                    Owner.SendComponentNetworkMessage(this, NetDeliveryMethod.ReliableUnordered, client, ComponentMessageType.GetActionChecksum, (uint)(Actions.Sum(x => x.uid) * Actions.Count));
                     break;
 
                 case (ComponentMessageType.DoAction):
@@ -47,11 +49,7 @@ namespace SGO
 
         private void DoAction(IncomingEntityComponentMessage message)
         {
-            PlayerAction toDo =
-                Actions.FirstOrDefault(
-                    x =>
-                    x.uid == (uint) message.messageParameters[1] &&
-                    (PlayerActionTargetType) message.messageParameters[2] == x.targetType);
+            PlayerAction toDo = Actions.FirstOrDefault(x => x.uid == (uint)message.messageParameters[1] && (PlayerActionTargetType)message.messageParameters[2] == x.targetType);
             if (toDo != null)
             {
                 double cdLeft = toDo.cooldownExpires.Subtract(DateTime.Now).TotalSeconds;
@@ -61,12 +59,9 @@ namespace SGO
                 }
                 else
                 {
-                    if (toDo.targetType == PlayerActionTargetType.Any || toDo.targetType == PlayerActionTargetType.Other ||
-                        toDo.targetType == PlayerActionTargetType.None)
-                        //Check validity of targets later. Only clientside atm.
+                    if (toDo.targetType == PlayerActionTargetType.Any || toDo.targetType == PlayerActionTargetType.Other || toDo.targetType == PlayerActionTargetType.None) //Check validity of targets later. Only clientside atm.
                     {
-                        Entity ent = EntityManager.Singleton.GetEntity((int) message.messageParameters[3]);
-                            //ent id clienside uint but server int. Why?!
+                        Entity ent = EntityManager.Singleton.GetEntity((int)message.messageParameters[3]); //ent id clienside uint but server int. Why?!
                         if (ent != null)
                         {
                             toDo.OnUse(ent);
@@ -76,10 +71,11 @@ namespace SGO
                     }
                     else if (toDo.targetType == PlayerActionTargetType.Point)
                     {
-                        var trg = new PointF((float) message.messageParameters[3], (float) message.messageParameters[4]);
+                        PointF trg = new PointF((float)message.messageParameters[3], (float)message.messageParameters[4]);
                         toDo.OnUse(trg);
                     }
                 }
+               
             }
             else
             {
@@ -93,8 +89,7 @@ namespace SGO
             if (act.cooldownSeconds == 0) return;
             act.cooldownExpires = DateTime.Now.AddSeconds(act.cooldownSeconds);
             if (GetMyOwnerConnection() != null)
-                Owner.SendComponentNetworkMessage(this, NetDeliveryMethod.ReliableUnordered, GetMyOwnerConnection(),
-                                                  ComponentMessageType.CooldownAction, act.uid, act.cooldownSeconds);
+                Owner.SendComponentNetworkMessage(this, NetDeliveryMethod.ReliableUnordered, GetMyOwnerConnection(), ComponentMessageType.CooldownAction, act.uid, act.cooldownSeconds);
         }
 
         public override void HandleInstantiationMessage(NetConnection netConnection)
@@ -103,17 +98,16 @@ namespace SGO
 
             if (GetMyOwnerConnection() != null && GetMyOwnerConnection() == netConnection)
             {
-                AddAction("ExampleAction");
-                    //This is a terrible place for this and only exists for testing. REMOVE THIS.
+                AddAction("ExampleAction"); //This is a terrible place for this and only exists for testing. REMOVE THIS.
                 SendFullListing(GetMyOwnerConnection());
             }
         }
 
         private void SendFullListing(NetConnection client)
         {
-            var message = new object[(Actions.Count*2) + 2];
+            object[] message = new object[(Actions.Count * 2) + 2];
             message[0] = ComponentMessageType.RequestActionList;
-            message[1] = (uint) Actions.Count;
+            message[1] = (uint)Actions.Count;
 
             uint index = 2;
             foreach (PlayerAction act in Actions)
@@ -134,11 +128,11 @@ namespace SGO
         private NetConnection GetMyOwnerConnection()
         {
             var replies = new List<ComponentReplyMessage>();
-            Owner.SendMessage(this, ComponentMessageType.GetActorSession, replies);
+            Owner.SendMessage(this, SS13_Shared.GO.ComponentMessageType.GetActorSession, replies);
 
-            if (replies.Count > 0 && replies[0].MessageType == ComponentMessageType.ReturnActorSession)
+            if (replies.Count > 0 && replies[0].MessageType == SS13_Shared.GO.ComponentMessageType.ReturnActorSession)
             {
-                var session = (IPlayerSession) replies[0].ParamsList[0];
+                IPlayerSession session = (IPlayerSession)replies[0].ParamsList[0];
                 return session.ConnectedClient;
             }
             else return null;
@@ -147,17 +141,16 @@ namespace SGO
         public uint? AddAction(string typeName)
         {
             Type t = Type.GetType("SGO." + typeName);
-            if (t == null || !t.IsSubclassOf(typeof (PlayerAction))) return null;
+            if (t == null || !t.IsSubclassOf(typeof(PlayerAction))) return null;
 
             uint nextUid = uidCurr++; //Increases uid even if adding fails due to effect being unique. fix.
 
-            var newAction = (PlayerAction) Activator.CreateInstance(t, new object[] {nextUid, this});
+            PlayerAction newAction = (PlayerAction)Activator.CreateInstance(t, new object[] { nextUid, this });
 
             Actions.Add(newAction);
 
-            if (GetMyOwnerConnection() != null)
-                Owner.SendComponentNetworkMessage(this, NetDeliveryMethod.ReliableUnordered, GetMyOwnerConnection(),
-                                                  ComponentMessageType.AddAction, typeName, nextUid);
+            if(GetMyOwnerConnection() != null)
+                Owner.SendComponentNetworkMessage(this, NetDeliveryMethod.ReliableUnordered, GetMyOwnerConnection(), ComponentMessageType.AddAction, typeName, nextUid);
 
             return nextUid;
         }
@@ -170,30 +163,26 @@ namespace SGO
                 Actions.Remove(toRemove);
 
                 if (GetMyOwnerConnection() != null)
-                    Owner.SendComponentNetworkMessage(this, NetDeliveryMethod.ReliableUnordered, GetMyOwnerConnection(),
-                                                      ComponentMessageType.RemoveAction, toRemove.uid);
+                    Owner.SendComponentNetworkMessage(this, NetDeliveryMethod.ReliableUnordered, GetMyOwnerConnection(), ComponentMessageType.RemoveAction, toRemove.uid);
             }
         }
 
         public void RemoveAction(string typeName)
         {
-            PlayerAction toRemove =
-                Actions.FirstOrDefault(
-                    x => x.GetType().Name.Equals(typeName, StringComparison.InvariantCultureIgnoreCase));
+            PlayerAction toRemove = Actions.FirstOrDefault(x => x.GetType().Name.Equals(typeName, StringComparison.InvariantCultureIgnoreCase));
             if (toRemove != null)
             {
                 Actions.Remove(toRemove);
 
                 if (GetMyOwnerConnection() != null)
-                    Owner.SendComponentNetworkMessage(this, NetDeliveryMethod.ReliableUnordered, GetMyOwnerConnection(),
-                                                      ComponentMessageType.RemoveAction, toRemove.uid);
+                    Owner.SendComponentNetworkMessage(this, NetDeliveryMethod.ReliableUnordered, GetMyOwnerConnection(), ComponentMessageType.RemoveAction, toRemove.uid);
             }
         }
 
         public bool HasAction(string typeName)
         {
-            foreach (PlayerAction act in Actions)
-                if (act.GetType().Name.Equals(typeName, StringComparison.InvariantCultureIgnoreCase))
+            foreach (PlayerAction act in Actions) 
+                if (act.GetType().Name.Equals(typeName, StringComparison.InvariantCultureIgnoreCase)) 
                     return true;
 
             return false;

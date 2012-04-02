@@ -1,10 +1,11 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Globalization;
 using System.Linq;
-using System.Xml.Linq;
+using System.Text;
 using Lidgren.Network;
+using System.Xml.Linq;
 using SS13_Shared;
+using System.Globalization;
 
 namespace SGO
 {
@@ -13,13 +14,13 @@ namespace SGO
     /// </summary>
     public class EntityManager
     {
-        private static EntityManager singleton;
-        private readonly Dictionary<int, Entity> m_entities;
-        private readonly NetServer m_netServer;
         private EntityFactory m_entityFactory;
-        private EntityNetworkManager m_entityNetworkManager;
         private EntityTemplateDatabase m_entityTemplateDatabase;
-        public int nextId;
+        private EntityNetworkManager m_entityNetworkManager;
+        private NetServer m_netServer;
+
+        private Dictionary<int, Entity> m_entities;
+        public int nextId = 0;
 
         public EntityManager(NetServer netServer)
         {
@@ -32,6 +33,7 @@ namespace SGO
             LoadEntities();
         }
 
+        private static EntityManager singleton;
         public static EntityManager Singleton
         {
             get
@@ -40,7 +42,8 @@ namespace SGO
                     throw new Exception("Singleton not initialized");
                 else return singleton;
             }
-            set { singleton = value; }
+            set
+            { singleton = value; }
         }
 
         /// <summary>
@@ -49,7 +52,7 @@ namespace SGO
         public void LoadEntities()
         {
             XElement tmp = XDocument.Load("SavedEntities.xml").Element("SavedEntities");
-            IEnumerable<XElement> SavedEntities = tmp.Descendants("SavedEntity");
+            var SavedEntities = tmp.Descendants("SavedEntity");
             foreach (XElement e in SavedEntities)
             {
                 LoadEntity(e);
@@ -70,21 +73,22 @@ namespace SGO
         public void SaveEntities()
         {
             //List<XElement> entities = new List<XElement>();
-            IEnumerable<XElement> entities = from e in m_entities.Values
-                                             where e.template.Name != "HumanMob"
-                                             select ToXML(e);
+            var entities = from e in m_entities.Values
+                           where e.template.Name != "HumanMob"
+                            select ToXML(e);
 
-            var saveFile = new XDocument(new XElement("SavedEntities", entities.ToArray()));
+            XDocument saveFile = new XDocument(new XElement("SavedEntities", entities.ToArray()));
             saveFile.Save("SavedEntities.xml");
+            
         }
 
         private XElement ToXML(Entity e)
         {
-            var el = new XElement("SavedEntity",
-                                  new XAttribute("X", e.position.X.ToString(CultureInfo.InvariantCulture)),
-                                  new XAttribute("Y", e.position.Y.ToString(CultureInfo.InvariantCulture)),
-                                  new XAttribute("template", e.template.Name),
-                                  new XAttribute("name", e.Name));
+            XElement el = new XElement("SavedEntity", 
+                new XAttribute("X", e.position.X.ToString(CultureInfo.InvariantCulture)),
+                new XAttribute("Y", e.position.Y.ToString(CultureInfo.InvariantCulture)),
+                new XAttribute("template", e.template.Name),
+                new XAttribute("name", e.Name));
             return el;
         }
 
@@ -124,8 +128,8 @@ namespace SGO
                 e.Uid = nextId++;
                 m_entities.Add(e.Uid, e);
                 e.Initialize();
-                if (send) SendSpawnEntity(e);
-                if (send) e.FireNetworkedSpawn();
+                if(send) SendSpawnEntity(e);
+                if(send) e.FireNetworkedSpawn();
             }
             return e;
         }
@@ -138,7 +142,7 @@ namespace SGO
         /// <returns></returns>
         public Entity SpawnEntityAt(string EntityType, Vector2 position)
         {
-            Entity e = SpawnEntity(EntityType, false);
+            var e = SpawnEntity(EntityType, false);
             e.Translate(position);
             SendSpawnEntityAtPosition(e);
             e.FireNetworkedSpawn();
@@ -148,16 +152,16 @@ namespace SGO
         private void SendEntityManagerInit(NetConnection client)
         {
             NetOutgoingMessage message = m_netServer.CreateMessage();
-            message.Write((byte) NetMessage.EntityManagerMessage);
-            message.Write((int) EntityManagerMessage.InitializeEntities);
+            message.Write((byte)NetMessage.EntityManagerMessage);
+            message.Write((int)EntityManagerMessage.InitializeEntities);
             m_netServer.SendMessage(message, client, NetDeliveryMethod.ReliableOrdered);
         }
 
         private void SendSpawnEntity(Entity e, NetConnection client = null)
         {
             NetOutgoingMessage message = m_netServer.CreateMessage();
-            message.Write((byte) NetMessage.EntityManagerMessage);
-            message.Write((int) EntityManagerMessage.SpawnEntity);
+            message.Write((byte)NetMessage.EntityManagerMessage);
+            message.Write((int)EntityManagerMessage.SpawnEntity);
             message.Write(e.template.Name);
             message.Write(e.Name);
             message.Write(e.Uid);
@@ -170,8 +174,8 @@ namespace SGO
         private void SendSpawnEntityAtPosition(Entity e, NetConnection client = null)
         {
             NetOutgoingMessage message = m_netServer.CreateMessage();
-            message.Write((byte) NetMessage.EntityManagerMessage);
-            message.Write((int) EntityManagerMessage.SpawnEntityAtPosition);
+            message.Write((byte)NetMessage.EntityManagerMessage);
+            message.Write((int)EntityManagerMessage.SpawnEntityAtPosition);
             message.Write(e.template.Name);
             message.Write(e.Name);
             message.Write(e.Uid);
@@ -191,8 +195,8 @@ namespace SGO
         {
             e.Shutdown();
             NetOutgoingMessage message = m_netServer.CreateMessage();
-            message.Write((byte) NetMessage.EntityManagerMessage);
-            message.Write((int) EntityManagerMessage.DeleteEntity);
+            message.Write((byte)NetMessage.EntityManagerMessage);
+            message.Write((int)EntityManagerMessage.DeleteEntity);
             message.Write(e.Uid);
             m_netServer.SendToAll(message, NetDeliveryMethod.ReliableOrdered);
             m_entities.Remove(e.Uid);
@@ -228,15 +232,15 @@ namespace SGO
         }
 
         #region Entity Manager Networking
-
         public void HandleNetworkMessage(NetIncomingMessage msg)
         {
-            var type = (EntityManagerMessage) msg.ReadInt32();
-            switch (type)
+            var type = (EntityManagerMessage)msg.ReadInt32();
+            switch(type)
             {
+
             }
         }
-
         #endregion
+        
     }
 }

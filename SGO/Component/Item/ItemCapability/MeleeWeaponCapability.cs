@@ -1,50 +1,49 @@
 ﻿using System;
-using SS13_Shared;
+using System.Collections.Generic;
+using System.Linq;
+using System.Text;
 using SS13_Shared.GO;
 using ServerInterfaces;
+using SS13_Shared;
 using ServerServices;
 
 namespace SGO.Component.Item.ItemCapability
 {
     public class MeleeWeaponCapability : ItemCapability
     {
-        public DamageType damType = DamageType.Bludgeoning;
         public int damageAmount = 10;
+        public DamageType damType = DamageType.Bludgeoning;
 
         public MeleeWeaponCapability()
         {
-            CapabilityType = ItemCapabilityType.MeleeWeapon;
+            CapabilityType = SS13_Shared.GO.ItemCapabilityType.MeleeWeapon;
             capabilityName = "MeleeCapability";
             interactsWith = InteractsWith.Actor | InteractsWith.LargeObject;
         }
 
         public override bool ApplyTo(Entity target, Entity sourceActor)
         {
-            BodyPart targetedArea = BodyPart.Torso;
+            var targetedArea = BodyPart.Torso;
 
-            ComponentReplyMessage reply = sourceActor.SendMessage(this, ComponentFamily.Actor,
-                                                                  ComponentMessageType.GetActorSession);
-            if (reply.MessageType == ComponentMessageType.ReturnActorSession)
+            var reply = sourceActor.SendMessage(this, ComponentFamily.Actor, SS13_Shared.GO.ComponentMessageType.GetActorSession);
+            if (reply.MessageType == SS13_Shared.GO.ComponentMessageType.ReturnActorSession)
             {
-                var session = (IPlayerSession) reply.ParamsList[0];
+                IPlayerSession session = (IPlayerSession)reply.ParamsList[0];
                 targetedArea = session.TargetedArea;
             }
-            else
-                throw new NotImplementedException("Actor has no session or No actor component that returns a session");
-                    //BEEPBOOP
+            else throw new NotImplementedException("Actor has no session or No actor component that returns a session"); //BEEPBOOP
 
-            if (target.HasComponent(ComponentFamily.Damageable))
+            if (target.HasComponent(SS13_Shared.GO.ComponentFamily.Damageable))
             {
                 target.SendMessage(this, ComponentMessageType.Damage, owner.Owner, damageAmount, damType, targetedArea);
 
-                string sourceName = sourceActor.Name;
-                string targetName = (sourceActor.Uid == target.Uid) ? "himself" : target.Name;
-                string suffix = (sourceActor.Uid == target.Uid) ? " What a fucking weirdo..." : "";
+                var sourceName = sourceActor.Name;
+                var targetName = (sourceActor.Uid == target.Uid) ? "himself" : target.Name;
+                var suffix = (sourceActor.Uid == target.Uid) ? " What a fucking weirdo..." : "";
                 ServiceManager.Singleton.Resolve<IChatManager>()
-                    .SendChatMessage(ChatChannel.Damage,
-                                     sourceName + " " + DamTypeMessage(damType) + " " + targetName + " in the " +
-                                     BodyPartMessage(targetedArea) + " with a " + owner.Owner.Name + "!" + suffix,
-                                     null, sourceActor.Uid);
+                    .SendChatMessage(ChatChannel.Damage, 
+                    sourceName + " " + DamTypeMessage(damType) + " " + targetName + " in the " + BodyPartMessage(targetedArea) + " with a " + owner.Owner.Name + "!" + suffix, 
+                    null, sourceActor.Uid);
                 return true;
             }
             return false;
@@ -52,8 +51,8 @@ namespace SGO.Component.Item.ItemCapability
 
         private string BodyPartMessage(BodyPart part)
         {
-            string message = "";
-            switch (part)
+            var message = "";
+            switch(part)
             {
                 case BodyPart.Groin:
                     message = "nuts";
@@ -82,8 +81,8 @@ namespace SGO.Component.Item.ItemCapability
 
         private string DamTypeMessage(DamageType type)
         {
-            string message = "";
-            switch (type)
+            var message = "";
+            switch(type)
             {
                 case DamageType.Slashing:
                     message = "slashes";
@@ -114,21 +113,21 @@ namespace SGO.Component.Item.ItemCapability
             switch (parameter.MemberName)
             {
                 case "damageAmount":
-                    if (parameter.ParameterType == typeof (int))
-                        damageAmount = (int) parameter.Parameter;
-                    if (parameter.ParameterType == typeof (string))
-                        damageAmount = int.Parse((string) parameter.Parameter);
+                    if (parameter.ParameterType == typeof(int))
+                        damageAmount = (int)parameter.Parameter;
+                    if (parameter.ParameterType == typeof(string))
+                        damageAmount = int.Parse((string)parameter.Parameter);
                     break;
                 case "damageType":
-                    if (parameter.ParameterType == typeof (string))
+                    if (parameter.ParameterType == typeof(string))
                     {
                         //Try to parse it. Set to Bludgeoning damagetype if parsing fails
-                        if (!Enum.TryParse((string) parameter.Parameter, true, out damType))
+                        if(!Enum.TryParse<DamageType>((string)parameter.Parameter, true, out damType))
                             damType = DamageType.Bludgeoning;
                     }
-                    else if (parameter.ParameterType == typeof (DamageType))
+                    else if (parameter.ParameterType == typeof(DamageType))
                     {
-                        damType = (DamageType) parameter.Parameter;
+                        damType = (DamageType)parameter.Parameter;
                     }
                     break;
             }

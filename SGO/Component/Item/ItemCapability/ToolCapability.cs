@@ -1,4 +1,7 @@
-﻿using SS13_Shared.GO;
+﻿using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Text;
 
 namespace SGO.Component.Item.ItemCapability
 {
@@ -6,8 +9,8 @@ namespace SGO.Component.Item.ItemCapability
     {
         public ToolCapability()
         {
-            CapabilityType = ItemCapabilityType.Tool;
-            verbs.Add(0, ItemCapabilityVerb.Hit);
+            CapabilityType = SS13_Shared.GO.ItemCapabilityType.Tool;
+            verbs.Add(0, SS13_Shared.GO.ItemCapabilityVerb.Hit);
             capabilityName = "ToolCapability";
         }
     }

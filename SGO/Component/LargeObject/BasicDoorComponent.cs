@@ -1,43 +1,45 @@
-﻿using System.Drawing;
+﻿using System;
+using System.Collections.Generic;
 using System.Linq;
+using System.Text;
 using SS13_Shared;
 using SS13_Shared.GO;
-using ServerInterfaces;
-using ServerServices;
 using ServerServices.Map;
-using ServerServices.Tiles;
+using ServerServices;
+using ServerInterfaces;
 
 namespace SGO
 {
     public class BasicDoorComponent : BasicLargeObjectComponent
     {
-        private bool Open;
-        private bool autoclose = true;
-        private string closedSprite = "";
-        private float openLength = 5000;
-        private string openSprite = "";
-        private bool openonbump;
-        private float timeOpen;
+        bool Open = false;
+        string openSprite = "";
+        string closedSprite = "";
+        float openLength = 5000;
+        float timeOpen = 0;
+        bool openonbump = false;
+        bool autoclose = true;
 
         public BasicDoorComponent()
+            :base()
         {
-            family = ComponentFamily.LargeObject;
+            family = SS13_Shared.GO.ComponentFamily.LargeObject;
         }
 
-        public override ComponentReplyMessage RecieveMessage(object sender, ComponentMessageType type,
-                                                             params object[] list)
+        public override ComponentReplyMessage RecieveMessage(object sender, ComponentMessageType type, params object[] list)
         {
-            ComponentReplyMessage reply = base.RecieveMessage(sender, type, list);
+            var reply = base.RecieveMessage(sender, type, list);
 
             if (sender == this)
                 return ComponentReplyMessage.Empty;
 
-            switch (type)
+            switch(type)
             {
                 case ComponentMessageType.Bumped:
-                    if (openonbump)
+                    if(openonbump)
                         OpenDoor();
                     break;
+
             }
 
             return reply;
@@ -57,12 +59,12 @@ namespace SGO
         public override void OnAdd(Entity owner)
         {
             base.OnAdd(owner);
-            Owner.OnMove += OnMove;
+            Owner.OnMove += new Entity.EntityMoveEvent(OnMove);
         }
 
         public override void OnRemove()
         {
-            Owner.OnMove -= OnMove;
+            Owner.OnMove -= new Entity.EntityMoveEvent(OnMove);
             base.OnRemove();
         }
 
@@ -72,8 +74,7 @@ namespace SGO
             SetImpermeable(newPosition);
         }
 
-        protected override void RecieveItemInteraction(Entity actor, Entity item,
-                                                       Lookup<ItemCapabilityType, ItemCapabilityVerb> verbs)
+        protected override void RecieveItemInteraction(Entity actor, Entity item, Lookup<ItemCapabilityType, ItemCapabilityVerb> verbs)
         {
             base.RecieveItemInteraction(actor, item, verbs);
 
@@ -83,9 +84,8 @@ namespace SGO
             }
             else if (verbs[ItemCapabilityType.Tool].Contains(ItemCapabilityVerb.Hit))
             {
-                var cm = (IChatManager) ServiceManager.Singleton.GetService(ServerServiceType.ChatManager);
-                cm.SendChatMessage(ChatChannel.Default,
-                                   actor.Name + " hit the " + Owner.Name + " with a " + item.Name + ".", null, item.Uid);
+                IChatManager cm = (IChatManager)ServiceManager.Singleton.GetService(ServerServiceType.ChatManager);
+                cm.SendChatMessage(ChatChannel.Default, actor.Name + " hit the " + Owner.Name + " with a " + item.Name + ".", null, item.Uid);
             }
         }
 
@@ -114,9 +114,9 @@ namespace SGO
 
         private void OpenDoor()
         {
-            var map = (Map) ServiceManager.Singleton.GetService(ServerServiceType.Map);
-            Point occupiedTilePos = map.GetTileArrayPositionFromWorldPosition(Owner.position);
-            Tile occupiedTile = map.GetTileAt(occupiedTilePos.X, occupiedTilePos.Y);
+            Map map = (Map)ServiceManager.Singleton.GetService(ServerServiceType.Map);
+            var occupiedTilePos = map.GetTileArrayPositionFromWorldPosition(Owner.position);
+            var occupiedTile = map.GetTileAt(occupiedTilePos.X, occupiedTilePos.Y);
             Open = true;
             Owner.SendMessage(this, ComponentMessageType.DisableCollision);
             Owner.SendMessage(this, ComponentMessageType.SetSpriteByKey, openSprite);
@@ -126,9 +126,9 @@ namespace SGO
 
         private void CloseDoor()
         {
-            var map = (Map) ServiceManager.Singleton.GetService(ServerServiceType.Map);
-            Point occupiedTilePos = map.GetTileArrayPositionFromWorldPosition(Owner.position);
-            Tile occupiedTile = map.GetTileAt(occupiedTilePos.X, occupiedTilePos.Y);
+            Map map = (Map)ServiceManager.Singleton.GetService(ServerServiceType.Map);
+            var occupiedTilePos = map.GetTileArrayPositionFromWorldPosition(Owner.position);
+            var occupiedTile = map.GetTileAt(occupiedTilePos.X, occupiedTilePos.Y);
             Open = false;
             timeOpen = 0;
             Owner.SendMessage(this, ComponentMessageType.EnableCollision);
@@ -139,27 +139,27 @@ namespace SGO
 
         private void SetImpermeable()
         {
-            var map = (Map) ServiceManager.Singleton.GetService(ServerServiceType.Map);
-            Point occupiedTilePos = map.GetTileArrayPositionFromWorldPosition(Owner.position);
-            Tile occupiedTile = map.GetTileAt(occupiedTilePos.X, occupiedTilePos.Y);
+            Map map = (Map)ServiceManager.Singleton.GetService(ServerServiceType.Map);
+            var occupiedTilePos = map.GetTileArrayPositionFromWorldPosition(Owner.position);
+            var occupiedTile = map.GetTileAt(occupiedTilePos.X, occupiedTilePos.Y);
             occupiedTile.gasPermeable = false;
             occupiedTile.gasCell.blocking = true;
         }
 
         private void SetImpermeable(Vector2 position)
         {
-            var map = (Map) ServiceManager.Singleton.GetService(ServerServiceType.Map);
-            Point occupiedTilePos = map.GetTileArrayPositionFromWorldPosition(position);
-            Tile occupiedTile = map.GetTileAt(occupiedTilePos.X, occupiedTilePos.Y);
+            Map map = (Map)ServiceManager.Singleton.GetService(ServerServiceType.Map);
+            var occupiedTilePos = map.GetTileArrayPositionFromWorldPosition(position);
+            var occupiedTile = map.GetTileAt(occupiedTilePos.X, occupiedTilePos.Y);
             occupiedTile.gasPermeable = false;
             occupiedTile.gasCell.blocking = true;
         }
 
         private void SetPermeable(Vector2 position)
         {
-            var map = (Map) ServiceManager.Singleton.GetService(ServerServiceType.Map);
-            Point occupiedTilePos = map.GetTileArrayPositionFromWorldPosition(position);
-            Tile occupiedTile = map.GetTileAt(occupiedTilePos.X, occupiedTilePos.Y);
+            Map map = (Map)ServiceManager.Singleton.GetService(ServerServiceType.Map);
+            var occupiedTilePos = map.GetTileArrayPositionFromWorldPosition(position);
+            var occupiedTile = map.GetTileAt(occupiedTilePos.X, occupiedTilePos.Y);
             occupiedTile.gasPermeable = true;
             occupiedTile.gasCell.blocking = false;
         }
@@ -171,20 +171,20 @@ namespace SGO
             switch (parameter.MemberName)
             {
                 case "OpenSprite":
-                    openSprite = (string) parameter.Parameter;
+                    openSprite = (string)parameter.Parameter;
                     break;
                 case "ClosedSprite":
-                    closedSprite = (string) parameter.Parameter;
+                    closedSprite = (string)parameter.Parameter;
                     break;
                 case "OpenOnBump":
-                    if ((string) parameter.Parameter == "true")
+                    if ((string)parameter.Parameter == "true")
                         openonbump = true;
                     else
                         openonbump = false;
                     break;
                 case "AutoCloseInterval":
                     int autocloseinterval;
-                    if (int.TryParse((string) parameter.Parameter, out autocloseinterval))
+                    if (int.TryParse((string)parameter.Parameter, out autocloseinterval))
                     {
                         if (autocloseinterval == 0)
                             autoclose = false;

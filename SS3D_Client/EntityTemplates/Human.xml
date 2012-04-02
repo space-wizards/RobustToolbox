@@ -15,7 +15,6 @@
       <Component name="StatusEffectComp"></Component>
       <Component name="InventoryComponent"></Component>
       <Component name="PlayerActionComp"></Component>
-      <Component name="EntityStatsComp"></Component>
     </Components>
   </EntityTemplate>
 </EntityTemplates>

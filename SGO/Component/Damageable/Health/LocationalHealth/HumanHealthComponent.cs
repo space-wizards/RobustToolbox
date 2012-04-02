@@ -26,11 +26,6 @@ namespace SGO
             currentHealth = maxHealth;
         }
 
-        public override void Update(float frameTime)
-        {
-            base.Update(frameTime);
-        }
-
         public override void HandleInstantiationMessage(NetConnection netConnection)
         {
             SendHealthUpdate(netConnection);
@@ -40,7 +35,7 @@ namespace SGO
         {
             DamagedBy(damager, damageamount, damType);
 
-            int actualDamage = Math.Max(damageamount - GetArmor(damType), 0);
+            int actualDamage = damageamount - GetArmorValue(damType);
 
             if (GetHealth() - actualDamage < 0) //No negative total health.
                 actualDamage = (int) GetHealth();
@@ -191,7 +186,7 @@ namespace SGO
         {
             SendHealthUpdate(null);
         }
-        
+
         protected override void SendHealthUpdate(NetConnection client)
         {
             foreach (DamageLocation loc in damageZones)

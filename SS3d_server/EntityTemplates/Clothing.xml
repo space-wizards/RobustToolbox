@@ -12,13 +12,6 @@
           <Parameter name="wearloc" type="string" value="Outer" />
         </Parameters>
       </Component>
-      <Component name="EntityStatsComp">
-        <ExtendedParameters>
-          <EntityArmor type="Piercing" value="5"></EntityArmor>
-          <EntityArmor type="Bludgeoning" value="5"></EntityArmor>
-          <EntityArmor type="Slashing" value="5"></EntityArmor>
-        </ExtendedParameters>
-      </Component>
     </Components>
   </EntityTemplate>
   <EntityTemplate name="Assistant_Grey">
@@ -74,12 +67,6 @@
         <Parameters>
           <Parameter name="wearloc" type="string" value="Outer" />
         </Parameters>
-      </Component>
-      <Component name="EntityStatsComp">
-        <ExtendedParameters>
-          <EntityArmor type="Toxin" value="3"></EntityArmor>
-          <EntityArmor type="Shock" value="1"></EntityArmor>
-        </ExtendedParameters>
       </Component>
     </Components>
   </EntityTemplate>
@@ -150,13 +137,6 @@
         <Parameters>
           <Parameter name="wearloc" type="string" value="Head" />
         </Parameters>
-      </Component>
-      <Component name="EntityStatsComp">
-        <ExtendedParameters>
-          <EntityArmor type="Piercing" value="3"></EntityArmor>
-          <EntityArmor type="Bludgeoning" value="3"></EntityArmor>
-          <EntityArmor type="Slashing" value="3"></EntityArmor>
-        </ExtendedParameters>
       </Component>
     </Components>
   </EntityTemplate>

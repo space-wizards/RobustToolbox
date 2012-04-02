@@ -1,10 +1,5 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using SS13_Shared;
+﻿using Lidgren.Network;
 using SS13_Shared.GO;
-using Lidgren.Network;
 
 namespace SGO
 {
@@ -12,12 +7,13 @@ namespace SGO
     {
         public CollidableComponent()
         {
-            family = SS13_Shared.GO.ComponentFamily.Collidable;
+            family = ComponentFamily.Collidable;
         }
 
-        public override ComponentReplyMessage RecieveMessage(object sender, ComponentMessageType type, params object[] list)
+        public override ComponentReplyMessage RecieveMessage(object sender, ComponentMessageType type,
+                                                             params object[] list)
         {
-            var reply = base.RecieveMessage(sender, type, list);
+            ComponentReplyMessage reply = base.RecieveMessage(sender, type, list);
 
             if (sender == this)
                 return ComponentReplyMessage.Empty;
@@ -25,10 +21,12 @@ namespace SGO
             switch (type)
             {
                 case ComponentMessageType.DisableCollision:
-                    Owner.SendComponentNetworkMessage(this, Lidgren.Network.NetDeliveryMethod.ReliableUnordered, null, ComponentMessageType.DisableCollision);
+                    Owner.SendComponentNetworkMessage(this, NetDeliveryMethod.ReliableUnordered, null,
+                                                      ComponentMessageType.DisableCollision);
                     break;
                 case ComponentMessageType.EnableCollision:
-                    Owner.SendComponentNetworkMessage(this, Lidgren.Network.NetDeliveryMethod.ReliableUnordered, null, ComponentMessageType.EnableCollision);
+                    Owner.SendComponentNetworkMessage(this, NetDeliveryMethod.ReliableUnordered, null,
+                                                      ComponentMessageType.EnableCollision);
                     break;
             }
 
@@ -37,13 +35,12 @@ namespace SGO
 
         public override void HandleNetworkMessage(IncomingEntityComponentMessage message, NetConnection client)
         {
-            switch((ComponentMessageType)message.messageParameters[0])
+            switch ((ComponentMessageType) message.messageParameters[0])
             {
                 case ComponentMessageType.Bumped:
                     ///TODO check who bumped us, how far away they are, etc.
                     Owner.SendMessage(this, ComponentMessageType.Bumped);
                     break;
-
             }
         }
     }

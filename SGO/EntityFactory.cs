@@ -1,14 +1,9 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-
-namespace SGO
+﻿namespace SGO
 {
     public class EntityFactory
     {
-        private EntityTemplateDatabase m_entityTemplateDatabase;
-        private EntityNetworkManager m_entityNetworkManager;
+        private readonly EntityNetworkManager m_entityNetworkManager;
+        private readonly EntityTemplateDatabase m_entityTemplateDatabase;
 
         /// <summary>
         /// Constructor
@@ -30,7 +25,7 @@ namespace SGO
             //TODO: Throw exception here
             if (template == null)
                 return null;
-            var entity = template.CreateEntity(m_entityNetworkManager);
+            Entity entity = template.CreateEntity(m_entityNetworkManager);
             entity.Initialize();
             return entity;
         }

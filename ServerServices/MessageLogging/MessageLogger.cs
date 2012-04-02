@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using SS13.IoC;
 using SS13_Shared;
 using ServerInterfaces;
 using ServerInterfaces.MessageLogging;
@@ -31,7 +32,7 @@ namespace ServerServices.MessageLogging
 
         public static void CheckServer(object source, ElapsedEventArgs e)
         {
-            ServiceManager.Singleton.Resolve<IMessageLogger>().Ping();
+            IoCManager.Resolve<IMessageLogger>().Ping();
         }
 
         /// <summary>

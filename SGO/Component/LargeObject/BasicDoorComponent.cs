@@ -8,6 +8,7 @@ using ServerInterfaces.GameObject;
 using ServerServices;
 using ServerServices.Map;
 using ServerServices.Tiles;
+using ServerInterfaces.Map;
 
 namespace SGO
 {
@@ -116,9 +117,9 @@ namespace SGO
 
         private void OpenDoor()
         {
-            var map = (Map) ServiceManager.Singleton.GetService(ServerServiceType.Map);
+            var map = IoCManager.Resolve<IMap>();
             Point occupiedTilePos = map.GetTileArrayPositionFromWorldPosition(Owner.Position);
-            Tile occupiedTile = map.GetTileAt(occupiedTilePos.X, occupiedTilePos.Y);
+            Tile occupiedTile = map.GetTileAt(occupiedTilePos.X, occupiedTilePos.Y) as Tile;
             Open = true;
             Owner.SendMessage(this, ComponentMessageType.DisableCollision);
             Owner.SendMessage(this, ComponentMessageType.SetSpriteByKey, openSprite);
@@ -128,9 +129,9 @@ namespace SGO
 
         private void CloseDoor()
         {
-            var map = (Map) ServiceManager.Singleton.GetService(ServerServiceType.Map);
+            var map = IoCManager.Resolve<IMap>();
             Point occupiedTilePos = map.GetTileArrayPositionFromWorldPosition(Owner.Position);
-            Tile occupiedTile = map.GetTileAt(occupiedTilePos.X, occupiedTilePos.Y);
+            Tile occupiedTile = map.GetTileAt(occupiedTilePos.X, occupiedTilePos.Y) as Tile;
             Open = false;
             timeOpen = 0;
             Owner.SendMessage(this, ComponentMessageType.EnableCollision);
@@ -141,27 +142,27 @@ namespace SGO
 
         private void SetImpermeable()
         {
-            var map = (Map) ServiceManager.Singleton.GetService(ServerServiceType.Map);
+            var map = IoCManager.Resolve<IMap>();
             Point occupiedTilePos = map.GetTileArrayPositionFromWorldPosition(Owner.Position);
-            Tile occupiedTile = map.GetTileAt(occupiedTilePos.X, occupiedTilePos.Y);
+            Tile occupiedTile = map.GetTileAt(occupiedTilePos.X, occupiedTilePos.Y) as Tile;
             occupiedTile.gasPermeable = false;
             occupiedTile.gasCell.blocking = true;
         }
 
         private void SetImpermeable(Vector2 position)
         {
-            var map = (Map) ServiceManager.Singleton.GetService(ServerServiceType.Map);
+            var map = IoCManager.Resolve<IMap>();
             Point occupiedTilePos = map.GetTileArrayPositionFromWorldPosition(position);
-            Tile occupiedTile = map.GetTileAt(occupiedTilePos.X, occupiedTilePos.Y);
+            Tile occupiedTile = map.GetTileAt(occupiedTilePos.X, occupiedTilePos.Y) as Tile;
             occupiedTile.gasPermeable = false;
             occupiedTile.gasCell.blocking = true;
         }
 
         private void SetPermeable(Vector2 position)
         {
-            var map = (Map) ServiceManager.Singleton.GetService(ServerServiceType.Map);
+            var map = IoCManager.Resolve<IMap>();
             Point occupiedTilePos = map.GetTileArrayPositionFromWorldPosition(position);
-            Tile occupiedTile = map.GetTileAt(occupiedTilePos.X, occupiedTilePos.Y);
+            Tile occupiedTile = map.GetTileAt(occupiedTilePos.X, occupiedTilePos.Y) as Tile;
             occupiedTile.gasPermeable = true;
             occupiedTile.gasCell.blocking = false;
         }

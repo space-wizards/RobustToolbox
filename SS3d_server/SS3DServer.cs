@@ -8,7 +8,6 @@ using ServerServices;
 using Lidgren.Network;
 using SS13_Shared;
 using ServerServices.Map;
-using SS13_Server.Modules.Gamemodes;
 using SGO;
 using ServerInterfaces;
 using ServerServices.Log;
@@ -21,13 +20,15 @@ using ServerInterfaces.Player;
 using SS13_Shared.ServerEnums;
 using ServerInterfaces.Crafting;
 using ServerInterfaces.Round;
+using ServerServices.Round;
+using ServerInterfaces.Map;
+using ServerInterfaces.Placement;
 
 namespace SS13_Server
 {
     public class SS13Server: ISS13Server
     {
         public Dictionary<NetConnection, IClient> ClientList = new Dictionary<NetConnection, IClient>();
-        public Map Map;
         public IEntityManager EntityManager { get; private set; }
         public RunLevel Runlevel {get; private set;}
 
@@ -113,9 +114,7 @@ namespace SS13_Server
             }
             else if (Runlevel == RunLevel.Game)
             {
-                Map = new Map();
-                ServiceManager.Singleton.AddService(Map);
-                Map.InitMap(_serverMapName);
+                IoCManager.Resolve<IMap>().InitMap(_serverMapName);
 
                 EntityManager = new EntityManager(IoCManager.Resolve<ISS13NetServer>());
 
@@ -153,7 +152,7 @@ namespace SS13_Server
 
         public void StartLobby()
         {
-            IoCManager.Resolve<IRoundManager>().Initialize(new Gamemode());
+            IoCManager.Resolve<IRoundManager>().Initialize(new Gamemode(this));
             InitModules(RunLevel.Lobby);
         }
 
@@ -167,8 +166,7 @@ namespace SS13_Server
         {
             EntityManager.Shutdown();
             EntityManager = null;
-            Map.Shutdown();
-            Map = null; //Implement proper disposal.
+            IoCManager.Resolve<IMap>().Shutdown();
             GC.Collect();
         }
 
@@ -265,7 +263,7 @@ namespace SS13_Server
                 if (lastFrame.TotalMilliseconds > framePeriod)
                 {
                     ComponentManager.Singleton.Update(framePeriod);
-                    Map.UpdateAtmos();
+                    IoCManager.Resolve<IMap>().UpdateAtmos();
                     IoCManager.Resolve<IRoundManager>().CurrentGameMode.Update();
                     IoCManager.Resolve<ICraftingManager>().Update();
                 }
@@ -411,13 +409,13 @@ namespace SS13_Server
                     IoCManager.Resolve<IPlayerManager>().HandleNetworkMessage(msg);
                     break;
                 case NetMessage.MapMessage:
-                    Map.HandleNetworkMessage(msg);
+                    IoCManager.Resolve<IMap>().HandleNetworkMessage(msg);
                     break;
                 case NetMessage.JobList:
                     HandleJobListRequest(msg);
                     break;
                 case NetMessage.PlacementManagerMessage:
-                    PlacementManager.Singleton.HandleNetMessage(msg);
+                    IoCManager.Resolve<IPlacementManager>().HandleNetMessage(msg);
                     break;
                 case NetMessage.EntityMessage:
                     EntityManager.HandleEntityNetworkMessage(msg);
@@ -596,8 +594,8 @@ namespace SS13_Server
             var mapMessage = IoCManager.Resolve<ISS13NetServer>().CreateMessage();
             mapMessage.Write((byte)NetMessage.SendMap);
 
-            var mapWidth = Map.GetMapWidth();
-            var mapHeight = Map.GetMapHeight();
+            var mapWidth = IoCManager.Resolve<IMap>().GetMapWidth();
+            var mapHeight = IoCManager.Resolve<IMap>().GetMapHeight();
 
             mapMessage.Write(mapWidth);
             mapMessage.Write(mapHeight);
@@ -606,7 +604,7 @@ namespace SS13_Server
             {
                 for (var y = 0; y < mapHeight; y++)
                 {
-                    var t = Map.GetTileAt(x, y);
+                    var t = IoCManager.Resolve<IMap>().GetTileAt(x, y);
                     mapMessage.Write((byte)t.tileType);
                     mapMessage.Write((byte)t.tileState);
                 }
@@ -619,7 +617,7 @@ namespace SS13_Server
             EntityManager.SendEntities(connection);
 
             //Send atmos state to player
-            Map.SendAtmosStateTo(connection);
+            IoCManager.Resolve<IMap>().SendAtmosStateTo(connection);
 
             //Todo: Preempt this with the lobby.
             IoCManager.Resolve<IRoundManager>().SpawnPlayer(IoCManager.Resolve<IPlayerManager>().GetSessionByConnection(connection)); //SPAWN PLAYER
@@ -646,12 +644,17 @@ namespace SS13_Server
 
         public void SaveMap()
         {
-            Map.SaveMap();
+            IoCManager.Resolve<IMap>().SaveMap();
         }
 
         public void SaveEntities()
         {
             EntityManager.SaveEntities();
+        }
+
+        public IMap GetMap()
+        {
+            return IoCManager.Resolve<IMap>();
         }
     }
 }

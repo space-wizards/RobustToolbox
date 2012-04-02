@@ -243,7 +243,7 @@ namespace SGO
                 sendertype = sender.GetType().ToString();
             }
             //Log the message
-            var logger = ServiceManager.Singleton.Resolve<IMessageLogger>();
+            var logger = IoCManager.Resolve<IMessageLogger>();
             logger.LogComponentMessage(uid, senderfamily, sendertype, type);
         }
 

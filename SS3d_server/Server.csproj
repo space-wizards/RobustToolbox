@@ -111,8 +111,6 @@
     <Compile Include="Helper Classes\InterpolationPacket.cs" />
     <Compile Include="Modules\Banlist.cs" />
     <Compile Include="Modules\Client\Client.cs" />
-    <Compile Include="Modules\Gamemodes.cs" />
-    <Compile Include="Modules\PlacementManager.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="SS3DServer.cs" />
@@ -219,9 +217,7 @@
   <ItemGroup>
     <WCFMetadata Include="Service References\" />
   </ItemGroup>
-  <ItemGroup>
-    <Folder Include="Scripts\" />
-  </ItemGroup>
+  <ItemGroup />
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <PropertyGroup>
     <PostBuildEvent>

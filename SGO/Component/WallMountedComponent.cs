@@ -5,6 +5,8 @@ using ServerInterfaces.GameObject;
 using ServerServices;
 using ServerServices.Map;
 using ServerServices.Tiles;
+using SS13.IoC;
+using ServerInterfaces.Map;
 
 namespace SGO
 {
@@ -16,12 +18,7 @@ namespace SGO
         {
             family = ComponentFamily.WallMounted;
         }
-
-        public override void Update(float frameTime)
-        {
-            base.Update(frameTime);
-        }
-
+        
         public override void OnAdd(IEntity owner)
         {
             base.OnAdd(owner);
@@ -36,15 +33,15 @@ namespace SGO
 
         private void OnMove(Vector2 newPosition, Vector2 oldPosition)
         {
-            var map = (Map) ServiceManager.Singleton.GetService(ServerServiceType.Map);
+            var map = IoCManager.Resolve<IMap>();
 
             Point tilePositionOld = map.GetTileArrayPositionFromWorldPosition(oldPosition);
-            Tile previousTile = map.GetTileAt(tilePositionOld.X, tilePositionOld.Y);
+            Tile previousTile = map.GetTileAt(tilePositionOld.X, tilePositionOld.Y) as Tile;
 
             previousTile.TileChange -= TileChanged;
 
             Point tilePositionNew = map.GetTileArrayPositionFromWorldPosition(newPosition);
-            Tile currentTile = map.GetTileAt(tilePositionNew.X, tilePositionNew.Y);
+            Tile currentTile = map.GetTileAt(tilePositionNew.X, tilePositionNew.Y) as Tile;
 
             currentTile.TileChange += TileChanged;
 

@@ -12,7 +12,10 @@ namespace SGO
     {
         private readonly List<DamageHistoryItem> _damageHistory = new List<DamageHistoryItem>();
         public float currentHealth = 100;
+        private List<DamageHistoryItem> _damageHistory = new List<DamageHistoryItem>(); 
 
+
+        protected bool isDead = false;
 
         protected bool isDead;
         public float maxHealth = 100;
@@ -96,22 +99,19 @@ namespace SGO
         {
             if (!isDead)
             {
-                int damagetoapply = Math.Max(damageamount - GetArmorValue(damType), 0); //No negative damage right now
+                int damagetoapply = Math.Max(damageamount - GetArmor(damType), 0); //No negative damage right now
                 currentHealth -= damagetoapply;
                 DamagedBy(damager, damageamount, damType);
             }
             SendHealthUpdate();
         }
 
-        protected virtual int GetArmorValue(DamageType damType)
+        protected virtual int GetArmor(DamageType damType)
         {
-            //TODO do armor by damagetype
-            var replies = new List<ComponentReplyMessage>();
-            Owner.SendMessage(this, ComponentMessageType.GetArmorValues, replies, damType);
-            return
-                replies.Where(
-                    reply => reply.MessageType == ComponentMessageType.ReturnArmorValues && reply.ParamsList[0] is int).
-                    Sum(reply => (int) reply.ParamsList[0]);
+            EntityStatsComp entStats = (EntityStatsComp)Owner.GetComponent(ComponentFamily.EntityStats);
+
+            if (entStats != null) return entStats.GetArmorValue(damType);
+            else return 0;
         }
 
         protected virtual void ApplyDamage(int p)

@@ -102,7 +102,7 @@ namespace SGO
                 {
                     var e = equippedEntities[p];
                     e.SendMessage(this, ComponentMessageType.ItemEquipped, Owner);
-                    Owner.SendComponentNetworkMessage(this, NetDeliveryMethod.ReliableUnordered, netConnection,
+                    Owner.SendComponentNetworkMessage(this, NetDeliveryMethod.ReliableOrdered, netConnection,
                                                       EquipmentComponentNetMessage.ItemEquipped, p, e.Uid);
                 }
             }
@@ -120,7 +120,7 @@ namespace SGO
 
                 equippedEntities.Add(part, e);
                 e.SendMessage(this, ComponentMessageType.ItemEquipped, Owner);
-                Owner.SendComponentNetworkMessage(this, NetDeliveryMethod.ReliableUnordered, null,
+                Owner.SendComponentNetworkMessage(this, NetDeliveryMethod.ReliableOrdered, null,
                                                   EquipmentComponentNetMessage.ItemEquipped, part, e.Uid);
             }
         }
@@ -167,7 +167,7 @@ namespace SGO
             if (!IsEmpty(part)) //If the part is not empty
             {
                 equippedEntities[part].SendMessage(this, ComponentMessageType.ItemUnEquipped);
-                Owner.SendComponentNetworkMessage(this, NetDeliveryMethod.ReliableUnordered, null,
+                Owner.SendComponentNetworkMessage(this, NetDeliveryMethod.ReliableOrdered, null,
                                                   EquipmentComponentNetMessage.ItemUnEquipped, part,
                                                   equippedEntities[part].Uid);
                 equippedEntities.Remove(part);

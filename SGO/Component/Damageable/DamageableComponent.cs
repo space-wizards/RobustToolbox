@@ -12,8 +12,7 @@ namespace SGO
     {
         private readonly List<DamageHistoryItem> _damageHistory = new List<DamageHistoryItem>();
         public float currentHealth = 100;
-
-
+        
         protected bool isDead;
         public float maxHealth = 100;
 

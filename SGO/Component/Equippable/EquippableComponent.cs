@@ -43,7 +43,7 @@ namespace SGO
         private void HandleUnEquipped()
         {
             Owner.AddComponent(ComponentFamily.Mover, ComponentFactory.Singleton.GetComponent("BasicMoverComponent"));
-            Owner.SendComponentNetworkMessage(this, NetDeliveryMethod.ReliableUnordered, null,
+            Owner.SendComponentNetworkMessage(this, NetDeliveryMethod.ReliableOrdered, null,
                                               EquippableComponentNetMessage.UnEquipped);
             currentWearer = null;
         }
@@ -53,7 +53,7 @@ namespace SGO
             currentWearer = entity;
             Owner.AddComponent(ComponentFamily.Mover, ComponentFactory.Singleton.GetComponent("SlaveMoverComponent"));
             Owner.SendMessage(this, ComponentMessageType.SlaveAttach, entity.Uid);
-            Owner.SendComponentNetworkMessage(this, NetDeliveryMethod.ReliableUnordered, null,
+            Owner.SendComponentNetworkMessage(this, NetDeliveryMethod.ReliableOrdered, null,
                                               EquippableComponentNetMessage.Equipped, entity.Uid, wearloc);
         }
 

@@ -21,7 +21,7 @@ namespace CGO
         private bool _initialized;
         private int _lastId;
 
-        private Queue<IncomingEntityMessage> MessageBuffer = new Queue<IncomingEntityMessage>();
+        private Queue<ClientIncomingEntityMessage> MessageBuffer = new Queue<ClientIncomingEntityMessage>();
 
         public EntityTemplateDatabase TemplateDb { get; private set; }
 
@@ -65,26 +65,6 @@ namespace CGO
         public IEntity GetEntity(int eid)
         {
             return _entities.Keys.Contains(eid) ? _entities[eid] : null;
-        }
-
-        /// <summary>
-        /// Creates an entity and adds it to the entity dictionary
-        /// </summary>
-        /// <param name="templateName">name of entity template to execute</param>
-        /// <returns>integer id of added entity</returns>
-        public int CreateEntity(string templateName)
-        {
-            //Get the entity from the factory
-            var e = _entityFactory.CreateEntity(templateName, _entityNetworkManager);
-            if (e != null)
-            {
-                //It worked, add it.
-                _entities.Add(++_lastId, e);
-                _lastId++;
-                return _lastId;
-            }
-            //TODO: throw exception here -- something went wrong.
-            return -1;
         }
 
         private IEntity SpawnEntity(string entityType, int uid)
@@ -132,17 +112,28 @@ namespace CGO
             if (!_initialized)
                 return;
             if (!MessageBuffer.Any()) return;
+            var misses = new List<ClientIncomingEntityMessage>();
 
             while (MessageBuffer.Any())
             {
-                IncomingEntityMessage entMsg = MessageBuffer.Dequeue();
-                _entities[entMsg.Uid].HandleNetworkMessage(entMsg);
+                ClientIncomingEntityMessage entMsg = MessageBuffer.Dequeue();
+                if(!_entities.ContainsKey(entMsg.Uid))
+                {
+                    entMsg.LastProcessingAttempt = DateTime.Now;
+                    if((entMsg.LastProcessingAttempt - entMsg.ReceivedTime).TotalSeconds > entMsg.Expires)
+                        misses.Add(entMsg);
+                }
+                else
+                    _entities[entMsg.Uid].HandleNetworkMessage(entMsg);
             }
+
+            foreach(var miss in misses) 
+                MessageBuffer.Enqueue(miss);
 
             MessageBuffer.Clear(); //Should be empty at this point anyway.
         }
 
-        private IncomingEntityMessage ProcessNetMessage(NetIncomingMessage msg)
+        private ClientIncomingEntityMessage ProcessNetMessage(NetIncomingMessage msg)
         {
             return _entityNetworkManager.HandleEntityNetworkMessage(msg);
         }
@@ -162,8 +153,12 @@ namespace CGO
             }
             else
             {
-                IncomingEntityMessage entMsg = ProcessNetMessage(msg);
-                _entities[entMsg.Uid].HandleNetworkMessage(entMsg);
+                ProcessMsgBuffer();
+                ClientIncomingEntityMessage entMsg = ProcessNetMessage(msg);
+                if(!_entities.ContainsKey(entMsg.Uid))
+                    MessageBuffer.Enqueue(entMsg);
+                else
+                    _entities[entMsg.Uid].HandleNetworkMessage(entMsg);
             }
         }
 
@@ -218,7 +213,6 @@ namespace CGO
             foreach (var e in _entities.Values)
                 e.Initialize();
             _initialized = true;
-            ProcessMsgBuffer();
         }
 
         #endregion

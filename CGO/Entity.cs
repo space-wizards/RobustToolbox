@@ -244,7 +244,7 @@ namespace CGO
             }
         }
 
-        public void HandleNetworkMessage(IncomingEntityMessage message)
+        public void HandleNetworkMessage(ClientIncomingEntityMessage message)
         {
             switch (message.MessageType)
             {

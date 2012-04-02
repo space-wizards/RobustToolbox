@@ -8,19 +8,15 @@ using System.Xml;
 using System.Xml.Serialization;
 using SS13_Shared;
 using ServerInterfaces;
+using ServerInterfaces.Configuration;
 
 namespace ServerServices.Configuration
 {
-    public sealed class ConfigManager: IConfigManager, IService
+    public sealed class ConfigurationManager: IConfigurationManager, IService
     {
         public PersistentConfiguration Configuration;
         private string ConfigFile;
         
-        public ConfigManager(string ConfigFilename)
-        {
-            Initialize(ConfigFilename);
-        }
-
         public void Initialize(string ConfigFileLoc)
         {
             if (File.Exists(ConfigFileLoc))
@@ -34,7 +30,7 @@ namespace ServerServices.Configuration
             }
             else
             {
-                //if (LogManager.Singleton != null) LogManager.Singleton.LogMessage("ConfigManager: Could not load config. File not found. " + ConfigFileLoc);
+                //if (LogManager.Singleton != null) LogManager.Singleton.LogMessage("ConfigurationManager: Could not load config. File not found. " + ConfigFileLoc);
             }
         }
 
@@ -42,7 +38,7 @@ namespace ServerServices.Configuration
         {
             if (Configuration == null)
             {
-                //if (LogManager.Singleton != null) LogManager.Singleton.LogMessage("ConfigManager: Could not write config. No File loaded. " + Configuration.ToString() + " , " + ConfigFile);
+                //if (LogManager.Singleton != null) LogManager.Singleton.LogMessage("ConfigurationManager: Could not write config. No File loaded. " + Configuration.ToString() + " , " + ConfigFile);
                 return;
             }
             else

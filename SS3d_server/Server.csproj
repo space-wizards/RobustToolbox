@@ -110,14 +110,7 @@
   <ItemGroup>
     <Compile Include="Helper Classes\InterpolationPacket.cs" />
     <Compile Include="Modules\Banlist.cs" />
-    <Compile Include="Modules\Chat\ChatManager.cs" />
     <Compile Include="Modules\Client\Client.cs" />
-    <Compile Include="Modules\CraftingManager.cs" />
-    <Compile Include="Modules\Gamemodes.cs" />
-    <Compile Include="Modules\PlacementManager.cs" />
-    <Compile Include="Modules\PlayerManager.cs" />
-    <Compile Include="Modules\PlayerSession.cs" />
-    <Compile Include="Modules\RoundManager.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="SS3DServer.cs" />
@@ -138,6 +131,10 @@
     <ProjectReference Include="..\SGO\ServerGameObject.csproj">
       <Project>{A59BA08B-B934-49D1-A449-6BBDFE292C5E}</Project>
       <Name>ServerGameObject</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\SS13.IoC\SS13.IoC.csproj">
+      <Project>{3401031F-35A7-4AE5-8B64-CAFDCB929F0E}</Project>
+      <Name>SS13.IoC</Name>
     </ProjectReference>
     <ProjectReference Include="..\SS3D_shared\SS13_Shared.csproj">
       <Project>{4229D7E3-C3AE-4C0A-B2B1-BB20911150DC}</Project>
@@ -220,9 +217,7 @@
   <ItemGroup>
     <WCFMetadata Include="Service References\" />
   </ItemGroup>
-  <ItemGroup>
-    <Folder Include="Scripts\" />
-  </ItemGroup>
+  <ItemGroup />
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <PropertyGroup>
     <PostBuildEvent>

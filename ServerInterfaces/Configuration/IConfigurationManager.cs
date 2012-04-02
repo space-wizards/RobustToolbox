@@ -4,10 +4,11 @@ using System.Linq;
 using System.Text;
 using SS13_Shared;
 
-namespace ServerInterfaces
+namespace ServerInterfaces.Configuration
 {
-    public interface IConfigManager
+    public interface IConfigurationManager
     {
+        void Initialize(string configFilePath);
         bool MessageLogging { get; set; }
         string ServerName { get; set; }
         string ServerMapName { get; set; }

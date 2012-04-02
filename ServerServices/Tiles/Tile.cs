@@ -1,26 +1,20 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using SS13_Shared;
+﻿using ServerInterfaces.Tiles;
 using ServerServices.Tiles.Atmos;
-using ServerServices.Map;
+using SS13_Shared;
 
 namespace ServerServices.Tiles
 {
-    public class Tile
+    public class Tile : ITile
     {
-        public TileType tileType;
+        public TileType tileType { get; set; }
         public GasCell gasCell;
-        public TileState tileState;
+        public TileState tileState { get; set; }
         public bool gasPermeable = false;
         public bool gasSink = false;
         private Map.Map map;
         private int _x;
         private int _y;
-
-        public delegate void TileChangeHandler(TileType tNew);
-
+        
         public event TileChangeHandler TileChange; //This event will be used for wall mounted objects and
                                                    //other things that need to react to tiles changing.
         public void RaiseChangedEvent(TileType type)

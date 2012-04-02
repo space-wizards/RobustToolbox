@@ -1,20 +1,22 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-
+﻿using System.Collections.Generic;
 using Lidgren.Network;
-using SS13_Shared;
-using ServerServices;
 using ServerInterfaces;
-using SGO;
+using ServerInterfaces.Chat;
+using ServerInterfaces.Network;
+using ServerServices.Log;
+using SS13.IoC;
+using SS13_Shared;
+using ServerInterfaces.Player;
 
 namespace SS13_Server.Modules.Chat
 {
-    public class ChatManager : IService, IChatManager
+    public class ChatManager : IChatManager
     {
-        public ChatManager()
+        private ISS13Server _serverMain;
+
+        public void Initialize(ISS13Server server)
         {
+            _serverMain = server;
         }
 
         public void HandleNetMessage(NetIncomingMessage message)
@@ -22,12 +24,12 @@ namespace SS13_Server.Modules.Chat
             //Read the chat message and pass it on
             ChatChannel channel = (ChatChannel)message.ReadByte();
             string text = message.ReadString();
-            string name = SS13Server.Singleton.ClientList[message.SenderConnection].playerName;
+            string name = _serverMain.GetClient(message.SenderConnection).PlayerName;
             LogManager.Log("CHAT- Channel " + channel.ToString() +  " - Player " + name + "Message: " + text + "\n");
 
             int entityId = 0;
-            if (SS13Server.Singleton.PlayerManager.GetSessionByConnection(message.SenderConnection).attachedEntity != null)
-                entityId = SS13Server.Singleton.PlayerManager.GetSessionByConnection(message.SenderConnection).attachedEntity.Uid;
+            if (IoCManager.Resolve<IPlayerManager>().GetSessionByConnection(message.SenderConnection).attachedEntity != null)
+                entityId = IoCManager.Resolve<IPlayerManager>().GetSessionByConnection(message.SenderConnection).attachedEntity.Uid;
 
             text = text.Trim(); // Remove whitespace
             if (text[0] == '/')
@@ -40,14 +42,14 @@ namespace SS13_Server.Modules.Chat
         {
             string fullmsg = name + ": " + text;
 
-            NetOutgoingMessage message = SS13NetServer.Singleton.CreateMessage();
+            NetOutgoingMessage message = IoCManager.Resolve<ISS13NetServer>().CreateMessage();
 
             message.Write((byte)NetMessage.ChatMessage);
             message.Write((byte)channel);
             message.Write(fullmsg);
             message.Write(entityId);
 
-            SS13NetServer.Singleton.SendToAll(message);
+            IoCManager.Resolve<ISS13NetServer>().SendToAll(message);
         }
 
         /// <summary>
@@ -66,16 +68,16 @@ namespace SS13_Server.Modules.Chat
             string command = args[0];
 
             Vector2 position;
-            Entity player;
+            /*Entity player;
             player = EntityManager.Singleton.GetEntity(entityId);
             if (player == null)
                 position = new Vector2(160, 160);
             else
                 position = player.position;
-
+            */
             switch (command)
             {
-                case "spawnentity":
+                /*case "spawnentity":
                     Entity spawned = EntityManager.Singleton.SpawnEntityAt(args[1], position);
                     break;
                 case "crowbar":
@@ -118,7 +120,7 @@ namespace SS13_Server.Modules.Chat
                     else
                         t.AddDecal(DecalType.Blood);
                         
-                    break;
+                    break;*/
                 default:
                     string message = "Command '" + command + "' not recognized.";
                     SendChatMessage(channel, message, name, entityId);
@@ -168,11 +170,6 @@ namespace SS13_Server.Modules.Chat
             if (buf != "")
                 args.Add(buf);
 
-        }
-
-        public ServerServiceType ServiceType
-        {
-            get { return ServerServiceType.ChatManager; }
         }
     }
 }

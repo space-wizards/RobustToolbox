@@ -63,21 +63,13 @@ namespace ClientServices.UserInterface.Inventory
         #endregion
 
         #region Status UI
-        private readonly TextSprite _txtResBlunt;
-        private readonly TextSprite _txtResBurn;
-        private readonly TextSprite _txtResFreeze;
-        private readonly TextSprite _txtResPierce;
-        private readonly TextSprite _txtResShock;
-        private readonly TextSprite _txtResSlash;
-        private readonly TextSprite _txtResTox;
-
-        private readonly Sprite _sprResBlunt;
-        private readonly Sprite _sprResBurn;
-        private readonly Sprite _sprResFreeze;
-        private readonly Sprite _sprResPierce;
-        private readonly Sprite _sprResShock;
-        private readonly Sprite _sprResSlash;
-        private readonly Sprite _sprResTox; 
+        private readonly ArmorInfoLabel _ResBlunt;
+        private readonly ArmorInfoLabel _ResBurn;
+        private readonly ArmorInfoLabel _ResFreeze;
+        private readonly ArmorInfoLabel _ResPierce;
+        private readonly ArmorInfoLabel _ResShock;
+        private readonly ArmorInfoLabel _ResSlash;
+        private readonly ArmorInfoLabel _ResTox;
         #endregion
 
         private byte _currentTab = 1; //1 = Inventory, 2 = Health, 3 = Crafting
@@ -115,21 +107,13 @@ namespace ClientServices.UserInterface.Inventory
             RightHand.Hand = Hand.Right;
 
             #region Status UI
-            _txtResBlunt = new TextSprite("txtResBlunt", "Blunt : 0", _resourceManager.GetFont("CALIBRI"));
-            _txtResBurn = new TextSprite("txtResBurn", "Burn : 0", _resourceManager.GetFont("CALIBRI"));
-            _txtResFreeze = new TextSprite("txtResFreeze", "Freeze : 0", _resourceManager.GetFont("CALIBRI"));
-            _txtResPierce = new TextSprite("txtResPierce", "Pierce : 0", _resourceManager.GetFont("CALIBRI"));
-            _txtResShock = new TextSprite("txtResShock", "Shock : 0", _resourceManager.GetFont("CALIBRI"));
-            _txtResSlash = new TextSprite("txtResSlash", "Slash : 0", _resourceManager.GetFont("CALIBRI"));
-            _txtResTox = new TextSprite("txtResTox", "Toxin : 0", _resourceManager.GetFont("CALIBRI"));
-
-            _sprResBlunt = _resourceManager.GetSprite("res_blunt");
-            _sprResBurn = _resourceManager.GetSprite("res_burn");
-            _sprResFreeze = _resourceManager.GetSprite("res_freeze");
-            _sprResPierce = _resourceManager.GetSprite("res_pierce");
-            _sprResShock = _resourceManager.GetSprite("res_shock");
-            _sprResSlash = _resourceManager.GetSprite("res_slash");
-            _sprResTox = _resourceManager.GetSprite("res_tox");
+            _ResBlunt = new ArmorInfoLabel(DamageType.Bludgeoning, resourceManager);
+            _ResBurn = new ArmorInfoLabel(DamageType.Burn, resourceManager);
+            _ResFreeze = new ArmorInfoLabel(DamageType.Freeze, resourceManager);
+            _ResPierce = new ArmorInfoLabel(DamageType.Piercing, resourceManager);
+            _ResShock = new ArmorInfoLabel(DamageType.Shock, resourceManager);
+            _ResSlash = new ArmorInfoLabel(DamageType.Slashing, resourceManager);
+            _ResTox = new ArmorInfoLabel(DamageType.Toxin, resourceManager);
             #endregion
 
             _equipBg = _resourceManager.GetSprite("outline");
@@ -463,21 +447,14 @@ namespace ClientServices.UserInterface.Inventory
                     case (2): //Health tab
                         {
                             #region Status
-                            _sprResBlunt.Draw();
-                            _sprResPierce.Draw();
-                            _sprResSlash.Draw();
-                            _sprResBurn.Draw();
-                            _sprResFreeze.Draw();
-                            _sprResShock.Draw();
-                            _sprResTox.Draw();
 
-                            _txtResBlunt.Draw();
-                            _txtResPierce.Draw();
-                            _txtResSlash.Draw();
-                            _txtResBurn.Draw();
-                            _txtResFreeze.Draw();
-                            _txtResShock.Draw();
-                            _txtResTox.Draw();
+                            _ResBlunt.Render();
+                            _ResPierce.Render();
+                            _ResSlash.Render();
+                            _ResBurn.Render();
+                            _ResFreeze.Render();
+                            _ResShock.Render();
+                            _ResTox.Render();
                             break; 
                             #endregion
                         }
@@ -625,51 +602,35 @@ namespace ClientServices.UserInterface.Inventory
                         #region Status
                         var resLinePos = new Point(Position.X + 35, Position.Y + 70);
 
-                        const int txtOffX = 16;
-                        const int txtOffY = -4;
-                        const int nxtOffY = 27;
+                        const int spacing = 8;
 
-                        EntityStatsComp entStats = null;
+                        _ResBlunt.Position = resLinePos;
+                        resLinePos.Offset(0, _ResBlunt.ClientArea.Height + spacing);
+                        _ResBlunt.Update();
 
-                        if (_playerManager.ControlledEntity != null)
-                        {
-                            var resEntity = _playerManager.ControlledEntity;
-                            entStats = (EntityStatsComp)resEntity.GetComponent(ComponentFamily.EntityStats);
-                        }
+                        _ResPierce.Position = resLinePos;
+                        resLinePos.Offset(0, _ResPierce.ClientArea.Height + spacing);
+                        _ResPierce.Update();
 
-                        _sprResBlunt.Position = resLinePos;
-                        _txtResBlunt.Position = new Vector2D(resLinePos.X + txtOffX, resLinePos.Y + txtOffY);
-                        _txtResBlunt.Text = "Blunt : " + (entStats != null ? entStats.GetArmorValue(DamageType.Bludgeoning).ToString() : "0");
-                        resLinePos.Offset(0, nxtOffY);
+                        _ResSlash.Position = resLinePos;
+                        resLinePos.Offset(0, _ResSlash.ClientArea.Height + spacing);
+                        _ResSlash.Update();
 
-                        _sprResPierce.Position = resLinePos;
-                        _txtResPierce.Position = new Vector2D(resLinePos.X + txtOffX, resLinePos.Y + txtOffY);
-                        _txtResPierce.Text = "Pierce : " + (entStats != null ? entStats.GetArmorValue(DamageType.Piercing).ToString() : "0");
-                        resLinePos.Offset(0, nxtOffY);
+                        _ResBurn.Position = resLinePos;
+                        resLinePos.Offset(0, _ResBurn.ClientArea.Height + spacing);
+                        _ResBurn.Update();
 
-                        _sprResSlash.Position = resLinePos;
-                        _txtResSlash.Position = new Vector2D(resLinePos.X + txtOffX, resLinePos.Y + txtOffY);
-                        _txtResSlash.Text = "Slash : " + (entStats != null ? entStats.GetArmorValue(DamageType.Slashing).ToString() : "0");
-                        resLinePos.Offset(0, nxtOffY);
+                        _ResFreeze.Position = resLinePos;
+                        resLinePos.Offset(0, _ResFreeze.ClientArea.Height + spacing);
+                        _ResFreeze.Update();
 
-                        _sprResBurn.Position = resLinePos;
-                        _txtResBurn.Position = new Vector2D(resLinePos.X + txtOffX, resLinePos.Y + txtOffY);
-                        _txtResBurn.Text = "Burn : " + (entStats != null ? entStats.GetArmorValue(DamageType.Burn).ToString() : "0");
-                        resLinePos.Offset(0, nxtOffY);
+                        _ResShock.Position = resLinePos;
+                        resLinePos.Offset(0, _ResShock.ClientArea.Height + spacing);
+                        _ResShock.Update();
 
-                        _sprResFreeze.Position = resLinePos;
-                        _txtResFreeze.Position = new Vector2D(resLinePos.X + txtOffX, resLinePos.Y + txtOffY);
-                        _txtResFreeze.Text = "Freeze : " + (entStats != null ? entStats.GetArmorValue(DamageType.Freeze).ToString() : "0");
-                        resLinePos.Offset(0, nxtOffY);
+                        _ResTox.Position = resLinePos;
+                        _ResTox.Update();
 
-                        _sprResShock.Position = resLinePos;
-                        _txtResShock.Position = new Vector2D(resLinePos.X + txtOffX, resLinePos.Y + txtOffY);
-                        _txtResShock.Text = "Shock : " + (entStats != null ? entStats.GetArmorValue(DamageType.Shock).ToString() : "0");
-                        resLinePos.Offset(0, nxtOffY);
-
-                        _sprResTox.Position = resLinePos;
-                        _txtResTox.Position = new Vector2D(resLinePos.X + txtOffX, resLinePos.Y + txtOffY);
-                        _txtResTox.Text = "Toxin : " + (entStats != null ? entStats.GetArmorValue(DamageType.Toxin).ToString() : "0");
                         break; 
                         #endregion
                     }

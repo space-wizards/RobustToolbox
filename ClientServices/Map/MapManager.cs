@@ -277,10 +277,6 @@ namespace ClientServices.Map
                     {
                         T.surroundDirs = SetSprite(T.TilePosition.X, T.TilePosition.Y);
                     }
-                    foreach (var l in lightList)
-                    {
-                        l.UpdateLight();
-                    }
                     _needVisUpdate = true;
                 }
                 else if (_tileArray[x, y].tileState != state)
@@ -716,116 +712,5 @@ namespace ClientServices.Map
 
 #endregion
 
-        #region Lighting
-        public void LightComputeVisibility(Vector2D lightPos, ILight light)
-        {
-            LightClearVisibility(light);
-            var lightArrayPos = GetTileArrayPositionFromWorldPosition(lightPos);
-
-            for (var i = 0; i < 4; ++i)
-            {
-                LightComputeVisibility
-                (
-                    lightArrayPos.X, lightArrayPos.Y,
-                    lightArrayPos.X, lightArrayPos.Y,
-                    Portal[i].Lx, Portal[i].Ly,
-                    Portal[i].Rx, Portal[i].Ry,
-                    light
-                );
-            }
-        }
-
-        public void LightClearVisibility(ILight light)
-        {
-            foreach (Tile T in light.GetTiles())
-            {
-                T.tileLights.Remove(light);
-            }
-            light.ClearTiles();
-        }
-
-        void LightSetVisible(int x, int y, ILight light)
-        {
-            if (!(_tileArray[x, y].TileType == TileType.Wall && _tileArray[x, y].Position.Y > light.Position.Y))
-            {
-                light.AddTile(_tileArray[x, y]);
-                if (!_tileArray[x, y].tileLights.Contains(light))
-                {
-                    _tileArray[x, y].tileLights.Add(light);
-                }
-            }
-        }
-
-        void LightComputeVisibility(int viewerX, int viewerY, int targetX, int targetY, int ldx, int ldy, int rdx, int rdy, ILight light)
-        {
-            if (targetX > viewerX + (light.Range / TileSpacing) + 1 || targetX < viewerX - (light.Range / TileSpacing) - 1)
-                return;
-            if (targetY > viewerY + (light.Range / TileSpacing) + 1 || targetY < viewerY - (light.Range / TileSpacing) - 1)
-                return;
-            // Abort if we are out of bounds.
-            if (targetX < 0 || targetX >= _mapWidth)
-                return;
-            if (targetY < 0 || targetY >= _mapHeight)
-                return;
-
-            // This square is visible.
-            LightSetVisible(targetX, targetY, light);
-
-            // A solid target square blocks all further visibility through it.
-            if (IsSightBlocked(targetX, targetY))
-                return;
-
-            // Target square center position relative to viewer:
-            int dx = 2 * (targetX - viewerX);
-            int dy = 2 * (targetY - viewerY);
-
-            for (int i = 0; i < 4; ++i)
-            {
-                // Relative positions of the portal's left and right endpoints:
-                int pldx = dx + Portal[i].Lx;
-                int pldy = dy + Portal[i].Ly;
-                int prdx = dx + Portal[i].Rx;
-                int prdy = dy + Portal[i].Ry;
-
-                // Clip portal against current view frustum:
-                int cldx, cldy;
-                if (a_right_of_b(ldx, ldy, pldx, pldy))
-                {
-                    cldx = ldx;
-                    cldy = ldy;
-                }
-                else
-                {
-                    cldx = pldx;
-                    cldy = pldy;
-                }
-                int crdx, crdy;
-                if (a_right_of_b(rdx, rdy, prdx, prdy))
-                {
-                    crdx = prdx;
-                    crdy = prdy;
-                }
-                else
-                {
-                    crdx = rdx;
-                    crdy = rdy;
-                }
-
-                // If we can see through the clipped portal, recurse through it.
-                if (a_right_of_b(crdx, crdy, cldx, cldy))
-                {
-                    LightComputeVisibility
-                    (
-                        viewerX, viewerY,
-                        targetX + Portal[i].Nx, targetY + Portal[i].Ny,
-                        cldx, cldy,
-                        crdx, crdy,
-                        light
-                    );
-                }
-            }
-        }
-
-        #endregion
     }
 }

@@ -149,5 +149,10 @@ namespace ClientServices.UserInterface.Inventory
         {
             _inventoryContainer.MouseMove(e);
         }
+
+        public override bool MouseWheelMove(MouseInputEventArgs e)
+        {
+            return _inventoryContainer.MouseWheelMove(e);
+        }
     }
 }

@@ -1005,5 +1005,14 @@ namespace ClientServices.UserInterface.Inventory
                     }
             }
         }
+
+        public override bool MouseWheelMove(MouseInputEventArgs e)
+        {
+            if (_currentTab == 1 || _currentTab == 3)
+            {
+                if (_inventory.MouseWheelMove(e)) return true;
+            }
+            return false;
+        }
     }
 }

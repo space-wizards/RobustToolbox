@@ -2,20 +2,28 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Drawing;
+
 using CGO;
+
 using ClientInterfaces.GOC;
 using ClientInterfaces.State;
 using ClientServices.Helpers;
 using ClientServices.UserInterface.Components;
 using ClientServices.UserInterface.Inventory;
+
 using ClientWindow;
+
 using GorgonLibrary;
 using GorgonLibrary.Graphics;
 using GorgonLibrary.InputDevices;
+
 using Lidgren.Network;
 using SS13_Shared;
 using ClientServices.Lighting;
+using SS3D.LightTest;
+
 using SS13_Shared.GO;
+
 
 namespace ClientServices.State.States
 {
@@ -28,6 +36,13 @@ namespace ClientServices.State.States
         #region UI Variables
         private Chatbox _gameChat;
         #endregion 
+
+        #region Lighting
+        QuadRenderer quadRenderer;
+        ShadowMapResolver shadowMapResolver;
+        LightArea lightArea1;
+        RenderImage screenShadows;
+        #endregion
 
         public DateTime LastUpdate;
         public DateTime Now;
@@ -142,12 +157,17 @@ namespace ClientServices.State.States
             var hotbar = new Hotbar(ResourceManager);
             hotbar.Position = new Point(5, 650);
             UserInterfaceManager.AddComponent(hotbar);
-        }
 
-        //void mNetworkMgr_Disconnected(NetworkManager netMgr)
-        //{
-        //    mStateMgr.RequestStateChange(typeof(ConnectMenu)); //Fix this. Only temporary solution.
-        //}
+            #region Lighting
+            quadRenderer = new QuadRenderer();
+            quadRenderer.LoadContent();
+            shadowMapResolver = new ShadowMapResolver(quadRenderer, ShadowmapSize.Size256, ShadowmapSize.Size1024, ResourceManager);
+            shadowMapResolver.LoadContent();
+            lightArea1 = new LightArea(ShadowmapSize.Size512);
+            screenShadows = new RenderImage("screenShadows", Gorgon.CurrentClippingViewport.Width, Gorgon.CurrentClippingViewport.Height, ImageBufferFormats.BufferRGB888A8);
+            screenShadows.UseDepthBuffer = false;
+            #endregion
+        }
 
         public void Shutdown()
         {
@@ -360,28 +380,17 @@ namespace ClientServices.State.States
             NetworkManager.SendMessage(message, NetDeliveryMethod.ReliableUnordered);
         }
 
-        /* What are we doing here exactly? Well:
-         * First we get the tile we are stood on, and try and make this the centre of the view. However if we're too close to one edge
-         * we allow us to be drawn nearer that edge, and not in the middle of the screen.
-         * We then find how far "into" the map we are (xTopLeft, yTopLeft), the position of the top left of the screen in WORLD
-         * co-ordinates so we can work out what we need to draw, and what we dont need to (what's off screen).
-         * Then we see if we've moved a tile recently or a flag has been set on the map that we need to update the visibility (a door 
-         * opened for example).
-         * We then loop through all the tiles, and draw the floor and the sides of the walls, as they will always be under us
-         * and the entities. Next we find all the entities in view and draw them. Lastly we draw the top section of walls as they will
-         * always be on top of us and entities.
-         * */
+
         public void GorgonRender(FrameEventArgs e)
         {
             Gorgon.CurrentRenderTarget = _baseTarget;
 
-            _baseTarget.Clear(Color.Black);
-            _lightTarget.Clear(Color.Black);
-            _lightTargetIntermediate.Clear(Color.FromArgb(0, Color.Black));
-            Gorgon.Screen.Clear(Color.Black);
+            _baseTarget.Clear(System.Drawing.Color.CornflowerBlue);
+            Gorgon.Screen.Clear(System.Drawing.Color.CornflowerBlue);
 
             Gorgon.Screen.DefaultView.Left = 400;
             Gorgon.Screen.DefaultView.Top = 400;
+
             if (PlayerManager.ControlledEntity != null)
             {
                 
@@ -394,109 +403,114 @@ namespace ClientServices.State.States
 
                 ClientWindowData.Singleton.UpdateViewPort(PlayerManager.ControlledEntity.Position);
 
-                //xTopLeft = Math.Max(0, playerController.controlledEntity.position.X - ((screenWidthTiles / 2) * map.tileSpacing));
-                //yTopLeft = Math.Max(0, playerController.controlledEntity.position.Y - ((screenHeightTiles / 2) * map.tileSpacing));
-                // COMPUTE TILE VISIBILITY
-                if ((centerTile != MapManager.GetLastVisiblePoint() || MapManager.NeedVisibilityUpdate()))
-                {
-                    if (!_telepathy)
-                    {
-                        MapManager.ComputeVisibility(centerTile.X, centerTile.Y);
-                        MapManager.SetLastVisiblePoint(centerTile);
-                    }
-                    else
-                    {
-                        MapManager.SetAllVisible();
-                    }
-                }
 
-                // RENDER TILE BASES, PUT GAS SPRITES AND WALL TOP SPRITES INTO BATCHES TO RENDER LATER
+                lightArea1.LightPosition = PlayerManager.ControlledEntity.Position;//mousePosWorld; // Set the light position
+                lightArea1.BeginDrawingShadowCasters(); // Start drawing to the light rendertarget
+                DrawWallsRelativeToLight(xStart, xEnd, yStart, yEnd); // Draw all shadowcasting stuff here in black
+                lightArea1.EndDrawingShadowCasters(); // End drawing to the light rendertarget
+                shadowMapResolver.ResolveShadows(lightArea1.renderTarget.Image, lightArea1.renderTarget, lightArea1.LightPosition); // Calc shadows
 
-                for (var x = xStart; x <= xEnd; x++)
-                {
-                    for (var y = yStart; y <= yEnd; y++)
-                    {
-                        var t = MapManager.GetTileAt(x, y); 
-                        if (!t.Visible)
-                            continue;
-                        if (t.TileType == TileType.Wall)
-                        {
-                            if (t.TilePosition.Y <= centerTile.Y)
-                            {
-                                t.Render(WindowOrigin.X, WindowOrigin.Y, MapManager.GetTileSpacing());
-                                t.DrawDecals(WindowOrigin.X, WindowOrigin.Y, MapManager.GetTileSpacing(), _decalBatch);
-                                t.RenderLight(WindowOrigin.X, WindowOrigin.Y, MapManager.GetTileSpacing(), _lightMapBatch);
-                            }
-                        }
-                        else
-                        {
-                            t.Render(WindowOrigin.X, WindowOrigin.Y, MapManager.GetTileSpacing());
-                            t.DrawDecals(WindowOrigin.X, WindowOrigin.Y, MapManager.GetTileSpacing(), _decalBatch);
-                            t.RenderLight(WindowOrigin.X, WindowOrigin.Y, MapManager.GetTileSpacing(), _lightMapBatch);
-                        }
+                Gorgon.CurrentRenderTarget = screenShadows; // Set to shadow rendertarget
+                screenShadows.Clear(Color.Black); // Clear shadow rendertarget
+                Gorgon.CurrentRenderTarget.BlendingMode = BlendingModes.Additive; // Need this to blend
+                Vector2D blitPos = new Vector2D((lightArea1.LightPosition.X - lightArea1.LightAreaSize.X * 0.5f) - WindowOrigin.X,
+                    (lightArea1.LightPosition.Y - lightArea1.LightAreaSize.Y * 0.5f) - WindowOrigin.Y); // Find light draw pos
+                lightArea1.renderTarget.Blit(blitPos.X, blitPos.Y, lightArea1.renderTarget.Width,
+                    lightArea1.renderTarget.Height, Color.LightBlue, BlitterSizeMode.Crop); // Draw the lights effects
 
-                        // Render gas sprites to gas batch
-                        t.RenderGas(WindowOrigin.X, WindowOrigin.Y, MapManager.GetTileSpacing(), _gasBatch);
-                        // Render wall top sprites to wall top batch
-                        t.RenderTop(WindowOrigin.X, WindowOrigin.Y, MapManager.GetTileSpacing(), _wallTopsBatch);
-                    }
-                }
+                Gorgon.CurrentRenderTarget = null;
+                Gorgon.CurrentRenderTarget.Clear(Color.Black);
 
-                Gorgon.CurrentRenderTarget = _lightTarget;
-                if(_lightMapBatch.Count > 0)
-                    _lightMapBatch.Draw();
-                _lightMapBatch.Clear();
-                Gorgon.CurrentRenderTarget = _baseTarget;
+                // Draw rest of scene
+                DrawGround(xStart, xEnd, yStart, yEnd, centerTile);
+                ComponentManager.Singleton.Render(0);
 
                 // Render decal batch
                 if (_decalBatch.Count > 0)
                     _decalBatch.Draw();
                 _decalBatch.Clear();
 
-                _lightsThisFrame.Clear();
+                Gorgon.CurrentRenderTarget.SourceBlend = AlphaBlendOperation.DestinationColor;
+                Gorgon.CurrentRenderTarget.DestinationBlend = AlphaBlendOperation.SourceColor;
 
-                //Render renderable components
-                ComponentManager.Singleton.Render(0);
-
-                // Render gas batch
-                if (_gasBatch.Count > 0)
-                    _gasBatch.Draw();
-                _gasBatch.Clear();
-
-                // Render wall tops batch
+                DrawWalls(xStart, xEnd, yStart, yEnd, centerTile, false);
                 if (_wallTopsBatch.Count > 0)
                     _wallTopsBatch.Draw();
                 _wallTopsBatch.Clear();
-                
+                ComponentManager.Singleton.Render(0);
+                screenShadows.Image.Blit(0, 0, screenShadows.Width, screenShadows.Height, Color.White, BlitterSizeMode.Crop); // Blit the shadow image on top of the screen
+
                 PlacementManager.Render();
-            }
 
-            _lightTargetSprite.DestinationBlend = AlphaBlendOperation.Zero;
-            _lightTargetSprite.SourceBlend = AlphaBlendOperation.One;
 
-            _gaussianBlur.SetSize(256.0f);
-            _gaussianBlur.PerformGaussianBlur(_lightTargetSprite, _lightTarget);
-            _gaussianBlur.SetSize(512.0f);
-            _gaussianBlur.PerformGaussianBlur(_lightTargetSprite, _lightTarget);
-            _gaussianBlur.SetSize(1024.0f);
-            _gaussianBlur.PerformGaussianBlur(_lightTargetSprite, _lightTarget);
-            
-            _baseTargetSprite.Draw();
-
-            if (BlendLightMap)
-            {
-                _lightTargetSprite.DestinationBlend = AlphaBlendOperation.InverseSourceAlpha; // Use the alpha of the light to do bright/darkness
-                _lightTargetSprite.SourceBlend = AlphaBlendOperation.DestinationColor;
             }
-            else
-            {
-                _lightTargetSprite.DestinationBlend = AlphaBlendOperation.Zero; // Use the alpha of the light to do bright/darkness
-                _lightTargetSprite.SourceBlend = AlphaBlendOperation.One;
-            }
-            _lightTargetSprite.Draw();
 
             Gorgon.CurrentRenderTarget = null;
         }
+
+        #region Lighting
+        // Draws all walls in the area around the light relative to it, and in black (test code, not pretty)
+        private void DrawWallsRelativeToLight(int xStart, int xEnd, int yStart, int yEnd)
+        {
+            System.Drawing.Point centerTile = MapManager.GetTileArrayPositionFromWorldPosition(lightArea1.LightPosition);
+
+            int xS = System.Math.Max(0, centerTile.X - (ScreenWidthTiles / 2) - 1);
+            int yS = System.Math.Max(0, centerTile.Y - (ScreenHeightTiles / 2) - 1);
+            int xE = System.Math.Min(xStart + ScreenWidthTiles + 2, MapManager.GetMapWidth() - 1);
+            int yE = System.Math.Min(yStart + ScreenHeightTiles + 2, MapManager.GetMapHeight() - 1);
+
+            ClientServices.Map.Tiles.Tile t;
+            for (int x = xS; x <= xE; x++)
+            {
+                for (int y = yS; y <= yE; y++)
+                {
+
+                    t = (Map.Tiles.Tile)MapManager.GetTileAt(x, y);
+                    if (t.TileType == TileType.Wall)
+                    {
+                        Vector2D pos = lightArea1.ToRelativePosision(t.Position);
+                        t.RenderPos(pos.X, pos.Y, MapManager.GetTileSpacing(), (int)lightArea1.LightAreaSize.X);
+                    }
+                }
+            }
+        }
+
+        // Draws all walls normally (test code, not pretty)
+        private void DrawWalls(int xStart, int xEnd, int yStart, int yEnd, Point centerTile, bool rel)
+        {
+            ClientServices.Map.Tiles.Tile t;
+            for (int x = xStart; x <= xEnd; x++)
+            {
+                for (int y = yStart; y <= yEnd; y++)
+                {
+                    t = (Map.Tiles.Tile)MapManager.GetTileAt(x, y);
+                    if (t.TileType == TileType.Wall)
+                    {
+                        t.Render(WindowOrigin.X, WindowOrigin.Y, MapManager.GetTileSpacing());
+                    }
+                    t.RenderTop(WindowOrigin.X, WindowOrigin.Y, MapManager.GetTileSpacing(), _wallTopsBatch);
+                }
+            }
+        }
+
+        // Draws all ground normally (test code, not pretty)
+        private void DrawGround(int xStart, int xEnd, int yStart, int yEnd, Point centerTile)
+        {
+            ClientServices.Map.Tiles.Tile t;
+            for (int x = xStart; x <= xEnd; x++)
+            {
+                for (int y = yStart; y <= yEnd; y++)
+                {
+                    t = (Map.Tiles.Tile)MapManager.GetTileAt(x, y);
+                    if (t.TileType != TileType.Wall)
+                    {
+                        t.Render(WindowOrigin.X, WindowOrigin.Y, MapManager.GetTileSpacing());
+                    }
+                }
+            }
+        }
+
+        #endregion
 
         // Not currently used.
         public void FormResize()

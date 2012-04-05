@@ -10,7 +10,7 @@ using GorgonLibrary.InputDevices;
 
 namespace ClientServices.UserInterface.Components
 {
-    class ScrollableContainer : GuiComponent
+    class ScrollableContainer : GuiComponent //This is a note: Spooge wants support for mouseover-scrolling of scrollable containers inside other scrollable containers.
     {
         private readonly IResourceManager _resourceManager;
 
@@ -145,6 +145,15 @@ namespace ClientServices.UserInterface.Components
             }
         }
 
+        protected void ClearFocus()
+        {
+            if (inner_focus != null)
+            {
+                inner_focus.Focus = false;
+                inner_focus = null;
+            }
+        }
+
         public override bool MouseDown(MouseInputEventArgs e)
         {
             if (disposing || !IsVisible()) return false;
@@ -230,7 +239,21 @@ namespace ClientServices.UserInterface.Components
         public override bool MouseWheelMove(MouseInputEventArgs e)
         {
             if (inner_focus != null)
-                if(inner_focus.MouseWheelMove(e)) return true;
+            {
+                if (inner_focus.MouseWheelMove(e))
+                    return true;
+                else
+                    if (scrollbarV.IsVisible() && ClientArea.Contains(new Point((int)e.Position.X, (int)e.Position.Y)))
+                    {
+                        scrollbarV.MouseWheelMove(e);
+                        return true;
+                    }
+            }
+            else if (scrollbarV.IsVisible() && ClientArea.Contains(new Point((int)e.Position.X, (int)e.Position.Y)))
+                {
+                    scrollbarV.MouseWheelMove(e);
+                    return true;
+                }
             return false;
         }
 

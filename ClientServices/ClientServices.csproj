@@ -117,6 +117,7 @@
     <Compile Include="UserInterface\Components\Checkbox.cs" />
     <Compile Include="UserInterface\Components\ContextMenu.cs" />
     <Compile Include="UserInterface\Components\ArmorInfoLabel.cs" />
+    <Compile Include="UserInterface\Components\HealthScannerWindow.cs" />
     <Compile Include="UserInterface\Components\Hotbar.cs" />
     <Compile Include="UserInterface\Components\HotbarSlot.cs" />
     <Compile Include="UserInterface\Components\PlayerActionsWindow.cs" />

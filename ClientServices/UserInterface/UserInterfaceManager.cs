@@ -13,6 +13,7 @@ using CGO;
 using ClientInterfaces.GOC;
 using ClientInterfaces.Placement;
 using SS13.IoC;
+using ClientServices.UserInterface.Components;
 
 namespace ClientServices.UserInterface
 {
@@ -33,6 +34,20 @@ namespace ClientServices.UserInterface
         /// </summary>
         private IPlayerAction targetingAction = null;
         public IPlayerAction currentTargetingAction { get { return targetingAction; } }
+
+        /// <summary>
+        ///  List of iGuiComponents. Components in this list will recieve input, updates and net messages.
+        /// </summary>
+        private readonly List<IGuiComponent> _components;
+
+        private readonly IResourceManager _resourceManager;
+
+        public UserInterfaceManager(IResourceManager resourceManager)
+        {
+            _resourceManager = resourceManager;
+            DragInfo = new DragDropInfo();
+            _components = new List<IGuiComponent>();
+        }
 
         /// <summary>
         ///  Enters targeting mode for given action.
@@ -63,20 +78,6 @@ namespace ClientServices.UserInterface
         public void CancelTargeting()
         {
             targetingAction = null;
-        }
-
-        /// <summary>
-        ///  List of iGuiComponents. Components in this list will recieve input, updates and net messages.
-        /// </summary>
-        private readonly List<IGuiComponent> _components;
-
-        private readonly IResourceManager _resourceManager;
-
-        public UserInterfaceManager(IResourceManager resourceManager)
-        {
-            _resourceManager = resourceManager;
-            DragInfo = new DragDropInfo();
-            _components = new List<IGuiComponent>();
         }
 
         /// <summary>
@@ -173,11 +174,34 @@ namespace ClientServices.UserInterface
         /// </summary>
         public void HandleNetMessage(NetIncomingMessage msg)
         {
-            var uiMsg = (UiManagerMessage) msg.ReadByte();
+            var uiMsg = (UiManagerMessage)msg.ReadByte();
             switch (uiMsg)
             {
                 case UiManagerMessage.ComponentMessage:
                     HandleComponentMessage(msg);
+                    break;
+                case UiManagerMessage.CreateUiElement:
+                    HandleElementCreation(msg);
+                    break;
+            }
+        }
+
+        /// <summary>
+        ///  Handles creation of ui elements over network.
+        /// </summary>
+        public void HandleElementCreation(NetIncomingMessage msg) //I've opted for hardcoding these in for the moment.
+        {
+            var uiType = (CreateUiType)msg.ReadByte();
+            switch (uiType)
+            {
+                case CreateUiType.HealthScannerWindow:
+                    IEntity ent = EntityManager.Singleton.GetEntity((int)msg.ReadInt32());
+                    if (ent != null)
+                    {
+                        DisposeAllComponents<HealthScannerWindow>();
+                        var scannerWindow = new HealthScannerWindow(ent, _mousePos , this, _resourceManager);
+                        AddComponent(scannerWindow);
+                    }
                     break;
             }
         }

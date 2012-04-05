@@ -455,6 +455,7 @@ namespace ClientServices.UserInterface.Inventory
                             _ResFreeze.Render();
                             _ResShock.Render();
                             _ResTox.Render();
+
                             break; 
                             #endregion
                         }

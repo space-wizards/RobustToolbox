@@ -19,7 +19,8 @@ namespace SS13_Shared.GO
         MeleeWeapon,
         Tool,
         Gun,
-        Medical
+        Medical,
+        HealthScan
     }
 
     public enum ItemCapabilityVerb

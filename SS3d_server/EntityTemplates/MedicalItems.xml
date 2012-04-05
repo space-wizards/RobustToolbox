@@ -26,6 +26,7 @@
       <Component name="BasicMoverComponent"></Component>
       <Component name="BasicItemComponent">
         <ExtendedParameters>
+          <ItemCapability name="HealthScanCapability"></ItemCapability>
           <ItemCapability name="MeleeWeaponCapability">
             <ItemCapabilityParameters>
               <ItemCapabilityParameter name="damageAmount" type="int" value="3" />

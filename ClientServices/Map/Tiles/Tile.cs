@@ -91,20 +91,33 @@ namespace ClientServices.Map.Tiles
 
         public virtual void Render(float xTopLeft, float yTopLeft, int tileSpacing)
         {
-            Sprite.Color = Color.White;
-            Sprite.SetPosition(TilePosition.X * tileSpacing - xTopLeft, TilePosition.Y * tileSpacing - yTopLeft);
-            Sprite.Draw();
+            if (Visible)
+            {
+                Sprite.Color = Color.White;
+                Sprite.SetPosition(TilePosition.X * tileSpacing - xTopLeft, TilePosition.Y * tileSpacing - yTopLeft);
+                Sprite.Draw();
+            }
         }
 
-        public virtual void RenderPos(float x, float y, int tileSpacing, int lightSize)
+        public virtual void RenderLight(float xTopLeft, float yTopLeft, int tileSpacing, Batch lightMapBatch)
         {
-            Sprite.Color = Color.Transparent;
-            Sprite.SetPosition(x, y);
-            Sprite.Draw();
-        }
+            if (Visible)
+            {
+                lightSprite.Color = Color.Black;
+                lightSprite.SetPosition(TilePosition.X * tileSpacing - xTopLeft, TilePosition.Y * tileSpacing - yTopLeft);
+                _lightManager.ApplyLightsToSprite(tileLights, lightSprite, new Vector2D(xTopLeft, yTopLeft));
+                lightMapBatch.AddClone(lightSprite);
 
-        public virtual void RenderPosOffset(float x, float y, int tileSpacing, Vector2D lightPosition)
-        {
+                if (surroundingTiles[0] != null && !surroundingTiles[0].Visible)
+                {
+                    lightSprite.Color = Color.Black;
+                    lightSprite.SetPosition(TilePosition.X * tileSpacing - xTopLeft, (TilePosition.Y - 1) * tileSpacing - yTopLeft);
+                    _lightManager.ApplyLightsToSprite(tileLights, lightSprite, new Vector2D(xTopLeft, yTopLeft));
+                    lightMapBatch.AddClone(lightSprite);
+                }
+            }
+
+
         }
 
         public virtual void DrawDecals(float xTopLeft, float yTopLeft, int tileSpacing, Batch decalBatch)

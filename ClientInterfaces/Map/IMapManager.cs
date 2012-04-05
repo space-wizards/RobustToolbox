@@ -8,8 +8,6 @@ namespace ClientInterfaces.Map
 {
     public interface IMapManager
     {
-        void LightComputeVisibility(Vector2D lightPos, ILight light);
-        void LightClearVisibility(ILight light);
         int GetTileSpacing();
         void Shutdown();
         bool IsSolidTile(Vector2D pos);

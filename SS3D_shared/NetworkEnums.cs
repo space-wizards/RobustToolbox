@@ -56,7 +56,13 @@
 
     public enum UiManagerMessage
     {
-        ComponentMessage
+        ComponentMessage,
+        CreateUiElement
+    }
+
+    public enum CreateUiType
+    {
+        HealthScannerWindow
     }
 
     public enum PlacementManagerMessage

@@ -282,6 +282,9 @@ namespace SGO
                     case "MedicalCapability":
                         cap = new MedicalCapability();
                         break;
+                    case "HealthScanCapability":
+                        cap = new HealthScanCapability();
+                        break;
                 }
 
                 if (cap == null)

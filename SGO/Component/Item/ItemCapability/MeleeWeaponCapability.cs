@@ -26,6 +26,7 @@ namespace SGO.Component.Item.ItemCapability
 
             ComponentReplyMessage reply = sourceActor.SendMessage(this, ComponentFamily.Actor,
                                                                   ComponentMessageType.GetActorSession);
+
             if (reply.MessageType == ComponentMessageType.ReturnActorSession)
             {
                 var session = (IPlayerSession) reply.ParamsList[0];
@@ -33,7 +34,7 @@ namespace SGO.Component.Item.ItemCapability
             }
             else
                 throw new NotImplementedException("Actor has no session or No actor component that returns a session");
-            //BEEPBOOP
+            
 
             if (target.HasComponent(ComponentFamily.Damageable))
             {

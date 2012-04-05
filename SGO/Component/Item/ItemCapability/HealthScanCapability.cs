@@ -18,7 +18,7 @@ namespace SGO.Component.Item.ItemCapability
         {
             CapabilityType = ItemCapabilityType.HealthScan;
             capabilityName = "HealthScanCapability";
-            interactsWith = InteractsWith.Actor | InteractsWith.LargeObject;
+            interactsWith = InteractsWith.Actor;
         }
 
         public override bool ApplyTo(Entity target, Entity sourceActor)

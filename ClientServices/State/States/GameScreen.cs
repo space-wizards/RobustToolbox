@@ -397,7 +397,6 @@ namespace ClientServices.State.States
             NetworkManager.SendMessage(message, NetDeliveryMethod.ReliableUnordered);
         }
 
-
         public void GorgonRender(FrameEventArgs e)
         {
             Gorgon.CurrentRenderTarget = _baseTarget;
@@ -442,10 +441,9 @@ namespace ClientServices.State.States
                     area.renderTarget.SourceBlend = AlphaBlendOperation.One; //Additive blending
                     area.renderTarget.DestinationBlend = AlphaBlendOperation.One; //Additive blending
                     area.renderTarget.Blit(blitPos.X, blitPos.Y, area.renderTarget.Width,
-                    area.renderTarget.Height, Color.LightGoldenrodYellow, BlitterSizeMode.Crop); // Draw the lights effects
+                    area.renderTarget.Height, l.Color, BlitterSizeMode.Crop); // Draw the lights effects
                     area.renderTarget.SourceBlend = AlphaBlendOperation.SourceAlpha; //reset blend mode
                     area.renderTarget.DestinationBlend = AlphaBlendOperation.InverseSourceAlpha; //reset blend mode
-
                 }
 
 

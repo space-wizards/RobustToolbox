@@ -12,7 +12,7 @@
       <Component name="PointLightComponent">
         <Parameters>
           <Parameter name="lightoffsetx" type="float" value="0" />
-          <Parameter name="lightoffsety" type="float" value="64" />
+          <Parameter name="lightoffsety" type="float" value="0" />
         </Parameters>
       </Component>
     </Components>

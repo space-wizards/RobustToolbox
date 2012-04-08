@@ -6,6 +6,7 @@ using System.Drawing;
 using CGO;
 
 using ClientInterfaces.GOC;
+using ClientInterfaces.Resource;
 using ClientInterfaces.State;
 using ClientServices.Helpers;
 using ClientServices.UserInterface.Components;
@@ -44,6 +45,8 @@ namespace ClientServices.State.States
         ShadowMapResolver shadowMapResolver;
         LightArea lightArea1;
         RenderImage screenShadows;
+        private FXShader lightBlendShader;
+        private RenderImage _sceneTarget;
         #endregion
 
         public DateTime LastUpdate;
@@ -124,6 +127,8 @@ namespace ClientServices.State.States
 
             _baseTargetSprite = new Sprite("baseTargetSprite", _baseTarget) { DepthWriteEnabled = false };
 
+            _sceneTarget = new RenderImage("sceneTarget", Gorgon.Screen.Width, Gorgon.Screen.Height, ImageBufferFormats.BufferRGB888A8);
+
             _lightTarget = new RenderImage("lightTarget", Gorgon.Screen.Width, Gorgon.Screen.Height, ImageBufferFormats.BufferRGB888A8);
             _lightTargetSprite = new Sprite("lightTargetSprite", _lightTarget) { DepthWriteEnabled = false };
             _lightTargetIntermediate = new RenderImage("lightTargetIntermediate", Gorgon.Screen.Width, Gorgon.Screen.Height, ImageBufferFormats.BufferRGB888A8);
@@ -168,6 +173,8 @@ namespace ClientServices.State.States
             lightArea1 = new LightArea(ShadowmapSize.Size512);
             screenShadows = new RenderImage("screenShadows", Gorgon.CurrentClippingViewport.Width, Gorgon.CurrentClippingViewport.Height, ImageBufferFormats.BufferRGB888A8);
             screenShadows.UseDepthBuffer = false;
+            lightBlendShader = IoCManager.Resolve<IResourceManager>().GetShader("lightblend");
+
             #endregion
         }
 
@@ -419,36 +426,22 @@ namespace ClientServices.State.States
                     shadowMapResolver.ResolveShadows(lightArea1.renderTarget.Image, lightArea1.renderTarget, lightArea1.LightPosition); // Calc shadows
 
                     Gorgon.CurrentRenderTarget = screenShadows; // Set to shadow rendertarget
-                    //Gorgon.CurrentRenderTarget.BlendingMode = BlendingModes.Additive; // Need this to blend
 
+                    //Draw the shadow to the shadows target.
                     blitPos = new Vector2D((lightArea1.LightPosition.X - lightArea1.LightAreaSize.X * 0.5f) - WindowOrigin.X,
                         (lightArea1.LightPosition.Y - lightArea1.LightAreaSize.Y * 0.5f) - WindowOrigin.Y); // Find light draw pos
-                    lightArea1.renderTarget.SourceBlend = AlphaBlendOperation.One;
-                    lightArea1.renderTarget.DestinationBlend = AlphaBlendOperation.One;
+                    lightArea1.renderTarget.SourceBlend = AlphaBlendOperation.One; //Additive blending
+                    lightArea1.renderTarget.DestinationBlend = AlphaBlendOperation.One; //Additive blending
                     lightArea1.renderTarget.Blit(blitPos.X, blitPos.Y, lightArea1.renderTarget.Width,
-                        lightArea1.renderTarget.Height, Color.LightBlue, BlitterSizeMode.Crop); // Draw the lights effects
-                    lightArea1.renderTarget.SourceBlend = AlphaBlendOperation.SourceAlpha;
-                    lightArea1.renderTarget.DestinationBlend = AlphaBlendOperation.InverseSourceAlpha;
+                    lightArea1.renderTarget.Height, Color.LightGoldenrodYellow, BlitterSizeMode.Crop); // Draw the lights effects
+                    lightArea1.renderTarget.SourceBlend = AlphaBlendOperation.SourceAlpha; //reset blend mode
+                    lightArea1.renderTarget.DestinationBlend = AlphaBlendOperation.InverseSourceAlpha; //reset blend mode
 
                 }
-                /*lightArea1.LightPosition = PlayerManager.ControlledEntity.Position;//mousePosWorld; // Set the light position
-                lightArea1.BeginDrawingShadowCasters(); // Start drawing to the light rendertarget
-                DrawWallsRelativeToLight(xStart, xEnd, yStart, yEnd); // Draw all shadowcasting stuff here in black
-                lightArea1.EndDrawingShadowCasters(); // End drawing to the light rendertarget
-                shadowMapResolver.ResolveShadows(lightArea1.renderTarget.Image, lightArea1.renderTarget, lightArea1.LightPosition); // Calc shadows
-
-                Gorgon.CurrentRenderTarget = screenShadows; // Set to shadow rendertarget
-                screenShadows.Clear(Color.Black); // Clear shadow rendertarget
-                Gorgon.CurrentRenderTarget.BlendingMode = BlendingModes.Additive; // Need this to blend
-                blitPos = new Vector2D((lightArea1.LightPosition.X - lightArea1.LightAreaSize.X * 0.5f) - WindowOrigin.X,
-                    (lightArea1.LightPosition.Y - lightArea1.LightAreaSize.Y * 0.5f) - WindowOrigin.Y); // Find light draw pos
-                lightArea1.renderTarget.Blit(blitPos.X, blitPos.Y, lightArea1.renderTarget.Width,
-                    lightArea1.renderTarget.Height, Color.LightBlue, BlitterSizeMode.Crop); // Draw the lights effects
-                */
-                Gorgon.CurrentRenderTarget = null;
+                //Set rendertarget to draw the rest of the scene
+                Gorgon.CurrentRenderTarget = _sceneTarget;
                 Gorgon.CurrentRenderTarget.Clear(Color.Black);
-                /*screenShadows.Image.Blit(0, 0, screenShadows.Width, screenShadows.Height, Color.White, BlitterSizeMode.Crop); // Blit the shadow image on top of the screen
-                return;*/
+                
                 // Draw rest of scene
                 DrawGround(xStart, xEnd, yStart, yEnd, centerTile);
                 ComponentManager.Singleton.Render(0);
@@ -458,6 +451,7 @@ namespace ClientServices.State.States
                     _decalBatch.Draw();
                 _decalBatch.Clear();
 
+                //I don't remember what the fuck this does but it is essential.
                 Gorgon.CurrentRenderTarget.SourceBlend = AlphaBlendOperation.DestinationColor;
                 Gorgon.CurrentRenderTarget.DestinationBlend = AlphaBlendOperation.SourceColor;
 
@@ -466,11 +460,18 @@ namespace ClientServices.State.States
                     _wallTopsBatch.Draw();
                 _wallTopsBatch.Clear();
                 ComponentManager.Singleton.Render(0);
+
+                //Render the scene and lights together to compose the lit scene
+                Gorgon.CurrentRenderTarget = null;
+                Gorgon.CurrentShader = lightBlendShader.Techniques["LightBlend"];
+                lightBlendShader.Parameters["LightTexture"].SetValue(screenShadows.Image);
+                lightBlendShader.Parameters["SceneTexture"].SetValue(_sceneTarget.Image); 
+                lightBlendShader.Parameters["AmbientLight"].SetValue(new Vector4D(0.156f, 0.156f, 0.156f, 1));
                 screenShadows.Image.Blit(0, 0, screenShadows.Width, screenShadows.Height, Color.White, BlitterSizeMode.Crop); // Blit the shadow image on top of the screen
+                Gorgon.CurrentShader = null;
 
+                //Render the placement manager shit
                 PlacementManager.Render();
-
-
             }
 
             Gorgon.CurrentRenderTarget = null;

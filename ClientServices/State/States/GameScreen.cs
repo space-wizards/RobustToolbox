@@ -419,11 +419,17 @@ namespace ClientServices.State.States
                     shadowMapResolver.ResolveShadows(lightArea1.renderTarget.Image, lightArea1.renderTarget, lightArea1.LightPosition); // Calc shadows
 
                     Gorgon.CurrentRenderTarget = screenShadows; // Set to shadow rendertarget
-                    Gorgon.CurrentRenderTarget.BlendingMode = BlendingModes.Additive; // Need this to blend
+                    //Gorgon.CurrentRenderTarget.BlendingMode = BlendingModes.Additive; // Need this to blend
+
                     blitPos = new Vector2D((lightArea1.LightPosition.X - lightArea1.LightAreaSize.X * 0.5f) - WindowOrigin.X,
                         (lightArea1.LightPosition.Y - lightArea1.LightAreaSize.Y * 0.5f) - WindowOrigin.Y); // Find light draw pos
+                    lightArea1.renderTarget.SourceBlend = AlphaBlendOperation.One;
+                    lightArea1.renderTarget.DestinationBlend = AlphaBlendOperation.One;
                     lightArea1.renderTarget.Blit(blitPos.X, blitPos.Y, lightArea1.renderTarget.Width,
                         lightArea1.renderTarget.Height, Color.LightBlue, BlitterSizeMode.Crop); // Draw the lights effects
+                    lightArea1.renderTarget.SourceBlend = AlphaBlendOperation.SourceAlpha;
+                    lightArea1.renderTarget.DestinationBlend = AlphaBlendOperation.InverseSourceAlpha;
+
                 }
                 /*lightArea1.LightPosition = PlayerManager.ControlledEntity.Position;//mousePosWorld; // Set the light position
                 lightArea1.BeginDrawingShadowCasters(); // Start drawing to the light rendertarget
@@ -441,7 +447,8 @@ namespace ClientServices.State.States
                 */
                 Gorgon.CurrentRenderTarget = null;
                 Gorgon.CurrentRenderTarget.Clear(Color.Black);
-
+                /*screenShadows.Image.Blit(0, 0, screenShadows.Width, screenShadows.Height, Color.White, BlitterSizeMode.Crop); // Blit the shadow image on top of the screen
+                return;*/
                 // Draw rest of scene
                 DrawGround(xStart, xEnd, yStart, yEnd, centerTile);
                 ComponentManager.Singleton.Render(0);

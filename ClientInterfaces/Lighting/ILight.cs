@@ -11,7 +11,7 @@ namespace ClientInterfaces.Lighting
         Vector2D Position { get; }
         void Move(Vector2D toPosition);
         void SetRadius(int Radius);
-        void SetColor(int r, int g, int b, int a);
+        void SetColor(int a, int r, int g, int b);
         void SetColor(Color color);
     }
 }

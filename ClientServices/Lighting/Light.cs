@@ -12,6 +12,12 @@ namespace ClientServices.Lighting
 {
     public class Light : ILight
     {
+        public Vector2D Position { get; private set; }
+
+        public void Move(Vector2D toPosition)
+        {
+            Position = toPosition;
+        }
 
     }
 }

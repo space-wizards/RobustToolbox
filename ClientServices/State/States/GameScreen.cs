@@ -43,10 +43,15 @@ namespace ClientServices.State.States
         #region Lighting
         QuadRenderer quadRenderer;
         ShadowMapResolver shadowMapResolver;
-        LightArea lightArea1;
+        LightArea lightArea128;
+        LightArea lightArea256;
+        LightArea lightArea512;
+        LightArea lightArea1024;
         RenderImage screenShadows;
         private FXShader lightBlendShader;
         private RenderImage _sceneTarget;
+
+        
         #endregion
 
         public DateTime LastUpdate;
@@ -168,9 +173,12 @@ namespace ClientServices.State.States
             #region Lighting
             quadRenderer = new QuadRenderer();
             quadRenderer.LoadContent();
-            shadowMapResolver = new ShadowMapResolver(quadRenderer, ShadowmapSize.Size256, ShadowmapSize.Size1024, ResourceManager);
+            shadowMapResolver = new ShadowMapResolver(quadRenderer, ShadowmapSize.Size512, ShadowmapSize.Size1024, ResourceManager);
             shadowMapResolver.LoadContent();
-            lightArea1 = new LightArea(ShadowmapSize.Size512);
+            lightArea128 = new LightArea(ShadowmapSize.Size128);
+            lightArea256 = new LightArea(ShadowmapSize.Size256);
+            lightArea512 = new LightArea(ShadowmapSize.Size512);
+            lightArea1024 = new LightArea(ShadowmapSize.Size1024);
             screenShadows = new RenderImage("screenShadows", Gorgon.CurrentClippingViewport.Width, Gorgon.CurrentClippingViewport.Height, ImageBufferFormats.BufferRGB888A8);
             screenShadows.UseDepthBuffer = false;
             lightBlendShader = IoCManager.Resolve<IResourceManager>().GetShader("lightblend");
@@ -413,31 +421,35 @@ namespace ClientServices.State.States
                 ClientWindowData.Singleton.UpdateViewPort(PlayerManager.ControlledEntity.Position);
 
                 var lights = IoCManager.Resolve<ILightManager>().lightsInRadius(
-                    PlayerManager.ControlledEntity.Position, 512f);
+                    PlayerManager.ControlledEntity.Position, 768f);
 
                 Vector2D blitPos;
                 screenShadows.Clear(Color.Black); // Clear shadow rendertarget
                 foreach(ILight l in lights)
                 {
-                    lightArea1.LightPosition = l.Position;//mousePosWorld; // Set the light position
-                    lightArea1.BeginDrawingShadowCasters(); // Start drawing to the light rendertarget
-                    DrawWallsRelativeToLight(xStart, xEnd, yStart, yEnd); // Draw all shadowcasting stuff here in black
-                    lightArea1.EndDrawingShadowCasters(); // End drawing to the light rendertarget
-                    shadowMapResolver.ResolveShadows(lightArea1.renderTarget.Image, lightArea1.renderTarget, lightArea1.LightPosition); // Calc shadows
+                    LightArea area = GetLightArea(RadiusToShadowMapSize(l.Radius));
+                    area.LightPosition = l.Position;//mousePosWorld; // Set the light position
+                    area.BeginDrawingShadowCasters(); // Start drawing to the light rendertarget
+                    DrawWallsRelativeToLight(xStart, xEnd, yStart, yEnd, area); // Draw all shadowcasting stuff here in black
+                    area.EndDrawingShadowCasters(); // End drawing to the light rendertarget
+                    shadowMapResolver.ResolveShadows(area.renderTarget.Image, area.renderTarget, area.LightPosition); // Calc shadows
 
                     Gorgon.CurrentRenderTarget = screenShadows; // Set to shadow rendertarget
 
                     //Draw the shadow to the shadows target.
-                    blitPos = new Vector2D((lightArea1.LightPosition.X - lightArea1.LightAreaSize.X * 0.5f) - WindowOrigin.X,
-                        (lightArea1.LightPosition.Y - lightArea1.LightAreaSize.Y * 0.5f) - WindowOrigin.Y); // Find light draw pos
-                    lightArea1.renderTarget.SourceBlend = AlphaBlendOperation.One; //Additive blending
-                    lightArea1.renderTarget.DestinationBlend = AlphaBlendOperation.One; //Additive blending
-                    lightArea1.renderTarget.Blit(blitPos.X, blitPos.Y, lightArea1.renderTarget.Width,
-                    lightArea1.renderTarget.Height, Color.LightGoldenrodYellow, BlitterSizeMode.Crop); // Draw the lights effects
-                    lightArea1.renderTarget.SourceBlend = AlphaBlendOperation.SourceAlpha; //reset blend mode
-                    lightArea1.renderTarget.DestinationBlend = AlphaBlendOperation.InverseSourceAlpha; //reset blend mode
+                    blitPos = new Vector2D((area.LightPosition.X - area.LightAreaSize.X * 0.5f) - WindowOrigin.X,
+                        (area.LightPosition.Y - area.LightAreaSize.Y * 0.5f) - WindowOrigin.Y); // Find light draw pos
+                    area.renderTarget.SourceBlend = AlphaBlendOperation.One; //Additive blending
+                    area.renderTarget.DestinationBlend = AlphaBlendOperation.One; //Additive blending
+                    area.renderTarget.Blit(blitPos.X, blitPos.Y, area.renderTarget.Width,
+                    area.renderTarget.Height, Color.LightGoldenrodYellow, BlitterSizeMode.Crop); // Draw the lights effects
+                    area.renderTarget.SourceBlend = AlphaBlendOperation.SourceAlpha; //reset blend mode
+                    area.renderTarget.DestinationBlend = AlphaBlendOperation.InverseSourceAlpha; //reset blend mode
 
                 }
+
+
+
                 //Set rendertarget to draw the rest of the scene
                 Gorgon.CurrentRenderTarget = _sceneTarget;
                 Gorgon.CurrentRenderTarget.Clear(Color.Black);
@@ -478,15 +490,50 @@ namespace ClientServices.State.States
         }
 
         #region Lighting
-        // Draws all walls in the area around the light relative to it, and in black (test code, not pretty)
-        private void DrawWallsRelativeToLight(int xStart, int xEnd, int yStart, int yEnd)
-        {
-            System.Drawing.Point centerTile = MapManager.GetTileArrayPositionFromWorldPosition(lightArea1.LightPosition);
 
-            int xS = System.Math.Max(0, centerTile.X - (ScreenWidthTiles / 2) - 1);
-            int yS = System.Math.Max(0, centerTile.Y - (ScreenHeightTiles / 2) - 1);
-            int xE = System.Math.Min(xStart + ScreenWidthTiles + 2, MapManager.GetMapWidth() - 1);
-            int yE = System.Math.Min(yStart + ScreenHeightTiles + 2, MapManager.GetMapHeight() - 1);
+        private ShadowmapSize RadiusToShadowMapSize(int Radius)
+        {
+             switch(Radius)
+            {
+                case 128:
+                    return ShadowmapSize.Size128;
+                case 256:
+                    return ShadowmapSize.Size256;
+                case 512:
+                    return ShadowmapSize.Size512;
+                case 1024:
+                    return ShadowmapSize.Size1024;
+                default:
+                    return ShadowmapSize.Size128;
+             }
+        }
+
+        private LightArea GetLightArea(ShadowmapSize size)
+        {
+            switch (size)
+            {
+                case ShadowmapSize.Size128:
+                    return lightArea128;
+                case ShadowmapSize.Size256:
+                    return lightArea256;
+                case ShadowmapSize.Size512:
+                    return lightArea512;
+                case ShadowmapSize.Size1024:
+                    return lightArea1024;
+                default:
+                    return null;
+            }
+        }
+
+        // Draws all walls in the area around the light relative to it, and in black (test code, not pretty)
+        private void DrawWallsRelativeToLight(int xStart, int xEnd, int yStart, int yEnd, LightArea area)
+        {
+            System.Drawing.Point centerTile = MapManager.GetTileArrayPositionFromWorldPosition(area.LightPosition);
+
+            int xS = System.Math.Max(0, centerTile.X - (ScreenWidthTiles / 2) - 4);
+            int yS = System.Math.Max(0, centerTile.Y - (ScreenHeightTiles / 2) - 4);
+            int xE = System.Math.Min(xStart + ScreenWidthTiles + 4, MapManager.GetMapWidth() - 1);
+            int yE = System.Math.Min(yStart + ScreenHeightTiles + 4, MapManager.GetMapHeight() - 1);
 
             ClientServices.Map.Tiles.Tile t;
             for (int x = xS; x <= xE; x++)
@@ -497,8 +544,8 @@ namespace ClientServices.State.States
                     t = (Map.Tiles.Tile)MapManager.GetTileAt(x, y);
                     if (t.TileType == TileType.Wall)
                     {
-                        Vector2D pos = lightArea1.ToRelativePosition(t.Position);
-                        t.RenderPos(pos.X, pos.Y, MapManager.GetTileSpacing(), (int)lightArea1.LightAreaSize.X);
+                        Vector2D pos = area.ToRelativePosition(t.Position);
+                        t.RenderPos(pos.X, pos.Y, MapManager.GetTileSpacing(), (int)area.LightAreaSize.X);
                     }
                 }
             }

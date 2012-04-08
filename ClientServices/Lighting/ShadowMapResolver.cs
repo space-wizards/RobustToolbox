@@ -51,16 +51,16 @@ namespace SS3D.LightTest
             resolveShadowsEffect = _resourceManager.GetShader("resolveShadowsEffect");
 
             // BUFFER TYPES ARE VERY IMPORTANT HERE AND IT WILL BREAK IF YOU CHANGE THEM!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-            distortRT = new RenderImage("distortRT", baseSize, baseSize, ImageBufferFormats.BufferGR1616F);
-            distancesRT = new RenderImage("distancesRT", baseSize, baseSize, ImageBufferFormats.BufferGR1616F);
-            shadowMap = new RenderImage("shadowMap", 2, baseSize, ImageBufferFormats.BufferGR1616F);
+            distortRT = new RenderImage("distortRT" + baseSize, baseSize, baseSize, ImageBufferFormats.BufferGR1616F);
+            distancesRT = new RenderImage("distancesRT" + baseSize, baseSize, baseSize, ImageBufferFormats.BufferGR1616F);
+            shadowMap = new RenderImage("shadowMap" + baseSize, 2, baseSize, ImageBufferFormats.BufferGR1616F);
             reductionRT = new RenderImage[reductionChainCount];
             for (int i = 0; i < reductionChainCount; i++)
             {
-                reductionRT[i] = new RenderImage("reductionRT" + i, 2 << i, baseSize, ImageBufferFormats.BufferGR1616F);
+                reductionRT[i] = new RenderImage("reductionRT" + i + baseSize, 2 << i, baseSize, ImageBufferFormats.BufferGR1616F);
             }
-            shadowsRT = new RenderImage("shadowsRT", baseSize, baseSize, ImageBufferFormats.BufferRGB888A8);
-            processedShadowsRT = new RenderImage("processedShadowsRT", baseSize, baseSize, ImageBufferFormats.BufferRGB888A8);
+            shadowsRT = new RenderImage("shadowsRT" + baseSize, baseSize, baseSize, ImageBufferFormats.BufferRGB888A8);
+            processedShadowsRT = new RenderImage("processedShadowsRT" + baseSize, baseSize, baseSize, ImageBufferFormats.BufferRGB888A8);
         }
 
         public void ResolveShadows(Image shadowCastersTexture, RenderImage result, Vector2D lightPosition)

@@ -6,6 +6,8 @@ using SS13.IoC;
 using SS13_Shared;
 using SS13_Shared.GO;
 
+
+
 namespace CGO
 {
     public class PointLightComponent : GameObjectComponent
@@ -27,9 +29,10 @@ namespace CGO
             _light = IoCManager.Resolve<ILightManager>().CreateLight();
             IoCManager.Resolve<ILightManager>().AddLight(_light);
 
+            _light.SetRadius(256);
             _light.Move(Owner.Position + _lightOffset);
             Owner.OnMove += OnMove;
-
+            
             /*_light = IoCManager.Resolve<ILightManager>().CreateLight(IoCManager.Resolve<IMapManager>(),
                                                                      System.Drawing.Color.FloralWhite, 300,
                                                                      LightState.On, Owner.Position);

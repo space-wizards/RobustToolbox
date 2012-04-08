@@ -17,7 +17,7 @@ namespace SS3D.LightTest
         {
             int baseSize = 2 << (int)size;
             LightAreaSize = new Vector2D(baseSize, baseSize);
-            renderTarget = new RenderImage("lightTest", baseSize, baseSize, ImageBufferFormats.BufferRGB888A8);
+            renderTarget = new RenderImage("lightTest" + baseSize, baseSize, baseSize, ImageBufferFormats.BufferRGB888A8);
 
         }
 

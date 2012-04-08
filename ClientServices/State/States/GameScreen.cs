@@ -476,7 +476,7 @@ namespace ClientServices.State.States
                 Gorgon.CurrentShader = lightBlendShader.Techniques["LightBlend"];
                 lightBlendShader.Parameters["LightTexture"].SetValue(screenShadows.Image);
                 lightBlendShader.Parameters["SceneTexture"].SetValue(_sceneTarget.Image); 
-                lightBlendShader.Parameters["AmbientLight"].SetValue(new Vector4D(0.04f, 0.04f, 0.04f, 1));
+                lightBlendShader.Parameters["AmbientLight"].SetValue(new Vector4D(0.06f, 0.06f, 0.06f, 1));
                 screenShadows.Image.Blit(0, 0, screenShadows.Width, screenShadows.Height, Color.White, BlitterSizeMode.Crop); // Blit the shadow image on top of the screen
                 Gorgon.CurrentShader = null;
 

@@ -53,7 +53,7 @@ namespace ClientServices.State.States
 
         
         #endregion
-
+ 
         public DateTime LastUpdate;
         public DateTime Now;
         private RenderImage _baseTarget;
@@ -182,6 +182,7 @@ namespace ClientServices.State.States
             screenShadows = new RenderImage("screenShadows", Gorgon.CurrentClippingViewport.Width, Gorgon.CurrentClippingViewport.Height, ImageBufferFormats.BufferRGB888A8);
             screenShadows.UseDepthBuffer = false;
             lightBlendShader = IoCManager.Resolve<IResourceManager>().GetShader("lightblend");
+
 
             #endregion
         }
@@ -401,8 +402,8 @@ namespace ClientServices.State.States
         {
             Gorgon.CurrentRenderTarget = _baseTarget;
 
-            _baseTarget.Clear(System.Drawing.Color.CornflowerBlue);
-            Gorgon.Screen.Clear(System.Drawing.Color.CornflowerBlue);
+            _baseTarget.Clear(System.Drawing.Color.Black);
+            Gorgon.Screen.Clear(System.Drawing.Color.Black);
 
             Gorgon.Screen.DefaultView.Left = 400;
             Gorgon.Screen.DefaultView.Top = 400;
@@ -424,6 +425,7 @@ namespace ClientServices.State.States
 
                 Vector2D blitPos;
                 screenShadows.Clear(Color.Black); // Clear shadow rendertarget
+
                 foreach(ILight l in lights)
                 {
                     LightArea area = GetLightArea(RadiusToShadowMapSize(l.Radius));
@@ -445,8 +447,6 @@ namespace ClientServices.State.States
                     area.renderTarget.SourceBlend = AlphaBlendOperation.SourceAlpha; //reset blend mode
                     area.renderTarget.DestinationBlend = AlphaBlendOperation.InverseSourceAlpha; //reset blend mode
                 }
-
-
 
                 //Set rendertarget to draw the rest of the scene
                 Gorgon.CurrentRenderTarget = _sceneTarget;
@@ -476,7 +476,7 @@ namespace ClientServices.State.States
                 Gorgon.CurrentShader = lightBlendShader.Techniques["LightBlend"];
                 lightBlendShader.Parameters["LightTexture"].SetValue(screenShadows.Image);
                 lightBlendShader.Parameters["SceneTexture"].SetValue(_sceneTarget.Image); 
-                lightBlendShader.Parameters["AmbientLight"].SetValue(new Vector4D(0.156f, 0.156f, 0.156f, 1));
+                lightBlendShader.Parameters["AmbientLight"].SetValue(new Vector4D(0.04f, 0.04f, 0.04f, 1));
                 screenShadows.Image.Blit(0, 0, screenShadows.Width, screenShadows.Height, Color.White, BlitterSizeMode.Crop); // Blit the shadow image on top of the screen
                 Gorgon.CurrentShader = null;
 
@@ -502,7 +502,7 @@ namespace ClientServices.State.States
                 case 1024:
                     return ShadowmapSize.Size1024;
                 default:
-                    return ShadowmapSize.Size128;
+                    return ShadowmapSize.Size1024;
              }
         }
 
@@ -519,7 +519,7 @@ namespace ClientServices.State.States
                 case ShadowmapSize.Size1024:
                     return lightArea1024;
                 default:
-                    return null;
+                    return lightArea1024;
             }
         }
 
@@ -616,7 +616,11 @@ namespace ClientServices.State.States
             }
             if (e.Key == KeyboardKeys.F6)
             {
-                _telepathy = !_telepathy;
+                var lights = IoCManager.Resolve<ILightManager>().lightsInRadius(
+                    PlayerManager.ControlledEntity.Position, 768f);
+                Random r = new Random();
+                int i = r.Next(lights.Length - 1);
+                lights[i].SetColor(r.Next(255), r.Next(255), r.Next(255), r.Next(255));
             }
             if (e.Key == KeyboardKeys.F7)
             {

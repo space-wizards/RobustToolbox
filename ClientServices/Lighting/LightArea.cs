@@ -21,7 +21,7 @@ namespace SS3D.LightTest
 
         }
 
-        public Vector2D ToRelativePosision(Vector2D worldPosition)
+        public Vector2D ToRelativePosition(Vector2D worldPosition)
         {
             return worldPosition - (LightPosition - LightAreaSize * 0.5f);
         }

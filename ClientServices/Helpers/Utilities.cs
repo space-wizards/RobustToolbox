@@ -47,7 +47,7 @@ namespace ClientServices.Helpers
         } 
     }
 
-    class ColorInterpolator
+    public class ColorInterpolator
     {
         delegate byte ComponentSelector(Color color);
         static readonly ComponentSelector RedSelector = color => color.R;

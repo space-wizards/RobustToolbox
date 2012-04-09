@@ -49,6 +49,7 @@ namespace ClientServices.UserInterface.Components
             IResourceManager _resMgr = IoCManager.Resolve<IResourceManager>();
             ComponentClass = GuiComponentType.HandsUi;
             handSlot = _resMgr.GetSprite("hand");
+            ZDepth = 5;
         }
 
         public override void ComponentUpdate(params object[] args)

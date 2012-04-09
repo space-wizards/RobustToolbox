@@ -438,7 +438,7 @@ namespace ClientServices.State.States
                     area.LightPosition = l.Position;//mousePosWorld; // Set the light position
                     if (MapManager.GetTileTypeFromWorldPosition(l.Position) == TileType.Wall)
                     {
-                        area.LightPosition = new Vector2D(area.LightPosition.X, MapManager.GetTileAt(l.Position).Position.Y + MapManager.GetTileSpacing());
+                        area.LightPosition = new Vector2D(area.LightPosition.X, MapManager.GetTileAt(l.Position).Position.Y + MapManager.GetTileSpacing() - 5);
                     }
                     area.BeginDrawingShadowCasters(); // Start drawing to the light rendertarget
                     DrawWallsRelativeToLight(xStart, xEnd, yStart, yEnd, area); // Draw all shadowcasting stuff here in black
@@ -511,7 +511,7 @@ namespace ClientServices.State.States
                 Gorgon.CurrentShader = lightBlendShader.Techniques["LightBlend"];
                 lightBlendShader.Parameters["LightTexture"].SetValue(screenShadows.Image);
                 lightBlendShader.Parameters["SceneTexture"].SetValue(_sceneTarget.Image); 
-                lightBlendShader.Parameters["AmbientLight"].SetValue(new Vector4D(0.1f, 0.2f, 0.25f, 1));
+                lightBlendShader.Parameters["AmbientLight"].SetValue(new Vector4D(.15f, .15f, 0.17f, 1));
                 screenShadows.Image.Blit(0, 0, screenShadows.Width, screenShadows.Height, Color.White, BlitterSizeMode.Crop); // Blit the shadow image on top of the screen
                 Gorgon.CurrentShader = null;
 

@@ -25,7 +25,7 @@ namespace ClientServices.UserInterface.Components
         public HotbarSlot(IResourceManager resourceManager)
         {
             _resourceManager = resourceManager;
-            _buttonSprite = _resourceManager.GetSprite("action_empty");
+            _buttonSprite = _resourceManager.GetSprite("hotbar_slot");
             Color = Color.White;
             Update();
         }

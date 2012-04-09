@@ -27,6 +27,7 @@ namespace ClientServices.State.States
         //UI Vars
         #region UI Variables
         private Chatbox _gameChat;
+        private HandsGui _handsGui;
         #endregion 
 
         public DateTime LastUpdate;
@@ -61,7 +62,6 @@ namespace ClientServices.State.States
 
         private Point _screenSize;
         public string SpawnType;
-        private bool _editMode;
    
         #region Mouse/Camera stuff
         private DateTime _lastRmbClick = DateTime.Now;
@@ -129,25 +129,25 @@ namespace ClientServices.State.States
             _gameChat.TextSubmitted += ChatTextboxTextSubmitted;
             UserInterfaceManager.AddComponent(_gameChat);
 
-            var combo = new HumanComboGui(PlayerManager, NetworkManager, ResourceManager, UserInterfaceManager);
-            combo.Update();
-            combo.Position = new Point(Gorgon.Screen.Width - combo.ClientArea.Width - 3, Gorgon.Screen.Height - combo.ClientArea.Height - 3);
-            UserInterfaceManager.AddComponent(combo);
-            UserInterfaceManager.AddComponent(new StatPanelComponent(ConfigurationManager.GetPlayerName(), PlayerManager, NetworkManager, ResourceManager));
+            //UserInterfaceManager.AddComponent(new StatPanelComponent(ConfigurationManager.GetPlayerName(), PlayerManager, NetworkManager, ResourceManager));
 
             var statusBar = new StatusEffectBar(ResourceManager, PlayerManager);
             statusBar.Position = new Point(Gorgon.Screen.Width - 200, 10);
             UserInterfaceManager.AddComponent(statusBar);
 
             var hotbar = new Hotbar(ResourceManager);
-            hotbar.Position = new Point(5, 650);
+            hotbar.Position = new Point(5, Gorgon.Screen.Height - hotbar.ClientArea.Height - 5);
             UserInterfaceManager.AddComponent(hotbar);
-        }
 
-        //void mNetworkMgr_Disconnected(NetworkManager netMgr)
-        //{
-        //    mStateMgr.RequestStateChange(typeof(ConnectMenu)); //Fix this. Only temporary solution.
-        //}
+            _handsGui = new HandsGui();
+            _handsGui.Position = new Point(hotbar.Position.X + 5, hotbar.Position.Y + 7);
+            UserInterfaceManager.AddComponent(_handsGui);
+
+            var combo = new HumanComboGui(PlayerManager, NetworkManager, ResourceManager, UserInterfaceManager);
+            combo.Update();
+            combo.Position = new Point(hotbar.ClientArea.Right - combo.ClientArea.Width + 5, hotbar.Position.Y - combo.ClientArea.Height - 5);
+            UserInterfaceManager.AddComponent(combo);
+        }
 
         public void Shutdown()
         {

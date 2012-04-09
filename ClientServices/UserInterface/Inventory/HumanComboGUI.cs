@@ -20,20 +20,8 @@ using SS13_Shared;
 
 namespace ClientServices.UserInterface.Inventory
 {
-    public struct UiHandInfo
-    {
-        public Hand Hand;
-        public IEntity Entity;
-        public Sprite HeldSprite;
-    }
-
     public class HumanComboGui : GuiComponent
     {
-        #region Hand Slot UI
-        public UiHandInfo LeftHand;
-        public UiHandInfo RightHand;
-        #endregion
-
         #region Inventory UI
         private Dictionary<EquipmentSlot, EquipmentSlotUi> _equipmentSlots = new Dictionary<EquipmentSlot, EquipmentSlotUi>();
 
@@ -79,12 +67,10 @@ namespace ClientServices.UserInterface.Inventory
 
         private readonly Sprite _comboBg;
         private readonly SimpleImageButton _comboClose;
-        private readonly SimpleImageButton _comboOpen;
         private readonly SimpleImageButton _tabEquip;
         private readonly SimpleImageButton _tabHealth;
         private readonly SimpleImageButton _tabCraft;
-        private readonly Sprite _handLBg;
-        private readonly Sprite _handRBg;
+
         private readonly Sprite _equipBg;
 
         private readonly Color _inactiveColor = Color.FromArgb(255, 90, 90, 90);
@@ -103,9 +89,6 @@ namespace ClientServices.UserInterface.Inventory
 
             ComponentClass = GuiComponentType.ComboGui;
 
-            LeftHand.Hand = Hand.Left;
-            RightHand.Hand = Hand.Right;
-
             #region Status UI
             _ResBlunt = new ArmorInfoLabel(DamageType.Bludgeoning, resourceManager);
             _ResBurn = new ArmorInfoLabel(DamageType.Burn, resourceManager);
@@ -120,7 +103,6 @@ namespace ClientServices.UserInterface.Inventory
 
             _comboBg = _resourceManager.GetSprite("combo_bg");
             _comboClose = new SimpleImageButton("button_closecombo", _resourceManager);
-            _comboOpen = new SimpleImageButton("button_inv", _resourceManager);
 
             _tabEquip = new SimpleImageButton("tab_equip", _resourceManager);
             _tabEquip.Clicked += TabClicked;
@@ -131,11 +113,7 @@ namespace ClientServices.UserInterface.Inventory
             _tabCraft = new SimpleImageButton("tab_craft", _resourceManager);
             _tabCraft.Clicked += TabClicked;
 
-            _handLBg = _resourceManager.GetSprite("hand_l");
-            _handRBg = _resourceManager.GetSprite("hand_r");
-
             _comboClose.Clicked += ComboCloseClicked;
-            _comboOpen.Clicked += ComboOpenClicked;
 
             //Left Side - head, eyes, outer, hands, feet
             _slotHead = new EquipmentSlotUi(EquipmentSlot.Head, _playerManager, _resourceManager,_userInterfaceManager);
@@ -245,7 +223,7 @@ namespace ClientServices.UserInterface.Inventory
             _craftStatus.Color = Color.White;
         }
 
-        void ComboOpenClicked(SimpleImageButton sender)
+        void ComboOpenClicked(SimpleImageButton sender) //!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
         {
             _showTabbedWindow = !_showTabbedWindow;
             _craftStatus.Text = "Status";
@@ -270,20 +248,6 @@ namespace ClientServices.UserInterface.Inventory
             }
 
             return false;
-        }
-
-        public override void ComponentUpdate(params object[] args)
-        {
-            base.ComponentUpdate(args);
-
-            var messageType = (ComboGuiMessage)args[0]; 
-
-            switch (messageType)
-            {
-                case ComboGuiMessage.UpdateHands:
-                    UpdateHandIcons();
-                    break;
-            }
         }
 
         public override void HandleNetworkMessage(NetIncomingMessage message)
@@ -474,16 +438,6 @@ namespace ClientServices.UserInterface.Inventory
                         }
                 }
             }
-            _comboOpen.Render();
-
-            _handLBg.Draw();
-            if (LeftHand.Entity != null && LeftHand.HeldSprite != null) 
-                LeftHand.HeldSprite.Draw(new Rectangle((int)_handLBg.Position.X + (int)(_handLBg.AABB.Width / 4f - LeftHand.HeldSprite.AABB.Width / 2f), (int)_handLBg.Position.Y + (int)(_handLBg.AABB.Height / 2f - LeftHand.HeldSprite.AABB.Height / 2f), (int)LeftHand.HeldSprite.AABB.Width, (int)LeftHand.HeldSprite.AABB.Height));
-
-            _handRBg.Draw(); //Change to something more sane.
-            if (RightHand.Entity != null && RightHand.HeldSprite != null) 
-                RightHand.HeldSprite.Draw(new Rectangle((int)_handRBg.Position.X + (int)((_handRBg.AABB.Width / 4f) * 3 - RightHand.HeldSprite.AABB.Width / 2f), (int)_handRBg.Position.Y + (int)(_handRBg.AABB.Height / 2f - RightHand.HeldSprite.AABB.Height / 2f), (int)RightHand.HeldSprite.AABB.Width, (int)RightHand.HeldSprite.AABB.Height));
-
         }
 
         public override void Update()
@@ -502,11 +456,6 @@ namespace ClientServices.UserInterface.Inventory
             _equipBg.Position = Position;
             equipBgPos.Offset((int)(_comboBg.AABB.Width / 2f - _equipBg.AABB.Width / 2f), 40);
             _equipBg.Position = equipBgPos;
-
-            var comboOpenPos = Position;
-            comboOpenPos.Offset((int)(_comboBg.Width - _comboOpen.ClientArea.Width), (int)_comboBg.Height - 1);
-            _comboOpen.Position = comboOpenPos;
-            _comboOpen.Update();
 
             var comboClosePos = Position;
             comboClosePos.Offset(264, 11); //Magic photoshop ruler numbers.
@@ -531,12 +480,7 @@ namespace ClientServices.UserInterface.Inventory
             _tabCraft.Color = _currentTab == 3 ? Color.White : _inactiveColor;
             _tabCraft.Update();
 
-            var handsPos = Position;
-            handsPos.Offset(1, (int)_comboBg.Height);
-            _handLBg.Position = handsPos;
-            _handRBg.Position = handsPos;
-
-            ClientArea = new Rectangle(Position.X, Position.Y, (int)_comboBg.AABB.Width, (int)_comboBg.AABB.Height + _comboOpen.ClientArea.Height);
+            ClientArea = new Rectangle(Position.X, Position.Y, (int)_comboBg.AABB.Width, (int)_comboBg.AABB.Height);
 
             switch (_currentTab)
             {
@@ -665,77 +609,14 @@ namespace ClientServices.UserInterface.Inventory
             }
 
             if (_craftTimer != null) _craftTimer.Update(); //Needs to update even when its not on the crafting tab so it continues to count.
-
-            #region Hands UI
-            if (_playerManager == null || _playerManager.ControlledEntity == null)
-                return;
-
-            var entity = _playerManager.ControlledEntity;
-            var hands = (HumanHandsComponent)entity.GetComponent(ComponentFamily.Hands);
-
-            if (hands.CurrentHand == Hand.Left)
-            {
-                _handLBg.Color = Color.White;
-                _handRBg.Color = _inactiveColor;
-            }
-            else
-            {
-                _handRBg.Color = Color.White;
-                _handLBg.Color = _inactiveColor;
-            }
-
-            #endregion
         }
 
         public override void Dispose()
         {
         }
 
-        public void UpdateHandIcons()
-        {
-            if (_playerManager.ControlledEntity == null)
-                return;
-
-            var entity = _playerManager.ControlledEntity;
-            var hands = (HumanHandsComponent)entity.GetComponent(ComponentFamily.Hands);
-
-            if (hands == null) return;
-
-            if (hands.HandSlots.Keys.Contains(Hand.Left))
-            {
-                if(LeftHand.Entity == null || LeftHand.Entity.Uid != hands.HandSlots[Hand.Left].Uid)
-                {
-                    var entityL = hands.HandSlots[Hand.Left];
-                    LeftHand.Entity = entityL;
-                    LeftHand.HeldSprite = Utilities.GetSpriteComponentSprite(entityL);
-                }
-            }
-            else
-            {
-                LeftHand.Entity = null;
-                LeftHand.HeldSprite = null;
-            }
-
-            if (hands.HandSlots.Keys.Contains(Hand.Right))
-            {
-                if (RightHand.Entity == null || RightHand.Entity.Uid != hands.HandSlots[Hand.Right].Uid)
-                {
-                    var entityR = hands.HandSlots[Hand.Right];
-                    RightHand.Entity = entityR;
-                    RightHand.HeldSprite = Utilities.GetSpriteComponentSprite(entityR);
-                }
-            }
-            else
-            {
-                RightHand.Entity = null;
-                RightHand.HeldSprite = null;
-            }
-        }
-
         public override bool MouseDown(MouseInputEventArgs e)
         {
-            if (_comboOpen.MouseDown(e)) return true;
-
             if (_showTabbedWindow)
             {
                 if (_comboClose.MouseDown(e)) return true;
@@ -743,46 +624,6 @@ namespace ClientServices.UserInterface.Inventory
                 if (_tabHealth.MouseDown(e)) return true;
                 if (_tabCraft.MouseDown(e)) return true;
             }
-
-            #region Hands UI, Switching
-            var entity = _playerManager.ControlledEntity;
-            var hands = (HumanHandsComponent)entity.GetComponent(ComponentFamily.Hands);
-            switch (e.Buttons)
-            {
-                case MouseButtons.Right:
-                    if (Utilities.SpritePixelHit(_handLBg, e.Position))
-                    {
-                        SendSwitchHandTo(Hand.Left);
-                        return true;
-                    }
-                    if (Utilities.SpritePixelHit(_handRBg, e.Position))
-                    {
-                        SendSwitchHandTo(Hand.Right);
-                        return true;
-                    }
-                    break;
-                case MouseButtons.Left:
-                    if (Utilities.SpritePixelHit(_handLBg, e.Position))
-                    {
-                        if (hands.HandSlots.Keys.Contains(Hand.Left))
-                        {
-                            var entityL = hands.HandSlots[Hand.Left];
-                            _userInterfaceManager.DragInfo.StartDrag(entityL);
-                        }
-                        return true;
-                    }
-                    if (Utilities.SpritePixelHit(_handRBg, e.Position))
-                    {
-                        if (hands.HandSlots.Keys.Contains(Hand.Right))
-                        {
-                            var entityR = hands.HandSlots[Hand.Right];
-                            _userInterfaceManager.DragInfo.StartDrag(entityR);
-                        }
-                        return true;
-                    }
-                    break;
-            }
-            #endregion
 
             switch (_currentTab)
             {
@@ -841,56 +682,6 @@ namespace ClientServices.UserInterface.Inventory
         public override bool MouseUp(MouseInputEventArgs e)
         {
             var mouseAABB = new PointF(e.Position.X, e.Position.Y);
-
-            if (_userInterfaceManager.DragInfo.IsEntity && _userInterfaceManager.DragInfo.IsActive)
-            {
-                #region Hands
-                if (_playerManager.ControlledEntity == null)
-                    return false;
-
-                var entity = _playerManager.ControlledEntity;
-
-                var equipment = (EquipmentComponent)entity.GetComponent(ComponentFamily.Equipment);
-                var hands = (HumanHandsComponent)entity.GetComponent(ComponentFamily.Hands);
-
-                if (hands == null || entity == null) return false;
-
-                if (Utilities.SpritePixelHit(_handLBg, e.Position))
-                {
-                    if (!hands.HandSlots.ContainsKey(Hand.Left))
-                    {
-                        if (hands.HandSlots.ContainsValue(_userInterfaceManager.DragInfo.DragEntity))
-                        {
-                            if (hands.HandSlots.First(x => x.Value == _userInterfaceManager.DragInfo.DragEntity).Key == Hand.Left) //From me to me, ignore.
-                                return false;
-
-                                hands.SendDropEntity(_userInterfaceManager.DragInfo.DragEntity); //Other hand to me.
-
-                        }
-                        equipment.DispatchUnEquipItemToSpecifiedHand(_userInterfaceManager.DragInfo.DragEntity.Uid, Hand.Left);
-                        _userInterfaceManager.DragInfo.Reset();
-                        return true;
-                    }
-                }
-
-                if (Utilities.SpritePixelHit(_handRBg, e.Position))
-                {
-                    if (!hands.HandSlots.ContainsKey(Hand.Right))
-                    {
-                        if (hands.HandSlots.ContainsValue(_userInterfaceManager.DragInfo.DragEntity))
-                        {
-                            if (hands.HandSlots.First(x => x.Value == _userInterfaceManager.DragInfo.DragEntity).Key == Hand.Right) //From me to me, ignore.
-                                return false;
-
-                            hands.SendDropEntity(_userInterfaceManager.DragInfo.DragEntity); //Other hand to me.
-                        }
-                        equipment.DispatchUnEquipItemToSpecifiedHand(_userInterfaceManager.DragInfo.DragEntity.Uid, Hand.Right);
-                        _userInterfaceManager.DragInfo.Reset();
-                        return true;
-                    }
-                } 
-                #endregion
-            }
 
             switch (_currentTab)
             {

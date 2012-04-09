@@ -41,6 +41,9 @@ namespace ClientServices.State.States
         #endregion 
 
         #region Lighting
+        bool bPlayerVision = false;
+        ILight playerVision;
+
         QuadRenderer quadRenderer;
         ShadowMapResolver shadowMapResolver;
         LightArea lightArea128;
@@ -183,7 +186,10 @@ namespace ClientServices.State.States
             screenShadows.UseDepthBuffer = false;
             lightBlendShader = IoCManager.Resolve<IResourceManager>().GetShader("lightblend");
 
-
+            playerVision = IoCManager.Resolve<ILightManager>().CreateLight();
+            playerVision.SetColor(Color.Transparent);
+            playerVision.SetRadius(1024);
+            playerVision.Move(Vector2D.Zero);
             #endregion
         }
 
@@ -448,6 +454,31 @@ namespace ClientServices.State.States
                     area.renderTarget.DestinationBlend = AlphaBlendOperation.InverseSourceAlpha; //reset blend mode
                 }
 
+                #region Vision testing stuff
+                if (bPlayerVision)
+                {
+                    playerVision.Move(PlayerManager.ControlledEntity.Position);
+                    LightArea area = GetLightArea(RadiusToShadowMapSize(playerVision.Radius));
+                    area.LightPosition = playerVision.Position;//mousePosWorld; // Set the light position
+                    area.BeginDrawingShadowCasters(); // Start drawing to the light rendertarget
+                    DrawWallsRelativeToLight(xStart, xEnd, yStart, yEnd, area); // Draw all shadowcasting stuff here in black
+                    area.EndDrawingShadowCasters(); // End drawing to the light rendertarget
+                    shadowMapResolver.ResolveShadows(area.renderTarget.Image, area.renderTarget, area.LightPosition); // Calc shadows
+
+                    Gorgon.CurrentRenderTarget = screenShadows; // Set to shadow rendertarget
+
+                    //Draw the shadow to the shadows target.
+                    blitPos = new Vector2D((area.LightPosition.X - area.LightAreaSize.X * 0.5f) - WindowOrigin.X,
+                        (area.LightPosition.Y - area.LightAreaSize.Y * 0.5f) - WindowOrigin.Y); // Find light draw pos
+                    area.renderTarget.SourceBlend = AlphaBlendOperation.DestinationColor; //Additive blending
+                    area.renderTarget.DestinationBlend = AlphaBlendOperation.SourceAlpha; //Additive blending
+                    area.renderTarget.Blit(blitPos.X, blitPos.Y, area.renderTarget.Width,
+                    area.renderTarget.Height, playerVision.Color, BlitterSizeMode.Crop); // Draw the lights effects
+                    area.renderTarget.SourceBlend = AlphaBlendOperation.SourceAlpha; //reset blend mode
+                    area.renderTarget.DestinationBlend = AlphaBlendOperation.InverseSourceAlpha; //reset blend mode
+                }
+                #endregion
+
                 //Set rendertarget to draw the rest of the scene
                 Gorgon.CurrentRenderTarget = _sceneTarget;
                 Gorgon.CurrentRenderTarget.Clear(Color.Black);
@@ -476,7 +507,7 @@ namespace ClientServices.State.States
                 Gorgon.CurrentShader = lightBlendShader.Techniques["LightBlend"];
                 lightBlendShader.Parameters["LightTexture"].SetValue(screenShadows.Image);
                 lightBlendShader.Parameters["SceneTexture"].SetValue(_sceneTarget.Image); 
-                lightBlendShader.Parameters["AmbientLight"].SetValue(new Vector4D(0.06f, 0.06f, 0.06f, 1));
+                lightBlendShader.Parameters["AmbientLight"].SetValue(new Vector4D(0f, 0f, 0f, 1));
                 screenShadows.Image.Blit(0, 0, screenShadows.Width, screenShadows.Height, Color.White, BlitterSizeMode.Crop); // Blit the shadow image on top of the screen
                 Gorgon.CurrentShader = null;
 
@@ -624,7 +655,7 @@ namespace ClientServices.State.States
             }
             if (e.Key == KeyboardKeys.F7)
             {
-                BlendLightMap = !BlendLightMap;
+                bPlayerVision = !bPlayerVision;
             }
             if (e.Key == KeyboardKeys.F8)
             {

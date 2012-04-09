@@ -112,14 +112,18 @@ namespace ClientServices.UserInterface.Components
 
             float blipCount = healthMeterInner.X + x_off + blipArea;
 
-            Gorgon.CurrentRenderTarget.BlendingMode = BlendingModes.Additive;
+            Gorgon.CurrentRenderTarget.BlendingMode = BlendingModes.ColorAdditive;
             while (blipCount <= (healthMeterInner.X + x_off + blipArea) + blipAreaWidth)
             {
                 float blipHeight = Math.Abs((half + healthMeterInner.X + x_off) - blipCount) * healthPct;
                 float alpha = Math.Max(Math.Min((half / blipHeight) * 15, 255) * Math.Max(healthPct, 0.10f),0);
                 _backgroundSprite.Color = Color.FromArgb((int)alpha, Color.FloralWhite);
                 _backgroundSprite.Draw(new Rectangle((int)blipCount, (int)Math.Min(healthMeterInner.Y + blipHeight, (blipCount >= healthMeterInner.X + x_off + half ? healthMeterInner.Y + healthMeterInner.Height / 2f : healthMeterInner.Y + healthMeterInner.Height / 3f)) + 5 + (int)(10 - (10 * healthPct)), 2, 2));
-                blipCount++;
+                if (++blipCount > (healthMeterInner.X + x_off + blipArea) + blipAreaWidth)
+                {
+                    _backgroundSprite.Color = Color.FromArgb(100, Color.White);
+                    _backgroundSprite.Draw(new Rectangle((int)blipCount, (int)Math.Min(healthMeterInner.Y + blipHeight, (blipCount >= healthMeterInner.X + x_off + half ? healthMeterInner.Y + healthMeterInner.Height / 2f : healthMeterInner.Y + healthMeterInner.Height / 3f)) + 5 + (int)(10 - (10 * healthPct)), 2, 2));
+                }
             }
             Gorgon.CurrentRenderTarget.BlendingMode = BlendingModes.None;
 

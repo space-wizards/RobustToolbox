@@ -19,7 +19,7 @@ namespace ClientServices.UserInterface.Components
     {
         private const int MaxHistory = 20;
         private const int MaxLines = 20;
-        private const int MaxLinePixelLength = 585;
+        private const int MaxLinePixelLength = 450;
 
         private readonly IResourceManager _resourceManager;
         private readonly IUserInterfaceManager _userInterfaceManager;
@@ -34,8 +34,6 @@ namespace ClientServices.UserInterface.Components
         private readonly Dictionary<ChatChannel, Color> _chatColors;
 
         private Label _textInputLabel;
-        private Sprite _backgroundSprite;
-        private RenderImage _renderImage;
 
         private string _inputTemp;
         private int _inputIndex = -1;
@@ -56,19 +54,23 @@ namespace ClientServices.UserInterface.Components
             _resourceManager = resourceManager;
             _userInterfaceManager = userInterfaceManager;
             _keyBindingManager = keyBindingManager;
-            
-            ClientArea = new Rectangle(5, Gorgon.CurrentRenderTarget.Height - 205, 600, 200); //!!! Use this instead of Window Dimensions
-            Position = new Point(5, Gorgon.CurrentRenderTarget.Height - 205);
 
-            _backgroundSprite = _resourceManager.GetSprite("1pxwhite");
+            const int width = 475;
+            const int height = 175;
+
+            Position = new Point(Gorgon.Screen.Width - width - 10, 10);
+
+            ClientArea = new Rectangle(Position.X, Position.Y, width, height);
 
             _textInputLabel = new Label("", "CALIBRI", _resourceManager)
                                 {
+                                    DrawBorder = true,
+                                    BorderColor = Color.DimGray,
                                     Text =
                                         {
                                             Size = new Size(ClientArea.Width - 10, 12),
                                             Color = Color.Green
-                                        }
+                                        }      
                                 };
 
             _chatColors = new Dictionary<ChatChannel, Color>
@@ -81,56 +83,6 @@ namespace ClientServices.UserInterface.Components
                                 {ChatChannel.Lobby, Color.White},
                                 {ChatChannel.Ingame, Color.Green}
                             };
-
-            _renderImage = new RenderImage("chatboxRI", ClientArea.Size.Width, ClientArea.Size.Height,
-                                          ImageBufferFormats.BufferUnknown) {ClearEachFrame = ClearTargets.None};
-
-            PreRender();
-        }
-
-        private void PreRender()
-        {
-            var renderPos = new Point(0, 0);
-
-            _renderImage.BeginDrawing();
-            _backgroundSprite.Color = Color.FromArgb(51, 56, 64);
-            _backgroundSprite.Opacity = 240;
-            _backgroundSprite.Draw(new Rectangle(renderPos, new Size(ClientArea.Width, ClientArea.Height)));
-
-            var cornerTopLeft = _resourceManager.GetSprite("corner_top_left");
-            cornerTopLeft.Draw(new Rectangle(renderPos.X, renderPos.Y, (int)cornerTopLeft.Width, (int)cornerTopLeft.Height));
-
-            var cornerTopRight = _resourceManager.GetSprite("corner_top_right");
-            cornerTopRight.Draw(new Rectangle(renderPos.X + ClientArea.Width - (int)cornerTopRight.Width, renderPos.Y, (int)cornerTopRight.Width, (int)cornerTopRight.Height));
-
-            var borderTop = _resourceManager.GetSprite("border_top");
-            borderTop.Draw(new Rectangle(renderPos.X + (int)cornerTopLeft.Width, renderPos.Y, ClientArea.Width - (int)cornerTopLeft.Width - (int)cornerTopRight.Width, (int)borderTop.Height));
-
-            var cornerBottomLeft = _resourceManager.GetSprite("corner_bottom_left");
-            cornerBottomLeft.Draw(new Rectangle(renderPos.X, renderPos.Y + ClientArea.Height - (int)cornerBottomLeft.Height, (int)cornerBottomLeft.Width, (int)cornerBottomLeft.Height));
-
-            var cornerBottomRight = _resourceManager.GetSprite("corner_bottom_right");
-            cornerBottomRight.Draw(new Rectangle(renderPos.X + ClientArea.Width - (int)cornerBottomRight.Width, renderPos.Y + ClientArea.Height - (int)cornerBottomRight.Height, (int)cornerBottomRight.Width, (int)cornerBottomRight.Height));
-
-            var borderLeft = _resourceManager.GetSprite("border_left");
-            borderLeft.Draw(new Rectangle(renderPos.X, renderPos.Y + (int)cornerTopLeft.Height, (int)borderLeft.Width, ClientArea.Height - (int)cornerBottomLeft.Height - (int)cornerTopLeft.Height));
-
-            var borderRight = _resourceManager.GetSprite("border_right");
-            borderRight.Draw(new Rectangle(renderPos.X + ClientArea.Width - (int)borderRight.Width, renderPos.Y + (int)cornerTopRight.Height, (int)borderRight.Width, ClientArea.Height - (int)cornerBottomRight.Height - (int)cornerTopRight.Height));
-
-            var borderBottom = _resourceManager.GetSprite("border_bottom");
-            borderBottom.Draw(new Rectangle(renderPos.X + (int)cornerTopLeft.Width, renderPos.Y + ClientArea.Height - (int)borderBottom.Height, ClientArea.Width - (int)cornerBottomLeft.Width - (int)cornerBottomRight.Width, (int)borderBottom.Height));
-
-            var cornerMiddleLeft = _resourceManager.GetSprite("corner_middle_left");
-            cornerMiddleLeft.Draw(new Rectangle(renderPos.X, renderPos.Y + ClientArea.Height - 16 - (int)cornerMiddleLeft.Height, (int)cornerMiddleLeft.Width, (int)cornerMiddleLeft.Height));
-
-            var cornerMiddleRight = _resourceManager.GetSprite("corner_middle_right");
-            cornerMiddleRight.Draw(new Rectangle(renderPos.X + ClientArea.Width - (int)cornerMiddleRight.Width, renderPos.Y + ClientArea.Height - 16 - (int)cornerMiddleRight.Height, (int)cornerMiddleRight.Width, (int)cornerMiddleRight.Height));
-
-            var borderMiddle = _resourceManager.GetSprite("border_middle_h");
-            borderMiddle.Draw(new Rectangle(renderPos.X + (int)cornerMiddleLeft.Width, renderPos.Y + ClientArea.Height - 16 - (int)borderMiddle.Height, ClientArea.Width - (int)cornerMiddleLeft.Width - (int)cornerMiddleRight.Width, (int)borderMiddle.Height));
-
-            _renderImage.EndDrawing();
         }
 
         private IEnumerable<string> CheckInboundMessage(string message)
@@ -214,7 +166,7 @@ namespace ClientServices.UserInterface.Components
         {
             CheckAndSetLine(_currentInputText.ToString());
             
-            _textInputLabel.Position = new Point(ClientArea.X + 4, ClientArea.Y + ClientArea.Height - 20);
+            _textInputLabel.Position = new Point(ClientArea.X + 4, ClientArea.Y + ClientArea.Height - 23);
             _textInputLabel.Render();
 
             while (_entries.Count > MaxLines)
@@ -337,9 +289,6 @@ namespace ClientServices.UserInterface.Components
             TextSubmitted = null;
             _entries.Clear();
             _textInputLabel = null;
-            _backgroundSprite = null;
-            if (_renderImage != null && _renderImage.Image != null) _renderImage.Dispose();
-            _renderImage = null;
             _chatColors.Clear();
             base.Dispose();
         }
@@ -354,14 +303,11 @@ namespace ClientServices.UserInterface.Components
         public override void Render()
         {
             if (_disposing || !IsVisible()) return;
-
-            _renderImage.Blit(ClientArea.X, ClientArea.Y);
+            Gorgon.CurrentRenderTarget.BlendingMode = BlendingModes.Modulated;
+            Gorgon.CurrentRenderTarget.FilledRectangle(ClientArea.X, ClientArea.Y, ClientArea.Width, ClientArea.Height, Color.FromArgb(100, Color.Black));
+            Gorgon.CurrentRenderTarget.Rectangle(ClientArea.X, ClientArea.Y, ClientArea.Width, ClientArea.Height, Color.FromArgb(100, Color.LightGray));
+            Gorgon.CurrentRenderTarget.BlendingMode = BlendingModes.None;
             DrawLines();
-        }
-
-        public override void Resize()
-        {
-            PreRender();
         }
     }
 }

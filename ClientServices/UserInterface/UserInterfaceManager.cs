@@ -42,6 +42,10 @@ namespace ClientServices.UserInterface
 
         private readonly IResourceManager _resourceManager;
 
+        private Vector2D dragOffset = Vector2D.Zero;
+        private bool moveMode = false;
+        private IGuiComponent movingComp;
+
         public UserInterfaceManager(IResourceManager resourceManager)
         {
             _resourceManager = resourceManager;
@@ -225,6 +229,9 @@ namespace ClientServices.UserInterface
         /// </summary>
         public void Update()
         {
+            if (moveMode && movingComp != null)
+                movingComp.Position = (System.Drawing.Point)(_mousePos - dragOffset);
+
             foreach (var component in _components)
                 component.Update();
         }
@@ -241,7 +248,17 @@ namespace ClientServices.UserInterface
                              select comp;
 
             foreach (var component in renderList)
+            {
                 component.Render();
+
+                if (moveMode)
+                {
+                    Gorgon.Screen.BlendingMode = BlendingModes.Modulated;
+                    Gorgon.Screen.FilledRectangle(component.ClientArea.X, component.ClientArea.Y, component.ClientArea.Width, component.ClientArea.Height, System.Drawing.Color.FromArgb(100, System.Drawing.Color.Green));
+                    Gorgon.Screen.Rectangle(component.ClientArea.X, component.ClientArea.Y, component.ClientArea.Width, component.ClientArea.Height, System.Drawing.Color.LightGreen);
+                    Gorgon.Screen.BlendingMode = BlendingModes.None;
+                }
+            }
 
             if (targetingAction != null)
             {
@@ -251,6 +268,7 @@ namespace ClientServices.UserInterface
             {
                 _cursorSprite = DragInfo.DragSprite != null && DragInfo.IsActive ? DragInfo.DragSprite :  _resourceManager.GetSprite("cursor");
             }
+
             _cursorSprite.Position = _mousePos;
             _cursorSprite.Draw();
         } 
@@ -312,20 +330,36 @@ namespace ClientServices.UserInterface
         /// </summary>
         public virtual bool MouseDown(MouseInputEventArgs e)
         {
-            var inputList = from IGuiComponent comp in _components
-                            where comp.RecieveInput
-                            orderby comp.ZDepth ascending
-                            orderby comp.IsVisible() descending //Invisible controls still recieve input but after everyone else. This is mostly for the inventory and other toggleable components.
-                            orderby comp.Focus descending
-                            select comp;
-
-            foreach (IGuiComponent current in inputList)
-                if (current.MouseDown(e))
+            if (moveMode)
+            {
+                foreach (IGuiComponent comp in _components)
                 {
-                    SetFocus(current);
-                    return true;
+                    if (comp.ClientArea.Contains(new System.Drawing.Point((int)e.Position.X, (int)e.Position.Y)))
+                    {
+                        movingComp = comp;
+                        dragOffset = (new Vector2D(e.Position.X, e.Position.Y)) - new Vector2D(comp.ClientArea.X, comp.ClientArea.Y);
+                        break;
+                    }
                 }
-            return false;
+                return true;
+            }
+            else
+            {
+                var inputList = from IGuiComponent comp in _components
+                                where comp.RecieveInput
+                                orderby comp.ZDepth ascending
+                                orderby comp.IsVisible() descending //Invisible controls still recieve input but after everyone else. This is mostly for the inventory and other toggleable components.
+                                orderby comp.Focus descending
+                                select comp;
+
+                foreach (IGuiComponent current in inputList)
+                    if (current.MouseDown(e))
+                    {
+                        SetFocus(current);
+                        return true;
+                    }
+                return false;
+            }
         }
 
         /// <summary>
@@ -333,19 +367,27 @@ namespace ClientServices.UserInterface
         /// </summary>
         public virtual bool MouseUp(MouseInputEventArgs e)
         {
-            var inputList = from IGuiComponent comp in _components
-                            where comp.RecieveInput
-                            orderby comp.ZDepth ascending
-                            orderby comp.IsVisible() descending //Invisible controls still recieve input but after everyone else. This is mostly for the inventory and other toggleable components.
-                            orderby comp.Focus descending
-                            select comp;
+            if (moveMode)
+            {
+                if (movingComp != null) movingComp = null;
+                return true;
+            }
+            else
+            {
+                var inputList = from IGuiComponent comp in _components
+                                where comp.RecieveInput
+                                orderby comp.ZDepth ascending
+                                orderby comp.IsVisible() descending //Invisible controls still recieve input but after everyone else. This is mostly for the inventory and other toggleable components.
+                                orderby comp.Focus descending
+                                select comp;
 
-            if (inputList.Any(current => current.MouseUp(e))) { return true; }
+                if (inputList.Any(current => current.MouseUp(e))) { return true; }
 
-            if (DragInfo.IsActive) //Drag & dropped into nothing or invalid. Remove dragged obj.
-                DragInfo.Reset();
+                if (DragInfo.IsActive) //Drag & dropped into nothing or invalid. Remove dragged obj.
+                    DragInfo.Reset();
 
-            return false;
+                return false;
+            }
         }
 
         /// <summary>

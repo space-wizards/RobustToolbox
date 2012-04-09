@@ -436,6 +436,10 @@ namespace ClientServices.State.States
                 {
                     LightArea area = GetLightArea(RadiusToShadowMapSize(l.Radius));
                     area.LightPosition = l.Position;//mousePosWorld; // Set the light position
+                    if (MapManager.GetTileTypeFromWorldPosition(l.Position) == TileType.Wall)
+                    {
+                        area.LightPosition = new Vector2D(area.LightPosition.X, MapManager.GetTileAt(l.Position).Position.Y + MapManager.GetTileSpacing());
+                    }
                     area.BeginDrawingShadowCasters(); // Start drawing to the light rendertarget
                     DrawWallsRelativeToLight(xStart, xEnd, yStart, yEnd, area); // Draw all shadowcasting stuff here in black
                     area.EndDrawingShadowCasters(); // End drawing to the light rendertarget

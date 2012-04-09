@@ -243,8 +243,8 @@ namespace ClientServices.UserInterface
         {
             var renderList = from IGuiComponent comp in _components
                              where comp.IsVisible()
-                             orderby comp.ZDepth ascending
                              orderby comp.Focus ascending
+                             orderby comp.ZDepth ascending
                              select comp;
 
             foreach (var component in renderList)

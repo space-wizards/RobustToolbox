@@ -147,6 +147,10 @@ namespace ClientServices.State.States
             combo.Update();
             combo.Position = new Point(hotbar.ClientArea.Right - combo.ClientArea.Width + 5, hotbar.Position.Y - combo.ClientArea.Height - 5);
             UserInterfaceManager.AddComponent(combo);
+
+            var healthPanel = new HealthPanel();
+            healthPanel.Position = new Point(hotbar.ClientArea.Right + 4, hotbar.Position.Y + 11);
+            UserInterfaceManager.AddComponent(healthPanel);
         }
 
         public void Shutdown()

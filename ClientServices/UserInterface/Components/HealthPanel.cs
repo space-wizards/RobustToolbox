@@ -86,6 +86,7 @@ namespace ClientServices.UserInterface.Components
                 float _health = comp.GetHealth();
 
                 healthPct = comp.GetHealth() / comp.GetMaxHealth();
+                if (float.IsNaN(healthPct)) healthPct = 1; //This can happen when the components are not ready yet.
 
                 interpCol = ColorInterpolator.InterpolateBetween(ColCritical, ColHealthy, healthPct);
                 healthPc.Text.Text = Math.Round((healthPct * 100)).ToString() + "%";
@@ -105,8 +106,6 @@ namespace ClientServices.UserInterface.Components
 
         private void RenderBlip()
         {
-            
-
             int x_off = 25;
 
             int half = (int)(healthMeterInner.Width / 2.5f);

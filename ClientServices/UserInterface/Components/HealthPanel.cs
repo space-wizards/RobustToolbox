@@ -114,7 +114,7 @@ namespace ClientServices.UserInterface.Components
             int blipMaxArea = 90;
 
             int blipUp = 45;
-            int blipDown = 56;
+            int blipDown = 57;
 
             Gorgon.CurrentRenderTarget.BlendingMode = BlendingModes.Modulated;
             for (int i = blipStart; i < (blipStart + blipWidth); i++)

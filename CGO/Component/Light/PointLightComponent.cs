@@ -30,7 +30,7 @@ namespace CGO
             _light = IoCManager.Resolve<ILightManager>().CreateLight();
             IoCManager.Resolve<ILightManager>().AddLight(_light);
 
-            _light.SetRadius(512);
+            _light.SetRadius(1024);
             _light.SetColor(255, 253, 255, 240);
             _light.Move(Owner.Position + _lightOffset);
             Owner.OnMove += OnMove;

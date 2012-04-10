@@ -13,5 +13,6 @@ namespace ClientInterfaces.Lighting
         void SetRadius(int Radius);
         void SetColor(int a, int r, int g, int b);
         void SetColor(Color color);
+        ILightArea LightArea { get; }
     }
 }

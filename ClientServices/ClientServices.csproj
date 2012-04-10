@@ -154,6 +154,7 @@
     <Compile Include="UserInterface\Inventory\InventorySlotUi.cs" />
     <Compile Include="UserInterface\Inventory\InventoryViewer.cs" />
     <Compile Include="UserInterface\UserInterfaceManager.cs" />
+    <Compile Include="Utility\Rand.cs" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\CGO\ClientGameObject.csproj">

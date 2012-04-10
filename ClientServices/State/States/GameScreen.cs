@@ -613,8 +613,8 @@ namespace ClientServices.State.States
 
             int xS = System.Math.Max(0, centerTile.X - (ScreenWidthTiles / 2) - 4);
             int yS = System.Math.Max(0, centerTile.Y - (ScreenHeightTiles / 2) - 4);
-            int xE = System.Math.Min(xStart + ScreenWidthTiles + 4, MapManager.GetMapWidth() - 1);
-            int yE = System.Math.Min(yStart + ScreenHeightTiles + 4, MapManager.GetMapHeight() - 1);
+            int xE = System.Math.Min(xS + ScreenWidthTiles + 4, MapManager.GetMapWidth() - 1);
+            int yE = System.Math.Min(yS + ScreenHeightTiles + 4, MapManager.GetMapHeight() - 1);
 
             ClientServices.Map.Tiles.Tile t;
             for (int x = xS; x <= xE; x++)

@@ -18,7 +18,7 @@ namespace ClientServices.UserInterface.Components
     public class Chatbox : GuiComponent
     {
         private const int MaxHistory = 20;
-        private const int MaxLines = 20;
+        private const int MaxLines = 10;
         private const int MaxLinePixelLength = 450;
 
         private readonly IResourceManager _resourceManager;
@@ -64,8 +64,6 @@ namespace ClientServices.UserInterface.Components
 
             _textInputLabel = new Label("", "CALIBRI", _resourceManager)
                                 {
-                                    DrawBorder = true,
-                                    BorderColor = Color.DimGray,
                                     Text =
                                         {
                                             Size = new Size(ClientArea.Width - 10, 12),

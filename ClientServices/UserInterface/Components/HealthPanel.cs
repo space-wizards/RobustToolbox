@@ -36,8 +36,8 @@ namespace ClientServices.UserInterface.Components
 
         Color interpCol = Color.Transparent;
 
-        private float blipArea = 0;
-        private readonly int blipAreaWidth = 15;
+        int blipStart = 0;
+        int blipWidth = 15;
 
         private float healthPct = 0;
 
@@ -73,7 +73,9 @@ namespace ClientServices.UserInterface.Components
             healthMeterBg.Position = new Vector2D(Position.X + x_inner, Position.Y + y_inner);
             healthMeterOverlay.Position = new Vector2D(Position.X + x_inner, Position.Y + y_inner);
             healthMeterGrid.Position = new Vector2D(Position.X + x_inner, Position.Y + y_inner);
+
             ClientArea = Rectangle.Round(panelBG.AABB);
+
             healthMeterInner = new Rectangle(Position.X + x_inner + dec_inner, Position.Y + y_inner + dec_inner, (int)(healthMeterOverlay.Width - (2 * dec_inner)), (int)(healthMeterOverlay.Height - (2 * dec_inner)));
             healthPc.Position = new Point(healthMeterInner.X + 5, (int)(healthMeterInner.Y + (healthMeterInner.Height / 2f) - (healthPc.ClientArea.Height / 2f)) - 2);
             healthPc.Update();
@@ -106,29 +108,32 @@ namespace ClientServices.UserInterface.Components
 
         private void RenderBlip()
         {
-            int x_off = 25;
+            int x_off = 38;
+            int y_off = 17;
 
-            int half = (int)(healthMeterInner.Width / 2.5f);
+            int blipMaxArea = 100;
 
-            float blipCount = healthMeterInner.X + x_off + blipArea;
+            int blipUp = 45;
+            int blipDown = 57;
 
-            Gorgon.CurrentRenderTarget.BlendingMode = BlendingModes.ColorAdditive;
-            while (blipCount <= (healthMeterInner.X + x_off + blipArea) + blipAreaWidth)
+            Gorgon.CurrentRenderTarget.BlendingMode = BlendingModes.Modulated;
+            for (int i = blipStart; i < (blipStart + blipWidth); i++)
             {
-                float blipHeight = Math.Abs((half + healthMeterInner.X + x_off) - blipCount) * healthPct;
-                float alpha = Math.Max(Math.Min((half / blipHeight) * 15, 255) * Math.Max(healthPct, 0.10f),0);
+                float sweepPct = (float)i / (blipStart + blipWidth);
+
+                float alpha = Math.Min(Math.Max((1 - (Math.Abs((blipMaxArea / 2f) - i) / (blipMaxArea / 2f))) * (280f * sweepPct), 0f), 255f);
                 _backgroundSprite.Color = Color.FromArgb((int)alpha, Color.FloralWhite);
-                _backgroundSprite.Draw(new Rectangle((int)blipCount, (int)Math.Min(healthMeterInner.Y + blipHeight, (blipCount >= healthMeterInner.X + x_off + half ? healthMeterInner.Y + healthMeterInner.Height / 2f : healthMeterInner.Y + healthMeterInner.Height / 3f)) + 5 + (int)(10 - (10 * healthPct)), 2, 2));
-                if (++blipCount > (healthMeterInner.X + x_off + blipArea) + blipAreaWidth)
-                {
-                    _backgroundSprite.Color = Color.FromArgb(100, Color.White);
-                    _backgroundSprite.Draw(new Rectangle((int)blipCount, (int)Math.Min(healthMeterInner.Y + blipHeight, (blipCount >= healthMeterInner.X + x_off + half ? healthMeterInner.Y + healthMeterInner.Height / 2f : healthMeterInner.Y + healthMeterInner.Height / 3f)) + 5 + (int)(10 - (10 * healthPct)), 2, 2));
-                }
+
+                float blipHeightUp = Math.Max(((blipUp - Math.Abs(blipUp - i)) / (float)blipUp) - 0.80f, 0f);
+                float blipHeightDown = Math.Max(((blipDown - Math.Abs(blipDown - i)) / (float)blipDown) - 0.93f, 0f);
+
+                if (i <= blipMaxArea) _backgroundSprite.Draw(new Rectangle(healthMeterInner.X + x_off + i,
+                    healthMeterInner.Y + y_off - (int)((blipHeightUp * 65) * ((healthPct > 0f) ? Math.Max(healthPct, 0.25f) : 0)) + (int)((blipHeightDown * 65) * ((healthPct > 0f) ? Math.Max(healthPct, 0.45f) : 0)),
+                    2, 2));
             }
             Gorgon.CurrentRenderTarget.BlendingMode = BlendingModes.None;
 
-            if ((blipArea + 1.3f) >= 100) blipArea = 0;
-            else blipArea += 1.3f;
+            if (++blipStart > blipMaxArea) blipStart = 0;
         }
 
         public override void Resize()

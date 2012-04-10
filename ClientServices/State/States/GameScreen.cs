@@ -150,7 +150,13 @@ namespace ClientServices.State.States
 
             var healthPanel = new HealthPanel();
             healthPanel.Position = new Point(hotbar.ClientArea.Right + 4, hotbar.Position.Y + 11);
+            healthPanel.Update();
             UserInterfaceManager.AddComponent(healthPanel);
+
+            var targetingUi = new TargetingGui();
+            targetingUi.Update();
+            targetingUi.Position = new Point(healthPanel.ClientArea.Right - 1, healthPanel.ClientArea.Bottom - targetingUi.ClientArea.Height);
+            UserInterfaceManager.AddComponent(targetingUi);
         }
 
         public void Shutdown()

@@ -1,0 +1,40 @@
+﻿using System;
+using ClientInterfaces.Utility;
+
+namespace ClientServices.Utility
+{
+    public class Rand : IRand
+    {
+        private Random rand;
+
+        public Rand()
+        {
+            rand = new Random(DateTime.Now.Millisecond);
+        }
+        
+        public int Next()
+        {
+            return rand.Next();
+        }
+
+        public int Next(int maxValue)
+        {
+            return rand.Next(maxValue);
+        }
+
+        public int Next(int minValue, int maxValue)
+        {
+            return rand.Next(minValue, maxValue);
+        }
+
+        public void NextBytes(byte[] buffer)
+        {
+            rand.NextBytes(buffer);
+        }
+
+        public double NextDouble()
+        {
+            return rand.NextDouble();
+        }
+    }
+}

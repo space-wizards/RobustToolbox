@@ -124,7 +124,8 @@ namespace ClientServices.UserInterface
 
         public void RemoveComponent(IGuiComponent component)
         {
-            _components.Remove(component);
+            if(_components.Contains(component))
+                _components.Remove(component);
         }
 
         /// <summary>

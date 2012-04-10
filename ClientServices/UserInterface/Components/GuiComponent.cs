@@ -6,6 +6,8 @@ using ClientInterfaces.UserInterface;
 using ClientServices.Player;
 using SS13_Shared;
 using GorgonLibrary.InputDevices;
+using SS13.IoC;
+using ClientInterfaces.UserInterface;
 
 namespace ClientServices.UserInterface.Components
 {
@@ -57,6 +59,8 @@ namespace ClientServices.UserInterface.Components
 
         public virtual void Dispose()
         {
+            IUserInterfaceManager _userInterfaceManager = IoCManager.Resolve<IUserInterfaceManager>();
+            _userInterfaceManager.RemoveComponent(this);
             GC.SuppressFinalize(this);
         }
 

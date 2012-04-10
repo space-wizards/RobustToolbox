@@ -205,22 +205,49 @@ namespace ClientServices.UserInterface.Inventory
             equipment.DispatchEquip(dropped.Uid); //Serverside equip component will equip and remove from hands.
         }
 
+        public override void ComponentUpdate(params object[] args)
+        {
+            switch ((ComboGuiMessage)args[0])
+            {
+                case ComboGuiMessage.ToggleShowPage:
+                    int page = (int)args[1];
+                    if (page == _currentTab) _showTabbedWindow = !_showTabbedWindow;
+                    else
+                    {
+                        _showTabbedWindow = true;
+                        ActivateTab(page);
+                    }
+                    break;
+            }
+        }
+
+        public void ActivateTab(int tabNum)
+        {
+            switch (tabNum)
+            {
+                case 1://Equip
+                    _currentTab = 1; 
+                    break;
+                case 2://Status
+                    if (_playerManager.ControlledEntity != null) //TEMPORARY SOLUTION.
+                    {
+                        var resEntity = _playerManager.ControlledEntity;
+                        var entStats = (EntityStatsComp)resEntity.GetComponent(ComponentFamily.EntityStats);
+                        entStats.PullFullUpdate();
+                    }
+                    _currentTab = 2;
+                    break;
+                case 3://Craft
+                    _currentTab = 3;
+                    break;
+            }
+        }
+
         void TabClicked(SimpleImageButton sender)
         {
-            if (sender == _tabEquip) _currentTab = 1;
-            if (sender == _tabHealth)
-            {
-                if (_playerManager.ControlledEntity != null) //TEMPORARY SOLUTION.
-                {
-                    var resEntity = _playerManager.ControlledEntity;
-                    var entStats = (EntityStatsComp)resEntity.GetComponent(ComponentFamily.EntityStats);
-                    entStats.PullFullUpdate();
-                }
-                _currentTab = 2;
-            }
-            if (sender == _tabCraft) _currentTab = 3;
-            _craftStatus.Text = "Status"; //Handle the resetting better.
-            _craftStatus.Color = Color.White;
+            if (sender == _tabEquip) ActivateTab(1);
+            if (sender == _tabHealth) ActivateTab(2);
+            if (sender == _tabCraft) ActivateTab(3);
         }
 
         void ComboOpenClicked(SimpleImageButton sender) //!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!

@@ -23,6 +23,7 @@
         CraftSuccess,
         CraftItemsMissing,
         CraftAlreadyCrafting,
-        CraftNoRecipe
+        CraftNoRecipe,
+        ToggleShowPage
     }
 }

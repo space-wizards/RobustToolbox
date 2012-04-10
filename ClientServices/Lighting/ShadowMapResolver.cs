@@ -8,14 +8,14 @@ using ClientInterfaces.Resource;
 
 namespace SS3D.LightTest
 {
-    enum ShadowmapSize
+    public enum ShadowmapSize
     {
         Size128 = 6,
         Size256 = 7,
         Size512 = 8,
         Size1024 = 9,
     }
-    class ShadowMapResolver
+    public class ShadowMapResolver
     {
         private readonly IResourceManager _resourceManager;
         

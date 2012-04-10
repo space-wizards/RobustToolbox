@@ -51,6 +51,8 @@ namespace ClientServices.State.States
         LightArea lightArea512;
         LightArea lightArea1024;
         RenderImage screenShadows;
+        RenderImage shadowIntermediate;
+        private RenderImage shadowBlendIntermediate;
         private FXShader lightBlendShader;
         private RenderImage _sceneTarget;
 
@@ -184,6 +186,10 @@ namespace ClientServices.State.States
             lightArea1024 = new LightArea(ShadowmapSize.Size1024);
             screenShadows = new RenderImage("screenShadows", Gorgon.CurrentClippingViewport.Width, Gorgon.CurrentClippingViewport.Height, ImageBufferFormats.BufferRGB888A8);
             screenShadows.UseDepthBuffer = false;
+            shadowIntermediate = new RenderImage("shadowIntermediate", Gorgon.CurrentClippingViewport.Width, Gorgon.CurrentClippingViewport.Height, ImageBufferFormats.BufferRGB888A8);
+            shadowIntermediate.UseDepthBuffer = false;
+            shadowBlendIntermediate = new RenderImage("shadowBlendIntermediate", Gorgon.CurrentClippingViewport.Width, Gorgon.CurrentClippingViewport.Height, ImageBufferFormats.BufferRGB888A8);
+            shadowBlendIntermediate.UseDepthBuffer = false;
             lightBlendShader = IoCManager.Resolve<IResourceManager>().GetShader("lightblend");
 
             playerVision = IoCManager.Resolve<ILightManager>().CreateLight();
@@ -434,7 +440,7 @@ namespace ClientServices.State.States
 
                 foreach(ILight l in lights)
                 {
-                    LightArea area = GetLightArea(RadiusToShadowMapSize(l.Radius));
+                    /*LightArea area = GetLightArea(RadiusToShadowMapSize(l.Radius));
                     area.LightPosition = l.Position;//mousePosWorld; // Set the light position
                     if (MapManager.GetTileTypeFromWorldPosition(l.Position) == TileType.Wall)
                     {
@@ -444,8 +450,11 @@ namespace ClientServices.State.States
                     DrawWallsRelativeToLight(xStart, xEnd, yStart, yEnd, area); // Draw all shadowcasting stuff here in black
                     area.EndDrawingShadowCasters(); // End drawing to the light rendertarget
                     shadowMapResolver.ResolveShadows(area.renderTarget.Image, area.renderTarget, area.LightPosition); // Calc shadows
-
-                    Gorgon.CurrentRenderTarget = screenShadows; // Set to shadow rendertarget
+                    */
+                    CalculateLightArea(l, xStart, yStart);
+                    var area = (LightArea) l.LightArea;
+                    Gorgon.CurrentRenderTarget = shadowIntermediate; // Set to shadow rendertarget
+                    shadowIntermediate.Clear(Color.Black);
 
                     //Draw the shadow to the shadows target.
                     blitPos = new Vector2D((area.LightPosition.X - area.LightAreaSize.X * 0.5f) - WindowOrigin.X,
@@ -456,6 +465,16 @@ namespace ClientServices.State.States
                     area.renderTarget.Height, l.Color, BlitterSizeMode.Crop); // Draw the lights effects
                     area.renderTarget.SourceBlend = AlphaBlendOperation.SourceAlpha; //reset blend mode
                     area.renderTarget.DestinationBlend = AlphaBlendOperation.InverseSourceAlpha; //reset blend mode
+                    
+                    Gorgon.CurrentRenderTarget = shadowBlendIntermediate;
+                    Gorgon.CurrentShader = lightBlendShader.Techniques["PreLightBlend"];
+                    lightBlendShader.Parameters["LightTexture"].SetValue(shadowIntermediate.Image);
+                    lightBlendShader.Parameters["SceneTexture"].SetValue(screenShadows.Image);
+                    lightBlendShader.Parameters["AmbientLight"].SetValue(new Vector4D(0, 0, 0, 1));
+                    screenShadows.Image.Blit(0, 0, screenShadows.Width, screenShadows.Height, Color.White, BlitterSizeMode.Crop); // Blit the shadow image on top of the screen
+                    Gorgon.CurrentShader = null;
+                    Gorgon.CurrentRenderTarget = screenShadows;
+                    shadowBlendIntermediate.Image.Blit(0,0, screenShadows.Width, screenShadows.Height, Color.White, BlitterSizeMode.Crop);
                 }
 
                 #region Vision testing stuff
@@ -524,6 +543,23 @@ namespace ClientServices.State.States
 
         #region Lighting
 
+        private void CalculateLightArea(ILight l, int xStart, int yStart)
+        {
+            var area = l.LightArea;
+            if (area.Calculated)
+                return;
+            area.LightPosition = l.Position;//mousePosWorld; // Set the light position
+            if (MapManager.GetTileTypeFromWorldPosition(l.Position) == TileType.Wall)
+            {
+                area.LightPosition = new Vector2D(area.LightPosition.X, MapManager.GetTileAt(l.Position).Position.Y + MapManager.GetTileSpacing() - 5);
+            }
+            area.BeginDrawingShadowCasters(); // Start drawing to the light rendertarget
+            DrawWallsRelativeToLight(xStart, 0, yStart, 0, area); // Draw all shadowcasting stuff here in black
+            area.EndDrawingShadowCasters(); // End drawing to the light rendertarget
+            shadowMapResolver.ResolveShadows(area.renderTarget.Image, area.renderTarget, area.LightPosition); // Calc shadows
+            area.Calculated = true;
+        }
+        
         private ShadowmapSize RadiusToShadowMapSize(int Radius)
         {
              switch(Radius)
@@ -559,7 +595,7 @@ namespace ClientServices.State.States
         }
 
         // Draws all walls in the area around the light relative to it, and in black (test code, not pretty)
-        private void DrawWallsRelativeToLight(int xStart, int xEnd, int yStart, int yEnd, LightArea area)
+        private void DrawWallsRelativeToLight(int xStart, int xEnd, int yStart, int yEnd, ILightArea area)
         {
             System.Drawing.Point centerTile = MapManager.GetTileArrayPositionFromWorldPosition(area.LightPosition);
 

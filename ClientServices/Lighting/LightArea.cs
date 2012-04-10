@@ -2,23 +2,26 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using ClientInterfaces.Lighting;
+using ClientInterfaces.Utility;
 using GorgonLibrary;
 using GorgonLibrary.Graphics;
+using SS13.IoC;
 
 namespace SS3D.LightTest
 {
-    class LightArea
+    public class LightArea : ILightArea
     {
         public RenderImage renderTarget { get; private set; }
         public Vector2D LightPosition { get; set; }
         public Vector2D LightAreaSize { get; set; }
+        public bool Calculated { get; set; }
 
         public LightArea(ShadowmapSize size)
         {
             int baseSize = 2 << (int)size;
             LightAreaSize = new Vector2D(baseSize, baseSize);
-            renderTarget = new RenderImage("lightTest" + baseSize, baseSize, baseSize, ImageBufferFormats.BufferRGB888A8);
-
+            renderTarget = new RenderImage("lightTest" + baseSize + IoCManager.Resolve<IRand>().Next(100000,999999), baseSize, baseSize, ImageBufferFormats.BufferRGB888A8);
         }
 
         public Vector2D ToRelativePosition(Vector2D worldPosition)

@@ -132,11 +132,12 @@ namespace ClientServices.State.States
             //UserInterfaceManager.AddComponent(new StatPanelComponent(ConfigurationManager.GetPlayerName(), PlayerManager, NetworkManager, ResourceManager));
 
             var statusBar = new StatusEffectBar(ResourceManager, PlayerManager);
-            statusBar.Position = new Point(Gorgon.Screen.Width - 200, 10);
+            statusBar.Position = new Point(Gorgon.Screen.Width - 800, 10);
             UserInterfaceManager.AddComponent(statusBar);
 
             var hotbar = new Hotbar(ResourceManager);
             hotbar.Position = new Point(5, Gorgon.Screen.Height - hotbar.ClientArea.Height - 5);
+            hotbar.Update();
             UserInterfaceManager.AddComponent(hotbar);
 
             _handsGui = new HandsGui();
@@ -149,7 +150,7 @@ namespace ClientServices.State.States
             UserInterfaceManager.AddComponent(combo);
 
             var healthPanel = new HealthPanel();
-            healthPanel.Position = new Point(hotbar.ClientArea.Right + 4, hotbar.Position.Y + 11);
+            healthPanel.Position = new Point(hotbar.ClientArea.Right - 1, hotbar.Position.Y + 11);
             healthPanel.Update();
             UserInterfaceManager.AddComponent(healthPanel);
 
@@ -157,6 +158,51 @@ namespace ClientServices.State.States
             targetingUi.Update();
             targetingUi.Position = new Point(healthPanel.ClientArea.Right - 1, healthPanel.ClientArea.Bottom - targetingUi.ClientArea.Height);
             UserInterfaceManager.AddComponent(targetingUi);
+
+            var inventoryButton = new SimpleImageButton("button_inv", ResourceManager);
+            inventoryButton.Position = new Point(hotbar.Position.X + 172, hotbar.Position.Y + 2);
+            inventoryButton.Update();
+            inventoryButton.Clicked += new SimpleImageButton.SimpleImageButtonPressHandler(inventoryButton_Clicked);
+            UserInterfaceManager.AddComponent(inventoryButton);
+
+            var statusButton = new SimpleImageButton("button_status", ResourceManager);
+            statusButton.Position = new Point(inventoryButton.ClientArea.Right , inventoryButton.Position.Y);
+            statusButton.Update();
+            statusButton.Clicked += new SimpleImageButton.SimpleImageButtonPressHandler(statusButton_Clicked);
+            UserInterfaceManager.AddComponent(statusButton);
+
+            var craftButton = new SimpleImageButton("button_craft", ResourceManager);
+            craftButton.Position = new Point(statusButton.ClientArea.Right , statusButton.Position.Y);
+            craftButton.Update();
+            craftButton.Clicked += new SimpleImageButton.SimpleImageButtonPressHandler(craftButton_Clicked);
+            UserInterfaceManager.AddComponent(craftButton);
+
+            var menuButton = new SimpleImageButton("button_menu", ResourceManager);
+            menuButton.Position = new Point(craftButton.ClientArea.Right , craftButton.Position.Y);
+            menuButton.Update();
+            menuButton.Clicked += new SimpleImageButton.SimpleImageButtonPressHandler(menuButton_Clicked);
+            UserInterfaceManager.AddComponent(menuButton);
+        }
+
+        void menuButton_Clicked(SimpleImageButton sender)
+        {
+            UserInterfaceManager.DisposeAllComponents<MenuWindow>(); //Remove old ones.
+            UserInterfaceManager.AddComponent(new MenuWindow()); //Create a new one.
+        }
+
+        void craftButton_Clicked(SimpleImageButton sender)
+        {
+            UserInterfaceManager.ComponentUpdate(GuiComponentType.ComboGui, ComboGuiMessage.ToggleShowPage, 3);
+        }
+
+        void statusButton_Clicked(SimpleImageButton sender)
+        {
+            UserInterfaceManager.ComponentUpdate(GuiComponentType.ComboGui, ComboGuiMessage.ToggleShowPage, 2);
+        }
+
+        void inventoryButton_Clicked(SimpleImageButton sender)
+        {
+            UserInterfaceManager.ComponentUpdate(GuiComponentType.ComboGui, ComboGuiMessage.ToggleShowPage, 1);
         }
 
         public void Shutdown()
@@ -550,12 +596,14 @@ namespace ClientServices.State.States
                 message.Write((byte)NetMessage.ForceRestart);
                 NetworkManager.SendMessage(message, NetDeliveryMethod.ReliableUnordered);
             }
+            if (e.Key == KeyboardKeys.Escape)
+            {
+                UserInterfaceManager.DisposeAllComponents<MenuWindow>(); //Remove old ones.
+                UserInterfaceManager.AddComponent(new MenuWindow()); //Create a new one.
+            }
             if (e.Key == KeyboardKeys.F9)
             {
-                UserInterfaceManager.DisposeAllComponents<PlayerActionsWindow>(); //Remove old ones.
-                PlayerActionComp actComp = (PlayerActionComp)PlayerManager.ControlledEntity.GetComponent(ComponentFamily.PlayerActions);
-                if(actComp != null)
-                    UserInterfaceManager.AddComponent(new PlayerActionsWindow(new Size(150, 150), ResourceManager, actComp)); //Create a new one.
+                UserInterfaceManager.ToggleMoveMode();
             }
             if (e.Key == KeyboardKeys.F10)
             {
@@ -569,9 +617,10 @@ namespace ClientServices.State.States
             }
             if (e.Key == KeyboardKeys.F12)
             {
-                var message = NetworkManager.CreateMessage();
-                message.Write((byte)NetMessage.RequestAdminPlayerlist);
-                NetworkManager.SendMessage(message, NetDeliveryMethod.ReliableUnordered);
+                UserInterfaceManager.DisposeAllComponents<PlayerActionsWindow>(); //Remove old ones.
+                PlayerActionComp actComp = (PlayerActionComp)PlayerManager.ControlledEntity.GetComponent(ComponentFamily.PlayerActions);
+                if (actComp != null)
+                    UserInterfaceManager.AddComponent(new PlayerActionsWindow(new Size(150, 150), ResourceManager, actComp)); //Create a new one.
             }
 
             PlayerManager.KeyDown(e.Key);

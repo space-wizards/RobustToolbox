@@ -54,6 +54,14 @@ namespace ClientServices.UserInterface
         }
 
         /// <summary>
+        ///  Toggles UI element move mode.
+        /// </summary>
+        public void ToggleMoveMode()
+        {
+            moveMode = !moveMode;
+        }
+
+        /// <summary>
         ///  Enters targeting mode for given action.
         /// </summary>
         public void StartTargeting(IPlayerAction act)

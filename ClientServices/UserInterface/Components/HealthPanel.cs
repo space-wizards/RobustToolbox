@@ -51,7 +51,7 @@ namespace ClientServices.UserInterface.Components
             healthMeterOverlay = _resMgr.GetSprite("healthMeterOverlay");
             healthMeterGrid = _resMgr.GetSprite("healthMeterGrid");
             panelBG = _resMgr.GetSprite("healthBg");
-            _backgroundSprite = _resMgr.GetSprite("1pxwhite");
+            _backgroundSprite = _resMgr.GetSprite("blip");
 
             healthPc = new Label("100", "CALIBRI", _resMgr);
             healthPc.Text.ShadowOffset = new Vector2D(1, 1);
@@ -111,25 +111,25 @@ namespace ClientServices.UserInterface.Components
             int x_off = 38;
             int y_off = 17;
 
-            int blipMaxArea = 100;
+            int blipMaxArea = 90;
 
             int blipUp = 45;
-            int blipDown = 57;
+            int blipDown = 56;
 
             Gorgon.CurrentRenderTarget.BlendingMode = BlendingModes.Modulated;
             for (int i = blipStart; i < (blipStart + blipWidth); i++)
             {
                 float sweepPct = (float)i / (blipStart + blipWidth);
 
-                float alpha = Math.Min(Math.Max((1 - (Math.Abs((blipMaxArea / 2f) - i) / (blipMaxArea / 2f))) * (280f * sweepPct), 0f), 255f);
-                _backgroundSprite.Color = Color.FromArgb((int)alpha, Color.FloralWhite);
+                float alpha = Math.Min(Math.Max((1 - (Math.Abs((blipMaxArea / 2f) - i) / (blipMaxArea / 2f))) * (300f * sweepPct), 0f), 255f);
+                _backgroundSprite.Color = Color.FromArgb((int)alpha, ColorInterpolator.InterpolateBetween(Color.Orange, Color.LawnGreen, healthPct));
 
                 float blipHeightUp = Math.Max(((blipUp - Math.Abs(blipUp - i)) / (float)blipUp) - 0.80f, 0f);
                 float blipHeightDown = Math.Max(((blipDown - Math.Abs(blipDown - i)) / (float)blipDown) - 0.93f, 0f);
 
                 if (i <= blipMaxArea) _backgroundSprite.Draw(new Rectangle(healthMeterInner.X + x_off + i,
-                    healthMeterInner.Y + y_off - (int)((blipHeightUp * 65) * ((healthPct > 0f) ? Math.Max(healthPct, 0.25f) : 0)) + (int)((blipHeightDown * 65) * ((healthPct > 0f) ? Math.Max(healthPct, 0.45f) : 0)),
-                    2, 2));
+                    healthMeterInner.Y + y_off - (int)((blipHeightUp * 65) * ((healthPct > 0f) ? Math.Max(healthPct, 0.30f) : 0)) + (int)((blipHeightDown * 65) * ((healthPct > 0f) ? Math.Max(healthPct, 0.45f) : 0)),
+                    3, 3));
             }
             Gorgon.CurrentRenderTarget.BlendingMode = BlendingModes.None;
 

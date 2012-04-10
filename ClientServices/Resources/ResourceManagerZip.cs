@@ -146,7 +146,7 @@ namespace ClientServices.Resources
             StreamUtils.Copy(zipStream, memStream, byteBuffer);
             memStream.Position = 0;
 
-            FXShader loadedShader = FXShader.FromStream(ResourceName, memStream, ShaderCompileOptions.None, (int)memStream.Length, false);
+            FXShader loadedShader = FXShader.FromStream(ResourceName, memStream, ShaderCompileOptions.Debug, (int)memStream.Length, false);
 
             memStream.Close();
             zipStream.Close();

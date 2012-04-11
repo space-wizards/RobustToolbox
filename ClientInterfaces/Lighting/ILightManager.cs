@@ -9,7 +9,10 @@ namespace ClientInterfaces.Lighting
 {
     public interface ILightManager
     {
-        void ApplyLightsToSprite(List<ILight> lights, Sprite sprite, Vector2D screenOffset);
-        ILight CreateLight(IMapManager mapManager, Color color, int range, LightState lightState, Vector2D position);
+        ILight CreateLight();
+        void AddLight(ILight light);
+        void RemoveLight(ILight light);
+        ILight[] lightsInRadius(Vector2D point, float radius);
+        void RecalculateLights();
     }
 }

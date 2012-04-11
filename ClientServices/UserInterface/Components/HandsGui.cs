@@ -226,16 +226,24 @@ namespace ClientServices.UserInterface.Components
                         {
                             if (hands.HandSlots.ContainsValue(_userInterfaceManager.DragInfo.DragEntity))
                             {
-                                if (hands.HandSlots.First(x => x.Value == _userInterfaceManager.DragInfo.DragEntity).Key == Hand.Left) //From me to me, ignore.
+                                if (hands.HandSlots.First(x => x.Value == _userInterfaceManager.DragInfo.DragEntity).Key == Hand.Left) //From me to me, dropped back on same hand.
                                     return false;
 
                                 hands.SendDropEntity(_userInterfaceManager.DragInfo.DragEntity); //Other hand to me.
 
                             }
                             equipment.DispatchUnEquipItemToSpecifiedHand(_userInterfaceManager.DragInfo.DragEntity.Uid, Hand.Left);
-                            _userInterfaceManager.DragInfo.Reset();
-                            return true;
                         }
+                        else if(hands.HandSlots[Hand.Left] == _userInterfaceManager.DragInfo.DragEntity)
+                        {
+                            if (_userInterfaceManager.DragInfo.Duration < 400)
+                            {
+                                _userInterfaceManager.DragInfo.DragEntity.SendMessage(this, ComponentMessageType.ClickedInHand,
+                                                                                        _playerManager.ControlledEntity.Uid);
+                            }
+                        }
+                        _userInterfaceManager.DragInfo.Reset();
+                        return true;
                     }
                     else if (handR.Contains(new Point((int)e.Position.X, (int)e.Position.Y)))
                     {
@@ -243,16 +251,25 @@ namespace ClientServices.UserInterface.Components
                         {
                             if (hands.HandSlots.ContainsValue(_userInterfaceManager.DragInfo.DragEntity))
                             {
-                                if (hands.HandSlots.First(x => x.Value == _userInterfaceManager.DragInfo.DragEntity).Key == Hand.Right) //From me to me, ignore.
+                                if (hands.HandSlots.First(x => x.Value == _userInterfaceManager.DragInfo.DragEntity).Key == Hand.Right) //From me to me, dropped back on same hand
                                     return false;
 
                                 hands.SendDropEntity(_userInterfaceManager.DragInfo.DragEntity); //Other hand to me.
                             }
                             equipment.DispatchUnEquipItemToSpecifiedHand(_userInterfaceManager.DragInfo.DragEntity.Uid, Hand.Right);
-                            _userInterfaceManager.DragInfo.Reset();
-                            return true;
                         }
-                    } 
+                        else if (hands.HandSlots[Hand.Right] == _userInterfaceManager.DragInfo.DragEntity)
+                        {
+                            if (_userInterfaceManager.DragInfo.Duration < 400)
+                            {
+                                _userInterfaceManager.DragInfo.DragEntity.SendMessage(this, ComponentMessageType.ClickedInHand,
+                                                                                        _playerManager.ControlledEntity.Uid);
+                            }
+                        }
+                        _userInterfaceManager.DragInfo.Reset();
+                        return true;
+                    }
+                    
                 }
             }
             return false;

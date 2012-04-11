@@ -1,4 +1,5 @@
-﻿using CGO;
+﻿using System;
+using CGO;
 using ClientInterfaces.GOC;
 using ClientInterfaces.UserInterface;
 using ClientServices.Helpers;
@@ -17,6 +18,8 @@ namespace ClientServices.UserInterface
         public IPlayerAction DragAction { get; private set; }
         public bool IsEntity { get; private set;}
         public bool IsActive { get { return Active(); } }
+        private DateTime _dragStarted = DateTime.Now;
+        public double Duration { get { return (DateTime.Now - _dragStarted).TotalMilliseconds; } }
 
         public void Reset()
         {
@@ -41,6 +44,7 @@ namespace ClientServices.UserInterface
             DragEntity = entity;
             DragSprite = Utilities.GetSpriteComponentSprite(entity);
             IsEntity = true;
+            _dragStarted = DateTime.Now;
         }
 
         public void StartDrag(IPlayerAction action)
@@ -49,6 +53,7 @@ namespace ClientServices.UserInterface
             DragAction = action;
             DragSprite = IoCManager.Resolve<IResourceManager>().GetSprite(action.Icon);
             IsEntity = false;
+            _dragStarted = DateTime.Now;
         }
     }
 }

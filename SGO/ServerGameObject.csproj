@@ -63,6 +63,7 @@
     <Compile Include="Component\EntityStats\EntityStatsCompS.cs" />
     <Compile Include="Component\Inventory\Inventory.cs" />
     <Compile Include="Component\Item\ItemCapability\HealthScanCapability.cs" />
+    <Compile Include="Component\Light\LightComponent.cs" />
     <Compile Include="Component\Objectives\ObjectivesComponent.cs" />
     <Compile Include="Component\PlayerActionComp\PlayerActionCompS.cs" />
     <Compile Include="Component\StatusEffects\StatusEffectComp.cs" />

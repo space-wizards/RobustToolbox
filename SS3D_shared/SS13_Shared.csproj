@@ -113,6 +113,7 @@
     <Compile Include="GO\ComponentReplyMessage.cs" />
     <Compile Include="GO\Crafting\CraftingEntry.cs" />
     <Compile Include="GO\Server\ServerDelegates.cs" />
+    <Compile Include="Lighting.cs" />
     <Compile Include="Objectives\ObjectiveParameterType.cs" />
     <Compile Include="Objectives\ObjectiveType.cs" />
     <Compile Include="PlayerActionEnum.cs" />

@@ -50,6 +50,18 @@ namespace CGO
             Owner.OnMove += OnMove;*/
         }
 
+        public override void HandleNetworkMessage(IncomingEntityComponentMessage message)
+        {
+            base.HandleNetworkMessage(message);
+            var type = (ComponentMessageType) message.MessageParameters[0];
+            switch(type)
+            {
+                case ComponentMessageType.SetLightState:
+                    SetState((LightState)message.MessageParameters[1]);
+                    break;
+            }
+        }
+
         public override void SetParameter(ComponentParameter parameter)
         {
             switch (parameter.MemberName)
@@ -79,6 +91,11 @@ namespace CGO
                     _mask = (string) parameter.Parameter;
                     break;
             }
+        }
+
+        protected void SetState(LightState state)
+        {
+            _light.SetState(state);
         }
 
         public override void OnRemove()

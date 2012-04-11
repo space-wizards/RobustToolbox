@@ -506,17 +506,6 @@ namespace ClientServices.State.States
 
                 foreach (ILight l in lights)
                 {
-                    /*LightArea area = GetLightArea(RadiusToShadowMapSize(l.Radius));
-                    area.LightPosition = l.Position;//mousePosWorld; // Set the light position
-                    if (MapManager.GetTileTypeFromWorldPosition(l.Position) == TileType.Wall)
-                    {
-                        area.LightPosition = new Vector2D(area.LightPosition.X, MapManager.GetTileAt(l.Position).Position.Y + MapManager.GetTileSpacing() - 5);
-                    }
-                    area.BeginDrawingShadowCasters(); // Start drawing to the light rendertarget
-                    DrawWallsRelativeToLight(xStart, xEnd, yStart, yEnd, area); // Draw all shadowcasting stuff here in black
-                    area.EndDrawingShadowCasters(); // End drawing to the light rendertarget
-                    shadowMapResolver.ResolveShadows(area.renderTarget.Image, area.renderTarget, area.LightPosition); // Calc shadows
-                    */
                     CalculateLightArea(l, xStart, yStart);
                     var area = (LightArea)l.LightArea;
                     Gorgon.CurrentRenderTarget = shadowIntermediate; // Set to shadow rendertarget
@@ -530,7 +519,8 @@ namespace ClientServices.State.States
                     area.renderTarget.DestinationBlend = AlphaBlendOperation.One; //Additive blending
                     Gorgon.CurrentShader = lightBlendShader.Techniques["MaskLight"];
                     lightBlendShader.Parameters["LightTexture"].SetValue(area.renderTarget.Image);
-                    lightBlendShader.Parameters["DiffuseColor"].SetValue(l.GetColorVec());
+                    var diffusecolor = l.LightState == LightState.On ? l.GetColorVec() : Vector4D.Zero;
+                    lightBlendShader.Parameters["DiffuseColor"].SetValue(diffusecolor);
                     lightBlendShader.Parameters["MaskTexture"].SetValue(area.Mask.Image);
                     lightBlendShader.Parameters["MaskProps"].SetValue(area.MaskProps);
                     area.renderTarget.Blit(blitPos.X, blitPos.Y, area.renderTarget.Width,

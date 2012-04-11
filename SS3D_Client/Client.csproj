@@ -191,6 +191,7 @@
     </Content>
     <Content Include="EntityTemplates\Lights.xml">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      <SubType>Designer</SubType>
     </Content>
     <Content Include="EntityTemplates\Lockers.xml">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>

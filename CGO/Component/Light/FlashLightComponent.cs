@@ -8,8 +8,6 @@ using SS13.IoC;
 using SS13_Shared;
 using SS13_Shared.GO;
 
-
-
 namespace CGO
 {
     public class FlashLightComponent : PointLightComponent
@@ -30,6 +28,13 @@ namespace CGO
             }
 
             return reply;
+        }
+
+        public override void OnAdd(IEntity owner)
+        {
+            base.OnAdd(owner);
+
+            _light.SetState(LightState.Off);
         }
 
         private void LightMoveDir(Constants.MoveDirs movedir)

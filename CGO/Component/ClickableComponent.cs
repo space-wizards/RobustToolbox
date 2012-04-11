@@ -13,6 +13,22 @@ namespace CGO
             get { return ComponentFamily.Click; }
         }
 
+        public override ComponentReplyMessage RecieveMessage(object sender, ComponentMessageType type, params object[] list)
+        {
+            var reply =  base.RecieveMessage(sender, type, list);
+            if (sender == this)
+                return reply;
+            
+            switch(type)
+            {
+                case ComponentMessageType.ClickedInHand:
+                    DispatchInHandClick((int)list[0]);
+                    break;
+            }
+
+            return reply;
+        }
+
         public bool CheckClick(PointF worldPos, out int drawdepth)
         {
             var reply = Owner.SendMessage(this, ComponentFamily.Renderable, ComponentMessageType.CheckSpriteClick, worldPos);
@@ -29,7 +45,12 @@ namespace CGO
 
         public void DispatchClick(int userUID)
         {
-            Owner.SendComponentNetworkMessage(this, Lidgren.Network.NetDeliveryMethod.ReliableOrdered, userUID);
+            Owner.SendComponentNetworkMessage(this, Lidgren.Network.NetDeliveryMethod.ReliableOrdered, ComponentMessageType.Click, userUID);
+        }
+
+        public void DispatchInHandClick(int userUID)
+        {
+            Owner.SendComponentNetworkMessage(this, Lidgren.Network.NetDeliveryMethod.ReliableOrdered, ComponentMessageType.ClickedInHand, userUID);
         }
     }
 }

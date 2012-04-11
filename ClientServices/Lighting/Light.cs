@@ -17,10 +17,12 @@ namespace ClientServices.Lighting
         public Color Color { get; private set; }
         public int Radius { get; private set; }
         public ILightArea LightArea { get; private set; }
+        public LightState LightState { get; private set; }
 
         public Light()
         {
             Radius = 256;
+            LightState = LightState.On;
         }
 
         public void Move(Vector2D toPosition)
@@ -73,6 +75,12 @@ namespace ClientServices.Lighting
         public void SetMask(string mask)
         {
             LightArea.SetMask(mask);
+        }
+
+        public void SetState(LightState state)
+        {
+            LightState = state;
+            LightArea.Calculated = false;
         }
 
     }

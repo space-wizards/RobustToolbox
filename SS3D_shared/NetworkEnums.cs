@@ -128,13 +128,7 @@
         Open,
         Broken
     }
-
-    public enum LightState
-    {
-        Off = 0,
-        On
-    }
-
+    
     public enum Direction
     {
         North = 0,

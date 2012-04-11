@@ -183,7 +183,9 @@ namespace SS13_Shared.GO
         WearerIsDead,
         Live,
         WearerIsAlive,
-        KilledEntity
+        KilledEntity,
+        ClickedInHand,
+        SetLightState
     }
 
     public enum Hand

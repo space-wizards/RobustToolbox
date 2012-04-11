@@ -10,6 +10,7 @@ namespace ClientInterfaces.UserInterface
         Sprite DragSprite { get; }
         bool IsEntity { get; }
         bool IsActive { get; }
+        double Duration { get; }
 
         void Reset();
 

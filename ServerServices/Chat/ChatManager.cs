@@ -1,4 +1,5 @@
 ﻿using System.Collections.Generic;
+using System.Linq;
 using Lidgren.Network;
 using ServerInterfaces;
 using ServerInterfaces.Chat;
@@ -31,6 +32,11 @@ namespace SS13_Server.Modules.Chat
             if (IoCManager.Resolve<IPlayerManager>().GetSessionByConnection(message.SenderConnection).attachedEntity != null)
                 entityId = IoCManager.Resolve<IPlayerManager>().GetSessionByConnection(message.SenderConnection).attachedEntity.Uid;
 
+            bool hasChannelIdentifier = false;
+            if(channel != ChatChannel.Lobby)
+                channel = DetectChannel(text, out hasChannelIdentifier);
+            if (hasChannelIdentifier)
+                text = text.Substring(1);
             text = text.Trim(); // Remove whitespace
             if (text[0] == '/')
                 ProcessCommand(text, name, channel, entityId, message.SenderConnection);
@@ -38,9 +44,35 @@ namespace SS13_Server.Modules.Chat
                 SendChatMessage(channel, text, name, entityId);
         }
 
+        private ChatChannel DetectChannel(string message, out bool hasChannelIdentifier)
+        {
+            hasChannelIdentifier = false;
+            var channel = ChatChannel.Ingame;
+            switch(message[0])
+            {
+                case '[':
+                    channel = ChatChannel.OOC;
+                    hasChannelIdentifier = true;
+                    break;
+                case ':':
+                    channel = ChatChannel.Radio;
+                    hasChannelIdentifier = true;
+                    break;
+                case '@':
+                    channel = ChatChannel.Emote;
+                    hasChannelIdentifier = true;
+                    break;
+            }
+            return channel;
+        }
+
         public void SendChatMessage(ChatChannel channel, string text, string name, int entityId)
         {
-            string fullmsg = name + ": " + text;
+            string fullmsg = text;
+            if (!string.IsNullOrEmpty(name) && channel == ChatChannel.Emote)
+                fullmsg = name + " " + text;
+            else if (channel == ChatChannel.Ingame || channel == ChatChannel.OOC || channel == ChatChannel.Radio || channel == ChatChannel.Lobby)
+                fullmsg = name + ": " + text;
 
             NetOutgoingMessage message = IoCManager.Resolve<ISS13NetServer>().CreateMessage();
 
@@ -49,7 +81,38 @@ namespace SS13_Server.Modules.Chat
             message.Write(fullmsg);
             message.Write(entityId);
 
-            IoCManager.Resolve<ISS13NetServer>().SendToAll(message);
+            switch(channel)
+            {
+                case ChatChannel.Server:
+                case ChatChannel.OOC:
+                case ChatChannel.Radio:
+                case ChatChannel.Player:
+                case ChatChannel.Default:
+                    IoCManager.Resolve<ISS13NetServer>().SendToAll(message);
+                    break;
+                case ChatChannel.Damage:
+                case ChatChannel.Ingame:
+                case ChatChannel.Visual:
+                case ChatChannel.Emote:
+                    SendToPlayersInRange(message, entityId);
+                    break;
+                case ChatChannel.Lobby:
+                    SendToLobby(message);
+                    break;
+            }
+
+        }
+
+        private void SendToPlayersInRange(NetOutgoingMessage message, int entityId)
+        {
+            var recipients = IoCManager.Resolve<IPlayerManager>().GetPlayersInRange(_serverMain.EntityManager.GetEntity(entityId).Position, 512).Select(p => p.ConnectedClient).ToList();
+            IoCManager.Resolve<ISS13NetServer>().SendToMany(message, recipients);
+        }
+
+        private void SendToLobby(NetOutgoingMessage message)
+        {
+            var recipients = IoCManager.Resolve<IPlayerManager>().GetPlayersInLobby().Select(p => p.ConnectedClient).ToList();
+            IoCManager.Resolve<ISS13NetServer>().SendToMany(message, recipients);
         }
 
         /// <summary>

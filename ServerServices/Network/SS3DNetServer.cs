@@ -1,4 +1,5 @@
-﻿using Lidgren.Network;
+﻿using System.Collections.Generic;
+using Lidgren.Network;
 using SS13.IoC;
 using ServerInterfaces.Configuration;
 using ServerInterfaces.Network;
@@ -19,6 +20,11 @@ namespace ServerServices.Network
         public void SendMessage(NetOutgoingMessage message, NetConnection client)
         {
             SendMessage(message, client, NetDeliveryMethod.ReliableOrdered);
+        }
+
+        public void SendToMany(NetOutgoingMessage message, IList<NetConnection> recipients)
+        {
+            SendMessage(message, recipients, NetDeliveryMethod.ReliableOrdered, 0);
         }
 
         public static NetPeerConfiguration LoadNetPeerConfig()

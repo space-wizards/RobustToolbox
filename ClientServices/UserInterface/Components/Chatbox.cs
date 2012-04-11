@@ -79,7 +79,10 @@ namespace ClientServices.UserInterface.Components
                                 {ChatChannel.Server, Color.Blue},
                                 {ChatChannel.Player, Color.Green},
                                 {ChatChannel.Lobby, Color.White},
-                                {ChatChannel.Ingame, Color.Green}
+                                {ChatChannel.Ingame, Color.Green},
+                                {ChatChannel.OOC, Color.White},
+                                {ChatChannel.Emote, Color.Cyan},
+                                {ChatChannel.Visual, Color.Yellow},
                             };
         }
 

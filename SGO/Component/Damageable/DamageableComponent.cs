@@ -129,6 +129,19 @@ namespace SGO
         {
             _damageHistory.Add(new DamageHistoryItem(damager, amount, damType));
         }
+
+        public override void SetParameter(ComponentParameter parameter)
+        {
+            base.SetParameter(parameter);
+
+            switch(parameter.MemberName)
+            {
+                case "MaxHealth":
+                    maxHealth = int.Parse((string) parameter.Parameter);
+                    currentHealth = maxHealth;
+                    break;
+            }
+        }
     }
 
     public struct DamageHistoryItem

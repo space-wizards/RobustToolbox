@@ -36,6 +36,14 @@ namespace ClientServices.Lighting
         {
             return new Light();
         }
+
+        public void RecalculateLights()
+        {
+            foreach(var l in _lights)
+            {
+                l.LightArea.Calculated = false;
+            }
+        }
     }
 
 }

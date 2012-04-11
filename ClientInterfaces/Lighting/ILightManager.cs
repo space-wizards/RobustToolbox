@@ -13,5 +13,6 @@ namespace ClientInterfaces.Lighting
         void AddLight(ILight light);
         void RemoveLight(ILight light);
         ILight[] lightsInRadius(Vector2D point, float radius);
+        void RecalculateLights();
     }
 }

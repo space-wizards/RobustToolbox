@@ -48,6 +48,11 @@ namespace ClientServices.Lighting
             Color = color;
         }
 
+        public Vector4D GetColorVec()
+        {
+            return new Vector4D((float)Color.R / 255, (float)Color.G / 255, (float)Color.B / 255, (float)Color.A / 255);
+        }
+
         public static ShadowmapSize RadiusToShadowMapSize(int Radius)
         {
             switch (Radius)
@@ -63,6 +68,11 @@ namespace ClientServices.Lighting
                 default:
                     return ShadowmapSize.Size1024;
             }
+        }
+
+        public void SetMask(string mask)
+        {
+            LightArea.SetMask(mask);
         }
 
     }

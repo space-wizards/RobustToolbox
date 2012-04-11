@@ -76,6 +76,7 @@
     <Compile Include="Component\Input\ContextMenuComponent.cs" />
     <Compile Include="Component\Inventory\Inventory.cs" />
     <Compile Include="Component\Item\BasicItemComponent.cs" />
+    <Compile Include="Component\Light\FlashLightComponent.cs" />
     <Compile Include="Component\Light\PointLightComponent.cs" />
     <Compile Include="Component\Mover\KeyBindingMoverComponent.cs" />
     <Compile Include="Component\Mover\NetworkMoverComponent.cs" />

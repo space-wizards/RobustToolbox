@@ -1,4 +1,5 @@
-﻿using System.Drawing;
+﻿using System;
+using System.Drawing;
 using ClientInterfaces.GOC;
 using ClientInterfaces.Lighting;
 using ClientInterfaces.Map;
@@ -14,9 +15,12 @@ namespace CGO
     public class PointLightComponent : GameObjectComponent
     {
         //Contains a standard light
-        private ILight _light;
+        protected ILight _light;
+        private int _lightRadius = 512;
         private Vector2D _lightOffset = new Vector2D(0, 0);
-
+        private Vector3D _lightColor = new Vector3D(190,190,190);
+        protected string _mask = "";
+        
         public override ComponentFamily Family
         {
             get { return ComponentFamily.Light; }
@@ -30,9 +34,10 @@ namespace CGO
             _light = IoCManager.Resolve<ILightManager>().CreateLight();
             IoCManager.Resolve<ILightManager>().AddLight(_light);
 
-            _light.SetRadius(1024);
-            _light.SetColor(255, 193, 194, 180);
+            _light.SetRadius(_lightRadius);
+            _light.SetColor(255, (int)_lightColor.X, (int)_lightColor.Y, (int)_lightColor.Z);
             _light.Move(Owner.Position + _lightOffset);
+            _light.SetMask(_mask);
             Owner.OnMove += OnMove;
             
             /*_light = IoCManager.Resolve<ILightManager>().CreateLight(IoCManager.Resolve<IMapManager>(),
@@ -58,6 +63,21 @@ namespace CGO
                 case "lightoffsety":
                     _lightOffset.Y = float.Parse((string)parameter.Parameter, System.Globalization.CultureInfo.InvariantCulture);
                     break;
+                case "lightradius":
+                    _lightRadius = int.Parse((string) parameter.Parameter);
+                    break;
+                case "lightColorR":
+                    _lightColor.X = int.Parse((string) parameter.Parameter);
+                    break;
+                case "lightColorG":
+                    _lightColor.Y = int.Parse((string)parameter.Parameter);
+                    break;
+                case "lightColorB":
+                    _lightColor.Z = int.Parse((string)parameter.Parameter);
+                    break;
+                case "mask":
+                    _mask = (string) parameter.Parameter;
+                    break;
             }
         }
 
@@ -75,6 +95,10 @@ namespace CGO
             //_light.UpdatePosition(Owner.Position + _lightOffset);
         }
 
+        protected void SetMask(string mask)
+        {
+            _light.SetMask(mask);
+        }
 
     }
 }

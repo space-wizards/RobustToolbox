@@ -528,6 +528,11 @@ namespace ClientServices.State.States
                         (area.LightPosition.Y - area.LightAreaSize.Y * 0.5f) - WindowOrigin.Y); // Find light draw pos
                     area.renderTarget.SourceBlend = AlphaBlendOperation.One; //Additive blending
                     area.renderTarget.DestinationBlend = AlphaBlendOperation.One; //Additive blending
+                    Gorgon.CurrentShader = lightBlendShader.Techniques["MaskLight"];
+                    lightBlendShader.Parameters["LightTexture"].SetValue(area.renderTarget.Image);
+                    lightBlendShader.Parameters["DiffuseColor"].SetValue(l.GetColorVec());
+                    lightBlendShader.Parameters["MaskTexture"].SetValue(area.Mask.Image);
+                    lightBlendShader.Parameters["MaskProps"].SetValue(area.MaskProps);
                     area.renderTarget.Blit(blitPos.X, blitPos.Y, area.renderTarget.Width,
                     area.renderTarget.Height, l.Color, BlitterSizeMode.Crop); // Draw the lights effects
                     area.renderTarget.SourceBlend = AlphaBlendOperation.SourceAlpha; //reset blend mode
@@ -602,7 +607,7 @@ namespace ClientServices.State.States
                 lightBlendShader.Parameters["PlayerViewTexture"].SetValue(playerOcclusionTarget.Image);
                 lightBlendShader.Parameters["LightTexture"].SetValue(screenShadows.Image);
                 lightBlendShader.Parameters["SceneTexture"].SetValue(_sceneTarget.Image);
-                lightBlendShader.Parameters["AmbientLight"].SetValue(new Vector4D(.10f, .10f, 0.10f, 1));
+                lightBlendShader.Parameters["AmbientLight"].SetValue(new Vector4D(.05f, .05f, 0.05f, 1));
                 screenShadows.Image.Blit(0, 0, screenShadows.Width, screenShadows.Height, Color.White, BlitterSizeMode.Crop); // Blit the shadow image on top of the screen
                 Gorgon.CurrentShader = null;
                 //Render the placement manager shit

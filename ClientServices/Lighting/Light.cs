@@ -7,63 +7,72 @@ using ClientInterfaces.Map;
 using ClientServices.Map.Tiles;
 using GorgonLibrary;
 using SS13_Shared;
+using SS3D.LightTest;
 
 namespace ClientServices.Lighting
 {
     public class Light : ILight
     {
-        private readonly IMapManager _mapManager;
-        private readonly IList<Tile> _tiles = new List<Tile>();
-
-        public Color Color = Color.PapayaWhip;
-        public float Brightness { get; set; }
-
-        public LightState State;
-
-        #region ILight members
-
         public Vector2D Position { get; private set; }
-        public int Range { get; set; }
-        public void ClearTiles()
+        public Color Color { get; private set; }
+        public int Radius { get; private set; }
+        public ILightArea LightArea { get; private set; }
+
+        public Light()
         {
-            foreach (var t in _tiles)
-            {
-                t.tileLights.Remove(this);
-            }
-            _tiles.Clear(); 
+            Radius = 256;
         }
-        public List<object> GetTiles()
-        { return _tiles.ToList<object>(); }
-        public void AddTile(object tile)
-        { _tiles.Add((Tile)tile); }
 
-        #endregion
-
-        public Light(IMapManager map, Color color, int range, LightState state, Vector2D position)
+        public void Move(Vector2D toPosition)
         {
-            _mapManager = map;
+            Position = toPosition;
+            LightArea.Calculated = false;
+        }
 
-            Position = position;
+        public void SetRadius(int radius)
+        {
+            if (Radius != radius)
+            {
+                Radius = radius;
+                LightArea = (ILightArea)new LightArea(RadiusToShadowMapSize(Radius));
+            }
+        }
+
+        public void SetColor(int a, int r, int g, int b)
+        {
+            Color = Color.FromArgb(a, r, g, b);
+        }
+
+        public void SetColor(Color color)
+        {
             Color = color;
-            Range = range;
-            State = state;
-            Brightness = 1.10f;
-
-            UpdateLight();
         }
 
-        public void UpdateLight()
+        public Vector4D GetColorVec()
         {
-            _mapManager.LightComputeVisibility(Position, this);
+            return new Vector4D((float)Color.R / 255, (float)Color.G / 255, (float)Color.B / 255, (float)Color.A / 255);
         }
 
-        public void UpdatePosition(Vector2D newPosition)
+        public static ShadowmapSize RadiusToShadowMapSize(int Radius)
         {
-            if (Position != newPosition)
+            switch (Radius)
             {
-                Position = newPosition;
-                UpdateLight();
+                case 128:
+                    return ShadowmapSize.Size128;
+                case 256:
+                    return ShadowmapSize.Size256;
+                case 512:
+                    return ShadowmapSize.Size512;
+                case 1024:
+                    return ShadowmapSize.Size1024;
+                default:
+                    return ShadowmapSize.Size1024;
             }
+        }
+
+        public void SetMask(string mask)
+        {
+            LightArea.SetMask(mask);
         }
 
     }

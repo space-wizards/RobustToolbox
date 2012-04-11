@@ -1,17 +1,21 @@
 ﻿using System.Collections.Generic;
+using System.Drawing;
 using GorgonLibrary;
 
 namespace ClientInterfaces.Lighting
 {
     public interface ILight
     {
-        float Brightness { get; set; }
+        int Radius {get;}
+        Color Color { get; }
         Vector2D Position { get; }
-        int Range { get; set; }
-        List<object> GetTiles();
-        void ClearTiles();
-        void AddTile(object tile);
-        void UpdateLight();
-        void UpdatePosition(Vector2D newPosition);
+        void Move(Vector2D toPosition);
+        void SetRadius(int Radius);
+        void SetColor(int a, int r, int g, int b);
+        void SetColor(Color color);
+        ILightArea LightArea { get; }
+
+        void SetMask(string _mask);
+        Vector4D GetColorVec();
     }
 }

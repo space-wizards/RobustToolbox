@@ -34,8 +34,11 @@ namespace SGO.Component.Item.ItemCapability
             }
             else
                 throw new NotImplementedException("Actor has no session or No actor component that returns a session");
-            
 
+            //Damage the item that is doing the damage.
+            owner.Owner.SendMessage(this, ComponentMessageType.Damage, owner.Owner, 5, DamageType.Collateral);
+
+            //Damage the target.
             if (target.HasComponent(ComponentFamily.Damageable))
             {
                 target.SendMessage(this, ComponentMessageType.Damage, owner.Owner, damageAmount, damType, targetedArea);

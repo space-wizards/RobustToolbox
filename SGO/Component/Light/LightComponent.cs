@@ -3,8 +3,10 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using Lidgren.Network;
+using SS13.IoC;
 using SS13_Shared;
 using SS13_Shared.GO;
+using ServerInterfaces.Chat;
 
 namespace SGO
 {
@@ -53,6 +55,9 @@ namespace SGO
                 case ComponentMessageType.ClickedInHand:
                     HandleClickedInHand();
                     break;
+                case ComponentMessageType.Die:
+                    SetState(LightState.Broken);
+                    break;
             }
 
             return reply;
@@ -60,20 +65,24 @@ namespace SGO
 
         private void HandleClickedInHand()
         {
-            bool statechanged = false;
             switch (_state)
             {
                 case LightState.On:
-                    _state = LightState.Off;
-                    statechanged = true;
+                    SetState(LightState.Off);
                     break;
                 case LightState.Off:
-                    _state = LightState.On;
-                    statechanged = true;
+                    SetState(LightState.On);
+                    break;
+                case LightState.Broken:
+                    IoCManager.Resolve<IChatManager>().SendChatMessage(ChatChannel.Damage, "You fiddle with it, but nothing happens. It must be broken.", Owner.Name, Owner.Uid);
                     break;
             }
-            if(statechanged)
-                SendState();
+        }
+
+        private void SetState(LightState state)
+        {
+            _state = state;
+            SendState();
         }
 
         private void SendState()

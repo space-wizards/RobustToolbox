@@ -13,6 +13,11 @@
         <Parameters>
           <Parameter name="lightoffsetx" type="float" value="0" />
           <Parameter name="lightoffsety" type="float" value="0" />
+          <Parameter name="lightradius" type="int" value="1024" />
+          <Parameter name="lightColorR" type="int" value="220" />
+          <Parameter name="lightColorG" type="int" value="220" />
+          <Parameter name="lightColorB" type="int" value="198" />
+          <Parameter name="mask" type="string" value="whitemask" />
         </Parameters>
       </Component>
     </Components>
@@ -27,7 +32,14 @@
       </Component>
       <Component name="ClickableComponent"></Component>
       <Component name="BasicItemComponent"></Component>
-      <Component name="PointLightComponent"></Component>
+      <Component name="FlashLightComponent">
+        <Parameters>
+          <Parameter name="lightradius" type="int" value="512" />
+          <Parameter name="lightColorR" type="int" value="180" />
+          <Parameter name="lightColorG" type="int" value="180" />
+          <Parameter name="lightColorB" type="int" value="140" />
+        </Parameters>
+      </Component>
     </Components>
   </EntityTemplate>
 </EntityTemplates>

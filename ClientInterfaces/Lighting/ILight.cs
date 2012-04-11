@@ -14,5 +14,8 @@ namespace ClientInterfaces.Lighting
         void SetColor(int a, int r, int g, int b);
         void SetColor(Color color);
         ILightArea LightArea { get; }
+
+        void SetMask(string _mask);
+        Vector4D GetColorVec();
     }
 }

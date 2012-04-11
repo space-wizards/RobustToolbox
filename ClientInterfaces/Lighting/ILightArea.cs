@@ -16,6 +16,13 @@ namespace ClientInterfaces.Lighting
         Vector2D ToRelativePosition(Vector2D worldPosition);
         void BeginDrawingShadowCasters();
         void EndDrawingShadowCasters();
+
+        void SetMask(string mask);
+        Sprite Mask { get; set; }
+        bool MaskFlipX { get; set; }
+        bool MaskFlipY { get; set; }
+        bool Rot90 { get; set; }
+        Vector4D MaskProps { get; }
     }
     
 }

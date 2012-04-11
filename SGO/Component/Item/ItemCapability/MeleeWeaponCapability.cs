@@ -42,11 +42,11 @@ namespace SGO.Component.Item.ItemCapability
 
                 string sourceName = sourceActor.Name;
                 string targetName = (sourceActor.Uid == target.Uid) ? "himself" : target.Name;
-                string suffix = (sourceActor.Uid == target.Uid) ? " What a fucking weirdo..." : "";
+                //string suffix = (sourceActor.Uid == target.Uid) ? " What a fucking weirdo..." : "";
                 IoCManager.Resolve<IChatManager>()
                     .SendChatMessage(ChatChannel.Damage,
                                      sourceName + " " + DamTypeMessage(damType) + " " + targetName + " in the " +
-                                     BodyPartMessage(targetedArea) + " with a " + owner.Owner.Name + "!" + suffix,
+                                     BodyPartMessage(targetedArea) + " with a " + owner.Owner.Name + "!",
                                      null, sourceActor.Uid);
                 return true;
             }

@@ -120,6 +120,11 @@
     <Compile Include="UserInterface\Components\Checkbox.cs" />
     <Compile Include="UserInterface\Components\ContextMenu.cs" />
     <Compile Include="UserInterface\Components\ArmorInfoLabel.cs" />
+    <Compile Include="UserInterface\Components\MenuWindow.cs" />
+    <Compile Include="UserInterface\Components\TargetingGui.cs" />
+    <Compile Include="UserInterface\Components\HealthPanel.cs" />
+    <Compile Include="UserInterface\Components\HandsGui.cs" />
+    <Compile Include="UserInterface\Components\TemplateGuiComponent.cs" />
     <Compile Include="UserInterface\Components\HealthScannerWindow.cs" />
     <Compile Include="UserInterface\Components\Hotbar.cs" />
     <Compile Include="UserInterface\Components\HotbarSlot.cs" />
@@ -139,8 +144,6 @@
     <Compile Include="UserInterface\Components\ScrollableContainer.cs" />
     <Compile Include="UserInterface\Components\Scrollbar.cs" />
     <Compile Include="UserInterface\Components\SimpleImageButton.cs" />
-    <Compile Include="UserInterface\Components\StatHealthComponent.cs" />
-    <Compile Include="UserInterface\Components\StatPanel.cs" />
     <Compile Include="UserInterface\Components\TargetingDummy.cs" />
     <Compile Include="UserInterface\Components\TargetingDummyElement.cs" />
     <Compile Include="UserInterface\Components\Textbox.cs" />

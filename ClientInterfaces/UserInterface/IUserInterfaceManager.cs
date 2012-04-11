@@ -25,6 +25,8 @@ namespace ClientInterfaces.UserInterface
         void SelectTarget(object target);
         void CancelTargeting();
 
+        void ToggleMoveMode();
+
         bool KeyDown(KeyboardInputEventArgs e);
         void MouseWheelMove(MouseInputEventArgs e);
         void MouseMove(MouseInputEventArgs e);

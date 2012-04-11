@@ -16,12 +16,14 @@ namespace ClientServices.UserInterface.Components
     class Hotbar : GuiComponent
     {
         private readonly IResourceManager _resourceManager;
+        Sprite hotbarBG;
 
         private GuiComponent[] slots = new GuiComponent[10];
 
         public Hotbar(IResourceManager resourceManager)
         {
             _resourceManager = resourceManager;
+            hotbarBG = resourceManager.GetSprite("main_hotbar");
             createSlots();
             Update();
         }
@@ -63,8 +65,10 @@ namespace ClientServices.UserInterface.Components
 
         public override sealed void Update()
         {
-            int y_dist = 5;
-            int x_pos = 5;
+            hotbarBG.Position = Position;
+
+            int y_dist = 30;
+            int x_pos = 175;
 
             int max_x = 0;
             int max_y = 0;
@@ -75,16 +79,19 @@ namespace ClientServices.UserInterface.Components
                 comp.Update();
                 if (comp.ClientArea.Right > max_x) max_x = comp.ClientArea.Right;
                 if (comp.ClientArea.Bottom > max_y) max_y = comp.ClientArea.Bottom;
-                x_pos += comp.ClientArea.Width + 5;
+                x_pos += comp.ClientArea.Width + 1;
             }
 
-            ClientArea = new Rectangle(Position, new Size((int)max_x - Position.X + 5, (int)max_y - Position.Y + 5));
+            //ClientArea = new Rectangle(Position, new Size((int)max_x - Position.X + 5, (int)max_y - Position.Y + 5));
+            ClientArea = Rectangle.Round(hotbarBG.AABB);
         }
 
         public override void Render()
         {
-            GorgonLibrary.Gorgon.CurrentRenderTarget.FilledRectangle(Position.X, Position.Y, ClientArea.Width, ClientArea.Height, Color.DimGray);
-            GorgonLibrary.Gorgon.CurrentRenderTarget.Rectangle(Position.X, Position.Y, ClientArea.Width, ClientArea.Height, Color.Black);
+            //GorgonLibrary.Gorgon.CurrentRenderTarget.FilledRectangle(Position.X, Position.Y, ClientArea.Width, ClientArea.Height, Color.DimGray);
+            //GorgonLibrary.Gorgon.CurrentRenderTarget.Rectangle(Position.X, Position.Y, ClientArea.Width, ClientArea.Height, Color.Black);
+
+            hotbarBG.Draw();
 
             foreach (GuiComponent comp in slots)
                 comp.Render();

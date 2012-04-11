@@ -60,7 +60,7 @@ namespace CGO
                     break;
             }
 
-            IoCManager.Resolve<IUserInterfaceManager>().ComponentUpdate(GuiComponentType.ComboGui, ComboGuiMessage.UpdateHands);
+            IoCManager.Resolve<IUserInterfaceManager>().ComponentUpdate(GuiComponentType.HandsUi);
         }
 
         public void SendSwitchHands(Hand hand)

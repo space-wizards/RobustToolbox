@@ -442,14 +442,20 @@ namespace ClientServices.State.States
             string message;
             switch (channel)
             {
-                case ChatChannel.Emote:
+                /*case ChatChannel.Emote:
                     message = _entityManager.GetEntity(entityId).Name + " " + text;
                     break;
                 case ChatChannel.Damage:
                     message = text;
+                    break; //Formatting is handled by the server. */
+                case ChatChannel.Ingame:
+                case ChatChannel.Server:
+                case ChatChannel.OOC:
+                case ChatChannel.Radio:
+                    message = "[" + channel + "] " + text;
                     break;
                 default:
-                    message = "[" + channel + "] " + text;
+                    message = text;
                     break;
             }
             _gameChat.AddLine(message, channel);

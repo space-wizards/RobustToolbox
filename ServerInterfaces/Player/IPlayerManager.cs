@@ -1,4 +1,5 @@
 ﻿using Lidgren.Network;
+using SS13_Shared;
 
 namespace ServerInterfaces.Player
 {
@@ -22,5 +23,7 @@ namespace ServerInterfaces.Player
         IPlayerSession GetSessionByIp(string ipKick);
 
         void DetachAll();
+        IPlayerSession[] GetPlayersInLobby();
+        IPlayerSession[] GetPlayersInRange(Vector2 position, int range);
     }
 }

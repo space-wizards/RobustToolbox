@@ -10,6 +10,7 @@ namespace ServerInterfaces.Network
     {
         void SendToAll(NetOutgoingMessage message);
         void SendMessage(NetOutgoingMessage message, NetConnection client);
+        void SendToMany(NetOutgoingMessage message, IList<NetConnection> recipients);
 
         /// <summary>
         /// Send a message to all connections

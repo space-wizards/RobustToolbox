@@ -111,5 +111,19 @@ namespace ServerServices.Player
             }
         }
 
+        public IPlayerSession[] GetPlayersInRange(Vector2 position, int range)
+        {
+            return
+                playerSessions.Values.Where(
+                    x => x.attachedEntity != null && (position - x.attachedEntity.Position).Magnitude < range).ToArray();
+        }
+
+        public IPlayerSession[] GetPlayersInLobby()
+        {
+            return
+                playerSessions.Values.Where(
+                    x => x.status == SessionStatus.InLobby).ToArray();
+        }
+
     }
 }

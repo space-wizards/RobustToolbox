@@ -1,4 +1,5 @@
-﻿using System.Drawing;
+﻿using System;
+using System.Drawing;
 using ClientInterfaces.Collision;
 using ClientInterfaces.Lighting;
 using ClientInterfaces.Resource;
@@ -62,34 +63,175 @@ namespace ClientServices.Map.Tiles.Wall
             }
         }
 
+        private void RenderOccluder(Direction d, Direction from, float x, float y, int tileSpacing)
+        {
+            int bx = 0;
+            int by = 0;
+            float drawX = 0;
+            float drawY = 0;
+            int width = 0;
+            int height = 0;
+            switch(from)
+            {
+                case Direction.North:
+                    by = -2;
+                    break;
+                case Direction.NorthEast:
+                    by = -2;
+                    bx = 2;
+                    break;
+                case Direction.East:
+                    bx = 2;
+                    break;
+                case Direction.SouthEast:
+                    by = 2;
+                    bx = 2;
+                    break;
+                case Direction.South:
+                    by = 2;
+                    break;
+                case Direction.SouthWest:
+                    by = 2;
+                    bx = -2;
+                    break;
+                case Direction.West:
+                    bx = -2;
+                    break;
+                case Direction.NorthWest:
+                    bx = -2;
+                    by = -2;
+                    break;
+            }
+            switch(d)
+            {
+                case Direction.North:
+                    drawX = x;
+                    drawY = y;
+                    width = tileSpacing;
+                    height = 2;
+                    break;
+                case Direction.East:
+                    drawX = x + tileSpacing;
+                    drawY = y;
+                    width = 2;
+                    height = tileSpacing;
+                    break;
+                case Direction.South:
+                    drawX = x;
+                    drawY = y + tileSpacing;
+                    width = tileSpacing;
+                    height = 2;
+                    break;
+                case Direction.West:
+                    drawX = x;
+                    drawY = y;
+                    width = 2;
+                    height = tileSpacing;
+                    break;
+            }
+
+            Gorgon.CurrentRenderTarget.FilledRectangle(drawX + bx, drawY + bx, width + Math.Abs(bx), height + Math.Abs(by), Color.Black);
+        }
+
         public override void RenderPos(float x, float y, int tileSpacing, int lightSize)
         {
-            if (x > (lightSize / 2))
+            int l = lightSize/2;
+            Direction from = Direction.East;
+            if(l < x && l < y)
+                from = Direction.NorthWest;
+            else if (l > x + tileSpacing && l < y)
+                from = Direction.NorthEast;
+            else if (l < x && l > y + tileSpacing)
+                from = Direction.SouthWest;
+            else if (l > x + tileSpacing && l > y + tileSpacing)
+                from = Direction.SouthEast;
+            else if (l < x)
+                from = Direction.West;
+            else if (l > x + tileSpacing)
+                from = Direction.East;
+            else if (l < y)
+                from = Direction.North;
+            else if (l > y + tileSpacing)
+                from = Direction.South;
+            
+            if(l < x)
             {
                 if (surroundingTiles[1].TileType == TileType.Floor || (surroundingTiles[1].TileType == TileType.Wall && surroundingTiles[2].TileType == TileType.Wall))
+                    RenderOccluder(Direction.East, from, x, y, tileSpacing);
+                if (surroundingTiles[2].surroundingTiles[3].TileType == TileType.Wall && surroundingTiles[3].TileType == TileType.Floor)
+                    RenderOccluder(Direction.West, from, x, y, tileSpacing);
+
+                if(l < y)
                 {
-                    Gorgon.CurrentRenderTarget.FilledRectangle(x + tileSpacing, y, 2, tileSpacing, Color.Black);
+                    if (surroundingTiles[2].TileType == TileType.Floor || (surroundingTiles[2].TileType == TileType.Wall && surroundingTiles[0].TileType == TileType.Floor))
+                        RenderOccluder(Direction.North, from, x, y, tileSpacing);
+                }
+                else if (l > y + tileSpacing)
+                {
+                    if (surroundingTiles[0].TileType == TileType.Floor || (surroundingTiles[0].TileType == TileType.Wall && surroundingTiles[2].TileType == TileType.Floor && (l < x + tileSpacing && surroundingTiles[1].TileType != TileType.Wall)))
+                        RenderOccluder(Direction.North, from, x, y, tileSpacing);
+                    if (surroundingTiles[1].TileType == TileType.Wall && surroundingTiles[3].TileType == TileType.Wall)
+                        RenderOccluder(Direction.North, from, x, y, tileSpacing);
+                }
+                else if (l >= y && l <= y + tileSpacing)
+                {
+                    if (surroundingTiles[2].TileType == TileType.Floor || (surroundingTiles[2].TileType == TileType.Wall && surroundingTiles[0].TileType == TileType.Floor))
+                        RenderOccluder(Direction.North, from, x, y, tileSpacing);
+                    if (surroundingTiles[0].TileType == TileType.Floor || (surroundingTiles[0].TileType == TileType.Wall && surroundingTiles[2].TileType == TileType.Floor))
+                        RenderOccluder(Direction.North, from, x, y, tileSpacing);
                 }
             }
-            else if (x < (lightSize / 2))
+            else if (l > x + tileSpacing)
             {
                 if (surroundingTiles[3].TileType == TileType.Floor || (surroundingTiles[3].TileType == TileType.Wall && surroundingTiles[2].TileType == TileType.Wall))
+                    RenderOccluder(Direction.West, from, x, y, tileSpacing); 
+                if (surroundingTiles[2].surroundingTiles[1].TileType == TileType.Wall && surroundingTiles[1].TileType == TileType.Floor)
+                    RenderOccluder(Direction.East, from, x, y, tileSpacing);
+
+                if (l < y)
                 {
-                    Gorgon.CurrentRenderTarget.FilledRectangle(x, y, 2, tileSpacing, Color.Black);
+                    if (surroundingTiles[2].TileType == TileType.Floor || (surroundingTiles[2].TileType == TileType.Wall && surroundingTiles[0].TileType == TileType.Floor))
+                        RenderOccluder(Direction.North, from, x, y, tileSpacing);
+                }
+                else if (l > y + tileSpacing)
+                {
+                    if (surroundingTiles[0].TileType == TileType.Floor || (surroundingTiles[0].TileType == TileType.Wall && surroundingTiles[2].TileType == TileType.Floor && (l < x + tileSpacing && surroundingTiles[1].TileType != TileType.Wall)))
+                        RenderOccluder(Direction.North, from, x, y, tileSpacing);
+                    if (surroundingTiles[1].TileType == TileType.Wall)
+                        RenderOccluder(Direction.North, from, x, y, tileSpacing);
+                }
+                else if (l >= y && l <= y + tileSpacing)
+                {
+                    if (surroundingTiles[2].TileType == TileType.Floor || (surroundingTiles[2].TileType == TileType.Wall && surroundingTiles[0].TileType == TileType.Floor))
+                        RenderOccluder(Direction.North, from, x, y, tileSpacing);
+                    if (surroundingTiles[0].TileType == TileType.Floor || (surroundingTiles[0].TileType == TileType.Wall && surroundingTiles[2].TileType == TileType.Floor))
+                        RenderOccluder(Direction.North, from, x, y, tileSpacing);
                 }
             }
-            if (y > (lightSize / 2))
+            else if (l >= x && l <= x + tileSpacing)
             {
-                if (surroundingTiles[2].TileType == TileType.Floor || (surroundingTiles[2].TileType == TileType.Wall && surroundingTiles[0].TileType == TileType.Floor))
+                if (surroundingTiles[1].TileType == TileType.Floor || (surroundingTiles[1].TileType == TileType.Wall && surroundingTiles[2].TileType == TileType.Wall))
+                    RenderOccluder(Direction.East, from, x, y, tileSpacing);
+                if (surroundingTiles[3].TileType == TileType.Floor || (surroundingTiles[3].TileType == TileType.Wall && surroundingTiles[2].TileType == TileType.Wall))
+                    RenderOccluder(Direction.West, from, x, y, tileSpacing);
+
+                if (l < y)
                 {
-                    Gorgon.CurrentRenderTarget.FilledRectangle(x, y, tileSpacing, 2, Color.Black);
+                    if (surroundingTiles[2].TileType == TileType.Floor || (surroundingTiles[2].TileType == TileType.Wall && surroundingTiles[0].TileType == TileType.Floor))
+                        RenderOccluder(Direction.North, from, x, y, tileSpacing);
                 }
-            }
-            else if (y < (lightSize / 2))
-            {
-                if (surroundingTiles[0].TileType == TileType.Floor || (surroundingTiles[0].TileType == TileType.Wall && surroundingTiles[2].TileType == TileType.Floor))
+                else if (l > y + tileSpacing)
                 {
-                    Gorgon.CurrentRenderTarget.FilledRectangle(x, y, tileSpacing, 2, Color.Black);
+                    if (surroundingTiles[0].TileType == TileType.Floor || (surroundingTiles[0].TileType == TileType.Wall && surroundingTiles[2].TileType == TileType.Floor && (l < x + tileSpacing && surroundingTiles[1].TileType != TileType.Wall)))
+                        RenderOccluder(Direction.North, from, x, y, tileSpacing);
+                    RenderOccluder(Direction.North, from, x, y, tileSpacing);
+                }
+                else if (l >= y && l <= y + tileSpacing)
+                {
+                    if (surroundingTiles[2].TileType == TileType.Floor || (surroundingTiles[2].TileType == TileType.Wall && surroundingTiles[0].TileType == TileType.Floor))
+                        RenderOccluder(Direction.North, from, x, y, tileSpacing);
+                    if (surroundingTiles[0].TileType == TileType.Floor || (surroundingTiles[0].TileType == TileType.Wall && surroundingTiles[2].TileType == TileType.Floor))
+                        RenderOccluder(Direction.North, from, x, y, tileSpacing);
                 }
             }
         }

@@ -137,11 +137,14 @@
 
     public enum Direction
     {
-        East = 0,
+        North = 0,
+        NorthEast,
+        East,
+        SouthEast,
         South,
+        SouthWest,
         West,
-        North,
-        All
+        NorthWest
     }
 
     public enum TileState

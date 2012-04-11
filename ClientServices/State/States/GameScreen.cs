@@ -40,7 +40,7 @@ namespace ClientServices.State.States
         #endregion 
 
         #region Lighting
-        bool bPlayerVision = false;
+        bool bPlayerVision = true;
         ILight playerVision;
 
         QuadRenderer quadRenderer;
@@ -520,8 +520,8 @@ namespace ClientServices.State.States
                     CalculateLightArea(l, xStart, yStart);
                     var area = (LightArea)l.LightArea;
                     Gorgon.CurrentRenderTarget = shadowIntermediate; // Set to shadow rendertarget
-                    shadowIntermediate.Clear(Color.FromArgb(0, 0, 0, 0));
-                    shadowBlendIntermediate.Clear(Color.FromArgb(0, 0, 0, 0));
+                    shadowIntermediate.Clear(Color.FromArgb(0, 0, 0, 1));
+                    shadowBlendIntermediate.Clear(Color.FromArgb(0, 0, 0, 1));
 
                     //Draw the shadow to the shadows target.
                     blitPos = new Vector2D((area.LightPosition.X - area.LightAreaSize.X * 0.5f) - WindowOrigin.X,
@@ -602,7 +602,7 @@ namespace ClientServices.State.States
                 lightBlendShader.Parameters["PlayerViewTexture"].SetValue(playerOcclusionTarget.Image);
                 lightBlendShader.Parameters["LightTexture"].SetValue(screenShadows.Image);
                 lightBlendShader.Parameters["SceneTexture"].SetValue(_sceneTarget.Image);
-                lightBlendShader.Parameters["AmbientLight"].SetValue(new Vector4D(.15f, .15f, 0.17f, 1));
+                lightBlendShader.Parameters["AmbientLight"].SetValue(new Vector4D(.10f, .10f, 0.10f, 1));
                 screenShadows.Image.Blit(0, 0, screenShadows.Width, screenShadows.Height, Color.White, BlitterSizeMode.Crop); // Blit the shadow image on top of the screen
                 Gorgon.CurrentShader = null;
                 //Render the placement manager shit

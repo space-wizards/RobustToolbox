@@ -22,11 +22,9 @@ using Lidgren.Network;
 using SS13.IoC;
 using SS13_Shared;
 using ClientServices.Lighting;
-using SS3D.LightTest;
-
 using SS13_Shared.GO;
 using ClientInterfaces.Lighting;
-
+using SS3D.LightTest;
 
 namespace ClientServices.State.States
 {
@@ -38,6 +36,7 @@ namespace ClientServices.State.States
         //UI Vars
         #region UI Variables
         private Chatbox _gameChat;
+        private HandsGui _handsGui;
         #endregion 
 
         #region Lighting
@@ -93,7 +92,7 @@ namespace ClientServices.State.States
         private Point _screenSize;
         public string SpawnType;
         private bool _editMode;
-   
+
         #region Mouse/Camera stuff
         private DateTime _lastRmbClick = DateTime.Now;
 
@@ -162,18 +161,15 @@ namespace ClientServices.State.States
             _gameChat.TextSubmitted += ChatTextboxTextSubmitted;
             UserInterfaceManager.AddComponent(_gameChat);
 
-            var combo = new HumanComboGui(PlayerManager, NetworkManager, ResourceManager, UserInterfaceManager);
-            combo.Update();
-            combo.Position = new Point(Gorgon.Screen.Width - combo.ClientArea.Width - 3, Gorgon.Screen.Height - combo.ClientArea.Height - 3);
-            UserInterfaceManager.AddComponent(combo);
-            UserInterfaceManager.AddComponent(new StatPanelComponent(ConfigurationManager.GetPlayerName(), PlayerManager, NetworkManager, ResourceManager));
+            //UserInterfaceManager.AddComponent(new StatPanelComponent(ConfigurationManager.GetPlayerName(), PlayerManager, NetworkManager, ResourceManager));
 
             var statusBar = new StatusEffectBar(ResourceManager, PlayerManager);
-            statusBar.Position = new Point(Gorgon.Screen.Width - 200, 10);
+            statusBar.Position = new Point(Gorgon.Screen.Width - 800, 10);
             UserInterfaceManager.AddComponent(statusBar);
 
             var hotbar = new Hotbar(ResourceManager);
-            hotbar.Position = new Point(5, 650);
+            hotbar.Position = new Point(5, Gorgon.Screen.Height - hotbar.ClientArea.Height - 5);
+            hotbar.Update();
             UserInterfaceManager.AddComponent(hotbar);
 
             #region Lighting
@@ -200,6 +196,71 @@ namespace ClientServices.State.States
             playerVision.SetRadius(1024);
             playerVision.Move(Vector2D.Zero);
             #endregion
+
+            _handsGui = new HandsGui();
+            _handsGui.Position = new Point(hotbar.Position.X + 5, hotbar.Position.Y + 7);
+            UserInterfaceManager.AddComponent(_handsGui);
+
+            var combo = new HumanComboGui(PlayerManager, NetworkManager, ResourceManager, UserInterfaceManager);
+            combo.Update();
+            combo.Position = new Point(hotbar.ClientArea.Right - combo.ClientArea.Width + 5, hotbar.Position.Y - combo.ClientArea.Height - 5);
+            UserInterfaceManager.AddComponent(combo);
+
+            var healthPanel = new HealthPanel();
+            healthPanel.Position = new Point(hotbar.ClientArea.Right - 1, hotbar.Position.Y + 11);
+            healthPanel.Update();
+            UserInterfaceManager.AddComponent(healthPanel);
+
+            var targetingUi = new TargetingGui();
+            targetingUi.Update();
+            targetingUi.Position = new Point(healthPanel.ClientArea.Right - 1, healthPanel.ClientArea.Bottom - targetingUi.ClientArea.Height);
+            UserInterfaceManager.AddComponent(targetingUi);
+
+            var inventoryButton = new SimpleImageButton("button_inv", ResourceManager);
+            inventoryButton.Position = new Point(hotbar.Position.X + 172, hotbar.Position.Y + 2);
+            inventoryButton.Update();
+            inventoryButton.Clicked += new SimpleImageButton.SimpleImageButtonPressHandler(inventoryButton_Clicked);
+            UserInterfaceManager.AddComponent(inventoryButton);
+
+            var statusButton = new SimpleImageButton("button_status", ResourceManager);
+            statusButton.Position = new Point(inventoryButton.ClientArea.Right , inventoryButton.Position.Y);
+            statusButton.Update();
+            statusButton.Clicked += new SimpleImageButton.SimpleImageButtonPressHandler(statusButton_Clicked);
+            UserInterfaceManager.AddComponent(statusButton);
+
+            var craftButton = new SimpleImageButton("button_craft", ResourceManager);
+            craftButton.Position = new Point(statusButton.ClientArea.Right , statusButton.Position.Y);
+            craftButton.Update();
+            craftButton.Clicked += new SimpleImageButton.SimpleImageButtonPressHandler(craftButton_Clicked);
+            UserInterfaceManager.AddComponent(craftButton);
+
+            var menuButton = new SimpleImageButton("button_menu", ResourceManager);
+            menuButton.Position = new Point(craftButton.ClientArea.Right , craftButton.Position.Y);
+            menuButton.Update();
+            menuButton.Clicked += new SimpleImageButton.SimpleImageButtonPressHandler(menuButton_Clicked);
+            UserInterfaceManager.AddComponent(menuButton);
+
+        }
+
+        void menuButton_Clicked(SimpleImageButton sender)
+        {
+            UserInterfaceManager.DisposeAllComponents<MenuWindow>(); //Remove old ones.
+            UserInterfaceManager.AddComponent(new MenuWindow()); //Create a new one.
+        }
+
+        void craftButton_Clicked(SimpleImageButton sender)
+        {
+            UserInterfaceManager.ComponentUpdate(GuiComponentType.ComboGui, ComboGuiMessage.ToggleShowPage, 3);
+        }
+
+        void statusButton_Clicked(SimpleImageButton sender)
+        {
+            UserInterfaceManager.ComponentUpdate(GuiComponentType.ComboGui, ComboGuiMessage.ToggleShowPage, 2);
+        }
+
+        void inventoryButton_Clicked(SimpleImageButton sender)
+        {
+            UserInterfaceManager.ComponentUpdate(GuiComponentType.ComboGui, ComboGuiMessage.ToggleShowPage, 1);
         }
 
         public void Shutdown()
@@ -425,9 +486,9 @@ namespace ClientServices.State.States
 
             if (PlayerManager.ControlledEntity != null)
             {
-                
+
                 var centerTile = MapManager.GetTileArrayPositionFromWorldPosition(PlayerManager.ControlledEntity.Position);
-              
+
                 var xStart = Math.Max(0, centerTile.X - (ScreenWidthTiles / 2) - 1);
                 var yStart = Math.Max(0, centerTile.Y - (ScreenHeightTiles / 2) - 1);
                 var xEnd = Math.Min(xStart + ScreenWidthTiles + 2, MapManager.GetMapWidth() - 1);
@@ -435,13 +496,15 @@ namespace ClientServices.State.States
 
                 ClientWindowData.Singleton.UpdateViewPort(PlayerManager.ControlledEntity.Position);
 
+
                 var lights = IoCManager.Resolve<ILightManager>().lightsInRadius(
                     PlayerManager.ControlledEntity.Position, 768f);
 
                 Vector2D blitPos;
                 screenShadows.Clear(Color.Black); // Clear shadow rendertarget
 
-                foreach(ILight l in lights)
+
+                foreach (ILight l in lights)
                 {
                     /*LightArea area = GetLightArea(RadiusToShadowMapSize(l.Radius));
                     area.LightPosition = l.Position;//mousePosWorld; // Set the light position
@@ -455,10 +518,10 @@ namespace ClientServices.State.States
                     shadowMapResolver.ResolveShadows(area.renderTarget.Image, area.renderTarget, area.LightPosition); // Calc shadows
                     */
                     CalculateLightArea(l, xStart, yStart);
-                    var area = (LightArea) l.LightArea;
+                    var area = (LightArea)l.LightArea;
                     Gorgon.CurrentRenderTarget = shadowIntermediate; // Set to shadow rendertarget
-                    shadowIntermediate.Clear(Color.FromArgb(0,0,0,0));
-                    shadowBlendIntermediate.Clear(Color.FromArgb(0,0,0,0));
+                    shadowIntermediate.Clear(Color.FromArgb(0, 0, 0, 0));
+                    shadowBlendIntermediate.Clear(Color.FromArgb(0, 0, 0, 0));
 
                     //Draw the shadow to the shadows target.
                     blitPos = new Vector2D((area.LightPosition.X - area.LightAreaSize.X * 0.5f) - WindowOrigin.X,
@@ -469,7 +532,7 @@ namespace ClientServices.State.States
                     area.renderTarget.Height, l.Color, BlitterSizeMode.Crop); // Draw the lights effects
                     area.renderTarget.SourceBlend = AlphaBlendOperation.SourceAlpha; //reset blend mode
                     area.renderTarget.DestinationBlend = AlphaBlendOperation.InverseSourceAlpha; //reset blend mode
-                    
+
                     Gorgon.CurrentRenderTarget = shadowBlendIntermediate;
                     Gorgon.CurrentShader = lightBlendShader.Techniques["PreLightBlend"];
                     lightBlendShader.Parameters["LightTexture"].SetValue(shadowIntermediate.Image);
@@ -478,7 +541,7 @@ namespace ClientServices.State.States
                     screenShadows.Image.Blit(0, 0, screenShadows.Width, screenShadows.Height, Color.White, BlitterSizeMode.Crop); // Blit the shadow image on top of the screen
                     Gorgon.CurrentShader = null;
                     Gorgon.CurrentRenderTarget = screenShadows;
-                    shadowBlendIntermediate.Image.Blit(0,0, screenShadows.Width, screenShadows.Height, Color.White, BlitterSizeMode.Crop);
+                    shadowBlendIntermediate.Image.Blit(0, 0, screenShadows.Width, screenShadows.Height, Color.White, BlitterSizeMode.Crop);
                 }
 
                 #region Vision testing stuff
@@ -514,8 +577,7 @@ namespace ClientServices.State.States
                 //Set rendertarget to draw the rest of the scene
                 Gorgon.CurrentRenderTarget = _sceneTarget;
                 Gorgon.CurrentRenderTarget.Clear(Color.Black);
-                
-                // Draw rest of scene
+
                 DrawGround(xStart, xEnd, yStart, yEnd, centerTile);
                 ComponentManager.Singleton.Render(0);
 
@@ -539,18 +601,13 @@ namespace ClientServices.State.States
                 Gorgon.CurrentShader = lightBlendShader.Techniques["FinalLightBlend"];
                 lightBlendShader.Parameters["PlayerViewTexture"].SetValue(playerOcclusionTarget.Image);
                 lightBlendShader.Parameters["LightTexture"].SetValue(screenShadows.Image);
-                lightBlendShader.Parameters["SceneTexture"].SetValue(_sceneTarget.Image); 
+                lightBlendShader.Parameters["SceneTexture"].SetValue(_sceneTarget.Image);
                 lightBlendShader.Parameters["AmbientLight"].SetValue(new Vector4D(.15f, .15f, 0.17f, 1));
                 screenShadows.Image.Blit(0, 0, screenShadows.Width, screenShadows.Height, Color.White, BlitterSizeMode.Crop); // Blit the shadow image on top of the screen
                 Gorgon.CurrentShader = null;
-
-
-
                 //Render the placement manager shit
                 PlacementManager.Render();
             }
-
-            Gorgon.CurrentRenderTarget = null;
         }
 
         #region Lighting
@@ -631,7 +688,6 @@ namespace ClientServices.State.States
                 }
             }
         }
-
         // Draws all walls normally (test code, not pretty)
         private void DrawWalls(int xStart, int xEnd, int yStart, int yEnd, Point centerTile, bool rel)
         {
@@ -668,7 +724,6 @@ namespace ClientServices.State.States
         }
 
         #endregion
-
         // Not currently used.
         public void FormResize()
         {
@@ -715,12 +770,14 @@ namespace ClientServices.State.States
                 message.Write((byte)NetMessage.ForceRestart);
                 NetworkManager.SendMessage(message, NetDeliveryMethod.ReliableUnordered);
             }
+            if (e.Key == KeyboardKeys.Escape)
+            {
+                UserInterfaceManager.DisposeAllComponents<MenuWindow>(); //Remove old ones.
+                UserInterfaceManager.AddComponent(new MenuWindow()); //Create a new one.
+            }
             if (e.Key == KeyboardKeys.F9)
             {
-                UserInterfaceManager.DisposeAllComponents<PlayerActionsWindow>(); //Remove old ones.
-                PlayerActionComp actComp = (PlayerActionComp)PlayerManager.ControlledEntity.GetComponent(ComponentFamily.PlayerActions);
-                if(actComp != null)
-                    UserInterfaceManager.AddComponent(new PlayerActionsWindow(new Size(150, 150), ResourceManager, actComp)); //Create a new one.
+                UserInterfaceManager.ToggleMoveMode();
             }
             if (e.Key == KeyboardKeys.F10)
             {
@@ -734,9 +791,10 @@ namespace ClientServices.State.States
             }
             if (e.Key == KeyboardKeys.F12)
             {
-                var message = NetworkManager.CreateMessage();
-                message.Write((byte)NetMessage.RequestAdminPlayerlist);
-                NetworkManager.SendMessage(message, NetDeliveryMethod.ReliableUnordered);
+                UserInterfaceManager.DisposeAllComponents<PlayerActionsWindow>(); //Remove old ones.
+                PlayerActionComp actComp = (PlayerActionComp)PlayerManager.ControlledEntity.GetComponent(ComponentFamily.PlayerActions);
+                if (actComp != null)
+                    UserInterfaceManager.AddComponent(new PlayerActionsWindow(new Size(150, 150), ResourceManager, actComp)); //Create a new one.
             }
 
             PlayerManager.KeyDown(e.Key);

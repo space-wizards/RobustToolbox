@@ -184,6 +184,7 @@ namespace ClientServices.UserInterface.Components
 
         public override bool MouseWheelMove(MouseInputEventArgs e)
         {
+            if (_entityList.MouseWheelMove(e)) return true;
             if (base.MouseWheelMove(e)) return true;
             return false;
         }

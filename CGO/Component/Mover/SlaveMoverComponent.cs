@@ -57,7 +57,7 @@ namespace CGO
 
             if (reply.MessageType == ComponentMessageType.MoveDirection)
             {
-                _movedir = (Constants.MoveDirs)reply.ParamsList[0];
+                SetMoveDir((Constants.MoveDirs)reply.ParamsList[0]);
                 Owner.SendMessage(this, ComponentMessageType.MoveDirection, _movedir);
             }
         }
@@ -73,6 +73,7 @@ namespace CGO
         private void HandleOnMove(object sender, VectorEventArgs args)
         {
             Translate(args.Vector2D);
+            GetMasterMoveDirection();
         }
 
         private void Translate(Vector2D toPosition)
@@ -80,7 +81,7 @@ namespace CGO
             Vector2D delta = toPosition - Owner.Position;
 
             Owner.Position = toPosition;
-
+            /*
             if (delta.X > 0 && delta.Y > 0)
                 SetMoveDir(Constants.MoveDirs.southeast);
             if (delta.X > 0 && delta.Y < 0)
@@ -97,6 +98,7 @@ namespace CGO
                 SetMoveDir(Constants.MoveDirs.south);
             if (delta.Y < 0 && delta.X == 0)
                 SetMoveDir(Constants.MoveDirs.north);
+             */
 
             Owner.Moved();
         }

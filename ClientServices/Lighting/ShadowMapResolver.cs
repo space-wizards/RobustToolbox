@@ -63,15 +63,16 @@ namespace SS3D.LightTest
             processedShadowsRT = new RenderImage("processedShadowsRT" + baseSize, baseSize, baseSize, ImageBufferFormats.BufferRGB888A8);
         }
 
-        public void ResolveShadows(Image shadowCastersTexture, RenderImage result, Vector2D lightPosition)
+        public void ResolveShadows(Image shadowCastersTexture, RenderImage result, Vector2D lightPosition, bool attenuateShadows)
         {
+            resolveShadowsEffect.Parameters["AttenuateShadows"].SetValue(attenuateShadows?0:1);
             Gorgon.CurrentRenderTarget.BlendingMode = BlendingModes.None;
             ExecuteTechnique(shadowCastersTexture, distancesRT, "ComputeDistances");
             ExecuteTechnique(distancesRT.Image, distortRT, "Distort");
             ApplyHorizontalReduction(distortRT, shadowMap);
-            ExecuteTechnique(null, shadowsRT, "DrawShadows", shadowMap);
-            ExecuteTechnique(shadowsRT.Image, processedShadowsRT, "BlurHorizontally");
-            ExecuteTechnique(processedShadowsRT.Image, result, "BlurVerticallyAndAttenuate");
+            ExecuteTechnique(null, result, "DrawShadows", shadowMap);
+            //ExecuteTechnique(shadowsRT.Image, processedShadowsRT, "BlurHorizontally");
+            //ExecuteTechnique(processedShadowsRT.Image, result, "BlurVerticallyAndAttenuate");
             Gorgon.CurrentShader = null;
         }
 

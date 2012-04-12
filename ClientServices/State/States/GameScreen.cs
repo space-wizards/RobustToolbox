@@ -576,7 +576,7 @@ namespace ClientServices.State.States
             Gorgon.CurrentShader = lightBlendShader.Techniques["FinalLightBlend"];
             lightBlendShader.Parameters["PlayerViewTexture"].SetValue(playerOcclusionTarget);
             lightBlendShader.Parameters["MaskTexture"].SetValue(IoCManager.Resolve<IResourceManager>().GetSprite("whitemask").Image);
-            lightBlendShader.Parameters["MaskProps"].SetValue(new Vector4D(Gorgon.Screen.Width, Gorgon.Screen.Height, 0, 0));
+            lightBlendShader.Parameters["MaskProps"].SetValue(new Vector4D(Gorgon.Screen.Width, Gorgon.Screen.Height, ClientWindowData.Singleton.ViewPort.X, ClientWindowData.Singleton.ViewPort.Y));
             lightBlendShader.Parameters["LightTexture"].SetValue(screenShadows);
             lightBlendShader.Parameters["SceneTexture"].SetValue(_sceneTarget);
             lightBlendShader.Parameters["AmbientLight"].SetValue(new Vector4D(.05f, .05f, 0.05f, 1));

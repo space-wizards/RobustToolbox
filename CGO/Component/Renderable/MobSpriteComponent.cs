@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using GorgonLibrary;
 using SS13_Shared;
 using SS13_Shared.GO;
 using GorgonLibrary.Graphics;
@@ -129,11 +130,16 @@ namespace CGO
             SetSpriteByKey(_basename + "_front");
         }
 
-        public override void Render()
+        public override void Render(Vector2D topLeft, Vector2D bottomRight)
         {
             if (!visible) return;
+            if (Owner.Position.X < topLeft.X
+                || Owner.Position.X > bottomRight.X
+                || Owner.Position.Y < topLeft.Y
+                || Owner.Position.Y > bottomRight.Y)
+                return;
 
-            base.Render();
+            base.Render(topLeft, bottomRight);
 
             if (_speechBubble != null)
                 _speechBubble.Draw(Owner.Position, ClientWindowData.Singleton.ScreenOrigin, currentSprite);

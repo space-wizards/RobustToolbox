@@ -2,7 +2,10 @@
 using System.Collections.Generic;
 using System.Linq;
 using ClientInterfaces.GOC;
+using GorgonLibrary;
+using SS13.IoC;
 using SS13_Shared.GO;
+using System.Drawing;
 
 namespace CGO
 {
@@ -76,16 +79,16 @@ namespace CGO
         /// Render the renderables
         /// </summary>
         /// <param name="frametime">time since the last frame was rendered.</param>
-        public void Render(float frametime)
+        public void Render(float frametime, RectangleF viewPort)
         {
             var renderables = from IRenderableComponent c in components[ComponentFamily.Renderable]
                               orderby c.DrawDepth ascending
-                              orderby c.Owner.Position.Y ascending
+                              //orderby c.Owner.Position.Y ascending
                               select c;
-                                
+                            
             foreach (var component in renderables.ToList())
             {
-                component.Render();
+                component.Render(new Vector2D(viewPort.Left, viewPort.Top), new Vector2D(viewPort.Right, viewPort.Bottom));
             }
         }
     }

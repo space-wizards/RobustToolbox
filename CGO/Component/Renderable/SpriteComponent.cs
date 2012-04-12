@@ -184,10 +184,15 @@ namespace CGO
             }
         }
 
-        public override void Render()
+        public override void Render(Vector2D topLeft, Vector2D bottomRight)
         {
             if (!visible) return;
             if (currentSprite == null) return;
+            if (Owner.Position.X + currentSprite.AABB.Right < topLeft.X
+                || Owner.Position.X > bottomRight.X
+                || Owner.Position.Y + currentSprite.AABB.Bottom < topLeft.Y
+                || Owner.Position.Y > bottomRight.Y)
+                return;
 
             var renderPos = ClientWindowData.Singleton.WorldToScreen(Owner.Position);
             SetSpriteCenter(currentSprite, renderPos);

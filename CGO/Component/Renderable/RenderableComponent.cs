@@ -1,5 +1,6 @@
 ﻿using ClientInterfaces.GOC;
 using SS13_Shared.GO;
+using GorgonLibrary;
 
 namespace CGO
 {
@@ -12,7 +13,7 @@ namespace CGO
             get { return ComponentFamily.Renderable; }
         }
 
-        public virtual void Render()
+        public virtual void Render(Vector2D topLeft, Vector2D bottomRight)
         {
 
         }

@@ -505,9 +505,9 @@ namespace ClientServices.State.States
                 ClientWindowData.Singleton.UpdateViewPort(PlayerManager.ControlledEntity.Position);
 
 
+                // Get nearby lights
                 var lights = IoCManager.Resolve<ILightManager>().lightsInRadius(
                     PlayerManager.ControlledEntity.Position, 768f);
-
 
                 // Render the lightmap
                 RenderLightMap(lights);
@@ -575,7 +575,8 @@ namespace ClientServices.State.States
             Gorgon.CurrentRenderTarget.Clear(Color.Black);
             Gorgon.CurrentShader = lightBlendShader.Techniques["FinalLightBlend"];
             lightBlendShader.Parameters["PlayerViewTexture"].SetValue(playerOcclusionTarget);
-            lightBlendShader.Parameters["MaskTexture"].SetValue(_tilesTarget);
+            lightBlendShader.Parameters["MaskTexture"].SetValue(IoCManager.Resolve<IResourceManager>().GetSprite("whitemask").Image);
+            lightBlendShader.Parameters["MaskProps"].SetValue(new Vector4D(Gorgon.Screen.Width, Gorgon.Screen.Height, 0, 0));
             lightBlendShader.Parameters["LightTexture"].SetValue(screenShadows);
             lightBlendShader.Parameters["SceneTexture"].SetValue(_sceneTarget);
             lightBlendShader.Parameters["AmbientLight"].SetValue(new Vector4D(.05f, .05f, 0.05f, 1));
@@ -607,14 +608,14 @@ namespace ClientServices.State.States
                     (area.LightPosition.Y - area.LightAreaSize.Y * 0.5f) - WindowOrigin.Y); // Find light draw pos
                 area.renderTarget.SourceBlend = AlphaBlendOperation.One; //Additive blending
                 area.renderTarget.DestinationBlend = AlphaBlendOperation.One; //Additive blending
-                Gorgon.CurrentShader = lightBlendShader.Techniques["MaskLight"];
+                /*Gorgon.CurrentShader = lightBlendShader.Techniques["MaskLight"];
                 lightBlendShader.Parameters["LightTexture"].SetValue(area.renderTarget.Image);
                 var diffusecolor = l.LightState == LightState.On ? l.GetColorVec() : Vector4D.Zero;
                 lightBlendShader.Parameters["DiffuseColor"].SetValue(diffusecolor);
                 lightBlendShader.Parameters["MaskTexture"].SetValue(area.Mask.Image);
-                lightBlendShader.Parameters["MaskProps"].SetValue(area.MaskProps);
+                lightBlendShader.Parameters["MaskProps"].SetValue(area.MaskProps);*/
                 area.renderTarget.Blit(blitPos.X, blitPos.Y, area.renderTarget.Width,
-                area.renderTarget.Height, l.Color, BlitterSizeMode.Crop); // Draw the lights effects
+                area.renderTarget.Height, Color.White, BlitterSizeMode.Crop); // Draw the lights effects
                 area.renderTarget.SourceBlend = AlphaBlendOperation.SourceAlpha; //reset blend mode
                 area.renderTarget.DestinationBlend = AlphaBlendOperation.InverseSourceAlpha; //reset blend mode
 
@@ -642,7 +643,8 @@ namespace ClientServices.State.States
                 area.BeginDrawingShadowCasters(); // Start drawing to the light rendertarget
                 DrawWallsRelativeToLight(area); // Draw all shadowcasting stuff here in black
                 area.EndDrawingShadowCasters(); // End drawing to the light rendertarget
-                shadowMapResolver.ResolveShadows(area.renderTarget.Image, area.renderTarget, area.LightPosition, false); // Calc shadows
+                shadowMapResolver.ResolveShadows(area.renderTarget.Image, area.renderTarget, area.LightPosition, false, 
+                    IoCManager.Resolve<IResourceManager>().GetSprite("whitemask").Image, Vector4D.Zero, new Vector4D(1,1,1,1)); // Calc shadows
 
                 Gorgon.CurrentRenderTarget = playerOcclusionTarget; // Set to shadow rendertarget
 
@@ -676,7 +678,7 @@ namespace ClientServices.State.States
             area.BeginDrawingShadowCasters(); // Start drawing to the light rendertarget
             DrawWallsRelativeToLight(area); // Draw all shadowcasting stuff here in black
             area.EndDrawingShadowCasters(); // End drawing to the light rendertarget
-            shadowMapResolver.ResolveShadows(area.renderTarget.Image, area.renderTarget, area.LightPosition, true); // Calc shadows
+            shadowMapResolver.ResolveShadows(area.renderTarget.Image, area.renderTarget, area.LightPosition, true, area.Mask.Image, area.MaskProps, l.GetColorVec()); // Calc shadows
             area.Calculated = true;
         }
         

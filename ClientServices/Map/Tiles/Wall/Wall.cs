@@ -164,7 +164,11 @@ namespace ClientServices.Map.Tiles.Wall
                 if(l < y)
                 {
                     if (surroundingTiles[2].TileType == TileType.Floor || (surroundingTiles[2].TileType == TileType.Wall && surroundingTiles[0].TileType == TileType.Floor))
+                    {
                         RenderOccluder(Direction.North, from, x, y, tileSpacing);
+                    }
+                    if (surroundingTiles[2].TileType == TileType.Floor)
+                        RenderOccluder(Direction.West, from, x, y, tileSpacing);
                 }
                 else if (l > y + tileSpacing)
                 {
@@ -176,7 +180,12 @@ namespace ClientServices.Map.Tiles.Wall
                 else if (l >= y && l <= y + tileSpacing)
                 {
                     if (surroundingTiles[2].TileType == TileType.Floor || (surroundingTiles[2].TileType == TileType.Wall && surroundingTiles[0].TileType == TileType.Floor))
+                    {
                         RenderOccluder(Direction.North, from, x, y, tileSpacing);
+                    }
+                    if (surroundingTiles[2].TileType == TileType.Floor)
+                        RenderOccluder(Direction.West, from, x, y, tileSpacing);
+
                     if (surroundingTiles[0].TileType == TileType.Floor || (surroundingTiles[0].TileType == TileType.Wall && surroundingTiles[2].TileType == TileType.Floor))
                         RenderOccluder(Direction.North, from, x, y, tileSpacing);
                 }
@@ -191,7 +200,11 @@ namespace ClientServices.Map.Tiles.Wall
                 if (l < y)
                 {
                     if (surroundingTiles[2].TileType == TileType.Floor || (surroundingTiles[2].TileType == TileType.Wall && surroundingTiles[0].TileType == TileType.Floor))
+                    {
                         RenderOccluder(Direction.North, from, x, y, tileSpacing);
+                    }
+                    if (surroundingTiles[2].TileType == TileType.Floor)
+                        RenderOccluder(Direction.East, from, x, y, tileSpacing);
                 }
                 else if (l > y + tileSpacing)
                 {
@@ -203,7 +216,11 @@ namespace ClientServices.Map.Tiles.Wall
                 else if (l >= y && l <= y + tileSpacing)
                 {
                     if (surroundingTiles[2].TileType == TileType.Floor || (surroundingTiles[2].TileType == TileType.Wall && surroundingTiles[0].TileType == TileType.Floor))
+                    {
                         RenderOccluder(Direction.North, from, x, y, tileSpacing);
+                    }
+                    if(surroundingTiles[2].TileType == TileType.Floor)
+                        RenderOccluder(Direction.East, from, x, y, tileSpacing);
                     if (surroundingTiles[0].TileType == TileType.Floor || (surroundingTiles[0].TileType == TileType.Wall && surroundingTiles[2].TileType == TileType.Floor))
                         RenderOccluder(Direction.North, from, x, y, tileSpacing);
                 }

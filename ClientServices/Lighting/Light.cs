@@ -22,6 +22,7 @@ namespace ClientServices.Lighting
         public Light()
         {
             Radius = 256;
+            //Color = Color.White;
             LightState = LightState.On;
         }
 

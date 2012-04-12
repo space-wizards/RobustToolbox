@@ -8,7 +8,7 @@ namespace ClientServices.Helpers
 {
     class GaussianBlur
     {
-        private readonly FXShader _shader;
+        private FXShader _shader;
 
         Sprite _intermediateTargetSprite;
         readonly RenderImage _intermediateTarget;
@@ -39,16 +39,16 @@ namespace ClientServices.Helpers
         public float[] Kernel { get; private set; }
 
         /// <summary>
-        /// Returns the texture offsets used for the horizontal Gaussian blur
+        /// Returns the weights and texture offsets used for the horizontal Gaussian blur
         /// pass.
         /// </summary>
-        public Vector4D[] TextureOffsetsX { get; private set; }
+        public Vector4D[] WeightsOffsetsX { get; private set; }
 
         /// <summary>
-        /// Returns the texture offsets used for the vertical Gaussian blur
+        /// Returns the weights and texture offsets used for the vertical Gaussian blur
         /// pass.
         /// </summary>
-        public Vector4D[] TextureOffsetsY { get; private set; }
+        public Vector4D[] WeightsOffsetsY { get; private set; }
 
         private readonly IResourceManager _resourceManager;
 
@@ -64,9 +64,12 @@ namespace ClientServices.Helpers
 
             _intermediateTarget = new RenderImage("gaussianIntermediateTarget", Gorgon.Screen.Width, Gorgon.Screen.Height, ImageBufferFormats.BufferRGB888A8);
             _intermediateTargetSprite = new Sprite("gaussianIntermediateTargetSprite", _intermediateTarget);
-
-            _shader = _resourceManager.GetShader("GaussianBlur");
-            ComputeKernel(7, 5.0f);
+            
+            //Set Defaults
+            Radius = 7;
+            Amount = 2.5f;
+            ComputeKernel();
+            
             //ComputeOffsets(Gorgon.Screen.Width, Gorgon.Screen.Height);
             ComputeOffsets(256.0f, 256.0f);
         }
@@ -87,12 +90,41 @@ namespace ClientServices.Helpers
 
         public void SetAmount(float amount)
         {
-            ComputeKernel(7, amount);
+            Amount = amount;
+            ComputeKernel();
         }
 
         public void SetSize(float size)
         {
             ComputeOffsets(size, size);
+        }
+
+        public void SetSize(System.Drawing.Size size)
+        {
+            ComputeOffsets(size.Width, size.Height);
+        }
+
+        public void SetRadius(int radius)
+        {
+            switch(radius)
+            {
+                case 3:
+                case 5:
+                case 7:
+                case 9:
+                case 11:
+                    Radius = radius;
+                    break;
+                default:
+                    throw new Exception("The blur radius must be 3, 5, 7, 9, or 11.");
+            }
+            ComputeKernel();
+            SetShader();
+        }
+        
+        private void SetShader()
+        {
+            _shader = _resourceManager.GetShader("GaussianBlur" + Radius);
         }
 
         /// <summary>
@@ -101,13 +133,8 @@ namespace ClientServices.Helpers
         /// "Filthy Rich Clients: Developing Animated and Graphical Effects for
         /// Desktop Java".
         /// </summary>
-        /// <param name="blurRadius">The blur radius in pixels.</param>
-        /// <param name="blurAmount">Used to calculate sigma.</param>
-        public void ComputeKernel(int blurRadius, float blurAmount)
+        public void ComputeKernel()
         {
-            Radius = blurRadius;
-            Amount = blurAmount;
-
             Kernel = null;
             Kernel = new float[Radius * 2 + 1];
             Sigma = Radius / Amount;
@@ -141,11 +168,13 @@ namespace ClientServices.Helpers
         /// <param name="textureHeight">The texture height in pixels.</param>
         public void ComputeOffsets(float textureWidth, float textureHeight)
         {
-            TextureOffsetsX = null;
-            TextureOffsetsX = new Vector4D[Radius * 2 + 1];
+            if(Kernel == null)
+                ComputeKernel();
 
-            TextureOffsetsY = null;
-            TextureOffsetsY = new Vector4D[Radius * 2 + 1];
+            WeightsOffsetsX = null;
+            WeightsOffsetsY = null;
+            WeightsOffsetsX = new Vector4D[Radius * 2 + 1];
+            WeightsOffsetsY = new Vector4D[Radius * 2 + 1];
 
             var xOffset = 1.0f / textureWidth;
             var yOffset = 1.0f / textureHeight;
@@ -153,8 +182,8 @@ namespace ClientServices.Helpers
             for (var i = -Radius; i <= Radius; ++i)
             {
                 var index = i + Radius;
-                TextureOffsetsX[index] = new Vector4D(i * xOffset, 0.0f, 0.0f, 0.0f);
-                TextureOffsetsY[index] = new Vector4D(0.0f, i * yOffset, 0.0f, 0.0f);
+                WeightsOffsetsX[index] = new Vector4D(Kernel[index], i * xOffset, 0.0f, 0.0f);
+                WeightsOffsetsY[index] = new Vector4D(Kernel[index], i * yOffset, 0.0f, 0.0f);
             }
         }
 
@@ -164,19 +193,19 @@ namespace ClientServices.Helpers
             _intermediateTarget.Clear(System.Drawing.Color.FromArgb(0, System.Drawing.Color.Black));
             //game.GraphicsDevice.SetRenderTarget(renderTarget1);
             Gorgon.CurrentRenderTarget = _intermediateTarget;
-            Gorgon.CurrentShader = _shader;
+            Gorgon.CurrentShader = _shader.Techniques["GaussianBlurHorizontal"];
 
-            _shader.Parameters["weights"].SetValue(Kernel);
+            _shader.Parameters["weights_offsets"].SetValue(WeightsOffsetsX);
             _shader.Parameters["colorMapTexture"].SetValue(sourceImage);
-            _shader.Parameters["offsets"].SetValue(TextureOffsetsX);
 
             sourceSprite.Draw();
 
             // Perform vertical Gaussian blur.
             Gorgon.CurrentRenderTarget = sourceImage;
-            
+            Gorgon.CurrentShader = _shader.Techniques["GaussianBlurVertical"];
+
             _shader.Parameters["colorMapTexture"].SetValue(_intermediateTarget);
-            _shader.Parameters["offsets"].SetValue(TextureOffsetsY);
+            _shader.Parameters["weights_offsets"].SetValue(WeightsOffsetsY);
 
             _intermediateTargetSprite.Draw();
 
@@ -190,19 +219,19 @@ namespace ClientServices.Helpers
             _intermediateTarget.Clear(System.Drawing.Color.FromArgb(0, System.Drawing.Color.Black));
             //game.GraphicsDevice.SetRenderTarget(renderTarget1);
             Gorgon.CurrentRenderTarget = _intermediateTarget;
-            Gorgon.CurrentShader = _shader;
+            Gorgon.CurrentShader = _shader.Techniques["GaussianBlurHorizontal"];
 
-            _shader.Parameters["weights"].SetValue(Kernel);
+            _shader.Parameters["weights_offsets"].SetValue(WeightsOffsetsX);
             _shader.Parameters["colorMapTexture"].SetValue(sourceImage);
-            _shader.Parameters["offsets"].SetValue(TextureOffsetsX);
 
             sourceImage.Blit(0,0,sourceImage.Width, sourceImage.Height);
 
             // Perform vertical Gaussian blur.
             Gorgon.CurrentRenderTarget = sourceImage;
+            Gorgon.CurrentShader = _shader.Techniques["GaussianBlurVertical"];
 
             _shader.Parameters["colorMapTexture"].SetValue(_intermediateTarget);
-            _shader.Parameters["offsets"].SetValue(TextureOffsetsY);
+            _shader.Parameters["weights_offsets"].SetValue(WeightsOffsetsY);
 
             _intermediateTargetSprite.Draw();
 

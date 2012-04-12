@@ -183,5 +183,31 @@ namespace ClientServices.Helpers
             Gorgon.CurrentShader = null;
             Gorgon.CurrentRenderTarget = null;
         }
+
+        public void PerformGaussianBlur(RenderImage sourceImage)
+        {
+            // Perform horizontal Gaussian blur.
+            _intermediateTarget.Clear(System.Drawing.Color.FromArgb(0, System.Drawing.Color.Black));
+            //game.GraphicsDevice.SetRenderTarget(renderTarget1);
+            Gorgon.CurrentRenderTarget = _intermediateTarget;
+            Gorgon.CurrentShader = _shader;
+
+            _shader.Parameters["weights"].SetValue(Kernel);
+            _shader.Parameters["colorMapTexture"].SetValue(sourceImage);
+            _shader.Parameters["offsets"].SetValue(TextureOffsetsX);
+
+            sourceImage.Blit(0,0,sourceImage.Width, sourceImage.Height);
+
+            // Perform vertical Gaussian blur.
+            Gorgon.CurrentRenderTarget = sourceImage;
+
+            _shader.Parameters["colorMapTexture"].SetValue(_intermediateTarget);
+            _shader.Parameters["offsets"].SetValue(TextureOffsetsY);
+
+            _intermediateTargetSprite.Draw();
+
+            Gorgon.CurrentShader = null;
+            Gorgon.CurrentRenderTarget = null;
+        }
     }
 }

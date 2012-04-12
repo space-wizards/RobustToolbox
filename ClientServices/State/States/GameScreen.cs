@@ -536,21 +536,41 @@ namespace ClientServices.State.States
                     _wallTopsBatch.Draw();
                 _wallTopsBatch.Clear();
 
-                //Render the scene and lights together to compose the lit scene
-                Gorgon.CurrentRenderTarget = null;
-                Gorgon.CurrentShader = lightBlendShader.Techniques["FinalLightBlend"];
-                lightBlendShader.Parameters["PlayerViewTexture"].SetValue(playerOcclusionTarget.Image);
-                lightBlendShader.Parameters["LightTexture"].SetValue(screenShadows.Image);
-                lightBlendShader.Parameters["SceneTexture"].SetValue(_sceneTarget.Image);
-                lightBlendShader.Parameters["AmbientLight"].SetValue(new Vector4D(.05f, .05f, 0.05f, 1));
-                screenShadows.Image.Blit(0, 0, screenShadows.Width, screenShadows.Height, Color.White, BlitterSizeMode.Crop); // Blit the shadow image on top of the screen
-                Gorgon.CurrentShader = null;
+                LightScene();
                 //Render the placement manager shit
                 PlacementManager.Render();
             }
         }
 
+        private void BlurShadowMap()
+        {
+            _gaussianBlur.PerformGaussianBlur(screenShadows);
+        }
 
+        private void BlurPlayerVision()
+        {
+            _gaussianBlur.PerformGaussianBlur(playerOcclusionTarget);
+        }
+
+        private void LightScene()
+        {
+            //Blur the light/shadow map
+            BlurShadowMap();
+
+            //Blur the player vision map
+            BlurPlayerVision();
+
+            //Render the scene and lights together to compose the lit scene
+            Gorgon.CurrentRenderTarget = null;
+            Gorgon.CurrentShader = lightBlendShader.Techniques["FinalLightBlend"];
+            lightBlendShader.Parameters["PlayerViewTexture"].SetValue(playerOcclusionTarget);
+            lightBlendShader.Parameters["LightTexture"].SetValue(screenShadows);
+            lightBlendShader.Parameters["SceneTexture"].SetValue(_sceneTarget);
+            lightBlendShader.Parameters["AmbientLight"].SetValue(new Vector4D(.05f, .05f, 0.05f, 1));
+            screenShadows.Image.Blit(0, 0, screenShadows.Width, screenShadows.Height, Color.White, BlitterSizeMode.Crop);
+            // Blit the shadow image on top of the screen
+            Gorgon.CurrentShader = null;
+        }
 
         #region Lighting
         private void RenderLightMap(ILight[] lights)
@@ -605,7 +625,7 @@ namespace ClientServices.State.States
                 area.BeginDrawingShadowCasters(); // Start drawing to the light rendertarget
                 DrawWallsRelativeToLight(area); // Draw all shadowcasting stuff here in black
                 area.EndDrawingShadowCasters(); // End drawing to the light rendertarget
-                shadowMapResolver.ResolveShadows(area.renderTarget.Image, area.renderTarget, area.LightPosition); // Calc shadows
+                shadowMapResolver.ResolveShadows(area.renderTarget.Image, area.renderTarget, area.LightPosition, false); // Calc shadows
 
                 Gorgon.CurrentRenderTarget = playerOcclusionTarget; // Set to shadow rendertarget
 
@@ -639,7 +659,7 @@ namespace ClientServices.State.States
             area.BeginDrawingShadowCasters(); // Start drawing to the light rendertarget
             DrawWallsRelativeToLight(area); // Draw all shadowcasting stuff here in black
             area.EndDrawingShadowCasters(); // End drawing to the light rendertarget
-            shadowMapResolver.ResolveShadows(area.renderTarget.Image, area.renderTarget, area.LightPosition); // Calc shadows
+            shadowMapResolver.ResolveShadows(area.renderTarget.Image, area.renderTarget, area.LightPosition, true); // Calc shadows
             area.Calculated = true;
         }
         

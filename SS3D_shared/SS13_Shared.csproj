@@ -129,6 +129,7 @@
     <Compile Include="GO\ItemFlags.cs" />
     <Compile Include="JobHandler.cs" />
     <Compile Include="KeyFunctions.cs" />
+    <Compile Include="PostProcessingEffects.cs" />
     <Compile Include="ProfilerEnums.cs" />
     <Compile Include="ServerEnums\RunLevel.cs" />
     <Compile Include="ServicesEnum.cs" />

@@ -26,5 +26,6 @@ namespace ServerInterfaces.Player
         void HandleNetworkMessage(NetIncomingMessage message);
 
         void DetachFromEntity();
+        void AddPostProcessingEffect(PostProcessingEffectType type, float duration);
     }
 }

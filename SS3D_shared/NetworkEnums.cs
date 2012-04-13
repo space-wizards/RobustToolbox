@@ -119,7 +119,8 @@
         AttachToEntity,
         Verb,
         JoinLobby,
-        SetTargetArea
+        SetTargetArea,
+        AddPostProcessingEffect
     }
 
     public enum DoorState

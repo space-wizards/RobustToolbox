@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Drawing;
 using ClientInterfaces;
 using ClientInterfaces.Resource;
 using GorgonLibrary;
@@ -10,8 +11,8 @@ namespace ClientServices.Helpers
     {
         private FXShader _shader;
 
-        Sprite _intermediateTargetSprite;
-        readonly RenderImage _intermediateTarget;
+        static Sprite _intermediateTargetSprite;
+        static RenderImage _intermediateTarget;
 
         /// <summary>
         /// Returns the radius of the Gaussian blur filter kernel in pixels.
@@ -50,6 +51,8 @@ namespace ClientServices.Helpers
         /// </summary>
         public Vector4D[] WeightsOffsetsY { get; private set; }
 
+        public SizeF Size { get; private set; }
+
         private readonly IResourceManager _resourceManager;
 
         /// <summary>
@@ -62,16 +65,20 @@ namespace ClientServices.Helpers
         {
             _resourceManager = resourceManager;
 
-            _intermediateTarget = new RenderImage("gaussianIntermediateTarget", Gorgon.Screen.Width, Gorgon.Screen.Height, ImageBufferFormats.BufferRGB888A8);
-            _intermediateTargetSprite = new Sprite("gaussianIntermediateTargetSprite", _intermediateTarget);
+            if(_intermediateTarget == null)
+                _intermediateTarget = new RenderImage("gaussianIntermediateTarget", Gorgon.Screen.Width, Gorgon.Screen.Height, ImageBufferFormats.BufferRGB888A8);
+            if(_intermediateTargetSprite == null)
+                _intermediateTargetSprite = new Sprite("gaussianIntermediateTargetSprite", _intermediateTarget);
             
             //Set Defaults
             Radius = 7;
             Amount = 2.5f;
+            Size = new SizeF(256.0f, 256.0f);
             ComputeKernel();
+            SetShader();
             
             //ComputeOffsets(Gorgon.Screen.Width, Gorgon.Screen.Height);
-            ComputeOffsets(256.0f, 256.0f);
+            ComputeOffsets();
         }
 
         public void Dispose()
@@ -92,16 +99,20 @@ namespace ClientServices.Helpers
         {
             Amount = amount;
             ComputeKernel();
+            ComputeOffsets();
         }
 
         public void SetSize(float size)
         {
-            ComputeOffsets(size, size);
+            Size = new SizeF(size, size);
+            ComputeOffsets();
+            
         }
 
-        public void SetSize(System.Drawing.Size size)
+        public void SetSize(SizeF size)
         {
-            ComputeOffsets(size.Width, size.Height);
+            Size = size;
+            ComputeOffsets();
         }
 
         public void SetRadius(int radius)
@@ -166,8 +177,10 @@ namespace ClientServices.Helpers
         /// </summary>
         /// <param name="textureWidth">The texture width in pixels.</param>
         /// <param name="textureHeight">The texture height in pixels.</param>
-        public void ComputeOffsets(float textureWidth, float textureHeight)
+        public void ComputeOffsets()
         {
+            float textureWidth = Size.Width;
+            float textureHeight = Size.Height;
             if(Kernel == null)
                 ComputeKernel();
 

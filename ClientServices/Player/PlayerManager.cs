@@ -1,9 +1,12 @@
 ﻿using System;
+using System.Collections.Generic;
 using ClientInterfaces.GOC;
 using ClientInterfaces.Network;
 using ClientInterfaces.Player;
 using ClientInterfaces.State;
+using ClientServices.Player.PostProcessing;
 using ClientServices.State.States;
+using GorgonLibrary.Graphics;
 using Lidgren.Network;
 using GorgonLibrary;
 using GorgonLibrary.InputDevices;
@@ -21,6 +24,8 @@ namespace ClientServices.Player
          * Why not just attach the inputs directly? It's messy! This makes the whole thing nicely encapsulated. 
          * This class also communicates with the server to let the server control what entity it is attached to. */
 
+        private List<PostProcessingEffect> _effects = new List<PostProcessingEffect>(); 
+
         public event EventHandler<TypeEventArgs> RequestedStateSwitch;
 
         public IEntity ControlledEntity { get; private set; }
@@ -30,6 +35,14 @@ namespace ClientServices.Player
             _networkManager = networkManager;
         }
 
+        public void Update(float frameTime)
+        {
+            foreach(var e in _effects.ToArray())
+            {
+                e.Update(frameTime);
+            }
+        }
+
         public void Attach(IEntity newEntity)
         {
             ControlledEntity = newEntity;
@@ -37,6 +50,26 @@ namespace ClientServices.Player
             ControlledEntity.AddComponent(ComponentFamily.Mover, ComponentFactory.Singleton.GetComponent("KeyBindingMoverComponent"));
             ControlledEntity.AddComponent(ComponentFamily.Collider, ComponentFactory.Singleton.GetComponent("ColliderComponent"));
             ControlledEntity.GetComponent(ComponentFamily.Collider).SetParameter(new ComponentParameter("TweakAABB", typeof(Vector4D), new Vector4D(39, 0, 0, 0)));
+        }
+
+        public void AddEffect(PostProcessingEffectType type, float duration)
+        {
+            switch(type)
+            {
+                case PostProcessingEffectType.Blur:
+                    var e = new BlurPostProcessingEffect(duration);
+                    e.OnExpired += EffectExpired;
+                    _effects.Add(e);
+                    break;
+            }
+        }
+
+        public void ApplyEffects(RenderImage image)
+        {
+            foreach(var e in _effects)
+            {
+                e.ProcessImage(image);
+            }
         }
 
         public void Detach()
@@ -73,6 +106,11 @@ namespace ClientServices.Player
                         Detach();
                     }
                     break;
+                case PlayerSessionMessage.AddPostProcessingEffect:
+                    var effectType = (PostProcessingEffectType)message.ReadInt32();
+                    var duration = message.ReadFloat();
+                    AddEffect(effectType, duration);
+                    break;
             }
         }
 
@@ -98,6 +136,13 @@ namespace ClientServices.Player
             Attach(EntityManager.Singleton.GetEntity(uid));
         }
         #endregion
+
+        private void EffectExpired(PostProcessingEffect effect)
+        {
+            effect.OnExpired -= EffectExpired;
+            if(_effects.Contains(effect))
+                _effects.Remove(effect);
+        }
 
     }
 }

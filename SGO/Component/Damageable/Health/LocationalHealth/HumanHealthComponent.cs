@@ -2,9 +2,11 @@
 using System.Collections.Generic;
 using System.Linq;
 using Lidgren.Network;
+using SS13.IoC;
 using SS13_Shared;
 using SS13_Shared.GO;
 using ServerInterfaces.GameObject;
+using ServerInterfaces.Player;
 
 namespace SGO
 {
@@ -49,6 +51,16 @@ namespace SGO
             {
                 DamageLocation dmgLoc = damageZones.First(x => x.location == targetLocation);
                 dmgLoc.AddDamage(damType, actualDamage);
+            }
+
+            if(targetLocation == BodyPart.Head && actualDamage > 5)
+            {
+                var r = Owner.SendMessage(this, ComponentFamily.Actor, ComponentMessageType.GetActorSession);
+                if(r.MessageType == ComponentMessageType.ReturnActorSession)
+                {
+                    var s = (IPlayerSession) r.ParamsList[0];
+                    s.AddPostProcessingEffect(PostProcessingEffectType.Blur, 5);
+                }
             }
 
             TriggerBleeding(damageamount, damType, targetLocation);

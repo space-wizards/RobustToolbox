@@ -21,5 +21,6 @@
         ShowFPS,
         Drop,
         Run,
+        ActivateItemInHand,
     }
 }

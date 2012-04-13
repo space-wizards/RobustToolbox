@@ -52,11 +52,11 @@ namespace SGO
 
             switch (type)
             {
-                case ComponentMessageType.ClickedInHand:
-                    HandleClickedInHand();
-                    break;
                 case ComponentMessageType.Die:
                     SetState(LightState.Broken);
+                    break;
+                case ComponentMessageType.Activate:
+                    HandleClickedInHand();
                     break;
             }
 

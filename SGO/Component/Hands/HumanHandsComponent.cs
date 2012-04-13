@@ -73,6 +73,10 @@ namespace SGO
                     {
                         SwitchHands();
                     }
+                    if ((BoundKeyFunctions)list[0] == BoundKeyFunctions.ActivateItemInHand &&
+                        (BoundKeyState)list[1] == BoundKeyState.Up)
+                        ActivateItemInHand();
+                        
                     break;
                 case ComponentMessageType.GetActiveHandItem:
                     if (!IsEmpty(currentHand))
@@ -147,6 +151,16 @@ namespace SGO
         private Hand GetCurrentHand()
         {
             return currentHand;
+        }
+
+        private void ActivateItemInHand()
+        {
+            var e = GetEntity(GetCurrentHand());
+            if (e != null)
+            {
+                e.SendMessage(this, ComponentFamily.Item, ComponentMessageType.Activate);
+            }
+            
         }
 
         /// <summary>

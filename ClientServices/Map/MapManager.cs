@@ -458,6 +458,11 @@ namespace ClientServices.Map
             return _mapHeight;
         }
 
+        public Size GetMapSizeWorld()
+        {
+            return new Size(_mapWidth * TileSpacing, _mapHeight * TileSpacing);
+        }
+
         /*public List<System.Drawing.RectangleF> GetSurroundingAABB(Vector2D pos)
         {
             List<System.Drawing.RectangleF> AABBList = new List<System.Drawing.RectangleF>();

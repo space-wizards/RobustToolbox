@@ -144,7 +144,11 @@ namespace SGO.Component.Item.ItemCapability
         /// <param name="cap"></param>
         public void AddCapability(ItemCapability cap)
         {
-            List<ItemCapability> retcap = returnedCapabilities.ToList();
+            List<ItemCapability> retcap;
+            if(returnedCapabilities == null || returnedCapabilities.Length == 0)
+                retcap = new List<ItemCapability>();
+            else
+                retcap = returnedCapabilities.ToList();
             retcap.Add(cap);
             returnedCapabilities = retcap.ToArray();
         }

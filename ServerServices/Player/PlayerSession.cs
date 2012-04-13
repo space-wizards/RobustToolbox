@@ -190,5 +190,15 @@ namespace ServerServices.Player
             m.Write((byte)gui);
             return m;
         }
+
+        public void AddPostProcessingEffect(PostProcessingEffectType type, float duration)
+        {
+            var m = IoCManager.Resolve<ISS13NetServer>().CreateMessage();
+            m.Write((byte)NetMessage.PlayerSessionMessage);
+            m.Write((byte)PlayerSessionMessage.AddPostProcessingEffect);
+            m.Write((int)type);
+            m.Write(duration);
+            IoCManager.Resolve<ISS13NetServer>().SendMessage(m, ConnectedClient, NetDeliveryMethod.ReliableUnordered);
+        }
     }
 }

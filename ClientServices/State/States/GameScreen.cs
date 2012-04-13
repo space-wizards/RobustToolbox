@@ -57,6 +57,7 @@ namespace ClientServices.State.States
         private FXShader finalBlendShader;
         private RenderImage _sceneTarget;
         private RenderImage _tilesTarget;
+        private RenderImage _composedSceneTarget;
 
         
         #endregion
@@ -130,6 +131,7 @@ namespace ClientServices.State.States
 
             _sceneTarget = new RenderImage("sceneTarget", Gorgon.Screen.Width, Gorgon.Screen.Height, ImageBufferFormats.BufferRGB888A8);
             _tilesTarget = new RenderImage("tilesTarget", Gorgon.Screen.Width, Gorgon.Screen.Height, ImageBufferFormats.BufferRGB888A8);
+            _composedSceneTarget = new RenderImage("composedSceneTarget", Gorgon.Screen.Width, Gorgon.Screen.Height, ImageBufferFormats.BufferRGB888A8);
 
             _lightTarget = new RenderImage("lightTarget", Gorgon.Screen.Width, Gorgon.Screen.Height, ImageBufferFormats.BufferRGB888A8);
             _lightTargetSprite = new Sprite("lightTargetSprite", _lightTarget) { DepthWriteEnabled = false };
@@ -301,6 +303,7 @@ namespace ClientServices.State.States
 
             ComponentManager.Singleton.Update(e.FrameDeltaTime);
             PlacementManager.Update(MousePosScreen, MapManager);
+            PlayerManager.Update(e.FrameDeltaTime);
 
             MousePosWorld = new Vector2D(MousePosScreen.X + WindowOrigin.X, MousePosScreen.Y + WindowOrigin.Y);
         }
@@ -559,7 +562,7 @@ namespace ClientServices.State.States
             BlurPlayerVision();
 
             //Render the scene and lights together to compose the lit scene
-            Gorgon.CurrentRenderTarget = null;
+            Gorgon.CurrentRenderTarget = _composedSceneTarget;
             Gorgon.CurrentRenderTarget.Clear(Color.Black);
             Gorgon.CurrentShader = finalBlendShader.Techniques["FinalLightBlend"];
             finalBlendShader.Parameters["PlayerViewTexture"].SetValue(playerOcclusionTarget);
@@ -575,9 +578,18 @@ namespace ClientServices.State.States
             screenShadows.Image.Blit(0, 0, screenShadows.Width, screenShadows.Height, Color.White, BlitterSizeMode.Crop);
             // Blit the shadow image on top of the screen
             Gorgon.CurrentShader = null;
+            Gorgon.CurrentRenderTarget = null;
             
+            PlayerPostProcess();
+
+            _composedSceneTarget.Image.Blit(0,0, Gorgon.Screen.Width, Gorgon.Screen.Height, Color.White, BlitterSizeMode.Crop);
             //screenShadows.Blit(0,0);
             //playerOcclusionTarget.Blit(0,0);
+        }
+
+        private void PlayerPostProcess()
+        {
+            PlayerManager.ApplyEffects(_composedSceneTarget);
         }
 
         #region Lighting

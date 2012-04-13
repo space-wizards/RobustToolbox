@@ -72,13 +72,9 @@ namespace ClientServices.State.States
         private Batch _gasBatch;
         private Batch _wallTopsBatch;
         private Batch _decalBatch;
-        private Batch _lightMapBatch;
         private GaussianBlur _gaussianBlur;
         public bool BlendLightMap = true;
         
-        private List<Light> _lightsLastFrame = new List<Light>();
-        private readonly List<Light> _lightsThisFrame = new List<Light>();
-
         public int ScreenWidthTiles = 15; // How many tiles around us do we draw?
         public int ScreenHeightTiles = 12;
 
@@ -86,17 +82,10 @@ namespace ClientServices.State.States
         private float _realScreenHeightTiles;
 
         private bool _showDebug;     // show AABBs & Bounding Circles on Entities.
-        private bool _telepathy;     // disable visiblity bounds if true
 
-        private float _scaleX = 1.0f;
-        private float _scaleY = 1.0f;
-
-        private Point _screenSize;
         public string SpawnType;
-        private bool _editMode;
 
         #region Mouse/Camera stuff
-        private DateTime _lastRmbClick = DateTime.Now;
 
         public Vector2D MousePosScreen = Vector2D.Zero;
         public Vector2D MousePosWorld = Vector2D.Zero;
@@ -150,15 +139,12 @@ namespace ClientServices.State.States
             _gasBatch = new Batch("gasBatch", 1);
             _wallTopsBatch = new Batch("wallTopsBatch", 1);
             _decalBatch = new Batch("decalBatch", 1);
-            _lightMapBatch = new Batch("lightMapBatch", 1);
 
             _gaussianBlur = new GaussianBlur(ResourceManager);
 
             _realScreenWidthTiles = (float)Gorgon.CurrentClippingViewport.Width / MapManager.GetTileSpacing();
             _realScreenHeightTiles = (float)Gorgon.CurrentClippingViewport.Height / MapManager.GetTileSpacing();
-
-            _screenSize = new Point(Gorgon.CurrentClippingViewport.Width, Gorgon.CurrentClippingViewport.Height);
-
+            
             //Init GUI components
             _gameChat = new Chatbox(ResourceManager, UserInterfaceManager, KeyBindingManager);
             _gameChat.TextSubmitted += ChatTextboxTextSubmitted;
@@ -783,12 +769,9 @@ namespace ClientServices.State.States
         }
 
         #endregion
-        // Not currently used.
+       
         public void FormResize()
         {
-            _scaleX = Gorgon.CurrentClippingViewport.Width / (_realScreenWidthTiles * MapManager.GetTileSpacing());
-            _scaleY = Gorgon.CurrentClippingViewport.Height / (_realScreenHeightTiles * MapManager.GetTileSpacing());
-            _screenSize = new Point(Gorgon.CurrentClippingViewport.Width, Gorgon.CurrentClippingViewport.Height);
             UserInterfaceManager.ResizeComponents();
             IoCManager.Resolve<ILightManager>().RecalculateLights();
         }

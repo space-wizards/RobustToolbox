@@ -83,11 +83,17 @@ namespace SGO
                 case ComponentMessageType.ItemGetAllCapabilities:
                     throw new NotImplementedException();
                     break;
+                case ComponentMessageType.Activate:
+                    Activate();
+                    break;
+                case ComponentMessageType.ClickedInHand:
+                    Activate();
+                    break;
             }
 
             return reply;
         }
-
+        
         /// <summary>
         /// Applies this item to the target entity. 
         /// </summary>
@@ -147,6 +153,12 @@ namespace SGO
         {
             //Pick up the item
             actor.SendMessage(this, ComponentMessageType.PickUpItem, Owner);
+        }
+
+        private void Activate()
+        {
+            Owner.SendMessage(this, ComponentMessageType.Activate);
+            ActivateCapabilities();
         }
 
         /// <summary>
@@ -242,6 +254,14 @@ namespace SGO
                 return null;
             else
                 return result.Capabilities;
+        }
+
+        private void ActivateCapabilities()
+        {
+            foreach(var c in GetAllCapabilities())
+            {
+                c.Activate();
+            }
         }
 
         private bool HasCapability(ItemCapabilityType type)

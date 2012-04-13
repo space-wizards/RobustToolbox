@@ -61,6 +61,11 @@ namespace SGO.Component.Item.ItemCapability
         public virtual void SetParameter(ComponentParameter parameter)
         {
         }
+
+        public virtual void Activate()
+        {
+            
+        }
     }
 
     /// <summary>

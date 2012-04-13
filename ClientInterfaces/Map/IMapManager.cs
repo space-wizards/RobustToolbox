@@ -26,6 +26,7 @@ namespace ClientInterfaces.Map
         void ComputeVisibility(int viewerX, int viewerY);
         void SetAllVisible();
         void Init();
+        Size GetMapSizeWorld();
 
         TileType GetTileTypeFromWorldPosition(Vector2D vector2D);
     }

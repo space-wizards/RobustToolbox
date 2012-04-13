@@ -54,6 +54,7 @@ namespace ClientServices.State.States
         private RenderImage shadowBlendIntermediate;
         private RenderImage playerOcclusionTarget;
         private FXShader lightBlendShader;
+        private FXShader finalBlendShader;
         private RenderImage _sceneTarget;
         private RenderImage _tilesTarget;
 
@@ -192,6 +193,7 @@ namespace ClientServices.State.States
             playerOcclusionTarget = new RenderImage("playerOcclusionTarget", Gorgon.CurrentClippingViewport.Width, Gorgon.CurrentClippingViewport.Height, ImageBufferFormats.BufferRGB888A8);
             playerOcclusionTarget.UseDepthBuffer = false;
             lightBlendShader = IoCManager.Resolve<IResourceManager>().GetShader("lightblend");
+            finalBlendShader = IoCManager.Resolve<IResourceManager>().GetShader("finallight");
 
             playerVision = IoCManager.Resolve<ILightManager>().CreateLight();
             playerVision.SetColor(Color.Transparent);
@@ -573,13 +575,17 @@ namespace ClientServices.State.States
             //Render the scene and lights together to compose the lit scene
             Gorgon.CurrentRenderTarget = null;
             Gorgon.CurrentRenderTarget.Clear(Color.Black);
-            Gorgon.CurrentShader = lightBlendShader.Techniques["FinalLightBlend"];
-            lightBlendShader.Parameters["PlayerViewTexture"].SetValue(playerOcclusionTarget);
-            lightBlendShader.Parameters["MaskTexture"].SetValue(IoCManager.Resolve<IResourceManager>().GetSprite("whitemask").Image);
-            lightBlendShader.Parameters["MaskProps"].SetValue(new Vector4D(Gorgon.Screen.Width, Gorgon.Screen.Height, ClientWindowData.Singleton.ViewPort.X, ClientWindowData.Singleton.ViewPort.Y));
-            lightBlendShader.Parameters["LightTexture"].SetValue(screenShadows);
-            lightBlendShader.Parameters["SceneTexture"].SetValue(_sceneTarget);
-            lightBlendShader.Parameters["AmbientLight"].SetValue(new Vector4D(.05f, .05f, 0.05f, 1));
+            Gorgon.CurrentShader = finalBlendShader.Techniques["FinalLightBlend"];
+            finalBlendShader.Parameters["PlayerViewTexture"].SetValue(playerOcclusionTarget);
+            Sprite outofview = IoCManager.Resolve<IResourceManager>().GetSprite("outofview");
+            finalBlendShader.Parameters["OutOfViewTexture"].SetValue(outofview.Image);
+            var texratiox = Gorgon.Screen.Width / outofview.Width;
+            var texratioy = Gorgon.Screen.Height / outofview.Height;
+            var maskProps = new Vector4D(texratiox, texratioy, 0, 0);
+            finalBlendShader.Parameters["MaskProps"].SetValue(maskProps);
+            finalBlendShader.Parameters["LightTexture"].SetValue(screenShadows);
+            finalBlendShader.Parameters["SceneTexture"].SetValue(_sceneTarget);
+            finalBlendShader.Parameters["AmbientLight"].SetValue(new Vector4D(.05f, .05f, 0.05f, 1));
             screenShadows.Image.Blit(0, 0, screenShadows.Width, screenShadows.Height, Color.White, BlitterSizeMode.Crop);
             // Blit the shadow image on top of the screen
             Gorgon.CurrentShader = null;
@@ -813,6 +819,7 @@ namespace ClientServices.State.States
                 Random r = new Random();
                 int i = r.Next(lights.Length - 1);
                 lights[i].SetColor(r.Next(255), r.Next(255), r.Next(255), r.Next(255));
+                lights[i].LightArea.Calculated = false;
             }
             if (e.Key == KeyboardKeys.F7)
             {

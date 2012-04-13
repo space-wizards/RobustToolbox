@@ -155,12 +155,16 @@ namespace SGO
 
         private void ActivateItemInHand()
         {
-            var e = GetEntity(GetCurrentHand());
-            if (e != null)
+            var h = GetCurrentHand();
+            if (!IsEmpty(h))
             {
-                e.SendMessage(this, ComponentFamily.Item, ComponentMessageType.Activate);
+                var e = GetEntity(h);
+                if (e != null)
+                {
+                    e.SendMessage(this, ComponentFamily.Item, ComponentMessageType.Activate);
+                }
             }
-            
+
         }
 
         /// <summary>

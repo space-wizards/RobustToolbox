@@ -632,6 +632,10 @@ namespace ClientServices.State.States
                 playerVision.Move(PlayerManager.ControlledEntity.Position);
                 LightArea area = GetLightArea(RadiusToShadowMapSize(playerVision.Radius));
                 area.LightPosition = playerVision.Position;//mousePosWorld; // Set the light position
+                if (MapManager.GetTileTypeFromWorldPosition(playerVision.Position) == TileType.Wall)
+                {
+                    area.LightPosition = new Vector2D(area.LightPosition.X, MapManager.GetTileAt(playerVision.Position).Position.Y + MapManager.GetTileSpacing() + 1);
+                }
                 area.BeginDrawingShadowCasters(); // Start drawing to the light rendertarget
                 DrawWallsRelativeToLight(area); // Draw all shadowcasting stuff here in black
                 area.EndDrawingShadowCasters(); // End drawing to the light rendertarget

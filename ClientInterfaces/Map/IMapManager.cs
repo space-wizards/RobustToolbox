@@ -6,8 +6,11 @@ using SS13_Shared;
 
 namespace ClientInterfaces.Map
 {
+    public delegate void TileChangeEvent(Point tilePosition, PointF tileWorldPosition);
+
     public interface IMapManager
     {
+        event TileChangeEvent OnTileChanged;
         int GetTileSpacing();
         void Shutdown();
         bool IsSolidTile(Vector2D pos);

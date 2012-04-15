@@ -6,6 +6,7 @@ using System.Drawing;
 using CGO;
 
 using ClientInterfaces.GOC;
+using ClientInterfaces.Map;
 using ClientInterfaces.Resource;
 using ClientInterfaces.State;
 using ClientServices.Helpers;
@@ -73,6 +74,8 @@ namespace ClientServices.State.States
         private Batch _gasBatch;
         private Batch _wallTopsBatch;
         private Batch _decalBatch;
+        private Batch _floorBatch;
+        private Batch _wallBatch;
         private GaussianBlur _gaussianBlur;
         public bool BlendLightMap = true;
         
@@ -121,6 +124,7 @@ namespace ClientServices.State.States
             NetworkManager.MessageArrived += NetworkManagerMessageArrived;
 
             NetworkManager.RequestMap();
+            IoCManager.Resolve<IMapManager>().OnTileChanged += OnTileChanged;
 
             // TODO This should go somewhere else, there should be explicit session setup and teardown at some point.
             NetworkManager.SendClientName(ConfigurationManager.GetPlayerName());
@@ -141,6 +145,8 @@ namespace ClientServices.State.States
             _gasBatch = new Batch("gasBatch", 1);
             _wallTopsBatch = new Batch("wallTopsBatch", 1);
             _decalBatch = new Batch("decalBatch", 1);
+            _floorBatch = new Batch("floorBatch", 1);
+            _wallBatch = new Batch("wallBatch", 1);
 
             _gaussianBlur = new GaussianBlur(ResourceManager);
 
@@ -292,6 +298,7 @@ namespace ClientServices.State.States
             MapManager.Shutdown();
             UserInterfaceManager.DisposeAllComponents(); //HerpDerp. This is probably bad. Should not remove them ALL.
             NetworkManager.MessageArrived -= NetworkManagerMessageArrived;
+            IoCManager.Resolve<IMapManager>().OnTileChanged -= OnTileChanged;
             RenderTargetCache.DestroyAll();
             GC.Collect();
         }
@@ -514,6 +521,13 @@ namespace ClientServices.State.States
                 //DrawGround(xStart, xEnd, yStart, yEnd, centerTile);
                 //DrawWalls(xStart, xEnd, yStart, yEnd, centerTile, false);
                 DrawTiles(xStart, xEnd, yStart, yEnd, centerTile);
+                if (_floorBatch.Count > 0)
+                    _floorBatch.Draw();
+                _floorBatch.Clear();
+
+                if(_wallBatch.Count > 0)
+                    _wallBatch.Draw();
+                _wallBatch.Clear();
                 Gorgon.CurrentRenderTarget = _sceneTarget;
                 _sceneTarget.Clear(Color.Black);
 
@@ -761,7 +775,7 @@ namespace ClientServices.State.States
                     t = (Map.Tiles.Tile)MapManager.GetTileAt(x, y);
                     if (t.TileType == TileType.Wall)
                     {
-                        t.Render(WindowOrigin.X, WindowOrigin.Y, MapManager.GetTileSpacing());
+                        t.Render(WindowOrigin.X, WindowOrigin.Y, MapManager.GetTileSpacing(), _wallBatch);
                     }
                     t.RenderTop(WindowOrigin.X, WindowOrigin.Y, MapManager.GetTileSpacing(), _wallTopsBatch);
                 }
@@ -779,7 +793,7 @@ namespace ClientServices.State.States
                     t = (Map.Tiles.Tile)MapManager.GetTileAt(x, y);
                     if (t.TileType != TileType.Wall)
                     {
-                        t.Render(WindowOrigin.X, WindowOrigin.Y, MapManager.GetTileSpacing());
+                        t.Render(WindowOrigin.X, WindowOrigin.Y, MapManager.GetTileSpacing(), _floorBatch);
                     }
                 }
             }
@@ -795,11 +809,11 @@ namespace ClientServices.State.States
                     t = (Map.Tiles.Tile)MapManager.GetTileAt(x, y);
                     if (t.TileType == TileType.Wall)
                     {
-                        t.Render(WindowOrigin.X, WindowOrigin.Y, MapManager.GetTileSpacing());
+                        t.Render(WindowOrigin.X, WindowOrigin.Y, MapManager.GetTileSpacing(), _wallBatch);
                     }
                     else if (t.TileType != TileType.Wall)
                     {
-                        t.Render(WindowOrigin.X, WindowOrigin.Y, MapManager.GetTileSpacing());
+                        t.Render(WindowOrigin.X, WindowOrigin.Y, MapManager.GetTileSpacing(), _floorBatch);
                     }
                     // Render gas sprites to gas batch
                     t.RenderGas(WindowOrigin.X, WindowOrigin.Y, MapManager.GetTileSpacing(), _gasBatch);
@@ -809,6 +823,12 @@ namespace ClientServices.State.States
                 }
             }
         }
+
+        public void OnTileChanged(Point tilePosition, PointF tileWorldPosition)
+        {
+            var ts = IoCManager.Resolve<IMapManager>().GetTileSpacing();
+            IoCManager.Resolve<ILightManager>().RecalculateLightsInView(new RectangleF(tileWorldPosition, new SizeF(ts, ts)));
+        }   
 
         #endregion
        

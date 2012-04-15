@@ -90,11 +90,12 @@ namespace ClientServices.Map.Tiles
             surroundDirs = _surroundDirs;
         }
 
-        public virtual void Render(float xTopLeft, float yTopLeft, int tileSpacing)
+        public virtual void Render(float xTopLeft, float yTopLeft, int tileSpacing, Batch batch)
         {
             //Sprite.Color = Color.White;
             Sprite.SetPosition((float)TilePosition.X * tileSpacing - xTopLeft, (float)TilePosition.Y * tileSpacing - yTopLeft);
-            Sprite.Draw();
+            //Sprite.Draw();
+            batch.AddClone(Sprite);
         }
 
         public virtual void RenderPos(float x, float y, int tileSpacing, int lightSize)

@@ -47,7 +47,7 @@ namespace ClientServices.Map.Tiles.Wall
         { }
         #endregion 
 
-        public override void Render(float xTopLeft, float yTopLeft, int tileSpacing)
+        public override void Render(float xTopLeft, float yTopLeft, int tileSpacing, Batch batch)
         {
             if (surroundDirs == 3 || surroundDirs == 2 && !(surroundingTiles[2] != null && surroundingTiles[2].surroundingTiles[3]!= null && surroundingTiles[2].surroundingTiles[3].TileType == TileType.Wall)) //north and east
                 sideSprite = wallCorner1;
@@ -59,7 +59,8 @@ namespace ClientServices.Map.Tiles.Wall
             {
                 sideSprite.SetPosition((float)TilePosition.X * tileSpacing - xTopLeft, (float)TilePosition.Y * tileSpacing - yTopLeft);
                 sideSprite.Color = Color.White;
-                sideSprite.Draw();
+                //sideSprite.Draw();
+                batch.AddClone(sideSprite);
             }
         }
 

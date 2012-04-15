@@ -10,10 +10,15 @@ namespace ClientServices.Player.PostProcessing
 
     public class PostProcessingEffect
     {
+        protected bool CanExpire = false;
         protected float _duration;
 
         public PostProcessingEffect(float duration)
         {
+            if (duration <= 0)
+                CanExpire = false;
+            else
+                CanExpire = true;
             _duration = duration;
         }
 
@@ -26,7 +31,9 @@ namespace ClientServices.Player.PostProcessing
         public virtual void Update(float frameTime)
         {
             _duration -= frameTime;
-            if(_duration <= 0)
+            if (!CanExpire)
+                return;
+            if(_duration <= 0 )
                 Expired();
         }
 

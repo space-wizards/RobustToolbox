@@ -69,6 +69,11 @@ namespace SGO
             maxHealth = GetMaxHealth();
 
             SendHealthUpdate();
+
+            if(GetHealth() <= 0)
+            {
+                Die();
+            }
         }
 
         /// <summary>

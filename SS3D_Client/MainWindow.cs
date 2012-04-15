@@ -169,7 +169,7 @@ namespace SS13
             Gorgon.Screen.BackgroundColor = Color.FromArgb(50, 50, 50);
             Gorgon.CurrentClippingViewport = new Viewport(0, 0, Gorgon.Screen.Width, Gorgon.Screen.Height);
             Gorgon.DeviceReset += MainWindowResizeEnd;
-            Gorgon.MinimumFrameTime = PreciseTimer.FpsToMilliseconds(66);
+            //Gorgon.MinimumFrameTime = PreciseTimer.FpsToMilliseconds(66);
             Gorgon.Idle += GorgonIdle;
         }
 

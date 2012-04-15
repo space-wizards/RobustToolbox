@@ -1,4 +1,5 @@
-﻿using SS13_Shared.GO;
+﻿using SS13_Shared;
+using SS13_Shared.GO;
 using ServerInterfaces;
 using ServerInterfaces.Player;
 
@@ -43,6 +44,9 @@ namespace SGO
                     break;
                 case ComponentMessageType.GetActorSession:
                     reply = new ComponentReplyMessage(ComponentMessageType.ReturnActorSession, playerSession);
+                    break;
+                case ComponentMessageType.Die:
+                    playerSession.AddPostProcessingEffect(PostProcessingEffectType.Death, -1);
                     break;
             }
 

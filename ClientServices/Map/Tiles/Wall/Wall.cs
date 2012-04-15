@@ -57,7 +57,7 @@ namespace ClientServices.Map.Tiles.Wall
                 sideSprite = plainWall;
             if (((surroundDirs&4) == 0))
             {
-                sideSprite.SetPosition(TilePosition.X * tileSpacing - xTopLeft, TilePosition.Y * tileSpacing - yTopLeft);
+                sideSprite.SetPosition((float)TilePosition.X * tileSpacing - xTopLeft, (float)TilePosition.Y * tileSpacing - yTopLeft);
                 sideSprite.Color = Color.White;
                 sideSprite.Draw();
             }

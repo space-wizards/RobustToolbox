@@ -81,7 +81,7 @@ namespace ClientWindow
                     y - Gorgon.Screen.Height / 2.0f
                 );
 
-            ViewPort = new RectangleF(ScreenOrigin, new Size(Gorgon.Screen.Width, Gorgon.Screen.Height));
+            ViewPort = new RectangleF(ScreenOrigin, new SizeF(Gorgon.Screen.Width, Gorgon.Screen.Height));
         }
 
         /// <summary>

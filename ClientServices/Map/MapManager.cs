@@ -334,10 +334,7 @@ namespace ClientServices.Map
                     if(t.surroundingTiles[1] != null) t.surroundingTiles[1].surroundingTiles[3] = t;
                     if(t.surroundingTiles[2] != null) t.surroundingTiles[2].surroundingTiles[0] = t;
                     if(t.surroundingTiles[3] != null) t.surroundingTiles[3].surroundingTiles[1] = t;
-                    foreach (var T in t.surroundingTiles)
-                    {
-                        T.surroundDirs = SetSprite(T.TilePosition.X, T.TilePosition.Y);
-                    }
+
                     _tileArray[y][x] = t;
                     _needVisUpdate = true;
                     TileChanged(_tileArray[y][x]);
@@ -757,6 +754,16 @@ namespace ClientServices.Map
         {
             if(OnTileChanged != null)
                 OnTileChanged(t.TilePosition, t.Position);
+
+            t.surroundDirs = SetSprite(t.TilePosition.X, t.TilePosition.Y);
+            if(t.TileType == TileType.Wall)
+                t.SetSprites(_tileSprites[WallTopSpriteName + t.surroundDirs], _tileSprites[WallSideSpriteName], t.surroundDirs);
+            foreach(Tile T in t.surroundingTiles)
+            {
+                T.surroundDirs = SetSprite(T.TilePosition.X, T.TilePosition.Y);
+                if(T.TileType == TileType.Wall)
+                    T.SetSprites(_tileSprites[WallTopSpriteName + T.surroundDirs], _tileSprites[WallSideSpriteName], T.surroundDirs);
+            }
         }
         #endregion
     }

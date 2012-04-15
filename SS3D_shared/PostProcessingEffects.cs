@@ -3,5 +3,6 @@
     public enum PostProcessingEffectType
     {
         Blur,
+        Death,
     }
 }

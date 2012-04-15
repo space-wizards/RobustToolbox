@@ -118,6 +118,10 @@ namespace SGO
         protected virtual void Die()
         {
             if (!isDead) isDead = true;
+            else
+            {
+                return;
+            }
 
             //Send a message that whatever last damaged us killed us. 
             _damageHistory.Last().Damager.SendMessage(this, ComponentMessageType.KilledEntity, this);

@@ -78,6 +78,7 @@ namespace ClientServices.Map.Tiles
             decals = new List<TileDecal>();
             _random = new Random((int)(Position.X * Position.Y));
             lightSprite = _resourceManager.GetSprite("white");
+            Visible = true;
 
 
         }
@@ -91,8 +92,8 @@ namespace ClientServices.Map.Tiles
 
         public virtual void Render(float xTopLeft, float yTopLeft, int tileSpacing)
         {
-            Sprite.Color = Color.White;
-            Sprite.SetPosition(TilePosition.X * tileSpacing - xTopLeft, TilePosition.Y * tileSpacing - yTopLeft);
+            //Sprite.Color = Color.White;
+            Sprite.SetPosition((float)TilePosition.X * tileSpacing - xTopLeft, (float)TilePosition.Y * tileSpacing - yTopLeft);
             Sprite.Draw();
         }
 

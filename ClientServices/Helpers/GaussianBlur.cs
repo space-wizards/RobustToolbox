@@ -83,16 +83,7 @@ namespace ClientServices.Helpers
 
         public void Dispose()
         {
-            if (_intermediateTarget != null && Gorgon.IsInitialized)
-            {
-                _intermediateTarget.ForceRelease();
-                _intermediateTarget.Dispose();
-            }
-            if (_intermediateTargetSprite != null && Gorgon.IsInitialized)
-            {
-                _intermediateTargetSprite.Image = null;
-                _intermediateTargetSprite = null;
-            }
+
         }
 
         public void SetAmount(float amount)

@@ -304,6 +304,8 @@ namespace ClientServices.State.States
             ComponentManager.Singleton.Update(e.FrameDeltaTime);
             PlacementManager.Update(MousePosScreen, MapManager);
             PlayerManager.Update(e.FrameDeltaTime);
+            if(PlayerManager != null && PlayerManager.ControlledEntity != null)
+                ClientWindowData.Singleton.UpdateViewPort(PlayerManager.ControlledEntity.Position);
 
             MousePosWorld = new Vector2D(MousePosScreen.X + WindowOrigin.X, MousePosScreen.Y + WindowOrigin.Y);
         }
@@ -493,7 +495,6 @@ namespace ClientServices.State.States
                 var xEnd = Math.Min(xStart + ScreenWidthTiles + 2, MapManager.GetMapWidth() - 1);
                 var yEnd = Math.Min(yStart + ScreenHeightTiles + 2, MapManager.GetMapHeight() - 1);
 
-                ClientWindowData.Singleton.UpdateViewPort(PlayerManager.ControlledEntity.Position);
 
 
                 // Get nearby lights
@@ -510,13 +511,9 @@ namespace ClientServices.State.States
                 Gorgon.CurrentRenderTarget = _tilesTarget;
                 Gorgon.CurrentRenderTarget.Clear(Color.Black);
 
-                DrawGround(xStart, xEnd, yStart, yEnd, centerTile);
-
-                //I don't remember what the fuck this does but it is essential.
-                Gorgon.CurrentRenderTarget.SourceBlend = AlphaBlendOperation.DestinationColor;
-                Gorgon.CurrentRenderTarget.DestinationBlend = AlphaBlendOperation.SourceColor;
-
-                DrawWalls(xStart, xEnd, yStart, yEnd, centerTile, false);
+                //DrawGround(xStart, xEnd, yStart, yEnd, centerTile);
+                //DrawWalls(xStart, xEnd, yStart, yEnd, centerTile, false);
+                DrawTiles(xStart, xEnd, yStart, yEnd, centerTile);
                 Gorgon.CurrentRenderTarget = _sceneTarget;
                 _sceneTarget.Clear(Color.Black);
 
@@ -530,6 +527,10 @@ namespace ClientServices.State.States
                 if (_wallTopsBatch.Count > 0)
                     _wallTopsBatch.Draw();
                 _wallTopsBatch.Clear();
+
+                if (_gasBatch.Count > 0)
+                    _gasBatch.Draw();
+                _gasBatch.Clear();
 
                 LightScene();
                 //Render the placement manager shit
@@ -780,6 +781,31 @@ namespace ClientServices.State.States
                     {
                         t.Render(WindowOrigin.X, WindowOrigin.Y, MapManager.GetTileSpacing());
                     }
+                }
+            }
+        }
+
+        private void DrawTiles(int xStart, int xEnd, int yStart, int yEnd, Point centerTile)
+        {
+            ClientServices.Map.Tiles.Tile t;
+            for (int x = xStart; x <= xEnd; x++)
+            {
+                for (int y = yStart; y <= yEnd; y++)
+                {
+                    t = (Map.Tiles.Tile)MapManager.GetTileAt(x, y);
+                    if (t.TileType == TileType.Wall)
+                    {
+                        t.Render(WindowOrigin.X, WindowOrigin.Y, MapManager.GetTileSpacing());
+                    }
+                    else if (t.TileType != TileType.Wall)
+                    {
+                        t.Render(WindowOrigin.X, WindowOrigin.Y, MapManager.GetTileSpacing());
+                    }
+                    // Render gas sprites to gas batch
+                    t.RenderGas(WindowOrigin.X, WindowOrigin.Y, MapManager.GetTileSpacing(), _gasBatch);
+                        
+                    t.RenderTop(WindowOrigin.X, WindowOrigin.Y, MapManager.GetTileSpacing(), _wallTopsBatch);
+
                 }
             }
         }

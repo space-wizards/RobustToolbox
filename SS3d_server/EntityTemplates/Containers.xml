@@ -10,7 +10,7 @@
 				<ExtendedParameters>
 					<ItemCapability name="MeleeWeaponCapability">
 						<ItemCapabilityParameters>
-							<ItemCapabilityParameter name="damageAmount" type="int" value="20" />
+							<ItemCapabilityParameter name="damageAmount" type="int" value="200" />
 							<ItemCapabilityParameter name="damageType" type="string" value="Bludgeon" />
 						</ItemCapabilityParameters>
 					</ItemCapability>

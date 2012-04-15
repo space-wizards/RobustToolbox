@@ -54,10 +54,16 @@ namespace ClientServices.Player
 
         public void AddEffect(PostProcessingEffectType type, float duration)
         {
+            PostProcessingEffect e;
             switch(type)
             {
                 case PostProcessingEffectType.Blur:
-                    var e = new BlurPostProcessingEffect(duration);
+                    e = new BlurPostProcessingEffect(duration);
+                    e.OnExpired += EffectExpired;
+                    _effects.Add(e);
+                    break;
+                case PostProcessingEffectType.Death:
+                    e = new DeathPostProcessingEffect(duration);
                     e.OnExpired += EffectExpired;
                     _effects.Add(e);
                     break;

@@ -77,11 +77,10 @@ namespace ClientWindow
         {
             ScreenOrigin = new Vector2D
                 (
-                    x - Gorgon.Screen.Width / 2.0f,
-                    y - Gorgon.Screen.Height / 2.0f
+                    x - Gorgon.CurrentClippingViewport.Width / 2.0f,
+                    y - Gorgon.CurrentClippingViewport.Height / 2.0f
                 );
-
-            ViewPort = new RectangleF(ScreenOrigin, new SizeF(Gorgon.Screen.Width, Gorgon.Screen.Height));
+            ViewPort = new RectangleF(ScreenOrigin, new SizeF(Gorgon.CurrentClippingViewport.Width, Gorgon.CurrentClippingViewport.Height));
         }
 
         /// <summary>

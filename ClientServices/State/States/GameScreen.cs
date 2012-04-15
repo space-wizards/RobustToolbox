@@ -251,6 +251,35 @@ namespace ClientServices.State.States
 
         }
 
+        void ResetRendertargets()
+        {
+            var w = Gorgon.CurrentClippingViewport.Width;
+            var h = Gorgon.CurrentClippingViewport.Height;
+
+            _baseTarget.Width = w;
+            _baseTarget.Height = h;
+            _sceneTarget.Width = w;
+            _sceneTarget.Height = h;
+            _tilesTarget.Width = w;
+            _tilesTarget.Height = h;
+            _overlayTarget.Width = w;
+            _overlayTarget.Height = h;
+            _composedSceneTarget.Width = w;
+            _composedSceneTarget.Height = h;
+            _lightTarget.Width = w;
+            _lightTarget.Height = h;
+            _lightTargetIntermediate.Width = w;
+            _lightTargetIntermediate.Height = h;
+            screenShadows.Width = w;
+            screenShadows.Height = h;
+            shadowIntermediate.Width = w;
+            shadowIntermediate.Height = h;
+            shadowBlendIntermediate.Width = w;
+            shadowBlendIntermediate.Height = h;
+            playerOcclusionTarget.Width = w;
+            playerOcclusionTarget.Height = h;
+        }
+
         void menuButton_Clicked(SimpleImageButton sender)
         {
             UserInterfaceManager.DisposeAllComponents<MenuWindow>(); //Remove old ones.
@@ -590,7 +619,7 @@ namespace ClientServices.State.States
             _wallBatch.Clear();
             _gasBatch.Clear();
 
-            DrawTiles(xStart, xEnd, yStart, yEnd, centerTile);
+            DrawTiles(xStart, xEnd, yStart, yEnd);
             _recalculateScene = false;
             _redrawTiles = true;
             _redrawOverlay = true;
@@ -825,47 +854,18 @@ namespace ClientServices.State.States
                 }
             }
         }
-        // Draws all walls normally (test code, not pretty)
-        private void DrawWalls(int xStart, int xEnd, int yStart, int yEnd, Point centerTile, bool rel)
+        
+        /// <summary>
+        /// Copys all tile sprites into batches.
+        /// </summary>
+        /// <param name="xStart">Leftmost tile to draw</param>
+        /// <param name="xEnd">Rightmost tile to draw</param>
+        /// <param name="yStart">Topmost tile to draw</param>
+        /// <param name="yEnd">Bottommost tile to draw</param>
+        private void DrawTiles(int xStart, int xEnd, int yStart, int yEnd)
         {
             var tilespacing = MapManager.GetTileSpacing();
-            ClientServices.Map.Tiles.Tile t;
-            for (int x = xStart; x <= xEnd; x++)
-            {
-                for (int y = yStart; y <= yEnd; y++)
-                {
-                    t = (Map.Tiles.Tile)MapManager.GetTileAt(x, y);
-                    if (t.TileType == TileType.Wall)
-                    {
-                        t.Render(WindowOrigin.X, WindowOrigin.Y, tilespacing, _wallBatch);
-                    }
-                    t.RenderTop(WindowOrigin.X, WindowOrigin.Y, tilespacing, _wallTopsBatch);
-                }
-            }
-        }
-
-        // Draws all ground normally (test code, not pretty)
-        private void DrawGround(int xStart, int xEnd, int yStart, int yEnd, Point centerTile)
-        {
-            var tilespacing = MapManager.GetTileSpacing();
-            ClientServices.Map.Tiles.Tile t;
-            for (int x = xStart; x <= xEnd; x++)
-            {
-                for (int y = yStart; y <= yEnd; y++)
-                {
-                    t = (Map.Tiles.Tile)MapManager.GetTileAt(x, y);
-                    if (t.TileType != TileType.Wall)
-                    {
-                        t.Render(WindowOrigin.X, WindowOrigin.Y, tilespacing, _floorBatch);
-                    }
-                }
-            }
-        }
-
-        private void DrawTiles(int xStart, int xEnd, int yStart, int yEnd, Point centerTile)
-        {
-            var tilespacing = MapManager.GetTileSpacing();
-            ClientServices.Map.Tiles.Tile t;
+            Map.Tiles.Tile t;
             for (int x = xStart; x <= xEnd; x++)
             {
                 for (int y = yStart; y <= yEnd; y++)
@@ -901,8 +901,12 @@ namespace ClientServices.State.States
        
         public void FormResize()
         {
+            Gorgon.CurrentClippingViewport = new Viewport(0, 0, Gorgon.Screen.Width, Gorgon.Screen.Height);
             UserInterfaceManager.ResizeComponents();
+            ResetRendertargets();
+            ClientWindowData.Singleton.UpdateViewPort(PlayerManager.ControlledEntity.Position);
             IoCManager.Resolve<ILightManager>().RecalculateLights();
+            RecalculateScene();
         }
 
         #region Input

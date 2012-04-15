@@ -730,10 +730,10 @@ namespace ClientServices.State.States
         {
             Point centerTile = MapManager.GetTileArrayPositionFromWorldPosition(area.LightPosition);
 
-            int xS = Math.Max(0, centerTile.X - (ScreenWidthTiles / 2) - 4);
-            int yS = Math.Max(0, centerTile.Y - (ScreenHeightTiles / 2) - 4);
-            int xE = Math.Min(xS + ScreenWidthTiles + 4, MapManager.GetMapWidth() - 1);
-            int yE = Math.Min(yS + ScreenHeightTiles + 4, MapManager.GetMapHeight() - 1);
+            int xS = Math.Max(0, centerTile.X - (int)Math.Round((area.LightAreaSize.X / MapManager.GetTileSpacing()) / 2));
+            int yS = Math.Max(0, centerTile.Y - (int)Math.Round((area.LightAreaSize.Y / MapManager.GetTileSpacing()) / 2));
+            int xE = Math.Min(centerTile.X + (int)Math.Round((area.LightAreaSize.X / MapManager.GetTileSpacing()) / 2), MapManager.GetMapWidth() - 1);
+            int yE = Math.Min(centerTile.Y + (int)Math.Round((area.LightAreaSize.X / MapManager.GetTileSpacing()) / 2), MapManager.GetMapHeight() - 1);
 
             Map.Tiles.Tile t;
             for (int x = xS; x <= xE; x++)

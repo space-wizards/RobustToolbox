@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.IO;
+using System.IO.Compression;
 using ServerServices.Tiles;
 using Lidgren.Network;
 
@@ -331,7 +332,9 @@ namespace ServerServices.Map
             if ((DateTime.Now - lastAtmosDisplayPush).TotalMilliseconds > 333)
             {
                 bool sendUpdate = false;
-                List<AtmosRecord> records = new List<AtmosRecord>();
+                //List<AtmosRecord> records = new List<AtmosRecord>();
+                byte[] records = new byte[mapWidth * mapHeight * 3];
+                int n = 0;
                 for (int x = 0; x < mapWidth; x++)
                     for (int y = 0; y < mapHeight; y++)
                     {
@@ -341,7 +344,9 @@ namespace ServerServices.Map
                         sendUpdate = true;
                         foreach (byte displayByte in displayBytes)
                         {
-                            records.Add(new AtmosRecord(x, y, displayByte));
+                            //records.Add(new AtmosRecord(x, y, displayByte));
+                            records[n] = displayByte;
+                            n++;
                         }
                     }
 
@@ -353,11 +358,45 @@ namespace ServerServices.Map
             }
         }
 
+        /// <summary>
+        /// Compresses byte array to new byte array.
+        /// </summary>
+        private byte[] Compress(byte[] raw)
+        {
+            using (MemoryStream memory = new MemoryStream())
+            {
+                using (GZipStream gzip = new GZipStream(memory, CompressionMode.Compress, true))
+                {
+                    gzip.Write(raw, 0, raw.Length);
+                }
+                return memory.ToArray();
+            }
+        }
+
+        private NetOutgoingMessage CreateAtmosUpdatePacket(byte[] records)
+        {
+            var recs = Compress(records);
+            var msg = IoCManager.Resolve<ISS13NetServer>().CreateMessage();
+            msg.Write((byte)NetMessage.AtmosDisplayUpdate);
+            msg.Write(recs.Length);
+            msg.Write(recs);
+            return msg;
+        }
+
+        private void SendAtmosUpdatePacket(byte[] records)
+        {
+            var msg = CreateAtmosUpdatePacket(records);
+            IoCManager.Resolve<ISS13NetServer>().SendToAll(msg, NetDeliveryMethod.Unreliable);
+            LogManager.Log("Sending Gas update packet of size " + msg.LengthBytes + " bytes\n", LogLevel.Debug);
+        }
+
         private void SendAtmosUpdatePacket(List<AtmosRecord> records)
         {
             int recordsCount = records.Count;
             int recordsInPacket = 0;
             int position = 0;
+
+            /*
             while (recordsCount > 0)
             {
                 if (recordsCount >= 50)
@@ -375,12 +414,12 @@ namespace ServerServices.Map
                 IoCManager.Resolve<ISS13NetServer>().SendToAll(message, NetDeliveryMethod.Unreliable);// Gas updates aren't a big deal.
                 LogManager.Log("Sending Gas update with " + recordsInPacket + " records\n", LogLevel.Debug);
                 position += recordsInPacket;
-            }
+            }*/
         }
 
         public void SendAtmosStateTo(NetConnection client)
         {
-            NetOutgoingMessage message = IoCManager.Resolve<ISS13NetServer>().CreateMessage();
+            /*NetOutgoingMessage message = IoCManager.Resolve<ISS13NetServer>().CreateMessage();
             message.Write((byte)NetMessage.AtmosDisplayUpdate);
 
             List<AtmosRecord> records = new List<AtmosRecord>();
@@ -402,7 +441,25 @@ namespace ServerServices.Map
                 rec.pack(message);
             }
             IoCManager.Resolve<ISS13NetServer>().SendMessage(message, client, NetDeliveryMethod.Unreliable);// Gas updates aren't a big deal.
-            //LogManager.Log("Sending Gas update to " + SS13Server.Singleton.playerManager.GetSessionByConnection(client).name + "\n", LogLevel.Debug);
+            //LogManager.Log("Sending Gas update to " + SS13Server.Singleton.playerManager.GetSessionByConnection(client).name + "\n", LogLevel.Debug);*/
+            byte[] records = new byte[mapWidth * mapHeight * 3];
+            int n = 0;
+            for (int x = 0; x < mapWidth; x++)
+                for (int y = 0; y < mapHeight; y++)
+                {
+                    byte[] displayBytes = tileArray[x, y].gasCell.PackDisplayBytes();
+                    if (displayBytes.Length == 0) //if there are no changes, continue.
+                        continue;
+                    foreach (byte displayByte in displayBytes)
+                    {
+                        //records.Add(new AtmosRecord(x, y, displayByte));
+                        records[n] = displayByte;
+                        n++;
+                    }
+                }
+            var msg = CreateAtmosUpdatePacket(records);
+            IoCManager.Resolve<ISS13NetServer>().SendMessage(msg, client, NetDeliveryMethod.ReliableUnordered);
+
         }
 
         /// <summary>

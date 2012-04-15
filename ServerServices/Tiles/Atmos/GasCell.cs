@@ -325,6 +325,11 @@ namespace ServerServices.Tiles.Atmos
                 displayBytes.Add((byte)(amount | type));
                 lastSentGasses[GasType.WVapor] = gasses[GasType.WVapor]; //Store the last quantity we sent.
             }
+            else
+            {
+                displayBytes.Add(0);
+                lastSentGasses[GasType.WVapor] = 0;
+            }
             //Toxins
             if (gasses[GasType.Toxin] > 10 && (checkUpdateThreshold(GasType.Toxin) || all))
             {
@@ -333,6 +338,11 @@ namespace ServerServices.Tiles.Atmos
                 displayBytes.Add((byte)(amount | type));
                 lastSentGasses[GasType.Toxin] = gasses[GasType.Toxin];
             }
+            else
+            {
+                displayBytes.Add(0);
+                lastSentGasses[GasType.Toxin] = 0;
+            }
             //Generic high-pressure gas
             if((normalizeGasAmount(GasVel.Magnitude,20) != normalizeGasAmount(lastVelSent,20)))
             {
@@ -340,6 +350,11 @@ namespace ServerServices.Tiles.Atmos
                 type = (uint)GasType.HighVel << 4; // This is normally invisible gas that is at such a large pressure gradient that it has a positive index of refraction.
                 displayBytes.Add((byte)(amount | type));
                 lastVelSent = GasVel.Magnitude;
+            }
+            else
+            {
+                displayBytes.Add(0);
+                lastSentGasses[GasType.HighVel] = 0;
             }
 
             byte[] displays = new byte[displayBytes.Count];

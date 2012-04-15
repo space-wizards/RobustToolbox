@@ -1,15 +1,19 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 using Lidgren.Network;
 using ServerInterfaces;
 using ServerInterfaces.Chat;
+using ServerInterfaces.GameObject;
 using ServerInterfaces.Network;
 using ServerServices.Log;
 using SS13.IoC;
 using SS13_Shared;
 using ServerInterfaces.Player;
+using ServerInterfaces.Map;
+using ServerServices.Tiles;
 
-namespace SS13_Server.Modules.Chat
+namespace ServerServices.Chat
 {
     public class ChatManager : IChatManager
     {
@@ -131,13 +135,14 @@ namespace SS13_Server.Modules.Chat
             string command = args[0];
 
             Vector2 position;
-            /*Entity player;
-            player = EntityManager.Singleton.GetEntity(entityId);
+            IEntity player;
+            player = _serverMain.EntityManager.GetEntity(entityId);
             if (player == null)
                 position = new Vector2(160, 160);
             else
-                position = player.position;
-            */
+                position = player.Position;
+            
+            var map = IoCManager.Resolve<IMap>();
             switch (command)
             {
                 /*case "spawnentity":
@@ -148,24 +153,27 @@ namespace SS13_Server.Modules.Chat
                     break;
                 case "toolbox":
                     EntityManager.Singleton.SpawnEntityAt("Toolbox", position);  
-                    break;
+                    break;*/
                 case "addgas":
                     if (args.Count > 1 && Convert.ToInt32(args[1]) > 0)
                     {
                         int amount = Convert.ToInt32(args[1]);
-                        SS13Server.Singleton.Map.AddGasAt(SS13Server.Singleton.Map.GetTileArrayPositionFromWorldPosition(position), GasType.Toxin, amount);
+                        
+                        map.AddGasAt(map.GetTileArrayPositionFromWorldPosition(position), GasType.Toxin, amount);
                     }
                     break;
                 case "gasreport":
 
-                    var p = SS13Server.Singleton.Map.GetTileArrayPositionFromWorldPosition(position);
-                    var c = SS13Server.Singleton.Map.GetTileAt(p.X, p.Y).gasCell;
+                    var p = map.GetTileArrayPositionFromWorldPosition(position);
+                    var t = (Tile) map.GetTileAt(p.X, p.Y);
+                    var c = t.gasCell;
                     foreach(var g in c.gasses)
                     {
-                        SS13Server.Singleton.ChatManager.SendChatMessage(ChatChannel.Default, g.Key.ToString() + ": " + g.Value.ToString(), "GasReport", 0);
+                        SendChatMessage(ChatChannel.Default, g.Key.ToString() + ": " + g.Value.ToString(), "GasReport", 0);
                     }
                     
                     break;
+                /*    
                 case "sprayblood":
                     if (player == null)
                         return;

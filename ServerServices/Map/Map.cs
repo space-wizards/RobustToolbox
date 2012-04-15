@@ -474,6 +474,12 @@ namespace ServerServices.Map
             (toTile as Tile).gasCell = g;
             g.AttachToTile((toTile as Tile));
         }
+
+        public float GetGasAmount(Point position, GasType type)
+        {
+            var t = (Tile)GetTileAt(position.X, position.Y);
+            return (float)t.gasCell.gasses[type];
+        }
         #endregion
 
         #region Map altering

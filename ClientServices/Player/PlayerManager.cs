@@ -27,6 +27,7 @@ namespace ClientServices.Player
         private List<PostProcessingEffect> _effects = new List<PostProcessingEffect>(); 
 
         public event EventHandler<TypeEventArgs> RequestedStateSwitch;
+        public event EventHandler<VectorEventArgs> OnPlayerMove;
 
         public IEntity ControlledEntity { get; private set; }
 
@@ -50,6 +51,7 @@ namespace ClientServices.Player
             ControlledEntity.AddComponent(ComponentFamily.Mover, ComponentFactory.Singleton.GetComponent("KeyBindingMoverComponent"));
             ControlledEntity.AddComponent(ComponentFamily.Collider, ComponentFactory.Singleton.GetComponent("ColliderComponent"));
             ControlledEntity.GetComponent(ComponentFamily.Collider).SetParameter(new ComponentParameter("TweakAABB", typeof(Vector4D), new Vector4D(39, 0, 0, 0)));
+            ControlledEntity.OnMove += PlayerEntityMoved;
         }
 
         public void AddEffect(PostProcessingEffectType type, float duration)
@@ -83,6 +85,7 @@ namespace ClientServices.Player
             ControlledEntity.RemoveComponent(ComponentFamily.Input);
             ControlledEntity.RemoveComponent(ComponentFamily.Mover);
             ControlledEntity.RemoveComponent(ComponentFamily.Collider);
+            ControlledEntity.OnMove -= PlayerEntityMoved;
             ControlledEntity = null;
         }
 
@@ -148,6 +151,12 @@ namespace ClientServices.Player
             effect.OnExpired -= EffectExpired;
             if(_effects.Contains(effect))
                 _effects.Remove(effect);
+        }
+
+        private void PlayerEntityMoved(object sender, VectorEventArgs args)
+        {
+            if(OnPlayerMove != null)
+                OnPlayerMove(sender, args);
         }
 
     }

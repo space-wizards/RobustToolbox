@@ -6,6 +6,7 @@ using SS13.IoC;
 using SS13_Shared;
 using SS13_Shared.GO;
 using ServerInterfaces.GameObject;
+using ServerInterfaces.Map;
 using ServerInterfaces.Player;
 
 namespace SGO
@@ -13,6 +14,7 @@ namespace SGO
     public class HumanHealthComponent : HealthComponent
     {
         protected List<DamageLocation> damageZones = new List<DamageLocation>();
+        private DateTime _lastUpdate;
 
         public HumanHealthComponent()
         {
@@ -31,6 +33,17 @@ namespace SGO
         public override void Update(float frameTime)
         {
             base.Update(frameTime);
+            if ((DateTime.Now - _lastUpdate).TotalSeconds < 1)
+                return;
+            _lastUpdate = DateTime.Now;
+            var map = IoCManager.Resolve<IMap>();
+
+            if(map.GetGasAmount(map.GetTileArrayPositionFromWorldPosition(Owner.Position), GasType.Toxin) > 10)
+            {
+                //ApplyDamage(null, 3, DamageType.Toxin, BodyPart.Torso);
+                var statuscomp = (StatusEffectComp)Owner.GetComponent(ComponentFamily.StatusEffects);
+                statuscomp.AddEffect("ToxinInhalation", 20);
+            }
         }
 
         public override void HandleInstantiationMessage(NetConnection netConnection)

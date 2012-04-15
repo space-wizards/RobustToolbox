@@ -15,6 +15,7 @@ namespace ServerInterfaces.Map
         TileType[,] GetMapForSending();
         ITile GetTileAt(int x, int y);
         void AddGasAt(Point position, GasType type, int amount);
+        float GetGasAmount(Point position, GasType type);
         void UpdateAtmos();
         void SendAtmosStateTo(NetConnection client);
 

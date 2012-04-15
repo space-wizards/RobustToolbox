@@ -11,7 +11,8 @@ namespace ClientInterfaces.Player
     {
         IEntity ControlledEntity { get; }
 
-        event EventHandler<TypeEventArgs> RequestedStateSwitch;
+        event EventHandler<TypeEventArgs> RequestedStateSwitch; 
+        event EventHandler<VectorEventArgs> OnPlayerMove;
 
         void Attach(IEntity newEntity);
         void Detach();

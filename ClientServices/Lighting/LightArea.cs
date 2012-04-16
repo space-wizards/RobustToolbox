@@ -78,5 +78,6 @@ namespace SS3D.LightTest
             return new Vector4D(rot?1:0, flipx?1:0, flipy?1:0, 0);
         }
 
+
     }
 }

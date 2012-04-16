@@ -68,7 +68,7 @@ namespace SS3D.LightTest
             resolveShadowsEffect.Parameters["AttenuateShadows"].SetValue(attenuateShadows?0:1);
             resolveShadowsEffect.Parameters["MaskProps"].SetValue(maskProps);
             resolveShadowsEffect.Parameters["DiffuseColor"].SetValue(diffuseColor);
-            Gorgon.CurrentRenderTarget.BlendingMode = BlendingModes.None;
+            //Gorgon.CurrentRenderTarget.BlendingMode = BlendingModes.None;
             ExecuteTechnique(shadowCastersTexture, distancesRT, "ComputeDistances");
             ExecuteTechnique(distancesRT.Image, distortRT, "Distort");
             ApplyHorizontalReduction(distortRT, shadowMap);

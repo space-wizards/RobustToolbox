@@ -18,5 +18,6 @@ namespace ClientInterfaces.Lighting
         void RecalculateLightsInView(RectangleF rect);
         ILight[] LightsIntersectingPoint(Vector2D point);
         ILight[] LightsIntersectingRect(RectangleF rect);
+        ILight[] GetLights();
     }
 }

@@ -20,7 +20,7 @@ namespace ClientServices.UserInterface.Components
         {
         }
 
-        public override void Update()
+        public override void Update(float frameTime)
         {
         }
 

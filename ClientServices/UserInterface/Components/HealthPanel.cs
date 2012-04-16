@@ -63,7 +63,7 @@ namespace ClientServices.UserInterface.Components
         {
         }
 
-        public override void Update()
+        public override void Update(float frameTime)
         {
             const int x_inner = 4;
             const int y_inner = 25;
@@ -78,7 +78,7 @@ namespace ClientServices.UserInterface.Components
 
             healthMeterInner = new Rectangle(Position.X + x_inner + dec_inner, Position.Y + y_inner + dec_inner, (int)(healthMeterOverlay.Width - (2 * dec_inner)), (int)(healthMeterOverlay.Height - (2 * dec_inner)));
             healthPc.Position = new Point(healthMeterInner.X + 5, (int)(healthMeterInner.Y + (healthMeterInner.Height / 2f) - (healthPc.ClientArea.Height / 2f)) - 2);
-            healthPc.Update();
+            healthPc.Update(frameTime);
 
             var entity = _playerManager.ControlledEntity;
 

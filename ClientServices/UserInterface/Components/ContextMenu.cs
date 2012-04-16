@@ -40,7 +40,7 @@ namespace ClientServices.UserInterface.Components
                 var examineButton = new ContextMenuButton(new ContextMenuEntry { ComponentMessage = "examine", EntryName = "Examine", IconName = "context_eye" }, _buttonSize, _resourceManager);
                 examineButton.Selected += ContextSelected;
                 _buttons.Add(examineButton);
-                examineButton.Update();
+                examineButton.Update(0);
             }
 
             foreach (var entry in entries)
@@ -48,7 +48,7 @@ namespace ClientServices.UserInterface.Components
                 var newButton = new ContextMenuButton(entry, _buttonSize, _resourceManager);
                 newButton.Selected += ContextSelected;
                 _buttons.Add(newButton);
-                newButton.Update();
+                newButton.Update(0);
             }
 
             var currY = creationPos.Y;
@@ -71,12 +71,12 @@ namespace ClientServices.UserInterface.Components
             else _owningEntity.SendMessage(this, SS13_Shared.GO.ComponentMessageType.ContextMessage, (string)sender.UserData);
         }
 
-        public override void Update()
+        public override void Update(float frameTime)
         {
-            base.Update();
+            base.Update(frameTime);
             _userInterfaceManager.SetFocus(this);
             foreach (var button in _buttons)
-                button.Update();
+                button.Update(frameTime);
         }
 
         public override void Render()
@@ -152,15 +152,15 @@ namespace ClientServices.UserInterface.Components
             _currentColor = Color.Gray;
             _iconSprite = _resourceManager.GetSprite(entry.IconName);
             _textLabel = new Label(entry.EntryName, "CALIBRI", _resourceManager);
-            _textLabel.Update();
+            _textLabel.Update(0);
         }
 
-        public override void Update()
+        public override void Update(float frameTime)
         {
-            base.Update();
+            base.Update(frameTime);
             ClientArea = new Rectangle(Position.X, Position.Y, (int)Size.X, (int)Size.Y);
             _textLabel.Position = new Point(ClientArea.X + (int)_iconSprite.Width + 6, ClientArea.Y + (int)(ClientArea.Height / 2f) - (int)(_textLabel.ClientArea.Height / 2f));
-            _textLabel.Update();
+            _textLabel.Update(frameTime);
         }
 
         public override void Render()

@@ -54,10 +54,10 @@ namespace ClientServices.UserInterface.Components
             tooltip = new TextSprite("tooltipAct" + _assigned.Uid.ToString() + _assigned.Name, "", _resourceManager.GetFont("CALIBRI"));
             tooltip.Color = Color.Black;
 
-            Update();
+            Update(0);
         }
 
-        public override sealed void Update()
+        public override sealed void Update(float frameTime)
         {
             cooldownLeft = Math.Truncate(assignedAction.CooldownExpires.Subtract(DateTime.Now).TotalSeconds);
 

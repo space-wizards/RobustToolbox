@@ -24,10 +24,10 @@ namespace ClientServices.UserInterface.Components
             stopwatch = new Stopwatch();
             max = (float)Math.Round(countdownTime.TotalSeconds);
             stopwatch.Restart();
-            Update();
+            Update(0);
         }
 
-        public override void Update()
+        public override void Update(float frameTime)
         {
             if (stopwatch != null)
             {

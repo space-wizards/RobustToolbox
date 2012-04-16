@@ -40,12 +40,12 @@ namespace ClientServices.UserInterface.Components
             _targetArea.UpdateHealthIcon();
         }
 
-        public override void Update()
+        public override void Update(float frameTime)
         {
             background.Position = Position;
             //_targetArea.Position = new Point(Position.X + 5, Position.Y + 5);
             _targetArea.Position = new Point(Position.X + (int)(ClientArea.Width / 2f) - (int)(_targetArea.ClientArea.Width / 2f), Position.Y + 15);
-            _targetArea.Update();
+            _targetArea.Update(0);
             ClientArea = new Rectangle(Position.X, Position.Y, (int)background.Width, (int)background.Height);
         }
 

@@ -59,10 +59,10 @@ namespace ClientServices.UserInterface.Components
                     break;
             }
 
-            Update();
+            Update(0);
         }
 
-        public override void Update()
+        public override void Update(float frameTime)
         {
             icon.Position = Position;
             text.Position = new Vector2D(Position.X + icon.Width + 5, Position.Y + (int)(icon.Height / 2f) - (int)(text.Height / 2f));

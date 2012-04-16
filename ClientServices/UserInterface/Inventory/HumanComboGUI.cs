@@ -360,7 +360,7 @@ namespace ClientServices.UserInterface.Inventory
             }
 
             var newBpb = new BlueprintButton(compo1Temp, compo1Name, compo2Temp, compo2Name, resultTemp, resultName, _resourceManager);
-            newBpb.Update();
+            newBpb.Update(0);
 
             newBpb.Clicked += BlueprintClicked;
 
@@ -467,7 +467,7 @@ namespace ClientServices.UserInterface.Inventory
             }
         }
 
-        public override void Update()
+        public override void Update(float frameTime)
         {
             if (_inventory == null && _playerManager != null) //Gotta do this here because the vars are null in the constructor.
                 if (_playerManager.ControlledEntity != null)
@@ -487,25 +487,25 @@ namespace ClientServices.UserInterface.Inventory
             var comboClosePos = Position;
             comboClosePos.Offset(264, 11); //Magic photoshop ruler numbers.
             _comboClose.Position = comboClosePos;
-            _comboClose.Update();
+            _comboClose.Update(frameTime);
 
             var tabEquipPos = Position;
             tabEquipPos.Offset(-26 , 76); //Magic photoshop ruler numbers.
             _tabEquip.Position = tabEquipPos;
             _tabEquip.Color = _currentTab == 1 ? Color.White : _inactiveColor;
-            _tabEquip.Update();
+            _tabEquip.Update(frameTime);
 
             var tabHealthPos = tabEquipPos;
             tabHealthPos.Offset(0, 3 + _tabEquip.ClientArea.Height);
             _tabHealth.Position = tabHealthPos;
             _tabHealth.Color = _currentTab == 2 ? Color.White : _inactiveColor;
-            _tabHealth.Update();
+            _tabHealth.Update(frameTime);
             
             var tabCraftPos = tabHealthPos;
             tabCraftPos.Offset(0, 3 + _tabHealth.ClientArea.Height);
             _tabCraft.Position = tabCraftPos;
             _tabCraft.Color = _currentTab == 3 ? Color.White : _inactiveColor;
-            _tabCraft.Update();
+            _tabCraft.Update(frameTime);
 
             ClientArea = new Rectangle(Position.X, Position.Y, (int)_comboBg.AABB.Width, (int)_comboBg.AABB.Height);
 
@@ -518,53 +518,53 @@ namespace ClientServices.UserInterface.Inventory
                         var slotLeftStart = Position;
                         slotLeftStart.Offset(28, 40);
                         _slotHead.Position = slotLeftStart;
-                        _slotHead.Update();
+                        _slotHead.Update(frameTime);
 
                         var slotRightStart = Position;
                         slotRightStart.Offset((int)(_comboBg.AABB.Width - _slotMask.ClientArea.Width - 28), 40);
                         _slotMask.Position = slotRightStart;
-                        _slotMask.Update();
+                        _slotMask.Update(frameTime);
 
                         var vertSpacing = 6 + _slotHead.ClientArea.Height;
 
                         //Left Side - head, eyes, outer, hands, feet
                         slotLeftStart.Offset(0, vertSpacing);
                         _slotEyes.Position = slotLeftStart;
-                        _slotEyes.Update();
+                        _slotEyes.Update(frameTime);
 
                         slotLeftStart.Offset(0, vertSpacing);
                         _slotOuter.Position = slotLeftStart;
-                        _slotOuter.Update();
+                        _slotOuter.Update(frameTime);
 
                         slotLeftStart.Offset(0, vertSpacing);
                         _slotHands.Position = slotLeftStart;
-                        _slotHands.Update();
+                        _slotHands.Update(frameTime);
 
                         slotLeftStart.Offset(0, vertSpacing);
                         _slotFeet.Position = slotLeftStart;
-                        _slotFeet.Update();
+                        _slotFeet.Update(frameTime);
 
                         //Right Side - mask, ears, inner, belt, back
                         slotRightStart.Offset(0, vertSpacing);
                         _slotEars.Position = slotRightStart;
-                        _slotEars.Update();
+                        _slotEars.Update(frameTime);
 
                         slotRightStart.Offset(0, vertSpacing);
                         _slotInner.Position = slotRightStart;
-                        _slotInner.Update();
+                        _slotInner.Update(frameTime);
 
                         slotRightStart.Offset(0, vertSpacing);
                         _slotBelt.Position = slotRightStart;
-                        _slotBelt.Update();
+                        _slotBelt.Update(frameTime);
 
                         slotRightStart.Offset(0, vertSpacing);
                         _slotBack.Position = slotRightStart;
-                        _slotBack.Update();
+                        _slotBack.Update(frameTime);
 
                         if (_inventory != null)
                         {
                             _inventory.Position = new Point(Position.X + 12, Position.Y + 315);
-                            _inventory.Update();
+                            _inventory.Update(frameTime);
                         }
                         break; 
                         #endregion
@@ -578,30 +578,30 @@ namespace ClientServices.UserInterface.Inventory
 
                         _ResBlunt.Position = resLinePos;
                         resLinePos.Offset(0, _ResBlunt.ClientArea.Height + spacing);
-                        _ResBlunt.Update();
+                        _ResBlunt.Update(frameTime);
 
                         _ResPierce.Position = resLinePos;
                         resLinePos.Offset(0, _ResPierce.ClientArea.Height + spacing);
-                        _ResPierce.Update();
+                        _ResPierce.Update(frameTime);
 
                         _ResSlash.Position = resLinePos;
                         resLinePos.Offset(0, _ResSlash.ClientArea.Height + spacing);
-                        _ResSlash.Update();
+                        _ResSlash.Update(frameTime);
 
                         _ResBurn.Position = resLinePos;
                         resLinePos.Offset(0, _ResBurn.ClientArea.Height + spacing);
-                        _ResBurn.Update();
+                        _ResBurn.Update(frameTime);
 
                         _ResFreeze.Position = resLinePos;
                         resLinePos.Offset(0, _ResFreeze.ClientArea.Height + spacing);
-                        _ResFreeze.Update();
+                        _ResFreeze.Update(frameTime);
 
                         _ResShock.Position = resLinePos;
                         resLinePos.Offset(0, _ResShock.ClientArea.Height + spacing);
-                        _ResShock.Update();
+                        _ResShock.Update(frameTime);
 
                         _ResTox.Position = resLinePos;
-                        _ResTox.Update();
+                        _ResTox.Update(frameTime);
 
                         break; 
                         #endregion
@@ -610,32 +610,32 @@ namespace ClientServices.UserInterface.Inventory
                     {
                         #region Crafting
                         _craftSlot1.Position = new Point(Position.X + 40, Position.Y + 80);
-                        _craftSlot1.Update();
+                        _craftSlot1.Update(frameTime);
 
                         _craftSlot2.Position = new Point(Position.X + ClientArea.Width - _craftSlot2.ClientArea.Width - 40, Position.Y + 80);
-                        _craftSlot2.Update();
+                        _craftSlot2.Update(frameTime);
 
                         _craftButton.Position = new Point(Position.X + (int)(ClientArea.Width / 2f) - (int)(_craftButton.ClientArea.Width / 2f), Position.Y + 70);
-                        _craftButton.Update();
+                        _craftButton.Update(frameTime);
 
                         if (_craftTimer != null) _craftTimer.Position = new Point(Position.X + (int)(ClientArea.Width / 2f) - (int)(_craftTimer.ClientArea.Width / 2f), Position.Y + 155);
 
                         _craftStatus.Position = new Vector2D(Position.X + (int)(ClientArea.Width / 2f) - (int)(_craftStatus.Width / 2f), Position.Y + 40);
 
                         _blueprints.Position = new Point(Position.X + 40, Position.Y + 180);
-                        _blueprints.Update();
+                        _blueprints.Update(frameTime);
 
                         if (_inventory != null)
                         {
                             _inventory.Position = new Point(Position.X + 12, Position.Y + 315);
-                            _inventory.Update();
+                            _inventory.Update(frameTime);
                         }
                         break; 
                         #endregion
                     }   
             }
 
-            if (_craftTimer != null) _craftTimer.Update(); //Needs to update even when its not on the crafting tab so it continues to count.
+            if (_craftTimer != null) _craftTimer.Update(frameTime); //Needs to update even when its not on the crafting tab so it continues to count.
         }
 
         public override void Dispose()

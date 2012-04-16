@@ -18,7 +18,7 @@ namespace ClientInterfaces.UserInterface
 
         Rectangle ClientArea { get; set; }
 
-        void Update();
+        void Update(float frameTime);
         void Render();
         void Resize();
 

@@ -156,7 +156,7 @@ namespace ClientServices.State.States
 
             _chkfullscreen.Value = ConfigurationManager.GetFullscreen();
 
-            UserInterfaceManager.Update();
+            UserInterfaceManager.Update(e.FrameDeltaTime);
         }
 
         #endregion

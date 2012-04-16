@@ -29,7 +29,7 @@ namespace ClientServices.UserInterface.Components
         {
         }
 
-        public virtual void Update()
+        public virtual void Update(float frameTime)
         {
         }
 

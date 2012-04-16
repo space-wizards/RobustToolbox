@@ -62,9 +62,9 @@ namespace ClientServices.UserInterface.Components
             return false;
         }
 
-        public override void Update()
+        public override void Update(float frameTime)
         {
-            base.Update();
+            base.Update(frameTime);
             objectSprite.Position = new Vector2D(Position.X + 5, Position.Y + 5);
             name.Position = new Vector2D(objectSprite.Position.X + objectSprite.Width + 5, objectSprite.Position.Y);
             ClientArea = new Rectangle(Position, new Size(fixed_width != -1 ? fixed_width : ((int)objectSprite.Width + (int)name.Width + 15), ((int)objectSprite.Height > (int)name.Height ? (int)objectSprite.Height : ((int)name.Height + 5)) + 10));

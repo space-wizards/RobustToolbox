@@ -36,10 +36,10 @@ namespace ClientServices.UserInterface.Components
             _resourceManager = resourceManager;
             checkbox = _resourceManager.GetSprite("checkbox0");
             checkboxCheck = _resourceManager.GetSprite("checkbox1");
-            Update();
+            Update(0);
         }
 
-        public override void Update()
+        public override void Update(float frameTime)
         {
             ClientArea = new Rectangle(this.Position, new Size((int)checkbox.Width, (int)checkbox.Height));
         }

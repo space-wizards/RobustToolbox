@@ -236,13 +236,13 @@ namespace ClientServices.UserInterface
         /// <summary>
         ///  Updates the logic of UI components.
         /// </summary>
-        public void Update()
+        public void Update(float frameTime)
         {
             if (moveMode && movingComp != null)
                 movingComp.Position = (System.Drawing.Point)(_mousePos - dragOffset);
 
             foreach (var component in _components)
-                component.Update();
+                component.Update(frameTime);
         }
 
         /// <summary>

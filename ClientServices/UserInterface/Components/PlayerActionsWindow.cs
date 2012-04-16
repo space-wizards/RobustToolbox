@@ -45,9 +45,9 @@ namespace ClientServices.UserInterface.Components
             {
                 PlayerActionButton newButt = new PlayerActionButton(act, _resourceManager);
                 newButt.Position = new Point(10, pos_y);
-                newButt.Update();
+                newButt.Update(0);
                 Label newLabel = new Label(act.Name, "CALIBRI", _resourceManager);
-                newLabel.Update();
+                newLabel.Update(0);
                 newLabel.Position = new Point(10 + newButt.ClientArea.Width + 5, pos_y + (int)(newButt.ClientArea.Height / 2f) - (int)(newLabel.ClientArea.Height / 2f));
                 components.Add(newButt);
                 components.Add(newLabel);
@@ -55,10 +55,10 @@ namespace ClientServices.UserInterface.Components
             }
         }
 
-        public override void Update()
+        public override void Update(float frameTime)
         {
             if (disposing || !IsVisible()) return;
-            base.Update();
+            base.Update(frameTime);
         }
 
         public override void Render()

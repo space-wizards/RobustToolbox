@@ -43,7 +43,7 @@ namespace ClientServices.UserInterface.Inventory
             _entSprite = null;
         }
 
-        public override void Update()
+        public override void Update(float frameTime)
         {
             ClientArea = new Rectangle(Position, new Size((int)_sprite.AABB.Width, (int)_sprite.AABB.Height));
         }

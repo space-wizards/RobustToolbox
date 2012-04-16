@@ -66,7 +66,7 @@ namespace ClientServices.UserInterface.Components
             Position = new Point((int)mousePos.X, (int)mousePos.Y);
 
             Setup();
-            Update();
+            Update(0);
         }
 
         private Color GetColor(int curr, int max)
@@ -118,7 +118,7 @@ namespace ClientServices.UserInterface.Components
 
         }
 
-        public override sealed void Update()
+        public override sealed void Update(float frameTime)
         {
             _background.Position = Position;
 

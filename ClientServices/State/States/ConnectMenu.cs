@@ -139,7 +139,7 @@ namespace ClientServices.State.States
                     NetworkManager.Disconnect();
                 }
             }
-            UserInterfaceManager.Update();
+            UserInterfaceManager.Update(e.FrameDeltaTime);
         }
 
         #endregion

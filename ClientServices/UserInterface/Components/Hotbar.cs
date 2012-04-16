@@ -25,7 +25,7 @@ namespace ClientServices.UserInterface.Components
             _resourceManager = resourceManager;
             hotbarBG = resourceManager.GetSprite("main_hotbar");
             createSlots();
-            Update();
+            Update(0);
         }
 
         private void createEmpty(int slot)
@@ -63,7 +63,7 @@ namespace ClientServices.UserInterface.Components
             IoCManager.Resolve<IUserInterfaceManager>().DragInfo.Reset();
         }
 
-        public override sealed void Update()
+        public override sealed void Update(float frameTime)
         {
             hotbarBG.Position = Position;
 
@@ -76,7 +76,7 @@ namespace ClientServices.UserInterface.Components
             foreach (GuiComponent comp in slots)
             {
                 comp.Position = new Point(this.Position.X + x_pos, this.Position.Y + y_dist);
-                comp.Update();
+                comp.Update(frameTime);
                 if (comp.ClientArea.Right > max_x) max_x = comp.ClientArea.Right;
                 if (comp.ClientArea.Bottom > max_y) max_y = comp.ClientArea.Bottom;
                 x_pos += comp.ClientArea.Width + 1;

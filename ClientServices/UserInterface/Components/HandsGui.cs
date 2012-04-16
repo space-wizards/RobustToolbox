@@ -58,7 +58,7 @@ namespace ClientServices.UserInterface.Components
             UpdateHandIcons();
         }
 
-        public override void Update()
+        public override void Update(float frameTime)
         {
             handL = new Rectangle(Position.X, Position.Y, (int)handSlot.Width, (int)handSlot.Height);
             handR = new Rectangle(Position.X + (int)handSlot.Width + spacing, Position.Y, (int)handSlot.Width, (int)handSlot.Height);

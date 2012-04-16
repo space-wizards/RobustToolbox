@@ -576,6 +576,7 @@ namespace ClientServices.Map
             _tileArray = null;
             _tileSprites = null;
             _initialized = false;
+            _loaded = false;
         }
         #endregion
 

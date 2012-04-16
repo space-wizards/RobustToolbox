@@ -37,12 +37,12 @@ namespace ClientServices.UserInterface.Components
             _stateManager.RequestStateChange<ConnectMenu>();
         }
 
-        public override void Update()
+        public override void Update(float frameTime)
         {
             _message.Position = new Point((int)(Gorgon.CurrentRenderTarget.Width / 2f - _message.ClientArea.Width / 2f), (int)(Gorgon.CurrentRenderTarget.Height / 2f - _message.ClientArea.Height / 2f) - 50);
-            _message.Update();
+            _message.Update(frameTime);
             _mainMenuButton.Position = new Point((int)(Gorgon.CurrentRenderTarget.Width / 2f - _message.ClientArea.Width / 2f), _message.ClientArea.Bottom + 20);
-            _mainMenuButton.Update();
+            _mainMenuButton.Update(frameTime);
         }
 
         public override void Render()

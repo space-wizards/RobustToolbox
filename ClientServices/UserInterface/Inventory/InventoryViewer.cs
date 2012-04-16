@@ -98,10 +98,10 @@ namespace ClientServices.UserInterface.Inventory
                 _userInterfaceManager.DragInfo.StartDrag(sender.ContainingEntity);
         }
 
-        public override void Update()
+        public override void Update(float frameTime)
         {
             _inventoryContainer.Position = Position;
-            _inventoryContainer.Update();
+            _inventoryContainer.Update(frameTime);
         }
 
         public override void Render()

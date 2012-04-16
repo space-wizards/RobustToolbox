@@ -294,11 +294,11 @@ namespace ClientServices.UserInterface.Components
             base.Dispose();
         }
 
-        public override void Update()
+        public override void Update(float frameTime)
         {
-            base.Update();
-            _textInputLabel.Update();
-            foreach (var l in _entries) l.Update();
+            base.Update(frameTime);
+            _textInputLabel.Update(frameTime);
+            foreach (var l in _entries) l.Update(frameTime);
         }
 
         public override void Render()

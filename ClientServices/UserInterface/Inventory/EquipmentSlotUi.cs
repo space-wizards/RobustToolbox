@@ -50,10 +50,10 @@ namespace ClientServices.UserInterface.Inventory
                            Color = Color.White
                        };
 
-            Update();
+            Update(0);
         }
 
-        public override sealed void Update()
+        public override sealed void Update(float frameTime)
         {
             _buttonSprite.Position = Position;
             ClientArea = new Rectangle(Position, new Size((int)_buttonSprite.AABB.Width, (int)_buttonSprite.AABB.Height));

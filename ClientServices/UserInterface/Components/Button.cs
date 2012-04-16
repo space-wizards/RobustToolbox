@@ -39,10 +39,10 @@ namespace ClientServices.UserInterface.Components
                             Color = Color.Black
                         };
 
-            Update();
+            Update(0);
         }
 
-        public override sealed void Update()
+        public override sealed void Update(float frameTime)
         {
             _clientAreaLeft = new Rectangle(Position, new Size((int)_buttonLeft.Width, (int)_buttonLeft.Height));
             _clientAreaMain = new Rectangle(new Point(_clientAreaLeft.Right, Position.Y), new Size((int)Label.Width, (int)_buttonMain.Height));

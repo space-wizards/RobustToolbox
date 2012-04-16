@@ -105,7 +105,7 @@ namespace ClientServices.UserInterface.Components
             {
                 _entityList.components.Add(newButton);
                 newButton.Position = new Point(5, yOffset);
-                newButton.Update();
+                newButton.Update(0);
                 yOffset += 5 + newButton.ClientArea.Height;
                 newButton.Clicked += NewButtonClicked;
 
@@ -141,10 +141,10 @@ namespace ClientServices.UserInterface.Components
             sender.selected = true; //This needs to be last.
         }
 
-        public override void Update()
+        public override void Update(float frameTime)
         {
             if (disposing || !IsVisible()) return;
-            base.Update();
+            base.Update(frameTime);
         }
 
         public override void Render()

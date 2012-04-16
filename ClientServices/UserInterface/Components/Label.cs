@@ -34,10 +34,10 @@ namespace ClientServices.UserInterface.Components
 
             Text = new TextSprite("Label" + text, text, _resourceManager.GetFont(font)) {Color = Color.Black};
 
-            Update();
+            Update(0);
         }
 
-        public override void Update()
+        public override void Update(float frameTime)
         {
             Text.Position = Position;
             ClientArea = new Rectangle(Position, new Size(FixedWidth == -1 ? (int)Text.Width : FixedWidth, FixedHeight == -1 ? (int)Text.Height : FixedHeight));

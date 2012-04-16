@@ -52,7 +52,7 @@ namespace ClientServices.UserInterface.Components
                 RebuildList();
             }
 
-            Update();
+            Update(0);
         }
 
         public void AddItem(string str)
@@ -89,7 +89,7 @@ namespace ClientServices.UserInterface.Components
             foreach (var newEntry in _contentStrings.Select(str => new ListboxItem(str, _width, _resourceManager)))
             {
                 newEntry.Position = new Point(0, offset);
-                newEntry.Update();
+                newEntry.Update(0);
                 newEntry.Clicked += NewEntryClicked;
                 _dropDown.components.Add(newEntry);
                 offset += (int) newEntry.Text.Height;
@@ -116,7 +116,7 @@ namespace ClientServices.UserInterface.Components
             foreach (var curr in notSelected) curr.Selected = false;
         }
 
-        public override sealed void Update()
+        public override sealed void Update(float frameTime)
         {
             _clientAreaLeft = new Rectangle(Position, new Size((int)_listboxLeft.Width, (int)_listboxLeft.Height));
             _clientAreaMain = new Rectangle(new Point(_clientAreaLeft.Right, Position.Y), new Size(_width, (int)_listboxMain.Height));
@@ -124,7 +124,7 @@ namespace ClientServices.UserInterface.Components
             ClientArea = new Rectangle(Position, new Size(_clientAreaLeft.Width + _clientAreaMain.Width + _clientAreaRight.Width, Math.Max(Math.Max(_clientAreaLeft.Height,_clientAreaRight.Height), _clientAreaMain.Height)));
             _selectedLabel.Position = new Point(_clientAreaLeft.Right, Position.Y + (int)(ClientArea.Height / 2f) - (int)(_selectedLabel.Height / 2f));
             _dropDown.Position = new Point(ClientArea.X + (int)((ClientArea.Width - _dropDown.ClientArea.Width) / 2f), ClientArea.Bottom);
-            _dropDown.Update();
+            _dropDown.Update(frameTime);
         }
 
         public override void Render()
@@ -185,7 +185,7 @@ namespace ClientServices.UserInterface.Components
             DrawBackground = true;
         }
 
-        public override void Update()
+        public override void Update(float frameTime)
         {
             Text.Position = Position;
             ClientArea = new Rectangle(Position, new Size(_width, (int)Text.Height));

@@ -45,10 +45,10 @@ namespace ClientServices.UserInterface.Components
 
             Size = size;
 
-            Update();
+            Update(0);
         }
 
-        public override void Update()
+        public override void Update(float frameTime)
         {
             Text.Text = Math.Round(percent * 100).ToString() + "%";
             Text.Position = new Vector2D(Position.X + (Size.Width / 2f - Text.Width / 2f), Position.Y + (Size.Height / 2f - Text.Height / 2f));

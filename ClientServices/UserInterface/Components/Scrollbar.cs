@@ -74,7 +74,7 @@ namespace ClientServices.UserInterface.Components
             DEBUG.ShadowColor = Color.DarkBlue;
             DEBUG.Shadowed = true;
             DEBUG.ShadowOffset = new Vector2D(1, 1);
-            Update();
+            Update(0);
         }
 
         public override void HandleNetworkMessage(NetIncomingMessage message)
@@ -126,10 +126,10 @@ namespace ClientServices.UserInterface.Components
             return true;
         }
 
-        public override void Update()
+        public override void Update(float frameTime)
         {
             if (!IsVisible()) return;
-            base.Update();
+            base.Update(frameTime);
             if (Horizontal)
             {
                 ClientArea = new Rectangle(Position, new Size(size, (int)scrollbarButton.Height));

@@ -182,7 +182,7 @@ namespace ClientServices.State.States
 
             var hotbar = new Hotbar(ResourceManager);
             hotbar.Position = new Point(5, Gorgon.CurrentClippingViewport.Height - hotbar.ClientArea.Height - 5);
-            hotbar.Update();
+            hotbar.Update(0);
             UserInterfaceManager.AddComponent(hotbar);
 
             #region Lighting
@@ -217,41 +217,41 @@ namespace ClientServices.State.States
             UserInterfaceManager.AddComponent(_handsGui);
 
             var combo = new HumanComboGui(PlayerManager, NetworkManager, ResourceManager, UserInterfaceManager);
-            combo.Update();
+            combo.Update(0);
             combo.Position = new Point(hotbar.ClientArea.Right - combo.ClientArea.Width + 5, hotbar.Position.Y - combo.ClientArea.Height - 5);
             UserInterfaceManager.AddComponent(combo);
 
             var healthPanel = new HealthPanel();
             healthPanel.Position = new Point(hotbar.ClientArea.Right - 1, hotbar.Position.Y + 11);
-            healthPanel.Update();
+            healthPanel.Update(0);
             UserInterfaceManager.AddComponent(healthPanel);
 
             var targetingUi = new TargetingGui();
-            targetingUi.Update();
+            targetingUi.Update(0);
             targetingUi.Position = new Point(healthPanel.ClientArea.Right - 1, healthPanel.ClientArea.Bottom - targetingUi.ClientArea.Height);
             UserInterfaceManager.AddComponent(targetingUi);
 
             var inventoryButton = new SimpleImageButton("button_inv", ResourceManager);
             inventoryButton.Position = new Point(hotbar.Position.X + 172, hotbar.Position.Y + 2);
-            inventoryButton.Update();
+            inventoryButton.Update(0);
             inventoryButton.Clicked += new SimpleImageButton.SimpleImageButtonPressHandler(inventoryButton_Clicked);
             UserInterfaceManager.AddComponent(inventoryButton);
 
             var statusButton = new SimpleImageButton("button_status", ResourceManager);
             statusButton.Position = new Point(inventoryButton.ClientArea.Right , inventoryButton.Position.Y);
-            statusButton.Update();
+            statusButton.Update(0);
             statusButton.Clicked += new SimpleImageButton.SimpleImageButtonPressHandler(statusButton_Clicked);
             UserInterfaceManager.AddComponent(statusButton);
 
             var craftButton = new SimpleImageButton("button_craft", ResourceManager);
             craftButton.Position = new Point(statusButton.ClientArea.Right , statusButton.Position.Y);
-            craftButton.Update();
+            craftButton.Update(0);
             craftButton.Clicked += new SimpleImageButton.SimpleImageButtonPressHandler(craftButton_Clicked);
             UserInterfaceManager.AddComponent(craftButton);
 
             var menuButton = new SimpleImageButton("button_menu", ResourceManager);
             menuButton.Position = new Point(craftButton.ClientArea.Right , craftButton.Position.Y);
-            menuButton.Update();
+            menuButton.Update(0);
             menuButton.Clicked += new SimpleImageButton.SimpleImageButtonPressHandler(menuButton_Clicked);
             UserInterfaceManager.AddComponent(menuButton);
 

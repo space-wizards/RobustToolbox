@@ -50,7 +50,7 @@ namespace ClientServices.UserInterface.Components
                 components.Add(unbanButton);
                 unbanButton.UserData = entry.ip;
                 unbanButton.Clicked += UnbanButtClicked;
-                unbanButton.Update();
+                unbanButton.Update(0);
 
                 yOffset += 35;
             }
@@ -65,10 +65,10 @@ namespace ClientServices.UserInterface.Components
             Dispose();
         }
 
-        public override void Update()
+        public override void Update(float frameTime)
         {
             if (disposing || !IsVisible()) return;
-            base.Update();
+            base.Update(frameTime);
         }
 
         public override void Render()

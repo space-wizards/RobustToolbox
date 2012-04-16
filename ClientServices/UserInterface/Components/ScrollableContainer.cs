@@ -49,12 +49,12 @@ namespace ClientServices.UserInterface.Components
             scrollbarV = new Scrollbar(false, _resourceManager);
             scrollbarV.size = Size.Height;
 
-            scrollbarH.Update();
-            scrollbarV.Update();
+            scrollbarH.Update(0);
+            scrollbarV.Update(0);
 
             clippingRI.SourceBlend = AlphaBlendOperation.SourceAlpha;
             clippingRI.DestinationBlend = AlphaBlendOperation.InverseSourceAlpha;
-            Update();
+            Update(0);
         }
 
         public void ResetScrollbars()
@@ -63,7 +63,7 @@ namespace ClientServices.UserInterface.Components
             if (scrollbarV.IsVisible()) scrollbarV.Value = 0;
         }
 
-        public override void Update()
+        public override void Update(float frameTime)
         {
             if (disposing || !IsVisible()) return;
             ClientArea = new Rectangle(Position, new Size(clippingRI.Width, clippingRI.Height));
@@ -94,8 +94,8 @@ namespace ClientServices.UserInterface.Components
             if (max_y > clippingRI.Height) scrollbarV.SetVisible(true);
             else scrollbarV.SetVisible(false);
 
-            scrollbarH.Update();
-            scrollbarV.Update();
+            scrollbarH.Update(frameTime);
+            scrollbarV.Update(frameTime);
         }
 
         public override void Render()
@@ -108,10 +108,10 @@ namespace ClientServices.UserInterface.Components
             {
                 Point oldPos = component.Position;
                 component.Position = new Point(component.Position.X - (int)scrollbarH.Value, component.Position.Y - (int)scrollbarV.Value);
-                component.Update(); //2 Updates per frame D:
+                component.Update(0); //2 Updates per frame D:
                 component.Render();
                 component.Position = oldPos;
-                component.Update();
+                component.Update(0);
             }
             clippingRI.EndDrawing();
             clippingRI.Blit(Position.X, Position.Y);

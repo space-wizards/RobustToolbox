@@ -42,10 +42,10 @@ namespace ClientServices.UserInterface.Components
             tooltip = new TextSprite("tooltip" + _assigned.uid.ToString() + _assigned.name, "", _resourceManager.GetFont("CALIBRI"));
             tooltip.Color = Color.Black;
 
-            Update();
+            Update(0);
         }
 
-        public override sealed void Update()
+        public override sealed void Update(float frameTime)
         {
             _buttonSprite.Position = Position;
             if (assignedEffect.doesExpire)

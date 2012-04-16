@@ -49,7 +49,7 @@ namespace ClientServices.UserInterface.Components
             armR.Clicked += Selected;
             legL.Clicked += Selected;
             legR.Clicked += Selected;
-            Update();
+            Update(0);
             UpdateHealthIcon();
         }
 
@@ -83,13 +83,13 @@ namespace ClientServices.UserInterface.Components
             }
         }
 
-        public override sealed void Update()
+        public override sealed void Update(float frameTime)
         {
             ClientArea = new Rectangle(Position, new Size(_elements[0].ClientArea.Width, _elements[0].ClientArea.Height));
             foreach (var current in _elements)
             {
                 current.Position = Position;
-                current.Update();
+                current.Update(frameTime);
             }
         }
 

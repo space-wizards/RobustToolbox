@@ -38,7 +38,7 @@ namespace ClientServices.UserInterface.Components
             }
 
             UpdateButtons();
-            Update();
+            Update(0);
             //Pull info from compo and sub to event.
         }
 
@@ -61,7 +61,7 @@ namespace ClientServices.UserInterface.Components
             UpdateButtons();
         }
 
-        public override sealed void Update()
+        public override sealed void Update(float frameTime)
         {
             if (assignedEnt != null)
             {
@@ -115,7 +115,7 @@ namespace ClientServices.UserInterface.Components
                         y_off = spacing + (spacing * curr_row_num) + (curr_row_num * 32);
                     }
 
-                    button.Update();
+                    button.Update(frameTime);
                 }
 
                 ClientArea = new Rectangle(Position, new Size(max_x - Position.X, max_y - Position.Y));

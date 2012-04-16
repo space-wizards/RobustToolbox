@@ -29,7 +29,7 @@ namespace ClientServices.UserInterface.Components
             _resourceManager = resourceManager;
             BodyPart = part;
             _elementSprite = _resourceManager.GetSprite(spriteName);
-            Update();
+            Update(0);
         }
 
         public void Select()
@@ -47,7 +47,7 @@ namespace ClientServices.UserInterface.Components
             _selected = false;
         }
 
-        public override sealed void Update()
+        public override sealed void Update(float frameTime)
         {
             _elementSprite.Position = Position;
             ClientArea = new Rectangle(Position, new Size((int)_elementSprite.AABB.Width, (int)_elementSprite.AABB.Height));

@@ -18,7 +18,7 @@ namespace ClientInterfaces.UserInterface
         void ResizeComponents();
         void SetFocus(IGuiComponent newFocus);
         void RemoveFocus();
-        void Update();
+        void Update(float frameTime);
         void Render();
 
         void StartTargeting(IPlayerAction action);

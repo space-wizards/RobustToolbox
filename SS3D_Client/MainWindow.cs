@@ -51,7 +51,7 @@ namespace SS13
             _networkManager.UpdateNetwork();
             _stateManager.Update(e);
 
-            _userInterfaceManager.Update();
+            _userInterfaceManager.Update(e.FrameDeltaTime);
             _userInterfaceManager.Render();
 
             _netGrapher.Update();

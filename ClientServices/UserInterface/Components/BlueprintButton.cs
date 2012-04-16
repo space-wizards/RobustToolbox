@@ -52,10 +52,10 @@ namespace ClientServices.UserInterface.Components
                             Shadowed = true
                         };
 
-            Update();
+            Update(0);
         }
 
-        public override void Update()
+        public override void Update(float frameTime)
         {
             ClientArea = new Rectangle(Position, new Size((int)(Label.Width + _icon.Width), (int)Math.Max(Label.Height, _icon.Height)));
             Label.Position = new Point(Position.X + (int)_icon.Width, Position.Y);

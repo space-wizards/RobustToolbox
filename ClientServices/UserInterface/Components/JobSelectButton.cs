@@ -39,10 +39,10 @@ namespace ClientServices.UserInterface.Components
                                 ShadowOffset = new Vector2D(1, 1)
                             };
 
-            Update();
+            Update(0);
         }
 
-        public override sealed void Update()
+        public override sealed void Update(float frameTime)
         {
             _buttonArea = new Rectangle(new Point(Position.X, Position.Y), new Size((int)_buttonSprite.Width, (int)_buttonSprite.Height));
             ClientArea = new Rectangle(new Point(Position.X, Position.Y), new Size((int)_buttonSprite.Width + (int)_descriptionTextSprite.Width + 2, (int)_buttonSprite.Height));

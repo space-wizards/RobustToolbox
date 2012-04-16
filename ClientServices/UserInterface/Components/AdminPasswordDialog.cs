@@ -50,10 +50,10 @@ namespace ClientServices.UserInterface.Components
             _textboxPassword.Text = string.Empty;
         }
 
-        public override void Update()
+        public override void Update(float frameTime)
         {
             if (disposing || !IsVisible()) return;
-            base.Update();
+            base.Update(frameTime);
             if (_okayButton == null || _textboxPassword == null) return;
 
             _okayButton.Position = new Point((int)(Size.Width / 2f) - (int)(_okayButton.ClientArea.Width / 2f), (Size.Height - _okayButton.ClientArea.Height - 5));

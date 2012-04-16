@@ -35,7 +35,7 @@ namespace ClientServices.UserInterface.Components
             title = new Label(windowTitle, "CALIBRI", _resourceManager);
             gradient = new GradientBox();
             DrawBackground = true;
-            Update();
+            Update(0);
         }
 
         void CloseButtonClicked(SimpleImageButton sender)
@@ -43,22 +43,22 @@ namespace ClientServices.UserInterface.Components
             Dispose();
         }
 
-        public override void Update()
+        public override void Update(float frameTime)
         {
             if (disposing || !IsVisible()) return;
-            base.Update();
+            base.Update(frameTime);
             if (title == null || gradient == null) return;
             var y_pos = ClientArea.Top - (2 * titleBuffer) - title.ClientArea.Height + 1;
             title.Position = new Point(ClientArea.X + 3, y_pos + titleBuffer);
             titleArea = new Rectangle(ClientArea.X, y_pos, ClientArea.Width, title.ClientArea.Height + (2 * titleBuffer));
-            title.Update();
+            title.Update(frameTime);
             closeButton.Position = new Point(titleArea.Right - 5 - closeButton.ClientArea.Width, titleArea.Y + (int)(titleArea.Height / 2f) - (int)(closeButton.ClientArea.Height / 2f));
             var gradientArea = titleArea;
             gradient.ClientArea = gradientArea;
             gradient.Color1 = TitleColor1;
             gradient.Color2 = TitleColor2;
-            gradient.Update();
-            closeButton.Update();
+            gradient.Update(frameTime);
+            closeButton.Update(frameTime);
         }
 
         public override void Render()
@@ -137,7 +137,7 @@ namespace ClientServices.UserInterface.Components
         VertexTypeList.PositionDiffuse2DTexture1[] box = new VertexTypeList.PositionDiffuse2DTexture1[4];
         public bool Vertical = true;
 
-        public override void Update()
+        public override void Update(float frameTime)
         {
             box[0].Position.X = ClientArea.Left;
             box[0].Position.Y = ClientArea.Top;

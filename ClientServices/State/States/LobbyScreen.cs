@@ -260,7 +260,7 @@ namespace ClientServices.State.States
 
         public void Update(FrameEventArgs e)
         {
-            UserInterfaceManager.Update();
+            UserInterfaceManager.Update(e.FrameDeltaTime);
             if (_playerListTime.CompareTo(DateTime.Now) < 0)
             {
                 NetOutgoingMessage playerListMsg = NetworkManager.CreateMessage();

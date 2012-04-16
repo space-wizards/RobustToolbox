@@ -69,7 +69,7 @@ namespace ClientServices.UserInterface.Components
                 components.Add(kickButton);
                 kickButton.UserData = ip;
                 kickButton.Clicked += KickButtonClicked;
-                kickButton.Update();
+                kickButton.Update(0);
 
                 var banButt = new Button("Ban", _resourceManager) { Position = new Point(kickButton.ClientArea.Right + 5, yOffset + (int)(line.ClientArea.Height / 3f)) };
                 components.Add(banButt);
@@ -96,10 +96,10 @@ namespace ClientServices.UserInterface.Components
             _networkManager.SendMessage(msg, NetDeliveryMethod.ReliableUnordered);
         }
 
-        public override void Update()
+        public override void Update(float frameTime)
         {
             if (disposing || !IsVisible()) return;
-            base.Update();
+            base.Update(frameTime);
         }
 
         public override void Render()

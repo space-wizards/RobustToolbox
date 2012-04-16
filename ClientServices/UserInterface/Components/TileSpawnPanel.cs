@@ -89,7 +89,7 @@ namespace ClientServices.UserInterface.Components
                 tileLabel.Position = new Point(5, yOffset);
                 tileLabel.DrawBackground = true;
                 tileLabel.DrawBorder = true;
-                tileLabel.Update();
+                tileLabel.Update(0);
                 yOffset += 5 + tileLabel.ClientArea.Height;
                 tileLabel.Clicked += TileLabelClicked;
                 if (tileLabel.ClientArea.Width > maxWidth) maxWidth = tileLabel.ClientArea.Width;
@@ -117,10 +117,10 @@ namespace ClientServices.UserInterface.Components
             sender.BackgroundColor = Color.ForestGreen;
         }
 
-        public override void Update()
+        public override void Update(float frameTime)
         {
             if (disposing || !IsVisible()) return;
-            base.Update();
+            base.Update(frameTime);
         }
 
         public override void Render()

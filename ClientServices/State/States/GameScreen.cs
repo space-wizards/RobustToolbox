@@ -57,6 +57,7 @@ namespace ClientServices.State.States
         private RenderImage playerOcclusionTarget;
         private FXShader lightBlendShader;
         private FXShader finalBlendShader;
+        private FXShader lightMapShader;
         private RenderImage _sceneTarget;
         private RenderImage _tilesTarget;
         private RenderImage _overlayTarget;
@@ -199,6 +200,7 @@ namespace ClientServices.State.States
             playerOcclusionTarget.UseDepthBuffer = false;
             lightBlendShader = IoCManager.Resolve<IResourceManager>().GetShader("lightblend");
             finalBlendShader = IoCManager.Resolve<IResourceManager>().GetShader("finallight");
+            lightMapShader = IoCManager.Resolve<IResourceManager>().GetShader("lightmap");
 
             playerVision = IoCManager.Resolve<ILightManager>().CreateLight();
             playerVision.SetColor(Color.Transparent);
@@ -550,7 +552,6 @@ namespace ClientServices.State.States
 
                 // Render the lightmap
                 RenderLightMap(lights);
-
                 CalculateSceneBatches(xStart, xEnd, yStart, yEnd, centerTile);
 
                 if (_redrawTiles)
@@ -698,51 +699,120 @@ namespace ClientServices.State.States
         /// <param name="lights">Array of lights</param>
         private void RenderLightMap(ILight[] lights)
         {
+            //Step 1 - Calculate lights that haven't been calculated yet or need refreshing
+            foreach (ILight l in lights.Where(l => l.LightArea.Calculated == false))
+            {
+                if (l.LightState != LightState.On)
+                    continue;
+                //Render the light area to its own target.
+                CalculateLightArea(l);
+            }
+
+            //Step 2 - Set up the render targets for the composite lighting.
             RenderImage source = screenShadows;
             source.Clear(Color.FromArgb(0,0,0,0));
             RenderImage destination = shadowIntermediate;
             Gorgon.CurrentRenderTarget = destination;
-            destination.Clear(Color.FromArgb(0,0,0,0));
             RenderImage copy;
+
+            //Reset the shader and render target
+            Gorgon.CurrentShader = lightMapShader.Techniques["PreLightBlend"];
+
+            var lightTextures = new List<GorgonLibrary.Graphics.Image>();
+            var colors = new List<Vector4D>();
+            var positions = new List<Vector4D>();
+
+            //Step 3 - Blend all the lights!
             foreach (ILight l in lights)
             {
                 //Skip off or broken lights (TODO code broken light states)
                 if (l.LightState != LightState.On)
                     continue;
-
-                Gorgon.CurrentShader = null;
-
-                //Render the light area to its own target.
-                CalculateLightArea(l);
-
-                Gorgon.CurrentShader = lightBlendShader.Techniques["PreLightBlend"];
-                Gorgon.CurrentRenderTarget = destination;
-
+                
                 // LIGHT BLEND STAGE 1 - SIZING -- copys the light texture to a full screen rendertarget
-                var area = (LightArea)l.LightArea;
+                var area = (LightArea) l.LightArea;
 
                 Vector2D blitPos;
                 //Draw the shadow to the shadows target.
-                blitPos = new Vector2D((area.LightPosition.X - area.LightAreaSize.X * 0.5f) - WindowOrigin.X,
-                    (area.LightPosition.Y - area.LightAreaSize.Y * 0.5f) - WindowOrigin.Y); // Find light draw pos
+                blitPos = new Vector2D((area.LightPosition.X - area.LightAreaSize.X*0.5f) - WindowOrigin.X,
+                                       (area.LightPosition.Y - area.LightAreaSize.Y*0.5f) - WindowOrigin.Y);
+                    // Find light draw pos
 
-                destination.Clear(Color.FromArgb(0,0,0,0));
+                //Set shader parameters
                 var LightPositionData = new Vector4D(blitPos.X/source.Width,
-                                                     blitPos.Y / source.Height,
-                                                     (float)source.Width / area.renderTarget.Width,
-                                                     (float)source.Height / area.renderTarget.Height);
-                lightBlendShader.Parameters["LightPositionData"].SetValue(LightPositionData);
-                lightBlendShader.Parameters["DiffuseColor"].SetValue(l.GetColorVec());
-                lightBlendShader.Parameters["LightTexture"].SetValue(area.renderTarget);
-                lightBlendShader.Parameters["SceneTexture"].SetValue(source.Image);
-
-                source.Image.Blit(0, 0, screenShadows.Width, screenShadows.Height, Color.White, BlitterSizeMode.Crop); // Blit the shadow image on top of the screen
-
-                //Swap rendertargets to blend the next light
-                copy = source;
-                source = destination;
-                destination = copy;
+                                                     blitPos.Y/source.Height,
+                                                     (float) source.Width/area.renderTarget.Width,
+                                                     (float) source.Height/area.renderTarget.Height);
+                lightTextures.Add(area.renderTarget.Image);
+                colors.Add(l.GetColorVec());
+                positions.Add(LightPositionData);
             }
+            var i = 0;
+            var num_lights = 6;
+            bool draw = false;
+            bool fill = false;
+            var black = IoCManager.Resolve<IResourceManager>().GetSprite("black5x5").Image;
+            GorgonLibrary.Graphics.Image[] r_img = new GorgonLibrary.Graphics.Image[num_lights];
+            Vector4D[] r_col = new Vector4D[num_lights];
+            Vector4D[] r_pos = new Vector4D[num_lights];
+            do
+            {
+                if(fill)
+                {
+                    for(int j = i;j < num_lights - 1;j++)
+                    {
+                        r_img[j] = black;
+                        r_col[j] = Vector4D.Zero;
+                        r_pos[j] = new Vector4D(0, 0, 1, 1);
+                        j++;
+                    }
+                    i = num_lights;
+                    draw = true;
+                    fill = false;
+                }
+                if(draw)
+                {
+                    Gorgon.CurrentRenderTarget = destination;
+
+                    lightMapShader.Parameters["LightPosData"].SetValue(r_pos);
+                    lightMapShader.Parameters["Colors"].SetValue(r_col);
+                    lightMapShader.Parameters["light1"].SetValue(r_img[0]);
+                    lightMapShader.Parameters["light2"].SetValue(r_img[1]);
+                    lightMapShader.Parameters["light3"].SetValue(r_img[2]);
+                    lightMapShader.Parameters["light4"].SetValue(r_img[3]);
+                    lightMapShader.Parameters["light5"].SetValue(r_img[4]);
+                    lightMapShader.Parameters["light6"].SetValue(r_img[5]);
+                    lightMapShader.Parameters["SceneTexture"].SetValue(source.Image);
+
+                    source.Image.Blit(0, 0, screenShadows.Width, screenShadows.Height, Color.White, BlitterSizeMode.Crop); // Blit the shadow image on top of the screen
+
+                    //Swap rendertargets to set up for the next light
+                    copy = source;
+                    source = destination;
+                    destination = copy;
+                    i = 0;
+                    draw = false;
+                    r_img = new GorgonLibrary.Graphics.Image[num_lights];
+                    r_col = new Vector4D[num_lights];
+                    r_pos = new Vector4D[num_lights];
+                }
+                if(lightTextures.Count > 0)
+                {
+                    var l = lightTextures[0];
+                    lightTextures.RemoveAt(0);
+                    r_img[i] = l;
+                    r_col[i] = colors[0];
+                    colors.RemoveAt(0);
+                    r_pos[i] = positions[0];
+                    positions.RemoveAt(0);
+                    i++;
+                }
+                if (i == num_lights)
+                    draw = true;
+                if (i > 0 && i < num_lights && lightTextures.Count == 0)
+                    fill = true;
+            } while (lightTextures.Count > 0 || draw || fill);
+
             Gorgon.CurrentShader = null;
             if(source != screenShadows)
             {

@@ -36,7 +36,8 @@ namespace ClientServices.UserInterface.Components
 
         Color interpCol = Color.Transparent;
 
-        int blipStart = 0;
+        double blipTime = 0;
+        private int blipSpeed = 60;
         int blipWidth = 15;
 
         private float healthPct = 0;
@@ -93,6 +94,8 @@ namespace ClientServices.UserInterface.Components
                 interpCol = ColorInterpolator.InterpolateBetween(ColCritical, ColHealthy, healthPct);
                 healthPc.Text.Text = Math.Round((healthPct * 100)).ToString() + "%";
             }
+
+            blipTime += frameTime;
         }
 
         public override void Render()
@@ -116,10 +119,15 @@ namespace ClientServices.UserInterface.Components
             int blipUp = 45;
             int blipDown = 57;
 
+            if (blipTime * blipSpeed > blipMaxArea)
+                blipTime = 0;
+
+            int bs = (int)Math.Floor(blipTime * blipSpeed);
+
             Gorgon.CurrentRenderTarget.BlendingMode = BlendingModes.Modulated;
-            for (int i = blipStart; i < (blipStart + blipWidth); i++)
+            for (int i = bs; i < (bs + blipWidth); i++)
             {
-                float sweepPct = (float)i / (blipStart + blipWidth);
+                float sweepPct = (float)i / (bs + blipWidth);
 
                 float alpha = Math.Min(Math.Max((1 - (Math.Abs((blipMaxArea / 2f) - i) / (blipMaxArea / 2f))) * (300f * sweepPct), 0f), 255f);
                 _backgroundSprite.Color = Color.FromArgb((int)alpha, ColorInterpolator.InterpolateBetween(Color.Orange, Color.LawnGreen, healthPct));
@@ -133,7 +141,6 @@ namespace ClientServices.UserInterface.Components
             }
             Gorgon.CurrentRenderTarget.BlendingMode = BlendingModes.None;
 
-            if (++blipStart > blipMaxArea) blipStart = 0;
         }
 
         public override void Resize()

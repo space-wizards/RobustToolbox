@@ -44,6 +44,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MessagingProfiler", "Messag
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Other", "Other", "{0E16F7BE-EB96-4EA3-9077-591BAB4A7214}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Balltest", "POCs\Balltest\Balltest.csproj", "{06F24A69-F66B-42AD-8EA3-632E83010B38}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -373,6 +375,26 @@ Global
 		{3D1ACB1A-28DC-45A1-842E-AA5F2C120278}.ZDebug|Mixed Platforms.Build.0 = Debug|x86
 		{3D1ACB1A-28DC-45A1-842E-AA5F2C120278}.ZDebug|x86.ActiveCfg = Debug|x86
 		{3D1ACB1A-28DC-45A1-842E-AA5F2C120278}.ZDebug|x86.Build.0 = Debug|x86
+		{06F24A69-F66B-42AD-8EA3-632E83010B38}.Debug|Any CPU.ActiveCfg = Debug|x86
+		{06F24A69-F66B-42AD-8EA3-632E83010B38}.Debug|Mixed Platforms.ActiveCfg = Debug|x86
+		{06F24A69-F66B-42AD-8EA3-632E83010B38}.Debug|Mixed Platforms.Build.0 = Debug|x86
+		{06F24A69-F66B-42AD-8EA3-632E83010B38}.Debug|x86.ActiveCfg = Debug|x86
+		{06F24A69-F66B-42AD-8EA3-632E83010B38}.Debug|x86.Build.0 = Debug|x86
+		{06F24A69-F66B-42AD-8EA3-632E83010B38}.DebugMessaging|Any CPU.ActiveCfg = DebugMessaging|x86
+		{06F24A69-F66B-42AD-8EA3-632E83010B38}.DebugMessaging|Mixed Platforms.ActiveCfg = DebugMessaging|x86
+		{06F24A69-F66B-42AD-8EA3-632E83010B38}.DebugMessaging|Mixed Platforms.Build.0 = DebugMessaging|x86
+		{06F24A69-F66B-42AD-8EA3-632E83010B38}.DebugMessaging|x86.ActiveCfg = DebugMessaging|x86
+		{06F24A69-F66B-42AD-8EA3-632E83010B38}.DebugMessaging|x86.Build.0 = DebugMessaging|x86
+		{06F24A69-F66B-42AD-8EA3-632E83010B38}.Release|Any CPU.ActiveCfg = Release|x86
+		{06F24A69-F66B-42AD-8EA3-632E83010B38}.Release|Mixed Platforms.ActiveCfg = Release|x86
+		{06F24A69-F66B-42AD-8EA3-632E83010B38}.Release|Mixed Platforms.Build.0 = Release|x86
+		{06F24A69-F66B-42AD-8EA3-632E83010B38}.Release|x86.ActiveCfg = Release|x86
+		{06F24A69-F66B-42AD-8EA3-632E83010B38}.Release|x86.Build.0 = Release|x86
+		{06F24A69-F66B-42AD-8EA3-632E83010B38}.ZDebug|Any CPU.ActiveCfg = Debug|x86
+		{06F24A69-F66B-42AD-8EA3-632E83010B38}.ZDebug|Mixed Platforms.ActiveCfg = Debug|x86
+		{06F24A69-F66B-42AD-8EA3-632E83010B38}.ZDebug|Mixed Platforms.Build.0 = Debug|x86
+		{06F24A69-F66B-42AD-8EA3-632E83010B38}.ZDebug|x86.ActiveCfg = Debug|x86
+		{06F24A69-F66B-42AD-8EA3-632E83010B38}.ZDebug|x86.Build.0 = Debug|x86
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -380,5 +402,6 @@ Global
 	GlobalSection(NestedProjects) = preSolution
 		{2A99B768-083D-4709-AEB8-791D4D4C6696} = {0E16F7BE-EB96-4EA3-9077-591BAB4A7214}
 		{F5690746-73FD-46E5-8213-56F5853A843C} = {0E16F7BE-EB96-4EA3-9077-591BAB4A7214}
+		{06F24A69-F66B-42AD-8EA3-632E83010B38} = {0E16F7BE-EB96-4EA3-9077-591BAB4A7214}
 	EndGlobalSection
 EndGlobal

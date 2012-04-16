@@ -60,9 +60,9 @@ namespace ClientServices.State.States
                 }
             }
 
-            if (vmList.Any(x => x.Value.Key == Gorgon.Screen.Width && x.Value.Value == Gorgon.Screen.Height))
+            if (vmList.Any(x => x.Value.Key == Gorgon.CurrentClippingViewport.Width && x.Value.Value == Gorgon.CurrentClippingViewport.Height))
             {
-                var curr = vmList.FirstOrDefault(x => x.Value.Key == Gorgon.Screen.Width && x.Value.Value == Gorgon.Screen.Height);
+                var curr = vmList.FirstOrDefault(x => x.Value.Key == Gorgon.CurrentClippingViewport.Width && x.Value.Value == Gorgon.CurrentClippingViewport.Height);
                 _reslistbox.SelectItem(curr.Key, false);
             }
 
@@ -148,7 +148,7 @@ namespace ClientServices.State.States
         public void Update(FrameEventArgs e)
         {
             //_connectbtt.Position = new Point(_connecttxt.Position.X, _connecttxt.Position.Y + _connecttxt.ClientArea.Height + 2);
-            _reslistbox.Position = new Point(45, (int)(Gorgon.Screen.Height / 2.5f));
+            _reslistbox.Position = new Point(45, (int)(Gorgon.CurrentClippingViewport.Height / 2.5f));
             _chkfullscreen.Position = new Point(_reslistbox.Position.X, _reslistbox.Position.Y + _reslistbox.ClientArea.Height + 5);
             _lblfullscreen.Position = new Point(_chkfullscreen.Position.X + _chkfullscreen.ClientArea.Width + 3, _chkfullscreen.Position.Y + (int)(_chkfullscreen.ClientArea.Height / 2f) - (int)(_lblfullscreen.ClientArea.Height / 2f));
             _mainmenubtt.Position = new Point(_reslistbox.Position.X + 650, _reslistbox.Position.Y);
@@ -163,8 +163,8 @@ namespace ClientServices.State.States
 
         public void GorgonRender(FrameEventArgs e)
         {
-            _background.Draw(new Rectangle(0, 0, Gorgon.Screen.Width, Gorgon.Screen.Height));
-            _ticketbg.Draw(new Rectangle(0, (int)(Gorgon.Screen.Height / 2f - _ticketbg.Height / 2f), (int)_ticketbg.Width, (int)_ticketbg.Height));
+            _background.Draw(new Rectangle(0, 0, Gorgon.CurrentClippingViewport.Width, Gorgon.CurrentClippingViewport.Height));
+            _ticketbg.Draw(new Rectangle(0, (int)(Gorgon.CurrentClippingViewport.Height / 2f - _ticketbg.Height / 2f), (int)_ticketbg.Width, (int)_ticketbg.Height));
             UserInterfaceManager.Render();
         }
         public void FormResize()

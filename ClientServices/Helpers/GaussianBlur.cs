@@ -2,17 +2,18 @@
 using System.Drawing;
 using ClientInterfaces;
 using ClientInterfaces.Resource;
+using ClientInterfaces.Utility;
 using GorgonLibrary;
 using GorgonLibrary.Graphics;
+using SS13.IoC;
 
 namespace ClientServices.Helpers
 {
     class GaussianBlur
     {
         private FXShader _shader;
-
-        static Sprite _intermediateTargetSprite;
-        static RenderImage _intermediateTarget;
+        private RenderImage _intermediateTarget;
+        private string targetName;
 
         /// <summary>
         /// Returns the radius of the Gaussian blur filter kernel in pixels.
@@ -65,10 +66,7 @@ namespace ClientServices.Helpers
         {
             _resourceManager = resourceManager;
 
-            if(_intermediateTarget == null)
-                _intermediateTarget = new RenderImage("gaussianIntermediateTarget", Gorgon.Screen.Width, Gorgon.Screen.Height, ImageBufferFormats.BufferRGB888A8);
-            if(_intermediateTargetSprite == null)
-                _intermediateTargetSprite = new Sprite("gaussianIntermediateTargetSprite", _intermediateTarget);
+            targetName = "gaussTarget" + IoCManager.Resolve<IRand>().Next(0, 1000000000);
             
             //Set Defaults
             Radius = 7;
@@ -83,7 +81,6 @@ namespace ClientServices.Helpers
 
         public void Dispose()
         {
-
         }
 
         public void SetAmount(float amount)
@@ -166,8 +163,6 @@ namespace ClientServices.Helpers
         /// from chapter 17 of "Filthy Rich Clients: Developing Animated and
         /// Graphical Effects for Desktop Java".
         /// </summary>
-        /// <param name="textureWidth">The texture width in pixels.</param>
-        /// <param name="textureHeight">The texture height in pixels.</param>
         public void ComputeOffsets()
         {
             float textureWidth = Size.Width;
@@ -191,56 +186,33 @@ namespace ClientServices.Helpers
             }
         }
 
-        public void PerformGaussianBlur(Sprite sourceSprite, RenderImage sourceImage)
-        {
-            // Perform horizontal Gaussian blur.
-            _intermediateTarget.Clear(System.Drawing.Color.FromArgb(0, System.Drawing.Color.Black));
-            //game.GraphicsDevice.SetRenderTarget(renderTarget1);
-            Gorgon.CurrentRenderTarget = _intermediateTarget;
-            Gorgon.CurrentShader = _shader.Techniques["GaussianBlurHorizontal"];
-
-            _shader.Parameters["weights_offsets"].SetValue(WeightsOffsetsX);
-            _shader.Parameters["colorMapTexture"].SetValue(sourceImage);
-
-            sourceSprite.Draw();
-
-            // Perform vertical Gaussian blur.
-            Gorgon.CurrentRenderTarget = sourceImage;
-            Gorgon.CurrentShader = _shader.Techniques["GaussianBlurVertical"];
-
-            _shader.Parameters["colorMapTexture"].SetValue(_intermediateTarget);
-            _shader.Parameters["weights_offsets"].SetValue(WeightsOffsetsY);
-
-            _intermediateTargetSprite.Draw();
-
-            Gorgon.CurrentShader = null;
-            Gorgon.CurrentRenderTarget = null;
-        }
-
         public void PerformGaussianBlur(RenderImage sourceImage)
         {
             // Perform horizontal Gaussian blur.
-            _intermediateTarget.Clear(System.Drawing.Color.FromArgb(0, System.Drawing.Color.Black));
-            //game.GraphicsDevice.SetRenderTarget(renderTarget1);
+            _intermediateTarget = new RenderImage(targetName, sourceImage.Width, sourceImage.Height, sourceImage.Format);
+            _intermediateTarget.Clear(Color.Black);
+
             Gorgon.CurrentRenderTarget = _intermediateTarget;
             Gorgon.CurrentShader = _shader.Techniques["GaussianBlurHorizontal"];
 
             _shader.Parameters["weights_offsets"].SetValue(WeightsOffsetsX);
-            _shader.Parameters["colorMapTexture"].SetValue(sourceImage);
+            _shader.Parameters["colorMapTexture"].SetValue(sourceImage.Image);
 
-            sourceImage.Blit(0,0,sourceImage.Width, sourceImage.Height);
+            sourceImage.Image.Blit(0, 0, sourceImage.Image.Width, sourceImage.Image.Height);
 
             // Perform vertical Gaussian blur.
             Gorgon.CurrentRenderTarget = sourceImage;
             Gorgon.CurrentShader = _shader.Techniques["GaussianBlurVertical"];
 
-            _shader.Parameters["colorMapTexture"].SetValue(_intermediateTarget);
+            _shader.Parameters["colorMapTexture"].SetValue(_intermediateTarget.Image);
             _shader.Parameters["weights_offsets"].SetValue(WeightsOffsetsY);
 
-            _intermediateTargetSprite.Draw();
+            //_intermediateTargetSprite.Draw();
+            _intermediateTarget.Image.Blit(0, 0, sourceImage.Image.Width, sourceImage.Image.Height);
 
             Gorgon.CurrentShader = null;
             Gorgon.CurrentRenderTarget = null;
+            _intermediateTarget.Dispose();
         }
     }
 }

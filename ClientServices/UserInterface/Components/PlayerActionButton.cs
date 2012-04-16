@@ -100,7 +100,7 @@ namespace ClientServices.UserInterface.Components
                     (cooldownLeft > 0 ? Environment.NewLine + Environment.NewLine + "Cooldown : " + cooldownLeft.ToString() + " sec" : "");
 
                 tooltip.Text = tooltipStr;
-                float x_pos = (tooltipPos.X + 10 + tooltip.Width + 5 + offset.X) > Gorgon.Screen.Width ? 0 - tooltip.Width - 10 : 10 + 5;
+                float x_pos = (tooltipPos.X + 10 + tooltip.Width + 5 + offset.X) > Gorgon.CurrentClippingViewport.Width ? 0 - tooltip.Width - 10 : 10 + 5;
                 tooltip.Position = new Vector2D(tooltipPos.X + x_pos + 5 + offset.X, tooltipPos.Y + 5 + 10 + offset.Y);
                 Gorgon.CurrentRenderTarget.FilledRectangle(tooltipPos.X + x_pos + offset.X, tooltipPos.Y + 10 + offset.Y, tooltip.Width + 5, tooltip.Height + 5, Color.SteelBlue);
                 Gorgon.CurrentRenderTarget.Rectangle(tooltipPos.X + x_pos + offset.X, tooltipPos.Y + 10 + offset.Y, tooltip.Width + 5, tooltip.Height + 5, Color.DarkSlateBlue);

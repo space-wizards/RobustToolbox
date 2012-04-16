@@ -38,18 +38,18 @@ namespace ClientWindow
         /// Translates a world position to a screen position.
         /// </summary>
         /// <param name="position">position to translate</param>
-        public Vector2D WorldToScreen(Vector2D position)
+        public static Vector2D WorldToScreen(Vector2D position)
         {
-            return position - ScreenOrigin;
+            return position - Singleton.ScreenOrigin;
         }
 
         /// <summary>
         /// Translates a screen position to a world position
         /// </summary>
         /// <param name="position">position to translate</param>
-        public Vector2D ScreenToWorld(Vector2D position)
+        public static Vector2D ScreenToWorld(Vector2D position)
         {
-            return position + ScreenOrigin;
+            return position + Singleton.ScreenOrigin;
         }
 
         #endregion
@@ -70,6 +70,7 @@ namespace ClientWindow
 
         /// <summary>
         /// Updates the ScreenTopLeft and Viewport variables given a center point.
+        /// WORLD POSITION
         /// </summary>
         /// <param name="x">Center point x</param>
         /// <param name="y">Center point y</param>

@@ -14,6 +14,9 @@ namespace SS3D.LightTest
     public class LightArea : ILightArea
     {
         public RenderImage renderTarget { get; private set; }
+        /// <summary>
+        /// World position coordinates of the light's center
+        /// </summary>
         public Vector2D LightPosition { get; set; }
         public Vector2D LightAreaSize { get; set; }
         public bool Calculated { get; set; }

@@ -31,9 +31,14 @@ namespace SS13_Server
         public Dictionary<NetConnection, IClient> ClientList = new Dictionary<NetConnection, IClient>();
         public IEntityManager EntityManager { get; private set; }
         public RunLevel Runlevel {get; private set;}
+        
+        public string ConsoleTitle { get; private set; }
+        private List<float> frameTimes = new List<float>();
+
 
         // The servers current frame time
         public DateTime Time;   
+        
 
         //SAVE THIS SOMEWHERE ELSE
         private const int GameCountdown = 15;
@@ -198,6 +203,14 @@ namespace SS13_Server
                     var sleepTime = Time.AddMilliseconds(FramePeriod) - DateTime.Now;
                     if (sleepTime.TotalMilliseconds > 0)
                         Thread.Sleep(sleepTime);
+                    var ElapsedTime = DateTime.Now - Time;
+                    if(frameTimes.Count >= 30)
+                        frameTimes.RemoveAt(0);
+                    var rate = 1/(ElapsedTime.TotalMilliseconds/1000);
+                    frameTimes.Add((float)rate);
+
+                    var netstats = IoCManager.Resolve<ISS13NetServer>().Statistics.SentBytes + " " + IoCManager.Resolve<ISS13NetServer>().Statistics.ReceivedBytes;
+                    Console.Title = "FPS: " + Math.Round(frameTimeAverage(), 2) + " Netstats: " + netstats;
                 }
                 catch (Exception e)
                 {
@@ -207,6 +220,13 @@ namespace SS13_Server
             }
         }
 
+        private float frameTimeAverage()
+        {
+            if(frameTimes.Count == 0)
+                return 0;
+            return frameTimes.Average(p => p);
+        }
+
         public void ProcessPackets()
         {
             try
@@ -214,8 +234,6 @@ namespace SS13_Server
                 NetIncomingMessage msg;
                 while ((msg = IoCManager.Resolve<ISS13NetServer>().ReadMessage()) != null)
                 {
-                    Console.Title = IoCManager.Resolve<ISS13NetServer>().Statistics.SentBytes + " " + IoCManager.Resolve<ISS13NetServer>().Statistics.ReceivedBytes;
-
                     switch (msg.MessageType)
                     {
                         case NetIncomingMessageType.VerboseDebugMessage:

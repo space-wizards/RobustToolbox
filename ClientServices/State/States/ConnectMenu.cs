@@ -123,7 +123,7 @@ namespace ClientServices.State.States
 
         public void Update(FrameEventArgs e)
         {
-            _connectTextbox.Position = new Point(Gorgon.Screen.Width - (int)(Gorgon.Screen.Width / 4f) - _connectTextbox.ClientArea.Width, (int)(Gorgon.Screen.Height / 2.7f));
+            _connectTextbox.Position = new Point(Gorgon.CurrentClippingViewport.Width - (int)(Gorgon.CurrentClippingViewport.Width / 4f) - _connectTextbox.ClientArea.Width, (int)(Gorgon.CurrentClippingViewport.Height / 2.7f));
             _connectButton.Position = new Point(_connectTextbox.Position.X, _connectTextbox.Position.Y + _connectTextbox.ClientArea.Height + 2);
             _optionsButton.Position = new Point(_connectButton.Position.X, _connectButton.Position.Y + _connectButton.ClientArea.Height + 10);
             _exitButton.Position = new Point(_optionsButton.Position.X, _optionsButton.Position.Y + _optionsButton.ClientArea.Height + 10);

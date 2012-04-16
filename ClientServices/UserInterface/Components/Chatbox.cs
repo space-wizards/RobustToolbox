@@ -58,7 +58,7 @@ namespace ClientServices.UserInterface.Components
             const int width = 475;
             const int height = 175;
 
-            Position = new Point(Gorgon.Screen.Width - width - 10, 10);
+            Position = new Point(Gorgon.CurrentClippingViewport.Width - width - 10, 10);
 
             ClientArea = new Rectangle(Position.X, Position.Y, width, height);
 

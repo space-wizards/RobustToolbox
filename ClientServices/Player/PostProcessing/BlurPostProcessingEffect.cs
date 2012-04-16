@@ -17,9 +17,6 @@ namespace ClientServices.Player.PostProcessing
         public BlurPostProcessingEffect(float duration)
             :base(duration)
         {
-            //_gaussianBlur.SetAmount(1.1f);
-            
-            
         }
 
         public override void ProcessImage(RenderImage image)

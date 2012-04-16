@@ -40,7 +40,7 @@ namespace ClientServices.Helpers
             {
                 for (var i = 0; i < _stars.Length / 4; i++)
                 {
-                    _stars[i, layer].Position = new Vector2D((float)(_random.NextDouble() * Gorgon.Screen.Width), (float)(_random.NextDouble() * Gorgon.Screen.Height));
+                    _stars[i, layer].Position = new Vector2D((float)(_random.NextDouble() * Gorgon.Screen.Width), (float)(_random.NextDouble() * Gorgon.CurrentClippingViewport.Height));
 
                     // Select magnitude.
                     switch (layer)
@@ -77,8 +77,8 @@ namespace ClientServices.Helpers
                 _stars[i, layer].Position.Y += _stars[i, layer].VDelta * deltaTime;
 
                 // Wrap around.
-                if (_stars[i, layer].Position.Y > Gorgon.Screen.Height)
-                    _stars[i, layer].Position = new Vector2D((float)(_random.NextDouble() * Gorgon.Screen.Width), 0);
+                if (_stars[i, layer].Position.Y > Gorgon.CurrentClippingViewport.Height)
+                    _stars[i, layer].Position = new Vector2D((float)(_random.NextDouble() * Gorgon.CurrentClippingViewport.Width), 0);
             }
         }
 

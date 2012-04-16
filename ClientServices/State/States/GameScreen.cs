@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using System.Drawing;
 
@@ -103,6 +104,9 @@ namespace ClientServices.State.States
 
         #endregion
 
+        /// <summary>
+        /// Center point of the current render window.
+        /// </summary>
         private Vector2D WindowOrigin
         {
             get { return ClientWindowData.Singleton.ScreenOrigin; }
@@ -138,20 +142,20 @@ namespace ClientServices.State.States
             // TODO This should go somewhere else, there should be explicit session setup and teardown at some point.
             NetworkManager.SendClientName(ConfigurationManager.GetPlayerName());
 
-            _baseTarget = new RenderImage("baseTarget", Gorgon.Screen.Width, Gorgon.Screen.Height, ImageBufferFormats.BufferRGB888A8);
+            _baseTarget = new RenderImage("baseTarget", Gorgon.CurrentClippingViewport.Width, Gorgon.CurrentClippingViewport.Height, ImageBufferFormats.BufferRGB888A8);
 
             _baseTargetSprite = new Sprite("baseTargetSprite", _baseTarget) { DepthWriteEnabled = false };
 
-            _sceneTarget = new RenderImage("sceneTarget", Gorgon.Screen.Width, Gorgon.Screen.Height, ImageBufferFormats.BufferRGB888A8);
-            _tilesTarget = new RenderImage("tilesTarget", Gorgon.Screen.Width, Gorgon.Screen.Height, ImageBufferFormats.BufferRGB888A8);
-            _overlayTarget = new RenderImage("overlayTarget", Gorgon.Screen.Width, Gorgon.Screen.Height, ImageBufferFormats.BufferRGB888A8);
+            _sceneTarget = new RenderImage("sceneTarget", Gorgon.CurrentClippingViewport.Width, Gorgon.CurrentClippingViewport.Height, ImageBufferFormats.BufferRGB888A8);
+            _tilesTarget = new RenderImage("tilesTarget", Gorgon.CurrentClippingViewport.Width, Gorgon.CurrentClippingViewport.Height, ImageBufferFormats.BufferRGB888A8);
+            _overlayTarget = new RenderImage("overlayTarget", Gorgon.CurrentClippingViewport.Width, Gorgon.CurrentClippingViewport.Height, ImageBufferFormats.BufferRGB888A8);
             _overlaySprite = new Sprite("overlaySprite", _overlayTarget);
             _overlaySprite.SetPosition(0,0);
-            _composedSceneTarget = new RenderImage("composedSceneTarget", Gorgon.Screen.Width, Gorgon.Screen.Height, ImageBufferFormats.BufferRGB888A8);
+            _composedSceneTarget = new RenderImage("composedSceneTarget", Gorgon.CurrentClippingViewport.Width, Gorgon.CurrentClippingViewport.Height, ImageBufferFormats.BufferRGB888A8);
 
-            _lightTarget = new RenderImage("lightTarget", Gorgon.Screen.Width, Gorgon.Screen.Height, ImageBufferFormats.BufferRGB888A8);
+            _lightTarget = new RenderImage("lightTarget", Gorgon.CurrentClippingViewport.Width, Gorgon.CurrentClippingViewport.Height, ImageBufferFormats.BufferRGB888A8);
             _lightTargetSprite = new Sprite("lightTargetSprite", _lightTarget) { DepthWriteEnabled = false };
-            _lightTargetIntermediate = new RenderImage("lightTargetIntermediate", Gorgon.Screen.Width, Gorgon.Screen.Height, ImageBufferFormats.BufferRGB888A8);
+            _lightTargetIntermediate = new RenderImage("lightTargetIntermediate", Gorgon.CurrentClippingViewport.Width, Gorgon.CurrentClippingViewport.Height, ImageBufferFormats.BufferRGB888A8);
             _lightTargetIntermediateSprite = new Sprite("lightTargetIntermediateSprite", _lightTargetIntermediate) { DepthWriteEnabled = false };
 
             _gasBatch = new Batch("gasBatch", 1);
@@ -173,11 +177,11 @@ namespace ClientServices.State.States
             //UserInterfaceManager.AddComponent(new StatPanelComponent(ConfigurationManager.GetPlayerName(), PlayerManager, NetworkManager, ResourceManager));
 
             var statusBar = new StatusEffectBar(ResourceManager, PlayerManager);
-            statusBar.Position = new Point(Gorgon.Screen.Width - 800, 10);
+            statusBar.Position = new Point(Gorgon.CurrentClippingViewport.Width - 800, 10);
             UserInterfaceManager.AddComponent(statusBar);
 
             var hotbar = new Hotbar(ResourceManager);
-            hotbar.Position = new Point(5, Gorgon.Screen.Height - hotbar.ClientArea.Height - 5);
+            hotbar.Position = new Point(5, Gorgon.CurrentClippingViewport.Height - hotbar.ClientArea.Height - 5);
             hotbar.Update();
             UserInterfaceManager.AddComponent(hotbar);
 
@@ -257,7 +261,7 @@ namespace ClientServices.State.States
         {
             var w = Gorgon.CurrentClippingViewport.Width;
             var h = Gorgon.CurrentClippingViewport.Height;
-
+            
             _baseTarget.Width = w;
             _baseTarget.Height = h;
             _sceneTarget.Width = w;
@@ -266,6 +270,8 @@ namespace ClientServices.State.States
             _tilesTarget.Height = h;
             _overlayTarget.Width = w;
             _overlayTarget.Height = h;
+            _overlaySprite.Width = w;
+            _overlaySprite.Height = h;
             _composedSceneTarget.Width = w;
             _composedSceneTarget.Height = h;
             _lightTarget.Width = w;
@@ -278,8 +284,14 @@ namespace ClientServices.State.States
             shadowIntermediate.Height = h;
             shadowBlendIntermediate.Width = w;
             shadowBlendIntermediate.Height = h;
+            playerOcclusionTarget.Dispose();
+            playerOcclusionTarget = new RenderImage("playerOcclusionTarget", Gorgon.CurrentClippingViewport.Width, Gorgon.CurrentClippingViewport.Height, ImageBufferFormats.BufferRGB888A8);
             playerOcclusionTarget.Width = w;
             playerOcclusionTarget.Height = h;
+            //playerOcclusionTarget.DeviceReset();
+            _gaussianBlur.Dispose();
+            _gaussianBlur = new GaussianBlur(ResourceManager);
+
         }
 
         void menuButton_Clicked(SimpleImageButton sender)
@@ -531,8 +543,8 @@ namespace ClientServices.State.States
             _baseTarget.Clear(System.Drawing.Color.Black);
             Gorgon.Screen.Clear(System.Drawing.Color.Black);
 
-            Gorgon.Screen.DefaultView.Left = 400;
-            Gorgon.Screen.DefaultView.Top = 400;
+            //Gorgon.Screen.DefaultView.Left = 400;
+            //Gorgon.Screen.DefaultView.Top = 400;
 
             //CalculateAllLights();
 
@@ -667,21 +679,22 @@ namespace ClientServices.State.States
             finalBlendShader.Parameters["PlayerViewTexture"].SetValue(playerOcclusionTarget);
             Sprite outofview = IoCManager.Resolve<IResourceManager>().GetSprite("outofview");
             finalBlendShader.Parameters["OutOfViewTexture"].SetValue(outofview.Image);
-            var texratiox = Gorgon.Screen.Width / outofview.Width;
-            var texratioy = Gorgon.Screen.Height / outofview.Height;
+            var texratiox = Gorgon.CurrentClippingViewport.Width / outofview.Width;
+            var texratioy = Gorgon.CurrentClippingViewport.Height / outofview.Height;
             var maskProps = new Vector4D(texratiox, texratioy, 0, 0);
             finalBlendShader.Parameters["MaskProps"].SetValue(maskProps);
             finalBlendShader.Parameters["LightTexture"].SetValue(screenShadows);
             finalBlendShader.Parameters["SceneTexture"].SetValue(_sceneTarget);
             finalBlendShader.Parameters["AmbientLight"].SetValue(new Vector4D(.05f, .05f, 0.05f, 1));
-            screenShadows.Image.Blit(0, 0, screenShadows.Width, screenShadows.Height, Color.White, BlitterSizeMode.Crop);
+            screenShadows.Image.Blit(0, 0, screenShadows.Width, screenShadows.Height, Color.White, BlitterSizeMode.Crop); 
+            
             // Blit the shadow image on top of the screen
             Gorgon.CurrentShader = null;
             Gorgon.CurrentRenderTarget = null;
-            
+
             PlayerPostProcess();
 
-            _composedSceneTarget.Image.Blit(0,0, Gorgon.Screen.Width, Gorgon.Screen.Height, Color.White, BlitterSizeMode.Crop);
+            _composedSceneTarget.Image.Blit(0,0, Gorgon.CurrentClippingViewport.Width, Gorgon.CurrentClippingViewport.Height, Color.White, BlitterSizeMode.Crop);
             //screenShadows.Blit(0,0);
             //playerOcclusionTarget.Blit(0,0);
         }
@@ -733,10 +746,8 @@ namespace ClientServices.State.States
                 var area = (LightArea) l.LightArea;
 
                 Vector2D blitPos;
-                //Draw the shadow to the shadows target.
-                blitPos = new Vector2D((area.LightPosition.X - area.LightAreaSize.X*0.5f) - WindowOrigin.X,
-                                       (area.LightPosition.Y - area.LightAreaSize.Y*0.5f) - WindowOrigin.Y);
-                    // Find light draw pos
+                //Set the drawing position.
+                blitPos = ClientWindowData.WorldToScreen(area.LightPosition - area.LightAreaSize * 0.5f);
 
                 //Set shader parameters
                 var LightPositionData = new Vector4D(blitPos.X/source.Width,
@@ -830,7 +841,7 @@ namespace ClientServices.State.States
                 playerOcclusionTarget.Clear(Color.Black);
                 playerVision.Move(PlayerManager.ControlledEntity.Position);
                 LightArea area = GetLightArea(RadiusToShadowMapSize(playerVision.Radius));
-                area.LightPosition = playerVision.Position;//mousePosWorld; // Set the light position
+                area.LightPosition = playerVision.Position; // Set the light position
                 if (MapManager.GetTileTypeFromWorldPosition(playerVision.Position) == TileType.Wall)
                 {
                     area.LightPosition = new Vector2D(area.LightPosition.X, MapManager.GetTileAt(playerVision.Position).Position.Y + MapManager.GetTileSpacing() + 1);
@@ -843,9 +854,7 @@ namespace ClientServices.State.States
 
                 Gorgon.CurrentRenderTarget = playerOcclusionTarget; // Set to shadow rendertarget
 
-                //Draw the shadow to the shadows target.
-                blitPos = new Vector2D((area.LightPosition.X - area.LightAreaSize.X * 0.5f) - WindowOrigin.X,
-                    (area.LightPosition.Y - area.LightAreaSize.Y * 0.5f) - WindowOrigin.Y); // Find light draw pos
+                blitPos = ClientWindowData.WorldToScreen(area.LightPosition - area.LightAreaSize*0.5f);
                 area.renderTarget.SourceBlend = AlphaBlendOperation.One; //Additive blending
                 area.renderTarget.DestinationBlend = AlphaBlendOperation.Zero; //Additive blending
                 area.renderTarget.Blit(blitPos.X, blitPos.Y, area.renderTarget.Width,
@@ -982,12 +991,13 @@ namespace ClientServices.State.States
        
         public void FormResize()
         {
-            Gorgon.CurrentClippingViewport = new Viewport(0, 0, Gorgon.Screen.Width, Gorgon.Screen.Height);
+            Gorgon.CurrentClippingViewport = new Viewport(0, 0, Gorgon.CurrentClippingViewport.Width, Gorgon.CurrentClippingViewport.Height);
+            ClientWindowData.Singleton.UpdateViewPort(PlayerManager.ControlledEntity.Position);
             UserInterfaceManager.ResizeComponents();
             ResetRendertargets();
-            ClientWindowData.Singleton.UpdateViewPort(PlayerManager.ControlledEntity.Position);
             IoCManager.Resolve<ILightManager>().RecalculateLights();
             RecalculateScene();
+            
         }
 
         #region Input

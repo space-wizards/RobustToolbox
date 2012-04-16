@@ -194,7 +194,7 @@ namespace CGO
                 || Owner.Position.Y > bottomRight.Y)
                 return;
 
-            var renderPos = ClientWindowData.Singleton.WorldToScreen(Owner.Position);
+            var renderPos = ClientWindowData.WorldToScreen(Owner.Position);
             SetSpriteCenter(currentSprite, renderPos);
 
             currentSprite.HorizontalFlip = flip;

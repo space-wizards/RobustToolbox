@@ -4,4 +4,9 @@
   <ServerName>SS13 Server</ServerName>
   <AdminPassword>admin123</AdminPassword>
   <MessageLogging>false</MessageLogging>
+  <serverMaxPlayers>32</serverMaxPlayers>
+  <framePeriod>1</framePeriod>
+  <gameType>Game</gameType>
+  <serverMapName>SavedMap</serverMapName>
+  <serverWelcomeMessage>Hello and have a great fucking day!</serverWelcomeMessage>
 </PersistentConfiguration>

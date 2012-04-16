@@ -27,6 +27,11 @@ namespace ClientServices.Lighting
                 _lights.Remove(light);
         }
 
+        public ILight[] GetLights()
+        {
+            return _lights.ToArray();
+        }
+
         public ILight[] lightsInRadius(Vector2D point, float radius)
         {
             return _lights.FindAll(l => Math.Abs((l.Position - point).Length) <= radius).ToArray();

@@ -532,6 +532,8 @@ namespace ClientServices.State.States
             Gorgon.Screen.DefaultView.Left = 400;
             Gorgon.Screen.DefaultView.Top = 400;
 
+            //CalculateAllLights();
+
             if (PlayerManager.ControlledEntity != null)
             {
                 RenderTarget tempTarget;
@@ -541,8 +543,6 @@ namespace ClientServices.State.States
                 var yStart = Math.Max(0, centerTile.Y - (ScreenHeightTiles / 2) - 1);
                 var xEnd = Math.Min(xStart + ScreenWidthTiles + 2, MapManager.GetMapWidth() - 1);
                 var yEnd = Math.Min(yStart + ScreenHeightTiles + 2, MapManager.GetMapHeight() - 1);
-
-
 
                 // Get nearby lights
                 var lights =
@@ -599,6 +599,14 @@ namespace ClientServices.State.States
                 LightScene();
                 //Render the placement manager shit
                 PlacementManager.Render();
+            }
+        }
+
+        private void CalculateAllLights()
+        {
+            foreach(ILight l in IoCManager.Resolve<ILightManager>().GetLights().Where(l => l.LightArea.Calculated == false))
+            {
+                CalculateLightArea(l);
             }
         }
 
@@ -691,19 +699,24 @@ namespace ClientServices.State.States
         private void RenderLightMap(ILight[] lights)
         {
             RenderImage source = screenShadows;
-            source.Clear(Color.FromArgb(1,1,1,1));
+            source.Clear(Color.FromArgb(0,0,0,0));
             RenderImage destination = shadowIntermediate;
-            destination.Clear(Color.FromArgb(1,1,1,1));
+            Gorgon.CurrentRenderTarget = destination;
+            destination.Clear(Color.FromArgb(0,0,0,0));
             RenderImage copy;
-            Gorgon.CurrentShader = lightBlendShader.Techniques["PreLightBlend"];
             foreach (ILight l in lights)
             {
                 //Skip off or broken lights (TODO code broken light states)
                 if (l.LightState != LightState.On)
                     continue;
 
+                Gorgon.CurrentShader = null;
+
                 //Render the light area to its own target.
                 CalculateLightArea(l);
+
+                Gorgon.CurrentShader = lightBlendShader.Techniques["PreLightBlend"];
+                Gorgon.CurrentRenderTarget = destination;
 
                 // LIGHT BLEND STAGE 1 - SIZING -- copys the light texture to a full screen rendertarget
                 var area = (LightArea)l.LightArea;
@@ -713,8 +726,7 @@ namespace ClientServices.State.States
                 blitPos = new Vector2D((area.LightPosition.X - area.LightAreaSize.X * 0.5f) - WindowOrigin.X,
                     (area.LightPosition.Y - area.LightAreaSize.Y * 0.5f) - WindowOrigin.Y); // Find light draw pos
 
-                Gorgon.CurrentRenderTarget = destination;
-                destination.Clear(Color.FromArgb(1,1,1,1));
+                destination.Clear(Color.FromArgb(0,0,0,0));
                 var LightPositionData = new Vector4D(blitPos.X/source.Width,
                                                      blitPos.Y / source.Height,
                                                      (float)source.Width / area.renderTarget.Width,
@@ -736,8 +748,8 @@ namespace ClientServices.State.States
             {
                 Gorgon.CurrentRenderTarget = screenShadows;
                 source.Image.Blit(0,0, source.Width, source.Height, Color.White, BlitterSizeMode.Crop);
-                Gorgon.CurrentRenderTarget = null;
             }
+            Gorgon.CurrentRenderTarget = null;
         }
 
         private void RenderPlayerVisionMap()
@@ -776,7 +788,6 @@ namespace ClientServices.State.States
                 playerOcclusionTarget.Clear(Color.White);
             }
         }
-
 
         private void CalculateLightArea(ILight l)
         {

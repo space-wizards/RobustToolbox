@@ -1,7 +1,7 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <Configuration xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema">
-    <DisplayWidth>1600</DisplayWidth>
-    <DisplayHeight>900</DisplayHeight>
+    <DisplayWidth>1280</DisplayWidth>
+    <DisplayHeight>768</DisplayHeight>
     <Fullscreen>false</Fullscreen>
     <VSync>true</VSync>
     <ResourcePack>..\..\..\Media\ResourcePack.zip</ResourcePack>

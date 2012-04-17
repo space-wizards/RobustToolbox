@@ -125,5 +125,10 @@ namespace ServerServices.Player
                     x => x.status == SessionStatus.InLobby).ToArray();
         }
 
+        public IPlayerSession[] GetAllPlayers()
+        {
+            return playerSessions.Values.ToArray();
+        }
+
     }
 }

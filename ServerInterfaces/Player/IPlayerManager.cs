@@ -25,5 +25,6 @@ namespace ServerInterfaces.Player
         void DetachAll();
         IPlayerSession[] GetPlayersInLobby();
         IPlayerSession[] GetPlayersInRange(Vector2 position, int range);
+        IPlayerSession[] GetAllPlayers();
     }
 }

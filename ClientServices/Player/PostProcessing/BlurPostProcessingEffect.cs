@@ -28,6 +28,7 @@ namespace ClientServices.Player.PostProcessing
             else 
                 _gaussianBlur.SetRadius(7);
             
+            _gaussianBlur.SetSize(new SizeF(image.Width, image.Height));
             _gaussianBlur.SetAmount(Math.Min(_duration / 2, 3f));
             _gaussianBlur.PerformGaussianBlur(image);
         }

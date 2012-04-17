@@ -12,6 +12,7 @@ namespace ClientServices.Player.PostProcessing
     {
         protected bool CanExpire = false;
         protected float _duration;
+        protected float _frameTime;
 
         public PostProcessingEffect(float duration)
         {
@@ -31,6 +32,7 @@ namespace ClientServices.Player.PostProcessing
         public virtual void Update(float frameTime)
         {
             _duration -= frameTime;
+            _frameTime = frameTime;
             if (!CanExpire)
                 return;
             if(_duration <= 0 )

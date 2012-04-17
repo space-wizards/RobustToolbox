@@ -4,5 +4,7 @@
     {
         Blur,
         Death,
+        Perlin,
+        Acid
     }
 }

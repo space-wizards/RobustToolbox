@@ -173,6 +173,12 @@ namespace ServerServices.Chat
                     }
                     
                     break;
+                case "everyonesondrugs":
+                    foreach (var playerfordrugs in IoCManager.Resolve<IPlayerManager>().GetAllPlayers())
+                    {
+                        playerfordrugs.AddPostProcessingEffect(PostProcessingEffectType.Acid, 60);
+                    }
+                    break;
                 /*    
                 case "sprayblood":
                     if (player == null)

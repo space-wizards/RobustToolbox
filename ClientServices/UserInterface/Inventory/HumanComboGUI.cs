@@ -650,52 +650,52 @@ namespace ClientServices.UserInterface.Inventory
                 if (_tabEquip.MouseDown(e)) return true;
                 if (_tabHealth.MouseDown(e)) return true;
                 if (_tabCraft.MouseDown(e)) return true;
+
+                switch (_currentTab)
+                {
+                    case (1): //Equip tab
+                        {
+                            #region Equip
+                            //Left Side - head, eyes, outer, hands, feet
+                            if (_slotHead.MouseDown(e)) return true;
+                            if (_slotEyes.MouseDown(e)) return true;
+                            if (_slotOuter.MouseDown(e)) return true;
+                            if (_slotHands.MouseDown(e)) return true;
+                            if (_slotFeet.MouseDown(e)) return true;
+
+                            //Right Side - mask, ears, inner, belt, back
+                            if (_slotMask.MouseDown(e)) return true;
+                            if (_slotEars.MouseDown(e)) return true;
+                            if (_slotInner.MouseDown(e)) return true;
+                            if (_slotBelt.MouseDown(e)) return true;
+                            if (_slotBack.MouseDown(e)) return true;
+
+                            if (_inventory != null) if (_inventory.MouseDown(e)) return true;
+                            break; 
+                            #endregion
+                        }
+                    case (2): //Health tab
+                        {
+                            #region Status
+                            break; 
+                            #endregion
+                        }
+                    case (3): //Craft tab
+                        {
+                            #region Crafting
+                            if (_craftTimer != null) if (_craftTimer.MouseDown(e)) return true;
+                            if (_craftSlot1.MouseDown(e)) return true;
+                            if (_craftSlot2.MouseDown(e)) return true;
+                            if (_craftButton.MouseDown(e)) return true;
+                            if (_blueprints.MouseDown(e)) return true;
+                            if (_inventory != null) if (_inventory.MouseDown(e)) return true;
+
+                            break; 
+                            #endregion
+                        }
+                }
+
             }
-
-            switch (_currentTab)
-            {
-                case (1): //Equip tab
-                    {
-                        #region Equip
-                        //Left Side - head, eyes, outer, hands, feet
-                        if (_slotHead.MouseDown(e)) return true;
-                        if (_slotEyes.MouseDown(e)) return true;
-                        if (_slotOuter.MouseDown(e)) return true;
-                        if (_slotHands.MouseDown(e)) return true;
-                        if (_slotFeet.MouseDown(e)) return true;
-
-                        //Right Side - mask, ears, inner, belt, back
-                        if (_slotMask.MouseDown(e)) return true;
-                        if (_slotEars.MouseDown(e)) return true;
-                        if (_slotInner.MouseDown(e)) return true;
-                        if (_slotBelt.MouseDown(e)) return true;
-                        if (_slotBack.MouseDown(e)) return true;
-
-                        if (_inventory != null) if (_inventory.MouseDown(e)) return true;
-                        break; 
-                        #endregion
-                    }
-                case (2): //Health tab
-                    {
-                        #region Status
-                        break; 
-                        #endregion
-                    }
-                case (3): //Craft tab
-                    {
-                        #region Crafting
-                        if (_craftTimer != null) if (_craftTimer.MouseDown(e)) return true;
-                        if (_craftSlot1.MouseDown(e)) return true;
-                        if (_craftSlot2.MouseDown(e)) return true;
-                        if (_craftButton.MouseDown(e)) return true;
-                        if (_blueprints.MouseDown(e)) return true;
-                        if (_inventory != null) if (_inventory.MouseDown(e)) return true;
-
-                        break; 
-                        #endregion
-                    }
-            }
-
             return false;
         }
 

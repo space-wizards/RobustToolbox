@@ -53,6 +53,7 @@ namespace SS13_Shared.GO
         Freeze,
         Suffocation,
         Shock,
+        BloodLoss,
         Collateral,
         Untyped
     }

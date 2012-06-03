@@ -1990,6 +1990,16 @@
             Property to set or return the destination blending operation.
             </summary>
         </member>
+        <member name="P:GorgonLibrary.Graphics.IRenderableStates.SourceBlendAlpha">
+            <summary>
+            Property to set or return the source blend alpha
+            </summary>
+        </member>
+        <member name="P:GorgonLibrary.Graphics.IRenderableStates.DestinationBlendAlpha">
+            <summary>
+            Property to set or return the destination blend alpha
+            </summary>
+        </member>
         <member name="P:GorgonLibrary.Graphics.IRenderableStates.StencilEnabled">
             <summary>
             Property to set or return whether to enable the use of the stencil buffer or not.
@@ -2091,6 +2101,12 @@
             </summary>
             <param name="value">Blending value.</param>
         </member>
+        <member name="M:GorgonLibrary.Graphics.RenderTarget.SetAlphaBlendMode(GorgonLibrary.Graphics.BlendingModes)">
+            <summary>
+            Function to set the blending modes for the alpha value
+            </summary>
+            <param name="value">Blending value.</param>
+        </member>
         <member name="M:GorgonLibrary.Graphics.RenderTarget.UpdateDepthStencilFormat(System.Boolean,System.Boolean)">
             <summary>
             Function to return a viable stencil/depth buffer.
@@ -2189,6 +2205,7 @@
             <param name="height">Height of the rectangle.</param>
             <param name="color">Color for the rectangle.</param>
         </member>
+        <!-- Badly formed XML comment ignored for member "M:GorgonLibrary.Graphics.RenderTarget.FilledTriangle(GorgonLibrary.Vector2D,GorgonLibrary.Vector2D,GorgonLibrary.Vector2D,System.Drawing.Color)" -->
         <member name="M:GorgonLibrary.Graphics.RenderTarget.FilledRectangle(System.Single,System.Single,System.Single,System.Single,System.Drawing.Color)">
             <summary>
             Function to draw a filled rectangle.
@@ -2577,6 +2594,16 @@
             </summary>
         </member>
         <member name="P:GorgonLibrary.Graphics.RenderTarget.DestinationBlend">
+            <summary>
+            Property to set or return the destination blending operation.
+            </summary>
+        </member>
+        <member name="P:GorgonLibrary.Graphics.RenderTarget.SourceBlendAlpha">
+            <summary>
+            Property to set or return the source blending operation.
+            </summary>
+        </member>
+        <member name="P:GorgonLibrary.Graphics.RenderTarget.DestinationBlendAlpha">
             <summary>
             Property to set or return the destination blending operation.
             </summary>
@@ -3293,6 +3320,16 @@
             Property to set or return the destination blending operation.
             </summary>
         </member>
+        <member name="P:GorgonLibrary.Graphics.Renderable.SourceBlendAlpha">
+            <summary>
+            Property to set or return the source blending operation.
+            </summary>
+        </member>
+        <member name="P:GorgonLibrary.Graphics.Renderable.DestinationBlendAlpha">
+            <summary>
+            Property to set or return the destination blending operation.
+            </summary>
+        </member>
         <member name="P:GorgonLibrary.Graphics.Renderable.WrapMode">
             <summary>
             Property to set or return the wrapping mode to use.
@@ -3326,6 +3363,11 @@
         <member name="P:GorgonLibrary.Graphics.Renderable.InheritBlending">
             <summary>
             Property to set or return whether we inherit blending from the layer.
+            </summary>
+        </member>
+        <member name="P:GorgonLibrary.Graphics.Renderable.InheritAlphaBlending">
+            <summary>
+            Property to set or return whether we inherit alpha blending from the layer.
             </summary>
         </member>
         <member name="P:GorgonLibrary.Graphics.Renderable.InheritAlphaMaskFunction">
@@ -3927,6 +3969,12 @@
             </summary>
             <value></value>
         </member>
+        <member name="P:GorgonLibrary.Graphics.StaticTextSprite.DestinationBlendAlpha">
+            <summary>
+            Property to set or return the destination alpha blending operation.
+            </summary>
+            <value></value>
+        </member>
         <member name="P:GorgonLibrary.Graphics.StaticTextSprite.HorizontalWrapMode">
             <summary>
             Property to set or return the horizontal wrapping mode to use.
@@ -4020,6 +4068,12 @@
         <member name="P:GorgonLibrary.Graphics.StaticTextSprite.SourceBlend">
             <summary>
             Property to set or return the source blending operation.
+            </summary>
+            <value></value>
+        </member>
+        <member name="P:GorgonLibrary.Graphics.StaticTextSprite.SourceBlendAlpha">
+            <summary>
+            Property to set or return the source alpha blending operation.
             </summary>
             <value></value>
         </member>
@@ -4486,6 +4540,18 @@
             Function to set a 4D vector parameter array value.
             </summary>
             <param name="value">An array of 4D vector values.</param>
+        </member>
+        <member name="M:GorgonLibrary.Graphics.ShaderParameter.SetValue(GorgonLibrary.Vector2D)">
+            <summary>
+            Function to set a 2D vector parameter value.
+            </summary>
+            <param name="value">A 2D vector value.</param>
+        </member>
+        <member name="M:GorgonLibrary.Graphics.ShaderParameter.SetValue(GorgonLibrary.Vector2D[])">
+            <summary>
+            Function to set a 2D vector parameter array value.
+            </summary>
+            <param name="value">An array of 2D vector values.</param>
         </member>
         <member name="M:GorgonLibrary.Graphics.ShaderParameter.SetValue(GorgonLibrary.Matrix)">
             <summary>
@@ -5645,6 +5711,18 @@
             </summary>
             <param name="value">TRUE to enable, FALSE to disable.</param>
         </member>
+        <member name="M:GorgonLibrary.Internal.RenderStates.SetSourceBlendOperation(GorgonLibrary.Graphics.AlphaBlendOperation)">
+            <summary>
+            Function to set the source alpha blending operation.
+            </summary>
+            <param name="value">Blend operation for the source.</param>
+        </member>
+        <member name="M:GorgonLibrary.Internal.RenderStates.SetDestinationBlendOperation(GorgonLibrary.Graphics.AlphaBlendOperation)">
+            <summary>
+            Function to set the destination alpha blending operation.
+            </summary>
+            <param name="value">Blend operation for the destination.</param>
+        </member>
         <member name="M:GorgonLibrary.Internal.RenderStates.SetSourceAlphaOperation(GorgonLibrary.Graphics.AlphaBlendOperation)">
             <summary>
             Function to set the source alpha blending operation.
@@ -5938,6 +6016,16 @@
         <member name="P:GorgonLibrary.Internal.RenderStates.DestinationAlphaBlendOperation">
             <summary>
             Property to set the destination alpha blending operation.
+            </summary>
+        </member>
+        <member name="P:GorgonLibrary.Internal.RenderStates.SourceAlphaOperation">
+            <summary>
+            Property to set the source alpha blending operation for the alpha channel.
+            </summary>
+        </member>
+        <member name="P:GorgonLibrary.Internal.RenderStates.DestinationAlphaOperation">
+            <summary>
+            Property to set the destination alpha blending operation for the alpha channel.
             </summary>
         </member>
         <member name="P:GorgonLibrary.Internal.RenderStates.AlphaTestFunction">
@@ -7295,6 +7383,12 @@
             </summary>
             <param name="value">Blending value.</param>
         </member>
+        <member name="M:GorgonLibrary.Graphics.SpriteStateCache.SetAlphaBlendMode(GorgonLibrary.Graphics.BlendingModes)">
+            <summary>
+            Function to set the blending modes for the alpha channel.
+            </summary>
+            <param name="value">Blending value.</param>
+        </member>
         <member name="M:GorgonLibrary.Graphics.SpriteStateCache.SetStates(GorgonLibrary.Graphics.IRenderableStates)">
             <summary>
             Function to set specific render states per sprite.
@@ -7366,6 +7460,11 @@
             Property to set or return the source blending operation.
             </summary>
         </member>
+        <member name="P:GorgonLibrary.Graphics.SpriteStateCache.GlobalAlphaSourceBlend">
+            <summary>
+            Property to set or return the source blending operation for the alpha channel.
+            </summary>
+        </member>
         <member name="P:GorgonLibrary.Graphics.SpriteStateCache.GlobalDepthWriteEnabled">
             <summary>
             Property to set or return whether the depth buffer writing (if applicable) is enabled or not.
@@ -7384,6 +7483,11 @@
         <member name="P:GorgonLibrary.Graphics.SpriteStateCache.GlobalDestinationBlend">
             <summary>
             Property to set or return the destination blending operation.
+            </summary>
+        </member>
+        <member name="P:GorgonLibrary.Graphics.SpriteStateCache.GlobalAlphaDestinationBlend">
+            <summary>
+            Property to set or return the destination blending operation for the alpha channel.
             </summary>
         </member>
         <member name="P:GorgonLibrary.Graphics.SpriteStateCache.GlobalAlphaMaskValue">
@@ -9944,6 +10048,13 @@
             <param name="vector">Gorgon vector to convert.</param>
             <returns>D3D 2D vector.</returns>
         </member>
+        <member name="M:GorgonLibrary.Internal.Converter.Convert(GorgonLibrary.Vector2D[])">
+            <summary>
+            Function to convert an array of Gorgon 2D vectors into an array of D3D 2D vectors.
+            </summary>
+            <param name="vector">Gorgon vectors to convert.</param>
+            <returns>D3D 2D vectors.</returns>
+        </member>
         <member name="M:GorgonLibrary.Internal.Converter.Convert(SlimDX.Vector3)">
             <summary>
             Function to convert a D3D 3D vector into a Gorgon 3D vector.
@@ -10915,6 +11026,11 @@
         <member name="P:GorgonLibrary.Driver.SupportWBuffer">
             <summary>
             Property to return whether the driver supports W Buffers or not.
+            </summary>
+        </member>
+        <member name="P:GorgonLibrary.Driver.SupportSeparableAlphaBlend">
+            <summary>
+            Property to return whether the device supports separate blending for alpha and color channels.
             </summary>
         </member>
         <member name="P:GorgonLibrary.Driver.MaximumSimultaneousRenderTargets">
@@ -14101,6 +14217,21 @@
         <member name="P:GorgonLibrary.Graphics.TextSprite.Scale">
             <summary>
             Property to set or return the scale of the sprite.
+            </summary>
+        </member>
+        <member name="P:GorgonLibrary.Graphics.TextSprite.ScaledDimensions">
+            <summary>
+            Property to set or return the size of the object with scaling applied.
+            </summary>
+        </member>
+        <member name="P:GorgonLibrary.Graphics.TextSprite.ScaledWidth">
+            <summary>
+            Property to set or return the scaled width of the object.
+            </summary>
+        </member>
+        <member name="P:GorgonLibrary.Graphics.TextSprite.ScaledHeight">
+            <summary>
+            Property to set or return the scaled height of the object.
             </summary>
         </member>
         <member name="P:GorgonLibrary.Graphics.TextSprite.Color">
@@ -18411,6 +18542,12 @@
             </summary>
             <param name="flush">TRUE to flush the buffers after drawing, FALSE to only flush on state change.</param>
         </member>
+        <member name="M:GorgonLibrary.Graphics.Sprite.Draw(System.Drawing.Rectangle)">
+            <summary>
+            Function to draw the sprite.
+            </summary>
+            <param name="dimensions">Dimensions of the sprite while drawing.</param>
+        </member>
         <member name="M:GorgonLibrary.Graphics.Sprite.Clone">
             <summary>
             Creates a new object that is a copy of the current instance.
@@ -20397,9 +20534,9 @@
             <summary>
             Enumeration containing the types of images we can create.
             </summary>
-            <remarks>The <typeparamref name="RenderTarget"/> value is used internally by Gorgon and should not be used when creating an image, however it can be used when validating an image format with 
+            <remarks>The RenderTarget value is used internally by Gorgon and should not be used when creating an image, however it can be used when validating an image format with 
             <see cref="M:GorgonLibrary.Driver.ValidImageFormat">Driver.ValidImageFormat</see> or <see cref="M:GorgonLibrary.Graphics.Image.ValidateFormat">Image.ValidateFormat</see>.
-            <para>The <typeparamref name="Dynamic"/> value will ensure the image is dynamic whether the <see cref="P:GorgonLibrary.Driver.SupportDynamicTextures">Driver.SupportDynamicTextures</see> property is TRUE or FALSE.  
+            <para>The Dynamic value will ensure the image is dynamic whether the <see cref="P:GorgonLibrary.Driver.SupportDynamicTextures">Driver.SupportDynamicTextures</see> property is TRUE or FALSE.  
             If the hardware supports dynamic textures then Gorgon will make use of it, otherwise the image will be a normal image placed in the default pool.</para>
             </remarks>
         </member>
@@ -20913,6 +21050,12 @@
             Form height.
             </summary>
         </member>
+        <member name="T:GorgonLibrary.Sprites.SpriteInfo">
+            <summary>
+            Struct to hold assorted sprite related information,
+            such as the name, offsets, and size.
+            </summary>
+        </member>
         <member name="T:GorgonLibrary.Graphics.BatchVertex">
             <summary>
             A vertex used by the batch.
@@ -21142,7 +21285,7 @@
             -or-
             The number of elements in the source <see cref="T:System.Collections.Generic.ICollection`1"/> is greater than the available space from <paramref name="arrayIndex"/> to the end of the destination <paramref name="array"/>.
             -or-
-            Type <paramref name="T"/> cannot be cast automatically to the type of the destination <paramref name="array"/>.
+            The type cannot be cast automatically to the type of the destination <paramref name="array"/>.
             </exception>
         </member>
         <member name="M:GorgonLibrary.Graphics.Batch.Remove(GorgonLibrary.Graphics.Renderable)">
@@ -21362,6 +21505,18 @@
             <value></value>
         </member>
         <member name="P:GorgonLibrary.Graphics.Batch.DestinationBlend">
+            <summary>
+            Property to set or return the destination blending operation.
+            </summary>
+            <value></value>
+        </member>
+        <member name="P:GorgonLibrary.Graphics.Batch.SourceBlendAlpha">
+            <summary>
+            Property to set or return the source blending operation.
+            </summary>
+            <value></value>
+        </member>
+        <member name="P:GorgonLibrary.Graphics.Batch.DestinationBlendAlpha">
             <summary>
             Property to set or return the destination blending operation.
             </summary>
@@ -22833,6 +22988,18 @@
             </summary>
             <value></value>
         </member>
+        <member name="P:GorgonLibrary.Graphics.PolygonSprite.SourceBlendAlpha">
+            <summary>
+            Property to set or return the source alpha blending operation.
+            </summary>
+            <value></value>
+        </member>
+        <member name="P:GorgonLibrary.Graphics.PolygonSprite.DestinationBlendAlpha">
+            <summary>
+            Property to set or return the destination alpha blending operation.
+            </summary>
+            <value></value>
+        </member>
         <member name="P:GorgonLibrary.Graphics.PolygonSprite.StencilEnabled">
             <summary>
             Property to set or return whether to enable the use of the stencil buffer or not.
@@ -23000,7 +23167,7 @@
             -or-
             The number of elements in the source <see cref="T:System.Collections.Generic.ICollection`1"/> is greater than the available space from <paramref name="arrayIndex"/> to the end of the destination <paramref name="array"/>.
             -or-
-            Type <paramref name="T"/> cannot be cast automatically to the type of the destination <paramref name="array"/>.
+            The type cannot be cast automatically to the type of the destination <paramref name="array"/>.
             </exception>
         </member>
         <member name="M:GorgonLibrary.Graphics.PolygonSprite.IndexList.System#Collections#Generic#ICollection{System#Int32}#Remove(System.Int32)">
@@ -23148,7 +23315,7 @@
             -or-
             The number of elements in the source <see cref="T:System.Collections.Generic.ICollection`1"/> is greater than the available space from <paramref name="arrayIndex"/> to the end of the destination <paramref name="array"/>.
             -or-
-            Type <paramref name="T"/> cannot be cast automatically to the type of the destination <paramref name="array"/>.
+            The type cannot be cast automatically to the type of the destination <paramref name="array"/>.
             </exception>
         </member>
         <member name="M:GorgonLibrary.Graphics.PolygonSprite.PolygonVertexList.Clear">

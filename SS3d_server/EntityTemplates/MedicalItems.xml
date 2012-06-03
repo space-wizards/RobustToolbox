@@ -163,4 +163,42 @@
       </Component>
     </Components>
   </EntityTemplate>
+  <EntityTemplate name="Bruise_Pack">
+    <Components>
+      <Component name="ClickableComponent"></Component>
+      <Component name="SpriteComponent"></Component>
+      <Component name="BasicInteractableComponent"></Component>
+      <Component name="BasicMoverComponent"></Component>
+      <Component name="BasicItemComponent">
+        <ExtendedParameters>
+          <ItemCapability name="MedicalCapability">
+            <ItemCapabilityParameters>
+              <ItemCapabilityParameter name="healAmount" type="int" value="20" />
+              <ItemCapabilityParameter name="damageType" type="string" value="Bludgeon" />
+              <ItemCapabilityParameter name="capacity" type="int" value="100" />
+            </ItemCapabilityParameters>
+          </ItemCapability>
+        </ExtendedParameters>
+      </Component>
+    </Components>
+  </EntityTemplate>
+  <EntityTemplate name="Bandages">
+    <Components>
+      <Component name="ClickableComponent"></Component>
+      <Component name="SpriteComponent"></Component>
+      <Component name="BasicInteractableComponent"></Component>
+      <Component name="BasicMoverComponent"></Component>
+      <Component name="BasicItemComponent">
+        <ExtendedParameters>
+          <ItemCapability name="MedicalCapability">
+            <ItemCapabilityParameters>
+              <ItemCapabilityParameter name="healAmount" type="int" value="20" />
+              <ItemCapabilityParameter name="damageType" type="string" value="Slashing" />
+              <ItemCapabilityParameter name="capacity" type="int" value="60" />
+            </ItemCapabilityParameters>
+          </ItemCapability>
+        </ExtendedParameters>
+      </Component>
+    </Components>
+  </EntityTemplate>
 </EntityTemplates>

@@ -186,7 +186,8 @@ namespace SS13_Shared.GO
         KilledEntity,
         ClickedInHand,
         SetLightState,
-        Activate
+        Activate,
+        Heal
     }
 
     public enum Hand

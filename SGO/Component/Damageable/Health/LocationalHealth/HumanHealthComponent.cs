@@ -89,6 +89,36 @@ namespace SGO
             }
         }
 
+        private void ApplyHeal(Entity healer, int healAmount, DamageType damType, BodyPart targetLocation)
+        {
+            if (isDead)
+                return;
+            float realHealAmount = healAmount;
+
+            if (GetHealth() + healAmount > GetMaxHealth())
+                realHealAmount = GetMaxHealth() - GetHealth();
+
+            if (damageZones.Exists(x => x.location == targetLocation))
+            {
+                DamageLocation dmgLoc = damageZones.First(x => x.location == targetLocation);
+                dmgLoc.HealDamage(damType, (int)realHealAmount);
+            }
+
+            currentHealth = GetHealth();
+            maxHealth = GetMaxHealth();
+
+            if(damType == DamageType.Slashing)
+            {
+                var statuscomp = (StatusEffectComp)Owner.GetComponent(ComponentFamily.StatusEffects);
+                if(statuscomp.HasEffect("Bleeding"))
+                {
+                    statuscomp.RemoveEffect("Bleeding");   
+                }
+            }
+
+            SendHealthUpdate();
+        }
+
         /// <summary>
         /// Triggers bleeding if the damage is enough to warrant it.
         /// </summary>
@@ -203,6 +233,10 @@ namespace SGO
                         ApplyDamage((Entity) list[0], (int) list[1], (DamageType) list[2], (BodyPart) list[3]);
                     else //We dont have a target location
                         ApplyDamage((Entity) list[0], (int) list[1], (DamageType) list[2]);
+                    break;
+                case ComponentMessageType.Heal:
+                    if (list.Count() > 3) // We also have a target location
+                        ApplyHeal((Entity) list[0], (int) list[1], (DamageType) list[2], (BodyPart) list[3]);
                     break;
             }
 

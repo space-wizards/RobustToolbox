@@ -113,10 +113,25 @@ namespace CGO
                     IsInHand = true;
                     holdingHand = (Hand)list[0];
                     break;
+                case ComponentMessageType.SetBaseName:
+                    basename = (string)list[0];
+                    break;
             }
 
             return reply;
 
+        }
+
+        public override void HandleNetworkMessage(IncomingEntityComponentMessage message)
+        {
+            base.HandleNetworkMessage(message);
+
+            switch ((ComponentMessageType)message.MessageParameters[0])
+            {
+                case ComponentMessageType.SetBaseName:
+                    basename = (string) message.MessageParameters[1];
+                    break;
+            }
         }
 
         /// <summary>
@@ -132,6 +147,11 @@ namespace CGO
                     basename = (string)parameter.Parameter;
                     LoadSprites();
                     break;
+                case "addsprite":
+                    if(parameter.ParameterType == typeof(string))
+                        LoadSprites((string)parameter.Parameter);
+                    break;
+
             }
         }
 
@@ -145,13 +165,17 @@ namespace CGO
         /// </summary>
         public void LoadSprites()
         {
-            AddSprite(basename);
-            AddSprite(basename + "_inhand");
-            AddSprite(basename + "_inhand_side");
-            if (IoCManager.Resolve<IResourceManager>().SpriteExists(basename + "_inhand_back"))
-                AddSprite(basename + "_inhand_back");
-
+            LoadSprites(basename);
             SetSpriteByKey(basename);
+        }
+
+        public void LoadSprites(string name)
+        {
+            AddSprite(name);
+            AddSprite(name + "_inhand");
+            AddSprite(name + "_inhand_side");
+            if(IoCManager.Resolve<IResourceManager>().SpriteExists(name + "_inhand_back"))
+                AddSprite(name + "_inhand_back");
         }
 
         protected override bool WasClicked(System.Drawing.PointF worldPos)

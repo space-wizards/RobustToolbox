@@ -52,6 +52,11 @@ namespace SGO
                         Owner.SendComponentNetworkMessage(this, NetDeliveryMethod.ReliableUnordered, null,
                                                           ComponentMessageType.SetSpriteByKey, list[0]);
                     break;
+                case ComponentMessageType.SetBaseName:
+                    if (Owner != null)
+                        Owner.SendComponentNetworkMessage(this, NetDeliveryMethod.ReliableUnordered, null,
+                            ComponentMessageType.SetBaseName, list[0]);
+                    break;
                 case ComponentMessageType.SetVisible:
                     Visible = (bool) list[0];
                     break;

@@ -90,31 +90,33 @@ namespace SGO
         {
             Name = templateElement.Attribute("name").Value;
 
-            IEnumerable<XElement> t_components = templateElement.Element("Components").Elements();
+            IEnumerable<XElement> tComponents = templateElement.Element("Components").Elements();
             //Parse components
-            foreach (XElement t_component in t_components)
+            foreach (XElement tComponent in tComponents)
             {
-                string componentname = t_component.Attribute("name").Value;
+                string componentname = tComponent.Attribute("name").Value;
                 components.Add(componentname);
                 parameters.Add(componentname, new List<ComponentParameter>());
-                IEnumerable<XElement> t_componentParameters = from t_param in t_component.Descendants("Parameter")
+                IEnumerable<XElement> tComponentParameters = from t_param in tComponent.Descendants("Parameter")
                                                               select t_param;
                 //Parse component parameters
-                foreach (XElement t_componentParameter in t_componentParameters)
+                foreach (XElement tComponentParameter in tComponentParameters)
                 {
-                    Type paramtype = translateType(t_componentParameter.Attribute("type").Value);
+                    Type paramtype = translateType(tComponentParameter.Attribute("type").Value);
                     if (paramtype == null)
-                        break; //TODO THROW ERROR
-                    parameters[componentname].Add(new ComponentParameter(t_componentParameter.Attribute("name").Value,
+                    {
+                        throw new TemplateLoadException("Invalid component parameter type.");
+                    }
+                    parameters[componentname].Add(new ComponentParameter(tComponentParameter.Attribute("name").Value,
                                                                          paramtype,
-                                                                         t_componentParameter.Attribute("value").Value)
+                                                                         Convert.ChangeType(tComponentParameter.Attribute("value").Value, paramtype))
                         );
                 }
 
-                if (t_component.Element("ExtendedParameters") != null)
+                if (tComponent.Element("ExtendedParameters") != null)
                 {
                     parameters[componentname].Add(new ComponentParameter("ExtendedParameters", typeof (XElement),
-                                                                         t_component.Element("ExtendedParameters")));
+                                                                         tComponent.Element("ExtendedParameters")));
                 }
             }
 
@@ -145,7 +147,7 @@ namespace SGO
 
         #endregion
 
-        private Type translateType(string typeName)
+        public static Type translateType(string typeName)
         {
             switch (typeName.ToLowerInvariant())
             {
@@ -155,9 +157,18 @@ namespace SGO
                     return typeof (int);
                 case "float":
                     return typeof (float);
+                case "boolean":
+                case "bool":
+                    return typeof (bool);
                 default:
                     return null;
             }
         }
+    }
+
+    public class TemplateLoadException: Exception
+    {
+        public TemplateLoadException(string message) :base(message)
+        {}
     }
 }

@@ -198,6 +198,9 @@ namespace CGO
                     return typeof(int);
                 case "float":
                     return typeof(float);
+                case "boolean":
+                case "bool":
+                    return typeof (bool);
                 default:
                     return null;
             }

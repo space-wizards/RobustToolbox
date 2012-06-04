@@ -1,0 +1,30 @@
+﻿<?xml version="1.0" encoding="utf-8" ?>
+<EntityTemplates>
+  <EntityTemplate name="Sword">
+    <Components>
+      <Component name="ClickableComponent"></Component>
+      <Component name="SpriteComponent"></Component>
+      <Component name="BasicInteractableComponent"></Component>
+      <Component name="BasicMoverComponent"></Component>
+      <Component name="BasicItemComponent">
+        <ExtendedParameters>
+          <ItemCapability name="MeleeWeaponCapability">
+            <ItemCapabilityParameters>
+              <ItemCapabilityParameter name="damageAmount" type="int" value="60" />
+              <ItemCapabilityParameter name="damageType" type="string" value="Slashing" />
+              <ItemCapabilityParameter name="activeSprite" type="string" value="sword_on" />
+              <ItemCapabilityParameter name="inactiveSprite" type="string" value="sword" />
+              <ItemCapabilityParameter name="startActive" type="bool" value="false" />
+              <ItemCapabilityParameter name="toggleable" type="bool" value="true" />
+            </ItemCapabilityParameters>
+          </ItemCapability>
+        </ExtendedParameters>
+      </Component>
+      <Component name="LightComponent">
+        <Parameters>
+          <Parameter name="startState" type="string" value="Off" />
+        </Parameters>
+      </Component>
+    </Components>
+  </EntityTemplate>
+</EntityTemplates>

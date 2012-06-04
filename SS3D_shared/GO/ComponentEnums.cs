@@ -187,7 +187,8 @@ namespace SS13_Shared.GO
         ClickedInHand,
         SetLightState,
         Activate,
-        Heal
+        Heal,
+        SetBaseName
     }
 
     public enum Hand

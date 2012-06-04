@@ -25,8 +25,7 @@
         <Parameters>
           <Parameter name="startState" type="string" value="Off" />
         </Parameters>
-      </Component>
-      
+      </Component>      
     </Components>
   </EntityTemplate>
   <EntityTemplate name="WallLight">

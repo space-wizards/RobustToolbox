@@ -12,6 +12,10 @@ namespace SGO.Component.Item.ItemCapability
     {
         public DamageType damType = DamageType.Bludgeoning;
         public int damageAmount = 10;
+        public bool toggleable = false;
+        public bool active = true;
+        public string activeSprite;
+        public string inactiveSprite;
 
         public MeleeWeaponCapability()
         {
@@ -22,6 +26,17 @@ namespace SGO.Component.Item.ItemCapability
 
         public override bool ApplyTo(Entity target, Entity sourceActor)
         {
+            string sourceName = sourceActor.Name;
+            string targetName = (sourceActor.Uid == target.Uid) ? "himself" : target.Name;
+            if (!active)
+            {
+                IoCManager.Resolve<IChatManager>()
+                    .SendChatMessage(ChatChannel.Damage, sourceName + " tries to attack " + targetName
+                                                         + " with the " + owner.Owner.Name + ", but nothing happens!",
+                                     null, sourceActor.Uid);
+                return true;
+            }
+
             BodyPart targetedArea = BodyPart.Torso;
 
             ComponentReplyMessage reply = sourceActor.SendMessage(this, ComponentFamily.Actor,
@@ -43,8 +58,7 @@ namespace SGO.Component.Item.ItemCapability
             {
                 target.SendMessage(this, ComponentMessageType.Damage, owner.Owner, damageAmount, damType, targetedArea);
 
-                string sourceName = sourceActor.Name;
-                string targetName = (sourceActor.Uid == target.Uid) ? "himself" : target.Name;
+
                 //string suffix = (sourceActor.Uid == target.Uid) ? " What a fucking weirdo..." : "";
                 IoCManager.Resolve<IChatManager>()
                     .SendChatMessage(ChatChannel.Damage,
@@ -137,7 +151,40 @@ namespace SGO.Component.Item.ItemCapability
                         damType = (DamageType) parameter.Parameter;
                     }
                     break;
+                case "startActive":
+                    if (parameter.ParameterType == typeof(bool))
+                        active = (bool)parameter.Parameter;
+                    break;
+                case "toggleable":
+                    if (parameter.ParameterType == typeof(bool))
+                        toggleable = (bool)parameter.Parameter;
+                    if (!toggleable)
+                        active = true;
+                    break;
+                case "inactiveSprite":
+                    if (parameter.ParameterType == typeof(string))
+                        inactiveSprite = (string) parameter.Parameter;
+                    break;
+                case "activeSprite":
+                    if (parameter.ParameterType == typeof(string))
+                        activeSprite = (string)parameter.Parameter;
+                    break;
             }
+        }
+
+        public override void Activate()
+        {
+            base.Activate();
+
+            if (!toggleable)
+                return;
+
+            if (!active && activeSprite != null)
+                owner.Owner.SendMessage(this, ComponentMessageType.SetBaseName, activeSprite);
+            if (active && inactiveSprite != null)
+                owner.Owner.SendMessage(this, ComponentMessageType.SetBaseName, inactiveSprite);
+
+            active = !active;
         }
     }
 }

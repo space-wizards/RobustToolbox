@@ -1,0 +1,27 @@
+﻿<?xml version="1.0" encoding="utf-8" ?>
+<EntityTemplates>
+  <EntityTemplate name="Sword">
+    <Components>
+      <Component name="NetworkMoverComponent"></Component>
+      <Component name="ItemSpriteComponent">
+        <Parameters>
+          <Parameter name="basename" type="string" value="sword" />
+          <Parameter name="addsprite" type="string" value="sword_on" />
+        </Parameters>
+      </Component>
+      <Component name="ClickableComponent"></Component>
+      <Component name="BasicItemComponent"></Component>
+      <Component name="PointLightComponent">
+        <Parameters>
+          <Parameter name="lightoffsetx" type="float" value="0" />
+          <Parameter name="lightoffsety" type="float" value="0" />
+          <Parameter name="lightradius" type="int" value="128" />
+          <Parameter name="lightColorR" type="int" value="104" />
+          <Parameter name="lightColorG" type="int" value="104" />
+          <Parameter name="lightColorB" type="int" value="255" />
+          <Parameter name="mask" type="string" value="whitemask" />
+        </Parameters>
+      </Component>
+    </Components>
+  </EntityTemplate>
+</EntityTemplates>

@@ -317,8 +317,10 @@ namespace SGO
                 }
                 foreach (XElement parameter in Parameters)
                 {
-                    cap.SetParameter(new ComponentParameter(parameter.Attribute("name").Value, typeof (string),
-                                                            parameter.Attribute("value").Value));
+                    string name = parameter.Attribute("name").Value;
+                    Type type = EntityTemplate.translateType(parameter.Attribute("type").Value);
+                    var value = Convert.ChangeType(parameter.Attribute("value").Value, type);
+                    cap.SetParameter(new ComponentParameter(name, type, value));
                 }
                 AddCapability(cap);
             }

@@ -74,6 +74,7 @@
     <Compile Include="GOC\ISpriteComponent.cs" />
     <Compile Include="Input\IKeyBindingManager.cs" />
     <Compile Include="Lighting\ILightArea.cs" />
+    <Compile Include="Lighting\LightMode.cs" />
     <Compile Include="MessageLogging\IMessageLogger.cs" />
     <Compile Include="Placement\IPlacementManager.cs" />
     <Compile Include="Lighting\ILight.cs" />

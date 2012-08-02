@@ -62,7 +62,6 @@ namespace ClientServices.State.States
         private RenderImage _sceneTarget;
         private RenderImage _tilesTarget;
         private RenderImage _overlayTarget;
-        private Sprite _overlaySprite;
         private RenderImage _composedSceneTarget;
 
         
@@ -149,8 +148,6 @@ namespace ClientServices.State.States
             _sceneTarget = new RenderImage("sceneTarget", Gorgon.CurrentClippingViewport.Width, Gorgon.CurrentClippingViewport.Height, ImageBufferFormats.BufferRGB888A8);
             _tilesTarget = new RenderImage("tilesTarget", Gorgon.CurrentClippingViewport.Width, Gorgon.CurrentClippingViewport.Height, ImageBufferFormats.BufferRGB888A8);
             _overlayTarget = new RenderImage("overlayTarget", Gorgon.CurrentClippingViewport.Width, Gorgon.CurrentClippingViewport.Height, ImageBufferFormats.BufferRGB888A8);
-            _overlaySprite = new Sprite("overlaySprite", _overlayTarget);
-            _overlaySprite.SetPosition(0,0);
             _composedSceneTarget = new RenderImage("composedSceneTarget", Gorgon.CurrentClippingViewport.Width, Gorgon.CurrentClippingViewport.Height, ImageBufferFormats.BufferRGB888A8);
 
             _lightTarget = new RenderImage("lightTarget", Gorgon.CurrentClippingViewport.Width, Gorgon.CurrentClippingViewport.Height, ImageBufferFormats.BufferRGB888A8);
@@ -159,8 +156,23 @@ namespace ClientServices.State.States
             _lightTargetIntermediateSprite = new Sprite("lightTargetIntermediateSprite", _lightTargetIntermediate) { DepthWriteEnabled = false };
 
             _gasBatch = new Batch("gasBatch", 1);
+            _gasBatch.SourceBlend = AlphaBlendOperation.SourceAlpha;
+            _gasBatch.DestinationBlend = AlphaBlendOperation.InverseSourceAlpha;
+            _gasBatch.SourceBlendAlpha = AlphaBlendOperation.SourceAlpha;
+            _gasBatch.DestinationBlendAlpha = AlphaBlendOperation.InverseSourceAlpha;
+
             _wallTopsBatch = new Batch("wallTopsBatch", 1);
+            _wallTopsBatch.SourceBlend = AlphaBlendOperation.SourceAlpha;
+            _wallTopsBatch.DestinationBlend = AlphaBlendOperation.InverseSourceAlpha;
+            _wallTopsBatch.SourceBlendAlpha = AlphaBlendOperation.SourceAlpha;
+            _wallTopsBatch.DestinationBlendAlpha = AlphaBlendOperation.InverseSourceAlpha;
+
             _decalBatch = new Batch("decalBatch", 1);
+            _decalBatch.SourceBlend = AlphaBlendOperation.SourceAlpha;
+            _decalBatch.DestinationBlend = AlphaBlendOperation.InverseSourceAlpha;
+            _decalBatch.SourceBlendAlpha = AlphaBlendOperation.SourceAlpha;
+            _decalBatch.DestinationBlendAlpha = AlphaBlendOperation.InverseSourceAlpha;
+
             _floorBatch = new Batch("floorBatch", 1);
             _wallBatch = new Batch("wallBatch", 1);
 
@@ -270,8 +282,6 @@ namespace ClientServices.State.States
             _tilesTarget.Height = h;
             _overlayTarget.Width = w;
             _overlayTarget.Height = h;
-            _overlaySprite.Width = w;
-            _overlaySprite.Height = h;
             _composedSceneTarget.Width = w;
             _composedSceneTarget.Height = h;
             _lightTarget.Width = w;
@@ -550,7 +560,6 @@ namespace ClientServices.State.States
 
             if (PlayerManager.ControlledEntity != null)
             {
-                RenderTarget tempTarget;
                 var centerTile = MapManager.GetTileArrayPositionFromWorldPosition(PlayerManager.ControlledEntity.Position);
 
                 var xStart = Math.Max(0, centerTile.X - (ScreenWidthTiles / 2) - 1);
@@ -591,10 +600,17 @@ namespace ClientServices.State.States
 
                 if (_redrawOverlay)
                 {
-                    tempTarget = Gorgon.CurrentRenderTarget;
                     Gorgon.CurrentRenderTarget = _overlayTarget;
                     _overlayTarget.Clear(Color.Transparent);
+
+                    _overlayTarget.SourceBlend = AlphaBlendOperation.SourceAlpha;
+                    _overlayTarget.DestinationBlend = AlphaBlendOperation.InverseSourceAlpha;
+
+                    _overlayTarget.SourceBlendAlpha = AlphaBlendOperation.SourceAlpha;
+                    _overlayTarget.DestinationBlendAlpha = AlphaBlendOperation.InverseSourceAlpha;
+
                     // Render decal batch
+
                     if (_decalBatch.Count > 0)
                         _decalBatch.Draw();
 
@@ -604,10 +620,11 @@ namespace ClientServices.State.States
                     if (_gasBatch.Count > 0)
                         _gasBatch.Draw();
 
-                    Gorgon.CurrentRenderTarget = tempTarget;
+                    Gorgon.CurrentRenderTarget = _sceneTarget;
                     _redrawOverlay = false;
                 }
-                _overlaySprite.Draw();
+
+                _overlayTarget.Blit();
 
                 LightScene();
                 //Render the placement manager shit
@@ -927,7 +944,7 @@ namespace ClientServices.State.States
             int xS = Math.Max(0, centerTile.X - (int)Math.Round((area.LightAreaSize.X / tilespacing) / 2));
             int yS = Math.Max(0, centerTile.Y - (int)Math.Round((area.LightAreaSize.Y / tilespacing) / 2));
             int xE = Math.Min(centerTile.X + (int)Math.Round((area.LightAreaSize.X / tilespacing) / 2), MapManager.GetMapWidth() - 1);
-            int yE = Math.Min(centerTile.Y + (int)Math.Round((area.LightAreaSize.X / tilespacing) / 2), MapManager.GetMapHeight() - 1);
+            int yE = Math.Min(centerTile.Y + (int)Math.Round((area.LightAreaSize.Y / tilespacing) / 2), MapManager.GetMapHeight() - 1);
 
             Map.Tiles.Tile t;
             for (int x = xS; x <= xE; x++)
@@ -973,7 +990,6 @@ namespace ClientServices.State.States
                     t.RenderGas(WindowOrigin.X, WindowOrigin.Y, tilespacing, _gasBatch);
 
                     t.RenderTop(WindowOrigin.X, WindowOrigin.Y, tilespacing, _wallTopsBatch);
-
                 }
             }
         }
@@ -1121,10 +1137,18 @@ namespace ClientServices.State.States
 
             if (clickedEntities.Any())
             {
-                var entToClick = (from cd in clickedEntities
-                                     orderby cd.Drawdepth descending
-                                     orderby cd.Clicked.Position.Y descending
-                                     select cd.Clicked).Last();
+                var entToClick = (from cd in clickedEntities                       //Treat mobs and their clothes as on the same level as ground placeables (windows, doors)
+                                  orderby (cd.Drawdepth == (int)DrawDepth.MobBase ||//This is a workaround to make both windows etc. and objects that rely on layers (objects on tables) work.
+                                            cd.Drawdepth == (int)DrawDepth.MobOverAccessoryLayer ||
+                                            cd.Drawdepth == (int)DrawDepth.MobOverClothingLayer ||
+                                            cd.Drawdepth == (int)DrawDepth.MobUnderAccessoryLayer ||
+                                            cd.Drawdepth == (int)DrawDepth.MobUnderClothingLayer
+                                   ? (int)DrawDepth.FloorPlaceable : cd.Drawdepth) ascending, cd.Clicked.Position.Y ascending
+                                  select cd.Clicked).Last();
+
+                //var entToClick = (from cd in clickedEntities
+                //                  orderby cd.Drawdepth ascending, cd.Clicked.Position.Y ascending
+                //                  select cd.Clicked).Last();
 
                 if (PlacementManager.Eraser && PlacementManager.IsActive)
                 {

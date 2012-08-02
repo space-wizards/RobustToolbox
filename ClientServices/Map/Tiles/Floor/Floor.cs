@@ -18,7 +18,5 @@ namespace ClientServices.Map.Tiles.Floor
             TileType = TileType.Floor;
             name = "Floor";
         }
-
-
     }
 }

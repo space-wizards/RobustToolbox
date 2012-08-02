@@ -8,6 +8,10 @@ using ClientServices.Map.Tiles;
 using GorgonLibrary;
 using SS13_Shared;
 using SS3D.LightTest;
+using CGO.Component.Light;
+using CGO.Component.Light.LightModes;
+using ClientInterfaces.GOC;
+using SS13.IoC;
 
 namespace ClientServices.Lighting
 {
@@ -18,11 +22,11 @@ namespace ClientServices.Lighting
         public int Radius { get; private set; }
         public ILightArea LightArea { get; private set; }
         public LightState LightState { get; private set; }
+        public LightMode LightMode { get; set; }
 
         public Light()
         {
             Radius = 256;
-            //Color = Color.White;
             LightState = LightState.On;
         }
 
@@ -76,6 +80,11 @@ namespace ClientServices.Lighting
         public void SetMask(string mask)
         {
             LightArea.SetMask(mask);
+        }
+
+        public void Update(float frametime)
+        {
+            if (LightMode != null) LightMode.Update(this, frametime);
         }
 
         public void SetState(LightState state)

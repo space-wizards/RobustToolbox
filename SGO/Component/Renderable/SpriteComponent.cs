@@ -7,6 +7,25 @@ namespace SGO
     {
         private bool visible = true;
 
+        public DrawDepth drawDepth
+        {
+            get
+            {
+                return _drawDepth;
+            }
+
+            set
+            {
+                if (value != _drawDepth)
+                {
+                    _drawDepth = value;
+                    SendDrawDepth(null);
+                }
+            }
+        }
+
+        private DrawDepth _drawDepth = DrawDepth.FloorTiles;
+
         public SpriteComponent()
         {
             family = ComponentFamily.Renderable;
@@ -28,12 +47,19 @@ namespace SGO
         {
             base.HandleInstantiationMessage(netConnection);
             SendVisible(netConnection);
+            SendDrawDepth(netConnection);
         }
 
         private void SendVisible(NetConnection connection)
         {
             Owner.SendComponentNetworkMessage(this, NetDeliveryMethod.ReliableUnordered, connection,
                                               ComponentMessageType.SetVisible, visible);
+        }
+
+        private void SendDrawDepth(NetConnection connection)
+        {
+            if (drawDepth != DrawDepth.FloorTiles) Owner.SendComponentNetworkMessage(this, NetDeliveryMethod.ReliableUnordered, connection,
+                                                           ComponentMessageType.SetDrawDepth, drawDepth);
         }
 
         public override ComponentReplyMessage RecieveMessage(object sender, ComponentMessageType type,
@@ -62,8 +88,9 @@ namespace SGO
                     break;
                 case ComponentMessageType.SetDrawDepth:
                     if (Owner != null)
+                        drawDepth = (DrawDepth)list[0];
                         Owner.SendComponentNetworkMessage(this, NetDeliveryMethod.ReliableUnordered, null,
-                                                          ComponentMessageType.SetDrawDepth, list[0]);
+                                                          ComponentMessageType.SetDrawDepth, drawDepth);
                     break;
             }
 

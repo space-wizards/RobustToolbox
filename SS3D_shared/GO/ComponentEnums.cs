@@ -188,7 +188,8 @@ namespace SS13_Shared.GO
         SetLightState,
         Activate,
         Heal,
-        SetBaseName
+        SetBaseName,
+        SetLightMode
     }
 
     public enum Hand
@@ -211,6 +212,7 @@ namespace SS13_Shared.GO
         HeldItems,
         Tables,
         ItemsOnTables,
+        FloorPlaceable,
         Doors,
         Walls,
         WallMountedItems,

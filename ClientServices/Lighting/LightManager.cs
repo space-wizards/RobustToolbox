@@ -8,12 +8,53 @@ using GorgonLibrary;
 using GorgonLibrary.Graphics;
 using ClientInterfaces;
 using SS13_Shared;
+using System.Text;
+using System.Reflection;
+using ClientInterfaces.GOC;
+using CGO.Component.Light.LightModes;
 
 namespace ClientServices.Lighting
 {
     public class LightManager : ILightManager
     {
         private List<ILight> _lights = new List<ILight>();
+        List<Type> LightModes = new List<Type>();
+
+        public LightManager()
+        {
+            List<Assembly> assemblies = AppDomain.CurrentDomain.GetAssemblies().ToList();
+            LightModes = assemblies.SelectMany(t => t.GetTypes()).Where(p => typeof(LightMode).IsAssignableFrom(p) && !p.IsInterface).ToList();
+        }
+
+        public void SetLightMode(LightModeClass? mode, ILight light)
+        {
+            if (!mode.HasValue)
+            {
+                if (light.LightMode != null)
+                {
+                    light.LightMode.OnRemove(light);
+                    light.LightMode = null;
+                }
+                return;
+            }
+
+            List<LightMode> modes = new List<LightMode>();
+            foreach (Type t in LightModes)
+            {
+                LightMode temp = (LightMode)Activator.CreateInstance(t);
+                if (temp.LightModeClass == mode.Value)
+                {
+                    if (light.LightMode != null)
+                    {
+                        light.LightMode.OnRemove(light);
+                        light.LightMode = null;
+                    }
+                    light.LightMode = temp;
+                    temp.OnAdd(light);
+                    return;
+                }
+            }
+        }
 
         public void AddLight(ILight light)
         {

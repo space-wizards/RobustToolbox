@@ -38,7 +38,7 @@ namespace ClientServices.UserInterface.Components
 
         double blipTime = 0;
         private int blipSpeed = 60;
-        int blipWidth = 15;
+        int blipWidth = 20;
 
         private float healthPct = 0;
 

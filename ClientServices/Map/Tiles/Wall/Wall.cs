@@ -302,6 +302,7 @@ namespace ClientServices.Map.Tiles.Wall
             Sprite.SetPosition(TilePosition.X * tileSpacing - xTopLeft, TilePosition.Y * tileSpacing - yTopLeft);
             Sprite.Position -= new Vector2D(0, tileSpacing);
             Sprite.Color = Color.FromArgb(200, Color.White);
+
             wallTopsBatch.AddClone(Sprite);
         }
     }

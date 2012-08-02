@@ -19,5 +19,6 @@ namespace ClientInterfaces.Lighting
         ILight[] LightsIntersectingPoint(Vector2D point);
         ILight[] LightsIntersectingRect(RectangleF rect);
         ILight[] GetLights();
+        void SetLightMode(LightModeClass? mode, ILight light);
     }
 }

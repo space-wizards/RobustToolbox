@@ -5,9 +5,15 @@
         On,
         Off,
         Broken,
-        Overload,
-        Strobe,
+    }
+
+    public enum LightModeClass
+    {
+        Constant,
+        Alarm,
+        Flicker,
         Flash,
-        Flicker
+        Strobe,
+        BrokenFlicker
     }
 }

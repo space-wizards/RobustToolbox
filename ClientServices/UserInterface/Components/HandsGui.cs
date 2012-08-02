@@ -163,8 +163,6 @@ namespace ClientServices.UserInterface.Components
 
         public override bool MouseDown(MouseInputEventArgs e)
         {
-            var entity = _playerManager.ControlledEntity;
-            var hands = (HumanHandsComponent)entity.GetComponent(ComponentFamily.Hands);
             switch (e.Buttons)
             {
                 case MouseButtons.Right:
@@ -179,27 +177,6 @@ namespace ClientServices.UserInterface.Components
                         return true;
                     }
                     break;
-
-                case MouseButtons.Left:
-                    if (handL.Contains(new Point((int)e.Position.X, (int)e.Position.Y)))
-                    {
-                        if (hands.HandSlots.Keys.Contains(Hand.Left))
-                        {
-                            var entityL = hands.HandSlots[Hand.Left];
-                            _userInterfaceManager.DragInfo.StartDrag(entityL);
-                        }
-                        return true;
-                    }
-                    if (handR.Contains(new Point((int)e.Position.X, (int)e.Position.Y)))
-                    {
-                        if (hands.HandSlots.Keys.Contains(Hand.Right))
-                        {
-                            var entityR = hands.HandSlots[Hand.Right];
-                            _userInterfaceManager.DragInfo.StartDrag(entityR);
-                        }
-                        return true;
-                    }
-                    break;
             }
             return false;
         }
@@ -208,18 +185,18 @@ namespace ClientServices.UserInterface.Components
         {
             if (ClientArea.Contains(new Point((int)e.Position.X, (int)e.Position.Y)))
             {
+                if (_playerManager.ControlledEntity == null)
+                    return false;
+
+                var entity = _playerManager.ControlledEntity;
+
+                var equipment = (EquipmentComponent)entity.GetComponent(ComponentFamily.Equipment);
+                var hands = (HumanHandsComponent)entity.GetComponent(ComponentFamily.Hands);
+
+                if (hands == null || entity == null) return false;
+
                 if (_userInterfaceManager.DragInfo.IsEntity && _userInterfaceManager.DragInfo.IsActive)
                 {
-                    if (_playerManager.ControlledEntity == null)
-                        return false;
-
-                    var entity = _playerManager.ControlledEntity;
-
-                    var equipment = (EquipmentComponent)entity.GetComponent(ComponentFamily.Equipment);
-                    var hands = (HumanHandsComponent)entity.GetComponent(ComponentFamily.Hands);
-
-                    if (hands == null || entity == null) return false;
-
                     if (handL.Contains(new Point((int)e.Position.X, (int)e.Position.Y)))
                     {
                         if (!hands.HandSlots.ContainsKey(Hand.Left))
@@ -234,17 +211,10 @@ namespace ClientServices.UserInterface.Components
                             }
                             equipment.DispatchUnEquipItemToSpecifiedHand(_userInterfaceManager.DragInfo.DragEntity.Uid, Hand.Left);
                         }
-                        else if(hands.HandSlots[Hand.Left] == _userInterfaceManager.DragInfo.DragEntity)
-                        {
-                            if (_userInterfaceManager.DragInfo.Duration < 400)
-                            {
-                                _userInterfaceManager.DragInfo.DragEntity.SendMessage(this, ComponentMessageType.ClickedInHand,
-                                                                                        _playerManager.ControlledEntity.Uid);
-                            }
-                        }
                         _userInterfaceManager.DragInfo.Reset();
                         return true;
                     }
+
                     else if (handR.Contains(new Point((int)e.Position.X, (int)e.Position.Y)))
                     {
                         if (!hands.HandSlots.ContainsKey(Hand.Right))
@@ -258,18 +228,23 @@ namespace ClientServices.UserInterface.Components
                             }
                             equipment.DispatchUnEquipItemToSpecifiedHand(_userInterfaceManager.DragInfo.DragEntity.Uid, Hand.Right);
                         }
-                        else if (hands.HandSlots[Hand.Right] == _userInterfaceManager.DragInfo.DragEntity)
-                        {
-                            if (_userInterfaceManager.DragInfo.Duration < 400)
-                            {
-                                _userInterfaceManager.DragInfo.DragEntity.SendMessage(this, ComponentMessageType.ClickedInHand,
-                                                                                        _playerManager.ControlledEntity.Uid);
-                            }
-                        }
                         _userInterfaceManager.DragInfo.Reset();
                         return true;
                     }
-                    
+
+                }
+                else
+                {
+                    if (handL.Contains(new Point((int)e.Position.X, (int)e.Position.Y)) && hands.HandSlots.ContainsKey(Hand.Left))
+                    {
+                        hands.HandSlots[Hand.Left].SendMessage(this, ComponentMessageType.ClickedInHand,
+                                               _playerManager.ControlledEntity.Uid);
+                    }
+                    else if (handR.Contains(new Point((int)e.Position.X, (int)e.Position.Y)) && hands.HandSlots.ContainsKey(Hand.Right))
+                    {
+                        hands.HandSlots[Hand.Right].SendMessage(this, ComponentMessageType.ClickedInHand,
+                                               _playerManager.ControlledEntity.Uid);
+                    }
                 }
             }
             return false;
@@ -277,6 +252,32 @@ namespace ClientServices.UserInterface.Components
 
         public override void MouseMove(MouseInputEventArgs e)
         {
+            if (ClientArea.Contains(new Point((int)e.Position.X, (int)e.Position.Y)))
+            {
+                var entity = _playerManager.ControlledEntity;
+                var hands = (HumanHandsComponent)entity.GetComponent(ComponentFamily.Hands);
+                switch (e.Buttons)
+                {
+                    case MouseButtons.Left:
+                        if (handL.Contains(new Point((int)e.Position.X, (int)e.Position.Y)))
+                        {
+                            if (hands.HandSlots.Keys.Contains(Hand.Left))
+                            {
+                                var entityL = hands.HandSlots[Hand.Left];
+                                _userInterfaceManager.DragInfo.StartDrag(entityL);
+                            }
+                        }
+                        if (handR.Contains(new Point((int)e.Position.X, (int)e.Position.Y)))
+                        {
+                            if (hands.HandSlots.Keys.Contains(Hand.Right))
+                            {
+                                var entityR = hands.HandSlots[Hand.Right];
+                                _userInterfaceManager.DragInfo.StartDrag(entityR);
+                            }
+                        }
+                        break;
+                }
+            }
         }
 
         public override bool MouseWheelMove(MouseInputEventArgs e)

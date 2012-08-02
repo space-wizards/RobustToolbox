@@ -178,6 +178,9 @@ namespace CGO
             base.SetParameter(parameter);
             switch(parameter.MemberName)
             {
+                case "drawdepth":
+                    SetDrawDepth((DrawDepth)Enum.Parse(typeof(DrawDepth), (string)parameter.Parameter, true));
+                    break;
                 case "addsprite":
                     AddSprite((string)parameter.Parameter);
                     break;
@@ -188,14 +191,15 @@ namespace CGO
         {
             if (!visible) return;
             if (currentSprite == null) return;
+
+            var renderPos = ClientWindowData.WorldToScreen(Owner.Position);
+            SetSpriteCenter(currentSprite, renderPos);
+
             if (Owner.Position.X + currentSprite.AABB.Right < topLeft.X
                 || Owner.Position.X > bottomRight.X
                 || Owner.Position.Y + currentSprite.AABB.Bottom < topLeft.Y
                 || Owner.Position.Y > bottomRight.Y)
                 return;
-
-            var renderPos = ClientWindowData.WorldToScreen(Owner.Position);
-            SetSpriteCenter(currentSprite, renderPos);
 
             currentSprite.HorizontalFlip = flip;
             currentSprite.Draw();

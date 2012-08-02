@@ -90,6 +90,7 @@
     <Compile Include="Lighting\Light.cs" />
     <Compile Include="Lighting\LightArea.cs" />
     <Compile Include="Lighting\LightManager.cs" />
+    <Compile Include="Lighting\LightModes\Flicker.cs" />
     <Compile Include="Lighting\QuadRenderer.cs" />
     <Compile Include="Lighting\ShadowMapResolver.cs" />
     <Compile Include="Map\MapManager.cs" />

@@ -43,9 +43,7 @@ namespace ClientServices.UserInterface.Components
                 uniqueName = uniqueName + System.Guid.NewGuid();
 
             clippingRI = new RenderImage(uniqueName, Size.Width, Size.Height, ImageBufferFormats.BufferRGB888A8);
-            scrollbarH = new Scrollbar(true, _resourceManager); //If you arrived here because of a duplicate key error:
-            scrollbarH.size = Size.Width; //The name for scrollable containers and all classes that inherit them
-                                             //(Windows, dialog boxes etc) must be unique. Only one instance with a given name.
+            scrollbarH = new Scrollbar(true, _resourceManager);
             scrollbarV = new Scrollbar(false, _resourceManager);
             scrollbarV.size = Size.Height;
 
@@ -54,6 +52,10 @@ namespace ClientServices.UserInterface.Components
 
             clippingRI.SourceBlend = AlphaBlendOperation.SourceAlpha;
             clippingRI.DestinationBlend = AlphaBlendOperation.InverseSourceAlpha;
+
+            clippingRI.SourceBlendAlpha = AlphaBlendOperation.SourceAlpha;
+            clippingRI.DestinationBlendAlpha = AlphaBlendOperation.InverseSourceAlpha;
+
             Update(0);
         }
 
@@ -101,9 +103,10 @@ namespace ClientServices.UserInterface.Components
         public override void Render()
         {
             if (disposing || !IsVisible()) return;
-            clippingRI.Clear(System.Drawing.Color.Transparent);
+
+            clippingRI.Clear(DrawBackground ? BackgroundColor : System.Drawing.Color.Transparent);
             clippingRI.BeginDrawing();
-            if (DrawBackground) Gorgon.CurrentRenderTarget.FilledRectangle(0, 0, ClientArea.Width, ClientArea.Height, BackgroundColor);
+
             foreach (GuiComponent component in components)
             {
                 Point oldPos = component.Position;
@@ -115,8 +118,10 @@ namespace ClientServices.UserInterface.Components
             }
             clippingRI.EndDrawing();
             clippingRI.Blit(Position.X, Position.Y);
+
             scrollbarH.Render();
             scrollbarV.Render();
+
             Gorgon.CurrentRenderTarget.Rectangle(ClientArea.X, ClientArea.Y, ClientArea.Width, ClientArea.Height, System.Drawing.Color.Black);
         }
 

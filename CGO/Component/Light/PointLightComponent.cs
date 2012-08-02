@@ -8,17 +8,15 @@ using SS13.IoC;
 using SS13_Shared;
 using SS13_Shared.GO;
 
-
-
 namespace CGO
 {
     public class PointLightComponent : GameObjectComponent
     {
         //Contains a standard light
-        protected ILight _light;
-        private int _lightRadius = 512;
-        private Vector2D _lightOffset = new Vector2D(0, 0);
-        private Vector3D _lightColor = new Vector3D(190,190,190);
+        public ILight _light;
+        public int _lightRadius = 512;
+        public Vector2D _lightOffset = new Vector2D(0, 0);
+        public Vector3D _lightColor = new Vector3D(190,190,190);
         protected string _mask = "";
         
         public override ComponentFamily Family
@@ -39,15 +37,6 @@ namespace CGO
             _light.Move(Owner.Position + _lightOffset);
             _light.SetMask(_mask);
             Owner.OnMove += OnMove;
-            
-            /*_light = IoCManager.Resolve<ILightManager>().CreateLight(IoCManager.Resolve<IMapManager>(),
-                                                                     System.Drawing.Color.FloralWhite, 300,
-                                                                     LightState.On, Owner.Position);
-            _light.Brightness = 1.5f;
-
-            _light.UpdatePosition(Owner.Position + _lightOffset);
-            _light.UpdateLight();
-            Owner.OnMove += OnMove;*/
         }
 
         public override void HandleNetworkMessage(IncomingEntityComponentMessage message)
@@ -58,6 +47,9 @@ namespace CGO
             {
                 case ComponentMessageType.SetLightState:
                     SetState((LightState)message.MessageParameters[1]);
+                    break;
+                case ComponentMessageType.SetLightMode:
+                    SetMode((LightModeClass)message.MessageParameters[1]);
                     break;
             }
         }
@@ -98,18 +90,27 @@ namespace CGO
             _light.SetState(state);
         }
 
+        protected void SetMode(LightModeClass mode)
+        {
+            IoCManager.Resolve<ILightManager>().SetLightMode(mode, _light);
+        }
+
         public override void OnRemove()
         {
             Owner.OnMove -= OnMove;
             IoCManager.Resolve<ILightManager>().RemoveLight(_light);
-            //_light.ClearTiles();
             base.OnRemove();
         }
 
         private void OnMove(object sender, VectorEventArgs args)
         {
             _light.Move(Owner.Position + _lightOffset);
-            //_light.UpdatePosition(Owner.Position + _lightOffset);
+        }
+
+        public override void Update(float frameTime)
+        {
+            base.Update(frameTime);
+            _light.Update(frameTime);
         }
 
         protected void SetMask(string mask)

@@ -81,10 +81,19 @@ namespace CGO
         /// <param name="frametime">time since the last frame was rendered.</param>
         public void Render(float frametime, RectangleF viewPort)
         {
-            var renderables = from IRenderableComponent c in components[ComponentFamily.Renderable]
-                              orderby c.DrawDepth ascending
-                              //orderby c.Owner.Position.Y ascending
+
+            var renderables = from IRenderableComponent c in components[ComponentFamily.Renderable] //Treat mobs and their clothes as on the same level as ground placeables (windows, doors)
+                              orderby (c.DrawDepth == DrawDepth.MobBase ||                          //This is a workaround to make both windows etc. and objects that rely on layers (objects on tables) work.
+                                       c.DrawDepth == DrawDepth.MobOverAccessoryLayer ||
+                                       c.DrawDepth == DrawDepth.MobOverClothingLayer ||
+                                       c.DrawDepth == DrawDepth.MobUnderAccessoryLayer ||
+                                       c.DrawDepth == DrawDepth.MobUnderClothingLayer
+                              ? DrawDepth.FloorPlaceable : c.DrawDepth) ascending, c.Owner.Position.Y ascending
                               select c;
+
+            //var renderables = from IRenderableComponent c in components[ComponentFamily.Renderable] //FIXTHIS
+            //                  orderby c.DrawDepth ascending, c.Owner.Position.Y ascending
+            //                  select c;
                             
             foreach (var component in renderables.ToList())
             {

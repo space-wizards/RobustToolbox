@@ -7,6 +7,7 @@ using ServerServices.Map;
 using ServerServices.Tiles;
 using SS13.IoC;
 using ServerInterfaces.Map;
+using Lidgren.Network;
 
 namespace SGO
 {
@@ -42,6 +43,22 @@ namespace SGO
 
             Point tilePositionNew = map.GetTileArrayPositionFromWorldPosition(newPosition);
             Tile currentTile = map.GetTileAt(tilePositionNew.X, tilePositionNew.Y) as Tile;
+
+            currentTile.TileChange += TileChanged;
+
+            linkedTile = currentTile;
+        }
+
+        public void AttachToTile(Vector2 tilePos)
+        {
+            var map = IoCManager.Resolve<IMap>();
+
+            Point tilePositionOld = map.GetTileArrayPositionFromWorldPosition(Owner.Position);
+            Tile previousTile = map.GetTileAt(tilePositionOld.X, tilePositionOld.Y) as Tile;
+
+            previousTile.TileChange -= TileChanged;
+
+            Tile currentTile = map.GetTileAt((int)tilePos.X, (int)tilePos.Y) as Tile;
 
             currentTile.TileChange += TileChanged;
 

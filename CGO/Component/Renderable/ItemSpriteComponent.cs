@@ -1,4 +1,6 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
+using System.Linq;
 using ClientInterfaces;
 using ClientInterfaces.Resource;
 using SS13.IoC;
@@ -143,6 +145,9 @@ namespace CGO
             //base.SetParameter(parameter);
             switch (parameter.MemberName)
             {
+                case "drawdepth":
+                    SetDrawDepth((DrawDepth)Enum.Parse(typeof(DrawDepth), (string)parameter.Parameter, true));
+                    break;
                 case "basename":
                     basename = (string)parameter.Parameter;
                     LoadSprites();

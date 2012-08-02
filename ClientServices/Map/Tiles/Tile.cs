@@ -92,7 +92,7 @@ namespace ClientServices.Map.Tiles
 
         public virtual void Render(float xTopLeft, float yTopLeft, int tileSpacing, Batch batch)
         {
-            //Sprite.Color = Color.White;
+            Sprite.Color = Color.White;
             Sprite.SetPosition((float)TilePosition.X * tileSpacing - xTopLeft, (float)TilePosition.Y * tileSpacing - yTopLeft);
             //Sprite.Draw();
             batch.AddClone(Sprite);
@@ -181,6 +181,7 @@ namespace ClientServices.Map.Tiles
 
         public virtual void RenderTop(float xTopLeft, float yTopLeft, int tileSpacing, Batch wallTopsBatch)
         {
+            //FIXTHIS
         }
 
         public virtual void SetAtmosDisplay(byte displayByte)

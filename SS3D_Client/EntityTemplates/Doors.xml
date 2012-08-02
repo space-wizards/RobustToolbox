@@ -7,6 +7,7 @@
         <Parameters>
           <Parameter name="addsprite" type="string" value="door_ew" />
           <Parameter name="addsprite" type="string" value="door_ewo" />
+          <Parameter name="drawdepth" type="string" value="FloorPlaceable" />
         </Parameters>
       </Component>
       <Component name="ClickableComponent"></Component>

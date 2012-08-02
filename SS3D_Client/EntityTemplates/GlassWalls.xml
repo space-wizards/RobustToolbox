@@ -7,6 +7,7 @@
         <Parameters>
           <Parameter name="addsprite" type="string" value="glass" />
           <Parameter name="addsprite" type="string" value="glass_shattered" />
+          <Parameter name="drawdepth" type="string" value="FloorPlaceable" />
         </Parameters>
       </Component>
       <Component name="ClickableComponent"></Component>

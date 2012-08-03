@@ -10,7 +10,7 @@ using SS13_Shared.GO;
 
 namespace CGO
 {
-    class ColliderComponent : GameObjectComponent
+    public class ColliderComponent : GameObjectComponent
     {
         public override ComponentFamily Family
         {
@@ -28,7 +28,7 @@ namespace CGO
         }
         
         private RectangleF currentAABB;
-        private RectangleF OffsetAABB
+        public RectangleF OffsetAABB
         {
             get
             { // Return tweaked AABB
@@ -99,7 +99,7 @@ namespace CGO
         {
             bool isColliding = false;
             var collisionManager = IoCManager.Resolve<ICollisionManager>();
-            isColliding = collisionManager.IsColliding(OffsetAABB, SuppressBump);
+            isColliding = collisionManager.TryCollide(Owner);
             return new ComponentReplyMessage(ComponentMessageType.CollisionStatus, isColliding);
         }
 

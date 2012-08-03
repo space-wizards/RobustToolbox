@@ -1,4 +1,5 @@
 ﻿using System.Drawing;
+using ClientInterfaces.GOC;
 
 namespace ClientInterfaces.Collision
 {
@@ -10,7 +11,8 @@ namespace ClientInterfaces.Collision
         /// </summary>
         /// <param name="collider">Collision rectangle to check</param>
         /// <returns>true if collides, false if not</returns>
-        bool IsColliding(RectangleF collider, bool suppressBump = false);
+        bool IsColliding(RectangleF collider);
+        bool TryCollide(IEntity collider);
         void AddCollidable(ICollidable collidable);
         void RemoveCollidable(ICollidable collidable);
         void UpdateCollidable(ICollidable collidable);

@@ -147,7 +147,13 @@ namespace ClientServices.State.States
 
             _sceneTarget = new RenderImage("sceneTarget", Gorgon.CurrentClippingViewport.Width, Gorgon.CurrentClippingViewport.Height, ImageBufferFormats.BufferRGB888A8);
             _tilesTarget = new RenderImage("tilesTarget", Gorgon.CurrentClippingViewport.Width, Gorgon.CurrentClippingViewport.Height, ImageBufferFormats.BufferRGB888A8);
+
             _overlayTarget = new RenderImage("overlayTarget", Gorgon.CurrentClippingViewport.Width, Gorgon.CurrentClippingViewport.Height, ImageBufferFormats.BufferRGB888A8);
+            _overlayTarget.SourceBlend = AlphaBlendOperation.SourceAlpha;
+            _overlayTarget.DestinationBlend = AlphaBlendOperation.InverseSourceAlpha;
+            _overlayTarget.SourceBlendAlpha = AlphaBlendOperation.SourceAlpha;
+            _overlayTarget.DestinationBlendAlpha = AlphaBlendOperation.InverseSourceAlpha;
+
             _composedSceneTarget = new RenderImage("composedSceneTarget", Gorgon.CurrentClippingViewport.Width, Gorgon.CurrentClippingViewport.Height, ImageBufferFormats.BufferRGB888A8);
 
             _lightTarget = new RenderImage("lightTarget", Gorgon.CurrentClippingViewport.Width, Gorgon.CurrentClippingViewport.Height, ImageBufferFormats.BufferRGB888A8);
@@ -602,12 +608,6 @@ namespace ClientServices.State.States
                 {
                     Gorgon.CurrentRenderTarget = _overlayTarget;
                     _overlayTarget.Clear(Color.Transparent);
-
-                    _overlayTarget.SourceBlend = AlphaBlendOperation.SourceAlpha;
-                    _overlayTarget.DestinationBlend = AlphaBlendOperation.InverseSourceAlpha;
-
-                    _overlayTarget.SourceBlendAlpha = AlphaBlendOperation.SourceAlpha;
-                    _overlayTarget.DestinationBlendAlpha = AlphaBlendOperation.InverseSourceAlpha;
 
                     // Render decal batch
 

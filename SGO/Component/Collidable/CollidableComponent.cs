@@ -1,6 +1,7 @@
 ﻿using Lidgren.Network;
 using SS13_Shared;
 using SS13_Shared.GO;
+using ServerInterfaces.GameObject;
 
 namespace SGO
 {
@@ -40,7 +41,9 @@ namespace SGO
             {
                 case ComponentMessageType.Bumped:
                     ///TODO check who bumped us, how far away they are, etc.
-                    Owner.SendMessage(this, ComponentMessageType.Bumped);
+                    IEntity bumper = EntityManager.Singleton.GetEntity((int) message.MessageParameters[1]);
+                    if(bumper != null)
+                        Owner.SendMessage(this, ComponentMessageType.Bumped, bumper);
                     break;
             }
         }

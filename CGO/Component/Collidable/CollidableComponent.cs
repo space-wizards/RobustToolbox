@@ -211,13 +211,13 @@ namespace CGO
         /// <summary>
         /// Called when the collidable is bumped into by someone/something
         /// </summary>
-        public void Bump()
+        public void Bump(IEntity ent)
         {
             if (OnBump != null)
                 OnBump(this, new EventArgs());
 
-            Owner.SendMessage(this, ComponentMessageType.Bumped);
-            Owner.SendComponentNetworkMessage(this, Lidgren.Network.NetDeliveryMethod.ReliableUnordered, ComponentMessageType.Bumped);
+            Owner.SendMessage(this, ComponentMessageType.Bumped, ent);
+            Owner.SendComponentNetworkMessage(this, Lidgren.Network.NetDeliveryMethod.ReliableUnordered, ComponentMessageType.Bumped, ent.Uid);
         }
 
 

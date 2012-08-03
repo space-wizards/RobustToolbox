@@ -7,6 +7,7 @@ using GorgonLibrary;
 using GorgonLibrary.Graphics;
 using ClientInterfaces;
 using SS13_Shared;
+using ClientInterfaces.GOC;
 
 namespace ClientServices.Map.Tiles.Wall
 {
@@ -43,7 +44,7 @@ namespace ClientServices.Map.Tiles.Wall
             }
         }
 
-        public void Bump()
+        public void Bump(IEntity collider)
         { }
         #endregion 
 

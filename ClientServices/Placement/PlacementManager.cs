@@ -211,7 +211,7 @@ namespace ClientServices.Placement
                         return;
                     }
 
-                    if (_collisionManager.IsColliding(spriteRectWorld, true)) _validPosition = false;
+                    if (_collisionManager.IsColliding(spriteRectWorld)) _validPosition = false;
 
                     if (currentMap.IsSolidTile(_currentLocWorld)) _validPosition = false; //HANDLE CURSOR OUTSIDE MAP
 
@@ -274,7 +274,7 @@ namespace ClientServices.Placement
                     }
 
                     spriteRectWorld = new RectangleF(_currentLocWorld.X - (_currentSprite.Width / 2f), _currentLocWorld.Y - (_currentSprite.Height / 2f), _currentSprite.Width, _currentSprite.Height);
-                    if (_collisionManager.IsColliding(spriteRectWorld, true)) _validPosition = false;
+                    if (_collisionManager.IsColliding(spriteRectWorld)) _validPosition = false;
                 }
                 #endregion
 
@@ -323,7 +323,7 @@ namespace ClientServices.Placement
                                 _currentLocScreen = new Vector2D(_currentLocWorld.X - ClientWindowData.Singleton.ScreenOrigin.X, _currentLocWorld.Y - ClientWindowData.Singleton.ScreenOrigin.Y);
 
                                 spriteRectWorld = new RectangleF(_currentLocWorld.X - (_currentSprite.Width / 2f), _currentLocWorld.Y - (_currentSprite.Height / 2f), _currentSprite.Width, _currentSprite.Height);
-                                if (_collisionManager.IsColliding(spriteRectWorld, true)) _validPosition = false; //This also includes walls. Meaning that even when set to solid only this will be unplacable. Fix this.
+                                if (_collisionManager.IsColliding(spriteRectWorld)) _validPosition = false; //This also includes walls. Meaning that even when set to solid only this will be unplacable. Fix this.
                             }
                         }
                         else _validPosition = false;

@@ -4,6 +4,9 @@ using System.Linq;
 using System.Drawing;
 using ClientInterfaces;
 using ClientInterfaces.Collision;
+using ClientInterfaces.GOC;
+using SS13_Shared.GO;
+using CGO;
 
 namespace ClientServices.Collision
 {
@@ -18,7 +21,7 @@ namespace ClientServices.Collision
 
         private readonly Dictionary<Point, int> _bucketIndex; //Indexed in 256-pixel blocks - 0 = 0, 1 = 256, 2 = 512 etc
         private readonly Dictionary<int, CollidableBucket> _buckets; // each bucket represents a 256x256 block of pixelspace
-        private readonly List<CollidableAABB> _aabbs;
+        private readonly Dictionary<CollidableAABB, IEntity> _aabbs;
 
         private int _lastIndex;
 
@@ -29,17 +32,16 @@ namespace ClientServices.Collision
         {
             _bucketIndex = new Dictionary<Point, int>();
             _buckets = new Dictionary<int, CollidableBucket>();
-            _aabbs = new List<CollidableAABB>();
+            _aabbs = new Dictionary<CollidableAABB, IEntity>();
         }
 
         #region ICollisionManager members
         /// <summary>
-        /// returns true if collider intersects a collidable under management.
+        /// returns true if collider intersects a collidable under management. Does not trigger Bump.
         /// </summary>
         /// <param name="collider">Rectangle to check for collision</param>
-        /// <param name="suppressBump">If true, don't run the Bump() func on the objects that are hit</param>
         /// <returns></returns>
-        public bool IsColliding(RectangleF collider, bool suppressBump = false)
+        public bool IsColliding(RectangleF collider)
         {
             PointF[] points = {   new PointF(collider.Left, collider.Top),
                                   new PointF(collider.Right, collider.Top),
@@ -68,9 +70,49 @@ namespace ClientServices.Collision
                 {
                     collided = true;
                 }
+            }
+            return collided;
+        }
 
-                if (!suppressBump)
-                    aabb.Collidable.Bump();
+        /// <summary>
+        /// returns true if collider intersects a collidable under management and calls Bump.
+        /// </summary>
+        /// <param name="collider">Rectangle to check for collision</param>
+        /// <returns></returns>
+        public bool TryCollide(IEntity entity)
+        {
+            ColliderComponent collider = (ColliderComponent)entity.GetComponent(ComponentFamily.Collider);
+            if (collider == null) return false;
+
+            PointF[] points = {   new PointF(collider.OffsetAABB.Left, collider.OffsetAABB.Top),
+                                  new PointF(collider.OffsetAABB.Right, collider.OffsetAABB.Top),
+                                  new PointF(collider.OffsetAABB.Right, collider.OffsetAABB.Bottom),
+                                  new PointF(collider.OffsetAABB.Left, collider.OffsetAABB.Bottom)
+                              };
+
+            //Get the buckets that correspond to the collider's points.
+            var buckets = points.Select(GetBucket).Distinct().ToList();
+
+            //Get all of the points
+            var cpoints = new List<CollidablePoint>();
+            foreach (var bucket in buckets)
+            {
+                cpoints.AddRange(bucket.GetPoints());
+            }
+
+            //Expand points to distinct AABBs
+            var aabBs = (cpoints.Select(cp => cp.ParentAABB)).Distinct().ToList();
+
+            //try all of the AABBs against the target rect.
+            var collided = false;
+            foreach (var aabb in aabBs.Where(aabb => aabb.Collidable.AABB.IntersectsWith(collider.OffsetAABB)))
+            {
+                if (aabb.IsHardCollider) //If the collider is supposed to prevent movement
+                {
+                    collided = true;
+                }
+
+                aabb.Collidable.Bump(entity);
             }
             return collided;
         }
@@ -86,7 +128,13 @@ namespace ClientServices.Collision
             {
                 AddPoint(p);
             }
-            _aabbs.Add(c);
+            if (collidable is IGameObjectComponent)
+            {
+                IGameObjectComponent baseComp = collidable as IGameObjectComponent;
+                _aabbs.Add(c, baseComp.Owner);
+            }
+            else
+                _aabbs.Add(c, null);
         }
 
         /// <summary>
@@ -95,16 +143,16 @@ namespace ClientServices.Collision
         /// <param name="collidable"></param>
         public void RemoveCollidable(ICollidable collidable)
         {
-            var ourAABB = _aabbs.FirstOrDefault(a => a.Collidable == collidable);
+            var ourAABB = _aabbs.FirstOrDefault(a => a.Key.Collidable == collidable);
 
-            if (ourAABB.Collidable == null)
+            if (ourAABB.Key.Collidable == null)
                 return;
 
-            foreach (var p in ourAABB.Points)
+            foreach (var p in ourAABB.Key.Points)
             {
                 RemovePoint(p);
             }
-            _aabbs.Remove(ourAABB);
+            _aabbs.Remove(ourAABB.Key);
         }
 
         /// <summary>

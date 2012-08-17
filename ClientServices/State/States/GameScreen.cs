@@ -1137,18 +1137,18 @@ namespace ClientServices.State.States
 
             if (clickedEntities.Any())
             {
-                var entToClick = (from cd in clickedEntities                       //Treat mobs and their clothes as on the same level as ground placeables (windows, doors)
-                                  orderby (cd.Drawdepth == (int)DrawDepth.MobBase ||//This is a workaround to make both windows etc. and objects that rely on layers (objects on tables) work.
-                                            cd.Drawdepth == (int)DrawDepth.MobOverAccessoryLayer ||
-                                            cd.Drawdepth == (int)DrawDepth.MobOverClothingLayer ||
-                                            cd.Drawdepth == (int)DrawDepth.MobUnderAccessoryLayer ||
-                                            cd.Drawdepth == (int)DrawDepth.MobUnderClothingLayer
-                                   ? (int)DrawDepth.FloorPlaceable : cd.Drawdepth) ascending, cd.Clicked.Position.Y ascending
-                                  select cd.Clicked).Last();
-
-                //var entToClick = (from cd in clickedEntities
-                //                  orderby cd.Drawdepth ascending, cd.Clicked.Position.Y ascending
+                //var entToClick = (from cd in clickedEntities                       //Treat mobs and their clothes as on the same level as ground placeables (windows, doors)
+                //                  orderby (cd.Drawdepth == (int)DrawDepth.MobBase ||//This is a workaround to make both windows etc. and objects that rely on layers (objects on tables) work.
+                //                            cd.Drawdepth == (int)DrawDepth.MobOverAccessoryLayer ||
+                //                            cd.Drawdepth == (int)DrawDepth.MobOverClothingLayer ||
+                //                            cd.Drawdepth == (int)DrawDepth.MobUnderAccessoryLayer ||
+                //                            cd.Drawdepth == (int)DrawDepth.MobUnderClothingLayer
+                //                   ? (int)DrawDepth.FloorPlaceable : cd.Drawdepth) ascending, cd.Clicked.Position.Y ascending
                 //                  select cd.Clicked).Last();
+
+                var entToClick = (from cd in clickedEntities
+                                  orderby cd.Drawdepth ascending, cd.Clicked.Position.Y ascending
+                                  select cd.Clicked).Last();
 
                 if (PlacementManager.Eraser && PlacementManager.IsActive)
                 {

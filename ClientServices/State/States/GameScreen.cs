@@ -1176,6 +1176,11 @@ namespace ClientServices.State.States
                         else
                             UserInterfaceManager.AddComponent(new ContextMenu(entToClick, MousePosScreen, ResourceManager, UserInterfaceManager));
                         break;
+
+                    case MouseButtons.Middle:
+                        UserInterfaceManager.DisposeAllComponents<PropEditWindow>();
+                        UserInterfaceManager.AddComponent(new PropEditWindow(new Size(400, 400), ResourceManager, (Entity)entToClick));
+                        break;
                 }
             }
             else

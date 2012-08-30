@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using System.Drawing;
@@ -24,8 +25,9 @@ namespace ClientServices.UserInterface.Components
     {
         public string VarName;
         public Label LabelName;
-        public Textbox VarEdit;
         public bool CanEdit;
+        public bool IsListItem;
+        public object ListItem;
     }
 
     class PropEditWindow : Window
@@ -71,48 +73,111 @@ namespace ClientServices.UserInterface.Components
             foreach (FieldInfo field in fields)
             {
                 PropWindowStruct newEntry = new PropWindowStruct();
-                newEntry.VarName = field.Name;
                 var fieldVal = field.GetValue(assigned);
-                newEntry.LabelName = new Label(field.Name + " = " + (fieldVal == null ? "null" : fieldVal.ToString()), "CALIBRI", _resourceManager);
-                newEntry.CanEdit = !field.IsInitOnly;
-                newEntry.LabelName.Position = new Point(5, pos);
-                newEntry.LabelName.DrawBorder = true;
-                newEntry.LabelName.BorderColor = newEntry.CanEdit ? Color.DarkGreen : Color.DarkRed;
-                newEntry.LabelName.BackgroundColor = Color.Gray;
-                newEntry.LabelName.DrawBackground = true;
-                newEntry.LabelName.Clicked += new Label.LabelPressHandler(LabelName_Clicked);
-                this.components.Add(newEntry.LabelName);
-                newEntry.LabelName.Update(0);
-                pos += 5 + newEntry.LabelName.ClientArea.Height;
+
+                if (fieldVal != null && fieldVal is ICollection)
+                {
+                    newEntry.VarName = field.Name;
+                    newEntry.LabelName = new Label(field.Name + " = " + (fieldVal == null ? "null" : fieldVal.ToString()), "CALIBRI", _resourceManager);
+                    newEntry.CanEdit = true;
+                    newEntry.IsListItem = true;
+                    newEntry.CanEdit = !field.IsInitOnly;
+
+                    newEntry.LabelName.Position = new Point(5, pos);
+                    newEntry.LabelName.DrawBorder = true;
+                    newEntry.LabelName.BorderColor = Color.Honeydew;
+                    newEntry.LabelName.BackgroundColor = Color.Gray;
+                    newEntry.LabelName.DrawBackground = true;
+                    newEntry.LabelName.Update(0);
+
+                    pos += 5 + newEntry.LabelName.ClientArea.Height;
+
+                    this.components.Add(newEntry.LabelName);
+                    ObjPropList.Add(newEntry);
+
+                    newEntry = new PropWindowStruct();
+
+                    foreach (var item in (ICollection)fieldVal)
+                    {
+                        newEntry.VarName = item.ToString();
+
+                        newEntry.CanEdit = true;
+                        newEntry.IsListItem = true;
+                        newEntry.ListItem = item;
+
+                        newEntry.LabelName = new Label(item.ToString(), "CALIBRI", _resourceManager);
+                        newEntry.LabelName.Position = new Point(15, pos);
+                        newEntry.LabelName.DrawBorder = true;
+                        newEntry.LabelName.BorderColor = Color.DeepSkyBlue;
+                        newEntry.LabelName.BackgroundColor = Color.Gray;
+                        newEntry.LabelName.DrawBackground = true;
+                        newEntry.LabelName.Clicked += new Label.LabelPressHandler(LabelName_Clicked);
+                        newEntry.LabelName.Update(0);
+
+                        pos += 5 + newEntry.LabelName.ClientArea.Height;
+
+                        this.components.Add(newEntry.LabelName);
+                        ObjPropList.Add(newEntry);
+                    }
+                }
+                else
+                {
+                    newEntry.VarName = field.Name;
+                    newEntry.LabelName = new Label(field.Name + " = " + (fieldVal == null ? "null" : fieldVal.ToString()), "CALIBRI", _resourceManager);
+                    newEntry.CanEdit = !field.IsInitOnly;
+                    newEntry.LabelName.Position = new Point(5, pos);
+                    newEntry.LabelName.DrawBorder = true;
+                    newEntry.LabelName.BorderColor = newEntry.CanEdit ? Color.Chartreuse : Color.IndianRed;
+                    newEntry.LabelName.BackgroundColor = Color.Gray;
+                    newEntry.LabelName.DrawBackground = true;
+                    newEntry.LabelName.Clicked += new Label.LabelPressHandler(LabelName_Clicked);
+                    this.components.Add(newEntry.LabelName);
+                    newEntry.LabelName.Update(0);
+                    pos += 5 + newEntry.LabelName.ClientArea.Height;
+                }
 
                 ObjPropList.Add(newEntry);
             }
         }
 
+
         void LabelName_Clicked(Label sender)
         {
-            string selected = null;
+            PropWindowStruct selected = new PropWindowStruct();
+            bool found = false;
+
             foreach (PropWindowStruct struc in ObjPropList)
             {
                 if (struc.LabelName == sender)
                 {
-                    selected = struc.VarName;
+                    selected = struc;
+                    found = true;
                     break;
                 }
             }
 
-            if (selected != null)
+            if (found)
             {
-                if (fields.First(x => x.Name == selected) != null)
+                if (selected.IsListItem)
                 {
-                    FieldInfo field = fields.First(x => x.Name == selected);
+                    if (selected.ListItem != null)
+                    {
+                        UserInterfaceManager uiMgr = (UserInterfaceManager)IoCManager.Resolve<IUserInterfaceManager>();
+                        uiMgr.AddComponent(new PropEditWindow(new Size(400, 400), _resourceManager, selected.ListItem));
+                    }
+                }
+                else if (fields.First(x => x.Name == selected.VarName) != null)
+                {
+                    FieldInfo field = fields.First(x => x.Name == selected.VarName);
                     var fieldVar = field.GetValue(assigned);
                     if (fieldVar == null) return;
+
                     UserInterfaceManager uiMgr = (UserInterfaceManager)IoCManager.Resolve<IUserInterfaceManager>();
                     uiMgr.AddComponent(new PropEditWindow(new Size(400, 400), _resourceManager, fieldVar));
                 }
+
+                this.Dispose();
             }
-            this.Dispose();
         }
 
         public override sealed void Update(float frameTime)

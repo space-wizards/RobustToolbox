@@ -32,7 +32,7 @@ namespace ClientServices.UserInterface.Components
 
     class PropEditWindow : Window
     {
-        private readonly Object assigned;
+        private Object assigned;
         private Textbox search;
         private FieldInfo[] fields;
 
@@ -42,14 +42,17 @@ namespace ClientServices.UserInterface.Components
             : base("Object Properties : " + obj.ToString(), size, resourceManager)
         {
             Position = new Point((int)(Gorgon.CurrentRenderTarget.Width / 2f) - (int)(ClientArea.Width / 2f), (int)(Gorgon.CurrentRenderTarget.Height / 2f) - (int)(ClientArea.Height / 2f));
+
             search = new Textbox(150, resourceManager);
             search.Position = new Point(5, 5);
             search.OnSubmit += new Textbox.TextSubmitHandler(search_OnSubmit);
             search.ClearOnSubmit = true;
             search.ClearFocusOnSubmit = false;
             components.Add(search);
+
             assigned = obj;
             BuildPropList();
+
             Update(0);
         }
 
@@ -62,6 +65,16 @@ namespace ClientServices.UserInterface.Components
                 else
                     struc.LabelName.BackgroundColor = Color.Gray;
             }
+        }
+
+        private void RebuildPropList(object newObj)
+        {
+            this.components.Clear();
+            this.components.Add(search);
+
+            ObjPropList.Clear();
+            assigned = newObj;
+            BuildPropList();
         }
 
         private void BuildPropList()
@@ -79,9 +92,8 @@ namespace ClientServices.UserInterface.Components
                 {
                     newEntry.VarName = field.Name;
                     newEntry.LabelName = new Label(field.Name + " = " + (fieldVal == null ? "null" : fieldVal.ToString()), "CALIBRI", _resourceManager);
-                    newEntry.CanEdit = true;
-                    newEntry.IsListItem = true;
-                    newEntry.CanEdit = !field.IsInitOnly;
+                    newEntry.CanEdit = false;
+                    newEntry.IsListItem = false;
 
                     newEntry.LabelName.Position = new Point(5, pos);
                     newEntry.LabelName.DrawBorder = true;
@@ -123,78 +135,51 @@ namespace ClientServices.UserInterface.Components
                 else
                 {
                     newEntry.VarName = field.Name;
-                    newEntry.LabelName = new Label(field.Name + " = " + (fieldVal == null ? "null" : fieldVal.ToString()), "CALIBRI", _resourceManager);
+
                     newEntry.CanEdit = !field.IsInitOnly;
+                    newEntry.IsListItem = false;
+
+                    newEntry.LabelName = new Label(field.Name + " = " + (fieldVal == null ? "null" : fieldVal.ToString()), "CALIBRI", _resourceManager);
                     newEntry.LabelName.Position = new Point(5, pos);
                     newEntry.LabelName.DrawBorder = true;
                     newEntry.LabelName.BorderColor = newEntry.CanEdit ? Color.Chartreuse : Color.IndianRed;
                     newEntry.LabelName.BackgroundColor = Color.Gray;
                     newEntry.LabelName.DrawBackground = true;
                     newEntry.LabelName.Clicked += new Label.LabelPressHandler(LabelName_Clicked);
-                    this.components.Add(newEntry.LabelName);
                     newEntry.LabelName.Update(0);
-                    pos += 5 + newEntry.LabelName.ClientArea.Height;
-                }
 
-                ObjPropList.Add(newEntry);
+                    pos += 5 + newEntry.LabelName.ClientArea.Height;
+
+                    this.components.Add(newEntry.LabelName);
+                    ObjPropList.Add(newEntry);
+                }   
             }
         }
 
 
         void LabelName_Clicked(Label sender)
         {
-            PropWindowStruct selected = new PropWindowStruct();
-            bool found = false;
+            PropWindowStruct? selected = null;
 
-            foreach (PropWindowStruct struc in ObjPropList)
-            {
-                if (struc.LabelName == sender)
-                {
-                    selected = struc;
-                    found = true;
-                    break;
-                }
-            }
+            if (ObjPropList.Any(x => x.LabelName == sender))
+                selected = ObjPropList.First(x => x.LabelName == sender);
 
-            if (found)
+            if (selected.HasValue)
             {
-                if (selected.IsListItem)
+                if (selected.Value.IsListItem)
                 {
-                    if (selected.ListItem != null)
-                    {
-                        UserInterfaceManager uiMgr = (UserInterfaceManager)IoCManager.Resolve<IUserInterfaceManager>();
-                        uiMgr.AddComponent(new PropEditWindow(new Size(400, 400), _resourceManager, selected.ListItem));
-                    }
+                    if (selected.Value.ListItem != null)
+                        RebuildPropList(selected.Value.ListItem);
                 }
-                else if (fields.First(x => x.Name == selected.VarName) != null)
+                else if (fields.First(x => x.Name == selected.Value.VarName) != null)
                 {
-                    FieldInfo field = fields.First(x => x.Name == selected.VarName);
+                    FieldInfo field = fields.First(x => x.Name == selected.Value.VarName);
                     var fieldVar = field.GetValue(assigned);
                     if (fieldVar == null) return;
 
-                    UserInterfaceManager uiMgr = (UserInterfaceManager)IoCManager.Resolve<IUserInterfaceManager>();
-                    uiMgr.AddComponent(new PropEditWindow(new Size(400, 400), _resourceManager, fieldVar));
+                    RebuildPropList(fieldVar);
                 }
-
-                this.Dispose();
             }
         }
-
-        public override sealed void Update(float frameTime)
-        {
-            base.Update(frameTime);
-        }
-
-        public override void Render()
-        {
-            base.Render();
-        }
-
-        public override void Dispose()
-        {
-            base.Dispose();
-            GC.SuppressFinalize(this);
-        }
-
     }
 }

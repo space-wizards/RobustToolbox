@@ -123,7 +123,7 @@ namespace ClientServices.UserInterface.Components
                 return true;
             }
 
-            if (char.IsLetterOrDigit(e.CharacterMapping.Character) || char.IsPunctuation(e.CharacterMapping.Character))
+            if (char.IsLetterOrDigit(e.CharacterMapping.Character) || char.IsPunctuation(e.CharacterMapping.Character) || char.IsWhiteSpace(e.CharacterMapping.Character))
             {
                 if (Text.Length == MaxCharacters) return false;
                 if (e.Shift)

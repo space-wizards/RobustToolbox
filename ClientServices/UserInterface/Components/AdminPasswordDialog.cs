@@ -33,7 +33,7 @@ namespace ClientServices.UserInterface.Components
             Position = new Point((int)(Gorgon.CurrentRenderTarget.Width / 2f) - (int)(ClientArea.Width / 2f), (int)(Gorgon.CurrentRenderTarget.Height / 2f) - (int)(ClientArea.Height / 2f));
         }
 
-        void textboxPassword_OnSubmit(string text)
+        void textboxPassword_OnSubmit(string text, Textbox sender)
         {
             if (text.Length > 1 && !string.IsNullOrWhiteSpace(text))
             {

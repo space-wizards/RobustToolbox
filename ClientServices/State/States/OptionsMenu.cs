@@ -77,12 +77,12 @@ namespace ClientServices.State.States
             _applybtt.Clicked += new Label.LabelPressHandler(_applybtt_Clicked);
         }
 
-        void _applybtt_Clicked(Label sender)
+        void _applybtt_Clicked(Label sender, MouseInputEventArgs e)
         {
             ApplyVideoMode();
         }
 
-        void _chkfullscreen_ValueChanged(bool newValue)
+        void _chkfullscreen_ValueChanged(bool newValue, Checkbox sender)
         {
             ConfigurationManager.SetFullscreen(newValue);
         }
@@ -92,7 +92,7 @@ namespace ClientServices.State.States
             Gorgon.SetMode(Gorgon.Screen.OwnerForm, (int)ConfigurationManager.GetDisplayWidth(), (int)ConfigurationManager.GetDisplayHeight(), Gorgon.DesktopVideoMode.Format, ConfigurationManager.GetFullscreen(), false, false, Gorgon.DesktopVideoMode.RefreshRate);
         }
 
-        void _reslistbox_ItemSelected(Label item)
+        void _reslistbox_ItemSelected(Label item, Listbox sender)
         {
             if (vmList.ContainsKey(item.Text.Text))
             {
@@ -111,12 +111,12 @@ namespace ClientServices.State.States
             Environment.Exit(0);
         }
 
-        void _mainmenubtt_Clicked(Label sender)
+        void _mainmenubtt_Clicked(Label sender, MouseInputEventArgs e)
         {
             StateManager.RequestStateChange<ConnectMenu>();
         }
 
-        void _connectbtt_Clicked(Label sender)
+        void _connectbtt_Clicked(Label sender, MouseInputEventArgs e)
         {
         }
 

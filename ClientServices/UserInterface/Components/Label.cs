@@ -14,7 +14,7 @@ namespace ClientServices.UserInterface.Components
 
         public TextSprite Text { get; private set; }
 
-        public delegate void LabelPressHandler(Label sender);
+        public delegate void LabelPressHandler(Label sender, MouseInputEventArgs e);
         public event LabelPressHandler Clicked;
 
         public bool DrawBorder { get; set; }
@@ -63,7 +63,7 @@ namespace ClientServices.UserInterface.Components
         {
             if (ClientArea.Contains(new Point((int)e.Position.X, (int)e.Position.Y)))
             {
-                if (Clicked != null) Clicked(this);
+                if (Clicked != null) Clicked(this, e);
                 return true;
             }
             return false;

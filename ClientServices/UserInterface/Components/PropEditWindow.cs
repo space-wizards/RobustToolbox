@@ -125,6 +125,7 @@ namespace ClientServices.UserInterface.Components
         void editBool_ValueChanged(bool newValue, Checkbox sender)
         {
             FieldInfo field = (FieldInfo)sender.UserData;
+            if (field.IsInitOnly || field.IsLiteral) return;
             field.SetValue(assigned, newValue);
         }
 
@@ -148,6 +149,7 @@ namespace ClientServices.UserInterface.Components
             else if (field.GetValue(assigned) is Single)
                 set = Single.Parse(text);
 
+            if (field.IsInitOnly || field.IsLiteral) return;
             field.SetValue(assigned, set);
         }
 
@@ -155,12 +157,14 @@ namespace ClientServices.UserInterface.Components
         {
             FieldInfo field = (FieldInfo)sender.UserData;
             object state = Enum.Parse(field.FieldType, item.Text.Text, true);
+            if (field.IsInitOnly || field.IsLiteral) return;
             field.SetValue(assigned, state);
         }
 
         void editStr_OnSubmit(string text, Textbox sender)
         {
             FieldInfo field = (FieldInfo)sender.UserData;
+            if (field.IsInitOnly || field.IsLiteral) return;
             field.SetValue(assigned, text);
         }
 
@@ -225,7 +229,7 @@ namespace ClientServices.UserInterface.Components
                 {
                     newEntry.VarName = field.Name;
 
-                    newEntry.CanEdit = !field.IsInitOnly;
+                    newEntry.CanEdit = !(field.IsInitOnly || field.IsLiteral);
                     newEntry.IsListItem = false;
 
                     newEntry.LabelName = new Label(field.Name + " = " + (fieldVal == null ? "null" : ""), "CALIBRI", _resourceManager);

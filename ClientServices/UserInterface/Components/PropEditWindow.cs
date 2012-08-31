@@ -242,7 +242,7 @@ namespace ClientServices.UserInterface.Components
                     newEntry.LabelName.Update(0);
 
                     GuiComponent edit = CreateEditField(fieldVal, field);
-                    if (edit != null)
+                    if (edit != null && newEntry.CanEdit)
                     {
                         edit.Position = new Point(newEntry.LabelName.ClientArea.Right + 5, newEntry.LabelName.ClientArea.Y);
                         components.Add(edit);

@@ -78,6 +78,7 @@ namespace ClientServices.UserInterface.Components
 
             ObjPropList.Clear();
             assigned = newObj;
+            title.Text.Text = "Object Properties : " + assigned.ToString();
             BuildPropList();
         }
 

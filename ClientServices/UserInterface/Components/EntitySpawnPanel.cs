@@ -69,13 +69,13 @@ namespace ClientServices.UserInterface.Components
             _placementManager.ToggleEraser();
         }
 
-        void ClearLabelClicked(Label sender)
+        void ClearLabelClicked(Label sender, MouseInputEventArgs e)
         {
             _clearLabel.BackgroundColor = Color.Gray;
             BuildEntityList();
         }
 
-        void entSearchTextbox_OnSubmit(string text)
+        void entSearchTextbox_OnSubmit(string text, Textbox sender)
         {
             BuildEntityList(text);
         }

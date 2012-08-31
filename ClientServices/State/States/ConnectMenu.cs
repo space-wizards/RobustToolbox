@@ -49,12 +49,12 @@ namespace ClientServices.State.States
             _connectTextbox.OnSubmit += ConnectTextboxOnSubmit;
         }
 
-        private static void ExitButtonClicked(Label sender)
+        private static void ExitButtonClicked(Label sender, MouseInputEventArgs e)
         {
             Environment.Exit(0);
         }
 
-        private void OptionsButtonClicked(Label sender)
+        private void OptionsButtonClicked(Label sender, MouseInputEventArgs e)
         {
             if (_isConnecting)
             {
@@ -65,7 +65,7 @@ namespace ClientServices.State.States
             StateManager.RequestStateChange<OptionsMenu>();
         }
 
-        private void ConnectButtonClicked(Label sender)
+        private void ConnectButtonClicked(Label sender, MouseInputEventArgs e)
         {
             if (!_isConnecting)
                 StartConnect(_connectTextbox.Text);
@@ -76,7 +76,7 @@ namespace ClientServices.State.States
             }
         }
 
-        private void ConnectTextboxOnSubmit(string text)
+        private void ConnectTextboxOnSubmit(string text, Textbox sender)
         {
             StartConnect(text);
         }

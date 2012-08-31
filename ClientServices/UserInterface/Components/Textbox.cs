@@ -18,7 +18,7 @@ namespace ClientServices.UserInterface.Components
 
         public TextSprite Label;
 
-        public delegate void TextSubmitHandler(string text);
+        public delegate void TextSubmitHandler(string text, Textbox sender);
         public event TextSubmitHandler OnSubmit;
 
         private Rectangle _clientAreaMain;
@@ -152,7 +152,7 @@ namespace ClientServices.UserInterface.Components
 
         private void Submit()
         {
-            if (OnSubmit != null) OnSubmit(Text);
+            if (OnSubmit != null) OnSubmit(Text, this);
             if (ClearOnSubmit)
             {
                 Text = string.Empty;

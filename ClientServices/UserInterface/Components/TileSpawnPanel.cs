@@ -51,13 +51,13 @@ namespace ClientServices.UserInterface.Components
             _placementManager.PlacementCanceled += PlacementManagerPlacementCanceled;
         }
 
-        void ClearLabelClicked(Label sender)
+        void ClearLabelClicked(Label sender, MouseInputEventArgs e)
         {
             _clearLabel.BackgroundColor = Color.Gray;
             BuildTileList();
         }
 
-        void tileSearchTextbox_OnSubmit(string text)
+        void tileSearchTextbox_OnSubmit(string text, Textbox sender)
         {
             BuildTileList(text);
         }
@@ -99,7 +99,7 @@ namespace ClientServices.UserInterface.Components
                 ((Label)curr).FixedWidth = maxWidth;
         }
 
-        void TileLabelClicked(Label sender)
+        void TileLabelClicked(Label sender, MouseInputEventArgs e)
         {
             foreach (var curr in _tileList.components.Where(curr => curr.GetType() == typeof(Label)))
                 ((Label)curr).BackgroundColor = Color.Gray;

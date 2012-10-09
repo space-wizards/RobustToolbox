@@ -70,6 +70,8 @@ namespace ClientServices.UserInterface.Components
             if (disposing || !IsVisible()) return;
             ClientArea = new Rectangle(Position, new Size(clippingRI.Width, clippingRI.Height));
 
+            if (inner_focus != null && !components.Contains((GuiComponent)inner_focus)) ClearFocus();
+
             scrollbarH.Position = new Point(ClientArea.X, ClientArea.Bottom - scrollbarH.ClientArea.Height);
             scrollbarV.Position = new Point(ClientArea.Right - scrollbarV.ClientArea.Width, ClientArea.Y);
 
@@ -109,6 +111,7 @@ namespace ClientServices.UserInterface.Components
 
             foreach (GuiComponent component in components)
             {
+                if (inner_focus != null && component == inner_focus) continue;
                 Point oldPos = component.Position;
                 component.Position = new Point(component.Position.X - (int)scrollbarH.Value, component.Position.Y - (int)scrollbarV.Value);
                 component.Update(0); //2 Updates per frame D:
@@ -116,6 +119,17 @@ namespace ClientServices.UserInterface.Components
                 component.Position = oldPos;
                 component.Update(0);
             }
+
+            if (inner_focus != null)
+            {
+                Point oldPos = inner_focus.Position;
+                inner_focus.Position = new Point(inner_focus.Position.X - (int)scrollbarH.Value, inner_focus.Position.Y - (int)scrollbarV.Value);
+                inner_focus.Update(0); //2 Updates per frame D:
+                inner_focus.Render();
+                inner_focus.Position = oldPos;
+                inner_focus.Update(0);
+            }
+
             clippingRI.EndDrawing();
             clippingRI.Blit(Position.X, Position.Y);
 

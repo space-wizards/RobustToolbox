@@ -12,7 +12,7 @@ namespace SS13_Shared
         public Boolean IsTile;
 
         public string EntityType;                                    //Object name / type. If not tile.
-        public TileType TileType = TileType.None;                         //Tile Type if tile.
+        public string TileType = "";                         //Tile Type if tile.
 
         public PlacementOption PlacementOption = PlacementOption.AlignNone; //Alignment type. See enum declaration for infos.
     }

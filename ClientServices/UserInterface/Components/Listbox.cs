@@ -6,6 +6,8 @@ using ClientInterfaces;
 using ClientInterfaces.Resource;
 using GorgonLibrary.Graphics;
 using GorgonLibrary.InputDevices;
+using SS13.IoC;
+using ClientInterfaces.UserInterface;
 
 namespace ClientServices.UserInterface.Components
 {
@@ -26,7 +28,7 @@ namespace ClientServices.UserInterface.Components
         private Rectangle _clientAreaLeft;
         private Rectangle _clientAreaRight;
 
-        public delegate void ListboxPressHandler(Label item);
+        public delegate void ListboxPressHandler(Label item, Listbox sender);
         public event ListboxPressHandler ItemSelected;
 
         public Label CurrentlySelected { get; private set; }
@@ -96,14 +98,14 @@ namespace ClientServices.UserInterface.Components
             }
         }
 
-        void NewEntryClicked(Label sender)
+        void NewEntryClicked(Label sender, MouseInputEventArgs e)
         {
             SetItem(sender, true);
         }
 
         private void SetItem(Label toSet, bool raiseEvent = false)
         {
-            if (ItemSelected != null && raiseEvent) ItemSelected(toSet);
+            if (ItemSelected != null && raiseEvent) ItemSelected(toSet, this);
 
             CurrentlySelected = toSet;
             _selectedLabel.Text = toSet.Text.Text;
@@ -154,7 +156,9 @@ namespace ClientServices.UserInterface.Components
         {
             if (ClientArea.Contains(new Point((int)e.Position.X, (int)e.Position.Y))) //change to clientAreaRight when theres a proper skin with an arrow to the right.
             {
+                IUserInterfaceManager UiMgr = IoCManager.Resolve<IUserInterfaceManager>();
                 _dropDown.ToggleVisible();
+                if (_dropDown.IsVisible()) UiMgr.SetFocus(_dropDown);
                 return true;
             }
 

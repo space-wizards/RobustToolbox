@@ -7,20 +7,18 @@ using System.Drawing;
 using ClientInterfaces;
 using SS13_Shared;
 
-namespace ClientServices.Map.Tiles.Floor
+namespace ClientServices.Tiles
 {
     public class Space : Tile
     {
-        public Space(Sprite _sprite, TileState state, float size, Vector2D _position, Point _tilePosition, ILightManager _lightManager,  IResourceManager resourceManager)
-            : base(_sprite, state, size, _position, _tilePosition, _lightManager, resourceManager)
+        public Space(TileState state, Vector2D position, Point tilePosition)
+            : base(state, position, tilePosition)
         {
-            TileType = TileType.Space;
+            ConnectSprite = false;
             name = "Space";
-        }
 
-        public override void Render(float xTopLeft, float yTopLeft, int tileSpacing, Batch batch)
-        {
-            return;
+            Sprite = _resourceManager.GetSprite("space_texture");
+            Sprite.SetPosition(position.X, position.Y);
         }
     }
 }

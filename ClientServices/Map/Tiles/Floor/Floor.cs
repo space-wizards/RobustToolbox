@@ -6,17 +6,21 @@ using GorgonLibrary.Graphics;
 using System.Drawing;
 using ClientInterfaces;
 using SS13_Shared;
+using ClientInterfaces.Resource;
+using SS13.IoC;
 
-
-namespace ClientServices.Map.Tiles.Floor
+namespace ClientServices.Tiles
 {
     public class Floor : Tile
     {
-        public Floor(Sprite _sprite, TileState state, float size, Vector2D _position, Point _tilePosition, ILightManager _lightManager, IResourceManager resourceManager)
-            : base(_sprite, state, size, _position, _tilePosition, _lightManager, resourceManager)
+        public Floor(TileState state, Vector2D position, Point tilePosition)
+            : base(state, position, tilePosition)
         {
-            TileType = TileType.Floor;
+            ConnectSprite = false;
             name = "Floor";
+
+            Sprite = _resourceManager.GetSprite("floor_texture");
+            Sprite.SetPosition(position.X, position.Y);
         }
     }
 }

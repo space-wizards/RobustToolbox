@@ -4,14 +4,13 @@ using System.Linq;
 using System.Text;
 using SS13_Shared;
 
-namespace ServerServices.Tiles.Wall
+namespace ServerServices.Tiles
 {
     public class Wall : Tile
     {
-        public Wall(int x, int y, ServerServices.Map.Map _map)
+        public Wall(int x, int y, ServerServices.Map.MapManager _map)
             : base(x, y, _map)
         {
-            tileType = TileType.Wall;
         }
 
         /*

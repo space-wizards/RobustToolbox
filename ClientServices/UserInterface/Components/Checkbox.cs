@@ -23,12 +23,12 @@ namespace ClientServices.UserInterface.Components
             }
             set
             {
-                if (ValueChanged != null) ValueChanged(value);
+                if (ValueChanged != null) ValueChanged(value, this);
                 this.value = value;
             }
         }
 
-        public delegate void CheckboxChangedHandler(Boolean newValue);
+        public delegate void CheckboxChangedHandler(Boolean newValue, Checkbox sender);
         public event CheckboxChangedHandler ValueChanged;
 
         public Checkbox(IResourceManager resourceManager)

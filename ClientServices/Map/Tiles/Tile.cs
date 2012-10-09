@@ -9,50 +9,53 @@ using ClientInterfaces.Resource;
 using GorgonLibrary;
 using GorgonLibrary.Graphics;
 using SS13_Shared;
+using ClientServices.Resources;
+using SS13.IoC;
 
-namespace ClientServices.Map.Tiles
+namespace ClientServices.Tiles
 {
     public abstract class Tile : ITile
     {
-        public TileType TileType { get; protected set; }
         public TileState tileState = TileState.Healthy;
         public string name;
         protected Sprite Sprite;
         public Sprite sideSprite;
-        public Sprite lightSprite;
+
         public Vector2D Position { get; protected set; }
         public Point TilePosition { get; protected set; }
         public bool Visible { get; set; }
         public bool sightBlocked = false; // Is something on this tile that blocks sight through it, like a door (used for lighting)
         public byte surroundDirs = 0; //north = 1 east = 2 south = 4 west = 8.
         public Tile[] surroundingTiles;
-        //public Dictionary<VertexLocations, bool> vertexVisibility;
         public List<ILight> tileLights;
         public Dictionary<GasType, int> gasAmounts;
         public Sprite gasSprite;
         public List<TileDecal> decals;
-        private Random _random;
-        private readonly ILightManager _lightManager;
-        private readonly IResourceManager _resourceManager;
+        protected Random _random;
+        protected readonly ILightManager _lightManager;
+        protected readonly IResourceManager _resourceManager;
 
-        protected Tile(Sprite sprite, TileState state, float size, Vector2D position, Point tilePosition, ILightManager lightManager, IResourceManager resourceManager)
+        public bool Opaque { get; set; } //Does this block LOS etc?
+        public bool ConnectSprite { get; set; } //Should this tile cause things like walls to change their sprite to 'connect' to this tile?
+
+        protected Tile(TileState state, Vector2D position, Point tilePosition)
         {
-            TileType = TileType.None;
+            _resourceManager = IoCManager.Resolve<IResourceManager>();
+            _lightManager = IoCManager.Resolve<ILightManager>();
+
             tileState = state;
+
             Position = position;
             TilePosition = tilePosition;
-            Sprite = sprite;
-            Sprite.SetPosition(position.X, position.Y);
 
-            _lightManager = lightManager;
-            _resourceManager = resourceManager;
+            Sprite = _resourceManager.GetSprite("space_texture");
+            Sprite.SetPosition(position.X, position.Y);
 
             Initialize();
         }
 
         protected Tile(Sprite sprite, Sprite _side, TileState state, float size, Vector2D _position, Point _tilePosition, ILightManager lightManager, IResourceManager resourceManager)
         {
-            TileType = TileType.None;
             tileState = state;
             Position = _position;
             TilePosition = _tilePosition;
@@ -77,24 +80,14 @@ namespace ClientServices.Map.Tiles
             sightBlocked = false;
             decals = new List<TileDecal>();
             _random = new Random((int)(Position.X * Position.Y));
-            lightSprite = _resourceManager.GetSprite("white");
+
             Visible = true;
-
-
-        }
-
-        public void SetSprites(Sprite _sprite, Sprite _side, byte _surroundDirs)
-        {
-            Sprite = _sprite;
-            sideSprite = _side;
-            surroundDirs = _surroundDirs;
         }
 
         public virtual void Render(float xTopLeft, float yTopLeft, int tileSpacing, Batch batch)
         {
             Sprite.Color = Color.White;
             Sprite.SetPosition((float)TilePosition.X * tileSpacing - xTopLeft, (float)TilePosition.Y * tileSpacing - yTopLeft);
-            //Sprite.Draw();
             batch.AddClone(Sprite);
         }
 

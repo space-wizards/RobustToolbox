@@ -12,6 +12,6 @@ namespace ServerInterfaces
         void SaveEntities();
         RunLevel Runlevel { get; }
 
-        IMap GetMap();
+        IMapManager GetMap();
     }
 }

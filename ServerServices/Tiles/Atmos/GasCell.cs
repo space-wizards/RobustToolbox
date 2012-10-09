@@ -231,7 +231,7 @@ namespace ServerServices.Tiles.Atmos
                     //Wall destruction
                     if (neighbor.blocking)
                     {
-                        if (Flow > 500 && neighbor.attachedtile.tileType == TileType.Wall)
+                        if (Flow > 500 && neighbor.attachedtile.GetType() == typeof(Wall))
                         {                           
                             neighbor.blocking = false; // Incident flow is > 750 so the wall is destroyed
                             neighbor.attachedtile.tileState = TileState.Dead;

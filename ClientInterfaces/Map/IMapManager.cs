@@ -3,6 +3,7 @@ using ClientInterfaces.Lighting;
 using GorgonLibrary;
 using Lidgren.Network;
 using SS13_Shared;
+using System;
 
 namespace ClientInterfaces.Map
 {
@@ -18,19 +19,15 @@ namespace ClientInterfaces.Map
         void HandleAtmosDisplayUpdate(NetIncomingMessage message);
         ITile GetTileAt(Vector2D pos);
         ITile GetTileAt(int x, int y);
-        bool LoadNetworkedMap(TileType[,] networkedArray, TileState[,] networkedStates, int _mapWidth, int _mapHeight);
         Vector2D GetTileArrayPositionFromWorldPosition(float x, float z);
         Point GetTileArrayPositionFromWorldPosition(Vector2D pos);
         int GetMapWidth();
         int GetMapHeight();
-        Point GetLastVisiblePoint();
-        bool NeedVisibilityUpdate();
-        void SetLastVisiblePoint(Point point);
-        void ComputeVisibility(int viewerX, int viewerY);
-        void SetAllVisible();
+        byte SetSprite(int x, int y);
+
         void Init();
         Size GetMapSizeWorld();
 
-        TileType GetTileTypeFromWorldPosition(Vector2D vector2D);
+        Type GetTileTypeFromWorldPosition(Vector2D vector2D);
     }
 }

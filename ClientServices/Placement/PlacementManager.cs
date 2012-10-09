@@ -15,9 +15,14 @@ using Lidgren.Network;
 using SS13_Shared;
 using System.Drawing;
 using ClientInterfaces;
-using CGO;using SS13_Shared.GO;
+using CGO;
+using SS13_Shared.GO;
 using SS13.IoC;
+
 using ClientInterfaces.UserInterface;
+using ClientInterfaces.Map;
+using ClientServices.Map;
+using SS13.IoC;
 
 namespace ClientServices.Placement
 {
@@ -79,7 +84,9 @@ namespace ClientServices.Placement
                                          IsTile = msg.ReadBoolean()
                                      };
 
-            if (_currentPermission.IsTile) _currentPermission.TileType = (TileType)msg.ReadInt32();
+            var mapMgr = (MapManager)IoCManager.Resolve<IMapManager>();
+
+            if (_currentPermission.IsTile) _currentPermission.TileType = mapMgr.GetTableIndexToStr(msg.ReadByte());
             else _currentPermission.EntityType = msg.ReadString();
             _currentPermission.PlacementOption = (PlacementOption)msg.ReadByte();
 
@@ -135,7 +142,7 @@ namespace ClientServices.Placement
             _currentPermission = info;
 
             if (info.IsTile)
-                PreparePlacement(info.TileType);
+                PreparePlacementTile(info.TileType);
             else
                 PreparePlacement(info.EntityType);
         }
@@ -158,7 +165,7 @@ namespace ClientServices.Placement
             IsActive = true;
         }
 
-        private void PreparePlacement(TileType tileType)
+        private void PreparePlacementTile(string tileType)
         {
             _currentSprite = _resourceManager.GetSprite("tilebuildoverlay");
 
@@ -170,6 +177,7 @@ namespace ClientServices.Placement
             if (_currentPermission == null) return;
             if (!_validPosition) return;
 
+            var mapMgr = (MapManager)IoCManager.Resolve<IMapManager>();
             NetOutgoingMessage message = _networkManager.CreateMessage();
 
             message.Write((byte)NetMessage.PlacementManagerMessage);
@@ -178,7 +186,7 @@ namespace ClientServices.Placement
 
             message.Write(_currentPermission.IsTile);
 
-            if (_currentPermission.IsTile) message.Write((int)_currentPermission.TileType);
+            if (_currentPermission.IsTile) message.Write(mapMgr.GetTileIndex(_currentPermission.TileType));
             else message.Write(_currentPermission.EntityType);
 
             message.Write(_currentLocWorld.X);

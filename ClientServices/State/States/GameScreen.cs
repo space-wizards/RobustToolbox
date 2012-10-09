@@ -28,6 +28,7 @@ using ClientServices.Lighting;
 using SS13_Shared.GO;
 using ClientInterfaces.Lighting;
 using SS3D.LightTest;
+using ClientServices.Tiles;
 
 namespace ClientServices.State.States
 {
@@ -423,9 +424,6 @@ namespace ClientServices.State.States
                         case NetMessage.PlacementManagerMessage:
                             PlacementManager.HandleNetMessage(message);
                             break;
-                        case NetMessage.SendMap:
-                            RecieveMap(message);
-                            break;
                         case NetMessage.ChatMessage:
                             HandleChatMessage(message);
                             break;
@@ -483,25 +481,6 @@ namespace ClientServices.State.States
                     UserInterfaceManager.AddComponent(new AdminUnbanPanel(new Size(620, 200), banList, NetworkManager, ResourceManager));
                     break;
             }
-        }
-
-        public void RecieveMap(NetIncomingMessage msg)
-        {
-            int mapWidth = msg.ReadInt32();
-            int mapHeight = msg.ReadInt32();
-
-            var tileArray = new TileType[mapWidth, mapHeight];
-            var tileStates = new TileState[mapWidth, mapHeight];
-
-            for (int x = 0; x < mapWidth; x++)
-            {
-                for (int y = 0; y < mapHeight; y++)
-                {
-                    tileArray[x, y] = (TileType)msg.ReadByte();
-                    tileStates[x, y] = (TileState)msg.ReadByte();
-                }
-            }
-            MapManager.LoadNetworkedMap(tileArray, tileStates, mapWidth, mapHeight);
         }
 
         #endregion
@@ -859,10 +838,12 @@ namespace ClientServices.State.States
                 playerVision.Move(PlayerManager.ControlledEntity.Position);
                 LightArea area = GetLightArea(RadiusToShadowMapSize(playerVision.Radius));
                 area.LightPosition = playerVision.Position; // Set the light position
-                if (MapManager.GetTileTypeFromWorldPosition(playerVision.Position) == TileType.Wall)
+
+                if (MapManager.GetTileTypeFromWorldPosition(playerVision.Position).GetType() == typeof(Wall))
                 {
                     area.LightPosition = new Vector2D(area.LightPosition.X, MapManager.GetTileAt(playerVision.Position).Position.Y + MapManager.GetTileSpacing() + 1);
                 }
+
                 area.BeginDrawingShadowCasters(); // Start drawing to the light rendertarget
                 DrawWallsRelativeToLight(area); // Draw all shadowcasting stuff here in black
                 area.EndDrawingShadowCasters(); // End drawing to the light rendertarget
@@ -891,7 +872,7 @@ namespace ClientServices.State.States
             if (area.Calculated)
                 return;
             area.LightPosition = l.Position;//mousePosWorld; // Set the light position
-            if (MapManager.GetTileTypeFromWorldPosition(l.Position) == TileType.Wall)
+            if (MapManager.GetTileTypeFromWorldPosition(l.Position).GetType() == typeof(Wall))
             {
                 area.LightPosition = new Vector2D(area.LightPosition.X, MapManager.GetTileAt(l.Position).Position.Y + MapManager.GetTileSpacing() + 1);
             }
@@ -946,14 +927,15 @@ namespace ClientServices.State.States
             int xE = Math.Min(centerTile.X + (int)Math.Round((area.LightAreaSize.X / tilespacing) / 2), MapManager.GetMapWidth() - 1);
             int yE = Math.Min(centerTile.Y + (int)Math.Round((area.LightAreaSize.Y / tilespacing) / 2), MapManager.GetMapHeight() - 1);
 
-            Map.Tiles.Tile t;
+            Tile t;
             for (int x = xS; x <= xE; x++)
             {
                 for (int y = yS; y <= yE; y++)
                 {
 
-                    t = (Map.Tiles.Tile)MapManager.GetTileAt(x, y);
-                    if (t.TileType == TileType.Wall)
+                    t = (Tile)MapManager.GetTileAt(x, y);
+
+                    if (t.GetType() == typeof(Wall))
                     {
                         Vector2D pos = area.ToRelativePosition(t.Position);
                         t.RenderPos(pos.X, pos.Y, tilespacing, (int)area.LightAreaSize.X);
@@ -972,20 +954,22 @@ namespace ClientServices.State.States
         private void DrawTiles(int xStart, int xEnd, int yStart, int yEnd)
         {
             var tilespacing = MapManager.GetTileSpacing();
-            Map.Tiles.Tile t;
+            Tile t;
             for (int x = xStart; x <= xEnd; x++)
             {
                 for (int y = yStart; y <= yEnd; y++)
                 {
-                    t = (Map.Tiles.Tile)MapManager.GetTileAt(x, y);
-                    if (t.TileType == TileType.Wall)
+                    t = (Tile)MapManager.GetTileAt(x, y);
+
+                    if (t.GetType() == typeof(Wall))
                     {
                         t.Render(WindowOrigin.X, WindowOrigin.Y, tilespacing, _wallBatch);
                     }
-                    else if (t.TileType != TileType.Wall)
+                    else if (t.GetType() != typeof(Wall))
                     {
                         t.Render(WindowOrigin.X, WindowOrigin.Y, tilespacing, _floorBatch);
                     }
+
                     // Render gas sprites to gas batch
                     t.RenderGas(WindowOrigin.X, WindowOrigin.Y, tilespacing, _gasBatch);
 
@@ -1175,6 +1159,11 @@ namespace ClientServices.State.States
                             UserInterfaceManager.CancelTargeting();
                         else
                             UserInterfaceManager.AddComponent(new ContextMenu(entToClick, MousePosScreen, ResourceManager, UserInterfaceManager));
+                        break;
+
+                    case MouseButtons.Middle:
+                        UserInterfaceManager.DisposeAllComponents<PropEditWindow>();
+                        UserInterfaceManager.AddComponent(new PropEditWindow(new Size(400, 400), ResourceManager, (Entity)entToClick));
                         break;
                 }
             }

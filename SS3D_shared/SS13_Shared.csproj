@@ -138,7 +138,6 @@
     <Compile Include="TypeEventArgs.cs" />
     <Compile Include="Utility\RandomString.cs" />
     <Compile Include="Vector2.cs" />
-    <Compile Include="ObjectTypeEnum.cs" />
     <Compile Include="NetworkEnums.cs" />
     <Compile Include="PlacementManagerEnums.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />

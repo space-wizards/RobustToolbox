@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using ClientInterfaces.GOC;
-using ClientServices.Map.Tiles;
+using ClientServices.Tiles;
 using GorgonLibrary;
 using GorgonLibrary.Graphics;
 using SS13_Shared;

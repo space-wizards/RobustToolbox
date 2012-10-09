@@ -6,15 +6,15 @@ using ClientInterfaces.Collision;
 using ClientInterfaces.Lighting;
 using ClientInterfaces.Map;
 using ClientInterfaces.Resource;
-using ClientServices.Map.Tiles.Floor;
-using ClientServices.Map.Tiles.Wall;
+using ClientServices.Tiles;
 using SS13_Shared;
 using System.IO;
 using Lidgren.Network;
 using GorgonLibrary;
 using GorgonLibrary.Graphics;
 using ClientInterfaces;
-using ClientServices.Map.Tiles;
+using System.Linq;
+using System.Reflection;
 
 namespace ClientServices.Map
 {
@@ -25,17 +25,13 @@ namespace ClientServices.Map
         private int _mapWidth; // Number of tiles across the map (must be a multiple of StaticGeoSize)
         private int _mapHeight; // Number of tiles up the map (must be a multiple of StaticGeoSize)
         private const int TileSpacing = 64; // Distance between tiles
-        private Dictionary<string, Sprite> _tileSprites;
-        private const string FloorSpriteName = "floor_texture";
-        private const string WallTopSpriteName = "wall_texture";
-        private const string WallSideSpriteName = "wall_side";
-        private readonly List<Vector2D> _cardinalList;
-        private static readonly PortalInfo[] Portal = new PortalInfo[4];
-        private Point _lastVisPoint;
 
-        private bool _needVisUpdate;
+        private readonly List<Vector2D> _cardinalList;
+
         private bool _loaded;
         private bool _initialized;
+
+        Dictionary<byte, string> tileStringTable = new Dictionary<byte, string>();
 
         private readonly IResourceManager _resourceManager;
         private readonly ILightManager _lightManager;
@@ -67,12 +63,6 @@ namespace ClientServices.Map
                                     new Vector2D(1, -1)
                                 };
 
-            Portal[0] = new PortalInfo(1, 1, 1, -1, 1, 0); // East
-            Portal[1] = new PortalInfo(-1, 1, 1, 1, 0, 1); // South
-            Portal[2] = new PortalInfo(-1, -1, -1, 1, -1, 0); // West
-            Portal[3] = new PortalInfo(1, -1, -1, -1, 0, -1); // North
-            
-            _lastVisPoint = new Point(0, 0);
         }
         
         #region Startup / Loading
@@ -80,65 +70,50 @@ namespace ClientServices.Map
         {
             if (!_initialized)
             {
-                _tileSprites = new Dictionary<string, Sprite>
-                                   {
-                                       {FloorSpriteName, _resourceManager.GetSprite(FloorSpriteName)},
-                                       {WallSideSpriteName, _resourceManager.GetSprite(WallSideSpriteName)}
-                                   };
-                for (var i = 0; i < 16; i++)
-                {
-                    _tileSprites.Add(WallTopSpriteName + i, _resourceManager.GetSprite(WallTopSpriteName + i));
-                }
-                _tileSprites.Add("space_texture", _resourceManager.GetSprite("space_texture"));
             }
             _initialized = true;
         }
 
-
-        public bool LoadNetworkedMap(TileType[,] networkedArray, TileState[,] networkedStates, int mapWidth, int mapHeight)
+        public byte GetTileIndex(string typeName)
         {
-           
-            _mapWidth = mapWidth;
-            _mapHeight = mapHeight;
+            if (tileStringTable.Values.Any(x => x.ToLowerInvariant() == typeName.ToLowerInvariant()))
+                return tileStringTable.First(x => x.Value.ToLowerInvariant() == typeName.ToLowerInvariant()).Key;
+            else throw new ArgumentNullException("tileStringTable", "Can not find '" + typeName + "' type.");
+        }
+
+        public string GetTableIndexToStr(byte index)
+        {
+            string typeStr = (from a in tileStringTable
+                              where a.Key == index
+                              select a.Value).First();
+
+            return typeStr;
+        }
+
+        public bool LoadTileMap(NetIncomingMessage message)
+        {
+            _mapWidth = message.ReadInt32();
+            _mapHeight = message.ReadInt32();
 
             _tileArray = new Tile[_mapHeight][];
+
             for (int i = 0; i < _mapHeight; i++)
             {
-                _tileArray[i] = new Tile[_mapWidth];   
+                _tileArray[i] = new Tile[_mapWidth];
             }
 
-            //loadingText = "Building Map...";
-            //loadingPercent = 0;
-
-            float maxElements = (_mapHeight * _mapWidth);
-            float oneElement = 100f / maxElements;
-            float currCount = 0;
-
-            for (var y = 0; y < _mapHeight; y++)
+            for (int x = 0; x < _mapWidth; x++)
             {
-                for (var x = 0; x < _mapWidth; x++)
+                for (int y = 0; y < _mapHeight; y++)
                 {
                     var posX = x * TileSpacing;
                     var posY = y * TileSpacing;
-                    var state = networkedStates[x, y];
-                    switch (networkedArray[x, y])
-                    {
-                        case TileType.Wall:
-                            _tileArray[y][x] = GenerateNewTile(TileType.Wall,  state, new Vector2D(posX, posY));
-                            break;
-                        case TileType.Floor:
-                            _tileArray[y][x] = GenerateNewTile(TileType.Floor, state, new Vector2D(posX, posY));
-                            break;
-                        case TileType.Space:
-                            _tileArray[y][x] = GenerateNewTile(TileType.Space, state, new Vector2D(posX, posY));
-                            break;
-                    }
-                    currCount += oneElement;
-                    if (currCount >= 1)
-                    {
-                        //loadingPercent += maxElements > 100 ? 1 : oneElement;
-                        currCount = 0;
-                    }
+
+                    byte index = message.ReadByte();
+                    TileState state = (TileState)message.ReadByte();
+
+                    Tile created = GenerateNewTile(GetTableIndexToStr(index), state, new Vector2D(posX, posY));
+                    _tileArray[y][x] = created;
                 }
             }
 
@@ -146,10 +121,10 @@ namespace ClientServices.Map
             {
                 for (var y = 0; y < _mapHeight; y++)
                 {
-                    if (_tileArray[y][x].TileType == TileType.Wall)
+                    if (_tileArray[y][x].ConnectSprite) //Was wall check.
                     {
                         var i = SetSprite(x, y);
-                        _tileArray[y][x].SetSprites(_tileSprites[WallTopSpriteName + i], _tileSprites[WallSideSpriteName], i);
+                        //_tileArray[y][x].SetSprites(_tileSprites[WallTopSpriteName + i], _tileSprites[WallSideSpriteName], i);
                     }
                     if (y > 0)
                     {
@@ -215,6 +190,26 @@ namespace ClientServices.Map
                 case MapMessage.TurfRemoveDecal:
                     HandleTurfRemoveDecal(message);
                     break;
+                case MapMessage.SendTileIndex:
+                    HandleIndexUpdate(message);
+                    break;
+                case MapMessage.SendTileMap:
+                    LoadTileMap(message);
+                    break;
+            }
+        }
+
+        private void HandleIndexUpdate(NetIncomingMessage message)
+        {
+            tileStringTable.Clear();
+
+            byte indexCount = message.ReadByte();
+
+            for (int i = 0; i < indexCount; i++)
+            {
+                byte currIndex = message.ReadByte();
+                string currStr = message.ReadString();
+                tileStringTable.Add(currIndex, currStr);
             }
         }
 
@@ -311,24 +306,24 @@ namespace ClientServices.Map
         {
             var x = message.ReadInt16();
             var y = message.ReadInt16();
-            var type = (TileType)message.ReadByte();
+            var tileStr = GetTableIndexToStr(message.ReadByte());
             var state = (TileState)message.ReadByte();
 
             var t = _tileArray[y][x];
 
             if (t == null)
             {
-                t = GenerateNewTile(type, state, new Vector2D(x * TileSpacing, y * TileSpacing));
+                t = GenerateNewTile(tileStr, state, new Vector2D(x * TileSpacing, y * TileSpacing));
                 _tileArray[y][x] = t;
                 TileChanged(_tileArray[y][x]);
             }
             else
             {
-                if (t.TileType != type)
+                if (t.GetType().Name != tileStr) //This is ugly beep boop. Fix this later.
                 {
                     var surroundTiles = t.surroundingTiles;
-                    
-                    t = GenerateNewTile(type, state, new Vector2D(x * TileSpacing, y * TileSpacing));
+
+                    t = GenerateNewTile(tileStr, state, new Vector2D(x * TileSpacing, y * TileSpacing));
                     t.surroundingTiles = surroundTiles;
                     if(t.surroundingTiles[0] != null) t.surroundingTiles[0].surroundingTiles[2] = t;
                     if(t.surroundingTiles[1] != null) t.surroundingTiles[1].surroundingTiles[3] = t;
@@ -336,7 +331,6 @@ namespace ClientServices.Map
                     if(t.surroundingTiles[3] != null) t.surroundingTiles[3].surroundingTiles[1] = t;
 
                     _tileArray[y][x] = t;
-                    _needVisUpdate = true;
                     TileChanged(_tileArray[y][x]);
                 }
                 else if (t.tileState != state)
@@ -378,36 +372,30 @@ namespace ClientServices.Map
             return new Point(xPos, yPos);
         }
 
-        public TileType GetTileTypeFromWorldPosition(float x, float z)
+        public Type GetTileTypeFromWorldPosition(float x, float y)
         {
-            var arrayPosition = GetTileArrayPositionFromWorldPosition(x, z);
-            if (arrayPosition.X < 0 || arrayPosition.Y < 0)
-            {
-                return TileType.None;
-            }
-
-            return GetTileTypeFromArrayPosition((int)arrayPosition.X, (int)arrayPosition.Y);
+            return GetTileTypeFromWorldPosition(new Vector2D(x, y));
         }
 
-        public TileType GetTileTypeFromWorldPosition(Vector2D pos)
+        public Type GetTileTypeFromWorldPosition(Vector2D pos)
         {
             Vector2D arrayPosition = GetTileArrayPositionFromWorldPosition(pos.X, pos.Y);
             if (arrayPosition.X < 0 || arrayPosition.Y < 0)
             {
-                return TileType.None;
+                return null;
             }
 
             return GetTileTypeFromArrayPosition((int)arrayPosition.X, (int)arrayPosition.Y);
         }
 
-        public TileType GetTileTypeFromArrayPosition(int x, int y)
+        public Type GetTileTypeFromArrayPosition(int x, int y)
         {
             if (x < 0 || y < 0 || x >= _mapWidth || y >= _mapHeight)
             {
-                return TileType.None;
+                return null;
             }
 
-            return _tileArray[y][x].TileType;
+            return _tileArray[y][x].GetType();
         }
 
         public ITile GetTileAt(Vector2D pos)
@@ -423,25 +411,21 @@ namespace ClientServices.Map
             return _tileArray[y][x];
         }
 
-        public Tile GenerateNewTile(TileType type, TileState state, Vector2D pos)
+        public Tile GenerateNewTile(string typeName, TileState state, Vector2D pos)
         {
-            var p = new Point((int) Math.Floor(pos.X / TileSpacing), (int) Math.Floor(pos.Y / TileSpacing));
+            var p = new Point((int)Math.Floor(pos.X / TileSpacing), (int)Math.Floor(pos.Y / TileSpacing));
 
-            switch (type)
-            {
-                case TileType.Space:
-                    return new Space(_tileSprites["space_texture"], state, TileSpacing, pos, p, _lightManager, _resourceManager);
-                case TileType.Floor:
-                    return new Floor(_tileSprites[FloorSpriteName], state, TileSpacing, pos, p, _lightManager, _resourceManager);
-                case TileType.Wall:
-                    var wall = new Wall(_tileSprites[WallTopSpriteName + "0"], _tileSprites[WallSideSpriteName], state, TileSpacing, pos, p, _lightManager, _resourceManager);
-                    _collisionManager.AddCollidable(wall);
-                    return wall;
-                default:
-                    return null;
-            }
+            Type tileType = Type.GetType("ClientServices.Tiles." + typeName, false);
+
+            if (tileType == null) throw new ArgumentException("Invalid Tile Type specified : '" + typeName + "' .");
+
+            Tile created = (Tile)Activator.CreateInstance(tileType, state, pos, p);
+
+            if (tileType.GetInterface("ICollidable") != null)
+                _collisionManager.AddCollidable((ICollidable)created);
+
+            return created;
         }
-
 
         // Where do we have tiles around us?
         // 0 = None
@@ -455,19 +439,19 @@ namespace ClientServices.Map
         {
             byte i = 0;
 
-            if (GetTileTypeFromArrayPosition(x, y - 1) == TileType.Wall) // N
+            if (GetTileAt(x, y - 1) != null && GetTileAt(x, y - 1).ConnectSprite) // N
             {
                 i += 1;
             }
-            if (GetTileTypeFromArrayPosition(x + 1, y) == TileType.Wall) // E
+            if (GetTileAt(x + 1, y) != null && GetTileAt(x + 1, y).ConnectSprite) // E
             {
                 i += 2;
             }
-            if (GetTileTypeFromArrayPosition(x, y + 1) == TileType.Wall) // S
+            if (GetTileAt(x, y + 1) != null && GetTileAt(x, y + 1).ConnectSprite) // S
             {
                 i += 4;
             }
-            if (GetTileTypeFromArrayPosition(x - 1, y) == TileType.Wall) // W
+            if (GetTileAt(x - 1, y) != null && GetTileAt(x - 1, y).ConnectSprite) // W
             {
                 i += 8;
             }
@@ -522,233 +506,22 @@ namespace ClientServices.Map
 
         public bool IsSolidTile(Vector2D pos)
         {
-            var tile = GetTileTypeFromWorldPosition(pos);
-
-            if (tile == null) return false; //Hack. This happens when its outside the map.
-
-            switch (tile)
-            {
-                case TileType.None:
-                    return false;
-                case TileType.Wall:
-                    return true;
-                case TileType.Space:
-                case TileType.Floor:
-                    return false;
-                default:
-                    return false;
-            }
+            var tile = (Tile)GetTileAt(GetTileArrayPositionFromWorldPosition(pos.X, pos.Y));
+            if (tile == null) return false;
+            if (tile.GetType().GetInterface("ICollidable") != null)
+                return true;
+            else return false;
         }
-
-        public bool CheckCollision(Vector2D pos)
-        {
-            var tile = GetTileTypeFromWorldPosition(pos);
-
-            switch (tile)
-            {
-                case TileType.None:
-                    return false;
-                case TileType.Wall:
-                    return true;
-                case TileType.Space:
-                case TileType.Floor:
-                    return true;
-                default:
-                    return false;
-            }
-        }
-
-        public TileType GetObjectTypeAt(Vector2D pos)
-        {
-            return GetTileTypeFromWorldPosition(pos);
-        }
-
-        public bool IsFloorUnder(Vector2D pos)
-        {
-            return GetTileTypeFromWorldPosition(pos) == TileType.Floor;
-        }
-
         #endregion
 
         #region Shutdown
         public void Shutdown()
         {
             _tileArray = null;
-            _tileSprites = null;
             _initialized = false;
             _loaded = false;
         }
         #endregion
-
-        #region Visibility
-
-        struct PortalInfo
-        {
-            // offset of portal's left corner relative to square center (doubled coordinates):
-            public readonly int Lx;
-            public readonly int Ly;
-            // offset of portal's right corner relative to square center (doubled coordinates):
-            public readonly int Rx;
-            public readonly int Ry;
-            // offset of neighboring cell relative to this cell's coordinates (not doubled):
-            public readonly int Nx;
-            public readonly int Ny;
-
-            public PortalInfo(int lx, int ly, int rx, int ry, int nx, int ny)
-            {
-                Lx = lx;
-                Ly = ly;
-                Rx = rx;
-                Ry = ry;
-                Nx = nx;
-                Ny = ny;
-            }
-        }
-
-        #region Helper methods
-        bool IsSightBlocked(int x, int y)
-        {
-            if (_tileArray[y][x].TileType == TileType.Wall || _tileArray[y][x].sightBlocked)
-            {
-                return true;
-            }
-            return false;
-        }
-
-        void ClearVisibility()
-        {
-            for (var x = 0; x < _mapWidth; x++)
-            {
-                for (var y = 0; y < _mapHeight; y++)
-                {
-                    _tileArray[y][x].Visible = false;
-                }
-            }
-        }
-
-        public void SetAllVisible()
-        {
-            for (var x = 0; x < _mapWidth; x++)
-            {
-                for (var y = 0; y < _mapHeight; y++)
-                {
-                    _tileArray[y][x].Visible = true;
-                }
-            }
-        }
-
-        void SetVisible(int x, int y)
-        {
-            _tileArray[y][x].Visible = true;
-        }
-        #endregion
-
-        public void ComputeVisibility(int viewerX, int viewerY)
-        {
-            ClearVisibility();
-            for (var i = 0; i < 4; ++i)
-            {
-                ComputeVisibility
-                (
-                    viewerX, viewerY,
-                    viewerX, viewerY,
-                    Portal[i].Lx, Portal[i].Ly,
-                    Portal[i].Rx, Portal[i].Ry
-                );
-            }
-        }
-        
-        bool a_right_of_b(int ax, int ay, int bx, int by)
-        {
-            return ax * by > ay * bx;
-        }
-        
-        void ComputeVisibility(int viewerX, int viewerY, int targetX, int targetY, int ldx, int ldy, int rdx, int rdy)
-        {
-            if (targetX > viewerX + 15 || targetX < viewerX - 15)
-                return;
-            if (targetY > viewerY + 15 || targetY < viewerY - 15)
-                return;
-            // Abort if we are out of bounds.
-            if (targetX < 0 || targetX >= _mapWidth)
-                return;
-            if (targetY < 0 || targetY >= _mapHeight)
-                return;
-
-            // This square is visible.
-            SetVisible(targetX, targetY);
-
-            // A solid target square blocks all further visibility through it.
-            if (IsSightBlocked(targetX, targetY))
-                return;
-
-            // Target square center position relative to viewer:
-            int dx = 2 * (targetX - viewerX);
-            int dy = 2 * (targetY - viewerY);
-
-            for (int i = 0; i < 4; ++i)
-            {
-                // Relative positions of the portal's left and right endpoints:
-                int pldx = dx + Portal[i].Lx;
-                int pldy = dy + Portal[i].Ly;
-                int prdx = dx + Portal[i].Rx;
-                int prdy = dy + Portal[i].Ry;
-
-                // Clip portal against current view frustum:
-                int cldx, cldy;
-                if (a_right_of_b(ldx, ldy, pldx, pldy))
-                {
-                    cldx = ldx;
-                    cldy = ldy;
-                }
-                else
-                {
-                    cldx = pldx;
-                    cldy = pldy;
-                }
-                int crdx, crdy;
-                if (a_right_of_b(rdx, rdy, prdx, prdy))
-                {
-                    crdx = prdx;
-                    crdy = prdy;
-                }
-                else
-                {
-                    crdx = rdx;
-                    crdy = rdy;
-                }
-
-                // If we can see through the clipped portal, recurse through it.
-                if (a_right_of_b(crdx, crdy, cldx, cldy))
-                {
-                    ComputeVisibility
-                    (
-                        viewerX, viewerY,
-                        targetX + Portal[i].Nx, targetY + Portal[i].Ny,
-                        cldx, cldy,
-                        crdx, crdy
-                    );
-                }
-            }
-        }
-
-        public Point GetLastVisiblePoint()
-        {
-            return _lastVisPoint;
-        }
-
-        public void SetLastVisiblePoint(Point point)
-        {
-            _lastVisPoint = point;
-        }
-
-        public bool NeedVisibilityUpdate()
-        {
-            return _needVisUpdate;
-        }
-
-
-#endregion
 
         #region Event Handling
         private void TileChanged(Tile t)
@@ -757,13 +530,10 @@ namespace ClientServices.Map
                 OnTileChanged(t.TilePosition, t.Position);
 
             t.surroundDirs = SetSprite(t.TilePosition.X, t.TilePosition.Y);
-            if(t.TileType == TileType.Wall)
-                t.SetSprites(_tileSprites[WallTopSpriteName + t.surroundDirs], _tileSprites[WallSideSpriteName], t.surroundDirs);
             foreach(Tile T in t.surroundingTiles)
             {
+                if (T == null) continue;
                 T.surroundDirs = SetSprite(T.TilePosition.X, T.TilePosition.Y);
-                if(T.TileType == TileType.Wall)
-                    T.SetSprites(_tileSprites[WallTopSpriteName + T.surroundDirs], _tileSprites[WallSideSpriteName], T.surroundDirs);
             }
         }
         #endregion

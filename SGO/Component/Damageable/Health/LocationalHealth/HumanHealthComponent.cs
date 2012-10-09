@@ -36,7 +36,7 @@ namespace SGO
             if ((DateTime.Now - _lastUpdate).TotalSeconds < 1)
                 return;
             _lastUpdate = DateTime.Now;
-            var map = IoCManager.Resolve<IMap>();
+            var map = IoCManager.Resolve<IMapManager>();
 
             if(map.GetGasAmount(map.GetTileArrayPositionFromWorldPosition(Owner.Position), GasType.Toxin) > 10)
             {

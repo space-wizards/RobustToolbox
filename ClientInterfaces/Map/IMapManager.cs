@@ -17,8 +17,17 @@ namespace ClientInterfaces.Map
         bool IsSolidTile(Vector2D pos);
         void HandleNetworkMessage(NetIncomingMessage message);
         void HandleAtmosDisplayUpdate(NetIncomingMessage message);
-        ITile GetTileAt(Vector2D pos);
-        ITile GetTileAt(int x, int y);
+
+        /// <summary>
+        /// Get Tile from World Position.
+        /// </summary>
+        ITile GetTileAt(Vector2D WorldPos);
+
+        /// <summary>
+        /// Get Tile from Array Position.
+        /// </summary>
+        ITile GetTileAt(int array_x, int array_y);
+
         Vector2D GetTileArrayPositionFromWorldPosition(float x, float z);
         Point GetTileArrayPositionFromWorldPosition(Vector2D pos);
         int GetMapWidth();

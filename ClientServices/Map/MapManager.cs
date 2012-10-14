@@ -22,8 +22,8 @@ namespace ClientServices.Map
     {
         #region Variables
         private Tile[][] _tileArray; // The array holding all the tiles that make up the map
-        private int _mapWidth; // Number of tiles across the map (must be a multiple of StaticGeoSize)
-        private int _mapHeight; // Number of tiles up the map (must be a multiple of StaticGeoSize)
+        private int _mapWidth; // Number of tiles across the map
+        private int _mapHeight; // Number of tiles up the map
         private const int TileSpacing = 64; // Distance between tiles
 
         private readonly List<Vector2D> _cardinalList;
@@ -81,7 +81,7 @@ namespace ClientServices.Map
             else throw new ArgumentNullException("tileStringTable", "Can not find '" + typeName + "' type.");
         }
 
-        public string GetTableIndexToStr(byte index)
+        public string GetTileString(byte index)
         {
             string typeStr = (from a in tileStringTable
                               where a.Key == index
@@ -112,7 +112,7 @@ namespace ClientServices.Map
                     byte index = message.ReadByte();
                     TileState state = (TileState)message.ReadByte();
 
-                    Tile created = GenerateNewTile(GetTableIndexToStr(index), state, new Vector2D(posX, posY));
+                    Tile created = GenerateNewTile(GetTileString(index), state, new Vector2D(posX, posY));
                     _tileArray[y][x] = created;
                 }
             }
@@ -124,7 +124,6 @@ namespace ClientServices.Map
                     if (_tileArray[y][x].ConnectSprite) //Was wall check.
                     {
                         var i = SetSprite(x, y);
-                        //_tileArray[y][x].SetSprites(_tileSprites[WallTopSpriteName + i], _tileSprites[WallSideSpriteName], i);
                     }
                     if (y > 0)
                     {
@@ -149,33 +148,9 @@ namespace ClientServices.Map
             _loaded = true;
             return true;
         }
-
-        public void SaveMap()
-        {
-            const string fileName = "SavedMap";
-
-            var fs = new FileStream(fileName, FileMode.Create);
-            var sw = new StreamWriter(fs);
-
-            sw.WriteLine(_mapWidth);
-            sw.WriteLine(_mapHeight);
-
-            for (int y = 0; y < _mapHeight; y++)
-            {
-                for (int x = 0; x < _mapWidth; x++)
-                {
-                    sw.WriteLine(_tileArray[y][x].name);
-                }
-            }
-
-            sw.Close();
-            fs.Close();
-        }
-
         #endregion
 
         #region Networking
-
         public void HandleNetworkMessage(NetIncomingMessage message)
         {
             var messageType = (MapMessage)message.ReadByte();
@@ -306,7 +281,7 @@ namespace ClientServices.Map
         {
             var x = message.ReadInt16();
             var y = message.ReadInt16();
-            var tileStr = GetTableIndexToStr(message.ReadByte());
+            var tileStr = GetTileString(message.ReadByte());
             var state = (TileState)message.ReadByte();
 
             var t = _tileArray[y][x];
@@ -322,6 +297,9 @@ namespace ClientServices.Map
                 if (t.GetType().Name != tileStr) //This is ugly beep boop. Fix this later.
                 {
                     var surroundTiles = t.surroundingTiles;
+
+                    if (t.GetType().GetInterface("ICollidable") != null)
+                        _collisionManager.RemoveCollidable((ICollidable)t);
 
                     t = GenerateNewTile(tileStr, state, new Vector2D(x * TileSpacing, y * TileSpacing));
                     t.surroundingTiles = surroundTiles;
@@ -398,17 +376,23 @@ namespace ClientServices.Map
             return _tileArray[y][x].GetType();
         }
 
-        public ITile GetTileAt(Vector2D pos)
+        /// <summary>
+        /// Get Tile from World Position.
+        /// </summary>
+        public ITile GetTileAt(Vector2D worldPos)
         {
-            if (pos.X < 0 || pos.Y < 0) return null;
-            var p = GetTileArrayPositionFromWorldPosition(pos);
+            var p = GetTileArrayPositionFromWorldPosition(worldPos);
+            if (p.X < 0 || p.Y < 0 || p.X >= _mapWidth || p.Y >= _mapHeight) return null;
             return _tileArray[p.Y][p.X];
         }
 
-        public ITile GetTileAt(int x, int y)
+        /// <summary>
+        /// Get Tile from Array Position.
+        /// </summary>
+        public ITile GetTileAt(int arrayX, int arrayY)
         {
-            if (x < 0 || y < 0) return null;
-            return _tileArray[y][x];
+            if (arrayX < 0 || arrayY < 0 || arrayX >= _mapWidth || arrayY >= _mapHeight) return null;
+            return _tileArray[arrayY][arrayX];
         }
 
         public Tile GenerateNewTile(string typeName, TileState state, Vector2D pos)
@@ -478,35 +462,12 @@ namespace ClientServices.Map
         {
             return new Size(_mapWidth * TileSpacing, _mapHeight * TileSpacing);
         }
-
-        /*public List<System.Drawing.RectangleF> GetSurroundingAABB(Vector2D pos)
-        {
-            List<System.Drawing.RectangleF> AABBList = new List<System.Drawing.RectangleF>();
-            Vector2D tilePos = GetTileArrayPositionFromWorldPosition(pos.X, pos.Y);
-
-            foreach (Vector2D dir in cardinalList)
-            {
-                Vector2D checkPos = pos + dir;
-                if (GetTileTypeFromArrayPosition((int)checkPos.X, (int)checkPos.Y) == TileType.Wall)
-                {
-                    System.Drawing.RectangleF AABB = GetAABB(checkPos);
-                    if (AABB != null)
-                    {
-                        AABBList.Add(AABB);
-                    }
-                }
-            }
-
-            return AABB;
-        }*/
-
         #endregion
 
         #region Quick collision checks
-
-        public bool IsSolidTile(Vector2D pos)
+        public bool IsSolidTile(Vector2D worldPos)
         {
-            var tile = (Tile)GetTileAt(GetTileArrayPositionFromWorldPosition(pos.X, pos.Y));
+            var tile = (Tile)GetTileAt(worldPos);
             if (tile == null) return false;
             if (tile.GetType().GetInterface("ICollidable") != null)
                 return true;

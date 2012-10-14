@@ -11,6 +11,7 @@ namespace ServerServices.Tiles
         public TileState tileState { get; set; }
         public bool gasPermeable = false;
         public bool gasSink = false;
+        public bool startWithAtmos = false; //Does this start with  breathable atmosphere? Maybe turn this into a bitfield to define which gases it starts with.
         private Map.MapManager map;
         private int _x;
         private int _y;
@@ -63,7 +64,6 @@ namespace ServerServices.Tiles
         {
             return false;
         }*/ //TODO HOOK ME BACK UP WITH ENTITY SYSTEM
-
-        
+ 
     }
 }

@@ -24,9 +24,7 @@ namespace ServerServices.Map
         private Tile[,] tileArray;
         private int mapWidth;
         private int mapHeight;
-        private string[,] nameArray;
         public int tileSpacing = 64;
-        private int wallHeight = 40; // This must be the same as defined in the MeshManager.
         DateTime lastAtmosDisplayPush;
         Dictionary<byte, string> tileStringTable = new Dictionary<byte, string>();
         #endregion
@@ -40,13 +38,8 @@ namespace ServerServices.Map
         {
             BuildTileTable();
             if (!LoadMap(mapName))
-            {
                 NewMap();
-            }
-            else
-            {
-                ParseNameArray();
-            }
+
             InitializeAtmos();
             return true;
         }
@@ -59,15 +52,9 @@ namespace ServerServices.Map
             List<Type> types = asses.SelectMany(t => t.GetTypes()).Where(p => type.IsAssignableFrom(p)).ToList();
 
             if (types.Count > 255)
-            {
                 throw new ArgumentOutOfRangeException("types.Count", "Can not load more than 255 types of tiles.");
-            }
 
             tileStringTable = types.ToDictionary(x => (byte)types.FindIndex(y => y == x), x => x.Name);
-
-            LogManager.Log("Building Tile Index..");
-            foreach(var x in tileStringTable)
-                LogManager.Log(x.Key.ToString() + " -> " + x.Value.ToString());
         }
 
         public byte GetTileIndex(string typeName)
@@ -77,7 +64,7 @@ namespace ServerServices.Map
             else throw new ArgumentNullException("tileStringTable", "Can not find '" + typeName + "' type.");
         }
 
-        public string GetTableIndexToStr(byte index)
+        public string GetTileString(byte index)
         {
             string typeStr = (from a in tileStringTable
                               where a.Key == index
@@ -153,7 +140,7 @@ namespace ServerServices.Map
             short x = message.ReadInt16();
             short y = message.ReadInt16();
 
-            string typeStr =  GetTableIndexToStr((byte)message.ReadByte());
+            string typeStr =  GetTileString((byte)message.ReadByte());
 
             if (IsSaneArrayPosition(x, y))
             {
@@ -186,9 +173,7 @@ namespace ServerServices.Map
         private bool LoadMap(string filename)
         {
             if (!File.Exists(filename))
-            {
                 return false;
-            }
 
             FileStream fs = new FileStream(filename, FileMode.Open);
             StreamReader sr = new StreamReader(fs);
@@ -196,13 +181,14 @@ namespace ServerServices.Map
             mapWidth = int.Parse(sr.ReadLine());
             mapHeight = int.Parse(sr.ReadLine());
 
-            nameArray = new string[mapWidth, mapHeight];
+            tileArray = new Tile[mapWidth, mapHeight];
 
             for (int y = 0; y < mapHeight; y++)
             {
                 for (int x = 0; x < mapWidth; x++)
                 {
-                    nameArray[x, y] = sr.ReadLine();
+                    string tileName = sr.ReadLine();
+                    tileArray[x, y] = (Tile)GenerateNewTile(x, y, tileName);
                 }
             }
 
@@ -219,6 +205,7 @@ namespace ServerServices.Map
             FileStream fs = new FileStream(fileName, FileMode.Create);
             StreamWriter sw = new StreamWriter(fs);
             LogManager.Log("Saving map: W: " + mapWidth + " H: " + mapHeight);
+
             sw.WriteLine(mapWidth);
             sw.WriteLine(mapHeight);
             
@@ -250,48 +237,6 @@ namespace ServerServices.Map
             }
         }
 
-        private void ParseNameArray()
-        {
-            tileArray = new Tile[mapWidth, mapHeight];
-
-            for (int z = 0; z < mapHeight; z++)
-            {
-                for (int x = 0; x < mapWidth; x++)
-                {
-                    switch (nameArray[x, z].ToLowerInvariant())
-                    {
-                        case "Wall":
-                            tileArray[x, z] = new Wall(x, z, this);
-                            break;
-                        case "Floor":
-                            tileArray[x, z] = new Floor(x, z, this);
-                            break;
-                        case "Space":
-                            tileArray[x, z] = new Space(x, z, this);
-                            break;
-                        default:
-                            break;
-                    }
-                }
-            }
-        }
-
-        public Type[,] GetMapForSending()
-        {
-            Type[,] mapObjectType = new Type[mapWidth, mapHeight];
-
-            for (int x = 0; x < mapWidth; x++)
-            {
-                for (int z = 0; z < mapHeight; z++)
-                {
-                    mapObjectType[x, z] = tileArray[x, z].GetType();
-                }
-            }
-
-            return mapObjectType;
-
-        }
-
         public ITile GetTileAt(int x, int y)
         {
             if (!IsSaneArrayPosition(x, y))
@@ -310,7 +255,7 @@ namespace ServerServices.Map
                 for (int x = 0; x < mapWidth; x++)
                 {
                     tileArray[x, z].gasCell = new Tiles.Atmos.GasCell(tileArray[x, z], x, z, tileArray, mapWidth, mapHeight);
-                    if (tileArray[x, z].GetType() == typeof(Floor))
+                    if (tileArray[x, z].startWithAtmos)
                     {
                         tileArray[x, z].gasCell.AddGas(20, GasType.Oxygen);
                         tileArray[x, z].gasCell.AddGas(80, GasType.Nitrogen);
@@ -356,7 +301,7 @@ namespace ServerServices.Map
             for (int x = 0; x < mapWidth; x++)
                 for (int y = 0; y < mapHeight; y++)
                 {
-                    if (tileArray[x, y].tileState == TileState.Dead) //This is now missing a wall check.
+                    if (tileArray[x, y].tileState == TileState.Dead && !tileArray[x, y].gasPermeable)
                         DestroyTile(new Point(x, y));
                     tileArray[x, y].gasCell.Update();
                 }
@@ -622,7 +567,7 @@ namespace ServerServices.Map
         }
 
         /// <summary>
-        /// Lol fuck
+        /// Send message to all clients.
         /// </summary>
         /// <param name="message"></param>
         public void SendMessage(NetOutgoingMessage message)
@@ -710,16 +655,11 @@ namespace ServerServices.Map
         {
             if (x < 0 || y < 0)
                 return false;
-            if (x > mapWidth|| y > mapWidth)
+            if (x > mapWidth - 1|| y > mapWidth - 1)
                 return false;
             return true;
         }
         #endregion
-
-        public Type GetObjectTypeAt(Vector2 pos)
-        {
-            return GetTileTypeFromWorldPosition(pos);
-        }
 
     }
 }

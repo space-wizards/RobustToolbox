@@ -839,7 +839,7 @@ namespace ClientServices.State.States
                 LightArea area = GetLightArea(RadiusToShadowMapSize(playerVision.Radius));
                 area.LightPosition = playerVision.Position; // Set the light position
 
-                if (MapManager.GetTileTypeFromWorldPosition(playerVision.Position).GetType() == typeof(Wall))
+                if (MapManager.GetTileAt(playerVision.Position) != null && MapManager.GetTileAt(playerVision.Position).Opaque)
                 {
                     area.LightPosition = new Vector2D(area.LightPosition.X, MapManager.GetTileAt(playerVision.Position).Position.Y + MapManager.GetTileSpacing() + 1);
                 }
@@ -848,7 +848,7 @@ namespace ClientServices.State.States
                 DrawWallsRelativeToLight(area); // Draw all shadowcasting stuff here in black
                 area.EndDrawingShadowCasters(); // End drawing to the light rendertarget
                 shadowMapResolver.ResolveShadows(area.renderTarget.Image, area.renderTarget, area.LightPosition, false, 
-                    IoCManager.Resolve<IResourceManager>().GetSprite("whitemask").Image, Vector4D.Zero, new Vector4D(1,1,1,1)); // Calc shadows
+                IoCManager.Resolve<IResourceManager>().GetSprite("whitemask").Image, Vector4D.Zero, new Vector4D(1,1,1,1)); // Calc shadows
 
                 Gorgon.CurrentRenderTarget = playerOcclusionTarget; // Set to shadow rendertarget
 
@@ -872,7 +872,7 @@ namespace ClientServices.State.States
             if (area.Calculated)
                 return;
             area.LightPosition = l.Position;//mousePosWorld; // Set the light position
-            if (MapManager.GetTileTypeFromWorldPosition(l.Position).GetType() == typeof(Wall))
+            if (MapManager.GetTileAt(l.Position).Opaque)
             {
                 area.LightPosition = new Vector2D(area.LightPosition.X, MapManager.GetTileAt(l.Position).Position.Y + MapManager.GetTileSpacing() + 1);
             }
@@ -935,7 +935,7 @@ namespace ClientServices.State.States
 
                     t = (Tile)MapManager.GetTileAt(x, y);
 
-                    if (t.GetType() == typeof(Wall))
+                    if (t.Opaque)
                     {
                         Vector2D pos = area.ToRelativePosition(t.Position);
                         t.RenderPos(pos.X, pos.Y, tilespacing, (int)area.LightAreaSize.X);
@@ -961,11 +961,11 @@ namespace ClientServices.State.States
                 {
                     t = (Tile)MapManager.GetTileAt(x, y);
 
-                    if (t.GetType() == typeof(Wall))
+                    if (t.Opaque)
                     {
                         t.Render(WindowOrigin.X, WindowOrigin.Y, tilespacing, _wallBatch);
                     }
-                    else if (t.GetType() != typeof(Wall))
+                    else if (!t.Opaque)
                     {
                         t.Render(WindowOrigin.X, WindowOrigin.Y, tilespacing, _floorBatch);
                     }

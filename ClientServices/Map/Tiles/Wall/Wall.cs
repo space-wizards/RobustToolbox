@@ -149,6 +149,10 @@ namespace ClientServices.Tiles
 
         public override void RenderPos(float x, float y, int tileSpacing, int lightSize)
         {
+            //Not drawing occlusion for tiles on the edge. Fuck this. Looks better too since there isnt actually anything to hide behind them.
+            if ((TilePosition.X == (mapMgr.GetMapWidth() - 1) || TilePosition.X == 0) || (TilePosition.Y == (mapMgr.GetMapHeight() - 1) || TilePosition.Y == 0))
+                return;
+
             int l = lightSize/2;
             Direction from = Direction.East;
             if(l < x && l < y)
@@ -172,6 +176,7 @@ namespace ClientServices.Tiles
             {
                 if (!surroundingTiles[1].Opaque || (surroundingTiles[1].Opaque && surroundingTiles[2].Opaque))
                     RenderOccluder(Direction.East, from, x, y, tileSpacing);
+
                 if (surroundingTiles[2].surroundingTiles[3].Opaque && !surroundingTiles[3].Opaque)
                     RenderOccluder(Direction.West, from, x, y, tileSpacing);
 

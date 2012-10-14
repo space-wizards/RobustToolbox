@@ -70,7 +70,7 @@ namespace ServerServices.Placement
 
             string entityTemplateName = "";
 
-            if (isTile) tileType = mapMgr.GetTableIndexToStr(msg.ReadByte());
+            if (isTile) tileType = mapMgr.GetTileString(msg.ReadByte());
             else entityTemplateName = msg.ReadString();
 
             float xRcv = msg.ReadFloat();

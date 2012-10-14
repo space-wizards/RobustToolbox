@@ -24,10 +24,8 @@ namespace ClientServices.Tiles
         public Vector2D Position { get; protected set; }
         public Point TilePosition { get; protected set; }
         public bool Visible { get; set; }
-        public bool sightBlocked = false; // Is something on this tile that blocks sight through it, like a door (used for lighting)
         public byte surroundDirs = 0; //north = 1 east = 2 south = 4 west = 8.
         public Tile[] surroundingTiles;
-        public List<ILight> tileLights;
         public Dictionary<GasType, int> gasAmounts;
         public Sprite gasSprite;
         public List<TileDecal> decals;
@@ -54,30 +52,11 @@ namespace ClientServices.Tiles
             Initialize();
         }
 
-        protected Tile(Sprite sprite, Sprite _side, TileState state, float size, Vector2D _position, Point _tilePosition, ILightManager lightManager, IResourceManager resourceManager)
-        {
-            tileState = state;
-            Position = _position;
-            TilePosition = _tilePosition;
-            Sprite = sprite;
-            Sprite.SetPosition(_position.X, _position.Y);
-
-            sideSprite = _side;
-            sideSprite.SetPosition(_position.X, _position.Y);
-
-            _lightManager = lightManager;
-            _resourceManager = resourceManager;
-
-            Initialize();
-        }
-
         public virtual void Initialize()
         {
             gasSprite = _resourceManager.GetSprite("gas");
             surroundingTiles = new Tile[4];
-            tileLights = new List<ILight>();
             gasAmounts = new Dictionary<GasType, int>();
-            sightBlocked = false;
             decals = new List<TileDecal>();
             _random = new Random((int)(Position.X * Position.Y));
 

@@ -8,6 +8,7 @@ namespace ServerServices.Tiles
 {
     public class Wall : Tile
     {
+
         public Wall(int x, int y, ServerServices.Map.MapManager _map)
             : base(x, y, _map)
         {

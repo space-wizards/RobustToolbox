@@ -86,7 +86,7 @@ namespace ClientServices.Placement
 
             var mapMgr = (MapManager)IoCManager.Resolve<IMapManager>();
 
-            if (_currentPermission.IsTile) _currentPermission.TileType = mapMgr.GetTableIndexToStr(msg.ReadByte());
+            if (_currentPermission.IsTile) _currentPermission.TileType = mapMgr.GetTileString(msg.ReadByte());
             else _currentPermission.EntityType = msg.ReadString();
             _currentPermission.PlacementOption = (PlacementOption)msg.ReadByte();
 
@@ -221,7 +221,7 @@ namespace ClientServices.Placement
 
                     if (_collisionManager.IsColliding(spriteRectWorld)) _validPosition = false;
 
-                    if (currentMap.IsSolidTile(_currentLocWorld)) _validPosition = false; //HANDLE CURSOR OUTSIDE MAP
+                    if (currentMap.IsSolidTile(_currentLocWorld)) _validPosition = false; //Prevents placement.
 
                     if (_currentPermission.PlacementOption == PlacementOption.AlignNone) //AlignNoneFree does not check for range.
                         if ((_playerManager.ControlledEntity.Position - _currentLocWorld).Length > _currentPermission.Range) _validPosition = false;

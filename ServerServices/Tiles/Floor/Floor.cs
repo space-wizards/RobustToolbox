@@ -11,6 +11,7 @@ namespace ServerServices.Tiles
         public Floor(int x, int y, ServerServices.Map.MapManager _map)
             : base(x, y, _map)
         {
+            startWithAtmos = true;
             gasPermeable = true;
         }
 

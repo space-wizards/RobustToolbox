@@ -12,7 +12,6 @@ namespace ServerInterfaces.Map
         void HandleNetworkMessage(NetIncomingMessage message);
         void NetworkUpdateTile(int x, int y);
         void SaveMap();
-        Type[,] GetMapForSending();
         ITile GetTileAt(int x, int y);
         void AddGasAt(Point position, GasType type, int amount);
         float GetGasAmount(Point position, GasType type);
@@ -32,7 +31,7 @@ namespace ServerInterfaces.Map
         NetOutgoingMessage CreateMapMessage(MapMessage messageType);
 
         /// <summary>
-        /// Lol fuck
+        /// Send message to all clients.
         /// </summary>
         /// <param name="message"></param>
         void SendMessage(NetOutgoingMessage message);
@@ -45,7 +44,6 @@ namespace ServerInterfaces.Map
         Point GetTileArrayPositionFromWorldPosition(Vector2 pos);
         Type GetTileTypeFromWorldPosition(float x, float z);
         bool IsSaneArrayPosition(int x, int y);
-        Type GetObjectTypeAt(Vector2 pos);
         void SendMap(NetConnection connection);
     }
 }

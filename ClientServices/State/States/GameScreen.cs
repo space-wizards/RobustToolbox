@@ -641,8 +641,8 @@ namespace ClientServices.State.States
             _redrawTiles = true;
             _redrawOverlay = true;
         }
-
-        private void RecalculateScene()
+        
+        public void RecalculateScene()
         {
             _recalculateScene = true;
         }

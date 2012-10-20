@@ -91,13 +91,41 @@ namespace CGO
             //                  ? DrawDepth.FloorPlaceable : c.DrawDepth) ascending, c.Owner.Position.Y ascending
             //                  select c;
 
-            var renderables = from IRenderableComponent c in components[ComponentFamily.Renderable] //FIXTHIS
-                              orderby c.DrawDepth ascending, c.Owner.Position.Y ascending
+            var floorRenderables = from IRenderableComponent c in components[ComponentFamily.Renderable]
+                              orderby c.Bottom ascending, c.DrawDepth ascending
+                              where c.DrawDepth < DrawDepth.MobBase
                               select c;
-                            
-            foreach (var component in renderables.ToList())
+
+            RenderList(new Vector2D(viewPort.Left, viewPort.Top), new Vector2D(viewPort.Right, viewPort.Bottom), floorRenderables.ToList());
+
+            var largeRenderables = from IRenderableComponent c in components[ComponentFamily.Renderable]
+                              orderby c.Bottom ascending
+                              where c.DrawDepth >= DrawDepth.MobBase &&
+                                c.DrawDepth < DrawDepth.WallTops                              
+                              select c;
+
+            RenderList(new Vector2D(viewPort.Left, viewPort.Top), new Vector2D(viewPort.Right, viewPort.Bottom), largeRenderables.ToList());
+
+            var ceilingRenderables = from IRenderableComponent c in components[ComponentFamily.Renderable]
+                              orderby c.Bottom ascending, c.DrawDepth ascending
+                              where c.DrawDepth >= DrawDepth.WallTops
+                              select c;
+
+            RenderList(new Vector2D(viewPort.Left, viewPort.Top), new Vector2D(viewPort.Right, viewPort.Bottom), ceilingRenderables.ToList());
+        }
+
+        private void RenderList(Vector2D topleft, Vector2D bottomright, List<IRenderableComponent> renderables)
+        {
+            foreach (var component in renderables)
             {
-                component.Render(new Vector2D(viewPort.Left, viewPort.Top), new Vector2D(viewPort.Right, viewPort.Bottom));
+                if (component is SpriteComponent)
+                {
+                    //Slaved components are drawn by their master
+                    var c = component as SpriteComponent;
+                    if (c.IsSlaved())
+                        continue;
+                }
+                component.Render(topleft, bottomright);
             }
         }
     }

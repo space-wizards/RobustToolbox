@@ -20,6 +20,8 @@ namespace CGO
         protected bool flip;
         protected Dictionary<string, Sprite> sprites;
         protected bool visible = true;
+        protected SpriteComponent master;
+        protected List<SpriteComponent> slaves; 
 
         public RectangleF AABB
         {
@@ -29,9 +31,15 @@ namespace CGO
             }
         }
 
+        public override float Bottom
+        {
+            get { return Owner.Position.Y + (currentSprite.AABB.Height / 2); }
+        }
+
         public SpriteComponent()
         {
             sprites = new Dictionary<string, Sprite>();
+            slaves = new List<SpriteComponent>();
         }
 
         public override void OnAdd(IEntity owner)
@@ -103,6 +111,13 @@ namespace CGO
                     break;
                 case ComponentMessageType.SetDrawDepth:
                     SetDrawDepth((DrawDepth)list[0]);
+                    break;
+                case ComponentMessageType.SlaveAttach:
+                    SetMaster(EntityManager.Singleton.GetEntity((int) list[0]));
+                    break;
+                case ComponentMessageType.ItemUnEquipped:
+                case ComponentMessageType.Dropped:
+                    UnsetMaster();
                     break;
             }
 
@@ -189,6 +204,18 @@ namespace CGO
 
         public override void Render(Vector2D topLeft, Vector2D bottomRight)
         {
+            //Render slaves beneath
+            var renderablesBeneath = from SpriteComponent c in slaves //FIXTHIS
+                    orderby c.DrawDepth ascending
+                    where c.DrawDepth < DrawDepth
+                    select c;
+
+            foreach (var component in renderablesBeneath.ToList())
+            {
+                component.Render(topLeft, bottomRight);
+            }
+
+            //Render this sprite
             if (!visible) return;
             if (currentSprite == null) return;
 
@@ -204,6 +231,17 @@ namespace CGO
             currentSprite.HorizontalFlip = flip;
             currentSprite.Draw();
             currentSprite.HorizontalFlip = false;
+
+            //Render slaves above
+            var renderablesAbove = from SpriteComponent c in slaves //FIXTHIS
+                              orderby c.DrawDepth ascending
+                              where c.DrawDepth >= DrawDepth
+                              select c;
+
+            foreach (var component in renderablesAbove.ToList())
+            {
+                component.Render(topLeft, bottomRight);
+            }
         }
 
         public void SetSpriteCenter(string sprite, Vector2D center)
@@ -213,6 +251,41 @@ namespace CGO
         public void SetSpriteCenter(Sprite sprite, Vector2D center)
         {
             sprite.SetPosition(center.X - (currentSprite.AABB.Width / 2), center.Y - (currentSprite.AABB.Height / 2));
+        }
+
+        public bool IsSlaved() { return master != null; }
+
+        public void SetMaster(IEntity m) 
+        { 
+            if(!m.HasComponent(ComponentFamily.Renderable))
+                return;
+            var mastercompo = m.GetComponent<SpriteComponent>(ComponentFamily.Renderable);
+            //If there's no sprite component, then FUCK IT
+            if (mastercompo == null)
+                return;
+
+            // lets get gay together and do some shit like in that stupid book 50 shades of gay
+            mastercompo.AddSlave(this);
+            master = mastercompo;
+        }
+
+        public void UnsetMaster()
+        {
+            if (master == null)
+                return;
+            master.RemoveSlave(this);
+            master = null;
+        }
+
+        public void AddSlave(SpriteComponent slavecompo)
+        {
+            slaves.Add(slavecompo);
+        }
+
+        public void RemoveSlave(SpriteComponent slavecompo)
+        {
+            if (slaves.Contains(slavecompo))
+                slaves.Remove(slavecompo);
         }
     }
 }

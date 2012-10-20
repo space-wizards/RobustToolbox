@@ -18,6 +18,7 @@ namespace ClientInterfaces.GOC
         void AddComponent(ComponentFamily family, IGameObjectComponent component);
         void RemoveComponent(ComponentFamily family);
         IGameObjectComponent GetComponent(ComponentFamily family);
+        T GetComponent<T>(ComponentFamily family) where T : class;
         bool HasComponent(ComponentFamily family);
         string GetDescriptionString();
         void Initialize();

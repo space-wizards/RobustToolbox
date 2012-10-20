@@ -126,6 +126,14 @@ namespace CGO
             return _components.ContainsKey(family) ? _components[family] : null;
         }
 
+        public T GetComponent<T>(ComponentFamily family) where T : class
+        {
+            if (GetComponent(family) is T)
+                return (T)GetComponent(family);
+
+            return null;
+        }
+
         /// <summary>
         /// Checks to see if a component of a certain family exists
         /// </summary>

@@ -201,23 +201,23 @@ namespace SS13_Shared.GO
 
     public enum DrawDepth
     {
-        FloorTiles,
-        FloorObjects,
-        ItemsOnFloor,
-        MobBase,
-        MobUnderClothingLayer,
-        MobUnderAccessoryLayer,
-        MobOverClothingLayer,
-        MobOverAccessoryLayer,
-        HeldItems,
-        Tables,
-        ItemsOnTables,
-        FloorPlaceable,
-        Doors,
-        Walls,
-        WallMountedItems,
-        WallTops,
-        LightOverlay
+        FloorTiles              = 0,
+        FloorObjects            = 1,
+        ItemsOnFloor            = 2,
+        MobBase                 = 3,
+        MobUnderClothingLayer   = 4,
+        MobUnderAccessoryLayer  = 5,
+        MobOverClothingLayer    = 6,
+        MobOverAccessoryLayer   = 7,
+        HeldItems               = 8,
+        Tables                  = 9,
+        ItemsOnTables           = 10,
+        FloorPlaceable          = 11,
+        Doors                   = 12,
+        Walls                   = 13,
+        WallMountedItems        = 14,
+        WallTops                = 15,
+        LightOverlay            = 16
     }
 
     public enum StatusEffectFamily

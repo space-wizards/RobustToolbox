@@ -6,7 +6,10 @@ using ClientInterfaces.Collision;
 using ClientInterfaces.Lighting;
 using ClientInterfaces.Map;
 using ClientInterfaces.Resource;
+using ClientInterfaces.State;
+using ClientServices.State.States;
 using ClientServices.Tiles;
+using SS13.IoC;
 using SS13_Shared;
 using System.IO;
 using Lidgren.Network;
@@ -260,6 +263,9 @@ namespace ClientServices.Map
                     r++;
                 }
             }
+
+            var gameScreen = IoCManager.Resolve<IStateManager>().CurrentState as GameScreen;
+            gameScreen.RecalculateScene();
 
         }
 

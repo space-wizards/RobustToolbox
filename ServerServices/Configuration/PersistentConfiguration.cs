@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using SS13_Shared;
+using SS13_Shared.ServerEnums;
 
 namespace ServerServices.Configuration
 {
@@ -22,5 +23,6 @@ namespace ServerServices.Configuration
         public int framePeriod = 33; // The time (in milliseconds) between server frames
         public string AdminPassword = "admin123";
         public bool MessageLogging = false;
+        public LogLevel LogLevel = LogLevel.Information;
     }
 }

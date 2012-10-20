@@ -16,7 +16,9 @@ LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRA
 TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE
 USE OR OTHER DEALINGS IN THE SOFTWARE.
 */
+#if !__ANDROID__ && !IOS
 #define IS_FULL_NET_AVAILABLE
+#endif
 
 using System;
 using System.Net;
@@ -24,6 +26,7 @@ using System.Net.NetworkInformation;
 using System.Net.Sockets;
 using System.Text;
 using System.Text.RegularExpressions;
+using System.Collections.Generic;
 
 namespace Lidgren.Network
 {
@@ -33,12 +36,118 @@ namespace Lidgren.Network
 	public static class NetUtility
 	{
 		/// <summary>
+		/// Resolve endpoint callback
+		/// </summary>
+		public delegate void ResolveEndPointCallback(IPEndPoint endPoint);
+
+		/// <summary>
+		/// Resolve address callback
+		/// </summary>
+		public delegate void ResolveAddressCallback(IPAddress adr);
+
+		/// <summary>
+		/// Get IPv4 endpoint from notation (xxx.xxx.xxx.xxx) or hostname and port number (asynchronous version)
+		/// </summary>
+		public static void ResolveAsync(string ipOrHost, int port, ResolveEndPointCallback callback)
+		{
+			ResolveAsync(ipOrHost, delegate(IPAddress adr)
+			{
+				if (adr == null)
+				{
+					callback(null);
+				}
+				else
+				{
+					callback(new IPEndPoint(adr, port));
+				}
+			});
+		}
+
+		/// <summary>
 		/// Get IPv4 endpoint from notation (xxx.xxx.xxx.xxx) or hostname and port number
 		/// </summary>
 		public static IPEndPoint Resolve(string ipOrHost, int port)
 		{
 			IPAddress adr = Resolve(ipOrHost);
 			return new IPEndPoint(adr, port);
+		}
+
+		/// <summary>
+		/// Get IPv4 address from notation (xxx.xxx.xxx.xxx) or hostname (asynchronous version)
+		/// </summary>
+		public static void ResolveAsync(string ipOrHost, ResolveAddressCallback callback)
+		{
+			if (string.IsNullOrEmpty(ipOrHost))
+				throw new ArgumentException("Supplied string must not be empty", "ipOrHost");
+
+			ipOrHost = ipOrHost.Trim();
+
+			IPAddress ipAddress = null;
+			if (IPAddress.TryParse(ipOrHost, out ipAddress))
+			{
+				if (ipAddress.AddressFamily == AddressFamily.InterNetwork)
+				{
+					callback(ipAddress);
+					return;
+				}
+				throw new ArgumentException("This method will not currently resolve other than ipv4 addresses");
+			}
+
+			// ok must be a host name
+			IPHostEntry entry;
+			try
+			{
+				Dns.BeginGetHostEntry(ipOrHost, delegate(IAsyncResult result)
+				{
+					try
+					{
+						entry = Dns.EndGetHostEntry(result);
+					}
+					catch (SocketException ex)
+					{
+						if (ex.SocketErrorCode == SocketError.HostNotFound)
+						{
+							//LogWrite(string.Format(CultureInfo.InvariantCulture, "Failed to resolve host '{0}'.", ipOrHost));
+							callback(null);
+							return;
+						}
+						else
+						{
+							throw;
+						}
+					}
+
+					if (entry == null)
+					{
+						callback(null);
+						return;
+					}
+
+					// check each entry for a valid IP address
+					foreach (IPAddress ipCurrent in entry.AddressList)
+					{
+						if (ipCurrent.AddressFamily == AddressFamily.InterNetwork)
+						{
+							callback(ipCurrent);
+							return;
+						}
+					}
+
+					callback(null);
+				}, null);
+			}
+			catch (SocketException ex)
+			{
+				if (ex.SocketErrorCode == SocketError.HostNotFound)
+				{
+					//LogWrite(string.Format(CultureInfo.InvariantCulture, "Failed to resolve host '{0}'.", ipOrHost));
+					callback(null);
+				}
+				else
+				{
+					throw;
+				}
+			}
 		}
 
 		/// <summary>
@@ -157,12 +266,98 @@ namespace Lidgren.Network
 			}
 			return new string(c);
 		}
+		
+		/// <summary>
+		/// Gets the local broadcast address
+		/// </summary>
+		public static IPAddress GetBroadcastAddress()
+		{
+#if __ANDROID__
+			try{
+			Android.Net.Wifi.WifiManager wifi = (Android.Net.Wifi.WifiManager)Android.App.Application.Context.GetSystemService(Android.App.Activity.WifiService);
+			if (wifi.IsWifiEnabled)
+			{
+				var dhcp = wifi.DhcpInfo;
+					
+				int broadcast = (dhcp.IpAddress & dhcp.Netmask) | ~dhcp.Netmask;
+	    		byte[] quads = new byte[4];
+	    		for (int k = 0; k < 4; k++)
+				{
+	      			quads[k] = (byte) ((broadcast >> k * 8) & 0xFF);
+				}
+				return new IPAddress(quads);
+			}
+			}
+			catch // Catch Access Denied Errors
+			{
+				return IPAddress.Broadcast;
+			}
+#endif		
+#if IS_FULL_NET_AVAILABLE
+			try
+			{
+				NetworkInterface ni = GetNetworkInterface();
+				if (ni == null)
+				{
+					return null;
+				}
+	
+				IPInterfaceProperties properties = ni.GetIPProperties();
+				foreach (UnicastIPAddressInformation unicastAddress in properties.UnicastAddresses)
+				{
+					if (unicastAddress != null && unicastAddress.Address != null && unicastAddress.Address.AddressFamily == AddressFamily.InterNetwork)
+					{
+						var mask = unicastAddress.IPv4Mask;
+						byte[] ipAdressBytes = unicastAddress.Address.GetAddressBytes();
+				        byte[] subnetMaskBytes = mask.GetAddressBytes();
+				
+				        if (ipAdressBytes.Length != subnetMaskBytes.Length)
+				            throw new ArgumentException("Lengths of IP address and subnet mask do not match.");
+				
+				        byte[] broadcastAddress = new byte[ipAdressBytes.Length];
+				        for (int i = 0; i < broadcastAddress.Length; i++)
+				        {
+				            broadcastAddress[i] = (byte)(ipAdressBytes[i] | (subnetMaskBytes[i] ^ 255));
+				        }
+				        return new IPAddress(broadcastAddress);				
+					}
+				}
+			}
+			catch // Catch any errors 
+			{
+			    return IPAddress.Broadcast;
+			}
+#endif		
+			return IPAddress.Broadcast;
+		}
 
 		/// <summary>
 		/// Gets my local IP address (not necessarily external) and subnet mask
 		/// </summary>
 		public static IPAddress GetMyAddress(out IPAddress mask)
 		{
+			mask = null;
+#if __ANDROID__
+			try
+			{
+				Android.Net.Wifi.WifiManager wifi = (Android.Net.Wifi.WifiManager)Android.App.Application.Context.GetSystemService(Android.App.Activity.WifiService);
+				if (!wifi.IsWifiEnabled) return null;
+				var dhcp = wifi.DhcpInfo;
+					
+				int addr = dhcp.IpAddress;
+	    		byte[] quads = new byte[4];
+	    		for (int k = 0; k < 4; k++)
+				{
+	      			quads[k] = (byte) ((addr >> k * 8) & 0xFF);
+				}			
+				return new IPAddress(quads);
+			}
+			catch // Catch Access Denied errors
+			{
+				return null;
+			}
+				
+#endif			
 #if IS_FULL_NET_AVAILABLE
 			NetworkInterface ni = GetNetworkInterface();
 			if (ni == null)
@@ -181,18 +376,17 @@ namespace Lidgren.Network
 				}
 			}
 #endif
-			mask = null;
 			return null;
 		}
 
 		/// <summary>
 		/// Returns true if the IPEndPoint supplied is on the same subnet as this host
 		/// </summary>
-		public static bool IsLocal(IPEndPoint endpoint)
+		public static bool IsLocal(IPEndPoint endPoint)
 		{
-			if (endpoint == null)
+			if (endPoint == null)
 				return false;
-			return IsLocal(endpoint.Address);
+			return IsLocal(endPoint.Address);
 		}
 
 		/// <summary>
@@ -291,10 +485,13 @@ namespace Lidgren.Network
 
 		internal static int RelativeSequenceNumber(int nr, int expected)
 		{
-			int retval = ((nr + NetConstants.NumSequenceNumbers) - expected) % NetConstants.NumSequenceNumbers;
-			if (retval > (NetConstants.NumSequenceNumbers / 2))
-				retval -= NetConstants.NumSequenceNumbers;
-			return retval;
+			return (nr - expected + NetConstants.NumSequenceNumbers + (NetConstants.NumSequenceNumbers / 2)) % NetConstants.NumSequenceNumbers - (NetConstants.NumSequenceNumbers / 2);
+
+			// old impl:
+			//int retval = ((nr + NetConstants.NumSequenceNumbers) - expected) % NetConstants.NumSequenceNumbers;
+			//if (retval > (NetConstants.NumSequenceNumbers / 2))
+			//	retval -= NetConstants.NumSequenceNumbers;
+			//return retval;
 		}
 
 		/// <summary>
@@ -371,6 +568,22 @@ namespace Lidgren.Network
 			else if (mtp >= NetMessageType.UserSequenced1)
 				return NetDeliveryMethod.UnreliableSequenced;
 			return NetDeliveryMethod.Unreliable;
+		}
+
+		/// <summary>
+		/// Creates a comma delimited string from a lite of items
+		/// </summary>
+		public static string MakeCommaDelimitedList<T>(IList<T> list)
+		{
+			var cnt = list.Count;
+			StringBuilder bdr = new StringBuilder(cnt * 5); // educated guess
+			for(int i=0;i<cnt;i++)
+			{
+				bdr.Append(list[i].ToString());
+				if (i != cnt - 1)
+					bdr.Append(", ");
+			}
+			return bdr.ToString();
 		}
 	}
 }

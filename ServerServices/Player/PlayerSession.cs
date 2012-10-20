@@ -130,7 +130,7 @@ namespace ServerServices.Player
         public void SetName(string _name)
         {
             name = _name;
-            LogManager.Log("Player set name: " + connectedClient.RemoteEndpoint.Address + " -> " + name);
+            LogManager.Log("Player set name: " + connectedClient.RemoteEndPoint.Address + " -> " + name);
             SetAttachedEntityName();
         }
 
@@ -172,7 +172,7 @@ namespace ServerServices.Player
         {
             status = SessionStatus.Connected;
             //Put player in lobby immediately.
-            LogManager.Log("Player connected - " + connectedClient.RemoteEndpoint.Address);
+            LogManager.Log("Player connected - " + connectedClient.RemoteEndPoint.Address);
             JoinLobby();
         }
 

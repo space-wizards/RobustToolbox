@@ -384,5 +384,19 @@ namespace ServerServices.Tiles.Atmos
                 amount = 150;
             return (int)(amount / 10);
         }
+
+        public double TotalGas
+        {
+            get
+            {
+                double total = 0;
+                foreach (var gas in gasses)
+                {
+                    total += gas.Value;
+                }
+
+                return total;
+            }
+        }
     }
 }

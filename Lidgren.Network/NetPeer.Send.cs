@@ -47,8 +47,6 @@ namespace Lidgren.Network
 			msg.m_isSent = true;
 
 			int len = NetConstants.UnfragmentedMessageHeaderSize + msg.LengthBytes; // headers + length, faster than calling msg.GetEncodedSize
-            // ** Statistics hack to enable sent packet statistics
-            m_statistics.PacketSent(len, 1);
 			if (len <= recipient.m_currentMTU)
 			{
 				Interlocked.Increment(ref msg.m_recyclingCount);
@@ -57,6 +55,8 @@ namespace Lidgren.Network
 			else
 			{
 				// message must be fragmented!
+				if (recipient.m_status != NetConnectionStatus.Connected)
+					return NetSendResult.FailedNotConnected;
 				SendFragmentedMessage(msg, new NetConnection[] { recipient }, method, sequenceChannel);
 				return NetSendResult.Queued; // could be different for each connection; Queued is "most true"
 			}
@@ -64,9 +64,13 @@ namespace Lidgren.Network
 
 		internal int GetMTU(IList<NetConnection> recipients)
 		{
+			int count = recipients.Count;
+			NetException.Assert(count > 0);
+
 			int mtu = int.MaxValue;
-			foreach (NetConnection conn in recipients)
+			for(int i=0;i<count;i++)
 			{
+				var conn = recipients[i];
 				int cmtu = conn.m_currentMTU;
 				if (cmtu < mtu)
 					mtu = cmtu;
@@ -81,12 +85,14 @@ namespace Lidgren.Network
 		/// <param name="recipients">The list of recipients to send to</param>
 		/// <param name="method">How to deliver the message</param>
 		/// <param name="sequenceChannel">Sequence channel within the delivery method</param>
-		public void SendMessage(NetOutgoingMessage msg, IList<NetConnection> recipients, NetDeliveryMethod method, int sequenceChannel)
+		public void SendMessage(NetOutgoingMessage msg, List<NetConnection> recipients, NetDeliveryMethod method, int sequenceChannel)
 		{
 			if (msg == null)
 				throw new ArgumentNullException("msg");
 			if (recipients == null)
 				throw new ArgumentNullException("recipients");
+			if (recipients.Count < 1)
+				throw new NetException("recipients must contain at least one item");
 			if (method == NetDeliveryMethod.Unreliable || method == NetDeliveryMethod.ReliableUnordered)
 				NetException.Assert(sequenceChannel == 0, "Delivery method " + method + " cannot use sequence channels other than 0!");
 			if (msg.m_isSent)
@@ -96,10 +102,8 @@ namespace Lidgren.Network
 
 			msg.m_isSent = true;
 
-			int len = msg.LengthBytes;
-            // ** Statistics hack to enable sent packet statistics
-            m_statistics.PacketSent(len * recipients.Count, recipients.Count);
-			if (len <= m_configuration.MaximumTransmissionUnit)
+			int len = msg.GetEncodedSize();
+			if (len <= mtu)
 			{
 				Interlocked.Add(ref msg.m_recyclingCount, recipients.Count);
 				foreach (NetConnection conn in recipients)
@@ -110,11 +114,8 @@ namespace Lidgren.Network
 						continue;
 					}
 					NetSendResult res = conn.EnqueueMessage(msg, method, sequenceChannel);
-					if (res == NetSendResult.Dropped)
-					{
-						LogDebug(msg + " dropped immediately due to full queues");
+					if (res != NetSendResult.Queued && res != NetSendResult.Sent)
 						Interlocked.Decrement(ref msg.m_recyclingCount);
-					}
 				}
 			}
 			else
@@ -145,6 +146,7 @@ namespace Lidgren.Network
 				throw new NetException("Failed to resolve " + host);
 
 			msg.m_messageType = NetMessageType.Unconnected;
+			msg.m_isSent = true;
 
 			Interlocked.Increment(ref msg.m_recyclingCount);
 			m_unsentUnconnectedMessages.Enqueue(new NetTuple<IPEndPoint, NetOutgoingMessage>(new IPEndPoint(adr, port), msg));
@@ -180,6 +182,8 @@ namespace Lidgren.Network
 				throw new ArgumentNullException("msg");
 			if (recipients == null)
 				throw new ArgumentNullException("recipients");
+			if (recipients.Count < 1)
+				throw new NetException("recipients must contain at least one item");
 			if (msg.m_isSent)
 				throw new NetException("This message has already been sent! Use NetPeer.SendMessage() to send to multiple recipients efficiently");
 			if (msg.LengthBytes > m_configuration.MaximumTransmissionUnit)
@@ -191,6 +195,32 @@ namespace Lidgren.Network
 			Interlocked.Add(ref msg.m_recyclingCount, recipients.Count);
 			foreach(IPEndPoint ep in recipients)
 				m_unsentUnconnectedMessages.Enqueue(new NetTuple<IPEndPoint, NetOutgoingMessage>(ep, msg));
+		}
+
+		/// <summary>
+		/// Send a message to this exact same netpeer (loopback)
+		/// </summary>
+		public void SendUnconnectedToSelf(NetOutgoingMessage msg)
+		{
+			if (msg == null)
+				throw new ArgumentNullException("msg");
+			if (msg.m_isSent)
+				throw new NetException("This message has already been sent! Use NetPeer.SendMessage() to send to multiple recipients efficiently");
+
+			msg.m_messageType = NetMessageType.Unconnected;
+			msg.m_isSent = true;
+
+			if (m_configuration.IsMessageTypeEnabled(NetIncomingMessageType.UnconnectedData) == false)
+				return; // dropping unconnected message since it's not enabled for receiving
+
+			NetIncomingMessage om = CreateIncomingMessage(NetIncomingMessageType.UnconnectedData, msg.LengthBytes);
+			om.m_isFragment = false;
+			om.m_receiveTime = NetTime.Now;
+			om.m_senderConnection = null;
+			om.m_senderEndPoint = m_socket.LocalEndPoint as IPEndPoint;
+			om.m_bitLength = msg.LengthBits;
+
+			ReleaseMessage(om);
 		}
 	}
 }

@@ -169,6 +169,14 @@ namespace SGO
             return false;
         }
 
+        public T GetComponent<T>(ComponentFamily family) where T : class
+        {
+            if (GetComponent(family) is T)
+                return (T)GetComponent(family);
+
+            return null;
+        }
+
         /// <summary>
         /// Gets the component of the specified family, if it exists
         /// </summary>

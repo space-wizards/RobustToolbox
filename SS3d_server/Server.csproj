@@ -153,6 +153,7 @@
   <ItemGroup>
     <Content Include="config.xml">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      <SubType>Designer</SubType>
     </Content>
     <Content Include="CraftingRecipes.xml">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>

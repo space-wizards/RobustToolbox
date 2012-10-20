@@ -28,17 +28,17 @@ namespace Lidgren.Network
 			}
 		}
 
-		internal byte[] GetStorage(int minimumCapacity)
+		internal byte[] GetStorage(int minimumCapacityInBytes)
 		{
 			if (m_storagePool == null)
-				return new byte[minimumCapacity];
+				return new byte[minimumCapacityInBytes];
 
 			lock (m_storagePool)
 			{
 				for (int i = 0; i < m_storagePool.Count; i++)
 				{
 					byte[] retval = m_storagePool[i];
-					if (retval != null && retval.Length >= minimumCapacity)
+					if (retval != null && retval.Length >= minimumCapacityInBytes)
 					{
 						m_storagePool[i] = null;
 						m_storagePoolBytes -= retval.Length;
@@ -46,8 +46,8 @@ namespace Lidgren.Network
 					}
 				}
 			}
-			m_statistics.m_bytesAllocated += minimumCapacity;
-			return new byte[minimumCapacity];
+			m_statistics.m_bytesAllocated += minimumCapacityInBytes;
+			return new byte[minimumCapacityInBytes];
 		}
 
 		internal void Recycle(byte[] storage)
@@ -55,19 +55,18 @@ namespace Lidgren.Network
 			if (m_storagePool == null)
 				return;
 
-			int len = storage.Length;
 			lock (m_storagePool)
 			{
-				for (int i = 0; i < m_storagePool.Count; i++)
+				m_storagePoolBytes += storage.Length;
+				int cnt = m_storagePool.Count;
+				for (int i = 0; i < cnt; i++)
 				{
 					if (m_storagePool[i] == null)
 					{
-						m_storagePoolBytes += storage.Length;
 						m_storagePool[i] = storage;
 						return;
 					}
 				}
-				m_storagePoolBytes += storage.Length;
 				m_storagePool.Add(storage);
 			}
 		}
@@ -148,6 +147,43 @@ namespace Lidgren.Network
 			m_incomingMessagesPool.Enqueue(msg);
 		}
 
+		/// <summary>
+		/// Recycles a list of NetIncomingMessage instances for reuse; taking pressure off the garbage collector
+		/// </summary>
+		public void Recycle(IEnumerable<NetIncomingMessage> toRecycle)
+		{
+			if (m_incomingMessagesPool == null)
+				return;
+
+			// first recycle the storage of each message
+			if (m_storagePool != null)
+			{
+				lock (m_storagePool)
+				{
+					foreach (var msg in toRecycle)
+					{
+						var storage = msg.m_data;
+						msg.m_data = null;
+						m_storagePoolBytes += storage.Length;
+						int cnt = m_storagePool.Count;
+						for (int i = 0; i < cnt; i++)
+						{
+							if (m_storagePool[i] == null)
+							{
+								m_storagePool[i] = storage;
+								return;
+							}
+						}
+						msg.Reset();
+						m_storagePool.Add(storage);
+					}
+				}
+			}
+
+			// then recycle the message objects
+			m_incomingMessagesPool.Enqueue(toRecycle);
+		}
+
 		internal void Recycle(NetOutgoingMessage msg)
 		{
 			if (m_outgoingMessagesPool == null)
@@ -178,7 +214,7 @@ namespace Lidgren.Network
 			if (string.IsNullOrEmpty(text))
 			{
 				retval = CreateIncomingMessage(tp, 1);
-				retval.Write("");
+				retval.Write(string.Empty);
 				return retval;
 			}
 

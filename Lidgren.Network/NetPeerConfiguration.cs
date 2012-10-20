@@ -33,6 +33,7 @@ namespace Lidgren.Network
 		private readonly string m_appIdentifier;
 		private string m_networkThreadName;
 		private IPAddress m_localAddress;
+		private IPAddress m_broadcastAddress;
 		internal bool m_acceptIncomingConnections;
 		internal int m_maximumConnections;
 		internal int m_defaultOutgoingMessageCapacity;
@@ -40,6 +41,7 @@ namespace Lidgren.Network
 		internal bool m_useMessageRecycling;
 		internal float m_connectionTimeout;
 		internal bool m_enableUPnP;
+		internal bool m_autoFlushSendQueue;
 
 		internal NetIncomingMessageType m_disabledTypes;
 		internal int m_port;
@@ -75,6 +77,12 @@ namespace Lidgren.Network
 			m_disabledTypes = NetIncomingMessageType.ConnectionApproval | NetIncomingMessageType.UnconnectedData | NetIncomingMessageType.VerboseDebugMessage | NetIncomingMessageType.ConnectionLatencyUpdated;
 			m_networkThreadName = "Lidgren network thread";
 			m_localAddress = IPAddress.Any;
+			m_broadcastAddress = IPAddress.Broadcast;
+			var ip = NetUtility.GetBroadcastAddress();
+			if (ip != null)
+			{
+				m_broadcastAddress = ip;
+			}
 			m_port = 0;
 			m_receiveBufferSize = 131071;
 			m_sendBufferSize = 131071;
@@ -86,6 +94,7 @@ namespace Lidgren.Network
 			m_useMessageRecycling = true;
 			m_resendHandshakeInterval = 3.0f;
 			m_maximumHandshakeAttempts = 5;
+			m_autoFlushSendQueue = true;
 
 			// Maximum transmission unit
 			// Ethernet can take 1500 bytes of payload, so lets stay below that.
@@ -185,13 +194,15 @@ namespace Lidgren.Network
 		}
 
 		/// <summary>
-		/// Gets or sets the maximum amount of bytes to send in a single packet, excluding ip, udp and lidgren headers
+		/// Gets or sets the maximum amount of bytes to send in a single packet, excluding ip, udp and lidgren headers. Cannot be changed once NetPeer is initialized.
 		/// </summary>
 		public int MaximumTransmissionUnit
 		{
 			get { return m_maximumTransmissionUnit; }
 			set
 			{
+				if (m_isLocked)
+					throw new NetException(c_isLockedMessage);
 				if (value < 1 || value >= ((ushort.MaxValue + 1) / 8))
 					throw new NetException("MaximumTransmissionUnit must be between 1 and " + (((ushort.MaxValue + 1) / 8) - 1) + " bytes");
 				m_maximumTransmissionUnit = value;
@@ -259,6 +270,15 @@ namespace Lidgren.Network
 		}
 
 		/// <summary>
+		/// Enables or disables automatic flushing of the send queue. If disabled, you must manully call NetPeer.FlushSendQueue() to flush sent messages to network.
+		/// </summary>
+		public bool AutoFlushSendQueue
+		{
+			get { return m_autoFlushSendQueue; }
+			set { m_autoFlushSendQueue = value; }
+		}
+
+		/// <summary>
 		/// Gets or sets the local ip address to bind to. Defaults to IPAddress.Any. Cannot be changed once NetPeer is initialized.
 		/// </summary>
 		public IPAddress LocalAddress
@@ -269,6 +289,20 @@ namespace Lidgren.Network
 				if (m_isLocked)
 					throw new NetException(c_isLockedMessage);
 				m_localAddress = value;
+			}
+		}
+
+		/// <summary>
+		/// Gets or sets the local broadcast address to use when broadcasting
+		/// </summary>
+		public IPAddress BroadcastAddress
+		{
+			get { return m_broadcastAddress; }
+			set
+			{
+				if (m_isLocked)
+					throw new NetException(c_isLockedMessage);
+				m_broadcastAddress = value;
 			}
 		}
 

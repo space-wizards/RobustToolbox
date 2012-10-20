@@ -2,6 +2,7 @@
 using System.IO;
 using SS13_Shared;
 using ServerInterfaces;
+using SS13_Shared.ServerEnums;
 
 namespace ServerServices.Log
 {
@@ -44,6 +45,7 @@ namespace ServerServices.Log
             singleton.LogPath = _logPath;
             singleton.currentLogLevel = logLevel;
             singleton.Start();
+            LogManager.Log("Logging at level: " + logLevel.ToString());
         }
 
         /// <summary>
@@ -99,14 +101,5 @@ namespace ServerServices.Log
         {
             get { return ServerServiceType.LogManager; }
         }
-    }
-
-    public enum LogLevel
-    {
-        Debug,
-        Information,
-        Warning, 
-        Error,
-        Fatal
     }
 }

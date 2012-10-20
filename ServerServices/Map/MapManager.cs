@@ -15,6 +15,7 @@ using ServerInterfaces.Map;
 using ServerInterfaces.Tiles;
 using System.Linq;
 using System.Reflection;
+using SS13_Shared.ServerEnums;
 
 namespace ServerServices.Map
 {
@@ -364,8 +365,8 @@ namespace ServerServices.Map
         private void SendAtmosUpdatePacket(byte[] records)
         {
             var msg = CreateAtmosUpdatePacket(records);
-            IoCManager.Resolve<ISS13NetServer>().SendToAll(msg, NetDeliveryMethod.Unreliable);
             LogManager.Log("Sending Gas update packet of size " + msg.LengthBytes + " bytes\n", LogLevel.Debug);
+            IoCManager.Resolve<ISS13NetServer>().SendToAll(msg, NetDeliveryMethod.Unreliable);
         }
 
         private void SendAtmosUpdatePacket(List<AtmosRecord> records)
@@ -453,10 +454,16 @@ namespace ServerServices.Map
             g.AttachToTile((toTile as Tile));
         }
 
-        public float GetGasAmount(Point position, GasType type)
+        public double GetGasAmount(Point position, GasType type)
         {
             var t = (Tile)GetTileAt(position.X, position.Y);
-            return (float)t.gasCell.gasses[type];
+            return t.gasCell.gasses[type];
+        }
+
+        public double GetGasTotal(Point position)
+        {
+            var t = (Tile) GetTileAt(position.X, position.Y);
+            return t.gasCell.TotalGas;
         }
         #endregion
 
@@ -543,7 +550,7 @@ namespace ServerServices.Map
         {
             SendTileIndex(connection); //Send index of byte -> str to save space.
 
-            LogManager.Log(connection.RemoteEndpoint.Address + ": Sending map");
+            LogManager.Log(connection.RemoteEndPoint.Address + ": Sending map");
             var mapMessage = CreateMapMessage(MapMessage.SendTileMap);
 
             var mapWidth = GetMapWidth();
@@ -563,7 +570,7 @@ namespace ServerServices.Map
             }
 
             IoCManager.Resolve<ISS13NetServer>().SendMessage(mapMessage, connection, NetDeliveryMethod.ReliableOrdered);
-            LogManager.Log(connection.RemoteEndpoint.Address + ": Sending map finished with message size: " + mapMessage.LengthBytes + " bytes");
+            LogManager.Log(connection.RemoteEndPoint.Address + ": Sending map finished with message size: " + mapMessage.LengthBytes + " bytes");
         }
 
         /// <summary>
@@ -607,6 +614,14 @@ namespace ServerServices.Map
             int zPos = (int)System.Math.Floor(z / tileSpacing);
 
             return new Point(xPos, zPos);
+        }
+
+        public bool IsWorldPositionInBounds(Vector2 pos)
+        {
+            var tpos = GetTileArrayPositionFromWorldPosition(pos);
+            if (tpos.X == -1 && tpos.Y == -1)
+                return false;
+            return true;
         }
 
         public ITile GetTileFromWorldPosition(Vector2 pos)

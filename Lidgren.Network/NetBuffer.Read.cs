@@ -1,73 +1,17 @@
-﻿/* Copyright (c) 2010 Michael Lidgren
-
-Permission is hereby granted, free of charge, to any person obtaining a copy of this software
-and associated documentation files (the "Software"), to deal in the Software without
-restriction, including without limitation the rights to use, copy, modify, merge, publish,
-distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom
-the Software is furnished to do so, subject to the following conditions:
-
-The above copyright notice and this permission notice shall be included in all copies or
-substantial portions of the Software.
-
-THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED,
-INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR
-PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE
-LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT,
-TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE
-USE OR OTHER DEALINGS IN THE SOFTWARE.
-
-*/
-using System;
+﻿using System;
 using System.Collections.Generic;
-using System.Net;
+using System.Text;
 using System.Reflection;
+using System.Net;
 
 namespace Lidgren.Network
 {
-	public partial class NetIncomingMessage
+	/// <summary>
+	/// Base class for NetIncomingMessage and NetOutgoingMessage
+	/// </summary>
+	public partial class NetBuffer
 	{
 		private const string c_readOverflowError = "Trying to read past the buffer size - likely caused by mismatching Write/Reads, different size or order.";
-
-		private static readonly Dictionary<Type, MethodInfo> s_readMethods;
-
-		internal int m_readPosition;
-
-		/// <summary>
-		/// Gets or sets the read position in the buffer, in bits (not bytes)
-		/// </summary>
-		public long Position
-		{
-			get { return (long)m_readPosition; }
-			set { m_readPosition = (int)value; }
-		}
-
-		/// <summary>
-		/// Gets the position in the buffer in bytes; note that the bits of the first returned byte may already have been read - check the Position property to make sure.
-		/// </summary>
-		public int PositionInBytes
-		{
-			get { return (int)(m_readPosition / 8); }
-		}
-
-		static NetIncomingMessage()
-		{
-			Type[] integralTypes = typeof(Byte).Assembly.GetTypes();
-
-			s_readMethods = new Dictionary<Type, MethodInfo>();
-			MethodInfo[] methods = typeof(NetIncomingMessage).GetMethods(BindingFlags.Instance | BindingFlags.Public);
-			foreach (MethodInfo mi in methods)
-			{
-				if (mi.GetParameters().Length == 0 && mi.Name.StartsWith("Read", StringComparison.InvariantCulture))
-				{
-					string n = mi.Name.Substring(4);
-					foreach (Type it in integralTypes)
-					{
-						if (it.Name == n)
-							s_readMethods[it] = mi;
-					}
-				}
-			}
-		}
 
 		/// <summary>
 		/// Reads a boolean value (stored as a single bit) written using Write(bool)
@@ -204,7 +148,7 @@ namespace Lidgren.Network
 		public Int16 ReadInt16()
 		{
 			NetException.Assert(m_bitLength - m_readPosition >= 16, c_readOverflowError);
-			uint retval = NetBitWriter.ReadUInt32(m_data, 16, m_readPosition);
+			uint retval = NetBitWriter.ReadUInt16(m_data, 16, m_readPosition);
 			m_readPosition += 16;
 			return (short)retval;
 		}
@@ -216,7 +160,7 @@ namespace Lidgren.Network
 		public UInt16 ReadUInt16()
 		{
 			NetException.Assert(m_bitLength - m_readPosition >= 16, c_readOverflowError);
-			uint retval = NetBitWriter.ReadUInt32(m_data, 16, m_readPosition);
+			uint retval = NetBitWriter.ReadUInt16(m_data, 16, m_readPosition);
 			m_readPosition += 16;
 			return (ushort)retval;
 		}
@@ -660,9 +604,23 @@ namespace Lidgren.Network
 		}
 
 		/// <summary>
+		/// Reads a value, in local time comparable to NetTime.Now, written using WriteTime() for the connection supplied
+		/// </summary>
+		public double ReadTime(NetConnection connection, bool highPrecision)
+		{
+			double remoteTime = (highPrecision ? ReadDouble() : (double)ReadSingle());
+
+			if (connection == null)
+				throw new NetException("Cannot call ReadTime() on message without a connected sender (ie. unconnected messages)");
+
+			// lets bypass NetConnection.GetLocalTime for speed
+			return remoteTime - connection.m_remoteTimeOffset;
+		}
+
+		/// <summary>
 		/// Reads a stored IPv4 endpoint description
 		/// </summary>
-		public IPEndPoint ReadIPEndpoint()
+		public IPEndPoint ReadIPEndPoint()
 		{
 			byte len = ReadByte();
 			byte[] addressBytes = ReadBytes(len);
@@ -670,21 +628,6 @@ namespace Lidgren.Network
 
 			IPAddress address = new IPAddress(addressBytes);
 			return new IPEndPoint(address, port);
-		}
-
-		/// <summary>
-		/// Reads a value, in local time comparable to NetTime.Now, written using WriteTime()
-		/// Must have a connected sender
-		/// </summary>
-		public double ReadTime(bool highPrecision)
-		{
-			double remoteTime = (highPrecision ? ReadDouble() : (double)ReadSingle());
-
-			if (m_senderConnection == null)
-				throw new NetException("Cannot call ReadTime() on message without a connected sender (ie. unconnected messages)");
-
-			// lets bypass NetConnection.GetLocalTime for speed
-			return remoteTime - m_senderConnection.m_remoteTimeOffset;
 		}
 
 		/// <summary>

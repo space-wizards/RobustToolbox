@@ -10,7 +10,7 @@ namespace ServerInterfaces.Network
     {
         void SendToAll(NetOutgoingMessage message);
         void SendMessage(NetOutgoingMessage message, NetConnection client);
-        void SendToMany(NetOutgoingMessage message, IList<NetConnection> recipients);
+        void SendToMany(NetOutgoingMessage message, List<NetConnection> recipients);
 
         /// <summary>
         /// Send a message to all connections
@@ -57,7 +57,7 @@ namespace ServerInterfaces.Network
         /// <param name="recipients">The list of recipients to send to</param>
         /// <param name="method">How to deliver the message</param>
         /// <param name="sequenceChannel">Sequence channel within the delivery method</param>
-        void SendMessage(NetOutgoingMessage msg, IList<NetConnection> recipients, NetDeliveryMethod method, int sequenceChannel);
+        void SendMessage(NetOutgoingMessage msg, List<NetConnection> recipients, NetDeliveryMethod method, int sequenceChannel);
 
         /// <summary>
         /// Send a message to an unconnected host

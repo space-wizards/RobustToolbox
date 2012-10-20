@@ -9,6 +9,7 @@ using System.Xml.Serialization;
 using SS13_Shared;
 using ServerInterfaces;
 using ServerInterfaces.Configuration;
+using SS13_Shared.ServerEnums;
 
 namespace ServerServices.Configuration
 {
@@ -117,6 +118,12 @@ namespace ServerServices.Configuration
         {
             get { return Configuration.MessageLogging; }
             set { Configuration.MessageLogging = value; }
+        }
+
+        public LogLevel LogLevel
+        {
+            get { return Configuration.LogLevel; }
+            set { Configuration.LogLevel = value; }
         }
 
         public ServerServiceType ServiceType

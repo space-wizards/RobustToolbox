@@ -19,8 +19,7 @@ namespace Lidgren.Network
 			// send message to client
 			NetOutgoingMessage msg = CreateMessage(10 + token.Length + 1);
 			msg.m_messageType = NetMessageType.NatIntroduction;
-			msg.Write(false);
-			msg.WritePadBits();
+			msg.Write((byte)0);
 			msg.Write(hostInternal);
 			msg.Write(hostExternal);
 			msg.Write(token);
@@ -29,8 +28,7 @@ namespace Lidgren.Network
 			// send message to host
 			msg = CreateMessage(10 + token.Length + 1);
 			msg.m_messageType = NetMessageType.NatIntroduction;
-			msg.Write(true);
-			msg.WritePadBits();
+			msg.Write((byte)1);
 			msg.Write(clientInternal);
 			msg.Write(clientExternal);
 			msg.Write(token);
@@ -48,8 +46,8 @@ namespace Lidgren.Network
 			NetIncomingMessage tmp = SetupReadHelperMessage(ptr, 1000); // never mind length
 
 			byte hostByte = tmp.ReadByte();
-			IPEndPoint remoteInternal = tmp.ReadIPEndpoint();
-			IPEndPoint remoteExternal = tmp.ReadIPEndpoint();
+			IPEndPoint remoteInternal = tmp.ReadIPEndPoint();
+			IPEndPoint remoteExternal = tmp.ReadIPEndPoint();
 			string token = tmp.ReadString();
 			bool isHost = (hostByte != 0);
 
@@ -78,7 +76,7 @@ namespace Lidgren.Network
 		/// <summary>
 		/// Called when receiving a NatPunchMessage from a remote endpoint
 		/// </summary>
-		private void HandleNatPunch(int ptr, IPEndPoint senderEndpoint)
+		private void HandleNatPunch(int ptr, IPEndPoint senderEndPoint)
 		{
 			NetIncomingMessage tmp = SetupReadHelperMessage(ptr, 1000); // never mind length
 
@@ -86,20 +84,27 @@ namespace Lidgren.Network
 			if (fromHostByte == 0)
 			{
 				// it's from client
-				LogDebug("NAT punch received from " + senderEndpoint + " we're host, so we ignore this");
+				LogDebug("NAT punch received from " + senderEndPoint + " we're host, so we ignore this");
 				return; // don't alert hosts about nat punch successes; only clients
 			}
 			string token = tmp.ReadString();
 
-			LogDebug("NAT punch received from " + senderEndpoint + " we're client, so we've succeeded - token is " + token);
+			LogDebug("NAT punch received from " + senderEndPoint + " we're client, so we've succeeded - token is " + token);
 
 			//
 			// Release punch success to client; enabling him to Connect() to msg.SenderIPEndPoint if token is ok
 			//
 			NetIncomingMessage punchSuccess = CreateIncomingMessage(NetIncomingMessageType.NatIntroductionSuccess, 10);
-			punchSuccess.m_senderEndpoint = senderEndpoint;
+			punchSuccess.m_senderEndPoint = senderEndPoint;
 			punchSuccess.Write(token);
 			ReleaseMessage(punchSuccess);
+
+			// send a return punch just for good measure
+			var punch = CreateMessage(1);
+			punch.m_messageType = NetMessageType.NatPunchMessage;
+			punch.Write((byte)0);
+			punch.Write(token);
+			m_unsentUnconnectedMessages.Enqueue(new NetTuple<IPEndPoint, NetOutgoingMessage>(senderEndPoint, punch));
 		}
 	}
 }

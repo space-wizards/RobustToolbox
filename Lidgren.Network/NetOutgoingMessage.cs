@@ -26,7 +26,7 @@ namespace Lidgren.Network
 	/// Outgoing message used to send data to remote peer(s)
 	/// </summary>
 	[DebuggerDisplay("LengthBits={LengthBits}")]
-	public sealed partial class NetOutgoingMessage
+	public sealed class NetOutgoingMessage : NetBuffer
 	{
 		internal NetMessageType m_messageType;
 		internal bool m_isSent;
@@ -110,7 +110,6 @@ namespace Lidgren.Network
 			if (m_fragmentGroup != 0)
 				retval += NetFragmentationHelper.GetFragmentationHeaderSize(m_fragmentGroup, m_fragmentGroupTotalBits / 8, m_fragmentChunkByteSize, m_fragmentChunkNumber);
 			retval += this.LengthBytes;
-
 			return retval;
 		}
 

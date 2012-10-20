@@ -30,6 +30,7 @@ namespace ServerInterfaces.GameObject
         event ShutdownEvent OnShutdown;
         bool HasComponent(ComponentFamily family);
         IGameObjectComponent GetComponent(ComponentFamily componentFamily);
+        T GetComponent<T>(ComponentFamily family) where T : class;
         void SendComponentNetworkMessage(IGameObjectComponent component, NetDeliveryMethod method, NetConnection recipient, params object[] messageParams);
 
         void Initialize(bool loaded = false);

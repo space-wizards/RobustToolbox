@@ -3,6 +3,7 @@ using System.Linq;
 
 using Lidgren.Network;
 using SS13_Shared;
+using SS13_Shared.ServerEnums;
 using ServerInterfaces;
 using ServerInterfaces.GameObject;
 using ServerServices.Log;
@@ -64,7 +65,7 @@ namespace ServerServices.Player
         {
             var sessions =
                 from s in playerSessions
-                where s.Value.connectedClient.RemoteEndpoint.Address.ToString().Equals(ip) //This is kinda silly. Comparing strings. Bleh.
+                where s.Value.connectedClient.RemoteEndPoint.Address.ToString().Equals(ip) //This is kinda silly. Comparing strings. Bleh.
                 select s.Value;
 
             return sessions.First(); // Should only be one session per client. Returns that session, in theory.

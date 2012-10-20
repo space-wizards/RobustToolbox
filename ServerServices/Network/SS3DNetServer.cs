@@ -22,7 +22,7 @@ namespace ServerServices.Network
             SendMessage(message, client, NetDeliveryMethod.ReliableOrdered);
         }
 
-        public void SendToMany(NetOutgoingMessage message, IList<NetConnection> recipients)
+        public void SendToMany(NetOutgoingMessage message, List<NetConnection> recipients)
         {
             SendMessage(message, recipients, NetDeliveryMethod.ReliableOrdered, 0);
         }

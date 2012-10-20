@@ -3,29 +3,30 @@
   <PropertyGroup>
     <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
     <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
-    <ProductVersion>9.0.30729</ProductVersion>
+    <ProductVersion>8.0.30703</ProductVersion>
     <SchemaVersion>2.0</SchemaVersion>
     <ProjectGuid>{AE483C29-042E-4226-BA52-D247CE7676DA}</ProjectGuid>
     <OutputType>Library</OutputType>
     <AppDesignerFolder>Properties</AppDesignerFolder>
     <RootNamespace>Lidgren.Network</RootNamespace>
     <AssemblyName>Lidgren.Network</AssemblyName>
-    <TargetFrameworkVersion>v3.5</TargetFrameworkVersion>
+    <TargetFrameworkVersion>v4.0</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
-    <SccProjectName>
-    </SccProjectName>
-    <SccLocalPath>
-    </SccLocalPath>
-    <SccAuxPath>
-    </SccAuxPath>
-    <SccProvider>
-    </SccProvider>
-    <FileUpgradeFlags>
-    </FileUpgradeFlags>
-    <UpgradeBackupLocation>
-    </UpgradeBackupLocation>
-    <OldToolsVersion>3.5</OldToolsVersion>
-    <TargetFrameworkProfile />
+    <PublishUrl>publish\</PublishUrl>
+    <Install>true</Install>
+    <InstallFrom>Disk</InstallFrom>
+    <UpdateEnabled>false</UpdateEnabled>
+    <UpdateMode>Foreground</UpdateMode>
+    <UpdateInterval>7</UpdateInterval>
+    <UpdateIntervalUnits>Days</UpdateIntervalUnits>
+    <UpdatePeriodically>false</UpdatePeriodically>
+    <UpdateRequired>false</UpdateRequired>
+    <MapFileExtensions>true</MapFileExtensions>
+    <ApplicationRevision>0</ApplicationRevision>
+    <ApplicationVersion>1.0.0.%2a</ApplicationVersion>
+    <IsWebBootstrapper>false</IsWebBootstrapper>
+    <UseApplicationTrust>false</UseApplicationTrust>
+    <BootstrapperEnabled>true</BootstrapperEnabled>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
     <DebugSymbols>true</DebugSymbols>
@@ -35,6 +36,7 @@
     <DefineConstants>DEBUG;TRACE</DefineConstants>
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
+    <CodeAnalysisRuleSet>AllRules.ruleset</CodeAnalysisRuleSet>
     <DocumentationFile>bin\Debug\Lidgren.Network.XML</DocumentationFile>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
@@ -44,69 +46,50 @@
     <DefineConstants>TRACE</DefineConstants>
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
-    <DocumentationFile>bin\Release\Lidgren.Network.XML</DocumentationFile>
-  </PropertyGroup>
-  <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'DebugMessaging|AnyCPU'">
-    <OutputPath>bin\DebugMessaging\</OutputPath>
-    <DefineConstants>TRACE</DefineConstants>
-    <DocumentationFile>bin\Release\Lidgren.Network.XML</DocumentationFile>
-    <Optimize>true</Optimize>
-    <DebugType>pdbonly</DebugType>
-    <PlatformTarget>AnyCPU</PlatformTarget>
-    <CodeAnalysisLogFile>bin\Release\Lidgren.Network.dll.CodeAnalysisLog.xml</CodeAnalysisLogFile>
-    <CodeAnalysisUseTypeNameInSuppression>true</CodeAnalysisUseTypeNameInSuppression>
-    <CodeAnalysisModuleSuppressionsFile>GlobalSuppressions.cs</CodeAnalysisModuleSuppressionsFile>
-    <ErrorReport>prompt</ErrorReport>
-    <CodeAnalysisRuleSet>MinimumRecommendedRules.ruleset</CodeAnalysisRuleSet>
-    <CodeAnalysisRuleSetDirectories>;C:\Program Files\Microsoft Visual Studio 10.0\Team Tools\Static Analysis Tools\\Rule Sets</CodeAnalysisRuleSetDirectories>
-    <CodeAnalysisIgnoreBuiltInRuleSets>true</CodeAnalysisIgnoreBuiltInRuleSets>
-    <CodeAnalysisRuleDirectories>;C:\Program Files\Microsoft Visual Studio 10.0\Team Tools\Static Analysis Tools\FxCop\\Rules</CodeAnalysisRuleDirectories>
+    <CodeAnalysisRuleSet>AllRules.ruleset</CodeAnalysisRuleSet>
   </PropertyGroup>
   <ItemGroup>
     <Reference Include="System" />
-    <Reference Include="System.Core">
-      <RequiredTargetFramework>3.5</RequiredTargetFramework>
-    </Reference>
+    <Reference Include="System.Core" />
+    <Reference Include="Microsoft.CSharp" />
     <Reference Include="System.Data" />
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Encryption\INetEncryption.cs" />
+    <Compile Include="Encryption\NetAESEncryption.cs" />
     <Compile Include="Encryption\NetBlockEncryptionBase.cs" />
+    <Compile Include="Encryption\NetDESEncryption.cs" />
+    <Compile Include="Encryption\NetRC2Encryption.cs" />
+    <Compile Include="Encryption\NetTripleDESEncryption.cs" />
     <Compile Include="Encryption\NetXorEncryption.cs" />
     <Compile Include="Encryption\NetXteaEncryption.cs" />
     <Compile Include="NamespaceDoc.cs" />
-    <Compile Include="NetBigInteger.cs">
-      <SubType>Code</SubType>
-    </Compile>
+    <Compile Include="NetBigInteger.cs" />
     <Compile Include="NetBitVector.cs" />
     <Compile Include="NetBitWriter.cs" />
+    <Compile Include="NetBuffer.cs" />
+    <Compile Include="NetBuffer.Peek.cs" />
+    <Compile Include="NetBuffer.Read.cs" />
+    <Compile Include="NetBuffer.Read.Reflection.cs" />
+    <Compile Include="NetBuffer.Write.cs" />
+    <Compile Include="NetBuffer.Write.Reflection.cs" />
     <Compile Include="NetClient.cs" />
     <Compile Include="NetConnection.cs" />
     <Compile Include="NetConnection.Handshake.cs" />
     <Compile Include="NetConnection.Latency.cs" />
+    <Compile Include="NetConnection.MTU.cs" />
     <Compile Include="NetConnectionStatistics.cs" />
     <Compile Include="NetConnectionStatus.cs" />
     <Compile Include="NetConstants.cs" />
     <Compile Include="NetDeliveryMethod.cs" />
-    <Compile Include="Encryption\NetAESEncryption.cs" />
     <Compile Include="NetException.cs" />
-    <Compile Include="Encryption\NetDESEncryption.cs" />
-    <Compile Include="Encryption\NetRC2Encryption.cs" />
-    <Compile Include="NetConnection.MTU.cs" />
     <Compile Include="NetFragmentationHelper.cs" />
-    <Compile Include="Encryption\NetTripleDESEncryption.cs" />
     <Compile Include="NetIncomingMessage.cs" />
-    <Compile Include="NetIncomingMessage.Peek.cs" />
-    <Compile Include="NetIncomingMessage.Read.cs" />
-    <Compile Include="NetIncomingMessage.Read.Reflection.cs" />
-    <Compile Include="NetIncomingMessage.Write.cs" />
     <Compile Include="NetIncomingMessageType.cs" />
     <Compile Include="NetMessageType.cs" />
     <Compile Include="NetNatIntroduction.cs" />
     <Compile Include="NetOutgoingMessage.cs" />
-    <Compile Include="NetOutgoingMessage.Write.cs" />
-    <Compile Include="NetOutgoingMessage.Write.Reflection.cs" />
     <Compile Include="NetPeer.cs" />
     <Compile Include="NetPeer.Discovery.cs" />
     <Compile Include="NetPeer.Fragmentation.cs" />
@@ -139,6 +122,28 @@
     <Compile Include="NetUtility.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="SenderChannelBase.cs" />
+  </ItemGroup>
+  <ItemGroup>
+    <BootstrapperPackage Include=".NETFramework,Version=v4.0">
+      <Visible>False</Visible>
+      <ProductName>Microsoft .NET Framework 4 %28x86 and x64%29</ProductName>
+      <Install>true</Install>
+    </BootstrapperPackage>
+    <BootstrapperPackage Include="Microsoft.Net.Client.3.5">
+      <Visible>False</Visible>
+      <ProductName>.NET Framework 3.5 SP1 Client Profile</ProductName>
+      <Install>false</Install>
+    </BootstrapperPackage>
+    <BootstrapperPackage Include="Microsoft.Net.Framework.3.5.SP1">
+      <Visible>False</Visible>
+      <ProductName>.NET Framework 3.5 SP1</ProductName>
+      <Install>false</Install>
+    </BootstrapperPackage>
+    <BootstrapperPackage Include="Microsoft.Windows.Installer.3.1">
+      <Visible>False</Visible>
+      <ProductName>Windows Installer 3.1</ProductName>
+      <Install>true</Install>
+    </BootstrapperPackage>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 

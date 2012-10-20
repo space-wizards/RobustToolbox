@@ -151,7 +151,7 @@ namespace ClientServices.Network
 
         public string GetServerAddress()
         {
-            return String.Format("{0}:{1}", _netClient.ServerConnection.RemoteEndpoint.Address, _netClient.Port);
+            return String.Format("{0}:{1}", _netClient.ServerConnection.RemoteEndPoint.Address, _netClient.Port);
         }
 
         public GameType GetGameType()

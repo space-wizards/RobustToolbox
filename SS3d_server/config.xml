@@ -9,4 +9,5 @@
   <gameType>Game</gameType>
   <serverMapName>SavedMap</serverMapName>
   <serverWelcomeMessage>Hello and have a great fucking day!</serverWelcomeMessage>
+  <LogLevel>Debug</LogLevel>
 </PersistentConfiguration>

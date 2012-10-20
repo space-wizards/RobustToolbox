@@ -17,6 +17,8 @@ TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR TH
 USE OR OTHER DEALINGS IN THE SOFTWARE.
 
 */
+//#define USE_RELEASE_STATISTICS
+
 using System;
 using System.Collections.Generic;
 using System.Net;
@@ -110,6 +112,18 @@ namespace Lidgren.Network
 			}
 		}
 
+		private void FlushDelayedPackets()
+		{
+			try
+			{
+				bool connectionReset;
+				foreach (DelayedPacket p in m_delayedPackets)
+					ActuallySendPacket(p.Data, p.Data.Length, p.Target, out connectionReset);
+				m_delayedPackets.Clear();
+			}
+			catch { }
+		}
+
 		internal bool ActuallySendPacket(byte[] data, int numBytes, IPEndPoint target, out bool connectionReset)
 		{
 			connectionReset = false;
@@ -117,7 +131,13 @@ namespace Lidgren.Network
 			{
 				// TODO: refactor this check outta here
 				if (target.Address == IPAddress.Broadcast)
+				{
+					// Some networks do not allow 
+					// a global broadcast so we use the BroadcastAddress from the configuration
+					// this can be resolved to a local broadcast addresss e.g 192.168.x.255                    
+					target.Address = m_configuration.BroadcastAddress;
 					m_socket.SetSocketOption(SocketOptionLevel.Socket, SocketOptionName.Broadcast, true);
+				}
 
 				int bytesSent = m_socket.SendTo(data, 0, numBytes, SocketFlags.None, target);
 				if (numBytes != bytesSent)
@@ -161,7 +181,7 @@ namespace Lidgren.Network
 				int bytesSent = m_socket.SendTo(m_sendBuffer, 0, numBytes, SocketFlags.None, target);
 				if (numBytes != bytesSent)
 					LogWarning("Failed to send the full " + numBytes + "; only " + bytesSent + " bytes sent in packet!");
-			
+
 				m_statistics.PacketSent(numBytes, 1);
 			}
 			catch (SocketException sx)
@@ -228,6 +248,9 @@ namespace Lidgren.Network
 		//
 		internal void SendPacket(int numBytes, IPEndPoint target, int numMessages, out bool connectionReset)
 		{
+#if USE_RELEASE_STATISTICS
+			m_statistics.PacketSent(numBytes, numMessages);
+#endif
 			connectionReset = false;
 			try
 			{
@@ -265,6 +288,10 @@ namespace Lidgren.Network
 					m_socket.SetSocketOption(SocketOptionLevel.Socket, SocketOptionName.Broadcast, false);
 			}
 			return;
+		}
+
+		private void FlushDelayedPackets()
+		{
 		}
 
 		private void SendCallBack(IAsyncResult res)

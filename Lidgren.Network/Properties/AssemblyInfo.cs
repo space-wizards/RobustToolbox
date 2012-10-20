@@ -36,5 +36,4 @@ using System.Security;
 [assembly: AssemblyVersion("2012.1.7.0")]
 [assembly: AssemblyFileVersion("2012.1.7.0")]
 [assembly: System.CLSCompliant(true)]
-
 [assembly: AllowPartiallyTrustedCallers]

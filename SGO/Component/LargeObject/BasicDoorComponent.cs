@@ -117,7 +117,7 @@ namespace SGO
 
         private void OpenDoor()
         {
-            var map = IoCManager.Resolve<IMap>();
+            var map = IoCManager.Resolve<IMapManager>();
             Point occupiedTilePos = map.GetTileArrayPositionFromWorldPosition(Owner.Position);
             Tile occupiedTile = map.GetTileAt(occupiedTilePos.X, occupiedTilePos.Y) as Tile;
             Open = true;
@@ -129,7 +129,7 @@ namespace SGO
 
         private void CloseDoor()
         {
-            var map = IoCManager.Resolve<IMap>();
+            var map = IoCManager.Resolve<IMapManager>();
             Point occupiedTilePos = map.GetTileArrayPositionFromWorldPosition(Owner.Position);
             Tile occupiedTile = map.GetTileAt(occupiedTilePos.X, occupiedTilePos.Y) as Tile;
             Open = false;
@@ -142,7 +142,7 @@ namespace SGO
 
         private void SetImpermeable()
         {
-            var map = IoCManager.Resolve<IMap>();
+            var map = IoCManager.Resolve<IMapManager>();
             Point occupiedTilePos = map.GetTileArrayPositionFromWorldPosition(Owner.Position);
             Tile occupiedTile = map.GetTileAt(occupiedTilePos.X, occupiedTilePos.Y) as Tile;
             occupiedTile.gasPermeable = false;
@@ -151,7 +151,7 @@ namespace SGO
 
         private void SetImpermeable(Vector2 position)
         {
-            var map = IoCManager.Resolve<IMap>();
+            var map = IoCManager.Resolve<IMapManager>();
             Point occupiedTilePos = map.GetTileArrayPositionFromWorldPosition(position);
             Tile occupiedTile = map.GetTileAt(occupiedTilePos.X, occupiedTilePos.Y) as Tile;
             occupiedTile.gasPermeable = false;
@@ -160,7 +160,7 @@ namespace SGO
 
         private void SetPermeable(Vector2 position)
         {
-            var map = IoCManager.Resolve<IMap>();
+            var map = IoCManager.Resolve<IMapManager>();
             Point occupiedTilePos = map.GetTileArrayPositionFromWorldPosition(position);
             Tile occupiedTile = map.GetTileAt(occupiedTilePos.X, occupiedTilePos.Y) as Tile;
             occupiedTile.gasPermeable = true;

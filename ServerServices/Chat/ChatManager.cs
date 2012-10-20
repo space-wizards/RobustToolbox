@@ -142,7 +142,7 @@ namespace ServerServices.Chat
             else
                 position = player.Position;
             
-            var map = IoCManager.Resolve<IMap>();
+            var map = IoCManager.Resolve<IMapManager>();
             switch (command)
             {
                 /*case "spawnentity":

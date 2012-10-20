@@ -13,6 +13,7 @@ using ServerInterfaces.Player;
 using ServerInterfaces.GameObject;
 using ServerInterfaces;
 using ServerInterfaces.Map;
+using ServerServices.Map;
 
 namespace ServerServices.Placement
 {
@@ -63,10 +64,13 @@ namespace ServerServices.Placement
 
             Boolean isTile = msg.ReadBoolean();
 
-            TileType tileType = TileType.None;
+            Map.MapManager mapMgr = (Map.MapManager)IoCManager.Resolve<IMapManager>();
+
+            string tileType = null;
+
             string entityTemplateName = "";
 
-            if (isTile) tileType = (TileType)msg.ReadInt32();
+            if (isTile) tileType = mapMgr.GetTileString(msg.ReadByte());
             else entityTemplateName = msg.ReadString();
 
             float xRcv = msg.ReadFloat();
@@ -102,13 +106,13 @@ namespace ServerServices.Placement
                 {
                     IEntity created = _server.EntityManager.SpawnEntityAt(entityTemplateName, new Vector2(xRcv, yRcv));
                     if(created != null)
-                        created.Translate(new Vector2(xRcv, yRcv), rotRcv);
+                        created.Translate(new Vector2(xRcv, yRcv));
                 }
                 else
                 {
-                    Point arrayPos = IoCManager.Resolve<IMap>().GetTileArrayPositionFromWorldPosition(new Vector2(xRcv, yRcv));
-                    IoCManager.Resolve<IMap>().ChangeTile(arrayPos.X, arrayPos.Y, tileType);
-                    IoCManager.Resolve<IMap>().NetworkUpdateTile(arrayPos.X, arrayPos.Y);
+                    Point arrayPos = IoCManager.Resolve<IMapManager>().GetTileArrayPositionFromWorldPosition(new Vector2(xRcv, yRcv));
+                    mapMgr.ChangeTile(arrayPos.X, arrayPos.Y, tileType);
+                    mapMgr.NetworkUpdateTile(arrayPos.X, arrayPos.Y);
                 }
             }
             else //They are not allowed to request this. Send 'PlacementFailed'. TBA
@@ -143,14 +147,15 @@ namespace ServerServices.Placement
         /// <summary>
         ///  Places mob in tile placement mode with given settings.
         /// </summary>
-        public void SendPlacementBegin(IEntity mob, ushort range, TileType tileType, PlacementOption alignOption)
+        public void SendPlacementBeginTile(IEntity mob, ushort range, string tileType, PlacementOption alignOption)
         {
+            var mapMgr = (MapManager)IoCManager.Resolve<IMapManager>();
             var message = IoCManager.Resolve<ISS13NetServer>().CreateMessage();
             message.Write((byte)NetMessage.PlacementManagerMessage);
             message.Write((byte)PlacementManagerMessage.StartPlacement);
             message.Write(range);
             message.Write(true);//Is a tile.
-            message.Write((int)tileType);
+            message.Write(mapMgr.GetTileIndex(tileType));
             message.Write((byte)alignOption);
 
             var reply = mob.SendMessage(this, ComponentFamily.Actor,ComponentMessageType.GetActorConnection);
@@ -184,10 +189,10 @@ namespace ServerServices.Placement
         /// <summary>
         ///  Gives Mob permission to place tile and places it in object placement mode.
         /// </summary>
-        public void StartBuilding(IEntity mob, ushort range, TileType tileType, PlacementOption alignOption)
+        public void StartBuildingTile(IEntity mob, ushort range, string tileType, PlacementOption alignOption)
         {
             AssignBuildPermission(mob, range, tileType, alignOption);
-            SendPlacementBegin(mob, range, tileType, alignOption);
+            SendPlacementBeginTile(mob, range, tileType, alignOption);
         }
 
         /// <summary>
@@ -229,7 +234,7 @@ namespace ServerServices.Placement
         /// <summary>
         ///  Gives a mob a permission to place a given Tile.
         /// </summary>
-        public void AssignBuildPermission(IEntity mob, ushort range, TileType tileType, PlacementOption alignOption)
+        public void AssignBuildPermissionTile(IEntity mob, ushort range, string tileType, PlacementOption alignOption)
         {
             PlacementInformation newPermission = new PlacementInformation();
             newPermission.MobUid = mob.Uid;

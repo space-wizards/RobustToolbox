@@ -4,7 +4,7 @@ using System.Linq;
 using ClientInterfaces;
 using ClientInterfaces.Lighting;
 using ClientInterfaces.Map;
-using ClientServices.Map.Tiles;
+using ClientServices.Tiles;
 using GorgonLibrary;
 using SS13_Shared;
 using SS3D.LightTest;

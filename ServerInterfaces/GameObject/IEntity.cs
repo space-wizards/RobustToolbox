@@ -11,8 +11,8 @@ namespace ServerInterfaces.GameObject
     public interface IEntity
     {
         void Translate(Vector2 toPosition);
-        void Translate(Vector2 toPosition, float toRotation);
         Vector2 Position { get; set; }
+        int Rotation { get; set; }
         int Uid { get; set; }
         string Name { get; set; }
 

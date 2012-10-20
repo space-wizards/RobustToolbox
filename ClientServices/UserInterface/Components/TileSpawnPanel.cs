@@ -7,6 +7,11 @@ using ClientInterfaces.Resource;
 using GorgonLibrary;
 using GorgonLibrary.InputDevices;
 using SS13_Shared;
+using ClientServices.Map;
+using ClientServices.Tiles;
+using System.Linq;
+using System.Reflection;
+using System.Collections.Generic;
 
 namespace ClientServices.UserInterface.Components
 {
@@ -76,9 +81,22 @@ namespace ClientServices.UserInterface.Components
             _tileList.components.Clear();
             _tileList.ResetScrollbars();
 
+            Type type = typeof(Tile);
+            List<Assembly> asses = AppDomain.CurrentDomain.GetAssemblies().ToList();
+            List<Type> types = asses.SelectMany(t => t.GetTypes()).Where(p => type.IsAssignableFrom(p) && !p.IsAbstract).ToList();
+
+            var rawNames = from a in types
+                           select a.Name;
+
+            if (types.Count > 255)
+            {
+                throw new ArgumentOutOfRangeException("types.Count", "Can not load more than 255 types of tiles.");
+            }
+
+
             var typeNames = (searchStr == null) ?
-                Enum.GetNames(typeof(TileType)).Where(x => x.ToLower() != "none").ToList() :
-                Enum.GetNames(typeof(TileType)).Where(x => x.ToLower().Contains(searchStr.ToLower()) && x.ToLower() != "none").ToList();
+                rawNames.ToList() :
+                rawNames.Where(x => x.ToLower().Contains(searchStr.ToLower())).ToList();
         
             if (searchStr != null) _clearLabel.BackgroundColor = Color.LightGray;
 
@@ -107,7 +125,7 @@ namespace ClientServices.UserInterface.Components
             var newObjInfo = new PlacementInformation
                                  {
                                      PlacementOption = PlacementOption.AlignTileAnyFree,
-                                     TileType = (TileType) Enum.Parse(typeof (TileType), sender.Text.Text, true),
+                                     TileType = sender.Text.Text,
                                      Range = 400,
                                      IsTile = true
                                  };

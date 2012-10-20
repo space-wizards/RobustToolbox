@@ -69,7 +69,7 @@
     <Compile Include="IClient.cs" />
     <Compile Include="GameObject\IEntityTemplate.cs" />
     <Compile Include="ISS13Server.cs" />
-    <Compile Include="Map\IMap.cs" />
+    <Compile Include="Map\IMapManager.cs" />
     <Compile Include="MessageLogging\IMessageLogger.cs" />
     <Compile Include="Placement\IPlacementManager.cs" />
     <Compile Include="Player\IPlayerSession.cs" />

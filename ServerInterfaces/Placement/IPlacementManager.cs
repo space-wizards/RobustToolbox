@@ -24,7 +24,7 @@ namespace ServerInterfaces.Placement
         /// <summary>
         ///  Places mob in tile placement mode with given settings.
         /// </summary>
-        void SendPlacementBegin(IEntity mob, ushort range, TileType tileType, PlacementOption alignOption);
+        void SendPlacementBeginTile(IEntity mob, ushort range, string tileType, PlacementOption alignOption);
 
         /// <summary>
         ///  Cancels object placement mode for given mob.
@@ -39,7 +39,7 @@ namespace ServerInterfaces.Placement
         /// <summary>
         ///  Gives Mob permission to place tile and places it in object placement mode.
         /// </summary>
-        void StartBuilding(IEntity mob, ushort range, TileType tileType, PlacementOption alignOption);
+        void StartBuildingTile(IEntity mob, ushort range, string tileType, PlacementOption alignOption);
 
         /// <summary>
         ///  Revokes open placement Permission and cancels object placement mode.
@@ -54,7 +54,7 @@ namespace ServerInterfaces.Placement
         /// <summary>
         ///  Gives a mob a permission to place a given Tile.
         /// </summary>
-        void AssignBuildPermission(IEntity mob, ushort range, TileType tileType, PlacementOption alignOption);
+        void AssignBuildPermissionTile(IEntity mob, ushort range, string tileType, PlacementOption alignOption);
 
         /// <summary>
         ///  Removes all building Permissions for given mob.

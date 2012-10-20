@@ -12,6 +12,7 @@ namespace ClientInterfaces.GOC
         IEntityTemplate Template { get; set; }
         string Name { get; set; }
         int Uid { get; set; }
+        int Rotation { get; set; }
         Vector2D Position { get; set; }
         bool Initialized { get; set; }
         event EventHandler<VectorEventArgs> OnMove;

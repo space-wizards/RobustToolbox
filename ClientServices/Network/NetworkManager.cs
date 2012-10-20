@@ -2,6 +2,9 @@
 using ClientInterfaces.Network;
 using Lidgren.Network;
 using SS13_Shared;
+using ClientInterfaces.Map;
+using ClientServices.Map;
+using SS13.IoC;
 
 namespace ClientServices.Network
 {
@@ -100,16 +103,17 @@ namespace ClientServices.Network
         public void RequestMap()
         {
             var message = _netClient.CreateMessage();
-            message.Write((byte)NetMessage.SendMap);
+            message.Write((byte)NetMessage.RequestMap);
             _netClient.SendMessage(message, NetDeliveryMethod.ReliableUnordered);
         }
 
-        public void SendChangeTile(int x, int z, TileType newTile)
+        public void SendChangeTile(int x, int z, string newTile)
         {
+            var mapMgr = (MapManager)IoCManager.Resolve<IMapManager>();
             var netMessage = _netClient.CreateMessage();
             netMessage.Write(x);
             netMessage.Write(z);
-            netMessage.Write((byte)newTile);
+            netMessage.Write((byte)mapMgr.GetTileIndex(newTile));
             _netClient.SendMessage(netMessage, NetDeliveryMethod.ReliableOrdered);
         }
 

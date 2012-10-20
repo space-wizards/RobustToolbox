@@ -119,7 +119,7 @@ namespace SS13_Server
             }
             else if (Runlevel == RunLevel.Game)
             {
-                IoCManager.Resolve<IMap>().InitMap(_serverMapName);
+                IoCManager.Resolve<IMapManager>().InitMap(_serverMapName);
 
                 EntityManager = new EntityManager(IoCManager.Resolve<ISS13NetServer>());
 
@@ -148,7 +148,6 @@ namespace SS13_Server
             IoCManager.Resolve<ICraftingManager>().Initialize("CraftingRecipes.xml", this);
             IoCManager.Resolve<IPlacementManager>().Initialize(this);
 
-
             StartLobby();
             StartGame();
                 
@@ -173,7 +172,7 @@ namespace SS13_Server
             IoCManager.Resolve<IPlayerManager>().DetachAll();
             EntityManager.Shutdown();
             EntityManager = null;
-            IoCManager.Resolve<IMap>().Shutdown();
+            IoCManager.Resolve<IMapManager>().Shutdown();
             GC.Collect();
         }
 
@@ -283,7 +282,7 @@ namespace SS13_Server
                 if (lastFrame.TotalMilliseconds > framePeriod)
                 {
                     ComponentManager.Singleton.Update(framePeriod);
-                    IoCManager.Resolve<IMap>().UpdateAtmos();
+                    IoCManager.Resolve<IMapManager>().UpdateAtmos();
                     IoCManager.Resolve<IRoundManager>().CurrentGameMode.Update();
                     IoCManager.Resolve<ICraftingManager>().Update();
                 }
@@ -413,7 +412,7 @@ namespace SS13_Server
                 case NetMessage.ForceRestart:
                     Restart();
                     break;
-                case NetMessage.SendMap:
+                case NetMessage.RequestMap:
                     SendMap(msg.SenderConnection);
                     break;
                 case NetMessage.PlayerList:
@@ -429,7 +428,7 @@ namespace SS13_Server
                     IoCManager.Resolve<IPlayerManager>().HandleNetworkMessage(msg);
                     break;
                 case NetMessage.MapMessage:
-                    IoCManager.Resolve<IMap>().HandleNetworkMessage(msg);
+                    IoCManager.Resolve<IMapManager>().HandleNetworkMessage(msg);
                     break;
                 case NetMessage.JobList:
                     HandleJobListRequest(msg);
@@ -610,46 +609,27 @@ namespace SS13_Server
         // The default 30x30 map is 900 bytes, a 100x100 one is 10,000 bytes (10kb).
         public void SendMap(NetConnection connection)
         {
-            LogManager.Log(connection.RemoteEndpoint.Address + ": Sending map");
-            var mapMessage = IoCManager.Resolve<ISS13NetServer>().CreateMessage();
-            mapMessage.Write((byte)NetMessage.SendMap);
-
-            var mapWidth = IoCManager.Resolve<IMap>().GetMapWidth();
-            var mapHeight = IoCManager.Resolve<IMap>().GetMapHeight();
-
-            mapMessage.Write(mapWidth);
-            mapMessage.Write(mapHeight);
-
-            for (var x = 0; x < mapWidth; x++)
-            {
-                for (var y = 0; y < mapHeight; y++)
-                {
-                    var t = IoCManager.Resolve<IMap>().GetTileAt(x, y);
-                    mapMessage.Write((byte)t.tileType);
-                    mapMessage.Write((byte)t.tileState);
-                }
-            }
-
-            IoCManager.Resolve<ISS13NetServer>().SendMessage(mapMessage, connection, NetDeliveryMethod.ReliableOrdered);
-            LogManager.Log(connection.RemoteEndpoint.Address + ": Sending map finished with message size: " + mapMessage.LengthBytes + " bytes");
+            // Send Tiles
+            IoCManager.Resolve<IMapManager>().SendMap(connection);
 
             // Lets also send them all the items and mobs.
             EntityManager.SendEntities(connection);
 
-            //Send atmos state to player
-            IoCManager.Resolve<IMap>().SendAtmosStateTo(connection);
+            // Send atmos state to player
+            IoCManager.Resolve<IMapManager>().SendAtmosStateTo(connection);
 
-            //Todo: Preempt this with the lobby.
+            // Todo: Preempt this with the lobby.
             IoCManager.Resolve<IRoundManager>().SpawnPlayer(IoCManager.Resolve<IPlayerManager>().GetSessionByConnection(connection)); //SPAWN PLAYER
         }
 
-        public void SendChangeTile(int x, int z, TileType newType)
+        public void SendChangeTile(int x, int z, string newType)
         {
             NetOutgoingMessage tileMessage = IoCManager.Resolve<ISS13NetServer>().CreateMessage();
+            var mapMgr = (MapManager)IoCManager.Resolve<IMapManager>();
             //tileMessage.Write((byte)NetMessage.ChangeTile);
             tileMessage.Write(x);
             tileMessage.Write(z);
-            tileMessage.Write((byte)newType);
+            tileMessage.Write(mapMgr.GetTileIndex(newType));
             foreach(var connection in ClientList.Keys)
             {
                 IoCManager.Resolve<ISS13NetServer>().SendMessage(tileMessage, connection, NetDeliveryMethod.ReliableOrdered);
@@ -664,7 +644,7 @@ namespace SS13_Server
 
         public void SaveMap()
         {
-            IoCManager.Resolve<IMap>().SaveMap();
+            IoCManager.Resolve<IMapManager>().SaveMap();
         }
 
         public void SaveEntities()
@@ -672,9 +652,9 @@ namespace SS13_Server
             EntityManager.SaveEntities();
         }
 
-        public IMap GetMap()
+        public IMapManager GetMap()
         {
-            return IoCManager.Resolve<IMap>();
+            return IoCManager.Resolve<IMapManager>();
         }
     }
 }

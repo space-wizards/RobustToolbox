@@ -70,7 +70,7 @@ namespace SGO
         {
             if (tNew != typeof(Wall))
             {
-                Owner.Translate(Owner.Position + new Vector2(0, 64), 90);
+                Owner.Translate(Owner.Position + new Vector2(0, 64));
             }
         }
     }

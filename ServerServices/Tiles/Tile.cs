@@ -5,7 +5,7 @@ using System;
 
 namespace ServerServices.Tiles
 {
-    public class Tile : ITile
+    public abstract class Tile : ITile
     {
         public GasCell gasCell;
         public TileState tileState { get; set; }

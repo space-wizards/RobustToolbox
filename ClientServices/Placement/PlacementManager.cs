@@ -35,7 +35,6 @@ namespace ClientServices.Placement
 
         private const float SnapToRange = 55;
         private Sprite _currentSprite;
-        private float _currentRotation;
         private EntityTemplate _currentTemplate;
         private PlacementInformation _currentPermission;
         private Boolean _validPosition;
@@ -96,7 +95,6 @@ namespace ClientServices.Placement
         public void Clear()
         {
             _currentSprite = null;
-            _currentRotation = 0;
             _currentTemplate = null;
             _currentPermission = null;
             _currentLocScreen = Vector2D.Zero;
@@ -104,6 +102,10 @@ namespace ClientServices.Placement
             if (PlacementCanceled != null && IsActive && !Eraser) PlacementCanceled(this, null);
             IsActive = false;
             Eraser = false;
+        }
+
+        public void Rotate()
+        {
         }
 
         public void HandlePlacement()
@@ -160,7 +162,6 @@ namespace ClientServices.Placement
 
             _currentSprite = sprite;
             _currentTemplate = template;
-            _currentRotation = 0;
 
             IsActive = true;
         }
@@ -191,7 +192,6 @@ namespace ClientServices.Placement
 
             message.Write(_currentLocWorld.X);
             message.Write(_currentLocWorld.Y);
-            message.Write(_currentRotation);
 
             _networkManager.SendMessage(message, NetDeliveryMethod.ReliableUnordered);
         }
@@ -309,7 +309,7 @@ namespace ClientServices.Placement
                         if (!currentMap.IsSolidTile(_currentLocWorld)) _validPosition = false;
 
                     if (_currentPermission.PlacementOption == PlacementOption.AlignTileEmpty || _currentPermission.PlacementOption == PlacementOption.AlignTileEmptyFree)
-                        _validPosition = _validPosition; //TBA.
+                        if (!currentMap.GetTileAt(_currentLocWorld).GetType().IsSubclassOf(typeof(Tiles.Space))) _validPosition = false;
 
                     if (_validPosition)
                     {

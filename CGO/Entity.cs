@@ -42,12 +42,22 @@ namespace CGO
         public delegate void ShutdownEvent(Entity e);
         public event ShutdownEvent OnShutdown;
 
-        /// <summary>
-        /// These are the only real pieces of data that the entity should have -- position and rotation.
-        /// </summary>
         public Vector2D Position { get; set; }
 
-        public float Rotation;
+        public int _rotation = 0;
+        public int Rotation
+        {
+            get
+            {
+                return _rotation;
+            }
+            set
+            {
+                _rotation = value;
+                //Send update
+            }
+        }
+
         #endregion
 
         #region Constructor/Destructor

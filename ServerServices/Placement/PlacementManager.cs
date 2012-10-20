@@ -106,7 +106,7 @@ namespace ServerServices.Placement
                 {
                     IEntity created = _server.EntityManager.SpawnEntityAt(entityTemplateName, new Vector2(xRcv, yRcv));
                     if(created != null)
-                        created.Translate(new Vector2(xRcv, yRcv), rotRcv);
+                        created.Translate(new Vector2(xRcv, yRcv));
                 }
                 else
                 {

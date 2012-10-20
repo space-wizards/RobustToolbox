@@ -1095,6 +1095,9 @@ namespace ClientServices.State.States
                     case MouseButtons.Right:
                         PlacementManager.Clear();
                         return;
+                    case MouseButtons.Middle:
+                        PlacementManager.Rotate();
+                        return;
                 }
             }
 

@@ -49,7 +49,7 @@ namespace ServerServices.Map
         {
             Type type = typeof(Tile);
             List<Assembly> asses = AppDomain.CurrentDomain.GetAssemblies().ToList();
-            List<Type> types = asses.SelectMany(t => t.GetTypes()).Where(p => type.IsAssignableFrom(p)).ToList();
+            List<Type> types = asses.SelectMany(t => t.GetTypes()).Where(p => type.IsAssignableFrom(p) && !p.IsAbstract).ToList();
 
             if (types.Count > 255)
                 throw new ArgumentOutOfRangeException("types.Count", "Can not load more than 255 types of tiles.");

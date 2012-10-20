@@ -7,11 +7,11 @@ namespace ClientInterfaces.Map
 {
     public interface ITile
     {
-        TileType TileType { get; }
         Vector2D Position { get; }
         Point TilePosition { get; }
         bool Visible { get; set; }
-
+        bool ConnectSprite { get; set; }
+        bool Opaque { get; set; }
         void Render(float xTopLeft, float yTopLeft, int tileSpacing, Batch batch);
         void RenderPos(float x, float y, int tileSpacing, int lightSize);
         void RenderPosOffset(float x, float y, int tileSpacing, Vector2D lightPosition);

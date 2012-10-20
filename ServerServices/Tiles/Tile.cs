@@ -1,28 +1,29 @@
 ﻿using ServerInterfaces.Tiles;
 using ServerServices.Tiles.Atmos;
 using SS13_Shared;
+using System;
 
 namespace ServerServices.Tiles
 {
-    public class Tile : ITile
+    public abstract class Tile : ITile
     {
-        public TileType tileType { get; set; }
         public GasCell gasCell;
         public TileState tileState { get; set; }
         public bool gasPermeable = false;
         public bool gasSink = false;
-        private Map.Map map;
+        public bool startWithAtmos = false; //Does this start with  breathable atmosphere? Maybe turn this into a bitfield to define which gases it starts with.
+        private Map.MapManager map;
         private int _x;
         private int _y;
         
         public event TileChangeHandler TileChange; //This event will be used for wall mounted objects and
                                                    //other things that need to react to tiles changing.
-        public void RaiseChangedEvent(TileType type)
+        public void RaiseChangedEvent(Type type)
         {
             if(TileChange != null) TileChange(type);
         }
 
-        public Tile(int x, int y, Map.Map _map)
+        public Tile(int x, int y, Map.MapManager _map)
         {
             tileState = TileState.Healthy;
             map = _map;
@@ -63,7 +64,6 @@ namespace ServerServices.Tiles
         {
             return false;
         }*/ //TODO HOOK ME BACK UP WITH ENTITY SYSTEM
-
-        
+ 
     }
 }

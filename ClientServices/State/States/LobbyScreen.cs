@@ -43,6 +43,9 @@ namespace ClientServices.State.States
             _lobbyChat = new Chatbox(ResourceManager, UserInterfaceManager, KeyBindingManager);
             _lobbyChat.TextSubmitted += LobbyChatTextSubmitted;
 
+            _lobbyChat.Update(0);
+            _lobbyChat.Position = new Point(5, 500);
+
             UserInterfaceManager.AddComponent(_lobbyChat);
 
             _lobbyText = new TextSprite("lobbyText", "", ResourceManager.GetFont("CALIBRI"))

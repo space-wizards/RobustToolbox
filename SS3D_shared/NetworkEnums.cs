@@ -10,10 +10,10 @@
         MaxPlayers,
         PlayerCount,
         PlayerList,
+        RequestMap,
         JobList,
         RequestJob,
         JobSelected,
-        SendMap,
         MapMessage,
         ItemMessage, // It's something the item system needs to handle
         CraftMessage,
@@ -93,7 +93,9 @@
         TurfUpdate = 0,
         TurfClick,
         TurfAddDecal,
-        TurfRemoveDecal
+        TurfRemoveDecal,
+        SendTileIndex,
+        SendTileMap
     }
 
     public enum MobHand

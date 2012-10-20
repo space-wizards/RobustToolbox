@@ -15,9 +15,14 @@ using Lidgren.Network;
 using SS13_Shared;
 using System.Drawing;
 using ClientInterfaces;
-using CGO;using SS13_Shared.GO;
+using CGO;
+using SS13_Shared.GO;
 using SS13.IoC;
+
 using ClientInterfaces.UserInterface;
+using ClientInterfaces.Map;
+using ClientServices.Map;
+using SS13.IoC;
 
 namespace ClientServices.Placement
 {
@@ -30,7 +35,6 @@ namespace ClientServices.Placement
 
         private const float SnapToRange = 55;
         private Sprite _currentSprite;
-        private float _currentRotation;
         private EntityTemplate _currentTemplate;
         private PlacementInformation _currentPermission;
         private Boolean _validPosition;
@@ -79,7 +83,9 @@ namespace ClientServices.Placement
                                          IsTile = msg.ReadBoolean()
                                      };
 
-            if (_currentPermission.IsTile) _currentPermission.TileType = (TileType)msg.ReadInt32();
+            var mapMgr = (MapManager)IoCManager.Resolve<IMapManager>();
+
+            if (_currentPermission.IsTile) _currentPermission.TileType = mapMgr.GetTileString(msg.ReadByte());
             else _currentPermission.EntityType = msg.ReadString();
             _currentPermission.PlacementOption = (PlacementOption)msg.ReadByte();
 
@@ -89,7 +95,6 @@ namespace ClientServices.Placement
         public void Clear()
         {
             _currentSprite = null;
-            _currentRotation = 0;
             _currentTemplate = null;
             _currentPermission = null;
             _currentLocScreen = Vector2D.Zero;
@@ -97,6 +102,10 @@ namespace ClientServices.Placement
             if (PlacementCanceled != null && IsActive && !Eraser) PlacementCanceled(this, null);
             IsActive = false;
             Eraser = false;
+        }
+
+        public void Rotate()
+        {
         }
 
         public void HandlePlacement()
@@ -135,7 +144,7 @@ namespace ClientServices.Placement
             _currentPermission = info;
 
             if (info.IsTile)
-                PreparePlacement(info.TileType);
+                PreparePlacementTile(info.TileType);
             else
                 PreparePlacement(info.EntityType);
         }
@@ -153,12 +162,11 @@ namespace ClientServices.Placement
 
             _currentSprite = sprite;
             _currentTemplate = template;
-            _currentRotation = 0;
 
             IsActive = true;
         }
 
-        private void PreparePlacement(TileType tileType)
+        private void PreparePlacementTile(string tileType)
         {
             _currentSprite = _resourceManager.GetSprite("tilebuildoverlay");
 
@@ -170,6 +178,7 @@ namespace ClientServices.Placement
             if (_currentPermission == null) return;
             if (!_validPosition) return;
 
+            var mapMgr = (MapManager)IoCManager.Resolve<IMapManager>();
             NetOutgoingMessage message = _networkManager.CreateMessage();
 
             message.Write((byte)NetMessage.PlacementManagerMessage);
@@ -178,12 +187,11 @@ namespace ClientServices.Placement
 
             message.Write(_currentPermission.IsTile);
 
-            if (_currentPermission.IsTile) message.Write((int)_currentPermission.TileType);
+            if (_currentPermission.IsTile) message.Write(mapMgr.GetTileIndex(_currentPermission.TileType));
             else message.Write(_currentPermission.EntityType);
 
             message.Write(_currentLocWorld.X);
             message.Write(_currentLocWorld.Y);
-            message.Write(_currentRotation);
 
             _networkManager.SendMessage(message, NetDeliveryMethod.ReliableUnordered);
         }
@@ -213,7 +221,7 @@ namespace ClientServices.Placement
 
                     if (_collisionManager.IsColliding(spriteRectWorld)) _validPosition = false;
 
-                    if (currentMap.IsSolidTile(_currentLocWorld)) _validPosition = false; //HANDLE CURSOR OUTSIDE MAP
+                    if (currentMap.IsSolidTile(_currentLocWorld)) _validPosition = false; //Prevents placement.
 
                     if (_currentPermission.PlacementOption == PlacementOption.AlignNone) //AlignNoneFree does not check for range.
                         if ((_playerManager.ControlledEntity.Position - _currentLocWorld).Length > _currentPermission.Range) _validPosition = false;
@@ -301,7 +309,7 @@ namespace ClientServices.Placement
                         if (!currentMap.IsSolidTile(_currentLocWorld)) _validPosition = false;
 
                     if (_currentPermission.PlacementOption == PlacementOption.AlignTileEmpty || _currentPermission.PlacementOption == PlacementOption.AlignTileEmptyFree)
-                        _validPosition = _validPosition; //TBA.
+                        if (!currentMap.GetTileAt(_currentLocWorld).GetType().IsSubclassOf(typeof(Tiles.Space))) _validPosition = false;
 
                     if (_validPosition)
                     {

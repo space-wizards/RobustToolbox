@@ -89,7 +89,10 @@ namespace ClientServices.State.States
 
         private void ApplyVideoMode()
         {
-            Gorgon.SetMode(Gorgon.Screen.OwnerForm, (int)ConfigurationManager.GetDisplayWidth(), (int)ConfigurationManager.GetDisplayHeight(), Gorgon.DesktopVideoMode.Format, ConfigurationManager.GetFullscreen(), false, false, Gorgon.DesktopVideoMode.RefreshRate);
+            BackBufferFormats bbf = Gorgon.DesktopVideoMode.Format;
+            int refr = Gorgon.DesktopVideoMode.RefreshRate;
+            System.Windows.Forms.Form owner = Gorgon.Screen.OwnerForm;
+            Gorgon.SetMode(owner, (int)ConfigurationManager.GetDisplayWidth(), (int)ConfigurationManager.GetDisplayHeight(), bbf, ConfigurationManager.GetFullscreen(), false, false, refr);
         }
 
         void _reslistbox_ItemSelected(Label item, Listbox sender)

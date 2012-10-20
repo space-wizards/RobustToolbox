@@ -33,6 +33,8 @@ namespace ClientServices.UserInterface.Components
         private readonly StringBuilder _currentInputText = new StringBuilder();
         private readonly Dictionary<ChatChannel, Color> _chatColors;
 
+        private Vector2D Size = new Vector2D();
+
         private Label _textInputLabel;
 
         private string _inputTemp;
@@ -60,7 +62,8 @@ namespace ClientServices.UserInterface.Components
 
             Position = new Point(Gorgon.CurrentClippingViewport.Width - width - 10, 10);
 
-            ClientArea = new Rectangle(Position.X, Position.Y, width, height);
+            Size = new Vector2D(width, height);
+            ClientArea = new Rectangle(Position.X, Position.Y, (int)Size.X, (int)Size.Y);
 
             _textInputLabel = new Label("", "CALIBRI", _resourceManager)
                                 {
@@ -297,6 +300,7 @@ namespace ClientServices.UserInterface.Components
         public override void Update(float frameTime)
         {
             base.Update(frameTime);
+            ClientArea = new Rectangle(Position.X, Position.Y, (int)Size.X, (int)Size.Y);
             _textInputLabel.Update(frameTime);
             foreach (var l in _entries) l.Update(frameTime);
         }

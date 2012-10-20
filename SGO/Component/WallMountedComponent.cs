@@ -8,6 +8,7 @@ using ServerServices.Tiles;
 using SS13.IoC;
 using ServerInterfaces.Map;
 using Lidgren.Network;
+using System;
 
 namespace SGO
 {
@@ -34,7 +35,7 @@ namespace SGO
 
         private void OnMove(Vector2 newPosition, Vector2 oldPosition)
         {
-            var map = IoCManager.Resolve<IMap>();
+            var map = IoCManager.Resolve<IMapManager>();
 
             Point tilePositionOld = map.GetTileArrayPositionFromWorldPosition(oldPosition);
             Tile previousTile = map.GetTileAt(tilePositionOld.X, tilePositionOld.Y) as Tile;
@@ -51,7 +52,7 @@ namespace SGO
 
         public void AttachToTile(Vector2 tilePos)
         {
-            var map = IoCManager.Resolve<IMap>();
+            var map = IoCManager.Resolve<IMapManager>();
 
             Point tilePositionOld = map.GetTileArrayPositionFromWorldPosition(Owner.Position);
             Tile previousTile = map.GetTileAt(tilePositionOld.X, tilePositionOld.Y) as Tile;
@@ -65,11 +66,11 @@ namespace SGO
             linkedTile = currentTile;
         }
 
-        protected virtual void TileChanged(TileType tNew)
+        protected virtual void TileChanged(Type tNew)
         {
-            if (tNew != TileType.Wall)
+            if (tNew != typeof(Wall))
             {
-                Owner.Translate(Owner.Position + new Vector2(0, 64), 90);
+                Owner.Translate(Owner.Position + new Vector2(0, 64));
             }
         }
     }

@@ -41,7 +41,6 @@ namespace SGO
         private readonly IEntityNetworkManager m_entityNetworkManager;
         private bool _initialized;
         private string _name;
-        public float rotation;
 
         public IEntityTemplate Template { get; set; }
 
@@ -49,10 +48,21 @@ namespace SGO
 
         public int Uid { get; set; }
 
-        /// <summary>
-        /// These are the only real pieces of data that the entity should have -- position and rotation.
-        /// </summary>
         public Vector2 Position { get; set; }
+
+        public int _rotation = 0;
+        public int Rotation 
+        { 
+            get 
+            { 
+                return _rotation; 
+            }
+            set 
+            {
+                _rotation = value;
+                //Send update
+            } 
+        }
 
         public string Name
         {
@@ -282,12 +292,6 @@ namespace SGO
         }
 
         #endregion
-
-        public void Translate(Vector2 toPosition, float toRotation)
-        {
-            rotation = toRotation;
-            Translate(toPosition);
-        }
 
         //VARIABLES TO REFACTOR AT A LATER DATE
 

@@ -75,7 +75,7 @@ namespace ServerServices.Placement
 
             float xRcv = msg.ReadFloat();
             float yRcv = msg.ReadFloat();
-            float rotRcv = msg.ReadFloat();
+            //float rotRcv = msg.ReadFloat();
 
             IPlayerSession session = IoCManager.Resolve<IPlayerManager>().GetSessionByConnection(msg.SenderConnection);
             PlacementInformation permission = GetPermission(session.attachedEntity.Uid, alignRcv);

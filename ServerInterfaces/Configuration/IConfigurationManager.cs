@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using SS13_Shared;
+using SS13_Shared.ServerEnums;
 
 namespace ServerInterfaces.Configuration
 {
@@ -15,6 +16,7 @@ namespace ServerInterfaces.Configuration
         string ServerWelcomeMessage { get; set; }
         string AdminPassword { get; set; }
         string LogPath { get; set; }
+        LogLevel LogLevel { get; set; }
         int Version { get; }
         int Port { get; set; }
         int ServerMaxPlayers { get; set; }

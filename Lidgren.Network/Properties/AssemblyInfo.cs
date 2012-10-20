@@ -1,6 +1,7 @@
 ﻿using System.Reflection;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
+using System.Security;
 
 // General Information about an assembly is controlled through the following 
 // set of attributes. Change these attribute values to modify the information
@@ -8,9 +9,9 @@ using System.Runtime.InteropServices;
 [assembly: AssemblyTitle("Lidgren.Network")]
 [assembly: AssemblyDescription("")]
 [assembly: AssemblyConfiguration("")]
-[assembly: AssemblyCompany("Microsoft")]
+[assembly: AssemblyCompany("")]
 [assembly: AssemblyProduct("Lidgren.Network")]
-[assembly: AssemblyCopyright("Copyright © Microsoft 2010")]
+[assembly: AssemblyCopyright("Copyright ©  2012")]
 [assembly: AssemblyTrademark("")]
 [assembly: AssemblyCulture("")]
 
@@ -20,7 +21,7 @@ using System.Runtime.InteropServices;
 [assembly: ComVisible(false)]
 
 // The following GUID is for the ID of the typelib if this project is exposed to COM
-[assembly: Guid("c4914374-a2fb-4e56-bf94-60d4b81c10a1")]
+[assembly: Guid("78f2a988-46e1-4fc4-b7b4-dd2cbe46da6a")]
 
 // Version information for an assembly consists of the following four values:
 //
@@ -32,6 +33,8 @@ using System.Runtime.InteropServices;
 // You can specify all the values or you can default the Build and Revision Numbers 
 // by using the '*' as shown below:
 // [assembly: AssemblyVersion("1.0.*")]
-[assembly: AssemblyVersion("2011.3.12.0")]
-[assembly: AssemblyFileVersion("2011.3.12.0")]
+[assembly: AssemblyVersion("2012.1.7.0")]
+[assembly: AssemblyFileVersion("2012.1.7.0")]
 [assembly: System.CLSCompliant(true)]
+
+[assembly: AllowPartiallyTrustedCallers]

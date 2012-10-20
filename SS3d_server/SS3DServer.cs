@@ -80,7 +80,7 @@ namespace SS13_Server
             _singleton = this;
 
             IoCManager.Resolve<IConfigurationManager>().Initialize("./config.xml");
-            LogManager.Initialize(IoCManager.Resolve<IConfigurationManager>().LogPath);
+            LogManager.Initialize(IoCManager.Resolve<IConfigurationManager>().LogPath, IoCManager.Resolve<IConfigurationManager>().LogLevel);
         }
         #endregion
 
@@ -355,7 +355,7 @@ namespace SS13_Server
         public void HandleStatusChanged(NetIncomingMessage msg)
         {
             var sender = msg.SenderConnection;
-            var senderIp = sender.RemoteEndpoint.Address.ToString();
+            var senderIp = sender.RemoteEndPoint.Address.ToString();
             LogManager.Log(senderIp + ": Status change");
 
             switch (sender.Status)
@@ -367,7 +367,7 @@ namespace SS13_Server
                         LogManager.Log(senderIp + ": Already connected", LogLevel.Error);
                         return;
                     }
-                    if (!BanlistMgr.Singleton.IsBanned(sender.RemoteEndpoint.Address.ToString()))
+                    if (!BanlistMgr.Singleton.IsBanned(sender.RemoteEndPoint.Address.ToString()))
                     {
                         HandleConnectionApproval(sender);
                         IoCManager.Resolve<IPlayerManager>().NewSession(sender); // TODO move this to somewhere that makes more sense.
@@ -483,11 +483,11 @@ namespace SS13_Server
                     var password = messageBody.ReadString();
                     if (password == IoCManager.Resolve<IConfigurationManager>().AdminPassword)
                     {
-                        LogManager.Log("Admin login: " + messageBody.SenderConnection.RemoteEndpoint.Address);
+                        LogManager.Log("Admin login: " + messageBody.SenderConnection.RemoteEndPoint.Address);
                         IoCManager.Resolve<IPlayerManager>().GetSessionByConnection(messageBody.SenderConnection).adminPermissions.isAdmin = true;
                     }
                     else
-                        LogManager.Log("Failed Admin login: " + messageBody.SenderConnection.RemoteEndpoint.Address + " -> ' " + password + " '");
+                        LogManager.Log("Failed Admin login: " + messageBody.SenderConnection.RemoteEndPoint.Address + " -> ' " + password + " '");
                     break;
                 case NetMessage.RequestAdminPlayerlist:
                     if (IoCManager.Resolve<IPlayerManager>().GetSessionByConnection(messageBody.SenderConnection).adminPermissions.isAdmin)
@@ -500,7 +500,7 @@ namespace SS13_Server
                             adminPlayerListMessage.Write(plrSession.name);
                             adminPlayerListMessage.Write((byte)plrSession.status);
                             adminPlayerListMessage.Write(plrSession.assignedJob.Name);
-                            adminPlayerListMessage.Write(plrSession.connectedClient.RemoteEndpoint.Address.ToString());
+                            adminPlayerListMessage.Write(plrSession.connectedClient.RemoteEndPoint.Address.ToString());
                             adminPlayerListMessage.Write(plrSession.adminPermissions.isAdmin);
                         }
                         IoCManager.Resolve<ISS13NetServer>().SendMessage(adminPlayerListMessage, messageBody.SenderConnection, NetDeliveryMethod.ReliableOrdered);
@@ -633,7 +633,7 @@ namespace SS13_Server
             foreach(var connection in ClientList.Keys)
             {
                 IoCManager.Resolve<ISS13NetServer>().SendMessage(tileMessage, connection, NetDeliveryMethod.ReliableOrdered);
-                LogManager.Log(connection.RemoteEndpoint.Address + ": Tile Change Being Sent", LogLevel.Debug);
+                LogManager.Log(connection.RemoteEndPoint.Address + ": Tile Change Being Sent", LogLevel.Debug);
             }
         }
 

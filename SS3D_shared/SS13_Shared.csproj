@@ -131,6 +131,7 @@
     <Compile Include="KeyFunctions.cs" />
     <Compile Include="PostProcessingEffects.cs" />
     <Compile Include="ProfilerEnums.cs" />
+    <Compile Include="ServerEnums\LogLevel.cs" />
     <Compile Include="ServerEnums\RunLevel.cs" />
     <Compile Include="ServicesEnum.cs" />
     <Compile Include="SessionStatusEnum.cs" />

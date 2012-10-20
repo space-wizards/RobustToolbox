@@ -38,11 +38,26 @@ namespace SGO
             _lastUpdate = DateTime.Now;
             var map = IoCManager.Resolve<IMapManager>();
 
-            if(map.GetGasAmount(map.GetTileArrayPositionFromWorldPosition(Owner.Position), GasType.Toxin) > 10)
+            var statuscomp = Owner.GetComponent<StatusEffectComp>(ComponentFamily.StatusEffects);
+            if(statuscomp == null)
+                return;
+
+            if(!map.IsWorldPositionInBounds(Owner.Position))
             {
-                //ApplyDamage(null, 3, DamageType.Toxin, BodyPart.Torso);
-                var statuscomp = (StatusEffectComp)Owner.GetComponent(ComponentFamily.StatusEffects);
-                statuscomp.AddEffect("ToxinInhalation", 20);
+                statuscomp.AddEffect("Hypoxia", 5); //Out of map bounds, you is asphyxiatin to death bitch
+            }
+            else
+            {
+                var tilePos = map.GetTileArrayPositionFromWorldPosition(Owner.Position);
+                if (map.GetGasAmount(tilePos, GasType.Toxin) > 10) //too much toxin in the air, bro
+                {
+                    statuscomp.AddEffect("ToxinInhalation", 20);
+                }
+                if(map.GetGasTotal(tilePos) < 35 //Less than 35 pressure units, whatever the fuck that is
+                    || (map.GetGasAmount(tilePos, GasType.Oxygen) / map.GetGasTotal(tilePos)) < 0.05f) //less than 5% oxygen
+                    //Not enough oxygen in the mixture, or pressure is too low.
+                    statuscomp.AddEffect("Hypoxia", 5);
+
             }
         }
 

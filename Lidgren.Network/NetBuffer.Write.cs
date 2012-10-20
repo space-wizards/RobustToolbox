@@ -1,4 +1,6 @@
-﻿/* Copyright (c) 2010 Michael Lidgren
+﻿//#define UNSAFE
+//#define BIGENDIAN
+/* Copyright (c) 2010 Michael Lidgren
 
 Permission is hereby granted, free of charge, to any person obtaining a copy of this software
 and associated documentation files (the "Software"), to deal in the Software without
@@ -25,64 +27,28 @@ using System.Runtime.InteropServices;
 
 namespace Lidgren.Network
 {
-	public sealed partial class NetOutgoingMessage
+	/// <summary>
+	/// Utility struct for writing Singles
+	/// </summary>
+	[StructLayout(LayoutKind.Explicit)]
+	public struct SingleUIntUnion
 	{
-		private const int c_overAllocateAmount = 4;
-
-		private static Dictionary<Type, MethodInfo> s_writeMethods;
-
-		internal byte[] m_data;
-		internal int m_bitLength;
-
-		static NetOutgoingMessage()
-		{
-			s_writeMethods = new Dictionary<Type, MethodInfo>();
-			MethodInfo[] methods = typeof(NetOutgoingMessage).GetMethods(BindingFlags.Instance | BindingFlags.Public);
-			foreach (MethodInfo mi in methods)
-			{
-				if (mi.Name.Equals("Write", StringComparison.InvariantCulture))
-				{
-					ParameterInfo[] pis = mi.GetParameters();
-					if (pis.Length == 1)
-						s_writeMethods[pis[0].ParameterType] = mi;
-				}
-			}
-		}
+		/// <summary>
+		/// Value as a 32 bit float
+		/// </summary>
+		[FieldOffset(0)]
+		public float SingleValue;
 
 		/// <summary>
-		/// Returns the internal data buffer, don't modify
+		/// Value as an unsigned 32 bit integer
 		/// </summary>
-		public byte[] PeekDataBuffer()
-		{
-			return m_data;
-		}
+		[FieldOffset(0)]
+		[CLSCompliant(false)]
+		public uint UIntValue;
+	}
 
-		/// <summary>
-		/// Gets or sets the length of the buffer in bytes
-		/// </summary>
-		public int LengthBytes
-		{
-			get { return ((m_bitLength + 7) >> 3); }
-			set
-			{
-				m_bitLength = value * 8;
-				InternalEnsureBufferSize(m_bitLength);
-			}
-		}
-
-		/// <summary>
-		/// Gets or sets the length of the buffer in bits
-		/// </summary>
-		public int LengthBits
-		{
-			get { return m_bitLength; }
-			set
-			{
-				m_bitLength = value;
-				InternalEnsureBufferSize(m_bitLength);
-			}
-		}
-
+	public partial class NetBuffer
+	{
 		/// <summary>
 		/// Ensures the buffer can hold this number of bits
 		/// </summary>
@@ -102,7 +68,7 @@ namespace Lidgren.Network
 		/// <summary>
 		/// Ensures the buffer can hold this number of bits
 		/// </summary>
-		public void InternalEnsureBufferSize(int numberOfBits)
+		internal void InternalEnsureBufferSize(int numberOfBits)
 		{
 			int byteLen = ((numberOfBits + 7) >> 3);
 			if (m_data == null)
@@ -191,7 +157,7 @@ namespace Lidgren.Network
 		public void Write(UInt16 source)
 		{
 			EnsureBufferSize(m_bitLength + 16);
-			NetBitWriter.WriteUInt32((uint)source, 16, m_data, m_bitLength);
+			NetBitWriter.WriteUInt16(source, 16, m_data, m_bitLength);
 			m_bitLength += 16;
 		}
 
@@ -203,7 +169,7 @@ namespace Lidgren.Network
 		{
 			NetException.Assert((numberOfBits > 0 && numberOfBits <= 16), "Write(ushort, numberOfBits) can only write between 1 and 16 bits");
 			EnsureBufferSize(m_bitLength + numberOfBits);
-			NetBitWriter.WriteUInt32((uint)source, numberOfBits, m_data, m_bitLength);
+			NetBitWriter.WriteUInt16(source, numberOfBits, m_data, m_bitLength);
 			m_bitLength += numberOfBits;
 		}
 
@@ -213,7 +179,7 @@ namespace Lidgren.Network
 		public void Write(Int16 source)
 		{
 			EnsureBufferSize(m_bitLength + 16);
-			NetBitWriter.WriteUInt32((uint)source, 16, m_data, m_bitLength);
+			NetBitWriter.WriteUInt16((ushort)source, 16, m_data, m_bitLength);
 			m_bitLength += 16;
 		}
 
@@ -592,7 +558,19 @@ namespace Lidgren.Network
 		}
 
 		/// <summary>
-		/// Writes the local time to a message; readable (and convertable to local time) by the remote host using ReadTime()
+		/// Writes the current local time to a message; readable (and convertable to local time) by the remote host using ReadTime()
+		/// </summary>
+		public void WriteTime(bool highPrecision)
+		{
+			double localTime = NetTime.Now;
+			if (highPrecision)
+				Write(localTime);
+			else
+				Write((float)localTime);
+		}
+
+		/// <summary>
+		/// Writes a local timestamp to a message; readable (and convertable to local time) by the remote host using ReadTime()
 		/// </summary>
 		public void WriteTime(double localTime, bool highPrecision)
 		{

@@ -83,7 +83,7 @@ namespace ClientServices.UserInterface.Components
 
             Type type = typeof(Tile);
             List<Assembly> asses = AppDomain.CurrentDomain.GetAssemblies().ToList();
-            List<Type> types = asses.SelectMany(t => t.GetTypes()).Where(p => type.IsAssignableFrom(p)).ToList();
+            List<Type> types = asses.SelectMany(t => t.GetTypes()).Where(p => type.IsAssignableFrom(p) && !p.IsAbstract).ToList();
 
             var rawNames = from a in types
                            select a.Name;
@@ -95,8 +95,8 @@ namespace ClientServices.UserInterface.Components
 
 
             var typeNames = (searchStr == null) ?
-                rawNames.Where(x => x.ToLower() != "tile").ToList() :
-                rawNames.Where(x => x.ToLower().Contains(searchStr.ToLower()) && x.ToLower() != "tile").ToList();
+                rawNames.ToList() :
+                rawNames.Where(x => x.ToLower().Contains(searchStr.ToLower())).ToList();
         
             if (searchStr != null) _clearLabel.BackgroundColor = Color.LightGray;
 

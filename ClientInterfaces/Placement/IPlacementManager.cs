@@ -20,6 +20,7 @@ namespace ClientInterfaces.Placement
         void Render();
         void Clear();
         void ToggleEraser();
+        void Rotate();
 
         void Update(Vector2D mouseScreen, IMapManager currentMap);
         void HandleNetMessage(NetIncomingMessage msg);

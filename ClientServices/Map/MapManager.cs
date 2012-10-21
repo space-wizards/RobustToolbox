@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Drawing;
 using System.IO.Compression;
+using BKSystem.IO;
 using ClientInterfaces.Collision;
 using ClientInterfaces.Lighting;
 using ClientInterfaces.Map;
@@ -245,22 +246,48 @@ namespace ClientServices.Map
             {
                 _tileArray[record.X][record.Y].SetAtmosDisplay(record.Display);
             }*/
-            var length = message.ReadInt32();
-            var records = new byte[length];
-            message.ReadBytes(records, 0, length);
+            //Length of records in bits
+            var lengthBits = message.ReadInt32();
+            var lengthBytes = message.ReadInt32();
+            var records = new byte[lengthBytes];
+            message.ReadBytes(records, 0, lengthBytes);
             var decompressed = Decompress(records);
+            var recordStream = new BitStream(lengthBits);
+            var bitsWritten = 0;
+            for (int i = 0; i < decompressed.Length; i++ )
+            {
+                var toWrite = 8;
+                if (toWrite > lengthBits - bitsWritten)
+                    toWrite = lengthBits - bitsWritten;
+                recordStream.Write(decompressed[i], 0, toWrite);
+                bitsWritten += toWrite;
+            }
 
-            var r = 0;
+            int typesCount = Enum.GetValues(typeof(GasType)).Length;
+            recordStream.Position = 0;
+            int types = 0;
+            byte amount = 0;
             for(var x = 0;x < _mapWidth;x++)
             {
                 for(var y = 0;y<_mapHeight;y++)
                 {
-                    _tileArray[y][x].SetAtmosDisplay(decompressed[r]);
+                    recordStream.Read(out types, 0, typesCount);
+
+                    for (int i = typesCount - 1; i >= 0; i--)
+                    {
+                        if((types & (1 << i)) == (1 << i))
+                        {
+                            recordStream.Read(out amount, 0, 4);
+                            _tileArray[y][x].SetAtmosDisplay((GasType)i, amount);
+                        }
+                    }
+
+                    /*        _tileArray[y][x].SetAtmosDisplay(decompressed[r]);
                     r++;
                     _tileArray[y][x].SetAtmosDisplay(decompressed[r]);
                     r++;
                     _tileArray[y][x].SetAtmosDisplay(decompressed[r]);
-                    r++;
+                    r++;*/
                 }
             }
 

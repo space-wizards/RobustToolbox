@@ -156,14 +156,15 @@ namespace ClientServices.Tiles
             //FIXTHIS
         }
 
-        public virtual void SetAtmosDisplay(byte displayByte)
+        public virtual void SetAtmosDisplay(GasType type, byte amount)
         {
-            int _type = displayByte >> 4;
-            GasType type = (GasType)_type;
-            int amount = displayByte & 15;
-
             if (gasAmounts.Keys.Contains(type))
-                gasAmounts[type] = amount;
+            {
+                if (amount == 0)
+                    gasAmounts.Remove(type);
+                else
+                    gasAmounts[type] = amount;
+            }
             else
                 gasAmounts.Add(type, amount);
         }

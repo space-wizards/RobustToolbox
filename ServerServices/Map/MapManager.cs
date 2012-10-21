@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.IO;
 using System.IO.Compression;
+using BKSystem.IO;
 using ServerServices.Tiles;
 using Lidgren.Network;
 
@@ -308,25 +309,21 @@ namespace ServerServices.Map
                 }
 
             //Prepare gas display message
-            if ((DateTime.Now - lastAtmosDisplayPush).TotalMilliseconds > 333)
+            if ((DateTime.Now - lastAtmosDisplayPush).TotalMilliseconds > 1000)
             {
                 bool sendUpdate = false;
-                //List<AtmosRecord> records = new List<AtmosRecord>();
-                byte[] records = new byte[mapWidth * mapHeight * 3];
+                int numberOfGasTypes = Enum.GetValues(typeof(GasType)).Length;
+                //byte[] records = new byte[mapWidth * mapHeight * 3];
+                var records = new BitStream(mapHeight*mapWidth*numberOfGasTypes);
+                int displayBitsWritten = 0;
                 int n = 0;
                 for (int x = 0; x < mapWidth; x++)
                     for (int y = 0; y < mapHeight; y++)
                     {
-                        byte[] displayBytes = tileArray[x, y].gasCell.PackDisplayBytes();
-                        if (displayBytes.Length == 0) //if there are no changes, continue.
-                            continue;
-                        sendUpdate = true;
-                        foreach (byte displayByte in displayBytes)
-                        {
-                            //records.Add(new AtmosRecord(x, y, displayByte));
-                            records[n] = displayByte;
-                            n++;
-                        }
+                        //byte[] displayBytes = tileArray[x, y].gasCell.PackDisplayBytes();
+                        displayBitsWritten = tileArray[x, y].gasCell.PackDisplayBytes(records);
+                        if(displayBitsWritten > numberOfGasTypes)
+                            sendUpdate = true;
                     }
 
                 if (sendUpdate)
@@ -340,8 +337,22 @@ namespace ServerServices.Map
         /// <summary>
         /// Compresses byte array to new byte array.
         /// </summary>
-        private byte[] Compress(byte[] raw)
+        private byte[] Compress(BitStream rawStream)
         {
+            rawStream.Position = 0;
+            byte[] raw = new byte[rawStream.Length8];
+            for (int i = 0; i < rawStream.Length8; i++)
+            {
+                rawStream.Read(out raw[i]);
+            }
+            int byteLength = (int)rawStream.Length8;
+            if (byteLength == 0)
+            {
+                LogManager.Log("Gas data unchanged. Not sending that shit.", LogLevel.Debug);
+                return null;
+            }
+
+            LogManager.Log(byteLength + " bytes of gas data to send before compression.", LogLevel.Debug);
             using (MemoryStream memory = new MemoryStream())
             {
                 using (GZipStream gzip = new GZipStream(memory, CompressionMode.Compress, true))
@@ -352,19 +363,24 @@ namespace ServerServices.Map
             }
         }
 
-        private NetOutgoingMessage CreateAtmosUpdatePacket(byte[] records)
+        private NetOutgoingMessage CreateAtmosUpdatePacket(BitStream records)
         {
             var recs = Compress(records);
+            if (recs == null)
+                return null;
             var msg = IoCManager.Resolve<ISS13NetServer>().CreateMessage();
             msg.Write((byte)NetMessage.AtmosDisplayUpdate);
+            msg.Write((int)records.Length);
             msg.Write(recs.Length);
             msg.Write(recs);
             return msg;
         }
 
-        private void SendAtmosUpdatePacket(byte[] records)
+        private void SendAtmosUpdatePacket(BitStream records)
         {
             var msg = CreateAtmosUpdatePacket(records);
+            if (msg == null)
+                return;
             LogManager.Log("Sending Gas update packet of size " + msg.LengthBytes + " bytes\n", LogLevel.Debug);
             IoCManager.Resolve<ISS13NetServer>().SendToAll(msg, NetDeliveryMethod.Unreliable);
         }
@@ -421,22 +437,19 @@ namespace ServerServices.Map
             }
             IoCManager.Resolve<ISS13NetServer>().SendMessage(message, client, NetDeliveryMethod.Unreliable);// Gas updates aren't a big deal.
             //LogManager.Log("Sending Gas update to " + SS13Server.Singleton.playerManager.GetSessionByConnection(client).name + "\n", LogLevel.Debug);*/
-            byte[] records = new byte[mapWidth * mapHeight * 3];
-            int n = 0;
+        
+            int numberOfGasTypes = Enum.GetValues(typeof(GasType)).Length;
+            var records = new BitStream(mapHeight * mapWidth * numberOfGasTypes);
+            int displayBitsWritten = 0;
             for (int x = 0; x < mapWidth; x++)
                 for (int y = 0; y < mapHeight; y++)
                 {
-                    byte[] displayBytes = tileArray[x, y].gasCell.PackDisplayBytes();
-                    if (displayBytes.Length == 0) //if there are no changes, continue.
-                        continue;
-                    foreach (byte displayByte in displayBytes)
-                    {
-                        //records.Add(new AtmosRecord(x, y, displayByte));
-                        records[n] = displayByte;
-                        n++;
-                    }
+                    //byte[] displayBytes = tileArray[x, y].gasCell.PackDisplayBytes();
+                    displayBitsWritten = tileArray[x, y].gasCell.PackDisplayBytes(records, true);
                 }
             var msg = CreateAtmosUpdatePacket(records);
+            if (msg == null)
+                return;
             IoCManager.Resolve<ISS13NetServer>().SendMessage(msg, client, NetDeliveryMethod.ReliableUnordered);
 
         }

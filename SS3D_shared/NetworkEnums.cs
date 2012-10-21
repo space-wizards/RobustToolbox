@@ -1,4 +1,6 @@
-﻿namespace SS13_Shared
+﻿using System;
+
+namespace SS13_Shared
 {
     public enum NetMessage
     {
@@ -154,12 +156,12 @@
 
     public enum GasType
     {
-        Oxygen = 1, // MUST BE 1 FOR NETWORKING
-        Toxin = 2,
-        Nitrogen = 3,
-        CO2 = 4,
-        WVapor = 5,
-        HighVel = 15
+        Oxygen = 0, // MUST BE 1 FOR NETWORKING
+        Toxin = 1,
+        Nitrogen = 2,
+        CO2 = 3,
+        WVapor = 4,
+        HighVel = 5
     }
 
     public enum DecalType

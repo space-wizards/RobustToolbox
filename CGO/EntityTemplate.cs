@@ -133,20 +133,63 @@ namespace CGO
                 //Parse component parameters
                 foreach (var tComponentParameter in tComponentParameters)
                 {
-                    Type paramtype = TranslateType(tComponentParameter.Attribute("type").Value);
+                    if(tComponentParameter.Attribute("type").Value == "" || tComponentParameter.Attribute("name").Value == "")
+                        throw new ArgumentException("Component Parameter name or type not set.");
 
-                    if (paramtype == null)
-                        break; //TODO THROW ERROR
+                    //Get the specified type
+                    Type paramType = TranslateType(tComponentParameter.Attribute("type").Value);
 
-                    _parameters[componentname].Add(new ComponentParameter(tComponentParameter.Attribute("name").Value, 
-                                                                         paramtype, 
-                                                                         tComponentParameter.Attribute("value").Value)
-                                                 );
+                    //Get the raw value
+                    string paramRawValue = tComponentParameter.Attribute("value").Value;
+
+                    //Validate
+                    var paramName = tComponentParameter.Attribute("name").Value;
+                    if (paramType == null)
+                        throw new ArgumentException("Invalid parameter type specified.");
+                    if (paramName == "")
+                        throw new ArgumentException("Invalid parameter name specified.");
+
+                    //Convert the raw value to the proper type
+                    object paramValue;// = Convert.ChangeType(tComponentParameter.Attribute("value").Value, paramType);
+                    if (paramType == typeof(int))
+                    {
+                        int pval;
+                        if(!int.TryParse(paramRawValue, out pval))
+                            throw new ArgumentException("Could not parse parameter " + paramName + " as int. Value: " + paramRawValue);
+                        paramValue = pval;
+                    }
+                    else if(paramType == typeof(float))
+                    {
+                        float pval;
+                        if(!float.TryParse(paramRawValue, System.Globalization.NumberStyles.Float, System.Globalization.CultureInfo.InvariantCulture,out pval))
+                            throw new ArgumentException("Could not parse parameter " + paramName + " as float. Value: " + paramRawValue);
+                        paramValue = pval;
+                    }
+                    else if(paramType == typeof(bool))
+                    {
+                        bool pval;
+                        if (!bool.TryParse(paramRawValue, out pval))
+                            throw new ArgumentException("Could not parse parameter " + paramName + " as bool. Value: " + paramRawValue);
+                        paramValue = pval;
+                    }
+                    else if(paramType == typeof(string))
+                    {
+                        paramValue = paramRawValue;
+                    }
+                    else
+                    {
+                        throw new ArgumentException("Could not parse parameter " + paramName + ". Type not recognized. Value: " + paramRawValue);
+                    }
+
+
+                    var cparamType = typeof (ComponentParameter<>).MakeGenericType(paramType);
+                    var cparam = (ComponentParameter)Activator.CreateInstance(cparamType, paramName, paramType, paramValue);
+                    _parameters[componentname].Add(cparam);
                 }
 
                 if (tComponent.Element("ExtendedParameters") != null)
                 {
-                    _parameters[componentname].Add(new ComponentParameter("ExtendedParameters", typeof(XElement), tComponent.Element("ExtendedParameters")));
+                    _parameters[componentname].Add(new ComponentParameter<XElement>("ExtendedParameters", typeof(XElement), tComponent.Element("ExtendedParameters")));
                 }
             }
 

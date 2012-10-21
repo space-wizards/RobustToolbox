@@ -96,28 +96,22 @@ namespace SGO.Component.Item.ItemCapability
             switch (parameter.MemberName)
             {
                 case "healAmount":
-                    if (parameter.ParameterType == typeof (int))
-                        healAmount = (int) parameter.Parameter;
-                    if (parameter.ParameterType == typeof (string))
-                        healAmount = int.Parse((string) parameter.Parameter);
+                    healAmount = parameter.GetValue<int>();
                     break;
                 case "damageType":
                     if (parameter.ParameterType == typeof (string))
                     {
                         //Try to parse it. Set to Bludgeoning damagetype if parsing fails
-                        if (!Enum.TryParse((string) parameter.Parameter, true, out damType))
+                        if (!Enum.TryParse(parameter.GetValue<string>(), true, out damType))
                             damType = DamageType.Bludgeoning;
                     }
                     else if (parameter.ParameterType == typeof (DamageType))
                     {
-                        damType = (DamageType) parameter.Parameter;
+                        damType = parameter.GetValue<DamageType>();
                     }
                     break;
                 case "capacity":
-                    if (parameter.ParameterType == typeof(int))
-                        capacity = (int) parameter.Parameter;
-                    if (parameter.ParameterType == typeof(string))
-                        capacity = int.Parse((string) parameter.Parameter);
+                    capacity = parameter.GetValue<int>();
                     break;
 
             }

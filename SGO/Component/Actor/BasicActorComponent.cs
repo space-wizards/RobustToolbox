@@ -20,7 +20,7 @@ namespace SGO
             {
                 case "playersession":
                     if (parameter.ParameterType == typeof (IPlayerSession))
-                        playerSession = (IPlayerSession) parameter.Parameter;
+                        playerSession = parameter.GetValue<IPlayerSession>();
                     break;
                 default:
                     base.SetParameter(parameter);

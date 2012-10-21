@@ -69,8 +69,7 @@ namespace CGO
             switch (parameter.MemberName)
             {
                 case "TweakAABB":
-                    if (parameter.Parameter.GetType() == typeof(Vector4D))
-                        TweakAABB = (Vector4D)parameter.Parameter;
+                        TweakAABB = parameter.GetValue<Vector4D>();
                     break;
             }
         }

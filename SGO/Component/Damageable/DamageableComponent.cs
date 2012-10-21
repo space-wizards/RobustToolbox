@@ -141,7 +141,7 @@ namespace SGO
             switch(parameter.MemberName)
             {
                 case "MaxHealth":
-                    maxHealth = Convert.ToInt32(parameter.Parameter);
+                    maxHealth = parameter.GetValue<int>();
                     currentHealth = maxHealth;
                     break;
             }

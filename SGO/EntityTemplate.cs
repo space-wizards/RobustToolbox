@@ -102,20 +102,58 @@ namespace SGO
                 //Parse component parameters
                 foreach (XElement tComponentParameter in tComponentParameters)
                 {
-                    Type paramtype = translateType(tComponentParameter.Attribute("type").Value);
-                    if (paramtype == null)
+                    Type paramType = translateType(tComponentParameter.Attribute("type").Value);
+
+                    string paramRawValue = tComponentParameter.Attribute("value").Value;
+
+                    //Validate
+                    var paramName = tComponentParameter.Attribute("name").Value;
+                    if (paramType == null)
+                        throw new TemplateLoadException("Invalid parameter type specified.");
+                    if (paramName == "")
+                        throw new TemplateLoadException("Invalid parameter name specified.");
+
+                    //Convert the raw value to the proper type
+                    object paramValue;// = Convert.ChangeType(tComponentParameter.Attribute("value").Value, paramType);
+                    if (paramType == typeof(int))
                     {
-                        throw new TemplateLoadException("Invalid component parameter type.");
+                        int pval;
+                        if (!int.TryParse(paramRawValue, out pval))
+                            throw new ArgumentException("Could not parse parameter " + paramName + " as int. Value: " + paramRawValue);
+                        paramValue = pval;
                     }
-                    parameters[componentname].Add(new ComponentParameter(tComponentParameter.Attribute("name").Value,
-                                                                         paramtype,
-                                                                         Convert.ChangeType(tComponentParameter.Attribute("value").Value, paramtype))
-                        );
+                    else if (paramType == typeof(float))
+                    {
+                        float pval;
+                        if (!float.TryParse(paramRawValue, System.Globalization.NumberStyles.Float, System.Globalization.CultureInfo.InvariantCulture, out pval))
+                            throw new ArgumentException("Could not parse parameter " + paramName + " as float. Value: " + paramRawValue);
+                        paramValue = pval;
+                    }
+                    else if (paramType == typeof(bool))
+                    {
+                        bool pval;
+                        if (!bool.TryParse(paramRawValue, out pval))
+                            throw new ArgumentException("Could not parse parameter " + paramName + " as bool. Value: " + paramRawValue);
+                        paramValue = pval;
+                    }
+                    else if (paramType == typeof(string))
+                    {
+                        paramValue = paramRawValue;
+                    }
+                    else
+                    {
+                        throw new ArgumentException("Could not parse parameter " + paramName + ". Type not recognized. Value: " + paramRawValue);
+                    }
+
+
+                    var cparamType = typeof(ComponentParameter<>).MakeGenericType(paramType);
+                    var cparam = (ComponentParameter)Activator.CreateInstance(cparamType, paramName, paramType, paramValue);
+                    parameters[componentname].Add(cparam);
                 }
 
                 if (tComponent.Element("ExtendedParameters") != null)
                 {
-                    parameters[componentname].Add(new ComponentParameter("ExtendedParameters", typeof (XElement),
+                    parameters[componentname].Add(new ComponentParameter<XElement>("ExtendedParameters", typeof (XElement),
                                                                          tComponent.Element("ExtendedParameters")));
                 }
             }

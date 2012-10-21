@@ -312,16 +312,14 @@ namespace ServerServices.Map
             if ((DateTime.Now - lastAtmosDisplayPush).TotalMilliseconds > 1000)
             {
                 bool sendUpdate = false;
+                //How many types of gasses do we have?
                 int numberOfGasTypes = Enum.GetValues(typeof(GasType)).Length;
-                //byte[] records = new byte[mapWidth * mapHeight * 3];
                 var records = new BitStream(mapHeight*mapWidth*numberOfGasTypes);
-                int displayBitsWritten = 0;
-                int n = 0;
-                for (int x = 0; x < mapWidth; x++)
-                    for (int y = 0; y < mapHeight; y++)
+                for (var x = 0; x < mapWidth; x++)
+                    for (var y = 0; y < mapHeight; y++)
                     {
-                        //byte[] displayBytes = tileArray[x, y].gasCell.PackDisplayBytes();
-                        displayBitsWritten = tileArray[x, y].gasCell.PackDisplayBytes(records);
+                        int displayBitsWritten = tileArray[x, y].gasCell.PackDisplayBytes(records);
+                        //The func will always write the same number of bytes as there are gas types.
                         if(displayBitsWritten > numberOfGasTypes)
                             sendUpdate = true;
                     }
@@ -340,12 +338,12 @@ namespace ServerServices.Map
         private byte[] Compress(BitStream rawStream)
         {
             rawStream.Position = 0;
-            byte[] raw = new byte[rawStream.Length8];
+            var raw = new byte[rawStream.Length8];
             for (int i = 0; i < rawStream.Length8; i++)
             {
                 rawStream.Read(out raw[i]);
             }
-            int byteLength = (int)rawStream.Length8;
+            var byteLength = (int)rawStream.Length8;
             if (byteLength == 0)
             {
                 LogManager.Log("Gas data unchanged. Not sending that shit.", LogLevel.Debug);

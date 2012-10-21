@@ -145,10 +145,10 @@ namespace CGO
             switch (parameter.MemberName)
             {
                 case "drawdepth":
-                    SetDrawDepth((DrawDepth)Enum.Parse(typeof(DrawDepth), (string)parameter.Parameter, true));
+                    SetDrawDepth((DrawDepth)Enum.Parse(typeof(DrawDepth), parameter.GetValue<string>(), true));
                     break;
                 case "basename":
-                    _basename = (string)parameter.Parameter;
+                    _basename = parameter.GetValue<string>();
                     LoadSprites();
                     break;
             }

@@ -53,7 +53,7 @@ namespace ServerServices.Player
             a.AddComponent(ComponentFamily.Input, _playerManager.server.EntityManager.ComponentFactory.GetComponent("KeyBindingInputComponent"));
             a.AddComponent(ComponentFamily.Mover, _playerManager.server.EntityManager.ComponentFactory.GetComponent("PlayerInputMoverComponent"));
             var actorComponent = _playerManager.server.EntityManager.ComponentFactory.GetComponent("BasicActorComponent");
-            actorComponent.SetParameter(new ComponentParameter("playersession", typeof(IPlayerSession), this));
+            actorComponent.SetParameter(new ComponentParameter<IPlayerSession>("playersession", typeof(IPlayerSession), this));
             a.AddComponent(ComponentFamily.Actor, actorComponent);
 
             attachedEntity = a;

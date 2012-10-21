@@ -134,40 +134,33 @@ namespace SGO.Component.Item.ItemCapability
             switch (parameter.MemberName)
             {
                 case "damageAmount":
-                    if (parameter.ParameterType == typeof (int))
-                        damageAmount = (int) parameter.Parameter;
-                    if (parameter.ParameterType == typeof (string))
-                        damageAmount = int.Parse((string) parameter.Parameter);
+                    damageAmount = parameter.GetValue<int>();
                     break;
                 case "damageType":
                     if (parameter.ParameterType == typeof (string))
                     {
                         //Try to parse it. Set to Bludgeoning damagetype if parsing fails
-                        if (!Enum.TryParse((string) parameter.Parameter, true, out damType))
+                        if (!Enum.TryParse(parameter.GetValue<string>(), true, out damType))
                             damType = DamageType.Bludgeoning;
                     }
                     else if (parameter.ParameterType == typeof (DamageType))
                     {
-                        damType = (DamageType) parameter.Parameter;
+                        damType = parameter.GetValue<DamageType>();
                     }
                     break;
                 case "startActive":
-                    if (parameter.ParameterType == typeof(bool))
-                        active = (bool)parameter.Parameter;
+                    active = parameter.GetValue<bool>();
                     break;
                 case "toggleable":
-                    if (parameter.ParameterType == typeof(bool))
-                        toggleable = (bool)parameter.Parameter;
+                    toggleable = parameter.GetValue<bool>();
                     if (!toggleable)
                         active = true;
                     break;
                 case "inactiveSprite":
-                    if (parameter.ParameterType == typeof(string))
-                        inactiveSprite = (string) parameter.Parameter;
+                    inactiveSprite = parameter.GetValue<string>();
                     break;
                 case "activeSprite":
-                    if (parameter.ParameterType == typeof(string))
-                        activeSprite = (string)parameter.Parameter;
+                    activeSprite = parameter.GetValue<string>();
                     break;
             }
         }

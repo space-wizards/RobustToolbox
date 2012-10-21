@@ -33,7 +33,7 @@ namespace ClientServices.UserInterface.Components
         {
             _resourceManager = resourceManager;
 
-            var SpriteName = (string)entityTemplate.GetBaseSpriteParamaters().FirstOrDefault().Parameter;
+            var SpriteName = entityTemplate.GetBaseSpriteParamaters().FirstOrDefault().GetValue<string>();
             var ObjectName = entityTemplate.Name;
 
             associatedTemplate = entityTemplate;

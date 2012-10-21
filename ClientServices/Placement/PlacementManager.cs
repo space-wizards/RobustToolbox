@@ -157,7 +157,7 @@ namespace ClientServices.Placement
             var spriteParam = template.GetBaseSpriteParamaters().FirstOrDefault(); //Will break if states not ordered correctly.
             if (spriteParam == null) return;
 
-            var spriteName = (string)spriteParam.Parameter;
+            var spriteName = spriteParam.GetValue<string>();
             var sprite = _resourceManager.GetSprite(spriteName);
 
             _currentSprite = sprite;

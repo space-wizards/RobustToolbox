@@ -109,7 +109,7 @@ namespace CGO
             switch (parameter.MemberName)
             {
                 case "ExtendedParameters":
-                    HandleExtendedParameters((XElement)parameter.Parameter);
+                    HandleExtendedParameters(parameter.GetValue<XElement>());
                     break;
             }
         }

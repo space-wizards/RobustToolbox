@@ -174,28 +174,22 @@ namespace SGO
             switch (parameter.MemberName)
             {
                 case "OpenSprite":
-                    openSprite = (string) parameter.Parameter;
+                    openSprite = parameter.GetValue<string>();
                     break;
                 case "ClosedSprite":
-                    closedSprite = (string) parameter.Parameter;
+                    closedSprite = parameter.GetValue<string>();
                     break;
                 case "OpenOnBump":
-                    if ((string) parameter.Parameter == "true")
-                        openonbump = true;
-                    else
-                        openonbump = false;
+                    openonbump = parameter.GetValue<bool>();
                     break;
                 case "AutoCloseInterval":
-                    int autocloseinterval;
-                    if (int.TryParse((string) parameter.Parameter, out autocloseinterval))
+                    var autocloseinterval = parameter.GetValue<int>();
+                    if (autocloseinterval == 0)
+                        autoclose = false;
+                    else
                     {
-                        if (autocloseinterval == 0)
-                            autoclose = false;
-                        else
-                        {
-                            autoclose = true;
-                            openLength = autocloseinterval;
-                        }
+                        autoclose = true;
+                        openLength = autocloseinterval;
                     }
                     break;
                 default:

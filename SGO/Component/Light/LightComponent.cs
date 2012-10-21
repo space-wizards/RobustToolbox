@@ -29,16 +29,16 @@ namespace SGO
             switch(parameter.MemberName)
             {
                 case "startState":
-                    _state = (LightState)Enum.Parse(typeof(LightState), (string)parameter.Parameter, true);
+                    _state = (LightState)Enum.Parse(typeof(LightState), parameter.GetValue<string>(), true);
                     break;
                 case "lightColorR":
-                    _colorR = int.Parse((string) parameter.Parameter);
+                    _colorR = int.Parse(parameter.GetValue<string>());
                     break;
                 case "lightColorG":
-                    _colorG = int.Parse((string) parameter.Parameter);
+                    _colorG = int.Parse(parameter.GetValue<string>());
                     break;
                 case "lightColorB":
-                    _colorB = int.Parse((string) parameter.Parameter);
+                    _colorB = int.Parse(parameter.GetValue<string>());
                     break;
             }
         }

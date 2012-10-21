@@ -136,34 +136,19 @@ namespace CGO
             switch (parameter.MemberName)
             {
                 case "TweakAABB":
-                    if (parameter.Parameter.GetType() == typeof(Vector4D))
-                    {
-                        TweakAABB = (Vector4D)parameter.Parameter; 
-                    }
+                    TweakAABB = parameter.GetValue<Vector4D>(); 
                     break;
                 case "TweakAABBtop":
-                    if (parameter.Parameter.GetType() == typeof(string))
-                    {
-                        tweakAABB.X = float.Parse((string)parameter.Parameter, System.Globalization.CultureInfo.InvariantCulture);
-                    }
+                    tweakAABB.X = parameter.GetValue<float>();
                     break;
                 case "TweakAABBright":
-                    if (parameter.Parameter.GetType() == typeof(string))
-                    {
-                        tweakAABB.Y = float.Parse((string)parameter.Parameter, System.Globalization.CultureInfo.InvariantCulture);
-                    }
+                    tweakAABB.Y = parameter.GetValue<float>();
                     break;
                 case "TweakAABBbottom":
-                    if (parameter.Parameter.GetType() == typeof(string))
-                    {
-                        tweakAABB.Z = float.Parse((string)parameter.Parameter, System.Globalization.CultureInfo.InvariantCulture);
-                    }
+                    tweakAABB.Z = parameter.GetValue<float>();
                     break;
                 case "TweakAABBleft":
-                    if (parameter.Parameter.GetType() == typeof(string))
-                    {
-                        tweakAABB.W = float.Parse((string)parameter.Parameter, System.Globalization.CultureInfo.InvariantCulture);
-                    }
+                    tweakAABB.W = parameter.GetValue<float>();
                     break;
             }
         }

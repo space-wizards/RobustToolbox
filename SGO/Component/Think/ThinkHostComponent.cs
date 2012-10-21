@@ -39,7 +39,7 @@ namespace SGO
             switch (parameter.MemberName)
             {
                 case "LoadThinkComponent":
-                    IThinkComponent c = GetThinkComponent((string) parameter.Parameter);
+                    IThinkComponent c = GetThinkComponent(parameter.GetValue<string>());
                     if (c == null)
                         break;
                     ThinkComponents.Add(c);

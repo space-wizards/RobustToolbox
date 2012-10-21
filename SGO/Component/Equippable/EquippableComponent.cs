@@ -64,7 +64,7 @@ namespace SGO
             switch (parameter.MemberName)
             {
                 case "wearloc":
-                    wearloc = (EquipmentSlot) Enum.Parse(typeof (EquipmentSlot), (string) parameter.Parameter);
+                    wearloc = (EquipmentSlot)Enum.Parse(typeof(EquipmentSlot), parameter.GetValue<string>());
                     break;
             }
         }

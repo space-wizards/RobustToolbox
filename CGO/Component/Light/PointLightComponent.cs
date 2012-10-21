@@ -58,29 +58,26 @@ namespace CGO
         {
             switch (parameter.MemberName)
             {
-                case "lightoffset":
-                    _lightOffset = (Vector2D)parameter.Parameter;
-                    break;
                 case "lightoffsetx":
-                    _lightOffset.X = float.Parse((string)parameter.Parameter, System.Globalization.CultureInfo.InvariantCulture);
+                    _lightOffset.X = parameter.GetValue<float>();//float.Parse((string)parameter.Parameter, System.Globalization.CultureInfo.InvariantCulture);
                     break;
                 case "lightoffsety":
-                    _lightOffset.Y = float.Parse((string)parameter.Parameter, System.Globalization.CultureInfo.InvariantCulture);
+                    _lightOffset.Y = parameter.GetValue<float>();//float.Parse((string)parameter.Parameter, System.Globalization.CultureInfo.InvariantCulture);
                     break;
                 case "lightradius":
-                    _lightRadius = int.Parse((string) parameter.Parameter);
+                    _lightRadius = parameter.GetValue<int>();//int.Parse((string) parameter.Parameter);
                     break;
                 case "lightColorR":
-                    _lightColor.X = int.Parse((string) parameter.Parameter);
+                    _lightColor.X = parameter.GetValue<int>();//int.Parse((string) parameter.Parameter);
                     break;
                 case "lightColorG":
-                    _lightColor.Y = int.Parse((string)parameter.Parameter);
+                    _lightColor.Y = parameter.GetValue<int>();//int.Parse((string)parameter.Parameter);
                     break;
                 case "lightColorB":
-                    _lightColor.Z = int.Parse((string)parameter.Parameter);
+                    _lightColor.Z = parameter.GetValue<int>();//int.Parse((string)parameter.Parameter);
                     break;
                 case "mask":
-                    _mask = (string) parameter.Parameter;
+                    _mask = parameter.GetValue<string>();// parameter.Parameter;
                     break;
             }
         }

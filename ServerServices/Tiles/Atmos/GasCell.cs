@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using BKSystem.IO;
 using SS13_Shared;
 
 namespace ServerServices.Tiles.Atmos
@@ -312,56 +313,81 @@ namespace ServerServices.Tiles.Atmos
         /// <param name="all">send em all anyway?</param>
         /// <returns></returns>
         /// 
-        public byte[] PackDisplayBytes(bool all = false)
+        public int PackDisplayBytes(BitStream bits, bool all = false)
         {
-            List<byte> displayBytes = new List<byte>();
-            uint amount;
-            uint type;
-            //Water vapor
-            if (gasses[GasType.WVapor] > 10 && (checkUpdateThreshold(GasType.WVapor) || all))
+           
+            int changedTypes = 0;
+
+            //How many gas types we have!
+            int typesCount = Enum.GetValues(typeof(GasType)).Length;
+            var gasChanges = new byte[typesCount];
+            var bitCount = typesCount;
+            for (int i = typesCount - 1; i >= 0; i--)
             {
-                amount = (uint)normalizeGasAmount(gasses[GasType.WVapor]);
-                type = (uint)GasType.WVapor << 4;
-                displayBytes.Add((byte)(amount | type));
-                lastSentGasses[GasType.WVapor] = gasses[GasType.WVapor]; //Store the last quantity we sent.
-            }
-            else
-            {
-                displayBytes.Add(0);
-                lastSentGasses[GasType.WVapor] = 0;
-            }
-            //Toxins
-            if (gasses[GasType.Toxin] > 10 && (checkUpdateThreshold(GasType.Toxin) || all))
-            {
-                amount = (uint)normalizeGasAmount(gasses[GasType.Toxin]);
-                type = (uint)GasType.Toxin << 4;
-                displayBytes.Add((byte)(amount | type));
-                lastSentGasses[GasType.Toxin] = gasses[GasType.Toxin];
-            }
-            else
-            {
-                displayBytes.Add(0);
-                lastSentGasses[GasType.Toxin] = 0;
-            }
-            //Generic high-pressure gas
-            if((normalizeGasAmount(GasVel.Magnitude,20) != normalizeGasAmount(lastVelSent,20)))
-            {
-                amount = (uint)normalizeGasAmount(GasVel.Magnitude,20);
-                type = (uint)GasType.HighVel << 4; // This is normally invisible gas that is at such a large pressure gradient that it has a positive index of refraction.
-                displayBytes.Add((byte)(amount | type));
-                lastVelSent = GasVel.Magnitude;
-            }
-            else
-            {
-                displayBytes.Add(0);
-                lastSentGasses[GasType.HighVel] = 0;
+                byte amount;
+                var t = (GasType) i;
+                switch(t)
+                {
+                    case GasType.Toxin:
+                        if (gasses[GasType.Toxin] > 10 && (checkUpdateThreshold(GasType.Toxin) || all))
+                        {
+                            amount = (byte)normalizeGasAmount(gasses[GasType.Toxin]);
+                            gasChanges[i] = amount;
+                            changedTypes = (changedTypes | (1 << i));
+                            lastSentGasses[GasType.Toxin] = gasses[GasType.Toxin];
+                            bitCount += 4;
+                        }
+                        else
+                        {
+                            lastSentGasses[GasType.Toxin] = 0;
+                        }
+                        break;
+                    case GasType.WVapor:
+                        if(gasses[GasType.WVapor] > 10 && (checkUpdateThreshold(GasType.WVapor) || all))
+                        {
+                            amount = (byte) normalizeGasAmount(gasses[GasType.WVapor]);
+                            gasChanges[i] = amount;
+                            changedTypes = (changedTypes | (1 << i));
+                            lastSentGasses[GasType.WVapor] = gasses[GasType.WVapor];
+                            bitCount += 4;
+                        }
+                        else
+                        {
+                            lastSentGasses[GasType.WVapor] = 0;
+                        }
+                        break;
+                    case GasType.HighVel:
+                        if ((normalizeGasAmount(GasVel.Magnitude, 20) != normalizeGasAmount(lastVelSent, 20)))
+                        {
+                            amount = (byte)normalizeGasAmount(GasVel.Magnitude, 20);
+                            gasChanges[i] = amount;
+                            changedTypes = (changedTypes | (1 << i));
+                            lastVelSent = GasVel.Magnitude;
+                            bitCount += 4;
+                        }
+                        else
+                        {
+                            lastSentGasses[GasType.HighVel] = 0;
+                        }
+                        break;
+                    default:
+                        break;
+                }
             }
 
-            byte[] displays = new byte[displayBytes.Count];
-            for (int i = 0; i < displayBytes.Count; i++) 
-                displays[i] = displayBytes[i];
+            //Make a new bitstream with the number o bits we need.
+            bits.Write(changedTypes, 0, typesCount); //write 8 bits for what gas types have changed...
+            for(int i = typesCount - 1;i>=0;i--)
+            {
+                int type = 1 << i;
+                //Checks flags in the form of 00001011 -- each 1 is a gas type that needs sending... I know this is nuts but it works great!
+                if((changedTypes & type) == type)
+                {
+                    bits.Write(gasChanges[i], 0, 4);
+                }
+            }
 
-            return displays;
+            return bitCount;
         }
 
         private bool checkUpdateThreshold(GasType g, double multiplier = 1)

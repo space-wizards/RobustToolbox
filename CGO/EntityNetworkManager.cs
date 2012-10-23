@@ -147,6 +147,20 @@ namespace CGO
             _networkManager.SendMessage(message, NetDeliveryMethod.ReliableUnordered);
         }
 
+        /// <summary>
+        /// Sends an SVar to the server to be set on the server-side entity.
+        /// </summary>
+        /// <param name="sendingEntity"></param>
+        /// <param name="svar"></param>
+        public void SendSVar(Entity sendingEntity, MarshalComponentParameter svar)
+        {
+            var message = CreateEntityMessage();
+            message.Write(sendingEntity.Uid);
+            message.Write((byte)EntityMessage.SetSVar);
+            svar.Serialize(message);
+            _networkManager.SendMessage(message, NetDeliveryMethod.ReliableUnordered);
+        }
+
         #endregion
 
         #region Receiving
@@ -180,6 +194,9 @@ namespace CGO
                     break;
                 case EntityMessage.NameUpdate:
                     result = new ClientIncomingEntityMessage(uid, EntityMessage.NameUpdate, message.ReadString());
+                    break;
+                case EntityMessage.GetSVars:
+                    result = new ClientIncomingEntityMessage(uid, EntityMessage.GetSVars, message);
                     break;
             }
             return result;

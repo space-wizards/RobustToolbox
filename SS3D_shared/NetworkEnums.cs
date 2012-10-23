@@ -191,6 +191,10 @@ namespace SS13_Shared
         ComponentInstantiationMessage,
         Null,
         NameUpdate,
+        SetSVar,
+        GetSVars,
+        SetCVar,
+        GetCVars
     }
 
     public enum EntityManagerMessage

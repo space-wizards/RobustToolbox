@@ -19,6 +19,8 @@ namespace SGO
         public DamageableComponent()
         {
             family = ComponentFamily.Damageable;
+            RegisterSVar("MaxHealth", typeof(int));
+            RegisterSVar("CurrentHealth", typeof(int));
         }
 
         public override void HandleInstantiationMessage(NetConnection netConnection)
@@ -144,8 +146,20 @@ namespace SGO
                     maxHealth = parameter.GetValue<int>();
                     currentHealth = maxHealth;
                     break;
+                case "CurrentHealth":
+                    currentHealth = parameter.GetValue<int>();
+                    break;
             }
         }
+
+        public override List<ComponentParameter> GetParameters()
+        {
+            var cparams = base.GetParameters();
+            cparams.Add(new ComponentParameter("MaxHealth", (int)maxHealth));
+            cparams.Add(new ComponentParameter("CurrentHealth", (int)currentHealth));
+            return cparams;
+        }
+
     }
 
     public struct DamageHistoryItem

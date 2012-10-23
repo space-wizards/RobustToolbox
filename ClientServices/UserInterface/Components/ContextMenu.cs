@@ -43,6 +43,14 @@ namespace ClientServices.UserInterface.Components
                 examineButton.Update(0);
             }
 
+            var sVarButton =
+                new ContextMenuButton(
+                    new ContextMenuEntry() {ComponentMessage = "svars", EntryName = "SVars", IconName = "context_eye"},
+                    _buttonSize, _resourceManager);
+            sVarButton.Selected += ContextSelected;
+            _buttons.Add(sVarButton);
+            sVarButton.Update(0);
+
             foreach (var entry in entries)
             {
                 var newButton = new ContextMenuButton(entry, _buttonSize, _resourceManager);
@@ -67,6 +75,15 @@ namespace ClientServices.UserInterface.Components
                 var newExamine = new ExamineWindow(new Size(300, 200), _owningEntity, _resourceManager);
                 _userInterfaceManager.AddComponent(newExamine);
                 newExamine.Position = new Point(ClientArea.X, ClientArea.Y);
+            }
+            else if ((string)sender.UserData == "svars")
+            {
+                var newSVars = new SVarEditWindow(new Size(300, 200), _owningEntity);
+                _userInterfaceManager.AddComponent(newSVars);
+                newSVars.Position = new Point(ClientArea.X, ClientArea.Y);
+                
+                _owningEntity.GetSVarsCallback += newSVars.GetSVarsCallback;
+                _owningEntity.GetSVars();
             }
             else _owningEntity.SendMessage(this, SS13_Shared.GO.ComponentMessageType.ContextMessage, (string)sender.UserData);
         }

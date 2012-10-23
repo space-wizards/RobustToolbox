@@ -92,6 +92,10 @@
       <SpecificVersion>False</SpecificVersion>
       <HintPath>..\References\Release\GorgonFramework.dll</HintPath>
     </Reference>
+    <Reference Include="Microsoft.CSharp" />
+    <Reference Include="NetSerializer">
+      <HintPath>..\References\Release\NetSerializer.dll</HintPath>
+    </Reference>
     <Reference Include="System" />
     <Reference Include="System.Core">
       <RequiredTargetFramework>3.5</RequiredTargetFramework>
@@ -112,6 +116,7 @@
     <Compile Include="GO\ComponentParameter.cs" />
     <Compile Include="GO\ComponentReplyMessage.cs" />
     <Compile Include="GO\Crafting\CraftingEntry.cs" />
+    <Compile Include="GO\MarshalComponentParameter.cs" />
     <Compile Include="GO\Server\ServerDelegates.cs" />
     <Compile Include="Lighting.cs" />
     <Compile Include="Objectives\ObjectiveParameterType.cs" />
@@ -138,6 +143,7 @@
     <Compile Include="BodypartEnum.cs" />
     <Compile Include="TypeEventArgs.cs" />
     <Compile Include="Utility\BitStream.cs" />
+    <Compile Include="Utility\NetParamsPacker.cs" />
     <Compile Include="Utility\RandomString.cs" />
     <Compile Include="Vector2.cs" />
     <Compile Include="NetworkEnums.cs" />

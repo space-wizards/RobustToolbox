@@ -18,9 +18,8 @@ namespace SGO
         {
             switch (parameter.MemberName)
             {
-                case "playersession":
-                    if (parameter.ParameterType == typeof (IPlayerSession))
-                        playerSession = parameter.GetValue<IPlayerSession>();
+                case "playersession": //TODO this shouldnt be a parameter.
+                    playerSession = parameter.GetValue<IPlayerSession>();
                     break;
                 default:
                     base.SetParameter(parameter);

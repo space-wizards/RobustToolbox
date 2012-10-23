@@ -65,6 +65,7 @@
     <Compile Include="Collision\ICollider.cs" />
     <Compile Include="Collision\ICollisionManager.cs" />
     <Compile Include="Configuration\IConfigurationManager.cs" />
+    <Compile Include="GOC\GetSVarsEventArgs.cs" />
     <Compile Include="GOC\IPlayerAction.cs" />
     <Compile Include="GOC\IEntity.cs" />
     <Compile Include="GOC\IEntityTemplate.cs" />

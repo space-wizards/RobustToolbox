@@ -31,6 +31,7 @@ namespace ClientInterfaces.GOC
         void SendComponentNetworkMessage(IGameObjectComponent component, NetDeliveryMethod method, params object[] messageParams);
         void SendComponentInstantiationMessage(IGameObjectComponent component);
         void HandleNetworkMessage(ClientIncomingEntityMessage message);
-
+        void GetSVars();
+        event EventHandler<GetSVarsEventArgs> GetSVarsCallback;
     }
 }

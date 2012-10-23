@@ -127,6 +127,7 @@
     <Compile Include="UserInterface\Components\ArmorInfoLabel.cs" />
     <Compile Include="UserInterface\Components\PropEditWindow.cs" />
     <Compile Include="UserInterface\Components\MenuWindow.cs" />
+    <Compile Include="UserInterface\Components\SVarEditWindow.cs" />
     <Compile Include="UserInterface\Components\TargetingGui.cs" />
     <Compile Include="UserInterface\Components\HealthPanel.cs" />
     <Compile Include="UserInterface\Components\HandsGui.cs" />

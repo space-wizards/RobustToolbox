@@ -1,4 +1,5 @@
-﻿using SS13_Shared;
+﻿using System.Collections.Generic;
+using SS13_Shared;
 using SS13_Shared.GO;
 using Lidgren.Network;
 
@@ -17,5 +18,8 @@ namespace ServerInterfaces.GameObject
         void SetParameter(ComponentParameter parameter);
         void HandleNetworkMessage(IncomingEntityComponentMessage message, NetConnection client);
         void HandleInstantiationMessage(Lidgren.Network.NetConnection netConnection);
+        void SetSVar(MarshalComponentParameter sVar);
+        List<MarshalComponentParameter> GetSVars();
+
     }
 }

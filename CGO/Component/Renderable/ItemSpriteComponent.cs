@@ -153,8 +153,8 @@ namespace CGO
                     LoadSprites();
                     break;
                 case "addsprite":
-                    if(parameter.ParameterType == typeof(string))
-                        LoadSprites(parameter.GetValue<string>());
+                    var spriteToAdd = parameter.GetValue<string>();
+                    LoadSprites(spriteToAdd);
                     break;
 
             }

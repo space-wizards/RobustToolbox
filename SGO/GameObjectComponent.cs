@@ -1,4 +1,7 @@
-﻿using System.Xml.Linq;
+﻿using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Xml.Linq;
 using Lidgren.Network;
 using SS13_Shared;
 using SS13_Shared.GO;
@@ -12,6 +15,8 @@ namespace SGO
         /// This is the family of the component. This should be set directly in all inherited components' constructors.
         /// </summary>
         protected ComponentFamily family = ComponentFamily.Generic;
+
+        private Dictionary<string, Type> _sVars = new Dictionary<string, Type>(); 
 
         #region IGameObjectComponent Members
 
@@ -96,6 +101,16 @@ namespace SGO
         }
 
         /// <summary>
+        /// This gets a list of runtime-settable component parameters, with CURRENT VALUES
+        /// If it isn't going to return a current value, it shouldn't return it at all.
+        /// </summary>
+        /// <returns></returns>
+        public virtual List<ComponentParameter> GetParameters()
+        {
+            return new List<ComponentParameter>();
+        }
+
+        /// <summary>
         /// Empty method for handling incoming input messages from counterpart client components
         /// </summary>
         /// <param name="message">the message object</param>
@@ -116,5 +131,68 @@ namespace SGO
         public virtual void HandleExtendedParameters(XElement extendedParameters)
         {
         }
+
+        /// <summary>
+        /// Gets all available SVars for the entity. 
+        /// This gets current values, or at least it should...
+        /// </summary>
+        /// <returns>Returns a list of component parameters for marshaling</returns>
+        public List<MarshalComponentParameter> GetSVars()
+        {
+            return (from param in GetParameters() where SVarIsRegistered(param.MemberName) select new MarshalComponentParameter(Family, param)).ToList();
+        }
+
+        /// <summary>
+        /// Checks if an SVar is registered
+        /// </summary>
+        /// <param name="name"></param>
+        /// <returns></returns>
+        protected bool SVarIsRegistered(string name)
+        {
+            if (!_sVars.ContainsKey(name))
+                return false;
+            return true;
+        }
+
+        /// <summary>
+        /// Registers an SVar
+        /// </summary>
+        /// <param name="sVar"></param>
+        /// <param name="type"></param>
+        protected void RegisterSVar(string sVar, Type type)
+        {
+            if (!SVarIsRegistered(sVar))
+                _sVars[sVar] = type;
+            else
+                _sVars.Add(sVar, type);
+        }
+
+        /// <summary>
+        /// Unregisters an SVar
+        /// </summary>
+        /// <param name="name"></param>
+        protected void UnRegisterSVar(string name)
+        {
+            if (SVarIsRegistered(name))
+                _sVars.Remove(name);
+        }
+
+        /// <summary>
+        /// Sets a component parameter via the sVar interface. Only
+        /// parameters that are registered as sVars will be set through this 
+        /// function.
+        /// </summary>
+        /// <param name="sVar">ComponentParameter</param>
+        public void SetSVar(MarshalComponentParameter sVar)
+        {
+            var param = sVar.Parameter;
+
+            //If it is registered, and the types match, set it.
+            if(_sVars.ContainsKey(param.MemberName) && 
+                _sVars[param.MemberName] == param.ParameterType)
+                SetParameter(param);
+        }
+
+        
     }
 }

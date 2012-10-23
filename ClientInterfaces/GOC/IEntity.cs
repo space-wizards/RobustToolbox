@@ -32,6 +32,7 @@ namespace ClientInterfaces.GOC
         void SendComponentInstantiationMessage(IGameObjectComponent component);
         void HandleNetworkMessage(ClientIncomingEntityMessage message);
         void GetSVars();
+        void SetSVar(MarshalComponentParameter svar);
         event EventHandler<GetSVarsEventArgs> GetSVarsCallback;
     }
 }

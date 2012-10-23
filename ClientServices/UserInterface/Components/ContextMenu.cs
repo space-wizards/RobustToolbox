@@ -78,7 +78,7 @@ namespace ClientServices.UserInterface.Components
             }
             else if ((string)sender.UserData == "svars")
             {
-                var newSVars = new SVarEditWindow(new Size(300, 200), _owningEntity);
+                var newSVars = new SVarEditWindow(new Size(350, 400), _owningEntity);
                 _userInterfaceManager.AddComponent(newSVars);
                 newSVars.Position = new Point(ClientArea.X, ClientArea.Y);
                 

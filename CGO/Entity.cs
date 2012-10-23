@@ -305,11 +305,7 @@ namespace CGO
 
         public void SetSVar(MarshalComponentParameter svar)
         {
-            _entityNetworkManager.SendEntityNetworkMessage(this, 
-                EntityMessage.SetSVar, 
-                svar.Family, 
-                svar.Parameter.MemberName, 
-                svar.Parameter.GetValue());
+            _entityNetworkManager.SendSVar(this, svar);
         }
 
         public void GetSVars()

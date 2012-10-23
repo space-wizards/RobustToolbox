@@ -101,5 +101,27 @@ namespace SGO
                     return true;
             return false;
         }
+
+        public override void SetParameter(ComponentParameter parameter)
+        {
+            base.SetParameter(parameter);
+
+            switch (parameter.MemberName)
+            {
+                case "AddEffect":
+                    AddEffect(parameter.GetValue<string>(),10);
+                    break;
+                default:
+                    base.SetParameter(parameter);
+                    break;
+            }
+        } 
+
+        public override List<ComponentParameter> GetParameters()
+        {
+            var cparams = base.GetParameters();
+            cparams.Add(new ComponentParameter("AddEffect", ""));
+            return cparams;
+        }
     }
 }

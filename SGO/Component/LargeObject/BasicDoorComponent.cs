@@ -1,4 +1,5 @@
-﻿using System.Drawing;
+﻿using System.Collections.Generic;
+using System.Drawing;
 using System.Linq;
 using SS13.IoC;
 using SS13_Shared;
@@ -25,6 +26,8 @@ namespace SGO
         public BasicDoorComponent()
         {
             family = ComponentFamily.LargeObject;
+
+            RegisterSVar("OpenOnBump", typeof(bool));
         }
 
         public override ComponentReplyMessage RecieveMessage(object sender, ComponentMessageType type,
@@ -196,6 +199,13 @@ namespace SGO
                     base.SetParameter(parameter);
                     break;
             }
+        }
+
+        public override List<ComponentParameter> GetParameters()
+        {
+            var cparams = base.GetParameters();
+            cparams.Add(new ComponentParameter("OpenOnBump", openonbump));
+            return cparams;
         }
     }
 }

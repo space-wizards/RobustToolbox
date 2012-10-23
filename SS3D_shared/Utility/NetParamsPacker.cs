@@ -1,0 +1,45 @@
+﻿using System;
+using System.Collections.Generic;
+using System.IO;
+using System.Linq;
+using System.Runtime.Serialization;
+using System.Runtime.Serialization.Formatters.Binary;
+using System.Text;
+using BKSystem.IO;
+using Lidgren.Network;
+
+namespace SS13_Shared.Utility
+{
+    class NetParamsPacker
+    {
+        private byte[] ObjectToByteArray(Object obj)
+        {
+            if (obj == null)
+                return null;
+            var bf = new BinaryFormatter();
+            var ms = new MemoryStream();
+            bf.Serialize(ms, obj);
+            return ms.ToArray();
+        }
+
+        private Object ByteArrayToObject(byte[] bytes)
+        {
+            if (bytes.Length == 0)
+                throw new SerializationException("Cannot deserialize empty byte array.");
+            var ms = new MemoryStream(bytes);
+            var bf = new BinaryFormatter();
+            return bf.Deserialize(ms);
+        }
+
+        public object Unpack(byte[] bytes)
+        {
+            return ByteArrayToObject(bytes);
+        }
+
+        public int Pack(Object obj, out byte[] bytes)
+        {
+            bytes = ObjectToByteArray(obj);
+            return bytes.Length;
+        }
+    }
+}

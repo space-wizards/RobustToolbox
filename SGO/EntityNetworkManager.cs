@@ -215,6 +215,16 @@ namespace SGO
                                                                             UnPackParams(message).First(),
                                                                             message.SenderConnection);
                     break;
+                case EntityMessage.SetSVar:
+                    incomingEntityMessage = new ServerIncomingEntityMessage(uid, 
+                        EntityMessage.SetSVar, 
+                        MarshalComponentParameter.Deserialize(message),
+                        message.SenderConnection);
+                    break;
+                case EntityMessage.GetSVars:
+                    incomingEntityMessage = new ServerIncomingEntityMessage(uid,
+                        EntityMessage.GetSVars, null, message.SenderConnection);
+                    break;
             }
 
             if (_messageProfiling)

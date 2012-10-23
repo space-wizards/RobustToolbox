@@ -32,6 +32,7 @@ namespace CGO
         public string Name { get; set; }
 
         public event EventHandler<VectorEventArgs> OnMove;
+        public event EventHandler<GetSVarsEventArgs> GetSVarsCallback; 
 
         public bool Initialized { get; set; }
 
@@ -274,6 +275,10 @@ namespace CGO
                 case EntityMessage.NameUpdate:
                     Name = message.Message as string;
                     break;
+                case EntityMessage.GetSVars:
+                    HandleGetSVars(message);
+                    break;
+
             }
         }
 
@@ -295,5 +300,42 @@ namespace CGO
           
             _entityNetworkManager.SendEntityNetworkMessage(this, EntityMessage.ComponentInstantiationMessage, component.Family);
         }
+
+        #region SVar/CVar Marshalling
+
+        public void SetSVar(MarshalComponentParameter svar)
+        {
+            _entityNetworkManager.SendEntityNetworkMessage(this, 
+                EntityMessage.SetSVar, 
+                svar.Family, 
+                svar.Parameter.MemberName, 
+                svar.Parameter.GetValue());
+        }
+
+        public void GetSVars()
+        {
+            _entityNetworkManager.SendEntityNetworkMessage(this, 
+                EntityMessage.GetSVars);
+        }
+
+        public void HandleGetSVars(ClientIncomingEntityMessage message)
+        {
+            //If nothing's listening, then why bother with this shit?
+            if (GetSVarsCallback == null)
+                return;
+            var msg = (NetIncomingMessage)message.Message;
+
+            var count = msg.ReadInt32();
+            var svars = new List<MarshalComponentParameter>();
+            for(int i = 0;i<count;i++)
+            {
+                svars.Add(MarshalComponentParameter.Deserialize(msg));
+            }
+            
+            GetSVarsCallback(this, new GetSVarsEventArgs(svars));
+            GetSVarsCallback = null;
+        }
+
+        #endregion
     }
 }

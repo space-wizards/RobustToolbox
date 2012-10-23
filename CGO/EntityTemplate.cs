@@ -181,15 +181,13 @@ namespace CGO
                         throw new ArgumentException("Could not parse parameter " + paramName + ". Type not recognized. Value: " + paramRawValue);
                     }
 
-
-                    var cparamType = typeof (ComponentParameter<>).MakeGenericType(paramType);
-                    var cparam = (ComponentParameter)Activator.CreateInstance(cparamType, paramName, paramType, paramValue);
+                    var cparam = new ComponentParameter(paramName, paramValue);
                     _parameters[componentname].Add(cparam);
                 }
 
                 if (tComponent.Element("ExtendedParameters") != null)
                 {
-                    _parameters[componentname].Add(new ComponentParameter<XElement>("ExtendedParameters", typeof(XElement), tComponent.Element("ExtendedParameters")));
+                    _parameters[componentname].Add(new ComponentParameter("ExtendedParameters", tComponent.Element("ExtendedParameters")));
                 }
             }
 

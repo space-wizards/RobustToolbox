@@ -50,7 +50,7 @@ namespace ClientServices.Player
             ControlledEntity.AddComponent(ComponentFamily.Input, ComponentFactory.Singleton.GetComponent("KeyBindingInputComponent"));
             ControlledEntity.AddComponent(ComponentFamily.Mover, ComponentFactory.Singleton.GetComponent("KeyBindingMoverComponent"));
             ControlledEntity.AddComponent(ComponentFamily.Collider, ComponentFactory.Singleton.GetComponent("ColliderComponent"));
-            ControlledEntity.GetComponent(ComponentFamily.Collider).SetParameter(new ComponentParameter<Vector4D>("TweakAABB", typeof(Vector4D), new Vector4D(39, 0, 0, 0)));
+            ControlledEntity.GetComponent(ComponentFamily.Collider).SetParameter(new ComponentParameter("TweakAABB", new Vector4D(39, 0, 0, 0)));
             ControlledEntity.OnMove += PlayerEntityMoved;
         }
 

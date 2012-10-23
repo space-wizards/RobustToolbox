@@ -1,15 +1,19 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 using Lidgren.Network;
 using SS13.IoC;
 using SS13_Shared;
 using SS13_Shared.GO;
 using SS13_Shared.GO.Server;
+using SS13_Shared.ServerEnums;
 using ServerInterfaces.Chat;
 using ServerInterfaces.Configuration;
 using ServerInterfaces.GameObject;
 using ServerInterfaces.MessageLogging;
+using ServerInterfaces.Player;
 using ServerServices;
+using ServerServices.Log;
 
 namespace SGO
 {
@@ -336,6 +340,12 @@ namespace SGO
                 case EntityMessage.ComponentInstantiationMessage:
                     HandleComponentInstantiationMessage(message);
                     break;
+                case EntityMessage.SetSVar:
+                    HandleSetSVar((MarshalComponentParameter)message.message, message.client);
+                    break;
+                case EntityMessage.GetSVars:
+                    HandleGetSVars(message.client);
+                    break;
             }
         }
 
@@ -352,6 +362,75 @@ namespace SGO
                 _components[message.ComponentFamily].HandleNetworkMessage(message, client);
             }
         }
+
+        #region SVar/CVar Marshalling
+        /// <summary>
+        /// This is all kinds of fucked, but basically it marshals an SVar from the client and poops
+        /// it forward to the component named in the message.
+        /// </summary>
+        /// <param name="message"></param>
+        /// <param name="client"></param>
+        internal void HandleSetSVar(MarshalComponentParameter parameter, NetConnection client)
+        {            
+            //Check admin status -- only admins can get svars.
+            var player = IoCManager.Resolve<IPlayerManager>().GetSessionByConnection(client);
+            if (!player.adminPermissions.isAdmin)
+            {
+                LogManager.Log("Player " + player.name + " tried to set an SVar, but is not an admin!", LogLevel.Warning);
+            }
+            else
+            {
+                GetComponent(parameter.Family).SetSVar(parameter);   
+                LogManager.Log("Player " + player.name + " set SVar."); //Make this message better
+            }
+            
+        }
+
+        /// <summary>
+        /// Sends all available SVars to the client that requested them.
+        /// </summary>
+        /// <param name="client"></param>
+        internal void SendSVars(NetConnection client)
+        {
+            var message = m_entityNetworkManager.CreateEntityMessage();
+            message.Write(Uid);
+            message.Write((byte)EntityMessage.GetSVars);
+
+            var svars = new List<MarshalComponentParameter>();
+            foreach(var component in _components.Values)
+            {
+                svars.AddRange(component.GetSVars());
+            }
+
+            message.Write(svars.Count);
+            foreach(var svar in svars)
+            {
+                svar.Serialize(message);
+            }
+            m_entityNetworkManager.SendMessage(message, client, NetDeliveryMethod.ReliableUnordered);
+            
+        }
+
+        /// <summary>
+        /// Handle a getSVars message
+        /// checks for admin access
+        /// </summary>
+        /// <param name="client"></param>
+        private void HandleGetSVars(NetConnection client)
+        {
+            //Check admin status -- only admins can get svars.
+            var player = IoCManager.Resolve<IPlayerManager>().GetSessionByConnection(client);
+            if (!player.adminPermissions.isAdmin)
+            {
+                LogManager.Log("Player " + player.name + " tried to get SVars, but is not an admin!", LogLevel.Warning);
+            }
+            else
+            {
+                SendSVars(client);
+                LogManager.Log("Sending SVars to " + player.name + " for entity " + Uid +":" + Name);
+            }
+        }
+        #endregion
 
         public void Emote(string emote)
         {

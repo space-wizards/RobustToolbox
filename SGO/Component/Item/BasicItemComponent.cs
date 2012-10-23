@@ -320,8 +320,8 @@ namespace SGO
                     string name = parameter.Attribute("name").Value;
                     Type type = EntityTemplate.translateType(parameter.Attribute("type").Value);
                     var value = Convert.ChangeType(parameter.Attribute("value").Value, type);
-                    var cparamType = typeof (ComponentParameter<>).MakeGenericType(type);
-                    var cparam = (ComponentParameter) Activator.CreateInstance(cparamType, name, type, value);
+
+                    var cparam = new ComponentParameter(name, value);
                     cap.SetParameter(cparam);
                 }
                 AddCapability(cap);

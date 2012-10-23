@@ -145,15 +145,13 @@ namespace SGO
                         throw new ArgumentException("Could not parse parameter " + paramName + ". Type not recognized. Value: " + paramRawValue);
                     }
 
-
-                    var cparamType = typeof(ComponentParameter<>).MakeGenericType(paramType);
-                    var cparam = (ComponentParameter)Activator.CreateInstance(cparamType, paramName, paramType, paramValue);
+                    var cparam = new ComponentParameter(paramName, paramValue);
                     parameters[componentname].Add(cparam);
                 }
 
                 if (tComponent.Element("ExtendedParameters") != null)
                 {
-                    parameters[componentname].Add(new ComponentParameter<XElement>("ExtendedParameters", typeof (XElement),
+                    parameters[componentname].Add(new ComponentParameter("ExtendedParameters",
                                                                          tComponent.Element("ExtendedParameters")));
                 }
             }

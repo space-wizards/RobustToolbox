@@ -22,6 +22,7 @@ namespace SGO
         private string openSprite = "";
         private bool openonbump;
         private float timeOpen;
+        private bool disabled = false;
 
         public BasicDoorComponent()
         {
@@ -52,6 +53,9 @@ namespace SGO
         public override void Update(float frameTime)
         {
             base.Update(frameTime);
+
+            if (disabled) return;
+
             if (Open && autoclose)
             {
                 timeOpen += frameTime;
@@ -85,13 +89,18 @@ namespace SGO
 
             if (verbs[ItemCapabilityType.Tool].Contains(ItemCapabilityVerb.Pry))
             {
-                ToggleDoor();
+                ToggleDoor(true);
             }
             else if (verbs[ItemCapabilityType.Tool].Contains(ItemCapabilityVerb.Hit))
             {
                 var cm = IoCManager.Resolve<IChatManager>();
                 cm.SendChatMessage(ChatChannel.Default,
                                    actor.Name + " hit the " + Owner.Name + " with a " + item.Name + ".", null, item.Uid);
+            }
+            else if (verbs[ItemCapabilityType.Tool].Contains(ItemCapabilityVerb.Emag))
+            {
+                OpenDoor();
+                disabled = true;
             }
         }
 
@@ -105,21 +114,23 @@ namespace SGO
             ToggleDoor();
         }
 
-        private void ToggleDoor()
+        private void ToggleDoor(bool forceToggle = false)
         {
             //Apply actions
             if (Open)
             {
-                CloseDoor();
+                CloseDoor(forceToggle);
             }
             else
             {
-                OpenDoor();
+                OpenDoor(forceToggle);
             }
         }
 
-        private void OpenDoor()
+        private void OpenDoor(bool force = false)
         {
+            if (disabled && !force) return;
+
             var map = IoCManager.Resolve<IMapManager>();
             Point occupiedTilePos = map.GetTileArrayPositionFromWorldPosition(Owner.Position);
             Tile occupiedTile = map.GetTileAt(occupiedTilePos.X, occupiedTilePos.Y) as Tile;
@@ -130,8 +141,10 @@ namespace SGO
             occupiedTile.gasCell.blocking = false;
         }
 
-        private void CloseDoor()
+        private void CloseDoor(bool force = false)
         {
+            if (disabled && !force) return;
+
             var map = IoCManager.Resolve<IMapManager>();
             Point occupiedTilePos = map.GetTileArrayPositionFromWorldPosition(Owner.Position);
             Tile occupiedTile = map.GetTileAt(occupiedTilePos.X, occupiedTilePos.Y) as Tile;

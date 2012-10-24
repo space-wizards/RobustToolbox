@@ -40,7 +40,8 @@ namespace SS13_Shared.GO
         FixCut,
         FixBurn,
         Mop,
-        Clean
+        Clean,
+        Emag
     }
     
     public enum DamageType

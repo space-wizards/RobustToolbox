@@ -189,7 +189,9 @@ namespace SS13_Shared.GO
         Activate,
         Heal,
         SetBaseName,
-        SetLightMode
+        SetLightMode,
+        WallMountTile,
+        WallMountSearch
     }
 
     public enum Hand

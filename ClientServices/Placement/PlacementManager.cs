@@ -41,6 +41,7 @@ namespace ClientServices.Placement
 
         private Vector2D _currentLocScreen = Vector2D.Zero;
         private Vector2D _currentLocWorld = Vector2D.Zero;
+        private ITile _currentTile = null;
 
         public Boolean IsActive { get; private set; }
         public Boolean Eraser { get; private set; }
@@ -190,7 +191,7 @@ namespace ClientServices.Placement
             IsActive = true;
         }
 
-        private void RequestPlacement()
+        private void RequestPlacement() //
         {
             if (_currentPermission == null) return;
             if (!_validPosition) return;
@@ -200,7 +201,7 @@ namespace ClientServices.Placement
 
             message.Write((byte)NetMessage.PlacementManagerMessage);
             message.Write((byte)PlacementManagerMessage.RequestPlacement);
-            message.Write((byte)PlacementOption.AlignNone);
+            message.Write((byte)PlacementOption.AlignNone); //Temporarily disable sanity checks.
 
             message.Write(_currentPermission.IsTile);
 
@@ -211,6 +212,9 @@ namespace ClientServices.Placement
             message.Write(_currentLocWorld.Y);
 
             message.Write((byte)direction);
+
+            message.Write(_currentTile.TilePosition.X);
+            message.Write(_currentTile.TilePosition.Y);
 
             _networkManager.SendMessage(message, NetDeliveryMethod.ReliableUnordered);
         }
@@ -259,6 +263,8 @@ namespace ClientServices.Placement
 
                     if (_currentPermission.PlacementOption == PlacementOption.AlignNone) //AlignNoneFree does not check for range.
                         if ((_playerManager.ControlledEntity.Position - _currentLocWorld).Length > _currentPermission.Range) _validPosition = false;
+
+                    _currentTile = currentMap.GetTileAt(_currentLocWorld);
                 } 
                 #endregion
 
@@ -312,6 +318,7 @@ namespace ClientServices.Placement
 
                             _currentLocWorld = closestSide;
                             _currentLocScreen = new Vector2D(closestSide.X - ClientWindowData.Singleton.ScreenOrigin.X, closestSide.Y - ClientWindowData.Singleton.ScreenOrigin.Y);
+                            _currentTile = currentMap.GetTileAt(_currentLocWorld);
                         }
                     }
 
@@ -342,7 +349,7 @@ namespace ClientServices.Placement
                     if (_currentPermission.PlacementOption == PlacementOption.AlignTileSolid || _currentPermission.PlacementOption == PlacementOption.AlignTileSolidFree)
                         if (!currentMap.IsSolidTile(_currentLocWorld)) _validPosition = false;
 
-                    if (_currentPermission.PlacementOption == PlacementOption.AlignTileEmpty || _currentPermission.PlacementOption == PlacementOption.AlignTileEmptyFree)
+                    if (_currentPermission.PlacementOption == PlacementOption.AlignTileEmpty || _currentPermission.PlacementOption == PlacementOption.AlignTileEmptyFree) //FIX THIS NO TYPEOF
                         if (!currentMap.GetTileAt(_currentLocWorld).GetType().IsSubclassOf(typeof(Tiles.Space))) _validPosition = false;
 
                     if (_validPosition)
@@ -367,6 +374,7 @@ namespace ClientServices.Placement
                                 spriteRectWorld = new RectangleF(_currentLocWorld.X - (spriteToUse.Width / 2f), _currentLocWorld.Y - (spriteToUse.Height / 2f), spriteToUse.Width, spriteToUse.Height);
                                 if (_collisionManager.IsColliding(spriteRectWorld)) _validPosition = false; //This also includes walls. Meaning that even when set to solid only this will be unplacable. Fix this.
                             }
+                            _currentTile = currentMap.GetTileAt(_currentLocWorld);
                         }
                         else _validPosition = false;
                     }
@@ -413,6 +421,7 @@ namespace ClientServices.Placement
 
                         _currentLocWorld = Vector2D.Add(closestNode, new Vector2D(_currentTemplate.PlacementOffset.Key, _currentTemplate.PlacementOffset.Value));
                         _currentLocScreen = new Vector2D(_currentLocWorld.X - ClientWindowData.Singleton.ScreenOrigin.X, _currentLocWorld.Y - ClientWindowData.Singleton.ScreenOrigin.Y);
+                        _currentTile = currentMap.GetTileAt(_currentLocWorld);
 
                         if (_currentPermission.PlacementOption == PlacementOption.AlignWall)
                             if ((_playerManager.ControlledEntity.Position - _currentLocWorld).Length > _currentPermission.Range) _validPosition = false;
@@ -506,7 +515,7 @@ namespace ClientServices.Placement
                             break;
                     }
                     _currentLocScreen = new Vector2D(_currentLocWorld.X - ClientWindowData.Singleton.ScreenOrigin.X, _currentLocWorld.Y - ClientWindowData.Singleton.ScreenOrigin.Y);
-
+                    _currentTile = currentTile;
                 }
                 #endregion
                 else if (_currentPermission.PlacementOption == PlacementOption.Freeform)

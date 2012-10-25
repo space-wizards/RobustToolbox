@@ -77,11 +77,14 @@ namespace ServerServices.Placement
             float yRcv = msg.ReadFloat();
             Direction dirRcv = (Direction)msg.ReadByte();
 
+            int tileX = msg.ReadInt32();
+            int tileY = msg.ReadInt32();
+
             IPlayerSession session = IoCManager.Resolve<IPlayerManager>().GetSessionByConnection(msg.SenderConnection);
             PlacementInformation permission = GetPermission(session.attachedEntity.Uid, alignRcv);
             Boolean isAdmin = IoCManager.Resolve<IPlayerManager>().GetSessionByConnection(msg.SenderConnection).adminPermissions.isAdmin;
 
-            if (permission != null || true) //isAdmin)
+            if (permission != null || true) //isAdmin) Temporarily disable actual permission check / admin check. REENABLE LATER
             {
                 if (permission != null)
                 {
@@ -109,6 +112,7 @@ namespace ServerServices.Placement
                     {
                         created.Translate(new Vector2(xRcv, yRcv));
                         created.Direction = dirRcv;
+                        created.SendMessage(this, ComponentMessageType.WallMountTile, new Vector2(tileX, tileY));
                     }
                 }
                 else

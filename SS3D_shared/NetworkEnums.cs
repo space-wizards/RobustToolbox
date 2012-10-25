@@ -190,6 +190,7 @@ namespace SS13_Shared
         PositionMessage,
         ComponentInstantiationMessage,
         Null,
+        SetDirection,
         NameUpdate,
         SetSVar,
         GetSVars,

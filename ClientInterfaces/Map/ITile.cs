@@ -7,6 +7,7 @@ namespace ClientInterfaces.Map
 {
     public interface ITile
     {
+        bool IsSolidTile();
         Vector2D Position { get; }
         Point TilePosition { get; }
         bool Visible { get; set; }

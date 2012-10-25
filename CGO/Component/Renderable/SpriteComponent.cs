@@ -16,9 +16,10 @@ namespace CGO
 {
     public class SpriteComponent : RenderableComponent, ISpriteComponent
     {
-        protected Sprite currentSprite;
+        protected Sprite currentBaseSprite;
         protected bool flip;
         protected Dictionary<string, Sprite> sprites;
+        protected Dictionary<string, Sprite> dirSprites;
         protected bool visible = true;
         protected SpriteComponent master;
         protected List<SpriteComponent> slaves; 
@@ -27,18 +28,35 @@ namespace CGO
         {
             get
             {
-                return new RectangleF(0,0,currentSprite.AABB.Width, currentSprite.AABB.Height);
+                return new RectangleF(0, 0, GetActiveDirectionalSprite().AABB.Width, GetActiveDirectionalSprite().AABB.Height);
             }
         }
 
         public override float Bottom
         {
-            get { return Owner.Position.Y + (currentSprite.AABB.Height / 2); }
+            get { return Owner.Position.Y + (GetActiveDirectionalSprite().AABB.Height / 2); }
+        }
+
+        private void BuildDirectionalSprites()
+        {
+            dirSprites.Clear();
+            IResourceManager resMgr = IoCManager.Resolve<IResourceManager>();
+
+            foreach(KeyValuePair<string, Sprite> curr in sprites)
+            {
+                foreach (var dir in Enum.GetNames(typeof(Direction)))
+                {
+                    string name = (curr.Key + "_" + dir).ToLowerInvariant();
+                    if (resMgr.SpriteExists(name))
+                        dirSprites.Add(name, resMgr.GetSprite(name));
+                }
+            }
         }
 
         public SpriteComponent()
         {
             sprites = new Dictionary<string, Sprite>();
+            dirSprites = new Dictionary<string, Sprite>();
             slaves = new List<SpriteComponent>();
         }
 
@@ -51,7 +69,7 @@ namespace CGO
 
         public Sprite GetCurrentSprite()
         {
-            return currentSprite;
+            return GetActiveDirectionalSprite();
         }
 
         public Sprite GetSprite(string spriteKey)
@@ -126,7 +144,7 @@ namespace CGO
 
         protected virtual Sprite GetBaseSprite()
         {
-            return currentSprite;
+            return currentBaseSprite;
         }
 
         protected void SetDrawDepth(DrawDepth p)
@@ -134,20 +152,40 @@ namespace CGO
             DrawDepth = p;
         }
 
+        private Sprite GetActiveDirectionalSprite()
+        {
+            if (currentBaseSprite == null) return null;
+
+            Sprite sprite = currentBaseSprite;
+
+            string dirName = (currentBaseSprite.Name + "_" + Owner.Direction.ToString()).ToLowerInvariant();
+
+            if (dirSprites.ContainsKey(dirName))
+                sprite = dirSprites[dirName];
+
+            return sprite;
+        }
+
         protected virtual bool WasClicked(PointF worldPos)
         {
-            if (currentSprite == null || !visible) return false;
-            // // // Almost straight copy & paste.
-            System.Drawing.RectangleF AABB = new System.Drawing.RectangleF(Owner.Position.X - (currentSprite.Width / 2), Owner.Position.Y - (currentSprite.Height / 2), currentSprite.Width, currentSprite.Height);
+            if (currentBaseSprite == null || !visible) return false;
+
+            Sprite spriteToCheck = GetActiveDirectionalSprite();
+
+            System.Drawing.RectangleF AABB = new System.Drawing.RectangleF(Owner.Position.X - (spriteToCheck.Width / 2), Owner.Position.Y - (spriteToCheck.Height / 2), spriteToCheck.Width, spriteToCheck.Height);
             if (!AABB.Contains(worldPos)) return false;
-            System.Drawing.Point spritePosition = new System.Drawing.Point((int)(worldPos.X - AABB.X + currentSprite.ImageOffset.X), (int)(worldPos.Y - AABB.Y + currentSprite.ImageOffset.Y));
-            GorgonLibrary.Graphics.Image.ImageLockBox imgData = currentSprite.Image.GetImageData();
+
+            System.Drawing.Point spritePosition = new System.Drawing.Point((int)(worldPos.X - AABB.X + spriteToCheck.ImageOffset.X), (int)(worldPos.Y - AABB.Y + spriteToCheck.ImageOffset.Y));
+
+            GorgonLibrary.Graphics.Image.ImageLockBox imgData = spriteToCheck.Image.GetImageData();
             imgData.Lock(false);
             System.Drawing.Color pixColour = System.Drawing.Color.FromArgb((int)(imgData[spritePosition.X, spritePosition.Y]));
+
             imgData.Dispose();
             imgData.Unlock();
+
             if (pixColour.A == 0) return false;
-            // // //
+
             return true;
         }
 
@@ -155,7 +193,7 @@ namespace CGO
         {
             if (sprites.ContainsKey(spriteKey))
             {
-                currentSprite = sprites[spriteKey];
+                currentBaseSprite = sprites[spriteKey];
                 if(Owner != null)
                     Owner.SendMessage(this, ComponentMessageType.SpriteChanged);
             }
@@ -173,12 +211,15 @@ namespace CGO
             //If there's only one sprite, and the current sprite is explicitly not set, then lets go ahead and set our sprite.
             if (sprites.Count == 1)
                 SetSpriteByKey(sprites.Keys.First());
+
+            BuildDirectionalSprites();
         }
 
         public void AddSprite(string key, Sprite spritetoadd)
         {
             if (spritetoadd != null && key != "")
                 sprites.Add(key, spritetoadd);
+            BuildDirectionalSprites();
         }
 
         public bool SpriteExists(string key)
@@ -217,20 +258,22 @@ namespace CGO
 
             //Render this sprite
             if (!visible) return;
-            if (currentSprite == null) return;
+            if (currentBaseSprite == null) return;
+
+            Sprite spriteToRender = GetActiveDirectionalSprite();
 
             var renderPos = ClientWindowData.WorldToScreen(Owner.Position);
-            SetSpriteCenter(currentSprite, renderPos);
+            SetSpriteCenter(spriteToRender, renderPos);
 
-            if (Owner.Position.X + currentSprite.AABB.Right < topLeft.X
+            if (Owner.Position.X + spriteToRender.AABB.Right < topLeft.X
                 || Owner.Position.X > bottomRight.X
-                || Owner.Position.Y + currentSprite.AABB.Bottom < topLeft.Y
+                || Owner.Position.Y + spriteToRender.AABB.Bottom < topLeft.Y
                 || Owner.Position.Y > bottomRight.Y)
                 return;
 
-            currentSprite.HorizontalFlip = flip;
-            currentSprite.Draw();
-            currentSprite.HorizontalFlip = false;
+            spriteToRender.HorizontalFlip = flip;
+            spriteToRender.Draw();
+            spriteToRender.HorizontalFlip = false;
 
             //Render slaves above
             var renderablesAbove = from SpriteComponent c in slaves //FIXTHIS
@@ -250,7 +293,7 @@ namespace CGO
         }
         public void SetSpriteCenter(Sprite sprite, Vector2D center)
         {
-            sprite.SetPosition(center.X - (currentSprite.AABB.Width / 2), center.Y - (currentSprite.AABB.Height / 2));
+            sprite.SetPosition(center.X - (GetActiveDirectionalSprite().AABB.Width / 2), center.Y - (GetActiveDirectionalSprite().AABB.Height / 2));
         }
 
         public bool IsSlaved() { return master != null; }
@@ -265,6 +308,7 @@ namespace CGO
                 return;
 
             // lets get gay together and do some shit like in that stupid book 50 shades of gay
+            // “His pointer finger circled my puckered love cave. “Are you ready for this?” he mewled, smirking at me like a mother hamster about to eat her three-legged young.”
             mastercompo.AddSlave(this);
             master = mastercompo;
         }

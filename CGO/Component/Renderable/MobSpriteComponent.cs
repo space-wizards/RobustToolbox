@@ -116,7 +116,7 @@ namespace CGO
         protected override Sprite GetBaseSprite()
         {
             //return sprites[basename + "_front"];
-            return currentSprite;
+            return currentBaseSprite;
         }
 
         /// <summary>
@@ -145,7 +145,7 @@ namespace CGO
             base.Render(topLeft, bottomRight);
 
             if (_speechBubble != null)
-                _speechBubble.Draw(Owner.Position, ClientWindowData.Singleton.ScreenOrigin, currentSprite);
+                _speechBubble.Draw(Owner.Position, ClientWindowData.Singleton.ScreenOrigin, currentBaseSprite);
         }
     }
 }

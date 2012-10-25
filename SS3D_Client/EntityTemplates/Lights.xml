@@ -21,6 +21,9 @@
         </Parameters>
       </Component>
     </Components>
+    <PlacementProperties>
+      <PlacementMode type="AlignWallTops"></PlacementMode>
+    </PlacementProperties>
   </EntityTemplate>
   <EntityTemplate name="Flashlight">
     <Components>

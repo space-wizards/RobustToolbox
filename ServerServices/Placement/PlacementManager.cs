@@ -75,7 +75,7 @@ namespace ServerServices.Placement
 
             float xRcv = msg.ReadFloat();
             float yRcv = msg.ReadFloat();
-            //float rotRcv = msg.ReadFloat();
+            Direction dirRcv = (Direction)msg.ReadByte();
 
             IPlayerSession session = IoCManager.Resolve<IPlayerManager>().GetSessionByConnection(msg.SenderConnection);
             PlacementInformation permission = GetPermission(session.attachedEntity.Uid, alignRcv);
@@ -105,8 +105,11 @@ namespace ServerServices.Placement
                 if (!isTile)
                 {
                     IEntity created = _server.EntityManager.SpawnEntityAt(entityTemplateName, new Vector2(xRcv, yRcv));
-                    if(created != null)
+                    if (created != null)
+                    {
                         created.Translate(new Vector2(xRcv, yRcv));
+                        created.Direction = dirRcv;
+                    }
                 }
                 else
                 {

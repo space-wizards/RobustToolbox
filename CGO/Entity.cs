@@ -45,17 +45,16 @@ namespace CGO
 
         public Vector2D Position { get; set; }
 
-        public int _rotation = 0;
-        public int Rotation
+        private Direction _direction = Direction.South;
+        public Direction Direction
         {
             get
             {
-                return _rotation;
+                return _direction;
             }
             set
             {
-                _rotation = value;
-                //Send update
+                _direction = value;
             }
         }
 
@@ -278,7 +277,9 @@ namespace CGO
                 case EntityMessage.GetSVars:
                     HandleGetSVars(message);
                     break;
-
+                case EntityMessage.SetDirection:
+                    _direction = (Direction)((byte)message.Message);
+                    break;
             }
         }
 

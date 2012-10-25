@@ -173,11 +173,17 @@ namespace SGO
         {
             float X = float.Parse(e.Attribute("X").Value, CultureInfo.InvariantCulture);
             float Y = float.Parse(e.Attribute("Y").Value, CultureInfo.InvariantCulture);
+
+            Direction dir = Direction.South;
+            if(e.Attribute("direction") != null)
+                dir = (Direction)Enum.Parse(typeof(Direction), e.Attribute("direction").Value, true);
+
             string template = e.Attribute("template").Value;
             string name = e.Attribute("name").Value;
             IEntity ent = SpawnEntity(template);
             ent.Name = name;
             ent.Translate(new Vector2(X, Y));
+            ent.Direction = dir;
         }
 
         private XElement ToXML(IEntity e)
@@ -186,7 +192,8 @@ namespace SGO
                                   new XAttribute("X", e.Position.X.ToString(CultureInfo.InvariantCulture)),
                                   new XAttribute("Y", e.Position.Y.ToString(CultureInfo.InvariantCulture)),
                                   new XAttribute("template", e.Template.Name),
-                                  new XAttribute("name", e.Name));
+                                  new XAttribute("name", e.Name),
+                                  new XAttribute("direction", e.Direction.ToString()));
             return el;
         }
 

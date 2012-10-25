@@ -168,6 +168,14 @@ namespace ClientServices.Tiles
             else
                 gasAmounts.Add(type, amount);
         }
+
+        public bool IsSolidTile()
+        {
+            var tile = this;
+            if (tile.GetType().GetInterface("ICollidable") != null)
+                return true;
+            else return false;
+        }
     }
 
     public class TileDecal

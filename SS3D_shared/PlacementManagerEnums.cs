@@ -73,6 +73,16 @@
         AlignWallFree,
 
         /// <summary>
+        ///  Used for wall mounted objects like lights. Objects are placed around the top of the wall.
+        /// </summary>
+        AlignWallTops,
+
+        /// <summary>
+        ///  Used for wall mounted objects like lights. Objects are placed around the top of the wall. Range not limited. Requires admin.
+        /// </summary>
+        AlignWallTopsFree,
+
+        /// <summary>
         ///  Not limited in any way. Requires admin.
         /// </summary>
         Freeform

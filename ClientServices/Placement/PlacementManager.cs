@@ -45,6 +45,8 @@ namespace ClientServices.Placement
         public Boolean IsActive { get; private set; }
         public Boolean Eraser { get; private set; }
 
+        private Direction direction = Direction.South;
+
         public event EventHandler PlacementCanceled;
 
         public PlacementManager(IResourceManager resourceManager, INetworkManager networkManager, ICollisionManager collisionManager, IPlayerManager playerManager)
@@ -106,6 +108,21 @@ namespace ClientServices.Placement
 
         public void Rotate()
         {
+            switch (direction)
+            {
+                case Direction.North:
+                    direction = Direction.East;
+                    break;
+                case Direction.East:
+                    direction = Direction.South;
+                    break;
+                case Direction.South:
+                    direction = Direction.West;
+                    break;
+                case Direction.West:
+                    direction = Direction.North;
+                    break;
+            }
         }
 
         public void HandlePlacement()
@@ -193,7 +210,22 @@ namespace ClientServices.Placement
             message.Write(_currentLocWorld.X);
             message.Write(_currentLocWorld.Y);
 
+            message.Write((byte)direction);
+
             _networkManager.SendMessage(message, NetDeliveryMethod.ReliableUnordered);
+        }
+
+        private Sprite GetDirectionalSprite()
+        {
+            Sprite spriteToUse = _currentSprite;
+
+            if (_currentSprite == null) return null;
+
+            string dirName = (_currentSprite.Name + "_" + direction.ToString()).ToLowerInvariant();
+            if (_resourceManager.SpriteExists(dirName))
+                spriteToUse = _resourceManager.GetSprite(dirName);
+
+            return spriteToUse;
         }
 
         public void Update(Vector2D mouseScreen, IMapManager currentMap)
@@ -206,9 +238,11 @@ namespace ClientServices.Placement
 
             _validPosition = true;
 
+            Sprite spriteToUse = GetDirectionalSprite();
+
             if (_currentPermission != null)
             {
-                var spriteRectWorld = new RectangleF(_currentLocWorld.X - (_currentSprite.Width / 2f), _currentLocWorld.Y - (_currentSprite.Height / 2f), _currentSprite.Width, _currentSprite.Height);
+                var spriteRectWorld = new RectangleF(_currentLocWorld.X - (spriteToUse.Width / 2f), _currentLocWorld.Y - (spriteToUse.Height / 2f), spriteToUse.Width, spriteToUse.Height);
 
                 #region AlignNone
                 if (_currentPermission.PlacementOption == PlacementOption.AlignNone || _currentPermission.PlacementOption == PlacementOption.AlignNoneFree)
@@ -268,10 +302,10 @@ namespace ClientServices.Placement
 
                             var sides = new List<Vector2D>
                                             {
-                                                new Vector2D(closestRect.X + (closestRect.Width/2f), closestRect.Top - _currentSprite.Height/2f),
-                                                new Vector2D(closestRect.X + (closestRect.Width/2f), closestRect.Bottom + _currentSprite.Height/2f),
-                                                new Vector2D(closestRect.Left - _currentSprite.Width/2f, closestRect.Y + (closestRect.Height/2f)),
-                                                new Vector2D(closestRect.Right + _currentSprite.Width/2f, closestRect.Y + (closestRect.Height/2f))
+                                                new Vector2D(closestRect.X + (closestRect.Width/2f), closestRect.Top - spriteToUse.Height/2f),
+                                                new Vector2D(closestRect.X + (closestRect.Width/2f), closestRect.Bottom + spriteToUse.Height/2f),
+                                                new Vector2D(closestRect.Left - spriteToUse.Width/2f, closestRect.Y + (closestRect.Height/2f)),
+                                                new Vector2D(closestRect.Right + spriteToUse.Width/2f, closestRect.Y + (closestRect.Height/2f))
                                             };
 
                             var closestSide = (from Vector2D side in sides orderby (side - _currentLocWorld).Length ascending select side).First();
@@ -281,7 +315,7 @@ namespace ClientServices.Placement
                         }
                     }
 
-                    spriteRectWorld = new RectangleF(_currentLocWorld.X - (_currentSprite.Width / 2f), _currentLocWorld.Y - (_currentSprite.Height / 2f), _currentSprite.Width, _currentSprite.Height);
+                    spriteRectWorld = new RectangleF(_currentLocWorld.X - (spriteToUse.Width / 2f), _currentLocWorld.Y - (spriteToUse.Height / 2f), spriteToUse.Width, spriteToUse.Height);
                     if (_collisionManager.IsColliding(spriteRectWorld)) _validPosition = false;
                 }
                 #endregion
@@ -330,7 +364,7 @@ namespace ClientServices.Placement
                                 _currentLocWorld = (currentTile.Position + new Vector2D(currentMap.GetTileSpacing() / 2f, currentMap.GetTileSpacing() / 2f)) + new Vector2D(_currentTemplate.PlacementOffset.Key, _currentTemplate.PlacementOffset.Value);
                                 _currentLocScreen = new Vector2D(_currentLocWorld.X - ClientWindowData.Singleton.ScreenOrigin.X, _currentLocWorld.Y - ClientWindowData.Singleton.ScreenOrigin.Y);
 
-                                spriteRectWorld = new RectangleF(_currentLocWorld.X - (_currentSprite.Width / 2f), _currentLocWorld.Y - (_currentSprite.Height / 2f), _currentSprite.Width, _currentSprite.Height);
+                                spriteRectWorld = new RectangleF(_currentLocWorld.X - (spriteToUse.Width / 2f), _currentLocWorld.Y - (spriteToUse.Height / 2f), spriteToUse.Width, spriteToUse.Height);
                                 if (_collisionManager.IsColliding(spriteRectWorld)) _validPosition = false; //This also includes walls. Meaning that even when set to solid only this will be unplacable. Fix this.
                             }
                         }
@@ -385,7 +419,96 @@ namespace ClientServices.Placement
                     }
                 } 
                 #endregion
+                #region WallTops
+                else if (_currentPermission.PlacementOption == PlacementOption.AlignWallTops || _currentPermission.PlacementOption == PlacementOption.AlignWallTopsFree)
+                {
+                    if (_currentPermission.PlacementOption == PlacementOption.AlignWallTops)
+                        if ((_playerManager.ControlledEntity.Position - _currentLocWorld).Length > _currentPermission.Range) _validPosition = false;
 
+                    if (_currentPermission.IsTile)
+                    {
+                        _validPosition = false;
+                        return;
+                    }
+
+                    var currentTile = currentMap.GetTileAt(_currentLocWorld);
+                    if(currentTile == null || !currentTile.IsSolidTile()) 
+                    {
+                        _validPosition = false;
+                        return;
+                    }
+
+                    var wallTop = currentMap.GetTileAt(currentTile.TilePosition.X, currentTile.TilePosition.Y - 1);
+                    if (wallTop == null)
+                    {
+                        _validPosition = false;
+                        return;
+                    }
+
+                    var wallTopNorth = currentMap.GetTileAt(wallTop.TilePosition.X, wallTop.TilePosition.Y - 1);
+                    var wallCurrentSouth = currentMap.GetTileAt(currentTile.TilePosition.X, currentTile.TilePosition.Y + 1);
+
+                    var wallTopEast = currentMap.GetTileAt(wallTop.TilePosition.X + 1, wallTop.TilePosition.Y);
+                    var wallCurrentEast = currentMap.GetTileAt(currentTile.TilePosition.X + 1, currentTile.TilePosition.Y);
+
+                    var wallTopWest = currentMap.GetTileAt(wallTop.TilePosition.X - 1, wallTop.TilePosition.Y);
+                    var wallCurrentWest = currentMap.GetTileAt(currentTile.TilePosition.X - 1, currentTile.TilePosition.Y);
+
+                    switch (direction)
+                    {
+                        case Direction.North:
+                            if (wallTopNorth == null || wallTopNorth.IsSolidTile() || wallTop.IsSolidTile())
+                            {
+                                _validPosition = false;
+                                return;
+                            }
+                            else
+                            {
+                                _currentLocWorld = new Vector2D(wallTop.Position.X + currentMap.GetTileSpacing() / 2f, wallTop.Position.Y - spriteToUse.AABB.Height);
+                                _validPosition = true;
+                            }
+                            break;
+                        case Direction.East:
+                            if (wallTopEast == null || wallTopEast.IsSolidTile() || wallCurrentEast.IsSolidTile())
+                            {
+                                _validPosition = false;
+                                return;
+                            }
+                            else
+                            {
+                                _currentLocWorld = new Vector2D(wallTop.Position.X + spriteToUse.AABB.Width + currentMap.GetTileSpacing(), wallTop.Position.Y + currentMap.GetTileSpacing() / 2f);
+                                _validPosition = true;
+                            }
+                            break;
+                        case Direction.South:
+                            if (!currentTile.IsSolidTile() || wallCurrentSouth.IsSolidTile())
+                            {
+                                _validPosition = false;
+                                return;
+                            }
+                            else
+                            {
+                                _currentLocWorld = new Vector2D(wallTop.Position.X + currentMap.GetTileSpacing() / 2f, wallTop.Position.Y + spriteToUse.AABB.Height + currentMap.GetTileSpacing());
+                                _validPosition = true;
+                            }
+                            break;
+                        case Direction.West:
+                            if (wallTopWest == null || wallTopWest.IsSolidTile() || wallCurrentWest.IsSolidTile())
+                            {
+                                _validPosition = false;
+                                return;
+                            }
+                            else
+                            {
+                                _currentLocWorld = new Vector2D(wallTop.Position.X - spriteToUse.AABB.Width, wallTop.Position.Y + currentMap.GetTileSpacing() / 2f);
+                                _validPosition = true;
+                            }
+                            break;
+                    }
+                    _currentLocScreen = new Vector2D(_currentLocWorld.X - ClientWindowData.Singleton.ScreenOrigin.X, _currentLocWorld.Y - ClientWindowData.Singleton.ScreenOrigin.Y);
+
+                }
+                #endregion
                 else if (_currentPermission.PlacementOption == PlacementOption.Freeform)
                 {
                     _validPosition = true; //Herpderp
@@ -395,12 +518,14 @@ namespace ClientServices.Placement
 
         public void Render()
         {
-            if (_currentSprite != null)
+            Sprite spriteToUse = GetDirectionalSprite();
+
+            if (spriteToUse != null)
             {
-                _currentSprite.Color = _validPosition ? Color.ForestGreen : Color.IndianRed;
-                _currentSprite.Position = new Vector2D(_currentLocScreen.X - (_currentSprite.Width / 2f), _currentLocScreen.Y - (_currentSprite.Height / 2f)); //Centering the sprite on the cursor.
-                _currentSprite.Draw();
-                _currentSprite.Color = Color.White;
+                spriteToUse.Color = _validPosition ? Color.ForestGreen : Color.IndianRed;
+                spriteToUse.Position = new Vector2D(_currentLocScreen.X - (spriteToUse.Width / 2f), _currentLocScreen.Y - (spriteToUse.Height / 2f)); //Centering the sprite on the cursor.
+                spriteToUse.Draw();
+                spriteToUse.Color = Color.White;
             }
 
             if (_currentPermission != null)
@@ -411,7 +536,8 @@ namespace ClientServices.Placement
                     _currentPermission.PlacementOption == PlacementOption.AlignTileEmpty ||
                     _currentPermission.PlacementOption == PlacementOption.AlignTileNonSolid ||
                     _currentPermission.PlacementOption == PlacementOption.AlignTileSolid ||
-                    _currentPermission.PlacementOption == PlacementOption.AlignWall)   //If it uses range, show the range.
+                    _currentPermission.PlacementOption == PlacementOption.AlignWall ||
+                    _currentPermission.PlacementOption == PlacementOption.AlignWallTops)   //If it uses range, show the range.
                 {
                     Gorgon.CurrentRenderTarget.Circle(
                         _playerManager.ControlledEntity.Position.X - ClientWindowData.Singleton.ScreenOrigin.X,

@@ -78,7 +78,7 @@ namespace ClientServices.State.States
             
             UserInterfaceManager.AddComponent(joinButton);
 
-            _jobButtonContainer = new ScrollableContainer("LobbyJobCont", new Size(450, 400), ResourceManager)
+            _jobButtonContainer = new ScrollableContainer("LobbyJobCont", new Size(375, 400), ResourceManager)
                                      {
                                          Position = new Point(630, 10)
                                      };

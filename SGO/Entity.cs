@@ -54,17 +54,17 @@ namespace SGO
 
         public Vector2 Position { get; set; }
 
-        public int _rotation = 0;
-        public int Rotation 
+        private Direction _direction = Direction.South;
+        public Direction Direction
         { 
             get 
-            { 
-                return _rotation; 
+            {
+                return _direction; 
             }
             set 
             {
-                _rotation = value;
-                //Send update
+                _direction = value;
+                SendDirectionUpdate();
             } 
         }
 
@@ -95,7 +95,9 @@ namespace SGO
             m_entityNetworkManager = entityNetworkManager;
             _messageProfiling = IoCManager.Resolve<IConfigurationManager>().MessageLogging;
             OnNetworkedJoinSpawn += SendNameUpdate;
+            OnNetworkedJoinSpawn += SendDirectionUpdate;
             OnNetworkedSpawn += SendNameUpdate;
+            OnNetworkedSpawn += SendDirectionUpdate;
         }
 
         public void FireNetworkedJoinSpawn(NetConnection client)
@@ -464,6 +466,20 @@ namespace SGO
             return message;
         }
 
+        private void SendDirectionUpdate(NetConnection client)
+        {
+            NetOutgoingMessage message = m_entityNetworkManager.CreateEntityMessage();
+            message.Write(Uid);
+            message.Write((byte)EntityMessage.SetDirection);
+            message.Write((byte)Direction);
+            if (client != null) m_entityNetworkManager.SendMessage(message, client);
+            else m_entityNetworkManager.SendToAll(message);
+        }
+
+        private void SendDirectionUpdate()
+        {
+            SendDirectionUpdate(null);
+        }
         #endregion
     }
 }

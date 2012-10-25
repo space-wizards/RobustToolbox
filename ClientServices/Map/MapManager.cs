@@ -502,9 +502,7 @@ namespace ClientServices.Map
         {
             var tile = (Tile)GetTileAt(worldPos);
             if (tile == null) return false;
-            if (tile.GetType().GetInterface("ICollidable") != null)
-                return true;
-            else return false;
+            return tile.IsSolidTile();
         }
         #endregion
 

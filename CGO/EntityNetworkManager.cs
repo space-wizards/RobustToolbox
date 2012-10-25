@@ -198,6 +198,9 @@ namespace CGO
                 case EntityMessage.GetSVars:
                     result = new ClientIncomingEntityMessage(uid, EntityMessage.GetSVars, message);
                     break;
+                case EntityMessage.SetDirection:
+                    result = new ClientIncomingEntityMessage(uid, EntityMessage.SetDirection, message.ReadByte());
+                    break;
             }
             return result;
         }

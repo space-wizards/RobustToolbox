@@ -614,7 +614,6 @@ namespace ServerServices.Map
         #region Tile helper function
         public Point GetTileArrayPositionFromWorldPosition(double x, double z)
         {
-            
             if (x < 0 || z < 0)
                 return new Point(-1, -1);
             if (x >= mapWidth * tileSpacing || z >= mapWidth * tileSpacing)

@@ -7,6 +7,7 @@ using Lidgren.Network;
 using SS13_Shared;
 using ServerInterfaces.GameObject;
 using ServerInterfaces.Network;
+using SS13_Shared.GO;
 
 namespace SGO
 {
@@ -184,6 +185,7 @@ namespace SGO
             ent.Name = name;
             ent.Translate(new Vector2(X, Y));
             ent.Direction = dir;
+            ent.SendMessage(this, ComponentMessageType.WallMountSearch); //Tell wall mounted compos to look for a tile to attach to. I hate to do this here but i have to.
         }
 
         private XElement ToXML(IEntity e)

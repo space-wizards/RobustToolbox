@@ -37,14 +37,8 @@ namespace SS13_Shared.GO
             {
                 InitSerializer();
             }
-            /*var packer = new Utility.NetParamsPacker();
-            byte[] bytes;
-            var length = (Int16)packer.Pack(this, out bytes);
-            message.Write(length);
-            message.Write(bytes);*/
             var ms = new MemoryStream();
-            /*var bs = new BinaryFormatter();
-            bs.Serialize(ms, this);*/
+            //Thank you NetSerializer
             Serializer.Serialize(ms, this);
             message.Write((int)ms.Length);
             message.Write(ms.ToArray());
@@ -59,12 +53,9 @@ namespace SS13_Shared.GO
             var length = message.ReadInt32();
             var bytes = message.ReadBytes(length);
             var ms = new MemoryStream(bytes);
-            /*var bs = new BinaryFormatter();
-            return (MarshalComponentParameter) bs.Deserialize(ms);*/
+
+            //Thank you NetSerializer
             return (MarshalComponentParameter)Serializer.Deserialize(ms);
-            /*
-            var packer = new Utility.NetParamsPacker();
-            return (MarshalComponentParameter) packer.Unpack(bytes);*/
         }
     }
 }

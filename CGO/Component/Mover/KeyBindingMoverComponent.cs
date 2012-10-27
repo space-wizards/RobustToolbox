@@ -11,6 +11,8 @@ namespace CGO
     {
         private const float BaseMoveSpeed = 300f;
         private const float FastMoveSpeed = 500f;
+        private float _moveTimeCache = 0;
+        private const float MoveRateLimit = .06666f; // 15 movements allowed to be sent to the server per second.
 
         private float _currentMoveSpeed;
 
@@ -68,6 +70,9 @@ namespace CGO
             var state = (BoundKeyState)list[1];
             var setting = state == BoundKeyState.Down;
 
+            if(state == BoundKeyState.Up)
+                SendPositionUpdate(); // Send a position update so that the server knows what position the client ended at.
+
             if (function == BoundKeyFunctions.MoveDown)
                 _moveDown = setting;
             if (function == BoundKeyFunctions.MoveUp)
@@ -88,6 +93,8 @@ namespace CGO
         /// <param name="frameTime"></param>
         public override void Update(float frameTime)
         {
+            _moveTimeCache += frameTime;
+
             base.Update(frameTime);
             
             if (_moveUp && !_moveLeft && !_moveRight && !_moveDown) // Move Up
@@ -196,7 +203,13 @@ namespace CGO
                 if (delta.Y < 0 && delta.X == 0)
                     SetMoveDir(Constants.MoveDirs.north);
 
-                SendPositionUpdate();
+
+                if (_moveTimeCache >= MoveRateLimit)
+                {
+                    SendPositionUpdate();
+
+                    _moveTimeCache = 0;
+                }
             }
             Owner.Moved();
         }

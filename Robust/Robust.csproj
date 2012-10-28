@@ -1,0 +1,145 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <PropertyGroup>
+    <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
+    <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
+    <ProductVersion>8.0.30703</ProductVersion>
+    <SchemaVersion>2.0</SchemaVersion>
+    <ProjectGuid>{5720CC62-DA0C-4BD4-B038-B257609CC665}</ProjectGuid>
+    <OutputType>Library</OutputType>
+    <AppDesignerFolder>Properties</AppDesignerFolder>
+    <RootNamespace>Robust</RootNamespace>
+    <AssemblyName>Robust</AssemblyName>
+    <TargetFrameworkVersion>v4.0</TargetFrameworkVersion>
+    <FileAlignment>512</FileAlignment>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
+    <DebugSymbols>true</DebugSymbols>
+    <DebugType>full</DebugType>
+    <Optimize>false</Optimize>
+    <OutputPath>bin\Debug\</OutputPath>
+    <DefineConstants>DEBUG;TRACE</DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
+    <DebugType>pdbonly</DebugType>
+    <Optimize>true</Optimize>
+    <OutputPath>bin\Release\</OutputPath>
+    <DefineConstants>TRACE</DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+  </PropertyGroup>
+  <ItemGroup>
+    <Reference Include="System" />
+    <Reference Include="System.Core" />
+    <Reference Include="System.Drawing" />
+    <Reference Include="System.Xml.Linq" />
+    <Reference Include="System.Data.DataSetExtensions" />
+    <Reference Include="Microsoft.CSharp" />
+    <Reference Include="System.Data" />
+    <Reference Include="System.Xml" />
+  </ItemGroup>
+  <ItemGroup>
+    <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="SFML\Audio\Listener.cs" />
+    <Compile Include="SFML\Audio\Music.cs" />
+    <None Include="SFML\Audio\Robust\LazySoundBuffer.cs" />
+    <Compile Include="SFML\Audio\Sound.cs" />
+    <Compile Include="SFML\Audio\SoundBuffer.cs" />
+    <Compile Include="SFML\Audio\SoundBufferRecorder.cs" />
+    <Compile Include="SFML\Audio\SoundRecorder.cs" />
+    <Compile Include="SFML\Audio\SoundStream.cs" />
+    <Compile Include="SFML\Audio\Vector3.cs" />
+    <Compile Include="SFML\FrameworkMessages.cs" />
+    <Compile Include="SFML\Graphics\BlendMode.cs" />
+    <Compile Include="SFML\Graphics\CircleShape.cs" />
+    <Compile Include="SFML\Graphics\Color.cs" />
+    <Compile Include="SFML\Graphics\Context.cs" />
+    <Compile Include="SFML\Graphics\ConvexShape.cs" />
+    <Compile Include="SFML\Graphics\Drawable.cs" />
+    <Compile Include="SFML\Graphics\Robust\FloatRect.cs" />
+    <Compile Include="SFML\Graphics\Font.cs" />
+    <Compile Include="SFML\Graphics\Glyph.cs" />
+    <Compile Include="SFML\Graphics\Image.cs" />
+    <Compile Include="SFML\Graphics\Robust\IntRect.cs" />
+    <None Include="SFML\Graphics\Robust\LazyFont.cs" />
+    <None Include="SFML\Graphics\Robust\LazyImage.cs" />
+    <None Include="SFML\Graphics\Robust\RenderImage.cs" />
+    <Compile Include="SFML\Graphics\Robust\ValueTypes\BoundingBox.cs" />
+    <Compile Include="SFML\Graphics\Robust\ValueTypes\BoundingFrustum.cs" />
+    <Compile Include="SFML\Graphics\Robust\ValueTypes\BoundingSphere.cs" />
+    <None Include="SFML\Graphics\Robust\ValueTypes\Color.cs" />
+    <Compile Include="SFML\Graphics\Robust\ValueTypes\ContainmentType.cs" />
+    <Compile Include="SFML\Graphics\Robust\ValueTypes\Design\BoundingBoxConverter.cs" />
+    <Compile Include="SFML\Graphics\Robust\ValueTypes\Design\BoundingSphereConverter.cs" />
+    <Compile Include="SFML\Graphics\Robust\ValueTypes\Design\ColorConverter.cs" />
+    <Compile Include="SFML\Graphics\Robust\ValueTypes\Design\FieldPropertyDescriptor.cs" />
+    <Compile Include="SFML\Graphics\Robust\ValueTypes\Design\MathTypeConverter.cs" />
+    <Compile Include="SFML\Graphics\Robust\ValueTypes\Design\MatrixConverter.cs" />
+    <Compile Include="SFML\Graphics\Robust\ValueTypes\Design\MemberPropertyDescriptor.cs" />
+    <Compile Include="SFML\Graphics\Robust\ValueTypes\Design\PlaneConverter.cs" />
+    <Compile Include="SFML\Graphics\Robust\ValueTypes\Design\PointConverter.cs" />
+    <Compile Include="SFML\Graphics\Robust\ValueTypes\Design\PropertyPropertyDescriptor.cs" />
+    <Compile Include="SFML\Graphics\Robust\ValueTypes\Design\QuaternionConverter.cs" />
+    <Compile Include="SFML\Graphics\Robust\ValueTypes\Design\RayConverter.cs" />
+    <Compile Include="SFML\Graphics\Robust\ValueTypes\Design\RectangleConverter.cs" />
+    <Compile Include="SFML\Graphics\Robust\ValueTypes\Design\Vector2Converter.cs" />
+    <Compile Include="SFML\Graphics\Robust\ValueTypes\Design\Vector3Converter.cs" />
+    <Compile Include="SFML\Graphics\Robust\ValueTypes\Design\Vector4Converter.cs" />
+    <Compile Include="SFML\Graphics\Robust\ValueTypes\Gjk.cs" />
+    <Compile Include="SFML\Graphics\Robust\ValueTypes\MathHelper.cs" />
+    <Compile Include="SFML\Graphics\Robust\ValueTypes\Matrix.cs" />
+    <Compile Include="SFML\Graphics\Robust\ValueTypes\Plane.cs" />
+    <Compile Include="SFML\Graphics\Robust\ValueTypes\PlaneIntersectionType.cs" />
+    <Compile Include="SFML\Graphics\Robust\ValueTypes\Point.cs" />
+    <Compile Include="SFML\Graphics\Robust\ValueTypes\Quaternion.cs" />
+    <Compile Include="SFML\Graphics\Robust\ValueTypes\Ray.cs" />
+    <Compile Include="SFML\Graphics\Robust\ValueTypes\Rectangle.cs" />
+    <Compile Include="SFML\Graphics\Robust\ValueTypes\Vector2.cs" />
+    <Compile Include="SFML\Graphics\Robust\ValueTypes\Vector3.cs" />
+    <Compile Include="SFML\Graphics\Robust\ValueTypes\Vector4.cs" />
+    <Compile Include="SFML\Graphics\PrimitiveType.cs" />
+    <Compile Include="SFML\Graphics\Rect.cs" />
+    <Compile Include="SFML\Graphics\RectangleShape.cs" />
+    <Compile Include="SFML\Graphics\RenderStates.cs" />
+    <Compile Include="SFML\Graphics\RenderTarget.cs" />
+    <Compile Include="SFML\Graphics\RenderTexture.cs" />
+    <Compile Include="SFML\Graphics\RenderWindow.cs" />
+    <Compile Include="SFML\Graphics\Shader.cs" />
+    <Compile Include="SFML\Graphics\Shape.cs" />
+    <Compile Include="SFML\Graphics\Sprite.cs" />
+    <Compile Include="SFML\Graphics\Text.cs" />
+    <Compile Include="SFML\Graphics\Texture.cs" />
+    <Compile Include="SFML\Graphics\Transform.cs" />
+    <Compile Include="SFML\Graphics\Transformable.cs" />
+    <Compile Include="SFML\Graphics\Vertex.cs" />
+    <Compile Include="SFML\Graphics\VertexArray.cs" />
+    <Compile Include="SFML\Graphics\View.cs" />
+    <None Include="SFML\LazyContentLoadFailCounter.cs" />
+    <Compile Include="SFML\Window\ContextSettings.cs" />
+    <Compile Include="SFML\Window\Event.cs" />
+    <Compile Include="SFML\Window\EventArgs.cs" />
+    <Compile Include="SFML\Window\Joystick.cs" />
+    <Compile Include="SFML\Window\Keyboard.cs" />
+    <Compile Include="SFML\Window\LoadingFailedException.cs" />
+    <Compile Include="SFML\Window\Mouse.cs" />
+    <Compile Include="SFML\Window\ObjectBase.cs" />
+    <Compile Include="SFML\Window\StreamAdaptor.cs" />
+    <Compile Include="SFML\Window\Vector2.cs" />
+    <Compile Include="SFML\Window\VideoMode.cs" />
+    <Compile Include="SFML\Window\Window.cs" />
+  </ItemGroup>
+  <ItemGroup>
+    <Content Include="SFML\version.txt" />
+  </ItemGroup>
+  <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
+  <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
+       Other similar extension points exist, see Microsoft.Common.targets.
+  <Target Name="BeforeBuild">
+  </Target>
+  <Target Name="AfterBuild">
+  </Target>
+  -->
+</Project>

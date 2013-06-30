@@ -84,8 +84,7 @@ namespace ServerServices.Player
             var session = GetSessionByConnection(client);
             LogManager.Log(session.name + " disconnected.", LogLevel.Information);
             //Detach the entity and (dont)delete it.
-            var a = session.attachedEntity;
-            session.DetachFromEntity();
+            session.OnDisconnect();
         }
 
         public void SendJoinGameToAll()

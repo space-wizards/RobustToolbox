@@ -2,6 +2,7 @@
 using SS13.IoC;
 using ServerInterfaces.GameMode;
 using ServerInterfaces;
+using ServerInterfaces.Chat;
 
 namespace ServerServices.Round
 {
@@ -38,14 +39,17 @@ namespace ServerServices.Round
 
         public virtual void PlayerJoined(IPlayerSession player)
         {
+
         }
 
-        public virtual void PlayerLeft(IPlayerSession player) //Not Called right now
+        public virtual void PlayerLeft(IPlayerSession player)
         {
+            IoCManager.Resolve<IChatManager>().SendChatMessage(SS13_Shared.ChatChannel.Server, "Gamemode: Player left!", null, player.attachedEntity.Uid);
         }
 
-        public virtual void PlayerDied(IPlayerSession player) //Not Called right now
+        public virtual void PlayerDied(IPlayerSession player)
         {
+            IoCManager.Resolve<IChatManager>().SendChatMessage(SS13_Shared.ChatChannel.Server, "Gamemode: Player died!", null, player.attachedEntity.Uid);
         }
 
         public virtual void Begin()

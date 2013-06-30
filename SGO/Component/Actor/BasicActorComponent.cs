@@ -2,6 +2,8 @@
 using SS13_Shared.GO;
 using ServerInterfaces;
 using ServerInterfaces.Player;
+using SS13.IoC;
+using ServerInterfaces.Round;
 
 namespace SGO
 {
@@ -46,6 +48,7 @@ namespace SGO
                     break;
                 case ComponentMessageType.Die:
                     playerSession.AddPostProcessingEffect(PostProcessingEffectType.Death, -1);
+                    IoCManager.Resolve<IRoundManager>().CurrentGameMode.PlayerDied(playerSession);                  // Tell the current game mode a player just died
                     break;
             }
 

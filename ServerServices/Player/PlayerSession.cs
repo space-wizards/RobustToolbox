@@ -7,6 +7,7 @@ using ServerServices.Log;
 using SS13.IoC;
 using ServerInterfaces.Network;
 using ServerInterfaces.GameObject;
+using ServerInterfaces.Round;
 using SS13_Shared.ServerEnums;
 using ServerInterfaces.Player;
 
@@ -179,7 +180,9 @@ namespace ServerServices.Player
         public void OnDisconnect()
         {
             status = SessionStatus.Disconnected;
+            IoCManager.Resolve<IRoundManager>().CurrentGameMode.PlayerLeft(this);
             DetachFromEntity();
+
         }
 
         public NetOutgoingMessage CreateGuiMessage(GuiComponentType gui)

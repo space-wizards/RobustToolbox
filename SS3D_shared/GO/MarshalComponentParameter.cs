@@ -1,13 +1,13 @@
 ﻿using System;
 using System.IO;
-using System.Runtime.Serialization.Formatters.Binary;
 using Lidgren.Network;
 using NetSerializer;
+using SS13_Shared.Serialization;
 
 namespace SS13_Shared.GO
 {
     [Serializable]
-    public class MarshalComponentParameter
+    public class MarshalComponentParameter : INetSerializableType
     {
         public ComponentFamily Family { get; set; }
 
@@ -26,8 +26,7 @@ namespace SS13_Shared.GO
 
         static void InitSerializer()
         {
-            Type[] types = { typeof(MarshalComponentParameter) };
-            Serializer.Initialize(types);
+            // Serializer will be initialized when the apps start up
             _serializerInitialized = true;
         }
 

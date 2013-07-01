@@ -54,6 +54,8 @@ namespace SGO
 
         public Vector2 Position { get; set; }
 
+        private bool stateChanged = false;
+
         private Direction _direction = Direction.South;
         public Direction Direction
         { 
@@ -325,6 +327,7 @@ namespace SGO
 
         public void Moved(Vector2 fromPosition)
         {
+            stateChanged = true;
             if (OnMove != null)
                 OnMove(Position, fromPosition);
         }
@@ -480,6 +483,40 @@ namespace SGO
         {
             SendDirectionUpdate(null);
         }
+
+        public EntityState GetEntityState(out bool changed)
+        {
+            bool compsChanged;
+            List<ComponentState> compStates = GetComponentStates(out compsChanged);
+
+            changed = stateChanged | compsChanged;
+            //Reset entity state changed to false
+            stateChanged = false;
+            if (changed)
+            {
+                //Send more entity info
+                var es = new EntityState(Uid, compStates);
+                es.SetStateData(new EntityStateData(Uid, Position));
+                return new EntityState(Uid, compStates);
+            }
+            return null;
+        }
+
+        private List<ComponentState> GetComponentStates(out bool compsChanged)
+        {
+            bool compChanged;
+            compsChanged = false;
+            var changedComps = new List<ComponentState>();
+            foreach(var component in _components.Values)
+            {
+                var componentState = component.GetComponentState(out compChanged);
+                if(compChanged)
+                    changedComps.Add(componentState);
+                compsChanged = compsChanged | compChanged;
+            }
+            return changedComps;
+        }
+
         #endregion
     }
 }

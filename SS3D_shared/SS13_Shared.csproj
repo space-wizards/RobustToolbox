@@ -113,9 +113,12 @@
   <ItemGroup>
     <Compile Include="AdminPermissions.cs" />
     <Compile Include="BoundKeyEventArgs.cs" />
+    <Compile Include="GameState.cs" />
     <Compile Include="GO\ComponentParameter.cs" />
     <Compile Include="GO\ComponentReplyMessage.cs" />
     <Compile Include="GO\Crafting\CraftingEntry.cs" />
+    <Compile Include="GO\ComponentState.cs" />
+    <Compile Include="GO\EntityState.cs" />
     <Compile Include="GO\MarshalComponentParameter.cs" />
     <Compile Include="GO\Server\ServerDelegates.cs" />
     <Compile Include="Lighting.cs" />
@@ -136,6 +139,8 @@
     <Compile Include="KeyFunctions.cs" />
     <Compile Include="PostProcessingEffects.cs" />
     <Compile Include="ProfilerEnums.cs" />
+    <Compile Include="Serialization\SS13Serializer.cs" />
+    <Compile Include="Serialization\INetSerializableType.cs" />
     <Compile Include="ServerEnums\LogLevel.cs" />
     <Compile Include="ServerEnums\RunLevel.cs" />
     <Compile Include="ServicesEnum.cs" />

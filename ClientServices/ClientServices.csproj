@@ -110,6 +110,7 @@
     <Compile Include="Map\Tiles\Floor\Space.cs" />
     <Compile Include="Map\Tiles\Tile.cs" />
     <Compile Include="Map\Tiles\Wall\Wall.cs" />
+    <Compile Include="Serialization\SS13Serializer.cs" />
     <Compile Include="State\State.cs" />
     <Compile Include="State\StateManager.cs" />
     <Compile Include="State\States\ConnectMenu.cs" />

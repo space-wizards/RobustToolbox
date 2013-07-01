@@ -16,6 +16,8 @@ namespace SGO
         /// </summary>
         protected ComponentFamily family = ComponentFamily.Generic;
 
+        protected bool stateChanged = false;
+
         private Dictionary<string, Type> _sVars = new Dictionary<string, Type>(); 
 
         #region IGameObjectComponent Members
@@ -193,6 +195,14 @@ namespace SGO
                 SetParameter(param);
         }
 
-        
+        public ComponentState GetComponentState(out bool changed)
+        {
+            changed = stateChanged;
+            //Reset state
+            stateChanged = false;
+            if (stateChanged) //TODO return something useful
+                return new ComponentState(Family);
+            return null;
+        }
     }
 }

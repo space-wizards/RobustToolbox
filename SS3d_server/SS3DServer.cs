@@ -4,6 +4,8 @@ using System.Linq;
 using System.Threading;
 using SS13_Server.Modules;
 using SS13_Server.Modules.Client;
+using ServerInterfaces.GameState;
+using ServerInterfaces.Serialization;
 using ServerServices;
 using Lidgren.Network;
 using SS13_Shared;
@@ -23,6 +25,7 @@ using ServerInterfaces.Round;
 using ServerServices.Round;
 using ServerInterfaces.Map;
 using ServerInterfaces.Placement;
+using SS13_Shared;
 
 namespace SS13_Server
 {
@@ -45,6 +48,11 @@ namespace SS13_Server
         private DateTime _startAt;
         private int _lastAnnounced;
         private bool _active;
+
+        // State update vars
+        private uint _oldestAckedState = 0;
+        private uint _lastState = 0;
+        private DateTime _lastStateTime = DateTime.Now; 
 
         private static SS13Server _singleton;
         public static SS13Server Singleton
@@ -76,6 +84,9 @@ namespace SS13_Server
 
         public SS13Server()
         {
+            //Init serializer
+            var serializer = IoCManager.Resolve<ISS13Serializer>();
+
             Runlevel = RunLevel.Init;
             _singleton = this;
 
@@ -301,6 +312,41 @@ namespace SS13_Server
                 }
             }
             LastUpdate = Time;
+
+            SendGameStateUpdate();
+        }
+
+        public void SendGameStateUpdate()
+        {
+            //Obey the updates per second limit
+            TimeSpan elapsed = Time - _lastStateTime;
+            if (elapsed.TotalMilliseconds > (1000 / IoCManager.Resolve<IConfigurationManager>().UpdatesPerSecond))
+            {
+                //Save last state time
+                _lastStateTime = Time;
+                //Create a new GameState object
+                var stateManager = IoCManager.Resolve<IGameStateManager>();
+                GameState state = new GameState(++_lastState);
+                state.EntityStates = EntityManager.GetEntityStates();
+                stateManager.Add(state.Sequence, state);
+
+                LogManager.Log("Update " + _lastState + " sent.");
+                var connections = IoCManager.Resolve<ISS13NetServer>().Connections;
+                if (connections.Count == 0)
+                { //No clients -- don't send state
+                    _oldestAckedState = _lastState;
+                    stateManager.Clear();
+                }
+                else
+                {
+                    var stateMessage = IoCManager.Resolve<ISS13NetServer>().CreateMessage();
+                    stateMessage.Write((byte) NetMessage.StateUpdate);
+                    state.GameStateUpdate(stateMessage);
+
+                    IoCManager.Resolve<ISS13NetServer>().SendToAll(stateMessage, NetDeliveryMethod.Unreliable);
+                }
+                stateManager.Cull();
+            }
         }
         #endregion
 
@@ -463,6 +509,9 @@ namespace SS13_Server
                 case NetMessage.RequestEntityDeletion:
                     HandleAdminMessage(messageType, msg);
                     break;
+                case NetMessage.StateAck:
+                    HandleStateAck(msg);
+                    break;
             }
         
         }
@@ -604,6 +653,13 @@ namespace SS13_Server
             var p = IoCManager.Resolve<IPlayerManager>().GetSessionByConnection(msg.SenderConnection);
             p.SetName(fixedname);
        }
+
+        public void HandleStateAck(NetIncomingMessage msg)
+        {
+            var sequence = msg.ReadUInt32();
+            IoCManager.Resolve<IGameStateManager>().Ack(msg.SenderConnection.RemoteUniqueIdentifier, sequence);
+            LogManager.Log("State Acked: " + sequence + " by client " + msg.SenderConnection.RemoteUniqueIdentifier + ".");
+        }
 
         // The size of the map being sent is almost exaclty 1 byte per tile.
         // The default 30x30 map is 900 bytes, a 100x100 one is 10,000 bytes (10kb).

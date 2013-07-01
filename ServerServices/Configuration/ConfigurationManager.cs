@@ -130,5 +130,11 @@ namespace ServerServices.Configuration
         {
             get { return ServerServiceType.ConfigManager; }
         }
+
+        public int UpdatesPerSecond
+        {
+            get { return Configuration.UpdatesPerSecond; }
+            set { Configuration.UpdatesPerSecond = value; }
+        }
     }
 }

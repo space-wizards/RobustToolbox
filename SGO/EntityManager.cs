@@ -262,5 +262,18 @@ namespace SGO
                 e.Shutdown();
             m_entities.Clear();
         }
+
+        public List<EntityState> GetEntityStates()
+        {
+            var changedEntities = new List<EntityState>();
+            bool entityChanged;
+            foreach(var entity in m_entities.Values)
+            {
+                var entityState = entity.GetEntityState(out entityChanged);
+                if(entityChanged)
+                    changedEntities.Add(entityState);
+            }
+            return changedEntities;
+        }
     }
 }

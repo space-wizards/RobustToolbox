@@ -66,6 +66,7 @@
     <Compile Include="GameObject\IEntityNetworkManager.cs" />
     <Compile Include="GameObject\IGameObjectComponent.cs" />
     <Compile Include="GameObject\IInventoryComponent.cs" />
+    <Compile Include="GameState\IGameStateManager.cs" />
     <Compile Include="IClient.cs" />
     <Compile Include="GameObject\IEntityTemplate.cs" />
     <Compile Include="ISS13Server.cs" />
@@ -80,6 +81,7 @@
     <Compile Include="Player\IPlayerManager.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Round\IRoundManager.cs" />
+    <Compile Include="Serialization\ISS13Serializer.cs" />
     <Compile Include="Tiles\ITile.cs" />
   </ItemGroup>
   <ItemGroup>

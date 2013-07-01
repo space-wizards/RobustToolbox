@@ -24,5 +24,6 @@ namespace ServerServices.Configuration
         public string AdminPassword = "admin123";
         public bool MessageLogging = false;
         public LogLevel LogLevel = LogLevel.Information;
+        public int UpdatesPerSecond = 20;
     }
 }

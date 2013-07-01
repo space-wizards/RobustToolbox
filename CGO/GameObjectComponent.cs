@@ -127,5 +127,10 @@ namespace CGO
         {
 
         }
+
+        public virtual void HandleStateMessage(ComponentState state)
+        {
+
+        }
     }
 }

@@ -21,6 +21,7 @@ namespace ServerInterfaces.Configuration
         int Port { get; set; }
         int ServerMaxPlayers { get; set; }
         int FramePeriod { get; set; }
+        int UpdatesPerSecond { get; set; }
         GameType GameType { get; set; }
     }
 }

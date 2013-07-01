@@ -2,6 +2,8 @@
 
 using System;
 using System.Xml.Serialization;
+using SS13_Shared.Serialization;
+
 // for various Xml attributes
 
 #endregion
@@ -28,7 +30,7 @@ namespace SS13_Shared
 
     [Serializable]
     public struct Vector2
-        : IComparable, IComparable<Vector2>, IEquatable<Vector2>, IFormattable
+        : INetSerializableType, IComparable, IComparable<Vector2>, IEquatable<Vector2>, IFormattable
     {
 
         #region Class Variables

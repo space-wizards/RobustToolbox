@@ -61,6 +61,7 @@
     <Compile Include="Chat\ChatManager.cs" />
     <Compile Include="Configuration\ConfigurationManager.cs" />
     <Compile Include="Crafting\CraftingManager.cs" />
+    <Compile Include="GameState\GameStateManager.cs" />
     <Compile Include="Log\LogManager.cs" />
     <Compile Include="Map\MapManager.cs" />
     <Compile Include="MessageLogging\MessageLogger.cs" />
@@ -73,6 +74,7 @@
     <Compile Include="Round\Gamemodes.cs" />
     <Compile Include="Round\RoundManager.cs" />
     <Compile Include="Network\SS3DNetServer.cs" />
+    <Compile Include="Serialization\SS13Serializer.cs" />
     <Compile Include="Tiles\Atmos\GasCell.cs" />
     <Compile Include="Tiles\Floor\Floor.cs" />
     <Compile Include="Tiles\Floor\Space.cs" />

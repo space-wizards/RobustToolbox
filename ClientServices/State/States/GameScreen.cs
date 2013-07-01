@@ -10,6 +10,7 @@ using ClientInterfaces.GOC;
 using ClientInterfaces.Map;
 using ClientInterfaces.Player;
 using ClientInterfaces.Resource;
+using ClientInterfaces.Serialization;
 using ClientInterfaces.State;
 using ClientServices.Helpers;
 using ClientServices.UserInterface.Components;
@@ -127,6 +128,9 @@ namespace ClientServices.State.States
             Now = DateTime.Now;
 
             UserInterfaceManager.DisposeAllComponents();
+
+            //Init serializer
+            var serializer = IoCManager.Resolve<ISS13Serializer>();
 
             _entityManager = new EntityManager(NetworkManager);
 
@@ -442,6 +446,9 @@ namespace ClientServices.State.States
                         case NetMessage.RequestBanList:
                             HandleAdminMessage(messageType, message);
                             break;
+                        case NetMessage.StateUpdate:
+                            HandleStateUpdate(message);
+                            break;
                     }
                     break;
             }
@@ -529,6 +536,20 @@ namespace ClientServices.State.States
             message.Write((byte)ChatChannel.Player);
             message.Write(text);
             NetworkManager.SendMessage(message, NetDeliveryMethod.ReliableUnordered);
+        }
+
+        private void HandleStateUpdate(NetIncomingMessage message)
+        {
+            var sequence = message.ReadUInt32();
+            SendStateAck(sequence);
+        }
+
+        private void SendStateAck(uint sequence)
+        {
+            var message = NetworkManager.CreateMessage();
+            message.Write((byte) NetMessage.StateAck);
+            message.Write(sequence);
+            NetworkManager.SendMessage(message, NetDeliveryMethod.Unreliable);
         }
 
         public void GorgonRender(FrameEventArgs e)

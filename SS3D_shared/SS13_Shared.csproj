@@ -84,6 +84,9 @@
     <CodeAnalysisIgnoreBuiltInRules>true</CodeAnalysisIgnoreBuiltInRules>
   </PropertyGroup>
   <ItemGroup>
+    <Reference Include="BsDiffLib">
+      <HintPath>..\References\Release\BsDiffLib.dll</HintPath>
+    </Reference>
     <Reference Include="Gorgon, Version=1.1.4119.34319, Culture=neutral, PublicKeyToken=c001d94e9acbbee7, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
       <HintPath>..\References\Release\Gorgon.dll</HintPath>
@@ -114,6 +117,7 @@
     <Compile Include="AdminPermissions.cs" />
     <Compile Include="BoundKeyEventArgs.cs" />
     <Compile Include="GameState.cs" />
+    <Compile Include="GameStateDelta.cs" />
     <Compile Include="GO\ComponentParameter.cs" />
     <Compile Include="GO\ComponentReplyMessage.cs" />
     <Compile Include="GO\Crafting\CraftingEntry.cs" />

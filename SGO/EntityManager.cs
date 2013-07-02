@@ -265,15 +265,13 @@ namespace SGO
 
         public List<EntityState> GetEntityStates()
         {
-            var changedEntities = new List<EntityState>();
-            bool entityChanged;
+            var stateEntities = new List<EntityState>();
             foreach(var entity in m_entities.Values)
             {
-                var entityState = entity.GetEntityState(out entityChanged);
-                if(entityChanged)
-                    changedEntities.Add(entityState);
+                var entityState = entity.GetEntityState();
+                stateEntities.Add(entityState);
             }
-            return changedEntities;
+            return stateEntities;
         }
     }
 }

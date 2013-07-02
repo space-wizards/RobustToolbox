@@ -36,6 +36,6 @@ namespace ServerInterfaces.GameObject
         void Initialize(bool loaded = false);
         void Moved(Vector2 oldPosition);
         void HandleNetworkMessage(ServerIncomingEntityMessage message);
-        EntityState GetEntityState(out bool changed);
+        EntityState GetEntityState();
     }
 }

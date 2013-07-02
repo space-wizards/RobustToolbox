@@ -1,23 +1,22 @@
 ﻿using System.Collections.Generic;
 using System.Linq;
-using Lidgren.Network;
+using ClientInterfaces.GameStates;
 using SS13_Shared;
-using ServerInterfaces.GameState;
 
-namespace ServerServices.GameState
+namespace ClientServices.GameStates
 {
     public class GameStateManager : Dictionary<uint, SS13_Shared.GameState>, IGameStateManager
     {
-        private Dictionary<long, uint> ackedStates = new Dictionary<long, uint>(); 
+        private Dictionary<long, uint> ackedStates = new Dictionary<long, uint>();
+        private uint currentStateSeq;
+        public GameState CurrentState { get; private set; }
 
         public GameStateManager()
-        {
-            
-        }
+        {}
 
         public void Cull()
         {
-            foreach (var v in Keys.Where( v => v < OldestStateAcked).ToList())
+            foreach (var v in Keys.Where(v => v < OldestStateAcked).ToList())
                 Remove(v);
         }
 
@@ -37,20 +36,21 @@ namespace ServerServices.GameState
 
         public void Ack(long uniqueIdentifier, uint stateAcked)
         {
-            if(!ackedStates.ContainsKey(uniqueIdentifier))
+            if (!ackedStates.ContainsKey(uniqueIdentifier))
                 ackedStates.Add(uniqueIdentifier, stateAcked);
             else
                 ackedStates[uniqueIdentifier] = stateAcked;
         }
 
-        public GameStateDelta GetDelta(NetConnection client, uint state)
+        public void ApplyFullState(uint seq, GameState fullState)
         {
-            var toState = this[state];
-            if (!ackedStates.ContainsKey(client.RemoteUniqueIdentifier))
-                return toState - new SS13_Shared.GameState(0); //The client has no state!
+            CurrentState = fullState;
+            currentStateSeq = seq;
+        }
+
+        public void ApplyDeltaState(uint oldStateSeq, uint newStateSeq, GameStateDelta delta)
+        {
             
-            var fromState = this[ackedStates[client.RemoteUniqueIdentifier]];
-            return toState - fromState;
         }
     }
 }

@@ -330,7 +330,7 @@ namespace SS13_Server
                 state.EntityStates = EntityManager.GetEntityStates();
                 stateManager.Add(state.Sequence, state);
 
-                LogManager.Log("Update " + _lastState + " sent.");
+                //LogManager.Log("Update " + _lastState + " sent.");
                 var connections = IoCManager.Resolve<ISS13NetServer>().Connections;
                 if (connections.Count == 0)
                 { //No clients -- don't send state
@@ -341,9 +341,15 @@ namespace SS13_Server
                 {
                     var stateMessage = IoCManager.Resolve<ISS13NetServer>().CreateMessage();
                     stateMessage.Write((byte) NetMessage.StateUpdate);
+                    
                     state.GameStateUpdate(stateMessage);
 
                     IoCManager.Resolve<ISS13NetServer>().SendToAll(stateMessage, NetDeliveryMethod.Unreliable);
+                    foreach(var c in IoCManager.Resolve<ISS13NetServer>().Connections)
+                    {
+                        var delta = stateManager.GetDelta(c, _lastState);
+                        LogManager.Log("Delta of size " + delta.Size + " sent to " + c.RemoteUniqueIdentifier);
+                    }
                 }
                 stateManager.Cull();
             }
@@ -658,7 +664,7 @@ namespace SS13_Server
         {
             var sequence = msg.ReadUInt32();
             IoCManager.Resolve<IGameStateManager>().Ack(msg.SenderConnection.RemoteUniqueIdentifier, sequence);
-            LogManager.Log("State Acked: " + sequence + " by client " + msg.SenderConnection.RemoteUniqueIdentifier + ".");
+            //LogManager.Log("State Acked: " + sequence + " by client " + msg.SenderConnection.RemoteUniqueIdentifier + ".");
         }
 
         // The size of the map being sent is almost exaclty 1 byte per tile.

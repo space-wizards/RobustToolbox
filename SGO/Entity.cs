@@ -484,37 +484,27 @@ namespace SGO
             SendDirectionUpdate(null);
         }
 
-        public EntityState GetEntityState(out bool changed)
+        public EntityState GetEntityState()
         {
-            bool compsChanged;
-            List<ComponentState> compStates = GetComponentStates(out compsChanged);
+            List<ComponentState> compStates = GetComponentStates();
 
-            changed = stateChanged | compsChanged;
             //Reset entity state changed to false
-            stateChanged = false;
-            if (changed)
-            {
-                //Send more entity info
-                var es = new EntityState(Uid, compStates);
-                es.SetStateData(new EntityStateData(Uid, Position));
-                return new EntityState(Uid, compStates);
-            }
-            return null;
+            
+            var es = new EntityState(Uid, compStates);
+            es.SetStateData(new EntityStateData(Uid, Position));
+            return es;
         }
 
-        private List<ComponentState> GetComponentStates(out bool compsChanged)
+        private List<ComponentState> GetComponentStates()
         {
             bool compChanged;
-            compsChanged = false;
-            var changedComps = new List<ComponentState>();
+            var stateComps = new List<ComponentState>();
             foreach(var component in _components.Values)
             {
-                var componentState = component.GetComponentState(out compChanged);
-                if(compChanged)
-                    changedComps.Add(componentState);
-                compsChanged = compsChanged | compChanged;
+                var componentState = component.GetComponentState();
+                stateComps.Add(componentState);
             }
-            return changedComps;
+            return stateComps;
         }
 
         #endregion

@@ -195,14 +195,9 @@ namespace SGO
                 SetParameter(param);
         }
 
-        public ComponentState GetComponentState(out bool changed)
+        public ComponentState GetComponentState()
         {
-            changed = stateChanged;
-            //Reset state
-            stateChanged = false;
-            if (stateChanged) //TODO return something useful
-                return new ComponentState(Family);
-            return null;
+            return new ComponentState(Family);
         }
     }
 }

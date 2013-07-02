@@ -20,7 +20,7 @@ namespace ServerInterfaces.GameObject
         void HandleInstantiationMessage(Lidgren.Network.NetConnection netConnection);
         void SetSVar(MarshalComponentParameter sVar);
         List<MarshalComponentParameter> GetSVars();
-        ComponentState GetComponentState(out bool changed);
+        ComponentState GetComponentState();
 
     }
 }

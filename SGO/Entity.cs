@@ -490,8 +490,7 @@ namespace SGO
 
             //Reset entity state changed to false
             
-            var es = new EntityState(Uid, compStates);
-            es.SetStateData(new EntityStateData(Uid, Position));
+            var es = new EntityState(Uid, compStates, Position, Template.Name, Name);
             return es;
         }
 

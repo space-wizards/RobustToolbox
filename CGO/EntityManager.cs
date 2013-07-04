@@ -6,6 +6,7 @@ using ClientInterfaces.Network;
 using Lidgren.Network;
 using GorgonLibrary;
 using SS13_Shared;
+using SS13_Shared.GO;
 
 namespace CGO
 {
@@ -161,6 +162,12 @@ namespace CGO
                     _entities[entMsg.Uid].HandleNetworkMessage(entMsg);
             }
         }
+
+        #region GameState Stuff
+        public void ApplyEntityStates(List<EntityState> entityStates)
+        {
+        }
+        #endregion
 
         #region Entity Manager Networking
         public void HandleNetworkMessage(NetIncomingMessage msg)

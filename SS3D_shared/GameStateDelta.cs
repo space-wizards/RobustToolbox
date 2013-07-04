@@ -2,6 +2,7 @@
 using System.IO;
 using Lidgren.Network;
 using NetSerializer;
+using SS13_Shared.GameStates;
 using SS13_Shared.Serialization;
 
 namespace SS13_Shared

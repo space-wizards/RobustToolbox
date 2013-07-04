@@ -2,10 +2,11 @@
 using System.Linq;
 using ClientInterfaces.GameStates;
 using SS13_Shared;
+using SS13_Shared.GameStates;
 
 namespace ClientServices.GameStates
 {
-    public class GameStateManager : Dictionary<uint, SS13_Shared.GameState>, IGameStateManager
+    public class GameStateManager : Dictionary<uint, GameState>, IGameStateManager
     {
         private Dictionary<long, uint> ackedStates = new Dictionary<long, uint>();
         private uint currentStateSeq;

@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.IO;
 using System.IO.Compression;
@@ -7,18 +7,18 @@ using NetSerializer;
 using SS13_Shared.GO;
 using SS13_Shared.Serialization;
 
-namespace SS13_Shared
+namespace SS13_Shared.GameStates
 {
     [Serializable]
     public class GameState : INetSerializableType
     {
         public uint Sequence { get; private set;}
         public List<EntityState> EntityStates { get; set; }
+        public List<PlayerState> PlayerStates { get; set; }
+            
+        [NonSerialized] private MemoryStream _serializedData;
 
-        [NonSerialized] 
-        private MemoryStream SerializedData;
-
-        [NonSerialized] private bool serialized = false;
+        [NonSerialized] private bool _serialized = false;
 
         /// <summary>
         /// Constructor!
@@ -80,11 +80,11 @@ namespace SS13_Shared
         /// </summary>
         private void Serialize()
         {
-            if (serialized)
+            if (_serialized)
                 return;
-            SerializedData = new MemoryStream();
-            Serializer.Serialize(SerializedData, this);
-            serialized = true;
+            _serializedData = new MemoryStream();
+            Serializer.Serialize(_serializedData, this);
+            _serialized = true;
         }
 
         /// <summary>
@@ -93,12 +93,12 @@ namespace SS13_Shared
         /// <returns></returns>
         public MemoryStream GetSerializedDataStream()
         {
-            if(!serialized)
+            if(!_serialized)
             {
                 Serialize();
             }
 
-            return SerializedData;
+            return _serializedData;
         }
 
         /// <summary>
@@ -107,12 +107,12 @@ namespace SS13_Shared
         /// <returns></returns>
         public byte[] GetSerializedDataBuffer()
         {
-            if (!serialized)
+            if (!_serialized)
             {
                 Serialize();
             }
 
-            return SerializedData.ToArray();
+            return _serializedData.ToArray();
         }
 
         /// <summary>

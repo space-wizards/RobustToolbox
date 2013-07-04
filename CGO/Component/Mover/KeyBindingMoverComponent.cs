@@ -36,10 +36,10 @@ namespace CGO
 
         public override void HandleNetworkMessage(IncomingEntityComponentMessage message)
         {
-            var x = (double)message.MessageParameters[0];
+            /*var x = (double)message.MessageParameters[0];
             var y = (double)message.MessageParameters[1];
             if((bool)message.MessageParameters[2]) //"forced" parameter -- if true forces position update
-            PlainTranslate((float)x, (float)y);
+            PlainTranslate((float)x, (float)y);*/
         }
 
         public override ComponentReplyMessage RecieveMessage(object sender, ComponentMessageType type, params object[] list)

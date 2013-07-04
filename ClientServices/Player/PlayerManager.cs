@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 using ClientInterfaces.GOC;
 using ClientInterfaces.Network;
 using ClientInterfaces.Player;
@@ -13,6 +14,7 @@ using GorgonLibrary.InputDevices;
 using SS13_Shared;
 using SS13_Shared.GO;
 using CGO;
+using SS13_Shared.GameStates;
 
 namespace ClientServices.Player
 {
@@ -28,6 +30,7 @@ namespace ClientServices.Player
 
         public event EventHandler<TypeEventArgs> RequestedStateSwitch;
         public event EventHandler<VectorEventArgs> OnPlayerMove;
+        private SessionStatus status = SessionStatus.Zombie;
 
         public IEntity ControlledEntity { get; private set; }
 
@@ -111,14 +114,14 @@ namespace ClientServices.Player
             switch (messageType)
             {
                 case PlayerSessionMessage.AttachToEntity:
-                    HandleAttachToEntity(message);
+                    //HandleAttachToEntity(message);
                     break;
                 case PlayerSessionMessage.JoinLobby:
-                    if (RequestedStateSwitch != null)
+                    /*if (RequestedStateSwitch != null)
                     {
                         RequestedStateSwitch(this, new TypeEventArgs(typeof(LobbyScreen)));
                         Detach();
-                    }
+                    }*/
                     break;
                 case PlayerSessionMessage.AddPostProcessingEffect:
                     var effectType = (PostProcessingEffectType)message.ReadInt32();
@@ -162,6 +165,29 @@ namespace ClientServices.Player
         {
             if(OnPlayerMove != null)
                 OnPlayerMove(sender, args);
+        }
+
+        public void ApplyPlayerStates(List<PlayerState> list)
+        {
+            var myState = list.FirstOrDefault(s => s.UniqueIdentifier == _networkManager.UniqueId);
+            if (myState == null)
+                return;
+            if(myState.ControlledEntity != null && 
+                (ControlledEntity == null || (ControlledEntity != null && myState.ControlledEntity != ControlledEntity.Uid) ))
+                Attach(EntityManager.Singleton.GetEntity((int)myState.ControlledEntity));
+            
+            if(status != myState.Status)
+                SwitchState(myState.Status);
+        }
+
+        private void SwitchState(SessionStatus newStatus)
+        {
+            status = newStatus;
+            if (status == SessionStatus.InLobby && RequestedStateSwitch != null)
+            {
+                RequestedStateSwitch(this, new TypeEventArgs(typeof (LobbyScreen)));
+                Detach();
+            }
         }
 
     }

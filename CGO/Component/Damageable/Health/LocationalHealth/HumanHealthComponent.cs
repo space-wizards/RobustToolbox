@@ -98,8 +98,7 @@ namespace CGO
             Health = GetHealth();
             if (Health <= 0) Die(); //Need better logic here.
 
-            if(IoCManager.Resolve<IPlayerManager>().ControlledEntity.Uid == Owner.Uid)
-                IoCManager.Resolve<IUserInterfaceManager>().ComponentUpdate(GuiComponentType.TargetingUi);
+            IoCManager.Resolve<IUserInterfaceManager>().ComponentUpdate(GuiComponentType.TargetingUi);
         }
 
         public override float GetMaxHealth()

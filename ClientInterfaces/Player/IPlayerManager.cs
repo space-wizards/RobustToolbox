@@ -22,5 +22,7 @@ namespace ClientInterfaces.Player
         void HandleNetworkMessage(NetIncomingMessage message);
         void Update(float frameTime);
         void ApplyEffects(RenderImage image);
+
+        void ApplyPlayerStates(System.Collections.Generic.List<SS13_Shared.GameStates.PlayerState> list);
     }
 }

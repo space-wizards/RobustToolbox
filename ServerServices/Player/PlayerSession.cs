@@ -1,6 +1,7 @@
 ﻿using Lidgren.Network;
 using SS13_Shared;
 using SS13_Shared.GO;
+using SS13_Shared.GameStates;
 using ServerServices;
 using ServerInterfaces;
 using ServerServices.Log;
@@ -31,10 +32,15 @@ namespace ServerServices.Player
 
         public JobDefinition assignedJob { get; set; }
 
+        public PlayerState PlayerState;
+
         public PlayerSession(NetConnection client, PlayerManager playerManager)
         {
             _playerManager = playerManager;
             name = "";
+
+            PlayerState = new PlayerState();
+            PlayerState.UniqueIdentifier = client.RemoteUniqueIdentifier;
 
             if (client != null)
             {
@@ -44,6 +50,8 @@ namespace ServerServices.Player
             }
             else
                 status = SessionStatus.Zombie;
+
+            UpdatePlayerState();
         }
 
         public void AttachToEntity(IEntity a)
@@ -60,6 +68,7 @@ namespace ServerServices.Player
             attachedEntity = a;
             SendAttachMessage();
             SetAttachedEntityName();
+            UpdatePlayerState();
         }
 
         public void DetachFromEntity()
@@ -70,6 +79,7 @@ namespace ServerServices.Player
             attachedEntity.RemoveComponent(ComponentFamily.Mover);
             attachedEntity.RemoveComponent(ComponentFamily.Actor);
             attachedEntity = null;
+            UpdatePlayerState();
         }
 
         private void SendAttachMessage()
@@ -133,6 +143,7 @@ namespace ServerServices.Player
             name = _name;
             LogManager.Log("Player set name: " + connectedClient.RemoteEndPoint.Address + " -> " + name);
             SetAttachedEntityName();
+            UpdatePlayerState();
         }
 
         private void SetAttachedEntityName()
@@ -150,11 +161,12 @@ namespace ServerServices.Player
         
         public void JoinLobby()
         {
-            var m = IoCManager.Resolve<ISS13NetServer>().CreateMessage();
+            /*var m = IoCManager.Resolve<ISS13NetServer>().CreateMessage();
             m.Write((byte)NetMessage.PlayerSessionMessage);
             m.Write((byte)PlayerSessionMessage.JoinLobby);
-            IoCManager.Resolve<ISS13NetServer>().SendMessage(m, connectedClient);
+            IoCManager.Resolve<ISS13NetServer>().SendMessage(m, connectedClient);*/
             status = SessionStatus.InLobby;
+            UpdatePlayerState();
         }
 
         public void JoinGame()
@@ -166,12 +178,14 @@ namespace ServerServices.Player
                 IoCManager.Resolve<ISS13NetServer>().SendMessage(m, connectedClient);
 
                 status = SessionStatus.InGame;
+                UpdatePlayerState();
             }
         }
 
         public void OnConnect()
         {
             status = SessionStatus.Connected;
+            UpdatePlayerState();
             //Put player in lobby immediately.
             LogManager.Log("Player connected - " + connectedClient.RemoteEndPoint.Address);
             JoinLobby();
@@ -182,6 +196,7 @@ namespace ServerServices.Player
             status = SessionStatus.Disconnected;
             IoCManager.Resolve<IRoundManager>().CurrentGameMode.PlayerLeft(this);
             DetachFromEntity();
+            UpdatePlayerState();
 
         }
 
@@ -202,6 +217,16 @@ namespace ServerServices.Player
             m.Write((int)type);
             m.Write(duration);
             IoCManager.Resolve<ISS13NetServer>().SendMessage(m, ConnectedClient, NetDeliveryMethod.ReliableUnordered);
+        }
+
+        private void UpdatePlayerState()
+        {
+            PlayerState.Status = status;
+            PlayerState.Name = name;
+            if (attachedEntity == null)
+                PlayerState.ControlledEntity = null;
+            else
+                PlayerState.ControlledEntity = attachedEntity.Uid;
         }
     }
 }

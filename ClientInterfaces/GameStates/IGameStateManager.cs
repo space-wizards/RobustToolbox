@@ -1,8 +1,9 @@
 ﻿using System.Collections.Generic;
+using SS13_Shared.GameStates;
 
 namespace ClientInterfaces.GameStates
 {
-    public interface IGameStateManager: IDictionary<uint, SS13_Shared.GameState>
+    public interface IGameStateManager: IDictionary<uint, GameState>
     {
         void Cull();
         uint OldestStateAcked { get; }

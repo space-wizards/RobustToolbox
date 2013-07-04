@@ -334,5 +334,12 @@ namespace CGO
         }
 
         #endregion
+
+        #region GameState Stuff
+        public void HandleEntityState(EntityState state)
+        {
+            
+        }
+        #endregion
     }
 }

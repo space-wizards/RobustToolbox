@@ -21,7 +21,6 @@ using ClientWindow;
 using GorgonLibrary;
 using GorgonLibrary.Graphics;
 using GorgonLibrary.InputDevices;
-
 using Lidgren.Network;
 using SS13.IoC;
 using SS13_Shared;
@@ -98,6 +97,10 @@ namespace ClientServices.State.States
 
         public string SpawnType;
 
+        #region gameState stuff
+        private Dictionary<uint, GameState> _lastStates = new Dictionary<uint, GameState>(); 
+        #endregion
+
         #region Mouse/Camera stuff
 
         public Vector2D MousePosScreen = Vector2D.Zero;
@@ -105,6 +108,8 @@ namespace ClientServices.State.States
 
         #endregion
 
+        
+        
         /// <summary>
         /// Center point of the current render window.
         /// </summary>
@@ -112,6 +117,8 @@ namespace ClientServices.State.States
         {
             get { return ClientWindowData.Singleton.ScreenOrigin; }
         }
+
+
 
         #endregion
 
@@ -449,6 +456,9 @@ namespace ClientServices.State.States
                         case NetMessage.StateUpdate:
                             HandleStateUpdate(message);
                             break;
+                        case NetMessage.FullState:
+                            HandleFullState(message);
+                            break;
                     }
                     break;
             }
@@ -540,7 +550,28 @@ namespace ClientServices.State.States
 
         private void HandleStateUpdate(NetIncomingMessage message)
         {
+            var delta = GameStateDelta.ReadDelta(message);
+            var fromState = _lastStates[delta.FromSequence];
+            var newState = fromState + delta;
+            _lastStates[delta.Sequence] = newState;
+            CullOldStates(delta.Sequence>=10?delta.Sequence-10:0);
+            SendStateAck(delta.Sequence);
+        }
+
+        private void CullOldStates(uint sequence)
+        {
+            foreach (var v in _lastStates.Keys.Where(v => v < sequence).ToList())
+                _lastStates.Remove(v);
+        }
+
+        private void HandleFullState(NetIncomingMessage message)
+        {
             var sequence = message.ReadUInt32();
+            var length = message.ReadInt32();
+            var bytes = message.ReadBytes(length);
+            var newState = GameState.Deserialize(bytes);
+
+            _lastStates[sequence] = newState;
             SendStateAck(sequence);
         }
 

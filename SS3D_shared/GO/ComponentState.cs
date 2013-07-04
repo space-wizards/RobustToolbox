@@ -1,17 +1,18 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
+using SS13_Shared.Serialization;
 
 namespace SS13_Shared.GO
 {
     [Serializable]
-    public class ComponentState
+    public class ComponentState : INetSerializableType
     {
-        public byte Family { get; private set; }
+        public ComponentFamily Family { get; protected set; }
+
         public ComponentState(ComponentFamily family)
         {
-            Family = (byte)family;
+            Family = family;
         }
+
+        public ComponentState() {}
     }
 }

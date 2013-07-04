@@ -120,6 +120,7 @@
     <Compile Include="GameStateDelta.cs" />
     <Compile Include="GO\ComponentParameter.cs" />
     <Compile Include="GO\ComponentReplyMessage.cs" />
+    <Compile Include="GO\Component\Mover\MoverComponentState.cs" />
     <Compile Include="GO\Crafting\CraftingEntry.cs" />
     <Compile Include="GO\ComponentState.cs" />
     <Compile Include="GO\EntityState.cs" />

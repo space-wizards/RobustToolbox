@@ -486,7 +486,7 @@ namespace SGO
 
         public EntityState GetEntityState()
         {
-            List<ComponentState> compStates = GetComponentStates();
+            var compStates = GetComponentStates();
 
             //Reset entity state changed to false
             
@@ -497,7 +497,6 @@ namespace SGO
 
         private List<ComponentState> GetComponentStates()
         {
-            bool compChanged;
             var stateComps = new List<ComponentState>();
             foreach(var component in _components.Values)
             {

@@ -339,16 +339,35 @@ namespace SS13_Server
                 }
                 else
                 {
-                    var stateMessage = IoCManager.Resolve<ISS13NetServer>().CreateMessage();
-                    stateMessage.Write((byte) NetMessage.StateUpdate);
                     
-                    state.GameStateUpdate(stateMessage);
+                    //state.GameStateUpdate(stateMessage);
 
-                    IoCManager.Resolve<ISS13NetServer>().SendToAll(stateMessage, NetDeliveryMethod.Unreliable);
+                    //IoCManager.Resolve<ISS13NetServer>().SendToAll(stateMessage, NetDeliveryMethod.Unreliable);
                     foreach(var c in IoCManager.Resolve<ISS13NetServer>().Connections)
                     {
-                        var delta = stateManager.GetDelta(c, _lastState);
-                        LogManager.Log("Delta of size " + delta.Size + " sent to " + c.RemoteUniqueIdentifier);
+                        var session = IoCManager.Resolve<IPlayerManager>().GetSessionByConnection(c);
+                        if (session.status != SessionStatus.InGame)
+                            continue;
+                        var stateMessage = IoCManager.Resolve<ISS13NetServer>().CreateMessage();
+                        var lastStateAcked = stateManager.GetLastStateAcked(c);
+                        if(lastStateAcked == 0)
+                        {
+                            stateMessage.Write((byte)NetMessage.FullState);
+                            var stateData = state.GetSerializedDataBuffer();
+                            stateMessage.Write(state.Sequence);
+                            stateMessage.Write(stateData.Length);
+                            stateMessage.Write(stateData);
+                            LogManager.Log("Full state of size " + stateData.Length + " sent to " + c.RemoteUniqueIdentifier);
+                        } 
+                        else
+                        {
+                            stateMessage.Write((byte)NetMessage.StateUpdate);
+                            var delta = stateManager.GetDelta(c, _lastState);
+                            delta.WriteDelta(stateMessage);
+                            LogManager.Log("Delta of size " + delta.Size + " sent to " + c.RemoteUniqueIdentifier);
+                        }
+
+                        IoCManager.Resolve<ISS13NetServer>().SendMessage(stateMessage, c, NetDeliveryMethod.Unreliable);
                     }
                 }
                 stateManager.Cull();

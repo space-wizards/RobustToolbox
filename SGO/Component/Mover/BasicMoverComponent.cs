@@ -1,6 +1,7 @@
 ﻿using Lidgren.Network;
 using SS13_Shared;
 using SS13_Shared.GO;
+using SS13_Shared.GO.Component.Mover;
 
 namespace SGO
 {
@@ -51,6 +52,11 @@ namespace SGO
         public override void HandleInstantiationMessage(NetConnection netConnection)
         {
             SendPositionUpdate(netConnection, true);
+        }
+
+        public override ComponentState GetComponentState()
+        {
+            return new MoverComponentState(Owner.Position.X, Owner.Position.Y);
         }
     }
 }

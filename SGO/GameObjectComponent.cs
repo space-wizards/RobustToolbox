@@ -195,7 +195,7 @@ namespace SGO
                 SetParameter(param);
         }
 
-        public ComponentState GetComponentState()
+        public virtual ComponentState GetComponentState()
         {
             return new ComponentState(Family);
         }

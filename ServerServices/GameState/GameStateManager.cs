@@ -52,5 +52,20 @@ namespace ServerServices.GameState
             var fromState = this[ackedStates[client.RemoteUniqueIdentifier]];
             return toState - fromState;
         }
+
+        public SS13_Shared.GameState GetFullState(uint state)
+        {
+            if (ContainsKey(state))
+                return this[state];
+            return null; //TODO SHIT
+        }
+
+        public uint GetLastStateAcked(NetConnection client)
+        {
+            if (!ackedStates.ContainsKey(client.RemoteUniqueIdentifier))
+                return 0;
+
+            return ackedStates[client.RemoteUniqueIdentifier];
+        }
     }
 }

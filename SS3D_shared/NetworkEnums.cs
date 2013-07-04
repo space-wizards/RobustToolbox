@@ -37,7 +37,8 @@ namespace SS13_Shared
         RequestAdminUnBan,
         RequestEntityDeletion,  //Client asks to delete entity. Used for editing. Requires admin.
         StateUpdate,
-        StateAck
+        StateAck,
+        FullState
     }
 
     public enum ItemMessage

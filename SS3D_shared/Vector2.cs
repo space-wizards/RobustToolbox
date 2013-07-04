@@ -2,6 +2,7 @@
 
 using System;
 using System.Xml.Serialization;
+using GorgonLibrary;
 using SS13_Shared.Serialization;
 
 // for various Xml attributes
@@ -441,6 +442,16 @@ namespace SS13_Shared
         public static bool operator !=(Vector2 v1, Vector2 v2)
         {
             return !(v1 == v2);
+        }
+
+        public static implicit operator Vector2D(Vector2 vec)
+        {
+            return new Vector2D((float)vec.X, (float)vec.Y);
+        }
+
+        public static implicit operator Vector2(Vector2D vec)
+        {
+            return new Vector2(vec.X, vec.Y);
         }
 
         #endregion

@@ -34,5 +34,6 @@ namespace ClientInterfaces.GOC
         void GetSVars();
         void SetSVar(MarshalComponentParameter svar);
         event EventHandler<GetSVarsEventArgs> GetSVarsCallback;
+        void HandleEntityState(EntityState state);
     }
 }

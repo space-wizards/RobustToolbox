@@ -68,6 +68,11 @@ namespace CGO
             return _entities.Keys.Contains(eid) ? _entities[eid] : null;
         }
 
+        public bool EntityExists(int eid)
+        {
+            return _entities.ContainsKey(eid);
+        }
+
         private IEntity SpawnEntity(string entityType, int uid)
         {
             var e = _entityFactory.CreateEntity(entityType, _entityNetworkManager);
@@ -88,6 +93,18 @@ namespace CGO
             var e = SpawnEntity(entityType, uid);
             e.Position = position;
             return e;
+        }
+
+        private void RemoveEntity(IEntity entity)
+        {
+            entity.Shutdown();
+            _entities.Remove(entity.Uid);
+        }
+
+        private void RemoveEntity(int entityUid)
+        {
+            if(EntityExists(entityUid))
+                RemoveEntity(GetEntity(entityUid));
         }
 
         public IEntity[] GetEntitiesInRange(Vector2D position, float Range)
@@ -166,6 +183,25 @@ namespace CGO
         #region GameState Stuff
         public void ApplyEntityStates(List<EntityState> entityStates)
         {
+            var entityKeys = new List<int>();
+            foreach(var es in entityStates)
+            {
+                entityKeys.Add(es.StateData.Uid);
+                //Known entities
+                if(_entities.ContainsKey(es.StateData.Uid))
+                {
+                    _entities[es.StateData.Uid].HandleEntityState(es);
+                }
+                else //Unknown entities
+                {
+                    SpawnEntityAt(es.StateData.TemplateName, es.StateData.Uid, es.StateData.Position);
+                }
+            }
+
+            //Delete entities that exist here but don't exist in the entity states
+            var toDelete = _entities.Keys.Where(k => !entityKeys.Contains(k)).ToArray();
+            foreach(var k in toDelete) 
+                RemoveEntity(k);
         }
         #endregion
 
@@ -179,16 +215,11 @@ namespace CGO
                     HandleSpawnEntity(msg);
                     break;
                 case EntityManagerMessage.SpawnEntityAtPosition:
-                    HandleSpawnEntityAtPosition(msg);
+                    //HandleSpawnEntityAtPosition(msg);
                     break;
                 case EntityManagerMessage.DeleteEntity:
                     var dUid = msg.ReadInt32();
-                    var ent = GetEntity(dUid);
-                    if (ent != null)
-                    {
-                        ent.Shutdown();
-                        _entities.Remove(dUid);
-                    }
+                    RemoveEntity(dUid);
                     break;
                 case EntityManagerMessage.InitializeEntities:
                     InitializeEntities();

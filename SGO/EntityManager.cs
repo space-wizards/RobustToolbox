@@ -116,11 +116,13 @@ namespace SGO
         public void DeleteEntity(IEntity e)
         {
             e.Shutdown();
+            /* //This is now handled by GameStates.
             NetOutgoingMessage message = m_netServer.CreateMessage();
             message.Write((byte) NetMessage.EntityManagerMessage);
             message.Write((int) EntityManagerMessage.DeleteEntity);
             message.Write(e.Uid);
             m_netServer.SendToAll(message, NetDeliveryMethod.ReliableOrdered);
+             */
             m_entities.Remove(e.Uid);
         }
 

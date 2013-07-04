@@ -579,6 +579,8 @@ namespace ClientServices.State.States
             if (delta.Sequence > _currentStateSequence)
                 _currentStateSequence = delta.Sequence;
 
+            ApplyCurrentGameState();
+
             //Dump states that have passed out of being relevant
             CullOldStates(delta.FromSequence);
         }
@@ -609,6 +611,13 @@ namespace ClientServices.State.States
             //Store the new state
             _lastStates[newState.Sequence] = newState;
             _currentStateSequence = newState.Sequence;
+            ApplyCurrentGameState();
+        }
+
+        private void ApplyCurrentGameState()
+        {
+            var currentState = _lastStates[_currentStateSequence];
+            _entityManager.ApplyEntityStates(currentState.EntityStates);
         }
 
         /// <summary>

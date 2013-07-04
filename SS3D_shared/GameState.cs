@@ -20,32 +20,43 @@ namespace SS13_Shared
 
         [NonSerialized] private bool serialized = false;
 
+        /// <summary>
+        /// Constructor!
+        /// </summary>
+        /// <param name="sequence"></param>
         public GameState(uint sequence)
         {
             Sequence = sequence;
         }
         
-        public NetOutgoingMessage GameStateUpdate(NetOutgoingMessage StateUpdateMessage)
-        {
-            StateUpdateMessage.Write(Sequence);
-            return StateUpdateMessage;
-        }
-
-        public NetOutgoingMessage WriteDelta(NetOutgoingMessage StateDeltaMessage)
-        {
-            return StateDeltaMessage;
-        }
-
+        /// <summary>
+        /// Creates a delta from two game states
+        /// </summary>
+        /// <param name="toState"></param>
+        /// <param name="fromState"></param>
+        /// <returns></returns>
         public static GameStateDelta operator - (GameState toState, GameState fromState)
         {
             return Delta(fromState, toState);
         }
 
+        /// <summary>
+        /// Applies a delta to a game state
+        /// </summary>
+        /// <param name="fromState"></param>
+        /// <param name="delta"></param>
+        /// <returns></returns>
         public static GameState operator + (GameState fromState, GameStateDelta delta)
         {
             return Patch(fromState, delta);
         }
 
+        /// <summary>
+        /// Applies a delta to a game state
+        /// </summary>
+        /// <param name="delta"></param>
+        /// <param name="fromState"></param>
+        /// <returns></returns>
         public static GameState operator + (GameStateDelta delta, GameState fromState)
         {
             return Patch(fromState, delta);
@@ -64,6 +75,9 @@ namespace SS13_Shared
             return delta.Apply(fromState);
         }
 
+        /// <summary>
+        /// Serializes the game state to its buffer -- allows us to serialize only once, saving some processor time
+        /// </summary>
         private void Serialize()
         {
             if (serialized)
@@ -73,6 +87,10 @@ namespace SS13_Shared
             serialized = true;
         }
 
+        /// <summary>
+        /// Returns the serialized game state data stream
+        /// </summary>
+        /// <returns></returns>
         public MemoryStream GetSerializedDataStream()
         {
             if(!serialized)
@@ -83,6 +101,10 @@ namespace SS13_Shared
             return SerializedData;
         }
 
+        /// <summary>
+        /// Returns the serialized game state data as a byte array
+        /// </summary>
+        /// <returns></returns>
         public byte[] GetSerializedDataBuffer()
         {
             if (!serialized)

@@ -7,14 +7,12 @@ namespace SS13_Shared.GO
     [Serializable]
     public class EntityState: INetSerializableType
     {
-        public int Uid { get; private set; }
         public EntityStateData StateData;
-
         public List<ComponentState> ComponentStates { get; private set; }
 
-        public EntityState(int uid, List<ComponentState> componentStates )
+        public EntityState(int uid, List<ComponentState> componentStates, Vector2 position, string templateName, string name )
         {
-            Uid = uid;
+            SetStateData(new EntityStateData(uid, position, templateName, name));
             ComponentStates = componentStates;
         }
 
@@ -29,10 +27,14 @@ namespace SS13_Shared.GO
     {
         public Vector2 Position;
         public int Uid;
-        public EntityStateData(int uid, Vector2 position)
+        public string TemplateName;
+        public string Name;
+        public EntityStateData(int uid, Vector2 position, string templateName, string name)
         {
             Position = position;
             Uid = uid;
+            TemplateName = templateName;
+            Name = name;
         }
     }
 }

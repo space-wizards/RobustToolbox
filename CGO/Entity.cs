@@ -338,7 +338,12 @@ namespace CGO
         #region GameState Stuff
         public void HandleEntityState(EntityState state)
         {
-            
+            /*if(Position.X != state.StateData.Position.X || Position.Y != state.StateData.Position.Y)
+            {
+                Position = state.StateData.Position;
+                Moved();
+            }*/
+            Name = state.StateData.Name;
         }
         #endregion
     }

@@ -116,8 +116,9 @@
   <ItemGroup>
     <Compile Include="AdminPermissions.cs" />
     <Compile Include="BoundKeyEventArgs.cs" />
-    <Compile Include="GameState.cs" />
     <Compile Include="GameStateDelta.cs" />
+    <Compile Include="GameStates\GameState.cs" />
+    <Compile Include="GameStates\PlayerState.cs" />
     <Compile Include="GO\ComponentParameter.cs" />
     <Compile Include="GO\ComponentReplyMessage.cs" />
     <Compile Include="GO\Component\Mover\MoverComponentState.cs" />

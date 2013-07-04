@@ -3,6 +3,7 @@ using System.Linq;
 
 using Lidgren.Network;
 using SS13_Shared;
+using SS13_Shared.GameStates;
 using SS13_Shared.ServerEnums;
 using ServerInterfaces;
 using ServerInterfaces.GameObject;
@@ -58,7 +59,7 @@ namespace ServerServices.Player
                 where s.Value.connectedClient == client
                 select s.Value;
 
-            return sessions.First(); // Should only be one session per client. Returns that session, in theory.
+            return sessions.FirstOrDefault(); // Should only be one session per client. Returns that session, in theory.
         }
 
         public IPlayerSession GetSessionByIp(string ip)
@@ -86,6 +87,7 @@ namespace ServerServices.Player
             //Detach the entity and (dont)delete it.
             session.OnDisconnect();
         }
+
 
         public void SendJoinGameToAll()
         {
@@ -129,6 +131,11 @@ namespace ServerServices.Player
         {
             return playerSessions.Values.ToArray();
         }
+
+        public List<PlayerState> GetPlayerStates()
+        {
+            return playerSessions.Values.Select(s => s.PlayerState).ToList();
+        } 
 
     }
 }

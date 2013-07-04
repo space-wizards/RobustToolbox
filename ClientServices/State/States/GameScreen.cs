@@ -27,6 +27,7 @@ using SS13_Shared;
 using ClientServices.Lighting;
 using SS13_Shared.GO;
 using ClientInterfaces.Lighting;
+using SS13_Shared.GameStates;
 using SS3D.LightTest;
 using ClientServices.Tiles;
 
@@ -618,6 +619,7 @@ namespace ClientServices.State.States
         {
             var currentState = _lastStates[_currentStateSequence];
             _entityManager.ApplyEntityStates(currentState.EntityStates);
+            PlayerManager.ApplyPlayerStates(currentState.PlayerStates);
         }
 
         /// <summary>

@@ -6,7 +6,7 @@ using ServerInterfaces.GameState;
 
 namespace ServerServices.GameState
 {
-    public class GameStateManager : Dictionary<uint, SS13_Shared.GameState>, IGameStateManager
+    public class GameStateManager : Dictionary<uint, SS13_Shared.GameStates.GameState>, IGameStateManager
     {
         private Dictionary<long, uint> ackedStates = new Dictionary<long, uint>(); 
 
@@ -30,7 +30,7 @@ namespace ServerServices.GameState
         {
             get
             {
-                var state = ackedStates.Values.FirstOrDefault(val => val == ackedStates.Values.Max());
+                var state = ackedStates.Values.FirstOrDefault(val => val == ackedStates.Values.Min());
                 return state;
             }
         }
@@ -47,13 +47,13 @@ namespace ServerServices.GameState
         {
             var toState = this[state];
             if (!ackedStates.ContainsKey(client.RemoteUniqueIdentifier))
-                return toState - new SS13_Shared.GameState(0); //The client has no state!
+                return toState - new SS13_Shared.GameStates.GameState(0); //The client has no state!
             
             var fromState = this[ackedStates[client.RemoteUniqueIdentifier]];
             return toState - fromState;
         }
 
-        public SS13_Shared.GameState GetFullState(uint state)
+        public SS13_Shared.GameStates.GameState GetFullState(uint state)
         {
             if (ContainsKey(state))
                 return this[state];
@@ -63,7 +63,9 @@ namespace ServerServices.GameState
         public uint GetLastStateAcked(NetConnection client)
         {
             if (!ackedStates.ContainsKey(client.RemoteUniqueIdentifier))
-                return 0;
+            {
+                ackedStates[client.RemoteUniqueIdentifier] = 0;
+            }
 
             return ackedStates[client.RemoteUniqueIdentifier];
         }

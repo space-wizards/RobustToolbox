@@ -1,5 +1,7 @@
-﻿using Lidgren.Network;
+﻿using System.Collections.Generic;
+using Lidgren.Network;
 using SS13_Shared;
+using SS13_Shared.GameStates;
 
 namespace ServerInterfaces.Player
 {
@@ -26,5 +28,6 @@ namespace ServerInterfaces.Player
         IPlayerSession[] GetPlayersInLobby();
         IPlayerSession[] GetPlayersInRange(Vector2 position, int range);
         IPlayerSession[] GetAllPlayers();
+        List<PlayerState> GetPlayerStates();
     }
 }

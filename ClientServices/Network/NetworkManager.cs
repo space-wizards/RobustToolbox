@@ -22,6 +22,11 @@ namespace ClientServices.Network
             get { return _netClient.Statistics; }
         }
 
+        public long UniqueId
+        {
+            get { return _netClient.UniqueIdentifier; }
+        }
+
         public event EventHandler<IncomingNetworkMessageArgs> MessageArrived;  //Called when we recieve a new message.
         protected virtual void OnMessageArrived(NetIncomingMessage message)
         {

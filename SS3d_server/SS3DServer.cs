@@ -4,6 +4,7 @@ using System.Linq;
 using System.Threading;
 using SS13_Server.Modules;
 using SS13_Server.Modules.Client;
+using SS13_Shared.GameStates;
 using ServerInterfaces.GameState;
 using ServerInterfaces.Serialization;
 using ServerServices;
@@ -328,6 +329,7 @@ namespace SS13_Server
                 var stateManager = IoCManager.Resolve<IGameStateManager>();
                 GameState state = new GameState(++_lastState);
                 state.EntityStates = EntityManager.GetEntityStates();
+                state.PlayerStates = IoCManager.Resolve<IPlayerManager>().GetPlayerStates();
                 stateManager.Add(state.Sequence, state);
 
                 //LogManager.Log("Update " + _lastState + " sent.");
@@ -342,7 +344,7 @@ namespace SS13_Server
                     foreach(var c in IoCManager.Resolve<ISS13NetServer>().Connections)
                     {
                         var session = IoCManager.Resolve<IPlayerManager>().GetSessionByConnection(c);
-                        if (session.status != SessionStatus.InGame)
+                        if (session == null || session.status != SessionStatus.InGame)
                             continue;
                         var stateMessage = IoCManager.Resolve<ISS13NetServer>().CreateMessage();
                         var lastStateAcked = stateManager.GetLastStateAcked(c);

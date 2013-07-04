@@ -227,6 +227,7 @@ namespace SGO
 
         private void SendSpawnEntity(IEntity e, NetConnection client = null)
         {
+            /* // This is now handled by game state
             NetOutgoingMessage message = m_netServer.CreateMessage();
             message.Write((byte) NetMessage.EntityManagerMessage);
             message.Write((int) EntityManagerMessage.SpawnEntity);
@@ -237,10 +238,12 @@ namespace SGO
                 m_netServer.SendMessage(message, client, NetDeliveryMethod.ReliableOrdered);
             else
                 m_netServer.SendToAll(message, NetDeliveryMethod.ReliableOrdered);
+             */
         }
 
         private void SendSpawnEntityAtPosition(IEntity e, NetConnection client = null)
         {
+            /* // This is now handled by game state
             NetOutgoingMessage message = m_netServer.CreateMessage();
             message.Write((byte) NetMessage.EntityManagerMessage);
             message.Write((int) EntityManagerMessage.SpawnEntityAtPosition);
@@ -253,6 +256,7 @@ namespace SGO
                 m_netServer.SendMessage(message, client, NetDeliveryMethod.ReliableOrdered);
             else
                 m_netServer.SendToAll(message, NetDeliveryMethod.ReliableOrdered);
+             */
         }
 
         /// <summary>

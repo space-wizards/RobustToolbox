@@ -339,10 +339,6 @@ namespace SS13_Server
                 }
                 else
                 {
-                    
-                    //state.GameStateUpdate(stateMessage);
-
-                    //IoCManager.Resolve<ISS13NetServer>().SendToAll(stateMessage, NetDeliveryMethod.Unreliable);
                     foreach(var c in IoCManager.Resolve<ISS13NetServer>().Connections)
                     {
                         var session = IoCManager.Resolve<IPlayerManager>().GetSessionByConnection(c);
@@ -352,12 +348,8 @@ namespace SS13_Server
                         var lastStateAcked = stateManager.GetLastStateAcked(c);
                         if(lastStateAcked == 0)
                         {
-                            stateMessage.Write((byte)NetMessage.FullState);
-                            var stateData = state.GetSerializedDataBuffer();
-                            stateMessage.Write(state.Sequence);
-                            stateMessage.Write(stateData.Length);
-                            stateMessage.Write(stateData);
-                            LogManager.Log("Full state of size " + stateData.Length + " sent to " + c.RemoteUniqueIdentifier);
+                            var length = state.WriteStateMessage(stateMessage);
+                            LogManager.Log("Full state of size " + length + " sent to " + c.RemoteUniqueIdentifier);
                         } 
                         else
                         {

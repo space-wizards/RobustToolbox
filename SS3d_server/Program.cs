@@ -9,6 +9,7 @@ namespace SS13_Server
     class EntryPoint
     {
         private SS13Server _server;
+        private Timer t;
 
         static void Main(string[] args)
         {
@@ -25,14 +26,7 @@ namespace SS13_Server
             string strVersion = System.Reflection.Assembly.GetExecutingAssembly().GetName().Version.ToString();
             LogManager.Log("Server Version " + strVersion + " -> Ready");
 
-            TimerCallback tcb = main._server.MainLoop;
-            AutoResetEvent are = new AutoResetEvent(false);
-            long due = (long)main._server.ServerRate;
-            main._server.stopWatch.Start(); //Start the clock
-            var t = new Timer(tcb, are, 0, due);
-            are.WaitOne(-1);
+            main._server.MainLoop();
         }
-
-
     }
 }

@@ -45,7 +45,11 @@ namespace SS13_Server
         public DateTime Time;
         public Stopwatch stopWatch = new Stopwatch();
         private float millisecondsPerTick; //
-        
+
+        //Threading!
+        private bool updateThreadRunning = false;
+        private object updateThreadLock = new Object();
+        private Timer mainLoopTimer;
 
         //SAVE THIS SOMEWHERE ELSE
         private const int GameCountdown = 15;
@@ -206,21 +210,43 @@ namespace SS13_Server
         #region server mainloop
         
         // The main server loop
-        public void MainLoop(Object stateInfo)
+        public void MainLoop()
         {
-            RunLoop(stateInfo);
+            TimerCallback tcb = RunLoop;
+            AutoResetEvent are = new AutoResetEvent(false);
+            var due = (long)ServerRate;
+            stopWatch.Start(); //Start the clock
+            mainLoopTimer = new Timer(tcb, are, 0, due);
+            are.WaitOne(-1);
         }
 
         public void RunLoop(Object stateInfo)
         {
+            /*** DO NOT CHANGE ANYTHING IN THIS FUNCTION UNLESS YOU ARE SPOOGE OR YOU UNDERSTAND EVERYTHING ***/
+
+            // This prevents more than one update thread running at once
+            lock (updateThreadLock)
+            {
+                if (updateThreadRunning)
+                    return;
+                updateThreadRunning = true;
+            }
+            
             using (var autoReset = stateInfo as AutoResetEvent)
+            {
                 if (!Active)
+                {
                     autoReset.Set();
+                    return;
+                }
+            }
+
+            // If the debugger is attached, let the errors dump through and break in the debugger
             if (Debugger.IsAttached)
             {
                 DoMainLoopStuff(stateInfo);
             }
-            else
+            else //Otherwise log them and crash out.
             {
                 try
                 {
@@ -232,13 +258,21 @@ namespace SS13_Server
                     _active = false;
                 }
             }
+
+            // Release the update thread lock
+            lock (updateThreadLock)
+            {
+                updateThreadRunning = false;
+            }
         }
 
         private void DoMainLoopStuff(Object stateInfo)
         {
-            float elapsedTime = (stopWatch.ElapsedTicks/millisecondsPerTick); //Elapsed time in milliseconds since the last tick
-            stopWatch.Reset(); //Reset the stopwatch so we get elapsed time next time
+            float elapsedTime;
             
+            elapsedTime = (stopWatch.ElapsedTicks / millisecondsPerTick); //Elapsed time in milliseconds since the last tick
+            stopWatch.Restart(); //Reset the stopwatch so we get elapsed time next time
+
             //Begin update time
             Time = DateTime.Now;
             ProcessPackets();
@@ -251,9 +285,9 @@ namespace SS13_Server
             if (sleepTime.TotalMilliseconds > 0)
                 Thread.Sleep(sleepTime);
             var totalElapsedTime = (DateTime.Now - Time).TotalMilliseconds;
+            var rate = 1 / (totalElapsedTime / 1000);*/
             if (frameTimes.Count >= TickRate)
                 frameTimes.RemoveAt(0);
-            var rate = 1 / (totalElapsedTime / 1000);*/
             var rate = 1000 / elapsedTime;
             frameTimes.Add(rate);
 

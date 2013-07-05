@@ -44,14 +44,14 @@ namespace SGO
 
         public void SendPositionUpdate(bool forced = false)
         {
-            Owner.SendComponentNetworkMessage(this, NetDeliveryMethod.ReliableUnordered, null, Owner.Position.X,
-                                              Owner.Position.Y, forced);
+            /*Owner.SendComponentNetworkMessage(this, NetDeliveryMethod.ReliableUnordered, null, Owner.Position.X,
+                                              Owner.Position.Y, forced);*/
         }
 
         public void SendPositionUpdate(NetConnection client, bool forced = false)
         {
-            Owner.SendComponentNetworkMessage(this, NetDeliveryMethod.ReliableUnordered, client, Owner.Position.X,
-                                              Owner.Position.Y, forced);
+            /*Owner.SendComponentNetworkMessage(this, NetDeliveryMethod.ReliableUnordered, client, Owner.Position.X,
+                                              Owner.Position.Y, forced);*/
         }
 
         public override void HandleInstantiationMessage(NetConnection netConnection)

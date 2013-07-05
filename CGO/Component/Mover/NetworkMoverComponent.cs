@@ -20,7 +20,7 @@ namespace CGO
         private MoverComponentState previousState;
         private MoverComponentState lastState;
         bool interpolating = false;
-        float movetime = 0.100f; // Milliseconds it should take to move.
+        float movetime = 0.05f; // Milliseconds it should take to move.
         float movedtime = 0; // Amount of time we've been moving since the last update packet.
 
         public override ComponentFamily Family
@@ -79,7 +79,7 @@ namespace CGO
             }
         }
         
-        private void Translate(float x, float y)
+        private void Translate(float x, float y, float velx, float vely)
         {
             Vector2D delta = new Vector2D(x, y) - Owner.Position;
             interpolating = true;
@@ -146,7 +146,7 @@ namespace CGO
             if (lastState != null)
                 previousState = lastState;
             lastState = state;
-            Translate(state.X, state.Y);
+            Translate(state.X, state.Y, state.VelocityX, state.VelocityY);
         }
     }
 }

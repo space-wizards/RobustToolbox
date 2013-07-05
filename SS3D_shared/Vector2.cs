@@ -435,7 +435,7 @@ namespace SS13_Shared
 
         public static implicit operator Vector2D(Vector2 vec)
         {
-            return new Vector2D((float)vec.X, (float)vec.Y);
+            return new Vector2D(vec.X, vec.Y);
         }
 
         public static implicit operator Vector2(Vector2D vec)

@@ -6,7 +6,7 @@ namespace ServerInterfaces
 {
     public interface ISS13Server
     {
-        void MainLoop(object stateInfo);
+        void MainLoop();
         IEntityManager EntityManager { get; }
         IClient GetClient(NetConnection clientConnection);
         void SaveMap();

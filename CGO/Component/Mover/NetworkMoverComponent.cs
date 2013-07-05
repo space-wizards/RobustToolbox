@@ -5,6 +5,7 @@ using System.Text;
 using GorgonLibrary;
 using SS13_Shared;
 using SS13_Shared.GO;
+using SS13_Shared.GO.Component.Mover;
 
 namespace CGO
 {
@@ -16,6 +17,8 @@ namespace CGO
         private Constants.MoveDirs movedir = Constants.MoveDirs.south;
         Vector2D targetPosition;
         Vector2D startPosition;
+        private MoverComponentState previousState;
+        private MoverComponentState lastState;
         bool interpolating = false;
         float movetime = 0.100f; // Milliseconds it should take to move.
         float movedtime = 0; // Amount of time we've been moving since the last update packet.
@@ -27,9 +30,9 @@ namespace CGO
 
         public override void HandleNetworkMessage(IncomingEntityComponentMessage message)
         {
-            var x = (double)message.MessageParameters[0];
-            var y = (double)message.MessageParameters[1];
-            Translate((float)x, (float)y);
+            /*var x = (float)message.MessageParameters[0];
+            var y = (float)message.MessageParameters[1];
+            Translate(x, y);*/
         }
 
         public override ComponentReplyMessage RecieveMessage(object sender, ComponentMessageType type, params object[] list)
@@ -126,6 +129,24 @@ namespace CGO
                 movedir = _movedir;
                 Owner.SendMessage(this, ComponentMessageType.MoveDirection, movedir);
             }
+        }
+
+        public override void HandleComponentState(ComponentState state)
+        {
+            base.HandleComponentState(state);
+
+            if(state.GetType() == typeof(MoverComponentState))
+            {
+                SetNewState(state as MoverComponentState);
+            }
+        }
+
+        private void SetNewState(MoverComponentState state)
+        {
+            if (lastState != null)
+                previousState = lastState;
+            lastState = state;
+            Translate(state.X, state.Y);
         }
     }
 }

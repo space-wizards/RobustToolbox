@@ -241,7 +241,7 @@ namespace CGO
             var entityType = msg.ReadString();
             var entityName = msg.ReadString();
             var uid = msg.ReadInt32();
-            var pos = new Vector2D((float)msg.ReadDouble(), (float)msg.ReadDouble());
+            var pos = new Vector2D(msg.ReadFloat(), msg.ReadFloat());
             var e = SpawnEntityAt(entityType, uid, pos);
             e.Name = entityName;
         }

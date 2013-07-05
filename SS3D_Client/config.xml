@@ -8,4 +8,8 @@
     <PlayerName>Joe Genero</PlayerName>
     <ServerAddress>127.0.0.1</ServerAddress>
     <MessageLogging>false</MessageLogging>
+    <SimulateLatency>false</SimulateLatency>
+    <SimulatedLoss>0</SimulatedLoss>
+    <SimulatedMinimumLatency>0</SimulatedMinimumLatency>
+    <SimulatedRandomLatency>0</SimulatedRandomLatency>
 </Configuration>

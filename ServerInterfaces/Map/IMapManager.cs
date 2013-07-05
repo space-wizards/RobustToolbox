@@ -14,8 +14,8 @@ namespace ServerInterfaces.Map
         void SaveMap();
         ITile GetTileAt(int x, int y);
         void AddGasAt(Point position, GasType type, int amount);
-        double GetGasAmount(Point position, GasType type);
-        double GetGasTotal(Point position);
+        float GetGasAmount(Point position, GasType type);
+        float GetGasTotal(Point position);
         void UpdateAtmos();
         void SendAtmosStateTo(NetConnection client);
 
@@ -41,7 +41,7 @@ namespace ServerInterfaces.Map
         int GetMapWidth();
         int GetMapHeight();
         bool IsWorldPositionInBounds(Vector2 pos);
-        Point GetTileArrayPositionFromWorldPosition(double x, double z);
+        Point GetTileArrayPositionFromWorldPosition(float x, float z);
         ITile GetTileFromWorldPosition(Vector2 pos);
         Point GetTileArrayPositionFromWorldPosition(Vector2 pos);
         Type GetTileTypeFromWorldPosition(float x, float z);

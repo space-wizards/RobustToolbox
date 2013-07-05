@@ -465,13 +465,13 @@ namespace ServerServices.Map
             g.AttachToTile((toTile as Tile));
         }
 
-        public double GetGasAmount(Point position, GasType type)
+        public float GetGasAmount(Point position, GasType type)
         {
             var t = (Tile)GetTileAt(position.X, position.Y);
             return t.gasCell.gasses[type];
         }
 
-        public double GetGasTotal(Point position)
+        public float GetGasTotal(Point position)
         {
             var t = (Tile) GetTileAt(position.X, position.Y);
             return t.gasCell.TotalGas;
@@ -612,7 +612,7 @@ namespace ServerServices.Map
 
 
         #region Tile helper function
-        public Point GetTileArrayPositionFromWorldPosition(double x, double z)
+        public Point GetTileArrayPositionFromWorldPosition(float x, float z)
         {
             if (x < 0 || z < 0)
                 return new Point(-1, -1);

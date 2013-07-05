@@ -1,4 +1,5 @@
 ﻿using System;
+using ClientInterfaces.Configuration;
 using ClientInterfaces.Network;
 using Lidgren.Network;
 using SS13_Shared;
@@ -49,6 +50,16 @@ namespace ClientServices.Network
         {
 
             IsConnected = false;
+
+            var config = IoCManager.Resolve<IConfigurationManager>();
+
+            //Simulate Latency
+            if(config.GetSimulateLatency())
+            {
+                _netConfig.SimulatedLoss = config.GetSimulatedLoss();
+                _netConfig.SimulatedMinimumLatency = config.GetSimulatedMinimumLatency();
+                _netConfig.SimulatedRandomLatency = config.GetSimulatedRandomLatency();
+            }
 
             _netClient = new NetClient(_netConfig);
             _netClient.Start();

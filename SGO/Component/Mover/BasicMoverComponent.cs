@@ -29,7 +29,7 @@ namespace SGO
             return reply;
         }
 
-        public void Translate(double x, double y)
+        public void Translate(float x, float y)
         {
             Vector2 oldPosition = Owner.Position;
             Owner.Position = new Vector2(x, y);
@@ -56,7 +56,7 @@ namespace SGO
 
         public override ComponentState GetComponentState()
         {
-            return new MoverComponentState(Owner.Position.X, Owner.Position.Y);
+            return new MoverComponentState(Owner.Position.X, Owner.Position.Y, Owner.Velocity.X, Owner.Velocity.Y);
         }
     }
 }

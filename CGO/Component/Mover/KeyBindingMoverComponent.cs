@@ -20,6 +20,11 @@ namespace CGO
         private bool _moveDown;
         private bool _moveLeft;
         private bool _moveRight;
+        private Vector2D Velocity
+        {
+            get { return Owner.Velocity; }
+            set { Owner.Velocity = value; }
+        }
 
         private Constants.MoveDirs _movedir;
 
@@ -36,8 +41,8 @@ namespace CGO
 
         public override void HandleNetworkMessage(IncomingEntityComponentMessage message)
         {
-            /*var x = (double)message.MessageParameters[0];
-            var y = (double)message.MessageParameters[1];
+            /*var x = (float)message.MessageParameters[0];
+            var y = (float)message.MessageParameters[1];
             if((bool)message.MessageParameters[2]) //"forced" parameter -- if true forces position update
             PlainTranslate((float)x, (float)y);*/
         }
@@ -99,36 +104,47 @@ namespace CGO
             
             if (_moveUp && !_moveLeft && !_moveRight && !_moveDown) // Move Up
             {
-                Translate(new Vector2D(0, -1) * _currentMoveSpeed * frameTime);
+                Velocity = new Vector2D(0, -1) * _currentMoveSpeed;
             }
             else if (_moveDown && !_moveLeft && !_moveRight && !_moveUp) // Move Down
             {
-                Translate(new Vector2D(0, 1) * _currentMoveSpeed * frameTime);
+                Velocity = new Vector2D(0, 1) * _currentMoveSpeed;
             }
             else if (_moveLeft && !_moveRight && !_moveUp && !_moveDown) // Move Left
             {
-                Translate(new Vector2D(-1, 0) * _currentMoveSpeed * frameTime);
+                Velocity = new Vector2D(-1, 0) * _currentMoveSpeed;
             }
             else if (_moveRight && !_moveLeft && !_moveUp && !_moveDown) // Move Right
             {
-                Translate(new Vector2D(1, 0) * _currentMoveSpeed * frameTime);
+                Velocity = new Vector2D(1, 0) * _currentMoveSpeed;
             }
             else if (_moveUp && _moveRight && !_moveLeft && !_moveDown) // Move Up & Right
             {
-                Translate(new Vector2D(0.7071f, -0.7071f) * _currentMoveSpeed * frameTime);
+                Velocity = new Vector2D(0.7071f, -0.7071f) * _currentMoveSpeed;
             }
             else if (_moveUp && _moveLeft && !_moveRight && !_moveDown) // Move Up & Left
             {
-                Translate(new Vector2D(-0.7071f, -0.7071f) * _currentMoveSpeed * frameTime);
+                Velocity = new Vector2D(-0.7071f, -0.7071f) * _currentMoveSpeed;
             }
             else if (_moveDown && _moveRight && !_moveLeft && !_moveUp) // Move Down & Right
             {
-                Translate(new Vector2D(0.7071f, 0.7071f) * _currentMoveSpeed * frameTime);
+                Velocity = new Vector2D(0.7071f, 0.7071f) * _currentMoveSpeed;
             }
             else if (_moveDown && _moveLeft && !_moveRight && !_moveUp) // Move Down & Left
             {
-                Translate(new Vector2D(-0.7071f, 0.7071f) * _currentMoveSpeed * frameTime);
+                Velocity = new Vector2D(-0.7071f, 0.7071f) * _currentMoveSpeed;
+            } 
+            else
+            {
+                Velocity = new Vector2D(0f,0f);
             }
+
+            UpdatePosition(frameTime);
+        }
+
+        private void UpdatePosition(float frameTime)
+        {
+            Translate(Velocity * frameTime);
         }
 
         private void SetMoveDir(Constants.MoveDirs movedir)
@@ -141,7 +157,7 @@ namespace CGO
 
         public virtual void SendPositionUpdate()
         {
-            Owner.SendComponentNetworkMessage(this, Lidgren.Network.NetDeliveryMethod.ReliableUnordered, Owner.Position.X, Owner.Position.Y);
+            Owner.SendComponentNetworkMessage(this, Lidgren.Network.NetDeliveryMethod.ReliableUnordered, Owner.Position.X, Owner.Position.Y, Owner.Velocity.X, Owner.Velocity.Y);
         }
 
         public void PlainTranslate(float x, float y)

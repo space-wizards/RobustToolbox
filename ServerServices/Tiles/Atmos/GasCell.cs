@@ -16,23 +16,23 @@ namespace ServerServices.Tiles.Atmos
         public int arrY;
         public int mapWidth;
         public int mapHeight;
-        public double nextGasAmount;
-        public double gasAmount;
+        public float nextGasAmount;
+        public float gasAmount;
         public bool sink = false;
         public bool blocking = false;
         bool calculated = true;
         public Vector2 GasVel;
         public Vector2 NextGasVel;
-        public Dictionary<GasType, double> gasses;
-        public Dictionary<GasType, double> nextGasses;
-        public Dictionary<GasType, double> lastSentGasses;
-        private double lastVelSent = 0;
+        public Dictionary<GasType, float> gasses;
+        public Dictionary<GasType, float> nextGasses;
+        public Dictionary<GasType, float> lastSentGasses;
+        private float lastVelSent = 0;
         Random rand;
         
         //Constants
-        double SourceDamping = .5;
-        double RecieverDamping = .75;
-        public const double quarterpi = Math.PI / 4;
+        private const float SourceDamping = .5f;
+        private const float RecieverDamping = .75f;
+        public const float quarterpi = (float)(Math.PI / 4);
         private float FlowConstant = .1f;
 
         public GasCell(Tile t, int _x, int _y, Tile[,] _tileArray, int _mapWidth, int _mapHeight)
@@ -54,9 +54,9 @@ namespace ServerServices.Tiles.Atmos
 
         private void InitGas()
         {
-            gasses = new Dictionary<GasType, double>();
-            nextGasses = new Dictionary<GasType, double>();
-            lastSentGasses = new Dictionary<GasType, double>();
+            gasses = new Dictionary<GasType, float>();
+            nextGasses = new Dictionary<GasType, float>();
+            lastSentGasses = new Dictionary<GasType, float>();
             
             var gastypes = Enum.GetValues(typeof(GasType));
             foreach (GasType g in gastypes)
@@ -113,16 +113,16 @@ namespace ServerServices.Tiles.Atmos
             //TODO set display here
         }
 
-        public void SetRadius(double r)
+        public void SetRadius(float r)
         {
             if(r > 7.5)
-                r = 7.5;
+                r = 7.5f;
             if (r < 0)
                 r = 0;
             //Defunct
         }
 
-        public void AddGas(double amount, GasType gas)
+        public void AddGas(float amount, GasType gas)
         {
             gasses[gas] += amount;
             nextGasses[gas] += amount;
@@ -131,11 +131,11 @@ namespace ServerServices.Tiles.Atmos
         public void CalculateTotals()
         {
             gasAmount = 0;
-            foreach (double g in gasses.Values)
+            foreach (float g in gasses.Values)
                 gasAmount += g;
 
             nextGasAmount = 0;
-            foreach (double n in nextGasses.Values)
+            foreach (float n in nextGasses.Values)
                 nextGasAmount += n;
         }
 
@@ -163,8 +163,8 @@ namespace ServerServices.Tiles.Atmos
         {
             if (blocking)
                 return;
-            double DAmount;
-            double Flow = 0;
+            float DAmount;
+            float Flow = 0;
             
 
             GasCell neighbor;
@@ -199,8 +199,8 @@ namespace ServerServices.Tiles.Atmos
 
                     //Velocity application code
                     Vector2 Dir = new Vector2(i, j);
-                    double proportion = 0;
-                    double componentangle;
+                    float proportion = 0;
+                    float componentangle;
                     //Process velocity flow to neighbor
                     if (GasVel.Magnitude > 0.01) //If the gas velocity vector is within 45 degrees of the direction of the neighbor
                     {
@@ -208,9 +208,9 @@ namespace ServerServices.Tiles.Atmos
                         if (Math.Abs(componentangle) < quarterpi)
                         {
                             proportion = Math.Abs((1 / quarterpi) * (quarterpi - componentangle)); // Get the proper proportion of the vel vector
-                            double velflow = proportion * GasVel.Magnitude; // Calculate flow due to gas velocity
-                            if (velflow > gasAmount / 2.5)
-                                velflow = gasAmount / 2.5;
+                            float velflow = proportion * GasVel.Magnitude; // Calculate flow due to gas velocity
+                            if (velflow > gasAmount / 2.5f)
+                                velflow = gasAmount / 2.5f;
                             Flow += velflow;
                         }
                     }
@@ -222,9 +222,9 @@ namespace ServerServices.Tiles.Atmos
                         if (Math.Abs(componentangle) < quarterpi)
                         {
                             proportion = Math.Abs((1 / quarterpi) * (quarterpi - componentangle)); // Get the proper proportion of the vel vector
-                            double velflow = proportion * neighbor.GasVel.Magnitude; // Calculate flow due to gas velocity
-                            if (velflow > neighbor.gasAmount / 2.5)
-                                velflow = neighbor.gasAmount / 2.5;
+                            float velflow = proportion * neighbor.GasVel.Magnitude; // Calculate flow due to gas velocity
+                            if (velflow > neighbor.gasAmount / 2.5f)
+                                velflow = neighbor.gasAmount / 2.5f;
                             Flow -= velflow;
                         }
                     }
@@ -236,7 +236,7 @@ namespace ServerServices.Tiles.Atmos
                         {                           
                             neighbor.blocking = false; // Incident flow is > 750 so the wall is destroyed
                             neighbor.attachedtile.tileState = TileState.Dead;
-                            Flow = Flow * .75; //Dying wall takes out some of the flow.
+                            Flow = Flow * .75f; //Dying wall takes out some of the flow.
                         }
                         else
                             continue;
@@ -264,20 +264,20 @@ namespace ServerServices.Tiles.Atmos
                     CalculateTotals();
                     neighbor.CalculateTotals();
 
-                    double chaos = (double)rand.Next(70000, 100000)/100000; // Get a random number between .7 and 1 with 4 sig figs
+                    float chaos = (float)rand.Next(70000, 100000) / 100000; // Get a random number between .7 and 1 with 4 sig figs
 
                     //Process next velocities
                     if (Flow > 0) //Flow is to neighbor
                     {
                         Vector2 addvel = new Vector2(i, j);
-                        addvel.Magnitude = Math.Abs(Flow); // Damping coefficient of .5
+                        addvel.Magnitude = (float)Math.Abs(Flow); // Damping coefficient of .5
                         neighbor.NextGasVel = neighbor.NextGasVel + addvel * chaos * RecieverDamping;
                         NextGasVel = NextGasVel + addvel * chaos * SourceDamping;
                     }
                     if (Flow < 0) // Flow is from neighbor
                     {
                         Vector2 addvel = new Vector2(-1 * i, -1 * j);
-                        addvel.Magnitude = Math.Abs(Flow);
+                        addvel.Magnitude = (float)Math.Abs(Flow);
                         neighbor.NextGasVel = neighbor.NextGasVel + addvel * chaos * SourceDamping;
                         NextGasVel = NextGasVel + addvel * chaos * RecieverDamping;
 
@@ -295,9 +295,9 @@ namespace ServerServices.Tiles.Atmos
                 }
         }
 
-        public double Clamp(double Flow, double amount, double neighamount)
+        public float Clamp(float Flow, float amount, float neighamount)
         {
-            double clampedFlow = Flow;
+            float clampedFlow = Flow;
 
             if (amount - clampedFlow < 0)
                 clampedFlow = clampedFlow + (amount - clampedFlow);
@@ -390,7 +390,7 @@ namespace ServerServices.Tiles.Atmos
             return bitCount;
         }
 
-        private bool checkUpdateThreshold(GasType g, double multiplier = 1)
+        private bool checkUpdateThreshold(GasType g, float multiplier = 1)
         {
             //If the delta since the last update was sent is greater than 2, send another update.
             if(Math.Abs(normalizeGasAmount(gasses[g], multiplier) - normalizeGasAmount(lastSentGasses[g], multiplier)) >= 1)
@@ -403,7 +403,7 @@ namespace ServerServices.Tiles.Atmos
         /// </summary>
         /// <param name="amount"></param>
         /// <returns></returns>
-        public int normalizeGasAmount(double amount, double multiplier = 1)
+        public int normalizeGasAmount(float amount, float multiplier = 1)
         {
             amount = amount * multiplier;
             if (amount > 150)
@@ -411,11 +411,11 @@ namespace ServerServices.Tiles.Atmos
             return (int)(amount / 10);
         }
 
-        public double TotalGas
+        public float TotalGas
         {
             get
             {
-                double total = 0;
+                float total = 0;
                 foreach (var gas in gasses)
                 {
                     total += gas.Value;

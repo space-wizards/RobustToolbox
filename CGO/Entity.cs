@@ -44,6 +44,7 @@ namespace CGO
         public event ShutdownEvent OnShutdown;
 
         public Vector2D Position { get; set; }
+        public Vector2D Velocity { get; set; }
 
         private Direction _direction = Direction.South;
         public Direction Direction
@@ -344,6 +345,11 @@ namespace CGO
                 Moved();
             }*/
             Name = state.StateData.Name;
+            foreach(var compState in state.ComponentStates)
+            {
+                if (HasComponent(compState.Family))
+                    GetComponent(compState.Family).HandleComponentState(compState);
+            }
         }
         #endregion
     }

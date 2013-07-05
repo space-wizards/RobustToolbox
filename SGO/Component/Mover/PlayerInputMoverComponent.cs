@@ -2,6 +2,7 @@
 using Lidgren.Network;
 using SS13_Shared;
 using SS13_Shared.GO;
+using SS13_Shared.GO.Component.Mover;
 
 namespace SGO
 {
@@ -28,12 +29,12 @@ namespace SGO
             }
 
             if (shouldMove)
-                Translate(Convert.ToDouble((float) message.MessageParameters[0]),
-                          Convert.ToDouble((float) message.MessageParameters[1]));
+                Translate((float) message.MessageParameters[0],
+                          (float) message.MessageParameters[1]);
             else SendPositionUpdate(true); //Tried to move even though they cant. Lets pin that fucker down.
         }
 
-        public void Translate(double x, double y)
+        public void Translate(float x, float y)
         {
             Vector2 oldPosition = Owner.Position;
             Owner.Position = new Vector2(x, y);
@@ -56,6 +57,11 @@ namespace SGO
         public override void HandleInstantiationMessage(NetConnection netConnection)
         {
             SendPositionUpdate(netConnection, true);
+        }
+        
+        public override ComponentState GetComponentState()
+        {
+            return new MoverComponentState(Owner.Position.X, Owner.Position.Y, Owner.Velocity.X, Owner.Velocity.Y);
         }
     }
 }

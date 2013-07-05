@@ -1,4 +1,6 @@
 ﻿using System;
+using System.Diagnostics;
+using System.Threading;
 using ServerServices.Log;
 using SS13_Shared.ServerEnums;
 
@@ -23,7 +25,12 @@ namespace SS13_Server
             string strVersion = System.Reflection.Assembly.GetExecutingAssembly().GetName().Version.ToString();
             LogManager.Log("Server Version " + strVersion + " -> Ready");
 
-            main._server.MainLoop();
+            TimerCallback tcb = main._server.MainLoop;
+            AutoResetEvent are = new AutoResetEvent(false);
+            long due = (long)main._server.ServerRate;
+            main._server.stopWatch.Start(); //Start the clock
+            var t = new Timer(tcb, are, 0, due);
+            are.WaitOne(-1);
         }
 
 

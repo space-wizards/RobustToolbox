@@ -103,11 +103,6 @@ namespace ServerServices.Configuration
             set { Configuration.serverMaxPlayers = value; }
         }
 
-        public int FramePeriod
-        {
-            get { return Configuration.framePeriod; }
-            set { Configuration.serverMaxPlayers = value; }
-        }
         public GameType GameType
         {
             get { return Configuration.gameType; }
@@ -131,10 +126,10 @@ namespace ServerServices.Configuration
             get { return ServerServiceType.ConfigManager; }
         }
 
-        public int UpdatesPerSecond
+        public float TickRate
         {
-            get { return Configuration.UpdatesPerSecond; }
-            set { Configuration.UpdatesPerSecond = value; }
+            get { return Configuration.TickRate; }
+            set { Configuration.TickRate = value; }
         }
     }
 }

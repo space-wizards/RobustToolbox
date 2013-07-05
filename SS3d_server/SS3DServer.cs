@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using System.Threading;
 using SS13_Server.Modules;
@@ -41,7 +42,9 @@ namespace SS13_Server
 
 
         // The servers current frame time
-        public DateTime Time;   
+        public DateTime Time;
+        public Stopwatch stopWatch = new Stopwatch();
+        private float millisecondsPerTick; //
         
 
         //SAVE THIS SOMEWHERE ELSE
@@ -74,17 +77,22 @@ namespace SS13_Server
         private int _serverMaxPlayers = 32;
         private GameType _gameType = GameType.Game;
 
-        public int FramePeriod = 33; // The time (in milliseconds) between server frames
         public DateTime LastUpdate;
 
-        public float ServerRate     // desired server framerate in frames per second,  backed by framePeriod
+        public float ServerRate     // desired server frame (tick) time in milliseconds
         {
-            get { return 1000.0f / FramePeriod; }
-            set { FramePeriod = (int)(1000.0f / value); }
+            get { return 1000.0f / TickRate; }
+        }
+
+        public float TickRate // desired server frames (ticks) per second
+        {
+            get { return IoCManager.Resolve<IConfigurationManager>().TickRate; }
         }
 
         public SS13Server()
         {
+            millisecondsPerTick = Stopwatch.Frequency / 1000; //Ticks per second dividied by 1000 = ticks per millisecond
+         
             //Init serializer
             var serializer = IoCManager.Resolve<ISS13Serializer>();
 
@@ -101,14 +109,13 @@ namespace SS13_Server
             var cfgmgr = IoCManager.Resolve<IConfigurationManager>();
             _serverPort = cfgmgr.Port;
             _serverName = cfgmgr.ServerName;
-            FramePeriod = cfgmgr.FramePeriod;
             _serverMapName = cfgmgr.ServerMapName;
             _serverMaxPlayers = cfgmgr.ServerMaxPlayers;
             _gameType = cfgmgr.GameType;
             _serverWelcomeMessage = cfgmgr.ServerWelcomeMessage;
             LogManager.Log("Port: " + _serverPort);
             LogManager.Log("Name: " + _serverName);
-            LogManager.Log("Rate: " + (int)ServerRate + " (" + FramePeriod + " ms)");
+            LogManager.Log("TickRate: " + TickRate + "(" + ServerRate + "ms)");
             LogManager.Log("Map: " + _serverMapName);
             LogManager.Log("Max players: " + _serverMaxPlayers);
             LogManager.Log("Game type: " + _gameType);
@@ -199,29 +206,25 @@ namespace SS13_Server
         #region server mainloop
         
         // The main server loop
-        public void MainLoop()
+        public void MainLoop(Object stateInfo)
         {
-            while (Active)
+            RunLoop(stateInfo);
+        }
+
+        public void RunLoop(Object stateInfo)
+        {
+            using (var autoReset = stateInfo as AutoResetEvent)
+                if (!Active)
+                    autoReset.Set();
+            if (Debugger.IsAttached)
+            {
+                DoMainLoopStuff(stateInfo);
+            }
+            else
             {
                 try
                 {
-                    Time = DateTime.Now;
-
-                    ProcessPackets();
-
-                    Update(FramePeriod);
-
-                    var sleepTime = Time.AddMilliseconds(FramePeriod) - DateTime.Now;
-                    if (sleepTime.TotalMilliseconds > 0)
-                        Thread.Sleep(sleepTime);
-                    var ElapsedTime = DateTime.Now - Time;
-                    if(frameTimes.Count >= 30)
-                        frameTimes.RemoveAt(0);
-                    var rate = 1/(ElapsedTime.TotalMilliseconds/1000);
-                    frameTimes.Add((float)rate);
-
-                    var netstats = IoCManager.Resolve<ISS13NetServer>().Statistics.SentBytes + " " + IoCManager.Resolve<ISS13NetServer>().Statistics.ReceivedBytes;
-                    Console.Title = "FPS: " + Math.Round(frameTimeAverage(), 2) + " Netstats: " + netstats;
+                    DoMainLoopStuff(stateInfo);
                 }
                 catch (Exception e)
                 {
@@ -229,6 +232,33 @@ namespace SS13_Server
                     _active = false;
                 }
             }
+        }
+
+        private void DoMainLoopStuff(Object stateInfo)
+        {
+            float elapsedTime = (stopWatch.ElapsedTicks/millisecondsPerTick); //Elapsed time in milliseconds since the last tick
+            stopWatch.Reset(); //Reset the stopwatch so we get elapsed time next time
+            
+            //Begin update time
+            Time = DateTime.Now;
+            ProcessPackets();
+
+            Update(elapsedTime);
+
+            /*var updateElapsedTime = DateTime.Now - Time;
+            var sleepTime = new TimeSpan((long)(10000 * (ServerRate - (float)updateElapsedTime.TotalMilliseconds)));
+            //var sleepTime = Time.AddMilliseconds(ServerRate) - DateTime.Now;
+            if (sleepTime.TotalMilliseconds > 0)
+                Thread.Sleep(sleepTime);
+            var totalElapsedTime = (DateTime.Now - Time).TotalMilliseconds;
+            if (frameTimes.Count >= TickRate)
+                frameTimes.RemoveAt(0);
+            var rate = 1 / (totalElapsedTime / 1000);*/
+            var rate = 1000 / elapsedTime;
+            frameTimes.Add(rate);
+
+            var netstats = IoCManager.Resolve<ISS13NetServer>().Statistics.SentBytes + " " + IoCManager.Resolve<ISS13NetServer>().Statistics.ReceivedBytes;
+            Console.Title = "FPS: " + Math.Round(frameTimeAverage(), 2) + " Netstats: " + netstats;
         }
 
         private float frameTimeAverage()
@@ -321,7 +351,7 @@ namespace SS13_Server
         {
             //Obey the updates per second limit
             TimeSpan elapsed = Time - _lastStateTime;
-            if (elapsed.TotalMilliseconds > (1000 / IoCManager.Resolve<IConfigurationManager>().UpdatesPerSecond))
+            if (elapsed.TotalMilliseconds > (1000 / IoCManager.Resolve<IConfigurationManager>().TickRate))
             {
                 //Save last state time
                 _lastStateTime = Time;

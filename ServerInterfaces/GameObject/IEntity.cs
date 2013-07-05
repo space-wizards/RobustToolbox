@@ -12,6 +12,7 @@ namespace ServerInterfaces.GameObject
     {
         void Translate(Vector2 toPosition);
         Vector2 Position { get; set; }
+        Vector2 Velocity { get; set; }
         Direction Direction { get; set; }
         int Uid { get; set; }
         string Name { get; set; }

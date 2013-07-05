@@ -106,5 +106,23 @@ namespace ClientServices.Configuration
         {
             return Configuration.MessageLogging;
         }
+
+
+        public bool GetSimulateLatency()
+        {
+            return Configuration.SimulateLatency;
+        }
+        public float GetSimulatedLoss()
+        {
+            return Configuration.SimulatedLoss;
+        }
+        public float GetSimulatedMinimumLatency()
+        {
+            return Configuration.SimulatedMinimumLatency;
+        }
+        public float GetSimulatedRandomLatency()
+        {
+            return Configuration.SimulatedRandomLatency;
+        }
     }
 }

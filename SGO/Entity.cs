@@ -53,6 +53,7 @@ namespace SGO
         public int Uid { get; set; }
 
         public Vector2 Position { get; set; }
+        public Vector2 Velocity { get; set; }
 
         private bool stateChanged = false;
 
@@ -490,7 +491,7 @@ namespace SGO
 
             //Reset entity state changed to false
             
-            var es = new EntityState(Uid, compStates, Position, Template.Name, Name);
+            var es = new EntityState(Uid, compStates, Position, Velocity, Template.Name, Name);
             return es;
         }
 

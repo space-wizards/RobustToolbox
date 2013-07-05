@@ -34,6 +34,7 @@ namespace ClientInterfaces.GOC
         void GetSVars();
         void SetSVar(MarshalComponentParameter svar);
         event EventHandler<GetSVarsEventArgs> GetSVarsCallback;
+        Vector2D Velocity { get; set; }
         void HandleEntityState(EntityState state);
     }
 }

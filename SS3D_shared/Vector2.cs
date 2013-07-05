@@ -10,7 +10,7 @@ using SS13_Shared.Serialization;
 #endregion
 
 /// <summary>
-/// vector of doubles with three components (x,y,z)
+/// vector of floats with three components (x,y,z)
 /// </summary>
 /// <author>Richard Potter BSc(Hons)</author>
 /// <created>Jun-04</created>
@@ -39,12 +39,12 @@ namespace SS13_Shared
         /// <summary>
         /// The X component of the vector
         /// </summary>
-        private double x;
+        private float x;
 
         /// <summary>
         /// The Y component of the vector
         /// </summary>
-        private double y;
+        private float y;
 
         /// <summary>
         /// The Z component of the vector
@@ -55,7 +55,7 @@ namespace SS13_Shared
         #region Constructors
 
         /// <summary>
-        /// Constructor for the Vector2 class accepting three doubles
+        /// Constructor for the Vector2 class accepting three floats
         /// </summary>
         /// <param name="x">The new x value for the Vector2</param>
         /// <param name="y">The new y value for the Vector2</param>
@@ -65,7 +65,7 @@ namespace SS13_Shared
         /// This results in the need for pre-initialisation initialisation of the Vector2 components to 0 
         /// Due to the necessity for struct's variables to be set in the constructor before moving control
         /// </implementation>
-        public Vector2(double x, double y)
+        public Vector2(float x, float y)
         {
             // Pre-initialisation initialisation
             // Implemented because a struct's variables always have to be set in the constructor before moving control
@@ -78,18 +78,7 @@ namespace SS13_Shared
             Y = y;
 
         }
-
-        public Vector2(float x, float y)
-        {
-            this.x = 0;
-            this.y = 0;
-
-
-            X = x;
-            Y = y;
-
-        }
-
+        
         /// <summary>
         /// Constructor for the Vector2 class from an array
         /// </summary>
@@ -97,7 +86,7 @@ namespace SS13_Shared
         /// <implementation>
         /// Uses the VectorArray property to avoid validation code duplication 
         /// </implementation>
-        public Vector2(double[] xyz)
+        public Vector2(float[] xyz)
         {
             // Pre-initialisation initialisation
             // Implemented because a struct's variables always have to be set in the constructor before moving control
@@ -134,7 +123,7 @@ namespace SS13_Shared
         /// <summary>
         /// Property for the x component of the Vector2
         /// </summary>
-        public double X
+        public float X
         {
             get { return x; }
             set { x = value; }
@@ -143,7 +132,7 @@ namespace SS13_Shared
         /// <summary>
         /// Property for the y component of the Vector2
         /// </summary>
-        public double Y
+        public float Y
         {
             get { return y; }
             set { y = value; }
@@ -151,12 +140,12 @@ namespace SS13_Shared
         /// <summary>
         /// Property for the magnitude (aka. length or absolute value) of the Vector2
         /// </summary>
-        public double Magnitude
+        public float Magnitude
         {
             get
             {
                 return
-                Math.Sqrt(SumComponentSqrs());
+                (float)Math.Sqrt(SumComponentSqrs());
             }
             set
             {
@@ -177,9 +166,9 @@ namespace SS13_Shared
         /// Thrown if the array argument does not contain exactly three components 
         /// </exception> 
         [XmlIgnore]
-        public double[] Array
+        public float[] Array
         {
-            get { return new double[] { x, y}; }
+            get { return new float[] { x, y}; }
             set
             {
                 if (value.Length == 3)
@@ -202,7 +191,7 @@ namespace SS13_Shared
         /// <exception cref="System.ArgumentException">
         /// Thrown if the array argument does not contain exactly three components 
         /// </exception>
-        public double this[int index]
+        public float this[int index]
         {
             get
             {
@@ -273,7 +262,7 @@ namespace SS13_Shared
         /// <param name="s2">Scalar value to be multiplied by </param>
         /// <returns>Vector2 representing the product of the vector and scalar</returns>
         /// <Acknowledgement>This code is adapted from CSOpenGL - Lucas Viñas Livschitz </Acknowledgement>
-        public static Vector2 operator *(Vector2 v1, double s2)
+        public static Vector2 operator *(Vector2 v1, float s2)
         {
             return
             (
@@ -294,10 +283,10 @@ namespace SS13_Shared
         /// <Acknowledgement>This code is adapted from CSOpenGL - Lucas Viñas Livschitz </Acknowledgement>
         /// <Implementation>
         /// Using the commutative law 'scalar x vector'='vector x scalar'.
-        /// Thus, this function calls 'operator*(Vector2 v1, double s2)'.
+        /// Thus, this function calls 'operator*(Vector2 v1, float s2)'.
         /// This avoids repetition of code.
         /// </Implementation>
-        public static Vector2 operator *(double s1, Vector2 v2)
+        public static Vector2 operator *(float s1, Vector2 v2)
         {
             return v2 * s1;
         }
@@ -309,7 +298,7 @@ namespace SS13_Shared
         /// <param name="s2">Scalar value to be divided by </param>
         /// <returns>Vector2 representing the division of the vector and scalar</returns>
         /// <Acknowledgement>This code is adapted from CSOpenGL - Lucas Viñas Livschitz </Acknowledgement>
-        public static Vector2 operator /(Vector2 v1, double s2)
+        public static Vector2 operator /(Vector2 v1, float s2)
         {
             return
             (
@@ -482,7 +471,7 @@ namespace SS13_Shared
             else
             {
                 // find the inverse of the vectors magnitude
-                double inverse = 1 / v1.Magnitude;
+                float inverse = 1 / v1.Magnitude;
                 return
                 (
                     new Vector2
@@ -525,7 +514,7 @@ namespace SS13_Shared
         /// Thrown when the control is not between values of 0 and 1 and extrapolation is not allowed
         /// </exception>
         /// <Acknowledgement>This code is adapted from Exocortex - Ben Houston </Acknowledgement>
-        public static Vector2 Interpolate(Vector2 v1, Vector2 v2, double control, bool allowExtrapolation)
+        public static Vector2 Interpolate(Vector2 v1, Vector2 v2, float control, bool allowExtrapolation)
         {
             if (!allowExtrapolation && (control > 1 || control < 0))
             {
@@ -558,14 +547,14 @@ namespace SS13_Shared
         /// <param name="control">The interpolated point between the two vectors to retrieve (fraction between 0 and 1)</param>
         /// <returns>The value at an arbitrary distance (interpolation) between two vectors</returns>
         /// <implementation>
-        /// <see cref="Interpolate(Vector2, Vector2, double, bool)"/>
-        /// Uses the Interpolate(Vector2,Vector2,double,bool) method to avoid code duplication
+        /// <see cref="Interpolate(Vector2, Vector2, float, bool)"/>
+        /// Uses the Interpolate(Vector2,Vector2,float,bool) method to avoid code duplication
         /// </implementation>
         /// <exception cref="System.ArgumentOutOfRangeException">
         /// Thrown when the control is not between values of 0 and 1
         /// </exception>
         /// <Acknowledgement>This code is adapted from Exocortex - Ben Houston </Acknowledgement>
-        public static Vector2 Interpolate(Vector2 v1, Vector2 v2, double control)
+        public static Vector2 Interpolate(Vector2 v1, Vector2 v2, float control)
         {
             return Interpolate(v1, v2, control, false);
         }
@@ -578,11 +567,11 @@ namespace SS13_Shared
         /// <param name="control">The interpolated point between the two vectors to retrieve (fraction between 0 and 1)</param>
         /// <returns>The value at an arbitrary distance (interpolation) between two vectors</returns>
         /// <implementation>
-        /// <see cref="Interpolate(Vector2, Vector2, double)"/>
+        /// <see cref="Interpolate(Vector2, Vector2, float)"/>
         /// Overload for Interpolate method, finds an interpolated value between this Vector2 and another
-        /// Uses the Interpolate(Vector2,Vector2,double) method to avoid code duplication
+        /// Uses the Interpolate(Vector2,Vector2,float) method to avoid code duplication
         /// </implementation>
-        public Vector2 Interpolate(Vector2 other, double control)
+        public Vector2 Interpolate(Vector2 other, float control)
         {
             return Interpolate(this, other, control);
         }
@@ -595,13 +584,13 @@ namespace SS13_Shared
         /// <param name="allowExtrapolation">True if the control may represent a point not on the vertex between v1 and v2</param>
         /// <returns>The value at an arbitrary distance (interpolation) between two vectors or an extrapolated point on the extended virtex</returns>
         /// <implementation>
-        /// <see cref="Interpolate(Vector2, Vector2, double, bool)"/>
-        /// Uses the Interpolate(Vector2,Vector2,double,bool) method to avoid code duplication
+        /// <see cref="Interpolate(Vector2, Vector2, float, bool)"/>
+        /// Uses the Interpolate(Vector2,Vector2,float,bool) method to avoid code duplication
         /// </implementation>
         /// <exception cref="System.ArgumentOutOfRangeException">
         /// Thrown when the control is not between values of 0 and 1 and extrapolation is not allowed
         /// </exception>
-        public Vector2 Interpolate(Vector2 other, double control, bool allowExtrapolation)
+        public Vector2 Interpolate(Vector2 other, float control, bool allowExtrapolation)
         {
             return Interpolate(this, other, control);
         }
@@ -615,11 +604,11 @@ namespace SS13_Shared
         /// <returns>The distance between two Vectors</returns>
         /// <implementation>
         /// </implementation>
-        public static double Distance(Vector2 v1, Vector2 v2)
+        public static float Distance(Vector2 v1, Vector2 v2)
         {
             return
             (
-                Math.Sqrt
+                (float)Math.Sqrt
                 (
                     (v1.X - v2.X) * (v1.X - v2.X) +
                     (v1.Y - v2.Y) * (v1.Y - v2.Y)
@@ -638,7 +627,7 @@ namespace SS13_Shared
         /// Overload for Distance method, finds distance between this Vector2 and another
         /// Uses the Distance(Vector2,Vector2) method to avoid code duplication
         /// </implementation>
-        public double Distance(Vector2 other)
+        public float Distance(Vector2 other)
         {
             return Distance(this, other);
         }
@@ -713,7 +702,7 @@ namespace SS13_Shared
         /// <implementation>
         /// An alternative interface to the magnitude property
         /// </implementation>
-        public static Double Abs(Vector2 v1)
+        public static float Abs(Vector2 v1)
         {
             return v1.Magnitude;
         }
@@ -726,7 +715,7 @@ namespace SS13_Shared
         /// <implementation>
         /// An alternative interface to the magnitude property
         /// </implementation>
-        public double Abs()
+        public float Abs()
         {
             return this.Magnitude;
         }
@@ -736,14 +725,14 @@ namespace SS13_Shared
         /// </summary>
         /// <param name="v1"></param>
         /// <param name="v2"></param>
-        /// <returns>double angle in radians</returns>
-        public static double Angle(Vector2 v1, Vector2 v2)
+        /// <returns>float angle in radians</returns>
+        public static float Angle(Vector2 v1, Vector2 v2)
         {
             if (v1.Magnitude == 0 || v2.Magnitude == 0)
                 throw new ArgumentException(ZERO_VECTOR_ANGLE, "this");
             return
             (
-               Math.Acos
+               (float)Math.Acos
                (
                   Normalize(v1).DotProduct(Normalize(v2))
                )
@@ -752,7 +741,7 @@ namespace SS13_Shared
 
         private const string ZERO_VECTOR_ANGLE = "Cannot find an angle from a zero vector.";
 
-        public double Angle(Vector2 other)
+        public float Angle(Vector2 other)
         {
             return Angle(this, other);
         }
@@ -763,7 +752,7 @@ namespace SS13_Shared
         /// <param name="v1"></param>
         /// <param name="v2"></param>
         /// <returns></returns>
-        public static double DotProduct(Vector2 v1, Vector2 v2)
+        public static float DotProduct(Vector2 v1, Vector2 v2)
         {
             return
             (
@@ -772,7 +761,7 @@ namespace SS13_Shared
             );
         }
 
-        public double DotProduct(Vector2 other)
+        public float DotProduct(Vector2 other)
         {
             return DotProduct(this, other);
         }
@@ -787,7 +776,7 @@ namespace SS13_Shared
         /// </summary>
         /// <param name="v1">The vector whose scalar components to sum</param>
         /// <returns>The sum of the Vectors X, Y and Z components</returns>
-        public static double SumComponents(Vector2 v1)
+        public static float SumComponents(Vector2 v1)
         {
             return (v1.X + v1.Y);
         }
@@ -800,7 +789,7 @@ namespace SS13_Shared
         /// <see cref="SumComponents(Vector2)"/>
         /// The Components.SumComponents(Vector2) function has been used to prevent code duplication
         /// </implementation>
-        public double SumComponents()
+        public float SumComponents()
         {
             return SumComponents(this);
         }
@@ -810,7 +799,7 @@ namespace SS13_Shared
         /// </summary>
         /// <param name="v1">The vector whose scalar components to square and sum</param>
         /// <returns>The sum of the Vectors X^2, Y^2 and Z^2 components</returns>
-        public static double SumComponentSqrs(Vector2 v1)
+        public static float SumComponentSqrs(Vector2 v1)
         {
             Vector2 v2 = SqrComponents(v1);
             return v2.SumComponents();
@@ -824,7 +813,7 @@ namespace SS13_Shared
         /// <see cref="SumComponentSqrs(Vector2)"/>
         /// The Components.SumComponentSqrs(Vector2) function has been used to prevent code duplication
         /// </implementation>
-        public double SumComponentSqrs()
+        public float SumComponentSqrs()
         {
             return SumComponentSqrs(this);
         }
@@ -835,14 +824,14 @@ namespace SS13_Shared
         /// <param name="v1">The vector whose scalar components to multiply by a power</param>
         /// <param name="power">The power by which to multiply the components</param>
         /// <returns>The multiplied Vector2</returns>
-        public static Vector2 PowComponents(Vector2 v1, double power)
+        public static Vector2 PowComponents(Vector2 v1, float power)
         {
             return
             (
                 new Vector2
                     (
-                        Math.Pow(v1.X, power),
-                        Math.Pow(v1.Y, power)
+                        (float)Math.Pow(v1.X, power),
+                        (float)Math.Pow(v1.Y, power)
                     )
             );
         }
@@ -853,10 +842,10 @@ namespace SS13_Shared
         /// <param name="power">The power by which to multiply the components</param>
         /// <returns>The multiplied Vector2</returns>
         /// <implementation>
-        /// <see cref="PowComponents(Vector2, Double)"/>
-        /// The Components.PowComponents(Vector2, double) function has been used to prevent code duplication
+        /// <see cref="PowComponents(Vector2, float)"/>
+        /// The Components.PowComponents(Vector2, float) function has been used to prevent code duplication
         /// </implementation>
-        public void PowComponents(double power)
+        public void PowComponents(float power)
         {
             this = PowComponents(this, power);
         }
@@ -872,8 +861,8 @@ namespace SS13_Shared
                 (
                 new Vector2
                     (
-                        Math.Sqrt(v1.X),
-                        Math.Sqrt(v1.Y)
+                        (float)Math.Sqrt(v1.X),
+                        (float)Math.Sqrt(v1.Y)
                     )
                 );
         }
@@ -957,7 +946,7 @@ namespace SS13_Shared
         /// <summary>
         /// Textual description of the Vector2
         /// </summary>
-        /// <param name="format">Formatting string: 'x','y','z' or '' followed by standard numeric format string characters valid for a double precision floating point</param>
+        /// <param name="format">Formatting string: 'x','y','z' or '' followed by standard numeric format string characters valid for a float precision floating point</param>
         /// <param name="formatProvider">The culture specific fromatting provider</param>
         /// <returns>Text (String) representing the vector</returns>
         public string ToString(string format, IFormatProvider formatProvider)
@@ -1238,22 +1227,22 @@ namespace SS13_Shared
         /// <summary>
         /// The tolerence used when determining the equality of two vectors 
         /// </summary>
-        public const double EqualityTolerence = Double.Epsilon;
+        public const float EqualityTolerence = float.Epsilon;
 
         /// <summary>
-        /// The smallest vector possible (based on the double precision floating point structure)
+        /// The smallest vector possible (based on the float precision floating point structure)
         /// </summary>
-        public static readonly Vector2 MinValue = new Vector2(Double.MinValue, Double.MinValue);
+        public static readonly Vector2 MinValue = new Vector2(float.MinValue, float.MinValue);
 
         /// <summary>
-        /// The largest vector possible (based on the double precision floating point structure)
+        /// The largest vector possible (based on the float precision floating point structure)
         /// </summary>
-        public static readonly Vector2 MaxValue = new Vector2(Double.MaxValue, Double.MaxValue);
+        public static readonly Vector2 MaxValue = new Vector2(float.MaxValue, float.MaxValue);
 
         /// <summary>
-        /// The smallest positive (non-zero) vector possible (based on the double precision floating point structure)
+        /// The smallest positive (non-zero) vector possible (based on the float precision floating point structure)
         /// </summary>
-        public static readonly Vector2 Epsilon = new Vector2(Double.Epsilon, Double.Epsilon);
+        public static readonly Vector2 Epsilon = new Vector2(float.Epsilon, float.Epsilon);
 
         #endregion
     }

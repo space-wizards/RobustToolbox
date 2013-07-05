@@ -15,5 +15,9 @@
         uint GetDisplayHeight();
         string GetServerAddress();
         bool GetMessageLogging();
+        bool GetSimulateLatency();
+        float GetSimulatedLoss();
+        float GetSimulatedMinimumLatency();
+        float GetSimulatedRandomLatency();
     }
 }

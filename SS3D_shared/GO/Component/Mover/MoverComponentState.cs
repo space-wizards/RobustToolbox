@@ -6,12 +6,16 @@ namespace SS13_Shared.GO.Component.Mover
     [Serializable]
     public class MoverComponentState : ComponentState
     {
-        public double X;
-        public double Y;
-        public MoverComponentState(double x, double y)
+        public float X;
+        public float Y;
+        public float VelocityX;
+        public float VelocityY;
+        public MoverComponentState(float x, float y, float velx, float vely)
         {
             X = x;
             Y = y;
+            VelocityX = velx;
+            VelocityY = vely;
             Family = ComponentFamily.Mover;
         }
     }

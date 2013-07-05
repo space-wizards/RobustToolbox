@@ -11,9 +11,7 @@ namespace ServerServices.GameState
         private Dictionary<long, uint> ackedStates = new Dictionary<long, uint>(); 
 
         public GameStateManager()
-        {
-            
-        }
+        {}
 
         public void Cull()
         {
@@ -45,7 +43,7 @@ namespace ServerServices.GameState
 
         public GameStateDelta GetDelta(NetConnection client, uint state)
         {
-            var toState = this[state];
+            var toState = GetFullState(state);
             if (!ackedStates.ContainsKey(client.RemoteUniqueIdentifier))
                 return toState - new SS13_Shared.GameStates.GameState(0); //The client has no state!
             

@@ -20,10 +20,9 @@ namespace ServerServices.Configuration
         public string serverWelcomeMessage = "Welcome to the server!";
         public int serverMaxPlayers = 32;
         public GameType gameType = GameType.Game;
-        public int framePeriod = 33; // The time (in milliseconds) between server frames
         public string AdminPassword = "admin123";
         public bool MessageLogging = false;
         public LogLevel LogLevel = LogLevel.Information;
-        public int UpdatesPerSecond = 20;
+        public float TickRate = 66;
     }
 }

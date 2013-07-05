@@ -20,8 +20,7 @@ namespace ServerInterfaces.Configuration
         int Version { get; }
         int Port { get; set; }
         int ServerMaxPlayers { get; set; }
-        int FramePeriod { get; set; }
-        int UpdatesPerSecond { get; set; }
+        float TickRate { get; set; }
         GameType GameType { get; set; }
     }
 }

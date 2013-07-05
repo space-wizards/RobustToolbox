@@ -131,11 +131,11 @@ namespace ServerServices.Tiles.Atmos
         public void CalculateTotals()
         {
             gasAmount = 0;
-            foreach (float g in gasses.Values)
+            foreach (float g in gasses.Values.ToArray())
                 gasAmount += g;
 
             nextGasAmount = 0;
-            foreach (float n in nextGasses.Values)
+            foreach (float n in nextGasses.Values.ToArray())
                 nextGasAmount += n;
         }
 

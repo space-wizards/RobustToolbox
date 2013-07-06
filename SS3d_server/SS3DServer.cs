@@ -58,6 +58,7 @@ namespace SS13_Server
         private bool _active;
 
         // State update vars
+        private int updateRate = 20; //20 updates per second
         private uint _oldestAckedState = 0;
         private uint _lastState = 0;
         private DateTime _lastStateTime = DateTime.Now; 
@@ -231,7 +232,9 @@ namespace SS13_Server
             lock (updateThreadLock)
             {
                 if (updateThreadRunning)
+                {
                     return;
+                }
                 updateThreadRunning = true;
             }
             
@@ -274,7 +277,7 @@ namespace SS13_Server
             float elapsedTime;
             
             elapsedTime = (stopWatch.ElapsedTicks / millisecondsPerTick); //Elapsed time in milliseconds since the last tick
-            stopWatch.Restart(); //Reset the stopwatch so we get elapsed time next time
+                        stopWatch.Restart(); //Reset the stopwatch so we get elapsed time next time
 
             //Begin update time
             Time = DateTime.Now;
@@ -401,7 +404,7 @@ namespace SS13_Server
         {
             //Obey the updates per second limit
             TimeSpan elapsed = Time - _lastStateTime;
-            if (elapsed.TotalMilliseconds > (1000 / IoCManager.Resolve<IConfigurationManager>().TickRate))
+            if (elapsed.TotalMilliseconds > (1000 / updateRate))
             {
                 //Save last state time
                 _lastStateTime = Time;
@@ -421,7 +424,7 @@ namespace SS13_Server
                 }
                 else
                 {
-                    foreach(var c in IoCManager.Resolve<ISS13NetServer>().Connections)
+                    foreach(var c in IoCManager.Resolve<ISS13NetServer>().Connections.Where(c => c.Status == NetConnectionStatus.Connected))
                     {
                         var session = IoCManager.Resolve<IPlayerManager>().GetSessionByConnection(c);
                         if (session == null || session.status != SessionStatus.InGame)

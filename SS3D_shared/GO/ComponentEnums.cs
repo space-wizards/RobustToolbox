@@ -191,7 +191,8 @@ namespace SS13_Shared.GO
         SetBaseName,
         SetLightMode,
         WallMountTile,
-        WallMountSearch
+        WallMountSearch,
+        GetHasInternals
     }
 
     public enum Hand

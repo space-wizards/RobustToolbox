@@ -81,7 +81,7 @@ namespace SGO
                                                       HasCapability((ItemCapabilityType) list[0]));
                     break;
                 case ComponentMessageType.ItemGetAllCapabilities:
-                    throw new NotImplementedException();
+                    reply = new ComponentReplyMessage(ComponentMessageType.ItemReturnCapability, (object)GetAllCapabilities());
                     break;
                 case ComponentMessageType.Activate:
                     Activate();
@@ -252,7 +252,7 @@ namespace SGO
                     new ItemCapabilityQuery(ItemCapabilityQuery.ItemCapabilityQueryType.GetAllCapabilities,
                                             ItemCapabilityType.None));
             if (result.ResultStatus == ItemCapabilityQueryResult.ItemCapabilityQueryResultType.Empty)
-                return null;
+                return new ItemCapability[0];
             else
                 return result.Capabilities;
         }
@@ -305,6 +305,9 @@ namespace SGO
                         break;
                     case "HealthScanCapability":
                         cap = new HealthScanCapability();
+                        break;
+                    case "BreatherCapability":
+                        cap = new BreatherCapability();
                         break;
                 }
 

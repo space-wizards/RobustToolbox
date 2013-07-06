@@ -2,12 +2,18 @@
 using SS13_Shared;
 using SS13_Shared.GO;
 using SS13_Shared.GO.Component.Mover;
+using SS13.IoC;
+using ServerInterfaces.Map;
+using System.Collections.Generic;
 
 namespace SGO
 {
-    internal class BasicMoverComponent : GameObjectComponent
+    internal class PhysicsMover : GameObjectComponent
     {
-        public BasicMoverComponent()
+
+        private float weight = 0.0f;
+
+        public PhysicsMover()
         {
             family = ComponentFamily.Mover;
         }
@@ -54,10 +60,37 @@ namespace SGO
             SendPositionUpdate(netConnection, true);
         }
 
+        public override void Update(float frameTime)
+        {
+            
+            Vector2 gasVel = IoCManager.Resolve<IMapManager>().GetGasVelocity(IoCManager.Resolve<IMapManager>().GetTileArrayPositionFromWorldPosition(Owner.Position));
+            if (gasVel.Abs() > weight) // Stop tiny wobbles (hack fix until we add weight)
+                Translate(Owner.Position.X + gasVel.X, Owner.Position.Y + gasVel.Y);
+            
+        }
+
         public override ComponentState GetComponentState()
         {
             return new MoverComponentState(Owner.Position.X, Owner.Position.Y, Owner.Velocity.X, Owner.Velocity.Y);
         }
 
+        public override void SetParameter(ComponentParameter parameter)
+        {
+            base.SetParameter(parameter);
+
+            switch (parameter.MemberName)
+            {
+                case "Weight":
+                    weight = parameter.GetValue<float>();
+                    break;
+
+            }
+        }
+
+        public override List<ComponentParameter> GetParameters()
+        {
+            var cparams = base.GetParameters();
+            return cparams;
+        }
     }
 }

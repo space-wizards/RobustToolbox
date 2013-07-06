@@ -476,6 +476,14 @@ namespace ServerServices.Map
             var t = (Tile) GetTileAt(position.X, position.Y);
             return t.gasCell.TotalGas;
         }
+
+        public Vector2 GetGasVelocity(Point position)
+        {
+            var t = (Tile)GetTileAt(position.X, position.Y);
+            if(t != null)
+                return t.gasCell.GasVel;
+            return new Vector2(0, 0);
+        }
         #endregion
 
         #region Map altering

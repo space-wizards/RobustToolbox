@@ -82,6 +82,9 @@ namespace SS13_Server
         private GameType _gameType = GameType.Game;
 
         public DateTime LastUpdate;
+        private int lastSentBytes = 0;
+        private int lastRecievedBytes = 0;
+        private DateTime lastBytesUpdate = DateTime.Now;
 
         public float ServerRate     // desired server frame (tick) time in milliseconds
         {
@@ -291,8 +294,21 @@ namespace SS13_Server
             var rate = 1000 / elapsedTime;
             frameTimes.Add(rate);
 
-            var netstats = IoCManager.Resolve<ISS13NetServer>().Statistics.SentBytes + " " + IoCManager.Resolve<ISS13NetServer>().Statistics.ReceivedBytes;
-            Console.Title = "FPS: " + Math.Round(frameTimeAverage(), 2) + " Netstats: " + netstats;
+
+            if ((DateTime.Now - lastBytesUpdate).TotalMilliseconds > 1000)
+            {
+                var netstats = UpdateBPS();
+                Console.Title = "FPS: " + Math.Round(frameTimeAverage(), 2) + " | Netstats: " + netstats;
+                lastBytesUpdate = DateTime.Now;
+            }
+        }
+
+        private string UpdateBPS()
+        {
+            string BPS = "S: " + (IoCManager.Resolve<ISS13NetServer>().Statistics.SentBytes - lastSentBytes) / 1000f + "kB/s | R: " + (IoCManager.Resolve<ISS13NetServer>().Statistics.ReceivedBytes - lastRecievedBytes) / 1000f + "kB/s";
+            lastSentBytes = IoCManager.Resolve<ISS13NetServer>().Statistics.SentBytes;
+            lastRecievedBytes = IoCManager.Resolve<ISS13NetServer>().Statistics.ReceivedBytes;
+            return BPS;
         }
 
         private float frameTimeAverage()
@@ -415,14 +431,14 @@ namespace SS13_Server
                         if(lastStateAcked == 0)
                         {
                             var length = state.WriteStateMessage(stateMessage);
-                            LogManager.Log("Full state of size " + length + " sent to " + c.RemoteUniqueIdentifier);
+                            //LogManager.Log("Full state of size " + length + " sent to " + c.RemoteUniqueIdentifier);
                         } 
                         else
                         {
                             stateMessage.Write((byte)NetMessage.StateUpdate);
                             var delta = stateManager.GetDelta(c, _lastState);
                             delta.WriteDelta(stateMessage);
-                            LogManager.Log("Delta of size " + delta.Size + " sent to " + c.RemoteUniqueIdentifier);
+                            //LogManager.Log("Delta of size " + delta.Size + " sent to " + c.RemoteUniqueIdentifier);
                         }
 
                         IoCManager.Resolve<ISS13NetServer>().SendMessage(stateMessage, c, NetDeliveryMethod.Unreliable);

@@ -20,7 +20,8 @@ namespace SS13_Shared.GO
         Tool,
         Gun,
         Medical,
-        HealthScan
+        HealthScan,
+        Internals
     }
 
     public enum ItemCapabilityVerb

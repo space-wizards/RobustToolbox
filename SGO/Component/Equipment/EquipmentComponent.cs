@@ -1,5 +1,7 @@
 ﻿using System.Collections.Generic;
+using System.Linq;
 using Lidgren.Network;
+using SGO.Component.Item.ItemCapability;
 using SS13_Shared;
 using SS13_Shared.GO;
 using ServerInterfaces.GameObject;
@@ -52,6 +54,12 @@ namespace SGO
                     if (!Owner.HasComponent(ComponentFamily.Hands))
                         break; //TODO REAL ERROR MESSAGE OR SOME FUCK SHIT
                     UnEquipEntityToHand((Entity) list[0], (Hand) list[1]);
+                    break;
+                case ComponentMessageType.GetHasInternals:
+                    if (HasInternals())
+                    {
+                        reply = new ComponentReplyMessage(ComponentMessageType.GetHasInternals, true);
+                    }
                     break;
             }
 
@@ -265,6 +273,30 @@ namespace SGO
                 }
             }
 
+            return false;
+        }
+
+        public List<ItemCapability> GetEquipmentCapabilities()
+        {
+            var caps = new List<ItemCapability>();
+            var replies = new List<ComponentReplyMessage>();
+            foreach(var ent in equippedEntities.Values)
+            {
+                ent.SendMessage(this, ComponentMessageType.ItemGetAllCapabilities, replies);
+            }
+            foreach(var reply in replies)
+            {
+                caps.AddRange((ItemCapability[])reply.ParamsList[0]);
+            }
+            return caps;
+        }
+        
+        protected bool HasInternals()
+        {
+            var caps = GetEquipmentCapabilities();
+            var cap = caps.FirstOrDefault(c => c.GetType() == typeof (BreatherCapability));
+            if (cap != null)
+                return true;
             return false;
         }
     }

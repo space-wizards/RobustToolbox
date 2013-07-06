@@ -48,12 +48,13 @@ namespace SGO
             }
             else
             {
+                var hasInternals = HasInternals();
                 var tilePos = map.GetTileArrayPositionFromWorldPosition(Owner.Position);
-                if (map.GetGasAmount(tilePos, GasType.Toxin) > 10) //too much toxin in the air, bro
+                if (map.GetGasAmount(tilePos, GasType.Toxin) > 10 && !hasInternals) //too much toxin in the air, bro
                 {
                     statuscomp.AddEffect("ToxinInhalation", 20);
                 }
-                if(map.GetGasTotal(tilePos) < 35 //Less than 35 pressure units, whatever the fuck that is
+                if(!hasInternals && map.GetGasTotal(tilePos) < 35 //Less than 35 pressure units, whatever the fuck that is
                     || (map.GetGasAmount(tilePos, GasType.Oxygen) / map.GetGasTotal(tilePos)) < 0.05f) //less than 5% oxygen
                     //Not enough oxygen in the mixture, or pressure is too low.
                     statuscomp.AddEffect("Hypoxia", 5);
@@ -290,6 +291,18 @@ namespace SGO
                 Owner.SendComponentNetworkMessage(this, NetDeliveryMethod.ReliableOrdered,
                                                   client != null ? client : null, newUp.ToArray());
             }
+        }
+
+        protected bool HasInternals()
+        {
+            ComponentReplyMessage reply = Owner.SendMessage(this, ComponentFamily.Equipment, ComponentMessageType.GetHasInternals);
+            if (reply.MessageType == ComponentMessageType.GetHasInternals)
+            {
+                var hasInternals = (bool) reply.ParamsList[0];
+                if (hasInternals)
+                    return true;
+            }
+            return false;
         }
     }
 }

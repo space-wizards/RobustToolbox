@@ -6,6 +6,11 @@
 			<Component name="SpriteComponent"></Component>
 			<Component name="BasicInteractableComponent"></Component>
 			<Component name="BasicMoverComponent"></Component>
+      <Component name="PhysicsMover">
+      <Parameters>
+        <Parameter name="Weight" type="float" value="5" />
+      </Parameters>
+      </Component>
 			<Component name="BasicItemComponent">
 				<ExtendedParameters>
 					<ItemCapability name="MeleeWeaponCapability">
@@ -29,6 +34,11 @@
 			<Component name="SpriteComponent"></Component>
 			<Component name="BasicInteractableComponent"></Component>
 			<Component name="BasicMoverComponent"></Component>
+      <Component name="PhysicsMover">
+      <Parameters>
+        <Parameter name="Weight" type="float" value="5" />
+      </Parameters>
+      </Component>
 			<Component name="BasicItemComponent">
         <ExtendedParameters>
           <ItemCapability name="MeleeWeaponCapability">
@@ -52,6 +62,11 @@
 			<Component name="SpriteComponent"></Component>
 			<Component name="BasicInteractableComponent"></Component>
 			<Component name="BasicMoverComponent"></Component>
+      <Component name="PhysicsMover">
+      <Parameters>
+        <Parameter name="Weight" type="float" value="5" />
+      </Parameters>
+      </Component>
 			<Component name="BasicItemComponent">
         <ExtendedParameters>
           <ItemCapability name="MeleeWeaponCapability">
@@ -75,6 +90,11 @@
 			<Component name="SpriteComponent"></Component>
 			<Component name="BasicInteractableComponent"></Component>
 			<Component name="BasicMoverComponent"></Component>
+      <Component name="PhysicsMover">
+      <Parameters>
+        <Parameter name="Weight" type="float" value="5" />
+      </Parameters>
+      </Component>
 			<Component name="BasicItemComponent">
         <ExtendedParameters>
           <ItemCapability name="MeleeWeaponCapability">

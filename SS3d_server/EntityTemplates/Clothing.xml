@@ -7,6 +7,11 @@
       <Component name="BasicInteractableComponent"></Component>
       <Component name="BasicMoverComponent"></Component>
       <Component name="BasicItemComponent"></Component>
+      <Component name="PhysicsMover">
+      <Parameters>
+        <Parameter name="Weight" type="float" value="5" />
+      </Parameters>
+      </Component>
       <Component name="EquippableComponent">
         <Parameters>
           <Parameter name="wearloc" type="string" value="Outer" />
@@ -28,6 +33,11 @@
       <Component name="BasicInteractableComponent"></Component>
       <Component name="BasicMoverComponent"></Component>
       <Component name="BasicItemComponent"></Component>
+      <Component name="PhysicsMover">
+      <Parameters>
+        <Parameter name="Weight" type="float" value="5" />
+      </Parameters>
+      </Component>
       <Component name="EquippableComponent">
         <Parameters>
           <Parameter name="wearloc" type="string" value="Inner" />
@@ -42,6 +52,11 @@
       <Component name="BasicInteractableComponent"></Component>
       <Component name="BasicMoverComponent"></Component>
       <Component name="BasicItemComponent"></Component>
+      <Component name="PhysicsMover">
+      <Parameters>
+        <Parameter name="Weight" type="float" value="5" />
+      </Parameters>
+      </Component>
       <Component name="EquippableComponent">
         <Parameters>
           <Parameter name="wearloc" type="string" value="Inner" />
@@ -56,6 +71,11 @@
       <Component name="BasicInteractableComponent"></Component>
       <Component name="BasicMoverComponent"></Component>
       <Component name="BasicItemComponent"></Component>
+      <Component name="PhysicsMover">
+      <Parameters>
+        <Parameter name="Weight" type="float" value="5" />
+      </Parameters>
+      </Component>
       <Component name="EquippableComponent">
         <Parameters>
           <Parameter name="wearloc" type="string" value="Inner" />
@@ -70,6 +90,11 @@
       <Component name="BasicInteractableComponent"></Component>
       <Component name="BasicMoverComponent"></Component>
       <Component name="BasicItemComponent"></Component>
+      <Component name="PhysicsMover">
+      <Parameters>
+        <Parameter name="Weight" type="float" value="5" />
+      </Parameters>
+      </Component>
       <Component name="EquippableComponent">
         <Parameters>
           <Parameter name="wearloc" type="string" value="Outer" />
@@ -90,6 +115,11 @@
       <Component name="BasicInteractableComponent"></Component>
       <Component name="BasicMoverComponent"></Component>
       <Component name="BasicItemComponent"></Component>
+      <Component name="PhysicsMover">
+      <Parameters>
+        <Parameter name="Weight" type="float" value="5" />
+      </Parameters>
+      </Component>
       <Component name="EquippableComponent">
         <Parameters>
           <Parameter name="wearloc" type="string" value="Hands" />
@@ -104,6 +134,11 @@
       <Component name="BasicInteractableComponent"></Component>
       <Component name="BasicMoverComponent"></Component>
       <Component name="BasicItemComponent"></Component>
+      <Component name="PhysicsMover">
+      <Parameters>
+        <Parameter name="Weight" type="float" value="5" />
+      </Parameters>
+      </Component>
       <Component name="EquippableComponent">
         <Parameters>
           <Parameter name="wearloc" type="string" value="Feet" />
@@ -118,6 +153,11 @@
       <Component name="BasicInteractableComponent"></Component>
       <Component name="BasicMoverComponent"></Component>
       <Component name="BasicItemComponent"></Component>
+      <Component name="PhysicsMover">
+      <Parameters>
+        <Parameter name="Weight" type="float" value="5" />
+      </Parameters>
+      </Component>
       <Component name="EquippableComponent">
         <Parameters>
           <Parameter name="wearloc" type="string" value="Mask" />
@@ -132,6 +172,11 @@
       <Component name="BasicInteractableComponent"></Component>
       <Component name="BasicMoverComponent"></Component>
       <Component name="BasicItemComponent"></Component>
+      <Component name="PhysicsMover">
+      <Parameters>
+        <Parameter name="Weight" type="float" value="5" />
+      </Parameters>
+      </Component>
       <Component name="EquippableComponent">
         <Parameters>
           <Parameter name="wearloc" type="string" value="Outer" />
@@ -146,6 +191,11 @@
       <Component name="BasicInteractableComponent"></Component>
       <Component name="BasicMoverComponent"></Component>
       <Component name="BasicItemComponent"></Component>
+      <Component name="PhysicsMover">
+      <Parameters>
+        <Parameter name="Weight" type="float" value="5" />
+      </Parameters>
+      </Component>
       <Component name="EquippableComponent">
         <Parameters>
           <Parameter name="wearloc" type="string" value="Head" />
@@ -167,6 +217,11 @@
       <Component name="BasicInteractableComponent"></Component>
       <Component name="BasicMoverComponent"></Component>
       <Component name="BasicItemComponent"></Component>
+      <Component name="PhysicsMover">
+      <Parameters>
+        <Parameter name="Weight" type="float" value="5" />
+      </Parameters>
+      </Component>
       <Component name="EquippableComponent">
         <Parameters>
           <Parameter name="wearloc" type="string" value="Hands" />
@@ -181,6 +236,11 @@
       <Component name="BasicInteractableComponent"></Component>
       <Component name="BasicMoverComponent"></Component>
       <Component name="BasicItemComponent"></Component>
+      <Component name="PhysicsMover">
+      <Parameters>
+        <Parameter name="Weight" type="float" value="5" />
+      </Parameters>
+      </Component>
       <Component name="EquippableComponent">
         <Parameters>
           <Parameter name="wearloc" type="string" value="Feet" />
@@ -195,6 +255,11 @@
       <Component name="BasicInteractableComponent"></Component>
       <Component name="BasicMoverComponent"></Component>
       <Component name="BasicItemComponent"></Component>
+      <Component name="PhysicsMover">
+      <Parameters>
+        <Parameter name="Weight" type="float" value="5" />
+      </Parameters>
+      </Component>
       <Component name="EquippableComponent">
         <Parameters>
           <Parameter name="wearloc" type="string" value="Feet" />

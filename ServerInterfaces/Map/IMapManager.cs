@@ -16,6 +16,7 @@ namespace ServerInterfaces.Map
         void AddGasAt(Point position, GasType type, int amount);
         float GetGasAmount(Point position, GasType type);
         float GetGasTotal(Point position);
+        Vector2 GetGasVelocity(Point position);
         void UpdateAtmos();
         void SendAtmosStateTo(NetConnection client);
 

@@ -7,6 +7,7 @@ using GorgonLibrary;
 using SS13.IoC;
 using SS13_Shared;
 using SS13_Shared.GO;
+using SS13_Shared.GO.Component.Light;
 
 namespace CGO
 {
@@ -18,10 +19,16 @@ namespace CGO
         public Vector2D _lightOffset = new Vector2D(0, 0);
         public Vector3D _lightColor = new Vector3D(190,190,190);
         protected string _mask = "";
+        public LightModeClass _mode = LightModeClass.Constant;
         
         public override ComponentFamily Family
         {
             get { return ComponentFamily.Light; }
+        }
+
+        public override Type StateType
+        {
+            get { return typeof (LightComponentState); }
         }
 
         //When added, set up the light.
@@ -45,9 +52,6 @@ namespace CGO
             var type = (ComponentMessageType) message.MessageParameters[0];
             switch(type)
             {
-                case ComponentMessageType.SetLightState:
-                    SetState((LightState)message.MessageParameters[1]);
-                    break;
                 case ComponentMessageType.SetLightMode:
                     SetMode((LightModeClass)message.MessageParameters[1]);
                     break;
@@ -113,6 +117,26 @@ namespace CGO
         protected void SetMask(string mask)
         {
             _light.SetMask(mask);
+        }
+
+        public override void HandleComponentState(dynamic state)
+        {
+            if (_light.LightState != state.State)
+                _light.SetState(state.State);
+            if (_light.Color.R != state.ColorR || _light.Color.G != state.ColorG ||_light.Color.B != state.ColorB)
+            {
+                SetColor(state.ColorR, state.ColorG, state.ColorB);
+            }
+            if(_mode != state.Mode)
+                SetMode(state.Mode);
+        }
+
+        protected void SetColor(int R, int G, int B)
+        {
+            _lightColor.X = R;
+            _lightColor.Y = G;
+            _lightColor.Z = B;
+            _light.SetColor(255, R, G, B);
         }
 
     }

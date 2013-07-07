@@ -6,6 +6,7 @@ using Lidgren.Network;
 using SS13.IoC;
 using SS13_Shared;
 using SS13_Shared.GO;
+using SS13_Shared.GO.Component.Light;
 using ServerInterfaces.Chat;
 
 namespace SGO
@@ -16,6 +17,7 @@ namespace SGO
         private int _colorR = 200;
         private int _colorG = 200;
         private int _colorB = 200;
+        private LightModeClass _mode = LightModeClass.Constant;
 
         public LightComponent()
         {
@@ -87,15 +89,19 @@ namespace SGO
 
         private void SendState()
         {
-            Owner.SendComponentNetworkMessage(this, NetDeliveryMethod.ReliableUnordered, null, ComponentMessageType.SetLightState, _state);
+            //Owner.SendComponentNetworkMessage(this, NetDeliveryMethod.ReliableUnordered, null, ComponentMessageType.SetLightState, _state);
         }
 
         public override void  HandleInstantiationMessage(NetConnection netConnection)
         {
  	        base.HandleInstantiationMessage(netConnection);
 
-            Owner.SendComponentNetworkMessage(this, NetDeliveryMethod.ReliableUnordered, netConnection, ComponentMessageType.SetLightState, _state);
+            //Owner.SendComponentNetworkMessage(this, NetDeliveryMethod.ReliableUnordered, netConnection, ComponentMessageType.SetLightState, _state);
         }
 
+        public override ComponentState GetComponentState()
+        {
+            return new LightComponentState(_state, _colorR, _colorG, _colorB, _mode);
+        }
     }
 }

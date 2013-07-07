@@ -1,6 +1,7 @@
 ﻿using ClientInterfaces.GOC;
 using SS13_Shared.GO;
 using GorgonLibrary;
+using SS13_Shared.GO.Component.Renderable;
 
 namespace CGO
 {
@@ -21,6 +22,19 @@ namespace CGO
         public virtual void Render(Vector2D topLeft, Vector2D bottomRight)
         {
 
+        }
+
+        public override System.Type StateType
+        {
+            get
+            {
+                return typeof(RenderableComponentState);
+            }
+        }
+
+        public override void HandleComponentState(dynamic state)
+        {
+            DrawDepth = state.DrawDepth;
         }
     }
 }

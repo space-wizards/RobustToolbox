@@ -15,6 +15,7 @@ namespace SS13_Shared.GO.Component.Light
         public LightModeClass Mode;
 
         public LightComponentState(LightState state, int colorR, int colorG, int colorB, LightModeClass mode)
+            :base(ComponentFamily.Light)
         {
             State = state;
             ColorR = colorR;

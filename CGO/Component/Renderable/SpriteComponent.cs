@@ -11,6 +11,7 @@ using System.Drawing;
 using SS13.IoC;
 using SS13_Shared;
 using SS13_Shared.GO;
+using SS13_Shared.GO.Component.Renderable;
 
 namespace CGO
 {
@@ -22,7 +23,15 @@ namespace CGO
         protected Dictionary<string, Sprite> dirSprites;
         protected bool visible = true;
         protected SpriteComponent master;
-        protected List<SpriteComponent> slaves; 
+        protected List<SpriteComponent> slaves;
+        
+        public override Type StateType
+        {
+            get
+            {
+                return typeof(SpriteComponentState);
+            }
+        }
 
         public RectangleF AABB
         {
@@ -330,6 +339,17 @@ namespace CGO
         {
             if (slaves.Contains(slavecompo))
                 slaves.Remove(slavecompo);
+        }
+
+        public override void HandleComponentState(dynamic state)
+        {
+            base.HandleComponentState((SpriteComponentState)state);
+            if (state.SpriteKey != null && sprites.ContainsKey(state.SpriteKey) && currentBaseSprite != sprites[state.SpriteKey])
+            {   
+                SetSpriteByKey(state.SpriteKey);
+            }
+
+            visible = state.Visible;
         }
     }
 }

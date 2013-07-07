@@ -7,6 +7,7 @@ using SS13.IoC;
 using SS13_Shared;
 using SS13_Shared.GO;
 using GorgonLibrary.Graphics;
+using SS13_Shared.GO.Component.Renderable;
 
 namespace CGO
 {
@@ -131,7 +132,7 @@ namespace CGO
             switch ((ComponentMessageType)message.MessageParameters[0])
             {
                 case ComponentMessageType.SetBaseName:
-                    basename = (string) message.MessageParameters[1];
+                    //basename = (string) message.MessageParameters[1];
                     break;
             }
         }
@@ -186,6 +187,17 @@ namespace CGO
         protected override bool WasClicked(System.Drawing.PointF worldPos)
         {
             return base.WasClicked(worldPos) && !IsInHand;
+        }
+
+        public override void HandleComponentState(dynamic state)
+        {
+            base.HandleComponentState((SpriteComponentState)state);
+
+            if (state.BaseName != null && basename != state.BaseName)
+            {
+                basename = state.BaseName;
+                LoadSprites();
+            }
         }
     }
 }

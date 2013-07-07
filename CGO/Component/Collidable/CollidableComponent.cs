@@ -9,6 +9,7 @@ using GorgonLibrary;
 using SS13.IoC;
 using SS13_Shared;
 using SS13_Shared.GO;
+using SS13_Shared.GO.Component.Collidable;
 
 namespace CGO
 {
@@ -107,22 +108,7 @@ namespace CGO
 
             return reply;
         }
-
-        public override void HandleNetworkMessage(IncomingEntityComponentMessage message)
-        {
-            ComponentMessageType type = (ComponentMessageType)message.MessageParameters[0];
-            switch (type)
-            {
-                case ComponentMessageType.EnableCollision:
-                    EnableCollision();
-                    break;
-                case ComponentMessageType.DisableCollision:
-                    DisableCollision();
-                    break;
-
-            }
-        }
-
+        
         /// <summary>
         /// Parameter Setting
         /// Settable params:
@@ -209,5 +195,17 @@ namespace CGO
         public bool IsHardCollidable
         { get { return isHardCollidable; } }
         #endregion
+
+        public override void HandleComponentState(ComponentState state)
+        {
+            var collidableState = (CollidableComponentState) state;
+            if(collidableState.CollisionEnabled != collisionEnabled)
+            {
+                if(collidableState.CollisionEnabled) 
+                    EnableCollision();
+                else
+                    DisableCollision();
+            }
+        }
     }
 }

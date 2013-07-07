@@ -5,6 +5,7 @@ using SS13_Shared;
 using SS13_Shared.GO;
 using GorgonLibrary.Graphics;
 using ClientWindow;
+using SS13_Shared.GO.Component.Renderable;
 
 namespace CGO
 {
@@ -146,6 +147,17 @@ namespace CGO
 
             if (_speechBubble != null)
                 _speechBubble.Draw(Owner.Position, ClientWindowData.Singleton.ScreenOrigin, currentBaseSprite);
+        }
+
+        public override void HandleComponentState(dynamic state)
+        {
+            base.HandleComponentState((SpriteComponentState)state);
+
+            if (state.BaseName != null && _basename != state.BaseName)
+            {
+                _basename = state.BaseName;
+                LoadSprites();
+            }
         }
     }
 }

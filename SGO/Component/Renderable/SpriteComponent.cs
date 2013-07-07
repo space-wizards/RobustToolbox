@@ -1,5 +1,6 @@
 ﻿using Lidgren.Network;
 using SS13_Shared.GO;
+using SS13_Shared.GO.Component.Renderable;
 
 namespace SGO
 {
@@ -25,6 +26,8 @@ namespace SGO
         }
 
         private DrawDepth _drawDepth = DrawDepth.FloorTiles;
+        private string _currentSpriteKey;
+        private string _currentBaseName;
 
         public SpriteComponent()
         {
@@ -52,14 +55,14 @@ namespace SGO
 
         private void SendVisible(NetConnection connection)
         {
-            Owner.SendComponentNetworkMessage(this, NetDeliveryMethod.ReliableUnordered, connection,
-                                              ComponentMessageType.SetVisible, visible);
+            /*Owner.SendComponentNetworkMessage(this, NetDeliveryMethod.ReliableUnordered, connection,
+                                              ComponentMessageType.SetVisible, visible);*/
         }
 
         private void SendDrawDepth(NetConnection connection)
         {
-            if (drawDepth != DrawDepth.FloorTiles) Owner.SendComponentNetworkMessage(this, NetDeliveryMethod.ReliableUnordered, connection,
-                                                           ComponentMessageType.SetDrawDepth, drawDepth);
+            /*if (drawDepth != DrawDepth.FloorTiles) Owner.SendComponentNetworkMessage(this, NetDeliveryMethod.ReliableUnordered, connection,
+                                                           ComponentMessageType.SetDrawDepth, drawDepth);*/
         }
 
         public override ComponentReplyMessage RecieveMessage(object sender, ComponentMessageType type,
@@ -75,13 +78,15 @@ namespace SGO
                 case ComponentMessageType.SetSpriteByKey:
                     if (Owner != null)
                         //We got a set sprite message. Forward it on to the clientside sprite components.                    
-                        Owner.SendComponentNetworkMessage(this, NetDeliveryMethod.ReliableUnordered, null,
-                                                          ComponentMessageType.SetSpriteByKey, list[0]);
+                        /*Owner.SendComponentNetworkMessage(this, NetDeliveryMethod.ReliableUnordered, null,
+                                                          ComponentMessageType.SetSpriteByKey, list[0]);*/
+                        _currentSpriteKey = (string) list[0];
                     break;
                 case ComponentMessageType.SetBaseName:
                     if (Owner != null)
-                        Owner.SendComponentNetworkMessage(this, NetDeliveryMethod.ReliableUnordered, null,
-                            ComponentMessageType.SetBaseName, list[0]);
+                        /*Owner.SendComponentNetworkMessage(this, NetDeliveryMethod.ReliableUnordered, null,
+                            ComponentMessageType.SetBaseName, list[0]);*/
+                        _currentBaseName = (string) list[0];
                     break;
                 case ComponentMessageType.SetVisible:
                     Visible = (bool) list[0];
@@ -89,12 +94,17 @@ namespace SGO
                 case ComponentMessageType.SetDrawDepth:
                     if (Owner != null)
                         drawDepth = (DrawDepth)list[0];
-                        Owner.SendComponentNetworkMessage(this, NetDeliveryMethod.ReliableUnordered, null,
-                                                          ComponentMessageType.SetDrawDepth, drawDepth);
+                        /*Owner.SendComponentNetworkMessage(this, NetDeliveryMethod.ReliableUnordered, null,
+                                                          ComponentMessageType.SetDrawDepth, drawDepth);*/
                     break;
             }
 
             return reply;
+        }
+
+        public override ComponentState GetComponentState()
+        {
+            return new SpriteComponentState(Visible, drawDepth, _currentSpriteKey, _currentBaseName);
         }
     }
 }

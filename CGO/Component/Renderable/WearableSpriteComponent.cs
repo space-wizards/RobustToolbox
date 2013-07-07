@@ -5,6 +5,7 @@ using System.Text;
 using SS13_Shared;
 using SS13_Shared.GO;
 using GorgonLibrary.Graphics;
+using SS13_Shared.GO.Component.Renderable;
 
 namespace CGO
 {
@@ -176,6 +177,17 @@ namespace CGO
             AddSprite(_basename + "_incap");
 
             SetSpriteByKey(_basename);
+        }
+
+        public override void HandleComponentState(dynamic state)
+        {
+            base.HandleComponentState((SpriteComponentState)state);
+
+            if (state.BaseName != null && _basename != state.BaseName)
+            {
+                _basename = state.BaseName;
+                LoadSprites();
+            }
         }
     }
 }

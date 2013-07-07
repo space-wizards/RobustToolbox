@@ -7,43 +7,26 @@ using System;
 using System.Text;
 using System.Reflection;
 using ClientInterfaces.GOC;
+using SS13_Shared.GO.Component.StatusEffect;
+using SS13_Shared.GO.StatusEffect;
 
 namespace CGO
 {
     public class StatusEffectComp : GameObjectComponent
     {
         public override ComponentFamily Family { get { return ComponentFamily.StatusEffects; } }
+        public override Type StateType
+        {
+            get
+            {
+                return typeof(StatusEffectComponentState);
+            }
+        }
 
         public delegate void StatusEffectsChangedHandler(StatusEffectComp sender);
         public event StatusEffectsChangedHandler Changed;
 
         public List<StatusEffect> Effects = new List<StatusEffect>();
-
-        public override void HandleNetworkMessage(IncomingEntityComponentMessage message)
-        {
-            var type = (ComponentMessageType)message.MessageParameters[0];
-
-            switch (type)
-            {
-                case (ComponentMessageType.AddStatusEffect):
-                    var typeName = (string)message.MessageParameters[1];
-                    var uid = (uint)message.MessageParameters[2];
-                    var doesExpire = (bool)message.MessageParameters[3];
-                    var expireSeconds = (double)message.MessageParameters[4];
-                    var family = (int)message.MessageParameters[5];
-                    AddEffect(typeName, uid, doesExpire, DateTime.Now.AddSeconds(expireSeconds), (StatusEffectFamily)family);
-                    break;
-
-                case (ComponentMessageType.RemoveStatusEffect):
-                    var uid2 = (uint)message.MessageParameters[1];
-                    RemoveEffect(uid2);
-                    break;
-
-                default:
-                    base.HandleNetworkMessage(message);
-                    break;
-            }
-        }
 
         public override void Update(float frameTime)
         {
@@ -86,12 +69,43 @@ namespace CGO
             return false;
         }
 
+        private StatusEffect GetEffect(uint uid)
+        {
+            return Effects.FirstOrDefault(e => e.uid == uid);
+        }
+
         public bool HasFamily(StatusEffectFamily family)
         {
             foreach (StatusEffect effect in Effects)
                 if (effect.family == family)
                     return true;
             return false;
+        }
+
+        public override void HandleComponentState(dynamic state)
+        {
+            var existing = Effects.Select(uid => uid.uid).ToList();
+            foreach(StatusEffectState effectState in state.EffectStates)
+            {
+                if (existing.Contains(effectState.Uid))
+                {
+                    // Effect exists, update it
+                    var existingEffect = GetEffect(effectState.Uid);
+                    existingEffect.UpdateEffectState(effectState);
+                } 
+                else
+                {
+                    //Effect doesn't exist, create it
+                    AddEffect(effectState.TypeName, effectState.Uid,effectState.DoesExpire, effectState.ExpiresAt, effectState.Family);
+                }
+
+                existing.Remove(effectState.Uid); // Whittle down the list so we can remove the effects that aren't contained in the state.
+            }
+
+            foreach(var u in existing)
+            {
+                RemoveEffect(u); //The server did not send anything else, so we can remove whatever is left. No client-side only effects.
+            }
         }
     }
 }

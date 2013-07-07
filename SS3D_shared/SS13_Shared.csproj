@@ -131,11 +131,13 @@
     <Compile Include="GO\Component\Mover\MoverComponentState.cs" />
     <Compile Include="GO\Component\Renderable\RenderableComponentState.cs" />
     <Compile Include="GO\Component\Renderable\SpriteComponentState.cs" />
+    <Compile Include="GO\Component\StatusEffect\StatusEffectComponentState.cs" />
     <Compile Include="GO\Crafting\CraftingEntry.cs" />
     <Compile Include="GO\ComponentState.cs" />
     <Compile Include="GO\EntityState.cs" />
     <Compile Include="GO\MarshalComponentParameter.cs" />
     <Compile Include="GO\Server\ServerDelegates.cs" />
+    <Compile Include="GO\StatusEffect\StatusEffectState.cs" />
     <Compile Include="Lighting.cs" />
     <Compile Include="Objectives\ObjectiveParameterType.cs" />
     <Compile Include="Objectives\ObjectiveType.cs" />

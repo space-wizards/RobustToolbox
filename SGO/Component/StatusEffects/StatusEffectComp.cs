@@ -4,6 +4,8 @@ using System.Linq;
 using Lidgren.Network;
 using SS13_Shared;
 using SS13_Shared.GO;
+using SS13_Shared.GO.Component.StatusEffect;
+using SS13_Shared.GO.StatusEffect;
 
 namespace SGO
 {
@@ -49,14 +51,8 @@ namespace SGO
             }
 
             Effects.Add(newEffect);
+            newEffect.typeName = typeName;
             newEffect.OnAdd();
-
-            Owner.SendComponentNetworkMessage(this, NetDeliveryMethod.ReliableUnordered, null,
-                                              ComponentMessageType.AddStatusEffect, typeName, nextUid,
-                                              newEffect.doesExpire,
-                                              newEffect.doesExpire
-                                                  ? newEffect.expiresAt.Subtract(DateTime.Now).TotalSeconds
-                                                  : 0, (int) newEffect.family);
         }
 
         public void RemoveEffect(uint uid)
@@ -66,8 +62,6 @@ namespace SGO
             {
                 toRemove.OnRemove();
                 Effects.Remove(toRemove);
-                Owner.SendComponentNetworkMessage(this, NetDeliveryMethod.ReliableUnordered, null,
-                                                  ComponentMessageType.RemoveStatusEffect, toRemove.uid);
             }
         }
 
@@ -80,8 +74,6 @@ namespace SGO
             {
                 toRemove.OnRemove();
                 Effects.Remove(toRemove);
-                Owner.SendComponentNetworkMessage(this, NetDeliveryMethod.ReliableUnordered, null,
-                                                  ComponentMessageType.RemoveStatusEffect, toRemove.uid);
             }
         }
 
@@ -122,6 +114,16 @@ namespace SGO
             var cparams = base.GetParameters();
             cparams.Add(new ComponentParameter("AddEffect", ""));
             return cparams;
+        }
+
+        public override ComponentState GetComponentState()
+        {
+            var states = new List<StatusEffectState>();
+            foreach(var effect in Effects)
+            {
+                states.Add(effect.GetState());
+            }
+            return new StatusEffectComponentState(states);
         }
     }
 }

@@ -43,5 +43,11 @@ namespace CGO
         public virtual void OnUpdate()
         {
         }
+
+        internal void UpdateEffectState(SS13_Shared.GO.StatusEffect.StatusEffectState effectState)
+        {
+            expiresAt = effectState.ExpiresAt;
+            doesExpire = effectState.DoesExpire;
+        }
     }
 }

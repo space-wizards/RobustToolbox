@@ -1,12 +1,15 @@
 ﻿using Lidgren.Network;
 using SS13_Shared;
 using SS13_Shared.GO;
+using SS13_Shared.GO.Component.Collidable;
 using ServerInterfaces.GameObject;
 
 namespace SGO
 {
     public class CollidableComponent : GameObjectComponent
     {
+        private bool _collisionEnabled = true;
+
         public CollidableComponent()
         {
             family = ComponentFamily.Collidable;
@@ -23,12 +26,10 @@ namespace SGO
             switch (type)
             {
                 case ComponentMessageType.DisableCollision:
-                    Owner.SendComponentNetworkMessage(this, NetDeliveryMethod.ReliableOrdered, null,
-                                                      ComponentMessageType.DisableCollision);
+                    _collisionEnabled = false;
                     break;
                 case ComponentMessageType.EnableCollision:
-                    Owner.SendComponentNetworkMessage(this, NetDeliveryMethod.ReliableOrdered, null,
-                                                      ComponentMessageType.EnableCollision);
+                    _collisionEnabled = true;
                     break;
             }
 
@@ -47,5 +48,10 @@ namespace SGO
                     break;
             }
         }
+
+        public override ComponentState GetComponentState()
+        {
+            return new CollidableComponentState(_collisionEnabled);
+        } 
     }
 }

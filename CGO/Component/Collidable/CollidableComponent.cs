@@ -20,6 +20,11 @@ namespace CGO
             get { return ComponentFamily.Collidable; }
         }
 
+        public override Type StateType
+        {
+            get { return typeof (CollidableComponentState); }
+        }
+
         /// <summary>
         /// X - Top | Y - Right | Z - Bottom | W - Left
         /// </summary>
@@ -196,12 +201,11 @@ namespace CGO
         { get { return isHardCollidable; } }
         #endregion
 
-        public override void HandleComponentState(ComponentState state)
+        public override void HandleComponentState(dynamic state)
         {
-            var collidableState = (CollidableComponentState) state;
-            if(collidableState.CollisionEnabled != collisionEnabled)
+            if (state.CollisionEnabled != collisionEnabled)
             {
-                if(collidableState.CollisionEnabled) 
+                if (state.CollisionEnabled) 
                     EnableCollision();
                 else
                     DisableCollision();

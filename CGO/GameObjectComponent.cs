@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using ClientInterfaces.GOC;
 using SS13_Shared;
 using SS13_Shared.GO;
@@ -17,6 +18,9 @@ namespace CGO
         /// This is the family of the component. This is required to be set on all inheriting components.
         /// </summary>
         public abstract ComponentFamily Family { get; }
+
+        public virtual Type StateType { get { return null; }
+        }
 
         /*
         /// <summary>
@@ -128,7 +132,7 @@ namespace CGO
 
         }
         
-        public virtual void HandleComponentState(ComponentState state)
+        public virtual void HandleComponentState(dynamic state)
         {}
     }
 }

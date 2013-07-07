@@ -87,9 +87,9 @@ namespace SGO
                     Die();
                 }
 
-                Owner.SendComponentNetworkMessage(this, NetDeliveryMethod.ReliableOrdered,
+                /*Owner.SendComponentNetworkMessage(this, NetDeliveryMethod.ReliableOrdered,
                                                   client != null ? client : null, ComponentMessageType.HealthStatus,
-                                                  isDead);
+                                                  isDead);*/
             }
         }
 

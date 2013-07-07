@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using SS13_Shared;
 using SS13_Shared.GO;
 
@@ -15,9 +16,10 @@ namespace ClientInterfaces.GOC
         void Update(float frameTime);
         void Shutdown();
         ComponentFamily Family {get;}
+        Type StateType { get; }
         void SetParameter(ComponentParameter parameter);
         void HandleNetworkMessage(IncomingEntityComponentMessage message);
 
-        void HandleComponentState(ComponentState compState);
+        void HandleComponentState(dynamic compState);
     }
 }

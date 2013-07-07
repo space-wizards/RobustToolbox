@@ -1,6 +1,7 @@
 ﻿using System.Collections.Generic;
 using SS13_Shared;
 using SS13_Shared.GO;
+using SS13_Shared.GO.Component.Damageable.Health;
 
 namespace CGO
 {
@@ -9,18 +10,26 @@ namespace CGO
         protected float Health ;
         protected float MaxHealth;
 
+        public override System.Type StateType
+        {
+            get
+            {
+                return typeof(HealthComponentState);
+            }
+        }
+
         public override void HandleNetworkMessage(IncomingEntityComponentMessage message)
         {
             var type = (ComponentMessageType)message.MessageParameters[0];
 
-            switch (type)
+            /*switch (type)
             {
                 case (ComponentMessageType.HealthStatus):
                     Health = (float)message.MessageParameters[1];
                     MaxHealth = (float)message.MessageParameters[2];
                     if (GetHealth() <= 0) Die();
                     break;
-            }
+            }*/
         }
 
         public override ComponentReplyMessage RecieveMessage(object sender, ComponentMessageType type, params object[] list)
@@ -48,6 +57,14 @@ namespace CGO
         public virtual float GetHealth()
         {
             return Health;
+        }
+
+        public override void HandleComponentState(dynamic state)
+        {
+            base.HandleComponentState((HealthComponentState)state);
+
+            Health = state.Health;
+            MaxHealth = state.MaxHealth;
         }
     }
 }

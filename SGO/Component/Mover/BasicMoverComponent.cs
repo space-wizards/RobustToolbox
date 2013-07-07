@@ -25,6 +25,9 @@ namespace SGO
                 case ComponentMessageType.SendPositionUpdate:
                     SendPositionUpdate(true);
                     break;
+                case ComponentMessageType.PhysicsMove:
+                    Translate((float)list[0], (float)list[1]);
+                    break;
             }
             return reply;
         }

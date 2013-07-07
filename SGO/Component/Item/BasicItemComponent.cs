@@ -109,7 +109,6 @@ namespace SGO
         {
             Owner.RemoveComponent(ComponentFamily.Mover);
             Owner.AddComponent(ComponentFamily.Mover, ComponentFactory.Singleton.GetComponent("BasicMoverComponent"));
-            Owner.AddComponent(ComponentFamily.Mover, ComponentFactory.Singleton.GetComponent("PhysicsMover"));
             Owner.SendComponentNetworkMessage(this, NetDeliveryMethod.ReliableOrdered, null,
                                               ItemComponentNetMessage.Dropped);
             currentHolder = null;

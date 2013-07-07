@@ -175,6 +175,7 @@
     </Content>
     <Content Include="EntityTemplates\JanitorItems.xml">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      <SubType>Designer</SubType>
     </Content>
     <Content Include="EntityTemplates\Lights.xml">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>

@@ -11,7 +11,7 @@
           <Parameter name="wearloc" type="string" value="Mask" />
         </Parameters>
       </Component>
-      <Component name="PhysicsMover">
+      <Component name="Physics">
         <Parameters>
           <Parameter name="Weight" type="float" value="5" />
         </Parameters>

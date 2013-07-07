@@ -6,9 +6,9 @@
       <Component name="SpriteComponent"></Component>
       <Component name="BasicInteractableComponent"></Component>
       <Component name="BasicMoverComponent"></Component>
-      <Component name="PhysicsMover">
+      <Component name="Physics">
       <Parameters>
-        <Parameter name="Weight" type="float" value="5" />
+        <Parameter name="Mass" type="float" value="5" />
       </Parameters>
       </Component>
       <Component name="BasicItemComponent">
@@ -29,9 +29,9 @@
       <Component name="SpriteComponent"></Component>
       <Component name="BasicInteractableComponent"></Component>
       <Component name="BasicMoverComponent"></Component>
-      <Component name="PhysicsMover">
+      <Component name="Physics">
       <Parameters>
-        <Parameter name="Weight" type="float" value="5" />
+        <Parameter name="Mass" type="float" value="5" />
       </Parameters>
       </Component>
       <Component name="BasicItemComponent">
@@ -53,9 +53,9 @@
       <Component name="SpriteComponent"></Component>
       <Component name="BasicInteractableComponent"></Component>
       <Component name="BasicMoverComponent"></Component>
-      <Component name="PhysicsMover">
+      <Component name="Physics">
       <Parameters>
-        <Parameter name="Weight" type="float" value="5" />
+        <Parameter name="Mass" type="float" value="5" />
       </Parameters>
       </Component>
       <Component name="BasicItemComponent">
@@ -76,9 +76,9 @@
       <Component name="SpriteComponent"></Component>
       <Component name="BasicInteractableComponent"></Component>
       <Component name="BasicMoverComponent"></Component>
-      <Component name="PhysicsMover">
+      <Component name="Physics">
       <Parameters>
-        <Parameter name="Weight" type="float" value="5" />
+        <Parameter name="Mass" type="float" value="5" />
       </Parameters>
       </Component>
       <Component name="BasicItemComponent">
@@ -99,9 +99,9 @@
       <Component name="SpriteComponent"></Component>
       <Component name="BasicInteractableComponent"></Component>
       <Component name="BasicMoverComponent"></Component>
-      <Component name="PhysicsMover">
+      <Component name="Physics">
       <Parameters>
-        <Parameter name="Weight" type="float" value="5" />
+        <Parameter name="Mass" type="float" value="5" />
       </Parameters>
       </Component>
       <Component name="BasicItemComponent">
@@ -122,9 +122,9 @@
       <Component name="SpriteComponent"></Component>
       <Component name="BasicInteractableComponent"></Component>
       <Component name="BasicMoverComponent"></Component>
-      <Component name="PhysicsMover">
+      <Component name="Physics">
       <Parameters>
-        <Parameter name="Weight" type="float" value="5" />
+        <Parameter name="Mass" type="float" value="5" />
       </Parameters>
       </Component>
       <Component name="BasicItemComponent">
@@ -145,9 +145,9 @@
       <Component name="SpriteComponent"></Component>
       <Component name="BasicInteractableComponent"></Component>
       <Component name="BasicMoverComponent"></Component>
-      <Component name="PhysicsMover">
+      <Component name="Physics">
       <Parameters>
-        <Parameter name="Weight" type="float" value="5" />
+        <Parameter name="Mass" type="float" value="5" />
       </Parameters>
       </Component>
       <Component name="BasicItemComponent">
@@ -168,9 +168,9 @@
       <Component name="SpriteComponent"></Component>
       <Component name="BasicInteractableComponent"></Component>
       <Component name="BasicMoverComponent"></Component>
-      <Component name="PhysicsMover">
+      <Component name="Physics">
       <Parameters>
-        <Parameter name="Weight" type="float" value="5" />
+        <Parameter name="Mass" type="float" value="5" />
       </Parameters>
       </Component>
       <Component name="BasicItemComponent">
@@ -191,9 +191,9 @@
       <Component name="SpriteComponent"></Component>
       <Component name="BasicInteractableComponent"></Component>
       <Component name="BasicMoverComponent"></Component>
-      <Component name="PhysicsMover">
+      <Component name="Physics">
       <Parameters>
-        <Parameter name="Weight" type="float" value="5" />
+        <Parameter name="Mass" type="float" value="5" />
       </Parameters>
       </Component>
       <Component name="BasicItemComponent">
@@ -214,9 +214,9 @@
       <Component name="SpriteComponent"></Component>
       <Component name="BasicInteractableComponent"></Component>
       <Component name="BasicMoverComponent"></Component>
-      <Component name="PhysicsMover">
+      <Component name="Physics">
       <Parameters>
-        <Parameter name="Weight" type="float" value="5" />
+        <Parameter name="Mass" type="float" value="5" />
       </Parameters>
       </Component>
       <Component name="BasicItemComponent">
@@ -238,9 +238,9 @@
       <Component name="SpriteComponent"></Component>
       <Component name="BasicInteractableComponent"></Component>
       <Component name="BasicMoverComponent"></Component>
-      <Component name="PhysicsMover">
+      <Component name="Physics">
       <Parameters>
-        <Parameter name="Weight" type="float" value="5" />
+        <Parameter name="Mass" type="float" value="5" />
       </Parameters>
       </Component>
       <Component name="BasicItemComponent">

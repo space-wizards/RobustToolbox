@@ -1,6 +1,8 @@
-﻿using Lidgren.Network;
+﻿using System;
+using Lidgren.Network;
 using SS13_Shared;
 using SS13_Shared.GO;
+using SS13_Shared.GO.Component.Damageable.Health;
 using ServerInterfaces.GameObject;
 
 namespace SGO
@@ -64,8 +66,13 @@ namespace SGO
         protected override void SendHealthUpdate(NetConnection client)
         {
             float health = GetHealth();
-            Owner.SendComponentNetworkMessage(this, NetDeliveryMethod.ReliableOrdered, client != null ? client : null,
-                                              ComponentMessageType.HealthStatus, health, maxHealth);
+            /*Owner.SendComponentNetworkMessage(this, NetDeliveryMethod.ReliableOrdered, client != null ? client : null,
+                                              ComponentMessageType.HealthStatus, health, maxHealth);*/
+        }
+
+        public override ComponentState GetComponentState()
+        {
+            return new HealthComponentState(isDead, GetHealth(), maxHealth);
         }
     }
 }

@@ -122,6 +122,10 @@
     <Compile Include="GO\ComponentParameter.cs" />
     <Compile Include="GO\ComponentReplyMessage.cs" />
     <Compile Include="GO\Component\Collidable\CollidableComponentState.cs" />
+    <Compile Include="GO\Component\Damageable\DamageableComponentState.cs" />
+    <Compile Include="GO\Component\Damageable\Health\HealthComponentState.cs" />
+    <Compile Include="GO\Component\Damageable\Health\LocationalHealth\HumanHealthComponentState.cs" />
+    <Compile Include="GO\Component\Damageable\Health\LocationalHealth\LocationHealthState.cs" />
     <Compile Include="GO\Component\Mover\MoverComponentState.cs" />
     <Compile Include="GO\Crafting\CraftingEntry.cs" />
     <Compile Include="GO\ComponentState.cs" />

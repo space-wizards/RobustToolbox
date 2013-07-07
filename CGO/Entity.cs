@@ -348,7 +348,14 @@ namespace CGO
             foreach(var compState in state.ComponentStates)
             {
                 if (HasComponent(compState.Family))
-                    GetComponent(compState.Family).HandleComponentState(compState);
+                {
+                    var comp = GetComponent(compState.Family);
+                    var stateType = comp.StateType;
+                    if (compState.GetType() == stateType)
+                    {
+                        comp.HandleComponentState(compState);
+                    }
+                }
             }
         }
         #endregion

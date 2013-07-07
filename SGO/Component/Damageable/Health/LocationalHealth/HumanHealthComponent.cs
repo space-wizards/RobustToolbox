@@ -5,6 +5,7 @@ using Lidgren.Network;
 using SS13.IoC;
 using SS13_Shared;
 using SS13_Shared.GO;
+using SS13_Shared.GO.Component.Damageable.Health.LocationalHealth;
 using ServerInterfaces.GameObject;
 using ServerInterfaces.Map;
 using ServerInterfaces.Player;
@@ -288,10 +289,11 @@ namespace SGO
                     newUp.Add(damagePair.Key);
                     newUp.Add(damagePair.Value);
                 }
-                Owner.SendComponentNetworkMessage(this, NetDeliveryMethod.ReliableOrdered,
-                                                  client != null ? client : null, newUp.ToArray());
+                /*Owner.SendComponentNetworkMessage(this, NetDeliveryMethod.ReliableOrdered,
+                                                  client != null ? client : null, newUp.ToArray());*/
             }
         }
+
 
         protected bool HasInternals()
         {
@@ -303,6 +305,29 @@ namespace SGO
                     return true;
             }
             return false;
+        }
+
+        public override ComponentState GetComponentState()
+        {
+            return new HumanHealthComponentState(isDead, GetHealth(), GetMaxHealth(), GetLocationHealthStates());
+        }
+
+        private List<LocationHealthState> GetLocationHealthStates()
+        {
+            var list = new List<LocationHealthState>();
+            foreach(var loc in damageZones)
+            {
+                var state = new LocationHealthState();
+                state.Location = loc.location;
+                state.MaxHealth = loc.maxHealth;
+                state.CurrentHealth = loc.currentHealth;
+                foreach(var damagePair in loc.damageIndex)
+                {
+                    state.DamageIndex.Add(damagePair.Key, damagePair.Value);
+                }
+                list.Add(state);
+            }
+            return list;
         }
     }
 }

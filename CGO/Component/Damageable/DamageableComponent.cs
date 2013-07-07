@@ -1,6 +1,7 @@
 ﻿using System.Collections.Generic;
 using SS13_Shared;
 using SS13_Shared.GO;
+using SS13_Shared.GO.Component.Damageable;
 
 namespace CGO
 {
@@ -11,6 +12,11 @@ namespace CGO
         public override ComponentFamily Family
         {
             get { return ComponentFamily.Damageable; }
+        }
+
+        public override System.Type StateType
+        {
+            get { return typeof (DamageableComponentState); }
         }
 
         public override ComponentReplyMessage RecieveMessage(object sender, ComponentMessageType type, params object[] list)
@@ -30,28 +36,20 @@ namespace CGO
             return reply;
         }
 
-        public override void HandleNetworkMessage(IncomingEntityComponentMessage message)
-        {
-            var type = (ComponentMessageType)message.MessageParameters[0];
-
-            switch (type)
-            {
-                case (ComponentMessageType.HealthStatus):
-                    var newIsDeadState = (bool)message.MessageParameters[1];
-
-                    if (newIsDeadState == true && IsDead == false)
-                        Die();
-
-                    break;
-            }
-        }
-
         protected virtual void Die()
         {
             if (IsDead) return;
             
             IsDead = true;
             Owner.SendMessage(this, ComponentMessageType.Die);
+        }
+
+        public override void HandleComponentState(dynamic state) 
+        {
+            var newIsDeadState = state.IsDead;
+
+            if(newIsDeadState && IsDead == false)
+                Die();
         }
     }
 }

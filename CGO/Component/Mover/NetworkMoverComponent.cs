@@ -28,6 +28,11 @@ namespace CGO
             get { return ComponentFamily.Mover; }
         }
 
+        public override Type StateType
+        {
+            get { return typeof (MoverComponentState); }
+        }
+
         public override void HandleNetworkMessage(IncomingEntityComponentMessage message)
         {
             /*var x = (float)message.MessageParameters[0];
@@ -131,14 +136,9 @@ namespace CGO
             }
         }
 
-        public override void HandleComponentState(ComponentState state)
+        public override void HandleComponentState(dynamic state)
         {
-            base.HandleComponentState(state);
-
-            if(state.GetType() == typeof(MoverComponentState))
-            {
-                SetNewState(state as MoverComponentState);
-            }
+            SetNewState(state);
         }
 
         private void SetNewState(MoverComponentState state)

@@ -126,6 +126,8 @@
     <Compile Include="GO\Component\Damageable\Health\HealthComponentState.cs" />
     <Compile Include="GO\Component\Damageable\Health\LocationalHealth\HumanHealthComponentState.cs" />
     <Compile Include="GO\Component\Damageable\Health\LocationalHealth\LocationHealthState.cs" />
+    <Compile Include="GO\Component\EntityStats\EntityStatsComponentState.cs" />
+    <Compile Include="GO\Component\Light\LightComponentState.cs" />
     <Compile Include="GO\Component\Mover\MoverComponentState.cs" />
     <Compile Include="GO\Crafting\CraftingEntry.cs" />
     <Compile Include="GO\ComponentState.cs" />
@@ -180,6 +182,7 @@
       <DependentUpon>BitStream.cs</DependentUpon>
     </EmbeddedResource>
   </ItemGroup>
+  <ItemGroup />
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
        Other similar extension points exist, see Microsoft.Common.targets.

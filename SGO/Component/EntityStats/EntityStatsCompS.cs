@@ -5,6 +5,7 @@ using System.Xml.Linq;
 using Lidgren.Network;
 using SS13_Shared;
 using SS13_Shared.GO;
+using SS13_Shared.GO.Component.EntityStats;
 
 namespace SGO
 {
@@ -43,7 +44,7 @@ namespace SGO
             switch (type)
             {
                 case (ComponentMessageType.GetArmorValues): //Add message for sending complete listing.
-                    Owner.SendComponentNetworkMessage(this, NetDeliveryMethod.ReliableUnordered, client, ComponentMessageType.ReturnArmorValues, (int)((DamageType)message.MessageParameters[1]), GetArmorValue((DamageType)message.MessageParameters[1]));
+                    //Owner.SendComponentNetworkMessage(this, NetDeliveryMethod.ReliableUnordered, client, ComponentMessageType.ReturnArmorValues, (int)((DamageType)message.MessageParameters[1]), GetArmorValue((DamageType)message.MessageParameters[1]));
                     break;
 
                 default:
@@ -96,6 +97,11 @@ namespace SGO
                 armorVal += armorStats[damType];
 
             return armorVal;
+        }
+
+        public override ComponentState GetComponentState()
+        {
+            return new EntityStatsComponentState(armorStats);
         }
     }
 }

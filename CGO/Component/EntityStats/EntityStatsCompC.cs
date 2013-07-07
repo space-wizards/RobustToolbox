@@ -9,12 +9,18 @@ using System.Reflection;
 using ClientInterfaces.GOC;
 using Lidgren;
 using Lidgren.Network;
+using SS13_Shared.GO.Component.EntityStats;
 
 namespace CGO
 {
     public class EntityStatsComp : GameObjectComponent
     {
         public override ComponentFamily Family { get { return ComponentFamily.EntityStats; } }
+
+        public override Type StateType
+        {
+            get { return typeof (EntityStatsComponentState); }
+        }
 
         Dictionary<DamageType, int> armorStats = new Dictionary<DamageType, int>();
 
@@ -48,10 +54,10 @@ namespace CGO
             if (armorStats.ContainsKey(damType)) return armorStats[damType];
             else return 0;
         }
-
-        public override void Update(float frameTime)
+        
+        public override void HandleComponentState(dynamic state)
         {
-            base.Update(frameTime);
+            armorStats = state.ArmorStats;
         }
     }
 }

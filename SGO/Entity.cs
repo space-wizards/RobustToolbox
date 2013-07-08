@@ -40,6 +40,8 @@ namespace SGO
         private readonly Dictionary<ComponentFamily, IGameObjectComponent> _components =
             new Dictionary<ComponentFamily, IGameObjectComponent>();
 
+        private List<Type> _componentTypes = new List<Type>(); 
+
         private readonly bool _messageProfiling;
 
         private readonly IEntityNetworkManager m_entityNetworkManager;
@@ -123,6 +125,7 @@ namespace SGO
                 component.OnRemove();
             }
             _components.Clear();
+            _componentTypes.Clear();
         }
 
         /// <summary>
@@ -149,6 +152,7 @@ namespace SGO
                 RemoveComponent(family);
             _components.Add(family, component);
             component.OnAdd(this);
+            UpdateComponentTypes();
         }
 
         /// <summary>
@@ -161,9 +165,15 @@ namespace SGO
         {
             if (_components.Keys.Contains(family))
             {
+                UpdateComponentTypes();
                 _components[family].OnRemove();
                 _components.Remove(family);
             }
+        }
+
+        private void UpdateComponentTypes()
+        {
+            _componentTypes = _components.Values.Select(t => t.GetType()).ToList();
         }
 
         /// <summary>
@@ -310,6 +320,43 @@ namespace SGO
 
         #endregion
 
+        #region entity systems
+        public bool Match(IEntityQuery query)
+        {
+            bool exclusionSet = query.Exclusionset.Any();
+            bool oneSet = query.OneSet.Any();
+            bool allSet = query.AllSet.Any();
+            bool noQuery = !(exclusionSet || oneSet || allSet);
+            if (noQuery) return true; //Empty queries return true for all entities.
+
+            bool exclusionSetMatch = false;
+            bool oneSetMatch = false;
+            bool allSetMatch = true;
+
+            //If there is an EXCLUDE set, and the entity contains any component types in that set, or subtypes of them, the entity is excluded.
+            if (query.Exclusionset.Any(t => _componentTypes.Any(t.IsAssignableFrom)))
+            {
+                exclusionSetMatch = true;
+            }
+
+
+            if (query.OneSet.Any(t => _componentTypes.Any(t.IsAssignableFrom)))
+            {
+                oneSetMatch = true;
+            }
+
+            //If there is an ALL set, the entity MUST match all types in the set
+            if(query.AllSet.Any(t => !_componentTypes.Any(t.IsAssignableFrom)))
+                allSetMatch = false;
+
+            bool matched = !(exclusionSet && exclusionSetMatch);
+            if(matched && (allSet && !allSetMatch))
+                matched = false;
+            if (matched && (oneSet && !oneSetMatch))
+                matched = false;
+            return matched;
+        }
+        #endregion
         //VARIABLES TO REFACTOR AT A LATER DATE
 
         //FUNCTIONS TO REFACTOR AT A LATER DATE

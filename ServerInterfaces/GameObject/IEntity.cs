@@ -38,5 +38,6 @@ namespace ServerInterfaces.GameObject
         void Moved(Vector2 oldPosition);
         void HandleNetworkMessage(ServerIncomingEntityMessage message);
         EntityState GetEntityState();
+        bool Match(IEntityQuery query);
     }
 }

@@ -105,8 +105,12 @@
     <Compile Include="EntityFactory.cs" />
     <Compile Include="EntityManager.cs" />
     <Compile Include="EntityNetworkManager.cs" />
+    <Compile Include="EntityQuery.cs" />
+    <Compile Include="EntitySystem.cs" />
     <Compile Include="EntityTemplate.cs" />
     <Compile Include="EntityTemplateDatabase.cs" />
+    <Compile Include="Exceptions\MissingImplementationException.cs" />
+    <Compile Include="Exceptions\NoPublicConstructorException.cs" />
     <Compile Include="GameObjectComponent.cs" />
     <Compile Include="GameObjectComponentEnum.cs" />
     <Compile Include="IMoverComponent.cs" />
@@ -120,6 +124,8 @@
     <Compile Include="Status Effects\Rooted.cs" />
     <Compile Include="Status Effects\ExampleEffect.cs" />
     <Compile Include="Status Effects\StatusEffect.cs" />
+    <Compile Include="EntitySystemManager.cs" />
+    <Compile Include="EntitySystems\TestSystem.cs" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\Lidgren.Network\Lidgren.Network.csproj">
@@ -143,6 +149,7 @@
       <Name>SS13_Shared</Name>
     </ProjectReference>
   </ItemGroup>
+  <ItemGroup />
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
        Other similar extension points exist, see Microsoft.Common.targets.

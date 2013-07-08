@@ -160,11 +160,14 @@ namespace SS13
             var displayWidth = _configurationManager.GetDisplayWidth();
             var displayHeight = _configurationManager.GetDisplayHeight();
             var fullscreen = _configurationManager.GetFullscreen();
+            int refresh = (int)_configurationManager.GetDisplayRefresh();
             Size = new Size((int)displayWidth, (int)displayHeight);
+
+            //TODO. Find first compatible videomode and set it if no configuration is present. Else the client might crash due to invalid videomodes on the first start.
 
             Gorgon.Initialize(true, false);
             //Gorgon.SetMode(this);
-            Gorgon.SetMode(this, (int)displayWidth, (int)displayHeight, Gorgon.DesktopVideoMode.Format, !fullscreen, false, false, Gorgon.DesktopVideoMode.RefreshRate);
+            Gorgon.SetMode(this, (int)displayWidth, (int)displayHeight, BackBufferFormats.BufferRGB888, !fullscreen, false, false, refresh);
             Gorgon.AllowBackgroundRendering = true;
             Gorgon.Screen.BackgroundColor = Color.FromArgb(50, 50, 50);
             Gorgon.CurrentClippingViewport = new Viewport(0, 0, Gorgon.Screen.Width, Gorgon.Screen.Height);

@@ -11,8 +11,12 @@
         string GetResourcePath();
         string GetResourcePassword();
         bool GetFullscreen();
+        bool GetVsync();
+        void SetVsync(bool state);
         uint GetDisplayWidth();
         uint GetDisplayHeight();
+        uint GetDisplayRefresh();
+        void SetDisplayRefresh(uint rate);
         string GetServerAddress();
         bool GetMessageLogging();
         bool GetSimulateLatency();

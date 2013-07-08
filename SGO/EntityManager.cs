@@ -22,6 +22,7 @@ namespace SGO
         private EntityFactory m_entityFactory;
         private EntityNetworkManager m_entityNetworkManager;
         private EntityTemplateDatabase m_entityTemplateDatabase;
+        private EntitySystemManager _systemManager;
         public int nextId;
 
         public EntityManager(ISS13NetServer netServer)
@@ -31,8 +32,10 @@ namespace SGO
             m_entityFactory = new EntityFactory(m_entityTemplateDatabase, m_entityNetworkManager);
             m_entities = new Dictionary<int, IEntity>();
             m_netServer = netServer;
+            _systemManager = new EntitySystemManager(this);
             Singleton = this;
             LoadEntities();
+            _systemManager.Initialize();
         }
 
         public static EntityManager Singleton
@@ -90,6 +93,11 @@ namespace SGO
             return null;
         }
 
+        public List<IEntity> GetEntities(IEntityQuery query)
+        {
+            return m_entities.Values.Where(e => e.Match(query)).ToList();
+        } 
+
         /// <summary>
         /// Creates an entity and adds it to the entity dictionary
         /// </summary>
@@ -129,6 +137,8 @@ namespace SGO
         public void Shutdown()
         {
             FlushEntities();
+            _systemManager.Shutdown();
+            _systemManager = null;
             m_entityFactory = null;
             m_entityTemplateDatabase = null;
             m_entityNetworkManager = null;
@@ -278,6 +288,11 @@ namespace SGO
                 stateEntities.Add(entityState);
             }
             return stateEntities;
+        }
+
+        public void Update()
+        {
+            _systemManager.Update();
         }
     }
 }

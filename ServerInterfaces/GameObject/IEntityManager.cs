@@ -17,5 +17,6 @@ namespace ServerInterfaces.GameObject
         IEntity SpawnEntityAt(string entityTemplateName, SS13_Shared.Vector2 vector2, bool send = true);
         IComponentFactory ComponentFactory { get; }
         List<EntityState> GetEntityStates();
+        void Update();
     }
 }

@@ -60,7 +60,7 @@ namespace ClientServices.State.States
             _reslistbox.ItemSelected += new Listbox.ListboxPressHandler(_reslistbox_ItemSelected);
 
             var modes = from v in Gorgon.CurrentDriver.VideoModes
-                        where (v.Height > 748 && v.Width > 1024) && v.Format == BackBufferFormats.BufferRGB888 //GOSH I HOPE NOONES USING 16 BIT COLORS. THAT WOULD SUCK.
+                        where (v.Height > 748 && v.Width > 1024) && v.Format == BackBufferFormats.BufferRGB888 && v.RefreshRate >= 59 //GOSH I HOPE NOONES USING 16 BIT COLORS. OR RUNNING AT LESS THAN 59 hz
                         orderby v.Height * v.Width ascending
                         select v;
 
@@ -145,7 +145,7 @@ namespace ClientServices.State.States
 
         private string GetVmString(VideoMode vm)
         {
-            return vm.Width.ToString() + "x" + vm.Height.ToString() + " @ " + vm.RefreshRate + " mhz";
+            return vm.Width.ToString() + "x" + vm.Height.ToString() + " @ " + vm.RefreshRate + " hz";
         }
 
         void _exitbtt_Clicked(Label sender)

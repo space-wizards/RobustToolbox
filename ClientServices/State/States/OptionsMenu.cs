@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Windows.Forms;
 using ClientInterfaces.State;
 using ClientServices.Helpers;
 using GorgonLibrary;
@@ -9,6 +10,7 @@ using System.Drawing;
 using ClientServices.UserInterface.Components;
 using Lidgren.Network;
 using System.Linq;
+using Label = ClientServices.UserInterface.Components.Label;
 
 namespace ClientServices.State.States
 {
@@ -24,9 +26,12 @@ namespace ClientServices.State.States
 
         private readonly Listbox _reslistbox;
         private readonly Checkbox _chkfullscreen;
-        private readonly Label _lblfullscreen;
+        private readonly Checkbox _chkvsync;
 
-        private Dictionary<string, KeyValuePair<uint, uint>> vmList = new Dictionary<string, KeyValuePair<uint, uint>>();
+        private readonly Label _lblfullscreen;
+        private readonly Label _lblvsync;
+
+        private Dictionary<string, VideoMode> vmList = new Dictionary<string, VideoMode>();
 
         #endregion
 
@@ -39,30 +44,47 @@ namespace ClientServices.State.States
             _background = ResourceManager.GetSprite("mainbg");
             _background.Smoothing = Smoothing.Smooth;
 
-            _chkfullscreen = new Checkbox(ResourceManager);
             _lblfullscreen = new Label("Fullscreen", "CALIBRI", ResourceManager);
+
+            _chkfullscreen = new Checkbox(ResourceManager);
+            _chkfullscreen.Value = ConfigurationManager.GetFullscreen();
             _chkfullscreen.ValueChanged += new Checkbox.CheckboxChangedHandler(_chkfullscreen_ValueChanged);
+
+            _lblvsync = new Label("Vsync", "CALIBRI", ResourceManager);
+
+            _chkvsync = new Checkbox(ResourceManager);
+            _chkvsync.Value = ConfigurationManager.GetVsync();
+            _chkvsync.ValueChanged += new Checkbox.CheckboxChangedHandler(_chkvsync_ValueChanged);
 
             _reslistbox = new Listbox(250, 150, ResourceManager);
             _reslistbox.ItemSelected += new Listbox.ListboxPressHandler(_reslistbox_ItemSelected);
 
             var modes = from v in Gorgon.CurrentDriver.VideoModes
-                        where v.Height * v.Width >= 786432 //Shitty way to limit it to 1024 * 748 upwards.
+                        where (v.Height > 748 && v.Width > 1024) && v.Format == BackBufferFormats.BufferRGB888 //GOSH I HOPE NOONES USING 16 BIT COLORS. THAT WOULD SUCK.
                         orderby v.Height * v.Width ascending
                         select v;
+
+            if(!modes.Any())
+                //No compatible videomodes at all. It is likely the game is being run on a calculator. TODO handle this.
+                Application.Exit();
 
             foreach (VideoMode vm in modes)
             {
                 if(!vmList.ContainsKey(GetVmString(vm)))
                 {
-                    vmList.Add(GetVmString(vm), new KeyValuePair<uint, uint>((uint)vm.Width, (uint)vm.Height));
+                    vmList.Add(GetVmString(vm), vm);
                     _reslistbox.AddItem(GetVmString(vm));
                 }
             }
 
-            if (vmList.Any(x => x.Value.Key == Gorgon.CurrentClippingViewport.Width && x.Value.Value == Gorgon.CurrentClippingViewport.Height))
+            if (vmList.Any(x => x.Value.Width == Gorgon.CurrentVideoMode.Width && x.Value.Height == Gorgon.CurrentVideoMode.Height && x.Value.RefreshRate == (Gorgon.Screen.Windowed ? Gorgon.DesktopVideoMode.RefreshRate : Gorgon.CurrentVideoMode.RefreshRate) ))
             {
-                var curr = vmList.FirstOrDefault(x => x.Value.Key == Gorgon.CurrentClippingViewport.Width && x.Value.Value == Gorgon.CurrentClippingViewport.Height);
+                var curr = vmList.FirstOrDefault(x => x.Value.Width == Gorgon.CurrentVideoMode.Width && x.Value.Height == Gorgon.CurrentVideoMode.Height && x.Value.RefreshRate == (Gorgon.Screen.Windowed ? Gorgon.DesktopVideoMode.RefreshRate : Gorgon.CurrentVideoMode.RefreshRate));
+                _reslistbox.SelectItem(curr.Key, false);
+            }
+            else
+            {   //No match due to different refresh rate in windowed mode. Just pick first resolution based on size only.
+                var curr = vmList.FirstOrDefault(x => x.Value.Width == Gorgon.CurrentVideoMode.Width && x.Value.Height == Gorgon.CurrentVideoMode.Height);
                 _reslistbox.SelectItem(curr.Key, false);
             }
 
@@ -77,6 +99,11 @@ namespace ClientServices.State.States
             _applybtt.Clicked += new Label.LabelPressHandler(_applybtt_Clicked);
         }
 
+        void _chkvsync_ValueChanged(bool newValue, Checkbox sender)
+        {
+            ConfigurationManager.SetVsync(newValue);
+        }
+
         void _applybtt_Clicked(Label sender, MouseInputEventArgs e)
         {
             ApplyVideoMode();
@@ -89,10 +116,21 @@ namespace ClientServices.State.States
 
         private void ApplyVideoMode()
         {
-            BackBufferFormats bbf = Gorgon.DesktopVideoMode.Format;
-            int refr = Gorgon.DesktopVideoMode.RefreshRate;
-            System.Windows.Forms.Form owner = Gorgon.Screen.OwnerForm;
-            Gorgon.SetMode(owner, (int)ConfigurationManager.GetDisplayWidth(), (int)ConfigurationManager.GetDisplayHeight(), bbf, ConfigurationManager.GetFullscreen(), false, false, refr);
+            Form owner = Gorgon.Screen.OwnerForm;
+            Gorgon.Stop();
+
+            Gorgon.SetMode(owner, (int)ConfigurationManager.GetDisplayWidth(), (int)ConfigurationManager.GetDisplayHeight(), BackBufferFormats.BufferRGB888, !ConfigurationManager.GetFullscreen(), false, false, (int)ConfigurationManager.GetDisplayRefresh(), (ConfigurationManager.GetVsync()? VSyncIntervals.IntervalOne: VSyncIntervals.IntervalNone));
+
+            if (!ConfigurationManager.GetFullscreen())
+            {   //Gee thanks gorgon for changing this stuff only when switching TO fullscreen.
+                owner.FormBorderStyle = FormBorderStyle.Sizable;
+                owner.WindowState = FormWindowState.Normal;
+                owner.ControlBox = true;
+                owner.MaximizeBox = true;
+                owner.MinimizeBox = true;
+            }
+
+            Gorgon.Go();
         }
 
         void _reslistbox_ItemSelected(Label item, Listbox sender)
@@ -100,13 +138,14 @@ namespace ClientServices.State.States
             if (vmList.ContainsKey(item.Text.Text))
             {
                 var sel = vmList[item.Text.Text];
-                ConfigurationManager.SetResolution((uint)sel.Key, (uint)sel.Value);
+                ConfigurationManager.SetResolution((uint)sel.Width, (uint)sel.Height);
+                ConfigurationManager.SetDisplayRefresh((uint)sel.RefreshRate);
             }
         }
 
         private string GetVmString(VideoMode vm)
         {
-            return vm.Width.ToString() + "x" + vm.Height.ToString();
+            return vm.Width.ToString() + "x" + vm.Height.ToString() + " @ " + vm.RefreshRate + " mhz";
         }
 
         void _exitbtt_Clicked(Label sender)
@@ -134,7 +173,9 @@ namespace ClientServices.State.States
             UserInterfaceManager.AddComponent(_mainmenubtt);
             UserInterfaceManager.AddComponent(_reslistbox);
             UserInterfaceManager.AddComponent(_chkfullscreen);
+            UserInterfaceManager.AddComponent(_chkvsync);
             UserInterfaceManager.AddComponent(_lblfullscreen);
+            UserInterfaceManager.AddComponent(_lblvsync);
             UserInterfaceManager.AddComponent(_applybtt);
         }
 
@@ -144,7 +185,9 @@ namespace ClientServices.State.States
             UserInterfaceManager.RemoveComponent(_mainmenubtt);
             UserInterfaceManager.RemoveComponent(_reslistbox);
             UserInterfaceManager.RemoveComponent(_chkfullscreen);
+            UserInterfaceManager.RemoveComponent(_chkvsync);
             UserInterfaceManager.RemoveComponent(_lblfullscreen);
+            UserInterfaceManager.RemoveComponent(_lblvsync);
             UserInterfaceManager.RemoveComponent(_applybtt);
         }
 
@@ -152,8 +195,10 @@ namespace ClientServices.State.States
         {
             //_connectbtt.Position = new Point(_connecttxt.Position.X, _connecttxt.Position.Y + _connecttxt.ClientArea.Height + 2);
             _reslistbox.Position = new Point(45, (int)(Gorgon.CurrentClippingViewport.Height / 2.5f));
-            _chkfullscreen.Position = new Point(_reslistbox.Position.X, _reslistbox.Position.Y + _reslistbox.ClientArea.Height + 5);
+            _chkfullscreen.Position = new Point(_reslistbox.Position.X, _reslistbox.Position.Y + _reslistbox.ClientArea.Height + 10);
+            _chkvsync.Position = new Point(_chkfullscreen.Position.X, _chkfullscreen.Position.Y + _chkfullscreen.ClientArea.Height + 10);
             _lblfullscreen.Position = new Point(_chkfullscreen.Position.X + _chkfullscreen.ClientArea.Width + 3, _chkfullscreen.Position.Y + (int)(_chkfullscreen.ClientArea.Height / 2f) - (int)(_lblfullscreen.ClientArea.Height / 2f));
+            _lblvsync.Position = new Point(_chkvsync.Position.X + _chkvsync.ClientArea.Width + 3, _chkvsync.Position.Y + (int)(_chkvsync.ClientArea.Height / 2f) - (int)(_chkvsync.ClientArea.Height / 2f));
             _mainmenubtt.Position = new Point(_reslistbox.Position.X + 650, _reslistbox.Position.Y);
             _applybtt.Position = new Point(_mainmenubtt.Position.X, _mainmenubtt.Position.Y + _mainmenubtt.ClientArea.Height + 5);
 

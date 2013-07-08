@@ -7,6 +7,7 @@ namespace ClientServices.Configuration
     {
         public uint DisplayWidth = 1024;
         public uint DisplayHeight = 768;
+        public uint DisplayRefresh = 60;
         public bool Fullscreen;
         public bool VSync = true;
         public string ResourcePack = @"..\..\..\Media\ResourcePack.zip";

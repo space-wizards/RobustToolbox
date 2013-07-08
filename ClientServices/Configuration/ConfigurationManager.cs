@@ -60,6 +60,17 @@ namespace ClientServices.Configuration
             return Configuration.PlayerName;
         }
 
+        public bool GetVsync()
+        {
+            return Configuration.VSync;
+        }
+
+        public void SetVsync(bool state)
+        {
+            Configuration.VSync = state;
+            Save();
+        }
+
         public bool GetFullscreen()
         {
             return Configuration.Fullscreen;
@@ -90,6 +101,17 @@ namespace ClientServices.Configuration
         public uint GetDisplayWidth()
         {
             return Configuration.DisplayWidth;
+        }
+
+        public uint GetDisplayRefresh()
+        {
+            return Configuration.DisplayRefresh;
+        }
+
+        public void SetDisplayRefresh(uint rate)
+        {
+            Configuration.DisplayRefresh = rate;
+            Save();
         }
 
         public uint GetDisplayHeight()

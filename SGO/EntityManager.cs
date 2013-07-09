@@ -1,9 +1,11 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Globalization;
+using System.IO;
 using System.Linq;
 using System.Xml.Linq;
 using Lidgren.Network;
+using SS13.IoC;
 using SS13_Shared;
 using ServerInterfaces.GameObject;
 using ServerInterfaces.Network;
@@ -174,7 +176,17 @@ namespace SGO
         /// </summary>
         public void LoadEntities()
         {
-            XElement tmp = XDocument.Load("SavedEntities.xml").Element("SavedEntities");
+            XElement tmp;
+            try
+            {
+                tmp = XDocument.Load("SavedEntities.xml").Element("SavedEntities");
+            }
+            catch (FileNotFoundException e)
+            {
+                var saveFile = new XDocument(new XElement("SavedEntities"));
+                saveFile.Save("SavedEntities.xml");
+                tmp = XDocument.Load("SavedEntities.xml").Element("SavedEntities");
+            }
             IEnumerable<XElement> SavedEntities = tmp.Descendants("SavedEntity");
             foreach (XElement e in SavedEntities)
             {
@@ -290,9 +302,9 @@ namespace SGO
             return stateEntities;
         }
 
-        public void Update()
+        public void Update(float frameTime)
         {
-            _systemManager.Update();
+            _systemManager.Update(frameTime);
         }
     }
 }

@@ -34,6 +34,6 @@ namespace SGO
             _shutdown = true;
         }
 
-        public abstract void Update();
+        public abstract void Update(float frameTime);
     }
 }

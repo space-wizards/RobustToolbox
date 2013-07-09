@@ -78,11 +78,11 @@ namespace SGO
             _shutdown = true;
         }
 
-        public void Update()
+        public void Update(float frameTime)
         {
             foreach(var system in _systems.Values)
             {
-                system.Update();
+                system.Update(frameTime);
             }
         }
     }

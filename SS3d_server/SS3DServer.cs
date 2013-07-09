@@ -396,7 +396,7 @@ namespace SS13_Server
                 }
             }
             LastUpdate = Time;
-            EntityManager.Update();
+            EntityManager.Update(framePeriod);
             SendGameStateUpdate();
         }
 

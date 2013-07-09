@@ -321,38 +321,27 @@ namespace SGO
         #endregion
 
         #region entity systems
+        /// <summary>
+        /// Match
+        /// 
+        /// Allows us to fetch entities with a defined SET of components
+        /// </summary>
+        /// <param name="query"></param>
+        /// <returns></returns>
         public bool Match(IEntityQuery query)
         {
-            bool exclusionSet = query.Exclusionset.Any();
-            bool oneSet = query.OneSet.Any();
-            bool allSet = query.AllSet.Any();
-            bool noQuery = !(exclusionSet || oneSet || allSet);
-            if (noQuery) return true; //Empty queries return true for all entities.
-
-            bool exclusionSetMatch = false;
-            bool oneSetMatch = false;
-            bool allSetMatch = true;
+            // Empty queries always result in a match - equivalent to SELECT * FROM ENTITIES
+            if (!(query.Exclusionset.Any() || query.OneSet.Any() || query.AllSet.Any()))
+                return true;
 
             //If there is an EXCLUDE set, and the entity contains any component types in that set, or subtypes of them, the entity is excluded.
-            if (query.Exclusionset.Any(t => _componentTypes.Any(t.IsAssignableFrom)))
-            {
-                exclusionSetMatch = true;
-            }
-
-
-            if (query.OneSet.Any(t => _componentTypes.Any(t.IsAssignableFrom)))
-            {
-                oneSetMatch = true;
-            }
-
-            //If there is an ALL set, the entity MUST match all types in the set
-            if(query.AllSet.Any(t => !_componentTypes.Any(t.IsAssignableFrom)))
-                allSetMatch = false;
-
-            bool matched = !(exclusionSet && exclusionSetMatch);
-            if(matched && (allSet && !allSetMatch))
+            bool matched = !(query.Exclusionset.Any() && query.Exclusionset.Any(t => _componentTypes.Any(t.IsAssignableFrom)));
+         
+            //If there are no matching exclusions, and the entity matches the ALL set, the entity is included
+            if(matched && (query.AllSet.Any() && query.AllSet.Any(t => !_componentTypes.Any(t.IsAssignableFrom))))
                 matched = false;
-            if (matched && (oneSet && !oneSetMatch))
+            //If the entity matches so far, and it matches the ONE set, it matches.
+            if(matched && (query.OneSet.Any() && query.OneSet.Any(t => _componentTypes.Any(t.IsAssignableFrom))))
                 matched = false;
             return matched;
         }

@@ -15,7 +15,7 @@ namespace SGO.EntitySystems
             //EntityQuery.Exclusionset.Add(typeof (LightComponent));
         }
 
-        public override void Update()
+        public override void Update(float frametime)
         {
             foreach(var e in RelevantEntities)
             {

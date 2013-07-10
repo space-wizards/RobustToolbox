@@ -167,7 +167,7 @@ namespace ServerServices.Chat
                     var p = map.GetTileArrayPositionFromWorldPosition(position);
                     var t = (Tile) map.GetTileAt(p.X, p.Y);
                     var c = t.gasCell;
-                    foreach(var g in c.gasses)
+                    foreach (var g in c.GasMixture.gasses)
                     {
                         SendChatMessage(ChatChannel.Default, g.Key.ToString() + ": " + g.Value.ToString(), "GasReport", 0);
                     }

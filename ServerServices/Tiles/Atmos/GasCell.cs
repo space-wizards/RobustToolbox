@@ -16,18 +16,16 @@ namespace ServerServices.Tiles.Atmos
         public int arrY;
         public int mapWidth;
         public int mapHeight;
-        public float nextGasAmount;
-        public float gasAmount;
         public bool sink = false;
         public bool blocking = false;
         bool calculated = true;
         public Vector2 GasVel;
         public Vector2 NextGasVel;
-        public Dictionary<GasType, float> gasses;
-        public Dictionary<GasType, float> nextGasses;
         public Dictionary<GasType, float> lastSentGasses;
         private float lastVelSent = 0;
         Random rand;
+
+        private GasMixture gasMixture;
         
         //Constants
         private const float SourceDamping = .5f;
@@ -48,34 +46,20 @@ namespace ServerServices.Tiles.Atmos
             NextGasVel = new Vector2(0, 0);
             sink = attachedtile.gasSink;
             blocking = !attachedtile.gasPermeable;
-            InitGas();
+            lastSentGasses = new Dictionary<GasType, float>();
+            gasMixture = new GasMixture();
             rand = new Random();
         }
 
-        private void InitGas()
-        {
-            gasses = new Dictionary<GasType, float>();
-            nextGasses = new Dictionary<GasType, float>();
-            lastSentGasses = new Dictionary<GasType, float>();
-            
-            var gastypes = Enum.GetValues(typeof(GasType));
-            foreach (GasType g in gastypes)
-            {
-                gasses.Add(g, 0);
-                nextGasses.Add(g, 0);
-                lastSentGasses.Add(g, 0);
-            }
-            //AddGas(20, GasType.Oxygen);
-        }
 
         public void Update()
         {
             if (sink)
             {
-                nextGasAmount = 0;
-                foreach (var g in gasses)
+                gasMixture.SetNextGasAmount(0);
+                foreach (var g in gasMixture.gasses)
                 {
-                    nextGasses[g.Key] = 0;
+                    gasMixture.nextGasses[g.Key] = 0;
                 }
             }
 
@@ -83,10 +67,7 @@ namespace ServerServices.Tiles.Atmos
             NextGasVel = new Vector2(0, 0);
 
             // Copy next gas values into gas values
-            foreach (var ng in nextGasses)
-            {
-                gasses[ng.Key] = ng.Value;
-            }
+            gasMixture.Update();
 
             CalculateTotals();
             SetGasDisplay();
@@ -103,7 +84,10 @@ namespace ServerServices.Tiles.Atmos
 
         public void SetGasDisplay()
         {
-            float gas = (float)gasAmount;
+            if (gasMixture == null)
+                return;
+
+            float gas = (float)gasMixture.GasAmount;
             if (gas < 1)
                 gas = 1;
             else if (gas > 10000)
@@ -124,39 +108,18 @@ namespace ServerServices.Tiles.Atmos
 
         public void AddGas(float amount, GasType gas)
         {
-            gasses[gas] += amount;
-            nextGasses[gas] += amount;
-            CalculateTotals();
+            gasMixture.AddGas(amount, gas);
         }
+
         public void CalculateTotals()
         {
-            gasAmount = 0;
-            foreach (float g in gasses.Values.ToArray())
-                gasAmount += g;
-
-            nextGasAmount = 0;
-            foreach (float n in nextGasses.Values.ToArray())
-                nextGasAmount += n;
+            gasMixture.CalculateTotals();
         }
 
-        private void Diffuse(GasCell a, GasCell b)
-        {
-            foreach (var gas in a.gasses)
-            {
-                if (gas.Value > b.gasses[gas.Key])
-                {
-                    var amount = (gas.Value - b.gasses[gas.Key]) / 8;
-                    b.nextGasses[gas.Key] += amount;
-                    a.nextGasses[gas.Key] -= amount;
-                }
-                else if (b.gasses[gas.Key] > gas.Value)
-                {
-                    var amount = (b.gasses[gas.Key] - gas.Value) / 8;
-                    a.nextGasses[gas.Key] += amount;
-                    b.nextGasses[gas.Key] -= amount;
-                }
 
-            }
+        private void Diffuse(GasMixture a)
+        {
+            gasMixture.Diffuse(a);
         }
 
         public void CalculateNextGasAmount()
@@ -186,16 +149,16 @@ namespace ServerServices.Tiles.Atmos
                             continue; //Don't process it. These cells are not connected.
                     }
 
-                    DAmount = gasAmount - neighbor.gasAmount;
+                    DAmount = gasMixture.GasAmount - neighbor.gasMixture.GasAmount;
                     if (DAmount == 0 || Math.Abs(DAmount) < 0.1)
                     {
-                        Diffuse(neighbor, this);
+                        Diffuse(neighbor.gasMixture);
                         return;
                     }
 
                     ///Calculate initial flow
                     Flow = FlowConstant * DAmount;
-                    Flow = Clamp(Flow, gasAmount / 8, neighbor.gasAmount / 8);
+                    Flow = Clamp(Flow, gasMixture.GasAmount / 8, neighbor.gasMixture.GasAmount / 8);
 
                     //Velocity application code
                     Vector2 Dir = new Vector2(i, j);
@@ -209,8 +172,8 @@ namespace ServerServices.Tiles.Atmos
                         {
                             proportion = Math.Abs((1 / quarterpi) * (quarterpi - componentangle)); // Get the proper proportion of the vel vector
                             float velflow = proportion * GasVel.Magnitude; // Calculate flow due to gas velocity
-                            if (velflow > gasAmount / 2.5f)
-                                velflow = gasAmount / 2.5f;
+                            if (velflow > gasMixture.GasAmount / 2.5f)
+                                velflow = gasMixture.GasAmount / 2.5f;
                             Flow += velflow;
                         }
                     }
@@ -223,8 +186,8 @@ namespace ServerServices.Tiles.Atmos
                         {
                             proportion = Math.Abs((1 / quarterpi) * (quarterpi - componentangle)); // Get the proper proportion of the vel vector
                             float velflow = proportion * neighbor.GasVel.Magnitude; // Calculate flow due to gas velocity
-                            if (velflow > neighbor.gasAmount / 2.5f)
-                                velflow = neighbor.gasAmount / 2.5f;
+                            if (velflow > neighbor.gasMixture.GasAmount / 2.5f)
+                                velflow = neighbor.gasMixture.GasAmount / 2.5f;
                             Flow -= velflow;
                         }
                     }
@@ -243,24 +206,26 @@ namespace ServerServices.Tiles.Atmos
                     }
 
                     //Transfer gasses
-                    nextGasAmount -= Flow;
-                    neighbor.nextGasAmount += Flow;
+                    gasMixture.SetNextGasAmount(gasMixture.GasAmount - Flow);
+                    neighbor.gasMixture.SetNextGasAmount(gasMixture.GasAmount + Flow);
+
                     if (Flow > 0) // Flow is to neighbor
                     {
-                        foreach (var g in gasses)
+                        foreach (var g in gasMixture.gasses)
                         {
-                            nextGasses[g.Key] -= Flow * (g.Value / gasAmount);
-                            neighbor.nextGasses[g.Key] += Flow * (g.Value / gasAmount);
+                            gasMixture.nextGasses[g.Key] -= Flow * (g.Value / gasMixture.GasAmount);
+                            neighbor.gasMixture.nextGasses[g.Key] += Flow * (g.Value / gasMixture.GasAmount);
                         }
                     }
-                    if(Flow < 0) // Flow is from neighbor
+                    if (Flow < 0) // Flow is from neighbor
                     {
-                        foreach (var g in neighbor.gasses)
+                        foreach (var g in neighbor.gasMixture.gasses)
                         {
-                            nextGasses[g.Key] -= Flow * (g.Value / neighbor.gasAmount);
-                            neighbor.nextGasses[g.Key] += Flow * (g.Value / neighbor.gasAmount);
+                            gasMixture.nextGasses[g.Key] -= Flow * (g.Value / neighbor.gasMixture.GasAmount);
+                            neighbor.gasMixture.nextGasses[g.Key] += Flow * (g.Value / neighbor.gasMixture.GasAmount);
                         }
                     }
+
                     CalculateTotals();
                     neighbor.CalculateTotals();
 
@@ -329,12 +294,12 @@ namespace ServerServices.Tiles.Atmos
                 switch(t)
                 {
                     case GasType.Toxin:
-                        if (gasses[GasType.Toxin] > 10 && (checkUpdateThreshold(GasType.Toxin) || all))
+                        if (gasMixture.gasses[GasType.Toxin] > 10 && (checkUpdateThreshold(GasType.Toxin) || all))
                         {
-                            amount = (byte)normalizeGasAmount(gasses[GasType.Toxin]);
+                            amount = (byte)normalizeGasAmount(gasMixture.gasses[GasType.Toxin]);
                             gasChanges[i] = amount;
                             changedTypes = (changedTypes | (1 << i));
-                            lastSentGasses[GasType.Toxin] = gasses[GasType.Toxin];
+                            lastSentGasses[GasType.Toxin] = gasMixture.gasses[GasType.Toxin];
                             bitCount += 4;
                         }
                         else
@@ -343,12 +308,12 @@ namespace ServerServices.Tiles.Atmos
                         }
                         break;
                     case GasType.WVapor:
-                        if(gasses[GasType.WVapor] > 10 && (checkUpdateThreshold(GasType.WVapor) || all))
+                        if (gasMixture.gasses[GasType.WVapor] > 10 && (checkUpdateThreshold(GasType.WVapor) || all))
                         {
-                            amount = (byte) normalizeGasAmount(gasses[GasType.WVapor]);
+                            amount = (byte)normalizeGasAmount(gasMixture.gasses[GasType.WVapor]);
                             gasChanges[i] = amount;
                             changedTypes = (changedTypes | (1 << i));
-                            lastSentGasses[GasType.WVapor] = gasses[GasType.WVapor];
+                            lastSentGasses[GasType.WVapor] = gasMixture.gasses[GasType.WVapor];
                             bitCount += 4;
                         }
                         else
@@ -393,7 +358,7 @@ namespace ServerServices.Tiles.Atmos
         private bool checkUpdateThreshold(GasType g, float multiplier = 1)
         {
             //If the delta since the last update was sent is greater than 2, send another update.
-            if(Math.Abs(normalizeGasAmount(gasses[g], multiplier) - normalizeGasAmount(lastSentGasses[g], multiplier)) >= 1)
+            if(Math.Abs(normalizeGasAmount(gasMixture.gasses[g], multiplier) - normalizeGasAmount(lastSentGasses[g], multiplier)) >= 1)
                 return true;
             return false;
         }
@@ -415,13 +380,15 @@ namespace ServerServices.Tiles.Atmos
         {
             get
             {
-                float total = 0;
-                foreach (var gas in gasses)
-                {
-                    total += gas.Value;
-                }
+                return gasMixture.TotalGas;
+            }
+        }
 
-                return total;
+        public GasMixture GasMixture
+        {
+            get
+            {
+                return gasMixture;
             }
         }
 

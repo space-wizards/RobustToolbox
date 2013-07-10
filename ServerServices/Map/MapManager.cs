@@ -468,7 +468,7 @@ namespace ServerServices.Map
         public float GetGasAmount(Point position, GasType type)
         {
             var t = (Tile)GetTileAt(position.X, position.Y);
-            return t.gasCell.gasses[type];
+            return t.gasCell.GasMixture.gasses[type];
         }
 
         public float GetGasTotal(Point position)

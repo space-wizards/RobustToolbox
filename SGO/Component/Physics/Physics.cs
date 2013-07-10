@@ -7,8 +7,6 @@ using ServerInterfaces.Map;
 using System.Collections.Generic;
 using ServerServices.Log;
 
-
-
 namespace SGO
 {
     internal class Physics : GameObjectComponent

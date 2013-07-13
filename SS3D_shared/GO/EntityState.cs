@@ -10,9 +10,9 @@ namespace SS13_Shared.GO
         public EntityStateData StateData;
         public List<ComponentState> ComponentStates { get; private set; }
 
-        public EntityState(int uid, List<ComponentState> componentStates, Vector2 position, Vector2 velocity, string templateName, string name )
+        public EntityState(int uid, List<ComponentState> componentStates, Vector2 position, Vector2 velocity, Direction dir, string templateName, string name )
         {
-            SetStateData(new EntityStateData(uid, position, velocity, templateName, name));
+            SetStateData(new EntityStateData(uid, position, velocity, dir, templateName, name));
             ComponentStates = componentStates;
         }
 
@@ -27,12 +27,14 @@ namespace SS13_Shared.GO
     {
         public Vector2 Position;
         public Vector2 Velocity;
+        public Direction Direction;
         public int Uid;
         public string TemplateName;
         public string Name;
-        public EntityStateData(int uid, Vector2 position, Vector2 velocity, string templateName, string name)
+        public EntityStateData(int uid, Vector2 position, Vector2 velocity, Direction dir, string templateName, string name)
         {
             Position = position;
+            Direction = dir;
             Uid = uid;
             TemplateName = templateName;
             Name = name;

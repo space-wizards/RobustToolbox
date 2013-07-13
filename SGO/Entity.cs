@@ -527,7 +527,7 @@ namespace SGO
 
             //Reset entity state changed to false
             
-            var es = new EntityState(Uid, compStates, Position, Velocity, Template.Name, Name);
+            var es = new EntityState(Uid, compStates, Position, Velocity, Direction, Template.Name, Name);
             return es;
         }
 

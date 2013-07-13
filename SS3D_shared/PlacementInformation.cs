@@ -5,7 +5,7 @@ namespace SS13_Shared
     public class PlacementInformation
     {
         public int MobUid;              //UID of mob this permission is for.
-        public ushort Range;            //Valid range from mob.
+        public int Range;            //Valid range from mob.
 
         public int Uses = 1;            //How many objects of this type may be placed.
 

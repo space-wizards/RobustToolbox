@@ -136,7 +136,7 @@ namespace ServerServices.Placement
         /// <summary>
         ///  Places mob in entity placement mode with given settings.
         /// </summary>
-        public void SendPlacementBegin(IEntity mob, ushort range, string objectType, string alignOption)
+        public void SendPlacementBegin(IEntity mob, int range, string objectType, string alignOption)
         {
             var message = IoCManager.Resolve<ISS13NetServer>().CreateMessage();
             message.Write((byte)NetMessage.PlacementManagerMessage);
@@ -154,7 +154,7 @@ namespace ServerServices.Placement
         /// <summary>
         ///  Places mob in tile placement mode with given settings.
         /// </summary>
-        public void SendPlacementBeginTile(IEntity mob, ushort range, string tileType, string alignOption)
+        public void SendPlacementBeginTile(IEntity mob, int range, string tileType, string alignOption)
         {
             var mapMgr = (MapManager)IoCManager.Resolve<IMapManager>();
             var message = IoCManager.Resolve<ISS13NetServer>().CreateMessage();
@@ -187,7 +187,7 @@ namespace ServerServices.Placement
         /// <summary>
         ///  Gives Mob permission to place entity and places it in object placement mode.
         /// </summary>
-        public void StartBuilding(IEntity mob, ushort range, string objectType, string alignOption)
+        public void StartBuilding(IEntity mob, int range, string objectType, string alignOption)
         {
             AssignBuildPermission(mob, range, objectType, alignOption);
             SendPlacementBegin(mob, range, objectType, alignOption);
@@ -196,7 +196,7 @@ namespace ServerServices.Placement
         /// <summary>
         ///  Gives Mob permission to place tile and places it in object placement mode.
         /// </summary>
-        public void StartBuildingTile(IEntity mob, ushort range, string tileType, string alignOption)
+        public void StartBuildingTile(IEntity mob, int range, string tileType, string alignOption)
         {
             AssignBuildPermission(mob, range, tileType, alignOption);
             SendPlacementBeginTile(mob, range, tileType, alignOption);
@@ -214,14 +214,16 @@ namespace ServerServices.Placement
         /// <summary>
         ///  Gives a mob a permission to place a given Entity.
         /// </summary>
-        public void AssignBuildPermission(IEntity mob, ushort range, string objectType, string alignOption)
+        public void AssignBuildPermission(IEntity mob, int range, string objectType, string alignOption)
         {
-            PlacementInformation newPermission = new PlacementInformation();
-            newPermission.MobUid = mob.Uid;
-            newPermission.Range = range;
-            newPermission.IsTile = false;
-            newPermission.EntityType = objectType;
-            newPermission.PlacementOption = alignOption;
+            PlacementInformation newPermission = new PlacementInformation
+                {
+                    MobUid = mob.Uid,
+                    Range = range,
+                    IsTile = false,
+                    EntityType = objectType,
+                    PlacementOption = alignOption
+                };
 
             var mobPermissions = from PlacementInformation permission in BuildPermissions
                                  where permission.MobUid == mob.Uid
@@ -241,14 +243,16 @@ namespace ServerServices.Placement
         /// <summary>
         ///  Gives a mob a permission to place a given Tile.
         /// </summary>
-        public void AssignBuildPermissionTile(IEntity mob, ushort range, string tileType, string alignOption)
+        public void AssignBuildPermissionTile(IEntity mob, int range, string tileType, string alignOption)
         {
-            PlacementInformation newPermission = new PlacementInformation();
-            newPermission.MobUid = mob.Uid;
-            newPermission.Range = range;
-            newPermission.IsTile = true;
-            newPermission.TileType = tileType;
-            newPermission.PlacementOption = alignOption;
+            PlacementInformation newPermission = new PlacementInformation
+                {
+                    MobUid = mob.Uid,
+                    Range = range,
+                    IsTile = true,
+                    TileType = tileType,
+                    PlacementOption = alignOption
+                };
 
             var mobPermissions = from PlacementInformation permission in BuildPermissions
                                  where permission.MobUid == mob.Uid

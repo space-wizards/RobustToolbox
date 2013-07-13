@@ -1,10 +1,12 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Drawing;
 using ClientInterfaces;
 using ClientInterfaces.GOC;
 using ClientInterfaces.Placement;
 using ClientInterfaces.Resource;
+using ClientServices.Placement;
 using GorgonLibrary;
 using GorgonLibrary.InputDevices;
 using CGO;
@@ -19,8 +21,10 @@ namespace ClientServices.UserInterface.Components
 
         private readonly ScrollableContainer _entityList;
         private readonly Label _clearLabel;
+        private readonly Label _overLabel;
         private readonly Textbox _entSearchTextbox;
         private readonly SimpleImageButton _eraserButton;
+        private readonly Listbox _lstOverride;
 
         public EntitySpawnPanel(Size size, IResourceManager resourceManager, IPlacementManager placementManager)
             : base("Entity Spawn Panel", size, resourceManager)
@@ -45,6 +49,34 @@ namespace ClientServices.UserInterface.Components
                                  Position = new Point(210, 55)
                              };
 
+            _overLabel = new Label("Override Placement:", "CALIBRI", _resourceManager)
+            {
+                Position = _clearLabel.Position + new Size(0, _clearLabel.ClientArea.Height + 15)
+            };
+
+            components.Add(_overLabel);
+
+            List<string> initOpts = new List<string>();
+
+            initOpts.AddRange(new string[]
+                {   "None", 
+                    "AlignNone", 
+                    "AlignFree", 
+                    "AlignSimilar", 
+                    "AlignTileAny", 
+                    "AlignTileEmpty",
+                    "AlignTileNonSolid",
+                    "AlignTileSolid",
+                    "AlignWall",
+                    "AlignWallTops"
+                });
+
+            _lstOverride = new Listbox(150, 125, resourceManager, initOpts);
+            _lstOverride.SelectItem("None");
+            _lstOverride.ItemSelected += new Listbox.ListboxPressHandler(_lstOverride_ItemSelected);
+            _lstOverride.Position = _overLabel.Position + new Size(0, _overLabel.ClientArea.Height);
+            components.Add(_lstOverride);
+
             _clearLabel.Clicked += ClearLabelClicked;
             _clearLabel.BackgroundColor = Color.Gray;
             components.Add(_clearLabel);
@@ -62,6 +94,25 @@ namespace ClientServices.UserInterface.Components
 
             Position = new Point((int)(Gorgon.CurrentRenderTarget.Width / 2f) - (int)(ClientArea.Width / 2f), (int)(Gorgon.CurrentRenderTarget.Height / 2f) - (int)(ClientArea.Height / 2f));
             _placementManager.PlacementCanceled += PlacementManagerPlacementCanceled;
+        }
+
+        void _lstOverride_ItemSelected(Label item, Listbox sender)
+        {
+            PlacementManager pMan = (PlacementManager) _placementManager;
+
+            if (pMan.CurrentMode != null)
+            {
+                var newObjInfo = new PlacementInformation
+                {
+                    PlacementOption = item.Text.Text,
+                    EntityType = pMan.CurrentPermission.EntityType,
+                    Range = -1,
+                    IsTile = pMan.CurrentPermission.IsTile
+                };
+
+                _placementManager.Clear();
+                _placementManager.BeginPlacing(newObjInfo);
+            }
         }
 
         void EraserButtonClicked(SimpleImageButton sender)
@@ -128,11 +179,16 @@ namespace ClientServices.UserInterface.Components
             foreach (var curr in _entityList.components.Where(curr => curr.GetType() == typeof(EntitySpawnSelectButton)))
                 ((EntitySpawnSelectButton)curr).selected = false;
 
+            var overrideMode = "";
+            if (_lstOverride.CurrentlySelected != null)
+                if(_lstOverride.CurrentlySelected.Text.Text != "None")
+                    overrideMode = _lstOverride.CurrentlySelected.Text.Text;
+
             var newObjInfo = new PlacementInformation
                                  {
-                                     PlacementOption = template.PlacementMode,
+                                     PlacementOption = overrideMode.Length > 0 ? overrideMode : template.PlacementMode,
                                      EntityType = templateName,
-                                     Range = 400,
+                                     Range = -1,
                                      IsTile = false
                                  };
 

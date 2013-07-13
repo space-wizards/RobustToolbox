@@ -27,12 +27,12 @@ namespace SGO
         #region IEntityTemplate Members
 
         /// <summary>
-        /// The Placement mode used for server-initiated placement. This is used for placement during normal gameplay. The clientside version controls the placement type for editor and admin spawning.
+        /// The Placement mode used for server-initiated placement. The clientside version applies when its initiated by the client (admin spawning, editor)
         /// </summary>
         public string PlacementMode { get; private set; }
 
         /// <summary>
-        /// The Range this entity can be placed from.
+        /// The Range this entity can be placed from. This is only used serverside since the server handles normal gameplay. The client uses unlimited range since it handles things like admin spawning and editing.
         /// </summary>
         public int PlacementRange { get; private set; }
 

@@ -88,9 +88,10 @@ namespace CGO
             return null;
         }
 
-        private IEntity SpawnEntityAt(string entityType, int uid, Vector2D position)
+        private IEntity SpawnEntityAt(string entityType, int uid, Vector2D position, Direction dir = Direction.North)
         {
             var e = SpawnEntity(entityType, uid);
+            e.Direction = dir;
             e.Position = position;
             return e;
         }

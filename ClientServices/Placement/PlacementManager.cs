@@ -89,7 +89,7 @@ namespace ClientServices.Placement
         {
             CurrentPermission = new PlacementInformation
                                      {
-                                         Range = msg.ReadUInt16(),
+                                         Range = msg.ReadInt32(),
                                          IsTile = msg.ReadBoolean()
                                      };
 
@@ -206,7 +206,7 @@ namespace ClientServices.Placement
             IsActive = true;
         }
 
-        private void RequestPlacement() //
+        private void RequestPlacement()
         {
             if (CurrentPermission == null) return;
             if (!ValidPosition) return;
@@ -216,7 +216,7 @@ namespace ClientServices.Placement
 
             message.Write((byte)NetMessage.PlacementManagerMessage);
             message.Write((byte)PlacementManagerMessage.RequestPlacement);
-            message.Write("AlignNone"); //Temporarily disable sanity checks.
+            message.Write(CurrentMode.ModeName);
 
             message.Write(CurrentPermission.IsTile);
 

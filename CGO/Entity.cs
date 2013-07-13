@@ -345,6 +345,7 @@ namespace CGO
                 Moved();
             }*/
             Name = state.StateData.Name;
+            Direction = state.StateData.Direction;
             foreach(var compState in state.ComponentStates)
             {
                 if (HasComponent(compState.Family))

@@ -26,7 +26,7 @@ namespace CGO
         /// <summary>
         /// The Placement mode used for client-initiated placement. This is used for admin and editor placement. The serverside version controls what type the server assigns in normal gameplay.
         /// </summary>
-        public PlacementOption PlacementMode { get; private set; }
+        public string PlacementMode { get; private set; }
 
         /// <summary>
         /// Offset that is added to the position when placing. (if any). Client only.
@@ -202,10 +202,10 @@ namespace CGO
                 if (modeElement != null)
                 {
                     string modeName = modeElement.Attribute("type").Value;
-                    this.PlacementMode = (PlacementOption)Enum.Parse(typeof(PlacementOption), modeName);
+                    this.PlacementMode = modeName;
                 }
                 else
-                    this.PlacementMode = PlacementOption.AlignNoneFree;
+                    this.PlacementMode = "AlignNone";
 
                 if (offsetElement != null)
                 {
@@ -223,6 +223,10 @@ namespace CGO
                         MountingPoints.Add(nodeHeight);
                     }
                 }
+            }
+            else
+            {
+                this.PlacementMode = "AlignNone";
             }
 
             var tDescription = templateElement.Element("Description");

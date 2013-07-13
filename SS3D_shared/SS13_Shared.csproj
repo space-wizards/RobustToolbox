@@ -169,7 +169,6 @@
     <Compile Include="Utility\RandomString.cs" />
     <Compile Include="Vector2.cs" />
     <Compile Include="NetworkEnums.cs" />
-    <Compile Include="PlacementManagerEnums.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="ChatConfig.cs" />
     <Compile Include="UIComponents.cs" />

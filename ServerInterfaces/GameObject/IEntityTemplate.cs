@@ -9,7 +9,7 @@ namespace ServerInterfaces.GameObject
         /// <summary>
         /// The Placement mode used for server-initiated placement. This is used for placement during normal gameplay. The clientside version controls the placement type for editor and admin spawning.
         /// </summary>
-        PlacementOption PlacementMode { get; }
+        string PlacementMode { get; }
 
         /// <summary>
         /// The Range this entity can be placed from.

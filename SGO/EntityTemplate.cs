@@ -29,7 +29,7 @@ namespace SGO
         /// <summary>
         /// The Placement mode used for server-initiated placement. This is used for placement during normal gameplay. The clientside version controls the placement type for editor and admin spawning.
         /// </summary>
-        public PlacementOption PlacementMode { get; private set; }
+        public string PlacementMode { get; private set; }
 
         /// <summary>
         /// The Range this entity can be placed from.
@@ -166,10 +166,10 @@ namespace SGO
                 if (modeElement != null)
                 {
                     string modeName = modeElement.Attribute("type").Value;
-                    PlacementMode = (PlacementOption) Enum.Parse(typeof (PlacementOption), modeName);
+                    PlacementMode = modeName;
                 }
                 else
-                    PlacementMode = PlacementOption.AlignNone;
+                    PlacementMode = "AlignNone";
 
                 if (rangeElement != null)
                 {
@@ -178,6 +178,10 @@ namespace SGO
                 }
                 else
                     PlacementRange = 200;
+            }
+            else
+            {
+                PlacementMode = "AlignNone";
             }
         }
 

@@ -124,7 +124,7 @@ namespace ClientServices.UserInterface.Components
 
             var newObjInfo = new PlacementInformation
                                  {
-                                     PlacementOption = PlacementOption.AlignTileAnyFree,
+                                     PlacementOption = "AlignTileAny",
                                      TileType = sender.Text.Text,
                                      Range = 400,
                                      IsTile = true

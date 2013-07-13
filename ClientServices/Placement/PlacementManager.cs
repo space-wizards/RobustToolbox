@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Reflection;
 using ClientInterfaces.Collision;
 using ClientInterfaces.GOC;
 using ClientInterfaces.Map;
@@ -26,36 +27,42 @@ using SS13.IoC;
 
 namespace ClientServices.Placement
 {
-    class PlacementManager : IPlacementManager
+    public class PlacementManager : IPlacementManager
     {
-        private readonly IResourceManager _resourceManager;
-        private readonly INetworkManager _networkManager;
-        private readonly ICollisionManager _collisionManager;
-        private readonly IPlayerManager _playerManager;
+        public readonly IResourceManager ResourceManager;
+        public readonly INetworkManager NetworkManager;
+        public readonly ICollisionManager CollisionManager;
+        public readonly IPlayerManager PlayerManager;
 
-        private const float SnapToRange = 55;
-        private Sprite _currentSprite;
-        private EntityTemplate _currentTemplate;
-        private PlacementInformation _currentPermission;
-        private Boolean _validPosition;
-
-        private Vector2D _currentLocScreen = Vector2D.Zero;
-        private Vector2D _currentLocWorld = Vector2D.Zero;
-        private ITile _currentTile = null;
+        public Sprite CurrentBaseSprite;
+        public EntityTemplate CurrentTemplate;
+        public PlacementInformation CurrentPermission;
+        public PlacementMode CurrentMode;
+        public Boolean ValidPosition;
 
         public Boolean IsActive { get; private set; }
         public Boolean Eraser { get; private set; }
 
-        private Direction direction = Direction.South;
+        public Direction Direction = Direction.South;
 
         public event EventHandler PlacementCanceled;
 
+        private readonly Dictionary<string, Type> _modeDictionary = new Dictionary<string, Type>(); 
+
         public PlacementManager(IResourceManager resourceManager, INetworkManager networkManager, ICollisionManager collisionManager, IPlayerManager playerManager)
         {
-            _resourceManager = resourceManager;
-            _networkManager = networkManager;
-            _collisionManager = collisionManager;
-            _playerManager = playerManager;
+            ResourceManager = resourceManager;
+            NetworkManager = networkManager;
+            CollisionManager = collisionManager;
+            PlayerManager = playerManager;
+
+            Type type = typeof(PlacementMode);
+            List<Assembly> assemblies = AppDomain.CurrentDomain.GetAssemblies().ToList();
+            List<Type> types = assemblies.SelectMany(t => t.GetTypes()).Where(p => type.IsAssignableFrom(p)).ToList();
+
+            _modeDictionary.Clear();
+            foreach (Type t in types)
+                _modeDictionary.Add(t.Name, t);
 
             Clear();
         }
@@ -80,7 +87,7 @@ namespace ClientServices.Placement
 
         private void HandleStartPlacement(NetIncomingMessage msg)
         {
-            _currentPermission = new PlacementInformation
+            CurrentPermission = new PlacementInformation
                                      {
                                          Range = msg.ReadUInt16(),
                                          IsTile = msg.ReadBoolean()
@@ -88,20 +95,19 @@ namespace ClientServices.Placement
 
             var mapMgr = (MapManager)IoCManager.Resolve<IMapManager>();
 
-            if (_currentPermission.IsTile) _currentPermission.TileType = mapMgr.GetTileString(msg.ReadByte());
-            else _currentPermission.EntityType = msg.ReadString();
-            _currentPermission.PlacementOption = (PlacementOption)msg.ReadByte();
+            if (CurrentPermission.IsTile) CurrentPermission.TileType = mapMgr.GetTileString(msg.ReadByte());
+            else CurrentPermission.EntityType = msg.ReadString();
+            CurrentPermission.PlacementOption = msg.ReadString();
 
-            BeginPlacing(_currentPermission);
+            BeginPlacing(CurrentPermission);
         }
 
         public void Clear()
         {
-            _currentSprite = null;
-            _currentTemplate = null;
-            _currentPermission = null;
-            _currentLocScreen = Vector2D.Zero;
-            _currentLocWorld = Vector2D.Zero;
+            CurrentBaseSprite = null;
+            CurrentTemplate = null;
+            CurrentPermission = null;
+            CurrentMode = null;
             if (PlacementCanceled != null && IsActive && !Eraser) PlacementCanceled(this, null);
             IsActive = false;
             Eraser = false;
@@ -109,19 +115,19 @@ namespace ClientServices.Placement
 
         public void Rotate()
         {
-            switch (direction)
+            switch (Direction)
             {
                 case Direction.North:
-                    direction = Direction.East;
+                    Direction = Direction.East;
                     break;
                 case Direction.East:
-                    direction = Direction.South;
+                    Direction = Direction.South;
                     break;
                 case Direction.South:
-                    direction = Direction.West;
+                    Direction = Direction.West;
                     break;
                 case Direction.West:
-                    direction = Direction.North;
+                    Direction = Direction.North;
                     break;
             }
         }
@@ -136,10 +142,10 @@ namespace ClientServices.Placement
         {
             if (!IsActive || !Eraser) return;
 
-            var message = _networkManager.CreateMessage();
+            var message = NetworkManager.CreateMessage();
             message.Write((byte)NetMessage.RequestEntityDeletion);
             message.Write(entity.Uid);
-            _networkManager.SendMessage(message, NetDeliveryMethod.ReliableUnordered);
+            NetworkManager.SendMessage(message, NetDeliveryMethod.ReliableUnordered);
         }
 
         public void ToggleEraser()
@@ -159,7 +165,16 @@ namespace ClientServices.Placement
             IoCManager.Resolve<IUserInterfaceManager>().CancelTargeting();
             IoCManager.Resolve<IUserInterfaceManager>().DragInfo.Reset();
 
-            _currentPermission = info;
+            CurrentPermission = info;
+
+            if (!_modeDictionary.Any(pair => pair.Key.Equals(CurrentPermission.PlacementOption)))
+            {
+                Clear();
+                return;
+            }
+
+            var modeType = _modeDictionary.First(pair => pair.Key.Equals(CurrentPermission.PlacementOption)).Value;
+            CurrentMode = (PlacementMode)Activator.CreateInstance(modeType, this);
 
             if (info.IsTile)
                 PreparePlacementTile(info.TileType);
@@ -176,385 +191,82 @@ namespace ClientServices.Placement
             if (spriteParam == null) return;
 
             var spriteName = spriteParam.GetValue<string>();
-            var sprite = _resourceManager.GetSprite(spriteName);
+            var sprite = ResourceManager.GetSprite(spriteName);
 
-            _currentSprite = sprite;
-            _currentTemplate = template;
+            CurrentBaseSprite = sprite;
+            CurrentTemplate = template;
 
             IsActive = true;
         }
 
         private void PreparePlacementTile(string tileType)
         {
-            _currentSprite = _resourceManager.GetSprite("tilebuildoverlay");
+            CurrentBaseSprite = ResourceManager.GetSprite("tilebuildoverlay");
 
             IsActive = true;
         }
 
         private void RequestPlacement() //
         {
-            if (_currentPermission == null) return;
-            if (!_validPosition) return;
+            if (CurrentPermission == null) return;
+            if (!ValidPosition) return;
 
             var mapMgr = (MapManager)IoCManager.Resolve<IMapManager>();
-            NetOutgoingMessage message = _networkManager.CreateMessage();
+            NetOutgoingMessage message = NetworkManager.CreateMessage();
 
             message.Write((byte)NetMessage.PlacementManagerMessage);
             message.Write((byte)PlacementManagerMessage.RequestPlacement);
-            message.Write((byte)PlacementOption.AlignNone); //Temporarily disable sanity checks.
+            message.Write("AlignNone"); //Temporarily disable sanity checks.
 
-            message.Write(_currentPermission.IsTile);
+            message.Write(CurrentPermission.IsTile);
 
-            if (_currentPermission.IsTile) message.Write(mapMgr.GetTileIndex(_currentPermission.TileType));
-            else message.Write(_currentPermission.EntityType);
+            if (CurrentPermission.IsTile) message.Write(mapMgr.GetTileIndex(CurrentPermission.TileType));
+            else message.Write(CurrentPermission.EntityType);
 
-            message.Write(_currentLocWorld.X);
-            message.Write(_currentLocWorld.Y);
+            message.Write(CurrentMode.mouseWorld.X);
+            message.Write(CurrentMode.mouseWorld.Y);
 
-            message.Write((byte)direction);
+            message.Write((byte)Direction);
 
-            message.Write(_currentTile.TilePosition.X);
-            message.Write(_currentTile.TilePosition.Y);
+            message.Write(CurrentMode.currentTile.TilePosition.X);
+            message.Write(CurrentMode.currentTile.TilePosition.Y);
 
-            _networkManager.SendMessage(message, NetDeliveryMethod.ReliableUnordered);
+            NetworkManager.SendMessage(message, NetDeliveryMethod.ReliableUnordered);
         }
 
-        private Sprite GetDirectionalSprite()
+        public Sprite GetDirectionalSprite()
         {
-            Sprite spriteToUse = _currentSprite;
+            Sprite spriteToUse = CurrentBaseSprite;
 
-            if (_currentSprite == null) return null;
+            if (CurrentBaseSprite == null) return null;
 
-            string dirName = (_currentSprite.Name + "_" + direction.ToString()).ToLowerInvariant();
-            if (_resourceManager.SpriteExists(dirName))
-                spriteToUse = _resourceManager.GetSprite(dirName);
+            string dirName = (CurrentBaseSprite.Name + "_" + Direction.ToString()).ToLowerInvariant();
+            if (ResourceManager.SpriteExists(dirName))
+                spriteToUse = ResourceManager.GetSprite(dirName);
 
             return spriteToUse;
         }
 
         public void Update(Vector2D mouseScreen, IMapManager currentMap)
         {
-            if (currentMap == null) return;
+            if (currentMap == null || CurrentPermission == null || CurrentMode == null) return;
 
-            _currentLocScreen = mouseScreen;
-
-            _currentLocWorld = new Vector2D(mouseScreen.X + ClientWindowData.Singleton.ScreenOrigin.X, mouseScreen.Y + ClientWindowData.Singleton.ScreenOrigin.Y);
-
-            _validPosition = true;
-
-            Sprite spriteToUse = GetDirectionalSprite();
-
-            if (_currentPermission != null)
-            {
-                var spriteRectWorld = new RectangleF(_currentLocWorld.X - (spriteToUse.Width / 2f), _currentLocWorld.Y - (spriteToUse.Height / 2f), spriteToUse.Width, spriteToUse.Height);
-
-                #region AlignNone
-                if (_currentPermission.PlacementOption == PlacementOption.AlignNone || _currentPermission.PlacementOption == PlacementOption.AlignNoneFree)
-                {
-                    if (_currentPermission.IsTile)
-                    {
-                        _validPosition = false;
-                        return;
-                    }
-
-                    if (_collisionManager.IsColliding(spriteRectWorld)) _validPosition = false;
-
-                    if (currentMap.IsSolidTile(_currentLocWorld)) _validPosition = false; //Prevents placement.
-
-                    if (_currentPermission.PlacementOption == PlacementOption.AlignNone) //AlignNoneFree does not check for range.
-                        if ((_playerManager.ControlledEntity.Position - _currentLocWorld).Length > _currentPermission.Range) _validPosition = false;
-
-                    _currentTile = currentMap.GetTileAt(_currentLocWorld);
-                } 
-                #endregion
-
-                #region AlignSimilar
-                else if (_currentPermission.PlacementOption == PlacementOption.AlignSimilar || _currentPermission.PlacementOption == PlacementOption.AlignSimilarFree)
-                {
-                    if (_currentPermission.IsTile)
-                    {
-                        _validPosition = false;
-                        return;
-                    }
-
-                    //Align to similar if nearby found else free
-                    if (currentMap.IsSolidTile(_currentLocWorld)) _validPosition = false; //HANDLE CURSOR OUTSIDE MAP
-
-                    if (_currentPermission.PlacementOption == PlacementOption.AlignSimilar)
-                        if ((_playerManager.ControlledEntity.Position - _currentLocWorld).Length > _currentPermission.Range) _validPosition = false;
-
-                    
-                    var nearbyEntities = EntityManager.Singleton.GetEntitiesInRange(_currentLocWorld, SnapToRange);
-
-                    var snapToEntities = from IEntity entity in nearbyEntities
-                                         where entity.Template == _currentTemplate
-                                         orderby (entity.Position - _currentLocWorld).Length ascending
-                                         select entity;
-
-                    if (snapToEntities.Any())
-                    {
-                        var closestEntity = snapToEntities.First();
-                        var reply = closestEntity.SendMessage(this, ComponentFamily.Renderable, ComponentMessageType.GetSprite);
-
-                        //if(replies.Any(x => x.messageType == SS13_Shared.GO.ComponentMessageType.CurrentSprite))
-                        //{
-                        //    Sprite closestSprite = (Sprite)replies.Find(x => x.messageType == SS13_Shared.GO.ComponentMessageType.CurrentSprite).paramsList[0]; //This is safer but slower.
-
-                        if (reply.MessageType == ComponentMessageType.CurrentSprite)
-                        {
-                            var closestSprite = (Sprite)reply.ParamsList[0]; //This is faster but kinda unsafe.
-
-                            var closestRect = new RectangleF(closestEntity.Position.X - closestSprite.Width / 2f, closestEntity.Position.Y - closestSprite.Height / 2f, closestSprite.Width, closestSprite.Height);
-
-                            var sides = new List<Vector2D>
-                                            {
-                                                new Vector2D(closestRect.X + (closestRect.Width/2f), closestRect.Top - spriteToUse.Height/2f),
-                                                new Vector2D(closestRect.X + (closestRect.Width/2f), closestRect.Bottom + spriteToUse.Height/2f),
-                                                new Vector2D(closestRect.Left - spriteToUse.Width/2f, closestRect.Y + (closestRect.Height/2f)),
-                                                new Vector2D(closestRect.Right + spriteToUse.Width/2f, closestRect.Y + (closestRect.Height/2f))
-                                            };
-
-                            var closestSide = (from Vector2D side in sides orderby (side - _currentLocWorld).Length ascending select side).First();
-
-                            _currentLocWorld = closestSide;
-                            _currentLocScreen = new Vector2D(closestSide.X - ClientWindowData.Singleton.ScreenOrigin.X, closestSide.Y - ClientWindowData.Singleton.ScreenOrigin.Y);
-                            _currentTile = currentMap.GetTileAt(_currentLocWorld);
-                        }
-                    }
-
-                    spriteRectWorld = new RectangleF(_currentLocWorld.X - (spriteToUse.Width / 2f), _currentLocWorld.Y - (spriteToUse.Height / 2f), spriteToUse.Width, spriteToUse.Height);
-                    if (_collisionManager.IsColliding(spriteRectWorld)) _validPosition = false;
-                }
-                #endregion
-
-                #region AlignTile
-                else if (_currentPermission.PlacementOption == PlacementOption.AlignTileAny ||
-                 _currentPermission.PlacementOption == PlacementOption.AlignTileAnyFree ||
-                 _currentPermission.PlacementOption == PlacementOption.AlignTileEmpty ||
-                 _currentPermission.PlacementOption == PlacementOption.AlignTileEmptyFree ||
-                 _currentPermission.PlacementOption == PlacementOption.AlignTileNonSolid ||
-                 _currentPermission.PlacementOption == PlacementOption.AlignTileNonSolidFree ||
-                 _currentPermission.PlacementOption == PlacementOption.AlignTileSolid ||
-                 _currentPermission.PlacementOption == PlacementOption.AlignTileSolidFree)
-                {
-                    if (_currentPermission.PlacementOption == PlacementOption.AlignTileAny ||
-                        _currentPermission.PlacementOption == PlacementOption.AlignTileEmpty ||
-                        _currentPermission.PlacementOption == PlacementOption.AlignTileNonSolid ||
-                        _currentPermission.PlacementOption == PlacementOption.AlignTileSolid)
-                        if ((_playerManager.ControlledEntity.Position - _currentLocWorld).Length > _currentPermission.Range) _validPosition = false;
-
-                    if (_currentPermission.PlacementOption == PlacementOption.AlignTileNonSolid || _currentPermission.PlacementOption == PlacementOption.AlignTileNonSolidFree)
-                        if (currentMap.IsSolidTile(_currentLocWorld)) _validPosition = false;
-
-                    if (_currentPermission.PlacementOption == PlacementOption.AlignTileSolid || _currentPermission.PlacementOption == PlacementOption.AlignTileSolidFree)
-                        if (!currentMap.IsSolidTile(_currentLocWorld)) _validPosition = false;
-
-                    if (_currentPermission.PlacementOption == PlacementOption.AlignTileEmpty || _currentPermission.PlacementOption == PlacementOption.AlignTileEmptyFree) //FIX THIS NO TYPEOF
-                        if (!currentMap.GetTileAt(_currentLocWorld).GetType().IsSubclassOf(typeof(Tiles.Space))) _validPosition = false;
-
-                    if (_validPosition)
-                    {
-                        var currentTile = currentMap.GetTileAt(_currentLocWorld);
-                        if (currentTile != null)
-                        {
-                            if (_currentPermission.IsTile)
-                            {
-                                _currentLocWorld = (currentTile.Position + new Vector2D(currentMap.GetTileSpacing() / 2f, currentMap.GetTileSpacing() / 2f));
-                                _currentLocScreen = new Vector2D(_currentLocWorld.X - ClientWindowData.Singleton.ScreenOrigin.X, _currentLocWorld.Y - ClientWindowData.Singleton.ScreenOrigin.Y);
-
-                                //TileRectWorld = new RectangleF(current_loc_world.X - (current_sprite.Width / 2f), current_loc_world.Y - (current_sprite.Height / 2f), current_sprite.Width, current_sprite.Height);
-                                //CollisionManager collisionMgr = (CollisionManager)ServiceManager.Singleton.GetService(ClientServiceType.CollisionManager);
-                                //if (collisionMgr.IsColliding(spriteRectWorld, true)) validPosition = false; //This also includes walls. Meaning that even when set to solid only this will be unplacable. Fix this.
-                            }
-                            else
-                            {
-                                _currentLocWorld = (currentTile.Position + new Vector2D(currentMap.GetTileSpacing() / 2f, currentMap.GetTileSpacing() / 2f)) + new Vector2D(_currentTemplate.PlacementOffset.Key, _currentTemplate.PlacementOffset.Value);
-                                _currentLocScreen = new Vector2D(_currentLocWorld.X - ClientWindowData.Singleton.ScreenOrigin.X, _currentLocWorld.Y - ClientWindowData.Singleton.ScreenOrigin.Y);
-
-                                spriteRectWorld = new RectangleF(_currentLocWorld.X - (spriteToUse.Width / 2f), _currentLocWorld.Y - (spriteToUse.Height / 2f), spriteToUse.Width, spriteToUse.Height);
-                                if (_collisionManager.IsColliding(spriteRectWorld)) _validPosition = false; //This also includes walls. Meaning that even when set to solid only this will be unplacable. Fix this.
-                            }
-                            _currentTile = currentMap.GetTileAt(_currentLocWorld);
-                        }
-                        else _validPosition = false;
-                    }
-
-                }  
-                #endregion
-
-                #region AlignWall
-                else if (_currentPermission.PlacementOption == PlacementOption.AlignWall || _currentPermission.PlacementOption == PlacementOption.AlignWallFree)
-                {
-                    if (_currentPermission.IsTile)
-                    {
-                        _validPosition = false;
-                        return;
-                    }
-
-                    //CollisionManager collisionMgr = (CollisionManager)ServiceManager.Singleton.GetService(ClientServiceType.CollisionManager);
-                    //if (collisionMgr.IsColliding(spriteRectWorld, true)) validPosition = false;
-
-                    if (!currentMap.IsSolidTile(_currentLocWorld)) _validPosition = false;
-
-                    if (_currentPermission.PlacementOption == PlacementOption.AlignWall)
-                        if ((_playerManager.ControlledEntity.Position - _currentLocWorld).Length > _currentPermission.Range) _validPosition = false;
-
-                    if (_validPosition)
-                    {
-                        var currentTile = currentMap.GetTileAt(_currentLocWorld);
-                        var nodes = new List<Vector2D>();
-
-                        if (_currentTemplate.MountingPoints != null)
-                        {
-                            nodes.AddRange(_currentTemplate.MountingPoints.Select(current => new Vector2D(_currentLocWorld.X, currentTile.Position.Y + current)));
-                        }
-                        else
-                        {
-                            nodes.Add(new Vector2D(_currentLocWorld.X, currentTile.Position.Y + 16));
-                            nodes.Add(new Vector2D(_currentLocWorld.X, currentTile.Position.Y + 32));
-                            nodes.Add(new Vector2D(_currentLocWorld.X, currentTile.Position.Y + 48));
-                        }
-
-                        Vector2D closestNode = (from Vector2D node in nodes
-                                                orderby (node - _currentLocWorld).Length ascending
-                                                select node).First();
-
-                        _currentLocWorld = Vector2D.Add(closestNode, new Vector2D(_currentTemplate.PlacementOffset.Key, _currentTemplate.PlacementOffset.Value));
-                        _currentLocScreen = new Vector2D(_currentLocWorld.X - ClientWindowData.Singleton.ScreenOrigin.X, _currentLocWorld.Y - ClientWindowData.Singleton.ScreenOrigin.Y);
-                        _currentTile = currentMap.GetTileAt(_currentLocWorld);
-
-                        if (_currentPermission.PlacementOption == PlacementOption.AlignWall)
-                            if ((_playerManager.ControlledEntity.Position - _currentLocWorld).Length > _currentPermission.Range) _validPosition = false;
-                    }
-                } 
-                #endregion
-                #region WallTops
-                else if (_currentPermission.PlacementOption == PlacementOption.AlignWallTops || _currentPermission.PlacementOption == PlacementOption.AlignWallTopsFree)
-                {
-                    if (_currentPermission.PlacementOption == PlacementOption.AlignWallTops)
-                        if ((_playerManager.ControlledEntity.Position - _currentLocWorld).Length > _currentPermission.Range) _validPosition = false;
-
-                    if (_currentPermission.IsTile)
-                    {
-                        _validPosition = false;
-                        return;
-                    }
-
-                    var currentTile = currentMap.GetTileAt(_currentLocWorld);
-                    if(currentTile == null || !currentTile.IsSolidTile()) 
-                    {
-                        _validPosition = false;
-                        return;
-                    }
-
-                    var wallTop = currentMap.GetTileAt(currentTile.TilePosition.X, currentTile.TilePosition.Y - 1);
-                    if (wallTop == null)
-                    {
-                        _validPosition = false;
-                        return;
-                    }
-
-                    var wallTopNorth = currentMap.GetTileAt(wallTop.TilePosition.X, wallTop.TilePosition.Y - 1);
-                    var wallCurrentSouth = currentMap.GetTileAt(currentTile.TilePosition.X, currentTile.TilePosition.Y + 1);
-
-                    var wallTopEast = currentMap.GetTileAt(wallTop.TilePosition.X + 1, wallTop.TilePosition.Y);
-                    var wallCurrentEast = currentMap.GetTileAt(currentTile.TilePosition.X + 1, currentTile.TilePosition.Y);
-
-                    var wallTopWest = currentMap.GetTileAt(wallTop.TilePosition.X - 1, wallTop.TilePosition.Y);
-                    var wallCurrentWest = currentMap.GetTileAt(currentTile.TilePosition.X - 1, currentTile.TilePosition.Y);
-
-                    switch (direction)
-                    {
-                        case Direction.North:
-                            if (wallTopNorth == null || wallTopNorth.IsSolidTile() || wallTop.IsSolidTile())
-                            {
-                                _validPosition = false;
-                                return;
-                            }
-                            else
-                            {
-                                _currentLocWorld = new Vector2D(wallTop.Position.X + currentMap.GetTileSpacing() / 2f, wallTop.Position.Y - spriteToUse.AABB.Height);
-                                _validPosition = true;
-                            }
-                            break;
-                        case Direction.East:
-                            if (wallTopEast == null || wallTopEast.IsSolidTile() || wallCurrentEast.IsSolidTile())
-                            {
-                                _validPosition = false;
-                                return;
-                            }
-                            else
-                            {
-                                _currentLocWorld = new Vector2D(wallTop.Position.X + spriteToUse.AABB.Width + currentMap.GetTileSpacing(), wallTop.Position.Y + currentMap.GetTileSpacing() / 2f);
-                                _validPosition = true;
-                            }
-                            break;
-                        case Direction.South:
-                            if (!currentTile.IsSolidTile() || wallCurrentSouth.IsSolidTile())
-                            {
-                                _validPosition = false;
-                                return;
-                            }
-                            else
-                            {
-                                _currentLocWorld = new Vector2D(wallTop.Position.X + currentMap.GetTileSpacing() / 2f, wallTop.Position.Y + spriteToUse.AABB.Height + currentMap.GetTileSpacing());
-                                _validPosition = true;
-                            }
-                            break;
-                        case Direction.West:
-                            if (wallTopWest == null || wallTopWest.IsSolidTile() || wallCurrentWest.IsSolidTile())
-                            {
-                                _validPosition = false;
-                                return;
-                            }
-                            else
-                            {
-                                _currentLocWorld = new Vector2D(wallTop.Position.X - spriteToUse.AABB.Width, wallTop.Position.Y + currentMap.GetTileSpacing() / 2f);
-                                _validPosition = true;
-                            }
-                            break;
-                    }
-                    _currentLocScreen = new Vector2D(_currentLocWorld.X - ClientWindowData.Singleton.ScreenOrigin.X, _currentLocWorld.Y - ClientWindowData.Singleton.ScreenOrigin.Y);
-                    _currentTile = currentTile;
-                }
-                #endregion
-                else if (_currentPermission.PlacementOption == PlacementOption.Freeform)
-                {
-                    _validPosition = true; //Herpderp
-                }
-            }
+            ValidPosition = CurrentMode.Update(mouseScreen, currentMap);
         }
 
         public void Render()
         {
-            Sprite spriteToUse = GetDirectionalSprite();
+            if (CurrentMode != null)
+                CurrentMode.Render();
 
-            if (spriteToUse != null)
+            if (CurrentPermission != null && CurrentPermission.Range > 0)
             {
-                spriteToUse.Color = _validPosition ? Color.ForestGreen : Color.IndianRed;
-                spriteToUse.Position = new Vector2D(_currentLocScreen.X - (spriteToUse.Width / 2f), _currentLocScreen.Y - (spriteToUse.Height / 2f)); //Centering the sprite on the cursor.
-                spriteToUse.Draw();
-                spriteToUse.Color = Color.White;
-            }
-
-            if (_currentPermission != null)
-            {
-                if (_currentPermission.PlacementOption == PlacementOption.AlignNone    ||
-                    _currentPermission.PlacementOption == PlacementOption.AlignSimilar ||
-                    _currentPermission.PlacementOption == PlacementOption.AlignTileAny ||
-                    _currentPermission.PlacementOption == PlacementOption.AlignTileEmpty ||
-                    _currentPermission.PlacementOption == PlacementOption.AlignTileNonSolid ||
-                    _currentPermission.PlacementOption == PlacementOption.AlignTileSolid ||
-                    _currentPermission.PlacementOption == PlacementOption.AlignWall ||
-                    _currentPermission.PlacementOption == PlacementOption.AlignWallTops)   //If it uses range, show the range.
-                {
-                    Gorgon.CurrentRenderTarget.Circle(
-                        _playerManager.ControlledEntity.Position.X - ClientWindowData.Singleton.ScreenOrigin.X,
-                        _playerManager.ControlledEntity.Position.Y - ClientWindowData.Singleton.ScreenOrigin.Y,
-                        _currentPermission.Range,
-                        Color.White,
-                        new Vector2D(2, 2));
-                }
+                Gorgon.CurrentRenderTarget.Circle(
+                    PlayerManager.ControlledEntity.Position.X - ClientWindowData.Singleton.ScreenOrigin.X,
+                    PlayerManager.ControlledEntity.Position.Y - ClientWindowData.Singleton.ScreenOrigin.Y,
+                    CurrentPermission.Range,
+                    Color.White,
+                    new Vector2D(2, 2));
             }
         }
             

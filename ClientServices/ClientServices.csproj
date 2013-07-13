@@ -99,7 +99,17 @@
     <Compile Include="MessageLogging\MessageLoggerService.cs" />
     <Compile Include="Network\NetworkGrapher.cs" />
     <Compile Include="Network\NetworkManager.cs" />
+    <Compile Include="Placement\Modes\AlignNone.cs" />
+    <Compile Include="Placement\Modes\AlignSimilar.cs" />
+    <Compile Include="Placement\Modes\AlignTileAny.cs" />
+    <Compile Include="Placement\Modes\AlignTileNonSolid.cs" />
+    <Compile Include="Placement\Modes\AlignTileSolid.cs" />
+    <Compile Include="Placement\Modes\AlignTileEmpty.cs" />
+    <Compile Include="Placement\Modes\AlignWall.cs" />
+    <Compile Include="Placement\Modes\AlignWallTops.cs" />
+    <Compile Include="Placement\Modes\AlignFree.cs" />
     <Compile Include="Placement\PlacementManager.cs" />
+    <Compile Include="Placement\PlacementMode.cs" />
     <Compile Include="Player\PlayerManager.cs" />
     <Compile Include="Player\PostProcessing\BlurPostProcessingEffect.cs" />
     <Compile Include="Player\PostProcessing\PerlinPostProcessingEffect.cs" />

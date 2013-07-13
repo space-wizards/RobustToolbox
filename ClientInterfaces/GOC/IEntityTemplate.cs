@@ -10,7 +10,7 @@ namespace ClientInterfaces.GOC
         string Description { get; }
         List<int> MountingPoints { get; }
         KeyValuePair<int, int> PlacementOffset { get; }
-        PlacementOption PlacementMode { get; }
+        string PlacementMode { get; }
 
         IEnumerable<ComponentParameter> GetBaseSpriteParamaters();
     }

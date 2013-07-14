@@ -18,12 +18,22 @@ using ServerServices.Tiles;
 
 namespace ServerServices.Atmos
 {
+
+
     public class AtmosManager : IAtmosManager
     {
         DateTime lastAtmosDisplayPush;
 
+        private Dictionary<GasType, IGasProperties> gasProperties;
+
         public AtmosManager()
         {
+            gasProperties = new Dictionary<GasType, IGasProperties>();
+            gasProperties.Add(GasType.Oxygen, new Oxygen());
+            gasProperties.Add(GasType.CO2, new CO2());
+            gasProperties.Add(GasType.Nitrogen, new Nitrogen());
+            gasProperties.Add(GasType.Toxin, new Toxin());
+            gasProperties.Add(GasType.WVapor, new WVapor());
         }
 
         public void InitializeGasCells()
@@ -70,7 +80,19 @@ namespace ServerServices.Atmos
 
             CheckNetworkUpdate();
         }
-    
+
+        public IGasProperties GetGasProperties(GasType g)
+        {
+            foreach (GasType type in gasProperties.Keys)
+            {
+                if (type == g)
+                {
+                    return gasProperties[g];
+                }
+            }
+
+            return null;
+        }
 
         #region Networking
 
@@ -187,4 +209,63 @@ namespace ServerServices.Atmos
         #endregion
 
     }
+
+    #region Gas Definitions
+
+    public class Oxygen : IGasProperties
+    {
+        private const string name = "Oxygen";
+        private const float shc = 0.919f;
+        private const GasType type = GasType.Oxygen;
+
+        public string Name { get { return name; } }
+        public float SpecificHeatCapacity { get { return shc; } }
+        public GasType Type { get { return type; } }
+    }
+
+    public class CO2 : IGasProperties
+    {
+        private const string name = "CO2";
+        private const float shc = 0.844f;
+        private const GasType type = GasType.CO2;
+
+        public string Name { get { return name; } }
+        public float SpecificHeatCapacity { get { return shc; } }
+        public GasType Type { get { return type; } }
+    }
+
+    public class Nitrogen : IGasProperties
+    {
+        private const string name = "Nitrogen";
+        private const float shc = 1.04f;
+        private const GasType type = GasType.Nitrogen;
+
+        public string Name { get { return name; } }
+        public float SpecificHeatCapacity { get { return shc; } }
+        public GasType Type { get { return type; } }
+    }
+
+    public class Toxin : IGasProperties
+    {
+        private const string name = "Toxin";
+        private const float shc = 4.00f;
+        private const GasType type = GasType.Toxin;
+
+        public string Name { get { return name; } }
+        public float SpecificHeatCapacity { get { return shc; } }
+        public GasType Type { get { return type; } }
+    }
+
+    public class WVapor : IGasProperties
+    {
+        private const string name = "Water Vapour";
+        private const float shc = 1.93f;
+        private const GasType type = GasType.WVapor;
+
+        public string Name { get { return name; } }
+        public float SpecificHeatCapacity { get { return shc; } }
+        public GasType Type { get { return type; } }
+    }
+
+    #endregion
 }

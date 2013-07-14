@@ -31,7 +31,6 @@ namespace ServerServices.Chat
             string text = message.ReadString();
             string name = _serverMain.GetClient(message.SenderConnection).PlayerName;
             LogManager.Log("CHAT- Channel " + channel.ToString() +  " - Player " + name + "Message: " + text + "\n");
-
             int entityId = 0;
             if (IoCManager.Resolve<IPlayerManager>().GetSessionByConnection(message.SenderConnection).attachedEntity != null)
                 entityId = IoCManager.Resolve<IPlayerManager>().GetSessionByConnection(message.SenderConnection).attachedEntity.Uid;

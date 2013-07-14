@@ -12,5 +12,6 @@ namespace ServerInterfaces.Atmos
         void InitializeGasCells();
         void Update();
         void SendAtmosStateTo(NetConnection client);
+        IGasProperties GetGasProperties(GasType g);
     }
 }

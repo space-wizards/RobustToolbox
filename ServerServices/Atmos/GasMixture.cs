@@ -4,6 +4,8 @@ using System.Linq;
 using System.Text;
 using BKSystem.IO;
 using SS13_Shared;
+using SS13.IoC;
+using ServerInterfaces.Atmos;
 
 namespace ServerServices.Atmos
 {
@@ -12,9 +14,10 @@ namespace ServerServices.Atmos
 
         private float nextGasAmount;
         private float gasAmount;
-        private float temperature = 0.0f;
+        private float temperature = 2.0f; // ~Space temp in K
+        private float volume = 2.0f; // in m^3
 
-        public Dictionary<GasType, float> gasses;
+        public Dictionary<GasType, float> gasses; // Type, moles
         public Dictionary<GasType, float> nextGasses;
         public Dictionary<GasType, float> lastSentGasses;
 
@@ -83,8 +86,6 @@ namespace ServerServices.Atmos
             nextGasses[gas] -= amount;
         }
 
-
-
         public void CalculateTotals()
         {
             gasAmount = 0;
@@ -144,8 +145,35 @@ namespace ServerServices.Atmos
             {
                 temperature = value;
             }
-    }
-            
+        }
 
+        // P = nRT / V
+        public float Pressure
+        {
+            get
+            {
+                return ((TotalGas * 8.314f * Temperature) / Volume);
+            }
+        }
+
+        public float Volume
+        {
+            get
+            {
+                return volume;
+            }
+            set
+            {
+                volume = value;
+            }
+        }
+
+        public float MassOf(GasType gas)
+        {
+            return (IoCManager.Resolve<IAtmosManager>().GetGasProperties(gas).MolecularMass * gasses[gas]);
+        }
+
+
+        
     }
 }

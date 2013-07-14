@@ -131,8 +131,9 @@ namespace ClientServices.Tiles
                         spritepositionset = true;
                     }
                 
-                    int opacity = (int)Math.Floor(((double)gasAmount.Value / 15) * 255);
-                    
+                    //int opacity = (int)Math.Floor(((double)gasAmount.Value / 15) * 255); // Commenting this out for now as it just makes some gas invisible until there's a shit load of it
+                    int opacity = 255;
+
                     switch (gasAmount.Key)
                     {
                         case GasType.HighVel:

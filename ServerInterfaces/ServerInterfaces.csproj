@@ -58,6 +58,7 @@
   <ItemGroup>
     <Compile Include="Atmos\IAtmosManager.cs" />
     <Compile Include="Atmos\IGasCell.cs" />
+    <Compile Include="Atmos\IGasProperties.cs" />
     <Compile Include="Chat\IChatManager.cs" />
     <Compile Include="Configuration\IConfigurationManager.cs" />
     <Compile Include="Crafting\ICraftingManager.cs" />

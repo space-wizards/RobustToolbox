@@ -216,55 +216,66 @@ namespace ServerServices.Atmos
     {
         private const string name = "Oxygen";
         private const float shc = 0.919f;
+        private const float mm = 32.0f;
         private const GasType type = GasType.Oxygen;
 
         public string Name { get { return name; } }
         public float SpecificHeatCapacity { get { return shc; } }
         public GasType Type { get { return type; } }
+        public float MolecularMass { get { return mm; } }
     }
 
     public class CO2 : IGasProperties
     {
         private const string name = "CO2";
         private const float shc = 0.844f;
+        private const float mm = 44.01f;
         private const GasType type = GasType.CO2;
 
         public string Name { get { return name; } }
         public float SpecificHeatCapacity { get { return shc; } }
         public GasType Type { get { return type; } }
+        public float MolecularMass { get { return mm; } }
     }
 
     public class Nitrogen : IGasProperties
     {
         private const string name = "Nitrogen";
         private const float shc = 1.04f;
+        private const float mm = 28.01f;
         private const GasType type = GasType.Nitrogen;
 
         public string Name { get { return name; } }
         public float SpecificHeatCapacity { get { return shc; } }
         public GasType Type { get { return type; } }
+        public float MolecularMass { get { return mm; } }
     }
 
     public class Toxin : IGasProperties
     {
         private const string name = "Toxin";
-        private const float shc = 4.00f;
+        private const float shc = 4.00f;    // Made up
+        private const float mm = 20.0f; // Made up
         private const GasType type = GasType.Toxin;
 
         public string Name { get { return name; } }
         public float SpecificHeatCapacity { get { return shc; } }
         public GasType Type { get { return type; } }
+        public float MolecularMass { get { return mm; } }
     }
 
     public class WVapor : IGasProperties
     {
         private const string name = "Water Vapour";
         private const float shc = 1.93f;
+        private const float mm = 16.0f;
         private const GasType type = GasType.WVapor;
+
 
         public string Name { get { return name; } }
         public float SpecificHeatCapacity { get { return shc; } }
         public GasType Type { get { return type; } }
+        public float MolecularMass { get { return mm; } }
     }
 
     #endregion

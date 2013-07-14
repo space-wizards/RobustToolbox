@@ -44,11 +44,19 @@ namespace ServerServices.Atmos
             attachedTile = _attachedTile;
         }
 
+        // Lets assume all gasses are ideal gasses so we can use PV = nRT
+        // Air is 78% Nitrogen, 21% Oxygen, 1% CO2 (very roughly)
+        // So using the ideal gas equation we can work out how many moles of each gas
+        // are in "normal" air (~ 100kPa, 298.15K)
+
+        // Roughly 0.08 moles of gas in 2m^3 (2 litres) of air (assuming each "tile" is 1x1x2 m)
 
         public void InitSTP()
         {
-            AddGas(20, GasType.Oxygen);
-            AddGas(80, GasType.Nitrogen);
+            AddGas(0.0172f, GasType.Oxygen);
+            AddGas(0.0627f, GasType.Nitrogen);
+            AddGas(0.0010f, GasType.CO2);
+            gasMixture.Temperature = 298.15f;
         }
 
         public void Update()
@@ -85,8 +93,8 @@ namespace ServerServices.Atmos
                 return;
 
             float gas = (float)gasMixture.GasAmount;
-            if (gas < 1)
-                gas = 1;
+            if (gas < 0)
+                gas = 0;
             else if (gas > 10000)
                 gas = 10000;
 
@@ -146,7 +154,7 @@ namespace ServerServices.Atmos
                     }
 
                     DAmount = gasMixture.GasAmount - neighbor.gasMixture.GasAmount;
-                    if (DAmount == 0 || Math.Abs(DAmount) < 0.1)
+                    if (DAmount == 0 || Math.Abs(DAmount) < 0.005)
                     {
                         Diffuse(neighbor.gasMixture);
                         return;
@@ -155,7 +163,7 @@ namespace ServerServices.Atmos
                     ///Calculate initial flow
                     Flow = FlowConstant * DAmount;
                     Flow = Clamp(Flow, gasMixture.GasAmount / 8, neighbor.gasMixture.GasAmount / 8);
-
+                    Log.LogManager.Log(Flow.ToString());
                     //Velocity application code
                     Vector2 Dir = new Vector2(i, j);
                     float proportion = 0;
@@ -192,7 +200,7 @@ namespace ServerServices.Atmos
                     //Wall destruction
                     if (!neighbor.attachedTile.GasPermeable)
                     {
-                        if (Flow > 500 && neighbor.attachedTile.GetType() == typeof(Wall))
+                        if (Flow > 5 && neighbor.attachedTile.GetType() == typeof(Wall))
                         {
                             neighbor.attachedTile.GasPermeable = false; // Incident flow is > 750 so the wall is destroyed
                             neighbor.attachedTile.TileState = TileState.Dead;
@@ -283,7 +291,7 @@ namespace ServerServices.Atmos
                 switch(t)
                 {
                     case GasType.Toxin:
-                        if (gasMixture.gasses[GasType.Toxin] > 10 && (checkUpdateThreshold(GasType.Toxin) || all))
+                        if (gasMixture.gasses[GasType.Toxin] > 0.0075f && (checkUpdateThreshold(GasType.Toxin) || all))
                         {
                             amount = (byte)normalizeGasAmount(gasMixture.gasses[GasType.Toxin]);
                             gasChanges[i] = amount;
@@ -297,7 +305,7 @@ namespace ServerServices.Atmos
                         }
                         break;
                     case GasType.WVapor:
-                        if (gasMixture.gasses[GasType.WVapor] > 10 && (checkUpdateThreshold(GasType.WVapor) || all))
+                        if (gasMixture.gasses[GasType.WVapor] > 0.005f && (checkUpdateThreshold(GasType.WVapor) || all))
                         {
                             amount = (byte)normalizeGasAmount(gasMixture.gasses[GasType.WVapor]);
                             gasChanges[i] = amount;
@@ -344,7 +352,7 @@ namespace ServerServices.Atmos
             return bitCount;
         }
 
-        private bool checkUpdateThreshold(GasType g, float multiplier = 1)
+        private bool checkUpdateThreshold(GasType g, float multiplier = 2000)
         {
             //If the delta since the last update was sent is greater than 2, send another update.
             if(Math.Abs(normalizeGasAmount(gasMixture.gasses[g], multiplier) - normalizeGasAmount(lastSentGasses[g], multiplier)) >= 1)
@@ -357,7 +365,7 @@ namespace ServerServices.Atmos
         /// </summary>
         /// <param name="amount"></param>
         /// <returns></returns>
-        public int normalizeGasAmount(float amount, float multiplier = 1)
+        public int normalizeGasAmount(float amount, float multiplier = 2000)
         {
             amount = amount * multiplier;
             if (amount > 150)
@@ -399,6 +407,14 @@ namespace ServerServices.Atmos
             get
             {
                 return calculated;
+            }
+        }
+
+        public float Pressure
+        {
+            get
+            {
+                return gasMixture.Pressure;
             }
         }
     }

@@ -51,15 +51,14 @@ namespace SGO
             {
                 var hasInternals = HasInternals();
                 var tilePos = map.GetTileArrayPositionFromWorldPosition(Owner.Position);
-                if (map.GetTileAt(tilePos.X, tilePos.Y).GasCell.GasAmount(GasType.Toxin) > 10 && !hasInternals) //too much toxin in the air, bro
+                if (map.GetTileAt(tilePos.X, tilePos.Y).GasCell.GasAmount(GasType.Toxin) > 0.01 && !hasInternals) //too much toxin in the air, bro
                 {
                     statuscomp.AddEffect("ToxinInhalation", 20);
                 }
-                if(!hasInternals && map.GetTileAt(tilePos.X, tilePos.Y).GasCell.TotalGas < 35 //Less than 35 pressure units, whatever the fuck that is
-                    || (map.GetTileAt(tilePos.X, tilePos.Y).GasCell.GasAmount(GasType.Oxygen) / map.GetTileAt(tilePos.X, tilePos.Y).GasCell.TotalGas) < 0.05f) //less than 5% oxygen
+                if(!hasInternals && map.GetTileAt(tilePos.X, tilePos.Y).GasCell.Pressure < 10 //Less than 10kPa
+                    || (map.GetTileAt(tilePos.X, tilePos.Y).GasCell.GasAmount(GasType.Oxygen) / map.GetTileAt(tilePos.X, tilePos.Y).GasCell.TotalGas) < 0.10f) //less than 10% oxygen
                     //Not enough oxygen in the mixture, or pressure is too low.
                     statuscomp.AddEffect("Hypoxia", 5);
-
             }
         }
 

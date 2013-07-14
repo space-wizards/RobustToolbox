@@ -20,6 +20,7 @@ namespace ServerInterfaces.Atmos
         float GasAmount(GasType type);
         void AddGas(float amount, GasType gas);
         bool Calculated { get; }
+        float Pressure { get; }
         
     }
 }

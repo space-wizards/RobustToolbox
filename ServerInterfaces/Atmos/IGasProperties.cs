@@ -10,6 +10,7 @@ namespace ServerInterfaces.Atmos
     {
         string Name { get;}
         float SpecificHeatCapacity { get;}
+        float MolecularMass { get; }
         GasType Type { get; }
     }
 }

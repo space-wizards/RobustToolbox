@@ -144,22 +144,19 @@ namespace ServerServices.Chat
             var map = IoCManager.Resolve<IMapManager>();
             switch (command)
             {
-                /*case "spawnentity":
-                    Entity spawned = EntityManager.Singleton.SpawnEntityAt(args[1], position);
-                    break;
-                case "crowbar":
-                    EntityManager.Singleton.SpawnEntityAt("Crowbar", position);                   
-                    break;
-                case "toolbox":
-                    EntityManager.Singleton.SpawnEntityAt("Toolbox", position);  
-                    break;*/
                 case "addgas":
-                    if (args.Count > 1 && Convert.ToInt32(args[1]) > 0)
+                    if (args.Count > 1 && Convert.ToDouble(args[1]) > 0)
                     {
-                        int amount = Convert.ToInt32(args[1]);
+                        double amount = Convert.ToDouble(args[1]);
 
-                        map.GetTileFromWorldPosition(position).GasCell.AddGas(amount, GasType.Toxin);
+                        map.GetTileFromWorldPosition(position).GasCell.AddGas((float)amount, GasType.Toxin);
                     }
+                    break;
+                case "tpreport":    // Reports on temp / pressure
+                    var tap = map.GetTileArrayPositionFromWorldPosition(position);
+                    var ti = (Tile)map.GetTileAt(tap.X, tap.Y);
+                    var ce = ti.gasCell;
+                    SendChatMessage(ChatChannel.Default, "T/P: " + ce.GasMixture.Temperature.ToString() + " / " + ce.GasMixture.Pressure.ToString(), "TempCheck", 0);
                     break;
                 case "gasreport":
 
@@ -168,9 +165,8 @@ namespace ServerServices.Chat
                     var c = t.gasCell;
                     foreach (var g in c.GasMixture.gasses)
                     {
-                        SendChatMessage(ChatChannel.Default, g.Key.ToString() + ": " + g.Value.ToString(), "GasReport", 0);
+                        SendChatMessage(ChatChannel.Default, g.Key.ToString() + ": " + g.Value.ToString() + " m", "GasReport", 0);
                     }
-                    
                     break;
                 case "everyonesondrugs":
                     foreach (var playerfordrugs in IoCManager.Resolve<IPlayerManager>().GetAllPlayers())

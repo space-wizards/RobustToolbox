@@ -45,7 +45,7 @@ namespace SGO
 
         private void GasEffect()
         {
-            Vector2 gasVel = IoCManager.Resolve<IMapManager>().GetGasVelocity(IoCManager.Resolve<IMapManager>().GetTileArrayPositionFromWorldPosition(Owner.Position));
+            Vector2 gasVel = IoCManager.Resolve<IMapManager>().GetTileFromWorldPosition(Owner.Position).GasCell.GasVel;
             if (gasVel.Abs() > mass) // Stop tiny wobbles
             {
                 Owner.SendMessage(this, ComponentMessageType.PhysicsMove, Owner.Position.X + gasVel.X, Owner.Position.Y + gasVel.Y);

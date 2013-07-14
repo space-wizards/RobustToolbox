@@ -11,8 +11,9 @@ namespace ServerServices.Tiles
         public Space(int x, int y, ServerServices.Map.MapManager _map)
             : base(x, y, _map)
         {
-            gasPermeable = true;
-            gasSink = true;
+            
+            GasPermeable = true;
+            GasSink = true;
         }
     }
 }

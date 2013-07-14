@@ -158,8 +158,8 @@ namespace ServerServices.Chat
                     if (args.Count > 1 && Convert.ToInt32(args[1]) > 0)
                     {
                         int amount = Convert.ToInt32(args[1]);
-                        
-                        map.AddGasAt(map.GetTileArrayPositionFromWorldPosition(position), GasType.Toxin, amount);
+
+                        map.GetTileFromWorldPosition(position).GasCell.AddGas(amount, GasType.Toxin);
                     }
                     break;
                 case "gasreport":

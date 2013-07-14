@@ -17,6 +17,7 @@ using ServerInterfaces.Tiles;
 using System.Linq;
 using System.Reflection;
 using SS13_Shared.ServerEnums;
+using ServerServices.Atmos;
 
 namespace ServerServices.Map
 {
@@ -42,7 +43,6 @@ namespace ServerServices.Map
             if (!LoadMap(mapName))
                 NewMap();
 
-            InitializeAtmos();
             return true;
         }
         #endregion
@@ -123,7 +123,7 @@ namespace ServerServices.Map
             }
         }*/ // TODO HOOK ME BACK UP WITH ENTITY SYSTEM
 
-        private void DestroyTile(Point arrayPosition)
+        public void DestroyTile(Point arrayPosition)
         {
             if (IsSaneArrayPosition(arrayPosition.X, arrayPosition.Y))
             {
@@ -146,7 +146,7 @@ namespace ServerServices.Map
 
             if (IsSaneArrayPosition(x, y))
             {
-                Tiles.Atmos.GasCell g = tileArray[x, y].gasCell;
+                Atmos.GasCell g = tileArray[x, y].gasCell;
                 var t = GenerateNewTile(x, y, typeStr) as Tile;
                 tileArray[x, y] = t as Tile;
                 tileArray[x, y].gasCell = g;
@@ -166,7 +166,7 @@ namespace ServerServices.Map
             message.Write((short)x);
             message.Write((short)y);
             message.Write((byte)GetTileIndex(tileArray[x, y].GetType().Name));
-            message.Write((byte)tileArray[x, y].tileState);
+            message.Write((byte)tileArray[x, y].TileState);
             IoCManager.Resolve<ISS13NetServer>().SendToAll(message);
         }
         #endregion
@@ -248,211 +248,8 @@ namespace ServerServices.Map
 
         #endregion
 
-        #region Atmos
 
-        private void InitializeAtmos()
-        {
-            for (int z = 0; z < mapHeight; z++)
-            {
-                for (int x = 0; x < mapWidth; x++)
-                {
-                    tileArray[x, z].gasCell = new Tiles.Atmos.GasCell(tileArray[x, z], x, z, tileArray, mapWidth, mapHeight);
-                    if (tileArray[x, z].startWithAtmos)
-                    {
-                        tileArray[x, z].gasCell.AddGas(20, GasType.Oxygen);
-                        tileArray[x, z].gasCell.AddGas(80, GasType.Nitrogen);
-                    }
-                }
-            }
-        }
-
-        private struct AtmosRecord
-        {
-            int x;
-            int y;
-            byte display;
-
-            public AtmosRecord(int _x, int _y, byte _display)
-            {
-                x = _x;
-                y = _y;
-                display = _display;
-            }
-
-            public void pack(NetOutgoingMessage message)
-            {
-                message.Write(x);
-                message.Write(y);
-                message.Write(display);
-            }
-        }
-
-        public void AddGasAt(Point position, GasType type, int amount)
-        {
-            tileArray[position.X, position.Y].gasCell.AddGas(amount, type);
-        }
-
-        public void UpdateAtmos()
-        {
-            for (int x = 0; x < mapWidth; x++)
-                for (int y = 0; y < mapHeight; y++)
-                {
-                    tileArray[x, y].gasCell.CalculateNextGasAmount();
-                }
-
-            for (int x = 0; x < mapWidth; x++)
-                for (int y = 0; y < mapHeight; y++)
-                {
-                    if (tileArray[x, y].tileState == TileState.Dead && !tileArray[x, y].gasPermeable)
-                        DestroyTile(new Point(x, y));
-                    tileArray[x, y].gasCell.Update();
-                }
-
-            //Prepare gas display message
-            if ((DateTime.Now - lastAtmosDisplayPush).TotalMilliseconds > 1000)
-            {
-                bool sendUpdate = false;
-                //How many types of gasses do we have?
-                int numberOfGasTypes = Enum.GetValues(typeof(GasType)).Length;
-                var records = new BitStream(mapHeight*mapWidth*numberOfGasTypes);
-                for (var x = 0; x < mapWidth; x++)
-                    for (var y = 0; y < mapHeight; y++)
-                    {
-                        int displayBitsWritten = tileArray[x, y].gasCell.PackDisplayBytes(records);
-                        //The func will always write the same number of bytes as there are gas types.
-                        if(displayBitsWritten > numberOfGasTypes)
-                            sendUpdate = true;
-                    }
-
-                if (sendUpdate)
-                {
-                    SendAtmosUpdatePacket(records);
-                }
-                lastAtmosDisplayPush = DateTime.Now;
-            }
-        }
-
-        /// <summary>
-        /// Compresses byte array to new byte array.
-        /// </summary>
-        private byte[] Compress(BitStream rawStream)
-        {
-            rawStream.Position = 0;
-            var raw = new byte[rawStream.Length8];
-            for (int i = 0; i < rawStream.Length8; i++)
-            {
-                rawStream.Read(out raw[i]);
-            }
-            var byteLength = (int)rawStream.Length8;
-            if (byteLength == 0)
-            {
-                LogManager.Log("Gas data unchanged. Not sending that shit.", LogLevel.Debug);
-                return null;
-            }
-
-            LogManager.Log(byteLength + " bytes of gas data to send before compression.", LogLevel.Debug);
-            using (MemoryStream memory = new MemoryStream())
-            {
-                using (GZipStream gzip = new GZipStream(memory, CompressionMode.Compress, true))
-                {
-                    gzip.Write(raw, 0, raw.Length);
-                }
-                return memory.ToArray();
-            }
-        }
-
-        private NetOutgoingMessage CreateAtmosUpdatePacket(BitStream records)
-        {
-            var recs = Compress(records);
-            if (recs == null)
-                return null;
-            var msg = IoCManager.Resolve<ISS13NetServer>().CreateMessage();
-            msg.Write((byte)NetMessage.AtmosDisplayUpdate);
-            msg.Write((int)records.Length);
-            msg.Write(recs.Length);
-            msg.Write(recs);
-            return msg;
-        }
-
-        private void SendAtmosUpdatePacket(BitStream records)
-        {
-            var msg = CreateAtmosUpdatePacket(records);
-            if (msg == null)
-                return;
-            LogManager.Log("Sending Gas update packet of size " + msg.LengthBytes + " bytes\n", LogLevel.Debug);
-            IoCManager.Resolve<ISS13NetServer>().SendToAll(msg, NetDeliveryMethod.Unreliable);
-        }
-
-        private void SendAtmosUpdatePacket(List<AtmosRecord> records)
-        {
-            int recordsCount = records.Count;
-            int recordsInPacket = 0;
-            int position = 0;
-
-            /*
-            while (recordsCount > 0)
-            {
-                if (recordsCount >= 50)
-                    recordsInPacket = 50;
-                else
-                    recordsInPacket = recordsCount;
-                recordsCount -= recordsInPacket;
-                NetOutgoingMessage message = IoCManager.Resolve<ISS13NetServer>().CreateMessage();
-                message.Write((byte)NetMessage.AtmosDisplayUpdate);
-                message.Write(recordsInPacket);
-                for (int i = 0 + position; i < recordsInPacket + position; i++)
-                {
-                    records[i].pack(message);
-                }
-                IoCManager.Resolve<ISS13NetServer>().SendToAll(message, NetDeliveryMethod.Unreliable);// Gas updates aren't a big deal.
-                LogManager.Log("Sending Gas update with " + recordsInPacket + " records\n", LogLevel.Debug);
-                position += recordsInPacket;
-            }*/
-        }
-
-        public void SendAtmosStateTo(NetConnection client)
-        {
-            /*NetOutgoingMessage message = IoCManager.Resolve<ISS13NetServer>().CreateMessage();
-            message.Write((byte)NetMessage.AtmosDisplayUpdate);
-
-            List<AtmosRecord> records = new List<AtmosRecord>();
-            for (int x = 0; x < mapWidth; x++)
-                for (int y = 0; y < mapHeight; y++)
-                {
-                    byte[] displayBytes = tileArray[x, y].gasCell.PackDisplayBytes(true);
-                    if (displayBytes.Length == 0) //if there are no changes, continue.
-                        continue;
-                    foreach (byte displayByte in displayBytes)
-                    {
-                        records.Add(new AtmosRecord(x, y, displayByte));
-                    }
-                }
-
-            message.Write(records.Count);
-            foreach (AtmosRecord rec in records)
-            {
-                rec.pack(message);
-            }
-            IoCManager.Resolve<ISS13NetServer>().SendMessage(message, client, NetDeliveryMethod.Unreliable);// Gas updates aren't a big deal.
-            //LogManager.Log("Sending Gas update to " + SS13Server.Singleton.playerManager.GetSessionByConnection(client).name + "\n", LogLevel.Debug);*/
-        
-            int numberOfGasTypes = Enum.GetValues(typeof(GasType)).Length;
-            var records = new BitStream(mapHeight * mapWidth * numberOfGasTypes);
-            int displayBitsWritten = 0;
-            for (int x = 0; x < mapWidth; x++)
-                for (int y = 0; y < mapHeight; y++)
-                {
-                    //byte[] displayBytes = tileArray[x, y].gasCell.PackDisplayBytes();
-                    displayBitsWritten = tileArray[x, y].gasCell.PackDisplayBytes(records, true);
-                }
-            var msg = CreateAtmosUpdatePacket(records);
-            if (msg == null)
-                return;
-            IoCManager.Resolve<ISS13NetServer>().SendMessage(msg, client, NetDeliveryMethod.ReliableUnordered);
-
-        }
-
-        /// <summary>
+         /// <summary>
         /// This function takes the gas cell from one tile and moves it to another, reconnecting all of the references in adjacent tiles.
         /// Use this when a new tile is generated at a map location.
         /// </summary>
@@ -460,31 +257,10 @@ namespace ServerServices.Map
         /// <param name="toTile">Tile to move gas information/cell to</param>
         public void MoveGasCell(ITile fromTile, ITile toTile)
         {
-            Tiles.Atmos.GasCell g = (fromTile as Tile).gasCell;
+            GasCell g = (fromTile as Tile).gasCell;
             (toTile as Tile).gasCell = g;
             g.AttachToTile((toTile as Tile));
         }
-
-        public float GetGasAmount(Point position, GasType type)
-        {
-            var t = (Tile)GetTileAt(position.X, position.Y);
-            return t.gasCell.GasMixture.gasses[type];
-        }
-
-        public float GetGasTotal(Point position)
-        {
-            var t = (Tile) GetTileAt(position.X, position.Y);
-            return t.gasCell.TotalGas;
-        }
-
-        public Vector2 GetGasVelocity(Point position)
-        {
-            var t = (Tile)GetTileAt(position.X, position.Y);
-            if(t != null)
-                return t.gasCell.GasVel;
-            return new Vector2(0, 0);
-        }
-        #endregion
 
         #region Map altering
         public bool ChangeTile(int x, int z, string newType)
@@ -584,7 +360,7 @@ namespace ServerServices.Map
                 {
                     var t = tileArray[x, y]; //Bypassing stuff.
                     mapMessage.Write((byte)GetTileIndex((t.GetType().Name)));
-                    mapMessage.Write((byte)t.tileState);
+                    mapMessage.Write((byte)t.TileState);
                 }
             }
 

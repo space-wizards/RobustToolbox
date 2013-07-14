@@ -27,6 +27,7 @@ using ServerInterfaces.Round;
 using ServerServices.Round;
 using ServerInterfaces.Map;
 using ServerInterfaces.Placement;
+using ServerInterfaces.Atmos;
 using SS13_Shared;
 
 namespace SS13_Server
@@ -147,6 +148,8 @@ namespace SS13_Server
             else if (Runlevel == RunLevel.Game)
             {
                 IoCManager.Resolve<IMapManager>().InitMap(_serverMapName);
+
+                IoCManager.Resolve<IAtmosManager>().InitializeGasCells();
 
                 EntityManager = new EntityManager(IoCManager.Resolve<ISS13NetServer>());
 
@@ -377,7 +380,7 @@ namespace SS13_Server
                 if (lastFrame.TotalMilliseconds > framePeriod)
                 {
                     ComponentManager.Singleton.Update(framePeriod);
-                    IoCManager.Resolve<IMapManager>().UpdateAtmos();
+                    IoCManager.Resolve<IAtmosManager>().Update();
                     IoCManager.Resolve<IRoundManager>().CurrentGameMode.Update();
                     IoCManager.Resolve<ICraftingManager>().Update();
                 }
@@ -774,7 +777,7 @@ namespace SS13_Server
             EntityManager.SendEntities(connection);
 
             // Send atmos state to player
-            IoCManager.Resolve<IMapManager>().SendAtmosStateTo(connection);
+            IoCManager.Resolve<IAtmosManager>().SendAtmosStateTo(connection);
 
             // Todo: Preempt this with the lobby.
             IoCManager.Resolve<IRoundManager>().SpawnPlayer(IoCManager.Resolve<IPlayerManager>().GetSessionByConnection(connection)); //SPAWN PLAYER

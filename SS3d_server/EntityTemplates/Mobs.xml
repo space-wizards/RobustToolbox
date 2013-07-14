@@ -11,6 +11,11 @@
       <Component name="HumanHealthComponent"></Component>
       <Component name="StatusEffectComp"></Component>
       <Component name="PlayerActionComp"></Component>
+      <Component name="Physics">
+        <Parameters>
+          <Parameter name="Mass" type="float" value="5" />
+        </Parameters>
+      </Component>
       <Component name="InventoryComponent">
         <ExtendedParameters>
           <InventoryProperties inventorySize="20"></InventoryProperties>

@@ -1,5 +1,6 @@
 ﻿using ServerInterfaces.Tiles;
-using ServerServices.Tiles.Atmos;
+using ServerInterfaces.Atmos;
+using ServerServices.Atmos;
 using SS13_Shared;
 using System;
 
@@ -8,10 +9,10 @@ namespace ServerServices.Tiles
     public abstract class Tile : ITile
     {
         public GasCell gasCell;
-        public TileState tileState { get; set; }
-        public bool gasPermeable = false;
-        public bool gasSink = false;
-        public bool startWithAtmos = false; //Does this start with  breathable atmosphere? Maybe turn this into a bitfield to define which gases it starts with.
+        public TileState TileState { get; set; }
+        private bool gasPermeable = false;
+        private bool gasSink = false;
+        private bool startWithAtmos = false; //Does this start with  breathable atmosphere? Maybe turn this into a bitfield to define which gases it starts with.
         private Map.MapManager map;
         private int _x;
         private int _y;
@@ -25,11 +26,28 @@ namespace ServerServices.Tiles
 
         public Tile(int x, int y, Map.MapManager _map)
         {
-            tileState = TileState.Healthy;
+            TileState = TileState.Healthy;
             map = _map;
             _x = x;
             _y = y;
         }
+
+
+        public void AddDecal(DecalType type)
+        {
+            var message = map.CreateMapMessage(MapMessage.TurfAddDecal);
+            message.Write(_x);
+            message.Write(_y);
+            message.Write((byte)type);
+            map.SendMessage(message);
+        }
+
+        /*
+        public virtual bool HandleItemClick(Atom.Item.Item item)
+        {
+            return false;
+        }*/
+        //TODO HOOK ME BACK UP WITH ENTITY SYSTEM
 
         // These return true if the tile needs to be updated over the network
         /*
@@ -48,22 +66,59 @@ namespace ServerServices.Tiles
              }
              return false;
         }
-        */ //TODO HOOK ME BACK UP WITH ENTITY SYSTEM
+        */
+        //TODO HOOK ME BACK UP WITH ENTITY SYSTEM
 
-        public void AddDecal(DecalType type)
+
+        #region getters / setters
+        public IGasCell GasCell
         {
-            var message = map.CreateMapMessage(MapMessage.TurfAddDecal);
-            message.Write(_x);
-            message.Write(_y);
-            message.Write((byte)type);
-            map.SendMessage(message);
+            get
+            {
+                return (IGasCell)gasCell;
+            }
+            set
+            {
+                gasCell = (GasCell)value;
+            }
         }
 
-        /*
-        public virtual bool HandleItemClick(Atom.Item.Item item)
+        public bool StartWithAtmos
         {
-            return false;
-        }*/ //TODO HOOK ME BACK UP WITH ENTITY SYSTEM
- 
+            get
+            {
+                return startWithAtmos;
+            }
+            set
+            {
+                startWithAtmos = value;
+            }
+        }
+
+        public bool GasPermeable
+        {
+            get
+            {
+                return gasPermeable;
+            }
+            set
+            {
+                gasPermeable = value;
+            }
+        }
+
+        public bool GasSink
+        {
+            get
+            {
+                return gasSink;
+            }
+            set
+            {
+                gasSink = value;
+            }
+        }
+        #endregion
+
     }
 }

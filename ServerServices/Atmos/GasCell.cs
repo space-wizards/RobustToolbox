@@ -4,22 +4,20 @@ using System.Linq;
 using System.Text;
 using BKSystem.IO;
 using SS13_Shared;
+using ServerInterfaces.Atmos;
+using ServerServices.Tiles;
+using ServerInterfaces.Map;
 
-namespace ServerServices.Tiles.Atmos
+namespace ServerServices.Atmos
 {
 
-    public class GasCell
+    public class GasCell : IGasCell
     {
-        Tile attachedtile;
-        Tile[,] tileArray;
+        public Tile attachedTile;
         public int arrX;
         public int arrY;
-        public int mapWidth;
-        public int mapHeight;
-        public bool sink = false;
-        public bool blocking = false;
         bool calculated = true;
-        public Vector2 GasVel;
+        public Vector2 gasVel;
         public Vector2 NextGasVel;
         public Dictionary<GasType, float> lastSentGasses;
         private float lastVelSent = 0;
@@ -33,28 +31,28 @@ namespace ServerServices.Tiles.Atmos
         public const float quarterpi = (float)(Math.PI / 4);
         private float FlowConstant = .1f;
 
-        public GasCell(Tile t, int _x, int _y, Tile[,] _tileArray, int _mapWidth, int _mapHeight)
+        public GasCell(int _x, int _y, Tile _attachedTile)
         {
-            attachedtile = t;
             arrX = _x;
             arrY = _y;
-            mapWidth = _mapWidth;
-            mapHeight = _mapHeight;
             SetGasDisplay();
-            tileArray = _tileArray;
-            GasVel = new Vector2(0, 0);
+            gasVel = new Vector2(0, 0);
             NextGasVel = new Vector2(0, 0);
-            sink = attachedtile.gasSink;
-            blocking = !attachedtile.gasPermeable;
             lastSentGasses = new Dictionary<GasType, float>();
             gasMixture = new GasMixture();
             rand = new Random();
+            attachedTile = _attachedTile;
         }
 
+        public void InitSTP()
+        {
+            AddGas(20, GasType.Oxygen);
+            AddGas(80, GasType.Nitrogen);
+        }
 
         public void Update()
         {
-            if (sink)
+            if (attachedTile.GasSink)
             {
                 gasMixture.SetNextGasAmount(0);
                 foreach (var g in gasMixture.gasses)
@@ -63,7 +61,7 @@ namespace ServerServices.Tiles.Atmos
                 }
             }
 
-            GasVel = NextGasVel;
+            gasVel = NextGasVel;
             NextGasVel = new Vector2(0, 0);
 
             // Copy next gas values into gas values
@@ -77,9 +75,7 @@ namespace ServerServices.Tiles.Atmos
 
         public void AttachToTile(Tile t)
         {
-            attachedtile = t;
-            blocking = !attachedtile.gasPermeable;
-            sink = attachedtile.gasSink;
+            attachedTile = t;
         }
 
         public void SetGasDisplay()
@@ -116,15 +112,14 @@ namespace ServerServices.Tiles.Atmos
             gasMixture.CalculateTotals();
         }
 
-
         private void Diffuse(GasMixture a)
         {
             gasMixture.Diffuse(a);
         }
 
-        public void CalculateNextGasAmount()
+        public void CalculateNextGasAmount(IMapManager m)
         {
-            if (blocking)
+            if (!attachedTile.GasPermeable)
                 return;
             float DAmount;
             float Flow = 0;
@@ -136,16 +131,16 @@ namespace ServerServices.Tiles.Atmos
                 {
                     if (i == 0 && j == 0) // If we're on this cell
                         continue;
-                    if (arrX + i < 0 || arrX + i >= mapWidth || arrY + j < 0 || arrY + j >= mapHeight) // If out of bounds
+                    if (arrX + i < 0 || arrX + i >= m.GetMapWidth() || arrY + j < 0 || arrY + j >= m.GetMapHeight()) // If out of bounds
                         continue;
 
-                    neighbor = tileArray[arrX+i,arrY+j].gasCell;
-                    if (neighbor.calculated) // if neighbor's already been calculated, skip it
+                    neighbor = (GasCell)m.GetTileAt(arrX+i,arrY+j).GasCell;
+                    if (neighbor.Calculated) // if neighbor's already been calculated, skip it
                         continue;
 
                     if (Math.Abs(i) + Math.Abs(j) == 2) //If its a corner
                     {
-                        if (tileArray[arrX + i, arrY].gasCell.blocking && tileArray[arrX, arrY + j].gasCell.blocking) // And it is a corner separated from us by 2 blocking walls
+                        if (!m.GetTileAt(arrX + i, arrY).GasPermeable && !m.GetTileAt(arrX, arrY + i).GasPermeable) // And it is a corner separated from us by 2 blocking walls
                             continue; //Don't process it. These cells are not connected.
                     }
 
@@ -165,27 +160,28 @@ namespace ServerServices.Tiles.Atmos
                     float proportion = 0;
                     float componentangle;
                     //Process velocity flow to neighbor
-                    if (GasVel.Magnitude > 0.01) //If the gas velocity vector is within 45 degrees of the direction of the neighbor
+                    if (gasVel.Magnitude > 0.01) //If the gas velocity vector is within 45 degrees of the direction of the neighbor
                     {
-                        componentangle = Dir.Angle(GasVel);
+                        componentangle = Dir.Angle(gasVel);
                         if (Math.Abs(componentangle) < quarterpi)
                         {
                             proportion = Math.Abs((1 / quarterpi) * (quarterpi - componentangle)); // Get the proper proportion of the vel vector
-                            float velflow = proportion * GasVel.Magnitude; // Calculate flow due to gas velocity
+                            float velflow = proportion * gasVel.Magnitude; // Calculate flow due to gas velocity
                             if (velflow > gasMixture.GasAmount / 2.5f)
                                 velflow = gasMixture.GasAmount / 2.5f;
                             Flow += velflow;
                         }
                     }
+
                     //Process velocity flow from neighbor
                     Dir = -1 * Dir; // Reverse Dir and apply same process to neighbor
-                    if (neighbor.GasVel.Magnitude > 0.01) //If the gas velocity vector is within 45 degrees of the direction of the neighbor
+                    if (neighbor.gasVel.Magnitude > 0.01) //If the gas velocity vector is within 45 degrees of the direction of the neighbor
                     {
-                        componentangle = Dir.Angle(neighbor.GasVel);
+                        componentangle = Dir.Angle(neighbor.gasVel);
                         if (Math.Abs(componentangle) < quarterpi)
                         {
                             proportion = Math.Abs((1 / quarterpi) * (quarterpi - componentangle)); // Get the proper proportion of the vel vector
-                            float velflow = proportion * neighbor.GasVel.Magnitude; // Calculate flow due to gas velocity
+                            float velflow = proportion * neighbor.gasVel.Magnitude; // Calculate flow due to gas velocity
                             if (velflow > neighbor.gasMixture.GasAmount / 2.5f)
                                 velflow = neighbor.gasMixture.GasAmount / 2.5f;
                             Flow -= velflow;
@@ -193,12 +189,12 @@ namespace ServerServices.Tiles.Atmos
                     }
 
                     //Wall destruction
-                    if (neighbor.blocking)
+                    if (!neighbor.attachedTile.GasPermeable)
                     {
-                        if (Flow > 500 && neighbor.attachedtile.GetType() == typeof(Wall))
-                        {                           
-                            neighbor.blocking = false; // Incident flow is > 750 so the wall is destroyed
-                            neighbor.attachedtile.tileState = TileState.Dead;
+                        if (Flow > 500 && neighbor.attachedTile.GetType() == typeof(Wall))
+                        {
+                            neighbor.attachedTile.GasPermeable = false; // Incident flow is > 750 so the wall is destroyed
+                            neighbor.attachedTile.TileState = TileState.Dead;
                             Flow = Flow * .75f; //Dying wall takes out some of the flow.
                         }
                         else
@@ -248,14 +244,6 @@ namespace ServerServices.Tiles.Atmos
 
                     }
 
-
-
-                    // Rescue clause. If this is needed to avoid crashes, something is wrong
-                    /*if(nextGasAmount < 0)
-                        nextGasAmount = 0;
-                    if (neighbor.nextGasAmount < 0)
-                        neighbor.nextGasAmount = 0;
-                      */
                     calculated = true;
                 }
         }
@@ -322,12 +310,12 @@ namespace ServerServices.Tiles.Atmos
                         }
                         break;
                     case GasType.HighVel:
-                        if ((normalizeGasAmount(GasVel.Magnitude, 20) != normalizeGasAmount(lastVelSent, 20)))
+                        if ((normalizeGasAmount(gasVel.Magnitude, 20) != normalizeGasAmount(lastVelSent, 20)))
                         {
-                            amount = (byte)normalizeGasAmount(GasVel.Magnitude, 20);
+                            amount = (byte)normalizeGasAmount(gasVel.Magnitude, 20);
                             gasChanges[i] = amount;
                             changedTypes = (changedTypes | (1 << i));
-                            lastVelSent = GasVel.Magnitude;
+                            lastVelSent = gasVel.Magnitude;
                             bitCount += 4;
                         }
                         else
@@ -376,6 +364,11 @@ namespace ServerServices.Tiles.Atmos
             return (int)(amount / 10);
         }
 
+        public float GasAmount(GasType type)
+        {
+            return gasMixture.gasses[type];
+        }
+
         public float TotalGas
         {
             get
@@ -392,5 +385,20 @@ namespace ServerServices.Tiles.Atmos
             }
         }
 
+        public Vector2 GasVel
+        {
+            get
+            {
+                return gasVel;
+            }
+        }
+
+        public bool Calculated
+        {
+            get
+            {
+                return calculated;
+            }
+        }
     }
 }

@@ -137,8 +137,7 @@ namespace SGO
             Open = true;
             Owner.SendMessage(this, ComponentMessageType.DisableCollision);
             Owner.SendMessage(this, ComponentMessageType.SetSpriteByKey, openSprite);
-            occupiedTile.gasPermeable = true;
-            occupiedTile.gasCell.blocking = false;
+            occupiedTile.GasPermeable = true;
         }
 
         private void CloseDoor(bool force = false)
@@ -152,8 +151,7 @@ namespace SGO
             timeOpen = 0;
             Owner.SendMessage(this, ComponentMessageType.EnableCollision);
             Owner.SendMessage(this, ComponentMessageType.SetSpriteByKey, closedSprite);
-            occupiedTile.gasPermeable = false;
-            occupiedTile.gasCell.blocking = true;
+            occupiedTile.GasPermeable = false;
         }
 
         private void SetImpermeable()
@@ -161,8 +159,7 @@ namespace SGO
             var map = IoCManager.Resolve<IMapManager>();
             Point occupiedTilePos = map.GetTileArrayPositionFromWorldPosition(Owner.Position);
             Tile occupiedTile = map.GetTileAt(occupiedTilePos.X, occupiedTilePos.Y) as Tile;
-            occupiedTile.gasPermeable = false;
-            occupiedTile.gasCell.blocking = true;
+            occupiedTile.GasPermeable = false;
         }
 
         private void SetImpermeable(Vector2 position)
@@ -170,8 +167,7 @@ namespace SGO
             var map = IoCManager.Resolve<IMapManager>();
             Point occupiedTilePos = map.GetTileArrayPositionFromWorldPosition(position);
             Tile occupiedTile = map.GetTileAt(occupiedTilePos.X, occupiedTilePos.Y) as Tile;
-            occupiedTile.gasPermeable = false;
-            occupiedTile.gasCell.blocking = true;
+            occupiedTile.GasPermeable = false;
         }
 
         private void SetPermeable(Vector2 position)
@@ -179,8 +175,7 @@ namespace SGO
             var map = IoCManager.Resolve<IMapManager>();
             Point occupiedTilePos = map.GetTileArrayPositionFromWorldPosition(position);
             Tile occupiedTile = map.GetTileAt(occupiedTilePos.X, occupiedTilePos.Y) as Tile;
-            occupiedTile.gasPermeable = true;
-            occupiedTile.gasCell.blocking = false;
+            occupiedTile.GasPermeable = true;
         }
 
         public override void SetParameter(ComponentParameter parameter)

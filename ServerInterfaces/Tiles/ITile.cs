@@ -1,5 +1,8 @@
 using SS13_Shared;
+using ServerInterfaces.Atmos;
+
 using System;
+
 
 namespace ServerInterfaces.Tiles
 {
@@ -9,6 +12,10 @@ namespace ServerInterfaces.Tiles
         event TileChangeHandler TileChange; //This event will be used for wall mounted objects and
         void RaiseChangedEvent(Type type);
         void AddDecal(DecalType type);
-        TileState tileState { get; set; }
+        TileState TileState { get; set; }
+        IGasCell GasCell { get; set; }
+        bool StartWithAtmos { get; }
+        bool GasPermeable { get; }
+        bool GasSink { get; }
     }
 }

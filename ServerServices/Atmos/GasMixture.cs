@@ -5,13 +5,14 @@ using System.Text;
 using BKSystem.IO;
 using SS13_Shared;
 
-namespace ServerServices.Tiles.Atmos
+namespace ServerServices.Atmos
 {
     public class GasMixture
     {
 
         private float nextGasAmount;
         private float gasAmount;
+        private float temperature = 0.0f;
 
         public Dictionary<GasType, float> gasses;
         public Dictionary<GasType, float> nextGasses;
@@ -132,6 +133,19 @@ namespace ServerServices.Tiles.Atmos
             }
         }
 
+        public float Temperature
+        {
+            get
+            {
+                return temperature;
+            }
+
+            set
+            {
+                temperature = value;
+            }
+    }
+            
 
     }
 }

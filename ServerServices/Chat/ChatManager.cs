@@ -12,6 +12,7 @@ using SS13_Shared;
 using ServerInterfaces.Player;
 using ServerInterfaces.Map;
 using ServerServices.Tiles;
+using ServerInterfaces.Atmos;
 
 namespace ServerServices.Chat
 {
@@ -152,11 +153,22 @@ namespace ServerServices.Chat
                         map.GetTileFromWorldPosition(position).GasCell.AddGas((float)amount, GasType.Toxin);
                     }
                     break;
-                case "tpreport":    // Reports on temp / pressure
+                case "heatgas":
+                    if (args.Count > 1 && Convert.ToDouble(args[1]) > 0)
+                    {
+                        double amount = Convert.ToDouble(args[1]);
+
+                        map.GetTileFromWorldPosition(position).GasCell.AddGas((float)amount, GasType.Toxin);
+                    }
+                    break;
+                case "atmosreport":
+                    IoCManager.Resolve<IAtmosManager>().TotalAtmosReport();
+                    break;
+                case "tpvreport":    // Reports on temp / pressure
                     var tap = map.GetTileArrayPositionFromWorldPosition(position);
                     var ti = (Tile)map.GetTileAt(tap.X, tap.Y);
                     var ce = ti.gasCell;
-                    SendChatMessage(ChatChannel.Default, "T/P: " + ce.GasMixture.Temperature.ToString() + " / " + ce.GasMixture.Pressure.ToString(), "TempCheck", 0);
+                    SendChatMessage(ChatChannel.Default, "T/P/V: " + ce.GasMixture.Temperature.ToString() + " / " + ce.GasMixture.Pressure.ToString() + " / " + ce.GasVelocity.ToString(), "TempCheck", 0);
                     break;
                 case "gasreport":
 

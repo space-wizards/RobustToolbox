@@ -136,9 +136,6 @@ namespace ClientServices.Tiles
 
                     switch (gasAmount.Key)
                     {
-                        case GasType.HighVel:
-                            gasSprite.Color = Color.FromArgb(opacity, Color.White);
-                            break;
                         case GasType.Toxin:
                             gasSprite.Color = Color.FromArgb(opacity, Color.Orange);
                             break;

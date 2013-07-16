@@ -94,6 +94,22 @@ namespace ServerServices.Atmos
             return null;
         }
 
+        public void TotalAtmosReport()
+        {
+            var m = IoCManager.Resolve<IMapManager>();
+
+            float totalGas = 0.0f;
+            for (int x = 0; x < m.GetMapWidth(); x++)
+            {
+                for (int y = 0; y < m.GetMapHeight(); y++)
+                {
+                    totalGas += m.GetTileAt(x, y).GasCell.TotalGas;
+                }
+            }
+
+            Log.LogManager.Log("Report: " + totalGas);
+        }
+
         #region Networking
 
         private void CheckNetworkUpdate()

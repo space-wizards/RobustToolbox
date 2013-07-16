@@ -164,8 +164,7 @@ namespace SS13_Shared
         Toxin = 1,
         Nitrogen = 2,
         CO2 = 3,
-        WVapor = 4,
-        HighVel = 5
+        WVapor = 4
     }
 
     public enum DecalType

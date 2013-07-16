@@ -45,11 +45,14 @@ namespace SGO
 
         private void GasEffect()
         {
-            /*Vector2 gasVel = IoCManager.Resolve<IMapManager>().GetTileFromWorldPosition(Owner.Position).GasCell.GasVel;
+            var t = IoCManager.Resolve<IMapManager>().GetTileFromWorldPosition(Owner.Position);
+            if (t == null)
+                return;
+            Vector2 gasVel = t.GasCell.GasVelocity;
             if (gasVel.Abs() > mass) // Stop tiny wobbles
             {
                 Owner.SendMessage(this, ComponentMessageType.PhysicsMove, Owner.Position.X + gasVel.X, Owner.Position.Y + gasVel.Y);
-            }*/
+            }
         }
 
         public override ComponentState GetComponentState()

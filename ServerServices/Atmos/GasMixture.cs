@@ -11,10 +11,8 @@ namespace ServerServices.Atmos
 {
     public class GasMixture
     {
-
-        private float nextGasAmount;
-        private float gasAmount;
-        private float temperature = 2.0f; // ~Space temp in K
+        private float temperature = 293.15f; // Normal room temp in K
+        private float nextTemperature = 0;
         private float volume = 2.0f; // in m^3
 
         public Dictionary<GasType, float> gasses; // Type, moles
@@ -47,77 +45,57 @@ namespace ServerServices.Atmos
             {
                 gasses[ng.Key] = ng.Value;
             }
+
+            temperature += nextTemperature;
+            nextTemperature = 0;
+            if (temperature < 0)    // This shouldn't happen unless someone fucks with the temperature directly
+                temperature = 0;
+
         }
 
-        public void SetNextGasAmount(float amount)
+        public void SetNextTemperature(float temp)
         {
-            nextGasAmount = amount;
-        }
-
-        public float GasAmount
-        {
-            get
-            {
-                return gasAmount;
-            }
-        }
-
-        public void AddGas(float amount, GasType gas)
-        {
-            gasses[gas] += amount;
-            nextGasses[gas] += amount;
-            CalculateTotals();
-        }
-
-        public void RemoveGas(float amount, GasType gas )
-        {
-            gasses[gas] -= amount;
-            nextGasses[gas] -= amount;
-            CalculateTotals();
+            nextTemperature += temp;
         }
 
         public void AddNextGas(float amount, GasType gas)
         {
             nextGasses[gas] += amount;
+
+            if (nextGasses[gas] < 0)    // This shouldn't happen unless someone calls this directly but lets just make sure
+                nextGasses[gas] = 0;
         }
 
-        public void RemoveNextGas(float amount, GasType gas)
-        {
-            nextGasses[gas] -= amount;
-        }
-
-        public void CalculateTotals()
-        {
-            gasAmount = 0;
-            foreach (float g in gasses.Values.ToArray())
-            {
-                gasAmount += g;
-            }
-
-            nextGasAmount = 0;
-            foreach (float n in nextGasses.Values.ToArray())
-            {
-                nextGasAmount += n;
-            }
-        }
-
-        public void Diffuse(GasMixture a)
+        public void Diffuse(GasMixture a, float factor = 8)
         {
             foreach (var gas in a.gasses)
             {
-                if (gas.Value > gasses[gas.Key])
-                {
-                    var amount = (gas.Value - gasses[gas.Key]) / 8;
-                    a.RemoveNextGas(amount, gas.Key);
-                    AddNextGas(amount, gas.Key);
-                }
-                else if (gasses[gas.Key] > gas.Value)
-                {
-                    var amount = (gasses[gas.Key] - gas.Value) / 8;
-                    a.AddNextGas(amount, gas.Key);
-                    RemoveNextGas(amount, gas.Key);
-                }
+                var amount = (gas.Value - gasses[gas.Key]) / factor;
+                AddNextGas(amount, gas.Key);
+                a.AddNextGas(-amount, gas.Key);
             }
+
+            ShareTemp(a, factor);
+        }
+
+        public void ShareTemp(GasMixture a, float factor = 8)
+        {
+            float HCCell = HeatCapacity * TotalMass;
+            float HCa = a.HeatCapacity * a.TotalMass;
+            float energyFlow = a.Temperature - Temperature;
+
+            if (energyFlow > 0.0f)
+            {
+                energyFlow *= HCa;
+            }
+            else
+            {
+                energyFlow *= HCCell;
+            }
+
+            energyFlow *= (1 / factor);
+            SetNextTemperature((energyFlow / HCCell));
+            a.SetNextTemperature(-(energyFlow / HCa));
         }
 
         public float TotalGas
@@ -139,11 +117,6 @@ namespace ServerServices.Atmos
             get
             {
                 return temperature;
-            }
-
-            set
-            {
-                temperature = value;
             }
         }
 
@@ -171,6 +144,35 @@ namespace ServerServices.Atmos
         public float MassOf(GasType gas)
         {
             return (IoCManager.Resolve<IAtmosManager>().GetGasProperties(gas).MolecularMass * gasses[gas]);
+        }
+
+        public float HeatCapacity
+        {
+            get
+            {
+                float SHC = 0.0f;
+                foreach (GasType g in gasses.Keys)
+                {
+                    SHC += (gasses[g] * IoCManager.Resolve<IAtmosManager>().GetGasProperties(g).SpecificHeatCapacity);
+                }
+                
+                return SHC;
+            }
+        }
+
+        public float TotalMass
+        {
+            get
+            {
+                float mass = 0.0f;
+
+                foreach (GasType g in gasses.Keys)
+                {
+                    mass += (gasses[g] * IoCManager.Resolve<IAtmosManager>().GetGasProperties(g).MolecularMass);
+                }
+
+                return mass;
+            }
         }
 
 

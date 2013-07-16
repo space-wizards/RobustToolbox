@@ -15,7 +15,7 @@ namespace ServerInterfaces.Atmos
         void InitSTP();
         void CalculateNextGasAmount(IMapManager m);
         int PackDisplayBytes(BitStream bits, bool all = false);
-        Vector2 GasVel { get; }
+        Vector2 GasVelocity { get; }
         float TotalGas { get; }
         float GasAmount(GasType type);
         void AddGas(float amount, GasType gas);

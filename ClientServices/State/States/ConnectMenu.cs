@@ -1,5 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
+using System.Reflection;
 using ClientInterfaces.State;
 using GorgonLibrary;
 using GorgonLibrary.Graphics;
@@ -21,9 +23,13 @@ namespace ClientServices.State.States
         private readonly Textbox _connectTextbox;
         private readonly Label _optionsButton;
         private readonly Label _exitButton;
+        private readonly SimpleImage _titleImage;
+        private readonly Label _lblVersion;
 
         private DateTime _connectTime;
         private bool _isConnecting;
+
+        private List<FloatingDeco> DecoFloats = new List<FloatingDeco>();
 
         #endregion
 
@@ -36,17 +42,32 @@ namespace ClientServices.State.States
             _background = ResourceManager.GetSprite("mainbg");
             _background.Smoothing = Smoothing.Smooth;
 
-            _connectButton = new Label("Connect", "CALIBRI", ResourceManager) { DrawBorder = true };
+            _connectButton = new Label("Connect", "CALIBRI", ResourceManager) { DrawBorder = true};
+            _connectButton.Text.Color = Color.DarkRed;
             _connectButton.Clicked += ConnectButtonClicked;
 
-            _optionsButton = new Label("Options", "CALIBRI", ResourceManager) { DrawBorder = true };
+            _optionsButton = new Label("Options", "CALIBRI", ResourceManager) { DrawBorder = true};
+            _optionsButton.Text.Color = Color.DarkRed;
             _optionsButton.Clicked += OptionsButtonClicked;
 
-            _exitButton = new Label("Exit", "CALIBRI", ResourceManager) { DrawBorder = true };
+            _exitButton = new Label("Exit", "CALIBRI", ResourceManager) { DrawBorder = true};
+            _exitButton.Text.Color = Color.DarkRed;
             _exitButton.Clicked += ExitButtonClicked;
 
             _connectTextbox = new Textbox(100, ResourceManager) { Text = ConfigurationManager.GetServerAddress() };
             _connectTextbox.OnSubmit += ConnectTextboxOnSubmit;
+
+            Assembly assembly = Assembly.GetExecutingAssembly();
+            FileVersionInfo fvi = FileVersionInfo.GetVersionInfo(assembly.Location);
+
+            _lblVersion = new Label("v. " + fvi.FileVersion, "CALIBRI", ResourceManager);
+            _lblVersion.Text.Color = Color.WhiteSmoke;
+            _lblVersion.Position = new Point(Gorgon.Screen.Width - _lblVersion.ClientArea.Width - 3, Gorgon.Screen.Height - _lblVersion.ClientArea.Height - 3);
+
+            _titleImage = new SimpleImage(ResourceManager, "SpaceStationLogoColor")
+                {
+                    Position = new Point(Gorgon.Screen.Width - 550, 100)
+                };
         }
 
         private static void ExitButtonClicked(Label sender, MouseInputEventArgs e)
@@ -87,10 +108,68 @@ namespace ClientServices.State.States
             NetworkManager.Disconnect();
             NetworkManager.Connected += OnConnected;
 
+            DecoFloats.Add(new FloatingDeco(ResourceManager, "floating_dude")
+            {
+                BounceRotate = true,
+                BounceRotateAngle = 10,
+                SpriteLocation = new Vector2D(125, 115),
+                Velocity = new Vector2D(0, 0),
+                RotationSpeed = 0.25f
+            });
+
+            DecoFloats.Add(new FloatingDeco(ResourceManager, "floating_oxy")
+            {
+                BounceRotate = true,
+                BounceRotateAngle = 15,
+                SpriteLocation = new Vector2D(325, 135),
+                Velocity = new Vector2D(0, 0),
+                RotationSpeed = -0.30f
+            });
+
+            DecoFloats.Add(new FloatingDeco(ResourceManager, "debris_mid_back")
+            {
+                BounceRotate = false,
+                SpriteLocation = new Vector2D(450, 400),
+                Velocity = new Vector2D(0, 0),
+                RotationSpeed = -0.10f
+            });
+
+            DecoFloats.Add(new FloatingDeco(ResourceManager, "debris_far_right_back")
+            {
+                BounceRotate = true,
+                BounceRotateAngle = 20,
+                SpriteLocation = new Vector2D(Gorgon.Screen.Width - 260, 415),
+                Velocity = new Vector2D(0, 0),
+                RotationSpeed = 0.05f
+            });
+
+            DecoFloats.Add(new FloatingDeco(ResourceManager, "debris_far_right_fore")
+            {
+                BounceRotate = true,
+                BounceRotateAngle = 15,
+                SpriteLocation = new Vector2D(Gorgon.Screen.Width - 295, 415),
+                Velocity = new Vector2D(0, 0),
+                RotationSpeed = -0.18f
+            });
+
+            DecoFloats.Add(new FloatingDeco(ResourceManager, "debris_far_left_fore")
+            {
+                BounceRotate = false,
+                SpriteLocation = new Vector2D(0, 335),
+                Velocity = new Vector2D(3, 1),
+                RotationSpeed = 0.20f
+            });
+
+            foreach (var floatingDeco in DecoFloats)
+                UserInterfaceManager.AddComponent(floatingDeco); 
+
             UserInterfaceManager.AddComponent(_connectTextbox);
             UserInterfaceManager.AddComponent(_optionsButton);
             UserInterfaceManager.AddComponent(_connectButton);
             UserInterfaceManager.AddComponent(_exitButton);
+            UserInterfaceManager.AddComponent(_titleImage);
+            UserInterfaceManager.AddComponent(_lblVersion);
+
         }
 
         private void OnConnected(object sender, EventArgs e)
@@ -119,6 +198,13 @@ namespace ClientServices.State.States
             UserInterfaceManager.RemoveComponent(_optionsButton);
             UserInterfaceManager.RemoveComponent(_connectButton);
             UserInterfaceManager.RemoveComponent(_exitButton);
+            UserInterfaceManager.RemoveComponent(_titleImage);
+            UserInterfaceManager.RemoveComponent(_lblVersion);
+
+            foreach (var floatingDeco in DecoFloats)
+                UserInterfaceManager.RemoveComponent(floatingDeco);
+
+            DecoFloats.Clear();
         }
 
         public void Update(FrameEventArgs e)

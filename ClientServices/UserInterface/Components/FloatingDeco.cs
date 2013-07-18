@@ -77,7 +77,7 @@ namespace ClientServices.UserInterface.Components
 
                 if (MouseParallaxVertical)
                 {
-                    ParY = Math.Abs(_uiMgr.MousePos.Y - (Gorgon.Screen.Height));
+                    ParY = Math.Abs(_uiMgr.MousePos.Y - (Gorgon.Screen.Height ));
                     ParY *= ParallaxScale;
                 }
 

@@ -40,7 +40,7 @@ namespace ClientServices.State.States
         public ConnectMenu(IDictionary<Type, object> managers)
             : base(managers)
         {
-            _background = ResourceManager.GetSprite("mainbg");
+            _background = ResourceManager.GetSprite("mainbg_filler");
             _background.Smoothing = Smoothing.Smooth;
 
             _connectButton = new Label("Connect", "CALIBRI", ResourceManager) { DrawBorder = true};
@@ -120,7 +120,7 @@ namespace ClientServices.State.States
                 BounceRotate = false,
                 BounceRotateAngle = 10,
                 ParallaxScale = 0.001f,
-                SpriteLocation = new Vector2D(-50, -50),
+                SpriteLocation = new Vector2D(0, 0),
                 Velocity = new Vector2D(0, 0),
                 RotationSpeed = 0.0f
             });
@@ -271,6 +271,7 @@ namespace ClientServices.State.States
 
         public void GorgonRender(FrameEventArgs e)
         {
+            _background.Draw(new Rectangle(0,0,Gorgon.Screen.Width, Gorgon.Screen.Height));
         }
 
         public void FormResize()

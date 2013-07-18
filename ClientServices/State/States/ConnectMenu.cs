@@ -112,7 +112,7 @@ namespace ClientServices.State.States
             {
                 BounceRotate = true,
                 BounceRotateAngle = 10,
-                ParallaxScale = 0.007f,
+                ParallaxScale = 0.005f,
                 SpriteLocation = new Vector2D(125, 115),
                 Velocity = new Vector2D(0, 0),
                 RotationSpeed = 0.25f

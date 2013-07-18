@@ -24,7 +24,7 @@ namespace ClientServices.UserInterface
     {
         private IGuiComponent _currentFocus;
 
-        private Vector2D _mousePos = Vector2D.Zero;
+        public Vector2D MousePos { get; private set; }
         private Sprite _cursorSprite;
 
         public IDragDropInfo DragInfo { get; private set; }
@@ -212,7 +212,7 @@ namespace ClientServices.UserInterface
                     if (ent != null)
                     {
                         DisposeAllComponents<HealthScannerWindow>();
-                        var scannerWindow = new HealthScannerWindow(ent, _mousePos , this, _resourceManager);
+                        var scannerWindow = new HealthScannerWindow(ent, MousePos , this, _resourceManager);
                         AddComponent(scannerWindow);
                     }
                     break;
@@ -239,7 +239,7 @@ namespace ClientServices.UserInterface
         public void Update(float frameTime)
         {
             if (moveMode && movingComp != null)
-                movingComp.Position = (System.Drawing.Point)(_mousePos - dragOffset);
+                movingComp.Position = (System.Drawing.Point)(MousePos - dragOffset);
 
             foreach (var component in _components)
                 component.Update(frameTime);
@@ -278,7 +278,7 @@ namespace ClientServices.UserInterface
                 _cursorSprite = DragInfo.DragSprite != null && DragInfo.IsActive ? DragInfo.DragSprite :  _resourceManager.GetSprite("cursor");
             }
 
-            _cursorSprite.Position = _mousePos;
+            _cursorSprite.Position = MousePos;
             _cursorSprite.Draw();
         } 
         #endregion
@@ -404,7 +404,7 @@ namespace ClientServices.UserInterface
         /// </summary>
         public virtual void MouseMove(MouseInputEventArgs e)
         {
-            _mousePos = e.Position;
+            MousePos = e.Position;
 
             var inputList = from IGuiComponent comp in _components
                             where comp.RecieveInput

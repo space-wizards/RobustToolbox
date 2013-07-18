@@ -137,6 +137,8 @@
     <Compile Include="UserInterface\Components\Checkbox.cs" />
     <Compile Include="UserInterface\Components\ContextMenu.cs" />
     <Compile Include="UserInterface\Components\ArmorInfoLabel.cs" />
+    <Compile Include="UserInterface\Components\SimpleImage.cs" />
+    <Compile Include="UserInterface\Components\FloatingDeco.cs" />
     <Compile Include="UserInterface\Components\PropEditWindow.cs" />
     <Compile Include="UserInterface\Components\MenuWindow.cs" />
     <Compile Include="UserInterface\Components\SVarEditWindow.cs" />

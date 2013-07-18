@@ -42,6 +42,11 @@ namespace ClientServices.State.States
             _background = ResourceManager.GetSprite("mainbg");
             _background.Smoothing = Smoothing.Smooth;
 
+            /*
+            _background.UniformScale = 2.0f;
+            _background.Position = new Vector2D(0 - (_background.Width / 4f), 0 - (_background.Height / 4f));
+             */
+
             _connectButton = new Label("Connect", "CALIBRI", ResourceManager) { DrawBorder = true};
             _connectButton.Text.Color = Color.DarkRed;
             _connectButton.Clicked += ConnectButtonClicked;
@@ -108,6 +113,16 @@ namespace ClientServices.State.States
             NetworkManager.Disconnect();
             NetworkManager.Connected += OnConnected;
 
+            DecoFloats.Add(new FloatingDeco(ResourceManager, "mainbg")
+            {
+                BounceRotate = false,
+                BounceRotateAngle = 10,
+                ParallaxScale = 0.001f,
+                SpriteLocation = new Vector2D(-50, -50),
+                Velocity = new Vector2D(0, 0),
+                RotationSpeed = 0.0f
+            });
+
             DecoFloats.Add(new FloatingDeco(ResourceManager, "floating_dude")
             {
                 BounceRotate = true,
@@ -122,7 +137,7 @@ namespace ClientServices.State.States
             {
                 BounceRotate = true,
                 BounceRotateAngle = 15,
-                ParallaxScale = 0.006f,
+                ParallaxScale = 0.004f,
                 SpriteLocation = new Vector2D(325, 135),
                 Velocity = new Vector2D(0, 0),
                 RotationSpeed = -0.30f
@@ -131,7 +146,7 @@ namespace ClientServices.State.States
             DecoFloats.Add(new FloatingDeco(ResourceManager, "debris_mid_back")
             {
                 BounceRotate = false,
-                ParallaxScale = 0.001f,
+                ParallaxScale = 0.003f,
                 SpriteLocation = new Vector2D(450, 400),
                 Velocity = new Vector2D(0, 0),
                 RotationSpeed = -0.10f
@@ -141,7 +156,7 @@ namespace ClientServices.State.States
             {
                 BounceRotate = true,
                 BounceRotateAngle = 20,
-                ParallaxScale = 0.002f,
+                ParallaxScale = 0.0032f,
                 SpriteLocation = new Vector2D(Gorgon.Screen.Width - 260, 415),
                 Velocity = new Vector2D(0, 0),
                 RotationSpeed = 0.05f
@@ -238,7 +253,8 @@ namespace ClientServices.State.States
 
         public void GorgonRender(FrameEventArgs e)
         {
-            _background.Draw(new Rectangle(0, 0, Gorgon.CurrentRenderTarget.Width, Gorgon.CurrentRenderTarget.Height));
+            //_background.Draw(new Rectangle(0, 0, Gorgon.CurrentRenderTarget.Width, Gorgon.CurrentRenderTarget.Height));
+            //_background.Draw();
             UserInterfaceManager.Render();
         }
 

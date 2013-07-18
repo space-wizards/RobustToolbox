@@ -112,6 +112,7 @@ namespace ClientServices.State.States
             {
                 BounceRotate = true,
                 BounceRotateAngle = 10,
+                ParallaxScale = 0.01f,
                 SpriteLocation = new Vector2D(125, 115),
                 Velocity = new Vector2D(0, 0),
                 RotationSpeed = 0.25f
@@ -121,6 +122,7 @@ namespace ClientServices.State.States
             {
                 BounceRotate = true,
                 BounceRotateAngle = 15,
+                ParallaxScale = 0.008f,
                 SpriteLocation = new Vector2D(325, 135),
                 Velocity = new Vector2D(0, 0),
                 RotationSpeed = -0.30f
@@ -129,6 +131,7 @@ namespace ClientServices.State.States
             DecoFloats.Add(new FloatingDeco(ResourceManager, "debris_mid_back")
             {
                 BounceRotate = false,
+                ParallaxScale = 0.001f,
                 SpriteLocation = new Vector2D(450, 400),
                 Velocity = new Vector2D(0, 0),
                 RotationSpeed = -0.10f
@@ -138,6 +141,7 @@ namespace ClientServices.State.States
             {
                 BounceRotate = true,
                 BounceRotateAngle = 20,
+                ParallaxScale = 0.002f,
                 SpriteLocation = new Vector2D(Gorgon.Screen.Width - 260, 415),
                 Velocity = new Vector2D(0, 0),
                 RotationSpeed = 0.05f
@@ -147,6 +151,7 @@ namespace ClientServices.State.States
             {
                 BounceRotate = true,
                 BounceRotateAngle = 15,
+                ParallaxScale = 0.018f,
                 SpriteLocation = new Vector2D(Gorgon.Screen.Width - 295, 415),
                 Velocity = new Vector2D(0, 0),
                 RotationSpeed = -0.18f
@@ -155,6 +160,7 @@ namespace ClientServices.State.States
             DecoFloats.Add(new FloatingDeco(ResourceManager, "debris_far_left_fore")
             {
                 BounceRotate = false,
+                ParallaxScale = 0.019f,
                 SpriteLocation = new Vector2D(0, 335),
                 Velocity = new Vector2D(3, 1),
                 RotationSpeed = 0.20f

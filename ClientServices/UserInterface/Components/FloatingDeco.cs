@@ -15,7 +15,7 @@ namespace ClientServices.UserInterface.Components
         private readonly IResourceManager _resourceManager;
         private readonly UserInterfaceManager _uiMgr;
 
-        Sprite _drawSprite;
+        public Sprite DrawSprite;
 
         public bool MouseParallax = true;             //Move with mouse?
         public bool MouseParallaxVertical = true;
@@ -33,8 +33,8 @@ namespace ClientServices.UserInterface.Components
         public FloatingDeco(IResourceManager resourceManager, string spriteName)
         {
             _resourceManager = resourceManager;
-            _drawSprite = _resourceManager.GetSprite(spriteName);
-            _drawSprite.Smoothing = Smoothing.Smooth;
+            DrawSprite = _resourceManager.GetSprite(spriteName);
+            DrawSprite.Smoothing = Smoothing.Smooth;
 
             _uiMgr = (UserInterfaceManager)IoCManager.Resolve<IUserInterfaceManager>();
 
@@ -51,17 +51,17 @@ namespace ClientServices.UserInterface.Components
                 RotationSpeed = -RotationSpeed;
 
             ClientArea = new Rectangle(new Point((int) SpriteLocation.X, (int) SpriteLocation.Y),
-                                       new Size((int) _drawSprite.Width, (int) _drawSprite.Height));
+                                       new Size((int) DrawSprite.Width, (int) DrawSprite.Height));
 
             //Outside screen. Does not respect rotation. FIX.
             if (ClientArea.X > Gorgon.Screen.Width)
-                SpriteLocation = new Vector2D((0 - _drawSprite.Width), SpriteLocation.Y);
-            else if (ClientArea.X < (0 - _drawSprite.Width))
+                SpriteLocation = new Vector2D((0 - DrawSprite.Width), SpriteLocation.Y);
+            else if (ClientArea.X < (0 - DrawSprite.Width))
                 SpriteLocation = new Vector2D(Gorgon.Screen.Width, SpriteLocation.Y);
 
             if (ClientArea.Y > Gorgon.Screen.Height)
-                SpriteLocation = new Vector2D(SpriteLocation.X, (0 - _drawSprite.Height));
-            else if (ClientArea.Y < (0 - _drawSprite.Height))
+                SpriteLocation = new Vector2D(SpriteLocation.X, (0 - DrawSprite.Height));
+            else if (ClientArea.Y < (0 - DrawSprite.Height))
                 SpriteLocation = new Vector2D(SpriteLocation.X, Gorgon.Screen.Height);
 
             if (MouseParallax)
@@ -93,14 +93,14 @@ namespace ClientServices.UserInterface.Components
 
         public override void Render()
         {
-            _drawSprite.Rotation = spriteRotation;
-            _drawSprite.Position = (SpriteLocation + ParallaxOffset);
-            _drawSprite.Draw();
+            DrawSprite.Rotation = spriteRotation;
+            DrawSprite.Position = (SpriteLocation + ParallaxOffset);
+            DrawSprite.Draw();
         }
 
         public override void Dispose()
         {
-            _drawSprite = null;
+            DrawSprite = null;
             base.Dispose();
             GC.SuppressFinalize(this);
         }

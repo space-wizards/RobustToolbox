@@ -24,6 +24,7 @@ namespace ClientServices.State.States
         private readonly Label _optionsButton;
         private readonly Label _exitButton;
         private readonly SimpleImage _titleImage;
+        private readonly SimpleImage _glow;
         private readonly Label _lblVersion;
 
         private DateTime _connectTime;
@@ -41,11 +42,6 @@ namespace ClientServices.State.States
         {
             _background = ResourceManager.GetSprite("mainbg");
             _background.Smoothing = Smoothing.Smooth;
-
-            /*
-            _background.UniformScale = 2.0f;
-            _background.Position = new Vector2D(0 - (_background.Width / 4f), 0 - (_background.Height / 4f));
-             */
 
             _connectButton = new Label("Connect", "CALIBRI", ResourceManager) { DrawBorder = true};
             _connectButton.Text.Color = Color.DarkRed;
@@ -73,6 +69,12 @@ namespace ClientServices.State.States
                 {
                     Position = new Point(Gorgon.Screen.Width - 550, 100)
                 };
+
+            _glow = new SimpleImage(ResourceManager, "mainbg_glow")
+            {
+                Position = new Point(0, 0)
+            };
+            _glow.size = new Vector2D(Gorgon.Screen.Width, Gorgon.Screen.Height);
         }
 
         private static void ExitButtonClicked(Label sender, MouseInputEventArgs e)
@@ -123,6 +125,21 @@ namespace ClientServices.State.States
                 RotationSpeed = 0.0f
             });
 
+            //            DrawSprite.Axis = new Vector2D(DrawSprite.Width / 2f, DrawSprite.Height / 2f);
+            FloatingDeco clouds = new FloatingDeco(ResourceManager, "mainbg_clouds")
+                {
+                    BounceRotate = true,
+                    BounceRotateAngle = 10,
+                    ParallaxScale = 0.004f,
+                    SpriteLocation = new Vector2D(-50, -50),
+                    Velocity = new Vector2D(0, 0),
+                    RotationSpeed = 0.25f,
+                };
+
+            //clouds.DrawSprite.Axis = new Vector2D(clouds.DrawSprite.Width/2f, clouds.DrawSprite.Height/2f);
+
+            DecoFloats.Add(clouds);
+
             DecoFloats.Add(new FloatingDeco(ResourceManager, "floating_dude")
             {
                 BounceRotate = true,
@@ -130,7 +147,7 @@ namespace ClientServices.State.States
                 ParallaxScale = 0.005f,
                 SpriteLocation = new Vector2D(125, 115),
                 Velocity = new Vector2D(0, 0),
-                RotationSpeed = 0.25f
+                RotationSpeed = 0.5f
             });
 
             DecoFloats.Add(new FloatingDeco(ResourceManager, "floating_oxy")
@@ -140,7 +157,7 @@ namespace ClientServices.State.States
                 ParallaxScale = 0.004f,
                 SpriteLocation = new Vector2D(325, 135),
                 Velocity = new Vector2D(0, 0),
-                RotationSpeed = -0.30f
+                RotationSpeed = -0.60f
             });
 
             DecoFloats.Add(new FloatingDeco(ResourceManager, "debris_mid_back")
@@ -149,7 +166,7 @@ namespace ClientServices.State.States
                 ParallaxScale = 0.003f,
                 SpriteLocation = new Vector2D(450, 400),
                 Velocity = new Vector2D(0, 0),
-                RotationSpeed = -0.10f
+                RotationSpeed = -0.20f
             });
 
             DecoFloats.Add(new FloatingDeco(ResourceManager, "debris_far_right_back")
@@ -159,7 +176,7 @@ namespace ClientServices.State.States
                 ParallaxScale = 0.0032f,
                 SpriteLocation = new Vector2D(Gorgon.Screen.Width - 260, 415),
                 Velocity = new Vector2D(0, 0),
-                RotationSpeed = 0.05f
+                RotationSpeed = 0.1f
             });
 
             DecoFloats.Add(new FloatingDeco(ResourceManager, "debris_far_right_fore")
@@ -169,7 +186,7 @@ namespace ClientServices.State.States
                 ParallaxScale = 0.018f,
                 SpriteLocation = new Vector2D(Gorgon.Screen.Width - 295, 415),
                 Velocity = new Vector2D(0, 0),
-                RotationSpeed = -0.18f
+                RotationSpeed = -0.36f
             });
 
             DecoFloats.Add(new FloatingDeco(ResourceManager, "debris_far_left_fore")
@@ -177,8 +194,8 @@ namespace ClientServices.State.States
                 BounceRotate = false,
                 ParallaxScale = 0.019f,
                 SpriteLocation = new Vector2D(0, 335),
-                Velocity = new Vector2D(3, 1),
-                RotationSpeed = 0.20f
+                Velocity = new Vector2D(6, 2),
+                RotationSpeed = 0.40f
             });
 
             foreach (var floatingDeco in DecoFloats)
@@ -189,6 +206,7 @@ namespace ClientServices.State.States
             UserInterfaceManager.AddComponent(_connectButton);
             UserInterfaceManager.AddComponent(_exitButton);
             UserInterfaceManager.AddComponent(_titleImage);
+            UserInterfaceManager.AddComponent(_glow);
             UserInterfaceManager.AddComponent(_lblVersion);
 
         }
@@ -220,6 +238,7 @@ namespace ClientServices.State.States
             UserInterfaceManager.RemoveComponent(_connectButton);
             UserInterfaceManager.RemoveComponent(_exitButton);
             UserInterfaceManager.RemoveComponent(_titleImage);
+            UserInterfaceManager.RemoveComponent(_glow);
             UserInterfaceManager.RemoveComponent(_lblVersion);
 
             foreach (var floatingDeco in DecoFloats)
@@ -246,16 +265,12 @@ namespace ClientServices.State.States
                     NetworkManager.Disconnect();
                 }
             }
-            UserInterfaceManager.Update(e.FrameDeltaTime);
         }
 
         #endregion
 
         public void GorgonRender(FrameEventArgs e)
         {
-            //_background.Draw(new Rectangle(0, 0, Gorgon.CurrentRenderTarget.Width, Gorgon.CurrentRenderTarget.Height));
-            //_background.Draw();
-            UserInterfaceManager.Render();
         }
 
         public void FormResize()

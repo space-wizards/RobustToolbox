@@ -10,7 +10,7 @@ using SS13.IoC;
 
 namespace ClientServices.UserInterface.Components
 {
-    class FloatingDeco : GuiComponent
+    class FloatingDecoration : GuiComponent
     {
         private readonly IResourceManager _resourceManager;
         private readonly UserInterfaceManager _uiMgr;
@@ -20,6 +20,7 @@ namespace ClientServices.UserInterface.Components
         public bool MouseParallax = true;             //Move with mouse?
         public bool MouseParallaxVertical = true;
         public bool MouseParallaxHorizontal = true;
+
         public float ParallaxScale = 0.01f;           //Mouse Parallax Rate Modifier.
         public bool BounceRotate = false;             //Rotation inverts after hitting a certain angle?
         public float BounceRotateAngle = 0;           //Angle at which to change rotation direction.
@@ -30,7 +31,7 @@ namespace ClientServices.UserInterface.Components
         private float spriteRotation = 0;
         private Vector2D ParallaxOffset;
 
-        public FloatingDeco(IResourceManager resourceManager, string spriteName)
+        public FloatingDecoration(IResourceManager resourceManager, string spriteName)
         {
             _resourceManager = resourceManager;
             DrawSprite = _resourceManager.GetSprite(spriteName);

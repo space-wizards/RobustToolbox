@@ -263,28 +263,42 @@ namespace ClientServices.State.States
             targetingUi.Position = new Point(healthPanel.ClientArea.Right - 1, healthPanel.ClientArea.Bottom - targetingUi.ClientArea.Height);
             UserInterfaceManager.AddComponent(targetingUi);
 
-            var inventoryButton = new SimpleImageButton("button_inv", ResourceManager);
-            inventoryButton.Position = new Point(hotbar.Position.X + 172, hotbar.Position.Y + 2);
+            var inventoryButton = new ImageButton()
+                {
+                    ImageNormal = "button_inv",
+                    ImageHover = "button_status",
+                    ImageClick = "button_craft",
+                    Position = new Point(hotbar.Position.X + 172, hotbar.Position.Y + 2)
+                };
             inventoryButton.Update(0);
-            inventoryButton.Clicked += new SimpleImageButton.SimpleImageButtonPressHandler(inventoryButton_Clicked);
+            inventoryButton.Clicked += new ImageButton.ImageButtonPressHandler(inventoryButton_Clicked);
             UserInterfaceManager.AddComponent(inventoryButton);
 
-            var statusButton = new SimpleImageButton("button_status", ResourceManager);
-            statusButton.Position = new Point(inventoryButton.ClientArea.Right , inventoryButton.Position.Y);
+            var statusButton = new ImageButton()
+                {
+                    ImageNormal = "button_status",
+                    Position = new Point(inventoryButton.ClientArea.Right , inventoryButton.Position.Y)
+                };
             statusButton.Update(0);
-            statusButton.Clicked += new SimpleImageButton.SimpleImageButtonPressHandler(statusButton_Clicked);
+            statusButton.Clicked += new ImageButton.ImageButtonPressHandler(statusButton_Clicked);
             UserInterfaceManager.AddComponent(statusButton);
 
-            var craftButton = new SimpleImageButton("button_craft", ResourceManager);
-            craftButton.Position = new Point(statusButton.ClientArea.Right , statusButton.Position.Y);
+            var craftButton = new ImageButton()
+                {
+                    ImageNormal = "button_craft",
+                    Position = new Point(statusButton.ClientArea.Right , statusButton.Position.Y)
+                };
             craftButton.Update(0);
-            craftButton.Clicked += new SimpleImageButton.SimpleImageButtonPressHandler(craftButton_Clicked);
+            craftButton.Clicked += new ImageButton.ImageButtonPressHandler(craftButton_Clicked);
             UserInterfaceManager.AddComponent(craftButton);
 
-            var menuButton = new SimpleImageButton("button_menu", ResourceManager);
-            menuButton.Position = new Point(craftButton.ClientArea.Right , craftButton.Position.Y);
+            var menuButton = new ImageButton()
+                {
+                    ImageNormal = "button_menu",
+                    Position = new Point(craftButton.ClientArea.Right , craftButton.Position.Y)
+                };
             menuButton.Update(0);
-            menuButton.Clicked += new SimpleImageButton.SimpleImageButtonPressHandler(menuButton_Clicked);
+            menuButton.Clicked += new ImageButton.ImageButtonPressHandler(menuButton_Clicked);
             UserInterfaceManager.AddComponent(menuButton);
 
         }
@@ -324,23 +338,23 @@ namespace ClientServices.State.States
 
         }
 
-        void menuButton_Clicked(SimpleImageButton sender)
+        void menuButton_Clicked(ImageButton sender)
         {
             UserInterfaceManager.DisposeAllComponents<MenuWindow>(); //Remove old ones.
             UserInterfaceManager.AddComponent(new MenuWindow()); //Create a new one.
         }
 
-        void craftButton_Clicked(SimpleImageButton sender)
+        void craftButton_Clicked(ImageButton sender)
         {
             UserInterfaceManager.ComponentUpdate(GuiComponentType.ComboGui, ComboGuiMessage.ToggleShowPage, 3);
         }
 
-        void statusButton_Clicked(SimpleImageButton sender)
+        void statusButton_Clicked(ImageButton sender)
         {
             UserInterfaceManager.ComponentUpdate(GuiComponentType.ComboGui, ComboGuiMessage.ToggleShowPage, 2);
         }
 
-        void inventoryButton_Clicked(SimpleImageButton sender)
+        void inventoryButton_Clicked(ImageButton sender)
         {
             UserInterfaceManager.ComponentUpdate(GuiComponentType.ComboGui, ComboGuiMessage.ToggleShowPage, 1);
         }

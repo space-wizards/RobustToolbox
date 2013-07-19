@@ -23,7 +23,7 @@ namespace ClientServices.UserInterface.Components
         private readonly Label _clearLabel;
         private readonly Label _overLabel;
         private readonly Textbox _entSearchTextbox;
-        private readonly SimpleImageButton _eraserButton;
+        private readonly ImageButton _eraserButton;
         private readonly Listbox _lstOverride;
 
         public EntitySpawnPanel(Size size, IResourceManager resourceManager, IPlacementManager placementManager)
@@ -81,8 +81,9 @@ namespace ClientServices.UserInterface.Components
             _clearLabel.BackgroundColor = Color.Gray;
             components.Add(_clearLabel);
 
-            _eraserButton = new SimpleImageButton("erasericon", _resourceManager)
+            _eraserButton = new ImageButton()
                                {
+                                   ImageNormal = "erasericon",
                                    Position = new Point(_clearLabel.Position.X + _clearLabel.ClientArea.Width + 5, _clearLabel.Position.Y)
                                };
 
@@ -115,7 +116,7 @@ namespace ClientServices.UserInterface.Components
             }
         }
 
-        void EraserButtonClicked(SimpleImageButton sender)
+        void EraserButtonClicked(ImageButton sender)
         {
             _placementManager.ToggleEraser();
         }

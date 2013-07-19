@@ -164,7 +164,7 @@
     <Compile Include="UserInterface\Components\ProgressBar.cs" />
     <Compile Include="UserInterface\Components\ScrollableContainer.cs" />
     <Compile Include="UserInterface\Components\Scrollbar.cs" />
-    <Compile Include="UserInterface\Components\SimpleImageButton.cs" />
+    <Compile Include="UserInterface\Components\ImageButton.cs" />
     <Compile Include="UserInterface\Components\TargetingDummy.cs" />
     <Compile Include="UserInterface\Components\TargetingDummyElement.cs" />
     <Compile Include="UserInterface\Components\Textbox.cs" />

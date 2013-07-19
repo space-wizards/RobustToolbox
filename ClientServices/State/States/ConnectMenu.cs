@@ -19,18 +19,19 @@ namespace ClientServices.State.States
         private const float ConnectTimeOut = 5000.0f;
 
         private readonly Sprite _background;
-        private readonly Label _connectButton;
         private readonly Textbox _connectTextbox;
-        private readonly Label _optionsButton;
-        private readonly Label _exitButton;
         private readonly SimpleImage _titleImage;
         private readonly SimpleImage _glow;
         private readonly Label _lblVersion;
 
+        private readonly ImageButton _buttConnect;
+        private readonly ImageButton _buttOptions;
+        private readonly ImageButton _buttExit;
+
         private DateTime _connectTime;
         private bool _isConnecting;
 
-        private List<FloatingDeco> DecoFloats = new List<FloatingDeco>();
+        private List<FloatingDecoration> DecoFloats = new List<FloatingDecoration>();
 
         #endregion
 
@@ -43,20 +44,30 @@ namespace ClientServices.State.States
             _background = ResourceManager.GetSprite("mainbg_filler");
             _background.Smoothing = Smoothing.Smooth;
 
-            _connectButton = new Label("Connect", "CALIBRI", ResourceManager) { DrawBorder = true};
-            _connectButton.Text.Color = Color.DarkRed;
-            _connectButton.Clicked += ConnectButtonClicked;
+            _buttConnect = new ImageButton()
+                {
+                    ImageNormal = "connect_norm",
+                    ImageHover = "connect_hover"
+                };
+            _buttConnect.Clicked += new ImageButton.ImageButtonPressHandler(_buttConnect_Clicked);
 
-            _optionsButton = new Label("Options", "CALIBRI", ResourceManager) { DrawBorder = true};
-            _optionsButton.Text.Color = Color.DarkRed;
-            _optionsButton.Clicked += OptionsButtonClicked;
+            _buttOptions = new ImageButton()
+            {
+                ImageNormal = "options_norm",
+                ImageHover = "options_hover"
+            };
+            _buttOptions.Clicked += new ImageButton.ImageButtonPressHandler(_buttOptions_Clicked);
 
-            _exitButton = new Label("Exit", "CALIBRI", ResourceManager) { DrawBorder = true};
-            _exitButton.Text.Color = Color.DarkRed;
-            _exitButton.Clicked += ExitButtonClicked;
+            _buttExit = new ImageButton()
+            {
+                ImageNormal = "exit_norm",
+                ImageHover = "exit_hover"
+            };
+            _buttExit.Clicked += new ImageButton.ImageButtonPressHandler(_buttExit_Clicked);
 
             _connectTextbox = new Textbox(100, ResourceManager) { Text = ConfigurationManager.GetServerAddress() };
             _connectTextbox.OnSubmit += ConnectTextboxOnSubmit;
+            _connectTextbox.SetVisible(false);
 
             Assembly assembly = Assembly.GetExecutingAssembly();
             FileVersionInfo fvi = FileVersionInfo.GetVersionInfo(assembly.Location);
@@ -71,18 +82,18 @@ namespace ClientServices.State.States
                 };
 
             _glow = new SimpleImage(ResourceManager, "mainbg_glow")
-            {
-                Position = new Point(0, 0)
-            };
+                {
+                    Position = new Point(0, 0)
+                };
             _glow.size = new Vector2D(Gorgon.Screen.Width, Gorgon.Screen.Height);
         }
 
-        private static void ExitButtonClicked(Label sender, MouseInputEventArgs e)
+        void _buttExit_Clicked(ImageButton sender)
         {
             Environment.Exit(0);
         }
 
-        private void OptionsButtonClicked(Label sender, MouseInputEventArgs e)
+        void _buttOptions_Clicked(ImageButton sender)
         {
             if (_isConnecting)
             {
@@ -93,14 +104,22 @@ namespace ClientServices.State.States
             StateManager.RequestStateChange<OptionsMenu>();
         }
 
-        private void ConnectButtonClicked(Label sender, MouseInputEventArgs e)
+        void _buttConnect_Clicked(ImageButton sender)
         {
-            if (!_isConnecting)
-                StartConnect(_connectTextbox.Text);
+            if (!_connectTextbox.IsVisible())
+            {
+                _connectTextbox.SetVisible(true);
+                return;
+            }
             else
             {
-                _isConnecting = false;
-                NetworkManager.Disconnect();
+                if (!_isConnecting)
+                    StartConnect(_connectTextbox.Text);
+                else
+                {
+                    _isConnecting = false;
+                    NetworkManager.Disconnect();
+                }           
             }
         }
 
@@ -115,7 +134,7 @@ namespace ClientServices.State.States
             NetworkManager.Disconnect();
             NetworkManager.Connected += OnConnected;
 
-            DecoFloats.Add(new FloatingDeco(ResourceManager, "mainbg")
+            DecoFloats.Add(new FloatingDecoration(ResourceManager, "mainbg")
             {
                 BounceRotate = false,
                 BounceRotateAngle = 10,
@@ -126,7 +145,7 @@ namespace ClientServices.State.States
             });
 
             //            DrawSprite.Axis = new Vector2D(DrawSprite.Width / 2f, DrawSprite.Height / 2f);
-            FloatingDeco clouds = new FloatingDeco(ResourceManager, "mainbg_clouds")
+            FloatingDecoration clouds = new FloatingDecoration(ResourceManager, "mainbg_clouds")
                 {
                     BounceRotate = true,
                     BounceRotateAngle = 10,
@@ -140,7 +159,7 @@ namespace ClientServices.State.States
 
             DecoFloats.Add(clouds);
 
-            DecoFloats.Add(new FloatingDeco(ResourceManager, "floating_dude")
+            DecoFloats.Add(new FloatingDecoration(ResourceManager, "floating_dude")
             {
                 BounceRotate = true,
                 BounceRotateAngle = 10,
@@ -150,7 +169,7 @@ namespace ClientServices.State.States
                 RotationSpeed = 0.5f
             });
 
-            DecoFloats.Add(new FloatingDeco(ResourceManager, "floating_oxy")
+            DecoFloats.Add(new FloatingDecoration(ResourceManager, "floating_oxy")
             {
                 BounceRotate = true,
                 BounceRotateAngle = 15,
@@ -160,7 +179,7 @@ namespace ClientServices.State.States
                 RotationSpeed = -0.60f
             });
 
-            DecoFloats.Add(new FloatingDeco(ResourceManager, "debris_mid_back")
+            DecoFloats.Add(new FloatingDecoration(ResourceManager, "debris_mid_back")
             {
                 BounceRotate = false,
                 ParallaxScale = 0.003f,
@@ -169,7 +188,7 @@ namespace ClientServices.State.States
                 RotationSpeed = -0.20f
             });
 
-            DecoFloats.Add(new FloatingDeco(ResourceManager, "debris_far_right_back")
+            DecoFloats.Add(new FloatingDecoration(ResourceManager, "debris_far_right_back")
             {
                 BounceRotate = true,
                 BounceRotateAngle = 20,
@@ -179,7 +198,7 @@ namespace ClientServices.State.States
                 RotationSpeed = 0.1f
             });
 
-            DecoFloats.Add(new FloatingDeco(ResourceManager, "debris_far_right_fore")
+            DecoFloats.Add(new FloatingDecoration(ResourceManager, "debris_far_right_fore")
             {
                 BounceRotate = true,
                 BounceRotateAngle = 15,
@@ -189,7 +208,7 @@ namespace ClientServices.State.States
                 RotationSpeed = -0.36f
             });
 
-            DecoFloats.Add(new FloatingDeco(ResourceManager, "debris_far_left_fore")
+            DecoFloats.Add(new FloatingDecoration(ResourceManager, "debris_far_left_fore")
             {
                 BounceRotate = false,
                 ParallaxScale = 0.019f,
@@ -202,9 +221,9 @@ namespace ClientServices.State.States
                 UserInterfaceManager.AddComponent(floatingDeco); 
 
             UserInterfaceManager.AddComponent(_connectTextbox);
-            UserInterfaceManager.AddComponent(_optionsButton);
-            UserInterfaceManager.AddComponent(_connectButton);
-            UserInterfaceManager.AddComponent(_exitButton);
+            UserInterfaceManager.AddComponent(_buttConnect);
+            UserInterfaceManager.AddComponent(_buttOptions);
+            UserInterfaceManager.AddComponent(_buttExit);
             UserInterfaceManager.AddComponent(_titleImage);
             UserInterfaceManager.AddComponent(_glow);
             UserInterfaceManager.AddComponent(_lblVersion);
@@ -234,9 +253,9 @@ namespace ClientServices.State.States
             NetworkManager.Connected -= OnConnected;
 
             UserInterfaceManager.RemoveComponent(_connectTextbox);
-            UserInterfaceManager.RemoveComponent(_optionsButton);
-            UserInterfaceManager.RemoveComponent(_connectButton);
-            UserInterfaceManager.RemoveComponent(_exitButton);
+            UserInterfaceManager.RemoveComponent(_buttConnect);
+            UserInterfaceManager.RemoveComponent(_buttOptions);
+            UserInterfaceManager.RemoveComponent(_buttExit);
             UserInterfaceManager.RemoveComponent(_titleImage);
             UserInterfaceManager.RemoveComponent(_glow);
             UserInterfaceManager.RemoveComponent(_lblVersion);
@@ -249,12 +268,10 @@ namespace ClientServices.State.States
 
         public void Update(FrameEventArgs e)
         {
-            _connectTextbox.Position = new Point(Gorgon.CurrentClippingViewport.Width - (int)(Gorgon.CurrentClippingViewport.Width / 4f) - _connectTextbox.ClientArea.Width, (int)(Gorgon.CurrentClippingViewport.Height / 2.7f));
-            _connectButton.Position = new Point(_connectTextbox.Position.X, _connectTextbox.Position.Y + _connectTextbox.ClientArea.Height + 2);
-            _optionsButton.Position = new Point(_connectButton.Position.X, _connectButton.Position.Y + _connectButton.ClientArea.Height + 10);
-            _exitButton.Position = new Point(_optionsButton.Position.X, _optionsButton.Position.Y + _optionsButton.ClientArea.Height + 10);
-
-            _connectButton.Text.Text = _isConnecting ? "Cancel" : "Connect";
+            _connectTextbox.Position = new Point(_titleImage.ClientArea.Left + 40, _titleImage.ClientArea.Bottom + 50);
+            _buttConnect.Position = new Point(_connectTextbox.Position.X, _connectTextbox.ClientArea.Bottom + 20);
+            _buttOptions.Position = new Point(_buttConnect.Position.X, _buttConnect.ClientArea.Bottom + 20);
+            _buttExit.Position = new Point(_buttOptions.Position.X, _buttOptions.ClientArea.Bottom + 20);
 
             if (_isConnecting)
             {

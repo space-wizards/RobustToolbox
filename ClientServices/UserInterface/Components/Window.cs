@@ -23,14 +23,19 @@ namespace ClientServices.UserInterface.Components
         public Color TitleColor1 = Color.SlateGray;
         public Color TitleColor2 = Color.DarkSlateGray;
 
-        protected SimpleImageButton closeButton;
+        protected ImageButton closeButton;
         public Boolean closeButtonVisible = true;
 
         public Window(string windowTitle, Size size, IResourceManager resourceManager)
             : base(windowTitle, size, resourceManager)
         {
             _resourceManager = resourceManager;
-            closeButton = new SimpleImageButton("closewindow", _resourceManager);
+
+            closeButton = new ImageButton()
+                {
+                    ImageNormal = "closewindow"
+                };
+
             closeButton.Clicked += CloseButtonClicked;
             title = new Label(windowTitle, "CALIBRI", _resourceManager);
             gradient = new GradientBox();
@@ -38,7 +43,7 @@ namespace ClientServices.UserInterface.Components
             Update(0);
         }
 
-        void CloseButtonClicked(SimpleImageButton sender)
+        void CloseButtonClicked(ImageButton sender)
         {
             Dispose();
         }

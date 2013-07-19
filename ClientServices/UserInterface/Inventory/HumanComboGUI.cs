@@ -43,7 +43,7 @@ namespace ClientServices.UserInterface.Inventory
         #region Crafting UI
         private readonly CraftSlotUi _craftSlot1;
         private readonly CraftSlotUi _craftSlot2;
-        private readonly SimpleImageButton _craftButton;
+        private readonly ImageButton _craftButton;
         private Timer_Bar _craftTimer;
         private readonly TextSprite _craftStatus;
         private readonly ScrollableContainer _blueprints;
@@ -66,10 +66,10 @@ namespace ClientServices.UserInterface.Inventory
         private readonly TextSprite _txtDbg;
 
         private readonly Sprite _comboBg;
-        private readonly SimpleImageButton _comboClose;
-        private readonly SimpleImageButton _tabEquip;
-        private readonly SimpleImageButton _tabHealth;
-        private readonly SimpleImageButton _tabCraft;
+        private readonly ImageButton _comboClose;
+        private readonly ImageButton _tabEquip;
+        private readonly ImageButton _tabHealth;
+        private readonly ImageButton _tabCraft;
 
         private readonly Sprite _equipBg;
 
@@ -102,15 +102,28 @@ namespace ClientServices.UserInterface.Inventory
             _equipBg = _resourceManager.GetSprite("outline");
 
             _comboBg = _resourceManager.GetSprite("combo_bg");
-            _comboClose = new SimpleImageButton("button_closecombo", _resourceManager);
 
-            _tabEquip = new SimpleImageButton("tab_equip", _resourceManager);
+            _comboClose = new ImageButton()
+                {
+                    ImageNormal = "button_closecombo",
+                };
+
+            _tabEquip = new ImageButton()
+                {
+                    ImageNormal = "tab_equip",
+                }; 
             _tabEquip.Clicked += TabClicked;
 
-            _tabHealth = new SimpleImageButton("tab_health", _resourceManager);
+            _tabHealth = new ImageButton()
+                {
+                    ImageNormal = "tab_health",
+                }; 
             _tabHealth.Clicked += TabClicked;
 
-            _tabCraft = new SimpleImageButton("tab_craft", _resourceManager);
+            _tabCraft = new ImageButton()
+                {
+                    ImageNormal = "tab_craft",
+                }; 
             _tabCraft.Clicked += TabClicked;
 
             _comboClose.Clicked += ComboCloseClicked;
@@ -152,7 +165,10 @@ namespace ClientServices.UserInterface.Inventory
             _craftSlot1 = new CraftSlotUi(_resourceManager, _userInterfaceManager);
             _craftSlot2 = new CraftSlotUi(_resourceManager, _userInterfaceManager);
 
-            _craftButton = new SimpleImageButton("wrenchbutt", _resourceManager);
+            _craftButton = new ImageButton()
+                {
+                    ImageNormal = "wrenchbutt"
+                };
             _craftButton.Clicked += CraftButtonClicked;
 
             _craftStatus = new TextSprite("craftText", "Status", _resourceManager.GetFont("CALIBRI"))
@@ -165,7 +181,7 @@ namespace ClientServices.UserInterface.Inventory
             _blueprints = new ScrollableContainer("blueprintCont", new Size(210, 100), _resourceManager);
         }
 
-        void CraftButtonClicked(SimpleImageButton sender)
+        void CraftButtonClicked(ImageButton sender)
         {
             //craftTimer = new Timer_Bar(new Size(200,15), new TimeSpan(0,0,0,10));
             if (_craftSlot1.ContainingEntity == null || _craftSlot2.ContainingEntity == null) return;
@@ -243,21 +259,21 @@ namespace ClientServices.UserInterface.Inventory
             }
         }
 
-        void TabClicked(SimpleImageButton sender)
+        void TabClicked(ImageButton sender)
         {
             if (sender == _tabEquip) ActivateTab(1);
             if (sender == _tabHealth) ActivateTab(2);
             if (sender == _tabCraft) ActivateTab(3);
         }
 
-        void ComboOpenClicked(SimpleImageButton sender) //!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+        void ComboOpenClicked(ImageButton sender) //!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
         {
             _showTabbedWindow = !_showTabbedWindow;
             _craftStatus.Text = "Status";
             _craftStatus.Color = Color.White;
         }
 
-        void ComboCloseClicked(SimpleImageButton sender)
+        void ComboCloseClicked(ImageButton sender)
         {
             _showTabbedWindow = false;
             _craftStatus.Text = "Status";

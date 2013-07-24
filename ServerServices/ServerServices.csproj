@@ -64,6 +64,9 @@
     <Compile Include="Atmos\AtmosManager.cs" />
     <Compile Include="Chat\ChatManager.cs" />
     <Compile Include="Configuration\ConfigurationManager.cs" />
+    <Compile Include="ServerConsole\Commands\TestCommand.cs" />
+    <Compile Include="ServerConsole\ConsoleCommand.cs" />
+    <Compile Include="ServerConsole\ConsoleManager.cs" />
     <Compile Include="Crafting\CraftingManager.cs" />
     <Compile Include="GameState\GameStateManager.cs" />
     <Compile Include="Log\LogManager.cs" />

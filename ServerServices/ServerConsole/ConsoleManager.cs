@@ -33,8 +33,9 @@ namespace ServerServices.ServerConsole
                     currentBuffer = currentBuffer.Insert(internalCursor++, key.KeyChar.ToString());
                     DrawCommandLine();
                 }
-                else  {
-                    switch(key.Key)
+                else
+                {
+                    switch (key.Key)
                     {
                         case ConsoleKey.Enter:
                             if (currentBuffer.Length == 0)
@@ -49,22 +50,22 @@ namespace ServerServices.ServerConsole
                         case ConsoleKey.Backspace:
                             if (currentBuffer.Length > 0)
                             {
-                                currentBuffer = currentBuffer.Remove(internalCursor-1, 1);
+                                currentBuffer = currentBuffer.Remove(internalCursor - 1, 1);
                                 //currentBuffer = currentBuffer.Substring(0, currentBuffer.Length - 1);
                                 internalCursor--;
                             }
                             break;
                         case ConsoleKey.Delete:
-                            if(currentBuffer.Length > 0 && internalCursor < currentBuffer.Length)
+                            if (currentBuffer.Length > 0 && internalCursor < currentBuffer.Length)
                             {
                                 currentBuffer = currentBuffer.Remove(internalCursor, 1);
                                 //internalCursor--;
                             }
                             break;
                         case ConsoleKey.UpArrow:
-                            if (historyIndex > 0) 
+                            if (historyIndex > 0)
                                 historyIndex--;
-                            if (commandHistory.ContainsKey(historyIndex)) 
+                            if (commandHistory.ContainsKey(historyIndex))
                                 currentBuffer = commandHistory[historyIndex];
                             else
                                 currentBuffer = "";
@@ -85,7 +86,7 @@ namespace ServerServices.ServerConsole
                             internalCursor = 0;
                             break;
                         case ConsoleKey.LeftArrow:
-                            if(internalCursor > 0)
+                            if (internalCursor > 0)
                                 internalCursor--;
                             break;
                         case ConsoleKey.RightArrow:
@@ -95,15 +96,34 @@ namespace ServerServices.ServerConsole
                     }
                     DrawCommandLine();
                 }
-            }  
+            }
         }
 
         private void ExecuteCommand(string commandLine)
         {
             var args = commandLine.Split(' ');
-            if(args.Length == 0)
-            {return;}
+            if (args.Length == 0)
+            {
+                return;
+            }
             var cmd = args[0].ToLower();
+            var handled = false;
+            switch (cmd)
+            {
+                case "list":
+                    ListCommands();
+                    handled = true;
+                    break;
+                case "help":
+                    if (args.Length > 1 && args[1].Length > 0)
+                        HelpCommand(args[1]);
+                    else
+                        Help();
+                    handled = true;
+                    break;
+            }
+            if (handled)
+                return;
             if (availableCommands.ContainsKey(cmd))
                 availableCommands[cmd].Execute(args);
             else if (cmd.Length == 0)
@@ -118,7 +138,7 @@ namespace ServerServices.ServerConsole
             ClearCurrentLine();
             Con.SetCursorPosition(0, Con.CursorTop);
             Con.Write("> " + currentBuffer);
-            Con.SetCursorPosition(internalCursor+2, Con.CursorTop); //+2 is for the "> " at the beginning of the line
+            Con.SetCursorPosition(internalCursor + 2, Con.CursorTop); //+2 is for the "> " at the beginning of the line
         }
 
         public void ClearCurrentLine()
@@ -133,21 +153,48 @@ namespace ServerServices.ServerConsole
         private void InitializeCommands()
         {
             var CommandTypes = new List<Type>();
-            CommandTypes.AddRange(Assembly.GetCallingAssembly().GetTypes().Where(t => typeof(ConsoleCommand).IsAssignableFrom(t)));
-            foreach(var t in CommandTypes)
+            CommandTypes.AddRange(
+                Assembly.GetCallingAssembly().GetTypes().Where(t => typeof (ConsoleCommand).IsAssignableFrom(t)));
+            foreach (var t in CommandTypes)
             {
-                if (t == typeof(ConsoleCommand))
+                if (t == typeof (ConsoleCommand))
                     continue;
-                var instance = Activator.CreateInstance(t,null) as ConsoleCommand;
+                var instance = Activator.CreateInstance(t, null) as ConsoleCommand;
                 RegisterCommand(instance);
             }
         }
 
         private void RegisterCommand(ConsoleCommand commandObj)
         {
-            if(!availableCommands.ContainsKey(commandObj.GetCommand().ToLower()))
-                availableCommands.Add(commandObj.GetCommand().ToLower(), commandObj);
+            if (!availableCommands.ContainsKey(commandObj.Command.ToLower()))
+                availableCommands.Add(commandObj.Command.ToLower(), commandObj);
         }
 
+        private void ListCommands()
+        {
+            Con.WriteLine("Available commands:");
+            foreach (var c in availableCommands)
+            {
+                Con.WriteLine("\t" + c.Key + "\t" + c.Value.Description);
+            }
+        }
+
+        private void Help()
+        {
+            Con.WriteLine("Help!");
+        }
+
+        private void HelpCommand(params string[] args)
+        {
+            if (availableCommands.ContainsKey(args[0].ToLower()))
+            {
+                Con.WriteLine("Help for " + args[0] + ":");
+                Con.WriteLine(availableCommands[args[0].ToLower()].Help);
+            } 
+            else
+            {
+                Con.WriteLine("Command '" + args[0] + "' not found.");
+            }
+        }
     }
 }

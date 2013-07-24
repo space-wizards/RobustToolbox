@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Drawing;
 using System.Linq;
 using System.Text;
 using SS13_Shared;
@@ -24,5 +25,6 @@ namespace ServerServices.Configuration
         public bool MessageLogging = false;
         public LogLevel LogLevel = LogLevel.Information;
         public float TickRate = 66;
+        public Size ConsoleSize = new Size(120, 60);
     }
 }

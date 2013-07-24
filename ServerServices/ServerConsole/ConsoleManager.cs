@@ -3,6 +3,8 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
 using System.Text;
+using SS13.IoC;
+using ServerInterfaces.Configuration;
 using ServerInterfaces.ServerConsole;
 using ServerServices.ServerConsole.Commands;
 using Con = System.Console;
@@ -19,6 +21,8 @@ namespace ServerServices.ServerConsole
         public ConsoleManager()
         {
             InitializeCommands();
+            var consoleSize = IoCManager.Resolve<IConfigurationManager>().ConsoleSize;
+            Console.SetWindowSize(consoleSize.Width, consoleSize.Height);
         }
 
         public void Update()
@@ -172,17 +176,46 @@ namespace ServerServices.ServerConsole
 
         private void ListCommands()
         {
-            Con.WriteLine("\nAvailable commands:");
-            foreach (var c in availableCommands.OrderBy(c => c.Key))
+            Con.ForegroundColor = ConsoleColor.Yellow;
+            Con.WriteLine("\nAvailable commands:\n");
+
+            var names = availableCommands.Keys.ToList();
+            names.Add("list");
+            names.Add("help");
+            names.Sort();
+            foreach (var c in names)
             {
-                var name = String.Format("{0, 16}", c.Key);
-                Con.WriteLine(name + " - " + c.Value.Description);
+                var name = String.Format("{0, 16}", c);
+                Con.ForegroundColor = ConsoleColor.Cyan;
+                Con.SetCursorPosition(0, Console.CursorTop);
+                Con.Write(name);
+                Con.ForegroundColor = ConsoleColor.Green;
+                Con.Write(" - ");
+                Con.ForegroundColor = ConsoleColor.White;
+                switch(c)
+                {
+                    case "list":
+                        Con.WriteLine("Lists available commands");
+                        break;
+                    case "help":
+                        Con.WriteLine("Lists general help. Type 'help <command>' for specific help on a command.");
+                        break;
+                    default:
+                        Con.WriteLine(availableCommands[c].Description);
+                        break;
+                }
+                Con.ResetColor();
             }
-            Con.WriteLine("\t\t\t" + availableCommands.Count + " commands available.\n");
+            Con.ForegroundColor = ConsoleColor.White;
+            Con.Write("\n\t\t\t" + availableCommands.Count);
+            Con.ForegroundColor = ConsoleColor.Yellow;
+            Con.WriteLine(" commands available.\n");
+            Con.ResetColor();
         }
 
         private void Help()
         {
+            Con.ForegroundColor = ConsoleColor.White;
             Con.WriteLine("Help!");
         }
 

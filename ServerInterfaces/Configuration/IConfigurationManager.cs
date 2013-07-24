@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Drawing;
 using System.Linq;
 using System.Text;
 using SS13_Shared;
@@ -22,5 +23,7 @@ namespace ServerInterfaces.Configuration
         int ServerMaxPlayers { get; set; }
         float TickRate { get; set; }
         GameType GameType { get; set; }
+        Size ConsoleSize { get; set; }
+        void Save();
     }
 }

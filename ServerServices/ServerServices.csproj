@@ -65,6 +65,7 @@
     <Compile Include="Chat\ChatManager.cs" />
     <Compile Include="Configuration\ConfigurationManager.cs" />
     <Compile Include="ServerConsole\Commands\RestartServer.cs" />
+    <Compile Include="ServerConsole\Commands\SaveConfig.cs" />
     <Compile Include="ServerConsole\Commands\TestCommand.cs" />
     <Compile Include="ServerConsole\ConsoleCommand.cs" />
     <Compile Include="ServerConsole\ConsoleManager.cs" />

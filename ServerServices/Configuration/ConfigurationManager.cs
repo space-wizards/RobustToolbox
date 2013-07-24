@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Drawing;
 using System.Linq;
 using System.Text;
 
@@ -10,6 +11,7 @@ using SS13_Shared;
 using ServerInterfaces;
 using ServerInterfaces.Configuration;
 using SS13_Shared.ServerEnums;
+using ServerServices.Log;
 
 namespace ServerServices.Configuration
 {
@@ -49,6 +51,7 @@ namespace ServerServices.Configuration
                 ConfigSaver.Serialize(ConfigWriter, Configuration);
                 ConfigWriter.Flush();
                 ConfigWriter.Close();
+                LogManager.Log("Server configuration saved to '" + ConfigFile + "'.");
             }
         }
 
@@ -130,6 +133,12 @@ namespace ServerServices.Configuration
         {
             get { return Configuration.TickRate; }
             set { Configuration.TickRate = value; }
+        }
+
+        public Size ConsoleSize
+        {
+            get { return Configuration.ConsoleSize; }
+            set { Configuration.ConsoleSize = value; }
         }
     }
 }

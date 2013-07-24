@@ -1,0 +1,6 @@
+E:\gamedev\ss13\Bin\Release\Initializing.exe
+E:\gamedev\ss13\GlyphSizeTest\obj\Release\GorgonLibrary.Example.MainForm.resources
+E:\gamedev\ss13\GlyphSizeTest\obj\Release\GorgonLibrary.Example.Properties.Resources.resources
+E:\gamedev\ss13\GlyphSizeTest\obj\Release\GlyphSizeTest.csproj.GenerateResource.Cache
+E:\gamedev\ss13\GlyphSizeTest\obj\Release\Initializing.exe
+E:\gamedev\ss13\Bin\Release\CALIBRI.TTF

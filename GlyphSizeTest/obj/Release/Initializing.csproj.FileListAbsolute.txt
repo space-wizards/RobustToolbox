@@ -1,0 +1,6 @@
+E:\gamedev\ss13\Bin\Release\Initializing.exe
+E:\gamedev\ss13\Initialization\obj\Release\Initializing.csprojResolveAssemblyReference.cache
+E:\gamedev\ss13\Initialization\obj\Release\GorgonLibrary.Example.MainForm.resources
+E:\gamedev\ss13\Initialization\obj\Release\GorgonLibrary.Example.Properties.Resources.resources
+E:\gamedev\ss13\Initialization\obj\Release\Initializing.csproj.GenerateResource.Cache
+E:\gamedev\ss13\Initialization\obj\Release\Initializing.exe

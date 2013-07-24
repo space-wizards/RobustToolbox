@@ -172,11 +172,13 @@ namespace ServerServices.ServerConsole
 
         private void ListCommands()
         {
-            Con.WriteLine("Available commands:");
-            foreach (var c in availableCommands)
+            Con.WriteLine("\nAvailable commands:");
+            foreach (var c in availableCommands.OrderBy(c => c.Key))
             {
-                Con.WriteLine("\t" + c.Key + "\t" + c.Value.Description);
+                var name = String.Format("{0, 16}", c.Key);
+                Con.WriteLine(name + " - " + c.Value.Description);
             }
+            Con.WriteLine("\t\t\t" + availableCommands.Count + " commands available.\n");
         }
 
         private void Help()

@@ -42,6 +42,9 @@ namespace ClientServices.UserInterface.Components
         private string _text = "";
         private string _displayText = "";
 
+        private Vector2D _caretPos;
+        private const int _caretShrink = 2;
+
         public bool ClearOnSubmit = true;
         public bool ClearFocusOnSubmit = true;
         public int MaxCharacters = 255;
@@ -70,8 +73,6 @@ namespace ClientServices.UserInterface.Components
             ClientArea = new Rectangle(Position, new Size(_clientAreaLeft.Width + _clientAreaMain.Width + _clientAreaRight.Width, Math.Max(Math.Max(_clientAreaLeft.Height,_clientAreaRight.Height), _clientAreaMain.Height)));
             Label.Position = new Point(_clientAreaLeft.Right, Position.Y + (int)(ClientArea.Height / 2f) - (int)(Label.Height / 2f));
 
-            if (!Focus)
-                _caretIndex = _text.Length;
         }
 
         public override void Render()
@@ -80,20 +81,12 @@ namespace ClientServices.UserInterface.Components
             _textboxMain.Draw(_clientAreaMain);
             _textboxRight.Draw(_clientAreaRight);
 
+            Gorgon.CurrentRenderTarget.FilledRectangle(_caretPos.X, _caretPos.Y, 1, Label.Height - (_caretShrink * 2), Color.HotPink);
+
             Label.Text = _displayText;
             Label.Draw();
 
-            const float barHeightAdj = 5f; //Amount of pixels to SHORTEN the bars height by. Negative means LONGER. Temporary.
 
-            Vector2D barPos;
-
-            string str = Text.Substring(_displayIndex, _caretIndex - _displayIndex); //When scrolling backwards , could display index be higher than caretindex?
-            float carretx = Label.MeasureLine(str);
-
-            barPos.X = Label.Position.X + carretx;
-            barPos.Y = Label.Position.Y + barHeightAdj;
-
-            Gorgon.CurrentRenderTarget.FilledRectangle(barPos.X, barPos.Y, 1, Label.Height - (barHeightAdj * 2), Color.HotPink);
             Gorgon.CurrentRenderTarget.Rectangle(Label.Position.X, Label.Position.Y, Label.Width, Label.Height, Color.DarkRed);
         }
 
@@ -185,28 +178,39 @@ namespace ClientServices.UserInterface.Components
 
                 int glyphCount = 0;
 
-                while (_displayIndex + (glyphCount + 1) < _text.Length && Label.MeasureLine(Text.Substring(_displayIndex, glyphCount + 1)) < _clientAreaMain.Width)
-                    glyphCount++;
-                //Now we have the number of letters we can display with the current index.
+                while (_displayIndex + (glyphCount + 1) < _text.Length && Label.MeasureLine(Text.Substring(_displayIndex + 1, glyphCount + 1)) < _clientAreaMain.Width)
+                    glyphCount++; //How many glyphs we could/would draw with the current index.
 
-                //if (_text.Substring(_displayIndex).Length == glyphCount)
-
-                //Since we now know how many glyphs we can draw, we can say whether the caret is outside to the right.
-                if (_caretIndex > _displayIndex + glyphCount) 
+                if (_caretIndex > _displayIndex + glyphCount) //Caret outside?
                 {
-                    _displayIndex++; //Increase display index by one since the carret is one outside to the right.
-                    glyphCount = 0;  //Reset to 0 since we need to check the length again with the new index.
+                    if (_text.Substring(_displayIndex + 1).Length != glyphCount) //Still stuff outside the screen?
+                    {
+                        _displayIndex++; //Increase display index by one since the carret is one outside to the right. But only if there's still letters to the right.
 
-                    while (_displayIndex + (glyphCount + 1) < _text.Length && Label.MeasureLine(Text.Substring(_displayIndex, glyphCount + 1)) < _clientAreaMain.Width)
-                        glyphCount++;
-                }
+                        glyphCount = 0;  //Update glyphcount with new index.
 
-                _displayText = Text.Substring(_displayIndex, glyphCount);
+                        while (_displayIndex + (glyphCount + 1) < _text.Length && Label.MeasureLine(Text.Substring(_displayIndex + 1, glyphCount + 1)) < _clientAreaMain.Width)
+                            glyphCount++;
+                    }
+            }
+                _displayText = Text.Substring(_displayIndex + 1, glyphCount);
+
+                string str1 = Text.Substring(_displayIndex, _caretIndex - _displayIndex);
+                float carretx = Label.MeasureLine(str1);
+
+                _caretPos.X = Label.Position.X + carretx;                   //caret still misaligned.
+                _caretPos.Y = Label.Position.Y + _caretShrink;
             }
             else //Text fits completely inside box.
             {
                 _displayIndex = 0;
                 _displayText = Text;
+
+                string str1 = Text.Substring(_displayIndex, _caretIndex);
+                float carretx = Label.MeasureLine(str1);
+
+                _caretPos.X = Label.Position.X + carretx;                   //caret still misaligned.
+                _caretPos.Y = Label.Position.Y + _caretShrink;
             }
         }
 

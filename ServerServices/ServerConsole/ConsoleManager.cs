@@ -37,6 +37,8 @@ namespace ServerServices.ServerConsole
                     switch(key.Key)
                     {
                         case ConsoleKey.Enter:
+                            if (currentBuffer.Length == 0)
+                                break;
                             Con.WriteLine("> " + currentBuffer);
                             commandHistory.Add(commandHistory.Count, currentBuffer);
                             historyIndex = commandHistory.Count;
@@ -104,6 +106,8 @@ namespace ServerServices.ServerConsole
             var cmd = args[0].ToLower();
             if (availableCommands.ContainsKey(cmd))
                 availableCommands[cmd].Execute(args);
+            else if (cmd.Length == 0)
+                return;
             else
                 Con.WriteLine("Unknown command: " + cmd);
 

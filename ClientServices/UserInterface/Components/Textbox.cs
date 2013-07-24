@@ -2,6 +2,7 @@
 using System.Drawing;
 using ClientInterfaces;
 using ClientInterfaces.Resource;
+using GorgonLibrary;
 using GorgonLibrary.Graphics;
 using GorgonLibrary.InputDevices;
 using System.Diagnostics;
@@ -25,25 +26,26 @@ namespace ClientServices.UserInterface.Components
         private Rectangle _clientAreaLeft;
         private Rectangle _clientAreaRight;
 
+        private int _caretIndex = 0;
+        private int _displayIndex = 0;
+
         public string Text
         {
-            get { return text; }
+            get { return _text; }
             set
             {
-                text = value;
+                _text = value;
                 SetVisibleText();
             }
         }
 
-        private string text = "";
-        private string displayText = "";
+        private string _text = "";
+        private string _displayText = "";
 
         public bool ClearOnSubmit = true;
         public bool ClearFocusOnSubmit = true;
-        public int MaxCharacters = 20;
+        public int MaxCharacters = 255;
         public int Width;
-
-        private byte blinkCount = 0; //Look at this shitty framerate dependant blinking bar. What a load of shit. I dont care!
 
         public Textbox(int width, IResourceManager resourceManager)
         {
@@ -68,10 +70,8 @@ namespace ClientServices.UserInterface.Components
             ClientArea = new Rectangle(Position, new Size(_clientAreaLeft.Width + _clientAreaMain.Width + _clientAreaRight.Width, Math.Max(Math.Max(_clientAreaLeft.Height,_clientAreaRight.Height), _clientAreaMain.Height)));
             Label.Position = new Point(_clientAreaLeft.Right, Position.Y + (int)(ClientArea.Height / 2f) - (int)(Label.Height / 2f));
 
-            if (Focus) Label.Text = displayText + (blinkCount++ < 100 ? "|" : "");
-            else Label.Text = displayText;
-
-            if (blinkCount > 150) blinkCount = 0;
+            if (!Focus)
+                _caretIndex = _text.Length;
         }
 
         public override void Render()
@@ -79,7 +79,22 @@ namespace ClientServices.UserInterface.Components
             _textboxLeft.Draw(_clientAreaLeft);
             _textboxMain.Draw(_clientAreaMain);
             _textboxRight.Draw(_clientAreaRight);
+
+            Label.Text = _displayText;
             Label.Draw();
+
+            const float barHeightAdj = 5f; //Amount of pixels to SHORTEN the bars height by. Negative means LONGER. Temporary.
+
+            Vector2D barPos;
+
+            string str = Text.Substring(_displayIndex, _caretIndex - _displayIndex); //When scrolling backwards , could display index be higher than caretindex?
+            float carretx = Label.MeasureLine(str);
+
+            barPos.X = Label.Position.X + carretx;
+            barPos.Y = Label.Position.Y + barHeightAdj;
+
+            Gorgon.CurrentRenderTarget.FilledRectangle(barPos.X, barPos.Y, 1, Label.Height - (barHeightAdj * 2), Color.HotPink);
+            Gorgon.CurrentRenderTarget.Rectangle(Label.Position.X, Label.Position.Y, Label.Width, Label.Height, Color.DarkRed);
         }
 
         public override void Dispose()
@@ -95,8 +110,10 @@ namespace ClientServices.UserInterface.Components
 
         public override bool MouseDown(MouseInputEventArgs e)
         {
-            if (ClientArea.Contains(new Point((int)e.Position.X, (int)e.Position.Y))) //Needed so it grabs focus when clicked.
-                return true;
+            if (ClientArea.Contains(new Point((int) e.Position.X, (int) e.Position.Y)))
+            {
+                return true; 
+            }
 
             return false;
         }
@@ -110,6 +127,19 @@ namespace ClientServices.UserInterface.Components
         {
             if (!Focus) return false;
 
+            if (e.Key == KeyboardKeys.Left)
+            {
+                if (_caretIndex > 0) _caretIndex--;
+                SetVisibleText();
+                return true;
+            }
+            else if (e.Key == KeyboardKeys.Right)
+            {
+                if (_caretIndex < _text.Length) _caretIndex++;
+                SetVisibleText();
+                return true;
+            }
+
             if (e.Key == KeyboardKeys.Return && Text.Length >= 1)
             {
                 Submit();
@@ -118,7 +148,8 @@ namespace ClientServices.UserInterface.Components
 
             if (e.Key == KeyboardKeys.Back && Text.Length >= 1)
             {
-                Text = Text.Substring(0, Text.Length - 1);
+                Text = Text.Remove(_caretIndex - 1, 1);
+                if (_caretIndex > 0) _caretIndex--;
                 SetVisibleText();
                 return true;
             }
@@ -128,12 +159,14 @@ namespace ClientServices.UserInterface.Components
                 if (Text.Length == MaxCharacters) return false;
                 if (e.Shift)
                 {
-                    Text += e.CharacterMapping.Shifted;
+                    Text = Text.Insert(_caretIndex, e.CharacterMapping.Shifted.ToString());
+                    if (_caretIndex < _text.Length) _caretIndex++;
                     SetVisibleText();
                 }
                 else
                 {
-                    Text += e.CharacterMapping.Character;
+                    Text = Text.Insert(_caretIndex, e.CharacterMapping.Character.ToString());
+                    if (_caretIndex < _text.Length) _caretIndex++;
                     SetVisibleText();
                 }
                 return true;
@@ -141,13 +174,40 @@ namespace ClientServices.UserInterface.Components
             return false;
         }
 
-        private void SetVisibleText()
+        private void SetVisibleText() 
         {
-            displayText = "";
-            int index = -1;
+            _displayText = "";
 
-            while (Label.MeasureLine(displayText + "|") < _clientAreaMain.Width && ++index <= Text.Length)
-                displayText = Text.Substring(Text.Length - index, index);
+            if (Label.MeasureLine(_text) >= _clientAreaMain.Width) //Text wider than box.
+            {
+                if (_caretIndex < _displayIndex) //Caret outside to the left. Move display text to the left by setting its index to the caret.
+                    _displayIndex = _caretIndex;
+
+                int glyphCount = 0;
+
+                while (_displayIndex + (glyphCount + 1) < _text.Length && Label.MeasureLine(Text.Substring(_displayIndex, glyphCount + 1)) < _clientAreaMain.Width)
+                    glyphCount++;
+                //Now we have the number of letters we can display with the current index.
+
+                //if (_text.Substring(_displayIndex).Length == glyphCount)
+
+                //Since we now know how many glyphs we can draw, we can say whether the caret is outside to the right.
+                if (_caretIndex > _displayIndex + glyphCount) 
+                {
+                    _displayIndex++; //Increase display index by one since the carret is one outside to the right.
+                    glyphCount = 0;  //Reset to 0 since we need to check the length again with the new index.
+
+                    while (_displayIndex + (glyphCount + 1) < _text.Length && Label.MeasureLine(Text.Substring(_displayIndex, glyphCount + 1)) < _clientAreaMain.Width)
+                        glyphCount++;
+                }
+
+                _displayText = Text.Substring(_displayIndex, glyphCount);
+            }
+            else //Text fits completely inside box.
+            {
+                _displayIndex = 0;
+                _displayText = Text;
+            }
         }
 
         private void Submit()
@@ -156,7 +216,7 @@ namespace ClientServices.UserInterface.Components
             if (ClearOnSubmit)
             {
                 Text = string.Empty;
-                displayText = string.Empty;
+                _displayText = string.Empty;
             }
             if (ClearFocusOnSubmit) Focus = false;
         }

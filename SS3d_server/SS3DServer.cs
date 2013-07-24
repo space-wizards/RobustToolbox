@@ -6,6 +6,7 @@ using System.Threading;
 using SS13_Server.Modules;
 using SS13_Server.Modules.Client;
 using SS13_Shared.GameStates;
+using ServerInterfaces.ServerConsole;
 using ServerInterfaces.GameState;
 using ServerInterfaces.Serialization;
 using ServerServices;
@@ -62,7 +63,9 @@ namespace SS13_Server
         private int updateRate = 20; //20 updates per second
         private uint _oldestAckedState = 0;
         private uint _lastState = 0;
-        private DateTime _lastStateTime = DateTime.Now; 
+        private DateTime _lastStateTime = DateTime.Now;
+
+        private string commandBuffer = "";
 
         private static SS13Server _singleton;
         public static SS13Server Singleton
@@ -287,6 +290,8 @@ namespace SS13_Server
             ProcessPackets();
 
             Update(elapsedTime);
+
+            IoCManager.Resolve<IConsoleManager>().Update();
 
             /*var updateElapsedTime = DateTime.Now - Time;
             var sleepTime = new TimeSpan((long)(10000 * (ServerRate - (float)updateElapsedTime.TotalMilliseconds)));

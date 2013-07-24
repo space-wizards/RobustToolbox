@@ -7,14 +7,24 @@ namespace ServerServices.ServerConsole.Commands
 {
     public class TestCommand : ConsoleCommand
     {
-        public override string GetCommand()
+        public override string Command
         {
-            return "test";
+            get {return "test";}
+            
+        }
+        public override string Help
+        {
+            get { return "This is a test command."; }
+        }
+        public override string Description
+        {
+            get { return "This is a dummy test command."; }
         }
 
-        public override void Execute(params object[] args)
+        public override void Execute(params string[] args)
         {
             Console.WriteLine("Test!");
         }
+
     }
 }

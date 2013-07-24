@@ -9,14 +9,24 @@ namespace ServerServices.ServerConsole.Commands
 {
     public class RestartServer : ConsoleCommand
     {
-        public override string GetCommand()
+        public override string Command
         {
-            return "restartserver";
+            get { return "restartserver"; }
         }
 
-        public override void Execute(params object[] args)
+        public override void Execute(params string[] args)
         {
             IoCManager.Resolve<ISS13Server>().Restart();
+        }
+
+        public override string Description
+        {
+            get { return "Restarts the server"; }
+        }
+
+        public override string Help
+        {
+            get { return "restartserver:\nRestarts the server."; }
         }
     }
 }

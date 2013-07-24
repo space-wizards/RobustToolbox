@@ -64,9 +64,7 @@ namespace SS13_Server
         private uint _oldestAckedState = 0;
         private uint _lastState = 0;
         private DateTime _lastStateTime = DateTime.Now;
-
-        private string commandBuffer = "";
-
+        
         private static SS13Server _singleton;
         public static SS13Server Singleton
         {
@@ -103,6 +101,7 @@ namespace SS13_Server
 
         public SS13Server()
         {
+            IoCManager.Resolve<ISS13Server>().SetServerInstance(this);
             millisecondsPerTick = Stopwatch.Frequency / 1000; //Ticks per second dividied by 1000 = ticks per millisecond
          
             //Init serializer
@@ -389,6 +388,7 @@ namespace SS13_Server
                     IoCManager.Resolve<IRoundManager>().CurrentGameMode.Update();
                     IoCManager.Resolve<ICraftingManager>().Update();
                 }
+                EntityManager.Update(framePeriod);
             }
             else if (Runlevel == RunLevel.Lobby)
             {
@@ -404,7 +404,6 @@ namespace SS13_Server
                 }
             }
             LastUpdate = Time;
-            EntityManager.Update(framePeriod);
             SendGameStateUpdate();
         }
 
@@ -419,7 +418,8 @@ namespace SS13_Server
                 //Create a new GameState object
                 var stateManager = IoCManager.Resolve<IGameStateManager>();
                 GameState state = new GameState(++_lastState);
-                state.EntityStates = EntityManager.GetEntityStates();
+                if(EntityManager != null)
+                    state.EntityStates = EntityManager.GetEntityStates();
                 state.PlayerStates = IoCManager.Resolve<IPlayerManager>().GetPlayerStates();
                 stateManager.Add(state.Sequence, state);
 
@@ -822,5 +822,11 @@ namespace SS13_Server
         {
             return IoCManager.Resolve<IMapManager>();
         }
+
+
+
+
+        public void SetServerInstance(ISS13Server server)
+        {} //Bogus -- this is some shit for the surrogate class in ServerServices.
     }
 }

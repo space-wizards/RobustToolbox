@@ -64,6 +64,7 @@
     <Compile Include="Atmos\AtmosManager.cs" />
     <Compile Include="Chat\ChatManager.cs" />
     <Compile Include="Configuration\ConfigurationManager.cs" />
+    <Compile Include="ServerConsole\Commands\RestartServer.cs" />
     <Compile Include="ServerConsole\Commands\TestCommand.cs" />
     <Compile Include="ServerConsole\ConsoleCommand.cs" />
     <Compile Include="ServerConsole\ConsoleManager.cs" />
@@ -84,6 +85,7 @@
     <Compile Include="Serialization\SS13Serializer.cs" />
     <Compile Include="Atmos\GasCell.cs" />
     <Compile Include="Atmos\GasMixture.cs" />
+    <Compile Include="SS13Server.cs" />
     <Compile Include="Tiles\Floor\Floor.cs" />
     <Compile Include="Tiles\Floor\Space.cs" />
     <Compile Include="Tiles\Tile.cs" />

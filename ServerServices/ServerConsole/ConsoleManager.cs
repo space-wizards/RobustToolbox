@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Reflection;
 using System.Text;
 using ServerInterfaces.ServerConsole;
 using ServerServices.ServerConsole.Commands;
@@ -102,7 +103,15 @@ namespace ServerServices.ServerConsole
 
         private void InitializeCommands()
         {
-            RegisterCommand(new TestCommand());
+            var CommandTypes = new List<Type>();
+            CommandTypes.AddRange(Assembly.GetCallingAssembly().GetTypes().Where(t => typeof(ConsoleCommand).IsAssignableFrom(t)));
+            foreach(var t in CommandTypes)
+            {
+                if (t == typeof(ConsoleCommand))
+                    continue;
+                var instance = Activator.CreateInstance(t,null) as ConsoleCommand;
+                RegisterCommand(instance);
+            }
         }
 
         private void RegisterCommand(ConsoleCommand commandObj)

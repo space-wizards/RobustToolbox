@@ -13,6 +13,7 @@ namespace ServerServices.ServerConsole
         private string currentBuffer = "";
         private Dictionary<int, string> commandHistory = new Dictionary<int, string>();
         private int historyIndex = 0;
+        private int internalCursor = 0;
         private Dictionary<string, ConsoleCommand> availableCommands = new Dictionary<string, ConsoleCommand>();
 
         public ConsoleManager()
@@ -29,7 +30,7 @@ namespace ServerServices.ServerConsole
                 Con.SetCursorPosition(0, Con.CursorTop);
                 if (!Char.IsControl(key.KeyChar))
                 {
-                    currentBuffer += key.KeyChar;
+                    currentBuffer = currentBuffer.Insert(internalCursor++, key.KeyChar.ToString());
                     DrawCommandLine();
                 }
                 else  {
@@ -41,18 +42,31 @@ namespace ServerServices.ServerConsole
                             historyIndex = commandHistory.Count;
                             ExecuteCommand(currentBuffer);
                             currentBuffer = "";
+                            internalCursor = 0;
                             break;
                         case ConsoleKey.Backspace:
-                            if(currentBuffer.Length > 0)
-                                currentBuffer = currentBuffer.Substring(0, currentBuffer.Length - 1);
+                            if (currentBuffer.Length > 0)
+                            {
+                                currentBuffer = currentBuffer.Remove(internalCursor-1, 1);
+                                //currentBuffer = currentBuffer.Substring(0, currentBuffer.Length - 1);
+                                internalCursor--;
+                            }
+                            break;
+                        case ConsoleKey.Delete:
+                            if(currentBuffer.Length > 0 && internalCursor < currentBuffer.Length)
+                            {
+                                currentBuffer = currentBuffer.Remove(internalCursor, 1);
+                                //internalCursor--;
+                            }
                             break;
                         case ConsoleKey.UpArrow:
                             if (historyIndex > 0) 
                                 historyIndex--;
-                            if (commandHistory.ContainsKey(historyIndex))
+                            if (commandHistory.ContainsKey(historyIndex)) 
                                 currentBuffer = commandHistory[historyIndex];
                             else
                                 currentBuffer = "";
+                            internalCursor = currentBuffer.Length;
                             break;
                         case ConsoleKey.DownArrow:
                             if (historyIndex < commandHistory.Count)
@@ -61,10 +75,20 @@ namespace ServerServices.ServerConsole
                                 currentBuffer = commandHistory[historyIndex];
                             else
                                 currentBuffer = "";
+                            internalCursor = currentBuffer.Length;
                             break;
                         case ConsoleKey.Escape:
                             historyIndex = commandHistory.Count;
                             currentBuffer = "";
+                            internalCursor = 0;
+                            break;
+                        case ConsoleKey.LeftArrow:
+                            if(internalCursor > 0)
+                                internalCursor--;
+                            break;
+                        case ConsoleKey.RightArrow:
+                            if (internalCursor < currentBuffer.Length)
+                                internalCursor++;
                             break;
                     }
                     DrawCommandLine();
@@ -90,6 +114,7 @@ namespace ServerServices.ServerConsole
             ClearCurrentLine();
             Con.SetCursorPosition(0, Con.CursorTop);
             Con.Write("> " + currentBuffer);
+            Con.SetCursorPosition(internalCursor+2, Con.CursorTop); //+2 is for the "> " at the beginning of the line
         }
 
         public void ClearCurrentLine()

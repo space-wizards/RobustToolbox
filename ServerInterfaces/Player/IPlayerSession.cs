@@ -18,6 +18,7 @@ namespace ServerInterfaces.Player
         SessionStatus status { get; set; }
         JobDefinition assignedJob { get; set; }
         NetConnection connectedClient { get; }
+        DateTime ConnectedTime { get; }
 
         void SetName(string name);
 

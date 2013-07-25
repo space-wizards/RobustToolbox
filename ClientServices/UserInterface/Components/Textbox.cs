@@ -192,7 +192,7 @@ namespace ClientServices.UserInterface.Components
                         while (_displayIndex + (glyphCount + 1) < _text.Length && Label.MeasureLine(Text.Substring(_displayIndex + 1, glyphCount + 1)) < _clientAreaMain.Width)
                             glyphCount++;
                     }
-            }
+                }   
                 _displayText = Text.Substring(_displayIndex + 1, glyphCount);
 
                 string str1 = Text.Substring(_displayIndex, _caretIndex - _displayIndex);

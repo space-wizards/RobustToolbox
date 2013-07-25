@@ -1,4 +1,5 @@
-﻿using Lidgren.Network;
+﻿using System;
+using Lidgren.Network;
 using SS13_Shared;
 using SS13_Shared.GO;
 using SS13_Shared.GameStates;
@@ -31,6 +32,7 @@ namespace ServerServices.Player
         public BodyPart TargetedArea { get { return targetedArea; } }
 
         public JobDefinition assignedJob { get; set; }
+        public DateTime ConnectedTime { get; private set; }
 
         public PlayerState PlayerState;
 
@@ -184,6 +186,7 @@ namespace ServerServices.Player
 
         public void OnConnect()
         {
+            ConnectedTime = DateTime.Now;
             status = SessionStatus.Connected;
             UpdatePlayerState();
             //Put player in lobby immediately.

@@ -16,13 +16,11 @@ namespace ServerInterfaces.GameObject
         Vector2 Velocity { get; set; }
         Direction Direction { get; set; }
         int Uid { get; set; }
-        string Name { get; set; }
 
         void SendMessage(object sender, ComponentMessageType type, params object[] parameters);
         void SendMessage(object sender, ComponentMessageType type, List<ComponentReplyMessage> replies, params object[] args);
         ComponentReplyMessage SendMessage(object sender, ComponentFamily family, ComponentMessageType type, params object[] args);
 
-        void Shutdown();
         void FireNetworkedSpawn();
         void FireNetworkedJoinSpawn(NetConnection client);
         IEntityTemplate Template { get; set; }

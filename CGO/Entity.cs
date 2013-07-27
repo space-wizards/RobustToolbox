@@ -24,9 +24,7 @@ namespace CGO
         private EntityNetworkManager _entityNetworkManager;
 
         public IEntityTemplate Template { get; set; }
-
-        public string Name { get; set; }
-
+        
         public event EventHandler<VectorEventArgs> OnMove;
         public event EventHandler<GetSVarsEventArgs> GetSVarsCallback; 
 

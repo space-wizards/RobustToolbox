@@ -66,17 +66,7 @@ namespace SGO
                 SendDirectionUpdate();
             } 
         }
-
-        public string Name
-        {
-            get { return _name; }
-            set
-            {
-                _name = value;
-                SendNameUpdate();
-            }
-        }
-
+        
         public event ShutdownEvent OnShutdown;
         public event NetworkedSpawnEvent OnNetworkedSpawn;
         public event NetworkedOnJoinSpawnEvent OnNetworkedJoinSpawn;

@@ -7,6 +7,8 @@ namespace GameObject
 {
     public interface IEntity
     {
+        string Name { get; set; }
+
         /// <summary>
         /// Match
         /// 
@@ -58,6 +60,7 @@ namespace GameObject
         #region Members
         private List<Type> _componentTypes = new List<Type>();
 
+        public string Name { get; set; }
 
         /// <summary>
         /// Holds this entity's components

@@ -5,9 +5,9 @@ namespace CGO
 {
     public class EquippableComponent : GameObjectComponent
     {
-        public override ComponentFamily Family
+        public EquippableComponent() :base()
         {
-            get { return ComponentFamily.Equippable; }
+            Family = ComponentFamily.Equippable;
         }
 
         public override void HandleNetworkMessage(IncomingEntityComponentMessage message)
@@ -28,7 +28,7 @@ namespace CGO
         private void EquippedBy(int uid, EquipmentSlot wearloc)
         {
             Owner.SendMessage(this, ComponentMessageType.ItemEquipped);
-            Owner.AddComponent(ComponentFamily.Mover, ComponentFactory.Singleton.GetComponent("SlaveMoverComponent"));
+            Owner.AddComponent(ComponentFamily.Mover, Owner.EntityManager.ComponentFactory.GetComponent("SlaveMoverComponent"));
             Owner.SendMessage(this, ComponentMessageType.SlaveAttach, uid);
             switch(wearloc)
             {
@@ -73,7 +73,7 @@ namespace CGO
         private void UnEquipped()
         {
             Owner.SendMessage(this, ComponentMessageType.ItemUnEquipped);
-            Owner.AddComponent(ComponentFamily.Mover, ComponentFactory.Singleton.GetComponent("NetworkMoverComponent"));
+            Owner.AddComponent(ComponentFamily.Mover, Owner.EntityManager.ComponentFactory.GetComponent("NetworkMoverComponent"));
         }
     }
 }

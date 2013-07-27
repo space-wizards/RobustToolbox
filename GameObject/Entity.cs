@@ -8,7 +8,9 @@ namespace GameObject
     public interface IEntity
     {
         string Name { get; set; }
+        EntityManager EntityManager { get; }
 
+        EntityTemplate Template { get; set; }
         /// <summary>
         /// Match
         /// 
@@ -60,6 +62,7 @@ namespace GameObject
         #region Members
         private List<Type> _componentTypes = new List<Type>();
 
+        public EntityTemplate Template { get; set; }
         public string Name { get; set; }
 
         /// <summary>
@@ -69,6 +72,16 @@ namespace GameObject
             new Dictionary<ComponentFamily, IComponent>();
 
         #endregion
+
+        #region constructor 
+
+        public EntityManager EntityManager { get; private set; }
+        public Entity(EntityManager entityManager)
+        {
+            EntityManager = entityManager;
+        }
+        #endregion
+
 
         #region Entity Systems
         /// <summary>

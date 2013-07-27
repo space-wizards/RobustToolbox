@@ -14,6 +14,9 @@ namespace CGO
     /// </summary>
     public class EntityTemplate : GameObject.EntityTemplate, IEntityTemplate
     {
+        public EntityTemplate(GameObject.EntityManager entityManager)
+            :base(entityManager) {}
+
         /// <summary>
         /// Offset that is added to the position when placing. (if any). Client only.
         /// </summary>
@@ -40,13 +43,13 @@ namespace CGO
         /// Creates an entity from this template
         /// </summary>
         /// <returns></returns>
-        public Entity CreateEntity(EntityNetworkManager entityNetworkManager)
+        public Entity CreateEntity()
         {
-            var e = new Entity(entityNetworkManager);
+            var e = new Entity((EntityManager)EntityManager);
 
             foreach (var componentname in _components)
             {
-                var component = ComponentFactory.Singleton.GetComponent(componentname);
+                var component = EntityManager.ComponentFactory.GetComponent(componentname);
                 if (component == null)
                     continue; //TODO THROW ERROR
 

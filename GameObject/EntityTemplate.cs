@@ -34,12 +34,15 @@ namespace GameObject
         /// Description for the entity. Used by default examine handlers.
         /// </summary>
         public string Description { get; protected set; }
+
+        public EntityManager EntityManager { get; protected set; }
         
         /// <summary>
         /// Default constructor
         /// </summary>
-        public EntityTemplate()
+        public EntityTemplate(EntityManager entityManager)
         {
+            EntityManager = entityManager;
             Description = "There is nothing special about this object.";
         }
 

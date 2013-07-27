@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using GameObject;
 
 namespace SGO.EntitySystems
 {
@@ -17,10 +18,6 @@ namespace SGO.EntitySystems
 
         public override void Update(float frametime)
         {
-            foreach(var e in RelevantEntities)
-            {
-                var s = e.GetEntityState();
-            }
         }
     }
 }

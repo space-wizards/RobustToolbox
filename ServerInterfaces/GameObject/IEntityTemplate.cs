@@ -22,7 +22,7 @@ namespace ServerInterfaces.GameObject
         /// Creates an entity from this template
         /// </summary>
         /// <returns></returns>
-        IEntity CreateEntity(IEntityNetworkManager entityNetworkManager);
+        IEntity CreateEntity();
 
         /// <summary>
         /// Adds a component type to the entity template

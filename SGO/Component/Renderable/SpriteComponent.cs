@@ -31,7 +31,7 @@ namespace SGO
 
         public SpriteComponent()
         {
-            family = ComponentFamily.Renderable;
+            Family = ComponentFamily.Renderable;
         }
 
         public bool Visible

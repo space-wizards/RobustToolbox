@@ -9,9 +9,9 @@ namespace CGO
     {                                                      //Used for things that are binary. Either broken or not broken. (windows?)
         protected bool IsDead;
 
-        public override ComponentFamily Family
+        public DamageableComponent() :base()
         {
-            get { return ComponentFamily.Damageable; }
+            Family = ComponentFamily.Damageable; ;
         }
 
         public override System.Type StateType

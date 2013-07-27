@@ -18,7 +18,7 @@ namespace SGO
 
         public PlayerActionComp()
         {
-            family = ComponentFamily.PlayerActions;
+            Family = ComponentFamily.PlayerActions;
         }
 
         public override void HandleNetworkMessage(IncomingEntityComponentMessage message, NetConnection client)

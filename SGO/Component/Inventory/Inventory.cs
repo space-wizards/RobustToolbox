@@ -11,7 +11,7 @@ namespace SGO
     {
         public InventoryComponent()
         {
-            family = ComponentFamily.Inventory;
+            Family = ComponentFamily.Inventory;
             containedEntities = new List<IEntity>();
         }
 

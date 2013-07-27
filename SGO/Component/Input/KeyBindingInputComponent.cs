@@ -11,7 +11,7 @@ namespace SGO
     {
         public KeyBindingInputComponent()
         {
-            family = ComponentFamily.Input;
+            Family = ComponentFamily.Input;
         }
 
         public override void HandleNetworkMessage(IncomingEntityComponentMessage message, NetConnection client)

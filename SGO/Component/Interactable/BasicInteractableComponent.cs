@@ -8,7 +8,7 @@ namespace SGO
     {
         public BasicInteractableComponent()
         {
-            family = ComponentFamily.Interactable;
+            Family = ComponentFamily.Interactable;
         }
 
         public override ComponentReplyMessage RecieveMessage(object sender, ComponentMessageType type,

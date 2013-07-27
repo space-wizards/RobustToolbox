@@ -18,7 +18,7 @@ namespace SGO
 
         public WallMountedComponent()
         {
-            family = ComponentFamily.WallMounted;
+            Family = ComponentFamily.WallMounted;
         }
         
         public override void OnAdd(GameObject.IEntity owner)

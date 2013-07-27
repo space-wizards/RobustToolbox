@@ -7,9 +7,11 @@ namespace SGO
     public class EntityTemplateDatabase
     {
         private readonly Dictionary<string, EntityTemplate> m_templates;
+        public EntityManager EntityManager { get; private set; }
 
-        public EntityTemplateDatabase()
+        public EntityTemplateDatabase(EntityManager entityManager)
         {
+            EntityManager = entityManager;
             m_templates = new Dictionary<string, EntityTemplate>();
             LoadAllTemplates();
         }
@@ -31,7 +33,7 @@ namespace SGO
             IEnumerable<XElement> templates = tmp.Elements("EntityTemplate");
             foreach (XElement e in templates)
             {
-                var newTemplate = new EntityTemplate();
+                var newTemplate = new EntityTemplate(EntityManager);
                 newTemplate.LoadFromXml(e);
                 AddTemplate(newTemplate);
             }

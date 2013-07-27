@@ -9,7 +9,7 @@ namespace SGO
     {
         public BasicMoverComponent()
         {
-            family = ComponentFamily.Mover;
+            Family = ComponentFamily.Mover;
         }
 
         public override ComponentReplyMessage RecieveMessage(object sender, ComponentMessageType type,

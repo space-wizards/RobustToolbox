@@ -9,6 +9,7 @@ namespace GameObject
 {
     public interface IComponent
     {
+        ComponentFamily Family { get; }
         IEntity Owner { get; set; }
 
         /// <summary>
@@ -42,6 +43,13 @@ namespace GameObject
     public class Component : IComponent
     {
         public virtual IEntity Owner { get; set; }
+        public ComponentFamily Family { get; protected set; }
+
+        public Component()
+        {
+            Family = ComponentFamily.Generic;
+        }
+
         /// <summary>
         /// Called when the component is removed from an entity.
         /// Shuts down the component

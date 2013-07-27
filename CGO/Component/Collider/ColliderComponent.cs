@@ -12,9 +12,9 @@ namespace CGO
 {
     public class ColliderComponent : GameObjectComponent
     {
-        public override ComponentFamily Family
+        public ColliderComponent() : base()
         {
-            get { return ComponentFamily.Collider; }
+            Family = ComponentFamily.Collider;
         }
 
         /// <summary>

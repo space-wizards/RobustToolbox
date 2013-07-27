@@ -27,7 +27,7 @@ namespace SGO
             //TODO: Throw exception here
             if (template == null)
                 return null;
-            IEntity entity = template.CreateEntity(m_entityNetworkManager);
+            IEntity entity = template.CreateEntity();
             return entity;
         }
     }

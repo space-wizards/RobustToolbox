@@ -60,9 +60,10 @@ namespace CGO
         /// Constructor for realz. This one should be used eventually instead of the naked one.
         /// </summary>
         /// <param name="entityNetworkManager"></param>
-        public Entity(EntityNetworkManager entityNetworkManager)
+        public Entity(EntityManager entityManager)
+            :base(entityManager)
         {
-            _entityNetworkManager = entityNetworkManager;
+            _entityNetworkManager = entityManager.EntityNetworkManager;
             Initialize();
 
             var cfg = IoCManager.Resolve<IConfigurationManager>();

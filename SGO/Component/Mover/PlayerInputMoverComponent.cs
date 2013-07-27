@@ -12,7 +12,7 @@ namespace SGO
     {
         public PlayerInputMoverComponent()
         {
-            family = ComponentFamily.Mover;
+            Family = ComponentFamily.Mover;
         }
 
         /// <summary>

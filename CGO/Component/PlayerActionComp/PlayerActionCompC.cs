@@ -12,8 +12,10 @@ namespace CGO
 {
     public class PlayerActionComp : GameObjectComponent
     {
-        public override ComponentFamily Family { get { return ComponentFamily.PlayerActions; } }
-
+        public PlayerActionComp() : base()
+        {
+            Family = ComponentFamily.PlayerActions;
+        }
         public delegate void PlayerActionsChangedHandler(PlayerActionComp sender);
         public event PlayerActionsChangedHandler Changed;
 

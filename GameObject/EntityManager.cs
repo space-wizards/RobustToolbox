@@ -5,7 +5,16 @@ namespace GameObject
 {
     public class EntityManager
     {
-        private readonly Dictionary<int, Entity> _entities;
+        protected readonly Dictionary<int, Entity> _entities = new Dictionary<int, Entity>();
+        private string _componentNamespace;
+        public ComponentFactory ComponentFactory { get; private set; }
+
+        public EntityManager(string componentNamespace)
+        {
+            _componentNamespace = componentNamespace;
+            ComponentFactory = new ComponentFactory(this, _componentNamespace);
+        }
+
         /// <summary>
         /// Returns an entity by id
         /// </summary>

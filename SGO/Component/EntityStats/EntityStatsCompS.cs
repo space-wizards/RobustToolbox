@@ -15,7 +15,7 @@ namespace SGO
 
         public EntityStatsComp()
         {
-            family = ComponentFamily.EntityStats;
+            Family = ComponentFamily.EntityStats;
 
             foreach (object dmgType in Enum.GetValues(typeof (DamageType)))
             {

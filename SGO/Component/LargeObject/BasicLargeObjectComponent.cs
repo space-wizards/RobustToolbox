@@ -5,9 +5,10 @@ namespace SGO
 {
     public class BasicLargeObjectComponent : GameObjectComponent
     {
-        public BasicLargeObjectComponent()
+
+        public BasicLargeObjectComponent() :base()
         {
-            family = ComponentFamily.LargeObject;
+            Family = ComponentFamily.LargeObject;
         }
 
         public override ComponentReplyMessage RecieveMessage(object sender, ComponentMessageType type,

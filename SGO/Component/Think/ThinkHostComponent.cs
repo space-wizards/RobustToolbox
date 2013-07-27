@@ -11,7 +11,7 @@ namespace SGO
 
         public ThinkHostComponent()
         {
-            family = ComponentFamily.Think;
+            Family = ComponentFamily.Think;
         }
 
         public override ComponentReplyMessage RecieveMessage(object sender, ComponentMessageType type,

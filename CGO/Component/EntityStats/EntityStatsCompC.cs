@@ -15,8 +15,10 @@ namespace CGO
 {
     public class EntityStatsComp : GameObjectComponent
     {
-        public override ComponentFamily Family { get { return ComponentFamily.EntityStats; } }
-
+        public EntityStatsComp():base()
+        {
+            Family = ComponentFamily.EntityStats;
+        }
         public override Type StateType
         {
             get { return typeof (EntityStatsComponentState); }

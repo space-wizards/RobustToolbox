@@ -21,7 +21,7 @@
         {
             var template = m_entityTemplateDatabase.GetTemplate(entityTemplateName);
             //TODO: Throw exception here
-            return template == null ? null : template.CreateEntity(entityNetworkManager);
+            return template == null ? null : template.CreateEntity();
         }
 
         /// <summary>

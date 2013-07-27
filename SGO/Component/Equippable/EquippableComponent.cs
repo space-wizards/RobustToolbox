@@ -11,7 +11,7 @@ namespace SGO
 
         public EquippableComponent()
         {
-            family = ComponentFamily.Equippable;
+            Family = ComponentFamily.Equippable;
         }
 
         public Entity currentWearer { get; private set; }
@@ -42,7 +42,7 @@ namespace SGO
 
         private void HandleUnEquipped()
         {
-            Owner.AddComponent(ComponentFamily.Mover, ComponentFactory.Singleton.GetComponent("BasicMoverComponent"));
+            Owner.AddComponent(ComponentFamily.Mover, Owner.EntityManager.ComponentFactory.GetComponent("BasicMoverComponent"));
             Owner.SendComponentNetworkMessage(this, NetDeliveryMethod.ReliableOrdered, null,
                                               EquippableComponentNetMessage.UnEquipped);
             currentWearer = null;
@@ -51,7 +51,7 @@ namespace SGO
         private void HandleEquipped(Entity entity)
         {
             currentWearer = entity;
-            Owner.AddComponent(ComponentFamily.Mover, ComponentFactory.Singleton.GetComponent("SlaveMoverComponent"));
+            Owner.AddComponent(ComponentFamily.Mover, Owner.EntityManager.ComponentFactory.GetComponent("SlaveMoverComponent"));
             Owner.SendMessage(this, ComponentMessageType.SlaveAttach, entity.Uid);
             Owner.SendComponentNetworkMessage(this, NetDeliveryMethod.ReliableOrdered, null,
                                               EquippableComponentNetMessage.Equipped, entity.Uid, wearloc);

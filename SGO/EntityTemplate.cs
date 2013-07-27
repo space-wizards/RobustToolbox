@@ -15,7 +15,10 @@ namespace SGO
     /// </summary>
     public class EntityTemplate : GameObject.EntityTemplate, IEntityTemplate
     {
-        
+
+        public EntityTemplate(GameObject.EntityManager entityManager)
+            : base(entityManager) { }
+
         #region IEntityTemplate Members
         
         /// <summary>
@@ -27,13 +30,13 @@ namespace SGO
         /// Creates an entity from this template
         /// </summary>
         /// <returns></returns>
-        public IEntity CreateEntity(IEntityNetworkManager entityNetworkManager)
+        public IEntity CreateEntity()
         {
-            var e = new Entity(entityNetworkManager);
+            var e = new Entity((EntityManager)EntityManager);
 
             foreach (var componentname in _components)
             {
-                var component = ComponentFactory.Singleton.GetComponent(componentname);
+                var component = EntityManager.ComponentFactory.GetComponent(componentname);
                 if (component == null)
                     continue; //TODO THROW ERROR
 

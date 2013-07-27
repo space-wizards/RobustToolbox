@@ -12,7 +12,7 @@ namespace SGO
 
         public CollidableComponent()
         {
-            family = ComponentFamily.Collidable;
+            Family = ComponentFamily.Collidable;
         }
 
         public override ComponentReplyMessage RecieveMessage(object sender, ComponentMessageType type,

@@ -16,23 +16,22 @@ namespace SGO
     /// <summary>
     /// Manager for entities -- controls things like template loading and instantiation
     /// </summary>
-    public class EntityManager : IEntityManager
+    public class EntityManager : GameObject.EntityManager, IEntityManager
     {
         private static EntityManager singleton;
-        private readonly Dictionary<int, IEntity> _entities;
         private readonly ISS13NetServer m_netServer;
         private EntityFactory m_entityFactory;
-        private EntityNetworkManager m_entityNetworkManager;
+        public EntityNetworkManager EntityNetworkManager { get; private set; }
         private EntityTemplateDatabase m_entityTemplateDatabase;
         private EntitySystemManager _systemManager;
         public int nextId;
 
         public EntityManager(ISS13NetServer netServer)
+            :base("SGO")
         {
-            m_entityNetworkManager = new EntityNetworkManager(netServer);
-            m_entityTemplateDatabase = new EntityTemplateDatabase();
-            m_entityFactory = new EntityFactory(m_entityTemplateDatabase, m_entityNetworkManager);
-            _entities = new Dictionary<int, IEntity>();
+            EntityNetworkManager = new EntityNetworkManager(netServer);
+            m_entityTemplateDatabase = new EntityTemplateDatabase(this);
+            m_entityFactory = new EntityFactory(m_entityTemplateDatabase, EntityNetworkManager);
             m_netServer = netServer;
             _systemManager = new EntitySystemManager(this);
             Singleton = this;
@@ -52,16 +51,11 @@ namespace SGO
         }
 
         #region IEntityManager Members
-
-        public IComponentFactory ComponentFactory
-        {
-            get { return SGO.ComponentFactory.Singleton; }
-        }
-
+        
         public void SaveEntities()
         {
             //List<XElement> entities = new List<XElement>();
-            IEnumerable<XElement> entities = from e in _entities.Values
+            IEnumerable<XElement> entities = from IEntity e in _entities.Values
                                              where e.Template.Name != "HumanMob"
                                              select ToXML(e);
 
@@ -91,13 +85,13 @@ namespace SGO
         public IEntity GetEntity(int eid)
         {
             if (_entities.Keys.Contains(eid))
-                return _entities[eid];
+                return (IEntity)_entities[eid];
             return null;
         }
 
-        public List<IEntity> GetEntities(IEntityQuery query)
+        public List<IEntity> GetEntities(GameObject.EntityQuery query)
         {
-            return _entities.Values.Where(e => e.Match(query)).ToList();
+            return _entities.Values.Where(e => e.Match(query)).Cast<IEntity>().ToList();
         } 
 
         /// <summary>
@@ -111,7 +105,7 @@ namespace SGO
             if (e != null)
             {
                 e.Uid = nextId++;
-                _entities.Add(e.Uid, e);
+                _entities.Add(e.Uid, (GameObject.Entity)e);
                 if (send) SendSpawnEntity(e);
                 if (send) e.Initialize();
                 if (send) e.FireNetworkedSpawn();
@@ -143,7 +137,7 @@ namespace SGO
             _systemManager = null;
             m_entityFactory = null;
             m_entityTemplateDatabase = null;
-            m_entityNetworkManager = null;
+            EntityNetworkManager = null;
         }
 
         /// <summary>
@@ -153,8 +147,8 @@ namespace SGO
         /// <param name="msg">Incoming raw network message</param>
         public void HandleEntityNetworkMessage(NetIncomingMessage msg)
         {
-            ServerIncomingEntityMessage message = m_entityNetworkManager.HandleEntityNetworkMessage(msg);
-            _entities[message.uid].HandleNetworkMessage(message);
+            ServerIncomingEntityMessage message = EntityNetworkManager.HandleEntityNetworkMessage(msg);
+            ((IEntity)_entities[message.uid]).HandleNetworkMessage(message);
         }
 
         #endregion
@@ -294,7 +288,7 @@ namespace SGO
         public List<EntityState> GetEntityStates()
         {
             var stateEntities = new List<EntityState>();
-            foreach(var entity in _entities.Values)
+            foreach(IEntity entity in _entities.Values)
             {
                 var entityState = entity.GetEntityState();
                 stateEntities.Add(entityState);

@@ -22,10 +22,10 @@ namespace CGO
         bool interpolating = false;
         float movetime = 0.05f; // Milliseconds it should take to move.
         float movedtime = 0; // Amount of time we've been moving since the last update packet.
-
-        public override ComponentFamily Family
+        
+        public NetworkMoverComponent():base()
         {
-            get { return ComponentFamily.Mover; }
+            Family = ComponentFamily.Mover; ;
         }
 
         public override Type StateType

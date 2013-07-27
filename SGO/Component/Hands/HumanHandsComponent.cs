@@ -13,7 +13,7 @@ namespace SGO
 
         public HumanHandsComponent()
         {
-            family = ComponentFamily.Hands;
+            Family = ComponentFamily.Hands;
             handslots = new Dictionary<Hand, Entity>();
         }
 

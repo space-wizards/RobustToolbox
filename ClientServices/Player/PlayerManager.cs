@@ -1,20 +1,21 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using ClientInterfaces.GOC;
 using ClientInterfaces.Network;
 using ClientInterfaces.Player;
 using ClientInterfaces.State;
 using ClientServices.Player.PostProcessing;
 using ClientServices.State.States;
+using GameObject;
 using GorgonLibrary.Graphics;
 using Lidgren.Network;
 using GorgonLibrary;
 using GorgonLibrary.InputDevices;
 using SS13_Shared;
 using SS13_Shared.GO;
-using CGO;
 using SS13_Shared.GameStates;
+using EntityManager = CGO.EntityManager;
+using IEntity = ClientInterfaces.GOC.IEntity;
 
 namespace ClientServices.Player
 {
@@ -50,9 +51,9 @@ namespace ClientServices.Player
         public void Attach(IEntity newEntity)
         {
             ControlledEntity = newEntity;
-            ControlledEntity.AddComponent(ComponentFamily.Input, ComponentFactory.Singleton.GetComponent("KeyBindingInputComponent"));
-            ControlledEntity.AddComponent(ComponentFamily.Mover, ComponentFactory.Singleton.GetComponent("KeyBindingMoverComponent"));
-            ControlledEntity.AddComponent(ComponentFamily.Collider, ComponentFactory.Singleton.GetComponent("ColliderComponent"));
+            ControlledEntity.AddComponent(ComponentFamily.Input, EntityManager.Singleton.ComponentFactory.GetComponent("KeyBindingInputComponent"));
+            ControlledEntity.AddComponent(ComponentFamily.Mover, EntityManager.Singleton.ComponentFactory.GetComponent("KeyBindingMoverComponent"));
+            ControlledEntity.AddComponent(ComponentFamily.Collider, EntityManager.Singleton.ComponentFactory.GetComponent("ColliderComponent"));
             ControlledEntity.GetComponent(ComponentFamily.Collider).SetParameter(new ComponentParameter("TweakAABB", new Vector4D(39, 0, 0, 0)));
             ControlledEntity.OnMove += PlayerEntityMoved;
         }

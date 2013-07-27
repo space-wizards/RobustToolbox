@@ -26,7 +26,7 @@ namespace SGO
 
         public BasicDoorComponent()
         {
-            family = ComponentFamily.LargeObject;
+            Family = ComponentFamily.LargeObject;
 
             RegisterSVar("OpenOnBump", typeof(bool));
         }

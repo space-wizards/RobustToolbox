@@ -18,7 +18,7 @@ namespace SGO
 
         public DamageableComponent()
         {
-            family = ComponentFamily.Damageable;
+            Family = ComponentFamily.Damageable;
             RegisterSVar("MaxHealth", typeof(int));
             RegisterSVar("CurrentHealth", typeof(int));
         }

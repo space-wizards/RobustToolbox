@@ -3,12 +3,13 @@ using SS13_Shared.GO;
 using Lidgren.Network;
 using SS13_Shared.GO.Server;
 using System.Collections.Generic;
+using GO = GameObject;
 
 namespace ServerInterfaces.GameObject
 {
     public delegate void ShutdownEvent(IEntity e);
     
-    public interface IEntity
+    public interface IEntity : GO.IEntity
     {
         void Translate(Vector2 toPosition);
         Vector2 Position { get; set; }
@@ -24,14 +25,9 @@ namespace ServerInterfaces.GameObject
         void Shutdown();
         void FireNetworkedSpawn();
         void FireNetworkedJoinSpawn(NetConnection client);
-        void AddComponent(ComponentFamily family, IGameObjectComponent component);
-        void RemoveComponent(ComponentFamily family);
         IEntityTemplate Template { get; set; }
         event EntityMoveEvent OnMove; 
         event ShutdownEvent OnShutdown;
-        bool HasComponent(ComponentFamily family);
-        IGameObjectComponent GetComponent(ComponentFamily componentFamily);
-        T GetComponent<T>(ComponentFamily family) where T : class;
         void SendComponentNetworkMessage(IGameObjectComponent component, NetDeliveryMethod method, NetConnection recipient, params object[] messageParams);
 
         void Initialize(bool loaded = false);

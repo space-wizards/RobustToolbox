@@ -94,6 +94,10 @@
     <Compile Include="Tiles\Wall\Wall.cs" />
   </ItemGroup>
   <ItemGroup>
+    <ProjectReference Include="..\GameObject\GameObject.csproj">
+      <Project>{FB8F5D6F-8500-4A5D-BCFB-20104AA902F4}</Project>
+      <Name>GameObject</Name>
+    </ProjectReference>
     <ProjectReference Include="..\Lidgren.Network\Lidgren.Network.csproj">
       <Project>{AE483C29-042E-4226-BA52-D247CE7676DA}</Project>
       <Name>Lidgren.Network</Name>

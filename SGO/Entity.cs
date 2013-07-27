@@ -22,7 +22,7 @@ namespace SGO
     /// Should not contain any game logic whatsoever other than entity movement functions and 
     /// component management functions.
     /// </summary>
-    public class Entity : IEntity
+    public class Entity : GameObject.Entity, IEntity
     {
         #region Variables
 
@@ -33,12 +33,6 @@ namespace SGO
         public delegate void NetworkedSpawnEvent();
         
         #endregion
-
-        /// <summary>
-        /// Holds this entity's components
-        /// </summary>
-        private readonly Dictionary<ComponentFamily, IGameObjectComponent> _components =
-            new Dictionary<ComponentFamily, IGameObjectComponent>();
 
         private List<Type> _componentTypes = new List<Type>(); 
 
@@ -116,19 +110,6 @@ namespace SGO
         }
 
         /// <summary>
-        /// Shuts down the entity gracefully for removal.
-        /// </summary>
-        public void Shutdown()
-        {
-            foreach (GameObjectComponent component in _components.Values)
-            {
-                component.OnRemove();
-            }
-            _components.Clear();
-            _componentTypes.Clear();
-        }
-
-        /// <summary>
         /// Sets up variables and shite
         /// </summary>
         public void Initialize(bool loaded = false)
@@ -140,79 +121,11 @@ namespace SGO
 
         #region Component Manipulation
 
-        /// <summary>
-        /// Public method to add a component to an entity.
-        /// Calls the component's onAdd method, which also adds it to the component manager.
-        /// </summary>
-        /// <param name="family">the family of component -- there can only be one at a time per family.</param>
-        /// <param name="component">The component.</param>
-        public void AddComponent(ComponentFamily family, IGameObjectComponent component)
-        {
-            if (_components.Keys.Contains(family))
-                RemoveComponent(family);
-            _components.Add(family, component);
-            component.OnAdd(this);
-            UpdateComponentTypes();
-        }
-
-        /// <summary>
-        /// Public method to remove a component from an entity.
-        /// Calls the onRemove method of the component, which handles removing it 
-        /// from the component manager and shutting down the component.
-        /// </summary>
-        /// <param name="family"></param>
-        public void RemoveComponent(ComponentFamily family)
-        {
-            if (_components.Keys.Contains(family))
-            {
-                UpdateComponentTypes();
-                _components[family].OnRemove();
-                _components.Remove(family);
-            }
-        }
-
-        private void UpdateComponentTypes()
-        {
-            _componentTypes = _components.Values.Select(t => t.GetType()).ToList();
-        }
-
-        /// <summary>
-        /// Checks to see if a component of a certain family exists
-        /// </summary>
-        /// <param name="family">componentfamily to check</param>
-        /// <returns>true if component exists, false otherwise</returns>
-        public bool HasComponent(ComponentFamily family)
-        {
-            if (_components.ContainsKey(family))
-                return true;
-            return false;
-        }
-
-        public T GetComponent<T>(ComponentFamily family) where T : class
-        {
-            if (GetComponent(family) is T)
-                return (T)GetComponent(family);
-
-            return null;
-        }
-
-        /// <summary>
-        /// Gets the component of the specified family, if it exists
-        /// </summary>
-        /// <param name="family">componentfamily to get</param>
-        /// <returns></returns>
-        public IGameObjectComponent GetComponent(ComponentFamily family)
-        {
-            if (_components.ContainsKey(family))
-                return _components[family];
-            return null;
-        }
-
         public void SendMessage(object sender, ComponentMessageType type, params object[] args)
         {
             LogComponentMessage(sender, type, args);
 
-            foreach (IGameObjectComponent component in _components.Values.ToArray())
+            foreach (IGameObjectComponent component in GetComponents())
             {
                 component.RecieveMessage(sender, type, args);
             }
@@ -229,7 +142,7 @@ namespace SGO
         {
             LogComponentMessage(sender, type, args);
 
-            foreach (IGameObjectComponent component in _components.Values.ToArray())
+            foreach (IGameObjectComponent component in GetComponents())
             {
                 if (replies != null)
                 {
@@ -248,7 +161,7 @@ namespace SGO
             LogComponentMessage(sender, type, args);
 
             if (HasComponent(family))
-                return GetComponent(family).RecieveMessage(sender, type, args);
+                return GetComponent<GameObjectComponent>(family).RecieveMessage(sender, type, args);
             else
                 return ComponentReplyMessage.Empty;
         }
@@ -269,7 +182,7 @@ namespace SGO
             //if (sender.GetType().IsAssignableFrom(typeof(IGameObjectComponent)))
             if (typeof (IGameObjectComponent).IsAssignableFrom(sender.GetType()))
             {
-                var realsender = (IGameObjectComponent) sender;
+                var realsender = (GameObjectComponent) sender;
                 senderfamily = realsender.Family;
 
                 uid = realsender.Owner.Uid;
@@ -394,14 +307,14 @@ namespace SGO
         internal void HandleComponentInstantiationMessage(ServerIncomingEntityMessage message)
         {
             if (HasComponent((ComponentFamily) message.message))
-                GetComponent((ComponentFamily) message.message).HandleInstantiationMessage(message.client);
+                GetComponent<GameObjectComponent>((ComponentFamily) message.message).HandleInstantiationMessage(message.client);
         }
 
         internal void HandleComponentMessage(IncomingEntityComponentMessage message, NetConnection client)
         {
-            if (_components.Keys.Contains(message.ComponentFamily))
+            if (GetComponentFamilies().Contains(message.ComponentFamily))
             {
-                _components[message.ComponentFamily].HandleNetworkMessage(message, client);
+                GetComponent<IGameObjectComponent>(message.ComponentFamily).HandleNetworkMessage(message, client);
             }
         }
 
@@ -422,7 +335,7 @@ namespace SGO
             }
             else
             {
-                GetComponent(parameter.Family).SetSVar(parameter);   
+                GetComponent<GameObjectComponent>(parameter.Family).SetSVar(parameter);   
                 LogManager.Log("Player " + player.name + " set SVar."); //Make this message better
             }
             
@@ -439,7 +352,7 @@ namespace SGO
             message.Write((byte)EntityMessage.GetSVars);
 
             var svars = new List<MarshalComponentParameter>();
-            foreach(var component in _components.Values)
+            foreach(IGameObjectComponent component in GetComponents())
             {
                 svars.AddRange(component.GetSVars());
             }
@@ -534,7 +447,7 @@ namespace SGO
         private List<ComponentState> GetComponentStates()
         {
             var stateComps = new List<ComponentState>();
-            foreach(var component in _components.Values)
+            foreach(IGameObjectComponent component in GetComponents())
             {
                 var componentState = component.GetComponentState();
                 stateComps.Add(componentState);

@@ -69,7 +69,7 @@ namespace CGO
             slaves = new List<SpriteComponent>();
         }
 
-        public override void OnAdd(IEntity owner)
+        public override void OnAdd(GameObject.IEntity owner)
         {
             base.OnAdd(owner);
             //Send a spritechanged message so everything knows whassup.

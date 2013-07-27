@@ -130,7 +130,7 @@ namespace ClientServices.Collision
             }
             if (collidable is IGameObjectComponent)
             {
-                IGameObjectComponent baseComp = collidable as IGameObjectComponent;
+                GameObjectComponent baseComp = collidable as GameObjectComponent;
                 _aabbs.Add(c, baseComp.Owner);
             }
             else

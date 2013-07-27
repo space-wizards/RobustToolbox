@@ -7,12 +7,12 @@ using System.Xml.Linq;
 
 namespace CGO
 {
-    public abstract class GameObjectComponent : IGameObjectComponent
+    public abstract class GameObjectComponent : GameObject.Component, IGameObjectComponent
     {
         /// <summary>
         /// The entity that owns this component
         /// </summary>
-        public IEntity Owner { get; set; }
+        new public IEntity Owner { get; set; }
 
         /// <summary>
         /// This is the family of the component. This is required to be set on all inheriting components.
@@ -57,20 +57,12 @@ namespace CGO
 
             return reply;
         }
-
-        /// <summary>
-        /// Base method to shut down the component. 
-        /// </summary>
-        public virtual void Shutdown()
-        {
-
-        }
-
+        
         /// <summary>
         /// Called when the component is removed from an entity.
         /// Shuts down the component, and removes it from the ComponentManager as well.
         /// </summary>
-        public virtual void OnRemove()
+        public override void OnRemove()
         {
             Owner = null;
             Shutdown();
@@ -84,13 +76,13 @@ namespace CGO
         /// by an entity without being in the ComponentManager.
         /// </summary>
         /// <param name="owner"></param>
-        public virtual void OnAdd(IEntity owner)
+        public override void OnAdd(GameObject.IEntity owner)
         {
-            Owner = owner;
+            Owner = (IEntity)owner;
             //Send us to the manager so it knows we're active
             ComponentManager.Singleton.AddComponent(this);
-            if (owner.Initialized)
-                owner.SendComponentInstantiationMessage(this);
+            if (Owner.Initialized)
+                Owner.SendComponentInstantiationMessage(this);
         }
 
         /// <summary>
@@ -102,27 +94,7 @@ namespace CGO
 
         }
 
-        /// <summary>
-        /// This allows setting of the component's parameters once it is instantiated.
-        /// This should basically be overridden by every inheriting component, as parameters will be different
-        /// across the board.
-        /// </summary>
-        /// <param name="parameter">ComponentParameter object describing the parameter and the value</param>
-        public virtual void SetParameter(ComponentParameter parameter)
-        {
-            switch (parameter.MemberName)
-            {
-                case "ExtendedParameters":
-                    HandleExtendedParameters(parameter.GetValue<XElement>());
-                    break;
-            }
-        }
-
-        public virtual void HandleExtendedParameters(XElement extendedParameters)
-        {
-
-        }
-        
+      
         /// <summary>
         /// Empty method for handling incoming input messages from counterpart client components
         /// </summary>

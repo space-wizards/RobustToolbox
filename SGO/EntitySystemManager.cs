@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
 using System.Text;
+using SGO.EntitySystems;
 using SGO.Exceptions;
 
 namespace SGO

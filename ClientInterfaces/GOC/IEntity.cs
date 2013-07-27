@@ -7,7 +7,7 @@ using SS13_Shared.GO;
 
 namespace ClientInterfaces.GOC
 {
-    public interface IEntity
+    public interface IEntity : GameObject.IEntity
     {
         IEntityTemplate Template { get; set; }
         string Name { get; set; }
@@ -16,11 +16,6 @@ namespace ClientInterfaces.GOC
         Vector2D Position { get; set; }
         bool Initialized { get; set; }
         event EventHandler<VectorEventArgs> OnMove;
-        void AddComponent(ComponentFamily family, IGameObjectComponent component);
-        void RemoveComponent(ComponentFamily family);
-        IGameObjectComponent GetComponent(ComponentFamily family);
-        T GetComponent<T>(ComponentFamily family) where T : class;
-        bool HasComponent(ComponentFamily family);
         string GetDescriptionString();
         void Initialize();
         void Moved();

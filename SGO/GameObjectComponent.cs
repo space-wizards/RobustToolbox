@@ -9,8 +9,13 @@ using ServerInterfaces.GameObject;
 
 namespace SGO
 {
-    public class GameObjectComponent : IGameObjectComponent
+    public class GameObjectComponent : GameObject.Component, IGameObjectComponent
     {
+        /// <summary>
+        /// The entity that owns this component
+        /// </summary>
+        new public IEntity Owner { get; set; }
+
         /// <summary>
         /// This is the family of the component. This should be set directly in all inherited components' constructors.
         /// </summary>
@@ -21,9 +26,7 @@ namespace SGO
         private Dictionary<string, Type> _sVars = new Dictionary<string, Type>(); 
 
         #region IGameObjectComponent Members
-
-        public IEntity Owner { get; set; }
-
+        
         public ComponentFamily Family
         {
             get { return family; }
@@ -45,19 +48,12 @@ namespace SGO
                 return ComponentReplyMessage.Empty;
             return reply;
         }
-
-        /// <summary>
-        /// Base method to shut down the component. 
-        /// </summary>
-        public virtual void Shutdown()
-        {
-        }
-
+        
         /// <summary>
         /// Called when the component is removed from an entity.
         /// Shuts down the component, and removes it from the ComponentManager as well.
         /// </summary>
-        public virtual void OnRemove()
+        public override void OnRemove()
         {
             Owner = null;
             Shutdown();
@@ -71,9 +67,9 @@ namespace SGO
         /// by an entity without being in the ComponentManager.
         /// </summary>
         /// <param name="owner"></param>
-        public virtual void OnAdd(IEntity owner)
+        public override void OnAdd(GameObject.IEntity owner)
         {
-            Owner = owner;
+            Owner = (IEntity)owner;
             //Send us to the manager so it knows we're active
             ComponentManager.Singleton.AddComponent(this);
         }
@@ -85,23 +81,7 @@ namespace SGO
         public virtual void Update(float frameTime)
         {
         }
-
-        /// <summary>
-        /// This allows setting of the component's parameters once it is instantiated.
-        /// This should basically be overridden by every inheriting component, as parameters will be different
-        /// across the board.
-        /// </summary>
-        /// <param name="parameter">ComponentParameter object describing the parameter and the value</param>
-        public virtual void SetParameter(ComponentParameter parameter)
-        {
-            switch (parameter.MemberName)
-            {
-                case "ExtendedParameters":
-                    HandleExtendedParameters(parameter.GetValue<XElement>());
-                    break;
-            }
-        }
-
+        
         /// <summary>
         /// This gets a list of runtime-settable component parameters, with CURRENT VALUES
         /// If it isn't going to return a current value, it shouldn't return it at all.
@@ -129,11 +109,7 @@ namespace SGO
         }
 
         #endregion
-
-        public virtual void HandleExtendedParameters(XElement extendedParameters)
-        {
-        }
-
+        
         /// <summary>
         /// Gets all available SVars for the entity. 
         /// This gets current values, or at least it should...

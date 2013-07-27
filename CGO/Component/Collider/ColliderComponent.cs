@@ -74,7 +74,7 @@ namespace CGO
             }
         }
 
-        public override void OnAdd(IEntity owner)
+        public override void OnAdd(GameObject.IEntity owner)
         {
             base.OnAdd(owner);
             GetAABB();

@@ -59,7 +59,7 @@ namespace CGO
         /// OnAdd override -- gets the AABB from the sprite component and sends it to the collision manager.
         /// </summary>
         /// <param name="owner"></param>
-        public override void OnAdd(IEntity owner)
+        public override void OnAdd(GameObject.IEntity owner)
         {
             base.OnAdd(owner);
             GetAABB();

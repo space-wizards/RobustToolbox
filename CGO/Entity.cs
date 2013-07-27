@@ -17,13 +17,9 @@ namespace CGO
     /// Should not contain any game logic whatsoever other than entity movement functions and 
     /// component management functions.
     /// </summary>
-    public class Entity : IEntity
+    public class Entity : GameObject.Entity, IEntity
     {
         #region Variables
-        /// <summary>
-        /// Holds this entity's components
-        /// </summary>
-        private readonly Dictionary<ComponentFamily, IGameObjectComponent> _components = new Dictionary<ComponentFamily, IGameObjectComponent>();
 
         private EntityNetworkManager _entityNetworkManager;
 
@@ -83,78 +79,9 @@ namespace CGO
             SendMessage(this, ComponentMessageType.Initialize);
             Initialized = true;
         }
-
-        /// <summary>
-        /// Shuts down the entity gracefully for removal.
-        /// </summary>
-        public void Shutdown()
-        {
-            foreach (var component in _components.Values)
-            {
-                component.OnRemove();
-            }
-            _components.Clear();
-        }
         #endregion
 
         #region Component Manipulation
-        /// <summary>
-        /// Public method to add a component to an entity.
-        /// Calls the component's onAdd method, which also adds it to the component manager.
-        /// </summary>
-        /// <param name="family">the family of component -- there can only be one at a time per family.</param>
-        /// <param name="component">The component.</param>
-        public void AddComponent(ComponentFamily family, IGameObjectComponent component)
-        {
-            if (_components.Keys.Contains(family)) RemoveComponent(family);
-
-            _components.Add(family, component);
-            component.OnAdd(this); 
-        }
-
-        /// <summary>
-        /// Public method to remove a component from an entity.
-        /// Calls the onRemove method of the component, which handles removing it 
-        /// from the component manager and shutting down the component.
-        /// </summary>
-        /// <param name="family"></param>
-        public void RemoveComponent(ComponentFamily family)
-        {
-            if (_components.Keys.Contains(family))
-            {
-                _components[family].OnRemove();
-                _components.Remove(family); 
-            }
-        }
-
-        /// <summary>
-        /// Returns the component in the specified family
-        /// </summary>
-        /// <param name="family">the family</param>
-        /// <returns></returns>
-        public IGameObjectComponent GetComponent(ComponentFamily family)
-        {
-            return _components.ContainsKey(family) ? _components[family] : null;
-        }
-
-        public T GetComponent<T>(ComponentFamily family) where T : class
-        {
-            if (GetComponent(family) is T)
-                return (T)GetComponent(family);
-
-            return null;
-        }
-
-        /// <summary>
-        /// Checks to see if a component of a certain family exists
-        /// </summary>
-        /// <param name="family">componentfamily to check</param>
-        /// <returns>true if component exists, false otherwise</returns>
-        public bool HasComponent(ComponentFamily family)
-        {
-            return _components.ContainsKey(family);
-        }
-
         /// <summary>
         /// Allows components to send messages
         /// </summary>
@@ -165,7 +92,7 @@ namespace CGO
         {
             LogComponentMessage(sender, type, args);
          
-            foreach (var component in _components.Values.ToArray())
+            foreach (IGameObjectComponent component in GetComponents())
             {
                 if (replies != null)
                 {
@@ -182,7 +109,7 @@ namespace CGO
         {
             LogComponentMessage(sender, type, args);
 
-            foreach (var component in _components.Values.ToArray())
+            foreach (IGameObjectComponent component in GetComponents())
             {
                 component.RecieveMessage(sender, type, args);
             }
@@ -193,7 +120,7 @@ namespace CGO
             LogComponentMessage(sender, type, args);
 
             if (HasComponent(family))
-                return GetComponent(family).RecieveMessage(sender, type, args);
+                return GetComponent<GameObjectComponent>(family).RecieveMessage(sender, type, args);
             else
                 return ComponentReplyMessage.Empty;
         }
@@ -214,7 +141,7 @@ namespace CGO
             //if (sender.GetType().IsAssignableFrom(typeof(IGameObjectComponent)))
             if (typeof(IGameObjectComponent).IsAssignableFrom(sender.GetType()))
             {
-                var realsender = (IGameObjectComponent)sender;
+                var realsender = (GameObjectComponent)sender;
                 senderfamily = realsender.Family;
 
                 uid = realsender.Owner.Uid;
@@ -257,9 +184,9 @@ namespace CGO
 
         internal void HandleComponentMessage(IncomingEntityComponentMessage message)
         {
-            if (_components.Keys.Contains(message.ComponentFamily))
+            if (GetComponentFamilies().Contains(message.ComponentFamily))
             {
-                _components[message.ComponentFamily].HandleNetworkMessage(message);
+                GetComponent<IGameObjectComponent>(message.ComponentFamily).HandleNetworkMessage(message);
             }
         }
 
@@ -350,7 +277,7 @@ namespace CGO
             {
                 if (HasComponent(compState.Family))
                 {
-                    var comp = GetComponent(compState.Family);
+                    var comp = (GameObjectComponent)GetComponent(compState.Family);
                     var stateType = comp.StateType;
                     if (compState.GetType() == stateType)
                     {

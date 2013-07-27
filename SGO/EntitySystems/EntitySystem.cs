@@ -4,7 +4,7 @@ using System.Linq;
 using System.Text;
 using ServerInterfaces.GameObject;
 
-namespace SGO
+namespace SGO.EntitySystems
 {
     public abstract class EntitySystem
     {

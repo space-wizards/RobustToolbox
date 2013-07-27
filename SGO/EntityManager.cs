@@ -19,7 +19,7 @@ namespace SGO
     public class EntityManager : IEntityManager
     {
         private static EntityManager singleton;
-        private readonly Dictionary<int, IEntity> m_entities;
+        private readonly Dictionary<int, IEntity> _entities;
         private readonly ISS13NetServer m_netServer;
         private EntityFactory m_entityFactory;
         private EntityNetworkManager m_entityNetworkManager;
@@ -32,7 +32,7 @@ namespace SGO
             m_entityNetworkManager = new EntityNetworkManager(netServer);
             m_entityTemplateDatabase = new EntityTemplateDatabase();
             m_entityFactory = new EntityFactory(m_entityTemplateDatabase, m_entityNetworkManager);
-            m_entities = new Dictionary<int, IEntity>();
+            _entities = new Dictionary<int, IEntity>();
             m_netServer = netServer;
             _systemManager = new EntitySystemManager(this);
             Singleton = this;
@@ -61,7 +61,7 @@ namespace SGO
         public void SaveEntities()
         {
             //List<XElement> entities = new List<XElement>();
-            IEnumerable<XElement> entities = from e in m_entities.Values
+            IEnumerable<XElement> entities = from e in _entities.Values
                                              where e.Template.Name != "HumanMob"
                                              select ToXML(e);
 
@@ -71,12 +71,12 @@ namespace SGO
 
         public void SendEntities(NetConnection client)
         {
-            foreach (Entity e in m_entities.Values)
+            foreach (Entity e in _entities.Values)
             {
                 SendSpawnEntityAtPosition(e, client);
             }
             SendEntityManagerInit(client);
-            foreach(Entity e in m_entities.Values)
+            foreach(Entity e in _entities.Values)
             {
                 e.FireNetworkedJoinSpawn(client);
             }
@@ -90,14 +90,14 @@ namespace SGO
         /// <returns>Entity or null if entity id doesn't exist</returns>
         public IEntity GetEntity(int eid)
         {
-            if (m_entities.Keys.Contains(eid))
-                return m_entities[eid];
+            if (_entities.Keys.Contains(eid))
+                return _entities[eid];
             return null;
         }
 
         public List<IEntity> GetEntities(IEntityQuery query)
         {
-            return m_entities.Values.Where(e => e.Match(query)).ToList();
+            return _entities.Values.Where(e => e.Match(query)).ToList();
         } 
 
         /// <summary>
@@ -111,7 +111,7 @@ namespace SGO
             if (e != null)
             {
                 e.Uid = nextId++;
-                m_entities.Add(e.Uid, e);
+                _entities.Add(e.Uid, e);
                 if (send) SendSpawnEntity(e);
                 if (send) e.Initialize();
                 if (send) e.FireNetworkedSpawn();
@@ -133,7 +133,7 @@ namespace SGO
             message.Write(e.Uid);
             m_netServer.SendToAll(message, NetDeliveryMethod.ReliableOrdered);
              */
-            m_entities.Remove(e.Uid);
+            _entities.Remove(e.Uid);
         }
 
         public void Shutdown()
@@ -154,7 +154,7 @@ namespace SGO
         public void HandleEntityNetworkMessage(NetIncomingMessage msg)
         {
             ServerIncomingEntityMessage message = m_entityNetworkManager.HandleEntityNetworkMessage(msg);
-            m_entities[message.uid].HandleNetworkMessage(message);
+            _entities[message.uid].HandleNetworkMessage(message);
         }
 
         #endregion
@@ -286,15 +286,15 @@ namespace SGO
         /// </summary>
         public void FlushEntities()
         {
-            foreach (Entity e in m_entities.Values)
+            foreach (Entity e in _entities.Values)
                 e.Shutdown();
-            m_entities.Clear();
+            _entities.Clear();
         }
 
         public List<EntityState> GetEntityStates()
         {
             var stateEntities = new List<EntityState>();
-            foreach(var entity in m_entities.Values)
+            foreach(var entity in _entities.Values)
             {
                 var entityState = entity.GetEntityState();
                 stateEntities.Add(entityState);

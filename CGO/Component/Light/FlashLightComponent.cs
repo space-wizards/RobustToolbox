@@ -30,7 +30,7 @@ namespace CGO
             return reply;
         }
 
-        public override void OnAdd(IEntity owner)
+        public override void OnAdd(GameObject.IEntity owner)
         {
             base.OnAdd(owner);
 

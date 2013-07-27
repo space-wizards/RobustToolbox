@@ -10,9 +10,9 @@ namespace CGO
         public Dictionary<EquipmentSlot, IEntity> EquippedEntities = new Dictionary<EquipmentSlot, IEntity>();
         public List<EquipmentSlot> ActiveSlots = new List<EquipmentSlot>();
 
-        public override ComponentFamily Family
+        public EquipmentComponent():base()
         {
-            get { return ComponentFamily.Equipment; }
+            Family = ComponentFamily.Equipment;
         }
 
         public override void HandleNetworkMessage(IncomingEntityComponentMessage message)

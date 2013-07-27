@@ -15,7 +15,7 @@ namespace SGO
 
         public BasicItemComponent()
         {
-            family = ComponentFamily.Item;
+            Family = ComponentFamily.Item;
             capabilities = new Dictionary<string, ItemCapability>();
         }
 
@@ -108,7 +108,7 @@ namespace SGO
         private void HandleDropped()
         {
             Owner.RemoveComponent(ComponentFamily.Mover);
-            Owner.AddComponent(ComponentFamily.Mover, ComponentFactory.Singleton.GetComponent("BasicMoverComponent"));
+            Owner.AddComponent(ComponentFamily.Mover, Owner.EntityManager.ComponentFactory.GetComponent("BasicMoverComponent"));
             Owner.SendComponentNetworkMessage(this, NetDeliveryMethod.ReliableOrdered, null,
                                               ItemComponentNetMessage.Dropped);
             currentHolder = null;
@@ -118,7 +118,7 @@ namespace SGO
         {
             currentHolder = entity;
             holdingHand = _holdingHand;
-            Owner.AddComponent(ComponentFamily.Mover, ComponentFactory.Singleton.GetComponent("SlaveMoverComponent"));
+            Owner.AddComponent(ComponentFamily.Mover, Owner.EntityManager.ComponentFactory.GetComponent("SlaveMoverComponent"));
             Owner.SendMessage(this, ComponentMessageType.SlaveAttach, entity.Uid);
             Owner.SendComponentNetworkMessage(this, NetDeliveryMethod.ReliableOrdered, null,
                                               ItemComponentNetMessage.PickedUp, entity.Uid, holdingHand);

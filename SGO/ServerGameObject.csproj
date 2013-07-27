@@ -58,7 +58,6 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="ComponentFactory.cs" />
     <Compile Include="ComponentManager.cs" />
     <Compile Include="Component\Actor\BasicActorComponent.cs" />
     <Compile Include="Component\EntityStats\EntityStatsCompS.cs" />
@@ -105,7 +104,6 @@
     <Compile Include="EntityFactory.cs" />
     <Compile Include="EntityManager.cs" />
     <Compile Include="EntityNetworkManager.cs" />
-    <Compile Include="EntityQuery.cs" />
     <Compile Include="EntitySystems\EntitySystem.cs" />
     <Compile Include="EntityTemplate.cs" />
     <Compile Include="EntityTemplateDatabase.cs" />

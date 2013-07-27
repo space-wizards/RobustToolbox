@@ -14,10 +14,10 @@ namespace CGO
     {
         private IEntity _master;
         private Constants.MoveDirs _movedir = Constants.MoveDirs.south;
-
-        public override ComponentFamily Family
+        
+        public SlaveMoverComponent():base()
         {
-            get { return ComponentFamily.Mover; }
+            Family = ComponentFamily.Mover;
         }
 
         public override ComponentReplyMessage RecieveMessage(object sender, ComponentMessageType type, params object[] list)

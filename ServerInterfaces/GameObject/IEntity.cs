@@ -23,7 +23,7 @@ namespace ServerInterfaces.GameObject
 
         void FireNetworkedSpawn();
         void FireNetworkedJoinSpawn(NetConnection client);
-        IEntityTemplate Template { get; set; }
+        GO.EntityTemplate Template { get; set; }
         event EntityMoveEvent OnMove; 
         event ShutdownEvent OnShutdown;
         void SendComponentNetworkMessage(IGameObjectComponent component, NetDeliveryMethod method, NetConnection recipient, params object[] messageParams);

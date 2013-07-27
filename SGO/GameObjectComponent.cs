@@ -15,24 +15,13 @@ namespace SGO
         /// The entity that owns this component
         /// </summary>
         new public IEntity Owner { get; set; }
-
-        /// <summary>
-        /// This is the family of the component. This should be set directly in all inherited components' constructors.
-        /// </summary>
-        protected ComponentFamily family = ComponentFamily.Generic;
-
+        
         protected bool stateChanged = false;
 
         private Dictionary<string, Type> _sVars = new Dictionary<string, Type>(); 
 
         #region IGameObjectComponent Members
         
-        public ComponentFamily Family
-        {
-            get { return family; }
-            set { family = value; }
-        }
-
         /// <summary>
         /// Recieve a message from another component within the owner entity
         /// </summary>

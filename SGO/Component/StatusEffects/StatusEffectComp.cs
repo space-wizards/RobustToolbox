@@ -16,7 +16,7 @@ namespace SGO
 
         public StatusEffectComp()
         {
-            family = ComponentFamily.StatusEffects;
+            Family = ComponentFamily.StatusEffects;
         }
 
         public override void Update(float frameTime)

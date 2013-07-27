@@ -15,9 +15,9 @@ namespace CGO
 {
     public class CollidableComponent : GameObjectComponent, ICollidable
     {
-        public override ComponentFamily Family
+        public CollidableComponent() :base()
         {
-            get { return ComponentFamily.Collidable; }
+            Family = ComponentFamily.Collidable;
         }
 
         public override Type StateType

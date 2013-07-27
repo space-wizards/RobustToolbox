@@ -13,7 +13,7 @@ namespace SGO
 
         public SlaveMoverComponent()
         {
-            family = ComponentFamily.Mover;
+            Family = ComponentFamily.Mover;
         }
 
         public override ComponentReplyMessage RecieveMessage(object sender, ComponentMessageType type,

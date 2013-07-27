@@ -21,11 +21,10 @@ namespace CGO
         protected string _mask = "";
         public LightModeClass _mode = LightModeClass.Constant;
         
-        public override ComponentFamily Family
+        public PointLightComponent():base()
         {
-            get { return ComponentFamily.Light; }
+            Family = ComponentFamily.Light;
         }
-
         public override Type StateType
         {
             get { return typeof (LightComponentState); }

@@ -14,13 +14,9 @@ namespace CGO
         public delegate void KeyEvent(bool state);
         private bool _enabled = true;
 
-        public override ComponentFamily Family
-        {
-            get { return ComponentFamily.Input; }
-        }
-
         public KeyBindingInputComponent()
         {
+            Family = ComponentFamily.Input; ;
             //Bind to the key binding manager
             var keyBindingManager = IoCManager.Resolve<IKeyBindingManager>();
             keyBindingManager.BoundKeyDown += KeyDown;

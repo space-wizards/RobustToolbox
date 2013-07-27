@@ -13,10 +13,9 @@ namespace CGO
             get { return 0f; }
         }
         
-
-        public override ComponentFamily Family
+        public RenderableComponent():base()
         {
-            get { return ComponentFamily.Renderable; }
+            Family = ComponentFamily.Renderable;
         }
 
         public virtual void Render(Vector2D topLeft, Vector2D bottomRight)

@@ -8,9 +8,9 @@ namespace CGO
 {
     public class ClickableComponent : GameObjectComponent
     {
-        public override ComponentFamily Family
+        public ClickableComponent() :base()
         {
-            get { return ComponentFamily.Click; }
+            Family = ComponentFamily.Click;
         }
 
         public override ComponentReplyMessage RecieveMessage(object sender, ComponentMessageType type, params object[] list)

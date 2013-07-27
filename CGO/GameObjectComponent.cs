@@ -14,11 +14,6 @@ namespace CGO
         /// </summary>
         new public IEntity Owner { get; set; }
 
-        /// <summary>
-        /// This is the family of the component. This is required to be set on all inheriting components.
-        /// </summary>
-        public abstract ComponentFamily Family { get; }
-
         public virtual Type StateType { get { return null; }
         }
 

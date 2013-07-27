@@ -4,4 +4,3 @@ E:\gamedev\ss13\GlyphSizeTest\obj\Release\GorgonLibrary.Example.Properties.Resou
 E:\gamedev\ss13\GlyphSizeTest\obj\Release\GlyphSizeTest.csproj.GenerateResource.Cache
 E:\gamedev\ss13\GlyphSizeTest\obj\Release\Initializing.exe
 E:\gamedev\ss13\Bin\Release\CALIBRI.TTF
-E:\gamedev\ss13\GlyphSizeTest\obj\Release\GlyphSizeTest.csprojResolveAssemblyReference.cache

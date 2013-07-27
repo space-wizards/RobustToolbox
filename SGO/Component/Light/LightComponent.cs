@@ -21,7 +21,7 @@ namespace SGO
 
         public LightComponent()
         {
-            family = ComponentFamily.Light;
+            Family = ComponentFamily.Light;
         }
 
         public override void SetParameter(ComponentParameter parameter)

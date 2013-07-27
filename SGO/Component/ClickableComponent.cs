@@ -8,7 +8,7 @@ namespace SGO
     {
         public ClickableComponent()
         {
-            family = ComponentFamily.Click;
+            Family = ComponentFamily.Click;
         }
 
         /// <summary>

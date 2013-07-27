@@ -10,9 +10,9 @@ namespace CGO
     {
         private readonly List<ContextMenuEntry> _entries = new List<ContextMenuEntry>();
 
-        public override ComponentFamily Family
+        public ContextMenuComponent():base()
         {
-            get { return ComponentFamily.ContextMenu; }
+            Family = ComponentFamily.ContextMenu;
         }
         
         public override ComponentReplyMessage RecieveMessage(object sender, ComponentMessageType type, params object[] list)

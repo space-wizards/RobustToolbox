@@ -14,13 +14,17 @@ namespace CGO
 {
     public class StatusEffectComp : GameObjectComponent
     {
-        public override ComponentFamily Family { get { return ComponentFamily.StatusEffects; } }
         public override Type StateType
         {
             get
             {
                 return typeof(StatusEffectComponentState);
             }
+        }
+
+        public StatusEffectComp():base()
+        {
+            Family = ComponentFamily.StatusEffects;
         }
 
         public delegate void StatusEffectsChangedHandler(StatusEffectComp sender);

@@ -11,8 +11,10 @@ namespace CGO
 
         public Dictionary<string, EntityTemplate> Templates { get { return m_templates; } }
 
-        public EntityTemplateDatabase()
+        public EntityManager EntityManager { get; private set; }
+        public EntityTemplateDatabase(EntityManager entityManager)
         {
+            EntityManager = entityManager;
             m_templates = new Dictionary<string, EntityTemplate>();
             LoadAllTemplates();
         }
@@ -34,7 +36,7 @@ namespace CGO
             var templates = tmp.Elements("EntityTemplate");
             foreach (XElement e in templates)
             {
-                EntityTemplate newTemplate = new EntityTemplate();
+                EntityTemplate newTemplate = new EntityTemplate(EntityManager);
                 newTemplate.LoadFromXml(e);
                 AddTemplate(newTemplate);
             }

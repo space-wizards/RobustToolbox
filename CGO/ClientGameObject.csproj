@@ -59,7 +59,6 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="ComponentFactory.cs" />
     <Compile Include="ComponentManager.cs" />
     <Compile Include="Component\ClickableComponent.cs" />
     <Compile Include="Component\Collidable\CollidableComponent.cs" />

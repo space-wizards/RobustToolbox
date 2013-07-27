@@ -13,12 +13,12 @@ namespace CGO
     /// <summary>
     /// Manager for entities -- controls things like template loading and instantiation
     /// </summary>
-    public class EntityManager
+    public class EntityManager:GameObject.EntityManager
     {
         private readonly Dictionary<int, IEntity> _entities;
 
         private EntityFactory _entityFactory;
-        private EntityNetworkManager _entityNetworkManager;
+        public EntityNetworkManager EntityNetworkManager { get; private set; }
         private bool _initialized;
         private int _lastId;
 
@@ -27,9 +27,10 @@ namespace CGO
         public EntityTemplateDatabase TemplateDb { get; private set; }
 
         public EntityManager(INetworkManager networkManager)
+            :base("CGO")
         {
-            _entityNetworkManager = new EntityNetworkManager(networkManager);
-            TemplateDb = new EntityTemplateDatabase();
+            EntityNetworkManager = new EntityNetworkManager(networkManager);
+            TemplateDb = new EntityTemplateDatabase(this);
             _entityFactory = new EntityFactory(TemplateDb);
             _entities = new Dictionary<int, IEntity>();
             Singleton = this;
@@ -75,7 +76,7 @@ namespace CGO
 
         private IEntity SpawnEntity(string entityType, int uid)
         {
-            var e = _entityFactory.CreateEntity(entityType, _entityNetworkManager);
+            var e = _entityFactory.CreateEntity(entityType, EntityNetworkManager);
             if (e != null)
             {
                 e.Uid = uid;
@@ -122,7 +123,7 @@ namespace CGO
             FlushEntities();
             _entityFactory = null;
             TemplateDb = null;
-            _entityNetworkManager = null;
+            EntityNetworkManager = null;
             _initialized = false;
         }
 
@@ -154,7 +155,7 @@ namespace CGO
 
         private ClientIncomingEntityMessage ProcessNetMessage(NetIncomingMessage msg)
         {
-            return _entityNetworkManager.HandleEntityNetworkMessage(msg);
+            return EntityNetworkManager.HandleEntityNetworkMessage(msg);
         }
 
         /// <summary>

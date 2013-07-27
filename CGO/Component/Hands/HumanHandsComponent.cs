@@ -13,14 +13,10 @@ namespace CGO
         public Dictionary<Hand, IEntity> HandSlots { get; private set; }
         public Hand CurrentHand { get; private set; }
 
-        public override ComponentFamily Family
-        {
-            get { return ComponentFamily.Hands; }
-        }
-
-        public HumanHandsComponent()
+        public HumanHandsComponent():base()
         {
             HandSlots = new Dictionary<Hand, IEntity>();
+            Family = ComponentFamily.Hands;
         }
 
         public override void HandleNetworkMessage(IncomingEntityComponentMessage message)

@@ -15,7 +15,7 @@ namespace SGO
 
         public EquipmentComponent()
         {
-            family = ComponentFamily.Equipment;
+            Family = ComponentFamily.Equipment;
         }
 
         public override ComponentReplyMessage RecieveMessage(object sender, ComponentMessageType type,

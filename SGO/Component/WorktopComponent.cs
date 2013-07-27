@@ -9,7 +9,7 @@ namespace SGO
     {
         public WorktopComponent()
         {
-            family = ComponentFamily.LargeObject;
+            Family = ComponentFamily.LargeObject;
         }
 
         public override void Update(float frameTime)

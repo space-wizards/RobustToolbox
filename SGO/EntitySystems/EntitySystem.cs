@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using GO = GameObject;
 using ServerInterfaces.GameObject;
 
 namespace SGO.EntitySystems
@@ -12,7 +13,7 @@ namespace SGO.EntitySystems
 
         private bool _initialized = false;
         private bool _shutdown = false;
-        protected EntityQuery EntityQuery;
+        protected GO.EntityQuery EntityQuery;
 
         protected List<IEntity> RelevantEntities
         {

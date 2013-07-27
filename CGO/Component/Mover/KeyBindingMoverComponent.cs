@@ -28,13 +28,9 @@ namespace CGO
 
         private Constants.MoveDirs _movedir;
 
-        public override ComponentFamily Family
-        {
-            get { return ComponentFamily.Mover; }
-        }
-
         public KeyBindingMoverComponent()
         {
+            Family = ComponentFamily.Mover; ;
             _currentMoveSpeed = BaseMoveSpeed;
             _movedir = Constants.MoveDirs.south;
         }

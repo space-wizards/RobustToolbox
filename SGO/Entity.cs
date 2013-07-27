@@ -41,9 +41,7 @@ namespace SGO
         private readonly IEntityNetworkManager m_entityNetworkManager;
         private bool _initialized;
         private string _name;
-
-        public IEntityTemplate Template { get; set; }
-
+        
         public event EntityMoveEvent OnMove;
 
         public int Uid { get; set; }
@@ -79,9 +77,10 @@ namespace SGO
         /// Constructor.
         /// </summary>
         /// <param name="entityNetworkManager"></param>
-        public Entity(IEntityNetworkManager entityNetworkManager)
+        public Entity(EntityManager entityManager)
+            :base(entityManager)
         {
-            m_entityNetworkManager = entityNetworkManager;
+            m_entityNetworkManager = entityManager.EntityNetworkManager;
             _messageProfiling = IoCManager.Resolve<IConfigurationManager>().MessageLogging;
             OnNetworkedJoinSpawn += SendNameUpdate;
             OnNetworkedJoinSpawn += SendDirectionUpdate;

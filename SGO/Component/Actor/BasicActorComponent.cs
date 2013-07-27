@@ -13,7 +13,7 @@ namespace SGO
 
         public BasicActorComponent()
         {
-            family = ComponentFamily.Actor;
+            Family = ComponentFamily.Actor;
         }
 
         public override void SetParameter(ComponentParameter parameter)

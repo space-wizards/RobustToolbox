@@ -10,7 +10,6 @@ namespace ClientInterfaces.GOC
         //void RecieveMessage(object sender, ComponentMessageType type, List<ComponentReplyMessage> replies, params object[] list);
         ComponentReplyMessage RecieveMessage(object sender, ComponentMessageType type, params object[] list);
         void Update(float frameTime);
-        ComponentFamily Family {get;}
         Type StateType { get; }
         void SetParameter(ComponentParameter parameter);
         void HandleNetworkMessage(IncomingEntityComponentMessage message);

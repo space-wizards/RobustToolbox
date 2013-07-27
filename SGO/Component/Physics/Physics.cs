@@ -16,7 +16,7 @@ namespace SGO
 
         public Physics()
         {
-            family = ComponentFamily.Physics;
+            Family = ComponentFamily.Physics;
         }
 
         public override ComponentReplyMessage RecieveMessage(object sender, ComponentMessageType type,

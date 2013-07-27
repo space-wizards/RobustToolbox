@@ -32,7 +32,7 @@ namespace SGO
             foreach (XElement e in templates)
             {
                 var newTemplate = new EntityTemplate();
-                newTemplate.LoadFromXML(e);
+                newTemplate.LoadFromXml(e);
                 AddTemplate(newTemplate);
             }
         }

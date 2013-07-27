@@ -13,6 +13,7 @@ namespace CGO
         /// Singleton
         /// </summary>
         private static ComponentFactory singleton;
+
         /// <summary>
         /// Singleton
         /// </summary>
@@ -32,7 +33,7 @@ namespace CGO
         /// </summary>
         public ComponentFactory()
         {
-            Type type = typeof(IGameObjectComponent);
+            Type type = typeof (IGameObjectComponent);
             List<Assembly> asses = AppDomain.CurrentDomain.GetAssemblies().ToList();
             List<Type> types = asses.SelectMany(t => t.GetTypes()).Where(p => type.IsAssignableFrom(p)).ToList();
             //TODO: Go through the current app domain and get all types that derive from IGameObjectComponent.
@@ -49,7 +50,7 @@ namespace CGO
         {
             if (componentType.GetInterface("IGameObjectComponent") == null)
                 return null;
-            return (IGameObjectComponent)Activator.CreateInstance(componentType);
+            return (IGameObjectComponent) Activator.CreateInstance(componentType);
         }
 
         /// <summary>
@@ -66,19 +67,7 @@ namespace CGO
             if (t == null || t.GetInterface("IGameObjectComponent") == null)
                 return null;
 
-            return (IGameObjectComponent)Activator.CreateInstance(t); // Return an instance
-        }
-
-        /// <summary>
-        /// Gets a component type from given name.
-        /// </summary>
-        /// <param name="componentType">Name of component type required.</param>
-        /// <returns>A component Type</returns>
-        public Type GetComponentType(string componentTypeName)
-        {
-            if (string.IsNullOrWhiteSpace(componentTypeName))
-                return null;
-            return Type.GetType("CGO." + componentTypeName, false);
+            return (IGameObjectComponent) Activator.CreateInstance(t); // Return an instance
         }
     }
 }

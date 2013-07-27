@@ -36,6 +36,6 @@ namespace ServerInterfaces.GameObject
         /// <param name="parameter">The parameter object</param>
         void SetParameter(string componenttype, ComponentParameter parameter);
 
-        void LoadFromXML(XElement templateElement);
+        void LoadFromXml(XElement templateElement);
     }
 }

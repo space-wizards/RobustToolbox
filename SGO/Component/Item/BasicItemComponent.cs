@@ -321,7 +321,7 @@ namespace SGO
                 foreach (XElement parameter in Parameters)
                 {
                     string name = parameter.Attribute("name").Value;
-                    Type type = EntityTemplate.translateType(parameter.Attribute("type").Value);
+                    Type type = EntityTemplate.TranslateType(parameter.Attribute("type").Value);
                     var value = Convert.ChangeType(parameter.Attribute("value").Value, type);
 
                     var cparam = new ComponentParameter(name, value);

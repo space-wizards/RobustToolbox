@@ -14,6 +14,20 @@ namespace SGO
         private static ComponentFactory singleton;
 
         /// <summary>
+        /// Singleton
+        /// </summary>
+        public static ComponentFactory Singleton
+        {
+            get
+            {
+                if (singleton == null)
+                    singleton = new ComponentFactory();
+                return singleton;
+            }
+            private set { }
+        }
+
+        /// <summary>
         /// Constructor
         /// </summary>
         public ComponentFactory()
@@ -26,39 +40,8 @@ namespace SGO
             // Type.GetType, we can just hit the type list and pull the right type.
         }
 
-        /// <summary>
-        /// Singleton
-        /// </summary>
-        public static ComponentFactory Singleton
-        {
-            get
-            {
-                if (singleton == null)
-                    singleton = new ComponentFactory();
-                return singleton;
-            }
-        }
 
         #region IComponentFactory Members
-
-        /// <summary>
-        /// Gets a new component instantiated of the specified type.
-        /// </summary>
-        /// <param name="componentType">type of component to make</param>
-        /// <returns>A GameObjectComponent</returns>
-        public IGameObjectComponent GetComponent(string componentTypeName)
-        {
-            if (componentTypeName == null || componentTypeName == "")
-                return null;
-            //Type t = Assembly.GetExecutingAssembly().GetType(componentTypeName); //Get the type
-            Type t = Type.GetType("SGO." + componentTypeName); //Get the type
-            if (t == null || t.GetInterface("IGameObjectComponent") == null)
-                return null;
-
-            return (IGameObjectComponent) Activator.CreateInstance(t); // Return an instance
-        }
-
-        #endregion
 
         /// <summary>
         /// Gets a new component instantiated of the specified type.
@@ -71,5 +54,25 @@ namespace SGO
                 return null;
             return (IGameObjectComponent) Activator.CreateInstance(componentType);
         }
+
+        /// <summary>
+        /// Gets a new component instantiated of the specified type.
+        /// </summary>
+        /// <param name="componentType">type of component to make</param>
+        /// <returns>A GameObjectComponent</returns>
+        public IGameObjectComponent GetComponent(string componentTypeName)
+        {
+            if (string.IsNullOrWhiteSpace(componentTypeName))
+                return null;
+            //Type t = Assembly.GetExecutingAssembly().GetType(componentTypeName); //Get the type
+            Type t = Type.GetType("SGO." + componentTypeName); //Get the type
+            if (t == null || t.GetInterface("IGameObjectComponent") == null)
+                return null;
+
+            return (IGameObjectComponent) Activator.CreateInstance(t); // Return an instance
+        }
+
+        #endregion
+
     }
 }

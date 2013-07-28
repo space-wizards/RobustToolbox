@@ -132,6 +132,8 @@
     <Compile Include="GO\Component\Renderable\RenderableComponentState.cs" />
     <Compile Include="GO\Component\Renderable\SpriteComponentState.cs" />
     <Compile Include="GO\Component\StatusEffect\StatusEffectComponentState.cs" />
+    <Compile Include="GO\Component\Transform\TransformComponentState.cs" />
+    <Compile Include="GO\Component\Velocity\VelocityComponentState.cs" />
     <Compile Include="GO\Crafting\CraftingEntry.cs" />
     <Compile Include="GO\ComponentState.cs" />
     <Compile Include="GO\EntityState.cs" />

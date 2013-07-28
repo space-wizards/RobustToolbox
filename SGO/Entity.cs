@@ -43,9 +43,7 @@ namespace SGO
         //public event EntityMoveEvent OnMove;
 
         public int Uid { get; set; }
-
-        public Vector2 Velocity { get; set; }
-
+        
         private bool stateChanged = false;
 
         private Direction _direction = Direction.South;
@@ -79,9 +77,7 @@ namespace SGO
         {
             m_entityNetworkManager = entityManager.EntityNetworkManager;
             _messageProfiling = IoCManager.Resolve<IConfigurationManager>().MessageLogging;
-            OnNetworkedJoinSpawn += SendNameUpdate;
             OnNetworkedJoinSpawn += SendDirectionUpdate;
-            OnNetworkedSpawn += SendNameUpdate;
             OnNetworkedSpawn += SendDirectionUpdate;
         }
 
@@ -355,31 +351,6 @@ namespace SGO
 
         #region Networking
 
-        private void SendNameUpdate()
-        {
-            if (!_initialized || Name == null)
-                return;
-            NetOutgoingMessage message = CreateNameUpdateMessage();
-            m_entityNetworkManager.SendToAll(message);
-        }
-
-        private void SendNameUpdate(NetConnection client)
-        {
-            if (!_initialized || Name == null)
-                return;
-            NetOutgoingMessage message = CreateNameUpdateMessage();
-            m_entityNetworkManager.SendMessage(message, client);
-        }
-
-        private NetOutgoingMessage CreateNameUpdateMessage()
-        {
-            NetOutgoingMessage message = m_entityNetworkManager.CreateEntityMessage();
-            message.Write(Uid); //Write this entity's UID
-            message.Write((byte) EntityMessage.NameUpdate);
-            message.Write(Name);
-            return message;
-        }
-
         private void SendDirectionUpdate(NetConnection client)
         {
             NetOutgoingMessage message = m_entityNetworkManager.CreateEntityMessage();
@@ -401,7 +372,14 @@ namespace SGO
 
             //Reset entity state changed to false
 
-            var es = new EntityState(Uid, compStates, GetComponent<TransformComponent>(ComponentFamily.Transform).Position, Velocity, Direction, Template.Name, Name);
+            var es = new EntityState(
+                Uid, 
+                compStates, 
+                GetComponent<TransformComponent>(ComponentFamily.Transform).Position,
+                GetComponent<VelocityComponent>(ComponentFamily.Velocity).Velocity, 
+                Direction, 
+                Template.Name, 
+                Name);
             return es;
         }
 

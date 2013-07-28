@@ -11,7 +11,6 @@ namespace ServerInterfaces.GameObject
     
     public interface IEntity : GO.IEntity
     {
-        Vector2 Velocity { get; set; }
         Direction Direction { get; set; }
         int Uid { get; set; }
 

@@ -1,4 +1,5 @@
-﻿using SS13_Shared;
+﻿using CGO;
+using SS13_Shared;
 using SS13_Shared.GO;
 using GorgonLibrary;
 
@@ -20,17 +21,17 @@ namespace CGO
         private bool _moveRight;
         private Vector2D Velocity
         {
-            get { return Owner.Velocity; }
-            set { Owner.Velocity = value; }
+            get { return Owner.GetComponent<VelocityComponent>(ComponentFamily.Velocity).Velocity; }
+            set { Owner.GetComponent<VelocityComponent>(ComponentFamily.Velocity).Velocity = value; }
         }
 
-        private Constants.MoveDirs _movedir;
+        private Direction _movedir;
 
         public KeyBindingMoverComponent()
         {
             Family = ComponentFamily.Mover; ;
             _currentMoveSpeed = BaseMoveSpeed;
-            _movedir = Constants.MoveDirs.south;
+            _movedir = Direction.South;
         }
 
         public override void HandleNetworkMessage(IncomingEntityComponentMessage message)
@@ -141,7 +142,7 @@ namespace CGO
             Translate(Velocity * frameTime);
         }
 
-        private void SetMoveDir(Constants.MoveDirs movedir)
+        private void SetMoveDir(Direction movedir)
         {
             if (movedir == _movedir) return;
 
@@ -151,7 +152,12 @@ namespace CGO
 
         public virtual void SendPositionUpdate()
         {
-            Owner.SendComponentNetworkMessage(this, Lidgren.Network.NetDeliveryMethod.ReliableUnordered, Owner.GetComponent<TransformComponent>(ComponentFamily.Transform).Position.X, Owner.GetComponent<TransformComponent>(ComponentFamily.Transform).Position.Y, Owner.Velocity.X, Owner.Velocity.Y);
+            Owner.SendComponentNetworkMessage(this, 
+                Lidgren.Network.NetDeliveryMethod.ReliableUnordered, 
+                Owner.GetComponent<TransformComponent>(ComponentFamily.Transform).Position.X, 
+                Owner.GetComponent<TransformComponent>(ComponentFamily.Transform).Position.Y,
+                Owner.GetComponent<VelocityComponent>(ComponentFamily.Velocity).Velocity.X,
+                Owner.GetComponent<VelocityComponent>(ComponentFamily.Velocity).Velocity.Y);
         }
 
         public void PlainTranslate(float x, float y)
@@ -161,21 +167,21 @@ namespace CGO
             Owner.GetComponent<TransformComponent>(ComponentFamily.Transform).Position = new Vector2D(x, y);
             
             if (delta.X > 0 && delta.Y > 0)
-                SetMoveDir(Constants.MoveDirs.southeast);
+                SetMoveDir(Direction.SouthEast);
             if (delta.X > 0 && delta.Y < 0)
-                SetMoveDir(Constants.MoveDirs.northeast);
+                SetMoveDir(Direction.NorthEast);
             if (delta.X < 0 && delta.Y > 0)
-                SetMoveDir(Constants.MoveDirs.southwest);
+                SetMoveDir(Direction.SouthWest);
             if (delta.X < 0 && delta.Y < 0)
-                SetMoveDir(Constants.MoveDirs.northwest);
+                SetMoveDir(Direction.NorthWest);
             if (delta.X > 0 && delta.Y == 0)
-                SetMoveDir(Constants.MoveDirs.east);
+                SetMoveDir(Direction.East);
             if (delta.X < 0 && delta.Y == 0)
-                SetMoveDir(Constants.MoveDirs.west);
+                SetMoveDir(Direction.West);
             if (delta.Y > 0 && delta.X == 0)
-                SetMoveDir(Constants.MoveDirs.south);
+                SetMoveDir(Direction.South);
             if (delta.Y < 0 && delta.X == 0)
-                SetMoveDir(Constants.MoveDirs.north);
+                SetMoveDir(Direction.North);
 
             //Owner.Moved();
         }
@@ -197,21 +203,21 @@ namespace CGO
             {
                 var delta = Owner.GetComponent<TransformComponent>(ComponentFamily.Transform).Position - oldPos;
                 if (delta.X > 0 && delta.Y > 0)
-                    SetMoveDir(Constants.MoveDirs.southeast);
+                    SetMoveDir(Direction.SouthEast);
                 if (delta.X > 0 && delta.Y < 0)
-                    SetMoveDir(Constants.MoveDirs.northeast);
+                    SetMoveDir(Direction.NorthEast);
                 if (delta.X < 0 && delta.Y > 0)
-                    SetMoveDir(Constants.MoveDirs.southwest);
+                    SetMoveDir(Direction.SouthWest);
                 if (delta.X < 0 && delta.Y < 0)
-                    SetMoveDir(Constants.MoveDirs.northwest);
+                    SetMoveDir(Direction.NorthWest);
                 if (delta.X > 0 && delta.Y == 0)
-                    SetMoveDir(Constants.MoveDirs.east);
+                    SetMoveDir(Direction.East);
                 if (delta.X < 0 && delta.Y == 0)
-                    SetMoveDir(Constants.MoveDirs.west);
+                    SetMoveDir(Direction.West);
                 if (delta.Y > 0 && delta.X == 0)
-                    SetMoveDir(Constants.MoveDirs.south);
+                    SetMoveDir(Direction.South);
                 if (delta.Y < 0 && delta.X == 0)
-                    SetMoveDir(Constants.MoveDirs.north);
+                    SetMoveDir(Direction.North);
 
 
                 if (_moveTimeCache >= MoveRateLimit)

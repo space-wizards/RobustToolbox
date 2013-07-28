@@ -4,6 +4,7 @@ using System.Linq;
 using System.Text;
 using SS13_Shared;
 using SS13_Shared.GO;
+using SS13_Shared.GO.Component.Transform;
 using ServerInterfaces.GameObject;
 
 namespace SGO
@@ -56,6 +57,11 @@ namespace SGO
         public void TranslateByOffset(Vector2 offset)
         {
             Position = Position + offset;
+        }
+
+        public override ComponentState GetComponentState()
+        {
+            return new TransformComponentState(Position.X, Position.Y, false);
         }
     }
 }

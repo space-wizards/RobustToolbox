@@ -3,6 +3,8 @@
   <EntityTemplate name="Shoes">
     <Components>
       <Component name="TransformComponent"></Component>
+      <Component name="VelocityComponent"></Component>
+      <Component name="DirectionComponent"></Component>
       <Component name="NetworkMoverComponent"></Component>
       <Component name="WearableSpriteComponent">
         <Parameters>
@@ -17,6 +19,8 @@
   <EntityTemplate name="Helmet">
     <Components>
       <Component name="TransformComponent"></Component>
+      <Component name="VelocityComponent"></Component>
+      <Component name="DirectionComponent"></Component>
       <Component name="NetworkMoverComponent"></Component>
       <Component name="WearableSpriteComponent">
         <Parameters>
@@ -32,6 +36,8 @@
   <EntityTemplate name="Assistant_Grey">
     <Components>
       <Component name="TransformComponent"></Component>
+      <Component name="VelocityComponent"></Component>
+      <Component name="DirectionComponent"></Component>
       <Component name="NetworkMoverComponent"></Component>
       <Component name="WearableSpriteComponent">
         <Parameters>
@@ -46,6 +52,8 @@
   <EntityTemplate name="Janitor_Suit">
     <Components>
       <Component name="TransformComponent"></Component>
+      <Component name="VelocityComponent"></Component>
+      <Component name="DirectionComponent"></Component>
       <Component name="NetworkMoverComponent"></Component>
       <Component name="WearableSpriteComponent">
         <Parameters>
@@ -60,6 +68,8 @@
   <EntityTemplate name="Medical_Suit">
     <Components>
       <Component name="TransformComponent"></Component>
+      <Component name="VelocityComponent"></Component>
+      <Component name="DirectionComponent"></Component>
       <Component name="NetworkMoverComponent"></Component>
       <Component name="WearableSpriteComponent">
         <Parameters>
@@ -74,6 +84,8 @@
   <EntityTemplate name="Biosuit">
     <Components>
       <Component name="TransformComponent"></Component>
+      <Component name="VelocityComponent"></Component>
+      <Component name="DirectionComponent"></Component>
       <Component name="NetworkMoverComponent"></Component>
       <Component name="WearableSpriteComponent">
         <Parameters>
@@ -89,6 +101,8 @@
   <EntityTemplate name="Gloves_Surgical">
     <Components>
       <Component name="TransformComponent"></Component>
+      <Component name="VelocityComponent"></Component>
+      <Component name="DirectionComponent"></Component>
       <Component name="NetworkMoverComponent"></Component>
       <Component name="WearableSpriteComponent">
         <Parameters>
@@ -103,6 +117,8 @@
   <EntityTemplate name="Shoes_Medical">
     <Components>
       <Component name="TransformComponent"></Component>
+      <Component name="VelocityComponent"></Component>
+      <Component name="DirectionComponent"></Component>
       <Component name="NetworkMoverComponent"></Component>
       <Component name="WearableSpriteComponent">
         <Parameters>
@@ -117,6 +133,8 @@
   <EntityTemplate name="Mask_Surgical">
     <Components>
       <Component name="TransformComponent"></Component>
+      <Component name="VelocityComponent"></Component>
+      <Component name="DirectionComponent"></Component>
       <Component name="NetworkMoverComponent"></Component>
       <Component name="WearableSpriteComponent">
         <Parameters>
@@ -131,6 +149,8 @@
   <EntityTemplate name="Surgicalgown">
     <Components>
       <Component name="TransformComponent"></Component>
+      <Component name="VelocityComponent"></Component>
+      <Component name="DirectionComponent"></Component>
       <Component name="NetworkMoverComponent"></Component>
       <Component name="WearableSpriteComponent">
         <Parameters>
@@ -145,6 +165,8 @@
   <EntityTemplate name="Armour">
     <Components>
       <Component name="TransformComponent"></Component>
+      <Component name="VelocityComponent"></Component>
+      <Component name="DirectionComponent"></Component>
       <Component name="NetworkMoverComponent"></Component>
       <Component name="WearableSpriteComponent">
         <Parameters>
@@ -160,6 +182,8 @@
   <EntityTemplate name="BlueGloves">
     <Components>
       <Component name="TransformComponent"></Component>
+      <Component name="VelocityComponent"></Component>
+      <Component name="DirectionComponent"></Component>
       <Component name="NetworkMoverComponent"></Component>
       <Component name="WearableSpriteComponent">
         <Parameters>
@@ -174,6 +198,8 @@
   <EntityTemplate name="Galoshes">
     <Components>
       <Component name="TransformComponent"></Component>
+      <Component name="VelocityComponent"></Component>
+      <Component name="DirectionComponent"></Component>
       <Component name="NetworkMoverComponent"></Component>
       <Component name="WearableSpriteComponent">
         <Parameters>

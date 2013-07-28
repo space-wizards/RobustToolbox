@@ -76,6 +76,7 @@
     <Compile Include="Component\Damageable\Health\LocationalHealth\HumanHealthComponent.cs" />
     <Compile Include="Component\Think\ThinkHostComponent.cs" />
     <Compile Include="Component\Transform\TransformComponent.cs" />
+    <Compile Include="Component\Velocity\VelocityComponent.cs" />
     <Compile Include="Component\WorktopComponent.cs" />
     <Compile Include="Component\WallMountedComponent.cs" />
     <Compile Include="Component\ClickableComponent.cs" />

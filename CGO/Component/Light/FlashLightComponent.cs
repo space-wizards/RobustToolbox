@@ -22,7 +22,7 @@ namespace CGO
             switch(type)
             {
                 case ComponentMessageType.MoveDirection:
-                    var movedir = (Constants.MoveDirs) list[0];
+                    var movedir = (Direction) list[0];
                     LightMoveDir(movedir);
                     break;
             }
@@ -37,60 +37,60 @@ namespace CGO
             _light.SetState(LightState.Off);
         }
 
-        private void LightMoveDir(Constants.MoveDirs movedir)
+        private void LightMoveDir(Direction movedir)
         {
             switch (movedir)
             {
-                case Constants.MoveDirs.east:
+                case Direction.East:
                     SetMask("flashlight_mask");
                     _light.LightArea.Rot90 = true;
                     _light.LightArea.MaskFlipX = true;
                     _light.LightArea.MaskFlipY = false;
                     _light.LightArea.Calculated = false;
                     break;
-                case Constants.MoveDirs.southeast:
+                case Direction.SouthEast:
                     SetMask("flashlight_mask_diag");
                     _light.LightArea.Rot90 = false;
                     _light.LightArea.MaskFlipX = false;
                     _light.LightArea.MaskFlipY = true;
                     _light.LightArea.Calculated = false;
                     break;
-                case Constants.MoveDirs.north:
+                case Direction.North:
                     SetMask("flashlight_mask");
                     _light.LightArea.Rot90 = false;
                     _light.LightArea.MaskFlipX = false;
                     _light.LightArea.MaskFlipY = false;
                     _light.LightArea.Calculated = false;
                     break;
-                case Constants.MoveDirs.northeast:
+                case Direction.NorthEast:
                     SetMask("flashlight_mask_diag");
                     _light.LightArea.Rot90 = false;
                     _light.LightArea.MaskFlipX = false;
                     _light.LightArea.MaskFlipY = false;
                     _light.LightArea.Calculated = false;
                     break;
-                case Constants.MoveDirs.west:
+                case Direction.West:
                     SetMask("flashlight_mask");
                     _light.LightArea.Rot90 = true;
                     _light.LightArea.MaskFlipX = false;
                     _light.LightArea.MaskFlipY = false;
                     _light.LightArea.Calculated = false;
                     break;
-                case Constants.MoveDirs.northwest:
+                case Direction.NorthWest:
                     SetMask("flashlight_mask_diag");
                     _light.LightArea.Rot90 = false;
                     _light.LightArea.MaskFlipX = true;
                     _light.LightArea.MaskFlipY = false;
                     _light.LightArea.Calculated = false;
                     break;
-                case Constants.MoveDirs.south:
+                case Direction.South:
                     SetMask("flashlight_mask");
                     _light.LightArea.Rot90 = false;
                     _light.LightArea.MaskFlipX = false;
                     _light.LightArea.MaskFlipY = true;
                     _light.LightArea.Calculated = false;
                     break;
-                case Constants.MoveDirs.southwest:
+                case Direction.SouthWest:
                     SetMask("flashlight_mask_diag");
                     _light.LightArea.Rot90 = false;
                     _light.LightArea.MaskFlipX = true;

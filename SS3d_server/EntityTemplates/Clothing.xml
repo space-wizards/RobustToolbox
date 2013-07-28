@@ -3,6 +3,7 @@
   <EntityTemplate name="Armour">
     <Components>
       <Component name="TransformComponent"></Component>
+      <Component name="VelocityComponent"></Component>
       <Component name="ClickableComponent"></Component>
       <Component name="SpriteComponent"></Component>
       <Component name="BasicInteractableComponent"></Component>
@@ -30,6 +31,7 @@
   <EntityTemplate name="Assistant_Grey">
     <Components>
       <Component name="TransformComponent"></Component>
+      <Component name="VelocityComponent"></Component>
       <Component name="ClickableComponent"></Component>
       <Component name="SpriteComponent"></Component>
       <Component name="BasicInteractableComponent"></Component>
@@ -50,6 +52,7 @@
   <EntityTemplate name="Janitor_Suit">
     <Components>
       <Component name="TransformComponent"></Component>
+      <Component name="VelocityComponent"></Component>
       <Component name="ClickableComponent"></Component>
       <Component name="SpriteComponent"></Component>
       <Component name="BasicInteractableComponent"></Component>
@@ -70,6 +73,7 @@
   <EntityTemplate name="Medical_Suit">
     <Components>
       <Component name="TransformComponent"></Component>
+      <Component name="VelocityComponent"></Component>
       <Component name="ClickableComponent"></Component>
       <Component name="SpriteComponent"></Component>
       <Component name="BasicInteractableComponent"></Component>
@@ -90,6 +94,7 @@
   <EntityTemplate name="Biosuit">
     <Components>
       <Component name="TransformComponent"></Component>
+      <Component name="VelocityComponent"></Component>
       <Component name="ClickableComponent"></Component>
       <Component name="SpriteComponent"></Component>
       <Component name="BasicInteractableComponent"></Component>
@@ -116,6 +121,7 @@
   <EntityTemplate name="Gloves_Surgical">
     <Components>
       <Component name="TransformComponent"></Component>
+      <Component name="VelocityComponent"></Component>
       <Component name="ClickableComponent"></Component>
       <Component name="SpriteComponent"></Component>
       <Component name="BasicInteractableComponent"></Component>
@@ -136,6 +142,7 @@
   <EntityTemplate name="Shoes_Medical">
     <Components>
       <Component name="TransformComponent"></Component>
+      <Component name="VelocityComponent"></Component>
       <Component name="ClickableComponent"></Component>
       <Component name="SpriteComponent"></Component>
       <Component name="BasicInteractableComponent"></Component>
@@ -156,6 +163,7 @@
   <EntityTemplate name="Mask_Surgical">
     <Components>
       <Component name="TransformComponent"></Component>
+      <Component name="VelocityComponent"></Component>
       <Component name="ClickableComponent"></Component>
       <Component name="SpriteComponent"></Component>
       <Component name="BasicInteractableComponent"></Component>
@@ -176,6 +184,7 @@
   <EntityTemplate name="Surgicalgown">
     <Components>
       <Component name="TransformComponent"></Component>
+      <Component name="VelocityComponent"></Component>
       <Component name="ClickableComponent"></Component>
       <Component name="SpriteComponent"></Component>
       <Component name="BasicInteractableComponent"></Component>
@@ -196,6 +205,7 @@
   <EntityTemplate name="Helmet">
     <Components>
       <Component name="TransformComponent"></Component>
+      <Component name="VelocityComponent"></Component>
       <Component name="ClickableComponent"></Component>
       <Component name="SpriteComponent"></Component>
       <Component name="BasicInteractableComponent"></Component>
@@ -223,6 +233,7 @@
   <EntityTemplate name="BlueGloves">
     <Components>
       <Component name="TransformComponent"></Component>
+      <Component name="VelocityComponent"></Component>
       <Component name="ClickableComponent"></Component>
       <Component name="SpriteComponent"></Component>
       <Component name="BasicInteractableComponent"></Component>
@@ -243,6 +254,7 @@
   <EntityTemplate name="Galoshes">
     <Components>
       <Component name="TransformComponent"></Component>
+      <Component name="VelocityComponent"></Component>
       <Component name="ClickableComponent"></Component>
       <Component name="SpriteComponent"></Component>
       <Component name="BasicInteractableComponent"></Component>
@@ -263,6 +275,7 @@
   <EntityTemplate name="Shoes">
     <Components>
       <Component name="TransformComponent"></Component>
+      <Component name="VelocityComponent"></Component>
       <Component name="ClickableComponent"></Component>
       <Component name="SpriteComponent"></Component>
       <Component name="BasicInteractableComponent"></Component>

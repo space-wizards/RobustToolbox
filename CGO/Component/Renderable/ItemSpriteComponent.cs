@@ -35,9 +35,9 @@ namespace CGO
                     if (!IsInHand)
                         break;
                     SetDrawDepth(DrawDepth.HeldItems);
-                    switch ((Constants.MoveDirs)list[0])
+                    switch ((Direction)list[0])
                     {
-                        case Constants.MoveDirs.north:
+                        case Direction.North:
                             if (SpriteExists(basename + "_inhand_back"))
                                 SetSpriteByKey(basename + "_inhand_back");
                             else
@@ -47,14 +47,14 @@ namespace CGO
                             else
                                 flip = true;
                             break;
-                        case Constants.MoveDirs.south:
+                        case Direction.South:
                             SetSpriteByKey(basename + "_inhand");
                             if (holdingHand == Hand.Left)
                                 flip = true;
                             else
                                 flip = false;
                             break;
-                        case Constants.MoveDirs.east:
+                        case Direction.East:
                             if (holdingHand == Hand.Left)
                                 SetDrawDepth(DrawDepth.FloorObjects);
                             else
@@ -62,7 +62,7 @@ namespace CGO
                             SetSpriteByKey(basename + "_inhand_side");
                             flip = true;
                             break;
-                        case Constants.MoveDirs.west:
+                        case Direction.West:
                             if (holdingHand == Hand.Right)
                                 SetDrawDepth(DrawDepth.FloorObjects);
                             else
@@ -70,7 +70,7 @@ namespace CGO
                             SetSpriteByKey(basename + "_inhand_side");
                             flip = false;
                             break;
-                        case Constants.MoveDirs.northeast:
+                        case Direction.NorthEast:
                             if (SpriteExists(basename + "_inhand_back"))
                                 SetSpriteByKey(basename + "_inhand_back");
                             else
@@ -80,7 +80,7 @@ namespace CGO
                             else
                                 flip = true;
                             break;
-                        case Constants.MoveDirs.northwest:
+                        case Direction.NorthWest:
                             if (SpriteExists(basename + "_inhand_back"))
                                 SetSpriteByKey(basename + "_inhand_back");
                             else
@@ -90,14 +90,14 @@ namespace CGO
                             else
                                 flip = true;
                             break;
-                        case Constants.MoveDirs.southeast:
+                        case Direction.SouthEast:
                             SetSpriteByKey(basename + "_inhand");
                             if (holdingHand == Hand.Right)
                                 flip = false;
                             else
                                 flip = true;
                             break;
-                        case Constants.MoveDirs.southwest:
+                        case Direction.SouthWest:
                             SetSpriteByKey(basename + "_inhand");
                             if (holdingHand == Hand.Right)
                                 flip = false;

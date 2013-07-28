@@ -30,9 +30,9 @@ namespace CGO
             switch (type)
             {
                 case ComponentMessageType.MoveDirection:
-                    switch ((Constants.MoveDirs)list[0])
+                    switch ((Direction)list[0])
                     {
-                        case Constants.MoveDirs.north:
+                        case Direction.North:
                             if (worn)
                             {
                                 SetSpriteByKey(_basename + "_back");
@@ -41,7 +41,7 @@ namespace CGO
                             else
                                 SetSpriteByKey(_basename);
                             break;
-                        case Constants.MoveDirs.south:
+                        case Direction.South:
                             if (worn)
                             {
                                 SetSpriteByKey(_basename + "_front");
@@ -51,7 +51,7 @@ namespace CGO
                                 SetSpriteByKey(_basename);
                             
                             break;
-                        case Constants.MoveDirs.east:
+                        case Direction.East:
                             if (worn)
                             {
                                 SetSpriteByKey(_basename + "_side");
@@ -60,7 +60,7 @@ namespace CGO
                             else
                                 SetSpriteByKey(_basename);
                             break;
-                        case Constants.MoveDirs.west:
+                        case Direction.West:
                             if (worn)
                             {
                                 SetSpriteByKey(_basename + "_side");
@@ -69,7 +69,7 @@ namespace CGO
                             else
                                 SetSpriteByKey(_basename);
                             break;
-                        case Constants.MoveDirs.northeast:
+                        case Direction.NorthEast:
                             if (worn)
                             {
                                 SetSpriteByKey(_basename + "_back");
@@ -78,7 +78,7 @@ namespace CGO
                             else
                                 SetSpriteByKey(_basename);
                             break;
-                        case Constants.MoveDirs.northwest:
+                        case Direction.NorthWest:
                             if (worn)
                             {
                                 SetSpriteByKey(_basename + "_back");
@@ -87,7 +87,7 @@ namespace CGO
                             else
                                 SetSpriteByKey(_basename);
                             break;
-                        case Constants.MoveDirs.southeast:
+                        case Direction.SouthEast:
                             if (worn)
                             {
                                 SetSpriteByKey(_basename + "_front");
@@ -96,7 +96,7 @@ namespace CGO
                             else
                                 SetSpriteByKey(_basename);
                             break;
-                        case Constants.MoveDirs.southwest:
+                        case Direction.SouthWest:
                             if (worn)
                             {
                                 SetSpriteByKey(_basename + "_front");

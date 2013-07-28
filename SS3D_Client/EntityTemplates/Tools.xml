@@ -3,6 +3,8 @@
   <EntityTemplate name="Wrench">
     <Components>
       <Component name="TransformComponent"></Component>
+      <Component name="VelocityComponent"></Component>
+      <Component name="DirectionComponent"></Component>
       <Component name="NetworkMoverComponent"></Component>
       <Component name="ItemSpriteComponent">
         <Parameters>
@@ -16,6 +18,8 @@
   <EntityTemplate name="Welder">
     <Components>
       <Component name="TransformComponent"></Component>
+      <Component name="VelocityComponent"></Component>
+      <Component name="DirectionComponent"></Component>
       <Component name="NetworkMoverComponent"></Component>
       <Component name="ItemSpriteComponent">
         <Parameters>
@@ -29,6 +33,8 @@
   <EntityTemplate name="Crowbar">
     <Components>
       <Component name="TransformComponent"></Component>
+      <Component name="VelocityComponent"></Component>
+      <Component name="DirectionComponent"></Component>
       <Component name="NetworkMoverComponent"></Component>
       <Component name="ItemSpriteComponent">
         <Parameters>
@@ -42,6 +48,8 @@
   <EntityTemplate name="Mop">
     <Components>
       <Component name="TransformComponent"></Component>
+      <Component name="VelocityComponent"></Component>
+      <Component name="DirectionComponent"></Component>
       <Component name="NetworkMoverComponent"></Component>
       <Component name="ItemSpriteComponent">
         <Parameters>

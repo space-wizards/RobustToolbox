@@ -11,7 +11,6 @@ namespace ClientInterfaces.GOC
     {
         IEntityTemplate Template { get; set; }
         int Uid { get; set; }
-        Direction Direction { get; set; }
         bool Initialized { get; set; }
         event EventHandler<VectorEventArgs> OnMove;
         string GetDescriptionString();

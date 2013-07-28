@@ -45,19 +45,25 @@ namespace SGO
 
         private void GasEffect()
         {
-            var t = IoCManager.Resolve<IMapManager>().GetTileFromWorldPosition(Owner.Position);
+            var t = IoCManager.Resolve<IMapManager>().GetTileFromWorldPosition(Owner.GetComponent<TransformComponent>(ComponentFamily.Transform).Position);
             if (t == null)
                 return;
             Vector2 gasVel = t.GasCell.GasVelocity;
             if (gasVel.Abs() > mass) // Stop tiny wobbles
             {
-                Owner.SendMessage(this, ComponentMessageType.PhysicsMove, Owner.Position.X + gasVel.X, Owner.Position.Y + gasVel.Y);
+                Owner.SendMessage(this, ComponentMessageType.PhysicsMove, 
+                    Owner.GetComponent<TransformComponent>(ComponentFamily.Transform).Position.X + gasVel.X, 
+                    Owner.GetComponent<TransformComponent>(ComponentFamily.Transform).Position.Y + gasVel.Y);
             }
         }
 
         public override ComponentState GetComponentState()
         {
-            return new MoverComponentState(Owner.Position.X, Owner.Position.Y, Owner.Velocity.X, Owner.Velocity.Y);
+            return new MoverComponentState(
+                Owner.GetComponent<TransformComponent>(ComponentFamily.Transform).Position.X, 
+                Owner.GetComponent<TransformComponent>(ComponentFamily.Transform).Position.Y, 
+                Owner.Velocity.X, 
+                Owner.Velocity.Y);
         }
 
         public override void SetParameter(ComponentParameter parameter)

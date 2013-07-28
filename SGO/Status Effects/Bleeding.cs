@@ -40,7 +40,7 @@ namespace SGO
             if (bleedEntTimer.ElapsedMilliseconds >= 1500)
             {
                 bleedEntTimer.Restart();
-                EntityManager.Singleton.SpawnEntityAt("Blood", affected.Position);
+                EntityManager.Singleton.SpawnEntityAt("Blood", affected.GetComponent<TransformComponent>(ComponentFamily.Transform).Position);
             }
         }
     }

@@ -21,7 +21,7 @@ namespace SGO
             var rnd = new Random();
             actor.SendMessage(this, ComponentMessageType.DropItemInCurrentHand);
             item.GetComponent<SpriteComponent>(ComponentFamily.Renderable).drawDepth = DrawDepth.ItemsOnTables; //TODO Unsafe, fix.
-            item.Translate(Owner.Position + new Vector2(rnd.Next(-28, 28), rnd.Next(-28, 15)));
+            item.GetComponent<TransformComponent>(ComponentFamily.Transform).TranslateByOffset(new Vector2(rnd.Next(-28, 28), rnd.Next(-28, 15)));
         }
 
         protected override void RecieveItemInteraction(Entity actor, Entity item,

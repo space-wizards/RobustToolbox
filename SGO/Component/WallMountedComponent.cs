@@ -24,19 +24,19 @@ namespace SGO
         public override void OnAdd(GameObject.IEntity owner)
         {
             base.OnAdd(owner);
-            Owner.OnMove += OnMove;
+            Owner.GetComponent<TransformComponent>(ComponentFamily.Transform).OnMove += OnMove;
         }
 
         public override void OnRemove()
         {
-            Owner.OnMove -= OnMove;
+            Owner.GetComponent<TransformComponent>(ComponentFamily.Transform).OnMove -= OnMove;
             base.OnRemove();
         }
 
         private void FindTile()
         {
             var map = IoCManager.Resolve<IMapManager>();
-            var arrayPos = map.GetTileArrayPositionFromWorldPosition(Owner.Position);
+            var arrayPos = map.GetTileArrayPositionFromWorldPosition(Owner.GetComponent<TransformComponent>(ComponentFamily.Transform).Position);
 
             switch (Owner.Direction)
             {
@@ -76,16 +76,16 @@ namespace SGO
             return reply;
         }
 
-        private void OnMove(Vector2 newPosition, Vector2 oldPosition)
+        private void OnMove(object sender, VectorEventArgs args)
         {
             var map = IoCManager.Resolve<IMapManager>();
 
-            Point tilePositionOld = map.GetTileArrayPositionFromWorldPosition(oldPosition);
+            Point tilePositionOld = map.GetTileArrayPositionFromWorldPosition(args.VectorFrom);
             Tile previousTile = map.GetTileAt(tilePositionOld.X, tilePositionOld.Y) as Tile;
 
             previousTile.TileChange -= TileChanged;
 
-            Point tilePositionNew = map.GetTileArrayPositionFromWorldPosition(newPosition);
+            Point tilePositionNew = map.GetTileArrayPositionFromWorldPosition(args.VectorTo);
             Tile currentTile = map.GetTileAt(tilePositionNew.X, tilePositionNew.Y) as Tile;
 
             currentTile.TileChange += TileChanged;
@@ -101,7 +101,7 @@ namespace SGO
 
             if (currentTile == null) return;
 
-            Point tilePositionOld = map.GetTileArrayPositionFromWorldPosition(Owner.Position);
+            Point tilePositionOld = map.GetTileArrayPositionFromWorldPosition(Owner.GetComponent<TransformComponent>(ComponentFamily.Transform).Position);
             Tile previousTile = map.GetTileAt(tilePositionOld.X, tilePositionOld.Y) as Tile;
 
             previousTile.TileChange -= TileChanged;
@@ -115,7 +115,7 @@ namespace SGO
         {
             if (tNew != typeof(Wall))
             {
-                Owner.Translate(Owner.Position + new Vector2(0, 64));
+                Owner.GetComponent<TransformComponent>(ComponentFamily.Transform).TranslateByOffset(new Vector2(0, 64));
             }
         }
     }

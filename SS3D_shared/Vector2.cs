@@ -1245,5 +1245,34 @@ namespace SS13_Shared
         public static readonly Vector2 Epsilon = new Vector2(float.Epsilon, float.Epsilon);
 
         #endregion
+
+        #region Static Initializers
+        // Static vector declarations to minimize object creation.
+        private readonly static Vector2 _zero = new Vector2(0, 0);
+        private readonly static Vector2 _unit = new Vector2(1.0f, 1.0f);
+        private readonly static Vector2 _unitX = new Vector2(1.0f, 0);
+        private readonly static Vector2 _unitY = new Vector2(0, 1.0f);
+        #endregion
+        #region Static Properties
+        /// <summary>
+        /// Property to return a zero vector (0,0)
+        /// </summary>
+        public static Vector2 Zero { get { return _zero; } }
+
+        /// <summary>
+        /// Property to return a unit vector (1,1).
+        /// </summary>
+        public static Vector2 Unit { get { return _unit; } }
+
+        /// <summary>
+        /// Property to return a unit vector for the X axis (1,0).
+        /// </summary>
+        public static Vector2 UnitX { get { return _unitX; } }
+
+        /// <summary>
+        /// Property to return a unit vector for the Y axis (0,1).
+        /// </summary>
+        public static Vector2 UnitY { get { return _unitY; } }
+        #endregion
     }
 }

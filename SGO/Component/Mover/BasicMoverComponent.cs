@@ -22,9 +22,6 @@ namespace SGO
 
             switch (type)
             {
-                case ComponentMessageType.SendPositionUpdate:
-                    SendPositionUpdate(true);
-                    break;
                 case ComponentMessageType.PhysicsMove:
                     Translate((float)list[0], (float)list[1]);
                     break;
@@ -34,32 +31,15 @@ namespace SGO
 
         public void Translate(float x, float y)
         {
-            Vector2 oldPosition = Owner.Position;
-            Owner.Position = new Vector2(x, y);
-            Owner.Moved(oldPosition);
-            SendPositionUpdate();
+            Owner.GetComponent<TransformComponent>(ComponentFamily.Transform).Position = new Vector2(x, y);
         }
-
-        public void SendPositionUpdate(bool forced = false)
-        {
-            /*Owner.SendComponentNetworkMessage(this, NetDeliveryMethod.ReliableUnordered, null, Owner.Position.X,
-                                              Owner.Position.Y, forced);*/
-        }
-
-        public void SendPositionUpdate(NetConnection client, bool forced = false)
-        {
-            /*Owner.SendComponentNetworkMessage(this, NetDeliveryMethod.ReliableUnordered, client, Owner.Position.X,
-                                              Owner.Position.Y, forced);*/
-        }
-
-        public override void HandleInstantiationMessage(NetConnection netConnection)
-        {
-            SendPositionUpdate(netConnection, true);
-        }
-
+        
         public override ComponentState GetComponentState()
         {
-            return new MoverComponentState(Owner.Position.X, Owner.Position.Y, Owner.Velocity.X, Owner.Velocity.Y);
+            return new MoverComponentState(Owner.GetComponent<TransformComponent>(ComponentFamily.Transform).Position.X, 
+                Owner.GetComponent<TransformComponent>(ComponentFamily.Transform).Position.Y, 
+                Owner.Velocity.X, 
+                Owner.Velocity.Y);
         }
 
     }

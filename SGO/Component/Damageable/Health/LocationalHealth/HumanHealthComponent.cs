@@ -43,14 +43,14 @@ namespace SGO
             if(statuscomp == null)
                 return;
 
-            if(!map.IsWorldPositionInBounds(Owner.Position))
+            if(!map.IsWorldPositionInBounds(Owner.GetComponent<TransformComponent>(ComponentFamily.Transform).Position))
             {
                 statuscomp.AddEffect("Hypoxia", 5); //Out of map bounds, you is asphyxiatin to death bitch
             }
             else
             {
                 var hasInternals = HasInternals();
-                var tilePos = map.GetTileArrayPositionFromWorldPosition(Owner.Position);
+                var tilePos = map.GetTileArrayPositionFromWorldPosition(Owner.GetComponent<TransformComponent>(ComponentFamily.Transform).Position);
                 if (map.GetTileAt(tilePos.X, tilePos.Y).GasCell.GasAmount(GasType.Toxin) > 0.01 && !hasInternals) //too much toxin in the air, bro
                 {
                     statuscomp.AddEffect("ToxinInhalation", 20);

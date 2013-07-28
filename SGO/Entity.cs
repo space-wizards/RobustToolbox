@@ -40,11 +40,10 @@ namespace SGO
         private bool _initialized;
         private string _name;
         
-        public event EntityMoveEvent OnMove;
+        //public event EntityMoveEvent OnMove;
 
         public int Uid { get; set; }
 
-        public Vector2 Position { get; set; }
         public Vector2 Velocity { get; set; }
 
         private bool stateChanged = false;
@@ -192,15 +191,7 @@ namespace SGO
         public float speed = 6.0f;
 
         #region IEntity Members
-
-        public void Translate(Vector2 toPosition)
-        {
-            Vector2 oldPosition = Position;
-            Position = toPosition;
-            SendPositionUpdate();
-            Moved(oldPosition);
-        }
-
+        
         /// <summary>
         /// Sends a message to the counterpart component on the server side
         /// </summary>
@@ -249,27 +240,10 @@ namespace SGO
         //VARIABLES TO REFACTOR AT A LATER DATE
 
         //FUNCTIONS TO REFACTOR AT A LATER DATE
-        /// <summary>
-        /// This should be refactored to some sort of component that sends entity movement input or something.
-        /// </summary>
-        public virtual void SendPositionUpdate()
-        {
-            if(_initialized)
-                SendMessage(this, ComponentMessageType.SendPositionUpdate);
-        }
-
         public virtual void HandleClick(int clickerID)
         {
         }
-
-        public void Moved(Vector2 fromPosition)
-        {
-            stateChanged = true;
-            if (OnMove != null)
-                OnMove(Position, fromPosition);
-        }
-
-
+        
         public void HandleNetworkMessage(ServerIncomingEntityMessage message)
         {
             switch (message.messageType)
@@ -426,8 +400,8 @@ namespace SGO
             var compStates = GetComponentStates();
 
             //Reset entity state changed to false
-            
-            var es = new EntityState(Uid, compStates, Position, Velocity, Direction, Template.Name, Name);
+
+            var es = new EntityState(Uid, compStates, GetComponent<TransformComponent>(ComponentFamily.Transform).Position, Velocity, Direction, Template.Name, Name);
             return es;
         }
 

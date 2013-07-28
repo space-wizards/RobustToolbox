@@ -1,15 +1,18 @@
 ﻿using System;
-using GorgonLibrary;
+using System.Collections.Generic;
+using System.Linq;
+using System.Text;
 using SS13_Shared;
 using SS13_Shared.GO;
+using ServerInterfaces.GameObject;
 
-namespace CGO
+namespace SGO
 {
-    public class TransformComponent : GameObjectComponent
+    class TransformComponent : GameObjectComponent, ITransformComponent
     {
-        private Vector2D _position = Vector2D.Zero;
+        private Vector2 _position = Vector2.Zero;
 
-        public Vector2D Position
+        public Vector2 Position
         {
             get { return _position; }
             set
@@ -31,18 +34,28 @@ namespace CGO
         public float X
         {
             get { return Position.X; }
-            set { Position = new Vector2D(value, Position.Y); }
+            set { Position = new Vector2(value, Position.Y); }
         }
 
         public float Y
         {
             get { return Position.Y; }
-            set { Position = new Vector2D(Position.X, value);}
+            set { Position = new Vector2(Position.X, value);}
         }
 
         public override void Shutdown()
         {
-            Position = Vector2D.Zero;
+            Position = Vector2.Zero;
+        }
+
+        public void TranslateTo(Vector2 toPosition)
+        {
+            Position = toPosition;
+        }
+
+        public void TranslateByOffset(Vector2 offset)
+        {
+            Position = Position + offset;
         }
     }
 }

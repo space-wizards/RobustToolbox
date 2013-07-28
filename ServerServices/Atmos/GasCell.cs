@@ -71,6 +71,8 @@ namespace ServerServices.Atmos
             gasVel = NextGasVel;
             NextGasVel = new Vector2(0, 0);
 
+            gasMixture.Burn();
+
             // Copy next gas values into gas values
             gasMixture.Update();
 
@@ -137,6 +139,11 @@ namespace ServerServices.Atmos
                     DAmount = GasMixture.Pressure - neighbor.GasMixture.Pressure;
                     if (neighbor.attachedTile.GasPermeable)
                     {
+                        if (gasMixture.Burning || neighbor.gasMixture.Burning)
+                        {
+                            neighbor.gasMixture.Expose();
+                            gasMixture.Expose();
+                        }
                         if (Math.Abs(DAmount) < 50.0f)
                         {
                             gasMixture.Diffuse(neighbor.gasMixture);
@@ -308,9 +315,9 @@ namespace ServerServices.Atmos
                 switch(t)
                 {
                     case GasType.Toxin:
-                        if (gasMixture.gasses[GasType.Toxin] > 0.0075f && (checkUpdateThreshold(GasType.Toxin) || all))
+                        if (gasMixture.gasses[GasType.Toxin] > 0.00005f && (checkUpdateThreshold(GasType.Toxin) || all))
                         {
-                            amount = (byte)15;//normalizeGasAmount(gasMixture.gasses[GasType.Toxin]);
+                            amount = (byte)normalizeGasAmount(gasMixture.gasses[GasType.Toxin]);
                             gasChanges[i] = amount;
                             changedTypes = (changedTypes | (1 << i));
                             lastSentGasses[GasType.Toxin] = gasMixture.gasses[GasType.Toxin];
@@ -323,7 +330,7 @@ namespace ServerServices.Atmos
                         break;
                     case GasType.WVapor:
                         //if (gasMixture.gasses[GasType.WVapor] > 0.005f && (checkUpdateThreshold(GasType.WVapor) || all))
-                        if(gasMixture.Temperature > 300)
+                        if (gasMixture.Burning)
                         {
                             amount = (byte)15;// normalizeGasAmount(gasMixture.gasses[GasType.WVapor]);
                             gasChanges[i] = amount;
@@ -333,7 +340,12 @@ namespace ServerServices.Atmos
                         }
                         else
                         {
-                            lastSentGasses[GasType.WVapor] = 0;
+                            amount = (byte)0;// normalizeGasAmount(gasMixture.gasses[GasType.WVapor]);
+                            gasChanges[i] = amount;
+                            changedTypes = (changedTypes | (1 << i));
+                            lastSentGasses[GasType.WVapor] = gasMixture.gasses[GasType.WVapor];
+                            bitCount += 4;
+                            //lastSentGasses[GasType.WVapor] = 0;
                         }
                         break;
                     default:
@@ -359,7 +371,7 @@ namespace ServerServices.Atmos
         private bool checkUpdateThreshold(GasType g, float multiplier = 2000)
         {
             //If the delta since the last update was sent is greater than 2, send another update.
-            if(Math.Abs(normalizeGasAmount(gasMixture.gasses[g], multiplier) - normalizeGasAmount(lastSentGasses[g], multiplier)) >= 2)
+            if(Math.Abs(normalizeGasAmount(gasMixture.gasses[g], multiplier) - normalizeGasAmount(lastSentGasses[g], multiplier)) >= 1)
                 return true;
             return false;
         }
@@ -374,6 +386,8 @@ namespace ServerServices.Atmos
             amount = amount * multiplier;
             if (amount > 150)
                 amount = 150;
+            else if (amount < 2)
+                amount = 0;
             return (int)(amount / 10);
         }
 

@@ -12,5 +12,8 @@ namespace ServerInterfaces.Atmos
         float SpecificHeatCapacity { get;}
         float MolecularMass { get; }
         GasType Type { get; }
+        bool Combustable { get; }
+        bool Oxidant { get; }
+        float AutoignitionTemperature { get; }
     }
 }

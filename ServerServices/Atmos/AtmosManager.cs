@@ -73,7 +73,6 @@ namespace ServerServices.Atmos
                     {
                         m.DestroyTile(new Point(x, y));
                     }
-
                     m.GetTileAt(x, y).GasCell.Update();
                 }
             }
@@ -234,11 +233,17 @@ namespace ServerServices.Atmos
         private const float shc = 0.919f;
         private const float mm = 32.0f;
         private const GasType type = GasType.Oxygen;
+        private const bool combustable = false;
+        private const bool oxidant = true;
+        private const float ait = 0.0f; // Means it wont autoignite
 
         public string Name { get { return name; } }
         public float SpecificHeatCapacity { get { return shc; } }
         public GasType Type { get { return type; } }
         public float MolecularMass { get { return mm; } }
+        public bool Combustable { get { return combustable; } }
+        public bool Oxidant { get { return oxidant; } }
+        public float AutoignitionTemperature { get { return ait; } }
     }
 
     public class CO2 : IGasProperties
@@ -247,11 +252,18 @@ namespace ServerServices.Atmos
         private const float shc = 0.844f;
         private const float mm = 44.01f;
         private const GasType type = GasType.CO2;
+        private const bool combustable = false;
+        private const bool oxidant = false;
+        private const float ait = 0.0f; // Means it wont autoignite
+
 
         public string Name { get { return name; } }
         public float SpecificHeatCapacity { get { return shc; } }
         public GasType Type { get { return type; } }
         public float MolecularMass { get { return mm; } }
+        public bool Combustable { get { return combustable; } }
+        public bool Oxidant { get { return oxidant; } }
+        public float AutoignitionTemperature { get { return ait; } }
     }
 
     public class Nitrogen : IGasProperties
@@ -260,11 +272,18 @@ namespace ServerServices.Atmos
         private const float shc = 1.04f;
         private const float mm = 28.01f;
         private const GasType type = GasType.Nitrogen;
+        private const bool combustable = false;
+        private const bool oxidant = false;
+        private const float ait = 0.0f; // Means it wont autoignite
+
 
         public string Name { get { return name; } }
         public float SpecificHeatCapacity { get { return shc; } }
         public GasType Type { get { return type; } }
         public float MolecularMass { get { return mm; } }
+        public bool Combustable { get { return combustable; } }
+        public bool Oxidant { get { return oxidant; } }
+        public float AutoignitionTemperature { get { return ait; } }
     }
 
     public class Toxin : IGasProperties
@@ -273,11 +292,18 @@ namespace ServerServices.Atmos
         private const float shc = 4.00f;    // Made up
         private const float mm = 20.0f; // Made up
         private const GasType type = GasType.Toxin;
+        private const bool combustable = true;
+        private const bool oxidant = false;
+        private const float ait = 1000.0f;
+
 
         public string Name { get { return name; } }
         public float SpecificHeatCapacity { get { return shc; } }
         public GasType Type { get { return type; } }
         public float MolecularMass { get { return mm; } }
+        public bool Combustable { get { return combustable; } }
+        public bool Oxidant { get { return oxidant; } }
+        public float AutoignitionTemperature { get { return ait; } }
     }
 
     public class WVapor : IGasProperties
@@ -286,12 +312,17 @@ namespace ServerServices.Atmos
         private const float shc = 1.93f;
         private const float mm = 16.0f;
         private const GasType type = GasType.WVapor;
-
+        private const bool combustable = false;
+        private const bool oxidant = false;
+        private const float ait = 0.0f; // Means it wont autoignite
 
         public string Name { get { return name; } }
         public float SpecificHeatCapacity { get { return shc; } }
         public GasType Type { get { return type; } }
         public float MolecularMass { get { return mm; } }
+        public bool Combustable { get { return combustable; } }
+        public bool Oxidant { get { return oxidant; } }
+        public float AutoignitionTemperature { get { return ait; } }
     }
 
     #endregion

@@ -2,20 +2,18 @@
 using System.IO;
 using System.Xml.Linq;
 
-namespace CGO
+namespace GameObject
 {
     public class EntityTemplateDatabase
     {
-        private Dictionary<string, EntityTemplate> m_templates;
-
-        public Dictionary<string, EntityTemplate> Templates { get { return m_templates; } }
-
+        public Dictionary<string, EntityTemplate> Templates { get; private set; }
+        
         public EntityManager EntityManager { get; private set; }
 
         public EntityTemplateDatabase(EntityManager entityManager)
         {
             EntityManager = entityManager;
-            m_templates = new Dictionary<string, EntityTemplate>();
+            Templates = new Dictionary<string, EntityTemplate>();
             LoadAllTemplates();
         }
 
@@ -48,7 +46,7 @@ namespace CGO
         /// <param name="template">the template to add</param>
         public void AddTemplate(EntityTemplate template)
         {
-            m_templates.Add(template.Name, template);
+            Templates.Add(template.Name, template);
         }
 
         /// <summary>
@@ -58,8 +56,8 @@ namespace CGO
         /// <returns></returns>
         public EntityTemplate GetTemplate(string templatename)
         {
-            if (m_templates.ContainsKey(templatename))
-                return m_templates[templatename];
+            if (Templates.ContainsKey(templatename))
+                return Templates[templatename];
             return null;
         }
     }

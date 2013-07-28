@@ -2,6 +2,7 @@
 <EntityTemplates>
   <EntityTemplate name="WallLight">
     <Components>
+      <Component name="TransformComponent"></Component>
       <Component name="NetworkMoverComponent"></Component>
       <Component name="SpriteComponent">
         <Parameters>
@@ -27,6 +28,7 @@
   </EntityTemplate>
   <EntityTemplate name="Flashlight">
     <Components>
+      <Component name="TransformComponent"></Component>
       <Component name="NetworkMoverComponent"></Component>
       <Component name="ItemSpriteComponent">
         <Parameters>

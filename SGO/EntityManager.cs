@@ -31,7 +31,7 @@ namespace SGO
         {
             EntityNetworkManager = new EntityNetworkManager(netServer);
             m_entityTemplateDatabase = new EntityTemplateDatabase(this);
-            m_entityFactory = new EntityFactory(m_entityTemplateDatabase, EntityNetworkManager);
+            m_entityFactory = new EntityFactory(m_entityTemplateDatabase);
             m_netServer = netServer;
             _systemManager = new EntitySystemManager(this);
             Singleton = this;

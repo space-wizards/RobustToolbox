@@ -3,11 +3,13 @@ using System.Collections.Generic;
 using System.Drawing;
 using System.Linq;
 using System.Text;
+using CGO;
 using ClientWindow;
 using GorgonLibrary;
 using ClientInterfaces.Map;
 using GorgonLibrary.Graphics;
 using SS13_Shared;
+using SS13_Shared.GO;
 
 namespace ClientServices.Placement.Modes
 {
@@ -39,7 +41,7 @@ namespace ClientServices.Placement.Modes
                 return false;
 
             if (pManager.CurrentPermission.Range > 0)
-                if ((pManager.PlayerManager.ControlledEntity.Position - mouseWorld).Length > pManager.CurrentPermission.Range) 
+                if ((pManager.PlayerManager.ControlledEntity.GetComponent<TransformComponent>(ComponentFamily.Transform).Position - mouseWorld).Length > pManager.CurrentPermission.Range) 
                     return false;
 
             currentTile = currentMap.GetTileAt(mouseWorld);
@@ -64,7 +66,7 @@ namespace ClientServices.Placement.Modes
             mouseScreen = new Vector2D(mouseWorld.X - ClientWindowData.Singleton.ScreenOrigin.X, mouseWorld.Y - ClientWindowData.Singleton.ScreenOrigin.Y);
 
             if (pManager.CurrentPermission.Range > 0)
-                if ((pManager.PlayerManager.ControlledEntity.Position - mouseWorld).Length > pManager.CurrentPermission.Range)
+                if ((pManager.PlayerManager.ControlledEntity.GetComponent<TransformComponent>(ComponentFamily.Transform).Position - mouseWorld).Length > pManager.CurrentPermission.Range)
                     return false;
 
             return true; 

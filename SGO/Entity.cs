@@ -33,9 +33,7 @@ namespace SGO
         public delegate void NetworkedSpawnEvent();
         
         #endregion
-
-        private List<Type> _componentTypes = new List<Type>(); 
-
+        
         private readonly bool _messageProfiling;
 
         private readonly IEntityNetworkManager m_entityNetworkManager;
@@ -237,13 +235,13 @@ namespace SGO
                 return true;
 
             //If there is an EXCLUDE set, and the entity contains any component types in that set, or subtypes of them, the entity is excluded.
-            bool matched = !(query.Exclusionset.Any() && query.Exclusionset.Any(t => _componentTypes.Any(t.IsAssignableFrom)));
+            bool matched = !(query.Exclusionset.Any() && query.Exclusionset.Any(t => ComponentTypes.Any(t.IsAssignableFrom)));
          
             //If there are no matching exclusions, and the entity matches the ALL set, the entity is included
-            if(matched && (query.AllSet.Any() && query.AllSet.Any(t => !_componentTypes.Any(t.IsAssignableFrom))))
+            if(matched && (query.AllSet.Any() && query.AllSet.Any(t => !ComponentTypes.Any(t.IsAssignableFrom))))
                 matched = false;
             //If the entity matches so far, and it matches the ONE set, it matches.
-            if(matched && (query.OneSet.Any() && query.OneSet.Any(t => _componentTypes.Any(t.IsAssignableFrom))))
+            if(matched && (query.OneSet.Any() && query.OneSet.Any(t => ComponentTypes.Any(t.IsAssignableFrom))))
                 matched = false;
             return matched;
         }

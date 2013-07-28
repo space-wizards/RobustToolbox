@@ -1,7 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
 using GorgonLibrary;
 using SS13_Shared;
 using SS13_Shared.GO;
@@ -63,11 +60,11 @@ namespace CGO
             if (interpolating)
             {
                 movedtime = movedtime + frameTime;
-                Vector2D delta = targetPosition - Owner.Position;
+                Vector2D delta = targetPosition - Owner.GetComponent<TransformComponent>(ComponentFamily.Transform).Position;
                 if (movedtime >= movetime)
                 {
                     //targetPosition = Owner.Position;
-                    Owner.Position = targetPosition;
+                    Owner.GetComponent<TransformComponent>(ComponentFamily.Transform).Position = targetPosition;
                     //startPosition = Owner.Position;
                     startPosition = targetPosition;
                     interpolating = false;
@@ -77,22 +74,22 @@ namespace CGO
                 {
                     float X = Ease(movedtime, startPosition.X, targetPosition.X, movetime);
                     float Y = Ease(movedtime, startPosition.Y, targetPosition.Y, movetime);
-                    Owner.Position = new Vector2D(X, Y);
+                    Owner.GetComponent<TransformComponent>(ComponentFamily.Transform).Position = new Vector2D(X, Y);
                 }
 
-                Owner.Moved();
+                //Owner.Moved();
             }
         }
         
         private void Translate(float x, float y, float velx, float vely)
         {
-            Vector2D delta = new Vector2D(x, y) - Owner.Position;
+            Vector2D delta = new Vector2D(x, y) - Owner.GetComponent<TransformComponent>(ComponentFamily.Transform).Position;
             interpolating = true;
             movedtime = 0;
             
             //Owner.Position = new Vector2D(x, y);
             targetPosition = new Vector2D(x, y);
-            startPosition = Owner.Position;
+            startPosition = Owner.GetComponent<TransformComponent>(ComponentFamily.Transform).Position;
 
             if (delta.X > 0 && delta.Y > 0)
                 SetMoveDir(Constants.MoveDirs.southeast);

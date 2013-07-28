@@ -2,6 +2,7 @@
 <EntityTemplates>
   <EntityTemplate name="Forceps">
     <Components>
+      <Component name="TransformComponent"></Component>
       <Component name="NetworkMoverComponent"></Component>
       <Component name="ItemSpriteComponent">
         <Parameters>
@@ -14,6 +15,7 @@
   </EntityTemplate>
   <EntityTemplate name="Medical_Scanner">
     <Components>
+      <Component name="TransformComponent"></Component>
       <Component name="NetworkMoverComponent"></Component>
       <Component name="ItemSpriteComponent">
         <Parameters>
@@ -26,6 +28,7 @@
   </EntityTemplate>
   <EntityTemplate name="Medical_Saw">
     <Components>
+      <Component name="TransformComponent"></Component>
       <Component name="NetworkMoverComponent"></Component>
       <Component name="ItemSpriteComponent">
         <Parameters>
@@ -38,6 +41,7 @@
   </EntityTemplate>
   <EntityTemplate name="Scalpel">
     <Components>
+      <Component name="TransformComponent"></Component>
       <Component name="NetworkMoverComponent"></Component>
       <Component name="ItemSpriteComponent">
         <Parameters>
@@ -50,6 +54,7 @@
   </EntityTemplate>
   <EntityTemplate name="SyringeGun">
     <Components>
+      <Component name="TransformComponent"></Component>
       <Component name="NetworkMoverComponent"></Component>
       <Component name="ItemSpriteComponent">
         <Parameters>
@@ -62,6 +67,7 @@
   </EntityTemplate>
   <EntityTemplate name="Medical_Vial">
     <Components>
+      <Component name="TransformComponent"></Component>
       <Component name="NetworkMoverComponent"></Component>
       <Component name="ItemSpriteComponent">
         <Parameters>
@@ -74,6 +80,7 @@
   </EntityTemplate>
   <EntityTemplate name="Medical_Vial_2">
     <Components>
+      <Component name="TransformComponent"></Component>
       <Component name="NetworkMoverComponent"></Component>
       <Component name="ItemSpriteComponent">
         <Parameters>
@@ -86,6 +93,7 @@
   </EntityTemplate>
   <EntityTemplate name="Medkit_Red">
     <Components>
+      <Component name="TransformComponent"></Component>
       <Component name="NetworkMoverComponent"></Component>
       <Component name="ItemSpriteComponent">
         <Parameters>
@@ -98,6 +106,7 @@
   </EntityTemplate>
   <EntityTemplate name="Medkit_White">
     <Components>
+      <Component name="TransformComponent"></Component>
       <Component name="NetworkMoverComponent"></Component>
       <Component name="ItemSpriteComponent">
         <Parameters>
@@ -110,6 +119,7 @@
   </EntityTemplate>
   <EntityTemplate name="Bruise_Pack">
     <Components>
+      <Component name="TransformComponent"></Component>
       <Component name="NetworkMoverComponent"></Component>
       <Component name="ItemSpriteComponent">
         <Parameters>
@@ -122,6 +132,7 @@
   </EntityTemplate>
   <EntityTemplate name="Bandages">
     <Components>
+      <Component name="TransformComponent"></Component>
       <Component name="NetworkMoverComponent"></Component>
       <Component name="ItemSpriteComponent">
         <Parameters>

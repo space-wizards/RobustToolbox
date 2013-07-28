@@ -2,6 +2,7 @@
 <EntityTemplates>
   <EntityTemplate name="Glass">
     <Components>
+      <Component name="TransformComponent"></Component>
       <Component name="NetworkMoverComponent"></Component>
       <Component name="SpriteComponent">
         <Parameters>
@@ -15,7 +16,7 @@
         <Parameters>
           <Parameter name="TweakAABBtop" type="float" value="48" />
         </Parameters>
-      </Component>"
+      </Component>
     </Components>
   </EntityTemplate>
 </EntityTemplates>

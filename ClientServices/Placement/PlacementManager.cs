@@ -262,8 +262,8 @@ namespace ClientServices.Placement
             if (CurrentPermission != null && CurrentPermission.Range > 0)
             {
                 Gorgon.CurrentRenderTarget.Circle(
-                    PlayerManager.ControlledEntity.Position.X - ClientWindowData.Singleton.ScreenOrigin.X,
-                    PlayerManager.ControlledEntity.Position.Y - ClientWindowData.Singleton.ScreenOrigin.Y,
+                    PlayerManager.ControlledEntity.GetComponent<TransformComponent>(ComponentFamily.Transform).Position.X - ClientWindowData.Singleton.ScreenOrigin.X,
+                    PlayerManager.ControlledEntity.GetComponent<TransformComponent>(ComponentFamily.Transform).Position.Y - ClientWindowData.Singleton.ScreenOrigin.Y,
                     CurrentPermission.Range,
                     Color.White,
                     new Vector2D(2, 2));

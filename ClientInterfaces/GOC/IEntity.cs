@@ -12,12 +12,10 @@ namespace ClientInterfaces.GOC
         IEntityTemplate Template { get; set; }
         int Uid { get; set; }
         Direction Direction { get; set; }
-        Vector2D Position { get; set; }
         bool Initialized { get; set; }
         event EventHandler<VectorEventArgs> OnMove;
         string GetDescriptionString();
         void Initialize();
-        void Moved();
         void SendMessage(object sender, ComponentMessageType type, List<ComponentReplyMessage> replies, params object[] args);
         void SendMessage(object sender, ComponentMessageType type, params object[] args);
         ComponentReplyMessage SendMessage(object sender, ComponentFamily family, ComponentMessageType type, params object[] args);

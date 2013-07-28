@@ -1,8 +1,5 @@
 ﻿using System;
-using System.Drawing;
-using ClientInterfaces.GOC;
 using ClientInterfaces.Lighting;
-using ClientInterfaces.Map;
 using GorgonLibrary;
 using SS13.IoC;
 using SS13_Shared;
@@ -40,9 +37,9 @@ namespace CGO
 
             _light.SetRadius(_lightRadius);
             _light.SetColor(255, (int)_lightColor.X, (int)_lightColor.Y, (int)_lightColor.Z);
-            _light.Move(Owner.Position + _lightOffset);
+            _light.Move(Owner.GetComponent<TransformComponent>(ComponentFamily.Transform).Position + _lightOffset);
             _light.SetMask(_mask);
-            Owner.OnMove += OnMove;
+            Owner.GetComponent<TransformComponent>(ComponentFamily.Transform).OnMove += OnMove;
         }
 
         public override void HandleNetworkMessage(IncomingEntityComponentMessage message)
@@ -97,14 +94,14 @@ namespace CGO
 
         public override void OnRemove()
         {
-            Owner.OnMove -= OnMove;
+            Owner.GetComponent<TransformComponent>(ComponentFamily.Transform).OnMove -= OnMove;
             IoCManager.Resolve<ILightManager>().RemoveLight(_light);
             base.OnRemove();
         }
 
         private void OnMove(object sender, VectorEventArgs args)
         {
-            _light.Move(Owner.Position + _lightOffset);
+            _light.Move(Owner.GetComponent<TransformComponent>(ComponentFamily.Transform).Position + _lightOffset);
         }
 
         public override void Update(float frameTime)

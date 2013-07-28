@@ -2,6 +2,7 @@
 <EntityTemplates>
   <EntityTemplate name="Worktop">
     <Components>
+      <Component name="TransformComponent"></Component>
       <Component name="NetworkMoverComponent"></Component>
       <Component name="SpriteComponent">
         <Parameters>

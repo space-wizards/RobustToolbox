@@ -2,6 +2,7 @@
 <EntityTemplates>
   <EntityTemplate name="Wrench">
     <Components>
+      <Component name="TransformComponent"></Component>
       <Component name="NetworkMoverComponent"></Component>
       <Component name="ItemSpriteComponent">
         <Parameters>
@@ -14,6 +15,7 @@
   </EntityTemplate>
   <EntityTemplate name="Welder">
     <Components>
+      <Component name="TransformComponent"></Component>
       <Component name="NetworkMoverComponent"></Component>
       <Component name="ItemSpriteComponent">
         <Parameters>
@@ -26,6 +28,7 @@
   </EntityTemplate>
   <EntityTemplate name="Crowbar">
     <Components>
+      <Component name="TransformComponent"></Component>
       <Component name="NetworkMoverComponent"></Component>
       <Component name="ItemSpriteComponent">
         <Parameters>
@@ -38,6 +41,7 @@
   </EntityTemplate>
   <EntityTemplate name="Mop">
     <Components>
+      <Component name="TransformComponent"></Component>
       <Component name="NetworkMoverComponent"></Component>
       <Component name="ItemSpriteComponent">
         <Parameters>

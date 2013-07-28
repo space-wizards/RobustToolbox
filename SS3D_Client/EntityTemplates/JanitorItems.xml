@@ -2,6 +2,7 @@
 <EntityTemplates>
   <EntityTemplate name="BlueBucket">
     <Components>
+      <Component name="TransformComponent"></Component>
       <Component name="NetworkMoverComponent"></Component>
       <Component name="ItemSpriteComponent">
         <Parameters>
@@ -14,6 +15,7 @@
   </EntityTemplate>
   <EntityTemplate name="WetFloorSign">
     <Components>
+      <Component name="TransformComponent"></Component>
       <Component name="NetworkMoverComponent"></Component>
       <Component name="ItemSpriteComponent">
         <Parameters>

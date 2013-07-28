@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using ClientInterfaces;
 using ClientInterfaces.GOC;
 using ClientInterfaces.Resource;
 using GorgonLibrary.Graphics;
@@ -43,7 +42,7 @@ namespace CGO
 
         public override float Bottom
         {
-            get { return Owner.Position.Y + (GetActiveDirectionalSprite().AABB.Height / 2); }
+            get { return Owner.GetComponent<TransformComponent>(ComponentFamily.Transform).Position.Y + (GetActiveDirectionalSprite().AABB.Height / 2); }
         }
 
         private void BuildDirectionalSprites()
@@ -181,7 +180,7 @@ namespace CGO
 
             Sprite spriteToCheck = GetActiveDirectionalSprite();
 
-            System.Drawing.RectangleF AABB = new System.Drawing.RectangleF(Owner.Position.X - (spriteToCheck.Width / 2), Owner.Position.Y - (spriteToCheck.Height / 2), spriteToCheck.Width, spriteToCheck.Height);
+            System.Drawing.RectangleF AABB = new System.Drawing.RectangleF(Owner.GetComponent<TransformComponent>(ComponentFamily.Transform).Position.X - (spriteToCheck.Width / 2), Owner.GetComponent<TransformComponent>(ComponentFamily.Transform).Position.Y - (spriteToCheck.Height / 2), spriteToCheck.Width, spriteToCheck.Height);
             if (!AABB.Contains(worldPos)) return false;
 
             System.Drawing.Point spritePosition = new System.Drawing.Point((int)(worldPos.X - AABB.X + spriteToCheck.ImageOffset.X), (int)(worldPos.Y - AABB.Y + spriteToCheck.ImageOffset.Y));
@@ -271,13 +270,13 @@ namespace CGO
 
             Sprite spriteToRender = GetActiveDirectionalSprite();
 
-            var renderPos = ClientWindowData.WorldToScreen(Owner.Position);
+            var renderPos = ClientWindowData.WorldToScreen(Owner.GetComponent<TransformComponent>(ComponentFamily.Transform).Position);
             SetSpriteCenter(spriteToRender, renderPos);
 
-            if (Owner.Position.X + spriteToRender.AABB.Right < topLeft.X
-                || Owner.Position.X > bottomRight.X
-                || Owner.Position.Y + spriteToRender.AABB.Bottom < topLeft.Y
-                || Owner.Position.Y > bottomRight.Y)
+            if (Owner.GetComponent<TransformComponent>(ComponentFamily.Transform).Position.X + spriteToRender.AABB.Right < topLeft.X
+                || Owner.GetComponent<TransformComponent>(ComponentFamily.Transform).Position.X > bottomRight.X
+                || Owner.GetComponent<TransformComponent>(ComponentFamily.Transform).Position.Y + spriteToRender.AABB.Bottom < topLeft.Y
+                || Owner.GetComponent<TransformComponent>(ComponentFamily.Transform).Position.Y > bottomRight.Y)
                 return;
 
             spriteToRender.HorizontalFlip = flip;

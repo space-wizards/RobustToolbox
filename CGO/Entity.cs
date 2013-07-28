@@ -37,7 +37,6 @@ namespace CGO
         public delegate void ShutdownEvent(Entity e);
         public event ShutdownEvent OnShutdown;
 
-        public Vector2D Position { get; set; }
         public Vector2D Velocity { get; set; }
 
         private Direction _direction = Direction.South;
@@ -172,14 +171,6 @@ namespace CGO
         }
 
         //FUNCTIONS TO REFACTOR AT A LATER DATE
-        /// <summary>
-        /// This should be refactored to some sort of component that sends entity movement input or something.
-        /// </summary>
-
-        public void Moved()
-        {
-            if(OnMove != null) OnMove(this, new VectorEventArgs(Position));
-        }
 
         internal void HandleComponentMessage(IncomingEntityComponentMessage message)
         {

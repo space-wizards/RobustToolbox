@@ -2,6 +2,7 @@
 <EntityTemplates>
   <EntityTemplate name="Breather">
     <Components>
+      <Component name="TransformComponent"></Component>
       <Component name="NetworkMoverComponent"></Component>
       <Component name="WearableSpriteComponent">
         <Parameters>

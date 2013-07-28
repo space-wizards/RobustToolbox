@@ -2,6 +2,7 @@
 <EntityTemplates>
   <EntityTemplate name="Extinguisher">
     <Components>
+      <Component name="TransformComponent"></Component>
       <Component name="NetworkMoverComponent"></Component>
       <Component name="SpriteComponent">
         <Parameters>
@@ -22,6 +23,7 @@
   </EntityTemplate>
   <EntityTemplate name="FireAlarm">
     <Components>
+      <Component name="TransformComponent"></Component>
       <Component name="NetworkMoverComponent"></Component>
       <Component name="SpriteComponent">
         <Parameters>
@@ -42,6 +44,7 @@
   </EntityTemplate>
   <EntityTemplate name="MedCabinet">
     <Components>
+      <Component name="TransformComponent"></Component>
       <Component name="NetworkMoverComponent"></Component>
       <Component name="SpriteComponent">
         <Parameters>

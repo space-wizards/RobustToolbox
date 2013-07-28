@@ -6,6 +6,7 @@ using BKSystem.IO;
 using SS13_Shared;
 using SS13.IoC;
 using ServerInterfaces.Atmos;
+using ServerServices.Log;
 
 namespace ServerServices.Atmos
 {
@@ -14,6 +15,8 @@ namespace ServerServices.Atmos
         private float temperature = 293.15f; // Normal room temp in K
         private float nextTemperature = 0;
         private float volume = 2.0f; // in m^3
+        private bool burning = false;
+        private bool exposed = false; // Have we been exposed to a source of ignition?
 
         public Dictionary<GasType, float> gasses; // Type, moles
         public Dictionary<GasType, float> nextGasses;
@@ -50,6 +53,7 @@ namespace ServerServices.Atmos
             nextTemperature = 0;
             if (temperature < 0)    // This shouldn't happen unless someone fucks with the temperature directly
                 temperature = 0;
+            exposed = false;
 
         }
 
@@ -96,6 +100,84 @@ namespace ServerServices.Atmos
             energyFlow *= (1 / factor);
             SetNextTemperature((energyFlow / HCCell));
             a.SetNextTemperature(-(energyFlow / HCa));
+        }
+
+        public void Expose()
+        {
+            exposed = true;
+        }
+
+        public void Burn()
+        {
+            var am = IoCManager.Resolve<IAtmosManager>();
+            if (!Burning) // If we're not burning lets see if we can start due to autoignition
+            {
+                foreach (GasType g in gasses.Keys)
+                {
+                    float ait = am.GetGasProperties(g).AutoignitionTemperature;
+                    if (ait > 0.0f && temperature > ait) // If our temperature is high enough to autoignite then we're burning now
+                    {
+                        burning = true;
+                        continue;
+                    }
+                }
+            }
+
+            float energy_released = 0.0f;
+
+            if (Burning || exposed) // We're going to try burning some of our gasses
+            {
+                float cAmount = 0.0f;
+                float oAmount = 0.0f;
+                foreach (GasType g in nextGasses.Keys)
+                {
+                    if (am.GetGasProperties(g).Combustable)
+                    {
+                        cAmount += gasses[g];
+                    }
+                    if (am.GetGasProperties(g).Oxidant)
+                    {
+                        oAmount += gasses[g];
+                    }
+                }
+
+                if (oAmount > 0.0001f && cAmount > 0.0001f && Pressure > 10)
+                {
+                    float ratio = Math.Min(1f, oAmount / cAmount); // This is how much of each gas we can burn as that's how much oxidant we have free
+                    ratio /= 3; // Lets not just go mental and burn everything in one go because that's dumb
+                    float amount = 0.0f;
+
+                    foreach (GasType g in gasses.Keys)
+                    {
+                        amount = gasses[g] * ratio;
+                        if (am.GetGasProperties(g).Combustable)
+                        {
+                            AddNextGas(-amount, g);
+                            AddNextGas(amount, GasType.CO2);
+                            energy_released += (am.GetGasProperties(g).SpecificHeatCapacity * 2000 * amount); // This is COMPLETE bullshit non science but whatever
+                        
+                        }
+                        if (am.GetGasProperties(g).Oxidant)
+                        {
+                            AddNextGas(-amount, g);
+                            AddNextGas(amount, GasType.CO2);
+                            energy_released += (am.GetGasProperties(g).SpecificHeatCapacity * 2000 * amount); // This is COMPLETE bullshit non science but whatever
+                        }
+                    }
+
+                }
+            }
+
+            if (energy_released > 0)
+            {
+                SetNextTemperature(energy_released *= HeatCapacity); // This is COMPLETE bullshit non science but whatever
+                burning = true;
+            }
+            else // Nothing burnt here so we're not on fire
+            {
+                burning = false;
+            }
+                
         }
 
         public float TotalGas
@@ -175,6 +257,13 @@ namespace ServerServices.Atmos
             }
         }
 
+        public bool Burning
+        {
+            get
+            {
+                return burning;
+            }
+        }
 
         
     }

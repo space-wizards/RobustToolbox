@@ -70,7 +70,7 @@ namespace CGO
 
         private void HandleOnMove(object sender, VectorEventArgs args)
         {
-            Translate(args.Vector2D);
+            Translate(args.VectorTo);
             GetMasterMoveDirection();
         }
 

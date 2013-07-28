@@ -2,6 +2,7 @@
 <EntityTemplates>
 	<EntityTemplate name="Crowbar">
 		<Components>
+      <Component name="TransformComponent"></Component>
 			<Component name="ClickableComponent"></Component>
 			<Component name="SpriteComponent"></Component>
 			<Component name="BasicInteractableComponent"></Component>
@@ -30,6 +31,7 @@
 	</EntityTemplate>
 	<EntityTemplate name="Welder">
 		<Components>
+      <Component name="TransformComponent"></Component>
 			<Component name="ClickableComponent"></Component>
 			<Component name="SpriteComponent"></Component>
 			<Component name="BasicInteractableComponent"></Component>
@@ -58,6 +60,7 @@
 	</EntityTemplate>
 	<EntityTemplate name="Wrench">
 		<Components>
+      <Component name="TransformComponent"></Component>
 			<Component name="ClickableComponent"></Component>
 			<Component name="SpriteComponent"></Component>
 			<Component name="BasicInteractableComponent"></Component>
@@ -86,6 +89,7 @@
 	</EntityTemplate>
 	<EntityTemplate name="Mop">
 		<Components>
+      <Component name="TransformComponent"></Component>
 			<Component name="ClickableComponent"></Component>
 			<Component name="SpriteComponent"></Component>
 			<Component name="BasicInteractableComponent"></Component>

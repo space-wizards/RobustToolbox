@@ -43,8 +43,8 @@ namespace SGO
         {
             master = EntityManager.Singleton.GetEntity(uid);
             master.OnShutdown += master_OnShutdown;
-            master.OnMove += HandleOnMove;
-            Translate(master.Position);
+            master.GetComponent<TransformComponent>(ComponentFamily.Transform).OnMove += HandleOnMasterMove;
+            Translate(master.GetComponent<TransformComponent>(ComponentFamily.Transform).Position);
         }
 
         private void master_OnShutdown(IEntity e)
@@ -56,21 +56,19 @@ namespace SGO
         {
             if (master != null)
             {
-                master.OnMove -= HandleOnMove;
+                master.GetComponent<TransformComponent>(ComponentFamily.Transform).OnMove -= HandleOnMasterMove;
                 master = null;
             }
         }
 
-        private void HandleOnMove(Vector2 toPosition, Vector2 fromPosition)
+        private void HandleOnMasterMove(object sender, VectorEventArgs args)
         {
-            Translate(toPosition);
+            Translate(args.VectorTo);
         }
 
         public void Translate(Vector2 toPosition)
         {
-            Vector2 oldPosition = Owner.Position;
-            Owner.Position = toPosition;
-            Owner.Moved(oldPosition);
+            Owner.GetComponent<TransformComponent>(ComponentFamily.Transform).Position = toPosition;
         }
     }
 }

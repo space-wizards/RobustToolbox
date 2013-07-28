@@ -67,19 +67,19 @@ namespace SGO
         public override void OnAdd(GameObject.IEntity owner)
         {
             base.OnAdd(owner);
-            Owner.OnMove += OnMove;
+            Owner.GetComponent<TransformComponent>(ComponentFamily.Transform).OnMove += OnMove;
         }
 
         public override void OnRemove()
         {
-            Owner.OnMove -= OnMove;
+            Owner.GetComponent<TransformComponent>(ComponentFamily.Transform).OnMove -= OnMove;
             base.OnRemove();
         }
 
-        private void OnMove(Vector2 newPosition, Vector2 oldPosition)
+        private void OnMove(object sender, VectorEventArgs args)
         {
-            SetPermeable(oldPosition);
-            SetImpermeable(newPosition);
+            SetPermeable(args.VectorFrom);
+            SetImpermeable(args.VectorTo);
         }
 
         protected override void RecieveItemInteraction(Entity actor, Entity item,
@@ -132,7 +132,7 @@ namespace SGO
             if (disabled && !force) return;
 
             var map = IoCManager.Resolve<IMapManager>();
-            Point occupiedTilePos = map.GetTileArrayPositionFromWorldPosition(Owner.Position);
+            Point occupiedTilePos = map.GetTileArrayPositionFromWorldPosition(Owner.GetComponent<TransformComponent>(ComponentFamily.Transform).Position);
             Tile occupiedTile = map.GetTileAt(occupiedTilePos.X, occupiedTilePos.Y) as Tile;
             Open = true;
             Owner.SendMessage(this, ComponentMessageType.DisableCollision);
@@ -145,7 +145,7 @@ namespace SGO
             if (disabled && !force) return;
 
             var map = IoCManager.Resolve<IMapManager>();
-            Point occupiedTilePos = map.GetTileArrayPositionFromWorldPosition(Owner.Position);
+            Point occupiedTilePos = map.GetTileArrayPositionFromWorldPosition(Owner.GetComponent<TransformComponent>(ComponentFamily.Transform).Position);
             Tile occupiedTile = map.GetTileAt(occupiedTilePos.X, occupiedTilePos.Y) as Tile;
             Open = false;
             timeOpen = 0;
@@ -157,7 +157,7 @@ namespace SGO
         private void SetImpermeable()
         {
             var map = IoCManager.Resolve<IMapManager>();
-            Point occupiedTilePos = map.GetTileArrayPositionFromWorldPosition(Owner.Position);
+            Point occupiedTilePos = map.GetTileArrayPositionFromWorldPosition(Owner.GetComponent<TransformComponent>(ComponentFamily.Transform).Position);
             Tile occupiedTile = map.GetTileAt(occupiedTilePos.X, occupiedTilePos.Y) as Tile;
             occupiedTile.GasPermeable = false;
         }

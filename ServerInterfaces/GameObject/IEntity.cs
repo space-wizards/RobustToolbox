@@ -11,8 +11,6 @@ namespace ServerInterfaces.GameObject
     
     public interface IEntity : GO.IEntity
     {
-        void Translate(Vector2 toPosition);
-        Vector2 Position { get; set; }
         Vector2 Velocity { get; set; }
         Direction Direction { get; set; }
         int Uid { get; set; }
@@ -24,12 +22,10 @@ namespace ServerInterfaces.GameObject
         void FireNetworkedSpawn();
         void FireNetworkedJoinSpawn(NetConnection client);
         GO.EntityTemplate Template { get; set; }
-        event EntityMoveEvent OnMove; 
         event ShutdownEvent OnShutdown;
         void SendComponentNetworkMessage(IGameObjectComponent component, NetDeliveryMethod method, NetConnection recipient, params object[] messageParams);
 
         void Initialize(bool loaded = false);
-        void Moved(Vector2 oldPosition);
         void HandleNetworkMessage(ServerIncomingEntityMessage message);
         EntityState GetEntityState();
         bool Match(IEntityQuery query);

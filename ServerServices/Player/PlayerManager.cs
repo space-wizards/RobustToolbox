@@ -3,6 +3,7 @@ using System.Linq;
 
 using Lidgren.Network;
 using SS13_Shared;
+using SS13_Shared.GO;
 using SS13_Shared.GameStates;
 using SS13_Shared.ServerEnums;
 using ServerInterfaces;
@@ -40,13 +41,13 @@ namespace ServerServices.Player
             //Spawn the player's entity. There's probably a much better place to do this.
             IEntity a = server.EntityManager.SpawnEntity("HumanMob");
             var human = a;
-            a.Translate(new Vector2(160, 160));
+            a.GetComponent<ITransformComponent>(ComponentFamily.Transform).TranslateTo(new Vector2(160, 160));
             if (s.assignedJob != null)
             {
                 foreach (var newItem in s.assignedJob.SpawnEquipment.Select(def => server.EntityManager.SpawnEntity(def.ObjectType)))
                 {
-                    newItem.Translate(human.Position); //This is not neccessary once the equipment component is built.
-                    human.SendMessage(this, SS13_Shared.GO.ComponentMessageType.EquipItem, newItem);
+                    newItem.GetComponent<ITransformComponent>(ComponentFamily.Transform).TranslateTo(human.GetComponent<ITransformComponent>(ComponentFamily.Transform).Position); //This is not neccessary once the equipment component is built.
+                    human.SendMessage(this, ComponentMessageType.EquipItem, newItem);
                 }
             }
             s.AttachToEntity(a);
@@ -117,7 +118,7 @@ namespace ServerServices.Player
         {
             return
                 playerSessions.Values.Where(
-                    x => x.attachedEntity != null && (position - x.attachedEntity.Position).Magnitude < range).ToArray();
+                    x => x.attachedEntity != null && (position - x.attachedEntity.GetComponent<ITransformComponent>(ComponentFamily.Transform).Position).Magnitude < range).ToArray();
         }
 
         public IPlayerSession[] GetPlayersInLobby()

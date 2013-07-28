@@ -5,11 +5,13 @@ namespace SS13_Shared
 {
     public class VectorEventArgs : EventArgs
     {
-        public Vector2D Vector2D { get; private set; }
-
-        public VectorEventArgs(Vector2D vector)
+        public Vector2 VectorFrom { get; private set; }
+        public Vector2 VectorTo { get; private set; }
+        
+        public VectorEventArgs(Vector2 vectorFrom, Vector2 vectorTo)
         {
-            Vector2D = vector;
+            VectorFrom = vectorFrom;
+            VectorTo = vectorTo;
         }
     }
 }

@@ -201,7 +201,7 @@ namespace SGO
             string name = e.Attribute("name").Value;
             IEntity ent = SpawnEntity(template);
             ent.Name = name;
-            ent.Translate(new Vector2(X, Y));
+            ent.GetComponent<TransformComponent>(ComponentFamily.Transform).TranslateTo(new Vector2(X, Y));
             ent.Direction = dir;
             ent.SendMessage(this, ComponentMessageType.WallMountSearch); //Tell wall mounted compos to look for a tile to attach to. I hate to do this here but i have to.
         }
@@ -209,8 +209,8 @@ namespace SGO
         private XElement ToXML(IEntity e)
         {
             var el = new XElement("SavedEntity",
-                                  new XAttribute("X", e.Position.X.ToString(CultureInfo.InvariantCulture)),
-                                  new XAttribute("Y", e.Position.Y.ToString(CultureInfo.InvariantCulture)),
+                                  new XAttribute("X", e.GetComponent<TransformComponent>(ComponentFamily.Transform).Position.X.ToString(CultureInfo.InvariantCulture)),
+                                  new XAttribute("Y", e.GetComponent<TransformComponent>(ComponentFamily.Transform).Position.Y.ToString(CultureInfo.InvariantCulture)),
                                   new XAttribute("template", e.Template.Name),
                                   new XAttribute("name", e.Name),
                                   new XAttribute("direction", e.Direction.ToString()));
@@ -226,7 +226,7 @@ namespace SGO
         public IEntity SpawnEntityAt(string EntityType, Vector2 position, bool send = true)
         {
             IEntity e = SpawnEntity(EntityType, false);
-            e.Translate(position);
+            e.GetComponent<TransformComponent>(ComponentFamily.Transform).TranslateTo(position);
             if (send) SendSpawnEntityAtPosition(e);
             if (send) e.Initialize();
             if (send) e.FireNetworkedSpawn();

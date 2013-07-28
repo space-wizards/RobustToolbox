@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using Lidgren.Network;
+using SS13_Shared.GO;
 using ServerInterfaces;
 using ServerInterfaces.Chat;
 using ServerInterfaces.GameObject;
@@ -109,7 +110,7 @@ namespace ServerServices.Chat
 
         private void SendToPlayersInRange(NetOutgoingMessage message, int entityId)
         {
-            var recipients = IoCManager.Resolve<IPlayerManager>().GetPlayersInRange(_serverMain.EntityManager.GetEntity(entityId).Position, 512).Select(p => p.ConnectedClient).ToList();
+            var recipients = IoCManager.Resolve<IPlayerManager>().GetPlayersInRange(_serverMain.EntityManager.GetEntity(entityId).GetComponent<ITransformComponent>(ComponentFamily.Transform).Position, 512).Select(p => p.ConnectedClient).ToList();
             IoCManager.Resolve<ISS13NetServer>().SendToMany(message, recipients);
         }
 
@@ -140,7 +141,7 @@ namespace ServerServices.Chat
             if (player == null)
                 position = new Vector2(160, 160);
             else
-                position = player.Position;
+                position = player.GetComponent<ITransformComponent>(ComponentFamily.Transform).Position;
             
             var map = IoCManager.Resolve<IMapManager>();
             switch (command)

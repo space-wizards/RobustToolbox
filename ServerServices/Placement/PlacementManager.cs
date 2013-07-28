@@ -110,7 +110,7 @@ namespace ServerServices.Placement
                     IEntity created = _server.EntityManager.SpawnEntityAt(entityTemplateName, new Vector2(xRcv, yRcv));
                     if (created != null)
                     {
-                        created.Translate(new Vector2(xRcv, yRcv));
+                        created.GetComponent<ITransformComponent>(ComponentFamily.Transform).TranslateTo(new Vector2(xRcv, yRcv));
                         created.Direction = dirRcv;
                         created.SendMessage(this, ComponentMessageType.WallMountTile, new Vector2(tileX, tileY));
                     }

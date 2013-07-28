@@ -37,9 +37,7 @@ namespace SGO
 
         public void Translate(float x, float y)
         {
-            Vector2 oldPosition = Owner.Position;
-            Owner.Position = new Vector2(x, y);
-            Owner.Moved(oldPosition);
+            Owner.GetComponent<TransformComponent>(ComponentFamily.Transform).Position = new Vector2(x, y);
             SendPositionUpdate();
         }
 
@@ -62,7 +60,10 @@ namespace SGO
         
         public override ComponentState GetComponentState()
         {
-            return new MoverComponentState(Owner.Position.X, Owner.Position.Y, Owner.Velocity.X, Owner.Velocity.Y);
+            return new MoverComponentState(Owner.GetComponent<TransformComponent>(ComponentFamily.Transform).Position.X, 
+                Owner.GetComponent<TransformComponent>(ComponentFamily.Transform).Position.Y, 
+                Owner.Velocity.X, 
+                Owner.Velocity.Y);
         }
     }
 }

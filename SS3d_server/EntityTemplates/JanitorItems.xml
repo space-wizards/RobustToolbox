@@ -3,6 +3,7 @@
   <EntityTemplate name="BlueBucket">
     <Components>
       <Component name="TransformComponent"></Component>
+      <Component name="VelocityComponent"></Component>
       <Component name="ClickableComponent"></Component>
       <Component name="SpriteComponent"></Component>
       <Component name="BasicInteractableComponent"></Component>
@@ -27,6 +28,7 @@
   <EntityTemplate name="WetFloorSign">
     <Components>
       <Component name="TransformComponent"></Component>
+      <Component name="VelocityComponent"></Component>
       <Component name="ClickableComponent"></Component>
       <Component name="SpriteComponent"></Component>
       <Component name="BasicInteractableComponent"></Component>

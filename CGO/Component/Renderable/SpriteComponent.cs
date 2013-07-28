@@ -166,7 +166,7 @@ namespace CGO
 
             Sprite sprite = currentBaseSprite;
 
-            string dirName = (currentBaseSprite.Name + "_" + Owner.Direction.ToString()).ToLowerInvariant();
+            string dirName = (currentBaseSprite.Name + "_" + Owner.GetComponent<DirectionComponent>(ComponentFamily.Direction).Direction.ToString()).ToLowerInvariant();
 
             if (dirSprites.ContainsKey(dirName))
                 sprite = dirSprites[dirName];

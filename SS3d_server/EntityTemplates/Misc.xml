@@ -3,6 +3,7 @@
   <EntityTemplate name="Puddle">
     <Components>
       <Component name="TransformComponent"></Component>
+      <Component name="VelocityComponent"></Component>
       <Component name="ClickableComponent"></Component>
       <Component name="SpriteComponent"></Component>
       <Component name="BasicInteractableComponent"></Component>
@@ -16,6 +17,7 @@
   <EntityTemplate name="Blood">
     <Components>
       <Component name="TransformComponent"></Component>
+      <Component name="VelocityComponent"></Component>
       <Component name="ClickableComponent"></Component>
       <Component name="SpriteComponent"></Component>
       <Component name="BasicMoverComponent"></Component>

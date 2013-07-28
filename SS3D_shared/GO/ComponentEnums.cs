@@ -40,7 +40,9 @@ namespace SS13_Shared.GO
         PlayerActions, //Holds and manages player actions (abilities).
         EntityStats, //Holds stats an entity provides. Also Manages request concerning stats.
         Physics,
-        Transform
+        Transform,
+        Velocity,
+        Direction
     }
 
     public enum ItemComponentNetMessage

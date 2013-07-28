@@ -3,6 +3,7 @@
   <EntityTemplate name="Extinguisher">
     <Components>
       <Component name="TransformComponent"></Component>
+      <Component name="VelocityComponent"></Component>
       <Component name="ClickableComponent"></Component>
       <Component name="SpriteComponent"></Component>
       <Component name="BasicInteractableComponent"></Component>
@@ -18,6 +19,7 @@
   <EntityTemplate name="FireAlarm">
     <Components>
       <Component name="TransformComponent"></Component>
+      <Component name="VelocityComponent"></Component>
       <Component name="ClickableComponent"></Component>
       <Component name="SpriteComponent"></Component>
       <Component name="BasicInteractableComponent"></Component>
@@ -33,6 +35,7 @@
   <EntityTemplate name="MedCabinet">
     <Components>
       <Component name="TransformComponent"></Component>
+      <Component name="VelocityComponent"></Component>
       <Component name="ClickableComponent"></Component>
       <Component name="SpriteComponent"></Component>
       <Component name="BasicInteractableComponent"></Component>

@@ -11,7 +11,7 @@ namespace CGO
     /// </summary>
     public class NetworkMoverComponent : GameObjectComponent
     {
-        private Constants.MoveDirs movedir = Constants.MoveDirs.south;
+        private Direction movedir = Direction.South;
         Vector2D targetPosition;
         Vector2D startPosition;
         private MoverComponentState previousState;
@@ -92,21 +92,21 @@ namespace CGO
             startPosition = Owner.GetComponent<TransformComponent>(ComponentFamily.Transform).Position;
 
             if (delta.X > 0 && delta.Y > 0)
-                SetMoveDir(Constants.MoveDirs.southeast);
+                SetMoveDir(Direction.SouthEast);
             if (delta.X > 0 && delta.Y < 0)
-                SetMoveDir(Constants.MoveDirs.northeast);
+                SetMoveDir(Direction.NorthEast);
             if (delta.X < 0 && delta.Y > 0)
-                SetMoveDir(Constants.MoveDirs.southwest);
+                SetMoveDir(Direction.SouthWest);
             if (delta.X < 0 && delta.Y < 0)
-                SetMoveDir(Constants.MoveDirs.northwest);
+                SetMoveDir(Direction.NorthWest);
             if (delta.X > 0 && delta.Y == 0)
-                SetMoveDir(Constants.MoveDirs.east);
+                SetMoveDir(Direction.East);
             if (delta.X < 0 && delta.Y == 0)
-                SetMoveDir(Constants.MoveDirs.west);
+                SetMoveDir(Direction.West);
             if (delta.Y > 0 && delta.X == 0)
-                SetMoveDir(Constants.MoveDirs.south);
+                SetMoveDir(Direction.South);
             if (delta.Y < 0 && delta.X == 0)
-                SetMoveDir(Constants.MoveDirs.north);
+                SetMoveDir(Direction.North);
         }
 
         /// <summary>
@@ -124,7 +124,7 @@ namespace CGO
             return time * (end - start) + start;
         }
 
-        private void SetMoveDir(Constants.MoveDirs _movedir)
+        private void SetMoveDir(Direction _movedir)
         {
             if (_movedir != movedir)
             {
@@ -135,7 +135,7 @@ namespace CGO
 
         public override void HandleComponentState(dynamic state)
         {
-            SetNewState(state);
+            //SetNewState(state);
         }
 
         private void SetNewState(MoverComponentState state)

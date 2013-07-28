@@ -192,9 +192,6 @@ namespace CGO
                 case EntityMessage.PositionMessage:
                     //TODO: Handle position messages!
                     break;
-                case EntityMessage.NameUpdate:
-                    result = new ClientIncomingEntityMessage(uid, EntityMessage.NameUpdate, message.ReadString());
-                    break;
                 case EntityMessage.GetSVars:
                     result = new ClientIncomingEntityMessage(uid, EntityMessage.GetSVars, message);
                     break;

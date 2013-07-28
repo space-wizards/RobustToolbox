@@ -11,7 +11,7 @@ namespace CGO
     public class SlaveMoverComponent : GameObjectComponent
     {
         private IEntity _master;
-        private Constants.MoveDirs _movedir = Constants.MoveDirs.south;
+        private Direction _movedir = Direction.South;
         
         public SlaveMoverComponent():base()
         {
@@ -55,7 +55,7 @@ namespace CGO
 
             if (reply.MessageType == ComponentMessageType.MoveDirection)
             {
-                SetMoveDir((Constants.MoveDirs)reply.ParamsList[0]);
+                SetMoveDir((Direction)reply.ParamsList[0]);
                 Owner.SendMessage(this, ComponentMessageType.MoveDirection, _movedir);
             }
         }
@@ -101,7 +101,7 @@ namespace CGO
             //Owner.Moved();
         }
 
-        private void SetMoveDir(Constants.MoveDirs movedir)
+        private void SetMoveDir(Direction movedir)
         {
             if (movedir == _movedir) return;
 

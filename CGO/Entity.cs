@@ -39,19 +39,6 @@ namespace CGO
 
         public Vector2D Velocity { get; set; }
 
-        private Direction _direction = Direction.South;
-        public Direction Direction
-        {
-            get
-            {
-                return _direction;
-            }
-            set
-            {
-                _direction = value;
-            }
-        }
-
         #endregion
 
         #region Constructor/Destructor
@@ -189,14 +176,11 @@ namespace CGO
                 case EntityMessage.ComponentMessage:
                     HandleComponentMessage((IncomingEntityComponentMessage)message.Message);
                     break;
-                case EntityMessage.NameUpdate:
-                    Name = message.Message as string;
-                    break;
                 case EntityMessage.GetSVars:
                     HandleGetSVars(message);
                     break;
                 case EntityMessage.SetDirection:
-                    _direction = (Direction)((byte)message.Message);
+                    GetComponent<DirectionComponent>(ComponentFamily.Direction).Direction = (Direction)((byte)message.Message);
                     break;
             }
         }
@@ -262,7 +246,7 @@ namespace CGO
                 Moved();
             }*/
             Name = state.StateData.Name;
-            Direction = state.StateData.Direction;
+            GetComponent<DirectionComponent>(ComponentFamily.Direction).Direction = state.StateData.Direction;
             foreach(var compState in state.ComponentStates)
             {
                 if (HasComponent(compState.Family))

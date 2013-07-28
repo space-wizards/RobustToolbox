@@ -29,37 +29,37 @@ namespace CGO
             switch (type)
             {
                 case ComponentMessageType.MoveDirection:
-                    switch ((Constants.MoveDirs)list[0])
+                    switch ((Direction)list[0])
                     {
-                        case Constants.MoveDirs.north:
+                        case Direction.North:
                             SetSpriteByKey(_basename + "_back");
                             flip = false;
                             break;
-                        case Constants.MoveDirs.south:
+                        case Direction.South:
                             SetSpriteByKey(_basename + "_front");
                             flip = false;
                             break;
-                        case Constants.MoveDirs.east:
+                        case Direction.East:
                             SetSpriteByKey(_basename + "_side");
                             flip = true;
                             break;
-                        case Constants.MoveDirs.west:
+                        case Direction.West:
                             SetSpriteByKey(_basename + "_side");
                             flip = false;
                             break;
-                        case Constants.MoveDirs.northeast:
+                        case Direction.NorthEast:
                             SetSpriteByKey(_basename + "_back");
                             flip = false;
                             break;
-                        case Constants.MoveDirs.northwest:
+                        case Direction.NorthWest:
                             SetSpriteByKey(_basename + "_back");
                             flip = false;
                             break;
-                        case Constants.MoveDirs.southeast:
+                        case Direction.SouthEast:
                             SetSpriteByKey(_basename + "_front");
                             flip = false;
                             break;
-                        case Constants.MoveDirs.southwest:
+                        case Direction.SouthWest:
                             SetSpriteByKey(_basename + "_front");
                             flip = false;
                             break;

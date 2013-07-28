@@ -92,7 +92,7 @@ namespace CGO
         private IEntity SpawnEntityAt(string entityType, int uid, Vector2D position, Direction dir = Direction.North)
         {
             var e = SpawnEntity(entityType, uid);
-            e.Direction = dir;
+            e.GetComponent<DirectionComponent>(ComponentFamily.Direction).Direction = dir;
             e.GetComponent<TransformComponent>(ComponentFamily.Transform).Position = position;
             return e;
         }

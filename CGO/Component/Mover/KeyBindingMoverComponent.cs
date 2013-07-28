@@ -1,6 +1,4 @@
-﻿using System.Collections.Generic;
-using System.Linq;
-using SS13_Shared;
+﻿using SS13_Shared;
 using SS13_Shared.GO;
 using GorgonLibrary;
 
@@ -153,14 +151,14 @@ namespace CGO
 
         public virtual void SendPositionUpdate()
         {
-            Owner.SendComponentNetworkMessage(this, Lidgren.Network.NetDeliveryMethod.ReliableUnordered, Owner.Position.X, Owner.Position.Y, Owner.Velocity.X, Owner.Velocity.Y);
+            Owner.SendComponentNetworkMessage(this, Lidgren.Network.NetDeliveryMethod.ReliableUnordered, Owner.GetComponent<TransformComponent>(ComponentFamily.Transform).Position.X, Owner.GetComponent<TransformComponent>(ComponentFamily.Transform).Position.Y, Owner.Velocity.X, Owner.Velocity.Y);
         }
 
         public void PlainTranslate(float x, float y)
         {
-            var delta = new Vector2D(x, y) - Owner.Position;
+            var delta = new Vector2D(x, y) - Owner.GetComponent<TransformComponent>(ComponentFamily.Transform).Position;
 
-            Owner.Position = new Vector2D(x, y);
+            Owner.GetComponent<TransformComponent>(ComponentFamily.Transform).Position = new Vector2D(x, y);
             
             if (delta.X > 0 && delta.Y > 0)
                 SetMoveDir(Constants.MoveDirs.southeast);
@@ -179,7 +177,7 @@ namespace CGO
             if (delta.Y < 0 && delta.X == 0)
                 SetMoveDir(Constants.MoveDirs.north);
 
-            Owner.Moved();
+            //Owner.Moved();
         }
 
         /// <summary>
@@ -188,7 +186,7 @@ namespace CGO
         /// <param name="translationVector"></param>
         public virtual void Translate(Vector2D translationVector)
         {
-            var oldPos = Owner.Position;
+            var oldPos = Owner.GetComponent<TransformComponent>(ComponentFamily.Transform).Position;
 
             var translated = TryTranslate(translationVector, false); //Only bump once...
             if (!translated)
@@ -197,7 +195,7 @@ namespace CGO
                 translated = TryTranslate(new Vector2D(0, translationVector.Y), true);
             if (translated)
             {
-                var delta = Owner.Position - oldPos;
+                var delta = Owner.GetComponent<TransformComponent>(ComponentFamily.Transform).Position - oldPos;
                 if (delta.X > 0 && delta.Y > 0)
                     SetMoveDir(Constants.MoveDirs.southeast);
                 if (delta.X > 0 && delta.Y < 0)
@@ -223,7 +221,7 @@ namespace CGO
                     _moveTimeCache = 0;
                 }
             }
-            Owner.Moved();
+            //Owner.Moved();
         }
 
         /// <summary>
@@ -234,8 +232,8 @@ namespace CGO
         /// <returns></returns>
         public bool TryTranslate(Vector2D translationVector, bool suppressBump)
         {
-            var oldPosition = Owner.Position;
-            Owner.Position += translationVector; // We move the sprite here rather than the position, as we can then use its updated AABB values.
+            var oldPosition = Owner.GetComponent<TransformComponent>(ComponentFamily.Transform).Position;
+            Owner.GetComponent<TransformComponent>(ComponentFamily.Transform).Position += translationVector; // We move the sprite here rather than the position, as we can then use its updated AABB values.
             //Check collision.
             var reply = Owner.SendMessage(this, ComponentFamily.Collider, ComponentMessageType.CheckCollision, false);
             if (reply.MessageType == ComponentMessageType.CollisionStatus)
@@ -243,7 +241,7 @@ namespace CGO
                 var colliding = (bool)reply.ParamsList[0];
                 if (colliding) //Collided, reset position and return false.
                 {
-                    Owner.Position = oldPosition;
+                    Owner.GetComponent<TransformComponent>(ComponentFamily.Transform).Position = oldPosition;
                     return false;
                 }
             }

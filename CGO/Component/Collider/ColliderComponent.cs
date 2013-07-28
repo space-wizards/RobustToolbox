@@ -1,11 +1,8 @@
-﻿using System.Collections.Generic;
-using System.Linq;
+﻿using System.Linq;
 using System.Drawing;
 using ClientInterfaces.Collision;
-using ClientInterfaces.GOC;
 using GorgonLibrary;
 using SS13.IoC;
-using SS13_Shared;
 using SS13_Shared.GO;
 
 namespace CGO
@@ -33,8 +30,8 @@ namespace CGO
             get
             { // Return tweaked AABB
                 if (currentAABB != null)
-                    return new RectangleF(currentAABB.Left + Owner.Position.X - (currentAABB.Width / 2) + tweakAABB.W,
-                                        currentAABB.Top + Owner.Position.Y - (currentAABB.Height / 2) + tweakAABB.X,
+                    return new RectangleF(currentAABB.Left + Owner.GetComponent<TransformComponent>(ComponentFamily.Transform).Position.X - (currentAABB.Width / 2) + tweakAABB.W,
+                                        currentAABB.Top + Owner.GetComponent<TransformComponent>(ComponentFamily.Transform).Position.Y - (currentAABB.Height / 2) + tweakAABB.X,
                                         currentAABB.Width - (tweakAABB.W - tweakAABB.Y),
                                         currentAABB.Height - (tweakAABB.X - tweakAABB.Z));
                 else

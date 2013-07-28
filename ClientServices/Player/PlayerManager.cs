@@ -1,12 +1,11 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using CGO;
 using ClientInterfaces.Network;
 using ClientInterfaces.Player;
-using ClientInterfaces.State;
 using ClientServices.Player.PostProcessing;
 using ClientServices.State.States;
-using GameObject;
 using GorgonLibrary.Graphics;
 using Lidgren.Network;
 using GorgonLibrary;
@@ -55,7 +54,7 @@ namespace ClientServices.Player
             ControlledEntity.AddComponent(ComponentFamily.Mover, EntityManager.Singleton.ComponentFactory.GetComponent("KeyBindingMoverComponent"));
             ControlledEntity.AddComponent(ComponentFamily.Collider, EntityManager.Singleton.ComponentFactory.GetComponent("ColliderComponent"));
             ControlledEntity.GetComponent(ComponentFamily.Collider).SetParameter(new ComponentParameter("TweakAABB", new Vector4D(39, 0, 0, 0)));
-            ControlledEntity.OnMove += PlayerEntityMoved;
+            ControlledEntity.GetComponent<TransformComponent>(ComponentFamily.Transform).OnMove += PlayerEntityMoved;
         }
 
         public void AddEffect(PostProcessingEffectType type, float duration)
@@ -94,7 +93,7 @@ namespace ClientServices.Player
             ControlledEntity.RemoveComponent(ComponentFamily.Input);
             ControlledEntity.RemoveComponent(ComponentFamily.Mover);
             ControlledEntity.RemoveComponent(ComponentFamily.Collider);
-            ControlledEntity.OnMove -= PlayerEntityMoved;
+            ControlledEntity.GetComponent<TransformComponent>(ComponentFamily.Transform).OnMove -= PlayerEntityMoved;
             ControlledEntity = null;
         }
 

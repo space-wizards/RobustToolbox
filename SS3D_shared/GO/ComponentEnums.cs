@@ -39,7 +39,8 @@ namespace SS13_Shared.GO
         StatusEffects, //Holds and manages status effects.
         PlayerActions, //Holds and manages player actions (abilities).
         EntityStats, //Holds stats an entity provides. Also Manages request concerning stats.
-        Physics
+        Physics,
+        Transform
     }
 
     public enum ItemComponentNetMessage

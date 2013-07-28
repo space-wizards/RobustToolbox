@@ -17,7 +17,7 @@
         /// </summary>
         /// <param name="entityTemplateName">name of the template</param>
         /// <returns>Created Entity</returns>
-        public Entity CreateEntity(string entityTemplateName, EntityNetworkManager entityNetworkManager)
+        public Entity CreateEntity(string entityTemplateName)
         {
             var template = m_entityTemplateDatabase.GetTemplate(entityTemplateName);
             //TODO: Throw exception here

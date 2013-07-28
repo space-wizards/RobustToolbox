@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
 using GorgonLibrary;
 using SS13_Shared;
 using SS13_Shared.GO;
@@ -137,16 +136,16 @@ namespace CGO
         public override void Render(Vector2D topLeft, Vector2D bottomRight)
         {
             if (!visible) return;
-            if (Owner.Position.X < topLeft.X
-                || Owner.Position.X > bottomRight.X
-                || Owner.Position.Y < topLeft.Y
-                || Owner.Position.Y > bottomRight.Y)
+            if (Owner.GetComponent<TransformComponent>(ComponentFamily.Transform).Position.X < topLeft.X
+                || Owner.GetComponent<TransformComponent>(ComponentFamily.Transform).Position.X > bottomRight.X
+                || Owner.GetComponent<TransformComponent>(ComponentFamily.Transform).Position.Y < topLeft.Y
+                || Owner.GetComponent<TransformComponent>(ComponentFamily.Transform).Position.Y > bottomRight.Y)
                 return;
 
             base.Render(topLeft, bottomRight);
 
             if (_speechBubble != null)
-                _speechBubble.Draw(Owner.Position, ClientWindowData.Singleton.ScreenOrigin, currentBaseSprite);
+                _speechBubble.Draw(Owner.GetComponent<TransformComponent>(ComponentFamily.Transform).Position, ClientWindowData.Singleton.ScreenOrigin, currentBaseSprite);
         }
 
         public override void HandleComponentState(dynamic state)

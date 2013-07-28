@@ -88,6 +88,7 @@
     <Compile Include="Component\Renderable\MobSpriteComponent.cs" />
     <Compile Include="Component\Renderable\SpriteComponent.cs" />
     <Compile Include="Component\StatusEffects\StatusEffectComp.cs" />
+    <Compile Include="Component\Transform\TransformComponent.cs" />
     <Compile Include="ContextMenuEntry.cs" />
     <Compile Include="Entity.cs" />
     <Compile Include="EntityFactory.cs" />

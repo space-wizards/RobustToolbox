@@ -4,16 +4,14 @@ namespace SGO
 {
     public class EntityFactory
     {
-        private readonly EntityNetworkManager m_entityNetworkManager;
         private readonly EntityTemplateDatabase m_entityTemplateDatabase;
 
         /// <summary>
         /// Constructor
         /// </summary>
-        public EntityFactory(EntityTemplateDatabase entityTemplateDatabase, EntityNetworkManager entityNetworkManager)
+        public EntityFactory(EntityTemplateDatabase entityTemplateDatabase)
         {
             m_entityTemplateDatabase = entityTemplateDatabase;
-            m_entityNetworkManager = entityNetworkManager;
         }
 
         /// <summary>

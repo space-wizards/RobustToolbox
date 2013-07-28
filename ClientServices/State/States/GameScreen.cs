@@ -410,7 +410,7 @@ namespace ClientServices.State.States
             PlacementManager.Update(MousePosScreen, MapManager);
             PlayerManager.Update(e.FrameDeltaTime);
             if(PlayerManager != null && PlayerManager.ControlledEntity != null)
-                ClientWindowData.Singleton.UpdateViewPort(PlayerManager.ControlledEntity.Position);
+                ClientWindowData.Singleton.UpdateViewPort(PlayerManager.ControlledEntity.GetComponent<TransformComponent>(ComponentFamily.Transform).Position);
 
             MousePosWorld = new Vector2D(MousePosScreen.X + WindowOrigin.X, MousePosScreen.Y + WindowOrigin.Y);
         }
@@ -664,7 +664,7 @@ namespace ClientServices.State.States
 
             if (PlayerManager.ControlledEntity != null)
             {
-                var centerTile = MapManager.GetTileArrayPositionFromWorldPosition(PlayerManager.ControlledEntity.Position);
+                var centerTile = MapManager.GetTileArrayPositionFromWorldPosition(PlayerManager.ControlledEntity.GetComponent<TransformComponent>(ComponentFamily.Transform).Position);
 
                 var xStart = Math.Max(0, centerTile.X - (ScreenWidthTiles / 2) - 1);
                 var yStart = Math.Max(0, centerTile.Y - (ScreenHeightTiles / 2) - 1);
@@ -954,7 +954,7 @@ namespace ClientServices.State.States
             if (bPlayerVision)
             {
                 playerOcclusionTarget.Clear(Color.Black);
-                playerVision.Move(PlayerManager.ControlledEntity.Position);
+                playerVision.Move(PlayerManager.ControlledEntity.GetComponent<TransformComponent>(ComponentFamily.Transform).Position);
                 LightArea area = GetLightArea(RadiusToShadowMapSize(playerVision.Radius));
                 area.LightPosition = playerVision.Position; // Set the light position
 
@@ -1111,7 +1111,7 @@ namespace ClientServices.State.States
         public void FormResize()
         {
             Gorgon.CurrentClippingViewport = new Viewport(0, 0, Gorgon.CurrentClippingViewport.Width, Gorgon.CurrentClippingViewport.Height);
-            ClientWindowData.Singleton.UpdateViewPort(PlayerManager.ControlledEntity.Position);
+            ClientWindowData.Singleton.UpdateViewPort(PlayerManager.ControlledEntity.GetComponent<TransformComponent>(ComponentFamily.Transform).Position);
             UserInterfaceManager.ResizeComponents();
             ResetRendertargets();
             IoCManager.Resolve<ILightManager>().RecalculateLights();
@@ -1141,7 +1141,7 @@ namespace ClientServices.State.States
             if (e.Key == KeyboardKeys.F6)
             {
                 var lights = IoCManager.Resolve<ILightManager>().lightsInRadius(
-                    PlayerManager.ControlledEntity.Position, 768f);
+                    PlayerManager.ControlledEntity.GetComponent<TransformComponent>(ComponentFamily.Transform).Position, 768f);
                 Random r = new Random();
                 int i = r.Next(lights.Length - 1);
                 lights[i].SetColor(r.Next(255), r.Next(255), r.Next(255), r.Next(255));
@@ -1227,7 +1227,7 @@ namespace ClientServices.State.States
             var mouseAABB = new RectangleF(MousePosWorld.X, MousePosWorld.Y, 1, 1);
             var checkDistance = MapManager.GetTileSpacing() * 1.5f;
             // Find all the entities near us we could have clicked
-            var entities = EntityManager.Singleton.GetEntitiesInRange(PlayerManager.ControlledEntity.Position, checkDistance);
+            var entities = EntityManager.Singleton.GetEntitiesInRange(PlayerManager.ControlledEntity.GetComponent<TransformComponent>(ComponentFamily.Transform).Position, checkDistance);
                 
             // See which one our click AABB intersected with
             var clickedEntities = new List<ClickData>();
@@ -1253,7 +1253,7 @@ namespace ClientServices.State.States
                 //                  select cd.Clicked).Last();
 
                 var entToClick = (from cd in clickedEntities
-                                  orderby cd.Drawdepth ascending, cd.Clicked.Position.Y ascending
+                                  orderby cd.Drawdepth ascending, cd.Clicked.GetComponent<TransformComponent>(ComponentFamily.Transform).Position.Y ascending
                                   select cd.Clicked).Last();
 
                 if (PlacementManager.Eraser && PlacementManager.IsActive)

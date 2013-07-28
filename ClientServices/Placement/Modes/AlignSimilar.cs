@@ -44,13 +44,13 @@ namespace ClientServices.Placement.Modes
             currentTile = currentMap.GetTileAt(mouseWorld);
 
             if (pManager.CurrentPermission.Range > 0)
-                if ((pManager.PlayerManager.ControlledEntity.Position - mouseWorld).Length > pManager.CurrentPermission.Range) return false;
+                if ((pManager.PlayerManager.ControlledEntity.GetComponent<TransformComponent>(ComponentFamily.Transform).Position - mouseWorld).Length > pManager.CurrentPermission.Range) return false;
 
             var nearbyEntities = EntityManager.Singleton.GetEntitiesInRange(mouseWorld, snapToRange);
 
             var snapToEntities = from IEntity entity in nearbyEntities
                                  where entity.Template == pManager.CurrentTemplate
-                                 orderby (entity.Position - mouseWorld).Length ascending
+                                 orderby (entity.GetComponent<TransformComponent>(ComponentFamily.Transform).Position - mouseWorld).Length ascending
                                  select entity;
 
             if (snapToEntities.Any())
@@ -66,7 +66,7 @@ namespace ClientServices.Placement.Modes
                 {
                     var closestSprite = (Sprite)reply.ParamsList[0]; //This is faster but kinda unsafe.
 
-                    var closestRect = new RectangleF(closestEntity.Position.X - closestSprite.Width / 2f, closestEntity.Position.Y - closestSprite.Height / 2f, closestSprite.Width, closestSprite.Height);
+                    var closestRect = new RectangleF(closestEntity.GetComponent<TransformComponent>(ComponentFamily.Transform).Position.X - closestSprite.Width / 2f, closestEntity.GetComponent<TransformComponent>(ComponentFamily.Transform).Position.Y - closestSprite.Height / 2f, closestSprite.Width, closestSprite.Height);
 
                     var sides = new List<Vector2D>
                                             {

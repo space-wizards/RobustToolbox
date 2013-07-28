@@ -2,6 +2,7 @@
 <EntityTemplates>
   <EntityTemplate name="Puddle">
     <Components>
+      <Component name="TransformComponent"></Component>
       <Component name="NetworkMoverComponent"></Component>
       <Component name="SpriteComponent">
         <Parameters>
@@ -18,6 +19,7 @@
   </EntityTemplate>
   <EntityTemplate name="Blood">
     <Components>
+      <Component name="TransformComponent"></Component>
       <Component name="NetworkMoverComponent"></Component>
       <Component name="SpriteComponent">
         <Parameters>

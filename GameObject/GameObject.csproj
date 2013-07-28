@@ -46,6 +46,7 @@
     <Compile Include="EntityManager.cs" />
     <Compile Include="EntityQuery.cs" />
     <Compile Include="EntityTemplate.cs" />
+    <Compile Include="EntityTemplateDatabase.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="System\EntitySystem.cs" />
   </ItemGroup>

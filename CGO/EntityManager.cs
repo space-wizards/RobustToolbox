@@ -76,7 +76,7 @@ namespace CGO
 
         private IEntity SpawnEntity(string entityType, int uid)
         {
-            var e = _entityFactory.CreateEntity(entityType, EntityNetworkManager);
+            var e = _entityFactory.CreateEntity(entityType);
             if (e != null)
             {
                 e.Uid = uid;
@@ -93,7 +93,7 @@ namespace CGO
         {
             var e = SpawnEntity(entityType, uid);
             e.Direction = dir;
-            e.Position = position;
+            e.GetComponent<TransformComponent>(ComponentFamily.Transform).Position = position;
             return e;
         }
 
@@ -112,7 +112,7 @@ namespace CGO
         public IEntity[] GetEntitiesInRange(Vector2D position, float Range)
         {
             var entities = from e in _entities.Values
-                           where (position - e.Position).Length < Range
+                           where (position - e.GetComponent<TransformComponent>(ComponentFamily.Transform).Position).Length < Range
                            select e;
 
             return entities.ToArray();

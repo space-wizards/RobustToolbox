@@ -1,6 +1,4 @@
-﻿using System.Collections.Generic;
-using System.Linq;
-using ClientInterfaces.GOC;
+﻿using ClientInterfaces.GOC;
 using GorgonLibrary;
 using SS13_Shared;
 using SS13_Shared.GO;
@@ -46,8 +44,8 @@ namespace CGO
         private void Attach(int uid)
         {
             _master = EntityManager.Singleton.GetEntity(uid);
-            _master.OnMove += HandleOnMove;
-            Translate(_master.Position);
+            _master.GetComponent<TransformComponent>(ComponentFamily.Transform).OnMove += HandleOnMove;
+            Translate(_master.GetComponent<TransformComponent>(ComponentFamily.Transform).Position);
             GetMasterMoveDirection();
         }
 
@@ -66,7 +64,7 @@ namespace CGO
         {
             if (_master == null) return;
 
-            _master.OnMove -= HandleOnMove;
+            _master.GetComponent<TransformComponent>(ComponentFamily.Transform).OnMove -= HandleOnMove;
             _master = null;
         }
 
@@ -78,9 +76,9 @@ namespace CGO
 
         private void Translate(Vector2D toPosition)
         {
-            Vector2D delta = toPosition - Owner.Position;
+            Vector2D delta = toPosition - Owner.GetComponent<TransformComponent>(ComponentFamily.Transform).Position;
 
-            Owner.Position = toPosition;
+            Owner.GetComponent<TransformComponent>(ComponentFamily.Transform).Position = toPosition;
             /*
             if (delta.X > 0 && delta.Y > 0)
                 SetMoveDir(Constants.MoveDirs.southeast);
@@ -100,7 +98,7 @@ namespace CGO
                 SetMoveDir(Constants.MoveDirs.north);
              */
 
-            Owner.Moved();
+            //Owner.Moved();
         }
 
         private void SetMoveDir(Constants.MoveDirs movedir)

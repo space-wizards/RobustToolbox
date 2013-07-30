@@ -45,22 +45,7 @@ namespace SGO
         public int Uid { get; set; }
         
         private bool stateChanged = false;
-
-        private Direction _direction = Direction.South;
-        public Direction Direction
-        { 
-            get 
-            {
-                return _direction; 
-            }
-            set 
-            {
-                _direction = value;
-                SendDirectionUpdate();
-            } 
-        }
-        
-        public event ShutdownEvent OnShutdown;
+                public event ShutdownEvent OnShutdown;
         public event NetworkedSpawnEvent OnNetworkedSpawn;
         public event NetworkedOnJoinSpawnEvent OnNetworkedJoinSpawn;
 
@@ -353,10 +338,11 @@ namespace SGO
 
         private void SendDirectionUpdate(NetConnection client)
         {
+            return;
             NetOutgoingMessage message = m_entityNetworkManager.CreateEntityMessage();
             message.Write(Uid);
             message.Write((byte)EntityMessage.SetDirection);
-            message.Write((byte)Direction);
+            message.Write((byte)GetComponent<DirectionComponent>(ComponentFamily.Direction).Direction);
             if (client != null) m_entityNetworkManager.SendMessage(message, client);
             else m_entityNetworkManager.SendToAll(message);
         }
@@ -377,7 +363,7 @@ namespace SGO
                 compStates, 
                 GetComponent<TransformComponent>(ComponentFamily.Transform).Position,
                 GetComponent<VelocityComponent>(ComponentFamily.Velocity).Velocity, 
-                Direction, 
+                GetComponent<DirectionComponent>(ComponentFamily.Direction).Direction, 
                 Template.Name, 
                 Name);
             return es;

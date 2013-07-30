@@ -11,7 +11,6 @@ namespace ServerInterfaces.GameObject
     
     public interface IEntity : GO.IEntity
     {
-        Direction Direction { get; set; }
         int Uid { get; set; }
 
         void SendMessage(object sender, ComponentMessageType type, params object[] parameters);

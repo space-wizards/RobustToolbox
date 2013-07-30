@@ -4,6 +4,7 @@
     <Components>
       <Component name="TransformComponent"></Component>
       <Component name="VelocityComponent"></Component>
+      <Component name="DirectionComponent"></Component>
       <Component name="ClickableComponent"></Component>
       <Component name="SpriteComponent"></Component>
       <Component name="BasicInteractableComponent"></Component>
@@ -29,6 +30,7 @@
     <Components>
       <Component name="TransformComponent"></Component>
       <Component name="VelocityComponent"></Component>
+      <Component name="DirectionComponent"></Component>
       <Component name="ClickableComponent"></Component>
       <Component name="SpriteComponent"></Component>
       <Component name="BasicInteractableComponent"></Component>

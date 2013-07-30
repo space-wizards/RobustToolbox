@@ -126,6 +126,7 @@
     <Compile Include="GO\Component\Damageable\Health\HealthComponentState.cs" />
     <Compile Include="GO\Component\Damageable\Health\LocationalHealth\HumanHealthComponentState.cs" />
     <Compile Include="GO\Component\Damageable\Health\LocationalHealth\LocationHealthState.cs" />
+    <Compile Include="GO\Component\Direction\DirectionComponentState.cs" />
     <Compile Include="GO\Component\EntityStats\EntityStatsComponentState.cs" />
     <Compile Include="GO\Component\Light\LightComponentState.cs" />
     <Compile Include="GO\Component\Mover\MoverComponentState.cs" />

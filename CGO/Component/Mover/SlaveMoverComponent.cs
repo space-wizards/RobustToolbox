@@ -46,18 +46,6 @@ namespace CGO
             _master = EntityManager.Singleton.GetEntity(uid);
             _master.GetComponent<TransformComponent>(ComponentFamily.Transform).OnMove += HandleOnMove;
             Translate(_master.GetComponent<TransformComponent>(ComponentFamily.Transform).Position);
-            GetMasterMoveDirection();
-        }
-
-        private void GetMasterMoveDirection()
-        {
-            var reply = _master.SendMessage(this, ComponentFamily.Mover, ComponentMessageType.GetMoveDir);
-
-            if (reply.MessageType == ComponentMessageType.MoveDirection)
-            {
-                SetMoveDir((Direction)reply.ParamsList[0]);
-                Owner.SendMessage(this, ComponentMessageType.MoveDirection, _movedir);
-            }
         }
 
         private void Detach()
@@ -71,7 +59,6 @@ namespace CGO
         private void HandleOnMove(object sender, VectorEventArgs args)
         {
             Translate(args.VectorTo);
-            GetMasterMoveDirection();
         }
 
         private void Translate(Vector2D toPosition)
@@ -101,12 +88,6 @@ namespace CGO
             //Owner.Moved();
         }
 
-        private void SetMoveDir(Direction movedir)
-        {
-            if (movedir == _movedir) return;
-
-            _movedir = movedir;
-            Owner.SendMessage(this, ComponentMessageType.MoveDirection, _movedir);
-        }
+        
     }
 }

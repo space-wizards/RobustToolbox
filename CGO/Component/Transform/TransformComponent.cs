@@ -74,9 +74,9 @@ namespace CGO
                 previousState = lastState;
             lastState = state;
             var toVector = new Vector2D(state.X, state.Y);
-            if(state.ForceUpdate 
+            if((toVector - Position).Length > 0.1f && (state.ForceUpdate 
                 || Owner.GetComponent<KeyBindingInputComponent>(ComponentFamily.Input) == null
-                || (toVector - Position).Length > 100)
+                || (toVector - Position).Length > 100.0f))
                 TranslateTo(toVector);
         }
     }

@@ -38,7 +38,7 @@ namespace SGO
             var map = IoCManager.Resolve<IMapManager>();
             var arrayPos = map.GetTileArrayPositionFromWorldPosition(Owner.GetComponent<TransformComponent>(ComponentFamily.Transform).Position);
 
-            switch (Owner.Direction)
+            switch (Owner.GetComponent<DirectionComponent>(ComponentFamily.Direction).Direction)
             {
                 case Direction.South:
                     AttachToTile(new Vector2(arrayPos.X, arrayPos.Y));

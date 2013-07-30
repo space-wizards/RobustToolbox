@@ -202,7 +202,7 @@ namespace SGO
             IEntity ent = SpawnEntity(template);
             ent.Name = name;
             ent.GetComponent<TransformComponent>(ComponentFamily.Transform).TranslateTo(new Vector2(X, Y));
-            ent.Direction = dir;
+            ent.GetComponent<DirectionComponent>(ComponentFamily.Direction).Direction = dir;
             ent.SendMessage(this, ComponentMessageType.WallMountSearch); //Tell wall mounted compos to look for a tile to attach to. I hate to do this here but i have to.
         }
 
@@ -213,7 +213,7 @@ namespace SGO
                                   new XAttribute("Y", e.GetComponent<TransformComponent>(ComponentFamily.Transform).Position.Y.ToString(CultureInfo.InvariantCulture)),
                                   new XAttribute("template", e.Template.Name),
                                   new XAttribute("name", e.Name),
-                                  new XAttribute("direction", e.Direction.ToString()));
+                                  new XAttribute("direction", e.GetComponent<DirectionComponent>(ComponentFamily.Direction).Direction.ToString()));
             return el;
         }
 

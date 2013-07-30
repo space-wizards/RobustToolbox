@@ -60,6 +60,7 @@
   <ItemGroup>
     <Compile Include="ComponentManager.cs" />
     <Compile Include="Component\Actor\BasicActorComponent.cs" />
+    <Compile Include="Component\Direction\DirectionComponent.cs" />
     <Compile Include="Component\EntityStats\EntityStatsCompS.cs" />
     <Compile Include="Component\Inventory\Inventory.cs" />
     <Compile Include="Component\Item\ItemCapability\BreatherCapability.cs" />

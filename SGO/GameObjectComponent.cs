@@ -28,13 +28,14 @@ namespace SGO
         /// <param name="sender">the component that sent the message</param>
         /// <param name="type">the message type in CGO.MessageType</param>
         /// <param name="list">parameters list</param>
-        public virtual ComponentReplyMessage RecieveMessage(object sender, ComponentMessageType type,
+        public override ComponentReplyMessage RecieveMessage(object sender, ComponentMessageType type,
                                                             params object[] list)
         {
-            ComponentReplyMessage reply = ComponentReplyMessage.Empty;
+            var reply = base.RecieveMessage(sender, type, list);
 
             if (sender == this) //Don't listen to our own messages!
-                return ComponentReplyMessage.Empty;
+                return reply;
+
             return reply;
         }
         
@@ -62,14 +63,6 @@ namespace SGO
             //Send us to the manager so it knows we're active
             ComponentManager.Singleton.AddComponent(this);
         }
-
-        /// <summary>
-        /// Main method for updating the component. This is called from a big loop in Componentmanager.
-        /// </summary>
-        /// <param name="frameTime"></param>
-        public virtual void Update(float frameTime)
-        {
-        }
         
         /// <summary>
         /// This gets a list of runtime-settable component parameters, with CURRENT VALUES
@@ -80,15 +73,7 @@ namespace SGO
         {
             return new List<ComponentParameter>();
         }
-
-        /// <summary>
-        /// Empty method for handling incoming input messages from counterpart client components
-        /// </summary>
-        /// <param name="message">the message object</param>
-        public virtual void HandleNetworkMessage(IncomingEntityComponentMessage message, NetConnection client)
-        {
-        }
-
+        
         /// <summary>
         /// Handles a message that a client has just instantiated a component
         /// </summary>
@@ -160,9 +145,6 @@ namespace SGO
                 SetParameter(param);
         }
 
-        public virtual ComponentState GetComponentState()
-        {
-            return new ComponentState(Family);
-        }
+
     }
 }

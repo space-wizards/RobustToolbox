@@ -1,4 +1,5 @@
 ﻿using CGO;
+using Lidgren.Network;
 using SS13_Shared;
 using SS13_Shared.GO;
 using GorgonLibrary;
@@ -34,7 +35,7 @@ namespace CGO
             _movedir = Direction.South;
         }
 
-        public override void HandleNetworkMessage(IncomingEntityComponentMessage message)
+        public override void HandleNetworkMessage(IncomingEntityComponentMessage message, NetConnection sender)
         {
             /*var x = (float)message.MessageParameters[0];
             var y = (float)message.MessageParameters[1];

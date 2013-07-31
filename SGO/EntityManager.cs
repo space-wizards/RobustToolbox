@@ -36,21 +36,9 @@ namespace SGO
             m_entityFactory = new EntityFactory(m_entityTemplateDatabase);
             m_netServer = netServer;
             _systemManager = new EntitySystemManager(this);
-            Singleton = this;
             LoadEntities();
             _systemManager.Initialize();
             _initialized = true;
-        }
-
-        public static EntityManager Singleton
-        {
-            get
-            {
-                if (singleton == null)
-                    throw new Exception("Singleton not initialized");
-                else return singleton;
-            }
-            set { singleton = value; }
         }
 
         #region IEntityManager Members
@@ -68,11 +56,6 @@ namespace SGO
 
         public void SendEntities(NetConnection client)
         {
-            foreach (Entity e in _entities.Values)
-            {
-                SendSpawnEntityAtPosition(e, client);
-            }
-            SendEntityManagerInit(client);
             foreach(Entity e in _entities.Values)
             {
                 e.FireNetworkedJoinSpawn(client);
@@ -109,7 +92,6 @@ namespace SGO
             {
                 e.Uid = nextId++;
                 _entities.Add(e.Uid, (GameObject.Entity)e);
-                if (send) SendSpawnEntity(e);
                 if (send) e.Initialize();
                 if (send) e.FireNetworkedSpawn();
             }
@@ -123,13 +105,6 @@ namespace SGO
         public void DeleteEntity(IEntity e)
         {
             e.Shutdown();
-            /* //This is now handled by GameStates.
-            NetOutgoingMessage message = m_netServer.CreateMessage();
-            message.Write((byte) NetMessage.EntityManagerMessage);
-            message.Write((int) EntityManagerMessage.DeleteEntity);
-            message.Write(e.Uid);
-            m_netServer.SendToAll(message, NetDeliveryMethod.ReliableOrdered);
-             */
             _entities.Remove(e.Uid);
         }
 
@@ -181,10 +156,10 @@ namespace SGO
         /// <param name="msg">Incoming raw network message</param>
         public void HandleEntityNetworkMessage(NetIncomingMessage msg)
         {
-            if(!_initialized)
+            if (!_initialized)
             {
                 var emsg = ProcessNetMessage(msg);
-                if(emsg.MessageType != EntityMessage.Null)
+                if (emsg.MessageType != EntityMessage.Null)
                     MessageBuffer.Enqueue(emsg);
             }
             else
@@ -198,18 +173,6 @@ namespace SGO
             }
         }
 
-
-        #endregion
-
-        #region Entity Manager Networking
-
-        public void HandleNetworkMessage(NetIncomingMessage msg)
-        {
-            var type = (EntityManagerMessage) msg.ReadInt32();
-            switch (type)
-            {
-            }
-        }
 
         #endregion
 
@@ -275,52 +238,9 @@ namespace SGO
         {
             IEntity e = SpawnEntity(EntityType, false);
             e.GetComponent<TransformComponent>(ComponentFamily.Transform).TranslateTo(position);
-            if (send) SendSpawnEntityAtPosition(e);
             if (send) e.Initialize();
             if (send) e.FireNetworkedSpawn();
             return e;
-        }
-
-        private void SendEntityManagerInit(NetConnection client)
-        {
-            NetOutgoingMessage message = m_netServer.CreateMessage();
-            message.Write((byte) NetMessage.EntityManagerMessage);
-            message.Write((int) EntityManagerMessage.InitializeEntities);
-            m_netServer.SendMessage(message, client, NetDeliveryMethod.ReliableOrdered);
-        }
-
-        private void SendSpawnEntity(IEntity e, NetConnection client = null)
-        {
-            /* // This is now handled by game state
-            NetOutgoingMessage message = m_netServer.CreateMessage();
-            message.Write((byte) NetMessage.EntityManagerMessage);
-            message.Write((int) EntityManagerMessage.SpawnEntity);
-            message.Write(e.Template.Name);
-            message.Write(e.Name);
-            message.Write(e.Uid);
-            if (client != null)
-                m_netServer.SendMessage(message, client, NetDeliveryMethod.ReliableOrdered);
-            else
-                m_netServer.SendToAll(message, NetDeliveryMethod.ReliableOrdered);
-             */
-        }
-
-        private void SendSpawnEntityAtPosition(IEntity e, NetConnection client = null)
-        {
-            /* // This is now handled by game state
-            NetOutgoingMessage message = m_netServer.CreateMessage();
-            message.Write((byte) NetMessage.EntityManagerMessage);
-            message.Write((int) EntityManagerMessage.SpawnEntityAtPosition);
-            message.Write(e.Template.Name);
-            message.Write(e.Name);
-            message.Write(e.Uid);
-            message.Write(e.Position.X); // SENT AS DOUBLES...
-            message.Write(e.Position.Y); // CONVERTED TO FLOATS ON CLIENT SIDE
-            if (client != null)
-                m_netServer.SendMessage(message, client, NetDeliveryMethod.ReliableOrdered);
-            else
-                m_netServer.SendToAll(message, NetDeliveryMethod.ReliableOrdered);
-             */
         }
 
         /// <summary>

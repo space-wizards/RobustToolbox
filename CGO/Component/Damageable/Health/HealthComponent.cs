@@ -1,4 +1,5 @@
 ﻿using System.Collections.Generic;
+using Lidgren.Network;
 using SS13_Shared;
 using SS13_Shared.GO;
 using SS13_Shared.GO.Component.Damageable.Health;
@@ -18,7 +19,7 @@ namespace CGO
             }
         }
 
-        public override void HandleNetworkMessage(IncomingEntityComponentMessage message)
+        public override void HandleNetworkMessage(IncomingEntityComponentMessage message, NetConnection sender)
         {
             var type = (ComponentMessageType)message.MessageParameters[0];
 

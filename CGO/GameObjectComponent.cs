@@ -37,9 +37,9 @@ namespace CGO
             }
         }*/
 
-        public virtual ComponentReplyMessage RecieveMessage(object sender, ComponentMessageType type, params object[] list)
+        public override ComponentReplyMessage RecieveMessage(object sender, ComponentMessageType type, params object[] list)
         {
-            var reply = ComponentReplyMessage.Empty;
+            var reply = base.RecieveMessage(sender, type, list);
 
             if (sender == this) //Don't listen to our own messages!
                 return reply;
@@ -79,27 +79,5 @@ namespace CGO
             if (Owner.Initialized)
                 Owner.SendComponentInstantiationMessage(this);
         }
-
-        /// <summary>
-        /// Main method for updating the component. This is called from a big loop in Componentmanager.
-        /// </summary>
-        /// <param name="frameTime"></param>
-        public virtual void Update(float frameTime)
-        {
-
-        }
-
-      
-        /// <summary>
-        /// Empty method for handling incoming input messages from counterpart client components
-        /// </summary>
-        /// <param name="message">the message object</param>
-        public virtual void HandleNetworkMessage(IncomingEntityComponentMessage message)
-        {
-
-        }
-        
-        public virtual void HandleComponentState(dynamic state)
-        {}
     }
 }

@@ -103,7 +103,7 @@ namespace SGO
                         SwitchHandsTo((Hand)message.MessageParameters[1]);
                         break;
                     case ComponentMessageType.DropEntityInHand:
-                        Drop((Entity)EntityManager.Singleton.GetEntity((int) message.MessageParameters[1]));
+                        Drop((Entity)Owner.EntityManager.GetEntity((int)message.MessageParameters[1]));
                         break;
                     case ComponentMessageType.DropItemInHand:
                         Drop((Hand)message.MessageParameters[1]);

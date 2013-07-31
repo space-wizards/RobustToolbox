@@ -457,9 +457,6 @@ namespace ClientServices.State.States
                         case NetMessage.EntityMessage:
                             _entityManager.HandleEntityNetworkMessage(message);
                             break;
-                        case NetMessage.EntityManagerMessage:
-                            _entityManager.HandleNetworkMessage(message);
-                            break;
                         case NetMessage.RequestAdminLogin:
                             HandleAdminMessage(messageType, message);
                             break;

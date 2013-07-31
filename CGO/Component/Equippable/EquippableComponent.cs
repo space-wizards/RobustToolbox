@@ -1,4 +1,5 @@
-﻿using SS13_Shared;
+﻿using Lidgren.Network;
+using SS13_Shared;
 using SS13_Shared.GO;
 
 namespace CGO
@@ -10,7 +11,7 @@ namespace CGO
             Family = ComponentFamily.Equippable;
         }
 
-        public override void HandleNetworkMessage(IncomingEntityComponentMessage message)
+        public override void HandleNetworkMessage(IncomingEntityComponentMessage message, NetConnection sender)
         {
             //base.HandleNetworkMessage(message);
 

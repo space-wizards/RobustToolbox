@@ -1,5 +1,6 @@
 ﻿using System.Collections.Generic;
 using System.Linq;
+using Lidgren.Network;
 using SS13_Shared;
 using SS13_Shared.GO;
 using System.Drawing;
@@ -21,7 +22,7 @@ namespace CGO
 
         public List<IPlayerAction> Actions = new List<IPlayerAction>();
 
-        public override void HandleNetworkMessage(IncomingEntityComponentMessage message)
+        public override void HandleNetworkMessage(IncomingEntityComponentMessage message, NetConnection sender)
         {
             var type = (ComponentMessageType)message.MessageParameters[0];
 
@@ -53,7 +54,7 @@ namespace CGO
                     break;
 
                 default:
-                    base.HandleNetworkMessage(message);
+                    base.HandleNetworkMessage(message, sender);
                     break;
             }
         }

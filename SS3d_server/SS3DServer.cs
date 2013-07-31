@@ -595,9 +595,6 @@ namespace SS13_Server
                 case NetMessage.EntityMessage:
                     EntityManager.HandleEntityNetworkMessage(msg);
                     break;
-                case NetMessage.EntityManagerMessage:
-                    EntityManager.HandleNetworkMessage(msg);
-                    break;
                 case NetMessage.RequestAdminLogin:
                     HandleAdminMessage(messageType, msg);
                     break;

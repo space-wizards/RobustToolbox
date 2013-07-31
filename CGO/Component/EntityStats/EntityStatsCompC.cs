@@ -26,7 +26,7 @@ namespace CGO
 
         Dictionary<DamageType, int> armorStats = new Dictionary<DamageType, int>();
 
-        public override void HandleNetworkMessage(IncomingEntityComponentMessage message)
+        public override void HandleNetworkMessage(IncomingEntityComponentMessage message, NetConnection sender)
         {
             var type = (ComponentMessageType)message.MessageParameters[0];
 
@@ -40,7 +40,7 @@ namespace CGO
                     break;
 
                 default:
-                    base.HandleNetworkMessage(message);
+                    base.HandleNetworkMessage(message, sender);
                     break;
             }
         }

@@ -75,27 +75,27 @@ namespace SGO
                 switch (type) //Why does this send messages to itself THIS IS DUMB AND WILL BREAK THINGS. BZZZ
                 {
                     case ComponentMessageType.EquipItem:
-                        EquipEntity(EntityManager.Singleton.GetEntity((int) message.MessageParameters[1]));
+                        EquipEntity((IEntity)Owner.EntityManager.GetEntity((int) message.MessageParameters[1]));
                         break;
                     case ComponentMessageType.EquipItemInHand:
                         EquipEntityInHand();
                         break;
                     case ComponentMessageType.EquipItemToPart:
                         EquipEntityToPart((EquipmentSlot) message.MessageParameters[1],
-                                          EntityManager.Singleton.GetEntity((int) message.MessageParameters[2]));
+                                          (IEntity)Owner.EntityManager.GetEntity((int)message.MessageParameters[2]));
                         break;
                     case ComponentMessageType.UnEquipItemToFloor:
-                        UnEquipEntity(EntityManager.Singleton.GetEntity((int) message.MessageParameters[1]));
+                        UnEquipEntity((IEntity)Owner.EntityManager.GetEntity((int)message.MessageParameters[1]));
                         break;
                     case ComponentMessageType.UnEquipItemToHand:
                         if (!Owner.HasComponent(ComponentFamily.Hands))
                             return; //TODO REAL ERROR MESSAGE OR SOME FUCK SHIT
-                        UnEquipEntityToHand(EntityManager.Singleton.GetEntity((int) message.MessageParameters[1]));
+                        UnEquipEntityToHand((IEntity)Owner.EntityManager.GetEntity((int)message.MessageParameters[1]));
                         break;
                     case ComponentMessageType.UnEquipItemToSpecifiedHand:
                         if (!Owner.HasComponent(ComponentFamily.Hands))
                             return; //TODO REAL ERROR MESSAGE OR SOME FUCK SHIT
-                        UnEquipEntityToHand(EntityManager.Singleton.GetEntity((int) message.MessageParameters[1]),
+                        UnEquipEntityToHand((IEntity)Owner.EntityManager.GetEntity((int)message.MessageParameters[1]),
                                             (Hand) message.MessageParameters[2]);
                         break;
                 }

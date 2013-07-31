@@ -25,6 +25,8 @@ namespace SGO
         private EntityTemplateDatabase m_entityTemplateDatabase;
         private EntitySystemManager _systemManager;
         public int nextId;
+        private bool _initialized;
+        private Queue<IncomingEntityMessage> MessageBuffer = new Queue<IncomingEntityMessage>();
 
         public EntityManager(ISS13NetServer netServer)
             :base("SGO")
@@ -37,6 +39,7 @@ namespace SGO
             Singleton = this;
             LoadEntities();
             _systemManager.Initialize();
+            _initialized = true;
         }
 
         public static EntityManager Singleton
@@ -140,6 +143,37 @@ namespace SGO
             EntityNetworkManager = null;
         }
 
+        private void ProcessMsgBuffer()
+        {
+            if (!_initialized)
+                return;
+            if (!MessageBuffer.Any()) return;
+            var misses = new List<IncomingEntityMessage>();
+
+            while (MessageBuffer.Any())
+            {
+                IncomingEntityMessage entMsg = MessageBuffer.Dequeue();
+                if (!_entities.ContainsKey(entMsg.Uid))
+                {
+                    entMsg.LastProcessingAttempt = DateTime.Now;
+                    if ((entMsg.LastProcessingAttempt - entMsg.ReceivedTime).TotalSeconds > entMsg.Expires)
+                        misses.Add(entMsg);
+                }
+                else
+                    ((IEntity)_entities[entMsg.Uid]).HandleNetworkMessage(entMsg);
+            }
+
+            foreach (var miss in misses)
+                MessageBuffer.Enqueue(miss);
+
+            MessageBuffer.Clear(); //Should be empty at this point anyway.
+        }
+
+        private IncomingEntityMessage ProcessNetMessage(NetIncomingMessage msg)
+        {
+            return EntityNetworkManager.HandleEntityNetworkMessage(msg);
+        }
+
         /// <summary>
         /// Handle an incoming network message by passing the message to the EntityNetworkManager 
         /// and handling the parsed result.
@@ -147,9 +181,23 @@ namespace SGO
         /// <param name="msg">Incoming raw network message</param>
         public void HandleEntityNetworkMessage(NetIncomingMessage msg)
         {
-            ServerIncomingEntityMessage message = EntityNetworkManager.HandleEntityNetworkMessage(msg);
-            ((IEntity)_entities[message.uid]).HandleNetworkMessage(message);
+            if(!_initialized)
+            {
+                var emsg = ProcessNetMessage(msg);
+                if(emsg.MessageType != EntityMessage.Null)
+                    MessageBuffer.Enqueue(emsg);
+            }
+            else
+            {
+                ProcessMsgBuffer();
+                var emsg = ProcessNetMessage(msg);
+                if (!_entities.ContainsKey(emsg.Uid))
+                    MessageBuffer.Enqueue(emsg);
+                else
+                    ((IEntity)_entities[emsg.Uid]).HandleNetworkMessage(emsg);
+            }
         }
+
 
         #endregion
 

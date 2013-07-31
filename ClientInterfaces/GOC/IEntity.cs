@@ -20,7 +20,7 @@ namespace ClientInterfaces.GOC
         ComponentReplyMessage SendMessage(object sender, ComponentFamily family, ComponentMessageType type, params object[] args);
         void SendComponentNetworkMessage(IGameObjectComponent component, NetDeliveryMethod method, params object[] messageParams);
         void SendComponentInstantiationMessage(IGameObjectComponent component);
-        void HandleNetworkMessage(ClientIncomingEntityMessage message);
+        void HandleNetworkMessage(IncomingEntityMessage message);
         void GetSVars();
         void SetSVar(MarshalComponentParameter svar);
         event EventHandler<GetSVarsEventArgs> GetSVarsCallback;

@@ -165,21 +165,21 @@ namespace CGO
 
         #region Receiving
         /// <summary>
-        /// Converts a raw NetIncomingMessage to an ClientIncomingEntityMessage object
+        /// Converts a raw NetIncomingMessage to an IncomingEntityMessage object
         /// </summary>
         /// <param name="message">raw network message</param>
-        /// <returns>An ClientIncomingEntityMessage object</returns>
-        public ClientIncomingEntityMessage HandleEntityNetworkMessage(NetIncomingMessage message)
+        /// <returns>An IncomingEntityMessage object</returns>
+        public IncomingEntityMessage HandleEntityNetworkMessage(NetIncomingMessage message)
         {
             var uid = message.ReadInt32();
             var messageType = (EntityMessage)message.ReadByte();
-            var result = ClientIncomingEntityMessage.Null;
+            var result = IncomingEntityMessage.Null;
 
             switch (messageType)
             {
                 case EntityMessage.ComponentMessage:
                     var messageContent = HandleEntityComponentNetworkMessage(message);
-                    result = new ClientIncomingEntityMessage(uid, EntityMessage.ComponentMessage, messageContent);
+                    result = new IncomingEntityMessage(uid, EntityMessage.ComponentMessage, messageContent, message.SenderConnection);
 
                     if (_messageProfiling)
                     {
@@ -193,10 +193,10 @@ namespace CGO
                     //TODO: Handle position messages!
                     break;
                 case EntityMessage.GetSVars:
-                    result = new ClientIncomingEntityMessage(uid, EntityMessage.GetSVars, message);
+                    result = new IncomingEntityMessage(uid, EntityMessage.GetSVars, message, message.SenderConnection);
                     break;
                 case EntityMessage.SetDirection:
-                    result = new ClientIncomingEntityMessage(uid, EntityMessage.SetDirection, message.ReadByte());
+                    result = new IncomingEntityMessage(uid, EntityMessage.SetDirection, message.ReadByte(), message.SenderConnection);
                     break;
             }
             return result;

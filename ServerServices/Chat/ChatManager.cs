@@ -126,7 +126,7 @@ namespace ServerServices.Chat
         /// <param name="text">chat text</param>
         /// <param name="name">player name that sent the chat text</param>
         /// <param name="channel">channel message was recieved on</param>
-        /// <param name="entityId">uid of the entity that sent the message. This will always be a player's attached entity</param>
+        /// <param name="entityId">Uid of the entity that sent the message. This will always be a player's attached entity</param>
         private void ProcessCommand(string text, string name, ChatChannel channel, int entityId, NetConnection client)
         {
             List<string> args = new List<string>();

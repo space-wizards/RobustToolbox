@@ -167,7 +167,7 @@ namespace CGO
             }
         }
 
-        public void HandleNetworkMessage(ClientIncomingEntityMessage message)
+        public void HandleNetworkMessage(IncomingEntityMessage message)
         {
             switch (message.MessageType)
             {
@@ -217,7 +217,7 @@ namespace CGO
                 EntityMessage.GetSVars);
         }
 
-        public void HandleGetSVars(ClientIncomingEntityMessage message)
+        public void HandleGetSVars(IncomingEntityMessage message)
         {
             //If nothing's listening, then why bother with this shit?
             if (GetSVarsCallback == null)
@@ -246,7 +246,6 @@ namespace CGO
                 Moved();
             }*/
             Name = state.StateData.Name;
-            GetComponent<DirectionComponent>(ComponentFamily.Direction).Direction = state.StateData.Direction;
             foreach(var compState in state.ComponentStates)
             {
                 if (HasComponent(compState.Family))

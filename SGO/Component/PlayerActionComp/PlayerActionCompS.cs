@@ -151,7 +151,7 @@ namespace SGO
             Type t = Type.GetType("SGO." + typeName);
             if (t == null || !t.IsSubclassOf(typeof (PlayerAction))) return null;
 
-            uint nextUid = uidCurr++; //Increases uid even if adding fails due to effect being unique. fix.
+            uint nextUid = uidCurr++; //Increases Uid even if adding fails due to effect being unique. fix.
 
             var newAction = (PlayerAction) Activator.CreateInstance(t, new object[] {nextUid, this});
 

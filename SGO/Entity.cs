@@ -225,31 +225,31 @@ namespace SGO
         {
         }
         
-        public void HandleNetworkMessage(ServerIncomingEntityMessage message)
+        public void HandleNetworkMessage(IncomingEntityMessage message)
         {
-            switch (message.messageType)
+            switch (message.MessageType)
             {
                 case EntityMessage.PositionMessage:
                     break;
                 case EntityMessage.ComponentMessage:
-                    HandleComponentMessage((IncomingEntityComponentMessage) message.message, message.client);
+                    HandleComponentMessage((IncomingEntityComponentMessage) message.Message, message.Sender);
                     break;
                 case EntityMessage.ComponentInstantiationMessage:
                     HandleComponentInstantiationMessage(message);
                     break;
                 case EntityMessage.SetSVar:
-                    HandleSetSVar((MarshalComponentParameter)message.message, message.client);
+                    HandleSetSVar((MarshalComponentParameter)message.Message, message.Sender);
                     break;
                 case EntityMessage.GetSVars:
-                    HandleGetSVars(message.client);
+                    HandleGetSVars(message.Sender);
                     break;
             }
         }
 
-        internal void HandleComponentInstantiationMessage(ServerIncomingEntityMessage message)
+        internal void HandleComponentInstantiationMessage(IncomingEntityMessage message)
         {
-            if (HasComponent((ComponentFamily) message.message))
-                GetComponent<GameObjectComponent>((ComponentFamily) message.message).HandleInstantiationMessage(message.client);
+            if (HasComponent((ComponentFamily) message.Message))
+                GetComponent<GameObjectComponent>((ComponentFamily)message.Message).HandleInstantiationMessage(message.Sender);
         }
 
         internal void HandleComponentMessage(IncomingEntityComponentMessage message, NetConnection client)
@@ -361,9 +361,6 @@ namespace SGO
             var es = new EntityState(
                 Uid, 
                 compStates, 
-                GetComponent<TransformComponent>(ComponentFamily.Transform).Position,
-                GetComponent<VelocityComponent>(ComponentFamily.Velocity).Velocity, 
-                GetComponent<DirectionComponent>(ComponentFamily.Direction).Direction, 
                 Template.Name, 
                 Name);
             return es;

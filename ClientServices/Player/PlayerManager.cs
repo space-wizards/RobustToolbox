@@ -136,7 +136,7 @@ namespace ClientServices.Player
         /// If UID is 0, it means its a global verb.
         /// </summary>
         /// <param name="verb">the verb</param>
-        /// <param name="uid">a target entity's uid</param>
+        /// <param name="uid">a target entity's Uid</param>
         public void SendVerb(string verb, int uid)
         {
             var message = _networkManager.CreateMessage();

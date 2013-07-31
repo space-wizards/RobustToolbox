@@ -24,7 +24,7 @@ namespace ServerInterfaces.GameObject
         void SendComponentNetworkMessage(IGameObjectComponent component, NetDeliveryMethod method, NetConnection recipient, params object[] messageParams);
 
         void Initialize(bool loaded = false);
-        void HandleNetworkMessage(ServerIncomingEntityMessage message);
+        void HandleNetworkMessage(IncomingEntityMessage message);
         EntityState GetEntityState();
         bool Match(IEntityQuery query);
     }

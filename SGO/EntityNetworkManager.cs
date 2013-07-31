@@ -193,15 +193,15 @@ namespace SGO
         /// </summary>
         /// <param name="message"></param>
         /// <returns></returns>
-        public ServerIncomingEntityMessage HandleEntityNetworkMessage(NetIncomingMessage message)
+        public IncomingEntityMessage HandleEntityNetworkMessage(NetIncomingMessage message)
         {
             int uid = message.ReadInt32();
             var messageType = (EntityMessage) message.ReadByte();
-            ServerIncomingEntityMessage incomingEntityMessage = ServerIncomingEntityMessage.Null;
+            IncomingEntityMessage incomingEntityMessage = IncomingEntityMessage.Null;
             switch (messageType)
             {
                 case EntityMessage.ComponentMessage:
-                    incomingEntityMessage = new ServerIncomingEntityMessage(uid, EntityMessage.ComponentMessage,
+                    incomingEntityMessage = new IncomingEntityMessage(uid, EntityMessage.ComponentMessage,
                                                                             HandleEntityComponentNetworkMessage(message),
                                                                             message.SenderConnection);
                     break;
@@ -209,20 +209,20 @@ namespace SGO
                     //TODO: Handle position messages!
                     break;
                 case EntityMessage.ComponentInstantiationMessage:
-                    incomingEntityMessage = new ServerIncomingEntityMessage(uid,
+                    incomingEntityMessage = new IncomingEntityMessage(uid,
                                                                             EntityMessage.ComponentInstantiationMessage,
                                                                             (ComponentFamily)
                                                                             UnPackParams(message).First(),
                                                                             message.SenderConnection);
                     break;
                 case EntityMessage.SetSVar:
-                    incomingEntityMessage = new ServerIncomingEntityMessage(uid, 
+                    incomingEntityMessage = new IncomingEntityMessage(uid, 
                         EntityMessage.SetSVar, 
                         MarshalComponentParameter.Deserialize(message),
                         message.SenderConnection);
                     break;
                 case EntityMessage.GetSVars:
-                    incomingEntityMessage = new ServerIncomingEntityMessage(uid,
+                    incomingEntityMessage = new IncomingEntityMessage(uid,
                         EntityMessage.GetSVars, null, message.SenderConnection);
                     break;
             }
@@ -233,7 +233,7 @@ namespace SGO
 
                 if (messageType == EntityMessage.ComponentMessage)
                 {
-                    var messageContent = (IncomingEntityComponentMessage) incomingEntityMessage.message;
+                    var messageContent = (IncomingEntityComponentMessage) incomingEntityMessage.Message;
                     logger.LogIncomingComponentNetMessage(message.SenderConnection.RemoteUniqueIdentifier,
                                                           uid,
                                                           messageType,
@@ -245,7 +245,7 @@ namespace SGO
                     logger.LogIncomingComponentNetMessage(message.SenderConnection.RemoteUniqueIdentifier,
                                                           uid,
                                                           messageType,
-                                                          (ComponentFamily) incomingEntityMessage.message,
+                                                          (ComponentFamily) incomingEntityMessage.Message,
                                                           new object[0]);
                 }
             }

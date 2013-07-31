@@ -22,7 +22,7 @@ namespace CGO
         private bool _initialized;
         private int _lastId;
 
-        private Queue<ClientIncomingEntityMessage> MessageBuffer = new Queue<ClientIncomingEntityMessage>();
+        private Queue<IncomingEntityMessage> MessageBuffer = new Queue<IncomingEntityMessage>();
 
         public EntityTemplateDatabase TemplateDb { get; private set; }
 
@@ -132,11 +132,11 @@ namespace CGO
             if (!_initialized)
                 return;
             if (!MessageBuffer.Any()) return;
-            var misses = new List<ClientIncomingEntityMessage>();
+            var misses = new List<IncomingEntityMessage>();
 
             while (MessageBuffer.Any())
             {
-                ClientIncomingEntityMessage entMsg = MessageBuffer.Dequeue();
+                IncomingEntityMessage entMsg = MessageBuffer.Dequeue();
                 if(!_entities.ContainsKey(entMsg.Uid))
                 {
                     entMsg.LastProcessingAttempt = DateTime.Now;
@@ -153,7 +153,7 @@ namespace CGO
             MessageBuffer.Clear(); //Should be empty at this point anyway.
         }
 
-        private ClientIncomingEntityMessage ProcessNetMessage(NetIncomingMessage msg)
+        private IncomingEntityMessage ProcessNetMessage(NetIncomingMessage msg)
         {
             return EntityNetworkManager.HandleEntityNetworkMessage(msg);
         }
@@ -174,7 +174,7 @@ namespace CGO
             else
             {
                 ProcessMsgBuffer();
-                ClientIncomingEntityMessage entMsg = ProcessNetMessage(msg);
+                IncomingEntityMessage entMsg = ProcessNetMessage(msg);
                 if(!_entities.ContainsKey(entMsg.Uid))
                     MessageBuffer.Enqueue(entMsg);
                 else
@@ -196,7 +196,10 @@ namespace CGO
                 }
                 else //Unknown entities
                 {
-                    SpawnEntityAt(es.StateData.TemplateName, es.StateData.Uid, es.StateData.Position);
+                    //SpawnEntityAt(es.StateData.TemplateName, es.StateData.Uid, es.StateData.Position);
+                    IEntity e = SpawnEntity(es.StateData.TemplateName, es.StateData.Uid);
+                    e.Name = es.StateData.Name;
+                    e.HandleEntityState(es);
                 }
             }
 

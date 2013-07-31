@@ -97,16 +97,16 @@ namespace CGO
             return e;
         }
 
-        private void RemoveEntity(IEntity entity)
+        private void DeleteEntity(IEntity entity)
         {
             entity.Shutdown();
             _entities.Remove(entity.Uid);
         }
 
-        private void RemoveEntity(int entityUid)
+        private void DeleteEntity(int entityUid)
         {
             if(EntityExists(entityUid))
-                RemoveEntity(GetEntity(entityUid));
+                DeleteEntity(GetEntity(entityUid));
         }
 
         public IEntity[] GetEntitiesInRange(Vector2D position, float Range)
@@ -137,17 +137,17 @@ namespace CGO
             while (MessageBuffer.Any())
             {
                 IncomingEntityMessage entMsg = MessageBuffer.Dequeue();
-                if(!_entities.ContainsKey(entMsg.Uid))
+                if (!_entities.ContainsKey(entMsg.Uid))
                 {
                     entMsg.LastProcessingAttempt = DateTime.Now;
-                    if((entMsg.LastProcessingAttempt - entMsg.ReceivedTime).TotalSeconds > entMsg.Expires)
+                    if ((entMsg.LastProcessingAttempt - entMsg.ReceivedTime).TotalSeconds > entMsg.Expires)
                         misses.Add(entMsg);
                 }
                 else
                     _entities[entMsg.Uid].HandleNetworkMessage(entMsg);
             }
 
-            foreach(var miss in misses) 
+            foreach (var miss in misses)
                 MessageBuffer.Enqueue(miss);
 
             MessageBuffer.Clear(); //Should be empty at this point anyway.
@@ -162,7 +162,7 @@ namespace CGO
         /// Handle an incoming network message by passing the message to the EntityNetworkManager 
         /// and handling the parsed result.
         /// </summary>
-        /// <param name="msg"></param>
+        /// <param name="msg">Incoming raw network message</param>
         public void HandleEntityNetworkMessage(NetIncomingMessage msg)
         {
             if (!_initialized)
@@ -174,11 +174,11 @@ namespace CGO
             else
             {
                 ProcessMsgBuffer();
-                IncomingEntityMessage entMsg = ProcessNetMessage(msg);
-                if(!_entities.ContainsKey(entMsg.Uid))
-                    MessageBuffer.Enqueue(entMsg);
+                var emsg = ProcessNetMessage(msg);
+                if (!_entities.ContainsKey(emsg.Uid))
+                    MessageBuffer.Enqueue(emsg);
                 else
-                    _entities[entMsg.Uid].HandleNetworkMessage(entMsg);
+                    _entities[emsg.Uid].HandleNetworkMessage(emsg);
             }
         }
 
@@ -206,49 +206,10 @@ namespace CGO
             //Delete entities that exist here but don't exist in the entity states
             var toDelete = _entities.Keys.Where(k => !entityKeys.Contains(k)).ToArray();
             foreach(var k in toDelete) 
-                RemoveEntity(k);
-        }
-        #endregion
+                DeleteEntity(k);
 
-        #region Entity Manager Networking
-        public void HandleNetworkMessage(NetIncomingMessage msg)
-        {
-            var type = (EntityManagerMessage)msg.ReadInt32();
-            switch(type)
-            {
-                case EntityManagerMessage.SpawnEntity:
-                    HandleSpawnEntity(msg);
-                    break;
-                case EntityManagerMessage.SpawnEntityAtPosition:
-                    //HandleSpawnEntityAtPosition(msg);
-                    break;
-                case EntityManagerMessage.DeleteEntity:
-                    var dUid = msg.ReadInt32();
-                    RemoveEntity(dUid);
-                    break;
-                case EntityManagerMessage.InitializeEntities:
-                    InitializeEntities();
-                    break;
-            }
-        }
-
-        private void HandleSpawnEntity(NetIncomingMessage msg)
-        {
-            var entityType = msg.ReadString();
-            var entityName = msg.ReadString();
-            var uid = msg.ReadInt32();
-            var e = SpawnEntity(entityType, uid);
-            e.Name = entityName;
-        }
-
-        private void HandleSpawnEntityAtPosition(NetIncomingMessage msg)
-        {
-            var entityType = msg.ReadString();
-            var entityName = msg.ReadString();
-            var uid = msg.ReadInt32();
-            var pos = new Vector2D(msg.ReadFloat(), msg.ReadFloat());
-            var e = SpawnEntityAt(entityType, uid, pos);
-            e.Name = entityName;
+            if(!_initialized)
+                InitializeEntities();
         }
 
         private void InitializeEntities()
@@ -257,7 +218,6 @@ namespace CGO
                 e.Initialize();
             _initialized = true;
         }
-
         #endregion
     }
 }

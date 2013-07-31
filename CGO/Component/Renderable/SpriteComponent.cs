@@ -7,6 +7,7 @@ using GorgonLibrary.Graphics;
 using GorgonLibrary;
 using ClientWindow;
 using System.Drawing;
+using Lidgren.Network;
 using SS13.IoC;
 using SS13_Shared;
 using SS13_Shared.GO;
@@ -98,7 +99,7 @@ namespace CGO
             sprites.Clear();
         }
 
-        public override void HandleNetworkMessage(IncomingEntityComponentMessage message)
+        public override void HandleNetworkMessage(IncomingEntityComponentMessage message, NetConnection sender)
         {
             switch ((ComponentMessageType)message.MessageParameters[0])
             {

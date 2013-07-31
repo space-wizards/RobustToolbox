@@ -9,7 +9,6 @@ namespace ServerInterfaces.GameObject
     {
         void Shutdown();
         void HandleEntityNetworkMessage(NetIncomingMessage message);
-        void HandleNetworkMessage(NetIncomingMessage message);
         IEntity GetEntity(int id);
         void DeleteEntity(IEntity entity);
         void SendEntities(NetConnection connection);

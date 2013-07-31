@@ -3,6 +3,7 @@ using System.Linq;
 using ClientInterfaces.GOC;
 using ClientInterfaces.UserInterface;
 using ClientInterfaces.Player;
+using Lidgren.Network;
 using SS13.IoC;
 using SS13_Shared.GO;
 using SS13_Shared;
@@ -22,7 +23,7 @@ namespace CGO
         
         public List<DamageLocation> DamageZones = new List<DamageLocation>(); //makes this protected again.
 
-        public override void HandleNetworkMessage(IncomingEntityComponentMessage message)
+        public override void HandleNetworkMessage(IncomingEntityComponentMessage message, NetConnection sender)
         {
             var type = (ComponentMessageType)message.MessageParameters[0];
 

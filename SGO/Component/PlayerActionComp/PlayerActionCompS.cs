@@ -67,7 +67,7 @@ namespace SGO
                         toDo.targetType == PlayerActionTargetType.None)
                         //Check validity of targets later. Only clientside atm.
                     {
-                        IEntity ent = EntityManager.Singleton.GetEntity((int) message.MessageParameters[3]);
+                        var ent = (IEntity)Owner.EntityManager.GetEntity((int)message.MessageParameters[3]);
                         //ent id clienside uint but server int. Why?!
                         if (ent != null)
                         {

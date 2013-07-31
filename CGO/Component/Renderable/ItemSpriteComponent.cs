@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using ClientInterfaces;
 using ClientInterfaces.Resource;
+using Lidgren.Network;
 using SS13.IoC;
 using SS13_Shared;
 using SS13_Shared.GO;
@@ -125,9 +126,9 @@ namespace CGO
 
         }
 
-        public override void HandleNetworkMessage(IncomingEntityComponentMessage message)
+        public override void HandleNetworkMessage(IncomingEntityComponentMessage message, NetConnection sender)
         {
-            base.HandleNetworkMessage(message);
+            base.HandleNetworkMessage(message, sender);
 
             switch ((ComponentMessageType)message.MessageParameters[0])
             {

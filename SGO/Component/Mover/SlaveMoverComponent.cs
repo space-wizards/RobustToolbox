@@ -41,7 +41,7 @@ namespace SGO
 
         private void Attach(int uid)
         {
-            master = EntityManager.Singleton.GetEntity(uid);
+            master = (IEntity)Owner.EntityManager.GetEntity(uid);
             master.OnShutdown += master_OnShutdown;
             master.GetComponent<TransformComponent>(ComponentFamily.Transform).OnMove += HandleOnMasterMove;
             Translate(master.GetComponent<TransformComponent>(ComponentFamily.Transform).Position);

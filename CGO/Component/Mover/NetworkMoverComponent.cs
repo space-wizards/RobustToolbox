@@ -1,5 +1,6 @@
 ﻿using System;
 using GorgonLibrary;
+using Lidgren.Network;
 using SS13_Shared;
 using SS13_Shared.GO;
 using SS13_Shared.GO.Component.Mover;
@@ -30,7 +31,7 @@ namespace CGO
             get { return typeof (MoverComponentState); }
         }
 
-        public override void HandleNetworkMessage(IncomingEntityComponentMessage message)
+        public override void HandleNetworkMessage(IncomingEntityComponentMessage message, NetConnection sender)
         {
             /*var x = (float)message.MessageParameters[0];
             var y = (float)message.MessageParameters[1];

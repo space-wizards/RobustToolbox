@@ -42,7 +42,7 @@ namespace SGO
             {
                 case ComponentMessageType.Bumped:
                     ///TODO check who bumped us, how far away they are, etc.
-                    IEntity bumper = EntityManager.Singleton.GetEntity((int) message.MessageParameters[1]);
+                    var bumper = (IEntity)Owner.EntityManager.GetEntity((int) message.MessageParameters[1]);
                     if(bumper != null)
                         Owner.SendMessage(this, ComponentMessageType.Bumped, bumper);
                     break;

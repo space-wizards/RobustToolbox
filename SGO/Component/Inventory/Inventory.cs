@@ -28,13 +28,13 @@ namespace SGO
                     break;
 
                 case ComponentMessageType.InventoryAdd:
-                    IEntity entAdd = EntityManager.Singleton.GetEntity((int) message.MessageParameters[1]);
+                    var entAdd = (IEntity)Owner.EntityManager.GetEntity((int) message.MessageParameters[1]);
                     if (entAdd != null)
                         AddToInventory(entAdd);
                     break;
 
                 case ComponentMessageType.InventoryRemove:
-                    IEntity entRemove = EntityManager.Singleton.GetEntity((int) message.MessageParameters[1]);
+                    var entRemove = (IEntity)Owner.EntityManager.GetEntity((int) message.MessageParameters[1]);
                     if (entRemove != null)
                         RemoveFromInventory(entRemove);
                     break;

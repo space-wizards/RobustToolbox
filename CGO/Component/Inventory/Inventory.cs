@@ -25,7 +25,7 @@ namespace CGO
             ContainedEntities = new List<IEntity>();
         }
 
-        public override void HandleNetworkMessage(IncomingEntityComponentMessage message)
+        public override void HandleNetworkMessage(IncomingEntityComponentMessage message, NetConnection sender)
         {
             switch ((ComponentMessageType)message.MessageParameters[0])
             {

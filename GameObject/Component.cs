@@ -3,6 +3,8 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Xml.Linq;
+using Lidgren.Network;
+using SS13_Shared;
 using SS13_Shared.GO;
 
 namespace GameObject
@@ -38,6 +40,29 @@ namespace GameObject
         void SetParameter(ComponentParameter parameter);
 
         void HandleExtendedParameters(XElement extendedParameters);
+
+        /// <summary>
+        /// Main method for updating the component. This is called from a big loop in Componentmanager.
+        /// </summary>
+        /// <param name="frameTime"></param>
+        void Update(float frameTime);
+
+        /// <summary>
+        /// Recieve a message from another component within the owner entity
+        /// </summary>
+        /// <param name="sender">the component that sent the message</param>
+        /// <param name="type">the message type in CGO.MessageType</param>
+        /// <param name="list">parameters list</param>
+        ComponentReplyMessage RecieveMessage(object sender, ComponentMessageType type,
+                                                             params object[] list);
+
+        /// <summary>
+        /// Get the component's state for synchronizing
+        /// </summary>
+        /// <returns>ComponentState object</returns>
+        ComponentState GetComponentState();
+        
+        void HandleNetworkMessage(IncomingEntityComponentMessage message, NetConnection sender);
     }
 
     public class Component : IComponent
@@ -73,8 +98,7 @@ namespace GameObject
         /// Base method to shut down the component. 
         /// </summary>
         public virtual void Shutdown()
-        {
-        }
+        {}
 
         /// <summary>
         /// This allows setting of the component's parameters once it is instantiated.
@@ -93,8 +117,49 @@ namespace GameObject
         }
 
         public virtual void HandleExtendedParameters(XElement extendedParameters)
-        {
+        {}
 
+        /// <summary>
+        /// Main method for updating the component. This is called from a big loop in Componentmanager.
+        /// </summary>
+        /// <param name="frameTime"></param>
+        public virtual void Update(float frameTime)
+        {}
+
+        /// <summary>
+        /// Recieve a message from another component within the owner entity
+        /// </summary>
+        /// <param name="sender">the component that sent the message</param>
+        /// <param name="type">the message type in CGO.MessageType</param>
+        /// <param name="list">parameters list</param>
+        public virtual ComponentReplyMessage RecieveMessage(object sender, ComponentMessageType type,
+                                                            params object[] list)
+        {
+            ComponentReplyMessage reply = ComponentReplyMessage.Empty;
+
+            if (sender == this) //Don't listen to our own messages!
+                return reply;
+
+            return reply;
         }
+
+        /// <summary>
+        /// Get the component's state for synchronizing
+        /// </summary>
+        /// <returns>ComponentState object</returns>
+        public virtual ComponentState GetComponentState()
+        {
+            return new ComponentState(Family);
+        }
+
+        public virtual void HandleComponentState(dynamic state)
+        {}
+
+        /// <summary>
+        /// Empty method for handling incoming input messages from counterpart server/client components
+        /// </summary>
+        /// <param name="message">the message object</param>
+        public virtual void HandleNetworkMessage(IncomingEntityComponentMessage message, NetConnection sender)
+        {}
     }
 }

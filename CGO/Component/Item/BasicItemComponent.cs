@@ -1,4 +1,5 @@
 ﻿using GameObject;
+using Lidgren.Network;
 using SS13_Shared;
 using SS13_Shared.GO;
 
@@ -11,7 +12,7 @@ namespace CGO
             Family = ComponentFamily.Item;
         }
 
-        public override void HandleNetworkMessage(IncomingEntityComponentMessage message)
+        public override void HandleNetworkMessage(IncomingEntityComponentMessage message, NetConnection sender)
         {
             if (message.ComponentFamily != Family)
                 return;

@@ -159,11 +159,11 @@ namespace CGO
 
         //FUNCTIONS TO REFACTOR AT A LATER DATE
 
-        internal void HandleComponentMessage(IncomingEntityComponentMessage message)
+        internal void HandleComponentMessage(IncomingEntityComponentMessage message, NetConnection sender)
         {
             if (GetComponentFamilies().Contains(message.ComponentFamily))
             {
-                GetComponent<IGameObjectComponent>(message.ComponentFamily).HandleNetworkMessage(message);
+                GetComponent<IGameObjectComponent>(message.ComponentFamily).HandleNetworkMessage(message, sender);
             }
         }
 
@@ -174,7 +174,7 @@ namespace CGO
                 case EntityMessage.PositionMessage:
                     break;
                 case EntityMessage.ComponentMessage:
-                    HandleComponentMessage((IncomingEntityComponentMessage)message.Message);
+                    HandleComponentMessage((IncomingEntityComponentMessage)message.Message, message.Sender);
                     break;
                 case EntityMessage.GetSVars:
                     HandleGetSVars(message);

@@ -1,5 +1,6 @@
 ﻿using System.Collections.Generic;
 using ClientInterfaces.GOC;
+using Lidgren.Network;
 using SS13_Shared;
 using SS13_Shared.GO;
 
@@ -15,7 +16,7 @@ namespace CGO
             Family = ComponentFamily.Equipment;
         }
 
-        public override void HandleNetworkMessage(IncomingEntityComponentMessage message)
+        public override void HandleNetworkMessage(IncomingEntityComponentMessage message, NetConnection sender)
         {
             switch ((EquipmentComponentNetMessage)message.MessageParameters[0])
             {

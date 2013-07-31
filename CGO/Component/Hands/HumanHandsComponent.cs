@@ -2,6 +2,7 @@
 using System.Linq;
 using ClientInterfaces.GOC;
 using ClientInterfaces.UserInterface;
+using Lidgren.Network;
 using SS13.IoC;
 using SS13_Shared.GO;
 using SS13_Shared;
@@ -19,7 +20,7 @@ namespace CGO
             Family = ComponentFamily.Hands;
         }
 
-        public override void HandleNetworkMessage(IncomingEntityComponentMessage message)
+        public override void HandleNetworkMessage(IncomingEntityComponentMessage message, NetConnection sender)
         {
             var type = (ComponentMessageType)message.MessageParameters[0];
             int entityUid;

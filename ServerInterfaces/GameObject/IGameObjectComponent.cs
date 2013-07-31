@@ -8,14 +8,8 @@ namespace ServerInterfaces.GameObject
 {
     public interface IGameObjectComponent: IComponent
     {
-
-        ComponentReplyMessage RecieveMessage(object sender, ComponentMessageType type, params object[] list);
-        void Update(float frameTime);
-        void HandleNetworkMessage(IncomingEntityComponentMessage message, NetConnection client);
         void HandleInstantiationMessage(Lidgren.Network.NetConnection netConnection);
         void SetSVar(MarshalComponentParameter sVar);
         List<MarshalComponentParameter> GetSVars();
-        ComponentState GetComponentState();
-
     }
 }

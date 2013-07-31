@@ -1,6 +1,7 @@
 ﻿using System;
 using ClientInterfaces.Lighting;
 using GorgonLibrary;
+using Lidgren.Network;
 using SS13.IoC;
 using SS13_Shared;
 using SS13_Shared.GO;
@@ -42,9 +43,9 @@ namespace CGO
             Owner.GetComponent<TransformComponent>(ComponentFamily.Transform).OnMove += OnMove;
         }
 
-        public override void HandleNetworkMessage(IncomingEntityComponentMessage message)
+        public override void HandleNetworkMessage(IncomingEntityComponentMessage message, NetConnection sender)
         {
-            base.HandleNetworkMessage(message);
+            base.HandleNetworkMessage(message, sender);
             var type = (ComponentMessageType) message.MessageParameters[0];
             switch(type)
             {

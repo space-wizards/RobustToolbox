@@ -210,6 +210,8 @@ namespace ClientServices.UserInterface.Components
                 _displayIndex = 0;
                 _displayText = Text;
 
+                if (Text.Length < _caretIndex - 1)
+                    _caretIndex = Text.Length;
                 _caretPos = Label.Position.X + Label.MeasureLine(Text.Substring(_displayIndex, _caretIndex - _displayIndex));
             }
         }

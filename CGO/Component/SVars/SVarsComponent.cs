@@ -34,7 +34,7 @@ namespace CGO
 
         public void DoSetSVar(MarshalComponentParameter svar)
         {
-            Owner.SendComponentNetworkMessage(this, NetDeliveryMethod.ReliableUnordered, svar.Serialize());
+            Owner.SendComponentNetworkMessage(this, NetDeliveryMethod.ReliableUnordered, ComponentMessageType.SetSVar, svar.Serialize());
         }
 
         public void DoGetSVars()

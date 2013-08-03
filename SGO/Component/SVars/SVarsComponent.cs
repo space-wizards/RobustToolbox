@@ -78,7 +78,7 @@ namespace SGO
             parameters.Add(ComponentMessageType.GetSVars);
             parameters.Add(serializedSvars.Count);
             parameters.AddRange(serializedSvars);
-            Owner.SendDirectedComponentNetworkMessage(this, NetDeliveryMethod.ReliableUnordered, client, parameters);
+            Owner.SendDirectedComponentNetworkMessage(this, NetDeliveryMethod.ReliableUnordered, client, parameters.ToArray());
         }
 
         /// <summary>

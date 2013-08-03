@@ -1,6 +1,9 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Linq;
+using Lidgren.Network;
 using SS13_Shared;
+using SS13_Shared.GO;
 
 namespace GameObject
 {
@@ -39,6 +42,7 @@ namespace GameObject
         protected EntityFactory EntityFactory { get; private set; }
         public EntityTemplateDatabase EntityTemplateDatabase { get; private set; }
         public EntitySystemManager EntitySystemManager { get; private set; }
+        protected Queue<IncomingEntityMessage> MessageBuffer = new Queue<IncomingEntityMessage>();
         protected int NextUid=0;
         public bool Initialized { get; protected set; }
 
@@ -85,6 +89,8 @@ namespace GameObject
         {
             foreach (var e in _entities.Values.Where(e => !e.Initialized))
                 e.Initialize();
+            if (EngineType == EngineType.Client)
+                Initialized = true;
         }
 
         public virtual void LoadEntities()
@@ -168,10 +174,101 @@ namespace GameObject
                 _entities.Add(e.Uid, e);
                 if (Initialized)
                     e.Initialize();
-                //if (send) e.FireNetworkedSpawn();
+                if(!e.HasComponent(ComponentFamily.SVars))
+                    e.AddComponent(ComponentFamily.SVars, ComponentFactory.GetComponent("SVarsComponent"));
             }
             return e;
         }
         #endregion
+
+        #region message processing
+        protected void ProcessMsgBuffer()
+        {
+            if (!Initialized)
+                return;
+            if (!MessageBuffer.Any()) return;
+            var misses = new List<IncomingEntityMessage>();
+
+            while (MessageBuffer.Any())
+            {
+                IncomingEntityMessage entMsg = MessageBuffer.Dequeue();
+                if (!_entities.ContainsKey(entMsg.Uid))
+                {
+                    entMsg.LastProcessingAttempt = DateTime.Now;
+                    if ((entMsg.LastProcessingAttempt - entMsg.ReceivedTime).TotalSeconds > entMsg.Expires)
+                        misses.Add(entMsg);
+                }
+                else
+                    _entities[entMsg.Uid].HandleNetworkMessage(entMsg);
+            }
+
+            foreach (var miss in misses)
+                MessageBuffer.Enqueue(miss);
+
+            MessageBuffer.Clear(); //Should be empty at this point anyway.
+        }
+
+        protected IncomingEntityMessage ProcessNetMessage(NetIncomingMessage msg)
+        {
+            return EntityNetworkManager.HandleEntityNetworkMessage(msg);
+        }
+
+        /// <summary>
+        /// Handle an incoming network message by passing the message to the EntityNetworkManager 
+        /// and handling the parsed result.
+        /// </summary>
+        /// <param name="msg">Incoming raw network message</param>
+        public void HandleEntityNetworkMessage(NetIncomingMessage msg)
+        {
+            if (!Initialized)
+            {
+                var emsg = ProcessNetMessage(msg);
+                if (emsg.MessageType != EntityMessage.Null)
+                    MessageBuffer.Enqueue(emsg);
+            }
+            else
+            {
+                ProcessMsgBuffer();
+                var emsg = ProcessNetMessage(msg);
+                if (!_entities.ContainsKey(emsg.Uid))
+                    MessageBuffer.Enqueue(emsg);
+                else
+                    _entities[emsg.Uid].HandleNetworkMessage(emsg);
+            }
+        }
+
+        #endregion
+
+        #region State stuff
+
+        public void ApplyEntityStates(List<EntityState> entityStates)
+        {
+            var entityKeys = new List<int>();
+            foreach (var es in entityStates)
+            {
+                entityKeys.Add(es.StateData.Uid);
+                //Known entities
+                if (_entities.ContainsKey(es.StateData.Uid))
+                {
+                    _entities[es.StateData.Uid].HandleEntityState(es);
+                }
+                else //Unknown entities
+                {
+                    Entity e = SpawnEntity(es.StateData.TemplateName, es.StateData.Uid);
+                    e.Name = es.StateData.Name;
+                    e.HandleEntityState(es);
+                }
+            }
+
+            //Delete entities that exist here but don't exist in the entity states
+            var toDelete = _entities.Keys.Where(k => !entityKeys.Contains(k)).ToArray();
+            foreach (var k in toDelete)
+                DeleteEntity(k);
+
+            if (!Initialized)
+                InitializeEntities();
+        }
+        #endregion
+
     }
 }

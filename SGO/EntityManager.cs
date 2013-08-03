@@ -17,8 +17,6 @@ namespace SGO
     /// </summary>
     public class EntityManager : GameObject.EntityManager, ServerInterfaces.GOC.IEntityManager
     {
-        private Queue<IncomingEntityMessage> MessageBuffer = new Queue<IncomingEntityMessage>();
-
         public EntityManager(ISS13NetServer netServer)
             :base(EngineType.Server, new EntityNetworkManager(netServer))
         {}
@@ -35,64 +33,7 @@ namespace SGO
             var saveFile = new XDocument(new XElement("SavedEntities", entities.ToArray()));
             saveFile.Save("SavedEntities.xml");
         }
-
-
-        private void ProcessMsgBuffer()
-        {
-            if (!Initialized)
-                return;
-            if (!MessageBuffer.Any()) return;
-            var misses = new List<IncomingEntityMessage>();
-
-            while (MessageBuffer.Any())
-            {
-                IncomingEntityMessage entMsg = MessageBuffer.Dequeue();
-                if (!_entities.ContainsKey(entMsg.Uid))
-                {
-                    entMsg.LastProcessingAttempt = DateTime.Now;
-                    if ((entMsg.LastProcessingAttempt - entMsg.ReceivedTime).TotalSeconds > entMsg.Expires)
-                        misses.Add(entMsg);
-                }
-                else
-                    _entities[entMsg.Uid].HandleNetworkMessage(entMsg);
-            }
-
-            foreach (var miss in misses)
-                MessageBuffer.Enqueue(miss);
-
-            MessageBuffer.Clear(); //Should be empty at this point anyway.
-        }
-
-        private IncomingEntityMessage ProcessNetMessage(NetIncomingMessage msg)
-        {
-            return EntityNetworkManager.HandleEntityNetworkMessage(msg);
-        }
-
-        /// <summary>
-        /// Handle an incoming network message by passing the message to the EntityNetworkManager 
-        /// and handling the parsed result.
-        /// </summary>
-        /// <param name="msg">Incoming raw network message</param>
-        public void HandleEntityNetworkMessage(NetIncomingMessage msg)
-        {
-            if (!Initialized)
-            {
-                var emsg = ProcessNetMessage(msg);
-                if (emsg.MessageType != EntityMessage.Null)
-                    MessageBuffer.Enqueue(emsg);
-            }
-            else
-            {
-                ProcessMsgBuffer();
-                var emsg = ProcessNetMessage(msg);
-                if (!_entities.ContainsKey(emsg.Uid))
-                    MessageBuffer.Enqueue(emsg);
-                else
-                    (_entities[emsg.Uid]).HandleNetworkMessage(emsg);
-            }
-        }
-
-
+        
         #endregion
 
         /// <summary>

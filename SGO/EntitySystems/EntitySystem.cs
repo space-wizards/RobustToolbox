@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using GO = GameObject;
-using ServerInterfaces.GameObject;
+using ServerInterfaces.GOC;
 
 namespace SGO.EntitySystems
 {
@@ -15,7 +15,7 @@ namespace SGO.EntitySystems
         private bool _shutdown = false;
         protected GO.EntityQuery EntityQuery;
 
-        protected List<IEntity> RelevantEntities
+        protected List<GO.Entity> RelevantEntities
         {
             get { return EntityManager.GetEntities(EntityQuery); }
         }

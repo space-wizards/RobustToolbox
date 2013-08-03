@@ -1,6 +1,8 @@
-﻿namespace ClientInterfaces.GOC
+﻿using GameObject;
+
+namespace ClientInterfaces.GOC
 {
-    public interface IMoverComponent : IGameObjectComponent
+    public interface IMoverComponent : IComponent
     {
 
     }

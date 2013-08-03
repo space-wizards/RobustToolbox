@@ -10,6 +10,7 @@ using ClientInterfaces.Resource;
 using ClientInterfaces.UserInterface;
 using ClientServices.Helpers;
 using ClientServices.UserInterface.Components;
+using GameObject;
 using GorgonLibrary;
 using GorgonLibrary.Graphics;
 using GorgonLibrary.InputDevices;
@@ -207,7 +208,7 @@ namespace ClientServices.UserInterface.Inventory
             _networkManager.SendMessage(msg, NetDeliveryMethod.ReliableUnordered);
         }
 
-        void SlotDropped(EquipmentSlotUi sender, IEntity dropped)
+        void SlotDropped(EquipmentSlotUi sender, Entity dropped)
         {
             _userInterfaceManager.DragInfo.Reset();
 

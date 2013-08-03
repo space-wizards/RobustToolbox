@@ -1,4 +1,4 @@
-﻿using ClientInterfaces.GOC;
+﻿using GameObject;
 using GorgonLibrary;
 using SS13_Shared;
 using SS13_Shared.GO;
@@ -8,9 +8,9 @@ namespace CGO
     /// <summary>
     /// Mover component that responds to movement by an entity.
     /// </summary>
-    public class SlaveMoverComponent : GameObjectComponent
+    public class SlaveMoverComponent : Component
     {
-        private IEntity _master;
+        private Entity _master;
         private Direction _movedir = Direction.South;
         
         public SlaveMoverComponent():base()
@@ -43,7 +43,7 @@ namespace CGO
 
         private void Attach(int uid)
         {
-            _master = EntityManager.Singleton.GetEntity(uid);
+            _master = Owner.EntityManager.GetEntity(uid);
             _master.GetComponent<TransformComponent>(ComponentFamily.Transform).OnMove += HandleOnMove;
             Translate(_master.GetComponent<TransformComponent>(ComponentFamily.Transform).Position);
         }

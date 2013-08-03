@@ -5,7 +5,7 @@ using SS13_Shared.GO;
 
 namespace CGO
 {
-    public class BasicItemComponent : GameObjectComponent
+    public class BasicItemComponent : Component
     {
         public BasicItemComponent() :base()
         {

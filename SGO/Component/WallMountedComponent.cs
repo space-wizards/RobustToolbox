@@ -1,18 +1,15 @@
 ﻿using System.Drawing;
+using GameObject;
 using SS13_Shared;
 using SS13_Shared.GO;
-using ServerInterfaces.GameObject;
-using ServerServices;
-using ServerServices.Map;
 using ServerServices.Tiles;
 using SS13.IoC;
 using ServerInterfaces.Map;
-using Lidgren.Network;
 using System;
 
 namespace SGO
 {
-    public class WallMountedComponent : GameObjectComponent
+    public class WallMountedComponent : Component
     {
         protected Tile linkedTile;
 
@@ -21,7 +18,7 @@ namespace SGO
             Family = ComponentFamily.WallMounted;
         }
         
-        public override void OnAdd(GameObject.IEntity owner)
+        public override void OnAdd(Entity owner)
         {
             base.OnAdd(owner);
             Owner.GetComponent<TransformComponent>(ComponentFamily.Transform).OnMove += OnMove;

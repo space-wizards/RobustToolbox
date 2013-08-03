@@ -1,10 +1,11 @@
-﻿using Lidgren.Network;
+﻿using GameObject;
+using Lidgren.Network;
 using SS13_Shared;
 using SS13_Shared.GO;
 
 namespace SGO
 {
-    public class ClickableComponent : GameObjectComponent
+    public class ClickableComponent : Component
     {
         public ClickableComponent()
         {

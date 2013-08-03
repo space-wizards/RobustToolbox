@@ -4,7 +4,8 @@ using System.Linq;
 using System.Text;
 using Lidgren.Network;
 using SS13_Shared;
-using ServerInterfaces.GameObject;
+using ServerInterfaces.GOC;
+using GO = GameObject;
 
 namespace ServerInterfaces.Player
 {
@@ -12,7 +13,7 @@ namespace ServerInterfaces.Player
     {
         NetConnection ConnectedClient { get; }
         BodyPart TargetedArea { get; }
-        IEntity attachedEntity { get; }
+        GO.Entity attachedEntity { get; }
         AdminPermissions adminPermissions { get; }
         string name { get; set; }
         SessionStatus status { get; set; }
@@ -22,7 +23,7 @@ namespace ServerInterfaces.Player
 
         void SetName(string name);
 
-        void AttachToEntity(IEntity a);
+        void AttachToEntity(GO.Entity a);
 
         void HandleNetworkMessage(NetIncomingMessage message);
 

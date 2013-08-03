@@ -1,8 +1,8 @@
-﻿using ServerInterfaces.GameObject;
+﻿using GameObject;
 
 namespace SGO
 {
-    public interface IMoverComponent : IGameObjectComponent
+    public interface IMoverComponent : IComponent
     {
     }
 }

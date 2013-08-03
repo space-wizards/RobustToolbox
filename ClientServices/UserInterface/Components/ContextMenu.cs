@@ -6,6 +6,7 @@ using ClientInterfaces;
 using ClientInterfaces.GOC;
 using ClientInterfaces.Resource;
 using ClientInterfaces.UserInterface;
+using GameObject;
 using GorgonLibrary;
 using GorgonLibrary.InputDevices;
 using GorgonLibrary.Graphics;
@@ -19,9 +20,9 @@ namespace ClientServices.UserInterface.Components
         private readonly IUserInterfaceManager _userInterfaceManager;
         private readonly Vector2D _buttonSize = new Vector2D(150, 20);
         private readonly List<ContextMenuButton> _buttons = new List<ContextMenuButton>();
-        private IEntity _owningEntity;
+        private Entity _owningEntity;
 
-        public ContextMenu(IEntity entity, Vector2D creationPos, IResourceManager resourceManager, IUserInterfaceManager userInterfaceManager, bool showExamine = true) 
+        public ContextMenu(Entity entity, Vector2D creationPos, IResourceManager resourceManager, IUserInterfaceManager userInterfaceManager, bool showExamine = true) 
         {
             _owningEntity = entity;
             _resourceManager = resourceManager;
@@ -81,9 +82,9 @@ namespace ClientServices.UserInterface.Components
                 var newSVars = new SVarEditWindow(new Size(350, 400), _owningEntity);
                 _userInterfaceManager.AddComponent(newSVars);
                 newSVars.Position = new Point(ClientArea.X, ClientArea.Y);
-                
-                _owningEntity.GetSVarsCallback += newSVars.GetSVarsCallback;
-                _owningEntity.GetSVars();
+
+                _owningEntity.GetComponent<ISVarsComponent>(ComponentFamily.SVars).GetSVarsCallback += newSVars.GetSVarsCallback;
+                _owningEntity.GetComponent<ISVarsComponent>(ComponentFamily.SVars).DoGetSVars();
             }
             else _owningEntity.SendMessage(this, SS13_Shared.GO.ComponentMessageType.ContextMessage, (string)sender.UserData);
         }

@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using ClientInterfaces.GOC;
 using ClientServices.Tiles;
+using GameObject;
 using GorgonLibrary;
 using GorgonLibrary.Graphics;
 using SS13_Shared;
@@ -18,7 +19,7 @@ namespace ClientServices.Helpers
             return type.IsSubclassOf(typeof(Tile)) ? "tilebuildoverlay" : "nosprite";
         }
 
-        public static Sprite GetSpriteComponentSprite(IEntity entity)
+        public static Sprite GetSpriteComponentSprite(Entity entity)
         {
             var reply = entity.SendMessage(entity, ComponentFamily.Renderable, ComponentMessageType.GetSprite);
             if (reply.MessageType == ComponentMessageType.CurrentSprite)

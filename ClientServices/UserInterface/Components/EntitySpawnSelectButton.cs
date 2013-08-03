@@ -4,6 +4,7 @@ using System.Drawing;
 using ClientInterfaces;
 using ClientInterfaces.GOC;
 using ClientInterfaces.Resource;
+using GameObject;
 using GorgonLibrary;
 using GorgonLibrary.Graphics;
 using GorgonLibrary.InputDevices;
@@ -23,13 +24,13 @@ namespace ClientServices.UserInterface.Components
 
         public int fixed_width = -1;
 
-        public delegate void EntitySpawnSelectPress(EntitySpawnSelectButton sender, IEntityTemplate template, string templateName);
+        public delegate void EntitySpawnSelectPress(EntitySpawnSelectButton sender, EntityTemplate template, string templateName);
         public event EntitySpawnSelectPress Clicked;
 
-        IEntityTemplate associatedTemplate;
+        EntityTemplate associatedTemplate;
         string associatedTemplateName;
 
-        public EntitySpawnSelectButton(IEntityTemplate entityTemplate, string templateName, IResourceManager resourceManager)
+        public EntitySpawnSelectButton(EntityTemplate entityTemplate, string templateName, IResourceManager resourceManager)
         {
             _resourceManager = resourceManager;
 

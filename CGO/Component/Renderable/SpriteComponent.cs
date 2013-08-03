@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using ClientInterfaces.GOC;
 using ClientInterfaces.Resource;
+using GameObject;
 using GorgonLibrary.Graphics;
 using GorgonLibrary;
 using ClientWindow;
@@ -69,7 +70,7 @@ namespace CGO
             slaves = new List<SpriteComponent>();
         }
 
-        public override void OnAdd(GameObject.IEntity owner)
+        public override void OnAdd(Entity owner)
         {
             base.OnAdd(owner);
             //Send a spritechanged message so everything knows whassup.
@@ -307,7 +308,7 @@ namespace CGO
 
         public bool IsSlaved() { return master != null; }
 
-        public void SetMaster(IEntity m) 
+        public void SetMaster(Entity m) 
         { 
             if(!m.HasComponent(ComponentFamily.Renderable))
                 return;

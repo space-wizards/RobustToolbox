@@ -1,4 +1,5 @@
-﻿using Lidgren.Network;
+﻿using GameObject;
+using Lidgren.Network;
 using SS13_Shared;
 using SS13_Shared.GO;
 
@@ -7,7 +8,7 @@ namespace SGO
     /// <summary>
     /// This class recieves keypresses from the attached client and forwards them to other components.
     /// </summary>
-    public class KeyBindingInputComponent : GameObjectComponent
+    public class KeyBindingInputComponent : Component
     {
         public KeyBindingInputComponent()
         {

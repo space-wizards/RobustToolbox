@@ -1,5 +1,6 @@
 ﻿using System.Collections.Generic;
 using System.Linq;
+using GameObject;
 using SS13_Shared;
 using SS13_Shared.GO;
 using System.Drawing;
@@ -12,7 +13,7 @@ using SS13_Shared.GO.StatusEffect;
 
 namespace CGO
 {
-    public class StatusEffectComp : GameObjectComponent
+    public class StatusEffectComp : Component
     {
         public override Type StateType
         {

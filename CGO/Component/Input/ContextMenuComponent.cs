@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using GameObject;
 using Lidgren.Network;
 using SS13_Shared;
 using SS13_Shared.GO;
@@ -7,7 +8,7 @@ using System.Xml.Linq;
 
 namespace CGO
 {
-    public class ContextMenuComponent : GameObjectComponent
+    public class ContextMenuComponent : Component
     {
         private readonly List<ContextMenuEntry> _entries = new List<ContextMenuEntry>();
 

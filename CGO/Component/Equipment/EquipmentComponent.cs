@@ -1,14 +1,14 @@
 ﻿using System.Collections.Generic;
-using ClientInterfaces.GOC;
+using GameObject;
 using Lidgren.Network;
 using SS13_Shared;
 using SS13_Shared.GO;
 
 namespace CGO
 {
-    public class EquipmentComponent : GameObjectComponent
+    public class EquipmentComponent : Component
     {
-        public Dictionary<EquipmentSlot, IEntity> EquippedEntities = new Dictionary<EquipmentSlot, IEntity>();
+        public Dictionary<EquipmentSlot, Entity> EquippedEntities = new Dictionary<EquipmentSlot, Entity>();
         public List<EquipmentSlot> ActiveSlots = new List<EquipmentSlot>();
 
         public EquipmentComponent():base()
@@ -97,7 +97,7 @@ namespace CGO
             {
                 UnEquipItem(part, EquippedEntities[part].Uid);
             }
-            EquippedEntities.Add(part, EntityManager.Singleton.GetEntity(uid));
+            EquippedEntities.Add(part, Owner.EntityManager.GetEntity(uid));
         }
 
         private void UnEquipItem(EquipmentSlot part, int uid)

@@ -1,14 +1,12 @@
 ﻿using System;
+using GameObject;
 using Lidgren.Network;
 using SS13_Shared;
 using SS13_Shared.GO;
 using SS13_Shared.GameStates;
-using ServerServices;
-using ServerInterfaces;
 using ServerServices.Log;
 using SS13.IoC;
 using ServerInterfaces.Network;
-using ServerInterfaces.GameObject;
 using ServerInterfaces.Round;
 using SS13_Shared.ServerEnums;
 using ServerInterfaces.Player;
@@ -23,7 +21,7 @@ namespace ServerServices.Player
         public NetConnection ConnectedClient { get { return connectedClient; } }
         private PlayerManager _playerManager;
 
-        public IEntity attachedEntity { get; set; }
+        public Entity attachedEntity { get; set; }
         public string name { get; set; }
         public SessionStatus status { get; set; }
         public AdminPermissions adminPermissions { get; set; }
@@ -56,7 +54,7 @@ namespace ServerServices.Player
             UpdatePlayerState();
         }
 
-        public void AttachToEntity(IEntity a)
+        public void AttachToEntity(Entity a)
         {
             DetachFromEntity();
             //a.attachedClient = connectedClient;

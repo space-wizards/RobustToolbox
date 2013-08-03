@@ -5,6 +5,7 @@ using ClientInterfaces.GOC;
 using ClientInterfaces.Resource;
 using ClientServices.Helpers;
 using ClientServices.UserInterface.Components;
+using GameObject;
 using GorgonLibrary.Graphics;
 using GorgonLibrary.InputDevices;
 
@@ -17,11 +18,11 @@ namespace ClientServices.UserInterface.Inventory
         private readonly Sprite _slotSprite;
         private Color _currentColor;
 
-        public IEntity ContainingEntity;
+        public Entity ContainingEntity;
         public delegate void InventoryClickHandler(InventorySlotUi sender);
         public event InventoryClickHandler Clicked;
 
-        public InventorySlotUi(IEntity containingEnt, IResourceManager resourceManager)
+        public InventorySlotUi(Entity containingEnt, IResourceManager resourceManager)
         {
             _currentColor = Color.White;
             _resourceManager = resourceManager;

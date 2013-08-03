@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Xml.Linq;
+using GameObject;
 using Lidgren.Network;
 using SS13_Shared;
 using SS13_Shared.GO;
@@ -9,7 +10,7 @@ using SS13_Shared.GO.Component.EntityStats;
 
 namespace SGO
 {
-    public class EntityStatsComp : GameObjectComponent
+    public class EntityStatsComp : Component
     {
         private readonly Dictionary<DamageType, int> armorStats = new Dictionary<DamageType, int>();
 

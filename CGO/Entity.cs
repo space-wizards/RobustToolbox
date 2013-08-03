@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using ClientInterfaces.GOC;
+using GameObject;
 using GorgonLibrary;
 using Lidgren.Network;
 using SS13_Shared;
@@ -17,28 +17,12 @@ namespace CGO
     /// Should not contain any game logic whatsoever other than entity movement functions and 
     /// component management functions.
     /// </summary>
-    public class Entity : GameObject.Entity, IEntity
+    public class Entity : GameObject.Entity
     {
         #region Variables
-
-        private EntityNetworkManager _entityNetworkManager;
-
-        public IEntityTemplate Template { get; set; }
         
-        public event EventHandler<VectorEventArgs> OnMove;
-        public event EventHandler<GetSVarsEventArgs> GetSVarsCallback; 
-
-        public bool Initialized { get; set; }
-
-        public int Uid { get; set; }
-
         private bool _messageProfiling;
-
-        public delegate void ShutdownEvent(Entity e);
-        public event ShutdownEvent OnShutdown;
-
-        public Vector2D Velocity { get; set; }
-
+        
         #endregion
 
         #region Constructor/Destructor
@@ -49,66 +33,16 @@ namespace CGO
         public Entity(EntityManager entityManager)
             :base(entityManager)
         {
-            _entityNetworkManager = entityManager.EntityNetworkManager;
             Initialize();
 
             var cfg = IoCManager.Resolve<IConfigurationManager>();
             _messageProfiling = cfg.GetMessageLogging();
         }
-
-        /// <summary>
-        /// Sets up variables and shite
-        /// </summary>
-        public virtual void Initialize()
-        {
-            SendMessage(this, ComponentMessageType.Initialize);
-            Initialized = true;
-        }
         #endregion
 
         #region Component Manipulation
-        /// <summary>
-        /// Allows components to send messages
-        /// </summary>
-        /// <param name="sender">the component doing the sending</param>
-        /// <param name="type">the type of message</param>
-        /// <param name="args">message parameters</param>
-        public void SendMessage(object sender, ComponentMessageType type, List<ComponentReplyMessage> replies, params object[] args)
-        {
-            LogComponentMessage(sender, type, args);
-         
-            foreach (IGameObjectComponent component in GetComponents())
-            {
-                if (replies != null)
-                {
-                    var reply = component.RecieveMessage(sender, type, args);
-                    if (reply.MessageType != ComponentMessageType.Empty)
-                        replies.Add(reply);
-                }
-                else
-                    component.RecieveMessage(sender, type, args);
-            }
-        }
 
-        public void SendMessage(object sender, ComponentMessageType type, params object[] args)
-        {
-            LogComponentMessage(sender, type, args);
 
-            foreach (IGameObjectComponent component in GetComponents())
-            {
-                component.RecieveMessage(sender, type, args);
-            }
-        }
-
-        public ComponentReplyMessage SendMessage(object sender, ComponentFamily family, ComponentMessageType type, params object[] args)
-        {
-            LogComponentMessage(sender, type, args);
-
-            if (HasComponent(family))
-                return GetComponent<GameObjectComponent>(family).RecieveMessage(sender, type, args);
-            else
-                return ComponentReplyMessage.Empty;
-        }
 
         /// <summary>
         /// Logs a component message to the messaging profiler
@@ -123,10 +57,10 @@ namespace CGO
             var senderfamily = ComponentFamily.Generic;
             var uid = 0;
             var sendertype = "";
-            //if (sender.GetType().IsAssignableFrom(typeof(IGameObjectComponent)))
-            if (typeof(IGameObjectComponent).IsAssignableFrom(sender.GetType()))
+            //if (sender.GetType().IsAssignableFrom(typeof(Component)))
+            if (typeof(Component).IsAssignableFrom(sender.GetType()))
             {
-                var realsender = (GameObjectComponent)sender;
+                var realsender = (Component)sender;
                 senderfamily = realsender.Family;
 
                 uid = realsender.Owner.Uid;
@@ -142,123 +76,6 @@ namespace CGO
         }
 
         #endregion
-
-        /// <summary>
-        /// Requests Description string from components and returns it. If no component answers, returns default description from template.
-        /// </summary>
-        public string GetDescriptionString() //This needs to go here since it can not be bound to any single component.
-        {
-            var replies = new List<ComponentReplyMessage>();
-
-            SendMessage(this, ComponentMessageType.GetDescriptionString, replies);
-
-            if (replies.Any()) return (string)replies.First(x => x.MessageType == ComponentMessageType.GetDescriptionString).ParamsList[0]; //If you dont answer with a string then fuck you.
-            
-            return Template.Description;
-        }
-
-        //FUNCTIONS TO REFACTOR AT A LATER DATE
-
-        internal void HandleComponentMessage(IncomingEntityComponentMessage message, NetConnection sender)
-        {
-            if (GetComponentFamilies().Contains(message.ComponentFamily))
-            {
-                GetComponent<IGameObjectComponent>(message.ComponentFamily).HandleNetworkMessage(message, sender);
-            }
-        }
-
-        public void HandleNetworkMessage(IncomingEntityMessage message)
-        {
-            switch (message.MessageType)
-            {
-                case EntityMessage.PositionMessage:
-                    break;
-                case EntityMessage.ComponentMessage:
-                    HandleComponentMessage((IncomingEntityComponentMessage)message.Message, message.Sender);
-                    break;
-                case EntityMessage.GetSVars:
-                    HandleGetSVars(message);
-                    break;
-                case EntityMessage.SetDirection:
-                    GetComponent<DirectionComponent>(ComponentFamily.Direction).Direction = (Direction)((byte)message.Message);
-                    break;
-            }
-        }
-
-        /// <summary>
-        /// Sends a message to the counterpart component on the server side
-        /// </summary>
-        /// <param name="component">Sending component</param>
-        /// <param name="method">Net Delivery Method</param>
-        /// <param name="messageParams">Parameters</param>
-        public void SendComponentNetworkMessage(IGameObjectComponent component, NetDeliveryMethod method, params object[] messageParams)
-        {
-            _entityNetworkManager.SendComponentNetworkMessage(this, component.Family, NetDeliveryMethod.ReliableUnordered, messageParams);
-        }
-
-        public void SendComponentInstantiationMessage(IGameObjectComponent component)
-        {
-            if (component == null)
-                throw new Exception("Component is null");
-          
-            _entityNetworkManager.SendEntityNetworkMessage(this, EntityMessage.ComponentInstantiationMessage, component.Family);
-        }
-
-        #region SVar/CVar Marshalling
-
-        public void SetSVar(MarshalComponentParameter svar)
-        {
-            _entityNetworkManager.SendSVar(this, svar);
-        }
-
-        public void GetSVars()
-        {
-            _entityNetworkManager.SendEntityNetworkMessage(this, 
-                EntityMessage.GetSVars);
-        }
-
-        public void HandleGetSVars(IncomingEntityMessage message)
-        {
-            //If nothing's listening, then why bother with this shit?
-            if (GetSVarsCallback == null)
-                return;
-            var msg = (NetIncomingMessage)message.Message;
-
-            var count = msg.ReadInt32();
-            var svars = new List<MarshalComponentParameter>();
-            for(int i = 0;i<count;i++)
-            {
-                svars.Add(MarshalComponentParameter.Deserialize(msg));
-            }
-            
-            GetSVarsCallback(this, new GetSVarsEventArgs(svars));
-            GetSVarsCallback = null;
-        }
-
-        #endregion
-
-        #region GameState Stuff
-        public void HandleEntityState(EntityState state)
-        {
-            /*if(Position.X != state.StateData.Position.X || Position.Y != state.StateData.Position.Y)
-            {
-                Position = state.StateData.Position;
-                Moved();
-            }*/
-            Name = state.StateData.Name;
-            foreach(var compState in state.ComponentStates)
-            {
-                if (HasComponent(compState.Family))
-                {
-                    var comp = (GameObjectComponent)GetComponent(compState.Family);
-                    var stateType = comp.StateType;
-                    if (compState.GetType() == stateType)
-                    {
-                        comp.HandleComponentState(compState);
-                    }
-                }
-            }
-        }
-        #endregion
+        
     }
 }

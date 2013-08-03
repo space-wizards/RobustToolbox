@@ -1,19 +1,19 @@
-﻿using ServerServices.Log;
-using ServerInterfaces.GameObject;
+﻿using GameObject;
+using ServerServices.Log;
 using SS13_Shared.GO;
 using System.Collections.Generic;
 using System;
 
-namespace SGO.Component.Think.ThinkComponent
+namespace SGO.Think.ThinkComponent
 {
     public class PuddleThinkComponent : ThinkComponent
     {
-        private Dictionary<IEntity, DateTime> recentlyAffected = new Dictionary<IEntity, DateTime>();
+        private Dictionary<Entity, DateTime> recentlyAffected = new Dictionary<Entity, DateTime>();
 
         public override void OnBump(object sender, params object[] list)
         {
             base.OnBump(sender, list);
-            IEntity bumper = ((IEntity)list[0]);
+            Entity bumper = ((Entity)list[0]);
             LogManager.Log("Puddle Bumped by " + bumper.Name);
             StatusEffectComp statComp = (StatusEffectComp)bumper.GetComponent(ComponentFamily.StatusEffects);
 

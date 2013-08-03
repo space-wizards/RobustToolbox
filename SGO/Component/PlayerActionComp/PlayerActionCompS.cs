@@ -2,16 +2,15 @@
 using System.Collections.Generic;
 using System.Drawing;
 using System.Linq;
+using GameObject;
 using Lidgren.Network;
 using SS13_Shared;
 using SS13_Shared.GO;
-using ServerInterfaces;
-using ServerInterfaces.GameObject;
 using ServerInterfaces.Player;
 
 namespace SGO
 {
-    public class PlayerActionComp : GameObjectComponent
+    public class PlayerActionComp : Component
     {
         public List<PlayerAction> Actions = new List<PlayerAction>();
         private uint uidCurr;
@@ -32,7 +31,7 @@ namespace SGO
                     break;
 
                 case (ComponentMessageType.GetActionChecksum):
-                    Owner.SendComponentNetworkMessage(this, NetDeliveryMethod.ReliableUnordered, client,
+                    Owner.SendDirectedComponentNetworkMessage(this, NetDeliveryMethod.ReliableUnordered, client,
                                                       ComponentMessageType.GetActionChecksum,
                                                       (uint) (Actions.Sum(x => x.uid)*Actions.Count));
                     break;
@@ -67,7 +66,7 @@ namespace SGO
                         toDo.targetType == PlayerActionTargetType.None)
                         //Check validity of targets later. Only clientside atm.
                     {
-                        var ent = (IEntity)Owner.EntityManager.GetEntity((int)message.MessageParameters[3]);
+                        var ent = (Entity)Owner.EntityManager.GetEntity((int)message.MessageParameters[3]);
                         //ent id clienside uint but server int. Why?!
                         if (ent != null)
                         {
@@ -95,7 +94,7 @@ namespace SGO
             if (act.cooldownSeconds == 0) return;
             act.cooldownExpires = DateTime.Now.AddSeconds(act.cooldownSeconds);
             if (GetMyOwnerConnection() != null)
-                Owner.SendComponentNetworkMessage(this, NetDeliveryMethod.ReliableUnordered, GetMyOwnerConnection(),
+                Owner.SendDirectedComponentNetworkMessage(this, NetDeliveryMethod.ReliableUnordered, GetMyOwnerConnection(),
                                                   ComponentMessageType.CooldownAction, act.uid, act.cooldownSeconds);
         }
 
@@ -125,7 +124,7 @@ namespace SGO
                 index += 2;
             }
 
-            Owner.SendComponentNetworkMessage(this, NetDeliveryMethod.ReliableUnordered, client, message);
+            Owner.SendDirectedComponentNetworkMessage(this, NetDeliveryMethod.ReliableUnordered, client, message);
         }
 
         public override void Update(float frameTime)
@@ -158,7 +157,7 @@ namespace SGO
             Actions.Add(newAction);
 
             if (GetMyOwnerConnection() != null)
-                Owner.SendComponentNetworkMessage(this, NetDeliveryMethod.ReliableUnordered, GetMyOwnerConnection(),
+                Owner.SendDirectedComponentNetworkMessage(this, NetDeliveryMethod.ReliableUnordered, GetMyOwnerConnection(),
                                                   ComponentMessageType.AddAction, typeName, nextUid);
 
             return nextUid;
@@ -172,7 +171,7 @@ namespace SGO
                 Actions.Remove(toRemove);
 
                 if (GetMyOwnerConnection() != null)
-                    Owner.SendComponentNetworkMessage(this, NetDeliveryMethod.ReliableUnordered, GetMyOwnerConnection(),
+                    Owner.SendDirectedComponentNetworkMessage(this, NetDeliveryMethod.ReliableUnordered, GetMyOwnerConnection(),
                                                       ComponentMessageType.RemoveAction, toRemove.uid);
             }
         }
@@ -187,7 +186,7 @@ namespace SGO
                 Actions.Remove(toRemove);
 
                 if (GetMyOwnerConnection() != null)
-                    Owner.SendComponentNetworkMessage(this, NetDeliveryMethod.ReliableUnordered, GetMyOwnerConnection(),
+                    Owner.SendDirectedComponentNetworkMessage(this, NetDeliveryMethod.ReliableUnordered, GetMyOwnerConnection(),
                                                       ComponentMessageType.RemoveAction, toRemove.uid);
             }
         }

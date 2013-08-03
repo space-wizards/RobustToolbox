@@ -1,11 +1,12 @@
 ﻿using System;
+using GameObject;
 using Lidgren.Network;
 using SS13_Shared;
 using SS13_Shared.GO;
 
 namespace SGO
 {
-    public class EquippableComponent : GameObjectComponent
+    public class EquippableComponent : Component
     {
         public EquipmentSlot wearloc;
 
@@ -43,7 +44,7 @@ namespace SGO
         private void HandleUnEquipped()
         {
             Owner.AddComponent(ComponentFamily.Mover, Owner.EntityManager.ComponentFactory.GetComponent("BasicMoverComponent"));
-            Owner.SendComponentNetworkMessage(this, NetDeliveryMethod.ReliableOrdered, null,
+            Owner.SendDirectedComponentNetworkMessage(this, NetDeliveryMethod.ReliableOrdered, null,
                                               EquippableComponentNetMessage.UnEquipped);
             currentWearer = null;
         }
@@ -53,7 +54,7 @@ namespace SGO
             currentWearer = entity;
             Owner.AddComponent(ComponentFamily.Mover, Owner.EntityManager.ComponentFactory.GetComponent("SlaveMoverComponent"));
             Owner.SendMessage(this, ComponentMessageType.SlaveAttach, entity.Uid);
-            Owner.SendComponentNetworkMessage(this, NetDeliveryMethod.ReliableOrdered, null,
+            Owner.SendDirectedComponentNetworkMessage(this, NetDeliveryMethod.ReliableOrdered, null,
                                               EquippableComponentNetMessage.Equipped, entity.Uid, wearloc);
         }
 

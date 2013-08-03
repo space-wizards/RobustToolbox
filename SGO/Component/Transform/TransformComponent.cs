@@ -2,14 +2,15 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using GameObject;
 using SS13_Shared;
 using SS13_Shared.GO;
 using SS13_Shared.GO.Component.Transform;
-using ServerInterfaces.GameObject;
+using ServerInterfaces.GOC;
 
 namespace SGO
 {
-    class TransformComponent : GameObjectComponent, ITransformComponent
+    class TransformComponent : Component, ITransformComponent
     {
         private Vector2 _position = Vector2.Zero;
 

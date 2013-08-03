@@ -6,6 +6,7 @@ using ClientInterfaces.Resource;
 using ClientInterfaces.UserInterface;
 using ClientServices.Helpers;
 using ClientServices.UserInterface.Components;
+using GameObject;
 using GorgonLibrary;
 using GorgonLibrary.Graphics;
 using GorgonLibrary.InputDevices;
@@ -25,11 +26,11 @@ namespace ClientServices.UserInterface.Inventory
         private Sprite _buttonSprite;
         private Sprite _currentEntSprite;
 
-        public delegate void InventorySlotUiDropHandler(EquipmentSlotUi sender, IEntity dropped);
+        public delegate void InventorySlotUiDropHandler(EquipmentSlotUi sender, Entity dropped);
         public event InventorySlotUiDropHandler Dropped;
 
         public EquipmentSlot AssignedSlot { get; private set; }
-        public IEntity CurrentEntity { get; private set; }
+        public Entity CurrentEntity { get; private set; }
 
         public EquipmentSlotUi(EquipmentSlot slot, IPlayerManager playerManager, IResourceManager resourceManager, IUserInterfaceManager userInterfaceManager)
         {

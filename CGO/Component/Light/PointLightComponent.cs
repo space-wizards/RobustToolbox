@@ -1,5 +1,6 @@
 ﻿using System;
 using ClientInterfaces.Lighting;
+using GameObject;
 using GorgonLibrary;
 using Lidgren.Network;
 using SS13.IoC;
@@ -9,7 +10,7 @@ using SS13_Shared.GO.Component.Light;
 
 namespace CGO
 {
-    public class PointLightComponent : GameObjectComponent
+    public class PointLightComponent : Component
     {
         //Contains a standard light
         public ILight _light;
@@ -29,7 +30,7 @@ namespace CGO
         }
 
         //When added, set up the light.
-        public override void OnAdd(GameObject.IEntity owner)
+        public override void OnAdd(Entity owner)
         {
             base.OnAdd(owner);
 

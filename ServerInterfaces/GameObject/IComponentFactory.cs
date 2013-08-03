@@ -2,11 +2,12 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using GameObject;
 
-namespace ServerInterfaces.GameObject
+namespace ServerInterfaces.GOC
 {
     public interface IComponentFactory
     {
-        IGameObjectComponent GetComponent(string componentType);
+        Component GetComponent(string componentType);
     }
 }

@@ -7,6 +7,7 @@ using ClientInterfaces.Network;
 using ClientInterfaces.Player;
 using ClientInterfaces.Resource;
 using ClientInterfaces.GOC;
+using GameObject;
 using GorgonLibrary.InputDevices;
 using GorgonLibrary.Graphics;
 using GorgonLibrary;
@@ -40,11 +41,11 @@ namespace ClientServices.UserInterface.Components
         private readonly Sprite _legl;
         private readonly Sprite _legr;
 
-        private readonly IEntity assigned;
+        private readonly Entity assigned;
 
         private bool dragging = false;
 
-        public HealthScannerWindow(IEntity assignedEnt, Vector2D mousePos, UserInterfaceManager uiMgr, IResourceManager resourceManager)
+        public HealthScannerWindow(Entity assignedEnt, Vector2D mousePos, UserInterfaceManager uiMgr, IResourceManager resourceManager)
         {
             _resourceManager = resourceManager;
             assigned = assignedEnt;

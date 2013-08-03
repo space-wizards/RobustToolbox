@@ -2,9 +2,9 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Drawing;
-using ClientInterfaces;
 using ClientInterfaces.Collision;
 using ClientInterfaces.GOC;
+using GameObject;
 using SS13_Shared.GO;
 using CGO;
 
@@ -21,7 +21,7 @@ namespace ClientServices.Collision
 
         private readonly Dictionary<Point, int> _bucketIndex; //Indexed in 256-pixel blocks - 0 = 0, 1 = 256, 2 = 512 etc
         private readonly Dictionary<int, CollidableBucket> _buckets; // each bucket represents a 256x256 block of pixelspace
-        private readonly Dictionary<CollidableAABB, IEntity> _aabbs;
+        private readonly Dictionary<CollidableAABB, Entity> _aabbs;
 
         private int _lastIndex;
 
@@ -32,7 +32,7 @@ namespace ClientServices.Collision
         {
             _bucketIndex = new Dictionary<Point, int>();
             _buckets = new Dictionary<int, CollidableBucket>();
-            _aabbs = new Dictionary<CollidableAABB, IEntity>();
+            _aabbs = new Dictionary<CollidableAABB, Entity>();
         }
 
         #region ICollisionManager members
@@ -79,7 +79,7 @@ namespace ClientServices.Collision
         /// </summary>
         /// <param name="collider">Rectangle to check for collision</param>
         /// <returns></returns>
-        public bool TryCollide(IEntity entity)
+        public bool TryCollide(Entity entity)
         {
             ColliderComponent collider = (ColliderComponent)entity.GetComponent(ComponentFamily.Collider);
             if (collider == null) return false;
@@ -128,9 +128,9 @@ namespace ClientServices.Collision
             {
                 AddPoint(p);
             }
-            if (collidable is IGameObjectComponent)
+            if (collidable is IComponent)
             {
-                GameObjectComponent baseComp = collidable as GameObjectComponent;
+                Component baseComp = collidable as Component;
                 _aabbs.Add(c, baseComp.Owner);
             }
             else

@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using ClientInterfaces.GOC;
 using ClientInterfaces.Network;
 using Lidgren.Network;
 using SS13_Shared;
@@ -10,7 +11,7 @@ using ClientInterfaces.Configuration;
 
 namespace CGO
 {
-    public class EntityNetworkManager
+    public class EntityNetworkManager : IEntityNetworkManager
     {
         private readonly INetworkManager _networkManager;
         private bool _messageProfiling;
@@ -29,6 +30,11 @@ namespace CGO
         }
 
         #region Sending
+        public void SendDirectedComponentNetworkMessage(GameObject.Entity sendingEntity, ComponentFamily family, NetDeliveryMethod method, NetConnection recipient, params object[] messageParams)
+        {
+            throw new NotImplementedException();
+        }
+
         /// <summary>
         /// Allows a component owned by this entity to send a message to a counterpart component on the
         /// counterpart entities on all clients.
@@ -37,7 +43,7 @@ namespace CGO
         /// <param name="family">Family of the component sending the message</param>
         /// <param name="method">Net delivery method -- if null, defaults to NetDeliveryMethod.ReliableUnordered</param>
         /// <param name="messageParams">Parameters of the message</param>
-        public void SendComponentNetworkMessage(Entity sendingEntity, ComponentFamily family, NetDeliveryMethod method = NetDeliveryMethod.ReliableUnordered, params object[] messageParams)
+        public void SendComponentNetworkMessage(GameObject.Entity sendingEntity, ComponentFamily family, NetDeliveryMethod method = NetDeliveryMethod.ReliableUnordered, params object[] messageParams)
         {
             var message = CreateEntityMessage();
             message.Write(sendingEntity.Uid);//Write this entity's UID
@@ -125,6 +131,12 @@ namespace CGO
                     message.Write((byte)NetworkDataType.d_string);
                     message.Write((string)messageParam);
                 }
+                else if (messageParam.GetType() == typeof(byte[]))
+                {
+                    message.Write((byte)NetworkDataType.d_byteArray);
+                    message.Write(((byte[])messageParam).Length);
+                    message.Write((byte[])messageParam);
+                }
                 else
                 {
                     throw new NotImplementedException("Cannot write specified type.");
@@ -138,7 +150,7 @@ namespace CGO
         /// <param name="sendingEntity">The entity the message is going from(and to, on the other end)</param>
         /// <param name="type">Message type</param>
         /// <param name="list">List of parameter objects</param>
-        public void SendEntityNetworkMessage(Entity sendingEntity, EntityMessage type, params object[] list)
+        public void SendEntityNetworkMessage(GameObject.Entity sendingEntity, EntityMessage type, params object[] list)
         {
             NetOutgoingMessage message = CreateEntityMessage();
             message.Write(sendingEntity.Uid);//Write this entity's UID
@@ -152,7 +164,7 @@ namespace CGO
         /// </summary>
         /// <param name="sendingEntity"></param>
         /// <param name="svar"></param>
-        public void SendSVar(Entity sendingEntity, MarshalComponentParameter svar)
+        public void SendSVar(GameObject.Entity sendingEntity, MarshalComponentParameter svar)
         {
             var message = CreateEntityMessage();
             message.Write(sendingEntity.Uid);
@@ -194,9 +206,6 @@ namespace CGO
                     break;
                 case EntityMessage.GetSVars:
                     result = new IncomingEntityMessage(uid, EntityMessage.GetSVars, message, message.SenderConnection);
-                    break;
-                case EntityMessage.SetDirection:
-                    result = new IncomingEntityMessage(uid, EntityMessage.SetDirection, message.ReadByte(), message.SenderConnection);
                     break;
             }
             return result;
@@ -254,9 +263,21 @@ namespace CGO
                     case NetworkDataType.d_string:
                         messageParams.Add(message.ReadString());
                         break;
+                    case NetworkDataType.d_byteArray:
+                        var length = message.ReadInt32();
+                        messageParams.Add(message.ReadBytes(length));
+                        break;
                 }
             }
             return new IncomingEntityComponentMessage(componentFamily, messageParams);
+        }
+        #endregion
+
+        #region dummy methods
+        public void SendMessage(NetOutgoingMessage message, NetConnection recipient,
+                                NetDeliveryMethod method = NetDeliveryMethod.ReliableOrdered)
+        {
+            throw new NotImplementedException();
         }
         #endregion
     }

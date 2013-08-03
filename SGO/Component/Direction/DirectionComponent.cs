@@ -2,14 +2,15 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using GameObject;
 using SS13_Shared;
 using SS13_Shared.GO;
 using SS13_Shared.GO.Component.Direction;
-using ServerInterfaces.GameObject;
+using ServerInterfaces.GOC;
 
 namespace SGO
 {
-    public class DirectionComponent : GameObjectComponent, IDirectionComponent
+    public class DirectionComponent : Component, IDirectionComponent
     {
         public Direction Direction { get; set; }
         public DirectionComponent()
@@ -19,7 +20,7 @@ namespace SGO
             Family = ComponentFamily.Direction;
         }
 
-        public override void OnAdd(GameObject.IEntity owner)
+        public override void OnAdd(Entity owner)
         {
             base.OnAdd(owner);
             owner.GetComponent<TransformComponent>(ComponentFamily.Transform).OnMove += HandleOnMove;

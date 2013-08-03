@@ -1,14 +1,14 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using GameObject;
 using Lidgren.Network;
 using SS13_Shared;
 using SS13_Shared.GO;
-using ServerInterfaces.GameObject;
 
 namespace SGO
 {
-    public class DamageableComponent : GameObjectComponent
+    public class DamageableComponent : Component
     {
         private readonly List<DamageHistoryItem> _damageHistory = new List<DamageHistoryItem>();
         public float currentHealth = 100;
@@ -93,7 +93,7 @@ namespace SGO
             }
         }
 
-        protected virtual void ApplyDamage(IEntity damager, int damageamount, DamageType damType)
+        protected virtual void ApplyDamage(Entity damager, int damageamount, DamageType damType)
         {
             if (!isDead)
             {
@@ -131,7 +131,7 @@ namespace SGO
             Owner.SendMessage(this, ComponentMessageType.Die);
         }
 
-        protected void DamagedBy(IEntity damager, int amount, DamageType damType)
+        protected void DamagedBy(Entity damager, int amount, DamageType damType)
         {
             _damageHistory.Add(new DamageHistoryItem(damager, amount, damType));
         }
@@ -166,10 +166,10 @@ namespace SGO
     {
         public int Amount;
         public DamageType DamType;
-        public IEntity Damager;
+        public Entity Damager;
         public DateTime When;
 
-        public DamageHistoryItem(IEntity damager, int amount, DamageType damType)
+        public DamageHistoryItem(Entity damager, int amount, DamageType damType)
         {
             Damager = damager;
             Amount = amount;

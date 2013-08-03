@@ -2,13 +2,14 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using GameObject;
 using GorgonLibrary;
 using SS13_Shared.GO;
 using SS13_Shared.GO.Component.Velocity;
 
 namespace CGO
 {
-    public class VelocityComponent : GameObjectComponent
+    public class VelocityComponent : Component
     {
         private Vector2D _velocity = Vector2D.Zero;
 

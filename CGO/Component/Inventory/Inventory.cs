@@ -1,19 +1,19 @@
 ﻿using System.Collections.Generic;
 using System.Linq;
-using ClientInterfaces.GOC;
+using GameObject;
 using SS13_Shared;
 using SS13_Shared.GO;
 using Lidgren.Network;
 
 namespace CGO
 {
-    public class InventoryComponent : GameObjectComponent
+    public class InventoryComponent : Component
     {
-        public List<IEntity> ContainedEntities { get; private set; }
+        public List<Entity> ContainedEntities { get; private set; }
 
         public int MaxSlots { get; private set; }
 
-        public delegate void InventoryComponentUpdateHandler(InventoryComponent sender, int maxSlots, List<IEntity> entities);
+        public delegate void InventoryComponentUpdateHandler(InventoryComponent sender, int maxSlots, List<Entity> entities);
         public event InventoryComponentUpdateHandler Changed;
 
         public delegate void InventoryUpdateRequiredHandler(InventoryComponent sender);
@@ -22,7 +22,7 @@ namespace CGO
         public InventoryComponent()
         {
             Family = ComponentFamily.Inventory;
-            ContainedEntities = new List<IEntity>();
+            ContainedEntities = new List<Entity>();
         }
 
         public override void HandleNetworkMessage(IncomingEntityComponentMessage message, NetConnection sender)
@@ -55,7 +55,7 @@ namespace CGO
             if (Changed != null) Changed(this, MaxSlots, ContainedEntities);
         }
 
-        public bool ContainsEntity(IEntity entity)
+        public bool ContainsEntity(Entity entity)
         {
             return ContainedEntities.Contains(entity);
         }
@@ -65,7 +65,7 @@ namespace CGO
             return ContainedEntities.Exists(x => x.Template.Name == templatename);
         }
 
-        public IEntity GetEntity(string templatename)
+        public Entity GetEntity(string templatename)
         {
             return ContainedEntities.Exists(x => x.Template.Name == templatename) ? ContainedEntities.First(x => x.Template.Name == templatename) : null;
         }
@@ -75,12 +75,12 @@ namespace CGO
             Owner.SendComponentNetworkMessage(this, NetDeliveryMethod.ReliableUnordered, ComponentMessageType.InventoryInformation);
         }
 
-        public void SendInventoryAdd(IEntity ent)
+        public void SendInventoryAdd(Entity ent)
         {
             Owner.SendComponentNetworkMessage(this, NetDeliveryMethod.ReliableUnordered, ComponentMessageType.InventoryAdd, ent.Uid);
         }
 
-        public void SendInventoryRemove(IEntity ent)
+        public void SendInventoryRemove(Entity ent)
         {
             Owner.SendComponentNetworkMessage(this, NetDeliveryMethod.ReliableUnordered, ComponentMessageType.InventoryRemove, ent.Uid);
         }

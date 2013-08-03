@@ -5,6 +5,7 @@ using System.Text;
 using System.Drawing;
 using ClientInterfaces.GOC;
 using ClientInterfaces.Resource;
+using GameObject;
 using SS13.IoC;
 using SS13_Shared.GO;
 
@@ -12,10 +13,10 @@ namespace ClientServices.UserInterface.Components
 {
     sealed class SVarEditWindow : Window
     {
-        private IEntity _owner;
+        private Entity _owner;
         private List<MarshalComponentParameter> _sVars;
         
-        public SVarEditWindow(Size size, IEntity owner)
+        public SVarEditWindow(Size size, Entity owner)
             :base("Entity SVars : " + owner.Name, size, IoCManager.Resolve<IResourceManager>())
         {
             _owner = owner;
@@ -74,7 +75,7 @@ namespace ClientServices.UserInterface.Components
         {
             MarshalComponentParameter assigned = (MarshalComponentParameter)sender.UserData;
             assigned.Parameter.Parameter = newValue;
-            _owner.SetSVar(assigned);
+            _owner.GetComponent<ISVarsComponent>(ComponentFamily.SVars).DoSetSVar(assigned);
         }
 
         void editTxt_OnSubmit(string text, Textbox sender)
@@ -84,17 +85,17 @@ namespace ClientServices.UserInterface.Components
             if (assigned.Parameter.ParameterType == typeof(string))
             {
                 assigned.Parameter.Parameter = text;
-                _owner.SetSVar(assigned);
+                _owner.GetComponent<ISVarsComponent>(ComponentFamily.SVars).DoSetSVar(assigned);
             }
             else if (assigned.Parameter.ParameterType == typeof(int))
             {
                 assigned.Parameter.Parameter = int.Parse(text);
-                _owner.SetSVar(assigned);
+                _owner.GetComponent<ISVarsComponent>(ComponentFamily.SVars).DoSetSVar(assigned);
             }
             else if (assigned.Parameter.ParameterType == typeof(float))
             {
                 assigned.Parameter.Parameter = float.Parse(text);
-                _owner.SetSVar(assigned);
+                _owner.GetComponent<ISVarsComponent>(ComponentFamily.SVars).DoSetSVar(assigned);
             }
         }
     }

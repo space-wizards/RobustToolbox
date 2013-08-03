@@ -1,4 +1,5 @@
-﻿using SS13_Shared.GO;
+﻿using GameObject;
+using SS13_Shared.GO;
 
 namespace SGO
 {

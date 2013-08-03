@@ -12,7 +12,8 @@ namespace GameObject
     public interface IComponent
     {
         ComponentFamily Family { get; }
-        IEntity Owner { get; set; }
+        Entity Owner { get; set; }
+        Type StateType { get; }
 
         /// <summary>
         /// Called when the component is removed from an entity.
@@ -24,7 +25,7 @@ namespace GameObject
         /// Called when the component gets added to an entity. 
         /// </summary>
         /// <param name="owner"></param>
-        void OnAdd(IEntity owner);
+        void OnAdd(Entity owner);
 
         /// <summary>
         /// Base method to shut down the component. 
@@ -63,12 +64,45 @@ namespace GameObject
         ComponentState GetComponentState();
         
         void HandleNetworkMessage(IncomingEntityComponentMessage message, NetConnection sender);
+        void HandleComponentState(dynamic state);
+
+        /// <summary>
+        /// Handles a message that a client has just instantiated a component
+        /// </summary>
+        /// <param name="netConnection"></param>
+        void HandleInstantiationMessage(NetConnection netConnection);
+
+        /// <summary>
+        /// This gets a list of runtime-settable component parameters, with CURRENT VALUES
+        /// If it isn't going to return a current value, it shouldn't return it at all.
+        /// </summary>
+        /// <returns></returns>
+        List<ComponentParameter> GetParameters();
+
+        /// <summary>
+        /// Gets all available SVars for the entity. 
+        /// This gets current values, or at least it should...
+        /// </summary>
+        /// <returns>Returns a list of component parameters for marshaling</returns>
+        List<MarshalComponentParameter> GetSVars();
+
+        /// <summary>
+        /// Sets a component parameter via the sVar interface. Only
+        /// parameters that are registered as sVars will be set through this 
+        /// function.
+        /// </summary>
+        /// <param name="sVar">ComponentParameter</param>
+        void SetSVar(MarshalComponentParameter sVar);
     }
 
     public class Component : IComponent
     {
-        public virtual IEntity Owner { get; set; }
+        public Entity Owner { get; set; }
         public ComponentFamily Family { get; protected set; }
+        public virtual Type StateType { get { return null; } }
+
+        //Contains SVars -- Server only
+        private Dictionary<string, Type> _sVars = new Dictionary<string, Type>(); 
 
         public Component()
         {
@@ -81,6 +115,8 @@ namespace GameObject
         /// </summary>
         public virtual void OnRemove()
         {
+            //Send us to the manager so it knows we're dead.
+            Owner.EntityManager.ComponentManager.RemoveComponent(this);
             Owner = null;
             Shutdown();
         }
@@ -89,9 +125,13 @@ namespace GameObject
         /// Called when the component gets added to an entity. 
         /// </summary>
         /// <param name="owner"></param>
-        public virtual void OnAdd(IEntity owner)
+        public virtual void OnAdd(Entity owner)
         {
             Owner = owner;
+            //Send us to the manager so it knows we're active
+            Owner.EntityManager.ComponentManager.AddComponent(this);
+            if (Owner.Initialized && Owner.EntityManager.EngineType == EngineType.Client)
+                Owner.SendComponentInstantiationMessage(this);
         }
 
         /// <summary>
@@ -140,6 +180,17 @@ namespace GameObject
             if (sender == this) //Don't listen to our own messages!
                 return reply;
 
+            //Client-only hack
+            if(Owner.EntityManager.EngineType == EngineType.Client)
+            {
+                switch(type)
+                {
+                    case ComponentMessageType.Initialize:
+                        Owner.SendComponentInstantiationMessage(this);
+                        break;
+                }
+            }
+
             return reply;
         }
 
@@ -161,5 +212,87 @@ namespace GameObject
         /// <param name="message">the message object</param>
         public virtual void HandleNetworkMessage(IncomingEntityComponentMessage message, NetConnection sender)
         {}
+
+        /// <summary>
+        /// Handles a message that a client has just instantiated a component
+        /// </summary>
+        /// <param name="netConnection"></param>
+        public virtual void HandleInstantiationMessage(NetConnection netConnection)
+        {
+        }
+
+        /// <summary>
+        /// This gets a list of runtime-settable component parameters, with CURRENT VALUES
+        /// If it isn't going to return a current value, it shouldn't return it at all.
+        /// </summary>
+        /// <returns></returns>
+        public virtual List<ComponentParameter> GetParameters()
+        {
+            return new List<ComponentParameter>();
+        }
+
+        #region SVars Stuff
+        /// <summary>
+        /// Gets all available SVars for the entity. 
+        /// This gets current values, or at least it should...
+        /// </summary>
+        /// <returns>Returns a list of component parameters for marshaling</returns>
+        public List<MarshalComponentParameter> GetSVars()
+        {
+            return (from param in GetParameters() where SVarIsRegistered(param.MemberName) select new MarshalComponentParameter(Family, param)).ToList();
+        }
+
+        /// <summary>
+        /// Checks if an SVar is registered
+        /// </summary>
+        /// <param name="name"></param>
+        /// <returns></returns>
+        protected bool SVarIsRegistered(string name)
+        {
+            if (!_sVars.ContainsKey(name))
+                return false;
+            return true;
+        }
+
+        /// <summary>
+        /// Registers an SVar
+        /// </summary>
+        /// <param name="sVar"></param>
+        /// <param name="type"></param>
+        protected void RegisterSVar(string sVar, Type type)
+        {
+            if (!SVarIsRegistered(sVar))
+                _sVars[sVar] = type;
+            else
+                _sVars.Add(sVar, type);
+        }
+
+        /// <summary>
+        /// Unregisters an SVar
+        /// </summary>
+        /// <param name="name"></param>
+        protected void UnRegisterSVar(string name)
+        {
+            if (SVarIsRegistered(name))
+                _sVars.Remove(name);
+        }
+
+        /// <summary>
+        /// Sets a component parameter via the sVar interface. Only
+        /// parameters that are registered as sVars will be set through this 
+        /// function.
+        /// </summary>
+        /// <param name="sVar">ComponentParameter</param>
+        public void SetSVar(MarshalComponentParameter sVar)
+        {
+            var param = sVar.Parameter;
+
+            //If it is registered, and the types match, set it.
+            if (_sVars.ContainsKey(param.MemberName) &&
+                _sVars[param.MemberName] == param.ParameterType)
+                SetParameter(param);
+        }
+        #endregion
+
     }
 }

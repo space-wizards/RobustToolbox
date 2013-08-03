@@ -1,4 +1,5 @@
-﻿using SS13_Shared;
+﻿using GameObject;
+using SS13_Shared;
 using SS13_Shared.GO;
 using ServerInterfaces;
 using ServerInterfaces.Player;
@@ -7,7 +8,7 @@ using ServerInterfaces.Round;
 
 namespace SGO
 {
-    public class BasicActorComponent : GameObjectComponent
+    public class BasicActorComponent : Component
     {
         private IPlayerSession playerSession;
 

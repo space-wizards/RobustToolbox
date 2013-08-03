@@ -1,5 +1,5 @@
-﻿using SS13_Shared.GO;
-using ServerInterfaces.GameObject;
+﻿using GameObject;
+using SS13_Shared.GO;
 
 namespace SGO
 {
@@ -10,7 +10,7 @@ namespace SGO
         {
         }
 
-        public override void OnUse(IEntity targetEnt)
+        public override void OnUse(Entity targetEnt)
         {
             if (targetEnt.HasComponent(ComponentFamily.StatusEffects)) //Use component messages instead.
             {

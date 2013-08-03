@@ -6,7 +6,7 @@ using System.IO;
 using System.IO.Compression;
 using Lidgren.Network;
 using ServerInterfaces;
-using ServerInterfaces.GameObject;
+using ServerInterfaces.GOC;
 using ServerInterfaces.Network;
 using SS13.IoC;
 using SS13_Shared;

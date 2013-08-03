@@ -1,4 +1,5 @@
 ﻿using System;
+using GameObject;
 using GorgonLibrary;
 using Lidgren.Network;
 using SS13_Shared;
@@ -10,7 +11,7 @@ namespace CGO
     /// <summary>
     /// Recieves movement data from the server and updates the entity's position accordingly.
     /// </summary>
-    public class NetworkMoverComponent : GameObjectComponent
+    public class NetworkMoverComponent : Component
     {
         private Direction movedir = Direction.South;
         Vector2D targetPosition;

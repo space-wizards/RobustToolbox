@@ -1,5 +1,6 @@
 ﻿using System.Collections.Generic;
 using System.Linq;
+using GameObject;
 using Lidgren.Network;
 using SS13_Shared;
 using SS13_Shared.GO;
@@ -11,7 +12,7 @@ using ClientInterfaces.GOC;
 
 namespace CGO
 {
-    public class PlayerActionComp : GameObjectComponent
+    public class PlayerActionComp : Component
     {
         public PlayerActionComp() : base()
         {

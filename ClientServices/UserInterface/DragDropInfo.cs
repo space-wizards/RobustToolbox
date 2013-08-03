@@ -3,6 +3,7 @@ using CGO;
 using ClientInterfaces.GOC;
 using ClientInterfaces.UserInterface;
 using ClientServices.Helpers;
+using GameObject;
 using GorgonLibrary.Graphics;
 using SS13.IoC;
 using ClientInterfaces.Resource;
@@ -13,7 +14,7 @@ namespace ClientServices.UserInterface
 {
     public class DragDropInfo : IDragDropInfo
     {
-        public IEntity DragEntity { get; private set; }
+        public Entity DragEntity { get; private set; }
         public Sprite DragSprite { get; private set; }
         public IPlayerAction DragAction { get; private set; }
         public bool IsEntity { get; private set;}
@@ -32,7 +33,7 @@ namespace ClientServices.UserInterface
             return (DragAction != null || DragEntity != null);
         }
 
-        public void StartDrag(IEntity entity)
+        public void StartDrag(Entity entity)
         {
             Reset();
 

@@ -2,9 +2,10 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using GameObject;
 using Lidgren.Network;
 using ServerInterfaces.Crafting;
-using ServerInterfaces.GameObject;
+using ServerInterfaces.GOC;
 using ServerInterfaces.Network;
 using ServerInterfaces.Player;
 using ServerServices.Log;
@@ -26,9 +27,9 @@ namespace ServerServices.Crafting
     public struct CraftingTicket
     {
         public DateTime doneAt;
-        public IEntity sourceEntity;
-        public IEntity component1;
-        public IEntity component2;
+        public Entity sourceEntity;
+        public Entity component1;
+        public Entity component2;
         public NetConnection sourceConnection;
         public string result;
     }
@@ -76,8 +77,8 @@ namespace ServerServices.Crafting
             int compo1Uid = msg.ReadInt32();
             int compo2Uid = msg.ReadInt32();
 
-            IEntity compo1Ent = _serverMain.EntityManager.GetEntity(compo1Uid);
-            IEntity compo2Ent = _serverMain.EntityManager.GetEntity(compo2Uid);
+            Entity compo1Ent = (Entity)_serverMain.EntityManager.GetEntity(compo1Uid);
+            Entity compo2Ent = (Entity)_serverMain.EntityManager.GetEntity(compo2Uid);
 
             foreach (var ticket in craftingTickets)
             {
@@ -139,7 +140,7 @@ namespace ServerServices.Crafting
             _netServer.SendMessage(busyMsg, connection, NetDeliveryMethod.ReliableUnordered);
         }
 
-        private void sendCraftSuccess(NetConnection connection, IEntity result, CraftingTicket ticket)
+        private void sendCraftSuccess(NetConnection connection, Entity result, CraftingTicket ticket)
         {
             NetOutgoingMessage successMsg = IoCManager.Resolve<ISS13NetServer>().CreateMessage();
             successMsg.Write((byte)NetMessage.PlayerUiMessage);
@@ -178,7 +179,7 @@ namespace ServerServices.Crafting
 
                         if (hasEntityInInventory(craftingTicket.sourceEntity, craftingTicket.component1) && hasEntityInInventory(craftingTicket.sourceEntity, craftingTicket.component2))
                         {
-                            IEntity newEnt = _serverMain.EntityManager.SpawnEntity(craftingTicket.result);
+                            Entity newEnt = _serverMain.EntityManager.SpawnEntity(craftingTicket.result);
                             sendCraftSuccess(craftingTicket.sourceConnection, newEnt, craftingTicket);
                             //craftingTicket.sourceEntity.SendMessage(this, ComponentMessageType.DisassociateEntity, null, craftingTicket.component1);
                             //craftingTicket.sourceEntity.SendMessage(this, ComponentMessageType.DisassociateEntity, null, craftingTicket.component2);
@@ -196,14 +197,14 @@ namespace ServerServices.Crafting
             }
         }
 
-        private bool hasEntityInInventory(IEntity container, IEntity toSearch)
+        private bool hasEntityInInventory(Entity container, Entity toSearch)
         {
             var compo = (IInventoryComponent)container.GetComponent(ComponentFamily.Inventory);
             if (compo.containsEntity(toSearch)) return true;
             else return false;
         }
 
-        private bool hasFreeInventorySlots(IEntity entity)
+        private bool hasFreeInventorySlots(Entity entity)
         {
             var compo = (IInventoryComponent) entity.GetComponent(ComponentFamily.Inventory);
             if (compo.containedEntities.Count >= compo.maxSlots) return false;
@@ -222,7 +223,7 @@ namespace ServerServices.Crafting
             return null;
         }
 
-        public void BeginCrafting(IEntity compo1, IEntity compo2, IEntity source, NetConnection sourceConnection) //Check for components and remove.
+        public void BeginCrafting(Entity compo1, Entity compo2, Entity source, NetConnection sourceConnection) //Check for components and remove.
         {
             if (!isValidRecipe(compo1.Template.Name, compo2.Template.Name)) return;
             CraftingEntry recipe = getRecipe(compo1.Template.Name, compo2.Template.Name);

@@ -6,6 +6,7 @@ using ClientInterfaces;
 using ClientInterfaces.Resource;
 using ClientInterfaces.Player;
 using ClientInterfaces.GOC;
+using GameObject;
 using GorgonLibrary.Graphics;
 using GorgonLibrary.InputDevices;
 using CGO;
@@ -20,7 +21,7 @@ namespace ClientServices.UserInterface.Components
         private IPlayerManager _playerManager;
 
         private StatusEffectComp assigned;
-        private IEntity assignedEnt;
+        private Entity assignedEnt;
         private List<StatusEffectButton> buttons = new List<StatusEffectButton>();
 
         private bool dragging = false;

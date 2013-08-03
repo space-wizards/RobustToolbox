@@ -1,15 +1,16 @@
 ﻿using System.Collections.Generic;
 using System.Linq;
+using GameObject;
 using SS13_Shared.GO;
 
-namespace SGO.Component.Item.ItemCapability
+namespace SGO.Item.ItemCapability
 {
     public class ItemCapability
     {
         public string capabilityName;
         protected ItemCapabilityType capabilityType;
         public InteractsWith interactsWith; //What types of shit this interacts with
-        public GameObjectComponent owner;
+        public Component owner;
         public int priority; //Where in the stack this puppy is
 
         /// <summary>

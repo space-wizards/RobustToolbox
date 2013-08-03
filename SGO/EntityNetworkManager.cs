@@ -6,7 +6,7 @@ using SS13.IoC;
 using SS13_Shared;
 using SS13_Shared.GO;
 using ServerInterfaces.Configuration;
-using ServerInterfaces.GameObject;
+using ServerInterfaces.GOC;
 using ServerInterfaces.MessageLogging;
 using ServerInterfaces.Network;
 using ServerServices;
@@ -47,7 +47,7 @@ namespace SGO
         #endregion
 
         #region Sending
-
+        
         /// <summary>
         /// Allows a component owned by this entity to send a message to a counterpart component on the
         /// counterpart entities on all clients.
@@ -57,7 +57,7 @@ namespace SGO
         /// <param name="method">Net delivery method -- if null, defaults to NetDeliveryMethod.ReliableUnordered</param>
         /// <param name="recipient">Client connection to send to. If null, send to all.</param>
         /// <param name="messageParams">Parameters of the message</param>
-        public void SendComponentNetworkMessage(IEntity sendingEntity, ComponentFamily family, NetDeliveryMethod method,
+        public void SendDirectedComponentNetworkMessage(GameObject.Entity sendingEntity, ComponentFamily family, NetDeliveryMethod method,
                                                 NetConnection recipient, params object[] messageParams)
         {
             NetOutgoingMessage message = CreateEntityMessage();
@@ -131,6 +131,12 @@ namespace SGO
                 {
                     message.Write((byte) NetworkDataType.d_string);
                     message.Write((string) messageParam);
+                }
+                else if (messageParam is byte[])
+                {
+                    message.Write((byte)NetworkDataType.d_byteArray);
+                    message.Write(((byte[])messageParam).Length);
+                    message.Write((byte[])messageParam);
                 }
                 else
                 {
@@ -312,9 +318,28 @@ namespace SGO
                     case NetworkDataType.d_string:
                         messageParams.Add(message.ReadString());
                         break;
+                    case NetworkDataType.d_byteArray:
+                        var length = message.ReadInt32();
+                        messageParams.Add(message.ReadBytes(length));
+                        break;
                 }
             }
             return messageParams;
+        }
+
+        /// <summary>
+        /// Sends an arbitrary entity network message
+        /// </summary>
+        /// <param name="sendingEntity">The entity the message is going from(and to, on the other end)</param>
+        /// <param name="type">Message type</param>
+        /// <param name="list">List of parameter objects</param>
+        public void SendEntityNetworkMessage(GameObject.Entity sendingEntity, EntityMessage type, params object[] list)
+        {}
+
+
+        public void SendComponentNetworkMessage(GameObject.Entity sendingEntity, ComponentFamily family, [System.Runtime.InteropServices.OptionalAttribute][System.Runtime.InteropServices.DefaultParameterValueAttribute(NetDeliveryMethod.ReliableUnordered)]NetDeliveryMethod method, params object[] messageParams)
+        {
+            throw new NotImplementedException();
         }
     }
 }

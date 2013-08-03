@@ -1,12 +1,13 @@
 ﻿using System.Collections.Generic;
 using System.Linq;
+using GameObject;
 using SS13_Shared;
 using SS13_Shared.GO;
 using System.Drawing;
 
 namespace CGO
 {
-    public class ClickableComponent : GameObjectComponent
+    public class ClickableComponent : Component
     {
         public ClickableComponent() :base()
         {

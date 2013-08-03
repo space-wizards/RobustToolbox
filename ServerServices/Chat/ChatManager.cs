@@ -1,11 +1,12 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using GameObject;
 using Lidgren.Network;
 using SS13_Shared.GO;
 using ServerInterfaces;
 using ServerInterfaces.Chat;
-using ServerInterfaces.GameObject;
+using ServerInterfaces.GOC;
 using ServerInterfaces.Network;
 using ServerServices.Log;
 using SS13.IoC;
@@ -136,7 +137,7 @@ namespace ServerServices.Chat
             string command = args[0];
 
             Vector2 position;
-            IEntity player;
+            Entity player;
             player = _serverMain.EntityManager.GetEntity(entityId);
             if (player == null)
                 position = new Vector2(160, 160);

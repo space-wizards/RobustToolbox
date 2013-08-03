@@ -2,6 +2,7 @@
 using System.Drawing;
 using ClientInterfaces.Collision;
 using ClientInterfaces.GOC;
+using GameObject;
 using GorgonLibrary;
 using SS13.IoC;
 using SS13_Shared.GO;
@@ -9,7 +10,7 @@ using SS13_Shared.GO.Component.Collidable;
 
 namespace CGO
 {
-    public class CollidableComponent : GameObjectComponent, ICollidable
+    public class CollidableComponent : Component, ICollidable
     {
         public CollidableComponent() :base()
         {
@@ -55,7 +56,7 @@ namespace CGO
         /// OnAdd override -- gets the AABB from the sprite component and sends it to the collision manager.
         /// </summary>
         /// <param name="owner"></param>
-        public override void OnAdd(GameObject.IEntity owner)
+        public override void OnAdd(Entity owner)
         {
             base.OnAdd(owner);
             GetAABB();
@@ -183,7 +184,7 @@ namespace CGO
         /// <summary>
         /// Called when the collidable is bumped into by someone/something
         /// </summary>
-        public void Bump(IEntity ent)
+        public void Bump(Entity ent)
         {
             if (OnBump != null)
                 OnBump(this, new EventArgs());

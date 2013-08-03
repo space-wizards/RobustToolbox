@@ -6,11 +6,13 @@ using System.Text;
 using CGO;
 using ClientInterfaces.GOC;
 using ClientWindow;
+using GameObject;
 using GorgonLibrary;
 using ClientInterfaces.Map;
 using GorgonLibrary.Graphics;
 using SS13_Shared;
 using SS13_Shared.GO;
+using EntityManager = CGO.EntityManager;
 
 namespace ClientServices.Placement.Modes
 {
@@ -48,7 +50,7 @@ namespace ClientServices.Placement.Modes
 
             var nearbyEntities = EntityManager.Singleton.GetEntitiesInRange(mouseWorld, snapToRange);
 
-            var snapToEntities = from IEntity entity in nearbyEntities
+            var snapToEntities = from Entity entity in nearbyEntities
                                  where entity.Template == pManager.CurrentTemplate
                                  orderby (entity.GetComponent<TransformComponent>(ComponentFamily.Transform).Position - mouseWorld).Length ascending
                                  select entity;

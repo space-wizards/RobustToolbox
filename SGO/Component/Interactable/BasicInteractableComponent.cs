@@ -1,10 +1,10 @@
 ﻿using System.Linq;
+using GameObject;
 using SS13_Shared.GO;
-using ServerInterfaces.GameObject;
 
 namespace SGO
 {
-    public class BasicInteractableComponent : GameObjectComponent
+    public class BasicInteractableComponent : Component
     {
         public BasicInteractableComponent()
         {
@@ -36,7 +36,7 @@ namespace SGO
         /// <param name="actorID">the id of the actor that clicked us</param>
         private void HandleClick(int actorID)
         {
-            var actor = (IEntity)Owner.EntityManager.GetEntity(actorID);
+            var actor = (Entity)Owner.EntityManager.GetEntity(actorID);
             if (actor == null || !actor.HasComponent(ComponentFamily.Actor))
                 // if actor is null or doesnt have actor component
                 return; // whoops bail out.
@@ -47,7 +47,7 @@ namespace SGO
         /// Entry point for all entity-entity interactions.
         /// </summary>
         /// <param name="actor">The entity that is the actor.</param>
-        private void DoInteraction(IEntity actor)
+        private void DoInteraction(Entity actor)
         {
             //Determine what kind of interaction this is
             //Does the actor have hands?
@@ -67,7 +67,7 @@ namespace SGO
         /// Entry point for interactions with actors that have hands
         /// </summary>
         /// <param name="actor"></param>
-        protected virtual void DoHandsInteraction(IEntity actor)
+        protected virtual void DoHandsInteraction(Entity actor)
         {
             // Ask if the current hand is empty
             ComponentReplyMessage reply = actor.SendMessage(this, ComponentFamily.Hands,
@@ -87,7 +87,7 @@ namespace SGO
         /// Basically, someone uses an item on an entity.
         /// </summary>
         /// <param name="actor"></param>
-        protected virtual void DoHeldItemInteraction(IEntity actor)
+        protected virtual void DoHeldItemInteraction(Entity actor)
         {
             Entity actingItem = GetItemInActorHand(actor);
             if (actingItem == null) // this should not happen
@@ -120,7 +120,7 @@ namespace SGO
         /// Basically, someone touches an entity with an empty hand.
         /// </summary>
         /// <param name="actor"></param>
-        protected virtual void DoEmptyHandInteraction(IEntity actor)
+        protected virtual void DoEmptyHandInteraction(Entity actor)
         {
             // Does this ent have an actor component(is it a mob?) if so, the actor component should mediate this interaction
             if (Owner.HasComponent(ComponentFamily.Actor))
@@ -140,12 +140,12 @@ namespace SGO
         /// HEADBUTT FTW
         /// </summary>
         /// <param name="actor"></param>
-        protected virtual void DoNoHandsInteraction(IEntity actor)
+        protected virtual void DoNoHandsInteraction(Entity actor)
         {
             //LOL WTF IS THIS SHIT
         }
 
-        protected virtual Entity GetItemInActorHand(IEntity actor)
+        protected virtual Entity GetItemInActorHand(Entity actor)
         {
             ComponentReplyMessage reply = actor.SendMessage(this, ComponentFamily.Hands,
                                                             ComponentMessageType.GetActiveHandItem);

@@ -42,7 +42,8 @@ namespace SS13_Shared.GO
         Physics,
         Transform,
         Velocity,
-        Direction
+        Direction,
+        SVars
     }
 
     public enum ItemComponentNetMessage
@@ -197,8 +198,10 @@ namespace SS13_Shared.GO
         WallMountTile,
         WallMountSearch,
         PhysicsMove,
-        GetHasInternals
-        
+        GetHasInternals,
+        GetSVars,
+        SetSVar
+
     }
 
     public enum Hand

@@ -59,7 +59,6 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="ComponentManager.cs" />
     <Compile Include="Component\ClickableComponent.cs" />
     <Compile Include="Component\Collidable\CollidableComponent.cs" />
     <Compile Include="Component\Collidable\TriggerableComponent.cs" />
@@ -89,16 +88,13 @@
     <Compile Include="Component\Renderable\MobSpriteComponent.cs" />
     <Compile Include="Component\Renderable\SpriteComponent.cs" />
     <Compile Include="Component\StatusEffects\StatusEffectComp.cs" />
+    <Compile Include="Component\SVars\SVarsComponent.cs" />
     <Compile Include="Component\Transform\TransformComponent.cs" />
     <Compile Include="Component\Velocity\VelocityComponent.cs" />
     <Compile Include="ContextMenuEntry.cs" />
-    <Compile Include="Entity.cs" />
-    <Compile Include="EntityFactory.cs" />
+    <None Include="Entity.cs" />
     <Compile Include="EntityManager.cs" />
     <Compile Include="EntityNetworkManager.cs" />
-    <Compile Include="EntityTemplate.cs" />
-    <Compile Include="EntityTemplateDatabase.cs" />
-    <Compile Include="GameObjectComponent.cs" />
     <Compile Include="Component\Input\KeyBindingInputComponent.cs" />
     <Compile Include="PlayerActions\ExampleAction.cs" />
     <Compile Include="PlayerActions\PlayerActionC.cs" />

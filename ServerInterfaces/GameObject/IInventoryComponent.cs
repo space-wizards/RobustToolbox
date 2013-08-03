@@ -1,10 +1,12 @@
 ﻿using System.Collections.Generic;
-namespace ServerInterfaces.GameObject
+using GameObject;
+
+namespace ServerInterfaces.GOC
 {
     public interface IInventoryComponent
     {
-        List<IEntity> containedEntities { get; }
+        List<Entity> containedEntities { get; }
         int maxSlots { get; }
-        bool containsEntity(IEntity toSearch);
+        bool containsEntity(Entity toSearch);
     }
 }

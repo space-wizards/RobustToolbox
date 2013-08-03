@@ -1,10 +1,11 @@
-﻿using Lidgren.Network;
+﻿using GameObject;
+using Lidgren.Network;
 using SS13_Shared;
 using SS13_Shared.GO;
 
 namespace CGO
 {
-    public class EquippableComponent : GameObjectComponent
+    public class EquippableComponent : Component
     {
         public EquippableComponent() :base()
         {

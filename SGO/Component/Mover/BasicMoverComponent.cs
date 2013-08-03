@@ -1,11 +1,12 @@
-﻿using Lidgren.Network;
+﻿using GameObject;
+using Lidgren.Network;
 using SS13_Shared;
 using SS13_Shared.GO;
 using SS13_Shared.GO.Component.Mover;
 
 namespace SGO
 {
-    internal class BasicMoverComponent : GameObjectComponent
+    internal class BasicMoverComponent : Component
     {
         public BasicMoverComponent()
         {

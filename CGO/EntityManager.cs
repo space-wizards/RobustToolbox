@@ -1,8 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using ClientInterfaces.GOC;
 using ClientInterfaces.Network;
+using GameObject;
 using Lidgren.Network;
 using GorgonLibrary;
 using SS13_Shared;
@@ -15,10 +15,7 @@ namespace CGO
     /// </summary>
     public class EntityManager:GameObject.EntityManager
     {
-        private readonly Dictionary<int, IEntity> _entities;
-
         private EntityFactory _entityFactory;
-        public EntityNetworkManager EntityNetworkManager { get; private set; }
         private bool _initialized;
         private int _lastId;
 
@@ -27,12 +24,11 @@ namespace CGO
         public EntityTemplateDatabase TemplateDb { get; private set; }
 
         public EntityManager(INetworkManager networkManager)
-            :base("CGO")
+            :base("CGO", new EntityNetworkManager(networkManager))
         {
-            EntityNetworkManager = new EntityNetworkManager(networkManager);
+            EngineType = EngineType.Client;
             TemplateDb = new EntityTemplateDatabase(this);
             _entityFactory = new EntityFactory(TemplateDb);
-            _entities = new Dictionary<int, IEntity>();
             Singleton = this;
         }
 
@@ -59,24 +55,9 @@ namespace CGO
             _entities.Clear();
         }
 
-        /// <summary>
-        /// Returns an entity by id
-        /// </summary>
-        /// <param name="eid">entity id</param>
-        /// <returns>Entity or null if entity id doesn't exist</returns>
-        public IEntity GetEntity(int eid)
+        private Entity SpawnEntity(string entityType, int uid)
         {
-            return _entities.Keys.Contains(eid) ? _entities[eid] : null;
-        }
-
-        public bool EntityExists(int eid)
-        {
-            return _entities.ContainsKey(eid);
-        }
-
-        private IEntity SpawnEntity(string entityType, int uid)
-        {
-            var e = _entityFactory.CreateEntity(entityType);
+            var e = (Entity)_entityFactory.CreateEntity(entityType);
             if (e != null)
             {
                 e.Uid = uid;
@@ -89,27 +70,15 @@ namespace CGO
             return null;
         }
 
-        private IEntity SpawnEntityAt(string entityType, int uid, Vector2D position, Direction dir = Direction.North)
+        private Entity SpawnEntityAt(string entityType, int uid, Vector2D position, Direction dir = Direction.North)
         {
             var e = SpawnEntity(entityType, uid);
             e.GetComponent<DirectionComponent>(ComponentFamily.Direction).Direction = dir;
             e.GetComponent<TransformComponent>(ComponentFamily.Transform).Position = position;
             return e;
         }
-
-        private void DeleteEntity(IEntity entity)
-        {
-            entity.Shutdown();
-            _entities.Remove(entity.Uid);
-        }
-
-        private void DeleteEntity(int entityUid)
-        {
-            if(EntityExists(entityUid))
-                DeleteEntity(GetEntity(entityUid));
-        }
-
-        public IEntity[] GetEntitiesInRange(Vector2D position, float Range)
+        
+        public Entity[] GetEntitiesInRange(Vector2D position, float Range)
         {
             var entities = from e in _entities.Values
                            where (position - e.GetComponent<TransformComponent>(ComponentFamily.Transform).Position).Length < Range
@@ -197,7 +166,7 @@ namespace CGO
                 else //Unknown entities
                 {
                     //SpawnEntityAt(es.StateData.TemplateName, es.StateData.Uid, es.StateData.Position);
-                    IEntity e = SpawnEntity(es.StateData.TemplateName, es.StateData.Uid);
+                    Entity e = SpawnEntity(es.StateData.TemplateName, es.StateData.Uid);
                     e.Name = es.StateData.Name;
                     e.HandleEntityState(es);
                 }

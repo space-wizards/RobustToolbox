@@ -1,14 +1,22 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using Lidgren.Network;
+using SS13_Shared;
 using SS13_Shared.GO;
 
 namespace GameObject
 {
+    public delegate void EntityShutdownEvent(Entity e);
+
     public interface IEntity
     {
         string Name { get; set; }
         EntityManager EntityManager { get; }
+        int Uid { get; set; }
+
+        bool Initialized { get; set; }
+        event EntityShutdownEvent OnShutdown;
 
         EntityTemplate Template { get; set; }
         /// <summary>
@@ -55,6 +63,68 @@ namespace GameObject
         void Shutdown();
         List<IComponent> GetComponents();
         List<ComponentFamily> GetComponentFamilies();
+        void SendMessage(object sender, ComponentMessageType type, params object[] args);
+
+        /// <summary>
+        /// Allows components to send messages
+        /// </summary>
+        /// <param name="sender">the component doing the sending</param>
+        /// <param name="type">the type of message</param>
+        /// <param name="args">message parameters</param>
+        void SendMessage(object sender, ComponentMessageType type, List<ComponentReplyMessage> replies,
+                                         params object[] args);
+
+        ComponentReplyMessage SendMessage(object sender, ComponentFamily family, ComponentMessageType type, params object[] args);
+
+        /// <summary>
+        /// Requests Description string from components and returns it. If no component answers, returns default description from template.
+        /// </summary>
+        string GetDescriptionString() //This needs to go here since it can not be bound to any single component.
+            ;
+
+        /// <summary>
+        /// Sends a message to the counterpart component on the server side
+        /// </summary>
+        /// <param name="component">Sending component</param>
+        /// <param name="method">Net Delivery Method</param>
+        /// <param name="messageParams">Parameters</param>
+        void SendComponentNetworkMessage(Component component, NetDeliveryMethod method, params object[] messageParams);
+
+        /// <summary>
+        /// Sends a message to the counterpart component on the server side
+        /// </summary>
+        /// <param name="component">Sending component</param>
+        /// <param name="method">Net Delivery Method</param>
+        /// <param name="recipient">The intended recipient netconnection (if null send to all)</param>
+        /// <param name="messageParams">Parameters</param>
+        void SendDirectedComponentNetworkMessage(Component component, NetDeliveryMethod method,
+                                                 NetConnection recipient, params object[] messageParams);
+
+        /// <summary>
+        /// Client message to server saying component has been instantiated and needs initial data
+        /// </summary>
+        /// <param name="component"></param>
+        [Obsolete("Getting rid of this messaging paradigm")]
+        void SendComponentInstantiationMessage(Component component);
+
+        /// <summary>
+        /// Sets up variables and shite
+        /// </summary>
+        void Initialize();
+
+        void HandleNetworkMessage(IncomingEntityMessage message);
+
+        /// <summary>
+        /// Client method to handle an entity state object
+        /// </summary>
+        /// <param name="state"></param>
+        void HandleEntityState(EntityState state);
+
+        /// <summary>
+        /// Serverside method to prepare an entity state object
+        /// </summary>
+        /// <returns></returns>
+        EntityState GetEntityState();
     }
 
     public class Entity : IEntity
@@ -62,8 +132,13 @@ namespace GameObject
         #region Members
         protected List<Type> ComponentTypes = new List<Type>();
 
+        public int Uid { get; set; }
         public EntityTemplate Template { get; set; }
         public string Name { get; set; }
+        protected IEntityNetworkManager EntityNetworkManager;
+
+        public bool Initialized { get; set; }
+        public event EntityShutdownEvent OnShutdown;
 
         /// <summary>
         /// Holds this entity's components
@@ -79,9 +154,169 @@ namespace GameObject
         public Entity(EntityManager entityManager)
         {
             EntityManager = entityManager;
+            EntityNetworkManager = EntityManager.EntityNetworkManager;
+            if (EntityManager.EngineType == EngineType.Client)
+                Initialize();
         }
         #endregion
 
+        #region Initialization
+        /// <summary>
+        /// Sets up variables and shite
+        /// </summary>
+        public virtual void Initialize()
+        {
+            SendMessage(this, ComponentMessageType.Initialize);
+            Initialized = true;
+        }
+        #endregion
+
+        #region Component Messaging
+        public void SendMessage(object sender, ComponentMessageType type, params object[] args)
+        {
+            //LogComponentMessage(sender, type, args);
+
+            foreach (Component component in GetComponents())
+            {
+                if(_components.ContainsValue(component)) //Check to see if the component is still a part of this entity --- collection may change in process.
+                    component.RecieveMessage(sender, type, args);
+            }
+        }
+
+        /// <summary>
+        /// Allows components to send messages
+        /// </summary>
+        /// <param name="sender">the component doing the sending</param>
+        /// <param name="type">the type of message</param>
+        /// <param name="args">message parameters</param>
+        public void SendMessage(object sender, ComponentMessageType type, List<ComponentReplyMessage> replies,
+                                params object[] args)
+        {
+            //LogComponentMessage(sender, type, args);
+
+            foreach (Component component in GetComponents())
+            {
+                //Check to see if the component is still a part of this entity --- collection may change in process.
+                if (_components.ContainsValue(component))
+                {
+                    if (replies != null)
+                    {
+                        ComponentReplyMessage reply = component.RecieveMessage(sender, type, args);
+                        if (reply.MessageType != ComponentMessageType.Empty)
+                            replies.Add(reply);
+                    }
+                    else
+                        component.RecieveMessage(sender, type, args);
+                }
+            }
+        }
+
+        public ComponentReplyMessage SendMessage(object sender, ComponentFamily family, ComponentMessageType type, params object[] args)
+        {
+            //LogComponentMessage(sender, type, args);
+
+            if (HasComponent(family))
+                return GetComponent<Component>(family).RecieveMessage(sender, type, args);
+            
+            return ComponentReplyMessage.Empty;
+        }
+
+        protected void HandleComponentMessage(IncomingEntityComponentMessage message, NetConnection client)
+        {
+            if (GetComponentFamilies().Contains(message.ComponentFamily))
+            {
+                GetComponent<Component>(message.ComponentFamily).HandleNetworkMessage(message, client);
+            }
+        }
+
+        #endregion
+
+        #region Network messaging 
+                /// <summary>
+        /// Sends a message to the counterpart component on the server side
+        /// </summary>
+        /// <param name="component">Sending component</param>
+        /// <param name="method">Net Delivery Method</param>
+        /// <param name="messageParams">Parameters</param>
+        public void SendComponentNetworkMessage(Component component, NetDeliveryMethod method, params object[] messageParams)
+        {
+            EntityNetworkManager.SendComponentNetworkMessage(this, component.Family, NetDeliveryMethod.ReliableUnordered, messageParams);
+        }
+
+        /// <summary>
+        /// Sends a message to the counterpart component on the server side
+        /// </summary>
+        /// <param name="component">Sending component</param>
+        /// <param name="method">Net Delivery Method</param>
+        /// <param name="recipient">The intended recipient netconnection (if null send to all)</param>
+        /// <param name="messageParams">Parameters</param>
+        public void SendDirectedComponentNetworkMessage(Component component, NetDeliveryMethod method,
+                                                NetConnection recipient, params object[] messageParams)
+        {
+            if (!Initialized)
+                return;
+            EntityNetworkManager.SendDirectedComponentNetworkMessage(this, component.Family,
+                                                               method, recipient,
+                                                               messageParams);
+        }
+
+        /// <summary>
+        /// Client message to server saying component has been instantiated and needs initial data
+        /// </summary>
+        /// <param name="component"></param>
+        [Obsolete("Getting rid of this messaging paradigm")]
+        public void SendComponentInstantiationMessage(Component component)
+        {
+            if (EntityManager.EngineType == EngineType.Server)
+                return;
+            if (component == null)
+                throw new Exception("Component is null");
+
+            EntityNetworkManager.SendEntityNetworkMessage(this, EntityMessage.ComponentInstantiationMessage, component.Family);
+        }
+
+        /// <summary>
+        /// Func to handle an incoming network message
+        /// </summary>
+        /// <param name="message"></param>
+        public virtual void HandleNetworkMessage(IncomingEntityMessage message)
+        {
+            switch (message.MessageType)
+            {
+                case EntityMessage.ComponentMessage:
+                    HandleComponentMessage((IncomingEntityComponentMessage)message.Message, message.Sender);
+                    break;
+                case EntityMessage.ComponentInstantiationMessage: //Server Only
+                    HandleComponentInstantiationMessage(message);
+                    break;
+            }
+        }
+
+        /// <summary>
+        /// Server-side method to handle instantiation messages from client-side components
+        /// asking for initialization data
+        /// </summary>
+        /// <param name="message">Message from client</param>
+        protected void HandleComponentInstantiationMessage(IncomingEntityMessage message)
+        {
+            if (HasComponent((ComponentFamily)message.Message))
+                GetComponent<Component>((ComponentFamily)message.Message).HandleInstantiationMessage(message.Sender);
+        }
+
+        #endregion
+        /// <summary>
+        /// Requests Description string from components and returns it. If no component answers, returns default description from template.
+        /// </summary>
+        public string GetDescriptionString() //This needs to go here since it can not be bound to any single component.
+        {
+            var replies = new List<ComponentReplyMessage>();
+
+            SendMessage(this, ComponentMessageType.GetDescriptionString, replies);
+
+            if (replies.Any()) return (string)replies.First(x => x.MessageType == ComponentMessageType.GetDescriptionString).ParamsList[0]; //If you dont answer with a string then fuck you.
+
+            return Template.Description;
+        }
 
         #region Entity Systems
         /// <summary>
@@ -191,6 +426,67 @@ namespace GameObject
         {
             return _components.Keys.ToList();
         } 
+        #endregion
+        
+        #region GameState Stuff
+        /// <summary>
+        /// Client method to handle an entity state object
+        /// </summary>
+        /// <param name="state"></param>
+        public void HandleEntityState(EntityState state)
+        {
+            /*if(Position.X != state.StateData.Position.X || Position.Y != state.StateData.Position.Y)
+            {
+                Position = state.StateData.Position;
+                Moved();
+            }*/
+            Name = state.StateData.Name;
+            foreach (var compState in state.ComponentStates)
+            {
+                if (HasComponent(compState.Family))
+                {
+                    var comp = GetComponent(compState.Family);
+                    var stateType = comp.StateType;
+                    if (compState.GetType() == stateType)
+                    {
+                        comp.HandleComponentState(compState);
+                    }
+                }
+            }
+        }
+
+        /// <summary>
+        /// Serverside method to prepare an entity state object
+        /// </summary>
+        /// <returns></returns>
+        public EntityState GetEntityState()
+        {
+            var compStates = GetComponentStates();
+
+            //Reset entity state changed to false
+
+            var es = new EntityState(
+                Uid,
+                compStates,
+                Template.Name,
+                Name);
+            return es;
+        }
+
+        /// <summary>
+        /// Server-side method to get the state of all our components
+        /// </summary>
+        /// <returns></returns>
+        private List<ComponentState> GetComponentStates()
+        {
+            var stateComps = new List<ComponentState>();
+            foreach (Component component in GetComponents())
+            {
+                var componentState = component.GetComponentState();
+                stateComps.Add(componentState);
+            }
+            return stateComps;
+        }
         #endregion
     }
 }

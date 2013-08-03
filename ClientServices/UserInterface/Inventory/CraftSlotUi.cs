@@ -6,6 +6,7 @@ using ClientInterfaces.Resource;
 using ClientInterfaces.UserInterface;
 using ClientServices.Helpers;
 using ClientServices.UserInterface.Components;
+using GameObject;
 using GorgonLibrary.Graphics;
 using GorgonLibrary.InputDevices;
 
@@ -19,7 +20,7 @@ namespace ClientServices.UserInterface.Inventory
         private Sprite _entSprite;
         private Color _color;
 
-        public IEntity ContainingEntity { get; private set; }
+        public Entity ContainingEntity { get; private set; }
 
         public delegate void CraftSlotClickHandler(CraftSlotUi sender);
 
@@ -31,7 +32,7 @@ namespace ClientServices.UserInterface.Inventory
             _color = Color.White;
         }
 
-        public void SetEntity(IEntity entity)
+        public void SetEntity(Entity entity)
         {
             ContainingEntity = entity;
             if (ContainingEntity != null) _entSprite = Utilities.GetSpriteComponentSprite(ContainingEntity);

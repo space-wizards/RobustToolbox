@@ -1,15 +1,5 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using ClientInterfaces.GOC;
-using GorgonLibrary;
-using Lidgren.Network;
-using SS13_Shared;
-using SS13_Shared.GO;
-using GorgonLibrary.Graphics;
-using ClientInterfaces;
-using ClientInterfaces.Resource;
-using SS13.IoC;
+using GameObject;
 
 namespace CGO
 {

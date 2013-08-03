@@ -1,6 +1,6 @@
 ﻿using SS13_Shared.GO;
 
-namespace SGO.Component.Item.ItemCapability
+namespace SGO.Item.ItemCapability
 {
     public class ToolCapability : ItemCapability
     {

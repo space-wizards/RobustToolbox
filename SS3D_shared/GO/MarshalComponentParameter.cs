@@ -43,6 +43,17 @@ namespace SS13_Shared.GO
             message.Write(ms.ToArray());
         }
 
+        public byte[] Serialize()
+        {
+            if(!_serializerInitialized)
+            {
+                InitSerializer();
+            }
+            var ms = new MemoryStream();
+            Serializer.Serialize(ms, this);
+            return ms.ToArray();
+        }
+
         public static MarshalComponentParameter Deserialize(NetIncomingMessage message)
         {
             if (!_serializerInitialized)
@@ -55,6 +66,16 @@ namespace SS13_Shared.GO
 
             //Thank you NetSerializer
             return (MarshalComponentParameter)Serializer.Deserialize(ms);
+        }
+
+        public static MarshalComponentParameter Deserialize(byte[] bytes)
+        {
+            if(!_serializerInitialized)
+            {
+                InitSerializer();
+            }
+            var ms = new MemoryStream(bytes);
+            return (MarshalComponentParameter) Serializer.Deserialize(ms);
         }
     }
 }

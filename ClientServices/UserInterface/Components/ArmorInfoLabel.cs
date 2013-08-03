@@ -2,6 +2,7 @@
 using System.Drawing;
 using ClientInterfaces;
 using ClientInterfaces.Resource;
+using GameObject;
 using GorgonLibrary;
 using GorgonLibrary.Graphics;
 using GorgonLibrary.InputDevices;
@@ -71,7 +72,7 @@ namespace ClientServices.UserInterface.Components
             IPlayerManager playerMgr = IoCManager.Resolve<IPlayerManager>();
             if (playerMgr != null)
             {
-                IEntity playerEnt = playerMgr.ControlledEntity;
+                Entity playerEnt = playerMgr.ControlledEntity;
                 if (playerEnt != null)
                 {
                     EntityStatsComp statsComp = (EntityStatsComp)playerEnt.GetComponent(ComponentFamily.EntityStats);

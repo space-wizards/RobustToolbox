@@ -1,13 +1,11 @@
 ﻿using System.Collections.Generic;
 using System.Drawing;
 using System.Linq;
+using GameObject;
 using SS13.IoC;
 using SS13_Shared;
 using SS13_Shared.GO;
 using ServerInterfaces.Chat;
-using ServerInterfaces.GameObject;
-using ServerServices;
-using ServerServices.Map;
 using ServerServices.Tiles;
 using ServerInterfaces.Map;
 
@@ -64,7 +62,7 @@ namespace SGO
             }
         }
 
-        public override void OnAdd(GameObject.IEntity owner)
+        public override void OnAdd(Entity owner)
         {
             base.OnAdd(owner);
             Owner.GetComponent<TransformComponent>(ComponentFamily.Transform).OnMove += OnMove;
@@ -82,7 +80,7 @@ namespace SGO
             SetImpermeable(args.VectorTo);
         }
 
-        protected override void RecieveItemInteraction(Entity actor, Entity item,
+        protected override void RecieveItemInteraction(GameObject.Entity actor, GameObject.Entity item,
                                                        Lookup<ItemCapabilityType, ItemCapabilityVerb> verbs)
         {
             base.RecieveItemInteraction(actor, item, verbs);
@@ -109,7 +107,7 @@ namespace SGO
         /// Basically, actor "uses" this object
         /// </summary>
         /// <param name="actor">The actor entity</param>
-        protected override void HandleEmptyHandToLargeObjectInteraction(Entity actor)
+        protected override void HandleEmptyHandToLargeObjectInteraction(GameObject.Entity actor)
         {
             ToggleDoor();
         }

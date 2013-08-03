@@ -47,9 +47,12 @@
     <Compile Include="EntityFactory.cs" />
     <Compile Include="EntityManager.cs" />
     <Compile Include="EntityQuery.cs" />
+    <Compile Include="EntitySystemManager.cs" />
     <Compile Include="EntityTemplate.cs" />
     <Compile Include="EntityTemplateDatabase.cs" />
     <Compile Include="Enums.cs" />
+    <Compile Include="Exceptions\MissingImplementationException.cs" />
+    <Compile Include="Exceptions\NoPublicConstructorException.cs" />
     <Compile Include="IEntityNetworkManager.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="System\EntitySystem.cs" />

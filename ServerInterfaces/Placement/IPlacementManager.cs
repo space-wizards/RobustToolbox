@@ -1,7 +1,5 @@
+using GameObject;
 using Lidgren.Network;
-using SS13_Shared;
-using ServerInterfaces;
-using ServerInterfaces.GameObject;
 
 namespace ServerInterfaces.Placement
 {
@@ -19,46 +17,46 @@ namespace ServerInterfaces.Placement
         /// <summary>
         ///  Places mob in entity placement mode with given settings.
         /// </summary>
-        void SendPlacementBegin(IEntity mob, int range, string objectType, string alignOption);
+        void SendPlacementBegin(Entity mob, int range, string objectType, string alignOption);
 
         /// <summary>
         ///  Places mob in tile placement mode with given settings.
         /// </summary>
-        void SendPlacementBeginTile(IEntity mob, int range, string tileType, string alignOption);
+        void SendPlacementBeginTile(Entity mob, int range, string tileType, string alignOption);
 
         /// <summary>
         ///  Cancels object placement mode for given mob.
         /// </summary>
-        void SendPlacementCancel(IEntity mob);
+        void SendPlacementCancel(Entity mob);
 
         /// <summary>
         ///  Gives Mob permission to place entity and places it in object placement mode.
         /// </summary>
-        void StartBuilding(IEntity mob, int range, string objectType, string alignOption);
+        void StartBuilding(Entity mob, int range, string objectType, string alignOption);
 
         /// <summary>
         ///  Gives Mob permission to place tile and places it in object placement mode.
         /// </summary>
-        void StartBuildingTile(IEntity mob, int range, string tileType, string alignOption);
+        void StartBuildingTile(Entity mob, int range, string tileType, string alignOption);
 
         /// <summary>
         ///  Revokes open placement Permission and cancels object placement mode.
         /// </summary>
-        void CancelBuilding(IEntity mob);
+        void CancelBuilding(Entity mob);
 
         /// <summary>
         ///  Gives a mob a permission to place a given Entity.
         /// </summary>
-        void AssignBuildPermission(IEntity mob, int range, string objectType, string alignOption);
+        void AssignBuildPermission(Entity mob, int range, string objectType, string alignOption);
 
         /// <summary>
         ///  Gives a mob a permission to place a given Tile.
         /// </summary>
-        void AssignBuildPermissionTile(IEntity mob, int range, string tileType, string alignOption);
+        void AssignBuildPermissionTile(Entity mob, int range, string tileType, string alignOption);
 
         /// <summary>
         ///  Removes all building Permissions for given mob.
         /// </summary>
-        void RevokeAllBuildPermissions(IEntity mob);
+        void RevokeAllBuildPermissions(Entity mob);
     }
 }

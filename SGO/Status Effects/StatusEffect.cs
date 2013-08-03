@@ -1,4 +1,5 @@
 ﻿using System;
+using GameObject;
 using SS13_Shared.GO;
 using SS13_Shared.GO.StatusEffect;
 

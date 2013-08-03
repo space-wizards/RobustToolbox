@@ -1,12 +1,13 @@
 ﻿using System.Collections.Generic;
 using System.Linq;
+using GameObject;
 using Lidgren.Network;
 using SS13_Shared;
 using SS13_Shared.GO;
 
 namespace SGO
 {
-    public class HumanHandsComponent : GameObjectComponent
+    public class HumanHandsComponent : Component
     {
         private readonly Dictionary<Hand, Entity> handslots;
         private Hand currentHand = Hand.Left;
@@ -127,7 +128,7 @@ namespace SGO
         private void SwitchHandsTo(Hand hand)
         {
             currentHand = hand;
-            Owner.SendComponentNetworkMessage(this, NetDeliveryMethod.ReliableOrdered, null,
+            Owner.SendDirectedComponentNetworkMessage(this, NetDeliveryMethod.ReliableOrdered, null,
                                               ComponentMessageType.ActiveHandChanged, hand);
         }
 
@@ -192,7 +193,7 @@ namespace SGO
                 RemoveFromOtherComps(entity);
 
                 SetEntity(currentHand, entity);
-                Owner.SendComponentNetworkMessage(this, NetDeliveryMethod.ReliableOrdered, null,
+                Owner.SendDirectedComponentNetworkMessage(this, NetDeliveryMethod.ReliableOrdered, null,
                                                   ComponentMessageType.HandsPickedUpItem, entity.Uid, currentHand);
                 entity.SendMessage(this, ComponentMessageType.PickedUp, Owner, currentHand);
             }
@@ -209,7 +210,7 @@ namespace SGO
                 RemoveFromOtherComps(entity);
 
                 SetEntity(hand, entity);
-                Owner.SendComponentNetworkMessage(this, NetDeliveryMethod.ReliableOrdered, null,
+                Owner.SendDirectedComponentNetworkMessage(this, NetDeliveryMethod.ReliableOrdered, null,
                                                   ComponentMessageType.HandsPickedUpItem, entity.Uid, hand);
                 entity.SendMessage(this, ComponentMessageType.PickedUp, Owner, hand);
             }
@@ -243,7 +244,7 @@ namespace SGO
             if (!IsEmpty(hand))
             {
                 GetEntity(hand).SendMessage(this, ComponentMessageType.Dropped);
-                Owner.SendComponentNetworkMessage(this, NetDeliveryMethod.ReliableOrdered, null,
+                Owner.SendDirectedComponentNetworkMessage(this, NetDeliveryMethod.ReliableOrdered, null,
                                                   ComponentMessageType.HandsDroppedItem, GetEntity(hand).Uid, hand);
                 handslots.Remove(hand);
             }

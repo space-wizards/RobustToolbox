@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using GameObject;
 using SS13_Shared;
 using Lidgren.Network;
 using System.Drawing;
@@ -10,7 +11,7 @@ using ServerServices.Log;
 using SS13.IoC;
 using ServerInterfaces.Network;
 using ServerInterfaces.Player;
-using ServerInterfaces.GameObject;
+using ServerInterfaces.GOC;
 using ServerInterfaces;
 using ServerInterfaces.Map;
 using ServerServices.Map;
@@ -107,7 +108,7 @@ namespace ServerServices.Placement
 
                 if (!isTile)
                 {
-                    IEntity created = _server.EntityManager.SpawnEntityAt(entityTemplateName, new Vector2(xRcv, yRcv));
+                    var created = _server.EntityManager.SpawnEntityAt(entityTemplateName, new Vector2(xRcv, yRcv));
                     if (created != null)
                     {
                         created.GetComponent<ITransformComponent>(ComponentFamily.Transform).TranslateTo(new Vector2(xRcv, yRcv));
@@ -136,7 +137,7 @@ namespace ServerServices.Placement
         /// <summary>
         ///  Places mob in entity placement mode with given settings.
         /// </summary>
-        public void SendPlacementBegin(IEntity mob, int range, string objectType, string alignOption)
+        public void SendPlacementBegin(Entity mob, int range, string objectType, string alignOption)
         {
             var message = IoCManager.Resolve<ISS13NetServer>().CreateMessage();
             message.Write((byte)NetMessage.PlacementManagerMessage);
@@ -154,7 +155,7 @@ namespace ServerServices.Placement
         /// <summary>
         ///  Places mob in tile placement mode with given settings.
         /// </summary>
-        public void SendPlacementBeginTile(IEntity mob, int range, string tileType, string alignOption)
+        public void SendPlacementBeginTile(Entity mob, int range, string tileType, string alignOption)
         {
             var mapMgr = (MapManager)IoCManager.Resolve<IMapManager>();
             var message = IoCManager.Resolve<ISS13NetServer>().CreateMessage();
@@ -173,7 +174,7 @@ namespace ServerServices.Placement
         /// <summary>
         ///  Cancels object placement mode for given mob.
         /// </summary>
-        public void SendPlacementCancel(IEntity mob)
+        public void SendPlacementCancel(Entity mob)
         {
             var message = IoCManager.Resolve<ISS13NetServer>().CreateMessage();
             message.Write((byte)NetMessage.PlacementManagerMessage);
@@ -187,7 +188,7 @@ namespace ServerServices.Placement
         /// <summary>
         ///  Gives Mob permission to place entity and places it in object placement mode.
         /// </summary>
-        public void StartBuilding(IEntity mob, int range, string objectType, string alignOption)
+        public void StartBuilding(Entity mob, int range, string objectType, string alignOption)
         {
             AssignBuildPermission(mob, range, objectType, alignOption);
             SendPlacementBegin(mob, range, objectType, alignOption);
@@ -196,7 +197,7 @@ namespace ServerServices.Placement
         /// <summary>
         ///  Gives Mob permission to place tile and places it in object placement mode.
         /// </summary>
-        public void StartBuildingTile(IEntity mob, int range, string tileType, string alignOption)
+        public void StartBuildingTile(Entity mob, int range, string tileType, string alignOption)
         {
             AssignBuildPermission(mob, range, tileType, alignOption);
             SendPlacementBeginTile(mob, range, tileType, alignOption);
@@ -205,7 +206,7 @@ namespace ServerServices.Placement
         /// <summary>
         ///  Revokes open placement Permission and cancels object placement mode.
         /// </summary>
-        public void CancelBuilding(IEntity mob)
+        public void CancelBuilding(Entity mob)
         {
             RevokeAllBuildPermissions(mob);
             SendPlacementCancel(mob);
@@ -214,7 +215,7 @@ namespace ServerServices.Placement
         /// <summary>
         ///  Gives a mob a permission to place a given Entity.
         /// </summary>
-        public void AssignBuildPermission(IEntity mob, int range, string objectType, string alignOption)
+        public void AssignBuildPermission(Entity mob, int range, string objectType, string alignOption)
         {
             PlacementInformation newPermission = new PlacementInformation
                 {
@@ -243,7 +244,7 @@ namespace ServerServices.Placement
         /// <summary>
         ///  Gives a mob a permission to place a given Tile.
         /// </summary>
-        public void AssignBuildPermissionTile(IEntity mob, int range, string tileType, string alignOption)
+        public void AssignBuildPermissionTile(Entity mob, int range, string tileType, string alignOption)
         {
             PlacementInformation newPermission = new PlacementInformation
                 {
@@ -272,7 +273,7 @@ namespace ServerServices.Placement
         /// <summary>
         ///  Removes all building Permissions for given mob.
         /// </summary>
-        public void RevokeAllBuildPermissions(IEntity mob)
+        public void RevokeAllBuildPermissions(Entity mob)
         {
             var mobPermissions = from PlacementInformation permission in BuildPermissions
                                  where permission.MobUid == mob.Uid

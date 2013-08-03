@@ -1,5 +1,6 @@
 ﻿using System.Collections.Generic;
 using System.Linq;
+using GameObject;
 using SS13_Shared;
 using SS13_Shared.GO;
 using System.Drawing;
@@ -13,7 +14,7 @@ using SS13_Shared.GO.Component.EntityStats;
 
 namespace CGO
 {
-    public class EntityStatsComp : GameObjectComponent
+    public class EntityStatsComp : Component
     {
         public EntityStatsComp():base()
         {

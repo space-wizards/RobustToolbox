@@ -1,13 +1,14 @@
 ﻿using System.Collections.Generic;
 using System.Linq;
 using ClientInterfaces.Input;
+using GameObject;
 using SS13.IoC;
 using SS13_Shared.GO;
 using SS13_Shared;
 
 namespace CGO
 {
-    public class KeyBindingInputComponent : GameObjectComponent
+    public class KeyBindingInputComponent : Component
     {
         private readonly Dictionary<BoundKeyFunctions, bool> _keyStates;
         private readonly Dictionary<BoundKeyFunctions, KeyEvent> _keyHandlers;

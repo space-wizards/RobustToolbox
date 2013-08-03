@@ -4,6 +4,7 @@ using System.Drawing;
 using ClientInterfaces;
 using ClientInterfaces.GOC;
 using ClientInterfaces.Resource;
+using GameObject;
 using GorgonLibrary.Graphics;
 using SS13_Shared;
 using SS13_Shared.GO;
@@ -16,7 +17,7 @@ namespace ClientServices.UserInterface.Components
         private Sprite _entitySprite;
         private readonly Label _entityDescription;
 
-        public ExamineWindow(Size size, IEntity entity, IResourceManager resourceManager)
+        public ExamineWindow(Size size, Entity entity, IResourceManager resourceManager)
             : base(entity.Name, size, resourceManager)
         {
             _resourceManager = resourceManager;

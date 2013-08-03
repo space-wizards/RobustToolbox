@@ -16,7 +16,7 @@ namespace SGO
         {
         }
 
-        private void PlaceItem(Entity actor, Entity item)
+        private void PlaceItem(GameObject.Entity actor, GameObject.Entity item)
         {
             var rnd = new Random();
             actor.SendMessage(this, ComponentMessageType.DropItemInCurrentHand);
@@ -24,7 +24,7 @@ namespace SGO
             item.GetComponent<TransformComponent>(ComponentFamily.Transform).TranslateByOffset(new Vector2(rnd.Next(-28, 28), rnd.Next(-28, 15)));
         }
 
-        protected override void RecieveItemInteraction(Entity actor, Entity item,
+        protected override void RecieveItemInteraction(GameObject.Entity actor, GameObject.Entity item,
                                                        Lookup<ItemCapabilityType, ItemCapabilityVerb> verbs)
         {
             base.RecieveItemInteraction(actor, item, verbs);
@@ -40,7 +40,7 @@ namespace SGO
         /// Recieve an item interaction. woop. NO VERBS D:
         /// </summary>
         /// <param name="item"></param>
-        protected override void RecieveItemInteraction(Entity actor, Entity item)
+        protected override void RecieveItemInteraction(GameObject.Entity actor, GameObject.Entity item)
         {
             PlaceItem(actor, item);
         }
@@ -50,7 +50,7 @@ namespace SGO
         /// Basically, actor "uses" this object
         /// </summary>
         /// <param name="actor">The actor entity</param>
-        protected override void HandleEmptyHandToLargeObjectInteraction(Entity actor)
+        protected override void HandleEmptyHandToLargeObjectInteraction(GameObject.Entity actor)
         {
         }
 

@@ -1,17 +1,17 @@
 ﻿using System.Collections.Generic;
 using System.Linq;
+using GameObject;
 using Lidgren.Network;
-using SGO.Component.Item.ItemCapability;
+using SGO.Item.ItemCapability;
 using SS13_Shared;
 using SS13_Shared.GO;
-using ServerInterfaces.GameObject;
 
 namespace SGO
 {
-    public class EquipmentComponent : GameObjectComponent
+    public class EquipmentComponent : Component
     {
         protected List<EquipmentSlot> activeSlots = new List<EquipmentSlot>();
-        public Dictionary<EquipmentSlot, IEntity> equippedEntities = new Dictionary<EquipmentSlot, IEntity>();
+        public Dictionary<EquipmentSlot, Entity> equippedEntities = new Dictionary<EquipmentSlot, Entity>();
 
         public EquipmentComponent()
         {
@@ -75,27 +75,27 @@ namespace SGO
                 switch (type) //Why does this send messages to itself THIS IS DUMB AND WILL BREAK THINGS. BZZZ
                 {
                     case ComponentMessageType.EquipItem:
-                        EquipEntity((IEntity)Owner.EntityManager.GetEntity((int) message.MessageParameters[1]));
+                        EquipEntity(Owner.EntityManager.GetEntity((int) message.MessageParameters[1]));
                         break;
                     case ComponentMessageType.EquipItemInHand:
                         EquipEntityInHand();
                         break;
                     case ComponentMessageType.EquipItemToPart:
                         EquipEntityToPart((EquipmentSlot) message.MessageParameters[1],
-                                          (IEntity)Owner.EntityManager.GetEntity((int)message.MessageParameters[2]));
+                                          Owner.EntityManager.GetEntity((int)message.MessageParameters[2]));
                         break;
                     case ComponentMessageType.UnEquipItemToFloor:
-                        UnEquipEntity((IEntity)Owner.EntityManager.GetEntity((int)message.MessageParameters[1]));
+                        UnEquipEntity((Entity)Owner.EntityManager.GetEntity((int)message.MessageParameters[1]));
                         break;
                     case ComponentMessageType.UnEquipItemToHand:
                         if (!Owner.HasComponent(ComponentFamily.Hands))
                             return; //TODO REAL ERROR MESSAGE OR SOME FUCK SHIT
-                        UnEquipEntityToHand((IEntity)Owner.EntityManager.GetEntity((int)message.MessageParameters[1]));
+                        UnEquipEntityToHand(Owner.EntityManager.GetEntity((int)message.MessageParameters[1]));
                         break;
                     case ComponentMessageType.UnEquipItemToSpecifiedHand:
                         if (!Owner.HasComponent(ComponentFamily.Hands))
                             return; //TODO REAL ERROR MESSAGE OR SOME FUCK SHIT
-                        UnEquipEntityToHand((IEntity)Owner.EntityManager.GetEntity((int)message.MessageParameters[1]),
+                        UnEquipEntityToHand(Owner.EntityManager.GetEntity((int)message.MessageParameters[1]),
                                             (Hand) message.MessageParameters[2]);
                         break;
                 }
@@ -110,14 +110,14 @@ namespace SGO
                 {
                     var e = equippedEntities[p];
                     e.SendMessage(this, ComponentMessageType.ItemEquipped, Owner);
-                    Owner.SendComponentNetworkMessage(this, NetDeliveryMethod.ReliableOrdered, netConnection,
+                    Owner.SendDirectedComponentNetworkMessage(this, NetDeliveryMethod.ReliableOrdered, netConnection,
                                                       EquipmentComponentNetMessage.ItemEquipped, p, e.Uid);
                 }
             }
         }
 
         // Equips Entity e to Part part
-        private void EquipEntityToPart(EquipmentSlot part, IEntity e)
+        private void EquipEntityToPart(EquipmentSlot part, Entity e)
         {
             if (equippedEntities.ContainsValue(e)) //Its already equipped? Unequip first. This shouldnt happen.
                 UnEquipEntity(e);
@@ -128,13 +128,13 @@ namespace SGO
 
                 equippedEntities.Add(part, e);
                 e.SendMessage(this, ComponentMessageType.ItemEquipped, Owner);
-                Owner.SendComponentNetworkMessage(this, NetDeliveryMethod.ReliableOrdered, null,
+                Owner.SendDirectedComponentNetworkMessage(this, NetDeliveryMethod.ReliableOrdered, null,
                                                   EquipmentComponentNetMessage.ItemEquipped, part, e.Uid);
             }
         }
 
         // Equips Entity e and automatically finds the appropriate part
-        private void EquipEntity(IEntity e)
+        private void EquipEntity(Entity e)
         {
             if (equippedEntities.ContainsValue(e)) //Its already equipped? Unequip first. This shouldnt happen.
                 UnEquipEntity(e);
@@ -175,21 +175,21 @@ namespace SGO
             if (!IsEmpty(part)) //If the part is not empty
             {
                 equippedEntities[part].SendMessage(this, ComponentMessageType.ItemUnEquipped);
-                Owner.SendComponentNetworkMessage(this, NetDeliveryMethod.ReliableOrdered, null,
+                Owner.SendDirectedComponentNetworkMessage(this, NetDeliveryMethod.ReliableOrdered, null,
                                                   EquipmentComponentNetMessage.ItemUnEquipped, part,
                                                   equippedEntities[part].Uid);
                 equippedEntities.Remove(part);
             }
         }
 
-        private void UnEquipEntityToHand(IEntity e)
+        private void UnEquipEntityToHand(Entity e)
         {
             UnEquipEntity(e);
             //HumanHandsComponent hh = (HumanHandsComponent)Owner.GetComponent(ComponentFamily.Hands);
             Owner.SendMessage(this, ComponentMessageType.PickUpItem, e);
         }
 
-        private void UnEquipEntityToHand(IEntity e, Hand h)
+        private void UnEquipEntityToHand(Entity e, Hand h)
         {
             var hands = (HumanHandsComponent) Owner.GetComponent(ComponentFamily.Hands);
             ComponentReplyMessage reply = Owner.SendMessage(this, ComponentFamily.Hands, ComponentMessageType.IsHandEmpty, h);
@@ -201,7 +201,7 @@ namespace SGO
         }
 
         // Unequips entity e 
-        private void UnEquipEntity(IEntity e)
+        private void UnEquipEntity(Entity e)
         {
             EquipmentSlot key;
             foreach (var kvp in equippedEntities)
@@ -224,14 +224,14 @@ namespace SGO
             }
         }
 
-        private bool IsItem(IEntity e)
+        private bool IsItem(Entity e)
         {
             if (e.HasComponent(ComponentFamily.Item)) //We can only equip items derp
                 return true;
             return false;
         }
 
-        private IEntity GetEntity(EquipmentSlot part)
+        private Entity GetEntity(EquipmentSlot part)
         {
             if (!IsEmpty(part))
                 return equippedEntities[part];
@@ -246,7 +246,7 @@ namespace SGO
             return true;
         }
 
-        private void RemoveFromOtherComps(IEntity entity)
+        private void RemoveFromOtherComps(Entity entity)
         {
             Entity holder = null;
             if (entity.HasComponent(ComponentFamily.Item))
@@ -257,7 +257,7 @@ namespace SGO
             else Owner.SendMessage(this, ComponentMessageType.DisassociateEntity, entity);
         }
 
-        private bool CanEquip(IEntity e)
+        private bool CanEquip(Entity e)
         {
             if (!e.HasComponent(ComponentFamily.Equippable))
                 return false;

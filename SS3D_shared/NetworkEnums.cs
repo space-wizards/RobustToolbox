@@ -223,6 +223,7 @@ namespace SS13_Shared
         d_long,
         d_float,
         d_double,
-        d_string
+        d_string,
+        d_byteArray
     }
 }

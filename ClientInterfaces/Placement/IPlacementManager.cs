@@ -1,6 +1,7 @@
 ﻿using System;
 using ClientInterfaces.GOC;
 using ClientInterfaces.Map;
+using GameObject;
 using GorgonLibrary;
 using Lidgren.Network;
 using SS13_Shared;
@@ -14,7 +15,7 @@ namespace ClientInterfaces.Placement
 
         event EventHandler PlacementCanceled;
 
-        void HandleDeletion(IEntity entity);
+        void HandleDeletion(Entity entity);
         void HandlePlacement();
         void BeginPlacing(PlacementInformation info);
         void Render();

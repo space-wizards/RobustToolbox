@@ -1,11 +1,12 @@
 ﻿using ClientInterfaces.GOC;
+using GameObject;
 using SS13_Shared.GO;
 using GorgonLibrary;
 using SS13_Shared.GO.Component.Renderable;
 
 namespace CGO
 {
-    public class RenderableComponent : GameObjectComponent, IRenderableComponent
+    public class RenderableComponent : Component, IRenderableComponent
     {
         public DrawDepth DrawDepth { get; set; }
         public virtual float Bottom

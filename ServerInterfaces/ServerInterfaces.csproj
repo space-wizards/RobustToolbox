@@ -67,15 +67,12 @@
     <Compile Include="Crafting\ICraftingManager.cs" />
     <Compile Include="GameMode\IGameMode.cs" />
     <Compile Include="GameObject\IComponentFactory.cs" />
-    <Compile Include="GameObject\IEntity.cs" />
     <Compile Include="GameObject\IEntityManager.cs" />
     <Compile Include="GameObject\IEntityNetworkManager.cs" />
     <Compile Include="GameObject\IEntityQuery.cs" />
-    <Compile Include="GameObject\IGameObjectComponent.cs" />
     <Compile Include="GameObject\IInventoryComponent.cs" />
     <Compile Include="GameState\IGameStateManager.cs" />
     <Compile Include="IClient.cs" />
-    <Compile Include="GameObject\IEntityTemplate.cs" />
     <Compile Include="ISS13Server.cs" />
     <Compile Include="Map\IMapManager.cs" />
     <Compile Include="MessageLogging\IMessageLogger.cs" />

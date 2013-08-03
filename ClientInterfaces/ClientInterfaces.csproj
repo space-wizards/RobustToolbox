@@ -67,13 +67,12 @@
     <Compile Include="Configuration\IConfigurationManager.cs" />
     <Compile Include="GameStates\IGameStateManager.cs" />
     <Compile Include="GOC\GetSVarsEventArgs.cs" />
+    <Compile Include="GOC\IEntityNetworkManager.cs" />
     <Compile Include="GOC\IPlayerAction.cs" />
-    <Compile Include="GOC\IEntity.cs" />
-    <Compile Include="GOC\IEntityTemplate.cs" />
-    <Compile Include="GOC\IGameObjectComponent.cs" />
     <Compile Include="GOC\IMoverComponent.cs" />
     <Compile Include="GOC\IRenderableComponent.cs" />
     <Compile Include="GOC\ISpriteComponent.cs" />
+    <Compile Include="GOC\ISVarsComponent.cs" />
     <Compile Include="Input\IKeyBindingManager.cs" />
     <Compile Include="Lighting\ILightArea.cs" />
     <Compile Include="Lighting\LightMode.cs" />

@@ -1,4 +1,5 @@
 ﻿using CGO;
+using GameObject;
 using Lidgren.Network;
 using SS13_Shared;
 using SS13_Shared.GO;
@@ -7,7 +8,7 @@ using GorgonLibrary;
 namespace CGO
 {
     //Moves an entity based on key binding input
-    public class KeyBindingMoverComponent : GameObjectComponent
+    public class KeyBindingMoverComponent : Component
     {
         private const float BaseMoveSpeed = 300f;
         private const float FastMoveSpeed = 500f;

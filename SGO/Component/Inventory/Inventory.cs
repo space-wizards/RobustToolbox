@@ -1,21 +1,22 @@
 ﻿using System.Collections.Generic;
 using System.Xml.Linq;
+using GameObject;
 using Lidgren.Network;
 using SS13_Shared;
 using SS13_Shared.GO;
-using ServerInterfaces.GameObject;
+using ServerInterfaces.GOC;
 
 namespace SGO
 {
-    public class InventoryComponent : GameObjectComponent,IInventoryComponent
+    public class InventoryComponent : Component,IInventoryComponent
     {
         public InventoryComponent()
         {
             Family = ComponentFamily.Inventory;
-            containedEntities = new List<IEntity>();
+            containedEntities = new List<Entity>();
         }
 
-        public List<IEntity> containedEntities { get; private set; }
+        public List<Entity> containedEntities { get; private set; }
 
         public int maxSlots { get; private set; }
 
@@ -28,13 +29,13 @@ namespace SGO
                     break;
 
                 case ComponentMessageType.InventoryAdd:
-                    var entAdd = (IEntity)Owner.EntityManager.GetEntity((int) message.MessageParameters[1]);
+                    var entAdd = (Entity)Owner.EntityManager.GetEntity((int) message.MessageParameters[1]);
                     if (entAdd != null)
                         AddToInventory(entAdd);
                     break;
 
                 case ComponentMessageType.InventoryRemove:
-                    var entRemove = (IEntity)Owner.EntityManager.GetEntity((int) message.MessageParameters[1]);
+                    var entRemove = (Entity)Owner.EntityManager.GetEntity((int) message.MessageParameters[1]);
                     if (entRemove != null)
                         RemoveFromInventory(entRemove);
                     break;
@@ -76,7 +77,7 @@ namespace SGO
             return reply;
         }
 
-        public bool containsEntity(IEntity entity)
+        public bool containsEntity(Entity entity)
         {
             if (containedEntities.Contains(entity)) return true;
             else return false;
@@ -116,11 +117,11 @@ namespace SGO
                 objArray[3 + i] = containedEntities[i].Uid;
             }
 
-            Owner.SendComponentNetworkMessage(this, NetDeliveryMethod.ReliableUnordered, connection, objArray);
+            Owner.SendDirectedComponentNetworkMessage(this, NetDeliveryMethod.ReliableUnordered, connection, objArray);
         }
 
         //Adds item to inventory and dispatches hide message to sprite compo.
-        private void AddToInventory(IEntity entity)
+        private void AddToInventory(Entity entity)
         {
             if (!containedEntities.Contains(entity) && containedEntities.Count < maxSlots)
             {
@@ -135,30 +136,30 @@ namespace SGO
                 containedEntities.Add(entity);
 
                 HandleAdded(entity);
-                Owner.SendComponentNetworkMessage(this, NetDeliveryMethod.ReliableOrdered, null,
+                Owner.SendDirectedComponentNetworkMessage(this, NetDeliveryMethod.ReliableOrdered, null,
                                                   ComponentMessageType.InventoryUpdateRequired);
             }
         }
 
         //Removes item from inventory and dispatches unhide message to sprite compo.
-        private void RemoveFromInventory(IEntity entity)
+        private void RemoveFromInventory(Entity entity)
         {
             if (containedEntities.Contains(entity))
             {
                 containedEntities.Remove(entity);
             }
             HandleRemoved(entity);
-            Owner.SendComponentNetworkMessage(this, NetDeliveryMethod.ReliableOrdered, null,
+            Owner.SendDirectedComponentNetworkMessage(this, NetDeliveryMethod.ReliableOrdered, null,
                                               ComponentMessageType.InventoryUpdateRequired);
         }
 
-        private void HandleAdded(IEntity entity)
+        private void HandleAdded(Entity entity)
         {
             entity.SendMessage(this, ComponentMessageType.PickedUp, Owner, Hand.None);
             entity.SendMessage(this, ComponentMessageType.SetVisible, false);
         }
 
-        private void HandleRemoved(IEntity entity)
+        private void HandleRemoved(Entity entity)
         {
             entity.SendMessage(this, ComponentMessageType.Dropped);
             entity.SendMessage(this, ComponentMessageType.SetVisible, true);

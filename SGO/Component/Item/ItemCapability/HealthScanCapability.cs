@@ -10,7 +10,7 @@ using ServerInterfaces.Network;
 using Lidgren;
 using Lidgren.Network;
 
-namespace SGO.Component.Item.ItemCapability
+namespace SGO.Item.ItemCapability
 {
     public class HealthScanCapability : ItemCapability
     {
@@ -21,7 +21,7 @@ namespace SGO.Component.Item.ItemCapability
             interactsWith = InteractsWith.Actor;
         }
 
-        public override bool ApplyTo(Entity target, Entity sourceActor)
+        public override bool ApplyTo(GameObject.Entity target, GameObject.Entity sourceActor)
         {
             ComponentReplyMessage reply = sourceActor.SendMessage(this, ComponentFamily.Actor,
                                                                   ComponentMessageType.GetActorSession);

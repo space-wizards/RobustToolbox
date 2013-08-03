@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Drawing;
+using GameObject;
 using SS13_Shared;
-using ServerInterfaces.GameObject;
 
 namespace SGO
 {
@@ -26,7 +26,7 @@ namespace SGO
             parent.StartCooldown(this);
         }
 
-        public virtual void OnUse(IEntity targetEnt)
+        public virtual void OnUse(Entity targetEnt)
         {
             parent.StartCooldown(this);
         }

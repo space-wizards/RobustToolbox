@@ -6,6 +6,7 @@ using ClientInterfaces.Network;
 using ClientInterfaces.Player;
 using ClientServices.Player.PostProcessing;
 using ClientServices.State.States;
+using GameObject;
 using GorgonLibrary.Graphics;
 using Lidgren.Network;
 using GorgonLibrary;
@@ -14,7 +15,6 @@ using SS13_Shared;
 using SS13_Shared.GO;
 using SS13_Shared.GameStates;
 using EntityManager = CGO.EntityManager;
-using IEntity = ClientInterfaces.GOC.IEntity;
 
 namespace ClientServices.Player
 {
@@ -32,7 +32,7 @@ namespace ClientServices.Player
         public event EventHandler<VectorEventArgs> OnPlayerMove;
         private SessionStatus status = SessionStatus.Zombie;
 
-        public IEntity ControlledEntity { get; private set; }
+        public Entity ControlledEntity { get; private set; }
 
         public PlayerManager(INetworkManager networkManager)
         {
@@ -47,7 +47,7 @@ namespace ClientServices.Player
             }
         }
 
-        public void Attach(IEntity newEntity)
+        public void Attach(Entity newEntity)
         {
             ControlledEntity = newEntity;
             ControlledEntity.AddComponent(ComponentFamily.Input, EntityManager.Singleton.ComponentFactory.GetComponent("KeyBindingInputComponent"));

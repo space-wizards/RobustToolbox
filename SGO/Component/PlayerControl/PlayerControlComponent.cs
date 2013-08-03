@@ -1,6 +1,8 @@
-﻿namespace SGO.Component.PlayerControl
+﻿using GameObject;
+
+namespace SGO
 {
-    public class PlayerControlComponent : GameObjectComponent
+    public class PlayerControlComponent : Component
     {
     }
 }

@@ -1,13 +1,14 @@
 ﻿using System.Linq;
 using System.Drawing;
 using ClientInterfaces.Collision;
+using GameObject;
 using GorgonLibrary;
 using SS13.IoC;
 using SS13_Shared.GO;
 
 namespace CGO
 {
-    public class ColliderComponent : GameObjectComponent
+    public class ColliderComponent : Component
     {
         public ColliderComponent() : base()
         {
@@ -71,7 +72,7 @@ namespace CGO
             }
         }
 
-        public override void OnAdd(GameObject.IEntity owner)
+        public override void OnAdd(Entity owner)
         {
             base.OnAdd(owner);
             GetAABB();

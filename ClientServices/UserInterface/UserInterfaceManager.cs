@@ -3,17 +3,18 @@ using System.Collections.Generic;
 using System.Linq;
 using ClientInterfaces.Resource;
 using ClientInterfaces.UserInterface;
+using GameObject;
 using SS13_Shared;
 using Lidgren.Network;
 using GorgonLibrary.InputDevices;
 using GorgonLibrary;
 using GorgonLibrary.Graphics;
 using ClientInterfaces;
-using CGO;
 using ClientInterfaces.GOC;
 using ClientInterfaces.Placement;
 using SS13.IoC;
 using ClientServices.UserInterface.Components;
+using EntityManager = CGO.EntityManager;
 
 namespace ClientServices.UserInterface
 {
@@ -210,7 +211,7 @@ namespace ClientServices.UserInterface
             switch (uiType)
             {
                 case CreateUiType.HealthScannerWindow:
-                    IEntity ent = EntityManager.Singleton.GetEntity((int)msg.ReadInt32());
+                    var ent = EntityManager.Singleton.GetEntity((int)msg.ReadInt32());
                     if (ent != null)
                     {
                         DisposeAllComponents<HealthScannerWindow>();

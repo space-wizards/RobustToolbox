@@ -6,6 +6,7 @@ using ClientInterfaces.GOC;
 using ClientInterfaces.Resource;
 using ClientInterfaces.UserInterface;
 using ClientServices.UserInterface.Components;
+using GameObject;
 using GorgonLibrary.InputDevices;
 using CGO;
 
@@ -35,12 +36,12 @@ namespace ClientServices.UserInterface.Inventory
             _inventoryComponent.SendRequestListing();
         }
 
-        void ComponentChanged(InventoryComponent sender, int maxSlots, List<IEntity> entities)
+        void ComponentChanged(InventoryComponent sender, int maxSlots, List<Entity> entities)
         {
             RebuildInventoryView(maxSlots, entities);
         }
 
-        public void RebuildInventoryView(int maxSlots, List<IEntity> entities)
+        public void RebuildInventoryView(int maxSlots, List<Entity> entities)
         {
             var currX = 0;
             var currY = 0;

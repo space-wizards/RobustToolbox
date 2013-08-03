@@ -1,4 +1,5 @@
 ﻿using System;
+using GameObject;
 using GorgonLibrary;
 using SS13_Shared;
 using SS13_Shared.GO;
@@ -6,7 +7,7 @@ using SS13_Shared.GO.Component.Transform;
 
 namespace CGO
 {
-    public class TransformComponent : GameObjectComponent
+    public class TransformComponent : Component
     {
         private Vector2D _position = Vector2D.Zero;
         private TransformComponentState previousState;

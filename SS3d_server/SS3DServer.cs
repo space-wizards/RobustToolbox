@@ -20,7 +20,7 @@ using SS13.IoC;
 using ServerInterfaces.Configuration;
 using ServerInterfaces.Network;
 using ServerInterfaces.Chat;
-using ServerInterfaces.GameObject;
+using ServerInterfaces.GOC;
 using ServerInterfaces.Player;
 using SS13_Shared.ServerEnums;
 using ServerInterfaces.Crafting;
@@ -383,7 +383,7 @@ namespace SS13_Server
                 TimeSpan lastFrame = Time - LastUpdate;
                 if (lastFrame.TotalMilliseconds > framePeriod)
                 {
-                    ComponentManager.Singleton.Update(framePeriod);
+                    EntityManager.ComponentManager.Update(framePeriod);
                     IoCManager.Resolve<IAtmosManager>().Update();
                     IoCManager.Resolve<IRoundManager>().CurrentGameMode.Update();
                     IoCManager.Resolve<ICraftingManager>().Update();
@@ -776,7 +776,7 @@ namespace SS13_Server
             IoCManager.Resolve<IMapManager>().SendMap(connection);
 
             // Lets also send them all the items and mobs.
-            EntityManager.SendEntities(connection);
+            //EntityManager.SendEntities(connection);
 
             // Send atmos state to player
             IoCManager.Resolve<IAtmosManager>().SendAtmosStateTo(connection);

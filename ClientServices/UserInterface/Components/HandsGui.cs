@@ -1,18 +1,12 @@
-﻿using System.Collections.Generic;
-using System.Linq;
+﻿using System.Linq;
 using System.Drawing;
-using ClientInterfaces;
-using ClientInterfaces.GOC;
-using ClientInterfaces.Network;
 using ClientInterfaces.Player;
 using ClientInterfaces.Resource;
 using ClientInterfaces.UserInterface;
 using ClientServices.Helpers;
-using ClientServices.UserInterface.Components;
-using GorgonLibrary;
+using GameObject;
 using GorgonLibrary.Graphics;
 using GorgonLibrary.InputDevices;
-using Lidgren.Network;
 using CGO;
 using SS13_Shared.GO;
 using SS13_Shared;
@@ -24,7 +18,7 @@ namespace ClientServices.UserInterface.Components
     public struct UiHandInfo
     {
         public Hand Hand;
-        public IEntity Entity;
+        public Entity Entity;
         public Sprite HeldSprite;
     }
 

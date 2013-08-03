@@ -1,11 +1,12 @@
 ﻿using System;
 using System.Collections.Generic;
-using SGO.Component.Think.ThinkComponent;
+using GameObject;
+using SGO.Think.ThinkComponent;
 using SS13_Shared.GO;
 
 namespace SGO
 {
-    public class ThinkHostComponent : GameObjectComponent
+    public class ThinkHostComponent : Component
     {
         private readonly List<IThinkComponent> ThinkComponents = new List<IThinkComponent>();
 
@@ -69,12 +70,12 @@ namespace SGO
         /// Gets a new component instantiated of the specified type.
         /// </summary>
         /// <param name="componentType">type of component to make</param>
-        /// <returns>A GameObjectComponent</returns>
+        /// <returns>A Component</returns>
         public IThinkComponent GetThinkComponent(string componentTypeName)
         {
             if (componentTypeName == null || componentTypeName == "")
                 return null;
-            Type t = Type.GetType("SGO.Component.Think.ThinkComponent." + componentTypeName); //Get the type
+            Type t = Type.GetType("SGO.Think.ThinkComponent." + componentTypeName); //Get the type
             if (t == null || t.GetInterface("IThinkComponent") == null)
                 return null;
 

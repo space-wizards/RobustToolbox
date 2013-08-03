@@ -1,12 +1,12 @@
-﻿using Lidgren.Network;
+﻿using GameObject;
+using Lidgren.Network;
 using SS13_Shared;
 using SS13_Shared.GO;
 using SS13_Shared.GO.Component.Collidable;
-using ServerInterfaces.GameObject;
 
 namespace SGO
 {
-    public class CollidableComponent : GameObjectComponent
+    public class CollidableComponent : Component
     {
         private bool _collisionEnabled = true;
 
@@ -42,7 +42,7 @@ namespace SGO
             {
                 case ComponentMessageType.Bumped:
                     ///TODO check who bumped us, how far away they are, etc.
-                    var bumper = (IEntity)Owner.EntityManager.GetEntity((int) message.MessageParameters[1]);
+                    var bumper = Owner.EntityManager.GetEntity((int) message.MessageParameters[1]);
                     if(bumper != null)
                         Owner.SendMessage(this, ComponentMessageType.Bumped, bumper);
                     break;

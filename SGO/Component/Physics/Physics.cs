@@ -1,4 +1,5 @@
-﻿using Lidgren.Network;
+﻿using GameObject;
+using Lidgren.Network;
 using SS13_Shared;
 using SS13_Shared.GO;
 using SS13_Shared.GO.Component.Mover;
@@ -9,7 +10,7 @@ using ServerServices.Log;
 
 namespace SGO
 {
-    internal class Physics : GameObjectComponent
+    internal class Physics : Component
     {
 
         private float mass = 0.0f;

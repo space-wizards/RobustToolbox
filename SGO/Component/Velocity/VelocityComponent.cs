@@ -2,13 +2,14 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using GameObject;
 using SS13_Shared;
 using SS13_Shared.GO;
 using SS13_Shared.GO.Component.Velocity;
 
 namespace SGO
 {
-    public class VelocityComponent : GameObjectComponent
+    public class VelocityComponent : Component
     {
         private Vector2 _velocity = Vector2.Zero;
 

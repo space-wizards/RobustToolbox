@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using GameObject;
 using Lidgren.Network;
 using SS13_Shared;
 using SS13_Shared.GO;
@@ -9,7 +10,7 @@ using SS13_Shared.GO.StatusEffect;
 
 namespace SGO
 {
-    public class StatusEffectComp : GameObjectComponent
+    public class StatusEffectComp : Component
     {
         public List<StatusEffect> Effects = new List<StatusEffect>();
         private uint uidCurr;

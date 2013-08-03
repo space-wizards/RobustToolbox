@@ -58,7 +58,6 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="ComponentManager.cs" />
     <Compile Include="Component\Actor\BasicActorComponent.cs" />
     <Compile Include="Component\Direction\DirectionComponent.cs" />
     <Compile Include="Component\EntityStats\EntityStatsCompS.cs" />
@@ -70,6 +69,7 @@
     <Compile Include="Component\Objectives\ObjectivesComponent.cs" />
     <Compile Include="Component\PlayerActionComp\PlayerActionCompS.cs" />
     <Compile Include="Component\StatusEffects\StatusEffectComp.cs" />
+    <Compile Include="Component\SVars\SVarsComponent.cs" />
     <Compile Include="Component\Think\ThinkComponent\IThinkComponent.cs" />
     <Compile Include="Component\Damageable\Health\LocationalHealth\DamageLocation.cs" />
     <Compile Include="Component\Think\ThinkComponent\PuddleThinkComponent.cs" />
@@ -103,17 +103,12 @@
     <Compile Include="Component\Mover\SlaveMoverComponent.cs" />
     <Compile Include="Component\PlayerControl\PlayerControlComponent.cs" />
     <Compile Include="Component\Renderable\SpriteComponent.cs" />
-    <Compile Include="Entity.cs" />
-    <Compile Include="EntityFactory.cs" />
+    <None Include="Entity.cs" />
     <Compile Include="EntityManager.cs" />
     <Compile Include="EntityNetworkManager.cs" />
     <Compile Include="EntitySystems\EntitySystem.cs" />
-    <Compile Include="EntityTemplate.cs" />
-    <Compile Include="EntityTemplateDatabase.cs" />
     <Compile Include="Exceptions\MissingImplementationException.cs" />
     <Compile Include="Exceptions\NoPublicConstructorException.cs" />
-    <Compile Include="GameObjectComponent.cs" />
-    <Compile Include="GameObjectComponentEnum.cs" />
     <Compile Include="IMoverComponent.cs" />
     <Compile Include="MessageEnums.cs" />
     <Compile Include="PlayerActions\ExampleAction.cs" />

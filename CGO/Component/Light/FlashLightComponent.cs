@@ -3,6 +3,7 @@ using System.Drawing;
 using ClientInterfaces.GOC;
 using ClientInterfaces.Lighting;
 using ClientInterfaces.Map;
+using GameObject;
 using GorgonLibrary;
 using SS13.IoC;
 using SS13_Shared;
@@ -30,7 +31,7 @@ namespace CGO
             return reply;
         }
 
-        public override void OnAdd(GameObject.IEntity owner)
+        public override void OnAdd(Entity owner)
         {
             base.OnAdd(owner);
 

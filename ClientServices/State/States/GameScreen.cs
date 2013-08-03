@@ -17,7 +17,7 @@ using ClientServices.UserInterface.Components;
 using ClientServices.UserInterface.Inventory;
 
 using ClientWindow;
-
+using GameObject;
 using GorgonLibrary;
 using GorgonLibrary.Graphics;
 using GorgonLibrary.InputDevices;
@@ -30,6 +30,7 @@ using ClientInterfaces.Lighting;
 using SS13_Shared.GameStates;
 using SS3D.LightTest;
 using ClientServices.Tiles;
+using EntityManager = CGO.EntityManager;
 
 namespace ClientServices.State.States
 {
@@ -406,7 +407,7 @@ namespace ClientServices.State.States
             LastUpdate = Now;
             Now = DateTime.Now;
 
-            ComponentManager.Singleton.Update(e.FrameDeltaTime);
+            _entityManager.ComponentManager.Update(e.FrameDeltaTime);
             PlacementManager.Update(MousePosScreen, MapManager);
             PlayerManager.Update(e.FrameDeltaTime);
             if(PlayerManager != null && PlayerManager.ControlledEntity != null)
@@ -697,7 +698,8 @@ namespace ClientServices.State.States
 
                 _tilesTarget.Image.Blit(0,0, _tilesTarget.Width, _tilesTarget.Height, Color.White, BlitterSizeMode.Crop);
 
-                ComponentManager.Singleton.Render(0, ClientWindowData.Singleton.ViewPort);
+                //ComponentManager.Singleton.Render(0, ClientWindowData.Singleton.ViewPort);
+                RenderComponents(e.FrameDeltaTime, ClientWindowData.Singleton.ViewPort);
 
                 if (_redrawOverlay)
                 {
@@ -724,6 +726,52 @@ namespace ClientServices.State.States
                 LightScene();
                 //Render the placement manager shit
                 PlacementManager.Render();
+            }
+        }
+
+        /// <summary>
+        /// Render the renderables
+        /// </summary>
+        /// <param name="frametime">time since the last frame was rendered.</param>
+        private void RenderComponents(float frameTime, RectangleF viewPort)
+        {
+            var components = _entityManager.ComponentManager.GetComponents(ComponentFamily.Renderable);
+        
+            var floorRenderables = from IRenderableComponent c in components
+                              orderby c.Bottom ascending, c.DrawDepth ascending
+                              where c.DrawDepth < DrawDepth.MobBase
+                              select c;
+
+            RenderList(new Vector2D(viewPort.Left, viewPort.Top), new Vector2D(viewPort.Right, viewPort.Bottom), floorRenderables.ToList());
+
+            var largeRenderables = from IRenderableComponent c in components
+                              orderby c.Bottom ascending
+                              where c.DrawDepth >= DrawDepth.MobBase &&
+                                c.DrawDepth < DrawDepth.WallTops                              
+                              select c;
+
+            RenderList(new Vector2D(viewPort.Left, viewPort.Top), new Vector2D(viewPort.Right, viewPort.Bottom), largeRenderables.ToList());
+
+            var ceilingRenderables = from IRenderableComponent c in components
+                              orderby c.Bottom ascending, c.DrawDepth ascending
+                              where c.DrawDepth >= DrawDepth.WallTops
+                              select c;
+
+            RenderList(new Vector2D(viewPort.Left, viewPort.Top), new Vector2D(viewPort.Right, viewPort.Bottom), ceilingRenderables.ToList());
+        }
+
+        private void RenderList(Vector2D topleft, Vector2D bottomright, List<IRenderableComponent> renderables)
+        {
+            foreach (var component in renderables)
+            {
+                if (component is SpriteComponent)
+                {
+                    //Slaved components are drawn by their master
+                    var c = component as SpriteComponent;
+                    if (c.IsSlaved())
+                        continue;
+                }
+                component.Render(topleft, bottomright);
             }
         }
 
@@ -1338,10 +1386,10 @@ namespace ClientServices.State.States
 
         private struct ClickData
         {
-            public readonly IEntity Clicked;
+            public readonly Entity Clicked;
             public readonly int Drawdepth;
 
-            public ClickData(IEntity clicked, int drawdepth)
+            public ClickData(Entity clicked, int drawdepth)
             {
                 Clicked = clicked;
                 Drawdepth = drawdepth;

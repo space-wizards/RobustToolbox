@@ -1,4 +1,4 @@
-﻿namespace SGO.Component.Think.ThinkComponent
+﻿namespace SGO.Think.ThinkComponent
 {
     public class ThinkComponent : IThinkComponent
     {

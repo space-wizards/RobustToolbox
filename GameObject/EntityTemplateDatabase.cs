@@ -6,14 +6,16 @@ namespace GameObject
 {
     public class EntityTemplateDatabase
     {
-        public Dictionary<string, EntityTemplate> Templates { get; private set; }
-        
+        private Dictionary<string, EntityTemplate> m_templates;
+
+        public Dictionary<string, EntityTemplate> Templates { get { return m_templates; } }
+
         public EntityManager EntityManager { get; private set; }
 
         public EntityTemplateDatabase(EntityManager entityManager)
         {
             EntityManager = entityManager;
-            Templates = new Dictionary<string, EntityTemplate>();
+            m_templates = new Dictionary<string, EntityTemplate>();
             LoadAllTemplates();
         }
 
@@ -46,7 +48,7 @@ namespace GameObject
         /// <param name="template">the template to add</param>
         public void AddTemplate(EntityTemplate template)
         {
-            Templates.Add(template.Name, template);
+            m_templates.Add(template.Name, template);
         }
 
         /// <summary>
@@ -56,8 +58,8 @@ namespace GameObject
         /// <returns></returns>
         public EntityTemplate GetTemplate(string templatename)
         {
-            if (Templates.ContainsKey(templatename))
-                return Templates[templatename];
+            if (m_templates.ContainsKey(templatename))
+                return m_templates[templatename];
             return null;
         }
     }

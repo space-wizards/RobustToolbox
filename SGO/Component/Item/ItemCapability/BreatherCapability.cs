@@ -9,7 +9,7 @@ using SS13_Shared.GO;
 using ServerInterfaces.Network;
 using ServerInterfaces.Player;
 
-namespace SGO.Component.Item.ItemCapability
+namespace SGO.Item.ItemCapability
 {
     class BreatherCapability : ItemCapability
     {        

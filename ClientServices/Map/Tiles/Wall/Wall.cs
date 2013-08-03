@@ -1,15 +1,11 @@
 ﻿using System;
 using System.Drawing;
 using ClientInterfaces.Collision;
-using ClientInterfaces.Lighting;
-using ClientInterfaces.Resource;
 using ClientInterfaces.Map;
+using GameObject;
 using GorgonLibrary;
 using GorgonLibrary.Graphics;
-using ClientInterfaces;
 using SS13_Shared;
-using ClientInterfaces.GOC;
-using ClientServices.Resources;
 using SS13.IoC;
 
 namespace ClientServices.Tiles
@@ -54,7 +50,7 @@ namespace ClientServices.Tiles
             }
         }
 
-        public void Bump(IEntity collider)
+        public void Bump(Entity collider)
         { }
         #endregion 
 

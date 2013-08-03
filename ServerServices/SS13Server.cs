@@ -1,7 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
+﻿
 using ServerInterfaces;
 
 namespace ServerServices
@@ -15,7 +12,7 @@ namespace ServerServices
             instance.MainLoop();
         }
 
-        public ServerInterfaces.GameObject.IEntityManager EntityManager
+        public ServerInterfaces.GOC.IEntityManager EntityManager
         {
             get { return instance.EntityManager; }
         }

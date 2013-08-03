@@ -1,9 +1,10 @@
 ﻿using System.Linq;
+using GameObject;
 using SS13_Shared.GO;
 
 namespace SGO
 {
-    public class BasicLargeObjectComponent : GameObjectComponent
+    public class BasicLargeObjectComponent : Component
     {
 
         public BasicLargeObjectComponent() :base()

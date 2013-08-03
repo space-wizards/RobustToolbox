@@ -3,13 +3,13 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
 using ClientInterfaces.Collision;
-using ClientInterfaces.GOC;
 using ClientInterfaces.Map;
 using ClientInterfaces.Network;
 using ClientInterfaces.Placement;
 using ClientInterfaces.Player;
 using ClientInterfaces.Resource;
 using ClientWindow;
+using GameObject;
 using GorgonLibrary;
 using GorgonLibrary.Graphics;
 using Lidgren.Network;
@@ -24,6 +24,7 @@ using ClientInterfaces.UserInterface;
 using ClientInterfaces.Map;
 using ClientServices.Map;
 using SS13.IoC;
+using EntityManager = CGO.EntityManager;
 
 namespace ClientServices.Placement
 {
@@ -138,7 +139,7 @@ namespace ClientServices.Placement
                 RequestPlacement();
         }
 
-        public void HandleDeletion(IEntity entity)
+        public void HandleDeletion(Entity entity)
         {
             if (!IsActive || !Eraser) return;
 

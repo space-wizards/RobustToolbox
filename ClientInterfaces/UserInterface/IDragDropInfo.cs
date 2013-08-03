@@ -1,11 +1,12 @@
 ﻿using ClientInterfaces.GOC;
+using GameObject;
 using GorgonLibrary.Graphics;
 
 namespace ClientInterfaces.UserInterface
 {
     public interface IDragDropInfo
     {
-        IEntity DragEntity { get; }
+        Entity DragEntity { get; }
         IPlayerAction DragAction { get; }
         Sprite DragSprite { get; }
         bool IsEntity { get; }
@@ -13,7 +14,7 @@ namespace ClientInterfaces.UserInterface
 
         void Reset();
 
-        void StartDrag(IEntity entity);
+        void StartDrag(Entity entity);
         void StartDrag(IPlayerAction action);
     }
 }

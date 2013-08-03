@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using GameObject;
 using Lidgren.Network;
 using SS13.IoC;
 using SS13_Shared;
@@ -11,7 +12,7 @@ using ServerInterfaces.Chat;
 
 namespace SGO
 {
-    public class LightComponent : GameObjectComponent
+    public class LightComponent : Component
     {
         private LightState _state = LightState.On;
         private int _colorR = 200;
@@ -89,16 +90,8 @@ namespace SGO
 
         private void SendState()
         {
-            //Owner.SendComponentNetworkMessage(this, NetDeliveryMethod.ReliableUnordered, null, ComponentMessageType.SetLightState, _state);
         }
-
-        public override void  HandleInstantiationMessage(NetConnection netConnection)
-        {
- 	        base.HandleInstantiationMessage(netConnection);
-
-            //Owner.SendComponentNetworkMessage(this, NetDeliveryMethod.ReliableUnordered, netConnection, ComponentMessageType.SetLightState, _state);
-        }
-
+        
         public override ComponentState GetComponentState()
         {
             return new LightComponentState(_state, _colorR, _colorG, _colorB, _mode);

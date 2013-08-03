@@ -1,7 +1,5 @@
+using GameObject;
 using Lidgren.Network;
-using ServerInterfaces.GameObject;
-using ServerInterfaces.Network;
-using ServerInterfaces.Player;
 using SS13_Shared.GO.Crafting;
 
 namespace ServerInterfaces.Crafting
@@ -15,7 +13,7 @@ namespace ServerInterfaces.Crafting
         void Update();
         CraftingEntry getRecipe(string compo1, string compo2);
 
-        void BeginCrafting(IEntity compo1, IEntity compo2, IEntity source, NetConnection sourceConnection) //Check for components and remove.
+        void BeginCrafting(Entity compo1, Entity compo2, Entity source, NetConnection sourceConnection) //Check for components and remove.
             ;
 
         void Initialize(string craftingListLoc, ISS13Server server);

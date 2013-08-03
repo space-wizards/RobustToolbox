@@ -1,7 +1,7 @@
 ﻿using System.Collections.Generic;
 using System.Linq;
-using ClientInterfaces.GOC;
 using ClientInterfaces.UserInterface;
+using GameObject;
 using Lidgren.Network;
 using SS13.IoC;
 using SS13_Shared.GO;
@@ -9,14 +9,14 @@ using SS13_Shared;
 
 namespace CGO
 {
-    public class HumanHandsComponent : GameObjectComponent
+    public class HumanHandsComponent : Component
     {
-        public Dictionary<Hand, IEntity> HandSlots { get; private set; }
+        public Dictionary<Hand, Entity> HandSlots { get; private set; }
         public Hand CurrentHand { get; private set; }
 
         public HumanHandsComponent():base()
         {
-            HandSlots = new Dictionary<Hand, IEntity>();
+            HandSlots = new Dictionary<Hand, Entity>();
             Family = ComponentFamily.Hands;
         }
 
@@ -25,7 +25,7 @@ namespace CGO
             var type = (ComponentMessageType)message.MessageParameters[0];
             int entityUid;
             Hand usedHand;
-            IEntity item;
+            Entity item;
 
             switch(type)
             {
@@ -65,7 +65,7 @@ namespace CGO
             Owner.SendComponentNetworkMessage(this, Lidgren.Network.NetDeliveryMethod.ReliableOrdered, ComponentMessageType.ActiveHandChanged, hand);
         }
 
-        public void SendDropEntity(IEntity ent)
+        public void SendDropEntity(Entity ent)
         {
             Owner.SendComponentNetworkMessage(this, Lidgren.Network.NetDeliveryMethod.ReliableOrdered, ComponentMessageType.DropEntityInHand, ent.Uid);
         }

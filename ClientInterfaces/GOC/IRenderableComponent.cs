@@ -7,7 +7,6 @@ namespace ClientInterfaces.GOC
     {
         void Render(Vector2D topLeft, Vector2D bottomRight);
         DrawDepth DrawDepth { get; set; }
-        IEntity Owner { get; set; }
         float Bottom { get; }
     }
 }

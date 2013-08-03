@@ -4,7 +4,7 @@ using System.Linq;
 using System.Text;
 using SS13_Shared;
 
-namespace ServerInterfaces.GameObject
+namespace ServerInterfaces.GOC
 {
     public interface ITransformComponent
     {

@@ -1,4 +1,5 @@
 ﻿using System;
+using GameObject;
 using Lidgren.Network;
 using SS13_Shared;
 using SS13_Shared.GO;
@@ -8,7 +9,7 @@ using ServerServices.Log;
 namespace SGO
 {
     //Moves the entity based on input from a Clientside KeyBindingMoverComponent.
-    public class PlayerInputMoverComponent : GameObjectComponent
+    public class PlayerInputMoverComponent : Component
     {
         public PlayerInputMoverComponent()
         {
@@ -43,14 +44,10 @@ namespace SGO
 
         public void SendPositionUpdate(bool forced = false)
         {
-            /*Owner.SendComponentNetworkMessage(this, NetDeliveryMethod.ReliableUnordered, null, Owner.Position.X,
-                                              Owner.Position.Y, forced);*/
         }
 
         public void SendPositionUpdate(NetConnection client, bool forced = false)
         {
-            /*Owner.SendComponentNetworkMessage(this, NetDeliveryMethod.ReliableUnordered, client, Owner.Position.X,
-                                              Owner.Position.Y, forced);*/
         }
 
         public override void HandleInstantiationMessage(NetConnection netConnection)

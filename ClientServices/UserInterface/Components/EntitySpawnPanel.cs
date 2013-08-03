@@ -7,10 +7,11 @@ using ClientInterfaces.GOC;
 using ClientInterfaces.Placement;
 using ClientInterfaces.Resource;
 using ClientServices.Placement;
+using GameObject;
 using GorgonLibrary;
 using GorgonLibrary.InputDevices;
-using CGO;
 using SS13_Shared;
+using EntityManager = CGO.EntityManager;
 
 namespace ClientServices.UserInterface.Components
 {
@@ -168,7 +169,7 @@ namespace ClientServices.UserInterface.Components
                 ((EntitySpawnSelectButton)curr).fixed_width = maxWidth;
         }
 
-        void NewButtonClicked(EntitySpawnSelectButton sender, IEntityTemplate template, string templateName)
+        void NewButtonClicked(EntitySpawnSelectButton sender, EntityTemplate template, string templateName)
         {
             if (sender.selected)
             {

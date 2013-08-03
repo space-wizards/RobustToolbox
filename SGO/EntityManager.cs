@@ -4,10 +4,9 @@ using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Xml.Linq;
+using GameObject;
 using Lidgren.Network;
-using SS13.IoC;
 using SS13_Shared;
-using ServerInterfaces.GameObject;
 using ServerInterfaces.Network;
 using SS13_Shared.GO;
 
@@ -16,12 +15,11 @@ namespace SGO
     /// <summary>
     /// Manager for entities -- controls things like template loading and instantiation
     /// </summary>
-    public class EntityManager : GameObject.EntityManager, IEntityManager
+    public class EntityManager : GameObject.EntityManager, ServerInterfaces.GOC.IEntityManager
     {
         private static EntityManager singleton;
         private readonly ISS13NetServer m_netServer;
         private EntityFactory m_entityFactory;
-        public EntityNetworkManager EntityNetworkManager { get; private set; }
         private EntityTemplateDatabase m_entityTemplateDatabase;
         private EntitySystemManager _systemManager;
         public int nextId;
@@ -29,9 +27,9 @@ namespace SGO
         private Queue<IncomingEntityMessage> MessageBuffer = new Queue<IncomingEntityMessage>();
 
         public EntityManager(ISS13NetServer netServer)
-            :base("SGO")
+            :base("SGO", new EntityNetworkManager(netServer))
         {
-            EntityNetworkManager = new EntityNetworkManager(netServer);
+            EngineType = EngineType.Server;
             m_entityTemplateDatabase = new EntityTemplateDatabase(this);
             m_entityFactory = new EntityFactory(m_entityTemplateDatabase);
             m_netServer = netServer;
@@ -46,7 +44,7 @@ namespace SGO
         public void SaveEntities()
         {
             //List<XElement> entities = new List<XElement>();
-            IEnumerable<XElement> entities = from IEntity e in _entities.Values
+            IEnumerable<XElement> entities = from Entity e in _entities.Values
                                              where e.Template.Name != "HumanMob"
                                              select ToXML(e);
 
@@ -58,55 +56,29 @@ namespace SGO
         {
             foreach(Entity e in _entities.Values)
             {
-                e.FireNetworkedJoinSpawn(client);
+                //e.FireNetworkedJoinSpawn(client);
             }
         }
-
-
-        /// <summary>
-        /// Returns an entity by id
-        /// </summary>
-        /// <param name="eid">entity id</param>
-        /// <returns>Entity or null if entity id doesn't exist</returns>
-        public IEntity GetEntity(int eid)
-        {
-            if (_entities.Keys.Contains(eid))
-                return (IEntity)_entities[eid];
-            return null;
-        }
-
-        public List<IEntity> GetEntities(GameObject.EntityQuery query)
-        {
-            return _entities.Values.Where(e => e.Match(query)).Cast<IEntity>().ToList();
-        } 
 
         /// <summary>
         /// Creates an entity and adds it to the entity dictionary
         /// </summary>
         /// <param name="EntityType">name of entity template to execute</param>
         /// <returns>spawned entity</returns>
-        public IEntity SpawnEntity(string EntityType, bool send = true)
+        public Entity SpawnEntity(string EntityType, bool send = true)
         {
-            IEntity e = m_entityFactory.CreateEntity(EntityType);
+            var e = m_entityFactory.CreateEntity(EntityType);
             if (e != null)
             {
                 e.Uid = nextId++;
-                _entities.Add(e.Uid, (GameObject.Entity)e);
+                _entities.Add(e.Uid, e);
                 if (send) e.Initialize();
-                if (send) e.FireNetworkedSpawn();
+                //if (send) e.FireNetworkedSpawn();
             }
             return e;
         }
 
-        /// <summary>
-        /// Shuts-down and removes given Entity. This is also broadcast to all clients.
-        /// </summary>
-        /// <param name="e">Entity to remove</param>
-        public void DeleteEntity(IEntity e)
-        {
-            e.Shutdown();
-            _entities.Remove(e.Uid);
-        }
+
 
         public void Shutdown()
         {
@@ -135,7 +107,7 @@ namespace SGO
                         misses.Add(entMsg);
                 }
                 else
-                    ((IEntity)_entities[entMsg.Uid]).HandleNetworkMessage(entMsg);
+                    _entities[entMsg.Uid].HandleNetworkMessage(entMsg);
             }
 
             foreach (var miss in misses)
@@ -169,7 +141,7 @@ namespace SGO
                 if (!_entities.ContainsKey(emsg.Uid))
                     MessageBuffer.Enqueue(emsg);
                 else
-                    ((IEntity)_entities[emsg.Uid]).HandleNetworkMessage(emsg);
+                    (_entities[emsg.Uid]).HandleNetworkMessage(emsg);
             }
         }
 
@@ -210,14 +182,14 @@ namespace SGO
 
             string template = e.Attribute("template").Value;
             string name = e.Attribute("name").Value;
-            IEntity ent = SpawnEntity(template);
+            Entity ent = SpawnEntity(template);
             ent.Name = name;
             ent.GetComponent<TransformComponent>(ComponentFamily.Transform).TranslateTo(new Vector2(X, Y));
             ent.GetComponent<DirectionComponent>(ComponentFamily.Direction).Direction = dir;
             ent.SendMessage(this, ComponentMessageType.WallMountSearch); //Tell wall mounted compos to look for a tile to attach to. I hate to do this here but i have to.
         }
 
-        private XElement ToXML(IEntity e)
+        private XElement ToXML(Entity e)
         {
             var el = new XElement("SavedEntity",
                                   new XAttribute("X", e.GetComponent<TransformComponent>(ComponentFamily.Transform).Position.X.ToString(CultureInfo.InvariantCulture)),
@@ -234,12 +206,12 @@ namespace SGO
         /// <param name="EntityType"></param>
         /// <param name="position"></param>
         /// <returns></returns>
-        public IEntity SpawnEntityAt(string EntityType, Vector2 position, bool send = true)
+        public Entity SpawnEntityAt(string EntityType, Vector2 position, bool send = true)
         {
-            IEntity e = SpawnEntity(EntityType, false);
+            Entity e = SpawnEntity(EntityType, false);
             e.GetComponent<TransformComponent>(ComponentFamily.Transform).TranslateTo(position);
             if (send) e.Initialize();
-            if (send) e.FireNetworkedSpawn();
+            //if (send) e.FireNetworkedSpawn();
             return e;
         }
 
@@ -256,7 +228,7 @@ namespace SGO
         public List<EntityState> GetEntityStates()
         {
             var stateEntities = new List<EntityState>();
-            foreach(IEntity entity in _entities.Values)
+            foreach(Entity entity in _entities.Values)
             {
                 var entityState = entity.GetEntityState();
                 stateEntities.Add(entityState);

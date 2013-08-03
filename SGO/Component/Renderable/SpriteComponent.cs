@@ -1,10 +1,11 @@
-﻿using Lidgren.Network;
+﻿using GameObject;
+using Lidgren.Network;
 using SS13_Shared.GO;
 using SS13_Shared.GO.Component.Renderable;
 
 namespace SGO
 {
-    public class SpriteComponent : GameObjectComponent
+    public class SpriteComponent : Component
     {
         private bool visible = true;
 
@@ -55,14 +56,10 @@ namespace SGO
 
         private void SendVisible(NetConnection connection)
         {
-            /*Owner.SendComponentNetworkMessage(this, NetDeliveryMethod.ReliableUnordered, connection,
-                                              ComponentMessageType.SetVisible, visible);*/
         }
 
         private void SendDrawDepth(NetConnection connection)
         {
-            /*if (drawDepth != DrawDepth.FloorTiles) Owner.SendComponentNetworkMessage(this, NetDeliveryMethod.ReliableUnordered, connection,
-                                                           ComponentMessageType.SetDrawDepth, drawDepth);*/
         }
 
         public override ComponentReplyMessage RecieveMessage(object sender, ComponentMessageType type,
@@ -77,15 +74,10 @@ namespace SGO
             {
                 case ComponentMessageType.SetSpriteByKey:
                     if (Owner != null)
-                        //We got a set sprite message. Forward it on to the clientside sprite components.                    
-                        /*Owner.SendComponentNetworkMessage(this, NetDeliveryMethod.ReliableUnordered, null,
-                                                          ComponentMessageType.SetSpriteByKey, list[0]);*/
                         _currentSpriteKey = (string) list[0];
                     break;
                 case ComponentMessageType.SetBaseName:
                     if (Owner != null)
-                        /*Owner.SendComponentNetworkMessage(this, NetDeliveryMethod.ReliableUnordered, null,
-                            ComponentMessageType.SetBaseName, list[0]);*/
                         _currentBaseName = (string) list[0];
                     break;
                 case ComponentMessageType.SetVisible:
@@ -94,8 +86,6 @@ namespace SGO
                 case ComponentMessageType.SetDrawDepth:
                     if (Owner != null)
                         drawDepth = (DrawDepth)list[0];
-                        /*Owner.SendComponentNetworkMessage(this, NetDeliveryMethod.ReliableUnordered, null,
-                                                          ComponentMessageType.SetDrawDepth, drawDepth);*/
                     break;
             }
 

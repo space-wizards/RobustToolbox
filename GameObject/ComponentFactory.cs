@@ -25,10 +25,10 @@ namespace GameObject
         /// Gets a new component instantiated of the specified type.
         /// </summary>
         /// <param name="componentType">type of component to make</param>
-        /// <returns>A GameObjectComponent</returns>
+        /// <returns>A Component</returns>
         public IComponent GetComponent(Type componentType)
         {
-            if (componentType.GetInterface("IGameObjectComponent") == null)
+            if (componentType.GetInterface("IComponent") == null)
                 return null;
             return (IComponent)Activator.CreateInstance(componentType);
         }
@@ -37,7 +37,7 @@ namespace GameObject
         /// Gets a new component instantiated of the specified type.
         /// </summary>
         /// <param name="componentType">type of component to make</param>
-        /// <returns>A GameObjectComponent</returns>
+        /// <returns>A Component</returns>
         public IComponent GetComponent(string componentTypeName)
         {
             if (string.IsNullOrWhiteSpace(componentTypeName))
@@ -46,7 +46,7 @@ namespace GameObject
             //Type t = Assembly.GetExecutingAssembly().GetType(componentTypeName); //Get the type
             var t = _types.FirstOrDefault(type => type.FullName == fullName);
             //Type t = Type.GetType(_componentNamespace + "." + componentTypeName); //Get the type
-            if (t == null || t.GetInterface("IGameObjectComponent") == null)
+            if (t == null || t.GetInterface("IComponent") == null)
                 throw new TypeLoadException("Cannot find specified component type: " + fullName);
 
             return (IComponent)Activator.CreateInstance(t); // Return an instance

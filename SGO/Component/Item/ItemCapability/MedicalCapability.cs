@@ -5,7 +5,7 @@ using SS13_Shared.GO;
 using ServerInterfaces.Chat;
 using ServerInterfaces.Player;
 
-namespace SGO.Component.Item.ItemCapability
+namespace SGO.Item.ItemCapability
 {
     public class MedicalCapability : ItemCapability
     {
@@ -20,7 +20,7 @@ namespace SGO.Component.Item.ItemCapability
             interactsWith = InteractsWith.Actor;
         }
 
-        public override bool ApplyTo(Entity target, Entity sourceActor)
+        public override bool ApplyTo(GameObject.Entity target, GameObject.Entity sourceActor)
         {
             if (capacity <= 0)
             {

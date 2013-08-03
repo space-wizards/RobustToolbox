@@ -2,13 +2,14 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Xml.Linq;
+using GameObject;
 using Lidgren.Network;
-using SGO.Component.Item.ItemCapability;
+using SGO.Item.ItemCapability;
 using SS13_Shared.GO;
 
 namespace SGO
 {
-    public class BasicItemComponent : GameObjectComponent
+    public class BasicItemComponent : Component
     {
         private readonly Dictionary<string, ItemCapability> capabilities;
         private Hand holdingHand;
@@ -109,7 +110,7 @@ namespace SGO
         {
             Owner.RemoveComponent(ComponentFamily.Mover);
             Owner.AddComponent(ComponentFamily.Mover, Owner.EntityManager.ComponentFactory.GetComponent("BasicMoverComponent"));
-            Owner.SendComponentNetworkMessage(this, NetDeliveryMethod.ReliableOrdered, null,
+            Owner.SendDirectedComponentNetworkMessage(this, NetDeliveryMethod.ReliableOrdered, null,
                                               ItemComponentNetMessage.Dropped);
             currentHolder = null;
         }
@@ -120,14 +121,14 @@ namespace SGO
             holdingHand = _holdingHand;
             Owner.AddComponent(ComponentFamily.Mover, Owner.EntityManager.ComponentFactory.GetComponent("SlaveMoverComponent"));
             Owner.SendMessage(this, ComponentMessageType.SlaveAttach, entity.Uid);
-            Owner.SendComponentNetworkMessage(this, NetDeliveryMethod.ReliableOrdered, null,
+            Owner.SendDirectedComponentNetworkMessage(this, NetDeliveryMethod.ReliableOrdered, null,
                                               ItemComponentNetMessage.PickedUp, entity.Uid, holdingHand);
         }
 
         public override void HandleInstantiationMessage(NetConnection netConnection)
         {
             if (currentHolder != null)
-                Owner.SendComponentNetworkMessage(this, NetDeliveryMethod.ReliableOrdered, netConnection,
+                Owner.SendDirectedComponentNetworkMessage(this, NetDeliveryMethod.ReliableOrdered, netConnection,
                                                   ItemComponentNetMessage.PickedUp, currentHolder.Uid, holdingHand);
         }
 

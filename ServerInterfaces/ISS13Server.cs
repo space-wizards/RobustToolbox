@@ -1,5 +1,5 @@
 ﻿using Lidgren.Network;
-using ServerInterfaces.GameObject;
+using ServerInterfaces.GOC;
 using SS13_Shared.ServerEnums;
 using ServerInterfaces.Map;
 namespace ServerInterfaces

@@ -7,7 +7,7 @@ using SS13_Shared.GO;
 using SS13_Shared.GameStates;
 using SS13_Shared.ServerEnums;
 using ServerInterfaces;
-using ServerInterfaces.GameObject;
+using ServerInterfaces.GOC;
 using ServerServices.Log;
 using ServerInterfaces.Player;
 
@@ -39,7 +39,7 @@ namespace ServerServices.Player
         public void SpawnPlayerMob(IPlayerSession s)
         {
             //Spawn the player's entity. There's probably a much better place to do this.
-            IEntity a = server.EntityManager.SpawnEntity("HumanMob");
+            var a = server.EntityManager.SpawnEntity("HumanMob");
             var human = a;
             a.GetComponent<ITransformComponent>(ComponentFamily.Transform).TranslateTo(new Vector2(160, 160));
             if (s.assignedJob != null)

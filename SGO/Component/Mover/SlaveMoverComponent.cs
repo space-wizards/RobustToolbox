@@ -1,15 +1,15 @@
-﻿using SS13_Shared;
+﻿using GameObject;
+using SS13_Shared;
 using SS13_Shared.GO;
-using ServerInterfaces.GameObject;
 
 namespace SGO
 {
     /// <summary>
     /// Mover component that responds to movement by an entity.
     /// </summary>
-    public class SlaveMoverComponent : GameObjectComponent
+    public class SlaveMoverComponent : Component
     {
-        private IEntity master;
+        private Entity master;
 
         public SlaveMoverComponent()
         {
@@ -41,13 +41,13 @@ namespace SGO
 
         private void Attach(int uid)
         {
-            master = (IEntity)Owner.EntityManager.GetEntity(uid);
+            master = Owner.EntityManager.GetEntity(uid);
             master.OnShutdown += master_OnShutdown;
             master.GetComponent<TransformComponent>(ComponentFamily.Transform).OnMove += HandleOnMasterMove;
             Translate(master.GetComponent<TransformComponent>(ComponentFamily.Transform).Position);
         }
 
-        private void master_OnShutdown(IEntity e)
+        private void master_OnShutdown(Entity e)
         {
             Detach();
         }

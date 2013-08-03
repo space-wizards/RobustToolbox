@@ -6,7 +6,7 @@ using ServerInterfaces;
 using ServerInterfaces.Chat;
 using ServerInterfaces.Player;
 
-namespace SGO.Component.Item.ItemCapability
+namespace SGO.Item.ItemCapability
 {
     public class MeleeWeaponCapability : ItemCapability
     {
@@ -24,7 +24,7 @@ namespace SGO.Component.Item.ItemCapability
             interactsWith = InteractsWith.Actor | InteractsWith.LargeObject;
         }
 
-        public override bool ApplyTo(Entity target, Entity sourceActor)
+        public override bool ApplyTo(GameObject.Entity target, GameObject.Entity sourceActor)
         {
             string sourceName = sourceActor.Name;
             string targetName = (sourceActor.Uid == target.Uid) ? "himself" : target.Name;

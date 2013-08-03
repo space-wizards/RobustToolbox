@@ -258,9 +258,18 @@ namespace ClientServices.UserInterface.Components
 
         public override bool MouseWheelMove(MouseInputEventArgs e)
         {
+            MouseInputEventArgs modArgs = new MouseInputEventArgs
+                (e.Buttons,
+                e.ShiftButtons,
+                new Vector2D(e.Position.X - Position.X + scrollbarH.Value, e.Position.Y - Position.Y + scrollbarV.Value),
+                e.WheelPosition,
+                e.RelativePosition,
+                e.WheelDelta,
+                e.ClickCount);
+
             if (inner_focus != null)
             {
-                if (inner_focus.MouseWheelMove(e))
+                if (inner_focus.MouseWheelMove(modArgs))
                     return true;
                 else
                     if (scrollbarV.IsVisible() && ClientArea.Contains(new Point((int)e.Position.X, (int)e.Position.Y)))

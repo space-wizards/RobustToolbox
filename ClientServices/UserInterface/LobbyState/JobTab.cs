@@ -23,6 +23,7 @@ namespace ClientServices.UserInterface.Components
                     Size = new Size(675, 80),
                     ButtonLeft = "job_arrowleft",
                     ButtonRight = "job_arrowright",
+                    SelectionBackground = "job_glow"
                 };
 
             var job_robo = new ImageButton()

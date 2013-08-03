@@ -5,6 +5,7 @@ using ClientInterfaces.Resource;
 using GorgonLibrary;
 using GorgonLibrary.Graphics;
 using GorgonLibrary.InputDevices;
+using SS13.IoC;
 
 namespace ClientServices.UserInterface.Components
 {
@@ -16,16 +17,21 @@ namespace ClientServices.UserInterface.Components
 
         public Vector2D size;
 
-        public SimpleImage(IResourceManager resourceManager, string spriteName)
+        public string Sprite
         {
-            _resourceManager = resourceManager;
-            drawingSprite = _resourceManager.GetSprite(spriteName);
-            size = drawingSprite.Size;
+            get { return drawingSprite != null ? drawingSprite.Name : null; }
+            set { drawingSprite = _resourceManager.GetSprite(value); }
+        }
+
+        public SimpleImage()
+        {
+            _resourceManager = IoCManager.Resolve<IResourceManager>();
             Update(0);
         }
 
         public override void Update(float frameTime)
         {
+            size = drawingSprite != null ? drawingSprite.Size : Vector2D.Zero;
             ClientArea = new Rectangle(this.Position, new Size((int)size.X, (int)size.Y));
         }
 

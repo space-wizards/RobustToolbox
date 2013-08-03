@@ -175,7 +175,10 @@ namespace ClientServices.Resources
             StreamUtils.Copy(zipStream, memStream, byteBuffer);
             memStream.Position = 0;
 
-            Font loadedFont = Font.FromStream(ResourceName, memStream, (int)memStream.Length, 10, false);
+            Font loadedFont = Font.FromStream(ResourceName, memStream, (int)memStream.Length, 9, false);
+
+            loadedFont.AntiAlias = true;
+            loadedFont.Refresh();
 
             memStream.Close();
             zipStream.Close();

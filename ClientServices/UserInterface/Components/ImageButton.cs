@@ -21,7 +21,7 @@ namespace ClientServices.UserInterface.Components
 
         public ImageButton()
         {
-            _resourceManager = IoCManager.Resolve<IResourceManager>(); ;
+            _resourceManager = IoCManager.Resolve<IResourceManager>();
             Color = Color.White;
             Update(0);
         }

@@ -15,20 +15,12 @@ namespace CGO
     /// </summary>
     public class EntityManager:GameObject.EntityManager
     {
-        private EntityFactory _entityFactory;
-        private bool _initialized;
-        private int _lastId;
-
         private Queue<IncomingEntityMessage> MessageBuffer = new Queue<IncomingEntityMessage>();
 
-        public EntityTemplateDatabase TemplateDb { get; private set; }
 
         public EntityManager(INetworkManager networkManager)
-            :base("CGO", new EntityNetworkManager(networkManager))
+            :base(EngineType.Client, new EntityNetworkManager(networkManager))
         {
-            EngineType = EngineType.Client;
-            TemplateDb = new EntityTemplateDatabase(this);
-            _entityFactory = new EntityFactory(TemplateDb);
             Singleton = this;
         }
 
@@ -44,39 +36,6 @@ namespace CGO
             set
             { singleton = value; }
         }
-
-        /// <summary>
-        /// Disposes all entities and clears all lists.
-        /// </summary>
-        public void FlushEntities()
-        {
-            foreach (Entity e in _entities.Values)
-                e.Shutdown();
-            _entities.Clear();
-        }
-
-        private Entity SpawnEntity(string entityType, int uid)
-        {
-            var e = (Entity)_entityFactory.CreateEntity(entityType);
-            if (e != null)
-            {
-                e.Uid = uid;
-                _entities.Add(uid, e);
-                _lastId = uid;
-                if(_initialized)
-                    e.Initialize();
-                return e;
-            }
-            return null;
-        }
-
-        private Entity SpawnEntityAt(string entityType, int uid, Vector2D position, Direction dir = Direction.North)
-        {
-            var e = SpawnEntity(entityType, uid);
-            e.GetComponent<DirectionComponent>(ComponentFamily.Direction).Direction = dir;
-            e.GetComponent<TransformComponent>(ComponentFamily.Transform).Position = position;
-            return e;
-        }
         
         public Entity[] GetEntitiesInRange(Vector2D position, float Range)
         {
@@ -87,18 +46,10 @@ namespace CGO
             return entities.ToArray();
         }
 
-        public void Shutdown()
-        {
-            FlushEntities();
-            _entityFactory = null;
-            TemplateDb = null;
-            EntityNetworkManager = null;
-            _initialized = false;
-        }
 
         private void ProcessMsgBuffer()
         {
-            if (!_initialized)
+            if (!Initialized)
                 return;
             if (!MessageBuffer.Any()) return;
             var misses = new List<IncomingEntityMessage>();
@@ -134,7 +85,7 @@ namespace CGO
         /// <param name="msg">Incoming raw network message</param>
         public void HandleEntityNetworkMessage(NetIncomingMessage msg)
         {
-            if (!_initialized)
+            if (!Initialized)
             {
                 var emsg = ProcessNetMessage(msg);
                 if (emsg.MessageType != EntityMessage.Null)
@@ -177,15 +128,14 @@ namespace CGO
             foreach(var k in toDelete) 
                 DeleteEntity(k);
 
-            if(!_initialized)
+            if(!Initialized)
                 InitializeEntities();
         }
 
-        private void InitializeEntities()
+        public override void InitializeEntities()
         {
-            foreach (var e in _entities.Values)
-                e.Initialize();
-            _initialized = true;
+            base.InitializeEntities();
+            Initialized = true;
         }
         #endregion
     }

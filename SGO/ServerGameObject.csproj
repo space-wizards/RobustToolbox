@@ -120,7 +120,6 @@
     <Compile Include="Status Effects\Rooted.cs" />
     <Compile Include="Status Effects\ExampleEffect.cs" />
     <Compile Include="Status Effects\StatusEffect.cs" />
-    <Compile Include="EntitySystemManager.cs" />
     <Compile Include="EntitySystems\TestSystem.cs" />
   </ItemGroup>
   <ItemGroup>

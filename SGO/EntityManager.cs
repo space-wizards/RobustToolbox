@@ -17,27 +17,11 @@ namespace SGO
     /// </summary>
     public class EntityManager : GameObject.EntityManager, ServerInterfaces.GOC.IEntityManager
     {
-        private static EntityManager singleton;
-        private readonly ISS13NetServer m_netServer;
-        private EntityFactory m_entityFactory;
-        private EntityTemplateDatabase m_entityTemplateDatabase;
-        private EntitySystemManager _systemManager;
-        public int nextId;
-        private bool _initialized;
         private Queue<IncomingEntityMessage> MessageBuffer = new Queue<IncomingEntityMessage>();
 
         public EntityManager(ISS13NetServer netServer)
-            :base("SGO", new EntityNetworkManager(netServer))
-        {
-            EngineType = EngineType.Server;
-            m_entityTemplateDatabase = new EntityTemplateDatabase(this);
-            m_entityFactory = new EntityFactory(m_entityTemplateDatabase);
-            m_netServer = netServer;
-            _systemManager = new EntitySystemManager(this);
-            LoadEntities();
-            _systemManager.Initialize();
-            _initialized = true;
-        }
+            :base(EngineType.Server, new EntityNetworkManager(netServer))
+        {}
 
         #region IEntityManager Members
         
@@ -52,47 +36,10 @@ namespace SGO
             saveFile.Save("SavedEntities.xml");
         }
 
-        public void SendEntities(NetConnection client)
-        {
-            foreach(Entity e in _entities.Values)
-            {
-                //e.FireNetworkedJoinSpawn(client);
-            }
-        }
-
-        /// <summary>
-        /// Creates an entity and adds it to the entity dictionary
-        /// </summary>
-        /// <param name="EntityType">name of entity template to execute</param>
-        /// <returns>spawned entity</returns>
-        public Entity SpawnEntity(string EntityType, bool send = true)
-        {
-            var e = m_entityFactory.CreateEntity(EntityType);
-            if (e != null)
-            {
-                e.Uid = nextId++;
-                _entities.Add(e.Uid, e);
-                if (send) e.Initialize();
-                //if (send) e.FireNetworkedSpawn();
-            }
-            return e;
-        }
-
-
-
-        public void Shutdown()
-        {
-            FlushEntities();
-            _systemManager.Shutdown();
-            _systemManager = null;
-            m_entityFactory = null;
-            m_entityTemplateDatabase = null;
-            EntityNetworkManager = null;
-        }
 
         private void ProcessMsgBuffer()
         {
-            if (!_initialized)
+            if (!Initialized)
                 return;
             if (!MessageBuffer.Any()) return;
             var misses = new List<IncomingEntityMessage>();
@@ -128,7 +75,7 @@ namespace SGO
         /// <param name="msg">Incoming raw network message</param>
         public void HandleEntityNetworkMessage(NetIncomingMessage msg)
         {
-            if (!_initialized)
+            if (!Initialized)
             {
                 var emsg = ProcessNetMessage(msg);
                 if (emsg.MessageType != EntityMessage.Null)
@@ -151,7 +98,7 @@ namespace SGO
         /// <summary>
         /// Load all entities from SavedEntities.xml
         /// </summary>
-        public void LoadEntities()
+        public override void LoadEntities()
         {
             XElement tmp;
             try
@@ -206,25 +153,13 @@ namespace SGO
         /// <param name="EntityType"></param>
         /// <param name="position"></param>
         /// <returns></returns>
-        public Entity SpawnEntityAt(string EntityType, Vector2 position, bool send = true)
+        public Entity SpawnEntityAt(string EntityType, Vector2 position)
         {
-            Entity e = SpawnEntity(EntityType, false);
+            Entity e = SpawnEntity(EntityType);
             e.GetComponent<TransformComponent>(ComponentFamily.Transform).TranslateTo(position);
-            if (send) e.Initialize();
-            //if (send) e.FireNetworkedSpawn();
+            e.Initialize();
             return e;
         }
-
-        /// <summary>
-        /// Disposes all entities and clears all lists.
-        /// </summary>
-        public void FlushEntities()
-        {
-            foreach (Entity e in _entities.Values)
-                e.Shutdown();
-            _entities.Clear();
-        }
-
         public List<EntityState> GetEntityStates()
         {
             var stateEntities = new List<EntityState>();
@@ -238,7 +173,7 @@ namespace SGO
 
         public void Update(float frameTime)
         {
-            _systemManager.Update(frameTime);
+            EntitySystemManager.Update(frameTime);
         }
     }
 }

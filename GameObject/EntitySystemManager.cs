@@ -2,11 +2,9 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
-using System.Text;
-using SGO.EntitySystems;
-using SGO.Exceptions;
-
-namespace SGO
+using GameObject.Exceptions;
+using GameObject.System;
+namespace GameObject
 {
     public class EntitySystemManager
     {
@@ -21,7 +19,15 @@ namespace SGO
         {
             _entityManager = em;
             _systemTypes = new List<Type>();
-            _systemTypes.AddRange(Assembly.LoadFrom("ServerGameComponent.dll").GetTypes().Where(t => typeof(EntitySystem).IsAssignableFrom(t)));
+            switch(em.EngineType)
+            {
+                case EngineType.Client:
+                    break;
+                case EngineType.Server:
+                    _systemTypes.AddRange(Assembly.LoadFrom("ServerGameComponent.dll").GetTypes().Where(t => typeof(EntitySystem).IsAssignableFrom(t)));
+                    break;
+
+            }
             foreach(var type in _systemTypes)
             {
                 if (type == typeof(EntitySystem))

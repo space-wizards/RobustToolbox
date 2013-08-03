@@ -9,10 +9,9 @@ namespace ServerInterfaces.GOC
     {
         void Shutdown();
         void HandleEntityNetworkMessage(NetIncomingMessage message);
-        void SendEntities(NetConnection connection);
         void SaveEntities();
-        Entity SpawnEntity(string template, bool send = true);
-        Entity SpawnEntityAt(string entityTemplateName, SS13_Shared.Vector2 vector2, bool send = true);
+        Entity SpawnEntity(string template, int uid=-1);
+        Entity SpawnEntityAt(string entityTemplateName, SS13_Shared.Vector2 vector2);
         List<EntityState> GetEntityStates();
         void Update(float frameTime);
     }

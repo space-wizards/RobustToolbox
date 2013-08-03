@@ -36,17 +36,84 @@ namespace GameObject
         public ComponentFactory ComponentFactory { get; private set; }
         public ComponentManager ComponentManager { get; private set; }
         public IEntityNetworkManager EntityNetworkManager { get; set; }
+        protected EntityFactory EntityFactory { get; private set; }
+        public EntityTemplateDatabase EntityTemplateDatabase { get; private set; }
+        public EntitySystemManager EntitySystemManager { get; private set; }
+        protected int NextUid=0;
+        public bool Initialized { get; protected set; }
 
         //This is a crude method to tell if we're running on the server or on the client. Fuck me.
         public EngineType EngineType { get; set; }
 
-        public EntityManager(string componentNamespace, IEntityNetworkManager entityNetworkManager)
+        public EntityManager(EngineType engineType, IEntityNetworkManager entityNetworkManager)
         {
-            _componentNamespace = componentNamespace;
+            EngineType = engineType;
+            switch(EngineType)
+            {
+                case EngineType.Client:
+                    _componentNamespace = "CGO";
+                    break;
+                case EngineType.Server:
+                    _componentNamespace = "SGO";
+                    break;
+            }
+            EntitySystemManager = new EntitySystemManager(this);
             ComponentFactory = new ComponentFactory(this, _componentNamespace);
             EntityNetworkManager = entityNetworkManager;
             ComponentManager = new ComponentManager();
+            EntityTemplateDatabase = new EntityTemplateDatabase(this);
+            EntityFactory = new EntityFactory(EntityTemplateDatabase);
+            Initialize();
         }
+
+        public void Initialize()
+        {
+            switch (EngineType)
+            {
+                case EngineType.Client:
+                    break;
+                case EngineType.Server:
+                    LoadEntities();
+                    EntitySystemManager.Initialize();
+                    Initialized = true;
+                    InitializeEntities();
+                    break;
+            }
+        }
+
+        public virtual void InitializeEntities()
+        {
+            foreach (var e in _entities.Values.Where(e => !e.Initialized))
+                e.Initialize();
+        }
+
+        public virtual void LoadEntities()
+        {
+            
+        }
+
+        public virtual void Shutdown()
+        {
+            FlushEntities();
+            EntityNetworkManager = null;
+            EntitySystemManager.Shutdown();
+            EntitySystemManager = null;
+            Initialized = false;
+        }
+
+        #region Entity Management
+
+
+        /// <summary>
+        /// Disposes all entities and clears all lists.
+        /// </summary>
+        public void FlushEntities()
+        {
+            foreach (Entity e in _entities.Values)
+                e.Shutdown();
+            _entities.Clear();
+        }
+
 
         /// <summary>
         /// Returns an entity by id
@@ -84,5 +151,27 @@ namespace GameObject
         {
             return _entities.ContainsKey(eid);
         }
+
+        /// <summary>
+        /// Creates an entity and adds it to the entity dictionary
+        /// </summary>
+        /// <param name="EntityType">name of entity template to execute</param>
+        /// <returns>spawned entity</returns>
+        public Entity SpawnEntity(string EntityType, int uid = -1)
+        {
+            if (uid == -1)
+                uid = NextUid++;
+            var e = EntityFactory.CreateEntity(EntityType);
+            if (e != null)
+            {
+                e.Uid = uid;
+                _entities.Add(e.Uid, e);
+                if (Initialized)
+                    e.Initialize();
+                //if (send) e.FireNetworkedSpawn();
+            }
+            return e;
+        }
+        #endregion
     }
 }

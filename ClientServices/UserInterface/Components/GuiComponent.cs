@@ -8,6 +8,7 @@ using SS13_Shared;
 using GorgonLibrary.InputDevices;
 using SS13.IoC;
 using ClientInterfaces.UserInterface;
+using GorgonLibrary.Graphics;
 
 namespace ClientServices.UserInterface.Components
 {

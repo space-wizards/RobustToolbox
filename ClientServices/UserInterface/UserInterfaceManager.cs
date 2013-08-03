@@ -17,6 +17,7 @@ using ClientServices.UserInterface.Components;
 
 namespace ClientServices.UserInterface
 {
+    //TODO Make sure all ui compos use gorgon.currentrendertarget instead of gorgon.screen so they draw to the ui rendertarget. also add the actual rendertarget.
     /// <summary>
     ///  Manages UI Components. This includes input, rendering, updates and net messages.
     /// </summary>
@@ -199,6 +200,7 @@ namespace ClientServices.UserInterface
             }
         }
 
+        //TODO Holy shit make this not complete crap. Oh man.
         /// <summary>
         ///  Handles creation of ui elements over network.
         /// </summary>

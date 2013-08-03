@@ -12,7 +12,7 @@ namespace ClientServices.UserInterface.Components
 {
     class ScrollableContainer : GuiComponent //This is a note: Spooge wants support for mouseover-scrolling of scrollable containers inside other scrollable containers.
     {
-        private readonly IResourceManager _resourceManager;
+        protected readonly IResourceManager _resourceManager;
 
         protected Scrollbar scrollbarH;
         protected Scrollbar scrollbarV;
@@ -26,6 +26,7 @@ namespace ClientServices.UserInterface.Components
 
         public Color BackgroundColor = Color.DarkGray;
         public bool DrawBackground = false;
+        public bool DrawBorder = true;
 
         protected Size Size;
 
@@ -136,7 +137,7 @@ namespace ClientServices.UserInterface.Components
             scrollbarH.Render();
             scrollbarV.Render();
 
-            Gorgon.CurrentRenderTarget.Rectangle(ClientArea.X, ClientArea.Y, ClientArea.Width, ClientArea.Height, System.Drawing.Color.Black);
+            if(DrawBorder) Gorgon.CurrentRenderTarget.Rectangle(ClientArea.X, ClientArea.Y, ClientArea.Width, ClientArea.Height, System.Drawing.Color.Black);
         }
 
         public override void Dispose()

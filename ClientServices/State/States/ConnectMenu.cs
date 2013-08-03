@@ -27,6 +27,7 @@ namespace ClientServices.State.States
         private readonly ImageButton _buttConnect;
         private readonly ImageButton _buttOptions;
         private readonly ImageButton _buttExit;
+        private readonly ImageButton _butt;
 
         private DateTime _connectTime;
         private bool _isConnecting;
@@ -65,6 +66,15 @@ namespace ClientServices.State.States
             };
             _buttExit.Clicked += new ImageButton.ImageButtonPressHandler(_buttExit_Clicked);
 
+            _butt = new ImageButton()
+            {
+                ImageNormal = "blueprint",
+                ImageHover = "blueprint",
+                Position = new Point(20, 20)
+            };
+            _butt.Clicked += new ImageButton.ImageButtonPressHandler(butt_Clicked);
+            
+
             _connectTextbox = new Textbox(100, ResourceManager) { Text = ConfigurationManager.GetServerAddress() };
             _connectTextbox.OnSubmit += ConnectTextboxOnSubmit;
             _connectTextbox.SetVisible(false);
@@ -76,16 +86,23 @@ namespace ClientServices.State.States
             _lblVersion.Text.Color = Color.WhiteSmoke;
             _lblVersion.Position = new Point(Gorgon.Screen.Width - _lblVersion.ClientArea.Width - 3, Gorgon.Screen.Height - _lblVersion.ClientArea.Height - 3);
 
-            _titleImage = new SimpleImage(ResourceManager, "SpaceStationLogoColor")
+            _titleImage = new SimpleImage()
                 {
+                    Sprite = "SpaceStationLogoColor",
                     Position = new Point(Gorgon.Screen.Width - 550, 100)
                 };
 
-            _glow = new SimpleImage(ResourceManager, "mainbg_glow")
+            _glow = new SimpleImage()
                 {
+                    Sprite = "mainbg_glow",
                     Position = new Point(0, 0)
                 };
             _glow.size = new Vector2D(Gorgon.Screen.Width, Gorgon.Screen.Height);
+        }
+
+        void butt_Clicked(ImageButton sender)
+        {
+            StateManager.RequestStateChange<NewLobby>();
         }
 
         void _buttExit_Clicked(ImageButton sender)
@@ -227,7 +244,7 @@ namespace ClientServices.State.States
             UserInterfaceManager.AddComponent(_titleImage);
             UserInterfaceManager.AddComponent(_glow);
             UserInterfaceManager.AddComponent(_lblVersion);
-
+            UserInterfaceManager.AddComponent(_butt);
         }
 
         private void OnConnected(object sender, EventArgs e)
@@ -259,6 +276,7 @@ namespace ClientServices.State.States
             UserInterfaceManager.RemoveComponent(_titleImage);
             UserInterfaceManager.RemoveComponent(_glow);
             UserInterfaceManager.RemoveComponent(_lblVersion);
+            UserInterfaceManager.RemoveComponent(_butt);
 
             foreach (var floatingDeco in DecoFloats)
                 UserInterfaceManager.RemoveComponent(floatingDeco);

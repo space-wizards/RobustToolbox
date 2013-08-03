@@ -42,13 +42,16 @@ namespace ClientServices.UserInterface.Components
         private string _text = "";
         private string _displayText = "";
 
-        private Vector2D _caretPos;
-        private const int _caretShrink = 2;
+        private float _caretPos;
+        private float _caretHeight = 12;
+        private float _caretWidth = 2;
 
         public bool ClearOnSubmit = true;
         public bool ClearFocusOnSubmit = true;
         public int MaxCharacters = 255;
         public int Width;
+
+        private float blinkCount = 0;
 
         public Textbox(int width, IResourceManager resourceManager)
         {
@@ -73,6 +76,11 @@ namespace ClientServices.UserInterface.Components
             ClientArea = new Rectangle(Position, new Size(_clientAreaLeft.Width + _clientAreaMain.Width + _clientAreaRight.Width, Math.Max(Math.Max(_clientAreaLeft.Height,_clientAreaRight.Height), _clientAreaMain.Height)));
             Label.Position = new Point(_clientAreaLeft.Right, Position.Y + (int)(ClientArea.Height / 2f) - (int)(Label.Height / 2f));
 
+            if (Focus)
+            {
+                blinkCount += 1*frameTime;
+                if (blinkCount > 0.50f) blinkCount = 0;
+            }
         }
 
         public override void Render()
@@ -81,13 +89,11 @@ namespace ClientServices.UserInterface.Components
             _textboxMain.Draw(_clientAreaMain);
             _textboxRight.Draw(_clientAreaRight);
 
-            Gorgon.CurrentRenderTarget.FilledRectangle(_caretPos.X, _caretPos.Y, 1, Label.Height - (_caretShrink * 2), Color.HotPink);
+            if(Focus && blinkCount <= 0.25f) Gorgon.CurrentRenderTarget.FilledRectangle(_caretPos - _caretWidth, Label.Position.Y + (Label.Height / 2f) - (_caretHeight / 2f), _caretWidth, _caretHeight, Color.WhiteSmoke);
 
             Label.Text = _displayText;
             Label.Draw();
 
-
-            Gorgon.CurrentRenderTarget.Rectangle(Label.Position.X, Label.Position.Y, Label.Width, Label.Height, Color.DarkRed);
         }
 
         public override void Dispose()
@@ -141,6 +147,8 @@ namespace ClientServices.UserInterface.Components
 
             if (e.Key == KeyboardKeys.Back && Text.Length >= 1)
             {
+                if (_caretIndex == 0) return true;
+
                 Text = Text.Remove(_caretIndex - 1, 1);
                 if (_caretIndex > 0) _caretIndex--;
                 SetVisibleText();
@@ -195,22 +203,14 @@ namespace ClientServices.UserInterface.Components
                 }   
                 _displayText = Text.Substring(_displayIndex + 1, glyphCount);
 
-                string str1 = Text.Substring(_displayIndex, _caretIndex - _displayIndex);
-                float carretx = Label.MeasureLine(str1);
-
-                _caretPos.X = Label.Position.X + carretx;                   //caret still misaligned.
-                _caretPos.Y = Label.Position.Y + _caretShrink;
+                _caretPos = Label.Position.X + Label.MeasureLine(Text.Substring(_displayIndex, _caretIndex - _displayIndex));
             }
             else //Text fits completely inside box.
             {
                 _displayIndex = 0;
                 _displayText = Text;
 
-                string str1 = Text.Substring(_displayIndex, _caretIndex);
-                float carretx = Label.MeasureLine(str1);
-
-                _caretPos.X = Label.Position.X + carretx;                   //caret still misaligned.
-                _caretPos.Y = Label.Position.Y + _caretShrink;
+                _caretPos = Label.Position.X + Label.MeasureLine(Text.Substring(_displayIndex, _caretIndex - _displayIndex));
             }
         }
 

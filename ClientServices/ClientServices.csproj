@@ -125,6 +125,7 @@
     <Compile Include="State\State.cs" />
     <Compile Include="State\StateManager.cs" />
     <Compile Include="State\States\ConnectMenu.cs" />
+    <Compile Include="State\States\NewLobbyMenu.cs" />
     <Compile Include="State\States\OptionsMenu.cs" />
     <Compile Include="State\States\GameScreen.cs" />
     <Compile Include="State\States\LobbyScreen.cs" />
@@ -177,6 +178,9 @@
     <Compile Include="UserInterface\Inventory\HumanComboGUI.cs" />
     <Compile Include="UserInterface\Inventory\InventorySlotUi.cs" />
     <Compile Include="UserInterface\Inventory\InventoryViewer.cs" />
+    <Compile Include="UserInterface\LobbyState\JobTab.cs" />
+    <Compile Include="UserInterface\LobbyState\TabbedMenu.cs" />
+    <Compile Include="UserInterface\LobbyState\TabContainer.cs" />
     <Compile Include="UserInterface\UserInterfaceManager.cs" />
     <Compile Include="Utility\Rand.cs" />
   </ItemGroup>

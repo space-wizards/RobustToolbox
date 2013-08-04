@@ -1,4 +1,5 @@
 ﻿using SS13_Shared.Objectives;
+
 namespace ServerInterfaces.Objectives
 {
     public interface IObjective

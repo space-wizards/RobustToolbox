@@ -1,8 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Drawing;
-using System.Linq;
-using System.Text;
+﻿using System.Drawing;
 using SS13_Shared;
 using SS13_Shared.ServerEnums;
 
@@ -10,7 +6,6 @@ namespace ServerInterfaces.Configuration
 {
     public interface IConfigurationManager
     {
-        void Initialize(string configFilePath);
         bool MessageLogging { get; set; }
         string ServerName { get; set; }
         string ServerMapName { get; set; }
@@ -24,6 +19,7 @@ namespace ServerInterfaces.Configuration
         float TickRate { get; set; }
         GameType GameType { get; set; }
         Size ConsoleSize { get; set; }
+        void Initialize(string configFilePath);
         void Save();
     }
 }

@@ -1,6 +1,4 @@
-﻿using GameObject;
-
-namespace GameObject
+﻿namespace GameObject
 {
     public class EntityFactory
     {
@@ -21,7 +19,7 @@ namespace GameObject
         /// <returns>Created Entity</returns>
         public Entity CreateEntity(string entityTemplateName)
         {
-            var template = _entityTemplateDatabase.GetTemplate(entityTemplateName);
+            EntityTemplate template = _entityTemplateDatabase.GetTemplate(entityTemplateName);
             //TODO: Throw exception here
             return template == null ? null : template.CreateEntity();
         }

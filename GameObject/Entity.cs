@@ -16,9 +16,10 @@ namespace GameObject
         int Uid { get; set; }
 
         bool Initialized { get; set; }
-        event EntityShutdownEvent OnShutdown;
 
         EntityTemplate Template { get; set; }
+        event EntityShutdownEvent OnShutdown;
+
         /// <summary>
         /// Match
         /// 
@@ -43,7 +44,7 @@ namespace GameObject
         /// </summary>
         /// <param name="family"></param>
         void RemoveComponent(ComponentFamily family);
-        
+
         /// <summary>
         /// Checks to see if a component of a certain family exists
         /// </summary>
@@ -72,9 +73,10 @@ namespace GameObject
         /// <param name="type">the type of message</param>
         /// <param name="args">message parameters</param>
         void SendMessage(object sender, ComponentMessageType type, List<ComponentReplyMessage> replies,
-                                         params object[] args);
+                         params object[] args);
 
-        ComponentReplyMessage SendMessage(object sender, ComponentFamily family, ComponentMessageType type, params object[] args);
+        ComponentReplyMessage SendMessage(object sender, ComponentFamily family, ComponentMessageType type,
+                                          params object[] args);
 
         /// <summary>
         /// Requests Description string from components and returns it. If no component answers, returns default description from template.
@@ -130,15 +132,6 @@ namespace GameObject
     public class Entity : IEntity
     {
         #region Members
-        protected List<Type> ComponentTypes = new List<Type>();
-
-        public int Uid { get; set; }
-        public EntityTemplate Template { get; set; }
-        public string Name { get; set; }
-        protected IEntityNetworkManager EntityNetworkManager;
-
-        public bool Initialized { get; set; }
-        public event EntityShutdownEvent OnShutdown;
 
         /// <summary>
         /// Holds this entity's components
@@ -146,11 +139,20 @@ namespace GameObject
         private readonly Dictionary<ComponentFamily, IComponent> _components =
             new Dictionary<ComponentFamily, IComponent>();
 
+        protected List<Type> ComponentTypes = new List<Type>();
+        protected IEntityNetworkManager EntityNetworkManager;
+
+        public int Uid { get; set; }
+        public EntityTemplate Template { get; set; }
+        public string Name { get; set; }
+
+        public bool Initialized { get; set; }
+        public event EntityShutdownEvent OnShutdown;
+
         #endregion
 
         #region constructor 
 
-        public EntityManager EntityManager { get; private set; }
         public Entity(EntityManager entityManager)
         {
             EntityManager = entityManager;
@@ -158,9 +160,13 @@ namespace GameObject
             if (EntityManager.EngineType == EngineType.Client)
                 Initialize();
         }
+
+        public EntityManager EntityManager { get; private set; }
+
         #endregion
 
         #region Initialization
+
         /// <summary>
         /// Sets up variables and shite
         /// </summary>
@@ -169,16 +175,19 @@ namespace GameObject
             SendMessage(this, ComponentMessageType.Initialize);
             Initialized = true;
         }
+
         #endregion
 
         #region Component Messaging
+
         public void SendMessage(object sender, ComponentMessageType type, params object[] args)
         {
             //LogComponentMessage(sender, type, args);
 
             foreach (Component component in GetComponents())
             {
-                if(_components.ContainsValue(component)) //Check to see if the component is still a part of this entity --- collection may change in process.
+                if (_components.ContainsValue(component))
+                    //Check to see if the component is still a part of this entity --- collection may change in process.
                     component.RecieveMessage(sender, type, args);
             }
         }
@@ -211,13 +220,14 @@ namespace GameObject
             }
         }
 
-        public ComponentReplyMessage SendMessage(object sender, ComponentFamily family, ComponentMessageType type, params object[] args)
+        public ComponentReplyMessage SendMessage(object sender, ComponentFamily family, ComponentMessageType type,
+                                                 params object[] args)
         {
             //LogComponentMessage(sender, type, args);
 
             if (HasComponent(family))
                 return GetComponent<Component>(family).RecieveMessage(sender, type, args);
-            
+
             return ComponentReplyMessage.Empty;
         }
 
@@ -232,15 +242,18 @@ namespace GameObject
         #endregion
 
         #region Network messaging 
-                /// <summary>
+
+        /// <summary>
         /// Sends a message to the counterpart component on the server side
         /// </summary>
         /// <param name="component">Sending component</param>
         /// <param name="method">Net Delivery Method</param>
         /// <param name="messageParams">Parameters</param>
-        public void SendComponentNetworkMessage(Component component, NetDeliveryMethod method, params object[] messageParams)
+        public void SendComponentNetworkMessage(Component component, NetDeliveryMethod method,
+                                                params object[] messageParams)
         {
-            EntityNetworkManager.SendComponentNetworkMessage(this, component.Family, NetDeliveryMethod.ReliableUnordered, messageParams);
+            EntityNetworkManager.SendComponentNetworkMessage(this, component.Family, NetDeliveryMethod.ReliableUnordered,
+                                                             messageParams);
         }
 
         /// <summary>
@@ -251,13 +264,13 @@ namespace GameObject
         /// <param name="recipient">The intended recipient netconnection (if null send to all)</param>
         /// <param name="messageParams">Parameters</param>
         public void SendDirectedComponentNetworkMessage(Component component, NetDeliveryMethod method,
-                                                NetConnection recipient, params object[] messageParams)
+                                                        NetConnection recipient, params object[] messageParams)
         {
             if (!Initialized)
                 return;
             EntityNetworkManager.SendDirectedComponentNetworkMessage(this, component.Family,
-                                                               method, recipient,
-                                                               messageParams);
+                                                                     method, recipient,
+                                                                     messageParams);
         }
 
         /// <summary>
@@ -272,7 +285,8 @@ namespace GameObject
             if (component == null)
                 throw new Exception("Component is null");
 
-            EntityNetworkManager.SendEntityNetworkMessage(this, EntityMessage.ComponentInstantiationMessage, component.Family);
+            EntityNetworkManager.SendEntityNetworkMessage(this, EntityMessage.ComponentInstantiationMessage,
+                                                          component.Family);
         }
 
         /// <summary>
@@ -284,7 +298,7 @@ namespace GameObject
             switch (message.MessageType)
             {
                 case EntityMessage.ComponentMessage:
-                    HandleComponentMessage((IncomingEntityComponentMessage)message.Message, message.Sender);
+                    HandleComponentMessage((IncomingEntityComponentMessage) message.Message, message.Sender);
                     break;
                 case EntityMessage.ComponentInstantiationMessage: //Server Only
                     HandleComponentInstantiationMessage(message);
@@ -299,11 +313,14 @@ namespace GameObject
         /// <param name="message">Message from client</param>
         protected void HandleComponentInstantiationMessage(IncomingEntityMessage message)
         {
-            if (HasComponent((ComponentFamily)message.Message))
-                GetComponent<Component>((ComponentFamily)message.Message).HandleInstantiationMessage(message.Sender);
+            if (HasComponent((ComponentFamily) message.Message))
+                GetComponent<Component>((ComponentFamily) message.Message).HandleInstantiationMessage(message.Sender);
         }
 
         #endregion
+
+        #region IEntity Members
+
         /// <summary>
         /// Requests Description string from components and returns it. If no component answers, returns default description from template.
         /// </summary>
@@ -313,12 +330,19 @@ namespace GameObject
 
             SendMessage(this, ComponentMessageType.GetDescriptionString, replies);
 
-            if (replies.Any()) return (string)replies.First(x => x.MessageType == ComponentMessageType.GetDescriptionString).ParamsList[0]; //If you dont answer with a string then fuck you.
+            if (replies.Any())
+                return
+                    (string)
+                    replies.First(x => x.MessageType == ComponentMessageType.GetDescriptionString).ParamsList[0];
+                    //If you dont answer with a string then fuck you.
 
             return Template.Description;
         }
 
+        #endregion
+
         #region Entity Systems
+
         /// <summary>
         /// Match
         /// 
@@ -333,7 +357,8 @@ namespace GameObject
                 return true;
 
             //If there is an EXCLUDE set, and the entity contains any component types in that set, or subtypes of them, the entity is excluded.
-            bool matched = !(query.Exclusionset.Any() && query.Exclusionset.Any(t => ComponentTypes.Any(t.IsAssignableFrom)));
+            bool matched =
+                !(query.Exclusionset.Any() && query.Exclusionset.Any(t => ComponentTypes.Any(t.IsAssignableFrom)));
 
             //If there are no matching exclusions, and the entity matches the ALL set, the entity is included
             if (matched && (query.AllSet.Any() && query.AllSet.Any(t => !ComponentTypes.Any(t.IsAssignableFrom))))
@@ -343,9 +368,11 @@ namespace GameObject
                 matched = false;
             return matched;
         }
+
         #endregion
 
         #region Components
+
         /// <summary>
         /// Public method to add a component to an entity.
         /// Calls the component's onAdd method, which also adds it to the component manager.
@@ -375,11 +402,6 @@ namespace GameObject
             _components.Remove(family);
         }
 
-        protected void UpdateComponentTypes()
-        {
-            ComponentTypes = _components.Values.Select(t => t.GetType()).ToList();
-        }
-
         /// <summary>
         /// Checks to see if a component of a certain family exists
         /// </summary>
@@ -393,7 +415,7 @@ namespace GameObject
         public T GetComponent<T>(ComponentFamily family) where T : class
         {
             if (GetComponent(family) is T)
-                return (T)GetComponent(family);
+                return (T) GetComponent(family);
             return null;
         }
 
@@ -409,7 +431,7 @@ namespace GameObject
 
         public virtual void Shutdown()
         {
-            foreach (var component in _components.Values)
+            foreach (IComponent component in _components.Values)
             {
                 component.OnRemove();
             }
@@ -420,15 +442,22 @@ namespace GameObject
         public List<IComponent> GetComponents()
         {
             return _components.Values.ToList();
-        } 
+        }
 
         public List<ComponentFamily> GetComponentFamilies()
         {
             return _components.Keys.ToList();
-        } 
+        }
+
+        protected void UpdateComponentTypes()
+        {
+            ComponentTypes = _components.Values.Select(t => t.GetType()).ToList();
+        }
+
         #endregion
-        
+
         #region GameState Stuff
+
         /// <summary>
         /// Client method to handle an entity state object
         /// </summary>
@@ -441,12 +470,12 @@ namespace GameObject
                 Moved();
             }*/
             Name = state.StateData.Name;
-            foreach (var compState in state.ComponentStates)
+            foreach (ComponentState compState in state.ComponentStates)
             {
                 if (HasComponent(compState.Family))
                 {
-                    var comp = GetComponent(compState.Family);
-                    var stateType = comp.StateType;
+                    IComponent comp = GetComponent(compState.Family);
+                    Type stateType = comp.StateType;
                     if (compState.GetType() == stateType)
                     {
                         comp.HandleComponentState(compState);
@@ -461,7 +490,7 @@ namespace GameObject
         /// <returns></returns>
         public EntityState GetEntityState()
         {
-            var compStates = GetComponentStates();
+            List<ComponentState> compStates = GetComponentStates();
 
             //Reset entity state changed to false
 
@@ -482,11 +511,12 @@ namespace GameObject
             var stateComps = new List<ComponentState>();
             foreach (Component component in GetComponents())
             {
-                var componentState = component.GetComponentState();
+                ComponentState componentState = component.GetComponentState();
                 stateComps.Add(componentState);
             }
             return stateComps;
         }
+
         #endregion
     }
 }

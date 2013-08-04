@@ -18,7 +18,7 @@ namespace GameObject
         public ComponentManager()
         {
             components = new Dictionary<ComponentFamily, List<Component>>();
-            foreach (ComponentFamily family in Enum.GetValues(typeof(ComponentFamily)))
+            foreach (ComponentFamily family in Enum.GetValues(typeof (ComponentFamily)))
             {
                 components.Add(family, new List<Component>());
             }
@@ -53,7 +53,7 @@ namespace GameObject
         /// <param name="frameTime">Time since the last frame was rendered.</param>
         public void Update(float frameTime)
         {
-            foreach (ComponentFamily family in Enum.GetValues(typeof(ComponentFamily)))
+            foreach (ComponentFamily family in Enum.GetValues(typeof (ComponentFamily)))
             {
                 // Hack the update loop to allow us to render somewhere in the GameScreen render loop
                 if (family == ComponentFamily.Renderable)

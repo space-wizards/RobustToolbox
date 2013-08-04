@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
 using System.Xml.Linq;
 using Lidgren.Network;
 using SS13_Shared;
@@ -55,14 +54,14 @@ namespace GameObject
         /// <param name="type">the message type in CGO.MessageType</param>
         /// <param name="list">parameters list</param>
         ComponentReplyMessage RecieveMessage(object sender, ComponentMessageType type,
-                                                             params object[] list);
+                                             params object[] list);
 
         /// <summary>
         /// Get the component's state for synchronizing
         /// </summary>
         /// <returns>ComponentState object</returns>
         ComponentState GetComponentState();
-        
+
         void HandleNetworkMessage(IncomingEntityComponentMessage message, NetConnection sender);
         void HandleComponentState(dynamic state);
 
@@ -97,17 +96,24 @@ namespace GameObject
 
     public class Component : IComponent
     {
-        public Entity Owner { get; set; }
-        public ComponentFamily Family { get; protected set; }
-        public virtual Type StateType { get { return null; } }
-
-        //Contains SVars -- Server only
-        private Dictionary<string, Type> _sVars = new Dictionary<string, Type>(); 
+        private readonly Dictionary<string, Type> _sVars = new Dictionary<string, Type>();
 
         public Component()
         {
             Family = ComponentFamily.Generic;
         }
+
+        #region IComponent Members
+
+        public Entity Owner { get; set; }
+        public ComponentFamily Family { get; protected set; }
+
+        public virtual Type StateType
+        {
+            get { return null; }
+        }
+
+        //Contains SVars -- Server only
 
         /// <summary>
         /// Called when the component is removed from an entity.
@@ -138,7 +144,8 @@ namespace GameObject
         /// Base method to shut down the component. 
         /// </summary>
         public virtual void Shutdown()
-        {}
+        {
+        }
 
         /// <summary>
         /// This allows setting of the component's parameters once it is instantiated.
@@ -157,14 +164,16 @@ namespace GameObject
         }
 
         public virtual void HandleExtendedParameters(XElement extendedParameters)
-        {}
+        {
+        }
 
         /// <summary>
         /// Main method for updating the component. This is called from a big loop in Componentmanager.
         /// </summary>
         /// <param name="frameTime"></param>
         public virtual void Update(float frameTime)
-        {}
+        {
+        }
 
         /// <summary>
         /// Recieve a message from another component within the owner entity
@@ -181,9 +190,9 @@ namespace GameObject
                 return reply;
 
             //Client-only hack
-            if(Owner.EntityManager.EngineType == EngineType.Client)
+            if (Owner.EntityManager.EngineType == EngineType.Client)
             {
-                switch(type)
+                switch (type)
                 {
                     case ComponentMessageType.Initialize:
                         Owner.SendComponentInstantiationMessage(this);
@@ -204,14 +213,16 @@ namespace GameObject
         }
 
         public virtual void HandleComponentState(dynamic state)
-        {}
+        {
+        }
 
         /// <summary>
         /// Empty method for handling incoming input messages from counterpart server/client components
         /// </summary>
         /// <param name="message">the message object</param>
         public virtual void HandleNetworkMessage(IncomingEntityComponentMessage message, NetConnection sender)
-        {}
+        {
+        }
 
         /// <summary>
         /// Handles a message that a client has just instantiated a component
@@ -231,7 +242,10 @@ namespace GameObject
             return new List<ComponentParameter>();
         }
 
+        #endregion
+
         #region SVars Stuff
+
         /// <summary>
         /// Gets all available SVars for the entity. 
         /// This gets current values, or at least it should...
@@ -239,7 +253,25 @@ namespace GameObject
         /// <returns>Returns a list of component parameters for marshaling</returns>
         public List<MarshalComponentParameter> GetSVars()
         {
-            return (from param in GetParameters() where SVarIsRegistered(param.MemberName) select new MarshalComponentParameter(Family, param)).ToList();
+            return (from param in GetParameters()
+                    where SVarIsRegistered(param.MemberName)
+                    select new MarshalComponentParameter(Family, param)).ToList();
+        }
+
+        /// <summary>
+        /// Sets a component parameter via the sVar interface. Only
+        /// parameters that are registered as sVars will be set through this 
+        /// function.
+        /// </summary>
+        /// <param name="sVar">ComponentParameter</param>
+        public void SetSVar(MarshalComponentParameter sVar)
+        {
+            ComponentParameter param = sVar.Parameter;
+
+            //If it is registered, and the types match, set it.
+            if (_sVars.ContainsKey(param.MemberName) &&
+                _sVars[param.MemberName] == param.ParameterType)
+                SetParameter(param);
         }
 
         /// <summary>
@@ -277,22 +309,6 @@ namespace GameObject
                 _sVars.Remove(name);
         }
 
-        /// <summary>
-        /// Sets a component parameter via the sVar interface. Only
-        /// parameters that are registered as sVars will be set through this 
-        /// function.
-        /// </summary>
-        /// <param name="sVar">ComponentParameter</param>
-        public void SetSVar(MarshalComponentParameter sVar)
-        {
-            var param = sVar.Parameter;
-
-            //If it is registered, and the types match, set it.
-            if (_sVars.ContainsKey(param.MemberName) &&
-                _sVars[param.MemberName] == param.ParameterType)
-                SetParameter(param);
-        }
         #endregion
-
     }
 }

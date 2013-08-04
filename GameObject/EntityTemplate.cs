@@ -1,8 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
 using System.Globalization;
+using System.Linq;
 using System.Xml.Linq;
 using SS13_Shared.GO;
 
@@ -14,12 +13,22 @@ namespace GameObject
         /// This holds a list of the component types the entity will be instantiated with.
         /// </summary>
         protected readonly List<string> _components = new List<string>();
-        
+
         /// <summary>
         /// This holds a dictionary linking parameter objects to components
         /// </summary>
-        protected readonly Dictionary<string, List<ComponentParameter>> _parameters = new Dictionary<string, List<ComponentParameter>>();
-        
+        protected readonly Dictionary<string, List<ComponentParameter>> _parameters =
+            new Dictionary<string, List<ComponentParameter>>();
+
+        /// <summary>
+        /// Default constructor
+        /// </summary>
+        public EntityTemplate(EntityManager entityManager)
+        {
+            EntityManager = entityManager;
+            Description = "There is nothing special about this object.";
+        }
+
         /// <summary>
         /// The Placement mode used for client-initiated placement. This is used for admin and editor placement. The serverside version controls what type the server assigns in normal gameplay.
         /// </summary>
@@ -29,7 +38,7 @@ namespace GameObject
         /// The Range this entity can be placed from. This is only used serverside since the server handles normal gameplay. The client uses unlimited range since it handles things like admin spawning and editing.
         /// </summary>
         public int PlacementRange { get; protected set; }
-        
+
         /// <summary>
         /// Offset that is added to the position when placing. (if any). Client only.
         /// </summary>
@@ -44,22 +53,13 @@ namespace GameObject
         /// Name of the entity template eg. "HumanMob"
         /// </summary>
         public string Name { get; set; }
-        
+
         /// <summary>
         /// Description for the entity. Used by default examine handlers.
         /// </summary>
         public string Description { get; protected set; }
 
         public EntityManager EntityManager { get; protected set; }
-        
-        /// <summary>
-        /// Default constructor
-        /// </summary>
-        public EntityTemplate(EntityManager entityManager)
-        {
-            EntityManager = entityManager;
-            Description = "There is nothing special about this object.";
-        }
 
         /// <summary>
         /// Adds a component type to the entity template
@@ -85,14 +85,14 @@ namespace GameObject
             switch (typeName.ToLowerInvariant())
             {
                 case "string":
-                    return typeof(string);
+                    return typeof (string);
                 case "int":
-                    return typeof(int);
+                    return typeof (int);
                 case "float":
-                    return typeof(float);
+                    return typeof (float);
                 case "boolean":
                 case "bool":
-                    return typeof(bool);
+                    return typeof (bool);
                 default:
                     return null;
             }
@@ -102,19 +102,20 @@ namespace GameObject
         {
             Name = templateElement.Attribute("name").Value;
 
-            var tComponents = templateElement.Element("Components").Elements();
+            IEnumerable<XElement> tComponents = templateElement.Element("Components").Elements();
             //Parse components
-            foreach (var tComponent in tComponents)
+            foreach (XElement tComponent in tComponents)
             {
                 string componentname = tComponent.Attribute("name").Value;
                 _components.Add(componentname);
                 _parameters.Add(componentname, new List<ComponentParameter>());
-                var tComponentParameters = from tParam in tComponent.Descendants("Parameter")
-                                           select tParam;
+                IEnumerable<XElement> tComponentParameters = from tParam in tComponent.Descendants("Parameter")
+                                                             select tParam;
                 //Parse component parameters
-                foreach (var tComponentParameter in tComponentParameters)
+                foreach (XElement tComponentParameter in tComponentParameters)
                 {
-                    if (tComponentParameter.Attribute("type").Value == "" || tComponentParameter.Attribute("name").Value == "")
+                    if (tComponentParameter.Attribute("type").Value == "" ||
+                        tComponentParameter.Attribute("name").Value == "")
                         throw new ArgumentException("Component Parameter name or type not set.");
 
                     //Get the specified type
@@ -124,42 +125,46 @@ namespace GameObject
                     string paramRawValue = tComponentParameter.Attribute("value").Value;
 
                     //Validate
-                    var paramName = tComponentParameter.Attribute("name").Value;
+                    string paramName = tComponentParameter.Attribute("name").Value;
                     if (paramType == null)
                         throw new TemplateLoadException("Invalid parameter type specified.");
                     if (paramName == "")
                         throw new TemplateLoadException("Invalid parameter name specified.");
 
                     //Convert the raw value to the proper type
-                    object paramValue;// = Convert.ChangeType(tComponentParameter.Attribute("value").Value, paramType);
-                    if (paramType == typeof(int))
+                    object paramValue; // = Convert.ChangeType(tComponentParameter.Attribute("value").Value, paramType);
+                    if (paramType == typeof (int))
                     {
                         int pval;
                         if (!int.TryParse(paramRawValue, out pval))
-                            throw new ArgumentException("Could not parse parameter " + paramName + " as int. Value: " + paramRawValue);
+                            throw new ArgumentException("Could not parse parameter " + paramName + " as int. Value: " +
+                                                        paramRawValue);
                         paramValue = pval;
                     }
-                    else if (paramType == typeof(float))
+                    else if (paramType == typeof (float))
                     {
                         float pval;
                         if (!float.TryParse(paramRawValue, NumberStyles.Float, CultureInfo.InvariantCulture, out pval))
-                            throw new ArgumentException("Could not parse parameter " + paramName + " as float. Value: " + paramRawValue);
+                            throw new ArgumentException("Could not parse parameter " + paramName + " as float. Value: " +
+                                                        paramRawValue);
                         paramValue = pval;
                     }
-                    else if (paramType == typeof(bool))
+                    else if (paramType == typeof (bool))
                     {
                         bool pval;
                         if (!bool.TryParse(paramRawValue, out pval))
-                            throw new ArgumentException("Could not parse parameter " + paramName + " as bool. Value: " + paramRawValue);
+                            throw new ArgumentException("Could not parse parameter " + paramName + " as bool. Value: " +
+                                                        paramRawValue);
                         paramValue = pval;
                     }
-                    else if (paramType == typeof(string))
+                    else if (paramType == typeof (string))
                     {
                         paramValue = paramRawValue;
                     }
                     else
                     {
-                        throw new ArgumentException("Could not parse parameter " + paramName + ". Type not recognized. Value: " + paramRawValue);
+                        throw new ArgumentException("Could not parse parameter " + paramName +
+                                                    ". Type not recognized. Value: " + paramRawValue);
                     }
 
                     var cparam = new ComponentParameter(paramName, paramValue);
@@ -169,11 +174,11 @@ namespace GameObject
                 if (tComponent.Element("ExtendedParameters") != null)
                 {
                     _parameters[componentname].Add(new ComponentParameter("ExtendedParameters",
-                                                                         tComponent.Element("ExtendedParameters")));
+                                                                          tComponent.Element("ExtendedParameters")));
                 }
             }
 
-            var t_placementprops = templateElement.Element("PlacementProperties");
+            XElement t_placementprops = templateElement.Element("PlacementProperties");
             //Load Placement properties.
             if (t_placementprops != null)
             {
@@ -184,7 +189,7 @@ namespace GameObject
                 PlacementMode = "AlignNone";
             }
 
-            var tDescription = templateElement.Element("Description");
+            XElement tDescription = templateElement.Element("Description");
             if (tDescription != null) Description = tDescription.Attribute("string").Value;
         }
 
@@ -207,15 +212,15 @@ namespace GameObject
             {
                 int xOffset = int.Parse(offsetElement.Attribute("offsetX").Value);
                 int yOffset = int.Parse(offsetElement.Attribute("offsetY").Value);
-                this.PlacementOffset = new KeyValuePair<int, int>(xOffset, yOffset);
+                PlacementOffset = new KeyValuePair<int, int>(xOffset, yOffset);
             }
 
             if (mNodesElement != null)
             {
                 MountingPoints = new List<int>();
-                foreach (var eNode in mNodesElement.Elements("PlacementNode"))
+                foreach (XElement eNode in mNodesElement.Elements("PlacementNode"))
                 {
-                    var nodeHeight = int.Parse(eNode.Attribute("nodeHeight").Value);
+                    int nodeHeight = int.Parse(eNode.Attribute("nodeHeight").Value);
                     MountingPoints.Add(nodeHeight);
                 }
             }
@@ -228,16 +233,20 @@ namespace GameObject
             else
                 PlacementRange = 200;
         }
-        
+
         /// <summary>
         /// Attempts to retrieve and return the name of the basesprite of this Template.
         /// </summary>
         /// <returns></returns>
         public IEnumerable<ComponentParameter> GetBaseSpriteParamaters()
         {
-            var spriteLists = from para in _parameters.Values
-                              let spriteArgs = para.Where(arg => arg.MemberName == "basename" || arg.MemberName == "addsprite")
-                              select spriteArgs;
+            IEnumerable<IEnumerable<ComponentParameter>> spriteLists = from para in _parameters.Values
+                                                                       let spriteArgs =
+                                                                           para.Where(
+                                                                               arg =>
+                                                                               arg.MemberName == "basename" ||
+                                                                               arg.MemberName == "addsprite")
+                                                                       select spriteArgs;
             return spriteLists.SelectMany(x => x);
         }
 
@@ -250,15 +259,15 @@ namespace GameObject
         {
             var e = new Entity(EntityManager);
 
-            foreach (var componentname in _components)
+            foreach (string componentname in _components)
             {
-                var component = EntityManager.ComponentFactory.GetComponent(componentname);
+                IComponent component = EntityManager.ComponentFactory.GetComponent(componentname);
                 if (component == null)
                     continue; //TODO THROW ERROR
 
                 // Get all the params in the template that apply to this component
-                var cparameters = _parameters[componentname];
-                foreach (var p in cparameters)
+                List<ComponentParameter> cparameters = _parameters[componentname];
+                foreach (ComponentParameter p in cparameters)
                 {
                     // Set the component's parameters
                     component.SetParameter(p);
@@ -277,6 +286,7 @@ namespace GameObject
     {
         public TemplateLoadException(string message)
             : base(message)
-        { }
+        {
+        }
     }
 }

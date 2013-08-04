@@ -1,14 +1,7 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-
 using System.IO;
-using System.Xml;
+using System.Linq;
 using System.Xml.Serialization;
-using Lidgren.Network;
-using ServerServices;
-
 using SS13_Shared;
 using ServerServices.Log;
 
@@ -16,32 +9,28 @@ namespace SS13_Server.Modules
 {
     public sealed class BanlistMgr
     {
-        public Banlist banlist;
+        private static readonly BanlistMgr singleton = new BanlistMgr();
         private string banListFile;
-
-        static readonly BanlistMgr singleton = new BanlistMgr();
+        public Banlist banlist;
 
         static BanlistMgr()
         {
         }
 
-        BanlistMgr()
+        private BanlistMgr()
         {
         }
 
         public static BanlistMgr Singleton
         {
-            get
-            {
-                return singleton;
-            }
+            get { return singleton; }
         }
 
         public Boolean IsBanned(string ip)
         {
-            var ban = (from BanEntry entry in banlist.List
-                       where entry.ip.Equals(ip)
-                       select entry).FirstOrDefault();
+            BanEntry ban = (from BanEntry entry in banlist.List
+                            where entry.ip.Equals(ip)
+                            select entry).FirstOrDefault();
 
             if (ban != null) return true;
 
@@ -50,9 +39,9 @@ namespace SS13_Server.Modules
 
         public BanEntry GetBanByIp(string ip)
         {
-            var ban = (from BanEntry entry in banlist.List
-                       where entry.ip.Equals(ip)
-                       select entry).FirstOrDefault();
+            BanEntry ban = (from BanEntry entry in banlist.List
+                            where entry.ip.Equals(ip)
+                            select entry).FirstOrDefault();
 
             if (ban != null) return ban;
 
@@ -61,9 +50,9 @@ namespace SS13_Server.Modules
 
         public void RemoveBanByIp(string ip)
         {
-            var ban = (from BanEntry entry in banlist.List
-                       where entry.ip.Equals(ip)
-                       select entry).FirstOrDefault();
+            BanEntry ban = (from BanEntry entry in banlist.List
+                            where entry.ip.Equals(ip)
+                            select entry).FirstOrDefault();
 
             if (ban != null)
             {
@@ -75,7 +64,7 @@ namespace SS13_Server.Modules
 
         public void AddBan(string ip, string reason, TimeSpan time)
         {
-            BanEntry newEntry = new BanEntry();
+            var newEntry = new BanEntry();
             newEntry.ip = ip;
             newEntry.reason = reason;
             newEntry.bannedAt = DateTime.Now;
@@ -88,7 +77,7 @@ namespace SS13_Server.Modules
 
         public void AddBan(string ip, string reason)
         {
-            BanEntry newEntry = new BanEntry();
+            var newEntry = new BanEntry();
             newEntry.ip = ip;
             newEntry.reason = reason;
             newEntry.bannedAt = DateTime.Now;
@@ -102,17 +91,19 @@ namespace SS13_Server.Modules
         {
             if (File.Exists(BanListLoc))
             {
-                System.Xml.Serialization.XmlSerializer ConfigLoader = new System.Xml.Serialization.XmlSerializer(typeof(Banlist));
+                var ConfigLoader = new XmlSerializer(typeof (Banlist));
                 StreamReader ConfigReader = File.OpenText(BanListLoc);
-                Banlist Config = (Banlist)ConfigLoader.Deserialize(ConfigReader);
+                var Config = (Banlist) ConfigLoader.Deserialize(ConfigReader);
                 ConfigReader.Close();
                 banlist = Config;
                 banListFile = BanListLoc;
-                LogManager.Log("Banlist loaded. "+banlist.List.Count.ToString()+" ban" + (banlist.List.Count != 1 ? "s." : "."));
+                LogManager.Log("Banlist loaded. " + banlist.List.Count.ToString() + " ban" +
+                               (banlist.List.Count != 1 ? "s." : "."));
             }
             else
             {
-                if (LogManager.Singleton != null) LogManager.Log("No Banlist found. Creating Empty List (" + BanListLoc + ")");
+                if (LogManager.Singleton != null)
+                    LogManager.Log("No Banlist found. Creating Empty List (" + BanListLoc + ")");
                 banlist = new Banlist();
                 banlist.List.Add(new BanEntry());
                 banListFile = BanListLoc;
@@ -126,7 +117,7 @@ namespace SS13_Server.Modules
                 return;
             else
             {
-                System.Xml.Serialization.XmlSerializer ConfigSaver = new System.Xml.Serialization.XmlSerializer(typeof(Banlist));
+                var ConfigSaver = new XmlSerializer(typeof (Banlist));
                 StreamWriter ConfigWriter = File.CreateText(banListFile);
                 ConfigSaver.Serialize(ConfigWriter, banlist);
                 ConfigWriter.Flush();

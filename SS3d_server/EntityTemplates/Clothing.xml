@@ -1,4 +1,5 @@
-﻿<?xml version="1.0" encoding="utf-8" ?>
+﻿<?xml version="1.0" encoding="utf-8"?>
+
 <EntityTemplates>
   <EntityTemplate name="Armour">
     <Components>
@@ -11,9 +12,9 @@
       <Component name="BasicMoverComponent"></Component>
       <Component name="BasicItemComponent"></Component>
       <Component name="Physics">
-      <Parameters>
-        <Parameter name="Mass" type="float" value="5" />
-      </Parameters>
+        <Parameters>
+          <Parameter name="Mass" type="float" value="5" />
+        </Parameters>
       </Component>
       <Component name="EquippableComponent">
         <Parameters>
@@ -40,9 +41,9 @@
       <Component name="BasicMoverComponent"></Component>
       <Component name="BasicItemComponent"></Component>
       <Component name="Physics">
-      <Parameters>
-        <Parameter name="Mass" type="float" value="5" />
-      </Parameters>
+        <Parameters>
+          <Parameter name="Mass" type="float" value="5" />
+        </Parameters>
       </Component>
       <Component name="EquippableComponent">
         <Parameters>
@@ -62,9 +63,9 @@
       <Component name="BasicMoverComponent"></Component>
       <Component name="BasicItemComponent"></Component>
       <Component name="Physics">
-      <Parameters>
-        <Parameter name="Mass" type="float" value="5" />
-      </Parameters>
+        <Parameters>
+          <Parameter name="Mass" type="float" value="5" />
+        </Parameters>
       </Component>
       <Component name="EquippableComponent">
         <Parameters>
@@ -84,9 +85,9 @@
       <Component name="BasicMoverComponent"></Component>
       <Component name="BasicItemComponent"></Component>
       <Component name="Physics">
-      <Parameters>
-        <Parameter name="Mass" type="float" value="5" />
-      </Parameters>
+        <Parameters>
+          <Parameter name="Mass" type="float" value="5" />
+        </Parameters>
       </Component>
       <Component name="EquippableComponent">
         <Parameters>
@@ -106,9 +107,9 @@
       <Component name="BasicMoverComponent"></Component>
       <Component name="BasicItemComponent"></Component>
       <Component name="Physics">
-      <Parameters>
-        <Parameter name="Mass" type="float" value="5" />
-      </Parameters>
+        <Parameters>
+          <Parameter name="Mass" type="float" value="5" />
+        </Parameters>
       </Component>
       <Component name="EquippableComponent">
         <Parameters>
@@ -134,9 +135,9 @@
       <Component name="BasicMoverComponent"></Component>
       <Component name="BasicItemComponent"></Component>
       <Component name="Physics">
-      <Parameters>
-        <Parameter name="Mass" type="float" value="5" />
-      </Parameters>
+        <Parameters>
+          <Parameter name="Mass" type="float" value="5" />
+        </Parameters>
       </Component>
       <Component name="EquippableComponent">
         <Parameters>
@@ -156,9 +157,9 @@
       <Component name="BasicMoverComponent"></Component>
       <Component name="BasicItemComponent"></Component>
       <Component name="Physics">
-      <Parameters>
-        <Parameter name="Mass" type="float" value="5" />
-      </Parameters>
+        <Parameters>
+          <Parameter name="Mass" type="float" value="5" />
+        </Parameters>
       </Component>
       <Component name="EquippableComponent">
         <Parameters>
@@ -178,9 +179,9 @@
       <Component name="BasicMoverComponent"></Component>
       <Component name="BasicItemComponent"></Component>
       <Component name="Physics">
-      <Parameters>
-        <Parameter name="Mass" type="float" value="5" />
-      </Parameters>
+        <Parameters>
+          <Parameter name="Mass" type="float" value="5" />
+        </Parameters>
       </Component>
       <Component name="EquippableComponent">
         <Parameters>
@@ -200,9 +201,9 @@
       <Component name="BasicMoverComponent"></Component>
       <Component name="BasicItemComponent"></Component>
       <Component name="Physics">
-      <Parameters>
-        <Parameter name="Mass" type="float" value="5" />
-      </Parameters>
+        <Parameters>
+          <Parameter name="Mass" type="float" value="5" />
+        </Parameters>
       </Component>
       <Component name="EquippableComponent">
         <Parameters>
@@ -222,9 +223,9 @@
       <Component name="BasicMoverComponent"></Component>
       <Component name="BasicItemComponent"></Component>
       <Component name="Physics">
-      <Parameters>
-        <Parameter name="Mass" type="float" value="5" />
-      </Parameters>
+        <Parameters>
+          <Parameter name="Mass" type="float" value="5" />
+        </Parameters>
       </Component>
       <Component name="EquippableComponent">
         <Parameters>
@@ -251,9 +252,9 @@
       <Component name="BasicMoverComponent"></Component>
       <Component name="BasicItemComponent"></Component>
       <Component name="Physics">
-      <Parameters>
-        <Parameter name="Mass" type="float" value="5" />
-      </Parameters>
+        <Parameters>
+          <Parameter name="Mass" type="float" value="5" />
+        </Parameters>
       </Component>
       <Component name="EquippableComponent">
         <Parameters>
@@ -273,9 +274,9 @@
       <Component name="BasicMoverComponent"></Component>
       <Component name="BasicItemComponent"></Component>
       <Component name="Physics">
-      <Parameters>
-        <Parameter name="Mass" type="float" value="5" />
-      </Parameters>
+        <Parameters>
+          <Parameter name="Mass" type="float" value="5" />
+        </Parameters>
       </Component>
       <Component name="EquippableComponent">
         <Parameters>
@@ -295,9 +296,9 @@
       <Component name="BasicMoverComponent"></Component>
       <Component name="BasicItemComponent"></Component>
       <Component name="Physics">
-      <Parameters>
-        <Parameter name="Mass" type="float" value="5" />
-      </Parameters>
+        <Parameters>
+          <Parameter name="Mass" type="float" value="5" />
+        </Parameters>
       </Component>
       <Component name="EquippableComponent">
         <Parameters>

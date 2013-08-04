@@ -1,4 +1,5 @@
-﻿<?xml version="1.0" encoding="utf-8" ?>
+﻿<?xml version="1.0" encoding="utf-8"?>
+
 <EntityTemplates>
   <EntityTemplate name="Locker">
     <Components>
@@ -11,9 +12,9 @@
       <Component name="BasicMoverComponent"></Component>
       <Component name="CollidableComponent"></Component>
       <Component name="Physics">
-      <Parameters>
-        <Parameter name="Mass" type="float" value="5" />
-      </Parameters>
+        <Parameters>
+          <Parameter name="Mass" type="float" value="5" />
+        </Parameters>
       </Component>
       <Component name="BasicDoorComponent">
         <Parameters>

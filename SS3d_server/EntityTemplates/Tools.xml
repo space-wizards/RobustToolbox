@@ -1,51 +1,52 @@
-﻿<?xml version="1.0" encoding="utf-8" ?>
+﻿<?xml version="1.0" encoding="utf-8"?>
+
 <EntityTemplates>
-	<EntityTemplate name="Crowbar">
-		<Components>
+  <EntityTemplate name="Crowbar">
+    <Components>
       <Component name="TransformComponent"></Component>
       <Component name="VelocityComponent"></Component>
       <Component name="DirectionComponent"></Component>
-			<Component name="ClickableComponent"></Component>
-			<Component name="SpriteComponent"></Component>
-			<Component name="BasicInteractableComponent"></Component>
-			<Component name="BasicMoverComponent"></Component>
+      <Component name="ClickableComponent"></Component>
+      <Component name="SpriteComponent"></Component>
+      <Component name="BasicInteractableComponent"></Component>
+      <Component name="BasicMoverComponent"></Component>
       <Component name="Physics">
-      <Parameters>
-        <Parameter name="Mass" type="float" value="5" />
-      </Parameters>
+        <Parameters>
+          <Parameter name="Mass" type="float" value="5" />
+        </Parameters>
       </Component>
-			<Component name="BasicItemComponent">
-				<ExtendedParameters>
-					<ItemCapability name="MeleeWeaponCapability">
-						<ItemCapabilityParameters>
-							<ItemCapabilityParameter name="damageAmount" type="int" value="20" />
-							<ItemCapabilityParameter name="damageType" type="string" value="Bludgeon" />
-						</ItemCapabilityParameters>
-					</ItemCapability>
-					<ItemCapability name="ToolCapability">
-						<ItemCapabilityVerbs>
-							<ItemCapabilityVerb name="Pry" priority="0" />
-						</ItemCapabilityVerbs>
-					</ItemCapability>
-				</ExtendedParameters>
-			</Component>
-		</Components>
-	</EntityTemplate>
-	<EntityTemplate name="Welder">
-		<Components>
+      <Component name="BasicItemComponent">
+        <ExtendedParameters>
+          <ItemCapability name="MeleeWeaponCapability">
+            <ItemCapabilityParameters>
+              <ItemCapabilityParameter name="damageAmount" type="int" value="20" />
+              <ItemCapabilityParameter name="damageType" type="string" value="Bludgeon" />
+            </ItemCapabilityParameters>
+          </ItemCapability>
+          <ItemCapability name="ToolCapability">
+            <ItemCapabilityVerbs>
+              <ItemCapabilityVerb name="Pry" priority="0" />
+            </ItemCapabilityVerbs>
+          </ItemCapability>
+        </ExtendedParameters>
+      </Component>
+    </Components>
+  </EntityTemplate>
+  <EntityTemplate name="Welder">
+    <Components>
       <Component name="TransformComponent"></Component>
       <Component name="VelocityComponent"></Component>
       <Component name="DirectionComponent"></Component>
-			<Component name="ClickableComponent"></Component>
-			<Component name="SpriteComponent"></Component>
-			<Component name="BasicInteractableComponent"></Component>
-			<Component name="BasicMoverComponent"></Component>
+      <Component name="ClickableComponent"></Component>
+      <Component name="SpriteComponent"></Component>
+      <Component name="BasicInteractableComponent"></Component>
+      <Component name="BasicMoverComponent"></Component>
       <Component name="Physics">
-      <Parameters>
-        <Parameter name="Mass" type="float" value="5" />
-      </Parameters>
+        <Parameters>
+          <Parameter name="Mass" type="float" value="5" />
+        </Parameters>
       </Component>
-			<Component name="BasicItemComponent">
+      <Component name="BasicItemComponent">
         <ExtendedParameters>
           <ItemCapability name="MeleeWeaponCapability">
             <ItemCapabilityParameters>
@@ -60,23 +61,23 @@
           </ItemCapability>
         </ExtendedParameters>
       </Component>
-		</Components>
-	</EntityTemplate>
-	<EntityTemplate name="Wrench">
-		<Components>
+    </Components>
+  </EntityTemplate>
+  <EntityTemplate name="Wrench">
+    <Components>
       <Component name="TransformComponent"></Component>
       <Component name="VelocityComponent"></Component>
       <Component name="DirectionComponent"></Component>
-			<Component name="ClickableComponent"></Component>
-			<Component name="SpriteComponent"></Component>
-			<Component name="BasicInteractableComponent"></Component>
-			<Component name="BasicMoverComponent"></Component>
+      <Component name="ClickableComponent"></Component>
+      <Component name="SpriteComponent"></Component>
+      <Component name="BasicInteractableComponent"></Component>
+      <Component name="BasicMoverComponent"></Component>
       <Component name="Physics">
-      <Parameters>
-        <Parameter name="Mass" type="float" value="5" />
-      </Parameters>
+        <Parameters>
+          <Parameter name="Mass" type="float" value="5" />
+        </Parameters>
       </Component>
-			<Component name="BasicItemComponent">
+      <Component name="BasicItemComponent">
         <ExtendedParameters>
           <ItemCapability name="MeleeWeaponCapability">
             <ItemCapabilityParameters>
@@ -91,23 +92,23 @@
           </ItemCapability>
         </ExtendedParameters>
       </Component>
-		</Components>
-	</EntityTemplate>
-	<EntityTemplate name="Mop">
-		<Components>
+    </Components>
+  </EntityTemplate>
+  <EntityTemplate name="Mop">
+    <Components>
       <Component name="TransformComponent"></Component>
       <Component name="VelocityComponent"></Component>
       <Component name="DirectionComponent"></Component>
-			<Component name="ClickableComponent"></Component>
-			<Component name="SpriteComponent"></Component>
-			<Component name="BasicInteractableComponent"></Component>
-			<Component name="BasicMoverComponent"></Component>
+      <Component name="ClickableComponent"></Component>
+      <Component name="SpriteComponent"></Component>
+      <Component name="BasicInteractableComponent"></Component>
+      <Component name="BasicMoverComponent"></Component>
       <Component name="Physics">
-      <Parameters>
-        <Parameter name="Mass" type="float" value="5" />
-      </Parameters>
+        <Parameters>
+          <Parameter name="Mass" type="float" value="5" />
+        </Parameters>
       </Component>
-			<Component name="BasicItemComponent">
+      <Component name="BasicItemComponent">
         <ExtendedParameters>
           <ItemCapability name="MeleeWeaponCapability">
             <ItemCapabilityParameters>
@@ -122,6 +123,6 @@
           </ItemCapability>
         </ExtendedParameters>
       </Component>
-		</Components>
-	</EntityTemplate>
+    </Components>
+  </EntityTemplate>
 </EntityTemplates>

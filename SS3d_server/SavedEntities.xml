@@ -1,4 +1,5 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
+
 <SavedEntities>
   <SavedEntity X="330" Y="300" template="Toolbox" name="Toolbox" />
   <SavedEntity X="250" Y="200" template="WallLight" name="FuckingLight" />

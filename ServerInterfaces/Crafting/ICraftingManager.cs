@@ -13,7 +13,8 @@ namespace ServerInterfaces.Crafting
         void Update();
         CraftingEntry getRecipe(string compo1, string compo2);
 
-        void BeginCrafting(Entity compo1, Entity compo2, Entity source, NetConnection sourceConnection) //Check for components and remove.
+        void BeginCrafting(Entity compo1, Entity compo2, Entity source, NetConnection sourceConnection)
+            //Check for components and remove.
             ;
 
         void Initialize(string craftingListLoc, ISS13Server server);

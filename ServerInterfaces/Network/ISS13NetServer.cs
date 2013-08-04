@@ -8,6 +8,64 @@ namespace ServerInterfaces.Network
 {
     public interface ISS13NetServer
     {
+        /// <summary>
+        /// Gets the NetPeerStatus of the NetPeer
+        /// </summary>
+        NetPeerStatus Status { get; }
+
+        /// <summary>
+        /// Signalling event which can be waited on to determine when a message is queued for reading.
+        /// Note that there is no guarantee that after the event is signaled the blocked thread will 
+        /// find the message in the queue. Other user created threads could be preempted and dequeue 
+        /// the message before the waiting thread wakes up.
+        /// </summary>
+        AutoResetEvent MessageReceivedEvent { get; }
+
+        /// <summary>
+        /// Gets a unique identifier for this NetPeer based on Mac address and ip/port. Note! Not available until Start() has been called!
+        /// </summary>
+        long UniqueIdentifier { get; }
+
+        /// <summary>
+        /// Gets the port number this NetPeer is listening and sending on, if Start() has been called
+        /// </summary>
+        int Port { get; }
+
+        /// <summary>
+        /// Returns an UPnP object if enabled in the NetPeerConfiguration
+        /// </summary>
+        NetUPnP UPnP { get; }
+
+        /// <summary>
+        /// Gets or sets the application defined object containing data about the peer
+        /// </summary>
+        object Tag { get; set; }
+
+        /// <summary>
+        /// Gets a copy of the list of connections
+        /// </summary>
+        List<NetConnection> Connections { get; }
+
+        /// <summary>
+        /// Gets the number of active connections
+        /// </summary>
+        int ConnectionsCount { get; }
+
+        /// <summary>
+        /// Statistics on this NetPeer since it was initialized
+        /// </summary>
+        NetPeerStatistics Statistics { get; }
+
+        /// <summary>
+        /// Gets the configuration used to instanciate this NetPeer
+        /// </summary>
+        NetPeerConfiguration Configuration { get; }
+
+        /// <summary>
+        /// Gets the socket, if Start() has been called
+        /// </summary>
+        Socket Socket { get; }
+
         void SendToAll(NetOutgoingMessage message);
         void SendMessage(NetOutgoingMessage message, NetConnection client);
         void SendToMany(NetOutgoingMessage message, List<NetConnection> recipients);
@@ -48,7 +106,8 @@ namespace ServerInterfaces.Network
         /// <param name="recipient">The recipient connection</param>
         /// <param name="method">How to deliver the message</param>
         /// <param name="sequenceChannel">Sequence channel within the delivery method</param>
-        NetSendResult SendMessage(NetOutgoingMessage msg, NetConnection recipient, NetDeliveryMethod method, int sequenceChannel);
+        NetSendResult SendMessage(NetOutgoingMessage msg, NetConnection recipient, NetDeliveryMethod method,
+                                  int sequenceChannel);
 
         /// <summary>
         /// Send a message to a list of connections
@@ -57,7 +116,8 @@ namespace ServerInterfaces.Network
         /// <param name="recipients">The list of recipients to send to</param>
         /// <param name="method">How to deliver the message</param>
         /// <param name="sequenceChannel">Sequence channel within the delivery method</param>
-        void SendMessage(NetOutgoingMessage msg, List<NetConnection> recipients, NetDeliveryMethod method, int sequenceChannel);
+        void SendMessage(NetOutgoingMessage msg, List<NetConnection> recipients, NetDeliveryMethod method,
+                         int sequenceChannel);
 
         /// <summary>
         /// Send a message to an unconnected host
@@ -124,64 +184,6 @@ namespace ServerInterfaces.Network
             IPEndPoint clientInternal,
             IPEndPoint clientExternal,
             string token);
-
-        /// <summary>
-        /// Gets the NetPeerStatus of the NetPeer
-        /// </summary>
-        NetPeerStatus Status { get; }
-
-        /// <summary>
-        /// Signalling event which can be waited on to determine when a message is queued for reading.
-        /// Note that there is no guarantee that after the event is signaled the blocked thread will 
-        /// find the message in the queue. Other user created threads could be preempted and dequeue 
-        /// the message before the waiting thread wakes up.
-        /// </summary>
-        AutoResetEvent MessageReceivedEvent { get; }
-
-        /// <summary>
-        /// Gets a unique identifier for this NetPeer based on Mac address and ip/port. Note! Not available until Start() has been called!
-        /// </summary>
-        long UniqueIdentifier { get; }
-
-        /// <summary>
-        /// Gets the port number this NetPeer is listening and sending on, if Start() has been called
-        /// </summary>
-        int Port { get; }
-
-        /// <summary>
-        /// Returns an UPnP object if enabled in the NetPeerConfiguration
-        /// </summary>
-        NetUPnP UPnP { get; }
-
-        /// <summary>
-        /// Gets or sets the application defined object containing data about the peer
-        /// </summary>
-        object Tag { get; set; }
-
-        /// <summary>
-        /// Gets a copy of the list of connections
-        /// </summary>
-        List<NetConnection> Connections { get; }
-
-        /// <summary>
-        /// Gets the number of active connections
-        /// </summary>
-        int ConnectionsCount { get; }
-
-        /// <summary>
-        /// Statistics on this NetPeer since it was initialized
-        /// </summary>
-        NetPeerStatistics Statistics { get; }
-
-        /// <summary>
-        /// Gets the configuration used to instanciate this NetPeer
-        /// </summary>
-        NetPeerConfiguration Configuration { get; }
-
-        /// <summary>
-        /// Gets the socket, if Start() has been called
-        /// </summary>
-        Socket Socket { get; }
 
         /// <summary>
         /// Binds to socket and spawns the networking thread

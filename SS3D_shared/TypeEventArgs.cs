@@ -2,7 +2,7 @@
 
 namespace SS13_Shared
 {
-    public class TypeEventArgs :EventArgs
+    public class TypeEventArgs : EventArgs
     {
         public Type Type;
 

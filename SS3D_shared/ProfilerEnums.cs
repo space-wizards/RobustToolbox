@@ -5,5 +5,4 @@
         Sent,
         Received
     }
-
 }

@@ -1,10 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
+using System.IO;
 using System.Xml;
 using System.Xml.Serialization;
-using System.IO;
 
 namespace SS13_Shared
 {
@@ -18,20 +16,23 @@ namespace SS13_Shared
     [Serializable]
     public class JobDefinition
     {
-        public List<SpawnEquipDefinition> SpawnEquipment = new List<SpawnEquipDefinition>();
-        public string Name = "JOB_NULL";
-        public string Description = "";
-        public int MaxNum = 3;
-        public string JobIcon = "job-placeholder";
         public bool Available = true;
+        public string Description = "";
+        public string JobIcon = "job-placeholder";
+        public int MaxNum = 3;
+        public string Name = "JOB_NULL";
+        public List<SpawnEquipDefinition> SpawnEquipment = new List<SpawnEquipDefinition>();
     }
 
     public class JobHandler
     {
         #region Singleton
+
         private static JobHandler singleton;
 
-        private JobHandler() { }
+        private JobHandler()
+        {
+        }
 
         public static JobHandler Singleton
         {
@@ -43,13 +44,13 @@ namespace SS13_Shared
                 }
                 return singleton;
             }
-        } 
+        }
+
         #endregion
 
+        private readonly XmlSerializer Serializer = new XmlSerializer(typeof (List<JobDefinition>));
+        private XmlWriterSettings settings = new XmlWriterSettings();
         public List<JobDefinition> JobDefinitions { get; private set; }
-
-        XmlSerializer Serializer = new XmlSerializer(typeof(List<JobDefinition>));
-        XmlWriterSettings settings = new XmlWriterSettings();
 
         //public void CreateTemplate()
         //{
@@ -77,8 +78,9 @@ namespace SS13_Shared
         {
             if (File.Exists(path))
             {
-                XmlReader reader = XmlTextReader.Create(path); //Create reader for file.
-                JobDefinitions = (List<JobDefinition>)Serializer.Deserialize(reader); //Deserialize and save inside class.
+                XmlReader reader = XmlReader.Create(path); //Create reader for file.
+                JobDefinitions = (List<JobDefinition>) Serializer.Deserialize(reader);
+                    //Deserialize and save inside class.
                 return false;
             }
             else
@@ -89,7 +91,7 @@ namespace SS13_Shared
 
         public string GetDefinitionsString()
         {
-            StringWriter outStream = new StringWriter();
+            var outStream = new StringWriter();
             Serializer.Serialize(outStream, JobDefinitions);
             return outStream.ToString();
         }
@@ -98,8 +100,8 @@ namespace SS13_Shared
         {
             if (data.Length > 1) //YEP. THATS TOTALLY SAFE.
             {
-                XmlTextReader tr = new XmlTextReader(new StringReader(data));
-                JobDefinitions = (List<JobDefinition>)Serializer.Deserialize(tr); //Deserialize.
+                var tr = new XmlTextReader(new StringReader(data));
+                JobDefinitions = (List<JobDefinition>) Serializer.Deserialize(tr); //Deserialize.
                 return false;
             }
             else

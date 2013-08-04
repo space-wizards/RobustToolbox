@@ -1,5 +1,4 @@
-﻿
-using System;
+﻿using System;
 
 namespace SS13_Shared.GO.Component.Velocity
 {
@@ -8,6 +7,7 @@ namespace SS13_Shared.GO.Component.Velocity
     {
         public float VelocityX;
         public float VelocityY;
+
         public VelocityComponentState(float velx, float vely)
         {
             VelocityX = velx;

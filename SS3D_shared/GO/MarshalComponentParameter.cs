@@ -9,9 +9,7 @@ namespace SS13_Shared.GO
     [Serializable]
     public class MarshalComponentParameter : INetSerializableType
     {
-        public ComponentFamily Family { get; set; }
-
-        public ComponentParameter Parameter { get; set; }
+        private static bool _serializerInitialized;
 
         public MarshalComponentParameter(ComponentFamily family, ComponentParameter parameter)
         {
@@ -20,11 +18,14 @@ namespace SS13_Shared.GO
         }
 
         public MarshalComponentParameter()
-        {}
+        {
+        }
 
-        static bool _serializerInitialized = false;
+        public ComponentFamily Family { get; set; }
 
-        static void InitSerializer()
+        public ComponentParameter Parameter { get; set; }
+
+        private static void InitSerializer()
         {
             // Serializer will be initialized when the apps start up
             _serializerInitialized = true;
@@ -32,20 +33,20 @@ namespace SS13_Shared.GO
 
         public void Serialize(NetOutgoingMessage message)
         {
-            if(!_serializerInitialized)
+            if (!_serializerInitialized)
             {
                 InitSerializer();
             }
             var ms = new MemoryStream();
             //Thank you NetSerializer
             Serializer.Serialize(ms, this);
-            message.Write((int)ms.Length);
+            message.Write((int) ms.Length);
             message.Write(ms.ToArray());
         }
 
         public byte[] Serialize()
         {
-            if(!_serializerInitialized)
+            if (!_serializerInitialized)
             {
                 InitSerializer();
             }
@@ -60,17 +61,17 @@ namespace SS13_Shared.GO
             {
                 InitSerializer();
             }
-            var length = message.ReadInt32();
-            var bytes = message.ReadBytes(length);
+            int length = message.ReadInt32();
+            byte[] bytes = message.ReadBytes(length);
             var ms = new MemoryStream(bytes);
 
             //Thank you NetSerializer
-            return (MarshalComponentParameter)Serializer.Deserialize(ms);
+            return (MarshalComponentParameter) Serializer.Deserialize(ms);
         }
 
         public static MarshalComponentParameter Deserialize(byte[] bytes)
         {
-            if(!_serializerInitialized)
+            if (!_serializerInitialized)
             {
                 InitSerializer();
             }

@@ -8,24 +8,29 @@ namespace SS13_Shared.GO
     [Serializable]
     public class ComponentParameter
     {
-        public string MemberName { get; protected set; }
+        public ComponentParameter()
+        {
+        }
 
-        public Type ParameterType { get { return Parameter.GetType(); } }
-
-        public dynamic Parameter { get; set; }
-
-        public ComponentParameter() {}
-        
         public ComponentParameter(string memberName, object parameterValue)
         {
             MemberName = memberName;
             Parameter = parameterValue;
         }
 
+        public string MemberName { get; protected set; }
+
+        public Type ParameterType
+        {
+            get { return Parameter.GetType(); }
+        }
+
+        public dynamic Parameter { get; set; }
+
         public T GetValue<T>()
         {
             //MAGIC WOOT
-            if(!(Parameter is T))
+            if (!(Parameter is T))
                 throw new ArgumentException("Parameter type specified does not match stored parameter's type.");
 
             return (T) Parameter;

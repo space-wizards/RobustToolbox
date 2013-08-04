@@ -1,7 +1,4 @@
-﻿using System;
-using System.Reflection;
-
-namespace SS13_Shared
+﻿namespace SS13_Shared
 {
     public enum NetMessage
     {
@@ -30,13 +27,13 @@ namespace SS13_Shared
         AtmosDisplayUpdate,
         EntityMessage,
         EntityManagerMessage,
-        RequestAdminLogin,      //Server asks client to login OR client tries to login.
+        RequestAdminLogin, //Server asks client to login OR client tries to login.
         RequestAdminPlayerlist, //Client request playerlist for admin panel OR server sends it.
         RequestAdminBan,
         RequestAdminKick,
         RequestBanList,
         RequestAdminUnBan,
-        RequestEntityDeletion,  //Client asks to delete entity. Used for editing. Requires admin.
+        RequestEntityDeletion, //Client asks to delete entity. Used for editing. Requires admin.
         StateUpdate,
         StateAck,
         FullState
@@ -137,7 +134,7 @@ namespace SS13_Shared
         Open,
         Broken
     }
-    
+
     public enum Direction
     {
         North = 0,

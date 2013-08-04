@@ -1,7 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
 using SS13_Shared.Serialization;
 
 namespace SS13_Shared.GO.StatusEffect
@@ -9,7 +6,6 @@ namespace SS13_Shared.GO.StatusEffect
     [Serializable]
     public class StatusEffectState : INetSerializableType
     {
-        public uint Uid;
         public int Affected;
         public bool DoesExpire;
         public DateTime ExpiresAt;
@@ -17,8 +13,10 @@ namespace SS13_Shared.GO.StatusEffect
         public bool IsDebuff;
         public bool IsUnique;
         public string TypeName;
+        public uint Uid;
 
-        public StatusEffectState(uint uid, int affected, bool doesExpire, DateTime expiresAt, StatusEffectFamily family, bool isDebuff, bool isUnique, string typeName)
+        public StatusEffectState(uint uid, int affected, bool doesExpire, DateTime expiresAt, StatusEffectFamily family,
+                                 bool isDebuff, bool isUnique, string typeName)
         {
             Uid = uid;
             Affected = affected;

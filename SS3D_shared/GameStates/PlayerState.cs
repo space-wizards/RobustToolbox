@@ -1,7 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
 using SS13_Shared.Serialization;
 
 namespace SS13_Shared.GameStates
@@ -10,8 +7,8 @@ namespace SS13_Shared.GameStates
     public class PlayerState : INetSerializableType
     {
         public int? ControlledEntity;
-        public SessionStatus Status;
         public string Name;
+        public SessionStatus Status;
         public long UniqueIdentifier;
     }
 }

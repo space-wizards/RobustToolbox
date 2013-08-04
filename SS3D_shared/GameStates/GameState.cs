@@ -12,13 +12,8 @@ namespace SS13_Shared.GameStates
     [Serializable]
     public class GameState : INetSerializableType
     {
-        public uint Sequence { get; private set;}
-        public List<EntityState> EntityStates { get; set; }
-        public List<PlayerState> PlayerStates { get; set; }
-            
+        [NonSerialized] private bool _serialized;
         [NonSerialized] private MemoryStream _serializedData;
-
-        [NonSerialized] private bool _serialized = false;
 
         /// <summary>
         /// Constructor!
@@ -28,14 +23,18 @@ namespace SS13_Shared.GameStates
         {
             Sequence = sequence;
         }
-        
+
+        public uint Sequence { get; private set; }
+        public List<EntityState> EntityStates { get; set; }
+        public List<PlayerState> PlayerStates { get; set; }
+
         /// <summary>
         /// Creates a delta from two game states
         /// </summary>
         /// <param name="toState"></param>
         /// <param name="fromState"></param>
         /// <returns></returns>
-        public static GameStateDelta operator - (GameState toState, GameState fromState)
+        public static GameStateDelta operator -(GameState toState, GameState fromState)
         {
             return Delta(fromState, toState);
         }
@@ -46,7 +45,7 @@ namespace SS13_Shared.GameStates
         /// <param name="fromState"></param>
         /// <param name="delta"></param>
         /// <returns></returns>
-        public static GameState operator + (GameState fromState, GameStateDelta delta)
+        public static GameState operator +(GameState fromState, GameStateDelta delta)
         {
             return Patch(fromState, delta);
         }
@@ -57,7 +56,7 @@ namespace SS13_Shared.GameStates
         /// <param name="delta"></param>
         /// <param name="fromState"></param>
         /// <returns></returns>
-        public static GameState operator + (GameStateDelta delta, GameState fromState)
+        public static GameState operator +(GameStateDelta delta, GameState fromState)
         {
             return Patch(fromState, delta);
         }
@@ -66,7 +65,7 @@ namespace SS13_Shared.GameStates
         {
             var delta = new GameStateDelta();
             delta.Sequence = toState.Sequence;
-            delta.Create(fromState ,toState);
+            delta.Create(fromState, toState);
             return delta;
         }
 
@@ -93,7 +92,7 @@ namespace SS13_Shared.GameStates
         /// <returns></returns>
         public MemoryStream GetSerializedDataStream()
         {
-            if(!_serialized)
+            if (!_serialized)
             {
                 Serialize();
             }
@@ -122,7 +121,7 @@ namespace SS13_Shared.GameStates
         /// <returns></returns>
         public static GameState Deserialize(byte[] data)
         {
-            return (GameState)Serializer.Deserialize(new MemoryStream(data));
+            return (GameState) Serializer.Deserialize(new MemoryStream(data));
         }
 
         /// <summary>
@@ -131,8 +130,8 @@ namespace SS13_Shared.GameStates
         /// <param name="message">NetOutgoingMessage to write to</param>
         public int WriteStateMessage(NetOutgoingMessage message)
         {
-            message.Write((byte)NetMessage.FullState);
-            var stateData = Compress(GetSerializedDataBuffer());
+            message.Write((byte) NetMessage.FullState);
+            byte[] stateData = Compress(GetSerializedDataBuffer());
             message.Write(Sequence);
             message.Write(stateData.Length);
             message.Write(stateData);
@@ -146,11 +145,11 @@ namespace SS13_Shared.GameStates
         /// <returns></returns>
         public static GameState ReadStateMessage(NetIncomingMessage message)
         {
-            var sequence = message.ReadUInt32();
-            var length = message.ReadInt32();
-            var stateData = Decompress(message.ReadBytes(length));
+            uint sequence = message.ReadUInt32();
+            int length = message.ReadInt32();
+            byte[] stateData = Decompress(message.ReadBytes(length));
             using (var stateStream = new MemoryStream(stateData))
-                return (GameState)Serializer.Deserialize(stateStream);
+                return (GameState) Serializer.Deserialize(stateStream);
         }
 
         /// <summary>
@@ -164,7 +163,6 @@ namespace SS13_Shared.GameStates
             using (var gzip = new GZipStream(compressedDataStream, CompressionMode.Compress, true))
             {
                 gzip.Write(stateData, 0, stateData.Length);
-
             }
             return compressedDataStream.ToArray();
         }
@@ -192,8 +190,7 @@ namespace SS13_Shared.GameStates
                         {
                             memory.Write(buffer, 0, count);
                         }
-                    }
-                    while (count > 0);
+                    } while (count > 0);
                     return memory.ToArray();
                 }
             }

@@ -4,16 +4,13 @@ namespace SS13_Shared
 {
     public class PlacementInformation
     {
-        public int MobUid;              //UID of mob this permission is for.
-        public int Range;            //Valid range from mob.
-
-        public int Uses = 1;            //How many objects of this type may be placed.
-
+        public string EntityType; //Object name / type. If not tile.
         public Boolean IsTile;
+        public int MobUid; //UID of mob this permission is for.
+        public string PlacementOption;
+        public int Range; //Valid range from mob.
 
-        public string EntityType;       //Object name / type. If not tile.
-        public string TileType = "";    //Tile Type if tile.
-
-        public string PlacementOption;  
+        public string TileType = ""; //Tile Type if tile.
+        public int Uses = 1; //How many objects of this type may be placed.
     }
 }

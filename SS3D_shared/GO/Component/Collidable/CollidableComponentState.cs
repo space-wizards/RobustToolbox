@@ -1,7 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
 
 namespace SS13_Shared.GO.Component.Collidable
 {
@@ -9,8 +6,9 @@ namespace SS13_Shared.GO.Component.Collidable
     public class CollidableComponentState : ComponentState
     {
         public bool CollisionEnabled;
+
         public CollidableComponentState(bool collisionEnabled)
-            :base(ComponentFamily.Collidable)
+            : base(ComponentFamily.Collidable)
         {
             CollisionEnabled = collisionEnabled;
         }

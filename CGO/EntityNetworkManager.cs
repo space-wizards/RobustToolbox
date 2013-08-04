@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
-using ClientInterfaces.GOC;
 using ClientInterfaces.Network;
+using GameObject;
 using Lidgren.Network;
 using SS13_Shared;
 using SS13_Shared.GO;

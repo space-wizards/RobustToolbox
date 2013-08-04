@@ -1,30 +1,25 @@
 ﻿using System;
-using System.Drawing;
 using System.Collections.Generic;
-using System.Linq;
+using System.Drawing;
 using System.IO;
 using System.IO.Compression;
+using BKSystem.IO;
 using Lidgren.Network;
-using ServerInterfaces;
-using ServerInterfaces.GOC;
-using ServerInterfaces.Network;
 using SS13.IoC;
 using SS13_Shared;
 using ServerInterfaces.Atmos;
 using ServerInterfaces.Map;
-using BKSystem.IO;
+using ServerInterfaces.Network;
+using ServerInterfaces.Tiles;
 using ServerServices.Log;
 using ServerServices.Tiles;
 
 namespace ServerServices.Atmos
 {
-
-
     public class AtmosManager : IAtmosManager
     {
-        DateTime lastAtmosDisplayPush;
-
-        private Dictionary<GasType, IGasProperties> gasProperties;
+        private readonly Dictionary<GasType, IGasProperties> gasProperties;
+        private DateTime lastAtmosDisplayPush;
 
         public AtmosManager()
         {
@@ -36,14 +31,16 @@ namespace ServerServices.Atmos
             gasProperties.Add(GasType.WVapor, new WVapor());
         }
 
+        #region IAtmosManager Members
+
         public void InitializeGasCells()
         {
             for (int x = 0; x < IoCManager.Resolve<IMapManager>().GetMapWidth(); x++)
             {
                 for (int y = 0; y < IoCManager.Resolve<IMapManager>().GetMapHeight(); y++)
                 {
-                    var t = IoCManager.Resolve<IMapManager>().GetTileAt(x, y);
-                    t.GasCell = new GasCell(x, y, (Tile)t);
+                    ITile t = IoCManager.Resolve<IMapManager>().GetTileAt(x, y);
+                    t.GasCell = new GasCell(x, y, (Tile) t);
                     if (t.StartWithAtmos)
                     {
                         t.GasCell.InitSTP();
@@ -106,10 +103,30 @@ namespace ServerServices.Atmos
                 }
             }
 
-            Log.LogManager.Log("Report: " + totalGas);
+            LogManager.Log("Report: " + totalGas);
         }
 
+        #endregion
+
         #region Networking
+
+        public void SendAtmosStateTo(NetConnection client)
+        {
+            var m = IoCManager.Resolve<IMapManager>();
+
+            int numberOfGasTypes = Enum.GetValues(typeof (GasType)).Length;
+            var records = new BitStream(m.GetMapHeight()*m.GetMapWidth()*numberOfGasTypes);
+            int displayBitsWritten = 0;
+            for (int x = 0; x < m.GetMapWidth(); x++)
+                for (int y = 0; y < m.GetMapHeight(); y++)
+                {
+                    displayBitsWritten = m.GetTileAt(x, y).GasCell.PackDisplayBytes(records, true);
+                }
+            NetOutgoingMessage msg = CreateAtmosUpdatePacket(records);
+            if (msg == null)
+                return;
+            IoCManager.Resolve<ISS13NetServer>().SendMessage(msg, client, NetDeliveryMethod.ReliableUnordered);
+        }
 
         private void CheckNetworkUpdate()
         {
@@ -118,10 +135,10 @@ namespace ServerServices.Atmos
             if ((DateTime.Now - lastAtmosDisplayPush).TotalMilliseconds > 1000)
             {
                 bool sendUpdate = false;
-                int numberOfGasTypes = Enum.GetValues(typeof(GasType)).Length;
-                var records = new BitStream(m.GetMapHeight() * m.GetMapWidth() * numberOfGasTypes);
-                for (var x = 0; x < m.GetMapWidth(); x++)
-                    for (var y = 0; y < m.GetMapHeight(); y++)
+                int numberOfGasTypes = Enum.GetValues(typeof (GasType)).Length;
+                var records = new BitStream(m.GetMapHeight()*m.GetMapWidth()*numberOfGasTypes);
+                for (int x = 0; x < m.GetMapWidth(); x++)
+                    for (int y = 0; y < m.GetMapHeight(); y++)
                     {
                         int displayBitsWritten = m.GetTileAt(x, y).GasCell.PackDisplayBytes(records);
                         if (displayBitsWritten > numberOfGasTypes)
@@ -138,7 +155,7 @@ namespace ServerServices.Atmos
 
         private void SendAtmosUpdatePacket(BitStream records)
         {
-            var msg = CreateAtmosUpdatePacket(records);
+            NetOutgoingMessage msg = CreateAtmosUpdatePacket(records);
             if (msg == null)
                 return;
             IoCManager.Resolve<ISS13NetServer>().SendToAll(msg, NetDeliveryMethod.Unreliable);
@@ -146,12 +163,12 @@ namespace ServerServices.Atmos
 
         private NetOutgoingMessage CreateAtmosUpdatePacket(BitStream records)
         {
-            var recs = Compress(records);
+            byte[] recs = Compress(records);
             if (recs == null)
                 return null;
-            var msg = IoCManager.Resolve<ISS13NetServer>().CreateMessage();
-            msg.Write((byte)NetMessage.AtmosDisplayUpdate);
-            msg.Write((int)records.Length);
+            NetOutgoingMessage msg = IoCManager.Resolve<ISS13NetServer>().CreateMessage();
+            msg.Write((byte) NetMessage.AtmosDisplayUpdate);
+            msg.Write((int) records.Length);
             msg.Write(recs.Length);
             msg.Write(recs);
             return msg;
@@ -165,15 +182,15 @@ namespace ServerServices.Atmos
             {
                 rawStream.Read(out raw[i]);
             }
-            var byteLength = (int)rawStream.Length8;
+            var byteLength = (int) rawStream.Length8;
             if (byteLength == 0)
             {
                 return null;
             }
 
-            using (MemoryStream memory = new MemoryStream())
+            using (var memory = new MemoryStream())
             {
-                using (GZipStream gzip = new GZipStream(memory, CompressionMode.Compress, true))
+                using (var gzip = new GZipStream(memory, CompressionMode.Compress, true))
                 {
                     gzip.Write(raw, 0, raw.Length);
                 }
@@ -181,30 +198,11 @@ namespace ServerServices.Atmos
             }
         }
 
-        public void SendAtmosStateTo(NetConnection client)
-        {
-            var m = IoCManager.Resolve<IMapManager>();
-
-            int numberOfGasTypes = Enum.GetValues(typeof(GasType)).Length;
-            var records = new BitStream(m.GetMapHeight() * m.GetMapWidth() * numberOfGasTypes);
-            int displayBitsWritten = 0;
-            for (int x = 0; x < m.GetMapWidth(); x++)
-                for (int y = 0; y < m.GetMapHeight(); y++)
-                {
-                    displayBitsWritten = m.GetTileAt(x, y).GasCell.PackDisplayBytes(records, true);
-                }
-            var msg = CreateAtmosUpdatePacket(records);
-            if (msg == null)
-                return;
-            IoCManager.Resolve<ISS13NetServer>().SendMessage(msg, client, NetDeliveryMethod.ReliableUnordered);
-
-        }
-
         private struct AtmosRecord
         {
-            int x;
-            int y;
-            byte display;
+            private readonly byte display;
+            private readonly int x;
+            private readonly int y;
 
             public AtmosRecord(int _x, int _y, byte _display)
             {
@@ -222,7 +220,6 @@ namespace ServerServices.Atmos
         }
 
         #endregion
-
     }
 
     #region Gas Definitions
@@ -237,13 +234,44 @@ namespace ServerServices.Atmos
         private const bool oxidant = true;
         private const float ait = 0.0f; // Means it wont autoignite
 
-        public string Name { get { return name; } }
-        public float SpecificHeatCapacity { get { return shc; } }
-        public GasType Type { get { return type; } }
-        public float MolecularMass { get { return mm; } }
-        public bool Combustable { get { return combustable; } }
-        public bool Oxidant { get { return oxidant; } }
-        public float AutoignitionTemperature { get { return ait; } }
+        #region IGasProperties Members
+
+        public string Name
+        {
+            get { return name; }
+        }
+
+        public float SpecificHeatCapacity
+        {
+            get { return shc; }
+        }
+
+        public GasType Type
+        {
+            get { return type; }
+        }
+
+        public float MolecularMass
+        {
+            get { return mm; }
+        }
+
+        public bool Combustable
+        {
+            get { return combustable; }
+        }
+
+        public bool Oxidant
+        {
+            get { return oxidant; }
+        }
+
+        public float AutoignitionTemperature
+        {
+            get { return ait; }
+        }
+
+        #endregion
     }
 
     public class CO2 : IGasProperties
@@ -256,14 +284,44 @@ namespace ServerServices.Atmos
         private const bool oxidant = false;
         private const float ait = 0.0f; // Means it wont autoignite
 
+        #region IGasProperties Members
 
-        public string Name { get { return name; } }
-        public float SpecificHeatCapacity { get { return shc; } }
-        public GasType Type { get { return type; } }
-        public float MolecularMass { get { return mm; } }
-        public bool Combustable { get { return combustable; } }
-        public bool Oxidant { get { return oxidant; } }
-        public float AutoignitionTemperature { get { return ait; } }
+        public string Name
+        {
+            get { return name; }
+        }
+
+        public float SpecificHeatCapacity
+        {
+            get { return shc; }
+        }
+
+        public GasType Type
+        {
+            get { return type; }
+        }
+
+        public float MolecularMass
+        {
+            get { return mm; }
+        }
+
+        public bool Combustable
+        {
+            get { return combustable; }
+        }
+
+        public bool Oxidant
+        {
+            get { return oxidant; }
+        }
+
+        public float AutoignitionTemperature
+        {
+            get { return ait; }
+        }
+
+        #endregion
     }
 
     public class Nitrogen : IGasProperties
@@ -276,34 +334,94 @@ namespace ServerServices.Atmos
         private const bool oxidant = false;
         private const float ait = 0.0f; // Means it wont autoignite
 
+        #region IGasProperties Members
 
-        public string Name { get { return name; } }
-        public float SpecificHeatCapacity { get { return shc; } }
-        public GasType Type { get { return type; } }
-        public float MolecularMass { get { return mm; } }
-        public bool Combustable { get { return combustable; } }
-        public bool Oxidant { get { return oxidant; } }
-        public float AutoignitionTemperature { get { return ait; } }
+        public string Name
+        {
+            get { return name; }
+        }
+
+        public float SpecificHeatCapacity
+        {
+            get { return shc; }
+        }
+
+        public GasType Type
+        {
+            get { return type; }
+        }
+
+        public float MolecularMass
+        {
+            get { return mm; }
+        }
+
+        public bool Combustable
+        {
+            get { return combustable; }
+        }
+
+        public bool Oxidant
+        {
+            get { return oxidant; }
+        }
+
+        public float AutoignitionTemperature
+        {
+            get { return ait; }
+        }
+
+        #endregion
     }
 
     public class Toxin : IGasProperties
     {
         private const string name = "Toxin";
-        private const float shc = 4.00f;    // Made up
+        private const float shc = 4.00f; // Made up
         private const float mm = 20.0f; // Made up
         private const GasType type = GasType.Toxin;
         private const bool combustable = true;
         private const bool oxidant = false;
         private const float ait = 1000.0f;
 
+        #region IGasProperties Members
 
-        public string Name { get { return name; } }
-        public float SpecificHeatCapacity { get { return shc; } }
-        public GasType Type { get { return type; } }
-        public float MolecularMass { get { return mm; } }
-        public bool Combustable { get { return combustable; } }
-        public bool Oxidant { get { return oxidant; } }
-        public float AutoignitionTemperature { get { return ait; } }
+        public string Name
+        {
+            get { return name; }
+        }
+
+        public float SpecificHeatCapacity
+        {
+            get { return shc; }
+        }
+
+        public GasType Type
+        {
+            get { return type; }
+        }
+
+        public float MolecularMass
+        {
+            get { return mm; }
+        }
+
+        public bool Combustable
+        {
+            get { return combustable; }
+        }
+
+        public bool Oxidant
+        {
+            get { return oxidant; }
+        }
+
+        public float AutoignitionTemperature
+        {
+            get { return ait; }
+        }
+
+        #endregion
     }
 
     public class WVapor : IGasProperties
@@ -316,13 +434,44 @@ namespace ServerServices.Atmos
         private const bool oxidant = false;
         private const float ait = 0.0f; // Means it wont autoignite
 
-        public string Name { get { return name; } }
-        public float SpecificHeatCapacity { get { return shc; } }
-        public GasType Type { get { return type; } }
-        public float MolecularMass { get { return mm; } }
-        public bool Combustable { get { return combustable; } }
-        public bool Oxidant { get { return oxidant; } }
-        public float AutoignitionTemperature { get { return ait; } }
+        #region IGasProperties Members
+
+        public string Name
+        {
+            get { return name; }
+        }
+
+        public float SpecificHeatCapacity
+        {
+            get { return shc; }
+        }
+
+        public GasType Type
+        {
+            get { return type; }
+        }
+
+        public float MolecularMass
+        {
+            get { return mm; }
+        }
+
+        public bool Combustable
+        {
+            get { return combustable; }
+        }
+
+        public bool Oxidant
+        {
+            get { return oxidant; }
+        }
+
+        public float AutoignitionTemperature
+        {
+            get { return ait; }
+        }
+
+        #endregion
     }
 
     #endregion

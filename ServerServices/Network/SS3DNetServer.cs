@@ -9,8 +9,11 @@ namespace ServerServices.Network
     public class SS13NetServer : NetServer, ISS13NetServer
     {
         public SS13NetServer()
-            :base(LoadNetPeerConfig())
-        {}
+            : base(LoadNetPeerConfig())
+        {
+        }
+
+        #region ISS13NetServer Members
 
         public void SendToAll(NetOutgoingMessage message)
         {
@@ -26,6 +29,8 @@ namespace ServerServices.Network
         {
             SendMessage(message, recipients, NetDeliveryMethod.ReliableOrdered, 0);
         }
+
+        #endregion
 
         public static NetPeerConfiguration LoadNetPeerConfig()
         {

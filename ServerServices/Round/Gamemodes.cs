@@ -1,24 +1,17 @@
-﻿using ServerInterfaces.Player;
-using SS13.IoC;
-using ServerInterfaces.GameMode;
+﻿using SS13.IoC;
+using SS13_Shared;
 using ServerInterfaces;
 using ServerInterfaces.Chat;
+using ServerInterfaces.GameMode;
+using ServerInterfaces.Player;
 
 namespace ServerServices.Round
 {
     public class Gamemode : IGameMode
     {
-        private string name = "";
-        public string Name { get { return name; } set { name = value; } }
-
-        private string description = "";
-        public string Description { get { return description; } set { description = value; } }
-
-        public event GameEndHandler OnGameBegin;
-        public event GameUpdateHandler OnGameUpdate;
-        public event GameEndHandler OnGameEnd;      
-
         private ISS13Server _server;
+        private string description = "";
+        private string name = "";
 
         public Gamemode(ISS13Server server)
         {
@@ -27,8 +20,27 @@ namespace ServerServices.Round
             Description = "This is an empty Gamemode";
         }
 
+        #region IGameMode Members
+
+        public string Name
+        {
+            get { return name; }
+            set { name = value; }
+        }
+
+        public string Description
+        {
+            get { return description; }
+            set { description = value; }
+        }
+
+        public event GameEndHandler OnGameBegin;
+        public event GameUpdateHandler OnGameUpdate;
+        public event GameEndHandler OnGameEnd;
+
         public virtual void SpawnPlayer(IPlayerSession player) //Called by SendMap() after sending everything.
-        {                                                     //This should be handled differently!!!.
+        {
+            //This should be handled differently!!!.
             IoCManager.Resolve<IPlayerManager>().SpawnPlayerMob(player);
         }
 
@@ -39,23 +51,25 @@ namespace ServerServices.Round
 
         public virtual void PlayerJoined(IPlayerSession player)
         {
-
         }
 
         public virtual void PlayerLeft(IPlayerSession player)
         {
-            IoCManager.Resolve<IChatManager>().SendChatMessage(SS13_Shared.ChatChannel.Server, "Gamemode: Player left!", null, player.attachedEntity.Uid);
+            IoCManager.Resolve<IChatManager>().SendChatMessage(ChatChannel.Server, "Gamemode: Player left!", null,
+                                                               player.attachedEntity.Uid);
         }
 
         public virtual void PlayerDied(IPlayerSession player)
         {
-            IoCManager.Resolve<IChatManager>().SendChatMessage(SS13_Shared.ChatChannel.Server, "Gamemode: Player died!", null, player.attachedEntity.Uid);
+            IoCManager.Resolve<IChatManager>().SendChatMessage(ChatChannel.Server, "Gamemode: Player died!", null,
+                                                               player.attachedEntity.Uid);
         }
 
         public virtual void Begin()
         {
-            if(OnGameBegin != null) OnGameBegin(this);
+            if (OnGameBegin != null) OnGameBegin(this);
         }
+
         public virtual void Update()
         {
             if (OnGameUpdate != null) OnGameUpdate(this);
@@ -65,5 +79,7 @@ namespace ServerServices.Round
         {
             if (OnGameEnd != null) OnGameEnd(this);
         }
+
+        #endregion
     }
 }

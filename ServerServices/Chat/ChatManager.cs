@@ -1,26 +1,30 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Drawing;
 using System.Linq;
 using GameObject;
 using Lidgren.Network;
-using SS13_Shared.GO;
-using ServerInterfaces;
-using ServerInterfaces.Chat;
-using ServerInterfaces.GOC;
-using ServerInterfaces.Network;
-using ServerServices.Log;
 using SS13.IoC;
 using SS13_Shared;
-using ServerInterfaces.Player;
-using ServerInterfaces.Map;
-using ServerServices.Tiles;
+using SS13_Shared.GO;
+using ServerInterfaces;
 using ServerInterfaces.Atmos;
+using ServerInterfaces.Chat;
+using ServerInterfaces.GOC;
+using ServerInterfaces.Map;
+using ServerInterfaces.Network;
+using ServerInterfaces.Player;
+using ServerServices.Atmos;
+using ServerServices.Log;
+using ServerServices.Tiles;
 
 namespace ServerServices.Chat
 {
     public class ChatManager : IChatManager
     {
         private ISS13Server _serverMain;
+
+        #region IChatManager Members
 
         public void Initialize(ISS13Server server)
         {
@@ -30,16 +34,19 @@ namespace ServerServices.Chat
         public void HandleNetMessage(NetIncomingMessage message)
         {
             //Read the chat message and pass it on
-            ChatChannel channel = (ChatChannel)message.ReadByte();
+            var channel = (ChatChannel) message.ReadByte();
             string text = message.ReadString();
             string name = _serverMain.GetClient(message.SenderConnection).PlayerName;
-            LogManager.Log("CHAT- Channel " + channel.ToString() +  " - Player " + name + "Message: " + text + "\n");
+            LogManager.Log("CHAT- Channel " + channel.ToString() + " - Player " + name + "Message: " + text + "\n");
             int entityId = 0;
-            if (IoCManager.Resolve<IPlayerManager>().GetSessionByConnection(message.SenderConnection).attachedEntity != null)
-                entityId = IoCManager.Resolve<IPlayerManager>().GetSessionByConnection(message.SenderConnection).attachedEntity.Uid;
+            if (IoCManager.Resolve<IPlayerManager>().GetSessionByConnection(message.SenderConnection).attachedEntity !=
+                null)
+                entityId =
+                    IoCManager.Resolve<IPlayerManager>().GetSessionByConnection(message.SenderConnection).attachedEntity
+                        .Uid;
 
             bool hasChannelIdentifier = false;
-            if(channel != ChatChannel.Lobby)
+            if (channel != ChatChannel.Lobby)
                 channel = DetectChannel(text, out hasChannelIdentifier);
             if (hasChannelIdentifier)
                 text = text.Substring(1);
@@ -50,44 +57,23 @@ namespace ServerServices.Chat
                 SendChatMessage(channel, text, name, entityId);
         }
 
-        private ChatChannel DetectChannel(string message, out bool hasChannelIdentifier)
-        {
-            hasChannelIdentifier = false;
-            var channel = ChatChannel.Ingame;
-            switch(message[0])
-            {
-                case '[':
-                    channel = ChatChannel.OOC;
-                    hasChannelIdentifier = true;
-                    break;
-                case ':':
-                    channel = ChatChannel.Radio;
-                    hasChannelIdentifier = true;
-                    break;
-                case '@':
-                    channel = ChatChannel.Emote;
-                    hasChannelIdentifier = true;
-                    break;
-            }
-            return channel;
-        }
-
         public void SendChatMessage(ChatChannel channel, string text, string name, int entityId)
         {
             string fullmsg = text;
             if (!string.IsNullOrEmpty(name) && channel == ChatChannel.Emote)
                 fullmsg = name + " " + text;
-            else if (channel == ChatChannel.Ingame || channel == ChatChannel.OOC || channel == ChatChannel.Radio || channel == ChatChannel.Lobby)
+            else if (channel == ChatChannel.Ingame || channel == ChatChannel.OOC || channel == ChatChannel.Radio ||
+                     channel == ChatChannel.Lobby)
                 fullmsg = name + ": " + text;
 
             NetOutgoingMessage message = IoCManager.Resolve<ISS13NetServer>().CreateMessage();
 
-            message.Write((byte)NetMessage.ChatMessage);
-            message.Write((byte)channel);
+            message.Write((byte) NetMessage.ChatMessage);
+            message.Write((byte) channel);
             message.Write(fullmsg);
             message.Write(entityId);
 
-            switch(channel)
+            switch (channel)
             {
                 case ChatChannel.Server:
                 case ChatChannel.OOC:
@@ -106,18 +92,45 @@ namespace ServerServices.Chat
                     SendToLobby(message);
                     break;
             }
+        }
 
+        #endregion
+
+        private ChatChannel DetectChannel(string message, out bool hasChannelIdentifier)
+        {
+            hasChannelIdentifier = false;
+            var channel = ChatChannel.Ingame;
+            switch (message[0])
+            {
+                case '[':
+                    channel = ChatChannel.OOC;
+                    hasChannelIdentifier = true;
+                    break;
+                case ':':
+                    channel = ChatChannel.Radio;
+                    hasChannelIdentifier = true;
+                    break;
+                case '@':
+                    channel = ChatChannel.Emote;
+                    hasChannelIdentifier = true;
+                    break;
+            }
+            return channel;
         }
 
         private void SendToPlayersInRange(NetOutgoingMessage message, int entityId)
         {
-            var recipients = IoCManager.Resolve<IPlayerManager>().GetPlayersInRange(_serverMain.EntityManager.GetEntity(entityId).GetComponent<ITransformComponent>(ComponentFamily.Transform).Position, 512).Select(p => p.ConnectedClient).ToList();
+            List<NetConnection> recipients =
+                IoCManager.Resolve<IPlayerManager>().GetPlayersInRange(
+                    _serverMain.EntityManager.GetEntity(entityId).GetComponent<ITransformComponent>(
+                        ComponentFamily.Transform).Position, 512).Select(p => p.ConnectedClient).ToList();
             IoCManager.Resolve<ISS13NetServer>().SendToMany(message, recipients);
         }
 
         private void SendToLobby(NetOutgoingMessage message)
         {
-            var recipients = IoCManager.Resolve<IPlayerManager>().GetPlayersInLobby().Select(p => p.ConnectedClient).ToList();
+            List<NetConnection> recipients =
+                IoCManager.Resolve<IPlayerManager>().GetPlayersInLobby().Select(p => p.ConnectedClient).ToList();
             IoCManager.Resolve<ISS13NetServer>().SendToMany(message, recipients);
         }
 
@@ -130,7 +143,7 @@ namespace ServerServices.Chat
         /// <param name="entityId">Uid of the entity that sent the message. This will always be a player's attached entity</param>
         private void ProcessCommand(string text, string name, ChatChannel channel, int entityId, NetConnection client)
         {
-            List<string> args = new List<string>();
+            var args = new List<string>();
 
             ParseArguments(text, args);
 
@@ -143,7 +156,7 @@ namespace ServerServices.Chat
                 position = new Vector2(160, 160);
             else
                 position = player.GetComponent<ITransformComponent>(ComponentFamily.Transform).Position;
-            
+
             var map = IoCManager.Resolve<IMapManager>();
             switch (command)
             {
@@ -152,7 +165,7 @@ namespace ServerServices.Chat
                     {
                         double amount = Convert.ToDouble(args[1]);
 
-                        map.GetTileFromWorldPosition(position).GasCell.AddGas((float)amount, GasType.Toxin);
+                        map.GetTileFromWorldPosition(position).GasCell.AddGas((float) amount, GasType.Toxin);
                     }
                     break;
                 case "heatgas":
@@ -160,35 +173,39 @@ namespace ServerServices.Chat
                     {
                         double amount = Convert.ToDouble(args[1]);
 
-                        map.GetTileFromWorldPosition(position).GasCell.AddGas((float)amount, GasType.Toxin);
+                        map.GetTileFromWorldPosition(position).GasCell.AddGas((float) amount, GasType.Toxin);
                     }
                     break;
                 case "atmosreport":
                     IoCManager.Resolve<IAtmosManager>().TotalAtmosReport();
                     break;
-                case "tpvreport":    // Reports on temp / pressure
-                    var tap = map.GetTileArrayPositionFromWorldPosition(position);
-                    var ti = (Tile)map.GetTileAt(tap.X, tap.Y);
-                    var ce = ti.gasCell;
-                    SendChatMessage(ChatChannel.Default, "T/P/V: " + ce.GasMixture.Temperature.ToString() + " / " + ce.GasMixture.Pressure.ToString() + " / " + ce.GasVelocity.ToString(), "TempCheck", 0);
+                case "tpvreport": // Reports on temp / pressure
+                    Point tap = map.GetTileArrayPositionFromWorldPosition(position);
+                    var ti = (Tile) map.GetTileAt(tap.X, tap.Y);
+                    GasCell ce = ti.gasCell;
+                    SendChatMessage(ChatChannel.Default,
+                                    "T/P/V: " + ce.GasMixture.Temperature.ToString() + " / " +
+                                    ce.GasMixture.Pressure.ToString() + " / " + ce.GasVelocity.ToString(), "TempCheck",
+                                    0);
                     break;
                 case "gasreport":
 
-                    var p = map.GetTileArrayPositionFromWorldPosition(position);
+                    Point p = map.GetTileArrayPositionFromWorldPosition(position);
                     var t = (Tile) map.GetTileAt(p.X, p.Y);
-                    var c = t.gasCell;
+                    GasCell c = t.gasCell;
                     foreach (var g in c.GasMixture.gasses)
                     {
-                        SendChatMessage(ChatChannel.Default, g.Key.ToString() + ": " + g.Value.ToString() + " m", "GasReport", 0);
+                        SendChatMessage(ChatChannel.Default, g.Key.ToString() + ": " + g.Value.ToString() + " m",
+                                        "GasReport", 0);
                     }
                     break;
                 case "everyonesondrugs":
-                    foreach (var playerfordrugs in IoCManager.Resolve<IPlayerManager>().GetAllPlayers())
+                    foreach (IPlayerSession playerfordrugs in IoCManager.Resolve<IPlayerManager>().GetAllPlayers())
                     {
                         playerfordrugs.AddPostProcessingEffect(PostProcessingEffectType.Acid, 60);
                     }
                     break;
-                /*    
+                    /*    
                 case "sprayblood":
                     if (player == null)
                         return;
@@ -232,7 +249,7 @@ namespace ServerServices.Chat
                     inquotes = false;
                     args.Add(buf);
                     buf = "";
-                    i++;//skip the following space.
+                    i++; //skip the following space.
                     continue;
                 }
                 else if (!inquotes && text[i] == '"')
@@ -255,7 +272,6 @@ namespace ServerServices.Chat
 
             if (buf != "")
                 args.Add(buf);
-
         }
     }
 }

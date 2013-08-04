@@ -1,9 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-
-namespace ServerServices.ServerConsole
+﻿namespace ServerServices.ServerConsole
 {
     public abstract class ConsoleCommand
     {
@@ -12,5 +7,4 @@ namespace ServerServices.ServerConsole
         public abstract string Help { get; }
         public abstract void Execute(params string[] args);
     }
-
 }

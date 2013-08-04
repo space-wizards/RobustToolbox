@@ -1,6 +1,6 @@
 ﻿using System.Collections.Generic;
 using System.Linq;
-
+using GameObject;
 using Lidgren.Network;
 using SS13_Shared;
 using SS13_Shared.GO;
@@ -8,12 +8,12 @@ using SS13_Shared.GameStates;
 using SS13_Shared.ServerEnums;
 using ServerInterfaces;
 using ServerInterfaces.GOC;
-using ServerServices.Log;
 using ServerInterfaces.Player;
+using ServerServices.Log;
 
 namespace ServerServices.Player
 {
-    public class PlayerManager: IPlayerManager
+    public class PlayerManager : IPlayerManager
     {
         /* This class will manage connected player sessions. */
         public Dictionary<int, PlayerSession> playerSessions;
@@ -24,6 +24,8 @@ namespace ServerServices.Player
             playerSessions = new Dictionary<int, PlayerSession>();
             //We can actually query this by client connection or whatever we want using linq
         }
+
+        #region IPlayerManager Members
 
         public void Initialize(ISS13Server _server)
         {
@@ -39,14 +41,18 @@ namespace ServerServices.Player
         public void SpawnPlayerMob(IPlayerSession s)
         {
             //Spawn the player's entity. There's probably a much better place to do this.
-            var a = server.EntityManager.SpawnEntity("HumanMob");
-            var human = a;
+            Entity a = server.EntityManager.SpawnEntity("HumanMob");
+            Entity human = a;
             a.GetComponent<ITransformComponent>(ComponentFamily.Transform).TranslateTo(new Vector2(160, 160));
             if (s.assignedJob != null)
             {
-                foreach (var newItem in s.assignedJob.SpawnEquipment.Select(def => server.EntityManager.SpawnEntity(def.ObjectType)))
+                foreach (
+                    Entity newItem in
+                        s.assignedJob.SpawnEquipment.Select(def => server.EntityManager.SpawnEntity(def.ObjectType)))
                 {
-                    newItem.GetComponent<ITransformComponent>(ComponentFamily.Transform).TranslateTo(human.GetComponent<ITransformComponent>(ComponentFamily.Transform).Position); //This is not neccessary once the equipment component is built.
+                    newItem.GetComponent<ITransformComponent>(ComponentFamily.Transform).TranslateTo(
+                        human.GetComponent<ITransformComponent>(ComponentFamily.Transform).Position);
+                        //This is not neccessary once the equipment component is built.
                     human.SendMessage(this, ComponentMessageType.EquipItem, newItem);
                 }
             }
@@ -55,7 +61,7 @@ namespace ServerServices.Player
 
         public IPlayerSession GetSessionByConnection(NetConnection client)
         {
-            var sessions =
+            IEnumerable<PlayerSession> sessions =
                 from s in playerSessions
                 where s.Value.connectedClient == client
                 select s.Value;
@@ -65,9 +71,10 @@ namespace ServerServices.Player
 
         public IPlayerSession GetSessionByIp(string ip)
         {
-            var sessions =
+            IEnumerable<PlayerSession> sessions =
                 from s in playerSessions
-                where s.Value.connectedClient.RemoteEndPoint.Address.ToString().Equals(ip) //This is kinda silly. Comparing strings. Bleh.
+                where s.Value.connectedClient.RemoteEndPoint.Address.ToString().Equals(ip)
+                //This is kinda silly. Comparing strings. Bleh.
                 select s.Value;
 
             return sessions.First(); // Should only be one session per client. Returns that session, in theory.
@@ -83,7 +90,7 @@ namespace ServerServices.Player
         public void EndSession(NetConnection client)
         {
             // Ends the session.
-            var session = GetSessionByConnection(client);
+            IPlayerSession session = GetSessionByConnection(client);
             LogManager.Log(session.name + " disconnected.", LogLevel.Information);
             //Detach the entity and (dont)delete it.
             session.OnDisconnect();
@@ -92,7 +99,7 @@ namespace ServerServices.Player
 
         public void SendJoinGameToAll()
         {
-            foreach (var s in playerSessions.Values)
+            foreach (PlayerSession s in playerSessions.Values)
             {
                 s.JoinGame();
             }
@@ -100,7 +107,7 @@ namespace ServerServices.Player
 
         public void SendJoinLobbyToAll()
         {
-            foreach(var s in playerSessions.Values)
+            foreach (PlayerSession s in playerSessions.Values)
             {
                 s.JoinLobby();
             }
@@ -108,7 +115,7 @@ namespace ServerServices.Player
 
         public void DetachAll()
         {
-            foreach(var s in playerSessions.Values)
+            foreach (PlayerSession s in playerSessions.Values)
             {
                 s.DetachFromEntity();
             }
@@ -118,7 +125,10 @@ namespace ServerServices.Player
         {
             return
                 playerSessions.Values.Where(
-                    x => x.attachedEntity != null && (position - x.attachedEntity.GetComponent<ITransformComponent>(ComponentFamily.Transform).Position).Magnitude < range).ToArray();
+                    x =>
+                    x.attachedEntity != null &&
+                    (position - x.attachedEntity.GetComponent<ITransformComponent>(ComponentFamily.Transform).Position).
+                        Magnitude < range).ToArray();
         }
 
         public IPlayerSession[] GetPlayersInLobby()
@@ -136,7 +146,8 @@ namespace ServerServices.Player
         public List<PlayerState> GetPlayerStates()
         {
             return playerSessions.Values.Select(s => s.PlayerState).ToList();
-        } 
+        }
 
+        #endregion
     }
 }

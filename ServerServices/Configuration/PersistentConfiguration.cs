@@ -1,8 +1,5 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Drawing;
-using System.Linq;
-using System.Text;
 using SS13_Shared;
 using SS13_Shared.ServerEnums;
 
@@ -12,19 +9,19 @@ namespace ServerServices.Configuration
     public class PersistentConfiguration
     {
         public const int _Version = 1;
+        public string AdminPassword = "admin123";
+        public Size ConsoleSize = new Size(120, 60);
+        public LogLevel LogLevel = LogLevel.Information;
 
         public string LogPath = "log.txt";
+        public bool MessageLogging = false;
 
         public int Port = 1212;
         public string ServerName = "SS13 Server";
-        public string serverMapName = "SavedMap";
-        public string serverWelcomeMessage = "Welcome to the server!";
-        public int serverMaxPlayers = 32;
-        public GameType gameType = GameType.Game;
-        public string AdminPassword = "admin123";
-        public bool MessageLogging = false;
-        public LogLevel LogLevel = LogLevel.Information;
         public float TickRate = 66;
-        public Size ConsoleSize = new Size(120, 60);
+        public GameType gameType = GameType.Game;
+        public string serverMapName = "SavedMap";
+        public int serverMaxPlayers = 32;
+        public string serverWelcomeMessage = "Welcome to the server!";
     }
 }

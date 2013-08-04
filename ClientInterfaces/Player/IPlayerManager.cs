@@ -1,10 +1,11 @@
 ﻿using System;
-using ClientInterfaces.GOC;
+using System.Collections.Generic;
 using GameObject;
 using GorgonLibrary.Graphics;
 using GorgonLibrary.InputDevices;
 using Lidgren.Network;
 using SS13_Shared;
+using SS13_Shared.GameStates;
 
 namespace ClientInterfaces.Player
 {
@@ -12,7 +13,7 @@ namespace ClientInterfaces.Player
     {
         Entity ControlledEntity { get; }
 
-        event EventHandler<TypeEventArgs> RequestedStateSwitch; 
+        event EventHandler<TypeEventArgs> RequestedStateSwitch;
         event EventHandler<VectorEventArgs> OnPlayerMove;
 
         void Attach(Entity newEntity);
@@ -24,6 +25,6 @@ namespace ClientInterfaces.Player
         void Update(float frameTime);
         void ApplyEffects(RenderImage image);
 
-        void ApplyPlayerStates(System.Collections.Generic.List<SS13_Shared.GameStates.PlayerState> list);
+        void ApplyPlayerStates(List<PlayerState> list);
     }
 }

@@ -5,8 +5,8 @@ namespace ClientInterfaces.GOC
 {
     public interface IRenderableComponent
     {
-        void Render(Vector2D topLeft, Vector2D bottomRight);
         DrawDepth DrawDepth { get; set; }
         float Bottom { get; }
+        void Render(Vector2D topLeft, Vector2D bottomRight);
     }
 }

@@ -1,14 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Drawing;
-using ClientInterfaces.GOC;
-using ClientInterfaces.Lighting;
-using ClientInterfaces.Map;
-using GorgonLibrary;
-using SS13_Shared;
-using SS13_Shared.GO;
+﻿using SS13_Shared;
 
 namespace ClientInterfaces.Lighting
 {

@@ -1,29 +1,31 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Drawing;
 using System.Linq;
 using System.Reflection;
-using System.Text;
 using SS13.IoC;
 using ServerInterfaces.Configuration;
 using ServerInterfaces.ServerConsole;
-using ServerServices.ServerConsole.Commands;
 using Con = System.Console;
+
 namespace ServerServices.ServerConsole
 {
     public class ConsoleManager : IConsoleManager
     {
+        private readonly Dictionary<string, ConsoleCommand> availableCommands = new Dictionary<string, ConsoleCommand>();
+        private readonly Dictionary<int, string> commandHistory = new Dictionary<int, string>();
         private string currentBuffer = "";
-        private Dictionary<int, string> commandHistory = new Dictionary<int, string>();
-        private int historyIndex = 0;
-        private int internalCursor = 0;
-        private Dictionary<string, ConsoleCommand> availableCommands = new Dictionary<string, ConsoleCommand>();
+        private int historyIndex;
+        private int internalCursor;
 
         public ConsoleManager()
         {
             InitializeCommands();
-            var consoleSize = IoCManager.Resolve<IConfigurationManager>().ConsoleSize;
-            Console.SetWindowSize(consoleSize.Width, consoleSize.Height);
+            Size consoleSize = IoCManager.Resolve<IConfigurationManager>().ConsoleSize;
+            Con.SetWindowSize(consoleSize.Width, consoleSize.Height);
         }
+
+        #region IConsoleManager Members
 
         public void Update()
         {
@@ -103,15 +105,17 @@ namespace ServerServices.ServerConsole
             }
         }
 
+        #endregion
+
         private void ExecuteCommand(string commandLine)
         {
-            var args = commandLine.Split(' ');
+            string[] args = commandLine.Split(' ');
             if (args.Length == 0)
             {
                 return;
             }
-            var cmd = args[0].ToLower();
-            var handled = false;
+            string cmd = args[0].ToLower();
+            bool handled = false;
             switch (cmd)
             {
                 case "list":
@@ -134,7 +138,6 @@ namespace ServerServices.ServerConsole
                 return;
             else
                 Con.WriteLine("Unknown command: " + cmd);
-
         }
 
         public void DrawCommandLine()
@@ -159,7 +162,7 @@ namespace ServerServices.ServerConsole
             var CommandTypes = new List<Type>();
             CommandTypes.AddRange(
                 Assembly.GetCallingAssembly().GetTypes().Where(t => typeof (ConsoleCommand).IsAssignableFrom(t)));
-            foreach (var t in CommandTypes)
+            foreach (Type t in CommandTypes)
             {
                 if (t == typeof (ConsoleCommand))
                     continue;
@@ -179,20 +182,20 @@ namespace ServerServices.ServerConsole
             Con.ForegroundColor = ConsoleColor.Yellow;
             Con.WriteLine("\nAvailable commands:\n");
 
-            var names = availableCommands.Keys.ToList();
+            List<string> names = availableCommands.Keys.ToList();
             names.Add("list");
             names.Add("help");
             names.Sort();
-            foreach (var c in names)
+            foreach (string c in names)
             {
-                var name = String.Format("{0, 16}", c);
+                string name = String.Format("{0, 16}", c);
                 Con.ForegroundColor = ConsoleColor.Cyan;
                 Con.SetCursorPosition(0, Console.CursorTop);
                 Con.Write(name);
                 Con.ForegroundColor = ConsoleColor.Green;
                 Con.Write(" - ");
                 Con.ForegroundColor = ConsoleColor.White;
-                switch(c)
+                switch (c)
                 {
                     case "list":
                         Con.WriteLine("Lists available commands");
@@ -225,7 +228,7 @@ namespace ServerServices.ServerConsole
             {
                 Con.WriteLine("Help for " + args[0] + ":");
                 Con.WriteLine(availableCommands[args[0].ToLower()].Help);
-            } 
+            }
             else
             {
                 Con.WriteLine("Command '" + args[0] + "' not found.");

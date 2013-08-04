@@ -1,15 +1,10 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using SS13_Shared;
+﻿using ServerServices.Map;
 
 namespace ServerServices.Tiles
 {
     public class Wall : Tile
     {
-
-        public Wall(int x, int y, ServerServices.Map.MapManager _map)
+        public Wall(int x, int y, MapManager _map)
             : base(x, y, _map)
         {
         }

@@ -8,34 +8,28 @@ namespace ServerServices.GameState
 {
     public class GameStateManager : Dictionary<uint, SS13_Shared.GameStates.GameState>, IGameStateManager
     {
-        private Dictionary<long, uint> ackedStates = new Dictionary<long, uint>(); 
+        private readonly Dictionary<long, uint> ackedStates = new Dictionary<long, uint>();
 
-        public GameStateManager()
-        {}
+        #region IGameStateManager Members
 
         public void Cull()
         {
-            foreach (var v in Keys.Where( v => v < OldestStateAcked).ToList())
+            foreach (uint v in Keys.Where(v => v < OldestStateAcked).ToList())
                 Remove(v);
-        }
-
-        public void CullAll()
-        {
-            Clear();
         }
 
         public uint OldestStateAcked
         {
             get
             {
-                var state = ackedStates.Values.FirstOrDefault(val => val == ackedStates.Values.Min());
+                uint state = ackedStates.Values.FirstOrDefault(val => val == ackedStates.Values.Min());
                 return state;
             }
         }
 
         public void Ack(long uniqueIdentifier, uint stateAcked)
         {
-            if(!ackedStates.ContainsKey(uniqueIdentifier))
+            if (!ackedStates.ContainsKey(uniqueIdentifier))
                 ackedStates.Add(uniqueIdentifier, stateAcked);
             else
                 ackedStates[uniqueIdentifier] = stateAcked;
@@ -43,11 +37,11 @@ namespace ServerServices.GameState
 
         public GameStateDelta GetDelta(NetConnection client, uint state)
         {
-            var toState = GetFullState(state);
+            SS13_Shared.GameStates.GameState toState = GetFullState(state);
             if (!ackedStates.ContainsKey(client.RemoteUniqueIdentifier))
                 return toState - new SS13_Shared.GameStates.GameState(0); //The client has no state!
-            
-            var fromState = this[ackedStates[client.RemoteUniqueIdentifier]];
+
+            SS13_Shared.GameStates.GameState fromState = this[ackedStates[client.RemoteUniqueIdentifier]];
             return toState - fromState;
         }
 
@@ -66,6 +60,13 @@ namespace ServerServices.GameState
             }
 
             return ackedStates[client.RemoteUniqueIdentifier];
+        }
+
+        #endregion
+
+        public void CullAll()
+        {
+            Clear();
         }
     }
 }

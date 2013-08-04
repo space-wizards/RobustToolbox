@@ -1,30 +1,21 @@
-﻿using ServerInterfaces.Tiles;
-using ServerInterfaces.Atmos;
-using ServerServices.Atmos;
+﻿using System;
+using Lidgren.Network;
 using SS13_Shared;
-using System;
+using ServerInterfaces.Atmos;
+using ServerInterfaces.Tiles;
+using ServerServices.Atmos;
+using ServerServices.Map;
 
 namespace ServerServices.Tiles
 {
     public abstract class Tile : ITile
     {
+        private readonly int _x;
+        private readonly int _y;
+        private readonly MapManager map;
         public GasCell gasCell;
-        public TileState TileState { get; set; }
-        private bool gasPermeable = false;
-        private bool gasSink = false;
-        private bool startWithAtmos = false; //Does this start with  breathable atmosphere? Maybe turn this into a bitfield to define which gases it starts with.
-        private Map.MapManager map;
-        private int _x;
-        private int _y;
-        
-        public event TileChangeHandler TileChange; //This event will be used for wall mounted objects and
-                                                   //other things that need to react to tiles changing.
-        public void RaiseChangedEvent(Type type)
-        {
-            if(TileChange != null) TileChange(type);
-        }
 
-        public Tile(int x, int y, Map.MapManager _map)
+        public Tile(int x, int y, MapManager _map)
         {
             TileState = TileState.Healthy;
             map = _map;
@@ -32,15 +23,44 @@ namespace ServerServices.Tiles
             _y = y;
         }
 
+        #region ITile Members
+
+        public TileState TileState { get; set; }
+
+        public event TileChangeHandler TileChange; //This event will be used for wall mounted objects and
+        //other things that need to react to tiles changing.
+        public void RaiseChangedEvent(Type type)
+        {
+            if (TileChange != null) TileChange(type);
+        }
+
 
         public void AddDecal(DecalType type)
         {
-            var message = map.CreateMapMessage(MapMessage.TurfAddDecal);
+            NetOutgoingMessage message = map.CreateMapMessage(MapMessage.TurfAddDecal);
             message.Write(_x);
             message.Write(_y);
-            message.Write((byte)type);
+            message.Write((byte) type);
             map.SendMessage(message);
         }
+
+        #endregion
+
+        #region getters / setters
+
+        public IGasCell GasCell
+        {
+            get { return gasCell; }
+            set { gasCell = (GasCell) value; }
+        }
+
+        public bool StartWithAtmos { get; set; }
+
+        public bool GasPermeable { get; set; }
+
+        public bool GasSink { get; set; }
+
+        #endregion
 
         /*
         public virtual bool HandleItemClick(Atom.Item.Item item)
@@ -68,57 +88,5 @@ namespace ServerServices.Tiles
         }
         */
         //TODO HOOK ME BACK UP WITH ENTITY SYSTEM
-
-
-        #region getters / setters
-        public IGasCell GasCell
-        {
-            get
-            {
-                return (IGasCell)gasCell;
-            }
-            set
-            {
-                gasCell = (GasCell)value;
-            }
-        }
-
-        public bool StartWithAtmos
-        {
-            get
-            {
-                return startWithAtmos;
-            }
-            set
-            {
-                startWithAtmos = value;
-            }
-        }
-
-        public bool GasPermeable
-        {
-            get
-            {
-                return gasPermeable;
-            }
-            set
-            {
-                gasPermeable = value;
-            }
-        }
-
-        public bool GasSink
-        {
-            get
-            {
-                return gasSink;
-            }
-            set
-            {
-                gasSink = value;
-            }
-        }
-        #endregion
-
     }
 }

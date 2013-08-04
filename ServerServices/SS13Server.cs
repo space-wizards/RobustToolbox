@@ -1,5 +1,8 @@
-﻿
+﻿using Lidgren.Network;
+using SS13_Shared.ServerEnums;
 using ServerInterfaces;
+using ServerInterfaces.GOC;
+using ServerInterfaces.Map;
 
 namespace ServerServices
 {
@@ -7,17 +10,19 @@ namespace ServerServices
     {
         private ISS13Server instance;
 
+        #region ISS13Server Members
+
         public void MainLoop()
         {
             instance.MainLoop();
         }
 
-        public ServerInterfaces.GOC.IEntityManager EntityManager
+        public IEntityManager EntityManager
         {
             get { return instance.EntityManager; }
         }
 
-        public IClient GetClient(Lidgren.Network.NetConnection clientConnection)
+        public IClient GetClient(NetConnection clientConnection)
         {
             return instance.GetClient(clientConnection);
         }
@@ -32,7 +37,7 @@ namespace ServerServices
             instance.SaveEntities();
         }
 
-        public SS13_Shared.ServerEnums.RunLevel Runlevel
+        public RunLevel Runlevel
         {
             get { return instance.Runlevel; }
         }
@@ -42,7 +47,7 @@ namespace ServerServices
             instance.Restart();
         }
 
-        public ServerInterfaces.Map.IMapManager GetMap()
+        public IMapManager GetMap()
         {
             return instance.GetMap();
         }
@@ -51,5 +56,7 @@ namespace ServerServices
         {
             instance = server;
         }
+
+        #endregion
     }
 }

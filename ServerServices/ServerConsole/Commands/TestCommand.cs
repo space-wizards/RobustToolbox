@@ -1,7 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
 
 namespace ServerServices.ServerConsole.Commands
 {
@@ -9,13 +6,14 @@ namespace ServerServices.ServerConsole.Commands
     {
         public override string Command
         {
-            get {return "test";}
-            
+            get { return "test"; }
         }
+
         public override string Help
         {
             get { return "This is a test command."; }
         }
+
         public override string Description
         {
             get { return "This is a dummy test command."; }
@@ -25,6 +23,5 @@ namespace ServerServices.ServerConsole.Commands
         {
             Console.WriteLine("Test!");
         }
-
     }
 }

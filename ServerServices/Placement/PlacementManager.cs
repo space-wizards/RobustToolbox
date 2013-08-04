@@ -1,19 +1,19 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Drawing;
 using System.Linq;
 using GameObject;
-using SS13_Shared;
 using Lidgren.Network;
-using System.Drawing;
-using SS13_Shared.GO;
-using ServerInterfaces.Placement;
-using ServerServices.Log;
 using SS13.IoC;
-using ServerInterfaces.Network;
-using ServerInterfaces.Player;
-using ServerInterfaces.GOC;
+using SS13_Shared;
+using SS13_Shared.GO;
 using ServerInterfaces;
+using ServerInterfaces.GOC;
 using ServerInterfaces.Map;
+using ServerInterfaces.Network;
+using ServerInterfaces.Placement;
+using ServerInterfaces.Player;
+using ServerServices.Log;
 using ServerServices.Map;
 
 namespace ServerServices.Placement
@@ -22,8 +22,12 @@ namespace ServerServices.Placement
     {
         //TO-DO: Expand for multiple permission per mob?
         //       Add support for multi-use placeables (tiles etc.).
-        public List<PlacementInformation> BuildPermissions = new List<PlacementInformation>(); //Holds build permissions for all mobs. A list of mobs and the objects they're allowed to request and how. One permission per mob.
+        public List<PlacementInformation> BuildPermissions = new List<PlacementInformation>();
+                                          //Holds build permissions for all mobs. A list of mobs and the objects they're allowed to request and how. One permission per mob.
+
         private ISS13Server _server;
+
+        #region IPlacementManager Members
 
         public void Initialize(ISS13Server server)
         {
@@ -35,7 +39,7 @@ namespace ServerServices.Placement
         /// </summary>
         public void HandleNetMessage(NetIncomingMessage msg)
         {
-            var messageType = (PlacementManagerMessage)msg.ReadByte();
+            var messageType = (PlacementManagerMessage) msg.ReadByte();
 
             switch (messageType)
             {
@@ -49,23 +53,13 @@ namespace ServerServices.Placement
             }
         }
 
-        private PlacementInformation GetPermission(int uid, string alignOpt)
-        {
-            var permission = from p in BuildPermissions
-                             where p.MobUid == uid && p.PlacementOption.Equals(alignOpt)
-                             select p;
-
-            if (permission.Any()) return permission.First();
-            else return null;
-        }
-
         public void HandlePlacementRequest(NetIncomingMessage msg)
         {
             string alignRcv = msg.ReadString();
 
             Boolean isTile = msg.ReadBoolean();
 
-            Map.MapManager mapMgr = (Map.MapManager)IoCManager.Resolve<IMapManager>();
+            var mapMgr = (MapManager) IoCManager.Resolve<IMapManager>();
 
             string tileType = null;
 
@@ -76,20 +70,23 @@ namespace ServerServices.Placement
 
             float xRcv = msg.ReadFloat();
             float yRcv = msg.ReadFloat();
-            Direction dirRcv = (Direction)msg.ReadByte();
+            var dirRcv = (Direction) msg.ReadByte();
 
             int tileX = msg.ReadInt32();
             int tileY = msg.ReadInt32();
 
             IPlayerSession session = IoCManager.Resolve<IPlayerManager>().GetSessionByConnection(msg.SenderConnection);
             PlacementInformation permission = GetPermission(session.attachedEntity.Uid, alignRcv);
-            Boolean isAdmin = IoCManager.Resolve<IPlayerManager>().GetSessionByConnection(msg.SenderConnection).adminPermissions.isAdmin;
+            Boolean isAdmin =
+                IoCManager.Resolve<IPlayerManager>().GetSessionByConnection(msg.SenderConnection).adminPermissions.
+                    isAdmin;
 
-            if (permission != null || true) //isAdmin) Temporarily disable actual permission check / admin check. REENABLE LATER
+            if (permission != null || true)
+                //isAdmin) Temporarily disable actual permission check / admin check. REENABLE LATER
             {
                 if (permission != null)
                 {
-                    if(permission.Uses > 0)
+                    if (permission.Uses > 0)
                     {
                         permission.Uses--;
                         if (permission.Uses <= 0)
@@ -108,17 +105,19 @@ namespace ServerServices.Placement
 
                 if (!isTile)
                 {
-                    var created = _server.EntityManager.SpawnEntityAt(entityTemplateName, new Vector2(xRcv, yRcv));
+                    Entity created = _server.EntityManager.SpawnEntityAt(entityTemplateName, new Vector2(xRcv, yRcv));
                     if (created != null)
                     {
-                        created.GetComponent<ITransformComponent>(ComponentFamily.Transform).TranslateTo(new Vector2(xRcv, yRcv));
+                        created.GetComponent<ITransformComponent>(ComponentFamily.Transform).TranslateTo(
+                            new Vector2(xRcv, yRcv));
                         created.GetComponent<IDirectionComponent>(ComponentFamily.Direction).Direction = dirRcv;
                         created.SendMessage(this, ComponentMessageType.WallMountTile, new Vector2(tileX, tileY));
                     }
                 }
                 else
                 {
-                    Point arrayPos = IoCManager.Resolve<IMapManager>().GetTileArrayPositionFromWorldPosition(new Vector2(xRcv, yRcv));
+                    Point arrayPos =
+                        IoCManager.Resolve<IMapManager>().GetTileArrayPositionFromWorldPosition(new Vector2(xRcv, yRcv));
                     mapMgr.ChangeTile(arrayPos.X, arrayPos.Y, tileType);
                     mapMgr.NetworkUpdateTile(arrayPos.X, arrayPos.Y);
                 }
@@ -126,11 +125,14 @@ namespace ServerServices.Placement
             else //They are not allowed to request this. Send 'PlacementFailed'. TBA
             {
                 LogManager.Log("Invalid placement request: "
-                    + IoCManager.Resolve<IPlayerManager>().GetSessionByConnection(msg.SenderConnection).name +
-                    " - " + IoCManager.Resolve<IPlayerManager>().GetSessionByConnection(msg.SenderConnection).attachedEntity.Uid.ToString() +
-                    " - " + alignRcv.ToString());
+                               + IoCManager.Resolve<IPlayerManager>().GetSessionByConnection(msg.SenderConnection).name +
+                               " - " +
+                               IoCManager.Resolve<IPlayerManager>().GetSessionByConnection(msg.SenderConnection).
+                                   attachedEntity.Uid.ToString() +
+                               " - " + alignRcv.ToString());
 
-                SendPlacementCancel(IoCManager.Resolve<IPlayerManager>().GetSessionByConnection(msg.SenderConnection).attachedEntity);
+                SendPlacementCancel(
+                    IoCManager.Resolve<IPlayerManager>().GetSessionByConnection(msg.SenderConnection).attachedEntity);
             }
         }
 
@@ -139,17 +141,19 @@ namespace ServerServices.Placement
         /// </summary>
         public void SendPlacementBegin(Entity mob, int range, string objectType, string alignOption)
         {
-            var message = IoCManager.Resolve<ISS13NetServer>().CreateMessage();
-            message.Write((byte)NetMessage.PlacementManagerMessage);
-            message.Write((byte)PlacementManagerMessage.StartPlacement);
+            NetOutgoingMessage message = IoCManager.Resolve<ISS13NetServer>().CreateMessage();
+            message.Write((byte) NetMessage.PlacementManagerMessage);
+            message.Write((byte) PlacementManagerMessage.StartPlacement);
             message.Write(range);
-            message.Write(false);//Not a tile
+            message.Write(false); //Not a tile
             message.Write(objectType);
             message.Write(alignOption);
 
-            var reply = mob.SendMessage(this, ComponentFamily.Actor, ComponentMessageType.GetActorConnection);
+            ComponentReplyMessage reply = mob.SendMessage(this, ComponentFamily.Actor,
+                                                          ComponentMessageType.GetActorConnection);
             if (reply.MessageType == ComponentMessageType.ReturnActorConnection)
-                IoCManager.Resolve<ISS13NetServer>().SendMessage(message, (NetConnection)reply.ParamsList[0], NetDeliveryMethod.ReliableOrdered);
+                IoCManager.Resolve<ISS13NetServer>().SendMessage(message, (NetConnection) reply.ParamsList[0],
+                                                                 NetDeliveryMethod.ReliableOrdered);
         }
 
         /// <summary>
@@ -157,18 +161,20 @@ namespace ServerServices.Placement
         /// </summary>
         public void SendPlacementBeginTile(Entity mob, int range, string tileType, string alignOption)
         {
-            var mapMgr = (MapManager)IoCManager.Resolve<IMapManager>();
-            var message = IoCManager.Resolve<ISS13NetServer>().CreateMessage();
-            message.Write((byte)NetMessage.PlacementManagerMessage);
-            message.Write((byte)PlacementManagerMessage.StartPlacement);
+            var mapMgr = (MapManager) IoCManager.Resolve<IMapManager>();
+            NetOutgoingMessage message = IoCManager.Resolve<ISS13NetServer>().CreateMessage();
+            message.Write((byte) NetMessage.PlacementManagerMessage);
+            message.Write((byte) PlacementManagerMessage.StartPlacement);
             message.Write(range);
-            message.Write(true);//Is a tile.
+            message.Write(true); //Is a tile.
             message.Write(mapMgr.GetTileIndex(tileType));
             message.Write(alignOption);
 
-            var reply = mob.SendMessage(this, ComponentFamily.Actor,ComponentMessageType.GetActorConnection);
+            ComponentReplyMessage reply = mob.SendMessage(this, ComponentFamily.Actor,
+                                                          ComponentMessageType.GetActorConnection);
             if (reply.MessageType == ComponentMessageType.ReturnActorConnection)
-                IoCManager.Resolve<ISS13NetServer>().SendMessage(message, (NetConnection)reply.ParamsList[0], NetDeliveryMethod.ReliableOrdered);
+                IoCManager.Resolve<ISS13NetServer>().SendMessage(message, (NetConnection) reply.ParamsList[0],
+                                                                 NetDeliveryMethod.ReliableOrdered);
         }
 
         /// <summary>
@@ -176,13 +182,15 @@ namespace ServerServices.Placement
         /// </summary>
         public void SendPlacementCancel(Entity mob)
         {
-            var message = IoCManager.Resolve<ISS13NetServer>().CreateMessage();
-            message.Write((byte)NetMessage.PlacementManagerMessage);
-            message.Write((byte)PlacementManagerMessage.CancelPlacement);
+            NetOutgoingMessage message = IoCManager.Resolve<ISS13NetServer>().CreateMessage();
+            message.Write((byte) NetMessage.PlacementManagerMessage);
+            message.Write((byte) PlacementManagerMessage.CancelPlacement);
 
-            var reply = mob.SendMessage(this, ComponentFamily.Actor, ComponentMessageType.GetActorConnection);
+            ComponentReplyMessage reply = mob.SendMessage(this, ComponentFamily.Actor,
+                                                          ComponentMessageType.GetActorConnection);
             if (reply.MessageType == ComponentMessageType.ReturnActorConnection)
-                IoCManager.Resolve<ISS13NetServer>().SendMessage(message, (NetConnection)reply.ParamsList[0], NetDeliveryMethod.ReliableOrdered);
+                IoCManager.Resolve<ISS13NetServer>().SendMessage(message, (NetConnection) reply.ParamsList[0],
+                                                                 NetDeliveryMethod.ReliableOrdered);
         }
 
         /// <summary>
@@ -217,18 +225,18 @@ namespace ServerServices.Placement
         /// </summary>
         public void AssignBuildPermission(Entity mob, int range, string objectType, string alignOption)
         {
-            PlacementInformation newPermission = new PlacementInformation
-                {
-                    MobUid = mob.Uid,
-                    Range = range,
-                    IsTile = false,
-                    EntityType = objectType,
-                    PlacementOption = alignOption
-                };
+            var newPermission = new PlacementInformation
+                                    {
+                                        MobUid = mob.Uid,
+                                        Range = range,
+                                        IsTile = false,
+                                        EntityType = objectType,
+                                        PlacementOption = alignOption
+                                    };
 
-            var mobPermissions = from PlacementInformation permission in BuildPermissions
-                                 where permission.MobUid == mob.Uid
-                                 select permission;
+            IEnumerable<PlacementInformation> mobPermissions = from PlacementInformation permission in BuildPermissions
+                                                               where permission.MobUid == mob.Uid
+                                                               select permission;
 
             if (mobPermissions.Any()) //Already has one? Revoke the old one and add this one.
             {
@@ -246,18 +254,18 @@ namespace ServerServices.Placement
         /// </summary>
         public void AssignBuildPermissionTile(Entity mob, int range, string tileType, string alignOption)
         {
-            PlacementInformation newPermission = new PlacementInformation
-                {
-                    MobUid = mob.Uid,
-                    Range = range,
-                    IsTile = true,
-                    TileType = tileType,
-                    PlacementOption = alignOption
-                };
+            var newPermission = new PlacementInformation
+                                    {
+                                        MobUid = mob.Uid,
+                                        Range = range,
+                                        IsTile = true,
+                                        TileType = tileType,
+                                        PlacementOption = alignOption
+                                    };
 
-            var mobPermissions = from PlacementInformation permission in BuildPermissions
-                                 where permission.MobUid == mob.Uid
-                                 select permission;
+            IEnumerable<PlacementInformation> mobPermissions = from PlacementInformation permission in BuildPermissions
+                                                               where permission.MobUid == mob.Uid
+                                                               select permission;
 
             if (mobPermissions.Any()) //Already has one? Revoke the old one and add this one.
             {
@@ -275,12 +283,24 @@ namespace ServerServices.Placement
         /// </summary>
         public void RevokeAllBuildPermissions(Entity mob)
         {
-            var mobPermissions = from PlacementInformation permission in BuildPermissions
-                                 where permission.MobUid == mob.Uid
-                                 select permission;
+            IEnumerable<PlacementInformation> mobPermissions = from PlacementInformation permission in BuildPermissions
+                                                               where permission.MobUid == mob.Uid
+                                                               select permission;
 
             if (mobPermissions.Any())
                 BuildPermissions.RemoveAll(x => mobPermissions.Contains(x));
+        }
+
+        #endregion
+
+        private PlacementInformation GetPermission(int uid, string alignOpt)
+        {
+            IEnumerable<PlacementInformation> permission = from p in BuildPermissions
+                                                           where p.MobUid == uid && p.PlacementOption.Equals(alignOpt)
+                                                           select p;
+
+            if (permission.Any()) return permission.First();
+            else return null;
         }
     }
 }

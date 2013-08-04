@@ -1,30 +1,23 @@
 ﻿using System;
 using System.IO;
 using SS13_Shared;
-using ServerInterfaces;
 using SS13_Shared.ServerEnums;
+using ServerInterfaces;
 
 namespace ServerServices.Log
 {
     public class LogManager : IService
     {
-        StreamWriter logStream;
-        LogLevel currentLogLevel;
-
-        private string logPath;
-        public string LogPath
-        {
-            get { return logPath; }
-            set
-            {
-                logPath = value;
-            }
-        }
-
         /// <summary>
         /// Singleton
         /// </summary>
         private static LogManager singleton;
+
+        private LogLevel currentLogLevel;
+        private StreamWriter logStream;
+
+        public string LogPath { get; set; }
+
         public static LogManager Singleton
         {
             get
@@ -34,6 +27,15 @@ namespace ServerServices.Log
                 return singleton;
             }
         }
+
+        #region IService Members
+
+        public ServerServiceType ServiceType
+        {
+            get { return ServerServiceType.LogManager; }
+        }
+
+        #endregion
 
         /// <summary>
         /// Initialize log
@@ -45,7 +47,7 @@ namespace ServerServices.Log
             singleton.LogPath = _logPath;
             singleton.currentLogLevel = logLevel;
             singleton.Start();
-            LogManager.Log("Logging at level: " + logLevel.ToString());
+            Log("Logging at level: " + logLevel.ToString());
         }
 
         /// <summary>
@@ -69,10 +71,10 @@ namespace ServerServices.Log
             if (singleton == null)
                 throw new TypeInitializationException("LogManager Not Initialized.", null);
 
-            if ((int)logLevel >= (int)singleton.currentLogLevel)
+            if ((int) logLevel >= (int) singleton.currentLogLevel)
             {
                 string logType = logLevel.ToString();
-                if(logType == "Information")
+                if (logType == "Information")
                     logType = "Info";
                 logStream.WriteLine(DateTime.Now.ToString("o") + " - " + logType + ": " + Message);
                 Console.Write(logType + ": " + Message + "\n");
@@ -94,12 +96,6 @@ namespace ServerServices.Log
             {
                 Console.WriteLine(Message);
             }
-        }
-
-
-        public ServerServiceType ServiceType
-        {
-            get { return ServerServiceType.LogManager; }
         }
     }
 }

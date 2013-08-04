@@ -1,32 +1,28 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Drawing;
-using System.Linq;
-using System.Text;
-
+﻿using System.Drawing;
 using System.IO;
-using System.Xml;
 using System.Xml.Serialization;
 using SS13_Shared;
+using SS13_Shared.ServerEnums;
 using ServerInterfaces;
 using ServerInterfaces.Configuration;
-using SS13_Shared.ServerEnums;
 using ServerServices.Log;
 
 namespace ServerServices.Configuration
 {
-    public sealed class ConfigurationManager: IConfigurationManager, IService
+    public sealed class ConfigurationManager : IConfigurationManager, IService
     {
-        public PersistentConfiguration Configuration;
         private string ConfigFile;
-        
+        public PersistentConfiguration Configuration;
+
+        #region IConfigurationManager Members
+
         public void Initialize(string ConfigFileLoc)
         {
             if (File.Exists(ConfigFileLoc))
             {
-                System.Xml.Serialization.XmlSerializer ConfigLoader = new System.Xml.Serialization.XmlSerializer(typeof(PersistentConfiguration));
+                var ConfigLoader = new XmlSerializer(typeof (PersistentConfiguration));
                 StreamReader ConfigReader = File.OpenText(ConfigFileLoc);
-                PersistentConfiguration Config = (PersistentConfiguration)ConfigLoader.Deserialize(ConfigReader);
+                var Config = (PersistentConfiguration) ConfigLoader.Deserialize(ConfigReader);
                 ConfigReader.Close();
                 Configuration = Config;
                 ConfigFile = ConfigFileLoc;
@@ -46,17 +42,13 @@ namespace ServerServices.Configuration
             }
             else
             {
-                System.Xml.Serialization.XmlSerializer ConfigSaver = new System.Xml.Serialization.XmlSerializer(Configuration.GetType());
+                var ConfigSaver = new XmlSerializer(Configuration.GetType());
                 StreamWriter ConfigWriter = File.CreateText(ConfigFile);
                 ConfigSaver.Serialize(ConfigWriter, Configuration);
                 ConfigWriter.Flush();
                 ConfigWriter.Close();
                 LogManager.Log("Server configuration saved to '" + ConfigFile + "'.");
             }
-        }
-
-        public void LoadResources()
-        {
         }
 
         public string ServerName
@@ -76,7 +68,7 @@ namespace ServerServices.Configuration
             get { return Configuration.serverWelcomeMessage; }
             set { Configuration.serverWelcomeMessage = value; }
         }
-        
+
         public string AdminPassword
         {
             get { return Configuration.AdminPassword; }
@@ -99,7 +91,7 @@ namespace ServerServices.Configuration
             get { return Configuration.Port; }
             set { Configuration.Port = value; }
         }
-        
+
         public int ServerMaxPlayers
         {
             get { return Configuration.serverMaxPlayers; }
@@ -124,11 +116,6 @@ namespace ServerServices.Configuration
             set { Configuration.LogLevel = value; }
         }
 
-        public ServerServiceType ServiceType
-        {
-            get { return ServerServiceType.ConfigManager; }
-        }
-
         public float TickRate
         {
             get { return Configuration.TickRate; }
@@ -139,6 +126,21 @@ namespace ServerServices.Configuration
         {
             get { return Configuration.ConsoleSize; }
             set { Configuration.ConsoleSize = value; }
+        }
+
+        #endregion
+
+        #region IService Members
+
+        public ServerServiceType ServiceType
+        {
+            get { return ServerServiceType.ConfigManager; }
+        }
+
+        #endregion
+
+        public void LoadResources()
+        {
         }
     }
 }

@@ -1,14 +1,16 @@
-﻿using ServerInterfaces.Player;
-using ServerInterfaces.GameMode;
+﻿using ServerInterfaces.GameMode;
+using ServerInterfaces.Player;
 using ServerInterfaces.Round;
 
 namespace ServerServices.Round
 {
-    class RoundManager : IRoundManager
+    internal class RoundManager : IRoundManager
     {
-        public IGameMode CurrentGameMode { get; private set; }
-
         private bool _ready;
+
+        #region IRoundManager Members
+
+        public IGameMode CurrentGameMode { get; private set; }
 
         public void Initialize(IGameMode gamemode) //Called by StartLobby() before InitModules.
         {
@@ -22,5 +24,7 @@ namespace ServerServices.Round
             CurrentGameMode.SpawnPlayer(player);
             CurrentGameMode.PlayerJoined(player);
         }
+
+        #endregion
     }
 }

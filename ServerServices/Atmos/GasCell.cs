@@ -1,35 +1,30 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
 using BKSystem.IO;
 using SS13_Shared;
 using ServerInterfaces.Atmos;
-using ServerServices.Tiles;
 using ServerInterfaces.Map;
+using ServerServices.Log;
+using ServerServices.Tiles;
 
 namespace ServerServices.Atmos
 {
-
     public class GasCell : IGasCell
     {
-        public Tile attachedTile;
-        public int arrX;
-        public int arrY;
-        bool calculated = true;
-        private Vector2 gasVel;
-        private Vector2 NextGasVel;
-        public Dictionary<GasType, float> lastSentGasses;
-        private float lastVelSent = 0;
-        Random rand;
-
-        private GasMixture gasMixture;
-        
-        //Constants
         private const float SourceDamping = .25f;
         private const float RecieverDamping = .1f;
-        public const float quarterpi = (float)(Math.PI / 4);
+        public const float quarterpi = (float) (Math.PI/4);
         private const float VelocityMultiplier = .1f;
+        private readonly GasMixture gasMixture;
+        private Vector2 NextGasVel;
+        public int arrX;
+        public int arrY;
+        public Tile attachedTile;
+        private bool calculated = true;
+        private Vector2 gasVel;
+        public Dictionary<GasType, float> lastSentGasses;
+        private float lastVelSent = 0;
+        private Random rand;
 
         public GasCell(int _x, int _y, Tile _attachedTile)
         {
@@ -43,12 +38,19 @@ namespace ServerServices.Atmos
             attachedTile = _attachedTile;
         }
 
+        public GasMixture GasMixture
+        {
+            get { return gasMixture; }
+        }
+
         // Lets assume all gasses are ideal gasses so we can use PV = nRT
         // Air is 78% Nitrogen, 21% Oxygen, 1% CO2 (very roughly)
         // So using the ideal gas equation we can work out how many moles of each gas
         // are in "normal" air (~ 100kPa, 298.15K)
 
         // Roughly 0.08 moles of gas in 2m^3 (2 litres) of air (assuming each "tile" is 1x1x2 m)
+
+        #region IGasCell Members
 
         public void InitSTP()
         {
@@ -79,26 +81,12 @@ namespace ServerServices.Atmos
             calculated = false;
         }
 
-        public void AttachToTile(Tile t)
-        {
-            attachedTile = t;
-        }
-
-        public void SetRadius(float r)
-        {
-            if(r > 7.5)
-                r = 7.5f;
-            if (r < 0)
-                r = 0;
-            //Defunct
-        }
-
         public void AddGas(float amount, GasType gas)
         {
             if (amount == 1.0f)
             {
                 gasMixture.SetNextTemperature(5000f);
-                Log.LogManager.Log("Temp increase");
+                LogManager.Log("Temp increase");
             }
             else
             {
@@ -123,16 +111,18 @@ namespace ServerServices.Atmos
                 {
                     if (i == 0 && j == 0) // If we're on this cell
                         continue;
-                    if (arrX + i < 0 || arrX + i >= m.GetMapWidth() || arrY + j < 0 || arrY + j >= m.GetMapHeight()) // If out of bounds
+                    if (arrX + i < 0 || arrX + i >= m.GetMapWidth() || arrY + j < 0 || arrY + j >= m.GetMapHeight())
+                        // If out of bounds
                         continue;
 
                     if (Math.Abs(i) + Math.Abs(j) == 2) //If its a corner
                     {
-                        if (!m.GetTileAt(arrX + i, arrY).GasPermeable && !m.GetTileAt(arrX, arrY + i).GasPermeable) // And it is a corner separated from us by 2 blocking walls
+                        if (!m.GetTileAt(arrX + i, arrY).GasPermeable && !m.GetTileAt(arrX, arrY + i).GasPermeable)
+                            // And it is a corner separated from us by 2 blocking walls
                             continue; //Don't process it. These cells are not connected.
                     }
 
-                    neighbor = (GasCell)m.GetTileAt(arrX + i, arrY + j).GasCell;
+                    neighbor = (GasCell) m.GetTileAt(arrX + i, arrY + j).GasCell;
                     if (neighbor.Calculated) // if neighbor's already been calculated, skip it
                         continue;
 
@@ -150,37 +140,37 @@ namespace ServerServices.Atmos
                         }
                         else
                         {
-                            Vector2 neighDir = new Vector2(i, j);
+                            var neighDir = new Vector2(i, j);
 
-                            float angle = quarterpi / 2.0f;
+                            float angle = quarterpi/2.0f;
                             if (gasVel.Magnitude > 0.0f)
-                                angle = Math.Abs(neighDir.Angle(gasVel)); // Get the angle between our current flow vector and the cell we're sharing with
-                            if (angle < quarterpi) // If the angle is more than 45 we shouldn't share with this cell as the gas is flowing away from it
+                                angle = Math.Abs(neighDir.Angle(gasVel));
+                                    // Get the angle between our current flow vector and the cell we're sharing with
+                            if (angle < quarterpi)
+                                // If the angle is more than 45 we shouldn't share with this cell as the gas is flowing away from it
                             {
                                 if (DAmount > 0) // We're giving
                                 {
-                                    float pAmount = Clamp(GasMixture.Pressure / neighbor.GasMixture.Pressure);
-                                    float proportion = Math.Abs(((1 / quarterpi) * (quarterpi - angle)) * pAmount);
-                                    GasMixture.Diffuse(neighbor.GasMixture, 1f / proportion);
-                                    neighbor.NextGasVel += new Vector2(DAmount * i, DAmount * j) * RecieverDamping;
-                                    NextGasVel += new Vector2(DAmount * i, DAmount * j) * SourceDamping;
+                                    float pAmount = Clamp(GasMixture.Pressure/neighbor.GasMixture.Pressure);
+                                    float proportion = Math.Abs(((1/quarterpi)*(quarterpi - angle))*pAmount);
+                                    GasMixture.Diffuse(neighbor.GasMixture, 1f/proportion);
+                                    neighbor.NextGasVel += new Vector2(DAmount*i, DAmount*j)*RecieverDamping;
+                                    NextGasVel += new Vector2(DAmount*i, DAmount*j)*SourceDamping;
                                 }
                                 else // We're recieving
                                 {
-                                    float pAmount = Clamp(neighbor.GasMixture.Pressure / GasMixture.Pressure);
-                                    float proportion = Math.Abs(((1 / quarterpi) * (quarterpi - angle)) * pAmount);
-                                    neighbor.GasMixture.Diffuse(GasMixture, 1f / proportion);
-                                    neighbor.NextGasVel += new Vector2(-DAmount * i, DAmount * j) * RecieverDamping;
-                                    NextGasVel += new Vector2(-DAmount * i, DAmount * j) * SourceDamping;
+                                    float pAmount = Clamp(neighbor.GasMixture.Pressure/GasMixture.Pressure);
+                                    float proportion = Math.Abs(((1/quarterpi)*(quarterpi - angle))*pAmount);
+                                    neighbor.GasMixture.Diffuse(GasMixture, 1f/proportion);
+                                    neighbor.NextGasVel += new Vector2(-DAmount*i, DAmount*j)*RecieverDamping;
+                                    NextGasVel += new Vector2(-DAmount*i, DAmount*j)*SourceDamping;
                                 }
                             }
                         }
                     }
-                    
-
-
 
                     #region old gas code
+
                     /*
                     if (DAmount == 0 || Math.Abs(DAmount) < 10)
                     {
@@ -276,21 +266,11 @@ namespace ServerServices.Atmos
                         NextGasVel = NextGasVel + addvel * chaos * RecieverDamping;
                     }*/
 
-#endregion
+                    #endregion
                 }
             }
 
             calculated = true;
-
-        }
-
-        public float Clamp(float Flow)
-        {
-            if (Flow > 0.3f)
-                return 0.3f;
-            if(Flow <= 0.0f)
-                return 0.01f;
-            return Flow;
         }
 
         /// <summary>
@@ -301,23 +281,22 @@ namespace ServerServices.Atmos
         /// 
         public int PackDisplayBytes(BitStream bits, bool all = false)
         {
-           
             int changedTypes = 0;
 
             //How many gas types we have!
-            int typesCount = Enum.GetValues(typeof(GasType)).Length;
+            int typesCount = Enum.GetValues(typeof (GasType)).Length;
             var gasChanges = new byte[typesCount];
-            var bitCount = typesCount;
+            int bitCount = typesCount;
             for (int i = typesCount - 1; i >= 0; i--)
             {
                 byte amount;
                 var t = (GasType) i;
-                switch(t)
+                switch (t)
                 {
                     case GasType.Toxin:
                         if (gasMixture.gasses[GasType.Toxin] > 0.00005f && (checkUpdateThreshold(GasType.Toxin) || all))
                         {
-                            amount = (byte)normalizeGasAmount(gasMixture.gasses[GasType.Toxin]);
+                            amount = (byte) normalizeGasAmount(gasMixture.gasses[GasType.Toxin]);
                             gasChanges[i] = amount;
                             changedTypes = (changedTypes | (1 << i));
                             lastSentGasses[GasType.Toxin] = gasMixture.gasses[GasType.Toxin];
@@ -332,7 +311,7 @@ namespace ServerServices.Atmos
                         //if (gasMixture.gasses[GasType.WVapor] > 0.005f && (checkUpdateThreshold(GasType.WVapor) || all))
                         if (gasMixture.Burning)
                         {
-                            amount = (byte)15;// normalizeGasAmount(gasMixture.gasses[GasType.WVapor]);
+                            amount = 15; // normalizeGasAmount(gasMixture.gasses[GasType.WVapor]);
                             gasChanges[i] = amount;
                             changedTypes = (changedTypes | (1 << i));
                             lastSentGasses[GasType.WVapor] = gasMixture.gasses[GasType.WVapor];
@@ -340,7 +319,7 @@ namespace ServerServices.Atmos
                         }
                         else
                         {
-                            amount = (byte)0;// normalizeGasAmount(gasMixture.gasses[GasType.WVapor]);
+                            amount = 0; // normalizeGasAmount(gasMixture.gasses[GasType.WVapor]);
                             gasChanges[i] = amount;
                             changedTypes = (changedTypes | (1 << i));
                             lastSentGasses[GasType.WVapor] = gasMixture.gasses[GasType.WVapor];
@@ -355,11 +334,11 @@ namespace ServerServices.Atmos
 
             //Make a new bitstream with the number o bits we need.
             bits.Write(changedTypes, 0, typesCount); //write 8 bits for what gas types have changed...
-            for(int i = typesCount - 1;i>=0;i--)
+            for (int i = typesCount - 1; i >= 0; i--)
             {
                 int type = 1 << i;
                 //Checks flags in the form of 00001011 -- each 1 is a gas type that needs sending... I know this is nuts but it works great!
-                if((changedTypes & type) == type)
+                if ((changedTypes & type) == type)
                 {
                     bits.Write(gasChanges[i], 0, 4);
                 }
@@ -368,10 +347,62 @@ namespace ServerServices.Atmos
             return bitCount;
         }
 
+        public float GasAmount(GasType type)
+        {
+            return gasMixture.gasses[type];
+        }
+
+        public float TotalGas
+        {
+            get { return gasMixture.TotalGas; }
+        }
+
+        public Vector2 GasVelocity
+        {
+            get { return gasVel*VelocityMultiplier; }
+        }
+
+        public bool Calculated
+        {
+            get { return calculated; }
+        }
+
+        public float Pressure
+        {
+            get { return gasMixture.Pressure; }
+        }
+
+        #endregion
+
+        public void AttachToTile(Tile t)
+        {
+            attachedTile = t;
+        }
+
+        public void SetRadius(float r)
+        {
+            if (r > 7.5)
+                r = 7.5f;
+            if (r < 0)
+                r = 0;
+            //Defunct
+        }
+
+        public float Clamp(float Flow)
+        {
+            if (Flow > 0.3f)
+                return 0.3f;
+            if (Flow <= 0.0f)
+                return 0.01f;
+            return Flow;
+        }
+
         private bool checkUpdateThreshold(GasType g, float multiplier = 2000)
         {
             //If the delta since the last update was sent is greater than 2, send another update.
-            if(Math.Abs(normalizeGasAmount(gasMixture.gasses[g], multiplier) - normalizeGasAmount(lastSentGasses[g], multiplier)) >= 1)
+            if (
+                Math.Abs(normalizeGasAmount(gasMixture.gasses[g], multiplier) -
+                         normalizeGasAmount(lastSentGasses[g], multiplier)) >= 1)
                 return true;
             return false;
         }
@@ -383,57 +414,12 @@ namespace ServerServices.Atmos
         /// <returns></returns>
         public int normalizeGasAmount(float amount, float multiplier = 2000)
         {
-            amount = amount * multiplier;
+            amount = amount*multiplier;
             if (amount > 150)
                 amount = 150;
             else if (amount < 2)
                 amount = 0;
-            return (int)(amount / 10);
-        }
-
-        public float GasAmount(GasType type)
-        {
-            return gasMixture.gasses[type];
-        }
-
-        public float TotalGas
-        {
-            get
-            {
-                return gasMixture.TotalGas;
-            }
-        }
-
-        public GasMixture GasMixture
-        {
-            get
-            {
-                return gasMixture;
-            }
-        }
-
-        public Vector2 GasVelocity
-        {
-            get
-            {
-                return gasVel * VelocityMultiplier;
-            }
-        }
-
-        public bool Calculated
-        {
-            get
-            {
-                return calculated;
-            }
-        }
-
-        public float Pressure
-        {
-            get
-            {
-                return gasMixture.Pressure;
-            }
+            return (int) (amount/10);
         }
     }
 }

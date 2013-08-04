@@ -1,19 +1,14 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using SS13_Shared;
+﻿using ServerServices.Map;
 
 namespace ServerServices.Tiles
 {
     public class Floor : Tile
     {
-        public Floor(int x, int y, ServerServices.Map.MapManager _map)
+        public Floor(int x, int y, MapManager _map)
             : base(x, y, _map)
         {
             StartWithAtmos = true;
             GasPermeable = true;
         }
-
     }
 }

@@ -6,11 +6,7 @@ namespace GameObject
 {
     public class EntityTemplateDatabase
     {
-        private Dictionary<string, EntityTemplate> m_templates;
-
-        public Dictionary<string, EntityTemplate> Templates { get { return m_templates; } }
-
-        public EntityManager EntityManager { get; private set; }
+        private readonly Dictionary<string, EntityTemplate> m_templates;
 
         public EntityTemplateDatabase(EntityManager entityManager)
         {
@@ -18,6 +14,13 @@ namespace GameObject
             m_templates = new Dictionary<string, EntityTemplate>();
             LoadAllTemplates();
         }
+
+        public Dictionary<string, EntityTemplate> Templates
+        {
+            get { return m_templates; }
+        }
+
+        public EntityManager EntityManager { get; private set; }
 
         private void LoadAllTemplates()
         {
@@ -33,7 +36,7 @@ namespace GameObject
         public void LoadTemplateFromXML(string path)
         {
             XElement tmp = XDocument.Load(path).Element("EntityTemplates");
-            var templates = tmp.Elements("EntityTemplate");
+            IEnumerable<XElement> templates = tmp.Elements("EntityTemplate");
             foreach (XElement e in templates)
             {
                 var newTemplate = new EntityTemplate(EntityManager);

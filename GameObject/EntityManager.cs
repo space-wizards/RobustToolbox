@@ -34,25 +34,15 @@ namespace GameObject
 
     public class EntityManager : IEntityManager
     {
+        private readonly string _componentNamespace;
         protected readonly Dictionary<int, Entity> _entities = new Dictionary<int, Entity>();
-        private string _componentNamespace;
-        public ComponentFactory ComponentFactory { get; private set; }
-        public ComponentManager ComponentManager { get; private set; }
-        public IEntityNetworkManager EntityNetworkManager { get; set; }
-        protected EntityFactory EntityFactory { get; private set; }
-        public EntityTemplateDatabase EntityTemplateDatabase { get; private set; }
-        public EntitySystemManager EntitySystemManager { get; private set; }
         protected Queue<IncomingEntityMessage> MessageBuffer = new Queue<IncomingEntityMessage>();
-        protected int NextUid=0;
-        public bool Initialized { get; protected set; }
-
-        //This is a crude method to tell if we're running on the server or on the client. Fuck me.
-        public EngineType EngineType { get; set; }
+        protected int NextUid = 0;
 
         public EntityManager(EngineType engineType, IEntityNetworkManager entityNetworkManager)
         {
             EngineType = engineType;
-            switch(EngineType)
+            switch (EngineType)
             {
                 case EngineType.Client:
                     _componentNamespace = "CGO";
@@ -69,6 +59,22 @@ namespace GameObject
             EntityFactory = new EntityFactory(EntityTemplateDatabase);
             Initialize();
         }
+
+        protected EntityFactory EntityFactory { get; private set; }
+        public EntityTemplateDatabase EntityTemplateDatabase { get; private set; }
+        public EntitySystemManager EntitySystemManager { get; private set; }
+        public bool Initialized { get; protected set; }
+
+        #region IEntityManager Members
+
+        public ComponentFactory ComponentFactory { get; private set; }
+        public ComponentManager ComponentManager { get; private set; }
+        public IEntityNetworkManager EntityNetworkManager { get; set; }
+
+        //This is a crude method to tell if we're running on the server or on the client. Fuck me.
+        public EngineType EngineType { get; set; }
+
+        #endregion
 
         public void Initialize()
         {
@@ -87,7 +93,7 @@ namespace GameObject
 
         public virtual void InitializeEntities()
         {
-            foreach (var e in _entities.Values.Where(e => !e.Initialized))
+            foreach (Entity e in _entities.Values.Where(e => !e.Initialized))
                 e.Initialize();
             if (EngineType == EngineType.Client)
                 Initialized = true;
@@ -95,7 +101,6 @@ namespace GameObject
 
         public virtual void LoadEntities()
         {
-            
         }
 
         public virtual void Shutdown()
@@ -108,18 +113,6 @@ namespace GameObject
         }
 
         #region Entity Management
-
-
-        /// <summary>
-        /// Disposes all entities and clears all lists.
-        /// </summary>
-        public void FlushEntities()
-        {
-            foreach (Entity e in _entities.Values)
-                e.Shutdown();
-            _entities.Clear();
-        }
-
 
         /// <summary>
         /// Returns an entity by id
@@ -147,15 +140,25 @@ namespace GameObject
             _entities.Remove(e.Uid);
         }
 
+        public bool EntityExists(int eid)
+        {
+            return _entities.ContainsKey(eid);
+        }
+
+        /// <summary>
+        /// Disposes all entities and clears all lists.
+        /// </summary>
+        public void FlushEntities()
+        {
+            foreach (Entity e in _entities.Values)
+                e.Shutdown();
+            _entities.Clear();
+        }
+
         protected void DeleteEntity(int entityUid)
         {
             if (EntityExists(entityUid))
                 DeleteEntity(GetEntity(entityUid));
-        }
-        
-        public bool EntityExists(int eid)
-        {
-            return _entities.ContainsKey(eid);
         }
 
         /// <summary>
@@ -167,21 +170,23 @@ namespace GameObject
         {
             if (uid == -1)
                 uid = NextUid++;
-            var e = EntityFactory.CreateEntity(EntityType);
+            Entity e = EntityFactory.CreateEntity(EntityType);
             if (e != null)
             {
                 e.Uid = uid;
                 _entities.Add(e.Uid, e);
                 if (Initialized)
                     e.Initialize();
-                if(!e.HasComponent(ComponentFamily.SVars))
+                if (!e.HasComponent(ComponentFamily.SVars))
                     e.AddComponent(ComponentFamily.SVars, ComponentFactory.GetComponent("SVarsComponent"));
             }
             return e;
         }
+
         #endregion
 
         #region message processing
+
         protected void ProcessMsgBuffer()
         {
             if (!Initialized)
@@ -202,7 +207,7 @@ namespace GameObject
                     _entities[entMsg.Uid].HandleNetworkMessage(entMsg);
             }
 
-            foreach (var miss in misses)
+            foreach (IncomingEntityMessage miss in misses)
                 MessageBuffer.Enqueue(miss);
 
             MessageBuffer.Clear(); //Should be empty at this point anyway.
@@ -222,14 +227,14 @@ namespace GameObject
         {
             if (!Initialized)
             {
-                var emsg = ProcessNetMessage(msg);
+                IncomingEntityMessage emsg = ProcessNetMessage(msg);
                 if (emsg.MessageType != EntityMessage.Null)
                     MessageBuffer.Enqueue(emsg);
             }
             else
             {
                 ProcessMsgBuffer();
-                var emsg = ProcessNetMessage(msg);
+                IncomingEntityMessage emsg = ProcessNetMessage(msg);
                 if (!_entities.ContainsKey(emsg.Uid))
                     MessageBuffer.Enqueue(emsg);
                 else
@@ -244,7 +249,7 @@ namespace GameObject
         public void ApplyEntityStates(List<EntityState> entityStates)
         {
             var entityKeys = new List<int>();
-            foreach (var es in entityStates)
+            foreach (EntityState es in entityStates)
             {
                 entityKeys.Add(es.StateData.Uid);
                 //Known entities
@@ -261,14 +266,14 @@ namespace GameObject
             }
 
             //Delete entities that exist here but don't exist in the entity states
-            var toDelete = _entities.Keys.Where(k => !entityKeys.Contains(k)).ToArray();
-            foreach (var k in toDelete)
+            int[] toDelete = _entities.Keys.Where(k => !entityKeys.Contains(k)).ToArray();
+            foreach (int k in toDelete)
                 DeleteEntity(k);
 
             if (!Initialized)
                 InitializeEntities();
         }
-        #endregion
 
+        #endregion
     }
 }

@@ -1,6 +1,6 @@
 ﻿using System;
-using SS13_Shared;
 using GorgonLibrary.InputDevices;
+using SS13_Shared;
 
 namespace ClientInterfaces.Input
 {

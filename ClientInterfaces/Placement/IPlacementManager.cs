@@ -1,5 +1,4 @@
 ﻿using System;
-using ClientInterfaces.GOC;
 using ClientInterfaces.Map;
 using GameObject;
 using GorgonLibrary;

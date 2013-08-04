@@ -12,6 +12,7 @@ namespace ClientInterfaces.Collision
         /// <param name="collider">Collision rectangle to check</param>
         /// <returns>true if collides, false if not</returns>
         bool IsColliding(RectangleF collider);
+
         bool TryCollide(Entity collider);
         void AddCollidable(ICollidable collidable);
         void RemoveCollidable(ICollidable collidable);

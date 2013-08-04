@@ -8,6 +8,7 @@ namespace ClientInterfaces.Network
     {
         NetPeerStatistics CurrentStatistics { get; }
         bool IsConnected { get; }
+        long UniqueId { get; }
 
         event EventHandler Connected;
         event EventHandler Disconnected;
@@ -21,6 +22,5 @@ namespace ClientInterfaces.Network
         void SendMessage(NetOutgoingMessage message, NetDeliveryMethod deliveryMethod);
         void ConnectTo(string ipAddress);
         void SendClientName(string name);
-        long UniqueId { get; }
     }
 }

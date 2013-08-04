@@ -1,9 +1,8 @@
 ﻿using System;
 using System.Drawing;
-using GorgonLibrary;
+using GorgonLibrary.InputDevices;
 using Lidgren.Network;
 using SS13_Shared;
-using GorgonLibrary.InputDevices;
 
 namespace ClientInterfaces.UserInterface
 {
@@ -18,6 +17,11 @@ namespace ClientInterfaces.UserInterface
         Point Position { get; set; }
 
         Rectangle ClientArea { get; set; }
+        bool RecieveInput { get; set; }
+
+        bool Focus { get; set; }
+
+        int ZDepth { get; set; }
 
         void Update(float frameTime);
         void Render();
@@ -36,12 +40,5 @@ namespace ClientInterfaces.UserInterface
         bool KeyDown(KeyboardInputEventArgs e);
 
         void ComponentUpdate(params object[] args);
-
-        bool RecieveInput { get; set; }
-
-        bool Focus { get; set; }
-
-        int ZDepth { get; set; }
-  
     }
 }

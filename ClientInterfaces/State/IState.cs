@@ -1,5 +1,4 @@
-﻿using ClientInterfaces.Network;
-using GorgonLibrary.Graphics;
+﻿using GorgonLibrary.Graphics;
 using GorgonLibrary.InputDevices;
 
 namespace ClientInterfaces.State

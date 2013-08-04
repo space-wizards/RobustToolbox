@@ -1,7 +1,7 @@
-﻿using GorgonLibrary.InputDevices;
+﻿using ClientInterfaces.GOC;
+using GorgonLibrary.InputDevices;
 using Lidgren.Network;
 using SS13_Shared;
-using ClientInterfaces.GOC;
 
 namespace ClientInterfaces.UserInterface
 {

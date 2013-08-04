@@ -1,9 +1,7 @@
-﻿using System.Drawing;
-using ClientInterfaces.Lighting;
+﻿using System;
+using System.Drawing;
 using GorgonLibrary;
 using Lidgren.Network;
-using SS13_Shared;
-using System;
 
 namespace ClientInterfaces.Map
 {

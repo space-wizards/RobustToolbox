@@ -1,5 +1,5 @@
-﻿using System.Linq;
-using System.Drawing;
+﻿using System.Drawing;
+using System.Linq;
 using ClientInterfaces.Collision;
 using GameObject;
 using GorgonLibrary;
@@ -10,37 +10,47 @@ namespace CGO
 {
     public class ColliderComponent : Component
     {
-        public ColliderComponent() : base()
-        {
-            Family = ComponentFamily.Collider;
-        }
+        private RectangleF currentAABB;
 
         /// <summary>
         /// X - Top | Y - Right | Z - Bottom | W - Left
         /// </summary>
         private Vector4D tweakAABB = Vector4D.Zero;
+
+        public ColliderComponent()
+        {
+            Family = ComponentFamily.Collider;
+        }
+
         private Vector4D TweakAABB
         {
             get { return tweakAABB; }
             set { tweakAABB = value; }
         }
-        
-        private RectangleF currentAABB;
+
         public RectangleF OffsetAABB
         {
             get
-            { // Return tweaked AABB
+            {
+                // Return tweaked AABB
                 if (currentAABB != null)
-                    return new RectangleF(currentAABB.Left + Owner.GetComponent<TransformComponent>(ComponentFamily.Transform).Position.X - (currentAABB.Width / 2) + tweakAABB.W,
-                                        currentAABB.Top + Owner.GetComponent<TransformComponent>(ComponentFamily.Transform).Position.Y - (currentAABB.Height / 2) + tweakAABB.X,
-                                        currentAABB.Width - (tweakAABB.W - tweakAABB.Y),
-                                        currentAABB.Height - (tweakAABB.X - tweakAABB.Z));
+                    return
+                        new RectangleF(
+                            currentAABB.Left +
+                            Owner.GetComponent<TransformComponent>(ComponentFamily.Transform).Position.X -
+                            (currentAABB.Width/2) + tweakAABB.W,
+                            currentAABB.Top +
+                            Owner.GetComponent<TransformComponent>(ComponentFamily.Transform).Position.Y -
+                            (currentAABB.Height/2) + tweakAABB.X,
+                            currentAABB.Width - (tweakAABB.W - tweakAABB.Y),
+                            currentAABB.Height - (tweakAABB.X - tweakAABB.Z));
                 else
                     return RectangleF.Empty;
             }
         }
 
-        public override ComponentReplyMessage RecieveMessage(object sender, ComponentMessageType type, params object[] list)
+        public override ComponentReplyMessage RecieveMessage(object sender, ComponentMessageType type,
+                                                             params object[] list)
         {
             ComponentReplyMessage reply = base.RecieveMessage(sender, type, list);
 
@@ -67,7 +77,7 @@ namespace CGO
             switch (parameter.MemberName)
             {
                 case "TweakAABB":
-                        TweakAABB = parameter.GetValue<Vector4D>();
+                    TweakAABB = parameter.GetValue<Vector4D>();
                     break;
             }
         }
@@ -83,10 +93,11 @@ namespace CGO
         /// </summary>
         private void GetAABB()
         {
-            var reply = Owner.SendMessage(this, ComponentFamily.Renderable, ComponentMessageType.GetAABB);
+            ComponentReplyMessage reply = Owner.SendMessage(this, ComponentFamily.Renderable,
+                                                            ComponentMessageType.GetAABB);
             if (reply.MessageType == ComponentMessageType.CurrentAABB)
             {
-                currentAABB = (RectangleF)reply.ParamsList[0];
+                currentAABB = (RectangleF) reply.ParamsList[0];
             }
             else
                 return;
@@ -99,7 +110,5 @@ namespace CGO
             isColliding = collisionManager.TryCollide(Owner);
             return new ComponentReplyMessage(ComponentMessageType.CollisionStatus, isColliding);
         }
-
-
     }
 }

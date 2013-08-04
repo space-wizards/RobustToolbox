@@ -1,29 +1,28 @@
-﻿using System.Collections.Generic;
-using System.Linq;
+﻿using System.Drawing;
 using GameObject;
-using SS13_Shared;
+using Lidgren.Network;
 using SS13_Shared.GO;
-using System.Drawing;
 
 namespace CGO
 {
     public class ClickableComponent : Component
     {
-        public ClickableComponent() :base()
+        public ClickableComponent()
         {
             Family = ComponentFamily.Click;
         }
 
-        public override ComponentReplyMessage RecieveMessage(object sender, ComponentMessageType type, params object[] list)
+        public override ComponentReplyMessage RecieveMessage(object sender, ComponentMessageType type,
+                                                             params object[] list)
         {
-            var reply =  base.RecieveMessage(sender, type, list);
+            ComponentReplyMessage reply = base.RecieveMessage(sender, type, list);
             if (sender == this)
                 return reply;
-            
-            switch(type)
+
+            switch (type)
             {
                 case ComponentMessageType.ClickedInHand:
-                    DispatchInHandClick((int)list[0]);
+                    DispatchInHandClick((int) list[0]);
                     break;
             }
 
@@ -32,12 +31,13 @@ namespace CGO
 
         public bool CheckClick(PointF worldPos, out int drawdepth)
         {
-            var reply = Owner.SendMessage(this, ComponentFamily.Renderable, ComponentMessageType.CheckSpriteClick, worldPos);
+            ComponentReplyMessage reply = Owner.SendMessage(this, ComponentFamily.Renderable,
+                                                            ComponentMessageType.CheckSpriteClick, worldPos);
 
-            if (reply.MessageType == ComponentMessageType.SpriteWasClicked && (bool)reply.ParamsList[0])
+            if (reply.MessageType == ComponentMessageType.SpriteWasClicked && (bool) reply.ParamsList[0])
             {
-                drawdepth = (int)reply.ParamsList[1];
-                return (bool)reply.ParamsList[0];
+                drawdepth = (int) reply.ParamsList[1];
+                return (bool) reply.ParamsList[0];
             }
 
             drawdepth = -1;
@@ -46,12 +46,14 @@ namespace CGO
 
         public void DispatchClick(int userUID)
         {
-            Owner.SendComponentNetworkMessage(this, Lidgren.Network.NetDeliveryMethod.ReliableOrdered, ComponentMessageType.Click, userUID);
+            Owner.SendComponentNetworkMessage(this, NetDeliveryMethod.ReliableOrdered, ComponentMessageType.Click,
+                                              userUID);
         }
 
         public void DispatchInHandClick(int userUID)
         {
-            Owner.SendComponentNetworkMessage(this, Lidgren.Network.NetDeliveryMethod.ReliableOrdered, ComponentMessageType.ClickedInHand, userUID);
+            Owner.SendComponentNetworkMessage(this, NetDeliveryMethod.ReliableOrdered,
+                                              ComponentMessageType.ClickedInHand, userUID);
         }
     }
 }

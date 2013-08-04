@@ -14,16 +14,17 @@ namespace CGO
     {
         //Contains a standard light
         public ILight _light;
-        public int _lightRadius = 512;
+        public Vector3D _lightColor = new Vector3D(190, 190, 190);
         public Vector2D _lightOffset = new Vector2D(0, 0);
-        public Vector3D _lightColor = new Vector3D(190,190,190);
+        public int _lightRadius = 512;
         protected string _mask = "";
         public LightModeClass _mode = LightModeClass.Constant;
-        
-        public PointLightComponent():base()
+
+        public PointLightComponent()
         {
             Family = ComponentFamily.Light;
         }
+
         public override Type StateType
         {
             get { return typeof (LightComponentState); }
@@ -38,7 +39,7 @@ namespace CGO
             IoCManager.Resolve<ILightManager>().AddLight(_light);
 
             _light.SetRadius(_lightRadius);
-            _light.SetColor(255, (int)_lightColor.X, (int)_lightColor.Y, (int)_lightColor.Z);
+            _light.SetColor(255, (int) _lightColor.X, (int) _lightColor.Y, (int) _lightColor.Z);
             _light.Move(Owner.GetComponent<TransformComponent>(ComponentFamily.Transform).Position + _lightOffset);
             _light.SetMask(_mask);
             Owner.GetComponent<TransformComponent>(ComponentFamily.Transform).OnMove += OnMove;
@@ -48,10 +49,10 @@ namespace CGO
         {
             base.HandleNetworkMessage(message, sender);
             var type = (ComponentMessageType) message.MessageParameters[0];
-            switch(type)
+            switch (type)
             {
                 case ComponentMessageType.SetLightMode:
-                    SetMode((LightModeClass)message.MessageParameters[1]);
+                    SetMode((LightModeClass) message.MessageParameters[1]);
                     break;
             }
         }
@@ -61,25 +62,27 @@ namespace CGO
             switch (parameter.MemberName)
             {
                 case "lightoffsetx":
-                    _lightOffset.X = parameter.GetValue<float>();//float.Parse((string)parameter.Parameter, System.Globalization.CultureInfo.InvariantCulture);
+                    _lightOffset.X = parameter.GetValue<float>();
+                        //float.Parse((string)parameter.Parameter, System.Globalization.CultureInfo.InvariantCulture);
                     break;
                 case "lightoffsety":
-                    _lightOffset.Y = parameter.GetValue<float>();//float.Parse((string)parameter.Parameter, System.Globalization.CultureInfo.InvariantCulture);
+                    _lightOffset.Y = parameter.GetValue<float>();
+                        //float.Parse((string)parameter.Parameter, System.Globalization.CultureInfo.InvariantCulture);
                     break;
                 case "lightradius":
-                    _lightRadius = parameter.GetValue<int>();//int.Parse((string) parameter.Parameter);
+                    _lightRadius = parameter.GetValue<int>(); //int.Parse((string) parameter.Parameter);
                     break;
                 case "lightColorR":
-                    _lightColor.X = parameter.GetValue<int>();//int.Parse((string) parameter.Parameter);
+                    _lightColor.X = parameter.GetValue<int>(); //int.Parse((string) parameter.Parameter);
                     break;
                 case "lightColorG":
-                    _lightColor.Y = parameter.GetValue<int>();//int.Parse((string)parameter.Parameter);
+                    _lightColor.Y = parameter.GetValue<int>(); //int.Parse((string)parameter.Parameter);
                     break;
                 case "lightColorB":
-                    _lightColor.Z = parameter.GetValue<int>();//int.Parse((string)parameter.Parameter);
+                    _lightColor.Z = parameter.GetValue<int>(); //int.Parse((string)parameter.Parameter);
                     break;
                 case "mask":
-                    _mask = parameter.GetValue<string>();// parameter.Parameter;
+                    _mask = parameter.GetValue<string>(); // parameter.Parameter;
                     break;
             }
         }
@@ -121,11 +124,11 @@ namespace CGO
         {
             if (_light.LightState != state.State)
                 _light.SetState(state.State);
-            if (_light.Color.R != state.ColorR || _light.Color.G != state.ColorG ||_light.Color.B != state.ColorB)
+            if (_light.Color.R != state.ColorR || _light.Color.G != state.ColorG || _light.Color.B != state.ColorB)
             {
                 SetColor(state.ColorR, state.ColorG, state.ColorB);
             }
-            if(_mode != state.Mode)
+            if (_mode != state.Mode)
                 SetMode(state.Mode);
         }
 
@@ -136,6 +139,5 @@ namespace CGO
             _lightColor.Z = B;
             _light.SetColor(255, R, G, B);
         }
-
     }
 }

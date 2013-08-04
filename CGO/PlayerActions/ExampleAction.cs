@@ -1,14 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using ClientInterfaces.GOC;
-using GorgonLibrary;
-using Lidgren.Network;
-using SS13_Shared;
-using SS13_Shared.GO;
-using GorgonLibrary.Graphics;
-
-namespace CGO
+﻿namespace CGO
 {
     public class ExampleAction : PlayerAction
     {

@@ -1,10 +1,8 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
+using System.Drawing;
+using GorgonLibrary.Graphics;
 using SS13_Shared;
 using SS13_Shared.GO;
-using GorgonLibrary.Graphics;
 using SS13_Shared.GO.Component.Renderable;
 
 namespace CGO
@@ -12,17 +10,18 @@ namespace CGO
     public class WearableSpriteComponent : SpriteComponent
     {
         private string _basename = "";
-        private bool worn = false;
-        private DrawDepth wornDrawDepth = SS13_Shared.GO.DrawDepth.MobOverClothingLayer;
+        private bool worn;
+        private DrawDepth wornDrawDepth = DrawDepth.MobOverClothingLayer;
+
         public WearableSpriteComponent()
-            : base()
         {
             DrawDepth = DrawDepth.FloorObjects; //Floor drawdepth
         }
 
-        public override ComponentReplyMessage RecieveMessage(object sender, ComponentMessageType type, params object[] list)
+        public override ComponentReplyMessage RecieveMessage(object sender, ComponentMessageType type,
+                                                             params object[] list)
         {
-            var reply = base.RecieveMessage(sender, type, list);
+            ComponentReplyMessage reply = base.RecieveMessage(sender, type, list);
 
             if (sender == this) //Don't listen to our own messages!
                 return ComponentReplyMessage.Empty;
@@ -30,7 +29,7 @@ namespace CGO
             switch (type)
             {
                 case ComponentMessageType.MoveDirection:
-                    switch ((Direction)list[0])
+                    switch ((Direction) list[0])
                     {
                         case Direction.North:
                             if (worn)
@@ -49,7 +48,7 @@ namespace CGO
                             }
                             else
                                 SetSpriteByKey(_basename);
-                            
+
                             break;
                         case Direction.East:
                             if (worn)
@@ -129,7 +128,7 @@ namespace CGO
                     worn = false;
                     break;
                 case ComponentMessageType.SetWornDrawDepth:
-                    wornDrawDepth = (DrawDepth)list[0];
+                    wornDrawDepth = (DrawDepth) list[0];
                     break;
             }
 
@@ -146,7 +145,7 @@ namespace CGO
             switch (parameter.MemberName)
             {
                 case "drawdepth":
-                    SetDrawDepth((DrawDepth)Enum.Parse(typeof(DrawDepth), parameter.GetValue<string>(), true));
+                    SetDrawDepth((DrawDepth) Enum.Parse(typeof (DrawDepth), parameter.GetValue<string>(), true));
                     break;
                 case "basename":
                     _basename = parameter.GetValue<string>();
@@ -160,7 +159,7 @@ namespace CGO
             return sprites[_basename];
         }
 
-        protected override bool WasClicked(System.Drawing.PointF worldPos)
+        protected override bool WasClicked(PointF worldPos)
         {
             return base.WasClicked(worldPos) && !worn;
         }
@@ -181,7 +180,7 @@ namespace CGO
 
         public override void HandleComponentState(dynamic state)
         {
-            base.HandleComponentState((SpriteComponentState)state);
+            base.HandleComponentState((SpriteComponentState) state);
 
             if (state.BaseName != null && _basename != state.BaseName)
             {

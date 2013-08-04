@@ -1,13 +1,8 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 using GameObject;
-using SS13_Shared;
 using SS13_Shared.GO;
-using System.Drawing;
-using System;
-using System.Text;
-using System.Reflection;
-using ClientInterfaces.GOC;
 using SS13_Shared.GO.Component.StatusEffect;
 using SS13_Shared.GO.StatusEffect;
 
@@ -15,23 +10,25 @@ namespace CGO
 {
     public class StatusEffectComp : Component
     {
-        public override Type StateType
-        {
-            get
-            {
-                return typeof(StatusEffectComponentState);
-            }
-        }
+        #region Delegates
 
-        public StatusEffectComp():base()
+        public delegate void StatusEffectsChangedHandler(StatusEffectComp sender);
+
+        #endregion
+
+        public List<StatusEffect> Effects = new List<StatusEffect>();
+
+        public StatusEffectComp()
         {
             Family = ComponentFamily.StatusEffects;
         }
 
-        public delegate void StatusEffectsChangedHandler(StatusEffectComp sender);
-        public event StatusEffectsChangedHandler Changed;
+        public override Type StateType
+        {
+            get { return typeof (StatusEffectComponentState); }
+        }
 
-        public List<StatusEffect> Effects = new List<StatusEffect>();
+        public event StatusEffectsChangedHandler Changed;
 
         public override void Update(float frameTime)
         {
@@ -41,11 +38,13 @@ namespace CGO
                 effect.OnUpdate();
         }
 
-        private void AddEffect(string typeName, uint uid, bool doesExpire, DateTime expiresAt, StatusEffectFamily _family) //Don't manually use this clientside. The server adds and removes what is needed.
+        private void AddEffect(string typeName, uint uid, bool doesExpire, DateTime expiresAt,
+                               StatusEffectFamily _family)
+            //Don't manually use this clientside. The server adds and removes what is needed.
         {
             Type t = Type.GetType("CGO." + typeName);
-            if (t == null || !t.IsSubclassOf(typeof(StatusEffect))) return;
-            StatusEffect newEffect = (StatusEffect)Activator.CreateInstance(t, new object[] { uid, this.Owner });
+            if (t == null || !t.IsSubclassOf(typeof (StatusEffect))) return;
+            var newEffect = (StatusEffect) Activator.CreateInstance(t, new object[] {uid, Owner});
             newEffect.doesExpire = doesExpire;
             newEffect.expiresAt = expiresAt;
             newEffect.family = _family;
@@ -54,7 +53,8 @@ namespace CGO
             if (Changed != null) Changed(this);
         }
 
-        private void RemoveEffect(uint uid) //Don't manually use this clientside. The server adds and removes what is needed.
+        private void RemoveEffect(uint uid)
+            //Don't manually use this clientside. The server adds and removes what is needed.
         {
             StatusEffect toRemove = Effects.FirstOrDefault(x => x.uid == uid);
             if (toRemove != null)
@@ -89,27 +89,30 @@ namespace CGO
 
         public override void HandleComponentState(dynamic state)
         {
-            var existing = Effects.Select(uid => uid.uid).ToList();
-            foreach(StatusEffectState effectState in state.EffectStates)
+            List<uint> existing = Effects.Select(uid => uid.uid).ToList();
+            foreach (StatusEffectState effectState in state.EffectStates)
             {
                 if (existing.Contains(effectState.Uid))
                 {
                     // Effect exists, update it
-                    var existingEffect = GetEffect(effectState.Uid);
+                    StatusEffect existingEffect = GetEffect(effectState.Uid);
                     existingEffect.UpdateEffectState(effectState);
-                } 
+                }
                 else
                 {
                     //Effect doesn't exist, create it
-                    AddEffect(effectState.TypeName, effectState.Uid,effectState.DoesExpire, effectState.ExpiresAt, effectState.Family);
+                    AddEffect(effectState.TypeName, effectState.Uid, effectState.DoesExpire, effectState.ExpiresAt,
+                              effectState.Family);
                 }
 
-                existing.Remove(effectState.Uid); // Whittle down the list so we can remove the effects that aren't contained in the state.
+                existing.Remove(effectState.Uid);
+                    // Whittle down the list so we can remove the effects that aren't contained in the state.
             }
 
-            foreach(var u in existing)
+            foreach (uint u in existing)
             {
-                RemoveEffect(u); //The server did not send anything else, so we can remove whatever is left. No client-side only effects.
+                RemoveEffect(u);
+                    //The server did not send anything else, so we can remove whatever is left. No client-side only effects.
             }
         }
     }

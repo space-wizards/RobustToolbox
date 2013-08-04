@@ -7,7 +7,7 @@ namespace CGO
 {
     public class EquippableComponent : Component
     {
-        public EquippableComponent() :base()
+        public EquippableComponent()
         {
             Family = ComponentFamily.Equippable;
         }
@@ -16,10 +16,10 @@ namespace CGO
         {
             //base.HandleNetworkMessage(message);
 
-            switch((EquippableComponentNetMessage)message.MessageParameters[0])
+            switch ((EquippableComponentNetMessage) message.MessageParameters[0])
             {
                 case EquippableComponentNetMessage.Equipped:
-                    EquippedBy((int)message.MessageParameters[1], (EquipmentSlot)message.MessageParameters[2]);
+                    EquippedBy((int) message.MessageParameters[1], (EquipmentSlot) message.MessageParameters[2]);
                     break;
                 case EquippableComponentNetMessage.UnEquipped:
                     UnEquipped();
@@ -30,9 +30,10 @@ namespace CGO
         private void EquippedBy(int uid, EquipmentSlot wearloc)
         {
             Owner.SendMessage(this, ComponentMessageType.ItemEquipped);
-            Owner.AddComponent(ComponentFamily.Mover, Owner.EntityManager.ComponentFactory.GetComponent("SlaveMoverComponent"));
+            Owner.AddComponent(ComponentFamily.Mover,
+                               Owner.EntityManager.ComponentFactory.GetComponent("SlaveMoverComponent"));
             Owner.SendMessage(this, ComponentMessageType.SlaveAttach, uid);
-            switch(wearloc)
+            switch (wearloc)
             {
                 case EquipmentSlot.Back:
                     SendDrawDepth(DrawDepth.MobOverAccessoryLayer);
@@ -67,7 +68,7 @@ namespace CGO
             }
         }
 
-        private void SendDrawDepth(SS13_Shared.GO.DrawDepth dd)
+        private void SendDrawDepth(DrawDepth dd)
         {
             Owner.SendMessage(this, ComponentMessageType.SetWornDrawDepth, dd);
         }
@@ -75,7 +76,8 @@ namespace CGO
         private void UnEquipped()
         {
             Owner.SendMessage(this, ComponentMessageType.ItemUnEquipped);
-            Owner.AddComponent(ComponentFamily.Mover, Owner.EntityManager.ComponentFactory.GetComponent("NetworkMoverComponent"));
+            Owner.AddComponent(ComponentFamily.Mover,
+                               Owner.EntityManager.ComponentFactory.GetComponent("NetworkMoverComponent"));
         }
     }
 }

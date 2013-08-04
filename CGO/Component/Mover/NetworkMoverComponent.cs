@@ -13,18 +13,19 @@ namespace CGO
     /// </summary>
     public class NetworkMoverComponent : Component
     {
-        private Direction movedir = Direction.South;
-        Vector2D targetPosition;
-        Vector2D startPosition;
-        private MoverComponentState previousState;
+        private bool interpolating;
         private MoverComponentState lastState;
-        bool interpolating = false;
-        float movetime = 0.05f; // Milliseconds it should take to move.
-        float movedtime = 0; // Amount of time we've been moving since the last update packet.
-        
-        public NetworkMoverComponent():base()
+        private Direction movedir = Direction.South;
+        private float movedtime; // Amount of time we've been moving since the last update packet.
+        private float movetime = 0.05f; // Milliseconds it should take to move.
+        private MoverComponentState previousState;
+        private Vector2D startPosition;
+        private Vector2D targetPosition;
+
+        public NetworkMoverComponent()
         {
-            Family = ComponentFamily.Mover; ;
+            Family = ComponentFamily.Mover;
+            ;
         }
 
         public override Type StateType
@@ -39,9 +40,10 @@ namespace CGO
             Translate(x, y);*/
         }
 
-        public override ComponentReplyMessage RecieveMessage(object sender, ComponentMessageType type, params object[] list)
+        public override ComponentReplyMessage RecieveMessage(object sender, ComponentMessageType type,
+                                                             params object[] list)
         {
-            var reply = base.RecieveMessage(sender, type, list);
+            ComponentReplyMessage reply = base.RecieveMessage(sender, type, list);
 
             if (sender == this) //Don't listen to our own messages!
                 return ComponentReplyMessage.Empty;
@@ -62,7 +64,8 @@ namespace CGO
             if (interpolating)
             {
                 movedtime = movedtime + frameTime;
-                Vector2D delta = targetPosition - Owner.GetComponent<TransformComponent>(ComponentFamily.Transform).Position;
+                Vector2D delta = targetPosition -
+                                 Owner.GetComponent<TransformComponent>(ComponentFamily.Transform).Position;
                 if (movedtime >= movetime)
                 {
                     //targetPosition = Owner.Position;
@@ -82,13 +85,14 @@ namespace CGO
                 //Owner.Moved();
             }
         }
-        
+
         private void Translate(float x, float y, float velx, float vely)
         {
-            Vector2D delta = new Vector2D(x, y) - Owner.GetComponent<TransformComponent>(ComponentFamily.Transform).Position;
+            Vector2D delta = new Vector2D(x, y) -
+                             Owner.GetComponent<TransformComponent>(ComponentFamily.Transform).Position;
             interpolating = true;
             movedtime = 0;
-            
+
             //Owner.Position = new Vector2D(x, y);
             targetPosition = new Vector2D(x, y);
             startPosition = Owner.GetComponent<TransformComponent>(ComponentFamily.Transform).Position;
@@ -121,9 +125,9 @@ namespace CGO
         /// <returns>current position</returns>
         private float Ease(float time, float start, float end, float duration = 1) // duration is in ms.
         {
-            time = time / duration;// - 1;
+            time = time/duration; // - 1;
             //return (float)(end * (Math.Pow(time, 5) + 1) * Math.Sign(end - start) + start);
-            return time * (end - start) + start;
+            return time*(end - start) + start;
         }
 
         private void SetMoveDir(Direction _movedir)

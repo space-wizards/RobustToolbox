@@ -1,7 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
 using GameObject;
 using GorgonLibrary;
 using SS13_Shared.GO;
@@ -11,10 +8,15 @@ namespace CGO
 {
     public class VelocityComponent : Component
     {
+        private VelocityComponentState _lastState;
+        private VelocityComponentState _previousState;
         private Vector2D _velocity = Vector2D.Zero;
 
-        private VelocityComponentState _previousState;
-        private VelocityComponentState _lastState;
+
+        public VelocityComponent()
+        {
+            Family = ComponentFamily.Velocity;
+        }
 
         public Vector2D Velocity
         {
@@ -22,16 +24,9 @@ namespace CGO
             set { _velocity = value; }
         }
 
-
-        public VelocityComponent()
-            : base()
-        {
-            Family = ComponentFamily.Velocity;
-        }
-
         public override Type StateType
         {
-            get { return typeof(VelocityComponentState); }
+            get { return typeof (VelocityComponentState); }
         }
 
         public float X

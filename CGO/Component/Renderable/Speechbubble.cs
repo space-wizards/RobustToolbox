@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Drawing;
 using System.Text;
-using ClientInterfaces;
 using ClientInterfaces.Resource;
 using GorgonLibrary;
 using GorgonLibrary.Graphics;
@@ -20,21 +19,6 @@ namespace CGO
         private const double MillisecondsToLive = 8000;
 
         /// <summary>
-        /// Owner mob unique name.
-        /// </summary>
-        private readonly string _mobName;
-
-        /// <summary>
-        /// TextSprite used to hold and display speech text.
-        /// </summary>
-        private readonly TextSprite _textSprite;
-
-        /// <summary>
-        /// StringBuilder to handle 
-        /// </summary>
-        private readonly StringBuilder _stringBuilder;
-
-        /// <summary>
         /// Holder for built bubble render image.
         /// Rebuilt upon text change.
         /// </summary>
@@ -47,11 +31,26 @@ namespace CGO
         private readonly Sprite _bubbleSprite;
 
         /// <summary>
+        /// Owner mob unique name.
+        /// </summary>
+        private readonly string _mobName;
+
+        /// <summary>
         /// Reference to Resource Manager service to prevent
         /// calling IoCManager every time speechbubble is drawn.
         /// </summary>
         private readonly IResourceManager _resourceManager;
-        
+
+        /// <summary>
+        /// StringBuilder to handle 
+        /// </summary>
+        private readonly StringBuilder _stringBuilder;
+
+        /// <summary>
+        /// TextSprite used to hold and display speech text.
+        /// </summary>
+        private readonly TextSprite _textSprite;
+
         /// <summary>
         /// Holder for last time the sprite was
         /// built. Used to detect if speech bubble
@@ -72,9 +71,9 @@ namespace CGO
             _buildTime = DateTime.Now;
             _textSprite = new TextSprite
                 (
-                    "chatBubbleTextSprite_" + _mobName,
-                    String.Empty,
-                    _resourceManager.GetFont("CALIBRI")
+                "chatBubbleTextSprite_" + _mobName,
+                String.Empty,
+                _resourceManager.GetFont("CALIBRI")
                 )
                               {
                                   Color = Color.Black,
@@ -100,8 +99,8 @@ namespace CGO
         {
             if ((DateTime.Now - _buildTime).TotalMilliseconds >= MillisecondsToLive) return;
 
-            var x = position.X - windowOrigin.X - (_bubbleSprite.Width / 2.0f);
-            var y = position.Y - windowOrigin.Y - (_bubbleSprite.Height) - (spriteToDrawAbove.Height / 2.0f) - 5.0f;
+            float x = position.X - windowOrigin.X - (_bubbleSprite.Width/2.0f);
+            float y = position.Y - windowOrigin.Y - (_bubbleSprite.Height) - (spriteToDrawAbove.Height/2.0f) - 5.0f;
 
             _bubbleSprite.SetPosition(x, y);
             _bubbleSprite.Draw();
@@ -109,9 +108,9 @@ namespace CGO
 
         public void SetText(string text)
         {
-            for (var i = 0; i < text.Length; i++)
+            for (int i = 0; i < text.Length; i++)
             {
-                if (i > 0 && i % 50 == 0)
+                if (i > 0 && i%50 == 0)
                     _stringBuilder.Append("\n" + text[i]);
                 else
                     _stringBuilder.Append(text[i]);
@@ -128,11 +127,11 @@ namespace CGO
 
         private void DrawBubbleSprite()
         {
-            var originalTarget = Gorgon.CurrentRenderTarget;
-            var cornerSprite = _resourceManager.GetSprite("corners");
+            RenderTarget originalTarget = Gorgon.CurrentRenderTarget;
+            Sprite cornerSprite = _resourceManager.GetSprite("corners");
 
             //Set up dimensions
-            _bubbleRender.SetDimensions((int)_textSprite.Size.X + 10, (int)_textSprite.Size.Y + 10);
+            _bubbleRender.SetDimensions((int) _textSprite.Size.X + 10, (int) _textSprite.Size.Y + 10);
             _bubbleSprite.SetSize(_textSprite.Size.X + 10, _textSprite.Size.Y + 10);
 
             //BEGIN RENDERING
@@ -142,7 +141,7 @@ namespace CGO
             //Draw black triangle at the bottom.
             var pointOneBlack = new Vector2D((_bubbleRender.Width/2) - 10, _bubbleRender.Height - 10);
             var pointTwoBlack = new Vector2D((_bubbleRender.Width/2) + 10, _bubbleRender.Height - 10);
-            var pointThreeBlack = new Vector2D((_bubbleRender.Width / 2), _bubbleRender.Height);
+            var pointThreeBlack = new Vector2D((_bubbleRender.Width/2), _bubbleRender.Height);
             _bubbleRender.FilledTriangle(pointOneBlack, pointTwoBlack, pointThreeBlack, Color.Black);
 
             //Draw the side lines
@@ -156,9 +155,9 @@ namespace CGO
             _bubbleRender.FilledRectangle(1, 3, _bubbleRender.Width - 2, _bubbleRender.Height - 12, Color.White);
 
             //Draw the white triangle at the bottom.
-            var pointOneWhite = pointOneBlack + new Vector2D(1, 0);
-            var pointTwoWhite = pointTwoBlack - new Vector2D(1, 0);
-            var pointThreeWhite = pointThreeBlack - new Vector2D(0, 1);
+            Vector2D pointOneWhite = pointOneBlack + new Vector2D(1, 0);
+            Vector2D pointTwoWhite = pointTwoBlack - new Vector2D(1, 0);
+            Vector2D pointThreeWhite = pointThreeBlack - new Vector2D(0, 1);
             _bubbleRender.FilledTriangle(pointOneWhite, pointTwoWhite, pointThreeWhite, Color.White);
 
             //Draw the corners.

@@ -1,27 +1,27 @@
 ﻿using System;
+using ClientWindow;
 using GorgonLibrary;
+using GorgonLibrary.Graphics;
 using SS13_Shared;
 using SS13_Shared.GO;
-using GorgonLibrary.Graphics;
-using ClientWindow;
 using SS13_Shared.GO.Component.Renderable;
 
 namespace CGO
 {
     public class MobSpriteComponent : SpriteComponent
     {
-        string _basename;
-        SpeechBubble _speechBubble;
+        private string _basename;
+        private SpeechBubble _speechBubble;
 
         public MobSpriteComponent()
-            : base()
         {
             DrawDepth = DrawDepth.MobBase;
         }
 
-        public override ComponentReplyMessage RecieveMessage(object sender, ComponentMessageType type, params object[] list)
+        public override ComponentReplyMessage RecieveMessage(object sender, ComponentMessageType type,
+                                                             params object[] list)
         {
-            var reply = base.RecieveMessage(sender, type, list);
+            ComponentReplyMessage reply = base.RecieveMessage(sender, type, list);
 
             if (sender == this) //Don't listen to our own messages!
                 return ComponentReplyMessage.Empty;
@@ -29,7 +29,7 @@ namespace CGO
             switch (type)
             {
                 case ComponentMessageType.MoveDirection:
-                    switch ((Direction)list[0])
+                    switch ((Direction) list[0])
                     {
                         case Direction.North:
                             SetSpriteByKey(_basename + "_back");
@@ -81,9 +81,10 @@ namespace CGO
                     ChatChannel channel;
                     if (Enum.TryParse(list[0].ToString(), true, out channel))
                     {
-                        var text = list[1].ToString();
-                        
-                        if (channel == ChatChannel.Ingame || channel == ChatChannel.Player || channel == ChatChannel.Radio)
+                        string text = list[1].ToString();
+
+                        if (channel == ChatChannel.Ingame || channel == ChatChannel.Player ||
+                            channel == ChatChannel.Radio)
                         {
                             (_speechBubble ?? (_speechBubble = new SpeechBubble(Owner.Name + Owner.Uid))).SetText(text);
                         }
@@ -104,7 +105,7 @@ namespace CGO
             switch (parameter.MemberName)
             {
                 case "drawdepth":
-                    SetDrawDepth((DrawDepth)Enum.Parse(typeof(DrawDepth), parameter.GetValue<string>(), true));
+                    SetDrawDepth((DrawDepth) Enum.Parse(typeof (DrawDepth), parameter.GetValue<string>(), true));
                     break;
                 case "basename":
                     _basename = parameter.GetValue<string>();
@@ -145,12 +146,13 @@ namespace CGO
             base.Render(topLeft, bottomRight);
 
             if (_speechBubble != null)
-                _speechBubble.Draw(Owner.GetComponent<TransformComponent>(ComponentFamily.Transform).Position, ClientWindowData.Singleton.ScreenOrigin, currentBaseSprite);
+                _speechBubble.Draw(Owner.GetComponent<TransformComponent>(ComponentFamily.Transform).Position,
+                                   ClientWindowData.Singleton.ScreenOrigin, currentBaseSprite);
         }
 
         public override void HandleComponentState(dynamic state)
         {
-            base.HandleComponentState((SpriteComponentState)state);
+            base.HandleComponentState((SpriteComponentState) state);
 
             if (state.BaseName != null && _basename != state.BaseName)
             {

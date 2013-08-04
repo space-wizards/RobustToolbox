@@ -1,9 +1,8 @@
-﻿using CGO;
-using GameObject;
+﻿using GameObject;
+using GorgonLibrary;
 using Lidgren.Network;
 using SS13_Shared;
 using SS13_Shared.GO;
-using GorgonLibrary;
 
 namespace CGO
 {
@@ -12,28 +11,30 @@ namespace CGO
     {
         private const float BaseMoveSpeed = 300f;
         private const float FastMoveSpeed = 500f;
-        private float _moveTimeCache = 0;
         private const float MoveRateLimit = .06666f; // 15 movements allowed to be sent to the server per second.
 
         private float _currentMoveSpeed;
 
-        private bool _moveUp;
         private bool _moveDown;
         private bool _moveLeft;
         private bool _moveRight;
-        private Vector2D Velocity
-        {
-            get { return Owner.GetComponent<VelocityComponent>(ComponentFamily.Velocity).Velocity; }
-            set { Owner.GetComponent<VelocityComponent>(ComponentFamily.Velocity).Velocity = value; }
-        }
+        private float _moveTimeCache;
+        private bool _moveUp;
 
         private Direction _movedir;
 
         public KeyBindingMoverComponent()
         {
-            Family = ComponentFamily.Mover; ;
+            Family = ComponentFamily.Mover;
+            ;
             _currentMoveSpeed = BaseMoveSpeed;
             _movedir = Direction.South;
+        }
+
+        private Vector2D Velocity
+        {
+            get { return Owner.GetComponent<VelocityComponent>(ComponentFamily.Velocity).Velocity; }
+            set { Owner.GetComponent<VelocityComponent>(ComponentFamily.Velocity).Velocity = value; }
         }
 
         public override void HandleNetworkMessage(IncomingEntityComponentMessage message, NetConnection sender)
@@ -44,9 +45,10 @@ namespace CGO
             PlainTranslate((float)x, (float)y);*/
         }
 
-        public override ComponentReplyMessage RecieveMessage(object sender, ComponentMessageType type, params object[] list)
+        public override ComponentReplyMessage RecieveMessage(object sender, ComponentMessageType type,
+                                                             params object[] list)
         {
-            var reply = base.RecieveMessage(sender, type, list);
+            ComponentReplyMessage reply = base.RecieveMessage(sender, type, list);
 
             if (sender == this) //Don't listen to our own messages!
                 return ComponentReplyMessage.Empty;
@@ -68,12 +70,13 @@ namespace CGO
         /// <param name="list">0 - Function, 1 - Key State</param>
         private void HandleKeyChange(params object[] list)
         {
-            var function = (BoundKeyFunctions)list[0];
-            var state = (BoundKeyState)list[1];
-            var setting = state == BoundKeyState.Down;
+            var function = (BoundKeyFunctions) list[0];
+            var state = (BoundKeyState) list[1];
+            bool setting = state == BoundKeyState.Down;
 
-            if(state == BoundKeyState.Up)
-                SendPositionUpdate(); // Send a position update so that the server knows what position the client ended at.
+            if (state == BoundKeyState.Up)
+                SendPositionUpdate();
+                    // Send a position update so that the server knows what position the client ended at.
 
             if (function == BoundKeyFunctions.MoveDown)
                 _moveDown = setting;
@@ -98,42 +101,42 @@ namespace CGO
             _moveTimeCache += frameTime;
 
             base.Update(frameTime);
-            
+
             if (_moveUp && !_moveLeft && !_moveRight && !_moveDown) // Move Up
             {
-                Velocity = new Vector2D(0, -1) * _currentMoveSpeed;
+                Velocity = new Vector2D(0, -1)*_currentMoveSpeed;
             }
             else if (_moveDown && !_moveLeft && !_moveRight && !_moveUp) // Move Down
             {
-                Velocity = new Vector2D(0, 1) * _currentMoveSpeed;
+                Velocity = new Vector2D(0, 1)*_currentMoveSpeed;
             }
             else if (_moveLeft && !_moveRight && !_moveUp && !_moveDown) // Move Left
             {
-                Velocity = new Vector2D(-1, 0) * _currentMoveSpeed;
+                Velocity = new Vector2D(-1, 0)*_currentMoveSpeed;
             }
             else if (_moveRight && !_moveLeft && !_moveUp && !_moveDown) // Move Right
             {
-                Velocity = new Vector2D(1, 0) * _currentMoveSpeed;
+                Velocity = new Vector2D(1, 0)*_currentMoveSpeed;
             }
             else if (_moveUp && _moveRight && !_moveLeft && !_moveDown) // Move Up & Right
             {
-                Velocity = new Vector2D(0.7071f, -0.7071f) * _currentMoveSpeed;
+                Velocity = new Vector2D(0.7071f, -0.7071f)*_currentMoveSpeed;
             }
             else if (_moveUp && _moveLeft && !_moveRight && !_moveDown) // Move Up & Left
             {
-                Velocity = new Vector2D(-0.7071f, -0.7071f) * _currentMoveSpeed;
+                Velocity = new Vector2D(-0.7071f, -0.7071f)*_currentMoveSpeed;
             }
             else if (_moveDown && _moveRight && !_moveLeft && !_moveUp) // Move Down & Right
             {
-                Velocity = new Vector2D(0.7071f, 0.7071f) * _currentMoveSpeed;
+                Velocity = new Vector2D(0.7071f, 0.7071f)*_currentMoveSpeed;
             }
             else if (_moveDown && _moveLeft && !_moveRight && !_moveUp) // Move Down & Left
             {
-                Velocity = new Vector2D(-0.7071f, 0.7071f) * _currentMoveSpeed;
-            } 
+                Velocity = new Vector2D(-0.7071f, 0.7071f)*_currentMoveSpeed;
+            }
             else
             {
-                Velocity = new Vector2D(0f,0f);
+                Velocity = new Vector2D(0f, 0f);
             }
 
             UpdatePosition(frameTime);
@@ -141,7 +144,7 @@ namespace CGO
 
         private void UpdatePosition(float frameTime)
         {
-            Translate(Velocity * frameTime);
+            Translate(Velocity*frameTime);
         }
 
         private void SetMoveDir(Direction movedir)
@@ -154,20 +157,23 @@ namespace CGO
 
         public virtual void SendPositionUpdate()
         {
-            Owner.SendComponentNetworkMessage(this, 
-                Lidgren.Network.NetDeliveryMethod.ReliableUnordered, 
-                Owner.GetComponent<TransformComponent>(ComponentFamily.Transform).Position.X, 
-                Owner.GetComponent<TransformComponent>(ComponentFamily.Transform).Position.Y,
-                Owner.GetComponent<VelocityComponent>(ComponentFamily.Velocity).Velocity.X,
-                Owner.GetComponent<VelocityComponent>(ComponentFamily.Velocity).Velocity.Y);
+            Owner.SendComponentNetworkMessage(this,
+                                              NetDeliveryMethod.ReliableUnordered,
+                                              Owner.GetComponent<TransformComponent>(ComponentFamily.Transform).Position
+                                                  .X,
+                                              Owner.GetComponent<TransformComponent>(ComponentFamily.Transform).Position
+                                                  .Y,
+                                              Owner.GetComponent<VelocityComponent>(ComponentFamily.Velocity).Velocity.X,
+                                              Owner.GetComponent<VelocityComponent>(ComponentFamily.Velocity).Velocity.Y);
         }
 
         public void PlainTranslate(float x, float y)
         {
-            var delta = new Vector2D(x, y) - Owner.GetComponent<TransformComponent>(ComponentFamily.Transform).Position;
+            Vector2D delta = new Vector2D(x, y) -
+                             Owner.GetComponent<TransformComponent>(ComponentFamily.Transform).Position;
 
             Owner.GetComponent<TransformComponent>(ComponentFamily.Transform).Position = new Vector2D(x, y);
-            
+
             if (delta.X > 0 && delta.Y > 0)
                 SetMoveDir(Direction.SouthEast);
             if (delta.X > 0 && delta.Y < 0)
@@ -194,16 +200,16 @@ namespace CGO
         /// <param name="translationVector"></param>
         public virtual void Translate(Vector2D translationVector)
         {
-            var oldPos = Owner.GetComponent<TransformComponent>(ComponentFamily.Transform).Position;
+            Vector2D oldPos = Owner.GetComponent<TransformComponent>(ComponentFamily.Transform).Position;
 
-            var translated = TryTranslate(translationVector, false); //Only bump once...
+            bool translated = TryTranslate(translationVector, false); //Only bump once...
             if (!translated)
                 translated = TryTranslate(new Vector2D(translationVector.X, 0), true);
             if (!translated)
                 translated = TryTranslate(new Vector2D(0, translationVector.Y), true);
             if (translated)
             {
-                var delta = Owner.GetComponent<TransformComponent>(ComponentFamily.Transform).Position - oldPos;
+                Vector2D delta = Owner.GetComponent<TransformComponent>(ComponentFamily.Transform).Position - oldPos;
                 if (delta.X > 0 && delta.Y > 0)
                     SetMoveDir(Direction.SouthEast);
                 if (delta.X > 0 && delta.Y < 0)
@@ -240,13 +246,15 @@ namespace CGO
         /// <returns></returns>
         public bool TryTranslate(Vector2D translationVector, bool suppressBump)
         {
-            var oldPosition = Owner.GetComponent<TransformComponent>(ComponentFamily.Transform).Position;
-            Owner.GetComponent<TransformComponent>(ComponentFamily.Transform).Position += translationVector; // We move the sprite here rather than the position, as we can then use its updated AABB values.
+            Vector2D oldPosition = Owner.GetComponent<TransformComponent>(ComponentFamily.Transform).Position;
+            Owner.GetComponent<TransformComponent>(ComponentFamily.Transform).Position += translationVector;
+                // We move the sprite here rather than the position, as we can then use its updated AABB values.
             //Check collision.
-            var reply = Owner.SendMessage(this, ComponentFamily.Collider, ComponentMessageType.CheckCollision, false);
+            ComponentReplyMessage reply = Owner.SendMessage(this, ComponentFamily.Collider,
+                                                            ComponentMessageType.CheckCollision, false);
             if (reply.MessageType == ComponentMessageType.CollisionStatus)
             {
-                var colliding = (bool)reply.ParamsList[0];
+                var colliding = (bool) reply.ParamsList[0];
                 if (colliding) //Collided, reset position and return false.
                 {
                     Owner.GetComponent<TransformComponent>(ComponentFamily.Transform).Position = oldPosition;

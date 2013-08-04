@@ -1,9 +1,5 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
 using GameObject;
-using Lidgren.Network;
 using SS13.IoC;
 using SS13_Shared;
 using SS13_Shared.GO;
@@ -14,11 +10,11 @@ namespace SGO
 {
     public class LightComponent : Component
     {
-        private LightState _state = LightState.On;
-        private int _colorR = 200;
-        private int _colorG = 200;
         private int _colorB = 200;
+        private int _colorG = 200;
+        private int _colorR = 200;
         private LightModeClass _mode = LightModeClass.Constant;
+        private LightState _state = LightState.On;
 
         public LightComponent()
         {
@@ -29,10 +25,10 @@ namespace SGO
         {
             base.SetParameter(parameter);
 
-            switch(parameter.MemberName)
+            switch (parameter.MemberName)
             {
                 case "startState":
-                    _state = (LightState)Enum.Parse(typeof(LightState), parameter.GetValue<string>(), true);
+                    _state = (LightState) Enum.Parse(typeof (LightState), parameter.GetValue<string>(), true);
                     break;
                 case "lightColorR":
                     _colorR = int.Parse(parameter.GetValue<string>());
@@ -46,9 +42,10 @@ namespace SGO
             }
         }
 
-        public override ComponentReplyMessage RecieveMessage(object sender, ComponentMessageType type, params object[] list)
+        public override ComponentReplyMessage RecieveMessage(object sender, ComponentMessageType type,
+                                                             params object[] list)
         {
-            var reply = base.RecieveMessage(sender, type, list);
+            ComponentReplyMessage reply = base.RecieveMessage(sender, type, list);
 
             if (sender == this)
                 return reply;
@@ -77,7 +74,9 @@ namespace SGO
                     SetState(LightState.On);
                     break;
                 case LightState.Broken:
-                    IoCManager.Resolve<IChatManager>().SendChatMessage(ChatChannel.Damage, "You fiddle with it, but nothing happens. It must be broken.", Owner.Name, Owner.Uid);
+                    IoCManager.Resolve<IChatManager>().SendChatMessage(ChatChannel.Damage,
+                                                                       "You fiddle with it, but nothing happens. It must be broken.",
+                                                                       Owner.Name, Owner.Uid);
                     break;
             }
         }
@@ -91,7 +90,7 @@ namespace SGO
         private void SendState()
         {
         }
-        
+
         public override ComponentState GetComponentState()
         {
             return new LightComponentState(_state, _colorR, _colorG, _colorB, _mode);

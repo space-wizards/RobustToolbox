@@ -1,5 +1,4 @@
 ﻿using GameObject;
-using Lidgren.Network;
 using SS13_Shared;
 using SS13_Shared.GO;
 using SS13_Shared.GO.Component.Mover;
@@ -24,7 +23,7 @@ namespace SGO
             switch (type)
             {
                 case ComponentMessageType.PhysicsMove:
-                    Translate((float)list[0], (float)list[1]);
+                    Translate((float) list[0], (float) list[1]);
                     break;
             }
             return reply;
@@ -34,14 +33,13 @@ namespace SGO
         {
             Owner.GetComponent<TransformComponent>(ComponentFamily.Transform).Position = new Vector2(x, y);
         }
-        
+
         public override ComponentState GetComponentState()
         {
-            return new MoverComponentState(Owner.GetComponent<TransformComponent>(ComponentFamily.Transform).Position.X, 
-                Owner.GetComponent<TransformComponent>(ComponentFamily.Transform).Position.Y, 
-                Owner.GetComponent<VelocityComponent>(ComponentFamily.Velocity).Velocity.X,
-                Owner.GetComponent<VelocityComponent>(ComponentFamily.Velocity).Velocity.Y);
+            return new MoverComponentState(Owner.GetComponent<TransformComponent>(ComponentFamily.Transform).Position.X,
+                                           Owner.GetComponent<TransformComponent>(ComponentFamily.Transform).Position.Y,
+                                           Owner.GetComponent<VelocityComponent>(ComponentFamily.Velocity).Velocity.X,
+                                           Owner.GetComponent<VelocityComponent>(ComponentFamily.Velocity).Velocity.Y);
         }
-
     }
 }

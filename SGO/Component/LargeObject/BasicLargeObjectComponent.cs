@@ -6,8 +6,7 @@ namespace SGO
 {
     public class BasicLargeObjectComponent : Component
     {
-
-        public BasicLargeObjectComponent() :base()
+        public BasicLargeObjectComponent()
         {
             Family = ComponentFamily.LargeObject;
         }

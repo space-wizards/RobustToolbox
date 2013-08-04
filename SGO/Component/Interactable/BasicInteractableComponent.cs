@@ -36,7 +36,7 @@ namespace SGO
         /// <param name="actorID">the id of the actor that clicked us</param>
         private void HandleClick(int actorID)
         {
-            var actor = (Entity)Owner.EntityManager.GetEntity(actorID);
+            Entity actor = Owner.EntityManager.GetEntity(actorID);
             if (actor == null || !actor.HasComponent(ComponentFamily.Actor))
                 // if actor is null or doesnt have actor component
                 return; // whoops bail out.

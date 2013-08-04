@@ -1,28 +1,24 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
+﻿using System.Collections.Generic;
 using GO = GameObject;
-using ServerInterfaces.GOC;
 
 namespace SGO.EntitySystems
 {
     public abstract class EntitySystem
     {
         protected EntityManager EntityManager;
-
-        private bool _initialized = false;
-        private bool _shutdown = false;
         protected GO.EntityQuery EntityQuery;
+
+        private bool _initialized;
+        private bool _shutdown;
+
+        public EntitySystem(EntityManager em)
+        {
+            EntityManager = em;
+        }
 
         protected List<GO.Entity> RelevantEntities
         {
             get { return EntityManager.GetEntities(EntityQuery); }
-        }
-        
-        public EntitySystem(EntityManager em)
-        {
-            EntityManager = em;
         }
 
         public virtual void Initialize()

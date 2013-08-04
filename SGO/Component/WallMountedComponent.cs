@@ -1,11 +1,11 @@
-﻿using System.Drawing;
+﻿using System;
+using System.Drawing;
 using GameObject;
+using SS13.IoC;
 using SS13_Shared;
 using SS13_Shared.GO;
-using ServerServices.Tiles;
-using SS13.IoC;
 using ServerInterfaces.Map;
-using System;
+using ServerServices.Tiles;
 
 namespace SGO
 {
@@ -17,7 +17,7 @@ namespace SGO
         {
             Family = ComponentFamily.WallMounted;
         }
-        
+
         public override void OnAdd(Entity owner)
         {
             base.OnAdd(owner);
@@ -33,7 +33,9 @@ namespace SGO
         private void FindTile()
         {
             var map = IoCManager.Resolve<IMapManager>();
-            var arrayPos = map.GetTileArrayPositionFromWorldPosition(Owner.GetComponent<TransformComponent>(ComponentFamily.Transform).Position);
+            Point arrayPos =
+                map.GetTileArrayPositionFromWorldPosition(
+                    Owner.GetComponent<TransformComponent>(ComponentFamily.Transform).Position);
 
             switch (Owner.GetComponent<DirectionComponent>(ComponentFamily.Direction).Direction)
             {
@@ -52,7 +54,8 @@ namespace SGO
             }
         }
 
-        public override ComponentReplyMessage RecieveMessage(object sender, ComponentMessageType type, params object[] list)
+        public override ComponentReplyMessage RecieveMessage(object sender, ComponentMessageType type,
+                                                             params object[] list)
         {
             ComponentReplyMessage reply = base.RecieveMessage(sender, type, list);
 
@@ -62,10 +65,11 @@ namespace SGO
             switch (type)
             {
                 case ComponentMessageType.WallMountTile: //Attach to a specific tile.
-                    Vector2 toAttach = (Vector2)list[0];
+                    var toAttach = (Vector2) list[0];
                     AttachToTile(toAttach);
                     break;
-                case ComponentMessageType.WallMountSearch: //Look for the best tile to attach to based on owning entity's direction.
+                case ComponentMessageType.WallMountSearch:
+                    //Look for the best tile to attach to based on owning entity's direction.
                     FindTile();
                     break;
             }
@@ -78,12 +82,12 @@ namespace SGO
             var map = IoCManager.Resolve<IMapManager>();
 
             Point tilePositionOld = map.GetTileArrayPositionFromWorldPosition(args.VectorFrom);
-            Tile previousTile = map.GetTileAt(tilePositionOld.X, tilePositionOld.Y) as Tile;
+            var previousTile = map.GetTileAt(tilePositionOld.X, tilePositionOld.Y) as Tile;
 
             previousTile.TileChange -= TileChanged;
 
             Point tilePositionNew = map.GetTileArrayPositionFromWorldPosition(args.VectorTo);
-            Tile currentTile = map.GetTileAt(tilePositionNew.X, tilePositionNew.Y) as Tile;
+            var currentTile = map.GetTileAt(tilePositionNew.X, tilePositionNew.Y) as Tile;
 
             currentTile.TileChange += TileChanged;
 
@@ -94,12 +98,14 @@ namespace SGO
         {
             var map = IoCManager.Resolve<IMapManager>();
 
-            Tile currentTile = map.GetTileAt((int)tilePos.X, (int)tilePos.Y) as Tile;
+            var currentTile = map.GetTileAt((int) tilePos.X, (int) tilePos.Y) as Tile;
 
             if (currentTile == null) return;
 
-            Point tilePositionOld = map.GetTileArrayPositionFromWorldPosition(Owner.GetComponent<TransformComponent>(ComponentFamily.Transform).Position);
-            Tile previousTile = map.GetTileAt(tilePositionOld.X, tilePositionOld.Y) as Tile;
+            Point tilePositionOld =
+                map.GetTileArrayPositionFromWorldPosition(
+                    Owner.GetComponent<TransformComponent>(ComponentFamily.Transform).Position);
+            var previousTile = map.GetTileAt(tilePositionOld.X, tilePositionOld.Y) as Tile;
 
             previousTile.TileChange -= TileChanged;
 
@@ -110,7 +116,7 @@ namespace SGO
 
         protected virtual void TileChanged(Type tNew)
         {
-            if (tNew != typeof(Wall))
+            if (tNew != typeof (Wall))
             {
                 Owner.GetComponent<TransformComponent>(ComponentFamily.Transform).TranslateByOffset(new Vector2(0, 64));
             }

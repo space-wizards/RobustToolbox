@@ -2,7 +2,7 @@
 
 namespace SGO.Exceptions
 {
-    class MissingImplementationException : Exception
+    internal class MissingImplementationException : Exception
     {
         private readonly Type _type;
 

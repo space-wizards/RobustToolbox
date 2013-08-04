@@ -32,8 +32,8 @@ namespace SGO
 
                 case (ComponentMessageType.GetActionChecksum):
                     Owner.SendDirectedComponentNetworkMessage(this, NetDeliveryMethod.ReliableUnordered, client,
-                                                      ComponentMessageType.GetActionChecksum,
-                                                      (uint) (Actions.Sum(x => x.uid)*Actions.Count));
+                                                              ComponentMessageType.GetActionChecksum,
+                                                              (uint) (Actions.Sum(x => x.uid)*Actions.Count));
                     break;
 
                 case (ComponentMessageType.DoAction):
@@ -66,7 +66,7 @@ namespace SGO
                         toDo.targetType == PlayerActionTargetType.None)
                         //Check validity of targets later. Only clientside atm.
                     {
-                        var ent = (Entity)Owner.EntityManager.GetEntity((int)message.MessageParameters[3]);
+                        Entity ent = Owner.EntityManager.GetEntity((int) message.MessageParameters[3]);
                         //ent id clienside uint but server int. Why?!
                         if (ent != null)
                         {
@@ -94,8 +94,10 @@ namespace SGO
             if (act.cooldownSeconds == 0) return;
             act.cooldownExpires = DateTime.Now.AddSeconds(act.cooldownSeconds);
             if (GetMyOwnerConnection() != null)
-                Owner.SendDirectedComponentNetworkMessage(this, NetDeliveryMethod.ReliableUnordered, GetMyOwnerConnection(),
-                                                  ComponentMessageType.CooldownAction, act.uid, act.cooldownSeconds);
+                Owner.SendDirectedComponentNetworkMessage(this, NetDeliveryMethod.ReliableUnordered,
+                                                          GetMyOwnerConnection(),
+                                                          ComponentMessageType.CooldownAction, act.uid,
+                                                          act.cooldownSeconds);
         }
 
         public override void HandleInstantiationMessage(NetConnection netConnection)
@@ -157,8 +159,9 @@ namespace SGO
             Actions.Add(newAction);
 
             if (GetMyOwnerConnection() != null)
-                Owner.SendDirectedComponentNetworkMessage(this, NetDeliveryMethod.ReliableUnordered, GetMyOwnerConnection(),
-                                                  ComponentMessageType.AddAction, typeName, nextUid);
+                Owner.SendDirectedComponentNetworkMessage(this, NetDeliveryMethod.ReliableUnordered,
+                                                          GetMyOwnerConnection(),
+                                                          ComponentMessageType.AddAction, typeName, nextUid);
 
             return nextUid;
         }
@@ -171,8 +174,9 @@ namespace SGO
                 Actions.Remove(toRemove);
 
                 if (GetMyOwnerConnection() != null)
-                    Owner.SendDirectedComponentNetworkMessage(this, NetDeliveryMethod.ReliableUnordered, GetMyOwnerConnection(),
-                                                      ComponentMessageType.RemoveAction, toRemove.uid);
+                    Owner.SendDirectedComponentNetworkMessage(this, NetDeliveryMethod.ReliableUnordered,
+                                                              GetMyOwnerConnection(),
+                                                              ComponentMessageType.RemoveAction, toRemove.uid);
             }
         }
 
@@ -186,8 +190,9 @@ namespace SGO
                 Actions.Remove(toRemove);
 
                 if (GetMyOwnerConnection() != null)
-                    Owner.SendDirectedComponentNetworkMessage(this, NetDeliveryMethod.ReliableUnordered, GetMyOwnerConnection(),
-                                                      ComponentMessageType.RemoveAction, toRemove.uid);
+                    Owner.SendDirectedComponentNetworkMessage(this, NetDeliveryMethod.ReliableUnordered,
+                                                              GetMyOwnerConnection(),
+                                                              ComponentMessageType.RemoveAction, toRemove.uid);
             }
         }
 

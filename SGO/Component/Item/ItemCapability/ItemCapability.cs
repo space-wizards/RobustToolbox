@@ -65,7 +65,6 @@ namespace SGO.Item.ItemCapability
 
         public virtual void Activate()
         {
-            
         }
     }
 
@@ -146,7 +145,7 @@ namespace SGO.Item.ItemCapability
         public void AddCapability(ItemCapability cap)
         {
             List<ItemCapability> retcap;
-            if(returnedCapabilities == null || returnedCapabilities.Length == 0)
+            if (returnedCapabilities == null || returnedCapabilities.Length == 0)
                 retcap = new List<ItemCapability>();
             else
                 retcap = returnedCapabilities.ToList();

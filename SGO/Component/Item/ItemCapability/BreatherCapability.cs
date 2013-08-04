@@ -1,18 +1,9 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using Lidgren.Network;
-using SS13.IoC;
-using SS13_Shared;
-using SS13_Shared.GO;
-using ServerInterfaces.Network;
-using ServerInterfaces.Player;
+﻿using SS13_Shared.GO;
 
 namespace SGO.Item.ItemCapability
 {
-    class BreatherCapability : ItemCapability
-    {        
+    internal class BreatherCapability : ItemCapability
+    {
         public BreatherCapability()
         {
             CapabilityType = ItemCapabilityType.Internals;

@@ -43,19 +43,21 @@ namespace SGO
 
         private void HandleUnEquipped()
         {
-            Owner.AddComponent(ComponentFamily.Mover, Owner.EntityManager.ComponentFactory.GetComponent("BasicMoverComponent"));
+            Owner.AddComponent(ComponentFamily.Mover,
+                               Owner.EntityManager.ComponentFactory.GetComponent("BasicMoverComponent"));
             Owner.SendDirectedComponentNetworkMessage(this, NetDeliveryMethod.ReliableOrdered, null,
-                                              EquippableComponentNetMessage.UnEquipped);
+                                                      EquippableComponentNetMessage.UnEquipped);
             currentWearer = null;
         }
 
         private void HandleEquipped(Entity entity)
         {
             currentWearer = entity;
-            Owner.AddComponent(ComponentFamily.Mover, Owner.EntityManager.ComponentFactory.GetComponent("SlaveMoverComponent"));
+            Owner.AddComponent(ComponentFamily.Mover,
+                               Owner.EntityManager.ComponentFactory.GetComponent("SlaveMoverComponent"));
             Owner.SendMessage(this, ComponentMessageType.SlaveAttach, entity.Uid);
             Owner.SendDirectedComponentNetworkMessage(this, NetDeliveryMethod.ReliableOrdered, null,
-                                              EquippableComponentNetMessage.Equipped, entity.Uid, wearloc);
+                                                      EquippableComponentNetMessage.Equipped, entity.Uid, wearloc);
         }
 
         public override void SetParameter(ComponentParameter parameter)
@@ -65,7 +67,7 @@ namespace SGO
             switch (parameter.MemberName)
             {
                 case "wearloc":
-                    wearloc = (EquipmentSlot)Enum.Parse(typeof(EquipmentSlot), parameter.GetValue<string>());
+                    wearloc = (EquipmentSlot) Enum.Parse(typeof (EquipmentSlot), parameter.GetValue<string>());
                     break;
             }
         }

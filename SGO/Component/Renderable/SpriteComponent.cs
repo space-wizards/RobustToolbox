@@ -7,14 +7,19 @@ namespace SGO
 {
     public class SpriteComponent : Component
     {
+        private string _currentBaseName;
+        private string _currentSpriteKey;
+        private DrawDepth _drawDepth = DrawDepth.FloorTiles;
         private bool visible = true;
+
+        public SpriteComponent()
+        {
+            Family = ComponentFamily.Renderable;
+        }
 
         public DrawDepth drawDepth
         {
-            get
-            {
-                return _drawDepth;
-            }
+            get { return _drawDepth; }
 
             set
             {
@@ -24,15 +29,6 @@ namespace SGO
                     SendDrawDepth(null);
                 }
             }
-        }
-
-        private DrawDepth _drawDepth = DrawDepth.FloorTiles;
-        private string _currentSpriteKey;
-        private string _currentBaseName;
-
-        public SpriteComponent()
-        {
-            Family = ComponentFamily.Renderable;
         }
 
         public bool Visible
@@ -85,7 +81,7 @@ namespace SGO
                     break;
                 case ComponentMessageType.SetDrawDepth:
                     if (Owner != null)
-                        drawDepth = (DrawDepth)list[0];
+                        drawDepth = (DrawDepth) list[0];
                     break;
             }
 

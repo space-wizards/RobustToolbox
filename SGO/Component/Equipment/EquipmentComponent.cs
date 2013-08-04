@@ -82,20 +82,20 @@ namespace SGO
                         break;
                     case ComponentMessageType.EquipItemToPart:
                         EquipEntityToPart((EquipmentSlot) message.MessageParameters[1],
-                                          Owner.EntityManager.GetEntity((int)message.MessageParameters[2]));
+                                          Owner.EntityManager.GetEntity((int) message.MessageParameters[2]));
                         break;
                     case ComponentMessageType.UnEquipItemToFloor:
-                        UnEquipEntity((Entity)Owner.EntityManager.GetEntity((int)message.MessageParameters[1]));
+                        UnEquipEntity(Owner.EntityManager.GetEntity((int) message.MessageParameters[1]));
                         break;
                     case ComponentMessageType.UnEquipItemToHand:
                         if (!Owner.HasComponent(ComponentFamily.Hands))
                             return; //TODO REAL ERROR MESSAGE OR SOME FUCK SHIT
-                        UnEquipEntityToHand(Owner.EntityManager.GetEntity((int)message.MessageParameters[1]));
+                        UnEquipEntityToHand(Owner.EntityManager.GetEntity((int) message.MessageParameters[1]));
                         break;
                     case ComponentMessageType.UnEquipItemToSpecifiedHand:
                         if (!Owner.HasComponent(ComponentFamily.Hands))
                             return; //TODO REAL ERROR MESSAGE OR SOME FUCK SHIT
-                        UnEquipEntityToHand(Owner.EntityManager.GetEntity((int)message.MessageParameters[1]),
+                        UnEquipEntityToHand(Owner.EntityManager.GetEntity((int) message.MessageParameters[1]),
                                             (Hand) message.MessageParameters[2]);
                         break;
                 }
@@ -108,10 +108,10 @@ namespace SGO
             {
                 if (!IsEmpty(p))
                 {
-                    var e = equippedEntities[p];
+                    Entity e = equippedEntities[p];
                     e.SendMessage(this, ComponentMessageType.ItemEquipped, Owner);
                     Owner.SendDirectedComponentNetworkMessage(this, NetDeliveryMethod.ReliableOrdered, netConnection,
-                                                      EquipmentComponentNetMessage.ItemEquipped, p, e.Uid);
+                                                              EquipmentComponentNetMessage.ItemEquipped, p, e.Uid);
                 }
             }
         }
@@ -129,7 +129,7 @@ namespace SGO
                 equippedEntities.Add(part, e);
                 e.SendMessage(this, ComponentMessageType.ItemEquipped, Owner);
                 Owner.SendDirectedComponentNetworkMessage(this, NetDeliveryMethod.ReliableOrdered, null,
-                                                  EquipmentComponentNetMessage.ItemEquipped, part, e.Uid);
+                                                          EquipmentComponentNetMessage.ItemEquipped, part, e.Uid);
             }
         }
 
@@ -176,8 +176,8 @@ namespace SGO
             {
                 equippedEntities[part].SendMessage(this, ComponentMessageType.ItemUnEquipped);
                 Owner.SendDirectedComponentNetworkMessage(this, NetDeliveryMethod.ReliableOrdered, null,
-                                                  EquipmentComponentNetMessage.ItemUnEquipped, part,
-                                                  equippedEntities[part].Uid);
+                                                          EquipmentComponentNetMessage.ItemUnEquipped, part,
+                                                          equippedEntities[part].Uid);
                 equippedEntities.Remove(part);
             }
         }
@@ -192,7 +192,8 @@ namespace SGO
         private void UnEquipEntityToHand(Entity e, Hand h)
         {
             var hands = (HumanHandsComponent) Owner.GetComponent(ComponentFamily.Hands);
-            ComponentReplyMessage reply = Owner.SendMessage(this, ComponentFamily.Hands, ComponentMessageType.IsHandEmpty, h);
+            ComponentReplyMessage reply = Owner.SendMessage(this, ComponentFamily.Hands,
+                                                            ComponentMessageType.IsHandEmpty, h);
             if (reply.MessageType == ComponentMessageType.IsHandEmptyReply && (bool) reply.ParamsList[0])
             {
                 UnEquipEntity(e);
@@ -280,21 +281,21 @@ namespace SGO
         {
             var caps = new List<ItemCapability>();
             var replies = new List<ComponentReplyMessage>();
-            foreach(var ent in equippedEntities.Values)
+            foreach (Entity ent in equippedEntities.Values)
             {
                 ent.SendMessage(this, ComponentMessageType.ItemGetAllCapabilities, replies);
             }
-            foreach(var reply in replies)
+            foreach (ComponentReplyMessage reply in replies)
             {
-                caps.AddRange((ItemCapability[])reply.ParamsList[0]);
+                caps.AddRange((ItemCapability[]) reply.ParamsList[0]);
             }
             return caps;
         }
-        
+
         protected bool HasInternals()
         {
-            var caps = GetEquipmentCapabilities();
-            var cap = caps.FirstOrDefault(c => c.GetType() == typeof (BreatherCapability));
+            List<ItemCapability> caps = GetEquipmentCapabilities();
+            ItemCapability cap = caps.FirstOrDefault(c => c.GetType() == typeof (BreatherCapability));
             if (cap != null)
                 return true;
             return false;

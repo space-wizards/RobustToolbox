@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Drawing;
 using System.Linq;
 using GameObject;
 using Lidgren.Network;
@@ -14,8 +15,8 @@ namespace SGO
 {
     public class HumanHealthComponent : HealthComponent
     {
-        protected List<DamageLocation> damageZones = new List<DamageLocation>();
         private DateTime _lastUpdate;
+        protected List<DamageLocation> damageZones = new List<DamageLocation>();
 
         public HumanHealthComponent()
         {
@@ -40,23 +41,28 @@ namespace SGO
             var map = IoCManager.Resolve<IMapManager>();
 
             var statuscomp = Owner.GetComponent<StatusEffectComp>(ComponentFamily.StatusEffects);
-            if(statuscomp == null)
+            if (statuscomp == null)
                 return;
 
-            if(!map.IsWorldPositionInBounds(Owner.GetComponent<TransformComponent>(ComponentFamily.Transform).Position))
+            if (!map.IsWorldPositionInBounds(Owner.GetComponent<TransformComponent>(ComponentFamily.Transform).Position))
             {
                 statuscomp.AddEffect("Hypoxia", 5); //Out of map bounds, you is asphyxiatin to death bitch
             }
             else
             {
-                var hasInternals = HasInternals();
-                var tilePos = map.GetTileArrayPositionFromWorldPosition(Owner.GetComponent<TransformComponent>(ComponentFamily.Transform).Position);
-                if (map.GetTileAt(tilePos.X, tilePos.Y).GasCell.GasAmount(GasType.Toxin) > 0.01 && !hasInternals) //too much toxin in the air, bro
+                bool hasInternals = HasInternals();
+                Point tilePos =
+                    map.GetTileArrayPositionFromWorldPosition(
+                        Owner.GetComponent<TransformComponent>(ComponentFamily.Transform).Position);
+                if (map.GetTileAt(tilePos.X, tilePos.Y).GasCell.GasAmount(GasType.Toxin) > 0.01 && !hasInternals)
+                    //too much toxin in the air, bro
                 {
                     statuscomp.AddEffect("ToxinInhalation", 20);
                 }
-                if(!hasInternals && map.GetTileAt(tilePos.X, tilePos.Y).GasCell.Pressure < 10 //Less than 10kPa
-                    || (map.GetTileAt(tilePos.X, tilePos.Y).GasCell.GasAmount(GasType.Oxygen) / map.GetTileAt(tilePos.X, tilePos.Y).GasCell.TotalGas) < 0.10f) //less than 10% oxygen
+                if (!hasInternals && map.GetTileAt(tilePos.X, tilePos.Y).GasCell.Pressure < 10 //Less than 10kPa
+                    ||
+                    (map.GetTileAt(tilePos.X, tilePos.Y).GasCell.GasAmount(GasType.Oxygen)/
+                     map.GetTileAt(tilePos.X, tilePos.Y).GasCell.TotalGas) < 0.10f) //less than 10% oxygen
                     //Not enough oxygen in the mixture, or pressure is too low.
                     statuscomp.AddEffect("Hypoxia", 5);
             }
@@ -82,10 +88,11 @@ namespace SGO
                 dmgLoc.AddDamage(damType, actualDamage);
             }
 
-            if(targetLocation == BodyPart.Head && actualDamage > 5)
+            if (targetLocation == BodyPart.Head && actualDamage > 5)
             {
-                var r = Owner.SendMessage(this, ComponentFamily.Actor, ComponentMessageType.GetActorSession);
-                if(r.MessageType == ComponentMessageType.ReturnActorSession)
+                ComponentReplyMessage r = Owner.SendMessage(this, ComponentFamily.Actor,
+                                                            ComponentMessageType.GetActorSession);
+                if (r.MessageType == ComponentMessageType.ReturnActorSession)
                 {
                     var s = (IPlayerSession) r.ParamsList[0];
                     s.AddPostProcessingEffect(PostProcessingEffectType.Blur, 5);
@@ -99,7 +106,7 @@ namespace SGO
 
             SendHealthUpdate();
 
-            if(GetHealth() <= 0)
+            if (GetHealth() <= 0)
             {
                 Die();
             }
@@ -117,18 +124,18 @@ namespace SGO
             if (damageZones.Exists(x => x.location == targetLocation))
             {
                 DamageLocation dmgLoc = damageZones.First(x => x.location == targetLocation);
-                dmgLoc.HealDamage(damType, (int)realHealAmount);
+                dmgLoc.HealDamage(damType, (int) realHealAmount);
             }
 
             currentHealth = GetHealth();
             maxHealth = GetMaxHealth();
 
-            if(damType == DamageType.Slashing)
+            if (damType == DamageType.Slashing)
             {
-                var statuscomp = (StatusEffectComp)Owner.GetComponent(ComponentFamily.StatusEffects);
-                if(statuscomp.HasEffect("Bleeding"))
+                var statuscomp = (StatusEffectComp) Owner.GetComponent(ComponentFamily.StatusEffects);
+                if (statuscomp.HasEffect("Bleeding"))
                 {
-                    statuscomp.RemoveEffect("Bleeding");   
+                    statuscomp.RemoveEffect("Bleeding");
                 }
             }
 
@@ -221,7 +228,7 @@ namespace SGO
                                                              params object[] list)
         {
             ComponentReplyMessage reply = ComponentReplyMessage.Empty;
-            if(type != ComponentMessageType.Damage)
+            if (type != ComponentMessageType.Damage)
                 reply = base.RecieveMessage(sender, type, list);
 
             if (sender == this)
@@ -296,7 +303,8 @@ namespace SGO
 
         protected bool HasInternals()
         {
-            ComponentReplyMessage reply = Owner.SendMessage(this, ComponentFamily.Equipment, ComponentMessageType.GetHasInternals);
+            ComponentReplyMessage reply = Owner.SendMessage(this, ComponentFamily.Equipment,
+                                                            ComponentMessageType.GetHasInternals);
             if (reply.MessageType == ComponentMessageType.GetHasInternals)
             {
                 var hasInternals = (bool) reply.ParamsList[0];
@@ -314,13 +322,13 @@ namespace SGO
         private List<LocationHealthState> GetLocationHealthStates()
         {
             var list = new List<LocationHealthState>();
-            foreach(var loc in damageZones)
+            foreach (DamageLocation loc in damageZones)
             {
                 var state = new LocationHealthState();
                 state.Location = loc.location;
                 state.MaxHealth = loc.maxHealth;
                 state.CurrentHealth = loc.currentHealth;
-                foreach(var damagePair in loc.damageIndex)
+                foreach (var damagePair in loc.damageIndex)
                 {
                     state.DamageIndex.Add(damagePair.Key, damagePair.Value);
                 }

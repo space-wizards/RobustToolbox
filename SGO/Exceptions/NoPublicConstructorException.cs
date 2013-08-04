@@ -2,7 +2,7 @@
 
 namespace SGO.Exceptions
 {
-    class NoPublicConstructorException : Exception
+    internal class NoPublicConstructorException : Exception
     {
         private readonly Type _type;
 

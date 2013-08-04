@@ -5,24 +5,25 @@ using System.IO;
 using System.Linq;
 using System.Xml.Linq;
 using GameObject;
-using Lidgren.Network;
 using SS13_Shared;
-using ServerInterfaces.Network;
 using SS13_Shared.GO;
+using ServerInterfaces.Network;
+using IEntityManager = ServerInterfaces.GOC.IEntityManager;
 
 namespace SGO
 {
     /// <summary>
     /// Manager for entities -- controls things like template loading and instantiation
     /// </summary>
-    public class EntityManager : GameObject.EntityManager, ServerInterfaces.GOC.IEntityManager
+    public class EntityManager : GameObject.EntityManager, IEntityManager
     {
         public EntityManager(ISS13NetServer netServer)
-            :base(EngineType.Server, new EntityNetworkManager(netServer))
-        {}
+            : base(EngineType.Server, new EntityNetworkManager(netServer))
+        {
+        }
 
         #region IEntityManager Members
-        
+
         public void SaveEntities()
         {
             //List<XElement> entities = new List<XElement>();
@@ -33,7 +34,37 @@ namespace SGO
             var saveFile = new XDocument(new XElement("SavedEntities", entities.ToArray()));
             saveFile.Save("SavedEntities.xml");
         }
-        
+
+        /// <summary>
+        /// Spawns an entity at a specific position
+        /// </summary>
+        /// <param name="EntityType"></param>
+        /// <param name="position"></param>
+        /// <returns></returns>
+        public Entity SpawnEntityAt(string EntityType, Vector2 position)
+        {
+            Entity e = SpawnEntity(EntityType);
+            e.GetComponent<TransformComponent>(ComponentFamily.Transform).TranslateTo(position);
+            e.Initialize();
+            return e;
+        }
+
+        public List<EntityState> GetEntityStates()
+        {
+            var stateEntities = new List<EntityState>();
+            foreach (Entity entity in _entities.Values)
+            {
+                EntityState entityState = entity.GetEntityState();
+                stateEntities.Add(entityState);
+            }
+            return stateEntities;
+        }
+
+        public void Update(float frameTime)
+        {
+            EntitySystemManager.Update(frameTime);
+        }
+
         #endregion
 
         /// <summary>
@@ -64,9 +95,9 @@ namespace SGO
             float X = float.Parse(e.Attribute("X").Value, CultureInfo.InvariantCulture);
             float Y = float.Parse(e.Attribute("Y").Value, CultureInfo.InvariantCulture);
 
-            Direction dir = Direction.South;
-            if(e.Attribute("direction") != null)
-                dir = (Direction)Enum.Parse(typeof(Direction), e.Attribute("direction").Value, true);
+            var dir = Direction.South;
+            if (e.Attribute("direction") != null)
+                dir = (Direction) Enum.Parse(typeof (Direction), e.Attribute("direction").Value, true);
 
             string template = e.Attribute("template").Value;
             string name = e.Attribute("name").Value;
@@ -74,47 +105,25 @@ namespace SGO
             ent.Name = name;
             ent.GetComponent<TransformComponent>(ComponentFamily.Transform).TranslateTo(new Vector2(X, Y));
             ent.GetComponent<DirectionComponent>(ComponentFamily.Direction).Direction = dir;
-            ent.SendMessage(this, ComponentMessageType.WallMountSearch); //Tell wall mounted compos to look for a tile to attach to. I hate to do this here but i have to.
+            ent.SendMessage(this, ComponentMessageType.WallMountSearch);
+                //Tell wall mounted compos to look for a tile to attach to. I hate to do this here but i have to.
         }
 
         private XElement ToXML(Entity e)
         {
             var el = new XElement("SavedEntity",
-                                  new XAttribute("X", e.GetComponent<TransformComponent>(ComponentFamily.Transform).Position.X.ToString(CultureInfo.InvariantCulture)),
-                                  new XAttribute("Y", e.GetComponent<TransformComponent>(ComponentFamily.Transform).Position.Y.ToString(CultureInfo.InvariantCulture)),
+                                  new XAttribute("X",
+                                                 e.GetComponent<TransformComponent>(ComponentFamily.Transform).Position.
+                                                     X.ToString(CultureInfo.InvariantCulture)),
+                                  new XAttribute("Y",
+                                                 e.GetComponent<TransformComponent>(ComponentFamily.Transform).Position.
+                                                     Y.ToString(CultureInfo.InvariantCulture)),
                                   new XAttribute("template", e.Template.Name),
                                   new XAttribute("name", e.Name),
-                                  new XAttribute("direction", e.GetComponent<DirectionComponent>(ComponentFamily.Direction).Direction.ToString()));
+                                  new XAttribute("direction",
+                                                 e.GetComponent<DirectionComponent>(ComponentFamily.Direction).Direction
+                                                     .ToString()));
             return el;
-        }
-
-        /// <summary>
-        /// Spawns an entity at a specific position
-        /// </summary>
-        /// <param name="EntityType"></param>
-        /// <param name="position"></param>
-        /// <returns></returns>
-        public Entity SpawnEntityAt(string EntityType, Vector2 position)
-        {
-            Entity e = SpawnEntity(EntityType);
-            e.GetComponent<TransformComponent>(ComponentFamily.Transform).TranslateTo(position);
-            e.Initialize();
-            return e;
-        }
-        public List<EntityState> GetEntityStates()
-        {
-            var stateEntities = new List<EntityState>();
-            foreach(Entity entity in _entities.Values)
-            {
-                var entityState = entity.GetEntityState();
-                stateEntities.Add(entityState);
-            }
-            return stateEntities;
-        }
-
-        public void Update(float frameTime)
-        {
-            EntitySystemManager.Update(frameTime);
         }
     }
 }

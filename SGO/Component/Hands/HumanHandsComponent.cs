@@ -74,10 +74,10 @@ namespace SGO
                     {
                         SwitchHands();
                     }
-                    if ((BoundKeyFunctions)list[0] == BoundKeyFunctions.ActivateItemInHand &&
-                        (BoundKeyState)list[1] == BoundKeyState.Up)
+                    if ((BoundKeyFunctions) list[0] == BoundKeyFunctions.ActivateItemInHand &&
+                        (BoundKeyState) list[1] == BoundKeyState.Up)
                         ActivateItemInHand();
-                        
+
                     break;
                 case ComponentMessageType.GetActiveHandItem:
                     if (!IsEmpty(currentHand))
@@ -101,13 +101,13 @@ namespace SGO
                 switch (type)
                 {
                     case ComponentMessageType.ActiveHandChanged:
-                        SwitchHandsTo((Hand)message.MessageParameters[1]);
+                        SwitchHandsTo((Hand) message.MessageParameters[1]);
                         break;
                     case ComponentMessageType.DropEntityInHand:
-                        Drop((Entity)Owner.EntityManager.GetEntity((int)message.MessageParameters[1]));
+                        Drop(Owner.EntityManager.GetEntity((int) message.MessageParameters[1]));
                         break;
                     case ComponentMessageType.DropItemInHand:
-                        Drop((Hand)message.MessageParameters[1]);
+                        Drop((Hand) message.MessageParameters[1]);
                         break;
                 }
             }
@@ -129,7 +129,7 @@ namespace SGO
         {
             currentHand = hand;
             Owner.SendDirectedComponentNetworkMessage(this, NetDeliveryMethod.ReliableOrdered, null,
-                                              ComponentMessageType.ActiveHandChanged, hand);
+                                                      ComponentMessageType.ActiveHandChanged, hand);
         }
 
         /// <summary>
@@ -156,16 +156,15 @@ namespace SGO
 
         private void ActivateItemInHand()
         {
-            var h = GetCurrentHand();
+            Hand h = GetCurrentHand();
             if (!IsEmpty(h))
             {
-                var e = GetEntity(h);
+                Entity e = GetEntity(h);
                 if (e != null)
                 {
                     e.SendMessage(this, ComponentFamily.Item, ComponentMessageType.Activate);
                 }
             }
-
         }
 
         /// <summary>
@@ -194,7 +193,8 @@ namespace SGO
 
                 SetEntity(currentHand, entity);
                 Owner.SendDirectedComponentNetworkMessage(this, NetDeliveryMethod.ReliableOrdered, null,
-                                                  ComponentMessageType.HandsPickedUpItem, entity.Uid, currentHand);
+                                                          ComponentMessageType.HandsPickedUpItem, entity.Uid,
+                                                          currentHand);
                 entity.SendMessage(this, ComponentMessageType.PickedUp, Owner, currentHand);
             }
         }
@@ -211,7 +211,7 @@ namespace SGO
 
                 SetEntity(hand, entity);
                 Owner.SendDirectedComponentNetworkMessage(this, NetDeliveryMethod.ReliableOrdered, null,
-                                                  ComponentMessageType.HandsPickedUpItem, entity.Uid, hand);
+                                                          ComponentMessageType.HandsPickedUpItem, entity.Uid, hand);
                 entity.SendMessage(this, ComponentMessageType.PickedUp, Owner, hand);
             }
         }
@@ -245,7 +245,8 @@ namespace SGO
             {
                 GetEntity(hand).SendMessage(this, ComponentMessageType.Dropped);
                 Owner.SendDirectedComponentNetworkMessage(this, NetDeliveryMethod.ReliableOrdered, null,
-                                                  ComponentMessageType.HandsDroppedItem, GetEntity(hand).Uid, hand);
+                                                          ComponentMessageType.HandsDroppedItem, GetEntity(hand).Uid,
+                                                          hand);
                 handslots.Remove(hand);
             }
         }

@@ -82,7 +82,8 @@ namespace SGO
                                                       HasCapability((ItemCapabilityType) list[0]));
                     break;
                 case ComponentMessageType.ItemGetAllCapabilities:
-                    reply = new ComponentReplyMessage(ComponentMessageType.ItemReturnCapability, (object)GetAllCapabilities());
+                    reply = new ComponentReplyMessage(ComponentMessageType.ItemReturnCapability,
+                                                      (object) GetAllCapabilities());
                     break;
                 case ComponentMessageType.Activate:
                     Activate();
@@ -94,7 +95,7 @@ namespace SGO
 
             return reply;
         }
-        
+
         /// <summary>
         /// Applies this item to the target entity. 
         /// </summary>
@@ -109,9 +110,10 @@ namespace SGO
         private void HandleDropped()
         {
             Owner.RemoveComponent(ComponentFamily.Mover);
-            Owner.AddComponent(ComponentFamily.Mover, Owner.EntityManager.ComponentFactory.GetComponent("BasicMoverComponent"));
+            Owner.AddComponent(ComponentFamily.Mover,
+                               Owner.EntityManager.ComponentFactory.GetComponent("BasicMoverComponent"));
             Owner.SendDirectedComponentNetworkMessage(this, NetDeliveryMethod.ReliableOrdered, null,
-                                              ItemComponentNetMessage.Dropped);
+                                                      ItemComponentNetMessage.Dropped);
             currentHolder = null;
         }
 
@@ -119,17 +121,19 @@ namespace SGO
         {
             currentHolder = entity;
             holdingHand = _holdingHand;
-            Owner.AddComponent(ComponentFamily.Mover, Owner.EntityManager.ComponentFactory.GetComponent("SlaveMoverComponent"));
+            Owner.AddComponent(ComponentFamily.Mover,
+                               Owner.EntityManager.ComponentFactory.GetComponent("SlaveMoverComponent"));
             Owner.SendMessage(this, ComponentMessageType.SlaveAttach, entity.Uid);
             Owner.SendDirectedComponentNetworkMessage(this, NetDeliveryMethod.ReliableOrdered, null,
-                                              ItemComponentNetMessage.PickedUp, entity.Uid, holdingHand);
+                                                      ItemComponentNetMessage.PickedUp, entity.Uid, holdingHand);
         }
 
         public override void HandleInstantiationMessage(NetConnection netConnection)
         {
             if (currentHolder != null)
                 Owner.SendDirectedComponentNetworkMessage(this, NetDeliveryMethod.ReliableOrdered, netConnection,
-                                                  ItemComponentNetMessage.PickedUp, currentHolder.Uid, holdingHand);
+                                                          ItemComponentNetMessage.PickedUp, currentHolder.Uid,
+                                                          holdingHand);
         }
 
         /// <summary>
@@ -259,7 +263,7 @@ namespace SGO
 
         private void ActivateCapabilities()
         {
-            foreach(var c in GetAllCapabilities())
+            foreach (ItemCapability c in GetAllCapabilities())
             {
                 c.Activate();
             }
@@ -323,7 +327,7 @@ namespace SGO
                 {
                     string name = parameter.Attribute("name").Value;
                     Type type = EntityTemplate.TranslateType(parameter.Attribute("type").Value);
-                    var value = Convert.ChangeType(parameter.Attribute("value").Value, type);
+                    object value = Convert.ChangeType(parameter.Attribute("value").Value, type);
 
                     var cparam = new ComponentParameter(name, value);
                     cap.SetParameter(cparam);

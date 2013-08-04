@@ -109,7 +109,6 @@
     <Compile Include="EntitySystems\EntitySystem.cs" />
     <Compile Include="Exceptions\MissingImplementationException.cs" />
     <Compile Include="Exceptions\NoPublicConstructorException.cs" />
-    <Compile Include="IMoverComponent.cs" />
     <Compile Include="MessageEnums.cs" />
     <Compile Include="PlayerActions\ExampleAction.cs" />
     <Compile Include="PlayerActions\PlayerActionS.cs" />

@@ -6,8 +6,8 @@ using SS13.IoC;
 using SS13_Shared;
 using SS13_Shared.GO;
 using ServerInterfaces.Chat;
-using ServerServices.Tiles;
 using ServerInterfaces.Map;
+using ServerServices.Tiles;
 
 namespace SGO
 {
@@ -16,17 +16,17 @@ namespace SGO
         private bool Open;
         private bool autoclose = true;
         private string closedSprite = "";
+        private bool disabled;
         private float openLength = 5000;
         private string openSprite = "";
         private bool openonbump;
         private float timeOpen;
-        private bool disabled = false;
 
         public BasicDoorComponent()
         {
             Family = ComponentFamily.LargeObject;
 
-            RegisterSVar("OpenOnBump", typeof(bool));
+            RegisterSVar("OpenOnBump", typeof (bool));
         }
 
         public override ComponentReplyMessage RecieveMessage(object sender, ComponentMessageType type,
@@ -80,7 +80,7 @@ namespace SGO
             SetImpermeable(args.VectorTo);
         }
 
-        protected override void RecieveItemInteraction(GameObject.Entity actor, GameObject.Entity item,
+        protected override void RecieveItemInteraction(Entity actor, Entity item,
                                                        Lookup<ItemCapabilityType, ItemCapabilityVerb> verbs)
         {
             base.RecieveItemInteraction(actor, item, verbs);
@@ -107,7 +107,7 @@ namespace SGO
         /// Basically, actor "uses" this object
         /// </summary>
         /// <param name="actor">The actor entity</param>
-        protected override void HandleEmptyHandToLargeObjectInteraction(GameObject.Entity actor)
+        protected override void HandleEmptyHandToLargeObjectInteraction(Entity actor)
         {
             ToggleDoor();
         }
@@ -130,8 +130,10 @@ namespace SGO
             if (disabled && !force) return;
 
             var map = IoCManager.Resolve<IMapManager>();
-            Point occupiedTilePos = map.GetTileArrayPositionFromWorldPosition(Owner.GetComponent<TransformComponent>(ComponentFamily.Transform).Position);
-            Tile occupiedTile = map.GetTileAt(occupiedTilePos.X, occupiedTilePos.Y) as Tile;
+            Point occupiedTilePos =
+                map.GetTileArrayPositionFromWorldPosition(
+                    Owner.GetComponent<TransformComponent>(ComponentFamily.Transform).Position);
+            var occupiedTile = map.GetTileAt(occupiedTilePos.X, occupiedTilePos.Y) as Tile;
             Open = true;
             Owner.SendMessage(this, ComponentMessageType.DisableCollision);
             Owner.SendMessage(this, ComponentMessageType.SetSpriteByKey, openSprite);
@@ -143,8 +145,10 @@ namespace SGO
             if (disabled && !force) return;
 
             var map = IoCManager.Resolve<IMapManager>();
-            Point occupiedTilePos = map.GetTileArrayPositionFromWorldPosition(Owner.GetComponent<TransformComponent>(ComponentFamily.Transform).Position);
-            Tile occupiedTile = map.GetTileAt(occupiedTilePos.X, occupiedTilePos.Y) as Tile;
+            Point occupiedTilePos =
+                map.GetTileArrayPositionFromWorldPosition(
+                    Owner.GetComponent<TransformComponent>(ComponentFamily.Transform).Position);
+            var occupiedTile = map.GetTileAt(occupiedTilePos.X, occupiedTilePos.Y) as Tile;
             Open = false;
             timeOpen = 0;
             Owner.SendMessage(this, ComponentMessageType.EnableCollision);
@@ -155,8 +159,10 @@ namespace SGO
         private void SetImpermeable()
         {
             var map = IoCManager.Resolve<IMapManager>();
-            Point occupiedTilePos = map.GetTileArrayPositionFromWorldPosition(Owner.GetComponent<TransformComponent>(ComponentFamily.Transform).Position);
-            Tile occupiedTile = map.GetTileAt(occupiedTilePos.X, occupiedTilePos.Y) as Tile;
+            Point occupiedTilePos =
+                map.GetTileArrayPositionFromWorldPosition(
+                    Owner.GetComponent<TransformComponent>(ComponentFamily.Transform).Position);
+            var occupiedTile = map.GetTileAt(occupiedTilePos.X, occupiedTilePos.Y) as Tile;
             occupiedTile.GasPermeable = false;
         }
 
@@ -164,7 +170,7 @@ namespace SGO
         {
             var map = IoCManager.Resolve<IMapManager>();
             Point occupiedTilePos = map.GetTileArrayPositionFromWorldPosition(position);
-            Tile occupiedTile = map.GetTileAt(occupiedTilePos.X, occupiedTilePos.Y) as Tile;
+            var occupiedTile = map.GetTileAt(occupiedTilePos.X, occupiedTilePos.Y) as Tile;
             occupiedTile.GasPermeable = false;
         }
 
@@ -172,7 +178,7 @@ namespace SGO
         {
             var map = IoCManager.Resolve<IMapManager>();
             Point occupiedTilePos = map.GetTileArrayPositionFromWorldPosition(position);
-            Tile occupiedTile = map.GetTileAt(occupiedTilePos.X, occupiedTilePos.Y) as Tile;
+            var occupiedTile = map.GetTileAt(occupiedTilePos.X, occupiedTilePos.Y) as Tile;
             occupiedTile.GasPermeable = true;
         }
 
@@ -209,7 +215,7 @@ namespace SGO
 
         public override List<ComponentParameter> GetParameters()
         {
-            var cparams = base.GetParameters();
+            List<ComponentParameter> cparams = base.GetParameters();
             cparams.Add(new ComponentParameter("OpenOnBump", openonbump));
             return cparams;
         }

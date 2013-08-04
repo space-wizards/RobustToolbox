@@ -12,15 +12,15 @@ namespace SGO
     {
         private readonly List<DamageHistoryItem> _damageHistory = new List<DamageHistoryItem>();
         public float currentHealth = 100;
-        
+
         protected bool isDead;
         public float maxHealth = 100;
 
         public DamageableComponent()
         {
             Family = ComponentFamily.Damageable;
-            RegisterSVar("MaxHealth", typeof(int));
-            RegisterSVar("CurrentHealth", typeof(int));
+            RegisterSVar("MaxHealth", typeof (int));
+            RegisterSVar("CurrentHealth", typeof (int));
         }
 
         public override void HandleInstantiationMessage(NetConnection netConnection)
@@ -106,7 +106,7 @@ namespace SGO
 
         protected virtual int GetArmor(DamageType damType)
         {
-            EntityStatsComp entStats = (EntityStatsComp)Owner.GetComponent(ComponentFamily.EntityStats);
+            var entStats = (EntityStatsComp) Owner.GetComponent(ComponentFamily.EntityStats);
 
             if (entStats != null) return entStats.GetArmorValue(damType);
             else return 0;
@@ -140,7 +140,7 @@ namespace SGO
         {
             base.SetParameter(parameter);
 
-            switch(parameter.MemberName)
+            switch (parameter.MemberName)
             {
                 case "MaxHealth":
                     maxHealth = parameter.GetValue<int>();
@@ -154,12 +154,11 @@ namespace SGO
 
         public override List<ComponentParameter> GetParameters()
         {
-            var cparams = base.GetParameters();
-            cparams.Add(new ComponentParameter("MaxHealth", (int)maxHealth));
-            cparams.Add(new ComponentParameter("CurrentHealth", (int)currentHealth));
+            List<ComponentParameter> cparams = base.GetParameters();
+            cparams.Add(new ComponentParameter("MaxHealth", (int) maxHealth));
+            cparams.Add(new ComponentParameter("CurrentHealth", (int) currentHealth));
             return cparams;
         }
-
     }
 
     public struct DamageHistoryItem

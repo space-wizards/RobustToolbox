@@ -20,7 +20,7 @@ namespace SGO
         {
             if (message.ComponentFamily == ComponentFamily.Click)
             {
-                var type = (ComponentMessageType)message.MessageParameters[0];
+                var type = (ComponentMessageType) message.MessageParameters[0];
                 var uid = (int) message.MessageParameters[1];
                 if (type == ComponentMessageType.Click)
                     Owner.SendMessage(this, ComponentMessageType.Click, uid);

@@ -42,8 +42,8 @@ namespace SGO
             {
                 case ComponentMessageType.Bumped:
                     ///TODO check who bumped us, how far away they are, etc.
-                    var bumper = Owner.EntityManager.GetEntity((int) message.MessageParameters[1]);
-                    if(bumper != null)
+                    Entity bumper = Owner.EntityManager.GetEntity((int) message.MessageParameters[1]);
+                    if (bumper != null)
                         Owner.SendMessage(this, ComponentMessageType.Bumped, bumper);
                     break;
             }
@@ -52,6 +52,6 @@ namespace SGO
         public override ComponentState GetComponentState()
         {
             return new CollidableComponentState(_collisionEnabled);
-        } 
+        }
     }
 }

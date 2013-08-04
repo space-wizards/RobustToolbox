@@ -1,8 +1,8 @@
 ﻿using System;
+using GameObject;
 using SS13.IoC;
 using SS13_Shared;
 using SS13_Shared.GO;
-using ServerInterfaces;
 using ServerInterfaces.Chat;
 using ServerInterfaces.Player;
 
@@ -10,12 +10,12 @@ namespace SGO.Item.ItemCapability
 {
     public class MeleeWeaponCapability : ItemCapability
     {
-        public DamageType damType = DamageType.Bludgeoning;
-        public int damageAmount = 10;
-        public bool toggleable = false;
         public bool active = true;
         public string activeSprite;
+        public DamageType damType = DamageType.Bludgeoning;
+        public int damageAmount = 10;
         public string inactiveSprite;
+        public bool toggleable = false;
 
         public MeleeWeaponCapability()
         {
@@ -24,7 +24,7 @@ namespace SGO.Item.ItemCapability
             interactsWith = InteractsWith.Actor | InteractsWith.LargeObject;
         }
 
-        public override bool ApplyTo(GameObject.Entity target, GameObject.Entity sourceActor)
+        public override bool ApplyTo(Entity target, Entity sourceActor)
         {
             string sourceName = sourceActor.Name;
             string targetName = (sourceActor.Uid == target.Uid) ? "himself" : target.Name;
@@ -37,7 +37,7 @@ namespace SGO.Item.ItemCapability
                 return true;
             }
 
-            BodyPart targetedArea = BodyPart.Torso;
+            var targetedArea = BodyPart.Torso;
 
             ComponentReplyMessage reply = sourceActor.SendMessage(this, ComponentFamily.Actor,
                                                                   ComponentMessageType.GetActorSession);

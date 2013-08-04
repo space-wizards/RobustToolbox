@@ -2,8 +2,6 @@
 using System.Collections.Generic;
 using System.Linq;
 using GameObject;
-using Lidgren.Network;
-using SS13_Shared;
 using SS13_Shared.GO;
 using SS13_Shared.GO.Component.StatusEffect;
 using SS13_Shared.GO.StatusEffect;
@@ -102,17 +100,17 @@ namespace SGO
             switch (parameter.MemberName)
             {
                 case "AddEffect":
-                    AddEffect(parameter.GetValue<string>(),10);
+                    AddEffect(parameter.GetValue<string>(), 10);
                     break;
                 default:
                     base.SetParameter(parameter);
                     break;
             }
-        } 
+        }
 
         public override List<ComponentParameter> GetParameters()
         {
-            var cparams = base.GetParameters();
+            List<ComponentParameter> cparams = base.GetParameters();
             cparams.Add(new ComponentParameter("AddEffect", ""));
             return cparams;
         }
@@ -120,7 +118,7 @@ namespace SGO
         public override ComponentState GetComponentState()
         {
             var states = new List<StatusEffectState>();
-            foreach(var effect in Effects)
+            foreach (StatusEffect effect in Effects)
             {
                 states.Add(effect.GetState());
             }

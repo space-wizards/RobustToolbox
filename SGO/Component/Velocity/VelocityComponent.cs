@@ -1,8 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using GameObject;
+﻿using GameObject;
 using SS13_Shared;
 using SS13_Shared.GO;
 using SS13_Shared.GO.Component.Velocity;
@@ -13,16 +9,16 @@ namespace SGO
     {
         private Vector2 _velocity = Vector2.Zero;
 
+
+        public VelocityComponent()
+        {
+            Family = ComponentFamily.Velocity;
+        }
+
         public Vector2 Velocity
         {
             get { return _velocity; }
             set { _velocity = value; }
-        }
-
-        
-        public VelocityComponent() :base()
-        {
-            Family = ComponentFamily.Velocity;
         }
 
         public float X
@@ -34,7 +30,7 @@ namespace SGO
         public float Y
         {
             get { return Velocity.Y; }
-            set { Velocity = new Vector2(Velocity.X, value);}
+            set { Velocity = new Vector2(Velocity.X, value); }
         }
 
         public override void Shutdown()

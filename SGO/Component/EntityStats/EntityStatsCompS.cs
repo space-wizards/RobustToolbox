@@ -83,12 +83,12 @@ namespace SGO
         {
             int armorVal = 0;
 
-            EquipmentComponent eqComp = (EquipmentComponent)Owner.GetComponent(ComponentFamily.Equipment);
+            var eqComp = (EquipmentComponent) Owner.GetComponent(ComponentFamily.Equipment);
             if (eqComp != null)
             {
                 foreach (Entity ent in eqComp.equippedEntities.Values)
                 {
-                    EntityStatsComp entStatComp = (EntityStatsComp)ent.GetComponent(ComponentFamily.EntityStats);
+                    var entStatComp = (EntityStatsComp) ent.GetComponent(ComponentFamily.EntityStats);
                     if (entStatComp != null)
                         armorVal += entStatComp.GetArmorValue(damType);
                 }

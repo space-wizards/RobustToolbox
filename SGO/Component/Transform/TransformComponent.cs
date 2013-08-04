@@ -1,7 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
 using GameObject;
 using SS13_Shared;
 using SS13_Shared.GO;
@@ -10,25 +7,11 @@ using ServerInterfaces.GOC;
 
 namespace SGO
 {
-    class TransformComponent : Component, ITransformComponent
+    internal class TransformComponent : Component, ITransformComponent
     {
         private Vector2 _position = Vector2.Zero;
 
-        public Vector2 Position
-        {
-            get { return _position; }
-            set
-            {
-                var oldPosition = _position;
-                _position = value;
-
-                if (OnMove != null) OnMove(this, new VectorEventArgs(oldPosition, _position));
-            }
-        }
-
-        public event EventHandler<VectorEventArgs> OnMove;
-        
-        public TransformComponent() :base()
+        public TransformComponent()
         {
             Family = ComponentFamily.Transform;
         }
@@ -42,12 +25,21 @@ namespace SGO
         public float Y
         {
             get { return Position.Y; }
-            set { Position = new Vector2(Position.X, value);}
+            set { Position = new Vector2(Position.X, value); }
         }
 
-        public override void Shutdown()
+        #region ITransformComponent Members
+
+        public Vector2 Position
         {
-            Position = Vector2.Zero;
+            get { return _position; }
+            set
+            {
+                Vector2 oldPosition = _position;
+                _position = value;
+
+                if (OnMove != null) OnMove(this, new VectorEventArgs(oldPosition, _position));
+            }
         }
 
         public void TranslateTo(Vector2 toPosition)
@@ -58,6 +50,15 @@ namespace SGO
         public void TranslateByOffset(Vector2 offset)
         {
             Position = Position + offset;
+        }
+
+        #endregion
+
+        public event EventHandler<VectorEventArgs> OnMove;
+
+        public override void Shutdown()
+        {
+            Position = Vector2.Zero;
         }
 
         public override ComponentState GetComponentState()

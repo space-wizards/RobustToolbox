@@ -1,25 +1,25 @@
-﻿using GameObject;
-using ServerServices.Log;
-using SS13_Shared.GO;
+﻿using System;
 using System.Collections.Generic;
-using System;
+using GameObject;
+using SS13_Shared.GO;
+using ServerServices.Log;
 
 namespace SGO.Think.ThinkComponent
 {
     public class PuddleThinkComponent : ThinkComponent
     {
-        private Dictionary<Entity, DateTime> recentlyAffected = new Dictionary<Entity, DateTime>();
+        private readonly Dictionary<Entity, DateTime> recentlyAffected = new Dictionary<Entity, DateTime>();
 
         public override void OnBump(object sender, params object[] list)
         {
             base.OnBump(sender, list);
-            Entity bumper = ((Entity)list[0]);
+            var bumper = ((Entity) list[0]);
             LogManager.Log("Puddle Bumped by " + bumper.Name);
-            StatusEffectComp statComp = (StatusEffectComp)bumper.GetComponent(ComponentFamily.StatusEffects);
+            var statComp = (StatusEffectComp) bumper.GetComponent(ComponentFamily.StatusEffects);
 
             if (statComp != null)
             {
-                if(recentlyAffected.ContainsKey(bumper))
+                if (recentlyAffected.ContainsKey(bumper))
                 {
                     if ((DateTime.Now - recentlyAffected[bumper]).Seconds > 5)
                     {
@@ -33,8 +33,6 @@ namespace SGO.Think.ThinkComponent
                     statComp.AddEffect("Rooted", 3);
                 }
             }
-
         }
-
     }
 }

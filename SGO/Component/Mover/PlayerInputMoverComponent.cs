@@ -1,10 +1,8 @@
-﻿using System;
-using GameObject;
+﻿using GameObject;
 using Lidgren.Network;
 using SS13_Shared;
 using SS13_Shared.GO;
 using SS13_Shared.GO.Component.Mover;
-using ServerServices.Log;
 
 namespace SGO
 {
@@ -54,13 +52,13 @@ namespace SGO
         {
             SendPositionUpdate(netConnection, true);
         }
-        
+
         public override ComponentState GetComponentState()
         {
-            return new MoverComponentState(Owner.GetComponent<TransformComponent>(ComponentFamily.Transform).Position.X, 
-                Owner.GetComponent<TransformComponent>(ComponentFamily.Transform).Position.Y,
-                Owner.GetComponent<VelocityComponent>(ComponentFamily.Velocity).Velocity.X,
-                Owner.GetComponent<VelocityComponent>(ComponentFamily.Velocity).Velocity.Y);
+            return new MoverComponentState(Owner.GetComponent<TransformComponent>(ComponentFamily.Transform).Position.X,
+                                           Owner.GetComponent<TransformComponent>(ComponentFamily.Transform).Position.Y,
+                                           Owner.GetComponent<VelocityComponent>(ComponentFamily.Velocity).Velocity.X,
+                                           Owner.GetComponent<VelocityComponent>(ComponentFamily.Velocity).Velocity.Y);
         }
     }
 }

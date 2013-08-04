@@ -1,19 +1,18 @@
-﻿using GameObject;
+﻿using System.Collections.Generic;
+using GameObject;
 using Lidgren.Network;
+using SS13.IoC;
 using SS13_Shared;
 using SS13_Shared.GO;
 using SS13_Shared.GO.Component.Mover;
-using SS13.IoC;
 using ServerInterfaces.Map;
-using System.Collections.Generic;
-using ServerServices.Log;
+using ServerInterfaces.Tiles;
 
 namespace SGO
 {
     internal class Physics : Component
     {
-
-        private float mass = 0.0f;
+        private float mass;
 
         public Physics()
         {
@@ -33,12 +32,12 @@ namespace SGO
 
         public override void HandleInstantiationMessage(NetConnection netConnection)
         {
-
         }
 
         public override void Update(float frameTime)
         {
-            if (Owner.GetComponent<SlaveMoverComponent>(ComponentFamily.Mover) != null)  // If we are being moved by something else right now (like being carried) dont be affected by physics
+            if (Owner.GetComponent<SlaveMoverComponent>(ComponentFamily.Mover) != null)
+                // If we are being moved by something else right now (like being carried) dont be affected by physics
                 return;
 
             GasEffect();
@@ -46,22 +45,26 @@ namespace SGO
 
         private void GasEffect()
         {
-            var t = IoCManager.Resolve<IMapManager>().GetTileFromWorldPosition(Owner.GetComponent<TransformComponent>(ComponentFamily.Transform).Position);
+            ITile t =
+                IoCManager.Resolve<IMapManager>().GetTileFromWorldPosition(
+                    Owner.GetComponent<TransformComponent>(ComponentFamily.Transform).Position);
             if (t == null)
                 return;
             Vector2 gasVel = t.GasCell.GasVelocity;
             if (gasVel.Abs() > mass) // Stop tiny wobbles
             {
-                Owner.SendMessage(this, ComponentMessageType.PhysicsMove, 
-                    Owner.GetComponent<TransformComponent>(ComponentFamily.Transform).Position.X + gasVel.X, 
-                    Owner.GetComponent<TransformComponent>(ComponentFamily.Transform).Position.Y + gasVel.Y);
+                Owner.SendMessage(this, ComponentMessageType.PhysicsMove,
+                                  Owner.GetComponent<TransformComponent>(ComponentFamily.Transform).Position.X +
+                                  gasVel.X,
+                                  Owner.GetComponent<TransformComponent>(ComponentFamily.Transform).Position.Y +
+                                  gasVel.Y);
             }
         }
 
         public override ComponentState GetComponentState()
         {
             return new MoverComponentState(
-                Owner.GetComponent<TransformComponent>(ComponentFamily.Transform).Position.X, 
+                Owner.GetComponent<TransformComponent>(ComponentFamily.Transform).Position.X,
                 Owner.GetComponent<TransformComponent>(ComponentFamily.Transform).Position.Y,
                 Owner.GetComponent<VelocityComponent>(ComponentFamily.Velocity).Velocity.X,
                 Owner.GetComponent<VelocityComponent>(ComponentFamily.Velocity).Velocity.Y);
@@ -76,13 +79,12 @@ namespace SGO
                 case "Mass":
                     mass = parameter.GetValue<float>();
                     break;
-
             }
         }
 
         public override List<ComponentParameter> GetParameters()
         {
-            var cparams = base.GetParameters();
+            List<ComponentParameter> cparams = base.GetParameters();
             return cparams;
         }
     }

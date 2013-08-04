@@ -35,13 +35,16 @@ namespace SGO
             if (bleedDmgTimer.ElapsedMilliseconds >= 300)
             {
                 bleedDmgTimer.Restart();
-                affected.SendMessage(this, ComponentMessageType.Damage, affected, 1, DamageType.BloodLoss, BodyPart.Torso);
+                affected.SendMessage(this, ComponentMessageType.Damage, affected, 1, DamageType.BloodLoss,
+                                     BodyPart.Torso);
             }
 
             if (bleedEntTimer.ElapsedMilliseconds >= 1500)
             {
                 bleedEntTimer.Restart();
-                ((EntityManager)affected.EntityManager).SpawnEntityAt("Blood", affected.GetComponent<TransformComponent>(ComponentFamily.Transform).Position);
+                ((EntityManager) affected.EntityManager).SpawnEntityAt("Blood",
+                                                                       affected.GetComponent<TransformComponent>(
+                                                                           ComponentFamily.Transform).Position);
             }
         }
     }

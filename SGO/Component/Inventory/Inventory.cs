@@ -8,7 +8,7 @@ using ServerInterfaces.GOC;
 
 namespace SGO
 {
-    public class InventoryComponent : Component,IInventoryComponent
+    public class InventoryComponent : Component, IInventoryComponent
     {
         public InventoryComponent()
         {
@@ -16,9 +16,19 @@ namespace SGO
             containedEntities = new List<Entity>();
         }
 
+        #region IInventoryComponent Members
+
         public List<Entity> containedEntities { get; private set; }
 
         public int maxSlots { get; private set; }
+
+        public bool containsEntity(Entity entity)
+        {
+            if (containedEntities.Contains(entity)) return true;
+            else return false;
+        }
+
+        #endregion
 
         public override void HandleNetworkMessage(IncomingEntityComponentMessage message, NetConnection client)
         {
@@ -29,13 +39,13 @@ namespace SGO
                     break;
 
                 case ComponentMessageType.InventoryAdd:
-                    var entAdd = (Entity)Owner.EntityManager.GetEntity((int) message.MessageParameters[1]);
+                    Entity entAdd = Owner.EntityManager.GetEntity((int) message.MessageParameters[1]);
                     if (entAdd != null)
                         AddToInventory(entAdd);
                     break;
 
                 case ComponentMessageType.InventoryRemove:
-                    var entRemove = (Entity)Owner.EntityManager.GetEntity((int) message.MessageParameters[1]);
+                    Entity entRemove = Owner.EntityManager.GetEntity((int) message.MessageParameters[1]);
                     if (entRemove != null)
                         RemoveFromInventory(entRemove);
                     break;
@@ -75,12 +85,6 @@ namespace SGO
             }
 
             return reply;
-        }
-
-        public bool containsEntity(Entity entity)
-        {
-            if (containedEntities.Contains(entity)) return true;
-            else return false;
         }
 
         public bool containsEntity(string templatename)
@@ -137,7 +141,7 @@ namespace SGO
 
                 HandleAdded(entity);
                 Owner.SendDirectedComponentNetworkMessage(this, NetDeliveryMethod.ReliableOrdered, null,
-                                                  ComponentMessageType.InventoryUpdateRequired);
+                                                          ComponentMessageType.InventoryUpdateRequired);
             }
         }
 
@@ -150,7 +154,7 @@ namespace SGO
             }
             HandleRemoved(entity);
             Owner.SendDirectedComponentNetworkMessage(this, NetDeliveryMethod.ReliableOrdered, null,
-                                              ComponentMessageType.InventoryUpdateRequired);
+                                                      ComponentMessageType.InventoryUpdateRequired);
         }
 
         private void HandleAdded(Entity entity)

@@ -1,15 +1,16 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Runtime.InteropServices;
+using GameObject;
 using Lidgren.Network;
 using SS13.IoC;
 using SS13_Shared;
 using SS13_Shared.GO;
 using ServerInterfaces.Configuration;
-using ServerInterfaces.GOC;
 using ServerInterfaces.MessageLogging;
 using ServerInterfaces.Network;
-using ServerServices;
+using IEntityNetworkManager = ServerInterfaces.GOC.IEntityNetworkManager;
 
 namespace SGO
 {
@@ -44,10 +45,27 @@ namespace SGO
             m_netServer.SendMessage(message, recipient, method);
         }
 
+        /// <summary>
+        /// Sends an arbitrary entity network message
+        /// </summary>
+        /// <param name="sendingEntity">The entity the message is going from(and to, on the other end)</param>
+        /// <param name="type">Message type</param>
+        /// <param name="list">List of parameter objects</param>
+        public void SendEntityNetworkMessage(Entity sendingEntity, EntityMessage type, params object[] list)
+        {
+        }
+
+
+        public void SendComponentNetworkMessage(Entity sendingEntity, ComponentFamily family,
+                                                [Optional] [DefaultParameterValue(NetDeliveryMethod.ReliableUnordered)] NetDeliveryMethod method, params object[] messageParams)
+        {
+            throw new NotImplementedException();
+        }
+
         #endregion
 
         #region Sending
-        
+
         /// <summary>
         /// Allows a component owned by this entity to send a message to a counterpart component on the
         /// counterpart entities on all clients.
@@ -57,8 +75,9 @@ namespace SGO
         /// <param name="method">Net delivery method -- if null, defaults to NetDeliveryMethod.ReliableUnordered</param>
         /// <param name="recipient">Client connection to send to. If null, send to all.</param>
         /// <param name="messageParams">Parameters of the message</param>
-        public void SendDirectedComponentNetworkMessage(GameObject.Entity sendingEntity, ComponentFamily family, NetDeliveryMethod method,
-                                                NetConnection recipient, params object[] messageParams)
+        public void SendDirectedComponentNetworkMessage(Entity sendingEntity, ComponentFamily family,
+                                                        NetDeliveryMethod method,
+                                                        NetConnection recipient, params object[] messageParams)
         {
             NetOutgoingMessage message = CreateEntityMessage();
             message.Write(sendingEntity.Uid); //Write this entity's UID
@@ -134,9 +153,9 @@ namespace SGO
                 }
                 else if (messageParam is byte[])
                 {
-                    message.Write((byte)NetworkDataType.d_byteArray);
-                    message.Write(((byte[])messageParam).Length);
-                    message.Write((byte[])messageParam);
+                    message.Write((byte) NetworkDataType.d_byteArray);
+                    message.Write(((byte[]) messageParam).Length);
+                    message.Write((byte[]) messageParam);
                 }
                 else
                 {
@@ -208,28 +227,29 @@ namespace SGO
             {
                 case EntityMessage.ComponentMessage:
                     incomingEntityMessage = new IncomingEntityMessage(uid, EntityMessage.ComponentMessage,
-                                                                            HandleEntityComponentNetworkMessage(message),
-                                                                            message.SenderConnection);
+                                                                      HandleEntityComponentNetworkMessage(message),
+                                                                      message.SenderConnection);
                     break;
                 case EntityMessage.PositionMessage:
                     //TODO: Handle position messages!
                     break;
                 case EntityMessage.ComponentInstantiationMessage:
                     incomingEntityMessage = new IncomingEntityMessage(uid,
-                                                                            EntityMessage.ComponentInstantiationMessage,
-                                                                            (ComponentFamily)
-                                                                            UnPackParams(message).First(),
-                                                                            message.SenderConnection);
+                                                                      EntityMessage.ComponentInstantiationMessage,
+                                                                      (ComponentFamily)
+                                                                      UnPackParams(message).First(),
+                                                                      message.SenderConnection);
                     break;
                 case EntityMessage.SetSVar:
-                    incomingEntityMessage = new IncomingEntityMessage(uid, 
-                        EntityMessage.SetSVar, 
-                        MarshalComponentParameter.Deserialize(message),
-                        message.SenderConnection);
+                    incomingEntityMessage = new IncomingEntityMessage(uid,
+                                                                      EntityMessage.SetSVar,
+                                                                      MarshalComponentParameter.Deserialize(message),
+                                                                      message.SenderConnection);
                     break;
                 case EntityMessage.GetSVars:
                     incomingEntityMessage = new IncomingEntityMessage(uid,
-                        EntityMessage.GetSVars, null, message.SenderConnection);
+                                                                      EntityMessage.GetSVars, null,
+                                                                      message.SenderConnection);
                     break;
             }
 
@@ -319,27 +339,12 @@ namespace SGO
                         messageParams.Add(message.ReadString());
                         break;
                     case NetworkDataType.d_byteArray:
-                        var length = message.ReadInt32();
+                        int length = message.ReadInt32();
                         messageParams.Add(message.ReadBytes(length));
                         break;
                 }
             }
             return messageParams;
-        }
-
-        /// <summary>
-        /// Sends an arbitrary entity network message
-        /// </summary>
-        /// <param name="sendingEntity">The entity the message is going from(and to, on the other end)</param>
-        /// <param name="type">Message type</param>
-        /// <param name="list">List of parameter objects</param>
-        public void SendEntityNetworkMessage(GameObject.Entity sendingEntity, EntityMessage type, params object[] list)
-        {}
-
-
-        public void SendComponentNetworkMessage(GameObject.Entity sendingEntity, ComponentFamily family, [System.Runtime.InteropServices.OptionalAttribute][System.Runtime.InteropServices.DefaultParameterValueAttribute(NetDeliveryMethod.ReliableUnordered)]NetDeliveryMethod method, params object[] messageParams)
-        {
-            throw new NotImplementedException();
         }
     }
 }

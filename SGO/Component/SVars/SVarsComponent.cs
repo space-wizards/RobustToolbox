@@ -1,16 +1,12 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
+﻿using System.Collections.Generic;
+using GameObject;
 using Lidgren.Network;
 using SS13.IoC;
 using SS13_Shared;
 using SS13_Shared.GO;
-using ServerInterfaces.GOC;
+using SS13_Shared.ServerEnums;
 using ServerInterfaces.Player;
 using ServerServices.Log;
-using SS13_Shared.ServerEnums;
-using Component = GameObject.Component;
 
 namespace SGO
 {
@@ -23,13 +19,13 @@ namespace SGO
 
         public override void HandleNetworkMessage(IncomingEntityComponentMessage message, NetConnection sender)
         {
-            switch ((ComponentMessageType)message.MessageParameters[0])
+            switch ((ComponentMessageType) message.MessageParameters[0])
             {
                 case ComponentMessageType.GetSVars:
                     HandleGetSVars(sender);
                     break;
                 case ComponentMessageType.SetSVar:
-                    HandleSetSVar((byte[])message.MessageParameters[1], sender);
+                    HandleSetSVar((byte[]) message.MessageParameters[1], sender);
                     break;
             }
         }
@@ -42,9 +38,9 @@ namespace SGO
         /// <param name="client"></param>
         internal void HandleSetSVar(byte[] serializedParameter, NetConnection client)
         {
-            var parameter = MarshalComponentParameter.Deserialize(serializedParameter);
+            MarshalComponentParameter parameter = MarshalComponentParameter.Deserialize(serializedParameter);
             //Check admin status -- only admins can get svars.
-            var player = IoCManager.Resolve<IPlayerManager>().GetSessionByConnection(client);
+            IPlayerSession player = IoCManager.Resolve<IPlayerManager>().GetSessionByConnection(client);
             if (!player.adminPermissions.isAdmin)
             {
                 LogManager.Log("Player " + player.name + " tried to set an SVar, but is not an admin!", LogLevel.Warning);
@@ -54,7 +50,6 @@ namespace SGO
                 Owner.GetComponent<Component>(parameter.Family).SetSVar(parameter);
                 LogManager.Log("Player " + player.name + " set SVar."); //Make this message better
             }
-
         }
 
         /// <summary>
@@ -70,7 +65,7 @@ namespace SGO
                 svars.AddRange(component.GetSVars());
             }
 
-            foreach (var svar in svars)
+            foreach (MarshalComponentParameter svar in svars)
             {
                 serializedSvars.Add(svar.Serialize());
             }
@@ -78,7 +73,8 @@ namespace SGO
             parameters.Add(ComponentMessageType.GetSVars);
             parameters.Add(serializedSvars.Count);
             parameters.AddRange(serializedSvars);
-            Owner.SendDirectedComponentNetworkMessage(this, NetDeliveryMethod.ReliableUnordered, client, parameters.ToArray());
+            Owner.SendDirectedComponentNetworkMessage(this, NetDeliveryMethod.ReliableUnordered, client,
+                                                      parameters.ToArray());
         }
 
         /// <summary>
@@ -89,7 +85,7 @@ namespace SGO
         private void HandleGetSVars(NetConnection client)
         {
             //Check admin status -- only admins can get svars.
-            var player = IoCManager.Resolve<IPlayerManager>().GetSessionByConnection(client);
+            IPlayerSession player = IoCManager.Resolve<IPlayerManager>().GetSessionByConnection(client);
             if (!player.adminPermissions.isAdmin)
             {
                 LogManager.Log("Player " + player.name + " tried to get SVars, but is not an admin!", LogLevel.Warning);

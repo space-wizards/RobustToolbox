@@ -1,4 +1,5 @@
 ﻿using System;
+using GameObject;
 using SS13.IoC;
 using SS13_Shared;
 using SS13_Shared.GO;
@@ -9,9 +10,9 @@ namespace SGO.Item.ItemCapability
 {
     public class MedicalCapability : ItemCapability
     {
+        public int capacity = 100; //Healing capacity
         public DamageType damType = DamageType.Bludgeoning;
         public int healAmount = 10;
-        public int capacity = 100; //Healing capacity
 
         public MedicalCapability()
         {
@@ -20,14 +21,14 @@ namespace SGO.Item.ItemCapability
             interactsWith = InteractsWith.Actor;
         }
 
-        public override bool ApplyTo(GameObject.Entity target, GameObject.Entity sourceActor)
+        public override bool ApplyTo(Entity target, Entity sourceActor)
         {
             if (capacity <= 0)
             {
                 return false;
                 //TODO send the player using the item a message
             }
-            BodyPart targetedArea = BodyPart.Torso;
+            var targetedArea = BodyPart.Torso;
 
             ComponentReplyMessage reply = sourceActor.SendMessage(this, ComponentFamily.Actor,
                                                                   ComponentMessageType.GetActorSession);
@@ -53,7 +54,7 @@ namespace SGO.Item.ItemCapability
                 //string suffix = (sourceActor.Uid == target.Uid) ? " What a fucking weirdo..." : "";
                 IoCManager.Resolve<IChatManager>()
                     .SendChatMessage(ChatChannel.Damage,
-                                     sourceName + " applies the " + owner.Owner.Name + " to "  + targetName + " " +
+                                     sourceName + " applies the " + owner.Owner.Name + " to " + targetName + " " +
                                      BodyPartMessage(targetedArea) + ".",
                                      null, sourceActor.Uid);
                 return true;
@@ -113,7 +114,6 @@ namespace SGO.Item.ItemCapability
                 case "capacity":
                     capacity = parameter.GetValue<int>();
                     break;
-
             }
         }
     }

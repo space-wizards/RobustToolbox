@@ -1,5 +1,4 @@
 ﻿using System.Drawing;
-using ClientInterfaces;
 using ClientInterfaces.Network;
 using ClientInterfaces.Resource;
 using GorgonLibrary;
@@ -9,13 +8,13 @@ using SS13_Shared;
 
 namespace ClientServices.UserInterface.Components
 {
-    class AdminPasswordDialog : Window
+    internal class AdminPasswordDialog : Window
     {
-        private readonly IResourceManager _resourceManager;
         private readonly INetworkManager _networkManager;
 
-        private readonly Textbox _textboxPassword;
         private readonly Button _okayButton;
+        private readonly IResourceManager _resourceManager;
+        private readonly Textbox _textboxPassword;
 
         public AdminPasswordDialog(Size size, INetworkManager networkManager, IResourceManager resourceManager)
             : base("Admin Login", size, resourceManager)
@@ -23,17 +22,18 @@ namespace ClientServices.UserInterface.Components
             _networkManager = networkManager;
             _resourceManager = resourceManager;
 
-            _textboxPassword = new Textbox((int)(size.Width / 2f), _resourceManager);
+            _textboxPassword = new Textbox((int) (size.Width/2f), _resourceManager);
             _okayButton = new Button("Submit", _resourceManager);
             _okayButton.Clicked += OkayButtonClicked;
             _okayButton.mouseOverColor = Color.LightSkyBlue;
             _textboxPassword.OnSubmit += textboxPassword_OnSubmit;
             components.Add(_textboxPassword);
             components.Add(_okayButton);
-            Position = new Point((int)(Gorgon.CurrentRenderTarget.Width / 2f) - (int)(ClientArea.Width / 2f), (int)(Gorgon.CurrentRenderTarget.Height / 2f) - (int)(ClientArea.Height / 2f));
+            Position = new Point((int) (Gorgon.CurrentRenderTarget.Width/2f) - (int) (ClientArea.Width/2f),
+                                 (int) (Gorgon.CurrentRenderTarget.Height/2f) - (int) (ClientArea.Height/2f));
         }
 
-        void textboxPassword_OnSubmit(string text, Textbox sender)
+        private void textboxPassword_OnSubmit(string text, Textbox sender)
         {
             if (text.Length > 1 && !string.IsNullOrWhiteSpace(text))
             {
@@ -42,7 +42,7 @@ namespace ClientServices.UserInterface.Components
             }
         }
 
-        void OkayButtonClicked(Button sender)
+        private void OkayButtonClicked(Button sender)
         {
             if (_textboxPassword.Text.Length <= 1 || string.IsNullOrWhiteSpace(_textboxPassword.Text)) return;
 
@@ -56,14 +56,16 @@ namespace ClientServices.UserInterface.Components
             base.Update(frameTime);
             if (_okayButton == null || _textboxPassword == null) return;
 
-            _okayButton.Position = new Point((int)(Size.Width / 2f) - (int)(_okayButton.ClientArea.Width / 2f), (Size.Height - _okayButton.ClientArea.Height - 5));
-            _textboxPassword.Position = new Point((int)(Size.Width / 2f) - (int)(_textboxPassword.ClientArea.Width / 2f),  5);
+            _okayButton.Position = new Point((int) (Size.Width/2f) - (int) (_okayButton.ClientArea.Width/2f),
+                                             (Size.Height - _okayButton.ClientArea.Height - 5));
+            _textboxPassword.Position = new Point((int) (Size.Width/2f) - (int) (_textboxPassword.ClientArea.Width/2f),
+                                                  5);
         }
 
         private void TryAdminLogin(string password)
         {
             NetOutgoingMessage msg = _networkManager.CreateMessage();
-            msg.Write((byte)NetMessage.RequestAdminLogin);
+            msg.Write((byte) NetMessage.RequestAdminLogin);
             msg.Write(password);
 
             _networkManager.SendMessage(msg, NetDeliveryMethod.ReliableUnordered);

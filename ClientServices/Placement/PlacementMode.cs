@@ -1,9 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using ClientInterfaces.Map;
-using ClientServices.Resources;
+﻿using ClientInterfaces.Map;
 using GorgonLibrary;
 using GorgonLibrary.Graphics;
 
@@ -13,19 +8,19 @@ namespace ClientServices.Placement
     {
         public readonly PlacementManager pManager;
 
-        public Sprite spriteToDraw;
-        public Vector2D mouseWorld;
-        public Vector2D mouseScreen;
         public ITile currentTile;
-
-        public virtual string ModeName
-        {
-            get { return this.GetType().Name; }
-        }
+        public Vector2D mouseScreen;
+        public Vector2D mouseWorld;
+        public Sprite spriteToDraw;
 
         public PlacementMode(PlacementManager pMan)
         {
             pManager = pMan;
+        }
+
+        public virtual string ModeName
+        {
+            get { return GetType().Name; }
         }
 
         public virtual bool Update(Vector2D mouseScreen, IMapManager currentMap) //Return valid position?

@@ -1,11 +1,7 @@
 ﻿using System;
-using System.Collections;
 using System.Collections.Generic;
 using System.Drawing;
 using ClientInterfaces.Resource;
-using ClientInterfaces.UserInterface;
-using GorgonLibrary;
-using GorgonLibrary.Graphics;
 using GorgonLibrary.InputDevices;
 using SS13.IoC;
 
@@ -14,19 +10,41 @@ namespace ClientServices.UserInterface.Components
     internal class Showcase : GuiComponent
     {
         //TODO Make selection repond to mousewheel
+
+        #region Delegates
+
         public delegate void ShowcaseSelectionChangedHandler(ImageButton sender, Object associatedData);
 
+        #endregion
+
+        private readonly List<KeyValuePair<ImageButton, Object>> _items = new List<KeyValuePair<ImageButton, object>>();
         private readonly IResourceManager _resourceManager;
-        private ImageButton _buttonLeft;
-        private ImageButton _buttonRight;
+        private readonly SimpleImage _selectionGlow;
 
-        private List<KeyValuePair<ImageButton, Object>>  _items = new List<KeyValuePair<ImageButton, object>>();
-        private int _selected = 0;
+        public int AdditionalColumns = 2;
+                   //Number of additional visible columns beside the selection. 1 = 3 total visible. selection + 1 left + 1 right.
 
-        public int AdditionalColumns = 2; //Number of additional visible columns beside the selection. 1 = 3 total visible. selection + 1 left + 1 right.
-        public int ItemSpacing = 10;      //Additional space between items.
+        public int ItemSpacing = 10; //Additional space between items.
 
         public Size Size = new Size(300, 100);
+        private ImageButton _buttonLeft;
+        private ImageButton _buttonRight;
+        private int _selected;
+
+        public Showcase()
+        {
+            _resourceManager = IoCManager.Resolve<IResourceManager>();
+
+            _buttonLeft = new ImageButton();
+            _buttonLeft.Clicked += _buttonLeft_Clicked;
+
+            _buttonRight = new ImageButton();
+            _buttonRight.Clicked += _buttonRight_Clicked;
+
+            _selectionGlow = new SimpleImage();
+
+            Update(0);
+        }
 
         public string ButtonRight
         {
@@ -60,29 +78,12 @@ namespace ClientServices.UserInterface.Components
 
         public event ShowcaseSelectionChangedHandler SelectionChanged;
 
-        private SimpleImage _selectionGlow;
-
-        public Showcase()
-        {
-            _resourceManager = IoCManager.Resolve<IResourceManager>();
-
-            _buttonLeft = new ImageButton();
-            _buttonLeft.Clicked += new ImageButton.ImageButtonPressHandler(_buttonLeft_Clicked);
-
-            _buttonRight = new ImageButton();
-            _buttonRight.Clicked += new ImageButton.ImageButtonPressHandler(_buttonRight_Clicked);
-
-            _selectionGlow = new SimpleImage();
-
-            Update(0);
-        }
-
-        void _buttonRight_Clicked(ImageButton sender)
+        private void _buttonRight_Clicked(ImageButton sender)
         {
             if (_selected + 1 <= _items.Count - 1) _selected++;
         }
 
-        void _buttonLeft_Clicked(ImageButton sender)
+        private void _buttonLeft_Clicked(ImageButton sender)
         {
             if (_selected - 1 >= 0) _selected--;
         }
@@ -94,17 +95,17 @@ namespace ClientServices.UserInterface.Components
             if (!_items.Exists(x => x.Key == button || x.Value == associatedData))
             {
                 _items.Add(new KeyValuePair<ImageButton, object>(button, associatedData));
-                button.Clicked += new ImageButton.ImageButtonPressHandler(button_Clicked);
+                button.Clicked += button_Clicked;
             }
 
-            _selected = (int)Math.Floor(_items.Count / 2f); //start in the middle. cosmetic thing only.
+            _selected = (int) Math.Floor(_items.Count/2f); //start in the middle. cosmetic thing only.
         }
 
-        void button_Clicked(ImageButton sender)
+        private void button_Clicked(ImageButton sender)
         {
             if (_items.Exists(x => x.Key == sender))
             {
-                var sel = _items.Find(x => x.Key == sender);
+                KeyValuePair<ImageButton, object> sel = _items.Find(x => x.Key == sender);
                 _selected = _items.IndexOf(sel);
             }
         }
@@ -127,13 +128,13 @@ namespace ClientServices.UserInterface.Components
             ClientArea = new Rectangle(Position, Size);
 
             _buttonLeft.Position = new Point(ClientArea.Left,
-                                                ClientArea.Top +
-                                                (int) (ClientArea.Height/2f - _buttonLeft.ClientArea.Height/2f));
+                                             ClientArea.Top +
+                                             (int) (ClientArea.Height/2f - _buttonLeft.ClientArea.Height/2f));
             _buttonLeft.Update(frameTime);
 
             _buttonRight.Position = new Point(ClientArea.Right - _buttonRight.ClientArea.Width,
-                                                ClientArea.Top +
-                                                (int) (ClientArea.Height/2f - _buttonRight.ClientArea.Height/2f));
+                                              ClientArea.Top +
+                                              (int) (ClientArea.Height/2f - _buttonRight.ClientArea.Height/2f));
             _buttonRight.Update(frameTime);
 
             foreach (var curr in _items)
@@ -154,12 +155,17 @@ namespace ClientServices.UserInterface.Components
                 {
                     if (_selectionGlow != null)
                     {
-                        _selectionGlow.Position = new Point(ClientArea.Left + (int)(ClientArea.Width / 2f - _selectionGlow.ClientArea.Width / 2f), ClientArea.Top + (int)(ClientArea.Height / 2f - _selectionGlow.ClientArea.Height / 2f));
+                        _selectionGlow.Position =
+                            new Point(
+                                ClientArea.Left + (int) (ClientArea.Width/2f - _selectionGlow.ClientArea.Width/2f),
+                                ClientArea.Top + (int) (ClientArea.Height/2f - _selectionGlow.ClientArea.Height/2f));
                         _selectionGlow.Render();
                     }
 
                     KeyValuePair<ImageButton, Object> selected = _items[_selected];
-                    selected.Key.Position = new Point(ClientArea.Left + (int)(ClientArea.Width / 2f - selected.Key.ClientArea.Width / 2f), ClientArea.Top + (int)(ClientArea.Height / 2f - selected.Key.ClientArea.Height / 2f));
+                    selected.Key.Position =
+                        new Point(ClientArea.Left + (int) (ClientArea.Width/2f - selected.Key.ClientArea.Width/2f),
+                                  ClientArea.Top + (int) (ClientArea.Height/2f - selected.Key.ClientArea.Height/2f));
                     selected.Key.Color = Color.FromArgb(255, Color.White);
                     selected.Key.Render();
 
@@ -168,16 +174,20 @@ namespace ClientServices.UserInterface.Components
 
                     for (int i = 1; i <= AdditionalColumns; i++)
                     {
-                        float alphaAdj = 1 + AdditionalColumns - ((float) AdditionalColumns / (float) i);
+                        float alphaAdj = 1 + AdditionalColumns - (AdditionalColumns/(float) i);
                         const float baseAlpha = 200;
 
                         //Left
                         if ((_selected - i) >= 0 && (_selected - i) <= _items.Count - 1)
                         {
                             KeyValuePair<ImageButton, Object> selectedLeft = _items[(_selected - i)];
-                            selectedLeft.Key.Position = new Point(lastPosLeft - selectedLeft.Key.ClientArea.Width, ClientArea.Top + (int)(ClientArea.Height / 2f - selectedLeft.Key.ClientArea.Height / 2f));
+                            selectedLeft.Key.Position = new Point(lastPosLeft - selectedLeft.Key.ClientArea.Width,
+                                                                  ClientArea.Top +
+                                                                  (int)
+                                                                  (ClientArea.Height/2f -
+                                                                   selectedLeft.Key.ClientArea.Height/2f));
                             lastPosLeft = selectedLeft.Key.ClientArea.Left - ItemSpacing;
-                            selectedLeft.Key.Color = Color.FromArgb((int)(baseAlpha / alphaAdj), Color.White);
+                            selectedLeft.Key.Color = Color.FromArgb((int) (baseAlpha/alphaAdj), Color.White);
                             selectedLeft.Key.Render();
                         }
 
@@ -185,9 +195,13 @@ namespace ClientServices.UserInterface.Components
                         if ((_selected + i) >= 0 && (_selected + i) <= _items.Count - 1)
                         {
                             KeyValuePair<ImageButton, Object> selectedRight = _items[(_selected + i)];
-                            selectedRight.Key.Position = new Point(lastPosRight, ClientArea.Top + (int)(ClientArea.Height / 2f - selectedRight.Key.ClientArea.Height / 2f));
+                            selectedRight.Key.Position = new Point(lastPosRight,
+                                                                   ClientArea.Top +
+                                                                   (int)
+                                                                   (ClientArea.Height/2f -
+                                                                    selectedRight.Key.ClientArea.Height/2f));
                             lastPosRight = selectedRight.Key.ClientArea.Right + ItemSpacing;
-                            selectedRight.Key.Color = Color.FromArgb((int)(baseAlpha / alphaAdj), Color.White);
+                            selectedRight.Key.Color = Color.FromArgb((int) (baseAlpha/alphaAdj), Color.White);
                             selectedRight.Key.Render();
                         }
                     }
@@ -229,7 +243,7 @@ namespace ClientServices.UserInterface.Components
 
         public override void MouseMove(MouseInputEventArgs e)
         {
-            if (ClientArea.Contains(new Point((int)e.Position.X, (int)e.Position.Y)))
+            if (ClientArea.Contains(new Point((int) e.Position.X, (int) e.Position.Y)))
             {
                 _buttonLeft.MouseMove(e);
                 _buttonRight.MouseMove(e);
@@ -245,7 +259,7 @@ namespace ClientServices.UserInterface.Components
         {
             if (ClientArea.Contains(new Point((int) e.Position.X, (int) e.Position.Y)))
             {
-                if(_buttonLeft.MouseDown(e)) return true;
+                if (_buttonLeft.MouseDown(e)) return true;
                 if (_buttonRight.MouseDown(e)) return true;
 
                 if (_items.Count > 0)
@@ -277,7 +291,7 @@ namespace ClientServices.UserInterface.Components
 
         public override bool MouseUp(MouseInputEventArgs e)
         {
-            if (ClientArea.Contains(new Point((int)e.Position.X, (int)e.Position.Y)))
+            if (ClientArea.Contains(new Point((int) e.Position.X, (int) e.Position.Y)))
             {
                 if (_buttonLeft.MouseUp(e)) return true;
                 if (_buttonRight.MouseUp(e)) return true;

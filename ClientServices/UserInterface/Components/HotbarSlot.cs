@@ -1,26 +1,25 @@
 ﻿using System;
 using System.Drawing;
-using ClientInterfaces;
 using ClientInterfaces.Resource;
+using ClientInterfaces.UserInterface;
 using GorgonLibrary.Graphics;
 using GorgonLibrary.InputDevices;
 using SS13.IoC;
-using ClientInterfaces.UserInterface;
 
 namespace ClientServices.UserInterface.Components
 {
-    class HotbarSlot : GuiComponent
+    internal class HotbarSlot : GuiComponent
     {
-        private readonly IResourceManager _resourceManager;
-        private Sprite _buttonSprite;
-
-        public delegate void HotbarSlotPressHandler(HotbarSlot sender);
-        public event HotbarSlotPressHandler Clicked;
+        #region Delegates
 
         public delegate void HotbarSlotDropHandler(HotbarSlot sender);
-        public event HotbarSlotDropHandler Dropped;
 
-        public Color Color { get; set; }
+        public delegate void HotbarSlotPressHandler(HotbarSlot sender);
+
+        #endregion
+
+        private readonly IResourceManager _resourceManager;
+        private Sprite _buttonSprite;
 
         public HotbarSlot(IResourceManager resourceManager)
         {
@@ -30,10 +29,17 @@ namespace ClientServices.UserInterface.Components
             Update(0);
         }
 
+        public Color Color { get; set; }
+
+        public event HotbarSlotPressHandler Clicked;
+
+        public event HotbarSlotDropHandler Dropped;
+
         public override sealed void Update(float frameTime)
         {
             _buttonSprite.Position = Position;
-            ClientArea = new Rectangle(Position, new Size((int)_buttonSprite.AABB.Width, (int)_buttonSprite.AABB.Height));
+            ClientArea = new Rectangle(Position,
+                                       new Size((int) _buttonSprite.AABB.Width, (int) _buttonSprite.AABB.Height));
         }
 
         public override void Render()
@@ -54,7 +60,7 @@ namespace ClientServices.UserInterface.Components
 
         public override bool MouseDown(MouseInputEventArgs e)
         {
-            if (ClientArea.Contains(new Point((int)e.Position.X, (int)e.Position.Y)))
+            if (ClientArea.Contains(new Point((int) e.Position.X, (int) e.Position.Y)))
             {
                 if (Clicked != null) Clicked(this);
                 return true;
@@ -64,11 +70,12 @@ namespace ClientServices.UserInterface.Components
 
         public override bool MouseUp(MouseInputEventArgs e)
         {
-            if (ClientArea.Contains(new Point((int)e.Position.X, (int)e.Position.Y)) && IoCManager.Resolve<IUserInterfaceManager>().DragInfo.IsActive)
+            if (ClientArea.Contains(new Point((int) e.Position.X, (int) e.Position.Y)) &&
+                IoCManager.Resolve<IUserInterfaceManager>().DragInfo.IsActive)
             {
                 if (Dropped != null) Dropped(this);
                 return true;
-            }            
+            }
             return false;
         }
     }

@@ -1,15 +1,14 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Linq;
+using System.Drawing;
+using System.Globalization;
 using System.IO;
-using ClientInterfaces;
+using System.Linq;
+using System.Text.RegularExpressions;
 using ClientInterfaces.Configuration;
 using ClientInterfaces.Resource;
 using GorgonLibrary;
 using GorgonLibrary.Graphics;
-using System.Globalization;
-using System.Drawing;
-using System.Text.RegularExpressions;
 using GorgonLibrary.Sprites;
 using ICSharpCode.SharpZipLib.Core;
 using ICSharpCode.SharpZipLib.Zip;
@@ -21,15 +20,14 @@ namespace ClientServices.Resources
     public class ResourceManager : IResourceManager
     {
         private const int zipBufferSize = 4096;
-        private readonly List<string> supportedImageExtensions = new List<string> { ".png" };
+        private readonly IConfigurationManager _configurationManager;
+        private readonly Dictionary<string, Font> _fonts = new Dictionary<string, Font>();
 
         private readonly Dictionary<string, Image> _images = new Dictionary<string, Image>();
         private readonly Dictionary<string, FXShader> _shaders = new Dictionary<string, FXShader>();
-        private readonly Dictionary<string, Font> _fonts = new Dictionary<string, Font>();
         private readonly Dictionary<string, SpriteInfo> _spriteInfos = new Dictionary<string, SpriteInfo>();
         private readonly Dictionary<string, Sprite> _sprites = new Dictionary<string, Sprite>();
-
-        private readonly IConfigurationManager _configurationManager;
+        private readonly List<string> supportedImageExtensions = new List<string> {".png"};
 
         public ResourceManager(IConfigurationManager configurationManager)
         {
@@ -44,25 +42,28 @@ namespace ClientServices.Resources
         /// </summary>
         public void LoadResourceZip()
         {
-            var zipPath = _configurationManager.GetResourcePath();
-            var password = _configurationManager.GetResourcePassword();
+            string zipPath = _configurationManager.GetResourcePath();
+            string password = _configurationManager.GetResourcePassword();
             if (!File.Exists(zipPath)) throw new FileNotFoundException("Specified Zip does not exist: " + zipPath);
 
-            var zipFileStream = File.OpenRead(zipPath);
+            FileStream zipFileStream = File.OpenRead(zipPath);
             var zipFile = new ZipFile(zipFileStream);
 
             if (!string.IsNullOrWhiteSpace(password)) zipFile.Password = password;
 
-            var filesInZip = from ZipEntry e in zipFile
-                             where e.IsFile
-                             orderby supportedImageExtensions.Contains(Path.GetExtension(e.Name).ToLowerInvariant()) descending //Loading images first so the TAI files that come after can be loaded correctly.
-                             select e;
+            IOrderedEnumerable<ZipEntry> filesInZip = from ZipEntry e in zipFile
+                                                      where e.IsFile
+                                                      orderby
+                                                          supportedImageExtensions.Contains(
+                                                              Path.GetExtension(e.Name).ToLowerInvariant()) descending
+                                                      //Loading images first so the TAI files that come after can be loaded correctly.
+                                                      select e;
 
-            foreach (var entry in filesInZip)
+            foreach (ZipEntry entry in filesInZip)
             {
                 if (supportedImageExtensions.Contains(Path.GetExtension(entry.Name).ToLowerInvariant()))
                 {
-                    var loadedImg = LoadImageFrom(zipFile, entry);
+                    Image loadedImg = LoadImageFrom(zipFile, entry);
                     if (loadedImg == null) continue;
                     else _images.Add(loadedImg.Name, loadedImg);
                 }
@@ -77,13 +78,14 @@ namespace ClientServices.Resources
                             break;
 
                         case ".tai":
-                            var loadedSprites = LoadSpritesFrom(zipFile, entry);
-                            foreach (var current in loadedSprites.Where(current => !_sprites.ContainsKey(current.Name)))
+                            IEnumerable<Sprite> loadedSprites = LoadSpritesFrom(zipFile, entry);
+                            foreach (
+                                Sprite current in loadedSprites.Where(current => !_sprites.ContainsKey(current.Name)))
                                 _sprites.Add(current.Name, current);
                             break;
 
                         case ".ttf":
-                            var loadedFont = LoadFontFrom(zipFile, entry);
+                            Font loadedFont = LoadFontFrom(zipFile, entry);
                             if (loadedFont == null) continue;
                             else _fonts.Add(loadedFont.Name, loadedFont);
                             break;
@@ -99,6 +101,18 @@ namespace ClientServices.Resources
         }
 
         /// <summary>
+        ///  <para>Clears all Resource lists</para>
+        /// </summary>
+        public void ClearLists()
+        {
+            _images.Clear();
+            _shaders.Clear();
+            _fonts.Clear();
+            _spriteInfos.Clear();
+            _sprites.Clear();
+        }
+
+        /// <summary>
         ///  <para>Loads Image from given Zip-File and Entry.</para>
         /// </summary>
         private Image LoadImageFrom(ZipFile zipFile, ZipEntry imageEntry)
@@ -108,16 +122,17 @@ namespace ClientServices.Resources
             if (ImageCache.Images.Contains(ResourceName))
                 return null;
 
-            byte[] byteBuffer = new byte[zipBufferSize];
+            var byteBuffer = new byte[zipBufferSize];
 
-            Stream zipStream = zipFile.GetInputStream(imageEntry); //Will throw exception is missing or wrong password. Handle this.
+            Stream zipStream = zipFile.GetInputStream(imageEntry);
+                //Will throw exception is missing or wrong password. Handle this.
 
-            MemoryStream memStream = new MemoryStream();
+            var memStream = new MemoryStream();
 
             StreamUtils.Copy(zipStream, memStream, byteBuffer);
             memStream.Position = 0;
 
-            Image loadedImg = Image.FromStream(ResourceName, memStream, (int)memStream.Length);
+            Image loadedImg = Image.FromStream(ResourceName, memStream, (int) memStream.Length);
 
             memStream.Close();
             zipStream.Close();
@@ -137,16 +152,18 @@ namespace ClientServices.Resources
             if (ShaderCache.Shaders.Contains(ResourceName))
                 return null;
 
-            byte[] byteBuffer = new byte[zipBufferSize];
+            var byteBuffer = new byte[zipBufferSize];
 
-            Stream zipStream = zipFile.GetInputStream(shaderEntry); //Will throw exception is missing or wrong password. Handle this.
+            Stream zipStream = zipFile.GetInputStream(shaderEntry);
+                //Will throw exception is missing or wrong password. Handle this.
 
-            MemoryStream memStream = new MemoryStream();
+            var memStream = new MemoryStream();
 
             StreamUtils.Copy(zipStream, memStream, byteBuffer);
             memStream.Position = 0;
 
-            FXShader loadedShader = FXShader.FromStream(ResourceName, memStream, ShaderCompileOptions.Debug, (int)memStream.Length, false);
+            FXShader loadedShader = FXShader.FromStream(ResourceName, memStream, ShaderCompileOptions.Debug,
+                                                        (int) memStream.Length, false);
 
             memStream.Close();
             zipStream.Close();
@@ -166,16 +183,17 @@ namespace ClientServices.Resources
             if (FontCache.Fonts.Contains(ResourceName))
                 return null;
 
-            byte[] byteBuffer = new byte[zipBufferSize];
+            var byteBuffer = new byte[zipBufferSize];
 
-            Stream zipStream = zipFile.GetInputStream(fontEntry); //Will throw exception is missing or wrong password. Handle this.
+            Stream zipStream = zipFile.GetInputStream(fontEntry);
+                //Will throw exception is missing or wrong password. Handle this.
 
-            MemoryStream memStream = new MemoryStream();
+            var memStream = new MemoryStream();
 
             StreamUtils.Copy(zipStream, memStream, byteBuffer);
             memStream.Position = 0;
 
-            Font loadedFont = Font.FromStream(ResourceName, memStream, (int)memStream.Length, 9, false);
+            Font loadedFont = Font.FromStream(ResourceName, memStream, (int) memStream.Length, 9, false);
 
             loadedFont.AntiAlias = true;
             loadedFont.Refresh();
@@ -199,7 +217,8 @@ namespace ClientServices.Resources
 
             var byteBuffer = new byte[zipBufferSize];
 
-            var zipStream = zipFile.GetInputStream(taiEntry); //Will throw exception is missing or wrong password. Handle this.
+            Stream zipStream = zipFile.GetInputStream(taiEntry);
+                //Will throw exception is missing or wrong password. Handle this.
 
             var memStream = new MemoryStream();
 
@@ -207,7 +226,7 @@ namespace ClientServices.Resources
             memStream.Position = 0;
 
             var taiReader = new StreamReader(memStream, true);
-            var loadedTAI = taiReader.ReadToEnd();
+            string loadedTAI = taiReader.ReadToEnd();
 
             memStream.Close();
             zipStream.Close();
@@ -236,7 +255,8 @@ namespace ClientServices.Resources
                 if (!ImageCache.Images.Contains(splitResourceName[0]))
                     continue; //Image for this sprite does not exist. Possibly set to defered later.
 
-                Image atlasTex = ImageCache.Images[splitResourceName[0]]; //Grab the image for the sprite from the cache.
+                Image atlasTex = ImageCache.Images[splitResourceName[0]];
+                    //Grab the image for the sprite from the cache.
 
                 var info = new SpriteInfo();
                 info.Name = originalName;
@@ -261,8 +281,10 @@ namespace ClientServices.Resources
                     sizeY = float.Parse(splitLine[7], CultureInfo.InvariantCulture);
                 }
 
-                info.Offsets = new Vector2D((float)Math.Round(offsetX * (float)atlasTex.Width, 1), (float)Math.Round(offsetY * (float)atlasTex.Height, 1));
-                info.Size = new Vector2D((float)Math.Round(sizeX * (float)atlasTex.Width, 1), (float)Math.Round(sizeY * (float)atlasTex.Height, 1));
+                info.Offsets = new Vector2D((float) Math.Round(offsetX*atlasTex.Width, 1),
+                                            (float) Math.Round(offsetY*atlasTex.Height, 1));
+                info.Size = new Vector2D((float) Math.Round(sizeX*atlasTex.Width, 1),
+                                         (float) Math.Round(sizeY*atlasTex.Height, 1));
 
                 if (!_spriteInfos.ContainsKey(originalName)) _spriteInfos.Add(originalName, info);
 
@@ -270,18 +292,6 @@ namespace ClientServices.Resources
             }
 
             return loadedSprites;
-        }
-
-        /// <summary>
-        ///  <para>Clears all Resource lists</para>
-        /// </summary>
-        public void ClearLists()
-        {
-            _images.Clear();
-            _shaders.Clear();
-            _fonts.Clear();
-            _spriteInfos.Clear();
-            _sprites.Clear();
         }
 
         #endregion
@@ -303,7 +313,7 @@ namespace ClientServices.Resources
                 }
                 else
                 {
-                    Sprite newSprite = new Sprite(key, _images[key]);
+                    var newSprite = new Sprite(key, _images[key]);
                     _sprites.Add(key, newSprite);
                     return newSprite;
                 }
@@ -346,7 +356,7 @@ namespace ClientServices.Resources
             key = key.ToLowerInvariant();
             return _images.ContainsKey(key);
         }
-      
+
         /// <summary>
         ///  Retrieves the SpriteInfo with the given key from the Resource List. Returns null if not found.
         /// </summary>

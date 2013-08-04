@@ -1,34 +1,27 @@
-﻿using System.Collections.Generic;
-using System.Drawing;
-using System.Linq;
-using ClientInterfaces;
+﻿using System.Drawing;
 using ClientInterfaces.Lighting;
-using ClientInterfaces.Map;
-using ClientServices.Tiles;
 using GorgonLibrary;
 using SS13_Shared;
 using SS3D.LightTest;
-using CGO.Component.Light;
-using CGO.Component.Light.LightModes;
-using ClientInterfaces.GOC;
-using SS13.IoC;
 
 namespace ClientServices.Lighting
 {
     public class Light : ILight
     {
+        public Light()
+        {
+            Radius = 256;
+            LightState = LightState.On;
+        }
+
+        #region ILight Members
+
         public Vector2D Position { get; private set; }
         public Color Color { get; private set; }
         public int Radius { get; private set; }
         public ILightArea LightArea { get; private set; }
         public LightState LightState { get; private set; }
         public LightMode LightMode { get; set; }
-
-        public Light()
-        {
-            Radius = 256;
-            LightState = LightState.On;
-        }
 
         public void Move(Vector2D toPosition)
         {
@@ -41,7 +34,7 @@ namespace ClientServices.Lighting
             if (Radius != radius)
             {
                 Radius = radius;
-                LightArea = (ILightArea)new LightArea(RadiusToShadowMapSize(Radius));
+                LightArea = new LightArea(RadiusToShadowMapSize(Radius));
             }
         }
 
@@ -57,24 +50,7 @@ namespace ClientServices.Lighting
 
         public Vector4D GetColorVec()
         {
-            return new Vector4D((float)Color.R / 255, (float)Color.G / 255, (float)Color.B / 255, (float)Color.A / 255);
-        }
-
-        public static ShadowmapSize RadiusToShadowMapSize(int Radius)
-        {
-            switch (Radius)
-            {
-                case 128:
-                    return ShadowmapSize.Size128;
-                case 256:
-                    return ShadowmapSize.Size256;
-                case 512:
-                    return ShadowmapSize.Size512;
-                case 1024:
-                    return ShadowmapSize.Size1024;
-                default:
-                    return ShadowmapSize.Size1024;
-            }
+            return new Vector4D((float) Color.R/255, (float) Color.G/255, (float) Color.B/255, (float) Color.A/255);
         }
 
         public void SetMask(string mask)
@@ -93,5 +69,23 @@ namespace ClientServices.Lighting
             LightArea.Calculated = false;
         }
 
+        #endregion
+
+        public static ShadowmapSize RadiusToShadowMapSize(int Radius)
+        {
+            switch (Radius)
+            {
+                case 128:
+                    return ShadowmapSize.Size128;
+                case 256:
+                    return ShadowmapSize.Size256;
+                case 512:
+                    return ShadowmapSize.Size512;
+                case 1024:
+                    return ShadowmapSize.Size1024;
+                default:
+                    return ShadowmapSize.Size1024;
+            }
+        }
     }
 }

@@ -1,19 +1,19 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using ClientInterfaces.MessageLogging;
-using ClientInterfaces.Configuration;
-using SS13.IoC;
+using System.ServiceModel;
 using System.Timers;
+using ClientInterfaces.Configuration;
+using ClientInterfaces.MessageLogging;
+using SS13.IoC;
+using SS13_Shared;
+using SS13_Shared.GO;
 
 namespace ClientServices.MessageLogging
 {
-    public class MessageLogger: IMessageLogger
+    public class MessageLogger : IMessageLogger
     {
-        private MessageLoggerServiceClient _loggerServiceClient;
-        private bool _logging;
         private static Timer _pingTimer;
+        private readonly MessageLoggerServiceClient _loggerServiceClient;
+        private bool _logging;
 
         public MessageLogger(IConfigurationManager _configurationManager)
         {
@@ -23,15 +23,12 @@ namespace ClientServices.MessageLogging
             {
                 Ping();
                 _pingTimer = new Timer(5000);
-                _pingTimer.Elapsed += new ElapsedEventHandler(CheckServer);
+                _pingTimer.Elapsed += CheckServer;
                 _pingTimer.Enabled = true;
             }
         }
 
-        public static void CheckServer(object source, ElapsedEventArgs e)
-        {
-            IoCManager.Resolve<IMessageLogger>().Ping();
-        }
+        #region IMessageLogger Members
 
         /// <summary>
         /// Check to see if the server is still running 
@@ -41,9 +38,9 @@ namespace ClientServices.MessageLogging
             bool failed = false;
             try
             {
-                var up = _loggerServiceClient.ServiceStatus();
+                bool up = _loggerServiceClient.ServiceStatus();
             }
-            catch (System.ServiceModel.CommunicationException e)
+            catch (CommunicationException e)
             {
                 failed = true;
             }
@@ -54,7 +51,7 @@ namespace ClientServices.MessageLogging
             }
         }
 
-        public void LogOutgoingComponentNetMessage(int uid, SS13_Shared.GO.ComponentFamily family, object[] parameters)
+        public void LogOutgoingComponentNetMessage(int uid, ComponentFamily family, object[] parameters)
         {
             if (!_logging)
                 return;
@@ -62,18 +59,19 @@ namespace ClientServices.MessageLogging
             for (int i = 0; i < parameters.Length; i++)
             {
                 if (parameters[i] is Enum)
-                    parameters[i] = (int)parameters[i];
+                    parameters[i] = (int) parameters[i];
             }
             try
             {
-                _loggerServiceClient.LogClientOutgoingNetMessage(uid, (int)family, parameters);
+                _loggerServiceClient.LogClientOutgoingNetMessage(uid, (int) family, parameters);
             }
-            catch (System.ServiceModel.CommunicationException e)
+            catch (CommunicationException e)
             {
             }
         }
 
-        public void LogIncomingComponentNetMessage(int uid, SS13_Shared.EntityMessage entityMessage, SS13_Shared.GO.ComponentFamily componentFamily, object[] parameters)
+        public void LogIncomingComponentNetMessage(int uid, EntityMessage entityMessage, ComponentFamily componentFamily,
+                                                   object[] parameters)
         {
             if (!_logging)
                 return;
@@ -81,29 +79,38 @@ namespace ClientServices.MessageLogging
             for (int i = 0; i < parameters.Length; i++)
             {
                 if (parameters[i] is Enum)
-                    parameters[i] = (int)parameters[i];
+                    parameters[i] = (int) parameters[i];
             }
             try
             {
-                _loggerServiceClient.LogClientIncomingNetMessage(uid, (int)entityMessage, (int)componentFamily, parameters);
+                _loggerServiceClient.LogClientIncomingNetMessage(uid, (int) entityMessage, (int) componentFamily,
+                                                                 parameters);
             }
-            catch (System.ServiceModel.CommunicationException e)
+            catch (CommunicationException e)
             {
             }
         }
 
-        public void LogComponentMessage(int uid, SS13_Shared.GO.ComponentFamily senderfamily, string sendertype, SS13_Shared.GO.ComponentMessageType type)
+        public void LogComponentMessage(int uid, ComponentFamily senderfamily, string sendertype,
+                                        ComponentMessageType type)
         {
             if (!_logging)
                 return;
 
             try
             {
-                _loggerServiceClient.LogClientComponentMessage(uid, (int)senderfamily, sendertype, (int)type);
+                _loggerServiceClient.LogClientComponentMessage(uid, (int) senderfamily, sendertype, (int) type);
             }
-            catch (System.ServiceModel.CommunicationException e)
+            catch (CommunicationException e)
             {
             }
+        }
+
+        #endregion
+
+        public static void CheckServer(object source, ElapsedEventArgs e)
+        {
+            IoCManager.Resolve<IMessageLogger>().Ping();
         }
     }
 }

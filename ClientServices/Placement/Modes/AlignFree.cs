@@ -1,13 +1,7 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Drawing;
-using System.Linq;
-using System.Text;
+﻿using System.Drawing;
+using ClientInterfaces.Map;
 using ClientWindow;
 using GorgonLibrary;
-using ClientInterfaces.Map;
-using GorgonLibrary.Graphics;
-using SS13_Shared;
 
 namespace ClientServices.Placement.Modes
 {
@@ -25,10 +19,11 @@ namespace ClientServices.Placement.Modes
             spriteToDraw = GetDirectionalSprite(pManager.CurrentBaseSprite);
 
             mouseScreen = mouseS;
-            mouseWorld = new Vector2D(mouseScreen.X + ClientWindowData.Singleton.ScreenOrigin.X, mouseScreen.Y + ClientWindowData.Singleton.ScreenOrigin.Y);
+            mouseWorld = new Vector2D(mouseScreen.X + ClientWindowData.Singleton.ScreenOrigin.X,
+                                      mouseScreen.Y + ClientWindowData.Singleton.ScreenOrigin.Y);
             currentTile = currentMap.GetTileAt(mouseWorld);
 
-            return true; 
+            return true;
         }
 
         public override void Render()
@@ -36,7 +31,9 @@ namespace ClientServices.Placement.Modes
             if (spriteToDraw != null)
             {
                 spriteToDraw.Color = pManager.ValidPosition ? Color.ForestGreen : Color.IndianRed;
-                spriteToDraw.Position = new Vector2D(mouseScreen.X - (spriteToDraw.Width / 2f), mouseScreen.Y - (spriteToDraw.Height / 2f)); //Centering the sprite on the cursor.
+                spriteToDraw.Position = new Vector2D(mouseScreen.X - (spriteToDraw.Width/2f),
+                                                     mouseScreen.Y - (spriteToDraw.Height/2f));
+                    //Centering the sprite on the cursor.
                 spriteToDraw.Draw();
                 spriteToDraw.Color = Color.White;
             }

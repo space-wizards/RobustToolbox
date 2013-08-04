@@ -1,45 +1,39 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Drawing;
-using ClientInterfaces;
+﻿using System.Drawing;
 using ClientInterfaces.Resource;
-using ClientInterfaces.UserInterface;
-using GorgonLibrary;
-using GorgonLibrary.Graphics;
 using GorgonLibrary.InputDevices;
 
 namespace ClientServices.UserInterface.Components
 {
-    class JobTab : TabContainer
+    internal class JobTab : TabContainer
     {
-        private Showcase _shwJobs;
+        private readonly Showcase _shwJobs;
 
-        public JobTab(string uniqueName, Size size, IResourceManager resourceManager) 
+        public JobTab(string uniqueName, Size size, IResourceManager resourceManager)
             : base(uniqueName, size, resourceManager)
         {
-            _shwJobs = new Showcase()
-                {
-                    Position = new Point(60, 5),
-                    Size = new Size(675, 80),
-                    ButtonLeft = "job_arrowleft",
-                    ButtonRight = "job_arrowright",
-                    SelectionBackground = "job_glow"
-                };
+            _shwJobs = new Showcase
+                           {
+                               Position = new Point(60, 5),
+                               Size = new Size(675, 80),
+                               ButtonLeft = "job_arrowleft",
+                               ButtonRight = "job_arrowright",
+                               SelectionBackground = "job_glow"
+                           };
 
-            var job_robo = new ImageButton()
-            {
-                ImageNormal = "job_roboticist"
-            };
+            var job_robo = new ImageButton
+                               {
+                                   ImageNormal = "job_roboticist"
+                               };
 
-            var job_gene = new ImageButton()
-            {
-                ImageNormal = "job_geneticist"
-            };
+            var job_gene = new ImageButton
+                               {
+                                   ImageNormal = "job_geneticist"
+                               };
 
-            var job_medic = new ImageButton()
-            {
-                ImageNormal = "job_medic"
-            };
+            var job_medic = new ImageButton
+                                {
+                                    ImageNormal = "job_medic"
+                                };
 
             _shwJobs.AddItem(job_gene, "1");
             _shwJobs.AddItem(job_medic, "2");

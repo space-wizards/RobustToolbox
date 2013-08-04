@@ -1,35 +1,25 @@
 ﻿using System;
 using System.Drawing;
-using ClientInterfaces;
 using ClientInterfaces.Resource;
 using GorgonLibrary.Graphics;
 using GorgonLibrary.InputDevices;
 
 namespace ClientServices.UserInterface.Components
 {
-    class Checkbox : GuiComponent
+    internal class Checkbox : GuiComponent
     {
-        private readonly IResourceManager _resourceManager;
-
-        Sprite checkbox;
-        Sprite checkboxCheck;
-
-        private Boolean value = false;
-        public Boolean Value
-        {
-            get
-            {
-                return value;
-            }
-            set
-            {
-                if (ValueChanged != null) ValueChanged(value, this);
-                this.value = value;
-            }
-        }
+        #region Delegates
 
         public delegate void CheckboxChangedHandler(Boolean newValue, Checkbox sender);
-        public event CheckboxChangedHandler ValueChanged;
+
+        #endregion
+
+        private readonly IResourceManager _resourceManager;
+
+        private Sprite checkbox;
+        private Sprite checkboxCheck;
+
+        private Boolean value;
 
         public Checkbox(IResourceManager resourceManager)
         {
@@ -39,9 +29,21 @@ namespace ClientServices.UserInterface.Components
             Update(0);
         }
 
+        public Boolean Value
+        {
+            get { return value; }
+            set
+            {
+                if (ValueChanged != null) ValueChanged(value, this);
+                this.value = value;
+            }
+        }
+
+        public event CheckboxChangedHandler ValueChanged;
+
         public override void Update(float frameTime)
         {
-            ClientArea = new Rectangle(this.Position, new Size((int)checkbox.Width, (int)checkbox.Height));
+            ClientArea = new Rectangle(Position, new Size((int) checkbox.Width, (int) checkbox.Height));
         }
 
         public override void Render()
@@ -61,7 +63,7 @@ namespace ClientServices.UserInterface.Components
 
         public override bool MouseDown(MouseInputEventArgs e)
         {
-            if (ClientArea.Contains(new Point((int)e.Position.X, (int)e.Position.Y)))
+            if (ClientArea.Contains(new Point((int) e.Position.X, (int) e.Position.Y)))
             {
                 Value = !Value;
                 return true;

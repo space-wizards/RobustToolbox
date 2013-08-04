@@ -1,5 +1,4 @@
 ﻿using System.Drawing;
-using ClientInterfaces;
 using ClientInterfaces.Resource;
 using ClientInterfaces.State;
 using ClientInterfaces.UserInterface;
@@ -11,14 +10,14 @@ namespace ClientServices.UserInterface.Components
 {
     public class DisconnectedScreenBlocker : GuiComponent
     {
+        private readonly Button _mainMenuButton;
+        private readonly Label _message;
+        private readonly IResourceManager _resourceManager;
         private readonly IStateManager _stateManager;
         private readonly IUserInterfaceManager _userInterfaceManager;
-        private readonly IResourceManager _resourceManager;
 
-        private readonly Label _message;
-        private readonly Button _mainMenuButton;
-
-        public DisconnectedScreenBlocker(IStateManager stateManager, IUserInterfaceManager userInterfaceManager, IResourceManager resourceManager, string message = "Connection closed.")
+        public DisconnectedScreenBlocker(IStateManager stateManager, IUserInterfaceManager userInterfaceManager,
+                                         IResourceManager resourceManager, string message = "Connection closed.")
         {
             _stateManager = stateManager;
             _resourceManager = resourceManager;
@@ -32,22 +31,27 @@ namespace ClientServices.UserInterface.Components
             _message.Text.Color = Color.WhiteSmoke;
         }
 
-        void MainMenuButtonClicked(Button sender)
+        private void MainMenuButtonClicked(Button sender)
         {
             _stateManager.RequestStateChange<ConnectMenu>();
         }
 
         public override void Update(float frameTime)
         {
-            _message.Position = new Point((int)(Gorgon.CurrentRenderTarget.Width / 2f - _message.ClientArea.Width / 2f), (int)(Gorgon.CurrentRenderTarget.Height / 2f - _message.ClientArea.Height / 2f) - 50);
+            _message.Position = new Point((int) (Gorgon.CurrentRenderTarget.Width/2f - _message.ClientArea.Width/2f),
+                                          (int) (Gorgon.CurrentRenderTarget.Height/2f - _message.ClientArea.Height/2f) -
+                                          50);
             _message.Update(frameTime);
-            _mainMenuButton.Position = new Point((int)(Gorgon.CurrentRenderTarget.Width / 2f - _message.ClientArea.Width / 2f), _message.ClientArea.Bottom + 20);
+            _mainMenuButton.Position =
+                new Point((int) (Gorgon.CurrentRenderTarget.Width/2f - _message.ClientArea.Width/2f),
+                          _message.ClientArea.Bottom + 20);
             _mainMenuButton.Update(frameTime);
         }
 
         public override void Render()
         {
-            Gorgon.CurrentRenderTarget.FilledRectangle(0,0,Gorgon.CurrentRenderTarget.Width, Gorgon.CurrentRenderTarget.Height, Color.Black);
+            Gorgon.CurrentRenderTarget.FilledRectangle(0, 0, Gorgon.CurrentRenderTarget.Width,
+                                                       Gorgon.CurrentRenderTarget.Height, Color.Black);
             _message.Render();
             _mainMenuButton.Render();
         }

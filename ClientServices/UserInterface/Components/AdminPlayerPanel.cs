@@ -1,5 +1,4 @@
 ﻿using System.Drawing;
-using ClientInterfaces;
 using ClientInterfaces.Network;
 using ClientInterfaces.Resource;
 using GorgonLibrary;
@@ -9,55 +8,59 @@ using SS13_Shared;
 
 namespace ClientServices.UserInterface.Components
 {
-    class AdminPlayerPanel : Window
+    internal class AdminPlayerPanel : Window
     {
         private readonly INetworkManager _networkManager;
         private readonly IResourceManager _resourceManager;
 
-        public AdminPlayerPanel (Size size, INetworkManager networkManager, IResourceManager resourceManager, NetIncomingMessage message)
+        public AdminPlayerPanel(Size size, INetworkManager networkManager, IResourceManager resourceManager,
+                                NetIncomingMessage message)
             : base("Admin Player Panel", size, resourceManager)
         {
             _networkManager = networkManager;
             _resourceManager = resourceManager;
 
             BuildList(message);
-            var closeButton = new Button("Close", _resourceManager) { Position = new Point(5, 5) };
+            var closeButton = new Button("Close", _resourceManager) {Position = new Point(5, 5)};
             closeButton.Clicked += CloseButtonClicked;
             components.Add(closeButton);
 
-            var unbanButton = new Button("Unban", _resourceManager) { Position = new Point(closeButton.ClientArea.Right + 10, 5) };
+            var unbanButton = new Button("Unban", _resourceManager)
+                                  {Position = new Point(closeButton.ClientArea.Right + 10, 5)};
             unbanButton.Clicked += UnbanButtonClicked;
             components.Add(unbanButton);
 
-            Position = new Point((int)(Gorgon.CurrentRenderTarget.Width / 2f) - (int)(ClientArea.Width / 2f), (int)(Gorgon.CurrentRenderTarget.Height / 2f) - (int)(ClientArea.Height / 2f));
+            Position = new Point((int) (Gorgon.CurrentRenderTarget.Width/2f) - (int) (ClientArea.Width/2f),
+                                 (int) (Gorgon.CurrentRenderTarget.Height/2f) - (int) (ClientArea.Height/2f));
         }
 
-        void UnbanButtonClicked(Button sender)
+        private void UnbanButtonClicked(Button sender)
         {
-            var msg = _networkManager.CreateMessage();
-            msg.Write((byte)NetMessage.RequestBanList);
+            NetOutgoingMessage msg = _networkManager.CreateMessage();
+            msg.Write((byte) NetMessage.RequestBanList);
             _networkManager.SendMessage(msg, NetDeliveryMethod.ReliableUnordered);
             Dispose();
         }
 
-        void CloseButtonClicked(Button sender)
+        private void CloseButtonClicked(Button sender)
         {
             Dispose();
         }
 
         private void BuildList(NetIncomingMessage message)
         {
-            var playerCount = message.ReadByte();
-            var yOffset = 40;
-            for (var i = 0; i < playerCount; i++)
+            byte playerCount = message.ReadByte();
+            int yOffset = 40;
+            for (int i = 0; i < playerCount; i++)
             {
-                var name = message.ReadString();
-                var status = (SessionStatus)message.ReadByte();
-                var job = message.ReadString();
-                var ip = message.ReadString();
-                var isAdmin = message.ReadBoolean();
+                string name = message.ReadString();
+                var status = (SessionStatus) message.ReadByte();
+                string job = message.ReadString();
+                string ip = message.ReadString();
+                bool isAdmin = message.ReadBoolean();
 
-                var line = new Label("Name: " + name + "    Status: " + status + "    Job: " + job + "    IP: " + ip, "CALIBRI", _resourceManager)
+                var line = new Label("Name: " + name + "    Status: " + status + "    Job: " + job + "    IP: " + ip,
+                                     "CALIBRI", _resourceManager)
                                {
                                    Position = new Point(5, yOffset + 5),
                                    Text = {Color = isAdmin ? Color.DarkCyan : Color.Black}
@@ -65,13 +68,23 @@ namespace ClientServices.UserInterface.Components
 
                 components.Add(line);
 
-                var kickButton = new Button("Kick", _resourceManager) { Position = new Point(line.ClientArea.Right + 10, yOffset + (int)(line.ClientArea.Height / 3f)) };
+                var kickButton = new Button("Kick", _resourceManager)
+                                     {
+                                         Position =
+                                             new Point(line.ClientArea.Right + 10,
+                                                       yOffset + (int) (line.ClientArea.Height/3f))
+                                     };
                 components.Add(kickButton);
                 kickButton.UserData = ip;
                 kickButton.Clicked += KickButtonClicked;
                 kickButton.Update(0);
 
-                var banButt = new Button("Ban", _resourceManager) { Position = new Point(kickButton.ClientArea.Right + 5, yOffset + (int)(line.ClientArea.Height / 3f)) };
+                var banButt = new Button("Ban", _resourceManager)
+                                  {
+                                      Position =
+                                          new Point(kickButton.ClientArea.Right + 5,
+                                                    yOffset + (int) (line.ClientArea.Height/3f))
+                                  };
                 components.Add(banButt);
                 banButt.UserData = ip;
                 banButt.Clicked += BanButtonClicked;
@@ -80,19 +93,19 @@ namespace ClientServices.UserInterface.Components
             }
         }
 
-        void BanButtonClicked(Button sender)
+        private void BanButtonClicked(Button sender)
         {
             NetOutgoingMessage msg = _networkManager.CreateMessage();
-            msg.Write((byte)NetMessage.RequestAdminBan);
-            msg.Write((string)sender.UserData); //ip
+            msg.Write((byte) NetMessage.RequestAdminBan);
+            msg.Write((string) sender.UserData); //ip
             _networkManager.SendMessage(msg, NetDeliveryMethod.ReliableUnordered);
         }
 
-        void KickButtonClicked(Button sender)
+        private void KickButtonClicked(Button sender)
         {
             NetOutgoingMessage msg = _networkManager.CreateMessage();
-            msg.Write((byte)NetMessage.RequestAdminKick);
-            msg.Write((string)sender.UserData); //ip
+            msg.Write((byte) NetMessage.RequestAdminKick);
+            msg.Write((string) sender.UserData); //ip
             _networkManager.SendMessage(msg, NetDeliveryMethod.ReliableUnordered);
         }
 

@@ -5,23 +5,17 @@ using ClientInterfaces.Map;
 using GameObject;
 using GorgonLibrary;
 using GorgonLibrary.Graphics;
-using SS13_Shared;
 using SS13.IoC;
+using SS13_Shared;
 
 namespace ClientServices.Tiles
 {
     public class Wall : Tile, ICollidable
     {
-        private Sprite plainWall;
-        private Sprite wallCorner1;
-        private Sprite wallCorner2;
-
-        private IMapManager mapMgr;
-
-        public bool IsHardCollidable
-        {
-            get { return true; }
-        }
+        private readonly IMapManager mapMgr;
+        private readonly Sprite plainWall;
+        private readonly Sprite wallCorner1;
+        private readonly Sprite wallCorner2;
 
         public Wall(TileState state, Vector2D position, Point tilePosition)
             : base(state, position, tilePosition)
@@ -42,32 +36,44 @@ namespace ClientServices.Tiles
         }
 
         #region ICollidable Members
+
+        public bool IsHardCollidable
+        {
+            get { return true; }
+        }
+
         public RectangleF AABB
         {
-            get
-            {
-                return new RectangleF(Position, Sprite.Size);
-            }
+            get { return new RectangleF(Position, Sprite.Size); }
         }
 
         public void Bump(Entity collider)
-        { }
-        #endregion 
+        {
+        }
+
+        #endregion
 
         public override void Render(float xTopLeft, float yTopLeft, int tileSpacing, Batch batch)
         {
             surroundDirs = mapMgr.SetSprite(TilePosition.X, TilePosition.Y); //Optimize.
 
-            if (surroundDirs == 3 || surroundDirs == 2 && !(surroundingTiles[2] != null && surroundingTiles[2].surroundingTiles[3]!= null && surroundingTiles[2].surroundingTiles[3].ConnectSprite)) //north and east
+            if (surroundDirs == 3 ||
+                surroundDirs == 2 &&
+                !(surroundingTiles[2] != null && surroundingTiles[2].surroundingTiles[3] != null &&
+                  surroundingTiles[2].surroundingTiles[3].ConnectSprite)) //north and east
                 sideSprite = wallCorner1;
 
-            else if (surroundDirs == 9 || surroundDirs == 8 && !(surroundingTiles[2] != null && surroundingTiles[2].surroundingTiles[1] != null && surroundingTiles[2].surroundingTiles[1].ConnectSprite)) //north and west 
+            else if (surroundDirs == 9 ||
+                     surroundDirs == 8 &&
+                     !(surroundingTiles[2] != null && surroundingTiles[2].surroundingTiles[1] != null &&
+                       surroundingTiles[2].surroundingTiles[1].ConnectSprite)) //north and west 
                 sideSprite = wallCorner2;
             else
                 sideSprite = plainWall;
-            if (((surroundDirs&4) == 0))
+            if (((surroundDirs & 4) == 0))
             {
-                sideSprite.SetPosition((float)TilePosition.X * tileSpacing - xTopLeft, (float)TilePosition.Y * tileSpacing - yTopLeft);
+                sideSprite.SetPosition((float) TilePosition.X*tileSpacing - xTopLeft,
+                                       (float) TilePosition.Y*tileSpacing - yTopLeft);
                 sideSprite.Color = Color.White;
                 batch.AddClone(sideSprite);
             }
@@ -81,7 +87,7 @@ namespace ClientServices.Tiles
             float drawY = 0;
             int width = 0;
             int height = 0;
-            switch(from)
+            switch (from)
             {
                 case Direction.North:
                     by = -2;
@@ -112,7 +118,7 @@ namespace ClientServices.Tiles
                     by = -2;
                     break;
             }
-            switch(d)
+            switch (d)
             {
                 case Direction.North:
                     drawX = x;
@@ -140,18 +146,20 @@ namespace ClientServices.Tiles
                     break;
             }
 
-            Gorgon.CurrentRenderTarget.FilledRectangle(drawX + bx, drawY + bx, width + Math.Abs(bx), height + Math.Abs(by), Color.Black);
+            Gorgon.CurrentRenderTarget.FilledRectangle(drawX + bx, drawY + bx, width + Math.Abs(bx),
+                                                       height + Math.Abs(by), Color.Black);
         }
 
         public override void RenderPos(float x, float y, int tileSpacing, int lightSize)
         {
             //Not drawing occlusion for tiles on the edge. Fuck this. Looks better too since there isnt actually anything to hide behind them.
-            if ((TilePosition.X == (mapMgr.GetMapWidth() - 1) || TilePosition.X == 0) || (TilePosition.Y == (mapMgr.GetMapHeight() - 1) || TilePosition.Y == 0))
+            if ((TilePosition.X == (mapMgr.GetMapWidth() - 1) || TilePosition.X == 0) ||
+                (TilePosition.Y == (mapMgr.GetMapHeight() - 1) || TilePosition.Y == 0))
                 return;
 
             int l = lightSize/2;
-            Direction from = Direction.East;
-            if(l < x && l < y)
+            var from = Direction.East;
+            if (l < x && l < y)
                 from = Direction.NorthWest;
             else if (l > x + tileSpacing && l < y)
                 from = Direction.NorthEast;
@@ -167,8 +175,8 @@ namespace ClientServices.Tiles
                 from = Direction.North;
             else if (l > y + tileSpacing)
                 from = Direction.South;
-            
-            if(l < x)
+
+            if (l < x)
             {
                 if (!surroundingTiles[1].Opaque || (surroundingTiles[1].Opaque && surroundingTiles[2].Opaque))
                     RenderOccluder(Direction.East, from, x, y, tileSpacing);
@@ -176,7 +184,7 @@ namespace ClientServices.Tiles
                 if (surroundingTiles[2].surroundingTiles[3].Opaque && !surroundingTiles[3].Opaque)
                     RenderOccluder(Direction.West, from, x, y, tileSpacing);
 
-                if(l < y)
+                if (l < y)
                 {
                     if (!surroundingTiles[2].Opaque || (surroundingTiles[2].Opaque && !surroundingTiles[0].Opaque))
                     {
@@ -187,7 +195,9 @@ namespace ClientServices.Tiles
                 }
                 else if (l > y + tileSpacing)
                 {
-                    if (!surroundingTiles[0].Opaque || (surroundingTiles[0].Opaque && !surroundingTiles[2].Opaque && (l < x + tileSpacing && !surroundingTiles[1].Opaque)))
+                    if (!surroundingTiles[0].Opaque ||
+                        (surroundingTiles[0].Opaque && !surroundingTiles[2].Opaque &&
+                         (l < x + tileSpacing && !surroundingTiles[1].Opaque)))
                         RenderOccluder(Direction.North, from, x, y, tileSpacing);
                     if (surroundingTiles[1].Opaque && surroundingTiles[3].Opaque)
                         RenderOccluder(Direction.North, from, x, y, tileSpacing);
@@ -223,7 +233,9 @@ namespace ClientServices.Tiles
                 }
                 else if (l > y + tileSpacing)
                 {
-                    if (!surroundingTiles[0].Opaque || (surroundingTiles[0].Opaque && !surroundingTiles[2].Opaque && (l < x + tileSpacing && !surroundingTiles[1].Opaque)))
+                    if (!surroundingTiles[0].Opaque ||
+                        (surroundingTiles[0].Opaque && !surroundingTiles[2].Opaque &&
+                         (l < x + tileSpacing && !surroundingTiles[1].Opaque)))
                         RenderOccluder(Direction.North, from, x, y, tileSpacing);
                     if (surroundingTiles[1].Opaque)
                         RenderOccluder(Direction.North, from, x, y, tileSpacing);
@@ -254,7 +266,9 @@ namespace ClientServices.Tiles
                 }
                 else if (l > y + tileSpacing)
                 {
-                    if (!surroundingTiles[0].Opaque || (surroundingTiles[0].Opaque && !surroundingTiles[2].Opaque && (l < x + tileSpacing && !surroundingTiles[1].Opaque)))
+                    if (!surroundingTiles[0].Opaque ||
+                        (surroundingTiles[0].Opaque && !surroundingTiles[2].Opaque &&
+                         (l < x + tileSpacing && !surroundingTiles[1].Opaque)))
                         RenderOccluder(Direction.North, from, x, y, tileSpacing);
                     RenderOccluder(Direction.North, from, x, y, tileSpacing);
                 }
@@ -270,7 +284,7 @@ namespace ClientServices.Tiles
 
         public override void RenderPosOffset(float x, float y, int tileSpacing, Vector2D lightPosition)
         {
-            Vector2D lightVec = lightPosition - new Vector2D(x + tileSpacing / 2.0f, y + tileSpacing / 2.0f);
+            Vector2D lightVec = lightPosition - new Vector2D(x + tileSpacing/2.0f, y + tileSpacing/2.0f);
             lightVec.Normalize();
             lightVec *= 10;
             //sideSprite.Color = Color.Black;
@@ -297,7 +311,8 @@ namespace ClientServices.Tiles
             if (surroundingTiles[3] != null && surroundingTiles[3].Opaque && lightVec.X < 0)
                 lightVec.X = 2;
 
-            Gorgon.CurrentRenderTarget.FilledRectangle(x + lightVec.X, y + lightVec.Y, sideSprite.Width + 1, sideSprite.Height + 1, Color.FromArgb(0, Color.Transparent));
+            Gorgon.CurrentRenderTarget.FilledRectangle(x + lightVec.X, y + lightVec.Y, sideSprite.Width + 1,
+                                                       sideSprite.Height + 1, Color.FromArgb(0, Color.Transparent));
         }
 
         public override void DrawDecals(float xTopLeft, float yTopLeft, int tileSpacing, Batch decalBatch)
@@ -313,9 +328,11 @@ namespace ClientServices.Tiles
 
         public override void RenderTop(float xTopLeft, float yTopLeft, int tileSpacing, Batch wallTopsBatch)
         {
-            Sprite = _resourceManager.GetSprite("wall_texture" + mapMgr.SetSprite(TilePosition.X, TilePosition.Y).ToString()); //Optimize
+            Sprite =
+                _resourceManager.GetSprite("wall_texture" + mapMgr.SetSprite(TilePosition.X, TilePosition.Y).ToString());
+                //Optimize
 
-            Sprite.SetPosition(TilePosition.X * tileSpacing - xTopLeft, TilePosition.Y * tileSpacing - yTopLeft);
+            Sprite.SetPosition(TilePosition.X*tileSpacing - xTopLeft, TilePosition.Y*tileSpacing - yTopLeft);
             Sprite.Position -= new Vector2D(0, tileSpacing);
             Sprite.Color = Color.FromArgb(200, Color.White);
 

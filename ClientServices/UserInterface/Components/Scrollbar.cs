@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Drawing;
-using ClientInterfaces;
 using ClientInterfaces.Resource;
 using GorgonLibrary;
 using GorgonLibrary.Graphics;
@@ -11,57 +10,38 @@ namespace ClientServices.UserInterface.Components
 {
     public class Scrollbar : GuiComponent
     {
-        private readonly IResourceManager _resourceManager;
-
         //IMPORTANT: With this implementation you are not guaranteed to get a step size of 1. 
         //           If the Bar is shorter than the maximum value the step size will increase.
         //           If the Bar is longer than the maximum value the step size will decrease.
         //           The latter leads to actual 1 increment steps even though the step size will be below 1.
         //           Additionally the Min value is a fixed 0 right now.
 
+        #region Delegates
+
         public delegate void ScrollbarChangedHandler(int newValue);
-        public event ScrollbarChangedHandler ValueChanged;
-        private bool RaiseEvent = false;
 
-        private Rectangle clientAreaButton;
+        #endregion
 
-        private Sprite scrollbarButton;
-
-        private TextSprite DEBUG;
+        private readonly TextSprite DEBUG;
+        private readonly IResourceManager _resourceManager;
+        private readonly Sprite scrollbarButton;
         private bool DRAW_DEBUG = false;
 
-        public bool drawBackground = true;
-
         public bool Horizontal = false;
+        private bool RaiseEvent;
 
-        public float stepSize { private set; get; } //How much one "step" on the bar counts as towards the actual current value.
+        private int actualSize; //Actual max value of bar.
 
-        public int max = 100;            //Maximum value of the bar.
+        private float actualVal; //The actual value of the current button position.
+        private Rectangle clientAreaButton;
+        private int currentPos; //The current button position in relation to location of scrollbar.
+        private bool dragging; //Currently dragging the button?
+        public bool drawBackground = true;
+        public int max = 100; //Maximum value of the bar.
 
-        public int size = 300;           //Graphical length of the bar.
+        public int size = 300; //Graphical length of the bar.
 
-        public float Value
-        {
-            get
-            {
-                return actualVal;
-            }
-            set
-            {
-                actualVal = Math.Min(max, Math.Max(value, 0));
-                currentPos = (int)Math.Max(Math.Round(actualVal / stepSize),0);
-                RaiseEvent = true;
-            }
-        }
-
-        private bool dragging = false;   //Currently dragging the button?
-
-        private int actualSize = 0;      //Actual max value of bar.
-
-        private int currentPos = 0;      //The current button position in relation to location of scrollbar.
-        private float actualVal = 0;     //The actual value of the current button position.
-
-        public Scrollbar(bool horizontal,IResourceManager resourceManager)
+        public Scrollbar(bool horizontal, IResourceManager resourceManager)
         {
             _resourceManager = resourceManager;
 
@@ -77,6 +57,21 @@ namespace ClientServices.UserInterface.Components
             Update(0);
         }
 
+        public float stepSize { private set; get; }
+
+        public float Value
+        {
+            get { return actualVal; }
+            set
+            {
+                actualVal = Math.Min(max, Math.Max(value, 0));
+                currentPos = (int) Math.Max(Math.Round(actualVal/stepSize), 0);
+                RaiseEvent = true;
+            }
+        }
+
+        public event ScrollbarChangedHandler ValueChanged;
+
         public override void HandleNetworkMessage(NetIncomingMessage message)
         {
         }
@@ -84,12 +79,12 @@ namespace ClientServices.UserInterface.Components
         public override bool MouseDown(MouseInputEventArgs e)
         {
             if (!IsVisible()) return false;
-            if (clientAreaButton.Contains((int)e.Position.X, (int)e.Position.Y))
+            if (clientAreaButton.Contains((int) e.Position.X, (int) e.Position.Y))
             {
                 dragging = true;
                 return true;
             }
-            else if (ClientArea.Contains((int)e.Position.X, (int)e.Position.Y))
+            else if (ClientArea.Contains((int) e.Position.X, (int) e.Position.Y))
             {
                 return true;
             }
@@ -98,7 +93,6 @@ namespace ClientServices.UserInterface.Components
 
         public override bool MouseUp(MouseInputEventArgs e)
         {
-
             if (dragging)
             {
                 dragging = false;
@@ -112,9 +106,10 @@ namespace ClientServices.UserInterface.Components
             if (!IsVisible()) return;
             if (dragging)
             {
-                if (Horizontal) currentPos = (int)e.Position.X - ClientArea.Location.X - (int)(scrollbarButton.Width / 2f);
-                else currentPos = (int)e.Position.Y - ClientArea.Location.Y - (int)(scrollbarButton.Height / 2f);
-                currentPos = Math.Min(currentPos, (int)actualSize);
+                if (Horizontal)
+                    currentPos = (int) e.Position.X - ClientArea.Location.X - (int) (scrollbarButton.Width/2f);
+                else currentPos = (int) e.Position.Y - ClientArea.Location.Y - (int) (scrollbarButton.Height/2f);
+                currentPos = Math.Min(currentPos, actualSize);
                 currentPos = Math.Max(currentPos, 0);
                 RaiseEvent = true;
             }
@@ -122,7 +117,7 @@ namespace ClientServices.UserInterface.Components
 
         public override bool MouseWheelMove(MouseInputEventArgs e)
         {
-            Value += ((Math.Sign(e.WheelDelta) * -1) * Math.Max(((max / 20)), 1));
+            Value += ((Math.Sign(e.WheelDelta)*-1)*Math.Max(((max/20)), 1));
             return true;
         }
 
@@ -132,37 +127,41 @@ namespace ClientServices.UserInterface.Components
             base.Update(frameTime);
             if (Horizontal)
             {
-                ClientArea = new Rectangle(Position, new Size(size, (int)scrollbarButton.Height));
-                clientAreaButton = new Rectangle(new Point(Position.X + currentPos, Position.Y), new Size((int)scrollbarButton.Width, (int)scrollbarButton.Height));
-                actualSize = size - (int)scrollbarButton.Width;
+                ClientArea = new Rectangle(Position, new Size(size, (int) scrollbarButton.Height));
+                clientAreaButton = new Rectangle(new Point(Position.X + currentPos, Position.Y),
+                                                 new Size((int) scrollbarButton.Width, (int) scrollbarButton.Height));
+                actualSize = size - (int) scrollbarButton.Width;
             }
             else
             {
-                ClientArea = new Rectangle(Position, new Size((int)scrollbarButton.Width, size));
-                clientAreaButton = new Rectangle(new Point(Position.X, Position.Y + currentPos), new Size((int)scrollbarButton.Width, (int)scrollbarButton.Height));
-                actualSize = size - (int)scrollbarButton.Height;
+                ClientArea = new Rectangle(Position, new Size((int) scrollbarButton.Width, size));
+                clientAreaButton = new Rectangle(new Point(Position.X, Position.Y + currentPos),
+                                                 new Size((int) scrollbarButton.Width, (int) scrollbarButton.Height));
+                actualSize = size - (int) scrollbarButton.Height;
             }
 
-            stepSize = (float)max / actualSize;
-            actualVal = Math.Min((int)Math.Round(currentPos * stepSize), max);
+            stepSize = (float) max/actualSize;
+            actualVal = Math.Min((int) Math.Round(currentPos*stepSize), max);
 
             if (ValueChanged != null && RaiseEvent) //This is a bit ugly.
             {
                 RaiseEvent = false;
-                ValueChanged((int)actualVal);
+                ValueChanged((int) actualVal);
             }
         }
 
         public override void Render()
         {
             if (!IsVisible()) return;
-            if (drawBackground) Gorgon.CurrentRenderTarget.FilledRectangle(ClientArea.X, ClientArea.Y, ClientArea.Width, ClientArea.Height, System.Drawing.Color.DarkSlateGray);
+            if (drawBackground)
+                Gorgon.CurrentRenderTarget.FilledRectangle(ClientArea.X, ClientArea.Y, ClientArea.Width,
+                                                           ClientArea.Height, Color.DarkSlateGray);
             scrollbarButton.Draw(clientAreaButton);
             DEBUG.Position = new Vector2D(ClientArea.Location.X + 20, ClientArea.Location.Y + 20);
             DEBUG.Text = "current: " + actualVal.ToString();
             if (DRAW_DEBUG) DEBUG.Draw();
-            Gorgon.CurrentRenderTarget.Rectangle(ClientArea.X + 0, ClientArea.Y + 0, ClientArea.Width - 0, ClientArea.Height - 0, System.Drawing.Color.Black);
+            Gorgon.CurrentRenderTarget.Rectangle(ClientArea.X + 0, ClientArea.Y + 0, ClientArea.Width - 0,
+                                                 ClientArea.Height - 0, Color.Black);
         }
-
     }
 }

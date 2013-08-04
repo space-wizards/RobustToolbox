@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Drawing;
 using ClientInterfaces.Resource;
-using ClientInterfaces.UserInterface;
 using GorgonLibrary.Graphics;
 using GorgonLibrary.InputDevices;
 using SS13.IoC;
@@ -10,7 +9,11 @@ namespace ClientServices.UserInterface.Components
 {
     internal class ImageButton : GuiComponent
     {
+        #region Delegates
+
         public delegate void ImageButtonPressHandler(ImageButton sender);
+
+        #endregion
 
         private readonly IResourceManager _resourceManager;
         private Sprite _buttonClick;
@@ -68,9 +71,10 @@ namespace ClientServices.UserInterface.Components
             if (_drawSprite != null)
             {
                 _drawSprite.Position = Position;
-                ClientArea = new Rectangle(Position, new Size((int) _drawSprite.AABB.Width, (int) _drawSprite.AABB.Height));
+                ClientArea = new Rectangle(Position,
+                                           new Size((int) _drawSprite.AABB.Width, (int) _drawSprite.AABB.Height));
             }
-    }
+        }
 
         public override void Render()
         {
@@ -81,7 +85,6 @@ namespace ClientServices.UserInterface.Components
                 _drawSprite.Draw();
                 _drawSprite.Color = Color.White;
             }
-
         }
 
         public override void Dispose()
@@ -96,7 +99,7 @@ namespace ClientServices.UserInterface.Components
 
         public override void MouseMove(MouseInputEventArgs e)
         {
-            if (ClientArea.Contains(new Point((int)e.Position.X, (int)e.Position.Y)) && _buttonHover != null)
+            if (ClientArea.Contains(new Point((int) e.Position.X, (int) e.Position.Y)) && _buttonHover != null)
             {
                 if (_drawSprite != _buttonClick)
                     _drawSprite = _buttonHover;
@@ -104,7 +107,7 @@ namespace ClientServices.UserInterface.Components
             else
             {
                 if (_drawSprite != _buttonClick)
-                    _drawSprite = _buttonNormal;             
+                    _drawSprite = _buttonNormal;
             }
         }
 
@@ -122,8 +125,10 @@ namespace ClientServices.UserInterface.Components
         public override bool MouseUp(MouseInputEventArgs e)
         {
             if (_drawSprite == _buttonClick)
-                if(_buttonHover != null)
-                    _drawSprite = ClientArea.Contains(new Point((int) e.Position.X, (int) e.Position.Y)) ? _buttonHover : _buttonNormal;
+                if (_buttonHover != null)
+                    _drawSprite = ClientArea.Contains(new Point((int) e.Position.X, (int) e.Position.Y))
+                                      ? _buttonHover
+                                      : _buttonNormal;
                 else
                     _drawSprite = _buttonNormal;
             return false;

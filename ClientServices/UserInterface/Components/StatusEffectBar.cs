@@ -1,41 +1,38 @@
 ﻿using System;
-using System.Drawing;
 using System.Collections.Generic;
-using System.Collections;
-using ClientInterfaces;
-using ClientInterfaces.Resource;
-using ClientInterfaces.Player;
-using ClientInterfaces.GOC;
-using GameObject;
-using GorgonLibrary.Graphics;
-using GorgonLibrary.InputDevices;
+using System.Drawing;
 using CGO;
-using ClientServices;
+using ClientInterfaces.Player;
+using ClientInterfaces.Resource;
+using GameObject;
 using GorgonLibrary;
+using GorgonLibrary.InputDevices;
+using SS13_Shared.GO;
 
 namespace ClientServices.UserInterface.Components
 {
-    class StatusEffectBar : GuiComponent
+    internal class StatusEffectBar : GuiComponent
     {
+        private readonly IPlayerManager _playerManager;
         private readonly IResourceManager _resourceManager;
-        private IPlayerManager _playerManager;
+        private readonly List<StatusEffectButton> buttons = new List<StatusEffectButton>();
 
         private StatusEffectComp assigned;
         private Entity assignedEnt;
-        private List<StatusEffectButton> buttons = new List<StatusEffectButton>();
 
-        private bool dragging = false;
+        private bool dragging;
 
         public StatusEffectBar(IResourceManager resourceManager, IPlayerManager playerManager)
         {
             _resourceManager = resourceManager;
             _playerManager = playerManager;
 
-            if (playerManager.ControlledEntity != null && playerManager.ControlledEntity.HasComponent(SS13_Shared.GO.ComponentFamily.StatusEffects))
+            if (playerManager.ControlledEntity != null &&
+                playerManager.ControlledEntity.HasComponent(ComponentFamily.StatusEffects))
             {
                 assignedEnt = playerManager.ControlledEntity;
-                assigned = (StatusEffectComp)playerManager.ControlledEntity.GetComponent(SS13_Shared.GO.ComponentFamily.StatusEffects);
-                assigned.Changed += new StatusEffectComp.StatusEffectsChangedHandler(assigned_Changed);
+                assigned = (StatusEffectComp) playerManager.ControlledEntity.GetComponent(ComponentFamily.StatusEffects);
+                assigned.Changed += assigned_Changed;
             }
 
             UpdateButtons();
@@ -49,15 +46,15 @@ namespace ClientServices.UserInterface.Components
 
             if (_playerManager.ControlledEntity != null && assigned != null)
             {
-                foreach(StatusEffect effect in assigned.Effects)
+                foreach (StatusEffect effect in assigned.Effects)
                 {
-                    StatusEffectButton newButt = new StatusEffectButton(effect, _resourceManager);
+                    var newButt = new StatusEffectButton(effect, _resourceManager);
                     buttons.Add(newButt);
                 }
             }
         }
 
-        void assigned_Changed(StatusEffectComp sender)
+        private void assigned_Changed(StatusEffectComp sender)
         {
             UpdateButtons();
         }
@@ -68,16 +65,18 @@ namespace ClientServices.UserInterface.Components
             {
                 if (assignedEnt.Uid != _playerManager.ControlledEntity.Uid) //Seems like the controled ent changed.
                 {
-                    assigned.Changed -= new StatusEffectComp.StatusEffectsChangedHandler(assigned_Changed);
+                    assigned.Changed -= assigned_Changed;
                     assigned = null;
                 }
             }
 
-            if (assigned == null && _playerManager.ControlledEntity != null && _playerManager.ControlledEntity.HasComponent(SS13_Shared.GO.ComponentFamily.StatusEffects))
+            if (assigned == null && _playerManager.ControlledEntity != null &&
+                _playerManager.ControlledEntity.HasComponent(ComponentFamily.StatusEffects))
             {
                 assignedEnt = _playerManager.ControlledEntity;
-                assigned = (StatusEffectComp)_playerManager.ControlledEntity.GetComponent(SS13_Shared.GO.ComponentFamily.StatusEffects);
-                assigned.Changed += new StatusEffectComp.StatusEffectsChangedHandler(assigned_Changed);
+                assigned =
+                    (StatusEffectComp) _playerManager.ControlledEntity.GetComponent(ComponentFamily.StatusEffects);
+                assigned.Changed += assigned_Changed;
                 UpdateButtons();
             }
 
@@ -87,7 +86,7 @@ namespace ClientServices.UserInterface.Components
                 const int max_per_row = 5;
 
                 int curr_row_count = 0;
-                int curr_row_num = 0;  
+                int curr_row_num = 0;
 
                 int x_off = spacing;
                 int y_off = spacing;
@@ -106,14 +105,14 @@ namespace ClientServices.UserInterface.Components
                     {
                         curr_row_num++;
                         curr_row_count = 0;
-                        x_off = spacing + (spacing * curr_row_count) + (curr_row_count * 32);
-                        y_off = spacing + (spacing * curr_row_num) + (curr_row_num * 32);
+                        x_off = spacing + (spacing*curr_row_count) + (curr_row_count*32);
+                        y_off = spacing + (spacing*curr_row_num) + (curr_row_num*32);
                     }
                     else
                     {
                         curr_row_count++;
-                        x_off = spacing + (spacing * curr_row_count) + (curr_row_count * 32);
-                        y_off = spacing + (spacing * curr_row_num) + (curr_row_num * 32);
+                        x_off = spacing + (spacing*curr_row_count) + (curr_row_count*32);
+                        y_off = spacing + (spacing*curr_row_num) + (curr_row_num*32);
                     }
 
                     button.Update(frameTime);
@@ -121,12 +120,13 @@ namespace ClientServices.UserInterface.Components
 
                 ClientArea = new Rectangle(Position, new Size(max_x - Position.X, max_y - Position.Y));
             }
-            
         }
 
         public override void Render()
         {
-            if(buttons.Count > 0) Gorgon.CurrentRenderTarget.Rectangle(ClientArea.X, ClientArea.Y, ClientArea.Width, ClientArea.Height, Color.DimGray);
+            if (buttons.Count > 0)
+                Gorgon.CurrentRenderTarget.Rectangle(ClientArea.X, ClientArea.Y, ClientArea.Width, ClientArea.Height,
+                                                     Color.DimGray);
 
             Gorgon.CurrentRenderTarget.Circle(Position.X, Position.Y, 3, Color.White);
             Gorgon.CurrentRenderTarget.Circle(Position.X, Position.Y, 2, Color.Gray);
@@ -146,9 +146,9 @@ namespace ClientServices.UserInterface.Components
 
         public override bool MouseDown(MouseInputEventArgs e)
         {
-            Vector2D mousePoint = new Vector2D((int)e.Position.X, (int)e.Position.Y);
+            var mousePoint = new Vector2D((int) e.Position.X, (int) e.Position.Y);
 
-            if ((mousePoint - new Vector2D(this.Position.X, this.Position.Y)).Length <= 3)
+            if ((mousePoint - new Vector2D(Position.X, Position.Y)).Length <= 3)
                 dragging = true;
 
             return false;
@@ -169,7 +169,7 @@ namespace ClientServices.UserInterface.Components
         {
             if (dragging)
             {
-                this.Position = new Point((int)e.Position.X, (int)e.Position.Y); 
+                Position = new Point((int) e.Position.X, (int) e.Position.Y);
             }
             else
             {

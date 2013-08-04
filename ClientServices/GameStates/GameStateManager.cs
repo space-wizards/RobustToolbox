@@ -8,29 +8,23 @@ namespace ClientServices.GameStates
 {
     public class GameStateManager : Dictionary<uint, GameState>, IGameStateManager
     {
-        private Dictionary<long, uint> ackedStates = new Dictionary<long, uint>();
+        private readonly Dictionary<long, uint> ackedStates = new Dictionary<long, uint>();
         private uint currentStateSeq;
         public GameState CurrentState { get; private set; }
 
-        public GameStateManager()
-        {}
+        #region IGameStateManager Members
 
         public void Cull()
         {
-            foreach (var v in Keys.Where(v => v < OldestStateAcked).ToList())
+            foreach (uint v in Keys.Where(v => v < OldestStateAcked).ToList())
                 Remove(v);
-        }
-
-        public void CullAll()
-        {
-            Clear();
         }
 
         public uint OldestStateAcked
         {
             get
             {
-                var state = ackedStates.Values.FirstOrDefault(val => val == ackedStates.Values.Max());
+                uint state = ackedStates.Values.FirstOrDefault(val => val == ackedStates.Values.Max());
                 return state;
             }
         }
@@ -43,6 +37,13 @@ namespace ClientServices.GameStates
                 ackedStates[uniqueIdentifier] = stateAcked;
         }
 
+        #endregion
+
+        public void CullAll()
+        {
+            Clear();
+        }
+
         public void ApplyFullState(uint seq, GameState fullState)
         {
             CurrentState = fullState;
@@ -51,7 +52,6 @@ namespace ClientServices.GameStates
 
         public void ApplyDeltaState(uint oldStateSeq, uint newStateSeq, GameStateDelta delta)
         {
-            
         }
     }
 }

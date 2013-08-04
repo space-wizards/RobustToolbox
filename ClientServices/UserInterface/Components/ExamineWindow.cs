@@ -1,21 +1,16 @@
-﻿using System.Collections.Generic;
-using System.Linq;
-using System.Drawing;
-using ClientInterfaces;
-using ClientInterfaces.GOC;
+﻿using System.Drawing;
 using ClientInterfaces.Resource;
 using GameObject;
 using GorgonLibrary.Graphics;
-using SS13_Shared;
 using SS13_Shared.GO;
 
 namespace ClientServices.UserInterface.Components
 {
-    sealed class ExamineWindow : Window
+    internal sealed class ExamineWindow : Window
     {
+        private readonly Label _entityDescription;
         private readonly IResourceManager _resourceManager;
         private Sprite _entitySprite;
-        private readonly Label _entityDescription;
 
         public ExamineWindow(Size size, Entity entity, IResourceManager resourceManager)
             : base(entity.Name, size, resourceManager)
@@ -25,14 +20,17 @@ namespace ClientServices.UserInterface.Components
 
             components.Add(_entityDescription);
 
-            var reply = entity.SendMessage(entity, ComponentFamily.Renderable, ComponentMessageType.GetSprite);
+            ComponentReplyMessage reply = entity.SendMessage(entity, ComponentFamily.Renderable,
+                                                             ComponentMessageType.GetSprite);
 
             SetVisible(true);
 
             if (reply.MessageType == ComponentMessageType.CurrentSprite)
             {
-                _entitySprite = (Sprite)reply.ParamsList[0];
-                _entityDescription.Position = new Point(10, (int)_entitySprite.Height + _entityDescription.ClientArea.Height + 10);
+                _entitySprite = (Sprite) reply.ParamsList[0];
+                _entityDescription.Position = new Point(10,
+                                                        (int) _entitySprite.Height +
+                                                        _entityDescription.ClientArea.Height + 10);
             }
             else
                 _entityDescription.Position = new Point(10, 10);
@@ -43,7 +41,8 @@ namespace ClientServices.UserInterface.Components
             base.Render();
             if (_entitySprite == null) return;
 
-            var spriteRect = new Rectangle((int)(ClientArea.Width / 2f - _entitySprite.Width / 2f) + ClientArea.X, 10 + ClientArea.Y, (int)_entitySprite.Width, (int)_entitySprite.Height);
+            var spriteRect = new Rectangle((int) (ClientArea.Width/2f - _entitySprite.Width/2f) + ClientArea.X,
+                                           10 + ClientArea.Y, (int) _entitySprite.Width, (int) _entitySprite.Height);
             _entitySprite.Draw(spriteRect);
         }
 

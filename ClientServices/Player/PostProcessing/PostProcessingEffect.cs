@@ -1,8 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using GorgonLibrary.Graphics;
+﻿using GorgonLibrary.Graphics;
 
 namespace ClientServices.Player.PostProcessing
 {
@@ -35,7 +31,7 @@ namespace ClientServices.Player.PostProcessing
             _frameTime = frameTime;
             if (!CanExpire)
                 return;
-            if(_duration <= 0 )
+            if (_duration <= 0)
                 Expired();
         }
 

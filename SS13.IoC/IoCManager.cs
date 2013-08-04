@@ -22,43 +22,43 @@ namespace SS13.IoC
 
         public static T Resolve<T>()
         {
-            var type = typeof(T);
-            if (!Services.ContainsKey(typeof(T)))
+            Type type = typeof (T);
+            if (!Services.ContainsKey(typeof (T)))
             {
                 BuildType(type);
             }
 
-            return (T)Services[typeof(T)];
+            return (T) Services[typeof (T)];
         }
 
         private static void BuildType(Type type)
         {
-            var concreteType = ServiceTypes.FirstOrDefault(x => x.GetInterfaces().Contains(type));
+            Type concreteType = ServiceTypes.FirstOrDefault(x => x.GetInterfaces().Contains(type));
             if (concreteType == null) throw new MissingImplementationException(type);
 
-            var constructor = concreteType.GetConstructors().FirstOrDefault();
+            ConstructorInfo constructor = concreteType.GetConstructors().FirstOrDefault();
             if (constructor == null) throw new NoPublicConstructorException(concreteType);
 
-            var parameters = constructor.GetParameters();
+            ParameterInfo[] parameters = constructor.GetParameters();
             if (parameters.Any())
             {
                 var requiredParameters = new List<object>();
-                foreach (var parameterInfo in parameters)
+                foreach (ParameterInfo parameterInfo in parameters)
                 {
                     if (!Services.ContainsKey(parameterInfo.ParameterType))
                     {
                         BuildType(parameterInfo.ParameterType);
                     }
 
-                    var dependency = Services[parameterInfo.ParameterType];
+                    object dependency = Services[parameterInfo.ParameterType];
                     requiredParameters.Add(dependency);
                 }
-                var instance = Activator.CreateInstance(concreteType, requiredParameters.ToArray());
+                object instance = Activator.CreateInstance(concreteType, requiredParameters.ToArray());
                 Services.Add(type, instance);
             }
             else
             {
-                var instance = Activator.CreateInstance(concreteType);
+                object instance = Activator.CreateInstance(concreteType);
                 Services.Add(type, instance);
             }
         }

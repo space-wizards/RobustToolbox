@@ -1,26 +1,23 @@
 ﻿using System;
-using System.Linq;
+using System.Collections.Generic;
 using System.Drawing;
-using ClientInterfaces;
+using System.Linq;
+using System.Reflection;
 using ClientInterfaces.Placement;
 using ClientInterfaces.Resource;
+using ClientServices.Tiles;
 using GorgonLibrary;
 using GorgonLibrary.InputDevices;
 using SS13_Shared;
-using ClientServices.Map;
-using ClientServices.Tiles;
-using System.Linq;
-using System.Reflection;
-using System.Collections.Generic;
 
 namespace ClientServices.UserInterface.Components
 {
-    class TileSpawnPanel : Window
+    internal class TileSpawnPanel : Window
     {
-        private readonly IResourceManager _resourceManager;
-        private readonly IPlacementManager _placementManager;
-        private readonly ScrollableContainer _tileList;
         private readonly Label _clearLabel;
+        private readonly IPlacementManager _placementManager;
+        private readonly IResourceManager _resourceManager;
+        private readonly ScrollableContainer _tileList;
         private readonly Textbox _tileSearchTextbox;
 
         public TileSpawnPanel(Size size, IResourceManager resourceManager, IPlacementManager placementManager)
@@ -29,13 +26,14 @@ namespace ClientServices.UserInterface.Components
             _resourceManager = resourceManager;
             _placementManager = placementManager;
 
-            _tileList = new ScrollableContainer("tilespawnlist", new Size(200, 400), _resourceManager) { Position = new Point(5, 5) };
+            _tileList = new ScrollableContainer("tilespawnlist", new Size(200, 400), _resourceManager)
+                            {Position = new Point(5, 5)};
             components.Add(_tileList);
 
-            var searchLabel = new Label("Tile Search:", "CALIBRI", _resourceManager) { Position = new Point(210, 0) };
+            var searchLabel = new Label("Tile Search:", "CALIBRI", _resourceManager) {Position = new Point(210, 0)};
             components.Add(searchLabel);
 
-            _tileSearchTextbox = new Textbox(125, _resourceManager) { Position = new Point(210, 20) };
+            _tileSearchTextbox = new Textbox(125, _resourceManager) {Position = new Point(210, 20)};
             _tileSearchTextbox.OnSubmit += tileSearchTextbox_OnSubmit;
             components.Add(_tileSearchTextbox);
 
@@ -52,41 +50,43 @@ namespace ClientServices.UserInterface.Components
 
             BuildTileList();
 
-            Position = new Point((int)(Gorgon.CurrentRenderTarget.Width / 2f) - (int)(ClientArea.Width / 2f), (int)(Gorgon.CurrentRenderTarget.Height / 2f) - (int)(ClientArea.Height / 2f));
+            Position = new Point((int) (Gorgon.CurrentRenderTarget.Width/2f) - (int) (ClientArea.Width/2f),
+                                 (int) (Gorgon.CurrentRenderTarget.Height/2f) - (int) (ClientArea.Height/2f));
             _placementManager.PlacementCanceled += PlacementManagerPlacementCanceled;
         }
 
-        void ClearLabelClicked(Label sender, MouseInputEventArgs e)
+        private void ClearLabelClicked(Label sender, MouseInputEventArgs e)
         {
             _clearLabel.BackgroundColor = Color.Gray;
             BuildTileList();
         }
 
-        void tileSearchTextbox_OnSubmit(string text, Textbox sender)
+        private void tileSearchTextbox_OnSubmit(string text, Textbox sender)
         {
             BuildTileList(text);
         }
 
-        void PlacementManagerPlacementCanceled(object sender, EventArgs e)
+        private void PlacementManagerPlacementCanceled(object sender, EventArgs e)
         {
-            foreach (var curr in _tileList.components.Where(curr => curr.GetType() == typeof(Label)))
-                ((Label)curr).BackgroundColor = Color.Gray;
+            foreach (GuiComponent curr in _tileList.components.Where(curr => curr.GetType() == typeof (Label)))
+                ((Label) curr).BackgroundColor = Color.Gray;
         }
 
         private void BuildTileList(string searchStr = null)
         {
-            var maxWidth = 0;
-            var yOffset = 5;
+            int maxWidth = 0;
+            int yOffset = 5;
 
             _tileList.components.Clear();
             _tileList.ResetScrollbars();
 
-            Type type = typeof(Tile);
+            Type type = typeof (Tile);
             List<Assembly> asses = AppDomain.CurrentDomain.GetAssemblies().ToList();
-            List<Type> types = asses.SelectMany(t => t.GetTypes()).Where(p => type.IsAssignableFrom(p) && !p.IsAbstract).ToList();
+            List<Type> types =
+                asses.SelectMany(t => t.GetTypes()).Where(p => type.IsAssignableFrom(p) && !p.IsAbstract).ToList();
 
-            var rawNames = from a in types
-                           select a.Name;
+            IEnumerable<string> rawNames = from a in types
+                                           select a.Name;
 
             if (types.Count > 255)
             {
@@ -94,10 +94,10 @@ namespace ClientServices.UserInterface.Components
             }
 
 
-            var typeNames = (searchStr == null) ?
-                rawNames.ToList() :
-                rawNames.Where(x => x.ToLower().Contains(searchStr.ToLower())).ToList();
-        
+            List<string> typeNames = (searchStr == null)
+                                         ? rawNames.ToList()
+                                         : rawNames.Where(x => x.ToLower().Contains(searchStr.ToLower())).ToList();
+
             if (searchStr != null) _clearLabel.BackgroundColor = Color.LightGray;
 
             foreach (string entry in typeNames)
@@ -113,14 +113,14 @@ namespace ClientServices.UserInterface.Components
                 if (tileLabel.ClientArea.Width > maxWidth) maxWidth = tileLabel.ClientArea.Width;
             }
 
-            foreach (var curr in _tileList.components.Where(curr => curr.GetType() == typeof(Label)))
-                ((Label)curr).FixedWidth = maxWidth;
+            foreach (GuiComponent curr in _tileList.components.Where(curr => curr.GetType() == typeof (Label)))
+                ((Label) curr).FixedWidth = maxWidth;
         }
 
-        void TileLabelClicked(Label sender, MouseInputEventArgs e)
+        private void TileLabelClicked(Label sender, MouseInputEventArgs e)
         {
-            foreach (var curr in _tileList.components.Where(curr => curr.GetType() == typeof(Label)))
-                ((Label)curr).BackgroundColor = Color.Gray;
+            foreach (GuiComponent curr in _tileList.components.Where(curr => curr.GetType() == typeof (Label)))
+                ((Label) curr).BackgroundColor = Color.Gray;
 
             var newObjInfo = new PlacementInformation
                                  {

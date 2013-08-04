@@ -1,30 +1,34 @@
 ﻿using System;
 using System.Drawing;
-using ClientInterfaces;
-using ClientInterfaces.Player;
 using ClientInterfaces.UserInterface;
-using ClientServices.Player;
-using SS13_Shared;
 using GorgonLibrary.InputDevices;
+using Lidgren.Network;
 using SS13.IoC;
-using ClientInterfaces.UserInterface;
-using GorgonLibrary.Graphics;
+using SS13_Shared;
 
 namespace ClientServices.UserInterface.Components
 {
     public class GuiComponent : IGuiComponent
     {
+        public object UserData;
+        private bool _recieveInput = true;
+        private bool _visible = true;
+
+        #region IGuiComponent Members
+
         public GuiComponentType ComponentClass { get; protected set; }
         public Point Position { get; set; }
         public Rectangle ClientArea { get; set; }
-        private bool _visible = true;
-        private bool _recieveInput = true;
 
         public int ZDepth { get; set; }
-        public bool RecieveInput { get { return _recieveInput; } set { _recieveInput = value; } }
-        public bool Focus { get; set; }
 
-        public object UserData;
+        public bool RecieveInput
+        {
+            get { return _recieveInput; }
+            set { _recieveInput = value; }
+        }
+
+        public bool Focus { get; set; }
 
         public virtual void ComponentUpdate(params object[] args)
         {
@@ -40,7 +44,6 @@ namespace ClientServices.UserInterface.Components
 
         public virtual void Resize()
         {
-            
         }
 
         public virtual void ToggleVisible()
@@ -60,12 +63,12 @@ namespace ClientServices.UserInterface.Components
 
         public virtual void Dispose()
         {
-            IUserInterfaceManager _userInterfaceManager = IoCManager.Resolve<IUserInterfaceManager>();
+            var _userInterfaceManager = IoCManager.Resolve<IUserInterfaceManager>();
             _userInterfaceManager.RemoveComponent(this);
             GC.SuppressFinalize(this);
         }
 
-        public virtual void HandleNetworkMessage(Lidgren.Network.NetIncomingMessage message)
+        public virtual void HandleNetworkMessage(NetIncomingMessage message)
         {
         }
 
@@ -92,5 +95,7 @@ namespace ClientServices.UserInterface.Components
         {
             return false;
         }
+
+        #endregion
     }
 }

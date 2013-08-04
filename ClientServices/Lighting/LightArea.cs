@@ -1,7 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
+﻿using System.Drawing;
 using ClientInterfaces.Lighting;
 using ClientInterfaces.Resource;
 using ClientInterfaces.Utility;
@@ -13,17 +10,31 @@ namespace SS3D.LightTest
 {
     public class LightArea : ILightArea
     {
+        public LightArea(ShadowmapSize size)
+        {
+            int baseSize = 2 << (int) size;
+            LightAreaSize = new Vector2D(baseSize, baseSize);
+            renderTarget = new RenderImage("lightTest" + baseSize + IoCManager.Resolve<IRand>().Next(100000, 999999),
+                                           baseSize, baseSize, ImageBufferFormats.BufferRGB888A8);
+            Mask = IoCManager.Resolve<IResourceManager>().GetSprite("whitemask");
+        }
+
+        #region ILightArea Members
+
         public RenderImage renderTarget { get; private set; }
+
         /// <summary>
         /// World position coordinates of the light's center
         /// </summary>
         public Vector2D LightPosition { get; set; }
+
         public Vector2D LightAreaSize { get; set; }
         public bool Calculated { get; set; }
         public Sprite Mask { get; set; }
         public bool MaskFlipX { get; set; }
         public bool MaskFlipY { get; set; }
         public bool Rot90 { get; set; }
+
         public Vector4D MaskProps
         {
             get
@@ -47,23 +58,15 @@ namespace SS3D.LightTest
             }
         }
 
-        public LightArea(ShadowmapSize size)
-        {
-            int baseSize = 2 << (int)size;
-            LightAreaSize = new Vector2D(baseSize, baseSize);
-            renderTarget = new RenderImage("lightTest" + baseSize + IoCManager.Resolve<IRand>().Next(100000,999999), baseSize, baseSize, ImageBufferFormats.BufferRGB888A8);
-            Mask = IoCManager.Resolve<IResourceManager>().GetSprite("whitemask");
-        }
-
         public Vector2D ToRelativePosition(Vector2D worldPosition)
         {
-            return worldPosition - (LightPosition - LightAreaSize * 0.5f);
+            return worldPosition - (LightPosition - LightAreaSize*0.5f);
         }
 
         public void BeginDrawingShadowCasters()
         {
             Gorgon.CurrentRenderTarget = renderTarget;
-            Gorgon.CurrentRenderTarget.Clear(System.Drawing.Color.FromArgb(0, 0, 0, 0));
+            Gorgon.CurrentRenderTarget.Clear(Color.FromArgb(0, 0, 0, 0));
         }
 
         public void EndDrawingShadowCasters()
@@ -76,11 +79,11 @@ namespace SS3D.LightTest
             Mask = IoCManager.Resolve<IResourceManager>().GetSprite(mask);
         }
 
+        #endregion
+
         private Vector4D maskPropsVec(bool rot, bool flipx, bool flipy)
         {
-            return new Vector4D(rot?1:0, flipx?1:0, flipy?1:0, 0);
+            return new Vector4D(rot ? 1 : 0, flipx ? 1 : 0, flipy ? 1 : 0, 0);
         }
-
-
     }
 }

@@ -1,20 +1,19 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Drawing;
 using System.Linq;
-using ClientInterfaces.Resource;
-using ClientInterfaces.UserInterface;
-using GameObject;
-using SS13_Shared;
-using Lidgren.Network;
-using GorgonLibrary.InputDevices;
-using GorgonLibrary;
-using GorgonLibrary.Graphics;
-using ClientInterfaces;
 using ClientInterfaces.GOC;
 using ClientInterfaces.Placement;
-using SS13.IoC;
+using ClientInterfaces.Resource;
+using ClientInterfaces.UserInterface;
 using ClientServices.UserInterface.Components;
-using EntityManager = CGO.EntityManager;
+using GameObject;
+using GorgonLibrary;
+using GorgonLibrary.Graphics;
+using GorgonLibrary.InputDevices;
+using Lidgren.Network;
+using SS13.IoC;
+using SS13_Shared;
 
 namespace ClientServices.UserInterface
 {
@@ -24,35 +23,40 @@ namespace ClientServices.UserInterface
     /// </summary>
     public class UserInterfaceManager : IUserInterfaceManager
     {
-        private IGuiComponent _currentFocus;
-
-        public Vector2D MousePos { get; private set; }
-        private Sprite _cursorSprite;
-
-        public IDragDropInfo DragInfo { get; private set; }
-
-        /// <summary>
-        ///  Currently targeting action.
-        /// </summary>
-        private IPlayerAction targetingAction = null;
-        public IPlayerAction currentTargetingAction { get { return targetingAction; } }
-
         /// <summary>
         ///  List of iGuiComponents. Components in this list will recieve input, updates and net messages.
         /// </summary>
         private readonly List<IGuiComponent> _components;
 
         private readonly IResourceManager _resourceManager;
+        private IGuiComponent _currentFocus;
+        private Sprite _cursorSprite;
 
         private Vector2D dragOffset = Vector2D.Zero;
-        private bool moveMode = false;
+        private bool moveMode;
         private IGuiComponent movingComp;
+
+        /// <summary>
+        ///  Currently targeting action.
+        /// </summary>
+        private IPlayerAction targetingAction;
 
         public UserInterfaceManager(IResourceManager resourceManager)
         {
             _resourceManager = resourceManager;
             DragInfo = new DragDropInfo();
             _components = new List<IGuiComponent>();
+        }
+
+        public Vector2D MousePos { get; private set; }
+
+        #region IUserInterfaceManager Members
+
+        public IDragDropInfo DragInfo { get; private set; }
+
+        public IPlayerAction currentTargetingAction
+        {
+            get { return targetingAction; }
         }
 
         /// <summary>
@@ -108,11 +112,11 @@ namespace ClientServices.UserInterface
         /// </summary>
         public void DisposeAllComponents<T>()
         {
-            var componentsOfType = (from IGuiComponent component in _components
-                                    where component.GetType() == typeof (T)
-                                    select component).ToList();
+            List<IGuiComponent> componentsOfType = (from IGuiComponent component in _components
+                                                    where component.GetType() == typeof (T)
+                                                    select component).ToList();
 
-            foreach (var current in componentsOfType)
+            foreach (IGuiComponent current in componentsOfType)
             {
                 current.Dispose();
                 _components.Remove(current);
@@ -126,7 +130,7 @@ namespace ClientServices.UserInterface
 
         public void RemoveComponent(IGuiComponent component)
         {
-            if(_components.Contains(component))
+            if (_components.Contains(component))
                 _components.Remove(component);
         }
 
@@ -135,14 +139,197 @@ namespace ClientServices.UserInterface
         /// </summary>
         public void ComponentUpdate(GuiComponentType componentType, params object[] args)
         {
-            var firstOrDefault = (from IGuiComponent comp in _components
-                                  where comp.ComponentClass == componentType
-                                  select comp).FirstOrDefault();
+            IGuiComponent firstOrDefault = (from IGuiComponent comp in _components
+                                            where comp.ComponentClass == componentType
+                                            select comp).FirstOrDefault();
             if (firstOrDefault != null)
                 firstOrDefault.ComponentUpdate(args);
         }
 
+        /// <summary>
+        ///  Handles Net messages directed at the UI manager or components thereof. This must be called by the currently active state. See GameScreen.
+        /// </summary>
+        public void HandleNetMessage(NetIncomingMessage msg)
+        {
+            var uiMsg = (UiManagerMessage) msg.ReadByte();
+            switch (uiMsg)
+            {
+                case UiManagerMessage.ComponentMessage:
+                    HandleComponentMessage(msg);
+                    break;
+                case UiManagerMessage.CreateUiElement:
+                    HandleElementCreation(msg);
+                    break;
+            }
+        }
+
+        //TODO Holy shit make this not complete crap. Oh man.
+
+        /// <summary>
+        ///  Sets focus for a component.
+        /// </summary>
+        public void SetFocus(IGuiComponent newFocus)
+        {
+            if (_currentFocus != null)
+            {
+                _currentFocus.Focus = false;
+                _currentFocus = newFocus;
+                newFocus.Focus = true;
+            }
+            else
+            {
+                _currentFocus = newFocus;
+                newFocus.Focus = true;
+            }
+        }
+
+        /// <summary>
+        ///  Removes focus for currently focused control.
+        /// </summary>
+        public void RemoveFocus()
+        {
+            if (_currentFocus == null) return;
+            _currentFocus = null;
+        }
+
+        public void ResizeComponents()
+        {
+            foreach (IGuiComponent guiComponent in _components)
+            {
+                guiComponent.Resize();
+            }
+        }
+
+        #endregion
+
+        #region Input
+
+        //The game states have to feed the UI Input!!! This is to allow more flexibility.
+        //Maybe this should be handled in the main methods for input. But then the state wouldnt have power over
+        //this and things like the chat might get difficult.
+        //Other Notes: When a component returns true to an input event the loop stops and so only that control recieves the input.
+        //             That way we don't have all components reacting to one event.
+
+        /// <summary>
+        ///  Handles MouseDown event. Returns true if a component accepted and handled the event.
+        /// </summary>
+        public virtual bool MouseDown(MouseInputEventArgs e)
+        {
+            if (moveMode)
+            {
+                foreach (IGuiComponent comp in _components)
+                {
+                    if (comp.ClientArea.Contains(new Point((int) e.Position.X, (int) e.Position.Y)))
+                    {
+                        movingComp = comp;
+                        dragOffset = (new Vector2D(e.Position.X, e.Position.Y)) -
+                                     new Vector2D(comp.ClientArea.X, comp.ClientArea.Y);
+                        break;
+                    }
+                }
+                return true;
+            }
+            else
+            {
+                IOrderedEnumerable<IGuiComponent> inputList = from IGuiComponent comp in _components
+                                                              where comp.RecieveInput
+                                                              orderby comp.ZDepth ascending
+                                                              orderby comp.IsVisible() descending
+                                                              //Invisible controls still recieve input but after everyone else. This is mostly for the inventory and other toggleable components.
+                                                              orderby comp.Focus descending
+                                                              select comp;
+
+                foreach (IGuiComponent current in inputList)
+                    if (current.MouseDown(e))
+                    {
+                        SetFocus(current);
+                        return true;
+                    }
+                return false;
+            }
+        }
+
+        /// <summary>
+        ///  Handles MouseUp event. Returns true if a component accepted and handled the event.
+        /// </summary>
+        public virtual bool MouseUp(MouseInputEventArgs e)
+        {
+            if (moveMode)
+            {
+                if (movingComp != null) movingComp = null;
+                return true;
+            }
+            else
+            {
+                IOrderedEnumerable<IGuiComponent> inputList = from IGuiComponent comp in _components
+                                                              where comp.RecieveInput
+                                                              orderby comp.ZDepth ascending
+                                                              orderby comp.IsVisible() descending
+                                                              //Invisible controls still recieve input but after everyone else. This is mostly for the inventory and other toggleable components.
+                                                              orderby comp.Focus descending
+                                                              select comp;
+
+                if (inputList.Any(current => current.MouseUp(e)))
+                {
+                    return true;
+                }
+
+                if (DragInfo.IsActive) //Drag & dropped into nothing or invalid. Remove dragged obj.
+                    DragInfo.Reset();
+
+                return false;
+            }
+        }
+
+        /// <summary>
+        ///  Handles MouseMove event. Sent to all visible components.
+        /// </summary>
+        public virtual void MouseMove(MouseInputEventArgs e)
+        {
+            MousePos = e.Position;
+
+            IOrderedEnumerable<IGuiComponent> inputList = from IGuiComponent comp in _components
+                                                          where comp.RecieveInput
+                                                          orderby comp.ZDepth ascending
+                                                          select comp;
+
+            foreach (IGuiComponent current in inputList)
+                current.MouseMove(e);
+        }
+
+        /// <summary>
+        ///  Handles MouseWheelMove event. Sent to Focused component.  Returns true if component accepted and handled the event.
+        /// </summary>
+        public virtual void MouseWheelMove(MouseInputEventArgs e)
+        {
+            IGuiComponent inputTo = (from IGuiComponent comp in _components
+                                     where comp.RecieveInput
+                                     where comp.Focus
+                                     select comp).FirstOrDefault();
+
+            if (inputTo != null) inputTo.MouseWheelMove(e);
+        }
+
+        /// <summary>
+        ///  Handles KeyDown event. Returns true if a component accepted and handled the event.
+        /// </summary>
+        public virtual bool KeyDown(KeyboardInputEventArgs e)
+        {
+            IOrderedEnumerable<IGuiComponent> inputList = from IGuiComponent comp in _components
+                                                          where comp.RecieveInput
+                                                          orderby comp.ZDepth ascending
+                                                          orderby comp.IsVisible() descending
+                                                          //Invisible controls still recieve input but after everyone else. This is mostly for the inventory and other toggleable components.
+                                                          orderby comp.Focus descending
+                                                          select comp;
+
+            return inputList.Any(current => current.KeyDown(e));
+        }
+
+        #endregion
+
         #region Component retrieval
+
         /// <summary>
         ///  Returns all components of given type.
         /// </summary>
@@ -181,41 +368,24 @@ namespace ClientServices.UserInterface
             return from IGuiComponent comp in _components
                    where comp.ComponentClass == componentType
                    select comp;
-        } 
-        #endregion
-
-        /// <summary>
-        ///  Handles Net messages directed at the UI manager or components thereof. This must be called by the currently active state. See GameScreen.
-        /// </summary>
-        public void HandleNetMessage(NetIncomingMessage msg)
-        {
-            var uiMsg = (UiManagerMessage)msg.ReadByte();
-            switch (uiMsg)
-            {
-                case UiManagerMessage.ComponentMessage:
-                    HandleComponentMessage(msg);
-                    break;
-                case UiManagerMessage.CreateUiElement:
-                    HandleElementCreation(msg);
-                    break;
-            }
         }
 
-        //TODO Holy shit make this not complete crap. Oh man.
+        #endregion
+
         /// <summary>
         ///  Handles creation of ui elements over network.
         /// </summary>
         public void HandleElementCreation(NetIncomingMessage msg) //I've opted for hardcoding these in for the moment.
         {
-            var uiType = (CreateUiType)msg.ReadByte();
+            var uiType = (CreateUiType) msg.ReadByte();
             switch (uiType)
             {
                 case CreateUiType.HealthScannerWindow:
-                    var ent = IoCManager.Resolve<IEntityManagerContainer>().EntityManager.GetEntity((int)msg.ReadInt32());
+                    Entity ent = IoCManager.Resolve<IEntityManagerContainer>().EntityManager.GetEntity(msg.ReadInt32());
                     if (ent != null)
                     {
                         DisposeAllComponents<HealthScannerWindow>();
-                        var scannerWindow = new HealthScannerWindow(ent, MousePos , this, _resourceManager);
+                        var scannerWindow = new HealthScannerWindow(ent, MousePos, this, _resourceManager);
                         AddComponent(scannerWindow);
                     }
                     break;
@@ -227,90 +397,10 @@ namespace ClientServices.UserInterface
         /// </summary>
         public void HandleComponentMessage(NetIncomingMessage msg)
         {
-            var component = (GuiComponentType)msg.ReadByte();
-            var targetComponents = GetComponentsByGuiComponentType(component);
-            foreach(IGuiComponent current in targetComponents)
+            var component = (GuiComponentType) msg.ReadByte();
+            IEnumerable<IGuiComponent> targetComponents = GetComponentsByGuiComponentType(component);
+            foreach (IGuiComponent current in targetComponents)
                 current.HandleNetworkMessage(msg);
-        }
-
-        #region Update & Render
-        //These methods are called directly from the main loop to allow for cross-state ui elements. (Console maybe)
-
-        /// <summary>
-        ///  Updates the logic of UI components.
-        /// </summary>
-        public void Update(float frameTime)
-        {
-            if (moveMode && movingComp != null)
-                movingComp.Position = (System.Drawing.Point)(MousePos - dragOffset);
-
-            foreach (var component in _components)
-                component.Update(frameTime);
-        }
-
-        /// <summary>
-        ///  Renders UI components to screen.
-        /// </summary>
-        public void Render()
-        {
-            var renderList = from IGuiComponent comp in _components
-                             where comp.IsVisible()
-                             orderby comp.Focus ascending
-                             orderby comp.ZDepth ascending
-                             select comp;
-
-            foreach (var component in renderList)
-            {
-                component.Render();
-
-                if (moveMode)
-                {
-                    Gorgon.Screen.BlendingMode = BlendingModes.Modulated;
-                    Gorgon.Screen.FilledRectangle(component.ClientArea.X, component.ClientArea.Y, component.ClientArea.Width, component.ClientArea.Height, System.Drawing.Color.FromArgb(100, System.Drawing.Color.Green));
-                    Gorgon.Screen.Rectangle(component.ClientArea.X, component.ClientArea.Y, component.ClientArea.Width, component.ClientArea.Height, System.Drawing.Color.LightGreen);
-                    Gorgon.Screen.BlendingMode = BlendingModes.None;
-                }
-            }
-
-            if (targetingAction != null)
-            {
-                _cursorSprite = _resourceManager.GetSprite("cursor_target");
-            }
-            else
-            {
-                _cursorSprite = DragInfo.DragSprite != null && DragInfo.IsActive ? DragInfo.DragSprite :  _resourceManager.GetSprite("cursor");
-            }
-
-            _cursorSprite.Position = MousePos;
-            _cursorSprite.Draw();
-        } 
-        #endregion
-
-        /// <summary>
-        ///  Sets focus for a component.
-        /// </summary>
-        public void SetFocus(IGuiComponent newFocus)
-        {
-            if (_currentFocus != null)
-            {
-                _currentFocus.Focus = false;
-                _currentFocus = newFocus;
-                newFocus.Focus = true;
-            }
-            else
-            {
-                _currentFocus = newFocus;
-                newFocus.Focus = true;
-            }
-        }
-
-        /// <summary>
-        ///  Removes focus for currently focused control.
-        /// </summary>
-        public void RemoveFocus()
-        {
-            if (_currentFocus == null) return;
-            _currentFocus = null;
         }
 
         /// <summary>
@@ -322,129 +412,64 @@ namespace ClientServices.UserInterface
             _currentFocus = null;
         }
 
-        public void ResizeComponents()
-        {
-            foreach (var guiComponent in _components)
-            {
-                guiComponent.Resize();
-            }
-        }
+        #region Update & Render
 
-        #region Input
-        //The game states have to feed the UI Input!!! This is to allow more flexibility.
-        //Maybe this should be handled in the main methods for input. But then the state wouldnt have power over
-        //this and things like the chat might get difficult.
-        //Other Notes: When a component returns true to an input event the loop stops and so only that control recieves the input.
-        //             That way we don't have all components reacting to one event.
+        //These methods are called directly from the main loop to allow for cross-state ui elements. (Console maybe)
 
         /// <summary>
-        ///  Handles MouseDown event. Returns true if a component accepted and handled the event.
+        ///  Updates the logic of UI components.
         /// </summary>
-        public virtual bool MouseDown(MouseInputEventArgs e)
+        public void Update(float frameTime)
         {
-            if (moveMode)
+            if (moveMode && movingComp != null)
+                movingComp.Position = (Point) (MousePos - dragOffset);
+
+            foreach (IGuiComponent component in _components)
+                component.Update(frameTime);
+        }
+
+        /// <summary>
+        ///  Renders UI components to screen.
+        /// </summary>
+        public void Render()
+        {
+            IOrderedEnumerable<IGuiComponent> renderList = from IGuiComponent comp in _components
+                                                           where comp.IsVisible()
+                                                           orderby comp.Focus ascending
+                                                           orderby comp.ZDepth ascending
+                                                           select comp;
+
+            foreach (IGuiComponent component in renderList)
             {
-                foreach (IGuiComponent comp in _components)
+                component.Render();
+
+                if (moveMode)
                 {
-                    if (comp.ClientArea.Contains(new System.Drawing.Point((int)e.Position.X, (int)e.Position.Y)))
-                    {
-                        movingComp = comp;
-                        dragOffset = (new Vector2D(e.Position.X, e.Position.Y)) - new Vector2D(comp.ClientArea.X, comp.ClientArea.Y);
-                        break;
-                    }
+                    Gorgon.Screen.BlendingMode = BlendingModes.Modulated;
+                    Gorgon.Screen.FilledRectangle(component.ClientArea.X, component.ClientArea.Y,
+                                                  component.ClientArea.Width, component.ClientArea.Height,
+                                                  Color.FromArgb(100, Color.Green));
+                    Gorgon.Screen.Rectangle(component.ClientArea.X, component.ClientArea.Y, component.ClientArea.Width,
+                                            component.ClientArea.Height, Color.LightGreen);
+                    Gorgon.Screen.BlendingMode = BlendingModes.None;
                 }
-                return true;
+            }
+
+            if (targetingAction != null)
+            {
+                _cursorSprite = _resourceManager.GetSprite("cursor_target");
             }
             else
             {
-                var inputList = from IGuiComponent comp in _components
-                                where comp.RecieveInput
-                                orderby comp.ZDepth ascending
-                                orderby comp.IsVisible() descending //Invisible controls still recieve input but after everyone else. This is mostly for the inventory and other toggleable components.
-                                orderby comp.Focus descending
-                                select comp;
-
-                foreach (IGuiComponent current in inputList)
-                    if (current.MouseDown(e))
-                    {
-                        SetFocus(current);
-                        return true;
-                    }
-                return false;
+                _cursorSprite = DragInfo.DragSprite != null && DragInfo.IsActive
+                                    ? DragInfo.DragSprite
+                                    : _resourceManager.GetSprite("cursor");
             }
+
+            _cursorSprite.Position = MousePos;
+            _cursorSprite.Draw();
         }
 
-        /// <summary>
-        ///  Handles MouseUp event. Returns true if a component accepted and handled the event.
-        /// </summary>
-        public virtual bool MouseUp(MouseInputEventArgs e)
-        {
-            if (moveMode)
-            {
-                if (movingComp != null) movingComp = null;
-                return true;
-            }
-            else
-            {
-                var inputList = from IGuiComponent comp in _components
-                                where comp.RecieveInput
-                                orderby comp.ZDepth ascending
-                                orderby comp.IsVisible() descending //Invisible controls still recieve input but after everyone else. This is mostly for the inventory and other toggleable components.
-                                orderby comp.Focus descending
-                                select comp;
-
-                if (inputList.Any(current => current.MouseUp(e))) { return true; }
-
-                if (DragInfo.IsActive) //Drag & dropped into nothing or invalid. Remove dragged obj.
-                    DragInfo.Reset();
-
-                return false;
-            }
-        }
-
-        /// <summary>
-        ///  Handles MouseMove event. Sent to all visible components.
-        /// </summary>
-        public virtual void MouseMove(MouseInputEventArgs e)
-        {
-            MousePos = e.Position;
-
-            var inputList = from IGuiComponent comp in _components
-                            where comp.RecieveInput
-                            orderby comp.ZDepth ascending
-                            select comp;
-
-            foreach (var current in inputList)
-                current.MouseMove(e);
-        }
-
-        /// <summary>
-        ///  Handles MouseWheelMove event. Sent to Focused component.  Returns true if component accepted and handled the event.
-        /// </summary>
-        public virtual void MouseWheelMove(MouseInputEventArgs e)
-        {
-            var inputTo = (from IGuiComponent comp in _components
-                            where comp.RecieveInput
-                            where comp.Focus == true
-                            select comp).FirstOrDefault();
-
-            if(inputTo != null) inputTo.MouseWheelMove(e);
-        }
-
-        /// <summary>
-        ///  Handles KeyDown event. Returns true if a component accepted and handled the event.
-        /// </summary>
-        public virtual bool KeyDown(KeyboardInputEventArgs e)
-        {
-            var inputList = from IGuiComponent comp in _components
-                            where comp.RecieveInput
-                            orderby comp.ZDepth ascending
-                            orderby comp.IsVisible() descending //Invisible controls still recieve input but after everyone else. This is mostly for the inventory and other toggleable components.
-                            orderby comp.Focus descending
-                            select comp;
-
-            return inputList.Any(current => current.KeyDown(e));
-        } 
         #endregion
     }
 }

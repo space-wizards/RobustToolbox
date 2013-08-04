@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Drawing;
-using ClientInterfaces;
 using ClientInterfaces.Resource;
 using GorgonLibrary;
 using GorgonLibrary.Graphics;
@@ -8,33 +7,31 @@ using GorgonLibrary.InputDevices;
 
 namespace ClientServices.UserInterface.Components
 {
-    class Window : ScrollableContainer
+    internal class Window : ScrollableContainer
     {
-        protected readonly IResourceManager _resourceManager;
-        protected Label title;
-        protected Rectangle titleArea;
-        protected GradientBox gradient;
-
-        protected bool dragging = false;
-        protected Vector2D draggingOffset = new Vector2D();
-
         protected const int titleBuffer = 1;
+        protected readonly IResourceManager _resourceManager;
 
         public Color TitleColor1 = Color.SlateGray;
         public Color TitleColor2 = Color.DarkSlateGray;
 
         protected ImageButton closeButton;
         public Boolean closeButtonVisible = true;
+        protected bool dragging = false;
+        protected Vector2D draggingOffset = new Vector2D();
+        protected GradientBox gradient;
+        protected Label title;
+        protected Rectangle titleArea;
 
         public Window(string windowTitle, Size size, IResourceManager resourceManager)
             : base(windowTitle, size, resourceManager)
         {
             _resourceManager = resourceManager;
 
-            closeButton = new ImageButton()
-                {
-                    ImageNormal = "closewindow"
-                };
+            closeButton = new ImageButton
+                              {
+                                  ImageNormal = "closewindow"
+                              };
 
             closeButton.Clicked += CloseButtonClicked;
             title = new Label(windowTitle, "CALIBRI", _resourceManager);
@@ -43,7 +40,7 @@ namespace ClientServices.UserInterface.Components
             Update(0);
         }
 
-        void CloseButtonClicked(ImageButton sender)
+        private void CloseButtonClicked(ImageButton sender)
         {
             Dispose();
         }
@@ -53,12 +50,14 @@ namespace ClientServices.UserInterface.Components
             if (disposing || !IsVisible()) return;
             base.Update(frameTime);
             if (title == null || gradient == null) return;
-            var y_pos = ClientArea.Top - (2 * titleBuffer) - title.ClientArea.Height + 1;
+            int y_pos = ClientArea.Top - (2*titleBuffer) - title.ClientArea.Height + 1;
             title.Position = new Point(ClientArea.X + 3, y_pos + titleBuffer);
-            titleArea = new Rectangle(ClientArea.X, y_pos, ClientArea.Width, title.ClientArea.Height + (2 * titleBuffer));
+            titleArea = new Rectangle(ClientArea.X, y_pos, ClientArea.Width, title.ClientArea.Height + (2*titleBuffer));
             title.Update(frameTime);
-            closeButton.Position = new Point(titleArea.Right - 5 - closeButton.ClientArea.Width, titleArea.Y + (int)(titleArea.Height / 2f) - (int)(closeButton.ClientArea.Height / 2f));
-            var gradientArea = titleArea;
+            closeButton.Position = new Point(titleArea.Right - 5 - closeButton.ClientArea.Width,
+                                             titleArea.Y + (int) (titleArea.Height/2f) -
+                                             (int) (closeButton.ClientArea.Height/2f));
+            Rectangle gradientArea = titleArea;
             gradient.ClientArea = gradientArea;
             gradient.Color1 = TitleColor1;
             gradient.Color2 = TitleColor2;
@@ -70,10 +69,11 @@ namespace ClientServices.UserInterface.Components
         {
             if (disposing || !IsVisible()) return;
             gradient.Render();
-            Gorgon.CurrentRenderTarget.Rectangle(titleArea.X, titleArea.Y, titleArea.Width, titleArea.Height, Color.Black);
+            Gorgon.CurrentRenderTarget.Rectangle(titleArea.X, titleArea.Y, titleArea.Width, titleArea.Height,
+                                                 Color.Black);
             base.Render();
             title.Render();
-            if(closeButtonVisible) closeButton.Render();
+            if (closeButtonVisible) closeButton.Render();
         }
 
         public override void Dispose()
@@ -90,10 +90,10 @@ namespace ClientServices.UserInterface.Components
 
             if (base.MouseDown(e)) return true;
 
-            if (titleArea.Contains((int)e.Position.X, (int)e.Position.Y))
+            if (titleArea.Contains((int) e.Position.X, (int) e.Position.Y))
             {
-                draggingOffset.X = (int)e.Position.X - Position.X;
-                draggingOffset.Y = (int)e.Position.Y - Position.Y;
+                draggingOffset.X = (int) e.Position.X - Position.X;
+                draggingOffset.Y = (int) e.Position.Y - Position.Y;
                 dragging = true;
                 return true;
             }
@@ -115,7 +115,8 @@ namespace ClientServices.UserInterface.Components
             if (disposing || !IsVisible()) return;
             if (dragging)
             {
-                Position = new Point((int)e.Position.X - (int)draggingOffset.X, (int)e.Position.Y - (int)draggingOffset.Y);
+                Position = new Point((int) e.Position.X - (int) draggingOffset.X,
+                                     (int) e.Position.Y - (int) draggingOffset.Y);
             }
             base.MouseMove(e);
 
@@ -137,9 +138,12 @@ namespace ClientServices.UserInterface.Components
 
     public class GradientBox : GuiComponent
     {
+        private readonly VertexTypeList.PositionDiffuse2DTexture1[] box =
+            new VertexTypeList.PositionDiffuse2DTexture1[4];
+
         public Color Color1 = Color.SlateGray;
         public Color Color2 = Color.DarkSlateGray;
-        VertexTypeList.PositionDiffuse2DTexture1[] box = new VertexTypeList.PositionDiffuse2DTexture1[4];
+
         public bool Vertical = true;
 
         public override void Update(float frameTime)
@@ -173,7 +177,8 @@ namespace ClientServices.UserInterface.Components
 
         public override void Render()
         {
-            Gorgon.CurrentRenderTarget.FilledRectangle(ClientArea.X, ClientArea.Y, ClientArea.Width, ClientArea.Height, Color.White); //Not sure why this is needed.
+            Gorgon.CurrentRenderTarget.FilledRectangle(ClientArea.X, ClientArea.Y, ClientArea.Width, ClientArea.Height,
+                                                       Color.White); //Not sure why this is needed.
             Gorgon.CurrentRenderTarget.Draw(box);
         }
     }

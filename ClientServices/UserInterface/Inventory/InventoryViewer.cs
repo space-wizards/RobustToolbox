@@ -1,50 +1,50 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Drawing;
-using ClientInterfaces;
-using ClientInterfaces.GOC;
+using CGO;
 using ClientInterfaces.Resource;
 using ClientInterfaces.UserInterface;
 using ClientServices.UserInterface.Components;
 using GameObject;
 using GorgonLibrary.InputDevices;
-using CGO;
 
 namespace ClientServices.UserInterface.Inventory
 {
-    class InventoryViewer : GuiComponent
+    internal class InventoryViewer : GuiComponent
     {
-        private readonly IUserInterfaceManager _userInterfaceManager;
-        private readonly IResourceManager _resourceManager;
         private readonly InventoryComponent _inventoryComponent;
         private readonly ScrollableContainer _inventoryContainer;
+        private readonly IResourceManager _resourceManager;
+        private readonly IUserInterfaceManager _userInterfaceManager;
 
-        public InventoryViewer(InventoryComponent assignedCompo, IUserInterfaceManager userInterfaceManager, IResourceManager resourceManager)
+        public InventoryViewer(InventoryComponent assignedCompo, IUserInterfaceManager userInterfaceManager,
+                               IResourceManager resourceManager)
         {
             _userInterfaceManager = userInterfaceManager;
             _resourceManager = resourceManager;
 
-            _inventoryContainer = new ScrollableContainer(assignedCompo.Owner.Uid + "InvViewer", new Size(270, 125), _resourceManager);
+            _inventoryContainer = new ScrollableContainer(assignedCompo.Owner.Uid + "InvViewer", new Size(270, 125),
+                                                          _resourceManager);
             _inventoryComponent = assignedCompo;
             _inventoryComponent.Changed += ComponentChanged;
             _inventoryComponent.UpdateRequired += ComponentUpdateRequired;
             _inventoryComponent.SendRequestListing();
         }
 
-        void ComponentUpdateRequired(InventoryComponent sender)
+        private void ComponentUpdateRequired(InventoryComponent sender)
         {
             _inventoryComponent.SendRequestListing();
         }
 
-        void ComponentChanged(InventoryComponent sender, int maxSlots, List<Entity> entities)
+        private void ComponentChanged(InventoryComponent sender, int maxSlots, List<Entity> entities)
         {
             RebuildInventoryView(maxSlots, entities);
         }
 
         public void RebuildInventoryView(int maxSlots, List<Entity> entities)
         {
-            var currX = 0;
-            var currY = 0;
+            int currX = 0;
+            int currY = 0;
 
             const int spacing = 50;
             const int xOffset = 12;
@@ -52,7 +52,7 @@ namespace ClientServices.UserInterface.Inventory
 
             _inventoryContainer.components.Clear();
 
-            foreach (var entity in entities)
+            foreach (Entity entity in entities)
             {
                 var slot = new InventorySlotUi(entity, _resourceManager)
                                {
@@ -71,7 +71,7 @@ namespace ClientServices.UserInterface.Inventory
                 currY++;
             }
 
-            for (var i = 0; i < (maxSlots - entities.Count); i++)
+            for (int i = 0; i < (maxSlots - entities.Count); i++)
             {
                 var slot = new InventorySlotUi(null, _resourceManager)
                                {
@@ -93,7 +93,7 @@ namespace ClientServices.UserInterface.Inventory
             _inventoryContainer.ResetScrollbars();
         }
 
-        void SlotClicked(InventorySlotUi sender)
+        private void SlotClicked(InventorySlotUi sender)
         {
             if (sender.ContainingEntity != null)
                 _userInterfaceManager.DragInfo.StartDrag(sender.ContainingEntity);
@@ -121,7 +121,7 @@ namespace ClientServices.UserInterface.Inventory
 
         public override bool MouseDown(MouseInputEventArgs e)
         {
-            if (_inventoryContainer.MouseDown(e)) 
+            if (_inventoryContainer.MouseDown(e))
                 return true;
             return false;
         }
@@ -130,7 +130,8 @@ namespace ClientServices.UserInterface.Inventory
         {
             //If dropped on container add to inventory.
             if (_inventoryContainer.MouseUp(e)) return true;
-            if (_inventoryContainer.ClientArea.Contains(new Point((int)e.Position.X, (int)e.Position.Y)) && _userInterfaceManager.DragInfo.IsEntity && _userInterfaceManager.DragInfo.IsActive)
+            if (_inventoryContainer.ClientArea.Contains(new Point((int) e.Position.X, (int) e.Position.Y)) &&
+                _userInterfaceManager.DragInfo.IsEntity && _userInterfaceManager.DragInfo.IsActive)
             {
                 if (!_inventoryComponent.ContainsEntity(_userInterfaceManager.DragInfo.DragEntity))
                 {

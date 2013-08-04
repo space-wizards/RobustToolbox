@@ -5,13 +5,15 @@ namespace ClientServices.Utility
 {
     public class Rand : IRand
     {
-        private Random rand;
+        private readonly Random rand;
 
         public Rand()
         {
             rand = new Random(DateTime.Now.Millisecond);
         }
-        
+
+        #region IRand Members
+
         public int Next()
         {
             return rand.Next();
@@ -36,5 +38,7 @@ namespace ClientServices.Utility
         {
             return rand.NextDouble();
         }
+
+        #endregion
     }
 }

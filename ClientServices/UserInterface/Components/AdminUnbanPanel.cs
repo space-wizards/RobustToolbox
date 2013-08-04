@@ -1,5 +1,4 @@
 ﻿using System.Drawing;
-using ClientInterfaces;
 using ClientInterfaces.Network;
 using ClientInterfaces.Resource;
 using GorgonLibrary;
@@ -9,12 +8,13 @@ using SS13_Shared;
 
 namespace ClientServices.UserInterface.Components
 {
-    class AdminUnbanPanel : Window
+    internal class AdminUnbanPanel : Window
     {
         private readonly INetworkManager _networkManager;
         private readonly IResourceManager _resourceManager;
 
-        public AdminUnbanPanel(Size size, Banlist banlist, INetworkManager networkManager, IResourceManager resourceManager)
+        public AdminUnbanPanel(Size size, Banlist banlist, INetworkManager networkManager,
+                               IResourceManager resourceManager)
             : base("Admin UnBan Panel", size, resourceManager)
         {
             _networkManager = networkManager;
@@ -22,22 +22,23 @@ namespace ClientServices.UserInterface.Components
 
             BuildList(banlist);
 
-            var closeButton = new Button("Close", _resourceManager) { Position = new Point(5, 5) };
+            var closeButton = new Button("Close", _resourceManager) {Position = new Point(5, 5)};
             closeButton.Clicked += CloseButtonClicked;
             components.Add(closeButton);
 
-            Position = new Point((int)(Gorgon.CurrentRenderTarget.Width / 2f) - (int)(ClientArea.Width / 2f), (int)(Gorgon.CurrentRenderTarget.Height / 2f) - (int)(ClientArea.Height / 2f));
+            Position = new Point((int) (Gorgon.CurrentRenderTarget.Width/2f) - (int) (ClientArea.Width/2f),
+                                 (int) (Gorgon.CurrentRenderTarget.Height/2f) - (int) (ClientArea.Height/2f));
         }
 
-        void CloseButtonClicked(Button sender)
+        private void CloseButtonClicked(Button sender)
         {
             Dispose();
         }
 
         private void BuildList(Banlist banList)
         {
-            var yOffset = 40;
-            foreach (var entry in banList.List)
+            int yOffset = 40;
+            foreach (BanEntry entry in banList.List)
             {
                 var line = new Label("IP: " + entry.ip + "\tReason: " + entry.reason +
                                      "\tTemporary: " + entry.tempBan + "\tExpires: " +
@@ -45,7 +46,12 @@ namespace ClientServices.UserInterface.Components
                                {Position = new Point(5, yOffset + 5)};
 
                 components.Add(line);
-                var unbanButton = new Button("Unban", _resourceManager) { Position = new Point(line.ClientArea.Right + 10, yOffset + (int)(line.ClientArea.Height / 3f)) };
+                var unbanButton = new Button("Unban", _resourceManager)
+                                      {
+                                          Position =
+                                              new Point(line.ClientArea.Right + 10,
+                                                        yOffset + (int) (line.ClientArea.Height/3f))
+                                      };
 
                 components.Add(unbanButton);
                 unbanButton.UserData = entry.ip;
@@ -56,11 +62,11 @@ namespace ClientServices.UserInterface.Components
             }
         }
 
-        void UnbanButtClicked(Button sender)
+        private void UnbanButtClicked(Button sender)
         {
             NetOutgoingMessage msg = _networkManager.CreateMessage();
-            msg.Write((byte)NetMessage.RequestAdminUnBan);
-            msg.Write((string)sender.UserData);
+            msg.Write((byte) NetMessage.RequestAdminUnBan);
+            msg.Write((string) sender.UserData);
             _networkManager.SendMessage(msg, NetDeliveryMethod.ReliableUnordered);
             Dispose();
         }

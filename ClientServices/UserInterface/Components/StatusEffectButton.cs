@@ -1,30 +1,27 @@
 ﻿using System;
 using System.Drawing;
-using ClientInterfaces;
+using CGO;
 using ClientInterfaces.Resource;
+using GorgonLibrary;
 using GorgonLibrary.Graphics;
 using GorgonLibrary.InputDevices;
-using CGO;
-using GorgonLibrary;
 using SS13_Shared.GO;
 
 namespace ClientServices.UserInterface.Components
 {
-    class StatusEffectButton : GuiComponent
+    internal class StatusEffectButton : GuiComponent
     {
         private readonly IResourceManager _resourceManager;
+
+        private readonly StatusEffect assignedEffect;
+
+        private readonly TextSprite timeLeft;
+
+        private readonly TextSprite tooltip;
         private Sprite _buttonSprite;
 
-        private StatusEffect assignedEffect;
-
-        private TextSprite timeLeft;
-
-        private TextSprite tooltip;
-
-        public Color Color { get; set; }
-
-        private bool showTooltip = false;
-        private Point tooltipPos = new Point();
+        private bool showTooltip;
+        private Point tooltipPos;
 
         public StatusEffectButton(StatusEffect _assigned, IResourceManager resourceManager)
         {
@@ -33,17 +30,21 @@ namespace ClientServices.UserInterface.Components
             assignedEffect = _assigned;
             Color = Color.White;
 
-            timeLeft = new TextSprite("timeleft"+_assigned.uid.ToString()+_assigned.name, "", _resourceManager.GetFont("CALIBRI"));
+            timeLeft = new TextSprite("timeleft" + _assigned.uid.ToString() + _assigned.name, "",
+                                      _resourceManager.GetFont("CALIBRI"));
             timeLeft.Color = Color.White;
             timeLeft.ShadowColor = Color.Gray;
             timeLeft.ShadowOffset = new Vector2D(1, 1);
             timeLeft.Shadowed = true;
 
-            tooltip = new TextSprite("tooltip" + _assigned.uid.ToString() + _assigned.name, "", _resourceManager.GetFont("CALIBRI"));
+            tooltip = new TextSprite("tooltip" + _assigned.uid.ToString() + _assigned.name, "",
+                                     _resourceManager.GetFont("CALIBRI"));
             tooltip.Color = Color.Black;
 
             Update(0);
         }
+
+        public Color Color { get; set; }
 
         public override sealed void Update(float frameTime)
         {
@@ -52,15 +53,16 @@ namespace ClientServices.UserInterface.Components
             {
                 string leftStr = Math.Truncate(assignedEffect.expiresAt.Subtract(DateTime.Now).TotalSeconds).ToString();
                 timeLeft.Text = leftStr;
-                int x_pos = 16 - (int)(timeLeft.Width / 2f);
+                int x_pos = 16 - (int) (timeLeft.Width/2f);
 
                 if (assignedEffect.isDebuff) timeLeft.Color = Color.Red;
                 else timeLeft.Color = Color.ForestGreen;
 
-                timeLeft.Position = new Vector2D(this.Position.X + x_pos, this.Position.Y + 15);
+                timeLeft.Position = new Vector2D(Position.X + x_pos, Position.Y + 15);
             }
 
-            ClientArea = new Rectangle(Position, new Size((int)_buttonSprite.AABB.Width, (int)_buttonSprite.AABB.Height));
+            ClientArea = new Rectangle(Position,
+                                       new Size((int) _buttonSprite.AABB.Width, (int) _buttonSprite.AABB.Height));
         }
 
         public override void Render()
@@ -82,16 +84,24 @@ namespace ClientServices.UserInterface.Components
             {
                 string leftStr = Math.Truncate(assignedEffect.expiresAt.Subtract(DateTime.Now).TotalSeconds).ToString();
 
-                string tooltipStr = assignedEffect.name + 
-                    (assignedEffect.family != StatusEffectFamily.None ?  Environment.NewLine + "(" + assignedEffect.family.ToString() + ")" : "") + Environment.NewLine + Environment.NewLine + 
-                    assignedEffect.description + 
-                    (assignedEffect.doesExpire ? Environment.NewLine + Environment.NewLine + leftStr + " sec" : "");
+                string tooltipStr = assignedEffect.name +
+                                    (assignedEffect.family != StatusEffectFamily.None
+                                         ? Environment.NewLine + "(" + assignedEffect.family.ToString() + ")"
+                                         : "") + Environment.NewLine + Environment.NewLine +
+                                    assignedEffect.description +
+                                    (assignedEffect.doesExpire
+                                         ? Environment.NewLine + Environment.NewLine + leftStr + " sec"
+                                         : "");
 
                 tooltip.Text = tooltipStr;
-                float x_pos = (tooltipPos.X + 10 + tooltip.Width + 5) > Gorgon.CurrentClippingViewport.Width ? 0 - tooltip.Width - 10 : 10 + 5;
+                float x_pos = (tooltipPos.X + 10 + tooltip.Width + 5) > Gorgon.CurrentClippingViewport.Width
+                                  ? 0 - tooltip.Width - 10
+                                  : 10 + 5;
                 tooltip.Position = new Vector2D(tooltipPos.X + x_pos + 5, tooltipPos.Y + 5 + 10);
-                Gorgon.CurrentRenderTarget.FilledRectangle(tooltipPos.X + x_pos, tooltipPos.Y + 10, tooltip.Width + 5, tooltip.Height + 5, Color.SteelBlue);
-                Gorgon.CurrentRenderTarget.Rectangle(tooltipPos.X + x_pos, tooltipPos.Y + 10, tooltip.Width + 5, tooltip.Height + 5, Color.DarkSlateBlue);
+                Gorgon.CurrentRenderTarget.FilledRectangle(tooltipPos.X + x_pos, tooltipPos.Y + 10, tooltip.Width + 5,
+                                                           tooltip.Height + 5, Color.SteelBlue);
+                Gorgon.CurrentRenderTarget.Rectangle(tooltipPos.X + x_pos, tooltipPos.Y + 10, tooltip.Width + 5,
+                                                     tooltip.Height + 5, Color.DarkSlateBlue);
                 tooltip.Draw();
             }
         }
@@ -105,7 +115,7 @@ namespace ClientServices.UserInterface.Components
 
         public override bool MouseDown(MouseInputEventArgs e)
         {
-                return false;
+            return false;
         }
 
         public override bool MouseUp(MouseInputEventArgs e)
@@ -115,10 +125,10 @@ namespace ClientServices.UserInterface.Components
 
         public override void MouseMove(MouseInputEventArgs e)
         {
-            if (ClientArea.Contains(new Point((int)e.Position.X, (int)e.Position.Y)))
+            if (ClientArea.Contains(new Point((int) e.Position.X, (int) e.Position.Y)))
             {
                 showTooltip = true;
-                tooltipPos = new Point((int)e.Position.X, (int)e.Position.Y);
+                tooltipPos = new Point((int) e.Position.X, (int) e.Position.Y);
             }
             else
                 showTooltip = false;

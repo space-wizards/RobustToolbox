@@ -1,7 +1,9 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Drawing;
+using System.IO;
 using System.IO.Compression;
+using System.Linq;
 using BKSystem.IO;
 using ClientInterfaces.Collision;
 using ClientInterfaces.Lighting;
@@ -10,43 +12,41 @@ using ClientInterfaces.Resource;
 using ClientInterfaces.State;
 using ClientServices.State.States;
 using ClientServices.Tiles;
+using GorgonLibrary;
+using Lidgren.Network;
 using SS13.IoC;
 using SS13_Shared;
-using System.IO;
-using Lidgren.Network;
-using GorgonLibrary;
-using GorgonLibrary.Graphics;
-using ClientInterfaces;
-using System.Linq;
-using System.Reflection;
 
 namespace ClientServices.Map
 {
     public class MapManager : IMapManager
     {
         #region Variables
-        private Tile[][] _tileArray; // The array holding all the tiles that make up the map
-        private int _mapWidth; // Number of tiles across the map
-        private int _mapHeight; // Number of tiles up the map
+
         private const int TileSpacing = 64; // Distance between tiles
 
         private readonly List<Vector2D> _cardinalList;
 
-        private bool _loaded;
-        private bool _initialized;
-
-        Dictionary<byte, string> tileStringTable = new Dictionary<byte, string>();
-
-        private readonly IResourceManager _resourceManager;
-        private readonly ILightManager _lightManager;
         private readonly ICollisionManager _collisionManager;
+        private readonly ILightManager _lightManager;
+        private readonly IResourceManager _resourceManager;
+        private readonly Dictionary<byte, string> tileStringTable = new Dictionary<byte, string>();
+        private bool _initialized;
+        private bool _loaded;
+        private int _mapHeight; // Number of tiles up the map
+        private int _mapWidth; // Number of tiles across the map
+        private Tile[][] _tileArray; // The array holding all the tiles that make up the map
+
         #endregion
 
         #region Events
+
         public event TileChangeEvent OnTileChanged;
+
         #endregion
 
-        public MapManager(IResourceManager resourceManager, ILightManager lightManager, ICollisionManager collisionManager)
+        public MapManager(IResourceManager resourceManager, ILightManager lightManager,
+                          ICollisionManager collisionManager)
         {
             _resourceManager = resourceManager;
             _lightManager = lightManager;
@@ -66,10 +66,10 @@ namespace ClientServices.Map
                                     new Vector2D(-1, 1),
                                     new Vector2D(1, -1)
                                 };
-
         }
-        
+
         #region Startup / Loading
+
         public void Init()
         {
             if (!_initialized)
@@ -110,24 +110,24 @@ namespace ClientServices.Map
             {
                 for (int y = 0; y < _mapHeight; y++)
                 {
-                    var posX = x * TileSpacing;
-                    var posY = y * TileSpacing;
+                    int posX = x*TileSpacing;
+                    int posY = y*TileSpacing;
 
                     byte index = message.ReadByte();
-                    TileState state = (TileState)message.ReadByte();
+                    var state = (TileState) message.ReadByte();
 
                     Tile created = GenerateNewTile(GetTileString(index), state, new Vector2D(posX, posY));
                     _tileArray[y][x] = created;
                 }
             }
 
-            for (var x = 0; x < _mapWidth; x++)
+            for (int x = 0; x < _mapWidth; x++)
             {
-                for (var y = 0; y < _mapHeight; y++)
+                for (int y = 0; y < _mapHeight; y++)
                 {
                     if (_tileArray[y][x].ConnectSprite) //Was wall check.
                     {
-                        var i = SetSprite(x, y);
+                        byte i = SetSprite(x, y);
                     }
                     if (y > 0)
                     {
@@ -145,19 +145,20 @@ namespace ClientServices.Map
                     {
                         _tileArray[y][x].surroundingTiles[3] = _tileArray[y][x - 1]; //west
                     }
-
                 }
             }
 
             _loaded = true;
             return true;
         }
+
         #endregion
 
         #region Networking
+
         public void HandleNetworkMessage(NetIncomingMessage message)
         {
-            var messageType = (MapMessage)message.ReadByte();
+            var messageType = (MapMessage) message.ReadByte();
             switch (messageType)
             {
                 case MapMessage.TurfUpdate:
@@ -176,6 +177,70 @@ namespace ClientServices.Map
                     LoadTileMap(message);
                     break;
             }
+        }
+
+        public void HandleAtmosDisplayUpdate(NetIncomingMessage message)
+        {
+            if (!_loaded)
+                return;
+            /*var count = message.ReadInt32();
+            var records = new List<AtmosRecord>();
+            for (var i = 1; i <= count; i++)
+            {
+                records.Add(new AtmosRecord(message.ReadInt32(), message.ReadInt32(), message.ReadByte()));
+            }
+
+            foreach (var record in records)
+            {
+                _tileArray[record.X][record.Y].SetAtmosDisplay(record.Display);
+            }*/
+            //Length of records in bits
+            int lengthBits = message.ReadInt32();
+            int lengthBytes = message.ReadInt32();
+            var records = new byte[lengthBytes];
+            message.ReadBytes(records, 0, lengthBytes);
+            byte[] decompressed = Decompress(records);
+            var recordStream = new BitStream(lengthBits);
+            int bitsWritten = 0;
+            for (int i = 0; i < decompressed.Length; i++)
+            {
+                int toWrite = 8;
+                if (toWrite > lengthBits - bitsWritten)
+                    toWrite = lengthBits - bitsWritten;
+                recordStream.Write(decompressed[i], 0, toWrite);
+                bitsWritten += toWrite;
+            }
+
+            int typesCount = Enum.GetValues(typeof (GasType)).Length;
+            recordStream.Position = 0;
+            int types = 0;
+            byte amount = 0;
+            for (int x = 0; x < _mapWidth; x++)
+            {
+                for (int y = 0; y < _mapHeight; y++)
+                {
+                    recordStream.Read(out types, 0, typesCount);
+
+                    for (int i = typesCount - 1; i >= 0; i--)
+                    {
+                        if ((types & (1 << i)) == (1 << i))
+                        {
+                            recordStream.Read(out amount, 0, 4);
+                            _tileArray[y][x].SetAtmosDisplay((GasType) i, amount);
+                        }
+                    }
+
+                    /*        _tileArray[y][x].SetAtmosDisplay(decompressed[r]);
+                    r++;
+                    _tileArray[y][x].SetAtmosDisplay(decompressed[r]);
+                    r++;
+                    _tileArray[y][x].SetAtmosDisplay(decompressed[r]);
+                    r++;*/
+                }
+            }
+
+            var gameScreen = IoCManager.Resolve<IStateManager>().CurrentState as GameScreen;
+            gameScreen.RecalculateScene();
         }
 
         private void HandleIndexUpdate(NetIncomingMessage message)
@@ -201,20 +266,20 @@ namespace ClientServices.Map
         {
             int x = message.ReadInt32();
             int y = message.ReadInt32();
-            var type = (DecalType)message.ReadByte();
+            var type = (DecalType) message.ReadByte();
 
             _tileArray[y][x].AddDecal(type);
         }
 
-        static byte[] Decompress(byte[] gzip)
+        private static byte[] Decompress(byte[] gzip)
         {
             // Create a GZIP stream with decompression mode.
             // ... Then create a buffer and write into while reading from the GZIP stream.
-            using (GZipStream stream = new GZipStream(new MemoryStream(gzip), CompressionMode.Decompress))
+            using (var stream = new GZipStream(new MemoryStream(gzip), CompressionMode.Decompress))
             {
                 const int size = 4096;
-                byte[] buffer = new byte[size];
-                using (MemoryStream memory = new MemoryStream())
+                var buffer = new byte[size];
+                using (var memory = new MemoryStream())
                 {
                     int count = 0;
                     do
@@ -224,104 +289,24 @@ namespace ClientServices.Map
                         {
                             memory.Write(buffer, 0, count);
                         }
-                    }
-                    while (count > 0);
+                    } while (count > 0);
                     return memory.ToArray();
                 }
             }
         }
 
-        public void HandleAtmosDisplayUpdate(NetIncomingMessage message)
-        {
-            if (!_loaded)
-                return;
-            /*var count = message.ReadInt32();
-            var records = new List<AtmosRecord>();
-            for (var i = 1; i <= count; i++)
-            {
-                records.Add(new AtmosRecord(message.ReadInt32(), message.ReadInt32(), message.ReadByte()));
-            }
-
-            foreach (var record in records)
-            {
-                _tileArray[record.X][record.Y].SetAtmosDisplay(record.Display);
-            }*/
-            //Length of records in bits
-            var lengthBits = message.ReadInt32();
-            var lengthBytes = message.ReadInt32();
-            var records = new byte[lengthBytes];
-            message.ReadBytes(records, 0, lengthBytes);
-            var decompressed = Decompress(records);
-            var recordStream = new BitStream(lengthBits);
-            var bitsWritten = 0;
-            for (int i = 0; i < decompressed.Length; i++ )
-            {
-                var toWrite = 8;
-                if (toWrite > lengthBits - bitsWritten)
-                    toWrite = lengthBits - bitsWritten;
-                recordStream.Write(decompressed[i], 0, toWrite);
-                bitsWritten += toWrite;
-            }
-
-            int typesCount = Enum.GetValues(typeof(GasType)).Length;
-            recordStream.Position = 0;
-            int types = 0;
-            byte amount = 0;
-            for(var x = 0;x < _mapWidth;x++)
-            {
-                for(var y = 0;y<_mapHeight;y++)
-                {
-                    recordStream.Read(out types, 0, typesCount);
-
-                    for (int i = typesCount - 1; i >= 0; i--)
-                    {
-                        if((types & (1 << i)) == (1 << i))
-                        {
-                            recordStream.Read(out amount, 0, 4);
-                            _tileArray[y][x].SetAtmosDisplay((GasType)i, amount);
-                        }
-                    }
-
-                    /*        _tileArray[y][x].SetAtmosDisplay(decompressed[r]);
-                    r++;
-                    _tileArray[y][x].SetAtmosDisplay(decompressed[r]);
-                    r++;
-                    _tileArray[y][x].SetAtmosDisplay(decompressed[r]);
-                    r++;*/
-                }
-            }
-
-            var gameScreen = IoCManager.Resolve<IStateManager>().CurrentState as GameScreen;
-            gameScreen.RecalculateScene();
-
-        }
-
-        private struct AtmosRecord
-        {
-            public readonly int X;
-            public readonly int Y;
-            public readonly byte Display;
-
-            public AtmosRecord(int x, int y, byte display)
-            {
-                X = x;
-                Y = y;
-                Display = display;
-            }
-        }
-
         private void HandleTurfUpdate(NetIncomingMessage message)
         {
-            var x = message.ReadInt16();
-            var y = message.ReadInt16();
-            var tileStr = GetTileString(message.ReadByte());
-            var state = (TileState)message.ReadByte();
+            short x = message.ReadInt16();
+            short y = message.ReadInt16();
+            string tileStr = GetTileString(message.ReadByte());
+            var state = (TileState) message.ReadByte();
 
-            var t = _tileArray[y][x];
+            Tile t = _tileArray[y][x];
 
             if (t == null)
             {
-                t = GenerateNewTile(tileStr, state, new Vector2D(x * TileSpacing, y * TileSpacing));
+                t = GenerateNewTile(tileStr, state, new Vector2D(x*TileSpacing, y*TileSpacing));
                 _tileArray[y][x] = t;
                 TileChanged(_tileArray[y][x]);
             }
@@ -329,17 +314,17 @@ namespace ClientServices.Map
             {
                 if (t.GetType().Name != tileStr) //This is ugly beep boop. Fix this later.
                 {
-                    var surroundTiles = t.surroundingTiles;
+                    Tile[] surroundTiles = t.surroundingTiles;
 
                     if (t.GetType().GetInterface("ICollidable") != null)
-                        _collisionManager.RemoveCollidable((ICollidable)t);
+                        _collisionManager.RemoveCollidable((ICollidable) t);
 
-                    t = GenerateNewTile(tileStr, state, new Vector2D(x * TileSpacing, y * TileSpacing));
+                    t = GenerateNewTile(tileStr, state, new Vector2D(x*TileSpacing, y*TileSpacing));
                     t.surroundingTiles = surroundTiles;
-                    if(t.surroundingTiles[0] != null) t.surroundingTiles[0].surroundingTiles[2] = t;
-                    if(t.surroundingTiles[1] != null) t.surroundingTiles[1].surroundingTiles[3] = t;
-                    if(t.surroundingTiles[2] != null) t.surroundingTiles[2].surroundingTiles[0] = t;
-                    if(t.surroundingTiles[3] != null) t.surroundingTiles[3].surroundingTiles[1] = t;
+                    if (t.surroundingTiles[0] != null) t.surroundingTiles[0].surroundingTiles[2] = t;
+                    if (t.surroundingTiles[1] != null) t.surroundingTiles[1].surroundingTiles[3] = t;
+                    if (t.surroundingTiles[2] != null) t.surroundingTiles[2].surroundingTiles[0] = t;
+                    if (t.surroundingTiles[3] != null) t.surroundingTiles[3].surroundingTiles[1] = t;
 
                     _tileArray[y][x] = t;
                     TileChanged(_tileArray[y][x]);
@@ -352,20 +337,35 @@ namespace ClientServices.Map
             }
         }
 
+        private struct AtmosRecord
+        {
+            public readonly byte Display;
+            public readonly int X;
+            public readonly int Y;
+
+            public AtmosRecord(int x, int y, byte display)
+            {
+                X = x;
+                Y = y;
+                Display = display;
+            }
+        }
+
         #endregion
 
         #region Tile helper functions
+
         // Returns the position of a tile in the tileArray from world coordinates
         // Returns -1,-1 if an invalid position was passed in.
         public Vector2D GetTileArrayPositionFromWorldPosition(float x, float z)
         {
             if (x < 0 || z < 0)
                 return new Vector2D(-1, -1);
-            if (x > _mapWidth * TileSpacing || z > _mapWidth * TileSpacing)
+            if (x > _mapWidth*TileSpacing || z > _mapWidth*TileSpacing)
                 return new Vector2D(-1, -1);
 
-            var xPos = (int)Math.Floor(x / TileSpacing);
-            var zPos = (int)Math.Floor(z / TileSpacing);
+            var xPos = (int) Math.Floor(x/TileSpacing);
+            var zPos = (int) Math.Floor(z/TileSpacing);
 
             return new Vector2D(xPos, zPos);
         }
@@ -374,18 +374,13 @@ namespace ClientServices.Map
         {
             if (pos.X < 0 || pos.Y < 0)
                 return new Point(-1, -1);
-            if (pos.X > _mapWidth * TileSpacing || pos.Y > _mapWidth * TileSpacing)
+            if (pos.X > _mapWidth*TileSpacing || pos.Y > _mapWidth*TileSpacing)
                 return new Point(-1, -1);
 
-            var xPos = (int)Math.Floor(pos.X / TileSpacing);
-            var yPos = (int)Math.Floor(pos.Y / TileSpacing);
+            var xPos = (int) Math.Floor(pos.X/TileSpacing);
+            var yPos = (int) Math.Floor(pos.Y/TileSpacing);
 
             return new Point(xPos, yPos);
-        }
-
-        public Type GetTileTypeFromWorldPosition(float x, float y)
-        {
-            return GetTileTypeFromWorldPosition(new Vector2D(x, y));
         }
 
         public Type GetTileTypeFromWorldPosition(Vector2D pos)
@@ -396,17 +391,7 @@ namespace ClientServices.Map
                 return null;
             }
 
-            return GetTileTypeFromArrayPosition((int)arrayPosition.X, (int)arrayPosition.Y);
-        }
-
-        public Type GetTileTypeFromArrayPosition(int x, int y)
-        {
-            if (x < 0 || y < 0 || x >= _mapWidth || y >= _mapHeight)
-            {
-                return null;
-            }
-
-            return _tileArray[y][x].GetType();
+            return GetTileTypeFromArrayPosition((int) arrayPosition.X, (int) arrayPosition.Y);
         }
 
         /// <summary>
@@ -414,7 +399,7 @@ namespace ClientServices.Map
         /// </summary>
         public ITile GetTileAt(Vector2D worldPos)
         {
-            var p = GetTileArrayPositionFromWorldPosition(worldPos);
+            Point p = GetTileArrayPositionFromWorldPosition(worldPos);
             if (p.X < 0 || p.Y < 0 || p.X >= _mapWidth || p.Y >= _mapHeight) return null;
             return _tileArray[p.Y][p.X];
         }
@@ -426,22 +411,6 @@ namespace ClientServices.Map
         {
             if (arrayX < 0 || arrayY < 0 || arrayX >= _mapWidth || arrayY >= _mapHeight) return null;
             return _tileArray[arrayY][arrayX];
-        }
-
-        public Tile GenerateNewTile(string typeName, TileState state, Vector2D pos)
-        {
-            var p = new Point((int)Math.Floor(pos.X / TileSpacing), (int)Math.Floor(pos.Y / TileSpacing));
-
-            Type tileType = Type.GetType("ClientServices.Tiles." + typeName, false);
-
-            if (tileType == null) throw new ArgumentException("Invalid Tile Type specified : '" + typeName + "' .");
-
-            Tile created = (Tile)Activator.CreateInstance(tileType, state, pos, p);
-
-            if (tileType.GetInterface("ICollidable") != null)
-                _collisionManager.AddCollidable((ICollidable)created);
-
-            return created;
         }
 
         // Where do we have tiles around us?
@@ -493,41 +462,79 @@ namespace ClientServices.Map
 
         public Size GetMapSizeWorld()
         {
-            return new Size(_mapWidth * TileSpacing, _mapHeight * TileSpacing);
+            return new Size(_mapWidth*TileSpacing, _mapHeight*TileSpacing);
         }
+
+        public Type GetTileTypeFromWorldPosition(float x, float y)
+        {
+            return GetTileTypeFromWorldPosition(new Vector2D(x, y));
+        }
+
+        public Type GetTileTypeFromArrayPosition(int x, int y)
+        {
+            if (x < 0 || y < 0 || x >= _mapWidth || y >= _mapHeight)
+            {
+                return null;
+            }
+
+            return _tileArray[y][x].GetType();
+        }
+
+        public Tile GenerateNewTile(string typeName, TileState state, Vector2D pos)
+        {
+            var p = new Point((int) Math.Floor(pos.X/TileSpacing), (int) Math.Floor(pos.Y/TileSpacing));
+
+            Type tileType = Type.GetType("ClientServices.Tiles." + typeName, false);
+
+            if (tileType == null) throw new ArgumentException("Invalid Tile Type specified : '" + typeName + "' .");
+
+            var created = (Tile) Activator.CreateInstance(tileType, state, pos, p);
+
+            if (tileType.GetInterface("ICollidable") != null)
+                _collisionManager.AddCollidable((ICollidable) created);
+
+            return created;
+        }
+
         #endregion
 
         #region Quick collision checks
+
         public bool IsSolidTile(Vector2D worldPos)
         {
-            var tile = (Tile)GetTileAt(worldPos);
+            var tile = (Tile) GetTileAt(worldPos);
             if (tile == null) return false;
             return tile.IsSolidTile();
         }
+
         #endregion
 
         #region Shutdown
+
         public void Shutdown()
         {
             _tileArray = null;
             _initialized = false;
             _loaded = false;
         }
+
         #endregion
 
         #region Event Handling
+
         private void TileChanged(Tile t)
         {
-            if(OnTileChanged != null)
+            if (OnTileChanged != null)
                 OnTileChanged(t.TilePosition, t.Position);
 
             t.surroundDirs = SetSprite(t.TilePosition.X, t.TilePosition.Y);
-            foreach(Tile T in t.surroundingTiles)
+            foreach (Tile T in t.surroundingTiles)
             {
                 if (T == null) continue;
                 T.surroundDirs = SetSprite(T.TilePosition.X, T.TilePosition.Y);
             }
         }
+
         #endregion
     }
 }

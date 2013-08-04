@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Drawing;
-using ClientInterfaces;
 using ClientInterfaces.Resource;
 using GorgonLibrary;
 using GorgonLibrary.Graphics;
@@ -10,42 +9,44 @@ using SS13.IoC;
 
 namespace ClientServices.UserInterface.Components
 {
-    class TabbedMenu : GuiComponent
+    internal class TabbedMenu : GuiComponent
     {
-        private readonly IResourceManager _resourceManager; 
+        private readonly IResourceManager _resourceManager;
+
+        private readonly List<KeyValuePair<ImageButton, TabContainer>> _tabs =
+            new List<KeyValuePair<ImageButton, TabContainer>>();
+
+        public Point TabOffset = new Point(0, 0);
+        private TabContainer _activeTab;
+        private Sprite botSprite;
+        private Sprite midSprite;
 
         public Vector2D size;
 
-        Sprite topSprite;
-        Sprite midSprite;
-        Sprite botSprite;
+        private Sprite topSprite;
+
+        public TabbedMenu()
+        {
+            _resourceManager = IoCManager.Resolve<IResourceManager>();
+            Update(0);
+        }
 
         public string TopSprite
         {
             get { return topSprite != null ? topSprite.Name : null; }
             set { topSprite = _resourceManager.GetSprite(value); }
         }
+
         public string MidSprite
         {
             get { return midSprite != null ? midSprite.Name : null; }
             set { midSprite = _resourceManager.GetSprite(value); }
         }
+
         public string BotSprite
         {
             get { return botSprite != null ? botSprite.Name : null; }
             set { botSprite = _resourceManager.GetSprite(value); }
-        }
-
-        private TabContainer _activeTab;
-
-        private List<KeyValuePair<ImageButton, TabContainer>> _tabs = new List<KeyValuePair<ImageButton, TabContainer>>();
-
-        public Point TabOffset = new Point(0,0);
-
-        public TabbedMenu()
-        {
-            _resourceManager = IoCManager.Resolve<IResourceManager>();
-            Update(0);
         }
 
         public void SelectTab(TabContainer tab)
@@ -62,14 +63,14 @@ namespace ClientServices.UserInterface.Components
 
         public void AddTab(TabContainer newTab)
         {
-            ImageButton newButton = new ImageButton();
+            var newButton = new ImageButton();
             newButton.Clicked += tabButton_Clicked;
 
             _tabs.Add(new KeyValuePair<ImageButton, TabContainer>(newButton, newTab));
             rebuildButtonIcons();
         }
 
-        void tabButton_Clicked(ImageButton sender)
+        private void tabButton_Clicked(ImageButton sender)
         {
             if (_tabs.Exists(x => x.Key == sender))
             {
@@ -95,7 +96,6 @@ namespace ClientServices.UserInterface.Components
                 {
                     curr.Key.ImageNormal = MidSprite;
                 }
-
             }
         }
 
@@ -106,10 +106,11 @@ namespace ClientServices.UserInterface.Components
             for (int i = _tabs.Count - 1; i >= 0; i--)
             {
                 KeyValuePair<ImageButton, TabContainer> curr = _tabs[i];
-                curr.Key.Position = new Point(this.Position.X + TabOffset.X - curr.Key.ClientArea.Width, this.Position.Y + TabOffset.Y - prevHeight);
+                curr.Key.Position = new Point(Position.X + TabOffset.X - curr.Key.ClientArea.Width,
+                                              Position.Y + TabOffset.Y - prevHeight);
                 prevHeight += curr.Key.ClientArea.Height;
 
-                curr.Value.Position = this.Position;
+                curr.Value.Position = Position;
 
                 curr.Key.Update(frameTime);
             }
@@ -117,7 +118,7 @@ namespace ClientServices.UserInterface.Components
             if (_activeTab != null)
                 _activeTab.Update(frameTime);
 
-            ClientArea = new Rectangle(this.Position, new Size((int)size.X, (int)size.Y));
+            ClientArea = new Rectangle(Position, new Size((int) size.X, (int) size.Y));
         }
 
         public override void Render()
@@ -131,7 +132,9 @@ namespace ClientServices.UserInterface.Components
 
                 if (currTabSprite != null)
                 {
-                    currTabSprite.Position = new Vector2D(curr.Key.Position.X + (curr.Key.ClientArea.Width / 2f - currTabSprite.Width / 2f), curr.Key.Position.Y + (curr.Key.ClientArea.Height / 2f - currTabSprite.Height / 2f));
+                    currTabSprite.Position =
+                        new Vector2D(curr.Key.Position.X + (curr.Key.ClientArea.Width/2f - currTabSprite.Width/2f),
+                                     curr.Key.Position.Y + (curr.Key.ClientArea.Height/2f - currTabSprite.Height/2f));
                     currTabSprite.Draw();
                 }
             }
@@ -148,7 +151,7 @@ namespace ClientServices.UserInterface.Components
 
         public override bool KeyDown(KeyboardInputEventArgs e)
         {
-            foreach (KeyValuePair<ImageButton, TabContainer> curr in _tabs)
+            foreach (var curr in _tabs)
             {
                 if (curr.Key.KeyDown(e)) return true;
 
@@ -160,7 +163,7 @@ namespace ClientServices.UserInterface.Components
 
         public override bool MouseWheelMove(MouseInputEventArgs e)
         {
-            foreach (KeyValuePair<ImageButton, TabContainer> curr in _tabs)
+            foreach (var curr in _tabs)
             {
                 if (curr.Key.MouseWheelMove(e)) return true;
 
@@ -172,7 +175,7 @@ namespace ClientServices.UserInterface.Components
 
         public override void MouseMove(MouseInputEventArgs e)
         {
-            foreach (KeyValuePair<ImageButton, TabContainer> curr in _tabs)
+            foreach (var curr in _tabs)
             {
                 curr.Key.MouseMove(e);
 
@@ -184,7 +187,7 @@ namespace ClientServices.UserInterface.Components
 
         public override bool MouseDown(MouseInputEventArgs e)
         {
-            foreach (KeyValuePair<ImageButton, TabContainer> curr in _tabs)
+            foreach (var curr in _tabs)
             {
                 if (curr.Key.MouseDown(e)) return true;
 
@@ -196,7 +199,7 @@ namespace ClientServices.UserInterface.Components
 
         public override bool MouseUp(MouseInputEventArgs e)
         {
-            foreach (KeyValuePair<ImageButton, TabContainer> curr in _tabs)
+            foreach (var curr in _tabs)
             {
                 if (curr.Key.MouseUp(e)) return true;
 

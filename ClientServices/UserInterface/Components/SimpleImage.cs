@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Drawing;
-using ClientInterfaces;
 using ClientInterfaces.Resource;
 using GorgonLibrary;
 using GorgonLibrary.Graphics;
@@ -9,19 +8,13 @@ using SS13.IoC;
 
 namespace ClientServices.UserInterface.Components
 {
-    class SimpleImage : GuiComponent
+    internal class SimpleImage : GuiComponent
     {
         private readonly IResourceManager _resourceManager; //TODO Make simpleimagebutton and other ui classes use this.
 
-        Sprite drawingSprite;
+        private Sprite drawingSprite;
 
         public Vector2D size;
-
-        public string Sprite
-        {
-            get { return drawingSprite != null ? drawingSprite.Name : null; }
-            set { drawingSprite = _resourceManager.GetSprite(value); }
-        }
 
         public SimpleImage()
         {
@@ -29,10 +22,16 @@ namespace ClientServices.UserInterface.Components
             Update(0);
         }
 
+        public string Sprite
+        {
+            get { return drawingSprite != null ? drawingSprite.Name : null; }
+            set { drawingSprite = _resourceManager.GetSprite(value); }
+        }
+
         public override void Update(float frameTime)
         {
             size = drawingSprite != null ? drawingSprite.Size : Vector2D.Zero;
-            ClientArea = new Rectangle(this.Position, new Size((int)size.X, (int)size.Y));
+            ClientArea = new Rectangle(Position, new Size((int) size.X, (int) size.Y));
         }
 
         public override void Render()

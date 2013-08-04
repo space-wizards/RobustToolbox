@@ -1,17 +1,14 @@
 ﻿using System;
 using System.Drawing;
-using ClientInterfaces;
-using ClientInterfaces.Player;
-using ClientInterfaces.UserInterface;
-using ClientServices.Player;
-using SS13_Shared;
 using GorgonLibrary.InputDevices;
+using Lidgren.Network;
+using SS13_Shared;
 
 namespace ClientServices.UserInterface.Components
 {
     public class TemplateGuiComponent : GuiComponent
     {
-        public TemplateGuiComponent() : base ()
+        public TemplateGuiComponent()
         {
             ComponentClass = GuiComponentType.Undefined;
         }
@@ -37,13 +34,13 @@ namespace ClientServices.UserInterface.Components
             GC.SuppressFinalize(this);
         }
 
-        public override void HandleNetworkMessage(Lidgren.Network.NetIncomingMessage message)
+        public override void HandleNetworkMessage(NetIncomingMessage message)
         {
         }
 
         public override bool MouseDown(MouseInputEventArgs e)
         {
-            if (ClientArea.Contains(new Point((int)e.Position.X, (int)e.Position.Y)))
+            if (ClientArea.Contains(new Point((int) e.Position.X, (int) e.Position.Y)))
             {
                 return true;
             }
@@ -52,7 +49,7 @@ namespace ClientServices.UserInterface.Components
 
         public override bool MouseUp(MouseInputEventArgs e)
         {
-            if (ClientArea.Contains(new Point((int)e.Position.X, (int)e.Position.Y)))
+            if (ClientArea.Contains(new Point((int) e.Position.X, (int) e.Position.Y)))
             {
                 return true;
             }

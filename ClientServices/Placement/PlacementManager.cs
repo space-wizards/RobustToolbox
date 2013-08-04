@@ -1,7 +1,9 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Drawing;
 using System.Linq;
 using System.Reflection;
+using CGO;
 using ClientInterfaces.Collision;
 using ClientInterfaces.GOC;
 using ClientInterfaces.Map;
@@ -9,56 +11,43 @@ using ClientInterfaces.Network;
 using ClientInterfaces.Placement;
 using ClientInterfaces.Player;
 using ClientInterfaces.Resource;
+using ClientInterfaces.UserInterface;
+using ClientServices.Map;
 using ClientWindow;
 using GameObject;
 using GorgonLibrary;
 using GorgonLibrary.Graphics;
 using Lidgren.Network;
+using SS13.IoC;
 using SS13_Shared;
-using System.Drawing;
-using ClientInterfaces;
-using CGO;
 using SS13_Shared.GO;
-using SS13.IoC;
-
-using ClientInterfaces.UserInterface;
-using ClientInterfaces.Map;
-using ClientServices.Map;
-using SS13.IoC;
-using EntityManager = CGO.EntityManager;
 
 namespace ClientServices.Placement
 {
     public class PlacementManager : IPlacementManager
     {
-        public readonly IResourceManager ResourceManager;
-        public readonly INetworkManager NetworkManager;
         public readonly ICollisionManager CollisionManager;
+        public readonly INetworkManager NetworkManager;
         public readonly IPlayerManager PlayerManager;
+        public readonly IResourceManager ResourceManager;
+        private readonly Dictionary<string, Type> _modeDictionary = new Dictionary<string, Type>();
 
         public Sprite CurrentBaseSprite;
-        public EntityTemplate CurrentTemplate;
-        public PlacementInformation CurrentPermission;
         public PlacementMode CurrentMode;
+        public PlacementInformation CurrentPermission;
+        public EntityTemplate CurrentTemplate;
+        public Direction Direction = Direction.South;
         public Boolean ValidPosition;
 
-        public Boolean IsActive { get; private set; }
-        public Boolean Eraser { get; private set; }
-
-        public Direction Direction = Direction.South;
-
-        public event EventHandler PlacementCanceled;
-
-        private readonly Dictionary<string, Type> _modeDictionary = new Dictionary<string, Type>(); 
-
-        public PlacementManager(IResourceManager resourceManager, INetworkManager networkManager, ICollisionManager collisionManager, IPlayerManager playerManager)
+        public PlacementManager(IResourceManager resourceManager, INetworkManager networkManager,
+                                ICollisionManager collisionManager, IPlayerManager playerManager)
         {
             ResourceManager = resourceManager;
             NetworkManager = networkManager;
             CollisionManager = collisionManager;
             PlayerManager = playerManager;
 
-            Type type = typeof(PlacementMode);
+            Type type = typeof (PlacementMode);
             List<Assembly> assemblies = AppDomain.CurrentDomain.GetAssemblies().ToList();
             List<Type> types = assemblies.SelectMany(t => t.GetTypes()).Where(p => type.IsAssignableFrom(p)).ToList();
 
@@ -69,9 +58,16 @@ namespace ClientServices.Placement
             Clear();
         }
 
+        #region IPlacementManager Members
+
+        public Boolean IsActive { get; private set; }
+        public Boolean Eraser { get; private set; }
+
+        public event EventHandler PlacementCanceled;
+
         public void HandleNetMessage(NetIncomingMessage msg)
         {
-            var messageType = (PlacementManagerMessage)msg.ReadByte();
+            var messageType = (PlacementManagerMessage) msg.ReadByte();
 
             switch (messageType)
             {
@@ -85,23 +81,6 @@ namespace ClientServices.Placement
                     //Sad trombone here.
                     break;
             }
-        }
-
-        private void HandleStartPlacement(NetIncomingMessage msg)
-        {
-            CurrentPermission = new PlacementInformation
-                                     {
-                                         Range = msg.ReadInt32(),
-                                         IsTile = msg.ReadBoolean()
-                                     };
-
-            var mapMgr = (MapManager)IoCManager.Resolve<IMapManager>();
-
-            if (CurrentPermission.IsTile) CurrentPermission.TileType = mapMgr.GetTileString(msg.ReadByte());
-            else CurrentPermission.EntityType = msg.ReadString();
-            CurrentPermission.PlacementOption = msg.ReadString();
-
-            BeginPlacing(CurrentPermission);
         }
 
         public void Clear()
@@ -144,8 +123,8 @@ namespace ClientServices.Placement
         {
             if (!IsActive || !Eraser) return;
 
-            var message = NetworkManager.CreateMessage();
-            message.Write((byte)NetMessage.RequestEntityDeletion);
+            NetOutgoingMessage message = NetworkManager.CreateMessage();
+            message.Write((byte) NetMessage.RequestEntityDeletion);
             message.Write(entity.Uid);
             NetworkManager.SendMessage(message, NetDeliveryMethod.ReliableUnordered);
         }
@@ -175,8 +154,8 @@ namespace ClientServices.Placement
                 return;
             }
 
-            var modeType = _modeDictionary.First(pair => pair.Key.Equals(CurrentPermission.PlacementOption)).Value;
-            CurrentMode = (PlacementMode)Activator.CreateInstance(modeType, this);
+            Type modeType = _modeDictionary.First(pair => pair.Key.Equals(CurrentPermission.PlacementOption)).Value;
+            CurrentMode = (PlacementMode) Activator.CreateInstance(modeType, this);
 
             if (info.IsTile)
                 PreparePlacementTile(info.TileType);
@@ -184,16 +163,63 @@ namespace ClientServices.Placement
                 PreparePlacement(info.EntityType);
         }
 
+        public void Update(Vector2D mouseScreen, IMapManager currentMap)
+        {
+            if (currentMap == null || CurrentPermission == null || CurrentMode == null) return;
+
+            ValidPosition = CurrentMode.Update(mouseScreen, currentMap);
+        }
+
+        public void Render()
+        {
+            if (CurrentMode != null)
+                CurrentMode.Render();
+
+            if (CurrentPermission != null && CurrentPermission.Range > 0)
+            {
+                Gorgon.CurrentRenderTarget.Circle(
+                    PlayerManager.ControlledEntity.GetComponent<TransformComponent>(ComponentFamily.Transform).Position.
+                        X - ClientWindowData.Singleton.ScreenOrigin.X,
+                    PlayerManager.ControlledEntity.GetComponent<TransformComponent>(ComponentFamily.Transform).Position.
+                        Y - ClientWindowData.Singleton.ScreenOrigin.Y,
+                    CurrentPermission.Range,
+                    Color.White,
+                    new Vector2D(2, 2));
+            }
+        }
+
+        #endregion
+
+        private void HandleStartPlacement(NetIncomingMessage msg)
+        {
+            CurrentPermission = new PlacementInformation
+                                    {
+                                        Range = msg.ReadInt32(),
+                                        IsTile = msg.ReadBoolean()
+                                    };
+
+            var mapMgr = (MapManager) IoCManager.Resolve<IMapManager>();
+
+            if (CurrentPermission.IsTile) CurrentPermission.TileType = mapMgr.GetTileString(msg.ReadByte());
+            else CurrentPermission.EntityType = msg.ReadString();
+            CurrentPermission.PlacementOption = msg.ReadString();
+
+            BeginPlacing(CurrentPermission);
+        }
+
         private void PreparePlacement(string templateName)
         {
-            var template = IoCManager.Resolve<IEntityManagerContainer>().EntityManager.EntityTemplateDatabase.GetTemplate(templateName);
+            EntityTemplate template =
+                IoCManager.Resolve<IEntityManagerContainer>().EntityManager.EntityTemplateDatabase.GetTemplate(
+                    templateName);
             if (template == null) return;
 
-            var spriteParam = template.GetBaseSpriteParamaters().FirstOrDefault(); //Will break if states not ordered correctly.
+            ComponentParameter spriteParam = template.GetBaseSpriteParamaters().FirstOrDefault();
+                //Will break if states not ordered correctly.
             if (spriteParam == null) return;
 
             var spriteName = spriteParam.GetValue<string>();
-            var sprite = ResourceManager.GetSprite(spriteName);
+            Sprite sprite = ResourceManager.GetSprite(spriteName);
 
             CurrentBaseSprite = sprite;
             CurrentTemplate = template;
@@ -213,11 +239,11 @@ namespace ClientServices.Placement
             if (CurrentPermission == null) return;
             if (!ValidPosition) return;
 
-            var mapMgr = (MapManager)IoCManager.Resolve<IMapManager>();
+            var mapMgr = (MapManager) IoCManager.Resolve<IMapManager>();
             NetOutgoingMessage message = NetworkManager.CreateMessage();
 
-            message.Write((byte)NetMessage.PlacementManagerMessage);
-            message.Write((byte)PlacementManagerMessage.RequestPlacement);
+            message.Write((byte) NetMessage.PlacementManagerMessage);
+            message.Write((byte) PlacementManagerMessage.RequestPlacement);
             message.Write(CurrentMode.ModeName);
 
             message.Write(CurrentPermission.IsTile);
@@ -228,7 +254,7 @@ namespace ClientServices.Placement
             message.Write(CurrentMode.mouseWorld.X);
             message.Write(CurrentMode.mouseWorld.Y);
 
-            message.Write((byte)Direction);
+            message.Write((byte) Direction);
 
             message.Write(CurrentMode.currentTile.TilePosition.X);
             message.Write(CurrentMode.currentTile.TilePosition.Y);
@@ -248,29 +274,5 @@ namespace ClientServices.Placement
 
             return spriteToUse;
         }
-
-        public void Update(Vector2D mouseScreen, IMapManager currentMap)
-        {
-            if (currentMap == null || CurrentPermission == null || CurrentMode == null) return;
-
-            ValidPosition = CurrentMode.Update(mouseScreen, currentMap);
-        }
-
-        public void Render()
-        {
-            if (CurrentMode != null)
-                CurrentMode.Render();
-
-            if (CurrentPermission != null && CurrentPermission.Range > 0)
-            {
-                Gorgon.CurrentRenderTarget.Circle(
-                    PlayerManager.ControlledEntity.GetComponent<TransformComponent>(ComponentFamily.Transform).Position.X - ClientWindowData.Singleton.ScreenOrigin.X,
-                    PlayerManager.ControlledEntity.GetComponent<TransformComponent>(ComponentFamily.Transform).Position.Y - ClientWindowData.Singleton.ScreenOrigin.Y,
-                    CurrentPermission.Range,
-                    Color.White,
-                    new Vector2D(2, 2));
-            }
-        }
-            
     }
 }

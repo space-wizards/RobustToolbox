@@ -1,14 +1,10 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Drawing;
 using System.Linq;
-using System.Text;
 using CGO;
+using ClientInterfaces.Map;
 using ClientWindow;
 using GorgonLibrary;
-using ClientInterfaces.Map;
-using GorgonLibrary.Graphics;
-using SS13_Shared;
 using SS13_Shared.GO;
 
 namespace ClientServices.Placement.Modes
@@ -27,9 +23,12 @@ namespace ClientServices.Placement.Modes
             spriteToDraw = GetDirectionalSprite(pManager.CurrentBaseSprite);
 
             mouseScreen = mouseS;
-            mouseWorld = new Vector2D(mouseScreen.X + ClientWindowData.Singleton.ScreenOrigin.X, mouseScreen.Y + ClientWindowData.Singleton.ScreenOrigin.Y);
+            mouseWorld = new Vector2D(mouseScreen.X + ClientWindowData.Singleton.ScreenOrigin.X,
+                                      mouseScreen.Y + ClientWindowData.Singleton.ScreenOrigin.Y);
 
-            var spriteRectWorld = new RectangleF(mouseWorld.X - (spriteToDraw.Width / 2f), mouseWorld.Y - (spriteToDraw.Height / 2f), spriteToDraw.Width, spriteToDraw.Height);
+            var spriteRectWorld = new RectangleF(mouseWorld.X - (spriteToDraw.Width/2f),
+                                                 mouseWorld.Y - (spriteToDraw.Height/2f), spriteToDraw.Width,
+                                                 spriteToDraw.Height);
 
             if (pManager.CurrentPermission.IsTile)
                 return false;
@@ -37,11 +36,13 @@ namespace ClientServices.Placement.Modes
             //CollisionManager collisionMgr = (CollisionManager)ServiceManager.Singleton.GetService(ClientServiceType.CollisionManager);
             //if (collisionMgr.IsColliding(spriteRectWorld, true)) validPosition = false;
 
-            if (!currentMap.IsSolidTile(mouseWorld)) 
+            if (!currentMap.IsSolidTile(mouseWorld))
                 return false;
 
             if (pManager.CurrentPermission.Range > 0)
-                if ((pManager.PlayerManager.ControlledEntity.GetComponent<TransformComponent>(ComponentFamily.Transform).Position - mouseWorld).Length > pManager.CurrentPermission.Range) 
+                if (
+                    (pManager.PlayerManager.ControlledEntity.GetComponent<TransformComponent>(ComponentFamily.Transform)
+                         .Position - mouseWorld).Length > pManager.CurrentPermission.Range)
                     return false;
 
             currentTile = currentMap.GetTileAt(mouseWorld);
@@ -49,7 +50,9 @@ namespace ClientServices.Placement.Modes
 
             if (pManager.CurrentTemplate.MountingPoints != null)
             {
-                nodes.AddRange(pManager.CurrentTemplate.MountingPoints.Select(current => new Vector2D(mouseWorld.X, currentTile.Position.Y + current)));
+                nodes.AddRange(
+                    pManager.CurrentTemplate.MountingPoints.Select(
+                        current => new Vector2D(mouseWorld.X, currentTile.Position.Y + current)));
             }
             else
             {
@@ -62,14 +65,19 @@ namespace ClientServices.Placement.Modes
                                     orderby (node - mouseWorld).Length ascending
                                     select node).First();
 
-            mouseWorld = Vector2D.Add(closestNode, new Vector2D(pManager.CurrentTemplate.PlacementOffset.Key, pManager.CurrentTemplate.PlacementOffset.Value));
-            mouseScreen = new Vector2D(mouseWorld.X - ClientWindowData.Singleton.ScreenOrigin.X, mouseWorld.Y - ClientWindowData.Singleton.ScreenOrigin.Y);
+            mouseWorld = Vector2D.Add(closestNode,
+                                      new Vector2D(pManager.CurrentTemplate.PlacementOffset.Key,
+                                                   pManager.CurrentTemplate.PlacementOffset.Value));
+            mouseScreen = new Vector2D(mouseWorld.X - ClientWindowData.Singleton.ScreenOrigin.X,
+                                       mouseWorld.Y - ClientWindowData.Singleton.ScreenOrigin.Y);
 
             if (pManager.CurrentPermission.Range > 0)
-                if ((pManager.PlayerManager.ControlledEntity.GetComponent<TransformComponent>(ComponentFamily.Transform).Position - mouseWorld).Length > pManager.CurrentPermission.Range)
+                if (
+                    (pManager.PlayerManager.ControlledEntity.GetComponent<TransformComponent>(ComponentFamily.Transform)
+                         .Position - mouseWorld).Length > pManager.CurrentPermission.Range)
                     return false;
 
-            return true; 
+            return true;
         }
 
         public override void Render()
@@ -77,7 +85,9 @@ namespace ClientServices.Placement.Modes
             if (spriteToDraw != null)
             {
                 spriteToDraw.Color = pManager.ValidPosition ? Color.ForestGreen : Color.IndianRed;
-                spriteToDraw.Position = new Vector2D(mouseScreen.X - (spriteToDraw.Width / 2f), mouseScreen.Y - (spriteToDraw.Height / 2f)); //Centering the sprite on the cursor.
+                spriteToDraw.Position = new Vector2D(mouseScreen.X - (spriteToDraw.Width/2f),
+                                                     mouseScreen.Y - (spriteToDraw.Height/2f));
+                    //Centering the sprite on the cursor.
                 spriteToDraw.Draw();
                 spriteToDraw.Color = Color.White;
             }

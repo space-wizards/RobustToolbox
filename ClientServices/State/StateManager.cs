@@ -20,12 +20,18 @@ namespace ClientServices.State
         private readonly Dictionary<Type, IState> _loadedStates;
         private readonly Dictionary<Type, object> _managers;
 
+        #region IStateManager Members
+
         public IState CurrentState { get; private set; }
+
+        #endregion
 
         #region Constructor
 
-        public StateManager(IConfigurationManager configurationManager, INetworkManager networkManager, IUserInterfaceManager userInterfaceManager, 
-            IResourceManager resourceManager, IMapManager mapManager, IPlayerManager playerManager, IPlacementManager placementManager, IKeyBindingManager keyBindingManager)
+        public StateManager(IConfigurationManager configurationManager, INetworkManager networkManager,
+                            IUserInterfaceManager userInterfaceManager,
+                            IResourceManager resourceManager, IMapManager mapManager, IPlayerManager playerManager,
+                            IPlacementManager placementManager, IKeyBindingManager keyBindingManager)
         {
             _managers = new Dictionary<Type, object>
                             {
@@ -100,7 +106,7 @@ namespace ClientServices.State
 
         public void RequestStateChange<T>() where T : IState
         {
-            if (CurrentState == null || CurrentState.GetType() != typeof(T))
+            if (CurrentState == null || CurrentState.GetType() != typeof (T))
                 SwitchToState<T>();
         }
 
@@ -108,17 +114,17 @@ namespace ClientServices.State
         {
             IState newState;
 
-            if (_loadedStates.ContainsKey(typeof(T)))
+            if (_loadedStates.ContainsKey(typeof (T)))
             {
-                newState = (T)_loadedStates[typeof(T)];
+                newState = (T) _loadedStates[typeof (T)];
             }
             else
             {
-                var parameters = new object[] { _managers };
-                newState = (T)Activator.CreateInstance(typeof(T), parameters);
-                _loadedStates.Add(typeof(T), newState);
+                var parameters = new object[] {_managers};
+                newState = (T) Activator.CreateInstance(typeof (T), parameters);
+                _loadedStates.Add(typeof (T), newState);
             }
-            
+
             if (CurrentState != null) CurrentState.Shutdown();
 
             CurrentState = newState;
@@ -143,8 +149,8 @@ namespace ClientServices.State
             }
             else
             {
-                var parameters = new object[] { _managers };
-                newState = (IState)Activator.CreateInstance(type, parameters);
+                var parameters = new object[] {_managers};
+                newState = (IState) Activator.CreateInstance(type, parameters);
                 _loadedStates.Add(type, newState);
             }
 

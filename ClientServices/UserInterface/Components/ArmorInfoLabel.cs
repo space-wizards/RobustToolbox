@@ -1,33 +1,31 @@
 ﻿using System;
 using System.Drawing;
-using ClientInterfaces;
+using CGO;
+using ClientInterfaces.Player;
 using ClientInterfaces.Resource;
 using GameObject;
 using GorgonLibrary;
 using GorgonLibrary.Graphics;
-using GorgonLibrary.InputDevices;
-using CGO;
-using SS13_Shared.GO;
 using SS13.IoC;
-using ClientInterfaces.Player;
-using ClientInterfaces.GOC;
+using SS13_Shared.GO;
 
 namespace ClientServices.UserInterface.Components
 {
-    class ArmorInfoLabel : GuiComponent
+    internal class ArmorInfoLabel : GuiComponent
     {
         private readonly IResourceManager _resourceManager;
-        private DamageType resAssigned;
+        private readonly DamageType resAssigned;
 
-        private TextSprite text;
         private Sprite icon;
+        private TextSprite text;
 
         public ArmorInfoLabel(DamageType resistance, IResourceManager resourceManager)
         {
             _resourceManager = resourceManager;
             resAssigned = resistance;
 
-            text = new TextSprite("StatInfoLabel" + resistance, "", _resourceManager.GetFont("CALIBRI")) { Color = Color.White };
+            text = new TextSprite("StatInfoLabel" + resistance, "", _resourceManager.GetFont("CALIBRI"))
+                       {Color = Color.White};
 
             switch (resistance)
             {
@@ -66,25 +64,29 @@ namespace ClientServices.UserInterface.Components
         public override void Update(float frameTime)
         {
             icon.Position = Position;
-            text.Position = new Vector2D(Position.X + icon.Width + 5, Position.Y + (int)(icon.Height / 2f) - (int)(text.Height / 2f));
-            ClientArea = new Rectangle(Position, new Size((int)text.Width + (int)icon.Width + 5, (int)Math.Max(icon.Height, text.Height)));
+            text.Position = new Vector2D(Position.X + icon.Width + 5,
+                                         Position.Y + (int) (icon.Height/2f) - (int) (text.Height/2f));
+            ClientArea = new Rectangle(Position,
+                                       new Size((int) text.Width + (int) icon.Width + 5,
+                                                (int) Math.Max(icon.Height, text.Height)));
 
-            IPlayerManager playerMgr = IoCManager.Resolve<IPlayerManager>();
+            var playerMgr = IoCManager.Resolve<IPlayerManager>();
             if (playerMgr != null)
             {
                 Entity playerEnt = playerMgr.ControlledEntity;
                 if (playerEnt != null)
                 {
-                    EntityStatsComp statsComp = (EntityStatsComp)playerEnt.GetComponent(ComponentFamily.EntityStats);
+                    var statsComp = (EntityStatsComp) playerEnt.GetComponent(ComponentFamily.EntityStats);
                     if (statsComp != null)
                     {
-                        text.Text = Enum.GetName(typeof(DamageType), resAssigned) + " : " + statsComp.GetArmorValue(resAssigned);
+                        text.Text = Enum.GetName(typeof (DamageType), resAssigned) + " : " +
+                                    statsComp.GetArmorValue(resAssigned);
                     }
-                    else text.Text = Enum.GetName(typeof(DamageType), resAssigned) + " : n/a";
+                    else text.Text = Enum.GetName(typeof (DamageType), resAssigned) + " : n/a";
                 }
-                else text.Text = Enum.GetName(typeof(DamageType), resAssigned) + " : n/a";
+                else text.Text = Enum.GetName(typeof (DamageType), resAssigned) + " : n/a";
             }
-            else text.Text = Enum.GetName(typeof(DamageType), resAssigned) + " : n/a";
+            else text.Text = Enum.GetName(typeof (DamageType), resAssigned) + " : n/a";
         }
 
         public override void Render()

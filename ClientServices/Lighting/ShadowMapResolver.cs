@@ -1,10 +1,8 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
+﻿using System.Drawing;
+using ClientInterfaces.Resource;
 using GorgonLibrary;
 using GorgonLibrary.Graphics;
-using ClientInterfaces.Resource;
+using Image = GorgonLibrary.Graphics.Image;
 
 namespace SS3D.LightTest
 {
@@ -15,34 +13,35 @@ namespace SS3D.LightTest
         Size512 = 8,
         Size1024 = 9,
     }
+
     public class ShadowMapResolver
     {
         private readonly IResourceManager _resourceManager;
-        
-        private int reductionChainCount;
-        private int baseSize;
+
+        private readonly int baseSize;
+        private readonly QuadRenderer quadRender;
+        private readonly int reductionChainCount;
         private int depthBufferSize;
+        private RenderImage distancesRT;
 
-        FXShader resolveShadowsEffect;
-        FXShader reductionEffect;
+        private RenderImage distortRT;
+        private RenderImage processedShadowsRT;
+        private FXShader reductionEffect;
 
-        RenderImage distortRT;
-        RenderImage shadowMap;
-        RenderImage shadowsRT;
-        RenderImage processedShadowsRT;
+        private RenderImage[] reductionRT;
+        private FXShader resolveShadowsEffect;
+        private RenderImage shadowMap;
+        private RenderImage shadowsRT;
 
-        QuadRenderer quadRender;
-        RenderImage distancesRT;
-        RenderImage[] reductionRT;
-
-        public ShadowMapResolver(QuadRenderer quad, ShadowmapSize maxShadowmapSize, ShadowmapSize maxDepthBufferSize, IResourceManager resourceManager)
+        public ShadowMapResolver(QuadRenderer quad, ShadowmapSize maxShadowmapSize, ShadowmapSize maxDepthBufferSize,
+                                 IResourceManager resourceManager)
         {
             _resourceManager = resourceManager;
-            this.quadRender = quad;
+            quadRender = quad;
 
-            reductionChainCount = (int)maxShadowmapSize;
+            reductionChainCount = (int) maxShadowmapSize;
             baseSize = 2 << reductionChainCount;
-            depthBufferSize = 2 << (int)maxDepthBufferSize;
+            depthBufferSize = 2 << (int) maxDepthBufferSize;
         }
 
         public void LoadContent()
@@ -57,15 +56,18 @@ namespace SS3D.LightTest
             reductionRT = new RenderImage[reductionChainCount];
             for (int i = 0; i < reductionChainCount; i++)
             {
-                reductionRT[i] = new RenderImage("reductionRT" + i + baseSize, 2 << i, baseSize, ImageBufferFormats.BufferGR1616F);
+                reductionRT[i] = new RenderImage("reductionRT" + i + baseSize, 2 << i, baseSize,
+                                                 ImageBufferFormats.BufferGR1616F);
             }
             shadowsRT = new RenderImage("shadowsRT" + baseSize, baseSize, baseSize, ImageBufferFormats.BufferRGB888A8);
-            processedShadowsRT = new RenderImage("processedShadowsRT" + baseSize, baseSize, baseSize, ImageBufferFormats.BufferRGB888A8);
+            processedShadowsRT = new RenderImage("processedShadowsRT" + baseSize, baseSize, baseSize,
+                                                 ImageBufferFormats.BufferRGB888A8);
         }
 
-        public void ResolveShadows(Image shadowCastersTexture, RenderImage result, Vector2D lightPosition, bool attenuateShadows, Image mask, Vector4D maskProps, Vector4D diffuseColor)
+        public void ResolveShadows(Image shadowCastersTexture, RenderImage result, Vector2D lightPosition,
+                                   bool attenuateShadows, Image mask, Vector4D maskProps, Vector4D diffuseColor)
         {
-            resolveShadowsEffect.Parameters["AttenuateShadows"].SetValue(attenuateShadows?0:1);
+            resolveShadowsEffect.Parameters["AttenuateShadows"].SetValue(attenuateShadows ? 0 : 1);
             resolveShadowsEffect.Parameters["MaskProps"].SetValue(maskProps);
             resolveShadowsEffect.Parameters["DiffuseColor"].SetValue(diffuseColor);
             //Gorgon.CurrentRenderTarget.BlendingMode = BlendingModes.None;
@@ -86,9 +88,9 @@ namespace SS3D.LightTest
         private void ExecuteTechnique(Image source, RenderImage destination, string techniqueName, RenderImage shadowMap)
         {
             Vector2D renderTargetSize;
-            renderTargetSize = new Vector2D((float)baseSize, (float)baseSize);
+            renderTargetSize = new Vector2D(baseSize, baseSize);
             Gorgon.CurrentRenderTarget = destination;
-            Gorgon.CurrentRenderTarget.Clear(System.Drawing.Color.White);
+            Gorgon.CurrentRenderTarget.Clear(Color.White);
 
             Gorgon.CurrentShader = resolveShadowsEffect.Techniques[techniqueName];
             resolveShadowsEffect.Parameters["renderTargetSize"].SetValue(renderTargetSize);
@@ -97,7 +99,7 @@ namespace SS3D.LightTest
             if (shadowMap != null)
                 resolveShadowsEffect.Parameters["ShadowMapTexture"].SetValue(shadowMap);
 
-            quadRender.Render(new Vector2D(1, 1) * -1, new Vector2D(1, 1));
+            quadRender.Render(new Vector2D(1, 1)*-1, new Vector2D(1, 1));
 
             Gorgon.CurrentRenderTarget = null;
         }
@@ -114,27 +116,25 @@ namespace SS3D.LightTest
                 d = reductionRT[step];
 
                 Gorgon.CurrentRenderTarget = d;
-                d.Clear(System.Drawing.Color.White);
+                d.Clear(Color.White);
 
                 reductionEffect.Parameters["SourceTexture"].SetValue(s);
-                Vector2D textureDim = new Vector2D(1.0f / (float)s.Width, 1.0f / (float)s.Height);
+                var textureDim = new Vector2D(1.0f/s.Width, 1.0f/s.Height);
                 reductionEffect.Parameters["TextureDimensions"].SetValue(textureDim);
-                quadRender.Render(new Vector2D(1, 1) * -1, new Vector2D(1, 1));
+                quadRender.Render(new Vector2D(1, 1)*-1, new Vector2D(1, 1));
                 s = d;
                 step--;
-
             }
 
             //copy to destination
             Gorgon.CurrentRenderTarget = destination;
             Gorgon.CurrentShader = reductionEffect.Techniques["Copy"];
             reductionEffect.Parameters["SourceTexture"].SetValue(d);
-            Gorgon.CurrentRenderTarget.Clear(System.Drawing.Color.White);
-            quadRender.Render(new Vector2D(1, 1) * -1, new Vector2D(1, 1));
+            Gorgon.CurrentRenderTarget.Clear(Color.White);
+            quadRender.Render(new Vector2D(1, 1)*-1, new Vector2D(1, 1));
 
             reductionEffect.Parameters["SourceTexture"].SetValue(reductionRT[reductionChainCount - 1]);
             Gorgon.CurrentRenderTarget = null;
         }
-
     }
 }

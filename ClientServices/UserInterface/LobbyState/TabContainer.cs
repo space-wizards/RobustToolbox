@@ -1,29 +1,25 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Drawing;
-using ClientInterfaces;
+﻿using System.Drawing;
 using ClientInterfaces.Resource;
-using ClientInterfaces.UserInterface;
-using GorgonLibrary;
 using GorgonLibrary.Graphics;
 using GorgonLibrary.InputDevices;
 
 namespace ClientServices.UserInterface.Components
 {
-    class TabContainer : ScrollableContainer
+    internal class TabContainer : ScrollableContainer
     {
+        public string tabName = "";
         public Sprite tabSprite = null;
+
+        public TabContainer(string uniqueName, Size size, IResourceManager resourceManager)
+            : base(uniqueName, size, resourceManager)
+        {
+            DrawBorder = false;
+        }
+
         public string tabSpriteName
         {
             get { return tabSprite != null ? tabSprite.Name : ""; }
             set { tabSprite = _resourceManager.GetSprite(value); }
-        }
-        public string tabName = "";
-
-        public TabContainer(string uniqueName, Size size, IResourceManager resourceManager) 
-            : base(uniqueName, size, resourceManager)
-        {
-            DrawBorder = false;
         }
 
         public override void Update(float frameTime)

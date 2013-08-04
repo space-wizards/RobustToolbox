@@ -1,11 +1,11 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Linq;
 using System.Drawing;
-using ClientInterfaces;
+using System.Linq;
 using ClientInterfaces.Network;
 using ClientInterfaces.Player;
 using ClientInterfaces.Resource;
+using GameObject;
 using GorgonLibrary.InputDevices;
 using Lidgren.Network;
 using SS13_Shared;
@@ -13,15 +13,16 @@ using SS13_Shared.GO;
 
 namespace ClientServices.UserInterface.Components
 {
-    class TargetingDummy : GuiComponent
+    internal class TargetingDummy : GuiComponent
     {
-        private readonly IPlayerManager _playerManager;
         private readonly INetworkManager _networkManager;
+        private readonly IPlayerManager _playerManager;
         private readonly IResourceManager _resourceManager;
 
         private List<TargetingDummyElement> _elements = new List<TargetingDummyElement>();
-        
-        public TargetingDummy(IPlayerManager playerManager, INetworkManager networkManager, IResourceManager resourceManager)
+
+        public TargetingDummy(IPlayerManager playerManager, INetworkManager networkManager,
+                              IResourceManager resourceManager)
         {
             _networkManager = networkManager;
             _playerManager = playerManager;
@@ -53,31 +54,33 @@ namespace ClientServices.UserInterface.Components
             UpdateHealthIcon();
         }
 
-        void Selected(TargetingDummyElement sender)
+        private void Selected(TargetingDummyElement sender)
         {
             //Send server targeted location
-            var msg = _networkManager.CreateMessage();
-            msg.Write((byte)NetMessage.PlayerSessionMessage);
-            msg.Write((byte)PlayerSessionMessage.SetTargetArea);
-            msg.Write((byte)sender.BodyPart);
+            NetOutgoingMessage msg = _networkManager.CreateMessage();
+            msg.Write((byte) NetMessage.PlayerSessionMessage);
+            msg.Write((byte) PlayerSessionMessage.SetTargetArea);
+            msg.Write((byte) sender.BodyPart);
             _networkManager.SendMessage(msg, NetDeliveryMethod.ReliableOrdered);
         }
 
         public void UpdateHealthIcon()
         {
-            var entity = _playerManager.ControlledEntity;
+            Entity entity = _playerManager.ControlledEntity;
 
             if (entity == null) return;
 
-            foreach (var current in _elements)
+            foreach (TargetingDummyElement current in _elements)
             {
                 if (entity != null && entity.HasComponent(ComponentFamily.Damageable))
                 {
-                    var reply = entity.SendMessage(this, ComponentFamily.Damageable, ComponentMessageType.GetCurrentLocationHealth, current.BodyPart);
+                    ComponentReplyMessage reply = entity.SendMessage(this, ComponentFamily.Damageable,
+                                                                     ComponentMessageType.GetCurrentLocationHealth,
+                                                                     current.BodyPart);
                     if (reply.MessageType == ComponentMessageType.CurrentLocationHealth)
                     {
-                        current.CurrentHealth = (int)reply.ParamsList[1];
-                        current.MaxHealth = (int)reply.ParamsList[2];
+                        current.CurrentHealth = (int) reply.ParamsList[1];
+                        current.MaxHealth = (int) reply.ParamsList[2];
                     }
                 }
             }
@@ -86,7 +89,7 @@ namespace ClientServices.UserInterface.Components
         public override sealed void Update(float frameTime)
         {
             ClientArea = new Rectangle(Position, new Size(_elements[0].ClientArea.Width, _elements[0].ClientArea.Height));
-            foreach (var current in _elements)
+            foreach (TargetingDummyElement current in _elements)
             {
                 current.Position = Position;
                 current.Update(frameTime);
@@ -95,13 +98,13 @@ namespace ClientServices.UserInterface.Components
 
         public override void Render()
         {
-            foreach (var current in _elements)
+            foreach (TargetingDummyElement current in _elements)
                 current.Render();
         }
 
         public override void Dispose()
         {
-            foreach (var current in _elements)
+            foreach (TargetingDummyElement current in _elements)
                 current.Dispose();
 
             base.Dispose();
@@ -110,7 +113,7 @@ namespace ClientServices.UserInterface.Components
 
         public override bool MouseDown(MouseInputEventArgs e)
         {
-            if (!ClientArea.Contains(new Point((int)e.Position.X, (int)e.Position.Y))) return false;
+            if (!ClientArea.Contains(new Point((int) e.Position.X, (int) e.Position.Y))) return false;
 
             TargetingDummyElement prevSelection = (from element in _elements
                                                    where element.IsSelected()
@@ -118,13 +121,14 @@ namespace ClientServices.UserInterface.Components
 
             foreach (TargetingDummyElement toClear in _elements) toClear.ClearSelected();
 
-            foreach (TargetingDummyElement current in _elements.ToArray()) //To array because list order changes in loop.
+            foreach (TargetingDummyElement current in _elements.ToArray())
+                //To array because list order changes in loop.
             {
                 if (current.MouseDown(e))
                 {
                     _elements = (from a in _elements
-                                orderby (a == current) ascending
-                                select a).ToList();
+                                 orderby (a == current) ascending
+                                 select a).ToList();
                     return true;
                 }
             }

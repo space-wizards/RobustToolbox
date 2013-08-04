@@ -3,23 +3,20 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Xml;
-using GorgonLibrary.InputDevices;
 using ClientInterfaces.Input;
+using GorgonLibrary.InputDevices;
 using SS13_Shared;
 
 namespace ClientServices.Input
 {
     public class KeyBindingManager : IKeyBindingManager
     {
-        public bool Enabled { get; set; }
-
+        private Dictionary<KeyboardKeys, BoundKeyFunctions> _boundKeys;
         private Keyboard _keyboard;
+
         public Keyboard Keyboard
         {
-            get
-            {
-                return _keyboard;
-            }
+            get { return _keyboard; }
             set
             {
                 if (_keyboard != null)
@@ -33,10 +30,21 @@ namespace ClientServices.Input
             }
         }
 
-        private Dictionary<KeyboardKeys, BoundKeyFunctions> _boundKeys;
+        #region IKeyBindingManager Members
+
+        public bool Enabled { get; set; }
 
         public event EventHandler<BoundKeyEventArgs> BoundKeyDown;
         public event EventHandler<BoundKeyEventArgs> BoundKeyUp;
+
+        public void Initialize(Keyboard keyboard)
+        {
+            Enabled = true;
+            Keyboard = keyboard;
+            LoadKeys();
+        }
+
+        #endregion
 
         /// <summary>
         /// Destructor -- unbinds from the keyboard input
@@ -47,13 +55,6 @@ namespace ClientServices.Input
 
             _keyboard.KeyDown -= KeyDown;
             _keyboard.KeyUp -= KeyUp;
-        }
-
-        public void Initialize(Keyboard keyboard)
-        {
-            Enabled = true;
-            Keyboard = keyboard;
-            LoadKeys();
         }
 
         private void KeyDown(object sender, KeyboardInputEventArgs e)
@@ -75,14 +76,15 @@ namespace ClientServices.Input
             var xml = new XmlDocument();
             var kb = new StreamReader("KeyBindings.xml");
             xml.Load(kb);
-            var resources = xml.SelectNodes("KeyBindings/Binding");
+            XmlNodeList resources = xml.SelectNodes("KeyBindings/Binding");
             _boundKeys = new Dictionary<KeyboardKeys, BoundKeyFunctions>();
             if (resources != null)
-                foreach (var node in resources.Cast<XmlNode>().Where(node => node.Attributes != null))
+                foreach (XmlNode node in resources.Cast<XmlNode>().Where(node => node.Attributes != null))
                 {
                     _boundKeys.Add(
-                        (KeyboardKeys)Enum.Parse(typeof(KeyboardKeys), node.Attributes["Key"].Value, false),
-                        (BoundKeyFunctions)Enum.Parse(typeof(BoundKeyFunctions), node.Attributes["Function"].Value, false));
+                        (KeyboardKeys) Enum.Parse(typeof (KeyboardKeys), node.Attributes["Key"].Value, false),
+                        (BoundKeyFunctions)
+                        Enum.Parse(typeof (BoundKeyFunctions), node.Attributes["Function"].Value, false));
                 }
         }
     }

@@ -1,57 +1,60 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Linq;
 using System.Drawing;
-using ClientInterfaces;
-using ClientInterfaces.GOC;
+using System.Linq;
+using CGO;
 using ClientInterfaces.Network;
 using ClientInterfaces.Player;
 using ClientInterfaces.Resource;
 using ClientInterfaces.UserInterface;
-using ClientServices.Helpers;
 using ClientServices.UserInterface.Components;
 using GameObject;
 using GorgonLibrary;
 using GorgonLibrary.Graphics;
 using GorgonLibrary.InputDevices;
 using Lidgren.Network;
-using CGO;
-using SS13_Shared.GO;
 using SS13_Shared;
+using SS13_Shared.GO;
 
 namespace ClientServices.UserInterface.Inventory
 {
     public class HumanComboGui : GuiComponent
     {
         #region Inventory UI
-        private Dictionary<EquipmentSlot, EquipmentSlotUi> _equipmentSlots = new Dictionary<EquipmentSlot, EquipmentSlotUi>();
 
-        private readonly EquipmentSlotUi _slotHead;
-        private readonly EquipmentSlotUi _slotEyes;
-        private readonly EquipmentSlotUi _slotOuter;
-        private readonly EquipmentSlotUi _slotHands;
-        private readonly EquipmentSlotUi _slotFeet;
-
-        private readonly EquipmentSlotUi _slotMask;
-        private readonly EquipmentSlotUi _slotEars;
-        private readonly EquipmentSlotUi _slotInner;
-        private readonly EquipmentSlotUi _slotBelt;
         private readonly EquipmentSlotUi _slotBack;
+        private readonly EquipmentSlotUi _slotBelt;
+        private readonly EquipmentSlotUi _slotEars;
+        private readonly EquipmentSlotUi _slotEyes;
+        private readonly EquipmentSlotUi _slotFeet;
+        private readonly EquipmentSlotUi _slotHands;
+        private readonly EquipmentSlotUi _slotHead;
+
+        private readonly EquipmentSlotUi _slotInner;
+        private readonly EquipmentSlotUi _slotMask;
+        private readonly EquipmentSlotUi _slotOuter;
+
+        private Dictionary<EquipmentSlot, EquipmentSlotUi> _equipmentSlots =
+            new Dictionary<EquipmentSlot, EquipmentSlotUi>();
 
         private InventoryViewer _inventory;
+
         #endregion
 
         #region Crafting UI
+
+        private readonly ScrollableContainer _blueprints;
+        private readonly ImageButton _craftButton;
         private readonly CraftSlotUi _craftSlot1;
         private readonly CraftSlotUi _craftSlot2;
-        private readonly ImageButton _craftButton;
-        private Timer_Bar _craftTimer;
         private readonly TextSprite _craftStatus;
-        private readonly ScrollableContainer _blueprints;
         private int _blueprintsOffset;
+        private Timer_Bar _craftTimer;
+
         #endregion
 
         #region Status UI
+
         private readonly ArmorInfoLabel _ResBlunt;
         private readonly ArmorInfoLabel _ResBurn;
         private readonly ArmorInfoLabel _ResFreeze;
@@ -59,18 +62,11 @@ namespace ClientServices.UserInterface.Inventory
         private readonly ArmorInfoLabel _ResShock;
         private readonly ArmorInfoLabel _ResSlash;
         private readonly ArmorInfoLabel _ResTox;
+
         #endregion
-
-        private byte _currentTab = 1; //1 = Inventory, 2 = Health, 3 = Crafting
-        private bool _showTabbedWindow;
-
-        private readonly TextSprite _txtDbg;
 
         private readonly Sprite _comboBg;
         private readonly ImageButton _comboClose;
-        private readonly ImageButton _tabEquip;
-        private readonly ImageButton _tabHealth;
-        private readonly ImageButton _tabCraft;
 
         private readonly Sprite _equipBg;
 
@@ -79,9 +75,16 @@ namespace ClientServices.UserInterface.Inventory
         private readonly INetworkManager _networkManager;
         private readonly IPlayerManager _playerManager;
         private readonly IResourceManager _resourceManager;
+        private readonly ImageButton _tabCraft;
+        private readonly ImageButton _tabEquip;
+        private readonly ImageButton _tabHealth;
+        private readonly TextSprite _txtDbg;
         private readonly IUserInterfaceManager _userInterfaceManager;
+        private byte _currentTab = 1; //1 = Inventory, 2 = Health, 3 = Crafting
+        private bool _showTabbedWindow;
 
-        public HumanComboGui(IPlayerManager playerManager, INetworkManager networkManager, IResourceManager resourceManager, IUserInterfaceManager userInterfaceManager)
+        public HumanComboGui(IPlayerManager playerManager, INetworkManager networkManager,
+                             IResourceManager resourceManager, IUserInterfaceManager userInterfaceManager)
         {
             _networkManager = networkManager;
             _playerManager = playerManager;
@@ -91,6 +94,7 @@ namespace ClientServices.UserInterface.Inventory
             ComponentClass = GuiComponentType.ComboGui;
 
             #region Status UI
+
             _ResBlunt = new ArmorInfoLabel(DamageType.Bludgeoning, resourceManager);
             _ResBurn = new ArmorInfoLabel(DamageType.Burn, resourceManager);
             _ResFreeze = new ArmorInfoLabel(DamageType.Freeze, resourceManager);
@@ -98,48 +102,51 @@ namespace ClientServices.UserInterface.Inventory
             _ResShock = new ArmorInfoLabel(DamageType.Shock, resourceManager);
             _ResSlash = new ArmorInfoLabel(DamageType.Slashing, resourceManager);
             _ResTox = new ArmorInfoLabel(DamageType.Toxin, resourceManager);
+
             #endregion
 
             _equipBg = _resourceManager.GetSprite("outline");
 
             _comboBg = _resourceManager.GetSprite("combo_bg");
 
-            _comboClose = new ImageButton()
-                {
-                    ImageNormal = "button_closecombo",
-                };
+            _comboClose = new ImageButton
+                              {
+                                  ImageNormal = "button_closecombo",
+                              };
 
-            _tabEquip = new ImageButton()
-                {
-                    ImageNormal = "tab_equip",
-                }; 
+            _tabEquip = new ImageButton
+                            {
+                                ImageNormal = "tab_equip",
+                            };
             _tabEquip.Clicked += TabClicked;
 
-            _tabHealth = new ImageButton()
-                {
-                    ImageNormal = "tab_health",
-                }; 
+            _tabHealth = new ImageButton
+                             {
+                                 ImageNormal = "tab_health",
+                             };
             _tabHealth.Clicked += TabClicked;
 
-            _tabCraft = new ImageButton()
-                {
-                    ImageNormal = "tab_craft",
-                }; 
+            _tabCraft = new ImageButton
+                            {
+                                ImageNormal = "tab_craft",
+                            };
             _tabCraft.Clicked += TabClicked;
 
             _comboClose.Clicked += ComboCloseClicked;
 
             //Left Side - head, eyes, outer, hands, feet
-            _slotHead = new EquipmentSlotUi(EquipmentSlot.Head, _playerManager, _resourceManager,_userInterfaceManager);
+            _slotHead = new EquipmentSlotUi(EquipmentSlot.Head, _playerManager, _resourceManager, _userInterfaceManager);
             _slotHead.Dropped += SlotDropped;
 
             _slotEyes = new EquipmentSlotUi(EquipmentSlot.Eyes, _playerManager, _resourceManager, _userInterfaceManager);
             _slotEyes.Dropped += SlotDropped;
 
-            _slotOuter = new EquipmentSlotUi(EquipmentSlot.Outer, _playerManager, _resourceManager, _userInterfaceManager);
+            _slotOuter = new EquipmentSlotUi(EquipmentSlot.Outer, _playerManager, _resourceManager,
+                                             _userInterfaceManager);
             _slotOuter.Dropped += SlotDropped;
 
-            _slotHands = new EquipmentSlotUi(EquipmentSlot.Hands, _playerManager, _resourceManager, _userInterfaceManager);
+            _slotHands = new EquipmentSlotUi(EquipmentSlot.Hands, _playerManager, _resourceManager,
+                                             _userInterfaceManager);
             _slotHands.Dropped += SlotDropped;
 
             _slotFeet = new EquipmentSlotUi(EquipmentSlot.Feet, _playerManager, _resourceManager, _userInterfaceManager);
@@ -152,7 +159,8 @@ namespace ClientServices.UserInterface.Inventory
             _slotEars = new EquipmentSlotUi(EquipmentSlot.Ears, _playerManager, _resourceManager, _userInterfaceManager);
             _slotEars.Dropped += SlotDropped;
 
-            _slotInner = new EquipmentSlotUi(EquipmentSlot.Inner, _playerManager, _resourceManager, _userInterfaceManager);
+            _slotInner = new EquipmentSlotUi(EquipmentSlot.Inner, _playerManager, _resourceManager,
+                                             _userInterfaceManager);
             _slotInner.Dropped += SlotDropped;
 
             _slotBelt = new EquipmentSlotUi(EquipmentSlot.Belt, _playerManager, _resourceManager, _userInterfaceManager);
@@ -166,10 +174,10 @@ namespace ClientServices.UserInterface.Inventory
             _craftSlot1 = new CraftSlotUi(_resourceManager, _userInterfaceManager);
             _craftSlot2 = new CraftSlotUi(_resourceManager, _userInterfaceManager);
 
-            _craftButton = new ImageButton()
-                {
-                    ImageNormal = "wrenchbutt"
-                };
+            _craftButton = new ImageButton
+                               {
+                                   ImageNormal = "wrenchbutt"
+                               };
             _craftButton.Clicked += CraftButtonClicked;
 
             _craftStatus = new TextSprite("craftText", "Status", _resourceManager.GetFont("CALIBRI"))
@@ -182,7 +190,7 @@ namespace ClientServices.UserInterface.Inventory
             _blueprints = new ScrollableContainer("blueprintCont", new Size(210, 100), _resourceManager);
         }
 
-        void CraftButtonClicked(ImageButton sender)
+        private void CraftButtonClicked(ImageButton sender)
         {
             //craftTimer = new Timer_Bar(new Size(200,15), new TimeSpan(0,0,0,10));
             if (_craftSlot1.ContainingEntity == null || _craftSlot2.ContainingEntity == null) return;
@@ -191,7 +199,8 @@ namespace ClientServices.UserInterface.Inventory
                 if (_playerManager.ControlledEntity != null)
                     if (_playerManager.ControlledEntity.HasComponent(ComponentFamily.Inventory))
                     {
-                        var invComp = (InventoryComponent)_playerManager.ControlledEntity.GetComponent(ComponentFamily.Inventory);
+                        var invComp =
+                            (InventoryComponent) _playerManager.ControlledEntity.GetComponent(ComponentFamily.Inventory);
                         if (invComp.ContainedEntities.Count >= invComp.MaxSlots)
                         {
                             _craftStatus.Text = "Status: Not enough Space";
@@ -200,34 +209,34 @@ namespace ClientServices.UserInterface.Inventory
                         }
                     }
 
-            var msg = _networkManager.CreateMessage();
-            msg.Write((byte)NetMessage.CraftMessage);
-            msg.Write((byte)CraftMessage.StartCraft);
+            NetOutgoingMessage msg = _networkManager.CreateMessage();
+            msg.Write((byte) NetMessage.CraftMessage);
+            msg.Write((byte) CraftMessage.StartCraft);
             msg.Write(_craftSlot1.ContainingEntity.Uid);
             msg.Write(_craftSlot2.ContainingEntity.Uid);
             _networkManager.SendMessage(msg, NetDeliveryMethod.ReliableUnordered);
         }
 
-        void SlotDropped(EquipmentSlotUi sender, Entity dropped)
+        private void SlotDropped(EquipmentSlotUi sender, Entity dropped)
         {
             _userInterfaceManager.DragInfo.Reset();
 
             if (_playerManager.ControlledEntity == null)
                 return;
 
-            var entity = _playerManager.ControlledEntity;
+            Entity entity = _playerManager.ControlledEntity;
 
-            var equipment = (EquipmentComponent)entity.GetComponent(ComponentFamily.Equipment);
+            var equipment = (EquipmentComponent) entity.GetComponent(ComponentFamily.Equipment);
 
             equipment.DispatchEquip(dropped.Uid); //Serverside equip component will equip and remove from hands.
         }
 
         public override void ComponentUpdate(params object[] args)
         {
-            switch ((ComboGuiMessage)args[0])
+            switch ((ComboGuiMessage) args[0])
             {
                 case ComboGuiMessage.ToggleShowPage:
-                    int page = (int)args[1];
+                    var page = (int) args[1];
                     if (page == _currentTab) _showTabbedWindow = !_showTabbedWindow;
                     else
                     {
@@ -242,39 +251,40 @@ namespace ClientServices.UserInterface.Inventory
         {
             switch (tabNum)
             {
-                case 1://Equip
-                    _currentTab = 1; 
+                case 1: //Equip
+                    _currentTab = 1;
                     break;
-                case 2://Status
+                case 2: //Status
                     if (_playerManager.ControlledEntity != null) //TEMPORARY SOLUTION.
                     {
-                        var resEntity = _playerManager.ControlledEntity;
-                        var entStats = (EntityStatsComp)resEntity.GetComponent(ComponentFamily.EntityStats);
+                        Entity resEntity = _playerManager.ControlledEntity;
+                        var entStats = (EntityStatsComp) resEntity.GetComponent(ComponentFamily.EntityStats);
                         entStats.PullFullUpdate();
                     }
                     _currentTab = 2;
                     break;
-                case 3://Craft
+                case 3: //Craft
                     _currentTab = 3;
                     break;
             }
         }
 
-        void TabClicked(ImageButton sender)
+        private void TabClicked(ImageButton sender)
         {
             if (sender == _tabEquip) ActivateTab(1);
             if (sender == _tabHealth) ActivateTab(2);
             if (sender == _tabCraft) ActivateTab(3);
         }
 
-        void ComboOpenClicked(ImageButton sender) //!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+        private void ComboOpenClicked(ImageButton sender)
+            //!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
         {
             _showTabbedWindow = !_showTabbedWindow;
             _craftStatus.Text = "Status";
             _craftStatus.Color = Color.White;
         }
 
-        void ComboCloseClicked(ImageButton sender)
+        private void ComboCloseClicked(ImageButton sender)
         {
             _showTabbedWindow = false;
             _craftStatus.Text = "Status";
@@ -285,7 +295,7 @@ namespace ClientServices.UserInterface.Inventory
         {
             if (e.Key == KeyboardKeys.I)
             {
-                _showTabbedWindow = !_showTabbedWindow; 
+                _showTabbedWindow = !_showTabbedWindow;
                 _craftStatus.Text = "Status";
                 _craftStatus.Color = Color.White;
                 return true;
@@ -296,12 +306,12 @@ namespace ClientServices.UserInterface.Inventory
 
         public override void HandleNetworkMessage(NetIncomingMessage message)
         {
-            var messageType = (ComboGuiMessage)message.ReadByte();
+            var messageType = (ComboGuiMessage) message.ReadByte();
 
             switch (messageType)
             {
                 case ComboGuiMessage.CancelCraftBar:
-                    if(_craftTimer != null)
+                    if (_craftTimer != null)
                     {
                         _craftTimer.Dispose();
                         _craftTimer = null;
@@ -320,7 +330,7 @@ namespace ClientServices.UserInterface.Inventory
                     _craftStatus.Color = Color.DarkRed;
                     break;
                 case ComboGuiMessage.CraftNeedInventorySpace:
-                    if(_craftTimer != null)
+                    if (_craftTimer != null)
                     {
                         _craftTimer.Dispose();
                         _craftTimer = null;
@@ -358,12 +368,12 @@ namespace ClientServices.UserInterface.Inventory
 
         private void AddBlueprint(NetIncomingMessage message)
         {
-            var compo1Temp = message.ReadString();
-            var compo1Name = message.ReadString();
-            var compo2Temp = message.ReadString();
-            var compo2Name = message.ReadString();
-            var resultTemp = message.ReadString();
-            var resultName = message.ReadString();
+            string compo1Temp = message.ReadString();
+            string compo1Name = message.ReadString();
+            string compo2Temp = message.ReadString();
+            string compo2Name = message.ReadString();
+            string resultTemp = message.ReadString();
+            string resultName = message.ReadString();
 
             _craftStatus.Text = "Status: You successfully create '" + resultName + "'";
             _craftStatus.Color = Color.Green;
@@ -371,12 +381,15 @@ namespace ClientServices.UserInterface.Inventory
             foreach (BlueprintButton bpbutt in _blueprints.components)
             {
                 var req = new List<string> {compo1Temp, compo2Temp};
-                if (req.Exists(x => x.ToLowerInvariant() == bpbutt.Compo1.ToLowerInvariant())) req.Remove(req.First(x => x.ToLowerInvariant() == bpbutt.Compo1.ToLowerInvariant()));
-                if (req.Exists(x => x.ToLowerInvariant() == bpbutt.Compo2.ToLowerInvariant())) req.Remove(req.First(x => x.ToLowerInvariant() == bpbutt.Compo2.ToLowerInvariant()));
+                if (req.Exists(x => x.ToLowerInvariant() == bpbutt.Compo1.ToLowerInvariant()))
+                    req.Remove(req.First(x => x.ToLowerInvariant() == bpbutt.Compo1.ToLowerInvariant()));
+                if (req.Exists(x => x.ToLowerInvariant() == bpbutt.Compo2.ToLowerInvariant()))
+                    req.Remove(req.First(x => x.ToLowerInvariant() == bpbutt.Compo2.ToLowerInvariant()));
                 if (!req.Any()) return;
             }
 
-            var newBpb = new BlueprintButton(compo1Temp, compo1Name, compo2Temp, compo2Name, resultTemp, resultName, _resourceManager);
+            var newBpb = new BlueprintButton(compo1Temp, compo1Name, compo2Temp, compo2Name, resultTemp, resultName,
+                                             _resourceManager);
             newBpb.Update(0);
 
             newBpb.Clicked += BlueprintClicked;
@@ -387,14 +400,15 @@ namespace ClientServices.UserInterface.Inventory
             _blueprints.components.Add(newBpb);
         }
 
-        void BlueprintClicked(BlueprintButton sender)
+        private void BlueprintClicked(BlueprintButton sender)
         {
             //craftTimer = new Timer_Bar(new Size(200,15), new TimeSpan(0,0,0,10));
             if (_playerManager != null)
                 if (_playerManager.ControlledEntity != null)
                     if (_playerManager.ControlledEntity.HasComponent(ComponentFamily.Inventory))
                     {
-                        var invComp = (InventoryComponent)_playerManager.ControlledEntity.GetComponent(ComponentFamily.Inventory);
+                        var invComp =
+                            (InventoryComponent) _playerManager.ControlledEntity.GetComponent(ComponentFamily.Inventory);
                         if (!invComp.ContainsEntity(sender.Compo1) || !invComp.ContainsEntity(sender.Compo2))
                         {
                             _craftStatus.Text = "Status: You do not have the required items.";
@@ -432,6 +446,7 @@ namespace ClientServices.UserInterface.Inventory
                     case (1): //Equip tab
                         {
                             #region Equip
+
                             _equipBg.Draw();
 
                             //Left Side - head, eyes, outer, hands, feet
@@ -449,7 +464,8 @@ namespace ClientServices.UserInterface.Inventory
                             _slotBack.Render();
 
                             if (_inventory != null) _inventory.Render();
-                            break; 
+                            break;
+
                             #endregion
                         }
                     case (2): //Health tab
@@ -464,20 +480,23 @@ namespace ClientServices.UserInterface.Inventory
                             _ResShock.Render();
                             _ResTox.Render();
 
-                            break; 
+                            break;
+
                             #endregion
                         }
                     case (3): //Craft tab
                         {
                             #region Crafting
+
                             if (_craftTimer != null) _craftTimer.Render();
                             if (_inventory != null) _inventory.Render();
                             _craftSlot1.Render();
                             _craftSlot2.Render();
-                            _craftButton.Render(); 
+                            _craftButton.Render();
                             _craftStatus.Draw();
                             _blueprints.Render();
                             break;
+
                             #endregion
                         }
                 }
@@ -486,63 +505,66 @@ namespace ClientServices.UserInterface.Inventory
 
         public override void Update(float frameTime)
         {
-            if (_inventory == null && _playerManager != null) //Gotta do this here because the vars are null in the constructor.
+            if (_inventory == null && _playerManager != null)
+                //Gotta do this here because the vars are null in the constructor.
                 if (_playerManager.ControlledEntity != null)
                     if (_playerManager.ControlledEntity.HasComponent(ComponentFamily.Inventory))
                     {
-                        var invComp = (InventoryComponent)_playerManager.ControlledEntity.GetComponent(ComponentFamily.Inventory);
+                        var invComp =
+                            (InventoryComponent) _playerManager.ControlledEntity.GetComponent(ComponentFamily.Inventory);
                         _inventory = new InventoryViewer(invComp, _userInterfaceManager, _resourceManager);
                     }
 
             _comboBg.Position = Position;
 
-            var equipBgPos = Position;
+            Point equipBgPos = Position;
             _equipBg.Position = Position;
-            equipBgPos.Offset((int)(_comboBg.AABB.Width / 2f - _equipBg.AABB.Width / 2f), 40);
+            equipBgPos.Offset((int) (_comboBg.AABB.Width/2f - _equipBg.AABB.Width/2f), 40);
             _equipBg.Position = equipBgPos;
 
-            var comboClosePos = Position;
+            Point comboClosePos = Position;
             comboClosePos.Offset(264, 11); //Magic photoshop ruler numbers.
             _comboClose.Position = comboClosePos;
             _comboClose.Update(frameTime);
 
-            var tabEquipPos = Position;
-            tabEquipPos.Offset(-26 , 76); //Magic photoshop ruler numbers.
+            Point tabEquipPos = Position;
+            tabEquipPos.Offset(-26, 76); //Magic photoshop ruler numbers.
             _tabEquip.Position = tabEquipPos;
             _tabEquip.Color = _currentTab == 1 ? Color.White : _inactiveColor;
             _tabEquip.Update(frameTime);
 
-            var tabHealthPos = tabEquipPos;
+            Point tabHealthPos = tabEquipPos;
             tabHealthPos.Offset(0, 3 + _tabEquip.ClientArea.Height);
             _tabHealth.Position = tabHealthPos;
             _tabHealth.Color = _currentTab == 2 ? Color.White : _inactiveColor;
             _tabHealth.Update(frameTime);
-            
-            var tabCraftPos = tabHealthPos;
+
+            Point tabCraftPos = tabHealthPos;
             tabCraftPos.Offset(0, 3 + _tabHealth.ClientArea.Height);
             _tabCraft.Position = tabCraftPos;
             _tabCraft.Color = _currentTab == 3 ? Color.White : _inactiveColor;
             _tabCraft.Update(frameTime);
 
-            ClientArea = new Rectangle(Position.X, Position.Y, (int)_comboBg.AABB.Width, (int)_comboBg.AABB.Height);
+            ClientArea = new Rectangle(Position.X, Position.Y, (int) _comboBg.AABB.Width, (int) _comboBg.AABB.Height);
 
             switch (_currentTab)
             {
                 case (1): //Equip tab
                     {
                         #region Equip
+
                         //Only set position for topmost 2 slots directly. Rest uses these to position themselves.
-                        var slotLeftStart = Position;
+                        Point slotLeftStart = Position;
                         slotLeftStart.Offset(28, 40);
                         _slotHead.Position = slotLeftStart;
                         _slotHead.Update(frameTime);
 
-                        var slotRightStart = Position;
-                        slotRightStart.Offset((int)(_comboBg.AABB.Width - _slotMask.ClientArea.Width - 28), 40);
+                        Point slotRightStart = Position;
+                        slotRightStart.Offset((int) (_comboBg.AABB.Width - _slotMask.ClientArea.Width - 28), 40);
                         _slotMask.Position = slotRightStart;
                         _slotMask.Update(frameTime);
 
-                        var vertSpacing = 6 + _slotHead.ClientArea.Height;
+                        int vertSpacing = 6 + _slotHead.ClientArea.Height;
 
                         //Left Side - head, eyes, outer, hands, feet
                         slotLeftStart.Offset(0, vertSpacing);
@@ -583,12 +605,14 @@ namespace ClientServices.UserInterface.Inventory
                             _inventory.Position = new Point(Position.X + 12, Position.Y + 315);
                             _inventory.Update(frameTime);
                         }
-                        break; 
+                        break;
+
                         #endregion
                     }
                 case (2): //Health tab
                     {
                         #region Status
+
                         var resLinePos = new Point(Position.X + 35, Position.Y + 70);
 
                         const int spacing = 8;
@@ -620,24 +644,36 @@ namespace ClientServices.UserInterface.Inventory
                         _ResTox.Position = resLinePos;
                         _ResTox.Update(frameTime);
 
-                        break; 
+                        break;
+
                         #endregion
                     }
                 case (3): //Craft tab
                     {
                         #region Crafting
+
                         _craftSlot1.Position = new Point(Position.X + 40, Position.Y + 80);
                         _craftSlot1.Update(frameTime);
 
-                        _craftSlot2.Position = new Point(Position.X + ClientArea.Width - _craftSlot2.ClientArea.Width - 40, Position.Y + 80);
+                        _craftSlot2.Position =
+                            new Point(Position.X + ClientArea.Width - _craftSlot2.ClientArea.Width - 40, Position.Y + 80);
                         _craftSlot2.Update(frameTime);
 
-                        _craftButton.Position = new Point(Position.X + (int)(ClientArea.Width / 2f) - (int)(_craftButton.ClientArea.Width / 2f), Position.Y + 70);
+                        _craftButton.Position =
+                            new Point(
+                                Position.X + (int) (ClientArea.Width/2f) - (int) (_craftButton.ClientArea.Width/2f),
+                                Position.Y + 70);
                         _craftButton.Update(frameTime);
 
-                        if (_craftTimer != null) _craftTimer.Position = new Point(Position.X + (int)(ClientArea.Width / 2f) - (int)(_craftTimer.ClientArea.Width / 2f), Position.Y + 155);
+                        if (_craftTimer != null)
+                            _craftTimer.Position =
+                                new Point(
+                                    Position.X + (int) (ClientArea.Width/2f) - (int) (_craftTimer.ClientArea.Width/2f),
+                                    Position.Y + 155);
 
-                        _craftStatus.Position = new Vector2D(Position.X + (int)(ClientArea.Width / 2f) - (int)(_craftStatus.Width / 2f), Position.Y + 40);
+                        _craftStatus.Position =
+                            new Vector2D(Position.X + (int) (ClientArea.Width/2f) - (int) (_craftStatus.Width/2f),
+                                         Position.Y + 40);
 
                         _blueprints.Position = new Point(Position.X + 40, Position.Y + 180);
                         _blueprints.Update(frameTime);
@@ -647,12 +683,15 @@ namespace ClientServices.UserInterface.Inventory
                             _inventory.Position = new Point(Position.X + 12, Position.Y + 315);
                             _inventory.Update(frameTime);
                         }
-                        break; 
+                        break;
+
                         #endregion
-                    }   
+                    }
             }
 
-            if (_craftTimer != null) _craftTimer.Update(frameTime); //Needs to update even when its not on the crafting tab so it continues to count.
+            if (_craftTimer != null)
+                _craftTimer.Update(frameTime);
+                    //Needs to update even when its not on the crafting tab so it continues to count.
         }
 
         public override void Dispose()
@@ -673,6 +712,7 @@ namespace ClientServices.UserInterface.Inventory
                     case (1): //Equip tab
                         {
                             #region Equip
+
                             //Left Side - head, eyes, outer, hands, feet
                             if (_slotHead.MouseDown(e)) return true;
                             if (_slotEyes.MouseDown(e)) return true;
@@ -688,18 +728,22 @@ namespace ClientServices.UserInterface.Inventory
                             if (_slotBack.MouseDown(e)) return true;
 
                             if (_inventory != null) if (_inventory.MouseDown(e)) return true;
-                            break; 
+                            break;
+
                             #endregion
                         }
                     case (2): //Health tab
                         {
                             #region Status
-                            break; 
+
+                            break;
+
                             #endregion
                         }
                     case (3): //Craft tab
                         {
                             #region Crafting
+
                             if (_craftTimer != null) if (_craftTimer.MouseDown(e)) return true;
                             if (_craftSlot1.MouseDown(e)) return true;
                             if (_craftSlot2.MouseDown(e)) return true;
@@ -707,19 +751,19 @@ namespace ClientServices.UserInterface.Inventory
                             if (_blueprints.MouseDown(e)) return true;
                             if (_inventory != null) if (_inventory.MouseDown(e)) return true;
 
-                            break; 
+                            break;
+
                             #endregion
                         }
                 }
-
             }
             return false;
         }
 
         private void SendSwitchHandTo(Hand hand)
         {
-            var playerEntity = _playerManager.ControlledEntity;
-            var equipComponent = (HumanHandsComponent)playerEntity.GetComponent(ComponentFamily.Hands);
+            Entity playerEntity = _playerManager.ControlledEntity;
+            var equipComponent = (HumanHandsComponent) playerEntity.GetComponent(ComponentFamily.Hands);
             equipComponent.SendSwitchHands(hand);
         }
 
@@ -732,6 +776,7 @@ namespace ClientServices.UserInterface.Inventory
                 case (1): //Equip tab
                     {
                         #region Equip
+
                         //Left Side - head, eyes, outer, hands, feet
                         if (_slotHead.MouseUp(e)) return true;
                         if (_slotEyes.MouseUp(e)) return true;
@@ -748,31 +793,37 @@ namespace ClientServices.UserInterface.Inventory
 
                         if (_inventory != null) if (_inventory.MouseUp(e)) return true;
 
-                        if (_comboBg.AABB.Contains(mouseAABB) && _userInterfaceManager.DragInfo.IsEntity && _userInterfaceManager.DragInfo.IsActive)
-                        { //Should be refined to only trigger in the equip area. Equip it if they drop it anywhere on the thing. This might make the slots obsolete if we keep it.
+                        if (_comboBg.AABB.Contains(mouseAABB) && _userInterfaceManager.DragInfo.IsEntity &&
+                            _userInterfaceManager.DragInfo.IsActive)
+                        {
+                            //Should be refined to only trigger in the equip area. Equip it if they drop it anywhere on the thing. This might make the slots obsolete if we keep it.
                             if (_playerManager.ControlledEntity == null)
                                 return false;
 
-                            var entity = (Entity)_playerManager.ControlledEntity;
+                            Entity entity = _playerManager.ControlledEntity;
 
-                            var equipment = (EquipmentComponent)entity.GetComponent(ComponentFamily.Equipment);
+                            var equipment = (EquipmentComponent) entity.GetComponent(ComponentFamily.Equipment);
                             equipment.DispatchEquip(_userInterfaceManager.DragInfo.DragEntity.Uid);
                             _userInterfaceManager.DragInfo.Reset();
                             return true;
                         }
 
-                        break; 
+                        break;
+
                         #endregion
                     }
                 case (2): //Health tab
                     {
                         #region Status
-                        break; 
+
+                        break;
+
                         #endregion
                     }
                 case (3): //Craft tab
                     {
                         #region Crafting
+
                         if (_craftTimer != null) if (_craftTimer.MouseUp(e)) return true;
                         if (_craftSlot1.MouseUp(e))
                         {
@@ -787,7 +838,8 @@ namespace ClientServices.UserInterface.Inventory
                         if (_craftButton.MouseUp(e)) return true;
                         if (_blueprints.MouseUp(e)) return true;
                         if (_inventory != null) if (_inventory.MouseUp(e)) return true;
-                        break; 
+                        break;
+
                         #endregion
                     }
             }
@@ -796,12 +848,13 @@ namespace ClientServices.UserInterface.Inventory
         }
 
         public override void MouseMove(MouseInputEventArgs e)
-        {      
+        {
             switch (_currentTab)
             {
                 case (1): //Equip tab
                     {
                         #region Equip
+
                         //Left Side - head, eyes, outer, hands, feet
                         _slotHead.MouseMove(e);
                         _slotEyes.MouseMove(e);
@@ -817,25 +870,30 @@ namespace ClientServices.UserInterface.Inventory
                         _slotBack.MouseMove(e);
 
                         if (_inventory != null) _inventory.MouseMove(e);
-                        break; 
+                        break;
+
                         #endregion
                     }
                 case (2): //Health tab
                     {
                         #region Status
-                        break; 
+
+                        break;
+
                         #endregion
                     }
                 case (3): //Craft tab
                     {
                         #region Crafting
+
                         if (_craftTimer != null) _craftTimer.MouseMove(e);
                         _craftSlot1.MouseMove(e);
                         _craftSlot2.MouseMove(e);
                         _craftButton.MouseMove(e);
                         _blueprints.MouseMove(e);
                         if (_inventory != null) _inventory.MouseMove(e);
-                        break; 
+                        break;
+
                         #endregion
                     }
             }

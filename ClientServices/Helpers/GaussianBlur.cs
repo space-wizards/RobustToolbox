@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Drawing;
-using ClientInterfaces;
 using ClientInterfaces.Resource;
 using ClientInterfaces.Utility;
 using GorgonLibrary;
@@ -9,11 +8,35 @@ using SS13.IoC;
 
 namespace ClientServices.Helpers
 {
-    class GaussianBlur
+    internal class GaussianBlur
     {
-        private FXShader _shader;
+        private readonly IResourceManager _resourceManager;
+        private readonly string targetName;
         private RenderImage _intermediateTarget;
-        private string targetName;
+        private FXShader _shader;
+
+        /// <summary>
+        /// Default constructor for the GaussianBlur class. This constructor
+        /// should be called if you don't want the GaussianBlur class to use
+        /// its GaussianBlur.fx effect file to perform the two pass Gaussian
+        /// blur operation.
+        /// </summary>
+        public GaussianBlur(IResourceManager resourceManager)
+        {
+            _resourceManager = resourceManager;
+
+            targetName = "gaussTarget" + IoCManager.Resolve<IRand>().Next(0, 1000000000);
+
+            //Set Defaults
+            Radius = 7;
+            Amount = 2.5f;
+            Size = new SizeF(256.0f, 256.0f);
+            ComputeKernel();
+            SetShader();
+
+            //ComputeOffsets(Gorgon.Screen.Width, Gorgon.Screen.Height);
+            ComputeOffsets();
+        }
 
         /// <summary>
         /// Returns the radius of the Gaussian blur filter kernel in pixels.
@@ -54,31 +77,6 @@ namespace ClientServices.Helpers
 
         public SizeF Size { get; private set; }
 
-        private readonly IResourceManager _resourceManager;
-
-        /// <summary>
-        /// Default constructor for the GaussianBlur class. This constructor
-        /// should be called if you don't want the GaussianBlur class to use
-        /// its GaussianBlur.fx effect file to perform the two pass Gaussian
-        /// blur operation.
-        /// </summary>
-        public GaussianBlur(IResourceManager resourceManager)
-        {
-            _resourceManager = resourceManager;
-
-            targetName = "gaussTarget" + IoCManager.Resolve<IRand>().Next(0, 1000000000);
-            
-            //Set Defaults
-            Radius = 7;
-            Amount = 2.5f;
-            Size = new SizeF(256.0f, 256.0f);
-            ComputeKernel();
-            SetShader();
-            
-            //ComputeOffsets(Gorgon.Screen.Width, Gorgon.Screen.Height);
-            ComputeOffsets();
-        }
-
         public void Dispose()
         {
         }
@@ -94,7 +92,6 @@ namespace ClientServices.Helpers
         {
             Size = new SizeF(size, size);
             ComputeOffsets();
-            
         }
 
         public void SetSize(SizeF size)
@@ -105,7 +102,7 @@ namespace ClientServices.Helpers
 
         public void SetRadius(int radius)
         {
-            switch(radius)
+            switch (radius)
             {
                 case 3:
                 case 5:
@@ -120,7 +117,7 @@ namespace ClientServices.Helpers
             ComputeKernel();
             SetShader();
         }
-        
+
         private void SetShader()
         {
             _shader = _resourceManager.GetShader("GaussianBlur" + Radius);
@@ -135,22 +132,22 @@ namespace ClientServices.Helpers
         public void ComputeKernel()
         {
             Kernel = null;
-            Kernel = new float[Radius * 2 + 1];
-            Sigma = Radius / Amount;
+            Kernel = new float[Radius*2 + 1];
+            Sigma = Radius/Amount;
 
-            var twoSigmaSquare = 2.0f * Sigma * Sigma;
-            var sigmaRoot = (float)Math.Sqrt(twoSigmaSquare * Math.PI);
-            var total = 0.0f;
+            float twoSigmaSquare = 2.0f*Sigma*Sigma;
+            var sigmaRoot = (float) Math.Sqrt(twoSigmaSquare*Math.PI);
+            float total = 0.0f;
 
-            for (var i = -Radius; i <= Radius; ++i)
+            for (int i = -Radius; i <= Radius; ++i)
             {
-                float distance = i * i;
-                var index = i + Radius;
-                Kernel[index] = (float)Math.Exp(-distance / twoSigmaSquare) / sigmaRoot;
+                float distance = i*i;
+                int index = i + Radius;
+                Kernel[index] = (float) Math.Exp(-distance/twoSigmaSquare)/sigmaRoot;
                 total += Kernel[index];
             }
 
-            for (var i = 0; i < Kernel.Length; ++i)
+            for (int i = 0; i < Kernel.Length; ++i)
                 Kernel[i] /= total;
         }
 
@@ -167,22 +164,22 @@ namespace ClientServices.Helpers
         {
             float textureWidth = Size.Width;
             float textureHeight = Size.Height;
-            if(Kernel == null)
+            if (Kernel == null)
                 ComputeKernel();
 
             WeightsOffsetsX = null;
             WeightsOffsetsY = null;
-            WeightsOffsetsX = new Vector4D[Radius * 2 + 1];
-            WeightsOffsetsY = new Vector4D[Radius * 2 + 1];
+            WeightsOffsetsX = new Vector4D[Radius*2 + 1];
+            WeightsOffsetsY = new Vector4D[Radius*2 + 1];
 
-            var xOffset = 1.0f / textureWidth;
-            var yOffset = 1.0f / textureHeight;
+            float xOffset = 1.0f/textureWidth;
+            float yOffset = 1.0f/textureHeight;
 
-            for (var i = -Radius; i <= Radius; ++i)
+            for (int i = -Radius; i <= Radius; ++i)
             {
-                var index = i + Radius;
-                WeightsOffsetsX[index] = new Vector4D(Kernel[index], i * xOffset, 0.0f, 0.0f);
-                WeightsOffsetsY[index] = new Vector4D(Kernel[index], i * yOffset, 0.0f, 0.0f);
+                int index = i + Radius;
+                WeightsOffsetsX[index] = new Vector4D(Kernel[index], i*xOffset, 0.0f, 0.0f);
+                WeightsOffsetsY[index] = new Vector4D(Kernel[index], i*yOffset, 0.0f, 0.0f);
             }
         }
 

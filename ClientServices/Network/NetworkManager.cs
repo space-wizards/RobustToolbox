@@ -1,11 +1,11 @@
 ﻿using System;
 using ClientInterfaces.Configuration;
-using ClientInterfaces.Network;
-using Lidgren.Network;
-using SS13_Shared;
 using ClientInterfaces.Map;
+using ClientInterfaces.Network;
 using ClientServices.Map;
+using Lidgren.Network;
 using SS13.IoC;
+using SS13_Shared;
 
 namespace ClientServices.Network
 {
@@ -13,48 +13,17 @@ namespace ClientServices.Network
     {
         private const string ServerName = "SS13 Server";
         private readonly NetPeerConfiguration _netConfig = new NetPeerConfiguration("SS13_NetTag");
-        private GameType _serverGameType;
         private NetClient _netClient;
-
-        public bool IsConnected { get; private set; }
-        
-        public NetPeerStatistics CurrentStatistics
-        {
-            get { return _netClient.Statistics; }
-        }
-
-        public long UniqueId
-        {
-            get { return _netClient.UniqueIdentifier; }
-        }
-
-        public event EventHandler<IncomingNetworkMessageArgs> MessageArrived;  //Called when we recieve a new message.
-        protected virtual void OnMessageArrived(NetIncomingMessage message)
-        {
-            if (MessageArrived != null) MessageArrived(this, new IncomingNetworkMessageArgs(message));
-        }
-
-        public event EventHandler Connected;     //Called when we connect to a server.
-        protected virtual void OnConnected()
-        {
-            if (Connected != null) Connected(this, null);
-        }
-
-        public event EventHandler Disconnected;  //Called when we Disconnect from a server.
-        protected virtual void OnDisconnected()
-        {
-            if (Disconnected != null) Disconnected(this, null);
-        }
+        private GameType _serverGameType;
 
         public NetworkManager()
         {
-
             IsConnected = false;
 
             var config = IoCManager.Resolve<IConfigurationManager>();
 
             //Simulate Latency
-            if(config.GetSimulateLatency())
+            if (config.GetSimulateLatency())
             {
                 _netConfig.SimulatedLoss = config.GetSimulatedLoss();
                 _netConfig.SimulatedMinimumLatency = config.GetSimulatedMinimumLatency();
@@ -65,21 +34,34 @@ namespace ClientServices.Network
             _netClient.Start();
         }
 
+        #region INetworkManager Members
+
+        public bool IsConnected { get; private set; }
+
+        public NetPeerStatistics CurrentStatistics
+        {
+            get { return _netClient.Statistics; }
+        }
+
+        public long UniqueId
+        {
+            get { return _netClient.UniqueIdentifier; }
+        }
+
+        public event EventHandler<IncomingNetworkMessageArgs> MessageArrived; //Called when we recieve a new message.
+
+        public event EventHandler Connected; //Called when we connect to a server.
+
+        public event EventHandler Disconnected; //Called when we Disconnect from a server.
+
         public void ConnectTo(string host)
         {
-          _netClient.Connect(host,1212);
+            _netClient.Connect(host, 1212);
         }
 
         public void Disconnect()
         {
             Restart();
-        }
-
-        public void Restart()
-        {
-            _netClient.Shutdown("Leaving");
-            _netClient = new NetClient(_netConfig);
-            _netClient.Start();
         }
 
         public void UpdateNetwork()
@@ -106,31 +88,11 @@ namespace ClientServices.Network
             }
         }
 
-        public void ShutDown()
-        {
-            _netClient.Shutdown("Quitting");
-        }
-
-        public void SetGameType(NetIncomingMessage msg)
-        {
-            _serverGameType = (GameType)msg.ReadByte();
-        }
-
         public void RequestMap()
         {
-            var message = _netClient.CreateMessage();
-            message.Write((byte)NetMessage.RequestMap);
+            NetOutgoingMessage message = _netClient.CreateMessage();
+            message.Write((byte) NetMessage.RequestMap);
             _netClient.SendMessage(message, NetDeliveryMethod.ReliableUnordered);
-        }
-
-        public void SendChangeTile(int x, int z, string newTile)
-        {
-            var mapMgr = (MapManager)IoCManager.Resolve<IMapManager>();
-            var netMessage = _netClient.CreateMessage();
-            netMessage.Write(x);
-            netMessage.Write(z);
-            netMessage.Write((byte)mapMgr.GetTileIndex(newTile));
-            _netClient.SendMessage(netMessage, NetDeliveryMethod.ReliableOrdered);
         }
 
         public NetOutgoingMessage CreateMessage()
@@ -140,8 +102,8 @@ namespace ClientServices.Network
 
         public void SendClientName(string name)
         {
-            var message = _netClient.CreateMessage();
-            message.Write((byte)NetMessage.ClientName);
+            NetOutgoingMessage message = _netClient.CreateMessage();
+            message.Write((byte) NetMessage.ClientName);
             message.Write(name);
             _netClient.SendMessage(message, NetDeliveryMethod.ReliableOrdered);
         }
@@ -152,6 +114,50 @@ namespace ClientServices.Network
             {
                 _netClient.SendMessage(message, deliveryMethod);
             }
+        }
+
+        #endregion
+
+        protected virtual void OnMessageArrived(NetIncomingMessage message)
+        {
+            if (MessageArrived != null) MessageArrived(this, new IncomingNetworkMessageArgs(message));
+        }
+
+        protected virtual void OnConnected()
+        {
+            if (Connected != null) Connected(this, null);
+        }
+
+        protected virtual void OnDisconnected()
+        {
+            if (Disconnected != null) Disconnected(this, null);
+        }
+
+        public void Restart()
+        {
+            _netClient.Shutdown("Leaving");
+            _netClient = new NetClient(_netConfig);
+            _netClient.Start();
+        }
+
+        public void ShutDown()
+        {
+            _netClient.Shutdown("Quitting");
+        }
+
+        public void SetGameType(NetIncomingMessage msg)
+        {
+            _serverGameType = (GameType) msg.ReadByte();
+        }
+
+        public void SendChangeTile(int x, int z, string newTile)
+        {
+            var mapMgr = (MapManager) IoCManager.Resolve<IMapManager>();
+            NetOutgoingMessage netMessage = _netClient.CreateMessage();
+            netMessage.Write(x);
+            netMessage.Write(z);
+            netMessage.Write(mapMgr.GetTileIndex(newTile));
+            _netClient.SendMessage(netMessage, NetDeliveryMethod.ReliableOrdered);
         }
 
         public NetIncomingMessage GetNetworkUpdate()

@@ -80,7 +80,7 @@ namespace CGO
         private void CheckFullUpdate(uint checksum) //This should never happen. This just exists in case it desynchs.
         {
             long sum = Actions.Sum(x => x.Uid)*Actions.Count;
-                //Absolutely not perfect or safe. If this causes problems later (unlikely) we can still change it.
+            //Absolutely not perfect or safe. If this causes problems later (unlikely) we can still change it.
             if (sum != checksum)
                 Owner.SendComponentNetworkMessage(this, NetDeliveryMethod.ReliableUnordered,
                                                   ComponentMessageType.RequestActionList);

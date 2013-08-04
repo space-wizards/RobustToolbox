@@ -330,7 +330,7 @@ namespace ClientServices.Tiles
         {
             Sprite =
                 _resourceManager.GetSprite("wall_texture" + mapMgr.SetSprite(TilePosition.X, TilePosition.Y).ToString());
-                //Optimize
+            //Optimize
 
             Sprite.SetPosition(TilePosition.X*tileSpacing - xTopLeft, TilePosition.Y*tileSpacing - yTopLeft);
             Sprite.Position -= new Vector2D(0, tileSpacing);

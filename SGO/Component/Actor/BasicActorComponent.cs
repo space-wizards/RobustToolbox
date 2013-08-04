@@ -49,7 +49,7 @@ namespace SGO
                 case ComponentMessageType.Die:
                     playerSession.AddPostProcessingEffect(PostProcessingEffectType.Death, -1);
                     IoCManager.Resolve<IRoundManager>().CurrentGameMode.PlayerDied(playerSession);
-                        // Tell the current game mode a player just died
+                    // Tell the current game mode a player just died
                     break;
             }
 

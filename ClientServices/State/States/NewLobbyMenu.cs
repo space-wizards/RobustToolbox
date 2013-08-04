@@ -38,7 +38,7 @@ namespace ClientServices.State.States
         private readonly TabbedMenu _tabs;
 
         private float _lastLblSpacing = 10;
-                      //TODO Actually calculate this and adjust all labels accordingly. Make sure we compensate if labels longer than status line.
+        //TODO Actually calculate this and adjust all labels accordingly. Make sure we compensate if labels longer than status line.
 
         private RectangleF _recStatus;
         private TabContainer _tabActive;

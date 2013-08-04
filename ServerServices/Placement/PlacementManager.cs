@@ -23,7 +23,7 @@ namespace ServerServices.Placement
         //TO-DO: Expand for multiple permission per mob?
         //       Add support for multi-use placeables (tiles etc.).
         public List<PlacementInformation> BuildPermissions = new List<PlacementInformation>();
-                                          //Holds build permissions for all mobs. A list of mobs and the objects they're allowed to request and how. One permission per mob.
+        //Holds build permissions for all mobs. A list of mobs and the objects they're allowed to request and how. One permission per mob.
 
         private ISS13Server _server;
 

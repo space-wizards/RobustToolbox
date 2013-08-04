@@ -86,7 +86,7 @@ namespace ClientServices.UserInterface.Components
         {
             _userInterfaceManager.DisposeAllComponents<TileSpawnPanel>(); //Remove old ones.
             _userInterfaceManager.AddComponent(new TileSpawnPanel(new Size(350, 410), _resMgr, _placeMgr));
-                //Create a new one.
+            //Create a new one.
             Dispose();
         }
 
@@ -94,7 +94,7 @@ namespace ClientServices.UserInterface.Components
         {
             _userInterfaceManager.DisposeAllComponents<EntitySpawnPanel>(); //Remove old ones.
             _userInterfaceManager.AddComponent(new EntitySpawnPanel(new Size(350, 410), _resMgr, _placeMgr));
-                //Create a new one.
+            //Create a new one.
             Dispose();
         }
 
@@ -104,7 +104,7 @@ namespace ClientServices.UserInterface.Components
             var actComp = (PlayerActionComp) _playerManager.ControlledEntity.GetComponent(ComponentFamily.PlayerActions);
             if (actComp != null)
                 _userInterfaceManager.AddComponent(new PlayerActionsWindow(new Size(150, 150), _resMgr, actComp));
-                    //Create a new one.
+            //Create a new one.
             Dispose();
         }
     }

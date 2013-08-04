@@ -20,10 +20,10 @@ namespace ClientServices.Collision
         private readonly Dictionary<CollidableAABB, Entity> _aabbs;
 
         private readonly Dictionary<Point, int> _bucketIndex;
-                                                //Indexed in 256-pixel blocks - 0 = 0, 1 = 256, 2 = 512 etc
+        //Indexed in 256-pixel blocks - 0 = 0, 1 = 256, 2 = 512 etc
 
         private readonly Dictionary<int, CollidableBucket> _buckets;
-                                                           // each bucket represents a 256x256 block of pixelspace
+        // each bucket represents a 256x256 block of pixelspace
 
         private int _lastIndex;
 

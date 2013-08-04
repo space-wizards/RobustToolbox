@@ -76,7 +76,7 @@ namespace CGO
 
             if (state == BoundKeyState.Up)
                 SendPositionUpdate();
-                    // Send a position update so that the server knows what position the client ended at.
+            // Send a position update so that the server knows what position the client ended at.
 
             if (function == BoundKeyFunctions.MoveDown)
                 _moveDown = setting;
@@ -248,7 +248,7 @@ namespace CGO
         {
             Vector2D oldPosition = Owner.GetComponent<TransformComponent>(ComponentFamily.Transform).Position;
             Owner.GetComponent<TransformComponent>(ComponentFamily.Transform).Position += translationVector;
-                // We move the sprite here rather than the position, as we can then use its updated AABB values.
+            // We move the sprite here rather than the position, as we can then use its updated AABB values.
             //Check collision.
             ComponentReplyMessage reply = Owner.SendMessage(this, ComponentFamily.Collider,
                                                             ComponentMessageType.CheckCollision, false);

@@ -22,7 +22,7 @@ namespace ClientServices.UserInterface.Components
         private readonly SimpleImage _selectionGlow;
 
         public int AdditionalColumns = 2;
-                   //Number of additional visible columns beside the selection. 1 = 3 total visible. selection + 1 left + 1 right.
+        //Number of additional visible columns beside the selection. 1 = 3 total visible. selection + 1 left + 1 right.
 
         public int ItemSpacing = 10; //Additional space between items.
 

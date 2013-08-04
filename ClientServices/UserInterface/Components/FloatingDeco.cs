@@ -27,7 +27,7 @@ namespace ClientServices.UserInterface.Components
         public float RotationSpeed = 0; //Speed and direction at which this rotates.
 
         public Vector2D SpriteLocation;
-                        //Have to have a separate one because i made the ui compo pos a Point. Can't change to Vector2d unless i fix 235+ errors. Do this later.
+        //Have to have a separate one because i made the ui compo pos a Point. Can't change to Vector2d unless i fix 235+ errors. Do this later.
 
         public Vector2D Velocity; //Direction and speed this is moving in.
 

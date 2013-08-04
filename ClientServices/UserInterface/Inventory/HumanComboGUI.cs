@@ -691,7 +691,7 @@ namespace ClientServices.UserInterface.Inventory
 
             if (_craftTimer != null)
                 _craftTimer.Update(frameTime);
-                    //Needs to update even when its not on the crafting tab so it continues to count.
+            //Needs to update even when its not on the crafting tab so it continues to count.
         }
 
         public override void Dispose()

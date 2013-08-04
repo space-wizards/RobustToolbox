@@ -61,7 +61,7 @@ namespace ClientServices.Placement.Modes
                                                      spriteToDraw.Height);
                     if (pManager.CollisionManager.IsColliding(spriteRectWorld))
                         return false;
-                            //Since walls also have collisions, this means we can't place objects on walls with this mode.
+                    //Since walls also have collisions, this means we can't place objects on walls with this mode.
                 }
             }
 
@@ -75,7 +75,7 @@ namespace ClientServices.Placement.Modes
                 spriteToDraw.Color = pManager.ValidPosition ? Color.ForestGreen : Color.IndianRed;
                 spriteToDraw.Position = new Vector2D(mouseScreen.X - (spriteToDraw.Width/2f),
                                                      mouseScreen.Y - (spriteToDraw.Height/2f));
-                    //Centering the sprite on the cursor.
+                //Centering the sprite on the cursor.
                 spriteToDraw.Draw();
                 spriteToDraw.Color = Color.White;
             }

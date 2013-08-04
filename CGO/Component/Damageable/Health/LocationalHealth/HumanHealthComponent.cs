@@ -75,7 +75,7 @@ namespace CGO
                 for (int i = 0; i < dmgCount; i++)
                 {
                     var type = (DamageType) msg.MessageParameters[4 + (i*2)];
-                        //Retrieve data from message in pairs starting at 4
+                    //Retrieve data from message in pairs starting at 4
                     var amount = (int) msg.MessageParameters[5 + (i*2)];
 
                     if (existingZone.DamageIndex.ContainsKey(type))
@@ -94,7 +94,7 @@ namespace CGO
                 for (int i = 0; i < dmgCount; i++)
                 {
                     var type = (DamageType) msg.MessageParameters[4 + (i*2)];
-                        //Retrieve data from message in pairs starting at 4
+                    //Retrieve data from message in pairs starting at 4
                     var amount = (int) msg.MessageParameters[5 + (i*2)];
 
                     if (newZone.DamageIndex.ContainsKey(type))

@@ -18,13 +18,13 @@ namespace SS13
     {
         #region Fields
 
-        private IStateManager _stateManager;
         private IConfigurationManager _configurationManager;
-        private INetworkManager _networkManager;
-        private INetworkGrapher _netGrapher;
-        private IUserInterfaceManager _userInterfaceManager;
         private Input _input;
-        
+        private INetworkGrapher _netGrapher;
+        private INetworkManager _networkManager;
+        private IStateManager _stateManager;
+        private IUserInterfaceManager _userInterfaceManager;
+
         #endregion
 
         #region Properties
@@ -76,7 +76,8 @@ namespace SS13
 
         private void MainWindowResizeEnd(object sender, EventArgs e)
         {
-            _input.Mouse.SetPositionRange(0, 0, Gorgon.CurrentClippingViewport.Width, Gorgon.CurrentClippingViewport.Height);
+            _input.Mouse.SetPositionRange(0, 0, Gorgon.CurrentClippingViewport.Width,
+                                          Gorgon.CurrentClippingViewport.Height);
             _stateManager.CurrentState.FormResize();
         }
 
@@ -136,7 +137,7 @@ namespace SS13
         /// <param name="e">The <see cref="GorgonLibrary.InputDevices.MouseInputEventArgs"/> instance containing the event data.</param>
         private void MouseDownEvent(object sender, MouseInputEventArgs e)
         {
-             _stateManager.MouseDown(e);
+            _stateManager.MouseDown(e);
         }
 
         /// <summary>
@@ -157,17 +158,18 @@ namespace SS13
 
         private void SetupGorgon()
         {
-            var displayWidth = _configurationManager.GetDisplayWidth();
-            var displayHeight = _configurationManager.GetDisplayHeight();
-            var fullscreen = _configurationManager.GetFullscreen();
-            int refresh = (int)_configurationManager.GetDisplayRefresh();
-            Size = new Size((int)displayWidth, (int)displayHeight);
+            uint displayWidth = _configurationManager.GetDisplayWidth();
+            uint displayHeight = _configurationManager.GetDisplayHeight();
+            bool fullscreen = _configurationManager.GetFullscreen();
+            var refresh = (int) _configurationManager.GetDisplayRefresh();
+            Size = new Size((int) displayWidth, (int) displayHeight);
 
             //TODO. Find first compatible videomode and set it if no configuration is present. Else the client might crash due to invalid videomodes on the first start.
 
             Gorgon.Initialize(true, false);
             //Gorgon.SetMode(this);
-            Gorgon.SetMode(this, (int)displayWidth, (int)displayHeight, BackBufferFormats.BufferRGB888, !fullscreen, false, false, refresh);
+            Gorgon.SetMode(this, (int) displayWidth, (int) displayHeight, BackBufferFormats.BufferRGB888, !fullscreen,
+                           false, false, refresh);
             Gorgon.AllowBackgroundRendering = true;
             Gorgon.Screen.BackgroundColor = Color.FromArgb(50, 50, 50);
             Gorgon.CurrentClippingViewport = new Viewport(0, 0, Gorgon.Screen.Width, Gorgon.Screen.Height);
@@ -199,7 +201,8 @@ namespace SS13
             _input.Keyboard.KeyUp += KeyUpEvent;
             IoCManager.Resolve<IKeyBindingManager>().Initialize(_input.Keyboard);
 
-            _input.Mouse.SetPositionRange(0, 0, Gorgon.CurrentClippingViewport.Width, Gorgon.CurrentClippingViewport.Height);
+            _input.Mouse.SetPositionRange(0, 0, Gorgon.CurrentClippingViewport.Width,
+                                          Gorgon.CurrentClippingViewport.Height);
         }
 
         #endregion

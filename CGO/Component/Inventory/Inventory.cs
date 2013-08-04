@@ -1,33 +1,40 @@
 ﻿using System.Collections.Generic;
 using System.Linq;
 using GameObject;
+using Lidgren.Network;
 using SS13_Shared;
 using SS13_Shared.GO;
-using Lidgren.Network;
 
 namespace CGO
 {
     public class InventoryComponent : Component
     {
-        public List<Entity> ContainedEntities { get; private set; }
+        #region Delegates
 
-        public int MaxSlots { get; private set; }
-
-        public delegate void InventoryComponentUpdateHandler(InventoryComponent sender, int maxSlots, List<Entity> entities);
-        public event InventoryComponentUpdateHandler Changed;
+        public delegate void InventoryComponentUpdateHandler(
+            InventoryComponent sender, int maxSlots, List<Entity> entities);
 
         public delegate void InventoryUpdateRequiredHandler(InventoryComponent sender);
-        public event InventoryUpdateRequiredHandler UpdateRequired;
-        
+
+        #endregion
+
         public InventoryComponent()
         {
             Family = ComponentFamily.Inventory;
             ContainedEntities = new List<Entity>();
         }
 
+        public List<Entity> ContainedEntities { get; private set; }
+
+        public int MaxSlots { get; private set; }
+
+        public event InventoryComponentUpdateHandler Changed;
+
+        public event InventoryUpdateRequiredHandler UpdateRequired;
+
         public override void HandleNetworkMessage(IncomingEntityComponentMessage message, NetConnection sender)
         {
-            switch ((ComponentMessageType)message.MessageParameters[0])
+            switch ((ComponentMessageType) message.MessageParameters[0])
             {
                 case ComponentMessageType.InventoryInformation:
                     UnpackListing(message);
@@ -40,14 +47,14 @@ namespace CGO
 
         private void UnpackListing(IncomingEntityComponentMessage msg)
         {
-            MaxSlots = (int)msg.MessageParameters[1];
+            MaxSlots = (int) msg.MessageParameters[1];
 
             ContainedEntities.Clear();
 
-            for (int i = 0; i < (int)msg.MessageParameters[2]; i++)
+            for (int i = 0; i < (int) msg.MessageParameters[2]; i++)
             {
-                var msgPos = 3 + i;
-                var entity = Owner.EntityManager.GetEntity((int)msg.MessageParameters[msgPos]);
+                int msgPos = 3 + i;
+                Entity entity = Owner.EntityManager.GetEntity((int) msg.MessageParameters[msgPos]);
                 if (entity != null)
                     ContainedEntities.Add(entity);
             }
@@ -67,27 +74,33 @@ namespace CGO
 
         public Entity GetEntity(string templatename)
         {
-            return ContainedEntities.Exists(x => x.Template.Name == templatename) ? ContainedEntities.First(x => x.Template.Name == templatename) : null;
+            return ContainedEntities.Exists(x => x.Template.Name == templatename)
+                       ? ContainedEntities.First(x => x.Template.Name == templatename)
+                       : null;
         }
 
         public void SendRequestListing()
         {
-            Owner.SendComponentNetworkMessage(this, NetDeliveryMethod.ReliableUnordered, ComponentMessageType.InventoryInformation);
+            Owner.SendComponentNetworkMessage(this, NetDeliveryMethod.ReliableUnordered,
+                                              ComponentMessageType.InventoryInformation);
         }
 
         public void SendInventoryAdd(Entity ent)
         {
-            Owner.SendComponentNetworkMessage(this, NetDeliveryMethod.ReliableUnordered, ComponentMessageType.InventoryAdd, ent.Uid);
+            Owner.SendComponentNetworkMessage(this, NetDeliveryMethod.ReliableUnordered,
+                                              ComponentMessageType.InventoryAdd, ent.Uid);
         }
 
         public void SendInventoryRemove(Entity ent)
         {
-            Owner.SendComponentNetworkMessage(this, NetDeliveryMethod.ReliableUnordered, ComponentMessageType.InventoryRemove, ent.Uid);
+            Owner.SendComponentNetworkMessage(this, NetDeliveryMethod.ReliableUnordered,
+                                              ComponentMessageType.InventoryRemove, ent.Uid);
         }
 
-        public override ComponentReplyMessage RecieveMessage(object sender, ComponentMessageType type, params object[] list)
+        public override ComponentReplyMessage RecieveMessage(object sender, ComponentMessageType type,
+                                                             params object[] list)
         {
-            var reply = base.RecieveMessage(sender, type, list);
+            ComponentReplyMessage reply = base.RecieveMessage(sender, type, list);
 
             if (sender == this) //Don't listen to our own messages!
                 return ComponentReplyMessage.Empty;
@@ -95,15 +108,16 @@ namespace CGO
             switch (type)
             {
                 case ComponentMessageType.InventoryInformation:
-                    Owner.SendComponentNetworkMessage(this, NetDeliveryMethod.ReliableUnordered, ComponentMessageType.InventoryInformation);
+                    Owner.SendComponentNetworkMessage(this, NetDeliveryMethod.ReliableUnordered,
+                                                      ComponentMessageType.InventoryInformation);
                     break;
 
                 case ComponentMessageType.InventoryAdd:
-                    SendInventoryAdd((Entity)list[0]);
+                    SendInventoryAdd((Entity) list[0]);
                     break;
 
                 case ComponentMessageType.InventoryRemove:
-                    SendInventoryRemove((Entity)list[0]);
+                    SendInventoryRemove((Entity) list[0]);
                     break;
             }
 

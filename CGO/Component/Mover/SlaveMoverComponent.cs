@@ -12,13 +12,14 @@ namespace CGO
     {
         private Entity _master;
         private Direction _movedir = Direction.South;
-        
-        public SlaveMoverComponent():base()
+
+        public SlaveMoverComponent()
         {
             Family = ComponentFamily.Mover;
         }
 
-        public override ComponentReplyMessage RecieveMessage(object sender, ComponentMessageType type, params object[] list)
+        public override ComponentReplyMessage RecieveMessage(object sender, ComponentMessageType type,
+                                                             params object[] list)
         {
             ComponentReplyMessage reply = base.RecieveMessage(sender, type, list);
 
@@ -28,7 +29,7 @@ namespace CGO
             switch (type)
             {
                 case ComponentMessageType.SlaveAttach:
-                    Attach((int)list[0]);
+                    Attach((int) list[0]);
                     break;
             }
 
@@ -87,7 +88,5 @@ namespace CGO
 
             //Owner.Moved();
         }
-
-        
     }
 }

@@ -1,31 +1,30 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using ClientInterfaces;
+using System.Drawing;
 using ClientInterfaces.Resource;
+using GorgonLibrary.Graphics;
 using Lidgren.Network;
 using SS13.IoC;
 using SS13_Shared;
 using SS13_Shared.GO;
-using GorgonLibrary.Graphics;
 using SS13_Shared.GO.Component.Renderable;
 
 namespace CGO
 {
     public class ItemSpriteComponent : SpriteComponent
     {
-        string basename = "";
-        private bool IsInHand = false;
+        private bool IsInHand;
+        private string basename = "";
         private Hand holdingHand = Hand.None;
+
         public ItemSpriteComponent()
-            : base()
         {
             SetDrawDepth(DrawDepth.FloorObjects);
         }
 
-        public override ComponentReplyMessage RecieveMessage(object sender, ComponentMessageType type, params object[] list)
+        public override ComponentReplyMessage RecieveMessage(object sender, ComponentMessageType type,
+                                                             params object[] list)
         {
-            var reply = base.RecieveMessage(sender, type, list);
+            ComponentReplyMessage reply = base.RecieveMessage(sender, type, list);
 
             if (sender == this) //Don't listen to our own messages!
                 return ComponentReplyMessage.Empty;
@@ -36,7 +35,7 @@ namespace CGO
                     if (!IsInHand)
                         break;
                     SetDrawDepth(DrawDepth.HeldItems);
-                    switch ((Direction)list[0])
+                    switch ((Direction) list[0])
                     {
                         case Direction.North:
                             if (SpriteExists(basename + "_inhand_back"))
@@ -115,22 +114,21 @@ namespace CGO
                     break;
                 case ComponentMessageType.PickedUp:
                     IsInHand = true;
-                    holdingHand = (Hand)list[0];
+                    holdingHand = (Hand) list[0];
                     break;
                 case ComponentMessageType.SetBaseName:
-                    basename = (string)list[0];
+                    basename = (string) list[0];
                     break;
             }
 
             return reply;
-
         }
 
         public override void HandleNetworkMessage(IncomingEntityComponentMessage message, NetConnection sender)
         {
             base.HandleNetworkMessage(message, sender);
 
-            switch ((ComponentMessageType)message.MessageParameters[0])
+            switch ((ComponentMessageType) message.MessageParameters[0])
             {
                 case ComponentMessageType.SetBaseName:
                     //basename = (string) message.MessageParameters[1];
@@ -148,7 +146,7 @@ namespace CGO
             switch (parameter.MemberName)
             {
                 case "drawdepth":
-                    SetDrawDepth((DrawDepth)Enum.Parse(typeof(DrawDepth), parameter.GetValue<string>(), true));
+                    SetDrawDepth((DrawDepth) Enum.Parse(typeof (DrawDepth), parameter.GetValue<string>(), true));
                     break;
                 case "basename":
                     basename = parameter.GetValue<string>();
@@ -158,7 +156,6 @@ namespace CGO
                     var spriteToAdd = parameter.GetValue<string>();
                     LoadSprites(spriteToAdd);
                     break;
-
             }
         }
 
@@ -181,18 +178,18 @@ namespace CGO
             AddSprite(name);
             AddSprite(name + "_inhand");
             AddSprite(name + "_inhand_side");
-            if(IoCManager.Resolve<IResourceManager>().SpriteExists(name + "_inhand_back"))
+            if (IoCManager.Resolve<IResourceManager>().SpriteExists(name + "_inhand_back"))
                 AddSprite(name + "_inhand_back");
         }
 
-        protected override bool WasClicked(System.Drawing.PointF worldPos)
+        protected override bool WasClicked(PointF worldPos)
         {
             return base.WasClicked(worldPos) && !IsInHand;
         }
 
         public override void HandleComponentState(dynamic state)
         {
-            base.HandleComponentState((SpriteComponentState)state);
+            base.HandleComponentState((SpriteComponentState) state);
 
             if (state.BaseName != null && basename != state.BaseName)
             {

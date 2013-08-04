@@ -10,31 +10,29 @@ namespace CGO
     public class TransformComponent : Component
     {
         private Vector2D _position = Vector2D.Zero;
-        private TransformComponentState previousState;
         private TransformComponentState lastState;
+        private TransformComponentState previousState;
+
+        public TransformComponent()
+        {
+            Family = ComponentFamily.Transform;
+        }
 
         public Vector2D Position
         {
             get { return _position; }
             set
             {
-                var oldPosition = _position;
+                Vector2D oldPosition = _position;
                 _position = value;
 
                 if (OnMove != null) OnMove(this, new VectorEventArgs(oldPosition, _position));
             }
         }
 
-        public event EventHandler<VectorEventArgs> OnMove;
-        
-        public TransformComponent() :base()
-        {
-            Family = ComponentFamily.Transform;
-        }
-
         public override Type StateType
         {
-            get { return typeof(TransformComponentState); }
+            get { return typeof (TransformComponentState); }
         }
 
         public float X
@@ -46,8 +44,10 @@ namespace CGO
         public float Y
         {
             get { return Position.Y; }
-            set { Position = new Vector2D(Position.X, value);}
+            set { Position = new Vector2D(Position.X, value); }
         }
+
+        public event EventHandler<VectorEventArgs> OnMove;
 
         public override void Shutdown()
         {
@@ -75,9 +75,11 @@ namespace CGO
                 previousState = lastState;
             lastState = state;
             var toVector = new Vector2D(state.X, state.Y);
-            if((toVector - Position).Length > 0.1f && (state.ForceUpdate 
-                || Owner.GetComponent<KeyBindingInputComponent>(ComponentFamily.Input) == null
-                || (toVector - Position).Length > 100.0f))
+            if ((toVector - Position).Length > 0.1f && (state.ForceUpdate
+                                                        ||
+                                                        Owner.GetComponent<KeyBindingInputComponent>(
+                                                            ComponentFamily.Input) == null
+                                                        || (toVector - Position).Length > 100.0f))
                 TranslateTo(toVector);
         }
     }

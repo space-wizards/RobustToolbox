@@ -1,9 +1,9 @@
 ﻿using System;
 using System.Drawing;
 using ClientInterfaces.Collision;
-using ClientInterfaces.GOC;
 using GameObject;
 using GorgonLibrary;
+using Lidgren.Network;
 using SS13.IoC;
 using SS13_Shared.GO;
 using SS13_Shared.GO.Component.Collidable;
@@ -12,7 +12,16 @@ namespace CGO
 {
     public class CollidableComponent : Component, ICollidable
     {
-        public CollidableComponent() :base()
+        private bool collisionEnabled = true;
+        private RectangleF currentAABB;
+        protected bool isHardCollidable = true;
+
+        /// <summary>
+        /// X - Top | Y - Right | Z - Bottom | W - Left
+        /// </summary>
+        private Vector4D tweakAABB = Vector4D.Zero;
+
+        public CollidableComponent()
         {
             Family = ComponentFamily.Collidable;
         }
@@ -22,35 +31,62 @@ namespace CGO
             get { return typeof (CollidableComponentState); }
         }
 
-        /// <summary>
-        /// X - Top | Y - Right | Z - Bottom | W - Left
-        /// </summary>
-        private Vector4D tweakAABB = Vector4D.Zero;
         private Vector4D TweakAABB
         {
             get { return tweakAABB; }
             set { tweakAABB = value; }
         }
 
-        private RectangleF currentAABB;
         private RectangleF OffsetAABB
         {
             get
-            {// Return tweaked AABB
+            {
+// Return tweaked AABB
                 if (currentAABB != null)
-                    return new RectangleF(currentAABB.Left + Owner.GetComponent<TransformComponent>(ComponentFamily.Transform).Position.X - (currentAABB.Width / 2) + tweakAABB.W,
-                                        currentAABB.Top + Owner.GetComponent<TransformComponent>(ComponentFamily.Transform).Position.Y - (currentAABB.Height / 2) + tweakAABB.X,
-                                        currentAABB.Width - (tweakAABB.W - tweakAABB.Y),
-                                        currentAABB.Height - (tweakAABB.X - tweakAABB.Z));
+                    return
+                        new RectangleF(
+                            currentAABB.Left +
+                            Owner.GetComponent<TransformComponent>(ComponentFamily.Transform).Position.X -
+                            (currentAABB.Width/2) + tweakAABB.W,
+                            currentAABB.Top +
+                            Owner.GetComponent<TransformComponent>(ComponentFamily.Transform).Position.Y -
+                            (currentAABB.Height/2) + tweakAABB.X,
+                            currentAABB.Width - (tweakAABB.W - tweakAABB.Y),
+                            currentAABB.Height - (tweakAABB.X - tweakAABB.Z));
                 else
                     return RectangleF.Empty;
             }
         }
-        
-        public event EventHandler OnBump;
 
-        private bool collisionEnabled = true;
-        protected bool isHardCollidable = true;
+        #region ICollidable Members
+
+        public RectangleF AABB
+        {
+            get { return OffsetAABB; }
+        }
+
+        /// <summary>
+        /// Called when the collidable is bumped into by someone/something
+        /// </summary>
+        public void Bump(Entity ent)
+        {
+            if (OnBump != null)
+                OnBump(this, new EventArgs());
+
+            Owner.SendMessage(this, ComponentMessageType.Bumped, ent);
+            Owner.SendComponentNetworkMessage(this, NetDeliveryMethod.ReliableUnordered, ComponentMessageType.Bumped,
+                                              ent.Uid);
+        }
+
+
+        public bool IsHardCollidable
+        {
+            get { return isHardCollidable; }
+        }
+
+        #endregion
+
+        public event EventHandler OnBump;
 
         /// <summary>
         /// OnAdd override -- gets the AABB from the sprite component and sends it to the collision manager.
@@ -83,9 +119,10 @@ namespace CGO
         /// <param name="type"></param>
         /// <param name="reply"></param>
         /// <param name="list"></param>
-        public override ComponentReplyMessage RecieveMessage(object sender, ComponentMessageType type, params object[] list)
+        public override ComponentReplyMessage RecieveMessage(object sender, ComponentMessageType type,
+                                                             params object[] list)
         {
-            var reply = base.RecieveMessage(sender, type, list);
+            ComponentReplyMessage reply = base.RecieveMessage(sender, type, list);
 
             if (sender == this) //Don't listen to our own messages!
                 return ComponentReplyMessage.Empty;
@@ -110,7 +147,7 @@ namespace CGO
 
             return reply;
         }
-        
+
         /// <summary>
         /// Parameter Setting
         /// Settable params:
@@ -124,7 +161,7 @@ namespace CGO
             switch (parameter.MemberName)
             {
                 case "TweakAABB":
-                    TweakAABB = parameter.GetValue<Vector4D>(); 
+                    TweakAABB = parameter.GetValue<Vector4D>();
                     break;
                 case "TweakAABBtop":
                     tweakAABB.X = parameter.GetValue<float>();
@@ -166,43 +203,21 @@ namespace CGO
         /// </summary>
         private void GetAABB()
         {
-            var reply = Owner.SendMessage(this, ComponentFamily.Renderable, ComponentMessageType.GetAABB);
+            ComponentReplyMessage reply = Owner.SendMessage(this, ComponentFamily.Renderable,
+                                                            ComponentMessageType.GetAABB);
             if (reply.MessageType == ComponentMessageType.CurrentAABB)
             {
-                currentAABB = (RectangleF)reply.ParamsList[0];
+                currentAABB = (RectangleF) reply.ParamsList[0];
             }
             else
                 return;
         }
 
-        #region ICollidable Members
-        public System.Drawing.RectangleF AABB
-        {
-            get { return OffsetAABB; }
-        }
-
-        /// <summary>
-        /// Called when the collidable is bumped into by someone/something
-        /// </summary>
-        public void Bump(Entity ent)
-        {
-            if (OnBump != null)
-                OnBump(this, new EventArgs());
-
-            Owner.SendMessage(this, ComponentMessageType.Bumped, ent);
-            Owner.SendComponentNetworkMessage(this, Lidgren.Network.NetDeliveryMethod.ReliableUnordered, ComponentMessageType.Bumped, ent.Uid);
-        }
-
-
-        public bool IsHardCollidable
-        { get { return isHardCollidable; } }
-        #endregion
-
         public override void HandleComponentState(dynamic state)
         {
             if (state.CollisionEnabled != collisionEnabled)
             {
-                if (state.CollisionEnabled) 
+                if (state.CollisionEnabled)
                     EnableCollision();
                 else
                     DisableCollision();

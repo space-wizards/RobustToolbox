@@ -2,8 +2,8 @@
 {
     public struct ContextMenuEntry
     {
-        public string IconName;
-        public string EntryName;
         public string ComponentMessage;
+        public string EntryName;
+        public string IconName;
     }
 }

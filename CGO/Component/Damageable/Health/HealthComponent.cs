@@ -1,4 +1,4 @@
-﻿using System.Collections.Generic;
+﻿using System;
 using Lidgren.Network;
 using SS13_Shared;
 using SS13_Shared.GO;
@@ -6,22 +6,21 @@ using SS13_Shared.GO.Component.Damageable.Health;
 
 namespace CGO
 {
-    public class HealthComponent : DamageableComponent //Behaves like the damageable component but recieves updates about its health.
-    {                                                  //Useful for objects that need to show different stages of damage clientside.
-        protected float Health ;
+    public class HealthComponent : DamageableComponent
+        //Behaves like the damageable component but recieves updates about its health.
+    {
+        //Useful for objects that need to show different stages of damage clientside.
+        protected float Health;
         protected float MaxHealth;
 
-        public override System.Type StateType
+        public override Type StateType
         {
-            get
-            {
-                return typeof(HealthComponentState);
-            }
+            get { return typeof (HealthComponentState); }
         }
 
         public override void HandleNetworkMessage(IncomingEntityComponentMessage message, NetConnection sender)
         {
-            var type = (ComponentMessageType)message.MessageParameters[0];
+            var type = (ComponentMessageType) message.MessageParameters[0];
 
             /*switch (type)
             {
@@ -33,9 +32,10 @@ namespace CGO
             }*/
         }
 
-        public override ComponentReplyMessage RecieveMessage(object sender, ComponentMessageType type, params object[] list)
+        public override ComponentReplyMessage RecieveMessage(object sender, ComponentMessageType type,
+                                                             params object[] list)
         {
-            var reply = base.RecieveMessage(sender, type, list);
+            ComponentReplyMessage reply = base.RecieveMessage(sender, type, list);
 
             if (sender == this) //Don't listen to our own messages!
                 return ComponentReplyMessage.Empty;
@@ -62,7 +62,7 @@ namespace CGO
 
         public override void HandleComponentState(dynamic state)
         {
-            base.HandleComponentState((HealthComponentState)state);
+            base.HandleComponentState((HealthComponentState) state);
 
             Health = state.Health;
             MaxHealth = state.MaxHealth;

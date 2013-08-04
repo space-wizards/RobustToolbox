@@ -1,7 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
 using GameObject;
 using SS13_Shared;
 using SS13_Shared.GO;
@@ -11,11 +8,17 @@ namespace CGO
 {
     public class DirectionComponent : Component
     {
-        public Direction Direction { get; set; }
-        public DirectionComponent() :base()
+        public DirectionComponent()
         {
             Direction = Direction.South;
             Family = ComponentFamily.Direction;
+        }
+
+        public Direction Direction { get; set; }
+
+        public override Type StateType
+        {
+            get { return typeof (DirectionComponentState); }
         }
 
         public override void OnAdd(Entity owner)
@@ -37,16 +40,11 @@ namespace CGO
             SetMoveDir(DetermineDirection(args.VectorFrom, args.VectorTo));
         }
 
-        public override Type StateType
-        {
-            get { return typeof (DirectionComponentState); }
-        }
-
         private Direction DetermineDirection(Vector2 from, Vector2 to)
         {
-            var delta = to - from;
+            Vector2 delta = to - from;
             if (delta.X > 0 && delta.Y > 0)
-                return Direction.SouthEast; 
+                return Direction.SouthEast;
             if (delta.X > 0 && delta.Y < 0)
                 return Direction.NorthEast;
             if (delta.X < 0 && delta.Y > 0)
@@ -73,7 +71,7 @@ namespace CGO
         public override void HandleComponentState(dynamic state)
         {
             var dir = (Direction) state.Direction;
-            if(Direction != dir)
+            if (Direction != dir)
                 SetMoveDir(dir);
         }
     }

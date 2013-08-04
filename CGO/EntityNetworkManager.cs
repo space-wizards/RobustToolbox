@@ -1,20 +1,20 @@
 ﻿using System;
 using System.Collections.Generic;
+using ClientInterfaces.Configuration;
+using ClientInterfaces.MessageLogging;
 using ClientInterfaces.Network;
 using GameObject;
 using Lidgren.Network;
+using SS13.IoC;
 using SS13_Shared;
 using SS13_Shared.GO;
-using SS13.IoC;
-using ClientInterfaces.MessageLogging;
-using ClientInterfaces.Configuration;
 
 namespace CGO
 {
     public class EntityNetworkManager : IEntityNetworkManager
     {
+        private readonly bool _messageProfiling;
         private readonly INetworkManager _networkManager;
-        private bool _messageProfiling;
 
         public EntityNetworkManager(INetworkManager networkManager)
         {
@@ -22,15 +22,22 @@ namespace CGO
             _messageProfiling = IoCManager.Resolve<IConfigurationManager>().GetMessageLogging();
         }
 
+        #region IEntityNetworkManager Members
+
         public NetOutgoingMessage CreateEntityMessage()
         {
             NetOutgoingMessage message = _networkManager.CreateMessage();
-            message.Write((byte)NetMessage.EntityMessage);
+            message.Write((byte) NetMessage.EntityMessage);
             return message;
         }
 
+        #endregion
+
         #region Sending
-        public void SendDirectedComponentNetworkMessage(GameObject.Entity sendingEntity, ComponentFamily family, NetDeliveryMethod method, NetConnection recipient, params object[] messageParams)
+
+        public void SendDirectedComponentNetworkMessage(Entity sendingEntity, ComponentFamily family,
+                                                        NetDeliveryMethod method, NetConnection recipient,
+                                                        params object[] messageParams)
         {
             throw new NotImplementedException();
         }
@@ -43,22 +50,40 @@ namespace CGO
         /// <param name="family">Family of the component sending the message</param>
         /// <param name="method">Net delivery method -- if null, defaults to NetDeliveryMethod.ReliableUnordered</param>
         /// <param name="messageParams">Parameters of the message</param>
-        public void SendComponentNetworkMessage(GameObject.Entity sendingEntity, ComponentFamily family, NetDeliveryMethod method = NetDeliveryMethod.ReliableUnordered, params object[] messageParams)
+        public void SendComponentNetworkMessage(Entity sendingEntity, ComponentFamily family,
+                                                NetDeliveryMethod method = NetDeliveryMethod.ReliableUnordered,
+                                                params object[] messageParams)
         {
-            var message = CreateEntityMessage();
-            message.Write(sendingEntity.Uid);//Write this entity's UID
-            message.Write((byte)EntityMessage.ComponentMessage);
-            message.Write((byte)family);
+            NetOutgoingMessage message = CreateEntityMessage();
+            message.Write(sendingEntity.Uid); //Write this entity's UID
+            message.Write((byte) EntityMessage.ComponentMessage);
+            message.Write((byte) family);
             PackParams(message, messageParams);
 
             if (_messageProfiling)
-            {//Log the message
-                IMessageLogger logger = IoCManager.Resolve<IMessageLogger>();
+            {
+//Log the message
+                var logger = IoCManager.Resolve<IMessageLogger>();
                 logger.LogOutgoingComponentNetMessage(sendingEntity.Uid, family, messageParams);
             }
-            
+
             //Send the message
             _networkManager.SendMessage(message, method);
+        }
+
+        /// <summary>
+        /// Sends an arbitrary entity network message
+        /// </summary>
+        /// <param name="sendingEntity">The entity the message is going from(and to, on the other end)</param>
+        /// <param name="type">Message type</param>
+        /// <param name="list">List of parameter objects</param>
+        public void SendEntityNetworkMessage(Entity sendingEntity, EntityMessage type, params object[] list)
+        {
+            NetOutgoingMessage message = CreateEntityMessage();
+            message.Write(sendingEntity.Uid); //Write this entity's UID
+            message.Write((byte) type);
+            PackParams(message, list);
+            _networkManager.SendMessage(message, NetDeliveryMethod.ReliableUnordered);
         }
 
         private void PackParams(NetOutgoingMessage message, params object[] messageParams)
@@ -66,76 +91,76 @@ namespace CGO
             foreach (object messageParam in messageParams)
             {
                 Type t = messageParam.GetType();
-                if (messageParam.GetType().IsSubclassOf(typeof(Enum)))
+                if (messageParam.GetType().IsSubclassOf(typeof (Enum)))
                 {
-                    message.Write((byte)NetworkDataType.d_enum);
-                    message.Write((int)messageParam);//Cast to int, because enums are stored as ints anyway.
+                    message.Write((byte) NetworkDataType.d_enum);
+                    message.Write((int) messageParam); //Cast to int, because enums are stored as ints anyway.
                 }
-                else if (messageParam.GetType() == typeof(bool))
+                else if (messageParam.GetType() == typeof (bool))
                 {
-                    message.Write((byte)NetworkDataType.d_bool);
-                    message.Write((bool)messageParam);
+                    message.Write((byte) NetworkDataType.d_bool);
+                    message.Write((bool) messageParam);
                 }
-                else if (messageParam.GetType() == typeof(byte))
+                else if (messageParam.GetType() == typeof (byte))
                 {
-                    message.Write((byte)NetworkDataType.d_byte);
-                    message.Write((byte)messageParam);
+                    message.Write((byte) NetworkDataType.d_byte);
+                    message.Write((byte) messageParam);
                 }
-                else if (messageParam.GetType() == typeof(sbyte))
+                else if (messageParam.GetType() == typeof (sbyte))
                 {
-                    message.Write((byte)NetworkDataType.d_sbyte);
-                    message.Write((sbyte)messageParam);
+                    message.Write((byte) NetworkDataType.d_sbyte);
+                    message.Write((sbyte) messageParam);
                 }
-                else if (messageParam.GetType() == typeof(ushort))
+                else if (messageParam.GetType() == typeof (ushort))
                 {
-                    message.Write((byte)NetworkDataType.d_ushort);
-                    message.Write((ushort)messageParam);
+                    message.Write((byte) NetworkDataType.d_ushort);
+                    message.Write((ushort) messageParam);
                 }
-                else if (messageParam.GetType() == typeof(short))
+                else if (messageParam.GetType() == typeof (short))
                 {
-                    message.Write((byte)NetworkDataType.d_short);
-                    message.Write((short)messageParam);
+                    message.Write((byte) NetworkDataType.d_short);
+                    message.Write((short) messageParam);
                 }
-                else if (messageParam.GetType() == typeof(int))
+                else if (messageParam.GetType() == typeof (int))
                 {
-                    message.Write((byte)NetworkDataType.d_int);
-                    message.Write((int)messageParam);
+                    message.Write((byte) NetworkDataType.d_int);
+                    message.Write((int) messageParam);
                 }
-                else if (messageParam.GetType() == typeof(uint))
+                else if (messageParam.GetType() == typeof (uint))
                 {
-                    message.Write((byte)NetworkDataType.d_uint);
-                    message.Write((uint)messageParam);
+                    message.Write((byte) NetworkDataType.d_uint);
+                    message.Write((uint) messageParam);
                 }
-                else if (messageParam.GetType() == typeof(ulong))
+                else if (messageParam.GetType() == typeof (ulong))
                 {
-                    message.Write((byte)NetworkDataType.d_ulong);
-                    message.Write((ulong)messageParam);
+                    message.Write((byte) NetworkDataType.d_ulong);
+                    message.Write((ulong) messageParam);
                 }
-                else if (messageParam.GetType() == typeof(long))
+                else if (messageParam.GetType() == typeof (long))
                 {
-                    message.Write((byte)NetworkDataType.d_long);
-                    message.Write((long)messageParam);
+                    message.Write((byte) NetworkDataType.d_long);
+                    message.Write((long) messageParam);
                 }
-                else if (messageParam.GetType() == typeof(float))
+                else if (messageParam.GetType() == typeof (float))
                 {
-                    message.Write((byte)NetworkDataType.d_float);
-                    message.Write((float)messageParam);
+                    message.Write((byte) NetworkDataType.d_float);
+                    message.Write((float) messageParam);
                 }
-                else if (messageParam.GetType() == typeof(double))
+                else if (messageParam.GetType() == typeof (double))
                 {
-                    message.Write((byte)NetworkDataType.d_double);
-                    message.Write((double)messageParam);
+                    message.Write((byte) NetworkDataType.d_double);
+                    message.Write((double) messageParam);
                 }
-                else if (messageParam.GetType() == typeof(string))
+                else if (messageParam.GetType() == typeof (string))
                 {
-                    message.Write((byte)NetworkDataType.d_string);
-                    message.Write((string)messageParam);
+                    message.Write((byte) NetworkDataType.d_string);
+                    message.Write((string) messageParam);
                 }
-                else if (messageParam.GetType() == typeof(byte[]))
+                else if (messageParam.GetType() == typeof (byte[]))
                 {
-                    message.Write((byte)NetworkDataType.d_byteArray);
-                    message.Write(((byte[])messageParam).Length);
-                    message.Write((byte[])messageParam);
+                    message.Write((byte) NetworkDataType.d_byteArray);
+                    message.Write(((byte[]) messageParam).Length);
+                    message.Write((byte[]) messageParam);
                 }
                 else
                 {
@@ -145,30 +170,15 @@ namespace CGO
         }
 
         /// <summary>
-        /// Sends an arbitrary entity network message
-        /// </summary>
-        /// <param name="sendingEntity">The entity the message is going from(and to, on the other end)</param>
-        /// <param name="type">Message type</param>
-        /// <param name="list">List of parameter objects</param>
-        public void SendEntityNetworkMessage(GameObject.Entity sendingEntity, EntityMessage type, params object[] list)
-        {
-            NetOutgoingMessage message = CreateEntityMessage();
-            message.Write(sendingEntity.Uid);//Write this entity's UID
-            message.Write((byte)type);
-            PackParams(message, list);
-            _networkManager.SendMessage(message, NetDeliveryMethod.ReliableUnordered);
-        }
-
-        /// <summary>
         /// Sends an SVar to the server to be set on the server-side entity.
         /// </summary>
         /// <param name="sendingEntity"></param>
         /// <param name="svar"></param>
-        public void SendSVar(GameObject.Entity sendingEntity, MarshalComponentParameter svar)
+        public void SendSVar(Entity sendingEntity, MarshalComponentParameter svar)
         {
-            var message = CreateEntityMessage();
+            NetOutgoingMessage message = CreateEntityMessage();
             message.Write(sendingEntity.Uid);
-            message.Write((byte)EntityMessage.SetSVar);
+            message.Write((byte) EntityMessage.SetSVar);
             svar.Serialize(message);
             _networkManager.SendMessage(message, NetDeliveryMethod.ReliableUnordered);
         }
@@ -176,6 +186,7 @@ namespace CGO
         #endregion
 
         #region Receiving
+
         /// <summary>
         /// Converts a raw NetIncomingMessage to an IncomingEntityMessage object
         /// </summary>
@@ -183,21 +194,24 @@ namespace CGO
         /// <returns>An IncomingEntityMessage object</returns>
         public IncomingEntityMessage HandleEntityNetworkMessage(NetIncomingMessage message)
         {
-            var uid = message.ReadInt32();
-            var messageType = (EntityMessage)message.ReadByte();
-            var result = IncomingEntityMessage.Null;
+            int uid = message.ReadInt32();
+            var messageType = (EntityMessage) message.ReadByte();
+            IncomingEntityMessage result = IncomingEntityMessage.Null;
 
             switch (messageType)
             {
                 case EntityMessage.ComponentMessage:
-                    var messageContent = HandleEntityComponentNetworkMessage(message);
-                    result = new IncomingEntityMessage(uid, EntityMessage.ComponentMessage, messageContent, message.SenderConnection);
+                    IncomingEntityComponentMessage messageContent = HandleEntityComponentNetworkMessage(message);
+                    result = new IncomingEntityMessage(uid, EntityMessage.ComponentMessage, messageContent,
+                                                       message.SenderConnection);
 
                     if (_messageProfiling)
                     {
                         //Log the message
-                        IMessageLogger logger = IoCManager.Resolve<IMessageLogger>();
-                        logger.LogIncomingComponentNetMessage(result.Uid, result.MessageType, messageContent.ComponentFamily, messageContent.MessageParameters.ToArray());
+                        var logger = IoCManager.Resolve<IMessageLogger>();
+                        logger.LogIncomingComponentNetMessage(result.Uid, result.MessageType,
+                                                              messageContent.ComponentFamily,
+                                                              messageContent.MessageParameters.ToArray());
                     }
 
                     break;
@@ -218,11 +232,11 @@ namespace CGO
         /// <returns>An IncomingEntityComponentMessage object</returns>
         public IncomingEntityComponentMessage HandleEntityComponentNetworkMessage(NetIncomingMessage message)
         {
-            ComponentFamily componentFamily = (ComponentFamily)message.ReadByte();
-            List<object> messageParams = new List<object>();
+            var componentFamily = (ComponentFamily) message.ReadByte();
+            var messageParams = new List<object>();
             while (message.Position < message.LengthBits)
             {
-                switch ((NetworkDataType)message.ReadByte())
+                switch ((NetworkDataType) message.ReadByte())
                 {
                     case NetworkDataType.d_enum:
                         messageParams.Add(message.ReadInt32());
@@ -264,23 +278,24 @@ namespace CGO
                         messageParams.Add(message.ReadString());
                         break;
                     case NetworkDataType.d_byteArray:
-                        var length = message.ReadInt32();
+                        int length = message.ReadInt32();
                         messageParams.Add(message.ReadBytes(length));
                         break;
                 }
             }
             return new IncomingEntityComponentMessage(componentFamily, messageParams);
         }
+
         #endregion
 
         #region dummy methods
+
         public void SendMessage(NetOutgoingMessage message, NetConnection recipient,
                                 NetDeliveryMethod method = NetDeliveryMethod.ReliableOrdered)
         {
             throw new NotImplementedException();
         }
+
         #endregion
     }
-
-
 }

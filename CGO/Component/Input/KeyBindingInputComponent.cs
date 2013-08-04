@@ -2,22 +2,30 @@
 using System.Linq;
 using ClientInterfaces.Input;
 using GameObject;
+using Lidgren.Network;
 using SS13.IoC;
-using SS13_Shared.GO;
 using SS13_Shared;
+using SS13_Shared.GO;
 
 namespace CGO
 {
     public class KeyBindingInputComponent : Component
     {
-        private readonly Dictionary<BoundKeyFunctions, bool> _keyStates;
-        private readonly Dictionary<BoundKeyFunctions, KeyEvent> _keyHandlers;
+        #region Delegates
+
         public delegate void KeyEvent(bool state);
+
+        #endregion
+
+        private readonly Dictionary<BoundKeyFunctions, KeyEvent> _keyHandlers;
+        private readonly Dictionary<BoundKeyFunctions, bool> _keyStates;
+
         private bool _enabled = true;
 
         public KeyBindingInputComponent()
         {
-            Family = ComponentFamily.Input; ;
+            Family = ComponentFamily.Input;
+            ;
             //Bind to the key binding manager
             var keyBindingManager = IoCManager.Resolve<IKeyBindingManager>();
             keyBindingManager.BoundKeyDown += KeyDown;
@@ -27,9 +35,10 @@ namespace CGO
             //Set up keystates
         }
 
-        public override ComponentReplyMessage RecieveMessage(object sender, ComponentMessageType type, params object[] list)
+        public override ComponentReplyMessage RecieveMessage(object sender, ComponentMessageType type,
+                                                             params object[] list)
         {
-            var reply = base.RecieveMessage(sender, type, list);
+            ComponentReplyMessage reply = base.RecieveMessage(sender, type, list);
 
             if (sender == this)
                 return ComponentReplyMessage.Empty;
@@ -58,7 +67,7 @@ namespace CGO
         public override void Update(float frameTime)
         {
             base.Update(frameTime);
-            if(_enabled)
+            if (_enabled)
                 UpdateKeys(frameTime);
         }
 
@@ -74,7 +83,7 @@ namespace CGO
             //Remove all active key states and send keyup messages for them.
             foreach (var state in _keyStates.ToList())
             {
-                Owner.SendComponentNetworkMessage(this, Lidgren.Network.NetDeliveryMethod.ReliableUnordered, state.Key, BoundKeyState.Up);
+                Owner.SendComponentNetworkMessage(this, NetDeliveryMethod.ReliableUnordered, state.Key, BoundKeyState.Up);
                 Owner.SendMessage(this, ComponentMessageType.BoundKeyChange, state.Key, BoundKeyState.Up);
                 _keyStates.Remove(state.Key);
             }
@@ -84,7 +93,7 @@ namespace CGO
         {
             if (!_enabled || GetKeyState(e.Function))
                 return; //Don't repeat keys that are already down.
-            Owner.SendComponentNetworkMessage(this, Lidgren.Network.NetDeliveryMethod.ReliableUnordered, e.Function, e.FunctionState);
+            Owner.SendComponentNetworkMessage(this, NetDeliveryMethod.ReliableUnordered, e.Function, e.FunctionState);
             SetKeyState(e.Function, true);
             Owner.SendMessage(this, ComponentMessageType.BoundKeyChange, e.Function, e.FunctionState);
         }
@@ -93,7 +102,7 @@ namespace CGO
         {
             if (!_enabled)
                 return;
-            Owner.SendComponentNetworkMessage(this, Lidgren.Network.NetDeliveryMethod.ReliableUnordered, e.Function, e.FunctionState);
+            Owner.SendComponentNetworkMessage(this, NetDeliveryMethod.ReliableUnordered, e.Function, e.FunctionState);
             SetKeyState(e.Function, false);
             Owner.SendMessage(this, ComponentMessageType.BoundKeyChange, e.Function, e.FunctionState);
         }
@@ -102,7 +111,6 @@ namespace CGO
         {
             // Check to see if we have a keyhandler for the key that's been pressed. Discard invalid keys.
             _keyStates[k] = state;
-
         }
 
         public bool GetKeyState(BoundKeyFunctions k)
@@ -124,7 +132,7 @@ namespace CGO
             var activeKeyHandlers =
                 from keyState in _keyStates
                 join handler in _keyHandlers on keyState.Key equals handler.Key
-                select new { evt = handler.Value, state = keyState.Value };
+                select new {evt = handler.Value, state = keyState.Value};
 
             //Execute the bastards!
             foreach (var keyHandler in activeKeyHandlers)

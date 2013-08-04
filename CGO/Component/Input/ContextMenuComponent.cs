@@ -1,10 +1,10 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Xml.Linq;
 using GameObject;
 using Lidgren.Network;
 using SS13_Shared;
 using SS13_Shared.GO;
-using System.Xml.Linq;
 
 namespace CGO
 {
@@ -12,12 +12,13 @@ namespace CGO
     {
         private readonly List<ContextMenuEntry> _entries = new List<ContextMenuEntry>();
 
-        public ContextMenuComponent():base()
+        public ContextMenuComponent()
         {
             Family = ComponentFamily.ContextMenu;
         }
-        
-        public override ComponentReplyMessage RecieveMessage(object sender, ComponentMessageType type, params object[] list)
+
+        public override ComponentReplyMessage RecieveMessage(object sender, ComponentMessageType type,
+                                                             params object[] list)
         {
             ComponentReplyMessage reply = base.RecieveMessage(sender, type, list);
 
@@ -27,15 +28,15 @@ namespace CGO
             switch (type)
             {
                 case ComponentMessageType.ContextAdd:
-                    AddEntry((ContextMenuEntry)list[0]);
+                    AddEntry((ContextMenuEntry) list[0]);
                     break;
 
                 case ComponentMessageType.ContextRemove:
-                    RemoveEntryByName((string)list[0]);
+                    RemoveEntryByName((string) list[0]);
                     break;
 
                 case ComponentMessageType.ContextGetEntries:
-                    reply = new ComponentReplyMessage(ComponentMessageType.ContextGetEntries,_entries);
+                    reply = new ComponentReplyMessage(ComponentMessageType.ContextGetEntries, _entries);
                     break;
             }
 
@@ -59,11 +60,11 @@ namespace CGO
 
         public override void HandleExtendedParameters(XElement extendedParameters)
         {
-            foreach (var param in extendedParameters.Descendants("ContextEntry"))
+            foreach (XElement param in extendedParameters.Descendants("ContextEntry"))
             {
-                var name = "NULL";
-                var icon = "NULL";
-                var message = "NULL";
+                string name = "NULL";
+                string icon = "NULL";
+                string message = "NULL";
 
                 if (param.Attribute("name") != null)
                     name = param.Attribute("name").Value;

@@ -5,9 +5,7 @@
   <DisplayHeight>768</DisplayHeight>
   <Fullscreen>false</Fullscreen>
   <VSync>true</VSync>
-  <ResourcePack>
-    ..\..\..\Media\ResourcePack.zip
-  </ResourcePack>
+  <ResourcePack>..\..\..\Media\ResourcePack.zip</ResourcePack>
   <PlayerName>Joe Genero</PlayerName>
   <ServerAddress>127.0.0.1</ServerAddress>
   <MessageLogging>false</MessageLogging>

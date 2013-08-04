@@ -10,8 +10,6 @@
   <TickRate>66.66</TickRate>
   <gameType>Game</gameType>
   <serverMapName>SavedMap</serverMapName>
-  <serverWelcomeMessage>
-    Hello and have a great fucking day!
-  </serverWelcomeMessage>
+  <serverWelcomeMessage>Hello and have a great fucking day!</serverWelcomeMessage>
   <LogLevel>Information</LogLevel>
 </PersistentConfiguration>

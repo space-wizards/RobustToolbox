@@ -5,6 +5,7 @@ namespace SS13_Shared.GO
 {
     public struct ComponentReplyMessage
     {
+        public static ComponentReplyMessage Empty = new ComponentReplyMessage(ComponentMessageType.Empty);
         public ComponentMessageType MessageType;
         public List<object> ParamsList;
 
@@ -13,7 +14,5 @@ namespace SS13_Shared.GO
             ParamsList = paramsList != null ? paramsList.ToList() : new List<object>();
             MessageType = messageType;
         }
-
-        public static ComponentReplyMessage Empty = new ComponentReplyMessage(ComponentMessageType.Empty);
     }
 }

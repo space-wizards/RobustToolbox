@@ -1,16 +1,11 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-
-namespace SS13_Shared.GO
+﻿namespace SS13_Shared.GO
 {
     /// <summary>
     /// Component Family ie. what type of component it is.
     /// </summary>
     public enum ComponentFamily
     {
-        Null,   //For message logger use
+        Null, //For message logger use
         Generic,
         Input, // Receives user input
         Mover, // Moves objects around
@@ -57,7 +52,7 @@ namespace SS13_Shared.GO
         UnEquipped,
         Equipped,
     }
-    
+
     public enum EquipmentComponentNetMessage
     {
         ItemEquipped,
@@ -67,7 +62,8 @@ namespace SS13_Shared.GO
     public enum ComponentMessageType
     {
         Null,
-        DisassociateEntity, //All components that can hold entities must respond to this by dropping the entity to the floor and removing all references. They will also need to send this message when they aquire an entity so other components relinquish control of it.
+        DisassociateEntity,
+        //All components that can hold entities must respond to this by dropping the entity to the floor and removing all references. They will also need to send this message when they aquire an entity so other components relinquish control of it.
         InventoryAdd,
         InventoryRemove,
         InventorySetSize,
@@ -201,7 +197,6 @@ namespace SS13_Shared.GO
         GetHasInternals,
         GetSVars,
         SetSVar
-
     }
 
     public enum Hand
@@ -213,23 +208,23 @@ namespace SS13_Shared.GO
 
     public enum DrawDepth
     {
-        FloorTiles              = 0,
-        FloorObjects            = 1,
-        ItemsOnFloor            = 2,
-        MobBase                 = 3,
-        MobUnderClothingLayer   = 4,
-        MobUnderAccessoryLayer  = 5,
-        MobOverClothingLayer    = 6,
-        MobOverAccessoryLayer   = 7,
-        HeldItems               = 8,
-        Tables                  = 9,
-        ItemsOnTables           = 10,
-        FloorPlaceable          = 11,
-        Doors                   = 12,
-        Walls                   = 13,
-        WallMountedItems        = 14,
-        WallTops                = 15,
-        LightOverlay            = 16
+        FloorTiles = 0,
+        FloorObjects = 1,
+        ItemsOnFloor = 2,
+        MobBase = 3,
+        MobUnderClothingLayer = 4,
+        MobUnderAccessoryLayer = 5,
+        MobOverClothingLayer = 6,
+        MobOverAccessoryLayer = 7,
+        HeldItems = 8,
+        Tables = 9,
+        ItemsOnTables = 10,
+        FloorPlaceable = 11,
+        Doors = 12,
+        Walls = 13,
+        WallMountedItems = 14,
+        WallTops = 15,
+        LightOverlay = 16
     }
 
     public enum StatusEffectFamily

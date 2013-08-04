@@ -1,7 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
 
 namespace SS13_Shared.GO.Component.Damageable.Health
 {
@@ -10,8 +7,9 @@ namespace SS13_Shared.GO.Component.Damageable.Health
     {
         public float Health;
         public float MaxHealth;
+
         public HealthComponentState(bool isDead, float health, float maxHealth)
-            :base(isDead)
+            : base(isDead)
         {
             Health = health;
             MaxHealth = maxHealth;

@@ -1,7 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
 
 namespace SS13_Shared.GO.Component.EntityStats
 {
@@ -10,7 +8,7 @@ namespace SS13_Shared.GO.Component.EntityStats
     {
         public Dictionary<DamageType, int> ArmorStats = new Dictionary<DamageType, int>();
 
-        public EntityStatsComponentState(Dictionary<DamageType, int> armorStats )
+        public EntityStatsComponentState(Dictionary<DamageType, int> armorStats)
         {
             ArmorStats = armorStats;
         }

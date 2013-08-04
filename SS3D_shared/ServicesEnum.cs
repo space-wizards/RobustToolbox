@@ -9,6 +9,5 @@
         PlayerManager,
         ConfigManager,
         MessageLogger
-
     }
 }

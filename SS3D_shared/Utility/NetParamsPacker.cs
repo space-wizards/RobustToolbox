@@ -1,16 +1,11 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.IO;
-using System.Linq;
 using System.Runtime.Serialization;
 using System.Runtime.Serialization.Formatters.Binary;
-using System.Text;
-using BKSystem.IO;
-using Lidgren.Network;
 
 namespace SS13_Shared.Utility
 {
-    class NetParamsPacker
+    internal class NetParamsPacker
     {
         private byte[] ObjectToByteArray(Object obj)
         {

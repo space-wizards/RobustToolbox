@@ -26,14 +26,13 @@ using SS13_Shared.Serialization;
 /// Mixed product function implemented
 /// </Changes>
 /// 
+
 namespace SS13_Shared
 {
-
     [Serializable]
     public struct Vector2
         : INetSerializableType, IComparable, IComparable<Vector2>, IEquatable<Vector2>, IFormattable
     {
-
         #region Class Variables
 
         /// <summary>
@@ -76,9 +75,8 @@ namespace SS13_Shared
             // Initialisation
             X = x;
             Y = y;
-
         }
-        
+
         /// <summary>
         /// Constructor for the Vector2 class from an array
         /// </summary>
@@ -90,8 +88,8 @@ namespace SS13_Shared
         {
             // Pre-initialisation initialisation
             // Implemented because a struct's variables always have to be set in the constructor before moving control
-            this.x = 0;
-            this.y = 0;
+            x = 0;
+            y = 0;
 
             // Initialisation
             Array = xyz;
@@ -108,9 +106,9 @@ namespace SS13_Shared
         {
             // Pre-initialisation initialisation
             // Implemented because a struct's variables always have to be set in the constructor before moving control
-            this.x = 0;
-            this.y = 0;
- 
+            x = 0;
+            y = 0;
+
             // Initialisation
             X = v1.X;
             Y = v1.Y;
@@ -137,6 +135,7 @@ namespace SS13_Shared
             get { return y; }
             set { y = value; }
         }
+
         /// <summary>
         /// Property for the magnitude (aka. length or absolute value) of the Vector2
         /// </summary>
@@ -145,17 +144,21 @@ namespace SS13_Shared
             get
             {
                 return
-                (float)Math.Sqrt(SumComponentSqrs());
+                    (float) Math.Sqrt(SumComponentSqrs());
             }
             set
             {
                 if (value < 0)
-                { throw new ArgumentOutOfRangeException("value", value, NEGATIVE_MAGNITUDE); }
+                {
+                    throw new ArgumentOutOfRangeException("value", value, NEGATIVE_MAGNITUDE);
+                }
 
                 if (this == new Vector2(0, 0))
-                { throw new ArgumentException(ORAGIN_VECTOR_MAGNITUDE, "this"); }
+                {
+                    throw new ArgumentException(ORAGIN_VECTOR_MAGNITUDE, "this");
+                }
 
-                this = this * (value / Magnitude);
+                this = this*(value/Magnitude);
             }
         }
 
@@ -168,7 +171,7 @@ namespace SS13_Shared
         [XmlIgnore]
         public float[] Array
         {
-            get { return new float[] { x, y}; }
+            get { return new[] {x, y}; }
             set
             {
                 if (value.Length == 3)
@@ -197,18 +200,34 @@ namespace SS13_Shared
             {
                 switch (index)
                 {
-                    case 0: { return X; }
-                    case 1: { return Y; }
-                    default: throw new ArgumentException(THREE_COMPONENTS, "index");
+                    case 0:
+                        {
+                            return X;
+                        }
+                    case 1:
+                        {
+                            return Y;
+                        }
+                    default:
+                        throw new ArgumentException(THREE_COMPONENTS, "index");
                 }
             }
             set
             {
                 switch (index)
                 {
-                    case 0: { X = value; break; }
-                    case 1: { Y = value; break; }
-                    default: throw new ArgumentException(THREE_COMPONENTS, "index");
+                    case 0:
+                        {
+                            X = value;
+                            break;
+                        }
+                    case 1:
+                        {
+                            Y = value;
+                            break;
+                        }
+                    default:
+                        throw new ArgumentException(THREE_COMPONENTS, "index");
                 }
             }
         }
@@ -227,13 +246,13 @@ namespace SS13_Shared
         public static Vector2 operator +(Vector2 v1, Vector2 v2)
         {
             return
-            (
-                new Vector2
-                    (
+                (
+                    new Vector2
+                        (
                         v1.X + v2.X,
                         v1.Y + v2.Y
-                    )
-            );
+                        )
+                );
         }
 
         /// <summary>
@@ -246,13 +265,13 @@ namespace SS13_Shared
         public static Vector2 operator -(Vector2 v1, Vector2 v2)
         {
             return
-            (
-                new Vector2
-                    (
+                (
+                    new Vector2
+                        (
                         v1.X - v2.X,
                         v1.Y - v2.Y
-                    )
-            );
+                        )
+                );
         }
 
         /// <summary>
@@ -265,13 +284,13 @@ namespace SS13_Shared
         public static Vector2 operator *(Vector2 v1, float s2)
         {
             return
-            (
-                new Vector2
                 (
-                    v1.X * s2,
-                    v1.Y * s2
-                )
-            );
+                    new Vector2
+                        (
+                        v1.X*s2,
+                        v1.Y*s2
+                        )
+                );
         }
 
         /// <summary>
@@ -288,7 +307,7 @@ namespace SS13_Shared
         /// </Implementation>
         public static Vector2 operator *(float s1, Vector2 v2)
         {
-            return v2 * s1;
+            return v2*s1;
         }
 
         /// <summary>
@@ -301,13 +320,13 @@ namespace SS13_Shared
         public static Vector2 operator /(Vector2 v1, float s2)
         {
             return
-            (
-                new Vector2
-                    (
-                        v1.X / s2,
-                        v1.Y / s2
-                    )
-            );
+                (
+                    new Vector2
+                        (
+                        v1.X/s2,
+                        v1.Y/s2
+                        )
+                );
         }
 
         /// <summary>
@@ -321,13 +340,13 @@ namespace SS13_Shared
         public static Vector2 operator -(Vector2 v1)
         {
             return
-            (
-                new Vector2
-                    (
+                (
+                    new Vector2
+                        (
                         -v1.X,
                         -v1.Y
-                    )
-            );
+                        )
+                );
         }
 
         /// <summary>
@@ -344,13 +363,13 @@ namespace SS13_Shared
         public static Vector2 operator +(Vector2 v1)
         {
             return
-            (
-                new Vector2
-                    (
+                (
+                    new Vector2
+                        (
                         +v1.X,
                         +v1.Y
-                    )
-            );
+                        )
+                );
         }
 
         /// <summary>
@@ -411,10 +430,10 @@ namespace SS13_Shared
         public static bool operator ==(Vector2 v1, Vector2 v2)
         {
             return
-            (
-                Math.Abs(v1.X - v2.X) <= EqualityTolerence &&
-                Math.Abs(v1.Y - v2.Y) <= EqualityTolerence
-            );
+                (
+                    Math.Abs(v1.X - v2.X) <= EqualityTolerence &&
+                    Math.Abs(v1.Y - v2.Y) <= EqualityTolerence
+                );
         }
 
         /// <summary>
@@ -447,6 +466,8 @@ namespace SS13_Shared
 
         #region Functions
 
+        private const string ZERO_VECTOR_ANGLE = "Cannot find an angle from a zero vector.";
+
         /// <summary>
         /// Get the normalized vector
         /// Get the unit vector
@@ -471,16 +492,16 @@ namespace SS13_Shared
             else
             {
                 // find the inverse of the vectors magnitude
-                float inverse = 1 / v1.Magnitude;
+                float inverse = 1/v1.Magnitude;
                 return
-                (
-                    new Vector2
                     (
-                    // multiply each component by the inverse of the magnitude
-                        v1.X * inverse,
-                        v1.Y * inverse
-                    )
-                );
+                        new Vector2
+                            (
+                            // multiply each component by the inverse of the magnitude
+                            v1.X*inverse,
+                            v1.Y*inverse
+                            )
+                    );
             }
         }
 
@@ -520,22 +541,22 @@ namespace SS13_Shared
             {
                 // Error message includes information about the actual value of the argument
                 throw new ArgumentOutOfRangeException
-                        (
-                            "control",
-                            control,
-                            INTERPOLATION_RANGE + "\n" + ARGUMENT_VALUE + control
-                        );
+                    (
+                    "control",
+                    control,
+                    INTERPOLATION_RANGE + "\n" + ARGUMENT_VALUE + control
+                    );
             }
             else
             {
                 return
-                (
-                    new Vector2
                     (
-                        v1.X * (1 - control) + v2.X * control,
-                        v1.Y * (1 - control) + v2.Y * control
-                    )
-                );
+                        new Vector2
+                            (
+                            v1.X*(1 - control) + v2.X*control,
+                            v1.Y*(1 - control) + v2.Y*control
+                            )
+                    );
             }
         }
 
@@ -607,13 +628,13 @@ namespace SS13_Shared
         public static float Distance(Vector2 v1, Vector2 v2)
         {
             return
-            (
-                (float)Math.Sqrt
                 (
-                    (v1.X - v2.X) * (v1.X - v2.X) +
-                    (v1.Y - v2.Y) * (v1.Y - v2.Y)
-                )
-            );
+                    (float) Math.Sqrt
+                                (
+                                    (v1.X - v2.X)*(v1.X - v2.X) +
+                                    (v1.Y - v2.Y)*(v1.Y - v2.Y)
+                                )
+                );
         }
 
         /// <summary>
@@ -644,7 +665,10 @@ namespace SS13_Shared
         /// <Acknowledgement>This code is adapted from Exocortex - Ben Houston </Acknowledgement>
         public static Vector2 Max(Vector2 v1, Vector2 v2)
         {
-            if (v1 >= v2) { return v1; }
+            if (v1 >= v2)
+            {
+                return v1;
+            }
             return v2;
         }
 
@@ -675,7 +699,10 @@ namespace SS13_Shared
         /// <Acknowledgement>This code is adapted from Exocortex - Ben Houston </Acknowledgement>
         public static Vector2 Min(Vector2 v1, Vector2 v2)
         {
-            if (v1 <= v2) { return v1; }
+            if (v1 <= v2)
+            {
+                return v1;
+            }
             return v2;
         }
 
@@ -694,6 +721,7 @@ namespace SS13_Shared
         {
             return Min(this, other);
         }
+
         /// <summary>
         /// Find the absolute value of a Vector2
         /// Find the magnitude of a Vector2
@@ -717,7 +745,7 @@ namespace SS13_Shared
         /// </implementation>
         public float Abs()
         {
-            return this.Magnitude;
+            return Magnitude;
         }
 
         /// <summary>
@@ -731,15 +759,13 @@ namespace SS13_Shared
             if (v1.Magnitude == 0 || v2.Magnitude == 0)
                 throw new ArgumentException(ZERO_VECTOR_ANGLE, "this");
             return
-            (
-               (float)Math.Acos
-               (
-                  Normalize(v1).DotProduct(Normalize(v2))
-               )
-            );
+                (
+                    (float) Math.Acos
+                                (
+                                    Normalize(v1).DotProduct(Normalize(v2))
+                                )
+                );
         }
-
-        private const string ZERO_VECTOR_ANGLE = "Cannot find an angle from a zero vector.";
 
         public float Angle(Vector2 other)
         {
@@ -755,17 +781,16 @@ namespace SS13_Shared
         public static float DotProduct(Vector2 v1, Vector2 v2)
         {
             return
-            (
-               v1.X * v2.X +
-               v1.Y * v2.Y
-            );
+                (
+                    v1.X*v2.X +
+                    v1.Y*v2.Y
+                );
         }
 
         public float DotProduct(Vector2 other)
         {
             return DotProduct(this, other);
         }
-
 
         #endregion
 
@@ -827,13 +852,13 @@ namespace SS13_Shared
         public static Vector2 PowComponents(Vector2 v1, float power)
         {
             return
-            (
-                new Vector2
-                    (
-                        (float)Math.Pow(v1.X, power),
-                        (float)Math.Pow(v1.Y, power)
-                    )
-            );
+                (
+                    new Vector2
+                        (
+                        (float) Math.Pow(v1.X, power),
+                        (float) Math.Pow(v1.Y, power)
+                        )
+                );
         }
 
         /// <summary>
@@ -859,11 +884,11 @@ namespace SS13_Shared
         {
             return
                 (
-                new Vector2
-                    (
-                        (float)Math.Sqrt(v1.X),
-                        (float)Math.Sqrt(v1.Y)
-                    )
+                    new Vector2
+                        (
+                        (float) Math.Sqrt(v1.X),
+                        (float) Math.Sqrt(v1.Y)
+                        )
                 );
         }
 
@@ -889,11 +914,11 @@ namespace SS13_Shared
         {
             return
                 (
-                new Vector2
-                    (
-                        v1.X * v1.X,
-                        v1.Y * v1.Y
-                    )
+                    new Vector2
+                        (
+                        v1.X*v1.X,
+                        v1.Y*v1.Y
+                        )
                 );
         }
 
@@ -914,121 +939,45 @@ namespace SS13_Shared
 
         #region Standard Functions
 
-        /// <summary>
-        /// Textual description of the Vector2
-        /// </summary>
-        /// <Implementation>
-        /// Uses ToString(string, IFormatProvider) to avoid code duplication
-        /// </Implementation>
-        /// <returns>Text (String) representing the vector</returns>
-        public override string ToString()
-        {
-            return ToString(null, null);
-        }
+        #region IComparable Members
 
         /// <summary>
-        /// Verbose textual description of the Vector2
+        /// compares the magnitude of this instance against the magnitude of the supplied vector
         /// </summary>
-        /// <returns>Text (string) representing the vector</returns>
-        public string ToVerbString()
-        {
-            string output = null;
-
-            if (IsUnitVector()) { output += UNIT_VECTOR; }
-            else { output += POSITIONAL_VECTOR; }
-
-            output += string.Format("( x={0}, y={1} )", X, Y);
-            output += MAGNITUDE + Magnitude;
-
-            return output;
-        }
-
-        /// <summary>
-        /// Textual description of the Vector2
-        /// </summary>
-        /// <param name="format">Formatting string: 'x','y','z' or '' followed by standard numeric format string characters valid for a float precision floating point</param>
-        /// <param name="formatProvider">The culture specific fromatting provider</param>
-        /// <returns>Text (String) representing the vector</returns>
-        public string ToString(string format, IFormatProvider formatProvider)
-        {
-            // If no format is passed
-            if (format == null || format == "") return String.Format("({0}, {1} )", X, Y);
-
-            char firstChar = format[0];
-            string remainder = null;
-
-            if (format.Length > 1)
-                remainder = format.Substring(1);
-
-            switch (firstChar)
-            {
-                case 'x': return X.ToString(remainder, formatProvider);
-                case 'y': return Y.ToString(remainder, formatProvider);
-                default:
-                    return String.Format
-                        (
-                            "({0}, {1})",
-                            X.ToString(format, formatProvider),
-                            Y.ToString(format, formatProvider)
-                        );
-            }
-        }
-
-        /// <summary>
-        /// Get the hashcode
-        /// </summary>
-        /// <returns>Hashcode for the object instance</returns>
+        /// <param name="other">The vector to compare this instance with</param>
+        /// <returns>
+        /// -1: The magnitude of this instance is less than the others magnitude
+        /// 0: The magnitude of this instance equals the magnitude of the other
+        /// 1: The magnitude of this instance is greater than the magnitude of the other
+        /// </returns>
         /// <implementation>
-        /// Required in order to implement comparator operations (i.e. ==, !=)
+        /// Implemented to fulfil the IComparable interface
         /// </implementation>
-        /// <Acknowledgement>This code is adapted from CSOpenGL - Lucas Viñas Livschitz </Acknowledgement>
-        public override int GetHashCode()
+        /// <exception cref="ArgumentException">
+        /// Throws an exception if the type of object to be compared is not known to this class
+        /// </exception>
+        /// <Acknowledgement>This code is adapted from Exocortex - Ben Houston </Acknowledgement>
+        public int CompareTo(object other)
         {
-            return
-            (
-                (int)((X + Y) % Int32.MaxValue)
-            );
-        }
-
-        /// <summary>
-        /// Comparator
-        /// </summary>
-        /// <param name="other">The other object (which should be a vector) to compare to</param>
-        /// <returns>Truth if two vectors are equal within a tolerence</returns>
-        /// <implementation>
-        /// Checks if the object argument is a Vector2 object 
-        /// Uses the equality operator function to avoid code duplication
-        /// Required in order to implement comparator operations (i.e. ==, !=)
-        /// </implementation>
-        public override bool Equals(object other)
-        {
-            // Check object other is a Vector2 object
             if (other is Vector2)
             {
-                // Convert object to Vector2
-                Vector2 otherVector = (Vector2)other;
-
-                // Check for equality
-                return otherVector == this;
+                return CompareTo((Vector2) other);
             }
             else
             {
-                return false;
+                // Error condition: other is not a Vector2 object
+                throw new ArgumentException
+                    (
+                    // Error message includes information about the actual type of the argument
+                    NON_VECTOR_COMPARISON + "\n" + ARGUMENT_TYPE + other.GetType(),
+                    "other"
+                    );
             }
         }
 
-        /// <summary>
-        /// Comparator
-        /// </summary>
-        /// <param name="other">The other Vector2 to compare to</param>
-        /// <returns>Truth if two vectors are equal within a tolerence</returns>
-        /// <implementation>
-        /// Uses the equality operator function to avoid code duplication
-        /// </implementation>
-        public bool Equals(Vector2 other)
-        {
-            return other == this;
-        }
+        #endregion
+
+        #region IComparable<Vector2> Members
 
         /// <summary>
         /// compares the magnitude of this instance against the magnitude of the supplied vector
@@ -1056,37 +1005,137 @@ namespace SS13_Shared
             return 0;
         }
 
+        #endregion
+
+        #region IEquatable<Vector2> Members
+
         /// <summary>
-        /// compares the magnitude of this instance against the magnitude of the supplied vector
+        /// Comparator
         /// </summary>
-        /// <param name="other">The vector to compare this instance with</param>
-        /// <returns>
-        /// -1: The magnitude of this instance is less than the others magnitude
-        /// 0: The magnitude of this instance equals the magnitude of the other
-        /// 1: The magnitude of this instance is greater than the magnitude of the other
-        /// </returns>
+        /// <param name="other">The other Vector2 to compare to</param>
+        /// <returns>Truth if two vectors are equal within a tolerence</returns>
         /// <implementation>
-        /// Implemented to fulfil the IComparable interface
+        /// Uses the equality operator function to avoid code duplication
         /// </implementation>
-        /// <exception cref="ArgumentException">
-        /// Throws an exception if the type of object to be compared is not known to this class
-        /// </exception>
-        /// <Acknowledgement>This code is adapted from Exocortex - Ben Houston </Acknowledgement>
-        public int CompareTo(object other)
+        public bool Equals(Vector2 other)
         {
-            if (other is Vector2)
+            return other == this;
+        }
+
+        #endregion
+
+        #region IFormattable Members
+
+        /// <summary>
+        /// Textual description of the Vector2
+        /// </summary>
+        /// <param name="format">Formatting string: 'x','y','z' or '' followed by standard numeric format string characters valid for a float precision floating point</param>
+        /// <param name="formatProvider">The culture specific fromatting provider</param>
+        /// <returns>Text (String) representing the vector</returns>
+        public string ToString(string format, IFormatProvider formatProvider)
+        {
+            // If no format is passed
+            if (format == null || format == "") return String.Format("({0}, {1} )", X, Y);
+
+            char firstChar = format[0];
+            string remainder = null;
+
+            if (format.Length > 1)
+                remainder = format.Substring(1);
+
+            switch (firstChar)
             {
-                return CompareTo((Vector2)other);
+                case 'x':
+                    return X.ToString(remainder, formatProvider);
+                case 'y':
+                    return Y.ToString(remainder, formatProvider);
+                default:
+                    return String.Format
+                        (
+                            "({0}, {1})",
+                            X.ToString(format, formatProvider),
+                            Y.ToString(format, formatProvider)
+                        );
+            }
+        }
+
+        #endregion
+
+        /// <summary>
+        /// Textual description of the Vector2
+        /// </summary>
+        /// <Implementation>
+        /// Uses ToString(string, IFormatProvider) to avoid code duplication
+        /// </Implementation>
+        /// <returns>Text (String) representing the vector</returns>
+        public override string ToString()
+        {
+            return ToString(null, null);
+        }
+
+        /// <summary>
+        /// Verbose textual description of the Vector2
+        /// </summary>
+        /// <returns>Text (string) representing the vector</returns>
+        public string ToVerbString()
+        {
+            string output = null;
+
+            if (IsUnitVector())
+            {
+                output += UNIT_VECTOR;
             }
             else
             {
-                // Error condition: other is not a Vector2 object
-                throw new ArgumentException
+                output += POSITIONAL_VECTOR;
+            }
+
+            output += string.Format("( x={0}, y={1} )", X, Y);
+            output += MAGNITUDE + Magnitude;
+
+            return output;
+        }
+
+        /// <summary>
+        /// Get the hashcode
+        /// </summary>
+        /// <returns>Hashcode for the object instance</returns>
+        /// <implementation>
+        /// Required in order to implement comparator operations (i.e. ==, !=)
+        /// </implementation>
+        /// <Acknowledgement>This code is adapted from CSOpenGL - Lucas Viñas Livschitz </Acknowledgement>
+        public override int GetHashCode()
+        {
+            return
                 (
-                    // Error message includes information about the actual type of the argument
-                    NON_VECTOR_COMPARISON + "\n" + ARGUMENT_TYPE + other.GetType().ToString(),
-                    "other"
+                    (int) ((X + Y)%Int32.MaxValue)
                 );
+        }
+
+        /// <summary>
+        /// Comparator
+        /// </summary>
+        /// <param name="other">The other object (which should be a vector) to compare to</param>
+        /// <returns>Truth if two vectors are equal within a tolerence</returns>
+        /// <implementation>
+        /// Checks if the object argument is a Vector2 object 
+        /// Uses the equality operator function to avoid code duplication
+        /// Required in order to implement comparator operations (i.e. ==, !=)
+        /// </implementation>
+        public override bool Equals(object other)
+        {
+            // Check object other is a Vector2 object
+            if (other is Vector2)
+            {
+                // Convert object to Vector2
+                var otherVector = (Vector2) other;
+
+                // Check for equality
+                return otherVector == this;
+            }
+            else
+            {
+                return false;
             }
         }
 
@@ -1151,7 +1200,6 @@ namespace SS13_Shared
         /// <Acknowledgement>This code is adapted from Exocortex - Ben Houston </Acknowledgement>
         public static readonly Vector2 yAxis = new Vector2(0, 1);
 
-
         #endregion
 
         #region Messages
@@ -1202,7 +1250,8 @@ namespace SS13_Shared
         /// Exception message descriptive text 
         /// Used when attempting to set a Vectors magnitude to a negative value 
         /// </summary>
-        private const string NEGATIVE_MAGNITUDE = "The magnitude of a Vector2 must be a positive value, (i.e. greater than 0)";
+        private const string NEGATIVE_MAGNITUDE =
+            "The magnitude of a Vector2 must be a positive value, (i.e. greater than 0)";
 
         /// <summary>
         /// Exception message descriptive text 
@@ -1247,32 +1296,49 @@ namespace SS13_Shared
         #endregion
 
         #region Static Initializers
+
         // Static vector declarations to minimize object creation.
-        private readonly static Vector2 _zero = new Vector2(0, 0);
-        private readonly static Vector2 _unit = new Vector2(1.0f, 1.0f);
-        private readonly static Vector2 _unitX = new Vector2(1.0f, 0);
-        private readonly static Vector2 _unitY = new Vector2(0, 1.0f);
+        private static readonly Vector2 _zero = new Vector2(0, 0);
+        private static readonly Vector2 _unit = new Vector2(1.0f, 1.0f);
+        private static readonly Vector2 _unitX = new Vector2(1.0f, 0);
+        private static readonly Vector2 _unitY = new Vector2(0, 1.0f);
+
         #endregion
+
         #region Static Properties
+
         /// <summary>
         /// Property to return a zero vector (0,0)
         /// </summary>
-        public static Vector2 Zero { get { return _zero; } }
+        public static Vector2 Zero
+        {
+            get { return _zero; }
+        }
 
         /// <summary>
         /// Property to return a unit vector (1,1).
         /// </summary>
-        public static Vector2 Unit { get { return _unit; } }
+        public static Vector2 Unit
+        {
+            get { return _unit; }
+        }
 
         /// <summary>
         /// Property to return a unit vector for the X axis (1,0).
         /// </summary>
-        public static Vector2 UnitX { get { return _unitX; } }
+        public static Vector2 UnitX
+        {
+            get { return _unitX; }
+        }
 
         /// <summary>
         /// Property to return a unit vector for the Y axis (0,1).
         /// </summary>
-        public static Vector2 UnitY { get { return _unitY; } }
+        public static Vector2 UnitY
+        {
+            get { return _unitY; }
+        }
+
         #endregion
     }
 }

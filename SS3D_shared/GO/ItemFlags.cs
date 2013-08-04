@@ -1,7 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
 
 namespace SS13_Shared.GO
 {
@@ -31,7 +28,7 @@ namespace SS13_Shared.GO
         Pry,
         Screw,
         Hit,
-        Cut, 
+        Cut,
         Slice,
         Pierce,
         Bludgeon,
@@ -44,7 +41,7 @@ namespace SS13_Shared.GO
         Clean,
         Emag
     }
-    
+
     public enum DamageType
     {
         Piercing,

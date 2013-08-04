@@ -1,16 +1,19 @@
 ﻿using System;
 using Lidgren.Network;
+
 namespace SS13_Shared
 {
     public class IncomingEntityMessage
     {
-        public int Uid;
-        public EntityMessage MessageType;
-        public object Message;
-        public DateTime LastProcessingAttempt;
-        public DateTime ReceivedTime;
+        public static IncomingEntityMessage Null = new IncomingEntityMessage(0, EntityMessage.Null, null, null);
         public ushort Expires;
+        public DateTime LastProcessingAttempt;
+        public object Message;
+        public EntityMessage MessageType;
+        public DateTime ReceivedTime;
         public NetConnection Sender;
+        public int Uid;
+
         public IncomingEntityMessage(int uid, EntityMessage messageType, object message, NetConnection sender)
         {
             Uid = uid;
@@ -21,7 +24,5 @@ namespace SS13_Shared
             Expires = 30;
             Sender = sender;
         }
-        
-        public static IncomingEntityMessage Null = new IncomingEntityMessage(0, EntityMessage.Null, null, null);
     }
 }

@@ -1,5 +1,6 @@
 ﻿using System;
 using System.IO;
+using BsDiffLib;
 using Lidgren.Network;
 using NetSerializer;
 using SS13_Shared.GameStates;
@@ -10,14 +11,9 @@ namespace SS13_Shared
     [Serializable]
     public class GameStateDelta : INetSerializableType
     {
-        MemoryStream deltaBytes = new MemoryStream();
-        public uint Sequence;
+        private readonly MemoryStream deltaBytes = new MemoryStream();
         public uint FromSequence;
-
-        public long Size
-        {
-            get { return deltaBytes.Length; }
-        }
+        public uint Sequence;
 
         public GameStateDelta(byte[] bytes)
         {
@@ -26,31 +22,38 @@ namespace SS13_Shared
         }
 
         public GameStateDelta()
-        {}
+        {
+        }
+
+        public long Size
+        {
+            get { return deltaBytes.Length; }
+        }
 
         public void Create(GameState fromState, GameState toState)
         {
             Sequence = toState.Sequence;
             FromSequence = fromState.Sequence;
-            BsDiffLib.BinaryPatchUtility.Create(fromState.GetSerializedDataBuffer(), toState.GetSerializedDataBuffer(), deltaBytes);
+            BinaryPatchUtility.Create(fromState.GetSerializedDataBuffer(), toState.GetSerializedDataBuffer(), deltaBytes);
         }
 
         public GameState Apply(GameState fromState)
         {
-            if(fromState.Sequence != FromSequence)
+            if (fromState.Sequence != FromSequence)
                 throw new Exception("Cannot apply GameStateDelta. Sequence incorrect.");
-            var fromBuffer = fromState.GetSerializedDataStream().ToArray();
+            byte[] fromBuffer = fromState.GetSerializedDataStream().ToArray();
             var toStream = new MemoryStream();
-            BsDiffLib.BinaryPatchUtility.Apply(new MemoryStream(fromBuffer), () => new MemoryStream(deltaBytes.ToArray()), toStream);
+            BinaryPatchUtility.Apply(new MemoryStream(fromBuffer), () => new MemoryStream(deltaBytes.ToArray()),
+                                     toStream);
             toStream.Seek(0, SeekOrigin.Begin);
             return (GameState) Serializer.Deserialize(toStream);
         }
 
         public static GameStateDelta ReadDelta(NetIncomingMessage message)
         {
-            var sequence = message.ReadUInt32();
-            var fromSequence = message.ReadUInt32();
-            var length = message.ReadInt32();
+            uint sequence = message.ReadUInt32();
+            uint fromSequence = message.ReadUInt32();
+            int length = message.ReadInt32();
             byte[] bytes;
             message.ReadBytes(length, out bytes);
 
@@ -64,10 +67,9 @@ namespace SS13_Shared
         {
             message.Write(Sequence);
             message.Write(FromSequence);
-            var bytes = deltaBytes.ToArray();
+            byte[] bytes = deltaBytes.ToArray();
             message.Write(bytes.Length);
             message.Write(bytes);
         }
-
     }
 }

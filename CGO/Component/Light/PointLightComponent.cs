@@ -63,11 +63,11 @@ namespace CGO
             {
                 case "lightoffsetx":
                     _lightOffset.X = parameter.GetValue<float>();
-                        //float.Parse((string)parameter.Parameter, System.Globalization.CultureInfo.InvariantCulture);
+                    //float.Parse((string)parameter.Parameter, System.Globalization.CultureInfo.InvariantCulture);
                     break;
                 case "lightoffsety":
                     _lightOffset.Y = parameter.GetValue<float>();
-                        //float.Parse((string)parameter.Parameter, System.Globalization.CultureInfo.InvariantCulture);
+                    //float.Parse((string)parameter.Parameter, System.Globalization.CultureInfo.InvariantCulture);
                     break;
                 case "lightradius":
                     _lightRadius = parameter.GetValue<int>(); //int.Parse((string) parameter.Parameter);

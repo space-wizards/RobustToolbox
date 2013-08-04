@@ -106,13 +106,13 @@ namespace CGO
                 }
 
                 existing.Remove(effectState.Uid);
-                    // Whittle down the list so we can remove the effects that aren't contained in the state.
+                // Whittle down the list so we can remove the effects that aren't contained in the state.
             }
 
             foreach (uint u in existing)
             {
                 RemoveEffect(u);
-                    //The server did not send anything else, so we can remove whatever is left. No client-side only effects.
+                //The server did not send anything else, so we can remove whatever is left. No client-side only effects.
             }
         }
     }

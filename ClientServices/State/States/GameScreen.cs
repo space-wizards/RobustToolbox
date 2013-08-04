@@ -1252,7 +1252,7 @@ namespace ClientServices.State.States
                     lightMapShader.Parameters["SceneTexture"].SetValue(source.Image);
 
                     source.Image.Blit(0, 0, screenShadows.Width, screenShadows.Height, Color.White, BlitterSizeMode.Crop);
-                        // Blit the shadow image on top of the screen
+                    // Blit the shadow image on top of the screen
 
                     //Swap rendertargets to set up for the next light
                     copy = source;
@@ -1323,7 +1323,7 @@ namespace ClientServices.State.States
                 area.renderTarget.DestinationBlend = AlphaBlendOperation.Zero; //Additive blending
                 area.renderTarget.Blit(blitPos.X, blitPos.Y, area.renderTarget.Width,
                                        area.renderTarget.Height, Color.White, BlitterSizeMode.Crop);
-                    // Draw the lights effects
+                // Draw the lights effects
                 area.renderTarget.SourceBlend = AlphaBlendOperation.SourceAlpha; //reset blend mode
                 area.renderTarget.DestinationBlend = AlphaBlendOperation.InverseSourceAlpha; //reset blend mode
             }

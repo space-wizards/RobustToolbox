@@ -204,7 +204,7 @@ namespace ClientServices.UserInterface.Components
                     if (_text.Substring(_displayIndex + 1).Length != glyphCount) //Still stuff outside the screen?
                     {
                         _displayIndex++;
-                            //Increase display index by one since the carret is one outside to the right. But only if there's still letters to the right.
+                        //Increase display index by one since the carret is one outside to the right. But only if there's still letters to the right.
 
                         glyphCount = 0; //Update glyphcount with new index.
 

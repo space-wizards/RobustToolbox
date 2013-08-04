@@ -215,7 +215,7 @@ namespace ClientServices.Placement
             if (template == null) return;
 
             ComponentParameter spriteParam = template.GetBaseSpriteParamaters().FirstOrDefault();
-                //Will break if states not ordered correctly.
+            //Will break if states not ordered correctly.
             if (spriteParam == null) return;
 
             var spriteName = spriteParam.GetValue<string>();

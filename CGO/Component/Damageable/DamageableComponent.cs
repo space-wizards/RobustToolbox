@@ -34,7 +34,7 @@ namespace CGO
             {
                 case ComponentMessageType.GetCurrentHealth:
                     reply = new ComponentReplyMessage(ComponentMessageType.CurrentHealth, IsDead ? 0 : 1, 1);
-                        //HANDLE THIS CORRECTLY
+                    //HANDLE THIS CORRECTLY
                     break;
             }
 

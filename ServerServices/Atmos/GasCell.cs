@@ -145,7 +145,7 @@ namespace ServerServices.Atmos
                             float angle = quarterpi/2.0f;
                             if (gasVel.Magnitude > 0.0f)
                                 angle = Math.Abs(neighDir.Angle(gasVel));
-                                    // Get the angle between our current flow vector and the cell we're sharing with
+                            // Get the angle between our current flow vector and the cell we're sharing with
                             if (angle < quarterpi)
                                 // If the angle is more than 45 we shouldn't share with this cell as the gas is flowing away from it
                             {

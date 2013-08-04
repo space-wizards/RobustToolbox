@@ -80,7 +80,7 @@ namespace SS13_Shared
             {
                 XmlReader reader = XmlReader.Create(path); //Create reader for file.
                 JobDefinitions = (List<JobDefinition>) Serializer.Deserialize(reader);
-                    //Deserialize and save inside class.
+                //Deserialize and save inside class.
                 return false;
             }
             else

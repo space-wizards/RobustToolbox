@@ -125,7 +125,7 @@ namespace ClientServices.Resources
             var byteBuffer = new byte[zipBufferSize];
 
             Stream zipStream = zipFile.GetInputStream(imageEntry);
-                //Will throw exception is missing or wrong password. Handle this.
+            //Will throw exception is missing or wrong password. Handle this.
 
             var memStream = new MemoryStream();
 
@@ -155,7 +155,7 @@ namespace ClientServices.Resources
             var byteBuffer = new byte[zipBufferSize];
 
             Stream zipStream = zipFile.GetInputStream(shaderEntry);
-                //Will throw exception is missing or wrong password. Handle this.
+            //Will throw exception is missing or wrong password. Handle this.
 
             var memStream = new MemoryStream();
 
@@ -186,7 +186,7 @@ namespace ClientServices.Resources
             var byteBuffer = new byte[zipBufferSize];
 
             Stream zipStream = zipFile.GetInputStream(fontEntry);
-                //Will throw exception is missing or wrong password. Handle this.
+            //Will throw exception is missing or wrong password. Handle this.
 
             var memStream = new MemoryStream();
 
@@ -218,7 +218,7 @@ namespace ClientServices.Resources
             var byteBuffer = new byte[zipBufferSize];
 
             Stream zipStream = zipFile.GetInputStream(taiEntry);
-                //Will throw exception is missing or wrong password. Handle this.
+            //Will throw exception is missing or wrong password. Handle this.
 
             var memStream = new MemoryStream();
 
@@ -256,7 +256,7 @@ namespace ClientServices.Resources
                     continue; //Image for this sprite does not exist. Possibly set to defered later.
 
                 Image atlasTex = ImageCache.Images[splitResourceName[0]];
-                    //Grab the image for the sprite from the cache.
+                //Grab the image for the sprite from the cache.
 
                 var info = new SpriteInfo();
                 info.Name = originalName;

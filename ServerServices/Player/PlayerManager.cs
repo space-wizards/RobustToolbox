@@ -52,7 +52,7 @@ namespace ServerServices.Player
                 {
                     newItem.GetComponent<ITransformComponent>(ComponentFamily.Transform).TranslateTo(
                         human.GetComponent<ITransformComponent>(ComponentFamily.Transform).Position);
-                        //This is not neccessary once the equipment component is built.
+                    //This is not neccessary once the equipment component is built.
                     human.SendMessage(this, ComponentMessageType.EquipItem, newItem);
                 }
             }

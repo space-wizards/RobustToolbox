@@ -201,7 +201,7 @@ namespace ServerServices.Map
                 return false;
 
             var tile = GenerateNewTile(x, z, newType) as Tile;
-                //Transfer the gas cell from the old tile to the new tile.
+            //Transfer the gas cell from the old tile to the new tile.
 
             MoveGasCell(tileArray[x, z], tile);
 

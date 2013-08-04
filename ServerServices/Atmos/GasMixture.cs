@@ -205,7 +205,7 @@ namespace ServerServices.Atmos
                 if (oAmount > 0.0001f && cAmount > 0.0001f && Pressure > 10)
                 {
                     float ratio = Math.Min(1f, oAmount/cAmount);
-                        // This is how much of each gas we can burn as that's how much oxidant we have free
+                    // This is how much of each gas we can burn as that's how much oxidant we have free
                     ratio /= 3; // Lets not just go mental and burn everything in one go because that's dumb
                     float amount = 0.0f;
 
@@ -217,14 +217,14 @@ namespace ServerServices.Atmos
                             AddNextGas(-amount, g);
                             AddNextGas(amount, GasType.CO2);
                             energy_released += (am.GetGasProperties(g).SpecificHeatCapacity*2000*amount);
-                                // This is COMPLETE bullshit non science but whatever
+                            // This is COMPLETE bullshit non science but whatever
                         }
                         if (am.GetGasProperties(g).Oxidant)
                         {
                             AddNextGas(-amount, g);
                             AddNextGas(amount, GasType.CO2);
                             energy_released += (am.GetGasProperties(g).SpecificHeatCapacity*2000*amount);
-                                // This is COMPLETE bullshit non science but whatever
+                            // This is COMPLETE bullshit non science but whatever
                         }
                     }
                 }
@@ -233,7 +233,7 @@ namespace ServerServices.Atmos
             if (energy_released > 0)
             {
                 SetNextTemperature(energy_released *= HeatCapacity);
-                    // This is COMPLETE bullshit non science but whatever
+                // This is COMPLETE bullshit non science but whatever
                 burning = true;
             }
             else // Nothing burnt here so we're not on fire

@@ -20,7 +20,7 @@ namespace SS13_Server
             if (main._server.Start())
             {
                 LogManager.Log("Server -> Can not start server", LogLevel.Fatal);
-                    //Not like you'd see this, haha. Perhaps later for logging.
+                //Not like you'd see this, haha. Perhaps later for logging.
                 Environment.Exit(0);
             }
 

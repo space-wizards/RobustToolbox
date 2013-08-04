@@ -222,7 +222,7 @@ namespace SS13_Server
             float elapsedTime;
 
             elapsedTime = (stopWatch.ElapsedTicks/millisecondsPerTick);
-                //Elapsed time in milliseconds since the last tick
+            //Elapsed time in milliseconds since the last tick
             stopWatch.Restart(); //Reset the stopwatch so we get elapsed time next time
 
             //Begin update time
@@ -569,7 +569,7 @@ namespace SS13_Server
                     {
                         HandleConnectionApproval(sender);
                         IoCManager.Resolve<IPlayerManager>().NewSession(sender);
-                            // TODO move this to somewhere that makes more sense.
+                        // TODO move this to somewhere that makes more sense.
                     }
                     else
                     {

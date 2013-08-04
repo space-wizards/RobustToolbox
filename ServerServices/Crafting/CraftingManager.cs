@@ -135,7 +135,7 @@ namespace ServerServices.Crafting
                             //craftingTicket.sourceEntity.SendMessage(this, ComponentMessageType.DisassociateEntity, null, craftingTicket.component2);
                             craftingTicket.sourceEntity.SendMessage(this, ComponentMessageType.InventoryAdd, newEnt);
                             _serverMain.EntityManager.DeleteEntity(craftingTicket.component1);
-                                //This might be unsafe and MIGHt leave behind references. Gotta check that later.
+                            //This might be unsafe and MIGHt leave behind references. Gotta check that later.
                             _serverMain.EntityManager.DeleteEntity(craftingTicket.component2);
                         }
                         else
@@ -180,7 +180,7 @@ namespace ServerServices.Crafting
             craftingTickets.Add(newTicket);
 
             NetOutgoingMessage startCraftMsg = IoCManager.Resolve<ISS13NetServer>().CreateMessage();
-                //Not starcraft. sorry.
+            //Not starcraft. sorry.
             startCraftMsg.Write((byte) NetMessage.PlayerUiMessage);
             startCraftMsg.Write((byte) UiManagerMessage.ComponentMessage);
             startCraftMsg.Write((byte) GuiComponentType.ComboGui);

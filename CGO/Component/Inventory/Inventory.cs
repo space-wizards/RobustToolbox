@@ -47,7 +47,7 @@ namespace CGO
             for (int i = 0; i < (int)msg.MessageParameters[2]; i++)
             {
                 var msgPos = 3 + i;
-                var entity = EntityManager.Singleton.GetEntity((int)msg.MessageParameters[msgPos]);
+                var entity = Owner.EntityManager.GetEntity((int)msg.MessageParameters[msgPos]);
                 if (entity != null)
                     ContainedEntities.Add(entity);
             }

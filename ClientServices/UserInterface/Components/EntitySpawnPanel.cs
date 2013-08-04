@@ -10,6 +10,7 @@ using ClientServices.Placement;
 using GameObject;
 using GorgonLibrary;
 using GorgonLibrary.InputDevices;
+using SS13.IoC;
 using SS13_Shared;
 using EntityManager = CGO.EntityManager;
 
@@ -147,9 +148,9 @@ namespace ClientServices.UserInterface.Components
             _entityList.components.Clear();
             _entityList.ResetScrollbars();
 
-            var templates = (searchStr == null) ? 
-                EntityManager.Singleton.EntityTemplateDatabase.Templates.ToList() : 
-                EntityManager.Singleton.EntityTemplateDatabase.Templates.Where(x => x.Value.Name.ToLower().Contains(searchStr.ToLower())).ToList();
+            var templates = (searchStr == null) ?
+                IoCManager.Resolve<IEntityManagerContainer>().EntityManager.EntityTemplateDatabase.Templates.ToList() :
+                IoCManager.Resolve<IEntityManagerContainer>().EntityManager.EntityTemplateDatabase.Templates.Where(x => x.Value.Name.ToLower().Contains(searchStr.ToLower())).ToList();
         
 
             if (searchStr != null) _clearLabel.BackgroundColor = Color.LightGray;

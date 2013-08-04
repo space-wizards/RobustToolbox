@@ -211,7 +211,7 @@ namespace ClientServices.UserInterface
             switch (uiType)
             {
                 case CreateUiType.HealthScannerWindow:
-                    var ent = EntityManager.Singleton.GetEntity((int)msg.ReadInt32());
+                    var ent = IoCManager.Resolve<IEntityManagerContainer>().EntityManager.GetEntity((int)msg.ReadInt32());
                     if (ent != null)
                     {
                         DisposeAllComponents<HealthScannerWindow>();

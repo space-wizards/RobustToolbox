@@ -10,6 +10,7 @@ using GameObject;
 using GorgonLibrary;
 using ClientInterfaces.Map;
 using GorgonLibrary.Graphics;
+using SS13.IoC;
 using SS13_Shared;
 using SS13_Shared.GO;
 using EntityManager = CGO.EntityManager;
@@ -48,7 +49,7 @@ namespace ClientServices.Placement.Modes
             if (pManager.CurrentPermission.Range > 0)
                 if ((pManager.PlayerManager.ControlledEntity.GetComponent<TransformComponent>(ComponentFamily.Transform).Position - mouseWorld).Length > pManager.CurrentPermission.Range) return false;
 
-            var nearbyEntities = EntityManager.Singleton.GetEntitiesInRange(mouseWorld, snapToRange);
+            var nearbyEntities = ((EntityManager)IoCManager.Resolve<IEntityManagerContainer>().EntityManager).GetEntitiesInRange(mouseWorld, snapToRange);
 
             var snapToEntities = from Entity entity in nearbyEntities
                                  where entity.Template == pManager.CurrentTemplate

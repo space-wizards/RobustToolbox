@@ -78,6 +78,7 @@
     <Compile Include="Configuration\ConfigurationManager.cs" />
     <Compile Include="Configuration\Configuration.cs" />
     <Compile Include="GameStates\GameStateManager.cs" />
+    <Compile Include="GOC\EntityManagerContainer.cs" />
     <Compile Include="Helpers\GaussianBlur.cs" />
     <Compile Include="Helpers\InterpolationPacket.cs" />
     <Compile Include="Helpers\StarScroller.cs" />

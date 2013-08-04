@@ -67,6 +67,7 @@
     <Compile Include="Configuration\IConfigurationManager.cs" />
     <Compile Include="GameStates\IGameStateManager.cs" />
     <Compile Include="GOC\GetSVarsEventArgs.cs" />
+    <Compile Include="GOC\IEntityManagerContainer.cs" />
     <Compile Include="GOC\IEntityNetworkManager.cs" />
     <Compile Include="GOC\IPlayerAction.cs" />
     <Compile Include="GOC\IMoverComponent.cs" />

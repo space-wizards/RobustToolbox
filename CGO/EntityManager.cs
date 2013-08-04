@@ -17,22 +17,8 @@ namespace CGO
     {
         public EntityManager(INetworkManager networkManager)
             :base(EngineType.Client, new EntityNetworkManager(networkManager))
-        {
-            Singleton = this;
-        }
+        {}
 
-        private static EntityManager singleton;
-        public static EntityManager Singleton
-        {
-            get
-            {
-                if (singleton == null) throw new Exception("Singleton not initialized");
-
-                return singleton;
-            }
-            set
-            { singleton = value; }
-        }
         
         public Entity[] GetEntitiesInRange(Vector2D position, float Range)
         {
@@ -42,7 +28,5 @@ namespace CGO
 
             return entities.ToArray();
         }
-        
-
     }
 }

@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using CGO;
+using ClientInterfaces.GOC;
 using ClientInterfaces.Network;
 using ClientInterfaces.Player;
 using ClientServices.Player.PostProcessing;
@@ -11,6 +12,7 @@ using GorgonLibrary.Graphics;
 using Lidgren.Network;
 using GorgonLibrary;
 using GorgonLibrary.InputDevices;
+using SS13.IoC;
 using SS13_Shared;
 using SS13_Shared.GO;
 using SS13_Shared.GameStates;
@@ -50,9 +52,9 @@ namespace ClientServices.Player
         public void Attach(Entity newEntity)
         {
             ControlledEntity = newEntity;
-            ControlledEntity.AddComponent(ComponentFamily.Input, EntityManager.Singleton.ComponentFactory.GetComponent("KeyBindingInputComponent"));
-            ControlledEntity.AddComponent(ComponentFamily.Mover, EntityManager.Singleton.ComponentFactory.GetComponent("KeyBindingMoverComponent"));
-            ControlledEntity.AddComponent(ComponentFamily.Collider, EntityManager.Singleton.ComponentFactory.GetComponent("ColliderComponent"));
+            ControlledEntity.AddComponent(ComponentFamily.Input, IoCManager.Resolve<IEntityManagerContainer>().EntityManager.ComponentFactory.GetComponent("KeyBindingInputComponent"));
+            ControlledEntity.AddComponent(ComponentFamily.Mover, IoCManager.Resolve<IEntityManagerContainer>().EntityManager.ComponentFactory.GetComponent("KeyBindingMoverComponent"));
+            ControlledEntity.AddComponent(ComponentFamily.Collider, IoCManager.Resolve<IEntityManagerContainer>().EntityManager.ComponentFactory.GetComponent("ColliderComponent"));
             ControlledEntity.GetComponent(ComponentFamily.Collider).SetParameter(new ComponentParameter("TweakAABB", new Vector4D(39, 0, 0, 0)));
             ControlledEntity.GetComponent<TransformComponent>(ComponentFamily.Transform).OnMove += PlayerEntityMoved;
         }
@@ -150,7 +152,7 @@ namespace ClientServices.Player
         private void HandleAttachToEntity(NetIncomingMessage message)
         {
             var uid = message.ReadInt32();
-            Attach(EntityManager.Singleton.GetEntity(uid));
+            Attach(IoCManager.Resolve<IEntityManagerContainer>().EntityManager.GetEntity(uid));
         }
         #endregion
 
@@ -174,7 +176,7 @@ namespace ClientServices.Player
                 return;
             if(myState.ControlledEntity != null && 
                 (ControlledEntity == null || (ControlledEntity != null && myState.ControlledEntity != ControlledEntity.Uid) ))
-                Attach(EntityManager.Singleton.GetEntity((int)myState.ControlledEntity));
+                Attach(IoCManager.Resolve<IEntityManagerContainer>().EntityManager.GetEntity((int)myState.ControlledEntity));
             
             if(status != myState.Status)
                 SwitchState(myState.Status);

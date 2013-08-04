@@ -20,7 +20,7 @@ namespace CGO
             {
                 case ItemComponentNetMessage.PickedUp://I've been picked up -- says the server's item component
                     Owner.AddComponent(ComponentFamily.Mover, Owner.EntityManager.ComponentFactory.GetComponent("SlaveMoverComponent"));
-                    var e = EntityManager.Singleton.GetEntity((int)message.MessageParameters[1]);
+                    var e = Owner.EntityManager.GetEntity((int)message.MessageParameters[1]);
                     var h = (Hand)message.MessageParameters[2];
                     Owner.SendMessage(this, ComponentMessageType.PickedUp, h); 
                     Owner.SendMessage(this, ComponentMessageType.SlaveAttach, e.Uid);

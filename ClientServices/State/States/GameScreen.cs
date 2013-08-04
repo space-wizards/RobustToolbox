@@ -8,6 +8,7 @@ using CGO;
 
 using ClientInterfaces.GOC;
 using ClientInterfaces.Map;
+using ClientInterfaces.Placement;
 using ClientInterfaces.Player;
 using ClientInterfaces.Resource;
 using ClientInterfaces.Serialization;
@@ -143,6 +144,7 @@ namespace ClientServices.State.States
             var serializer = IoCManager.Resolve<ISS13Serializer>();
 
             _entityManager = new EntityManager(NetworkManager);
+            IoCManager.Resolve<IEntityManagerContainer>().EntityManager = _entityManager;
 
             MapManager.Init();
 
@@ -541,7 +543,7 @@ namespace ClientServices.State.States
                     break;
             }
             _gameChat.AddLine(message, channel);
-            var a = EntityManager.Singleton.GetEntity(entityId);
+            var a = IoCManager.Resolve<IEntityManagerContainer>().EntityManager.GetEntity(entityId);
             if (a != null)
             {
                 a.SendMessage(this, ComponentMessageType.EntitySaidSomething, channel, text);
@@ -1272,7 +1274,7 @@ namespace ClientServices.State.States
             var mouseAABB = new RectangleF(MousePosWorld.X, MousePosWorld.Y, 1, 1);
             var checkDistance = MapManager.GetTileSpacing() * 1.5f;
             // Find all the entities near us we could have clicked
-            var entities = EntityManager.Singleton.GetEntitiesInRange(PlayerManager.ControlledEntity.GetComponent<TransformComponent>(ComponentFamily.Transform).Position, checkDistance);
+            var entities = ((EntityManager)IoCManager.Resolve<IEntityManagerContainer>().EntityManager).GetEntitiesInRange(PlayerManager.ControlledEntity.GetComponent<TransformComponent>(ComponentFamily.Transform).Position, checkDistance);
                 
             // See which one our click AABB intersected with
             var clickedEntities = new List<ClickData>();

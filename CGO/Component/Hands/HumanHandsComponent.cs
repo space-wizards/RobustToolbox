@@ -32,7 +32,7 @@ namespace CGO
                 case(ComponentMessageType.EntityChanged): //This is not sent atm. Commented out serverside for later use.
                     entityUid = (int)message.MessageParameters[1];
                     usedHand = (Hand)message.MessageParameters[2];
-                    item = EntityManager.Singleton.GetEntity(entityUid);
+                    item = Owner.EntityManager.GetEntity(entityUid);
                     if (HandSlots.Keys.Contains(usedHand))
                         HandSlots[usedHand] = item;          
                     else
@@ -48,7 +48,7 @@ namespace CGO
                 case(ComponentMessageType.HandsPickedUpItem):
                     entityUid = (int)message.MessageParameters[1];
                     usedHand = (Hand)message.MessageParameters[2];
-                    item = EntityManager.Singleton.GetEntity(entityUid);
+                    item = Owner.EntityManager.GetEntity(entityUid);
                     //item.SendMessage(this, ComponentMessageType.PickedUp, null, usedHand);
                     HandSlots.Add(usedHand, item);
                     break;

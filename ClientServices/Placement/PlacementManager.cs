@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
 using ClientInterfaces.Collision;
+using ClientInterfaces.GOC;
 using ClientInterfaces.Map;
 using ClientInterfaces.Network;
 using ClientInterfaces.Placement;
@@ -185,7 +186,7 @@ namespace ClientServices.Placement
 
         private void PreparePlacement(string templateName)
         {
-            var template = EntityManager.Singleton.EntityTemplateDatabase.GetTemplate(templateName);
+            var template = IoCManager.Resolve<IEntityManagerContainer>().EntityManager.EntityTemplateDatabase.GetTemplate(templateName);
             if (template == null) return;
 
             var spriteParam = template.GetBaseSpriteParamaters().FirstOrDefault(); //Will break if states not ordered correctly.

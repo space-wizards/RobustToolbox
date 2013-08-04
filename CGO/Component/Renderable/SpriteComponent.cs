@@ -141,7 +141,7 @@ namespace CGO
                     SetDrawDepth((DrawDepth)list[0]);
                     break;
                 case ComponentMessageType.SlaveAttach:
-                    SetMaster(EntityManager.Singleton.GetEntity((int) list[0]));
+                    SetMaster(Owner.EntityManager.GetEntity((int)list[0]));
                     break;
                 case ComponentMessageType.ItemUnEquipped:
                 case ComponentMessageType.Dropped:

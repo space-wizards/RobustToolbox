@@ -10,37 +10,22 @@ using ServerInterfaces.Tiles;
 
 namespace SGO
 {
-    internal class Physics : Component
+    internal class PhysicsComponent : Component
     {
-        private float mass;
+        public float Mass { get; set; }
 
-        public Physics()
+        public PhysicsComponent()
         {
             Family = ComponentFamily.Physics;
         }
 
-        public override ComponentReplyMessage RecieveMessage(object sender, ComponentMessageType type,
-                                                             params object[] list)
-        {
-            ComponentReplyMessage reply = base.RecieveMessage(sender, type, list);
-
-            if (sender == this)
-                return ComponentReplyMessage.Empty;
-
-            return reply;
-        }
-
-        public override void HandleInstantiationMessage(NetConnection netConnection)
-        {
-        }
-
         public override void Update(float frameTime)
         {
-            if (Owner.GetComponent<SlaveMoverComponent>(ComponentFamily.Mover) != null)
+            /*if (Owner.GetComponent<SlaveMoverComponent>(ComponentFamily.Mover) != null)
                 // If we are being moved by something else right now (like being carried) dont be affected by physics
                 return;
 
-            GasEffect();
+            GasEffect();*/
         }
 
         private void GasEffect()
@@ -51,7 +36,7 @@ namespace SGO
             if (t == null)
                 return;
             Vector2 gasVel = t.GasCell.GasVelocity;
-            if (gasVel.Abs() > mass) // Stop tiny wobbles
+            if (gasVel.Abs() > Mass) // Stop tiny wobbles
             {
                 Owner.SendMessage(this, ComponentMessageType.PhysicsMove,
                                   Owner.GetComponent<TransformComponent>(ComponentFamily.Transform).Position.X +
@@ -61,15 +46,6 @@ namespace SGO
             }
         }
 
-        public override ComponentState GetComponentState()
-        {
-            return new MoverComponentState(
-                Owner.GetComponent<TransformComponent>(ComponentFamily.Transform).Position.X,
-                Owner.GetComponent<TransformComponent>(ComponentFamily.Transform).Position.Y,
-                Owner.GetComponent<VelocityComponent>(ComponentFamily.Velocity).Velocity.X,
-                Owner.GetComponent<VelocityComponent>(ComponentFamily.Velocity).Velocity.Y);
-        }
-
         public override void SetParameter(ComponentParameter parameter)
         {
             base.SetParameter(parameter);
@@ -77,7 +53,7 @@ namespace SGO
             switch (parameter.MemberName)
             {
                 case "Mass":
-                    mass = parameter.GetValue<float>();
+                    Mass = parameter.GetValue<float>();
                     break;
             }
         }

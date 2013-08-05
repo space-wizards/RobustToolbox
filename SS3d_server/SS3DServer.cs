@@ -229,7 +229,8 @@ namespace SS13_Server
             Time = DateTime.Now;
             ProcessPackets();
 
-            Update(elapsedTime);
+            //Update takes elapsed time in seconds.
+            Update(elapsedTime/1000);
 
             IoCManager.Resolve<IConsoleManager>().Update();
 
@@ -320,19 +321,15 @@ namespace SS13_Server
             }
         }
 
-        public void Update(float framePeriod)
+        public void Update(float frameTime)
         {
             if (Runlevel == RunLevel.Game)
             {
-                TimeSpan lastFrame = Time - LastUpdate;
-                if (lastFrame.TotalMilliseconds > framePeriod)
-                {
-                    EntityManager.ComponentManager.Update(framePeriod);
-                    IoCManager.Resolve<IAtmosManager>().Update();
-                    IoCManager.Resolve<IRoundManager>().CurrentGameMode.Update();
-                    IoCManager.Resolve<ICraftingManager>().Update();
-                }
-                EntityManager.Update(framePeriod);
+                EntityManager.ComponentManager.Update(frameTime);
+                IoCManager.Resolve<IAtmosManager>().Update();
+                IoCManager.Resolve<IRoundManager>().CurrentGameMode.Update();
+                IoCManager.Resolve<ICraftingManager>().Update();
+                EntityManager.Update(frameTime);
             }
             else if (Runlevel == RunLevel.Lobby)
             {

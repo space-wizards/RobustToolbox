@@ -17,7 +17,7 @@ using Image = GorgonLibrary.Graphics.Image;
 
 namespace CGO
 {
-    public class SpriteComponent : RenderableComponent, ISpriteComponent
+    public class SpriteComponent : Component, IRenderableComponent, ISpriteComponent
     {
         protected Sprite currentBaseSprite;
         protected Dictionary<string, Sprite> dirSprites;
@@ -26,9 +26,11 @@ namespace CGO
         protected List<SpriteComponent> slaves;
         protected Dictionary<string, Sprite> sprites;
         protected bool visible = true;
+        public DrawDepth DrawDepth { get; set; }
 
         public SpriteComponent()
         {
+            Family = ComponentFamily.Renderable;
             sprites = new Dictionary<string, Sprite>();
             dirSprites = new Dictionary<string, Sprite>();
             slaves = new List<SpriteComponent>();
@@ -39,7 +41,7 @@ namespace CGO
             get { return typeof (SpriteComponentState); }
         }
 
-        public override float Bottom
+        public float Bottom
         {
             get
             {
@@ -271,7 +273,7 @@ namespace CGO
             }
         }
 
-        public override void Render(Vector2D topLeft, Vector2D bottomRight)
+        public virtual void Render(Vector2D topLeft, Vector2D bottomRight)
         {
             //Render slaves beneath
             IEnumerable<SpriteComponent> renderablesBeneath = from SpriteComponent c in slaves
@@ -374,7 +376,7 @@ namespace CGO
 
         public override void HandleComponentState(dynamic state)
         {
-            base.HandleComponentState((SpriteComponentState) state);
+            DrawDepth = state.DrawDepth;
             if (state.SpriteKey != null && sprites.ContainsKey(state.SpriteKey) &&
                 currentBaseSprite != sprites[state.SpriteKey])
             {

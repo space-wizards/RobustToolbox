@@ -1,4 +1,5 @@
 ﻿using GameObject;
+using GameObject.System;
 
 namespace SGO.EntitySystems
 {
@@ -9,7 +10,6 @@ namespace SGO.EntitySystems
         {
             EntityQuery = new EntityQuery();
             EntityQuery.OneSet.Add(typeof (BasicItemComponent));
-            //EntityQuery.Exclusionset.Add(typeof (LightComponent));
         }
 
         public override void Update(float frametime)

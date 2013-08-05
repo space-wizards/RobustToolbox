@@ -10,7 +10,7 @@
       <Component name="SpriteComponent"></Component>
       <Component name="BasicInteractableComponent"></Component>
       <Component name="BasicMoverComponent"></Component>
-      <Component name="Physics">
+      <Component name="PhysicsComponent">
         <Parameters>
           <Parameter name="Mass" type="float" value="5" />
         </Parameters>
@@ -36,7 +36,7 @@
       <Component name="SpriteComponent"></Component>
       <Component name="BasicInteractableComponent"></Component>
       <Component name="BasicMoverComponent"></Component>
-      <Component name="Physics">
+      <Component name="PhysicsComponent">
         <Parameters>
           <Parameter name="Mass" type="float" value="5" />
         </Parameters>

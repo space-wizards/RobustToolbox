@@ -31,42 +31,68 @@ namespace GasPropagationTest
         bool calculated = true;
         public Vector2 GasVel;
         public Vector2 NextGasVel;
-        
+        private readonly Dictionary<GasType, IGasProperties> gasProperties;
+        private readonly AtmosManager _atmosManager;
+        public readonly GasMixture GasMixture;
+
         //Constants
-        double SourceDamping = .5;
-        double RecieverDamping = .75;
-        public const double quarterpi = Math.PI / 4;
+        float SourceDamping = .5f;
+        float RecieverDamping = .75f;
+        public const float quarterpi = (float)Math.PI / 4;
         int circleDiameter = 15;
         private float FlowConstant = .1f;
 
-        public GasCell(Ellipse e, double _x, double _y, GasCell[,] _cellArray)
+        public GasCell(Ellipse e, double _x, double _y, GasCell[,] _cellArray, AtmosManager atmosManager)
         {
+            _atmosManager = atmosManager;
             attachedellipse = e;
             x = _x;
             y = _y;
+            GasMixture = new GasMixture(atmosManager);
             SetGasDisplay();
             cellArray = _cellArray;
             GasVel = new Vector2(0, 0);
             NextGasVel = new Vector2(0, 0);
         }
 
+        public void InitSTP()
+        {
+            AddGas(0.0172f, GasType.Oxygen);
+            AddGas(0.0627f, GasType.Nitrogen);
+            AddGas(0.0010f, GasType.CO2);
+        }
+
+        public void AddGas(float amount, GasType gas)
+        {
+            if (amount == 1.0f)
+            {
+                GasMixture.SetNextTemperature(5000f);
+            }
+            else
+            {
+                GasMixture.AddNextGas(amount, gas);
+            }
+        }
+
         public void Update(bool draw)
         {
-            if (sink || blocking)
-                nextGasAmount = 0;
-
+            if (sink)
+            {
+                GasMixture.SetNextTemperature(0);
+                foreach(var g in GasMixture.gasses)
+                {
+                    GasMixture.nextGasses[g.Key] = 0;
+                }
+            }
             GasVel = NextGasVel;
             NextGasVel = new Vector2(0, 0);
+            
+            GasMixture.Burn();
+            GasMixture.Update();
 
-            heatEnergy = nextHeatEnergy; // Decay heat
-            nextHeatEnergy = nextHeatEnergy * 0.99999;
-
-            if (gasAmount != nextGasAmount)
-            {
-                gasAmount = nextGasAmount;
-                if(draw)
-                    SetGasDisplay();
-            }
+            if(draw)
+                SetGasDisplay();
+            
 
             if (blocking && attachedellipse.Fill != Brushes.Black)
             {
@@ -89,7 +115,7 @@ namespace GasPropagationTest
 
         public void SetGasDisplay()
         {
-            float gas = (float)gasAmount;
+            float gas = GasMixture.Pressure;
             if (gas < 1)
                 gas = 1;
             else if (gas > 10000)
@@ -108,7 +134,7 @@ namespace GasPropagationTest
             c.B = (byte)Math.Round(blue * 255);
             c.A = 255;
             attachedellipse.Fill = new SolidColorBrush(c);
-            SetRadius(circleDiameter * gasAmount / 200);
+            SetRadius(circleDiameter * gas / 200);
         }
 
         public void SetRadius(double r)
@@ -122,7 +148,7 @@ namespace GasPropagationTest
             Canvas.SetLeft(attachedellipse, 7.5 - r + x);
             Canvas.SetTop(attachedellipse, 7.5 - r + y);
         }
-
+        /*
         public void CalculateNextGasAmount()
         {
             if (blocking)
@@ -241,21 +267,197 @@ namespace GasPropagationTest
                         nextGasAmount = 0;
                     if (neighbor.nextGasAmount < 0)
                         neighbor.nextGasAmount = 0;
-                      */
+                      *
                     calculated = true;
                 }
+        }*/
+        public void CalculateNextGasAmount()
+        {
+            if (calculated)
+                return;
+
+            if (blocking)
+                return;
+
+            float DAmount;
+
+            GasCell neighbor;
+            for (int i = -1; i <= 1; i++)
+            {
+                for (int j = -1; j <= 1; j++)
+                {
+                    if (i == 0 && j == 0) // If we're on this cell
+                        continue;
+                    if (arrX + i < 0 || arrX + i >= 38 || arrY + j < 0 || arrY + j >= 38)
+                        // If out of bounds
+                        continue;
+
+                    if (Math.Abs(i) + Math.Abs(j) == 2) //If its a corner
+                    {
+                        if (cellArray[arrX + i, arrY].blocking && cellArray[arrX, arrY + i].blocking)
+                            // And it is a corner separated from us by 2 blocking walls
+                            continue; //Don't process it. These cells are not connected.
+                    }
+
+                    neighbor = (GasCell) cellArray[arrX + i, arrY + j];
+                    if (neighbor.calculated) // if neighbor's already been calculated, skip it
+                        continue;
+
+                    DAmount = GasMixture.Pressure - neighbor.GasMixture.Pressure;
+                    if (!neighbor.blocking)
+                    {
+                        if (GasMixture.Burning || neighbor.GasMixture.Burning)
+                        {
+                            neighbor.GasMixture.Expose();
+                            GasMixture.Expose();
+                        }
+                        if (Math.Abs(DAmount) < 50.0f)
+                        {
+                            GasMixture.Diffuse(neighbor.GasMixture);
+                        }
+                        else
+                        {
+                            var neighDir = new Vector2(i, j);
+
+                            float angle = quarterpi/2.0f;
+                            if (GasVel.Magnitude > 0.0f)
+                                angle = (float)Math.Abs(neighDir.Angle(GasVel));
+                            // Get the angle between our current flow vector and the cell we're sharing with
+                            if (angle < quarterpi)
+                                // If the angle is more than 45 we shouldn't share with this cell as the gas is flowing away from it
+                            {
+                                if (DAmount > 0) // We're giving
+                                {
+                                    float pAmount = Clamp(GasMixture.Pressure/neighbor.GasMixture.Pressure);
+                                    float proportion = Math.Abs(((1/quarterpi)*(quarterpi - angle))*pAmount);
+                                    GasMixture.Diffuse(neighbor.GasMixture, 1f/proportion);
+                                    neighbor.NextGasVel += new Vector2(DAmount*i, DAmount*j)*RecieverDamping;
+                                    NextGasVel += new Vector2(DAmount*i, DAmount*j)*SourceDamping;
+                                }
+                                else // We're recieving
+                                {
+                                    float pAmount = Clamp(neighbor.GasMixture.Pressure/GasMixture.Pressure);
+                                    float proportion = Math.Abs(((1/quarterpi)*(quarterpi - angle))*pAmount);
+                                    neighbor.GasMixture.Diffuse(GasMixture, 1f/proportion);
+                                    neighbor.NextGasVel += new Vector2(-DAmount*i, DAmount*j)*RecieverDamping;
+                                    NextGasVel += new Vector2(-DAmount*i, DAmount*j)*SourceDamping;
+                                }
+                            }
+                        }
+                    }
+
+                    #region old gas code
+
+                    /*
+                    if (DAmount == 0 || Math.Abs(DAmount) < 10)
+                    {
+                        gasMixture.Diffuse(neighbor.gasMixture);
+                        return;
+                    }
+
+                    Log.LogManager.Log("High pressure difference");
+                    ///Calculate initial flow
+                    Flow = FlowConstant * DAmount;
+                    Flow = Clamp(Flow, gasMixture.Pressure / 8, neighbor.gasMixture.Pressure / 8);
+                    //Velocity application code
+                    Vector2 Dir = new Vector2(i, j);
+                    float proportion = 0;
+                    float componentangle;
+
+                    //Process velocity flow to neighbor
+                    if (gasVel.Magnitude > 0.01) 
+                    {
+                        componentangle = Dir.Angle(gasVel);
+                        if (Math.Abs(componentangle) < quarterpi) //If the gas velocity vector is within 45 degrees of the direction of the neighbor
+                        {
+                            proportion = Math.Abs((1 / quarterpi) * (quarterpi - componentangle)); // Get the proper proportion of the vel vector
+                            float velflow = proportion * gasVel.Magnitude; // Calculate flow due to gas velocity
+                            if (velflow > gasMixture.TotalGas / 2.5f)
+                                velflow = gasMixture.TotalGas / 2.5f;
+                            Flow += velflow;
+                        }
+                    }
+
+                    //Process velocity flow from neighbor
+                    Dir = -1 * Dir; // Reverse Dir and apply same process to neighbor
+                    if (neighbor.gasVel.Magnitude > 0.01) //If the gas velocity vector is within 45 degrees of the direction of the neighbor
+                    {
+                        componentangle = Dir.Angle(neighbor.gasVel);
+                        if (Math.Abs(componentangle) < quarterpi)
+                        {
+                            proportion = Math.Abs((1 / quarterpi) * (quarterpi - componentangle)); // Get the proper proportion of the vel vector
+                            float velflow = proportion * neighbor.gasVel.Magnitude; // Calculate flow due to gas velocity
+                            if (velflow > neighbor.gasMixture.TotalGas / 2.5f)
+                                velflow = neighbor.gasMixture.TotalGas / 2.5f;
+                            Flow -= velflow;
+                        }
+                    }
+
+
+                    //  what the fuck is this doing here
+                    /*Wall destruction 
+                    if (!neighbor.attachedTile.GasPermeable)
+                    {
+                        if (Flow > 5 && neighbor.attachedTile.GetType() == typeof(Wall))
+                        {
+                            neighbor.attachedTile.GasPermeable = false; // Incident flow is > 750 so the wall is destroyed
+                            neighbor.attachedTile.TileState = TileState.Dead;
+                            Flow = Flow * .75f; //Dying wall takes out some of the flow.
+                        }
+                        else
+                            continue;
+                    }*/
+                    /*
+                    if (Flow > 0) // Flow is to neighbor
+                    {
+                        foreach (var g in gasMixture.gasses)
+                        {
+                            gasMixture.RemoveNextGas(Flow * (g.Value / gasMixture.TotalGas), g.Key);
+                            neighbor.gasMixture.AddNextGas(Flow * (g.Value / gasMixture.TotalGas), g.Key);
+                        }
+                    }
+                    if (Flow < 0) // Flow is from neighbor
+                    {
+                        foreach (var g in neighbor.gasMixture.gasses)
+                        {
+                            gasMixture.AddNextGas(Flow * (g.Value / neighbor.gasMixture.TotalGas), g.Key);
+                            neighbor.gasMixture.RemoveNextGas(Flow * (g.Value / neighbor.gasMixture.TotalGas), g.Key);
+                        }
+                    }
+
+                    float chaos = (float)rand.Next(70000, 100000) / 100000; // Get a random number between .7 and 1 with 4 sig figs
+
+                    //Process next velocities
+                    if (Flow > 0) //Flow is to neighbor
+                    {
+                        Vector2 addvel = new Vector2(i, j);
+                        addvel.Magnitude = (float)Math.Abs(Flow); // Damping coefficient of .5
+                        neighbor.NextGasVel = neighbor.NextGasVel + addvel * chaos * RecieverDamping;
+                        NextGasVel = NextGasVel + addvel * chaos * SourceDamping;
+                    }
+                    if (Flow < 0) // Flow is from neighbor
+                    {
+                        Vector2 addvel = new Vector2(-1 * i, -1 * j);
+                        addvel.Magnitude = (float)Math.Abs(Flow);
+                        neighbor.NextGasVel = neighbor.NextGasVel + addvel * chaos * SourceDamping;
+                        NextGasVel = NextGasVel + addvel * chaos * RecieverDamping;
+                    }*/
+
+                    #endregion
+                }
+            }
+
+            calculated = true;
         }
 
-        public double Clamp(double Flow, double amount, double neighamount)
+
+        public float Clamp(float Flow)
         {
-            double clampedFlow = Flow;
-
-            if (amount - clampedFlow < 0)
-                clampedFlow = clampedFlow + (amount - clampedFlow);
-            if (neighamount + clampedFlow < 0)
-                clampedFlow = clampedFlow + (neighamount + clampedFlow);
-
-            return clampedFlow;
+            if (Flow > 0.3f)
+                return 0.3f;
+            if (Flow <= 0.0f)
+                return 0.01f;
+            return Flow;
         }
     }
 }

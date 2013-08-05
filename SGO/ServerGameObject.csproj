@@ -65,7 +65,7 @@
     <Compile Include="Component\Item\ItemCapability\BreatherCapability.cs" />
     <Compile Include="Component\Item\ItemCapability\HealthScanCapability.cs" />
     <Compile Include="Component\Light\LightComponent.cs" />
-    <Compile Include="Component\Physics\Physics.cs" />
+    <Compile Include="Component\Physics\PhysicsComponent.cs" />
     <Compile Include="Component\Objectives\ObjectivesComponent.cs" />
     <Compile Include="Component\PlayerActionComp\PlayerActionCompS.cs" />
     <Compile Include="Component\StatusEffects\StatusEffectComp.cs" />
@@ -106,7 +106,7 @@
     <None Include="Entity.cs" />
     <Compile Include="EntityManager.cs" />
     <Compile Include="EntityNetworkManager.cs" />
-    <Compile Include="EntitySystems\EntitySystem.cs" />
+    <Compile Include="EntitySystems\PhysicsSystem.cs" />
     <Compile Include="Exceptions\MissingImplementationException.cs" />
     <Compile Include="Exceptions\NoPublicConstructorException.cs" />
     <Compile Include="MessageEnums.cs" />

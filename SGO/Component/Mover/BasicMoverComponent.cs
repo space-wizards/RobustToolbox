@@ -34,12 +34,12 @@ namespace SGO
             Owner.GetComponent<TransformComponent>(ComponentFamily.Transform).Position = new Vector2(x, y);
         }
 
-        public override ComponentState GetComponentState()
+        /*public override ComponentState GetComponentState()
         {
             return new MoverComponentState(Owner.GetComponent<TransformComponent>(ComponentFamily.Transform).Position.X,
                                            Owner.GetComponent<TransformComponent>(ComponentFamily.Transform).Position.Y,
                                            Owner.GetComponent<VelocityComponent>(ComponentFamily.Velocity).Velocity.X,
                                            Owner.GetComponent<VelocityComponent>(ComponentFamily.Velocity).Velocity.Y);
-        }
+        }*/
     }
 }

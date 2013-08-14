@@ -147,7 +147,7 @@ namespace ClientServices.UserInterface.Components
             components.Add(_lbljobDesc);
             components.Add(_lbljobName);
             components.Add(_bttReady);
-            components.Add(_imgTest);
+            //components.Add(_imgTest);
         }
 
         void _bttReady_Clicked(ImageButton sender)

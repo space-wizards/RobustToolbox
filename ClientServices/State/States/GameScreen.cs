@@ -284,8 +284,6 @@ namespace ClientServices.State.States
             var inventoryButton = new ImageButton
                                       {
                                           ImageNormal = "button_inv",
-                                          ImageHover = "button_status",
-                                          ImageClick = "button_craft",
                                           Position = new Point(hotbar.Position.X + 172, hotbar.Position.Y + 2)
                                       };
             inventoryButton.Update(0);

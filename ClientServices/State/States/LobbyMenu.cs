@@ -178,7 +178,8 @@ namespace ClientServices.State.States
                             //AddChat(text);
                             break;
                         case NetMessage.PlayerCount:
-                            //var newCount = message.ReadByte();
+                            var newCount = message.ReadByte();
+                            _lblPlayersInfo.Text.Text = newCount.ToString();
                             break;
                         case NetMessage.PlayerList:
                             //HandlePlayerList(message);
@@ -270,6 +271,9 @@ namespace ClientServices.State.States
             if (associatedData != null && associatedData is JobDefinition)
             {
                 JobDefinition jobDef = (JobDefinition) associatedData;
+
+                _tabJob._lbljobName.Text.Text = jobDef.Name;
+                _tabJob._lbljobDesc.Text.Text = jobDef.Description;
 
                 var netManager = IoCManager.Resolve<INetworkManager>();
                 NetOutgoingMessage playerJobSpawnMsg = netManager.CreateMessage();

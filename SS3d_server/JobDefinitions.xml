@@ -67,7 +67,7 @@
 
     <JobDefinition>
       <Available>true</Available>
-      <Description>Gives everyone genetic defects and then gets toolboxed and throw out of the airlock.</Description>
+      <Description>Gives everyone genetic defects and then gets toolboxed and thrown out of the airlock.</Description>
       <JobIcon>job_geneticist</JobIcon>
       <MaxNum>2</MaxNum>
       <Name>Geneticist</Name>
@@ -82,28 +82,28 @@
       <Name>Command</Name>
       <Description>The Command Department is responsible for assigning Tasks, overseeing Work and Security on the Station.</Description>
       <DepartmentIcon>depa_command</DepartmentIcon>
-	  <DepartmentColor>-8553091</DepartmentColor>
+      <DepartmentColorHex>#FFFF33</DepartmentColorHex>
     </DepartmentDefinition>
 
     <DepartmentDefinition>
       <Name>Engineering</Name>
       <Description>The Engineering Department deals with technical Problems on the Station as well as working things like the Engine.</Description>
       <DepartmentIcon>depa_engineering</DepartmentIcon>
-	  <DepartmentColor>-8553091</DepartmentColor>
+      <DepartmentColorHex>#FFFF33</DepartmentColorHex>
     </DepartmentDefinition>
 
     <DepartmentDefinition>
       <Name>Research</Name>
       <Description>The Research Department has various Jobs ranging from Plasma Research to Medical Jobs.</Description>
       <DepartmentIcon>depa_research</DepartmentIcon>
-	  <DepartmentColor>-8553091</DepartmentColor>
+      <DepartmentColorHex>#FFFF33</DepartmentColorHex>
     </DepartmentDefinition>
 
     <DepartmentDefinition>
       <Name>Civilian</Name>
       <Description>The Civilian Department encompasses a wide Range of various Jobs. Jobs include things like Janitor, Chef or the Clown.</Description>
       <DepartmentIcon>depa_civilian</DepartmentIcon>
-	  <DepartmentColor>-8553091</DepartmentColor>
+      <DepartmentColorHex>#FFFF33</DepartmentColorHex>
     </DepartmentDefinition>
     
   </DepartmentDefinitions>

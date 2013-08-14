@@ -14,7 +14,14 @@ namespace SS13_Shared
         public string Description;
         public string DepartmentIcon;
 
-        public int DepartmentColor;
+        public string DepartmentColorHex;
+
+        [XmlIgnore]
+        public Color DepartmentColor
+        {
+            get { return ColorTranslator.FromHtml(DepartmentColorHex); }
+            set { DepartmentColorHex = ColorTranslator.ToHtml(value); }
+        }
     }
 
     [Serializable]
@@ -90,10 +97,9 @@ namespace SS13_Shared
             depDef.DepartmentIcon = "department_security";
             depDef.Description = "The security department handles the security of the station in all matters.";
             depDef.Name = "Security";
-            depDef.DepartmentColor = Color.FromArgb(255, 125, 125, 125).ToArgb();
+            depDef.DepartmentColor = Color.FromArgb(255, 125, 125, 125);
 
             JobSettingsTemplate.DepartmentDefinitions = new List<DepartmentDefinition>() {depDef};
-
 
             XmlWriterSettings settings = new XmlWriterSettings();
             settings.Indent = true;

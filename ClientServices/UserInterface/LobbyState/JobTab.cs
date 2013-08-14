@@ -18,6 +18,9 @@ namespace ClientServices.UserInterface.Components
         private readonly SimpleImage _imgWhatDep;
         public readonly Label _lblDep;
         private ImageButton _bttReady;
+        private SimpleImage _imgJobDesc;
+        public Label _lbljobDesc;
+        public Label _lbljobName;
 
         public JobTab(string uniqueName, Size size, IResourceManager resourceManager)
             : base(uniqueName, size, resourceManager)
@@ -37,6 +40,11 @@ namespace ClientServices.UserInterface.Components
             _imgWhatDep.Update(0);
             _imgWhatDep.Position = new Point((int)(size.Width / 2f - _imgWhatDep.ClientArea.Width / 2f),  30);
             _imgWhatDep.Update(0);
+
+            _imgJobDesc = new SimpleImage()
+            {
+                Sprite = "lobby_descbg"
+            };
 
             _shwDepa = new Showcase
             {
@@ -71,6 +79,24 @@ namespace ClientServices.UserInterface.Components
             };
             _shwJobs.Update(0);
 
+            _imgJobDesc.Update(0);
+            _imgJobDesc.Position = new Point(0, _shwJobs.ClientArea.Bottom + 5);
+            _imgJobDesc.Update(0);
+
+            _lbljobName = new Label(" ", "MICROGBE", resourceManager)
+            {
+                TextColor = Color.WhiteSmoke
+            };
+            _lbljobName.Position = new Point(3, _imgJobDesc.Position.Y + 4);
+
+            _lbljobName.Update(0);
+
+            _lbljobDesc = new Label(" ", "MICROGME", resourceManager)
+            {
+                TextColor = Color.WhiteSmoke
+            };
+            _lbljobDesc.Position = new Point(3, _lbljobName.ClientArea.Bottom + 5);
+
             _bttReady.Position = new Point(ClientArea.Width - _bttReady.ClientArea.Width - 5, _shwJobs.ClientArea.Bottom + 50);
 
             components.Add(_bttReady);
@@ -78,6 +104,9 @@ namespace ClientServices.UserInterface.Components
             components.Add(_imgWhatDep);
             components.Add(_shwDepa);
             components.Add(_shwJobs);
+            components.Add(_imgJobDesc);
+            components.Add(_lbljobDesc);
+            components.Add(_lbljobName);
         }
 
         void _bttReady_Clicked(ImageButton sender)

@@ -34,6 +34,12 @@ namespace ClientServices.UserInterface.Components
             set { drawingSprite.Color = value; }
         }
 
+        public BlendingModes BlendingMode
+        {
+            get { return drawingSprite != null ? drawingSprite.BlendingMode : BlendingModes.None; }
+            set { drawingSprite.BlendingMode = value; }
+        }
+
         public override void Update(float frameTime)
         {
             size = drawingSprite != null ? drawingSprite.Size : Vector2D.Zero;

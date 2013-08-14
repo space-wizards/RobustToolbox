@@ -31,6 +31,25 @@ namespace ClientServices.UserInterface.Components
 
         public Color Color { get; set; }
 
+        public BlendingModes BlendingMode
+        {
+            get
+            {
+                return _buttonNormal != null ? _buttonNormal.BlendingMode : BlendingModes.None;
+            }
+            set
+            {
+                if(_buttonNormal != null)
+                    _buttonNormal.BlendingMode = value;
+
+                if (_buttonHover != null)
+                    _buttonHover.BlendingMode = value;
+
+                if (_buttonClick != null)
+                    _buttonClick.BlendingMode = value;
+            }
+        }
+
         public string ImageNormal
         {
             get

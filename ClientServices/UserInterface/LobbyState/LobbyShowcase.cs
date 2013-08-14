@@ -10,6 +10,7 @@ namespace ClientServices.UserInterface.Components
     public class LobbyShowcase : Showcase
     {
         protected int ScrollOffset = 0;
+        public Size ItemOffsets = new Size(0,0);
 
         protected override void _buttonRight_Clicked(ImageButton sender)
         {
@@ -88,14 +89,14 @@ namespace ClientServices.UserInterface.Components
                 {
                     if (_selectionGlow != null && Selected == ScrollOffset)
                     {
-                        _selectionGlow.Position = new Point(ClientArea.Left + (int)(ClientArea.Width / 2f - _selectionGlow.ClientArea.Width / 2f), ClientArea.Top + (int)(ClientArea.Height / 2f - _selectionGlow.ClientArea.Height / 2f));
+                        _selectionGlow.Position = new Point(ItemOffsets.Width + ClientArea.Left + (int)(ClientArea.Width / 2f - _selectionGlow.ClientArea.Width / 2f), ItemOffsets.Height + ClientArea.Top + (int)(ClientArea.Height / 2f - _selectionGlow.ClientArea.Height / 2f));
                         _selectionGlow.Render();
                     }
 
                     KeyValuePair<ImageButton, Object> middle = _items[ScrollOffset];
                     middle.Key.Position =
-                        new Point(ClientArea.Left + (int) (ClientArea.Width/2f - middle.Key.ClientArea.Width/2f),
-                                  ClientArea.Top + (int) (ClientArea.Height/2f - middle.Key.ClientArea.Height/2f));
+                        new Point(ItemOffsets.Width + ClientArea.Left + (int)(ClientArea.Width / 2f - middle.Key.ClientArea.Width / 2f),
+                                  ItemOffsets.Height + ClientArea.Top + (int)(ClientArea.Height / 2f - middle.Key.ClientArea.Height / 2f));
                     if (FadeItems)
                         middle.Key.Color = Color.FromArgb(255, Color.White);
 
@@ -113,7 +114,7 @@ namespace ClientServices.UserInterface.Components
                         if ((ScrollOffset - i) >= 0 && (ScrollOffset - i) <= _items.Count - 1)
                         {
                             KeyValuePair<ImageButton, Object> currLeft = _items[(ScrollOffset - i)];
-                            currLeft.Key.Position = new Point(lastPosLeft - currLeft.Key.ClientArea.Width, ClientArea.Top +(int) (ClientArea.Height/2f -currLeft.Key.ClientArea.Height/2f));
+                            currLeft.Key.Position = new Point(lastPosLeft - currLeft.Key.ClientArea.Width,ClientArea.Top + (int)(ClientArea.Height / 2f - currLeft.Key.ClientArea.Height / 2f));
                             lastPosLeft = currLeft.Key.ClientArea.Left - ItemSpacing;
 
                             if (_selectionGlow != null && (ScrollOffset - i) == Selected)
@@ -132,7 +133,7 @@ namespace ClientServices.UserInterface.Components
                         if ((ScrollOffset + i) >= 0 && (ScrollOffset + i) <= _items.Count - 1)
                         {
                             KeyValuePair<ImageButton, Object> currRight = _items[(ScrollOffset + i)];
-                            currRight.Key.Position = new Point(lastPosRight, ClientArea.Top + (int) (ClientArea.Height/2f - currRight.Key.ClientArea.Height/2f));
+                            currRight.Key.Position = new Point(lastPosRight, ClientArea.Top + (int)(ClientArea.Height / 2f - currRight.Key.ClientArea.Height / 2f));
                             lastPosRight = currRight.Key.ClientArea.Right + ItemSpacing;
 
                             if (_selectionGlow != null && (ScrollOffset + i) == Selected)

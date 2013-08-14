@@ -4,6 +4,7 @@ using ClientInterfaces.Player;
 using ClientInterfaces.Resource;
 using ClientServices.Network;
 using ClientServices.Player;
+using GorgonLibrary.Graphics;
 using GorgonLibrary.InputDevices;
 using Lidgren.Network;
 using SS13.IoC;
@@ -30,7 +31,9 @@ namespace ClientServices.UserInterface.Components
         {
             _bttReady = new ImageButton()
                 {
-                    ImageNormal = "lobby_ready"
+                    ImageNormal = "lobby_ready",
+                    ImageHover = "lobby_ready_green",
+                    BlendingMode = BlendingModes.None
                 };
             _bttReady.Clicked += new ImageButton.ImageButtonPressHandler(_bttReady_Clicked);
             _bttReady.Update(0);
@@ -56,14 +59,16 @@ namespace ClientServices.UserInterface.Components
                 ButtonLeft = "job_arrowleft",
                 ButtonRight = "job_arrowright",
                 SelectionBackground = "dep_glow",
-                ItemSpacing = 20
+                ItemSpacing = 20,
+                //ItemOffsets = new Size(40, 0)
             };
             _shwDepa.Update(0);
 
             _imgDepGrad = new SimpleImage()
             {
                 Sprite = "lobby_depgrad",
-                Color = Color.FromArgb(180, Color.White)
+                Color = Color.FromArgb(120, Color.White),
+                BlendingMode = BlendingModes.None
             };
             _imgDepGrad.Update(0);
             _imgDepGrad.Position = new Point(_shwDepa.ClientArea.X + (int)(_shwDepa.ClientArea.Width / 2f - _imgDepGrad.ClientArea.Width / 2f), _shwDepa.ClientArea.Top);
@@ -98,7 +103,8 @@ namespace ClientServices.UserInterface.Components
             _imgJobGrad = new SimpleImage()
             {
                 Sprite = "lobby_jobgrad",
-                Color = Color.FromArgb(180, Color.White)
+                Color = Color.FromArgb(120, Color.White),
+                BlendingMode = BlendingModes.None
             };
             _imgJobGrad.Update(0);
             _imgJobGrad.Position = new Point(_shwJobs.ClientArea.X + (int)(_shwJobs.ClientArea.Width / 2f - _imgJobGrad.ClientArea.Width / 2f), _shwJobs.ClientArea.Top);

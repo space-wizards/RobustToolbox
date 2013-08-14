@@ -8,7 +8,7 @@ using SS13.IoC;
 
 namespace ClientServices.UserInterface.Components
 {
-    internal class SimpleImage : GuiComponent
+    public class SimpleImage : GuiComponent
     {
         private readonly IResourceManager _resourceManager; //TODO Make simpleimagebutton and other ui classes use this.
 

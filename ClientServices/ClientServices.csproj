@@ -181,6 +181,7 @@
     <Compile Include="UserInterface\Inventory\InventorySlotUi.cs" />
     <Compile Include="UserInterface\Inventory\InventoryViewer.cs" />
     <Compile Include="UserInterface\LobbyState\JobTab.cs" />
+    <Compile Include="UserInterface\LobbyState\LobbyShowcase.cs" />
     <Compile Include="UserInterface\LobbyState\TabbedMenu.cs" />
     <Compile Include="UserInterface\LobbyState\TabContainer.cs" />
     <Compile Include="UserInterface\UserInterfaceManager.cs" />

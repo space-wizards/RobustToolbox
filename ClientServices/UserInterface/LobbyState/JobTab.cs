@@ -97,9 +97,8 @@ namespace ClientServices.UserInterface.Components
             };
             _lbljobDesc.Position = new Point(3, _lbljobName.ClientArea.Bottom + 5);
 
-            _bttReady.Position = new Point(ClientArea.Width - _bttReady.ClientArea.Width - 5, _shwJobs.ClientArea.Bottom + 50);
+            _bttReady.Position = new Point(ClientArea.Width - _bttReady.ClientArea.Width - 5, _imgJobDesc.ClientArea.Bottom + 10);
 
-            components.Add(_bttReady);
             components.Add(_lblDep);
             components.Add(_imgWhatDep);
             components.Add(_shwDepa);
@@ -107,6 +106,7 @@ namespace ClientServices.UserInterface.Components
             components.Add(_imgJobDesc);
             components.Add(_lbljobDesc);
             components.Add(_lbljobName);
+            components.Add(_bttReady);
         }
 
         void _bttReady_Clicked(ImageButton sender)

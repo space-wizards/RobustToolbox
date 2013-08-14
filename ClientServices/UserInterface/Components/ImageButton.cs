@@ -7,7 +7,7 @@ using SS13.IoC;
 
 namespace ClientServices.UserInterface.Components
 {
-    internal class ImageButton : GuiComponent
+    public class ImageButton : GuiComponent
     {
         #region Delegates
 

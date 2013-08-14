@@ -13,8 +13,8 @@ namespace ClientServices.UserInterface.Components
 {
     internal class JobTab : TabContainer
     {
-        public readonly Showcase _shwJobs;
-        public readonly Showcase _shwDepa;
+        public readonly LobbyShowcase _shwJobs;
+        public readonly LobbyShowcase _shwDepa;
         private readonly SimpleImage _imgWhatDep;
         public readonly Label _lblDep;
         private ImageButton _bttReady;
@@ -46,13 +46,13 @@ namespace ClientServices.UserInterface.Components
                 Sprite = "lobby_descbg"
             };
 
-            _shwDepa = new Showcase
+            _shwDepa = new LobbyShowcase
             {
                 Position = new Point(60, _imgWhatDep.ClientArea.Bottom + 5),
                 Size = new Size(675, 80),
                 ButtonLeft = "job_arrowleft",
                 ButtonRight = "job_arrowright",
-                SelectionBackground = "job_glow",
+                SelectionBackground = "dep_glow",
                 ItemSpacing = 20
             };
 
@@ -69,7 +69,7 @@ namespace ClientServices.UserInterface.Components
             _lblDep.Position = new Point((int)(size.Width / 2f - _lblDep.ClientArea.Width / 2f), _shwDepa.ClientArea.Bottom + 5);
             _lblDep.Update(0);
 
-            _shwJobs = new Showcase
+            _shwJobs = new LobbyShowcase
             {
                 Position = new Point(60, _lblDep.ClientArea.Bottom + 15),
                 Size = new Size(675, 80),

@@ -7,7 +7,7 @@ using SS13.IoC;
 
 namespace ClientServices.UserInterface.Components
 {
-    internal class Showcase : GuiComponent
+    public class Showcase : GuiComponent
     {
         //TODO Make selection repond to mousewheel
 
@@ -17,30 +17,30 @@ namespace ClientServices.UserInterface.Components
 
         #endregion
 
-        private readonly List<KeyValuePair<ImageButton, Object>> _items = new List<KeyValuePair<ImageButton, object>>();
-        private readonly IResourceManager _resourceManager;
-        private readonly SimpleImage _selectionGlow;
+        protected readonly List<KeyValuePair<ImageButton, Object>> _items = new List<KeyValuePair<ImageButton, object>>();
+        protected readonly IResourceManager _resourceManager;
+        protected readonly SimpleImage _selectionGlow;
 
         public int AdditionalColumns = 2;//Number of additional visible columns beside the selection. 1 = 3 total visible. selection + 1 left + 1 right.
 
         public int ItemSpacing = 10; //Additional space between items.
 
         public Size Size = new Size(300, 100);
-        private ImageButton _buttonLeft;
-        private ImageButton _buttonRight;
-        private int _selected
+        protected ImageButton _buttonLeft;
+        protected ImageButton _buttonRight;
+        protected int Selected
         {
-            get { return selected; }  
+            get { return _selected; }  
             set 
             { 
-                selected = value;
-                SelectionChanged(_items[selected].Key, _items[selected].Value);
+                _selected = value;
+                SelectionChanged(_items[_selected].Key, _items[_selected].Value);
             }
         }
-        private int selected;
+        protected int _selected;
 
         public bool FadeItems = false;   //Fade out items to the sides?
-        public bool ShowArrows = false; //Show side arrows?
+        public bool ShowArrows = true; //Show side arrows?
 
         public Showcase()
         {
@@ -89,17 +89,17 @@ namespace ClientServices.UserInterface.Components
 
         public event ShowcaseSelectionChangedHandler SelectionChanged;
 
-        private void _buttonRight_Clicked(ImageButton sender)
+        protected virtual void _buttonRight_Clicked(ImageButton sender)
         {
-            if (_selected + 1 <= _items.Count - 1) _selected++;
+            if (Selected + 1 <= _items.Count - 1) Selected++;
         }
 
-        private void _buttonLeft_Clicked(ImageButton sender)
+        protected virtual void _buttonLeft_Clicked(ImageButton sender)
         {
-            if (_selected - 1 >= 0) _selected--;
+            if (Selected - 1 >= 0) Selected--;
         }
 
-        public void AddItem(ImageButton button, Object associatedData)
+        public virtual void AddItem(ImageButton button, Object associatedData)
         {
             if (button == null || associatedData == null) return;
 
@@ -109,31 +109,31 @@ namespace ClientServices.UserInterface.Components
                 button.Clicked += button_Clicked;
             }
 
-            _selected = (int) Math.Floor(_items.Count/2f); //start in the middle. cosmetic thing only.
+            Selected = (int) Math.Floor(_items.Count/2f); //start in the middle. cosmetic thing only.
         }
 
-        private void button_Clicked(ImageButton sender)
+        protected virtual void button_Clicked(ImageButton sender)
         {
             if (_items.Exists(x => x.Key == sender))
             {
                 KeyValuePair<ImageButton, object> sel = _items.Find(x => x.Key == sender);
-                _selected = _items.IndexOf(sel);
+                Selected = _items.IndexOf(sel);
             }
         }
 
-        public void ClearItems()
+        public virtual void ClearItems()
         {
             _items.Clear();
         }
 
-        public KeyValuePair<ImageButton, Object>? GetSelection()
+        public virtual KeyValuePair<ImageButton, Object>? GetSelection()
         {
-            if (_selected < 0 || _selected > _items.Count - 1 || _items.Count == 0)
+            if (Selected < 0 || Selected > _items.Count - 1 || _items.Count == 0)
                 return null;
-            else return _items[selected];
+            else return _items[_selected];
         }
 
-        public void RemoveItem(Object toRemove)
+        public virtual void RemoveItem(Object toRemove)
         {
             if (toRemove is ImageButton)
                 _items.RemoveAll(x => x.Key == toRemove);
@@ -141,7 +141,7 @@ namespace ClientServices.UserInterface.Components
                 _items.RemoveAll(x => x.Value == toRemove);
         }
 
-        public override sealed void Update(float frameTime)
+        public override void Update(float frameTime)
         {
             ClientArea = new Rectangle(Position, Size);
 
@@ -167,8 +167,8 @@ namespace ClientServices.UserInterface.Components
         {
             if (_items.Count > 0)
             {
-                if (_selected < 0 || _selected > _items.Count - 1)
-                    _selected = 0;
+                if (Selected < 0 || Selected > _items.Count - 1)
+                    Selected = 0;
                 else
                 {
                     if (_selectionGlow != null)
@@ -180,7 +180,7 @@ namespace ClientServices.UserInterface.Components
                         _selectionGlow.Render();
                     }
 
-                    KeyValuePair<ImageButton, Object> selected = _items[_selected];
+                    KeyValuePair<ImageButton, Object> selected = _items[Selected];
                     selected.Key.Position =
                         new Point(ClientArea.Left + (int) (ClientArea.Width/2f - selected.Key.ClientArea.Width/2f),
                                   ClientArea.Top + (int) (ClientArea.Height/2f - selected.Key.ClientArea.Height/2f));
@@ -198,9 +198,9 @@ namespace ClientServices.UserInterface.Components
                         const float baseAlpha = 200;
 
                         //Left
-                        if ((_selected - i) >= 0 && (_selected - i) <= _items.Count - 1)
+                        if ((Selected - i) >= 0 && (Selected - i) <= _items.Count - 1)
                         {
-                            KeyValuePair<ImageButton, Object> selectedLeft = _items[(_selected - i)];
+                            KeyValuePair<ImageButton, Object> selectedLeft = _items[(Selected - i)];
                             selectedLeft.Key.Position = new Point(lastPosLeft - selectedLeft.Key.ClientArea.Width,
                                                                   ClientArea.Top +
                                                                   (int)
@@ -215,9 +215,9 @@ namespace ClientServices.UserInterface.Components
                         }
 
                         //Right
-                        if ((_selected + i) >= 0 && (_selected + i) <= _items.Count - 1)
+                        if ((Selected + i) >= 0 && (Selected + i) <= _items.Count - 1)
                         {
-                            KeyValuePair<ImageButton, Object> selectedRight = _items[(_selected + i)];
+                            KeyValuePair<ImageButton, Object> selectedRight = _items[(Selected + i)];
                             selectedRight.Key.Position = new Point(lastPosRight,
                                                                    ClientArea.Top +
                                                                    (int)
@@ -258,12 +258,12 @@ namespace ClientServices.UserInterface.Components
             {
                 if (e.WheelDelta > 0)
                 {
-                    if (_selected + 1 <= _items.Count - 1) _selected++;
+                    if (Selected + 1 <= _items.Count - 1) Selected++;
                     return true;
                 }
                 else if (e.WheelDelta < 0)
                 {
-                    if (_selected - 1 >= 0) _selected--;
+                    if (Selected - 1 >= 0) Selected--;
                     return true;
                 }
             }
@@ -297,22 +297,22 @@ namespace ClientServices.UserInterface.Components
 
                 if (_items.Count > 0)
                 {
-                    if (_selected >= 0 || _selected <= _items.Count - 1)
+                    if (Selected >= 0 || Selected <= _items.Count - 1)
                     {
-                        KeyValuePair<ImageButton, Object> selected = _items[_selected];
+                        KeyValuePair<ImageButton, Object> selected = _items[Selected];
                         if (selected.Key.MouseDown(e)) return true;
 
                         for (int i = 1; i <= AdditionalColumns; i++)
                         {
-                            if ((_selected - i) >= 0 && (_selected - i) <= _items.Count - 1)
+                            if ((Selected - i) >= 0 && (Selected - i) <= _items.Count - 1)
                             {
-                                KeyValuePair<ImageButton, Object> selectedLeft = _items[(_selected - i)];
+                                KeyValuePair<ImageButton, Object> selectedLeft = _items[(Selected - i)];
                                 if (selectedLeft.Key.MouseDown(e)) return true;
                             }
 
-                            if ((_selected + i) >= 0 && (_selected + i) <= _items.Count - 1)
+                            if ((Selected + i) >= 0 && (Selected + i) <= _items.Count - 1)
                             {
-                                KeyValuePair<ImageButton, Object> selectedRight = _items[(_selected + i)];
+                                KeyValuePair<ImageButton, Object> selectedRight = _items[(Selected + i)];
                                 if (selectedRight.Key.MouseDown(e)) return true;
                             }
                         }
@@ -331,22 +331,22 @@ namespace ClientServices.UserInterface.Components
 
                 if (_items.Count > 0)
                 {
-                    if (_selected >= 0 || _selected <= _items.Count - 1)
+                    if (Selected >= 0 || Selected <= _items.Count - 1)
                     {
-                        KeyValuePair<ImageButton, Object> selected = _items[_selected];
+                        KeyValuePair<ImageButton, Object> selected = _items[Selected];
                         if (selected.Key.MouseUp(e)) return true;
 
                         for (int i = 1; i <= AdditionalColumns; i++)
                         {
-                            if ((_selected - i) >= 0 && (_selected - i) <= _items.Count - 1)
+                            if ((Selected - i) >= 0 && (Selected - i) <= _items.Count - 1)
                             {
-                                KeyValuePair<ImageButton, Object> selectedLeft = _items[(_selected - i)];
+                                KeyValuePair<ImageButton, Object> selectedLeft = _items[(Selected - i)];
                                 if (selectedLeft.Key.MouseUp(e)) return true;
                             }
 
-                            if ((_selected + i) >= 0 && (_selected + i) <= _items.Count - 1)
+                            if ((Selected + i) >= 0 && (Selected + i) <= _items.Count - 1)
                             {
-                                KeyValuePair<ImageButton, Object> selectedRight = _items[(_selected + i)];
+                                KeyValuePair<ImageButton, Object> selectedRight = _items[(Selected + i)];
                                 if (selectedRight.Key.MouseUp(e)) return true;
                             }
                         }

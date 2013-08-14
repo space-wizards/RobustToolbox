@@ -28,6 +28,12 @@ namespace ClientServices.UserInterface.Components
             set { drawingSprite = _resourceManager.GetSprite(value); }
         }
 
+        public Color Color
+        {
+            get { return drawingSprite != null ? drawingSprite.Color : Color.White; }
+            set { drawingSprite.Color = value; }
+        }
+
         public override void Update(float frameTime)
         {
             size = drawingSprite != null ? drawingSprite.Size : Vector2D.Zero;

@@ -252,6 +252,8 @@ namespace ClientServices.State.States
             {
                 DepartmentInfo info = (DepartmentInfo) associatedData;
 
+                _tabJob._imgJobGrad.Color = Color.FromArgb(_tabJob._imgJobGrad.Color.A, ColorTranslator.FromHtml(info.Department.DepartmentColorHex));
+
                 _tabJob._lblDep.Text.Text = info.Department.Name;
 
                 foreach (JobDefinition def in info.JobDefs)

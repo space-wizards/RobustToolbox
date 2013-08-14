@@ -70,7 +70,7 @@ namespace ClientServices.UserInterface.Components
         private void button_quit_Clicked(Button sender)
         {
             _netMgr.Disconnect();
-            _stateManager.RequestStateChange<ConnectMenu>();
+            _stateManager.RequestStateChange<MainScreen>();
             Dispose();
         }
 

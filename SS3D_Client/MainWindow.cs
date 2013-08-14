@@ -71,7 +71,7 @@ namespace SS13
 
             Gorgon.Go();
 
-            _stateManager.RequestStateChange<ConnectMenu>();
+            _stateManager.RequestStateChange<MainScreen>();
         }
 
         private void MainWindowResizeEnd(object sender, EventArgs e)

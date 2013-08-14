@@ -12,7 +12,7 @@ using Lidgren.Network;
 
 namespace ClientServices.State.States
 {
-    public class ConnectMenu : State, IState
+    public class MainScreen : State, IState
     {
         #region Fields
 
@@ -20,7 +20,6 @@ namespace ClientServices.State.States
         private readonly List<FloatingDecoration> DecoFloats = new List<FloatingDecoration>();
 
         private readonly Sprite _background;
-        private readonly ImageButton _butt;
         private readonly ImageButton _buttConnect;
         private readonly ImageButton _buttExit;
         private readonly ImageButton _buttOptions;
@@ -38,7 +37,7 @@ namespace ClientServices.State.States
 
         #endregion
 
-        public ConnectMenu(IDictionary<Type, object> managers)
+        public MainScreen(IDictionary<Type, object> managers)
             : base(managers)
         {
             _background = ResourceManager.GetSprite("mainbg_filler");
@@ -64,15 +63,6 @@ namespace ClientServices.State.States
                                 ImageHover = "exit_hover"
                             };
             _buttExit.Clicked += _buttExit_Clicked;
-
-            _butt = new ImageButton
-                        {
-                            ImageNormal = "blueprint",
-                            ImageHover = "blueprint",
-                            Position = new Point(20, 20)
-                        };
-            _butt.Clicked += butt_Clicked;
-
 
             _connectTextbox = new Textbox(100, ResourceManager) {Text = ConfigurationManager.GetServerAddress()};
             _connectTextbox.OnSubmit += ConnectTextboxOnSubmit;
@@ -145,11 +135,6 @@ namespace ClientServices.State.States
         }
 
         #endregion
-
-        private void butt_Clicked(ImageButton sender)
-        {
-            StateManager.RequestStateChange<NewLobby>();
-        }
 
         private void _buttExit_Clicked(ImageButton sender)
         {
@@ -291,7 +276,6 @@ namespace ClientServices.State.States
             UserInterfaceManager.AddComponent(_titleImage);
             UserInterfaceManager.AddComponent(_glow);
             UserInterfaceManager.AddComponent(_lblVersion);
-            UserInterfaceManager.AddComponent(_butt);
         }
 
         public void Shutdown()
@@ -305,7 +289,6 @@ namespace ClientServices.State.States
             UserInterfaceManager.RemoveComponent(_titleImage);
             UserInterfaceManager.RemoveComponent(_glow);
             UserInterfaceManager.RemoveComponent(_lblVersion);
-            UserInterfaceManager.RemoveComponent(_butt);
 
             foreach (FloatingDecoration floatingDeco in DecoFloats)
                 UserInterfaceManager.RemoveComponent(floatingDeco);
@@ -334,7 +317,7 @@ namespace ClientServices.State.States
         private void OnConnected(object sender, EventArgs e)
         {
             _isConnecting = false;
-            StateManager.RequestStateChange<LobbyScreen>();
+            StateManager.RequestStateChange<Lobby>();
         }
 
         public void StartConnect(string address)

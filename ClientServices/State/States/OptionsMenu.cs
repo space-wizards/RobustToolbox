@@ -229,7 +229,7 @@ namespace ClientServices.State.States
 
         private void _mainmenubtt_Clicked(Label sender, MouseInputEventArgs e)
         {
-            StateManager.RequestStateChange<ConnectMenu>();
+            StateManager.RequestStateChange<MainScreen>();
         }
 
         private void _connectbtt_Clicked(Label sender, MouseInputEventArgs e)

@@ -170,6 +170,7 @@
     <Compile Include="Utility\BitStream.cs" />
     <Compile Include="Utility\NetParamsPacker.cs" />
     <Compile Include="Utility\RandomString.cs" />
+    <Compile Include="Utility\unZipString.cs" />
     <Compile Include="Vector2.cs" />
     <Compile Include="NetworkEnums.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />

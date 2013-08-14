@@ -33,6 +33,12 @@ namespace ClientServices.UserInterface.Components
 
         public TextSprite Text { get; private set; }
 
+        public Color TextColor 
+        {
+            get { return Text.Color; }
+            set { Text.Color = value;}
+        }
+
         public bool DrawBorder { get; set; }
         public bool DrawBackground { get; set; }
         public bool DrawTextHighlight { get; set; }

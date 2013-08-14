@@ -8,6 +8,7 @@ using GorgonLibrary.Graphics;
 using GorgonLibrary.InputDevices;
 using Lidgren.Network;
 using SS13_Shared;
+using SS13_Shared.Utility;
 
 namespace ClientServices.State.States
 {
@@ -221,11 +222,15 @@ namespace ClientServices.State.States
 
         private void HandleJobList(NetIncomingMessage msg)
         {
-            string jobListXml = msg.ReadString(); //READ THE WHOLE XML FILE.
+            int byteNum = msg.ReadInt32();
+            byte[] compressedXml = msg.ReadBytes(byteNum);
+
+            string jobListXml = ZipString.UnZipStr(compressedXml);
+
             JobHandler.Singleton.LoadDefinitionsFromString(jobListXml);
             int pos = 5;
             _jobButtonContainer.components.Clear(); //Properly dispose old buttons !!!!!!!
-            foreach (JobDefinition definition in JobHandler.Singleton.JobDefinitions)
+            foreach (JobDefinition definition in JobHandler.Singleton.JobSettings.JobDefinitions)
             {
                 var current = new JobSelectButton(definition.Name, definition.JobIcon, definition.Description,
                                                   ResourceManager)

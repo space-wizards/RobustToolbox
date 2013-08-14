@@ -36,8 +36,8 @@ namespace GasPropagationTest
         public readonly GasMixture GasMixture;
 
         //Constants
-        float SourceDamping = .5f;
-        float RecieverDamping = .75f;
+        float SourceDamping = .05f;
+        float RecieverDamping = .075f;
         public const float quarterpi = (float)Math.PI / 4;
         int circleDiameter = 15;
         private float FlowConstant = .1f;
@@ -303,7 +303,7 @@ namespace GasPropagationTest
                     if (neighbor.calculated) // if neighbor's already been calculated, skip it
                         continue;
 
-                    DAmount = GasMixture.Pressure - neighbor.GasMixture.Pressure;
+
                     if (!neighbor.blocking)
                     {
                         if (GasMixture.Burning || neighbor.GasMixture.Burning)
@@ -311,39 +311,54 @@ namespace GasPropagationTest
                             neighbor.GasMixture.Expose();
                             GasMixture.Expose();
                         }
+                        DAmount = GasMixture.Pressure - neighbor.GasMixture.Pressure;
                         if (Math.Abs(DAmount) < 50.0f)
                         {
                             GasMixture.Diffuse(neighbor.GasMixture);
                         }
                         else
                         {
-                            var neighDir = new Vector2(i, j);
 
-                            float angle = quarterpi/2.0f;
+                            var neighDir = new Vector2(i, j);
+                            float angle = 0.0f;
+                            float pAmount = 0.0f;
+                            float proportion = 0.075f;
+
+
+
                             if (GasVel.Magnitude > 0.0f)
-                                angle = (float)Math.Abs(neighDir.Angle(GasVel));
-                            // Get the angle between our current flow vector and the cell we're sharing with
-                            if (angle < quarterpi)
-                                // If the angle is more than 45 we shouldn't share with this cell as the gas is flowing away from it
                             {
-                                if (DAmount > 0) // We're giving
+                                angle = (float)Math.Abs(neighDir.Angle(GasVel));
+                                if (Math.Abs(angle) < quarterpi)
                                 {
-                                    float pAmount = Clamp(GasMixture.Pressure/neighbor.GasMixture.Pressure);
-                                    float proportion = Math.Abs(((1/quarterpi)*(quarterpi - angle))*pAmount);
-                                    GasMixture.Diffuse(neighbor.GasMixture, 1f/proportion);
-                                    neighbor.NextGasVel += new Vector2(DAmount*i, DAmount*j)*RecieverDamping;
-                                    NextGasVel += new Vector2(DAmount*i, DAmount*j)*SourceDamping;
-                                }
-                                else // We're recieving
-                                {
-                                    float pAmount = Clamp(neighbor.GasMixture.Pressure/GasMixture.Pressure);
-                                    float proportion = Math.Abs(((1/quarterpi)*(quarterpi - angle))*pAmount);
-                                    neighbor.GasMixture.Diffuse(GasMixture, 1f/proportion);
-                                    neighbor.NextGasVel += new Vector2(-DAmount*i, DAmount*j)*RecieverDamping;
-                                    NextGasVel += new Vector2(-DAmount*i, DAmount*j)*SourceDamping;
+                                    pAmount += VelClamp((float)GasVel.Magnitude);//Clamp(GasMixture.Pressure / neighbor.GasMixture.Pressure);
+                                    proportion += Math.Abs(((1f / quarterpi) * (quarterpi - angle)) * pAmount);// (float)GasVel.Magnitude / 100f);
                                 }
                             }
+
+                            if (neighbor.GasVel.Magnitude > 0.0f)
+                            {
+                                var Dir = neighDir * -1;
+                                angle = (float)Math.Abs(Dir.Angle(neighbor.GasVel));
+                                if (angle < quarterpi)
+                                {
+                                    pAmount += VelClamp((float)neighbor.GasVel.Magnitude); //Clamp(neighbor.GasMixture.Pressure / GasMixture.Pressure);
+                                    proportion += Math.Abs(((1f / quarterpi) * (quarterpi - angle)) * pAmount);//(float)neighbor.GasVel.Magnitude / 1000f));
+                                }
+                            }
+                            if (proportion > 0.3f)
+                                proportion = 0.3f;
+                            
+                            
+                            if (proportion > 0.0f)
+                            {
+                                GasMixture.Diffuse(neighbor.GasMixture, 1f / proportion);
+                                neighbor.NextGasVel += new Vector2(DAmount * proportion * i, DAmount * proportion * j) * RecieverDamping;
+                                NextGasVel += new Vector2(DAmount * proportion * i, DAmount * proportion * j) * SourceDamping;
+                            }
                         }
+                        
+                        
                     }
 
                     #region old gas code
@@ -458,6 +473,16 @@ namespace GasPropagationTest
             if (Flow <= 0.0f)
                 return 0.01f;
             return Flow;
+        }
+
+        public float VelClamp(float vel)
+        {
+            float returnVel = vel / 100f;
+            if (returnVel > 0.4f)
+                returnVel = 0.4f;
+            else if (returnVel < 0.05f)
+                returnVel = 0.05f;
+            return returnVel;
         }
     }
 }

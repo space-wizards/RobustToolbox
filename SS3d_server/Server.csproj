@@ -219,6 +219,7 @@
     </Content>
     <Content Include="JobDefinitions.xml">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      <SubType>Designer</SubType>
     </Content>
     <Content Include="SavedEntities.xml">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>

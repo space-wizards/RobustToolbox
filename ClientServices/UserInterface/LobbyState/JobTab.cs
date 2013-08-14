@@ -110,7 +110,7 @@ namespace ClientServices.UserInterface.Components
             _imgJobGrad.Position = new Point(_shwJobs.ClientArea.X + (int)(_shwJobs.ClientArea.Width / 2f - _imgJobGrad.ClientArea.Width / 2f), _shwJobs.ClientArea.Top);
 
             _imgJobDesc.Update(0);
-            _imgJobDesc.Position = new Point(0, _shwJobs.ClientArea.Bottom + 5);
+            _imgJobDesc.Position = new Point(0, _shwJobs.ClientArea.Bottom - 12);
             _imgJobDesc.Update(0);
 
             _lbljobName = new Label(" ", "MICROGBE", resourceManager)

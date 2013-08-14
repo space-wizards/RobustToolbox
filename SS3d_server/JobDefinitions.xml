@@ -49,7 +49,7 @@
 
     <JobDefinition>
       <Available>true</Available>
-      <Description>Ignores wounded people and then spontaneous disappears later on.</Description>
+      <Description>Ignores wounded people and then spontaneously disappears later on.</Description>
       <JobIcon>job_medic</JobIcon>
       <MaxNum>3</MaxNum>
       <Name>Medic</Name>

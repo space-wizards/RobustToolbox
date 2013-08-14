@@ -137,19 +137,23 @@ namespace GasPropagationTest {
                 nextGasses[gas] = 0;
         }
 
-        public void Diffuse(GasMixture a, float factor = 8)
+        public float Diffuse(GasMixture a, float factor = 9)
         {
+            float totalAmount = 0.0f;
             foreach (var gas in a.gasses)
             {
                 float amount = (gas.Value - gasses[gas.Key])/factor;
                 AddNextGas(amount, gas.Key);
                 a.AddNextGas(-amount, gas.Key);
+                totalAmount += amount;
             }
 
             ShareTemp(a, factor);
+
+            return Math.Abs(totalAmount);
         }
 
-        public void ShareTemp(GasMixture a, float factor = 8)
+        public void ShareTemp(GasMixture a, float factor = 9)
         {
             float HCCell = HeatCapacity*TotalMass;
             float HCa = a.HeatCapacity*a.TotalMass;

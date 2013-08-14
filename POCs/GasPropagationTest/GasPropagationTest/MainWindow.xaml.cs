@@ -87,8 +87,8 @@ namespace GasPropagationTest
             {
                 for (int j = 0; j < 39; j++)
                 {
-                    Sum += AtmosManager.cellArray[i, j].gasAmount;
-                    HeatSum += AtmosManager.cellArray[i, j].heatEnergy;
+                    Sum += AtmosManager.cellArray[i, j].GasMixture.TotalGas;
+                    HeatSum += (AtmosManager.cellArray[i, j].GasMixture.HeatCapacity * AtmosManager.cellArray[i, j].GasMixture.Temperature);
                 }
             }
 

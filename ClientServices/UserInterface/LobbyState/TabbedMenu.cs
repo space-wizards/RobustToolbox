@@ -52,7 +52,10 @@ namespace ClientServices.UserInterface.Components
         public void SelectTab(TabContainer tab)
         {
             if (_tabs.Exists(x => x.Value == tab))
+            {
                 _activeTab = tab;
+                _activeTab.Activated();
+            }
         }
 
         public void RemoveTab(TabContainer remTab)
@@ -75,7 +78,7 @@ namespace ClientServices.UserInterface.Components
             if (_tabs.Exists(x => x.Key == sender))
             {
                 KeyValuePair<ImageButton, TabContainer> tab = _tabs.Find(x => x.Key == sender);
-                _activeTab = tab.Value;
+                SelectTab(tab.Value);
             }
         }
 

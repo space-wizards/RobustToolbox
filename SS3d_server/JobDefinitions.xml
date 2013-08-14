@@ -1,274 +1,111 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
+<JobSettings xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+  <JobDefinitions>
+    
+    <JobDefinition>
+      <Available>true</Available>
+      <Description>Hits people with a turned-off Stunbaton like hes a cop from America.</Description>
+      <JobIcon>job_security</JobIcon>
+      <MaxNum>3</MaxNum>
+      <Name>Security Officer</Name>
+      <Department>Command</Department>
+      <SpawnEquipment>
+        <SpawnEquipDefinition>
+          <Location>Outer</Location>
+          <ObjectType>Armour</ObjectType>
+        </SpawnEquipDefinition>
+        <SpawnEquipDefinition>
+          <Location>Inner</Location>
+          <ObjectType>Assistant_Grey</ObjectType>
+        </SpawnEquipDefinition>
+        <SpawnEquipDefinition>
+          <Location>Head</Location>
+          <ObjectType>Helmet</ObjectType>
+        </SpawnEquipDefinition>
+        <SpawnEquipDefinition>
+          <Location>Feet</Location>
+          <ObjectType>Shoes</ObjectType>
+        </SpawnEquipDefinition>
+      </SpawnEquipment>
+    </JobDefinition>
 
-<ArrayOfJobDefinition xmlns:xsd="http://www.w3.org/2001/XMLSchema"
-                      xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+    <JobDefinition>
+      <Available>true</Available>
+      <Description>Is a huge jerk and pisses off into space at the beginning of the round.</Description>
+      <JobIcon>job_captain</JobIcon>
+      <MaxNum>1</MaxNum>
+      <Name>Captain</Name>
+      <Department>Command</Department>
+    </JobDefinition>
 
-  <JobDefinition>
-    <SpawnEquipment>
-      <SpawnEquipDefinition>
-        <Location>Inner</Location>
-        <ObjectType>Assistant_Grey</ObjectType>
-      </SpawnEquipDefinition>
-      <SpawnEquipDefinition>
-        <Location>Feet</Location>
-        <ObjectType>Shoes</ObjectType>
-      </SpawnEquipDefinition>
-    </SpawnEquipment>
-    <Name>Assistant</Name>
-    <Description>
-      Runs around the station doing nothing&#13;&#10;in particular.
-    </Description>
-    <MaxNum>-1</MaxNum>
-    <JobIcon>job_button_none</JobIcon>
-    <Available>true</Available>
-  </JobDefinition>
+    <JobDefinition>
+      <Available>true</Available>
+      <Description>Destroys the Engine permanently and then disappears forever.</Description>
+      <JobIcon>job_headengineer</JobIcon>
+      <MaxNum>1</MaxNum>
+      <Name>Head of Engineering</Name>
+      <Department>Command</Department>
+    </JobDefinition>
 
-  <JobDefinition>
-    <SpawnEquipment>
-      <SpawnEquipDefinition>
-        <Location>Inner</Location>
-        <ObjectType>Janitor_Suit</ObjectType>
-      </SpawnEquipDefinition>
-      <SpawnEquipDefinition>
-        <Location>Feet</Location>
-        <ObjectType>Shoes</ObjectType>
-      </SpawnEquipDefinition>
-    </SpawnEquipment>
-    <Name>Janitor</Name>
-    <Description>
-      Cleans up the station and occasionally&#13;&#10;changes broken lightbulbs.
-    </Description>
-    <MaxNum>1</MaxNum>
-    <JobIcon>job_button_none</JobIcon>
-    <Available>true</Available>
-  </JobDefinition>
+    <JobDefinition>
+      <Available>true</Available>
+      <Description>Ignores wounded people and then spontaneous disappears later on.</Description>
+      <JobIcon>job_medic</JobIcon>
+      <MaxNum>3</MaxNum>
+      <Name>Medic</Name>
+      <Department>Research</Department>
+    </JobDefinition>
 
-  <JobDefinition>
-    <SpawnEquipment>
-      <SpawnEquipDefinition>
-        <Location>Outer</Location>
-        <ObjectType>Armour</ObjectType>
-      </SpawnEquipDefinition>
-      <SpawnEquipDefinition>
-        <Location>Inner</Location>
-        <ObjectType>Assistant_Grey</ObjectType>
-      </SpawnEquipDefinition>
-      <SpawnEquipDefinition>
-        <Location>Head</Location>
-        <ObjectType>Helmet</ObjectType>
-      </SpawnEquipDefinition>
-      <SpawnEquipDefinition>
-        <Location>Feet</Location>
-        <ObjectType>Shoes</ObjectType>
-      </SpawnEquipDefinition>
-    </SpawnEquipment>
-    <Name>Head of Security</Name>
-    <Description>
-      Coordinates Security Officers and manages security&#13;&#10;related matters.
-    </Description>
-    <MaxNum>3</MaxNum>
-    <JobIcon>job_button_none</JobIcon>
-    <Available>true</Available>
-  </JobDefinition>
+    <JobDefinition>
+      <Available>true</Available>
+      <Description>Builds buttbots.</Description>
+      <JobIcon>job_roboticist</JobIcon>
+      <MaxNum>3</MaxNum>
+      <Name>Roboticist</Name>
+      <Department>Research</Department>
+    </JobDefinition>
 
-  <JobDefinition>
-    <SpawnEquipment>
-      <SpawnEquipDefinition>
-        <Location>Outer</Location>
-        <ObjectType>Armour</ObjectType>
-      </SpawnEquipDefinition>
-      <SpawnEquipDefinition>
-        <Location>Inner</Location>
-        <ObjectType>Assistant_Grey</ObjectType>
-      </SpawnEquipDefinition>
-      <SpawnEquipDefinition>
-        <Location>Head</Location>
-        <ObjectType>Helmet</ObjectType>
-      </SpawnEquipDefinition>
-      <SpawnEquipDefinition>
-        <Location>Feet</Location>
-        <ObjectType>Shoes</ObjectType>
-      </SpawnEquipDefinition>
-    </SpawnEquipment>
-    <Name>Security Officer</Name>
-    <Description>
-      Keeps the inhabitants of the station safe.
-    </Description>
-    <MaxNum>3</MaxNum>
-    <JobIcon>job_button_none</JobIcon>
-    <Available>true</Available>
-  </JobDefinition>
+    <JobDefinition>
+      <Available>true</Available>
+      <Description>Gives everyone genetic defects and then gets toolboxed and throw out of the airlock.</Description>
+      <JobIcon>job_geneticist</JobIcon>
+      <MaxNum>2</MaxNum>
+      <Name>Geneticist</Name>
+      <Department>Research</Department>
+    </JobDefinition>
+    
+  </JobDefinitions>
+  
+  <DepartmentDefinitions>
+    
+    <DepartmentDefinition>
+      <Name>Command</Name>
+      <Description>The Command Department is responsible for assigning Tasks, overseeing Work and Security on the Station.</Description>
+      <DepartmentIcon>depa_command</DepartmentIcon>
+	  <DepartmentColor>-8553091</DepartmentColor>
+    </DepartmentDefinition>
 
-  <JobDefinition>
-    <SpawnEquipment>
-      <SpawnEquipDefinition>
-        <Location>Inner</Location>
-        <ObjectType>Assistant_Grey</ObjectType>
-      </SpawnEquipDefinition>
-      <SpawnEquipDefinition>
-        <Location>Feet</Location>
-        <ObjectType>Shoes</ObjectType>
-      </SpawnEquipDefinition>
-    </SpawnEquipment>
-    <Name>Doctor</Name>
-    <Description>
-      Keeps the stations inhabitants healthy and alive.
-    </Description>
-    <MaxNum>3</MaxNum>
-    <JobIcon>job_button_none</JobIcon>
-    <Available>true</Available>
-  </JobDefinition>
+    <DepartmentDefinition>
+      <Name>Engineering</Name>
+      <Description>The Engineering Department deals with technical Problems on the Station as well as working things like the Engine.</Description>
+      <DepartmentIcon>depa_engineering</DepartmentIcon>
+	  <DepartmentColor>-8553091</DepartmentColor>
+    </DepartmentDefinition>
 
-  <JobDefinition>
-    <SpawnEquipment>
-      <SpawnEquipDefinition>
-        <Location>Inner</Location>
-        <ObjectType>Assistant_Grey</ObjectType>
-      </SpawnEquipDefinition>
-      <SpawnEquipDefinition>
-        <Location>Feet</Location>
-        <ObjectType>Shoes</ObjectType>
-      </SpawnEquipDefinition>
-    </SpawnEquipment>
-    <Name>Engineer</Name>
-    <Description>
-      Responsible for keeping the Stations machinery&#13;&#10;running smoothly. Also repairs damage to the station.
-    </Description>
-    <MaxNum>3</MaxNum>
-    <JobIcon>job_button_none</JobIcon>
-    <Available>true</Available>
-  </JobDefinition>
+    <DepartmentDefinition>
+      <Name>Research</Name>
+      <Description>The Research Department has various Jobs ranging from Plasma Research to Medical Jobs.</Description>
+      <DepartmentIcon>depa_research</DepartmentIcon>
+	  <DepartmentColor>-8553091</DepartmentColor>
+    </DepartmentDefinition>
 
-  <JobDefinition>
-    <SpawnEquipment>
-      <SpawnEquipDefinition>
-        <Location>Inner</Location>
-        <ObjectType>Assistant_Grey</ObjectType>
-      </SpawnEquipDefinition>
-      <SpawnEquipDefinition>
-        <Location>Feet</Location>
-        <ObjectType>Shoes</ObjectType>
-      </SpawnEquipDefinition>
-    </SpawnEquipment>
-    <Name>Atmos. Technician</Name>
-    <Description>
-      Makes sure the atmospheric systems of the station run&#13;&#10;correctly.
-    </Description>
-    <MaxNum>3</MaxNum>
-    <JobIcon>job_button_none</JobIcon>
-    <Available>true</Available>
-  </JobDefinition>
-
-  <JobDefinition>
-    <SpawnEquipment>
-      <SpawnEquipDefinition>
-        <Location>Inner</Location>
-        <ObjectType>Assistant_Grey</ObjectType>
-      </SpawnEquipDefinition>
-      <SpawnEquipDefinition>
-        <Location>Feet</Location>
-        <ObjectType>Shoes</ObjectType>
-      </SpawnEquipDefinition>
-    </SpawnEquipment>
-    <Name>Geneticist</Name>
-    <Description>
-      Researches the mysteries of the human genome.
-    </Description>
-    <MaxNum>3</MaxNum>
-    <JobIcon>job_button_none</JobIcon>
-    <Available>true</Available>
-  </JobDefinition>
-
-  <JobDefinition>
-    <SpawnEquipment>
-      <SpawnEquipDefinition>
-        <Location>Inner</Location>
-        <ObjectType>Assistant_Grey</ObjectType>
-      </SpawnEquipDefinition>
-      <SpawnEquipDefinition>
-        <Location>Feet</Location>
-        <ObjectType>Shoes</ObjectType>
-      </SpawnEquipDefinition>
-    </SpawnEquipment>
-    <Name>Scientist</Name>
-    <Description>TBD</Description>
-    <MaxNum>3</MaxNum>
-    <JobIcon>job_button_none</JobIcon>
-    <Available>true</Available>
-  </JobDefinition>
-
-  <JobDefinition>
-    <SpawnEquipment>
-      <SpawnEquipDefinition>
-        <Location>Inner</Location>
-        <ObjectType>Assistant_Grey</ObjectType>
-      </SpawnEquipDefinition>
-      <SpawnEquipDefinition>
-        <Location>Feet</Location>
-        <ObjectType>Shoes</ObjectType>
-      </SpawnEquipDefinition>
-    </SpawnEquipment>
-    <Name>Chemist</Name>
-    <Description>
-      Researches new chemicals or chemical compounds.
-    </Description>
-    <MaxNum>3</MaxNum>
-    <JobIcon>job_button_none</JobIcon>
-    <Available>true</Available>
-  </JobDefinition>
-
-  <JobDefinition>
-    <SpawnEquipment>
-      <SpawnEquipDefinition>
-        <Location>Inner</Location>
-        <ObjectType>Assistant_Grey</ObjectType>
-      </SpawnEquipDefinition>
-      <SpawnEquipDefinition>
-        <Location>Feet</Location>
-        <ObjectType>Shoes</ObjectType>
-      </SpawnEquipDefinition>
-    </SpawnEquipment>
-    <Name>Roboticist</Name>
-    <Description>Builds robots. TBD</Description>
-    <MaxNum>3</MaxNum>
-    <JobIcon>job_button_none</JobIcon>
-    <Available>true</Available>
-  </JobDefinition>
-
-  <JobDefinition>
-    <SpawnEquipment>
-      <SpawnEquipDefinition>
-        <Location>Inner</Location>
-        <ObjectType>Assistant_Grey</ObjectType>
-      </SpawnEquipDefinition>
-      <SpawnEquipDefinition>
-        <Location>Feet</Location>
-        <ObjectType>Shoes</ObjectType>
-      </SpawnEquipDefinition>
-    </SpawnEquipment>
-    <Name>Captain</Name>
-    <Description>TBD</Description>
-    <MaxNum>3</MaxNum>
-    <JobIcon>job_button_none</JobIcon>
-    <Available>true</Available>
-  </JobDefinition>
-
-  <JobDefinition>
-    <SpawnEquipment>
-      <SpawnEquipDefinition>
-        <Location>Inner</Location>
-        <ObjectType>Assistant_Grey</ObjectType>
-      </SpawnEquipDefinition>
-      <SpawnEquipDefinition>
-        <Location>Feet</Location>
-        <ObjectType></ObjectType>
-      </SpawnEquipDefinition>
-    </SpawnEquipment>
-    <Name>Placeholder</Name>
-    <Description>---</Description>
-    <MaxNum>0</MaxNum>
-    <JobIcon>job_button_none</JobIcon>
-    <Available>false</Available>
-  </JobDefinition>
-
-</ArrayOfJobDefinition>
+    <DepartmentDefinition>
+      <Name>Civilian</Name>
+      <Description>The Civilian Department encompasses a wide Range of various Jobs. Jobs include things like Janitor, Chef or the Clown.</Description>
+      <DepartmentIcon>depa_civilian</DepartmentIcon>
+	  <DepartmentColor>-8553091</DepartmentColor>
+    </DepartmentDefinition>
+    
+  </DepartmentDefinitions>
+  
+</JobSettings>

@@ -1,15 +1,21 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Drawing;
+using System.Linq;
+using ClientInterfaces.Network;
 using ClientInterfaces.State;
 using ClientServices.UserInterface.Components;
 using GorgonLibrary;
 using GorgonLibrary.Graphics;
 using GorgonLibrary.InputDevices;
+using Lidgren.Network;
+using SS13.IoC;
+using SS13_Shared;
+using SS13_Shared.Utility;
 
 namespace ClientServices.State.States
 {
-    public class NewLobby : State, IState
+    public class Lobby : State, IState
     {
         #region Fields
 
@@ -43,13 +49,16 @@ namespace ClientServices.State.States
         private RectangleF _recStatus;
         private TabContainer _tabActive;
 
+        List<KeyValuePair<DepartmentDefinition, List<JobDefinition>>> sortedJobs = new List<KeyValuePair<DepartmentDefinition, List<JobDefinition>>>();
+        private Chatbox _lobbyChat;
+
         #endregion
 
         #region Properties
 
         #endregion
 
-        public NewLobby(IDictionary<Type, object> managers)
+        public Lobby(IDictionary<Type, object> managers)
             : base(managers)
         {
             _background = ResourceManager.GetSprite("mainbg");
@@ -110,6 +119,8 @@ namespace ClientServices.State.States
                               tabSpriteName = "lobby_tab_bcase"
                           };
             _tabs.AddTab(_tabJob);
+            _tabJob._shwDepa.SelectionChanged += new Showcase.ShowcaseSelectionChangedHandler(_shwDepa_SelectionChanged);
+            _tabJob._shwJobs.SelectionChanged += new Showcase.ShowcaseSelectionChangedHandler(_shwJobs_SelectionChanged);
 
             _tabCharacter = new TabContainer("lobbyTabCharacter", new Size(793, 450), ResourceManager)
                                 {
@@ -130,7 +141,149 @@ namespace ClientServices.State.States
             _tabs.AddTab(_tabServer);
 
             _tabs.SelectTab(_tabJob);
+
+            _lobbyChat = new Chatbox(ResourceManager, UserInterfaceManager, KeyBindingManager);
+            _lobbyChat.Resize();
+            _lobbyChat.TextSubmitted += new Chatbox.TextSubmitHandler(_lobbyChat_TextSubmitted);
+
         }
+
+        void _lobbyChat_TextSubmitted(Chatbox chatbox, string text)
+        {
+        }
+
+        #region Network
+        private void NetworkManagerMessageArrived(object sender, IncomingNetworkMessageArgs args)
+        {
+            NetIncomingMessage message = args.Message;
+            switch (message.MessageType)
+            {
+                case NetIncomingMessageType.StatusChanged:
+                    var statMsg = (NetConnectionStatus)message.ReadByte();
+                    if (statMsg == NetConnectionStatus.Disconnected)
+                    {
+                        string disconnectMessage = message.ReadString();
+                        UserInterfaceManager.AddComponent(new DisconnectedScreenBlocker(StateManager,
+                                                                                        UserInterfaceManager,
+                                                                                        ResourceManager,
+                                                                                        disconnectMessage));
+                    }
+                    break;
+                case NetIncomingMessageType.Data:
+                    var messageType = (NetMessage)message.ReadByte();
+                    switch (messageType)
+                    {
+                        case NetMessage.LobbyChat:
+                            string text = message.ReadString();
+                            //AddChat(text);
+                            break;
+                        case NetMessage.PlayerCount:
+                            //var newCount = message.ReadByte();
+                            break;
+                        case NetMessage.PlayerList:
+                            //HandlePlayerList(message);
+                            break;
+                        case NetMessage.WelcomeMessage:
+                            //HandleWelcomeMessage(message);
+                            break;
+                        case NetMessage.ChatMessage:
+                            //HandleChatMessage(message);
+                            break;
+                        case NetMessage.JobList:
+                            HandleJobList(message);
+                            break;
+                        case NetMessage.JobSelected:
+                            //HandleJobSelected(message); THIS IS THE ACK FROM THE SERVER FOR JOB SELECTION TODO STILL NEEDED?
+                            break;
+                        case NetMessage.JoinGame:
+                            HandleJoinGame();
+                            break;
+                    }
+                    break;
+            }
+        }
+
+        private void HandleJobList(NetIncomingMessage msg)
+        {
+            int byteNum = msg.ReadInt32();
+            byte[] compressedXml = msg.ReadBytes(byteNum);
+
+            string jobListXml = ZipString.UnZipStr(compressedXml);
+
+            JobHandler.Singleton.LoadDefinitionsFromString(jobListXml);
+
+            _tabJob._shwDepa.ClearItems();
+            _tabJob._shwJobs.ClearItems();
+
+            sortedJobs.Clear();
+
+            foreach (DepartmentDefinition dep in JobHandler.Singleton.JobSettings.DepartmentDefinitions)
+            {
+                var depJobs = (from x in JobHandler.Singleton.JobSettings.JobDefinitions
+                              where x.Department.ToLowerInvariant() == dep.Name.ToLowerInvariant()
+                              where x.Available
+                              orderby x.Name
+                              select x).ToList();
+
+                var newEntry = new KeyValuePair<DepartmentDefinition, List<JobDefinition>>(dep, depJobs);
+                sortedJobs.Add(newEntry);
+
+                var newDep = new ImageButton
+                {
+                    ImageNormal = dep.DepartmentIcon,
+                };
+
+                DepartmentInfo newInfo = new DepartmentInfo()
+                    {
+                        Department = dep,
+                        JobDefs = depJobs
+                    };
+
+                _tabJob._shwDepa.AddItem(newDep, newInfo);
+            }
+        }
+
+        void _shwDepa_SelectionChanged(ImageButton sender, object associatedData)
+        {
+            _tabJob._shwJobs.ClearItems();
+
+            if (associatedData is DepartmentInfo)
+            {
+                DepartmentInfo info = (DepartmentInfo) associatedData;
+
+                _tabJob._lblDep.Text.Text = info.Department.Name;
+
+                foreach (JobDefinition def in info.JobDefs)
+                {
+                    var newJob = new ImageButton
+                    {
+                        ImageNormal = def.JobIcon
+                    };
+
+                    _tabJob._shwJobs.AddItem(newJob, def);
+                }
+            }
+        }
+
+        void _shwJobs_SelectionChanged(ImageButton sender, object associatedData)
+        {
+            if (associatedData != null && associatedData is JobDefinition)
+            {
+                JobDefinition jobDef = (JobDefinition) associatedData;
+
+                var netManager = IoCManager.Resolve<INetworkManager>();
+                NetOutgoingMessage playerJobSpawnMsg = netManager.CreateMessage();
+                playerJobSpawnMsg.Write((byte) NetMessage.RequestJob);
+                playerJobSpawnMsg.Write(jobDef.Name);
+                netManager.SendMessage(playerJobSpawnMsg, NetDeliveryMethod.ReliableOrdered);
+            }
+        }
+
+        private void HandleJoinGame()
+        {
+            StateManager.RequestStateChange<GameScreen>();
+        }
+        #endregion
 
         #region Startup, Shutdown, Update
 
@@ -138,11 +291,13 @@ namespace ClientServices.State.States
         {
             UserInterfaceManager.AddComponent(_mainbg);
             UserInterfaceManager.AddComponent(_imgStatus);
+            UserInterfaceManager.AddComponent(_tabs);
+            UserInterfaceManager.AddComponent(_lobbyChat);
 
             foreach (Label curr in _serverLabels)
                 UserInterfaceManager.AddComponent(curr);
 
-            UserInterfaceManager.AddComponent(_tabs);
+            NetworkManager.MessageArrived += NetworkManagerMessageArrived;
         }
 
         public void Shutdown()
@@ -150,9 +305,12 @@ namespace ClientServices.State.States
             UserInterfaceManager.RemoveComponent(_mainbg);
             UserInterfaceManager.RemoveComponent(_imgStatus);
             UserInterfaceManager.RemoveComponent(_tabs);
+            UserInterfaceManager.RemoveComponent(_lobbyChat);
 
             foreach (Label curr in _serverLabels)
                 UserInterfaceManager.RemoveComponent(curr);
+
+            NetworkManager.MessageArrived -= NetworkManagerMessageArrived;
         }
 
         public void Update(FrameEventArgs e)
@@ -181,6 +339,8 @@ namespace ClientServices.State.States
             _lblPortInfo.Position = new Point(_lblPort.ClientArea.Right, _lblPort.ClientArea.Y);
 
             _tabs.Position = _mainbg.Position + new Size(5, 90);
+
+            _lobbyChat.Position = new Point(_mainbg.ClientArea.Left + 10, _mainbg.ClientArea.Bottom - _lobbyChat.ClientArea.Height - 15);
         }
 
         #endregion
@@ -232,5 +392,11 @@ namespace ClientServices.State.States
         }
 
         #endregion
+    }
+
+    public struct DepartmentInfo
+    {
+        public DepartmentDefinition Department;
+        public List<JobDefinition> JobDefs;
     }
 }

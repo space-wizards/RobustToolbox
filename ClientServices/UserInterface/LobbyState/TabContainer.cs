@@ -22,6 +22,11 @@ namespace ClientServices.UserInterface.Components
             set { tabSprite = _resourceManager.GetSprite(value); }
         }
 
+        public virtual void Activated() //Called when tab is selected.
+        {
+
+        }
+
         public override void Update(float frameTime)
         {
             base.Update(frameTime);

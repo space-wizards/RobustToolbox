@@ -33,7 +33,7 @@ namespace ClientServices.UserInterface.Components
 
         private void MainMenuButtonClicked(Button sender)
         {
-            _stateManager.RequestStateChange<ConnectMenu>();
+            _stateManager.RequestStateChange<MainScreen>();
         }
 
         public override void Update(float frameTime)

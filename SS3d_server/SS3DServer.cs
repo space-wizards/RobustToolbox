@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
+using System.Text;
 using System.Threading;
 using GameObject;
 using Lidgren.Network;
@@ -29,6 +30,7 @@ using ServerServices.Map;
 using ServerServices.Round;
 using EntityManager = SGO.EntityManager;
 using IEntityManager = ServerInterfaces.GOC.IEntityManager;
+using SS13_Shared.Utility;
 
 namespace SS13_Server
 {
@@ -460,11 +462,11 @@ namespace SS13_Server
 
             if (JobHandler.Singleton.LoadDefinitionsFromFile("JobDefinitions.xml"))
             {
-                LogManager.Log("Job Definitions File not found.", LogLevel.Fatal);
+                LogManager.Log("Job Definitions File not found. A Template has been created.", LogLevel.Fatal);
                 Environment.Exit(1);
             }
             else
-                LogManager.Log("Job Definitions Found. " + JobHandler.Singleton.JobDefinitions.Count + " Jobs loaded.");
+                LogManager.Log("Job Definitions Found. " + JobHandler.Singleton.JobSettings.JobDefinitions.Count + " Jobs loaded. " + JobHandler.Singleton.JobSettings.DepartmentDefinitions.Count + " Departments loaded.");
 
             BanlistMgr.Singleton.Initialize("BanList.xml");
 
@@ -789,7 +791,7 @@ namespace SS13_Server
         public void HandleJobRequest(NetIncomingMessage msg)
         {
             string name = msg.ReadString();
-            JobDefinition pickedJob = (from JobDefinition def in JobHandler.Singleton.JobDefinitions
+            JobDefinition pickedJob = (from JobDefinition def in JobHandler.Singleton.JobSettings.JobDefinitions
                                        where def.Name == name
                                        select def).First();
 
@@ -809,7 +811,10 @@ namespace SS13_Server
         {
             NetOutgoingMessage jobListMessage = IoCManager.Resolve<ISS13NetServer>().CreateMessage();
             jobListMessage.Write((byte) NetMessage.JobList);
-            jobListMessage.Write(JobHandler.Singleton.GetDefinitionsString());
+            byte[] compressedStr = ZipString.ZipStr(JobHandler.Singleton.GetDefinitionsString());
+            jobListMessage.Write(compressedStr.Length);
+            jobListMessage.Write(compressedStr);
+            //LogManager.Log("Jobs sent: " + compressedStr.Length.ToString());
             IoCManager.Resolve<ISS13NetServer>().SendMessage(jobListMessage, msg.SenderConnection,
                                                              NetDeliveryMethod.ReliableOrdered);
         }

@@ -125,8 +125,8 @@
     <Compile Include="Serialization\SS13Serializer.cs" />
     <Compile Include="State\State.cs" />
     <Compile Include="State\StateManager.cs" />
-    <Compile Include="State\States\ConnectMenu.cs" />
-    <Compile Include="State\States\NewLobbyMenu.cs" />
+    <Compile Include="State\States\MainMenu.cs" />
+    <Compile Include="State\States\LobbyMenu.cs" />
     <Compile Include="State\States\OptionsMenu.cs" />
     <Compile Include="State\States\GameScreen.cs" />
     <Compile Include="State\States\LobbyScreen.cs" />

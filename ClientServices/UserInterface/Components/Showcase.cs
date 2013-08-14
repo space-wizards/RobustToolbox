@@ -21,15 +21,26 @@ namespace ClientServices.UserInterface.Components
         private readonly IResourceManager _resourceManager;
         private readonly SimpleImage _selectionGlow;
 
-        public int AdditionalColumns = 2;
-        //Number of additional visible columns beside the selection. 1 = 3 total visible. selection + 1 left + 1 right.
+        public int AdditionalColumns = 2;//Number of additional visible columns beside the selection. 1 = 3 total visible. selection + 1 left + 1 right.
 
         public int ItemSpacing = 10; //Additional space between items.
 
         public Size Size = new Size(300, 100);
         private ImageButton _buttonLeft;
         private ImageButton _buttonRight;
-        private int _selected;
+        private int _selected
+        {
+            get { return selected; }  
+            set 
+            { 
+                selected = value;
+                SelectionChanged(_items[selected].Key, _items[selected].Value);
+            }
+        }
+        private int selected;
+
+        public bool FadeItems = false;   //Fade out items to the sides?
+        public bool ShowArrows = false; //Show side arrows?
 
         public Showcase()
         {
@@ -115,6 +126,13 @@ namespace ClientServices.UserInterface.Components
             _items.Clear();
         }
 
+        public KeyValuePair<ImageButton, Object>? GetSelection()
+        {
+            if (_selected < 0 || _selected > _items.Count - 1 || _items.Count == 0)
+                return null;
+            else return _items[selected];
+        }
+
         public void RemoveItem(Object toRemove)
         {
             if (toRemove is ImageButton)
@@ -166,7 +184,9 @@ namespace ClientServices.UserInterface.Components
                     selected.Key.Position =
                         new Point(ClientArea.Left + (int) (ClientArea.Width/2f - selected.Key.ClientArea.Width/2f),
                                   ClientArea.Top + (int) (ClientArea.Height/2f - selected.Key.ClientArea.Height/2f));
-                    selected.Key.Color = Color.FromArgb(255, Color.White);
+                    if (FadeItems)
+                        selected.Key.Color = Color.FromArgb(255, Color.White);
+
                     selected.Key.Render();
 
                     int lastPosLeft = selected.Key.ClientArea.Left - ItemSpacing;
@@ -187,7 +207,10 @@ namespace ClientServices.UserInterface.Components
                                                                   (ClientArea.Height/2f -
                                                                    selectedLeft.Key.ClientArea.Height/2f));
                             lastPosLeft = selectedLeft.Key.ClientArea.Left - ItemSpacing;
-                            selectedLeft.Key.Color = Color.FromArgb((int) (baseAlpha/alphaAdj), Color.White);
+
+                            if (FadeItems)
+                                selectedLeft.Key.Color = Color.FromArgb((int) (baseAlpha/alphaAdj), Color.White);
+
                             selectedLeft.Key.Render();
                         }
 
@@ -201,15 +224,21 @@ namespace ClientServices.UserInterface.Components
                                                                    (ClientArea.Height/2f -
                                                                     selectedRight.Key.ClientArea.Height/2f));
                             lastPosRight = selectedRight.Key.ClientArea.Right + ItemSpacing;
-                            selectedRight.Key.Color = Color.FromArgb((int) (baseAlpha/alphaAdj), Color.White);
+
+                            if (FadeItems)
+                                selectedRight.Key.Color = Color.FromArgb((int) (baseAlpha/alphaAdj), Color.White);
+
                             selectedRight.Key.Render();
                         }
                     }
                 }
             }
 
-            _buttonLeft.Render();
-            _buttonRight.Render();
+            if (ShowArrows)
+            {
+                _buttonLeft.Render();
+                _buttonRight.Render();
+            }
 
             //Gorgon.CurrentRenderTarget.Rectangle(ClientArea.X, ClientArea.Y, ClientArea.Width, ClientArea.Height, System.Drawing.Color.DarkOrange);
         }
@@ -259,8 +288,12 @@ namespace ClientServices.UserInterface.Components
         {
             if (ClientArea.Contains(new Point((int) e.Position.X, (int) e.Position.Y)))
             {
-                if (_buttonLeft.MouseDown(e)) return true;
-                if (_buttonRight.MouseDown(e)) return true;
+
+                if (ShowArrows)
+                {
+                    if (_buttonLeft.MouseDown(e)) return true;
+                    if (_buttonRight.MouseDown(e)) return true;
+                }
 
                 if (_items.Count > 0)
                 {

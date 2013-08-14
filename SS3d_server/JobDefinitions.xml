@@ -82,28 +82,28 @@
       <Name>Command</Name>
       <Description>The Command Department is responsible for assigning Tasks, overseeing Work and Security on the Station.</Description>
       <DepartmentIcon>depa_command</DepartmentIcon>
-      <DepartmentColorHex>#FFFF33</DepartmentColorHex>
+      <DepartmentColorHex>#e13129</DepartmentColorHex>
     </DepartmentDefinition>
 
     <DepartmentDefinition>
       <Name>Engineering</Name>
       <Description>The Engineering Department deals with technical Problems on the Station as well as working things like the Engine.</Description>
       <DepartmentIcon>depa_engineering</DepartmentIcon>
-      <DepartmentColorHex>#FFFF33</DepartmentColorHex>
+      <DepartmentColorHex>#ff9900</DepartmentColorHex>
     </DepartmentDefinition>
 
     <DepartmentDefinition>
       <Name>Research</Name>
       <Description>The Research Department has various Jobs ranging from Plasma Research to Medical Jobs.</Description>
       <DepartmentIcon>depa_research</DepartmentIcon>
-      <DepartmentColorHex>#FFFF33</DepartmentColorHex>
+      <DepartmentColorHex>#846ec2</DepartmentColorHex>
     </DepartmentDefinition>
 
     <DepartmentDefinition>
       <Name>Civilian</Name>
       <Description>The Civilian Department encompasses a wide Range of various Jobs. Jobs include things like Janitor, Chef or the Clown.</Description>
       <DepartmentIcon>depa_civilian</DepartmentIcon>
-      <DepartmentColorHex>#FFFF33</DepartmentColorHex>
+      <DepartmentColorHex>#67a9eb</DepartmentColorHex>
     </DepartmentDefinition>
     
   </DepartmentDefinitions>

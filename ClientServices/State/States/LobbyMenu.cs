@@ -34,6 +34,7 @@ namespace ClientServices.State.States
         private readonly Label _lblServer;
         private readonly Label _lblServerInfo;
         private readonly SimpleImage _mainbg;
+        private SimpleImage _imgChatBg;
 
         private readonly List<Label> _serverLabels = new List<Label>();
 
@@ -142,8 +143,18 @@ namespace ClientServices.State.States
 
             _tabs.SelectTab(_tabJob);
 
-            _lobbyChat = new Chatbox(ResourceManager, UserInterfaceManager, KeyBindingManager);
-            _lobbyChat.Resize();
+            _lobbyChat = new Chatbox(ResourceManager, UserInterfaceManager, KeyBindingManager)
+                {
+                    Size = new Vector2D(780,225),
+                };
+
+            _lobbyChat.Update(0);
+
+            _imgChatBg = new SimpleImage()
+            {
+                Sprite = "lobby_chatbg",
+            };
+
             _lobbyChat.TextSubmitted += new Chatbox.TextSubmitHandler(_lobbyChat_TextSubmitted);
 
         }
@@ -298,6 +309,7 @@ namespace ClientServices.State.States
             UserInterfaceManager.AddComponent(_mainbg);
             UserInterfaceManager.AddComponent(_imgStatus);
             UserInterfaceManager.AddComponent(_tabs);
+            UserInterfaceManager.AddComponent(_imgChatBg);
             UserInterfaceManager.AddComponent(_lobbyChat);
 
             foreach (Label curr in _serverLabels)
@@ -311,6 +323,7 @@ namespace ClientServices.State.States
             UserInterfaceManager.RemoveComponent(_mainbg);
             UserInterfaceManager.RemoveComponent(_imgStatus);
             UserInterfaceManager.RemoveComponent(_tabs);
+            UserInterfaceManager.RemoveComponent(_imgChatBg);
             UserInterfaceManager.RemoveComponent(_lobbyChat);
 
             foreach (Label curr in _serverLabels)
@@ -346,7 +359,8 @@ namespace ClientServices.State.States
 
             _tabs.Position = _mainbg.Position + new Size(5, 90);
 
-            _lobbyChat.Position = new Point(_mainbg.ClientArea.Left + 10, _mainbg.ClientArea.Bottom - _lobbyChat.ClientArea.Height - 15);
+            _lobbyChat.Position = new Point(_mainbg.ClientArea.Left + 12, _mainbg.ClientArea.Bottom - _lobbyChat.ClientArea.Height - 12); //Wish the chat box wasnt such shit. Then i wouldnt have to do this here.
+            _imgChatBg.Position = new Point(_lobbyChat.ClientArea.Left - 6, _lobbyChat.ClientArea.Top - 9);
         }
 
         #endregion

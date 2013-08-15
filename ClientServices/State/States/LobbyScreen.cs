@@ -46,7 +46,6 @@ namespace ClientServices.State.States
             _lobbyChat.TextSubmitted += LobbyChatTextSubmitted;
 
             _lobbyChat.Update(0);
-            _lobbyChat.Position = new Point(5, 500);
 
             UserInterfaceManager.AddComponent(_lobbyChat);
 

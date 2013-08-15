@@ -25,7 +25,7 @@ namespace ClientServices.UserInterface.Components
         private SimpleImage _imgJobFluff;
         private SimpleImage _imgDepGrad;
         public SimpleImage _imgJobGrad;
-        public SimpleImage _imgTest;
+
 
         public JobTab(string uniqueName, Size size, IResourceManager resourceManager)
             : base(uniqueName, size, resourceManager)
@@ -128,13 +128,7 @@ namespace ClientServices.UserInterface.Components
             };
             _lbljobDesc.Position = new Point(3, _lbljobName.ClientArea.Bottom + 5);
 
-            _imgTest = new SimpleImage()
-            {
-                Sprite = "lobby_test",
-            };
-            _imgTest.Position = new Point(33, 33);
-
-            _bttReady.Position = new Point(ClientArea.Width - _bttReady.ClientArea.Width - 5, _imgJobDesc.ClientArea.Bottom);
+            _bttReady.Position = new Point(ClientArea.Width - _bttReady.ClientArea.Width - 5, _imgJobDesc.ClientArea.Bottom + 4);
 
             components.Add(_lblDep);
             components.Add(_imgWhatDep);
@@ -147,7 +141,6 @@ namespace ClientServices.UserInterface.Components
             components.Add(_lbljobDesc);
             components.Add(_lbljobName);
             components.Add(_bttReady);
-            //components.Add(_imgTest);
         }
 
         void _bttReady_Clicked(ImageButton sender)

@@ -34,7 +34,7 @@ namespace ClientServices.UserInterface.Components
         private readonly IResourceManager _resourceManager;
         private readonly IUserInterfaceManager _userInterfaceManager;
 
-        private Vector2D Size;
+        public Vector2D Size = new Vector2D(475, 175);
 
         private bool _active;
         private bool _disposing;
@@ -49,12 +49,8 @@ namespace ClientServices.UserInterface.Components
             _userInterfaceManager = userInterfaceManager;
             _keyBindingManager = keyBindingManager;
 
-            const int width = 475;
-            const int height = 175;
+            Position = new Point(Gorgon.CurrentClippingViewport.Width - (int)Size.X - 10, 10);
 
-            Position = new Point(Gorgon.CurrentClippingViewport.Width - width - 10, 10);
-
-            Size = new Vector2D(width, height);
             ClientArea = new Rectangle(Position.X, Position.Y, (int) Size.X, (int) Size.Y);
 
             _textInputLabel = new Label("", "CALIBRI", _resourceManager)
@@ -311,6 +307,7 @@ namespace ClientServices.UserInterface.Components
         {
             base.Update(frameTime);
             ClientArea = new Rectangle(Position.X, Position.Y, (int) Size.X, (int) Size.Y);
+            _textInputLabel.Text.Size = new Size(ClientArea.Width - 10, 12);
             _textInputLabel.Update(frameTime);
             foreach (Label l in _entries) l.Update(frameTime);
         }

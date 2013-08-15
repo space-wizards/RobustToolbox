@@ -105,6 +105,13 @@
       <DepartmentIcon>depa_civilian</DepartmentIcon>
       <DepartmentColorHex>#67a9eb</DepartmentColorHex>
     </DepartmentDefinition>
+
+    <DepartmentDefinition>
+      <Name>GET OUT</Name>
+      <Description>Clown fartés.</Description>
+      <DepartmentIcon>depa_frog</DepartmentIcon>
+      <DepartmentColorHex>#67eb76</DepartmentColorHex>
+    </DepartmentDefinition>
     
   </DepartmentDefinitions>
   

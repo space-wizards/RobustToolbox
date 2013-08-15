@@ -151,26 +151,35 @@ namespace ClientServices.UserInterface.Components
                 }
             }
 
-            if (ShowArrows)
+            if (ShowArrows && ScrollingNeeded())
             {
                 _buttonLeft.Render();
                 _buttonRight.Render();
             }
         }
 
+        public bool ScrollingNeeded()
+        {
+            if (1 + (AdditionalColumns * 2) < _items.Count) return true;
+            return false;
+        }
+
         public override bool MouseWheelMove(MouseInputEventArgs e)
         {
             if (ClientArea.Contains(new Point((int) e.Position.X, (int) e.Position.Y)))
             {
-                if (e.WheelDelta > 0)
+                if (ScrollingNeeded())
                 {
-                    if (ScrollOffset + 1 <= _items.Count - 1) ScrollOffset++;
-                    return true;
-                }
-                else if (e.WheelDelta < 0)
-                {
-                    if (ScrollOffset - 1 >= 0) ScrollOffset--;
-                    return true;
+                    if (e.WheelDelta > 0)
+                    {
+                        if (ScrollOffset + 1 <= _items.Count - 1) ScrollOffset++;
+                        return true;
+                    }
+                    else if (e.WheelDelta < 0)
+                    {
+                        if (ScrollOffset - 1 >= 0) ScrollOffset--;
+                        return true;
+                    }
                 }
             }
             return false;
@@ -195,7 +204,7 @@ namespace ClientServices.UserInterface.Components
             if (ClientArea.Contains(new Point((int) e.Position.X, (int) e.Position.Y)))
             {
 
-                if (ShowArrows)
+                if (ShowArrows && ScrollingNeeded())
                 {
                     if (_buttonLeft.MouseDown(e)) return true;
                     if (_buttonRight.MouseDown(e)) return true;

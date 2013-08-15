@@ -73,6 +73,31 @@
       <Name>Geneticist</Name>
       <Department>Research</Department>
     </JobDefinition>
+
+    <JobDefinition>
+      <Available>true</Available>
+      <Description>Responsible for embiggening the Wall Tops.</Description>
+      <JobIcon>job_enlarger</JobIcon>
+      <MaxNum>3</MaxNum>
+      <Name>Top Enlarger</Name>
+      <Department>Wall Research</Department>
+    </JobDefinition>
+    <JobDefinition>
+      <Available>true</Available>
+      <Description>Calculates perfect Wall Heights.</Description>
+      <JobIcon>job_height</JobIcon>
+      <MaxNum>3</MaxNum>
+      <Name>Height Negotiator</Name>
+      <Department>Wall Research</Department>
+    </JobDefinition>
+    <JobDefinition>
+      <Available>true</Available>
+      <Description>Ensures that all Walls on the Station meet certain Thickness Standards.</Description>
+      <JobIcon>job_thick</JobIcon>
+      <MaxNum>2</MaxNum>
+      <Name>Thickness Surveyor</Name>
+      <Department>Wall Research</Department>
+    </JobDefinition>
     
   </JobDefinitions>
   
@@ -107,10 +132,10 @@
     </DepartmentDefinition>
 
     <DepartmentDefinition>
-      <Name>GET OUT</Name>
-      <Description>Clown fartés.</Description>
-      <DepartmentIcon>depa_frog</DepartmentIcon>
-      <DepartmentColorHex>#67eb76</DepartmentColorHex>
+      <Name>Wall Research</Name>
+      <Description>BLAH</Description>
+      <DepartmentIcon>depa_wall</DepartmentIcon>
+      <DepartmentColorHex>#48b04f</DepartmentColorHex>
     </DepartmentDefinition>
     
   </DepartmentDefinitions>

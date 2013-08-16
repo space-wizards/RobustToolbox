@@ -17,6 +17,10 @@ namespace ServerServices.ServerConsole
         private string currentBuffer = "";
         private int historyIndex;
         private int internalCursor;
+        private string tabCompleteBuffer = "";
+        private List<string> tabCompleteList = new List<string>();
+        private int tabCompleteIndex;
+        private ConsoleKey lastKeyPressed = ConsoleKey.NoName;
 
         public ConsoleManager()
         {
@@ -99,7 +103,21 @@ namespace ServerServices.ServerConsole
                             if (internalCursor < currentBuffer.Length)
                                 internalCursor++;
                             break;
+                        case ConsoleKey.Tab:
+                            if (lastKeyPressed != ConsoleKey.Tab)
+                            {
+                                tabCompleteList.Clear();
+                                tabCompleteBuffer = currentBuffer;
+                            }
+                            string tabCompleteResult = TabComplete();
+                            if (tabCompleteResult != String.Empty)
+                            {
+                                currentBuffer = tabCompleteResult;
+                                internalCursor = currentBuffer.Length;
+                            }
+                            break;
                     }
+                    lastKeyPressed = key.Key;
                     DrawCommandLine();
                 }
             }
@@ -233,6 +251,31 @@ namespace ServerServices.ServerConsole
             {
                 Con.WriteLine("Command '" + args[0] + "' not found.");
             }
+        }
+
+        private string TabComplete()
+        {
+            if (currentBuffer.Trim() == String.Empty)
+            {
+                return String.Empty;
+            }
+
+            if (tabCompleteList.Count == 0)
+            {
+                tabCompleteList = availableCommands.Keys.Where(key => key.StartsWith(currentBuffer)).ToList();
+                if (tabCompleteList.Count == 0)
+                {
+                    return String.Empty;
+                }
+            }
+
+            if (tabCompleteIndex + 1 > tabCompleteList.Count)
+            {
+                tabCompleteIndex = 0;
+            }
+            string result = tabCompleteList[tabCompleteIndex];
+            tabCompleteIndex++;
+            return result;
         }
     }
 }

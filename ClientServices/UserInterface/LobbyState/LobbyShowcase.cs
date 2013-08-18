@@ -87,18 +87,18 @@ namespace ClientServices.UserInterface.Components
                     ScrollOffset = 0;
                 else
                 {
-                    if (_selectionGlow != null && Selected == ScrollOffset)
-                    {
-                        _selectionGlow.Position = new Point(ItemOffsets.Width + ClientArea.Left + (int)(ClientArea.Width / 2f - _selectionGlow.ClientArea.Width / 2f), ItemOffsets.Height + ClientArea.Top + (int)(ClientArea.Height / 2f - _selectionGlow.ClientArea.Height / 2f));
-                        _selectionGlow.Render();
-                    }
-
                     KeyValuePair<ImageButton, Object> middle = _items[ScrollOffset];
                     middle.Key.Position =
                         new Point(ItemOffsets.Width + ClientArea.Left + (int)(ClientArea.Width / 2f - middle.Key.ClientArea.Width / 2f),
                                   ItemOffsets.Height + ClientArea.Top + (int)(ClientArea.Height / 2f - middle.Key.ClientArea.Height / 2f));
                     if (FadeItems)
                         middle.Key.Color = Color.FromArgb(255, Color.White);
+
+                    if (_selectionGlow != null && Selected == ScrollOffset)
+                    {
+                        _selectionGlow.Position = new Point(ItemOffsets.Width + ClientArea.Left + (int)(ClientArea.Width / 2f - _selectionGlow.ClientArea.Width / 2f), middle.Key.ClientArea.Top + (int)(middle.Key.ClientArea.Height / 2f - _selectionGlow.ClientArea.Height / 2f));
+                        _selectionGlow.Render();
+                    }
 
                     middle.Key.Render();
 

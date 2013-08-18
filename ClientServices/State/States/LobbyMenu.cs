@@ -41,7 +41,7 @@ namespace ClientServices.State.States
         private readonly TabContainer _tabCharacter;
         private readonly JobTab _tabJob;
         private readonly TabContainer _tabObserve;
-        private readonly TabContainer _tabServer;
+        private readonly PlayerListTab _tabServer;
         private readonly TabbedMenu _tabs;
 
         private float _lastLblSpacing = 10;
@@ -52,6 +52,14 @@ namespace ClientServices.State.States
 
         List<KeyValuePair<DepartmentDefinition, List<JobDefinition>>> sortedJobs = new List<KeyValuePair<DepartmentDefinition, List<JobDefinition>>>();
         private Chatbox _lobbyChat;
+
+        private string _serverName;
+        private int _serverPort;
+        private string _welcomeString;
+        private int _serverMaxPlayers;
+        private int _serverPlayers;
+        private string _serverMapName;
+        private string _gameType;
 
         #endregion
 
@@ -135,7 +143,7 @@ namespace ClientServices.State.States
                               };
             _tabs.AddTab(_tabObserve);
 
-            _tabServer = new TabContainer("lobbyTabServer", new Size(793, 450), ResourceManager)
+            _tabServer = new PlayerListTab("lobbyTabServer", new Size(793, 450), ResourceManager)
                              {
                                  tabSpriteName = "lobby_tab_info"
                              };
@@ -188,18 +196,14 @@ namespace ClientServices.State.States
                             string text = message.ReadString();
                             //AddChat(text);
                             break;
-                        case NetMessage.PlayerCount:
-                            var newCount = message.ReadByte();
-                            _lblPlayersInfo.Text.Text = newCount.ToString();
-                            break;
                         case NetMessage.PlayerList:
-                            //HandlePlayerList(message);
+                            HandlePlayerList(message);
                             break;
                         case NetMessage.WelcomeMessage:
-                            //HandleWelcomeMessage(message);
+                            HandleWelcomeMessage(message);
                             break;
                         case NetMessage.ChatMessage:
-                            //HandleChatMessage(message);
+                            HandleChatMessage(message);
                             break;
                         case NetMessage.JobList:
                             HandleJobList(message);
@@ -212,6 +216,45 @@ namespace ClientServices.State.States
                             break;
                     }
                     break;
+            }
+        }
+
+        private void HandleWelcomeMessage(NetIncomingMessage msg)
+        {
+            _serverName = msg.ReadString();
+            _serverPort = msg.ReadInt32();
+            _welcomeString = msg.ReadString();
+            _serverMaxPlayers = msg.ReadInt32();
+            _serverMapName = msg.ReadString();
+            _gameType = msg.ReadString();
+        }
+
+        private void HandleChatMessage(NetIncomingMessage msg)
+        {
+            var channel = (ChatChannel)msg.ReadByte();
+            string text = msg.ReadString();
+            string message = "[" + channel + "] " + text;
+            _lobbyChat.AddLine(message, ChatChannel.Lobby);
+        }
+
+        private void HandlePlayerList(NetIncomingMessage message)
+        {
+            byte playerCount = message.ReadByte();
+            _serverPlayers = playerCount;
+            _tabServer._scPlayerList.components.Clear();
+            int offY = 0;
+            for (int i = 0; i < playerCount; i++)
+            {
+                string currName = message.ReadString();
+                var currStatus = (SessionStatus)message.ReadByte();
+                float currRoundtrip = message.ReadFloat();
+
+                Label newLabel = new Label(currName + "\t\tStatus: " + currStatus + "\t\tLatency: " + Math.Truncate(currRoundtrip * 1000) + " ms", "MICROGBE", ResourceManager);
+                newLabel.Position = new Point(0, offY);
+                newLabel.TextColor = Color.Black;
+                newLabel.Update(0);
+                offY += newLabel.ClientArea.Height;
+                _tabServer._scPlayerList.components.Add(newLabel);
             }
         }
 
@@ -316,6 +359,14 @@ namespace ClientServices.State.States
                 UserInterfaceManager.AddComponent(curr);
 
             NetworkManager.MessageArrived += NetworkManagerMessageArrived;
+
+            NetOutgoingMessage message = NetworkManager.CreateMessage();
+            message.Write((byte)NetMessage.WelcomeMessage); //Request Welcome msg.
+            NetworkManager.SendMessage(message, NetDeliveryMethod.ReliableOrdered);
+
+            NetOutgoingMessage playerListMsg = NetworkManager.CreateMessage();
+            playerListMsg.Write((byte)NetMessage.PlayerList); //Request Playerlist.
+            NetworkManager.SendMessage(playerListMsg, NetDeliveryMethod.ReliableOrdered);
         }
 
         public void Shutdown()
@@ -344,18 +395,22 @@ namespace ClientServices.State.States
 
             _lblServer.Position = new Point((int) _recStatus.Left + 5, (int) _recStatus.Top + 2);
             _lblServerInfo.Position = new Point(_lblServer.ClientArea.Right, _lblServer.ClientArea.Y);
+            _lblServerInfo.Text.Text = _serverName;
 
             _lblMode.Position = new Point(_lblServerInfo.ClientArea.Right + (int) _lastLblSpacing,
                                           _lblServerInfo.ClientArea.Y);
             _lblModeInfo.Position = new Point(_lblMode.ClientArea.Right, _lblMode.ClientArea.Y);
+            _lblModeInfo.Text.Text = _gameType;
 
             _lblPlayers.Position = new Point(_lblModeInfo.ClientArea.Right + (int) _lastLblSpacing,
                                              _lblModeInfo.ClientArea.Y);
             _lblPlayersInfo.Position = new Point(_lblPlayers.ClientArea.Right, _lblPlayers.ClientArea.Y);
+            _lblPlayersInfo.Text.Text = _serverPlayers.ToString() + " / " + _serverMaxPlayers.ToString();
 
             _lblPort.Position = new Point(_lblPlayersInfo.ClientArea.Right + (int) _lastLblSpacing,
                                           _lblPlayersInfo.ClientArea.Y);
             _lblPortInfo.Position = new Point(_lblPort.ClientArea.Right, _lblPort.ClientArea.Y);
+            _lblPortInfo.Text.Text = _serverPort.ToString();
 
             _tabs.Position = _mainbg.Position + new Size(5, 90);
 

@@ -12,6 +12,7 @@
           <Parameter name="basename" type="string" value="toolbox_r" />
         </Parameters>
       </Component>
+      <Component name="PhysicsComponent"></Component>
       <Component name="ClickableComponent"></Component>
       <Component name="BasicItemComponent"></Component>
     </Components>

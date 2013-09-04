@@ -139,12 +139,32 @@ namespace CGO
                 Velocity = new Vector2D(0f, 0f);
             }
 
-            UpdatePosition(frameTime);
-        }
+            Vector2D translationVector = Velocity*frameTime;
+            var velcomp = Owner.GetComponent<VelocityComponent>(ComponentFamily.Velocity);
 
-        private void UpdatePosition(float frameTime)
-        {
-            Translate(Velocity*frameTime);
+            bool translated = TryTranslate(translationVector, false); //Only bump once...
+            bool translatedx = false, translatedy = false;
+            if (!translated)
+                translatedx = TryTranslate(new Vector2D(translationVector.X, 0), true);
+            if (!translated && !translatedx)
+                translatedy = TryTranslate(new Vector2D(0, translationVector.Y), true);
+
+            if (!translated)
+            {
+                if (!translatedx)
+                    velcomp.Velocity = new Vector2D(0, velcomp.Velocity.Y);
+                if (!translatedy)
+                    velcomp.Velocity = new Vector2D(velcomp.Velocity.X, 0);
+                if (!translatedx && !translatedy)
+                    velcomp.Velocity = Vector2D.Zero;
+            }
+
+            if (_moveTimeCache >= MoveRateLimit)
+            {
+                SendPositionUpdate();
+
+                _moveTimeCache = 0;
+            }
         }
 
         private void SetMoveDir(Direction movedir)
@@ -159,21 +179,20 @@ namespace CGO
         {
             Owner.SendComponentNetworkMessage(this,
                                               NetDeliveryMethod.ReliableUnordered,
-                                              Owner.GetComponent<TransformComponent>(ComponentFamily.Transform).Position
-                                                  .X,
-                                              Owner.GetComponent<TransformComponent>(ComponentFamily.Transform).Position
-                                                  .Y,
                                               Owner.GetComponent<VelocityComponent>(ComponentFamily.Velocity).Velocity.X,
                                               Owner.GetComponent<VelocityComponent>(ComponentFamily.Velocity).Velocity.Y);
         }
 
-        public void PlainTranslate(float x, float y)
+        /// <summary>
+        /// Moves the entity and sends an update packet to the serverside mover component.
+        /// </summary>
+        /// <param name="translationVector"></param>
+        public virtual void Translate(Vector2D translationVector)
         {
-            Vector2D delta = new Vector2D(x, y) -
-                             Owner.GetComponent<TransformComponent>(ComponentFamily.Transform).Position;
+            Vector2D oldPos = Owner.GetComponent<TransformComponent>(ComponentFamily.Transform).Position;
 
-            Owner.GetComponent<TransformComponent>(ComponentFamily.Transform).Position = new Vector2D(x, y);
-
+            Owner.GetComponent<TransformComponent>(ComponentFamily.Transform).Position += translationVector;
+            Vector2D delta = Owner.GetComponent<TransformComponent>(ComponentFamily.Transform).Position - oldPos;
             if (delta.X > 0 && delta.Y > 0)
                 SetMoveDir(Direction.SouthEast);
             if (delta.X > 0 && delta.Y < 0)
@@ -190,51 +209,7 @@ namespace CGO
                 SetMoveDir(Direction.South);
             if (delta.Y < 0 && delta.X == 0)
                 SetMoveDir(Direction.North);
-
-            //Owner.Moved();
-        }
-
-        /// <summary>
-        /// Moves the entity and sends an update packet to the serverside mover component.
-        /// </summary>
-        /// <param name="translationVector"></param>
-        public virtual void Translate(Vector2D translationVector)
-        {
-            Vector2D oldPos = Owner.GetComponent<TransformComponent>(ComponentFamily.Transform).Position;
-
-            bool translated = TryTranslate(translationVector, false); //Only bump once...
-            if (!translated)
-                translated = TryTranslate(new Vector2D(translationVector.X, 0), true);
-            if (!translated)
-                translated = TryTranslate(new Vector2D(0, translationVector.Y), true);
-            if (translated)
-            {
-                Vector2D delta = Owner.GetComponent<TransformComponent>(ComponentFamily.Transform).Position - oldPos;
-                if (delta.X > 0 && delta.Y > 0)
-                    SetMoveDir(Direction.SouthEast);
-                if (delta.X > 0 && delta.Y < 0)
-                    SetMoveDir(Direction.NorthEast);
-                if (delta.X < 0 && delta.Y > 0)
-                    SetMoveDir(Direction.SouthWest);
-                if (delta.X < 0 && delta.Y < 0)
-                    SetMoveDir(Direction.NorthWest);
-                if (delta.X > 0 && delta.Y == 0)
-                    SetMoveDir(Direction.East);
-                if (delta.X < 0 && delta.Y == 0)
-                    SetMoveDir(Direction.West);
-                if (delta.Y > 0 && delta.X == 0)
-                    SetMoveDir(Direction.South);
-                if (delta.Y < 0 && delta.X == 0)
-                    SetMoveDir(Direction.North);
-
-
-                if (_moveTimeCache >= MoveRateLimit)
-                {
-                    SendPositionUpdate();
-
-                    _moveTimeCache = 0;
-                }
-            }
+            
             //Owner.Moved();
         }
 
@@ -250,6 +225,7 @@ namespace CGO
             Owner.GetComponent<TransformComponent>(ComponentFamily.Transform).Position += translationVector;
             // We move the sprite here rather than the position, as we can then use its updated AABB values.
             //Check collision.
+            bool ret = true;
             ComponentReplyMessage reply = Owner.SendMessage(this, ComponentFamily.Collider,
                                                             ComponentMessageType.CheckCollision, false);
             if (reply.MessageType == ComponentMessageType.CollisionStatus)
@@ -258,10 +234,11 @@ namespace CGO
                 if (colliding) //Collided, reset position and return false.
                 {
                     Owner.GetComponent<TransformComponent>(ComponentFamily.Transform).Position = oldPosition;
-                    return false;
+                    ret = false;
                 }
             }
-            return true;
+            Owner.GetComponent<TransformComponent>(ComponentFamily.Transform).Position = oldPosition;
+            return ret;
         }
     }
 }

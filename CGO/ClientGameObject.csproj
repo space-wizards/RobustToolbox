@@ -81,6 +81,7 @@
     <Compile Include="Component\Mover\KeyBindingMoverComponent.cs" />
     <Compile Include="Component\Mover\NetworkMoverComponent.cs" />
     <Compile Include="Component\Mover\SlaveMoverComponent.cs" />
+    <Compile Include="Component\Physics\PhysicsComponent.cs" />
     <Compile Include="Component\PlayerActionComp\PlayerActionCompC.cs" />
     <Compile Include="Component\Renderable\Speechbubble.cs" />
     <Compile Include="Component\Renderable\WearableSpriteComponent.cs" />
@@ -92,10 +93,13 @@
     <Compile Include="Component\Transform\TransformComponent.cs" />
     <Compile Include="Component\Velocity\VelocityComponent.cs" />
     <Compile Include="ContextMenuEntry.cs" />
+    <Compile Include="Vector2.cs" />
     <None Include="Entity.cs" />
     <Compile Include="EntityManager.cs" />
     <Compile Include="EntityNetworkManager.cs" />
     <Compile Include="Component\Input\KeyBindingInputComponent.cs" />
+    <Compile Include="EntitySystems\PhysicsSystem.cs" />
+    <Compile Include="EntitySystems\TestSystem.cs" />
     <Compile Include="PlayerActions\ExampleAction.cs" />
     <Compile Include="PlayerActions\PlayerActionC.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />

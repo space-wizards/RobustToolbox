@@ -12,6 +12,7 @@
           <Parameter name="basename" type="string" value="shoes" />
         </Parameters>
       </Component>
+      <Component name="PhysicsComponent"></Component>
       <Component name="ClickableComponent"></Component>
       <Component name="BasicItemComponent"></Component>
       <Component name="EquippableComponent"></Component>
@@ -28,6 +29,7 @@
           <Parameter name="basename" type="string" value="helmet" />
         </Parameters>
       </Component>
+      <Component name="PhysicsComponent"></Component>
       <Component name="ClickableComponent"></Component>
       <Component name="BasicItemComponent"></Component>
       <Component name="EquippableComponent"></Component>
@@ -45,6 +47,7 @@
           <Parameter name="basename" type="string" value="jumpsuit" />
         </Parameters>
       </Component>
+      <Component name="PhysicsComponent"></Component>
       <Component name="ClickableComponent"></Component>
       <Component name="BasicItemComponent"></Component>
       <Component name="EquippableComponent"></Component>
@@ -61,6 +64,7 @@
           <Parameter name="basename" type="string" value="janitorsuit" />
         </Parameters>
       </Component>
+      <Component name="PhysicsComponent"></Component>
       <Component name="ClickableComponent"></Component>
       <Component name="BasicItemComponent"></Component>
       <Component name="EquippableComponent"></Component>
@@ -77,6 +81,7 @@
           <Parameter name="basename" type="string" value="medicsuit" />
         </Parameters>
       </Component>
+      <Component name="PhysicsComponent"></Component>
       <Component name="ClickableComponent"></Component>
       <Component name="BasicItemComponent"></Component>
       <Component name="EquippableComponent"></Component>
@@ -93,6 +98,7 @@
           <Parameter name="basename" type="string" value="biosuit" />
         </Parameters>
       </Component>
+      <Component name="PhysicsComponent"></Component>
       <Component name="ClickableComponent"></Component>
       <Component name="BasicItemComponent"></Component>
       <Component name="EquippableComponent"></Component>
@@ -110,6 +116,7 @@
           <Parameter name="basename" type="string" value="gloves_surgical" />
         </Parameters>
       </Component>
+      <Component name="PhysicsComponent"></Component>
       <Component name="ClickableComponent"></Component>
       <Component name="BasicItemComponent"></Component>
       <Component name="EquippableComponent"></Component>
@@ -126,6 +133,7 @@
           <Parameter name="basename" type="string" value="medshoes" />
         </Parameters>
       </Component>
+      <Component name="PhysicsComponent"></Component>
       <Component name="ClickableComponent"></Component>
       <Component name="BasicItemComponent"></Component>
       <Component name="EquippableComponent"></Component>
@@ -142,6 +150,7 @@
           <Parameter name="basename" type="string" value="surgicalmask" />
         </Parameters>
       </Component>
+      <Component name="PhysicsComponent"></Component>
       <Component name="ClickableComponent"></Component>
       <Component name="BasicItemComponent"></Component>
       <Component name="EquippableComponent"></Component>
@@ -158,6 +167,7 @@
           <Parameter name="basename" type="string" value="surgicalgown" />
         </Parameters>
       </Component>
+      <Component name="PhysicsComponent"></Component>
       <Component name="ClickableComponent"></Component>
       <Component name="BasicItemComponent"></Component>
       <Component name="EquippableComponent"></Component>
@@ -174,6 +184,7 @@
           <Parameter name="basename" type="string" value="armour" />
         </Parameters>
       </Component>
+      <Component name="PhysicsComponent"></Component>
       <Component name="ClickableComponent"></Component>
       <Component name="BasicItemComponent"></Component>
       <Component name="EquippableComponent"></Component>
@@ -191,6 +202,7 @@
           <Parameter name="basename" type="string" value="bluegloves" />
         </Parameters>
       </Component>
+      <Component name="PhysicsComponent"></Component>
       <Component name="ClickableComponent"></Component>
       <Component name="BasicItemComponent"></Component>
       <Component name="EquippableComponent"></Component>
@@ -207,6 +219,7 @@
           <Parameter name="basename" type="string" value="galoshes" />
         </Parameters>
       </Component>
+      <Component name="PhysicsComponent"></Component>
       <Component name="ClickableComponent"></Component>
       <Component name="BasicItemComponent"></Component>
       <Component name="EquippableComponent"></Component>

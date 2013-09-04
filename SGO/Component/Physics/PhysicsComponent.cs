@@ -5,6 +5,7 @@ using SS13.IoC;
 using SS13_Shared;
 using SS13_Shared.GO;
 using SS13_Shared.GO.Component.Mover;
+using SS13_Shared.GO.Component.Physics;
 using ServerInterfaces.Map;
 using ServerInterfaces.Tiles;
 
@@ -62,6 +63,11 @@ namespace SGO
         {
             List<ComponentParameter> cparams = base.GetParameters();
             return cparams;
+        }
+
+        public override ComponentState GetComponentState()
+        {
+            return new PhysicsComponentState(Mass);
         }
     }
 }

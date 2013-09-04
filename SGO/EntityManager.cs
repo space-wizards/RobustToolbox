@@ -59,12 +59,7 @@ namespace SGO
             }
             return stateEntities;
         }
-
-        public void Update(float frameTime)
-        {
-            EntitySystemManager.Update(frameTime);
-        }
-
+        
         #endregion
 
         /// <summary>

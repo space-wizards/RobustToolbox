@@ -52,6 +52,7 @@ namespace SS13_Server
         private int _lastAnnounced;
 
         // State update vars
+        private float serverClock;
         private uint _lastState;
         private DateTime _lastStateTime = DateTime.Now;
         private uint _oldestAckedState;
@@ -224,6 +225,7 @@ namespace SS13_Server
             float elapsedTime;
 
             elapsedTime = (stopWatch.ElapsedTicks/millisecondsPerTick);
+            serverClock += elapsedTime/1000;
             //Elapsed time in milliseconds since the last tick
             stopWatch.Restart(); //Reset the stopwatch so we get elapsed time next time
 

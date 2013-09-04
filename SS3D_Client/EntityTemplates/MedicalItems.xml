@@ -12,6 +12,7 @@
           <Parameter name="basename" type="string" value="forceps" />
         </Parameters>
       </Component>
+      <Component name="PhysicsComponent"></Component>
       <Component name="ClickableComponent"></Component>
       <Component name="BasicItemComponent"></Component>
     </Components>
@@ -27,6 +28,7 @@
           <Parameter name="basename" type="string" value="medscanner" />
         </Parameters>
       </Component>
+      <Component name="PhysicsComponent"></Component>
       <Component name="ClickableComponent"></Component>
       <Component name="BasicItemComponent"></Component>
     </Components>
@@ -42,6 +44,7 @@
           <Parameter name="basename" type="string" value="saw" />
         </Parameters>
       </Component>
+      <Component name="PhysicsComponent"></Component>
       <Component name="ClickableComponent"></Component>
       <Component name="BasicItemComponent"></Component>
     </Components>
@@ -57,6 +60,7 @@
           <Parameter name="basename" type="string" value="scalpel" />
         </Parameters>
       </Component>
+      <Component name="PhysicsComponent"></Component>
       <Component name="ClickableComponent"></Component>
       <Component name="BasicItemComponent"></Component>
     </Components>
@@ -72,6 +76,7 @@
           <Parameter name="basename" type="string" value="syringegun" />
         </Parameters>
       </Component>
+      <Component name="PhysicsComponent"></Component>
       <Component name="ClickableComponent"></Component>
       <Component name="BasicItemComponent"></Component>
     </Components>
@@ -87,6 +92,7 @@
           <Parameter name="basename" type="string" value="vial" />
         </Parameters>
       </Component>
+      <Component name="PhysicsComponent"></Component>
       <Component name="ClickableComponent"></Component>
       <Component name="BasicItemComponent"></Component>
     </Components>
@@ -102,6 +108,7 @@
           <Parameter name="basename" type="string" value="vial_2" />
         </Parameters>
       </Component>
+      <Component name="PhysicsComponent"></Component>
       <Component name="ClickableComponent"></Component>
       <Component name="BasicItemComponent"></Component>
     </Components>
@@ -117,6 +124,7 @@
           <Parameter name="basename" type="string" value="medkit_r" />
         </Parameters>
       </Component>
+      <Component name="PhysicsComponent"></Component>
       <Component name="ClickableComponent"></Component>
       <Component name="BasicItemComponent"></Component>
     </Components>
@@ -132,6 +140,7 @@
           <Parameter name="basename" type="string" value="medkit_w" />
         </Parameters>
       </Component>
+      <Component name="PhysicsComponent"></Component>
       <Component name="ClickableComponent"></Component>
       <Component name="BasicItemComponent"></Component>
     </Components>
@@ -147,6 +156,7 @@
           <Parameter name="basename" type="string" value="bruisepack" />
         </Parameters>
       </Component>
+      <Component name="PhysicsComponent"></Component>
       <Component name="ClickableComponent"></Component>
       <Component name="BasicItemComponent"></Component>
     </Components>
@@ -162,6 +172,7 @@
           <Parameter name="basename" type="string" value="bandages" />
         </Parameters>
       </Component>
+      <Component name="PhysicsComponent"></Component>
       <Component name="ClickableComponent"></Component>
       <Component name="BasicItemComponent"></Component>
     </Components>

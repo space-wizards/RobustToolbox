@@ -40,6 +40,7 @@
           <Parameter name="basename" type="string" value="flashlight" />
         </Parameters>
       </Component>
+      <Component name="PhysicsComponent"></Component>
       <Component name="ClickableComponent"></Component>
       <Component name="BasicItemComponent"></Component>
       <Component name="FlashLightComponent">

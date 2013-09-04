@@ -186,9 +186,15 @@ namespace GasPropagationTest
             else if (e.RightButton == MouseButtonState.Pressed && Keyboard.IsKeyDown(Key.LeftAlt))
                 g.AddGas(20, GasType.Oxygen);
             else if (e.LeftButton == MouseButtonState.Pressed && Keyboard.IsKeyDown(Key.RightShift))
+            {
+                g.NextGasVel.X += 1000;
                 g.GasVel.X += 1000;
+            }
             else if (e.RightButton == MouseButtonState.Pressed && Keyboard.IsKeyDown(Key.RightShift))
+            {
+                g.NextGasVel.X += 100000;
                 g.GasVel.X += 100000;
+            }
             else if (e.LeftButton == MouseButtonState.Pressed && Keyboard.IsKeyDown(Key.LeftCtrl))
                 g.nextHeatEnergy += 100;
             else if (e.LeftButton == MouseButtonState.Pressed)

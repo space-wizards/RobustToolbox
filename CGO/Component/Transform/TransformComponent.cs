@@ -26,7 +26,7 @@ namespace CGO
                 Vector2D oldPosition = _position;
                 _position = value;
 
-                if (OnMove != null) OnMove(this, new VectorEventArgs(oldPosition, _position));
+                if (OnMove != null) OnMove(this, new VectorEventArgs(Vector2TypeConverter.ToVector2(oldPosition), Vector2TypeConverter.ToVector2(_position)));
             }
         }
 
@@ -75,11 +75,13 @@ namespace CGO
                 previousState = lastState;
             lastState = state;
             var toVector = new Vector2D(state.X, state.Y);
-            if ((toVector - Position).Length > 0.1f && (state.ForceUpdate
-                                                        ||
-                                                        Owner.GetComponent<KeyBindingInputComponent>(
-                                                            ComponentFamily.Input) == null
-                                                        || (toVector - Position).Length > 100.0f))
+            var diff = (toVector - Position).Length;
+            if (diff > 0.1f && 
+                (
+                    state.ForceUpdate
+                 || Owner.GetComponent<KeyBindingInputComponent>(ComponentFamily.Input) == null
+                 || diff > 60.0f)
+                )
                 TranslateTo(toVector);
         }
     }

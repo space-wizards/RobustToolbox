@@ -39,6 +39,7 @@ namespace ClientServices.State.States
         public bool BlendLightMap = true;
         public DateTime LastUpdate;
         public DateTime Now;
+        public float Clock;
         public int ScreenHeightTiles = 12;
         public int ScreenWidthTiles = 15; // How many tiles around us do we draw?
         public string SpawnType;
@@ -365,8 +366,10 @@ namespace ClientServices.State.States
         {
             LastUpdate = Now;
             Now = DateTime.Now;
+            Clock += e.FrameDeltaTime;
 
             _entityManager.ComponentManager.Update(e.FrameDeltaTime);
+            _entityManager.Update(e.FrameDeltaTime);
             PlacementManager.Update(MousePosScreen, MapManager);
             PlayerManager.Update(e.FrameDeltaTime);
             if (PlayerManager != null && PlayerManager.ControlledEntity != null)

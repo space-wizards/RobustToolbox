@@ -112,6 +112,11 @@ namespace GameObject
             Initialized = false;
         }
 
+        public virtual void Update(float frameTime)
+        {
+            EntitySystemManager.Update(frameTime);
+        }
+
         #region Entity Management
 
         /// <summary>

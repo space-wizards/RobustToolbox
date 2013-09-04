@@ -12,6 +12,7 @@
           <Parameter name="basename" type="string" value="bluebucket" />
         </Parameters>
       </Component>
+      <Component name="PhysicsComponent"></Component>
       <Component name="ClickableComponent"></Component>
       <Component name="BasicItemComponent"></Component>
     </Components>
@@ -27,6 +28,7 @@
           <Parameter name="basename" type="string" value="wetfloorsign" />
         </Parameters>
       </Component>
+      <Component name="PhysicsComponent"></Component>
       <Component name="ClickableComponent"></Component>
       <Component name="BasicItemComponent"></Component>
     </Components>

@@ -12,6 +12,7 @@
           <Parameter name="basename" type="string" value="wrench" />
         </Parameters>
       </Component>
+      <Component name="PhysicsComponent"></Component>
       <Component name="ClickableComponent"></Component>
       <Component name="BasicItemComponent"></Component>
     </Components>
@@ -27,6 +28,7 @@
           <Parameter name="basename" type="string" value="welder" />
         </Parameters>
       </Component>
+      <Component name="PhysicsComponent"></Component>
       <Component name="ClickableComponent"></Component>
       <Component name="BasicItemComponent"></Component>
     </Components>
@@ -42,6 +44,7 @@
           <Parameter name="basename" type="string" value="crowbar" />
         </Parameters>
       </Component>
+      <Component name="PhysicsComponent"></Component>
       <Component name="ClickableComponent"></Component>
       <Component name="BasicItemComponent"></Component>
     </Components>
@@ -57,6 +60,7 @@
           <Parameter name="basename" type="string" value="mop" />
         </Parameters>
       </Component>
+      <Component name="PhysicsComponent"></Component>
       <Component name="ClickableComponent"></Component>
       <Component name="BasicItemComponent"></Component>
     </Components>

@@ -452,16 +452,6 @@ namespace SS13_Shared
             return !(v1 == v2);
         }
 
-        public static implicit operator Vector2D(Vector2 vec)
-        {
-            return new Vector2D(vec.X, vec.Y);
-        }
-
-        public static implicit operator Vector2(Vector2D vec)
-        {
-            return new Vector2(vec.X, vec.Y);
-        }
-
         #endregion
 
         #region Functions

@@ -23,6 +23,9 @@ namespace GameObject
             switch (em.EngineType)
             {
                 case EngineType.Client:
+                    _systemTypes.AddRange(
+                        Assembly.LoadFrom("CGO.dll").GetTypes().Where(
+                            t => typeof(EntitySystem).IsAssignableFrom(t)));
                     break;
                 case EngineType.Server:
                     _systemTypes.AddRange(

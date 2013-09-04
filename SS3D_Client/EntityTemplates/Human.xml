@@ -12,6 +12,7 @@
           <Parameter name="basename" type="string" value="human" />
         </Parameters>
       </Component>
+      <Component name="PhysicsComponent"></Component>
       <Component name="ClickableComponent"></Component>
       <Component name="HumanEquipmentComponent"></Component>
       <Component name="HumanHandsComponent"></Component>

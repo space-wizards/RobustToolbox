@@ -16,6 +16,7 @@ namespace CGO
         public VelocityComponent()
         {
             Family = ComponentFamily.Velocity;
+            Velocity = new Vector2D(0,0);
         }
 
         public Vector2D Velocity
@@ -48,7 +49,8 @@ namespace CGO
 
         public override void HandleComponentState(dynamic state)
         {
-            SetNewState(state);
+            if(Owner.GetComponent<KeyBindingMoverComponent>(ComponentFamily.Mover) == null)
+                SetNewState(state);
         }
 
         private void SetNewState(VelocityComponentState state)

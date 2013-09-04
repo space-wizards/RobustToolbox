@@ -29,36 +29,10 @@ namespace SGO
             }
 
             if (shouldMove)
-                Translate((float) message.MessageParameters[0],
-                          (float) message.MessageParameters[1]);
-            else SendPositionUpdate(true); //Tried to move even though they cant. Lets pin that fucker down.
+            {
+                var velComp = Owner.GetComponent<VelocityComponent>(ComponentFamily.Velocity);
+                velComp.Velocity = new Vector2((float)message.MessageParameters[0], (float)message.MessageParameters[1]);
+            }
         }
-
-        public void Translate(float x, float y)
-        {
-            Owner.GetComponent<TransformComponent>(ComponentFamily.Transform).Position = new Vector2(x, y);
-            SendPositionUpdate();
-        }
-
-        public void SendPositionUpdate(bool forced = false)
-        {
-        }
-
-        public void SendPositionUpdate(NetConnection client, bool forced = false)
-        {
-        }
-
-        public override void HandleInstantiationMessage(NetConnection netConnection)
-        {
-            SendPositionUpdate(netConnection, true);
-        }
-
-        /*public override ComponentState GetComponentState()
-        {
-            return new MoverComponentState(Owner.GetComponent<TransformComponent>(ComponentFamily.Transform).Position.X,
-                                           Owner.GetComponent<TransformComponent>(ComponentFamily.Transform).Position.Y,
-                                           Owner.GetComponent<VelocityComponent>(ComponentFamily.Velocity).Velocity.X,
-                                           Owner.GetComponent<VelocityComponent>(ComponentFamily.Velocity).Velocity.Y);
-        }*/
     }
 }

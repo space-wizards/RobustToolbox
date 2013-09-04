@@ -13,6 +13,7 @@
           <Parameter name="addsprite" type="string" value="sword_on" />
         </Parameters>
       </Component>
+      <Component name="PhysicsComponent"></Component>
       <Component name="ClickableComponent"></Component>
       <Component name="BasicItemComponent"></Component>
       <Component name="PointLightComponent">

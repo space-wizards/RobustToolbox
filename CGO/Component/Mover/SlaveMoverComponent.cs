@@ -59,7 +59,7 @@ namespace CGO
 
         private void HandleOnMove(object sender, VectorEventArgs args)
         {
-            Translate(args.VectorTo);
+            Translate(Vector2TypeConverter.ToVector2D(args.VectorTo));
         }
 
         private void Translate(Vector2D toPosition)

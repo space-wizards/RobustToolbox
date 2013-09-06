@@ -213,7 +213,7 @@ namespace SGO
         }
 
         /// <summary>
-        /// Sends a message to the target system(s) on all clients.
+        /// Sends a message to the relevant system(s) on all clients.
         /// </summary>
         public void SendSystemNetworkMessage(EntitySystemMessage message,
                                              NetDeliveryMethod method = NetDeliveryMethod.ReliableUnordered)
@@ -222,7 +222,7 @@ namespace SGO
         }
 
         /// <summary>
-        /// Sends a message to the target system(s) on the target client.
+        /// Sends a message to the relevant system(s) on the target client.
         /// </summary>
         public void SendSystemNetworkMessage(EntitySystemMessage message, 
                                      NetConnection targetConnection = null,

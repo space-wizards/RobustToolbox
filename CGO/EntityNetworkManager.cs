@@ -38,6 +38,9 @@ namespace CGO
 
         #region Sending
 
+        /// <summary>
+        /// Sends a message to the relevant system(s) serverside.
+        /// </summary>
         public void SendSystemNetworkMessage(EntitySystemMessage message,
                                              NetDeliveryMethod method = NetDeliveryMethod.ReliableUnordered)
         {

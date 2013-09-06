@@ -17,7 +17,7 @@ namespace GameObject
     {
         private readonly List<Type> _systemTypes;
         private readonly Dictionary<Type, EntitySystem> _systems = new Dictionary<Type, EntitySystem>();
-        private readonly Dictionary<EntitySystem, List<Type>> _systemMessageTypes = new Dictionary<EntitySystem, List<Type>>();
+        private readonly Dictionary<Type, EntitySystem> _systemMessageTypes = new Dictionary<Type, EntitySystem>();
         private EntityManager _entityManager;
 
         private bool _initialized;
@@ -61,15 +61,8 @@ namespace GameObject
                 throw new ArgumentException("Invalid Entity System.");
             }
 
-            if (_systemMessageTypes.ContainsKey(regSystem))
-            {
-                if (!_systemMessageTypes[regSystem].Contains(type))
-                    _systemMessageTypes[regSystem].Add(type);
-            }
-            else
-            {
-                _systemMessageTypes.Add(regSystem, new List<Type>(){type});
-            }
+            if(!_systemMessageTypes.Any(x => x.Key == type && x.Value == regSystem))
+                _systemMessageTypes.Add(type, regSystem);
         }
 
         public T GetEntitySystem<T>() where T : EntitySystem
@@ -124,14 +117,9 @@ namespace GameObject
 
             object deserialized = Serializer.Deserialize(new MemoryStream(sysMsg.message.ReadBytes(messageLength)));
 
-            var selectedSystems = from x in _systemMessageTypes
-                                 where x.Value.Contains(deserialized.GetType())
-                                 select x.Key;
-
-            foreach (EntitySystem curr in selectedSystems)
-            {
-                curr.HandleNetMessage((EntitySystemMessage)deserialized);
-            }
+            if (deserialized is EntitySystemMessage)
+                foreach (KeyValuePair<Type, EntitySystem> current in _systemMessageTypes.Where(x => x.Key == deserialized.GetType()))
+                    current.Value.HandleNetMessage((EntitySystemMessage)deserialized);
         }
 
         public void Update(float frameTime)

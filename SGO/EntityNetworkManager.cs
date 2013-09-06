@@ -231,7 +231,7 @@ namespace SGO
             NetOutgoingMessage newMsg = CreateEntityMessage();
             newMsg.Write(sendingEntity.Uid);
             newMsg.Write((byte)EntityMessage.SystemMessage);
-            newMsg.Write(targetSystem.FullName);
+            newMsg.Write(targetSystem.Name);
 
             var stream = new MemoryStream();
             Serializer.Serialize(stream, message);

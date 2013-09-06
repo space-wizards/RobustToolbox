@@ -22,9 +22,9 @@ namespace GameObject
                                          params object[] messageParams);
 
         /// <summary>
-        /// Sends an Entity System Message to the Target System.
-        /// Client: Sends the message to the serverside system.
-        /// Server: Sends the message to the systems of all connected clients.
+        /// Sends an Entity System Message to relevant System(s).
+        /// Client: Sends the message to the relevant serverside System(s).
+        /// Server: Sends the message to the relevant systems of all connected clients.
         /// Server: Use the alternative overload to send to a single client.
         /// </summary>
         /// <param name="sendingEntity">Entity sending the message</param>   

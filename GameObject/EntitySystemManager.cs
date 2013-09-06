@@ -17,7 +17,7 @@ namespace GameObject
     {
         private readonly List<Type> _systemTypes;
         private readonly Dictionary<Type, EntitySystem> _systems = new Dictionary<Type, EntitySystem>();
-        private readonly Dictionary<string, Type> _systemStrings = new Dictionary<string, Type>();
+        private readonly Dictionary<EntitySystem, List<Type>> _systemMessageTypes = new Dictionary<EntitySystem, List<Type>>();
         private EntityManager _entityManager;
 
         private bool _initialized;
@@ -48,10 +48,28 @@ namespace GameObject
                 object instance = Activator.CreateInstance(type, em);
                 MethodInfo generic = typeof (EntitySystemManager).GetMethod("AddSystem").MakeGenericMethod(type);
                 generic.Invoke(this, new[] {instance});
-
-                _systemStrings.Add(type.Name, type);
             }
 
+        }
+
+        public void RegisterMessageType<T>(EntitySystem regSystem) where T : EntitySystemMessage
+        {
+            Type type = typeof(T);
+
+            if (!_systems.ContainsValue(regSystem))
+            {
+                throw new ArgumentException("Invalid Entity System.");
+            }
+
+            if (_systemMessageTypes.ContainsKey(regSystem))
+            {
+                if (!_systemMessageTypes[regSystem].Contains(type))
+                    _systemMessageTypes[regSystem].Add(type);
+            }
+            else
+            {
+                _systemMessageTypes.Add(regSystem, new List<Type>(){type});
+            }
         }
 
         public T GetEntitySystem<T>() where T : EntitySystem
@@ -102,24 +120,17 @@ namespace GameObject
 
         public void HandleSystemMessage(EntitySystemData sysMsg)
         {
-            string targetSystemStr = sysMsg.message.ReadString();
-            if (!_systemStrings.ContainsKey(targetSystemStr)) return;
-            Type targetSystemType = _systemStrings[targetSystemStr];
+            Int32 messageLength = sysMsg.message.ReadInt32();
 
-            if (targetSystemType == null) throw new NullReferenceException("Invalid Entity System Type specified for Entity System Message.");
+            object deserialized = Serializer.Deserialize(new MemoryStream(sysMsg.message.ReadBytes(messageLength)));
 
-            ArrayList byteList = new ArrayList();
+            var selectedSystems = from x in _systemMessageTypes
+                                 where x.Value.Contains(deserialized.GetType())
+                                 select x.Key;
 
-            while (sysMsg.message.Position < sysMsg.message.LengthBits)
-                byteList.Add(sysMsg.message.ReadByte());
-
-            object deserialized = Serializer.Deserialize(new MemoryStream((byte[])byteList.ToArray(typeof(byte)))); //Fuck microsoft.
-
-            if (deserialized is EntitySystemMessage) //No idea if this works.
+            foreach (EntitySystem curr in selectedSystems)
             {
-                foreach (KeyValuePair<Type, EntitySystem> curr in _systems)
-                    if (curr.Key == targetSystemType || targetSystemType.IsAssignableFrom(curr.Key)) //Send to systems of same type and systems derived from this type. This is needed for some thing i had in mind (the sending to derived classes).
-                        curr.Value.HandleNetMessage((EntitySystemMessage)deserialized);
+                curr.HandleNetMessage((EntitySystemMessage)deserialized);
             }
         }
 
@@ -134,13 +145,11 @@ namespace GameObject
 
     public struct EntitySystemData
     {
-        public int sourceEntityUid;
         public NetIncomingMessage message;
         public NetConnection senderConnection;
 
-        public EntitySystemData(int sourceEntityUid, NetConnection senderConnection, NetIncomingMessage message)
+        public EntitySystemData(NetConnection senderConnection, NetIncomingMessage message)
         {
-            this.sourceEntityUid = sourceEntityUid;
             this.senderConnection = senderConnection;
             this.message = message;
         }

@@ -12,6 +12,6 @@ namespace ServerInterfaces.GOC
         /// <summary>
         /// Sends a message to the target system(s) on the target client.
         /// </summary>
-        void SendSystemNetworkMessage(GO.Entity sendingEntity, Type targetSystem, EntitySystemMessage message, NetConnection targetConnection = null, NetDeliveryMethod method = NetDeliveryMethod.ReliableUnordered);
+        void SendSystemNetworkMessage(EntitySystemMessage message, NetConnection targetConnection = null, NetDeliveryMethod method = NetDeliveryMethod.ReliableUnordered);
     }
 }

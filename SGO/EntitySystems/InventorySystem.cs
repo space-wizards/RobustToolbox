@@ -14,15 +14,16 @@ namespace SGO.EntitySystems
             EntityQuery.OneSet.Add(typeof(EquipmentComponent));
             EntityQuery.OneSet.Add(typeof(HumanHandsComponent));
 
-            EntityManager.EntitySystemManager.RegisterMessageType<InventorySystemPickUp>(this);
-            EntityManager.EntitySystemManager.RegisterMessageType<InventorySystemDrop>(this);
-            EntityManager.EntitySystemManager.RegisterMessageType<InventorySystemExchange>(this);
+            //EntityManager.EntitySystemManager.RegisterMessageType<InventorySystemPickUp>(this);
+            //EntityManager.EntitySystemManager.RegisterMessageType<InventorySystemDrop>(this);
+            //EntityManager.EntitySystemManager.RegisterMessageType<InventorySystemExchange>(this);
         }
 
         public override void HandleNetMessage(EntitySystemMessage sysMsg)
         {
             //can't use a switch for this, not an integral value :(
             //I wish i could think of a better way to structure this all. These ifs make it really hard to read.
+
             if (sysMsg is InventorySystemPickUp)
             {
                 InventorySystemPickUp message = sysMsg as InventorySystemPickUp;

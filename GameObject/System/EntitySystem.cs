@@ -1,4 +1,5 @@
 ﻿using System.Collections.Generic;
+using SS13_Shared.GO;
 
 namespace GameObject.System
 {
@@ -28,6 +29,11 @@ namespace GameObject.System
         public virtual void Shutdown()
         {
             _shutdown = true;
+        }
+
+        public virtual void HandleNetMessage(EntitySystemMessage sysMsg)
+        {
+            return;
         }
 
         public abstract void Update(float frameTime);

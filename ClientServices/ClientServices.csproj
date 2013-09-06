@@ -187,6 +187,7 @@
     <Compile Include="UserInterface\LobbyState\PlayerLstTab.cs" />
     <Compile Include="UserInterface\UserInterfaceManager.cs" />
     <Compile Include="Utility\Rand.cs" />
+    <Compile Include="Utility\RobustSortedDrawing.cs" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\CGO\ClientGameObject.csproj">

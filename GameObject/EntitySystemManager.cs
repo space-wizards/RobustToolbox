@@ -102,8 +102,9 @@ namespace GameObject
 
         public void HandleSystemMessage(EntitySystemData sysMsg)
         {
-            string targetSystemStr = sysMsg.message.ReadString(); //Must be fully qualified name. Shouldnt cause problem since messages should be in shared project.
-            Type targetSystemType = Type.GetType(targetSystemStr);
+            string targetSystemStr = sysMsg.message.ReadString();
+            if (!_systemStrings.ContainsKey(targetSystemStr)) return;
+            Type targetSystemType = _systemStrings[targetSystemStr];
 
             if (targetSystemType == null) throw new NullReferenceException("Invalid Entity System Type specified for Entity System Message.");
 
@@ -117,7 +118,7 @@ namespace GameObject
             if (deserialized is EntitySystemMessage) //No idea if this works.
             {
                 foreach (KeyValuePair<Type, EntitySystem> curr in _systems)
-                    if (curr.Key == targetSystemType || targetSystemType.IsAssignableFrom(curr.Key)) //Send to systems of same type and systems derived from this type.
+                    if (curr.Key == targetSystemType || targetSystemType.IsAssignableFrom(curr.Key)) //Send to systems of same type and systems derived from this type. This is needed for some thing i had in mind (the sending to derived classes).
                         curr.Value.HandleNetMessage((EntitySystemMessage)deserialized);
             }
         }

@@ -1,4 +1,5 @@
-﻿using Lidgren.Network;
+﻿using System;
+using Lidgren.Network;
 using SS13_Shared;
 using SS13_Shared.GO;
 
@@ -19,6 +20,19 @@ namespace GameObject
         void SendComponentNetworkMessage(Entity sendingEntity, ComponentFamily family,
                                          NetDeliveryMethod method = NetDeliveryMethod.ReliableUnordered,
                                          params object[] messageParams);
+
+        /// <summary>
+        /// Sends an Entity System Message to the Target System.
+        /// Client: Sends the message to the serverside system.
+        /// Server: Sends the message to the systems of all connected clients.
+        /// Server: Use the alternative overload to send to a single client.
+        /// </summary>
+        /// <param name="sendingEntity">Entity sending the message</param>   
+        /// <param name="targetSystem">Type of the System that should recieve the message. Also includes derived systems.</param>
+        /// <param name="message">Message that should be sent.</param>
+        /// <param name="method">Net delivery method -- if null, defaults to NetDeliveryMethod.ReliableUnordered</param>
+        /// <param name="messageParams">Parameters of the message</param>
+        void SendSystemNetworkMessage(Entity sendingEntity, Type targetSystem, EntitySystemMessage message, NetDeliveryMethod method = NetDeliveryMethod.ReliableUnordered);
 
         /// <summary>
         /// Allows a component owned by this entity to send a message to a counterpart component on the

@@ -1,9 +1,15 @@
 ﻿using System;
+using System.Collections;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Reflection;
 using GameObject.Exceptions;
 using GameObject.System;
+using Lidgren.Network;
+using NetSerializer;
+using SS13_Shared.GO;
+using SS13_Shared.Serialization;
 
 namespace GameObject
 {
@@ -11,6 +17,7 @@ namespace GameObject
     {
         private readonly List<Type> _systemTypes;
         private readonly Dictionary<Type, EntitySystem> _systems = new Dictionary<Type, EntitySystem>();
+        private readonly Dictionary<string, Type> _systemStrings = new Dictionary<string, Type>();
         private EntityManager _entityManager;
 
         private bool _initialized;
@@ -41,7 +48,10 @@ namespace GameObject
                 object instance = Activator.CreateInstance(type, em);
                 MethodInfo generic = typeof (EntitySystemManager).GetMethod("AddSystem").MakeGenericMethod(type);
                 generic.Invoke(this, new[] {instance});
+
+                _systemStrings.Add(type.Name, type);
             }
+
         }
 
         public T GetEntitySystem<T>() where T : EntitySystem
@@ -51,7 +61,7 @@ namespace GameObject
             {
                 throw new MissingImplementationException(type);
             }
-
+            
             return (T) _systems[type];
         }
 
@@ -90,12 +100,48 @@ namespace GameObject
             _shutdown = true;
         }
 
+        public void HandleSystemMessage(EntitySystemData sysMsg)
+        {
+            string targetSystemStr = sysMsg.message.ReadString(); //Must be fully qualified name. Shouldnt cause problem since messages should be in shared project.
+            Type targetSystemType = Type.GetType(targetSystemStr);
+
+            if (targetSystemType == null) throw new NullReferenceException("Invalid Entity System Type specified for Entity System Message.");
+
+            ArrayList byteList = new ArrayList();
+
+            while (sysMsg.message.Position < sysMsg.message.LengthBits)
+                byteList.Add(sysMsg.message.ReadByte());
+
+            object deserialized = Serializer.Deserialize(new MemoryStream((byte[])byteList.ToArray(typeof(byte)))); //Fuck microsoft.
+
+            if (deserialized is EntitySystemMessage) //No idea if this works.
+            {
+                foreach (KeyValuePair<Type, EntitySystem> curr in _systems)
+                    if (curr.Key == targetSystemType || targetSystemType.IsAssignableFrom(curr.Key)) //Send to systems of same type and systems derived from this type.
+                        curr.Value.HandleNetMessage((EntitySystemMessage)deserialized);
+            }
+        }
+
         public void Update(float frameTime)
         {
             foreach (EntitySystem system in _systems.Values)
             {
                 system.Update(frameTime);
             }
+        }
+    }
+
+    public struct EntitySystemData
+    {
+        public int sourceEntityUid;
+        public NetIncomingMessage message;
+        public NetConnection senderConnection;
+
+        public EntitySystemData(int sourceEntityUid, NetConnection senderConnection, NetIncomingMessage message)
+        {
+            this.sourceEntityUid = sourceEntityUid;
+            this.senderConnection = senderConnection;
+            this.message = message;
         }
     }
 }

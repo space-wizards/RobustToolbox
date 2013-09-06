@@ -135,7 +135,7 @@ namespace ClientServices.UserInterface.Components
             }
 
             clippingRI.EndDrawing();
-            clippingRI.Blit(Position.X, Position.Y);
+            clippingRI.Blit(Position.X, Position.Y,clippingRI.Width, clippingRI.Height, Color.White, BlitterSizeMode.Crop);
 
             scrollbarH.Render();
             scrollbarV.Render();

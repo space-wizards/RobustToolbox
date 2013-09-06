@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.IO;
 using ClientInterfaces.Configuration;
 using ClientInterfaces.MessageLogging;
 using ClientInterfaces.Network;
@@ -8,6 +9,8 @@ using Lidgren.Network;
 using SS13.IoC;
 using SS13_Shared;
 using SS13_Shared.GO;
+using NetSerializer;
+using SS13_Shared.Serialization;
 
 namespace CGO
 {
@@ -34,6 +37,27 @@ namespace CGO
         #endregion
 
         #region Sending
+
+        public void SendSystemNetworkMessage(Entity sendingEntity, Type targetSystem, EntitySystemMessage message,
+                                             NetDeliveryMethod method = NetDeliveryMethod.ReliableUnordered)
+        {
+            NetOutgoingMessage newMsg = CreateEntityMessage();
+            newMsg.Write(sendingEntity.Uid);
+            newMsg.Write((byte)EntityMessage.SystemMessage);
+            newMsg.Write(targetSystem.FullName);
+
+            var stream = new MemoryStream();
+            Serializer.Serialize(stream, message);
+            newMsg.Write(stream.ToArray());
+
+            if (_messageProfiling)
+            {
+                //Log the message
+            }
+
+            //Send the message
+            _networkManager.SendMessage(newMsg, method);
+        }
 
         public void SendDirectedComponentNetworkMessage(Entity sendingEntity, ComponentFamily family,
                                                         NetDeliveryMethod method, NetConnection recipient,
@@ -214,6 +238,10 @@ namespace CGO
                                                               messageContent.MessageParameters.ToArray());
                     }
 
+                    break;
+                case EntityMessage.SystemMessage: //TODO: Not happy with this resolving the entmgr everytime a message comes in.
+                    EntityManager eMgr = (EntityManager)IoCManager.Resolve<IEntityManager>();
+                    eMgr.EntitySystemManager.HandleSystemMessage(new EntitySystemData(uid, message.SenderConnection, message));
                     break;
                 case EntityMessage.PositionMessage:
                     //TODO: Handle position messages!

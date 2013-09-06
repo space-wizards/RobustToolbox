@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Runtime.InteropServices;
 using GameObject;
@@ -11,6 +12,8 @@ using ServerInterfaces.Configuration;
 using ServerInterfaces.MessageLogging;
 using ServerInterfaces.Network;
 using IEntityNetworkManager = ServerInterfaces.GOC.IEntityNetworkManager;
+using NetSerializer;
+using SS13_Shared.Serialization;
 
 namespace SGO
 {
@@ -209,6 +212,48 @@ namespace SGO
             return parameters.ToArray();
         }
 
+        /// <summary>
+        /// Sends a message to the target system(s) on all clients.
+        /// </summary>
+        public void SendSystemNetworkMessage(Entity sendingEntity, Type targetSystem, EntitySystemMessage message,
+                                             NetDeliveryMethod method = NetDeliveryMethod.ReliableUnordered)
+        {
+            SendSystemNetworkMessage(sendingEntity, targetSystem, message, null, method);
+        }
+
+        /// <summary>
+        /// Sends a message to the target system(s) on the target client.
+        /// </summary>
+        public void SendSystemNetworkMessage(Entity sendingEntity, Type targetSystem, EntitySystemMessage message, 
+                                     NetConnection targetConnection = null,
+                                     NetDeliveryMethod method = NetDeliveryMethod.ReliableUnordered)
+        {
+            NetOutgoingMessage newMsg = CreateEntityMessage();
+            newMsg.Write(sendingEntity.Uid);
+            newMsg.Write((byte)EntityMessage.SystemMessage);
+            newMsg.Write(targetSystem.FullName);
+
+            var stream = new MemoryStream();
+            Serializer.Serialize(stream, message);
+            newMsg.Write(stream.ToArray());
+
+            if (_messageProfiling)
+            {
+                //Log the message
+            }
+
+            //Send the message
+            if (targetConnection != null)
+            {
+                m_netServer.SendMessage(newMsg, targetConnection, method);
+            }
+            else
+            {
+                m_netServer.SendToAll(newMsg, method);
+            }
+            
+        }
+
         #endregion
 
         #region Receiving
@@ -229,6 +274,10 @@ namespace SGO
                     incomingEntityMessage = new IncomingEntityMessage(uid, EntityMessage.ComponentMessage,
                                                                       HandleEntityComponentNetworkMessage(message),
                                                                       message.SenderConnection);
+                    break;
+                case EntityMessage.SystemMessage: //TODO: Not happy with this resolving the entmgr everytime a message comes in.
+                    EntityManager eMgr = (EntityManager)IoCManager.Resolve<IEntityManager>();
+                    eMgr.EntitySystemManager.HandleSystemMessage(new EntitySystemData(uid, message.SenderConnection, message));
                     break;
                 case EntityMessage.PositionMessage:
                     //TODO: Handle position messages!

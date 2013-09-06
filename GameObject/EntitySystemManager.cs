@@ -61,6 +61,8 @@ namespace GameObject
                 throw new ArgumentException("Invalid Entity System.");
             }
 
+            if (_systemMessageTypes.ContainsKey(type)) return;
+
             if(!_systemMessageTypes.Any(x => x.Key == type && x.Value == regSystem))
                 _systemMessageTypes.Add(type, regSystem);
         }

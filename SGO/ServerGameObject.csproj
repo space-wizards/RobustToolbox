@@ -110,6 +110,7 @@
     <None Include="Entity.cs" />
     <Compile Include="EntityManager.cs" />
     <Compile Include="EntityNetworkManager.cs" />
+    <Compile Include="EntitySystems\InventorySystem.cs" />
     <Compile Include="EntitySystems\PhysicsSystem.cs" />
     <Compile Include="Exceptions\MissingImplementationException.cs" />
     <Compile Include="Exceptions\NoPublicConstructorException.cs" />

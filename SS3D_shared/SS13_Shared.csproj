@@ -139,6 +139,7 @@
     <Compile Include="GO\Crafting\CraftingEntry.cs" />
     <Compile Include="GO\ComponentState.cs" />
     <Compile Include="GO\EntityState.cs" />
+    <Compile Include="GO\EntitySystemMessage\InventorySystemMessages.cs" />
     <Compile Include="GO\EntitySystemMessage\EntitySystemMessage.cs" />
     <Compile Include="GO\MarshalComponentParameter.cs" />
     <Compile Include="GO\Server\ServerDelegates.cs" />

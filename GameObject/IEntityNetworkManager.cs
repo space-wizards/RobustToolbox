@@ -32,7 +32,7 @@ namespace GameObject
         /// <param name="message">Message that should be sent.</param>
         /// <param name="method">Net delivery method -- if null, defaults to NetDeliveryMethod.ReliableUnordered</param>
         /// <param name="messageParams">Parameters of the message</param>
-        void SendSystemNetworkMessage(Entity sendingEntity, Type targetSystem, EntitySystemMessage message, NetDeliveryMethod method = NetDeliveryMethod.ReliableUnordered);
+        void SendSystemNetworkMessage(EntitySystemMessage message, NetDeliveryMethod method = NetDeliveryMethod.ReliableUnordered);
 
         /// <summary>
         /// Allows a component owned by this entity to send a message to a counterpart component on the

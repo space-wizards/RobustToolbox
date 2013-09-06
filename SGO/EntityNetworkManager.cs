@@ -83,8 +83,8 @@ namespace SGO
                                                         NetConnection recipient, params object[] messageParams)
         {
             NetOutgoingMessage message = CreateEntityMessage();
-            message.Write(sendingEntity.Uid); //Write this entity's UID
             message.Write((byte) EntityMessage.ComponentMessage);
+            message.Write(sendingEntity.Uid); //Write this entity's UID
             message.Write((byte) family);
             //Loop through the params and write them as is proper
             foreach (object messageParam in messageParams)
@@ -215,26 +215,25 @@ namespace SGO
         /// <summary>
         /// Sends a message to the target system(s) on all clients.
         /// </summary>
-        public void SendSystemNetworkMessage(Entity sendingEntity, Type targetSystem, EntitySystemMessage message,
+        public void SendSystemNetworkMessage(EntitySystemMessage message,
                                              NetDeliveryMethod method = NetDeliveryMethod.ReliableUnordered)
         {
-            SendSystemNetworkMessage(sendingEntity, targetSystem, message, null, method);
+            SendSystemNetworkMessage(message, null, method);
         }
 
         /// <summary>
         /// Sends a message to the target system(s) on the target client.
         /// </summary>
-        public void SendSystemNetworkMessage(Entity sendingEntity, Type targetSystem, EntitySystemMessage message, 
+        public void SendSystemNetworkMessage(EntitySystemMessage message, 
                                      NetConnection targetConnection = null,
                                      NetDeliveryMethod method = NetDeliveryMethod.ReliableUnordered)
         {
             NetOutgoingMessage newMsg = CreateEntityMessage();
-            newMsg.Write(sendingEntity.Uid);
             newMsg.Write((byte)EntityMessage.SystemMessage);
-            newMsg.Write(targetSystem.Name);
 
             var stream = new MemoryStream();
             Serializer.Serialize(stream, message);
+            newMsg.Write((int)stream.Length);
             newMsg.Write(stream.ToArray());
 
             if (_messageProfiling)
@@ -265,24 +264,27 @@ namespace SGO
         /// <returns></returns>
         public IncomingEntityMessage HandleEntityNetworkMessage(NetIncomingMessage message)
         {
-            int uid = message.ReadInt32();
             var messageType = (EntityMessage) message.ReadByte();
+            int uid = 0;
             IncomingEntityMessage incomingEntityMessage = IncomingEntityMessage.Null;
             switch (messageType)
             {
                 case EntityMessage.ComponentMessage:
+                    uid = message.ReadInt32();
                     incomingEntityMessage = new IncomingEntityMessage(uid, EntityMessage.ComponentMessage,
                                                                       HandleEntityComponentNetworkMessage(message),
                                                                       message.SenderConnection);
                     break;
                 case EntityMessage.SystemMessage: //TODO: Not happy with this resolving the entmgr everytime a message comes in.
                     EntityManager eMgr = (EntityManager)IoCManager.Resolve<IEntityManager>();
-                    eMgr.EntitySystemManager.HandleSystemMessage(new EntitySystemData(uid, message.SenderConnection, message));
+                    eMgr.EntitySystemManager.HandleSystemMessage(new EntitySystemData(message.SenderConnection, message));
                     break;
                 case EntityMessage.PositionMessage:
+                    uid = message.ReadInt32();
                     //TODO: Handle position messages!
                     break;
                 case EntityMessage.ComponentInstantiationMessage:
+                    uid = message.ReadInt32();
                     incomingEntityMessage = new IncomingEntityMessage(uid,
                                                                       EntityMessage.ComponentInstantiationMessage,
                                                                       (ComponentFamily)
@@ -290,12 +292,14 @@ namespace SGO
                                                                       message.SenderConnection);
                     break;
                 case EntityMessage.SetSVar:
+                    uid = message.ReadInt32();
                     incomingEntityMessage = new IncomingEntityMessage(uid,
                                                                       EntityMessage.SetSVar,
                                                                       MarshalComponentParameter.Deserialize(message),
                                                                       message.SenderConnection);
                     break;
                 case EntityMessage.GetSVars:
+                    uid = message.ReadInt32();
                     incomingEntityMessage = new IncomingEntityMessage(uid,
                                                                       EntityMessage.GetSVars, null,
                                                                       message.SenderConnection);

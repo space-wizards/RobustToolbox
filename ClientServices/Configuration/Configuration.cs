@@ -19,5 +19,9 @@ namespace ClientServices.Configuration
         public float SimulatedMinimumLatency = 0f;
         public float SimulatedRandomLatency = 0f;
         public bool VSync = true;
+        public int Rate = 10240; //10 KBytes/s
+        public int UpdateRate = 20; //Updates from the server per second
+        public int CommandRate = 30; //Commands to the server per second
+        public float Interpolation = 0.1f; //Number of seconds behind to render interpolation
     }
 }

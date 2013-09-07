@@ -13,6 +13,7 @@ namespace GameObject
         ComponentManager ComponentManager { get; }
         IEntityNetworkManager EntityNetworkManager { get; set; }
         EngineType EngineType { get; set; }
+        float Clock { get; }
 
         /// <summary>
         /// Returns an entity by id
@@ -57,6 +58,7 @@ namespace GameObject
             ComponentManager = new ComponentManager();
             EntityTemplateDatabase = new EntityTemplateDatabase(this);
             EntityFactory = new EntityFactory(EntityTemplateDatabase);
+            Clock = 0f;
             Initialize();
         }
 
@@ -64,6 +66,7 @@ namespace GameObject
         public EntityTemplateDatabase EntityTemplateDatabase { get; private set; }
         public EntitySystemManager EntitySystemManager { get; private set; }
         public bool Initialized { get; protected set; }
+        public float Clock { get; private set; }
 
         #region IEntityManager Members
 
@@ -114,6 +117,7 @@ namespace GameObject
 
         public virtual void Update(float frameTime)
         {
+            Clock += frameTime;
             EntitySystemManager.Update(frameTime);
         }
 
@@ -251,11 +255,12 @@ namespace GameObject
 
         #region State stuff
 
-        public void ApplyEntityStates(List<EntityState> entityStates)
+        public void ApplyEntityStates(List<EntityState> entityStates, float serverTime)
         {
             var entityKeys = new List<int>();
             foreach (EntityState es in entityStates)
             {
+                es.ReceivedTime = serverTime;
                 entityKeys.Add(es.StateData.Uid);
                 //Known entities
                 if (_entities.ContainsKey(es.StateData.Uid))

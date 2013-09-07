@@ -10,7 +10,7 @@ namespace SGO
     internal class TransformComponent : Component, ITransformComponent
     {
         private Vector2 _position = Vector2.Zero;
-
+        private bool firstState = true;
         public TransformComponent()
         {
             Family = ComponentFamily.Transform;
@@ -63,7 +63,9 @@ namespace SGO
 
         public override ComponentState GetComponentState()
         {
-            return new TransformComponentState(Position.X, Position.Y, false);
+            var state = new TransformComponentState(Position.X, Position.Y, firstState);
+            firstState = false;
+            return state;
         }
     }
 }

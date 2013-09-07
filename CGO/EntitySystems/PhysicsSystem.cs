@@ -39,15 +39,15 @@ namespace CGO.EntitySystems
                 var movement = velocity.Velocity*frametime;
 
                 var mover = entity.GetComponent<KeyBindingMoverComponent>(ComponentFamily.Mover);
-                if(mover != null)
+                if(mover != null && movement.Length > 0.001f)
                 {
                     mover.Translate(movement);
                 } 
-                else
+                /*else
                 {
                     //Apply velocity
                     transform.Position += movement;
-                }
+                }*/
             }
         }
 

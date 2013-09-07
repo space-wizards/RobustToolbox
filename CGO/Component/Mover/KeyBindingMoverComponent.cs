@@ -10,7 +10,7 @@ namespace CGO
     public class KeyBindingMoverComponent : Component
     {
         private const float BaseMoveSpeed = 300f;
-        private const float FastMoveSpeed = 500f;
+        public const float FastMoveSpeed = 500f;
         private const float MoveRateLimit = .06666f; // 15 movements allowed to be sent to the server per second.
 
         private float _currentMoveSpeed;
@@ -75,7 +75,7 @@ namespace CGO
             bool setting = state == BoundKeyState.Down;
 
             if (state == BoundKeyState.Up)
-                SendPositionUpdate();
+                SendPositionUpdate(Owner.GetComponent<TransformComponent>(ComponentFamily.Transform).Position);
             // Send a position update so that the server knows what position the client ended at.
 
             if (function == BoundKeyFunctions.MoveDown)
@@ -152,16 +152,22 @@ namespace CGO
             if (!translated)
             {
                 if (!translatedx)
+                {
                     velcomp.Velocity = new Vector2D(0, velcomp.Velocity.Y);
+                }
                 if (!translatedy)
                     velcomp.Velocity = new Vector2D(velcomp.Velocity.X, 0);
                 if (!translatedx && !translatedy)
                     velcomp.Velocity = Vector2D.Zero;
+
+                translationVector = new Vector2D(translatedx?translationVector.X:0, translatedy?translationVector.Y:0);
             }
 
             if (_moveTimeCache >= MoveRateLimit)
             {
-                SendPositionUpdate();
+                var nextPosition = Owner.GetComponent<TransformComponent>(ComponentFamily.Transform).Position + translationVector;
+
+                SendPositionUpdate(nextPosition);
 
                 _moveTimeCache = 0;
             }
@@ -175,10 +181,12 @@ namespace CGO
             Owner.SendMessage(this, ComponentMessageType.MoveDirection, _movedir);
         }
 
-        public virtual void SendPositionUpdate()
+        public virtual void SendPositionUpdate(Vector2D nextPosition)
         {
             Owner.SendComponentNetworkMessage(this,
                                               NetDeliveryMethod.ReliableUnordered,
+                                              nextPosition.X,
+                                              nextPosition.Y,
                                               Owner.GetComponent<VelocityComponent>(ComponentFamily.Velocity).Velocity.X,
                                               Owner.GetComponent<VelocityComponent>(ComponentFamily.Velocity).Velocity.Y);
         }

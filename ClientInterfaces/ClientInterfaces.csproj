@@ -84,6 +84,7 @@
     <Compile Include="Resource\IResourceManager.cs" />
     <Compile Include="Map\ITile.cs" />
     <Compile Include="Serialization\ISS13Serializer.cs" />
+    <Compile Include="GameTimer\IGameTimer.cs" />
     <Compile Include="UserInterface\IDragDropInfo.cs" />
     <Compile Include="UserInterface\IGuiComponent.cs" />
     <Compile Include="UserInterface\IUserInterfaceManager.cs" />

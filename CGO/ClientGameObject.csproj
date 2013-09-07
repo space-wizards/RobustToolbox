@@ -101,6 +101,7 @@
     <Compile Include="Component\Velocity\VelocityComponent.cs" />
     <Compile Include="ContextMenuEntry.cs" />
     <Compile Include="EntitySystems\InventorySystem.cs" />
+    <Compile Include="EntitySystems\TransformSystem.cs" />
     <Compile Include="Vector2.cs" />
     <None Include="Entity.cs" />
     <Compile Include="EntityManager.cs" />

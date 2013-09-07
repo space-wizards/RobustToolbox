@@ -10,6 +10,7 @@ using ClientInterfaces.Player;
 using ClientInterfaces.Resource;
 using ClientInterfaces.Serialization;
 using ClientInterfaces.State;
+using ClientInterfaces.GameTimer;
 using ClientServices.Helpers;
 using ClientServices.Tiles;
 using ClientServices.UserInterface.Components;
@@ -39,7 +40,6 @@ namespace ClientServices.State.States
         public bool BlendLightMap = true;
         public DateTime LastUpdate;
         public DateTime Now;
-        public float Clock;
         public int ScreenHeightTiles = 12;
         public int ScreenWidthTiles = 15; // How many tiles around us do we draw?
         public string SpawnType;
@@ -366,8 +366,7 @@ namespace ClientServices.State.States
         {
             LastUpdate = Now;
             Now = DateTime.Now;
-            Clock += e.FrameDeltaTime;
-
+            IoCManager.Resolve<IGameTimer>().UpdateTime(e.FrameDeltaTime);
             _entityManager.ComponentManager.Update(e.FrameDeltaTime);
             _entityManager.Update(e.FrameDeltaTime);
             PlacementManager.Update(MousePosScreen, MapManager);
@@ -950,6 +949,7 @@ namespace ClientServices.State.States
             GameState fromState = _lastStates[delta.FromSequence];
             //Apply the delta
             GameState newState = fromState + delta;
+            newState.GameTime = IoCManager.Resolve<IGameTimer>().CurrentTime;
 
             // Go ahead and store it even if our current state is newer than this one, because
             // a newer state delta may later reference this one.
@@ -985,6 +985,7 @@ namespace ClientServices.State.States
         private void HandleFullState(NetIncomingMessage message)
         {
             GameState newState = GameState.ReadStateMessage(message);
+            newState.GameTime = IoCManager.Resolve<IGameTimer>().CurrentTime;
             SendStateAck(newState.Sequence);
 
             //Store the new state
@@ -996,7 +997,7 @@ namespace ClientServices.State.States
         private void ApplyCurrentGameState()
         {
             GameState currentState = _lastStates[_currentStateSequence];
-            _entityManager.ApplyEntityStates(currentState.EntityStates);
+            _entityManager.ApplyEntityStates(currentState.EntityStates, currentState.GameTime);
             PlayerManager.ApplyPlayerStates(currentState.PlayerStates);
         }
 

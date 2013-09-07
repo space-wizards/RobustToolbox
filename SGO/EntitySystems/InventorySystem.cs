@@ -1,5 +1,6 @@
 ﻿using GameObject;
 using GameObject.System;
+using Lidgren.Network;
 using SS13_Shared.GO;
 
 namespace SGO.EntitySystems
@@ -10,20 +11,17 @@ namespace SGO.EntitySystems
             : base(em)
         {
             EntityQuery = new EntityQuery();
-            EntityQuery.OneSet.Add(typeof(InventoryComponent));
-            EntityQuery.OneSet.Add(typeof(EquipmentComponent));
-            EntityQuery.OneSet.Add(typeof(HumanHandsComponent));
+            EntityQuery.OneSet.Add(typeof(NewInventoryComponent));
+            EntityQuery.OneSet.Add(typeof(NewEquipmentComponent));
+            EntityQuery.OneSet.Add(typeof(NewHandsComponent));
 
-            //EntityManager.EntitySystemManager.RegisterMessageType<InventorySystemPickUp>(this);
-            //EntityManager.EntitySystemManager.RegisterMessageType<InventorySystemDrop>(this);
-            //EntityManager.EntitySystemManager.RegisterMessageType<InventorySystemExchange>(this);
+            EntityManager.EntitySystemManager.RegisterMessageType<InventorySystemPickUp>(this);
+            EntityManager.EntitySystemManager.RegisterMessageType<InventorySystemDrop>(this);
+            EntityManager.EntitySystemManager.RegisterMessageType<InventorySystemExchange>(this);
         }
 
         public override void HandleNetMessage(EntitySystemMessage sysMsg)
         {
-            //can't use a switch for this, not an integral value :(
-            //I wish i could think of a better way to structure this all. These ifs make it really hard to read.
-
             if (sysMsg is InventorySystemPickUp)
             {
                 InventorySystemPickUp message = sysMsg as InventorySystemPickUp;
@@ -31,12 +29,15 @@ namespace SGO.EntitySystems
                 Entity obj = EntityManager.GetEntity(message.uidObject);
                 if (user != null && obj != null)
                 {
-                    HumanHandsComponent userHands = user.GetComponent<HumanHandsComponent>(ComponentFamily.Hands);
+                    NewHandsComponent userHands = user.GetComponent<NewHandsComponent>(ComponentFamily.Hands);
                     BasicItemComponent objItem = obj.GetComponent<BasicItemComponent>(ComponentFamily.Item);
 
                     if (userHands != null && objItem != null)
                     {
-
+                        if (userHands.handslots.ContainsKey(userHands.currentHand) && userHands.handslots[userHands.currentHand] == null)
+                        {
+                            
+                        }
                     }
                     else if (userHands == null && objItem != null && obj.HasComponent(ComponentFamily.Inventory))
                     {

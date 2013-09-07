@@ -11,9 +11,9 @@ namespace CGO.EntitySystems
             : base(em)
         {
             EntityQuery = new EntityQuery();
-            EntityQuery.OneSet.Add(typeof(InventoryComponent));
-            EntityQuery.OneSet.Add(typeof(EquipmentComponent));
-            EntityQuery.OneSet.Add(typeof(HumanHandsComponent));
+            EntityQuery.OneSet.Add(typeof(NewInventoryComponent));
+            EntityQuery.OneSet.Add(typeof(NewEquipmentComponent));
+            EntityQuery.OneSet.Add(typeof(NewHandsComponent));
         }
 
         public override void Update(float frametime)

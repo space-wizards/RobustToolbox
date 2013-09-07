@@ -72,12 +72,15 @@
     <Compile Include="Component\Damageable\Health\LocationalHealth\HumanHealthComponent.cs" />
     <Compile Include="Component\Direction\DirectionComponent.cs" />
     <Compile Include="Component\EntityStats\EntityStatsCompC.cs" />
+    <Compile Include="Component\Equipment\NewEquipmentComponent.cs" />
     <Compile Include="Component\Equipment\EquipmentComponent.cs" />
     <Compile Include="Component\Equipment\HumanEquipmentComponent.cs" />
     <Compile Include="Component\Equippable\EquippableComponent.cs" />
+    <Compile Include="Component\Hands\NewHandsComponent.cs" />
     <Compile Include="Component\Hands\HumanHandsComponent.cs" />
     <Compile Include="Component\Damageable\Health\HealthComponent.cs" />
     <Compile Include="Component\Input\ContextMenuComponent.cs" />
+    <Compile Include="Component\Inventory\NewInventory.cs" />
     <Compile Include="Component\Inventory\Inventory.cs" />
     <Compile Include="Component\Item\BasicItemComponent.cs" />
     <Compile Include="Component\Light\FlashLightComponent.cs" />

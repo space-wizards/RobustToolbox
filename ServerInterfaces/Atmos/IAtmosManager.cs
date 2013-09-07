@@ -6,7 +6,7 @@ namespace ServerInterfaces.Atmos
     public interface IAtmosManager
     {
         void InitializeGasCells();
-        void Update();
+        void Update(float frametime);
         void SendAtmosStateTo(NetConnection client);
         IGasProperties GetGasProperties(GasType g);
         void TotalAtmosReport();

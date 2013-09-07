@@ -330,7 +330,7 @@ namespace SS13_Server
             if (Runlevel == RunLevel.Game)
             {
                 EntityManager.ComponentManager.Update(frameTime);
-                IoCManager.Resolve<IAtmosManager>().Update();
+                IoCManager.Resolve<IAtmosManager>().Update(frameTime);
                 IoCManager.Resolve<IRoundManager>().CurrentGameMode.Update();
                 IoCManager.Resolve<ICraftingManager>().Update();
                 EntityManager.Update(frameTime);

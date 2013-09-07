@@ -23,5 +23,9 @@
         float GetSimulatedLoss();
         float GetSimulatedMinimumLatency();
         float GetSimulatedRandomLatency();
+        int GetRate();
+        int GetUpdateRate();
+        int GetCommandRate();
+        float GetInterpolation();
     }
 }

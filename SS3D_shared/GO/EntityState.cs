@@ -8,6 +8,8 @@ namespace SS13_Shared.GO
     public class EntityState : INetSerializableType
     {
         public EntityStateData StateData;
+        [NonSerialized]
+        public float ReceivedTime;
 
         public EntityState(int uid, List<ComponentState> componentStates, string templateName, string name)
         {

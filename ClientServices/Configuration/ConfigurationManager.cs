@@ -136,6 +136,26 @@ namespace ClientServices.Configuration
             return Configuration.SimulatedRandomLatency;
         }
 
+        public int GetRate()
+        {
+            return Configuration.Rate;
+        }
+
+        public int GetUpdateRate()
+        {
+            return Configuration.UpdateRate;
+        }
+
+        public int GetCommandRate()
+        {
+            return Configuration.CommandRate;
+        }
+
+        public float GetInterpolation()
+        {
+            return Configuration.Interpolation;
+        }
+
         #endregion
 
         private void Save()

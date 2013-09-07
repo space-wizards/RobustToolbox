@@ -31,7 +31,10 @@ namespace SGO
             if (shouldMove)
             {
                 var velComp = Owner.GetComponent<VelocityComponent>(ComponentFamily.Velocity);
-                velComp.Velocity = new Vector2((float)message.MessageParameters[0], (float)message.MessageParameters[1]);
+                var transform = Owner.GetComponent<TransformComponent>(ComponentFamily.Transform);
+
+                velComp.Velocity = new Vector2((float)message.MessageParameters[2], (float)message.MessageParameters[3]);
+                transform.Position = new Vector2((float)message.MessageParameters[0], (float)message.MessageParameters[1]);
             }
         }
     }

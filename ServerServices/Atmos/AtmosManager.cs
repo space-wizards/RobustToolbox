@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Drawing;
 using System.IO;
 using System.IO.Compression;
+using System.Linq;
 using BKSystem.IO;
 using Lidgren.Network;
 using SS13.IoC;
@@ -20,6 +21,8 @@ namespace ServerServices.Atmos
     {
         private readonly Dictionary<GasType, IGasProperties> gasProperties;
         private DateTime lastAtmosDisplayPush;
+        private float elapsedSinceLastFrame;
+        private const float fps = 15;
 
         public AtmosManager()
         {
@@ -49,8 +52,12 @@ namespace ServerServices.Atmos
             }
         }
 
-        public void Update()
+        public void Update(float frametime)
         {
+            elapsedSinceLastFrame += frametime;
+            if (elapsedSinceLastFrame < (1 / fps))
+                return;
+            elapsedSinceLastFrame = 0;
             var m = IoCManager.Resolve<IMapManager>();
 
             for (int x = 0; x < m.GetMapWidth(); x++)
@@ -79,14 +86,8 @@ namespace ServerServices.Atmos
 
         public IGasProperties GetGasProperties(GasType g)
         {
-            foreach (GasType type in gasProperties.Keys)
-            {
-                if (type == g)
-                {
-                    return gasProperties[g];
-                }
-            }
-
+            if (gasProperties.ContainsKey(g))
+                return gasProperties[g];
             return null;
         }
 

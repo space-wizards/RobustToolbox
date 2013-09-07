@@ -14,6 +14,7 @@ namespace SS13_Shared.GameStates
     {
         [NonSerialized] private bool _serialized;
         [NonSerialized] private MemoryStream _serializedData;
+        [NonSerialized] public float GameTime;
 
         /// <summary>
         /// Constructor!

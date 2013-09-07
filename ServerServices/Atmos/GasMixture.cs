@@ -17,10 +17,12 @@ namespace ServerServices.Atmos
         private float nextTemperature;
         private float temperature = 293.15f; // Normal room temp in K
         private float volume = 2.0f; // in m^3
+        private IAtmosManager _atmosManager;
 
         public GasMixture()
         {
             InitGasses();
+            _atmosManager = IoCManager.Resolve<IAtmosManager>();
         }
 
         public float TotalGas
@@ -61,7 +63,7 @@ namespace ServerServices.Atmos
                 float SHC = 0.0f;
                 foreach (GasType g in gasses.Keys)
                 {
-                    SHC += (gasses[g]*IoCManager.Resolve<IAtmosManager>().GetGasProperties(g).SpecificHeatCapacity);
+                    SHC += (gasses[g]*_atmosManager.GetGasProperties(g).SpecificHeatCapacity);
                 }
 
                 return SHC;
@@ -76,7 +78,7 @@ namespace ServerServices.Atmos
 
                 foreach (GasType g in gasses.Keys)
                 {
-                    mass += (gasses[g]*IoCManager.Resolve<IAtmosManager>().GetGasProperties(g).MolecularMass);
+                    mass += (gasses[g]*_atmosManager.GetGasProperties(g).MolecularMass);
                 }
 
                 return mass;
@@ -169,12 +171,11 @@ namespace ServerServices.Atmos
 
         public void Burn()
         {
-            var am = IoCManager.Resolve<IAtmosManager>();
             if (!Burning) // If we're not burning lets see if we can start due to autoignition
             {
                 foreach (GasType g in gasses.Keys)
                 {
-                    float ait = am.GetGasProperties(g).AutoignitionTemperature;
+                    float ait = _atmosManager.GetGasProperties(g).AutoignitionTemperature;
                     if (ait > 0.0f && temperature > ait)
                         // If our temperature is high enough to autoignite then we're burning now
                     {
@@ -192,11 +193,11 @@ namespace ServerServices.Atmos
                 float oAmount = 0.0f;
                 foreach (GasType g in nextGasses.Keys)
                 {
-                    if (am.GetGasProperties(g).Combustable)
+                    if (_atmosManager.GetGasProperties(g).Combustable)
                     {
                         cAmount += gasses[g];
                     }
-                    if (am.GetGasProperties(g).Oxidant)
+                    if (_atmosManager.GetGasProperties(g).Oxidant)
                     {
                         oAmount += gasses[g];
                     }
@@ -212,18 +213,18 @@ namespace ServerServices.Atmos
                     foreach (GasType g in gasses.Keys)
                     {
                         amount = gasses[g]*ratio;
-                        if (am.GetGasProperties(g).Combustable)
+                        if (_atmosManager.GetGasProperties(g).Combustable)
                         {
                             AddNextGas(-amount, g);
                             AddNextGas(amount, GasType.CO2);
-                            energy_released += (am.GetGasProperties(g).SpecificHeatCapacity*2000*amount);
+                            energy_released += (_atmosManager.GetGasProperties(g).SpecificHeatCapacity * 2000 * amount);
                             // This is COMPLETE bullshit non science but whatever
                         }
-                        if (am.GetGasProperties(g).Oxidant)
+                        if (_atmosManager.GetGasProperties(g).Oxidant)
                         {
                             AddNextGas(-amount, g);
                             AddNextGas(amount, GasType.CO2);
-                            energy_released += (am.GetGasProperties(g).SpecificHeatCapacity*2000*amount);
+                            energy_released += (_atmosManager.GetGasProperties(g).SpecificHeatCapacity * 2000 * amount);
                             // This is COMPLETE bullshit non science but whatever
                         }
                     }
@@ -244,7 +245,7 @@ namespace ServerServices.Atmos
 
         public float MassOf(GasType gas)
         {
-            return (IoCManager.Resolve<IAtmosManager>().GetGasProperties(gas).MolecularMass*gasses[gas]);
+            return (_atmosManager.GetGasProperties(gas).MolecularMass * gasses[gas]);
         }
     }
 }

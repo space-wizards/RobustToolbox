@@ -13,7 +13,7 @@ namespace ClientServices.Network
     {
         private const string ServerName = "SS13 Server";
         private readonly NetPeerConfiguration _netConfig = new NetPeerConfiguration("SS13_NetTag");
-        private NetClient _netClient;
+        public NetClient NetClient { get; private set; }
         private GameType _serverGameType;
 
         public NetworkManager()
@@ -30,8 +30,8 @@ namespace ClientServices.Network
                 _netConfig.SimulatedRandomLatency = config.GetSimulatedRandomLatency();
             }
 
-            _netClient = new NetClient(_netConfig);
-            _netClient.Start();
+            NetClient = new NetClient(_netConfig);
+            NetClient.Start();
         }
 
         #region INetworkManager Members
@@ -40,12 +40,12 @@ namespace ClientServices.Network
 
         public NetPeerStatistics CurrentStatistics
         {
-            get { return _netClient.Statistics; }
+            get { return NetClient.Statistics; }
         }
 
         public long UniqueId
         {
-            get { return _netClient.UniqueIdentifier; }
+            get { return NetClient.UniqueIdentifier; }
         }
 
         public event EventHandler<IncomingNetworkMessageArgs> MessageArrived; //Called when we recieve a new message.
@@ -56,7 +56,7 @@ namespace ClientServices.Network
 
         public void ConnectTo(string host)
         {
-            _netClient.Connect(host, 1212);
+            NetClient.Connect(host, 1212);
         }
 
         public void Disconnect()
@@ -69,19 +69,19 @@ namespace ClientServices.Network
             if (IsConnected)
             {
                 NetIncomingMessage msg;
-                while ((msg = _netClient.ReadMessage()) != null)
+                while ((msg = NetClient.ReadMessage()) != null)
                 {
                     OnMessageArrived(msg);
-                    _netClient.Recycle(msg);
+                    NetClient.Recycle(msg);
                 }
             }
 
-            if (!IsConnected && _netClient.ServerConnection != null)
+            if (!IsConnected && NetClient.ServerConnection != null)
             {
                 OnConnected();
                 IsConnected = true;
             }
-            else if (IsConnected && _netClient.ServerConnection == null)
+            else if (IsConnected && NetClient.ServerConnection == null)
             {
                 OnDisconnected();
                 IsConnected = false;
@@ -90,29 +90,29 @@ namespace ClientServices.Network
 
         public void RequestMap()
         {
-            NetOutgoingMessage message = _netClient.CreateMessage();
+            NetOutgoingMessage message = NetClient.CreateMessage();
             message.Write((byte) NetMessage.RequestMap);
-            _netClient.SendMessage(message, NetDeliveryMethod.ReliableUnordered);
+            NetClient.SendMessage(message, NetDeliveryMethod.ReliableUnordered);
         }
 
         public NetOutgoingMessage CreateMessage()
         {
-            return _netClient.CreateMessage();
+            return NetClient.CreateMessage();
         }
 
         public void SendClientName(string name)
         {
-            NetOutgoingMessage message = _netClient.CreateMessage();
+            NetOutgoingMessage message = NetClient.CreateMessage();
             message.Write((byte) NetMessage.ClientName);
             message.Write(name);
-            _netClient.SendMessage(message, NetDeliveryMethod.ReliableOrdered);
+            NetClient.SendMessage(message, NetDeliveryMethod.ReliableOrdered);
         }
 
         public void SendMessage(NetOutgoingMessage message, NetDeliveryMethod deliveryMethod)
         {
             if (message != null)
             {
-                _netClient.SendMessage(message, deliveryMethod);
+                NetClient.SendMessage(message, deliveryMethod);
             }
         }
 
@@ -135,14 +135,14 @@ namespace ClientServices.Network
 
         public void Restart()
         {
-            _netClient.Shutdown("Leaving");
-            _netClient = new NetClient(_netConfig);
-            _netClient.Start();
+            NetClient.Shutdown("Leaving");
+            NetClient = new NetClient(_netConfig);
+            NetClient.Start();
         }
 
         public void ShutDown()
         {
-            _netClient.Shutdown("Quitting");
+            NetClient.Shutdown("Quitting");
         }
 
         public void SetGameType(NetIncomingMessage msg)
@@ -153,17 +153,17 @@ namespace ClientServices.Network
         public void SendChangeTile(int x, int z, string newTile)
         {
             var mapMgr = (MapManager) IoCManager.Resolve<IMapManager>();
-            NetOutgoingMessage netMessage = _netClient.CreateMessage();
+            NetOutgoingMessage netMessage = NetClient.CreateMessage();
             netMessage.Write(x);
             netMessage.Write(z);
             netMessage.Write(mapMgr.GetTileIndex(newTile));
-            _netClient.SendMessage(netMessage, NetDeliveryMethod.ReliableOrdered);
+            NetClient.SendMessage(netMessage, NetDeliveryMethod.ReliableOrdered);
         }
 
         public NetIncomingMessage GetNetworkUpdate()
         {
             NetIncomingMessage msg;
-            return (msg = _netClient.ReadMessage()) != null ? msg : null;
+            return (msg = NetClient.ReadMessage()) != null ? msg : null;
         }
 
         public string GetServerName()
@@ -173,7 +173,7 @@ namespace ClientServices.Network
 
         public string GetServerAddress()
         {
-            return String.Format("{0}:{1}", _netClient.ServerConnection.RemoteEndPoint.Address, _netClient.Port);
+            return String.Format("{0}:{1}", NetClient.ServerConnection.RemoteEndPoint.Address, NetClient.Port);
         }
 
         public GameType GetGameType()

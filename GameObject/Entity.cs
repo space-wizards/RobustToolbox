@@ -472,6 +472,7 @@ namespace GameObject
             Name = state.StateData.Name;
             foreach (ComponentState compState in state.ComponentStates)
             {
+                compState.ReceivedTime = state.ReceivedTime;
                 if (HasComponent(compState.Family))
                 {
                     IComponent comp = GetComponent(compState.Family);

@@ -7,6 +7,7 @@ namespace ClientInterfaces.Network
     public interface INetworkManager
     {
         NetPeerStatistics CurrentStatistics { get; }
+        NetClient NetClient { get; }
         bool IsConnected { get; }
         long UniqueId { get; }
 

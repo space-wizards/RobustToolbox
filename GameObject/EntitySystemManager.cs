@@ -60,7 +60,7 @@ namespace GameObject
 
             if (!_systems.ContainsValue(regSystem))
             {
-                throw new ArgumentException("Invalid Entity System.");
+                throw new InvalidEntitySystemException();
             }
 
             if (_systemMessageTypes.ContainsKey(type)) return;
@@ -146,4 +146,7 @@ namespace GameObject
             this.message = message;
         }
     }
+
+    public class InvalidEntitySystemException : Exception
+    {}
 }

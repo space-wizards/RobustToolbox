@@ -52,8 +52,6 @@ namespace GameObject
                     break;
             }
             EntitySystemManager = new EntitySystemManager(this);
-            EntitySystemManager.InitializeInstances(); //This needs to come after the instance is created and assigned so that the systems can find the
-                                                       //EntitySystemManager referenced here when they are instantiated.
             ComponentFactory = new ComponentFactory(this, _componentNamespace);
             EntityNetworkManager = entityNetworkManager;
             ComponentManager = new ComponentManager();

@@ -41,10 +41,6 @@ namespace GameObject
                     break;
             }
 
-        }
-
-        public void InitializeInstances()
-        {
             foreach (Type type in _systemTypes)
             {
                 if (type == typeof(EntitySystem))

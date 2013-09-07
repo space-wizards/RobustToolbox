@@ -65,6 +65,9 @@
     <Compile Include="Component\Actor\BasicActorComponent.cs" />
     <Compile Include="Component\Direction\DirectionComponent.cs" />
     <Compile Include="Component\EntityStats\EntityStatsCompS.cs" />
+    <Compile Include="Component\Equipment\NewEquipmentComponent.cs" />
+    <Compile Include="Component\Hands\NewHandsComponent.cs" />
+    <Compile Include="Component\Inventory\NewInventory.cs" />
     <Compile Include="Component\Inventory\Inventory.cs" />
     <Compile Include="Component\Item\ItemCapability\BreatherCapability.cs" />
     <Compile Include="Component\Item\ItemCapability\HealthScanCapability.cs" />

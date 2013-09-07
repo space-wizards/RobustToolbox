@@ -18,6 +18,9 @@ namespace GameObject.System
             EntitySystemManager = esm;
         }
 
+        public virtual void RegisterMessageTypes()
+        {}
+
         protected List<Entity> RelevantEntities
         {
             get { return EntityManager.GetEntities(EntityQuery); }

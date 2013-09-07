@@ -11,10 +11,13 @@ namespace SGO.EntitySystems
             : base(em, esm)
         {
             EntityQuery = new EntityQuery();
-            EntityQuery.OneSet.Add(typeof(NewInventoryComponent));
-            EntityQuery.OneSet.Add(typeof(NewEquipmentComponent));
-            EntityQuery.OneSet.Add(typeof(NewHandsComponent));
+            EntityQuery.OneSet.Add(typeof (NewInventoryComponent));
+            EntityQuery.OneSet.Add(typeof (NewEquipmentComponent));
+            EntityQuery.OneSet.Add(typeof (NewHandsComponent));
+        }
 
+        public override void RegisterMessageTypes()
+        {
             EntitySystemManager.RegisterMessageType<InventorySystemPickUp>(this);
             EntitySystemManager.RegisterMessageType<InventorySystemDrop>(this);
             EntitySystemManager.RegisterMessageType<InventorySystemExchange>(this);

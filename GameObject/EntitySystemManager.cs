@@ -46,15 +46,22 @@ namespace GameObject
                 if (type == typeof(EntitySystem))
                     continue; //Don't run the base EntitySystem.
                 //Force initialization of all systems
-                object instance = Activator.CreateInstance(type, _entityManager, this);
+                var instance = (EntitySystem)Activator.CreateInstance(type, _entityManager, this);
                 MethodInfo generic = typeof(EntitySystemManager).GetMethod("AddSystem").MakeGenericMethod(type);
                 generic.Invoke(this, new[] { instance });
+                instance.RegisterMessageTypes();
+
             }
         }
 
         public void RegisterMessageType<T>(EntitySystem regSystem) where T : EntitySystemMessage
         {
             Type type = typeof(T);
+
+            if (!_systems.ContainsValue(regSystem))
+            {
+                throw new ArgumentException("Invalid Entity System.");
+            }
 
             if (_systemMessageTypes.ContainsKey(type)) return;
 

@@ -7,8 +7,8 @@ namespace SGO.EntitySystems
 {
     public class InventorySystem : EntitySystem
     {
-        public InventorySystem(EntityManager em)
-            : base(em)
+        public InventorySystem(EntityManager em, EntitySystemManager esm)
+            : base(em, esm)
         {
             EntityQuery = new EntityQuery();
             EntityQuery.OneSet.Add(typeof(NewInventoryComponent));

@@ -6,14 +6,16 @@ namespace GameObject.System
     public abstract class EntitySystem
     {
         protected EntityManager EntityManager;
+        protected EntitySystemManager EntitySystemManager;
         protected EntityQuery EntityQuery;
 
         private bool _initialized;
         private bool _shutdown;
 
-        public EntitySystem(EntityManager em)
+        public EntitySystem(EntityManager em, EntitySystemManager esm)
         {
             EntityManager = em;
+            EntitySystemManager = esm;
         }
 
         protected List<Entity> RelevantEntities

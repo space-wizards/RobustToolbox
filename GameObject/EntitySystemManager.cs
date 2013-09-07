@@ -50,7 +50,7 @@ namespace GameObject
                 if (type == typeof(EntitySystem))
                     continue; //Don't run the base EntitySystem.
                 //Force initialization of all systems
-                object instance = Activator.CreateInstance(type, _entityManager);
+                object instance = Activator.CreateInstance(type, _entityManager, this);
                 MethodInfo generic = typeof(EntitySystemManager).GetMethod("AddSystem").MakeGenericMethod(type);
                 generic.Invoke(this, new[] { instance });
             }

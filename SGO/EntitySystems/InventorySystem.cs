@@ -15,9 +15,9 @@ namespace SGO.EntitySystems
             EntityQuery.OneSet.Add(typeof(NewEquipmentComponent));
             EntityQuery.OneSet.Add(typeof(NewHandsComponent));
 
-            EntityManager.EntitySystemManager.RegisterMessageType<InventorySystemPickUp>(this);
-            EntityManager.EntitySystemManager.RegisterMessageType<InventorySystemDrop>(this);
-            EntityManager.EntitySystemManager.RegisterMessageType<InventorySystemExchange>(this);
+            EntitySystemManager.RegisterMessageType<InventorySystemPickUp>(this);
+            EntitySystemManager.RegisterMessageType<InventorySystemDrop>(this);
+            EntitySystemManager.RegisterMessageType<InventorySystemExchange>(this);
         }
 
         public override void HandleNetMessage(EntitySystemMessage sysMsg)

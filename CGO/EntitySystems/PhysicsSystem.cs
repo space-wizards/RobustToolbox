@@ -15,8 +15,8 @@ namespace CGO.EntitySystems
 {
     internal class PhysicsSystem : EntitySystem
     {
-        public PhysicsSystem(EntityManager em)
-            : base(em)
+        public PhysicsSystem(EntityManager em, EntitySystemManager esm)
+            : base(em, esm)
         {
             EntityQuery = new EntityQuery();
             EntityQuery.AllSet.Add(typeof(PhysicsComponent));

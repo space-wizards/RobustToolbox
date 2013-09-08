@@ -31,7 +31,7 @@ using ServerServices.Round;
 using EntityManager = SGO.EntityManager;
 using IEntityManager = ServerInterfaces.GOC.IEntityManager;
 using SS13_Shared.Utility;
-
+using TimerQueueTimer = ServerServices.Timing.TimerQueueTimer;
 namespace SS13_Server
 {
     public class SS13Server : ISS13Server
@@ -57,7 +57,8 @@ namespace SS13_Server
         private DateTime _lastStateTime = DateTime.Now;
         private uint _oldestAckedState;
         private DateTime _startAt;
-        private Timer mainLoopTimer;
+        private TimerQueueTimer mainLoopTimer;
+        private AutoResetEvent are;
         public Stopwatch stopWatch = new Stopwatch();
         private int updateRate = 20; //20 updates per second
         private bool updateThreadRunning;
@@ -164,15 +165,22 @@ namespace SS13_Server
         // The main server loop
         public void MainLoop()
         {
-            TimerCallback tcb = RunLoop;
-            var are = new AutoResetEvent(false);
-            var due = (long) ServerRate;
+            var due = 1;// (long)ServerRate / 3;
+            mainLoopTimer = new TimerQueueTimer();
+            TimerQueueTimer.WaitOrTimerDelegate RunLoopDelegate = RunLoop;
+            mainLoopTimer.Create(0, (uint)ServerRate, RunLoopDelegate);
+
+            are = new AutoResetEvent(false);
+            are.WaitOne(-1);
+            mainLoopTimer.Delete();
+            /*   TimerCallback tcb = RunLoop;
+            var due = 1;// (long)ServerRate / 3;
             stopWatch.Start(); //Start the clock
             mainLoopTimer = new Timer(tcb, are, 0, due);
-            are.WaitOne(-1);
+            are.WaitOne(-1);*/
         }
 
-        public void RunLoop(Object stateInfo)
+        public void RunLoop(IntPtr param, bool success)
         {
             /*** DO NOT CHANGE ANYTHING IN THIS FUNCTION UNLESS YOU ARE SPOOGE OR YOU UNDERSTAND EVERYTHING ***/
 
@@ -181,30 +189,28 @@ namespace SS13_Server
             {
                 if (updateThreadRunning)
                 {
+                    mainLoopTimer.Change(1,(uint)ServerRate);
                     return;
                 }
                 updateThreadRunning = true;
             }
 
-            using (var autoReset = stateInfo as AutoResetEvent)
+            if (!Active)
             {
-                if (!Active)
-                {
-                    autoReset.Set();
-                    return;
-                }
+                are.Reset();
+                return;
             }
 
             // If the debugger is attached, let the errors dump through and break in the debugger
             if (Debugger.IsAttached)
             {
-                DoMainLoopStuff(stateInfo);
+                DoMainLoopStuff();
             }
             else //Otherwise log them and crash out.
             {
                 try
                 {
-                    DoMainLoopStuff(stateInfo);
+                    DoMainLoopStuff();
                 }
                 catch (Exception e)
                 {
@@ -220,34 +226,20 @@ namespace SS13_Server
             }
         }
 
-        private void DoMainLoopStuff(Object stateInfo)
+        private void DoMainLoopStuff()
         {
             float elapsedTime;
 
-            elapsedTime = (stopWatch.ElapsedTicks/millisecondsPerTick);
-            serverClock += elapsedTime/1000;
-            //Elapsed time in milliseconds since the last tick
+            elapsedTime = (stopWatch.ElapsedTicks/(float)Stopwatch.Frequency);
+            //Elapsed time in seconds since the last tick
             stopWatch.Restart(); //Reset the stopwatch so we get elapsed time next time
+            serverClock += elapsedTime;
 
             //Begin update time
             Time = DateTime.Now;
-            ProcessPackets();
-
-            //Update takes elapsed time in seconds.
-            Update(elapsedTime/1000);
-
-            IoCManager.Resolve<IConsoleManager>().Update();
-
-            /*var updateElapsedTime = DateTime.Now - Time;
-            var sleepTime = new TimeSpan((long)(10000 * (ServerRate - (float)updateElapsedTime.TotalMilliseconds)));
-            //var sleepTime = Time.AddMilliseconds(ServerRate) - DateTime.Now;
-            if (sleepTime.TotalMilliseconds > 0)
-                Thread.Sleep(sleepTime);
-            var totalElapsedTime = (DateTime.Now - Time).TotalMilliseconds;
-            var rate = 1 / (totalElapsedTime / 1000);*/
             if (frameTimes.Count >= TickRate)
                 frameTimes.RemoveAt(0);
-            float rate = 1000/elapsedTime;
+            float rate = 1 / elapsedTime;
             frameTimes.Add(rate);
 
 
@@ -257,6 +249,13 @@ namespace SS13_Server
                 Console.Title = "FPS: " + Math.Round(frameTimeAverage(), 2) + " | Netstats: " + netstats;
                 lastBytesUpdate = DateTime.Now;
             }
+
+            ProcessPackets();
+
+            //Update takes elapsed time in seconds.
+            Update(elapsedTime);
+
+            IoCManager.Resolve<IConsoleManager>().Update();
         }
 
         private string UpdateBPS()

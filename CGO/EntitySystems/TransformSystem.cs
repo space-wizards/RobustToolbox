@@ -56,7 +56,7 @@ namespace CGO.EntitySystems
                         if (diff > deltaTime * KeyBindingMoverComponent.FastMoveSpeed * 2) //If we're really off
                             transform.TranslateTo(lerpedPosition);
                     }
-                    else if(diff > 0.1f)
+                    else if(diff > 0.01f)
                     {
                         transform.TranslateTo(lerpedPosition);
                     }

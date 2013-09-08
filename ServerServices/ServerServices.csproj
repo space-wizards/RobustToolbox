@@ -92,6 +92,7 @@
     <Compile Include="Tiles\Floor\Space.cs" />
     <Compile Include="Tiles\Tile.cs" />
     <Compile Include="Tiles\Wall\Wall.cs" />
+    <Compile Include="Timing\TimerQueueTimer.cs" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\GameObject\GameObject.csproj">

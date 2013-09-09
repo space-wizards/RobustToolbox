@@ -303,9 +303,13 @@ namespace SS13_Server
             {
                 EntityManager.ComponentManager.Update(frameTime);
                 EntityManager.Update(frameTime);
+                var start = stopWatch.ElapsedTicks;
                 ((AtmosManager)IoCManager.Resolve<IAtmosManager>()).Update(frameTime);
+                var end = stopWatch.ElapsedTicks;
+                var atmosTime = (end - start) / (float)Stopwatch.Frequency * 1000;
                 IoCManager.Resolve<IRoundManager>().CurrentGameMode.Update();
                 IoCManager.Resolve<ICraftingManager>().Update();
+                GC.KeepAlive(atmosTime);
             }
             else if (Runlevel == RunLevel.Lobby)
             {

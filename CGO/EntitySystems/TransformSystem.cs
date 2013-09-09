@@ -3,10 +3,13 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
 using System.Text;
+using ClientInterfaces.Configuration;
 using ClientInterfaces.GameTimer;
 using GameObject;
 using GameObject.System;
+using GorgonLibrary;
 using SS13.IoC;
+using SS13_Shared;
 using SS13_Shared.GO;
 
 namespace CGO.EntitySystems
@@ -24,44 +27,72 @@ namespace CGO.EntitySystems
         public override void Update(float frametime)
         {
             var entities = EntityManager.GetEntities(EntityQuery);
+            var interpolation = IoCManager.Resolve<IConfigurationManager>().GetInterpolation();
             foreach (var entity in entities)
             {
                 var transform = entity.GetComponent<TransformComponent>(ComponentFamily.Transform);
-                var currentTime = IoCManager.Resolve<IGameTimer>().CurrentTime;
-                var deltaTime = currentTime - transform.LerpTime;
-                if (transform.ToTime - transform.LerpTime <= 0.001f) // If there is no lerping to be done for whatever reason
+                bool haskbMover = entity.GetComponent<KeyBindingMoverComponent>(ComponentFamily.Mover) != null;
+                var currentTime = IoCManager.Resolve<IGameTimer>().CurrentTime - interpolation;
+                Vector2D newPosition;
+                if (transform.lerpStateTo == transform.lerpStateFrom || currentTime > transform.lerpStateTo.ReceivedTime || currentTime < transform.lerpStateFrom.ReceivedTime)
                 {
-                    var diff = (transform.ToPosition - transform.Position).Length;
-                    if (entity.GetComponent<KeyBindingMoverComponent>(ComponentFamily.Mover) != null)
-                    {
-                        if (diff > deltaTime * KeyBindingMoverComponent.FastMoveSpeed * 2) //If we're really off
-                            transform.TranslateTo(transform.ToPosition);
-                    }
-                    else if (diff > 0.1f) 
-                    {
-                            transform.TranslateTo(transform.ToPosition);
-                    }
+                    newPosition = new Vector2D(transform.lerpStateTo.X, transform.lerpStateTo.Y);
                 }
                 else
                 {
-                    var lerpVelocity = (transform.ToPosition - transform.LerpPosition)/
-                                       (transform.ToTime - transform.LerpTime);
-                    var lerpedPosition = transform.LerpPosition + lerpVelocity*deltaTime;
-                    //Calculate lerped position
-                    /*var lerpVelocity = (transform.ToPosition - transform.LerpPosition)/transform.LerpTime;
-                    var lerpPosition = transform.LerpPosition + lerpVelocity*transform.LerpClock;*/
-                    var diff = (lerpedPosition - transform.Position).Length;
-                    if(entity.GetComponent<KeyBindingMoverComponent>(ComponentFamily.Mover) != null)
-                    {
-                        if (diff > deltaTime * KeyBindingMoverComponent.FastMoveSpeed * 2) //If we're really off
-                            transform.TranslateTo(lerpedPosition);
-                    }
-                    else if(diff > 0.01f)
-                    {
-                        transform.TranslateTo(lerpedPosition);
-                    }
+                    var p1 = new Vector2D(transform.lerpStateFrom.X, transform.lerpStateTo.Y);
+                    var p2 = new Vector2D(transform.lerpStateTo.X, transform.lerpStateTo.Y);
+                    var t1 = transform.lerpStateFrom.ReceivedTime;
+                    var t2 = transform.lerpStateTo.ReceivedTime;
+                    var lerp = (currentTime - t1)/(t2 - t1);
+                    newPosition = Interpolate(p1, p2, lerp, false);
+                    if(haskbMover)
+                        newPosition = EaseExponential(currentTime - t1, transform.Position, newPosition, t2 - t1);
                 }
+                if ((newPosition - transform.Position).Length > 0.01f && 
+                    (!haskbMover || (newPosition - transform.Position).Length > 2 * interpolation * KeyBindingMoverComponent.FastMoveSpeed))
+                        transform.TranslateTo(newPosition);
+                
+            }
+        }
 
+        private Vector2D EaseExponential(float time, Vector2D v1, Vector2D v2, float duration)
+        {
+            var dx = (v2.X - v1.X);
+            var x = EaseExponential(time, v1.X, dx, duration);
+            
+            var dy = (v2.Y - v1.Y);
+            var y = EaseExponential(time, v1.Y, dy, duration);
+            return new Vector2D(x,y);
+        }
+
+        private float EaseExponential(float t, float b, float c, float d)
+        {
+            return c * ((float)-Math.Pow(2, -10 * t / d) + 1) + b;
+        }
+
+        private Vector2D Interpolate(Vector2D v1, Vector2D v2, float control, bool allowExtrapolation)
+        {
+            if (!allowExtrapolation && (control > 1 || control < 0))
+            {
+                // Error message includes information about the actual value of the argument
+                throw new ArgumentOutOfRangeException
+                    (
+                    "control",
+                    control,
+                    "Control parameter must be a value between 0 & 1\nThe argument provided has a value of " + control
+                    );
+            }
+            else
+            {
+                return
+                    (
+                        new Vector2D
+                            (
+                            v1.X * (1 - control) + v2.X * control,
+                            v1.Y * (1 - control) + v2.Y * control
+                            )
+                    );
             }
         }
     }

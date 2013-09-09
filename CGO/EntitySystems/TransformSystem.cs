@@ -49,10 +49,16 @@ namespace CGO.EntitySystems
                     if(haskbMover)
                         newPosition = EaseExponential(currentTime - t1, transform.Position, newPosition, t2 - t1);
                 }
-                if ((newPosition - transform.Position).Length > 0.01f && 
+                if ((newPosition - transform.Position).Length > 0.01f &&
                     (!haskbMover || (newPosition - transform.Position).Length > 2 * interpolation * KeyBindingMoverComponent.FastMoveSpeed))
-                        transform.TranslateTo(newPosition);
-                
+                {
+                    transform.TranslateTo(newPosition);
+                    if(haskbMover)
+                    {
+                        entity.GetComponent<KeyBindingMoverComponent>(ComponentFamily.Mover).SendPositionUpdate(newPosition);
+                    }
+                }
+
             }
         }
 

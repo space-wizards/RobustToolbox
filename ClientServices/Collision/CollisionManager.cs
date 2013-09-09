@@ -5,6 +5,7 @@ using System.Linq;
 using CGO;
 using ClientInterfaces.Collision;
 using GameObject;
+using GorgonLibrary;
 using SS13_Shared.GO;
 
 namespace ClientServices.Collision
@@ -86,8 +87,22 @@ namespace ClientServices.Collision
         /// <returns></returns>
         public bool TryCollide(Entity entity)
         {
-            var collider = (ColliderComponent) entity.GetComponent(ComponentFamily.Collider);
+            return TryCollide(entity, Vector2D.Zero);
+        }
+
+        /// <summary>
+        /// returns true if collider intersects a collidable under management and calls Bump.
+        /// </summary>
+        /// <param name="collider">Rectangle to check for collision</param>
+        /// <returns></returns>
+        public bool TryCollide(Entity entity, Vector2D offset, bool bump = true)
+        {
+            var collider = (ColliderComponent)entity.GetComponent(ComponentFamily.Collider);
             if (collider == null) return false;
+
+            var ColliderAABB = collider.OffsetAABB;
+            if(offset.Length > 0)
+                ColliderAABB.Offset(offset.X, offset.Y);
 
             PointF[] points =
                 {
@@ -120,10 +135,11 @@ namespace ClientServices.Collision
                     collided = true;
                 }
 
-                aabb.Collidable.Bump(entity);
+                if(bump) aabb.Collidable.Bump(entity);
             }
             return collided;
         }
+
 
         /// <summary>
         /// Adds a collidable to the manager.

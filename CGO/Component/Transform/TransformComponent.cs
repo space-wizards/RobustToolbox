@@ -18,10 +18,6 @@ namespace CGO
         private TransformComponentState lastState;
         public TransformComponentState lerpStateFrom;
         public TransformComponentState lerpStateTo;
-        public Vector2D ToPosition { get; set; }
-        public float ToTime { get; set; }
-        public Vector2D LerpPosition { get; set; }
-        public float LerpTime { get; set; }
         public TransformComponent()
         {
             Family = ComponentFamily.Transform;
@@ -71,6 +67,7 @@ namespace CGO
         public void TranslateByOffset(Vector2D offset)
         {
             Position = Position + offset;
+
         }
 
         public override void HandleComponentState(dynamic state)
@@ -101,25 +98,8 @@ namespace CGO
             }
             if(lastState.ForceUpdate)
             {
-                Position = new Vector2D(state.X, state.Y);
+                TranslateTo(new Vector2D(state.X, state.Y));
             }
-            /*
-            if (lerpState == null || Math.Abs(lerpState.ReceivedTime - state.ReceivedTime) <= .001f)
-            {
-                lerpState = null;
-                    //Basically if the state we're trying to interp from is the same as the state we're trying to interp to, we won't interp.
-                ToPosition = new Vector2D(state.X, state.Y);
-                ToTime = state.ReceivedTime;
-                LerpPosition = ToPosition;
-                LerpTime = state.ReceivedTime;
-            }
-            else
-            {
-                ToPosition = new Vector2D(state.X, state.Y);
-                ToTime = state.ReceivedTime;
-                LerpPosition = new Vector2D(lerpState.X, lerpState.Y);
-                LerpTime = lerpState.ReceivedTime;
-            }*/
 
         }
     }

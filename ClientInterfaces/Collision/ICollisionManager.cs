@@ -1,5 +1,6 @@
 ﻿using System.Drawing;
 using GameObject;
+using GorgonLibrary;
 
 namespace ClientInterfaces.Collision
 {
@@ -14,6 +15,7 @@ namespace ClientInterfaces.Collision
         bool IsColliding(RectangleF collider);
 
         bool TryCollide(Entity collider);
+        bool TryCollide(Entity collider, Vector2D offset, bool bump = true);
         void AddCollidable(ICollidable collidable);
         void RemoveCollidable(ICollidable collidable);
         void UpdateCollidable(ICollidable collidable);

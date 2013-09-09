@@ -110,5 +110,10 @@ namespace CGO
             isColliding = collisionManager.TryCollide(Owner);
             return new ComponentReplyMessage(ComponentMessageType.CollisionStatus, isColliding);
         }
+
+        public bool TryCollision(Vector2D offset)
+        {
+            return IoCManager.Resolve<ICollisionManager>().TryCollide(Owner, offset);
+        }
     }
 }

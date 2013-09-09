@@ -20,6 +20,7 @@ namespace CGO
         private bool _moveRight;
         private float _moveTimeCache;
         private bool _moveUp;
+        public bool ShouldSendPositionUpdate;
 
         private Direction _movedir;
 
@@ -74,8 +75,9 @@ namespace CGO
             var state = (BoundKeyState) list[1];
             bool setting = state == BoundKeyState.Down;
 
-            if (state == BoundKeyState.Up)
-                SendPositionUpdate(Owner.GetComponent<TransformComponent>(ComponentFamily.Transform).Position);
+            ShouldSendPositionUpdate = true;
+            /*if (state == BoundKeyState.Up)
+                SendPositionUpdate(Owner.GetComponent<TransformComponent>(ComponentFamily.Transform).Position);*/
             // Send a position update so that the server knows what position the client ended at.
 
             if (function == BoundKeyFunctions.MoveDown)
@@ -139,7 +141,7 @@ namespace CGO
                 Velocity = new Vector2D(0f, 0f);
             }
 
-            Vector2D translationVector = Velocity*frameTime;
+            /*Vector2D translationVector = Velocity*frameTime;
             var velcomp = Owner.GetComponent<VelocityComponent>(ComponentFamily.Velocity);
 
             bool translated = TryTranslate(translationVector, false); //Only bump once...
@@ -170,7 +172,7 @@ namespace CGO
                 SendPositionUpdate(nextPosition);
 
                 _moveTimeCache = 0;
-            }
+            }*/
         }
 
         private void SetMoveDir(Direction movedir)
@@ -190,37 +192,7 @@ namespace CGO
                                               Owner.GetComponent<VelocityComponent>(ComponentFamily.Velocity).Velocity.X,
                                               Owner.GetComponent<VelocityComponent>(ComponentFamily.Velocity).Velocity.Y);
         }
-
-        /// <summary>
-        /// Moves the entity and sends an update packet to the serverside mover component.
-        /// </summary>
-        /// <param name="translationVector"></param>
-        public virtual void Translate(Vector2D translationVector)
-        {
-            Vector2D oldPos = Owner.GetComponent<TransformComponent>(ComponentFamily.Transform).Position;
-
-            Owner.GetComponent<TransformComponent>(ComponentFamily.Transform).Position += translationVector;
-            Vector2D delta = Owner.GetComponent<TransformComponent>(ComponentFamily.Transform).Position - oldPos;
-            if (delta.X > 0 && delta.Y > 0)
-                SetMoveDir(Direction.SouthEast);
-            if (delta.X > 0 && delta.Y < 0)
-                SetMoveDir(Direction.NorthEast);
-            if (delta.X < 0 && delta.Y > 0)
-                SetMoveDir(Direction.SouthWest);
-            if (delta.X < 0 && delta.Y < 0)
-                SetMoveDir(Direction.NorthWest);
-            if (delta.X > 0 && delta.Y == 0)
-                SetMoveDir(Direction.East);
-            if (delta.X < 0 && delta.Y == 0)
-                SetMoveDir(Direction.West);
-            if (delta.Y > 0 && delta.X == 0)
-                SetMoveDir(Direction.South);
-            if (delta.Y < 0 && delta.X == 0)
-                SetMoveDir(Direction.North);
-            
-            //Owner.Moved();
-        }
-
+        
         /// <summary>
         /// Tries to move the entity. Checks collision. If the entity _is_ colliding, move it back and return false.
         /// </summary>

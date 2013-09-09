@@ -192,9 +192,10 @@ namespace SS13_Server
         private void DoMainLoopStuff()
         {
             float elapsedTime;
-
             elapsedTime = (stopWatch.ElapsedTicks / (float)Stopwatch.Frequency);
-            if(elapsedTime * 1000 < ServerRate)
+            float elapsedMilliseconds = elapsedTime*1000;
+            
+            if(elapsedMilliseconds < ServerRate && ServerRate - elapsedMilliseconds >= 0.5f)
             {
                 return;
             }
@@ -223,12 +224,6 @@ namespace SS13_Server
             Update(elapsedTime);
 
             IoCManager.Resolve<IConsoleManager>().Update();
-        }
-
-        private void setTimerPeriod(uint newPeriod)
-        {
-            period = newPeriod;
-            mainLoopTimer.Change(period, period);
         }
 
         private string UpdateBPS()

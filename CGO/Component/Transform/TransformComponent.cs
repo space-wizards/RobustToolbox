@@ -16,7 +16,8 @@ namespace CGO
         private Vector2D _position = Vector2D.Zero;
         private List<TransformComponentState> states = new List<TransformComponentState>();
         private TransformComponentState lastState;
-        private TransformComponentState lerpState;
+        public TransformComponentState lerpStateFrom;
+        public TransformComponentState lerpStateTo;
         public Vector2D ToPosition { get; set; }
         public float ToTime { get; set; }
         public Vector2D LerpPosition { get; set; }
@@ -82,17 +83,27 @@ namespace CGO
             lastState = state;
             states.Add(state);
             var interp = IoCManager.Resolve<IConfigurationManager>().GetInterpolation();
-            //Remove all states older than the interp time.
-            lerpState = states.Where(s => s.ReceivedTime <= state.ReceivedTime - interp).OrderByDescending(s => s.ReceivedTime).FirstOrDefault();
-            if (lerpState != null)
+            //Remove all states older than the one just before the interp time.
+            lerpStateFrom = states.Where(s => s.ReceivedTime <= state.ReceivedTime - interp).OrderByDescending(s => s.ReceivedTime).FirstOrDefault();
+            if (lerpStateFrom != null)
             {
-                states.RemoveAll(s => s.ReceivedTime < lerpState.ReceivedTime);
+                lerpStateTo =
+                    states.Where(s => s.ReceivedTime > lerpStateFrom.ReceivedTime).OrderByDescending(s => s.ReceivedTime).
+                        LastOrDefault();
+                if (lerpStateTo == null)
+                    lerpStateTo = lerpStateFrom;
+                states.RemoveAll(s => s.ReceivedTime < lerpStateFrom.ReceivedTime);
             }
-            if(state.ForceUpdate)
+            else
+            {
+                lerpStateFrom = state;
+                lerpStateTo = state;
+            }
+            if(lastState.ForceUpdate)
             {
                 Position = new Vector2D(state.X, state.Y);
             }
-
+            /*
             if (lerpState == null || Math.Abs(lerpState.ReceivedTime - state.ReceivedTime) <= .001f)
             {
                 lerpState = null;
@@ -108,7 +119,7 @@ namespace CGO
                 ToTime = state.ReceivedTime;
                 LerpPosition = new Vector2D(lerpState.X, lerpState.Y);
                 LerpTime = lerpState.ReceivedTime;
-            }
+            }*/
 
         }
     }

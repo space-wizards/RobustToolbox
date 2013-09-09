@@ -3,9 +3,11 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using CGO;
+using ClientInterfaces.Collision;
 using ClientInterfaces.Map;
 using GameObject;
 using GameObject.System;
+using GorgonLibrary;
 using SS13.IoC;
 using SS13_Shared;
 using SS13_Shared.GO;
@@ -41,8 +43,34 @@ namespace CGO.EntitySystems
                 var mover = entity.GetComponent<KeyBindingMoverComponent>(ComponentFamily.Mover);
                 if(mover != null && movement.Length > 0.001f)
                 {
-                    mover.Translate(movement);
-                } 
+                    //Check for collision
+                    var collider = entity.GetComponent<ColliderComponent>(ComponentFamily.Collider);
+                    if(collider != null)
+                    {
+                        bool collided = collider.TryCollision(movement);
+                        bool collidedx, collidedy;
+                        if(collided)
+                        {
+                            collidedx = collider.TryCollision(new Vector2D(movement.X, 0));
+                            if(collidedx)
+                                velocity.X = 0;
+                            collidedy = collider.TryCollision(new Vector2D(0, movement.Y));
+                            if (collidedy)
+                                velocity.Y = 0;
+                            movement = velocity.Velocity*frametime;
+                        }
+                    }
+                    if (movement.Length > 0.001f)
+                    {
+                        transform.TranslateByOffset(movement);
+                        mover.SendPositionUpdate(transform.Position);
+                    }
+                }
+                if (mover != null && mover.ShouldSendPositionUpdate)
+                {
+                    mover.SendPositionUpdate(transform.Position);
+                    mover.ShouldSendPositionUpdate = false;
+                }
                 /*else
                 {
                     //Apply velocity

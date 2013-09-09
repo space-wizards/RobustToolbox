@@ -11,9 +11,9 @@ namespace ServerServices.Atmos
         private bool burning;
         private bool exposed; // Have we been exposed to a source of ignition?
 
-        public Dictionary<GasType, float> gasses; // Type, moles
-        public Dictionary<GasType, float> lastSentGasses;
-        public Dictionary<GasType, float> nextGasses;
+        public float[] gasses;
+        public float[] lastSentGasses;
+        public float[] nextGasses;
         private float nextTemperature;
         private float temperature = 293.15f; // Normal room temp in K
         private float volume = 2.0f; // in m^3
@@ -21,8 +21,8 @@ namespace ServerServices.Atmos
 
         public GasMixture()
         {
-            InitGasses();
             _atmosManager = IoCManager.Resolve<IAtmosManager>();
+            InitGasses();
         }
 
         public float TotalGas
@@ -32,7 +32,7 @@ namespace ServerServices.Atmos
                 float total = 0;
                 foreach (var gas in gasses)
                 {
-                    total += gas.Value;
+                    total += gas;
                 }
 
                 return total;
@@ -56,34 +56,9 @@ namespace ServerServices.Atmos
             set { volume = value; }
         }
 
-        public float HeatCapacity
-        {
-            get
-            {
-                float SHC = 0.0f;
-                foreach (GasType g in gasses.Keys)
-                {
-                    SHC += (gasses[g]*_atmosManager.GetGasProperties(g).SpecificHeatCapacity);
-                }
+        public float HeatCapacity { get; private set; }
 
-                return SHC;
-            }
-        }
-
-        public float TotalMass
-        {
-            get
-            {
-                float mass = 0.0f;
-
-                foreach (GasType g in gasses.Keys)
-                {
-                    mass += (gasses[g]*_atmosManager.GetGasProperties(g).MolecularMass);
-                }
-
-                return mass;
-            }
-        }
+        public float TotalMass { get; private set; }
 
         public bool Burning
         {
@@ -92,31 +67,56 @@ namespace ServerServices.Atmos
 
         private void InitGasses()
         {
-            gasses = new Dictionary<GasType, float>();
-            nextGasses = new Dictionary<GasType, float>();
-            lastSentGasses = new Dictionary<GasType, float>();
+            gasses = new float[_atmosManager.NumGasTypes];
+            lastSentGasses = new float[_atmosManager.NumGasTypes];
+            nextGasses = new float[_atmosManager.NumGasTypes];
 
             Array gasTypes = Enum.GetValues(typeof (GasType));
             foreach (GasType g in gasTypes)
             {
-                gasses.Add(g, 0);
-                nextGasses.Add(g, 0);
-                lastSentGasses.Add(g, 0);
+                gasses[(int)g] = 0;
+                nextGasses[(int)g] = 0;
+                lastSentGasses[(int)g] = 0;
             }
+            UpdateHeatCapacity();
+            UpdateTotalMass();
         }
 
         public void Update()
         {
-            foreach (var ng in nextGasses)
+            for (var i = 0; i < nextGasses.Length; i++)
             {
-                gasses[ng.Key] = ng.Value;
+                gasses[i] = nextGasses[i];
             }
-
             temperature += nextTemperature;
             nextTemperature = 0;
             if (temperature < 0) // This shouldn't happen unless someone fucks with the temperature directly
                 temperature = 0;
             exposed = false;
+            UpdateHeatCapacity();
+            UpdateTotalMass();
+        }
+
+        public void UpdateHeatCapacity()
+        {
+            float SHC = 0.0f;
+            for (var i = 0; i < gasses.Length; i++)
+            {
+                SHC += (gasses[i] * _atmosManager.GetGasProperties((GasType)i).SpecificHeatCapacity);
+            }
+            
+            HeatCapacity = SHC;
+        }
+
+        public void UpdateTotalMass()
+        {
+            float mass = 0.0f;
+
+            for (var i = 0; i < gasses.Length; i++)
+            {
+                mass += (gasses[i] * _atmosManager.GetGasProperties((GasType)i).MolecularMass);
+            }
+            TotalMass = mass;
         }
 
         public void SetNextTemperature(float temp)
@@ -126,19 +126,19 @@ namespace ServerServices.Atmos
 
         public void AddNextGas(float amount, GasType gas)
         {
-            nextGasses[gas] += amount;
+            nextGasses[(int)gas] += amount;
 
-            if (nextGasses[gas] < 0) // This shouldn't happen unless someone calls this directly but lets just make sure
-                nextGasses[gas] = 0;
+            if (nextGasses[(int)gas] < 0) // This shouldn't happen unless someone calls this directly but lets just make sure
+                nextGasses[(int)gas] = 0;
         }
 
         public void Diffuse(GasMixture a, float factor = 8)
         {
-            foreach (var gas in a.gasses)
+            for (var i = 0; i < a.gasses.Length; i++)
             {
-                float amount = (gas.Value - gasses[gas.Key])/factor;
-                AddNextGas(amount, gas.Key);
-                a.AddNextGas(-amount, gas.Key);
+                float amount = (a.gasses[i] - gasses[i])/factor;
+                AddNextGas(amount, (GasType)i);
+                a.AddNextGas(-amount, (GasType)i);
             }
 
             ShareTemp(a, factor);
@@ -173,14 +173,13 @@ namespace ServerServices.Atmos
         {
             if (!Burning) // If we're not burning lets see if we can start due to autoignition
             {
-                foreach (GasType g in gasses.Keys)
+                for (var i = 0; i < gasses.Length; i++)
                 {
-                    float ait = _atmosManager.GetGasProperties(g).AutoignitionTemperature;
+                    float ait = _atmosManager.GetGasProperties((GasType)i).AutoignitionTemperature;
                     if (ait > 0.0f && temperature > ait)
                         // If our temperature is high enough to autoignite then we're burning now
                     {
                         burning = true;
-                        continue;
                     }
                 }
             }
@@ -191,15 +190,15 @@ namespace ServerServices.Atmos
             {
                 float cAmount = 0.0f;
                 float oAmount = 0.0f;
-                foreach (GasType g in nextGasses.Keys)
+                for (var i = 0; i < nextGasses.Length; i++)
                 {
-                    if (_atmosManager.GetGasProperties(g).Combustable)
+                    if (_atmosManager.GetGasProperties((GasType)i).Combustable)
                     {
-                        cAmount += gasses[g];
+                        cAmount += gasses[i];
                     }
-                    if (_atmosManager.GetGasProperties(g).Oxidant)
+                    if (_atmosManager.GetGasProperties((GasType)i).Oxidant)
                     {
-                        oAmount += gasses[g];
+                        oAmount += gasses[i];
                     }
                 }
 
@@ -210,21 +209,21 @@ namespace ServerServices.Atmos
                     ratio /= 3; // Lets not just go mental and burn everything in one go because that's dumb
                     float amount = 0.0f;
 
-                    foreach (GasType g in gasses.Keys)
+                    for (var i = 0; i < gasses.Length; i++)
                     {
-                        amount = gasses[g]*ratio;
-                        if (_atmosManager.GetGasProperties(g).Combustable)
+                        amount = gasses[i]*ratio;
+                        if (_atmosManager.GetGasProperties((GasType)i).Combustable)
                         {
-                            AddNextGas(-amount, g);
+                            AddNextGas(-amount, (GasType)i);
                             AddNextGas(amount, GasType.CO2);
-                            energy_released += (_atmosManager.GetGasProperties(g).SpecificHeatCapacity * 2000 * amount);
+                            energy_released += (_atmosManager.GetGasProperties((GasType)i).SpecificHeatCapacity * 2000 * amount);
                             // This is COMPLETE bullshit non science but whatever
                         }
-                        if (_atmosManager.GetGasProperties(g).Oxidant)
+                        if (_atmosManager.GetGasProperties((GasType)i).Oxidant)
                         {
-                            AddNextGas(-amount, g);
+                            AddNextGas(-amount, (GasType)i);
                             AddNextGas(amount, GasType.CO2);
-                            energy_released += (_atmosManager.GetGasProperties(g).SpecificHeatCapacity * 2000 * amount);
+                            energy_released += (_atmosManager.GetGasProperties((GasType)i).SpecificHeatCapacity * 2000 * amount);
                             // This is COMPLETE bullshit non science but whatever
                         }
                     }
@@ -245,7 +244,7 @@ namespace ServerServices.Atmos
 
         public float MassOf(GasType gas)
         {
-            return (_atmosManager.GetGasProperties(gas).MolecularMass * gasses[gas]);
+            return (_atmosManager.GetGasProperties(gas).MolecularMass * gasses[(int)gas]);
         }
     }
 }

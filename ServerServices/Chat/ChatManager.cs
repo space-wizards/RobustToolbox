@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Drawing;
+using System.Globalization;
 using System.Linq;
 using GameObject;
 using Lidgren.Network;
@@ -193,9 +194,9 @@ namespace ServerServices.Chat
                     Point p = map.GetTileArrayPositionFromWorldPosition(position);
                     var t = (Tile) map.GetTileAt(p.X, p.Y);
                     GasCell c = t.gasCell;
-                    foreach (var g in c.GasMixture.gasses)
+                    for (int i = 0; i < c.GasMixture.gasses.Length; i++)
                     {
-                        SendChatMessage(ChatChannel.Default, g.Key.ToString() + ": " + g.Value.ToString() + " m",
+                        SendChatMessage(ChatChannel.Default, ((GasType)i).ToString() + ": " + c.GasMixture.gasses[i].ToString(CultureInfo.InvariantCulture) + " m",
                                         "GasReport", 0);
                     }
                     break;

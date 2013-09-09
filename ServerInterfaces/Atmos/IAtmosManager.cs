@@ -10,5 +10,6 @@ namespace ServerInterfaces.Atmos
         void SendAtmosStateTo(NetConnection client);
         IGasProperties GetGasProperties(GasType g);
         void TotalAtmosReport();
+        int NumGasTypes { get; }
     }
 }

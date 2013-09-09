@@ -19,19 +19,24 @@ namespace ServerServices.Atmos
 {
     public class AtmosManager : IAtmosManager
     {
-        private readonly Dictionary<GasType, IGasProperties> gasProperties;
+        private IGasProperties[] gasProperties;
+        //private readonly Dictionary<GasType, IGasProperties> gasProperties;
         private DateTime lastAtmosDisplayPush;
         private float elapsedSinceLastFrame;
         private const float fps = 15;
 
+        public int NumGasTypes {
+            get { return Enum.GetNames(typeof(GasType)).Length; }}
+
         public AtmosManager()
         {
-            gasProperties = new Dictionary<GasType, IGasProperties>();
-            gasProperties.Add(GasType.Oxygen, new Oxygen());
-            gasProperties.Add(GasType.CO2, new CO2());
-            gasProperties.Add(GasType.Nitrogen, new Nitrogen());
-            gasProperties.Add(GasType.Toxin, new Toxin());
-            gasProperties.Add(GasType.WVapor, new WVapor());
+            //gasProperties = new Dictionary<GasType, IGasProperties>();
+            gasProperties = new IGasProperties[NumGasTypes];
+            gasProperties[(int)GasType.Oxygen] = new Oxygen();
+            gasProperties[(int)GasType.CO2] = new CO2();
+            gasProperties[(int)GasType.Nitrogen] = new Nitrogen();
+            gasProperties[(int)GasType.Toxin] = new Toxin();
+            gasProperties[(int)GasType.WVapor] = new WVapor();
         }
 
         #region IAtmosManager Members
@@ -54,41 +59,42 @@ namespace ServerServices.Atmos
 
         public void Update(float frametime)
         {
-            elapsedSinceLastFrame += frametime;
-            if (elapsedSinceLastFrame < (1 / fps))
-                return;
-            elapsedSinceLastFrame = 0;
-            var m = IoCManager.Resolve<IMapManager>();
-
-            for (int x = 0; x < m.GetMapWidth(); x++)
+            lock (this)
             {
-                for (int y = 0; y < m.GetMapHeight(); y++)
-                {
-                    m.GetTileAt(x, y).GasCell.CalculateNextGasAmount(m);
-                }
-            }
+                elapsedSinceLastFrame += frametime;
+                if (elapsedSinceLastFrame < (1/fps))
+                    return;
+                elapsedSinceLastFrame = 0;
+                var m = IoCManager.Resolve<IMapManager>();
 
-
-            for (int x = 0; x < m.GetMapWidth(); x++)
-            {
-                for (int y = 0; y < m.GetMapHeight(); y++)
+                for (int x = 0; x < m.GetMapWidth(); x++)
                 {
-                    if (m.GetTileAt(x, y).TileState == TileState.Dead && m.GetTileAt(x, y).GasPermeable)
+                    for (int y = 0; y < m.GetMapHeight(); y++)
                     {
-                        m.DestroyTile(new Point(x, y));
+                        m.GetTileAt(x, y).GasCell.CalculateNextGasAmount(m);
                     }
-                    m.GetTileAt(x, y).GasCell.Update();
                 }
-            }
 
-            CheckNetworkUpdate();
+
+                for (int x = 0; x < m.GetMapWidth(); x++)
+                {
+                    for (int y = 0; y < m.GetMapHeight(); y++)
+                    {
+                        if (m.GetTileAt(x, y).TileState == TileState.Dead && m.GetTileAt(x, y).GasPermeable)
+                        {
+                            m.DestroyTile(new Point(x, y));
+                        }
+                        m.GetTileAt(x, y).GasCell.Update();
+                    }
+                }
+
+                CheckNetworkUpdate();
+            }
         }
 
         public IGasProperties GetGasProperties(GasType g)
         {
-            if (gasProperties.ContainsKey(g))
-                return gasProperties[g];
-            return null;
+            return gasProperties[(int)g];
         }
 
         public void TotalAtmosReport()

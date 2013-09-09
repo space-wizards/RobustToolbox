@@ -121,10 +121,10 @@ namespace GameObject
         /// </summary>
         public virtual void OnRemove()
         {
+            Shutdown();
             //Send us to the manager so it knows we're dead.
             Owner.EntityManager.ComponentManager.RemoveComponent(this);
             Owner = null;
-            Shutdown();
         }
 
         /// <summary>

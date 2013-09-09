@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.IO;
 using System.Linq;
 using System.Text;
 using System.Threading;
@@ -9,6 +10,7 @@ using Lidgren.Network;
 using SS13.IoC;
 using SS13_Server.Modules;
 using SS13_Server.Modules.Client;
+using SS13_Server.Timing;
 using SS13_Shared;
 using SS13_Shared.GameStates;
 using SS13_Shared.ServerEnums;
@@ -25,13 +27,14 @@ using ServerInterfaces.Player;
 using ServerInterfaces.Round;
 using ServerInterfaces.Serialization;
 using ServerInterfaces.ServerConsole;
+using ServerServices.Atmos;
 using ServerServices.Log;
 using ServerServices.Map;
 using ServerServices.Round;
 using EntityManager = SGO.EntityManager;
 using IEntityManager = ServerInterfaces.GOC.IEntityManager;
 using SS13_Shared.Utility;
-using TimerQueueTimer = ServerServices.Timing.TimerQueueTimer;
+using TimerQueueTimer = SS13_Server.Timing.TimerQueueTimer;
 namespace SS13_Server
 {
     public class SS13Server : ISS13Server
@@ -40,12 +43,6 @@ namespace SS13_Server
         private static SS13Server _singleton;
         private readonly List<float> frameTimes = new List<float>();
 
-
-        // The servers current frame time
-        private readonly float millisecondsPerTick; //
-
-        //Threading!
-        private readonly object updateThreadLock = new Object();
         public Dictionary<NetConnection, IClient> ClientList = new Dictionary<NetConnection, IClient>();
         public DateTime Time;
         private bool _active;
@@ -58,10 +55,11 @@ namespace SS13_Server
         private uint _oldestAckedState;
         private DateTime _startAt;
         private TimerQueueTimer mainLoopTimer;
-        private AutoResetEvent are;
+        private static readonly AutoResetEvent are = new AutoResetEvent(true);
         public Stopwatch stopWatch = new Stopwatch();
+        private uint basePeriod;
+        private uint period;
         private int updateRate = 20; //20 updates per second
-        private bool updateThreadRunning;
         public string ConsoleTitle { get; private set; }
 
         public static SS13Server Singleton
@@ -95,7 +93,6 @@ namespace SS13_Server
         public SS13Server()
         {
             IoCManager.Resolve<ISS13Server>().SetServerInstance(this);
-            millisecondsPerTick = Stopwatch.Frequency/1000; //Ticks per second dividied by 1000 = ticks per millisecond
 
             //Init serializer
             var serializer = IoCManager.Resolve<ISS13Serializer>();
@@ -106,17 +103,16 @@ namespace SS13_Server
             IoCManager.Resolve<IConfigurationManager>().Initialize("./config.xml");
             LogManager.Initialize(IoCManager.Resolve<IConfigurationManager>().LogPath,
                                   IoCManager.Resolve<IConfigurationManager>().LogLevel);
-        }
 
-        public float ServerRate // desired server frame (tick) time in milliseconds
-        {
-            get { return 1000.0f/TickRate; }
+            TickRate = IoCManager.Resolve<IConfigurationManager>().TickRate;
+            ServerRate = 1000.0f / TickRate;
         }
+        
+        public float ServerRate // desired server frame (tick) time in milliseconds
+        { get; private set; }
 
         public float TickRate // desired server frames (ticks) per second
-        {
-            get { return IoCManager.Resolve<IConfigurationManager>().TickRate; }
-        }
+        { get; private set; }
 
         #endregion
 
@@ -163,16 +159,24 @@ namespace SS13_Server
         #region server mainloop
 
         // The main server loop
-        public void MainLoop()
+        public void MainLoop() 
         {
-            var due = 1;// (long)ServerRate / 3;
-            mainLoopTimer = new TimerQueueTimer();
-            TimerQueueTimer.WaitOrTimerDelegate RunLoopDelegate = RunLoop;
-            mainLoopTimer.Create(0, (uint)ServerRate, RunLoopDelegate);
+            basePeriod = 1;
+            period = basePeriod;
 
-            are = new AutoResetEvent(false);
-            are.WaitOne(-1);
-            mainLoopTimer.Delete();
+            var timerQueue = new TimerQueue();
+            stopWatch.Start();
+            mainLoopTimer = timerQueue.CreateTimer(s =>
+                                                       {
+                                                           RunLoop();
+                                                       }, null, 0, period);
+            
+            while (Active)
+            {
+                are.WaitOne(-1);
+
+                DoMainLoopStuff();
+            }
             /*   TimerCallback tcb = RunLoop;
             var due = 1;// (long)ServerRate / 3;
             stopWatch.Start(); //Start the clock
@@ -180,59 +184,23 @@ namespace SS13_Server
             are.WaitOne(-1);*/
         }
 
-        public void RunLoop(IntPtr param, bool success)
+        public void RunLoop()
         {
-            /*** DO NOT CHANGE ANYTHING IN THIS FUNCTION UNLESS YOU ARE SPOOGE OR YOU UNDERSTAND EVERYTHING ***/
-
-            // This prevents more than one update thread running at once
-            lock (updateThreadLock)
-            {
-                if (updateThreadRunning)
-                {
-                    mainLoopTimer.Change(1,(uint)ServerRate);
-                    return;
-                }
-                updateThreadRunning = true;
-            }
-
-            if (!Active)
-            {
-                are.Reset();
-                return;
-            }
-
-            // If the debugger is attached, let the errors dump through and break in the debugger
-            if (Debugger.IsAttached)
-            {
-                DoMainLoopStuff();
-            }
-            else //Otherwise log them and crash out.
-            {
-                try
-                {
-                    DoMainLoopStuff();
-                }
-                catch (Exception e)
-                {
-                    LogManager.Log(e.ToString(), LogLevel.Error);
-                    _active = false;
-                }
-            }
-
-            // Release the update thread lock
-            lock (updateThreadLock)
-            {
-                updateThreadRunning = false;
-            }
+            are.Set();  
         }
 
         private void DoMainLoopStuff()
         {
             float elapsedTime;
 
-            elapsedTime = (stopWatch.ElapsedTicks/(float)Stopwatch.Frequency);
-            //Elapsed time in seconds since the last tick
+            elapsedTime = (stopWatch.ElapsedTicks / (float)Stopwatch.Frequency);
+            if(elapsedTime * 1000 < ServerRate)
+            {
+                return;
+            }
             stopWatch.Restart(); //Reset the stopwatch so we get elapsed time next time
+
+            //Elapsed time in seconds since the last tick
             serverClock += elapsedTime;
 
             //Begin update time
@@ -241,7 +209,6 @@ namespace SS13_Server
                 frameTimes.RemoveAt(0);
             float rate = 1 / elapsedTime;
             frameTimes.Add(rate);
-
 
             if ((DateTime.Now - lastBytesUpdate).TotalMilliseconds > 1000)
             {
@@ -256,6 +223,12 @@ namespace SS13_Server
             Update(elapsedTime);
 
             IoCManager.Resolve<IConsoleManager>().Update();
+        }
+
+        private void setTimerPeriod(uint newPeriod)
+        {
+            period = newPeriod;
+            mainLoopTimer.Change(period, period);
         }
 
         private string UpdateBPS()
@@ -329,10 +302,10 @@ namespace SS13_Server
             if (Runlevel == RunLevel.Game)
             {
                 EntityManager.ComponentManager.Update(frameTime);
-                IoCManager.Resolve<IAtmosManager>().Update(frameTime);
+                EntityManager.Update(frameTime);
+                ((AtmosManager)IoCManager.Resolve<IAtmosManager>()).Update(frameTime);
                 IoCManager.Resolve<IRoundManager>().CurrentGameMode.Update();
                 IoCManager.Resolve<ICraftingManager>().Update();
-                EntityManager.Update(frameTime);
             }
             else if (Runlevel == RunLevel.Lobby)
             {
@@ -351,6 +324,18 @@ namespace SS13_Server
             }
             LastUpdate = Time;
             SendGameStateUpdate();
+        }
+
+        public void UpdateAtmos(float frameTime)
+        {
+            /*
+            var t = new Thread(() => RealUpdateAtmos(frameTime));
+            t.Start();
+            return t;*/
+        }
+
+        public void RealUpdateAtmos(float frameTime)
+        {
         }
 
         public void SendGameStateUpdate()

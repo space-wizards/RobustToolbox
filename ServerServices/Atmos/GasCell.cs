@@ -64,9 +64,9 @@ namespace ServerServices.Atmos
             if (attachedTile.GasSink)
             {
                 gasMixture.SetNextTemperature(0);
-                foreach (var g in gasMixture.gasses)
+                for (var i = 0; i < gasMixture.gasses.Length; i++)
                 {
-                    gasMixture.nextGasses[g.Key] = 0;
+                    gasMixture.nextGasses[i] = 0;
                 }
             }
 
@@ -306,12 +306,12 @@ namespace ServerServices.Atmos
                 switch (t)
                 {
                     case GasType.Toxin:
-                        if (gasMixture.gasses[GasType.Toxin] > 0.00005f && (checkUpdateThreshold(GasType.Toxin) || all))
+                        if (gasMixture.gasses[(int)GasType.Toxin] > 0.00005f && (checkUpdateThreshold(GasType.Toxin) || all))
                         {
-                            amount = (byte) normalizeGasAmount(gasMixture.gasses[GasType.Toxin]);
+                            amount = (byte)normalizeGasAmount(gasMixture.gasses[(int)GasType.Toxin]);
                             gasChanges[i] = amount;
                             changedTypes = (changedTypes | (1 << i));
-                            lastSentGasses[GasType.Toxin] = gasMixture.gasses[GasType.Toxin];
+                            lastSentGasses[GasType.Toxin] = gasMixture.gasses[(int)GasType.Toxin];
                             bitCount += 4;
                         }
                         else
@@ -326,7 +326,7 @@ namespace ServerServices.Atmos
                             amount = 15; // normalizeGasAmount(gasMixture.gasses[GasType.WVapor]);
                             gasChanges[i] = amount;
                             changedTypes = (changedTypes | (1 << i));
-                            lastSentGasses[GasType.WVapor] = gasMixture.gasses[GasType.WVapor];
+                            lastSentGasses[GasType.WVapor] = gasMixture.gasses[(int)GasType.WVapor];
                             bitCount += 4;
                         }
                         else
@@ -334,7 +334,7 @@ namespace ServerServices.Atmos
                             amount = 0; // normalizeGasAmount(gasMixture.gasses[GasType.WVapor]);
                             gasChanges[i] = amount;
                             changedTypes = (changedTypes | (1 << i));
-                            lastSentGasses[GasType.WVapor] = gasMixture.gasses[GasType.WVapor];
+                            lastSentGasses[GasType.WVapor] = gasMixture.gasses[(int)GasType.WVapor];
                             bitCount += 4;
                             //lastSentGasses[GasType.WVapor] = 0;
                         }
@@ -361,7 +361,7 @@ namespace ServerServices.Atmos
 
         public float GasAmount(GasType type)
         {
-            return gasMixture.gasses[type];
+            return gasMixture.gasses[(int)type];
         }
 
         public float TotalGas
@@ -423,7 +423,7 @@ namespace ServerServices.Atmos
         {
             //If the delta since the last update was sent is greater than 2, send another update.
             if (
-                Math.Abs(normalizeGasAmount(gasMixture.gasses[g], multiplier) -
+                Math.Abs(normalizeGasAmount(gasMixture.gasses[(int)g], multiplier) -
                          normalizeGasAmount(lastSentGasses[g], multiplier)) >= 1)
                 return true;
             return false;

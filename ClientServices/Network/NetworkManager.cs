@@ -25,9 +25,11 @@ namespace ClientServices.Network
             //Simulate Latency
             if (config.GetSimulateLatency())
             {
+#if DEBUG
                 _netConfig.SimulatedLoss = config.GetSimulatedLoss();
                 _netConfig.SimulatedMinimumLatency = config.GetSimulatedMinimumLatency();
                 _netConfig.SimulatedRandomLatency = config.GetSimulatedRandomLatency();
+#endif
             }
 
             NetClient = new NetClient(_netConfig);

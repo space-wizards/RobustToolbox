@@ -78,7 +78,7 @@ namespace ServerServices.Timing
                 dueTime,
                 // Period - Timer period (milliseconds). If zero, timer is signaled only once.
                 period,
-                (uint)Flag.WT_EXECUTEINIOTHREAD);
+                (uint)Flag.WT_EXECUTELONGFUNCTION | (uint)Flag.WT_EXECUTEINIOTHREAD);
 
             if (!success)
                 throw new QueueTimerException("Error creating QueueTimer");
@@ -89,7 +89,7 @@ namespace ServerServices.Timing
             //bool success = DeleteTimerQueue(IntPtr.Zero);
             bool success = DeleteTimerQueueTimer(
                 IntPtr.Zero, // TimerQueue - A handle to the (default) timer queue
-                phNewTimer,  // Timer - A handle to the timer
+                phNewTimer,  // Timer - A handle to t7he timer
                 IntPtr.Zero  // CompletionEvent - A handle to an optional event to be signaled when the function is successful and all callback functions have completed. Can be NULL.
                 );
             int error = Marshal.GetLastWin32Error();
@@ -107,7 +107,7 @@ namespace ServerServices.Timing
             int error = Marshal.GetLastWin32Error();
         }
 
-        private enum Flag
+        public enum Flag: uint
         {
             WT_EXECUTEDEFAULT = 0x00000000,
             WT_EXECUTEINIOTHREAD = 0x00000001,

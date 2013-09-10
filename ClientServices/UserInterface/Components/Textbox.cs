@@ -157,7 +157,15 @@ namespace ClientServices.UserInterface.Components
                 if (_caretIndex == 0) return true;
 
                 Text = Text.Remove(_caretIndex - 1, 1);
-                if (_caretIndex > 0) _caretIndex--;
+                if (_caretIndex > 0 && _caretIndex < Text.Length) _caretIndex--;
+                SetVisibleText();
+                return true;
+            }
+
+            if (e.Key == KeyboardKeys.Delete && Text.Length >= 1)
+            {
+                if (_caretIndex >= Text.Length) return true;
+                Text = Text.Remove(_caretIndex, 1);
                 SetVisibleText();
                 return true;
             }
@@ -224,7 +232,7 @@ namespace ClientServices.UserInterface.Components
                 _displayIndex = 0;
                 _displayText = Text;
 
-                if (Text.Length < _caretIndex - 1)
+                if (Text.Length <= _caretIndex - 1)
                     _caretIndex = Text.Length;
                 _caretPos = Label.Position.X +
                             Label.MeasureLine(Text.Substring(_displayIndex, _caretIndex - _displayIndex));

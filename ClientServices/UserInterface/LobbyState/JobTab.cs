@@ -36,7 +36,7 @@ namespace ClientServices.UserInterface.Components
                     ImageHover = "lobby_ready_green",
                     BlendingMode = BlendingModes.None
                 };
-            _bttReady.Clicked += new ImageButton.ImageButtonPressHandler(_bttReady_Clicked);
+            _bttReady.Clicked += _bttReady_Clicked;
             _bttReady.Update(0);
 
             _imgWhatDep = new SimpleImage()
@@ -181,6 +181,7 @@ namespace ClientServices.UserInterface.Components
 
         public override void Dispose()
         {
+            _bttReady.Clicked -= _bttReady_Clicked;
             base.Dispose();
         }
 

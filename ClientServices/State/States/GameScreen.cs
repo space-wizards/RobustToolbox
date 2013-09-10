@@ -59,6 +59,8 @@ namespace ClientServices.State.States
         private bool _recalculateScene = true;
         private bool _redrawOverlay = true;
         private bool _redrawTiles = true;
+        private List<RenderTarget> _cleanupList = new List<RenderTarget>();
+        private List<Sprite> _cleanupSpriteList = new List<Sprite>(); 
 
         private bool _showDebug; // show AABBs & Bounding Circles on Entities.
         private Batch _wallBatch;
@@ -132,6 +134,9 @@ namespace ClientServices.State.States
             LastUpdate = DateTime.Now;
             Now = DateTime.Now;
 
+            _cleanupList = new List<RenderTarget>();
+            _cleanupSpriteList = new List<Sprite>();
+
             UserInterfaceManager.DisposeAllComponents();
 
             //Init serializer
@@ -154,16 +159,20 @@ namespace ClientServices.State.States
 
             _baseTarget = new RenderImage("baseTarget", Gorgon.CurrentClippingViewport.Width,
                                           Gorgon.CurrentClippingViewport.Height, ImageBufferFormats.BufferRGB888A8);
-
+            _cleanupList.Add(_baseTarget);
             _baseTargetSprite = new Sprite("baseTargetSprite", _baseTarget) {DepthWriteEnabled = false};
-
+            _cleanupSpriteList.Add(_baseTargetSprite);
+            
             _sceneTarget = new RenderImage("sceneTarget", Gorgon.CurrentClippingViewport.Width,
                                            Gorgon.CurrentClippingViewport.Height, ImageBufferFormats.BufferRGB888A8);
+            _cleanupList.Add(_sceneTarget);
             _tilesTarget = new RenderImage("tilesTarget", Gorgon.CurrentClippingViewport.Width,
                                            Gorgon.CurrentClippingViewport.Height, ImageBufferFormats.BufferRGB888A8);
+            _cleanupList.Add(_tilesTarget);
 
             _overlayTarget = new RenderImage("overlayTarget", Gorgon.CurrentClippingViewport.Width,
                                              Gorgon.CurrentClippingViewport.Height, ImageBufferFormats.BufferRGB888A8);
+            _cleanupList.Add(_overlayTarget);
             _overlayTarget.SourceBlend = AlphaBlendOperation.SourceAlpha;
             _overlayTarget.DestinationBlend = AlphaBlendOperation.InverseSourceAlpha;
             _overlayTarget.SourceBlendAlpha = AlphaBlendOperation.SourceAlpha;
@@ -172,15 +181,20 @@ namespace ClientServices.State.States
             _composedSceneTarget = new RenderImage("composedSceneTarget", Gorgon.CurrentClippingViewport.Width,
                                                    Gorgon.CurrentClippingViewport.Height,
                                                    ImageBufferFormats.BufferRGB888A8);
+            _cleanupList.Add(_composedSceneTarget);
 
             _lightTarget = new RenderImage("lightTarget", Gorgon.CurrentClippingViewport.Width,
                                            Gorgon.CurrentClippingViewport.Height, ImageBufferFormats.BufferRGB888A8);
-            _lightTargetSprite = new Sprite("lightTargetSprite", _lightTarget) {DepthWriteEnabled = false};
+            _cleanupList.Add(_lightTarget);
+            _lightTargetSprite = new Sprite("lightTargetSprite", _lightTarget) { DepthWriteEnabled = false };
+            _cleanupSpriteList.Add(_lightTargetSprite);
             _lightTargetIntermediate = new RenderImage("lightTargetIntermediate", Gorgon.CurrentClippingViewport.Width,
                                                        Gorgon.CurrentClippingViewport.Height,
                                                        ImageBufferFormats.BufferRGB888A8);
+            _cleanupList.Add(_lightTargetIntermediate);
             _lightTargetIntermediateSprite = new Sprite("lightTargetIntermediateSprite", _lightTargetIntermediate)
                                                  {DepthWriteEnabled = false};
+            _cleanupSpriteList.Add(_lightTargetIntermediateSprite);
 
             _gasBatch = new Batch("gasBatch", 1);
             _gasBatch.SourceBlend = AlphaBlendOperation.SourceAlpha;
@@ -237,18 +251,22 @@ namespace ClientServices.State.States
             lightArea1024 = new LightArea(ShadowmapSize.Size1024);
             screenShadows = new RenderImage("screenShadows", Gorgon.CurrentClippingViewport.Width,
                                             Gorgon.CurrentClippingViewport.Height, ImageBufferFormats.BufferRGB888A8);
+            _cleanupList.Add(screenShadows);
             screenShadows.UseDepthBuffer = false;
             shadowIntermediate = new RenderImage("shadowIntermediate", Gorgon.CurrentClippingViewport.Width,
                                                  Gorgon.CurrentClippingViewport.Height,
                                                  ImageBufferFormats.BufferRGB888A8);
+            _cleanupList.Add(shadowIntermediate);
             shadowIntermediate.UseDepthBuffer = false;
             shadowBlendIntermediate = new RenderImage("shadowBlendIntermediate", Gorgon.CurrentClippingViewport.Width,
                                                       Gorgon.CurrentClippingViewport.Height,
                                                       ImageBufferFormats.BufferRGB888A8);
+            _cleanupList.Add(shadowBlendIntermediate);
             shadowBlendIntermediate.UseDepthBuffer = false;
             playerOcclusionTarget = new RenderImage("playerOcclusionTarget", Gorgon.CurrentClippingViewport.Width,
                                                     Gorgon.CurrentClippingViewport.Height,
                                                     ImageBufferFormats.BufferRGB888A8);
+            _cleanupList.Add(playerOcclusionTarget);
             playerOcclusionTarget.UseDepthBuffer = false;
             lightBlendShader = IoCManager.Resolve<IResourceManager>().GetShader("lightblend");
             finalBlendShader = IoCManager.Resolve<IResourceManager>().GetShader("finallight");
@@ -322,44 +340,23 @@ namespace ClientServices.State.States
 
         public void Shutdown()
         {
-            if (_baseTarget != null && Gorgon.IsInitialized)
+            IoCManager.Resolve<IPlayerManager>().Detach();
+            if(Gorgon.IsInitialized)
             {
-                _baseTarget.ForceRelease();
-                _baseTarget.Dispose();
+                _cleanupSpriteList.ForEach(s => s.Image = null);
+                _cleanupSpriteList.Clear();
+                _cleanupList.ForEach(t => {t.ForceRelease();t.Dispose();});
+                _cleanupList.Clear();
             }
-            if (_baseTargetSprite != null && Gorgon.IsInitialized)
-            {
-                _baseTargetSprite.Image = null;
-                _baseTargetSprite = null;
-            }
-            if (_lightTarget != null && Gorgon.IsInitialized)
-            {
-                _lightTarget.ForceRelease();
-                _lightTarget.Dispose();
-            }
-            if (_lightTargetSprite != null && Gorgon.IsInitialized)
-            {
-                _lightTargetSprite.Image = null;
-                _lightTargetSprite = null;
-            }
-            if (_lightTargetIntermediate != null && Gorgon.IsInitialized)
-            {
-                _lightTargetIntermediate.ForceRelease();
-                _lightTargetIntermediate.Dispose();
-            }
-            if (_lightTargetIntermediateSprite != null && Gorgon.IsInitialized)
-            {
-                _lightTargetIntermediateSprite.Image = null;
-                _lightTargetIntermediateSprite = null;
-            }
+            shadowMapResolver.Dispose();
             _gaussianBlur.Dispose();
             _entityManager.Shutdown();
             MapManager.Shutdown();
             UserInterfaceManager.DisposeAllComponents(); //HerpDerp. This is probably bad. Should not remove them ALL.
             NetworkManager.MessageArrived -= NetworkManagerMessageArrived;
             IoCManager.Resolve<IMapManager>().OnTileChanged -= OnTileChanged;
-            RenderTargetCache.DestroyAll();
-            GC.Collect();
+            //RenderTargetCache.DestroyAll();
+            //GC.Collect();
         }
 
         public void Update(FrameEventArgs e)

@@ -28,8 +28,8 @@ namespace SGO
 
         public override void OnRemove()
         {
-            base.OnRemove();
             Owner.GetComponent<TransformComponent>(ComponentFamily.Transform).OnMove -= HandleOnMove;
+            base.OnRemove();
         }
 
         public void HandleOnMove(object sender, VectorEventArgs args)

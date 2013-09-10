@@ -148,6 +148,10 @@ namespace ClientServices.UserInterface.Components
 
         public override void Dispose()
         {
+            _tabs.ForEach(b => b.Key.Clicked -= tabButton_Clicked);
+            _tabs.ForEach(b => b.Key.Dispose());
+            _tabs.ForEach(t => t.Value.Dispose());
+            _tabs.Clear();
             base.Dispose();
             GC.SuppressFinalize(this);
         }

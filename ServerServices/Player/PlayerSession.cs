@@ -206,6 +206,7 @@ namespace ServerServices.Player
             m.Write((byte)NetMessage.PlayerSessionMessage);
             m.Write((byte)PlayerSessionMessage.JoinLobby);
             IoCManager.Resolve<ISS13NetServer>().SendMessage(m, connectedClient);*/
+            DetachFromEntity();
             status = SessionStatus.InLobby;
             UpdatePlayerState();
         }

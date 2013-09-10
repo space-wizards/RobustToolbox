@@ -118,6 +118,7 @@ namespace GameObject
         /// <summary>
         /// Called when the component is removed from an entity.
         /// Shuts down the component
+        /// This should be called AFTER any inheriting classes OnRemove code has run. This should be last.
         /// </summary>
         public virtual void OnRemove()
         {

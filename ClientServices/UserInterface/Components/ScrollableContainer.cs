@@ -149,6 +149,8 @@ namespace ClientServices.UserInterface.Components
         {
             if (disposing) return;
             disposing = true;
+            components.ForEach(c => c.Dispose());
+            components.Clear();
             clippingRI.Dispose();
             clippingRI = null;
             base.Dispose();

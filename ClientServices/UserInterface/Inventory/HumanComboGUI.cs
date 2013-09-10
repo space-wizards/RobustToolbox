@@ -696,6 +696,8 @@ namespace ClientServices.UserInterface.Inventory
 
         public override void Dispose()
         {
+            //TODO dispose me
+            base.Dispose();
         }
 
         public override bool MouseDown(MouseInputEventArgs e)

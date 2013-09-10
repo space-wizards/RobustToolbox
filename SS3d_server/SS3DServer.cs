@@ -125,6 +125,7 @@ namespace SS13_Server
         {
             LogManager.Log("Restarting Server...");
             IoCManager.Resolve<IPlayerManager>().SendJoinLobbyToAll();
+            SendGameStateUpdate(true, true);
             DisposeForRestart();
             StartLobby();
         }
@@ -337,11 +338,11 @@ namespace SS13_Server
         {
         }
 
-        public void SendGameStateUpdate()
+        public void SendGameStateUpdate(bool force = false, bool forceFullState = false)
         {
             //Obey the updates per second limit
             TimeSpan elapsed = Time - _lastStateTime;
-            if (elapsed.TotalMilliseconds > (1000/updateRate))
+            if (force || elapsed.TotalMilliseconds > (1000/updateRate))
             {
                 //Save last state time
                 _lastStateTime = Time;
@@ -369,11 +370,11 @@ namespace SS13_Server
                                 c => c.Status == NetConnectionStatus.Connected))
                     {
                         IPlayerSession session = IoCManager.Resolve<IPlayerManager>().GetSessionByConnection(c);
-                        if (session == null || session.status != SessionStatus.InGame)
+                        if (session == null || (session.status != SessionStatus.InGame && session.status != SessionStatus.InLobby))
                             continue;
                         NetOutgoingMessage stateMessage = IoCManager.Resolve<ISS13NetServer>().CreateMessage();
                         uint lastStateAcked = stateManager.GetLastStateAcked(c);
-                        if (lastStateAcked == 0)
+                        if (lastStateAcked == 0)// || forceFullState)
                         {
                             int length = state.WriteStateMessage(stateMessage);
                             //LogManager.Log("Full state of size " + length + " sent to " + c.RemoteUniqueIdentifier);

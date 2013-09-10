@@ -77,6 +77,7 @@ namespace ClientServices.UserInterface.Components
             _buttonSprite = null;
             _jobSprite = null;
             Clicked = null;
+            base.Dispose();
             GC.SuppressFinalize(this);
         }
 

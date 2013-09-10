@@ -1,4 +1,5 @@
-﻿using System.Drawing;
+﻿using System;
+using System.Drawing;
 using ClientInterfaces.Resource;
 using GorgonLibrary;
 using GorgonLibrary.Graphics;
@@ -14,7 +15,7 @@ namespace SS3D.LightTest
         Size1024 = 9,
     }
 
-    public class ShadowMapResolver
+    public class ShadowMapResolver : IDisposable
     {
         private readonly IResourceManager _resourceManager;
 
@@ -135,6 +136,25 @@ namespace SS3D.LightTest
 
             reductionEffect.Parameters["SourceTexture"].SetValue(reductionRT[reductionChainCount - 1]);
             Gorgon.CurrentRenderTarget = null;
+        }
+
+        public void Dispose()
+        {
+            distancesRT.ForceRelease();
+            distancesRT.Dispose();
+            distortRT.ForceRelease();
+            distortRT.Dispose();
+            processedShadowsRT.ForceRelease();
+            processedShadowsRT.Dispose();
+            foreach(var rt in reductionRT)
+            {
+                rt.ForceRelease();
+                rt.Dispose();
+            }
+            shadowMap.ForceRelease();
+            shadowMap.Dispose();
+            shadowsRT.ForceRelease();
+            shadowsRT.Dispose();
         }
     }
 }

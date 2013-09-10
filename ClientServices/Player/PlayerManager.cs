@@ -77,10 +77,15 @@ namespace ClientServices.Player
 
         public void Detach()
         {
-            ControlledEntity.RemoveComponent(ComponentFamily.Input);
-            ControlledEntity.RemoveComponent(ComponentFamily.Mover);
-            ControlledEntity.RemoveComponent(ComponentFamily.Collider);
-            ControlledEntity.GetComponent<TransformComponent>(ComponentFamily.Transform).OnMove -= PlayerEntityMoved;
+            if (ControlledEntity != null && ControlledEntity.Initialized)
+            {
+                ControlledEntity.RemoveComponent(ComponentFamily.Input);
+                ControlledEntity.RemoveComponent(ComponentFamily.Mover);
+                ControlledEntity.RemoveComponent(ComponentFamily.Collider);
+                var transform = ControlledEntity.GetComponent<TransformComponent>(ComponentFamily.Transform);
+                if(transform != null)
+                    transform.OnMove -= PlayerEntityMoved;
+            }
             ControlledEntity = null;
         }
 
@@ -199,7 +204,7 @@ namespace ClientServices.Player
             status = newStatus;
             if (status == SessionStatus.InLobby && RequestedStateSwitch != null)
             {
-                RequestedStateSwitch(this, new TypeEventArgs(typeof (LobbyScreen)));
+                RequestedStateSwitch(this, new TypeEventArgs(typeof (Lobby)));
                 Detach();
             }
         }

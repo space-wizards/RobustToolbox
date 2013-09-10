@@ -175,14 +175,6 @@ namespace CGO
             }*/
         }
 
-        private void SetMoveDir(Direction movedir)
-        {
-            if (movedir == _movedir) return;
-
-            _movedir = movedir;
-            Owner.SendMessage(this, ComponentMessageType.MoveDirection, _movedir);
-        }
-
         public virtual void SendPositionUpdate(Vector2D nextPosition)
         {
             Owner.SendComponentNetworkMessage(this,
@@ -191,34 +183,6 @@ namespace CGO
                                               nextPosition.Y,
                                               Owner.GetComponent<VelocityComponent>(ComponentFamily.Velocity).Velocity.X,
                                               Owner.GetComponent<VelocityComponent>(ComponentFamily.Velocity).Velocity.Y);
-        }
-        
-        /// <summary>
-        /// Tries to move the entity. Checks collision. If the entity _is_ colliding, move it back and return false.
-        /// </summary>
-        /// <param name="translationVector"></param>
-        /// <param name="suppressBump"></param>
-        /// <returns></returns>
-        public bool TryTranslate(Vector2D translationVector, bool suppressBump)
-        {
-            Vector2D oldPosition = Owner.GetComponent<TransformComponent>(ComponentFamily.Transform).Position;
-            Owner.GetComponent<TransformComponent>(ComponentFamily.Transform).Position += translationVector;
-            // We move the sprite here rather than the position, as we can then use its updated AABB values.
-            //Check collision.
-            bool ret = true;
-            ComponentReplyMessage reply = Owner.SendMessage(this, ComponentFamily.Collider,
-                                                            ComponentMessageType.CheckCollision, false);
-            if (reply.MessageType == ComponentMessageType.CollisionStatus)
-            {
-                var colliding = (bool) reply.ParamsList[0];
-                if (colliding) //Collided, reset position and return false.
-                {
-                    Owner.GetComponent<TransformComponent>(ComponentFamily.Transform).Position = oldPosition;
-                    ret = false;
-                }
-            }
-            Owner.GetComponent<TransformComponent>(ComponentFamily.Transform).Position = oldPosition;
-            return ret;
         }
     }
 }

@@ -104,6 +104,7 @@ namespace ClientServices.UserInterface.Components
 
         public override void Dispose()
         {
+            base.Dispose();
             GC.SuppressFinalize(this);
         }
 

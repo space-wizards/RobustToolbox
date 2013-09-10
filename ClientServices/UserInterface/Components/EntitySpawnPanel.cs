@@ -234,8 +234,8 @@ namespace ClientServices.UserInterface.Components
         {
             if (disposing) return;
             _placementManager.PlacementCanceled -= PlacementManagerPlacementCanceled;
-            base.Dispose();
             _entityList.Dispose();
+            base.Dispose();
         }
 
         public override bool MouseDown(MouseInputEventArgs e)

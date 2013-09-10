@@ -58,6 +58,7 @@ namespace ClientServices.UserInterface.Components
         public override void Dispose()
         {
             _targetArea.Dispose();
+            base.Dispose();
             GC.SuppressFinalize(this);
         }
 

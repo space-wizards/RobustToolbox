@@ -9,8 +9,8 @@
   <PlayerName>Joe Genero</PlayerName>
   <ServerAddress>127.0.0.1</ServerAddress>
   <MessageLogging>false</MessageLogging>
-  <SimulateLatency>true</SimulateLatency>
+  <SimulateLatency>false</SimulateLatency>
   <SimulatedLoss>0.05</SimulatedLoss>
-  <SimulatedMinimumLatency>40</SimulatedMinimumLatency>
-  <SimulatedRandomLatency>10</SimulatedRandomLatency>
+  <SimulatedMinimumLatency>0.040</SimulatedMinimumLatency>
+  <SimulatedRandomLatency>0.010</SimulatedRandomLatency>
 </Configuration>

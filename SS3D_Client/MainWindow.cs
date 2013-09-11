@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Drawing;
+using System.IO;
 using System.Windows.Forms;
 using ClientInterfaces.Configuration;
 using ClientInterfaces.Input;
@@ -180,7 +181,8 @@ namespace SS13
 
         private void SetupInput()
         {
-            _input = Input.LoadInputPlugIn(Environment.CurrentDirectory + @"\GorgonInput.DLL", "Gorgon.RawInput");
+            var inputPath = Path.Combine(Environment.CurrentDirectory,"GorgonInput.dll");
+            _input = Input.LoadInputPlugIn(inputPath, "Gorgon.RawInput");
             _input.Bind(this);
 
             Cursor.Hide();

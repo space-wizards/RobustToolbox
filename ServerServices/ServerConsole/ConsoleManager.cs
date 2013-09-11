@@ -144,7 +144,10 @@ namespace ServerServices.ServerConsole
                     if (args.Length > 1 && args[1].Length > 0)
                         HelpCommand(args[1]);
                     else
+                    {
                         Help();
+                        ListCommands();
+                    }
                     handled = true;
                     break;
             }

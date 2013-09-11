@@ -51,6 +51,9 @@ namespace ServerServices.Player
         }
 
         public Entity attachedEntity { get; set; }
+        public int? AttachedEntityUid {
+            get { return attachedEntity == null ? null : (int?)attachedEntity.Uid; }
+        }
         public string name { get; set; }
         public SessionStatus status { get; set; }
         public AdminPermissions adminPermissions { get; set; }
@@ -152,6 +155,8 @@ namespace ServerServices.Player
 
         private void SendAttachMessage()
         {
+            if(attachedEntity == null) //TODO proper exception
+                throw new Exception("Cannot attach player session to entity: No entity attached.");
             NetOutgoingMessage m = IoCManager.Resolve<ISS13NetServer>().CreateMessage();
             m.Write((byte) NetMessage.PlayerSessionMessage);
             m.Write((byte) PlayerSessionMessage.AttachToEntity);
@@ -197,7 +202,8 @@ namespace ServerServices.Player
 
         private void ResetAttachedEntityName()
         {
-            attachedEntity.Name = attachedEntity.Template.Name;
+            if(attachedEntity != null)
+                attachedEntity.Name = attachedEntity.Template.Name;
         }
 
         public void JoinLobby()

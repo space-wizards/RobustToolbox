@@ -120,6 +120,9 @@
       <SpecificVersion>False</SpecificVersion>
       <HintPath>..\References\Release\Gorgon.dll</HintPath>
     </Reference>
+    <Reference Include="Microsoft.Diagnostics.Runtime">
+      <HintPath>..\packages\Microsoft.Diagnostics.Runtime.0.7.1-beta\lib\net40\Microsoft.Diagnostics.Runtime.dll</HintPath>
+    </Reference>
     <Reference Include="System" />
     <Reference Include="System.Core">
       <RequiredTargetFramework>3.5</RequiredTargetFramework>
@@ -228,6 +231,7 @@
     <Content Include="plugins.cfg">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </Content>
+    <None Include="packages.config" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\ClientInterfaces\ClientInterfaces.csproj">
@@ -241,6 +245,10 @@
     <ProjectReference Include="..\SS13.IoC\SS13.IoC.csproj">
       <Project>{3401031F-35A7-4AE5-8B64-CAFDCB929F0E}</Project>
       <Name>SS13.IoC</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\SS3D_shared\SS13_Shared.csproj">
+      <Project>{4229D7E3-C3AE-4C0A-B2B1-BB20911150DC}</Project>
+      <Name>SS13_Shared</Name>
     </ProjectReference>
   </ItemGroup>
   <ItemGroup>

@@ -1,0 +1,162 @@
+<?xml version="1.0"?>
+<doc>
+    <assembly>
+        <name>GorgonZipFileSystem</name>
+    </assembly>
+    <members>
+        <member name="T:GorgonLibrary.FileSystems.GorgonZipFileSystem">
+            <summary>
+            Object representing a packed file system compressed using Zip (WinZip) compression.
+            </summary>
+        </member>
+        <member name="M:GorgonLibrary.FileSystems.GorgonZipFileSystem.ReadIndex(System.IO.Stream)">
+            <summary>
+            Function to read the file system index.
+            </summary>
+            <param name="fileSystemStream">Stream that contains the index.</param>
+        </member>
+        <member name="M:GorgonLibrary.FileSystems.GorgonZipFileSystem.DecodeData(GorgonLibrary.FileSystems.FileSystemFile)">
+            <summary>
+            Function to load an object from the file system.
+            </summary>
+            <param name="file">File to read.</param>
+            <returns>The raw binary data for the file.</returns>
+        </member>
+        <member name="M:GorgonLibrary.FileSystems.GorgonZipFileSystem.EncodeData(GorgonLibrary.FileSystems.FileSystemPath,System.String,System.Byte[])">
+            <summary>
+            Function to encode object data.
+            </summary>
+            <param name="path">Path to place the file into.</param>
+            <param name="filePath">File path.</param>
+            <param name="data">Data to encode.</param>
+            <returns>A new file system entry.</returns>
+        </member>
+        <member name="M:GorgonLibrary.FileSystems.GorgonZipFileSystem.Load(GorgonLibrary.FileSystems.FileSystemFile)">
+            <summary>
+            Function to load an object from the file system.
+            </summary>
+            <param name="file">File system entry for the object.</param>
+        </member>
+        <member name="M:GorgonLibrary.FileSystems.GorgonZipFileSystem.SaveInitialize(System.String)">
+            <summary>
+            Function called when a save operation begins.
+            </summary>
+            <param name="filePath">Path to the file system location.</param>
+        </member>
+        <member name="M:GorgonLibrary.FileSystems.GorgonZipFileSystem.SaveFinalize">
+            <summary>
+            Function called when the save function is complete.
+            </summary>
+            <remarks>This function is called at the end of the save function, regardless of whether the save was successful or not.</remarks>
+        </member>
+        <member name="M:GorgonLibrary.FileSystems.GorgonZipFileSystem.SaveEmptyDirectory(GorgonLibrary.FileSystems.FileSystemPath)">
+            <summary>
+            Function to save the empty directory entries into the zip file.
+            </summary>
+            <param name="path">The path to the empty directory.</param>
+        </member>
+        <member name="M:GorgonLibrary.FileSystems.GorgonZipFileSystem.SaveIndex(System.String)">
+            <summary>
+            Function to save the file index.
+            </summary>
+            <param name="filePath">Root of the file system on the disk.</param>
+        </member>
+        <member name="M:GorgonLibrary.FileSystems.GorgonZipFileSystem.SaveFileData(System.String,GorgonLibrary.FileSystems.FileSystemFile)">
+            <summary>
+            Function to save the file data.
+            </summary>
+            <param name="filePath">Root of the file system on the disk.</param>
+            <param name="file">File to save.</param>
+        </member>
+        <member name="M:GorgonLibrary.FileSystems.GorgonZipFileSystem.Dispose(System.Boolean)">
+            <summary>
+            Function to perform clean up.
+            </summary>
+            <param name="disposing">TRUE to release all resources, FALSE to only release unmanaged.</param>
+        </member>
+        <member name="M:GorgonLibrary.FileSystems.GorgonZipFileSystem.IsValidForProvider(GorgonLibrary.FileSystems.FileSystemProvider,System.IO.Stream)">
+            <summary>
+            Function return whether a file system is valid for a given file system provider.
+            </summary>
+            <param name="provider">Provider to test.</param>
+            <param name="fileSystemStream">Stream containing the file system root.</param>
+            <returns>
+            TRUE if the provider can support this filesystem, FALSE if not.
+            </returns>
+        </member>
+        <member name="M:GorgonLibrary.FileSystems.GorgonZipFileSystem.Save(System.IO.Stream)">
+            <summary>
+            Function to save the file system to a stream.
+            </summary>
+            <param name="fileSystemStream">Stream to save into.</param>
+        </member>
+        <member name="M:GorgonLibrary.FileSystems.GorgonZipFileSystem.Save(System.String)">
+            <summary>
+            Function to save the file system.
+            </summary>
+            <param name="filePath">Path to save the file system into.</param>
+        </member>
+        <member name="M:GorgonLibrary.FileSystems.GorgonZipFileSystem.AssignRoot(System.IO.Stream)">
+            <summary>
+            Function to assign the root of this file system.
+            </summary>
+            <param name="fileSystemStream">The file stream that will contain the file system.</param>
+            <remarks>Due to the nature of a file stream, the file system within the stream must be a packed file system.</remarks>
+        </member>
+        <member name="M:GorgonLibrary.FileSystems.GorgonZipFileSystem.AssignRoot(System.String)">
+            <summary>
+            Function to assign the root of this file system.
+            </summary>
+            <param name="path">Path to the root of the file system.</param>
+            <remarks>Path can be a folder that contains the file system XML index for a folder file system or a file (typically
+            ending with extension .zip) for a packed file system.</remarks>		
+        </member>
+        <member name="M:GorgonLibrary.FileSystems.GorgonZipFileSystem.#ctor(System.String,GorgonLibrary.FileSystems.FileSystemProvider)">
+            <summary>
+            Initializes a new instance of the <see cref="T:GorgonLibrary.FileSystems.GorgonZipFileSystem"/> class.
+            </summary>
+            <param name="name">Name of this file system.</param>
+            <param name="provider">File system provider.</param>
+        </member>
+        <member name="P:GorgonLibrary.FileSystems.GorgonZipFileSystem.FileSystemHeader">
+            <summary>
+            Property to return the header for the file system.
+            </summary>
+        </member>
+        <member name="P:GorgonLibrary.FileSystems.GorgonZipFileSystem.IsRootInStream">
+            <summary>
+            Property to return whether the root of the file system is a stream or not.
+            </summary>
+            <value></value>
+        </member>
+        <member name="P:GorgonLibrary.FileSystems.GorgonZipFileSystem.FileSystemStreamOffset">
+            <summary>
+            Property to return the offset of the file system within the stream.
+            </summary>
+        </member>
+        <member name="T:GorgonLibrary.FileSystems.GorgonZipFileSystemPlugInEntry">
+            <summary>
+            Entry point for the plug-in.
+            </summary>
+        </member>
+        <member name="M:GorgonLibrary.FileSystems.GorgonZipFileSystemPlugInEntry.CreateImplementation(System.Object[])">
+            <summary>
+            Function to create a new object from the plug-in.
+            </summary>
+            <param name="parameters">Parameters to pass.</param>
+            <returns>The new object.</returns>
+        </member>
+        <member name="M:GorgonLibrary.FileSystems.GorgonZipFileSystemPlugInEntry.#ctor(System.String)">
+            <summary>
+            Constructor.
+            </summary>
+            <param name="plugInPath">Path to the plug-in.</param>
+        </member>
+        <member name="P:GorgonLibrary.FileSystems.GorgonZipFileSystemPlugInEntry.FileSystemInfo">
+            <summary>
+            Property to return the file system information for the file system within the plug-in.
+            </summary>
+            <value></value>
+        </member>
+    </members>
+</doc>

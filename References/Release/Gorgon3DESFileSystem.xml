@@ -1,0 +1,303 @@
+<?xml version="1.0"?>
+<doc>
+    <assembly>
+        <name>Gorgon3DESFileSystem</name>
+    </assembly>
+    <members>
+        <member name="T:GorgonLibrary.FileSystems.formChangePassword">
+            <summary>
+            Interface to allow the user to change the password.
+            </summary>
+        </member>
+        <member name="M:GorgonLibrary.FileSystems.formChangePassword.buttonOK_Click(System.Object,System.EventArgs)">
+            <summary>
+            Handles the Click event of the buttonOK control.
+            </summary>
+            <param name="sender">The source of the event.</param>
+            <param name="e">The <see cref="T:System.EventArgs"/> instance containing the event data.</param>
+        </member>
+        <member name="M:GorgonLibrary.FileSystems.formChangePassword.textOldPassword_TextChanged(System.Object,System.EventArgs)">
+            <summary>
+            Handles the TextChanged event of the textOldPassword control.
+            </summary>
+            <param name="sender">The source of the event.</param>
+            <param name="e">The <see cref="T:System.EventArgs"/> instance containing the event data.</param>
+        </member>
+        <member name="M:GorgonLibrary.FileSystems.formChangePassword.ValidateForm">
+            <summary>
+            Function to validate the form.
+            </summary>
+        </member>
+        <member name="M:GorgonLibrary.FileSystems.formChangePassword.OnLoad(System.EventArgs)">
+            <summary>
+            Raises the <see cref="E:System.Windows.Forms.Form.Load"/> event.
+            </summary>
+            <param name="e">An <see cref="T:System.EventArgs"/> that contains the event data.</param>
+        </member>
+        <member name="M:GorgonLibrary.FileSystems.formChangePassword.#ctor">
+            <summary>
+            Initializes a new instance of the <see cref="T:GorgonLibrary.FileSystems.formChangePassword"/> class.
+            </summary>
+        </member>
+        <member name="F:GorgonLibrary.FileSystems.formChangePassword.components">
+            <summary>
+            Required designer variable.
+            </summary>
+        </member>
+        <member name="M:GorgonLibrary.FileSystems.formChangePassword.Dispose(System.Boolean)">
+            <summary>
+            Clean up any resources being used.
+            </summary>
+            <param name="disposing">true if managed resources should be disposed; otherwise, false.</param>
+        </member>
+        <member name="M:GorgonLibrary.FileSystems.formChangePassword.InitializeComponent">
+            <summary>
+            Required method for Designer support - do not modify
+            the contents of this method with the code editor.
+            </summary>
+        </member>
+        <member name="T:GorgonLibrary.FileSystems.formGetPassword">
+            <summary>
+            Interface used to retrieve the password for the 3DES encryption.
+            </summary>
+        </member>
+        <member name="M:GorgonLibrary.FileSystems.formGetPassword.buttonOK_Click(System.Object,System.EventArgs)">
+            <summary>
+            Handles the Click event of the buttonOK control.
+            </summary>
+            <param name="sender">The source of the event.</param>
+            <param name="e">The <see cref="T:System.EventArgs"/> instance containing the event data.</param>
+        </member>
+        <member name="M:GorgonLibrary.FileSystems.formGetPassword.textPassword_TextChanged(System.Object,System.EventArgs)">
+            <summary>
+            Handles the TextChanged event of the textPassword control.
+            </summary>
+            <param name="sender">The source of the event.</param>
+            <param name="e">The <see cref="T:System.EventArgs"/> instance containing the event data.</param>
+        </member>
+        <member name="M:GorgonLibrary.FileSystems.formGetPassword.ValidateForm">
+            <summary>
+            Function to validate the controls on the form.
+            </summary>
+        </member>
+        <member name="M:GorgonLibrary.FileSystems.formGetPassword.#ctor">
+            <summary>
+            Initializes a new instance of the <see cref="T:GorgonLibrary.FileSystems.formGetPassword"/> class.
+            </summary>
+        </member>
+        <member name="F:GorgonLibrary.FileSystems.formGetPassword.components">
+            <summary>
+            Required designer variable.
+            </summary>
+        </member>
+        <member name="M:GorgonLibrary.FileSystems.formGetPassword.Dispose(System.Boolean)">
+            <summary>
+            Clean up any resources being used.
+            </summary>
+            <param name="disposing">true if managed resources should be disposed; otherwise, false.</param>
+        </member>
+        <member name="M:GorgonLibrary.FileSystems.formGetPassword.InitializeComponent">
+            <summary>
+            Required method for Designer support - do not modify
+            the contents of this method with the code editor.
+            </summary>
+        </member>
+        <member name="T:GorgonLibrary.FileSystems.PasswordData">
+            <summary>
+            Object used to get the password from the user.
+            </summary>
+        </member>
+        <member name="M:GorgonLibrary.FileSystems.PasswordData.SetPassword(System.String)">
+            <summary>
+            Function to set the password.
+            </summary>
+            <param name="password">Password to set.</param>
+        </member>
+        <member name="P:GorgonLibrary.FileSystems.PasswordData.Data">
+            <summary>
+            Property to set or return the authentication data.
+            </summary>
+            <value></value>
+        </member>
+        <member name="T:GorgonLibrary.FileSystems.Gorgon3DESFileSystemPlugInEntry">
+            <summary>
+            Entry point for the plug-in.
+            </summary>
+        </member>
+        <member name="M:GorgonLibrary.FileSystems.Gorgon3DESFileSystemPlugInEntry.CreateImplementation(System.Object[])">
+            <summary>
+            Function to create a new object from the plug-in.
+            </summary>
+            <param name="parameters">Parameters to pass.</param>
+            <returns>The new object.</returns>
+        </member>
+        <member name="M:GorgonLibrary.FileSystems.Gorgon3DESFileSystemPlugInEntry.#ctor(System.String)">
+            <summary>
+            Constructor.
+            </summary>
+            <param name="plugInPath">Path to the plug-in.</param>
+        </member>
+        <member name="P:GorgonLibrary.FileSystems.Gorgon3DESFileSystemPlugInEntry.FileSystemInfo">
+            <summary>
+            Property to return the file system information for the file system within the plug-in.
+            </summary>
+            <value></value>
+        </member>
+        <member name="T:GorgonLibrary.FileSystems.Gorgon3DESFileSystem">
+            <summary>
+            Object representing a packed file system encrypted with 3DES encryption.
+            </summary>
+        </member>
+        <member name="M:GorgonLibrary.FileSystems.Gorgon3DESFileSystem.ReadIndex(System.IO.Stream)">
+            <summary>
+            Function to read the file system index.
+            </summary>
+            <param name="fileSystemStream">Stream from which to read to the index.</param>
+        </member>
+        <member name="M:GorgonLibrary.FileSystems.Gorgon3DESFileSystem.AssignRoot(System.IO.Stream)">
+            <summary>
+            Function to assign the root of this file system.
+            </summary>
+            <param name="fileSystemStream">The file stream that will contain the file system.</param>
+            <remarks>Due to the nature of a file stream, the file system within the stream must be a packed file system.</remarks>
+        </member>
+        <member name="M:GorgonLibrary.FileSystems.Gorgon3DESFileSystem.AssignRoot(System.String)">
+            <summary>
+            Function to assign the root of this file system.
+            </summary>
+            <param name="path">Path to the root of the file system.</param>
+            <remarks>Path can be a folder that contains the file system XML index for a folder file system or a file (typically
+            ending with extension .gorPack) for a packed file system.</remarks>
+        </member>
+        <member name="M:GorgonLibrary.FileSystems.Gorgon3DESFileSystem.EncodeData(GorgonLibrary.FileSystems.FileSystemFile,System.Byte[])">
+            <summary>
+            Function to encode object data.
+            </summary>
+            <param name="file">File to re-encode.</param>
+            <param name="data">Data to encode.</param>
+            <returns>A new file system entry.</returns>
+        </member>
+        <member name="M:GorgonLibrary.FileSystems.Gorgon3DESFileSystem.TransformData(System.Byte[],System.Byte[],System.Boolean)">
+            <summary>
+            Function to transform a block of data.
+            </summary>
+            <param name="data">Data to encrypt.</param>
+            <param name="key">Private key.</param>
+            <param name="decrypt">TRUE to decrypt the data, FALSE to encrypt it</param>
+            <returns>The block of encrypted data.</returns>
+        </member>
+        <member name="M:GorgonLibrary.FileSystems.Gorgon3DESFileSystem.DecodeData(GorgonLibrary.FileSystems.FileSystemFile)">
+            <summary>
+            Function to load an object from the file system.
+            </summary>
+            <param name="file">File to read.</param>
+            <returns>The raw binary data for the file.</returns>
+        </member>
+        <member name="M:GorgonLibrary.FileSystems.Gorgon3DESFileSystem.InitializeSecurity">
+            <summary>
+            Function to make the encryption key based on our authorization data.
+            </summary>
+        </member>
+        <member name="M:GorgonLibrary.FileSystems.Gorgon3DESFileSystem.EncodeData(GorgonLibrary.FileSystems.FileSystemPath,System.String,System.Byte[])">
+            <summary>
+            Function to encode object data.
+            </summary>
+            <param name="path">Path to place the file into.</param>
+            <param name="filePath">File path.</param>
+            <param name="data">Data to encode.</param>
+            <returns>A new file system entry.</returns>
+        </member>
+        <member name="M:GorgonLibrary.FileSystems.Gorgon3DESFileSystem.Load(GorgonLibrary.FileSystems.FileSystemFile)">
+            <summary>
+            Function to load an object from the file system.
+            </summary>
+            <param name="file">File system entry for the object.</param>
+        </member>
+        <member name="M:GorgonLibrary.FileSystems.Gorgon3DESFileSystem.SaveInitialize(System.String)">
+            <summary>
+            Function called when a save operation begins.
+            </summary>
+            <param name="filePath">Path to the file system location.</param>
+        </member>
+        <member name="M:GorgonLibrary.FileSystems.Gorgon3DESFileSystem.SaveFinalize">
+            <summary>
+            Function called when the save function is complete.
+            </summary>
+            <remarks>This function is called at the end of the save function, regardless of whether the save was successful or not.</remarks>
+        </member>
+        <member name="M:GorgonLibrary.FileSystems.Gorgon3DESFileSystem.SaveIndex(System.String)">
+            <summary>
+            Function to save the file index.
+            </summary>
+            <param name="filePath">Root of the file system on the disk.</param>
+        </member>
+        <member name="M:GorgonLibrary.FileSystems.Gorgon3DESFileSystem.SaveFileData(System.String,GorgonLibrary.FileSystems.FileSystemFile)">
+            <summary>
+            Function to save the file data.
+            </summary>
+            <param name="filePath">Root of the file system on the disk.</param>
+            <param name="file">File to save.</param>
+        </member>
+        <member name="M:GorgonLibrary.FileSystems.Gorgon3DESFileSystem.IsValidForProvider(GorgonLibrary.FileSystems.FileSystemProvider,System.IO.Stream)">
+            <summary>
+            Function return whether a file system is valid for a given file system provider.
+            </summary>
+            <param name="provider">Provider to test.</param>
+            <param name="fileSystemStream">Stream containing the file system root.</param>
+            <returns>
+            TRUE if the provider can support this filesystem, FALSE if not.
+            </returns>
+        </member>
+        <member name="M:GorgonLibrary.FileSystems.Gorgon3DESFileSystem.CreateAuthorization(System.Windows.Forms.Form)">
+            <summary>
+            Function used to create a user friendly authorization interface.
+            </summary>
+            <param name="owner">Form that would potentially own any dialogs we create.</param>
+            <returns>A code to indicate the status.</returns>
+            <remarks>You'd typically use this to create a login screen or file browser or whatever to define the authorization for the user.</remarks>
+        </member>
+        <member name="M:GorgonLibrary.FileSystems.Gorgon3DESFileSystem.GetAuthorization(System.Windows.Forms.Form)">
+            <summary>
+            Function user to get the authorization from the user.
+            </summary>
+            <param name="owner">Form that would potentially own any dialogs we create.</param>
+            <returns>A code to indicate the status.</returns>
+            <remarks>You'd typically use this to create a login screen or file browser or whatever to define the authorization for the user.</remarks>
+        </member>
+        <member name="M:GorgonLibrary.FileSystems.Gorgon3DESFileSystem.Save(System.IO.Stream)">
+            <summary>
+            Function to save the file system to a stream.
+            </summary>
+            <param name="fileSystemStream">Stream to save into.</param>
+        </member>
+        <member name="M:GorgonLibrary.FileSystems.Gorgon3DESFileSystem.Save(System.String)">
+            <summary>
+            Function to save the file system.
+            </summary>
+            <param name="filePath">Path to save the file system into.</param>
+        </member>
+        <member name="M:GorgonLibrary.FileSystems.Gorgon3DESFileSystem.#ctor(System.String,GorgonLibrary.FileSystems.FileSystemProvider)">
+            <summary>
+            Constructor.
+            </summary>
+            <param name="name">Name of this file system.</param>
+            <param name="provider">File system provider.</param>
+        </member>
+        <member name="P:GorgonLibrary.FileSystems.Gorgon3DESFileSystem.FileSystemHeader">
+            <summary>
+            Property to return the header for the file system.
+            </summary>
+        </member>
+        <member name="P:GorgonLibrary.FileSystems.Gorgon3DESFileSystem.IsRootInStream">
+            <summary>
+            Property to return whether the root of the file system is a stream or not.
+            </summary>
+            <value></value>
+        </member>
+        <member name="P:GorgonLibrary.FileSystems.Gorgon3DESFileSystem.FileSystemStreamOffset">
+            <summary>
+            Property to return the offset of the file system within the stream.
+            </summary>
+        </member>
+    </members>
+</doc>

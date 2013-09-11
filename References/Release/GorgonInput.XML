@@ -4,6 +4,97 @@
         <name>GorgonInput</name>
     </assembly>
     <members>
+        <member name="T:GorgonLibrary.InputDevices.GorgonInput">
+            <summary>
+            Object representing the main interface to the input library.
+            </summary>
+        </member>
+        <member name="M:GorgonLibrary.InputDevices.GorgonInput.messageFilter_RawInputData(System.Object,GorgonLibrary.InputDevices.RawInputEventArgs)">
+            <summary>
+            Handles the RawInputData event of the _messageFilter control.
+            </summary>
+            <param name="sender">The source of the event.</param>
+            <param name="e">The <see cref="T:GorgonLibrary.InputDevices.RawInputEventArgs"/> instance containing the event data.</param>
+        </member>
+        <member name="M:GorgonLibrary.InputDevices.GorgonInput.CreateJoystickList">
+            <summary>
+            Function to create the list of joystick interfaces.
+            </summary>
+            <returns>A new list of joystick interfaces.</returns>
+        </member>
+        <member name="M:GorgonLibrary.InputDevices.GorgonInput.CreateKeyboard">
+            <summary>
+            Function to create the keyboard interface.
+            </summary>
+            <returns>A new keyboard interface.</returns>
+        </member>
+        <member name="M:GorgonLibrary.InputDevices.GorgonInput.CreateMouse">
+            <summary>
+            Function to create the mouse interface.
+            </summary>
+            <returns>A new mouse interface.</returns>
+        </member>
+        <member name="M:GorgonLibrary.InputDevices.GorgonInput.Owner_LostFocus(System.Object,System.EventArgs)">
+            <summary>
+            Handles the LostFocus event of the owner control.
+            </summary>
+            <param name="sender">The source of the event.</param>
+            <param name="e">The <see cref="T:System.EventArgs"/> instance containing the event data.</param>
+        </member>
+        <member name="M:GorgonLibrary.InputDevices.GorgonInput.Dispose(System.Boolean)">
+            <summary>
+            Function to perform clean up.
+            </summary>
+            <param name="disposing">TRUE to perform clean up of all objects.  FALSE to clean up only unmanaged objects.</param>
+        </member>
+        <member name="M:GorgonLibrary.InputDevices.GorgonInput.#ctor(GorgonLibrary.InputDevices.InputPlugIn)">
+            <summary>
+            Constructor.
+            </summary>
+            <param name="inputPlugIn">Plug-in that created this object.</param>
+        </member>
+        <member name="T:GorgonLibrary.InputDevices.GorgonInput.MessageFilter">
+            <summary>
+            Object representing a message loop filter.
+            </summary>
+        </member>
+        <member name="M:GorgonLibrary.InputDevices.GorgonInput.MessageFilter.PreFilterMessage(System.Windows.Forms.Message@)">
+            <summary>
+            Filters out a message before it is dispatched.
+            </summary>
+            <param name="m">The message to be dispatched. You cannot modify this message.</param>
+            <returns>
+            true to filter the message and stop it from being dispatched; false to allow the message to continue to the next filter or control.
+            </returns>
+        </member>
+        <member name="E:GorgonLibrary.InputDevices.GorgonInput.MessageFilter.RawInputData">
+            <summary>
+            Event fired when a raw input event occours.
+            </summary>
+        </member>
+        <member name="T:GorgonLibrary.InputDevices.JoystickDriverNotPresentException">
+            <summary>
+            Joystick driver not present exception.
+            </summary>
+            <remarks>Exception thrown when there's no joystick driver present for the joystick ID passed.</remarks>
+        </member>
+        <member name="M:GorgonLibrary.InputDevices.JoystickDriverNotPresentException.#ctor">
+            <summary>
+            Constructor.
+            </summary>
+        </member>
+        <member name="T:GorgonLibrary.InputDevices.JoystickCannotGetNameException">
+            <summary>
+            Cannot retrieve joystick name exception.
+            </summary>
+            <remarks>Exception thrown when the function is unable to retrieve the joystick name.</remarks>
+        </member>
+        <member name="M:GorgonLibrary.InputDevices.JoystickCannotGetNameException.#ctor(System.Exception)">
+            <summary>
+            Constructor.
+            </summary>
+            <param name="ex">Inner exception.</param>
+        </member>
         <member name="T:GorgonLibrary.InputDevices.GorgonMouse">
             <summary>
             Object representing mouse data.
@@ -43,6 +134,544 @@
             Constructor.
             </summary>
             <param name="owner">Input device interface that owns this object.</param>
+        </member>
+        <member name="T:GorgonLibrary.InputDevices.Internal.Win32API">
+            <summary>
+            Static class for Native Win32 methods and corresponding structures.
+            </summary>
+            <remarks>
+            This is a grouping of any API calls regularly used by Gorgon.
+            <para>
+            This list is by no means complete.  The Win32 API is just massive and would probably take a lifetime to map.
+            </para>
+            	<para>
+            These calls are considered "unsafe" and thus should be used with care.  If you don't know how to use a function, or why you want it, you probably don't need to use them.
+            </para>
+            	<para>
+            Please note that a lot of the enumerators/structures have slightly different names than their Win32 counterparts.  This was done for the sake of readability.  This does NOT affect their results or their effect on the results of their related functionality.
+            </para>
+            </remarks>
+        </member>
+        <member name="M:GorgonLibrary.InputDevices.Internal.Win32API.joyGetThreshold(System.Int32,System.Int32@)">
+            <summary>
+            Function to retrieve the dead zone of the joystick.
+            </summary>
+            <param name="uJoyID">ID the joystick to query.</param>
+            <param name="puThreshold">Threshold for the joystick.</param>
+            <returns>0 if successful, non-zero if not.</returns>
+        </member>
+        <member name="M:GorgonLibrary.InputDevices.Internal.Win32API.joyGetNumDevs">
+            <summary>
+            Function to return the number of joystick devices supported by the current driver.
+            </summary>
+            <returns>Number of joysticks supported, 0 if no driver is installed.</returns>
+        </member>
+        <member name="M:GorgonLibrary.InputDevices.Internal.Win32API.joyGetDevCaps(System.Int32,GorgonLibrary.InputDevices.Internal.JOYCAPS@,System.Int32)">
+            <summary>
+            Function to return the joystick device capabilities.
+            </summary>
+            <param name="uJoyID">ID of the joystick to return.  -1 will return registry key, whether a device exists or not.</param>
+            <param name="pjc">Joystick capabilities.</param>
+            <param name="cbjc">Size of the JOYCAPS structure in bytes.</param>
+            <returns>0 if successful, non zero if not.</returns>
+        </member>
+        <member name="M:GorgonLibrary.InputDevices.Internal.Win32API.joyGetPos(System.Int32,GorgonLibrary.InputDevices.Internal.JOYINFO@)">
+            <summary>
+            Function to retrieve joystick position information.
+            </summary>
+            <param name="uJoyID">ID the of joystick to query.</param>
+            <param name="pji">Position information.</param>
+            <returns>0 if successful, non zero if not.  JOYERR_UNPLUGGED if not connected.</returns>
+        </member>
+        <member name="M:GorgonLibrary.InputDevices.Internal.Win32API.joyGetPosEx(System.Int32,GorgonLibrary.InputDevices.Internal.JOYINFOEX@)">
+            <summary>
+            Function to retrieve joystick position information.
+            </summary>
+            <param name="uJoyID">ID the of joystick to query.</param>
+            <param name="pji">Position information.</param>
+            <returns>0 if successful, non zero if not.  JOYERR_UNPLUGGED if not connected.</returns>
+        </member>
+        <member name="M:GorgonLibrary.InputDevices.Internal.Win32API.GetRawInputData(System.IntPtr,GorgonLibrary.InputDevices.Internal.RawInputCommand,GorgonLibrary.InputDevices.Internal.RAWINPUTx86@,System.Int32@,System.Int32)">
+            <summary>
+            Function to retrieve raw input data.
+            </summary>
+            <param name="hRawInput">Handle to the raw input.</param>
+            <param name="uiCommand">Command to issue when retrieving data.</param>
+            <param name="pData">Raw input data.</param>
+            <param name="pcbSize">Number of bytes in the array.</param>
+            <param name="cbSizeHeader">Size of the header.</param>
+            <returns>0 if successful if pData is null, otherwise number of bytes if pData is not null.</returns>
+        </member>
+        <member name="M:GorgonLibrary.InputDevices.Internal.Win32API.GetRawInputData(System.IntPtr,GorgonLibrary.InputDevices.Internal.RawInputCommand,GorgonLibrary.InputDevices.Internal.RAWINPUTx64@,System.Int32@,System.Int32)">
+            <summary>
+            Function to retrieve raw input data.
+            </summary>
+            <param name="hRawInput">Handle to the raw input.</param>
+            <param name="uiCommand">Command to issue when retrieving data.</param>
+            <param name="pData">Raw input data.</param>
+            <param name="pcbSize">Number of bytes in the array.</param>
+            <param name="cbSizeHeader">Size of the header.</param>
+            <returns>0 if successful if pData is null, otherwise number of bytes if pData is not null.</returns>
+        </member>
+        <member name="M:GorgonLibrary.InputDevices.Internal.Win32API.GetRawInputData(System.IntPtr,GorgonLibrary.InputDevices.Internal.RawInputCommand,System.Byte[],System.Int32@,System.Int32)">
+            <summary>
+            Function to retrieve raw input data.
+            </summary>
+            <param name="hRawInput">Handle to the raw input.</param>
+            <param name="uiCommand">Command to issue when retrieving data.</param>
+            <param name="pData">Raw input data.</param>
+            <param name="pcbSize">Number of bytes in the array.</param>
+            <param name="cbSizeHeader">Size of the header.</param>
+            <returns>0 if successful if pData is null, otherwise number of bytes if pData is not null.</returns>
+        </member>
+        <member name="M:GorgonLibrary.InputDevices.Internal.Win32API.RegisterRawInputDevices(GorgonLibrary.InputDevices.Internal.RAWINPUTDEVICE[],System.Int32,System.Int32)">
+            <summary>
+            Function to register a raw input device.
+            </summary>
+            <param name="pRawInputDevices">Array of raw input devices.</param>
+            <param name="uiNumDevices">Number of devices.</param>
+            <param name="cbSize">Size of the RAWINPUTDEVICE structure.</param>
+            <returns>TRUE if successful, FALSE if not.</returns>
+        </member>
+        <member name="M:GorgonLibrary.InputDevices.Internal.Win32API.RegisterRawInputDevices(GorgonLibrary.InputDevices.Internal.RAWINPUTDEVICE)">
+            <summary>
+            Function to register a raw input device.
+            </summary>
+            <param name="device">Device information.</param>
+            <returns>TRUE if successful, FALSE if not.</returns>
+        </member>
+        <member name="T:GorgonLibrary.InputDevices.Internal.RawInputData">
+            <summary>
+            Object for raw input data (platform agnostic).
+            </summary>
+        </member>
+        <member name="M:GorgonLibrary.InputDevices.Internal.RawInputData.GetRawInputData(System.IntPtr)">
+            <summary>
+            Function to retrieve the raw input data.
+            </summary>
+            <param name="inputHandle">Handle to raw input data.</param>
+        </member>
+        <member name="M:GorgonLibrary.InputDevices.Internal.RawInputData.#ctor">
+            <summary>
+            Initializes a new instance of the <see cref="T:GorgonLibrary.InputDevices.Internal.RawInputData"/> class.
+            </summary>
+        </member>
+        <member name="P:GorgonLibrary.InputDevices.Internal.RawInputData.Header">
+            <summary>
+            Header for the data.
+            </summary>
+        </member>
+        <member name="P:GorgonLibrary.InputDevices.Internal.RawInputData.Mouse">
+            <summary>
+            Mouse specific data.
+            </summary>
+        </member>
+        <member name="P:GorgonLibrary.InputDevices.Internal.RawInputData.Keyboard">
+            <summary>
+            Keyboard specific data.
+            </summary>
+        </member>
+        <member name="P:GorgonLibrary.InputDevices.Internal.RawInputData.HID">
+            <summary>
+            Human input device data.
+            </summary>
+        </member>
+        <member name="T:GorgonLibrary.InputDevices.GorgonKeyboard">
+            <summary>
+            Object representing keyboard data.
+            </summary>
+        </member>
+        <member name="M:GorgonLibrary.InputDevices.GorgonKeyboard.GetRawData(GorgonLibrary.InputDevices.Internal.RAWINPUTKEYBOARD)">
+            <summary>
+            Function to retrieve and parse the raw keyboard data.
+            </summary>
+            <param name="keyboardData">Data to examine.</param>
+        </member>
+        <member name="M:GorgonLibrary.InputDevices.GorgonKeyboard.BindDevice">
+            <summary>
+            Function to bind the input device.
+            </summary>
+        </member>
+        <member name="M:GorgonLibrary.InputDevices.GorgonKeyboard.UnbindDevice">
+            <summary>
+            Function to unbind the input device.
+            </summary>
+        </member>
+        <member name="M:GorgonLibrary.InputDevices.GorgonKeyboard.#ctor(GorgonLibrary.InputDevices.Input)">
+            <summary>
+            Constructor.
+            </summary>
+            <param name="owner">Input device interface that owns this object.</param>
+        </member>
+        <member name="T:GorgonLibrary.InputDevices.GorgonInputPlugInEntry">
+            <summary>
+            Entry point for the plug-in.
+            </summary>
+        </member>
+        <member name="M:GorgonLibrary.InputDevices.GorgonInputPlugInEntry.Unload">
+            <summary>
+            Function to unload this plug-in.
+            </summary>
+        </member>
+        <member name="M:GorgonLibrary.InputDevices.GorgonInputPlugInEntry.CreateImplementation(System.Object[])">
+            <summary>
+            Function to create an input interface.
+            </summary>
+            <param name="parameters">Parameters to pass for construction.</param>
+            <returns>New input object.</returns>
+        </member>
+        <member name="M:GorgonLibrary.InputDevices.GorgonInputPlugInEntry.#ctor(System.String)">
+            <summary>
+            Constructor.
+            </summary>
+            <param name="plugInPath">Path to the plug-in.</param>
+        </member>
+        <member name="P:GorgonLibrary.InputDevices.GorgonInputPlugInEntry.Description">
+            <summary>
+            Property to return a description of the input interface.
+            </summary>
+            <value></value>
+        </member>
+        <member name="T:GorgonLibrary.InputDevices.GorgonJoystickList">
+            <summary>
+            Object representing a list of joysticks.
+            </summary>
+        </member>
+        <member name="M:GorgonLibrary.InputDevices.GorgonJoystickList.EnumerateJoysticks(System.Boolean)">
+            <summary>
+            Function to enumerate the available joysticks.
+            </summary>
+            <param name="includeDisconnected">TRUE to include all joysticks, include those that are disconnected, FALSE to exclude.</param>
+        </member>
+        <member name="M:GorgonLibrary.InputDevices.GorgonJoystickList.IsJoystickConnected(System.Int32)">
+            <summary>
+            Function to determine if a joystick is connected.
+            </summary>
+            <param name="ID">ID of the joystick to check.</param>
+            <returns>TRUE if connected, FALSE if not.</returns>
+        </member>
+        <member name="M:GorgonLibrary.InputDevices.GorgonJoystickList.GetJoystickName(GorgonLibrary.InputDevices.Internal.JOYCAPS,System.Int32)">
+            <summary>
+            Function to retrieve a joystick name from the registry.
+            </summary>
+            <param name="joystickData">Joystick capability data.</param>
+            <param name="ID">ID of the joystick to retrieve data for.</param>
+            <returns>The name of the joystick.</returns>
+        </member>
+        <member name="M:GorgonLibrary.InputDevices.GorgonJoystickList.Refresh">
+            <summary>
+            Function to refresh the joystick list.
+            </summary>
+        </member>
+        <member name="M:GorgonLibrary.InputDevices.GorgonJoystickList.#ctor(GorgonLibrary.InputDevices.Input)">
+            <summary>
+            Constructor.
+            </summary>
+            <param name="owner">Owning input interface.</param>
+        </member>
+        <member name="T:GorgonLibrary.InputDevices.Internal.JOYINFO">
+            <summary>
+            Value type containing joystick position information.
+            </summary>
+        </member>
+        <member name="F:GorgonLibrary.InputDevices.Internal.JOYINFO.X">
+            <summary>X axis.</summary>
+        </member>
+        <member name="F:GorgonLibrary.InputDevices.Internal.JOYINFO.Y">
+            <summary>Y axis.</summary>
+        </member>
+        <member name="F:GorgonLibrary.InputDevices.Internal.JOYINFO.Z">
+            <summary>Z axis.</summary>
+        </member>
+        <member name="F:GorgonLibrary.InputDevices.Internal.JOYINFO.Buttons">
+            <summary>State of buttons.</summary>
+        </member>
+        <member name="T:GorgonLibrary.InputDevices.Internal.JOYINFOEX">
+            <summary>
+            Value type containing joystick position information.
+            </summary>
+        </member>
+        <member name="F:GorgonLibrary.InputDevices.Internal.JOYINFOEX.Size">
+            <summary>Size of structure, in bytes.</summary>
+        </member>
+        <member name="F:GorgonLibrary.InputDevices.Internal.JOYINFOEX.Flags">
+            <summary>Flags to indicate what information is valid for the device.</summary>
+        </member>
+        <member name="F:GorgonLibrary.InputDevices.Internal.JOYINFOEX.X">
+            <summary>X axis.</summary>
+        </member>
+        <member name="F:GorgonLibrary.InputDevices.Internal.JOYINFOEX.Y">
+            <summary>Y axis.</summary>
+        </member>
+        <member name="F:GorgonLibrary.InputDevices.Internal.JOYINFOEX.Z">
+            <summary>Z axis.</summary>
+        </member>
+        <member name="F:GorgonLibrary.InputDevices.Internal.JOYINFOEX.Rudder">
+            <summary>Rudder position.</summary>
+        </member>
+        <member name="F:GorgonLibrary.InputDevices.Internal.JOYINFOEX.Axis5">
+            <summary>5th axis position.</summary>
+        </member>
+        <member name="F:GorgonLibrary.InputDevices.Internal.JOYINFOEX.Axis6">
+            <summary>6th axis position.</summary>
+        </member>
+        <member name="F:GorgonLibrary.InputDevices.Internal.JOYINFOEX.Buttons">
+            <summary>State of buttons.</summary>
+        </member>
+        <member name="F:GorgonLibrary.InputDevices.Internal.JOYINFOEX.ButtonNumber">
+            <summary>Currently pressed button.</summary>
+        </member>
+        <member name="F:GorgonLibrary.InputDevices.Internal.JOYINFOEX.POV">
+            <summary>Angle of the POV hat, in degrees (0 - 35900, divide by 100 to get 0 - 359 degrees.</summary>
+        </member>
+        <member name="F:GorgonLibrary.InputDevices.Internal.JOYINFOEX.Reserved1">
+            <summary>Reserved.</summary>
+        </member>
+        <member name="F:GorgonLibrary.InputDevices.Internal.JOYINFOEX.Reserved2">
+            <summary>Reserved.</summary>
+        </member>
+        <member name="T:GorgonLibrary.InputDevices.Internal.JOYCAPS">
+            <summary>
+            Value type containing joystick capabilities.
+            </summary>
+        </member>
+        <member name="F:GorgonLibrary.InputDevices.Internal.JOYCAPS.ManufacturerID">
+            <summary>Manufacturer ID.</summary>
+        </member>
+        <member name="F:GorgonLibrary.InputDevices.Internal.JOYCAPS.ProductID">
+            <summary>Product ID.</summary>
+        </member>
+        <member name="F:GorgonLibrary.InputDevices.Internal.JOYCAPS.Name">
+            <summary>Joystick name.</summary>
+        </member>
+        <member name="F:GorgonLibrary.InputDevices.Internal.JOYCAPS.MinimumX">
+            <summary>Minimum X coordinate.</summary>
+        </member>
+        <member name="F:GorgonLibrary.InputDevices.Internal.JOYCAPS.MaximumX">
+            <summary>Maximum X coordinate.</summary>
+        </member>
+        <member name="F:GorgonLibrary.InputDevices.Internal.JOYCAPS.MinimumY">
+            <summary>Minimum Y coordinate.</summary>
+        </member>
+        <member name="F:GorgonLibrary.InputDevices.Internal.JOYCAPS.MaximumY">
+            <summary>Maximum Y coordinate.</summary>
+        </member>
+        <member name="F:GorgonLibrary.InputDevices.Internal.JOYCAPS.MinimumZ">
+            <summary>Minimum Z coordinate.</summary>
+        </member>
+        <member name="F:GorgonLibrary.InputDevices.Internal.JOYCAPS.MaximumZ">
+            <summary>Maximum Z coordinate.</summary>
+        </member>
+        <member name="F:GorgonLibrary.InputDevices.Internal.JOYCAPS.ButtonCount">
+            <summary>Number of buttons on the joystick.</summary>
+        </member>
+        <member name="F:GorgonLibrary.InputDevices.Internal.JOYCAPS.MinimumPollingFrequency">
+            <summary>Smallest polling frequency (used by joySetCapture).</summary>
+        </member>
+        <member name="F:GorgonLibrary.InputDevices.Internal.JOYCAPS.MaximumPollingFrequency">
+            <summary>Largest polling frequency (used by joySetCapture).</summary>
+        </member>
+        <member name="F:GorgonLibrary.InputDevices.Internal.JOYCAPS.MinimumRudder">
+            <summary>Minimum rudder value.</summary>
+        </member>
+        <member name="F:GorgonLibrary.InputDevices.Internal.JOYCAPS.MaximumRudder">
+            <summary>Maximum rudder value.</summary>
+        </member>
+        <member name="F:GorgonLibrary.InputDevices.Internal.JOYCAPS.Axis5Minimum">
+            <summary>Minimum 5th axis value.</summary>
+        </member>
+        <member name="F:GorgonLibrary.InputDevices.Internal.JOYCAPS.Axis5Maximum">
+            <summary>Maximum 5th axis value.</summary>
+        </member>
+        <member name="F:GorgonLibrary.InputDevices.Internal.JOYCAPS.Axis6Minimum">
+            <summary>Minimum 6th axis value.</summary>
+        </member>
+        <member name="F:GorgonLibrary.InputDevices.Internal.JOYCAPS.Axis6Maximum">
+            <summary>Maximum 6th axis value.</summary>
+        </member>
+        <member name="F:GorgonLibrary.InputDevices.Internal.JOYCAPS.Capabilities">
+            <summary>Joystick capabilities.</summary>
+        </member>
+        <member name="F:GorgonLibrary.InputDevices.Internal.JOYCAPS.MaximumAxes">
+            <summary>Maxmimum number of axes for the joystick.</summary>
+        </member>
+        <member name="F:GorgonLibrary.InputDevices.Internal.JOYCAPS.AxisCount">
+            <summary>Number of axes on the joystick.</summary>
+        </member>
+        <member name="F:GorgonLibrary.InputDevices.Internal.JOYCAPS.MaximumButtons">
+            <summary>Maximum buttons for the device.</summary>
+        </member>
+        <member name="F:GorgonLibrary.InputDevices.Internal.JOYCAPS.RegistryKey">
+            <summary>Registry key for the joystick.</summary>
+        </member>
+        <member name="F:GorgonLibrary.InputDevices.Internal.JOYCAPS.DriverName">
+            <summary>Driver name for the joystick.</summary>
+        </member>
+        <member name="T:GorgonLibrary.InputDevices.Internal.RAWINPUTDEVICELIST">
+            <summary>
+            Value type for raw input device list.
+            </summary>
+        </member>
+        <member name="F:GorgonLibrary.InputDevices.Internal.RAWINPUTDEVICELIST.Device">
+            <summary>Device handle.</summary>
+        </member>
+        <member name="F:GorgonLibrary.InputDevices.Internal.RAWINPUTDEVICELIST.DeviceType">
+            <summary>Device type.</summary>
+        </member>
+        <member name="T:GorgonLibrary.InputDevices.Internal.RAWINPUTDEVICE">
+            <summary>
+            Value type for raw input devices.
+            </summary>
+        </member>
+        <member name="F:GorgonLibrary.InputDevices.Internal.RAWINPUTDEVICE.UsagePage">
+            <summary>Top level collection Usage page for the raw input device.</summary>
+        </member>
+        <member name="F:GorgonLibrary.InputDevices.Internal.RAWINPUTDEVICE.Usage">
+            <summary>Top level collection Usage for the raw input device. </summary>
+        </member>
+        <member name="F:GorgonLibrary.InputDevices.Internal.RAWINPUTDEVICE.Flags">
+            <summary>Mode flag that specifies how to interpret the information provided by UsagePage and Usage.</summary>
+        </member>
+        <member name="F:GorgonLibrary.InputDevices.Internal.RAWINPUTDEVICE.WindowHandle">
+            <summary>Handle to the target device. If NULL, it follows the keyboard focus.</summary>
+        </member>
+        <member name="T:GorgonLibrary.InputDevices.Internal.RAWINPUTHEADER">
+            <summary>
+            Value type for a raw input header.
+            </summary>
+        </member>
+        <member name="F:GorgonLibrary.InputDevices.Internal.RAWINPUTHEADER.Type">
+            <summary>Type of device the input is coming from.</summary>
+        </member>
+        <member name="F:GorgonLibrary.InputDevices.Internal.RAWINPUTHEADER.Size">
+            <summary>Size of the packet of data.</summary>
+        </member>
+        <member name="F:GorgonLibrary.InputDevices.Internal.RAWINPUTHEADER.Device">
+            <summary>Handle to the device sending the data.</summary>
+        </member>
+        <member name="F:GorgonLibrary.InputDevices.Internal.RAWINPUTHEADER.wParam">
+            <summary>wParam from the window message.</summary>
+        </member>
+        <member name="T:GorgonLibrary.InputDevices.Internal.RAWINPUTMOUSE">
+            <summary>
+            Value type for raw input from a mouse.
+            </summary>
+        </member>
+        <member name="F:GorgonLibrary.InputDevices.Internal.RAWINPUTMOUSE.Flags">
+            <summary>Flags for the event.</summary>
+        </member>
+        <member name="F:GorgonLibrary.InputDevices.Internal.RAWINPUTMOUSE.ButtonFlags">
+            <summary>Flags for the event.</summary>
+        </member>
+        <member name="F:GorgonLibrary.InputDevices.Internal.RAWINPUTMOUSE.ButtonData">
+            <summary>If the mouse wheel is moved, this will contain the delta amount.</summary>
+        </member>
+        <member name="F:GorgonLibrary.InputDevices.Internal.RAWINPUTMOUSE.RawButtons">
+            <summary>Raw button data.</summary>
+        </member>
+        <member name="F:GorgonLibrary.InputDevices.Internal.RAWINPUTMOUSE.LastX">
+            <summary>Relative direction of motion, depending on flags.</summary>
+        </member>
+        <member name="F:GorgonLibrary.InputDevices.Internal.RAWINPUTMOUSE.LastY">
+            <summary>Relative direction of motion, depending on flags.</summary>
+        </member>
+        <member name="F:GorgonLibrary.InputDevices.Internal.RAWINPUTMOUSE.ExtraInformation">
+            <summary>Extra information.</summary>
+        </member>
+        <member name="T:GorgonLibrary.InputDevices.Internal.RAWINPUTKEYBOARD">
+            <summary>
+            Value type for raw input from a keyboard.
+            </summary>	
+        </member>
+        <member name="F:GorgonLibrary.InputDevices.Internal.RAWINPUTKEYBOARD.MakeCode">
+            <summary>Scan code for key depression.</summary>
+        </member>
+        <member name="F:GorgonLibrary.InputDevices.Internal.RAWINPUTKEYBOARD.Flags">
+            <summary>Scan code information.</summary>
+        </member>
+        <member name="F:GorgonLibrary.InputDevices.Internal.RAWINPUTKEYBOARD.Reserved">
+            <summary>Reserved.</summary>
+        </member>
+        <member name="F:GorgonLibrary.InputDevices.Internal.RAWINPUTKEYBOARD.VirtualKey">
+            <summary>Virtual key code.</summary>
+        </member>
+        <member name="F:GorgonLibrary.InputDevices.Internal.RAWINPUTKEYBOARD.Message">
+            <summary>Corresponding window message.</summary>
+        </member>
+        <member name="F:GorgonLibrary.InputDevices.Internal.RAWINPUTKEYBOARD.ExtraInformation">
+            <summary>Extra information.</summary>
+        </member>
+        <member name="T:GorgonLibrary.InputDevices.Internal.RAWINPUTHID">
+            <summary>
+            Value type for raw input from a HID.
+            </summary>	
+        </member>
+        <member name="F:GorgonLibrary.InputDevices.Internal.RAWINPUTHID.Size">
+            <summary>Size of the HID data in bytes.</summary>
+        </member>
+        <member name="F:GorgonLibrary.InputDevices.Internal.RAWINPUTHID.Count">
+            <summary>Number of HID in Data.</summary>
+        </member>
+        <member name="F:GorgonLibrary.InputDevices.Internal.RAWINPUTHID.Data">
+            <summary>Data for the HID.</summary>
+        </member>
+        <member name="T:GorgonLibrary.InputDevices.Internal.RAWINPUTx86">
+            <summary>
+            Value type for raw input.
+            </summary>
+        </member>
+        <member name="F:GorgonLibrary.InputDevices.Internal.RAWINPUTx86.Header">
+            <summary>Header for the data.</summary>
+        </member>
+        <member name="F:GorgonLibrary.InputDevices.Internal.RAWINPUTx86.Mouse">
+            <summary>Mouse raw input data.</summary>
+        </member>
+        <member name="F:GorgonLibrary.InputDevices.Internal.RAWINPUTx86.Keyboard">
+            <summary>Keyboard raw input data.</summary>
+        </member>
+        <member name="F:GorgonLibrary.InputDevices.Internal.RAWINPUTx86.HID">
+            <summary>HID raw input data.</summary>
+        </member>
+        <member name="T:GorgonLibrary.InputDevices.Internal.RAWINPUTx64">
+            <summary>
+            Value type for raw input.
+            </summary>
+            <remarks>This is for use with x64 versions of windows.  Using the <c ref="RAWINPUT">32 bit RAWINPUT</c> will fail on the x64 version of windows.</remarks>
+        </member>
+        <member name="F:GorgonLibrary.InputDevices.Internal.RAWINPUTx64.Header">
+            <summary>Header for the data.</summary>
+        </member>
+        <member name="F:GorgonLibrary.InputDevices.Internal.RAWINPUTx64.Mouse">
+            <summary>Mouse raw input data.</summary>
+        </member>
+        <member name="F:GorgonLibrary.InputDevices.Internal.RAWINPUTx64.Keyboard">
+            <summary>Keyboard raw input data.</summary>
+        </member>
+        <member name="F:GorgonLibrary.InputDevices.Internal.RAWINPUTx64.HID">
+            <summary>HID raw input data.</summary>
+        </member>
+        <member name="T:GorgonLibrary.InputDevices.RawInputEventArgs">
+            <summary>
+            Object representing event arguments for the raw input events.
+            </summary>
+        </member>
+        <member name="M:GorgonLibrary.InputDevices.RawInputEventArgs.#ctor(GorgonLibrary.InputDevices.Internal.RawInputData)">
+            <summary>
+            Constructor.
+            </summary>
+            <param name="data">Raw input data to pass.</param>
+        </member>
+        <member name="P:GorgonLibrary.InputDevices.RawInputEventArgs.Data">
+            <summary>
+            Property to return the raw input data.
+            </summary>
+        </member>
+        <member name="T:GorgonLibrary.InputDevices.RawInputEventHandler">
+            <summary>
+            Delegate for a raw input event.
+            </summary>
+            <param name="sender">Object that sent the event.</param>
+            <param name="e">Event arguments.</param>
         </member>
         <member name="T:GorgonLibrary.InputDevices.Internal.JoystickInfoFlags">
             <summary>
@@ -2160,275 +2789,6 @@
         <member name="F:GorgonLibrary.InputDevices.Internal.WindowMessages.RawInput">
             <summary></summary>
         </member>
-        <member name="T:GorgonLibrary.InputDevices.GorgonInput">
-            <summary>
-            Object representing the main interface to the input library.
-            </summary>
-        </member>
-        <member name="M:GorgonLibrary.InputDevices.GorgonInput.messageFilter_RawInputData(System.Object,GorgonLibrary.InputDevices.RawInputEventArgs)">
-            <summary>
-            Handles the RawInputData event of the _messageFilter control.
-            </summary>
-            <param name="sender">The source of the event.</param>
-            <param name="e">The <see cref="T:GorgonLibrary.InputDevices.RawInputEventArgs"/> instance containing the event data.</param>
-        </member>
-        <member name="M:GorgonLibrary.InputDevices.GorgonInput.CreateJoystickList">
-            <summary>
-            Function to create the list of joystick interfaces.
-            </summary>
-            <returns>A new list of joystick interfaces.</returns>
-        </member>
-        <member name="M:GorgonLibrary.InputDevices.GorgonInput.CreateKeyboard">
-            <summary>
-            Function to create the keyboard interface.
-            </summary>
-            <returns>A new keyboard interface.</returns>
-        </member>
-        <member name="M:GorgonLibrary.InputDevices.GorgonInput.CreateMouse">
-            <summary>
-            Function to create the mouse interface.
-            </summary>
-            <returns>A new mouse interface.</returns>
-        </member>
-        <member name="M:GorgonLibrary.InputDevices.GorgonInput.Owner_LostFocus(System.Object,System.EventArgs)">
-            <summary>
-            Handles the LostFocus event of the owner control.
-            </summary>
-            <param name="sender">The source of the event.</param>
-            <param name="e">The <see cref="T:System.EventArgs"/> instance containing the event data.</param>
-        </member>
-        <member name="M:GorgonLibrary.InputDevices.GorgonInput.Dispose(System.Boolean)">
-            <summary>
-            Function to perform clean up.
-            </summary>
-            <param name="disposing">TRUE to perform clean up of all objects.  FALSE to clean up only unmanaged objects.</param>
-        </member>
-        <member name="M:GorgonLibrary.InputDevices.GorgonInput.#ctor(GorgonLibrary.InputDevices.InputPlugIn)">
-            <summary>
-            Constructor.
-            </summary>
-            <param name="inputPlugIn">Plug-in that created this object.</param>
-        </member>
-        <member name="T:GorgonLibrary.InputDevices.GorgonInput.MessageFilter">
-            <summary>
-            Object representing a message loop filter.
-            </summary>
-        </member>
-        <member name="M:GorgonLibrary.InputDevices.GorgonInput.MessageFilter.PreFilterMessage(System.Windows.Forms.Message@)">
-            <summary>
-            Filters out a message before it is dispatched.
-            </summary>
-            <param name="m">The message to be dispatched. You cannot modify this message.</param>
-            <returns>
-            true to filter the message and stop it from being dispatched; false to allow the message to continue to the next filter or control.
-            </returns>
-        </member>
-        <member name="E:GorgonLibrary.InputDevices.GorgonInput.MessageFilter.RawInputData">
-            <summary>
-            Event fired when a raw input event occours.
-            </summary>
-        </member>
-        <member name="T:GorgonLibrary.InputDevices.RawInputEventArgs">
-            <summary>
-            Object representing event arguments for the raw input events.
-            </summary>
-        </member>
-        <member name="M:GorgonLibrary.InputDevices.RawInputEventArgs.#ctor(GorgonLibrary.InputDevices.Internal.RawInputData)">
-            <summary>
-            Constructor.
-            </summary>
-            <param name="data">Raw input data to pass.</param>
-        </member>
-        <member name="P:GorgonLibrary.InputDevices.RawInputEventArgs.Data">
-            <summary>
-            Property to return the raw input data.
-            </summary>
-        </member>
-        <member name="T:GorgonLibrary.InputDevices.RawInputEventHandler">
-            <summary>
-            Delegate for a raw input event.
-            </summary>
-            <param name="sender">Object that sent the event.</param>
-            <param name="e">Event arguments.</param>
-        </member>
-        <member name="T:GorgonLibrary.InputDevices.GorgonJoystickList">
-            <summary>
-            Object representing a list of joysticks.
-            </summary>
-        </member>
-        <member name="M:GorgonLibrary.InputDevices.GorgonJoystickList.EnumerateJoysticks(System.Boolean)">
-            <summary>
-            Function to enumerate the available joysticks.
-            </summary>
-            <param name="includeDisconnected">TRUE to include all joysticks, include those that are disconnected, FALSE to exclude.</param>
-        </member>
-        <member name="M:GorgonLibrary.InputDevices.GorgonJoystickList.IsJoystickConnected(System.Int32)">
-            <summary>
-            Function to determine if a joystick is connected.
-            </summary>
-            <param name="ID">ID of the joystick to check.</param>
-            <returns>TRUE if connected, FALSE if not.</returns>
-        </member>
-        <member name="M:GorgonLibrary.InputDevices.GorgonJoystickList.GetJoystickName(GorgonLibrary.InputDevices.Internal.JOYCAPS,System.Int32)">
-            <summary>
-            Function to retrieve a joystick name from the registry.
-            </summary>
-            <param name="joystickData">Joystick capability data.</param>
-            <param name="ID">ID of the joystick to retrieve data for.</param>
-            <returns>The name of the joystick.</returns>
-        </member>
-        <member name="M:GorgonLibrary.InputDevices.GorgonJoystickList.Refresh">
-            <summary>
-            Function to refresh the joystick list.
-            </summary>
-        </member>
-        <member name="M:GorgonLibrary.InputDevices.GorgonJoystickList.#ctor(GorgonLibrary.InputDevices.Input)">
-            <summary>
-            Constructor.
-            </summary>
-            <param name="owner">Owning input interface.</param>
-        </member>
-        <member name="T:GorgonLibrary.InputDevices.Internal.Win32API">
-            <summary>
-            Static class for Native Win32 methods and corresponding structures.
-            </summary>
-            <remarks>
-            This is a grouping of any API calls regularly used by Gorgon.
-            <para>
-            This list is by no means complete.  The Win32 API is just massive and would probably take a lifetime to map.
-            </para>
-            	<para>
-            These calls are considered "unsafe" and thus should be used with care.  If you don't know how to use a function, or why you want it, you probably don't need to use them.
-            </para>
-            	<para>
-            Please note that a lot of the enumerators/structures have slightly different names than their Win32 counterparts.  This was done for the sake of readability.  This does NOT affect their results or their effect on the results of their related functionality.
-            </para>
-            </remarks>
-        </member>
-        <member name="M:GorgonLibrary.InputDevices.Internal.Win32API.joyGetThreshold(System.Int32,System.Int32@)">
-            <summary>
-            Function to retrieve the dead zone of the joystick.
-            </summary>
-            <param name="uJoyID">ID the joystick to query.</param>
-            <param name="puThreshold">Threshold for the joystick.</param>
-            <returns>0 if successful, non-zero if not.</returns>
-        </member>
-        <member name="M:GorgonLibrary.InputDevices.Internal.Win32API.joyGetNumDevs">
-            <summary>
-            Function to return the number of joystick devices supported by the current driver.
-            </summary>
-            <returns>Number of joysticks supported, 0 if no driver is installed.</returns>
-        </member>
-        <member name="M:GorgonLibrary.InputDevices.Internal.Win32API.joyGetDevCaps(System.Int32,GorgonLibrary.InputDevices.Internal.JOYCAPS@,System.Int32)">
-            <summary>
-            Function to return the joystick device capabilities.
-            </summary>
-            <param name="uJoyID">ID of the joystick to return.  -1 will return registry key, whether a device exists or not.</param>
-            <param name="pjc">Joystick capabilities.</param>
-            <param name="cbjc">Size of the JOYCAPS structure in bytes.</param>
-            <returns>0 if successful, non zero if not.</returns>
-        </member>
-        <member name="M:GorgonLibrary.InputDevices.Internal.Win32API.joyGetPos(System.Int32,GorgonLibrary.InputDevices.Internal.JOYINFO@)">
-            <summary>
-            Function to retrieve joystick position information.
-            </summary>
-            <param name="uJoyID">ID the of joystick to query.</param>
-            <param name="pji">Position information.</param>
-            <returns>0 if successful, non zero if not.  JOYERR_UNPLUGGED if not connected.</returns>
-        </member>
-        <member name="M:GorgonLibrary.InputDevices.Internal.Win32API.joyGetPosEx(System.Int32,GorgonLibrary.InputDevices.Internal.JOYINFOEX@)">
-            <summary>
-            Function to retrieve joystick position information.
-            </summary>
-            <param name="uJoyID">ID the of joystick to query.</param>
-            <param name="pji">Position information.</param>
-            <returns>0 if successful, non zero if not.  JOYERR_UNPLUGGED if not connected.</returns>
-        </member>
-        <member name="M:GorgonLibrary.InputDevices.Internal.Win32API.GetRawInputData(System.IntPtr,GorgonLibrary.InputDevices.Internal.RawInputCommand,GorgonLibrary.InputDevices.Internal.RAWINPUTx86@,System.Int32@,System.Int32)">
-            <summary>
-            Function to retrieve raw input data.
-            </summary>
-            <param name="hRawInput">Handle to the raw input.</param>
-            <param name="uiCommand">Command to issue when retrieving data.</param>
-            <param name="pData">Raw input data.</param>
-            <param name="pcbSize">Number of bytes in the array.</param>
-            <param name="cbSizeHeader">Size of the header.</param>
-            <returns>0 if successful if pData is null, otherwise number of bytes if pData is not null.</returns>
-        </member>
-        <member name="M:GorgonLibrary.InputDevices.Internal.Win32API.GetRawInputData(System.IntPtr,GorgonLibrary.InputDevices.Internal.RawInputCommand,GorgonLibrary.InputDevices.Internal.RAWINPUTx64@,System.Int32@,System.Int32)">
-            <summary>
-            Function to retrieve raw input data.
-            </summary>
-            <param name="hRawInput">Handle to the raw input.</param>
-            <param name="uiCommand">Command to issue when retrieving data.</param>
-            <param name="pData">Raw input data.</param>
-            <param name="pcbSize">Number of bytes in the array.</param>
-            <param name="cbSizeHeader">Size of the header.</param>
-            <returns>0 if successful if pData is null, otherwise number of bytes if pData is not null.</returns>
-        </member>
-        <member name="M:GorgonLibrary.InputDevices.Internal.Win32API.GetRawInputData(System.IntPtr,GorgonLibrary.InputDevices.Internal.RawInputCommand,System.Byte[],System.Int32@,System.Int32)">
-            <summary>
-            Function to retrieve raw input data.
-            </summary>
-            <param name="hRawInput">Handle to the raw input.</param>
-            <param name="uiCommand">Command to issue when retrieving data.</param>
-            <param name="pData">Raw input data.</param>
-            <param name="pcbSize">Number of bytes in the array.</param>
-            <param name="cbSizeHeader">Size of the header.</param>
-            <returns>0 if successful if pData is null, otherwise number of bytes if pData is not null.</returns>
-        </member>
-        <member name="M:GorgonLibrary.InputDevices.Internal.Win32API.RegisterRawInputDevices(GorgonLibrary.InputDevices.Internal.RAWINPUTDEVICE[],System.Int32,System.Int32)">
-            <summary>
-            Function to register a raw input device.
-            </summary>
-            <param name="pRawInputDevices">Array of raw input devices.</param>
-            <param name="uiNumDevices">Number of devices.</param>
-            <param name="cbSize">Size of the RAWINPUTDEVICE structure.</param>
-            <returns>TRUE if successful, FALSE if not.</returns>
-        </member>
-        <member name="M:GorgonLibrary.InputDevices.Internal.Win32API.RegisterRawInputDevices(GorgonLibrary.InputDevices.Internal.RAWINPUTDEVICE)">
-            <summary>
-            Function to register a raw input device.
-            </summary>
-            <param name="device">Device information.</param>
-            <returns>TRUE if successful, FALSE if not.</returns>
-        </member>
-        <member name="T:GorgonLibrary.InputDevices.Internal.RawInputData">
-            <summary>
-            Object for raw input data (platform agnostic).
-            </summary>
-        </member>
-        <member name="M:GorgonLibrary.InputDevices.Internal.RawInputData.GetRawInputData(System.IntPtr)">
-            <summary>
-            Function to retrieve the raw input data.
-            </summary>
-            <param name="inputHandle">Handle to raw input data.</param>
-        </member>
-        <member name="M:GorgonLibrary.InputDevices.Internal.RawInputData.#ctor">
-            <summary>
-            Initializes a new instance of the <see cref="T:GorgonLibrary.InputDevices.Internal.RawInputData"/> class.
-            </summary>
-        </member>
-        <member name="P:GorgonLibrary.InputDevices.Internal.RawInputData.Header">
-            <summary>
-            Header for the data.
-            </summary>
-        </member>
-        <member name="P:GorgonLibrary.InputDevices.Internal.RawInputData.Mouse">
-            <summary>
-            Mouse specific data.
-            </summary>
-        </member>
-        <member name="P:GorgonLibrary.InputDevices.Internal.RawInputData.Keyboard">
-            <summary>
-            Keyboard specific data.
-            </summary>
-        </member>
-        <member name="P:GorgonLibrary.InputDevices.Internal.RawInputData.HID">
-            <summary>
-            Human input device data.
-            </summary>
-        </member>
         <member name="T:GorgonLibrary.InputDevices.GorgonJoystick">
             <summary>
             Object representing joystick data.
@@ -2504,366 +2864,6 @@
             Property to return the rudder coordinate for the joystick.
             </summary>
             <value></value>
-        </member>
-        <member name="T:GorgonLibrary.InputDevices.GorgonInputPlugInEntry">
-            <summary>
-            Entry point for the plug-in.
-            </summary>
-        </member>
-        <member name="M:GorgonLibrary.InputDevices.GorgonInputPlugInEntry.Unload">
-            <summary>
-            Function to unload this plug-in.
-            </summary>
-        </member>
-        <member name="M:GorgonLibrary.InputDevices.GorgonInputPlugInEntry.CreateImplementation(System.Object[])">
-            <summary>
-            Function to create an input interface.
-            </summary>
-            <param name="parameters">Parameters to pass for construction.</param>
-            <returns>New input object.</returns>
-        </member>
-        <member name="M:GorgonLibrary.InputDevices.GorgonInputPlugInEntry.#ctor(System.String)">
-            <summary>
-            Constructor.
-            </summary>
-            <param name="plugInPath">Path to the plug-in.</param>
-        </member>
-        <member name="P:GorgonLibrary.InputDevices.GorgonInputPlugInEntry.Description">
-            <summary>
-            Property to return a description of the input interface.
-            </summary>
-            <value></value>
-        </member>
-        <member name="T:GorgonLibrary.InputDevices.GorgonKeyboard">
-            <summary>
-            Object representing keyboard data.
-            </summary>
-        </member>
-        <member name="M:GorgonLibrary.InputDevices.GorgonKeyboard.GetRawData(GorgonLibrary.InputDevices.Internal.RAWINPUTKEYBOARD)">
-            <summary>
-            Function to retrieve and parse the raw keyboard data.
-            </summary>
-            <param name="keyboardData">Data to examine.</param>
-        </member>
-        <member name="M:GorgonLibrary.InputDevices.GorgonKeyboard.BindDevice">
-            <summary>
-            Function to bind the input device.
-            </summary>
-        </member>
-        <member name="M:GorgonLibrary.InputDevices.GorgonKeyboard.UnbindDevice">
-            <summary>
-            Function to unbind the input device.
-            </summary>
-        </member>
-        <member name="M:GorgonLibrary.InputDevices.GorgonKeyboard.#ctor(GorgonLibrary.InputDevices.Input)">
-            <summary>
-            Constructor.
-            </summary>
-            <param name="owner">Input device interface that owns this object.</param>
-        </member>
-        <member name="T:GorgonLibrary.InputDevices.Internal.JOYINFO">
-            <summary>
-            Value type containing joystick position information.
-            </summary>
-        </member>
-        <member name="F:GorgonLibrary.InputDevices.Internal.JOYINFO.X">
-            <summary>X axis.</summary>
-        </member>
-        <member name="F:GorgonLibrary.InputDevices.Internal.JOYINFO.Y">
-            <summary>Y axis.</summary>
-        </member>
-        <member name="F:GorgonLibrary.InputDevices.Internal.JOYINFO.Z">
-            <summary>Z axis.</summary>
-        </member>
-        <member name="F:GorgonLibrary.InputDevices.Internal.JOYINFO.Buttons">
-            <summary>State of buttons.</summary>
-        </member>
-        <member name="T:GorgonLibrary.InputDevices.Internal.JOYINFOEX">
-            <summary>
-            Value type containing joystick position information.
-            </summary>
-        </member>
-        <member name="F:GorgonLibrary.InputDevices.Internal.JOYINFOEX.Size">
-            <summary>Size of structure, in bytes.</summary>
-        </member>
-        <member name="F:GorgonLibrary.InputDevices.Internal.JOYINFOEX.Flags">
-            <summary>Flags to indicate what information is valid for the device.</summary>
-        </member>
-        <member name="F:GorgonLibrary.InputDevices.Internal.JOYINFOEX.X">
-            <summary>X axis.</summary>
-        </member>
-        <member name="F:GorgonLibrary.InputDevices.Internal.JOYINFOEX.Y">
-            <summary>Y axis.</summary>
-        </member>
-        <member name="F:GorgonLibrary.InputDevices.Internal.JOYINFOEX.Z">
-            <summary>Z axis.</summary>
-        </member>
-        <member name="F:GorgonLibrary.InputDevices.Internal.JOYINFOEX.Rudder">
-            <summary>Rudder position.</summary>
-        </member>
-        <member name="F:GorgonLibrary.InputDevices.Internal.JOYINFOEX.Axis5">
-            <summary>5th axis position.</summary>
-        </member>
-        <member name="F:GorgonLibrary.InputDevices.Internal.JOYINFOEX.Axis6">
-            <summary>6th axis position.</summary>
-        </member>
-        <member name="F:GorgonLibrary.InputDevices.Internal.JOYINFOEX.Buttons">
-            <summary>State of buttons.</summary>
-        </member>
-        <member name="F:GorgonLibrary.InputDevices.Internal.JOYINFOEX.ButtonNumber">
-            <summary>Currently pressed button.</summary>
-        </member>
-        <member name="F:GorgonLibrary.InputDevices.Internal.JOYINFOEX.POV">
-            <summary>Angle of the POV hat, in degrees (0 - 35900, divide by 100 to get 0 - 359 degrees.</summary>
-        </member>
-        <member name="F:GorgonLibrary.InputDevices.Internal.JOYINFOEX.Reserved1">
-            <summary>Reserved.</summary>
-        </member>
-        <member name="F:GorgonLibrary.InputDevices.Internal.JOYINFOEX.Reserved2">
-            <summary>Reserved.</summary>
-        </member>
-        <member name="T:GorgonLibrary.InputDevices.Internal.JOYCAPS">
-            <summary>
-            Value type containing joystick capabilities.
-            </summary>
-        </member>
-        <member name="F:GorgonLibrary.InputDevices.Internal.JOYCAPS.ManufacturerID">
-            <summary>Manufacturer ID.</summary>
-        </member>
-        <member name="F:GorgonLibrary.InputDevices.Internal.JOYCAPS.ProductID">
-            <summary>Product ID.</summary>
-        </member>
-        <member name="F:GorgonLibrary.InputDevices.Internal.JOYCAPS.Name">
-            <summary>Joystick name.</summary>
-        </member>
-        <member name="F:GorgonLibrary.InputDevices.Internal.JOYCAPS.MinimumX">
-            <summary>Minimum X coordinate.</summary>
-        </member>
-        <member name="F:GorgonLibrary.InputDevices.Internal.JOYCAPS.MaximumX">
-            <summary>Maximum X coordinate.</summary>
-        </member>
-        <member name="F:GorgonLibrary.InputDevices.Internal.JOYCAPS.MinimumY">
-            <summary>Minimum Y coordinate.</summary>
-        </member>
-        <member name="F:GorgonLibrary.InputDevices.Internal.JOYCAPS.MaximumY">
-            <summary>Maximum Y coordinate.</summary>
-        </member>
-        <member name="F:GorgonLibrary.InputDevices.Internal.JOYCAPS.MinimumZ">
-            <summary>Minimum Z coordinate.</summary>
-        </member>
-        <member name="F:GorgonLibrary.InputDevices.Internal.JOYCAPS.MaximumZ">
-            <summary>Maximum Z coordinate.</summary>
-        </member>
-        <member name="F:GorgonLibrary.InputDevices.Internal.JOYCAPS.ButtonCount">
-            <summary>Number of buttons on the joystick.</summary>
-        </member>
-        <member name="F:GorgonLibrary.InputDevices.Internal.JOYCAPS.MinimumPollingFrequency">
-            <summary>Smallest polling frequency (used by joySetCapture).</summary>
-        </member>
-        <member name="F:GorgonLibrary.InputDevices.Internal.JOYCAPS.MaximumPollingFrequency">
-            <summary>Largest polling frequency (used by joySetCapture).</summary>
-        </member>
-        <member name="F:GorgonLibrary.InputDevices.Internal.JOYCAPS.MinimumRudder">
-            <summary>Minimum rudder value.</summary>
-        </member>
-        <member name="F:GorgonLibrary.InputDevices.Internal.JOYCAPS.MaximumRudder">
-            <summary>Maximum rudder value.</summary>
-        </member>
-        <member name="F:GorgonLibrary.InputDevices.Internal.JOYCAPS.Axis5Minimum">
-            <summary>Minimum 5th axis value.</summary>
-        </member>
-        <member name="F:GorgonLibrary.InputDevices.Internal.JOYCAPS.Axis5Maximum">
-            <summary>Maximum 5th axis value.</summary>
-        </member>
-        <member name="F:GorgonLibrary.InputDevices.Internal.JOYCAPS.Axis6Minimum">
-            <summary>Minimum 6th axis value.</summary>
-        </member>
-        <member name="F:GorgonLibrary.InputDevices.Internal.JOYCAPS.Axis6Maximum">
-            <summary>Maximum 6th axis value.</summary>
-        </member>
-        <member name="F:GorgonLibrary.InputDevices.Internal.JOYCAPS.Capabilities">
-            <summary>Joystick capabilities.</summary>
-        </member>
-        <member name="F:GorgonLibrary.InputDevices.Internal.JOYCAPS.MaximumAxes">
-            <summary>Maxmimum number of axes for the joystick.</summary>
-        </member>
-        <member name="F:GorgonLibrary.InputDevices.Internal.JOYCAPS.AxisCount">
-            <summary>Number of axes on the joystick.</summary>
-        </member>
-        <member name="F:GorgonLibrary.InputDevices.Internal.JOYCAPS.MaximumButtons">
-            <summary>Maximum buttons for the device.</summary>
-        </member>
-        <member name="F:GorgonLibrary.InputDevices.Internal.JOYCAPS.RegistryKey">
-            <summary>Registry key for the joystick.</summary>
-        </member>
-        <member name="F:GorgonLibrary.InputDevices.Internal.JOYCAPS.DriverName">
-            <summary>Driver name for the joystick.</summary>
-        </member>
-        <member name="T:GorgonLibrary.InputDevices.Internal.RAWINPUTDEVICELIST">
-            <summary>
-            Value type for raw input device list.
-            </summary>
-        </member>
-        <member name="F:GorgonLibrary.InputDevices.Internal.RAWINPUTDEVICELIST.Device">
-            <summary>Device handle.</summary>
-        </member>
-        <member name="F:GorgonLibrary.InputDevices.Internal.RAWINPUTDEVICELIST.DeviceType">
-            <summary>Device type.</summary>
-        </member>
-        <member name="T:GorgonLibrary.InputDevices.Internal.RAWINPUTDEVICE">
-            <summary>
-            Value type for raw input devices.
-            </summary>
-        </member>
-        <member name="F:GorgonLibrary.InputDevices.Internal.RAWINPUTDEVICE.UsagePage">
-            <summary>Top level collection Usage page for the raw input device.</summary>
-        </member>
-        <member name="F:GorgonLibrary.InputDevices.Internal.RAWINPUTDEVICE.Usage">
-            <summary>Top level collection Usage for the raw input device. </summary>
-        </member>
-        <member name="F:GorgonLibrary.InputDevices.Internal.RAWINPUTDEVICE.Flags">
-            <summary>Mode flag that specifies how to interpret the information provided by UsagePage and Usage.</summary>
-        </member>
-        <member name="F:GorgonLibrary.InputDevices.Internal.RAWINPUTDEVICE.WindowHandle">
-            <summary>Handle to the target device. If NULL, it follows the keyboard focus.</summary>
-        </member>
-        <member name="T:GorgonLibrary.InputDevices.Internal.RAWINPUTHEADER">
-            <summary>
-            Value type for a raw input header.
-            </summary>
-        </member>
-        <member name="F:GorgonLibrary.InputDevices.Internal.RAWINPUTHEADER.Type">
-            <summary>Type of device the input is coming from.</summary>
-        </member>
-        <member name="F:GorgonLibrary.InputDevices.Internal.RAWINPUTHEADER.Size">
-            <summary>Size of the packet of data.</summary>
-        </member>
-        <member name="F:GorgonLibrary.InputDevices.Internal.RAWINPUTHEADER.Device">
-            <summary>Handle to the device sending the data.</summary>
-        </member>
-        <member name="F:GorgonLibrary.InputDevices.Internal.RAWINPUTHEADER.wParam">
-            <summary>wParam from the window message.</summary>
-        </member>
-        <member name="T:GorgonLibrary.InputDevices.Internal.RAWINPUTMOUSE">
-            <summary>
-            Value type for raw input from a mouse.
-            </summary>
-        </member>
-        <member name="F:GorgonLibrary.InputDevices.Internal.RAWINPUTMOUSE.Flags">
-            <summary>Flags for the event.</summary>
-        </member>
-        <member name="F:GorgonLibrary.InputDevices.Internal.RAWINPUTMOUSE.ButtonFlags">
-            <summary>Flags for the event.</summary>
-        </member>
-        <member name="F:GorgonLibrary.InputDevices.Internal.RAWINPUTMOUSE.ButtonData">
-            <summary>If the mouse wheel is moved, this will contain the delta amount.</summary>
-        </member>
-        <member name="F:GorgonLibrary.InputDevices.Internal.RAWINPUTMOUSE.RawButtons">
-            <summary>Raw button data.</summary>
-        </member>
-        <member name="F:GorgonLibrary.InputDevices.Internal.RAWINPUTMOUSE.LastX">
-            <summary>Relative direction of motion, depending on flags.</summary>
-        </member>
-        <member name="F:GorgonLibrary.InputDevices.Internal.RAWINPUTMOUSE.LastY">
-            <summary>Relative direction of motion, depending on flags.</summary>
-        </member>
-        <member name="F:GorgonLibrary.InputDevices.Internal.RAWINPUTMOUSE.ExtraInformation">
-            <summary>Extra information.</summary>
-        </member>
-        <member name="T:GorgonLibrary.InputDevices.Internal.RAWINPUTKEYBOARD">
-            <summary>
-            Value type for raw input from a keyboard.
-            </summary>	
-        </member>
-        <member name="F:GorgonLibrary.InputDevices.Internal.RAWINPUTKEYBOARD.MakeCode">
-            <summary>Scan code for key depression.</summary>
-        </member>
-        <member name="F:GorgonLibrary.InputDevices.Internal.RAWINPUTKEYBOARD.Flags">
-            <summary>Scan code information.</summary>
-        </member>
-        <member name="F:GorgonLibrary.InputDevices.Internal.RAWINPUTKEYBOARD.Reserved">
-            <summary>Reserved.</summary>
-        </member>
-        <member name="F:GorgonLibrary.InputDevices.Internal.RAWINPUTKEYBOARD.VirtualKey">
-            <summary>Virtual key code.</summary>
-        </member>
-        <member name="F:GorgonLibrary.InputDevices.Internal.RAWINPUTKEYBOARD.Message">
-            <summary>Corresponding window message.</summary>
-        </member>
-        <member name="F:GorgonLibrary.InputDevices.Internal.RAWINPUTKEYBOARD.ExtraInformation">
-            <summary>Extra information.</summary>
-        </member>
-        <member name="T:GorgonLibrary.InputDevices.Internal.RAWINPUTHID">
-            <summary>
-            Value type for raw input from a HID.
-            </summary>	
-        </member>
-        <member name="F:GorgonLibrary.InputDevices.Internal.RAWINPUTHID.Size">
-            <summary>Size of the HID data in bytes.</summary>
-        </member>
-        <member name="F:GorgonLibrary.InputDevices.Internal.RAWINPUTHID.Count">
-            <summary>Number of HID in Data.</summary>
-        </member>
-        <member name="F:GorgonLibrary.InputDevices.Internal.RAWINPUTHID.Data">
-            <summary>Data for the HID.</summary>
-        </member>
-        <member name="T:GorgonLibrary.InputDevices.Internal.RAWINPUTx86">
-            <summary>
-            Value type for raw input.
-            </summary>
-        </member>
-        <member name="F:GorgonLibrary.InputDevices.Internal.RAWINPUTx86.Header">
-            <summary>Header for the data.</summary>
-        </member>
-        <member name="F:GorgonLibrary.InputDevices.Internal.RAWINPUTx86.Mouse">
-            <summary>Mouse raw input data.</summary>
-        </member>
-        <member name="F:GorgonLibrary.InputDevices.Internal.RAWINPUTx86.Keyboard">
-            <summary>Keyboard raw input data.</summary>
-        </member>
-        <member name="F:GorgonLibrary.InputDevices.Internal.RAWINPUTx86.HID">
-            <summary>HID raw input data.</summary>
-        </member>
-        <member name="T:GorgonLibrary.InputDevices.Internal.RAWINPUTx64">
-            <summary>
-            Value type for raw input.
-            </summary>
-            <remarks>This is for use with x64 versions of windows.  Using the <c ref="RAWINPUT">32 bit RAWINPUT</c> will fail on the x64 version of windows.</remarks>
-        </member>
-        <member name="F:GorgonLibrary.InputDevices.Internal.RAWINPUTx64.Header">
-            <summary>Header for the data.</summary>
-        </member>
-        <member name="F:GorgonLibrary.InputDevices.Internal.RAWINPUTx64.Mouse">
-            <summary>Mouse raw input data.</summary>
-        </member>
-        <member name="F:GorgonLibrary.InputDevices.Internal.RAWINPUTx64.Keyboard">
-            <summary>Keyboard raw input data.</summary>
-        </member>
-        <member name="F:GorgonLibrary.InputDevices.Internal.RAWINPUTx64.HID">
-            <summary>HID raw input data.</summary>
-        </member>
-        <member name="T:GorgonLibrary.InputDevices.JoystickDriverNotPresentException">
-            <summary>
-            Joystick driver not present exception.
-            </summary>
-            <remarks>Exception thrown when there's no joystick driver present for the joystick ID passed.</remarks>
-        </member>
-        <member name="M:GorgonLibrary.InputDevices.JoystickDriverNotPresentException.#ctor">
-            <summary>
-            Constructor.
-            </summary>
-        </member>
-        <member name="T:GorgonLibrary.InputDevices.JoystickCannotGetNameException">
-            <summary>
-            Cannot retrieve joystick name exception.
-            </summary>
-            <remarks>Exception thrown when the function is unable to retrieve the joystick name.</remarks>
-        </member>
-        <member name="M:GorgonLibrary.InputDevices.JoystickCannotGetNameException.#ctor(System.Exception)">
-            <summary>
-            Constructor.
-            </summary>
-            <param name="ex">Inner exception.</param>
         </member>
     </members>
 </doc>

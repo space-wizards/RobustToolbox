@@ -145,6 +145,7 @@
     <Compile Include="GO\Server\ServerDelegates.cs" />
     <Compile Include="GO\StatusEffect\StatusEffectState.cs" />
     <Compile Include="Lighting.cs" />
+    <Compile Include="Minidump\MiniDump.cs" />
     <Compile Include="Objectives\ObjectiveParameterType.cs" />
     <Compile Include="Objectives\ObjectiveType.cs" />
     <Compile Include="PlayerActionEnum.cs" />

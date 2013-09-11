@@ -903,10 +903,13 @@ namespace ClientServices.State.States
                     break;
             }
             _gameChat.AddLine(message, channel);
-            Entity a = IoCManager.Resolve<IEntityManagerContainer>().EntityManager.GetEntity(entityId);
-            if (a != null)
+            if (entityId > 0)
             {
-                a.SendMessage(this, ComponentMessageType.EntitySaidSomething, channel, text);
+                Entity a = IoCManager.Resolve<IEntityManagerContainer>().EntityManager.GetEntity(entityId);
+                if (a != null)
+                {
+                    a.SendMessage(this, ComponentMessageType.EntitySaidSomething, channel, text);
+                }
             }
         }
 

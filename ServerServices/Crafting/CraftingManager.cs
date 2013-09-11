@@ -77,6 +77,10 @@ namespace ServerServices.Crafting
 
         public void HandleCraftRequest(NetIncomingMessage msg)
         {
+            //We don't like messages from nobody
+            if (_playerManager.GetSessionByConnection(msg.SenderConnection).attachedEntity == null)
+                return;
+
             int compo1Uid = msg.ReadInt32();
             int compo2Uid = msg.ReadInt32();
 
@@ -119,6 +123,10 @@ namespace ServerServices.Crafting
         {
             foreach (CraftingTicket craftingTicket in craftingTickets.ToArray())
             {
+                //Nobodys can't craft.
+                if (_playerManager.GetSessionByConnection(craftingTicket.sourceConnection).attachedEntity == null)
+                    continue;
+
                 if (craftingTicket.doneAt.Subtract(DateTime.Now).Ticks <= 0)
                 {
                     if (

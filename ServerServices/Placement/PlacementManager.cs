@@ -76,6 +76,9 @@ namespace ServerServices.Placement
             int tileY = msg.ReadInt32();
 
             IPlayerSession session = IoCManager.Resolve<IPlayerManager>().GetSessionByConnection(msg.SenderConnection);
+            if (session.attachedEntity == null)
+                return; //Don't accept placement requests from nobodys
+
             PlacementInformation permission = GetPermission(session.attachedEntity.Uid, alignRcv);
             Boolean isAdmin =
                 IoCManager.Resolve<IPlayerManager>().GetSessionByConnection(msg.SenderConnection).adminPermissions.

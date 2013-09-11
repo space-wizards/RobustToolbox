@@ -173,6 +173,9 @@
     </None>
   </ItemGroup>
   <ItemGroup>
+    <None Include="ClrDump.dll">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
     <Content Include="config.xml">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
       <SubType>Designer</SubType>

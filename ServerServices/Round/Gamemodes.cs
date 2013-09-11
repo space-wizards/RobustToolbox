@@ -56,13 +56,13 @@ namespace ServerServices.Round
         public virtual void PlayerLeft(IPlayerSession player)
         {
             IoCManager.Resolve<IChatManager>().SendChatMessage(ChatChannel.Server, "Gamemode: Player left!", null,
-                                                               player.attachedEntity.Uid);
+                                                               player.AttachedEntityUid);
         }
 
         public virtual void PlayerDied(IPlayerSession player)
         {
             IoCManager.Resolve<IChatManager>().SendChatMessage(ChatChannel.Server, "Gamemode: Player died!", null,
-                                                               player.attachedEntity.Uid);
+                                                               player.AttachedEntityUid);
         }
 
         public virtual void Begin()

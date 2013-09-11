@@ -39,12 +39,7 @@ namespace ServerServices.Chat
             string text = message.ReadString();
             string name = _serverMain.GetClient(message.SenderConnection).PlayerName;
             LogManager.Log("CHAT- Channel " + channel.ToString() + " - Player " + name + "Message: " + text + "\n");
-            int entityId = 0;
-            if (IoCManager.Resolve<IPlayerManager>().GetSessionByConnection(message.SenderConnection).attachedEntity !=
-                null)
-                entityId =
-                    IoCManager.Resolve<IPlayerManager>().GetSessionByConnection(message.SenderConnection).attachedEntity
-                        .Uid;
+            var entityId = IoCManager.Resolve<IPlayerManager>().GetSessionByConnection(message.SenderConnection).AttachedEntityUid;
 
             bool hasChannelIdentifier = false;
             if (channel != ChatChannel.Lobby)
@@ -58,7 +53,7 @@ namespace ServerServices.Chat
                 SendChatMessage(channel, text, name, entityId);
         }
 
-        public void SendChatMessage(ChatChannel channel, string text, string name, int entityId)
+        public void SendChatMessage(ChatChannel channel, string text, string name, int? entityId)
         {
             string fullmsg = text;
             if (!string.IsNullOrEmpty(name) && channel == ChatChannel.Emote)
@@ -72,7 +67,10 @@ namespace ServerServices.Chat
             message.Write((byte) NetMessage.ChatMessage);
             message.Write((byte) channel);
             message.Write(fullmsg);
-            message.Write(entityId);
+            if(entityId == null)
+                message.Write(-1);
+            else
+                message.Write((int)entityId);
 
             switch (channel)
             {
@@ -119,11 +117,13 @@ namespace ServerServices.Chat
             return channel;
         }
 
-        private void SendToPlayersInRange(NetOutgoingMessage message, int entityId)
+        private void SendToPlayersInRange(NetOutgoingMessage message, int? entityId)
         {
+            if (entityId == null)
+                return;
             List<NetConnection> recipients =
                 IoCManager.Resolve<IPlayerManager>().GetPlayersInRange(
-                    _serverMain.EntityManager.GetEntity(entityId).GetComponent<ITransformComponent>(
+                    _serverMain.EntityManager.GetEntity((int)entityId).GetComponent<ITransformComponent>(
                         ComponentFamily.Transform).Position, 512).Select(p => p.ConnectedClient).ToList();
             IoCManager.Resolve<ISS13NetServer>().SendToMany(message, recipients);
         }
@@ -142,8 +142,10 @@ namespace ServerServices.Chat
         /// <param name="name">player name that sent the chat text</param>
         /// <param name="channel">channel message was recieved on</param>
         /// <param name="entityId">Uid of the entity that sent the message. This will always be a player's attached entity</param>
-        private void ProcessCommand(string text, string name, ChatChannel channel, int entityId, NetConnection client)
+        private void ProcessCommand(string text, string name, ChatChannel channel, int? entityId, NetConnection client)
         {
+            if (entityId == null)
+                return;
             var args = new List<string>();
 
             ParseArguments(text, args);
@@ -152,7 +154,7 @@ namespace ServerServices.Chat
 
             Vector2 position;
             Entity player;
-            player = _serverMain.EntityManager.GetEntity(entityId);
+            player = _serverMain.EntityManager.GetEntity((int)entityId);
             if (player == null)
                 position = new Vector2(160, 160);
             else

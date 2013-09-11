@@ -247,49 +247,42 @@ namespace SS13_Server
 
         public void ProcessPackets()
         {
-            try
+            NetIncomingMessage msg;
+            while ((msg = IoCManager.Resolve<ISS13NetServer>().ReadMessage()) != null)
             {
-                NetIncomingMessage msg;
-                while ((msg = IoCManager.Resolve<ISS13NetServer>().ReadMessage()) != null)
+                switch (msg.MessageType)
                 {
-                    switch (msg.MessageType)
-                    {
-                        case NetIncomingMessageType.VerboseDebugMessage:
-                            LogManager.Log(msg.ReadString(), LogLevel.Debug);
-                            break;
+                    case NetIncomingMessageType.VerboseDebugMessage:
+                        LogManager.Log(msg.ReadString(), LogLevel.Debug);
+                        break;
 
-                        case NetIncomingMessageType.DebugMessage:
-                            LogManager.Log(msg.ReadString(), LogLevel.Debug);
-                            break;
+                    case NetIncomingMessageType.DebugMessage:
+                        LogManager.Log(msg.ReadString(), LogLevel.Debug);
+                        break;
 
-                        case NetIncomingMessageType.WarningMessage:
-                            LogManager.Log(msg.ReadString(), LogLevel.Warning);
-                            break;
+                    case NetIncomingMessageType.WarningMessage:
+                        LogManager.Log(msg.ReadString(), LogLevel.Warning);
+                        break;
 
-                        case NetIncomingMessageType.ErrorMessage:
-                            LogManager.Log(msg.ReadString(), LogLevel.Error);
-                            break;
+                    case NetIncomingMessageType.ErrorMessage:
+                        LogManager.Log(msg.ReadString(), LogLevel.Error);
+                        break;
 
-                        case NetIncomingMessageType.Data:
-                            if (ClientList.ContainsKey(msg.SenderConnection))
-                            {
-                                HandleData(msg);
-                            }
-                            break;
+                    case NetIncomingMessageType.Data:
+                        if (ClientList.ContainsKey(msg.SenderConnection))
+                        {
+                            HandleData(msg);
+                        }
+                        break;
 
-                        case NetIncomingMessageType.StatusChanged:
-                            HandleStatusChanged(msg);
-                            break;
-                        default:
-                            LogManager.Log("Unhandled type: " + msg.MessageType, LogLevel.Error);
-                            break;
-                    }
-                    IoCManager.Resolve<ISS13NetServer>().Recycle(msg);
+                    case NetIncomingMessageType.StatusChanged:
+                        HandleStatusChanged(msg);
+                        break;
+                    default:
+                        LogManager.Log("Unhandled type: " + msg.MessageType, LogLevel.Error);
+                        break;
                 }
-            }
-            catch (Exception e)
-            {
-                LogManager.Log(e.ToString(), LogLevel.Error);
+                IoCManager.Resolve<ISS13NetServer>().Recycle(msg);
             }
         }
 

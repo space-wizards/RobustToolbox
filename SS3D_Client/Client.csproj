@@ -231,7 +231,6 @@
     <Content Include="plugins.cfg">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </Content>
-    <None Include="packages.config" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\ClientInterfaces\ClientInterfaces.csproj">

@@ -84,6 +84,8 @@ namespace ServerServices.Player
         {
             // Pass message on to session
             IPlayerSession s = GetSessionByConnection(message.SenderConnection);
+            if (s == null)
+                return;
             s.HandleNetworkMessage(message);
         }
 
@@ -91,6 +93,8 @@ namespace ServerServices.Player
         {
             // Ends the session.
             IPlayerSession session = GetSessionByConnection(client);
+            if (session == null)
+                return; //There is no session!
             LogManager.Log(session.name + " disconnected.", LogLevel.Information);
             //Detach the entity and (dont)delete it.
             session.OnDisconnect();

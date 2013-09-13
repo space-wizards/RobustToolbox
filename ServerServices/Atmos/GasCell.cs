@@ -117,7 +117,8 @@ namespace ServerServices.Atmos
 
                     if (Math.Abs(i) + Math.Abs(j) == 2) //If its a corner
                     {
-                        if (!m.GetTileAt(arrX + i, arrY).GasPermeable && !m.GetTileAt(arrX, arrY + i).GasPermeable)
+                        if (m.IsSaneArrayPosition(arrX+i,arrY) && m.IsSaneArrayPosition(arrX, arrY + i) 
+                            && !m.GetTileAt(arrX + i, arrY).GasPermeable && !m.GetTileAt(arrX, arrY + i).GasPermeable)
                             // And it is a corner separated from us by 2 blocking walls
                             continue; //Don't process it. These cells are not connected.
                     }

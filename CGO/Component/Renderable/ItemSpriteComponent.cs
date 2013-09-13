@@ -175,11 +175,14 @@ namespace CGO
 
         public void LoadSprites(string name)
         {
-            AddSprite(name);
-            AddSprite(name + "_inhand");
-            AddSprite(name + "_inhand_side");
-            if (IoCManager.Resolve<IResourceManager>().SpriteExists(name + "_inhand_back"))
-                AddSprite(name + "_inhand_back");
+            if (!HasSprite(name))
+            {
+                AddSprite(name);
+                AddSprite(name + "_inhand");
+                AddSprite(name + "_inhand_side");
+                if (IoCManager.Resolve<IResourceManager>().SpriteExists(name + "_inhand_back"))
+                    AddSprite(name + "_inhand_back");
+            }
         }
 
         protected override bool WasClicked(PointF worldPos)

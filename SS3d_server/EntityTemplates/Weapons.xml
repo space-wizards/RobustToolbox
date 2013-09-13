@@ -34,6 +34,13 @@
           <Parameter name="startState" type="string" value="Off" />
         </Parameters>
       </Component>
+      <Component name="ParticleSystemComponent">
+        <Parameters>
+          <Parameter name="colorStart" type="Vector4" value="255,128,200,255" />
+          <Parameter name="colorEnd" type="Vector4" value="80,104,180,255" />
+          <Parameter name="startActive" type="bool" value="false" />
+        </Parameters>
+      </Component>
     </Components>
   </EntityTemplate>
 </EntityTemplates>

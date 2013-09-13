@@ -113,7 +113,8 @@ namespace ServerServices.Placement
                     {
                         created.GetComponent<ITransformComponent>(ComponentFamily.Transform).TranslateTo(
                             new Vector2(xRcv, yRcv));
-                        created.GetComponent<IDirectionComponent>(ComponentFamily.Direction).Direction = dirRcv;
+                        if(created.HasComponent(ComponentFamily.Direction))
+                            created.GetComponent<IDirectionComponent>(ComponentFamily.Direction).Direction = dirRcv;
                         created.SendMessage(this, ComponentMessageType.WallMountTile, new Vector2(tileX, tileY));
                     }
                 }

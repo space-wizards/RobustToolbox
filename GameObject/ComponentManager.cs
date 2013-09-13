@@ -26,7 +26,7 @@ namespace GameObject
 
         public List<Component> GetComponents(ComponentFamily family)
         {
-            return components[ComponentFamily.Renderable].Cast<Component>().ToList();
+            return components[family].Cast<Component>().ToList();
         }
 
         /// <summary>
@@ -56,8 +56,8 @@ namespace GameObject
             foreach (ComponentFamily family in Enum.GetValues(typeof (ComponentFamily)))
             {
                 // Hack the update loop to allow us to render somewhere in the GameScreen render loop
-                if (family == ComponentFamily.Renderable)
-                    continue;
+                /*if (family == ComponentFamily.Renderable)
+                    continue;*/
                 foreach (Component component in components[family])
                 {
                     component.Update(frameTime);

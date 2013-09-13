@@ -66,6 +66,9 @@
       <SpecificVersion>False</SpecificVersion>
       <HintPath>..\References\Release\Gorgon.dll</HintPath>
     </Reference>
+    <Reference Include="GorgonFramework">
+      <HintPath>..\References\Release\GorgonFramework.dll</HintPath>
+    </Reference>
     <Reference Include="Microsoft.CSharp" />
     <Reference Include="NetSerializer, Version=1.5.0.0, Culture=neutral, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
@@ -105,6 +108,8 @@
     <Compile Include="Component\Mover\SlaveMoverComponent.cs" />
     <Compile Include="Component\Physics\PhysicsComponent.cs" />
     <Compile Include="Component\PlayerActionComp\PlayerActionCompC.cs" />
+    <Compile Include="Component\Renderable\ParticleSystem.cs" />
+    <Compile Include="Component\Renderable\ParticleSystemComponent.cs" />
     <Compile Include="Component\Renderable\Speechbubble.cs" />
     <Compile Include="Component\Renderable\WearableSpriteComponent.cs" />
     <Compile Include="Component\Renderable\ItemSpriteComponent.cs" />

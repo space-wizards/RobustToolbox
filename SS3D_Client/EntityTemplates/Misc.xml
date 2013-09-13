@@ -34,4 +34,12 @@
       <Component name="ClickableComponent"></Component>
     </Components>
   </EntityTemplate>
+  <EntityTemplate name="Particles">
+    <Components>
+      <Component name="TransformComponent"></Component>
+      <Component name="VelocityComponent"></Component>
+      <Component name="NetworkMoverComponent"></Component>
+      <Component name="ParticleSystemComponent"></Component>
+    </Components>
+  </EntityTemplate>
 </EntityTemplates>

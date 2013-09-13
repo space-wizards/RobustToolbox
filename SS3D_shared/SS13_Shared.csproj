@@ -130,6 +130,7 @@
     <Compile Include="GO\Component\EntityStats\EntityStatsComponentState.cs" />
     <Compile Include="GO\Component\Light\LightComponentState.cs" />
     <Compile Include="GO\Component\Mover\MoverComponentState.cs" />
+    <Compile Include="GO\Component\Particles\ParticleSystemComponentState.cs" />
     <Compile Include="GO\Component\Physics\PhysicsComponentState.cs" />
     <Compile Include="GO\Component\Renderable\RenderableComponentState.cs" />
     <Compile Include="GO\Component\Renderable\SpriteComponentState.cs" />
@@ -180,6 +181,8 @@
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="ChatConfig.cs" />
     <Compile Include="UIComponents.cs" />
+    <Compile Include="Vector3.cs" />
+    <Compile Include="Vector4.cs" />
     <Compile Include="VectorEventArgs.cs" />
   </ItemGroup>
   <ItemGroup>

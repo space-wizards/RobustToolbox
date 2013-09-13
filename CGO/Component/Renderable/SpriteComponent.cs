@@ -112,6 +112,11 @@ namespace CGO
             BuildDirectionalSprites();
         }
 
+        public bool HasSprite(string key)
+        {
+            return sprites.ContainsKey(key);
+        }
+
         #endregion
 
         private void BuildDirectionalSprites()

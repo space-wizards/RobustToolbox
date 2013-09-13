@@ -109,6 +109,7 @@
     <Compile Include="Lighting\QuadRenderer.cs" />
     <Compile Include="Lighting\ShadowMapResolver.cs" />
     <Compile Include="Map\MapManager.cs" />
+    <Compile Include="Map\RectangleTree\RectangleTree.cs" />
     <Compile Include="MessageLogging\MessageLogger.cs" />
     <Compile Include="MessageLogging\MessageLoggerService.cs" />
     <Compile Include="Network\NetworkGrapher.cs" />

@@ -39,23 +39,23 @@ namespace ClientServices.Placement.Modes
             if (pManager.CurrentPermission.IsTile)
                 return false;
 
-            currentTile = currentMap.GetTileAt(mouseWorld);
+            currentTile = currentMap.GetITileAt(mouseWorld);
 
             if (currentTile == null || !currentTile.IsSolidTile())
                 return false;
 
-            ITile wallTop = currentMap.GetTileAt(currentTile.TilePosition.X, currentTile.TilePosition.Y - 1);
+            ITile wallTop = currentMap.GetITileAt(currentTile.TilePosition.X, currentTile.TilePosition.Y - 1);
             if (wallTop == null)
                 return false;
 
-            ITile wallTopNorth = currentMap.GetTileAt(wallTop.TilePosition.X, wallTop.TilePosition.Y - 1);
-            ITile wallCurrentSouth = currentMap.GetTileAt(currentTile.TilePosition.X, currentTile.TilePosition.Y + 1);
+            ITile wallTopNorth = currentMap.GetITileAt(wallTop.TilePosition.X, wallTop.TilePosition.Y - 1);
+            ITile wallCurrentSouth = currentMap.GetITileAt(currentTile.TilePosition.X, currentTile.TilePosition.Y + 1);
 
-            ITile wallTopEast = currentMap.GetTileAt(wallTop.TilePosition.X + 1, wallTop.TilePosition.Y);
-            ITile wallCurrentEast = currentMap.GetTileAt(currentTile.TilePosition.X + 1, currentTile.TilePosition.Y);
+            ITile wallTopEast = currentMap.GetITileAt(wallTop.TilePosition.X + 1, wallTop.TilePosition.Y);
+            ITile wallCurrentEast = currentMap.GetITileAt(currentTile.TilePosition.X + 1, currentTile.TilePosition.Y);
 
-            ITile wallTopWest = currentMap.GetTileAt(wallTop.TilePosition.X - 1, wallTop.TilePosition.Y);
-            ITile wallCurrentWest = currentMap.GetTileAt(currentTile.TilePosition.X - 1, currentTile.TilePosition.Y);
+            ITile wallTopWest = currentMap.GetITileAt(wallTop.TilePosition.X - 1, wallTop.TilePosition.Y);
+            ITile wallCurrentWest = currentMap.GetITileAt(currentTile.TilePosition.X - 1, currentTile.TilePosition.Y);
 
             switch (pManager.Direction)
             {

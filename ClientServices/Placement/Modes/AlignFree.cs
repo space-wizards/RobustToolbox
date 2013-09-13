@@ -21,7 +21,7 @@ namespace ClientServices.Placement.Modes
             mouseScreen = mouseS;
             mouseWorld = new Vector2D(mouseScreen.X + ClientWindowData.Singleton.ScreenOrigin.X,
                                       mouseScreen.Y + ClientWindowData.Singleton.ScreenOrigin.Y);
-            currentTile = currentMap.GetTileAt(mouseWorld);
+            currentTile = currentMap.GetITileAt(mouseWorld);
 
             return true;
         }

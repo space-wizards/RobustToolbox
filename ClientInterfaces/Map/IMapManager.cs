@@ -19,12 +19,12 @@ namespace ClientInterfaces.Map
         /// <summary>
         /// Get Tile from World Position.
         /// </summary>
-        ITile GetTileAt(Vector2D WorldPos);
+        ITile GetITileAt(Vector2D WorldPos);
 
         /// <summary>
         /// Get Tile from Array Position.
         /// </summary>
-        ITile GetTileAt(int array_x, int array_y);
+        ITile GetITileAt(int array_x, int array_y);
 
         Vector2D GetTileArrayPositionFromWorldPosition(float x, float z);
         Point GetTileArrayPositionFromWorldPosition(Vector2D pos);

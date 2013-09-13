@@ -35,7 +35,8 @@ namespace ClientServices.Map
         private bool _loaded;
         private int _mapHeight; // Number of tiles up the map
         private int _mapWidth; // Number of tiles across the map
-        private Tile[][] _tileArray; // The array holding all the tiles that make up the map
+        //private Tile[][] _tileArray; // The array holding all the tiles that make up the map
+        private RectangleTree<Tile> _tileArray;
 
         #endregion
 
@@ -94,17 +95,45 @@ namespace ClientServices.Map
             return typeStr;
         }
 
+        private Rectangle TilePos(Tile T)
+        {
+            return new Rectangle((int)(T.Position.X), (int)(T.Position.Y), (int)(TileSpacing), (int)(TileSpacing));
+        }
+
+        private ITile GetITileAt(Point p)
+        {
+            return (Tile)_tileArray.GetItems(p)[0];
+        }
+
+        public ITile GetITileAt(int X, int Y)
+        {
+            return GetITileAt(new Point(X, Y));
+        }
+
+        private Tile GetTileAt(Point p)
+        {
+                return (Tile)_tileArray.GetItems(p)[0];
+        }
+
+        private Tile GetTileAt(int X, int Y)
+        {
+            return GetTileAt(new Point(X, Y));
+        }
+
+
         public bool LoadTileMap(NetIncomingMessage message)
         {
             _mapWidth = message.ReadInt32();
             _mapHeight = message.ReadInt32();
 
-            _tileArray = new Tile[_mapHeight][];
+            //_tileArray = new Tile[_mapHeight][];
 
-            for (int i = 0; i < _mapHeight; i++)
+            _tileArray = new RectangleTree<Tile>(TilePos, new Rectangle(0, 0, _mapWidth * TileSpacing, _mapHeight * TileSpacing));
+
+            /*for (int i = 0; i < _mapHeight; i++)
             {
                 _tileArray[i] = new Tile[_mapWidth];
-            }
+            }*/
 
             for (int x = 0; x < _mapWidth; x++)
             {
@@ -117,7 +146,7 @@ namespace ClientServices.Map
                     var state = (TileState) message.ReadByte();
 
                     Tile created = GenerateNewTile(GetTileString(index), state, new Vector2D(posX, posY));
-                    _tileArray[y][x] = created;
+                    _tileArray.Add(created);
                 }
             }
 
@@ -125,25 +154,28 @@ namespace ClientServices.Map
             {
                 for (int y = 0; y < _mapHeight; y++)
                 {
-                    if (_tileArray[y][x].ConnectSprite) //Was wall check.
+                    Tile T = GetTileAt(new Point(x * TileSpacing, y * TileSpacing));
+                    /*if (T == null)
+                        continue;*/
+                    if (T.ConnectSprite) //Was wall check.
                     {
                         byte i = SetSprite(x, y);
                     }
                     if (y > 0)
                     {
-                        _tileArray[y][x].surroundingTiles[0] = _tileArray[y - 1][x]; //north
+                        T.surroundingTiles[0] = GetTileAt(x * TileSpacing, (y - 1) * TileSpacing); //north
                     }
                     if (x < _mapWidth - 1)
                     {
-                        _tileArray[y][x].surroundingTiles[1] = _tileArray[y][x + 1]; //east
+                        T.surroundingTiles[1] = GetTileAt((x + 1) * TileSpacing, y * TileSpacing); //east
                     }
                     if (y < _mapHeight - 1)
                     {
-                        _tileArray[y][x].surroundingTiles[2] = _tileArray[y + 1][x]; //south
+                        T.surroundingTiles[2] = GetTileAt(x * TileSpacing, (y + 1) * TileSpacing); //south
                     }
                     if (x > 0)
                     {
-                        _tileArray[y][x].surroundingTiles[3] = _tileArray[y][x - 1]; //west
+                        T.surroundingTiles[3] = GetTileAt((x - 1) * TileSpacing, y * TileSpacing); //west
                     }
                 }
             }
@@ -226,7 +258,7 @@ namespace ClientServices.Map
                         if ((types & (1 << i)) == (1 << i))
                         {
                             recordStream.Read(out amount, 0, 4);
-                            _tileArray[y][x].SetAtmosDisplay((GasType) i, amount);
+                            //GetTileAt(x * TileSpacing, y * TileSpacing).SetAtmosDisplay((GasType) i, amount);
                         }
                     }
 
@@ -268,7 +300,7 @@ namespace ClientServices.Map
             int y = message.ReadInt32();
             var type = (DecalType) message.ReadByte();
 
-            _tileArray[y][x].AddDecal(type);
+            GetTileAt(x * TileSpacing,y * TileSpacing).AddDecal(type);
         }
 
         private static byte[] Decompress(byte[] gzip)
@@ -302,13 +334,13 @@ namespace ClientServices.Map
             string tileStr = GetTileString(message.ReadByte());
             var state = (TileState) message.ReadByte();
 
-            Tile t = _tileArray[y][x];
+            Tile t = GetTileAt(x * TileSpacing, y * TileSpacing);
 
             if (t == null)
             {
                 t = GenerateNewTile(tileStr, state, new Vector2D(x*TileSpacing, y*TileSpacing));
-                _tileArray[y][x] = t;
-                TileChanged(_tileArray[y][x]);
+                _tileArray.Add(t);
+                TileChanged(t);
             }
             else
             {
@@ -326,8 +358,8 @@ namespace ClientServices.Map
                     if (t.surroundingTiles[2] != null) t.surroundingTiles[2].surroundingTiles[0] = t;
                     if (t.surroundingTiles[3] != null) t.surroundingTiles[3].surroundingTiles[1] = t;
 
-                    _tileArray[y][x] = t;
-                    TileChanged(_tileArray[y][x]);
+                    _tileArray.Add(t);
+                    TileChanged(t);
                 }
                 else if (t.tileState != state)
                 {
@@ -397,21 +429,21 @@ namespace ClientServices.Map
         /// <summary>
         /// Get Tile from World Position.
         /// </summary>
-        public ITile GetTileAt(Vector2D worldPos)
+        public ITile GetITileAt(Vector2D worldPos)
         {
             Point p = GetTileArrayPositionFromWorldPosition(worldPos);
             if (p.X < 0 || p.Y < 0 || p.X >= _mapWidth || p.Y >= _mapHeight) return null;
-            return _tileArray[p.Y][p.X];
+            return GetTileAt(p.X, p.Y);
         }
 
         /// <summary>
         /// Get Tile from Array Position.
         /// </summary>
-        public ITile GetTileAt(int arrayX, int arrayY)
+        /*public ITile GetTileAt(int arrayX, int arrayY)
         {
             if (arrayX < 0 || arrayY < 0 || arrayX >= _mapWidth || arrayY >= _mapHeight) return null;
             return _tileArray[arrayY][arrayX];
-        }
+        }*/
 
         // Where do we have tiles around us?
         // 0 = None
@@ -425,19 +457,19 @@ namespace ClientServices.Map
         {
             byte i = 0;
 
-            if (GetTileAt(x, y - 1) != null && GetTileAt(x, y - 1).ConnectSprite) // N
+            if (GetTileAt(x * TileSpacing, (y - 1) * TileSpacing) != null && GetTileAt(x * TileSpacing, (y - 1) * TileSpacing).ConnectSprite) // N
             {
                 i += 1;
             }
-            if (GetTileAt(x + 1, y) != null && GetTileAt(x + 1, y).ConnectSprite) // E
+            if (GetTileAt((x + 1) * TileSpacing, y * TileSpacing) != null && GetTileAt((x + 1) * TileSpacing, y * TileSpacing).ConnectSprite) // E
             {
                 i += 2;
             }
-            if (GetTileAt(x, y + 1) != null && GetTileAt(x, y + 1).ConnectSprite) // S
+            if (GetTileAt(x * TileSpacing, (y + 1) * TileSpacing) != null && GetTileAt(x * TileSpacing, (y + 1) * TileSpacing).ConnectSprite) // S
             {
                 i += 4;
             }
-            if (GetTileAt(x - 1, y) != null && GetTileAt(x - 1, y).ConnectSprite) // W
+            if (GetTileAt((x - 1) * TileSpacing, y * TileSpacing) != null && GetTileAt((x - 1) * TileSpacing, y * TileSpacing).ConnectSprite) // W
             {
                 i += 8;
             }
@@ -477,12 +509,12 @@ namespace ClientServices.Map
                 return null;
             }
 
-            return _tileArray[y][x].GetType();
+            return GetTileAt(x * TileSpacing, y * TileSpacing).GetType();
         }
 
         public Tile GenerateNewTile(string typeName, TileState state, Vector2D pos)
         {
-            var p = new Point((int) Math.Floor(pos.X/TileSpacing), (int) Math.Floor(pos.Y/TileSpacing));
+            var p = new Point((int)pos.X / TileSpacing, (int)pos.Y / TileSpacing);
 
             Type tileType = Type.GetType("ClientServices.Tiles." + typeName, false);
 
@@ -502,7 +534,7 @@ namespace ClientServices.Map
 
         public bool IsSolidTile(Vector2D worldPos)
         {
-            var tile = (Tile) GetTileAt(worldPos);
+            var tile = (Tile) GetITileAt(worldPos);
             if (tile == null) return false;
             return tile.IsSolidTile();
         }

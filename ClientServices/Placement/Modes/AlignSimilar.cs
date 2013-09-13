@@ -44,7 +44,7 @@ namespace ClientServices.Placement.Modes
             if (currentMap.IsSolidTile(mouseScreen))
                 return false; //HANDLE CURSOR OUTSIDE MAP
 
-            currentTile = currentMap.GetTileAt(mouseWorld);
+            currentTile = currentMap.GetITileAt(mouseWorld);
 
             if (pManager.CurrentPermission.Range > 0)
                 if (

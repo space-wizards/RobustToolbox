@@ -102,7 +102,7 @@ namespace ClientServices.Map
 
         private ITile GetITileAt(Point p)
         {
-            return (Tile)_tileArray.GetItems(p)[0];
+            return (Tile)_tileArray.GetItems(p).FirstOrDefault();
         }
 
         public ITile GetITileAt(int X, int Y)
@@ -112,7 +112,7 @@ namespace ClientServices.Map
 
         private Tile GetTileAt(Point p)
         {
-                return (Tile)_tileArray.GetItems(p)[0];
+                return (Tile)_tileArray.GetItems(p).FirstOrDefault();
         }
 
         private Tile GetTileAt(int X, int Y)

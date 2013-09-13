@@ -1304,11 +1304,11 @@ namespace ClientServices.State.States
                 LightArea area = GetLightArea(RadiusToShadowMapSize(playerVision.Radius));
                 area.LightPosition = playerVision.Position; // Set the light position
 
-                if (MapManager.GetTileAt(playerVision.Position) != null &&
-                    MapManager.GetTileAt(playerVision.Position).Opaque)
+                if (MapManager.GetITileAt(playerVision.Position) != null &&
+                    MapManager.GetITileAt(playerVision.Position).Opaque)
                 {
                     area.LightPosition = new Vector2D(area.LightPosition.X,
-                                                      MapManager.GetTileAt(playerVision.Position).Position.Y +
+                                                      MapManager.GetITileAt(playerVision.Position).Position.Y +
                                                       MapManager.GetTileSpacing() + 1);
                 }
 
@@ -1342,10 +1342,10 @@ namespace ClientServices.State.States
             if (area.Calculated)
                 return;
             area.LightPosition = l.Position; //mousePosWorld; // Set the light position
-            if (MapManager.GetTileAt(l.Position).Opaque)
+            if (MapManager.GetITileAt(l.Position).Opaque)
             {
                 area.LightPosition = new Vector2D(area.LightPosition.X,
-                                                  MapManager.GetTileAt(l.Position).Position.Y +
+                                                  MapManager.GetITileAt(l.Position).Position.Y +
                                                   MapManager.GetTileSpacing() + 1);
             }
             area.BeginDrawingShadowCasters(); // Start drawing to the light rendertarget
@@ -1407,7 +1407,7 @@ namespace ClientServices.State.States
             {
                 for (int y = yS; y <= yE; y++)
                 {
-                    t = (Tile) MapManager.GetTileAt(x, y);
+                    t = (Tile)MapManager.GetITileAt(x * tilespacing, y * tilespacing);
 
                     if (t.Opaque)
                     {
@@ -1433,7 +1433,7 @@ namespace ClientServices.State.States
             {
                 for (int y = yStart; y <= yEnd; y++)
                 {
-                    t = (Tile) MapManager.GetTileAt(x, y);
+                    t = (Tile)MapManager.GetITileAt(x * tilespacing, y * tilespacing);
 
                     if (t.Opaque)
                     {

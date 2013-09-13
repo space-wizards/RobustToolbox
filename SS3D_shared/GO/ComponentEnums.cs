@@ -38,7 +38,8 @@
         Transform,
         Velocity,
         Direction,
-        SVars
+        SVars,
+        Particles
     }
 
     public enum ItemComponentNetMessage

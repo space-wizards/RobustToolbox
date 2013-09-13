@@ -13,6 +13,11 @@
           <Parameter name="addsprite" type="string" value="sword_on" />
         </Parameters>
       </Component>
+      <Component name="ParticleSystemComponent">
+        <Parameters>
+          <Parameter name="particlesPerSecond" type="int" value="30" />
+        </Parameters>
+      </Component>
       <Component name="PhysicsComponent"></Component>
       <Component name="ClickableComponent"></Component>
       <Component name="BasicItemComponent"></Component>

@@ -1021,7 +1021,8 @@ namespace ClientServices.State.States
         /// <param name="frametime">time since the last frame was rendered.</param>
         private void RenderComponents(float frameTime, RectangleF viewPort)
         {
-            List<Component> components = _entityManager.ComponentManager.GetComponents(ComponentFamily.Renderable);
+            IEnumerable<Component> components = _entityManager.ComponentManager.GetComponents(ComponentFamily.Renderable)
+                .Union(_entityManager.ComponentManager.GetComponents(ComponentFamily.Particles));
 
             IEnumerable<IRenderableComponent> floorRenderables = from IRenderableComponent c in components
                                                                  orderby c.Bottom ascending , c.DrawDepth ascending
@@ -1029,7 +1030,7 @@ namespace ClientServices.State.States
                                                                  select c;
 
             RenderList(new Vector2D(viewPort.Left, viewPort.Top), new Vector2D(viewPort.Right, viewPort.Bottom),
-                       floorRenderables.ToList());
+                       floorRenderables);
 
             IEnumerable<IRenderableComponent> largeRenderables = from IRenderableComponent c in components
                                                                  orderby c.Bottom ascending
@@ -1038,7 +1039,7 @@ namespace ClientServices.State.States
                                                                  select c;
 
             RenderList(new Vector2D(viewPort.Left, viewPort.Top), new Vector2D(viewPort.Right, viewPort.Bottom),
-                       largeRenderables.ToList());
+                       largeRenderables);
 
             IEnumerable<IRenderableComponent> ceilingRenderables = from IRenderableComponent c in components
                                                                    orderby c.Bottom ascending , c.DrawDepth ascending
@@ -1046,10 +1047,10 @@ namespace ClientServices.State.States
                                                                    select c;
 
             RenderList(new Vector2D(viewPort.Left, viewPort.Top), new Vector2D(viewPort.Right, viewPort.Bottom),
-                       ceilingRenderables.ToList());
+                       ceilingRenderables);
         }
 
-        private void RenderList(Vector2D topleft, Vector2D bottomright, List<IRenderableComponent> renderables)
+        private void RenderList(Vector2D topleft, Vector2D bottomright, IEnumerable<IRenderableComponent> renderables)
         {
             foreach (IRenderableComponent component in renderables)
             {

@@ -83,6 +83,7 @@
     <Compile Include="Component\Item\ItemCapability\BreatherCapability.cs" />
     <Compile Include="Component\Item\ItemCapability\HealthScanCapability.cs" />
     <Compile Include="Component\Light\LightComponent.cs" />
+    <Compile Include="Component\Particles\ParticleSystemComponent.cs" />
     <Compile Include="Component\Physics\PhysicsComponent.cs" />
     <Compile Include="Component\Objectives\ObjectivesComponent.cs" />
     <Compile Include="Component\PlayerActionComp\PlayerActionCompS.cs" />

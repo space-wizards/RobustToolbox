@@ -84,13 +84,8 @@ namespace SGO
         private void SetState(LightState state)
         {
             _state = state;
-            SendState();
         }
-
-        private void SendState()
-        {
-        }
-
+        
         public override ComponentState GetComponentState()
         {
             return new LightComponentState(_state, _colorR, _colorG, _colorB, _mode);

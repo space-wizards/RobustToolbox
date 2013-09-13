@@ -27,4 +27,11 @@
       <Component name="BasicInteractableComponent"></Component>
     </Components>
   </EntityTemplate>
+  <EntityTemplate name="Particles">
+    <Components>
+      <Component name="TransformComponent"></Component>
+      <Component name="VelocityComponent"></Component>
+      <Component name="BasicMoverComponent"></Component>
+    </Components>
+  </EntityTemplate>
 </EntityTemplates>

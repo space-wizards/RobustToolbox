@@ -1225,6 +1225,13 @@
             <param name="x">Horizontal Position.</param>
             <param name="y">Vertical position.</param>
         </member>
+        <member name="M:GorgonLibrary.Graphics.Utilities.ParticleEmitter.MoveParticles(System.Single,System.Single)">
+            <summary>
+            Function to move just the particles by an offset.
+            </summary>
+            <param name="x">Horizontal offset</param>
+            <param name="y">Vertical offset</param>
+        </member>
         <member name="M:GorgonLibrary.Graphics.Utilities.ParticleEmitter.Update(System.Single)">
             <summary>
             Function to update the particles.

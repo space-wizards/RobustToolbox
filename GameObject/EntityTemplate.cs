@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
 using System.Xml.Linq;
+using SS13_Shared;
 using SS13_Shared.GO;
 
 namespace GameObject
@@ -93,6 +94,12 @@ namespace GameObject
                 case "boolean":
                 case "bool":
                     return typeof (bool);
+                case "vector2":
+                    return typeof(Vector2);
+                case "vector3":
+                    return typeof(Vector3);
+                case "vector4":
+                    return typeof(Vector4);
                 default:
                     return null;
             }
@@ -160,6 +167,30 @@ namespace GameObject
                     else if (paramType == typeof (string))
                     {
                         paramValue = paramRawValue;
+                    }
+                    else if (paramType == typeof (Vector2))
+                    {
+                        var args = paramRawValue.Split(',');
+                        if (args.Length != 2)
+                            throw new ArgumentException("Could not parse parameter " + paramName +
+                                                        " as Vector2. Value: " + paramRawValue);
+                        paramValue = new Vector2(float.Parse(args[0]), float.Parse(args[1]));
+                    }
+                    else if (paramType == typeof(Vector3))
+                    {
+                        var args = paramRawValue.Split(',');
+                        if (args.Length != 3)
+                            throw new ArgumentException("Could not parse parameter " + paramName +
+                                                        " as Vector3. Value: " + paramRawValue);
+                        paramValue = new Vector3(float.Parse(args[0]), float.Parse(args[1]), float.Parse(args[2]));
+                    }
+                    else if (paramType == typeof(Vector4))
+                    {
+                        var args = paramRawValue.Split(',');
+                        if (args.Length != 4)
+                            throw new ArgumentException("Could not parse parameter " + paramName +
+                                                        " as Vector4. Value: " + paramRawValue);
+                        paramValue = new Vector4(float.Parse(args[0]), float.Parse(args[1]), float.Parse(args[2]), float.Parse(args[3]));
                     }
                     else
                     {

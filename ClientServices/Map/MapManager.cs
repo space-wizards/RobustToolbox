@@ -51,8 +51,8 @@ namespace ClientServices.Map
             _resourceManager = resourceManager;
             _lightManager = lightManager;
             _collisionManager = collisionManager;
-            _mapHeight = 1024;
-            _mapWidth = 1024;
+            _mapHeight = 256;
+            _mapWidth = 256;
             Init();
 
             _cardinalList = new List<Vector2D>
@@ -433,9 +433,7 @@ namespace ClientServices.Map
         /// </summary>
         public ITile GetITileAt(Vector2D worldPos)
         {
-            Point p = GetTileArrayPositionFromWorldPosition(worldPos);
-            if (p.X < 0 || p.Y < 0 || p.X >= _mapWidth || p.Y >= _mapHeight) return null;
-            return GetTileAt(p.X, p.Y);
+            return GetTileAt((int)worldPos.X, (int)worldPos.Y);
         }
 
         /// <summary>

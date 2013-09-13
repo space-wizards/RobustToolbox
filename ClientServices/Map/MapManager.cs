@@ -24,7 +24,6 @@ namespace ClientServices.Map
         #region Variables
 
         private const int TileSpacing = 64; // Distance between tiles
-
         private readonly List<Vector2D> _cardinalList;
 
         private readonly ICollisionManager _collisionManager;
@@ -52,7 +51,8 @@ namespace ClientServices.Map
             _resourceManager = resourceManager;
             _lightManager = lightManager;
             _collisionManager = collisionManager;
-
+            _mapHeight = 1024;
+            _mapWidth = 1024;
             Init();
 
             _cardinalList = new List<Vector2D>
@@ -123,21 +123,23 @@ namespace ClientServices.Map
 
         public bool LoadTileMap(NetIncomingMessage message)
         {
-            _mapWidth = message.ReadInt32();
-            _mapHeight = message.ReadInt32();
+            var _mapLoadWidth = message.ReadInt32();
+            var _mapLoadHeight = message.ReadInt32();
 
             //_tileArray = new Tile[_mapHeight][];
 
-            _tileArray = new RectangleTree<Tile>(TilePos, new Rectangle(0, 0, _mapWidth * TileSpacing, _mapHeight * TileSpacing));
+            _tileArray = new RectangleTree<Tile>(TilePos,
+                                                 new Rectangle(-(_mapWidth/2)*TileSpacing, -(_mapHeight/2)*TileSpacing,
+                                                                 _mapWidth*TileSpacing, _mapHeight*TileSpacing));
 
             /*for (int i = 0; i < _mapHeight; i++)
             {
                 _tileArray[i] = new Tile[_mapWidth];
             }*/
 
-            for (int x = 0; x < _mapWidth; x++)
+            for (int x = 0; x < _mapLoadWidth; x++)
             {
-                for (int y = 0; y < _mapHeight; y++)
+                for (int y = 0; y < _mapLoadHeight; y++)
                 {
                     int posX = x*TileSpacing;
                     int posY = y*TileSpacing;
@@ -150,9 +152,9 @@ namespace ClientServices.Map
                 }
             }
 
-            for (int x = 0; x < _mapWidth; x++)
+            for (int x = 0; x < _mapLoadWidth; x++)
             {
-                for (int y = 0; y < _mapHeight; y++)
+                for (int y = 0; y < _mapLoadWidth; y++)
                 {
                     Tile T = GetTileAt(new Point(x * TileSpacing, y * TileSpacing));
                     /*if (T == null)
@@ -350,7 +352,7 @@ namespace ClientServices.Map
 
                     if (t.GetType().GetInterface("ICollidable") != null)
                         _collisionManager.RemoveCollidable((ICollidable) t);
-
+                    _tileArray.Remove(t);
                     t = GenerateNewTile(tileStr, state, new Vector2D(x*TileSpacing, y*TileSpacing));
                     t.surroundingTiles = surroundTiles;
                     if (t.surroundingTiles[0] != null) t.surroundingTiles[0].surroundingTiles[2] = t;

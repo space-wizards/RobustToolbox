@@ -154,6 +154,8 @@ namespace ClientServices.Map
 
         private void CollapseChildren(RectangleTreeNode node)
         {
+            if (node.Children == null)
+                return;
             foreach (RectangleTreeNode child in node.Children)
             {
                 while (child.Items.Count > 0)

@@ -138,9 +138,9 @@ namespace CGO
                 var radius = positionRelativeToEmitter.Length;
                 if (radius > 0)
                 {
-                    var theta = MathUtility.ASin(positionRelativeToEmitter.X/radius);
+                    var theta = MathUtility.ATan(positionRelativeToEmitter.Y, positionRelativeToEmitter.X);
                     theta += TangentialVelocity*frameTime;
-                    deltaPosition += new Vector2D(radius*MathUtility.Sin(theta), radius*MathUtility.Cos(theta))
+                    deltaPosition += new Vector2D(radius*MathUtility.Cos(theta), radius*MathUtility.Sin(theta))
                                      - positionRelativeToEmitter;
                 }
                 //Calculate delta p due to Velocity
@@ -315,7 +315,7 @@ namespace CGO
         /// This controls the range in radius from the emission position where the particles 
         /// will start. If the radius is 0, they will all be emitted at the EmitPosition.
         /// </summary>
-        public Range<float> EmissionRadiusRange { get; set; }
+        public SS13_Shared.Utility.Range<float> EmissionRadiusRange { get; set; }
 
         /// <summary>
         /// Velocity Range
@@ -405,7 +405,7 @@ namespace CGO
         /// Spin Velocity
         /// This controls the initial spin velocity over the life of the particle
         /// </summary>
-        public Range<float> SpinVelocity { get; set; }
+        public SS13_Shared.Utility.Range<float> SpinVelocity { get; set; }
 
         /// <summary>
         /// Spin Velocity Variance
@@ -417,7 +417,7 @@ namespace CGO
         /// Size Range
         /// This controls the range in size of the particle over the course of its lifetime
         /// </summary>
-        public Range<float> SizeRange { get; set; }
+        public SS13_Shared.Utility.Range<float> SizeRange { get; set; }
 
         /// <summary>
         /// This controls how much particle size will vary between particles
@@ -427,7 +427,7 @@ namespace CGO
         /// <summary>
         /// This controls the color range of the particle over the course of its lifetime
         /// </summary>
-        public Range<Vector4D> ColorRange { get; set; }
+        public SS13_Shared.Utility.Range<Vector4D> ColorRange { get; set; }
 
         /// <summary>
         /// This controls how much particle color will vary between particles
@@ -473,7 +473,7 @@ namespace CGO
             return (float) (_rnd.NextDouble() - 0.5f)*2;
         }
 
-        private float RandomRangeFloat(Range<float> randomRange)
+        private float RandomRangeFloat(SS13_Shared.Utility.Range<float> randomRange)
         {
             return (RandomFloat() * (randomRange.End - randomRange.Start)) + randomRange.Start;
         }
@@ -483,7 +483,7 @@ namespace CGO
             return (RandomFloat()*(end - start)) + start;
         }
 
-        private Vector2D RandomRangeVector2D(Range<Vector2D> randomRange)
+        private Vector2D RandomRangeVector2D(SS13_Shared.Utility.Range<Vector2D> randomRange)
         {
             return new Vector2D(
                 RandomRangeFloat(randomRange.Start.X, randomRange.End.X),
@@ -491,7 +491,7 @@ namespace CGO
                 );
         }
 
-        private Vector3D RandomRangeVector3D(Range<Vector3D> randomRange)
+        private Vector3D RandomRangeVector3D(SS13_Shared.Utility.Range<Vector3D> randomRange)
         {
             return new Vector3D(
                 RandomRangeFloat(randomRange.Start.X, randomRange.End.X),
@@ -499,8 +499,8 @@ namespace CGO
                 RandomRangeFloat(randomRange.Start.Z, randomRange.End.Z)
                 );
         }
-        
-        private Vector4D RandomRangeVector4D(Range<Vector4D> randomRange)
+
+        private Vector4D RandomRangeVector4D(SS13_Shared.Utility.Range<Vector4D> randomRange)
         {
             return new Vector4D(
                 RandomRangeFloat(randomRange.Start.X, randomRange.End.X),
@@ -517,7 +517,8 @@ namespace CGO
 
         private float VariedPositiveFloat(float value, float variance)
         {
-            return value + RandomFloat() * variance;
+            var val = VariedFloat(value, variance);
+            return Math.Max(val, 0);
         }
         
         private Vector2D VariedVector2D(Vector2D value, float variance)
@@ -697,7 +698,11 @@ namespace CGO
 
         public void Update(float frameTime)
         {
-            Parallel.ForEach(LiveParticles, particle => particle.Update(frameTime));
+            foreach(var particle in LiveParticles)
+            {
+                particle.Update(frameTime);
+            }
+            //Parallel.ForEach(LiveParticles, particle => particle.Update(frameTime));
 
             if (!Emit)
                 return;
@@ -747,10 +752,10 @@ namespace CGO
             //TODO start with sane defaults
             Acceleration = Vector2D.Zero;
             AccelerationVariance = 0f;
-            ColorRange = new Range<Vector4D>(Vector4D.UnitX * 255, Vector4D.Zero);
+            ColorRange = new SS13_Shared.Utility.Range<Vector4D>(Vector4D.UnitX * 255, Vector4D.Zero);
             ColorVariance = 0f;
             EmissionOffset = Vector2D.Zero;
-            EmissionRadiusRange = new Range<float>(0f,0f);
+            EmissionRadiusRange = new SS13_Shared.Utility.Range<float>(0f, 0f);
             Emit = false;
             EmitRate = 1;
             EmitterPosition = position;
@@ -761,9 +766,9 @@ namespace CGO
             RadialAccelerationVariance = 0f;
             RadialVelocity = 0f;
             RadialVelocityVariance = 0f;
-            SizeRange = new Range<float>(10,0);
-            SizeVariance = 1.0f;
-            SpinVelocity = new Range<float>(0f, 0f);
+            SizeRange = new SS13_Shared.Utility.Range<float>(1, 0);
+            SizeVariance = 0.1f;
+            SpinVelocity = new SS13_Shared.Utility.Range<float>(0f, 0f);
             SpinVelocityVariance = 0f;
             TangentialAcceleration = 0;
             TangentialAccelerationVariance = 0;

@@ -145,7 +145,7 @@ namespace CGO
 
         private void UpdateParticleColor()
         {
-            _emitter.ColorRange = new Range<Vector4D>(_particlesColorStart, _particlesColorEnd);
+            _emitter.ColorRange = new SS13_Shared.Utility.Range<Vector4D>(_particlesColorStart, _particlesColorEnd);
         }
 
         private void UpdateParticleRate()
@@ -185,16 +185,16 @@ namespace CGO
             _emitter = null;
 
             _emitter = new ParticleSystem(_particleSprite, position);
-            _emitter.ColorRange = new Range<Vector4D>(_particlesColorStart, _particlesColorEnd);
+            _emitter.ColorRange = new SS13_Shared.Utility.Range<Vector4D>(_particlesColorStart, _particlesColorEnd);
             _emitter.Emit = _active;
             _emitter.Lifetime = 10f;
             _emitter.LifetimeVariance = 2f;
-            _emitter.SizeRange = new Range<float>(0.1f, 0.05f);
+            _emitter.SizeRange = new SS13_Shared.Utility.Range<float>(0.1f, 0.05f);
             _emitter.SizeVariance = 0.05f;
             _emitter.Acceleration = new Vector2D(0, 1.5f);
             _emitter.RadialVelocity = 10f;
             _emitter.RadialAcceleration = -1 * _emitter.RadialVelocity/(_emitter.Lifetime-2);
-            _emitter.EmissionRadiusRange = new Range<float>(5, 20);
+            _emitter.EmissionRadiusRange = new SS13_Shared.Utility.Range<float>(5, 20);
         }
 
         public float Bottom

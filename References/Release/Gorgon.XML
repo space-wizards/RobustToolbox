@@ -24134,6 +24134,16 @@
               resource lookups using this strongly typed resource class.
             </summary>
         </member>
+        <member name="P:GorgonLibrary.Properties.Resources.GorgonLogo3">
+            <summary>
+              Looks up a localized resource of type System.Drawing.Bitmap.
+            </summary>
+        </member>
+        <member name="P:GorgonLibrary.Properties.Resources.GorIcon">
+            <summary>
+              Looks up a localized resource of type System.Drawing.Icon similar to (Icon).
+            </summary>
+        </member>
         <member name="T:GorgonLibrary.FileSystems.FileSystemPathList">
             <summary>
             Object representing a list of path paths.

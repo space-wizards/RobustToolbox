@@ -135,12 +135,6 @@
     <Compile Include="FloatRangeControl.Designer.cs">
       <DependentUpon>FloatRangeControl.cs</DependentUpon>
     </Compile>
-    <Compile Include="MainForm.cs">
-      <SubType>Form</SubType>
-    </Compile>
-    <Compile Include="MainForm.Designer.cs">
-      <DependentUpon>MainForm.cs</DependentUpon>
-    </Compile>
     <Compile Include="ParticleConfigurator.cs">
       <SubType>UserControl</SubType>
     </Compile>
@@ -193,9 +187,6 @@
     </EmbeddedResource>
     <EmbeddedResource Include="FloatRangeControl.resx">
       <DependentUpon>FloatRangeControl.cs</DependentUpon>
-    </EmbeddedResource>
-    <EmbeddedResource Include="MainForm.resx">
-      <DependentUpon>MainForm.cs</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="ParticleConfigurator.resx">
       <DependentUpon>ParticleConfigurator.cs</DependentUpon>

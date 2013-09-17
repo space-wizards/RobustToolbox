@@ -13,12 +13,18 @@ namespace ParticleEditor
         public PointF Range
         {
             get { return floatRangeControlRange.Range; }
-            set { floatRangeControlRange.Range = value; OnPropertyChanged("Range"); }
+            set
+            {
+                floatRangeControlRange.Range = value;
+                OnPropertyChanged("Range");
+                OnPropertyChanged("Start");
+                OnPropertyChanged("End");
+            }
         }
 
         [Description("Start"), Category("Data"),
         Bindable(true)]
-        public float X
+        public float Start
         {
             get { return Range.X; }
             set
@@ -29,7 +35,7 @@ namespace ParticleEditor
 
         [Description("End"), Category("Data"),
         Bindable(true)]
-        public float Y
+        public float End
         {
             get { return Range.Y; }
             set

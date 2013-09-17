@@ -335,6 +335,16 @@ namespace ClientServices.Resources
             else return GetSpriteFromImage(key);
         }
 
+        public List<Sprite> GetSprites()
+        {
+            return _sprites.Values.ToList();
+        } 
+
+        public List<string> GetSpriteKeys()
+        {
+            return _sprites.Keys.ToList();
+        } 
+
         /// <summary>
         /// Checks if a sprite with the given key is in the Resource List.
         /// </summary>

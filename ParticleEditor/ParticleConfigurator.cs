@@ -1,10 +1,12 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.ComponentModel;
 using System.Drawing;
 using System.Drawing.Design;
 using System.Windows.Forms;
 using System.Windows.Forms.Design;
 using Cyotek.Windows.Forms;
+using GorgonLibrary.Graphics;
 
 namespace ParticleEditor
 {
@@ -22,12 +24,27 @@ namespace ParticleEditor
         public event ShowFpsChangedHandler ShowFPSChanged;
         public event BackgroundColorChangedHandler BackgroundColorChanged;
         public event ParticleConfigurationChangedHandler ParticleRateChanged;
+        public ParticleEditorMainForm MainForm { get; set; }
+        private List<string> _sprites; 
 
         public ParticleConfigurator()
         {
             InitializeComponent();
             ParticleSettings = new ParticleSettings();
             InitializeBindings();
+        }
+
+        public void InitializeSpriteSelect()
+        {
+            _sprites = MainForm.ResourceManager.GetSpriteKeys();
+            comboBoxSpriteSelect.DataBindings.Clear();
+            comboBoxSpriteSelect.DataSource = _sprites;
+            comboBoxSpriteSelect.SelectedValueChanged += ComboBoxSpriteSelectOnSelectedValueChanged;
+        }
+
+        private void ComboBoxSpriteSelectOnSelectedValueChanged(object sender, EventArgs eventArgs)
+        {
+            ParticleSettings.Sprite = (string)comboBoxSpriteSelect.SelectedValue;
         }
 
         public void InitializeBindings()

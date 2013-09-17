@@ -13,7 +13,13 @@ namespace ParticleEditor
         public PointF Point
         {
             get { return _point; }
-            set { _point = value; OnPropertyChanged("Point"); }
+            set
+            {
+                _point = value; 
+                OnPropertyChanged("Point");
+                OnPropertyChanged("X");
+                OnPropertyChanged("Y");
+            }
         }
 
         [Description("X component"), Category("Data"),

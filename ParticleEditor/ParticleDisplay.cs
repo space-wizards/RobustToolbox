@@ -7,6 +7,7 @@ using System.Linq;
 using System.Text;
 using System.Windows.Forms;
 using CGO;
+using ClientServices.Resources;
 using Dialogs;
 using GorgonLibrary;
 using GorgonLibrary.Graphics;
@@ -20,6 +21,8 @@ namespace ParticleEditor
         private ParticleSystem _particleSystem;
         private Sprite _particleSprite;
         private GorgonLibrary.Graphics.Image _particleImage;
+        public ResourceManager ResourceManager { get; set; }
+        public ParticleEditorMainForm MainForm { get; set; }
         #endregion
 
         #region Methods.
@@ -38,11 +41,9 @@ namespace ParticleEditor
         }
 
         /// <summary>
-        /// Handles the Load event of the MainForm control.
+        /// Initializes the display control.
         /// </summary>
-        /// <param name="sender">The source of the event.</param>
-        /// <param name="e">The <see cref="System.EventArgs"/> instance containing the event data.</param>
-        private void MainForm_Load(object sender, EventArgs e)
+        public void InitDisplay()
         {
             if (!DesignMode)
             {
@@ -62,9 +63,14 @@ namespace ParticleEditor
 
                 // Set the clear color to something ugly.
                 Gorgon.Screen.BackgroundColor = Color.FromArgb(0, 0, 0);
+
+                //Init Configuration and resource manager.
+                MainForm.InitializeResourceManager();
+                /*
                 _particleImage = GorgonLibrary.Graphics.Image.FromFile("star1.png");
                 _particleSprite = new Sprite("particlesprite", _particleImage);
-                _particleSprite.Axis = new Vector2D(_particleSprite.Width/2, _particleSprite.Height/2);
+                _particleSprite.Axis = new Vector2D(_particleSprite.Width/2, _particleSprite.Height/2);*/
+                _particleSprite = ResourceManager.GetSprite("star1");
                 var settings = ParticleConfigurator.ParticleSettings;
                 _particleSystem = new ParticleSystem(_particleSprite, new Vector2D(0, 0));
                 settings.ColorRange = new SS13_Shared.Utility.Range<Color>(Color.Blue, Color.Black);
@@ -168,7 +174,9 @@ namespace ParticleEditor
                 case "VelocityVariance":
                     _particleSystem.VelocityVariance = settings.VelocityVariance;
                     break;
-
+                case "Sprite":
+                    _particleSystem.ParticleSprite = MainForm.ResourceManager.GetSprite(settings.Sprite);
+                    break;
             }
         }
 

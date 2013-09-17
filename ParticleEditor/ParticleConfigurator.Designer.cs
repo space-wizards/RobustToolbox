@@ -36,18 +36,24 @@ namespace ParticleEditor
             this.label2 = new System.Windows.Forms.Label();
             this.textBoxParticleEmitRate = new System.Windows.Forms.TextBox();
             this.groupBox1 = new System.Windows.Forms.GroupBox();
+            this.colorSwatchBackgroundColor = new ParticleEditor.ColorSwatch();
             this.checkShowFPS = new System.Windows.Forms.CheckBox();
             this.groupBox2 = new System.Windows.Forms.GroupBox();
+            this.colorRangeControl1 = new ParticleEditor.ColorRangeControl();
             this.numericUpDownColorVariation = new System.Windows.Forms.NumericUpDown();
             this.label5 = new System.Windows.Forms.Label();
             this.ApplyButton = new System.Windows.Forms.Button();
             this.groupBox3 = new System.Windows.Forms.GroupBox();
+            this.tableLayoutPanel2 = new System.Windows.Forms.TableLayoutPanel();
             this.label4 = new System.Windows.Forms.Label();
+            this.label6 = new System.Windows.Forms.Label();
+            this.label7 = new System.Windows.Forms.Label();
+            this.vector2ControlEmitterPosition = new ParticleEditor.Vector2Control();
+            this.floatRangeControlEmitRadius = new ParticleEditor.FloatRangeControl();
+            this.vector2ControlEmitOffset = new ParticleEditor.Vector2Control();
             this.textBoxMaxDisplayedParticles = new System.Windows.Forms.TextBox();
             this.label3 = new System.Windows.Forms.Label();
             this.trackBarMaxDisplayedParticles = new System.Windows.Forms.TrackBar();
-            this.label7 = new System.Windows.Forms.Label();
-            this.label6 = new System.Windows.Forms.Label();
             this.trackBar1 = new System.Windows.Forms.TrackBar();
             this.groupBox4 = new System.Windows.Forms.GroupBox();
             this.tableLayoutPanel1 = new System.Windows.Forms.TableLayoutPanel();
@@ -55,10 +61,15 @@ namespace ParticleEditor
             this.label11 = new System.Windows.Forms.Label();
             this.label12 = new System.Windows.Forms.Label();
             this.label13 = new System.Windows.Forms.Label();
+            this.variedVector2Velocity = new ParticleEditor.VariedVector2Control();
             this.label9 = new System.Windows.Forms.Label();
+            this.variedVector2Acceleration = new ParticleEditor.VariedVector2Control();
             this.label8 = new System.Windows.Forms.Label();
+            this.variedFloatControlRadialVelocity = new ParticleEditor.VariedFloatControl();
+            this.variedFloatControlRadialAcceleration = new ParticleEditor.VariedFloatControl();
+            this.variedFloatControlTangentialVelocity = new ParticleEditor.VariedFloatControl();
+            this.variedFloatControlTangentialAcceleration = new ParticleEditor.VariedFloatControl();
             this.groupBox5 = new System.Windows.Forms.GroupBox();
-            this.tableLayoutPanel2 = new System.Windows.Forms.TableLayoutPanel();
             this.tableLayoutPanel3 = new System.Windows.Forms.TableLayoutPanel();
             this.label14 = new System.Windows.Forms.Label();
             this.label15 = new System.Windows.Forms.Label();
@@ -66,27 +77,18 @@ namespace ParticleEditor
             this.variedFloatControlLifetime = new ParticleEditor.VariedFloatControl();
             this.variedFloatRangeControlSize = new ParticleEditor.VariedFloatRangeControl();
             this.variedFloatRangeControlSpin = new ParticleEditor.VariedFloatRangeControl();
-            this.variedVector2Velocity = new ParticleEditor.VariedVector2Control();
-            this.variedVector2Acceleration = new ParticleEditor.VariedVector2Control();
-            this.variedFloatControlRadialVelocity = new ParticleEditor.VariedFloatControl();
-            this.variedFloatControlRadialAcceleration = new ParticleEditor.VariedFloatControl();
-            this.variedFloatControlTangentialVelocity = new ParticleEditor.VariedFloatControl();
-            this.variedFloatControlTangentialAcceleration = new ParticleEditor.VariedFloatControl();
-            this.vector2ControlEmitterPosition = new ParticleEditor.Vector2Control();
-            this.floatRangeControlEmitRadius = new ParticleEditor.FloatRangeControl();
-            this.vector2ControlEmitOffset = new ParticleEditor.Vector2Control();
-            this.colorRangeControl1 = new ParticleEditor.ColorRangeControl();
-            this.colorSwatchBackgroundColor = new ParticleEditor.ColorSwatch();
+            this.label17 = new System.Windows.Forms.Label();
+            this.comboBoxSpriteSelect = new System.Windows.Forms.ComboBox();
             this.groupBox1.SuspendLayout();
             this.groupBox2.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.numericUpDownColorVariation)).BeginInit();
             this.groupBox3.SuspendLayout();
+            this.tableLayoutPanel2.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.trackBarMaxDisplayedParticles)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.trackBar1)).BeginInit();
             this.groupBox4.SuspendLayout();
             this.tableLayoutPanel1.SuspendLayout();
             this.groupBox5.SuspendLayout();
-            this.tableLayoutPanel2.SuspendLayout();
             this.tableLayoutPanel3.SuspendLayout();
             this.SuspendLayout();
             // 
@@ -127,6 +129,16 @@ namespace ParticleEditor
             this.groupBox1.TabStop = false;
             this.groupBox1.Text = "Display Options";
             // 
+            // colorSwatchBackgroundColor
+            // 
+            this.colorSwatchBackgroundColor.Location = new System.Drawing.Point(251, 14);
+            this.colorSwatchBackgroundColor.Name = "colorSwatchBackgroundColor";
+            this.colorSwatchBackgroundColor.SelectedColor = System.Drawing.Color.FromArgb(((int)(((byte)(0)))), ((int)(((byte)(0)))), ((int)(((byte)(0)))));
+            this.colorSwatchBackgroundColor.Size = new System.Drawing.Size(20, 20);
+            this.colorSwatchBackgroundColor.TabIndex = 3;
+            this.colorSwatchBackgroundColor.Text = "colorSwatchBackgroundColor";
+            this.colorSwatchBackgroundColor.Click += new System.EventHandler(this.colorSwatchBackgroundColor_Click);
+            // 
             // checkShowFPS
             // 
             this.checkShowFPS.AutoSize = true;
@@ -156,6 +168,15 @@ namespace ParticleEditor
             this.groupBox2.TabIndex = 7;
             this.groupBox2.TabStop = false;
             this.groupBox2.Text = "Colors";
+            // 
+            // colorRangeControl1
+            // 
+            this.colorRangeControl1.EndColor = System.Drawing.Color.Black;
+            this.colorRangeControl1.Location = new System.Drawing.Point(7, 18);
+            this.colorRangeControl1.Name = "colorRangeControl1";
+            this.colorRangeControl1.Size = new System.Drawing.Size(259, 26);
+            this.colorRangeControl1.StartColor = System.Drawing.Color.Black;
+            this.colorRangeControl1.TabIndex = 9;
             // 
             // numericUpDownColorVariation
             // 
@@ -196,12 +217,36 @@ namespace ParticleEditor
             this.groupBox3.Controls.Add(this.textBoxParticleEmitRate);
             this.groupBox3.Controls.Add(this.label2);
             this.groupBox3.Controls.Add(this.trackBar1);
-            this.groupBox3.Location = new System.Drawing.Point(3, 137);
+            this.groupBox3.Location = new System.Drawing.Point(3, 131);
             this.groupBox3.Name = "groupBox3";
             this.groupBox3.Size = new System.Drawing.Size(340, 211);
             this.groupBox3.TabIndex = 9;
             this.groupBox3.TabStop = false;
             this.groupBox3.Text = "Emitter Options";
+            // 
+            // tableLayoutPanel2
+            // 
+            this.tableLayoutPanel2.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
+            | System.Windows.Forms.AnchorStyles.Left) 
+            | System.Windows.Forms.AnchorStyles.Right)));
+            this.tableLayoutPanel2.AutoSize = true;
+            this.tableLayoutPanel2.ColumnCount = 2;
+            this.tableLayoutPanel2.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Percent, 28.39506F));
+            this.tableLayoutPanel2.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Percent, 71.60494F));
+            this.tableLayoutPanel2.Controls.Add(this.label4, 0, 2);
+            this.tableLayoutPanel2.Controls.Add(this.label6, 0, 0);
+            this.tableLayoutPanel2.Controls.Add(this.label7, 0, 1);
+            this.tableLayoutPanel2.Controls.Add(this.vector2ControlEmitterPosition, 1, 0);
+            this.tableLayoutPanel2.Controls.Add(this.floatRangeControlEmitRadius, 1, 2);
+            this.tableLayoutPanel2.Controls.Add(this.vector2ControlEmitOffset, 1, 1);
+            this.tableLayoutPanel2.Location = new System.Drawing.Point(10, 107);
+            this.tableLayoutPanel2.Name = "tableLayoutPanel2";
+            this.tableLayoutPanel2.RowCount = 3;
+            this.tableLayoutPanel2.RowStyles.Add(new System.Windows.Forms.RowStyle());
+            this.tableLayoutPanel2.RowStyles.Add(new System.Windows.Forms.RowStyle());
+            this.tableLayoutPanel2.RowStyles.Add(new System.Windows.Forms.RowStyle());
+            this.tableLayoutPanel2.Size = new System.Drawing.Size(324, 103);
+            this.tableLayoutPanel2.TabIndex = 21;
             // 
             // label4
             // 
@@ -215,6 +260,62 @@ namespace ParticleEditor
             this.label4.TabIndex = 22;
             this.label4.Text = "Emit Radius:";
             this.label4.TextAlign = System.Drawing.ContentAlignment.MiddleRight;
+            // 
+            // label6
+            // 
+            this.label6.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
+            | System.Windows.Forms.AnchorStyles.Left) 
+            | System.Windows.Forms.AnchorStyles.Right)));
+            this.label6.AutoSize = true;
+            this.label6.Location = new System.Drawing.Point(3, 0);
+            this.label6.Name = "label6";
+            this.label6.Size = new System.Drawing.Size(85, 37);
+            this.label6.TabIndex = 10;
+            this.label6.Text = "Emitter Position:";
+            this.label6.TextAlign = System.Drawing.ContentAlignment.MiddleRight;
+            // 
+            // label7
+            // 
+            this.label7.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
+            | System.Windows.Forms.AnchorStyles.Left) 
+            | System.Windows.Forms.AnchorStyles.Right)));
+            this.label7.AutoSize = true;
+            this.label7.Location = new System.Drawing.Point(3, 37);
+            this.label7.Name = "label7";
+            this.label7.Size = new System.Drawing.Size(85, 33);
+            this.label7.TabIndex = 15;
+            this.label7.Text = "Emit Offset:";
+            this.label7.TextAlign = System.Drawing.ContentAlignment.MiddleRight;
+            // 
+            // vector2ControlEmitterPosition
+            // 
+            this.vector2ControlEmitterPosition.Location = new System.Drawing.Point(94, 3);
+            this.vector2ControlEmitterPosition.Name = "vector2ControlEmitterPosition";
+            this.vector2ControlEmitterPosition.Point = ((System.Drawing.PointF)(resources.GetObject("vector2ControlEmitterPosition.Point")));
+            this.vector2ControlEmitterPosition.Size = new System.Drawing.Size(137, 31);
+            this.vector2ControlEmitterPosition.TabIndex = 16;
+            this.vector2ControlEmitterPosition.X = 0F;
+            this.vector2ControlEmitterPosition.Y = 0F;
+            // 
+            // floatRangeControlEmitRadius
+            // 
+            this.floatRangeControlEmitRadius.End = 0F;
+            this.floatRangeControlEmitRadius.Location = new System.Drawing.Point(94, 73);
+            this.floatRangeControlEmitRadius.Name = "floatRangeControlEmitRadius";
+            this.floatRangeControlEmitRadius.Range = ((System.Drawing.PointF)(resources.GetObject("floatRangeControlEmitRadius.Range")));
+            this.floatRangeControlEmitRadius.Size = new System.Drawing.Size(137, 27);
+            this.floatRangeControlEmitRadius.Start = 0F;
+            this.floatRangeControlEmitRadius.TabIndex = 21;
+            // 
+            // vector2ControlEmitOffset
+            // 
+            this.vector2ControlEmitOffset.Location = new System.Drawing.Point(94, 40);
+            this.vector2ControlEmitOffset.Name = "vector2ControlEmitOffset";
+            this.vector2ControlEmitOffset.Point = ((System.Drawing.PointF)(resources.GetObject("vector2ControlEmitOffset.Point")));
+            this.vector2ControlEmitOffset.Size = new System.Drawing.Size(137, 27);
+            this.vector2ControlEmitOffset.TabIndex = 17;
+            this.vector2ControlEmitOffset.X = 0F;
+            this.vector2ControlEmitOffset.Y = 0F;
             // 
             // textBoxMaxDisplayedParticles
             // 
@@ -243,32 +344,6 @@ namespace ParticleEditor
             this.trackBarMaxDisplayedParticles.TabIndex = 18;
             this.trackBarMaxDisplayedParticles.TickStyle = System.Windows.Forms.TickStyle.None;
             this.trackBarMaxDisplayedParticles.Value = 1;
-            // 
-            // label7
-            // 
-            this.label7.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
-            | System.Windows.Forms.AnchorStyles.Left) 
-            | System.Windows.Forms.AnchorStyles.Right)));
-            this.label7.AutoSize = true;
-            this.label7.Location = new System.Drawing.Point(3, 37);
-            this.label7.Name = "label7";
-            this.label7.Size = new System.Drawing.Size(85, 33);
-            this.label7.TabIndex = 15;
-            this.label7.Text = "Emit Offset:";
-            this.label7.TextAlign = System.Drawing.ContentAlignment.MiddleRight;
-            // 
-            // label6
-            // 
-            this.label6.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
-            | System.Windows.Forms.AnchorStyles.Left) 
-            | System.Windows.Forms.AnchorStyles.Right)));
-            this.label6.AutoSize = true;
-            this.label6.Location = new System.Drawing.Point(3, 0);
-            this.label6.Name = "label6";
-            this.label6.Size = new System.Drawing.Size(85, 37);
-            this.label6.TabIndex = 10;
-            this.label6.Text = "Emitter Position:";
-            this.label6.TextAlign = System.Drawing.ContentAlignment.MiddleRight;
             // 
             // trackBar1
             // 
@@ -377,6 +452,17 @@ namespace ParticleEditor
             this.label13.Text = "Tangent Accel.:";
             this.label13.TextAlign = System.Drawing.ContentAlignment.MiddleRight;
             // 
+            // variedVector2Velocity
+            // 
+            this.variedVector2Velocity.Location = new System.Drawing.Point(93, 3);
+            this.variedVector2Velocity.Name = "variedVector2Velocity";
+            this.variedVector2Velocity.Point = ((System.Drawing.PointF)(resources.GetObject("variedVector2Velocity.Point")));
+            this.variedVector2Velocity.Size = new System.Drawing.Size(217, 27);
+            this.variedVector2Velocity.TabIndex = 8;
+            this.variedVector2Velocity.Variation = 0F;
+            this.variedVector2Velocity.X = 0F;
+            this.variedVector2Velocity.Y = 0F;
+            // 
             // label9
             // 
             this.label9.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
@@ -389,6 +475,17 @@ namespace ParticleEditor
             this.label9.TabIndex = 1;
             this.label9.Text = "Acceleration:";
             this.label9.TextAlign = System.Drawing.ContentAlignment.MiddleRight;
+            // 
+            // variedVector2Acceleration
+            // 
+            this.variedVector2Acceleration.Location = new System.Drawing.Point(93, 36);
+            this.variedVector2Acceleration.Name = "variedVector2Acceleration";
+            this.variedVector2Acceleration.Point = ((System.Drawing.PointF)(resources.GetObject("variedVector2Acceleration.Point")));
+            this.variedVector2Acceleration.Size = new System.Drawing.Size(217, 27);
+            this.variedVector2Acceleration.TabIndex = 9;
+            this.variedVector2Acceleration.Variation = 0F;
+            this.variedVector2Acceleration.X = 0F;
+            this.variedVector2Acceleration.Y = 0F;
             // 
             // label8
             // 
@@ -403,39 +500,51 @@ namespace ParticleEditor
             this.label8.Text = "Velocity:";
             this.label8.TextAlign = System.Drawing.ContentAlignment.MiddleRight;
             // 
+            // variedFloatControlRadialVelocity
+            // 
+            this.variedFloatControlRadialVelocity.Location = new System.Drawing.Point(93, 69);
+            this.variedFloatControlRadialVelocity.Name = "variedFloatControlRadialVelocity";
+            this.variedFloatControlRadialVelocity.Size = new System.Drawing.Size(143, 25);
+            this.variedFloatControlRadialVelocity.TabIndex = 14;
+            this.variedFloatControlRadialVelocity.Value = 0F;
+            this.variedFloatControlRadialVelocity.Variation = 0F;
+            // 
+            // variedFloatControlRadialAcceleration
+            // 
+            this.variedFloatControlRadialAcceleration.Location = new System.Drawing.Point(93, 100);
+            this.variedFloatControlRadialAcceleration.Name = "variedFloatControlRadialAcceleration";
+            this.variedFloatControlRadialAcceleration.Size = new System.Drawing.Size(143, 25);
+            this.variedFloatControlRadialAcceleration.TabIndex = 15;
+            this.variedFloatControlRadialAcceleration.Value = 0F;
+            this.variedFloatControlRadialAcceleration.Variation = 0F;
+            // 
+            // variedFloatControlTangentialVelocity
+            // 
+            this.variedFloatControlTangentialVelocity.Location = new System.Drawing.Point(93, 131);
+            this.variedFloatControlTangentialVelocity.Name = "variedFloatControlTangentialVelocity";
+            this.variedFloatControlTangentialVelocity.Size = new System.Drawing.Size(143, 25);
+            this.variedFloatControlTangentialVelocity.TabIndex = 16;
+            this.variedFloatControlTangentialVelocity.Value = 0F;
+            this.variedFloatControlTangentialVelocity.Variation = 0F;
+            // 
+            // variedFloatControlTangentialAcceleration
+            // 
+            this.variedFloatControlTangentialAcceleration.Location = new System.Drawing.Point(93, 162);
+            this.variedFloatControlTangentialAcceleration.Name = "variedFloatControlTangentialAcceleration";
+            this.variedFloatControlTangentialAcceleration.Size = new System.Drawing.Size(143, 25);
+            this.variedFloatControlTangentialAcceleration.TabIndex = 17;
+            this.variedFloatControlTangentialAcceleration.Value = 0F;
+            this.variedFloatControlTangentialAcceleration.Variation = 0F;
+            // 
             // groupBox5
             // 
             this.groupBox5.Controls.Add(this.tableLayoutPanel3);
-            this.groupBox5.Location = new System.Drawing.Point(3, 354);
+            this.groupBox5.Location = new System.Drawing.Point(3, 348);
             this.groupBox5.Name = "groupBox5";
-            this.groupBox5.Size = new System.Drawing.Size(340, 121);
+            this.groupBox5.Size = new System.Drawing.Size(340, 157);
             this.groupBox5.TabIndex = 11;
             this.groupBox5.TabStop = false;
             this.groupBox5.Text = "Particle Options";
-            // 
-            // tableLayoutPanel2
-            // 
-            this.tableLayoutPanel2.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
-            | System.Windows.Forms.AnchorStyles.Left) 
-            | System.Windows.Forms.AnchorStyles.Right)));
-            this.tableLayoutPanel2.AutoSize = true;
-            this.tableLayoutPanel2.ColumnCount = 2;
-            this.tableLayoutPanel2.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Percent, 28.39506F));
-            this.tableLayoutPanel2.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Percent, 71.60494F));
-            this.tableLayoutPanel2.Controls.Add(this.label4, 0, 2);
-            this.tableLayoutPanel2.Controls.Add(this.label6, 0, 0);
-            this.tableLayoutPanel2.Controls.Add(this.label7, 0, 1);
-            this.tableLayoutPanel2.Controls.Add(this.vector2ControlEmitterPosition, 1, 0);
-            this.tableLayoutPanel2.Controls.Add(this.floatRangeControlEmitRadius, 1, 2);
-            this.tableLayoutPanel2.Controls.Add(this.vector2ControlEmitOffset, 1, 1);
-            this.tableLayoutPanel2.Location = new System.Drawing.Point(10, 107);
-            this.tableLayoutPanel2.Name = "tableLayoutPanel2";
-            this.tableLayoutPanel2.RowCount = 3;
-            this.tableLayoutPanel2.RowStyles.Add(new System.Windows.Forms.RowStyle());
-            this.tableLayoutPanel2.RowStyles.Add(new System.Windows.Forms.RowStyle());
-            this.tableLayoutPanel2.RowStyles.Add(new System.Windows.Forms.RowStyle());
-            this.tableLayoutPanel2.Size = new System.Drawing.Size(324, 103);
-            this.tableLayoutPanel2.TabIndex = 21;
             // 
             // tableLayoutPanel3
             // 
@@ -452,14 +561,17 @@ namespace ParticleEditor
             this.tableLayoutPanel3.Controls.Add(this.variedFloatControlLifetime, 1, 0);
             this.tableLayoutPanel3.Controls.Add(this.variedFloatRangeControlSize, 1, 1);
             this.tableLayoutPanel3.Controls.Add(this.variedFloatRangeControlSpin, 1, 2);
+            this.tableLayoutPanel3.Controls.Add(this.label17, 0, 3);
+            this.tableLayoutPanel3.Controls.Add(this.comboBoxSpriteSelect, 1, 3);
             this.tableLayoutPanel3.Location = new System.Drawing.Point(6, 20);
             this.tableLayoutPanel3.Name = "tableLayoutPanel3";
-            this.tableLayoutPanel3.RowCount = 3;
+            this.tableLayoutPanel3.RowCount = 4;
             this.tableLayoutPanel3.RowStyles.Add(new System.Windows.Forms.RowStyle());
             this.tableLayoutPanel3.RowStyles.Add(new System.Windows.Forms.RowStyle());
             this.tableLayoutPanel3.RowStyles.Add(new System.Windows.Forms.RowStyle());
             this.tableLayoutPanel3.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Absolute, 20F));
-            this.tableLayoutPanel3.Size = new System.Drawing.Size(327, 97);
+            this.tableLayoutPanel3.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Absolute, 20F));
+            this.tableLayoutPanel3.Size = new System.Drawing.Size(327, 133);
             this.tableLayoutPanel3.TabIndex = 0;
             // 
             // label14
@@ -512,132 +624,49 @@ namespace ParticleEditor
             // 
             // variedFloatRangeControlSize
             // 
+            this.variedFloatRangeControlSize.End = 0F;
             this.variedFloatRangeControlSize.Location = new System.Drawing.Point(97, 34);
             this.variedFloatRangeControlSize.Name = "variedFloatRangeControlSize";
             this.variedFloatRangeControlSize.Range = ((System.Drawing.PointF)(resources.GetObject("variedFloatRangeControlSize.Range")));
             this.variedFloatRangeControlSize.Size = new System.Drawing.Size(221, 27);
+            this.variedFloatRangeControlSize.Start = 0F;
             this.variedFloatRangeControlSize.TabIndex = 4;
             this.variedFloatRangeControlSize.Variation = 0F;
-            this.variedFloatRangeControlSize.X = 0F;
-            this.variedFloatRangeControlSize.Y = 0F;
             // 
             // variedFloatRangeControlSpin
             // 
+            this.variedFloatRangeControlSpin.End = 0F;
             this.variedFloatRangeControlSpin.Location = new System.Drawing.Point(97, 67);
             this.variedFloatRangeControlSpin.Name = "variedFloatRangeControlSpin";
             this.variedFloatRangeControlSpin.Range = ((System.Drawing.PointF)(resources.GetObject("variedFloatRangeControlSpin.Range")));
             this.variedFloatRangeControlSpin.Size = new System.Drawing.Size(221, 27);
+            this.variedFloatRangeControlSpin.Start = 0F;
             this.variedFloatRangeControlSpin.TabIndex = 5;
             this.variedFloatRangeControlSpin.Variation = 0F;
-            this.variedFloatRangeControlSpin.X = 0F;
-            this.variedFloatRangeControlSpin.Y = 0F;
             // 
-            // variedVector2Velocity
+            // label17
             // 
-            this.variedVector2Velocity.Location = new System.Drawing.Point(93, 3);
-            this.variedVector2Velocity.Name = "variedVector2Velocity";
-            this.variedVector2Velocity.Point = ((System.Drawing.PointF)(resources.GetObject("variedVector2Velocity.Point")));
-            this.variedVector2Velocity.Size = new System.Drawing.Size(217, 27);
-            this.variedVector2Velocity.TabIndex = 8;
-            this.variedVector2Velocity.Variation = 0F;
-            this.variedVector2Velocity.X = 0F;
-            this.variedVector2Velocity.Y = 0F;
+            this.label17.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
+            | System.Windows.Forms.AnchorStyles.Left) 
+            | System.Windows.Forms.AnchorStyles.Right)));
+            this.label17.AutoSize = true;
+            this.label17.Location = new System.Drawing.Point(3, 97);
+            this.label17.Name = "label17";
+            this.label17.Size = new System.Drawing.Size(88, 36);
+            this.label17.TabIndex = 6;
+            this.label17.Text = "Particle Sprite";
+            this.label17.TextAlign = System.Drawing.ContentAlignment.MiddleRight;
             // 
-            // variedVector2Acceleration
+            // comboBoxSpriteSelect
             // 
-            this.variedVector2Acceleration.Location = new System.Drawing.Point(93, 36);
-            this.variedVector2Acceleration.Name = "variedVector2Acceleration";
-            this.variedVector2Acceleration.Point = ((System.Drawing.PointF)(resources.GetObject("variedVector2Acceleration.Point")));
-            this.variedVector2Acceleration.Size = new System.Drawing.Size(217, 27);
-            this.variedVector2Acceleration.TabIndex = 9;
-            this.variedVector2Acceleration.Variation = 0F;
-            this.variedVector2Acceleration.X = 0F;
-            this.variedVector2Acceleration.Y = 0F;
-            // 
-            // variedFloatControlRadialVelocity
-            // 
-            this.variedFloatControlRadialVelocity.Location = new System.Drawing.Point(93, 69);
-            this.variedFloatControlRadialVelocity.Name = "variedFloatControlRadialVelocity";
-            this.variedFloatControlRadialVelocity.Size = new System.Drawing.Size(143, 25);
-            this.variedFloatControlRadialVelocity.TabIndex = 14;
-            this.variedFloatControlRadialVelocity.Value = 0F;
-            this.variedFloatControlRadialVelocity.Variation = 0F;
-            // 
-            // variedFloatControlRadialAcceleration
-            // 
-            this.variedFloatControlRadialAcceleration.Location = new System.Drawing.Point(93, 100);
-            this.variedFloatControlRadialAcceleration.Name = "variedFloatControlRadialAcceleration";
-            this.variedFloatControlRadialAcceleration.Size = new System.Drawing.Size(143, 25);
-            this.variedFloatControlRadialAcceleration.TabIndex = 15;
-            this.variedFloatControlRadialAcceleration.Value = 0F;
-            this.variedFloatControlRadialAcceleration.Variation = 0F;
-            // 
-            // variedFloatControlTangentialVelocity
-            // 
-            this.variedFloatControlTangentialVelocity.Location = new System.Drawing.Point(93, 131);
-            this.variedFloatControlTangentialVelocity.Name = "variedFloatControlTangentialVelocity";
-            this.variedFloatControlTangentialVelocity.Size = new System.Drawing.Size(143, 25);
-            this.variedFloatControlTangentialVelocity.TabIndex = 16;
-            this.variedFloatControlTangentialVelocity.Value = 0F;
-            this.variedFloatControlTangentialVelocity.Variation = 0F;
-            // 
-            // variedFloatControlTangentialAcceleration
-            // 
-            this.variedFloatControlTangentialAcceleration.Location = new System.Drawing.Point(93, 162);
-            this.variedFloatControlTangentialAcceleration.Name = "variedFloatControlTangentialAcceleration";
-            this.variedFloatControlTangentialAcceleration.Size = new System.Drawing.Size(143, 25);
-            this.variedFloatControlTangentialAcceleration.TabIndex = 17;
-            this.variedFloatControlTangentialAcceleration.Value = 0F;
-            this.variedFloatControlTangentialAcceleration.Variation = 0F;
-            // 
-            // vector2ControlEmitterPosition
-            // 
-            this.vector2ControlEmitterPosition.Location = new System.Drawing.Point(94, 3);
-            this.vector2ControlEmitterPosition.Name = "vector2ControlEmitterPosition";
-            this.vector2ControlEmitterPosition.Point = ((System.Drawing.PointF)(resources.GetObject("vector2ControlEmitterPosition.Point")));
-            this.vector2ControlEmitterPosition.Size = new System.Drawing.Size(137, 31);
-            this.vector2ControlEmitterPosition.TabIndex = 16;
-            this.vector2ControlEmitterPosition.X = 0F;
-            this.vector2ControlEmitterPosition.Y = 0F;
-            // 
-            // floatRangeControlEmitRadius
-            // 
-            this.floatRangeControlEmitRadius.End = 0F;
-            this.floatRangeControlEmitRadius.Location = new System.Drawing.Point(94, 73);
-            this.floatRangeControlEmitRadius.Name = "floatRangeControlEmitRadius";
-            this.floatRangeControlEmitRadius.Range = ((System.Drawing.PointF)(resources.GetObject("floatRangeControlEmitRadius.Range")));
-            this.floatRangeControlEmitRadius.Size = new System.Drawing.Size(137, 27);
-            this.floatRangeControlEmitRadius.Start = 0F;
-            this.floatRangeControlEmitRadius.TabIndex = 21;
-            // 
-            // vector2ControlEmitOffset
-            // 
-            this.vector2ControlEmitOffset.Location = new System.Drawing.Point(94, 40);
-            this.vector2ControlEmitOffset.Name = "vector2ControlEmitOffset";
-            this.vector2ControlEmitOffset.Point = ((System.Drawing.PointF)(resources.GetObject("vector2ControlEmitOffset.Point")));
-            this.vector2ControlEmitOffset.Size = new System.Drawing.Size(137, 27);
-            this.vector2ControlEmitOffset.TabIndex = 17;
-            this.vector2ControlEmitOffset.X = 0F;
-            this.vector2ControlEmitOffset.Y = 0F;
-            // 
-            // colorRangeControl1
-            // 
-            this.colorRangeControl1.EndColor = System.Drawing.Color.Black;
-            this.colorRangeControl1.Location = new System.Drawing.Point(7, 18);
-            this.colorRangeControl1.Name = "colorRangeControl1";
-            this.colorRangeControl1.Size = new System.Drawing.Size(259, 26);
-            this.colorRangeControl1.StartColor = System.Drawing.Color.Black;
-            this.colorRangeControl1.TabIndex = 9;
-            // 
-            // colorSwatchBackgroundColor
-            // 
-            this.colorSwatchBackgroundColor.Location = new System.Drawing.Point(251, 14);
-            this.colorSwatchBackgroundColor.Name = "colorSwatchBackgroundColor";
-            this.colorSwatchBackgroundColor.SelectedColor = System.Drawing.Color.FromArgb(((int)(((byte)(0)))), ((int)(((byte)(0)))), ((int)(((byte)(0)))));
-            this.colorSwatchBackgroundColor.Size = new System.Drawing.Size(20, 20);
-            this.colorSwatchBackgroundColor.TabIndex = 3;
-            this.colorSwatchBackgroundColor.Text = "colorSwatchBackgroundColor";
-            this.colorSwatchBackgroundColor.Click += new System.EventHandler(this.colorSwatchBackgroundColor_Click);
+            this.comboBoxSpriteSelect.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
+            | System.Windows.Forms.AnchorStyles.Left) 
+            | System.Windows.Forms.AnchorStyles.Right)));
+            this.comboBoxSpriteSelect.FormattingEnabled = true;
+            this.comboBoxSpriteSelect.Location = new System.Drawing.Point(97, 100);
+            this.comboBoxSpriteSelect.Name = "comboBoxSpriteSelect";
+            this.comboBoxSpriteSelect.Size = new System.Drawing.Size(227, 21);
+            this.comboBoxSpriteSelect.TabIndex = 7;
             // 
             // ParticleConfigurator
             // 
@@ -658,6 +687,8 @@ namespace ParticleEditor
             ((System.ComponentModel.ISupportInitialize)(this.numericUpDownColorVariation)).EndInit();
             this.groupBox3.ResumeLayout(false);
             this.groupBox3.PerformLayout();
+            this.tableLayoutPanel2.ResumeLayout(false);
+            this.tableLayoutPanel2.PerformLayout();
             ((System.ComponentModel.ISupportInitialize)(this.trackBarMaxDisplayedParticles)).EndInit();
             ((System.ComponentModel.ISupportInitialize)(this.trackBar1)).EndInit();
             this.groupBox4.ResumeLayout(false);
@@ -666,8 +697,6 @@ namespace ParticleEditor
             this.tableLayoutPanel1.PerformLayout();
             this.groupBox5.ResumeLayout(false);
             this.groupBox5.PerformLayout();
-            this.tableLayoutPanel2.ResumeLayout(false);
-            this.tableLayoutPanel2.PerformLayout();
             this.tableLayoutPanel3.ResumeLayout(false);
             this.tableLayoutPanel3.PerformLayout();
             this.ResumeLayout(false);
@@ -721,6 +750,8 @@ namespace ParticleEditor
         private VariedFloatControl variedFloatControlLifetime;
         private VariedFloatRangeControl variedFloatRangeControlSize;
         private VariedFloatRangeControl variedFloatRangeControlSpin;
+        private System.Windows.Forms.Label label17;
+        private System.Windows.Forms.ComboBox comboBoxSpriteSelect;
 
     }
 }

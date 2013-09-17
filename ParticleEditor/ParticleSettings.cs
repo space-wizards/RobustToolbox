@@ -33,9 +33,24 @@ namespace ParticleEditor
         private SS13_Shared.Utility.Range<Color> _colorRange = new SS13_Shared.Utility.Range<Color>(Color.Black,
                                                                                                     Color.FromArgb(0, 0,
                                                                                                                    0, 0));
+        private string _sprite = "star1";
 
         public ParticleSettings()
         {
+        }
+
+        /// <summary>
+        /// Sprite
+        /// This is the selected sprite to display.
+        /// </summary>
+        public string Sprite
+        {
+            get { return _sprite; }
+            set
+            {
+                _sprite = value;
+                OnPropertyChanged("Sprite");
+            }
         }
 
         /// <summary>

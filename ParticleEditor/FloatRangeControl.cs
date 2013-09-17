@@ -13,7 +13,13 @@ namespace ParticleEditor
         public PointF Range
         {
             get { return _range; }
-            set { _range = value; OnPropertyChanged("Range"); }
+            set
+            {
+                _range = value;
+                OnPropertyChanged("Range");
+                OnPropertyChanged("Start");
+                OnPropertyChanged("End");
+            }
         }
 
         [Description("Start"), Category("Data"),

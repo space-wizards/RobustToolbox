@@ -18,7 +18,13 @@ namespace ParticleEditor
         public PointF Point
         {
             get { return vector2Control1.Point; }
-            set { vector2Control1.Point = value; OnPropertyChanged("Point"); }
+            set
+            {
+                vector2Control1.Point = value;
+                OnPropertyChanged("Point");
+                OnPropertyChanged("X");
+                OnPropertyChanged("Y");
+            }
         }
 
         [Description("X component"), Category("Data"),

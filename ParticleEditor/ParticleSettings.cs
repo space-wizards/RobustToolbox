@@ -1,8 +1,12 @@
-﻿using System.ComponentModel;
+﻿using System;
+using System.ComponentModel;
 using System.Drawing;
+using System.Xml.Serialization;
+using SS13_Shared.Utility;
 
 namespace ParticleEditor
 {
+    [Serializable]
     public class ParticleSettings : INotifyPropertyChanged
     {
         private PointF _emitterPosition = new PointF(0,0);
@@ -37,6 +41,36 @@ namespace ParticleEditor
 
         public ParticleSettings()
         {
+        }
+
+        public void Load(ParticleSettings loadFrom)
+        {
+            Acceleration = loadFrom.Acceleration;
+            AccelerationVariance = loadFrom.AccelerationVariance;
+            ColorRange = loadFrom.ColorRange;
+            ColorVariance = loadFrom.ColorVariance;
+            EmissionOffset = loadFrom.EmissionOffset;
+            EmissionRadiusRange = loadFrom.EmissionRadiusRange;
+            EmitRate = loadFrom.EmitRate;
+            EmitterPosition = loadFrom.EmitterPosition;
+            Lifetime = loadFrom.Lifetime;
+            LifetimeVariance = loadFrom.LifetimeVariance;
+            MaximumParticleCount = loadFrom.MaximumParticleCount;
+            RadialAcceleration = loadFrom.RadialAcceleration;
+            RadialAccelerationVariance = loadFrom.RadialAccelerationVariance;
+            RadialVelocity = loadFrom.RadialVelocity;
+            RadialVelocityVariance = loadFrom.RadialVelocityVariance;
+            SizeRange = loadFrom.SizeRange;
+            SizeVariance = loadFrom.SizeVariance;
+            SpinVelocity = loadFrom.SpinVelocity;
+            SpinVelocityVariance = loadFrom.SpinVelocityVariance;
+            Sprite = loadFrom.Sprite;
+            TangentialAcceleration = loadFrom.TangentialAcceleration;
+            TangentialAccelerationVariance = loadFrom.TangentialAccelerationVariance;
+            TangentialVelocity = loadFrom.TangentialVelocity;
+            TangentialVelocityVariance = loadFrom.TangentialVelocityVariance;
+            Velocity = loadFrom.Velocity;
+            VelocityVariance = loadFrom.VelocityVariance;
         }
 
         /// <summary>
@@ -376,6 +410,7 @@ namespace ParticleEditor
             }
         }
 
+        [XmlIgnore]
         public SS13_Shared.Utility.Range<Color> ColorRange
         {
             get { return _colorRange; }
@@ -384,6 +419,13 @@ namespace ParticleEditor
                 _colorRange = value;
                 OnPropertyChanged("ColorRange");
             }
+        }
+
+        [XmlElement(ElementName = "ColorRange")]
+        public SerializableColorRange ColorRangeXml
+        {
+            get { return new SerializableColorRange(ColorRange); }
+            set { ColorRange = value.ToRange(); }
         }
 
         /// <summary>
@@ -407,5 +449,59 @@ namespace ParticleEditor
         }
 
         public event PropertyChangedEventHandler PropertyChanged;
+    }
+
+    public class SerializableColor
+    {
+        public int A { get; set; }
+        public int R { get; set; }
+        public int G { get; set; }
+        public int B { get; set; }
+
+        public SerializableColor()
+        {
+            
+        }
+
+        public SerializableColor(Color c)
+        {
+            A = c.A;
+            R = c.R;
+            G = c.G;
+            B = c.B;
+        }
+
+        public Color ToColor()
+        {
+            return Color.FromArgb(A, R, G, B);
+        }
+    }
+
+    public class SerializableColorRange
+    {
+        public SerializableColor Start { get; set; }
+        public SerializableColor End { get; set; }
+
+        public SerializableColorRange()
+        {
+            
+        }
+
+        public SerializableColorRange(Color start, Color end)
+        {
+            Start = new SerializableColor(start);
+            End = new SerializableColor(end);
+        }
+
+        public SerializableColorRange(Range<Color> colorRange )
+        {
+            Start = new SerializableColor(colorRange.Start);
+            End = new SerializableColor(colorRange.End);
+        }
+
+        public Range<Color> ToRange()
+        {
+            return new Range<Color>(Start.ToColor(), End.ToColor());
+        }
     }
 }

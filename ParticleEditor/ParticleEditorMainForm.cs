@@ -1,5 +1,7 @@
 ﻿using System;
+using System.IO;
 using System.Windows.Forms;
+using System.Xml.Serialization;
 using ClientServices.Configuration;
 using ClientServices.Resources;
 using GorgonLibrary;
@@ -18,6 +20,16 @@ namespace ParticleEditor
             particleConfigurator.MainForm = this;
             particleDisplay.MainForm = this;
             particleDisplay.InitDisplay();
+            InitializeFileDialog();
+        }
+
+        private void InitializeFileDialog()
+        {
+            var currentDir = Directory.GetCurrentDirectory() + @"..\..\..\..\Media\ParticleSystems";
+            saveFileDialog1.InitialDirectory = Path.GetFullPath(currentDir);
+            saveFileDialog1.RestoreDirectory = true;
+            openFileDialog1.InitialDirectory = Path.GetFullPath(currentDir);
+            openFileDialog1.RestoreDirectory = true;
         }
 
         public void InitializeResourceManager()
@@ -50,6 +62,30 @@ namespace ParticleEditor
             {
                 // Perform clean up.
                 Gorgon.Terminate();
+            }
+        }
+
+        private void saveToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            if(saveFileDialog1.ShowDialog(this) == DialogResult.OK)
+            {
+                var particleSaver = new XmlSerializer(typeof(ParticleSettings));
+                StreamWriter particleWriter = File.CreateText(saveFileDialog1.FileName);
+                particleSaver.Serialize(particleWriter, particleConfigurator.ParticleSettings);
+                particleWriter.Flush();
+                particleWriter.Close();
+            }
+        }
+
+        private void toolStripMenuItem2_Click(object sender, EventArgs e)
+        {
+            if (openFileDialog1.ShowDialog(this) == DialogResult.OK)
+            {
+                var particleLoader = new XmlSerializer(typeof(ParticleSettings));
+                StreamReader particleReader = File.OpenText(openFileDialog1.FileName);
+                var particleSettings = (ParticleSettings)particleLoader.Deserialize(particleReader);
+                particleReader.Close();
+                particleConfigurator.ParticleSettings.Load(particleSettings);
             }
         }
     }

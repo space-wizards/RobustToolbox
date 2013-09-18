@@ -11,7 +11,8 @@ namespace SS13_Shared.Utility
     /// Value type to indicate a range of values.
     /// </summary>
     /// <typeparam name="T">Type of data for the range.</typeparam>
-    [TypeConverter(typeof(RangeTypeConverter))]
+    [TypeConverter(typeof(RangeTypeConverter)),
+    Serializable]
     public class Range<T>
     {
         /// <summary>
@@ -33,6 +34,11 @@ namespace SS13_Shared.Utility
         {
             Start = start;
             End = end;
+        }
+
+        public Range()
+        {
+            
         }
     }
 

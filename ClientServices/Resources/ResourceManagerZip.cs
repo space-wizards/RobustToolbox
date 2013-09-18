@@ -26,7 +26,7 @@ namespace ClientServices.Resources
         private readonly Dictionary<string, Image> _images = new Dictionary<string, Image>();
         private readonly Dictionary<string, FXShader> _shaders = new Dictionary<string, FXShader>();
         private readonly Dictionary<string, SpriteInfo> _spriteInfos = new Dictionary<string, SpriteInfo>();
-        private readonly Dictionary<string, Sprite> _sprites = new Dictionary<string, Sprite>();
+        private readonly Dictionary<string, Sprite> _sprites = new Dictionary<string, Sprite>(); 
         private readonly List<string> supportedImageExtensions = new List<string> {".png"};
 
         public ResourceManager(IConfigurationManager configurationManager)

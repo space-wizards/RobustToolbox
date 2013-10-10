@@ -12,6 +12,7 @@ using GorgonLibrary.Graphics;
 using GorgonLibrary.Sprites;
 using ICSharpCode.SharpZipLib.Core;
 using ICSharpCode.SharpZipLib.Zip;
+using SS13_Shared;
 using Font = GorgonLibrary.Graphics.Font;
 using Image = GorgonLibrary.Graphics.Image;
 
@@ -26,7 +27,8 @@ namespace ClientServices.Resources
         private readonly Dictionary<string, Image> _images = new Dictionary<string, Image>();
         private readonly Dictionary<string, FXShader> _shaders = new Dictionary<string, FXShader>();
         private readonly Dictionary<string, SpriteInfo> _spriteInfos = new Dictionary<string, SpriteInfo>();
-        private readonly Dictionary<string, Sprite> _sprites = new Dictionary<string, Sprite>(); 
+        private readonly Dictionary<string, Sprite> _sprites = new Dictionary<string, Sprite>();
+        private readonly Dictionary<string, AnimationCollection> _animationCollections = new Dictionary<string, AnimationCollection>(); 
         private readonly List<string> supportedImageExtensions = new List<string> {".png"};
 
         public ResourceManager(IConfigurationManager configurationManager)
@@ -88,6 +90,15 @@ namespace ClientServices.Resources
                             Font loadedFont = LoadFontFrom(zipFile, entry);
                             if (loadedFont == null) continue;
                             else _fonts.Add(loadedFont.Name, loadedFont);
+                            break;
+
+                        case ".xml":
+                            if (entry.Name.Contains("Animations"))
+                            {
+                                AnimationCollection animationCollection = LoadAnimationCollectionFrom(zipFile, entry);
+                                if (animationCollection == null) continue;
+                                else _animationCollections.Add(animationCollection.Name, animationCollection);
+                            }
                             break;
                     }
                 }
@@ -204,6 +215,32 @@ namespace ClientServices.Resources
             zipStream.Dispose();
 
             return loadedFont;
+        }
+
+        /// <summary>
+        /// Loads animation collection from given zipfile and entry.
+        /// </summary>
+        /// <param name="zipFile"></param>
+        /// <param name="entry"></param>
+        /// <returns></returns>
+        private AnimationCollection LoadAnimationCollectionFrom(ZipFile zipFile, ZipEntry entry)
+        {
+            string ResourceName = Path.GetFileNameWithoutExtension(entry.Name).ToLowerInvariant();
+
+
+            var byteBuffer = new byte[zipBufferSize];
+
+            Stream zipStream = zipFile.GetInputStream(entry);
+            //Will throw exception is missing or wrong password. Handle this.
+
+            System.Xml.Serialization.XmlSerializer serializer =
+                new System.Xml.Serialization.XmlSerializer(typeof(AnimationCollection));
+
+            var animationCollection = (AnimationCollection)serializer.Deserialize(zipStream);
+            zipStream.Close();
+            zipStream.Dispose();
+
+            return animationCollection;
         }
 
         /// <summary>

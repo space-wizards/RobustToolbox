@@ -221,6 +221,7 @@
     </Content>
     <Content Include="EntityTemplates\Weapons.xml">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      <SubType>Designer</SubType>
     </Content>
     <Content Include="EntityTemplates\Internals.xml">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>

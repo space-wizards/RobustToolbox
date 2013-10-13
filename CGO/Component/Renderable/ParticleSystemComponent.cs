@@ -27,6 +27,8 @@ namespace CGO
         private Vector4D _particlesColorEnd = Vector4D.Zero;
         private bool _active = false;
         private int _particleRate = 1;
+        protected IRenderableComponent master;
+        protected List<IRenderableComponent> slaves = new List<IRenderableComponent>();
 
         public DrawDepth DrawDepth { get; set; }
         #endregion
@@ -234,5 +236,43 @@ namespace CGO
             }
         }
 
+        public bool IsSlaved()
+        {
+            return master != null;
+        }
+
+        public void SetMaster(Entity m)
+        {
+            if (!m.HasComponent(ComponentFamily.Renderable))
+                return;
+            var mastercompo = m.GetComponent<SpriteComponent>(ComponentFamily.Renderable);
+            //If there's no sprite component, then FUCK IT
+            if (mastercompo == null)
+                return;
+
+            // lets get gay together and do some shit like in that stupid book 50 shades of gay
+            // “His pointer finger circled my puckered love cave. “Are you ready for this?” he mewled, smirking at me like a mother hamster about to eat her three-legged young.”
+            mastercompo.AddSlave(this);
+            master = mastercompo;
+        }
+
+        public void UnsetMaster()
+        {
+            if (master == null)
+                return;
+            master.RemoveSlave(this);
+            master = null;
+        }
+
+        public void AddSlave(IRenderableComponent slavecompo)
+        {
+            slaves.Add(slavecompo);
+        }
+
+        public void RemoveSlave(IRenderableComponent slavecompo)
+        {
+            if (slaves.Contains(slavecompo))
+                slaves.Remove(slavecompo);
+        }
     }
 }

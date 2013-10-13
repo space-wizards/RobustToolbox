@@ -12,6 +12,7 @@ using GorgonLibrary.Graphics;
 using GorgonLibrary.Sprites;
 using ICSharpCode.SharpZipLib.Core;
 using ICSharpCode.SharpZipLib.Zip;
+using SS13.Graphics;
 using SS13_Shared;
 using Font = GorgonLibrary.Graphics.Font;
 using Image = GorgonLibrary.Graphics.Image;
@@ -29,12 +30,14 @@ namespace ClientServices.Resources
         private readonly Dictionary<string, SpriteInfo> _spriteInfos = new Dictionary<string, SpriteInfo>();
         private readonly Dictionary<string, Sprite> _sprites = new Dictionary<string, Sprite>();
         private readonly Dictionary<string, AnimationCollection> _animationCollections = new Dictionary<string, AnimationCollection>(); 
+        private readonly Dictionary<string, AnimatedSprite> _animatedSprites = new Dictionary<string, AnimatedSprite>(); 
         private readonly List<string> supportedImageExtensions = new List<string> {".png"};
 
         public ResourceManager(IConfigurationManager configurationManager)
         {
             _configurationManager = configurationManager;
             LoadResourceZip();
+            LoadAnimatedSprites();
         }
 
         #region Resource Loading & Disposal
@@ -331,6 +334,14 @@ namespace ClientServices.Resources
             return loadedSprites;
         }
 
+        public void LoadAnimatedSprites()
+        {
+            foreach(var col in _animationCollections)
+            {
+                _animatedSprites.Add(col.Key, new AnimatedSprite(col.Key, col.Value, this));
+            }
+        }
+
         #endregion
 
         #region Resource Retrieval
@@ -381,6 +392,16 @@ namespace ClientServices.Resources
         {
             return _sprites.Keys.ToList();
         } 
+
+        public object GetAnimatedSprite(string key)
+        {
+            key = key.ToLowerInvariant();
+            if (_animationCollections.ContainsKey(key))
+            {
+                return new AnimatedSprite(key, _animationCollections[key], this);
+            }
+            return null;
+        }
 
         /// <summary>
         /// Checks if a sprite with the given key is in the Resource List.

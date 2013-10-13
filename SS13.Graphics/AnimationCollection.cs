@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 
-namespace SS13_Shared
+namespace SS13.Graphics
 {
     [Serializable]
     public class AnimationCollection

@@ -9,6 +9,7 @@ using GameObject;
 using GorgonLibrary;
 using GorgonLibrary.Graphics;
 using Lidgren.Network;
+using SS13.Graphics;
 using SS13.IoC;
 using SS13_Shared;
 using SS13_Shared.GO;
@@ -17,28 +18,25 @@ using Image = GorgonLibrary.Graphics.Image;
 
 namespace CGO
 {
-    public class SpriteComponent : Component, IRenderableComponent, ISpriteComponent
+    public class AnimatedSpriteComponent : Component, IRenderableComponent
     {
-        protected Sprite currentBaseSprite;
-        protected Dictionary<string, Sprite> dirSprites;
+        protected AnimatedSprite sprite;
         protected bool flip;
         protected IRenderableComponent master;
         protected List<IRenderableComponent> slaves;
-        protected Dictionary<string, Sprite> sprites;
         protected bool visible = true;
         public DrawDepth DrawDepth { get; set; }
 
-        public SpriteComponent()
+
+        public AnimatedSpriteComponent()
         {
             Family = ComponentFamily.Renderable;
-            sprites = new Dictionary<string, Sprite>();
-            dirSprites = new Dictionary<string, Sprite>();
             slaves = new List<IRenderableComponent>();
         }
 
         public override Type StateType
         {
-            get { return typeof (SpriteComponentState); }
+            get { return typeof(SpriteComponentState); }
         }
 
         public float Bottom
@@ -46,7 +44,7 @@ namespace CGO
             get
             {
                 return Owner.GetComponent<TransformComponent>(ComponentFamily.Transform).Position.Y +
-                       (GetActiveDirectionalSprite().AABB.Height/2);
+                       (sprite.AABB.Height / 2);
             }
         }
 
@@ -56,84 +54,12 @@ namespace CGO
         {
             get
             {
-                return new RectangleF(0, 0, GetActiveDirectionalSprite().AABB.Width,
-                                      GetActiveDirectionalSprite().AABB.Height);
+                return new RectangleF(0, 0, sprite.AABB.Width,
+                                      sprite.AABB.Height);
             }
         }
-
-        public Sprite GetCurrentSprite()
-        {
-            return GetActiveDirectionalSprite();
-        }
-
-        public Sprite GetSprite(string spriteKey)
-        {
-            if (sprites.ContainsKey(spriteKey))
-                return sprites[spriteKey];
-            else
-                return null;
-        }
-
-        public List<Sprite> GetAllSprites()
-        {
-            return sprites.Values.ToList();
-        }
-
-        public void SetSpriteByKey(string spriteKey)
-        {
-            if (sprites.ContainsKey(spriteKey))
-            {
-                currentBaseSprite = sprites[spriteKey];
-                if (Owner != null)
-                    Owner.SendMessage(this, ComponentMessageType.SpriteChanged);
-            }
-            else
-                throw new Exception("Whoops. That sprite isn't in the dictionary.");
-        }
-
-        public void AddSprite(string spriteKey)
-        {
-            if (sprites.ContainsKey(spriteKey))
-                throw new Exception("That sprite is already added.");
-            if (IoCManager.Resolve<IResourceManager>().SpriteExists(spriteKey))
-                AddSprite(spriteKey, IoCManager.Resolve<IResourceManager>().GetSprite(spriteKey));
-
-            //If there's only one sprite, and the current sprite is explicitly not set, then lets go ahead and set our sprite.
-            if (sprites.Count == 1)
-                SetSpriteByKey(sprites.Keys.First());
-
-            BuildDirectionalSprites();
-        }
-
-        public void AddSprite(string key, Sprite spritetoadd)
-        {
-            if (spritetoadd != null && key != "")
-                sprites.Add(key, spritetoadd);
-            BuildDirectionalSprites();
-        }
-
-        public bool HasSprite(string key)
-        {
-            return sprites.ContainsKey(key);
-        }
-
+        
         #endregion
-
-        private void BuildDirectionalSprites()
-        {
-            dirSprites.Clear();
-            var resMgr = IoCManager.Resolve<IResourceManager>();
-
-            foreach (var curr in sprites)
-            {
-                foreach (string dir in Enum.GetNames(typeof (Direction)))
-                {
-                    string name = (curr.Key + "_" + dir).ToLowerInvariant();
-                    if (resMgr.SpriteExists(name))
-                        dirSprites.Add(name, resMgr.GetSprite(name));
-                }
-            }
-        }
 
         public override void OnAdd(Entity owner)
         {
@@ -142,23 +68,20 @@ namespace CGO
             Owner.SendMessage(this, ComponentMessageType.SpriteChanged);
         }
 
-        public void ClearSprites()
+        public void SetSprite(string name)
         {
-            sprites.Clear();
+            sprite = (AnimatedSprite)IoCManager.Resolve<IResourceManager>().GetAnimatedSprite("player");
         }
 
         public override void HandleNetworkMessage(IncomingEntityComponentMessage message, NetConnection sender)
         {
-            switch ((ComponentMessageType) message.MessageParameters[0])
+            switch ((ComponentMessageType)message.MessageParameters[0])
             {
                 case ComponentMessageType.SetVisible:
-                    visible = (bool) message.MessageParameters[1];
-                    break;
-                case ComponentMessageType.SetSpriteByKey:
-                    SetSpriteByKey((string) message.MessageParameters[1]);
+                    visible = (bool)message.MessageParameters[1];
                     break;
                 case ComponentMessageType.SetDrawDepth:
-                    SetDrawDepth((DrawDepth) message.MessageParameters[1]);
+                    SetDrawDepth((DrawDepth)message.MessageParameters[1]);
                     break;
             }
         }
@@ -175,35 +98,56 @@ namespace CGO
             {
                 case ComponentMessageType.CheckSpriteClick:
                     reply = new ComponentReplyMessage(ComponentMessageType.SpriteWasClicked,
-                                                      WasClicked((PointF) list[0]), DrawDepth);
+                                                      WasClicked((PointF)list[0]), DrawDepth);
                     break;
                 case ComponentMessageType.GetAABB:
                     reply = new ComponentReplyMessage(ComponentMessageType.CurrentAABB, AABB);
                     break;
                 case ComponentMessageType.GetSprite:
-                    reply = new ComponentReplyMessage(ComponentMessageType.CurrentSprite, GetBaseSprite());
-                    break;
-                case ComponentMessageType.SetSpriteByKey:
-                    SetSpriteByKey((string) list[0]);
+                    reply = new ComponentReplyMessage(ComponentMessageType.CurrentSprite, sprite.GetCurrentSprite());
                     break;
                 case ComponentMessageType.SetDrawDepth:
-                    SetDrawDepth((DrawDepth) list[0]);
+                    SetDrawDepth((DrawDepth)list[0]);
                     break;
                 case ComponentMessageType.SlaveAttach:
-                    SetMaster(Owner.EntityManager.GetEntity((int) list[0]));
+                    SetMaster(Owner.EntityManager.GetEntity((int)list[0]));
                     break;
                 case ComponentMessageType.ItemUnEquipped:
                 case ComponentMessageType.Dropped:
                     UnsetMaster();
                     break;
+                case ComponentMessageType.MoveDirection:
+                    switch ((Direction)list[0])
+                    {
+                        case Direction.North:
+                            sprite.Direction = Direction.North;
+                            break;
+                        case Direction.South:
+                            sprite.Direction = Direction.South;
+                            break;
+                        case Direction.East:
+                            sprite.Direction = Direction.East;
+                            break;
+                        case Direction.West:
+                            sprite.Direction = Direction.West;
+                            break;
+                        case Direction.NorthEast:
+                            sprite.Direction = Direction.NorthEast;
+                            break;
+                        case Direction.NorthWest:
+                            sprite.Direction = Direction.NorthWest;
+                            break;
+                        case Direction.SouthEast:
+                            sprite.Direction = Direction.SouthEast;
+                            break;
+                        case Direction.SouthWest:
+                            sprite.Direction = Direction.SouthWest;
+                            break;
+                    }
+                    break;
             }
 
             return reply;
-        }
-
-        protected virtual Sprite GetBaseSprite()
-        {
-            return currentBaseSprite;
         }
 
         protected void SetDrawDepth(DrawDepth p)
@@ -211,43 +155,26 @@ namespace CGO
             DrawDepth = p;
         }
 
-        private Sprite GetActiveDirectionalSprite()
-        {
-            if (currentBaseSprite == null) return null;
-
-            Sprite sprite = currentBaseSprite;
-
-            string dirName =
-                (currentBaseSprite.Name + "_" +
-                 Owner.GetComponent<DirectionComponent>(ComponentFamily.Direction).Direction.ToString()).
-                    ToLowerInvariant();
-
-            if (dirSprites.ContainsKey(dirName))
-                sprite = dirSprites[dirName];
-
-            return sprite;
-        }
-
         protected virtual bool WasClicked(PointF worldPos)
         {
-            if (currentBaseSprite == null || !visible) return false;
+            if (sprite == null || !visible) return false;
 
-            Sprite spriteToCheck = GetActiveDirectionalSprite();
+            Sprite spriteToCheck = sprite.GetCurrentSprite();
 
             var AABB =
                 new RectangleF(
                     Owner.GetComponent<TransformComponent>(ComponentFamily.Transform).Position.X -
-                    (spriteToCheck.Width/2),
+                    (spriteToCheck.Width / 2),
                     Owner.GetComponent<TransformComponent>(ComponentFamily.Transform).Position.Y -
-                    (spriteToCheck.Height/2), spriteToCheck.Width, spriteToCheck.Height);
+                    (spriteToCheck.Height / 2), spriteToCheck.Width, spriteToCheck.Height);
             if (!AABB.Contains(worldPos)) return false;
 
-            var spritePosition = new Point((int) (worldPos.X - AABB.X + spriteToCheck.ImageOffset.X),
-                                           (int) (worldPos.Y - AABB.Y + spriteToCheck.ImageOffset.Y));
+            var spritePosition = new Point((int)(worldPos.X - AABB.X + spriteToCheck.ImageOffset.X),
+                                           (int)(worldPos.Y - AABB.Y + spriteToCheck.ImageOffset.Y));
 
             Image.ImageLockBox imgData = spriteToCheck.Image.GetImageData();
             imgData.Lock(false);
-            Color pixColour = Color.FromArgb((int) (imgData[spritePosition.X, spritePosition.Y]));
+            Color pixColour = Color.FromArgb((int)(imgData[spritePosition.X, spritePosition.Y]));
 
             imgData.Dispose();
             imgData.Unlock();
@@ -257,23 +184,17 @@ namespace CGO
             return true;
         }
 
-        public bool SpriteExists(string key)
-        {
-            if (sprites.ContainsKey(key))
-                return true;
-            return false;
-        }
-
         public override void SetParameter(ComponentParameter parameter)
         {
             base.SetParameter(parameter);
             switch (parameter.MemberName)
             {
                 case "drawdepth":
-                    SetDrawDepth((DrawDepth) Enum.Parse(typeof (DrawDepth), parameter.GetValue<string>(), true));
+                    SetDrawDepth((DrawDepth)Enum.Parse(typeof(DrawDepth), parameter.GetValue<string>(), true));
                     break;
-                case "addsprite":
-                    AddSprite(parameter.GetValue<string>());
+
+                case "sprite":
+                    SetSprite(parameter.GetValue<string>());
                     break;
             }
         }
@@ -294,27 +215,25 @@ namespace CGO
 
             //Render this sprite
             if (!visible) return;
-            if (currentBaseSprite == null) return;
-
-            Sprite spriteToRender = GetActiveDirectionalSprite();
+            if (sprite == null) return;
 
             Vector2D renderPos =
                 ClientWindowData.WorldToScreen(
                     Owner.GetComponent<TransformComponent>(ComponentFamily.Transform).Position);
-            SetSpriteCenter(spriteToRender, renderPos);
+            SetSpriteCenter(renderPos);
 
-            if (Owner.GetComponent<TransformComponent>(ComponentFamily.Transform).Position.X + spriteToRender.AABB.Right <
+            if (Owner.GetComponent<TransformComponent>(ComponentFamily.Transform).Position.X + sprite.AABB.Right <
                 topLeft.X
                 || Owner.GetComponent<TransformComponent>(ComponentFamily.Transform).Position.X > bottomRight.X
                 ||
                 Owner.GetComponent<TransformComponent>(ComponentFamily.Transform).Position.Y +
-                spriteToRender.AABB.Bottom < topLeft.Y
+                sprite.AABB.Bottom < topLeft.Y
                 || Owner.GetComponent<TransformComponent>(ComponentFamily.Transform).Position.Y > bottomRight.Y)
                 return;
 
-            spriteToRender.HorizontalFlip = flip;
-            spriteToRender.Draw();
-            spriteToRender.HorizontalFlip = false;
+            sprite.HorizontalFlip = flip;
+            sprite.Draw();
+            sprite.HorizontalFlip = false;
 
             //Render slaves above
             IEnumerable<SpriteComponent> renderablesAbove = from SpriteComponent c in slaves
@@ -323,21 +242,25 @@ namespace CGO
                                                             where c.DrawDepth >= DrawDepth
                                                             select c;
 
-            foreach (SpriteComponent component in renderablesAbove.ToList())
+            foreach (IRenderableComponent component in renderablesAbove.ToList())
             {
                 component.Render(topLeft, bottomRight);
             }
         }
 
-        public void SetSpriteCenter(string sprite, Vector2D center)
+        public override void Update(float frameTime)
         {
-            SetSpriteCenter(sprites[sprite], center);
+            base.Update(frameTime);
+            if(sprite != null)
+            {
+                sprite.Update(frameTime);
+            }
         }
 
-        public void SetSpriteCenter(Sprite sprite, Vector2D center)
+        public void SetSpriteCenter(Vector2D center)
         {
-            sprite.SetPosition(center.X - (GetActiveDirectionalSprite().AABB.Width/2),
-                               center.Y - (GetActiveDirectionalSprite().AABB.Height/2));
+            sprite.SetPosition(center.X - (sprite.AABB.Width / 2),
+                               center.Y - (sprite.AABB.Height / 2));
         }
 
         public bool IsSlaved()
@@ -382,12 +305,6 @@ namespace CGO
         public override void HandleComponentState(dynamic state)
         {
             DrawDepth = state.DrawDepth;
-            if (state.SpriteKey != null && sprites.ContainsKey(state.SpriteKey) &&
-                currentBaseSprite != sprites[state.SpriteKey])
-            {
-                SetSpriteByKey(state.SpriteKey);
-            }
-
             visible = state.Visible;
         }
     }

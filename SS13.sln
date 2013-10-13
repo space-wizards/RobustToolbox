@@ -50,6 +50,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "GameObject", "GameObject\Ga
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ParticleEditor", "ParticleEditor\ParticleEditor.csproj", "{55D04FF4-90F1-4747-B11C-CE827A813FDC}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SS13.Graphics", "SS13.Graphics\SS13.Graphics.csproj", "{D905F34C-B672-4A4E-85DC-3A43C1DD3F60}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -349,6 +351,22 @@ Global
 		{55D04FF4-90F1-4747-B11C-CE827A813FDC}.Release|Mixed Platforms.Build.0 = Release|Any CPU
 		{55D04FF4-90F1-4747-B11C-CE827A813FDC}.Release|x86.ActiveCfg = Release|x86
 		{55D04FF4-90F1-4747-B11C-CE827A813FDC}.Release|x86.Build.0 = Release|x86
+		{D905F34C-B672-4A4E-85DC-3A43C1DD3F60}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{D905F34C-B672-4A4E-85DC-3A43C1DD3F60}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{D905F34C-B672-4A4E-85DC-3A43C1DD3F60}.Debug|Mixed Platforms.ActiveCfg = Debug|Any CPU
+		{D905F34C-B672-4A4E-85DC-3A43C1DD3F60}.Debug|Mixed Platforms.Build.0 = Debug|Any CPU
+		{D905F34C-B672-4A4E-85DC-3A43C1DD3F60}.Debug|x86.ActiveCfg = Debug|Any CPU
+		{D905F34C-B672-4A4E-85DC-3A43C1DD3F60}.DebugMessaging|Any CPU.ActiveCfg = Debug|Any CPU
+		{D905F34C-B672-4A4E-85DC-3A43C1DD3F60}.DebugMessaging|Any CPU.Build.0 = Debug|Any CPU
+		{D905F34C-B672-4A4E-85DC-3A43C1DD3F60}.DebugMessaging|Mixed Platforms.ActiveCfg = Debug|Any CPU
+		{D905F34C-B672-4A4E-85DC-3A43C1DD3F60}.DebugMessaging|Mixed Platforms.Build.0 = Debug|Any CPU
+		{D905F34C-B672-4A4E-85DC-3A43C1DD3F60}.DebugMessaging|x86.ActiveCfg = Debug|Any CPU
+		{D905F34C-B672-4A4E-85DC-3A43C1DD3F60}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{D905F34C-B672-4A4E-85DC-3A43C1DD3F60}.Release|Any CPU.Build.0 = Release|Any CPU
+		{D905F34C-B672-4A4E-85DC-3A43C1DD3F60}.Release|Mixed Platforms.ActiveCfg = Release|Any CPU
+		{D905F34C-B672-4A4E-85DC-3A43C1DD3F60}.Release|Mixed Platforms.Build.0 = Release|Any CPU
+		{D905F34C-B672-4A4E-85DC-3A43C1DD3F60}.Release|x86.ActiveCfg = Release|x86
+		{D905F34C-B672-4A4E-85DC-3A43C1DD3F60}.Release|x86.Build.0 = Release|x86
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

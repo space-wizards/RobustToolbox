@@ -8,5 +8,6 @@ namespace ClientInterfaces.GOC
         DrawDepth DrawDepth { get; set; }
         float Bottom { get; }
         void Render(Vector2D topLeft, Vector2D bottomRight);
+        void RemoveSlave(IRenderableComponent slave);
     }
 }

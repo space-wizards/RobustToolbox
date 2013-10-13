@@ -15,5 +15,6 @@ namespace ClientInterfaces.Resource
         Image GetImage(string key);
         Font GetFont(string key);
         SpriteInfo? GetSpriteInfo(string key);
+        object GetAnimatedSprite(string key);
     }
 }

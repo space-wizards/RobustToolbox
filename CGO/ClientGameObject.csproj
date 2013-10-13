@@ -108,6 +108,7 @@
     <Compile Include="Component\Mover\SlaveMoverComponent.cs" />
     <Compile Include="Component\Physics\PhysicsComponent.cs" />
     <Compile Include="Component\PlayerActionComp\PlayerActionCompC.cs" />
+    <Compile Include="Component\Renderable\AnimatedSpriteComponent.cs" />
     <Compile Include="Component\Renderable\ParticleSystem.cs" />
     <Compile Include="Component\Renderable\ParticleSystemComponent.cs" />
     <Compile Include="Component\Renderable\Speechbubble.cs" />
@@ -132,7 +133,7 @@
     <Compile Include="PlayerActions\ExampleAction.cs" />
     <Compile Include="PlayerActions\PlayerActionC.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
-    <Compile Include="Component\Renderable\RenderableComponent.cs" />
+    <None Include="Component\Renderable\RenderableComponent.cs" />
     <Compile Include="Status Effects\Bleeding.cs" />
     <Compile Include="Status Effects\Hypoxia.cs" />
     <Compile Include="Status Effects\ToxinInhalation.cs" />
@@ -156,6 +157,10 @@
     <ProjectReference Include="..\Lidgren.Network\Lidgren.Network.csproj">
       <Project>{AE483C29-042E-4226-BA52-D247CE7676DA}</Project>
       <Name>Lidgren.Network</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\SS13.Graphics\SS13.Graphics.csproj">
+      <Project>{D905F34C-B672-4A4E-85DC-3A43C1DD3F60}</Project>
+      <Name>SS13.Graphics</Name>
     </ProjectReference>
     <ProjectReference Include="..\SS13.IoC\SS13.IoC.csproj">
       <Project>{3401031F-35A7-4AE5-8B64-CAFDCB929F0E}</Project>

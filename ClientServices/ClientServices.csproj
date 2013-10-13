@@ -225,6 +225,10 @@
       <Project>{AE483C29-042E-4226-BA52-D247CE7676DA}</Project>
       <Name>Lidgren.Network</Name>
     </ProjectReference>
+    <ProjectReference Include="..\SS13.Graphics\SS13.Graphics.csproj">
+      <Project>{D905F34C-B672-4A4E-85DC-3A43C1DD3F60}</Project>
+      <Name>SS13.Graphics</Name>
+    </ProjectReference>
     <ProjectReference Include="..\SS13.IoC\SS13.IoC.csproj">
       <Project>{3401031F-35A7-4AE5-8B64-CAFDCB929F0E}</Project>
       <Name>SS13.IoC</Name>

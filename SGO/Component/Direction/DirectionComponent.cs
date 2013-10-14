@@ -1,4 +1,5 @@
-﻿using GameObject;
+﻿using System;
+using GameObject;
 using SS13_Shared;
 using SS13_Shared.GO;
 using SS13_Shared.GO.Component.Direction;
@@ -8,6 +9,8 @@ namespace SGO
 {
     public class DirectionComponent : Component, IDirectionComponent
     {
+        private Direction _lastDeterminedDirection = Direction.South;
+
         public DirectionComponent()
         {
             Direction = Direction.South;
@@ -42,23 +45,26 @@ namespace SGO
         private Direction DetermineDirection(Vector2 from, Vector2 to)
         {
             Vector2 delta = to - from;
+            if (delta.Magnitude < 0.1f)
+                return _lastDeterminedDirection;
+
             if (delta.X > 0 && delta.Y > 0)
-                return Direction.SouthEast;
+                _lastDeterminedDirection = Direction.SouthEast;
             if (delta.X > 0 && delta.Y < 0)
-                return Direction.NorthEast;
+                _lastDeterminedDirection = Direction.NorthEast;
             if (delta.X < 0 && delta.Y > 0)
-                return Direction.SouthWest;
+                _lastDeterminedDirection = Direction.SouthWest;
             if (delta.X < 0 && delta.Y < 0)
-                return Direction.NorthWest;
-            if (delta.X > 0 && delta.Y == 0)
-                return Direction.East;
-            if (delta.X < 0 && delta.Y == 0)
-                return Direction.West;
-            if (delta.Y > 0 && delta.X == 0)
-                return Direction.South;
-            if (delta.Y < 0 && delta.X == 0)
-                return Direction.North;
-            return Direction.South;
+                _lastDeterminedDirection = Direction.NorthWest;
+            if (delta.X > 0 && Math.Abs(0-delta.Y) < 0.05f)
+                _lastDeterminedDirection = Direction.East;
+            if (delta.X < 0 && Math.Abs(0 - delta.Y) < 0.05f)
+                _lastDeterminedDirection = Direction.West;
+            if (delta.Y > 0 && Math.Abs(0 - delta.X) < 0.05f)
+                _lastDeterminedDirection = Direction.South;
+            if (delta.Y < 0 && Math.Abs(0 - delta.X) < 0.05f)
+                _lastDeterminedDirection = Direction.North;
+            return _lastDeterminedDirection;
         }
 
         private void SetMoveDir(Direction movedir)

@@ -361,10 +361,10 @@ namespace GameObject
                 !(query.Exclusionset.Any() && query.Exclusionset.Any(t => ComponentTypes.Any(t.IsAssignableFrom)));
 
             //If there are no matching exclusions, and the entity matches the ALL set, the entity is included
-            if (matched && (query.AllSet.Any() && query.AllSet.Any(t => !ComponentTypes.Any(t.IsAssignableFrom))))
+            if (matched && query.AllSet.Any() && query.AllSet.Any(t => !ComponentTypes.Any(t.IsAssignableFrom)))
                 matched = false;
             //If the entity matches so far, and it matches the ONE set, it matches.
-            if (matched && (query.OneSet.Any() && query.OneSet.Any(t => ComponentTypes.Any(t.IsAssignableFrom))))
+            if (matched && query.OneSet.Any() && !query.OneSet.Any(t => ComponentTypes.Any(t.IsAssignableFrom)))
                 matched = false;
             return matched;
         }

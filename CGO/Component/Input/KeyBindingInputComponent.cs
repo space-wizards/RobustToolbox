@@ -25,7 +25,7 @@ namespace CGO
         public KeyBindingInputComponent()
         {
             Family = ComponentFamily.Input;
-            ;
+            
             //Bind to the key binding manager
             var keyBindingManager = IoCManager.Resolve<IKeyBindingManager>();
             keyBindingManager.BoundKeyDown += KeyDown;

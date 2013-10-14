@@ -22,5 +22,8 @@
         public const byte EAST = 2;
         public const byte SOUTH = 4;
         public const byte WEST = 8;
+
+        public const float HumanWalkSpeed = 150f;
+        public const float HumanRunSpeed = 400f;
     }
 }

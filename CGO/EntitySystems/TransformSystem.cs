@@ -50,7 +50,7 @@ namespace CGO.EntitySystems
                         newPosition = EaseExponential(currentTime - t1, transform.Position, newPosition, t2 - t1);
                 }
                 if ((newPosition - transform.Position).Length > 0.01f &&
-                    (!haskbMover || (newPosition - transform.Position).Length > 2 * interpolation * KeyBindingMoverComponent.FastMoveSpeed))
+                    (!haskbMover || (newPosition - transform.Position).Length > 3 * interpolation * KeyBindingMoverComponent.FastMoveSpeed))
                 {
                     transform.TranslateTo(newPosition);
                     if(haskbMover)

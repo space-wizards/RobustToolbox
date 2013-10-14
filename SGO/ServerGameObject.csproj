@@ -87,6 +87,7 @@
     <Compile Include="Component\Physics\PhysicsComponent.cs" />
     <Compile Include="Component\Objectives\ObjectivesComponent.cs" />
     <Compile Include="Component\PlayerActionComp\PlayerActionCompS.cs" />
+    <Compile Include="Component\Renderable\AnimatedSpriteComponent.cs" />
     <Compile Include="Component\StatusEffects\StatusEffectComp.cs" />
     <Compile Include="Component\SVars\SVarsComponent.cs" />
     <Compile Include="Component\Think\ThinkComponent\IThinkComponent.cs" />
@@ -125,6 +126,7 @@
     <None Include="Entity.cs" />
     <Compile Include="EntityManager.cs" />
     <Compile Include="EntityNetworkManager.cs" />
+    <Compile Include="EntitySystems\InputSystem.cs" />
     <Compile Include="EntitySystems\InventorySystem.cs" />
     <Compile Include="EntitySystems\PhysicsSystem.cs" />
     <Compile Include="Exceptions\MissingImplementationException.cs" />

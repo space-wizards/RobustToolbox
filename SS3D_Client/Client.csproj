@@ -214,6 +214,7 @@
     </Content>
     <Content Include="EntityTemplates\Human.xml">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      <SubType>Designer</SubType>
     </Content>
     <Content Include="EntityTemplates\WallMounted.xml">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>

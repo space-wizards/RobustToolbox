@@ -63,9 +63,6 @@
     <CodeAnalysisIgnoreBuiltInRules>false</CodeAnalysisIgnoreBuiltInRules>
   </PropertyGroup>
   <ItemGroup>
-    <Reference Include="ClientInterfaces">
-      <HintPath>..\ClientInterfaces\bin\Release\ClientInterfaces.dll</HintPath>
-    </Reference>
     <Reference Include="Gorgon">
       <HintPath>..\References\Release\Gorgon.dll</HintPath>
     </Reference>
@@ -86,9 +83,9 @@
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\ServerInterfaces\ServerInterfaces.csproj">
-      <Project>{54D36F17-8D71-4DD8-8B29-12CAD489F0D9}</Project>
-      <Name>ServerInterfaces</Name>
+    <ProjectReference Include="..\ClientInterfaces\ClientInterfaces.csproj">
+      <Project>{B31E7B59-7066-4186-AB18-B1BB6DE0E537}</Project>
+      <Name>ClientInterfaces</Name>
     </ProjectReference>
     <ProjectReference Include="..\SS13.IoC\SS13.IoC.csproj">
       <Project>{3401031F-35A7-4AE5-8B64-CAFDCB929F0E}</Project>

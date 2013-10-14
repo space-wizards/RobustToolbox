@@ -26,8 +26,7 @@ namespace CGO
         protected List<IRenderableComponent> slaves;
         protected bool visible = true;
         public DrawDepth DrawDepth { get; set; }
-
-
+        
         public AnimatedSpriteComponent()
         {
             Family = ComponentFamily.Renderable;
@@ -36,7 +35,7 @@ namespace CGO
 
         public override Type StateType
         {
-            get { return typeof(SpriteComponentState); }
+            get { return typeof(AnimatedSpriteComponentState); }
         }
 
         public float Bottom
@@ -73,17 +72,10 @@ namespace CGO
             sprite = (AnimatedSprite)IoCManager.Resolve<IResourceManager>().GetAnimatedSprite("player");
         }
 
-        public override void HandleNetworkMessage(IncomingEntityComponentMessage message, NetConnection sender)
+        public void SetAnimationState(string state, bool loop = true)
         {
-            switch ((ComponentMessageType)message.MessageParameters[0])
-            {
-                case ComponentMessageType.SetVisible:
-                    visible = (bool)message.MessageParameters[1];
-                    break;
-                case ComponentMessageType.SetDrawDepth:
-                    SetDrawDepth((DrawDepth)message.MessageParameters[1]);
-                    break;
-            }
+            sprite.SetAnimationState(state);
+            sprite.SetLoop(loop);
         }
 
         public override ComponentReplyMessage RecieveMessage(object sender, ComponentMessageType type,
@@ -306,6 +298,12 @@ namespace CGO
         {
             DrawDepth = state.DrawDepth;
             visible = state.Visible;
+            if(sprite.Name != state.Name)
+                SetSprite(state.Name);
+            if(sprite.CurrentAnimationStateKey != state.CurrentAnimation)
+                sprite.SetAnimationState(state.CurrentAnimation);
+
+            sprite.SetLoop(state.Loop);
         }
     }
 }

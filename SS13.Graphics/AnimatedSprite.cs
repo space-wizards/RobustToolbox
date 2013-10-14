@@ -15,6 +15,17 @@ namespace SS13.Graphics
         public string Name { get; set; }
         public Dictionary<string, AnimationState> AnimationStates { get; private set; }
         private AnimationState _currentAnimationState;
+
+        public string CurrentAnimationStateKey
+        {
+            get
+            {
+                if (_currentAnimationState != null)
+                    return _currentAnimationState.Name;
+                return null;
+            }
+        }
+
         public string BaseName { get; set; }
 
         public Direction Direction
@@ -110,6 +121,9 @@ namespace SS13.Graphics
         {
             if(_currentAnimationState != null)
             {
+                //Dont change the state to the current state or we'll be stuck always on the first frame :(
+                if (_currentAnimationState.Name == state)
+                    return;
                 _currentAnimationState.Reset();
             }
             _currentAnimationState = AnimationStates[state];

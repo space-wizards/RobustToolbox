@@ -9,8 +9,8 @@ namespace CGO
     //Moves an entity based on key binding input
     public class KeyBindingMoverComponent : Component
     {
-        private const float BaseMoveSpeed = 300f;
-        public const float FastMoveSpeed = 500f;
+        private const float BaseMoveSpeed = Constants.HumanWalkSpeed;
+        public const float FastMoveSpeed = Constants.HumanRunSpeed;
         private const float MoveRateLimit = .06666f; // 15 movements allowed to be sent to the server per second.
 
         private float _currentMoveSpeed;
@@ -57,9 +57,6 @@ namespace CGO
             {
                 case ComponentMessageType.BoundKeyChange:
                     HandleKeyChange(list);
-                    break;
-                case ComponentMessageType.GetMoveDir:
-                    reply = new ComponentReplyMessage(ComponentMessageType.MoveDirection, _movedir);
                     break;
             }
             return reply;

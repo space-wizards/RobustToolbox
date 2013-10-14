@@ -1,4 +1,5 @@
-﻿using GameObject;
+﻿using System.Collections.Generic;
+using GameObject;
 using Lidgren.Network;
 using SS13_Shared;
 using SS13_Shared.GO;
@@ -10,17 +11,37 @@ namespace SGO
     /// </summary>
     public class KeyBindingInputComponent : Component
     {
-        public KeyBindingInputComponent()
-        {
-            Family = ComponentFamily.Input;
-        }
-
         public override void HandleNetworkMessage(IncomingEntityComponentMessage message, NetConnection client)
         {
             var keyFunction = (BoundKeyFunctions) message.MessageParameters[0];
             var keyState = (BoundKeyState) message.MessageParameters[1];
 
             Owner.SendMessage(this, ComponentMessageType.BoundKeyChange, keyFunction, keyState);
+
+            var boolState = keyState == BoundKeyState.Down;
+
+            SetKeyState(keyFunction, boolState);
+        }
+        
+        private readonly Dictionary<BoundKeyFunctions, bool> _keyStates = new Dictionary<BoundKeyFunctions, bool>();
+        
+        public KeyBindingInputComponent()
+        {
+            Family = ComponentFamily.Input;
+            _keyStates = new Dictionary<BoundKeyFunctions, bool>();
+        }
+
+        protected void SetKeyState(BoundKeyFunctions k, bool state)
+        {
+            // Check to see if we have a keyhandler for the key that's been pressed. Discard invalid keys.
+            _keyStates[k] = state;
+        }
+
+        public bool GetKeyState(BoundKeyFunctions k)
+        {
+            if (_keyStates.ContainsKey(k))
+                return _keyStates[k];
+            return false;
         }
     }
 }

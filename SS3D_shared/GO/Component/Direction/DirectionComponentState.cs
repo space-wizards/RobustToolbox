@@ -10,7 +10,7 @@ namespace SS13_Shared.GO.Component.Direction
         public DirectionComponentState(SS13_Shared.Direction dir)
         {
             Direction = dir;
-            Family = ComponentFamily.Mover;
+            Family = ComponentFamily.Direction;
         }
     }
 }

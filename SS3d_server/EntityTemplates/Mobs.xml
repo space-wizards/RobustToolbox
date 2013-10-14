@@ -7,7 +7,11 @@
       <Component name="VelocityComponent"></Component>
       <Component name="DirectionComponent"></Component>
       <Component name="ClickableComponent"></Component>
-      <Component name="SpriteComponent"></Component>
+      <Component name="AnimatedSpriteComponent">
+        <Parameters>
+          <Parameter name="sprite" type="string" value="player" />
+        </Parameters>
+      </Component>
       <Component name="BasicInteractableComponent"></Component>
       <Component name="BasicMoverComponent"></Component>
       <Component name="HumanEquipmentComponent"></Component>

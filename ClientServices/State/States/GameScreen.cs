@@ -1342,6 +1342,9 @@ namespace ClientServices.State.States
             if (area.Calculated)
                 return;
             area.LightPosition = l.Position; //mousePosWorld; // Set the light position
+            ITile t = MapManager.GetITileAt(l.Position);
+            if (t == null)
+                return;
             if (MapManager.GetITileAt(l.Position).Opaque)
             {
                 area.LightPosition = new Vector2D(area.LightPosition.X,
@@ -1408,7 +1411,8 @@ namespace ClientServices.State.States
                 for (int y = yS; y <= yE; y++)
                 {
                     t = (Tile)MapManager.GetITileAt(x * tilespacing, y * tilespacing);
-
+                    if (t == null)
+                        continue;
                     if (t.Opaque)
                     {
                         Vector2D pos = area.ToRelativePosition(t.Position);
@@ -1434,7 +1438,8 @@ namespace ClientServices.State.States
                 for (int y = yStart; y <= yEnd; y++)
                 {
                     t = (Tile)MapManager.GetITileAt(x * tilespacing, y * tilespacing);
-
+                    if (t == null)
+                        continue;
                     if (t.Opaque)
                     {
                         t.Render(WindowOrigin.X, WindowOrigin.Y, tilespacing, _wallBatch);

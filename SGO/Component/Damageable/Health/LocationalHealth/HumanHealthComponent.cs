@@ -10,6 +10,7 @@ using SS13_Shared.GO;
 using SS13_Shared.GO.Component.Damageable.Health.LocationalHealth;
 using ServerInterfaces.Map;
 using ServerInterfaces.Player;
+using ServerInterfaces.Tiles;
 
 namespace SGO
 {
@@ -44,25 +45,25 @@ namespace SGO
             if (statuscomp == null)
                 return;
 
-            if (!map.IsWorldPositionInBounds(Owner.GetComponent<TransformComponent>(ComponentFamily.Transform).Position))
+            ITile t = map.GetTileFromWorldPosition(Owner.GetComponent<TransformComponent>(ComponentFamily.Transform).Position);
+
+            if (t == null)
             {
                 statuscomp.AddEffect("Hypoxia", 5); //Out of map bounds, you is asphyxiatin to death bitch
             }
             else
             {
                 bool hasInternals = HasInternals();
-                Point tilePos =
-                    map.GetTileArrayPositionFromWorldPosition(
-                        Owner.GetComponent<TransformComponent>(ComponentFamily.Transform).Position);
-                if (map.GetTileAt(tilePos.X, tilePos.Y).GasCell.GasAmount(GasType.Toxin) > 0.01 && !hasInternals)
+
+                if (t.GasCell.GasAmount(GasType.Toxin) > 0.01 && !hasInternals)
                     //too much toxin in the air, bro
                 {
                     statuscomp.AddEffect("ToxinInhalation", 20);
                 }
-                if (!hasInternals && map.GetTileAt(tilePos.X, tilePos.Y).GasCell.Pressure < 10 //Less than 10kPa
+                if (!hasInternals && t.GasCell.Pressure < 10 //Less than 10kPa
                     ||
-                    (map.GetTileAt(tilePos.X, tilePos.Y).GasCell.GasAmount(GasType.Oxygen)/
-                     map.GetTileAt(tilePos.X, tilePos.Y).GasCell.TotalGas) < 0.10f) //less than 10% oxygen
+                    (t.GasCell.GasAmount(GasType.Oxygen)/
+                     t.GasCell.TotalGas) < 0.10f) //less than 10% oxygen
                     //Not enough oxygen in the mixture, or pressure is too low.
                     statuscomp.AddEffect("Hypoxia", 5);
             }

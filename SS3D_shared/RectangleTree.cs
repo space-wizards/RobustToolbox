@@ -4,7 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Drawing;
 
-namespace ClientServices.Map
+namespace SS13_Shared
 {
     public class RectangleTree<T>
     {

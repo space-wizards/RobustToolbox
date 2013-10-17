@@ -166,6 +166,7 @@
     <Compile Include="KeyFunctions.cs" />
     <Compile Include="PostProcessingEffects.cs" />
     <Compile Include="ProfilerEnums.cs" />
+    <Compile Include="RectangleTree.cs" />
     <Compile Include="Serialization\SS13Serializer.cs" />
     <Compile Include="Serialization\INetSerializableType.cs" />
     <Compile Include="ServerEnums\LogLevel.cs" />

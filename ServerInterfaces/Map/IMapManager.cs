@@ -12,7 +12,7 @@ namespace ServerInterfaces.Map
         void HandleNetworkMessage(NetIncomingMessage message);
         void NetworkUpdateTile(int x, int y);
         void SaveMap();
-        ITile GetTileAt(int x, int y);
+        ITile GetTileFromIndex(int x, int y);
         void DestroyTile(Point arrayPosition);
         void MoveGasCell(ITile fromTile, ITile toTile);
         bool ChangeTile(int x, int z, Type newType);

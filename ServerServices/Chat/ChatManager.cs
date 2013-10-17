@@ -184,7 +184,9 @@ namespace ServerServices.Chat
                     break;
                 case "tpvreport": // Reports on temp / pressure
                     Point tap = map.GetTileArrayPositionFromWorldPosition(position);
-                    var ti = (Tile) map.GetTileAt(tap.X, tap.Y);
+                    var ti = (Tile) map.GetTileFromIndex(tap.X, tap.Y);
+                    if (ti == null)
+                        break;
                     GasCell ce = ti.gasCell;
                     SendChatMessage(ChatChannel.Default,
                                     "T/P/V: " + ce.GasMixture.Temperature.ToString() + " / " +
@@ -194,7 +196,9 @@ namespace ServerServices.Chat
                 case "gasreport":
 
                     Point p = map.GetTileArrayPositionFromWorldPosition(position);
-                    var t = (Tile) map.GetTileAt(p.X, p.Y);
+                    var t = (Tile) map.GetTileFromIndex(p.X, p.Y);
+                    if (t == null)
+                        break;
                     GasCell c = t.gasCell;
                     for (int i = 0; i < c.GasMixture.gasses.Length; i++)
                     {

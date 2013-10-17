@@ -12,6 +12,7 @@ namespace ServerServices.Tiles
     {
         private readonly int _x;
         private readonly int _y;
+        private readonly Vector2 _worldPosition;
         private readonly MapManager map;
         public GasCell gasCell;
 
@@ -21,6 +22,7 @@ namespace ServerServices.Tiles
             map = _map;
             _x = x;
             _y = y;
+            _worldPosition =  new Vector2(x * _map.tileSpacing, y * _map.tileSpacing);
         }
 
         #region ITile Members
@@ -59,6 +61,11 @@ namespace ServerServices.Tiles
         public bool GasPermeable { get; set; }
 
         public bool GasSink { get; set; }
+
+        public Vector2 worldPosition
+        {
+            get { return _worldPosition; }
+        }
 
         #endregion
 

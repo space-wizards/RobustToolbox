@@ -145,6 +145,8 @@ namespace ClientServices.Map
                     int posY = y*TileSpacing;
 
                     byte index = message.ReadByte();
+                    if (index == 255) // No tile here
+                        continue;
                     var state = (TileState) message.ReadByte();
 
                     Tile created = GenerateNewTile(GetTileString(index), state, new Vector2D(posX, posY));
@@ -157,8 +159,8 @@ namespace ClientServices.Map
                 for (int y = 0; y < _mapLoadWidth; y++)
                 {
                     Tile T = GetTileAt(new Point(x * TileSpacing, y * TileSpacing));
-                    /*if (T == null)
-                        continue;*/
+                    if (T == null)
+                        continue;
                     if (T.ConnectSprite) //Was wall check.
                     {
                         byte i = SetSprite(x, y);

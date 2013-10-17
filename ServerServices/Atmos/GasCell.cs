@@ -115,16 +115,21 @@ namespace ServerServices.Atmos
                         // If out of bounds
                         continue;
 
+                    Tile t = (Tile)m.GetTileFromIndex(arrX + i, arrY + j);
+                    if (t == null)
+                        continue;
+
+
                     if (Math.Abs(i) + Math.Abs(j) == 2) //If its a corner
                     {
                         if (m.IsSaneArrayPosition(arrX+i,arrY) && m.IsSaneArrayPosition(arrX, arrY + i) 
-                            && !m.GetTileAt(arrX + i, arrY).GasPermeable && !m.GetTileAt(arrX, arrY + i).GasPermeable)
+                            && !m.GetTileFromIndex(arrX + i, arrY).GasPermeable && !m.GetTileFromIndex(arrX, arrY + i).GasPermeable)
                             // And it is a corner separated from us by 2 blocking walls
                             continue; //Don't process it. These cells are not connected.
                     }
 
-                    neighbor = (GasCell) m.GetTileAt(arrX + i, arrY + j).GasCell;
-                    if (neighbor.Calculated) // if neighbor's already been calculated, skip it
+                    neighbor = (GasCell)t.GasCell;
+                    if (neighbor == null || neighbor.Calculated) // if neighbor's already been calculated, skip it
                         continue;
 
                     if (neighbor.attachedTile.GasPermeable)

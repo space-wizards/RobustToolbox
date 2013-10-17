@@ -82,12 +82,14 @@ namespace SGO
             var map = IoCManager.Resolve<IMapManager>();
 
             Point tilePositionOld = map.GetTileArrayPositionFromWorldPosition(args.VectorFrom);
-            var previousTile = map.GetTileAt(tilePositionOld.X, tilePositionOld.Y) as Tile;
+            var previousTile = map.GetTileFromIndex(tilePositionOld.X, tilePositionOld.Y) as Tile;
 
             previousTile.TileChange -= TileChanged;
 
             Point tilePositionNew = map.GetTileArrayPositionFromWorldPosition(args.VectorTo);
-            var currentTile = map.GetTileAt(tilePositionNew.X, tilePositionNew.Y) as Tile;
+            var currentTile = map.GetTileFromIndex(tilePositionNew.X, tilePositionNew.Y) as Tile;
+
+            if (currentTile == null) return;
 
             currentTile.TileChange += TileChanged;
 
@@ -98,14 +100,14 @@ namespace SGO
         {
             var map = IoCManager.Resolve<IMapManager>();
 
-            var currentTile = map.GetTileAt((int) tilePos.X, (int) tilePos.Y) as Tile;
+            var currentTile = map.GetTileFromIndex((int) tilePos.X, (int) tilePos.Y) as Tile;
 
             if (currentTile == null) return;
 
             Point tilePositionOld =
                 map.GetTileArrayPositionFromWorldPosition(
                     Owner.GetComponent<TransformComponent>(ComponentFamily.Transform).Position);
-            var previousTile = map.GetTileAt(tilePositionOld.X, tilePositionOld.Y) as Tile;
+            var previousTile = map.GetTileFromIndex(tilePositionOld.X, tilePositionOld.Y) as Tile;
 
             previousTile.TileChange -= TileChanged;
 

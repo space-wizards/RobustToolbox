@@ -47,7 +47,9 @@ namespace ServerServices.Atmos
             {
                 for (int y = 0; y < IoCManager.Resolve<IMapManager>().GetMapHeight(); y++)
                 {
-                    ITile t = IoCManager.Resolve<IMapManager>().GetTileAt(x, y);
+                    ITile t = IoCManager.Resolve<IMapManager>().GetTileFromIndex(x, y);
+                    if (t == null)
+                        continue;
                     t.GasCell = new GasCell(x, y, (Tile) t);
                     if (t.StartWithAtmos)
                     {
@@ -71,7 +73,10 @@ namespace ServerServices.Atmos
                 {
                     for (int y = 0; y < m.GetMapHeight(); y++)
                     {
-                        m.GetTileAt(x, y).GasCell.CalculateNextGasAmount(m);
+                        ITile t = IoCManager.Resolve<IMapManager>().GetTileFromIndex(x, y);
+                        if (t == null)
+                            continue;
+                        t.GasCell.CalculateNextGasAmount(m);
                     }
                 }
 
@@ -80,11 +85,14 @@ namespace ServerServices.Atmos
                 {
                     for (int y = 0; y < m.GetMapHeight(); y++)
                     {
-                        if (m.GetTileAt(x, y).TileState == TileState.Dead && m.GetTileAt(x, y).GasPermeable)
+                        ITile t = IoCManager.Resolve<IMapManager>().GetTileFromIndex(x, y);
+                        if (t == null)
+                            continue;
+                        if (t.TileState == TileState.Dead && t.GasPermeable)
                         {
                             m.DestroyTile(new Point(x, y));
                         }
-                        m.GetTileAt(x, y).GasCell.Update();
+                        t.GasCell.Update();
                     }
                 }
 
@@ -106,7 +114,10 @@ namespace ServerServices.Atmos
             {
                 for (int y = 0; y < m.GetMapHeight(); y++)
                 {
-                    totalGas += m.GetTileAt(x, y).GasCell.TotalGas;
+                    Tile t = (Tile)m.GetTileFromIndex(x, y);
+                    if (t == null)
+                        continue;
+                    totalGas += t.GasCell.TotalGas;
                 }
             }
 
@@ -127,7 +138,10 @@ namespace ServerServices.Atmos
             for (int x = 0; x < m.GetMapWidth(); x++)
                 for (int y = 0; y < m.GetMapHeight(); y++)
                 {
-                    displayBitsWritten = m.GetTileAt(x, y).GasCell.PackDisplayBytes(records, true);
+                    Tile t = (Tile)m.GetTileFromIndex(x, y);
+                    if (t == null)
+                        continue;
+                    displayBitsWritten = t.GasCell.PackDisplayBytes(records, true);
                 }
             NetOutgoingMessage msg = CreateAtmosUpdatePacket(records);
             if (msg == null)
@@ -147,7 +161,10 @@ namespace ServerServices.Atmos
                 for (int x = 0; x < m.GetMapWidth(); x++)
                     for (int y = 0; y < m.GetMapHeight(); y++)
                     {
-                        int displayBitsWritten = m.GetTileAt(x, y).GasCell.PackDisplayBytes(records);
+                        ITile t = IoCManager.Resolve<IMapManager>().GetTileFromIndex(x, y);
+                        if (t == null)
+                            continue;
+                        int displayBitsWritten = t.GasCell.PackDisplayBytes(records);
                         if (displayBitsWritten > numberOfGasTypes)
                             sendUpdate = true;
                     }

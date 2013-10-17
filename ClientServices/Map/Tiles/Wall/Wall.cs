@@ -178,108 +178,115 @@ namespace ClientServices.Tiles
 
             if (l < x)
             {
-                if (!surroundingTiles[1].Opaque || (surroundingTiles[1].Opaque && surroundingTiles[2].Opaque))
+                if (!IsOpaque(1) || (IsOpaque(1) && IsOpaque(2)))
                     RenderOccluder(Direction.East, from, x, y, tileSpacing);
 
-                if (surroundingTiles[2].surroundingTiles[3].Opaque && !surroundingTiles[3].Opaque)
+                if (surroundingTiles[2] != null && surroundingTiles[2].surroundingTiles[3] != null && surroundingTiles[2].surroundingTiles[3].Opaque && !IsOpaque(3))
                     RenderOccluder(Direction.West, from, x, y, tileSpacing);
 
                 if (l < y)
                 {
-                    if (!surroundingTiles[2].Opaque || (surroundingTiles[2].Opaque && !surroundingTiles[0].Opaque))
+                    if (!IsOpaque(2) || (IsOpaque(2) && !IsOpaque(0)))
                     {
                         RenderOccluder(Direction.North, from, x, y, tileSpacing);
                     }
-                    if (!surroundingTiles[2].Opaque)
+                    if (!IsOpaque(2))
                         RenderOccluder(Direction.West, from, x, y, tileSpacing);
                 }
                 else if (l > y + tileSpacing)
                 {
-                    if (!surroundingTiles[0].Opaque ||
-                        (surroundingTiles[0].Opaque && !surroundingTiles[2].Opaque &&
-                         (l < x + tileSpacing && !surroundingTiles[1].Opaque)))
+                    if (!IsOpaque(0) || (IsOpaque(0) && !IsOpaque(2) &&
+                         (l < x + tileSpacing && !IsOpaque(1))))
                         RenderOccluder(Direction.North, from, x, y, tileSpacing);
-                    if (surroundingTiles[1].Opaque && surroundingTiles[3].Opaque)
+                    if (IsOpaque(1) && IsOpaque(3))
                         RenderOccluder(Direction.North, from, x, y, tileSpacing);
                 }
                 else if (l >= y && l <= y + tileSpacing)
                 {
-                    if (!surroundingTiles[2].Opaque || (surroundingTiles[2].Opaque && !surroundingTiles[0].Opaque))
+                    if (!IsOpaque(2) || (IsOpaque(2) && !IsOpaque(0)))
                     {
                         RenderOccluder(Direction.North, from, x, y, tileSpacing);
                     }
-                    if (!surroundingTiles[2].Opaque)
+                    if (!IsOpaque(2))
                         RenderOccluder(Direction.West, from, x, y, tileSpacing);
 
-                    if (!surroundingTiles[0].Opaque || (surroundingTiles[0].Opaque && !surroundingTiles[2].Opaque))
+                    if (!IsOpaque(0) || (IsOpaque(0) && !IsOpaque(2)))
                         RenderOccluder(Direction.North, from, x, y, tileSpacing);
                 }
             }
             else if (l > x + tileSpacing)
             {
-                if (!surroundingTiles[3].Opaque || (surroundingTiles[3].Opaque && surroundingTiles[2].Opaque))
+                if (!IsOpaque(3) || (IsOpaque(3) && IsOpaque(2)))
                     RenderOccluder(Direction.West, from, x, y, tileSpacing);
-                if (surroundingTiles[2].surroundingTiles[1].Opaque && !surroundingTiles[1].Opaque)
+                if (surroundingTiles[2] != null && surroundingTiles[2].surroundingTiles[1] != null &&
+                    surroundingTiles[2].surroundingTiles[1].Opaque && !IsOpaque(1))
                     RenderOccluder(Direction.East, from, x, y, tileSpacing);
 
                 if (l < y)
                 {
-                    if (!surroundingTiles[2].Opaque || (surroundingTiles[2].Opaque && !surroundingTiles[0].Opaque))
+                    if (!IsOpaque(2) || (IsOpaque(2) && !IsOpaque(0)))
                     {
                         RenderOccluder(Direction.North, from, x, y, tileSpacing);
                     }
-                    if (!surroundingTiles[2].Opaque)
+                    if (!IsOpaque(2))
                         RenderOccluder(Direction.East, from, x, y, tileSpacing);
                 }
                 else if (l > y + tileSpacing)
                 {
-                    if (!surroundingTiles[0].Opaque ||
-                        (surroundingTiles[0].Opaque && !surroundingTiles[2].Opaque &&
-                         (l < x + tileSpacing && !surroundingTiles[1].Opaque)))
+                    if (!IsOpaque(0) ||
+                        (IsOpaque(0) && !IsOpaque(2) &&
+                         (l < x + tileSpacing && !IsOpaque(1))))
                         RenderOccluder(Direction.North, from, x, y, tileSpacing);
-                    if (surroundingTiles[1].Opaque)
+                    if (IsOpaque(1))
                         RenderOccluder(Direction.North, from, x, y, tileSpacing);
                 }
                 else if (l >= y && l <= y + tileSpacing)
                 {
-                    if (!surroundingTiles[2].Opaque || (surroundingTiles[2].Opaque && !surroundingTiles[0].Opaque))
+                    if (!IsOpaque(2) || (IsOpaque(2) && !IsOpaque(0)))
                     {
                         RenderOccluder(Direction.North, from, x, y, tileSpacing);
                     }
-                    if (!surroundingTiles[2].Opaque)
+                    if (!IsOpaque(2))
                         RenderOccluder(Direction.East, from, x, y, tileSpacing);
-                    if (!surroundingTiles[0].Opaque || (surroundingTiles[0].Opaque && !surroundingTiles[2].Opaque))
+                    if (!IsOpaque(0) || (IsOpaque(0) && !IsOpaque(2)))
                         RenderOccluder(Direction.North, from, x, y, tileSpacing);
                 }
             }
             else if (l >= x && l <= x + tileSpacing)
             {
-                if (!surroundingTiles[1].Opaque || (surroundingTiles[1].Opaque && surroundingTiles[2].Opaque))
+                if (!IsOpaque(1) || (IsOpaque(1) && IsOpaque(2)))
                     RenderOccluder(Direction.East, from, x, y, tileSpacing);
-                if (!surroundingTiles[3].Opaque || (surroundingTiles[3].Opaque && surroundingTiles[2].Opaque))
+                if (!IsOpaque(3) || (IsOpaque(3) && IsOpaque(2)))
                     RenderOccluder(Direction.West, from, x, y, tileSpacing);
 
                 if (l < y)
                 {
-                    if (!surroundingTiles[2].Opaque || (surroundingTiles[2].Opaque && !surroundingTiles[0].Opaque))
+                    if (!IsOpaque(2) || (IsOpaque(2) && !IsOpaque(0)))
                         RenderOccluder(Direction.North, from, x, y, tileSpacing);
                 }
                 else if (l > y + tileSpacing)
                 {
-                    if (!surroundingTiles[0].Opaque ||
-                        (surroundingTiles[0].Opaque && !surroundingTiles[2].Opaque &&
-                         (l < x + tileSpacing && !surroundingTiles[1].Opaque)))
+                    if (!IsOpaque(0) ||
+                        (IsOpaque(0) && !IsOpaque(2) &&
+                         (l < x + tileSpacing && !IsOpaque(1))))
                         RenderOccluder(Direction.North, from, x, y, tileSpacing);
                     RenderOccluder(Direction.North, from, x, y, tileSpacing);
                 }
                 else if (l >= y && l <= y + tileSpacing)
                 {
-                    if (!surroundingTiles[2].Opaque || (surroundingTiles[2].Opaque && !surroundingTiles[0].Opaque))
+                    if (!IsOpaque(2) || (IsOpaque(2) && !IsOpaque(0)))
                         RenderOccluder(Direction.North, from, x, y, tileSpacing);
-                    if (!surroundingTiles[0].Opaque || (surroundingTiles[0].Opaque && !surroundingTiles[2].Opaque))
+                    if (!IsOpaque(0) || (IsOpaque(0) && !IsOpaque(2)))
                         RenderOccluder(Direction.North, from, x, y, tileSpacing);
                 }
             }
+        }
+
+        private bool IsOpaque(int i)
+        {
+            if (surroundingTiles[i] != null && surroundingTiles[i].Opaque)
+                return true;
+            return false;
         }
 
         public override void RenderPosOffset(float x, float y, int tileSpacing, Vector2D lightPosition)
@@ -302,13 +309,13 @@ namespace ClientServices.Tiles
             if (lightVec.Y > 0)
                 lightVec.Y = 3;
 
-            if (surroundingTiles[0] != null && surroundingTiles[0].Opaque && lightVec.Y < 0) // tile to north
+            if (surroundingTiles[0] != null && IsOpaque(0) && lightVec.Y < 0) // tile to north
                 lightVec.Y = 2;
-            if (surroundingTiles[1] != null && surroundingTiles[1].Opaque && lightVec.X > 0)
+            if (surroundingTiles[1] != null && IsOpaque(1) && lightVec.X > 0)
                 lightVec.X = -2;
-            if (surroundingTiles[2] != null && surroundingTiles[2].Opaque && lightVec.Y > 0)
+            if (surroundingTiles[2] != null && IsOpaque(2) && lightVec.Y > 0)
                 lightVec.Y = -2;
-            if (surroundingTiles[3] != null && surroundingTiles[3].Opaque && lightVec.X < 0)
+            if (surroundingTiles[3] != null && IsOpaque(3) && lightVec.X < 0)
                 lightVec.X = 2;
 
             Gorgon.CurrentRenderTarget.FilledRectangle(x + lightVec.X, y + lightVec.Y, sideSprite.Width + 1,

@@ -130,14 +130,12 @@ namespace SGO
             if (disabled && !force) return;
 
             var map = IoCManager.Resolve<IMapManager>();
-            Point occupiedTilePos =
-                map.GetTileArrayPositionFromWorldPosition(
-                    Owner.GetComponent<TransformComponent>(ComponentFamily.Transform).Position);
-            var occupiedTile = map.GetTileAt(occupiedTilePos.X, occupiedTilePos.Y) as Tile;
+            Tile t = (Tile)map.GetTileFromWorldPosition(Owner.GetComponent<TransformComponent>(ComponentFamily.Transform).Position);
             Open = true;
             Owner.SendMessage(this, ComponentMessageType.DisableCollision);
             Owner.SendMessage(this, ComponentMessageType.SetSpriteByKey, openSprite);
-            occupiedTile.GasPermeable = true;
+            if(t != null)
+                t.GasPermeable = true;
         }
 
         private void CloseDoor(bool force = false)
@@ -145,41 +143,38 @@ namespace SGO
             if (disabled && !force) return;
 
             var map = IoCManager.Resolve<IMapManager>();
-            Point occupiedTilePos =
-                map.GetTileArrayPositionFromWorldPosition(
-                    Owner.GetComponent<TransformComponent>(ComponentFamily.Transform).Position);
-            var occupiedTile = map.GetTileAt(occupiedTilePos.X, occupiedTilePos.Y) as Tile;
+            Tile t = (Tile)map.GetTileFromWorldPosition(Owner.GetComponent<TransformComponent>(ComponentFamily.Transform).Position);
+            Open = true;
             Open = false;
             timeOpen = 0;
             Owner.SendMessage(this, ComponentMessageType.EnableCollision);
             Owner.SendMessage(this, ComponentMessageType.SetSpriteByKey, closedSprite);
-            occupiedTile.GasPermeable = false;
+            if (t != null)
+                t.GasPermeable = false;
         }
 
         private void SetImpermeable()
         {
             var map = IoCManager.Resolve<IMapManager>();
-            Point occupiedTilePos =
-                map.GetTileArrayPositionFromWorldPosition(
-                    Owner.GetComponent<TransformComponent>(ComponentFamily.Transform).Position);
-            var occupiedTile = map.GetTileAt(occupiedTilePos.X, occupiedTilePos.Y) as Tile;
-            occupiedTile.GasPermeable = false;
+            Tile t = (Tile)map.GetTileFromWorldPosition(Owner.GetComponent<TransformComponent>(ComponentFamily.Transform).Position);
+            if (t != null)
+                t.GasPermeable = false;
         }
 
         private void SetImpermeable(Vector2 position)
         {
             var map = IoCManager.Resolve<IMapManager>();
-            Point occupiedTilePos = map.GetTileArrayPositionFromWorldPosition(position);
-            var occupiedTile = map.GetTileAt(occupiedTilePos.X, occupiedTilePos.Y) as Tile;
-            occupiedTile.GasPermeable = false;
+            Tile t = (Tile)map.GetTileFromWorldPosition(Owner.GetComponent<TransformComponent>(ComponentFamily.Transform).Position);
+            if (t != null)
+                t.GasPermeable = false;
         }
 
         private void SetPermeable(Vector2 position)
         {
             var map = IoCManager.Resolve<IMapManager>();
-            Point occupiedTilePos = map.GetTileArrayPositionFromWorldPosition(position);
-            var occupiedTile = map.GetTileAt(occupiedTilePos.X, occupiedTilePos.Y) as Tile;
-            occupiedTile.GasPermeable = true;
+            Tile t = (Tile)map.GetTileFromWorldPosition(Owner.GetComponent<TransformComponent>(ComponentFamily.Transform).Position);
+            if (t != null)
+                t.GasPermeable = true;
         }
 
         public override void SetParameter(ComponentParameter parameter)

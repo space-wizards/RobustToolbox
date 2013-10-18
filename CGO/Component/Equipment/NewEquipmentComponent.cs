@@ -15,5 +15,21 @@ namespace CGO
         {
             Family = ComponentFamily.Equipment;
         }
+
+        public override void HandleComponentState(dynamic state)
+        {
+            Dictionary<EquipmentSlot, Entity> newInventory = new Dictionary<EquipmentSlot, Entity>();
+
+            foreach (KeyValuePair<EquipmentSlot, int> curr in state.EquippedEntities)
+            {
+                Entity retEnt = Owner.EntityManager.GetEntity(curr.Value);
+                newInventory.Add(curr.Key, retEnt);
+            }
+
+            //Find differences and raise event?
+
+            EquippedEntities = newInventory;
+            ActiveSlots = state.ActiveSlots;
+        }
     }
 }

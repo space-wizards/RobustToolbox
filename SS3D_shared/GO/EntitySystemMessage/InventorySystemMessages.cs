@@ -20,7 +20,7 @@ namespace SS13_Shared.GO
 
     //Client sends this when it drops something.
     //Server does not send this.
-    //Action: Server sets object location to ground, removes object from all related compos - compos fire events that change sprite, unattach etc.
+    //Action: Server sets object location to ground, removes object from all related compos - compos fire events that change sprite, detach etc.
     [Serializable]
     public class InventorySystemDrop : EntitySystemMessage
     {

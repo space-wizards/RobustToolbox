@@ -1,10 +1,13 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Linq;
+using System.Xml.Linq;
 using GameObject;
 using Lidgren.Network;
 using SGO.Item.ItemCapability;
 using SS13_Shared;
 using SS13_Shared.GO;
+using SS13_Shared.GO.Equipment;
 
 namespace SGO
 {
@@ -18,6 +21,63 @@ namespace SGO
             Family = ComponentFamily.Equipment;
         }
 
-        //Handle possible slots with extended parameters.
+        public override void HandleExtendedParameters(XElement extendedParameters)
+        {
+            activeSlots.Clear();
+
+            foreach (XElement param in extendedParameters.Descendants("equipmentSlot"))
+            {
+                if (param.Attribute("slot") != null)
+                    activeSlots.Add((EquipmentSlot)Enum.Parse(typeof(EquipmentSlot), param.Attribute("slot").Value));
+            }
+        }
+
+        public bool RemoveEntity(Entity user, Entity toRemove)
+        {
+            if (equippedEntities.Any(x => x.Value == toRemove))
+            {
+                EquippableComponent eqCompo = toRemove.GetComponent<EquippableComponent>(ComponentFamily.Equippable);
+
+                if(eqCompo != null)
+                    eqCompo.currentWearer = null;
+
+                equippedEntities[equippedEntities.First(x => x.Value == toRemove).Key] = null;
+                return true;
+            }
+            else
+            {
+                return false;
+            }
+        }
+
+        public bool AddEntity(Entity user, Entity toAdd)
+        {
+            if (equippedEntities.Any(x => x.Value == toAdd))
+                return false;
+            else
+            {
+                EquippableComponent eqCompo = toAdd.GetComponent<EquippableComponent>(ComponentFamily.Equippable);
+                if (eqCompo != null)
+                {
+                    if (activeSlots.Contains(eqCompo.wearloc) && !equippedEntities.ContainsKey(eqCompo.wearloc))
+                    {
+                        equippedEntities.Add(eqCompo.wearloc, toAdd);
+                        eqCompo.currentWearer = this.Owner;
+
+                        return true;
+                    }
+                    else
+                        return false;
+                }
+                else
+                    return false;
+            }
+        }
+
+        public override ComponentState GetComponentState()
+        {
+            Dictionary<EquipmentSlot, int> equipped = equippedEntities.Select(x => new KeyValuePair<EquipmentSlot, int>(x.Key, x.Value.Uid)).ToDictionary(key => key.Key, va => va.Value);
+            return new EquipmentState(equipped, activeSlots);
+        }
     }
 }

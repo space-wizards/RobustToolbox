@@ -15,7 +15,7 @@ namespace SGO
             Family = ComponentFamily.Equippable;
         }
 
-        public Entity currentWearer { get; private set; }
+        public Entity currentWearer { get; set; }
 
         public override ComponentReplyMessage RecieveMessage(object sender, ComponentMessageType type,
                                                              params object[] list)

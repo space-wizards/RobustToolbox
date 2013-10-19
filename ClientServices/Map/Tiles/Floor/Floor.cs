@@ -6,8 +6,8 @@ namespace ClientServices.Tiles
 {
     public class Floor : Tile
     {
-        public Floor(TileState state, Vector2D position, Point tilePosition)
-            : base(state, position, tilePosition)
+        public Floor(TileState state, Vector2D position)
+            : base(state, position)
         {
             ConnectSprite = false;
             name = "Floor";

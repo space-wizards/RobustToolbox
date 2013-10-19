@@ -44,18 +44,18 @@ namespace ClientServices.Placement.Modes
             if (currentTile == null || !currentTile.IsSolidTile())
                 return false;
 
-            ITile wallTop = currentMap.GetITileAt(currentTile.TilePosition.X, currentTile.TilePosition.Y - 1);
+            ITile wallTop = currentMap.GetITileAt(new Vector2D(currentTile.Position.X, currentTile.Position.Y - currentMap.GetTileSpacing()));
             if (wallTop == null)
                 return false;
 
-            ITile wallTopNorth = currentMap.GetITileAt(wallTop.TilePosition.X, wallTop.TilePosition.Y - 1);
-            ITile wallCurrentSouth = currentMap.GetITileAt(currentTile.TilePosition.X, currentTile.TilePosition.Y + 1);
+            ITile wallTopNorth = currentMap.GetITileAt(new Vector2D(wallTop.Position.X, wallTop.Position.Y - currentMap.GetTileSpacing()));
+            ITile wallCurrentSouth = currentMap.GetITileAt(new Vector2D(currentTile.Position.X, currentTile.Position.Y - currentMap.GetTileSpacing()));
 
-            ITile wallTopEast = currentMap.GetITileAt(wallTop.TilePosition.X + 1, wallTop.TilePosition.Y);
-            ITile wallCurrentEast = currentMap.GetITileAt(currentTile.TilePosition.X + 1, currentTile.TilePosition.Y);
+            ITile wallTopEast = currentMap.GetITileAt(new Vector2D(wallTop.Position.X + currentMap.GetTileSpacing(), wallTop.Position.Y));
+            ITile wallCurrentEast = currentMap.GetITileAt(new Vector2D(currentTile.Position.X + currentMap.GetTileSpacing(), currentTile.Position.Y));
 
-            ITile wallTopWest = currentMap.GetITileAt(wallTop.TilePosition.X - 1, wallTop.TilePosition.Y);
-            ITile wallCurrentWest = currentMap.GetITileAt(currentTile.TilePosition.X - 1, currentTile.TilePosition.Y);
+            ITile wallTopWest = currentMap.GetITileAt(new Vector2D(wallTop.Position.X - currentMap.GetTileSpacing(), wallTop.Position.Y));
+            ITile wallCurrentWest = currentMap.GetITileAt(new Vector2D(currentTile.Position.X - currentMap.GetTileSpacing(), currentTile.Position.Y));
 
             switch (pManager.Direction)
             {

@@ -51,15 +51,9 @@ namespace ServerServices.Atmos
                     t.GasCell.InitSTP();
             }
 
-            foreach(Tile t in m.GetITilesIn(new RectangleF(0, 0, m.GetMapWidth() * m.GetTileSpacing(), m.GetMapHeight() * m.GetTileSpacing())))
+            foreach(Tile t in m.GetITilesIn(m.GetWorldArea()))
             {
-                t.gasCell = new GasCell(t);
-                if(t.StartWithAtmos)
-                {
-                    t.gasCell.InitSTP();
-                    t.gasCell.SetNeighbours(m);
-                }
-
+                t.gasCell.SetNeighbours(m);
             }
         }
 

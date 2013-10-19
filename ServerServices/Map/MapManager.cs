@@ -467,8 +467,7 @@ namespace ServerServices.Map
 
             worldArea = new RectangleF(0, 0, mapWidth * tileSpacing, mapHeight * tileSpacing);
 
-            tileArray = new RectangleTree<Tile>(TilePos, new Rectangle(-(mapWidth / 2) * tileSpacing, -(mapHeight / 2) * tileSpacing,
-                                                                 mapWidth * tileSpacing, mapHeight * tileSpacing));
+            tileArray = new RectangleTree<Tile>(TilePos, new Rectangle(0, 0, mapWidth * tileSpacing, mapHeight * tileSpacing));
 
             while (!sr.EndOfStream)
             {
@@ -490,8 +489,7 @@ namespace ServerServices.Map
             LogManager.Log("Cannot find map. Generating blank map.", LogLevel.Warning);
             mapWidth = 50;
             mapHeight = 50;
-            tileArray = new RectangleTree<Tile>(TilePos, new Rectangle(-(mapWidth / 2) * tileSpacing, -(mapHeight / 2) * tileSpacing,
-                                                                             mapWidth * tileSpacing, mapHeight * tileSpacing));
+            tileArray = new RectangleTree<Tile>(TilePos, new Rectangle(0, 0, mapWidth * tileSpacing, mapHeight * tileSpacing));
 
             worldArea = new RectangleF(0, 0, mapWidth * tileSpacing, mapHeight * tileSpacing);
 

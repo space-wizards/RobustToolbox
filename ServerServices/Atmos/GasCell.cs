@@ -136,12 +136,13 @@ namespace ServerServices.Atmos
                     if (Math.Abs(i) + Math.Abs(j) == 2) //If its a corner
                     {
                         if (!neighbours[i + 1, 1].GasPermeable && !neighbours[1, j + 1].GasPermeable)
-                            //&& !m.GetTileFromIndex(arrX + i, arrY).GasPermeable && !m.GetTileFromIndex(arrX, arrY + i).GasPermeable)
+                        {
                             // And it is a corner separated from us by 2 blocking walls
                             continue; //Don't process it. These cells are not connected.
+                        }
                     }
 
-                    if (neighbor == null || neighbor.Calculated) // if neighbor's already been calculated, skip it
+                    if (neighbor.Calculated) // if neighbor's already been calculated, skip it
                         continue;
 
                     if (neighbor.attachedTile.GasPermeable)

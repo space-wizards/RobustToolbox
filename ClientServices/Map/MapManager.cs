@@ -80,14 +80,12 @@ namespace ClientServices.Map
 
         public bool LoadTileMap(NetIncomingMessage message)
         {
-            var _mapLoadWidth = message.ReadInt32();
-            var _mapLoadHeight = message.ReadInt32();
+            int _mapWidth = message.ReadInt32();
+            int _mapHeight = message.ReadInt32();
 
-            _mapWidth = _mapLoadWidth;
-            _mapHeight = _mapLoadHeight;
 
             _tileArray = new RectangleTree<Tile>(TilePos,
-                                                 new Rectangle(-(_mapWidth/2)*TileSpacing, -(_mapHeight/2)*TileSpacing,
+                                                 new Rectangle(0, 0,
                                                                  _mapWidth*TileSpacing, _mapHeight*TileSpacing));
 
             while (message.PositionInBytes < message.LengthBytes)
@@ -101,7 +99,7 @@ namespace ClientServices.Map
                 _tileArray.Add(newTile);
             }
 
-            foreach (Tile t in _tileArray.GetItems(new Rectangle(0, 0, _mapLoadWidth * TileSpacing, _mapLoadHeight * TileSpacing)))
+            foreach (Tile t in _tileArray.GetItems(new Rectangle(0, 0, _mapWidth * TileSpacing, _mapHeight * TileSpacing)))
             {
                 t.surroundingTiles[0] = GetTileN(t.Position.X, t.Position.Y);
                 t.surroundingTiles[1] = GetTileE(t.Position.X, t.Position.Y);

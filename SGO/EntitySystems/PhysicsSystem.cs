@@ -44,7 +44,7 @@ namespace SGO.EntitySystems
             var transform = entity.GetComponent<TransformComponent>(ComponentFamily.Transform);
             var physics = entity.GetComponent<PhysicsComponent>(ComponentFamily.Physics);
             ITile t =
-                IoCManager.Resolve<IMapManager>().GetTileFromWorldPosition(transform.Position);
+                IoCManager.Resolve<IMapManager>().GetITileAt(transform.Position);
             if (t == null)
                 return;
             var gasVel = t.GasCell.GasVelocity;

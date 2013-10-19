@@ -72,9 +72,6 @@ namespace ServerServices.Placement
             float yRcv = msg.ReadFloat();
             var dirRcv = (Direction) msg.ReadByte();
 
-            int tileX = msg.ReadInt32();
-            int tileY = msg.ReadInt32();
-
             IPlayerSession session = IoCManager.Resolve<IPlayerManager>().GetSessionByConnection(msg.SenderConnection);
             if (session.attachedEntity == null)
                 return; //Don't accept placement requests from nobodys
@@ -83,6 +80,10 @@ namespace ServerServices.Placement
             Boolean isAdmin =
                 IoCManager.Resolve<IPlayerManager>().GetSessionByConnection(msg.SenderConnection).adminPermissions.
                     isAdmin;
+
+            float a = (float)Math.Floor(xRcv / mapMgr.tileSpacing);
+            float b = (float)Math.Floor(yRcv / mapMgr.tileSpacing);
+            Vector2 tilePos = new Vector2(a * mapMgr.tileSpacing, b * mapMgr.tileSpacing);
 
             if (permission != null || true)
                 //isAdmin) Temporarily disable actual permission check / admin check. REENABLE LATER
@@ -115,15 +116,13 @@ namespace ServerServices.Placement
                             new Vector2(xRcv, yRcv));
                         if(created.HasComponent(ComponentFamily.Direction))
                             created.GetComponent<IDirectionComponent>(ComponentFamily.Direction).Direction = dirRcv;
-                        created.SendMessage(this, ComponentMessageType.WallMountTile, new Vector2(tileX, tileY));
+                        created.SendMessage(this, ComponentMessageType.WallMountTile, tilePos);
                     }
                 }
                 else
                 {
-                    Point arrayPos =
-                        IoCManager.Resolve<IMapManager>().GetTileArrayPositionFromWorldPosition(new Vector2(xRcv, yRcv));
-                    mapMgr.ChangeTile(arrayPos.X, arrayPos.Y, tileType);
-                    mapMgr.NetworkUpdateTile(arrayPos.X, arrayPos.Y);
+                    mapMgr.ChangeTile(tilePos, tileType);
+                    mapMgr.NetworkUpdateTile(tilePos);
                 }
             }
             else //They are not allowed to request this. Send 'PlacementFailed'. TBA

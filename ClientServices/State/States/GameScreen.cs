@@ -1390,31 +1390,6 @@ namespace ClientServices.State.States
             RectangleF lightArea = new RectangleF(area.LightPosition - (area.LightAreaSize / 2),
                 area.LightAreaSize);
 
-            /*Point centerTile = MapManager.GetTileArrayPositionFromWorldPosition(area.LightPosition);
-            int tilespacing = MapManager.GetTileSpacing();
-            int xS = Math.Max(0, centerTile.X - (int) Math.Round((area.LightAreaSize.X/tilespacing)/2));
-            int yS = Math.Max(0, centerTile.Y - (int) Math.Round((area.LightAreaSize.Y/tilespacing)/2));
-            int xE = Math.Min(centerTile.X + (int) Math.Round((area.LightAreaSize.X/tilespacing)/2),
-                              MapManager.GetMapWidth() - 1);
-            int yE = Math.Min(centerTile.Y + (int) Math.Round((area.LightAreaSize.Y/tilespacing)/2),
-                              MapManager.GetMapHeight() - 1);
-
-            Tile t;
-            for (int x = xS; x <= xE; x++)
-            {
-                for (int y = yS; y <= yE; y++)
-                {
-                    t = (Tile)MapManager.GetITileAt(x * tilespacing, y * tilespacing);
-                    if (t == null)
-                        continue;
-                    if (t.Opaque)
-                    {
-                        Vector2D pos = area.ToRelativePosition(t.Position);
-                        t.RenderPos(pos.X, pos.Y, tilespacing, (int) area.LightAreaSize.X);
-                    }
-                }
-            }*/
-
             foreach (Tile t in MapManager.GetITilesIn(lightArea))
             {
                 if (t.Opaque)
@@ -1456,29 +1431,6 @@ namespace ClientServices.State.States
 
                 t.RenderTop(WindowOrigin.X, WindowOrigin.Y, tilespacing, _wallTopsBatch);
             }
-
-            /*for (int x = xStart; x <= xEnd; x++)
-            {
-                for (int y = yStart; y <= yEnd; y++)
-                {
-                    t = (Tile)MapManager.GetITileAt(x * tilespacing, y * tilespacing);
-                    if (t == null)
-                        continue;
-                    if (t.Opaque)
-                    {
-                        t.Render(WindowOrigin.X, WindowOrigin.Y, tilespacing, _wallBatch);
-                    }
-                    else if (!t.Opaque)
-                    {
-                        t.Render(WindowOrigin.X, WindowOrigin.Y, tilespacing, _floorBatch);
-                    }
-
-                    // Render gas sprites to gas batch
-                    t.RenderGas(WindowOrigin.X, WindowOrigin.Y, tilespacing, _gasBatch);
-
-                    t.RenderTop(WindowOrigin.X, WindowOrigin.Y, tilespacing, _wallTopsBatch);
-                }
-            }*/
         }
 
         public void OnTileChanged(PointF tileWorldPosition)

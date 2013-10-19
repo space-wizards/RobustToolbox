@@ -1,11 +1,12 @@
 ﻿using ServerServices.Map;
+using SS13_Shared;
 
 namespace ServerServices.Tiles
 {
     public class Floor : Tile
     {
-        public Floor(int x, int y, MapManager _map)
-            : base(x, y, _map)
+        public Floor(Vector2 pos, MapManager _map)
+            : base(pos, _map)
         {
             StartWithAtmos = true;
             GasPermeable = true;

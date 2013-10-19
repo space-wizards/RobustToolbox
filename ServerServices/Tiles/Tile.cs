@@ -10,19 +10,21 @@ namespace ServerServices.Tiles
 {
     public abstract class Tile : ITile
     {
-        private readonly int _x;
-        private readonly int _y;
         private readonly Vector2 _worldPosition;
         private readonly MapManager map;
         public GasCell gasCell;
 
-        public Tile(int x, int y, MapManager _map)
+        public Vector2 WorldPosition
+        {
+            get { return _worldPosition; }
+        }
+
+
+        public Tile(Vector2 pos, MapManager _map)
         {
             TileState = TileState.Healthy;
             map = _map;
-            _x = x;
-            _y = y;
-            _worldPosition =  new Vector2(x * _map.tileSpacing, y * _map.tileSpacing);
+            _worldPosition = pos;
         }
 
         #region ITile Members
@@ -40,8 +42,8 @@ namespace ServerServices.Tiles
         public void AddDecal(DecalType type)
         {
             NetOutgoingMessage message = map.CreateMapMessage(MapMessage.TurfAddDecal);
-            message.Write(_x);
-            message.Write(_y);
+            message.Write(WorldPosition.X);
+            message.Write(WorldPosition.Y);
             message.Write((byte) type);
             map.SendMessage(message);
         }
@@ -61,11 +63,6 @@ namespace ServerServices.Tiles
         public bool GasPermeable { get; set; }
 
         public bool GasSink { get; set; }
-
-        public Vector2 worldPosition
-        {
-            get { return _worldPosition; }
-        }
 
         #endregion
 

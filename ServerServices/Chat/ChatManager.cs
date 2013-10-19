@@ -167,24 +167,25 @@ namespace ServerServices.Chat
                     if (args.Count > 1 && Convert.ToDouble(args[1]) > 0)
                     {
                         double amount = Convert.ToDouble(args[1]);
-
-                        map.GetTileFromWorldPosition(position).GasCell.AddGas((float) amount, GasType.Toxin);
+                        var t = map.GetITileAt(position) as Tile;
+                        if(t != null)
+                            t.GasCell.AddGas((float) amount, GasType.Toxin);
                     }
                     break;
                 case "heatgas":
                     if (args.Count > 1 && Convert.ToDouble(args[1]) > 0)
                     {
                         double amount = Convert.ToDouble(args[1]);
-
-                        map.GetTileFromWorldPosition(position).GasCell.AddGas((float) amount, GasType.Toxin);
+                        var t = map.GetITileAt(position) as Tile;
+                        if (t != null)
+                            t.GasCell.AddGas((float)amount, GasType.Toxin);
                     }
                     break;
                 case "atmosreport":
                     IoCManager.Resolve<IAtmosManager>().TotalAtmosReport();
                     break;
                 case "tpvreport": // Reports on temp / pressure
-                    Point tap = map.GetTileArrayPositionFromWorldPosition(position);
-                    var ti = (Tile) map.GetTileFromIndex(tap.X, tap.Y);
+                    var ti = (Tile)map.GetITileAt(position);
                     if (ti == null)
                         break;
                     GasCell ce = ti.gasCell;
@@ -195,11 +196,10 @@ namespace ServerServices.Chat
                     break;
                 case "gasreport":
 
-                    Point p = map.GetTileArrayPositionFromWorldPosition(position);
-                    var t = (Tile) map.GetTileFromIndex(p.X, p.Y);
-                    if (t == null)
+                    var tile = map.GetITileAt(position) as Tile;
+                    if (tile == null)
                         break;
-                    GasCell c = t.gasCell;
+                    GasCell c = tile.gasCell;
                     for (int i = 0; i < c.GasMixture.gasses.Length; i++)
                     {
                         SendChatMessage(ChatChannel.Default, ((GasType)i).ToString() + ": " + c.GasMixture.gasses[i].ToString(CultureInfo.InvariantCulture) + " m",

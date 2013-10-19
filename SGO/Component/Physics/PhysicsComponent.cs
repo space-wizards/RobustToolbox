@@ -31,9 +31,7 @@ namespace SGO
 
         private void GasEffect()
         {
-            ITile t =
-                IoCManager.Resolve<IMapManager>().GetTileFromWorldPosition(
-                    Owner.GetComponent<TransformComponent>(ComponentFamily.Transform).Position);
+            ITile t = IoCManager.Resolve<IMapManager>().GetITileAt(Owner.GetComponent<TransformComponent>(ComponentFamily.Transform).Position);
             if (t == null)
                 return;
             Vector2 gasVel = t.GasCell.GasVelocity;

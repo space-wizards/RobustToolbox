@@ -27,8 +27,5 @@ namespace ClientInterfaces.Map
         byte SetSprite(Vector2D position);
 
         void Init();
-        Size GetMapSizeWorld();
-
-        Type GetTileTypeFromWorldPosition(Vector2D vector2D);
     }
 }

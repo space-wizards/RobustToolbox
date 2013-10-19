@@ -236,19 +236,12 @@ namespace ServerServices.Map
             mapMessage.Write(mapWidth);
             mapMessage.Write(mapHeight);
 
-            for (int x = 0; x < mapWidth; x++)
+            foreach (Tile t in tileArray.GetItems(new Rectangle(0, 0, mapWidth * tileSpacing, mapHeight * tileSpacing)))
             {
-                for (int y = 0; y < mapHeight; y++)
-                {
-                    Tile t = (Tile)GetTileFromIndex(x, y); //Bypassing stuff.
-                    if (t == null)
-                    {
-                        mapMessage.Write((byte)255);
-                        continue;
-                    }
-                    mapMessage.Write(GetTileIndex((t.GetType().Name)));
-                    mapMessage.Write((byte) t.TileState);
-                }
+                mapMessage.Write(t.worldPosition.X);
+                mapMessage.Write(t.worldPosition.Y);
+                mapMessage.Write(GetTileIndex((t.GetType().Name)));
+                mapMessage.Write((byte)t.TileState);
             }
 
             IoCManager.Resolve<ISS13NetServer>().SendMessage(mapMessage, connection, NetDeliveryMethod.ReliableOrdered);
@@ -385,7 +378,7 @@ namespace ServerServices.Map
             message.Write((byte) MapMessage.TurfUpdate);
             message.Write((short) x);
             message.Write((short) y);
-            message.Write(t.GetType().Name);
+            message.Write(GetTileIndex(t.GetType().Name));
             message.Write((byte) t.TileState);
             IoCManager.Resolve<ISS13NetServer>().SendToAll(message);
         }

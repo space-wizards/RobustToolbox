@@ -5,7 +5,7 @@ using Lidgren.Network;
 
 namespace ClientInterfaces.Map
 {
-    public delegate void TileChangeEvent(Point tilePosition, PointF tileWorldPosition);
+    public delegate void TileChangeEvent(PointF tileWorldPosition);
 
     public interface IMapManager
     {
@@ -20,17 +20,11 @@ namespace ClientInterfaces.Map
         /// Get Tile from World Position.
         /// </summary>
         ITile GetITileAt(Vector2D WorldPos);
+        ITile[] GetITilesIn(RectangleF Area);
 
-        /// <summary>
-        /// Get Tile from Array Position.
-        /// </summary>
-        ITile GetITileAt(int array_x, int array_y);
-
-        Vector2D GetTileArrayPositionFromWorldPosition(float x, float z);
-        Point GetTileArrayPositionFromWorldPosition(Vector2D pos);
         int GetMapWidth();
         int GetMapHeight();
-        byte SetSprite(int x, int y);
+        byte SetSprite(Vector2D position);
 
         void Init();
         Size GetMapSizeWorld();

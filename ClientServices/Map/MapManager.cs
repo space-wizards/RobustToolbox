@@ -34,7 +34,6 @@ namespace ClientServices.Map
         private bool _loaded;
         private int _mapHeight; // Number of tiles up the map
         private int _mapWidth; // Number of tiles across the map
-        //private Tile[][] _tileArray; // The array holding all the tiles that make up the map
         private RectangleTree<Tile> _tileArray;
 
         #endregion
@@ -100,6 +99,12 @@ namespace ClientServices.Map
             return new Rectangle((int)(T.Position.X), (int)(T.Position.Y), (int)(TileSpacing), (int)(TileSpacing));
         }
 
+        public ITile[] GetITilesIn(RectangleF area)
+        {
+            return _tileArray.GetItems(new Rectangle((int)area.X, (int)area.Y, (int)area.Width, (int)area.Height));
+        }
+
+
         private ITile GetITileAt(Point p)
         {
             return (Tile)_tileArray.GetItems(p).FirstOrDefault();
@@ -115,6 +120,11 @@ namespace ClientServices.Map
                 return (Tile)_tileArray.GetItems(p).FirstOrDefault();
         }
 
+        private Tile GetTileAt(float x, float y)
+        {
+            return (Tile)_tileArray.GetItems(new Point((int)x, (int)y)).FirstOrDefault();
+        }
+
         private Tile GetTileAt(int X, int Y)
         {
             return GetTileAt(new Point(X, Y));
@@ -126,32 +136,19 @@ namespace ClientServices.Map
             var _mapLoadWidth = message.ReadInt32();
             var _mapLoadHeight = message.ReadInt32();
 
-            //_tileArray = new Tile[_mapHeight][];
-
             _tileArray = new RectangleTree<Tile>(TilePos,
                                                  new Rectangle(-(_mapWidth/2)*TileSpacing, -(_mapHeight/2)*TileSpacing,
                                                                  _mapWidth*TileSpacing, _mapHeight*TileSpacing));
 
-            /*for (int i = 0; i < _mapHeight; i++)
+            while (message.PositionInBytes < message.LengthBytes)
             {
-                _tileArray[i] = new Tile[_mapWidth];
-            }*/
+                float posX = message.ReadFloat();
+                float posY = message.ReadFloat();
+                byte index = message.ReadByte();
+                var state = (TileState)message.ReadByte();
 
-            for (int x = 0; x < _mapLoadWidth; x++)
-            {
-                for (int y = 0; y < _mapLoadHeight; y++)
-                {
-                    int posX = x*TileSpacing;
-                    int posY = y*TileSpacing;
-
-                    byte index = message.ReadByte();
-                    if (index == 255) // No tile here
-                        continue;
-                    var state = (TileState) message.ReadByte();
-
-                    Tile created = GenerateNewTile(GetTileString(index), state, new Vector2D(posX, posY));
-                    _tileArray.Add(created);
-                }
+                Tile newTile = GenerateNewTile(GetTileString(index), state, new Vector2D(posX, posY));
+                _tileArray.Add(newTile);
             }
 
             for (int x = 0; x < _mapLoadWidth; x++)
@@ -163,7 +160,7 @@ namespace ClientServices.Map
                         continue;
                     if (T.ConnectSprite) //Was wall check.
                     {
-                        byte i = SetSprite(x, y);
+                        byte i = SetSprite(T.Position);
                     }
                     if (y > 0)
                     {
@@ -455,23 +452,23 @@ namespace ClientServices.Map
         // 8 = West
         // So if we have one N and S, we return (N + S) or (1 + 4), so 5.
 
-        public byte SetSprite(int x, int y)
+        public byte SetSprite(Vector2D position)
         {
             byte i = 0;
 
-            if (GetTileAt(x * TileSpacing, (y - 1) * TileSpacing) != null && GetTileAt(x * TileSpacing, (y - 1) * TileSpacing).ConnectSprite) // N
+            if (GetTileAt(position.X, position.Y - TileSpacing) != null && GetTileAt(position.X, position.Y - TileSpacing).ConnectSprite) // N
             {
                 i += 1;
             }
-            if (GetTileAt((x + 1) * TileSpacing, y * TileSpacing) != null && GetTileAt((x + 1) * TileSpacing, y * TileSpacing).ConnectSprite) // E
+            if (GetTileAt(position.X + TileSpacing, position.Y) != null && GetTileAt(position.X + TileSpacing, position.Y).ConnectSprite) // E
             {
                 i += 2;
             }
-            if (GetTileAt(x * TileSpacing, (y + 1) * TileSpacing) != null && GetTileAt(x * TileSpacing, (y + 1) * TileSpacing).ConnectSprite) // S
+            if (GetTileAt(position.X, position.Y + TileSpacing) != null && GetTileAt(position.X, position.Y + TileSpacing).ConnectSprite) // S
             {
                 i += 4;
             }
-            if (GetTileAt((x - 1) * TileSpacing, y * TileSpacing) != null && GetTileAt((x - 1) * TileSpacing, y * TileSpacing).ConnectSprite) // W
+            if (GetTileAt(position.X - TileSpacing, position.Y) != null && GetTileAt(position.X - TileSpacing, position.Y).ConnectSprite) // W
             {
                 i += 8;
             }
@@ -516,13 +513,12 @@ namespace ClientServices.Map
 
         public Tile GenerateNewTile(string typeName, TileState state, Vector2D pos)
         {
-            var p = new Point((int)pos.X / TileSpacing, (int)pos.Y / TileSpacing);
 
             Type tileType = Type.GetType("ClientServices.Tiles." + typeName, false);
 
             if (tileType == null) throw new ArgumentException("Invalid Tile Type specified : '" + typeName + "' .");
 
-            var created = (Tile) Activator.CreateInstance(tileType, state, pos, p);
+            var created = (Tile) Activator.CreateInstance(tileType, state, pos);
 
             if (tileType.GetInterface("ICollidable") != null)
                 _collisionManager.AddCollidable((ICollidable) created);
@@ -559,13 +555,13 @@ namespace ClientServices.Map
         private void TileChanged(Tile t)
         {
             if (OnTileChanged != null)
-                OnTileChanged(t.TilePosition, t.Position);
+                OnTileChanged(t.Position);
 
-            t.surroundDirs = SetSprite(t.TilePosition.X, t.TilePosition.Y);
+            t.surroundDirs = SetSprite(t.Position);
             foreach (Tile T in t.surroundingTiles)
             {
                 if (T == null) continue;
-                T.surroundDirs = SetSprite(T.TilePosition.X, T.TilePosition.Y);
+                T.surroundDirs = SetSprite(T.Position);
             }
         }
 

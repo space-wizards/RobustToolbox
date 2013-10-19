@@ -7,7 +7,6 @@ namespace ClientInterfaces.Map
     public interface ITile
     {
         Vector2D Position { get; }
-        Point TilePosition { get; }
         bool Visible { get; set; }
         bool ConnectSprite { get; set; }
         bool Opaque { get; set; }

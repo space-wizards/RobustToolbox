@@ -27,7 +27,7 @@ namespace ClientServices.Tiles
         public Tile[] surroundingTiles;
         public TileState tileState = TileState.Healthy;
 
-        protected Tile(TileState state, Vector2D position, Point tilePosition)
+        protected Tile(TileState state, Vector2D position)
         {
             _resourceManager = IoCManager.Resolve<IResourceManager>();
             _lightManager = IoCManager.Resolve<ILightManager>();
@@ -35,7 +35,6 @@ namespace ClientServices.Tiles
             tileState = state;
 
             Position = position;
-            TilePosition = tilePosition;
 
             Sprite = _resourceManager.GetSprite("space_texture");
             Sprite.SetPosition(position.X, position.Y);
@@ -46,7 +45,6 @@ namespace ClientServices.Tiles
         #region ITile Members
 
         public Vector2D Position { get; protected set; }
-        public Point TilePosition { get; protected set; }
         public bool Visible { get; set; }
 
         public bool Opaque { get; set; } //Does this block LOS etc?
@@ -56,8 +54,8 @@ namespace ClientServices.Tiles
         public virtual void Render(float xTopLeft, float yTopLeft, int tileSpacing, Batch batch)
         {
             Sprite.Color = Color.White;
-            Sprite.SetPosition((float) TilePosition.X*tileSpacing - xTopLeft,
-                               (float) TilePosition.Y*tileSpacing - yTopLeft);
+            Sprite.SetPosition((float)Position.X - xTopLeft,
+                               (float)Position.Y - yTopLeft);
             batch.AddClone(Sprite);
         }
 
@@ -91,8 +89,8 @@ namespace ClientServices.Tiles
                         continue;
                     if (!spritepositionset)
                     {
-                        gasSprite.SetPosition(TilePosition.X*tileSpacing - xTopLeft,
-                                              TilePosition.Y*tileSpacing - yTopLeft);
+                        gasSprite.SetPosition(Position.X - xTopLeft,
+                                              Position.Y - yTopLeft);
                         spritepositionset = true;
                     }
 
@@ -109,7 +107,6 @@ namespace ClientServices.Tiles
                             break;
                     }
                     gasBatch.AddClone(gasSprite);
-                    //gasSprite.Draw();//UGH THIS IS SLOW AS FUCK
                 }
             }
         }
@@ -199,8 +196,8 @@ namespace ClientServices.Tiles
         public void Draw(float xTopLeft, float yTopLeft, int tileSpacing, Batch decalBatch)
         {
             //Need to find a way to light it.
-            sprite.SetPosition(tile.TilePosition.X*tileSpacing - xTopLeft + position.X,
-                               tile.TilePosition.Y*tileSpacing - yTopLeft + position.Y);
+            sprite.SetPosition(tile.Position.X - xTopLeft + position.X,
+                               tile.Position.Y - yTopLeft + position.Y);
             decalBatch.AddClone(sprite);
         }
     }

@@ -554,15 +554,6 @@ namespace ClientServices.State.States
 
             if (PlayerManager.ControlledEntity != null)
             {
-                Point centerTile =
-                    MapManager.GetTileArrayPositionFromWorldPosition(
-                        PlayerManager.ControlledEntity.GetComponent<TransformComponent>(ComponentFamily.Transform).
-                            Position);
-
-                int xStart = Math.Max(0, centerTile.X - (ScreenWidthTiles/2) - 1);
-                int yStart = Math.Max(0, centerTile.Y - (ScreenHeightTiles/2) - 1);
-                int xEnd = Math.Min(xStart + ScreenWidthTiles + 2, MapManager.GetMapWidth() - 1);
-                int yEnd = Math.Min(yStart + ScreenHeightTiles + 2, MapManager.GetMapHeight() - 1);
 
                 // Get nearby lights
                 ILight[] lights =
@@ -570,7 +561,7 @@ namespace ClientServices.State.States
 
                 // Render the lightmap
                 RenderLightMap(lights);
-                CalculateSceneBatches(xStart, xEnd, yStart, yEnd, centerTile);
+                CalculateSceneBatches(ClientWindowData.Singleton.ViewPort);
 
                 if (_redrawTiles)
                 {
@@ -838,7 +829,7 @@ namespace ClientServices.State.States
                             }
                             else
                             {
-                                Point clickedPoint = MapManager.GetTileArrayPositionFromWorldPosition(MousePosWorld);
+                                /*Point clickedPoint = MapManager.GetTileArrayPositionFromWorldPosition(MousePosWorld);
                                 if (clickedPoint.X > 0 && clickedPoint.Y > 0)
                                 {
                                     NetOutgoingMessage message = NetworkManager.CreateMessage();
@@ -847,7 +838,7 @@ namespace ClientServices.State.States
                                     message.Write((short) clickedPoint.X);
                                     message.Write((short) clickedPoint.Y);
                                     NetworkManager.SendMessage(message, NetDeliveryMethod.ReliableUnordered);
-                                }
+                                }*/
                             }
                             break;
                         }
@@ -1074,7 +1065,7 @@ namespace ClientServices.State.States
             }
         }
 
-        private void CalculateSceneBatches(int xStart, int xEnd, int yStart, int yEnd, Point centerTile)
+        private void CalculateSceneBatches(RectangleF vision)
         {
             if (!_recalculateScene)
                 return;
@@ -1091,7 +1082,7 @@ namespace ClientServices.State.States
             _wallBatch.Clear();
             _gasBatch.Clear();
 
-            DrawTiles(xStart, xEnd, yStart, yEnd);
+            DrawTiles(vision);
             _recalculateScene = false;
             _redrawTiles = true;
             _redrawOverlay = true;
@@ -1396,7 +1387,10 @@ namespace ClientServices.State.States
         // Draws all walls in the area around the light relative to it, and in black (test code, not pretty)
         private void DrawWallsRelativeToLight(ILightArea area)
         {
-            Point centerTile = MapManager.GetTileArrayPositionFromWorldPosition(area.LightPosition);
+            RectangleF lightArea = new RectangleF(area.LightPosition - (area.LightAreaSize / 2),
+                area.LightAreaSize);
+
+            /*Point centerTile = MapManager.GetTileArrayPositionFromWorldPosition(area.LightPosition);
             int tilespacing = MapManager.GetTileSpacing();
             int xS = Math.Max(0, centerTile.X - (int) Math.Round((area.LightAreaSize.X/tilespacing)/2));
             int yS = Math.Max(0, centerTile.Y - (int) Math.Round((area.LightAreaSize.Y/tilespacing)/2));
@@ -1419,6 +1413,19 @@ namespace ClientServices.State.States
                         t.RenderPos(pos.X, pos.Y, tilespacing, (int) area.LightAreaSize.X);
                     }
                 }
+            }*/
+
+            foreach (Tile t in MapManager.GetITilesIn(lightArea))
+            {
+                if (t.Opaque)
+                {
+                    if (t.Opaque)
+                    {
+                        Vector2D pos = area.ToRelativePosition(t.Position);
+                        t.RenderPos(pos.X, pos.Y, MapManager.GetTileSpacing(), (int)area.LightAreaSize.X);
+                    }
+                }
+
             }
         }
 
@@ -1429,11 +1436,28 @@ namespace ClientServices.State.States
         /// <param name="xEnd">Rightmost tile to draw</param>
         /// <param name="yStart">Topmost tile to draw</param>
         /// <param name="yEnd">Bottommost tile to draw</param>
-        private void DrawTiles(int xStart, int xEnd, int yStart, int yEnd)
+        private void DrawTiles(RectangleF vision)
         {
             int tilespacing = MapManager.GetTileSpacing();
-            Tile t;
-            for (int x = xStart; x <= xEnd; x++)
+            //Tile t;
+
+            foreach (Tile t in MapManager.GetITilesIn(vision))
+            {
+                if (t.Opaque)
+                {
+                    t.Render(WindowOrigin.X, WindowOrigin.Y, tilespacing, _wallBatch);
+                }
+                else if (!t.Opaque)
+                {
+                    t.Render(WindowOrigin.X, WindowOrigin.Y, tilespacing, _floorBatch);
+                }
+
+                t.RenderGas(WindowOrigin.X, WindowOrigin.Y, tilespacing, _gasBatch);
+
+                t.RenderTop(WindowOrigin.X, WindowOrigin.Y, tilespacing, _wallTopsBatch);
+            }
+
+            /*for (int x = xStart; x <= xEnd; x++)
             {
                 for (int y = yStart; y <= yEnd; y++)
                 {
@@ -1454,10 +1478,10 @@ namespace ClientServices.State.States
 
                     t.RenderTop(WindowOrigin.X, WindowOrigin.Y, tilespacing, _wallTopsBatch);
                 }
-            }
+            }*/
         }
 
-        public void OnTileChanged(Point tilePosition, PointF tileWorldPosition)
+        public void OnTileChanged(PointF tileWorldPosition)
         {
             int ts = IoCManager.Resolve<IMapManager>().GetTileSpacing();
             IoCManager.Resolve<ILightManager>().RecalculateLightsInView(new RectangleF(tileWorldPosition,

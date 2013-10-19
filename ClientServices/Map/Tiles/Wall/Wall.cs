@@ -17,8 +17,8 @@ namespace ClientServices.Tiles
         private readonly Sprite wallCorner1;
         private readonly Sprite wallCorner2;
 
-        public Wall(TileState state, Vector2D position, Point tilePosition)
-            : base(state, position, tilePosition)
+        public Wall(TileState state, Vector2D position)
+            : base(state, position)
         {
             ConnectSprite = true;
             Opaque = true;
@@ -55,7 +55,7 @@ namespace ClientServices.Tiles
 
         public override void Render(float xTopLeft, float yTopLeft, int tileSpacing, Batch batch)
         {
-            surroundDirs = mapMgr.SetSprite(TilePosition.X, TilePosition.Y); //Optimize.
+            surroundDirs = mapMgr.SetSprite(Position); //Optimize.
 
             if (surroundDirs == 3 ||
                 surroundDirs == 2 &&
@@ -72,8 +72,8 @@ namespace ClientServices.Tiles
                 sideSprite = plainWall;
             if (((surroundDirs & 4) == 0))
             {
-                sideSprite.SetPosition((float) TilePosition.X*tileSpacing - xTopLeft,
-                                       (float) TilePosition.Y*tileSpacing - yTopLeft);
+                sideSprite.SetPosition((float) Position.X - xTopLeft,
+                                       (float) Position.Y - yTopLeft);
                 sideSprite.Color = Color.White;
                 batch.AddClone(sideSprite);
             }
@@ -153,8 +153,8 @@ namespace ClientServices.Tiles
         public override void RenderPos(float x, float y, int tileSpacing, int lightSize)
         {
             //Not drawing occlusion for tiles on the edge. Fuck this. Looks better too since there isnt actually anything to hide behind them.
-            if ((TilePosition.X == (mapMgr.GetMapWidth() - 1) || TilePosition.X == 0) ||
-                (TilePosition.Y == (mapMgr.GetMapHeight() - 1) || TilePosition.Y == 0))
+            if ((Position.X == ((mapMgr.GetMapWidth() - 1) * mapMgr.GetTileSpacing()) || Position.X == 0) ||
+                (Position.Y == ((mapMgr.GetMapHeight() - 1) * mapMgr.GetTileSpacing()) || Position.Y == 0))
                 return;
 
             int l = lightSize/2;
@@ -336,10 +336,10 @@ namespace ClientServices.Tiles
         public override void RenderTop(float xTopLeft, float yTopLeft, int tileSpacing, Batch wallTopsBatch)
         {
             Sprite =
-                _resourceManager.GetSprite("wall_texture" + mapMgr.SetSprite(TilePosition.X, TilePosition.Y).ToString());
+                _resourceManager.GetSprite("wall_texture" + mapMgr.SetSprite(Position).ToString());
             //Optimize
 
-            Sprite.SetPosition(TilePosition.X*tileSpacing - xTopLeft, TilePosition.Y*tileSpacing - yTopLeft);
+            Sprite.SetPosition(Position.X - xTopLeft, Position.Y - yTopLeft);
             Sprite.Position -= new Vector2D(0, tileSpacing);
             Sprite.Color = Color.FromArgb(200, Color.White);
 

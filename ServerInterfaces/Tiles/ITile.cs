@@ -16,5 +16,6 @@ namespace ServerInterfaces.Tiles
         event TileChangeHandler TileChange; //This event will be used for wall mounted objects and
         void RaiseChangedEvent(Type type);
         void AddDecal(DecalType type);
+        Vector2 WorldPosition { get; }
     }
 }

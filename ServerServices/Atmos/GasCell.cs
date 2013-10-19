@@ -17,25 +17,39 @@ namespace ServerServices.Atmos
         private const float VelocityMultiplier = .1f;
         private readonly GasMixture gasMixture;
         private Vector2 NextGasVel;
-        public int arrX;
-        public int arrY;
         public Tile attachedTile;
         private bool calculated = true;
         private Vector2 gasVel;
         public Dictionary<GasType, float> lastSentGasses;
         private float lastVelSent = 0;
         private Random rand;
+        private Tile[,] neighbours;
 
-        public GasCell(int _x, int _y, Tile _attachedTile)
+        public GasCell(Tile _attachedTile)
         {
-            arrX = _x;
-            arrY = _y;
             gasVel = new Vector2(0, 0);
             NextGasVel = new Vector2(0, 0);
             lastSentGasses = new Dictionary<GasType, float>();
             gasMixture = new GasMixture();
             rand = new Random();
             attachedTile = _attachedTile;
+        }
+
+        public void SetNeighbours(IMapManager m)
+        {
+            neighbours = new Tile[3,3];
+            for (int i = 0; i <= 2; i++)
+            {
+                for (int j = 0; j <= 2; j++)
+                {
+                    if (i == 1 && j == 1)
+                    {
+                        neighbours[i, j] = null;
+                        continue;
+                    }
+                    neighbours[i, j] = (Tile)m.GetITileAt(attachedTile.WorldPosition + new Vector2((i - 1) * m.GetTileSpacing(), (j - 1) * m.GetTileSpacing()));
+                }
+            }
         }
 
         public GasMixture GasMixture
@@ -111,24 +125,22 @@ namespace ServerServices.Atmos
                 {
                     if (i == 0 && j == 0) // If we're on this cell
                         continue;
-                    if (arrX + i < 0 || arrX + i >= m.GetMapWidth() || arrY + j < 0 || arrY + j >= m.GetMapHeight())
-                        // If out of bounds
+
+                    Tile t = neighbours[i + 1, j + 1];
+                    if (t == null || t.gasCell == null)
                         continue;
 
-                    Tile t = (Tile)m.GetTileFromIndex(arrX + i, arrY + j);
-                    if (t == null)
-                        continue;
+                    neighbor = t.gasCell;
 
 
                     if (Math.Abs(i) + Math.Abs(j) == 2) //If its a corner
                     {
-                        if (m.IsSaneArrayPosition(arrX+i,arrY) && m.IsSaneArrayPosition(arrX, arrY + i) 
-                            && !m.GetTileFromIndex(arrX + i, arrY).GasPermeable && !m.GetTileFromIndex(arrX, arrY + i).GasPermeable)
+                        if (!neighbours[i + 1, 1].GasPermeable && !neighbours[1, j + 1].GasPermeable)
+                            //&& !m.GetTileFromIndex(arrX + i, arrY).GasPermeable && !m.GetTileFromIndex(arrX, arrY + i).GasPermeable)
                             // And it is a corner separated from us by 2 blocking walls
                             continue; //Don't process it. These cells are not connected.
                     }
 
-                    neighbor = (GasCell)t.GasCell;
                     if (neighbor == null || neighbor.Calculated) // if neighbor's already been calculated, skip it
                         continue;
 

@@ -24,10 +24,10 @@ namespace ServerServices.Map
         private DateTime lastAtmosDisplayPush;
         private int mapHeight;
         private int mapWidth;
-        //private Tile[,] tileArray;
         public int tileSpacing = 64;
         private Dictionary<byte, string> tileStringTable = new Dictionary<byte, string>();
         private RectangleTree<Tile> tileArray;
+        private RectangleF worldArea;
 
         #endregion
 
@@ -80,6 +80,26 @@ namespace ServerServices.Map
         #endregion
 
         #region Tile helper function
+
+        public int GetTileSpacing()
+        {
+            return tileSpacing;
+        }
+
+        public ITile[] GetITilesIn(RectangleF area)
+        {
+            return tileArray.GetItems(new Rectangle((int)area.X, (int)area.Y, (int)area.Width, (int)area.Height));
+        }
+
+        public ITile GetITileAt(Vector2 pos)
+        {
+            return (ITile)tileArray.GetItems(new Point((int)pos.X, (int)pos.Y)).FirstOrDefault();
+        }
+
+        public Tile GetTileAt(Vector2 pos)
+        {
+            return tileArray.GetItems(new Point((int)pos.X, (int)pos.Y)).FirstOrDefault();
+        }
 
         public Point GetTileArrayPositionFromWorldPosition(float x, float z)
         {
@@ -152,64 +172,33 @@ namespace ServerServices.Map
 
         #region Map altering
 
-        public bool ChangeTile(int x, int z, Type newType)
+        public bool ChangeTile(Vector2 pos, string newType)
         {
-            if (x < 0 || z < 0)
-                return false;
-
-            if (x > mapWidth || z > mapWidth)
-                return false;
-
-            var args = new object[3];
-            args[0] = x;
-            args[1] = z;
-            args[2] = this;
-            object newTile = Activator.CreateInstance(newType, args);
-            var castTile = (Tile) newTile;
-            Tile t = (Tile)GetTileFromIndex(x, z);
-
-            if (t != null)
-                t.RaiseChangedEvent(castTile.GetType());
-
-            MoveGasCell(t, castTile); //Transfer the gas cell from the old tile to the new tile.
+            var tile = GenerateNewTile(pos, newType) as Tile;
+            //Transfer the gas cell from the old tile to the new tile.
+            Tile t = (Tile)GetITileAt(pos);
+            MoveGasCell(t, tile);
 
             tileArray.Remove(t);
-            tileArray.Add(castTile);
-
+            tileArray.Add(tile);
+            UpdateTile(pos);
             return true;
         }
 
-        public ITile GenerateNewTile(int x, int y, string typeName)
+        public ITile GenerateNewTile(Vector2 pos, string typeName)
         {
             Type tileType = Type.GetType("ServerServices.Tiles." + typeName, false);
 
             if (tileType == null) throw new ArgumentException("Invalid Tile Type specified : '" + typeName + "' .");
 
-            Tile t = (Tile)GetTileFromIndex(x, y);
+            Tile t = (Tile)GetTileAt(pos);
 
             if (t != null) //If theres a tile, activate it's changed event.
                 t.RaiseChangedEvent(tileType);
 
-            return (ITile) Activator.CreateInstance(tileType, x, y, this);
+            return (ITile) Activator.CreateInstance(tileType, pos, this);
         }
 
-        public bool ChangeTile(int x, int z, string newType)
-        {
-            if (x < 0 || z < 0)
-                return false;
-
-            if (x > mapWidth || z > mapWidth)
-                return false;
-
-            var tile = GenerateNewTile(x, z, newType) as Tile;
-            //Transfer the gas cell from the old tile to the new tile.
-            Tile t = (Tile)GetTileFromIndex(x, z);
-            MoveGasCell(t, tile);
-
-            tileArray.Remove(t);
-            tileArray.Add(tile);
-            return true;
-        }
 
         #endregion
 
@@ -238,8 +227,8 @@ namespace ServerServices.Map
 
             foreach (Tile t in tileArray.GetItems(new Rectangle(0, 0, mapWidth * tileSpacing, mapHeight * tileSpacing)))
             {
-                mapMessage.Write(t.worldPosition.X);
-                mapMessage.Write(t.worldPosition.Y);
+                mapMessage.Write(t.WorldPosition.X);
+                mapMessage.Write(t.WorldPosition.Y);
                 mapMessage.Write(GetTileIndex((t.GetType().Name)));
                 mapMessage.Write((byte)t.TileState);
             }
@@ -352,32 +341,40 @@ namespace ServerServices.Map
             }
         }*/ // TODO HOOK ME BACK UP WITH ENTITY SYSTEM
 
-        public void DestroyTile(Point arrayPosition)
+        public void DestroyTile(Vector2 pos)
         {
-            if (IsSaneArrayPosition(arrayPosition.X, arrayPosition.Y))
+            Tile t = GetTileAt(pos);
+            var newTile = GenerateNewTile(pos, "Floor") as Tile; //Ugly
+            tileArray.Remove(t);
+            tileArray.Add(newTile);
+            MoveGasCell(t, newTile);
+            NetworkUpdateTile(pos);
+            UpdateTile(pos);
+        }
+
+        public void UpdateTile(Vector2 pos)
+        {
+            Tile t = (Tile)GetTileAt(pos);
+            if (t == null)
+                return;
+            t.gasCell.SetNeighbours(this);
+            foreach(Tile u in GetITilesIn(new RectangleF(pos.X - tileSpacing, pos.Y - tileSpacing, tileSpacing * 2, tileSpacing * 2)))
             {
-                Tile t = (Tile)(GetTileFromIndex(arrayPosition.X, arrayPosition.Y));
-                var newTile = GenerateNewTile(arrayPosition.X, arrayPosition.Y, "Floor") as Tile; //Ugly
-                tileArray.Remove(t);
-                tileArray.Add(newTile);
-                MoveGasCell(t, newTile);
-                NetworkUpdateTile(arrayPosition.X, arrayPosition.Y);
+                u.gasCell.SetNeighbours(this);
             }
         }
 
-        public void NetworkUpdateTile(int x, int y)
-        {
-            if (!IsSaneArrayPosition(x, y))
-                return;
 
-            Tile t = (Tile)GetTileFromIndex(x, y);
+        public void NetworkUpdateTile(Vector2 pos)
+        {
+            Tile t = (Tile)GetTileAt(pos);
             if (t == null)
                 return;
             NetOutgoingMessage message = IoCManager.Resolve<ISS13NetServer>().CreateMessage();
             message.Write((byte) NetMessage.MapMessage);
             message.Write((byte) MapMessage.TurfUpdate);
-            message.Write((short) x);
-            message.Write((short) y);
+            message.Write(pos.X);
+            message.Write(pos.Y);
             message.Write(GetTileIndex(t.GetType().Name));
             message.Write((byte) t.TileState);
             IoCManager.Resolve<ISS13NetServer>().SendToAll(message);
@@ -385,24 +382,21 @@ namespace ServerServices.Map
 
         private void HandleTurfUpdate(NetIncomingMessage message)
         {
-            short x = message.ReadInt16();
-            short y = message.ReadInt16();
-
+            float x = message.ReadFloat();
+            float y = message.ReadFloat();
+            Vector2 pos = new Vector2(x, y);
             string typeStr = GetTileString(message.ReadByte());
 
-            
+            Tile tile = GetTileAt(pos);
 
-            if (IsSaneArrayPosition(x, y))
-            {
-                Tile tile = (Tile)GetTileFromIndex(x, y);
+            GasCell g = tile.gasCell;
+            var t = GenerateNewTile(pos, typeStr) as Tile;
+            MoveGasCell(tile, t);
+            tileArray.Remove(tile);
+            tileArray.Add(t);
+            NetworkUpdateTile(pos);
+            UpdateTile(pos);
 
-                GasCell g = tile.gasCell;
-                var t = GenerateNewTile(x, y, typeStr) as Tile;
-                MoveGasCell(tile, t);
-                tileArray.Remove(tile);
-                tileArray.Add(t);
-                NetworkUpdateTile(x, y);
-            }
         }
 
         #endregion
@@ -420,13 +414,13 @@ namespace ServerServices.Map
             sw.WriteLine(mapWidth);
             sw.WriteLine(mapHeight);
 
-            for (int y = 0; y < mapHeight; y++)
+            foreach (Tile t in tileArray.GetItems(new Rectangle(0, 0, mapWidth * tileSpacing, mapHeight * tileSpacing)))
             {
-                for (int x = 0; x < mapWidth; x++)
-                {
-                    sw.WriteLine(GetTileFromIndex(x, y).GetType().Name);
-                }
+                sw.WriteLine(t.WorldPosition.X);
+                sw.WriteLine(t.WorldPosition.Y);
+                sw.WriteLine(GetTileIndex(t.GetType().Name));
             }
+
             LogManager.Log("Done saving map.");
 
             sw.Close();
@@ -435,7 +429,7 @@ namespace ServerServices.Map
 
         private Rectangle TilePos(Tile T)
         {
-            return new Rectangle((int)(T.worldPosition.X), (int)(T.worldPosition.Y), (int)(tileSpacing), (int)(tileSpacing));
+            return new Rectangle((int)(T.WorldPosition.X), (int)(T.WorldPosition.Y), (int)(tileSpacing), (int)(tileSpacing));
         }
 
 
@@ -455,6 +449,11 @@ namespace ServerServices.Map
             return (Tile)tileArray.GetItems(p).FirstOrDefault();
         }
 
+        public RectangleF GetWorldArea()
+        {
+            return worldArea;
+        }
+
         private bool LoadMap(string filename)
         {
             if (!File.Exists(filename))
@@ -466,16 +465,18 @@ namespace ServerServices.Map
             mapWidth = int.Parse(sr.ReadLine());
             mapHeight = int.Parse(sr.ReadLine());
 
+            worldArea = new RectangleF(0, 0, mapWidth * tileSpacing, mapHeight * tileSpacing);
+
             tileArray = new RectangleTree<Tile>(TilePos, new Rectangle(-(mapWidth / 2) * tileSpacing, -(mapHeight / 2) * tileSpacing,
                                                                  mapWidth * tileSpacing, mapHeight * tileSpacing));
 
-            for (int y = 0; y < mapHeight; y++)
+            while (!sr.EndOfStream)
             {
-                for (int x = 0; x < mapWidth; x++)
-                {
-                    string tileName = sr.ReadLine();
-                    tileArray.Add((Tile)GenerateNewTile(x, y, tileName));
-                }
+                float x = float.Parse(sr.ReadLine());
+                float y = float.Parse(sr.ReadLine());
+                byte i = byte.Parse(sr.ReadLine());
+
+                tileArray.Add((Tile)GenerateNewTile(new Vector2(x, y), GetTileString(i)));
             }
 
             sr.Close();
@@ -492,11 +493,13 @@ namespace ServerServices.Map
             tileArray = new RectangleTree<Tile>(TilePos, new Rectangle(-(mapWidth / 2) * tileSpacing, -(mapHeight / 2) * tileSpacing,
                                                                              mapWidth * tileSpacing, mapHeight * tileSpacing));
 
+            worldArea = new RectangleF(0, 0, mapWidth * tileSpacing, mapHeight * tileSpacing);
+
             for (int y = 0; y < mapHeight; y++)
             {
                 for (int x = 0; x < mapWidth; x++)
                 {
-                    tileArray.Add(new Floor(x, y, this));
+                    tileArray.Add(new Floor(new Vector2(x * tileSpacing, y * tileSpacing), this));
                 }
             }
         }

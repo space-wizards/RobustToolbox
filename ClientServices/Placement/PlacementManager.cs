@@ -256,9 +256,6 @@ namespace ClientServices.Placement
 
             message.Write((byte) Direction);
 
-            message.Write(CurrentMode.currentTile.Position.X);
-            message.Write(CurrentMode.currentTile.Position.Y);
-
             NetworkManager.SendMessage(message, NetDeliveryMethod.ReliableUnordered);
         }
 

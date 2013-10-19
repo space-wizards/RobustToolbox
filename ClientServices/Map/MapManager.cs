@@ -83,6 +83,9 @@ namespace ClientServices.Map
             var _mapLoadWidth = message.ReadInt32();
             var _mapLoadHeight = message.ReadInt32();
 
+            _mapWidth = _mapLoadWidth;
+            _mapHeight = _mapLoadHeight;
+
             _tileArray = new RectangleTree<Tile>(TilePos,
                                                  new Rectangle(-(_mapWidth/2)*TileSpacing, -(_mapHeight/2)*TileSpacing,
                                                                  _mapWidth*TileSpacing, _mapHeight*TileSpacing));
@@ -173,16 +176,12 @@ namespace ClientServices.Map
                         if ((types & (1 << i)) == (1 << i))
                         {
                             recordStream.Read(out amount, 0, 4);
-                            //GetTileAt(x * TileSpacing, y * TileSpacing).SetAtmosDisplay((GasType) i, amount);
+                            Tile t = GetTileAt(x * TileSpacing, y * TileSpacing);
+                            if (t == null)
+                                continue;
+                            t.SetAtmosDisplay((GasType) i, amount);
                         }
                     }
-
-                    /*        _tileArray[y][x].SetAtmosDisplay(decompressed[r]);
-                    r++;
-                    _tileArray[y][x].SetAtmosDisplay(decompressed[r]);
-                    r++;
-                    _tileArray[y][x].SetAtmosDisplay(decompressed[r]);
-                    r++;*/
                 }
             }
 
@@ -211,11 +210,11 @@ namespace ClientServices.Map
 
         private void HandleTurfAddDecal(NetIncomingMessage message)
         {
-            int x = message.ReadInt32();
-            int y = message.ReadInt32();
+            float x = message.ReadFloat();
+            float y = message.ReadFloat();
             var type = (DecalType) message.ReadByte();
 
-            GetTileAt(x * TileSpacing,y * TileSpacing).AddDecal(type);
+            GetTileAt(x, y).AddDecal(type);
         }
 
         private static byte[] Decompress(byte[] gzip)
@@ -244,16 +243,16 @@ namespace ClientServices.Map
 
         private void HandleTurfUpdate(NetIncomingMessage message)
         {
-            short x = message.ReadInt16();
-            short y = message.ReadInt16();
+            float x = message.ReadFloat();
+            float y = message.ReadFloat();
             string tileStr = GetTileString(message.ReadByte());
             var state = (TileState) message.ReadByte();
 
-            Tile t = GetTileAt(x * TileSpacing, y * TileSpacing);
+            Tile t = GetTileAt(x, y);
 
             if (t == null)
             {
-                t = GenerateNewTile(tileStr, state, new Vector2D(x*TileSpacing, y*TileSpacing));
+                t = GenerateNewTile(tileStr, state, new Vector2D(x, y));
                 _tileArray.Add(t);
                 TileChanged(t);
             }

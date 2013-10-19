@@ -16,5 +16,6 @@ namespace ServerInterfaces.Atmos
         int PackDisplayBytes(BitStream bits, bool all = false);
         float GasAmount(GasType type);
         void AddGas(float amount, GasType gas);
+        void SetNeighbours(IMapManager m);
     }
 }

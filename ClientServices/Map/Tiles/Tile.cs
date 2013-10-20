@@ -12,7 +12,7 @@ using SS13_Shared;
 
 namespace ClientServices.Tiles
 {
-    public abstract class Tile : ITile
+    public abstract class Tile : ITile, IQuadObject
     {
         protected readonly ILightManager _lightManager;
         protected readonly IResourceManager _resourceManager;
@@ -176,6 +176,11 @@ namespace ClientServices.Tiles
             }
             else
                 gasAmounts.Add(type, amount);
+        }
+
+        public RectangleF Bounds
+        {
+            get { return new RectangleF(Position.X, Position.Y, 64f, 64f); }
         }
     }
 

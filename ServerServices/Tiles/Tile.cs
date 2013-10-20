@@ -8,7 +8,7 @@ using ServerServices.Map;
 
 namespace ServerServices.Tiles
 {
-    public abstract class Tile : ITile
+    public abstract class Tile : ITile , IQuadObject
     {
         private readonly Vector2 _worldPosition;
         private readonly MapManager map;
@@ -92,5 +92,10 @@ namespace ServerServices.Tiles
         }
         */
         //TODO HOOK ME BACK UP WITH ENTITY SYSTEM
+
+        public System.Drawing.RectangleF Bounds
+        {
+            get { return new System.Drawing.RectangleF(WorldPosition.X, WorldPosition.Y, 64f, 64f); }
+        }
     }
 }

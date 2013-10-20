@@ -20,8 +20,6 @@ namespace ServerInterfaces.Map
         void Shutdown();
         int GetMapWidth();
         int GetMapHeight();
-        bool IsWorldPositionInBounds(Vector2 pos);
-        bool IsSaneArrayPosition(int x, int y);
         void SendMap(NetConnection connection);
         int GetTileSpacing();
 

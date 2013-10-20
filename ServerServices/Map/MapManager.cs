@@ -26,7 +26,7 @@ namespace ServerServices.Map
         private int mapWidth;
         public int tileSpacing = 64;
         private Dictionary<byte, string> tileStringTable = new Dictionary<byte, string>();
-        private RectangleTree<Tile> tileArray;
+        private QuadTree<Tile> tileArray;
         private RectangleF worldArea;
 
         #endregion
@@ -88,84 +88,17 @@ namespace ServerServices.Map
 
         public ITile[] GetITilesIn(RectangleF area)
         {
-            return tileArray.GetItems(new Rectangle((int)area.X, (int)area.Y, (int)area.Width, (int)area.Height));
+            return tileArray.Query(area).ToArray();
         }
 
         public ITile GetITileAt(Vector2 pos)
         {
-            return (ITile)tileArray.GetItems(new Point((int)pos.X, (int)pos.Y)).FirstOrDefault();
+            return GetITilesIn(new RectangleF(pos.X, pos.Y, 1, 1)).FirstOrDefault();
         }
 
         public Tile GetTileAt(Vector2 pos)
         {
-            return tileArray.GetItems(new Point((int)pos.X, (int)pos.Y)).FirstOrDefault();
-        }
-
-        public Point GetTileArrayPositionFromWorldPosition(float x, float z)
-        {
-            if (x < 0 || z < 0)
-                return new Point(-1, -1);
-            if (x >= mapWidth*tileSpacing || z >= mapWidth*tileSpacing)
-                return new Point(-1, -1);
-
-            // We use floor here, because even if we're at pos 10.999999, we're still on tile 10 in the array.
-            var xPos = (int) Math.Floor(x/tileSpacing);
-            var zPos = (int) Math.Floor(z/tileSpacing);
-
-            return new Point(xPos, zPos);
-        }
-
-        public bool IsWorldPositionInBounds(Vector2 pos)
-        {
-            Point tpos = GetTileArrayPositionFromWorldPosition(pos);
-            if (tpos.X == -1 && tpos.Y == -1)
-                return false;
-            return true;
-        }
-
-        public Point GetTileArrayPositionFromWorldPosition(Vector2 pos)
-        {
-            return GetTileArrayPositionFromWorldPosition(pos.X, pos.Y);
-        }
-
-        public Type GetTileTypeFromWorldPosition(float x, float y)
-        {
-            Point arrayPosition = GetTileArrayPositionFromWorldPosition(x, y);
-            return GetTileTypeFromWorldPosition(new Vector2(x, y));
-        }
-
-        public bool IsSaneArrayPosition(int x, int y)
-        {
-            if (x < 0 || y < 0)
-                return false;
-            if (x > mapWidth - 1 || y > mapWidth - 1)
-                return false;
-            return true;
-        }
-
-        private Type GetTileTypeFromWorldPosition(Vector2 pos)
-        {
-            Point arrayPosition = GetTileArrayPositionFromWorldPosition(pos.X, pos.Y);
-            if (arrayPosition.Y < 0 || arrayPosition.Y < 0)
-            {
-                return null;
-            }
-            else
-            {
-                return GetObjectTypeFromArrayPosition(arrayPosition.X, arrayPosition.Y);
-            }
-        }
-
-        private Type GetObjectTypeFromArrayPosition(int x, int z)
-        {
-            if (x < 0 || z < 0 || x >= mapWidth || z >= mapHeight)
-            {
-                return null;
-            }
-            else
-            {
-                return GetTileFromIndex(x, z).GetType();
-            }
+            return (Tile)GetITileAt(pos);
         }
 
         #endregion
@@ -180,7 +113,7 @@ namespace ServerServices.Map
             MoveGasCell(t, tile);
 
             tileArray.Remove(t);
-            tileArray.Add(tile);
+            tileArray.Insert(tile);
             UpdateTile(pos);
             return true;
         }
@@ -225,7 +158,7 @@ namespace ServerServices.Map
             mapMessage.Write(mapWidth);
             mapMessage.Write(mapHeight);
 
-            foreach (Tile t in tileArray.GetItems(new Rectangle(0, 0, mapWidth * tileSpacing, mapHeight * tileSpacing)))
+            foreach (Tile t in GetITilesIn(new Rectangle(0, 0, mapWidth * tileSpacing, mapHeight * tileSpacing)))
             {
                 mapMessage.Write(t.WorldPosition.X);
                 mapMessage.Write(t.WorldPosition.Y);
@@ -346,7 +279,7 @@ namespace ServerServices.Map
             Tile t = GetTileAt(pos);
             var newTile = GenerateNewTile(pos, "Floor") as Tile; //Ugly
             tileArray.Remove(t);
-            tileArray.Add(newTile);
+            tileArray.Insert(newTile);
             MoveGasCell(t, newTile);
             NetworkUpdateTile(pos);
             UpdateTile(pos);
@@ -393,7 +326,7 @@ namespace ServerServices.Map
             var t = GenerateNewTile(pos, typeStr) as Tile;
             MoveGasCell(tile, t);
             tileArray.Remove(tile);
-            tileArray.Add(t);
+            tileArray.Insert(t);
             NetworkUpdateTile(pos);
             UpdateTile(pos);
 
@@ -414,7 +347,7 @@ namespace ServerServices.Map
             sw.WriteLine(mapWidth);
             sw.WriteLine(mapHeight);
 
-            foreach (Tile t in tileArray.GetItems(new Rectangle(0, 0, mapWidth * tileSpacing, mapHeight * tileSpacing)))
+            foreach (Tile t in GetITilesIn(new Rectangle(0, 0, mapWidth * tileSpacing, mapHeight * tileSpacing)))
             {
                 sw.WriteLine(t.WorldPosition.X);
                 sw.WriteLine(t.WorldPosition.Y);
@@ -430,23 +363,6 @@ namespace ServerServices.Map
         private Rectangle TilePos(Tile T)
         {
             return new Rectangle((int)(T.WorldPosition.X), (int)(T.WorldPosition.Y), (int)(tileSpacing), (int)(tileSpacing));
-        }
-
-
-        public ITile GetTileFromIndex(int x, int y)
-        {
-            return (Tile)GetTileFromWorldPosition(x * tileSpacing, y * tileSpacing);
-        }
-
-        public ITile GetTileFromWorldPosition(Vector2 v)
-        {
-            return GetTileFromWorldPosition(v.X, v.Y);
-        }
-
-        public ITile GetTileFromWorldPosition(float x, float y)
-        {
-            Point p = new Point((int)x, (int)y);
-            return (Tile)tileArray.GetItems(p).FirstOrDefault();
         }
 
         public RectangleF GetWorldArea()
@@ -467,7 +383,7 @@ namespace ServerServices.Map
 
             worldArea = new RectangleF(0, 0, mapWidth * tileSpacing, mapHeight * tileSpacing);
 
-            tileArray = new RectangleTree<Tile>(TilePos, new Rectangle(0, 0, mapWidth * tileSpacing, mapHeight * tileSpacing));
+            tileArray = new QuadTree<Tile>(new SizeF(tileSpacing * 2f, tileSpacing * 2f), 4);
 
             while (!sr.EndOfStream)
             {
@@ -475,7 +391,7 @@ namespace ServerServices.Map
                 float y = float.Parse(sr.ReadLine());
                 byte i = byte.Parse(sr.ReadLine());
 
-                tileArray.Add((Tile)GenerateNewTile(new Vector2(x, y), GetTileString(i)));
+                tileArray.Insert((Tile)GenerateNewTile(new Vector2(x, y), GetTileString(i)));
             }
 
             sr.Close();
@@ -489,7 +405,7 @@ namespace ServerServices.Map
             LogManager.Log("Cannot find map. Generating blank map.", LogLevel.Warning);
             mapWidth = 50;
             mapHeight = 50;
-            tileArray = new RectangleTree<Tile>(TilePos, new Rectangle(0, 0, mapWidth * tileSpacing, mapHeight * tileSpacing));
+            tileArray = new QuadTree<Tile>(new SizeF(tileSpacing * 2f, tileSpacing * 2f), 4);
 
             worldArea = new RectangleF(0, 0, mapWidth * tileSpacing, mapHeight * tileSpacing);
 
@@ -497,7 +413,7 @@ namespace ServerServices.Map
             {
                 for (int x = 0; x < mapWidth; x++)
                 {
-                    tileArray.Add(new Floor(new Vector2(x * tileSpacing, y * tileSpacing), this));
+                    tileArray.Insert(new Floor(new Vector2(x * tileSpacing, y * tileSpacing), this));
                 }
             }
         }

@@ -60,7 +60,8 @@ namespace ClientServices.State.States
         private bool _redrawOverlay = true;
         private bool _redrawTiles = true;
         private List<RenderTarget> _cleanupList = new List<RenderTarget>();
-        private List<Sprite> _cleanupSpriteList = new List<Sprite>(); 
+        private List<Sprite> _cleanupSpriteList = new List<Sprite>();
+        private List<ITile> _visibleTiles;
 
         private bool _showDebug; // show AABBs & Bounding Circles on Entities.
         private Batch _wallBatch;
@@ -1295,11 +1296,13 @@ namespace ClientServices.State.States
                 LightArea area = GetLightArea(RadiusToShadowMapSize(playerVision.Radius));
                 area.LightPosition = playerVision.Position; // Set the light position
 
-                if (MapManager.GetITileAt(playerVision.Position) != null &&
-                    MapManager.GetITileAt(playerVision.Position).Opaque)
+                ITile t = MapManager.GetITileAt(playerVision.Position);
+
+                if (t != null &&
+                    t.Opaque)
                 {
                     area.LightPosition = new Vector2D(area.LightPosition.X,
-                                                      MapManager.GetITileAt(playerVision.Position).Position.Y +
+                                                      t.Position.Y +
                                                       MapManager.GetTileSpacing() + 1);
                 }
 
@@ -1323,7 +1326,7 @@ namespace ClientServices.State.States
             }
             else
             {
-                playerOcclusionTarget.Clear(Color.White);
+                playerOcclusionTarget.Clear(Color.Black);
             }
         }
 
@@ -1390,7 +1393,9 @@ namespace ClientServices.State.States
             RectangleF lightArea = new RectangleF(area.LightPosition - (area.LightAreaSize / 2),
                 area.LightAreaSize);
 
-            foreach (Tile t in MapManager.GetITilesIn(lightArea))
+            ITile[] tiles = MapManager.GetITilesIn(lightArea);
+
+            foreach (Tile t in tiles)
             {
                 if (t.Opaque)
                 {
@@ -1414,9 +1419,10 @@ namespace ClientServices.State.States
         private void DrawTiles(RectangleF vision)
         {
             int tilespacing = MapManager.GetTileSpacing();
-            //Tile t;
 
-            foreach (Tile t in MapManager.GetITilesIn(vision))
+            ITile[] tiles = MapManager.GetITilesIn(vision);
+
+            foreach (Tile t in tiles)
             {
                 if (t.Opaque)
                 {

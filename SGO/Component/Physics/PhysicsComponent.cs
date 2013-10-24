@@ -1,4 +1,5 @@
 ﻿using System.Collections.Generic;
+using System.Drawing;
 using GameObject;
 using Lidgren.Network;
 using SS13.IoC;
@@ -31,7 +32,8 @@ namespace SGO
 
         private void GasEffect()
         {
-            ITile t = IoCManager.Resolve<IMapManager>().GetITileAt(Owner.GetComponent<TransformComponent>(ComponentFamily.Transform).Position);
+
+            ITile t = IoCManager.Resolve<IMapManager>().GetFloorAt(Owner.GetComponent<TransformComponent>(ComponentFamily.Transform).Position);
             if (t == null)
                 return;
             Vector2 gasVel = t.GasCell.GasVelocity;

@@ -15,6 +15,7 @@ using ServerInterfaces.Placement;
 using ServerInterfaces.Player;
 using ServerServices.Log;
 using ServerServices.Map;
+using ServerInterfaces.Tiles;
 
 namespace ServerServices.Placement
 {
@@ -121,8 +122,9 @@ namespace ServerServices.Placement
                 }
                 else
                 {
-                    mapMgr.ChangeTile(tilePos, tileType);
-                    mapMgr.NetworkUpdateTile(tilePos);
+                    Vector2 nearestPos = new Vector2(xRcv, yRcv);
+                    ITile t = mapMgr.ChangeTile(nearestPos, tileType, dirRcv);
+                    mapMgr.NetworkUpdateTile(t);
                 }
             }
             else //They are not allowed to request this. Send 'PlacementFailed'. TBA

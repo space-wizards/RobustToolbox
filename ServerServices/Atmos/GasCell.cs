@@ -47,7 +47,7 @@ namespace ServerServices.Atmos
                         neighbours[i, j] = null;
                         continue;
                     }
-                    neighbours[i, j] = (Tile)m.GetITileAt(attachedTile.WorldPosition + new Vector2((i - 1) * m.GetTileSpacing(), (j - 1) * m.GetTileSpacing()));
+                    neighbours[i, j] = (Tile)m.GetFloorAt(attachedTile.WorldPosition + new Vector2((i - 1) * m.GetTileSpacing(), (j - 1) * m.GetTileSpacing()));
                 }
             }
         }

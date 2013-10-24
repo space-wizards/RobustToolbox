@@ -229,7 +229,14 @@ namespace ClientServices.Placement
 
         private void PreparePlacementTile(string tileType)
         {
-            CurrentBaseSprite = ResourceManager.GetSprite("tilebuildoverlay");
+            if (tileType == "Wall")
+            {
+                CurrentBaseSprite = ResourceManager.GetSprite("wall");
+            }
+            else
+            {
+                CurrentBaseSprite = ResourceManager.GetSprite("tilebuildoverlay");
+            }
 
             IsActive = true;
         }

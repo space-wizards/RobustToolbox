@@ -1296,7 +1296,7 @@ namespace ClientServices.State.States
                 LightArea area = GetLightArea(RadiusToShadowMapSize(playerVision.Radius));
                 area.LightPosition = playerVision.Position; // Set the light position
 
-                ITile t = MapManager.GetITileAt(playerVision.Position);
+                ITile t = MapManager.GetFloorAt(playerVision.Position);
 
                 if (t != null &&
                     t.Opaque)
@@ -1336,13 +1336,13 @@ namespace ClientServices.State.States
             if (area.Calculated)
                 return;
             area.LightPosition = l.Position; //mousePosWorld; // Set the light position
-            ITile t = MapManager.GetITileAt(l.Position);
+            ITile t = MapManager.GetAllTilesAt(l.Position).FirstOrDefault();
             if (t == null)
                 return;
-            if (MapManager.GetITileAt(l.Position).Opaque)
+            if (MapManager.GetFloorAt(l.Position).Opaque)
             {
                 area.LightPosition = new Vector2D(area.LightPosition.X,
-                                                  MapManager.GetITileAt(l.Position).Position.Y +
+                                                  MapManager.GetAllTilesAt(l.Position).FirstOrDefault().Position.Y +
                                                   MapManager.GetTileSpacing() + 1);
             }
             area.BeginDrawingShadowCasters(); // Start drawing to the light rendertarget
@@ -1393,49 +1393,37 @@ namespace ClientServices.State.States
             RectangleF lightArea = new RectangleF(area.LightPosition - (area.LightAreaSize / 2),
                 area.LightAreaSize);
 
-            ITile[] tiles = MapManager.GetITilesIn(lightArea);
+            ITile[] tiles = MapManager.GetAllWallIn(lightArea);
 
             foreach (Tile t in tiles)
             {
-                if (t.Opaque)
-                {
-                    if (t.Opaque)
-                    {
-                        Vector2D pos = area.ToRelativePosition(t.Position);
-                        t.RenderPos(pos.X, pos.Y, MapManager.GetTileSpacing(), (int)area.LightAreaSize.X);
-                    }
-                }
-
+                Vector2D pos = area.ToRelativePosition(t.Position);
+                t.RenderPos(pos.X, pos.Y, MapManager.GetTileSpacing(), (int)area.LightAreaSize.X);
             }
         }
 
         /// <summary>
         /// Copys all tile sprites into batches.
         /// </summary>
-        /// <param name="xStart">Leftmost tile to draw</param>
-        /// <param name="xEnd">Rightmost tile to draw</param>
-        /// <param name="yStart">Topmost tile to draw</param>
-        /// <param name="yEnd">Bottommost tile to draw</param>
         private void DrawTiles(RectangleF vision)
         {
             int tilespacing = MapManager.GetTileSpacing();
 
-            ITile[] tiles = MapManager.GetITilesIn(vision);
+            ITile[] floorTiles = MapManager.GetAllFloorIn(vision);
+            ITile[] wallTiles = MapManager.GetAllWallIn(vision);
 
-            foreach (Tile t in tiles)
+            foreach (Tile t in floorTiles)
             {
-                if (t.Opaque)
-                {
-                    t.Render(WindowOrigin.X, WindowOrigin.Y, tilespacing, _wallBatch);
-                }
-                else if (!t.Opaque)
-                {
-                    t.Render(WindowOrigin.X, WindowOrigin.Y, tilespacing, _floorBatch);
-                }
+                t.Render(WindowOrigin.X, WindowOrigin.Y, _floorBatch);
 
                 t.RenderGas(WindowOrigin.X, WindowOrigin.Y, tilespacing, _gasBatch);
+            }
 
-                t.RenderTop(WindowOrigin.X, WindowOrigin.Y, tilespacing, _wallTopsBatch);
+            
+            foreach (Tile t in wallTiles.OrderBy(x => x.Position.Y))
+            {
+                t.Render(WindowOrigin.X, WindowOrigin.Y, _wallBatch);
+                t.RenderTop(WindowOrigin.X, WindowOrigin.Y, _wallTopsBatch);
             }
         }
 
@@ -1444,7 +1432,6 @@ namespace ClientServices.State.States
             int ts = IoCManager.Resolve<IMapManager>().GetTileSpacing();
             IoCManager.Resolve<ILightManager>().RecalculateLightsInView(new RectangleF(tileWorldPosition,
                                                                                        new SizeF(ts, ts)));
-
             // Recalculate the scene batches.
             RecalculateScene();
         }

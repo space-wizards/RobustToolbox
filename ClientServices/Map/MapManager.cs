@@ -24,6 +24,7 @@ namespace ClientServices.Map
         #region Variables
 
         private const int TileSpacing = 64; // Distance between tiles
+        private const int wallThickness = 24;
         private readonly List<Vector2D> _cardinalList;
 
         private readonly ICollisionManager _collisionManager;
@@ -34,7 +35,8 @@ namespace ClientServices.Map
         private bool _loaded;
         private int _mapHeight; // Number of tiles up the map
         private int _mapWidth; // Number of tiles across the map
-        private QuadTree<Tile> _tileArray;
+        private QuadTree<Tile> _groundArray;
+        private QuadTree<Tile> _wallArray;
 
         #endregion
 
@@ -84,9 +86,8 @@ namespace ClientServices.Map
             int _mapHeight = message.ReadInt32();
 
 
-            _tileArray = new QuadTree<Tile>(new SizeF(2*TileSpacing, 2*TileSpacing), 4);
-                                                 //new Rectangle(0, 0,
-                                                                 //TileSpacing._mapWidth*TileSpacing, _mapHeight*TileSpacing));
+            _groundArray = new QuadTree<Tile>(new SizeF(2*TileSpacing, 2*TileSpacing), 4);
+            _wallArray = new QuadTree<Tile>(new SizeF(2 * TileSpacing, 2 * TileSpacing), 4);
 
             while (message.PositionInBytes < message.LengthBytes)
             {
@@ -94,17 +95,19 @@ namespace ClientServices.Map
                 float posY = message.ReadFloat();
                 byte index = message.ReadByte();
                 var state = (TileState)message.ReadByte();
-
-                Tile newTile = GenerateNewTile(GetTileString(index), state, new Vector2D(posX, posY));
-                _tileArray.Insert(newTile);
+                string name = GetTileString(index);
+                Direction dir = Direction.North;
+                if (name == "Wall")
+                {
+                    dir = (Direction)message.ReadByte();
+                }
+                Tile newTile = GenerateNewTile(GetTileString(index), state, new Vector2D(posX, posY), dir);
+                AddTile(newTile);
             }
 
-            foreach (Tile t in GetITilesIn(new Rectangle(0, 0, _mapWidth * TileSpacing, _mapHeight * TileSpacing)))
+            foreach (Wall w in GetAllWallIn(new RectangleF(0, 0, _mapWidth * TileSpacing, _mapHeight * TileSpacing)))
             {
-                t.surroundingTiles[0] = GetTileN(t.Position.X, t.Position.Y);
-                t.surroundingTiles[1] = GetTileE(t.Position.X, t.Position.Y);
-                t.surroundingTiles[2] = GetTileS(t.Position.X, t.Position.Y);
-                t.surroundingTiles[3] = GetTileW(t.Position.X, t.Position.Y);
+                w.SetSprite();
             }
 
             _loaded = true;
@@ -174,7 +177,7 @@ namespace ClientServices.Map
                         if ((types & (1 << i)) == (1 << i))
                         {
                             recordStream.Read(out amount, 0, 4);
-                            Tile t = GetTileAt(x * TileSpacing, y * TileSpacing);
+                            Tile t = (Tile)GetFloorAt(new Vector2D(x * TileSpacing, y * TileSpacing));
                             if (t == null)
                                 continue;
                             t.SetAtmosDisplay((GasType) i, amount);
@@ -212,7 +215,8 @@ namespace ClientServices.Map
             float y = message.ReadFloat();
             var type = (DecalType) message.ReadByte();
 
-            GetTileAt(x, y).AddDecal(type);
+            Tile t = (Tile)GetAllTilesAt(new Vector2D(x, y)).FirstOrDefault();
+            t.AddDecal(type);
         }
 
         private static byte[] Decompress(byte[] gzip)
@@ -245,40 +249,19 @@ namespace ClientServices.Map
             float y = message.ReadFloat();
             string tileStr = GetTileString(message.ReadByte());
             var state = (TileState) message.ReadByte();
+            Direction dir = Direction.North;
+            if (tileStr == "Wall") dir = (Direction)message.ReadByte();
 
-            Tile t = GetTileAt(x, y);
-
-            if (t == null)
+            Tile t = (Tile)GetTypeAt(tileStr, new Vector2D(x, y));
+            if (t != null && t._dir == dir)
             {
-                t = GenerateNewTile(tileStr, state, new Vector2D(x, y));
-                _tileArray.Insert(t);
-                TileChanged(t);
+                RemoveTile(t);
+                if (t.GetType().GetInterface("ICollidable") != null)
+                    _collisionManager.RemoveCollidable((ICollidable)t);
             }
-            else
-            {
-                if (t.GetType().Name != tileStr) //This is ugly beep boop. Fix this later.
-                {
-                    Tile[] surroundTiles = t.surroundingTiles;
-
-                    if (t.GetType().GetInterface("ICollidable") != null)
-                        _collisionManager.RemoveCollidable((ICollidable) t);
-                    _tileArray.Remove(t);
-                    t = GenerateNewTile(tileStr, state, new Vector2D(x*TileSpacing, y*TileSpacing));
-                    t.surroundingTiles = surroundTiles;
-                    if (t.surroundingTiles[0] != null) t.surroundingTiles[0].surroundingTiles[2] = t;
-                    if (t.surroundingTiles[1] != null) t.surroundingTiles[1].surroundingTiles[3] = t;
-                    if (t.surroundingTiles[2] != null) t.surroundingTiles[2].surroundingTiles[0] = t;
-                    if (t.surroundingTiles[3] != null) t.surroundingTiles[3].surroundingTiles[1] = t;
-
-                    _tileArray.Insert(t);
-                    TileChanged(t);
-                }
-                else if (t.tileState != state)
-                {
-                    t.tileState = state;
-                    TileChanged(t);
-                }
-            }
+            t = GenerateNewTile(tileStr, state, new Vector2D(x, y), dir);
+            AddTile(t);
+            TileChanged(t);
         }
 
         private struct AtmosRecord
@@ -299,22 +282,50 @@ namespace ClientServices.Map
 
         #region Tile helper functions
 
-        public Tile GetTileN(float x, float y)
+        public Tile GetFloorN(float x, float y)
         {
-            return GetTileAt(x, y - TileSpacing);
+            return (Tile)GetFloorAt(new Vector2D(x, y - TileSpacing));
         }
 
-        public Tile GetTileE(float x, float y)
+        public Tile GetFloorE(float x, float y)
         {
-            return GetTileAt(x + TileSpacing, y);
+            return (Tile)GetFloorAt(new Vector2D(x + TileSpacing, y));
         }
-        public Tile GetTileS(float x, float y)
+
+        public Tile GetFloorS(float x, float y)
         {
-            return GetTileAt(x, y + TileSpacing);
+            return (Tile)GetFloorAt(new Vector2D(x, y + TileSpacing));
         }
-        public Tile GetTileW(float x, float y)
+
+        public Tile GetFloorW(float x, float y)
         {
-            return GetTileAt(x - TileSpacing, y);
+            return (Tile)GetFloorAt(new Vector2D(x - TileSpacing, y));
+        }
+
+        public void AddTile(Tile t)
+        {
+            if (t.GetType().Name == "Wall")
+            {
+                _wallArray.Insert(t);
+                SetSpritesAround(t);
+            }
+            else
+            {
+                _groundArray.Insert(t);
+            }
+        }
+
+        private void RemoveTile(Tile t)
+        {
+            if (t.GetType().Name == "Wall")
+            {
+                _wallArray.Remove(t);
+                SetSpritesAround(t);
+            }
+            else
+            {
+                _groundArray.Remove(t);
+            }
         }
 
         private Rectangle TilePos(Tile T)
@@ -322,33 +333,47 @@ namespace ClientServices.Map
             return new Rectangle((int)(T.Position.X), (int)(T.Position.Y), TileSpacing, TileSpacing);
         }
 
-        public ITile[] GetITilesIn(RectangleF area)
+        public ITile[] GetAllTilesIn(RectangleF area)
         {
-            Rectangle r = new Rectangle((int)area.X, (int)area.Y, (int)area.Width, (int)area.Height);
-            //return _tileArray.GetItems(r);
-            return _tileArray.Query(area).ToArray();
+            List<Tile> tiles = _groundArray.Query(area);
+            tiles.AddRange(_wallArray.Query(area));
+            return tiles.ToArray();
         }
 
-
-        private ITile GetITileAt(Point p)
+        public ITile[] GetAllFloorIn(RectangleF Area)
         {
-            //return (Tile)_tileArray.GetItems(p).FirstOrDefault();
-            return GetITilesIn(new RectangleF(p.X, p.Y, 1, 1)).FirstOrDefault();
+            return _groundArray.Query(Area).ToArray();
         }
 
-        private Tile GetTileAt(Point p)
+        public ITile[] GetAllWallIn(RectangleF Area)
         {
-            return (Tile)GetITileAt(p);
+            return _wallArray.Query(Area).ToArray();
         }
 
-        private Tile GetTileAt(float x, float y)
+        public ITile GetWallAt(Vector2D pos)
         {
-            return (Tile)GetITileAt(new Point((int)x, (int)y));
+            return GetAllWallIn(new RectangleF(pos.X, pos.Y, 2f, 2f)).FirstOrDefault();
         }
 
-        public ITile GetITileAt(Vector2D worldPos)
+        public ITile GetFloorAt(Vector2D pos)
         {
-            return GetTileAt((int)worldPos.X, (int)worldPos.Y);
+            return GetAllFloorIn(new RectangleF(pos.X, pos.Y, 2f, 2f)).FirstOrDefault();
+        }
+
+        public ITile[] GetAllTilesAt(Vector2D pos)
+        {
+            return GetAllTilesIn(new RectangleF(pos.X, pos.Y, 2f, 2f));
+        }
+
+        public ITile GetTypeAt(Type type, Vector2D pos)
+        {
+            ITile[] tiles = GetAllTilesAt(pos);
+            return tiles.FirstOrDefault(x => x.GetType() == type);
+        }
+
+        public ITile GetTypeAt(string type, Vector2D pos)
+        {
+            return GetTypeAt(Type.GetType("ClientServices.Tiles." + type, false), pos);
         }
 
         public byte GetTileIndex(string typeName)
@@ -367,40 +392,14 @@ namespace ClientServices.Map
             return typeStr;
         }
 
-        // Where do we have tiles around us?
-        // 0 = None
-        // 1 = North
-        // 2 = East
-        // 4 = South
-        // 8 = West
-        // So if we have one N and S, we return (N + S) or (1 + 4), so 5.
-        public byte SetSprite(Vector2D position)
-        {
-            byte i = 0;
-
-            if (GetTileAt(position.X, position.Y - TileSpacing) != null && GetTileAt(position.X, position.Y - TileSpacing).ConnectSprite) // N
-            {
-                i += 1;
-            }
-            if (GetTileAt(position.X + TileSpacing, position.Y) != null && GetTileAt(position.X + TileSpacing, position.Y).ConnectSprite) // E
-            {
-                i += 2;
-            }
-            if (GetTileAt(position.X, position.Y + TileSpacing) != null && GetTileAt(position.X, position.Y + TileSpacing).ConnectSprite) // S
-            {
-                i += 4;
-            }
-            if (GetTileAt(position.X - TileSpacing, position.Y) != null && GetTileAt(position.X - TileSpacing, position.Y).ConnectSprite) // W
-            {
-                i += 8;
-            }
-
-            return i;
-        }
-
         public int GetTileSpacing()
         {
             return TileSpacing;
+        }
+
+        public int GetWallThickness()
+        {
+            return wallThickness;
         }
 
         public int GetMapWidth()
@@ -413,14 +412,39 @@ namespace ClientServices.Map
             return _mapHeight;
         }
 
-        public Tile GenerateNewTile(string typeName, TileState state, Vector2D pos)
+        public Tile GenerateNewTile(string typeName, TileState state, Vector2D pos, Direction dir = Direction.North)
         {
-
             Type tileType = Type.GetType("ClientServices.Tiles." + typeName, false);
 
             if (tileType == null) throw new ArgumentException("Invalid Tile Type specified : '" + typeName + "' .");
+            RectangleF rect = new RectangleF();
+            Tile created;
+            if (typeName != "Wall")
+            {
+                rect = new RectangleF(pos.X, pos.Y, TileSpacing, TileSpacing);
+            }
+            else
+            {
+                if (dir == Direction.North)
+                {
+                    rect = new RectangleF(pos.X, pos.Y, wallThickness, TileSpacing);
+                }
+                else
+                {
+                    rect = new RectangleF(pos.X, pos.Y, TileSpacing, wallThickness);
+                }
+            }
 
-            var created = (Tile) Activator.CreateInstance(tileType, state, pos);
+            if (typeName == "Wall")
+            {
+                created = (Tile)Activator.CreateInstance(tileType, state, rect, dir);
+            }
+            else
+            {
+                created = (Tile)Activator.CreateInstance(tileType, state, rect);
+            }
+
+            created.Initialize();
 
             if (tileType.GetInterface("ICollidable") != null)
                 _collisionManager.AddCollidable((ICollidable) created);
@@ -434,9 +458,9 @@ namespace ClientServices.Map
 
         public bool IsSolidTile(Vector2D worldPos)
         {
-            var tile = (Tile) GetITileAt(worldPos);
+            var tile = (Tile) GetWallAt(worldPos);
             if (tile == null) return false;
-            return tile.IsSolidTile();
+            return true;
         }
 
         #endregion
@@ -445,7 +469,7 @@ namespace ClientServices.Map
 
         public void Shutdown()
         {
-            _tileArray = null;
+            _groundArray = null;
             _initialized = false;
             _loaded = false;
         }
@@ -458,14 +482,20 @@ namespace ClientServices.Map
         {
             if (OnTileChanged != null)
                 OnTileChanged(t.Position);
+        }
 
-            t.surroundDirs = SetSprite(t.Position);
-            foreach (Tile T in t.surroundingTiles)
+        private void SetSpritesAround(Tile t)
+        {
+            Tile[] tiles = (Tile[])GetAllWallIn(new RectangleF(t.Position.X - (TileSpacing / 2f), t.Position.Y - (TileSpacing / 2f), TileSpacing * 2, TileSpacing * 2));
+
+            foreach (Tile u in tiles)
             {
-                if (T == null) continue;
-                T.surroundDirs = SetSprite(T.Position);
+                if(u != t)
+                    u.SetSprite();
             }
         }
+
+        
 
         #endregion
     }

@@ -39,23 +39,23 @@ namespace ClientServices.Placement.Modes
             if (pManager.CurrentPermission.IsTile)
                 return false;
 
-            currentTile = currentMap.GetITileAt(mouseWorld);
+            currentTile = currentMap.GetWallAt(mouseWorld);
 
             if (currentTile == null || !currentTile.IsSolidTile())
                 return false;
 
-            ITile wallTop = currentMap.GetITileAt(new Vector2D(currentTile.Position.X, currentTile.Position.Y - currentMap.GetTileSpacing()));
+            ITile wallTop = currentMap.GetWallAt(new Vector2D(currentTile.Position.X, currentTile.Position.Y - currentMap.GetTileSpacing()));
             if (wallTop == null)
                 return false;
 
-            ITile wallTopNorth = currentMap.GetITileAt(new Vector2D(wallTop.Position.X, wallTop.Position.Y - currentMap.GetTileSpacing()));
-            ITile wallCurrentSouth = currentMap.GetITileAt(new Vector2D(currentTile.Position.X, currentTile.Position.Y - currentMap.GetTileSpacing()));
+            ITile wallTopNorth = currentMap.GetWallAt(new Vector2D(wallTop.Position.X, wallTop.Position.Y - currentMap.GetTileSpacing()));
+            ITile wallCurrentSouth = currentMap.GetWallAt(new Vector2D(currentTile.Position.X, currentTile.Position.Y - currentMap.GetTileSpacing()));
 
-            ITile wallTopEast = currentMap.GetITileAt(new Vector2D(wallTop.Position.X + currentMap.GetTileSpacing(), wallTop.Position.Y));
-            ITile wallCurrentEast = currentMap.GetITileAt(new Vector2D(currentTile.Position.X + currentMap.GetTileSpacing(), currentTile.Position.Y));
+            ITile wallTopEast = currentMap.GetWallAt(new Vector2D(wallTop.Position.X + currentMap.GetTileSpacing(), wallTop.Position.Y));
+            ITile wallCurrentEast = currentMap.GetWallAt(new Vector2D(currentTile.Position.X + currentMap.GetTileSpacing(), currentTile.Position.Y));
 
-            ITile wallTopWest = currentMap.GetITileAt(new Vector2D(wallTop.Position.X - currentMap.GetTileSpacing(), wallTop.Position.Y));
-            ITile wallCurrentWest = currentMap.GetITileAt(new Vector2D(currentTile.Position.X - currentMap.GetTileSpacing(), currentTile.Position.Y));
+            ITile wallTopWest = currentMap.GetWallAt(new Vector2D(wallTop.Position.X - currentMap.GetTileSpacing(), wallTop.Position.Y));
+            ITile wallCurrentWest = currentMap.GetWallAt(new Vector2D(currentTile.Position.X - currentMap.GetTileSpacing(), currentTile.Position.Y));
 
             switch (pManager.Direction)
             {

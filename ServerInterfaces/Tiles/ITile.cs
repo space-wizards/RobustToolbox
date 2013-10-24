@@ -1,4 +1,5 @@
 using System;
+using System.Drawing;
 using SS13_Shared;
 using ServerInterfaces.Atmos;
 
@@ -17,5 +18,7 @@ namespace ServerInterfaces.Tiles
         void RaiseChangedEvent(Type type);
         void AddDecal(DecalType type);
         Vector2 WorldPosition { get; }
+        RectangleF Bounds { get; }
+        Direction dir { get;}
     }
 }

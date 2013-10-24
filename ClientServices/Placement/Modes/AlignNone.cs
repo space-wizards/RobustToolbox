@@ -40,7 +40,7 @@ namespace ClientServices.Placement.Modes
                     (pManager.PlayerManager.ControlledEntity.GetComponent<TransformComponent>(ComponentFamily.Transform)
                          .Position - mouseWorld).Length > pManager.CurrentPermission.Range) return false;
 
-            currentTile = currentMap.GetITileAt(mouseWorld);
+            currentTile = currentMap.GetFloorAt(mouseWorld);
 
             return true;
         }

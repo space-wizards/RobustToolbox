@@ -44,14 +44,14 @@ namespace ServerServices.Atmos
         public void InitializeGasCells()
         {
             var m = IoCManager.Resolve<IMapManager>();
-            foreach (ITile t in m.GetITilesIn(m.GetWorldArea()))
+            foreach (ITile t in m.GetAllFloorIn(m.GetWorldArea()))
             {
                 t.GasCell = new GasCell((Tile)t);
                 if (t.StartWithAtmos)
                     t.GasCell.InitSTP();
             }
 
-            foreach(Tile t in m.GetITilesIn(m.GetWorldArea()))
+            foreach (Tile t in m.GetAllFloorIn(m.GetWorldArea()))
             {
                 t.gasCell.SetNeighbours(m);
             }
@@ -67,16 +67,16 @@ namespace ServerServices.Atmos
                 elapsedSinceLastFrame = 0;
                 var m = IoCManager.Resolve<IMapManager>();
 
-                foreach (Tile t in m.GetITilesIn(m.GetWorldArea()))
+                foreach (Tile t in m.GetAllFloorIn(m.GetWorldArea()))
                 {
                     t.gasCell.CalculateNextGasAmount(m);
                 }
 
-                foreach (Tile t in m.GetITilesIn(m.GetWorldArea()))
+                foreach (Tile t in m.GetAllFloorIn(m.GetWorldArea()))
                 {
                     if (t.TileState == TileState.Dead && t.GasPermeable)
                     {
-                        m.DestroyTile(t.WorldPosition);
+                        m.DestroyTile(t);
                     }
                     t.GasCell.Update();
                 }
@@ -125,7 +125,7 @@ namespace ServerServices.Atmos
             {
                 for (int y = 0; y < m.GetMapHeight(); y++)
                 {
-                    Tile t = (Tile)m.GetITileAt(new Vector2(x * m.GetTileSpacing(), y * m.GetTileSpacing()));
+                    Tile t = (Tile)m.GetFloorAt(new Vector2(x * m.GetTileSpacing(), y * m.GetTileSpacing()));
                     if (t == null)
                         continue;
                     displayBitsWritten = t.GasCell.PackDisplayBytes(records, true);
@@ -150,7 +150,7 @@ namespace ServerServices.Atmos
                 {
                     for (int y = 0; y < m.GetMapHeight(); y++)
                     {
-                        Tile t = (Tile)m.GetITileAt(new Vector2(x * m.GetTileSpacing(), y * m.GetTileSpacing()));
+                        Tile t = (Tile)m.GetFloorAt(new Vector2(x * m.GetTileSpacing(), y * m.GetTileSpacing()));
                         if (t == null)
                             continue;
                         int displayBitsWritten = t.GasCell.PackDisplayBytes(records);

@@ -11,20 +11,23 @@ namespace ClientInterfaces.Map
     {
         event TileChangeEvent OnTileChanged;
         int GetTileSpacing();
+        int GetWallThickness();
         void Shutdown();
         bool IsSolidTile(Vector2D pos);
         void HandleNetworkMessage(NetIncomingMessage message);
         void HandleAtmosDisplayUpdate(NetIncomingMessage message);
 
-        /// <summary>
-        /// Get Tile from World Position.
-        /// </summary>
-        ITile GetITileAt(Vector2D WorldPos);
-        ITile[] GetITilesIn(RectangleF Area);
+
+        ITile[] GetAllTilesIn(RectangleF Area);
+        ITile[] GetAllFloorIn(RectangleF Area);
+        ITile[] GetAllWallIn(RectangleF Area);
+
+        ITile GetWallAt(Vector2D pos);
+        ITile GetFloorAt(Vector2D pos);
+        ITile[] GetAllTilesAt(Vector2D pos);
 
         int GetMapWidth();
         int GetMapHeight();
-        byte SetSprite(Vector2D position);
 
         void Init();
     }

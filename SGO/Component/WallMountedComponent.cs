@@ -80,11 +80,11 @@ namespace SGO
         {
             var map = IoCManager.Resolve<IMapManager>();
 
-            var previousTile = map.GetITileAt(args.VectorFrom) as Tile;
+            var previousTile = map.GetWallAt(args.VectorFrom) as Tile;
+            if(previousTile != null)
+                previousTile.TileChange -= TileChanged;
 
-            previousTile.TileChange -= TileChanged;
-
-            var currentTile = map.GetITileAt(args.VectorTo) as Tile;
+            var currentTile = map.GetWallAt(args.VectorTo) as Tile;
 
             if (currentTile == null) return;
 
@@ -97,11 +97,11 @@ namespace SGO
         {
             var map = IoCManager.Resolve<IMapManager>();
 
-            var currentTile = map.GetITileAt(tilePos) as Tile;
+            var currentTile = map.GetWallAt(tilePos) as Tile;
 
             if (currentTile == null) return;
 
-            var previousTile = map.GetITileAt(Owner.GetComponent<TransformComponent>(ComponentFamily.Transform).Position) as Tile;
+            var previousTile = map.GetWallAt(Owner.GetComponent<TransformComponent>(ComponentFamily.Transform).Position) as Tile;
 
             previousTile.TileChange -= TileChanged;
 

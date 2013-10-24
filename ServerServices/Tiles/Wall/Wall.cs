@@ -1,13 +1,15 @@
 ﻿using ServerServices.Map;
 using SS13_Shared;
+using System.Drawing;
 
 namespace ServerServices.Tiles
 {
     public class Wall : Tile
     {
-        public Wall(Vector2 pos, MapManager _map)
-            : base(pos, _map)
+        public Wall(RectangleF rectangle, MapManager _map, Direction dir)
+            : base(rectangle, _map)
         {
+            _dir = dir;
         }
 
         /*

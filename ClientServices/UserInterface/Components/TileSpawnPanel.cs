@@ -130,6 +130,11 @@ namespace ClientServices.UserInterface.Components
                                      IsTile = true
                                  };
 
+            if (sender.Text.Text == "Wall")
+            {
+                newObjInfo.PlacementOption = "AlignWallPlace";
+            }
+
             _placementManager.BeginPlacing(newObjInfo);
 
             sender.BackgroundColor = Color.ForestGreen;

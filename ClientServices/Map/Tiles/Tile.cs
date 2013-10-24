@@ -22,42 +22,46 @@ namespace ClientServices.Tiles
         public Dictionary<GasType, int> gasAmounts;
         public Sprite gasSprite;
         public string name;
-        public Sprite sideSprite;
-        public byte surroundDirs = 0; //north = 1 east = 2 south = 4 west = 8.
-        public Tile[] surroundingTiles;
+        public byte surroundDirsNW, surroundDirsSE = 0; //north = 1 east = 2 south = 4 west = 8.
         public TileState tileState = TileState.Healthy;
+        public RectangleF bounds;
+        public Direction _dir = Direction.North;
 
-        protected Tile(TileState state, Vector2D position)
+        protected Tile(TileState state, RectangleF rect)
         {
             _resourceManager = IoCManager.Resolve<IResourceManager>();
             _lightManager = IoCManager.Resolve<ILightManager>();
-
+            
             tileState = state;
 
-            Position = position;
+            bounds = rect;
 
             Sprite = _resourceManager.GetSprite("space_texture");
-            Sprite.SetPosition(position.X, position.Y);
-
-            Initialize();
+            Sprite.SetPosition(Position.X, Position.Y);
         }
 
         #region ITile Members
 
-        public Vector2D Position { get; protected set; }
+        
         public bool Visible { get; set; }
 
         public bool Opaque { get; set; } //Does this block LOS etc?
         public bool ConnectSprite { get; set; }
         //Should this tile cause things like walls to change their sprite to 'connect' to this tile?
 
-        public virtual void Render(float xTopLeft, float yTopLeft, int tileSpacing, Batch batch)
+        public Vector2D Position
+        {
+            get { return new Vector2D(bounds.X, bounds.Y); }
+        }
+
+        public virtual void Render(float xTopLeft, float yTopLeft, Batch batch)
         {
             Sprite.Color = Color.White;
             Sprite.SetPosition((float)Position.X - xTopLeft,
                                (float)Position.Y - yTopLeft);
             batch.AddClone(Sprite);
         }
+
 
         public virtual void RenderPos(float x, float y, int tileSpacing, int lightSize)
         {
@@ -111,7 +115,7 @@ namespace ClientServices.Tiles
             }
         }
 
-        public virtual void RenderTop(float xTopLeft, float yTopLeft, int tileSpacing, Batch wallTopsBatch)
+        public virtual void RenderTop(float xTopLeft, float yTopLeft, Batch wallTopsBatch)
         {
             //FIXTHIS
         }
@@ -126,10 +130,13 @@ namespace ClientServices.Tiles
 
         #endregion
 
+        public virtual void SetSprite()
+        {
+        }
+
         public virtual void Initialize()
         {
             gasSprite = _resourceManager.GetSprite("gas");
-            surroundingTiles = new Tile[4];
             gasAmounts = new Dictionary<GasType, int>();
             decals = new List<TileDecal>();
             _random = new Random((int) (Position.X*Position.Y));
@@ -180,7 +187,7 @@ namespace ClientServices.Tiles
 
         public RectangleF Bounds
         {
-            get { return new RectangleF(Position.X, Position.Y, 64f, 64f); }
+            get { return bounds; }
         }
     }
 

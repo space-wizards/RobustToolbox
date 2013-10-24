@@ -28,7 +28,7 @@ namespace ClientServices.Placement.Modes
                                                  mouseWorld.Y - (spriteToDraw.Height/2f), spriteToDraw.Width,
                                                  spriteToDraw.Height);
 
-            currentTile = currentMap.GetITileAt(mouseWorld);
+            currentTile = currentMap.GetFloorAt(mouseWorld);
 
             if (currentMap.IsSolidTile(mouseWorld))
                 return false;

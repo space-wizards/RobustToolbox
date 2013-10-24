@@ -10,7 +10,7 @@ namespace ServerInterfaces.Map
     {
         bool InitMap(string mapName);
         void HandleNetworkMessage(NetIncomingMessage message);
-        void NetworkUpdateTile(Vector2 pos);
+        //void NetworkUpdateTile(ITile t);
         void SaveMap();
 
         void MoveGasCell(ITile fromTile, ITile toTile);
@@ -23,10 +23,16 @@ namespace ServerInterfaces.Map
         void SendMap(NetConnection connection);
         int GetTileSpacing();
 
-        ITile[] GetITilesIn(RectangleF Area);
-        ITile GetITileAt(Vector2 WorldPos);
-        ITile GenerateNewTile(Vector2 pos, string type);
-        void DestroyTile(Vector2 pos);
+        ITile[] GetAllTilesIn(RectangleF Area);
+        ITile[] GetAllFloorIn(RectangleF Area);
+        ITile[] GetAllWallIn(RectangleF Area);
+
+        ITile GetWallAt(Vector2 pos);
+        ITile GetFloorAt(Vector2 pos);
+        ITile[] GetAllTilesAt(Vector2 pos);
+
+        ITile GenerateNewTile(Vector2 pos, string type, Direction dir = Direction.North);
+        void DestroyTile(ITile s);
         RectangleF GetWorldArea();
     }
 }

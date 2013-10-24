@@ -45,7 +45,7 @@ namespace ClientServices.Placement.Modes
                          .Position - mouseWorld).Length > pManager.CurrentPermission.Range)
                     return false;
 
-            currentTile = currentMap.GetITileAt(mouseWorld);
+            currentTile = currentMap.GetWallAt(mouseWorld);
             var nodes = new List<Vector2D>();
 
             if (pManager.CurrentTemplate.MountingPoints != null)

@@ -5,32 +5,37 @@ using ServerInterfaces.Atmos;
 using ServerInterfaces.Tiles;
 using ServerServices.Atmos;
 using ServerServices.Map;
+using System.Drawing;
 
 namespace ServerServices.Tiles
 {
-    public abstract class Tile : ITile , IQuadObject
+    public abstract class Tile : ITile, IQuadObject
     {
-        private readonly Vector2 _worldPosition;
+        private readonly RectangleF _rectangle;
         private readonly MapManager map;
         public GasCell gasCell;
 
+
         public Vector2 WorldPosition
         {
-            get { return _worldPosition; }
+            get { return new Vector2(_rectangle.X, _rectangle.Y); }
         }
 
-
-        public Tile(Vector2 pos, MapManager _map)
+        public Tile(RectangleF rectangle,  MapManager _map)
         {
             TileState = TileState.Healthy;
             map = _map;
-            _worldPosition = pos;
+            _rectangle = rectangle;
         }
 
         #region ITile Members
 
         public TileState TileState { get; set; }
-
+        public Direction _dir;
+        public Direction dir
+        {
+            get { return _dir; }
+        }
         public event TileChangeHandler TileChange; //This event will be used for wall mounted objects and
         //other things that need to react to tiles changing.
         public void RaiseChangedEvent(Type type)
@@ -93,9 +98,9 @@ namespace ServerServices.Tiles
         */
         //TODO HOOK ME BACK UP WITH ENTITY SYSTEM
 
-        public System.Drawing.RectangleF Bounds
+        public RectangleF Bounds
         {
-            get { return new System.Drawing.RectangleF(WorldPosition.X, WorldPosition.Y, 64f, 64f); }
+            get { return _rectangle; }
         }
     }
 }

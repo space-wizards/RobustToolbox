@@ -120,6 +120,7 @@
     <Compile Include="Placement\Modes\AlignTileSolid.cs" />
     <Compile Include="Placement\Modes\AlignTileEmpty.cs" />
     <Compile Include="Placement\Modes\AlignWall.cs" />
+    <Compile Include="Placement\Modes\AlignWallPlace.cs" />
     <Compile Include="Placement\Modes\AlignWallTops.cs" />
     <Compile Include="Placement\Modes\AlignFree.cs" />
     <Compile Include="Placement\PlacementManager.cs" />

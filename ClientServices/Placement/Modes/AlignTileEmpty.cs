@@ -29,9 +29,9 @@ namespace ClientServices.Placement.Modes
                                                  mouseWorld.Y - (spriteToDraw.Height/2f), spriteToDraw.Width,
                                                  spriteToDraw.Height);
 
-            currentTile = currentMap.GetITileAt(mouseWorld);
+            currentTile = currentMap.GetFloorAt(mouseWorld);
 
-            if (!currentMap.GetITileAt(mouseWorld).GetType().IsSubclassOf(typeof (Space)))
+            if (!currentMap.GetFloorAt(mouseWorld).GetType().IsSubclassOf(typeof (Space)))
                 return false;
 
             if (pManager.CurrentPermission.Range > 0)

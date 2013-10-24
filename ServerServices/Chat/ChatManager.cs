@@ -167,7 +167,7 @@ namespace ServerServices.Chat
                     if (args.Count > 1 && Convert.ToDouble(args[1]) > 0)
                     {
                         double amount = Convert.ToDouble(args[1]);
-                        var t = map.GetITileAt(position) as Tile;
+                        var t = map.GetFloorAt(position) as Tile;
                         if(t != null)
                             t.GasCell.AddGas((float) amount, GasType.Toxin);
                     }
@@ -176,7 +176,7 @@ namespace ServerServices.Chat
                     if (args.Count > 1 && Convert.ToDouble(args[1]) > 0)
                     {
                         double amount = Convert.ToDouble(args[1]);
-                        var t = map.GetITileAt(position) as Tile;
+                        var t = map.GetFloorAt(position) as Tile;
                         if (t != null)
                             t.GasCell.AddGas((float)amount, GasType.Toxin);
                     }
@@ -185,7 +185,7 @@ namespace ServerServices.Chat
                     IoCManager.Resolve<IAtmosManager>().TotalAtmosReport();
                     break;
                 case "tpvreport": // Reports on temp / pressure
-                    var ti = (Tile)map.GetITileAt(position);
+                    var ti = (Tile)map.GetFloorAt(position);
                     if (ti == null)
                         break;
                     GasCell ce = ti.gasCell;
@@ -196,7 +196,7 @@ namespace ServerServices.Chat
                     break;
                 case "gasreport":
 
-                    var tile = map.GetITileAt(position) as Tile;
+                    var tile = map.GetFloorAt(position) as Tile;
                     if (tile == null)
                         break;
                     GasCell c = tile.gasCell;

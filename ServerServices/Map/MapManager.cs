@@ -25,8 +25,10 @@ namespace ServerServices.Map
         private int mapHeight;
         private int mapWidth;
         public int tileSpacing = 64;
+        private const int wallThickness = 24;
         private Dictionary<byte, string> tileStringTable = new Dictionary<byte, string>();
-        private QuadTree<Tile> tileArray;
+        private QuadTree<Tile> _groundArray;
+        private QuadTree<Tile> _wallArray;
         private RectangleF worldArea;
 
         #endregion
@@ -64,7 +66,7 @@ namespace ServerServices.Map
         public void Shutdown()
         {
             //ServiceManager.Singleton.RemoveService(this);
-            tileArray = null;
+            _groundArray = null;
         }
 
         public int GetMapWidth()
@@ -86,50 +88,110 @@ namespace ServerServices.Map
             return tileSpacing;
         }
 
-        public ITile[] GetITilesIn(RectangleF area)
+        public ITile[] GetAllTilesIn(RectangleF area)
         {
-            return tileArray.Query(area).ToArray();
+            List<Tile> tiles = _groundArray.Query(area);
+            tiles.AddRange(_wallArray.Query(area));
+            return tiles.ToArray();
         }
 
-        public ITile GetITileAt(Vector2 pos)
+
+        public ITile[] GetAllFloorIn(RectangleF Area)
         {
-            return GetITilesIn(new RectangleF(pos.X, pos.Y, 1, 1)).FirstOrDefault();
+            return _groundArray.Query(Area).ToArray();
         }
 
-        public Tile GetTileAt(Vector2 pos)
+        public ITile[] GetAllWallIn(RectangleF Area)
         {
-            return (Tile)GetITileAt(pos);
+            return _wallArray.Query(Area).ToArray();
         }
+
+        public ITile GetWallAt(Vector2 pos)
+        {
+            return GetAllWallIn(new RectangleF(pos.X, pos.Y, 2f, 2f)).FirstOrDefault();
+        }
+
+        public ITile GetFloorAt(Vector2 pos)
+        {
+            return GetAllFloorIn(new RectangleF(pos.X, pos.Y, 2f, 2f)).FirstOrDefault();
+        }
+
+        public ITile[] GetAllTilesAt(Vector2 pos)
+        {
+            return GetAllTilesIn(new RectangleF(pos.X, pos.Y, 2f, 2f));
+        }
+
+        public ITile GetTypeAt(Type type, Vector2 pos)
+        {
+            ITile[] tiles = GetAllTilesAt(pos);
+            return tiles.FirstOrDefault(x => x.GetType() == type);
+        }
+
+        public ITile GetTypeAt(string type, Vector2 pos)
+        {
+            return GetTypeAt(Type.GetType("ServerServices.Tiles." + type, false), pos);
+        }
+
 
         #endregion
 
         #region Map altering
 
-        public bool ChangeTile(Vector2 pos, string newType)
+        public Tile ChangeTile(Vector2 pos, string newType, Direction dir = Direction.North)
         {
-            var tile = GenerateNewTile(pos, newType) as Tile;
+            var tile = GenerateNewTile(pos, newType, dir) as Tile;
+            if (tile == null)
+                return null;
             //Transfer the gas cell from the old tile to the new tile.
-            Tile t = (Tile)GetITileAt(pos);
-            MoveGasCell(t, tile);
+            Tile t = (Tile)GetTypeAt(newType, pos);
+            if (t != null && t.GasPermeable && tile.GasPermeable)
+            {
+                MoveGasCell(t, tile);
+            }
 
-            tileArray.Remove(t);
-            tileArray.Insert(tile);
-            UpdateTile(pos);
-            return true;
+            RemoveTile(t);
+            AddTile(tile);
+            UpdateTile(tile);
+            return tile;
         }
 
-        public ITile GenerateNewTile(Vector2 pos, string typeName)
+        public ITile GenerateNewTile(Vector2 pos, string typeName, Direction dir = Direction.North)
         {
             Type tileType = Type.GetType("ServerServices.Tiles." + typeName, false);
 
             if (tileType == null) throw new ArgumentException("Invalid Tile Type specified : '" + typeName + "' .");
+            RectangleF rect = new RectangleF();
 
-            Tile t = (Tile)GetTileAt(pos);
-
-            if (t != null) //If theres a tile, activate it's changed event.
+            Tile t = (Tile)GetTypeAt(tileType, pos);
+            Tile tile = null;
+            if (t != null && t.dir == dir)
+            {
                 t.RaiseChangedEvent(tileType);
+                rect = t.Bounds;
+            }
+            else
+            {
+                if (typeName != "Wall")
+                {
+                    rect = new RectangleF(pos.X, pos.Y, tileSpacing, tileSpacing);
+                    tile = (Tile)Activator.CreateInstance(tileType, rect, this);
+                }
+                else
+                {
+                    if (dir == Direction.North) // NS (vertical) wall
+                    {
+                        rect = new RectangleF(pos.X, pos.Y, wallThickness, tileSpacing);
+                    }
+                    else // EW (horizontal) wall
+                    {
+                        rect = new RectangleF(pos.X, pos.Y, tileSpacing, wallThickness);
+                    }
+                    tile = (Tile)Activator.CreateInstance(tileType, rect, this, dir);
+                }
+            }
 
-            return (ITile) Activator.CreateInstance(tileType, pos, this);
+
+            return (ITile)tile;
         }
 
 
@@ -158,12 +220,13 @@ namespace ServerServices.Map
             mapMessage.Write(mapWidth);
             mapMessage.Write(mapHeight);
 
-            foreach (Tile t in GetITilesIn(new Rectangle(0, 0, mapWidth * tileSpacing, mapHeight * tileSpacing)))
+            foreach (Tile t in GetAllTilesIn(new Rectangle(0, 0, mapWidth * tileSpacing, mapHeight * tileSpacing)))
             {
                 mapMessage.Write(t.WorldPosition.X);
                 mapMessage.Write(t.WorldPosition.Y);
                 mapMessage.Write(GetTileIndex((t.GetType().Name)));
                 mapMessage.Write((byte)t.TileState);
+                if (t.GetType().Name == "Wall") mapMessage.Write((byte)t.dir);
             }
 
             IoCManager.Resolve<ISS13NetServer>().SendMessage(mapMessage, connection, NetDeliveryMethod.ReliableOrdered);
@@ -236,9 +299,6 @@ namespace ServerServices.Map
                 case MapMessage.TurfClick:
                     //HandleTurfClick(message);
                     break;
-                case MapMessage.TurfUpdate:
-                    HandleTurfUpdate(message);
-                    break;
                 default:
                     break;
             }
@@ -274,62 +334,70 @@ namespace ServerServices.Map
             }
         }*/ // TODO HOOK ME BACK UP WITH ENTITY SYSTEM
 
-        public void DestroyTile(Vector2 pos)
+        public void DestroyTile(ITile t)
         {
-            Tile t = GetTileAt(pos);
-            var newTile = GenerateNewTile(pos, "Floor") as Tile; //Ugly
-            tileArray.Remove(t);
-            tileArray.Insert(newTile);
-            MoveGasCell(t, newTile);
-            NetworkUpdateTile(pos);
-            UpdateTile(pos);
-        }
-
-        public void UpdateTile(Vector2 pos)
-        {
-            Tile t = (Tile)GetTileAt(pos);
-            if (t == null)
-                return;
-            t.gasCell.SetNeighbours(this);
-            foreach(Tile u in GetITilesIn(new RectangleF(pos.X - tileSpacing, pos.Y - tileSpacing, tileSpacing * 2, tileSpacing * 2)))
+            if (RemoveTile((Tile)t))
             {
-                u.gasCell.SetNeighbours(this);
+                NetworkUpdateTile((Tile)t);
+                UpdateTile((Tile)t);
             }
         }
 
-
-        public void NetworkUpdateTile(Vector2 pos)
+        private void AddTile(Tile t)
         {
-            Tile t = (Tile)GetTileAt(pos);
+            if (t.GetType().Name == "Wall")
+            {
+                _wallArray.Insert(t);
+            }
+            else
+            {
+                _groundArray.Insert(t);
+            }
+        }
+
+        private bool RemoveTile(Tile t)
+        {
+            if (t == null)
+                return false;
+            if (t.GetType().Name == "Wall")
+            {
+                _wallArray.Remove(t);
+            }
+            else
+            {
+                _groundArray.Remove(t);
+            }
+
+            return true;
+        }
+
+        public void UpdateTile(Tile t)
+        {
+            if (t == null || t.gasCell == null)
+                return;
+            t.gasCell.SetNeighbours(this);
+            
+            foreach (Tile u in GetAllTilesIn(new RectangleF(t.WorldPosition.X - tileSpacing, t.WorldPosition.Y - tileSpacing, tileSpacing * 2, tileSpacing * 2)))
+            {
+                u.gasCell.SetNeighbours(this);
+            }
+
+        }
+
+
+        public void NetworkUpdateTile(ITile t)
+        {
             if (t == null)
                 return;
             NetOutgoingMessage message = IoCManager.Resolve<ISS13NetServer>().CreateMessage();
             message.Write((byte) NetMessage.MapMessage);
             message.Write((byte) MapMessage.TurfUpdate);
-            message.Write(pos.X);
-            message.Write(pos.Y);
+            message.Write(t.WorldPosition.X);
+            message.Write(t.WorldPosition.Y);
             message.Write(GetTileIndex(t.GetType().Name));
             message.Write((byte) t.TileState);
+            if (t.GetType().Name == "Wall") message.Write((byte)t.dir);
             IoCManager.Resolve<ISS13NetServer>().SendToAll(message);
-        }
-
-        private void HandleTurfUpdate(NetIncomingMessage message)
-        {
-            float x = message.ReadFloat();
-            float y = message.ReadFloat();
-            Vector2 pos = new Vector2(x, y);
-            string typeStr = GetTileString(message.ReadByte());
-
-            Tile tile = GetTileAt(pos);
-
-            GasCell g = tile.gasCell;
-            var t = GenerateNewTile(pos, typeStr) as Tile;
-            MoveGasCell(tile, t);
-            tileArray.Remove(tile);
-            tileArray.Insert(t);
-            NetworkUpdateTile(pos);
-            UpdateTile(pos);
-
         }
 
         #endregion
@@ -347,7 +415,7 @@ namespace ServerServices.Map
             sw.WriteLine(mapWidth);
             sw.WriteLine(mapHeight);
 
-            foreach (Tile t in GetITilesIn(new Rectangle(0, 0, mapWidth * tileSpacing, mapHeight * tileSpacing)))
+            foreach (Tile t in GetAllTilesIn(new Rectangle(0, 0, mapWidth * tileSpacing, mapHeight * tileSpacing)))
             {
                 sw.WriteLine(t.WorldPosition.X);
                 sw.WriteLine(t.WorldPosition.Y);
@@ -383,7 +451,9 @@ namespace ServerServices.Map
 
             worldArea = new RectangleF(0, 0, mapWidth * tileSpacing, mapHeight * tileSpacing);
 
-            tileArray = new QuadTree<Tile>(new SizeF(tileSpacing * 2f, tileSpacing * 2f), 4);
+            _groundArray = new QuadTree<Tile>(new SizeF(tileSpacing * 2f, tileSpacing * 2f), 4);
+            _wallArray = new QuadTree<Tile>(new SizeF(tileSpacing * 2f, tileSpacing * 2f), 4);
+
 
             while (!sr.EndOfStream)
             {
@@ -391,7 +461,7 @@ namespace ServerServices.Map
                 float y = float.Parse(sr.ReadLine());
                 byte i = byte.Parse(sr.ReadLine());
 
-                tileArray.Insert((Tile)GenerateNewTile(new Vector2(x, y), GetTileString(i)));
+                AddTile((Tile)GenerateNewTile(new Vector2(x, y), GetTileString(i)));
             }
 
             sr.Close();
@@ -405,7 +475,8 @@ namespace ServerServices.Map
             LogManager.Log("Cannot find map. Generating blank map.", LogLevel.Warning);
             mapWidth = 50;
             mapHeight = 50;
-            tileArray = new QuadTree<Tile>(new SizeF(tileSpacing * 2f, tileSpacing * 2f), 4);
+            _groundArray = new QuadTree<Tile>(new SizeF(tileSpacing * 2f, tileSpacing * 2f), 4);
+            _wallArray = new QuadTree<Tile>(new SizeF(tileSpacing * 2f, tileSpacing * 2f), 4);
 
             worldArea = new RectangleF(0, 0, mapWidth * tileSpacing, mapHeight * tileSpacing);
 
@@ -413,7 +484,7 @@ namespace ServerServices.Map
             {
                 for (int x = 0; x < mapWidth; x++)
                 {
-                    tileArray.Insert(new Floor(new Vector2(x * tileSpacing, y * tileSpacing), this));
+                    AddTile(new Floor(new RectangleF(x * tileSpacing, y * tileSpacing, tileSpacing, tileSpacing), this));
                 }
             }
         }

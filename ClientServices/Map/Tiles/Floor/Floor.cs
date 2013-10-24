@@ -6,14 +6,14 @@ namespace ClientServices.Tiles
 {
     public class Floor : Tile
     {
-        public Floor(TileState state, Vector2D position)
-            : base(state, position)
+        public Floor(TileState state, RectangleF rect)
+            : base(state, rect)
         {
             ConnectSprite = false;
             name = "Floor";
 
             Sprite = _resourceManager.GetSprite("floor_texture");
-            Sprite.SetPosition(position.X, position.Y);
+            Sprite.SetPosition(Position.X, Position.Y);
         }
     }
 }

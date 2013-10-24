@@ -45,7 +45,7 @@ namespace SGO
             if (statuscomp == null)
                 return;
 
-            ITile t = map.GetITileAt(Owner.GetComponent<TransformComponent>(ComponentFamily.Transform).Position);
+            ITile t = map.GetFloorAt(Owner.GetComponent<TransformComponent>(ComponentFamily.Transform).Position);
 
             if (t == null)
             {

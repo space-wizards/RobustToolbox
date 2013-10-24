@@ -205,8 +205,8 @@ namespace ClientServices.Tiles
         public override void RenderPos(float x, float y, int tileSpacing, int lightSize)
         {
 
-            Gorgon.CurrentRenderTarget.FilledRectangle(x, y, bounds.Width,
-                                                       bounds.Height, Color.Black);
+            //Gorgon.CurrentRenderTarget.FilledRectangle(x, y, bounds.Width,
+                                                       //bounds.Height, Color.Black);
 
 
 

@@ -104,12 +104,14 @@ namespace ClientServices.State.States
         private FXShader lightMapShader;
         private RenderImage playerOcclusionTarget;
         private ILight playerVision;
+        private RenderImage _occluderDebugTarget;
 
         private QuadRenderer quadRenderer;
         private RenderImage screenShadows;
         private RenderImage shadowBlendIntermediate;
         private RenderImage shadowIntermediate;
         private ShadowMapResolver shadowMapResolver;
+        private bool debugWallOccluders = false;
 
         #endregion
 
@@ -611,9 +613,17 @@ namespace ClientServices.State.States
                 _overlayTarget.Blit();
 
                 LightScene();
+
+                RenderDebug();
                 //Render the placement manager shit
                 PlacementManager.Render();
             }
+        }
+
+        private void RenderDebug()
+        {   
+            if(debugWallOccluders)
+                _occluderDebugTarget.Blit(0,0,_occluderDebugTarget.Width, _occluderDebugTarget.Height, Color.White, BlitterSizeMode.Crop);
         }
 
         public void FormResize()
@@ -644,6 +654,10 @@ namespace ClientServices.State.States
             if (e.Key == KeyboardKeys.F2)
             {
                 _showDebug = !_showDebug;
+            }
+            if (e.Key == KeyboardKeys.F3)
+            {
+                ToggleOccluderDebug();
             }
             if (e.Key == KeyboardKeys.F5)
             {
@@ -1007,6 +1021,21 @@ namespace ClientServices.State.States
             NetworkManager.SendMessage(message, NetDeliveryMethod.Unreliable);
         }
 
+        private void ToggleOccluderDebug()
+        {
+            if(debugWallOccluders)
+            {
+                debugWallOccluders = false;
+                _occluderDebugTarget.Dispose();
+                _occluderDebugTarget = null;
+            }
+            else
+            {
+                debugWallOccluders = true;
+                _occluderDebugTarget = new RenderImage("OccluderDebugTarget", Gorgon.Screen.Width, Gorgon.Screen.Height, ImageBufferFormats.BufferRGB888A8);
+            }
+        }
+
         /// <summary>
         /// Render the renderables
         /// </summary>
@@ -1135,6 +1164,8 @@ namespace ClientServices.State.States
             Gorgon.CurrentShader = null;
             Gorgon.CurrentRenderTarget = null;
 
+            
+            playerOcclusionTarget.Blit(0,0, screenShadows.Width, screenShadows.Height, Color.White, BlitterSizeMode.Crop);
             PlayerPostProcess();
 
             _composedSceneTarget.Image.Blit(0, 0, Gorgon.CurrentClippingViewport.Width,
@@ -1306,16 +1337,28 @@ namespace ClientServices.State.States
                                                       MapManager.GetTileSpacing() + 1);
                 }
 
+
                 area.BeginDrawingShadowCasters(); // Start drawing to the light rendertarget
                 DrawWallsRelativeToLight(area); // Draw all shadowcasting stuff here in black
                 area.EndDrawingShadowCasters(); // End drawing to the light rendertarget
+
+                blitPos = ClientWindowData.WorldToScreen(area.LightPosition - area.LightAreaSize * 0.5f);
+                if (debugWallOccluders)
+                {
+                    RenderTarget previous = Gorgon.CurrentRenderTarget;
+                    Gorgon.CurrentRenderTarget = _occluderDebugTarget;
+                    _occluderDebugTarget.Clear(Color.White);
+                    area.renderTarget.Blit(blitPos.X, blitPos.Y, area.renderTarget.Width, area.renderTarget.Height, Color.White,
+                                           BlitterSizeMode.Crop);
+                    Gorgon.CurrentRenderTarget = previous;
+                }
+
                 shadowMapResolver.ResolveShadows(area.renderTarget.Image, area.renderTarget, area.LightPosition, false,
                                                  IoCManager.Resolve<IResourceManager>().GetSprite("whitemask").Image,
                                                  Vector4D.Zero, new Vector4D(1, 1, 1, 1)); // Calc shadows
 
                 Gorgon.CurrentRenderTarget = playerOcclusionTarget; // Set to shadow rendertarget
 
-                blitPos = ClientWindowData.WorldToScreen(area.LightPosition - area.LightAreaSize*0.5f);
                 area.renderTarget.SourceBlend = AlphaBlendOperation.One; //Additive blending
                 area.renderTarget.DestinationBlend = AlphaBlendOperation.Zero; //Additive blending
                 area.renderTarget.Blit(blitPos.X, blitPos.Y, area.renderTarget.Width,

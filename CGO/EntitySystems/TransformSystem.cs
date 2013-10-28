@@ -27,6 +27,7 @@ namespace CGO.EntitySystems
         public override void Update(float frametime)
         {
             var entities = EntityManager.GetEntities(EntityQuery);
+            //Interp constant -- determines how far back in time to interpolate from
             var interpolation = IoCManager.Resolve<IConfigurationManager>().GetInterpolation();
             foreach (var entity in entities)
             {

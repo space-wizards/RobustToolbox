@@ -42,13 +42,13 @@ namespace ClientServices.Tiles
             base.Initialize();
         }
 
-        public override void SetSprite()
+        public Point GetSurroundDirs()
         {
             surroundDirsNW = 0;
             surroundDirsSE = 0;
             float halfSpacing = mapMgr.GetTileSpacing() / 2f;
             Vector2D checkPos = Position + new Vector2D(1f, 1f);
-            if (mapMgr.GetWallAt(checkPos + new Vector2D(0,-halfSpacing)) != null) // North side
+            if (mapMgr.GetWallAt(checkPos + new Vector2D(0, -halfSpacing)) != null) // North side
             {
                 surroundDirsNW += 1;
             }
@@ -83,6 +83,31 @@ namespace ClientServices.Tiles
                 surroundDirsSE += 8;
             }
 
+            return new Point(surroundDirsNW, surroundDirsSE);
+        }
+
+        public bool HasNeighborWall(Direction dir)
+        {
+            if(_dir == Direction.East)
+            {
+                if (dir == Direction.East)
+                    return (surroundDirsSE & 2) != 0;
+                if (dir == Direction.West)
+                    return (surroundDirsNW & 8) != 0;
+            }
+            else
+            {
+                if (dir == Direction.North)
+                    return (surroundDirsNW & 1) != 0;
+                if (dir == Direction.South)
+                    return (surroundDirsSE & 4) != 0;
+            }
+            return false;
+        }
+
+        public override void SetSprite()
+        {
+            GetSurroundDirs();
             int first = 0, second = 0;
 
             if (_dir == Direction.East)
@@ -131,7 +156,7 @@ namespace ClientServices.Tiles
             batch.AddClone(Sprite);
         }
 
-        private void RenderOccluder(Direction d, Direction from, float x, float y, int tileSpacing)
+        private void RenderOccluder(Direction d, Direction from, float x, float y)
         {
             int bx = 0;
             int by = 0;
@@ -175,43 +200,48 @@ namespace ClientServices.Tiles
                 case Direction.North:
                     drawX = x;
                     drawY = y;
-                    width = tileSpacing;
+                    width = (int)bounds.Width;
                     height = 2;
                     break;
                 case Direction.East:
-                    drawX = x + tileSpacing;
+                    drawX = x + (int)bounds.Width;
                     drawY = y;
                     width = 2;
-                    height = tileSpacing;
+                    height = (int)bounds.Height;
                     break;
                 case Direction.South:
                     drawX = x;
-                    drawY = y + tileSpacing;
-                    width = tileSpacing;
+                    drawY = y + (int)bounds.Height;
+                    width = (int)bounds.Width;
                     height = 2;
                     break;
                 case Direction.West:
                     drawX = x;
                     drawY = y;
                     width = 2;
-                    height = tileSpacing;
+                    height = (int)bounds.Height;
                     break;
             }
 
-            Gorgon.CurrentRenderTarget.FilledRectangle(drawX + bx, drawY + bx, width + Math.Abs(bx),
+            /*Sprite.SetPosition((float)bounds.X - xTopLeft,
+                                        (float)bounds.Y - (Sprite.Height - bounds.Height) - yTopLeft);*/
+            Gorgon.CurrentRenderTarget.FilledRectangle(drawX + bx, drawY + by, width + Math.Abs(bx),
                                                        height + Math.Abs(by), Color.Black);
         }
 
         public override void RenderPos(float x, float y, int tileSpacing, int lightSize)
         {
 
-            //Gorgon.CurrentRenderTarget.FilledRectangle(x, y, bounds.Width,
-                                                       //bounds.Height, Color.Black);
+            /*Gorgon.CurrentRenderTarget.FilledRectangle(x, y, bounds.Width,
+                                                       bounds.Height, Color.Black);
+            */
 
 
+            /*Sprite.SetPosition((float)bounds.X - xTopLeft,
+                                        (float)bounds.Y - (Sprite.Height - bounds.Height) - yTopLeft);*/
 
             //Not drawing occlusion for tiles on the edge. Fuck this. Looks better too since there isnt actually anything to hide behind them.
-            /*if ((Position.X == ((mapMgr.GetMapWidth() - 1) * mapMgr.GetTileSpacing()) || Position.X == 0) ||
+            if ((Position.X == ((mapMgr.GetMapWidth() - 1) * mapMgr.GetTileSpacing()) || Position.X == 0) ||
                 (Position.Y == ((mapMgr.GetMapHeight() - 1) * mapMgr.GetTileSpacing()) || Position.Y == 0))
                 return;
 
@@ -219,119 +249,156 @@ namespace ClientServices.Tiles
             var from = Direction.East;
             if (l < x && l < y)
                 from = Direction.NorthWest;
-            else if (l > x + tileSpacing && l < y)
+            else if (l > x + bounds.Width && l < y)
                 from = Direction.NorthEast;
-            else if (l < x && l > y + tileSpacing)
+            else if (l < x && l > y + bounds.Height)
                 from = Direction.SouthWest;
-            else if (l > x + tileSpacing && l > y + tileSpacing)
+            else if (l > x + bounds.Width && l > y + bounds.Height)
                 from = Direction.SouthEast;
             else if (l < x)
                 from = Direction.West;
-            else if (l > x + tileSpacing)
+            else if (l > x + bounds.Width)
                 from = Direction.East;
             else if (l < y)
                 from = Direction.North;
-            else if (l > y + tileSpacing)
+            else if (l > y + bounds.Height)
                 from = Direction.South;
 
-            if (l < x)
+            //Dirs == north=1, east=2, south=3, west=4
+
+            if (_dir == Direction.East) //East-west wall
             {
-                if (!IsOpaque(1) || (IsOpaque(1) && IsOpaque(2)))
-                    RenderOccluder(Direction.East, from, x, y, tileSpacing);
-
-                if (l < y)
+                if (l < y) //Light is north of wall
                 {
-                    if (!IsOpaque(2) || (IsOpaque(2) && !IsOpaque(0)))
+                    if (l < x) //light is north west of wall
                     {
-                        RenderOccluder(Direction.North, from, x, y, tileSpacing);
+                        RenderOccluder(Direction.South, from, x, y);
+                        if(!HasNeighborWall(Direction.East))
+                            RenderOccluder(Direction.East, from, x, y);
                     }
-                    if (!IsOpaque(2))
-                        RenderOccluder(Direction.West, from, x, y, tileSpacing);
-                }
-                else if (l > y + tileSpacing)
-                {
-                    if (!IsOpaque(0) || (IsOpaque(0) && !IsOpaque(2) &&
-                         (l < x + tileSpacing && !IsOpaque(1))))
-                        RenderOccluder(Direction.North, from, x, y, tileSpacing);
-                    if (IsOpaque(1) && IsOpaque(3))
-                        RenderOccluder(Direction.North, from, x, y, tileSpacing);
-                }
-                else if (l >= y && l <= y + tileSpacing)
-                {
-                    if (!IsOpaque(2) || (IsOpaque(2) && !IsOpaque(0)))
+                    else if (l > x + bounds.Width) // light is north east of wall
                     {
-                        RenderOccluder(Direction.North, from, x, y, tileSpacing);
+                        RenderOccluder(Direction.South, from, x, y);
+                        if(!HasNeighborWall(Direction.West))
+                            RenderOccluder(Direction.West, from, x, y);
                     }
-                    if (!IsOpaque(2))
-                        RenderOccluder(Direction.West, from, x, y, tileSpacing);
+                    else if (l >= x && l <= x + bounds.Width) //light is north, within wall X bounds
+                    {
+                        RenderOccluder(Direction.South, from, x, y);
+                        if (!HasNeighborWall(Direction.East))
+                            RenderOccluder(Direction.East, from, x, y);
+                        if (!HasNeighborWall(Direction.West))
+                            RenderOccluder(Direction.West, from, x, y);
 
-                    if (!IsOpaque(0) || (IsOpaque(0) && !IsOpaque(2)))
-                        RenderOccluder(Direction.North, from, x, y, tileSpacing);
+                    }
+                }
+                else if (l > y + bounds.Height) // Light is south of wall
+                {
+                    if (l < x) //light is south west of wall
+                    {
+                        RenderOccluder(Direction.North, from, x, y);
+                        if (!HasNeighborWall(Direction.East))
+                            RenderOccluder(Direction.East, from, x, y);
+                    }
+                    else if (l > x + bounds.Width) //light is south east of wall
+                    {
+                        RenderOccluder(Direction.North, from, x, y);
+                        if (!HasNeighborWall(Direction.West))
+                            RenderOccluder(Direction.West, from, x, y);
+                    }
+                    else if (l >= x && l <= x + bounds.Width) //light is south, within wall X bounds
+                    {
+                        RenderOccluder(Direction.North, from, x, y);
+                        if (!HasNeighborWall(Direction.East))
+                            RenderOccluder(Direction.East, from, x, y);
+                        if (!HasNeighborWall(Direction.West))
+                            RenderOccluder(Direction.West, from, x, y);
+                    }
+                }
+                else if (l >= y && l <= y + bounds.Height) //light is within wall Y bounds
+                {
+                    if (l < x) //light is west of wall, within wall Y bounds
+                    {
+                        if (!HasNeighborWall(Direction.East))
+                            RenderOccluder(Direction.East, from, x, y);
+                    }
+                    else if (l > x + bounds.Width) //Light is east of wall, within wall Y bounds
+                    {
+                        if (!HasNeighborWall(Direction.West))
+                            RenderOccluder(Direction.West, from, x, y);
+                    }
+                    else if (l >= x && l <= x + bounds.Width) //Light is within wall X and Y bounds
+                    {
+                        //Don't render occluders for this wall
+                    }
                 }
             }
-            else if (l > x + tileSpacing)
+            else // North-south wall
             {
-                if (!IsOpaque(3) || (IsOpaque(3) && IsOpaque(2)))
-                    RenderOccluder(Direction.West, from, x, y, tileSpacing);
-
-                if (l < y)
+                if (l < x) //Light is west of wall
                 {
-                    if (!IsOpaque(2) || (IsOpaque(2) && !IsOpaque(0)))
+                    if (l < y) //light is north west of wall
                     {
-                        RenderOccluder(Direction.North, from, x, y, tileSpacing);
+                        RenderOccluder(Direction.East, from, x, y);
+                        if(!HasNeighborWall(Direction.South))
+                            RenderOccluder(Direction.South, from, x, y);
                     }
-                    if (!IsOpaque(2))
-                        RenderOccluder(Direction.East, from, x, y, tileSpacing);
-                }
-                else if (l > y + tileSpacing)
-                {
-                    if (!IsOpaque(0) ||
-                        (IsOpaque(0) && !IsOpaque(2) &&
-                         (l < x + tileSpacing && !IsOpaque(1))))
-                        RenderOccluder(Direction.North, from, x, y, tileSpacing);
-                    if (IsOpaque(1))
-                        RenderOccluder(Direction.North, from, x, y, tileSpacing);
-                }
-                else if (l >= y && l <= y + tileSpacing)
-                {
-                    if (!IsOpaque(2) || (IsOpaque(2) && !IsOpaque(0)))
+                    else if (l > y + bounds.Height) // light is south west of wall
                     {
-                        RenderOccluder(Direction.North, from, x, y, tileSpacing);
+                        RenderOccluder(Direction.East, from, x, y);
+                        if (!HasNeighborWall(Direction.North))
+                            RenderOccluder(Direction.North, from, x, y);
                     }
-                    if (!IsOpaque(2))
-                        RenderOccluder(Direction.East, from, x, y, tileSpacing);
-                    if (!IsOpaque(0) || (IsOpaque(0) && !IsOpaque(2)))
-                        RenderOccluder(Direction.North, from, x, y, tileSpacing);
+                    else if (l >= y && l <= y + bounds.Height) //light is west, within wall Y bounds
+                    {
+                        RenderOccluder(Direction.East, from, x, y);
+                        if (!HasNeighborWall(Direction.South))
+                            RenderOccluder(Direction.South, from, x, y);
+                        if (!HasNeighborWall(Direction.North))
+                            RenderOccluder(Direction.North, from, x, y);
+                    }
+                }
+                else if (l > x + bounds.Width) // Light is east of wall
+                {
+                    if (l < y) //light is north east of wall
+                    {
+                        RenderOccluder(Direction.West, from, x, y);
+                        if (!HasNeighborWall(Direction.South))
+                            RenderOccluder(Direction.South, from, x, y);
+                    }
+                    else if (l > y + bounds.Height) //light is south east of wall
+                    {
+                        RenderOccluder(Direction.West, from, x, y);
+                        if (!HasNeighborWall(Direction.North))
+                            RenderOccluder(Direction.North, from, x, y);
+                    }
+                    else if (l >= y && l <= y + bounds.Height) //light is east, within wall Y bounds
+                    {
+                        RenderOccluder(Direction.West, from, x, y);
+                        if (!HasNeighborWall(Direction.South))
+                            RenderOccluder(Direction.South, from, x, y);
+                        if (!HasNeighborWall(Direction.North))
+                            RenderOccluder(Direction.North, from, x, y);
+                    }
+                }
+                else if (l >= x && l <= x + bounds.Width) //light is within wall X bounds
+                {
+                    if (l < y) //light is within wall X bounds, north of wall
+                    {
+                        if (!HasNeighborWall(Direction.South))
+                            RenderOccluder(Direction.South, from, x, y);
+                    }
+                    else if (l > y + bounds.Height) //Light is within wall X bounds, south of wall
+                    {
+                        if (!HasNeighborWall(Direction.North))
+                            RenderOccluder(Direction.North, from, x, y);
+                    }
+                    else if (l >= y && l <= y + bounds.Height) //Light is within wall Y and Y bounds
+                    {
+                        //Don't render occluders for this wall
+                    }
                 }
             }
-            else if (l >= x && l <= x + tileSpacing)
-            {
-                if (!IsOpaque(1) || (IsOpaque(1) && IsOpaque(2)))
-                    RenderOccluder(Direction.East, from, x, y, tileSpacing);
-                if (!IsOpaque(3) || (IsOpaque(3) && IsOpaque(2)))
-                    RenderOccluder(Direction.West, from, x, y, tileSpacing);
-
-                if (l < y)
-                {
-                    if (!IsOpaque(2) || (IsOpaque(2) && !IsOpaque(0)))
-                        RenderOccluder(Direction.North, from, x, y, tileSpacing);
-                }
-                else if (l > y + tileSpacing)
-                {
-                    if (!IsOpaque(0) ||
-                        (IsOpaque(0) && !IsOpaque(2) &&
-                         (l < x + tileSpacing && !IsOpaque(1))))
-                        RenderOccluder(Direction.North, from, x, y, tileSpacing);
-                    RenderOccluder(Direction.North, from, x, y, tileSpacing);
-                }
-                else if (l >= y && l <= y + tileSpacing)
-                {
-                    if (!IsOpaque(2) || (IsOpaque(2) && !IsOpaque(0)))
-                        RenderOccluder(Direction.North, from, x, y, tileSpacing);
-                    if (!IsOpaque(0) || (IsOpaque(0) && !IsOpaque(2)))
-                        RenderOccluder(Direction.North, from, x, y, tileSpacing);
-                }
-            }*/
 
         }
 

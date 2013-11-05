@@ -1,4 +1,5 @@
-﻿using GorgonLibrary;
+﻿using System.Drawing;
+using GorgonLibrary;
 using SS13_Shared.GO;
 
 namespace ClientInterfaces.GOC
@@ -9,5 +10,7 @@ namespace ClientInterfaces.GOC
         float Bottom { get; }
         void Render(Vector2D topLeft, Vector2D bottomRight);
         void RemoveSlave(IRenderableComponent slave);
+        RectangleF AABB { get; }
+        RectangleF AverageAABB { get; }
     }
 }

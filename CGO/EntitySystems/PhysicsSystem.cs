@@ -27,9 +27,17 @@ namespace CGO.EntitySystems
             EntityQuery.Exclusionset.Add(typeof(SlaveMoverComponent));
         }
 
+        /// <summary>
+        /// Update
+        /// 
+        /// This system is currently slightly dumb -- it only does player movement right now because
+        /// all other movement is done via straight interpolation through coordinates sent from the server.
+        /// </summary>
+        /// <param name="frametime"></param>
         public override void Update(float frametime)
         {
             var entities = EntityManager.GetEntities(EntityQuery);
+            return;
             foreach(var entity in entities)
             {
                 var transform = entity.GetComponent<TransformComponent>(ComponentFamily.Transform);
@@ -41,7 +49,7 @@ namespace CGO.EntitySystems
                 var movement = velocity.Velocity*frametime;
 
                 var mover = entity.GetComponent<KeyBindingMoverComponent>(ComponentFamily.Mover);
-                if(mover != null && movement.Length > 0.001f)
+                if(mover != null && movement.Length > 0)
                 {
                     //Check for collision
                     var collider = entity.GetComponent<ColliderComponent>(ComponentFamily.Collider);
@@ -63,7 +71,7 @@ namespace CGO.EntitySystems
                     if (movement.Length > 0.001f)
                     {
                         transform.TranslateByOffset(movement);
-                        mover.SendPositionUpdate(transform.Position);
+                        mover.ShouldSendPositionUpdate = true;
                     }
                 }
                 if (mover != null && mover.ShouldSendPositionUpdate)

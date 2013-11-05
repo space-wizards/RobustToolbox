@@ -31,38 +31,106 @@ namespace CGO.EntitySystems
             var interpolation = IoCManager.Resolve<IConfigurationManager>().GetInterpolation();
             foreach (var entity in entities)
             {
+                //Get transform component
                 var transform = entity.GetComponent<TransformComponent>(ComponentFamily.Transform);
+                //Check if the entity has a keyboard input mover component
                 bool haskbMover = entity.GetComponent<KeyBindingMoverComponent>(ComponentFamily.Mover) != null;
+
+                //Pretend that the current point in time is actually 100 or more milliseconds in the past depending on the interp constant
                 var currentTime = IoCManager.Resolve<IGameTimer>().CurrentTime - interpolation;
                 Vector2D newPosition;
-                if (transform.lerpStateTo == transform.lerpStateFrom || currentTime > transform.lerpStateTo.ReceivedTime || currentTime < transform.lerpStateFrom.ReceivedTime)
+
+                //Limit to how far a human can move
+                var humanMoveLimit = 3 * interpolation * KeyBindingMoverComponent.FastMoveSpeed;
+                
+                // If the "to" interp position is equal to the "from" interp position, 
+                // OR we're actually trying to interpolate past the "to" state
+                // OR we're trying to interpolate a point older than the oldest state in memory
+                if (transform.lerpStateTo == transform.lerpStateFrom || 
+                    currentTime > transform.lerpStateTo.ReceivedTime || 
+                    currentTime < transform.lerpStateFrom.ReceivedTime)
                 {
+                    // Fall back to setting the position to the "To" state
                     newPosition = new Vector2D(transform.lerpStateTo.X, transform.lerpStateTo.Y);
                 }
-                else
+                else //OTHERWISE
                 {
+                    //Interpolate
+
                     var p1 = new Vector2D(transform.lerpStateFrom.X, transform.lerpStateTo.Y);
                     var p2 = new Vector2D(transform.lerpStateTo.X, transform.lerpStateTo.Y);
                     var t1 = transform.lerpStateFrom.ReceivedTime;
                     var t2 = transform.lerpStateTo.ReceivedTime;
+
+                    // linear interpolation from the state immediately prior to the "current time"
+                    // to the state immediately after the "current time"
                     var lerp = (currentTime - t1)/(t2 - t1);
+                    //lerp is a constant 0..1 value that says what position along the line from p1 to p2 we're at
                     newPosition = Interpolate(p1, p2, lerp, false);
                     if(haskbMover)
-                        newPosition = EaseExponential(currentTime - t1, transform.Position, newPosition, t2 - t1);
-                }
-                if ((newPosition - transform.Position).Length > 0.01f &&
-                    (!haskbMover || (newPosition - transform.Position).Length > 3 * interpolation * KeyBindingMoverComponent.FastMoveSpeed))
-                {
-                    transform.TranslateTo(newPosition);
-                    if(haskbMover)
                     {
-                        entity.GetComponent<KeyBindingMoverComponent>(ComponentFamily.Mover).SendPositionUpdate(newPosition);
+                        newPosition = EaseExponential(currentTime - t1, transform.Position, newPosition, t2 - t1);
+                    }
+                }
+
+                //Handle player movement
+                if (haskbMover)
+                {
+                    //var playerPosition = transform.Position + 
+                    var velocityComponent = entity.GetComponent<VelocityComponent>(ComponentFamily.Velocity);
+                    if (velocityComponent != null) 
+                    {
+                        var movement = velocityComponent.Velocity * frametime;
+                        var playerPosition = movement + transform.Position;
+                        var difference = playerPosition - newPosition;
+                        if (difference.Length <= humanMoveLimit)
+                            //TODO do this by reducing the length of the difference vector to the acceptable amount and applying it
+                            //Instead of just snapping back to the server's position
+                            newPosition = playerPosition;
+                    }
+                    // Reduce rubber banding by easing to the position we're supposed to be at
+                }
+
+                if ((newPosition - transform.Position).Length > 0.0001f)// &&
+                    //(!haskbMover || (newPosition - transform.Position).Length > humanMoveLimit))
+                {
+                    var doTranslate = false;
+                    if (!haskbMover)
+                        doTranslate = true;
+                    else
+                    {
+                        //Only for components with a keyboard input mover component, and a collider component
+                        // Check for collision so we don't get shit stuck in objects
+                        if (entity.GetComponent<ColliderComponent>(ComponentFamily.Collider) != null)
+                        {
+                            //Check for collision
+                            var collider = entity.GetComponent<ColliderComponent>(ComponentFamily.Collider);
+                            bool collided = collider.TryCollision(newPosition - transform.Position, true);
+                            if (!collided)
+                                doTranslate = true;
+                            else
+                            {
+                                //Debugger.Break();
+                            }
+                                
+                        }
+                        else
+                        {
+                            doTranslate = true;
+                        }
+                    }
+                    if (doTranslate)
+                    {
+                        transform.TranslateTo(newPosition);
+                        if (haskbMover)
+                            entity.GetComponent<KeyBindingMoverComponent>(ComponentFamily.Mover).SendPositionUpdate(newPosition);
+
                     }
                 }
 
             }
         }
-
+        
         private Vector2D EaseExponential(float time, Vector2D v1, Vector2D v2, float duration)
         {
             var dx = (v2.X - v1.X);

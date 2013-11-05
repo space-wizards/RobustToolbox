@@ -51,7 +51,12 @@ namespace CGO
         }
 
         #region ISpriteComponent Members
-
+        
+        public RectangleF AverageAABB
+        {
+            get { return AABB; }
+        }
+        
         public RectangleF AABB
         {
             get
@@ -327,6 +332,11 @@ namespace CGO
             {
                 component.Render(topLeft, bottomRight);
             }
+
+
+            //Draw AABB
+            var aabb = AABB;
+            Gorgon.CurrentRenderTarget.Rectangle(renderPos.X - aabb.Width / 2, renderPos.Y - aabb.Height / 2, aabb.Width, aabb.Height, Color.Lime);
         }
 
         public void SetSpriteCenter(string sprite, Vector2D center)

@@ -32,6 +32,19 @@ namespace CGO
 
         public DrawDepth DrawDepth { get; set; }
         #endregion
+
+        #region Properties
+        public RectangleF AverageAABB
+        {
+            get { return AABB; }
+        }
+
+        public RectangleF AABB
+        {
+            get { return RectangleF.Empty; }
+        }
+        #endregion
+
         public ParticleSystemComponent()
         {
             Family = ComponentFamily.Particles;

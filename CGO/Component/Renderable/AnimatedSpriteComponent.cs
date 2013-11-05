@@ -47,6 +47,11 @@ namespace CGO
             }
         }
 
+        public RectangleF AverageAABB
+        {
+            get { return sprite.AverageAABB; }
+        }
+
         #region ISpriteComponent Members
 
         public RectangleF AABB
@@ -238,6 +243,10 @@ namespace CGO
             {
                 component.Render(topLeft, bottomRight);
             }
+
+            //Draw AABB
+            var aabb = AABB;
+            Gorgon.CurrentRenderTarget.Rectangle(renderPos.X - aabb.Width/2, renderPos.Y - aabb.Height / 2, aabb.Width, aabb.Height, Color.Lime);
         }
 
         public override void Update(float frameTime)

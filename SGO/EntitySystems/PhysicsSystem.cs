@@ -18,6 +18,7 @@ namespace SGO.EntitySystems
             EntityQuery.AllSet.Add(typeof(VelocityComponent));
             EntityQuery.AllSet.Add(typeof(TransformComponent));
             EntityQuery.Exclusionset.Add(typeof(SlaveMoverComponent));
+            EntityQuery.Exclusionset.Add(typeof(PlayerInputMoverComponent));
         }
 
         public override void Update(float frametime)
@@ -30,6 +31,8 @@ namespace SGO.EntitySystems
                 var transform = entity.GetComponent<TransformComponent>(ComponentFamily.Transform);
                 var velocity = entity.GetComponent<VelocityComponent>(ComponentFamily.Velocity);
 
+                if (velocity.Velocity.Magnitude < 0.001f)
+                    continue;
                 //Decelerate
                 velocity.Velocity -= (velocity.Velocity * (frametime * 0.01f));
 

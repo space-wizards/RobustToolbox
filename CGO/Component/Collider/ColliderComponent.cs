@@ -1,6 +1,7 @@
 ﻿using System.Drawing;
 using System.Linq;
 using ClientInterfaces.Collision;
+using ClientInterfaces.GOC;
 using GameObject;
 using GorgonLibrary;
 using SS13.IoC;
@@ -10,7 +11,15 @@ namespace CGO
 {
     public class ColliderComponent : Component
     {
-        private RectangleF currentAABB;
+        private RectangleF currentAABB
+        {
+            get
+            {
+                if (Owner.HasComponent(ComponentFamily.Renderable))
+                    return Owner.GetComponent<IRenderableComponent>(ComponentFamily.Renderable).AverageAABB;
+                return RectangleF.Empty;
+            }
+        }
 
         /// <summary>
         /// X - Top | Y - Right | Z - Bottom | W - Left
@@ -33,17 +42,18 @@ namespace CGO
             get
             {
                 // Return tweaked AABB
-                if (currentAABB != null)
+                var currAABB = currentAABB;
+                if (currAABB != null)
                     return
                         new RectangleF(
-                            currentAABB.Left +
+                            currAABB.Left +
                             Owner.GetComponent<TransformComponent>(ComponentFamily.Transform).Position.X -
-                            (currentAABB.Width/2) + tweakAABB.W,
-                            currentAABB.Top +
+                            (currAABB.Width / 2) + tweakAABB.W,
+                            currAABB.Top +
                             Owner.GetComponent<TransformComponent>(ComponentFamily.Transform).Position.Y -
-                            (currentAABB.Height/2) + tweakAABB.X,
-                            currentAABB.Width - (tweakAABB.W - tweakAABB.Y),
-                            currentAABB.Height - (tweakAABB.X - tweakAABB.Z));
+                            (currAABB.Height / 2) + tweakAABB.X,
+                            currAABB.Width - (tweakAABB.W - tweakAABB.Y),
+                            currAABB.Height - (tweakAABB.X - tweakAABB.Z));
                 else
                     return RectangleF.Empty;
             }
@@ -59,9 +69,6 @@ namespace CGO
 
             switch (type)
             {
-                case ComponentMessageType.SpriteChanged:
-                    GetAABB();
-                    break;
                 case ComponentMessageType.CheckCollision:
                     reply = list.Any() ? CheckCollision((bool) list[0]) : CheckCollision();
                     break;
@@ -82,27 +89,6 @@ namespace CGO
             }
         }
 
-        public override void OnAdd(Entity owner)
-        {
-            base.OnAdd(owner);
-            GetAABB();
-        }
-
-        /// <summary>
-        /// Gets the current AABB from the sprite component.
-        /// </summary>
-        private void GetAABB()
-        {
-            ComponentReplyMessage reply = Owner.SendMessage(this, ComponentFamily.Renderable,
-                                                            ComponentMessageType.GetAABB);
-            if (reply.MessageType == ComponentMessageType.CurrentAABB)
-            {
-                currentAABB = (RectangleF) reply.ParamsList[0];
-            }
-            else
-                return;
-        }
-
         private ComponentReplyMessage CheckCollision(bool SuppressBump = false)
         {
             bool isColliding = false;
@@ -111,9 +97,9 @@ namespace CGO
             return new ComponentReplyMessage(ComponentMessageType.CollisionStatus, isColliding);
         }
 
-        public bool TryCollision(Vector2D offset)
+        public bool TryCollision(Vector2D offset, bool bump = false)
         {
-            return IoCManager.Resolve<ICollisionManager>().TryCollide(Owner, offset);
+            return IoCManager.Resolve<ICollisionManager>().TryCollide(Owner, offset, bump);
         }
     }
 }

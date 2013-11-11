@@ -160,8 +160,8 @@ namespace ClientServices.Tiles
         {
             int bx = 0;
             int by = 0;
-            float drawX = 0;
-            float drawY = 0;
+            float drawX = x;
+            float drawY = y;
             int width = 0;
             int height = 0;
             switch (from)
@@ -195,141 +195,150 @@ namespace ClientServices.Tiles
                     by = -2;
                     break;
             }
-            switch (d)
+
+            if (_dir == Direction.East)
             {
-                case Direction.North:
-                    drawX = x;
-                    drawY = y;
-                    width = (int)bounds.Width;
-                    height = 2;
-                    break;
-                case Direction.East:
-                    drawX = x + (int)bounds.Width;
-                    drawY = y;
-                    width = 2;
-                    height = (int)bounds.Height;
-                    break;
-                case Direction.South:
-                    drawX = x;
-                    drawY = y + (int)bounds.Height;
-                    width = (int)bounds.Width;
-                    height = 2;
-                    break;
-                case Direction.West:
-                    drawX = x;
-                    drawY = y;
-                    width = 2;
-                    height = (int)bounds.Height;
-                    break;
+                switch (d)
+                {
+                    case Direction.North:
+                        drawY += bounds.Height - Sprite.Height;
+                        width = (int)Sprite.Width;
+                        height = 4;
+                        break;
+                    case Direction.East:
+                        drawX += bounds.Width;
+                        width = 4;
+                        if (from != Direction.North && from != Direction.NorthEast)
+                        {
+                            drawY += bounds.Height - Sprite.Height;
+                            height = (int)Sprite.Height;
+                        }
+                        else
+                        {
+                            drawY += (bounds.Height * 2) - Sprite.Height;
+                            height = (int)(Sprite.Height - bounds.Height);
+                        }
+                        break;
+                    case Direction.South:
+                        drawY += (2 * bounds.Height) - Sprite.Height;
+                        width = (int)Sprite.Width;
+                        height = 4;
+                        break;
+                    case Direction.West:
+                        width = 4;
+                        if (from != Direction.North && from != Direction.NorthWest)
+                        {
+                            drawY += bounds.Height - Sprite.Height;
+                            height = (int)Sprite.Height;
+                        }
+                        else
+                        {
+                            drawY += (bounds.Height * 2) - Sprite.Height;
+                            height = (int)(Sprite.Height - bounds.Height);
+                        }
+                        break;
+                }
+            }
+            else
+            {
+                switch (d)
+                {
+                    case Direction.North:
+                        drawY += bounds.Height - Sprite.Height;
+                        width = (int)Sprite.Width;
+                        height = 4;
+                        break;
+                    case Direction.East:
+                        drawX += bounds.Width;
+                        width = 4;
+                        if (from != Direction.East && from != Direction.SouthEast && from != Direction.NorthEast)
+                        {
+                            drawY += bounds.Height - Sprite.Height;
+                            height = (int)Sprite.Height;
+                        }
+                        else
+                        {
+                            drawY += (bounds.Height * 2) - Sprite.Height;
+                            height = (int)(Sprite.Height - bounds.Height);
+                        }
+                        break;
+                    case Direction.South:
+                        drawY += (2 * bounds.Height) - Sprite.Height;
+                        width = (int)Sprite.Width;
+                        height = 4;
+                        break;
+                    case Direction.West:
+                        width = 4;
+                        if (from != Direction.West && from != Direction.SouthWest && from != Direction.NorthWest)
+                        {
+                            drawY += bounds.Height - Sprite.Height;
+                            height = (int)Sprite.Height;
+                        }
+                        else
+                        {
+                            drawY += (bounds.Height * 2) - Sprite.Height;
+                            height = (int)(Sprite.Height - bounds.Height);
+                        }
+                        break;
+                }
             }
 
-            /*Sprite.SetPosition((float)bounds.X - xTopLeft,
-                                        (float)bounds.Y - (Sprite.Height - bounds.Height) - yTopLeft);*/
-            Gorgon.CurrentRenderTarget.FilledRectangle(drawX + bx, drawY + by, width + Math.Abs(bx),
-                                                       height + Math.Abs(by), Color.Black);
+            Gorgon.CurrentRenderTarget.FilledRectangle(drawX + bx, drawY + by, width,
+                                                       height, Color.Black);
         }
 
         public override void RenderPos(float x, float y, int tileSpacing, int lightSize)
         {
-
-            /*Gorgon.CurrentRenderTarget.FilledRectangle(x, y, bounds.Width,
-                                                       bounds.Height, Color.Black);
-            */
-
-
-            /*Sprite.SetPosition((float)bounds.X - xTopLeft,
-                                        (float)bounds.Y - (Sprite.Height - bounds.Height) - yTopLeft);*/
-
-            //Not drawing occlusion for tiles on the edge. Fuck this. Looks better too since there isnt actually anything to hide behind them.
-            if ((Position.X == ((mapMgr.GetMapWidth() - 1) * mapMgr.GetTileSpacing()) || Position.X == 0) ||
-                (Position.Y == ((mapMgr.GetMapHeight() - 1) * mapMgr.GetTileSpacing()) || Position.Y == 0))
-                return;
-
             int l = lightSize/2;
             var from = Direction.East;
-            if (l < x && l < y)
+            if (l < x && l < y - (2.5f * bounds.Height))
                 from = Direction.NorthWest;
-            else if (l > x + bounds.Width && l < y)
+            else if (l > x + bounds.Width && l < y - (2.5f * bounds.Height))
                 from = Direction.NorthEast;
-            else if (l < x && l > y + bounds.Height)
+            else if (l < x && l > y)
                 from = Direction.SouthWest;
-            else if (l > x + bounds.Width && l > y + bounds.Height)
+            else if (l > x + bounds.Width && l > y)
                 from = Direction.SouthEast;
             else if (l < x)
                 from = Direction.West;
             else if (l > x + bounds.Width)
                 from = Direction.East;
-            else if (l < y)
+            else if (l < y - (2.5f * bounds.Height))
                 from = Direction.North;
-            else if (l > y + bounds.Height)
+            else if (l > y)
                 from = Direction.South;
 
             //Dirs == north=1, east=2, south=3, west=4
 
             if (_dir == Direction.East) //East-west wall
             {
-                if (l < y) //Light is north of wall
+                if (l < y - (2.5f * bounds.Height)) //Light is north of wall
                 {
-                    if (l < x) //light is north west of wall
-                    {
-                        RenderOccluder(Direction.South, from, x, y);
-                        if(!HasNeighborWall(Direction.East))
-                            RenderOccluder(Direction.East, from, x, y);
-                    }
-                    else if (l > x + bounds.Width) // light is north east of wall
-                    {
-                        RenderOccluder(Direction.South, from, x, y);
-                        if(!HasNeighborWall(Direction.West))
-                            RenderOccluder(Direction.West, from, x, y);
-                    }
-                    else if (l >= x && l <= x + bounds.Width) //light is north, within wall X bounds
-                    {
-                        RenderOccluder(Direction.South, from, x, y);
-                        if (!HasNeighborWall(Direction.East))
-                            RenderOccluder(Direction.East, from, x, y);
-                        if (!HasNeighborWall(Direction.West))
-                            RenderOccluder(Direction.West, from, x, y);
-
-                    }
+                    RenderOccluder(Direction.South, from, x, y);
+                    if (!HasNeighborWall(Direction.East))
+                        RenderOccluder(Direction.East, from, x, y);
+                    if (!HasNeighborWall(Direction.West))
+                        RenderOccluder(Direction.West, from, x, y);
                 }
-                else if (l > y + bounds.Height) // Light is south of wall
+                else//(l > y - Sprite.Height) // Light is south of wall
                 {
+                    RenderOccluder(Direction.North, from, x, y);
                     if (l < x) //light is south west of wall
                     {
-                        RenderOccluder(Direction.North, from, x, y);
                         if (!HasNeighborWall(Direction.East))
                             RenderOccluder(Direction.East, from, x, y);
                     }
                     else if (l > x + bounds.Width) //light is south east of wall
                     {
-                        RenderOccluder(Direction.North, from, x, y);
                         if (!HasNeighborWall(Direction.West))
                             RenderOccluder(Direction.West, from, x, y);
                     }
                     else if (l >= x && l <= x + bounds.Width) //light is south, within wall X bounds
                     {
-                        RenderOccluder(Direction.North, from, x, y);
                         if (!HasNeighborWall(Direction.East))
                             RenderOccluder(Direction.East, from, x, y);
                         if (!HasNeighborWall(Direction.West))
                             RenderOccluder(Direction.West, from, x, y);
-                    }
-                }
-                else if (l >= y && l <= y + bounds.Height) //light is within wall Y bounds
-                {
-                    if (l < x) //light is west of wall, within wall Y bounds
-                    {
-                        if (!HasNeighborWall(Direction.East))
-                            RenderOccluder(Direction.East, from, x, y);
-                    }
-                    else if (l > x + bounds.Width) //Light is east of wall, within wall Y bounds
-                    {
-                        if (!HasNeighborWall(Direction.West))
-                            RenderOccluder(Direction.West, from, x, y);
-                    }
-                    else if (l >= x && l <= x + bounds.Width) //Light is within wall X and Y bounds
-                    {
-                        //Don't render occluders for this wall
                     }
                 }
             }
@@ -337,52 +346,42 @@ namespace ClientServices.Tiles
             {
                 if (l < x) //Light is west of wall
                 {
+                    RenderOccluder(Direction.East, from, x, y);
                     if (l < y) //light is north west of wall
                     {
-                        RenderOccluder(Direction.East, from, x, y);
-                        if(!HasNeighborWall(Direction.South))
-                            RenderOccluder(Direction.South, from, x, y);
-                    }
-                    else if (l > y + bounds.Height) // light is south west of wall
-                    {
-                        RenderOccluder(Direction.East, from, x, y);
-                        if (!HasNeighborWall(Direction.North))
-                            RenderOccluder(Direction.North, from, x, y);
-                    }
-                    else if (l >= y && l <= y + bounds.Height) //light is west, within wall Y bounds
-                    {
-                        RenderOccluder(Direction.East, from, x, y);
                         if (!HasNeighborWall(Direction.South))
+                        {
+                            RenderOccluder(Direction.West, from, x, y);
                             RenderOccluder(Direction.South, from, x, y);
+                        }
+                    }
+                    else if (l > y) // light is south west of wall
+                    {
                         if (!HasNeighborWall(Direction.North))
                             RenderOccluder(Direction.North, from, x, y);
                     }
                 }
                 else if (l > x + bounds.Width) // Light is east of wall
                 {
+                    RenderOccluder(Direction.West, from, x, y);
                     if (l < y) //light is north east of wall
                     {
-                        RenderOccluder(Direction.West, from, x, y);
                         if (!HasNeighborWall(Direction.South))
+                        {
+                            RenderOccluder(Direction.East, from, x, y);
                             RenderOccluder(Direction.South, from, x, y);
+                        }
                     }
-                    else if (l > y + bounds.Height) //light is south east of wall
+                    else if (l > y) //light is south east of wall
                     {
-                        RenderOccluder(Direction.West, from, x, y);
-                        if (!HasNeighborWall(Direction.North))
-                            RenderOccluder(Direction.North, from, x, y);
-                    }
-                    else if (l >= y && l <= y + bounds.Height) //light is east, within wall Y bounds
-                    {
-                        RenderOccluder(Direction.West, from, x, y);
-                        if (!HasNeighborWall(Direction.South))
-                            RenderOccluder(Direction.South, from, x, y);
                         if (!HasNeighborWall(Direction.North))
                             RenderOccluder(Direction.North, from, x, y);
                     }
                 }
                 else if (l >= x && l <= x + bounds.Width) //light is within wall X bounds
                 {
+                    RenderOccluder(Direction.West, Direction.East, x, y);
+                    RenderOccluder(Direction.East, Direction.West, x, y);
                     if (l < y) //light is within wall X bounds, north of wall
                     {
                         if (!HasNeighborWall(Direction.South))
@@ -392,10 +391,6 @@ namespace ClientServices.Tiles
                     {
                         if (!HasNeighborWall(Direction.North))
                             RenderOccluder(Direction.North, from, x, y);
-                    }
-                    else if (l >= y && l <= y + bounds.Height) //Light is within wall Y and Y bounds
-                    {
-                        //Don't render occluders for this wall
                     }
                 }
             }

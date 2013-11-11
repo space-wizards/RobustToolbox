@@ -203,11 +203,11 @@ namespace ClientServices.Tiles
                     case Direction.North:
                         drawY += bounds.Height - Sprite.Height;
                         width = (int)Sprite.Width;
-                        height = 4;
+                        height = 1;
                         break;
                     case Direction.East:
                         drawX += bounds.Width;
-                        width = 4;
+                        width = 1;
                         if (from != Direction.North && from != Direction.NorthEast)
                         {
                             drawY += bounds.Height - Sprite.Height;
@@ -222,10 +222,10 @@ namespace ClientServices.Tiles
                     case Direction.South:
                         drawY += (2 * bounds.Height) - Sprite.Height;
                         width = (int)Sprite.Width;
-                        height = 4;
+                        height = 1;
                         break;
                     case Direction.West:
-                        width = 4;
+                        width = 1;
                         if (from != Direction.North && from != Direction.NorthWest)
                         {
                             drawY += bounds.Height - Sprite.Height;
@@ -246,11 +246,11 @@ namespace ClientServices.Tiles
                     case Direction.North:
                         drawY += bounds.Height - Sprite.Height;
                         width = (int)Sprite.Width;
-                        height = 4;
+                        height = 1;
                         break;
                     case Direction.East:
                         drawX += bounds.Width;
-                        width = 4;
+                        width = 1;
                         if (from != Direction.East && from != Direction.SouthEast && from != Direction.NorthEast)
                         {
                             drawY += bounds.Height - Sprite.Height;
@@ -265,10 +265,10 @@ namespace ClientServices.Tiles
                     case Direction.South:
                         drawY += (2 * bounds.Height) - Sprite.Height;
                         width = (int)Sprite.Width;
-                        height = 4;
+                        height = 1;
                         break;
                     case Direction.West:
-                        width = 4;
+                        width = 1;
                         if (from != Direction.West && from != Direction.SouthWest && from != Direction.NorthWest)
                         {
                             drawY += bounds.Height - Sprite.Height;
@@ -320,7 +320,7 @@ namespace ClientServices.Tiles
                     if (!HasNeighborWall(Direction.West))
                         RenderOccluder(Direction.West, from, x, y);
                 }
-                else//(l > y - Sprite.Height) // Light is south of wall
+                else // Light is south of wall
                 {
                     RenderOccluder(Direction.North, from, x, y);
                     if (l < x) //light is south west of wall
@@ -346,7 +346,8 @@ namespace ClientServices.Tiles
             {
                 if (l < x) //Light is west of wall
                 {
-                    RenderOccluder(Direction.East, from, x, y);
+                    if((surroundDirsSE & 2) == 0)
+                        RenderOccluder(Direction.East, from, x, y);
                     if (l < y) //light is north west of wall
                     {
                         if (!HasNeighborWall(Direction.South))
@@ -363,7 +364,8 @@ namespace ClientServices.Tiles
                 }
                 else if (l > x + bounds.Width) // Light is east of wall
                 {
-                    RenderOccluder(Direction.West, from, x, y);
+                    if((surroundDirsSE & 8) == 0)
+                        RenderOccluder(Direction.West, from, x, y);
                     if (l < y) //light is north east of wall
                     {
                         if (!HasNeighborWall(Direction.South))

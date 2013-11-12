@@ -1,0 +1,33 @@
+﻿<?xml version="1.0"?>
+<ArrayOfEmote xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema">
+  <Emote>
+    <Command>default</Command>
+    <SelfText>You do something!</SelfText>
+    <OtherText>{0} does something!</OtherText>
+  </Emote>
+  <Emote>
+    <Command>sigh</Command>
+    <SelfText>You sigh.</SelfText>
+    <OtherText>{0} sighs.</OtherText>
+  </Emote>
+  <Emote>
+    <Command>scream</Command>
+    <SelfText>You scream as loudly as you can!</SelfText>
+    <OtherText>{0} lets out a blood-curdling scream!</OtherText>
+  </Emote>
+  <Emote>
+    <Command>fart</Command>
+    <SelfText>You strain, but produce nary a toot.</SelfText>
+    <OtherText>{0} lifts {1} leg a little and gets a funny look on {1} face.</OtherText>
+  </Emote>
+  <Emote>
+    <Command>laugh</Command>
+    <SelfText>You laugh.</SelfText>
+    <OtherText>{0} laughs heartily.</OtherText>
+  </Emote>
+  <Emote>
+    <Command>chuckle</Command>
+    <SelfText>You chuckle.</SelfText>
+    <OtherText>{0} chuckles wryly.</OtherText>
+  </Emote>
+</ArrayOfEmote>

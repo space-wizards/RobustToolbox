@@ -2,7 +2,10 @@
 using System.Collections.Generic;
 using System.Drawing;
 using System.Globalization;
+using System.IO;
 using System.Linq;
+using System.Security.AccessControl;
+using System.Xml.Serialization;
 using GameObject;
 using Lidgren.Network;
 using SS13.IoC;
@@ -24,12 +27,14 @@ namespace ServerServices.Chat
     public class ChatManager : IChatManager
     {
         private ISS13Server _serverMain;
-
+        private Dictionary<string, Emote> _emotes = new Dictionary<string, Emote>();
+        private string _emotePath = @"emotes.xml";
         #region IChatManager Members
 
         public void Initialize(ISS13Server server)
         {
             _serverMain = server;
+            LoadEmotes();
         }
 
         public void HandleNetMessage(NetIncomingMessage message)
@@ -49,6 +54,8 @@ namespace ServerServices.Chat
             text = text.Trim(); // Remove whitespace
             if (text[0] == '/')
                 ProcessCommand(text, name, channel, entityId, message.SenderConnection);
+            else if (text[0] == '*')
+                ProcessEmote(text, name, channel, entityId, message.SenderConnection);
             else
                 SendChatMessage(channel, text, name, entityId);
         }
@@ -57,7 +64,7 @@ namespace ServerServices.Chat
         {
             string fullmsg = text;
             if (!string.IsNullOrEmpty(name) && channel == ChatChannel.Emote)
-                fullmsg = name + " " + text;
+                fullmsg = text; //Emote already has name in it probably...
             else if (channel == ChatChannel.Ingame || channel == ChatChannel.OOC || channel == ChatChannel.Radio ||
                      channel == ChatChannel.Lobby)
                 fullmsg = name + ": " + text;
@@ -117,6 +124,38 @@ namespace ServerServices.Chat
             return channel;
         }
 
+        private void LoadEmotes()
+        {
+            if (File.Exists(_emotePath))
+            {
+                using (var emoteFileStream = new FileStream(_emotePath, FileMode.Open, FileAccess.Read))
+                {
+                    XmlSerializer serializer = new XmlSerializer(typeof (List<Emote>));
+
+                    var emotes = (List<Emote>) serializer.Deserialize(emoteFileStream);
+                    emoteFileStream.Close();
+                    foreach(var emote in emotes)
+                    {
+                        _emotes.Add(emote.Command, emote);
+                    }
+                }
+            }
+            else
+            {
+                using (var emoteFileStream = new FileStream(_emotePath, FileMode.OpenOrCreate, FileAccess.ReadWrite))
+                {
+                    var emote = new Emote();
+                    emote.Command = "default";
+                    emote.OtherText = "{0} does something!";
+                    emote.SelfText = "You do something!";
+                    _emotes.Add("default", emote);
+                    XmlSerializer serializer = new XmlSerializer(typeof (List<Emote>));
+                    serializer.Serialize(emoteFileStream, _emotes.Values.ToList());
+                    emoteFileStream.Close();
+                }
+            }
+        }
+
         private void SendToPlayersInRange(NetOutgoingMessage message, int? entityId)
         {
             if (entityId == null)
@@ -133,6 +172,27 @@ namespace ServerServices.Chat
             List<NetConnection> recipients =
                 IoCManager.Resolve<IPlayerManager>().GetPlayersInLobby().Select(p => p.ConnectedClient).ToList();
             IoCManager.Resolve<ISS13NetServer>().SendToMany(message, recipients);
+        }
+
+        private void ProcessEmote(string text, string name, ChatChannel channel, int? entityId, NetConnection client)
+        {
+            if (entityId == null)
+                return; //No emotes from non-entities!
+
+            var args = new List<string>();
+
+            ParseArguments(text, args);
+            if(_emotes.ContainsKey(args[0]))
+            {
+                var userText = String.Format(_emotes[args[0]].SelfText, name);//todo user-only channel
+                var otherText = String.Format(_emotes[args[0]].OtherText, name, "his"); //todo pronouns, gender
+                SendChatMessage(ChatChannel.Emote, otherText, name, entityId);
+            }
+            else
+            {
+                //todo Bitch at the user
+            }
+            
         }
 
         /// <summary>
@@ -249,7 +309,7 @@ namespace ServerServices.Chat
             bool inquotes = false;
             for (int i = 0; i < text.Length; i++)
             {
-                if (text[i] == '/')
+                if (text[i] == '/' || text[i] == '*')
                     continue;
                 else if (inquotes && text[i] == '"')
                 {
@@ -280,5 +340,12 @@ namespace ServerServices.Chat
             if (buf != "")
                 args.Add(buf);
         }
+    }
+
+    public struct Emote
+    {
+        public string Command;
+        public string SelfText;
+        public string OtherText;
     }
 }

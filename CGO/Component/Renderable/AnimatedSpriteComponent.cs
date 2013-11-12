@@ -26,6 +26,7 @@ namespace CGO
         protected List<IRenderableComponent> slaves;
         protected bool visible = true;
         public DrawDepth DrawDepth { get; set; }
+        private SpeechBubble _speechBubble;
         
         public AnimatedSpriteComponent()
         {
@@ -142,6 +143,19 @@ namespace CGO
                             break;
                     }
                     break;
+                case ComponentMessageType.EntitySaidSomething:
+                    ChatChannel channel;
+                    if (Enum.TryParse(list[0].ToString(), true, out channel))
+                    {
+                        string text = list[1].ToString();
+
+                        if (channel == ChatChannel.Ingame || channel == ChatChannel.Player ||
+                            channel == ChatChannel.Radio)
+                        {
+                            (_speechBubble ?? (_speechBubble = new SpeechBubble(Owner.Name + Owner.Uid))).SetText(text);
+                        }
+                    }
+                    break;
             }
 
             return reply;
@@ -247,6 +261,11 @@ namespace CGO
             //Draw AABB
             var aabb = AABB;
             Gorgon.CurrentRenderTarget.Rectangle(renderPos.X - aabb.Width/2, renderPos.Y - aabb.Height / 2, aabb.Width, aabb.Height, Color.Lime);
+
+            if (_speechBubble != null)
+                _speechBubble.Draw(Owner.GetComponent<TransformComponent>(ComponentFamily.Transform).Position,
+                                   ClientWindowData.Singleton.ScreenOrigin, aabb);
+
         }
 
         public override void Update(float frameTime)

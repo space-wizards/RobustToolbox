@@ -614,6 +614,8 @@ namespace ClientServices.State.States
 
                 LightScene();
 
+
+
                 RenderDebug();
                 //Render the placement manager shit
                 PlacementManager.Render();

@@ -106,6 +106,17 @@ namespace CGO
             _bubbleSprite.Draw();
         }
 
+        public void Draw(Vector2D position, Vector2D windowOrigin, RectangleF boundingBox)
+        {
+            if ((DateTime.Now - _buildTime).TotalMilliseconds >= MillisecondsToLive) return;
+
+            float x = position.X - windowOrigin.X - (_bubbleSprite.Width / 2.0f);
+            float y = position.Y - windowOrigin.Y - (_bubbleSprite.Height) - (boundingBox.Height / 2.0f) - 5.0f;
+
+            _bubbleSprite.SetPosition(x, y);
+            _bubbleSprite.Draw();
+        }
+
         public void SetText(string text)
         {
             for (int i = 0; i < text.Length; i++)

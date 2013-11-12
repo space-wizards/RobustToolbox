@@ -56,54 +56,103 @@ namespace ClientServices.Resources
 
             if (!string.IsNullOrWhiteSpace(password)) zipFile.Password = password;
 
-            IOrderedEnumerable<ZipEntry> filesInZip = from ZipEntry e in zipFile
-                                                      where e.IsFile
-                                                      orderby
-                                                          supportedImageExtensions.Contains(
-                                                              Path.GetExtension(e.Name).ToLowerInvariant()) descending
-                                                      //Loading images first so the TAI files that come after can be loaded correctly.
-                                                      select e;
+            var directories = from ZipEntry a in zipFile
+                              where a.IsDirectory
+                              orderby a.Name.ToLowerInvariant() == "textures" descending 
+                              select a;
 
-            foreach (ZipEntry entry in filesInZip)
+            Dictionary<string, List<ZipEntry>> sorted = new Dictionary<string, List<ZipEntry>>();
+
+            foreach (ZipEntry dir in directories)
             {
-                if (supportedImageExtensions.Contains(Path.GetExtension(entry.Name).ToLowerInvariant()))
+                if (sorted.ContainsKey(dir.Name.ToLowerInvariant())) continue; //Duplicate folder? shouldnt happen.
+
+                List<ZipEntry> folderContents = (from ZipEntry entry in zipFile
+                                                 where entry.Name.ToLowerInvariant().Contains(dir.Name.ToLowerInvariant())
+                                                 where entry.IsFile
+                                                 select entry).ToList();
+
+                sorted.Add(dir.Name.ToLowerInvariant(), folderContents);
+            }
+
+            sorted = sorted.OrderByDescending(x => x.Key == "textures/").ToDictionary(x => x.Key, x => x.Value); //Textures first.
+
+            foreach (KeyValuePair<string, List<ZipEntry>>  current in sorted)
+            {
+                switch (current.Key)
                 {
-                    Image loadedImg = LoadImageFrom(zipFile, entry);
-                    if (loadedImg == null) continue;
-                    else _images.Add(loadedImg.Name, loadedImg);
-                }
-                else
-                {
-                    switch (Path.GetExtension(entry.Name).ToLowerInvariant())
-                    {
-                        case ".fx":
-                            FXShader loadedShader = LoadShaderFrom(zipFile, entry);
-                            if (loadedShader == null) continue;
-                            else _shaders.Add(loadedShader.Name, loadedShader);
-                            break;
-
-                        case ".tai":
-                            IEnumerable<Sprite> loadedSprites = LoadSpritesFrom(zipFile, entry);
-                            foreach (
-                                Sprite current in loadedSprites.Where(current => !_sprites.ContainsKey(current.Name)))
-                                _sprites.Add(current.Name, current);
-                            break;
-
-                        case ".ttf":
-                            Font loadedFont = LoadFontFrom(zipFile, entry);
-                            if (loadedFont == null) continue;
-                            else _fonts.Add(loadedFont.Name, loadedFont);
-                            break;
-
-                        case ".xml":
-                            if (entry.Name.Contains("Animations"))
+                    case("textures/"):
+                        foreach (ZipEntry texture in current.Value)
+                        {
+                            if(supportedImageExtensions.Contains(Path.GetExtension(texture.Name).ToLowerInvariant()))
                             {
-                                AnimationCollection animationCollection = LoadAnimationCollectionFrom(zipFile, entry);
+                                Image loadedImg = LoadImageFrom(zipFile, texture);
+                                if (loadedImg == null) continue;
+                                else _images.Add(loadedImg.Name, loadedImg);
+                            }
+                        }
+                        break;
+
+                    case("tai/"):
+                        foreach (ZipEntry tai in current.Value)
+                        {
+                            if (Path.GetExtension(tai.Name).ToLowerInvariant() == ".tai")
+                            {
+                                IEnumerable<Sprite> loadedSprites = LoadSpritesFrom(zipFile, tai);
+                                foreach (Sprite currentSprite in loadedSprites.Where(currentSprite => !_sprites.ContainsKey(currentSprite.Name)))
+                                    _sprites.Add(currentSprite.Name, currentSprite);                               
+                            }
+                        }
+                        break;
+
+                    case("fonts/"):
+                        foreach (ZipEntry font in current.Value)
+                        {
+                            if (Path.GetExtension(font.Name).ToLowerInvariant() == ".ttf")
+                            {
+                                Font loadedFont = LoadFontFrom(zipFile, font);
+                                if (loadedFont == null) continue;
+                                else _fonts.Add(loadedFont.Name, loadedFont);
+                            }
+                        }
+                        break;
+
+                    case("particlesystems/"):
+                        foreach (ZipEntry particles in current.Value)
+                        {
+                            if (Path.GetExtension(particles.Name).ToLowerInvariant() == ".xml")
+                            {
+                                //Font loadedFont = LoadFontFrom(zipFile, font);
+                                //if (loadedFont == null) continue;
+                                //else _fonts.Add(loadedFont.Name, loadedFont);
+                            }
+                        }
+                        break;
+
+                    case("shaders/"):
+                        foreach (ZipEntry shader in current.Value)
+                        {
+                            if (Path.GetExtension(shader.Name).ToLowerInvariant() == ".fx")
+                            {
+                                FXShader loadedShader = LoadShaderFrom(zipFile, shader);
+                                if (loadedShader == null) continue;
+                                else _shaders.Add(loadedShader.Name, loadedShader);
+                            }
+                        }
+                        break;
+
+                    case("animations/"):
+                        foreach (ZipEntry animation in current.Value)
+                        {
+                            if (Path.GetExtension(animation.Name).ToLowerInvariant() == ".xml")
+                            {
+                                AnimationCollection animationCollection = LoadAnimationCollectionFrom(zipFile, animation);
                                 if (animationCollection == null) continue;
                                 else _animationCollections.Add(animationCollection.Name, animationCollection);
                             }
-                            break;
-                    }
+                        }
+                        break;
+
                 }
             }
 

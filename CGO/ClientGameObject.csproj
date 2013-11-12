@@ -121,6 +121,7 @@
     <Compile Include="Component\Transform\TransformComponent.cs" />
     <Compile Include="Component\Velocity\VelocityComponent.cs" />
     <Compile Include="ContextMenuEntry.cs" />
+    <Compile Include="EntitySystems\ParticleSystem.cs" />
     <Compile Include="EntitySystems\InputSystem.cs" />
     <Compile Include="EntitySystems\InventorySystem.cs" />
     <Compile Include="EntitySystems\TransformSystem.cs" />

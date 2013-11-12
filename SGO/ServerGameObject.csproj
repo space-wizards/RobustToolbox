@@ -126,6 +126,7 @@
     <None Include="Entity.cs" />
     <Compile Include="EntityManager.cs" />
     <Compile Include="EntityNetworkManager.cs" />
+    <Compile Include="EntitySystems\ParticleSystem.cs" />
     <Compile Include="EntitySystems\InputSystem.cs" />
     <Compile Include="EntitySystems\InventorySystem.cs" />
     <Compile Include="EntitySystems\PhysicsSystem.cs" />

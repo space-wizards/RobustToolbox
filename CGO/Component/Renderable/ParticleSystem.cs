@@ -4,8 +4,11 @@ using System.Drawing;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using ClientInterfaces.Resource;
+using GameObject;
 using GorgonLibrary;
 using GorgonLibrary.Graphics;
+using SS13.IoC;
 
 namespace CGO
 {
@@ -639,6 +642,50 @@ namespace CGO
             p.TangentialAcceleration = VariedFloat(TangentialAcceleration, TangentialAccelerationVariance);
             p.TangentialVelocity = VariedFloat(TangentialVelocity, TangentialVelocityVariance);
             p.Velocity = VariedVector2D(Velocity, VelocityVariance);
+        }
+
+        /// <summary>
+        /// Copy given ParticleSettings into this emitter.
+        /// </summary>
+        /// <remarks>
+        /// Applies the settings of the given ParticleSettings to this emitter.
+        /// </remarks>
+        /// <param name="toPosition"></param>
+        public void LoadParticleSettings(ParticleSettings settings)
+        {
+            if (settings == null) return;
+
+            this.Acceleration = settings.Acceleration;
+            this.AccelerationVariance = settings.AccelerationVariance;
+
+            //I hope this is correct.
+            this.ColorRange = new SS13_Shared.Utility.Range<Vector4D>(
+                new Vector4D(settings.ColorRange.Start.A, settings.ColorRange.Start.R, settings.ColorRange.Start.G, settings.ColorRange.Start.B), 
+                new Vector4D(settings.ColorRange.End.A, settings.ColorRange.End.R, settings.ColorRange.End.G, settings.ColorRange.End.B));
+
+            this.ColorVariance = settings.ColorVariance;
+            this.EmissionOffset = settings.EmissionOffset;
+            this.EmissionRadiusRange = new SS13_Shared.Utility.Range<float>(settings.EmissionRadiusRange.X, settings.EmissionRadiusRange.Y);
+            this.EmitterPosition = settings.EmitterPosition;
+            this.EmitRate = settings.EmitRate;
+            this.Lifetime = settings.Lifetime;
+            this.LifetimeVariance = settings.LifetimeVariance;
+            this.MaximumParticleCount = settings.MaximumParticleCount;
+            this.ParticleSprite = IoCManager.Resolve<IResourceManager>().GetSprite(settings.Sprite); 
+            this.RadialAcceleration = settings.RadialAcceleration;
+            this.RadialAccelerationVariance = settings.RadialAccelerationVariance;
+            this.RadialVelocity = settings.RadialVelocity;
+            this.RadialVelocityVariance = settings.RadialVelocityVariance;
+            this.SizeRange = new SS13_Shared.Utility.Range<float>(settings.SizeRange.X, settings.SizeRange.Y);
+            this.SizeVariance = settings.SizeVariance;
+            this.SpinVelocity = new SS13_Shared.Utility.Range<float>(settings.SpinVelocity.X, settings.SpinVelocity.Y);
+            this.SpinVelocityVariance = settings.SpinVelocityVariance;
+            this.TangentialAcceleration = settings.TangentialAcceleration;
+            this.TangentialAccelerationVariance = settings.TangentialAccelerationVariance;
+            this.TangentialVelocity = settings.TangentialVelocity;
+            this.TangentialVelocityVariance = settings.TangentialVelocityVariance;
+            this.Velocity = settings.Velocity;
+            this.VelocityVariance = settings.VelocityVariance;
         }
 
         /// <summary>

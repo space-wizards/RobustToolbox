@@ -70,15 +70,8 @@ namespace CGO
             base.OnAdd(owner);
             var transform = Owner.GetComponent<TransformComponent>(ComponentFamily.Transform);
             transform.OnMove += OnMove;
-            /*
-            _particleImage = new RenderImage("ParticleImage" + Owner.Uid, 64, 64, ImageBufferFormats.BufferRGB888A8);
-            CreateParticle();
-            
-            _particleSprite = new Sprite("ParticleSprite" + Owner.Uid, _particleImage);
-            _particleSprite.Axis = new Vector2D(32, 32);
-             */
-            _particleSprite = IoCManager.Resolve<IResourceManager>().GetSprite("star1");
-            _emitter.ParticleSprite = _particleSprite;
+
+            _emitter.LoadParticleSettings(IoCManager.Resolve<IResourceManager>().GetParticles("purpleesword"));
         }
 
         public override void OnRemove()
@@ -103,14 +96,14 @@ namespace CGO
                     DrawDepth = ((DrawDepth)Enum.Parse(typeof(DrawDepth), parameter.GetValue<string>(), true));
                     break;
                 case "colorStart":
-                    parameterValue = parameter.GetValue<Vector4>();
-                    _particlesColorStart = new Vector4D(parameterValue.X, parameterValue.Y, parameterValue.Z, parameterValue.W);
-                    UpdateParticleColor();
+                    //parameterValue = parameter.GetValue<Vector4>();
+                    //_particlesColorStart = new Vector4D(parameterValue.X, parameterValue.Y, parameterValue.Z, parameterValue.W);
+                    //UpdateParticleColor();
                     break;
                 case "colorEnd":
-                    parameterValue = parameter.GetValue<Vector4>();
-                    _particlesColorEnd = new Vector4D(parameterValue.X, parameterValue.Y, parameterValue.Z, parameterValue.W);
-                    UpdateParticleColor();
+                    //parameterValue = parameter.GetValue<Vector4>();
+                    //_particlesColorEnd = new Vector4D(parameterValue.X, parameterValue.Y, parameterValue.Z, parameterValue.W);
+                    //UpdateParticleColor();
                     break;
                 case "particlesPerSecond":
                     _particleRate = parameter.GetValue<int>();
@@ -160,7 +153,7 @@ namespace CGO
 
         private void UpdateParticleColor()
         {
-            _emitter.ColorRange = new SS13_Shared.Utility.Range<Vector4D>(_particlesColorStart, _particlesColorEnd);
+            //_emitter.ColorRange = new SS13_Shared.Utility.Range<Vector4D>(_particlesColorStart, _particlesColorEnd);
         }
 
         private void UpdateParticleRate()
@@ -171,23 +164,6 @@ namespace CGO
         private void UpdateActive()
         {
             _emitter.Emit = _active;
-        }
-
-        /// <summary>
-        /// Function to create a particle.
-        /// </summary>
-        private void CreateParticle()
-        {
-            Color particleColor;
-
-            _particleImage.Clear(Color.Transparent);
-            _particleImage.BeginDrawing();
-            for (int x = 64; x > 0; x--)
-            {
-                particleColor = Color.FromArgb(255 - ((x * 4) - 1), 255, 255, 255);
-                _particleImage.FilledCircle(32.0f, 32.0f, x / 2, particleColor);
-            }
-            _particleImage.EndDrawing();
         }
 
         /// <summary>

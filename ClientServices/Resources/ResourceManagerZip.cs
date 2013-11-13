@@ -5,8 +5,10 @@ using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Text.RegularExpressions;
+using CGO;
 using ClientInterfaces.Configuration;
 using ClientInterfaces.Resource;
+using GameObject;
 using GorgonLibrary;
 using GorgonLibrary.Graphics;
 using GorgonLibrary.Sprites;
@@ -24,7 +26,7 @@ namespace ClientServices.Resources
         private const int zipBufferSize = 4096;
         private readonly IConfigurationManager _configurationManager;
         private readonly Dictionary<string, Font> _fonts = new Dictionary<string, Font>();
-
+        private readonly Dictionary<string, ParticleSettings> _particles = new Dictionary<string, ParticleSettings>();
         private readonly Dictionary<string, Image> _images = new Dictionary<string, Image>();
         private readonly Dictionary<string, FXShader> _shaders = new Dictionary<string, FXShader>();
         private readonly Dictionary<string, SpriteInfo> _spriteInfos = new Dictionary<string, SpriteInfo>();
@@ -77,7 +79,7 @@ namespace ClientServices.Resources
 
             sorted = sorted.OrderByDescending(x => x.Key == "textures/").ToDictionary(x => x.Key, x => x.Value); //Textures first.
 
-            foreach (KeyValuePair<string, List<ZipEntry>>  current in sorted)
+            foreach (KeyValuePair<string, List<ZipEntry>> current in sorted)
             {
                 switch (current.Key)
                 {
@@ -122,9 +124,9 @@ namespace ClientServices.Resources
                         {
                             if (Path.GetExtension(particles.Name).ToLowerInvariant() == ".xml")
                             {
-                                //Font loadedFont = LoadFontFrom(zipFile, font);
-                                //if (loadedFont == null) continue;
-                                //else _fonts.Add(loadedFont.Name, loadedFont);
+                                ParticleSettings particleSettings = LoadParticlesFrom(zipFile, particles);
+                                if (particleSettings == null) continue;
+                                else _particles.Add(Path.GetFileNameWithoutExtension(particles.Name), particleSettings);
                             }
                         }
                         break;
@@ -155,6 +157,8 @@ namespace ClientServices.Resources
 
                 }
             }
+
+            sorted = null;
 
             zipFile.Close();
             zipFileStream.Close();
@@ -267,6 +271,30 @@ namespace ClientServices.Resources
             zipStream.Dispose();
 
             return loadedFont;
+        }
+
+        /// <summary>
+        /// Loads particle settings from given zipfile and entry.
+        /// </summary>
+        /// <param name="zipFile"></param>
+        /// <param name="entry"></param>
+        /// <returns></returns>
+        private ParticleSettings LoadParticlesFrom(ZipFile zipFile, ZipEntry entry)
+        {
+            string ResourceName = Path.GetFileNameWithoutExtension(entry.Name).ToLowerInvariant();
+
+            var byteBuffer = new byte[zipBufferSize];
+
+            Stream zipStream = zipFile.GetInputStream(entry);
+            //Will throw exception is missing or wrong password. Handle this.
+
+            System.Xml.Serialization.XmlSerializer serializer = new System.Xml.Serialization.XmlSerializer(typeof(ParticleSettings));
+
+            var particleSettings = (ParticleSettings)serializer.Deserialize(zipStream);
+            zipStream.Close();
+            zipStream.Dispose();
+
+            return particleSettings;
         }
 
         /// <summary>
@@ -491,6 +519,16 @@ namespace ClientServices.Resources
         {
             key = key.ToLowerInvariant();
             if (_shaders.ContainsKey(key)) return _shaders[key];
+            else return null;
+        }
+
+        /// <summary>
+        ///  Retrieves the ParticleSettings with the given key from the Resource List. Returns null if not found.
+        /// </summary>
+        public ParticleSettings GetParticles(string key)
+        {
+            key = key.ToLowerInvariant();
+            if (_particles.ContainsKey(key)) return _particles[key];
             else return null;
         }
 

@@ -1,5 +1,6 @@
 ﻿using GorgonLibrary.Graphics;
 using GorgonLibrary.Sprites;
+using GameObject;
 
 namespace ClientInterfaces.Resource
 {
@@ -12,6 +13,7 @@ namespace ClientInterfaces.Resource
         bool SpriteExists(string key);
         bool ImageExists(string key);
         FXShader GetShader(string key);
+        ParticleSettings GetParticles(string key);
         Image GetImage(string key);
         Font GetFont(string key);
         SpriteInfo? GetSpriteInfo(string key);

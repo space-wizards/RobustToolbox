@@ -4,6 +4,7 @@ using System.Windows.Forms;
 using System.Xml.Serialization;
 using ClientServices.Configuration;
 using ClientServices.Resources;
+using GameObject;
 using GorgonLibrary;
 
 namespace ParticleEditor

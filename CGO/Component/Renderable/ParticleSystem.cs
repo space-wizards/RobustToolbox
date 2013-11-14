@@ -824,6 +824,11 @@ namespace CGO
             Velocity = Vector2D.Zero;
             VelocityVariance = 0;
         }
+        public ParticleSystem(ParticleSettings settings, Vector2D position)
+        {
+            LoadParticleSettings(settings);
+            EmitterPosition = position;
+        }
         #endregion
     }
 }

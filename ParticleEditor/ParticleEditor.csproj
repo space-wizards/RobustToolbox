@@ -153,7 +153,6 @@
     <Compile Include="ParticleEditorMainForm.Designer.cs">
       <DependentUpon>ParticleEditorMainForm.cs</DependentUpon>
     </Compile>
-    <Compile Include="ParticleSettings.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Resources.Designer.cs">
@@ -244,6 +243,10 @@
     <ProjectReference Include="..\ClientServices\ClientServices.csproj">
       <Project>{7F85F20C-E2B5-455D-A1CA-76ED000D25EA}</Project>
       <Name>ClientServices</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\GameObject\GameObject.csproj">
+      <Project>{FB8F5D6F-8500-4A5D-BCFB-20104AA902F4}</Project>
+      <Name>GameObject</Name>
     </ProjectReference>
     <ProjectReference Include="..\SS13.IoC\SS13.IoC.csproj">
       <Project>{3401031F-35A7-4AE5-8B64-CAFDCB929F0E}</Project>

@@ -6,6 +6,7 @@ using System.Drawing.Design;
 using System.Windows.Forms;
 using System.Windows.Forms.Design;
 using Cyotek.Windows.Forms;
+using GameObject;
 using GorgonLibrary.Graphics;
 
 namespace ParticleEditor

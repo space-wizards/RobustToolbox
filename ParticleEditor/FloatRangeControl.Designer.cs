@@ -1,4 +1,6 @@
-﻿namespace ParticleEditor
+﻿using GameObject;
+
+namespace ParticleEditor
 {
     partial class FloatRangeControl
     {
@@ -42,11 +44,11 @@
             // 
             // particleSettingsBindingSource
             // 
-            this.particleSettingsBindingSource.DataSource = typeof(ParticleEditor.ParticleSettings);
+            this.particleSettingsBindingSource.DataSource = typeof(ParticleSettings);
             // 
             // particleSettingsBindingSource1
             // 
-            this.particleSettingsBindingSource1.DataSource = typeof(ParticleEditor.ParticleSettings);
+            this.particleSettingsBindingSource1.DataSource = typeof(ParticleSettings);
             // 
             // numericUpDownX
             // 

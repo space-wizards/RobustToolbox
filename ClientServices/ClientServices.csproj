@@ -154,6 +154,7 @@
     <Compile Include="UserInterface\Components\Checkbox.cs" />
     <Compile Include="UserInterface\Components\ContextMenu.cs" />
     <Compile Include="UserInterface\Components\ArmorInfoLabel.cs" />
+    <Compile Include="UserInterface\Components\DebugConsole.cs" />
     <Compile Include="UserInterface\Components\Showcase.cs" />
     <Compile Include="UserInterface\Components\SimpleImage.cs" />
     <Compile Include="UserInterface\Components\FloatingDeco.cs" />

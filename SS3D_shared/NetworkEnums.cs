@@ -36,7 +36,9 @@
         RequestEntityDeletion, //Client asks to delete entity. Used for editing. Requires admin.
         StateUpdate,
         StateAck,
-        FullState
+        FullState,
+        ConsoleCommand,
+        ConsoleCommandReply
     }
 
     public enum ItemMessage

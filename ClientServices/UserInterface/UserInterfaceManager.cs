@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Drawing;
 using System.Linq;
+using ClientInterfaces.Configuration;
 using ClientInterfaces.GOC;
 using ClientInterfaces.Placement;
 using ClientInterfaces.Resource;
@@ -27,10 +28,11 @@ namespace ClientServices.UserInterface
         ///  List of iGuiComponents. Components in this list will recieve input, updates and net messages.
         /// </summary>
         private readonly List<IGuiComponent> _components;
-
+        private readonly IConfigurationManager _config;
         private readonly IResourceManager _resourceManager;
         private IGuiComponent _currentFocus;
         private Sprite _cursorSprite;
+        private DebugConsole _console;
 
         private Vector2D dragOffset = Vector2D.Zero;
         private bool moveMode;
@@ -46,6 +48,9 @@ namespace ClientServices.UserInterface
             _resourceManager = resourceManager;
             DragInfo = new DragDropInfo();
             _components = new List<IGuiComponent>();
+            _config = IoCManager.Resolve<IConfigurationManager>();
+            _console = new DebugConsole("dbgConsole", new Size(Gorgon.Screen.Width, 400), resourceManager);
+            _console.SetVisible(false);
         }
 
         public Vector2D MousePos { get; private set; }
@@ -215,6 +220,11 @@ namespace ClientServices.UserInterface
         /// </summary>
         public virtual bool MouseDown(MouseInputEventArgs e)
         {
+            if (_console.IsVisible())
+            {
+                if (_console.MouseDown(e)) return true;
+            }
+
             if (moveMode)
             {
                 foreach (IGuiComponent comp in _components)
@@ -254,6 +264,11 @@ namespace ClientServices.UserInterface
         /// </summary>
         public virtual bool MouseUp(MouseInputEventArgs e)
         {
+            if (_console.IsVisible())
+            {
+                if (_console.MouseUp(e)) return true;
+            }
+
             if (moveMode)
             {
                 if (movingComp != null) movingComp = null;
@@ -288,6 +303,11 @@ namespace ClientServices.UserInterface
         {
             MousePos = e.Position;
 
+            if (_console.IsVisible())
+            {
+                _console.MouseMove(e);
+            }
+
             IOrderedEnumerable<IGuiComponent> inputList = from IGuiComponent comp in _components
                                                           where comp.RecieveInput
                                                           orderby comp.ZDepth ascending
@@ -302,6 +322,11 @@ namespace ClientServices.UserInterface
         /// </summary>
         public virtual void MouseWheelMove(MouseInputEventArgs e)
         {
+            if (_console.IsVisible())
+            {
+                _console.MouseWheelMove(e);
+            }
+
             IGuiComponent inputTo = (from IGuiComponent comp in _components
                                      where comp.RecieveInput
                                      where comp.Focus
@@ -315,6 +340,17 @@ namespace ClientServices.UserInterface
         /// </summary>
         public virtual bool KeyDown(KeyboardInputEventArgs e)
         {
+            if ((e.Shift ? e.CharacterMapping.Shifted : e.CharacterMapping.Character) == _config.GetConsoleKey())
+            {
+                _console.ToggleVisible();
+                return true;
+            }
+
+            if (_console.IsVisible())
+            {
+                if (_console.KeyDown(e)) return true;
+            }
+
             IOrderedEnumerable<IGuiComponent> inputList = from IGuiComponent comp in _components
                                                           where comp.RecieveInput
                                                           orderby comp.ZDepth ascending
@@ -421,6 +457,8 @@ namespace ClientServices.UserInterface
         /// </summary>
         public void Update(float frameTime)
         {
+            if(_console.IsVisible()) _console.Update(frameTime);
+
             if (moveMode && movingComp != null)
                 movingComp.Position = (Point) (MousePos - dragOffset);
 
@@ -465,6 +503,8 @@ namespace ClientServices.UserInterface
                                     ? DragInfo.DragSprite
                                     : _resourceManager.GetSprite("cursor");
             }
+
+            if (_console.IsVisible()) _console.Render();
 
             _cursorSprite.Position = MousePos;
             _cursorSprite.Draw();

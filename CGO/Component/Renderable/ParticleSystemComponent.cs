@@ -17,7 +17,7 @@ using SS13_Shared.GO.Component.Particles;
 
 namespace CGO
 {
-    public class ParticleSystemComponent : Component, IRenderableComponent
+    public class ParticleSystemComponent : Component, IParticleSystemComponent, IRenderableComponent
     {
         #region Variables.
         private Dictionary<string, ParticleSystem> _emitters = new Dictionary<string, ParticleSystem>(); // List of particle emitters.

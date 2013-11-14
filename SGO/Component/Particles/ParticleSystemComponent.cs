@@ -50,6 +50,24 @@ namespace SGO
             return new ParticleSystemComponentState(emitters);
         }
 
+        public void AddParticleSystem(string name, bool active)
+        {
+            if (!emitters.ContainsKey(name))
+                emitters.Add(name, active);
+        }
+
+        public void RemoveParticleSystem(string name)
+        {
+            if (emitters.ContainsKey(name))
+                emitters.Remove(name);
+        }
+
+        public void SetParticleSystemActive(string name, bool active)
+        {
+            if (emitters.ContainsKey(name))
+                emitters[name] = active;           
+        }
+
         public override void HandleExtendedParameters(XElement extendedParameters)
         {
             foreach (XElement param in extendedParameters.DescendantNodes())

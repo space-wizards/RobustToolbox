@@ -171,33 +171,46 @@ namespace CGO
                 slaves.Remove(slavecompo);
         }
 
+        public void AddParticleSystem(string name, bool active)
+        {
+            if (!_emitters.ContainsKey(name))
+            {
+                ParticleSettings toAdd = IoCManager.Resolve<IResourceManager>().GetParticles(name);
+                if (toAdd != null)
+                {
+                    _emitters.Add(name, new ParticleSystem(toAdd, Vector2D.Zero));
+                    _emitters[name].Emit = active;
+                }
+            }
+
+        }
+
+        public void RemoveParticleSystem(string name)
+        {
+            if (_emitters.ContainsKey(name))
+                _emitters.Remove(name);
+        }
+
+        public void SetParticleSystemActive(string name, bool active)
+        {
+            if (_emitters.ContainsKey(name))
+                _emitters[name].Emit = active;
+        }
+
         public override void HandleComponentState(dynamic _state)
         {
             ParticleSystemComponentState state = (ParticleSystemComponentState)_state;
 
             foreach (var a in state.emitters)
             {
-                if (_emitters.ContainsKey(a.Key)) //Exists, update emitting.
-                {
-                    _emitters[a.Key].Emit = a.Value;
-                }
+                if (_emitters.ContainsKey(a.Key))
+                    SetParticleSystemActive(a.Key, a.Value);
                 else
-                {
-                    ParticleSettings toAdd = IoCManager.Resolve<IResourceManager>().GetParticles(a.Key); //Doesnt exist, create.
-                    if (toAdd != null)
-                    {
-                        _emitters.Add(a.Key, new ParticleSystem(toAdd, Vector2D.Zero));
-                        _emitters[a.Key].Emit = a.Value;
-                    }
-
-                }
+                    AddParticleSystem(a.Key, a.Value);
             }
 
             foreach (var toRemove in _emitters.Keys.Except<string>(state.emitters.Keys)) //Remove emitters that are not in the new state.
-            {
-                _emitters[toRemove].Emit = false;
-                _emitters.Remove(toRemove);
-            }
+                RemoveParticleSystem(toRemove);
         }
     }
 }

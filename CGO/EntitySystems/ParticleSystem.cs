@@ -3,6 +3,7 @@ using ClientInterfaces.Resource;
 using GameObject;
 using GameObject.System;
 using SS13.IoC;
+using SS13_Shared.GO;
 using EntityManager = GameObject.EntityManager;
 
 namespace CGO.EntitySystems
@@ -18,11 +19,26 @@ namespace CGO.EntitySystems
 
         public void AddParticleSystem(Entity ent, string systemName)
         {
-            //ParticleSystem = IoCManager.Resolve<IResourceManager>().Ge;
+            ParticleSettings settings = IoCManager.Resolve<IResourceManager>().GetParticles(systemName);
+            if (settings != null)
+            {
+                //Add it.
+            }
+        }
+
+        public override void RegisterMessageTypes()
+        {
+            //EntitySystemManager.RegisterMessageType<>();
+            base.RegisterMessageTypes();
         }
 
         public override void Update(float frametime)
         {
+        }
+
+        public override void HandleNetMessage(EntitySystemMessage sysMsg)
+        {
+            base.HandleNetMessage(sysMsg);
         }
     }
 }

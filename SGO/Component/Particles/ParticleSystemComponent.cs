@@ -1,5 +1,7 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Drawing;
+using System.Xml.Linq;
 using GameObject;
 using SS13.IoC;
 using SS13_Shared;
@@ -12,30 +14,11 @@ namespace SGO
 {
     public class ParticleSystemComponent : Component
     {
-        private Vector4 _startColor = new Vector4(255, 0, 0, 0);
-        private Vector4 _endColor = new Vector4(0, 0, 0, 0);
-        private bool _active = false;
+        private Dictionary<string, Boolean> emitters = new Dictionary<string, bool>();
 
         public ParticleSystemComponent()
         {
             Family = ComponentFamily.Particles;
-        }
-        
-        public override void SetParameter(ComponentParameter parameter)
-        {
-            base.SetParameter(parameter);
-            switch (parameter.MemberName)
-            {
-                case "colorStart":
-                    _startColor = parameter.GetValue<Vector4>();
-                    break;
-                case "colorEnd":
-                    _endColor = parameter.GetValue<Vector4>();
-                    break;
-                case "startActive":
-                    _active = parameter.GetValue<bool>();
-                    break;
-            }
         }
 
         public override ComponentReplyMessage RecieveMessage(object sender, ComponentMessageType type,
@@ -56,14 +39,37 @@ namespace SGO
             return reply;
         }
 
-        private void HandleClickedInHand()
+        private void HandleClickedInHand() //TODO: This is really dumb. Change this !!!
         {
-            _active = !_active;
+            foreach (KeyValuePair<string, bool> emitter in new Dictionary<string, bool>(emitters)) //to work around "collection modified" crap.
+                emitters[emitter.Key] = !emitters[emitter.Key];
         }
-        
+
         public override ComponentState GetComponentState()
         {
-            return new ParticleSystemComponentState(_active, _startColor, _endColor);
+            return new ParticleSystemComponentState(emitters);
+        }
+
+        public override void HandleExtendedParameters(XElement extendedParameters)
+        {
+            foreach (XElement param in extendedParameters.DescendantNodes())
+            {
+                if(param.Name == "ParticleSystem")
+                    if (param.Attribute("name") != null)
+                    {
+                        if (!emitters.ContainsKey(param.Attribute("name").Value))
+                        {
+                            if (param.Attribute("active") != null)
+                            {
+                                emitters.Add(param.Attribute("name").Value, bool.Parse(param.Attribute("active").Value));
+                            }
+                            else
+                            {
+                                emitters.Add(param.Attribute("name").Value, true);
+                            }
+                        }
+                    }
+            }
         }
     }
 }

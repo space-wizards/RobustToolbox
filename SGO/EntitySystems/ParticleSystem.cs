@@ -12,6 +12,12 @@ namespace SGO.EntitySystems
             EntityQuery.OneSet.Add(typeof(ParticleSystemComponent));
         }
 
+        public override void RegisterMessageTypes()
+        {
+            //EntitySystemManager.RegisterMessageType<>();
+            base.RegisterMessageTypes();
+        }
+
         public override void Update(float frametime)
         {
         }

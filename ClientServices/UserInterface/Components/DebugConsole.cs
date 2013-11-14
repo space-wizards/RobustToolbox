@@ -214,11 +214,11 @@ namespace ClientServices.UserInterface.Components
                         }
                         else
                         {
-                            var entMgr = IoCManager.Resolve<IEntityManager>();
+                            var entMgr = IoCManager.Resolve<IEntityManagerContainer>();
                             if (entMgr != null)
                             {
                                 int entUid = int.Parse(args[1]);
-                                target = entMgr.GetEntity(entUid);
+                                target = entMgr.EntityManager.GetEntity(entUid);
                             }
                         }
 

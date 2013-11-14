@@ -38,6 +38,7 @@ namespace ParticleEditor
             _configurationManager = new ConfigurationManager();
             _configurationManager.Initialize("config.xml");
             ResourceManager = new ResourceManager(_configurationManager);
+            ResourceManager.LoadLocalResources();
             particleDisplay.ResourceManager = ResourceManager;
             particleConfigurator.InitializeSpriteSelect();
         }

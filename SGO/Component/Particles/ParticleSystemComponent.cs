@@ -9,10 +9,12 @@ using SS13_Shared.GO;
 using SS13_Shared.GO.Component.Light;
 using SS13_Shared.GO.Component.Particles;
 using ServerInterfaces.Chat;
+using ServerInterfaces.GOC;
 
 namespace SGO
 {
-    public class ParticleSystemComponent : Component
+
+    public class ParticleSystemComponent : Component, IParticleSystemComponent
     {
         private Dictionary<string, Boolean> emitters = new Dictionary<string, bool>();
 

@@ -21,6 +21,7 @@
       <Component name="InventoryComponent"></Component>
       <Component name="PlayerActionComp"></Component>
       <Component name="EntityStatsComp"></Component>
+      <Component name="ParticleSystemComponent"></Component>
     </Components>
   </EntityTemplate>
 </EntityTemplates>

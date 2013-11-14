@@ -223,6 +223,57 @@ namespace ServerServices.Chat
             var map = IoCManager.Resolve<IMapManager>();
             switch (command)
             {
+                case "addparticles":
+                    if (args.Count >= 3)
+                    {
+                        Entity target = null;
+                        if (args[1].ToLowerInvariant() == "player")
+                            target = player;
+                        else
+                        {
+                            int entUid = int.Parse(args[1]);
+                            target = _serverMain.EntityManager.GetEntity(entUid);
+                        }
+
+                        if (target != null)
+                        {
+                            if (target.HasComponent(ComponentFamily.Particles))
+                            {
+                                IParticleSystemComponent compo = (IParticleSystemComponent)target.GetComponent(ComponentFamily.Particles);
+                                compo.AddParticleSystem(args[2], true);
+                            }
+                            else
+                            {
+                                var compo = (IParticleSystemComponent)_serverMain.EntityManager.ComponentFactory.GetComponent("ParticleSystemComponent");
+                                target.AddComponent(ComponentFamily.Particles, compo);
+                                compo.AddParticleSystem(args[2], true);
+                                //Can't find a way to add clientside compo from here.
+                            }
+                        }
+                    }
+                    break;
+                case "removeparticles":
+                    if (args.Count >= 3)
+                    {
+                        Entity target = null;
+                        if (args[1].ToLowerInvariant() == "player")
+                            target = player;
+                        else
+                        {
+                            int entUid = int.Parse(args[1]);
+                            target = _serverMain.EntityManager.GetEntity(entUid);
+                        }
+
+                        if (target != null)
+                        {
+                            if (target.HasComponent(ComponentFamily.Particles))
+                            {
+                                IParticleSystemComponent compo = (IParticleSystemComponent)target.GetComponent(ComponentFamily.Particles);
+                                compo.RemoveParticleSystem(args[2]);
+                            }
+                        }
+                    }
+                    break;
                 case "addgas":
                     if (args.Count > 1 && Convert.ToDouble(args[1]) > 0)
                     {

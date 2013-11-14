@@ -88,7 +88,7 @@ namespace SGO
             IPlayerSession player = IoCManager.Resolve<IPlayerManager>().GetSessionByConnection(client);
             if (!player.adminPermissions.isAdmin)
             {
-                LogManager.Log("Player " + player.name + " tried to get SVars, but is not an admin!", LogLevel.Warning);
+                LogManager.Log("Player " + player.name + " tried to get SVars on Entity " + Owner.Uid + ", but is not an admin!", LogLevel.Warning);
             }
             else
             {

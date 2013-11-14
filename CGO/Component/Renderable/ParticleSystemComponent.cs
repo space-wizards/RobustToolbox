@@ -112,7 +112,7 @@ namespace CGO
                 ClientWindowData.WorldToScreen(
                     Owner.GetComponent<TransformComponent>(ComponentFamily.Transform).Position);
 
-            foreach (KeyValuePair<string, ParticleSystem> particleSystem in _emitters.OrderBy(x => x.Value.ParticleSprite.Image)) //Render sorted by atlas. Tiny performance improvement for entities with a bunch of particlesystems.
+            foreach (KeyValuePair<string, ParticleSystem> particleSystem in _emitters.OrderBy(x => x.Value.ParticleSprite.Image.Name)) //Render sorted by atlas. Tiny performance improvement for entities with a bunch of particlesystems.
             {
                 particleSystem.Value.Move(renderPos);
                 particleSystem.Value.Render();                

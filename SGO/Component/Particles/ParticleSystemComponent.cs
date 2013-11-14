@@ -16,6 +16,11 @@ namespace SGO
     {
         private Dictionary<string, Boolean> emitters = new Dictionary<string, bool>();
 
+        //Notes: The server doesn't actually care about whether the client can't find a particle system when we tell it to add it.
+        //       The server is literally just a list of stuff we wan't the clients to use - if they can't then tough luck.
+        //       It's not the most elegant Solution but short of passing around a whole bunch of messages to verify that everything worked
+        //       there's not much else i can do. And quite frankly - it doesn't matter if the client cant find a particle system - it just wont show up - no error.
+
         public ParticleSystemComponent()
         {
             Family = ComponentFamily.Particles;

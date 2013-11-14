@@ -209,7 +209,7 @@ namespace CGO
                     AddParticleSystem(a.Key, a.Value);
             }
 
-            foreach (var toRemove in _emitters.Keys.Except<string>(state.emitters.Keys)) //Remove emitters that are not in the new state.
+            foreach (var toRemove in new List<string>(_emitters.Keys.Except<string>(state.emitters.Keys))) //Remove emitters that are not in the new state.
                 RemoveParticleSystem(toRemove);
         }
     }

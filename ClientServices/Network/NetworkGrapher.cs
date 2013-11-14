@@ -26,7 +26,7 @@ namespace ClientServices.Network
             _networkManager = networkManager;
             _dataPoints = new List<NetworkStatisticsDataPoint>();
             _lastDataPointTime = DateTime.Now;
-            _textSprite = new TextSprite("NetGraphText", "", _resourceManager.GetFont("CALIBRI"));
+            _textSprite = new TextSprite("NetGraphText", "", _resourceManager.GetFont("base_font"));
         }
 
         #region INetworkGrapher Members

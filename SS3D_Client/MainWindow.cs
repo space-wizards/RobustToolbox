@@ -1,10 +1,12 @@
 ﻿using System;
+using System.ComponentModel;
 using System.Drawing;
 using System.IO;
 using System.Windows.Forms;
 using ClientInterfaces.Configuration;
 using ClientInterfaces.Input;
 using ClientInterfaces.Network;
+using ClientInterfaces.Resource;
 using ClientInterfaces.State;
 using ClientInterfaces.UserInterface;
 using ClientServices.State.States;
@@ -65,12 +67,15 @@ namespace SS13
             SetupGorgon();
             SetupInput();
 
+            IoCManager.Resolve<IResourceManager>().LoadBaseResources();
+            IoCManager.Resolve<IResourceManager>().LoadLocalResources();
+
+            Gorgon.Go();
+
             _networkManager = IoCManager.Resolve<INetworkManager>();
             _netGrapher = IoCManager.Resolve<INetworkGrapher>();
             _stateManager = IoCManager.Resolve<IStateManager>();
             _userInterfaceManager = IoCManager.Resolve<IUserInterfaceManager>();
-
-            Gorgon.Go();
 
             _stateManager.RequestStateChange<MainScreen>();
         }

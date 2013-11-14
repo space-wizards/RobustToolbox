@@ -6,7 +6,7 @@ namespace ClientInterfaces.Resource
 {
     public interface IResourceManager
     {
-        void LoadResourceZip();
+        void LoadResourceZip(string path = null, string pw = null);
         void ClearLists();
         Sprite GetSpriteFromImage(string key);
         Sprite GetSprite(string key);
@@ -18,5 +18,7 @@ namespace ClientInterfaces.Resource
         Font GetFont(string key);
         SpriteInfo? GetSpriteInfo(string key);
         object GetAnimatedSprite(string key);
+        void LoadLocalResources();
+        void LoadBaseResources();
     }
 }

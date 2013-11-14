@@ -1,9 +1,11 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.Drawing;
 using System.Globalization;
 using System.IO;
 using System.Linq;
+using System.Reflection;
 using System.Text.RegularExpressions;
 using CGO;
 using ClientInterfaces.Configuration;
@@ -35,22 +37,56 @@ namespace ClientServices.Resources
         private readonly Dictionary<string, AnimatedSprite> _animatedSprites = new Dictionary<string, AnimatedSprite>(); 
         private readonly List<string> supportedImageExtensions = new List<string> {".png"};
 
+        public int done = 0;
+
         public ResourceManager(IConfigurationManager configurationManager)
         {
             _configurationManager = configurationManager;
-            LoadResourceZip();
-            LoadAnimatedSprites();
         }
 
         #region Resource Loading & Disposal
 
         /// <summary>
+        ///  <para>Loads the embedded base files.</para>
+        /// </summary>
+        public void LoadBaseResources()
+        {
+            Assembly _assembly = Assembly.GetExecutingAssembly(); ;
+            Stream _stream;
+
+            _stream = _assembly.GetManifestResourceStream("ClientServices._EmbeddedBaseResources.bluehigh.ttf");
+            if (_stream != null)
+                _fonts.Add("base_font", Font.FromStream("base_font", _stream, (int)_stream.Length, 10));
+            _stream = null;
+
+            _stream = _assembly.GetManifestResourceStream("ClientServices._EmbeddedBaseResources.noSprite.png");
+            if (_stream != null)
+            {
+                Image nospriteimage = Image.FromStream("nospriteimage", _stream, (int) _stream.Length);
+                _images.Add("nosprite", nospriteimage);
+                _sprites.Add("nosprite", new Sprite("nosprite", nospriteimage));  
+            }
+            _stream = null;
+        }
+
+        /// <summary>
+        ///  <para>Loads the local resources as specified by the config</para>
+        /// </summary>
+        public void LoadLocalResources()
+        {
+            LoadResourceZip();
+            LoadAnimatedSprites();
+        }
+
+        /// <summary>
         ///  <para>Loads all Resources from given Zip into the respective Resource Lists and Caches</para>
         /// </summary>
-        public void LoadResourceZip()
+        public void LoadResourceZip(string path = null, string pw = null)
         {
-            string zipPath = _configurationManager.GetResourcePath();
-            string password = _configurationManager.GetResourcePassword();
+            string zipPath = path ?? _configurationManager.GetResourcePath();
+            string password = pw ?? _configurationManager.GetResourcePassword();
+
+
             if (!File.Exists(zipPath)) throw new FileNotFoundException("Specified Zip does not exist: " + zipPath);
 
             FileStream zipFileStream = File.OpenRead(zipPath);
@@ -543,13 +579,13 @@ namespace ClientServices.Resources
         }
 
         /// <summary>
-        ///  Retrieves the Font with the given key from the Resource List. Returns null if not found.
+        ///  Retrieves the Font with the given key from the Resource List. Returns base_font if not found.
         /// </summary>
         public Font GetFont(string key)
         {
             key = key.ToLowerInvariant();
             if (_fonts.ContainsKey(key)) return _fonts[key];
-            else return null;
+            else return _fonts["base_font"];
         }
 
         #endregion

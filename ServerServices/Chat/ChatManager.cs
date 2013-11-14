@@ -11,6 +11,7 @@ using Lidgren.Network;
 using SS13.IoC;
 using SS13_Shared;
 using SS13_Shared.GO;
+using SS13_Shared.Utility;
 using ServerInterfaces;
 using ServerInterfaces.Atmos;
 using ServerInterfaces.Chat;
@@ -181,7 +182,7 @@ namespace ServerServices.Chat
 
             var args = new List<string>();
 
-            ParseArguments(text, args);
+            CommandParsing.ParseArguments(text, args);
             if(_emotes.ContainsKey(args[0]))
             {
                 var userText = String.Format(_emotes[args[0]].SelfText, name);//todo user-only channel
@@ -208,7 +209,7 @@ namespace ServerServices.Chat
                 return;
             var args = new List<string>();
 
-            ParseArguments(text, args);
+            CommandParsing.ParseArguments(text, args);
 
             string command = args[0];
 
@@ -223,57 +224,6 @@ namespace ServerServices.Chat
             var map = IoCManager.Resolve<IMapManager>();
             switch (command)
             {
-                case "addparticles":
-                    if (args.Count >= 3)
-                    {
-                        Entity target = null;
-                        if (args[1].ToLowerInvariant() == "player")
-                            target = player;
-                        else
-                        {
-                            int entUid = int.Parse(args[1]);
-                            target = _serverMain.EntityManager.GetEntity(entUid);
-                        }
-
-                        if (target != null)
-                        {
-                            if (target.HasComponent(ComponentFamily.Particles))
-                            {
-                                IParticleSystemComponent compo = (IParticleSystemComponent)target.GetComponent(ComponentFamily.Particles);
-                                compo.AddParticleSystem(args[2], true);
-                            }
-                            else
-                            {
-                                var compo = (IParticleSystemComponent)_serverMain.EntityManager.ComponentFactory.GetComponent("ParticleSystemComponent");
-                                target.AddComponent(ComponentFamily.Particles, compo);
-                                compo.AddParticleSystem(args[2], true);
-                                //Can't find a way to add clientside compo from here.
-                            }
-                        }
-                    }
-                    break;
-                case "removeparticles":
-                    if (args.Count >= 3)
-                    {
-                        Entity target = null;
-                        if (args[1].ToLowerInvariant() == "player")
-                            target = player;
-                        else
-                        {
-                            int entUid = int.Parse(args[1]);
-                            target = _serverMain.EntityManager.GetEntity(entUid);
-                        }
-
-                        if (target != null)
-                        {
-                            if (target.HasComponent(ComponentFamily.Particles))
-                            {
-                                IParticleSystemComponent compo = (IParticleSystemComponent)target.GetComponent(ComponentFamily.Particles);
-                                compo.RemoveParticleSystem(args[2]);
-                            }
-                        }
-                    }
-                    break;
                 case "addgas":
                     if (args.Count > 1 && Convert.ToDouble(args[1]) > 0)
                     {
@@ -347,49 +297,6 @@ namespace ServerServices.Chat
                     SendChatMessage(channel, message, name, entityId);
                     break;
             }
-        }
-
-        /// <summary>
-        /// Command parsing func
-        /// </summary>
-        /// <param name="text">full input string</param>
-        /// <param name="args">List of arguments, including the command as #0</param>
-        private void ParseArguments(string text, List<string> args)
-        {
-            string buf = "";
-            bool inquotes = false;
-            for (int i = 0; i < text.Length; i++)
-            {
-                if (text[i] == '/' || text[i] == '*')
-                    continue;
-                else if (inquotes && text[i] == '"')
-                {
-                    inquotes = false;
-                    args.Add(buf);
-                    buf = "";
-                    i++; //skip the following space.
-                    continue;
-                }
-                else if (!inquotes && text[i] == '"')
-                {
-                    inquotes = true;
-                    continue;
-                }
-                else if (text[i] == ' ' && !inquotes)
-                {
-                    args.Add(buf);
-                    buf = "";
-                    continue;
-                }
-                else
-                {
-                    buf += text[i];
-                    continue;
-                }
-            }
-
-            if (buf != "")
-                args.Add(buf);
         }
     }
 

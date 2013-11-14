@@ -180,6 +180,7 @@
     <Compile Include="BodypartEnum.cs" />
     <Compile Include="TypeEventArgs.cs" />
     <Compile Include="Utility\BitStream.cs" />
+    <Compile Include="Utility\CommandParsing.cs" />
     <Compile Include="Utility\NetParamsPacker.cs" />
     <Compile Include="Utility\RandomString.cs" />
     <Compile Include="Utility\Range.cs" />

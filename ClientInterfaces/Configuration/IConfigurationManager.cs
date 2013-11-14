@@ -26,6 +26,7 @@
         int GetRate();
         int GetUpdateRate();
         int GetCommandRate();
+        char GetConsoleKey();
         float GetInterpolation();
     }
 }

@@ -74,6 +74,7 @@
   <ItemGroup>
     <Compile Include="Atmos\AtmosManager.cs" />
     <Compile Include="Chat\ChatManager.cs" />
+    <Compile Include="ClientConsoleHost\ClientConsoleHost.cs" />
     <Compile Include="Configuration\ConfigurationManager.cs" />
     <Compile Include="ServerConsole\Commands\ListPlayers.cs" />
     <Compile Include="ServerConsole\Commands\RestartServer.cs" />

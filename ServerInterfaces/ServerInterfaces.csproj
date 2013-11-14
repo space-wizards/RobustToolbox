@@ -71,6 +71,7 @@
     <Compile Include="Atmos\IGasCell.cs" />
     <Compile Include="Atmos\IGasProperties.cs" />
     <Compile Include="Chat\IChatManager.cs" />
+    <Compile Include="ClientConsoleHost\IClientConsoleHost.cs" />
     <Compile Include="Configuration\IConfigurationManager.cs" />
     <Compile Include="GameObject\IDirectionComponent.cs" />
     <Compile Include="GameObject\IParticleSystemComponent.cs" />

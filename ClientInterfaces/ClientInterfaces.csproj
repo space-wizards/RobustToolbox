@@ -79,6 +79,7 @@
     <Compile Include="GameStates\IGameStateManager.cs" />
     <Compile Include="GOC\GetSVarsEventArgs.cs" />
     <Compile Include="GOC\IEntityManagerContainer.cs" />
+    <Compile Include="GOC\IParticleSystemComponent.cs" />
     <Compile Include="GOC\IPlayerAction.cs" />
     <Compile Include="GOC\IRenderableComponent.cs" />
     <Compile Include="GOC\ISpriteComponent.cs" />

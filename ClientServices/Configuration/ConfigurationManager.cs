@@ -46,6 +46,11 @@ namespace ClientServices.Configuration
             return Configuration.PlayerName;
         }
 
+        public char GetConsoleKey()
+        {
+            return Configuration.ConsoleKey;
+        }
+
         public bool GetVsync()
         {
             return Configuration.VSync;

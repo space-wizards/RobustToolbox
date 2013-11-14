@@ -39,6 +39,9 @@ namespace ClientServices.UserInterface.Components
         private Sprite _textboxMain;
         private Sprite _textboxRight;
 
+        public Color drawColor = Color.White;
+        public Color textColor = Color.Black;
+
         private float blinkCount;
 
         public Textbox(int width, IResourceManager resourceManager)
@@ -90,6 +93,13 @@ namespace ClientServices.UserInterface.Components
 
         public override void Render()
         {
+            if (drawColor != Color.White)
+            {
+                _textboxLeft.Color = drawColor;
+                _textboxMain.Color = drawColor;
+                _textboxRight.Color = drawColor;
+            }
+
             _textboxLeft.Draw(_clientAreaLeft);
             _textboxMain.Draw(_clientAreaMain);
             _textboxRight.Draw(_clientAreaRight);
@@ -99,6 +109,14 @@ namespace ClientServices.UserInterface.Components
                                                            Label.Position.Y + (Label.Height/2f) - (_caretHeight/2f),
                                                            _caretWidth, _caretHeight, Color.WhiteSmoke);
 
+            if (drawColor != Color.White)
+            {
+                _textboxLeft.Color = Color.White;
+                _textboxMain.Color = Color.White;
+                _textboxRight.Color = Color.White;
+            }
+
+            Label.Color = textColor;
             Label.Text = _displayText;
             Label.Draw();
         }

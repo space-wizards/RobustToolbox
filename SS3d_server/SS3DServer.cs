@@ -17,6 +17,7 @@ using SS13_Shared.ServerEnums;
 using ServerInterfaces;
 using ServerInterfaces.Atmos;
 using ServerInterfaces.Chat;
+using ServerInterfaces.ClientConsoleHost;
 using ServerInterfaces.Configuration;
 using ServerInterfaces.Crafting;
 using ServerInterfaces.GameState;
@@ -641,6 +642,9 @@ namespace SS13_Server
                     break;
                 case NetMessage.StateAck:
                     HandleStateAck(msg);
+                    break;
+                case NetMessage.ConsoleCommand:
+                    IoCManager.Resolve<IClientConsoleHost>().ProcessCommand(msg.ReadString(), msg.SenderConnection);
                     break;
             }
         }

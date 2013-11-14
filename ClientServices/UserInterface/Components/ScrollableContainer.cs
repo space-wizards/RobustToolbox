@@ -9,7 +9,7 @@ using GorgonLibrary.InputDevices;
 
 namespace ClientServices.UserInterface.Components
 {
-    internal class ScrollableContainer : GuiComponent
+    public class ScrollableContainer : GuiComponent
         //This is a note: Spooge wants support for mouseover-scrolling of scrollable containers inside other scrollable containers.
     {
         protected readonly IResourceManager _resourceManager;

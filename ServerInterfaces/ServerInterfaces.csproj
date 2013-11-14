@@ -73,6 +73,7 @@
     <Compile Include="Chat\IChatManager.cs" />
     <Compile Include="Configuration\IConfigurationManager.cs" />
     <Compile Include="GameObject\IDirectionComponent.cs" />
+    <Compile Include="GameObject\IParticleSystemComponent.cs" />
     <Compile Include="GameObject\ITransformComponent.cs" />
     <Compile Include="ServerConsole\IConsoleManager.cs" />
     <Compile Include="Crafting\ICraftingManager.cs" />

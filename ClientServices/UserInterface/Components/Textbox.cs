@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Drawing;
+using System.Windows.Forms;
 using ClientInterfaces.Resource;
 using GorgonLibrary;
 using GorgonLibrary.Graphics;
@@ -150,6 +151,18 @@ namespace ClientServices.UserInterface.Components
         public override bool KeyDown(KeyboardInputEventArgs e)
         {
             if (!Focus) return false;
+
+            if (e.Ctrl && e.CharacterMapping.Character == 'v')
+            {
+                if (Clipboard.ContainsText())
+                {
+                    string ret = Clipboard.GetText();
+                    Text = Text.Insert(_caretIndex, ret);
+                    if (_caretIndex < _text.Length) _caretIndex += ret.Length;
+                    SetVisibleText();
+                    return true;
+                }
+            }
 
             if (e.Key == KeyboardKeys.Left)
             {

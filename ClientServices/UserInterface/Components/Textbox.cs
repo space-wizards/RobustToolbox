@@ -164,6 +164,12 @@ namespace ClientServices.UserInterface.Components
                 }
             }
 
+            if (e.Ctrl && e.CharacterMapping.Character == 'c')
+            {
+                Clipboard.SetText(Text);
+                return true;
+            }
+
             if (e.Key == KeyboardKeys.Left)
             {
                 if (_caretIndex > 0) _caretIndex--;

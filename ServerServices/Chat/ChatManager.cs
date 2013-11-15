@@ -53,9 +53,9 @@ namespace ServerServices.Chat
             if (hasChannelIdentifier)
                 text = text.Substring(1);
             text = text.Trim(); // Remove whitespace
-            if (text[0] == '/')
-                ProcessCommand(text, name, channel, entityId, message.SenderConnection);
-            else if (text[0] == '*')
+            //if (text[0] == '/')
+            //    ProcessCommand(text, name, channel, entityId, message.SenderConnection);
+            if (text[0] == '*')
                 ProcessEmote(text, name, channel, entityId, message.SenderConnection);
             else
                 SendChatMessage(channel, text, name, entityId);
@@ -196,108 +196,40 @@ namespace ServerServices.Chat
             
         }
 
-        /// <summary>
-        /// Processes commands (chat messages starting with /)
-        /// </summary>
-        /// <param name="text">chat text</param>
-        /// <param name="name">player name that sent the chat text</param>
-        /// <param name="channel">channel message was recieved on</param>
-        /// <param name="entityId">Uid of the entity that sent the message. This will always be a player's attached entity</param>
-        private void ProcessCommand(string text, string name, ChatChannel channel, int? entityId, NetConnection client)
-        {
-            if (entityId == null)
-                return;
-            var args = new List<string>();
+    //    /// <summary>
+    //    /// Processes commands (chat messages starting with /)
+    //    /// </summary>
+    //    /// <param name="text">chat text</param>
+    //    /// <param name="name">player name that sent the chat text</param>
+    //    /// <param name="channel">channel message was recieved on</param>
+    //    /// <param name="entityId">Uid of the entity that sent the message. This will always be a player's attached entity</param>
+    //    private void ProcessCommand(string text, string name, ChatChannel channel, int? entityId, NetConnection client)
+    //    {
+    //        if (entityId == null)
+    //            return;
+    //        var args = new List<string>();
 
-            CommandParsing.ParseArguments(text, args);
+    //        CommandParsing.ParseArguments(text, args);
 
-            string command = args[0];
+    //        string command = args[0];
 
-            Vector2 position;
-            Entity player;
-            player = _serverMain.EntityManager.GetEntity((int)entityId);
-            if (player == null)
-                position = new Vector2(160, 160);
-            else
-                position = player.GetComponent<ITransformComponent>(ComponentFamily.Transform).Position;
+    //        Vector2 position;
+    //        Entity player;
+    //        player = _serverMain.EntityManager.GetEntity((int)entityId);
+    //        if (player == null)
+    //            position = new Vector2(160, 160);
+    //        else
+    //            position = player.GetComponent<ITransformComponent>(ComponentFamily.Transform).Position;
 
-            var map = IoCManager.Resolve<IMapManager>();
-            switch (command)
-            {
-                case "addgas":
-                    if (args.Count > 1 && Convert.ToDouble(args[1]) > 0)
-                    {
-                        double amount = Convert.ToDouble(args[1]);
-                        var t = map.GetFloorAt(position) as Tile;
-                        if(t != null)
-                            t.GasCell.AddGas((float) amount, GasType.Toxin);
-                    }
-                    break;
-                case "heatgas":
-                    if (args.Count > 1 && Convert.ToDouble(args[1]) > 0)
-                    {
-                        double amount = Convert.ToDouble(args[1]);
-                        var t = map.GetFloorAt(position) as Tile;
-                        if (t != null)
-                            t.GasCell.AddGas((float)amount, GasType.Toxin);
-                    }
-                    break;
-                case "atmosreport":
-                    IoCManager.Resolve<IAtmosManager>().TotalAtmosReport();
-                    break;
-                case "tpvreport": // Reports on temp / pressure
-                    var ti = (Tile)map.GetFloorAt(position);
-                    if (ti == null)
-                        break;
-                    GasCell ce = ti.gasCell;
-                    SendChatMessage(ChatChannel.Default,
-                                    "T/P/V: " + ce.GasMixture.Temperature.ToString() + " / " +
-                                    ce.GasMixture.Pressure.ToString() + " / " + ce.GasVelocity.ToString(), "TempCheck",
-                                    0);
-                    break;
-                case "gasreport":
-
-                    var tile = map.GetFloorAt(position) as Tile;
-                    if (tile == null)
-                        break;
-                    GasCell c = tile.gasCell;
-                    for (int i = 0; i < c.GasMixture.gasses.Length; i++)
-                    {
-                        SendChatMessage(ChatChannel.Default, ((GasType)i).ToString() + ": " + c.GasMixture.gasses[i].ToString(CultureInfo.InvariantCulture) + " m",
-                                        "GasReport", 0);
-                    }
-                    break;
-                case "everyonesondrugs":
-                    foreach (IPlayerSession playerfordrugs in IoCManager.Resolve<IPlayerManager>().GetAllPlayers())
-                    {
-                        playerfordrugs.AddPostProcessingEffect(PostProcessingEffectType.Acid, 60);
-                    }
-                    break;
-                    /*    
-                case "sprayblood":
-                    if (player == null)
-                        return;
-                    else
-                        position = player.position;
-                    p = SS13Server.Singleton.Map.GetTileArrayPositionFromWorldPosition(position);
-                    var t = SS13Server.Singleton.Map.GetTileAt(p.X, p.Y);
-                    if (args.Count > 1 && Convert.ToInt32(args[1]) > 0)
-                    {
-                        for (int i = 0; i <= Convert.ToInt32(args[1]); i++)
-                        {
-                            t.AddDecal(DecalType.Blood);
-                        }
-                    }
-                    else
-                        t.AddDecal(DecalType.Blood);
-                        
-                    break;*/
-                default:
-                    string message = "Command '" + command + "' not recognized.";
-                    SendChatMessage(channel, message, name, entityId);
-                    break;
-            }
-        }
+    //        var map = IoCManager.Resolve<IMapManager>();
+    //        switch (command)
+    //        {
+    //            default:
+    //                string message = "Command '" + command + "' not recognized.";
+    //                SendChatMessage(channel, message, name, entityId);
+    //                break;
+    //        }
+    //    }
     }
 
     public struct Emote

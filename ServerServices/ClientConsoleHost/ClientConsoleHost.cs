@@ -139,12 +139,13 @@ namespace ServerServices.ClientConsoleHost
                         if (ti == null)
                             break;
                         GasCell ce = ti.gasCell;
-                        var chatMgr = IoCManager.Resolve<IChatManager>();
-                        chatMgr.SendChatMessage(ChatChannel.Default,
-                                                "T/P/V: " + ce.GasMixture.Temperature.ToString() + " / " +
-                                                ce.GasMixture.Pressure.ToString() + " / " + ce.GasVelocity.ToString(),
-                                                "TempCheck",
-                                                0);
+                        SendConsoleReply("T/P/V: " + ce.GasMixture.Temperature.ToString() + " / " + ce.GasMixture.Pressure.ToString() + " / " + ce.GasVelocity.ToString(), sender);   
+                        //var chatMgr = IoCManager.Resolve<IChatManager>();
+                        //chatMgr.SendChatMessage(ChatChannel.Default,
+                        //                        "T/P/V: " + ce.GasMixture.Temperature.ToString() + " / " +
+                        //                        ce.GasMixture.Pressure.ToString() + " / " + ce.GasVelocity.ToString(),
+                        //                        "TempCheck",
+                        //                        0);
                     }
                     break;
                 case "gasreport":
@@ -156,11 +157,12 @@ namespace ServerServices.ClientConsoleHost
                         GasCell c = tile.gasCell;
                         for (int i = 0; i < c.GasMixture.gasses.Length; i++)
                         {
-                            var chatMgr = IoCManager.Resolve<IChatManager>();
-                            chatMgr.SendChatMessage(ChatChannel.Default,
-                                                    ((GasType) i).ToString() + ": " +
-                                                    c.GasMixture.gasses[i].ToString(CultureInfo.InvariantCulture) + " m",
-                                                    "GasReport", 0);
+                            SendConsoleReply(((GasType) i).ToString() + ": " +c.GasMixture.gasses[i].ToString(CultureInfo.InvariantCulture) + " m", sender); 
+                            //var chatMgr = IoCManager.Resolve<IChatManager>();
+                            //chatMgr.SendChatMessage(ChatChannel.Default,
+                            //                        ((GasType) i).ToString() + ": " +
+                            //                        c.GasMixture.gasses[i].ToString(CultureInfo.InvariantCulture) + " m",
+                            //                        "GasReport", 0);
                         }
                     }
                     break;

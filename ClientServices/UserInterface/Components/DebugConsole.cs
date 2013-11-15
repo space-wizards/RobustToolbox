@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Drawing;
 using ClientInterfaces.Configuration;
 using ClientInterfaces.GOC;
@@ -164,6 +165,16 @@ namespace ClientServices.UserInterface.Components
 
             switch (command)
             {
+                case "cls":
+                    lines.Clear();
+                    components.Clear();
+                    last_y = 0;
+                    //this.scrollbarH.Value = 0;
+                    this.scrollbarV.Value = 0;
+                    break;
+                case "quit":
+                    Environment.Exit(0);
+                    break;
                 case "addparticles": //This is only clientside.
                     if (args.Count >= 3)
                     {

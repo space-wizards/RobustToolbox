@@ -148,6 +148,10 @@ namespace ServerServices.Map
             {
                 MoveGasCell(t, tile);
             }
+            else
+            {
+                tile.GasCell = new GasCell((Tile)tile);
+            }
 
             RemoveTile(t);
             AddTile(tile);

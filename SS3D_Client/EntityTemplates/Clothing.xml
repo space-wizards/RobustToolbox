@@ -42,9 +42,26 @@
       <Component name="VelocityComponent"></Component>
       <Component name="DirectionComponent"></Component>
       <Component name="NetworkMoverComponent"></Component>
-      <Component name="WearableSpriteComponent">
+      <Component name="AnimatedSpriteComponent">
         <Parameters>
-          <Parameter name="basename" type="string" value="jumpsuit" />
+          <Parameter name="sprite" type="string" value="player_jumpsuit" />
+        </Parameters>
+      </Component>
+      <Component name="PhysicsComponent"></Component>
+      <Component name="ClickableComponent"></Component>
+      <Component name="BasicItemComponent"></Component>
+      <Component name="EquippableComponent"></Component>
+    </Components>
+  </EntityTemplate>
+  <EntityTemplate name="Security_Jumpsuit">
+    <Components>
+      <Component name="TransformComponent"></Component>
+      <Component name="VelocityComponent"></Component>
+      <Component name="DirectionComponent"></Component>
+      <Component name="NetworkMoverComponent"></Component>
+      <Component name="AnimatedSpriteComponent">
+        <Parameters>
+          <Parameter name="sprite" type="string" value="player_jumpsuit_security" />
         </Parameters>
       </Component>
       <Component name="PhysicsComponent"></Component>

@@ -8,7 +8,6 @@ using ClientWindow;
 using GameObject;
 using GorgonLibrary;
 using GorgonLibrary.Graphics;
-using Lidgren.Network;
 using SS13.Graphics;
 using SS13.IoC;
 using SS13_Shared;
@@ -75,13 +74,18 @@ namespace CGO
 
         public void SetSprite(string name)
         {
-            sprite = (AnimatedSprite)IoCManager.Resolve<IResourceManager>().GetAnimatedSprite("player");
+            sprite = (AnimatedSprite)IoCManager.Resolve<IResourceManager>().GetAnimatedSprite(name);
         }
 
         public void SetAnimationState(string state, bool loop = true)
         {
             sprite.SetAnimationState(state);
             sprite.SetLoop(loop);
+
+            foreach(AnimatedSpriteComponent s in slaves)
+            {
+                s.SetAnimationState(state, loop);
+            }
         }
 
         public override ComponentReplyMessage RecieveMessage(object sender, ComponentMessageType type,
@@ -213,13 +217,13 @@ namespace CGO
         public virtual void Render(Vector2D topLeft, Vector2D bottomRight)
         {
             //Render slaves beneath
-            IEnumerable<SpriteComponent> renderablesBeneath = from SpriteComponent c in slaves
+            IEnumerable<IRenderableComponent> renderablesBeneath = from IRenderableComponent c in slaves
                                                               //FIXTHIS
                                                               orderby c.DrawDepth ascending
                                                               where c.DrawDepth < DrawDepth
                                                               select c;
 
-            foreach (SpriteComponent component in renderablesBeneath.ToList())
+            foreach (IRenderableComponent component in renderablesBeneath.ToList())
             {
                 component.Render(topLeft, bottomRight);
             }
@@ -247,7 +251,7 @@ namespace CGO
             sprite.HorizontalFlip = false;
 
             //Render slaves above
-            IEnumerable<SpriteComponent> renderablesAbove = from SpriteComponent c in slaves
+            IEnumerable<IRenderableComponent> renderablesAbove = from IRenderableComponent c in slaves
                                                             //FIXTHIS
                                                             orderby c.DrawDepth ascending
                                                             where c.DrawDepth >= DrawDepth
@@ -292,7 +296,7 @@ namespace CGO
         {
             if (!m.HasComponent(ComponentFamily.Renderable))
                 return;
-            var mastercompo = m.GetComponent<SpriteComponent>(ComponentFamily.Renderable);
+            var mastercompo = m.GetComponent<IRenderableComponent>(ComponentFamily.Renderable);
             //If there's no sprite component, then FUCK IT
             if (mastercompo == null)
                 return;

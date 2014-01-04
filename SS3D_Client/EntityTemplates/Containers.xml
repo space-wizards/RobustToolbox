@@ -7,9 +7,9 @@
       <Component name="VelocityComponent"></Component>
       <Component name="DirectionComponent"></Component>
       <Component name="NetworkMoverComponent"></Component>
-      <Component name="ItemSpriteComponent">
+      <Component name="AnimatedSpriteComponent">
         <Parameters>
-          <Parameter name="basename" type="string" value="toolbox_r" />
+          <Parameter name="sprite" type="string" value="player_toolbox" />
         </Parameters>
       </Component>
       <Component name="PhysicsComponent"></Component>

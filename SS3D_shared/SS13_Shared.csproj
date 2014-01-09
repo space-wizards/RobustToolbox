@@ -117,6 +117,7 @@
   <ItemGroup>
     <Compile Include="AdminPermissions.cs" />
     <Compile Include="BoundKeyEventArgs.cs" />
+    <Compile Include="ComponentEvents.cs" />
     <Compile Include="GO\Equipment\EquipmentState.cs" />
     <Compile Include="GO\Hands\HandsState.cs" />
     <Compile Include="GO\Inventory\InventoryState.cs" />

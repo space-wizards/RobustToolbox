@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using GameObject;
+using SS13_Shared;
 using SS13_Shared.GO;
 using SS13_Shared.GO.Component.StatusEffect;
 using SS13_Shared.GO.StatusEffect;

@@ -371,6 +371,24 @@ namespace GameObject
 
         #endregion
 
+        #region Component Events
+        //Convenience thing.
+        public void SubscribeEvent<T>(ComponentEventDelegate de) where T : ComponentEvent
+        {
+            EntityManager.SubscribeEvent<T>(de);
+        }
+
+        public void UnsubscribeEvent<T>(ComponentEventDelegate de) where T : ComponentEvent
+        {
+            EntityManager.UnsubscribeEvent<T>(de);
+        }
+
+        public void RaiseEvent(ComponentEvent toRaise)
+        {
+            EntityManager.RaiseEvent(toRaise);
+        } 
+        #endregion
+
         #region Components
 
         /// <summary>

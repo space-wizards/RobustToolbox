@@ -40,6 +40,9 @@ namespace GameObject
         protected Queue<IncomingEntityMessage> MessageBuffer = new Queue<IncomingEntityMessage>();
         protected int NextUid = 0;
 
+        private Dictionary<ComponentEventDelegate, Type> _subscriptions = new Dictionary<ComponentEventDelegate, Type>();
+        private Queue<KeyValuePair<ComponentEventDelegate, ComponentEvent>> _eventQueue = new Queue<KeyValuePair<ComponentEventDelegate, ComponentEvent>>();
+
         public EntityManager(EngineType engineType, IEntityNetworkManager entityNetworkManager)
         {
             EngineType = engineType;
@@ -119,7 +122,47 @@ namespace GameObject
         {
             Clock += frameTime;
             EntitySystemManager.Update(frameTime);
+            ProcessEventQueue();
         }
+
+        #region ComponentEvents
+        public void SubscribeEvent<T>(ComponentEventDelegate de) where T : ComponentEvent
+        {
+            Type eventType = typeof(T);
+            if (_subscriptions.Any(x => x.Key == de && x.Value == eventType)) return;
+            _subscriptions.Add(de, eventType);
+        }
+
+        public void UnsubscribeEvent<T>(ComponentEventDelegate de) where T : ComponentEvent
+        {
+            Type eventType = typeof(T);
+            if (!_subscriptions.Any(x => x.Key == de && x.Value == eventType)) return;
+            _subscriptions.Remove(de);
+        }
+
+        public void RaiseEvent(ComponentEvent toRaise)
+        {
+            foreach (KeyValuePair<ComponentEventDelegate, Type> subscription in _subscriptions)
+            {
+                if (subscription.Value != toRaise.GetType()) continue;
+                _eventQueue.Enqueue(new KeyValuePair<ComponentEventDelegate, ComponentEvent>(subscription.Key, toRaise));
+            }
+        }
+
+        private void ProcessEventQueue()
+        {
+            while (_eventQueue.Any())
+            {
+                var current = _eventQueue.Dequeue();
+                current.Key(current.Value);
+            }
+        }
+
+        private void RemoveComponentDelegates(IComponent compo)
+        {
+            _eventQueue = new Queue<KeyValuePair<ComponentEventDelegate, ComponentEvent>>(_eventQueue.Where(x => x.Key.Target != compo)); //Does comparing them like this work? Who knows.
+        }
+        #endregion
 
         #region Entity Management
 

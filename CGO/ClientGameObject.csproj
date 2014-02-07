@@ -126,6 +126,7 @@
     <Compile Include="EntitySystems\InventorySystem.cs" />
     <Compile Include="EntitySystems\TransformSystem.cs" />
     <Compile Include="Vector2.cs" />
+    <None Include="ClassDiagram1.cd" />
     <None Include="Entity.cs" />
     <Compile Include="EntityManager.cs" />
     <Compile Include="EntityNetworkManager.cs" />

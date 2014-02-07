@@ -264,7 +264,6 @@ namespace SGO
             }
         }
 
-
         private void DropAll()
         {
             Drop(Hand.Left);

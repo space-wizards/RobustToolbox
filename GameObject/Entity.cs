@@ -416,6 +416,7 @@ namespace GameObject
         {
             if (!_components.Keys.Contains(family)) return;
             UpdateComponentTypes();
+            EntityManager.RemoveComponentDelegates(_components[family]);
             _components[family].OnRemove();
             _components.Remove(family);
         }

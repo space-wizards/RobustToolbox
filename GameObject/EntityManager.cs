@@ -158,7 +158,7 @@ namespace GameObject
             }
         }
 
-        private void RemoveComponentDelegates(IComponent compo)
+        public void RemoveComponentDelegates(IComponent compo)
         {
             _eventQueue = new Queue<KeyValuePair<Delegate, ComponentEvent>>(_eventQueue.Where(x => x.Key.Target != compo)); //Does comparing them like this work? Who knows.
         }

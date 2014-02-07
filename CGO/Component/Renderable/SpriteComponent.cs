@@ -336,7 +336,7 @@ namespace CGO
 
             //Draw AABB
             var aabb = AABB;
-            Gorgon.CurrentRenderTarget.Rectangle(renderPos.X - aabb.Width / 2, renderPos.Y - aabb.Height / 2, aabb.Width, aabb.Height, Color.Lime);
+            //Gorgon.CurrentRenderTarget.Rectangle(renderPos.X - aabb.Width / 2, renderPos.Y - aabb.Height / 2, aabb.Width, aabb.Height, Color.Lime);
         }
 
         public void SetSpriteCenter(string sprite, Vector2D center)

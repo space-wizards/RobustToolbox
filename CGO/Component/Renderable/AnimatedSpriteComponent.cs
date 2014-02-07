@@ -264,7 +264,7 @@ namespace CGO
 
             //Draw AABB
             var aabb = AABB;
-            Gorgon.CurrentRenderTarget.Rectangle(renderPos.X - aabb.Width/2, renderPos.Y - aabb.Height / 2, aabb.Width, aabb.Height, Color.Lime);
+            //Gorgon.CurrentRenderTarget.Rectangle(renderPos.X - aabb.Width/2, renderPos.Y - aabb.Height / 2, aabb.Width, aabb.Height, Color.Lime);
 
             if (_speechBubble != null)
                 _speechBubble.Draw(Owner.GetComponent<TransformComponent>(ComponentFamily.Transform).Position,

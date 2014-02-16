@@ -261,6 +261,7 @@ namespace ClientServices.Map
             }
             t = GenerateNewTile(tileStr, state, new Vector2D(x, y), dir);
             AddTile(t);
+            t.SetSprite();
             TileChanged(t);
         }
 

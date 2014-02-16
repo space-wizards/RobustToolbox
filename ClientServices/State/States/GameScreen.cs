@@ -95,6 +95,7 @@ namespace ClientServices.State.States
         private RenderImage _sceneTarget;
         private RenderImage _tilesTarget;
         private bool bPlayerVision = true;
+        private bool bFullVision = false;
         private FXShader finalBlendShader;
         private LightArea lightArea1024;
         private LightArea lightArea128;
@@ -667,13 +668,7 @@ namespace ClientServices.State.States
             }
             if (e.Key == KeyboardKeys.F6)
             {
-                ILight[] lights = IoCManager.Resolve<ILightManager>().lightsInRadius(
-                    PlayerManager.ControlledEntity.GetComponent<TransformComponent>(ComponentFamily.Transform).Position,
-                    768f);
-                var r = new Random();
-                int i = r.Next(lights.Length - 1);
-                lights[i].SetColor(r.Next(255), r.Next(255), r.Next(255), r.Next(255));
-                lights[i].LightArea.Calculated = false;
+                bFullVision = !bFullVision;
             }
             if (e.Key == KeyboardKeys.F7)
             {
@@ -1321,6 +1316,11 @@ namespace ClientServices.State.States
         private void RenderPlayerVisionMap()
         {
             Vector2D blitPos;
+            if (bFullVision)
+            {
+                playerOcclusionTarget.Clear(Color.LightGray);
+                return;
+            }
             if (bPlayerVision)
             {
                 playerOcclusionTarget.Clear(Color.Black);

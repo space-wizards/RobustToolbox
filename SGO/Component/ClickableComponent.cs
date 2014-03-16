@@ -26,6 +26,7 @@ namespace SGO
                     Owner.SendMessage(this, ComponentMessageType.Click, uid);
                 else if (type == ComponentMessageType.ClickedInHand)
                     Owner.SendMessage(this, ComponentMessageType.ClickedInHand, uid);
+                Owner.RaiseEvent(new ClickedOnEntityEventArgs{Clicked = Owner.Uid, Clicker = uid});
             }
         }
     }

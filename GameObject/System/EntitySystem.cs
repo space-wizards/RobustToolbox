@@ -1,9 +1,10 @@
 ﻿using System.Collections.Generic;
+using SS13_Shared;
 using SS13_Shared.GO;
 
 namespace GameObject.System
 {
-    public abstract class EntitySystem
+    public abstract class EntitySystem: IComponentEventSubscriber
     {
         protected EntityManager EntityManager;
         protected EntitySystemManager EntitySystemManager;
@@ -19,6 +20,9 @@ namespace GameObject.System
         }
 
         public virtual void RegisterMessageTypes()
+        {}
+
+        public virtual void SubscribeEvents() 
         {}
 
         protected List<Entity> RelevantEntities

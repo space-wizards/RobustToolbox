@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using GameObject.System;
 using Lidgren.Network;
 using SS13_Shared;
 using SS13_Shared.GO;
@@ -40,9 +41,14 @@ namespace GameObject
         protected Queue<IncomingEntityMessage> MessageBuffer = new Queue<IncomingEntityMessage>();
         protected int NextUid = 0;
 
-        private Dictionary<Delegate, Type> _subscriptions = new Dictionary<Delegate, Type>();
-        private Queue<KeyValuePair<Delegate, ComponentEvent>> _eventQueue = new Queue<KeyValuePair<Delegate, ComponentEvent>>();
+        private Dictionary<Type, List<Delegate>> _eventSubscriptions
+            = new Dictionary<Type, List<Delegate>>();
+        private Dictionary<IComponentEventSubscriber, Dictionary<Type, Delegate>> _inverseEventSubscriptions
+            = new Dictionary<IComponentEventSubscriber, Dictionary<Type, Delegate>>();
 
+        private Queue<Tuple<object, ComponentEventArgs>> _eventQueue
+            = new Queue<Tuple<object, ComponentEventArgs>>();
+        
         public EntityManager(EngineType engineType, IEntityNetworkManager entityNetworkManager)
         {
             EngineType = engineType;
@@ -126,27 +132,58 @@ namespace GameObject
         }
 
         #region ComponentEvents
-        public void SubscribeEvent<T>(Delegate de) where T : ComponentEvent
-        {
-            Type eventType = typeof(T);
-            if (_subscriptions.Any(x => x.Key == de && x.Value == eventType)) return;
-            _subscriptions.Add(de, eventType);
-        }
 
-        public void UnsubscribeEvent<T>(Delegate de) where T : ComponentEvent
+        public void SubscribeEvent<T>(Delegate eventHandler, IComponentEventSubscriber s) where T:ComponentEventArgs
         {
-            Type eventType = typeof(T);
-            if (!_subscriptions.Any(x => x.Key == de && x.Value == eventType)) return;
-            _subscriptions.Remove(de);
-        }
-
-        public void RaiseEvent(ComponentEvent toRaise)
-        {
-            foreach (KeyValuePair<Delegate, Type> subscription in _subscriptions)
+            Type eventType = typeof (T);
+            //var evh = (ComponentEventHandler<ComponentEventArgs>)Convert.ChangeType(eventHandler, typeof(ComponentEventHandler<ComponentEventArgs>));
+            if(!_eventSubscriptions.ContainsKey(eventType))
             {
-                if (subscription.Value != toRaise.GetType()) continue;
-                _eventQueue.Enqueue(new KeyValuePair<Delegate, ComponentEvent>(subscription.Key, toRaise));
+                _eventSubscriptions.Add(eventType, new List<Delegate> { eventHandler });
             }
+            else if (!_eventSubscriptions[eventType].Contains(eventHandler))
+            {
+                _eventSubscriptions[eventType].Add(eventHandler);
+            }
+            if (!_inverseEventSubscriptions.ContainsKey(s))
+            {
+                _inverseEventSubscriptions.Add(
+                    s, 
+                    new Dictionary<Type, Delegate>()
+                );
+            }
+            if (!_inverseEventSubscriptions[s].ContainsKey(eventType))
+            {
+                _inverseEventSubscriptions[s].Add(eventType, eventHandler);
+            }
+            
+        }
+
+        public void UnsubscribeEvent<T>(IComponentEventSubscriber s) where T : ComponentEventArgs
+        {
+            Type eventType = typeof(T);
+
+            if (_inverseEventSubscriptions.ContainsKey(s) && _inverseEventSubscriptions[s].ContainsKey(eventType))
+            {
+                UnsubscribeEvent(eventType, _inverseEventSubscriptions[s][eventType], s);
+            }
+        }
+
+        public void UnsubscribeEvent(Type eventType, Delegate evh, IComponentEventSubscriber s)
+        {
+            if (_eventSubscriptions.ContainsKey(eventType) && _eventSubscriptions[eventType].Contains(evh))
+            {
+                _eventSubscriptions[eventType].Remove(evh);
+            }
+            if (_inverseEventSubscriptions.ContainsKey(s) && _inverseEventSubscriptions[s].ContainsKey(eventType))
+            {
+                _inverseEventSubscriptions[s].Remove(eventType);
+            }
+        }
+
+        public void RaiseEvent(object sender, ComponentEventArgs toRaise)
+        {
+            _eventQueue.Enqueue(new Tuple<object, ComponentEventArgs>(sender, toRaise));
         }
 
         private void ProcessEventQueue()
@@ -154,13 +191,32 @@ namespace GameObject
             while (_eventQueue.Any())
             {
                 var current = _eventQueue.Dequeue();
-                current.Key.DynamicInvoke(current.Value);
+                ProcessSingleEvent(current);
             }
         }
 
-        public void RemoveComponentDelegates(IComponent compo)
+        private void ProcessSingleEvent(Tuple<object, ComponentEventArgs> argsTuple)
         {
-            _eventQueue = new Queue<KeyValuePair<Delegate, ComponentEvent>>(_eventQueue.Where(x => x.Key.Target != compo)); //Does comparing them like this work? Who knows.
+            var sender = argsTuple.Item1;
+            var args = argsTuple.Item2;
+            var eventType = args.GetType();
+            if (_eventSubscriptions.ContainsKey(eventType))
+            {
+                foreach (Delegate handler in _eventSubscriptions[eventType])
+                {
+                    handler.DynamicInvoke(sender, args);
+                }
+            }
+        }
+        public void RemoveSubscribedEvents(IComponentEventSubscriber subscriber)
+        {
+            if(_inverseEventSubscriptions.ContainsKey(subscriber))
+            {
+                foreach(KeyValuePair<Type, Delegate> keyValuePair in _inverseEventSubscriptions[subscriber])
+                {
+                    UnsubscribeEvent(keyValuePair.Key, keyValuePair.Value, subscriber);
+                }
+            }
         }
         #endregion
 

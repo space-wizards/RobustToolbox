@@ -50,6 +50,7 @@ namespace GameObject
                 MethodInfo generic = typeof(EntitySystemManager).GetMethod("AddSystem").MakeGenericMethod(type);
                 generic.Invoke(this, new[] { instance });
                 instance.RegisterMessageTypes();
+                instance.SubscribeEvents();
 
             }
         }

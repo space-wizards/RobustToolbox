@@ -8,7 +8,7 @@ using SS13_Shared.GO;
 
 namespace GameObject
 {
-    public interface IComponent
+    public interface IComponent:IComponentEventSubscriber
     {
         ComponentFamily Family { get; }
         Entity Owner { get; set; }
@@ -202,6 +202,10 @@ namespace GameObject
             }
 
             return reply;
+        }
+
+        public virtual void HandleComponentEvent<T>(T args)
+        {
         }
 
         /// <summary>

@@ -1,14 +1,16 @@
 ﻿using System.Collections.Generic;
+using System.Linq;
 using System.Xml.Linq;
 using GameObject;
 using Lidgren.Network;
 using SS13_Shared;
 using SS13_Shared.GO;
+using SS13_Shared.GO.Inventory;
 using ServerInterfaces.GOC;
 
 namespace SGO
 {
-    public class InventoryComponent : Component, IInventoryComponent
+    public class InventoryComponent : Component, IInventoryComponent, IInventoryContainer
     {
         public InventoryComponent()
         {
@@ -146,7 +148,7 @@ namespace SGO
         }
 
         //Removes item from inventory and dispatches unhide message to sprite compo.
-        private void RemoveFromInventory(Entity entity)
+        public bool RemoveFromInventory(Entity entity)
         {
             if (containedEntities.Contains(entity))
             {
@@ -155,6 +157,7 @@ namespace SGO
             HandleRemoved(entity);
             Owner.SendDirectedComponentNetworkMessage(this, NetDeliveryMethod.ReliableOrdered, null,
                                                       ComponentMessageType.InventoryUpdateRequired);
+            return true;
         }
 
         private void HandleAdded(Entity entity)
@@ -167,6 +170,43 @@ namespace SGO
         {
             entity.SendMessage(this, ComponentMessageType.Dropped);
             entity.SendMessage(this, ComponentMessageType.SetVisible, true);
+        }
+
+        public bool RemoveEntity(Entity actor, Entity toRemove, InventoryLocation location = InventoryLocation.Any)
+        {
+            if (containedEntities.Contains(toRemove))
+            {
+                containedEntities.Remove(toRemove);
+                return true;
+            }
+            else
+            {
+                return false;
+            }
+        }
+
+        public bool AddEntity(Entity actor, Entity toAdd, InventoryLocation location = InventoryLocation.Any)
+        {
+            if (containedEntities.Contains(toAdd))
+            {
+                return false;
+            }
+            else
+            {
+                containedEntities.Add(toAdd);
+                return true;
+            }
+        }
+
+        public IEnumerable<Entity> GetEntitiesInInventory()
+        {
+            return containedEntities;
+        }
+
+        public override ComponentState GetComponentState()
+        {
+            List<int> entities = containedEntities.Select(x => x.Uid).ToList();
+            return new InventoryState(maxSlots, entities);
         }
     }
 }

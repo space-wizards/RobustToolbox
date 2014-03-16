@@ -4,18 +4,19 @@ using GameObject;
 using Lidgren.Network;
 using SS13_Shared;
 using SS13_Shared.GO;
+using SS13_Shared.GO.Hands;
 
 namespace SGO
 {
-    public class HumanHandsComponent : Component
+    public class HumanHandsComponent : Component, IInventoryContainer
     {
-        private readonly Dictionary<Hand, Entity> handslots;
-        private Hand currentHand = Hand.Left;
+        public readonly Dictionary<InventoryLocation, Entity> Handslots;
+        public InventoryLocation CurrentHand = InventoryLocation.HandLeft;
 
         public HumanHandsComponent()
         {
             Family = ComponentFamily.Hands;
-            handslots = new Dictionary<Hand, Entity>();
+            Handslots = new Dictionary<InventoryLocation, Entity>();
         }
 
         /// <summary>
@@ -35,7 +36,7 @@ namespace SGO
 
             switch (type)
             {
-                case ComponentMessageType.DisassociateEntity:
+                /*case ComponentMessageType.DisassociateEntity:
                     var entDrop = (Entity) list[0];
                     Drop(entDrop);
                     break;
@@ -43,7 +44,7 @@ namespace SGO
                     SwitchHandsTo((Hand) list[0]);
                     break;
                 case ComponentMessageType.IsCurrentHandEmpty:
-                    reply = new ComponentReplyMessage(ComponentMessageType.IsCurrentHandEmpty, IsEmpty(currentHand));
+                    reply = new ComponentReplyMessage(ComponentMessageType.IsCurrentHandEmpty, IsEmpty(CurrentHand));
                     break;
                 case ComponentMessageType.IsHandEmpty:
                     reply = new ComponentReplyMessage(ComponentMessageType.IsHandEmptyReply, IsEmpty((Hand) list[0]));
@@ -55,7 +56,7 @@ namespace SGO
                     Pickup((Entity) list[0], (Hand) list[1]);
                     break;
                 case ComponentMessageType.DropItemInCurrentHand:
-                    Drop(currentHand);
+                    Drop(CurrentHand);
                     break;
                 case ComponentMessageType.DropItemInHand:
                     var hand = (Hand) list[0];
@@ -80,13 +81,13 @@ namespace SGO
 
                     break;
                 case ComponentMessageType.GetActiveHandItem:
-                    if (!IsEmpty(currentHand))
+                    if (!IsEmpty(CurrentHand))
                         reply = new ComponentReplyMessage(ComponentMessageType.ReturnActiveHandItem,
-                                                          handslots[currentHand]);
+                                                          Handslots[CurrentHand]);
                     break;
                 case ComponentMessageType.Die:
                     DropAll();
-                    break;
+                    break;*/
             }
 
             return reply;
@@ -101,13 +102,21 @@ namespace SGO
                 switch (type)
                 {
                     case ComponentMessageType.ActiveHandChanged:
-                        SwitchHandsTo((Hand) message.MessageParameters[1]);
+                        var hand = (Hand) message.MessageParameters[1];
+                        if(hand == Hand.Left)
+                            SwitchHandsTo(InventoryLocation.HandLeft);
+                        else if(hand == Hand.Right)
+                            SwitchHandsTo(InventoryLocation.HandRight);
                         break;
                     case ComponentMessageType.DropEntityInHand:
                         Drop(Owner.EntityManager.GetEntity((int) message.MessageParameters[1]));
                         break;
                     case ComponentMessageType.DropItemInHand:
-                        Drop((Hand) message.MessageParameters[1]);
+                        var dhand = (Hand)message.MessageParameters[1];
+                        if (dhand == Hand.Left)
+                            Drop(InventoryLocation.HandLeft);
+                        else if (dhand == Hand.Right)
+                            Drop(InventoryLocation.HandRight);
                         break;
                 }
             }
@@ -119,15 +128,15 @@ namespace SGO
         /// </summary>
         private void SwitchHands()
         {
-            if (currentHand == Hand.Left)
-                SwitchHandsTo(Hand.Right);
+            if (CurrentHand == InventoryLocation.HandLeft)
+                SwitchHandsTo(InventoryLocation.HandRight);
             else
-                SwitchHandsTo(Hand.Left);
+                SwitchHandsTo(InventoryLocation.HandLeft);
         }
 
-        private void SwitchHandsTo(Hand hand)
+        private void SwitchHandsTo(InventoryLocation hand)
         {
-            currentHand = hand;
+            CurrentHand = hand;
             Owner.SendDirectedComponentNetworkMessage(this, NetDeliveryMethod.ReliableOrdered, null,
                                                       ComponentMessageType.ActiveHandChanged, hand);
         }
@@ -137,10 +146,10 @@ namespace SGO
         /// </summary>
         /// <param name="hand"></param>
         /// <returns></returns>
-        private Entity GetEntity(Hand hand)
+        public Entity GetEntity(InventoryLocation hand)
         {
             if (!IsEmpty(hand))
-                return handslots[hand];
+                return Handslots[hand];
             else
                 return null;
         }
@@ -149,14 +158,14 @@ namespace SGO
         /// Get the currently selected hand
         /// </summary>
         /// <returns></returns>
-        private Hand GetCurrentHand()
+        private InventoryLocation GetCurrentHand()
         {
-            return currentHand;
+            return CurrentHand;
         }
 
         private void ActivateItemInHand()
         {
-            Hand h = GetCurrentHand();
+            InventoryLocation h = GetCurrentHand();
             if (!IsEmpty(h))
             {
                 Entity e = GetEntity(h);
@@ -172,11 +181,11 @@ namespace SGO
         /// </summary>
         /// <param name="hand"></param>
         /// <param name="entity"></param>
-        private void SetEntity(Hand hand, Entity entity)
+        private void SetEntity(InventoryLocation hand, Entity entity)
         {
             if (entity != null && IsEmpty(hand))
             {
-                handslots.Add(hand, entity);
+                Handslots.Add(hand, entity);
                 //Owner.SendComponentNetworkMessage(this, Lidgren.Network.NetDeliveryMethod.ReliableOrdered, null, ComponentMessageType.EntityChanged, entity.Uid, hand); Maybe for later use?
             }
         }
@@ -187,15 +196,15 @@ namespace SGO
         /// <param name="entity"></param>
         private void Pickup(Entity entity)
         {
-            if (entity != null && IsEmpty(currentHand))
+            if (entity != null && IsEmpty(CurrentHand))
             {
                 RemoveFromOtherComps(entity);
 
-                SetEntity(currentHand, entity);
+                SetEntity(CurrentHand, entity);
                 Owner.SendDirectedComponentNetworkMessage(this, NetDeliveryMethod.ReliableOrdered, null,
                                                           ComponentMessageType.HandsPickedUpItem, entity.Uid,
-                                                          currentHand);
-                entity.SendMessage(this, ComponentMessageType.PickedUp, Owner, currentHand);
+                                                          CurrentHand);
+                entity.SendMessage(this, ComponentMessageType.PickedUp, Owner, CurrentHand);
             }
         }
 
@@ -203,7 +212,7 @@ namespace SGO
         /// Put the specified entity in the specified hand
         /// </summary>
         /// <param name="entity"></param>
-        private void Pickup(Entity entity, Hand hand)
+        private void Pickup(Entity entity, InventoryLocation hand)
         {
             if (entity != null && IsEmpty(hand))
             {
@@ -221,7 +230,7 @@ namespace SGO
         /// </summary>
         private void Drop()
         {
-            Drop(currentHand);
+            Drop(CurrentHand);
         }
 
         private void RemoveFromOtherComps(Entity entity)
@@ -239,7 +248,7 @@ namespace SGO
         /// Drop an item from a hand.
         /// </summary>
         /// <param name="hand"></param>
-        private void Drop(Hand hand)
+        private void Drop(InventoryLocation hand)
         {
             if (!IsEmpty(hand))
             {
@@ -247,7 +256,7 @@ namespace SGO
                 Owner.SendDirectedComponentNetworkMessage(this, NetDeliveryMethod.ReliableOrdered, null,
                                                           ComponentMessageType.HandsDroppedItem, GetEntity(hand).Uid,
                                                           hand);
-                handslots.Remove(hand);
+                Handslots.Remove(hand);
             }
         }
 
@@ -257,17 +266,17 @@ namespace SGO
         /// <param name="hand"></param>
         private void Drop(Entity ent)
         {
-            if (handslots.ContainsValue(ent))
+            if (Handslots.ContainsValue(ent))
             {
-                Hand holding = handslots.First(x => x.Value == ent).Key;
+                InventoryLocation holding = Handslots.First(x => x.Value == ent).Key;
                 Drop(holding);
             }
         }
 
         private void DropAll()
         {
-            Drop(Hand.Left);
-            Drop(Hand.Right);
+            Drop(InventoryLocation.HandLeft);
+            Drop(InventoryLocation.HandRight);
         }
 
         /// <summary>
@@ -275,11 +284,68 @@ namespace SGO
         /// </summary>
         /// <param name="hand"></param>
         /// <returns></returns>
-        private bool IsEmpty(Hand hand)
+        public bool IsEmpty(InventoryLocation hand)
         {
-            if (handslots.ContainsKey(hand))
+            if (Handslots.ContainsKey(hand))
                 return false;
             return true;
+        }
+
+        public bool RemoveEntity(Entity actor, Entity toRemove, InventoryLocation location = InventoryLocation.Any)
+        {
+            if (Handslots.Any(x => x.Value == toRemove))
+            {
+                Handslots[Handslots.First(x => x.Value == toRemove).Key] = null;
+                return true;
+            }
+            else
+            {
+                return false;
+            }
+        }
+
+        public bool AddEntity(Entity actor, Entity toAdd, InventoryLocation location = InventoryLocation.Any)
+        {
+            if (Handslots.Any(x => x.Value == toAdd))
+            {
+                return false;
+            }
+            else
+            {
+                if (location == InventoryLocation.Any)
+                {
+                    if (Handslots[CurrentHand] != null)
+                        return false;
+                    else
+                    {
+                        Handslots[CurrentHand] = toAdd;
+                    }
+                }
+                else
+                {
+                    if (Handslots.Any(x => x.Value == null))
+                    {
+                        Handslots[Handslots.First(x => x.Value == null).Key] = toAdd;
+                    }
+                    else
+                    {
+                        return false;
+                    }
+                }
+                return true;
+            }
+        }
+
+        public IEnumerable<Entity> GetEntitiesInInventory()
+        {
+            return Handslots.Values;
+        }
+
+        public override ComponentState GetComponentState()
+        {
+            //Oh man , what
+            Dictionary<InventoryLocation, int> entities = Handslots.Select(x => new KeyValuePair<InventoryLocation, int>(x.Key, x.Value.Uid)).ToDictionary(key => key.Key, va => va.Value);
+            return new HandsState(CurrentHand, entities);
         }
     }
 }

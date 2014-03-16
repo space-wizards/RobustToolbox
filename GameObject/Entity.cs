@@ -373,19 +373,19 @@ namespace GameObject
 
         #region Component Events
         //Convenience thing.
-        public void SubscribeEvent<T>(Delegate de) where T : ComponentEvent
+        public void SubscribeEvent<T>(ComponentEventHandler<ComponentEventArgs> evh, IComponentEventSubscriber s) where T : ComponentEventArgs
         {
-            EntityManager.SubscribeEvent<T>(de);
+            EntityManager.SubscribeEvent<T>(evh, s);
         }
 
-        public void UnsubscribeEvent<T>(Delegate de) where T : ComponentEvent
+        public void UnsubscribeEvent<T>(IComponentEventSubscriber s) where T : ComponentEventArgs
         {
-            EntityManager.UnsubscribeEvent<T>(de);
+            EntityManager.UnsubscribeEvent<T>(s);
         }
 
-        public void RaiseEvent(ComponentEvent toRaise)
+        public void RaiseEvent(ComponentEventArgs toRaise)
         {
-            EntityManager.RaiseEvent(toRaise);
+            EntityManager.RaiseEvent(this, toRaise);
         } 
         #endregion
 
@@ -416,7 +416,7 @@ namespace GameObject
         {
             if (!_components.Keys.Contains(family)) return;
             UpdateComponentTypes();
-            EntityManager.RemoveComponentDelegates(_components[family]);
+            EntityManager.RemoveSubscribedEvents(_components[family]);
             _components[family].OnRemove();
             _components.Remove(family);
         }

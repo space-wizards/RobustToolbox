@@ -1,4 +1,5 @@
-﻿using GameObject;
+﻿using System;
+using GameObject;
 using GameObject.System;
 using Lidgren.Network;
 using SS13_Shared;
@@ -12,9 +13,9 @@ namespace SGO.EntitySystems
             : base(em, esm)
         {
             EntityQuery = new EntityQuery();
-            EntityQuery.OneSet.Add(typeof (NewInventoryComponent));
-            EntityQuery.OneSet.Add(typeof (NewEquipmentComponent));
-            EntityQuery.OneSet.Add(typeof (NewHandsComponent));
+            EntityQuery.OneSet.Add(typeof (InventoryComponent));
+            EntityQuery.OneSet.Add(typeof (EquipmentComponent));
+            EntityQuery.OneSet.Add(typeof (HumanHandsComponent));
         }
 
         public override void RegisterMessageTypes()
@@ -22,6 +23,19 @@ namespace SGO.EntitySystems
             EntitySystemManager.RegisterMessageType<InventorySystemPickUp>(this);
             EntitySystemManager.RegisterMessageType<InventorySystemDrop>(this);
             EntitySystemManager.RegisterMessageType<InventorySystemExchange>(this);
+        }
+
+        public override void SubscribeEvents()
+        {
+            base.SubscribeEvents();
+            EntityManager.SubscribeEvent<ClickedOnEntityEventArgs>(new ComponentEventHandler<ClickedOnEntityEventArgs>(HandleClickEvent), this);
+        }
+
+        public void HandleClickEvent(object sender, ClickedOnEntityEventArgs args)
+        {
+            Entity user = EntityManager.GetEntity(args.Clicker);
+            Entity obj = EntityManager.GetEntity(args.Clicked);
+            UserClickedEntity(user, obj);
         }
 
         public override void HandleNetMessage(EntitySystemMessage sysMsg)
@@ -64,15 +78,99 @@ namespace SGO.EntitySystems
         {
         }
 
+        public bool UserClickedEntity(Entity user, Entity obj)
+        {
+            if(user.HasComponent(ComponentFamily.Hands))
+            {
+                //It's something with hands!
+                if(obj.HasComponent(ComponentFamily.Item))
+                {
+                    //It's something with hands using their hands on an item!
+                    return doHandsToItemInteraction(user, obj);
+                }
+                if(obj.HasComponent(ComponentFamily.LargeObject))
+                {
+                    //It's something with hands using their hands on a large object!
+                    return doHandsToLargeObjectInteraction(user, obj);
+                }
+                if(obj.HasComponent(ComponentFamily.Actor))
+                {
+                    //It's something with hands using their hands on an actor!
+                    return doHandsToActorInteraction(user, obj);
+                }
+            }
+            return false;
+        }
+
+        private bool doHandsToActorInteraction(Entity user, Entity obj)
+        {
+            var hands = user.GetComponent<HumanHandsComponent>(ComponentFamily.Hands);
+            if(hands.IsEmpty(hands.CurrentHand))
+            {
+                return doEmptyHandToActorInteraction(user, obj);
+            }
+            return doApplyItemToActor(user, hands.GetEntity(hands.CurrentHand), obj);
+        }
+
+        private bool doApplyItemToActor(Entity user, Entity entity, Entity obj)
+        {
+            throw new NotImplementedException();
+        }
+
+        private bool doEmptyHandToActorInteraction(Entity user, Entity obj)
+        {
+            throw new NotImplementedException();
+        }
+
+        private bool doHandsToLargeObjectInteraction(Entity user, Entity obj)
+        {
+            var hands = user.GetComponent<HumanHandsComponent>(ComponentFamily.Hands);
+            if (hands.IsEmpty(hands.CurrentHand))
+            {
+                return doEmptyHandToLargeObjectInteraction(user, obj);
+            }
+            return doApplyItemToLargeObject(user, hands.GetEntity(hands.CurrentHand), obj);
+        }
+
+        private bool doApplyItemToLargeObject(Entity user, Entity entity, Entity obj)
+        {
+            throw new NotImplementedException();
+        }
+
+        private bool doEmptyHandToLargeObjectInteraction(Entity user, Entity obj)
+        {
+            throw new NotImplementedException();
+        }
+
+        private bool doHandsToItemInteraction(Entity user, Entity obj)
+        {
+            var hands = user.GetComponent<HumanHandsComponent>(ComponentFamily.Hands);
+            if (hands.IsEmpty(hands.CurrentHand))
+            {
+                return doEmptyHandToItemInteraction(user, obj);
+            }
+            return doApplyItemToItem(user, hands.GetEntity(hands.CurrentHand), obj);
+        }
+
+        private bool doApplyItemToItem(Entity user, Entity entity, Entity obj)
+        {
+            throw new NotImplementedException();
+        }
+
+        private bool doEmptyHandToItemInteraction(Entity user, Entity obj)
+        {
+            throw new NotImplementedException();
+        }
+
         #region Inventory Management Methods
         public bool PickUpEntity(Entity user, Entity obj)
         {
-            NewHandsComponent userHands = user.GetComponent<NewHandsComponent>(ComponentFamily.Hands);
+            HumanHandsComponent userHands = user.GetComponent<HumanHandsComponent>(ComponentFamily.Hands);
             BasicItemComponent objItem = obj.GetComponent<BasicItemComponent>(ComponentFamily.Item);
 
             if (userHands != null && objItem != null)
             {
-                return AddEntity(user, user, obj, userHands.currentHand);
+                return AddEntity(user, user, obj, userHands.CurrentHand);
             }
             else if (userHands == null && objItem != null && obj.HasComponent(ComponentFamily.Inventory))
             {
@@ -91,9 +189,9 @@ namespace SGO.EntitySystems
 
         public bool RemoveEntity(Entity user, Entity inventory, Entity toRemove, InventoryLocation location = InventoryLocation.Any)
         {
-            NewHandsComponent comHands = inventory.GetComponent<NewHandsComponent>(ComponentFamily.Hands);
-            NewEquipmentComponent comEquip = inventory.GetComponent<NewEquipmentComponent>(ComponentFamily.Equipment);
-            NewInventoryComponent comInv = inventory.GetComponent<NewInventoryComponent>(ComponentFamily.Inventory);
+            var comHands = inventory.GetComponent<HumanHandsComponent>(ComponentFamily.Hands);
+            var comEquip = inventory.GetComponent<EquipmentComponent>(ComponentFamily.Equipment);
+            var comInv = inventory.GetComponent<InventoryComponent>(ComponentFamily.Inventory);
 
             if ((location == InventoryLocation.Inventory) && comInv != null)
             {
@@ -143,9 +241,9 @@ namespace SGO.EntitySystems
 
         public bool AddEntity(Entity user, Entity inventory, Entity toAdd, InventoryLocation location = InventoryLocation.Any)
         {
-            NewHandsComponent comHands = inventory.GetComponent<NewHandsComponent>(ComponentFamily.Hands);
-            NewEquipmentComponent comEquip = inventory.GetComponent<NewEquipmentComponent>(ComponentFamily.Equipment);
-            NewInventoryComponent comInv = inventory.GetComponent<NewInventoryComponent>(ComponentFamily.Inventory);
+            var comHands = inventory.GetComponent<HumanHandsComponent>(ComponentFamily.Hands);
+            var comEquip = inventory.GetComponent<EquipmentComponent>(ComponentFamily.Equipment);
+            var comInv = inventory.GetComponent<InventoryComponent>(ComponentFamily.Inventory);
 
             if ((location == InventoryLocation.Inventory) && comInv != null)
             {

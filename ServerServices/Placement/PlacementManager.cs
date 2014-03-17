@@ -117,7 +117,8 @@ namespace ServerServices.Placement
                             new Vector2(xRcv, yRcv));
                         if(created.HasComponent(ComponentFamily.Direction))
                             created.GetComponent<IDirectionComponent>(ComponentFamily.Direction).Direction = dirRcv;
-                        created.SendMessage(this, ComponentMessageType.WallMountTile, tilePos);
+                        if(created.HasComponent(ComponentFamily.WallMounted))
+                            created.GetComponent<IWallMountedComponent>(ComponentFamily.WallMounted).AttachToTile(tilePos);
                     }
                 }
                 else
@@ -154,11 +155,15 @@ namespace ServerServices.Placement
             message.Write(objectType);
             message.Write(alignOption);
 
-            ComponentReplyMessage reply = mob.SendMessage(this, ComponentFamily.Actor,
-                                                          ComponentMessageType.GetActorConnection);
-            if (reply.MessageType == ComponentMessageType.ReturnActorConnection)
-                IoCManager.Resolve<ISS13NetServer>().SendMessage(message, (NetConnection) reply.ParamsList[0],
-                                                                 NetDeliveryMethod.ReliableOrdered);
+            if(mob.HasComponent(ComponentFamily.Actor))
+            {
+                var playerConnection = mob.GetComponent<IActorComponent>(ComponentFamily.Actor).GetPlayerSession().ConnectedClient;
+                if(playerConnection != null)
+                {
+                    IoCManager.Resolve<ISS13NetServer>().SendMessage(message, playerConnection,
+                                                                     NetDeliveryMethod.ReliableOrdered);
+                }
+            }
         }
 
         /// <summary>
@@ -174,12 +179,15 @@ namespace ServerServices.Placement
             message.Write(true); //Is a tile.
             message.Write(mapMgr.GetTileIndex(tileType));
             message.Write(alignOption);
-
-            ComponentReplyMessage reply = mob.SendMessage(this, ComponentFamily.Actor,
-                                                          ComponentMessageType.GetActorConnection);
-            if (reply.MessageType == ComponentMessageType.ReturnActorConnection)
-                IoCManager.Resolve<ISS13NetServer>().SendMessage(message, (NetConnection) reply.ParamsList[0],
-                                                                 NetDeliveryMethod.ReliableOrdered);
+            if (mob.HasComponent(ComponentFamily.Actor))
+            {
+                var playerConnection = mob.GetComponent<IActorComponent>(ComponentFamily.Actor).GetPlayerSession().ConnectedClient;
+                if (playerConnection != null)
+                {
+                    IoCManager.Resolve<ISS13NetServer>().SendMessage(message, playerConnection,
+                                                                     NetDeliveryMethod.ReliableOrdered);
+                }
+            }
         }
 
         /// <summary>
@@ -191,11 +199,15 @@ namespace ServerServices.Placement
             message.Write((byte) NetMessage.PlacementManagerMessage);
             message.Write((byte) PlacementManagerMessage.CancelPlacement);
 
-            ComponentReplyMessage reply = mob.SendMessage(this, ComponentFamily.Actor,
-                                                          ComponentMessageType.GetActorConnection);
-            if (reply.MessageType == ComponentMessageType.ReturnActorConnection)
-                IoCManager.Resolve<ISS13NetServer>().SendMessage(message, (NetConnection) reply.ParamsList[0],
-                                                                 NetDeliveryMethod.ReliableOrdered);
+            if (mob.HasComponent(ComponentFamily.Actor))
+            {
+                var playerConnection = mob.GetComponent<IActorComponent>(ComponentFamily.Actor).GetPlayerSession().ConnectedClient;
+                if (playerConnection != null)
+                {
+                    IoCManager.Resolve<ISS13NetServer>().SendMessage(message, playerConnection,
+                                                                     NetDeliveryMethod.ReliableOrdered);
+                }
+            }
         }
 
         /// <summary>

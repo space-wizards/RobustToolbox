@@ -4,12 +4,13 @@ using GameObject;
 using SS13.IoC;
 using SS13_Shared;
 using SS13_Shared.GO;
+using ServerInterfaces.GOC;
 using ServerInterfaces.Map;
 using ServerServices.Tiles;
 
 namespace SGO
 {
-    public class WallMountedComponent : Component
+    public class WallMountedComponent : Component, IWallMountedComponent
     {
         protected Tile linkedTile;
 

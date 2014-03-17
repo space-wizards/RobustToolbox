@@ -2,12 +2,13 @@
 using SS13.IoC;
 using SS13_Shared;
 using SS13_Shared.GO;
+using ServerInterfaces.GOC;
 using ServerInterfaces.Player;
 using ServerInterfaces.Round;
 
 namespace SGO
 {
-    public class BasicActorComponent : Component
+    public class BasicActorComponent : Component, IActorComponent
     {
         private IPlayerSession playerSession;
 
@@ -54,6 +55,11 @@ namespace SGO
             }
 
             return reply;
+        }
+
+        public IPlayerSession GetPlayerSession()
+        {
+            return playerSession;
         }
     }
 }

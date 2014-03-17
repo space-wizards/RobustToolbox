@@ -1,7 +1,9 @@
 ﻿using System;
+using System.Linq;
 using GameObject;
 using GameObject.System;
 using Lidgren.Network;
+using SGO.Events;
 using SS13_Shared;
 using SS13_Shared.GO;
 
@@ -28,16 +30,12 @@ namespace SGO.EntitySystems
         public override void SubscribeEvents()
         {
             base.SubscribeEvents();
-            EntityManager.SubscribeEvent<ClickedOnEntityEventArgs>(new ComponentEventHandler<ClickedOnEntityEventArgs>(HandleClickEvent), this);
+            EntityManager.SubscribeEvent<InventoryPickedUpItemEventArgs>
+                (new EntityEventHandler<InventoryPickedUpItemEventArgs>(HandlePickUpItem), this);
+            EntityManager.SubscribeEvent<InventoryDroppedItemEventArgs>
+                (new EntityEventHandler<InventoryDroppedItemEventArgs>(HandleDropItem), this);
         }
-
-        public void HandleClickEvent(object sender, ClickedOnEntityEventArgs args)
-        {
-            Entity user = EntityManager.GetEntity(args.Clicker);
-            Entity obj = EntityManager.GetEntity(args.Clicked);
-            UserClickedEntity(user, obj);
-        }
-
+        
         public override void HandleNetMessage(EntitySystemMessage sysMsg)
         {
             if (sysMsg is InventorySystemPickUp)
@@ -78,89 +76,49 @@ namespace SGO.EntitySystems
         {
         }
 
-        public bool UserClickedEntity(Entity user, Entity obj)
+        #region events
+        public void HandlePickUpItem(object sender, InventoryPickedUpItemEventArgs args)
         {
-            if(user.HasComponent(ComponentFamily.Hands))
+            PickUpEntity(args.Actor, args.Item);
+        }
+        public void HandleDropItem(object sender, InventoryDroppedItemEventArgs args)
+        {
+            //Check to see if the item is actually in a hand
+            var actorHands = args.Actor.GetComponent<HumanHandsComponent>(ComponentFamily.Hands);
+            var item = args.Item;
+            var holdingHand = InventoryLocation.None;
+            if (item != null)
             {
-                //It's something with hands!
-                if(obj.HasComponent(ComponentFamily.Item))
-                {
-                    //It's something with hands using their hands on an item!
-                    return doHandsToItemInteraction(user, obj);
-                }
-                if(obj.HasComponent(ComponentFamily.LargeObject))
-                {
-                    //It's something with hands using their hands on a large object!
-                    return doHandsToLargeObjectInteraction(user, obj);
-                }
-                if(obj.HasComponent(ComponentFamily.Actor))
-                {
-                    //It's something with hands using their hands on an actor!
-                    return doHandsToActorInteraction(user, obj);
-                }
+                holdingHand = actorHands.GetHand(item);
+                //If not, do nothing
+                if (holdingHand != InventoryLocation.HandLeft && holdingHand != InventoryLocation.HandRight)
+                    return;
+                //If they are indeed holding it, 
             }
-            return false;
-        }
-
-        private bool doHandsToActorInteraction(Entity user, Entity obj)
-        {
-            var hands = user.GetComponent<HumanHandsComponent>(ComponentFamily.Hands);
-            if(hands.IsEmpty(hands.CurrentHand))
+            else
             {
-                return doEmptyHandToActorInteraction(user, obj);
+                holdingHand = actorHands.CurrentHand;
+                item = actorHands.GetEntity(holdingHand);
             }
-            return doApplyItemToActor(user, hands.GetEntity(hands.CurrentHand), obj);
+            if(item != null) 
+                RemoveEntity(args.Actor, args.Actor, item, holdingHand);
         }
 
-        private bool doApplyItemToActor(Entity user, Entity entity, Entity obj)
+        public void HandleExchangeItem(object sender, InventoryExchangedItemEventArgs args)
         {
-            throw new NotImplementedException();
+            
         }
 
-        private bool doEmptyHandToActorInteraction(Entity user, Entity obj)
+        public void HandleRemovedItem(object sender, InventoryRemovedItemEventArgs args)
         {
-            throw new NotImplementedException();
+            
         }
 
-        private bool doHandsToLargeObjectInteraction(Entity user, Entity obj)
+        public void HandleAddedItem(object sender, InventoryAddedItemEventArgs args)
         {
-            var hands = user.GetComponent<HumanHandsComponent>(ComponentFamily.Hands);
-            if (hands.IsEmpty(hands.CurrentHand))
-            {
-                return doEmptyHandToLargeObjectInteraction(user, obj);
-            }
-            return doApplyItemToLargeObject(user, hands.GetEntity(hands.CurrentHand), obj);
+            
         }
-
-        private bool doApplyItemToLargeObject(Entity user, Entity entity, Entity obj)
-        {
-            throw new NotImplementedException();
-        }
-
-        private bool doEmptyHandToLargeObjectInteraction(Entity user, Entity obj)
-        {
-            throw new NotImplementedException();
-        }
-
-        private bool doHandsToItemInteraction(Entity user, Entity obj)
-        {
-            var hands = user.GetComponent<HumanHandsComponent>(ComponentFamily.Hands);
-            if (hands.IsEmpty(hands.CurrentHand))
-            {
-                return doEmptyHandToItemInteraction(user, obj);
-            }
-            return doApplyItemToItem(user, hands.GetEntity(hands.CurrentHand), obj);
-        }
-
-        private bool doApplyItemToItem(Entity user, Entity entity, Entity obj)
-        {
-            throw new NotImplementedException();
-        }
-
-        private bool doEmptyHandToItemInteraction(Entity user, Entity obj)
-        {
-            throw new NotImplementedException();
-        }
+        #endregion
 
         #region Inventory Management Methods
         public bool PickUpEntity(Entity user, Entity obj)
@@ -205,7 +163,15 @@ namespace SGO.EntitySystems
             {
                 if (comHands.RemoveEntity(user, toRemove))
                 {
-                    //Do sprite stuff and detaching
+                    //Do sprite stuff and attaching
+                    var toRemoveSlaveMover = toRemove.GetComponent<SlaveMoverComponent>(ComponentFamily.Mover);
+                    if(toRemoveSlaveMover != null)
+                    {
+                        toRemoveSlaveMover.Detach();
+                    }
+                    toRemove.RemoveComponent(ComponentFamily.Mover);
+                    toRemove.AddComponent(ComponentFamily.Mover, EntityManager.ComponentFactory.GetComponent<BasicMoverComponent>());
+                    toRemove.GetComponent<BasicItemComponent>(ComponentFamily.Item).HandleDropped();
                     return true;
                 }
             }
@@ -258,6 +224,10 @@ namespace SGO.EntitySystems
                 if (comHands.AddEntity(user, toAdd, location))
                 {
                     //Do sprite stuff and attaching
+                    toAdd.RemoveComponent(ComponentFamily.Mover);
+                    toAdd.AddComponent(ComponentFamily.Mover, EntityManager.ComponentFactory.GetComponent<SlaveMoverComponent>());
+                    toAdd.GetComponent<SlaveMoverComponent>(ComponentFamily.Mover).Attach(inventory);
+                    toAdd.GetComponent<BasicItemComponent>(ComponentFamily.Item).HandlePickedUp(inventory, location);
                     return true;
                 }
             }

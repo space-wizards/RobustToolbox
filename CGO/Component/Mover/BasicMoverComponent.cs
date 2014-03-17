@@ -11,7 +11,7 @@ namespace CGO
     /// <summary>
     /// Recieves movement data from the server and updates the entity's position accordingly.
     /// </summary>
-    public class NetworkMoverComponent : Component
+    public class BasicMoverComponent : Component
     {
         private bool interpolating;
         private float movedtime; // Amount of time we've been moving since the last update packet.
@@ -19,7 +19,7 @@ namespace CGO
         private Vector2D startPosition;
         private Vector2D targetPosition;
 
-        public NetworkMoverComponent()
+        public BasicMoverComponent()
         {
             Family = ComponentFamily.Mover;
         }

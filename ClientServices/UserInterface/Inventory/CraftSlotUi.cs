@@ -37,7 +37,7 @@ namespace ClientServices.UserInterface.Inventory
         public void SetEntity(Entity entity)
         {
             ContainingEntity = entity;
-            if (ContainingEntity != null) _entSprite = Utilities.GetSpriteComponentSprite(ContainingEntity);
+            if (ContainingEntity != null) _entSprite = Utilities.GetIconSprite(ContainingEntity);
         }
 
         public void ResetEntity()

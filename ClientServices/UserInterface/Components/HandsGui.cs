@@ -122,13 +122,13 @@ namespace ClientServices.UserInterface.Components
 
             if (hands == null) return;
 
-            if (hands.HandSlots.Keys.Contains(Hand.Left))
+            if (hands.HandSlots.Keys.Contains(Hand.Left) && hands.HandSlots[Hand.Left] != null)
             {
                 if (LeftHand.Entity == null || LeftHand.Entity.Uid != hands.HandSlots[Hand.Left].Uid)
                 {
                     Entity entityL = hands.HandSlots[Hand.Left];
                     LeftHand.Entity = entityL;
-                    LeftHand.HeldSprite = Utilities.GetSpriteComponentSprite(entityL);
+                    LeftHand.HeldSprite = Utilities.GetIconSprite(entityL);
                 }
             }
             else
@@ -137,13 +137,13 @@ namespace ClientServices.UserInterface.Components
                 LeftHand.HeldSprite = null;
             }
 
-            if (hands.HandSlots.Keys.Contains(Hand.Right))
+            if (hands.HandSlots.Keys.Contains(Hand.Right) && hands.HandSlots[Hand.Right] != null)
             {
                 if (RightHand.Entity == null || RightHand.Entity.Uid != hands.HandSlots[Hand.Right].Uid)
                 {
                     Entity entityR = hands.HandSlots[Hand.Right];
                     RightHand.Entity = entityR;
-                    RightHand.HeldSprite = Utilities.GetSpriteComponentSprite(entityR);
+                    RightHand.HeldSprite = Utilities.GetIconSprite(entityR);
                 }
             }
             else

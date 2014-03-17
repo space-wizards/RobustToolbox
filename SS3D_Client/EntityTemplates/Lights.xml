@@ -6,10 +6,15 @@
       <Component name="TransformComponent"></Component>
       <Component name="VelocityComponent"></Component>
       <Component name="DirectionComponent"></Component>
-      <Component name="NetworkMoverComponent"></Component>
+      <Component name="BasicMoverComponent"></Component>
       <Component name="SpriteComponent">
         <Parameters>
           <Parameter name="addsprite" type="string" value="wall_light" />
+        </Parameters>
+      </Component>
+      <Component name="IconComponent">
+        <Parameters>
+          <Parameter name="icon" type="string" value="wall_light" />
         </Parameters>
       </Component>
       <Component name="ClickableComponent"></Component>
@@ -34,10 +39,15 @@
       <Component name="TransformComponent"></Component>
       <Component name="VelocityComponent"></Component>
       <Component name="DirectionComponent"></Component>
-      <Component name="NetworkMoverComponent"></Component>
+      <Component name="BasicMoverComponent"></Component>
       <Component name="ItemSpriteComponent">
         <Parameters>
           <Parameter name="basename" type="string" value="flashlight" />
+        </Parameters>
+      </Component>
+      <Component name="IconComponent">
+        <Parameters>
+          <Parameter name="icon" type="string" value="flashlight" />
         </Parameters>
       </Component>
       <Component name="PhysicsComponent"></Component>

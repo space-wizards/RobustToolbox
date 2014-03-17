@@ -39,7 +39,7 @@ namespace ClientServices.UserInterface
             IoCManager.Resolve<IPlacementManager>().Clear();
 
             DragEntity = entity;
-            DragSprite = Utilities.GetSpriteComponentSprite(entity);
+            DragSprite = Utilities.GetIconSprite(entity);
             IsEntity = true;
         }
 

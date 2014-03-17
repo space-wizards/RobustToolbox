@@ -6,10 +6,15 @@
       <Component name="TransformComponent"></Component>
       <Component name="VelocityComponent"></Component>
       <Component name="DirectionComponent"></Component>
-      <Component name="NetworkMoverComponent"></Component>
+      <Component name="BasicMoverComponent"></Component>
       <Component name="ItemSpriteComponent">
         <Parameters>
           <Parameter name="basename" type="string" value="forceps" />
+        </Parameters>
+      </Component>
+      <Component name="IconComponent">
+        <Parameters>
+          <Parameter name="icon" type="string" value="forceps" />
         </Parameters>
       </Component>
       <Component name="PhysicsComponent"></Component>
@@ -22,10 +27,15 @@
       <Component name="TransformComponent"></Component>
       <Component name="VelocityComponent"></Component>
       <Component name="DirectionComponent"></Component>
-      <Component name="NetworkMoverComponent"></Component>
+      <Component name="BasicMoverComponent"></Component>
       <Component name="ItemSpriteComponent">
         <Parameters>
           <Parameter name="basename" type="string" value="medscanner" />
+        </Parameters>
+      </Component>
+      <Component name="IconComponent">
+        <Parameters>
+          <Parameter name="icon" type="string" value="medscanner" />
         </Parameters>
       </Component>
       <Component name="PhysicsComponent"></Component>
@@ -38,10 +48,15 @@
       <Component name="TransformComponent"></Component>
       <Component name="VelocityComponent"></Component>
       <Component name="DirectionComponent"></Component>
-      <Component name="NetworkMoverComponent"></Component>
+      <Component name="BasicMoverComponent"></Component>
       <Component name="ItemSpriteComponent">
         <Parameters>
           <Parameter name="basename" type="string" value="saw" />
+        </Parameters>
+      </Component>
+      <Component name="IconComponent">
+        <Parameters>
+          <Parameter name="icon" type="string" value="saw" />
         </Parameters>
       </Component>
       <Component name="PhysicsComponent"></Component>
@@ -54,10 +69,15 @@
       <Component name="TransformComponent"></Component>
       <Component name="VelocityComponent"></Component>
       <Component name="DirectionComponent"></Component>
-      <Component name="NetworkMoverComponent"></Component>
+      <Component name="BasicMoverComponent"></Component>
       <Component name="ItemSpriteComponent">
         <Parameters>
           <Parameter name="basename" type="string" value="scalpel" />
+        </Parameters>
+      </Component>
+      <Component name="IconComponent">
+        <Parameters>
+          <Parameter name="icon" type="string" value="scalpel" />
         </Parameters>
       </Component>
       <Component name="PhysicsComponent"></Component>
@@ -70,10 +90,15 @@
       <Component name="TransformComponent"></Component>
       <Component name="VelocityComponent"></Component>
       <Component name="DirectionComponent"></Component>
-      <Component name="NetworkMoverComponent"></Component>
+      <Component name="BasicMoverComponent"></Component>
       <Component name="ItemSpriteComponent">
         <Parameters>
           <Parameter name="basename" type="string" value="syringegun" />
+        </Parameters>
+      </Component>
+      <Component name="IconComponent">
+        <Parameters>
+          <Parameter name="icon" type="string" value="syringegun" />
         </Parameters>
       </Component>
       <Component name="PhysicsComponent"></Component>
@@ -86,10 +111,15 @@
       <Component name="TransformComponent"></Component>
       <Component name="VelocityComponent"></Component>
       <Component name="DirectionComponent"></Component>
-      <Component name="NetworkMoverComponent"></Component>
+      <Component name="BasicMoverComponent"></Component>
       <Component name="ItemSpriteComponent">
         <Parameters>
           <Parameter name="basename" type="string" value="vial" />
+        </Parameters>
+      </Component>
+      <Component name="IconComponent">
+        <Parameters>
+          <Parameter name="icon" type="string" value="vial" />
         </Parameters>
       </Component>
       <Component name="PhysicsComponent"></Component>
@@ -102,10 +132,15 @@
       <Component name="TransformComponent"></Component>
       <Component name="VelocityComponent"></Component>
       <Component name="DirectionComponent"></Component>
-      <Component name="NetworkMoverComponent"></Component>
+      <Component name="BasicMoverComponent"></Component>
       <Component name="ItemSpriteComponent">
         <Parameters>
           <Parameter name="basename" type="string" value="vial_2" />
+        </Parameters>
+      </Component>
+      <Component name="IconComponent">
+        <Parameters>
+          <Parameter name="icon" type="string" value="vial_2" />
         </Parameters>
       </Component>
       <Component name="PhysicsComponent"></Component>
@@ -118,10 +153,15 @@
       <Component name="TransformComponent"></Component>
       <Component name="VelocityComponent"></Component>
       <Component name="DirectionComponent"></Component>
-      <Component name="NetworkMoverComponent"></Component>
+      <Component name="BasicMoverComponent"></Component>
       <Component name="ItemSpriteComponent">
         <Parameters>
           <Parameter name="basename" type="string" value="medkit_r" />
+        </Parameters>
+      </Component>
+      <Component name="IconComponent">
+        <Parameters>
+          <Parameter name="icon" type="string" value="medkit_r" />
         </Parameters>
       </Component>
       <Component name="PhysicsComponent"></Component>
@@ -134,10 +174,15 @@
       <Component name="TransformComponent"></Component>
       <Component name="VelocityComponent"></Component>
       <Component name="DirectionComponent"></Component>
-      <Component name="NetworkMoverComponent"></Component>
+      <Component name="BasicMoverComponent"></Component>
       <Component name="ItemSpriteComponent">
         <Parameters>
           <Parameter name="basename" type="string" value="medkit_w" />
+        </Parameters>
+      </Component>
+      <Component name="IconComponent">
+        <Parameters>
+          <Parameter name="icon" type="string" value="medkit_w" />
         </Parameters>
       </Component>
       <Component name="PhysicsComponent"></Component>
@@ -150,10 +195,15 @@
       <Component name="TransformComponent"></Component>
       <Component name="VelocityComponent"></Component>
       <Component name="DirectionComponent"></Component>
-      <Component name="NetworkMoverComponent"></Component>
+      <Component name="BasicMoverComponent"></Component>
       <Component name="ItemSpriteComponent">
         <Parameters>
           <Parameter name="basename" type="string" value="bruisepack" />
+        </Parameters>
+      </Component>
+      <Component name="IconComponent">
+        <Parameters>
+          <Parameter name="icon" type="string" value="bruisepack" />
         </Parameters>
       </Component>
       <Component name="PhysicsComponent"></Component>
@@ -166,10 +216,15 @@
       <Component name="TransformComponent"></Component>
       <Component name="VelocityComponent"></Component>
       <Component name="DirectionComponent"></Component>
-      <Component name="NetworkMoverComponent"></Component>
+      <Component name="BasicMoverComponent"></Component>
       <Component name="ItemSpriteComponent">
         <Parameters>
           <Parameter name="basename" type="string" value="bandages" />
+        </Parameters>
+      </Component>
+      <Component name="IconComponent">
+        <Parameters>
+          <Parameter name="icon" type="string" value="bandages" />
         </Parameters>
       </Component>
       <Component name="PhysicsComponent"></Component>

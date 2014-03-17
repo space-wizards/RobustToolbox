@@ -97,14 +97,15 @@
     <Compile Include="Component\Hands\NewHandsComponent.cs" />
     <Compile Include="Component\Hands\HumanHandsComponent.cs" />
     <Compile Include="Component\Damageable\Health\HealthComponent.cs" />
+    <Compile Include="Component\Icon\IconComponent.cs" />
     <Compile Include="Component\Input\ContextMenuComponent.cs" />
     <Compile Include="Component\Inventory\NewInventory.cs" />
     <Compile Include="Component\Inventory\Inventory.cs" />
     <Compile Include="Component\Item\BasicItemComponent.cs" />
     <Compile Include="Component\Light\FlashLightComponent.cs" />
     <Compile Include="Component\Light\PointLightComponent.cs" />
-    <Compile Include="Component\Mover\KeyBindingMoverComponent.cs" />
-    <Compile Include="Component\Mover\NetworkMoverComponent.cs" />
+    <Compile Include="Component\Mover\PlayerInputMoverComponent.cs" />
+    <Compile Include="Component\Mover\BasicMoverComponent.cs" />
     <Compile Include="Component\Mover\SlaveMoverComponent.cs" />
     <Compile Include="Component\Physics\PhysicsComponent.cs" />
     <Compile Include="Component\PlayerActionComp\PlayerActionCompC.cs" />

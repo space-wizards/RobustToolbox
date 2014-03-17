@@ -37,7 +37,7 @@ namespace CGO
 
         public void HandleOnMove(object sender, VectorEventArgs args)
         {
-            if (!(Owner.GetComponent(ComponentFamily.Mover) is KeyBindingMoverComponent))
+            if (!(Owner.GetComponent(ComponentFamily.Mover) is PlayerInputMoverComponent))
             {
                 return;
             }

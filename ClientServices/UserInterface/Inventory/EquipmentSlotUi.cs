@@ -77,7 +77,7 @@ namespace ClientServices.UserInterface.Inventory
                 if ((CurrentEntity == null || CurrentEntity.Uid != equipment.EquippedEntities[AssignedSlot].Uid))
                 {
                     CurrentEntity = equipment.EquippedEntities[AssignedSlot];
-                    _currentEntSprite = Utilities.GetSpriteComponentSprite(CurrentEntity);
+                    _currentEntSprite = Utilities.GetIconSprite(CurrentEntity);
                 }
             }
             else

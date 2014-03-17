@@ -8,7 +8,7 @@ using SS13_Shared.GO;
 
 namespace GameObject
 {
-    public interface IComponent:IComponentEventSubscriber
+    public interface IComponent:IEntityEventSubscriber
     {
         ComponentFamily Family { get; }
         Entity Owner { get; set; }
@@ -313,7 +313,9 @@ namespace GameObject
             if (SVarIsRegistered(name))
                 _sVars.Remove(name);
         }
-
         #endregion
+        
+        protected virtual void SubscribeEvents()
+        {}
     }
 }

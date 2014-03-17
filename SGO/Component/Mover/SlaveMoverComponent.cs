@@ -1,6 +1,7 @@
 ﻿using GameObject;
 using SS13_Shared;
 using SS13_Shared.GO;
+using SS13_Shared.GO.Component.Mover;
 
 namespace SGO
 {
@@ -39,9 +40,17 @@ namespace SGO
             base.OnRemove();
         }
 
-        private void Attach(int uid)
+        public void Attach(int uid)
         {
             master = Owner.EntityManager.GetEntity(uid);
+            master.OnShutdown += master_OnShutdown;
+            master.GetComponent<TransformComponent>(ComponentFamily.Transform).OnMove += HandleOnMasterMove;
+            Translate(master.GetComponent<TransformComponent>(ComponentFamily.Transform).Position);
+        }
+
+        public void Attach(Entity newMaster)
+        {
+            master = newMaster;
             master.OnShutdown += master_OnShutdown;
             master.GetComponent<TransformComponent>(ComponentFamily.Transform).OnMove += HandleOnMasterMove;
             Translate(master.GetComponent<TransformComponent>(ComponentFamily.Transform).Position);
@@ -52,7 +61,7 @@ namespace SGO
             Detach();
         }
 
-        private void Detach()
+        public void Detach()
         {
             if (master != null)
             {
@@ -69,6 +78,21 @@ namespace SGO
         public void Translate(Vector2 toPosition)
         {
             Owner.GetComponent<TransformComponent>(ComponentFamily.Transform).Position = toPosition;
+        }
+
+        private TransformComponent getTransform()
+        {
+            return Owner.GetComponent<TransformComponent>(ComponentFamily.Transform);
+        }
+
+        public override ComponentState GetComponentState()
+        {
+            var transform = getTransform();
+            if (master == null)
+            {
+                return new MoverComponentState(transform.X, transform.Y, 0, 0);
+            }
+            return new MoverComponentState(transform.X, transform.Y, 0, 0, master.Uid);
         }
     }
 }

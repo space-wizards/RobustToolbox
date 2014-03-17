@@ -43,11 +43,16 @@ namespace GameObject
 
         private Dictionary<Type, List<Delegate>> _eventSubscriptions
             = new Dictionary<Type, List<Delegate>>();
-        private Dictionary<IComponentEventSubscriber, Dictionary<Type, Delegate>> _inverseEventSubscriptions
-            = new Dictionary<IComponentEventSubscriber, Dictionary<Type, Delegate>>();
+        private Dictionary<IEntityEventSubscriber, Dictionary<Type, Delegate>> _inverseEventSubscriptions
+            = new Dictionary<IEntityEventSubscriber, Dictionary<Type, Delegate>>();
 
-        private Queue<Tuple<object, ComponentEventArgs>> _eventQueue
-            = new Queue<Tuple<object, ComponentEventArgs>>();
+        private Queue<Tuple<object, EntityEventArgs>> _eventQueue
+            = new Queue<Tuple<object, EntityEventArgs>>();
+
+        public readonly List<ComponentFamily> SynchedComponentTypes = new List<ComponentFamily>
+                                                                  {
+                                                                      ComponentFamily.Mover
+                                                                  }; 
         
         public EntityManager(EngineType engineType, IEntityNetworkManager entityNetworkManager)
         {
@@ -133,7 +138,7 @@ namespace GameObject
 
         #region ComponentEvents
 
-        public void SubscribeEvent<T>(Delegate eventHandler, IComponentEventSubscriber s) where T:ComponentEventArgs
+        public void SubscribeEvent<T>(Delegate eventHandler, IEntityEventSubscriber s) where T:EntityEventArgs
         {
             Type eventType = typeof (T);
             //var evh = (ComponentEventHandler<ComponentEventArgs>)Convert.ChangeType(eventHandler, typeof(ComponentEventHandler<ComponentEventArgs>));
@@ -159,7 +164,7 @@ namespace GameObject
             
         }
 
-        public void UnsubscribeEvent<T>(IComponentEventSubscriber s) where T : ComponentEventArgs
+        public void UnsubscribeEvent<T>(IEntityEventSubscriber s) where T : EntityEventArgs
         {
             Type eventType = typeof(T);
 
@@ -169,7 +174,7 @@ namespace GameObject
             }
         }
 
-        public void UnsubscribeEvent(Type eventType, Delegate evh, IComponentEventSubscriber s)
+        public void UnsubscribeEvent(Type eventType, Delegate evh, IEntityEventSubscriber s)
         {
             if (_eventSubscriptions.ContainsKey(eventType) && _eventSubscriptions[eventType].Contains(evh))
             {
@@ -181,9 +186,9 @@ namespace GameObject
             }
         }
 
-        public void RaiseEvent(object sender, ComponentEventArgs toRaise)
+        public void RaiseEvent(object sender, EntityEventArgs toRaise)
         {
-            _eventQueue.Enqueue(new Tuple<object, ComponentEventArgs>(sender, toRaise));
+            _eventQueue.Enqueue(new Tuple<object, EntityEventArgs>(sender, toRaise));
         }
 
         private void ProcessEventQueue()
@@ -195,7 +200,7 @@ namespace GameObject
             }
         }
 
-        private void ProcessSingleEvent(Tuple<object, ComponentEventArgs> argsTuple)
+        private void ProcessSingleEvent(Tuple<object, EntityEventArgs> argsTuple)
         {
             var sender = argsTuple.Item1;
             var args = argsTuple.Item2;
@@ -208,7 +213,7 @@ namespace GameObject
                 }
             }
         }
-        public void RemoveSubscribedEvents(IComponentEventSubscriber subscriber)
+        public void RemoveSubscribedEvents(IEntityEventSubscriber subscriber)
         {
             if(_inverseEventSubscriptions.ContainsKey(subscriber))
             {

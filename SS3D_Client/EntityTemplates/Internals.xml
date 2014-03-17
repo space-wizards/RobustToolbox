@@ -6,10 +6,15 @@
       <Component name="TransformComponent"></Component>
       <Component name="VelocityComponent"></Component>
       <Component name="DirectionComponent"></Component>
-      <Component name="NetworkMoverComponent"></Component>
+      <Component name="BasicMoverComponent"></Component>
       <Component name="WearableSpriteComponent">
         <Parameters>
           <Parameter name="basename" type="string" value="surgicalmask" />
+        </Parameters>
+      </Component>
+      <Component name="IconComponent">
+        <Parameters>
+          <Parameter name="icon" type="string" value="surgicalmask" />
         </Parameters>
       </Component>
       <Component name="PhysicsComponent"></Component>

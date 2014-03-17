@@ -6,10 +6,15 @@
       <Component name="TransformComponent"></Component>
       <Component name="VelocityComponent"></Component>
       <Component name="DirectionComponent"></Component>
-      <Component name="NetworkMoverComponent"></Component>
+      <Component name="BasicMoverComponent"></Component>
       <Component name="WearableSpriteComponent">
         <Parameters>
           <Parameter name="basename" type="string" value="shoes" />
+        </Parameters>
+      </Component>
+      <Component name="IconComponent">
+        <Parameters>
+          <Parameter name="icon" type="string" value="shoes" />
         </Parameters>
       </Component>
       <Component name="PhysicsComponent"></Component>
@@ -23,10 +28,15 @@
       <Component name="TransformComponent"></Component>
       <Component name="VelocityComponent"></Component>
       <Component name="DirectionComponent"></Component>
-      <Component name="NetworkMoverComponent"></Component>
+      <Component name="BasicMoverComponent"></Component>
       <Component name="WearableSpriteComponent">
         <Parameters>
           <Parameter name="basename" type="string" value="helmet" />
+        </Parameters>
+      </Component>
+      <Component name="IconComponent">
+        <Parameters>
+          <Parameter name="icon" type="string" value="helmet" />
         </Parameters>
       </Component>
       <Component name="PhysicsComponent"></Component>
@@ -41,10 +51,15 @@
       <Component name="TransformComponent"></Component>
       <Component name="VelocityComponent"></Component>
       <Component name="DirectionComponent"></Component>
-      <Component name="NetworkMoverComponent"></Component>
+      <Component name="BasicMoverComponent"></Component>
       <Component name="AnimatedSpriteComponent">
         <Parameters>
           <Parameter name="sprite" type="string" value="player_jumpsuit" />
+        </Parameters>
+      </Component>
+      <Component name="IconComponent">
+        <Parameters>
+          <Parameter name="icon" type="string" value="player_jumpsuit" />
         </Parameters>
       </Component>
       <Component name="PhysicsComponent"></Component>
@@ -58,10 +73,15 @@
       <Component name="TransformComponent"></Component>
       <Component name="VelocityComponent"></Component>
       <Component name="DirectionComponent"></Component>
-      <Component name="NetworkMoverComponent"></Component>
+      <Component name="BasicMoverComponent"></Component>
       <Component name="AnimatedSpriteComponent">
         <Parameters>
           <Parameter name="sprite" type="string" value="player_jumpsuit_security" />
+        </Parameters>
+      </Component>
+      <Component name="IconComponent">
+        <Parameters>
+          <Parameter name="icon" type="string" value="player_jumpsuit_security" />
         </Parameters>
       </Component>
       <Component name="PhysicsComponent"></Component>
@@ -75,10 +95,15 @@
       <Component name="TransformComponent"></Component>
       <Component name="VelocityComponent"></Component>
       <Component name="DirectionComponent"></Component>
-      <Component name="NetworkMoverComponent"></Component>
+      <Component name="BasicMoverComponent"></Component>
       <Component name="WearableSpriteComponent">
         <Parameters>
           <Parameter name="basename" type="string" value="janitorsuit" />
+        </Parameters>
+      </Component>
+      <Component name="IconComponent">
+        <Parameters>
+          <Parameter name="icon" type="string" value="janitorsuit" />
         </Parameters>
       </Component>
       <Component name="PhysicsComponent"></Component>
@@ -92,10 +117,15 @@
       <Component name="TransformComponent"></Component>
       <Component name="VelocityComponent"></Component>
       <Component name="DirectionComponent"></Component>
-      <Component name="NetworkMoverComponent"></Component>
+      <Component name="BasicMoverComponent"></Component>
       <Component name="WearableSpriteComponent">
         <Parameters>
           <Parameter name="basename" type="string" value="medicsuit" />
+        </Parameters>
+      </Component>
+      <Component name="IconComponent">
+        <Parameters>
+          <Parameter name="icon" type="string" value="medicsuit" />
         </Parameters>
       </Component>
       <Component name="PhysicsComponent"></Component>
@@ -109,10 +139,15 @@
       <Component name="TransformComponent"></Component>
       <Component name="VelocityComponent"></Component>
       <Component name="DirectionComponent"></Component>
-      <Component name="NetworkMoverComponent"></Component>
+      <Component name="BasicMoverComponent"></Component>
       <Component name="WearableSpriteComponent">
         <Parameters>
           <Parameter name="basename" type="string" value="biosuit" />
+        </Parameters>
+      </Component>
+      <Component name="IconComponent">
+        <Parameters>
+          <Parameter name="icon" type="string" value="biosuit" />
         </Parameters>
       </Component>
       <Component name="PhysicsComponent"></Component>
@@ -127,10 +162,15 @@
       <Component name="TransformComponent"></Component>
       <Component name="VelocityComponent"></Component>
       <Component name="DirectionComponent"></Component>
-      <Component name="NetworkMoverComponent"></Component>
+      <Component name="BasicMoverComponent"></Component>
       <Component name="WearableSpriteComponent">
         <Parameters>
           <Parameter name="basename" type="string" value="gloves_surgical" />
+        </Parameters>
+      </Component>
+      <Component name="IconComponent">
+        <Parameters>
+          <Parameter name="icon" type="string" value="gloves_surgical" />
         </Parameters>
       </Component>
       <Component name="PhysicsComponent"></Component>
@@ -144,10 +184,15 @@
       <Component name="TransformComponent"></Component>
       <Component name="VelocityComponent"></Component>
       <Component name="DirectionComponent"></Component>
-      <Component name="NetworkMoverComponent"></Component>
+      <Component name="BasicMoverComponent"></Component>
       <Component name="WearableSpriteComponent">
         <Parameters>
           <Parameter name="basename" type="string" value="medshoes" />
+        </Parameters>
+      </Component>
+      <Component name="IconComponent">
+        <Parameters>
+          <Parameter name="icon" type="string" value="medshoes" />
         </Parameters>
       </Component>
       <Component name="PhysicsComponent"></Component>
@@ -161,10 +206,15 @@
       <Component name="TransformComponent"></Component>
       <Component name="VelocityComponent"></Component>
       <Component name="DirectionComponent"></Component>
-      <Component name="NetworkMoverComponent"></Component>
+      <Component name="BasicMoverComponent"></Component>
       <Component name="WearableSpriteComponent">
         <Parameters>
           <Parameter name="basename" type="string" value="surgicalmask" />
+        </Parameters>
+      </Component>
+      <Component name="IconComponent">
+        <Parameters>
+          <Parameter name="icon" type="string" value="surgicalmask" />
         </Parameters>
       </Component>
       <Component name="PhysicsComponent"></Component>
@@ -178,10 +228,15 @@
       <Component name="TransformComponent"></Component>
       <Component name="VelocityComponent"></Component>
       <Component name="DirectionComponent"></Component>
-      <Component name="NetworkMoverComponent"></Component>
+      <Component name="BasicMoverComponent"></Component>
       <Component name="WearableSpriteComponent">
         <Parameters>
           <Parameter name="basename" type="string" value="surgicalgown" />
+        </Parameters>
+      </Component>
+      <Component name="IconComponent">
+        <Parameters>
+          <Parameter name="icon" type="string" value="surgicalgown" />
         </Parameters>
       </Component>
       <Component name="PhysicsComponent"></Component>
@@ -195,10 +250,15 @@
       <Component name="TransformComponent"></Component>
       <Component name="VelocityComponent"></Component>
       <Component name="DirectionComponent"></Component>
-      <Component name="NetworkMoverComponent"></Component>
+      <Component name="BasicMoverComponent"></Component>
       <Component name="WearableSpriteComponent">
         <Parameters>
           <Parameter name="basename" type="string" value="armour" />
+        </Parameters>
+      </Component>
+      <Component name="IconComponent">
+        <Parameters>
+          <Parameter name="icon" type="string" value="armour" />
         </Parameters>
       </Component>
       <Component name="PhysicsComponent"></Component>
@@ -213,10 +273,15 @@
       <Component name="TransformComponent"></Component>
       <Component name="VelocityComponent"></Component>
       <Component name="DirectionComponent"></Component>
-      <Component name="NetworkMoverComponent"></Component>
+      <Component name="BasicMoverComponent"></Component>
       <Component name="WearableSpriteComponent">
         <Parameters>
           <Parameter name="basename" type="string" value="bluegloves" />
+        </Parameters>
+      </Component>
+      <Component name="IconComponent">
+        <Parameters>
+          <Parameter name="icon" type="string" value="bluegloves" />
         </Parameters>
       </Component>
       <Component name="PhysicsComponent"></Component>
@@ -230,10 +295,15 @@
       <Component name="TransformComponent"></Component>
       <Component name="VelocityComponent"></Component>
       <Component name="DirectionComponent"></Component>
-      <Component name="NetworkMoverComponent"></Component>
+      <Component name="BasicMoverComponent"></Component>
       <Component name="WearableSpriteComponent">
         <Parameters>
           <Parameter name="basename" type="string" value="galoshes" />
+        </Parameters>
+      </Component>
+      <Component name="IconComponent">
+        <Parameters>
+          <Parameter name="icon" type="string" value="galoshes" />
         </Parameters>
       </Component>
       <Component name="PhysicsComponent"></Component>

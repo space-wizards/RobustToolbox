@@ -4,7 +4,7 @@ using SS13_Shared.GO;
 
 namespace GameObject.System
 {
-    public abstract class EntitySystem: IComponentEventSubscriber
+    public abstract class EntitySystem: IEntityEventSubscriber
     {
         protected EntityManager EntityManager;
         protected EntitySystemManager EntitySystemManager;
@@ -18,6 +18,9 @@ namespace GameObject.System
             EntityManager = em;
             EntitySystemManager = esm;
         }
+
+        public EntitySystem()
+        {}
 
         public virtual void RegisterMessageTypes()
         {}
@@ -45,6 +48,7 @@ namespace GameObject.System
             return;
         }
 
-        public abstract void Update(float frameTime);
+        public virtual void Update(float frameTime)
+        {}
     }
 }

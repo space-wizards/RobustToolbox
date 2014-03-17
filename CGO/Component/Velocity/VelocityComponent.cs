@@ -49,7 +49,7 @@ namespace CGO
 
         public override void HandleComponentState(dynamic state)
         {
-            if(Owner.GetComponent<KeyBindingMoverComponent>(ComponentFamily.Mover) == null)
+            if(Owner.GetComponent<PlayerInputMoverComponent>(ComponentFamily.Mover) == null)
                 SetNewState(state);
         }
 

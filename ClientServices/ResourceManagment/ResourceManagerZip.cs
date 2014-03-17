@@ -479,7 +479,7 @@ namespace ClientServices.Resources
                     return newSprite;
                 }
             }
-            else return _sprites["nosprite"];
+            return GetNoSprite();
         }
 
         /// <summary>
@@ -514,6 +514,11 @@ namespace ClientServices.Resources
                 return new AnimatedSprite(key, _animationCollections[key], this);
             }
             return null;
+        }
+
+        public Sprite GetNoSprite()
+        {
+            return _sprites["nosprite"];
         }
 
         /// <summary>

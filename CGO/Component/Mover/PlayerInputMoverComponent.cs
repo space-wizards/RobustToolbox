@@ -7,7 +7,7 @@ using SS13_Shared.GO;
 namespace CGO
 {
     //Moves an entity based on key binding input
-    public class KeyBindingMoverComponent : Component
+    public class PlayerInputMoverComponent : Component
     {
         private const float BaseMoveSpeed = Constants.HumanWalkSpeed;
         public const float FastMoveSpeed = Constants.HumanRunSpeed;
@@ -24,7 +24,7 @@ namespace CGO
 
         private Direction _movedir;
 
-        public KeyBindingMoverComponent()
+        public PlayerInputMoverComponent()
         {
             Family = ComponentFamily.Mover;
             ;

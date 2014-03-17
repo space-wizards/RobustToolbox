@@ -6,10 +6,15 @@
       <Component name="TransformComponent"></Component>
       <Component name="VelocityComponent"></Component>
       <Component name="DirectionComponent"></Component>
-      <Component name="NetworkMoverComponent"></Component>
+      <Component name="BasicMoverComponent"></Component>
       <Component name="ItemSpriteComponent">
         <Parameters>
           <Parameter name="basename" type="string" value="wrench" />
+        </Parameters>
+      </Component>
+      <Component name="IconComponent">
+        <Parameters>
+          <Parameter name="icon" type="string" value="wrench" />
         </Parameters>
       </Component>
       <Component name="PhysicsComponent"></Component>
@@ -22,10 +27,15 @@
       <Component name="TransformComponent"></Component>
       <Component name="VelocityComponent"></Component>
       <Component name="DirectionComponent"></Component>
-      <Component name="NetworkMoverComponent"></Component>
+      <Component name="BasicMoverComponent"></Component>
       <Component name="ItemSpriteComponent">
         <Parameters>
           <Parameter name="basename" type="string" value="welder" />
+        </Parameters>
+      </Component>
+      <Component name="IconComponent">
+        <Parameters>
+          <Parameter name="icon" type="string" value="welder" />
         </Parameters>
       </Component>
       <Component name="PhysicsComponent"></Component>
@@ -38,10 +48,15 @@
       <Component name="TransformComponent"></Component>
       <Component name="VelocityComponent"></Component>
       <Component name="DirectionComponent"></Component>
-      <Component name="NetworkMoverComponent"></Component>
+      <Component name="BasicMoverComponent"></Component>
       <Component name="ItemSpriteComponent">
         <Parameters>
           <Parameter name="basename" type="string" value="crowbar" />
+        </Parameters>
+      </Component>
+      <Component name="IconComponent">
+        <Parameters>
+          <Parameter name="icon" type="string" value="crowbar" />
         </Parameters>
       </Component>
       <Component name="PhysicsComponent"></Component>
@@ -54,10 +69,15 @@
       <Component name="TransformComponent"></Component>
       <Component name="VelocityComponent"></Component>
       <Component name="DirectionComponent"></Component>
-      <Component name="NetworkMoverComponent"></Component>
+      <Component name="BasicMoverComponent"></Component>
       <Component name="ItemSpriteComponent">
         <Parameters>
           <Parameter name="basename" type="string" value="mop" />
+        </Parameters>
+      </Component>
+      <Component name="IconComponent">
+        <Parameters>
+          <Parameter name="icon" type="string" value="mop" />
         </Parameters>
       </Component>
       <Component name="PhysicsComponent"></Component>

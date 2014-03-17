@@ -69,6 +69,8 @@
     <Compile Include="IEntityNetworkManager.cs" />
     <Compile Include="ParticleSettings.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="System\EntityEventHandlingSystem.cs" />
+    <Compile Include="System\EntityProcessingSystem.cs" />
     <Compile Include="System\EntitySystem.cs" />
   </ItemGroup>
   <ItemGroup>

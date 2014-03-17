@@ -1,7 +1,12 @@
-﻿using GameObject;
+﻿using System;
+using ClientInterfaces.Configuration;
+using GameObject;
 using GorgonLibrary;
+using SS13.IoC;
 using SS13_Shared;
 using SS13_Shared.GO;
+using SS13_Shared.GO.Component.Mover;
+using SS13_Shared.GO.Component.Transform;
 
 namespace CGO
 {
@@ -18,22 +23,9 @@ namespace CGO
             Family = ComponentFamily.Mover;
         }
 
-        public override ComponentReplyMessage RecieveMessage(object sender, ComponentMessageType type,
-                                                             params object[] list)
+        public override Type StateType
         {
-            ComponentReplyMessage reply = base.RecieveMessage(sender, type, list);
-
-            if (sender == this) //Don't listen to our own messages!
-                return ComponentReplyMessage.Empty;
-
-            switch (type)
-            {
-                case ComponentMessageType.SlaveAttach:
-                    Attach((int) list[0]);
-                    break;
-            }
-
-            return reply;
+            get { return typeof(MoverComponentState); }
         }
 
         public override void OnRemove()
@@ -87,6 +79,28 @@ namespace CGO
              */
 
             //Owner.Moved();
+        }
+
+        public override void HandleComponentState(dynamic state)
+        {
+            SetNewState(state);
+        }
+
+        private void SetNewState(MoverComponentState state)
+        {
+            if(_master == null && state.Master != null)
+            {
+                Attach((int)state.Master);
+            }
+            if(_master != null && state.Master == null)
+            {
+                Detach();
+            }
+            if(_master != null && state.Master != null && _master.Uid != state.Master)
+            {
+                Detach();
+                Attach((int)state.Master);
+            }
         }
     }
 }

@@ -34,14 +34,14 @@ namespace CGO.EntitySystems
                 //Get transform component
                 var transform = entity.GetComponent<TransformComponent>(ComponentFamily.Transform);
                 //Check if the entity has a keyboard input mover component
-                bool haskbMover = entity.GetComponent<KeyBindingMoverComponent>(ComponentFamily.Mover) != null;
+                bool haskbMover = entity.GetComponent<PlayerInputMoverComponent>(ComponentFamily.Mover) != null;
 
                 //Pretend that the current point in time is actually 100 or more milliseconds in the past depending on the interp constant
                 var currentTime = IoCManager.Resolve<IGameTimer>().CurrentTime - interpolation;
                 Vector2D newPosition;
 
                 //Limit to how far a human can move
-                var humanMoveLimit = 3 * interpolation * KeyBindingMoverComponent.FastMoveSpeed;
+                var humanMoveLimit = 3 * interpolation * PlayerInputMoverComponent.FastMoveSpeed;
                 
                 // If the "to" interp position is equal to the "from" interp position, 
                 // OR we're actually trying to interpolate past the "to" state
@@ -123,7 +123,7 @@ namespace CGO.EntitySystems
                     {
                         transform.TranslateTo(newPosition);
                         if (haskbMover)
-                            entity.GetComponent<KeyBindingMoverComponent>(ComponentFamily.Mover).SendPositionUpdate(newPosition);
+                            entity.GetComponent<PlayerInputMoverComponent>(ComponentFamily.Mover).SendPositionUpdate(newPosition);
 
                     }
                 }

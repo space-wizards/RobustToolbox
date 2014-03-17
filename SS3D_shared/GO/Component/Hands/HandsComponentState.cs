@@ -2,15 +2,15 @@
 using System.Collections.Generic;
 using SS13_Shared.Serialization;
 
-namespace SS13_Shared.GO.Hands
+namespace SS13_Shared.GO.Component.Hands
 {
     [Serializable]
-    public class HandsState : ComponentState 
+    public class HandsComponentState : ComponentState 
     {
         public InventoryLocation ActiveHand;
-        public Dictionary<InventoryLocation, int> Slots;
+        public Dictionary<InventoryLocation, int?> Slots;
 
-        public HandsState(InventoryLocation _ActiveHand, Dictionary<InventoryLocation, int> _Slots) 
+        public HandsComponentState(InventoryLocation _ActiveHand, Dictionary<InventoryLocation, int?> _Slots) 
             : base(ComponentFamily.Hands)
         {
             ActiveHand = _ActiveHand;

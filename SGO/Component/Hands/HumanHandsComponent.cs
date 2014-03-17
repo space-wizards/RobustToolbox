@@ -1,10 +1,13 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Linq;
+using System.Xml.Linq;
 using GameObject;
 using Lidgren.Network;
+using SGO.Events;
 using SS13_Shared;
 using SS13_Shared.GO;
-using SS13_Shared.GO.Hands;
+using SS13_Shared.GO.Component.Hands;
 
 namespace SGO
 {
@@ -17,6 +20,17 @@ namespace SGO
         {
             Family = ComponentFamily.Hands;
             Handslots = new Dictionary<InventoryLocation, Entity>();
+        }
+
+        public override void HandleExtendedParameters(XElement extendedParameters)
+        {
+            Handslots.Clear();
+
+            foreach (XElement param in extendedParameters.Descendants("handSlot"))
+            {
+                if (param.Attribute("slot") != null)
+                    Handslots.Add((InventoryLocation)Enum.Parse(typeof(InventoryLocation), param.Attribute("slot").Value), null);
+            }
         }
 
         /// <summary>
@@ -126,7 +140,7 @@ namespace SGO
         /// <summary>
         /// Change the currently selected hand
         /// </summary>
-        private void SwitchHands()
+        public void SwitchHands()
         {
             if (CurrentHand == InventoryLocation.HandLeft)
                 SwitchHandsTo(InventoryLocation.HandRight);
@@ -152,6 +166,21 @@ namespace SGO
                 return Handslots[hand];
             else
                 return null;
+        }
+        
+        /// <summary>
+        /// Get the entity in the specified hand
+        /// </summary>
+        /// <param name="hand"></param>
+        /// <returns></returns>
+        public InventoryLocation GetHand(Entity entity)
+        {
+            foreach(var kvp in Handslots)
+            {
+                if (kvp.Value == entity)
+                    return kvp.Key;
+            }
+            return InventoryLocation.None;
         }
 
         /// <summary>
@@ -237,7 +266,7 @@ namespace SGO
         {
             Entity holder = null;
             if (entity.HasComponent(ComponentFamily.Item))
-                holder = ((BasicItemComponent) entity.GetComponent(ComponentFamily.Item)).currentHolder;
+                holder = ((BasicItemComponent) entity.GetComponent(ComponentFamily.Item)).CurrentHolder;
             if (holder == null && entity.HasComponent(ComponentFamily.Equippable))
                 holder = ((EquippableComponent) entity.GetComponent(ComponentFamily.Equippable)).currentWearer;
             if (holder != null) holder.SendMessage(this, ComponentMessageType.DisassociateEntity, entity);
@@ -286,7 +315,7 @@ namespace SGO
         /// <returns></returns>
         public bool IsEmpty(InventoryLocation hand)
         {
-            if (Handslots.ContainsKey(hand))
+            if (Handslots.ContainsKey(hand) && Handslots[hand] != null)
                 return false;
             return true;
         }
@@ -323,9 +352,9 @@ namespace SGO
                 }
                 else
                 {
-                    if (Handslots.Any(x => x.Value == null))
+                    if (Handslots[location] == null)
                     {
-                        Handslots[Handslots.First(x => x.Value == null).Key] = toAdd;
+                        Handslots[location] = toAdd;
                     }
                     else
                     {
@@ -344,8 +373,9 @@ namespace SGO
         public override ComponentState GetComponentState()
         {
             //Oh man , what
-            Dictionary<InventoryLocation, int> entities = Handslots.Select(x => new KeyValuePair<InventoryLocation, int>(x.Key, x.Value.Uid)).ToDictionary(key => key.Key, va => va.Value);
-            return new HandsState(CurrentHand, entities);
+            //Yes man, this!
+            var entities = Handslots.Select(x => new KeyValuePair<InventoryLocation, int?>(x.Key, x.Value != null?(int?)x.Value.Uid:null)).ToDictionary(key => key.Key, va => va.Value);
+            return new HandsComponentState(CurrentHand, entities);
         }
     }
 }

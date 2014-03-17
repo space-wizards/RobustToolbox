@@ -5,14 +5,17 @@ using System.Xml.Linq;
 using GameObject;
 using Lidgren.Network;
 using SGO.Item.ItemCapability;
+using SS13_Shared;
 using SS13_Shared.GO;
+using SS13_Shared.GO.Component.Item;
 
 namespace SGO
 {
     public class BasicItemComponent : Component
     {
         private readonly Dictionary<string, ItemCapability> capabilities;
-        private Hand holdingHand;
+        public InventoryLocation HoldingHand = InventoryLocation.None;
+        public bool CanBePickedUp = true;
 
         public BasicItemComponent()
         {
@@ -20,7 +23,7 @@ namespace SGO
             capabilities = new Dictionary<string, ItemCapability>();
         }
 
-        public Entity currentHolder { get; private set; }
+        public Entity CurrentHolder { get; set; }
 
         public override ComponentReplyMessage RecieveMessage(object sender, ComponentMessageType type,
                                                              params object[] list)
@@ -32,10 +35,10 @@ namespace SGO
 
             switch (type)
             {
-                case ComponentMessageType.ReceiveEmptyHandToItemInteraction:
+                /*case ComponentMessageType.ReceiveEmptyHandToItemInteraction:
                     HandleEmptyHandToItemInteraction((Entity) list[0]);
                     // param 0 is the actor entity, param 1 is the source actor entity
-                    break;
+                    break;*/
                 case ComponentMessageType.ReceiveItemToItemInteraction:
                     //This message means we were clicked on by an actor with an item in hand
                     HandleItemToItemInteraction((Entity) list[0]);
@@ -50,9 +53,9 @@ namespace SGO
                 case ComponentMessageType.EnactItemToLargeObjectInteraction:
                     ApplyTo((Entity) list[0], InteractsWith.LargeObject, (Entity) list[1]);
                     break;
-                case ComponentMessageType.PickedUp:
+                /*case ComponentMessageType.PickedUp:
                     HandlePickedUp((Entity) list[0], (Hand) list[1]);
-                    break;
+                    break;*/
                 case ComponentMessageType.Dropped:
                     HandleDropped();
                     break;
@@ -107,34 +110,30 @@ namespace SGO
             ApplyCapabilities(targetEntity, targetType, sourceActor);
         }
 
-        private void HandleDropped()
+        public void HandleDropped()
         {
-            Owner.RemoveComponent(ComponentFamily.Mover);
-            Owner.AddComponent(ComponentFamily.Mover,
-                               Owner.EntityManager.ComponentFactory.GetComponent("BasicMoverComponent"));
-            Owner.SendDirectedComponentNetworkMessage(this, NetDeliveryMethod.ReliableOrdered, null,
-                                                      ItemComponentNetMessage.Dropped);
-            currentHolder = null;
+            CurrentHolder = null;
+            HoldingHand = InventoryLocation.None;
         }
 
-        private void HandlePickedUp(Entity entity, Hand _holdingHand)
+        public void HandlePickedUp(Entity entity, InventoryLocation holdingHand)
         {
-            currentHolder = entity;
-            holdingHand = _holdingHand;
-            Owner.AddComponent(ComponentFamily.Mover,
+            CurrentHolder = entity;
+            HoldingHand = holdingHand;
+            /*Owner.AddComponent(ComponentFamily.Mover,
                                Owner.EntityManager.ComponentFactory.GetComponent("SlaveMoverComponent"));
             Owner.SendMessage(this, ComponentMessageType.SlaveAttach, entity.Uid);
             Owner.SendDirectedComponentNetworkMessage(this, NetDeliveryMethod.ReliableOrdered, null,
-                                                      ItemComponentNetMessage.PickedUp, entity.Uid, holdingHand);
+                                                      ItemComponentNetMessage.PickedUp, entity.Uid, holdingHand);*/
         }
 
-        public override void HandleInstantiationMessage(NetConnection netConnection)
+        /*public override void HandleInstantiationMessage(NetConnection netConnection)
         {
-            if (currentHolder != null)
+            if (CurrentHolder != null)
                 Owner.SendDirectedComponentNetworkMessage(this, NetDeliveryMethod.ReliableOrdered, netConnection,
-                                                          ItemComponentNetMessage.PickedUp, currentHolder.Uid,
-                                                          holdingHand);
-        }
+                                                          ItemComponentNetMessage.PickedUp, CurrentHolder.Uid,
+                                                          HoldingHand);
+        }*/
 
         /// <summary>
         /// Entry point for interactions between an item and this item
@@ -154,7 +153,7 @@ namespace SGO
         /// Basically, the actor touches this item with an empty hand
         /// </summary>
         /// <param name="actor"></param>
-        protected virtual void HandleEmptyHandToItemInteraction(Entity actor)
+        public virtual void HandleEmptyHandToItemInteraction(Entity actor)
         {
             //Pick up the item
             actor.SendMessage(this, ComponentMessageType.PickUpItem, Owner);
@@ -334,6 +333,11 @@ namespace SGO
                 }
                 AddCapability(cap);
             }
+        }
+
+        public override ComponentState GetComponentState()
+        {
+            return new ItemComponentState(CurrentHolder != null ? (int?)CurrentHolder.Uid : null, HoldingHand);
         }
     }
 }

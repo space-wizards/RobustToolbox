@@ -77,7 +77,7 @@ namespace CGO
         {
             Owner.SendMessage(this, ComponentMessageType.ItemUnEquipped);
             Owner.AddComponent(ComponentFamily.Mover,
-                               Owner.EntityManager.ComponentFactory.GetComponent("NetworkMoverComponent"));
+                               Owner.EntityManager.ComponentFactory.GetComponent("BasicMoverComponent"));
         }
     }
 }

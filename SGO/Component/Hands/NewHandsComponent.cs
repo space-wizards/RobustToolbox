@@ -6,7 +6,7 @@ using GameObject;
 using Lidgren.Network;
 using SS13_Shared;
 using SS13_Shared.GO;
-using SS13_Shared.GO.Hands;
+using SS13_Shared.GO.Component.Hands;
 
 namespace SGO
 {
@@ -80,8 +80,8 @@ namespace SGO
         public override ComponentState GetComponentState()
         {
             //Oh man , what
-            Dictionary<InventoryLocation, int> entities = handslots.Select(x => new KeyValuePair<InventoryLocation, int>(x.Key, x.Value.Uid)).ToDictionary(key => key.Key, va => va.Value);
-            return new HandsState(currentHand, entities);
+            //Dictionary<InventoryLocation, int> entities = handslots.Select(x => new KeyValuePair<InventoryLocation, int>(x.Key, x.Value.Uid)).ToDictionary(key => key.Key, va => va.Value);
+            return new HandsComponentState(currentHand, new Dictionary<InventoryLocation, int?>());
         }
     }
 }

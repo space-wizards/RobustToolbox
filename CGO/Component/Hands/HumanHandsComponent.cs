@@ -6,6 +6,7 @@ using Lidgren.Network;
 using SS13.IoC;
 using SS13_Shared;
 using SS13_Shared.GO;
+using SS13_Shared.GO.Component.Hands;
 
 namespace CGO
 {
@@ -61,6 +62,14 @@ namespace CGO
             IoCManager.Resolve<IUserInterfaceManager>().ComponentUpdate(GuiComponentType.HandsUi);
         }
 
+        public override System.Type StateType
+        {
+            get
+            {
+                return typeof (HandsComponentState);
+            }
+        }
+
         public void SendSwitchHands(Hand hand)
         {
             Owner.SendComponentNetworkMessage(this, NetDeliveryMethod.ReliableOrdered,
@@ -87,6 +96,68 @@ namespace CGO
         private void SwitchHandTo(Hand hand)
         {
             CurrentHand = hand;
+        }
+
+        public override void HandleComponentState(dynamic state)
+        {
+            SetNewState(state);
+        }
+
+        private void SetNewState(HandsComponentState state)
+        {
+            bool changed = false;
+            var currentHand = Hand.None;
+            if(state.ActiveHand == InventoryLocation.HandLeft) currentHand = Hand.Left;
+            if(state.ActiveHand == InventoryLocation.HandRight) currentHand = Hand.Right;
+            if(CurrentHand != currentHand)
+            {
+                changed = true;
+                CurrentHand = currentHand;
+            }
+            foreach(var handSlot in state.Slots.Keys)
+            {
+                var hand = inventoryLocationToHand(handSlot);
+                if (!HandSlots.ContainsKey(hand))
+                {
+                    HandSlots.Add(hand, null);
+                    changed = true;
+                }
+                var existingSlotUid = HandSlots[hand] == null ? null : (int?)HandSlots[hand].Uid;
+                var newSlotUid = state.Slots[handSlot];
+                if(existingSlotUid == null)
+                {
+                    if (newSlotUid != null)
+                    {
+                        HandSlots[hand] = Owner.EntityManager.GetEntity((int)newSlotUid);
+                        changed = true;
+                    }
+                }
+                else
+                {
+                    if(newSlotUid != existingSlotUid)
+                    {
+                        if (newSlotUid != null)
+                            HandSlots[hand] = Owner.EntityManager.GetEntity((int)newSlotUid);
+                        else
+                            HandSlots[hand] = null;
+
+                        changed = true;
+                    }
+                }
+            }
+            if(changed)
+            {
+                IoCManager.Resolve<IUserInterfaceManager>().ComponentUpdate(GuiComponentType.HandsUi);
+            }
+        }
+
+        private Hand inventoryLocationToHand(InventoryLocation location)
+        {
+            if(location == InventoryLocation.HandLeft)
+                return Hand.Left;
+            if(location == InventoryLocation.HandRight)
+                return Hand.Right;
+            return Hand.None;
         }
     }
 }

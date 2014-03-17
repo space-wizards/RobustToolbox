@@ -29,7 +29,7 @@ namespace ClientServices.UserInterface.Inventory
             _currentColor = Color.White;
             _resourceManager = resourceManager;
             ContainingEntity = containingEnt;
-            if (ContainingEntity != null) _entitySprite = Utilities.GetSpriteComponentSprite(ContainingEntity);
+            if (ContainingEntity != null) _entitySprite = Utilities.GetIconSprite(ContainingEntity);
             _slotSprite = _resourceManager.GetSprite("slot");
         }
 

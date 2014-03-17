@@ -6,10 +6,15 @@
       <Component name="TransformComponent"></Component>
       <Component name="VelocityComponent"></Component>
       <Component name="DirectionComponent"></Component>
-      <Component name="NetworkMoverComponent"></Component>
+      <Component name="BasicMoverComponent"></Component>
       <Component name="SpriteComponent">
         <Parameters>
           <Parameter name="addsprite" type="string" value="fire_extinguisher" />
+        </Parameters>
+      </Component>
+      <Component name="IconComponent">
+        <Parameters>
+          <Parameter name="icon" type="string" value="fire_extinguisher" />
         </Parameters>
       </Component>
       <Component name="ClickableComponent"></Component>
@@ -29,10 +34,15 @@
       <Component name="TransformComponent"></Component>
       <Component name="VelocityComponent"></Component>
       <Component name="DirectionComponent"></Component>
-      <Component name="NetworkMoverComponent"></Component>
+      <Component name="BasicMoverComponent"></Component>
       <Component name="SpriteComponent">
         <Parameters>
           <Parameter name="addsprite" type="string" value="fire_alarm_off" />
+        </Parameters>
+      </Component>
+      <Component name="IconComponent">
+        <Parameters>
+          <Parameter name="icon" type="string" value="fire_alarm_off" />
         </Parameters>
       </Component>
       <Component name="ClickableComponent"></Component>
@@ -52,10 +62,15 @@
       <Component name="TransformComponent"></Component>
       <Component name="VelocityComponent"></Component>
       <Component name="DirectionComponent"></Component>
-      <Component name="NetworkMoverComponent"></Component>
+      <Component name="BasicMoverComponent"></Component>
       <Component name="SpriteComponent">
         <Parameters>
           <Parameter name="addsprite" type="string" value="med_cabinet" />
+        </Parameters>
+      </Component>
+      <Component name="IconComponent">
+        <Parameters>
+          <Parameter name="icon" type="string" value="med_cabinet" />
         </Parameters>
       </Component>
       <Component name="ClickableComponent"></Component>

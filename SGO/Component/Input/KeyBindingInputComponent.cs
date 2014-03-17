@@ -1,6 +1,7 @@
 ﻿using System.Collections.Generic;
 using GameObject;
 using Lidgren.Network;
+using SGO.Events;
 using SS13_Shared;
 using SS13_Shared.GO;
 
@@ -17,7 +18,7 @@ namespace SGO
             var keyState = (BoundKeyState) message.MessageParameters[1];
 
             Owner.SendMessage(this, ComponentMessageType.BoundKeyChange, keyFunction, keyState);
-
+            Owner.RaiseEvent(new BoundKeyChangeEventArgs{KeyFunction = keyFunction, KeyState = keyState, Actor = Owner});
             var boolState = keyState == BoundKeyState.Down;
 
             SetKeyState(keyFunction, boolState);

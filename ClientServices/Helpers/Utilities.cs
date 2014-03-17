@@ -1,9 +1,12 @@
 ﻿using System;
 using System.Drawing;
+using CGO;
+using ClientInterfaces.Resource;
 using ClientServices.Tiles;
 using GameObject;
 using GorgonLibrary;
 using GorgonLibrary.Graphics;
+using SS13.IoC;
 using SS13_Shared.GO;
 using Image = GorgonLibrary.Graphics.Image;
 
@@ -26,6 +29,18 @@ namespace ClientServices.Helpers
                 return sprite;
             }
             return null;
+        }
+
+        public static Sprite GetIconSprite(Entity entity)
+        {
+            if(entity.HasComponent(ComponentFamily.Icon))
+            {
+                var icon = entity.GetComponent<IconComponent>(ComponentFamily.Icon).Icon;
+                if (icon == null)
+                    return IoCManager.Resolve<IResourceManager>().GetNoSprite();
+                return icon;
+            }
+            return IoCManager.Resolve<IResourceManager>().GetNoSprite();
         }
 
         public static bool SpritePixelHit(Sprite toCheck, Vector2D clickPos)

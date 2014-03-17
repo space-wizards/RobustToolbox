@@ -373,17 +373,17 @@ namespace GameObject
 
         #region Component Events
         //Convenience thing.
-        public void SubscribeEvent<T>(ComponentEventHandler<ComponentEventArgs> evh, IComponentEventSubscriber s) where T : ComponentEventArgs
+        public void SubscribeEvent<T>(EntityEventHandler<EntityEventArgs> evh, IEntityEventSubscriber s) where T : EntityEventArgs
         {
             EntityManager.SubscribeEvent<T>(evh, s);
         }
 
-        public void UnsubscribeEvent<T>(IComponentEventSubscriber s) where T : ComponentEventArgs
+        public void UnsubscribeEvent<T>(IEntityEventSubscriber s) where T : EntityEventArgs
         {
             EntityManager.UnsubscribeEvent<T>(s);
         }
 
-        public void RaiseEvent(ComponentEventArgs toRaise)
+        public void RaiseEvent(EntityEventArgs toRaise)
         {
             EntityManager.RaiseEvent(this, toRaise);
         } 
@@ -489,6 +489,15 @@ namespace GameObject
                 Moved();
             }*/
             Name = state.StateData.Name;
+            var synchedComponentTypes = state.StateData.SynchedComponentTypes;
+            foreach(var t in synchedComponentTypes)
+            {
+                if(HasComponent(t.Item1) && GetComponent(t.Item1).GetType().Name != t.Item2)
+                    RemoveComponent(t.Item1);
+                
+                if(!HasComponent(t.Item1))
+                    AddComponent(t.Item1, EntityManager.ComponentFactory.GetComponent(t.Item2));
+            }
             foreach (ComponentState compState in state.ComponentStates)
             {
                 compState.ReceivedTime = state.ReceivedTime;
@@ -512,13 +521,18 @@ namespace GameObject
         {
             List<ComponentState> compStates = GetComponentStates();
 
-            //Reset entity state changed to false
+            List<Tuple<ComponentFamily, string>> synchedComponentTypes = _components
+                .Where(t => EntityManager.SynchedComponentTypes.Contains(t.Key))
+                .Select(
+                    t => new Tuple<ComponentFamily, string>(t.Key, t.Value.GetType().Name)
+                ).ToList();
 
             var es = new EntityState(
                 Uid,
                 compStates,
                 Template.Name,
-                Name);
+                Name,
+                synchedComponentTypes);
             return es;
         }
 

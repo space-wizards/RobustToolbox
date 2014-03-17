@@ -57,7 +57,7 @@ namespace ClientServices.Player
                                               GetComponent("KeyBindingInputComponent"));
             ControlledEntity.AddComponent(ComponentFamily.Mover,
                                           IoCManager.Resolve<IEntityManagerContainer>().EntityManager.ComponentFactory.
-                                              GetComponent("KeyBindingMoverComponent"));
+                                              GetComponent("PlayerInputMoverComponent"));
             ControlledEntity.AddComponent(ComponentFamily.Collider,
                                           IoCManager.Resolve<IEntityManagerContainer>().EntityManager.ComponentFactory.
                                               GetComponent("ColliderComponent"));

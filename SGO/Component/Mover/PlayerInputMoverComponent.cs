@@ -6,7 +6,7 @@ using SS13_Shared.GO.Component.Mover;
 
 namespace SGO
 {
-    //Moves the entity based on input from a Clientside KeyBindingMoverComponent.
+    //Moves the entity based on input from a Clientside PlayerInputMoverComponent.
     public class PlayerInputMoverComponent : Component
     {
         public PlayerInputMoverComponent()

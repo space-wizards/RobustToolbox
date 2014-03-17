@@ -6,10 +6,15 @@
       <Component name="TransformComponent"></Component>
       <Component name="VelocityComponent"></Component>
       <Component name="DirectionComponent"></Component>
-      <Component name="NetworkMoverComponent"></Component>
+      <Component name="BasicMoverComponent"></Component>
       <Component name="ItemSpriteComponent">
         <Parameters>
           <Parameter name="basename" type="string" value="bluebucket" />
+        </Parameters>
+      </Component>
+      <Component name="IconComponent">
+        <Parameters>
+          <Parameter name="icon" type="string" value="bluebucket" />
         </Parameters>
       </Component>
       <Component name="PhysicsComponent"></Component>
@@ -22,10 +27,15 @@
       <Component name="TransformComponent"></Component>
       <Component name="VelocityComponent"></Component>
       <Component name="DirectionComponent"></Component>
-      <Component name="NetworkMoverComponent"></Component>
+      <Component name="BasicMoverComponent"></Component>
       <Component name="ItemSpriteComponent">
         <Parameters>
           <Parameter name="basename" type="string" value="wetfloorsign" />
+        </Parameters>
+      </Component>
+      <Component name="IconComponent">
+        <Parameters>
+          <Parameter name="icon" type="string" value="wetfloorsign" />
         </Parameters>
       </Component>
       <Component name="PhysicsComponent"></Component>

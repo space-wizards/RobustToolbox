@@ -34,6 +34,11 @@ namespace GameObject
             return (IComponent) Activator.CreateInstance(componentType);
         }
 
+        public T GetComponent<T>() where T:IComponent
+        {
+            return (T) Activator.CreateInstance(typeof (T));
+        }
+
         /// <summary>
         /// Gets a new component instantiated of the specified type.
         /// </summary>
@@ -41,6 +46,10 @@ namespace GameObject
         /// <returns>A Component</returns>
         public IComponent GetComponent(string componentTypeName)
         {
+            if (componentTypeName == "KeyBindingInputMoverComponent")
+                componentTypeName = "PlayerInputMoverComponent";
+            if (componentTypeName == "NetworkMoverComponent")
+                componentTypeName = "BasicMoverComponent";
             if (string.IsNullOrWhiteSpace(componentTypeName))
                 return null;
             string fullName = _componentNamespace + "." + componentTypeName;

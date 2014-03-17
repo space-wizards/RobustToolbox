@@ -117,9 +117,11 @@
   <ItemGroup>
     <Compile Include="AdminPermissions.cs" />
     <Compile Include="BoundKeyEventArgs.cs" />
-    <Compile Include="ComponentEvents.cs" />
+    <Compile Include="EntityEvents.cs" />
+    <Compile Include="GO\Component\Item\ItemComponentState.cs" />
     <Compile Include="GO\Equipment\EquipmentState.cs" />
-    <Compile Include="GO\Hands\HandsState.cs" />
+    <Compile Include="GO\Events\InputEvents.cs" />
+    <Compile Include="GO\Component\Hands\HandsComponentState.cs" />
     <Compile Include="GO\Inventory\InventoryState.cs" />
     <Compile Include="InventoryLocEnum.cs" />
     <Compile Include="GameStateDelta.cs" />
@@ -206,7 +208,9 @@
       <DependentUpon>BitStream.cs</DependentUpon>
     </EmbeddedResource>
   </ItemGroup>
-  <ItemGroup />
+  <ItemGroup>
+    <Folder Include="GO\Hands\" />
+  </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
        Other similar extension points exist, see Microsoft.Common.targets.

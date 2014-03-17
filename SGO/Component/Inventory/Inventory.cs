@@ -133,7 +133,7 @@ namespace SGO
             {
                 Entity holder = null;
                 if (entity.HasComponent(ComponentFamily.Item))
-                    holder = ((BasicItemComponent) entity.GetComponent(ComponentFamily.Item)).currentHolder;
+                    holder = ((BasicItemComponent) entity.GetComponent(ComponentFamily.Item)).CurrentHolder;
                 if (holder == null && entity.HasComponent(ComponentFamily.Equippable))
                     holder = ((EquippableComponent) entity.GetComponent(ComponentFamily.Equippable)).currentWearer;
                 if (holder != null) holder.SendMessage(this, ComponentMessageType.DisassociateEntity, entity);

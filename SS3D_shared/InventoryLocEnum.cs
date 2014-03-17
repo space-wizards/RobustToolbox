@@ -6,6 +6,7 @@
         Inventory,
         Equipment,
         HandLeft,
-        HandRight
+        HandRight,
+        None
     }
 }

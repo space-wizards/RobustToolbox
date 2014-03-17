@@ -20,5 +20,6 @@ namespace ClientInterfaces.Resource
         object GetAnimatedSprite(string key);
         void LoadLocalResources();
         void LoadBaseResources();
+        Sprite GetNoSprite();
     }
 }

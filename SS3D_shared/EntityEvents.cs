@@ -5,23 +5,19 @@ using System.Text;
 
 namespace SS13_Shared
 {
-    public interface IComponentEventSubscriber
-    {}
+    public interface IEntityEventSubscriber
+    { }
 
     //public delegate void ComponentEventHandler(object sender, IComponentEventArgs ev);
-    public delegate void ComponentEventHandler<in T>(object sender, T ev) where T:ComponentEventArgs;
+    public delegate void EntityEventHandler<in T>(object sender, T ev) where T : EntityEventArgs;
 
-    public interface IComponentEventArgs
-    {
-    }
-
-    public class ComponentEventArgs:EventArgs, IComponentEventArgs
+    public class EntityEventArgs : EventArgs
     {
     }
 
     //MAKE SURE YOU SET UP YOUR SHIT LIKE THIS SO WE DONT END UP WITH A HUGE MESS.
     public delegate void TestCEventDelegate(TestCEvent ev);
-    public class TestCEvent : ComponentEventArgs
+    public class TestCEvent : EntityEventArgs
     {
         public string testStr = "thisisatest";
 
@@ -31,9 +27,10 @@ namespace SS13_Shared
         }
     }
 
-    public class ClickedOnEntityEventArgs : ComponentEventArgs
+    public class ClickedOnEntityEventArgs : EntityEventArgs
     {
         public int Clicker;
         public int Clicked;
     }
+
 }

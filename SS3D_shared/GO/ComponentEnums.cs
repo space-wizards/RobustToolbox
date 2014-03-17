@@ -39,7 +39,8 @@
         Velocity,
         Direction,
         SVars,
-        Particles
+        Particles,
+        Icon
     }
 
     public enum ItemComponentNetMessage

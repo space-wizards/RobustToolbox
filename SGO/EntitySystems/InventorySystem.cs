@@ -85,7 +85,10 @@ namespace SGO.EntitySystems
         {
             //Check to see if the item is actually in a hand
             var actorHands = args.Actor.GetComponent<HumanHandsComponent>(ComponentFamily.Hands);
+
+            //We can drop either a specific item from any inventory location or any item from a hand
             var item = args.Item;
+
             var holdingHand = InventoryLocation.None;
             if (item != null)
             {
@@ -93,7 +96,6 @@ namespace SGO.EntitySystems
                 //If not, do nothing
                 if (holdingHand != InventoryLocation.HandLeft && holdingHand != InventoryLocation.HandRight)
                     return;
-                //If they are indeed holding it, 
             }
             else
             {

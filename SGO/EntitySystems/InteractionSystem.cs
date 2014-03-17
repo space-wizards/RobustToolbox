@@ -59,78 +59,90 @@ namespace SGO.EntitySystems
                 if (obj.HasComponent(ComponentFamily.Item))
                 {
                     //It's something with hands using their hands on an item!
-                    return doHandsToItemInteraction(user, obj);
+                    return DoHandsToItemInteraction(user, obj);
                 }
                 if (obj.HasComponent(ComponentFamily.LargeObject))
                 {
                     //It's something with hands using their hands on a large object!
-                    return doHandsToLargeObjectInteraction(user, obj);
+                    return DoHandsToLargeObjectInteraction(user, obj);
                 }
                 if (obj.HasComponent(ComponentFamily.Actor))
                 {
                     //It's something with hands using their hands on an actor!
-                    return doHandsToActorInteraction(user, obj);
+                    return DoHandsToActorInteraction(user, obj);
                 }
             }
             return false;
         }
 
-        private bool doHandsToActorInteraction(Entity user, Entity obj)
+        private bool DoHandsToActorInteraction(Entity user, Entity obj)
         {
             var hands = user.GetComponent<HumanHandsComponent>(ComponentFamily.Hands);
             if (hands.IsEmpty(hands.CurrentHand))
             {
-                return doEmptyHandToActorInteraction(user, obj);
+                return DoEmptyHandToActorInteraction(user, obj);
             }
-            return doApplyItemToActor(user, hands.GetEntity(hands.CurrentHand), obj);
+            return DoApplyItemToActor(user, hands.GetEntity(hands.CurrentHand), obj);
         }
 
-        private bool doApplyItemToActor(Entity user, Entity entity, Entity obj)
+        private bool DoApplyItemToActor(Entity user, Entity entity, Entity obj)
+        {
+            return DoApplyItem(user, entity, obj, InteractsWith.Actor);
+        }
+
+        private bool DoEmptyHandToActorInteraction(Entity user, Entity obj)
         {
             throw new NotImplementedException();
         }
 
-        private bool doEmptyHandToActorInteraction(Entity user, Entity obj)
-        {
-            throw new NotImplementedException();
-        }
-
-        private bool doHandsToLargeObjectInteraction(Entity user, Entity obj)
+        private bool DoHandsToLargeObjectInteraction(Entity user, Entity obj)
         {
             var hands = user.GetComponent<HumanHandsComponent>(ComponentFamily.Hands);
             if (hands.IsEmpty(hands.CurrentHand))
             {
-                return doEmptyHandToLargeObjectInteraction(user, obj);
+                return DoEmptyHandToLargeObjectInteraction(user, obj);
             }
-            return doApplyItemToLargeObject(user, hands.GetEntity(hands.CurrentHand), obj);
+            return DoApplyItemToLargeObject(user, hands.GetEntity(hands.CurrentHand), obj);
         }
 
-        private bool doApplyItemToLargeObject(Entity user, Entity entity, Entity obj)
+        private bool DoApplyItemToLargeObject(Entity user, Entity entity, Entity obj)
+        {
+            return DoApplyItem(user, entity, obj, InteractsWith.LargeObject);
+        }
+
+        private bool DoEmptyHandToLargeObjectInteraction(Entity user, Entity obj)
         {
             throw new NotImplementedException();
         }
 
-        private bool doEmptyHandToLargeObjectInteraction(Entity user, Entity obj)
-        {
-            throw new NotImplementedException();
-        }
-
-        private bool doHandsToItemInteraction(Entity user, Entity obj)
+        private bool DoHandsToItemInteraction(Entity user, Entity obj)
         {
             var hands = user.GetComponent<HumanHandsComponent>(ComponentFamily.Hands);
             if (hands.IsEmpty(hands.CurrentHand))
             {
-                return doEmptyHandToItemInteraction(user, obj);
+                return DoEmptyHandToItemInteraction(user, obj);
             }
-            return doApplyItemToItem(user, hands.GetEntity(hands.CurrentHand), obj);
+            return DoApplyItemToItem(user, hands.GetEntity(hands.CurrentHand), obj);
         }
 
-        private bool doApplyItemToItem(Entity user, Entity entity, Entity obj)
+        private bool DoApplyItemToItem(Entity user, Entity entity, Entity obj)
         {
-            throw new NotImplementedException();
+            return DoApplyItem(user, entity, obj, InteractsWith.Item);
         }
 
-        private bool doEmptyHandToItemInteraction(Entity user, Entity obj)
+        private bool DoApplyItem(Entity user, Entity item, Entity target, InteractsWith interaction)
+        {
+            if (item == target) //Can't apply item to itself!
+                return false;
+            var itemComponent = item.GetComponent<BasicItemComponent>(ComponentFamily.Item);
+            if (itemComponent != null)
+            {
+                //TODO move this logic somewhere that makes more sense than in the component
+                itemComponent.ApplyTo(target, interaction, user);
+            }
+            return true;
+        } 
+        private bool DoEmptyHandToItemInteraction(Entity user, Entity obj)
         {
             var itemComponent = obj.GetComponent<BasicItemComponent>(ComponentFamily.Item);
             if(itemComponent.CanBePickedUp)

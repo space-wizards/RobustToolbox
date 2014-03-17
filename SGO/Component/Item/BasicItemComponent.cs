@@ -104,7 +104,7 @@ namespace SGO
         /// </summary>
         /// <param name="targetEntity">Target entity</param>
         /// <param name="targetType">Type of entity, Item, LargeObject, or Actor</param>
-        protected virtual void ApplyTo(Entity targetEntity, InteractsWith targetType, Entity sourceActor)
+        public virtual void ApplyTo(Entity targetEntity, InteractsWith targetType, Entity sourceActor)
         {
             //can be overridden in children to sort of bypass the capability system if needed.
             ApplyCapabilities(targetEntity, targetType, sourceActor);

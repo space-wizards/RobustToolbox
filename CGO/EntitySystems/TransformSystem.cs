@@ -5,6 +5,7 @@ using System.Linq;
 using System.Text;
 using ClientInterfaces.Configuration;
 using ClientInterfaces.GameTimer;
+using ClientInterfaces.Player;
 using GameObject;
 using GameObject.System;
 using GorgonLibrary;
@@ -34,7 +35,8 @@ namespace CGO.EntitySystems
                 //Get transform component
                 var transform = entity.GetComponent<TransformComponent>(ComponentFamily.Transform);
                 //Check if the entity has a keyboard input mover component
-                bool haskbMover = entity.GetComponent<PlayerInputMoverComponent>(ComponentFamily.Mover) != null;
+                bool isLocallyControlled = entity.GetComponent<PlayerInputMoverComponent>(ComponentFamily.Mover) != null
+                    && IoCManager.Resolve<IPlayerManager>().ControlledEntity == entity;
 
                 //Pretend that the current point in time is actually 100 or more milliseconds in the past depending on the interp constant
                 var currentTime = IoCManager.Resolve<IGameTimer>().CurrentTime - interpolation;
@@ -67,14 +69,14 @@ namespace CGO.EntitySystems
                     var lerp = (currentTime - t1)/(t2 - t1);
                     //lerp is a constant 0..1 value that says what position along the line from p1 to p2 we're at
                     newPosition = Interpolate(p1, p2, lerp, false);
-                    if(haskbMover)
+                    if(isLocallyControlled)
                     {
                         newPosition = EaseExponential(currentTime - t1, transform.Position, newPosition, t2 - t1);
                     }
                 }
 
                 //Handle player movement
-                if (haskbMover)
+                if (isLocallyControlled)
                 {
                     //var playerPosition = transform.Position + 
                     var velocityComponent = entity.GetComponent<VelocityComponent>(ComponentFamily.Velocity);
@@ -95,7 +97,7 @@ namespace CGO.EntitySystems
                     //(!haskbMover || (newPosition - transform.Position).Length > humanMoveLimit))
                 {
                     var doTranslate = false;
-                    if (!haskbMover)
+                    if (!isLocallyControlled)
                         doTranslate = true;
                     else
                     {
@@ -122,7 +124,7 @@ namespace CGO.EntitySystems
                     if (doTranslate)
                     {
                         transform.TranslateTo(newPosition);
-                        if (haskbMover)
+                        if (isLocallyControlled)
                             entity.GetComponent<PlayerInputMoverComponent>(ComponentFamily.Mover).SendPositionUpdate(newPosition);
 
                     }

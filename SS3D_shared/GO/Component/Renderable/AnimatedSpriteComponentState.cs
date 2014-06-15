@@ -10,8 +10,8 @@ namespace SS13_Shared.GO.Component.Renderable
         public string CurrentAnimation;
         public bool Loop;
 
-        public AnimatedSpriteComponentState(bool visible, DrawDepth drawDepth, string name, string currentAnimation, bool loop)
-            : base(drawDepth)
+        public AnimatedSpriteComponentState(bool visible, DrawDepth drawDepth, string name, string currentAnimation, bool loop, int? masterUid)
+            : base(drawDepth, masterUid)
         {
             Visible = visible;
             CurrentAnimation = currentAnimation;

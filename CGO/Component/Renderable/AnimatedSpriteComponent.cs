@@ -294,6 +294,11 @@ namespace CGO
 
         public void SetMaster(Entity m)
         {
+            if (m == null)
+            {
+                UnsetMaster();
+                return;
+            }
             if (!m.HasComponent(ComponentFamily.Renderable))
                 return;
             var mastercompo = m.GetComponent<IRenderableComponent>(ComponentFamily.Renderable);
@@ -305,6 +310,26 @@ namespace CGO
             // “His pointer finger circled my puckered love cave. “Are you ready for this?” he mewled, smirking at me like a mother hamster about to eat her three-legged young.”
             mastercompo.AddSlave(this);
             master = mastercompo;
+        }
+
+        public void SetMaster(int? mUid)
+        {
+            if (master != null)
+            {
+                if (mUid == null)
+                {
+                    UnsetMaster();
+                } 
+                else if (mUid != master.Owner.Uid)
+                {
+                    UnsetMaster();
+                    SetMaster(Owner.EntityManager.GetEntity((int)mUid));
+                }
+            } 
+            else if (mUid != null)
+            {
+                SetMaster(Owner.EntityManager.GetEntity((int)mUid));
+            }
         }
 
         public void UnsetMaster()
@@ -332,8 +357,14 @@ namespace CGO
             visible = state.Visible;
             if(sprite.Name != state.Name)
                 SetSprite(state.Name);
-            if(sprite.CurrentAnimationStateKey != state.CurrentAnimation)
-                sprite.SetAnimationState(state.CurrentAnimation);
+            if (sprite.CurrentAnimationStateKey != state.CurrentAnimation)
+            {
+                if(state.CurrentAnimation == null)
+                    sprite.SetAnimationState("idle");
+                else 
+                    sprite.SetAnimationState(state.CurrentAnimation);
+            }
+            SetMaster((int?)state.MasterUid);
 
             sprite.SetLoop(state.Loop);
         }

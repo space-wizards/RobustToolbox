@@ -6,6 +6,8 @@ using Lidgren.Network;
 using SGO.Events;
 using SS13_Shared;
 using SS13_Shared.GO;
+using ServerInterfaces.GOC;
+using EntityQuery = GameObject.EntityQuery;
 
 namespace SGO.EntitySystems
 {
@@ -171,6 +173,11 @@ namespace SGO.EntitySystems
                     {
                         toRemoveSlaveMover.Detach();
                     }
+
+                    if (toRemove.HasComponent(ComponentFamily.Renderable))
+                    {
+                        toRemove.GetComponent<IRenderableComponent>(ComponentFamily.Renderable).UnsetMaster();
+                    }
                     toRemove.RemoveComponent(ComponentFamily.Mover);
                     toRemove.AddComponent(ComponentFamily.Mover, EntityManager.ComponentFactory.GetComponent<BasicMoverComponent>());
                     toRemove.GetComponent<BasicItemComponent>(ComponentFamily.Item).HandleDropped();
@@ -229,6 +236,10 @@ namespace SGO.EntitySystems
                     toAdd.RemoveComponent(ComponentFamily.Mover);
                     toAdd.AddComponent(ComponentFamily.Mover, EntityManager.ComponentFactory.GetComponent<SlaveMoverComponent>());
                     toAdd.GetComponent<SlaveMoverComponent>(ComponentFamily.Mover).Attach(inventory);
+                    if (toAdd.HasComponent(ComponentFamily.Renderable) && inventory.HasComponent(ComponentFamily.Renderable))
+                    {
+                        toAdd.GetComponent<IRenderableComponent>(ComponentFamily.Renderable).SetMaster(inventory);
+                    }
                     toAdd.GetComponent<BasicItemComponent>(ComponentFamily.Item).HandlePickedUp(inventory, location);
                     return true;
                 }

@@ -156,8 +156,12 @@ namespace SS13.Graphics
                     return;
                 _currentAnimationState.Reset();
             }
-            _currentAnimationState = AnimationStates[state];
-            _currentAnimationState.Enabled = true;
+            
+            if (state != null)
+            {
+                _currentAnimationState = AnimationStates[state];
+                _currentAnimationState.Enabled = true;
+            }
         }
 
         private void SetCurrentSprite()

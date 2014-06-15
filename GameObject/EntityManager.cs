@@ -364,6 +364,7 @@ namespace GameObject
             var entityKeys = new List<int>();
             foreach (EntityState es in entityStates)
             {
+                //Todo defer component state result processing until all entities are loaded and initialized...
                 es.ReceivedTime = serverTime;
                 entityKeys.Add(es.StateData.Uid);
                 //Known entities

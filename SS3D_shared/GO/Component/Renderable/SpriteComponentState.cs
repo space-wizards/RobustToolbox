@@ -10,7 +10,7 @@ namespace SS13_Shared.GO.Component.Renderable
         public bool Visible;
 
         public SpriteComponentState(bool visible, DrawDepth drawDepth, string spriteKey, string baseName)
-            : base(drawDepth)
+            : base(drawDepth, null)
         {
             Visible = visible;
             SpriteKey = spriteKey;

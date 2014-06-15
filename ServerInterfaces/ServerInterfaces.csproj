@@ -76,6 +76,7 @@
     <Compile Include="GameObject\IActorComponent.cs" />
     <Compile Include="GameObject\IDirectionComponent.cs" />
     <Compile Include="GameObject\IParticleSystemComponent.cs" />
+    <Compile Include="GameObject\IRenderableComponent.cs" />
     <Compile Include="GameObject\ITransformComponent.cs" />
     <Compile Include="GameObject\IWallMountedComponent.cs" />
     <Compile Include="ServerConsole\IConsoleManager.cs" />

@@ -5,7 +5,7 @@ using SS13_Shared.GO;
 
 namespace ClientInterfaces.GOC
 {
-    public interface IRenderableComponent
+    public interface IRenderableComponent : IComponent
     {
         DrawDepth DrawDepth { get; set; }
         float Bottom { get; }

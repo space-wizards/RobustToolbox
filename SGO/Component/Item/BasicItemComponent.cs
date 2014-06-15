@@ -127,14 +127,6 @@ namespace SGO
                                                       ItemComponentNetMessage.PickedUp, entity.Uid, holdingHand);*/
         }
 
-        /*public override void HandleInstantiationMessage(NetConnection netConnection)
-        {
-            if (CurrentHolder != null)
-                Owner.SendDirectedComponentNetworkMessage(this, NetDeliveryMethod.ReliableOrdered, netConnection,
-                                                          ItemComponentNetMessage.PickedUp, CurrentHolder.Uid,
-                                                          HoldingHand);
-        }*/
-
         /// <summary>
         /// Entry point for interactions between an item and this item
         /// Basically, the actor uses an item on this item

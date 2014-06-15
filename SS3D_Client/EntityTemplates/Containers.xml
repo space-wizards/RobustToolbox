@@ -14,7 +14,7 @@
       </Component>
       <Component name="IconComponent">
         <Parameters>
-          <Parameter name="icon" type="string" value="player_toolbox" />
+          <Parameter name="icon" type="string" value="toolbox_r" />
         </Parameters>
       </Component>
       <Component name="PhysicsComponent"></Component>

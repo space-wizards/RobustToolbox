@@ -21,25 +21,6 @@ namespace CGO
             get { return typeof (ItemComponentState); }
         }
 
-        public override void HandleNetworkMessage(IncomingEntityComponentMessage message, NetConnection sender)
-        {
-            if (message.ComponentFamily != Family)
-                return;
-            switch ((ItemComponentNetMessage) message.MessageParameters[0])
-            {
-                case ItemComponentNetMessage.PickedUp: //I've been picked up -- says the server's item component
-                    Entity e = Owner.EntityManager.GetEntity((int) message.MessageParameters[1]);
-                    var h = (Hand) message.MessageParameters[2];
-                    Owner.SendMessage(this, ComponentMessageType.PickedUp, h);
-                    break;
-                case ItemComponentNetMessage.Dropped: //I've been dropped -- says the server's item component
-                    Owner.AddComponent(ComponentFamily.Mover,
-                                       Owner.EntityManager.ComponentFactory.GetComponent("BasicMoverComponent"));
-                    Owner.SendMessage(this, ComponentMessageType.Dropped);
-                    break;
-            }
-        }
-
         public override void HandleComponentState(dynamic state)
         {
             SetNewState(state);

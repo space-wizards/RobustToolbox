@@ -1,0 +1,6 @@
+bin
+obj
+Media/textures/Animations/*.*
+_ReSharper*
+Media/ResourcePack.zip
+SS13.suo

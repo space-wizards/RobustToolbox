@@ -268,7 +268,7 @@ namespace ClientServices.UserInterface.Components
                     case MouseButtons.Left:
                         if (handL.Contains(new Point((int) e.Position.X, (int) e.Position.Y)))
                         {
-                            if (hands.HandSlots.Keys.Contains(Hand.Left))
+                            if (hands.HandSlots.Keys.Contains(Hand.Left) && hands.HandSlots[Hand.Left] != null)
                             {
                                 Entity entityL = hands.HandSlots[Hand.Left];
                                 _userInterfaceManager.DragInfo.StartDrag(entityL);
@@ -276,7 +276,7 @@ namespace ClientServices.UserInterface.Components
                         }
                         if (handR.Contains(new Point((int) e.Position.X, (int) e.Position.Y)))
                         {
-                            if (hands.HandSlots.Keys.Contains(Hand.Right))
+                            if (hands.HandSlots.Keys.Contains(Hand.Right) && hands.HandSlots[Hand.Right] != null)
                             {
                                 Entity entityR = hands.HandSlots[Hand.Right];
                                 _userInterfaceManager.DragInfo.StartDrag(entityR);

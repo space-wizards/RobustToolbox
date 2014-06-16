@@ -1,12 +1,16 @@
-﻿using GameObject;
+﻿using System.Collections.Generic;
+using GameObject;
 using Lidgren.Network;
 using SS13_Shared.GO;
 using SS13_Shared.GO.Component.Renderable;
+using ServerInterfaces.GOC;
 
 namespace SGO
 {
-    public class SpriteComponent : Component
+    public class SpriteComponent : Component, IRenderableComponent
     {
+        protected IRenderableComponent master;
+        protected List<IRenderableComponent> slaves;
         private string _currentBaseName;
         private string _currentSpriteKey;
         private DrawDepth _drawDepth = DrawDepth.FloorTiles;
@@ -15,6 +19,7 @@ namespace SGO
         public SpriteComponent()
         {
             Family = ComponentFamily.Renderable;
+            slaves = new List<IRenderableComponent>();
         }
 
         public DrawDepth drawDepth
@@ -91,6 +96,47 @@ namespace SGO
         public override ComponentState GetComponentState()
         {
             return new SpriteComponentState(Visible, drawDepth, _currentSpriteKey, _currentBaseName);
+        }
+
+
+
+        public bool IsSlaved()
+        {
+            return master != null;
+        }
+
+        public void SetMaster(Entity m)
+        {
+            if (!m.HasComponent(ComponentFamily.Renderable))
+                return;
+            var mastercompo = m.GetComponent<IRenderableComponent>(ComponentFamily.Renderable);
+            //If there's no sprite component, then FUCK IT
+            if (mastercompo == null)
+                return;
+
+            // lets get gay together and do some shit like in that stupid book 50 shades of gay
+            // “His pointer finger circled my puckered love cave. “Are you ready for this?” he mewled, smirking at me like a mother hamster about to eat her three-legged young.”
+            mastercompo.AddSlave(this);
+            master = mastercompo;
+        }
+
+        public void UnsetMaster()
+        {
+            if (master == null)
+                return;
+            master.RemoveSlave(this);
+            master = null;
+        }
+
+        public void AddSlave(IRenderableComponent slavecompo)
+        {
+            slaves.Add(slavecompo);
+        }
+
+        public void RemoveSlave(IRenderableComponent slavecompo)
+        {
+            if (slaves.Contains(slavecompo))
+                slaves.Remove(slavecompo);
         }
     }
 }

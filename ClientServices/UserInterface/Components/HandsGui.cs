@@ -241,13 +241,13 @@ namespace ClientServices.UserInterface.Components
                 else
                 {
                     if (handL.Contains(new Point((int) e.Position.X, (int) e.Position.Y)) &&
-                        hands.HandSlots.ContainsKey(Hand.Left))
+                        hands.HandSlots.ContainsKey(Hand.Left) && hands.HandSlots[Hand.Right] != null)
                     {
                         hands.HandSlots[Hand.Left].SendMessage(this, ComponentMessageType.ClickedInHand,
                                                                _playerManager.ControlledEntity.Uid);
                     }
                     else if (handR.Contains(new Point((int) e.Position.X, (int) e.Position.Y)) &&
-                             hands.HandSlots.ContainsKey(Hand.Right))
+                             hands.HandSlots.ContainsKey(Hand.Right) && hands.HandSlots[Hand.Right] != null)
                     {
                         hands.HandSlots[Hand.Right].SendMessage(this, ComponentMessageType.ClickedInHand,
                                                                 _playerManager.ControlledEntity.Uid);

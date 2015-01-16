@@ -3,6 +3,7 @@ using GameObject;
 using Lidgren.Network;
 using SS13_Shared;
 using SS13_Shared.GO;
+using SS13_Shared.GO.Component.Equippable;
 
 namespace SGO
 {
@@ -70,6 +71,11 @@ namespace SGO
                     wearloc = (EquipmentSlot) Enum.Parse(typeof (EquipmentSlot), parameter.GetValue<string>());
                     break;
             }
+        }
+
+        public override ComponentState GetComponentState()
+        {
+            return new EquippableComponentState();
         }
     }
 }

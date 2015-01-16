@@ -1,8 +1,11 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
+using System.Linq;
 using GameObject;
 using Lidgren.Network;
 using SS13_Shared;
 using SS13_Shared.GO;
+using SS13_Shared.GO.Component.Equipment;
 
 namespace CGO
 {
@@ -16,18 +19,11 @@ namespace CGO
             Family = ComponentFamily.Equipment;
         }
 
-        public override void HandleNetworkMessage(IncomingEntityComponentMessage message, NetConnection sender)
+        public override Type StateType
         {
-            switch ((EquipmentComponentNetMessage) message.MessageParameters[0])
-            {
-                case EquipmentComponentNetMessage.ItemEquipped:
-                    EquipItem((EquipmentSlot) message.MessageParameters[1], (int) message.MessageParameters[2]);
-                    break;
-                case EquipmentComponentNetMessage.ItemUnEquipped:
-                    UnEquipItem((EquipmentSlot) message.MessageParameters[1], (int) message.MessageParameters[2]);
-                    break;
-            }
+            get { return typeof(EquipmentComponentState); }
         }
+
 
         public override ComponentReplyMessage RecieveMessage(object sender, ComponentMessageType type,
                                                              params object[] list)
@@ -103,14 +99,33 @@ namespace CGO
             if (!IsEmpty(part))
                 // Uh oh we are confused about something! But it's better to just do what the server says
             {
-                UnEquipItem(part, EquippedEntities[part].Uid);
+                UnEquipItem(part);
             }
             EquippedEntities.Add(part, Owner.EntityManager.GetEntity(uid));
         }
+        
+        private void EquipItem(EquipmentSlot part, Entity entity)
+        {
+            if (!IsEmpty(part))
+            {
+                UnEquipItem(part);
+            }
+            if (IsEquipped(entity))
+            {
+                UnEquipItem(entity);
+            }
+            EquippedEntities.Add(part, entity);
+        }
 
-        private void UnEquipItem(EquipmentSlot part, int uid)
+        private void UnEquipItem(EquipmentSlot part)
         {
             EquippedEntities.Remove(part);
+        }
+
+        public void UnEquipItem(Entity entity)
+        {
+            if (EquippedEntities.ContainsValue(entity))
+                EquippedEntities.Remove(EquippedEntities.Where(x => x.Value == entity).Select(x => x.Key).First());
         }
 
         public bool IsEmpty(EquipmentSlot part)
@@ -118,6 +133,48 @@ namespace CGO
             if (EquippedEntities.ContainsKey(part))
                 return false;
             return true;
+        }
+
+        public bool IsEquipped(Entity entity, EquipmentSlot slot)
+        {
+            return EquippedEntities.ContainsKey(slot) && EquippedEntities[slot] == entity;
+        }
+
+        public bool IsEquipped(Entity entity)
+        {
+            return EquippedEntities.ContainsValue(entity);
+        }
+
+        public override void HandleComponentState(dynamic state)
+        {
+            foreach (KeyValuePair<EquipmentSlot, int> curr in state.EquippedEntities)
+            {
+                Entity retEnt = Owner.EntityManager.GetEntity(curr.Value);
+                if(retEnt == null && !IsEmpty(curr.Key))
+                {
+                    UnEquipItem(curr.Key);
+                }
+                else if (retEnt != null)
+                {
+                    if (!IsEquipped(retEnt, curr.Key))
+                    {
+                        if (IsEquipped(retEnt))
+                        {
+                            UnEquipItem(retEnt);
+                        }
+                        EquipItem(curr.Key, retEnt.Uid);
+                    }
+                }
+            }
+
+            var removed = EquippedEntities.Where(x => !state.EquippedEntities.ContainsKey(x.Key));
+            foreach(KeyValuePair<EquipmentSlot, Entity> rem in removed)
+            {
+                UnEquipItem(rem.Key);
+            }
+
+            //Find differences and raise event?
+            ActiveSlots = state.ActiveSlots;
         }
     }
 }

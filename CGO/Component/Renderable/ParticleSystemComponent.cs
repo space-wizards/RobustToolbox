@@ -146,8 +146,6 @@ namespace CGO
             if (mastercompo == null)
                 return;
 
-            // lets get gay together and do some shit like in that stupid book 50 shades of gay
-            // “His pointer finger circled my puckered love cave. “Are you ready for this?” he mewled, smirking at me like a mother hamster about to eat her three-legged young.”
             mastercompo.AddSlave(this);
             master = mastercompo;
         }

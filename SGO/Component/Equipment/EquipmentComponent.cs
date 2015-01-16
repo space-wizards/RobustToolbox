@@ -5,7 +5,7 @@ using Lidgren.Network;
 using SGO.Item.ItemCapability;
 using SS13_Shared;
 using SS13_Shared.GO;
-using SS13_Shared.GO.Equipment;
+using SS13_Shared.GO.Component.Equipment;
 
 namespace SGO
 {
@@ -111,8 +111,8 @@ namespace SGO
                 {
                     Entity e = equippedEntities[p];
                     e.SendMessage(this, ComponentMessageType.ItemEquipped, Owner);
-                    Owner.SendDirectedComponentNetworkMessage(this, NetDeliveryMethod.ReliableOrdered, netConnection,
-                                                              EquipmentComponentNetMessage.ItemEquipped, p, e.Uid);
+                    //Owner.SendDirectedComponentNetworkMessage(this, NetDeliveryMethod.ReliableOrdered, netConnection,
+                    //                                          EquipmentComponentNetMessage.ItemEquipped, p, e.Uid);
                 }
             }
         }
@@ -129,8 +129,8 @@ namespace SGO
 
                 equippedEntities.Add(part, e);
                 e.SendMessage(this, ComponentMessageType.ItemEquipped, Owner);
-                Owner.SendDirectedComponentNetworkMessage(this, NetDeliveryMethod.ReliableOrdered, null,
-                                                          EquipmentComponentNetMessage.ItemEquipped, part, e.Uid);
+                //Owner.SendDirectedComponentNetworkMessage(this, NetDeliveryMethod.ReliableOrdered, null,
+                //                                          EquipmentComponentNetMessage.ItemEquipped, part, e.Uid);
             }
         }
 
@@ -176,9 +176,9 @@ namespace SGO
             if (!IsEmpty(part)) //If the part is not empty
             {
                 equippedEntities[part].SendMessage(this, ComponentMessageType.ItemUnEquipped);
-                Owner.SendDirectedComponentNetworkMessage(this, NetDeliveryMethod.ReliableOrdered, null,
-                                                          EquipmentComponentNetMessage.ItemUnEquipped, part,
-                                                          equippedEntities[part].Uid);
+                //Owner.SendDirectedComponentNetworkMessage(this, NetDeliveryMethod.ReliableOrdered, null,
+                //                                          EquipmentComponentNetMessage.ItemUnEquipped, part,
+                //                                          equippedEntities[part].Uid);
                 equippedEntities.Remove(part);
             }
         }
@@ -347,7 +347,7 @@ namespace SGO
         public override ComponentState GetComponentState()
         {
             Dictionary<EquipmentSlot, int> equipped = equippedEntities.Select(x => new KeyValuePair<EquipmentSlot, int>(x.Key, x.Value.Uid)).ToDictionary(key => key.Key, va => va.Value);
-            return new EquipmentState(equipped, activeSlots);
+            return new EquipmentComponentState(equipped, activeSlots);
         }
     }
 }

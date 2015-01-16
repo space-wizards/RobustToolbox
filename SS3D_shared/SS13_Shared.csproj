@@ -118,8 +118,9 @@
     <Compile Include="AdminPermissions.cs" />
     <Compile Include="BoundKeyEventArgs.cs" />
     <Compile Include="EntityEvents.cs" />
+    <Compile Include="GO\Component\Equippable\EquippableComponentState.cs" />
     <Compile Include="GO\Component\Item\ItemComponentState.cs" />
-    <Compile Include="GO\Equipment\EquipmentState.cs" />
+    <Compile Include="GO\Component\Equipment\EquipmentComponentState.cs" />
     <Compile Include="GO\Events\InputEvents.cs" />
     <Compile Include="GO\Component\Hands\HandsComponentState.cs" />
     <Compile Include="GO\Inventory\InventoryState.cs" />

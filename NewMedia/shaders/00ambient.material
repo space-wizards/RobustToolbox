@@ -1,0 +1,23 @@
+vertex_program ambient_vs cg
+{
+    source ambient.cg
+    profiles vs_1_1 arbvp1
+    entry_point ambient_vs
+
+    default_params
+    {
+        param_named_auto ambient ambient_light_colour
+        param_named_auto wvp worldviewproj_matrix
+    }
+}
+
+fragment_program ambient_ps cg
+{
+    source ambient.cg
+    profiles ps_2_0 arbfp1
+    entry_point ambient_ps
+
+    default_params
+    {
+    }
+}

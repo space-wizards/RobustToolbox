@@ -109,9 +109,7 @@
     <Compile Include="Component\Mover\SlaveMoverComponent.cs" />
     <Compile Include="Component\Physics\PhysicsComponent.cs" />
     <Compile Include="Component\PlayerActionComp\PlayerActionCompC.cs" />
-    <Compile Include="Component\Renderable\AnimatedItemSpriteComponent.cs" />
     <Compile Include="Component\Renderable\AnimatedSpriteComponent.cs" />
-    <Compile Include="Component\Renderable\AnimatedWearableSpriteComponent.cs" />
     <Compile Include="Component\Renderable\ParticleSystem.cs" />
     <Compile Include="Component\Renderable\ParticleSystemComponent.cs" />
     <Compile Include="Component\Renderable\Speechbubble.cs" />

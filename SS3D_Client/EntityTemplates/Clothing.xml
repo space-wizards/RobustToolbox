@@ -7,9 +7,9 @@
       <Component name="VelocityComponent"></Component>
       <Component name="DirectionComponent"></Component>
       <Component name="BasicMoverComponent"></Component>
-      <Component name="WearableSpriteComponent">
+      <Component name="AnimatedSpriteComponent">
         <Parameters>
-          <Parameter name="basename" type="string" value="shoes" />
+          <Parameter name="sprite" type="string" value="player_toolbox" />
         </Parameters>
       </Component>
       <Component name="IconComponent">
@@ -29,9 +29,9 @@
       <Component name="VelocityComponent"></Component>
       <Component name="DirectionComponent"></Component>
       <Component name="BasicMoverComponent"></Component>
-      <Component name="WearableSpriteComponent">
+      <Component name="AnimatedSpriteComponent">
         <Parameters>
-          <Parameter name="basename" type="string" value="helmet" />
+          <Parameter name="sprite" type="string" value="player_toolbox" />
         </Parameters>
       </Component>
       <Component name="IconComponent">
@@ -96,9 +96,9 @@
       <Component name="VelocityComponent"></Component>
       <Component name="DirectionComponent"></Component>
       <Component name="BasicMoverComponent"></Component>
-      <Component name="WearableSpriteComponent">
+      <Component name="AnimatedSpriteComponent">
         <Parameters>
-          <Parameter name="basename" type="string" value="janitorsuit" />
+          <Parameter name="sprite" type="string" value="player_jumpsuit_gray" />
         </Parameters>
       </Component>
       <Component name="IconComponent">
@@ -118,9 +118,9 @@
       <Component name="VelocityComponent"></Component>
       <Component name="DirectionComponent"></Component>
       <Component name="BasicMoverComponent"></Component>
-      <Component name="WearableSpriteComponent">
+      <Component name="AnimatedSpriteComponent">
         <Parameters>
-          <Parameter name="basename" type="string" value="medicsuit" />
+          <Parameter name="sprite" type="string" value="player_jumpsuit_gray" />
         </Parameters>
       </Component>
       <Component name="IconComponent">
@@ -140,9 +140,9 @@
       <Component name="VelocityComponent"></Component>
       <Component name="DirectionComponent"></Component>
       <Component name="BasicMoverComponent"></Component>
-      <Component name="WearableSpriteComponent">
+      <Component name="AnimatedSpriteComponent">
         <Parameters>
-          <Parameter name="basename" type="string" value="biosuit" />
+          <Parameter name="sprite" type="string" value="player_jumpsuit_gray" />
         </Parameters>
       </Component>
       <Component name="IconComponent">
@@ -163,9 +163,9 @@
       <Component name="VelocityComponent"></Component>
       <Component name="DirectionComponent"></Component>
       <Component name="BasicMoverComponent"></Component>
-      <Component name="WearableSpriteComponent">
+      <Component name="AnimatedSpriteComponent">
         <Parameters>
-          <Parameter name="basename" type="string" value="gloves_surgical" />
+          <Parameter name="sprite" type="string" value="player_toolbox" />
         </Parameters>
       </Component>
       <Component name="IconComponent">
@@ -185,9 +185,9 @@
       <Component name="VelocityComponent"></Component>
       <Component name="DirectionComponent"></Component>
       <Component name="BasicMoverComponent"></Component>
-      <Component name="WearableSpriteComponent">
+      <Component name="AnimatedSpriteComponent">
         <Parameters>
-          <Parameter name="basename" type="string" value="medshoes" />
+          <Parameter name="sprite" type="string" value="player_toolbox" />
         </Parameters>
       </Component>
       <Component name="IconComponent">
@@ -207,9 +207,9 @@
       <Component name="VelocityComponent"></Component>
       <Component name="DirectionComponent"></Component>
       <Component name="BasicMoverComponent"></Component>
-      <Component name="WearableSpriteComponent">
+      <Component name="AnimatedSpriteComponent">
         <Parameters>
-          <Parameter name="basename" type="string" value="surgicalmask" />
+          <Parameter name="sprite" type="string" value="player_toolbox" />
         </Parameters>
       </Component>
       <Component name="IconComponent">
@@ -229,9 +229,9 @@
       <Component name="VelocityComponent"></Component>
       <Component name="DirectionComponent"></Component>
       <Component name="BasicMoverComponent"></Component>
-      <Component name="WearableSpriteComponent">
+      <Component name="AnimatedSpriteComponent">
         <Parameters>
-          <Parameter name="basename" type="string" value="surgicalgown" />
+          <Parameter name="sprite" type="string" value="player_toolbox" />
         </Parameters>
       </Component>
       <Component name="IconComponent">
@@ -251,9 +251,9 @@
       <Component name="VelocityComponent"></Component>
       <Component name="DirectionComponent"></Component>
       <Component name="BasicMoverComponent"></Component>
-      <Component name="WearableSpriteComponent">
+      <Component name="AnimatedSpriteComponent">
         <Parameters>
-          <Parameter name="basename" type="string" value="armour" />
+          <Parameter name="sprite" type="string" value="player_toolbox" />
         </Parameters>
       </Component>
       <Component name="IconComponent">
@@ -274,9 +274,9 @@
       <Component name="VelocityComponent"></Component>
       <Component name="DirectionComponent"></Component>
       <Component name="BasicMoverComponent"></Component>
-      <Component name="WearableSpriteComponent">
+      <Component name="AnimatedSpriteComponent">
         <Parameters>
-          <Parameter name="basename" type="string" value="bluegloves" />
+          <Parameter name="sprite" type="string" value="player_toolbox" />
         </Parameters>
       </Component>
       <Component name="IconComponent">
@@ -296,9 +296,9 @@
       <Component name="VelocityComponent"></Component>
       <Component name="DirectionComponent"></Component>
       <Component name="BasicMoverComponent"></Component>
-      <Component name="WearableSpriteComponent">
+      <Component name="AnimatedSpriteComponent">
         <Parameters>
-          <Parameter name="basename" type="string" value="galoshes" />
+          <Parameter name="sprite" type="string" value="player_toolbox" />
         </Parameters>
       </Component>
       <Component name="IconComponent">

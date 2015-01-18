@@ -167,10 +167,10 @@ namespace CGO
                 }
             }
 
-            var removed = EquippedEntities.Where(x => !state.EquippedEntities.ContainsKey(x.Key));
-            foreach(KeyValuePair<EquipmentSlot, Entity> rem in removed)
+            var removed = EquippedEntities.Keys.Where(x => !state.EquippedEntities.ContainsKey(x)).ToArray();
+            foreach(EquipmentSlot rem in removed)
             {
-                UnEquipItem(rem.Key);
+                UnEquipItem(rem);
             }
 
             //Find differences and raise event?

@@ -7,10 +7,9 @@
       <Component name="VelocityComponent"></Component>
       <Component name="DirectionComponent"></Component>
       <Component name="BasicMoverComponent"></Component>
-      <Component name="ItemSpriteComponent">
+      <Component name="AnimatedSpriteComponent">
         <Parameters>
-          <Parameter name="basename" type="string" value="sword" />
-          <Parameter name="addsprite" type="string" value="sword_on" />
+          <Parameter name="sprite" type="string" value="player_toolbox" />
         </Parameters>
       </Component>
       <Component name="IconComponent">

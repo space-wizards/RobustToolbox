@@ -7,9 +7,9 @@
       <Component name="VelocityComponent"></Component>
       <Component name="DirectionComponent"></Component>
       <Component name="BasicMoverComponent"></Component>
-      <Component name="ItemSpriteComponent">
+      <Component name="AnimatedSpriteComponent">
         <Parameters>
-          <Parameter name="basename" type="string" value="forceps" />
+          <Parameter name="sprite" type="string" value="player_toolbox" />
         </Parameters>
       </Component>
       <Component name="IconComponent">
@@ -28,9 +28,9 @@
       <Component name="VelocityComponent"></Component>
       <Component name="DirectionComponent"></Component>
       <Component name="BasicMoverComponent"></Component>
-      <Component name="ItemSpriteComponent">
+      <Component name="AnimatedSpriteComponent">
         <Parameters>
-          <Parameter name="basename" type="string" value="medscanner" />
+          <Parameter name="sprite" type="string" value="player_toolbox" />
         </Parameters>
       </Component>
       <Component name="IconComponent">
@@ -49,9 +49,9 @@
       <Component name="VelocityComponent"></Component>
       <Component name="DirectionComponent"></Component>
       <Component name="BasicMoverComponent"></Component>
-      <Component name="ItemSpriteComponent">
+      <Component name="AnimatedSpriteComponent">
         <Parameters>
-          <Parameter name="basename" type="string" value="saw" />
+          <Parameter name="sprite" type="string" value="player_toolbox" />
         </Parameters>
       </Component>
       <Component name="IconComponent">
@@ -70,9 +70,9 @@
       <Component name="VelocityComponent"></Component>
       <Component name="DirectionComponent"></Component>
       <Component name="BasicMoverComponent"></Component>
-      <Component name="ItemSpriteComponent">
+      <Component name="AnimatedSpriteComponent">
         <Parameters>
-          <Parameter name="basename" type="string" value="scalpel" />
+          <Parameter name="sprite" type="string" value="player_toolbox" />
         </Parameters>
       </Component>
       <Component name="IconComponent">
@@ -91,9 +91,9 @@
       <Component name="VelocityComponent"></Component>
       <Component name="DirectionComponent"></Component>
       <Component name="BasicMoverComponent"></Component>
-      <Component name="ItemSpriteComponent">
+      <Component name="AnimatedSpriteComponent">
         <Parameters>
-          <Parameter name="basename" type="string" value="syringegun" />
+          <Parameter name="sprite" type="string" value="player_toolbox" />
         </Parameters>
       </Component>
       <Component name="IconComponent">
@@ -112,9 +112,9 @@
       <Component name="VelocityComponent"></Component>
       <Component name="DirectionComponent"></Component>
       <Component name="BasicMoverComponent"></Component>
-      <Component name="ItemSpriteComponent">
+      <Component name="AnimatedSpriteComponent">
         <Parameters>
-          <Parameter name="basename" type="string" value="vial" />
+          <Parameter name="sprite" type="string" value="player_toolbox" />
         </Parameters>
       </Component>
       <Component name="IconComponent">
@@ -133,9 +133,9 @@
       <Component name="VelocityComponent"></Component>
       <Component name="DirectionComponent"></Component>
       <Component name="BasicMoverComponent"></Component>
-      <Component name="ItemSpriteComponent">
+      <Component name="AnimatedSpriteComponent">
         <Parameters>
-          <Parameter name="basename" type="string" value="vial_2" />
+          <Parameter name="sprite" type="string" value="player_toolbox" />
         </Parameters>
       </Component>
       <Component name="IconComponent">
@@ -154,9 +154,9 @@
       <Component name="VelocityComponent"></Component>
       <Component name="DirectionComponent"></Component>
       <Component name="BasicMoverComponent"></Component>
-      <Component name="ItemSpriteComponent">
+      <Component name="AnimatedSpriteComponent">
         <Parameters>
-          <Parameter name="basename" type="string" value="medkit_r" />
+          <Parameter name="sprite" type="string" value="player_toolbox" />
         </Parameters>
       </Component>
       <Component name="IconComponent">
@@ -175,9 +175,9 @@
       <Component name="VelocityComponent"></Component>
       <Component name="DirectionComponent"></Component>
       <Component name="BasicMoverComponent"></Component>
-      <Component name="ItemSpriteComponent">
+      <Component name="AnimatedSpriteComponent">
         <Parameters>
-          <Parameter name="basename" type="string" value="medkit_w" />
+          <Parameter name="sprite" type="string" value="player_toolbox" />
         </Parameters>
       </Component>
       <Component name="IconComponent">
@@ -196,9 +196,9 @@
       <Component name="VelocityComponent"></Component>
       <Component name="DirectionComponent"></Component>
       <Component name="BasicMoverComponent"></Component>
-      <Component name="ItemSpriteComponent">
+      <Component name="AnimatedSpriteComponent">
         <Parameters>
-          <Parameter name="basename" type="string" value="bruisepack" />
+          <Parameter name="sprite" type="string" value="player_toolbox" />
         </Parameters>
       </Component>
       <Component name="IconComponent">
@@ -217,9 +217,9 @@
       <Component name="VelocityComponent"></Component>
       <Component name="DirectionComponent"></Component>
       <Component name="BasicMoverComponent"></Component>
-      <Component name="ItemSpriteComponent">
+      <Component name="AnimatedSpriteComponent">
         <Parameters>
-          <Parameter name="basename" type="string" value="bandages" />
+          <Parameter name="sprite" type="string" value="player_toolbox" />
         </Parameters>
       </Component>
       <Component name="IconComponent">

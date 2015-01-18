@@ -24,7 +24,6 @@ namespace ClientServices.State.States
         private readonly ImageButton _buttExit;
         private readonly ImageButton _buttOptions;
         private readonly Textbox _connectTextbox;
-        private readonly SimpleImage _glow;
         private readonly Label _lblVersion;
         private readonly SimpleImage _titleImage;
 
@@ -81,13 +80,6 @@ namespace ClientServices.State.States
                                   Sprite = "SpaceStationLogoColor",
                                   Position = new Point(Gorgon.Screen.Width - 550, 100)
                               };
-
-            _glow = new SimpleImage
-                        {
-                            Sprite = "mainbg_glow",
-                            Position = new Point(0, 0)
-                        };
-            _glow.size = new Vector2D(Gorgon.Screen.Width, Gorgon.Screen.Height);
         }
 
         #region IState Members
@@ -194,7 +186,7 @@ namespace ClientServices.State.States
                                });
 
             //            DrawSprite.Axis = new Vector2D(DrawSprite.Width / 2f, DrawSprite.Height / 2f);
-            var clouds = new FloatingDecoration(ResourceManager, "mainbg_clouds")
+/*            var clouds = new FloatingDecoration(ResourceManager, "mainbg_clouds")
                              {
                                  BounceRotate = true,
                                  BounceRotateAngle = 10,
@@ -202,11 +194,11 @@ namespace ClientServices.State.States
                                  SpriteLocation = new Vector2D(-50, -50),
                                  Velocity = new Vector2D(0, 0),
                                  RotationSpeed = 0.25f,
-                             };
+                             };*/
 
             //clouds.DrawSprite.Axis = new Vector2D(clouds.DrawSprite.Width/2f, clouds.DrawSprite.Height/2f);
 
-            DecoFloats.Add(clouds);
+           /* DecoFloats.Add(clouds);
 
             DecoFloats.Add(new FloatingDecoration(ResourceManager, "floating_dude")
                                {
@@ -216,9 +208,9 @@ namespace ClientServices.State.States
                                    SpriteLocation = new Vector2D(125, 115),
                                    Velocity = new Vector2D(0, 0),
                                    RotationSpeed = 0.5f
-                               });
+                               });*/
 
-            DecoFloats.Add(new FloatingDecoration(ResourceManager, "floating_oxy")
+          /*  DecoFloats.Add(new FloatingDecoration(ResourceManager, "floating_oxy")
                                {
                                    BounceRotate = true,
                                    BounceRotateAngle = 15,
@@ -226,8 +218,9 @@ namespace ClientServices.State.States
                                    SpriteLocation = new Vector2D(325, 135),
                                    Velocity = new Vector2D(0, 0),
                                    RotationSpeed = -0.60f
-                               });
+                               });*/
 
+/*
             DecoFloats.Add(new FloatingDecoration(ResourceManager, "debris_mid_back")
                                {
                                    BounceRotate = false,
@@ -236,7 +229,8 @@ namespace ClientServices.State.States
                                    Velocity = new Vector2D(0, 0),
                                    RotationSpeed = -0.20f
                                });
-
+*/
+/*
             DecoFloats.Add(new FloatingDecoration(ResourceManager, "debris_far_right_back")
                                {
                                    BounceRotate = true,
@@ -245,9 +239,9 @@ namespace ClientServices.State.States
                                    SpriteLocation = new Vector2D(Gorgon.Screen.Width - 260, 415),
                                    Velocity = new Vector2D(0, 0),
                                    RotationSpeed = 0.1f
-                               });
+                               });*/
 
-            DecoFloats.Add(new FloatingDecoration(ResourceManager, "debris_far_right_fore")
+/*            DecoFloats.Add(new FloatingDecoration(ResourceManager, "debris_far_right_fore")
                                {
                                    BounceRotate = true,
                                    BounceRotateAngle = 15,
@@ -255,16 +249,16 @@ namespace ClientServices.State.States
                                    SpriteLocation = new Vector2D(Gorgon.Screen.Width - 295, 415),
                                    Velocity = new Vector2D(0, 0),
                                    RotationSpeed = -0.36f
-                               });
+                               });*/
 
-            DecoFloats.Add(new FloatingDecoration(ResourceManager, "debris_far_left_fore")
+/*            DecoFloats.Add(new FloatingDecoration(ResourceManager, "debris_far_left_fore")
                                {
                                    BounceRotate = false,
                                    ParallaxScale = 0.019f,
                                    SpriteLocation = new Vector2D(0, 335),
                                    Velocity = new Vector2D(6, 2),
                                    RotationSpeed = 0.40f
-                               });
+                               });*/
 
             foreach (FloatingDecoration floatingDeco in DecoFloats)
                 UserInterfaceManager.AddComponent(floatingDeco);
@@ -274,7 +268,6 @@ namespace ClientServices.State.States
             UserInterfaceManager.AddComponent(_buttOptions);
             UserInterfaceManager.AddComponent(_buttExit);
             UserInterfaceManager.AddComponent(_titleImage);
-            UserInterfaceManager.AddComponent(_glow);
             UserInterfaceManager.AddComponent(_lblVersion);
         }
 
@@ -287,7 +280,6 @@ namespace ClientServices.State.States
             UserInterfaceManager.RemoveComponent(_buttOptions);
             UserInterfaceManager.RemoveComponent(_buttExit);
             UserInterfaceManager.RemoveComponent(_titleImage);
-            UserInterfaceManager.RemoveComponent(_glow);
             UserInterfaceManager.RemoveComponent(_lblVersion);
 
             foreach (FloatingDecoration floatingDeco in DecoFloats)

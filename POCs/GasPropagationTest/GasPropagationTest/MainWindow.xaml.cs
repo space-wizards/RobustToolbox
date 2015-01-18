@@ -19,19 +19,18 @@ namespace GasPropagationTest
     /// </summary>
     public partial class MainWindow : Window
     {
+        GasCell[,] cellArray;
         DateTime lastUpdate;
         DateTime lastDraw;
         DateTime lastDataUpdate;
-        System.Drawing.Size mapSize = new System.Drawing.Size(39,39);
         int updatePeriod = 30; //update period in ms
         int drawPeriod = 66;
         int dataPeriod = 1000;
-        public AtmosManager AtmosManager;
 
         public MainWindow()
         {
+            cellArray = new GasCell[40, 40];
             InitializeComponent();
-            AtmosManager = new AtmosManager(mapSize, canvas);
             Initialize();
             CompositionTarget.Rendering += Update;
             KeyDown += KeyDownEventHandler;
@@ -44,8 +43,25 @@ namespace GasPropagationTest
             lastUpdate = DateTime.Now;
             lastDraw = DateTime.Now;
             lastDataUpdate = DateTime.Now;
+            Ellipse e;
+            for (int i = 0; i < 39; i++)
+            {
+                for (int j = 0; j < 39; j++)
+                {
+                    e = new Ellipse();
+                    e.Width = 15;
+                    e.Height = 15;
+                    e.Fill = Brushes.Blue;                    
+                    canvas.Children.Add(e);
+                    Canvas.SetLeft(e, (double)i * 15);
+                    Canvas.SetTop(e, (double)j * 15);
+                    cellArray[i, j] = new GasCell(e, i*15, j*15, cellArray);
+                    cellArray[i, j].arrX = i;
+                    cellArray[i, j].arrY = j;
+                }
+            }
+
             //cellArray[20, 20].nextGasAmount = 10;
-            AtmosManager.InitializeGasCells();
         }
 
         public void Update(object sender, EventArgs e)
@@ -67,32 +83,42 @@ namespace GasPropagationTest
             else
                 lastUpdate = DateTime.Now;
 
-            AtmosManager.Calculate();
+            for (int i = 0; i < 39; i++)
+            {
+                for (int j = 0; j < 39; j++)
+                {
+                    cellArray[i, j].CalculateNextGasAmount();
+                }
+            }
 
             bool draw = false;
             TimeSpan d = DateTime.Now - lastDraw;
             if (d.TotalMilliseconds >= drawPeriod)
                 draw = true;
             draw = draw || clicked;
-
-            AtmosManager.Update();
+            
+            for (int i = 0; i < 39; i++)
+            {
+                for (int j = 0; j < 39; j++)
+                {
+                    
+                    cellArray[i, j].Update(draw);
+                }
+            }
 
         }
 
         public void DataUpdate()
         {
             double Sum = 0;
-            double HeatSum = 0;
             for (int i = 0; i < 39; i++)
             {
                 for (int j = 0; j < 39; j++)
                 {
-                    Sum += AtmosManager.cellArray[i, j].GasMixture.TotalGas;
-                    HeatSum += (AtmosManager.cellArray[i, j].GasMixture.HeatCapacity * AtmosManager.cellArray[i, j].GasMixture.Temperature);
+                    Sum += cellArray[i, j].gasAmount;
                 }
             }
 
-            totalheat.Text = HeatSum.ToString();
             totalgas.Text = Sum.ToString();
             lastDataUpdate = DateTime.Now;
         }
@@ -110,7 +136,7 @@ namespace GasPropagationTest
             {
                 for (int j = 0; j < 39; j++)
                 {
-                    AtmosManager.cellArray[i, j].gasAmount = n * 0.1;
+                    cellArray[i, j].gasAmount = n * 0.1;
                 }
             }
         }
@@ -122,7 +148,7 @@ namespace GasPropagationTest
             if (x < 0 || y < 0 || x > 38 || y > 38)
                 return null;
             else
-                return AtmosManager.cellArray[x, y];
+                return cellArray[x, y];
         }
 
         private void KeyUpEventHandler(object sender, KeyEventArgs e)
@@ -182,21 +208,13 @@ namespace GasPropagationTest
             else if (e.RightButton == MouseButtonState.Pressed && Keyboard.IsKeyDown(Key.LeftShift))
                 g.blocking = !g.blocking;
             else if (e.LeftButton == MouseButtonState.Pressed && Keyboard.IsKeyDown(Key.LeftAlt))
-                g.AddGas(2, GasType.Oxygen);
+                g.nextGasAmount += addamount * 100;
             else if (e.RightButton == MouseButtonState.Pressed && Keyboard.IsKeyDown(Key.LeftAlt))
-                g.AddGas(20, GasType.Oxygen);
+                g.nextGasAmount += addamount * 1000;
             else if (e.LeftButton == MouseButtonState.Pressed && Keyboard.IsKeyDown(Key.RightShift))
-            {
-                g.NextGasVel.X += 1000;
                 g.GasVel.X += 1000;
-            }
             else if (e.RightButton == MouseButtonState.Pressed && Keyboard.IsKeyDown(Key.RightShift))
-            {
-                g.NextGasVel.X += 100000;
                 g.GasVel.X += 100000;
-            }
-            else if (e.LeftButton == MouseButtonState.Pressed && Keyboard.IsKeyDown(Key.LeftCtrl))
-                g.nextHeatEnergy += 100;
             else if (e.LeftButton == MouseButtonState.Pressed)
                 g.nextGasAmount += addamount;
             else if (e.RightButton == MouseButtonState.Pressed)

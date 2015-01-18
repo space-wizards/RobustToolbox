@@ -5,8 +5,8 @@
     <Canvas Name="canvas">
         <Button Canvas.Left="524" Canvas.Top="634" Content="Instructions" Height="23" Name="button1" Width="75" Click="button1_Click" />
         <TextBlock Canvas.Left="16" Canvas.Top="620" Height="25" Name="textBlock1" Text="Total gas:" Width="58" />
-        <TextBlock Canvas.Left="80" Canvas.Top="620" Height="19" Name="totalgas" Text="0" Width="125" />
-        <TextBlock Canvas.Left="234" Canvas.Top="620" Height="25" Name="textBlock2" Text="Total heat:" Width="58" />
-        <TextBlock Canvas.Left="298" Canvas.Top="620" Height="19" Name="totalheat" Text="0" Width="157" />
+        <TextBlock Canvas.Left="80" Canvas.Top="620" Height="19" Name="totalgas" Text="0" Width="92" />
+        <TextBlock Canvas.Left="137" Canvas.Top="620" Height="25" Name="textBlock2" Text="Total heat:" Width="58" />
+        <TextBlock Canvas.Left="201" Canvas.Top="620" Height="19" Name="totalheat" Text="0" Width="92" />
     </Canvas>
 </Window>

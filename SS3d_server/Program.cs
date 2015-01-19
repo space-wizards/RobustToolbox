@@ -5,6 +5,7 @@ using System.Runtime.InteropServices;
 using System.Threading;
 using SS13_Shared.Minidump;
 using SS13_Shared.ServerEnums;
+using SS13_Shared.Utility;
 using ServerServices.Log;
 
 namespace SS13_Server
@@ -20,7 +21,8 @@ namespace SS13_Server
             //Process command-line args
             processArgs(args);
             //Register minidump dumper only if the app isn't being debugged. No use filling up hard drives with shite
-            if(!System.Diagnostics.Debugger.IsAttached)
+            //Minidump is Windows-only, so we need a platform check here
+            if(PlatformDetector.DetectPlatform() == Platform.Windows && !System.Diagnostics.Debugger.IsAttached)
                 MiniDump.Register("crashdump-" + Guid.NewGuid().ToString("N") + ".dmp",
                                   fullDump
                                       ? MiniDump.MINIDUMP_TYPE.MiniDumpWithFullMemory

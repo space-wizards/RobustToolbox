@@ -1,0 +1,19 @@
+{
+ "linters": {
+ "csharp": {
+ "type": "csharp",
+ "include": "(\\.cs$)",
+ "exclude": "(^MogreDependencies/)",
+ "discovery": {
+ "([^/]+)/(.*?)\\.cs": [
+ "$1/$1.csproj"
+ ],
+ "([^\\\\]+)\\\\(.*?)\\.cs": [
+ "$1\\$1.csproj"
+ ]
+ },
+ "binary":"cslint"
+ }
+ }
+}
+

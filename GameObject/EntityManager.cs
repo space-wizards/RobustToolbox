@@ -213,6 +213,7 @@ namespace GameObject
                 }
             }
         }
+
         public void RemoveSubscribedEvents(IEntityEventSubscriber subscriber)
         {
             if(_inverseEventSubscriptions.ContainsKey(subscriber))

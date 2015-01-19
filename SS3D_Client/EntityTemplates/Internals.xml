@@ -7,14 +7,15 @@
       <Component name="VelocityComponent"></Component>
       <Component name="DirectionComponent"></Component>
       <Component name="BasicMoverComponent"></Component>
-      <Component name="AnimatedSpriteComponent">
+      <Component name="WearableAnimatedSpriteComponent">
         <Parameters>
           <Parameter name="sprite" type="string" value="player_toolbox" />
+          <Parameter name="notWornSprite" type="string" value="breather" />
         </Parameters>
       </Component>s
       <Component name="IconComponent">
         <Parameters>
-          <Parameter name="icon" type="string" value="surgicalmask" />
+          <Parameter name="icon" type="string" value="breather" />
         </Parameters>
       </Component>
       <Component name="PhysicsComponent"></Component>

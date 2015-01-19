@@ -19,6 +19,8 @@ namespace CGO
 {
     public class AnimatedSpriteComponent : Component, IRenderableComponent
     {
+        protected string baseSprite;
+        protected string currentSprite;
         protected AnimatedSprite sprite;
         protected bool flip;
         protected IRenderableComponent master;
@@ -72,8 +74,17 @@ namespace CGO
             Owner.SendMessage(this, ComponentMessageType.SpriteChanged);
         }
 
+        public void SetSprite()
+        {
+            if(baseSprite != null)
+            {
+                SetSprite(baseSprite);
+            }
+        }
+
         public void SetSprite(string name)
         {
+            currentSprite = name;
             sprite = (AnimatedSprite)IoCManager.Resolve<IResourceManager>().GetAnimatedSprite(name);
         }
 
@@ -209,6 +220,7 @@ namespace CGO
                     break;
 
                 case "sprite":
+                    baseSprite = parameter.GetValue<string>();
                     SetSprite(parameter.GetValue<string>());
                     break;
             }

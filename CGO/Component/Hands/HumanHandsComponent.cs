@@ -12,14 +12,14 @@ namespace CGO
 {
     public class HumanHandsComponent : Component
     {
+        public Dictionary<Hand, Entity> HandSlots { get; private set; }
+        public Hand CurrentHand { get; private set; }
+
         public HumanHandsComponent()
         {
             HandSlots = new Dictionary<Hand, Entity>();
             Family = ComponentFamily.Hands;
         }
-
-        public Dictionary<Hand, Entity> HandSlots { get; private set; }
-        public Hand CurrentHand { get; private set; }
 
         public override void HandleNetworkMessage(IncomingEntityComponentMessage message, NetConnection sender)
         {

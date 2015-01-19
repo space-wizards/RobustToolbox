@@ -11,12 +11,12 @@ namespace SGO
     {
         public EquipmentSlot wearloc;
 
+        public Entity currentWearer { get; set; }
+
         public EquippableComponent()
         {
             Family = ComponentFamily.Equippable;
         }
-
-        public Entity currentWearer { get; set; }
 
         public override ComponentReplyMessage RecieveMessage(object sender, ComponentMessageType type,
                                                              params object[] list)
@@ -46,8 +46,8 @@ namespace SGO
         {
             Owner.AddComponent(ComponentFamily.Mover,
                                Owner.EntityManager.ComponentFactory.GetComponent("BasicMoverComponent"));
-            Owner.SendDirectedComponentNetworkMessage(this, NetDeliveryMethod.ReliableOrdered, null,
-                                                      EquippableComponentNetMessage.UnEquipped);
+            /*Owner.SendDirectedComponentNetworkMessage(this, NetDeliveryMethod.ReliableOrdered, null,
+                                                      EquippableComponentNetMessage.UnEquipped);*/
             currentWearer = null;
         }
 
@@ -57,8 +57,8 @@ namespace SGO
             Owner.AddComponent(ComponentFamily.Mover,
                                Owner.EntityManager.ComponentFactory.GetComponent("SlaveMoverComponent"));
             Owner.SendMessage(this, ComponentMessageType.SlaveAttach, entity.Uid);
-            Owner.SendDirectedComponentNetworkMessage(this, NetDeliveryMethod.ReliableOrdered, null,
-                                                      EquippableComponentNetMessage.Equipped, entity.Uid, wearloc);
+           /* Owner.SendDirectedComponentNetworkMessage(this, NetDeliveryMethod.ReliableOrdered, null,
+                                                      EquippableComponentNetMessage.Equipped, entity.Uid, wearloc);*/
         }
 
         public override void SetParameter(ComponentParameter parameter)
@@ -75,7 +75,7 @@ namespace SGO
 
         public override ComponentState GetComponentState()
         {
-            return new EquippableComponentState();
+            return new EquippableComponentState(wearloc, currentWearer != null ? currentWearer.Uid : (int?)null);
         }
     }
 }

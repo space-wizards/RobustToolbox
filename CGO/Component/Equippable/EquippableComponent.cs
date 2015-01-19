@@ -2,14 +2,24 @@
 using Lidgren.Network;
 using SS13_Shared;
 using SS13_Shared.GO;
+using SS13_Shared.GO.Component.Equippable;
 
 namespace CGO
 {
     public class EquippableComponent : Component
     {
+        public EquipmentSlot wearloc;
+
+        public Entity currentWearer { get; set; }
+        
         public EquippableComponent()
         {
             Family = ComponentFamily.Equippable;
+        }
+
+        public override System.Type StateType
+        {
+            get { return typeof (EquippableComponentState); }
         }
 
         public override void HandleNetworkMessage(IncomingEntityComponentMessage message, NetConnection sender)
@@ -78,6 +88,23 @@ namespace CGO
             Owner.SendMessage(this, ComponentMessageType.ItemUnEquipped);
             Owner.AddComponent(ComponentFamily.Mover,
                                Owner.EntityManager.ComponentFactory.GetComponent("BasicMoverComponent"));
+        }
+
+        public override void HandleComponentState(dynamic state)
+        {
+            int? holderUid = currentWearer != null ? currentWearer.Uid : (int?) null;
+            if(state.Holder != holderUid)
+            {
+                if(state.Holder == null)
+                {
+                    UnEquipped();
+                    currentWearer = null;
+                }
+                else
+                {
+                    EquippedBy((int)state.Holder, state.WearLocation);
+                }
+            }
         }
     }
 }

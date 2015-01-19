@@ -113,6 +113,7 @@
     <Compile Include="Component\Renderable\ParticleSystem.cs" />
     <Compile Include="Component\Renderable\ParticleSystemComponent.cs" />
     <Compile Include="Component\Renderable\Speechbubble.cs" />
+    <Compile Include="Component\Renderable\WearableAnimatedSpriteComponent.cs" />
     <Compile Include="Component\Renderable\WearableSpriteComponent.cs" />
     <Compile Include="Component\Renderable\ItemSpriteComponent.cs" />
     <Compile Include="Component\Renderable\MobSpriteComponent.cs" />

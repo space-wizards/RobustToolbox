@@ -7,7 +7,7 @@
       <Component name="VelocityComponent"></Component>
       <Component name="DirectionComponent"></Component>
       <Component name="ClickableComponent"></Component>
-      <Component name="AnimatedSpriteComponent">
+      <Component name="WearableAnimatedSpriteComponent">
         <Parameters>
           <Parameter name="sprite" type="string" value="player_toolbox" />
         </Parameters>

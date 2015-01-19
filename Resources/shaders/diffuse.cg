@@ -1,0 +1,144 @@
+struct VIn {
+    float4 p    : POSITION;
+    float3 n    : NORMAL;
+    float2 uv   : TEXCOORD0;
+};
+
+struct VOut {
+    float4 p    : POSITION;
+
+    float2 uv   : TEXCOORD0;
+    float4 wp   : TEXCOORD1;
+    float3 n    : TEXCOORD2;
+    float4 lp   : TEXCOORD3;
+    float3 sdir : TEXCOORD4;
+};
+
+struct PIn {
+    float2 uv   : TEXCOORD0;
+    float4 wp   : TEXCOORD1;
+    float3 n    : TEXCOORD2;
+    float4 lp   : TEXCOORD3;
+    float3 sdir : TEXCOORD4;
+};
+
+struct POut {
+    float4 c : COLOR;
+};
+
+VOut diffuse_vs(VIn IN,
+    uniform float4x4 wMat,
+    uniform float4x4 wvpMat,
+    uniform float4x4 tvpMat,
+    uniform float4 spotlightDir
+    ) {
+    VOut OUT;
+    OUT.wp = mul(wMat, IN.p);
+    OUT.p = mul(wvpMat, IN.p);
+
+    OUT.uv = IN.uv;
+
+    OUT.n = mul(wMat, float4(IN.n, 0)).xyz; // world-space normal
+    OUT.sdir = mul(wMat, spotlightDir).xyz; // spotlight dir in world space
+
+    OUT.lp = mul(tvpMat, OUT.wp);
+
+    return OUT;
+}
+
+
+float2 btex2D_rg(sampler2D map, float2 uv, float radius, float2 offset) {
+    // this is sometimes too slow and long
+    // (3 * 2 + 1) ^ 2 =  7 ^ 2 = 49 samples
+//    float2 sample = float2(0, 0);
+//    for (float x = -radius; x <= radius; x += 1) {
+//        for (float y = -radius; y <= radius; y += 1) {
+//            sample += tex2D(map, float2(uv.x + x * offset.x, uv.y + y * offset.y)).rg;
+//        }
+//    }
+//    return sample / ((radius * 2 + 1) * (radius * 2 + 1));
+
+    // simple 3x3 filter
+    float2 o = offset;
+    float2 c = tex2D(map, uv.xy).rg; // center
+    c += tex2D(map, uv.xy - o.xy).rg; // top left
+    c += tex2D(map, uv.xy + o.xy).rg; // bottom right
+    c += tex2D(map, float2(uv.x - o.x, uv.y)).rg; // left
+    c += tex2D(map, float2(uv.x + o.x, uv.y)).rg; // right
+    c += tex2D(map, float2(uv.x, uv.y + o.y)).rg; // bottom
+    c += tex2D(map, float2(uv.x, uv.y - o.y)).rg; // top
+    c += tex2D(map, float2(uv.x - o.x, uv.y + o.y)).rg; // bottom left
+    c += tex2D(map, float2(uv.x + o.x, uv.y - o.y)).rg; // top right
+    return c / 9;
+}
+
+float shadow(
+    sampler2D shadowMap, float4 shadowMapPos, float ourDepth, float radius, float2 offset) {
+    float2 suv = shadowMapPos.xy / shadowMapPos.w;
+
+    float2 moments = //tex2D(shadowMap, suv).rg;
+    // blurred texture read
+    btex2D_rg(shadowMap, suv, radius, offset);
+    float litFactor = (ourDepth <= moments.x ? 1 : 0);
+
+    // standard variance shadow mapping code
+    float E_x2 = moments.y;
+    float Ex_2 = moments.x * moments.x;
+    float vsmEpsilon = 0.0001;
+    float variance = min(max(E_x2 - Ex_2, 0.0) + vsmEpsilon, 1.0);
+    float m_d = moments.x - ourDepth;
+    float p = variance / (variance + m_d * m_d);
+
+    return smoothstep(0.4, 1, max(litFactor, p));
+    //return litFactor;
+}
+
+// to put it simply, this does 100% per pixel diffuse lighting
+POut diffuse_ps(PIn IN,
+    uniform float3 lightDif0,
+    uniform float4 lightPos0,
+    uniform float4 lightAtt0,
+    uniform float4 depthRange,
+    uniform float4 invSMSize,
+    uniform float4 spotlightParams,
+    uniform sampler2D dMap : TEXUNIT0,
+    uniform sampler2D shadowMap : TEXUNIT1
+    ) {
+    POut OUT;
+
+    // direction
+    float3 ld0 = normalize(lightPos0.xyz - (lightPos0.w * IN.wp.xyz));
+
+    // attenuation
+    half ila = length(lightPos0.xyz - IN.wp.xyz) / lightAtt0.r;
+    ila *= ila; // quadratic falloff
+    half la = 1.0 - ila;
+
+    float3 normal = normalize(IN.n);
+
+    float3 LdotN0 = max(dot(ld0, normal), 0);
+    float4 difTex = tex2D(dMap, IN.uv);
+
+    // calculate the spotlight effect
+    float spot = dot(ld0, normalize(-IN.sdir)); // angle between spotlight dir and actual dir
+    spot = saturate((spot - spotlightParams.y) / (spotlightParams.x - spotlightParams.y));
+
+    float3 light0C =
+    //   N . L    LIGHT DIF   TEX DIF       ATT
+        (LdotN0 * lightDif0 * difTex.xyz) * la * spot
+        * shadow(
+            // pass in the shadow map
+            shadowMap,
+            // the calculated shadow position in the shadow map
+            IN.lp,
+            // distance to light, done just as in the caster shader
+            (length(lightPos0.xyz - IN.wp.xyz) - depthRange.x) * depthRange.w,
+            // radius to blur (we discussed)
+            3,
+            // inverse shadow map size so we know how much to move when blurring
+            invSMSize.xy);
+
+    OUT.c = float4(light0C, 1);
+
+    return OUT;
+}

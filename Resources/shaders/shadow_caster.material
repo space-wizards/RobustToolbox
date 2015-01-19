@@ -1,0 +1,53 @@
+// declare the vertex shader (CG for the language)
+vertex_program shadow_caster_vs cg
+{
+    // source file
+    source shadow_caster.cg
+    // will run on vertex shader 1.1+
+    profiles vs_1_1 arbvp1
+    // entry function
+    entry_point shadow_caster_vs
+
+    default_params
+    {
+        // pMat == projection matrix
+        param_named_auto pMat projection_matrix
+        // wvMat == world * view matrix
+        param_named_auto wvMat worldview_matrix
+    }
+}
+
+// declare the fragment shader (CG for the language)
+fragment_program shadow_caster_ps cg
+{
+    // source file
+    source shadow_caster.cg
+    // will run on pixel shader 2.0+
+    profiles ps_2_0 arbfp1
+    // entry function
+    entry_point shadow_caster_ps
+
+    default_params
+    {
+        // this is the scene's depth range
+        param_named_auto depthRange scene_depth_range
+    }
+}
+
+material shadow_caster
+{
+    technique
+    {
+        // all this will do is write depth and depth² to red and green
+        pass
+        {
+            vertex_program_ref shadow_caster_vs
+            {
+            }
+
+            fragment_program_ref shadow_caster_ps
+            {
+            }
+        }
+    }
+}

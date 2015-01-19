@@ -4,4 +4,11 @@ Media/textures/Animations/*.*
 _ReSharper*
 Media/ResourcePack.zip
 SS13.suo
-/NewMedia/textures/Animations
+Media/textures/*_Animations.png
+Media/textures/*_Decals.png
+Media/textures/*_Effects.png
+Media/textures/*_Items.png
+Media/textures/*_Objects.png
+Media/textures/*_Tiles.png
+Media/textures/*_UserInterface.png
+Media/textures/*.TAI

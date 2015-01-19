@@ -9,6 +9,7 @@ The original sprites for the game, created by Adam Riches, have been withheld fo
 * Code: Keelin, Nyxation (Tyler Merta), Ostaf, Volundr/Spoogemonster
 * Minor code additions/Navel gazing: Edad, Nannek (a wanker), DrSingh
 * Art: Keelin
+* Icons: Item Icons were lifted from TG-Station - thanks
 * Badly botched coder art: Volundr/Spoogemonster
 * Design and Concepts: Keelin, Supernorn (Adam Riches), Volundr/Spoogemonster
 * 3d Modelling: Synchronic (Joseph Riches)

@@ -187,6 +187,7 @@
     <Compile Include="Utility\BitStream.cs" />
     <Compile Include="Utility\CommandParsing.cs" />
     <Compile Include="Utility\NetParamsPacker.cs" />
+    <Compile Include="Utility\PlatformDetector.cs" />
     <Compile Include="Utility\RandomString.cs" />
     <Compile Include="Utility\Range.cs" />
     <Compile Include="Utility\unZipString.cs" />

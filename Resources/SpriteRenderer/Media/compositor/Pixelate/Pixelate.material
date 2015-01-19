@@ -1,0 +1,41 @@
+fragment_program Pixelate_PS cg
+{
+	source pixelate.cg
+	entry_point pixelate_ps
+	profiles ps_2_0 arbfp1	
+	
+	default_params 
+	{
+		param_named TargetWidth float 256
+		param_named TargetHeight float 256
+		param_named PixelSize float 2
+	}
+}
+
+material Pixelate
+{
+	technique
+	{
+
+		pass
+		{
+			depth_check off
+
+			vertex_program_ref Ogre/Compositor/StdQuad_Cg_vp
+			{
+			}
+
+			fragment_program_ref Pixelate_PS
+			{
+			}
+
+			texture_unit
+			{
+				//texture RT
+                tex_coord_set 0
+				tex_address_mode clamp
+				filtering anisotropic
+			}
+		}
+	}
+}

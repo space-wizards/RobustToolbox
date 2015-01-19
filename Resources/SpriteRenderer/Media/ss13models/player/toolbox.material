@@ -1,0 +1,13 @@
+material Toolbox/lambert3
+{
+	technique
+	{
+		pass
+		{
+			ambient 1 0 0 1
+			diffuse 1 0 0 1
+			specular 0 0 0 1
+			emissive 0.601511 0 0
+		}
+	}
+}

@@ -1,0 +1,53 @@
+//-----------------------------------------------------
+//Copyright (C) 2008 Mat�as N. Goldberg (Dark Sylinc)
+//
+//Image Sharpening filter using extrapolation
+//
+//Hardware Requierements:
+// Vertex Shader 1.1
+// Pixel Shader 2.0
+//
+//Parameters:
+//	factor:
+//		factor > 1.0 Sharpens the image
+//		factor = 1.0 Filter has no effect
+//		factor < 1.0 Blurs the image
+//-----------------------------------------------------
+ 
+fragment_program ImageBlur_ps cg
+{
+	source ImageSharpen.cg
+	entry_point main_fp
+	profiles	ps_2_0 arbfp1
+	default_params
+	{
+		param_named factor float 0.1
+	}
+}
+
+//Effect: ImageSharpen
+material ImageBlur
+{
+	technique
+	{
+		pass
+		{
+			cull_hardware none
+			cull_software none
+			depth_check off
+
+			fragment_program_ref ImageBlur_ps
+			{
+			}
+			vertex_program_ref Ogre/Compositor/StdQuad_Cg_vp
+			{
+			}
+
+			texture_unit RT
+			{
+				tex_address_mode clamp
+				filtering none
+			}
+		}
+	}
+}

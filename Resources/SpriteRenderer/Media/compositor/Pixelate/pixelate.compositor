@@ -1,0 +1,75 @@
+/// Pixelate effect
+compositor Pixelate
+{
+    technique
+    {
+        // Temporary textures
+        texture scene target_width_scaled 2 target_height_scaled 2 PF_A8R8G8B8
+        texture edges target_width_scaled 2 target_height_scaled 2 PF_A8R8G8B8
+        texture sharpened target_width_scaled 2 target_height_scaled 2 PF_A8R8G8B8
+        texture blended target_width_scaled 2 target_height_scaled 2 PF_A8R8G8B8
+        texture pixelated target_width_scaled 2 target_height_scaled 2 PF_A8R8G8B8
+		target scene
+		{
+			pass clear 
+			{
+				clear
+				{
+				}
+			}
+			pass render_scene
+			{
+			}
+		}
+		target edges
+		{
+		    input none
+
+            pass render_quad
+            {
+				material EdgeDetect
+				input 0 scene
+            }
+		}
+		target sharpened 
+		{
+			input none
+			pass render_quad 
+			{
+				material ImageSharpen
+				input 0 scene
+			}
+		}
+		target blended
+		{
+			input none
+			pass render_quad
+			{
+				material Blend
+				input 0 scene
+				input 1 sharpened
+				input 2 edges
+			}
+		}
+		
+		target pixelated
+		{
+			input none
+			pass render_quad
+			{
+				material Pixelate
+				input 0 blended
+			}
+		}
+		
+		target_output 
+		{
+			input none
+			pass render_quad
+			{
+				material Output
+				input 0 pixelated
+			}
+		}
+    }
+}

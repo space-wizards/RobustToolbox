@@ -1,0 +1,21 @@
+material Output
+{
+	technique
+	{
+
+		pass
+		{
+			cull_hardware none
+			cull_software none
+			depth_check off
+
+			texture_unit
+			{
+				//texture RT
+                tex_coord_set 0
+				tex_address_mode clamp
+				filtering anisotropic
+			}
+		}
+	}
+}

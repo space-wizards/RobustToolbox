@@ -1,0 +1,24 @@
+#define QUAD_FLOAT
+#define QUAD_REAL float
+#define QUAD_REAL2 float2
+#define QUAD_REAL3 float3
+#define QUAD_REAL4 float4
+#define QUAD_REAL3x3 float3x3
+#define QUAD_REAL4x3 float4x3
+#define QUAD_REAL3x4 float3x4
+#define QUAD_REAL4x4 float4x4
+
+void edgeDetectVS(
+    
+	QUAD_REAL3 PositionIN : POSITION, 
+    QUAD_REAL3 TexCoord : TEXCOORD0,
+	
+	out QUAD_REAL4 Position	: POSITION,
+    out QUAD_REAL2 UV	: TEXCOORD0,
+	
+    uniform QUAD_REAL2 TexelOffsets
+) {
+    Position = QUAD_REAL4(PositionIN, 1);
+    UV = QUAD_REAL2(TexCoord.xy /* TexelOffsets ignored for OpenGL */); 
+    
+}

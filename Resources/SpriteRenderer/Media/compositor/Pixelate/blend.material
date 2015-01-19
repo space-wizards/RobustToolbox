@@ -1,0 +1,48 @@
+fragment_program Blend_PS cg
+{
+	source blend.cg
+	entry_point blend_ps
+	profiles ps_2_0 arbfp1		
+}
+
+material Blend
+{
+	technique
+	{
+
+		pass
+		{
+			cull_hardware none
+			cull_software none
+			depth_check off
+
+			vertex_program_ref Ogre/Compositor/StdQuad_Cg_vp
+			{
+			}
+
+			fragment_program_ref Blend_PS
+			{
+			}
+
+			texture_unit RT
+			{
+				//texture RT
+                tex_coord_set 0
+				tex_address_mode clamp
+				filtering none
+			}
+			texture_unit sharpened
+			{
+				tex_coord_set 0
+				tex_address_mode clamp
+				filtering none
+			}
+			texture_unit edges
+			{
+				tex_coord_set 0
+				tex_address_mode clamp
+				filtering none
+			}
+		}
+	}
+}

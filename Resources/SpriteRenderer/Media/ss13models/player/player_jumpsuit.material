@@ -1,0 +1,19 @@
+material player_jumpsuit
+{
+	technique
+	{
+		
+		pass
+		{
+			diffuse 1 1 1 1
+			
+			scene_blend alpha_blend
+
+			texture_unit
+			{
+				texture UV_jumpsuit2.png
+				colour_op modulate
+			}
+		}
+	}
+}

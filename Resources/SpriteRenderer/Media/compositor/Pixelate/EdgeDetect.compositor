@@ -1,0 +1,22 @@
+compositor EdgeDetectCompositor
+{
+    technique
+    {        
+		texture scene target_width target_height PF_A8R8G8B8
+		target scene
+		{
+			input previous
+		}
+        target_output
+        {
+            input none
+
+            pass render_quad
+            {
+				material EdgeDetect
+				input 0 scene
+            }
+        }
+    }
+
+}

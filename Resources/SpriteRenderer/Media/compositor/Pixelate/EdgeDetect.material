@@ -1,0 +1,60 @@
+/*
+
+% Detect image edges in the current scene.
+
+*/
+
+vertex_program EdgeDetect_vs cg
+{
+	source vs_EdgeDetect.cg
+	profiles arbvp1 vs_3_0
+    entry_point edgeDetectVS
+	default_params
+    {
+
+    }
+}
+
+
+fragment_program EdgeDetect_ps cg
+{
+    source ps_EdgeDetect.cg
+    entry_point edgeDetectPS
+    profiles arbfp1 ps_3_0
+
+	default_params
+	{
+		param_named_auto QuadScreenSize viewport_size
+		param_named NPixels 		float	1
+		param_named Threshhold		float	0.5
+	}
+}
+
+
+material EdgeDetect
+{
+	technique
+	{
+		pass
+		{
+			depth_check off
+
+			vertex_program_ref Ogre/Compositor/StdQuad_Cg_vp
+			{
+			}
+			
+			fragment_program_ref EdgeDetect_ps
+			{
+			}	
+			
+			 texture_unit	// (scene)
+			 {
+				//texture RT
+                tex_coord_set 0
+				tex_address_mode clamp
+				filtering none
+			 }
+			
+		}
+	}
+}

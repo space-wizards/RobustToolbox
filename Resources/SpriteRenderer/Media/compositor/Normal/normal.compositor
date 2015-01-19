@@ -1,0 +1,15 @@
+/// Normal effect
+compositor Normal
+{
+    technique
+    {
+		target_output 
+		{
+			input none
+			pass render_quad 
+			{
+				material Normal
+			}
+		}
+    }
+}

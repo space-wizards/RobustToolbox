@@ -1,0 +1,29 @@
+struct VOut {
+    float4 p : POSITION;
+    float2 uv: TEXCOORD0;
+    float3 a : TEXCOORD1;
+};
+
+VOut ambient_vs(
+    in float4 p : POSITION,
+    in float2 uv : TEXCOORD0,
+    uniform float3 ambient,
+    uniform float4x4 wvp
+    ) {
+    VOut OUT;
+    OUT.p = mul(wvp, p);
+    OUT.a = ambient;
+    OUT.uv = uv;
+    return OUT;
+}
+
+struct PIn {
+    float2 uv: TEXCOORD0;
+    float3 a : TEXCOORD1;
+};
+
+float4 ambient_ps(PIn IN,
+    uniform sampler2D dMap : TEXUNIT0): COLOR0 {
+    float3 diffuse = tex2D(dMap, IN.uv).rgb;
+    return float4(diffuse * IN.a, 1);
+}

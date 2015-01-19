@@ -1,0 +1,37 @@
+fragment_program Normal_PS cg
+{
+	source normal.cg
+	entry_point normal_ps
+	profiles ps_2_0 arbfp1		
+}
+
+vertex_program Normal_VS cg
+{
+	source normal.cg
+	entry_point normal_vs
+	profiles vs_2_0	arbvp1 
+	default_params
+	{
+		param_named_auto modelViewProj worldviewproj_matrix
+	}
+}
+
+material Normal
+{
+	technique
+	{
+
+		pass
+		{
+			depth_check off
+
+			vertex_program_ref Normal_VS
+			{
+			}
+
+			fragment_program_ref Normal_PS
+			{
+			}
+		}
+	}
+}

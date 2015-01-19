@@ -1,0 +1,42 @@
+struct VIn {
+    float4 p    : POSITION;
+};
+
+struct VOut {
+    float4 p     : POSITION;
+    float4 depth : TEXCOORD0;
+};
+
+VOut shadow_caster_vs(VIn IN,
+    uniform float4x4 pMat,
+    uniform float4x4 wvMat) {
+    VOut OUT;
+
+    // this is the view space position
+    float4 fp = mul(wvMat, IN.p);
+    // interpolate the whole position
+    OUT.depth = fp;
+    OUT.p = mul(pMat, fp);
+
+    return OUT;
+}
+
+struct PIn {
+    float4 depth : TEXCOORD0;
+};
+
+struct POut {
+    float4 color : COLOR;
+};
+
+POut shadow_caster_ps(PIn IN, uniform float4 depthRange) {
+    POut OUT;
+
+    // derive a per-pixel depth and depth squared
+    // (length of the view space position == distance from camera)
+    // (this is linear space, not post-projection quadratic space)
+    float d = (length(IN.depth.xyz) - depthRange.x) * depthRange.w;
+    OUT.color = float4(d, d * d, 1, 1);
+
+    return OUT;
+}

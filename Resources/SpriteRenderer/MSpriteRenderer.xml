@@ -1,0 +1,60 @@
+<?xml version="1.0"?>
+<doc>
+    <assembly>
+        <name>MSpriteRenderer</name>
+    </assembly>
+    <members>
+        <member name="T:MSpriteRenderer.LimitedConcurrencyLevelTaskScheduler">
+            <summary>
+            Provides a task scheduler that ensures a maximum concurrency level while
+            running on top of the ThreadPool.
+            </summary>
+        </member>
+        <member name="F:MSpriteRenderer.LimitedConcurrencyLevelTaskScheduler._currentThreadIsProcessingItems">
+            <summary>Whether the current thread is processing work items.</summary>
+        </member>
+        <member name="F:MSpriteRenderer.LimitedConcurrencyLevelTaskScheduler._tasks">
+            <summary>The list of tasks to be executed.</summary>
+        </member>
+        <member name="F:MSpriteRenderer.LimitedConcurrencyLevelTaskScheduler._maxDegreeOfParallelism">
+            <summary>The maximum concurrency level allowed by this scheduler.</summary>
+        </member>
+        <member name="F:MSpriteRenderer.LimitedConcurrencyLevelTaskScheduler._delegatesQueuedOrRunning">
+            <summary>Whether the scheduler is currently processing work items.</summary>
+        </member>
+        <member name="M:MSpriteRenderer.LimitedConcurrencyLevelTaskScheduler.#ctor(System.Int32)">
+            <summary>
+            Initializes an instance of the LimitedConcurrencyLevelTaskScheduler class with the
+            specified degree of parallelism.
+            </summary>
+            <param name="maxDegreeOfParallelism">The maximum degree of parallelism provided by this scheduler.</param>
+        </member>
+        <member name="M:MSpriteRenderer.LimitedConcurrencyLevelTaskScheduler.QueueTask(System.Threading.Tasks.Task)">
+            <summary>Queues a task to the scheduler.</summary>
+            <param name="task">The task to be queued.</param>
+        </member>
+        <member name="M:MSpriteRenderer.LimitedConcurrencyLevelTaskScheduler.NotifyThreadPoolOfPendingWork">
+            <summary>
+            Informs the ThreadPool that there's work to be executed for this scheduler.
+            </summary>
+        </member>
+        <member name="M:MSpriteRenderer.LimitedConcurrencyLevelTaskScheduler.TryExecuteTaskInline(System.Threading.Tasks.Task,System.Boolean)">
+            <summary>Attempts to execute the specified task on the current thread.</summary>
+            <param name="task">The task to be executed.</param>
+            <param name="taskWasPreviouslyQueued"></param>
+            <returns>Whether the task could be executed on the current thread.</returns>
+        </member>
+        <member name="M:MSpriteRenderer.LimitedConcurrencyLevelTaskScheduler.TryDequeue(System.Threading.Tasks.Task)">
+            <summary>Attempts to remove a previously scheduled task from the scheduler.</summary>
+            <param name="task">The task to be removed.</param>
+            <returns>Whether the task could be found and removed.</returns>
+        </member>
+        <member name="M:MSpriteRenderer.LimitedConcurrencyLevelTaskScheduler.GetScheduledTasks">
+            <summary>Gets an enumerable of the tasks currently scheduled on this scheduler.</summary>
+            <returns>An enumerable of the tasks currently scheduled.</returns>
+        </member>
+        <member name="P:MSpriteRenderer.LimitedConcurrencyLevelTaskScheduler.MaximumConcurrencyLevel">
+            <summary>Gets the maximum concurrency level supported by this scheduler.</summary>
+        </member>
+    </members>
+</doc>

@@ -1,0 +1,19 @@
+material player_jumpsuit_gray
+{
+	technique
+	{
+		
+		pass
+		{
+			diffuse 1 1 1 1
+			
+			scene_blend alpha_blend
+
+			texture_unit
+			{
+				texture jumpsuit_gray.png
+				colour_op modulate
+			}
+		}
+	}
+}

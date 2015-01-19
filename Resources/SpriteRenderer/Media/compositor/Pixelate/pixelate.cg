@@ -1,0 +1,19 @@
+sampler RT : register(s0);
+float TargetWidth : register(c0);
+float TargetHeight : register(c1);
+float PixelSize : register(c2);
+
+float4 pixelate_ps(float2 uv : TEXCOORD0
+	) : COLOR
+{ 
+	float dx = PixelSize*(1./TargetWidth);
+	float dy = PixelSize*(1./TargetHeight);
+	vec2 coord = vec2(dx*floor(uv.x/dx),
+						dy*floor(uv.y/dy));
+						
+  float4 colorN = tex2D(RT, coord);
+  float4 color = { colorN.r, colorN.g, colorN.b, tex2D(RT, uv).a };
+  
+
+  return color;
+}

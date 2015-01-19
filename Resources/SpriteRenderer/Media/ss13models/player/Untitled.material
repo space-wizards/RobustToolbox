@@ -1,0 +1,13 @@
+// Untitled genrated by blender2ogre 0.6.0
+
+material Untitled 
+{
+    technique
+    {
+        pass Untitled
+        {
+            ambient 1 0 0 1.0
+            diffuse 1 0 0 1.0
+        }
+    }
+}

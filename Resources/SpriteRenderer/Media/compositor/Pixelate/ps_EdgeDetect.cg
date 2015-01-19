@@ -1,0 +1,78 @@
+#define QUAD_FLOAT
+#define QUAD_REAL float
+#define QUAD_REAL2 float2
+#define QUAD_REAL3 float3
+#define QUAD_REAL4 float4
+#define QUAD_REAL3x3 float3x3
+#define QUAD_REAL4x3 float4x3
+#define QUAD_REAL3x4 float3x4
+#define QUAD_REAL4x4 float4x4
+
+QUAD_REAL2 QuadScreenSize;
+sampler RT : register(s0);
+
+//////////////////////////////////////////////////////
+/////////////////////////////////// pixel shader /////
+//////////////////////////////////////////////////////
+
+float getGray(float4 c)
+{
+    return(dot(c.rgb,((0.33333).xxx)));
+}
+
+float4 edgeDetectPS(
+
+	QUAD_REAL4 Position	: POSITION,
+	QUAD_REAL2 UV	: TEXCOORD0,
+    uniform float NPixels,
+    uniform float Threshhold
+) : COLOR {
+    float2 ox = float2(NPixels/QuadScreenSize.x,0.0);
+    float2 oy = float2(0.0,NPixels/QuadScreenSize.y);
+    float2 uv = UV.xy;
+    float2 PP = uv - oy;
+    float4 CC = tex2D(RT,PP-ox); float g00 = getGray(CC);
+    CC = tex2D(RT,PP);    float g01 = getGray(CC);
+    CC = tex2D(RT,PP+ox); float g02 = getGray(CC);
+    PP = uv;
+    CC = tex2D(RT,PP-ox); float g10 = getGray(CC);
+    CC = tex2D(RT,PP);    float g11 = getGray(CC);
+    CC = tex2D(RT,PP+ox); float g12 = getGray(CC);
+    PP = uv + oy;
+    CC = tex2D(RT,PP-ox); float g20 = getGray(CC);
+    CC = tex2D(RT,PP);    float g21 = getGray(CC);
+    CC = tex2D(RT,PP+ox); float g22 = getGray(CC);
+    float K00 = -1;
+    float K01 = -2;
+    float K02 = -1;
+    float K10 = 0;
+    float K11 = 0;
+    float K12 = 0;
+    float K20 = 1;
+    float K21 = 2;
+    float K22 = 1;
+    float sx = 0;
+    float sy = 0;
+    sx += g00 * K00;
+    sx += g01 * K01;
+    sx += g02 * K02;
+    sx += g10 * K10;
+    sx += g11 * K11;
+    sx += g12 * K12;
+    sx += g20 * K20;
+    sx += g21 * K21;
+    sx += g22 * K22; 
+    sy += g00 * K00;
+    sy += g01 * K10;
+    sy += g02 * K20;
+    sy += g10 * K01;
+    sy += g11 * K11;
+    sy += g12 * K21;
+    sy += g20 * K02;
+    sy += g21 * K12;
+    sy += g22 * K22; 
+    float dist = sqrt(sx*sx+sy*sy);
+    float result = 1;
+    if (dist>Threshhold) { result = 0; }
+    return result.xxxx;
+}

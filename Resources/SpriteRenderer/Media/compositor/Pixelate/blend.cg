@@ -1,0 +1,24 @@
+sampler RT : register(s0);
+sampler sharpened : register(s1);
+sampler edges : register(s2);
+
+float4 blend_ps(float2 uv : TEXCOORD0
+	) : COLOR
+{ 
+	//Get the scene, sharpened, and edge detected pixels
+	float4 sceneColor = tex2D(RT, uv);
+	float4 sharpenedColor = tex2D(sharpened, uv);
+	float edgesColor = tex2D(edges, uv).x;
+	//get inverse
+	float invEdgesColor = 1-edgesColor;
+	//lerp the edges color towards gray instead of black
+	float lerpedEdgesColor = lerp(edgesColor, 1, 0.75);
+	//Adjust the scenes color to darken the edges
+	sceneColor.rgb = sceneColor.rgb * lerpedEdgesColor;
+	//Now erase the non-edge parts of the scene color
+	sceneColor = sceneColor * invEdgesColor;
+	//Now erase the edges from the sharpened color
+	sharpenedColor = sharpenedColor * edgesColor;
+	//Return the combination of the two, which should give nice sharp edges, and a sharpened interior
+    return sceneColor + sharpenedColor;
+}

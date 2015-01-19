@@ -1,0 +1,19 @@
+material Base_norig_02_PlayerModel_Geo_lambert2
+{
+	technique
+	{
+		
+		pass
+		{
+			diffuse 1 1 1 1
+			
+			scene_blend alpha_blend
+
+			texture_unit
+			{
+				texture UV_underwear.png
+				colour_op modulate
+			}
+		}
+	}
+}

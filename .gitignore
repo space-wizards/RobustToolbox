@@ -1,14 +1,53 @@
-bin
-obj
-Resources/textures/Animations/*.*
-_ReSharper*
-Resources/ResourcePack.zip
-SS13.suo
-Resources/textures/*_Animations.png
-Resources/textures/*_Decals.png
-Resources/textures/*_Effects.png
-Resources/textures/*_Items.png
-Resources/textures/*_Objects.png
-Resources/textures/*_Tiles.png
-Resources/textures/*_UserInterface.png
-Resources/textures/*.TAI
+# User-specific files
+*.suo
+*.user
+*.userosscache
+*.sln.docstates
+
+# Roslyn cache directories
+*.ide/
+
+# MSTest test Results
+[Tt]est[Rr]esult*/
+[Bb]uild[Ll]og.*
+
+# Program databases
+*.pdb
+
+# WinMerge backups
+*.bak
+
+*.vspscc
+*.vssscc
+.builds
+*.pidb
+*.svclog
+
+
+# Visual Studio profiler
+*.psess
+*.vsp
+*.vspx
+
+# Build results
+bin/
+obj/
+
+# ReSharper is a .NET coding add-in
+_ReSharper*/
+*.[Rr]e[Ss]harper
+*.DotSettings.user
+
+# Resources
+/Resources/textures/Animations/*.*
+/Resources/ResourcePack.zip
+/Resources/textures/*_Animations.png
+/Resources/textures/*_Decals.png
+/Resources/textures/*_Effects.png
+/Resources/textures/*_Items.png
+/Resources/textures/*_Objects.png
+/Resources/textures/*_Tiles.png
+/Resources/textures/*_UserInterface.png
+/Resources/textures/*.TAI
+/Resources/SpriteRenderer/Ogre.log
+/Media

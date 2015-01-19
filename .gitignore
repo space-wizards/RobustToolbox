@@ -12,3 +12,5 @@ Resources/textures/*_Objects.png
 Resources/textures/*_Tiles.png
 Resources/textures/*_UserInterface.png
 Resources/textures/*.TAI
+/Resources/SpriteRenderer/Ogre.log
+/Media

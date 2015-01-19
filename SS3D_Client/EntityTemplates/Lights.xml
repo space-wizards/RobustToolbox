@@ -40,9 +40,10 @@
       <Component name="VelocityComponent"></Component>
       <Component name="DirectionComponent"></Component>
       <Component name="BasicMoverComponent"></Component>
-      <Component name="AnimatedSpriteComponent">
+      <Component name="WearableAnimatedSpriteComponent">
         <Parameters>
           <Parameter name="sprite" type="string" value="player_toolbox" />
+          <Parameter name="notWornSprite" type="string" value="flashlight" />
         </Parameters>
       </Component>
       <Component name="IconComponent">

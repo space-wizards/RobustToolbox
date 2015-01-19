@@ -112,14 +112,6 @@ namespace CGO
                     SetSpriteByKey(_basename + "_incap");
                     flip = false;
                     break; //TODO do stuff here, incap and dead.
-                case ComponentMessageType.NotIncapacitated:
-                    SetSpriteByKey(_basename + "_incap");
-                    flip = false;
-                    break;
-                case ComponentMessageType.ItemDetach:
-                    SetSpriteByKey(_basename);
-                    DrawDepth = DrawDepth.FloorObjects;
-                    break;
                 case ComponentMessageType.ItemEquipped:
                     worn = true;
                     DrawDepth = wornDrawDepth;

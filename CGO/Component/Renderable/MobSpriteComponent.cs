@@ -65,14 +65,6 @@ namespace CGO
                             break;
                     }
                     break;
-                case ComponentMessageType.Incapacitated:
-                    SetSpriteByKey(_basename + "_incap");
-                    flip = false;
-                    break;
-                case ComponentMessageType.NotIncapacitated:
-                    SetSpriteByKey(_basename + "_incap");
-                    flip = false;
-                    break;
                 case ComponentMessageType.Die:
                     SetSpriteByKey(_basename + "_incap_dead");
                     flip = false;

@@ -7,7 +7,11 @@
       <Component name="VelocityComponent"></Component>
       <Component name="DirectionComponent"></Component>
       <Component name="ClickableComponent"></Component>
-      <Component name="SpriteComponent"></Component>
+      <Component name="WearableAnimatedSpriteComponent">
+        <Parameters>
+          <Parameter name="sprite" type="string" value="player_toolbox" />
+        </Parameters>
+      </Component>
       <Component name="BasicInteractableComponent"></Component>
       <Component name="BasicMoverComponent"></Component>
       <Component name="PhysicsComponent">
@@ -33,7 +37,11 @@
       <Component name="VelocityComponent"></Component>
       <Component name="DirectionComponent"></Component>
       <Component name="ClickableComponent"></Component>
-      <Component name="SpriteComponent"></Component>
+      <Component name="WearableAnimatedSpriteComponent">
+        <Parameters>
+          <Parameter name="sprite" type="string" value="player_toolbox" />
+        </Parameters>
+      </Component>
       <Component name="BasicInteractableComponent"></Component>
       <Component name="BasicMoverComponent"></Component>
       <Component name="PhysicsComponent">
@@ -60,7 +68,11 @@
       <Component name="VelocityComponent"></Component>
       <Component name="DirectionComponent"></Component>
       <Component name="ClickableComponent"></Component>
-      <Component name="SpriteComponent"></Component>
+      <Component name="WearableAnimatedSpriteComponent">
+        <Parameters>
+          <Parameter name="sprite" type="string" value="player_toolbox" />
+        </Parameters>
+      </Component>
       <Component name="BasicInteractableComponent"></Component>
       <Component name="BasicMoverComponent"></Component>
       <Component name="PhysicsComponent">
@@ -86,7 +98,11 @@
       <Component name="VelocityComponent"></Component>
       <Component name="DirectionComponent"></Component>
       <Component name="ClickableComponent"></Component>
-      <Component name="SpriteComponent"></Component>
+      <Component name="WearableAnimatedSpriteComponent">
+        <Parameters>
+          <Parameter name="sprite" type="string" value="player_toolbox" />
+        </Parameters>
+      </Component>
       <Component name="BasicInteractableComponent"></Component>
       <Component name="BasicMoverComponent"></Component>
       <Component name="PhysicsComponent">
@@ -112,7 +128,11 @@
       <Component name="VelocityComponent"></Component>
       <Component name="DirectionComponent"></Component>
       <Component name="ClickableComponent"></Component>
-      <Component name="SpriteComponent"></Component>
+      <Component name="WearableAnimatedSpriteComponent">
+        <Parameters>
+          <Parameter name="sprite" type="string" value="player_toolbox" />
+        </Parameters>
+      </Component>
       <Component name="BasicInteractableComponent"></Component>
       <Component name="BasicMoverComponent"></Component>
       <Component name="PhysicsComponent">
@@ -138,7 +158,11 @@
       <Component name="VelocityComponent"></Component>
       <Component name="DirectionComponent"></Component>
       <Component name="ClickableComponent"></Component>
-      <Component name="SpriteComponent"></Component>
+      <Component name="WearableAnimatedSpriteComponent">
+        <Parameters>
+          <Parameter name="sprite" type="string" value="player_toolbox" />
+        </Parameters>
+      </Component>
       <Component name="BasicInteractableComponent"></Component>
       <Component name="BasicMoverComponent"></Component>
       <Component name="PhysicsComponent">
@@ -164,7 +188,11 @@
       <Component name="VelocityComponent"></Component>
       <Component name="DirectionComponent"></Component>
       <Component name="ClickableComponent"></Component>
-      <Component name="SpriteComponent"></Component>
+      <Component name="WearableAnimatedSpriteComponent">
+        <Parameters>
+          <Parameter name="sprite" type="string" value="player_toolbox" />
+        </Parameters>
+      </Component>
       <Component name="BasicInteractableComponent"></Component>
       <Component name="BasicMoverComponent"></Component>
       <Component name="PhysicsComponent">
@@ -190,7 +218,11 @@
       <Component name="VelocityComponent"></Component>
       <Component name="DirectionComponent"></Component>
       <Component name="ClickableComponent"></Component>
-      <Component name="SpriteComponent"></Component>
+      <Component name="WearableAnimatedSpriteComponent">
+        <Parameters>
+          <Parameter name="sprite" type="string" value="player_toolbox" />
+        </Parameters>
+      </Component>
       <Component name="BasicInteractableComponent"></Component>
       <Component name="BasicMoverComponent"></Component>
       <Component name="PhysicsComponent">
@@ -216,7 +248,11 @@
       <Component name="VelocityComponent"></Component>
       <Component name="DirectionComponent"></Component>
       <Component name="ClickableComponent"></Component>
-      <Component name="SpriteComponent"></Component>
+      <Component name="WearableAnimatedSpriteComponent">
+        <Parameters>
+          <Parameter name="sprite" type="string" value="player_toolbox" />
+        </Parameters>
+      </Component>
       <Component name="BasicInteractableComponent"></Component>
       <Component name="BasicMoverComponent"></Component>
       <Component name="PhysicsComponent">
@@ -242,7 +278,11 @@
       <Component name="VelocityComponent"></Component>
       <Component name="DirectionComponent"></Component>
       <Component name="ClickableComponent"></Component>
-      <Component name="SpriteComponent"></Component>
+      <Component name="WearableAnimatedSpriteComponent">
+        <Parameters>
+          <Parameter name="sprite" type="string" value="player_toolbox" />
+        </Parameters>
+      </Component>
       <Component name="BasicInteractableComponent"></Component>
       <Component name="BasicMoverComponent"></Component>
       <Component name="PhysicsComponent">
@@ -269,7 +309,11 @@
       <Component name="VelocityComponent"></Component>
       <Component name="DirectionComponent"></Component>
       <Component name="ClickableComponent"></Component>
-      <Component name="SpriteComponent"></Component>
+      <Component name="WearableAnimatedSpriteComponent">
+        <Parameters>
+          <Parameter name="sprite" type="string" value="player_toolbox" />
+        </Parameters>
+      </Component>
       <Component name="BasicInteractableComponent"></Component>
       <Component name="BasicMoverComponent"></Component>
       <Component name="PhysicsComponent">

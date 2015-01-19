@@ -89,6 +89,7 @@
     <Compile Include="Component\Objectives\ObjectivesComponent.cs" />
     <Compile Include="Component\PlayerActionComp\PlayerActionCompS.cs" />
     <Compile Include="Component\Renderable\AnimatedSpriteComponent.cs" />
+    <Compile Include="Component\Renderable\WearableAnimatedSpriteComponent.cs" />
     <Compile Include="Component\StatusEffects\StatusEffectComp.cs" />
     <Compile Include="Component\SVars\SVarsComponent.cs" />
     <Compile Include="Component\Think\ThinkComponent\IThinkComponent.cs" />

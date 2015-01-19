@@ -271,14 +271,12 @@ namespace GameObject
         /// <returns></returns>
         public IEnumerable<ComponentParameter> GetBaseSpriteParamaters()
         {
-            IEnumerable<IEnumerable<ComponentParameter>> spriteLists = from para in _parameters.Values
-                                                                       let spriteArgs =
-                                                                           para.Where(
-                                                                               arg =>
-                                                                               arg.MemberName == "basename" ||
-                                                                               arg.MemberName == "addsprite")
-                                                                       select spriteArgs;
-            return spriteLists.SelectMany(x => x);
+            // TODO unfuck this, it is painfully stupid.
+            if(_parameters.ContainsKey("IconComponent"))
+            {
+                return _parameters["IconComponent"].Where(arg => arg.MemberName == "icon");
+            }
+            return new List<ComponentParameter>();
         }
 
 

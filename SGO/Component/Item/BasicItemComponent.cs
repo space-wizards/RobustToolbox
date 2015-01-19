@@ -17,13 +17,13 @@ namespace SGO
         public InventoryLocation HoldingHand = InventoryLocation.None;
         public bool CanBePickedUp = true;
 
+        public Entity CurrentHolder { get; set; }
+
         public BasicItemComponent()
         {
             Family = ComponentFamily.Item;
             capabilities = new Dictionary<string, ItemCapability>();
         }
-
-        public Entity CurrentHolder { get; set; }
 
         public override ComponentReplyMessage RecieveMessage(object sender, ComponentMessageType type,
                                                              params object[] list)
@@ -93,6 +93,9 @@ namespace SGO
                     break;
                 case ComponentMessageType.ClickedInHand:
                     Activate();
+                    break;
+                case ComponentMessageType.ItemEquipped:
+                    HandleDropped();
                     break;
             }
 

@@ -92,7 +92,8 @@ namespace SGO.EntitySystems
 
         private bool DoEmptyHandToActorInteraction(Entity user, Entity obj)
         {
-            throw new NotImplementedException();
+            //throw new NotImplementedException();
+            return true;
         }
 
         private bool DoHandsToLargeObjectInteraction(Entity user, Entity obj)

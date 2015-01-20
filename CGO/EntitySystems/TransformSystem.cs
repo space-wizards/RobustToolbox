@@ -43,7 +43,7 @@ namespace CGO.EntitySystems
                 Vector2D newPosition;
 
                 //Limit to how far a human can move
-                var humanMoveLimit = 3 * interpolation * PlayerInputMoverComponent.FastMoveSpeed;
+                var humanMoveLimit = 6 * interpolation * PlayerInputMoverComponent.FastMoveSpeed;
                 
                 // If the "to" interp position is equal to the "from" interp position, 
                 // OR we're actually trying to interpolate past the "to" state

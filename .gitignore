@@ -54,3 +54,4 @@ _ReSharper*/
 *.sln
 *.csproj
 /Bin
+/setenv.bat

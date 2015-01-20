@@ -1,0 +1,63 @@
+<Project frameworkVersion="v4_0" name="ServerInterfaces" rootNamespace="ServerInterfaces" type="Library" path="ServerInterfaces">
+  <Configuration name="Debug">
+    <Options>
+      <OutputPath>../Bin</OutputPath>
+    </Options>
+  </Configuration>
+  <Configuration name="Release">
+    <Options>
+      <OutputPath>../Bin</OutputPath>
+    </Options>
+  </Configuration>
+  <ReferencePath>../Bin</ReferencePath>
+  <ReferencePath>../Third-Party</ReferencePath>
+  <Reference name="System"/>
+  <Reference name="System.Core"/>
+  <Reference name="System.Drawing"/>
+  <Reference name="System.Xml.Linq"/>
+  <Reference name="System.Data.DataSetExtensions"/>
+  <Reference name="Microsoft.CSharp"/>
+  <Reference name="System.Data"/>
+  <Reference name="System.Xml"/>
+  <Files>
+    <File buildAction="Compile">Atmos/IAtmosManager.cs</File>
+    <File buildAction="Compile">Atmos/IGasCell.cs</File>
+    <File buildAction="Compile">Atmos/IGasProperties.cs</File>
+    <File buildAction="Compile">Chat/IChatManager.cs</File>
+    <File buildAction="Compile">ClientConsoleHost/IClientConsoleHost.cs</File>
+    <File buildAction="Compile">Configuration/IConfigurationManager.cs</File>
+    <File buildAction="Compile">GameObject/IActorComponent.cs</File>
+    <File buildAction="Compile">GameObject/IDirectionComponent.cs</File>
+    <File buildAction="Compile">GameObject/IParticleSystemComponent.cs</File>
+    <File buildAction="Compile">GameObject/IRenderableComponent.cs</File>
+    <File buildAction="Compile">GameObject/ITransformComponent.cs</File>
+    <File buildAction="Compile">GameObject/IWallMountedComponent.cs</File>
+    <File buildAction="Compile">ServerConsole/IConsoleManager.cs</File>
+    <File buildAction="Compile">Crafting/ICraftingManager.cs</File>
+    <File buildAction="Compile">GameMode/IGameMode.cs</File>
+    <File buildAction="Compile">GameObject/IComponentFactory.cs</File>
+    <File buildAction="Compile">GameObject/IEntityManager.cs</File>
+    <File buildAction="Compile">GameObject/IEntityNetworkManager.cs</File>
+    <File buildAction="Compile">GameObject/IEntityQuery.cs</File>
+    <File buildAction="Compile">GameObject/IInventoryComponent.cs</File>
+    <File buildAction="Compile">GameState/IGameStateManager.cs</File>
+    <File buildAction="Compile">IClient.cs</File>
+    <File buildAction="Compile">ISS13Server.cs</File>
+    <File buildAction="Compile">Map/IMapManager.cs</File>
+    <File buildAction="Compile">MessageLogging/IMessageLogger.cs</File>
+    <File buildAction="Compile">Placement/IPlacementManager.cs</File>
+    <File buildAction="Compile">Player/IPlayerSession.cs</File>
+    <File buildAction="Compile">IService.cs</File>
+    <File buildAction="Compile">Network/ISS13NetServer.cs</File>
+    <File buildAction="Compile">Objectives/IObjective.cs</File>
+    <File buildAction="Compile">Objectives/IObjectiveSet.cs</File>
+    <File buildAction="Compile">Player/IPlayerManager.cs</File>
+    <File buildAction="Compile">Properties/AssemblyInfo.cs</File>
+    <File buildAction="Compile">Round/IRoundManager.cs</File>
+    <File buildAction="Compile">Serialization/ISS13Serializer.cs</File>
+    <File buildAction="Compile">Tiles/ITile.cs</File>
+  </Files>
+  <Reference name="GameObject"/>
+  <Reference name="Lidgren.Network"/>
+  <Reference name="SS13_Shared"/>
+</Project>

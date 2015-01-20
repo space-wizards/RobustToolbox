@@ -1,0 +1,29 @@
+<Project frameworkVersion="v4_0" name="SS13.IoC" rootNamespace="SS13.IoC" type="Library" path="SS13.IoC">
+  <Configuration name="Debug">
+    <Options>
+      <OutputPath>../Bin</OutputPath>
+    </Options>
+  </Configuration>
+  <Configuration name="Release">
+    <Options>
+      <OutputPath>../Bin</OutputPath>
+    </Options>
+  </Configuration>
+  <ReferencePath>../Bin</ReferencePath>
+  <ReferencePath>../Third-Party</ReferencePath>
+  <Reference name="ClientInterfaces" path="../Third-Party"/>
+  <Reference name="System"/>
+  <Reference name="System.Core"/>
+  <Reference name="System.Xml.Linq"/>
+  <Reference name="System.Data.DataSetExtensions"/>
+  <Reference name="Microsoft.CSharp"/>
+  <Reference name="System.Data"/>
+  <Reference name="System.Xml"/>
+  <Files>
+    <File buildAction="Compile">Exceptions/MissingImplementationException.cs</File>
+    <File buildAction="Compile">Exceptions/NoPublicConstructorException.cs</File>
+    <File buildAction="Compile">IoCManager.cs</File>
+    <File buildAction="Compile">Properties/AssemblyInfo.cs</File>
+  </Files>
+  <Reference name="ServerInterfaces"/>
+</Project>

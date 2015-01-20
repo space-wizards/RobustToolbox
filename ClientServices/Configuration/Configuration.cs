@@ -11,7 +11,7 @@ namespace ClientServices.Configuration
         public bool Fullscreen;
         public bool MessageLogging = false;
         public string PlayerName = "Joe Genero";
-        public string ResourcePack = @"..\..\..\..\Media\ResourcePack.zip";
+        public string ResourcePack = @"..\..\..\..\Resources\ResourcePack.zip";
         public string ResourcePassword;
         public string ServerAddress = "127.0.0.1";
         public bool SimulateLatency = false;

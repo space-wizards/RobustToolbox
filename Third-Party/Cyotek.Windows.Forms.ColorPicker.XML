@@ -1,0 +1,1658 @@
+<?xml version="1.0"?>
+<doc>
+    <assembly>
+        <name>Cyotek.Windows.Forms.ColorPicker</name>
+    </assembly>
+    <members>
+        <member name="T:Cyotek.Windows.Forms.ColorCellBorderStyle">
+            <summary>
+            Specifies the style of a color cell border.
+            </summary>
+        </member>
+        <member name="F:Cyotek.Windows.Forms.ColorCellBorderStyle.None">
+            <summary>
+            No border.
+            </summary>
+        </member>
+        <member name="F:Cyotek.Windows.Forms.ColorCellBorderStyle.FixedSingle">
+            <summary>
+            A single line border.
+            </summary>
+        </member>
+        <member name="F:Cyotek.Windows.Forms.ColorPickerDialog.components">
+            <summary>
+            Required designer variable.
+            </summary>
+        </member>
+        <member name="M:Cyotek.Windows.Forms.ColorPickerDialog.Dispose(System.Boolean)">
+            <summary>
+            Clean up any resources being used.
+            </summary>
+            <param name="disposing">true if managed resources should be disposed; otherwise, false.</param>
+        </member>
+        <member name="M:Cyotek.Windows.Forms.ColorPickerDialog.InitializeComponent">
+            <summary>
+            Required method for Designer support - do not modify
+            the contents of this method with the code editor.
+            </summary>
+        </member>
+        <member name="T:Cyotek.Windows.Forms.ColorSlider">
+            <summary>
+            Represents a control for selecting a value from a scale
+            </summary>
+        </member>
+        <member name="M:Cyotek.Windows.Forms.ColorSlider.#ctor">
+            <summary>
+            Initializes a new instance of the <see cref="T:Cyotek.Windows.Forms.ColorSlider"/> class.
+            </summary>
+        </member>
+        <member name="M:Cyotek.Windows.Forms.ColorSlider.Dispose(System.Boolean)">
+            <summary>
+            Releases the unmanaged resources used by the <see cref="T:System.Windows.Forms.Control" /> and its child controls and optionally releases the managed resources.
+            </summary>
+            <param name="disposing">true to release both managed and unmanaged resources; false to release only unmanaged resources.</param>
+        </member>
+        <member name="M:Cyotek.Windows.Forms.ColorSlider.IsInputKey(System.Windows.Forms.Keys)">
+            <summary>
+            Determines whether the specified key is a regular input key or a special key that requires preprocessing.
+            </summary>
+            <param name="keyData">One of the <see cref="T:System.Windows.Forms.Keys" /> values.</param>
+            <returns>true if the specified key is a regular input key; otherwise, false.</returns>
+        </member>
+        <member name="M:Cyotek.Windows.Forms.ColorSlider.OnGotFocus(System.EventArgs)">
+            <summary>
+            Raises the <see cref="E:System.Windows.Forms.Control.GotFocus" /> event.
+            </summary>
+            <param name="e">An <see cref="T:System.EventArgs" /> that contains the event data.</param>
+        </member>
+        <member name="M:Cyotek.Windows.Forms.ColorSlider.OnKeyDown(System.Windows.Forms.KeyEventArgs)">
+            <summary>
+            Raises the <see cref="E:System.Windows.Forms.Control.KeyDown" /> event.
+            </summary>
+            <param name="e">A <see cref="T:System.Windows.Forms.KeyEventArgs" /> that contains the event data.</param>
+        </member>
+        <member name="M:Cyotek.Windows.Forms.ColorSlider.OnLostFocus(System.EventArgs)">
+            <summary>
+            Raises the <see cref="E:System.Windows.Forms.Control.LostFocus" /> event.
+            </summary>
+            <param name="e">An <see cref="T:System.EventArgs" /> that contains the event data.</param>
+        </member>
+        <member name="M:Cyotek.Windows.Forms.ColorSlider.OnMouseDown(System.Windows.Forms.MouseEventArgs)">
+            <summary>
+            Raises the <see cref="E:System.Windows.Forms.Control.MouseDown" /> event.
+            </summary>
+            <param name="e">A <see cref="T:System.Windows.Forms.MouseEventArgs" /> that contains the event data.</param>
+        </member>
+        <member name="M:Cyotek.Windows.Forms.ColorSlider.OnMouseMove(System.Windows.Forms.MouseEventArgs)">
+            <summary>
+            Raises the <see cref="E:System.Windows.Forms.Control.MouseMove" /> event.
+            </summary>
+            <param name="e">A <see cref="T:System.Windows.Forms.MouseEventArgs" /> that contains the event data.</param>
+        </member>
+        <member name="M:Cyotek.Windows.Forms.ColorSlider.OnPaddingChanged(System.EventArgs)">
+            <summary>
+            Raises the <see cref="E:System.Windows.Forms.Control.PaddingChanged" /> event.
+            </summary>
+            <param name="e">A <see cref="T:System.EventArgs" /> that contains the event data.</param>
+        </member>
+        <member name="M:Cyotek.Windows.Forms.ColorSlider.OnPaint(System.Windows.Forms.PaintEventArgs)">
+            <summary>
+            Raises the <see cref="E:System.Windows.Forms.Control.Paint" /> event.
+            </summary>
+            <param name="e">A <see cref="T:System.Windows.Forms.PaintEventArgs" /> that contains the event data.</param>
+        </member>
+        <member name="M:Cyotek.Windows.Forms.ColorSlider.OnResize(System.EventArgs)">
+            <summary>
+            Raises the <see cref="E:System.Windows.Forms.Control.Resize" /> event.
+            </summary>
+            <param name="e">An <see cref="T:System.EventArgs" /> that contains the event data.</param>
+        </member>
+        <member name="M:Cyotek.Windows.Forms.ColorSlider.CreateNubGlyph">
+            <summary>
+            Creates the selection nub glyph.
+            </summary>
+            <returns>Image.</returns>
+        </member>
+        <member name="M:Cyotek.Windows.Forms.ColorSlider.DefineBar">
+            <summary>
+            Defines the bar bounds and padding.
+            </summary>
+        </member>
+        <member name="M:Cyotek.Windows.Forms.ColorSlider.GetBarBounds">
+            <summary>
+            Gets the bar bounds.
+            </summary>
+            <returns>Rectangle.</returns>
+        </member>
+        <member name="M:Cyotek.Windows.Forms.ColorSlider.GetBarPadding">
+            <summary>
+            Gets the bar padding.
+            </summary>
+            <returns>Padding.</returns>
+        </member>
+        <member name="M:Cyotek.Windows.Forms.ColorSlider.OnBarBoundsChanged(System.EventArgs)">
+            <summary>
+            Raises the <see cref="E:Cyotek.Windows.Forms.ColorSlider.BarBoundsChanged"/> event.
+            </summary>
+            <param name="e">The <see cref="T:System.EventArgs"/> instance containing the event data.</param>
+        </member>
+        <member name="M:Cyotek.Windows.Forms.ColorSlider.OnBarPaddingChanged(System.EventArgs)">
+            <summary>
+            Raises the <see cref="E:Cyotek.Windows.Forms.ColorSlider.BarPaddingChanged"/> event.
+            </summary>
+            <param name="e">The <see cref="T:System.EventArgs"/> instance containing the event data.</param>
+        </member>
+        <member name="M:Cyotek.Windows.Forms.ColorSlider.OnBarStyleChanged(System.EventArgs)">
+            <summary>
+            Raises the <see cref="E:Cyotek.Windows.Forms.ColorSlider.BarStyleChanged"/> event.
+            </summary>
+            <param name="e">The <see cref="T:System.EventArgs"/> instance containing the event data.</param>
+        </member>
+        <member name="M:Cyotek.Windows.Forms.ColorSlider.OnColor1Changed(System.EventArgs)">
+            <summary>
+            Raises the <see cref="E:Cyotek.Windows.Forms.ColorSlider.Color1Changed"/> event.
+            </summary>
+            <param name="e">The <see cref="T:System.EventArgs"/> instance containing the event data.</param>
+        </member>
+        <member name="M:Cyotek.Windows.Forms.ColorSlider.OnColor2Changed(System.EventArgs)">
+            <summary>
+            Raises the <see cref="E:Cyotek.Windows.Forms.ColorSlider.Color2Changed"/> event.
+            </summary>
+            <param name="e">The <see cref="T:System.EventArgs"/> instance containing the event data.</param>
+        </member>
+        <member name="M:Cyotek.Windows.Forms.ColorSlider.OnColor3Changed(System.EventArgs)">
+            <summary>
+            Raises the <see cref="E:Cyotek.Windows.Forms.ColorSlider.Color3Changed"/> event.
+            </summary>
+            <param name="e">The <see cref="T:System.EventArgs"/> instance containing the event data.</param>
+        </member>
+        <member name="M:Cyotek.Windows.Forms.ColorSlider.OnCustomColorsChanged(System.EventArgs)">
+            <summary>
+            Raises the <see cref="E:Cyotek.Windows.Forms.ColorSlider.CustomColorsChanged"/> event.
+            </summary>
+            <param name="e">The <see cref="T:System.EventArgs"/> instance containing the event data.</param>
+        </member>
+        <member name="M:Cyotek.Windows.Forms.ColorSlider.OnLargeChangeChanged(System.EventArgs)">
+            <summary>
+            Raises the <see cref="E:Cyotek.Windows.Forms.ColorSlider.LargeChangeChanged"/> event.
+            </summary>
+            <param name="e">The <see cref="T:System.EventArgs"/> instance containing the event data.</param>
+        </member>
+        <member name="M:Cyotek.Windows.Forms.ColorSlider.OnMaximumChanged(System.EventArgs)">
+            <summary>
+            Raises the <see cref="E:Cyotek.Windows.Forms.ColorSlider.MaximumChanged"/> event.
+            </summary>
+            <param name="e">The <see cref="T:System.EventArgs"/> instance containing the event data.</param>
+        </member>
+        <member name="M:Cyotek.Windows.Forms.ColorSlider.OnMinimumChanged(System.EventArgs)">
+            <summary>
+            Raises the <see cref="E:Cyotek.Windows.Forms.ColorSlider.MinimumChanged"/> event.
+            </summary>
+            <param name="e">The <see cref="T:System.EventArgs"/> instance containing the event data.</param>
+        </member>
+        <member name="M:Cyotek.Windows.Forms.ColorSlider.OnNubColorChanged(System.EventArgs)">
+            <summary>
+            Raises the <see cref="E:Cyotek.Windows.Forms.ColorSlider.NubColorChanged"/> event.
+            </summary>
+            <param name="e">The <see cref="T:System.EventArgs"/> instance containing the event data.</param>
+        </member>
+        <member name="M:Cyotek.Windows.Forms.ColorSlider.OnNubSizeChanged(System.EventArgs)">
+            <summary>
+            Raises the <see cref="E:Cyotek.Windows.Forms.ColorSlider.NubSizeChanged"/> event.
+            </summary>
+            <param name="e">The <see cref="T:System.EventArgs"/> instance containing the event data.</param>
+        </member>
+        <member name="M:Cyotek.Windows.Forms.ColorSlider.OnNubStyleChanged(System.EventArgs)">
+            <summary>
+            Raises the <see cref="E:Cyotek.Windows.Forms.ColorSlider.NubStyleChanged"/> event.
+            </summary>
+            <param name="e">The <see cref="T:System.EventArgs"/> instance containing the event data.</param>
+        </member>
+        <member name="M:Cyotek.Windows.Forms.ColorSlider.OnOrientationChanged(System.EventArgs)">
+            <summary>
+            Raises the <see cref="E:Cyotek.Windows.Forms.ColorSlider.OrientationChanged"/> event.
+            </summary>
+            <param name="e">The <see cref="T:System.EventArgs"/> instance containing the event data.</param>
+        </member>
+        <member name="M:Cyotek.Windows.Forms.ColorSlider.OnShowValueDividerChanged(System.EventArgs)">
+            <summary>
+            Raises the <see cref="E:Cyotek.Windows.Forms.ColorSlider.ShowValueDividerChanged"/> event.
+            </summary>
+            <param name="e">The <see cref="T:System.EventArgs"/> instance containing the event data.</param>
+        </member>
+        <member name="M:Cyotek.Windows.Forms.ColorSlider.OnSliderStyleChanged(System.EventArgs)">
+            <summary>
+            Raises the <see cref="E:Cyotek.Windows.Forms.ColorSlider.SliderStyleChanged"/> event.
+            </summary>
+            <param name="e">The <see cref="T:System.EventArgs"/> instance containing the event data.</param>
+        </member>
+        <member name="M:Cyotek.Windows.Forms.ColorSlider.OnSmallChangeChanged(System.EventArgs)">
+            <summary>
+            Raises the <see cref="E:Cyotek.Windows.Forms.ColorSlider.SmallChangeChanged"/> event.
+            </summary>
+            <param name="e">The <see cref="T:System.EventArgs"/> instance containing the event data.</param>
+        </member>
+        <member name="M:Cyotek.Windows.Forms.ColorSlider.OnValueChanged(System.EventArgs)">
+            <summary>
+            Raises the <see cref="E:Cyotek.Windows.Forms.ColorSlider.ValueChanged"/> event.
+            </summary>
+            <param name="e">The <see cref="T:System.EventArgs"/> instance containing the event data.</param>
+        </member>
+        <member name="M:Cyotek.Windows.Forms.ColorSlider.PaintAdornments(System.Windows.Forms.PaintEventArgs)">
+            <summary>
+            Paints control adornments.
+            </summary>
+            <param name="e">The <see cref="T:System.Windows.Forms.PaintEventArgs"/> instance containing the event data.</param>
+        </member>
+        <member name="M:Cyotek.Windows.Forms.ColorSlider.PaintBar(System.Windows.Forms.PaintEventArgs)">
+            <summary>
+            Paints the bar.
+            </summary>
+            <param name="e">The <see cref="T:System.Windows.Forms.PaintEventArgs"/> instance containing the event data.</param>
+        </member>
+        <member name="M:Cyotek.Windows.Forms.ColorSlider.PointToValue(System.Drawing.Point)">
+            <summary>
+            Computes the location of the specified client point into value coordinates.
+            </summary>
+            <param name="location">The client coordinate <see cref="T:System.Drawing.Point"/> to convert.</param>
+        </member>
+        <member name="M:Cyotek.Windows.Forms.ColorSlider.ValueToPoint(System.Single)">
+            <summary>
+            Computes the location of the value point into client coordinates.
+            </summary>
+            <param name="value">The value coordinate <see cref="T:System.Drawing.Point"/> to convert.</param>
+            <returns>A <see cref="T:System.Drawing.Point"/> that represents the converted <see cref="T:System.Drawing.Point"/>, value, in client coordinates.</returns>
+        </member>
+        <member name="E:Cyotek.Windows.Forms.ColorSlider.BarBoundsChanged">
+            <summary>
+            Occurs when the BarBounds property value changes
+            </summary>
+        </member>
+        <member name="E:Cyotek.Windows.Forms.ColorSlider.BarPaddingChanged">
+            <summary>
+            Occurs when the BarPadding property value changes
+            </summary>
+        </member>
+        <member name="E:Cyotek.Windows.Forms.ColorSlider.BarStyleChanged">
+            <summary>
+            Occurs when the Style property value changes
+            </summary>
+        </member>
+        <member name="E:Cyotek.Windows.Forms.ColorSlider.Color1Changed">
+            <summary>
+            Occurs when the Color1 property value changes
+            </summary>
+        </member>
+        <member name="E:Cyotek.Windows.Forms.ColorSlider.Color2Changed">
+            <summary>
+            Occurs when the Color2 property value changes
+            </summary>
+        </member>
+        <member name="E:Cyotek.Windows.Forms.ColorSlider.Color3Changed">
+            <summary>
+            Occurs when the Color3 property value changes
+            </summary>
+        </member>
+        <member name="E:Cyotek.Windows.Forms.ColorSlider.CustomColorsChanged">
+            <summary>
+            Occurs when the CustomColors property value changes
+            </summary>
+        </member>
+        <member name="E:Cyotek.Windows.Forms.ColorSlider.LargeChangeChanged">
+            <summary>
+            Occurs when the LargeChange property value changes
+            </summary>
+        </member>
+        <member name="E:Cyotek.Windows.Forms.ColorSlider.MaximumChanged">
+            <summary>
+            Occurs when the Maximum property value changes
+            </summary>
+        </member>
+        <member name="E:Cyotek.Windows.Forms.ColorSlider.MinimumChanged">
+            <summary>
+            Occurs when the Minimum property value changes
+            </summary>
+        </member>
+        <member name="E:Cyotek.Windows.Forms.ColorSlider.NubColorChanged">
+            <summary>
+            Occurs when the NubColor property value changes
+            </summary>
+        </member>
+        <member name="E:Cyotek.Windows.Forms.ColorSlider.NubSizeChanged">
+            <summary>
+            Occurs when the NubSize property value changes
+            </summary>
+        </member>
+        <member name="E:Cyotek.Windows.Forms.ColorSlider.NubStyleChanged">
+            <summary>
+            Occurs when the NubStyle property value changes
+            </summary>
+        </member>
+        <member name="E:Cyotek.Windows.Forms.ColorSlider.OrientationChanged">
+            <summary>
+            Occurs when the Orientation property value changes
+            </summary>
+        </member>
+        <member name="E:Cyotek.Windows.Forms.ColorSlider.ShowValueDividerChanged">
+            <summary>
+            Occurs when the ShowValueDivider property value changes
+            </summary>
+        </member>
+        <member name="E:Cyotek.Windows.Forms.ColorSlider.SliderStyleChanged">
+            <summary>
+            Occurs when the SliderStyle property value changes
+            </summary>
+        </member>
+        <member name="E:Cyotek.Windows.Forms.ColorSlider.SmallChangeChanged">
+            <summary>
+            Occurs when the SmallChange property value changes
+            </summary>
+        </member>
+        <member name="E:Cyotek.Windows.Forms.ColorSlider.ValueChanged">
+            <summary>
+            Occurs when the Percent property value changes
+            </summary>
+        </member>
+        <member name="P:Cyotek.Windows.Forms.ColorSlider.Font">
+            <summary>
+            Gets or sets the font of the text displayed by the control.
+            </summary>
+            <value>The font.</value>
+            <returns>The <see cref="T:System.Drawing.Font" /> to apply to the text displayed by the control. The default is the value of the <see cref="P:System.Windows.Forms.Control.DefaultFont" /> property.</returns>
+        </member>
+        <member name="P:Cyotek.Windows.Forms.ColorSlider.ForeColor">
+            <summary>
+            Gets or sets the foreground color of the control.
+            </summary>
+            <value>The color of the fore.</value>
+            <returns>The foreground <see cref="T:System.Drawing.Color" /> of the control. The default is the value of the <see cref="P:System.Windows.Forms.Control.DefaultForeColor" /> property.</returns>
+        </member>
+        <member name="P:Cyotek.Windows.Forms.ColorSlider.Text">
+            <summary>
+            Gets or sets the text associated with this control.
+            </summary>
+            <value>The text.</value>
+            <returns>The text associated with this control.</returns>
+        </member>
+        <member name="P:Cyotek.Windows.Forms.ColorSlider.BarBounds">
+            <summary>
+            Gets or sets the location and size of the color bar.
+            </summary>
+            <value>The location and size of the color bar.</value>
+        </member>
+        <member name="P:Cyotek.Windows.Forms.ColorSlider.BarPadding">
+            <summary>
+            Gets or sets the bar padding.
+            </summary>
+            <value>The bar padding.</value>
+        </member>
+        <member name="P:Cyotek.Windows.Forms.ColorSlider.BarStyle">
+            <summary>
+            Gets or sets the bar style.
+            </summary>
+            <value>The bar style.</value>
+        </member>
+        <member name="P:Cyotek.Windows.Forms.ColorSlider.Color1">
+            <summary>
+            Gets or sets the first color of the bar.
+            </summary>
+            <value>The first color.</value>
+            <remarks>This property is ignored if the <see cref="P:Cyotek.Windows.Forms.ColorSlider.BarStyle"/> property is set to Custom and a valid color set has been specified</remarks>
+        </member>
+        <member name="P:Cyotek.Windows.Forms.ColorSlider.Color2">
+            <summary>
+            Gets or sets the second color of the bar.
+            </summary>
+            <value>The second color.</value>
+            <remarks>This property is ignored if the <see cref="P:Cyotek.Windows.Forms.ColorSlider.BarStyle"/> property is set to Custom and a valid color set has been specified</remarks>
+        </member>
+        <member name="P:Cyotek.Windows.Forms.ColorSlider.Color3">
+            <summary>
+            Gets or sets the third color of the bar.
+            </summary>
+            <value>The third color.</value>
+            <remarks>This property is ignored if the <see cref="P:Cyotek.Windows.Forms.ColorSlider.BarStyle"/> property is set to Custom and a valid color set has been specified, or if the BarStyle is set to TwoColor.</remarks>
+        </member>
+        <member name="P:Cyotek.Windows.Forms.ColorSlider.CustomColors">
+            <summary>
+            Gets or sets the color range used by the custom bar style.
+            </summary>
+            <value>The custom colors.</value>
+            <remarks>This property is ignored if the <see cref="P:Cyotek.Windows.Forms.ColorSlider.BarStyle"/> property is not set to Custom</remarks>
+        </member>
+        <member name="P:Cyotek.Windows.Forms.ColorSlider.LargeChange">
+            <summary>
+            Gets or sets a value to be added to or subtracted from the <see cref="P:Cyotek.Windows.Forms.ColorSlider.Value"/> property when the selection is moved a large distance.
+            </summary>
+            <value>A numeric value. The default value is 10.</value>
+        </member>
+        <member name="P:Cyotek.Windows.Forms.ColorSlider.Maximum">
+            <summary>
+            Gets or sets the upper limit of values of the selection range.
+            </summary>
+            <value>A numeric value. The default value is 100.</value>
+        </member>
+        <member name="P:Cyotek.Windows.Forms.ColorSlider.Minimum">
+            <summary>
+            Gets or sets the lower limit of values of the selection range.
+            </summary>
+            <value>A numeric value. The default value is 0.</value>
+        </member>
+        <member name="P:Cyotek.Windows.Forms.ColorSlider.NubColor">
+            <summary>
+            Gets or sets the color of the selection nub.
+            </summary>
+            <value>The color of the nub.</value>
+        </member>
+        <member name="P:Cyotek.Windows.Forms.ColorSlider.NubSize">
+            <summary>
+            Gets or sets the size of the selection nub.
+            </summary>
+            <value>The size of the nub.</value>
+        </member>
+        <member name="P:Cyotek.Windows.Forms.ColorSlider.NubStyle">
+            <summary>
+            Gets or sets the selection nub style.
+            </summary>
+            <value>The nub style.</value>
+        </member>
+        <member name="P:Cyotek.Windows.Forms.ColorSlider.Orientation">
+            <summary>
+            Gets or sets the orientation of the color bar.
+            </summary>
+            <value>The orientation.</value>
+        </member>
+        <member name="P:Cyotek.Windows.Forms.ColorSlider.ShowValueDivider">
+            <summary>
+            Gets or sets a value indicating whether a divider is shown at the selection nub location.
+            </summary>
+            <value><c>true</c> if a value divider is to be shown; otherwise, <c>false</c>.</value>
+        </member>
+        <member name="P:Cyotek.Windows.Forms.ColorSlider.SmallChange">
+            <summary>
+            Gets or sets the value to be added to or subtracted from the <see cref="P:Cyotek.Windows.Forms.ColorSlider.Value"/> property when the selection is moved a small distance.
+            </summary>
+            <value>A numeric value. The default value is 1.</value>
+        </member>
+        <member name="P:Cyotek.Windows.Forms.ColorSlider.Value">
+            <summary>
+            Gets or sets a numeric value that represents the current position of the selection numb on the color slider control.
+            </summary>
+            <value>A numeric value that is within the <see cref="P:Cyotek.Windows.Forms.ColorSlider.Minimum"/> and <see cref="P:Cyotek.Windows.Forms.ColorSlider.Maximum"/> range. The default value is 0.</value>
+        </member>
+        <member name="P:Cyotek.Windows.Forms.ColorSlider.SelectionGlyph">
+            <summary>
+            Gets or sets the selection glyph.
+            </summary>
+            <value>The selection glyph.</value>
+        </member>
+        <member name="T:Cyotek.Windows.Forms.ColorBarStyle">
+            <summary>
+            Specifies the style of a color bar
+            </summary>
+        </member>
+        <member name="F:Cyotek.Windows.Forms.ColorBarStyle.TwoColor">
+            <summary>
+            A gradient from one color to another.
+            </summary>
+        </member>
+        <member name="F:Cyotek.Windows.Forms.ColorBarStyle.ThreeColor">
+            <summary>
+            A gradient between three colors.
+            </summary>
+        </member>
+        <member name="F:Cyotek.Windows.Forms.ColorBarStyle.Custom">
+            <summary>
+            A gadient between a user defined number of colors.
+            </summary>
+        </member>
+        <member name="T:Cyotek.Windows.Forms.ColorCollection">
+            <summary>
+            Represents a collection of colors
+            </summary>
+            <remarks>
+            	<para>ColorCollection allows duplicate elements.</para>
+            	<para>Elements in this collection can be accessed using an integer index. Indexes in this collection are zero-based.</para>
+            </remarks>
+        </member>
+        <member name="M:Cyotek.Windows.Forms.ColorCollection.#ctor">
+            <summary>
+            Initializes a new instance of the <see cref="T:Cyotek.Windows.Forms.ColorCollection"/> class.
+            </summary>
+        </member>
+        <member name="M:Cyotek.Windows.Forms.ColorCollection.#ctor(System.Collections.Generic.IEnumerable{System.Drawing.Color})">
+            <summary>
+            Initializes a new instance of the <see cref="T:Cyotek.Windows.Forms.ColorCollection"/> class that contains elements copied from the specified collection.
+            </summary>
+            <param name="collection">The collection whose elements are copied to the new collection.</param>
+        </member>
+        <member name="M:Cyotek.Windows.Forms.ColorCollection.ClearItems">
+            <summary>
+            Removes all elements from the <see cref="T:System.Collections.ObjectModel.Collection`1" />.
+            </summary>
+        </member>
+        <member name="M:Cyotek.Windows.Forms.ColorCollection.InsertItem(System.Int32,System.Drawing.Color)">
+            <summary>
+            Inserts an element into the <see cref="T:System.Collections.ObjectModel.Collection`1" /> at the specified index.
+            </summary>
+            <param name="index">The zero-based index at which <paramref name="item" /> should be inserted.</param>
+            <param name="item">The object to insert.</param>
+        </member>
+        <member name="M:Cyotek.Windows.Forms.ColorCollection.RemoveItem(System.Int32)">
+            <summary>
+            Removes the element at the specified index of the <see cref="T:System.Collections.ObjectModel.Collection`1" />.
+            </summary>
+            <param name="index">The zero-based index of the element to remove.</param>
+        </member>
+        <member name="M:Cyotek.Windows.Forms.ColorCollection.SetItem(System.Int32,System.Drawing.Color)">
+            <summary>
+            Replaces the element at the specified index.
+            </summary>
+            <param name="index">The zero-based index of the element to replace.</param>
+            <param name="item">The new value for the element at the specified index.</param>
+        </member>
+        <member name="M:Cyotek.Windows.Forms.ColorCollection.AddRange(System.Collections.Generic.IEnumerable{System.Drawing.Color})">
+            <summary>Adds the elements of the specified collection to the end of the <see cref="T:Cyotek.Windows.Forms.ColorCollection"/>.</summary>
+            <param name="colors">The collection whose elements should be added to the end of the <see cref="T:Cyotek.Windows.Forms.ColorCollection"/>.</param>
+        </member>
+        <member name="M:Cyotek.Windows.Forms.ColorCollection.Sort(Cyotek.Windows.Forms.ColorCollectionSortOrder)">
+            <summary>
+            Sorts the elements in the entire %ColorCollection% using the specified order.
+            </summary>
+            <param name="sortOrder">The sort order.</param>
+            <exception cref="T:System.ArgumentException">Thrown when an invalid sort order is specified</exception>
+        </member>
+        <member name="M:Cyotek.Windows.Forms.ColorCollection.OnCollectionChanged(Cyotek.Windows.Forms.ColorCollectionEventArgs)">
+            <summary>
+            Raises the <see cref="E:Cyotek.Windows.Forms.ColorCollection.CollectionChanged"/> event.
+            </summary>
+            <param name="e">The <see cref="T:System.EventArgs"/> instance containing the event data.</param>
+        </member>
+        <member name="E:Cyotek.Windows.Forms.ColorCollection.CollectionChanged">
+            <summary>
+            Occurs when elements in the collection are added, removed or modified.
+            </summary>
+        </member>
+        <member name="T:Cyotek.Windows.Forms.ColorCollectionEventArgs">
+            <summary>Provides data for the <see cref="E:Cyotek.Windows.Forms.ColorCollection.CollectionChanged"/> event of a <see cref="T:Cyotek.Windows.Forms.ColorCollection"/> instance.</summary>
+        </member>
+        <member name="M:Cyotek.Windows.Forms.ColorCollectionEventArgs.#ctor(System.Int32,System.Drawing.Color)">
+            <summary>
+            Initializes a new instance of the <see cref="T:Cyotek.Windows.Forms.ColorCollectionEventArgs"/> class for the specified color.
+            </summary>
+            <param name="index">The color index that the event is responding to.</param>
+            <param name="color">The %Color% that the event is responding to.</param>
+        </member>
+        <member name="M:Cyotek.Windows.Forms.ColorCollectionEventArgs.#ctor">
+            <summary>
+            Initializes a new instance of the <see cref="T:Cyotek.Windows.Forms.ColorCollectionEventArgs"/> class.
+            </summary>
+        </member>
+        <member name="P:Cyotek.Windows.Forms.ColorCollectionEventArgs.Color">
+            <summary>
+            Gets the color that raised the event.
+            </summary>
+            <value>The color that raised the event.</value>
+        </member>
+        <member name="P:Cyotek.Windows.Forms.ColorCollectionEventArgs.Index">
+            <summary>
+            Gets the color index that raised the event.
+            </summary>
+            <value>The color index that raised the event.</value>
+        </member>
+        <member name="T:Cyotek.Windows.Forms.ColorCollectionSortOrder">
+            <summary>
+            Specifies the sort order of colors
+            </summary>
+        </member>
+        <member name="F:Cyotek.Windows.Forms.ColorCollectionSortOrder.Hue">
+            <summary>
+            Ordered by hue.
+            </summary>
+        </member>
+        <member name="F:Cyotek.Windows.Forms.ColorCollectionSortOrder.Brightness">
+            <summary>
+            Ordered by brightness.
+            </summary>
+        </member>
+        <member name="F:Cyotek.Windows.Forms.ColorCollectionSortOrder.Value">
+            <summary>
+            Ordered by value
+            </summary>
+        </member>
+        <member name="T:Cyotek.Windows.Forms.ColorComparer">
+            <summary>
+            Provides access to color comparision operations.
+            </summary>
+        </member>
+        <member name="M:Cyotek.Windows.Forms.ColorComparer.Brightness(System.Drawing.Color,System.Drawing.Color)">
+            <summary>
+            Ccompares two colors by brightness and returns an indication of their relative sort order.
+            </summary>
+            <param name="x">A color to compare to y.</param>
+            <param name="y">A color to compare to x.</param>
+        </member>
+        <member name="M:Cyotek.Windows.Forms.ColorComparer.Hue(System.Drawing.Color,System.Drawing.Color)">
+            <summary>
+            Ccompares two colors by hue and returns an indication of their relative sort order.
+            </summary>
+            <param name="x">A color to compare to y.</param>
+            <param name="y">A color to compare to x.</param>
+        </member>
+        <member name="M:Cyotek.Windows.Forms.ColorComparer.Value(System.Drawing.Color,System.Drawing.Color)">
+            <summary>
+            Ccompares two colors by value and returns an indication of their relative sort order.
+            </summary>
+            <param name="x">A color to compare to y.</param>
+            <param name="y">A color to compare to x.</param>
+        </member>
+        <member name="T:Cyotek.Windows.Forms.ColorEditorManager">
+            <summary>
+            Represents a control that binds multiple editors together as a single composite unit.
+            </summary>
+        </member>
+        <member name="T:Cyotek.Windows.Forms.IColorEditor">
+            <summary>
+            Provides functionality required by color editors that are bindable
+            </summary>
+        </member>
+        <member name="E:Cyotek.Windows.Forms.IColorEditor.ColorChanged">
+            <summary>
+            Occurs when the <see cref="P:Cyotek.Windows.Forms.IColorEditor.Color"/> property is changed.
+            </summary>
+        </member>
+        <member name="P:Cyotek.Windows.Forms.IColorEditor.Color">
+            <summary>
+            Gets or sets the component color.
+            </summary>
+            <value>The component color.</value>
+        </member>
+        <member name="M:Cyotek.Windows.Forms.ColorEditorManager.BindEvents(Cyotek.Windows.Forms.IColorEditor)">
+            <summary>
+            Binds events for the specified editor.
+            </summary>
+            <param name="control">The <see cref="T:Cyotek.Windows.Forms.IColorEditor"/> to bind to.</param>
+        </member>
+        <member name="M:Cyotek.Windows.Forms.ColorEditorManager.OnColorChanged(System.EventArgs)">
+            <summary>
+            Raises the <see cref="E:Cyotek.Windows.Forms.ColorEditorManager.ColorChanged"/> event.
+            </summary>
+            <param name="e">The <see cref="T:System.EventArgs"/> instance containing the event data.</param>
+        </member>
+        <member name="M:Cyotek.Windows.Forms.ColorEditorManager.OnColorEditorChanged(System.EventArgs)">
+            <summary>
+            Raises the <see cref="E:Cyotek.Windows.Forms.ColorEditorManager.ColorEditorChanged"/> event.
+            </summary>
+            <param name="e">The <see cref="T:System.EventArgs"/> instance containing the event data.</param>
+        </member>
+        <member name="M:Cyotek.Windows.Forms.ColorEditorManager.OnColorGridChanged(System.EventArgs)">
+            <summary>
+            Raises the <see cref="E:Cyotek.Windows.Forms.ColorEditorManager.ColorGridChanged"/> event.
+            </summary>
+            <param name="e">The <see cref="T:System.EventArgs"/> instance containing the event data.</param>
+        </member>
+        <member name="M:Cyotek.Windows.Forms.ColorEditorManager.OnColorWheelChanged(System.EventArgs)">
+            <summary>
+            Raises the <see cref="E:Cyotek.Windows.Forms.ColorEditorManager.ColorWheelChanged"/> event.
+            </summary>
+            <param name="e">The <see cref="T:System.EventArgs"/> instance containing the event data.</param>
+        </member>
+        <member name="M:Cyotek.Windows.Forms.ColorEditorManager.OnLightnessColorSliderChanged(System.EventArgs)">
+            <summary>
+            Raises the <see cref="E:Cyotek.Windows.Forms.ColorEditorManager.LightnessColorSliderChanged"/> event.
+            </summary>
+            <param name="e">The <see cref="T:System.EventArgs"/> instance containing the event data.</param>
+        </member>
+        <member name="M:Cyotek.Windows.Forms.ColorEditorManager.OnScreenColorPickerChanged(System.EventArgs)">
+            <summary>
+            Raises the <see cref="E:Cyotek.Windows.Forms.ColorEditorManager.ScreenColorPickerChanged"/> event.
+            </summary>
+            <param name="e">The <see cref="T:System.EventArgs"/> instance containing the event data.</param>
+        </member>
+        <member name="M:Cyotek.Windows.Forms.ColorEditorManager.SetColor(Cyotek.Windows.Forms.IColorEditor,Cyotek.Windows.Forms.IColorEditor)">
+            <summary>
+            Sets the color of the given editor.
+            </summary>
+            <param name="control">The <see cref="T:Cyotek.Windows.Forms.IColorEditor"/> to update.</param>
+            <param name="sender">The <see cref="T:Cyotek.Windows.Forms.IColorEditor"/> triggering the update.</param>
+        </member>
+        <member name="M:Cyotek.Windows.Forms.ColorEditorManager.Synchronize(Cyotek.Windows.Forms.IColorEditor)">
+            <summary>
+            Synchronizes linked components with the specified <see cref="T:Cyotek.Windows.Forms.IColorEditor"/>.
+            </summary>
+            <param name="sender">The <see cref="T:Cyotek.Windows.Forms.IColorEditor"/> triggering the update.</param>
+        </member>
+        <member name="M:Cyotek.Windows.Forms.ColorEditorManager.ColorChangedHandler(System.Object,System.EventArgs)">
+            <summary>
+            Handler for linked controls.
+            </summary>
+            <param name="sender">The sender.</param>
+            <param name="e">The <see cref="T:System.EventArgs"/> instance containing the event data.</param>
+        </member>
+        <member name="E:Cyotek.Windows.Forms.ColorEditorManager.ColorChanged">
+            <summary>
+            Occurs when the Color property value changes
+            </summary>
+        </member>
+        <member name="E:Cyotek.Windows.Forms.ColorEditorManager.ColorEditorChanged">
+            <summary>
+            Occurs when the ColorEditor property value changes
+            </summary>
+        </member>
+        <member name="E:Cyotek.Windows.Forms.ColorEditorManager.ColorGridChanged">
+            <summary>
+            Occurs when the Grid property value changes
+            </summary>
+        </member>
+        <member name="E:Cyotek.Windows.Forms.ColorEditorManager.ColorWheelChanged">
+            <summary>
+            Occurs when the Wheel property value changes
+            </summary>
+        </member>
+        <member name="E:Cyotek.Windows.Forms.ColorEditorManager.LightnessColorSliderChanged">
+            <summary>
+            Occurs when the LightnessColorSlider property value changes
+            </summary>
+        </member>
+        <member name="E:Cyotek.Windows.Forms.ColorEditorManager.ScreenColorPickerChanged">
+            <summary>
+            Occurs when the ScreenColorPicker property value changes
+            </summary>
+        </member>
+        <member name="P:Cyotek.Windows.Forms.ColorEditorManager.Color">
+            <summary>
+            Gets or sets the component color.
+            </summary>
+            <value>The component color.</value>
+        </member>
+        <member name="P:Cyotek.Windows.Forms.ColorEditorManager.ColorEditor">
+            <summary>
+            Gets or sets the linked <see cref="P:Cyotek.Windows.Forms.ColorEditorManager.ColorEditor"/>.
+            </summary>
+        </member>
+        <member name="P:Cyotek.Windows.Forms.ColorEditorManager.ColorGrid">
+            <summary>
+            Gets or sets the linked <see cref="P:Cyotek.Windows.Forms.ColorEditorManager.ColorGrid"/>.
+            </summary>
+        </member>
+        <member name="P:Cyotek.Windows.Forms.ColorEditorManager.ColorWheel">
+            <summary>
+            Gets or sets the linked <see cref="P:Cyotek.Windows.Forms.ColorEditorManager.ColorWheel"/>.
+            </summary>
+        </member>
+        <member name="P:Cyotek.Windows.Forms.ColorEditorManager.HslColor">
+            <summary>
+            Gets or sets the component color as a HSL structure.
+            </summary>
+            <value>The component color.</value>
+        </member>
+        <member name="P:Cyotek.Windows.Forms.ColorEditorManager.LightnessColorSlider">
+            <summary>
+            Gets or sets the linked <see cref="P:Cyotek.Windows.Forms.ColorEditorManager.LightnessColorSlider"/>.
+            </summary>
+        </member>
+        <member name="P:Cyotek.Windows.Forms.ColorEditorManager.ScreenColorPicker">
+            <summary>
+            Gets or sets the linked <see cref="P:Cyotek.Windows.Forms.ColorEditorManager.ScreenColorPicker"/>.
+            </summary>
+        </member>
+        <member name="P:Cyotek.Windows.Forms.ColorEditorManager.LockUpdates">
+            <summary>
+            Gets or sets a value indicating whether updating of linked components is disabled.
+            </summary>
+            <value><c>true</c> if updated of linked components is disabled; otherwise, <c>false</c>.</value>
+        </member>
+        <member name="T:Cyotek.Windows.Forms.ColorEditingMode">
+            <summary>
+            Specifies the edit mode of a <see cref="T:Cyotek.Windows.Forms.ColorGrid"/>.
+            </summary>
+        </member>
+        <member name="F:Cyotek.Windows.Forms.ColorEditingMode.None">
+            <summary>
+            None. No editing is allowed.
+            </summary>
+        </member>
+        <member name="F:Cyotek.Windows.Forms.ColorEditingMode.CustomOnly">
+            <summary>
+            Only custom colors can be edited.
+            </summary>
+        </member>
+        <member name="F:Cyotek.Windows.Forms.ColorEditingMode.Both">
+            <summary>
+            Custom or standard colors can be edited.
+            </summary>
+        </member>
+        <member name="T:Cyotek.Windows.Forms.ColorEditor">
+            <summary>
+            Represents a control that allows the editing of a color in a variety of ways.
+            </summary>
+        </member>
+        <member name="M:Cyotek.Windows.Forms.ColorEditor.#ctor">
+            <summary>
+            Initializes a new instance of the <see cref="T:Cyotek.Windows.Forms.ColorEditor"/> class.
+            </summary>
+        </member>
+        <member name="M:Cyotek.Windows.Forms.ColorEditor.OnDockChanged(System.EventArgs)">
+            <summary>
+            Raises the <see cref="E:System.Windows.Forms.Control.DockChanged" /> event.
+            </summary>
+            <param name="e">An <see cref="T:System.EventArgs" /> that contains the event data.</param>
+        </member>
+        <member name="M:Cyotek.Windows.Forms.ColorEditor.OnLoad(System.EventArgs)">
+            <summary>
+            Raises the <see cref="E:System.Windows.Forms.UserControl.Load" /> event.
+            </summary>
+            <param name="e">An <see cref="T:System.EventArgs" /> that contains the event data.</param>
+        </member>
+        <member name="M:Cyotek.Windows.Forms.ColorEditor.OnPaddingChanged(System.EventArgs)">
+            <summary>
+            Raises the <see cref="E:System.Windows.Forms.Control.PaddingChanged" /> event.
+            </summary>
+            <param name="e">An <see cref="T:System.EventArgs" /> that contains the event data.</param>
+        </member>
+        <member name="M:Cyotek.Windows.Forms.ColorEditor.OnResize(System.EventArgs)">
+            <summary>
+            Raises the <see cref="E:Resize" /> event.
+            </summary>
+            <param name="e">An <see cref="T:System.EventArgs" /> that contains the event data.</param>
+        </member>
+        <member name="M:Cyotek.Windows.Forms.ColorEditor.OnColorChanged(System.EventArgs)">
+            <summary>
+            Raises the <see cref="E:Cyotek.Windows.Forms.ColorEditor.ColorChanged"/> event.
+            </summary>
+            <param name="e">The <see cref="T:System.EventArgs"/> instance containing the event data.</param>
+        </member>
+        <member name="M:Cyotek.Windows.Forms.ColorEditor.OnOrientationChanged(System.EventArgs)">
+            <summary>
+            Raises the <see cref="E:Cyotek.Windows.Forms.ColorEditor.OrientationChanged"/> event.
+            </summary>
+            <param name="e">The <see cref="T:System.EventArgs"/> instance containing the event data.</param>
+        </member>
+        <member name="M:Cyotek.Windows.Forms.ColorEditor.ResizeComponents">
+            <summary>
+            Resizes the editing components.
+            </summary>
+        </member>
+        <member name="M:Cyotek.Windows.Forms.ColorEditor.UpdateFields(System.Boolean)">
+            <summary>
+            Updates the editing field values.
+            </summary>
+            <param name="userAction">if set to <c>true</c> the update is due to user interaction.</param>
+        </member>
+        <member name="M:Cyotek.Windows.Forms.ColorEditor.ValueChangedHandler(System.Object,System.EventArgs)">
+            <summary>
+            Change handler for editing components.
+            </summary>
+            <param name="sender">The sender.</param>
+            <param name="e">The <see cref="T:System.EventArgs"/> instance containing the event data.</param>
+        </member>
+        <member name="F:Cyotek.Windows.Forms.ColorEditor.components">
+            <summary> 
+            Required designer variable.
+            </summary>
+        </member>
+        <member name="M:Cyotek.Windows.Forms.ColorEditor.Dispose(System.Boolean)">
+            <summary> 
+            Clean up any resources being used.
+            </summary>
+            <param name="disposing">true if managed resources should be disposed; otherwise, false.</param>
+        </member>
+        <member name="M:Cyotek.Windows.Forms.ColorEditor.InitializeComponent">
+            <summary> 
+            Required method for Designer support - do not modify 
+            the contents of this method with the code editor.
+            </summary>
+        </member>
+        <member name="E:Cyotek.Windows.Forms.ColorEditor.ColorChanged">
+            <summary>
+            Occurs when the Color property value changes
+            </summary>
+        </member>
+        <member name="E:Cyotek.Windows.Forms.ColorEditor.OrientationChanged">
+            <summary>
+            Occurs when the Orientation property value changes
+            </summary>
+        </member>
+        <member name="P:Cyotek.Windows.Forms.ColorEditor.Color">
+            <summary>
+            Gets or sets the component color.
+            </summary>
+            <value>The component color.</value>
+        </member>
+        <member name="P:Cyotek.Windows.Forms.ColorEditor.HslColor">
+            <summary>
+            Gets or sets the component color as a HSL structure.
+            </summary>
+            <value>The component color.</value>
+        </member>
+        <member name="P:Cyotek.Windows.Forms.ColorEditor.Orientation">
+            <summary>
+            Gets or sets the orientation of the editor.
+            </summary>
+            <value>The orientation.</value>
+        </member>
+        <member name="P:Cyotek.Windows.Forms.ColorEditor.LockUpdates">
+            <summary>
+            Gets or sets a value indicating whether input changes should be processed.
+            </summary>
+            <value><c>true</c> if input changes should be processed; otherwise, <c>false</c>.</value>
+        </member>
+        <member name="T:Cyotek.Windows.Forms.ColorGrid">
+            <summary>
+            Represents a grid control, which displays a collection of colors using different styles.
+            </summary>
+        </member>
+        <member name="M:Cyotek.Windows.Forms.ColorGrid.BeginUpdate">
+            <summary>
+              Disables any redrawing of the image box
+            </summary>
+        </member>
+        <member name="M:Cyotek.Windows.Forms.ColorGrid.EndUpdate">
+            <summary>
+              Enables the redrawing of the image box
+            </summary>
+        </member>
+        <member name="M:Cyotek.Windows.Forms.ColorGrid.OnAutoAddColorsChanged(System.EventArgs)">
+            <summary>
+            Raises the <see cref="E:Cyotek.Windows.Forms.ColorGrid.AutoAddColorsChanged"/> event.
+            </summary>
+            <param name="e">The <see cref="T:System.EventArgs"/> instance containing the event data.</param>
+        </member>
+        <member name="M:Cyotek.Windows.Forms.ColorGrid.OnCellBorderColorChanged(System.EventArgs)">
+            <summary>
+            Raises the <see cref="E:Cyotek.Windows.Forms.ColorGrid.CellBorderColorChanged"/> event.
+            </summary>
+            <param name="e">The <see cref="T:System.EventArgs"/> instance containing the event data.</param>
+        </member>
+        <member name="M:Cyotek.Windows.Forms.ColorGrid.OnCellBorderStyleChanged(System.EventArgs)">
+            <summary>
+            Raises the <see cref="E:Cyotek.Windows.Forms.ColorGrid.CellBorderStyleChanged"/> event.
+            </summary>
+            <param name="e">The <see cref="T:System.EventArgs"/> instance containing the event data.</param>
+        </member>
+        <member name="M:Cyotek.Windows.Forms.ColorGrid.OnCellSizeChanged(System.EventArgs)">
+            <summary>
+            Raises the <see cref="E:Cyotek.Windows.Forms.ColorGrid.CellSizeChanged"/> event.
+            </summary>
+            <param name="e">The <see cref="T:System.EventArgs"/> instance containing the event data.</param>
+        </member>
+        <member name="M:Cyotek.Windows.Forms.ColorGrid.OnColorChanged(System.EventArgs)">
+            <summary>
+            Raises the <see cref="E:Cyotek.Windows.Forms.ColorGrid.ColorChanged"/> event.
+            </summary>
+            <param name="e">The <see cref="T:System.EventArgs"/> instance containing the event data.</param>
+        </member>
+        <member name="M:Cyotek.Windows.Forms.ColorGrid.OnColorsChanged(System.EventArgs)">
+            <summary>
+            Raises the <see cref="E:Cyotek.Windows.Forms.ColorGrid.ColorsChanged"/> event.
+            </summary>
+            <param name="e">The <see cref="T:System.EventArgs"/> instance containing the event data.</param>
+        </member>
+        <member name="M:Cyotek.Windows.Forms.ColorGrid.OnColumnsChanged(System.EventArgs)">
+            <summary>
+            Raises the <see cref="E:Cyotek.Windows.Forms.ColorGrid.ColumnsChanged"/> event.
+            </summary>
+            <param name="e">The <see cref="T:System.EventArgs"/> instance containing the event data.</param>
+        </member>
+        <member name="M:Cyotek.Windows.Forms.ColorGrid.OnCustomColorsChanged(System.EventArgs)">
+            <summary>
+            Raises the <see cref="E:Cyotek.Windows.Forms.ColorGrid.CustomColorsChanged"/> event.
+            </summary>
+            <param name="e">The <see cref="T:System.EventArgs"/> instance containing the event data.</param>
+        </member>
+        <member name="M:Cyotek.Windows.Forms.ColorGrid.OnEditModeChanged(System.EventArgs)">
+            <summary>
+            Raises the <see cref="E:Cyotek.Windows.Forms.ColorGrid.EditModeChanged"/> event.
+            </summary>
+            <param name="e">The <see cref="T:System.EventArgs"/> instance containing the event data.</param>
+        </member>
+        <member name="M:Cyotek.Windows.Forms.ColorGrid.OnHotIndexChanged(System.EventArgs)">
+            <summary>
+            Raises the <see cref="E:Cyotek.Windows.Forms.ColorGrid.HotIndexChanged"/> event.
+            </summary>
+            <param name="e">The <see cref="T:System.EventArgs"/> instance containing the event data.</param>
+        </member>
+        <member name="M:Cyotek.Windows.Forms.ColorGrid.OnPaletteChanged(System.EventArgs)">
+            <summary>
+            Raises the <see cref="E:Cyotek.Windows.Forms.ColorGrid.PaletteChanged"/> event.
+            </summary>
+            <param name="e">The <see cref="T:System.EventArgs"/> instance containing the event data.</param>
+        </member>
+        <member name="M:Cyotek.Windows.Forms.ColorGrid.OnSelectedCellStyleChanged(System.EventArgs)">
+            <summary>
+            Raises the <see cref="E:Cyotek.Windows.Forms.ColorGrid.SelectedCellStyleChanged"/> event.
+            </summary>
+            <param name="e">The <see cref="T:System.EventArgs"/> instance containing the event data.</param>
+        </member>
+        <member name="M:Cyotek.Windows.Forms.ColorGrid.OnShowCustomColorsChanged(System.EventArgs)">
+            <summary>
+            Raises the <see cref="E:Cyotek.Windows.Forms.ColorGrid.ShowCustomColorsChanged"/> event.
+            </summary>
+            <param name="e">The <see cref="T:System.EventArgs"/> instance containing the event data.</param>
+        </member>
+        <member name="M:Cyotek.Windows.Forms.ColorGrid.OnShowToolTipsChanged(System.EventArgs)">
+            <summary>
+            Raises the <see cref="E:Cyotek.Windows.Forms.ColorGrid.ShowToolTipsChanged"/> event.
+            </summary>
+            <param name="e">The <see cref="T:System.EventArgs"/> instance containing the event data.</param>
+        </member>
+        <member name="M:Cyotek.Windows.Forms.ColorGrid.OnSpacingChanged(System.EventArgs)">
+            <summary>
+            Raises the <see cref="E:Cyotek.Windows.Forms.ColorGrid.SpacingChanged"/> event.
+            </summary>
+            <param name="e">The <see cref="T:System.EventArgs"/> instance containing the event data.</param>
+        </member>
+        <member name="E:Cyotek.Windows.Forms.ColorGrid.AutoAddColorsChanged">
+            <summary>
+            Occurs when the AutoAddColors property value changes
+            </summary>
+        </member>
+        <member name="E:Cyotek.Windows.Forms.ColorGrid.CellBorderColorChanged">
+            <summary>
+            Occurs when the CellBorderColor property value changes
+            </summary>
+        </member>
+        <member name="E:Cyotek.Windows.Forms.ColorGrid.CellBorderStyleChanged">
+            <summary>
+            Occurs when the CellBorderStyle property value changes
+            </summary>
+        </member>
+        <member name="E:Cyotek.Windows.Forms.ColorGrid.CellSizeChanged">
+            <summary>
+            Occurs when the CellSize property value changes
+            </summary>
+        </member>
+        <member name="E:Cyotek.Windows.Forms.ColorGrid.ColorChanged">
+            <summary>
+            Occurs when the Color property value changes
+            </summary>
+        </member>
+        <member name="E:Cyotek.Windows.Forms.ColorGrid.ColorsChanged">
+            <summary>
+            Occurs when the Colors property value changes
+            </summary>
+        </member>
+        <member name="E:Cyotek.Windows.Forms.ColorGrid.ColumnsChanged">
+            <summary>
+            Occurs when the Columns property value changes
+            </summary>
+        </member>
+        <member name="E:Cyotek.Windows.Forms.ColorGrid.CustomColorsChanged">
+            <summary>
+            Occurs when the CustomColors property value changes
+            </summary>
+        </member>
+        <member name="E:Cyotek.Windows.Forms.ColorGrid.EditModeChanged">
+            <summary>
+            Occurs when the EditMode property value changes
+            </summary>
+        </member>
+        <member name="E:Cyotek.Windows.Forms.ColorGrid.HotIndexChanged">
+            <summary>
+            Occurs when the HotIndex property value changes
+            </summary>
+        </member>
+        <member name="E:Cyotek.Windows.Forms.ColorGrid.PaletteChanged">
+            <summary>
+            Occurs when the Palette property value changes
+            </summary>
+        </member>
+        <member name="E:Cyotek.Windows.Forms.ColorGrid.SelectedCellStyleChanged">
+            <summary>
+            Occurs when the SelectedCellStyle property value changes
+            </summary>
+        </member>
+        <member name="E:Cyotek.Windows.Forms.ColorGrid.ShowCustomColorsChanged">
+            <summary>
+            Occurs when the ShowCustomColors property value changes
+            </summary>
+        </member>
+        <member name="E:Cyotek.Windows.Forms.ColorGrid.ShowToolTipsChanged">
+            <summary>
+            Occurs when the ShowToolTips property value changes
+            </summary>
+        </member>
+        <member name="E:Cyotek.Windows.Forms.ColorGrid.SpacingChanged">
+            <summary>
+            Occurs when the Spacing property value changes
+            </summary>
+        </member>
+        <member name="P:Cyotek.Windows.Forms.ColorGrid.AllowPainting">
+            <summary>
+              Gets a value indicating whether painting of the control is allowed.
+            </summary>
+            <value>
+              <c>true</c> if painting of the control is allowed; otherwise, <c>false</c>.
+            </value>
+        </member>
+        <member name="M:Cyotek.Windows.Forms.ColorWheel.BeginUpdate">
+            <summary>
+              Disables any redrawing of the image box
+            </summary>
+        </member>
+        <member name="M:Cyotek.Windows.Forms.ColorWheel.EndUpdate">
+            <summary>
+              Enables the redrawing of the image box
+            </summary>
+        </member>
+        <member name="M:Cyotek.Windows.Forms.ColorWheel.OnColorChanged(System.EventArgs)">
+            <summary>
+            Raises the <see cref="E:Cyotek.Windows.Forms.ColorWheel.ColorChanged"/> event.
+            </summary>
+            <param name="e">The <see cref="T:System.EventArgs"/> instance containing the event data.</param>
+        </member>
+        <member name="M:Cyotek.Windows.Forms.ColorWheel.OnColorStepChanged(System.EventArgs)">
+            <summary>
+            Raises the <see cref="E:Cyotek.Windows.Forms.ColorWheel.ColorStepChanged"/> event.
+            </summary>
+            <param name="e">The <see cref="T:System.EventArgs"/> instance containing the event data.</param>
+        </member>
+        <member name="M:Cyotek.Windows.Forms.ColorWheel.OnHslColorChanged(System.EventArgs)">
+            <summary>
+            Raises the <see cref="E:Cyotek.Windows.Forms.ColorWheel.HslColorChanged"/> event.
+            </summary>
+            <param name="e">The <see cref="T:System.EventArgs"/> instance containing the event data.</param>
+        </member>
+        <member name="M:Cyotek.Windows.Forms.ColorWheel.OnLargeChangeChanged(System.EventArgs)">
+            <summary>
+            Raises the <see cref="E:Cyotek.Windows.Forms.ColorWheel.LargeChangeChanged"/> event.
+            </summary>
+            <param name="e">The <see cref="T:System.EventArgs"/> instance containing the event data.</param>
+        </member>
+        <member name="M:Cyotek.Windows.Forms.ColorWheel.OnSelectionSizeChanged(System.EventArgs)">
+            <summary>
+            Raises the <see cref="E:Cyotek.Windows.Forms.ColorWheel.SelectionSizeChanged"/> event.
+            </summary>
+            <param name="e">The <see cref="T:System.EventArgs"/> instance containing the event data.</param>
+        </member>
+        <member name="M:Cyotek.Windows.Forms.ColorWheel.OnSmallChangeChanged(System.EventArgs)">
+            <summary>
+            Raises the <see cref="E:Cyotek.Windows.Forms.ColorWheel.SmallChangeChanged"/> event.
+            </summary>
+            <param name="e">The <see cref="T:System.EventArgs"/> instance containing the event data.</param>
+        </member>
+        <member name="E:Cyotek.Windows.Forms.ColorWheel.ColorChanged">
+            <summary>
+            Occurs when the Color property value changes
+            </summary>
+        </member>
+        <member name="E:Cyotek.Windows.Forms.ColorWheel.ColorStepChanged">
+            <summary>
+            Occurs when the ColorStep property value changes
+            </summary>
+        </member>
+        <member name="E:Cyotek.Windows.Forms.ColorWheel.HslColorChanged">
+            <summary>
+            Occurs when the HslColor property value changes
+            </summary>
+        </member>
+        <member name="E:Cyotek.Windows.Forms.ColorWheel.LargeChangeChanged">
+            <summary>
+            Occurs when the LargeChange property value changes
+            </summary>
+        </member>
+        <member name="E:Cyotek.Windows.Forms.ColorWheel.SelectionSizeChanged">
+            <summary>
+            Occurs when the SelectionSize property value changes
+            </summary>
+        </member>
+        <member name="E:Cyotek.Windows.Forms.ColorWheel.SmallChangeChanged">
+            <summary>
+            Occurs when the SmallChange property value changes
+            </summary>
+        </member>
+        <member name="P:Cyotek.Windows.Forms.ColorWheel.AllowPainting">
+            <summary>
+              Gets a value indicating whether painting of the control is allowed.
+            </summary>
+            <value>
+              <c>true</c> if painting of the control is allowed; otherwise, <c>false</c>.
+            </value>
+        </member>
+        <member name="T:Cyotek.Windows.Forms.GimpPaletteSerializer">
+            <summary>
+            Serializes and deserializes color palettes into and from the Gimp palette format.
+            </summary>
+        </member>
+        <member name="T:Cyotek.Windows.Forms.PaletteSerializer">
+            <summary>
+            Serializes and deserializes color palettes into and from other documents.
+            </summary>
+        </member>
+        <member name="T:Cyotek.Windows.Forms.IPaletteSerializer">
+            <summary>
+            Serializes and deserializes color palettes into and from other documents.
+            </summary>
+        </member>
+        <member name="M:Cyotek.Windows.Forms.IPaletteSerializer.Deserialize(System.IO.Stream)">
+            <summary>
+            Deserializes the <see cref="T:Cyotek.Windows.Forms.ColorCollection"/> contained by the specified <see cref="T:System.IO.Stream"/>.
+            </summary>
+            <param name="stream">The <see cref="T:System.IO.Stream"/> that contains the palette to deserialize.</param>
+            <returns>The <see cref="T:Cyotek.Windows.Forms.ColorCollection"/> being deserialized.</returns>
+        </member>
+        <member name="M:Cyotek.Windows.Forms.IPaletteSerializer.Serialize(System.IO.Stream,Cyotek.Windows.Forms.ColorCollection)">
+            <summary>
+            Serializes the specified <see cref="T:Cyotek.Windows.Forms.ColorCollection"/> and writes the palette to a file using the specified <see cref="T:System.IO.Stream"/>.
+            </summary>
+            <param name="stream">The <see cref="T:System.IO.Stream"/> used to write the palette.</param>
+            <param name="palette">The <see cref="T:Cyotek.Windows.Forms.ColorCollection"/> to serialize.</param>
+        </member>
+        <member name="M:Cyotek.Windows.Forms.PaletteSerializer.Deserialize(System.IO.Stream)">
+            <summary>
+            Deserializes the <see cref="T:Cyotek.Windows.Forms.ColorCollection"/> contained by the specified <see cref="T:System.IO.Stream"/>.
+            </summary>
+            <param name="stream">The <see cref="T:System.IO.Stream"/> that contains the palette to deserialize.</param>
+            <returns>The <see cref="T:Cyotek.Windows.Forms.ColorCollection"/> being deserialized..</returns>
+        </member>
+        <member name="M:Cyotek.Windows.Forms.PaletteSerializer.Deserialize(System.String)">
+            <summary>
+            Deserializes the <see cref="T:Cyotek.Windows.Forms.ColorCollection"/> contained by the specified <see cref="T:System.IO.Stream"/>.
+            </summary>
+            <param name="fileName">The name of the file that the palette will be read from.</param>
+            <returns>The <see cref="T:Cyotek.Windows.Forms.ColorCollection"/> being deserialized.</returns>
+        </member>
+        <member name="M:Cyotek.Windows.Forms.PaletteSerializer.Serialize(System.IO.Stream,Cyotek.Windows.Forms.ColorCollection)">
+            <summary>
+            Serializes the specified <see cref="T:Cyotek.Windows.Forms.ColorCollection"/> and writes the palette to a file using the specified <see cref="T:System.IO.Stream"/>.
+            </summary>
+            <param name="stream">The <see cref="T:System.IO.Stream"/> used to write the palette.</param>
+            <param name="palette">The <see cref="T:Cyotek.Windows.Forms.ColorCollection"/> to serialize.</param>
+        </member>
+        <member name="M:Cyotek.Windows.Forms.PaletteSerializer.Serialize(System.String,Cyotek.Windows.Forms.ColorCollection)">
+            <summary>
+            Serializes the specified <see cref="T:Cyotek.Windows.Forms.ColorCollection"/> and writes the palette to a file using the specified <see cref="T:System.IO.Stream"/>.
+            </summary>
+            <param name="fileName">The name of the file where the palette will be written to.</param>
+            <param name="palette">The <see cref="T:Cyotek.Windows.Forms.ColorCollection"/> to serialize.</param>
+        </member>
+        <member name="M:Cyotek.Windows.Forms.PaletteSerializer.Cyotek#Windows#Forms#IPaletteSerializer#Serialize(System.IO.Stream,Cyotek.Windows.Forms.ColorCollection)">
+            <summary>
+            Serializes the specified <see cref="T:Cyotek.Windows.Forms.ColorCollection"/> and writes the palette to a file using the specified Stream.
+            </summary>
+            <param name="stream">The <see cref="T:System.IO.Stream"/> used to write the palette.</param>
+            <param name="palette">The <see cref="T:Cyotek.Windows.Forms.ColorCollection"/> to serialize.</param>
+        </member>
+        <member name="M:Cyotek.Windows.Forms.PaletteSerializer.Cyotek#Windows#Forms#IPaletteSerializer#Deserialize(System.IO.Stream)">
+            <summary>
+            Deserializes the <see cref="T:Cyotek.Windows.Forms.ColorCollection"/> contained by the specified <see cref="T:System.IO.Stream"/>.
+            </summary>
+            <param name="stream">The <see cref="T:System.IO.Stream"/> that contains the palette to deserialize.</param>
+            <returns>The <see cref="T:Cyotek.Windows.Forms.ColorCollection"/> being deserialized..</returns>
+        </member>
+        <member name="M:Cyotek.Windows.Forms.GimpPaletteSerializer.Deserialize(System.IO.Stream)">
+            <summary>
+            Deserializes the <see cref="T:Cyotek.Windows.Forms.ColorCollection"/> contained by the specified <see cref="T:System.IO.Stream"/>.
+            </summary>
+            <param name="stream">The <see cref="T:System.IO.Stream"/> that contains the palette to deserialize.</param>
+            <returns>The <see cref="T:Cyotek.Windows.Forms.ColorCollection"/> being deserialized..</returns>
+        </member>
+        <member name="M:Cyotek.Windows.Forms.GimpPaletteSerializer.Serialize(System.IO.Stream,Cyotek.Windows.Forms.ColorCollection)">
+            <summary>
+            Serializes the specified <see cref="T:Cyotek.Windows.Forms.ColorCollection"/> and writes the palette to a file using the specified <see cref="T:System.IO.Stream"/>.
+            </summary>
+            <param name="stream">The <see cref="T:System.IO.Stream"/> used to write the palette.</param>
+            <param name="palette">The <see cref="T:Cyotek.Windows.Forms.ColorCollection"/> to serialize.</param>
+        </member>
+        <member name="T:Cyotek.Windows.Forms.JascPaletteSerializer">
+            <summary>
+            Serializes and deserializes color palettes into and from the Jasc palette format.
+            </summary>
+        </member>
+        <member name="M:Cyotek.Windows.Forms.JascPaletteSerializer.Deserialize(System.IO.Stream)">
+            <summary>
+            Deserializes the <see cref="T:Cyotek.Windows.Forms.ColorCollection"/> contained by the specified <see cref="T:System.IO.Stream"/>.
+            </summary>
+            <param name="stream">The <see cref="T:System.IO.Stream"/> that contains the palette to deserialize.</param>
+            <returns>The <see cref="T:Cyotek.Windows.Forms.ColorCollection"/> being deserialized..</returns>
+        </member>
+        <member name="M:Cyotek.Windows.Forms.JascPaletteSerializer.Serialize(System.IO.Stream,Cyotek.Windows.Forms.ColorCollection)">
+            <summary>
+            Serializes the specified <see cref="T:Cyotek.Windows.Forms.ColorCollection"/> and writes the palette to a file using the specified <see cref="T:System.IO.Stream"/>.
+            </summary>
+            <param name="stream">The <see cref="T:System.IO.Stream"/> used to write the palette.</param>
+            <param name="palette">The <see cref="T:Cyotek.Windows.Forms.ColorCollection"/> to serialize.</param>
+        </member>
+        <member name="M:Cyotek.Windows.Forms.LightnessColorSlider.OnColorChanged(System.EventArgs)">
+            <summary>
+            Raises the <see cref="E:Cyotek.Windows.Forms.LightnessColorSlider.ColorChanged"/> event.
+            </summary>
+            <param name="e">The <see cref="T:System.EventArgs"/> instance containing the event data.</param>
+        </member>
+        <member name="E:Cyotek.Windows.Forms.LightnessColorSlider.ColorChanged">
+            <summary>
+            Occurs when the Color property value changes
+            </summary>
+        </member>
+        <member name="T:Cyotek.Windows.Forms.PaintNetPaletteSerializer">
+            <summary>
+            Serializes and deserializes color palettes into and from the Paint.NET palette format.
+            </summary>
+        </member>
+        <member name="M:Cyotek.Windows.Forms.PaintNetPaletteSerializer.Deserialize(System.IO.Stream)">
+            <summary>
+            Deserializes the <see cref="T:Cyotek.Windows.Forms.ColorCollection"/> contained by the specified <see cref="T:System.IO.Stream"/>.
+            </summary>
+            <param name="stream">The <see cref="T:System.IO.Stream"/> that contains the palette to deserialize.</param>
+            <returns>The <see cref="T:Cyotek.Windows.Forms.ColorCollection"/> being deserialized..</returns>
+        </member>
+        <member name="M:Cyotek.Windows.Forms.PaintNetPaletteSerializer.Serialize(System.IO.Stream,Cyotek.Windows.Forms.ColorCollection)">
+            <summary>
+            Serializes the specified <see cref="T:Cyotek.Windows.Forms.ColorCollection"/> and writes the palette to a file using the specified <see cref="T:System.IO.Stream"/>.
+            </summary>
+            <param name="stream">The <see cref="T:System.IO.Stream"/> used to write the palette.</param>
+            <param name="palette">The <see cref="T:Cyotek.Windows.Forms.ColorCollection"/> to serialize.</param>
+        </member>
+        <member name="T:Cyotek.Windows.Forms.Properties.Resources">
+            <summary>
+              A strongly-typed resource class, for looking up localized strings, etc.
+            </summary>
+        </member>
+        <member name="P:Cyotek.Windows.Forms.Properties.Resources.ResourceManager">
+            <summary>
+              Returns the cached ResourceManager instance used by this class.
+            </summary>
+        </member>
+        <member name="P:Cyotek.Windows.Forms.Properties.Resources.Culture">
+            <summary>
+              Overrides the current thread's CurrentUICulture property for all
+              resource lookups using this strongly typed resource class.
+            </summary>
+        </member>
+        <member name="P:Cyotek.Windows.Forms.Properties.Resources.eyedropper">
+            <summary>
+              Looks up a localized resource of type System.Drawing.Bitmap.
+            </summary>
+        </member>
+        <member name="P:Cyotek.Windows.Forms.Properties.Resources.LoadPalette">
+            <summary>
+              Looks up a localized resource of type System.Drawing.Bitmap.
+            </summary>
+        </member>
+        <member name="P:Cyotek.Windows.Forms.Properties.Resources.SavePalette">
+            <summary>
+              Looks up a localized resource of type System.Drawing.Bitmap.
+            </summary>
+        </member>
+        <member name="M:Cyotek.Windows.Forms.RgbaColorSlider.OnChannelChanged(System.EventArgs)">
+            <summary>
+            Raises the <see cref="E:Cyotek.Windows.Forms.RgbaColorSlider.ChannelChanged"/> event.
+            </summary>
+            <param name="e">The <see cref="T:System.EventArgs"/> instance containing the event data.</param>
+        </member>
+        <member name="M:Cyotek.Windows.Forms.RgbaColorSlider.OnColorChanged(System.EventArgs)">
+            <summary>
+            Raises the <see cref="E:Cyotek.Windows.Forms.RgbaColorSlider.ColorChanged"/> event.
+            </summary>
+            <param name="e">The <see cref="T:System.EventArgs"/> instance containing the event data.</param>
+        </member>
+        <member name="E:Cyotek.Windows.Forms.RgbaColorSlider.ChannelChanged">
+            <summary>
+            Occurs when the Channel property value changes
+            </summary>
+        </member>
+        <member name="E:Cyotek.Windows.Forms.RgbaColorSlider.ColorChanged">
+            <summary>
+            Occurs when the Color property value changes
+            </summary>
+        </member>
+        <member name="T:Cyotek.Windows.Forms.SaturationColorSlider">
+            <summary>
+            Represents a control for selecting the saturation of a color
+            </summary>
+        </member>
+        <member name="M:Cyotek.Windows.Forms.SaturationColorSlider.OnColorChanged(System.EventArgs)">
+            <summary>
+            Raises the <see cref="E:Cyotek.Windows.Forms.SaturationColorSlider.ColorChanged"/> event.
+            </summary>
+            <param name="e">The <see cref="T:System.EventArgs"/> instance containing the event data.</param>
+        </member>
+        <member name="E:Cyotek.Windows.Forms.SaturationColorSlider.ColorChanged">
+            <summary>
+            Occurs when the Color property value changes
+            </summary>
+        </member>
+        <member name="T:Cyotek.Windows.Forms.ScreenColorPicker">
+            <summary>
+            Represents a control that allows the selection of a color by dragging the mouse across the desktop
+            </summary>
+        </member>
+        <member name="M:Cyotek.Windows.Forms.ScreenColorPicker.#ctor">
+            <summary>
+            Initializes a new instance of the <see cref="T:Cyotek.Windows.Forms.ScreenColorPicker"/> class.
+            </summary>
+        </member>
+        <member name="M:Cyotek.Windows.Forms.ScreenColorPicker.Dispose(System.Boolean)">
+            <summary>
+            Releases the unmanaged resources used by the <see cref="T:System.Windows.Forms.Control" /> and its child controls and optionally releases the managed resources.
+            </summary>
+            <param name="disposing">true to release both managed and unmanaged resources; false to release only unmanaged resources.</param>
+        </member>
+        <member name="M:Cyotek.Windows.Forms.ScreenColorPicker.OnFontChanged(System.EventArgs)">
+            <summary>
+            Raises the <see cref="E:System.Windows.Forms.Control.FontChanged" /> event.
+            </summary>
+            <param name="e">An <see cref="T:System.EventArgs" /> that contains the event data.</param>
+        </member>
+        <member name="M:Cyotek.Windows.Forms.ScreenColorPicker.OnForeColorChanged(System.EventArgs)">
+            <summary>
+            Raises the <see cref="E:System.Windows.Forms.Control.ForeColorChanged" /> event.
+            </summary>
+            <param name="e">An <see cref="T:System.EventArgs" /> that contains the event data.</param>
+        </member>
+        <member name="M:Cyotek.Windows.Forms.ScreenColorPicker.OnMouseDown(System.Windows.Forms.MouseEventArgs)">
+            <summary>
+            Raises the <see cref="E:System.Windows.Forms.Control.MouseDown" /> event.
+            </summary>
+            <param name="e">A <see cref="T:System.Windows.Forms.MouseEventArgs" /> that contains the event data.</param>
+        </member>
+        <member name="M:Cyotek.Windows.Forms.ScreenColorPicker.OnMouseMove(System.Windows.Forms.MouseEventArgs)">
+            <summary>
+            Raises the <see cref="E:System.Windows.Forms.Control.MouseMove" /> event.
+            </summary>
+            <param name="e">A <see cref="T:System.Windows.Forms.MouseEventArgs" /> that contains the event data.</param>
+        </member>
+        <member name="M:Cyotek.Windows.Forms.ScreenColorPicker.OnMouseUp(System.Windows.Forms.MouseEventArgs)">
+            <summary>
+            Raises the <see cref="E:System.Windows.Forms.Control.MouseUp" /> event.
+            </summary>
+            <param name="e">A <see cref="T:System.Windows.Forms.MouseEventArgs" /> that contains the event data.</param>
+        </member>
+        <member name="M:Cyotek.Windows.Forms.ScreenColorPicker.OnPaint(System.Windows.Forms.PaintEventArgs)">
+            <summary>
+            Raises the <see cref="E:System.Windows.Forms.Control.Paint" /> event.
+            </summary>
+            <param name="e">A <see cref="T:System.Windows.Forms.PaintEventArgs" /> that contains the event data.</param>
+        </member>
+        <member name="M:Cyotek.Windows.Forms.ScreenColorPicker.OnResize(System.EventArgs)">
+            <summary>
+            Raises the <see cref="E:System.Windows.Forms.Control.Resize" /> event.
+            </summary>
+            <param name="e">An <see cref="T:System.EventArgs" /> that contains the event data.</param>
+        </member>
+        <member name="M:Cyotek.Windows.Forms.ScreenColorPicker.OnTextChanged(System.EventArgs)">
+            <summary>
+            Raises the <see cref="E:System.Windows.Forms.Control.TextChanged" /> event.
+            </summary>
+            <param name="e">An <see cref="T:System.EventArgs" /> that contains the event data.</param>
+        </member>
+        <member name="M:Cyotek.Windows.Forms.ScreenColorPicker.CreateSnapshotImage">
+            <summary>
+            Creates the snapshot image.
+            </summary>
+        </member>
+        <member name="M:Cyotek.Windows.Forms.ScreenColorPicker.GetCenterPoint">
+            <summary>
+            Gets the center point based on the current zoom level.
+            </summary>
+        </member>
+        <member name="M:Cyotek.Windows.Forms.ScreenColorPicker.GetSnapshotSize">
+            <summary>
+            Gets the size of the snapshot.
+            </summary>
+        </member>
+        <member name="M:Cyotek.Windows.Forms.ScreenColorPicker.OnColorChanged(System.EventArgs)">
+            <summary>
+            Raises the <see cref="E:Cyotek.Windows.Forms.ScreenColorPicker.ColorChanged"/> event.
+            </summary>
+            <param name="e">The <see cref="T:System.EventArgs"/> instance containing the event data.</param>
+        </member>
+        <member name="M:Cyotek.Windows.Forms.ScreenColorPicker.OnGridColorChanged(System.EventArgs)">
+            <summary>
+            Raises the <see cref="E:Cyotek.Windows.Forms.ScreenColorPicker.GridColorChanged"/> event.
+            </summary>
+            <param name="e">The <see cref="T:System.EventArgs"/> instance containing the event data.</param>
+        </member>
+        <member name="M:Cyotek.Windows.Forms.ScreenColorPicker.OnImageChanged(System.EventArgs)">
+            <summary>
+            Raises the <see cref="E:Cyotek.Windows.Forms.ScreenColorPicker.ImageChanged"/> event.
+            </summary>
+            <param name="e">The <see cref="T:System.EventArgs"/> instance containing the event data.</param>
+        </member>
+        <member name="M:Cyotek.Windows.Forms.ScreenColorPicker.OnShowGridChanged(System.EventArgs)">
+            <summary>
+            Raises the <see cref="E:Cyotek.Windows.Forms.ScreenColorPicker.ShowGridChanged"/> event.
+            </summary>
+            <param name="e">The <see cref="T:System.EventArgs"/> instance containing the event data.</param>
+        </member>
+        <member name="M:Cyotek.Windows.Forms.ScreenColorPicker.OnShowTextWithSnapshotChanged(System.EventArgs)">
+            <summary>
+            Raises the <see cref="E:Cyotek.Windows.Forms.ScreenColorPicker.ShowTextWithSnapshotChanged"/> event.
+            </summary>
+            <param name="e">The <see cref="T:System.EventArgs"/> instance containing the event data.</param>
+        </member>
+        <member name="M:Cyotek.Windows.Forms.ScreenColorPicker.OnZoomChanged(System.EventArgs)">
+            <summary>
+            Raises the <see cref="E:Cyotek.Windows.Forms.ScreenColorPicker.ZoomChanged"/> event.
+            </summary>
+            <param name="e">The <see cref="T:System.EventArgs"/> instance containing the event data.</param>
+        </member>
+        <member name="M:Cyotek.Windows.Forms.ScreenColorPicker.PaintAdornments(System.Windows.Forms.PaintEventArgs)">
+            <summary>
+            Paints adornments onto the control.
+            </summary>
+            <param name="e">The <see cref="T:System.Windows.Forms.PaintEventArgs"/> instance containing the event data.</param>
+        </member>
+        <member name="M:Cyotek.Windows.Forms.ScreenColorPicker.PaintCenterMarker(System.Windows.Forms.PaintEventArgs)">
+            <summary>
+            Paints the center marker.
+            </summary>
+            <param name="e">The <see cref="T:System.Windows.Forms.PaintEventArgs"/> instance containing the event data.</param>
+        </member>
+        <member name="M:Cyotek.Windows.Forms.ScreenColorPicker.PaintGrid(System.Windows.Forms.PaintEventArgs)">
+            <summary>
+            Paints the pixel grid.
+            </summary>
+            <param name="e">The <see cref="T:System.Windows.Forms.PaintEventArgs"/> instance containing the event data.</param>
+        </member>
+        <member name="M:Cyotek.Windows.Forms.ScreenColorPicker.UpdateSnapshot">
+            <summary>
+            Updates the snapshot.
+            </summary>
+        </member>
+        <member name="E:Cyotek.Windows.Forms.ScreenColorPicker.ColorChanged">
+            <summary>
+            Occurs when the Color property value changes
+            </summary>
+        </member>
+        <member name="E:Cyotek.Windows.Forms.ScreenColorPicker.GridColorChanged">
+            <summary>
+            Occurs when the GridColor property value changes
+            </summary>
+        </member>
+        <member name="E:Cyotek.Windows.Forms.ScreenColorPicker.ImageChanged">
+            <summary>
+            Occurs when the Image property value changes
+            </summary>
+        </member>
+        <member name="E:Cyotek.Windows.Forms.ScreenColorPicker.ShowGridChanged">
+            <summary>
+            Occurs when the ShowGrid property value changes
+            </summary>
+        </member>
+        <member name="E:Cyotek.Windows.Forms.ScreenColorPicker.ShowTextWithSnapshotChanged">
+            <summary>
+            Occurs when the ShowTextWithSnapshot property value changes
+            </summary>
+        </member>
+        <member name="E:Cyotek.Windows.Forms.ScreenColorPicker.ZoomChanged">
+            <summary>
+            Occurs when the Zoom property value changes
+            </summary>
+        </member>
+        <member name="P:Cyotek.Windows.Forms.ScreenColorPicker.Color">
+            <summary>
+            Gets or sets the component color.
+            </summary>
+            <value>The component color.</value>
+        </member>
+        <member name="P:Cyotek.Windows.Forms.ScreenColorPicker.GridColor">
+            <summary>
+            Gets or sets the color of the grid.
+            </summary>
+            <value>The color of the grid.</value>
+        </member>
+        <member name="P:Cyotek.Windows.Forms.ScreenColorPicker.HasSnapshot">
+            <summary>
+            Returns if a snapshot image is available
+            </summary>
+            <value><c>true</c> if a snapshot image is available; otherwise, <c>false</c>.</value>
+        </member>
+        <member name="P:Cyotek.Windows.Forms.ScreenColorPicker.Image">
+            <summary>
+            Gets or sets the image.
+            </summary>
+            <value>The image.</value>
+        </member>
+        <member name="P:Cyotek.Windows.Forms.ScreenColorPicker.ShowGrid">
+            <summary>
+            Gets or sets a value indicating whether a pixel grid is displayed.
+            </summary>
+            <value><c>true</c> if a pixel grid is displayed; otherwise, <c>false</c>.</value>
+        </member>
+        <member name="P:Cyotek.Windows.Forms.ScreenColorPicker.ShowTextWithSnapshot">
+            <summary>
+            Gets or sets a value indicating whether text should be shown when a snapshot is present.
+            </summary>
+            <value><c>true</c> if text is to be shown when a snapshot is present; otherwise, <c>false</c> to only show text when no snapshot is available.</value>
+        </member>
+        <member name="P:Cyotek.Windows.Forms.ScreenColorPicker.TabIndex">
+            <summary>
+            Gets or sets the tab order of the control within its container.
+            </summary>
+            <value>The index of the tab.</value>
+            <returns>The index value of the control within the set of controls within its container. The controls in the container are included in the tab order.</returns>
+        </member>
+        <member name="P:Cyotek.Windows.Forms.ScreenColorPicker.TabStop">
+            <summary>
+            Gets or sets a value indicating whether the user can give the focus to this control using the TAB key.
+            </summary>
+            <value><c>true</c> if [tab stop]; otherwise, <c>false</c>.</value>
+            <returns>true if the user can give the focus to the control using the TAB key; otherwise, false. The default is true.Note:This property will always return true for an instance of the <see cref="T:System.Windows.Forms.Form" /> class.</returns>
+        </member>
+        <member name="P:Cyotek.Windows.Forms.ScreenColorPicker.Zoom">
+            <summary>
+            Gets or sets the zoom level of the snapshot image.
+            </summary>
+            <value>The zoom level.</value>
+        </member>
+        <member name="P:Cyotek.Windows.Forms.ScreenColorPicker.IsCapturing">
+            <summary>
+            Gets or sets a value indicating snapshot capture is in progress.
+            </summary>
+            <value><c>true</c> if snapshot capture is in progress; otherwise, <c>false</c>.</value>
+        </member>
+        <member name="P:Cyotek.Windows.Forms.ScreenColorPicker.LockUpdates">
+            <summary>
+            Gets or sets a value indicating whether redraw operations should occur.
+            </summary>
+            <value><c>true</c> if redraw operations should occur; otherwise, <c>false</c>.</value>
+        </member>
+        <member name="P:Cyotek.Windows.Forms.ScreenColorPicker.SnapshotImage">
+            <summary>
+            Gets or sets the snapshot image.
+            </summary>
+            <value>The snapshot image.</value>
+        </member>
+    </members>
+</doc>

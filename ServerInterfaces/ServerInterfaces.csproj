@@ -1,132 +1,236 @@
-﻿<?xml version="1.0" encoding="utf-8"?>
-<Project ToolsVersion="4.0" DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
-  <PropertyGroup>
-    <Configuration Condition=" '$(Configuration)' == '' ">Release</Configuration>
-    <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
-    <ProductVersion>8.0.30703</ProductVersion>
-    <SchemaVersion>2.0</SchemaVersion>
-    <ProjectGuid>{54D36F17-8D71-4DD8-8B29-12CAD489F0D9}</ProjectGuid>
-    <OutputType>Library</OutputType>
-    <AppDesignerFolder>Properties</AppDesignerFolder>
-    <RootNamespace>ServerInterfaces</RootNamespace>
-    <AssemblyName>ServerInterfaces</AssemblyName>
-    <TargetFrameworkVersion>v4.0</TargetFrameworkVersion>
-    <FileAlignment>512</FileAlignment>
-  </PropertyGroup>
-  <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Debug|x86'">
-    <DebugSymbols>true</DebugSymbols>
-    <OutputPath>bin\x86\Debug\</OutputPath>
-    <DefineConstants>DEBUG;TRACE</DefineConstants>
-    <DebugType>full</DebugType>
-    <PlatformTarget>x86</PlatformTarget>
-    <CodeAnalysisLogFile>bin\Debug\ServerInterfaces.dll.CodeAnalysisLog.xml</CodeAnalysisLogFile>
-    <CodeAnalysisUseTypeNameInSuppression>true</CodeAnalysisUseTypeNameInSuppression>
-    <CodeAnalysisModuleSuppressionsFile>GlobalSuppressions.cs</CodeAnalysisModuleSuppressionsFile>
-    <ErrorReport>prompt</ErrorReport>
-    <CodeAnalysisRuleSet>MinimumRecommendedRules.ruleset</CodeAnalysisRuleSet>
-    <CodeAnalysisRuleSetDirectories>;C:\Program Files (x86)\Microsoft Visual Studio 10.0\Team Tools\Static Analysis Tools\\Rule Sets</CodeAnalysisRuleSetDirectories>
-    <CodeAnalysisRuleDirectories>;C:\Program Files (x86)\Microsoft Visual Studio 10.0\Team Tools\Static Analysis Tools\FxCop\\Rules</CodeAnalysisRuleDirectories>
-  </PropertyGroup>
-  <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Release|x86'">
-    <OutputPath>bin\x86\Release\</OutputPath>
-    <DefineConstants>TRACE</DefineConstants>
-    <Optimize>true</Optimize>
-    <DebugType>pdbonly</DebugType>
-    <PlatformTarget>x86</PlatformTarget>
-    <CodeAnalysisLogFile>bin\Release\ServerInterfaces.dll.CodeAnalysisLog.xml</CodeAnalysisLogFile>
-    <CodeAnalysisUseTypeNameInSuppression>true</CodeAnalysisUseTypeNameInSuppression>
-    <CodeAnalysisModuleSuppressionsFile>GlobalSuppressions.cs</CodeAnalysisModuleSuppressionsFile>
-    <ErrorReport>prompt</ErrorReport>
-    <CodeAnalysisRuleSet>MinimumRecommendedRules.ruleset</CodeAnalysisRuleSet>
-    <CodeAnalysisRuleSetDirectories>;C:\Program Files (x86)\Microsoft Visual Studio 10.0\Team Tools\Static Analysis Tools\\Rule Sets</CodeAnalysisRuleSetDirectories>
-    <CodeAnalysisRuleDirectories>;C:\Program Files (x86)\Microsoft Visual Studio 10.0\Team Tools\Static Analysis Tools\FxCop\\Rules</CodeAnalysisRuleDirectories>
-  </PropertyGroup>
-  <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'DebugMessaging|x86'">
-    <OutputPath>bin\x86\DebugMessaging\</OutputPath>
-    <DefineConstants>TRACE</DefineConstants>
-    <Optimize>true</Optimize>
-    <DebugType>pdbonly</DebugType>
-    <PlatformTarget>x86</PlatformTarget>
-    <CodeAnalysisLogFile>bin\Release\ServerInterfaces.dll.CodeAnalysisLog.xml</CodeAnalysisLogFile>
-    <CodeAnalysisUseTypeNameInSuppression>true</CodeAnalysisUseTypeNameInSuppression>
-    <CodeAnalysisModuleSuppressionsFile>GlobalSuppressions.cs</CodeAnalysisModuleSuppressionsFile>
-    <ErrorReport>prompt</ErrorReport>
-    <CodeAnalysisRuleSet>MinimumRecommendedRules.ruleset</CodeAnalysisRuleSet>
-    <CodeAnalysisRuleSetDirectories>;C:\Program Files\Microsoft Visual Studio 10.0\Team Tools\Static Analysis Tools\\Rule Sets</CodeAnalysisRuleSetDirectories>
-    <CodeAnalysisIgnoreBuiltInRuleSets>true</CodeAnalysisIgnoreBuiltInRuleSets>
-    <CodeAnalysisRuleDirectories>;C:\Program Files\Microsoft Visual Studio 10.0\Team Tools\Static Analysis Tools\FxCop\\Rules;C:\Program Files (x86)\Microsoft Visual Studio 10.0\Team Tools\Static Analysis Tools\FxCop\\Rules</CodeAnalysisRuleDirectories>
-  </PropertyGroup>
-  <ItemGroup>
-    <Reference Include="System" />
-    <Reference Include="System.Core" />
-    <Reference Include="System.Drawing" />
-    <Reference Include="System.Xml.Linq" />
-    <Reference Include="System.Data.DataSetExtensions" />
-    <Reference Include="Microsoft.CSharp" />
-    <Reference Include="System.Data" />
-    <Reference Include="System.Xml" />
+<Project DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003" ToolsVersion="4.0">
+	<PropertyGroup>
+	  <ProjectType>Local</ProjectType>
+	  <ProductVersion>9.0.30729</ProductVersion>
+	  <SchemaVersion>2.0</SchemaVersion>
+	  <ProjectGuid>{2E4590E7-0000-0000-0000-000000000000}</ProjectGuid>
+	  <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
+	  <ApplicationIcon></ApplicationIcon>
+	  <AssemblyKeyContainerName>
+	  </AssemblyKeyContainerName>
+	  <AssemblyName>ServerInterfaces</AssemblyName>
+	  <DefaultClientScript>JScript</DefaultClientScript>
+	  <DefaultHTMLPageLayout>Grid</DefaultHTMLPageLayout>
+	  <DefaultTargetSchema>IE50</DefaultTargetSchema>
+	  <DelaySign>false</DelaySign>
+	  <TargetFrameworkVersion>v4.0</TargetFrameworkVersion>
+	  <OutputType>Library</OutputType>
+	  <AppDesignerFolder></AppDesignerFolder>
+	  <RootNamespace>ServerInterfaces</RootNamespace>
+	  <StartupObject></StartupObject>
+	  <StartArguments></StartArguments>
+	  <FileUpgradeFlags>
+	  </FileUpgradeFlags>
+	</PropertyGroup>
+	<PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
+	  <AllowUnsafeBlocks>False</AllowUnsafeBlocks>
+	  <BaseAddress>285212672</BaseAddress>
+	  <CheckForOverflowUnderflow>False</CheckForOverflowUnderflow>
+	  <ConfigurationOverrideFile>
+	  </ConfigurationOverrideFile>
+	  <DefineConstants>TRACE;DEBUG</DefineConstants>
+	  <DocumentationFile></DocumentationFile>
+	  <DebugSymbols>True</DebugSymbols>
+	  <FileAlignment>4096</FileAlignment>
+	  <Optimize>False</Optimize>
+	  <OutputPath>..\Bin\</OutputPath>
+	  <RegisterForComInterop>False</RegisterForComInterop>
+	  <RemoveIntegerChecks>False</RemoveIntegerChecks>
+	  <TreatWarningsAsErrors>False</TreatWarningsAsErrors>
+	  <WarningLevel>4</WarningLevel>
+	  <NoStdLib>False</NoStdLib>
+	  <NoWarn></NoWarn>
+	  <PlatformTarget>AnyCPU</PlatformTarget>
+	</PropertyGroup>
+	<PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
+	  <AllowUnsafeBlocks>False</AllowUnsafeBlocks>
+	  <BaseAddress>285212672</BaseAddress>
+	  <CheckForOverflowUnderflow>False</CheckForOverflowUnderflow>
+	  <ConfigurationOverrideFile>
+	  </ConfigurationOverrideFile>
+	  <DefineConstants>TRACE</DefineConstants>
+	  <DocumentationFile></DocumentationFile>
+	  <DebugSymbols>False</DebugSymbols>
+	  <FileAlignment>4096</FileAlignment>
+	  <Optimize>True</Optimize>
+	  <OutputPath>..\Bin\</OutputPath>
+	  <RegisterForComInterop>False</RegisterForComInterop>
+	  <RemoveIntegerChecks>False</RemoveIntegerChecks>
+	  <TreatWarningsAsErrors>False</TreatWarningsAsErrors>
+	  <WarningLevel>4</WarningLevel>
+	  <NoStdLib>False</NoStdLib>
+	  <NoWarn></NoWarn>
+	  <PlatformTarget>AnyCPU</PlatformTarget>
+	</PropertyGroup>
+	<ItemGroup>
+	  <Reference Include="Microsoft.CSharp" >
+		  <Name>Microsoft.CSharp</Name>
+		<Private>False</Private>
+	  </Reference>
+	  <Reference Include="System" >
+		  <Name>System</Name>
+		<Private>False</Private>
+	  </Reference>
+	  <Reference Include="System.Core" >
+		  <Name>System.Core</Name>
+		<Private>False</Private>
+	  </Reference>
+	  <Reference Include="System.Data" >
+		  <Name>System.Data</Name>
+		<Private>False</Private>
+	  </Reference>
+	  <Reference Include="System.Data.DataSetExtensions" >
+		  <Name>System.Data.DataSetExtensions</Name>
+		<Private>False</Private>
+	  </Reference>
+	  <Reference Include="System.Drawing" >
+		  <Name>System.Drawing</Name>
+		<Private>False</Private>
+	  </Reference>
+	  <Reference Include="System.Xml" >
+		  <Name>System.Xml</Name>
+		<Private>False</Private>
+	  </Reference>
+	  <Reference Include="System.Xml.Linq" >
+		  <Name>System.Xml.Linq</Name>
+		<Private>False</Private>
+	  </Reference>
+	</ItemGroup>
+	<ItemGroup>
+	  <ProjectReference Include="..\GameObject\GameObject.csproj">
+		<Name>GameObject</Name>
+		<Project>{85486103-0000-0000-0000-000000000000}</Project>
+		<Package>{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}</Package>
+		<Private>False</Private>
+	  </ProjectReference>
+	  <ProjectReference Include="..\Lidgren.Network\Lidgren.Network.csproj">
+		<Name>Lidgren.Network</Name>
+		<Project>{59250BAF-0000-0000-0000-000000000000}</Project>
+		<Package>{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}</Package>
+		<Private>False</Private>
+	  </ProjectReference>
+	  <ProjectReference Include="..\SS3D_shared\SS13_Shared.csproj">
+		<Name>SS13_Shared</Name>
+		<Project>{26CA7B60-0000-0000-0000-000000000000}</Project>
+		<Package>{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}</Package>
+		<Private>False</Private>
+	  </ProjectReference>
+	</ItemGroup>
+	<ItemGroup>
+	  <Compile Include="Atmos\IAtmosManager.cs">
+		<SubType>Code</SubType>
+	  </Compile>
+	  <Compile Include="Atmos\IGasCell.cs">
+		<SubType>Code</SubType>
+	  </Compile>
+	  <Compile Include="Atmos\IGasProperties.cs">
+		<SubType>Code</SubType>
+	  </Compile>
+	  <Compile Include="Chat\IChatManager.cs">
+		<SubType>Code</SubType>
+	  </Compile>
+	  <Compile Include="ClientConsoleHost\IClientConsoleHost.cs">
+		<SubType>Code</SubType>
+	  </Compile>
+	  <Compile Include="Configuration\IConfigurationManager.cs">
+		<SubType>Code</SubType>
+	  </Compile>
+	  <Compile Include="GameObject\IActorComponent.cs">
+		<SubType>Code</SubType>
+	  </Compile>
+	  <Compile Include="GameObject\IDirectionComponent.cs">
+		<SubType>Code</SubType>
+	  </Compile>
+	  <Compile Include="GameObject\IParticleSystemComponent.cs">
+		<SubType>Code</SubType>
+	  </Compile>
+	  <Compile Include="GameObject\IRenderableComponent.cs">
+		<SubType>Code</SubType>
+	  </Compile>
+	  <Compile Include="GameObject\ITransformComponent.cs">
+		<SubType>Code</SubType>
+	  </Compile>
+	  <Compile Include="GameObject\IWallMountedComponent.cs">
+		<SubType>Code</SubType>
+	  </Compile>
+	  <Compile Include="ServerConsole\IConsoleManager.cs">
+		<SubType>Code</SubType>
+	  </Compile>
+	  <Compile Include="Crafting\ICraftingManager.cs">
+		<SubType>Code</SubType>
+	  </Compile>
+	  <Compile Include="GameMode\IGameMode.cs">
+		<SubType>Code</SubType>
+	  </Compile>
+	  <Compile Include="GameObject\IComponentFactory.cs">
+		<SubType>Code</SubType>
+	  </Compile>
+	  <Compile Include="GameObject\IEntityManager.cs">
+		<SubType>Code</SubType>
+	  </Compile>
+	  <Compile Include="GameObject\IEntityNetworkManager.cs">
+		<SubType>Code</SubType>
+	  </Compile>
+	  <Compile Include="GameObject\IEntityQuery.cs">
+		<SubType>Code</SubType>
+	  </Compile>
+	  <Compile Include="GameObject\IInventoryComponent.cs">
+		<SubType>Code</SubType>
+	  </Compile>
+	  <Compile Include="GameState\IGameStateManager.cs">
+		<SubType>Code</SubType>
+	  </Compile>
+	  <Compile Include="IClient.cs">
+		<SubType>Code</SubType>
+	  </Compile>
+	  <Compile Include="ISS13Server.cs">
+		<SubType>Code</SubType>
+	  </Compile>
+	  <Compile Include="Map\IMapManager.cs">
+		<SubType>Code</SubType>
+	  </Compile>
+	  <Compile Include="MessageLogging\IMessageLogger.cs">
+		<SubType>Code</SubType>
+	  </Compile>
+	  <Compile Include="Placement\IPlacementManager.cs">
+		<SubType>Code</SubType>
+	  </Compile>
+	  <Compile Include="Player\IPlayerSession.cs">
+		<SubType>Code</SubType>
+	  </Compile>
+	  <Compile Include="IService.cs">
+		<SubType>Code</SubType>
+	  </Compile>
+	  <Compile Include="Network\ISS13NetServer.cs">
+		<SubType>Code</SubType>
+	  </Compile>
+	  <Compile Include="Objectives\IObjective.cs">
+		<SubType>Code</SubType>
+	  </Compile>
+	  <Compile Include="Objectives\IObjectiveSet.cs">
+		<SubType>Code</SubType>
+	  </Compile>
+	  <Compile Include="Player\IPlayerManager.cs">
+		<SubType>Code</SubType>
+	  </Compile>
+	  <Compile Include="Properties\AssemblyInfo.cs">
+		<SubType>Code</SubType>
+	  </Compile>
+	  <Compile Include="Round\IRoundManager.cs">
+		<SubType>Code</SubType>
+	  </Compile>
+	  <Compile Include="Serialization\ISS13Serializer.cs">
+		<SubType>Code</SubType>
+	  </Compile>
+	  <Compile Include="Tiles\ITile.cs">
+		<SubType>Code</SubType>
+	  </Compile>
   </ItemGroup>
-  <ItemGroup>
-    <Compile Include="Atmos\IAtmosManager.cs" />
-    <Compile Include="Atmos\IGasCell.cs" />
-    <Compile Include="Atmos\IGasProperties.cs" />
-    <Compile Include="Chat\IChatManager.cs" />
-    <Compile Include="ClientConsoleHost\IClientConsoleHost.cs" />
-    <Compile Include="Configuration\IConfigurationManager.cs" />
-    <Compile Include="GameObject\IActorComponent.cs" />
-    <Compile Include="GameObject\IDirectionComponent.cs" />
-    <Compile Include="GameObject\IParticleSystemComponent.cs" />
-    <Compile Include="GameObject\IRenderableComponent.cs" />
-    <Compile Include="GameObject\ITransformComponent.cs" />
-    <Compile Include="GameObject\IWallMountedComponent.cs" />
-    <Compile Include="ServerConsole\IConsoleManager.cs" />
-    <Compile Include="Crafting\ICraftingManager.cs" />
-    <Compile Include="GameMode\IGameMode.cs" />
-    <Compile Include="GameObject\IComponentFactory.cs" />
-    <Compile Include="GameObject\IEntityManager.cs" />
-    <Compile Include="GameObject\IEntityNetworkManager.cs" />
-    <Compile Include="GameObject\IEntityQuery.cs" />
-    <Compile Include="GameObject\IInventoryComponent.cs" />
-    <Compile Include="GameState\IGameStateManager.cs" />
-    <Compile Include="IClient.cs" />
-    <Compile Include="ISS13Server.cs" />
-    <Compile Include="Map\IMapManager.cs" />
-    <Compile Include="MessageLogging\IMessageLogger.cs" />
-    <Compile Include="Placement\IPlacementManager.cs" />
-    <Compile Include="Player\IPlayerSession.cs" />
-    <Compile Include="IService.cs" />
-    <Compile Include="Network\ISS13NetServer.cs" />
-    <Compile Include="Objectives\IObjective.cs" />
-    <Compile Include="Objectives\IObjectiveSet.cs" />
-    <Compile Include="Player\IPlayerManager.cs" />
-    <Compile Include="Properties\AssemblyInfo.cs" />
-    <Compile Include="Round\IRoundManager.cs" />
-    <Compile Include="Serialization\ISS13Serializer.cs" />
-    <Compile Include="Tiles\ITile.cs" />
-  </ItemGroup>
-  <ItemGroup>
-    <ProjectReference Include="..\GameObject\GameObject.csproj">
-      <Project>{FB8F5D6F-8500-4A5D-BCFB-20104AA902F4}</Project>
-      <Name>GameObject</Name>
-    </ProjectReference>
-    <ProjectReference Include="..\Lidgren.Network\Lidgren.Network.csproj">
-      <Project>{AE483C29-042E-4226-BA52-D247CE7676DA}</Project>
-      <Name>Lidgren.Network</Name>
-    </ProjectReference>
-    <ProjectReference Include="..\SS3D_shared\SS13_Shared.csproj">
-      <Project>{4229D7E3-C3AE-4C0A-B2B1-BB20911150DC}</Project>
-      <Name>SS13_Shared</Name>
-    </ProjectReference>
-  </ItemGroup>
-  <ItemGroup>
-    <Folder Include="Log\" />
-  </ItemGroup>
-  <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
-  <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
-       Other similar extension points exist, see Microsoft.Common.targets.
-  <Target Name="BeforeBuild">
-  </Target>
-  <Target Name="AfterBuild">
-  </Target>
-  -->
+	<Import Project="$(MSBuildBinPath)\Microsoft.CSHARP.Targets" />
+	<PropertyGroup>
+	  <PreBuildEvent>
+	  </PreBuildEvent>
+	  <PostBuildEvent>
+	  </PostBuildEvent>
+	</PropertyGroup>
 </Project>

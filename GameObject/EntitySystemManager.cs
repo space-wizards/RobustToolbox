@@ -31,12 +31,12 @@ namespace GameObject
             {
                 case EngineType.Client:
                     _systemTypes.AddRange(
-                        Assembly.LoadFrom("CGO.dll").GetTypes().Where(
+                        Assembly.LoadFrom("ClientGameObject.dll").GetTypes().Where(
                             t => typeof(EntitySystem).IsAssignableFrom(t)));
                     break;
                 case EngineType.Server:
                     _systemTypes.AddRange(
-                        Assembly.LoadFrom("ServerGameComponent.dll").GetTypes().Where(
+                        Assembly.LoadFrom("ServerGameObject.dll").GetTypes().Where(
                             t => typeof (EntitySystem).IsAssignableFrom(t)));
                     break;
             }

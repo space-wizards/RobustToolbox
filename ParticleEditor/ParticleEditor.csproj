@@ -1,303 +1,327 @@
-﻿<?xml version="1.0" encoding="utf-8"?>
-<Project ToolsVersion="4.0" DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
-  <PropertyGroup>
-    <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
-    <Platform Condition=" '$(Platform)' == '' ">x86</Platform>
-    <ProductVersion>8.0.30703</ProductVersion>
-    <SchemaVersion>2.0</SchemaVersion>
-    <ProjectGuid>{55D04FF4-90F1-4747-B11C-CE827A813FDC}</ProjectGuid>
-    <OutputType>WinExe</OutputType>
-    <AppDesignerFolder>Properties</AppDesignerFolder>
-    <RootNamespace>ParticleEditor</RootNamespace>
-    <AssemblyName>ParticleEditor</AssemblyName>
-    <TargetFrameworkVersion>v4.0</TargetFrameworkVersion>
-    <TargetFrameworkProfile>
-    </TargetFrameworkProfile>
-    <FileAlignment>512</FileAlignment>
-    <PublishUrl>publish\</PublishUrl>
-    <Install>true</Install>
-    <InstallFrom>Disk</InstallFrom>
-    <UpdateEnabled>false</UpdateEnabled>
-    <UpdateMode>Foreground</UpdateMode>
-    <UpdateInterval>7</UpdateInterval>
-    <UpdateIntervalUnits>Days</UpdateIntervalUnits>
-    <UpdatePeriodically>false</UpdatePeriodically>
-    <UpdateRequired>false</UpdateRequired>
-    <MapFileExtensions>true</MapFileExtensions>
-    <ApplicationRevision>0</ApplicationRevision>
-    <ApplicationVersion>1.0.0.%2a</ApplicationVersion>
-    <IsWebBootstrapper>false</IsWebBootstrapper>
-    <UseApplicationTrust>false</UseApplicationTrust>
-    <BootstrapperEnabled>true</BootstrapperEnabled>
-  </PropertyGroup>
-  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|x86' ">
-    <PlatformTarget>x86</PlatformTarget>
-    <DebugSymbols>true</DebugSymbols>
-    <DebugType>full</DebugType>
-    <Optimize>false</Optimize>
-    <OutputPath>bin\Debug\</OutputPath>
-    <DefineConstants>DEBUG;TRACE</DefineConstants>
-    <ErrorReport>prompt</ErrorReport>
-    <WarningLevel>4</WarningLevel>
-  </PropertyGroup>
-  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|x86' ">
-    <PlatformTarget>x86</PlatformTarget>
-    <DebugType>pdbonly</DebugType>
-    <Optimize>true</Optimize>
-    <OutputPath>bin\Release\</OutputPath>
-    <DefineConstants>TRACE</DefineConstants>
-    <ErrorReport>prompt</ErrorReport>
-    <WarningLevel>4</WarningLevel>
-  </PropertyGroup>
-  <PropertyGroup>
-    <Win32Resource>
-    </Win32Resource>
-  </PropertyGroup>
-  <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Debug|AnyCPU'">
-    <DebugSymbols>true</DebugSymbols>
-    <OutputPath>bin\Debug\</OutputPath>
-    <DefineConstants>DEBUG;TRACE</DefineConstants>
-    <DebugType>full</DebugType>
-    <PlatformTarget>AnyCPU</PlatformTarget>
-    <CodeAnalysisLogFile>bin\Debug\ParticleEditor.exe.CodeAnalysisLog.xml</CodeAnalysisLogFile>
-    <CodeAnalysisUseTypeNameInSuppression>true</CodeAnalysisUseTypeNameInSuppression>
-    <CodeAnalysisModuleSuppressionsFile>GlobalSuppressions.cs</CodeAnalysisModuleSuppressionsFile>
-    <ErrorReport>prompt</ErrorReport>
-    <CodeAnalysisRuleSet>MinimumRecommendedRules.ruleset</CodeAnalysisRuleSet>
-    <CodeAnalysisRuleSetDirectories>;C:\Program Files (x86)\Microsoft Visual Studio 10.0\Team Tools\Static Analysis Tools\\Rule Sets</CodeAnalysisRuleSetDirectories>
-    <CodeAnalysisIgnoreBuiltInRuleSets>true</CodeAnalysisIgnoreBuiltInRuleSets>
-    <CodeAnalysisRuleDirectories>;C:\Program Files (x86)\Microsoft Visual Studio 10.0\Team Tools\Static Analysis Tools\FxCop\\Rules</CodeAnalysisRuleDirectories>
-    <CodeAnalysisIgnoreBuiltInRules>false</CodeAnalysisIgnoreBuiltInRules>
-    <CodeAnalysisFailOnMissingRules>false</CodeAnalysisFailOnMissingRules>
-  </PropertyGroup>
-  <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Release|AnyCPU'">
-    <OutputPath>bin\Release\</OutputPath>
-    <DefineConstants>TRACE</DefineConstants>
-    <Optimize>true</Optimize>
-    <DebugType>pdbonly</DebugType>
-    <PlatformTarget>AnyCPU</PlatformTarget>
-    <CodeAnalysisLogFile>bin\Release\ParticleEditor.exe.CodeAnalysisLog.xml</CodeAnalysisLogFile>
-    <CodeAnalysisUseTypeNameInSuppression>true</CodeAnalysisUseTypeNameInSuppression>
-    <CodeAnalysisModuleSuppressionsFile>GlobalSuppressions.cs</CodeAnalysisModuleSuppressionsFile>
-    <ErrorReport>prompt</ErrorReport>
-    <CodeAnalysisRuleSet>MinimumRecommendedRules.ruleset</CodeAnalysisRuleSet>
-    <CodeAnalysisRuleSetDirectories>;C:\Program Files (x86)\Microsoft Visual Studio 10.0\Team Tools\Static Analysis Tools\\Rule Sets</CodeAnalysisRuleSetDirectories>
-    <CodeAnalysisRuleDirectories>;C:\Program Files (x86)\Microsoft Visual Studio 10.0\Team Tools\Static Analysis Tools\FxCop\\Rules</CodeAnalysisRuleDirectories>
-  </PropertyGroup>
-  <ItemGroup>
-    <Reference Include="Cyotek.Windows.Forms.ColorPicker">
-      <HintPath>..\References\Release\Cyotek.Windows.Forms.ColorPicker.dll</HintPath>
-    </Reference>
-    <Reference Include="DialogHelper">
-      <HintPath>..\References\Release\DialogHelper.dll</HintPath>
-    </Reference>
-    <Reference Include="Gorgon, Version=1.1.5005.599, Culture=neutral, processorArchitecture=MSIL">
-      <SpecificVersion>False</SpecificVersion>
-      <HintPath>..\References\Release\Gorgon.dll</HintPath>
-    </Reference>
-    <Reference Include="ParticleEditor, Version=1.0.0.0, Culture=neutral, processorArchitecture=x86">
-      <ExecutableExtension>.exe</ExecutableExtension>
-      <HintPath>obj\x86\Release\ParticleEditor.exe</HintPath>
-    </Reference>
-    <Reference Include="System" />
-    <Reference Include="System.Core" />
-    <Reference Include="System.Xml.Linq" />
-    <Reference Include="System.Data.DataSetExtensions" />
-    <Reference Include="Microsoft.CSharp" />
-    <Reference Include="System.Data" />
-    <Reference Include="System.Deployment" />
-    <Reference Include="System.Drawing" />
-    <Reference Include="System.Windows.Forms" />
-    <Reference Include="System.Xml" />
+<Project DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003" ToolsVersion="4.0">
+	<PropertyGroup>
+	  <ProjectType>Local</ProjectType>
+	  <ProductVersion>9.0.30729</ProductVersion>
+	  <SchemaVersion>2.0</SchemaVersion>
+	  <ProjectGuid>{6BBAE7E5-0000-0000-0000-000000000000}</ProjectGuid>
+	  <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
+	  <ApplicationIcon></ApplicationIcon>
+	  <AssemblyKeyContainerName>
+	  </AssemblyKeyContainerName>
+	  <AssemblyName>ParticleEditor</AssemblyName>
+	  <DefaultClientScript>JScript</DefaultClientScript>
+	  <DefaultHTMLPageLayout>Grid</DefaultHTMLPageLayout>
+	  <DefaultTargetSchema>IE50</DefaultTargetSchema>
+	  <DelaySign>false</DelaySign>
+	  <TargetFrameworkVersion>v4.0</TargetFrameworkVersion>
+	  <OutputType>WinExe</OutputType>
+	  <AppDesignerFolder></AppDesignerFolder>
+	  <RootNamespace>ParticleEditor</RootNamespace>
+	  <StartupObject></StartupObject>
+	  <StartArguments></StartArguments>
+	  <FileUpgradeFlags>
+	  </FileUpgradeFlags>
+	</PropertyGroup>
+	<PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
+	  <AllowUnsafeBlocks>False</AllowUnsafeBlocks>
+	  <BaseAddress>285212672</BaseAddress>
+	  <CheckForOverflowUnderflow>False</CheckForOverflowUnderflow>
+	  <ConfigurationOverrideFile>
+	  </ConfigurationOverrideFile>
+	  <DefineConstants>TRACE;DEBUG</DefineConstants>
+	  <DocumentationFile></DocumentationFile>
+	  <DebugSymbols>True</DebugSymbols>
+	  <FileAlignment>4096</FileAlignment>
+	  <Optimize>False</Optimize>
+	  <OutputPath>..\Bin\</OutputPath>
+	  <RegisterForComInterop>False</RegisterForComInterop>
+	  <RemoveIntegerChecks>False</RemoveIntegerChecks>
+	  <TreatWarningsAsErrors>False</TreatWarningsAsErrors>
+	  <WarningLevel>4</WarningLevel>
+	  <NoStdLib>False</NoStdLib>
+	  <NoWarn></NoWarn>
+	  <PlatformTarget>AnyCPU</PlatformTarget>
+	</PropertyGroup>
+	<PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
+	  <AllowUnsafeBlocks>False</AllowUnsafeBlocks>
+	  <BaseAddress>285212672</BaseAddress>
+	  <CheckForOverflowUnderflow>False</CheckForOverflowUnderflow>
+	  <ConfigurationOverrideFile>
+	  </ConfigurationOverrideFile>
+	  <DefineConstants>TRACE</DefineConstants>
+	  <DocumentationFile></DocumentationFile>
+	  <DebugSymbols>False</DebugSymbols>
+	  <FileAlignment>4096</FileAlignment>
+	  <Optimize>True</Optimize>
+	  <OutputPath>..\Bin\</OutputPath>
+	  <RegisterForComInterop>False</RegisterForComInterop>
+	  <RemoveIntegerChecks>False</RemoveIntegerChecks>
+	  <TreatWarningsAsErrors>False</TreatWarningsAsErrors>
+	  <WarningLevel>4</WarningLevel>
+	  <NoStdLib>False</NoStdLib>
+	  <NoWarn></NoWarn>
+	  <PlatformTarget>AnyCPU</PlatformTarget>
+	</PropertyGroup>
+	<ItemGroup>
+	  <Reference Include="Cyotek.Windows.Forms.ColorPicker" >
+		  <Name>Cyotek.Windows.Forms.ColorPicker</Name>
+		<HintPath>..\Third-Party\Cyotek.Windows.Forms.ColorPicker.dll</HintPath>
+		<Private>False</Private>
+	  </Reference>
+	  <Reference Include="DialogHelper" >
+		  <Name>DialogHelper</Name>
+		<HintPath>..\Third-Party\DialogHelper.dll</HintPath>
+		<Private>False</Private>
+	  </Reference>
+	  <Reference Include="Gorgon" >
+		  <Name>Gorgon</Name>
+		<HintPath>..\Third-Party\Gorgon.dll</HintPath>
+		<Private>False</Private>
+	  </Reference>
+	  <Reference Include="Microsoft.CSharp" >
+		  <Name>Microsoft.CSharp</Name>
+		<Private>False</Private>
+	  </Reference>
+	  <Reference Include="System" >
+		  <Name>System</Name>
+		<Private>False</Private>
+	  </Reference>
+	  <Reference Include="System.Core" >
+		  <Name>System.Core</Name>
+		<Private>False</Private>
+	  </Reference>
+	  <Reference Include="System.Data" >
+		  <Name>System.Data</Name>
+		<Private>False</Private>
+	  </Reference>
+	  <Reference Include="System.Data.DataSetExtensions" >
+		  <Name>System.Data.DataSetExtensions</Name>
+		<Private>False</Private>
+	  </Reference>
+	  <Reference Include="System.Deployment" >
+		  <Name>System.Deployment</Name>
+		<Private>False</Private>
+	  </Reference>
+	  <Reference Include="System.Drawing" >
+		  <Name>System.Drawing</Name>
+		<Private>False</Private>
+	  </Reference>
+	  <Reference Include="System.Windows.Forms" >
+		  <Name>System.Windows.Forms</Name>
+		<Private>False</Private>
+	  </Reference>
+	  <Reference Include="System.Xml" >
+		  <Name>System.Xml</Name>
+		<Private>False</Private>
+	  </Reference>
+	  <Reference Include="System.Xml.Linq" >
+		  <Name>System.Xml.Linq</Name>
+		<Private>False</Private>
+	  </Reference>
+	</ItemGroup>
+	<ItemGroup>
+	  <ProjectReference Include="..\CGO\ClientGameObject.csproj">
+		<Name>ClientGameObject</Name>
+		<Project>{07729BD8-0000-0000-0000-000000000000}</Project>
+		<Package>{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}</Package>
+		<Private>False</Private>
+	  </ProjectReference>
+	  <ProjectReference Include="..\ClientInterfaces\ClientInterfaces.csproj">
+		<Name>ClientInterfaces</Name>
+		<Project>{48FDFC43-0000-0000-0000-000000000000}</Project>
+		<Package>{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}</Package>
+		<Private>False</Private>
+	  </ProjectReference>
+	  <ProjectReference Include="..\ClientServices\ClientServices.csproj">
+		<Name>ClientServices</Name>
+		<Project>{378311B3-0000-0000-0000-000000000000}</Project>
+		<Package>{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}</Package>
+		<Private>False</Private>
+	  </ProjectReference>
+	  <ProjectReference Include="..\GameObject\GameObject.csproj">
+		<Name>GameObject</Name>
+		<Project>{85486103-0000-0000-0000-000000000000}</Project>
+		<Package>{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}</Package>
+		<Private>False</Private>
+	  </ProjectReference>
+	  <ProjectReference Include="..\SS13.IoC\SS13.IoC.csproj">
+		<Name>SS13.IoC</Name>
+		<Project>{D6A43211-0000-0000-0000-000000000000}</Project>
+		<Package>{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}</Package>
+		<Private>False</Private>
+	  </ProjectReference>
+	  <ProjectReference Include="..\SS3D_shared\SS13_Shared.csproj">
+		<Name>SS13_Shared</Name>
+		<Project>{26CA7B60-0000-0000-0000-000000000000}</Project>
+		<Package>{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}</Package>
+		<Private>False</Private>
+	  </ProjectReference>
+	</ItemGroup>
+	<ItemGroup>
+	  <EmbeddedResource Include="ColorRangeControl.resx">
+		<DependentUpon>ColorRangeControl.cs</DependentUpon>
+		<SubType>Designer</SubType>
+	  </EmbeddedResource>
+	  <Compile Include="ColorRangeControl.cs">
+		<SubType>UserControl</SubType>
+	  </Compile>
+	  <Compile Include="ColorRangeControl.Designer.cs">
+		<DependentUpon>ColorRangeControl.cs</DependentUpon>
+		<SubType>Code</SubType>
+	  </Compile>
+	  <EmbeddedResource Include="ColorSwatch.resx">
+		<DependentUpon>ColorSwatch.cs</DependentUpon>
+		<SubType>Designer</SubType>
+	  </EmbeddedResource>
+	  <Compile Include="ColorSwatch.cs">
+		<SubType>Component</SubType>
+	  </Compile>
+	  <Compile Include="ColorSwatch.Designer.cs">
+		<DependentUpon>ColorSwatch.cs</DependentUpon>
+		<SubType>Code</SubType>
+	  </Compile>
+	  <EmbeddedResource Include="VariedFloatRangeControl.resx">
+		<DependentUpon>VariedFloatRangeControl.cs</DependentUpon>
+		<SubType>Designer</SubType>
+	  </EmbeddedResource>
+	  <Compile Include="VariedFloatRangeControl.cs">
+		<SubType>UserControl</SubType>
+	  </Compile>
+	  <Compile Include="VariedFloatRangeControl.Designer.cs">
+		<DependentUpon>VariedFloatRangeControl.cs</DependentUpon>
+		<SubType>Code</SubType>
+	  </Compile>
+	  <EmbeddedResource Include="FloatRangeControl.resx">
+		<DependentUpon>FloatRangeControl.cs</DependentUpon>
+		<SubType>Designer</SubType>
+	  </EmbeddedResource>
+	  <Compile Include="FloatRangeControl.cs">
+		<SubType>UserControl</SubType>
+	  </Compile>
+	  <Compile Include="FloatRangeControl.Designer.cs">
+		<DependentUpon>FloatRangeControl.cs</DependentUpon>
+		<SubType>Code</SubType>
+	  </Compile>
+	  <EmbeddedResource Include="ParticleConfigurator.resx">
+		<DependentUpon>ParticleConfigurator.cs</DependentUpon>
+		<SubType>Designer</SubType>
+	  </EmbeddedResource>
+	  <Compile Include="ParticleConfigurator.cs">
+		<SubType>UserControl</SubType>
+	  </Compile>
+	  <Compile Include="ParticleConfigurator.Designer.cs">
+		<DependentUpon>ParticleConfigurator.cs</DependentUpon>
+		<SubType>Code</SubType>
+	  </Compile>
+	  <EmbeddedResource Include="ParticleDisplay.resx">
+		<DependentUpon>ParticleDisplay.cs</DependentUpon>
+		<SubType>Designer</SubType>
+	  </EmbeddedResource>
+	  <Compile Include="ParticleDisplay.cs">
+		<SubType>UserControl</SubType>
+	  </Compile>
+	  <Compile Include="ParticleDisplay.Designer.cs">
+		<DependentUpon>ParticleDisplay.cs</DependentUpon>
+		<SubType>Code</SubType>
+	  </Compile>
+	  <EmbeddedResource Include="ParticleEditorMainForm.resx">
+		<DependentUpon>ParticleEditorMainForm.cs</DependentUpon>
+		<SubType>Designer</SubType>
+	  </EmbeddedResource>
+	  <Compile Include="ParticleEditorMainForm.cs">
+		<SubType>Form</SubType>
+	  </Compile>
+	  <Compile Include="ParticleEditorMainForm.Designer.cs">
+		<DependentUpon>ParticleEditorMainForm.cs</DependentUpon>
+		<SubType>Code</SubType>
+	  </Compile>
+	  <EmbeddedResource Include="VariedFloatControl.resx">
+		<DependentUpon>VariedFloatControl.cs</DependentUpon>
+		<SubType>Designer</SubType>
+	  </EmbeddedResource>
+	  <Compile Include="VariedFloatControl.cs">
+		<SubType>UserControl</SubType>
+	  </Compile>
+	  <Compile Include="VariedFloatControl.Designer.cs">
+		<DependentUpon>VariedFloatControl.cs</DependentUpon>
+		<SubType>Code</SubType>
+	  </Compile>
+	  <EmbeddedResource Include="Vector2Control.resx">
+		<DependentUpon>Vector2Control.cs</DependentUpon>
+		<SubType>Designer</SubType>
+	  </EmbeddedResource>
+	  <Compile Include="Vector2Control.cs">
+		<SubType>UserControl</SubType>
+	  </Compile>
+	  <Compile Include="Vector2Control.Designer.cs">
+		<DependentUpon>Vector2Control.cs</DependentUpon>
+		<SubType>Code</SubType>
+	  </Compile>
+	  <EmbeddedResource Include="VariedVector2Control.resx">
+		<DependentUpon>VariedVector2Control.cs</DependentUpon>
+		<SubType>Designer</SubType>
+	  </EmbeddedResource>
+	  <Compile Include="VariedVector2Control.cs">
+		<SubType>UserControl</SubType>
+	  </Compile>
+	  <Compile Include="VariedVector2Control.Designer.cs">
+		<DependentUpon>VariedVector2Control.cs</DependentUpon>
+		<SubType>Code</SubType>
+	  </Compile>
+	  <Compile Include="Program.cs">
+		<SubType>Code</SubType>
+	  </Compile>
+	  <Compile Include="Properties\AssemblyInfo.cs">
+		<SubType>Code</SubType>
+	  </Compile>
+	  <EmbeddedResource Include="Properties\Resources.resx">
+		<Generator>ResXFileCodeGenerator</Generator>
+		<LastGenOutput>Resources.Designer.cs</LastGenOutput>
+		<SubType>Designer</SubType>
+	  </EmbeddedResource>
+	  <Compile Include="Properties\Resources.Designer.cs">
+		<AutoGen>True</AutoGen>
+		<DependentUpon>Resources.resx</DependentUpon>
+	  </Compile>
+	  <EmbeddedResource Include="Resources.resx">
+		<Generator>ResXFileCodeGenerator</Generator>
+		<LastGenOutput>Resources.Designer.cs</LastGenOutput>
+		<SubType>Designer</SubType>
+	  </EmbeddedResource>
+	  <Compile Include="Resources.Designer.cs">
+		<AutoGen>True</AutoGen>
+		<DependentUpon>Resources.resx</DependentUpon>
+	  </Compile>
+	  <None Include="app.config">
+	  </None>
+	  <None Include="Properties\DataSources\ParticleSettings.datasource">
+	  </None>
+	  <None Include="Properties\Settings.settings">
+		<Generator>SettingsSingleFileGenerator</Generator>
+		<LastGenOutput>Settings.Designer.cs</LastGenOutput>
+	  </None>
+	  <Compile Include="Properties\Settings.Designer.cs">
+		<DependentUpon>Settings.settings</DependentUpon>
+		<AutoGen>True</AutoGen>
+		<DesignTimeSharedInput>True</DesignTimeSharedInput>
+		<SubType>Code</SubType>
+	  </Compile>
+	  <None Include="Resources\cellbackground.bmp">
+	  </None>
+	  <Content Include="config.xml">
+		<SubType>Code</SubType>
+		<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+	  </Content>
+	  <Content Include="star1.png">
+		<SubType>Code</SubType>
+		<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+	  </Content>
   </ItemGroup>
-  <ItemGroup>
-    <Compile Include="ColorRangeControl.cs">
-      <SubType>UserControl</SubType>
-    </Compile>
-    <Compile Include="ColorRangeControl.Designer.cs">
-      <DependentUpon>ColorRangeControl.cs</DependentUpon>
-    </Compile>
-    <Compile Include="ColorSwatch.cs">
-      <SubType>Component</SubType>
-    </Compile>
-    <Compile Include="ColorSwatch.Designer.cs">
-      <DependentUpon>ColorSwatch.cs</DependentUpon>
-    </Compile>
-    <Compile Include="VariedFloatRangeControl.cs">
-      <SubType>UserControl</SubType>
-    </Compile>
-    <Compile Include="VariedFloatRangeControl.Designer.cs">
-      <DependentUpon>VariedFloatRangeControl.cs</DependentUpon>
-    </Compile>
-    <Compile Include="FloatRangeControl.cs">
-      <SubType>UserControl</SubType>
-    </Compile>
-    <Compile Include="FloatRangeControl.Designer.cs">
-      <DependentUpon>FloatRangeControl.cs</DependentUpon>
-    </Compile>
-    <Compile Include="ParticleConfigurator.cs">
-      <SubType>UserControl</SubType>
-    </Compile>
-    <Compile Include="ParticleConfigurator.Designer.cs">
-      <DependentUpon>ParticleConfigurator.cs</DependentUpon>
-    </Compile>
-    <Compile Include="ParticleDisplay.cs">
-      <SubType>UserControl</SubType>
-    </Compile>
-    <Compile Include="ParticleDisplay.Designer.cs">
-      <DependentUpon>ParticleDisplay.cs</DependentUpon>
-    </Compile>
-    <Compile Include="ParticleEditorMainForm.cs">
-      <SubType>Form</SubType>
-    </Compile>
-    <Compile Include="ParticleEditorMainForm.Designer.cs">
-      <DependentUpon>ParticleEditorMainForm.cs</DependentUpon>
-    </Compile>
-    <Compile Include="Program.cs" />
-    <Compile Include="Properties\AssemblyInfo.cs" />
-    <Compile Include="Resources.Designer.cs">
-      <AutoGen>True</AutoGen>
-      <DesignTime>True</DesignTime>
-      <DependentUpon>Resources.resx</DependentUpon>
-    </Compile>
-    <Compile Include="VariedFloatControl.cs">
-      <SubType>UserControl</SubType>
-    </Compile>
-    <Compile Include="VariedFloatControl.Designer.cs">
-      <DependentUpon>VariedFloatControl.cs</DependentUpon>
-    </Compile>
-    <Compile Include="VariedVector2Control.cs">
-      <SubType>UserControl</SubType>
-    </Compile>
-    <Compile Include="VariedVector2Control.Designer.cs">
-      <DependentUpon>VariedVector2Control.cs</DependentUpon>
-    </Compile>
-    <Compile Include="Vector2Control.cs">
-      <SubType>UserControl</SubType>
-    </Compile>
-    <Compile Include="Vector2Control.Designer.cs">
-      <DependentUpon>Vector2Control.cs</DependentUpon>
-    </Compile>
-    <EmbeddedResource Include="ColorRangeControl.resx">
-      <DependentUpon>ColorRangeControl.cs</DependentUpon>
-    </EmbeddedResource>
-    <EmbeddedResource Include="VariedFloatRangeControl.resx">
-      <DependentUpon>VariedFloatRangeControl.cs</DependentUpon>
-    </EmbeddedResource>
-    <EmbeddedResource Include="FloatRangeControl.resx">
-      <DependentUpon>FloatRangeControl.cs</DependentUpon>
-    </EmbeddedResource>
-    <EmbeddedResource Include="ParticleConfigurator.resx">
-      <DependentUpon>ParticleConfigurator.cs</DependentUpon>
-    </EmbeddedResource>
-    <EmbeddedResource Include="ParticleDisplay.resx">
-      <DependentUpon>ParticleDisplay.cs</DependentUpon>
-    </EmbeddedResource>
-    <EmbeddedResource Include="ParticleEditorMainForm.resx">
-      <DependentUpon>ParticleEditorMainForm.cs</DependentUpon>
-    </EmbeddedResource>
-    <EmbeddedResource Include="Properties\Resources.resx">
-      <Generator>ResXFileCodeGenerator</Generator>
-      <LastGenOutput>Resources.Designer.cs</LastGenOutput>
-      <SubType>Designer</SubType>
-    </EmbeddedResource>
-    <Compile Include="Properties\Resources.Designer.cs">
-      <AutoGen>True</AutoGen>
-      <DependentUpon>Resources.resx</DependentUpon>
-      <DesignTime>True</DesignTime>
-    </Compile>
-    <EmbeddedResource Include="Resources.resx">
-      <Generator>ResXFileCodeGenerator</Generator>
-      <LastGenOutput>Resources.Designer.cs</LastGenOutput>
-    </EmbeddedResource>
-    <EmbeddedResource Include="VariedFloatControl.resx">
-      <DependentUpon>VariedFloatControl.cs</DependentUpon>
-    </EmbeddedResource>
-    <EmbeddedResource Include="VariedVector2Control.resx">
-      <DependentUpon>VariedVector2Control.cs</DependentUpon>
-    </EmbeddedResource>
-    <EmbeddedResource Include="Vector2Control.resx">
-      <DependentUpon>Vector2Control.cs</DependentUpon>
-    </EmbeddedResource>
-    <None Include="app.config" />
-    <None Include="Properties\DataSources\ParticleSettings.datasource" />
-    <None Include="Properties\Settings.settings">
-      <Generator>SettingsSingleFileGenerator</Generator>
-      <LastGenOutput>Settings.Designer.cs</LastGenOutput>
-    </None>
-    <Compile Include="Properties\Settings.Designer.cs">
-      <AutoGen>True</AutoGen>
-      <DependentUpon>Settings.settings</DependentUpon>
-      <DesignTimeSharedInput>True</DesignTimeSharedInput>
-    </Compile>
-  </ItemGroup>
-  <ItemGroup>
-    <ProjectReference Include="..\CGO\ClientGameObject.csproj">
-      <Project>{6C778741-98D8-48EB-835A-293077AF0E07}</Project>
-      <Name>ClientGameObject</Name>
-    </ProjectReference>
-    <ProjectReference Include="..\ClientInterfaces\ClientInterfaces.csproj">
-      <Project>{B31E7B59-7066-4186-AB18-B1BB6DE0E537}</Project>
-      <Name>ClientInterfaces</Name>
-    </ProjectReference>
-    <ProjectReference Include="..\ClientServices\ClientServices.csproj">
-      <Project>{7F85F20C-E2B5-455D-A1CA-76ED000D25EA}</Project>
-      <Name>ClientServices</Name>
-    </ProjectReference>
-    <ProjectReference Include="..\GameObject\GameObject.csproj">
-      <Project>{FB8F5D6F-8500-4A5D-BCFB-20104AA902F4}</Project>
-      <Name>GameObject</Name>
-    </ProjectReference>
-    <ProjectReference Include="..\SS13.IoC\SS13.IoC.csproj">
-      <Project>{3401031F-35A7-4AE5-8B64-CAFDCB929F0E}</Project>
-      <Name>SS13.IoC</Name>
-    </ProjectReference>
-    <ProjectReference Include="..\SS3D_shared\SS13_Shared.csproj">
-      <Project>{4229D7E3-C3AE-4C0A-B2B1-BB20911150DC}</Project>
-      <Name>SS13_Shared</Name>
-    </ProjectReference>
-  </ItemGroup>
-  <ItemGroup>
-    <None Include="Resources\cellbackground.bmp" />
-    <Content Include="config.xml">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Include="star1.png">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-  </ItemGroup>
-  <ItemGroup>
-    <BootstrapperPackage Include=".NETFramework,Version=v4.0">
-      <Visible>False</Visible>
-      <ProductName>Microsoft .NET Framework 4 %28x86 and x64%29</ProductName>
-      <Install>true</Install>
-    </BootstrapperPackage>
-    <BootstrapperPackage Include="Microsoft.Net.Client.3.5">
-      <Visible>False</Visible>
-      <ProductName>.NET Framework 3.5 SP1 Client Profile</ProductName>
-      <Install>false</Install>
-    </BootstrapperPackage>
-    <BootstrapperPackage Include="Microsoft.Net.Framework.3.5.SP1">
-      <Visible>False</Visible>
-      <ProductName>.NET Framework 3.5 SP1</ProductName>
-      <Install>false</Install>
-    </BootstrapperPackage>
-    <BootstrapperPackage Include="Microsoft.Windows.Installer.3.1">
-      <Visible>False</Visible>
-      <ProductName>Windows Installer 3.1</ProductName>
-      <Install>true</Install>
-    </BootstrapperPackage>
-  </ItemGroup>
-  <ItemGroup />
-  <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
-  <PropertyGroup>
-    <PostBuildEvent>copy "$(SolutionDir)References\Release\*.dll" "$(ProjectDir)$(OutDir)"</PostBuildEvent>
-  </PropertyGroup>
-  <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
-       Other similar extension points exist, see Microsoft.Common.targets.
-  <Target Name="BeforeBuild">
-  </Target>
-  <Target Name="AfterBuild">
-  </Target>
-  -->
+	<Import Project="$(MSBuildBinPath)\Microsoft.CSHARP.Targets" />
+	<PropertyGroup>
+	  <PreBuildEvent>
+	  </PreBuildEvent>
+	  <PostBuildEvent>
+	  </PostBuildEvent>
+	</PropertyGroup>
 </Project>

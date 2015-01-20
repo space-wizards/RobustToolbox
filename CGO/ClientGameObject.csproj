@@ -1,191 +1,346 @@
-﻿<?xml version="1.0" encoding="utf-8"?>
-<Project ToolsVersion="4.0" DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
-  <PropertyGroup>
-    <Configuration Condition=" '$(Configuration)' == '' ">Release</Configuration>
-    <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
-    <ProductVersion>8.0.30703</ProductVersion>
-    <SchemaVersion>2.0</SchemaVersion>
-    <ProjectGuid>{6C778741-98D8-48EB-835A-293077AF0E07}</ProjectGuid>
-    <OutputType>Library</OutputType>
-    <AppDesignerFolder>Properties</AppDesignerFolder>
-    <RootNamespace>CGO</RootNamespace>
-    <AssemblyName>CGO</AssemblyName>
-    <TargetFrameworkVersion>v4.0</TargetFrameworkVersion>
-    <FileAlignment>512</FileAlignment>
-  </PropertyGroup>
-  <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Debug|x86'">
-    <DebugSymbols>true</DebugSymbols>
-    <OutputPath>bin\x86\Debug\</OutputPath>
-    <DefineConstants>DEBUG;TRACE</DefineConstants>
-    <DebugType>full</DebugType>
-    <PlatformTarget>x86</PlatformTarget>
-    <CodeAnalysisLogFile>bin\Debug\CGO.dll.CodeAnalysisLog.xml</CodeAnalysisLogFile>
-    <CodeAnalysisUseTypeNameInSuppression>true</CodeAnalysisUseTypeNameInSuppression>
-    <CodeAnalysisModuleSuppressionsFile>GlobalSuppressions.cs</CodeAnalysisModuleSuppressionsFile>
-    <ErrorReport>prompt</ErrorReport>
-    <CodeAnalysisRuleSet>MinimumRecommendedRules.ruleset</CodeAnalysisRuleSet>
-    <CodeAnalysisRuleSetDirectories>;C:\Program Files (x86)\Microsoft Visual Studio 10.0\Team Tools\Static Analysis Tools\\Rule Sets</CodeAnalysisRuleSetDirectories>
-    <CodeAnalysisIgnoreBuiltInRuleSets>false</CodeAnalysisIgnoreBuiltInRuleSets>
-    <CodeAnalysisRuleDirectories>;C:\Program Files (x86)\Microsoft Visual Studio 10.0\Team Tools\Static Analysis Tools\FxCop\\Rules</CodeAnalysisRuleDirectories>
-    <CodeAnalysisIgnoreBuiltInRules>false</CodeAnalysisIgnoreBuiltInRules>
-  </PropertyGroup>
-  <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Release|x86'">
-    <OutputPath>bin\x86\Release\</OutputPath>
-    <DefineConstants>TRACE</DefineConstants>
-    <Optimize>true</Optimize>
-    <DebugType>pdbonly</DebugType>
-    <PlatformTarget>x86</PlatformTarget>
-    <CodeAnalysisLogFile>bin\Release\CGO.dll.CodeAnalysisLog.xml</CodeAnalysisLogFile>
-    <CodeAnalysisUseTypeNameInSuppression>true</CodeAnalysisUseTypeNameInSuppression>
-    <CodeAnalysisModuleSuppressionsFile>GlobalSuppressions.cs</CodeAnalysisModuleSuppressionsFile>
-    <ErrorReport>prompt</ErrorReport>
-    <CodeAnalysisRuleSet>MinimumRecommendedRules.ruleset</CodeAnalysisRuleSet>
-    <CodeAnalysisRuleSetDirectories>;C:\Program Files (x86)\Microsoft Visual Studio 10.0\Team Tools\Static Analysis Tools\\Rule Sets</CodeAnalysisRuleSetDirectories>
-    <CodeAnalysisIgnoreBuiltInRuleSets>false</CodeAnalysisIgnoreBuiltInRuleSets>
-    <CodeAnalysisRuleDirectories>;C:\Program Files (x86)\Microsoft Visual Studio 10.0\Team Tools\Static Analysis Tools\FxCop\\Rules</CodeAnalysisRuleDirectories>
-  </PropertyGroup>
-  <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'DebugMessaging|x86'">
-    <OutputPath>bin\x86\DebugMessaging\</OutputPath>
-    <DefineConstants>DEBUG;TRACE;MESSAGEDEBUG</DefineConstants>
-    <Optimize>true</Optimize>
-    <DebugType>pdbonly</DebugType>
-    <PlatformTarget>x86</PlatformTarget>
-    <CodeAnalysisLogFile>bin\Release\CGO.dll.CodeAnalysisLog.xml</CodeAnalysisLogFile>
-    <CodeAnalysisUseTypeNameInSuppression>true</CodeAnalysisUseTypeNameInSuppression>
-    <CodeAnalysisModuleSuppressionsFile>GlobalSuppressions.cs</CodeAnalysisModuleSuppressionsFile>
-    <ErrorReport>prompt</ErrorReport>
-    <CodeAnalysisRuleSet>MinimumRecommendedRules.ruleset</CodeAnalysisRuleSet>
-    <CodeAnalysisRuleSetDirectories>;C:\Program Files\Microsoft Visual Studio 10.0\Team Tools\Static Analysis Tools\\Rule Sets</CodeAnalysisRuleSetDirectories>
-    <CodeAnalysisIgnoreBuiltInRuleSets>true</CodeAnalysisIgnoreBuiltInRuleSets>
-    <CodeAnalysisRuleDirectories>;C:\Program Files\Microsoft Visual Studio 10.0\Team Tools\Static Analysis Tools\FxCop\\Rules</CodeAnalysisRuleDirectories>
-    <CodeAnalysisIgnoreBuiltInRules>true</CodeAnalysisIgnoreBuiltInRules>
-    <CodeAnalysisFailOnMissingRules>false</CodeAnalysisFailOnMissingRules>
-  </PropertyGroup>
-  <ItemGroup>
-    <Reference Include="Gorgon, Version=1.1.4119.34319, Culture=neutral, PublicKeyToken=c001d94e9acbbee7, processorArchitecture=MSIL">
-      <SpecificVersion>False</SpecificVersion>
-      <HintPath>..\References\Release\Gorgon.dll</HintPath>
-    </Reference>
-    <Reference Include="GorgonFramework">
-      <HintPath>..\References\Release\GorgonFramework.dll</HintPath>
-    </Reference>
-    <Reference Include="Microsoft.CSharp" />
-    <Reference Include="NetSerializer, Version=1.5.0.0, Culture=neutral, processorArchitecture=MSIL">
-      <SpecificVersion>False</SpecificVersion>
-      <HintPath>..\References\Release\NetSerializer.dll</HintPath>
-    </Reference>
-    <Reference Include="System" />
-    <Reference Include="System.Core" />
-    <Reference Include="System.Drawing" />
-    <Reference Include="System.Xml.Linq" />
-    <Reference Include="System.Xml" />
+<Project DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003" ToolsVersion="4.0">
+	<PropertyGroup>
+	  <ProjectType>Local</ProjectType>
+	  <ProductVersion>9.0.30729</ProductVersion>
+	  <SchemaVersion>2.0</SchemaVersion>
+	  <ProjectGuid>{07729BD8-0000-0000-0000-000000000000}</ProjectGuid>
+	  <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
+	  <ApplicationIcon></ApplicationIcon>
+	  <AssemblyKeyContainerName>
+	  </AssemblyKeyContainerName>
+	  <AssemblyName>ClientGameObject</AssemblyName>
+	  <DefaultClientScript>JScript</DefaultClientScript>
+	  <DefaultHTMLPageLayout>Grid</DefaultHTMLPageLayout>
+	  <DefaultTargetSchema>IE50</DefaultTargetSchema>
+	  <DelaySign>false</DelaySign>
+	  <TargetFrameworkVersion>v4.0</TargetFrameworkVersion>
+	  <OutputType>Library</OutputType>
+	  <AppDesignerFolder></AppDesignerFolder>
+	  <RootNamespace>CGO</RootNamespace>
+	  <StartupObject></StartupObject>
+	  <StartArguments></StartArguments>
+	  <FileUpgradeFlags>
+	  </FileUpgradeFlags>
+	</PropertyGroup>
+	<PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
+	  <AllowUnsafeBlocks>False</AllowUnsafeBlocks>
+	  <BaseAddress>285212672</BaseAddress>
+	  <CheckForOverflowUnderflow>False</CheckForOverflowUnderflow>
+	  <ConfigurationOverrideFile>
+	  </ConfigurationOverrideFile>
+	  <DefineConstants>TRACE;DEBUG</DefineConstants>
+	  <DocumentationFile></DocumentationFile>
+	  <DebugSymbols>True</DebugSymbols>
+	  <FileAlignment>4096</FileAlignment>
+	  <Optimize>False</Optimize>
+	  <OutputPath>..\Bin\</OutputPath>
+	  <RegisterForComInterop>False</RegisterForComInterop>
+	  <RemoveIntegerChecks>False</RemoveIntegerChecks>
+	  <TreatWarningsAsErrors>False</TreatWarningsAsErrors>
+	  <WarningLevel>4</WarningLevel>
+	  <NoStdLib>False</NoStdLib>
+	  <NoWarn></NoWarn>
+	  <PlatformTarget>AnyCPU</PlatformTarget>
+	</PropertyGroup>
+	<PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
+	  <AllowUnsafeBlocks>False</AllowUnsafeBlocks>
+	  <BaseAddress>285212672</BaseAddress>
+	  <CheckForOverflowUnderflow>False</CheckForOverflowUnderflow>
+	  <ConfigurationOverrideFile>
+	  </ConfigurationOverrideFile>
+	  <DefineConstants>TRACE</DefineConstants>
+	  <DocumentationFile></DocumentationFile>
+	  <DebugSymbols>False</DebugSymbols>
+	  <FileAlignment>4096</FileAlignment>
+	  <Optimize>True</Optimize>
+	  <OutputPath>..\Bin\</OutputPath>
+	  <RegisterForComInterop>False</RegisterForComInterop>
+	  <RemoveIntegerChecks>False</RemoveIntegerChecks>
+	  <TreatWarningsAsErrors>False</TreatWarningsAsErrors>
+	  <WarningLevel>4</WarningLevel>
+	  <NoStdLib>False</NoStdLib>
+	  <NoWarn></NoWarn>
+	  <PlatformTarget>AnyCPU</PlatformTarget>
+	</PropertyGroup>
+	<ItemGroup>
+	  <Reference Include="Gorgon" >
+		  <Name>Gorgon</Name>
+		<HintPath>..\Third-Party\Gorgon.dll</HintPath>
+		<Private>False</Private>
+	  </Reference>
+	  <Reference Include="GorgonFramework" >
+		  <Name>GorgonFramework</Name>
+		<HintPath>..\Third-Party\GorgonFramework.dll</HintPath>
+		<Private>False</Private>
+	  </Reference>
+	  <Reference Include="Microsoft.CSharp" >
+		  <Name>Microsoft.CSharp</Name>
+		<Private>False</Private>
+	  </Reference>
+	  <Reference Include="NetSerializer" >
+		  <Name>NetSerializer</Name>
+		<HintPath>..\Third-Party\NetSerializer.dll</HintPath>
+		<Private>False</Private>
+	  </Reference>
+	  <Reference Include="System" >
+		  <Name>System</Name>
+		<Private>False</Private>
+	  </Reference>
+	  <Reference Include="System.Core" >
+		  <Name>System.Core</Name>
+		<Private>False</Private>
+	  </Reference>
+	  <Reference Include="System.Drawing" >
+		  <Name>System.Drawing</Name>
+		<Private>False</Private>
+	  </Reference>
+	  <Reference Include="System.Xml" >
+		  <Name>System.Xml</Name>
+		<Private>False</Private>
+	  </Reference>
+	  <Reference Include="System.Xml.Linq" >
+		  <Name>System.Xml.Linq</Name>
+		<Private>False</Private>
+	  </Reference>
+	</ItemGroup>
+	<ItemGroup>
+	  <ProjectReference Include="..\ClientInterfaces\ClientInterfaces.csproj">
+		<Name>ClientInterfaces</Name>
+		<Project>{48FDFC43-0000-0000-0000-000000000000}</Project>
+		<Package>{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}</Package>
+		<Private>False</Private>
+	  </ProjectReference>
+	  <ProjectReference Include="..\ClientWindow\ClientWindow.csproj">
+		<Name>ClientWindow</Name>
+		<Project>{330C0EC1-0000-0000-0000-000000000000}</Project>
+		<Package>{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}</Package>
+		<Private>False</Private>
+	  </ProjectReference>
+	  <ProjectReference Include="..\GameObject\GameObject.csproj">
+		<Name>GameObject</Name>
+		<Project>{85486103-0000-0000-0000-000000000000}</Project>
+		<Package>{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}</Package>
+		<Private>False</Private>
+	  </ProjectReference>
+	  <ProjectReference Include="..\Lidgren.Network\Lidgren.Network.csproj">
+		<Name>Lidgren.Network</Name>
+		<Project>{59250BAF-0000-0000-0000-000000000000}</Project>
+		<Package>{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}</Package>
+		<Private>False</Private>
+	  </ProjectReference>
+	  <ProjectReference Include="..\SS13.Graphics\SS13.Graphics.csproj">
+		<Name>SS13.Graphics</Name>
+		<Project>{29DCD819-0000-0000-0000-000000000000}</Project>
+		<Package>{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}</Package>
+		<Private>False</Private>
+	  </ProjectReference>
+	  <ProjectReference Include="..\SS13.IoC\SS13.IoC.csproj">
+		<Name>SS13.IoC</Name>
+		<Project>{D6A43211-0000-0000-0000-000000000000}</Project>
+		<Package>{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}</Package>
+		<Private>False</Private>
+	  </ProjectReference>
+	  <ProjectReference Include="..\SS3D_shared\SS13_Shared.csproj">
+		<Name>SS13_Shared</Name>
+		<Project>{26CA7B60-0000-0000-0000-000000000000}</Project>
+		<Package>{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}</Package>
+		<Private>False</Private>
+	  </ProjectReference>
+	</ItemGroup>
+	<ItemGroup>
+	  <Compile Include="Component\ClickableComponent.cs">
+		<SubType>Code</SubType>
+	  </Compile>
+	  <Compile Include="Component\Collidable\CollidableComponent.cs">
+		<SubType>Code</SubType>
+	  </Compile>
+	  <Compile Include="Component\Collidable\TriggerableComponent.cs">
+		<SubType>Code</SubType>
+	  </Compile>
+	  <Compile Include="Component\Collider\ColliderComponent.cs">
+		<SubType>Code</SubType>
+	  </Compile>
+	  <Compile Include="Component\Damageable\DamageableComponent.cs">
+		<SubType>Code</SubType>
+	  </Compile>
+	  <Compile Include="Component\Damageable\Health\LocationalHealth\DamageLocation.cs">
+		<SubType>Code</SubType>
+	  </Compile>
+	  <Compile Include="Component\Damageable\Health\LocationalHealth\HumanHealthComponent.cs">
+		<SubType>Code</SubType>
+	  </Compile>
+	  <Compile Include="Component\Direction\DirectionComponent.cs">
+		<SubType>Code</SubType>
+	  </Compile>
+	  <Compile Include="Component\EntityStats\EntityStatsCompC.cs">
+		<SubType>Code</SubType>
+	  </Compile>
+	  <Compile Include="Component\Equipment\NewEquipmentComponent.cs">
+		<SubType>Code</SubType>
+	  </Compile>
+	  <Compile Include="Component\Equipment\EquipmentComponent.cs">
+		<SubType>Code</SubType>
+	  </Compile>
+	  <Compile Include="Component\Equipment\HumanEquipmentComponent.cs">
+		<SubType>Code</SubType>
+	  </Compile>
+	  <Compile Include="Component\Equippable\EquippableComponent.cs">
+		<SubType>Code</SubType>
+	  </Compile>
+	  <Compile Include="Component\Hands\NewHandsComponent.cs">
+		<SubType>Code</SubType>
+	  </Compile>
+	  <Compile Include="Component\Hands\HumanHandsComponent.cs">
+		<SubType>Code</SubType>
+	  </Compile>
+	  <Compile Include="Component\Damageable\Health\HealthComponent.cs">
+		<SubType>Code</SubType>
+	  </Compile>
+	  <Compile Include="Component\Icon\IconComponent.cs">
+		<SubType>Code</SubType>
+	  </Compile>
+	  <Compile Include="Component\Input\ContextMenuComponent.cs">
+		<SubType>Code</SubType>
+	  </Compile>
+	  <Compile Include="Component\Inventory\NewInventory.cs">
+		<SubType>Code</SubType>
+	  </Compile>
+	  <Compile Include="Component\Inventory\Inventory.cs">
+		<SubType>Code</SubType>
+	  </Compile>
+	  <Compile Include="Component\Item\BasicItemComponent.cs">
+		<SubType>Code</SubType>
+	  </Compile>
+	  <Compile Include="Component\Light\FlashLightComponent.cs">
+		<SubType>Code</SubType>
+	  </Compile>
+	  <Compile Include="Component\Light\PointLightComponent.cs">
+		<SubType>Code</SubType>
+	  </Compile>
+	  <Compile Include="Component\Mover\PlayerInputMoverComponent.cs">
+		<SubType>Code</SubType>
+	  </Compile>
+	  <Compile Include="Component\Mover\BasicMoverComponent.cs">
+		<SubType>Code</SubType>
+	  </Compile>
+	  <Compile Include="Component\Mover\SlaveMoverComponent.cs">
+		<SubType>Code</SubType>
+	  </Compile>
+	  <Compile Include="Component\Physics\PhysicsComponent.cs">
+		<SubType>Code</SubType>
+	  </Compile>
+	  <Compile Include="Component\PlayerActionComp\PlayerActionCompC.cs">
+		<SubType>Code</SubType>
+	  </Compile>
+	  <Compile Include="Component\Renderable\AnimatedSpriteComponent.cs">
+		<SubType>Code</SubType>
+	  </Compile>
+	  <Compile Include="Component\Renderable\ParticleSystem.cs">
+		<SubType>Code</SubType>
+	  </Compile>
+	  <Compile Include="Component\Renderable\ParticleSystemComponent.cs">
+		<SubType>Code</SubType>
+	  </Compile>
+	  <Compile Include="Component\Renderable\Speechbubble.cs">
+		<SubType>Code</SubType>
+	  </Compile>
+	  <Compile Include="Component\Renderable\WearableAnimatedSpriteComponent.cs">
+		<SubType>Code</SubType>
+	  </Compile>
+	  <Compile Include="Component\Renderable\WearableSpriteComponent.cs">
+		<SubType>Code</SubType>
+	  </Compile>
+	  <Compile Include="Component\Renderable\ItemSpriteComponent.cs">
+		<SubType>Code</SubType>
+	  </Compile>
+	  <Compile Include="Component\Renderable\MobSpriteComponent.cs">
+		<SubType>Code</SubType>
+	  </Compile>
+	  <Compile Include="Component\Renderable\SpriteComponent.cs">
+		<SubType>Code</SubType>
+	  </Compile>
+	  <Compile Include="Component\StatusEffects\StatusEffectComp.cs">
+		<SubType>Code</SubType>
+	  </Compile>
+	  <Compile Include="Component\SVars\SVarsComponent.cs">
+		<SubType>Code</SubType>
+	  </Compile>
+	  <Compile Include="Component\Transform\TransformComponent.cs">
+		<SubType>Code</SubType>
+	  </Compile>
+	  <Compile Include="Component\Velocity\VelocityComponent.cs">
+		<SubType>Code</SubType>
+	  </Compile>
+	  <Compile Include="ContextMenuEntry.cs">
+		<SubType>Code</SubType>
+	  </Compile>
+	  <Compile Include="EntitySystems\ParticleSystem.cs">
+		<SubType>Code</SubType>
+	  </Compile>
+	  <Compile Include="EntitySystems\InputSystem.cs">
+		<SubType>Code</SubType>
+	  </Compile>
+	  <Compile Include="EntitySystems\InventorySystem.cs">
+		<SubType>Code</SubType>
+	  </Compile>
+	  <Compile Include="EntitySystems\TransformSystem.cs">
+		<SubType>Code</SubType>
+	  </Compile>
+	  <Compile Include="Vector2.cs">
+		<SubType>Code</SubType>
+	  </Compile>
+	  <None Include="Entity.cs">
+	  </None>
+	  <Compile Include="EntityManager.cs">
+		<SubType>Code</SubType>
+	  </Compile>
+	  <Compile Include="EntityNetworkManager.cs">
+		<SubType>Code</SubType>
+	  </Compile>
+	  <Compile Include="Component\Input\KeyBindingInputComponent.cs">
+		<SubType>Code</SubType>
+	  </Compile>
+	  <Compile Include="EntitySystems\PhysicsSystem.cs">
+		<SubType>Code</SubType>
+	  </Compile>
+	  <Compile Include="EntitySystems\TestSystem.cs">
+		<SubType>Code</SubType>
+	  </Compile>
+	  <Compile Include="PlayerActions\ExampleAction.cs">
+		<SubType>Code</SubType>
+	  </Compile>
+	  <Compile Include="PlayerActions\PlayerActionC.cs">
+		<SubType>Code</SubType>
+	  </Compile>
+	  <Compile Include="Properties\AssemblyInfo.cs">
+		<SubType>Code</SubType>
+	  </Compile>
+	  <None Include="Component\Renderable\RenderableComponent.cs">
+	  </None>
+	  <Compile Include="Status Effects\Bleeding.cs">
+		<SubType>Code</SubType>
+	  </Compile>
+	  <Compile Include="Status Effects\Hypoxia.cs">
+		<SubType>Code</SubType>
+	  </Compile>
+	  <Compile Include="Status Effects\ToxinInhalation.cs">
+		<SubType>Code</SubType>
+	  </Compile>
+	  <Compile Include="Status Effects\Rooted.cs">
+		<SubType>Code</SubType>
+	  </Compile>
+	  <Compile Include="Status Effects\ExampleEffect.cs">
+		<SubType>Code</SubType>
+	  </Compile>
+	  <Compile Include="Status Effects\StatusEffect.cs">
+		<SubType>Code</SubType>
+	  </Compile>
   </ItemGroup>
-  <ItemGroup>
-    <Compile Include="Component\ClickableComponent.cs" />
-    <Compile Include="Component\Collidable\CollidableComponent.cs" />
-    <Compile Include="Component\Collidable\TriggerableComponent.cs" />
-    <Compile Include="Component\Collider\ColliderComponent.cs" />
-    <Compile Include="Component\Damageable\DamageableComponent.cs" />
-    <Compile Include="Component\Damageable\Health\LocationalHealth\DamageLocation.cs" />
-    <Compile Include="Component\Damageable\Health\LocationalHealth\HumanHealthComponent.cs" />
-    <Compile Include="Component\Direction\DirectionComponent.cs" />
-    <Compile Include="Component\EntityStats\EntityStatsCompC.cs" />
-    <Compile Include="Component\Equipment\NewEquipmentComponent.cs" />
-    <Compile Include="Component\Equipment\EquipmentComponent.cs" />
-    <Compile Include="Component\Equipment\HumanEquipmentComponent.cs" />
-    <Compile Include="Component\Equippable\EquippableComponent.cs" />
-    <Compile Include="Component\Hands\NewHandsComponent.cs" />
-    <Compile Include="Component\Hands\HumanHandsComponent.cs" />
-    <Compile Include="Component\Damageable\Health\HealthComponent.cs" />
-    <Compile Include="Component\Icon\IconComponent.cs" />
-    <Compile Include="Component\Input\ContextMenuComponent.cs" />
-    <Compile Include="Component\Inventory\NewInventory.cs" />
-    <Compile Include="Component\Inventory\Inventory.cs" />
-    <Compile Include="Component\Item\BasicItemComponent.cs" />
-    <Compile Include="Component\Light\FlashLightComponent.cs" />
-    <Compile Include="Component\Light\PointLightComponent.cs" />
-    <Compile Include="Component\Mover\PlayerInputMoverComponent.cs" />
-    <Compile Include="Component\Mover\BasicMoverComponent.cs" />
-    <Compile Include="Component\Mover\SlaveMoverComponent.cs" />
-    <Compile Include="Component\Physics\PhysicsComponent.cs" />
-    <Compile Include="Component\PlayerActionComp\PlayerActionCompC.cs" />
-    <Compile Include="Component\Renderable\AnimatedSpriteComponent.cs" />
-    <Compile Include="Component\Renderable\ParticleSystem.cs" />
-    <Compile Include="Component\Renderable\ParticleSystemComponent.cs" />
-    <Compile Include="Component\Renderable\Speechbubble.cs" />
-    <Compile Include="Component\Renderable\WearableAnimatedSpriteComponent.cs" />
-    <Compile Include="Component\Renderable\WearableSpriteComponent.cs" />
-    <Compile Include="Component\Renderable\ItemSpriteComponent.cs" />
-    <Compile Include="Component\Renderable\MobSpriteComponent.cs" />
-    <Compile Include="Component\Renderable\SpriteComponent.cs" />
-    <Compile Include="Component\StatusEffects\StatusEffectComp.cs" />
-    <Compile Include="Component\SVars\SVarsComponent.cs" />
-    <Compile Include="Component\Transform\TransformComponent.cs" />
-    <Compile Include="Component\Velocity\VelocityComponent.cs" />
-    <Compile Include="ContextMenuEntry.cs" />
-    <Compile Include="EntitySystems\ParticleSystem.cs" />
-    <Compile Include="EntitySystems\InputSystem.cs" />
-    <Compile Include="EntitySystems\InventorySystem.cs" />
-    <Compile Include="EntitySystems\TransformSystem.cs" />
-    <Compile Include="Vector2.cs" />
-    <None Include="ClassDiagram1.cd" />
-    <None Include="Entity.cs" />
-    <Compile Include="EntityManager.cs" />
-    <Compile Include="EntityNetworkManager.cs" />
-    <Compile Include="Component\Input\KeyBindingInputComponent.cs" />
-    <Compile Include="EntitySystems\PhysicsSystem.cs" />
-    <Compile Include="EntitySystems\TestSystem.cs" />
-    <Compile Include="PlayerActions\ExampleAction.cs" />
-    <Compile Include="PlayerActions\PlayerActionC.cs" />
-    <Compile Include="Properties\AssemblyInfo.cs" />
-    <None Include="Component\Renderable\RenderableComponent.cs" />
-    <Compile Include="Status Effects\Bleeding.cs" />
-    <Compile Include="Status Effects\Hypoxia.cs" />
-    <Compile Include="Status Effects\ToxinInhalation.cs" />
-    <Compile Include="Status Effects\Rooted.cs" />
-    <Compile Include="Status Effects\ExampleEffect.cs" />
-    <Compile Include="Status Effects\StatusEffect.cs" />
-  </ItemGroup>
-  <ItemGroup>
-    <ProjectReference Include="..\ClientInterfaces\ClientInterfaces.csproj">
-      <Project>{B31E7B59-7066-4186-AB18-B1BB6DE0E537}</Project>
-      <Name>ClientInterfaces</Name>
-    </ProjectReference>
-    <ProjectReference Include="..\ClientWindow\ClientWindow.csproj">
-      <Project>{9CFBF7F1-B939-433B-AFA1-C12EBA2565CD}</Project>
-      <Name>ClientWindow</Name>
-    </ProjectReference>
-    <ProjectReference Include="..\GameObject\GameObject.csproj">
-      <Project>{FB8F5D6F-8500-4A5D-BCFB-20104AA902F4}</Project>
-      <Name>GameObject</Name>
-    </ProjectReference>
-    <ProjectReference Include="..\Lidgren.Network\Lidgren.Network.csproj">
-      <Project>{AE483C29-042E-4226-BA52-D247CE7676DA}</Project>
-      <Name>Lidgren.Network</Name>
-    </ProjectReference>
-    <ProjectReference Include="..\SS13.Graphics\SS13.Graphics.csproj">
-      <Project>{D905F34C-B672-4A4E-85DC-3A43C1DD3F60}</Project>
-      <Name>SS13.Graphics</Name>
-    </ProjectReference>
-    <ProjectReference Include="..\SS13.IoC\SS13.IoC.csproj">
-      <Project>{3401031F-35A7-4AE5-8B64-CAFDCB929F0E}</Project>
-      <Name>SS13.IoC</Name>
-    </ProjectReference>
-    <ProjectReference Include="..\SS3D_shared\SS13_Shared.csproj">
-      <Project>{4229D7E3-C3AE-4C0A-B2B1-BB20911150DC}</Project>
-      <Name>SS13_Shared</Name>
-    </ProjectReference>
-  </ItemGroup>
-  <ItemGroup>
-    <Folder Include="Component\Actor\" />
-    <Folder Include="Component\Interactable\" />
-  </ItemGroup>
-  <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
-  <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
-       Other similar extension points exist, see Microsoft.Common.targets.
-  <Target Name="BeforeBuild">
-  </Target>
-  <Target Name="AfterBuild">
-  </Target>
-  -->
+	<Import Project="$(MSBuildBinPath)\Microsoft.CSHARP.Targets" />
+	<PropertyGroup>
+	  <PreBuildEvent>
+	  </PreBuildEvent>
+	  <PostBuildEvent>
+	  </PostBuildEvent>
+	</PropertyGroup>
 </Project>

@@ -9,8 +9,8 @@ mkdir %dir%\bin
 mkdir %dir%\bin\client
 mkdir %dir%\bin\client\client
 mkdir %dir%\bin\server
-mkdir %dir%\Media
-copy Media\ResourcePack.zip %dir%\Media
+mkdir %dir%\Resources
+copy Resources\ResourcePack.zip %dir%\Resources
 copy Buildfiles\* %dir%
 
 xcopy /E SS3D_Client\bin\Release\* %dir%\bin\client\client

@@ -1,0 +1,44 @@
+<Project frameworkVersion="v4_0" name="MessagingProfiler" rootNamespace="MessagingProfiler" type="WinExe" path="MessagingProfiler">
+  <Configuration name="Debug">
+    <Options>
+      <OutputPath>../Bin</OutputPath>
+    </Options>
+  </Configuration>
+  <Configuration name="Release">
+    <Options>
+      <OutputPath>../Bin</OutputPath>
+    </Options>
+  </Configuration>
+  <ReferencePath>../Bin</ReferencePath>
+  <ReferencePath>../Third-Party</ReferencePath>
+  <Reference name="System"/>
+  <Reference name="System.Data"/>
+  <Reference name="System.ServiceModel"/>
+  <Reference name="System.Xml"/>
+  <Reference name="Microsoft.CSharp"/>
+  <Reference name="System.Core"/>
+  <Reference name="System.Xml.Linq"/>
+  <Reference name="System.Data.DataSetExtensions"/>
+  <Reference name="System.Xaml"/>
+  <Reference name="WindowsBase"/>
+  <Reference name="PresentationCore"/>
+  <Reference name="PresentationFramework"/>
+  <Files>
+    <File buildAction="ApplicationDefinition" subType="Designer">App.xaml</File>
+    <File buildAction="Page" subType="Designer">LogViewer.xaml</File>
+    <File buildAction="Page" subType="Designer">MainWindow.xaml</File>
+    <File buildAction="Compile" subType="Code">App.xaml.cs</File>
+    <File buildAction="Compile">LogHolder.cs</File>
+    <File buildAction="Compile">LogItem.cs</File>
+    <File buildAction="Compile">MessageLoggerServer.cs</File>
+    <File buildAction="Compile">MessageLoggerService.cs</File>
+    <File buildAction="Compile">LogViewer.xaml.cs</File>
+    <File buildAction="Compile" subType="Code">MainWindow.xaml.cs</File>
+    <File buildAction="Compile" subType="Code">Properties/AssemblyInfo.cs</File>
+    <File buildAction="Compile">Properties/Resources.Designer.cs</File>
+    <File buildAction="Compile">Properties/Settings.Designer.cs</File>
+    <File buildAction="EmbeddedResource">Properties/Resources.resx</File>
+    <File buildAction="None">Properties/Settings.settings</File>
+  </Files>
+  <Reference name="SS13_Shared"/>
+</Project>

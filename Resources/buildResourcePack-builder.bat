@@ -22,9 +22,5 @@ cd ..
 echo Cleaning up...
 rd /S /Q ResourcePack
 
-:: Todo - check for existence
-mkdir ..\Media
-copy ResourcePack.zip ..\Media\ResourcePack.zip
-
 echo Resource pack build complete.
 pause

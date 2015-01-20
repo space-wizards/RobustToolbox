@@ -1,132 +1,235 @@
-﻿<?xml version="1.0" encoding="utf-8"?>
-<Project ToolsVersion="4.0" DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
-  <PropertyGroup>
-    <Configuration Condition=" '$(Configuration)' == '' ">Release</Configuration>
-    <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
-    <ProductVersion>8.0.30703</ProductVersion>
-    <SchemaVersion>2.0</SchemaVersion>
-    <ProjectGuid>{B31E7B59-7066-4186-AB18-B1BB6DE0E537}</ProjectGuid>
-    <OutputType>Library</OutputType>
-    <AppDesignerFolder>Properties</AppDesignerFolder>
-    <RootNamespace>ClientInterfaces</RootNamespace>
-    <AssemblyName>ClientInterfaces</AssemblyName>
-    <TargetFrameworkVersion>v4.0</TargetFrameworkVersion>
-    <FileAlignment>512</FileAlignment>
-  </PropertyGroup>
-  <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Debug|x86'">
-    <DebugSymbols>true</DebugSymbols>
-    <OutputPath>bin\x86\Debug\</OutputPath>
-    <DefineConstants>DEBUG;TRACE</DefineConstants>
-    <DebugType>full</DebugType>
-    <PlatformTarget>x86</PlatformTarget>
-    <CodeAnalysisLogFile>bin\Debug\ClientInterfaces.dll.CodeAnalysisLog.xml</CodeAnalysisLogFile>
-    <CodeAnalysisUseTypeNameInSuppression>true</CodeAnalysisUseTypeNameInSuppression>
-    <CodeAnalysisModuleSuppressionsFile>GlobalSuppressions.cs</CodeAnalysisModuleSuppressionsFile>
-    <ErrorReport>prompt</ErrorReport>
-    <CodeAnalysisRuleSet>MinimumRecommendedRules.ruleset</CodeAnalysisRuleSet>
-    <CodeAnalysisRuleSetDirectories>;C:\Program Files (x86)\Microsoft Visual Studio 10.0\Team Tools\Static Analysis Tools\\Rule Sets</CodeAnalysisRuleSetDirectories>
-    <CodeAnalysisRuleDirectories>;C:\Program Files (x86)\Microsoft Visual Studio 10.0\Team Tools\Static Analysis Tools\FxCop\\Rules</CodeAnalysisRuleDirectories>
-  </PropertyGroup>
-  <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Release|x86'">
-    <OutputPath>bin\x86\Release\</OutputPath>
-    <DefineConstants>TRACE</DefineConstants>
-    <Optimize>true</Optimize>
-    <DebugType>pdbonly</DebugType>
-    <PlatformTarget>x86</PlatformTarget>
-    <CodeAnalysisLogFile>bin\Release\ClientInterfaces.dll.CodeAnalysisLog.xml</CodeAnalysisLogFile>
-    <CodeAnalysisUseTypeNameInSuppression>true</CodeAnalysisUseTypeNameInSuppression>
-    <CodeAnalysisModuleSuppressionsFile>GlobalSuppressions.cs</CodeAnalysisModuleSuppressionsFile>
-    <ErrorReport>prompt</ErrorReport>
-    <CodeAnalysisRuleSet>MinimumRecommendedRules.ruleset</CodeAnalysisRuleSet>
-    <CodeAnalysisRuleSetDirectories>;C:\Program Files (x86)\Microsoft Visual Studio 10.0\Team Tools\Static Analysis Tools\\Rule Sets</CodeAnalysisRuleSetDirectories>
-    <CodeAnalysisRuleDirectories>;C:\Program Files (x86)\Microsoft Visual Studio 10.0\Team Tools\Static Analysis Tools\FxCop\\Rules</CodeAnalysisRuleDirectories>
-  </PropertyGroup>
-  <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'DebugMessaging|x86'">
-    <OutputPath>bin\x86\DebugMessaging\</OutputPath>
-    <DefineConstants>TRACE</DefineConstants>
-    <Optimize>true</Optimize>
-    <DebugType>pdbonly</DebugType>
-    <PlatformTarget>x86</PlatformTarget>
-    <CodeAnalysisLogFile>bin\Release\ClientInterfaces.dll.CodeAnalysisLog.xml</CodeAnalysisLogFile>
-    <CodeAnalysisUseTypeNameInSuppression>true</CodeAnalysisUseTypeNameInSuppression>
-    <CodeAnalysisModuleSuppressionsFile>GlobalSuppressions.cs</CodeAnalysisModuleSuppressionsFile>
-    <ErrorReport>prompt</ErrorReport>
-    <CodeAnalysisRuleSet>MinimumRecommendedRules.ruleset</CodeAnalysisRuleSet>
-    <CodeAnalysisRuleSetDirectories>;C:\Program Files\Microsoft Visual Studio 10.0\Team Tools\Static Analysis Tools\\Rule Sets</CodeAnalysisRuleSetDirectories>
-    <CodeAnalysisRuleDirectories>;C:\Program Files\Microsoft Visual Studio 10.0\Team Tools\Static Analysis Tools\FxCop\\Rules</CodeAnalysisRuleDirectories>
-    <CodeAnalysisIgnoreBuiltInRules>true</CodeAnalysisIgnoreBuiltInRules>
-    <CodeAnalysisFailOnMissingRules>false</CodeAnalysisFailOnMissingRules>
-  </PropertyGroup>
-  <ItemGroup>
-    <Reference Include="Gorgon, Version=1.1.4119.34319, Culture=neutral, PublicKeyToken=c001d94e9acbbee7, processorArchitecture=MSIL">
-      <SpecificVersion>False</SpecificVersion>
-      <HintPath>..\References\Release\Gorgon.dll</HintPath>
-    </Reference>
-    <Reference Include="System" />
-    <Reference Include="System.Core" />
-    <Reference Include="System.Drawing" />
-    <Reference Include="System.Xml.Linq" />
-    <Reference Include="System.Data.DataSetExtensions" />
-    <Reference Include="Microsoft.CSharp" />
-    <Reference Include="System.Data" />
-    <Reference Include="System.Xml" />
+<Project DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003" ToolsVersion="4.0">
+	<PropertyGroup>
+	  <ProjectType>Local</ProjectType>
+	  <ProductVersion>9.0.30729</ProductVersion>
+	  <SchemaVersion>2.0</SchemaVersion>
+	  <ProjectGuid>{48FDFC43-0000-0000-0000-000000000000}</ProjectGuid>
+	  <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
+	  <ApplicationIcon></ApplicationIcon>
+	  <AssemblyKeyContainerName>
+	  </AssemblyKeyContainerName>
+	  <AssemblyName>ClientInterfaces</AssemblyName>
+	  <DefaultClientScript>JScript</DefaultClientScript>
+	  <DefaultHTMLPageLayout>Grid</DefaultHTMLPageLayout>
+	  <DefaultTargetSchema>IE50</DefaultTargetSchema>
+	  <DelaySign>false</DelaySign>
+	  <TargetFrameworkVersion>v4.0</TargetFrameworkVersion>
+	  <OutputType>Library</OutputType>
+	  <AppDesignerFolder></AppDesignerFolder>
+	  <RootNamespace>ClientInterfaces</RootNamespace>
+	  <StartupObject></StartupObject>
+	  <StartArguments></StartArguments>
+	  <FileUpgradeFlags>
+	  </FileUpgradeFlags>
+	</PropertyGroup>
+	<PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
+	  <AllowUnsafeBlocks>False</AllowUnsafeBlocks>
+	  <BaseAddress>285212672</BaseAddress>
+	  <CheckForOverflowUnderflow>False</CheckForOverflowUnderflow>
+	  <ConfigurationOverrideFile>
+	  </ConfigurationOverrideFile>
+	  <DefineConstants>TRACE;DEBUG</DefineConstants>
+	  <DocumentationFile></DocumentationFile>
+	  <DebugSymbols>True</DebugSymbols>
+	  <FileAlignment>4096</FileAlignment>
+	  <Optimize>False</Optimize>
+	  <OutputPath>..\Bin\</OutputPath>
+	  <RegisterForComInterop>False</RegisterForComInterop>
+	  <RemoveIntegerChecks>False</RemoveIntegerChecks>
+	  <TreatWarningsAsErrors>False</TreatWarningsAsErrors>
+	  <WarningLevel>4</WarningLevel>
+	  <NoStdLib>False</NoStdLib>
+	  <NoWarn></NoWarn>
+	  <PlatformTarget>AnyCPU</PlatformTarget>
+	</PropertyGroup>
+	<PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
+	  <AllowUnsafeBlocks>False</AllowUnsafeBlocks>
+	  <BaseAddress>285212672</BaseAddress>
+	  <CheckForOverflowUnderflow>False</CheckForOverflowUnderflow>
+	  <ConfigurationOverrideFile>
+	  </ConfigurationOverrideFile>
+	  <DefineConstants>TRACE</DefineConstants>
+	  <DocumentationFile></DocumentationFile>
+	  <DebugSymbols>False</DebugSymbols>
+	  <FileAlignment>4096</FileAlignment>
+	  <Optimize>True</Optimize>
+	  <OutputPath>..\Bin\</OutputPath>
+	  <RegisterForComInterop>False</RegisterForComInterop>
+	  <RemoveIntegerChecks>False</RemoveIntegerChecks>
+	  <TreatWarningsAsErrors>False</TreatWarningsAsErrors>
+	  <WarningLevel>4</WarningLevel>
+	  <NoStdLib>False</NoStdLib>
+	  <NoWarn></NoWarn>
+	  <PlatformTarget>AnyCPU</PlatformTarget>
+	</PropertyGroup>
+	<ItemGroup>
+	  <Reference Include="Gorgon" >
+		  <Name>Gorgon</Name>
+		<HintPath>..\Third-Party\Gorgon.dll</HintPath>
+		<Private>False</Private>
+	  </Reference>
+	  <Reference Include="Microsoft.CSharp" >
+		  <Name>Microsoft.CSharp</Name>
+		<Private>False</Private>
+	  </Reference>
+	  <Reference Include="System" >
+		  <Name>System</Name>
+		<Private>False</Private>
+	  </Reference>
+	  <Reference Include="System.Core" >
+		  <Name>System.Core</Name>
+		<Private>False</Private>
+	  </Reference>
+	  <Reference Include="System.Data" >
+		  <Name>System.Data</Name>
+		<Private>False</Private>
+	  </Reference>
+	  <Reference Include="System.Data.DataSetExtensions" >
+		  <Name>System.Data.DataSetExtensions</Name>
+		<Private>False</Private>
+	  </Reference>
+	  <Reference Include="System.Drawing" >
+		  <Name>System.Drawing</Name>
+		<Private>False</Private>
+	  </Reference>
+	  <Reference Include="System.Xml" >
+		  <Name>System.Xml</Name>
+		<Private>False</Private>
+	  </Reference>
+	  <Reference Include="System.Xml.Linq" >
+		  <Name>System.Xml.Linq</Name>
+		<Private>False</Private>
+	  </Reference>
+	</ItemGroup>
+	<ItemGroup>
+	  <ProjectReference Include="..\GameObject\GameObject.csproj">
+		<Name>GameObject</Name>
+		<Project>{85486103-0000-0000-0000-000000000000}</Project>
+		<Package>{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}</Package>
+		<Private>False</Private>
+	  </ProjectReference>
+	  <ProjectReference Include="..\Lidgren.Network\Lidgren.Network.csproj">
+		<Name>Lidgren.Network</Name>
+		<Project>{59250BAF-0000-0000-0000-000000000000}</Project>
+		<Package>{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}</Package>
+		<Private>False</Private>
+	  </ProjectReference>
+	  <ProjectReference Include="..\SS3D_shared\SS13_Shared.csproj">
+		<Name>SS13_Shared</Name>
+		<Project>{26CA7B60-0000-0000-0000-000000000000}</Project>
+		<Package>{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}</Package>
+		<Private>False</Private>
+	  </ProjectReference>
+	</ItemGroup>
+	<ItemGroup>
+	  <Compile Include="Collision\ICollidable.cs">
+		<SubType>Code</SubType>
+	  </Compile>
+	  <Compile Include="Collision\ICollider.cs">
+		<SubType>Code</SubType>
+	  </Compile>
+	  <Compile Include="Collision\ICollisionManager.cs">
+		<SubType>Code</SubType>
+	  </Compile>
+	  <Compile Include="Configuration\IConfigurationManager.cs">
+		<SubType>Code</SubType>
+	  </Compile>
+	  <Compile Include="GameStates\IGameStateManager.cs">
+		<SubType>Code</SubType>
+	  </Compile>
+	  <Compile Include="GOC\GetSVarsEventArgs.cs">
+		<SubType>Code</SubType>
+	  </Compile>
+	  <Compile Include="GOC\IEntityManagerContainer.cs">
+		<SubType>Code</SubType>
+	  </Compile>
+	  <Compile Include="GOC\IParticleSystemComponent.cs">
+		<SubType>Code</SubType>
+	  </Compile>
+	  <Compile Include="GOC\IPlayerAction.cs">
+		<SubType>Code</SubType>
+	  </Compile>
+	  <Compile Include="GOC\IRenderableComponent.cs">
+		<SubType>Code</SubType>
+	  </Compile>
+	  <Compile Include="GOC\ISpriteComponent.cs">
+		<SubType>Code</SubType>
+	  </Compile>
+	  <Compile Include="GOC\ISVarsComponent.cs">
+		<SubType>Code</SubType>
+	  </Compile>
+	  <Compile Include="Input\IKeyBindingManager.cs">
+		<SubType>Code</SubType>
+	  </Compile>
+	  <Compile Include="Lighting\ILightArea.cs">
+		<SubType>Code</SubType>
+	  </Compile>
+	  <Compile Include="Lighting\LightMode.cs">
+		<SubType>Code</SubType>
+	  </Compile>
+	  <Compile Include="MessageLogging\IMessageLogger.cs">
+		<SubType>Code</SubType>
+	  </Compile>
+	  <Compile Include="Placement\IPlacementManager.cs">
+		<SubType>Code</SubType>
+	  </Compile>
+	  <Compile Include="Lighting\ILight.cs">
+		<SubType>Code</SubType>
+	  </Compile>
+	  <Compile Include="Lighting\ILightManager.cs">
+		<SubType>Code</SubType>
+	  </Compile>
+	  <Compile Include="Map\IMapManager.cs">
+		<SubType>Code</SubType>
+	  </Compile>
+	  <Compile Include="Player\IPlayerManager.cs">
+		<SubType>Code</SubType>
+	  </Compile>
+	  <Compile Include="Resource\IResourceManager.cs">
+		<SubType>Code</SubType>
+	  </Compile>
+	  <Compile Include="Map\ITile.cs">
+		<SubType>Code</SubType>
+	  </Compile>
+	  <Compile Include="Serialization\ISS13Serializer.cs">
+		<SubType>Code</SubType>
+	  </Compile>
+	  <Compile Include="GameTimer\IGameTimer.cs">
+		<SubType>Code</SubType>
+	  </Compile>
+	  <Compile Include="UserInterface\IDragDropInfo.cs">
+		<SubType>Code</SubType>
+	  </Compile>
+	  <Compile Include="UserInterface\IGuiComponent.cs">
+		<SubType>Code</SubType>
+	  </Compile>
+	  <Compile Include="UserInterface\IUserInterfaceManager.cs">
+		<SubType>Code</SubType>
+	  </Compile>
+	  <Compile Include="Network\INetworkGrapher.cs">
+		<SubType>Code</SubType>
+	  </Compile>
+	  <Compile Include="Network\INetworkManager.cs">
+		<SubType>Code</SubType>
+	  </Compile>
+	  <Compile Include="Properties\AssemblyInfo.cs">
+		<SubType>Code</SubType>
+	  </Compile>
+	  <Compile Include="State\IState.cs">
+		<SubType>Code</SubType>
+	  </Compile>
+	  <Compile Include="State\IStateManager.cs">
+		<SubType>Code</SubType>
+	  </Compile>
+	  <Compile Include="Utility\IRand.cs">
+		<SubType>Code</SubType>
+	  </Compile>
   </ItemGroup>
-  <ItemGroup>
-    <Compile Include="Collision\ICollidable.cs" />
-    <Compile Include="Collision\ICollider.cs" />
-    <Compile Include="Collision\ICollisionManager.cs" />
-    <Compile Include="Configuration\IConfigurationManager.cs" />
-    <Compile Include="GameStates\IGameStateManager.cs" />
-    <Compile Include="GOC\GetSVarsEventArgs.cs" />
-    <Compile Include="GOC\IEntityManagerContainer.cs" />
-    <Compile Include="GOC\IParticleSystemComponent.cs" />
-    <Compile Include="GOC\IPlayerAction.cs" />
-    <Compile Include="GOC\IRenderableComponent.cs" />
-    <Compile Include="GOC\ISpriteComponent.cs" />
-    <Compile Include="GOC\ISVarsComponent.cs" />
-    <Compile Include="Input\IKeyBindingManager.cs" />
-    <Compile Include="Lighting\ILightArea.cs" />
-    <Compile Include="Lighting\LightMode.cs" />
-    <Compile Include="MessageLogging\IMessageLogger.cs" />
-    <Compile Include="Placement\IPlacementManager.cs" />
-    <Compile Include="Lighting\ILight.cs" />
-    <Compile Include="Lighting\ILightManager.cs" />
-    <Compile Include="Map\IMapManager.cs" />
-    <Compile Include="Player\IPlayerManager.cs" />
-    <Compile Include="Resource\IResourceManager.cs" />
-    <Compile Include="Map\ITile.cs" />
-    <Compile Include="Serialization\ISS13Serializer.cs" />
-    <Compile Include="GameTimer\IGameTimer.cs" />
-    <Compile Include="UserInterface\IDragDropInfo.cs" />
-    <Compile Include="UserInterface\IGuiComponent.cs" />
-    <Compile Include="UserInterface\IUserInterfaceManager.cs" />
-    <Compile Include="Network\INetworkGrapher.cs" />
-    <Compile Include="Network\INetworkManager.cs" />
-    <Compile Include="Properties\AssemblyInfo.cs" />
-    <Compile Include="State\IState.cs" />
-    <Compile Include="State\IStateManager.cs" />
-    <Compile Include="Utility\IRand.cs" />
-  </ItemGroup>
-  <ItemGroup>
-    <ProjectReference Include="..\GameObject\GameObject.csproj">
-      <Project>{FB8F5D6F-8500-4A5D-BCFB-20104AA902F4}</Project>
-      <Name>GameObject</Name>
-    </ProjectReference>
-    <ProjectReference Include="..\Lidgren.Network\Lidgren.Network.csproj">
-      <Project>{AE483C29-042E-4226-BA52-D247CE7676DA}</Project>
-      <Name>Lidgren.Network</Name>
-    </ProjectReference>
-    <ProjectReference Include="..\SS3D_shared\SS13_Shared.csproj">
-      <Project>{4229D7E3-C3AE-4C0A-B2B1-BB20911150DC}</Project>
-      <Name>SS13_Shared</Name>
-    </ProjectReference>
-  </ItemGroup>
-  <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
-  <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
-       Other similar extension points exist, see Microsoft.Common.targets.
-  <Target Name="BeforeBuild">
-  </Target>
-  <Target Name="AfterBuild">
-  </Target>
-  -->
+	<Import Project="$(MSBuildBinPath)\Microsoft.CSHARP.Targets" />
+	<PropertyGroup>
+	  <PreBuildEvent>
+	  </PreBuildEvent>
+	  <PostBuildEvent>
+	  </PostBuildEvent>
+	</PropertyGroup>
 </Project>

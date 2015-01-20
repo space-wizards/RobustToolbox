@@ -4,6 +4,10 @@
 *.userosscache
 *.sln.docstates
 
+#sln/csproj
+*.sln
+*.csproj
+
 # Roslyn cache directories
 *.ide/
 

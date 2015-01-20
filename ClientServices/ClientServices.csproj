@@ -1,271 +1,533 @@
-﻿<?xml version="1.0" encoding="utf-8"?>
-<Project ToolsVersion="4.0" DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
-  <PropertyGroup>
-    <Configuration Condition=" '$(Configuration)' == '' ">Release</Configuration>
-    <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
-    <ProductVersion>8.0.30703</ProductVersion>
-    <SchemaVersion>2.0</SchemaVersion>
-    <ProjectGuid>{7F85F20C-E2B5-455D-A1CA-76ED000D25EA}</ProjectGuid>
-    <OutputType>Library</OutputType>
-    <AppDesignerFolder>Properties</AppDesignerFolder>
-    <RootNamespace>ClientServices</RootNamespace>
-    <AssemblyName>ClientServices</AssemblyName>
-    <TargetFrameworkVersion>v4.0</TargetFrameworkVersion>
-    <FileAlignment>512</FileAlignment>
-  </PropertyGroup>
-  <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Debug|x86'">
-    <DebugSymbols>true</DebugSymbols>
-    <OutputPath>bin\x86\Debug\</OutputPath>
-    <DefineConstants>DEBUG;TRACE</DefineConstants>
-    <DebugType>full</DebugType>
-    <PlatformTarget>x86</PlatformTarget>
-    <CodeAnalysisLogFile>bin\Debug\ClientServices.dll.CodeAnalysisLog.xml</CodeAnalysisLogFile>
-    <CodeAnalysisUseTypeNameInSuppression>true</CodeAnalysisUseTypeNameInSuppression>
-    <CodeAnalysisModuleSuppressionsFile>GlobalSuppressions.cs</CodeAnalysisModuleSuppressionsFile>
-    <ErrorReport>prompt</ErrorReport>
-    <CodeAnalysisRuleSet>MinimumRecommendedRules.ruleset</CodeAnalysisRuleSet>
-    <CodeAnalysisRuleSetDirectories>;C:\Program Files (x86)\Microsoft Visual Studio 10.0\Team Tools\Static Analysis Tools\\Rule Sets</CodeAnalysisRuleSetDirectories>
-    <CodeAnalysisIgnoreBuiltInRuleSets>false</CodeAnalysisIgnoreBuiltInRuleSets>
-    <CodeAnalysisRuleDirectories>;C:\Program Files (x86)\Microsoft Visual Studio 10.0\Team Tools\Static Analysis Tools\FxCop\\Rules</CodeAnalysisRuleDirectories>
-    <CodeAnalysisIgnoreBuiltInRules>false</CodeAnalysisIgnoreBuiltInRules>
-  </PropertyGroup>
-  <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Release|x86'">
-    <OutputPath>bin\x86\Release\</OutputPath>
-    <DefineConstants>TRACE</DefineConstants>
-    <Optimize>true</Optimize>
-    <DebugType>pdbonly</DebugType>
-    <PlatformTarget>x86</PlatformTarget>
-    <CodeAnalysisLogFile>bin\Release\ClientServices.dll.CodeAnalysisLog.xml</CodeAnalysisLogFile>
-    <CodeAnalysisUseTypeNameInSuppression>true</CodeAnalysisUseTypeNameInSuppression>
-    <CodeAnalysisModuleSuppressionsFile>GlobalSuppressions.cs</CodeAnalysisModuleSuppressionsFile>
-    <ErrorReport>prompt</ErrorReport>
-    <CodeAnalysisRuleSet>MinimumRecommendedRules.ruleset</CodeAnalysisRuleSet>
-    <CodeAnalysisRuleSetDirectories>;C:\Program Files (x86)\Microsoft Visual Studio 10.0\Team Tools\Static Analysis Tools\\Rule Sets</CodeAnalysisRuleSetDirectories>
-    <CodeAnalysisRuleDirectories>;C:\Program Files (x86)\Microsoft Visual Studio 10.0\Team Tools\Static Analysis Tools\FxCop\\Rules</CodeAnalysisRuleDirectories>
-  </PropertyGroup>
-  <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'DebugMessaging|x86'">
-    <OutputPath>bin\x86\DebugMessaging\</OutputPath>
-    <DefineConstants>TRACE</DefineConstants>
-    <Optimize>true</Optimize>
-    <DebugType>pdbonly</DebugType>
-    <PlatformTarget>x86</PlatformTarget>
-    <CodeAnalysisLogFile>bin\Release\ClientServices.dll.CodeAnalysisLog.xml</CodeAnalysisLogFile>
-    <CodeAnalysisUseTypeNameInSuppression>true</CodeAnalysisUseTypeNameInSuppression>
-    <CodeAnalysisModuleSuppressionsFile>GlobalSuppressions.cs</CodeAnalysisModuleSuppressionsFile>
-    <ErrorReport>prompt</ErrorReport>
-    <CodeAnalysisRuleSet>MinimumRecommendedRules.ruleset</CodeAnalysisRuleSet>
-    <CodeAnalysisRuleSetDirectories>;C:\Program Files\Microsoft Visual Studio 10.0\Team Tools\Static Analysis Tools\\Rule Sets</CodeAnalysisRuleSetDirectories>
-    <CodeAnalysisIgnoreBuiltInRuleSets>true</CodeAnalysisIgnoreBuiltInRuleSets>
-    <CodeAnalysisRuleDirectories>;C:\Program Files\Microsoft Visual Studio 10.0\Team Tools\Static Analysis Tools\FxCop\\Rules</CodeAnalysisRuleDirectories>
-    <CodeAnalysisIgnoreBuiltInRules>true</CodeAnalysisIgnoreBuiltInRules>
-  </PropertyGroup>
-  <ItemGroup>
-    <Reference Include="Gorgon, Version=1.1.4119.34319, Culture=neutral, PublicKeyToken=c001d94e9acbbee7, processorArchitecture=MSIL">
-      <SpecificVersion>False</SpecificVersion>
-      <HintPath>..\References\Release\Gorgon.dll</HintPath>
-    </Reference>
-    <Reference Include="GorgonBZip2FileSystem">
-      <HintPath>..\References\Release\GorgonBZip2FileSystem.dll</HintPath>
-    </Reference>
-    <Reference Include="GorgonFramework, Version=1.1.4275.12460, Culture=neutral, processorArchitecture=MSIL">
-      <SpecificVersion>False</SpecificVersion>
-      <HintPath>..\References\Release\GorgonFramework.dll</HintPath>
-    </Reference>
-    <Reference Include="ICSharpCode.SharpZipLib, Version=0.85.4.369, Culture=neutral, PublicKeyToken=1b03e6acf1164f73, processorArchitecture=MSIL">
-      <SpecificVersion>False</SpecificVersion>
-      <HintPath>..\References\Release\ICSharpCode.SharpZipLib.dll</HintPath>
-    </Reference>
-    <Reference Include="System" />
-    <Reference Include="System.Core" />
-    <Reference Include="System.Drawing" />
-    <Reference Include="System.ServiceModel" />
-    <Reference Include="System.Windows.Forms" />
-    <Reference Include="System.Xml.Linq" />
-    <Reference Include="System.Data.DataSetExtensions" />
-    <Reference Include="Microsoft.CSharp" />
-    <Reference Include="System.Data" />
-    <Reference Include="System.Xml" />
+<Project DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003" ToolsVersion="4.0">
+	<PropertyGroup>
+	  <ProjectType>Local</ProjectType>
+	  <ProductVersion>9.0.30729</ProductVersion>
+	  <SchemaVersion>2.0</SchemaVersion>
+	  <ProjectGuid>{378311B3-0000-0000-0000-000000000000}</ProjectGuid>
+	  <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
+	  <ApplicationIcon></ApplicationIcon>
+	  <AssemblyKeyContainerName>
+	  </AssemblyKeyContainerName>
+	  <AssemblyName>ClientServices</AssemblyName>
+	  <DefaultClientScript>JScript</DefaultClientScript>
+	  <DefaultHTMLPageLayout>Grid</DefaultHTMLPageLayout>
+	  <DefaultTargetSchema>IE50</DefaultTargetSchema>
+	  <DelaySign>false</DelaySign>
+	  <TargetFrameworkVersion>v4.0</TargetFrameworkVersion>
+	  <OutputType>Library</OutputType>
+	  <AppDesignerFolder></AppDesignerFolder>
+	  <RootNamespace>ClientServices</RootNamespace>
+	  <StartupObject></StartupObject>
+	  <StartArguments></StartArguments>
+	  <FileUpgradeFlags>
+	  </FileUpgradeFlags>
+	</PropertyGroup>
+	<PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
+	  <AllowUnsafeBlocks>False</AllowUnsafeBlocks>
+	  <BaseAddress>285212672</BaseAddress>
+	  <CheckForOverflowUnderflow>False</CheckForOverflowUnderflow>
+	  <ConfigurationOverrideFile>
+	  </ConfigurationOverrideFile>
+	  <DefineConstants>TRACE;DEBUG</DefineConstants>
+	  <DocumentationFile></DocumentationFile>
+	  <DebugSymbols>True</DebugSymbols>
+	  <FileAlignment>4096</FileAlignment>
+	  <Optimize>False</Optimize>
+	  <OutputPath>..\Bin\</OutputPath>
+	  <RegisterForComInterop>False</RegisterForComInterop>
+	  <RemoveIntegerChecks>False</RemoveIntegerChecks>
+	  <TreatWarningsAsErrors>False</TreatWarningsAsErrors>
+	  <WarningLevel>4</WarningLevel>
+	  <NoStdLib>False</NoStdLib>
+	  <NoWarn></NoWarn>
+	  <PlatformTarget>AnyCPU</PlatformTarget>
+	</PropertyGroup>
+	<PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
+	  <AllowUnsafeBlocks>False</AllowUnsafeBlocks>
+	  <BaseAddress>285212672</BaseAddress>
+	  <CheckForOverflowUnderflow>False</CheckForOverflowUnderflow>
+	  <ConfigurationOverrideFile>
+	  </ConfigurationOverrideFile>
+	  <DefineConstants>TRACE</DefineConstants>
+	  <DocumentationFile></DocumentationFile>
+	  <DebugSymbols>False</DebugSymbols>
+	  <FileAlignment>4096</FileAlignment>
+	  <Optimize>True</Optimize>
+	  <OutputPath>..\Bin\</OutputPath>
+	  <RegisterForComInterop>False</RegisterForComInterop>
+	  <RemoveIntegerChecks>False</RemoveIntegerChecks>
+	  <TreatWarningsAsErrors>False</TreatWarningsAsErrors>
+	  <WarningLevel>4</WarningLevel>
+	  <NoStdLib>False</NoStdLib>
+	  <NoWarn></NoWarn>
+	  <PlatformTarget>AnyCPU</PlatformTarget>
+	</PropertyGroup>
+	<ItemGroup>
+	  <Reference Include="Gorgon" >
+		  <Name>Gorgon</Name>
+		<HintPath>..\Third-Party\Gorgon.dll</HintPath>
+		<Private>False</Private>
+	  </Reference>
+	  <Reference Include="GorgonBZip2FileSystem" >
+		  <Name>GorgonBZip2FileSystem</Name>
+		<HintPath>..\Third-Party\GorgonBZip2FileSystem.dll</HintPath>
+		<Private>False</Private>
+	  </Reference>
+	  <Reference Include="GorgonFramework" >
+		  <Name>GorgonFramework</Name>
+		<HintPath>..\Third-Party\GorgonFramework.dll</HintPath>
+		<Private>False</Private>
+	  </Reference>
+	  <Reference Include="ICSharpCode.SharpZipLib" >
+		  <Name>ICSharpCode.SharpZipLib</Name>
+		<HintPath>..\Third-Party\ICSharpCode.SharpZipLib.dll</HintPath>
+		<Private>False</Private>
+	  </Reference>
+	  <Reference Include="Microsoft.CSharp" >
+		  <Name>Microsoft.CSharp</Name>
+		<Private>False</Private>
+	  </Reference>
+	  <Reference Include="System" >
+		  <Name>System</Name>
+		<Private>False</Private>
+	  </Reference>
+	  <Reference Include="System.Core" >
+		  <Name>System.Core</Name>
+		<Private>False</Private>
+	  </Reference>
+	  <Reference Include="System.Data" >
+		  <Name>System.Data</Name>
+		<Private>False</Private>
+	  </Reference>
+	  <Reference Include="System.Data.DataSetExtensions" >
+		  <Name>System.Data.DataSetExtensions</Name>
+		<Private>False</Private>
+	  </Reference>
+	  <Reference Include="System.Drawing" >
+		  <Name>System.Drawing</Name>
+		<Private>False</Private>
+	  </Reference>
+	  <Reference Include="System.ServiceModel" >
+		  <Name>System.ServiceModel</Name>
+		<Private>False</Private>
+	  </Reference>
+	  <Reference Include="System.Windows.Forms" >
+		  <Name>System.Windows.Forms</Name>
+		<Private>False</Private>
+	  </Reference>
+	  <Reference Include="System.Xml" >
+		  <Name>System.Xml</Name>
+		<Private>False</Private>
+	  </Reference>
+	  <Reference Include="System.Xml.Linq" >
+		  <Name>System.Xml.Linq</Name>
+		<Private>False</Private>
+	  </Reference>
+	</ItemGroup>
+	<ItemGroup>
+	  <ProjectReference Include="..\CGO\ClientGameObject.csproj">
+		<Name>ClientGameObject</Name>
+		<Project>{07729BD8-0000-0000-0000-000000000000}</Project>
+		<Package>{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}</Package>
+		<Private>False</Private>
+	  </ProjectReference>
+	  <ProjectReference Include="..\ClientInterfaces\ClientInterfaces.csproj">
+		<Name>ClientInterfaces</Name>
+		<Project>{48FDFC43-0000-0000-0000-000000000000}</Project>
+		<Package>{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}</Package>
+		<Private>False</Private>
+	  </ProjectReference>
+	  <ProjectReference Include="..\ClientWindow\ClientWindow.csproj">
+		<Name>ClientWindow</Name>
+		<Project>{330C0EC1-0000-0000-0000-000000000000}</Project>
+		<Package>{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}</Package>
+		<Private>False</Private>
+	  </ProjectReference>
+	  <ProjectReference Include="..\GameObject\GameObject.csproj">
+		<Name>GameObject</Name>
+		<Project>{85486103-0000-0000-0000-000000000000}</Project>
+		<Package>{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}</Package>
+		<Private>False</Private>
+	  </ProjectReference>
+	  <ProjectReference Include="..\Lidgren.Network\Lidgren.Network.csproj">
+		<Name>Lidgren.Network</Name>
+		<Project>{59250BAF-0000-0000-0000-000000000000}</Project>
+		<Package>{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}</Package>
+		<Private>False</Private>
+	  </ProjectReference>
+	  <ProjectReference Include="..\SS13.Graphics\SS13.Graphics.csproj">
+		<Name>SS13.Graphics</Name>
+		<Project>{29DCD819-0000-0000-0000-000000000000}</Project>
+		<Package>{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}</Package>
+		<Private>False</Private>
+	  </ProjectReference>
+	  <ProjectReference Include="..\SS13.IoC\SS13.IoC.csproj">
+		<Name>SS13.IoC</Name>
+		<Project>{D6A43211-0000-0000-0000-000000000000}</Project>
+		<Package>{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}</Package>
+		<Private>False</Private>
+	  </ProjectReference>
+	  <ProjectReference Include="..\SS3D_shared\SS13_Shared.csproj">
+		<Name>SS13_Shared</Name>
+		<Project>{26CA7B60-0000-0000-0000-000000000000}</Project>
+		<Package>{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}</Package>
+		<Private>False</Private>
+	  </ProjectReference>
+	</ItemGroup>
+	<ItemGroup>
+	  <Compile Include="Collision\CollisionManager.cs">
+		<SubType>Code</SubType>
+	  </Compile>
+	  <Compile Include="Configuration\ConfigurationManager.cs">
+		<SubType>Code</SubType>
+	  </Compile>
+	  <Compile Include="Configuration\Configuration.cs">
+		<SubType>Code</SubType>
+	  </Compile>
+	  <Compile Include="GameStates\GameStateManager.cs">
+		<SubType>Code</SubType>
+	  </Compile>
+	  <Compile Include="GOC\EntityManagerContainer.cs">
+		<SubType>Code</SubType>
+	  </Compile>
+	  <Compile Include="Helpers\GaussianBlur.cs">
+		<SubType>Code</SubType>
+	  </Compile>
+	  <Compile Include="Helpers\InterpolationPacket.cs">
+		<SubType>Code</SubType>
+	  </Compile>
+	  <Compile Include="Helpers\StarScroller.cs">
+		<SubType>Code</SubType>
+	  </Compile>
+	  <Compile Include="Helpers\Utilities.cs">
+		<SubType>Code</SubType>
+	  </Compile>
+	  <Compile Include="Input\KeyBindingManager.cs">
+		<SubType>Code</SubType>
+	  </Compile>
+	  <Compile Include="Lighting\Light.cs">
+		<SubType>Code</SubType>
+	  </Compile>
+	  <Compile Include="Lighting\LightArea.cs">
+		<SubType>Code</SubType>
+	  </Compile>
+	  <Compile Include="Lighting\LightManager.cs">
+		<SubType>Code</SubType>
+	  </Compile>
+	  <Compile Include="Lighting\LightModes\Flicker.cs">
+		<SubType>Code</SubType>
+	  </Compile>
+	  <Compile Include="Lighting\QuadRenderer.cs">
+		<SubType>Code</SubType>
+	  </Compile>
+	  <Compile Include="Lighting\ShadowMapResolver.cs">
+		<SubType>Code</SubType>
+	  </Compile>
+	  <Compile Include="Map\MapManager.cs">
+		<SubType>Code</SubType>
+	  </Compile>
+	  <Compile Include="MessageLogging\MessageLogger.cs">
+		<SubType>Code</SubType>
+	  </Compile>
+	  <Compile Include="MessageLogging\MessageLoggerService.cs">
+		<SubType>Code</SubType>
+	  </Compile>
+	  <Compile Include="Network\NetworkGrapher.cs">
+		<SubType>Code</SubType>
+	  </Compile>
+	  <Compile Include="Network\NetworkManager.cs">
+		<SubType>Code</SubType>
+	  </Compile>
+	  <Compile Include="Placement\Modes\AlignNone.cs">
+		<SubType>Code</SubType>
+	  </Compile>
+	  <Compile Include="Placement\Modes\AlignSimilar.cs">
+		<SubType>Code</SubType>
+	  </Compile>
+	  <Compile Include="Placement\Modes\AlignTileAny.cs">
+		<SubType>Code</SubType>
+	  </Compile>
+	  <Compile Include="Placement\Modes\AlignTileNonSolid.cs">
+		<SubType>Code</SubType>
+	  </Compile>
+	  <Compile Include="Placement\Modes\AlignTileSolid.cs">
+		<SubType>Code</SubType>
+	  </Compile>
+	  <Compile Include="Placement\Modes\AlignTileEmpty.cs">
+		<SubType>Code</SubType>
+	  </Compile>
+	  <Compile Include="Placement\Modes\AlignWall.cs">
+		<SubType>Code</SubType>
+	  </Compile>
+	  <Compile Include="Placement\Modes\AlignWallPlace.cs">
+		<SubType>Code</SubType>
+	  </Compile>
+	  <Compile Include="Placement\Modes\AlignWallTops.cs">
+		<SubType>Code</SubType>
+	  </Compile>
+	  <Compile Include="Placement\Modes\AlignFree.cs">
+		<SubType>Code</SubType>
+	  </Compile>
+	  <Compile Include="Placement\PlacementManager.cs">
+		<SubType>Code</SubType>
+	  </Compile>
+	  <Compile Include="Placement\PlacementMode.cs">
+		<SubType>Code</SubType>
+	  </Compile>
+	  <Compile Include="Player\PlayerManager.cs">
+		<SubType>Code</SubType>
+	  </Compile>
+	  <Compile Include="Player\PostProcessing\BlurPostProcessingEffect.cs">
+		<SubType>Code</SubType>
+	  </Compile>
+	  <Compile Include="Player\PostProcessing\PerlinPostProcessingEffect.cs">
+		<SubType>Code</SubType>
+	  </Compile>
+	  <Compile Include="Player\PostProcessing\DeathPostProcessingEffect.cs">
+		<SubType>Code</SubType>
+	  </Compile>
+	  <Compile Include="Player\PostProcessing\PostProcessingEffect.cs">
+		<SubType>Code</SubType>
+	  </Compile>
+	  <Compile Include="ResourceManagment\ResourceManagerZip.cs">
+		<SubType>Code</SubType>
+	  </Compile>
+	  <Compile Include="Properties\AssemblyInfo.cs">
+		<SubType>Code</SubType>
+	  </Compile>
+	  <Compile Include="Map\Tiles\Floor\Floor.cs">
+		<SubType>Code</SubType>
+	  </Compile>
+	  <Compile Include="Map\Tiles\Floor\Space.cs">
+		<SubType>Code</SubType>
+	  </Compile>
+	  <Compile Include="Map\Tiles\Tile.cs">
+		<SubType>Code</SubType>
+	  </Compile>
+	  <Compile Include="Map\Tiles\Wall\Wall.cs">
+		<SubType>Code</SubType>
+	  </Compile>
+	  <Compile Include="Serialization\SS13Serializer.cs">
+		<SubType>Code</SubType>
+	  </Compile>
+	  <Compile Include="State\State.cs">
+		<SubType>Code</SubType>
+	  </Compile>
+	  <Compile Include="State\StateManager.cs">
+		<SubType>Code</SubType>
+	  </Compile>
+	  <Compile Include="State\States\MainMenu.cs">
+		<SubType>Code</SubType>
+	  </Compile>
+	  <Compile Include="State\States\LobbyMenu.cs">
+		<SubType>Code</SubType>
+	  </Compile>
+	  <Compile Include="State\States\OptionsMenu.cs">
+		<SubType>Code</SubType>
+	  </Compile>
+	  <Compile Include="State\States\GameScreen.cs">
+		<SubType>Code</SubType>
+	  </Compile>
+	  <Compile Include="State\States\LobbyScreen.cs">
+		<SubType>Code</SubType>
+	  </Compile>
+	  <Compile Include="GameTimer\GameTimer.cs">
+		<SubType>Code</SubType>
+	  </Compile>
+	  <Compile Include="UserInterface\Components\AdminPasswordDialog.cs">
+		<SubType>Code</SubType>
+	  </Compile>
+	  <Compile Include="UserInterface\Components\AdminPlayerPanel.cs">
+		<SubType>Code</SubType>
+	  </Compile>
+	  <Compile Include="UserInterface\Components\AdminUnbanPanel.cs">
+		<SubType>Code</SubType>
+	  </Compile>
+	  <Compile Include="UserInterface\Components\BlueprintButton.cs">
+		<SubType>Code</SubType>
+	  </Compile>
+	  <Compile Include="UserInterface\Components\Button.cs">
+		<SubType>Code</SubType>
+	  </Compile>
+	  <Compile Include="UserInterface\Components\Chatbox.cs">
+		<SubType>Code</SubType>
+	  </Compile>
+	  <Compile Include="UserInterface\Components\Checkbox.cs">
+		<SubType>Code</SubType>
+	  </Compile>
+	  <Compile Include="UserInterface\Components\ContextMenu.cs">
+		<SubType>Code</SubType>
+	  </Compile>
+	  <Compile Include="UserInterface\Components\ArmorInfoLabel.cs">
+		<SubType>Code</SubType>
+	  </Compile>
+	  <Compile Include="UserInterface\Components\DebugConsole.cs">
+		<SubType>Code</SubType>
+	  </Compile>
+	  <Compile Include="UserInterface\Components\Showcase.cs">
+		<SubType>Code</SubType>
+	  </Compile>
+	  <Compile Include="UserInterface\Components\SimpleImage.cs">
+		<SubType>Code</SubType>
+	  </Compile>
+	  <Compile Include="UserInterface\Components\FloatingDeco.cs">
+		<SubType>Code</SubType>
+	  </Compile>
+	  <Compile Include="UserInterface\Components\PropEditWindow.cs">
+		<SubType>Code</SubType>
+	  </Compile>
+	  <Compile Include="UserInterface\Components\MenuWindow.cs">
+		<SubType>Code</SubType>
+	  </Compile>
+	  <Compile Include="UserInterface\Components\SVarEditWindow.cs">
+		<SubType>Code</SubType>
+	  </Compile>
+	  <Compile Include="UserInterface\Components\TargetingGui.cs">
+		<SubType>Code</SubType>
+	  </Compile>
+	  <Compile Include="UserInterface\Components\HealthPanel.cs">
+		<SubType>Code</SubType>
+	  </Compile>
+	  <Compile Include="UserInterface\Components\HandsGui.cs">
+		<SubType>Code</SubType>
+	  </Compile>
+	  <Compile Include="UserInterface\Components\TemplateGuiComponent.cs">
+		<SubType>Code</SubType>
+	  </Compile>
+	  <Compile Include="UserInterface\Components\HealthScannerWindow.cs">
+		<SubType>Code</SubType>
+	  </Compile>
+	  <Compile Include="UserInterface\Components\Hotbar.cs">
+		<SubType>Code</SubType>
+	  </Compile>
+	  <Compile Include="UserInterface\Components\HotbarSlot.cs">
+		<SubType>Code</SubType>
+	  </Compile>
+	  <Compile Include="UserInterface\Components\PlayerActionsWindow.cs">
+		<SubType>Code</SubType>
+	  </Compile>
+	  <Compile Include="UserInterface\Components\PlayerActionButton.cs">
+		<SubType>Code</SubType>
+	  </Compile>
+	  <Compile Include="UserInterface\Components\StatusEffectBar.cs">
+		<SubType>Code</SubType>
+	  </Compile>
+	  <Compile Include="UserInterface\Components\StatusEffectButton.cs">
+		<SubType>Code</SubType>
+	  </Compile>
+	  <Compile Include="UserInterface\Components\DisconnectedScreenBlocker.cs">
+		<SubType>Code</SubType>
+	  </Compile>
+	  <Compile Include="UserInterface\Components\EntitySpawnPanel.cs">
+		<SubType>Code</SubType>
+	  </Compile>
+	  <Compile Include="UserInterface\Components\EntitySpawnSelectButton.cs">
+		<SubType>Code</SubType>
+	  </Compile>
+	  <Compile Include="UserInterface\Components\ExamineWindow.cs">
+		<SubType>Code</SubType>
+	  </Compile>
+	  <Compile Include="UserInterface\Components\GuiComponent.cs">
+		<SubType>Code</SubType>
+	  </Compile>
+	  <Compile Include="UserInterface\Components\JobSelectButton.cs">
+		<SubType>Code</SubType>
+	  </Compile>
+	  <Compile Include="UserInterface\Components\Label.cs">
+		<SubType>Code</SubType>
+	  </Compile>
+	  <Compile Include="UserInterface\Components\Listbox.cs">
+		<SubType>Code</SubType>
+	  </Compile>
+	  <Compile Include="UserInterface\Components\ProgressBar.cs">
+		<SubType>Code</SubType>
+	  </Compile>
+	  <Compile Include="UserInterface\Components\ScrollableContainer.cs">
+		<SubType>Code</SubType>
+	  </Compile>
+	  <Compile Include="UserInterface\Components\Scrollbar.cs">
+		<SubType>Code</SubType>
+	  </Compile>
+	  <Compile Include="UserInterface\Components\ImageButton.cs">
+		<SubType>Code</SubType>
+	  </Compile>
+	  <Compile Include="UserInterface\Components\TargetingDummy.cs">
+		<SubType>Code</SubType>
+	  </Compile>
+	  <Compile Include="UserInterface\Components\TargetingDummyElement.cs">
+		<SubType>Code</SubType>
+	  </Compile>
+	  <Compile Include="UserInterface\Components\Textbox.cs">
+		<SubType>Code</SubType>
+	  </Compile>
+	  <Compile Include="UserInterface\Components\TileSpawnPanel.cs">
+		<SubType>Code</SubType>
+	  </Compile>
+	  <Compile Include="UserInterface\Components\TimerBar.cs">
+		<SubType>Code</SubType>
+	  </Compile>
+	  <Compile Include="UserInterface\Components\Window.cs">
+		<SubType>Code</SubType>
+	  </Compile>
+	  <Compile Include="UserInterface\DragDropInfo.cs">
+		<SubType>Code</SubType>
+	  </Compile>
+	  <Compile Include="UserInterface\Inventory\CraftSlotUi.cs">
+		<SubType>Code</SubType>
+	  </Compile>
+	  <Compile Include="UserInterface\Inventory\EquipmentSlotUi.cs">
+		<SubType>Code</SubType>
+	  </Compile>
+	  <Compile Include="UserInterface\Inventory\HumanComboGUI.cs">
+		<SubType>Code</SubType>
+	  </Compile>
+	  <Compile Include="UserInterface\Inventory\InventorySlotUi.cs">
+		<SubType>Code</SubType>
+	  </Compile>
+	  <Compile Include="UserInterface\Inventory\InventoryViewer.cs">
+		<SubType>Code</SubType>
+	  </Compile>
+	  <Compile Include="UserInterface\LobbyState\TabContainer.cs">
+		<SubType>Code</SubType>
+	  </Compile>
+	  <Compile Include="UserInterface\LobbyState\JobTab.cs">
+		<SubType>Code</SubType>
+	  </Compile>
+	  <Compile Include="UserInterface\LobbyState\LobbyShowcase.cs">
+		<SubType>Code</SubType>
+	  </Compile>
+	  <Compile Include="UserInterface\LobbyState\TabbedMenu.cs">
+		<SubType>Code</SubType>
+	  </Compile>
+	  <Compile Include="UserInterface\LobbyState\PlayerLstTab.cs">
+		<SubType>Code</SubType>
+	  </Compile>
+	  <Compile Include="UserInterface\UserInterfaceManager.cs">
+		<SubType>Code</SubType>
+	  </Compile>
+	  <Compile Include="Utility\Rand.cs">
+		<SubType>Code</SubType>
+	  </Compile>
+	  <Compile Include="Utility\RobustSortedDrawing.cs">
+		<SubType>Code</SubType>
+	  </Compile>
+	  <EmbeddedResource Include="Input\KeyBindings.xsd">
+		<Generator>ResXFileCodeGenerator</Generator>
+		<LastGenOutput>KeyBindings.Designer.cs</LastGenOutput>
+		<SubType>Designer</SubType>
+	  </EmbeddedResource>
+	  <None Include="MessageLogging\messageLoggerService.config">
+	  </None>
+	  <EmbeddedResource Include="_EmbeddedBaseResources\bluehigh.ttf">
+	  </EmbeddedResource>
+	  <EmbeddedResource Include="_EmbeddedBaseResources\noSprite.png">
+	  </EmbeddedResource>
   </ItemGroup>
-  <ItemGroup>
-    <Compile Include="Collision\CollisionManager.cs" />
-    <Compile Include="Configuration\ConfigurationManager.cs" />
-    <Compile Include="Configuration\Configuration.cs" />
-    <Compile Include="GameStates\GameStateManager.cs" />
-    <Compile Include="GOC\EntityManagerContainer.cs" />
-    <Compile Include="Helpers\GaussianBlur.cs" />
-    <Compile Include="Helpers\InterpolationPacket.cs" />
-    <Compile Include="Helpers\StarScroller.cs" />
-    <Compile Include="Helpers\Utilities.cs" />
-    <Compile Include="Input\KeyBindingManager.cs" />
-    <Compile Include="Input\KeyBindings.Designer.cs">
-      <DependentUpon>KeyBindings.xsd</DependentUpon>
-      <AutoGen>True</AutoGen>
-      <DesignTime>True</DesignTime>
-    </Compile>
-    <Compile Include="Lighting\Light.cs" />
-    <Compile Include="Lighting\LightArea.cs" />
-    <Compile Include="Lighting\LightManager.cs" />
-    <Compile Include="Lighting\LightModes\Flicker.cs" />
-    <Compile Include="Lighting\QuadRenderer.cs" />
-    <Compile Include="Lighting\ShadowMapResolver.cs" />
-    <Compile Include="Map\MapManager.cs" />
-    <Compile Include="MessageLogging\MessageLogger.cs" />
-    <Compile Include="MessageLogging\MessageLoggerService.cs" />
-    <Compile Include="Network\NetworkGrapher.cs" />
-    <Compile Include="Network\NetworkManager.cs" />
-    <Compile Include="Placement\Modes\AlignNone.cs" />
-    <Compile Include="Placement\Modes\AlignSimilar.cs" />
-    <Compile Include="Placement\Modes\AlignTileAny.cs" />
-    <Compile Include="Placement\Modes\AlignTileNonSolid.cs" />
-    <Compile Include="Placement\Modes\AlignTileSolid.cs" />
-    <Compile Include="Placement\Modes\AlignTileEmpty.cs" />
-    <Compile Include="Placement\Modes\AlignWall.cs" />
-    <Compile Include="Placement\Modes\AlignWallPlace.cs" />
-    <Compile Include="Placement\Modes\AlignWallTops.cs" />
-    <Compile Include="Placement\Modes\AlignFree.cs" />
-    <Compile Include="Placement\PlacementManager.cs" />
-    <Compile Include="Placement\PlacementMode.cs" />
-    <Compile Include="Player\PlayerManager.cs" />
-    <Compile Include="Player\PostProcessing\BlurPostProcessingEffect.cs" />
-    <Compile Include="Player\PostProcessing\PerlinPostProcessingEffect.cs" />
-    <Compile Include="Player\PostProcessing\DeathPostProcessingEffect.cs" />
-    <Compile Include="Player\PostProcessing\PostProcessingEffect.cs" />
-    <Compile Include="ResourceManagment\ResourceManagerZip.cs" />
-    <Compile Include="Properties\AssemblyInfo.cs" />
-    <Compile Include="Map\Tiles\Floor\Floor.cs" />
-    <Compile Include="Map\Tiles\Floor\Space.cs" />
-    <Compile Include="Map\Tiles\Tile.cs" />
-    <Compile Include="Map\Tiles\Wall\Wall.cs" />
-    <Compile Include="Serialization\SS13Serializer.cs" />
-    <Compile Include="State\State.cs" />
-    <Compile Include="State\StateManager.cs" />
-    <Compile Include="State\States\MainMenu.cs" />
-    <Compile Include="State\States\LobbyMenu.cs" />
-    <Compile Include="State\States\OptionsMenu.cs" />
-    <Compile Include="State\States\GameScreen.cs" />
-    <Compile Include="State\States\LobbyScreen.cs" />
-    <Compile Include="GameTimer\GameTimer.cs" />
-    <Compile Include="UserInterface\Components\AdminPasswordDialog.cs" />
-    <Compile Include="UserInterface\Components\AdminPlayerPanel.cs" />
-    <Compile Include="UserInterface\Components\AdminUnbanPanel.cs" />
-    <Compile Include="UserInterface\Components\BlueprintButton.cs" />
-    <Compile Include="UserInterface\Components\Button.cs" />
-    <Compile Include="UserInterface\Components\Chatbox.cs" />
-    <Compile Include="UserInterface\Components\Checkbox.cs" />
-    <Compile Include="UserInterface\Components\ContextMenu.cs" />
-    <Compile Include="UserInterface\Components\ArmorInfoLabel.cs" />
-    <Compile Include="UserInterface\Components\DebugConsole.cs" />
-    <Compile Include="UserInterface\Components\Showcase.cs" />
-    <Compile Include="UserInterface\Components\SimpleImage.cs" />
-    <Compile Include="UserInterface\Components\FloatingDeco.cs" />
-    <Compile Include="UserInterface\Components\PropEditWindow.cs" />
-    <Compile Include="UserInterface\Components\MenuWindow.cs" />
-    <Compile Include="UserInterface\Components\SVarEditWindow.cs" />
-    <Compile Include="UserInterface\Components\TargetingGui.cs" />
-    <Compile Include="UserInterface\Components\HealthPanel.cs" />
-    <Compile Include="UserInterface\Components\HandsGui.cs" />
-    <Compile Include="UserInterface\Components\TemplateGuiComponent.cs" />
-    <Compile Include="UserInterface\Components\HealthScannerWindow.cs" />
-    <Compile Include="UserInterface\Components\Hotbar.cs" />
-    <Compile Include="UserInterface\Components\HotbarSlot.cs" />
-    <Compile Include="UserInterface\Components\PlayerActionsWindow.cs" />
-    <Compile Include="UserInterface\Components\PlayerActionButton.cs" />
-    <Compile Include="UserInterface\Components\StatusEffectBar.cs" />
-    <Compile Include="UserInterface\Components\StatusEffectButton.cs" />
-    <Compile Include="UserInterface\Components\DisconnectedScreenBlocker.cs" />
-    <Compile Include="UserInterface\Components\EntitySpawnPanel.cs" />
-    <Compile Include="UserInterface\Components\EntitySpawnSelectButton.cs" />
-    <Compile Include="UserInterface\Components\ExamineWindow.cs" />
-    <Compile Include="UserInterface\Components\GuiComponent.cs" />
-    <Compile Include="UserInterface\Components\JobSelectButton.cs" />
-    <Compile Include="UserInterface\Components\Label.cs" />
-    <Compile Include="UserInterface\Components\Listbox.cs" />
-    <Compile Include="UserInterface\Components\ProgressBar.cs" />
-    <Compile Include="UserInterface\Components\ScrollableContainer.cs" />
-    <Compile Include="UserInterface\Components\Scrollbar.cs" />
-    <Compile Include="UserInterface\Components\ImageButton.cs" />
-    <Compile Include="UserInterface\Components\TargetingDummy.cs" />
-    <Compile Include="UserInterface\Components\TargetingDummyElement.cs" />
-    <Compile Include="UserInterface\Components\Textbox.cs" />
-    <Compile Include="UserInterface\Components\TileSpawnPanel.cs" />
-    <Compile Include="UserInterface\Components\TimerBar.cs" />
-    <Compile Include="UserInterface\Components\Window.cs" />
-    <Compile Include="UserInterface\DragDropInfo.cs" />
-    <Compile Include="UserInterface\Inventory\CraftSlotUi.cs" />
-    <Compile Include="UserInterface\Inventory\EquipmentSlotUi.cs" />
-    <Compile Include="UserInterface\Inventory\HumanComboGUI.cs" />
-    <Compile Include="UserInterface\Inventory\InventorySlotUi.cs" />
-    <Compile Include="UserInterface\Inventory\InventoryViewer.cs" />
-    <Compile Include="UserInterface\LobbyState\TabContainer.cs" />
-    <Compile Include="UserInterface\LobbyState\JobTab.cs" />
-    <Compile Include="UserInterface\LobbyState\LobbyShowcase.cs" />
-    <Compile Include="UserInterface\LobbyState\TabbedMenu.cs" />
-    <Compile Include="UserInterface\LobbyState\PlayerLstTab.cs" />
-    <Compile Include="UserInterface\UserInterfaceManager.cs" />
-    <Compile Include="Utility\Rand.cs" />
-    <Compile Include="Utility\RobustSortedDrawing.cs" />
-  </ItemGroup>
-  <ItemGroup>
-    <ProjectReference Include="..\CGO\ClientGameObject.csproj">
-      <Project>{6C778741-98D8-48EB-835A-293077AF0E07}</Project>
-      <Name>ClientGameObject</Name>
-    </ProjectReference>
-    <ProjectReference Include="..\ClientInterfaces\ClientInterfaces.csproj">
-      <Project>{B31E7B59-7066-4186-AB18-B1BB6DE0E537}</Project>
-      <Name>ClientInterfaces</Name>
-    </ProjectReference>
-    <ProjectReference Include="..\ClientWindow\ClientWindow.csproj">
-      <Project>{9CFBF7F1-B939-433B-AFA1-C12EBA2565CD}</Project>
-      <Name>ClientWindow</Name>
-    </ProjectReference>
-    <ProjectReference Include="..\GameObject\GameObject.csproj">
-      <Project>{FB8F5D6F-8500-4A5D-BCFB-20104AA902F4}</Project>
-      <Name>GameObject</Name>
-    </ProjectReference>
-    <ProjectReference Include="..\Lidgren.Network\Lidgren.Network.csproj">
-      <Project>{AE483C29-042E-4226-BA52-D247CE7676DA}</Project>
-      <Name>Lidgren.Network</Name>
-    </ProjectReference>
-    <ProjectReference Include="..\SS13.Graphics\SS13.Graphics.csproj">
-      <Project>{D905F34C-B672-4A4E-85DC-3A43C1DD3F60}</Project>
-      <Name>SS13.Graphics</Name>
-    </ProjectReference>
-    <ProjectReference Include="..\SS13.IoC\SS13.IoC.csproj">
-      <Project>{3401031F-35A7-4AE5-8B64-CAFDCB929F0E}</Project>
-      <Name>SS13.IoC</Name>
-    </ProjectReference>
-    <ProjectReference Include="..\SS3D_shared\SS13_Shared.csproj">
-      <Project>{4229D7E3-C3AE-4C0A-B2B1-BB20911150DC}</Project>
-      <Name>SS13_Shared</Name>
-    </ProjectReference>
-  </ItemGroup>
-  <ItemGroup>
-    <None Include="Input\KeyBindings.xsc">
-      <DependentUpon>KeyBindings.xsd</DependentUpon>
-    </None>
-    <None Include="Input\KeyBindings.xsd">
-      <Generator>MSDataSetGenerator</Generator>
-      <LastGenOutput>KeyBindings.Designer.cs</LastGenOutput>
-      <SubType>Designer</SubType>
-    </None>
-    <None Include="Input\KeyBindings.xss">
-      <DependentUpon>KeyBindings.xsd</DependentUpon>
-    </None>
-    <None Include="MessageLogging\messageLoggerService.config" />
-    <EmbeddedResource Include="_EmbeddedBaseResources\bluehigh.ttf" />
-  </ItemGroup>
-  <ItemGroup>
-    <Folder Include="Graphics\" />
-  </ItemGroup>
-  <ItemGroup>
-    <EmbeddedResource Include="_EmbeddedBaseResources\noSprite.png" />
-  </ItemGroup>
-  <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
-  <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
-       Other similar extension points exist, see Microsoft.Common.targets.
-  <Target Name="BeforeBuild">
-  </Target>
-  <Target Name="AfterBuild">
-  </Target>
-  -->
+	<Import Project="$(MSBuildBinPath)\Microsoft.CSHARP.Targets" />
+	<PropertyGroup>
+	  <PreBuildEvent>
+	  </PreBuildEvent>
+	  <PostBuildEvent>
+	  </PostBuildEvent>
+	</PropertyGroup>
 </Project>

@@ -1,0 +1,154 @@
+<Project frameworkVersion="v4_0" name="ClientServices" rootNamespace="ClientServices" type="Library" path="ClientServices">
+  <Configuration name="Debug">
+    <Options>
+      <OutputPath>../Bin</OutputPath>
+    </Options>
+  </Configuration>
+  <Configuration name="Release">
+    <Options>
+      <OutputPath>../Bin</OutputPath>
+    </Options>
+  </Configuration>
+  <ReferencePath>../Bin</ReferencePath>
+  <ReferencePath>../Third-Party</ReferencePath>
+  <Reference name="Gorgon" path="../Third-Party"/>
+  <Reference name="GorgonBZip2FileSystem" path="../Third-Party"/>
+  <Reference name="GorgonFramework" path="../Third-Party"/>
+  <Reference name="ICSharpCode.SharpZipLib" path="../Third-Party"/>
+  <Reference name="System"/>
+  <Reference name="System.Core"/>
+  <Reference name="System.Drawing"/>
+  <Reference name="System.ServiceModel"/>
+  <Reference name="System.Windows.Forms"/>
+  <Reference name="System.Xml.Linq"/>
+  <Reference name="System.Data.DataSetExtensions"/>
+  <Reference name="Microsoft.CSharp"/>
+  <Reference name="System.Data"/>
+  <Reference name="System.Xml"/>
+  <Files>
+    <File buildAction="Compile">Collision/CollisionManager.cs</File>
+    <File buildAction="Compile">Configuration/ConfigurationManager.cs</File>
+    <File buildAction="Compile">Configuration/Configuration.cs</File>
+    <File buildAction="Compile">GameStates/GameStateManager.cs</File>
+    <File buildAction="Compile">GOC/EntityManagerContainer.cs</File>
+    <File buildAction="Compile">Helpers/GaussianBlur.cs</File>
+    <File buildAction="Compile">Helpers/InterpolationPacket.cs</File>
+    <File buildAction="Compile">Helpers/StarScroller.cs</File>
+    <File buildAction="Compile">Helpers/Utilities.cs</File>
+    <File buildAction="Compile">Input/KeyBindingManager.cs</File>
+    <File buildAction="Compile">Lighting/Light.cs</File>
+    <File buildAction="Compile">Lighting/LightArea.cs</File>
+    <File buildAction="Compile">Lighting/LightManager.cs</File>
+    <File buildAction="Compile">Lighting/LightModes/Flicker.cs</File>
+    <File buildAction="Compile">Lighting/QuadRenderer.cs</File>
+    <File buildAction="Compile">Lighting/ShadowMapResolver.cs</File>
+    <File buildAction="Compile">Map/MapManager.cs</File>
+    <File buildAction="Compile">MessageLogging/MessageLogger.cs</File>
+    <File buildAction="Compile">MessageLogging/MessageLoggerService.cs</File>
+    <File buildAction="Compile">Network/NetworkGrapher.cs</File>
+    <File buildAction="Compile">Network/NetworkManager.cs</File>
+    <File buildAction="Compile">Placement/Modes/AlignNone.cs</File>
+    <File buildAction="Compile">Placement/Modes/AlignSimilar.cs</File>
+    <File buildAction="Compile">Placement/Modes/AlignTileAny.cs</File>
+    <File buildAction="Compile">Placement/Modes/AlignTileNonSolid.cs</File>
+    <File buildAction="Compile">Placement/Modes/AlignTileSolid.cs</File>
+    <File buildAction="Compile">Placement/Modes/AlignTileEmpty.cs</File>
+    <File buildAction="Compile">Placement/Modes/AlignWall.cs</File>
+    <File buildAction="Compile">Placement/Modes/AlignWallPlace.cs</File>
+    <File buildAction="Compile">Placement/Modes/AlignWallTops.cs</File>
+    <File buildAction="Compile">Placement/Modes/AlignFree.cs</File>
+    <File buildAction="Compile">Placement/PlacementManager.cs</File>
+    <File buildAction="Compile">Placement/PlacementMode.cs</File>
+    <File buildAction="Compile">Player/PlayerManager.cs</File>
+    <File buildAction="Compile">Player/PostProcessing/BlurPostProcessingEffect.cs</File>
+    <File buildAction="Compile">Player/PostProcessing/PerlinPostProcessingEffect.cs</File>
+    <File buildAction="Compile">Player/PostProcessing/DeathPostProcessingEffect.cs</File>
+    <File buildAction="Compile">Player/PostProcessing/PostProcessingEffect.cs</File>
+    <File buildAction="Compile">ResourceManagment/ResourceManagerZip.cs</File>
+    <File buildAction="Compile">Properties/AssemblyInfo.cs</File>
+    <File buildAction="Compile">Map/Tiles/Floor/Floor.cs</File>
+    <File buildAction="Compile">Map/Tiles/Floor/Space.cs</File>
+    <File buildAction="Compile">Map/Tiles/Tile.cs</File>
+    <File buildAction="Compile">Map/Tiles/Wall/Wall.cs</File>
+    <File buildAction="Compile">Serialization/SS13Serializer.cs</File>
+    <File buildAction="Compile">State/State.cs</File>
+    <File buildAction="Compile">State/StateManager.cs</File>
+    <File buildAction="Compile">State/States/MainMenu.cs</File>
+    <File buildAction="Compile">State/States/LobbyMenu.cs</File>
+    <File buildAction="Compile">State/States/OptionsMenu.cs</File>
+    <File buildAction="Compile">State/States/GameScreen.cs</File>
+    <File buildAction="Compile">State/States/LobbyScreen.cs</File>
+    <File buildAction="Compile">GameTimer/GameTimer.cs</File>
+    <File buildAction="Compile">UserInterface/Components/AdminPasswordDialog.cs</File>
+    <File buildAction="Compile">UserInterface/Components/AdminPlayerPanel.cs</File>
+    <File buildAction="Compile">UserInterface/Components/AdminUnbanPanel.cs</File>
+    <File buildAction="Compile">UserInterface/Components/BlueprintButton.cs</File>
+    <File buildAction="Compile">UserInterface/Components/Button.cs</File>
+    <File buildAction="Compile">UserInterface/Components/Chatbox.cs</File>
+    <File buildAction="Compile">UserInterface/Components/Checkbox.cs</File>
+    <File buildAction="Compile">UserInterface/Components/ContextMenu.cs</File>
+    <File buildAction="Compile">UserInterface/Components/ArmorInfoLabel.cs</File>
+    <File buildAction="Compile">UserInterface/Components/DebugConsole.cs</File>
+    <File buildAction="Compile">UserInterface/Components/Showcase.cs</File>
+    <File buildAction="Compile">UserInterface/Components/SimpleImage.cs</File>
+    <File buildAction="Compile">UserInterface/Components/FloatingDeco.cs</File>
+    <File buildAction="Compile">UserInterface/Components/PropEditWindow.cs</File>
+    <File buildAction="Compile">UserInterface/Components/MenuWindow.cs</File>
+    <File buildAction="Compile">UserInterface/Components/SVarEditWindow.cs</File>
+    <File buildAction="Compile">UserInterface/Components/TargetingGui.cs</File>
+    <File buildAction="Compile">UserInterface/Components/HealthPanel.cs</File>
+    <File buildAction="Compile">UserInterface/Components/HandsGui.cs</File>
+    <File buildAction="Compile">UserInterface/Components/TemplateGuiComponent.cs</File>
+    <File buildAction="Compile">UserInterface/Components/HealthScannerWindow.cs</File>
+    <File buildAction="Compile">UserInterface/Components/Hotbar.cs</File>
+    <File buildAction="Compile">UserInterface/Components/HotbarSlot.cs</File>
+    <File buildAction="Compile">UserInterface/Components/PlayerActionsWindow.cs</File>
+    <File buildAction="Compile">UserInterface/Components/PlayerActionButton.cs</File>
+    <File buildAction="Compile">UserInterface/Components/StatusEffectBar.cs</File>
+    <File buildAction="Compile">UserInterface/Components/StatusEffectButton.cs</File>
+    <File buildAction="Compile">UserInterface/Components/DisconnectedScreenBlocker.cs</File>
+    <File buildAction="Compile">UserInterface/Components/EntitySpawnPanel.cs</File>
+    <File buildAction="Compile">UserInterface/Components/EntitySpawnSelectButton.cs</File>
+    <File buildAction="Compile">UserInterface/Components/ExamineWindow.cs</File>
+    <File buildAction="Compile">UserInterface/Components/GuiComponent.cs</File>
+    <File buildAction="Compile">UserInterface/Components/JobSelectButton.cs</File>
+    <File buildAction="Compile">UserInterface/Components/Label.cs</File>
+    <File buildAction="Compile">UserInterface/Components/Listbox.cs</File>
+    <File buildAction="Compile">UserInterface/Components/ProgressBar.cs</File>
+    <File buildAction="Compile">UserInterface/Components/ScrollableContainer.cs</File>
+    <File buildAction="Compile">UserInterface/Components/Scrollbar.cs</File>
+    <File buildAction="Compile">UserInterface/Components/ImageButton.cs</File>
+    <File buildAction="Compile">UserInterface/Components/TargetingDummy.cs</File>
+    <File buildAction="Compile">UserInterface/Components/TargetingDummyElement.cs</File>
+    <File buildAction="Compile">UserInterface/Components/Textbox.cs</File>
+    <File buildAction="Compile">UserInterface/Components/TileSpawnPanel.cs</File>
+    <File buildAction="Compile">UserInterface/Components/TimerBar.cs</File>
+    <File buildAction="Compile">UserInterface/Components/Window.cs</File>
+    <File buildAction="Compile">UserInterface/DragDropInfo.cs</File>
+    <File buildAction="Compile">UserInterface/Inventory/CraftSlotUi.cs</File>
+    <File buildAction="Compile">UserInterface/Inventory/EquipmentSlotUi.cs</File>
+    <File buildAction="Compile">UserInterface/Inventory/HumanComboGUI.cs</File>
+    <File buildAction="Compile">UserInterface/Inventory/InventorySlotUi.cs</File>
+    <File buildAction="Compile">UserInterface/Inventory/InventoryViewer.cs</File>
+    <File buildAction="Compile">UserInterface/LobbyState/TabContainer.cs</File>
+    <File buildAction="Compile">UserInterface/LobbyState/JobTab.cs</File>
+    <File buildAction="Compile">UserInterface/LobbyState/LobbyShowcase.cs</File>
+    <File buildAction="Compile">UserInterface/LobbyState/TabbedMenu.cs</File>
+    <File buildAction="Compile">UserInterface/LobbyState/PlayerLstTab.cs</File>
+    <File buildAction="Compile">UserInterface/UserInterfaceManager.cs</File>
+    <File buildAction="Compile">Utility/Rand.cs</File>
+    <File buildAction="Compile">Utility/RobustSortedDrawing.cs</File>
+    <File buildAction="None" subType="Designer">Input/KeyBindings.xsd</File>
+    <File buildAction="None">MessageLogging/messageLoggerService.config</File>
+    <File buildAction="EmbeddedResource">_EmbeddedBaseResources/bluehigh.ttf</File>
+    <File buildAction="EmbeddedResource">_EmbeddedBaseResources/noSprite.png</File>
+  </Files>
+  <Reference name="ClientGameObject"/>
+  <Reference name="ClientInterfaces"/>
+  <Reference name="ClientWindow"/>
+  <Reference name="GameObject"/>
+  <Reference name="Lidgren.Network"/>
+  <Reference name="SS13.Graphics"/>
+  <Reference name="SS13.IoC"/>
+  <Reference name="SS13_Shared"/>
+</Project>

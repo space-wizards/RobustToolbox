@@ -26,7 +26,15 @@ namespace ServerServices.ServerConsole
         {
             InitializeCommands();
             Size consoleSize = IoCManager.Resolve<IConfigurationManager>().ConsoleSize;
-            Con.SetWindowSize(consoleSize.Width, consoleSize.Height);
+            try
+            {
+                Con.SetWindowSize(consoleSize.Width, consoleSize.Height);
+            }
+            catch (ArgumentOutOfRangeException e)
+            {
+                Con.WriteLine("Resizing Failure:");
+                Con.WriteLine(e.Message);
+            }
         }
 
         #region IConsoleManager Members
@@ -182,10 +190,10 @@ namespace ServerServices.ServerConsole
         {
             var CommandTypes = new List<Type>();
             CommandTypes.AddRange(
-                Assembly.GetCallingAssembly().GetTypes().Where(t => typeof (ConsoleCommand).IsAssignableFrom(t)));
+                Assembly.GetCallingAssembly().GetTypes().Where(t => typeof(ConsoleCommand).IsAssignableFrom(t)));
             foreach (Type t in CommandTypes)
             {
-                if (t == typeof (ConsoleCommand))
+                if (t == typeof(ConsoleCommand))
                     continue;
                 var instance = Activator.CreateInstance(t, null) as ConsoleCommand;
                 RegisterCommand(instance);

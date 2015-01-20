@@ -1,7 +1,7 @@
 <?xml version="1.0" ?>
 <Prebuild version="1.10" xmlns="http://dnpb.sourceforge.net/schemas/prebuild-1.10.xsd">
 	<Solution activeConfig="Debug" name="SpaceStation14" path="./" version="0.0.1">
-		<Configuration name="Debug">
+		<Configuration name="Debug" platform="x86">
 			<Options>
 				<CompilerDefines>TRACE;DEBUG</CompilerDefines>
 				<OptimizeCode>false</OptimizeCode>
@@ -16,7 +16,7 @@
 				<NoStdLib>false</NoStdLib>
 			</Options>
 		</Configuration>
-		<Configuration name="Release">
+		<Configuration name="Release" platform="x86">
 			<Options>
 				<CompilerDefines>TRACE</CompilerDefines>
 				<OptimizeCode>true</OptimizeCode>

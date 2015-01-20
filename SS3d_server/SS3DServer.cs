@@ -10,6 +10,7 @@ using Lidgren.Network;
 using SS13.IoC;
 using SS13_Server.Modules;
 using SS13_Server.Modules.Client;
+using SS13_Server.Timing;
 using SS13_Shared;
 using SS13_Shared.GameStates;
 using SS13_Shared.ServerEnums;
@@ -34,6 +35,7 @@ using ServerServices.Round;
 using EntityManager = SGO.EntityManager;
 using IEntityManager = ServerInterfaces.GOC.IEntityManager;
 using SS13_Shared.Utility;
+using TimerQueueTimer = SS13_Server.Timing.TimerQueueTimer;
 namespace SS13_Server
 {
     public class SS13Server : ISS13Server
@@ -53,6 +55,7 @@ namespace SS13_Server
         private DateTime _lastStateTime = DateTime.Now;
         private uint _oldestAckedState;
         private DateTime _startAt;
+        private TimerQueueTimer mainLoopTimer;
         private static readonly AutoResetEvent are = new AutoResetEvent(true);
         public Stopwatch stopWatch = new Stopwatch();
         private uint basePeriod;
@@ -163,7 +166,12 @@ namespace SS13_Server
             basePeriod = 1;
             period = basePeriod;
 
+            var timerQueue = new TimerQueue();
             stopWatch.Start();
+            mainLoopTimer = timerQueue.CreateTimer(s =>
+                                                       {
+                                                       RunLoop();
+                                                       }, null, 0, period);
             
             while (Active)
             {
@@ -174,6 +182,7 @@ namespace SS13_Server
             /*   TimerCallback tcb = RunLoop;
             var due = 1;// (long)ServerRate / 3;
             stopWatch.Start(); //Start the clock
+            mainLoopTimer = new Timer(tcb, are, 0, due);
             are.WaitOne(-1);*/
         }
 

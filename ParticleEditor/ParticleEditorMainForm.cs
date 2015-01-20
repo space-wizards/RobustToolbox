@@ -26,7 +26,7 @@ namespace ParticleEditor
 
         private void InitializeFileDialog()
         {
-            var currentDir = Directory.GetCurrentDirectory() + @"..\..\..\..\Media\ParticleSystems";
+            var currentDir = Directory.GetCurrentDirectory() + @"..\..\..\..\Resources\ParticleSystems";
             saveFileDialog1.InitialDirectory = Path.GetFullPath(currentDir);
             saveFileDialog1.RestoreDirectory = true;
             openFileDialog1.InitialDirectory = Path.GetFullPath(currentDir);

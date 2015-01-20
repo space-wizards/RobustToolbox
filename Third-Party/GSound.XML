@@ -1,0 +1,665 @@
+<?xml version="1.0"?>
+<doc>
+    <assembly>
+        <name>GSound</name>
+    </assembly>
+    <members>
+        <member name="T:GorgonLibrary.Sound.FileWAV">
+            <summary>
+            This code was created by Magellan http://trinidad.delphigl.com/. Comments and stream loading were translated/created by ShadowDust702
+            </summary>
+        </member>
+        <member name="M:GorgonLibrary.Sound.FileWAV.ReadANSIString(System.Int32)">
+            <summary>
+            Reads a string a certain length.
+            </summary>
+            <param name="Count">The number of characters to be read.</param>
+            <returns>Returns the string</returns>
+        </member>
+        <member name="M:GorgonLibrary.Sound.FileWAV.RaiseUnknownFormatException">
+            <summary>
+            Throws an exception.
+            </summary>
+        </member>
+        <member name="M:GorgonLibrary.Sound.FileWAV.ReadHeader">
+            <summary>
+            Reads the header of the WAV file.
+            </summary>
+        </member>
+        <member name="M:GorgonLibrary.Sound.FileWAV.ReadDataChunk">
+            <summary>
+            Reads information from the chunk with the name "data".
+            </summary>
+        </member>
+        <member name="M:GorgonLibrary.Sound.FileWAV.ReadData">
+            <summary>
+            Reads all other information from the file.
+            </summary>
+        </member>
+        <member name="M:GorgonLibrary.Sound.FileWAV.GenerateSoundBuffer">
+            <summary>
+            Creates the buffer that contains all the necessary information from the file.
+            </summary>
+            <returns>The sound buffer which contains the sound information.</returns>
+        </member>
+        <member name="M:GorgonLibrary.Sound.FileWAV.LoadFromFile(System.String)">
+            <summary>
+            Loads a wav from a file
+            </summary>
+            <param name="FileName">Filename of the file to open.</param>
+            <returns>Result code.</returns>
+        </member>
+        <member name="M:GorgonLibrary.Sound.FileWAV.LoadFromStream(System.IO.Stream)">
+            <summary>
+            Loads a wav from a stream
+            </summary>
+            <param name="In">Input stream.</param>
+            <returns>Result code.</returns>
+        </member>
+        <member name="T:GorgonLibrary.Sound.FileWAV.HeaderWAV">
+            <summary>
+            Header of the Wav file
+            </summary>
+        </member>
+        <member name="T:GorgonLibrary.Sound.al">
+            <summary>
+            This code was created by Magellan http://trinidad.delphigl.com/. Comments were translated/created by ShadowDust702
+            </summary>
+        </member>
+        <member name="M:GorgonLibrary.Sound.al.DeleteBuffer(System.Int32)">
+            <summary>
+            Deletes a buffer
+            </summary>
+        </member>
+        <member name="M:GorgonLibrary.Sound.al.DeleteSource(System.Int32)">
+            <summary>
+            Deletes a source
+            </summary>
+        </member>
+        <member name="M:GorgonLibrary.Sound.al.GenBuffer">
+            <summary>
+            Generates a buffer
+            </summary>
+            <returns>returns the buffer ID needed to do anything with it</returns>
+        </member>
+        <member name="M:GorgonLibrary.Sound.al.GenSource">
+            <summary>
+            Generates a source
+            </summary>
+            <returns>returns the source ID needed to do anything with it</returns>
+        </member>
+        <member name="T:GorgonLibrary.Sound.alc">
+            <summary>
+            Provides all OpenAL (alc) capabilities.
+            </summary>
+        </member>
+        <member name="T:GorgonLibrary.Sound.SoundSource">
+            <summary>
+            A Sound source with 3D positioning
+            </summary>
+        </member>
+        <member name="F:GorgonLibrary.Sound.SoundSource.Source">
+            <summary>
+            The OpenAL Sound source object
+            </summary>
+        </member>
+        <member name="F:GorgonLibrary.Sound.SoundSource._Pitch">
+            <summary>
+            Pitch
+            </summary>
+        </member>
+        <member name="F:GorgonLibrary.Sound.SoundSource._Gain">
+            <summary>
+            Gain
+            </summary>
+        </member>
+        <member name="F:GorgonLibrary.Sound.SoundSource._Position">
+            <summary>
+            World coordinates
+            </summary>
+        </member>
+        <member name="F:GorgonLibrary.Sound.SoundSource._Velocity">
+            <summary>
+            Velocity
+            </summary>
+        </member>
+        <member name="F:GorgonLibrary.Sound.SoundSource._Loop">
+            <summary>
+            If true this sound source will loop
+            </summary>
+        </member>
+        <member name="F:GorgonLibrary.Sound.SoundSource._Buffer">
+            <summary>
+            Reference to the sound file/buffer
+            </summary>
+        </member>
+        <member name="M:GorgonLibrary.Sound.SoundSource.#ctor(GorgonLibrary.Sound.SoundBuffer)">
+            <summary>
+            Initializes a new instance of the <see cref="T:GorgonLibrary.Sound.SoundSource"/> class.
+            </summary>
+            <param name="Buffer">The buffer to get sound data from.</param>
+        </member>
+        <member name="M:GorgonLibrary.Sound.SoundSource.Play">
+            <summary>
+            Play the sound
+            </summary>
+        </member>
+        <member name="M:GorgonLibrary.Sound.SoundSource.Pause">
+            <summary>
+            Pause the sound
+            </summary>
+        </member>
+        <member name="M:GorgonLibrary.Sound.SoundSource.Stop">
+            <summary>
+            Stop the sound
+            </summary>
+        </member>
+        <member name="M:GorgonLibrary.Sound.SoundSource.Finalize">
+            <summary>
+            Finalization
+            </summary>
+        </member>
+        <member name="M:GorgonLibrary.Sound.SoundSource.Dispose(System.Boolean)">
+            <summary>
+            Clean up the memory for this object
+            </summary>
+            <param name="disposing">true if the Dispose method was called outside of a the finalize method</param>
+        </member>
+        <member name="M:GorgonLibrary.Sound.SoundSource.Dispose">
+            <summary>
+            Clean up the memory for this object
+            </summary>
+        </member>
+        <member name="P:GorgonLibrary.Sound.SoundSource.Pitch">
+            <summary>
+            The pitch of the sound, can be useful for things like cars, that require varying pitches
+            </summary>
+        </member>
+        <member name="P:GorgonLibrary.Sound.SoundSource.Gain">
+            <summary>
+            If someone notices a difference when they change this, let me know...
+            </summary>
+        </member>
+        <member name="P:GorgonLibrary.Sound.SoundSource.Position">
+            <summary>
+            The 3 Dimensional position of this sound object
+            </summary>
+        </member>
+        <member name="P:GorgonLibrary.Sound.SoundSource.Velocity">
+            <summary>
+            The 3 Dimensional velocity of this sound object
+            </summary>
+        </member>
+        <member name="P:GorgonLibrary.Sound.SoundSource.Loop">
+            <summary>
+            If true this sound will loop while it's being played
+            </summary>
+        </member>
+        <member name="P:GorgonLibrary.Sound.SoundSource.ReferenceDistance">
+            <summary>
+            The distance that the source will be the loudest (if the listener is
+            closer, it won't be any louder than if they were at this distance)
+            </summary>
+        </member>
+        <member name="P:GorgonLibrary.Sound.SoundSource.State">
+            <summary>
+            Gets the current state of the sound
+            </summary>
+        </member>
+        <member name="P:GorgonLibrary.Sound.SoundSource.MaxRange">
+            <summary>
+            The distance that the source will be the quietest (if the listener is
+            farther, it won't be any quieter than if they were at this distance)
+            </summary>
+        </member>
+        <member name="P:GorgonLibrary.Sound.SoundSource.Paused">
+            <summary>
+            If true, the sound will be paused
+            </summary>
+        </member>
+        <member name="P:GorgonLibrary.Sound.SoundSource.Buffer">
+            <summary>
+            The sound buffer for this sound source
+            </summary>
+        </member>
+        <member name="P:GorgonLibrary.Sound.SoundSource.MinGain">
+            <summary>
+            How quiet it is at max distance
+            </summary>
+        </member>
+        <member name="P:GorgonLibrary.Sound.SoundSource.MaxGain">
+            <summary>
+            How loud it is at closest distance
+            </summary>
+        </member>
+        <member name="P:GorgonLibrary.Sound.SoundSource.RolloffFactor">
+            <summary>
+            rolloffFactor is used for distance attenuation calculations based on inverse distance with rolloff. For distances smaller than maxDistance (and, depending on the distance model, larger than referenceDistance), this will scale the distance attenuation over the applicable range. See Sound.OpenAL.AL.Attenuation for details how the attenuation is computed as a function of the distance. The initial value is 1.
+            </summary>
+        </member>
+        <member name="T:GorgonLibrary.Sound.SoundSource.SoundStates">
+            <summary>
+            Shows the state a sound could be in
+            </summary>
+        </member>
+        <member name="F:GorgonLibrary.Sound.SoundSource.SoundStates.INITIAL">
+            <summary>
+            Initial state.
+            </summary>
+        </member>
+        <member name="F:GorgonLibrary.Sound.SoundSource.SoundStates.STOPPED">
+            <summary>
+            Stopped playing.
+            </summary>
+        </member>
+        <member name="F:GorgonLibrary.Sound.SoundSource.SoundStates.PLAYING">
+            <summary>
+            Currently playing.
+            </summary>
+        </member>
+        <member name="F:GorgonLibrary.Sound.SoundSource.SoundStates.PAUSED">
+            <summary>
+            Paused.
+            </summary>
+        </member>
+        <member name="T:GorgonLibrary.Sound.SoundType">
+            <summary>
+            Currently only supports Wave,OGG Vorbis files
+            </summary>
+        </member>
+        <member name="F:GorgonLibrary.Sound.SoundType.Wav">
+            <summary>
+            Wave file.
+            </summary>
+        </member>
+        <member name="F:GorgonLibrary.Sound.SoundType.OGG">
+            <summary>
+            OGG file.
+            </summary>
+        </member>
+        <member name="T:GorgonLibrary.Sound.SoundBuffer">
+            <summary>
+            A sound object e.g a wave file, use a SoundSource to play this
+            </summary>
+        </member>
+        <member name="F:GorgonLibrary.Sound.SoundBuffer.BufferID">
+            <summary>
+            Internal ID for the sound buffer
+            </summary>
+        </member>
+        <member name="F:GorgonLibrary.Sound.SoundBuffer._disposed">
+            <summary>
+            Is Disposed yet?
+            </summary>
+        </member>
+        <member name="M:GorgonLibrary.Sound.SoundBuffer.GetBufferID">
+            <summary>
+            Returns the internal OpenAL ID for this object
+            </summary>
+            <returns></returns>
+        </member>
+        <member name="M:GorgonLibrary.Sound.SoundBuffer.#ctor(System.String)">
+            <summary>
+            Load the sound from a wav file
+            </summary>
+            <param name="Filename"></param>
+        </member>
+        <member name="M:GorgonLibrary.Sound.SoundBuffer.#ctor(System.IO.Stream)">
+            <summary>
+            Load the sound from a wav stream
+            </summary>
+            <param name="Stream"></param>
+        </member>
+        <member name="M:GorgonLibrary.Sound.SoundBuffer.#ctor(System.String,GorgonLibrary.Sound.SoundType)">
+            <summary>
+            Load the sound from a file
+            </summary>
+            <param name="Filename">File name of the file to load.</param>
+            <param name="Type">Type of file to load.</param>
+        </member>
+        <member name="M:GorgonLibrary.Sound.SoundBuffer.#ctor(System.IO.Stream,GorgonLibrary.Sound.SoundType)">
+            <summary>
+            Load the sound from a stream
+            </summary>
+            <param name="Stream">Stream containing the audio data.</param>
+            <param name="Type">Type of file to load.</param>
+        </member>
+        <member name="M:GorgonLibrary.Sound.SoundBuffer.Finalize">
+            <summary>
+            Finalization
+            </summary>
+        </member>
+        <member name="M:GorgonLibrary.Sound.SoundBuffer.Dispose(System.Boolean)">
+            <summary>
+            Clean up the memory for this object
+            </summary>
+            <param name="disposing">true if the Dispose method was called outside of a the finalize method</param>
+        </member>
+        <member name="M:GorgonLibrary.Sound.SoundBuffer.Dispose">
+            <summary>
+            Clean up the memory for this object
+            </summary>
+        </member>
+        <member name="T:GorgonLibrary.Sound.OggDecodeStream">
+            <summary>
+            A stream that can decode OGG Vorbis files
+            </summary>
+        </member>
+        <member name="F:GorgonLibrary.Sound.OggDecodeStream.Channels">
+            <summary>
+            Number of channels.
+            </summary>
+        </member>
+        <member name="F:GorgonLibrary.Sound.OggDecodeStream.Rate">
+            <summary>
+            Playback rate.
+            </summary>
+        </member>
+        <member name="M:GorgonLibrary.Sound.OggDecodeStream.#ctor(System.IO.Stream,System.Boolean)">
+            <summary>
+            Initializes a new instance of the <see cref="T:GorgonLibrary.Sound.OggDecodeStream"/> class.
+            </summary>
+            <param name="input">The input stream.</param>
+            <param name="skipWavHeader">TRUE to skip the header for the wav file, FALSE to include it.</param>
+        </member>
+        <member name="M:GorgonLibrary.Sound.OggDecodeStream.#ctor(System.IO.Stream)">
+            <summary>
+            Initializes a new instance of the <see cref="T:GorgonLibrary.Sound.OggDecodeStream"/> class.
+            </summary>
+            <param name="input">The input stream.</param>
+        </member>
+        <member name="M:GorgonLibrary.Sound.OggDecodeStream.Flush">
+            <summary>
+            When overridden in a derived class, clears all buffers for this stream and causes any buffered data to be written to the underlying device.
+            </summary>
+            <exception cref="T:System.IO.IOException">
+            An I/O error occurs.
+              </exception>
+        </member>
+        <member name="M:GorgonLibrary.Sound.OggDecodeStream.Read(System.Byte[],System.Int32,System.Int32)">
+            <summary>
+            When overridden in a derived class, reads a sequence of bytes from the current stream and advances the position within the stream by the number of bytes read.
+            </summary>
+            <param name="buffer">An array of bytes. When this method returns, the buffer contains the specified byte array with the values between <paramref name="offset"/> and (<paramref name="offset"/> + <paramref name="count"/> - 1) replaced by the bytes read from the current source.</param>
+            <param name="offset">The zero-based byte offset in <paramref name="buffer"/> at which to begin storing the data read from the current stream.</param>
+            <param name="count">The maximum number of bytes to be read from the current stream.</param>
+            <returns>
+            The total number of bytes read into the buffer. This can be less than the number of bytes requested if that many bytes are not currently available, or zero (0) if the end of the stream has been reached.
+            </returns>
+            <exception cref="T:System.ArgumentException">
+            The sum of <paramref name="offset"/> and <paramref name="count"/> is larger than the buffer length.
+              </exception>
+              
+            <exception cref="T:System.ArgumentNullException">
+              <paramref name="buffer"/> is null.
+              </exception>
+              
+            <exception cref="T:System.ArgumentOutOfRangeException">
+              <paramref name="offset"/> or <paramref name="count"/> is negative.
+              </exception>
+              
+            <exception cref="T:System.IO.IOException">
+            An I/O error occurs.
+              </exception>
+              
+            <exception cref="T:System.NotSupportedException">
+            The stream does not support reading.
+              </exception>
+              
+            <exception cref="T:System.ObjectDisposedException">
+            Methods were called after the stream was closed.
+              </exception>
+        </member>
+        <member name="M:GorgonLibrary.Sound.OggDecodeStream.Seek(System.Int64,System.IO.SeekOrigin)">
+            <summary>
+            When overridden in a derived class, sets the position within the current stream.
+            </summary>
+            <param name="offset">A byte offset relative to the <paramref name="origin"/> parameter.</param>
+            <param name="origin">A value of type <see cref="T:System.IO.SeekOrigin"/> indicating the reference point used to obtain the new position.</param>
+            <returns>
+            The new position within the current stream.
+            </returns>
+            <exception cref="T:System.IO.IOException">
+            An I/O error occurs.
+              </exception>
+              
+            <exception cref="T:System.NotSupportedException">
+            The stream does not support seeking, such as if the stream is constructed from a pipe or console output.
+              </exception>
+              
+            <exception cref="T:System.ObjectDisposedException">
+            Methods were called after the stream was closed.
+              </exception>
+        </member>
+        <member name="M:GorgonLibrary.Sound.OggDecodeStream.SetLength(System.Int64)">
+            <summary>
+            When overridden in a derived class, sets the length of the current stream.
+            </summary>
+            <param name="value">The desired length of the current stream in bytes.</param>
+            <exception cref="T:System.IO.IOException">
+            An I/O error occurs.
+              </exception>
+              
+            <exception cref="T:System.NotSupportedException">
+            The stream does not support both writing and seeking, such as if the stream is constructed from a pipe or console output.
+              </exception>
+              
+            <exception cref="T:System.ObjectDisposedException">
+            Methods were called after the stream was closed.
+              </exception>
+        </member>
+        <member name="M:GorgonLibrary.Sound.OggDecodeStream.Write(System.Byte[],System.Int32,System.Int32)">
+            <summary>
+            When overridden in a derived class, writes a sequence of bytes to the current stream and advances the current position within this stream by the number of bytes written.
+            </summary>
+            <param name="buffer">An array of bytes. This method copies <paramref name="count"/> bytes from <paramref name="buffer"/> to the current stream.</param>
+            <param name="offset">The zero-based byte offset in <paramref name="buffer"/> at which to begin copying bytes to the current stream.</param>
+            <param name="count">The number of bytes to be written to the current stream.</param>
+            <exception cref="T:System.ArgumentException">
+            The sum of <paramref name="offset"/> and <paramref name="count"/> is greater than the buffer length.
+              </exception>
+              
+            <exception cref="T:System.ArgumentNullException">
+              <paramref name="buffer"/> is null.
+              </exception>
+              
+            <exception cref="T:System.ArgumentOutOfRangeException">
+              <paramref name="offset"/> or <paramref name="count"/> is negative.
+              </exception>
+              
+            <exception cref="T:System.IO.IOException">
+            An I/O error occurs.
+              </exception>
+              
+            <exception cref="T:System.NotSupportedException">
+            The stream does not support writing.
+              </exception>
+              
+            <exception cref="T:System.ObjectDisposedException">
+            Methods were called after the stream was closed.
+              </exception>
+        </member>
+        <member name="P:GorgonLibrary.Sound.OggDecodeStream.CanRead">
+            <summary>
+            When overridden in a derived class, gets a value indicating whether the current stream supports reading.
+            </summary>
+            <returns>true if the stream supports reading; otherwise, false.
+              </returns>
+        </member>
+        <member name="P:GorgonLibrary.Sound.OggDecodeStream.CanSeek">
+            <summary>
+            When overridden in a derived class, gets a value indicating whether the current stream supports seeking.
+            </summary>
+            <returns>true if the stream supports seeking; otherwise, false.
+              </returns>
+        </member>
+        <member name="P:GorgonLibrary.Sound.OggDecodeStream.CanWrite">
+            <summary>
+            When overridden in a derived class, gets a value indicating whether the current stream supports writing.
+            </summary>
+            <returns>true if the stream supports writing; otherwise, false.
+              </returns>
+        </member>
+        <member name="P:GorgonLibrary.Sound.OggDecodeStream.Length">
+            <summary>
+            When overridden in a derived class, gets the length in bytes of the stream.
+            </summary>
+            <returns>
+            A long value representing the length of the stream in bytes.
+              </returns>
+              
+            <exception cref="T:System.NotSupportedException">
+            A class derived from Stream does not support seeking.
+              </exception>
+              
+            <exception cref="T:System.ObjectDisposedException">
+            Methods were called after the stream was closed.
+              </exception>
+        </member>
+        <member name="P:GorgonLibrary.Sound.OggDecodeStream.Position">
+            <summary>
+            When overridden in a derived class, gets or sets the position within the current stream.
+            </summary>
+            <returns>
+            The current position within the stream.
+              </returns>
+              
+            <exception cref="T:System.IO.IOException">
+            An I/O error occurs.
+              </exception>
+              
+            <exception cref="T:System.NotSupportedException">
+            The stream does not support seeking.
+              </exception>
+              
+            <exception cref="T:System.ObjectDisposedException">
+            Methods were called after the stream was closed.
+              </exception>
+        </member>
+        <member name="T:GorgonLibrary.Sound.DistanceModel">
+            <summary>
+            Distance model that a context can use
+            </summary>
+        </member>
+        <member name="F:GorgonLibrary.Sound.DistanceModel.INVERSE_DISTANCE">
+            <summary>
+            Inverse Distance, unclamped.
+            </summary>
+        </member>
+        <member name="F:GorgonLibrary.Sound.DistanceModel.INVERSE_DISTANCE_CLAMPED">
+            <summary>
+            Inverse distance, clamped.
+            </summary>
+        </member>
+        <member name="T:GorgonLibrary.Sound.GSContext">
+            <summary>
+            This is the sound context. Set listener information in here
+            </summary>
+        </member>
+        <member name="F:GorgonLibrary.Sound.GSContext.FDevice">
+            <summary>
+            Pointer to the device
+            </summary>
+        </member>
+        <member name="F:GorgonLibrary.Sound.GSContext.FContext">
+            <summary>
+            Pointer to the OAL context
+            </summary>
+        </member>
+        <member name="F:GorgonLibrary.Sound.GSContext._disposed">
+            <summary>
+            Is Disposed yet?
+            </summary>
+        </member>
+        <member name="F:GorgonLibrary.Sound.GSContext.Up">
+            <summary>
+            The direction that is up.
+            </summary>
+        </member>
+        <member name="M:GorgonLibrary.Sound.GSContext.#ctor">
+            <summary>
+            Creates the listener context object.
+            </summary>
+        </member>
+        <member name="M:GorgonLibrary.Sound.GSContext.SetListener(GorgonLibrary.Vector3D,GorgonLibrary.Vector3D,GorgonLibrary.Vector3D)">
+            <summary>
+            Set the Position, Velocity, and Direction of the listener
+            </summary>
+            <param name="Position">Where the listener is</param>
+            <param name="Velocity">Velocity specifies the current velocity (speed and direction) of the object, in the world coordinate system. The object Velocity does not affect the source's position. OpenAL does not calculate the velocity from subsequent position updates, nor does it adjust the position over time based on the specified velocity. Any such calculation is left to the application. For the purposes of sound processing, position and velocity are independent parameters affecting different aspects of the sounds.</param>
+            <param name="Direction">The direction the listener is looking</param>
+        </member>
+        <member name="M:GorgonLibrary.Sound.GSContext.Finalize">
+            <summary>
+            Finalization
+            </summary>
+        </member>
+        <member name="M:GorgonLibrary.Sound.GSContext.Dispose(System.Boolean)">
+            <summary>
+            Clean up the memory for this object
+            </summary>
+            <param name="disposing">true if the Dispose method was called outside of a the finalize method</param>
+        </member>
+        <member name="M:GorgonLibrary.Sound.GSContext.Dispose">
+            <summary>
+            Clean up the memory for this object
+            </summary>
+        </member>
+        <member name="P:GorgonLibrary.Sound.GSContext.DistanceModel">
+            <summary>
+            How OpenAL behaves at different distances
+            </summary>
+        </member>
+        <member name="P:GorgonLibrary.Sound.GSContext.Device">
+            <summary>
+            A pointer to OpenAL device
+            </summary>
+        </member>
+        <member name="P:GorgonLibrary.Sound.GSContext.Context">
+            <summary>
+            A pointer to the OpenAL context
+            </summary>
+        </member>
+        <member name="T:GorgonLibrary.Sound.FileOGG">
+            <summary>
+            Loads an OGG in to a Buffer
+            </summary>
+        </member>
+        <member name="M:GorgonLibrary.Sound.FileOGG.GenerateSoundBuffer(GorgonLibrary.Sound.OggDecodeStream)">
+            <summary>
+            Creates the buffer that contains all the necessary information from the file.
+            </summary>
+            <returns>The sound buffer which contains the sound information.</returns>
+        </member>
+        <member name="M:GorgonLibrary.Sound.FileOGG.LoadFromFile(System.String)">
+            <summary>
+            Load an OGG vorbis buffer from a file
+            </summary>
+            <param name="Filename"></param>
+            <returns></returns>
+        </member>
+        <member name="M:GorgonLibrary.Sound.FileOGG.LoadFromStream(System.IO.Stream)">
+            <summary>
+            Load an OGG vorbis buffer from a stream.
+            </summary>
+            <param name="Filename"></param>
+            <returns></returns>
+        </member>
+        <member name="T:GorgonLibrary.Sound.Properties.Resources">
+            <summary>
+              A strongly-typed resource class, for looking up localized strings, etc.
+            </summary>
+        </member>
+        <member name="P:GorgonLibrary.Sound.Properties.Resources.ResourceManager">
+            <summary>
+              Returns the cached ResourceManager instance used by this class.
+            </summary>
+        </member>
+        <member name="P:GorgonLibrary.Sound.Properties.Resources.Culture">
+            <summary>
+              Overrides the current thread's CurrentUICulture property for all
+              resource lookups using this strongly typed resource class.
+            </summary>
+        </member>
+    </members>
+</doc>

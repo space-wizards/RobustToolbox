@@ -65,7 +65,6 @@ namespace ClientServices.State.States
 
             _connectTextbox = new Textbox(100, ResourceManager) {Text = ConfigurationManager.GetServerAddress()};
             _connectTextbox.OnSubmit += ConnectTextboxOnSubmit;
-            _connectTextbox.SetVisible(false);
 
             Assembly assembly = Assembly.GetExecutingAssembly();
             FileVersionInfo fvi = FileVersionInfo.GetVersionInfo(assembly.Location);
@@ -146,20 +145,12 @@ namespace ClientServices.State.States
 
         private void _buttConnect_Clicked(ImageButton sender)
         {
-            if (!_connectTextbox.IsVisible())
-            {
-                _connectTextbox.SetVisible(true);
-                return;
-            }
+            if (!_isConnecting)
+                StartConnect(_connectTextbox.Text);
             else
             {
-                if (!_isConnecting)
-                    StartConnect(_connectTextbox.Text);
-                else
-                {
-                    _isConnecting = false;
-                    NetworkManager.Disconnect();
-                }
+                _isConnecting = false;
+                NetworkManager.Disconnect();
             }
         }
 

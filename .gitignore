@@ -51,4 +51,7 @@ _ReSharper*/
 /Resources/textures/*.TAI
 /Resources/SpriteRenderer/Ogre.log
 /Media
+*.sln
+*.csproj
+/Bin
 /setenv.bat

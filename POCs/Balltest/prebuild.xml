@@ -1,0 +1,38 @@
+<Project frameworkVersion="v4_0" name="Balltest" rootNamespace="Balltest" type="WinExe" path="POCs\Balltest">
+  <Configuration name="Debug">
+    <Options>
+      <OutputPath>../Bin</OutputPath>
+    </Options>
+  </Configuration>
+  <Configuration name="Release">
+    <Options>
+      <OutputPath>../Bin</OutputPath>
+    </Options>
+  </Configuration>
+  <ReferencePath>../Bin</ReferencePath>
+  <ReferencePath>../Third-Party</ReferencePath>
+  <Reference name="Gorgon" path="../Third-Party"/>
+  <Reference name="System"/>
+  <Reference name="System.Core"/>
+  <Reference name="System.Xml.Linq"/>
+  <Reference name="System.Data.DataSetExtensions"/>
+  <Reference name="Microsoft.CSharp"/>
+  <Reference name="System.Data"/>
+  <Reference name="System.Deployment"/>
+  <Reference name="System.Drawing"/>
+  <Reference name="System.Windows.Forms"/>
+  <Reference name="System.Xml"/>
+  <Files>
+    <File buildAction="Compile" subType="Form">Balltest.cs</File>
+    <File buildAction="Compile">Balltest.Designer.cs</File>
+    <File buildAction="Compile">Program.cs</File>
+    <File buildAction="Compile">Properties/AssemblyInfo.cs</File>
+    <File buildAction="EmbeddedResource">Balltest.resx</File>
+    <File buildAction="EmbeddedResource" subType="Designer">Properties/Resources.resx</File>
+    <File buildAction="Compile">Properties/Resources.Designer.cs</File>
+    <File buildAction="None">app.config</File>
+    <File buildAction="None">Properties/Settings.settings</File>
+    <File buildAction="Compile">Properties/Settings.Designer.cs</File>
+    <File buildAction="Content" copyToOutput="PreserveNewest">flyingball.png</File>
+  </Files>
+</Project>

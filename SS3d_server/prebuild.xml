@@ -1,0 +1,62 @@
+<Project frameworkVersion="v4_0" name="SS13_Server" rootNamespace="SS13_Server" type="Exe" path="SS3d_server">
+  <Configuration name="Debug">
+    <Options>
+      <OutputPath>../Bin</OutputPath>
+    </Options>
+  </Configuration>
+  <Configuration name="Release">
+    <Options>
+      <OutputPath>../Bin</OutputPath>
+    </Options>
+  </Configuration>
+  <ReferencePath>../Bin</ReferencePath>
+  <ReferencePath>../Third-Party</ReferencePath>
+  <Reference name="CSScriptLibrary" path="../Third-Party"/>
+  <Reference name="System"/>
+  <Reference name="System.Core"/>
+  <Reference name="System.Drawing"/>
+  <Reference name="System.Xml.Linq"/>
+  <Reference name="System.Data.DataSetExtensions"/>
+  <Reference name="System.Data"/>
+  <Reference name="System.Xml"/>
+  <Files>
+    <File buildAction="Compile">Helper Classes/InterpolationPacket.cs</File>
+    <File buildAction="Compile">Modules/Banlist.cs</File>
+    <File buildAction="Compile">Modules/Client/Client.cs</File>
+    <File buildAction="Compile">Program.cs</File>
+    <File buildAction="Compile">Properties/AssemblyInfo.cs</File>
+    <File buildAction="Compile">SS3DServer.cs</File>
+    <File buildAction="Compile">Timing/TimerQueueTimer.cs</File>
+    <File buildAction="None">Timing/TimerQueueTimer_.cs</File>
+    <File buildAction="None">app.config</File>
+    <File buildAction="None" copyToOutput="PreserveNewest">atoms.ss13</File>
+    <File buildAction="None" copyToOutput="PreserveNewest">ServerSettings.cfg</File>
+    <File buildAction="Content" copyToOutput="PreserveNewest" subType="Designer">config.xml</File>
+    <File buildAction="Content" copyToOutput="Always" subType="Designer">CraftingRecipes.xml</File>
+    <File buildAction="Content" copyToOutput="PreserveNewest">emotes.xml</File>
+    <File buildAction="Content" copyToOutput="PreserveNewest" subType="Designer">EntityTemplates/Clothing.xml</File>
+    <File buildAction="Content" copyToOutput="PreserveNewest">EntityTemplates/Containers.xml</File>
+    <File buildAction="Content" copyToOutput="PreserveNewest" subType="Designer">EntityTemplates/Doors.xml</File>
+    <File buildAction="Content" copyToOutput="PreserveNewest">EntityTemplates/GlassWalls.xml</File>
+    <File buildAction="Content" copyToOutput="PreserveNewest" subType="Designer">EntityTemplates/JanitorItems.xml</File>
+    <File buildAction="Content" copyToOutput="PreserveNewest" subType="Designer">EntityTemplates/Lights.xml</File>
+    <File buildAction="Content" copyToOutput="PreserveNewest">EntityTemplates/Lockers.xml</File>
+    <File buildAction="Content" copyToOutput="PreserveNewest">EntityTemplates/MedicalItems.xml</File>
+    <File buildAction="Content" copyToOutput="PreserveNewest" subType="Designer">EntityTemplates/Mobs.xml</File>
+    <File buildAction="Content" copyToOutput="PreserveNewest" subType="Designer">EntityTemplates/Tools.xml</File>
+    <File buildAction="Content" copyToOutput="PreserveNewest" subType="Designer">EntityTemplates/Tables.xml</File>
+    <File buildAction="Content" copyToOutput="PreserveNewest" subType="Designer">EntityTemplates/Wallmounted.xml</File>
+    <File buildAction="Content" copyToOutput="PreserveNewest" subType="Designer">EntityTemplates/Misc.xml</File>
+    <File buildAction="Content" copyToOutput="PreserveNewest" subType="Designer">EntityTemplates/Weapons.xml</File>
+    <File buildAction="Content" copyToOutput="Always">EntityTemplates/Internals.xml</File>
+    <File buildAction="Content" copyToOutput="PreserveNewest" subType="Designer">JobDefinitions.xml</File>
+    <File buildAction="Content" copyToOutput="PreserveNewest">SavedEntities.xml</File>
+  </Files>
+  <Reference name="GameObject"/>
+  <Reference name="Lidgren.Network"/>
+  <Reference name="ServerInterfaces"/>
+  <Reference name="ServerServices"/>
+  <Reference name="ServerGameObject"/>
+  <Reference name="SS13.IoC"/>
+  <Reference name="SS13_Shared"/>
+</Project>

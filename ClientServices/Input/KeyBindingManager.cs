@@ -79,13 +79,15 @@ namespace ClientServices.Input
             XmlNodeList resources = xml.SelectNodes("KeyBindings/Binding");
             _boundKeys = new Dictionary<KeyboardKeys, BoundKeyFunctions>();
             if (resources != null)
+            {
                 foreach (XmlNode node in resources.Cast<XmlNode>().Where(node => node.Attributes != null))
                 {
                     _boundKeys.Add(
-                        (KeyboardKeys) Enum.Parse(typeof (KeyboardKeys), node.Attributes["Key"].Value, false),
+                        (KeyboardKeys)Enum.Parse(typeof(KeyboardKeys), node.Attributes["Key"].Value, false),
                         (BoundKeyFunctions)
-                        Enum.Parse(typeof (BoundKeyFunctions), node.Attributes["Function"].Value, false));
+                        Enum.Parse(typeof(BoundKeyFunctions), node.Attributes["Function"].Value, false));
                 }
+            }
         }
     }
 }

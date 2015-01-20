@@ -1,0 +1,33 @@
+<Project frameworkVersion="v4_0" name="SS13.Graphics" rootNamespace="SS13.Graphics" type="Library" path="SS13.Graphics">
+  <Configuration name="Debug">
+    <Options>
+      <OutputPath>../Bin</OutputPath>
+    </Options>
+  </Configuration>
+  <Configuration name="Release">
+    <Options>
+      <OutputPath>../Bin</OutputPath>
+    </Options>
+  </Configuration>
+  <ReferencePath>../Bin</ReferencePath>
+  <ReferencePath>../Third-Party</ReferencePath>
+  <Reference name="Gorgon" path="../Third-Party"/>
+  <Reference name="System"/>
+  <Reference name="System.Core"/>
+  <Reference name="System.Drawing"/>
+  <Reference name="System.Xml.Linq"/>
+  <Reference name="System.Data.DataSetExtensions"/>
+  <Reference name="Microsoft.CSharp"/>
+  <Reference name="System.Data"/>
+  <Reference name="System.Xml"/>
+  <Files>
+    <File buildAction="Compile">AnimatedSprite.cs</File>
+    <File buildAction="Compile">AnimationCollection.cs</File>
+    <File buildAction="Compile">AnimationInfo.cs</File>
+    <File buildAction="Compile">AnimationState.cs</File>
+    <File buildAction="Compile">Properties/AssemblyInfo.cs</File>
+  </Files>
+  <Reference name="ClientInterfaces"/>
+  <Reference name="SS13.IoC"/>
+  <Reference name="SS13_Shared"/>
+</Project>

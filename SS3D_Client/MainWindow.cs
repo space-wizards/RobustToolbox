@@ -96,7 +96,8 @@ namespace SS13
         /// <param name="e">The <see cref="GorgonLibrary.InputDevices.KeyboardInputEventArgs"/> instance containing the event data.</param>
         private void KeyDownEvent(object sender, KeyboardInputEventArgs e)
         {
-            _stateManager.KeyDown(e);
+            if(_stateManager!=null)
+                _stateManager.KeyDown(e);
 
             switch (e.Key)
             {
@@ -113,7 +114,8 @@ namespace SS13
         /// <param name="e">The <see cref="GorgonLibrary.InputDevices.KeyboardInputEventArgs"/> instance containing the event data.</param>
         private void KeyUpEvent(object sender, KeyboardInputEventArgs e)
         {
-            _stateManager.KeyUp(e);
+            if (_stateManager != null) 
+                _stateManager.KeyUp(e);
         }
 
         /// <summary>
@@ -123,7 +125,8 @@ namespace SS13
         /// <param name="e">The <see cref="GorgonLibrary.InputDevices.MouseInputEventArgs"/> instance containing the event data.</param>
         private void MouseWheelMoveEvent(object sender, MouseInputEventArgs e)
         {
-            _stateManager.MouseWheelMove(e);
+            if (_stateManager != null) 
+                _stateManager.MouseWheelMove(e);
         }
 
         /// <summary>
@@ -133,7 +136,8 @@ namespace SS13
         /// <param name="e">The <see cref="GorgonLibrary.InputDevices.MouseInputEventArgs"/> instance containing the event data.</param>
         private void MouseMoveEvent(object sender, MouseInputEventArgs e)
         {
-            _stateManager.MouseMove(e);
+            if (_stateManager != null) 
+                _stateManager.MouseMove(e);
         }
 
         /// <summary>
@@ -143,7 +147,8 @@ namespace SS13
         /// <param name="e">The <see cref="GorgonLibrary.InputDevices.MouseInputEventArgs"/> instance containing the event data.</param>
         private void MouseDownEvent(object sender, MouseInputEventArgs e)
         {
-            _stateManager.MouseDown(e);
+            if (_stateManager != null) 
+                _stateManager.MouseDown(e);
         }
 
         /// <summary>
@@ -153,7 +158,8 @@ namespace SS13
         /// <param name="e">The <see cref="GorgonLibrary.InputDevices.MouseInputEventArgs"/> instance containing the event data.</param>
         private void MouseUpEvent(object sender, MouseInputEventArgs e)
         {
-            _stateManager.MouseUp(e);
+            if (_stateManager != null) 
+                _stateManager.MouseUp(e);
         }
 
         #endregion

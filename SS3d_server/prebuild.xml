@@ -29,8 +29,9 @@
     <File buildAction="Compile">Timing/TimerQueueTimer.cs</File>
     <File buildAction="None">Timing/TimerQueueTimer_.cs</File>
     <File buildAction="None">app.config</File>
-    <File buildAction="None" copyToOutput="PreserveNewest">atoms.ss13</File>
-    <File buildAction="None" copyToOutput="PreserveNewest">ServerSettings.cfg</File>
+	<File buildAction="Content" copyToOutput="Always">../Third-Party/ClrDump.dll</File>
+    <File buildAction="Content" copyToOutput="PreserveNewest">atoms.ss13</File>
+    <File buildAction="Content" copyToOutput="PreserveNewest">ServerSettings.cfg</File>
     <File buildAction="Content" copyToOutput="PreserveNewest">config.xml</File>
     <File buildAction="Content" copyToOutput="PreserveNewest">CraftingRecipes.xml</File>
     <File buildAction="Content" copyToOutput="PreserveNewest">emotes.xml</File>

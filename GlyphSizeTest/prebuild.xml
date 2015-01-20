@@ -1,0 +1,32 @@
+<Project frameworkVersion="v4_0" name="GlyphSizeTest" rootNamespace="GorgonLibrary.Example" type="Exe" path="GlyphSizeTest">
+  <Configuration name="Debug">
+    <Options>
+      <OutputPath>../Bin</OutputPath>
+    </Options>
+  </Configuration>
+  <Configuration name="Release">
+    <Options>
+      <OutputPath>../Bin</OutputPath>
+    </Options>
+  </Configuration>
+  <ReferencePath>../Bin</ReferencePath>
+  <ReferencePath>../Third-Party</ReferencePath>
+  <Reference name="DialogHelper" path="../Third-Party"/>
+  <Reference name="Gorgon" path="../Third-Party"/>
+  <Reference name="System"/>
+  <Reference name="System.Core"/>
+  <Reference name="System.Drawing"/>
+  <Reference name="System.Windows.Forms"/>
+  <Files>
+    <File buildAction="Compile" subType="Form">MainForm.cs</File>
+    <File buildAction="Compile">MainForm.Designer.cs</File>
+	
+    <File buildAction="Compile">Program.cs</File>
+    <File buildAction="Compile">Properties/AssemblyInfo.cs</File>
+    <File buildAction="EmbeddedResource" subType="Designer">Properties/Resources.resx</File>
+    <File buildAction="Compile" subType="Designer">Properties/Resources.Designer.cs</File>
+	
+    <File buildAction="Content">GorIcon.ico</File>
+    <File buildAction="None" copyToOutput="PreserveNewest">CALIBRI.TTF</File>
+  </Files>
+</Project>

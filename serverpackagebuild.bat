@@ -7,9 +7,8 @@ set dir=ss3d-server-%dt%
 mkdir %dir%
 mkdir %dir%\bin
 mkdir %dir%\bin\server
-xcopy /E SS3d_server\bin\Release\* %dir%\bin\server
+xcopy /E bin\* %dir%\bin\server
 cd %dir%
-FOR /F "tokens=*" %%G IN ('DIR /B /AD /S *.svn*') DO RMDIR /S /Q "%%G"
 cd ..
 %zip% -tzip a %dir%.zip %dir%
 rd /S /Q %dir%

@@ -48,8 +48,13 @@
     <File buildAction="Content" copyToOutput="PreserveNewest">config.xml</File>
     <File buildAction="EmbeddedResource">Properties/Resources.resx</File>
   </Files>
+  <Reference name="ClientGameObject" localCopy="true"/>
   <Reference name="ClientInterfaces" localCopy="true"/>
   <Reference name="ClientServices" localCopy="true"/>
+  <Reference name="ClientWindow" localCopy="true"/>
+  <Reference name="GameObject" localCopy="true"/>
+  <Reference name="Lidgren.Network" localCopy="true"/>
+  <Reference name="SS13.Graphics" localCopy="true"/>
   <Reference name="SS13.IoC" localCopy="true"/>
   <Reference name="SS13_Shared" localCopy="true"/>
 </Project>

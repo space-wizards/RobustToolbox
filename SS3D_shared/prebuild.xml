@@ -1,10 +1,10 @@
 <Project frameworkVersion="v4_0" name="SS13_Shared" rootNamespace="SS13_Shared" type="Library" path="SS3D_shared">
-  <Configuration name="Debug">
+  <Configuration name="Debug" platform="x86">
     <Options>
       <OutputPath>../Bin</OutputPath>
     </Options>
   </Configuration>
-  <Configuration name="Release">
+  <Configuration name="Release" platform="x86">
     <Options>
       <OutputPath>../Bin</OutputPath>
     </Options>
@@ -44,6 +44,7 @@
     <File buildAction="Compile">GO/Component/Collidable/CollidableComponentState.cs</File>
     <File buildAction="Compile">GO/Component/Damageable/DamageableComponentState.cs</File>
     <File buildAction="Compile">GO/Component/Damageable/Health/HealthComponentState.cs</File>
+    <File buildAction="Compile">GO/Component/Hitbox/HitboxComponentState.cs</File>
     <File buildAction="Compile">GO/Component/Damageable/Health/LocationalHealth/HumanHealthComponentState.cs</File>
     <File buildAction="Compile">GO/Component/Damageable/Health/LocationalHealth/LocationHealthState.cs</File>
     <File buildAction="Compile">GO/Component/Direction/DirectionComponentState.cs</File>

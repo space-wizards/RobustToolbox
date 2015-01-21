@@ -10,11 +10,11 @@ namespace SS13_Shared.GO.Component.Transform
         public float Y;
 
         public TransformComponentState(float x, float y, bool forceUpdate)
+            : base(ComponentFamily.Transform)
         {
             X = x;
             Y = y;
             ForceUpdate = forceUpdate;
-            Family = ComponentFamily.Transform;
         }
     }
 }

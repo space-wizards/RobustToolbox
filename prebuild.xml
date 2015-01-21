@@ -10,7 +10,6 @@
 				<WarningLevel>4</WarningLevel>
 				<WarningsAsErrors>false</WarningsAsErrors>
 				<SuppressWarnings/>
-				<OutputPath>bin</OutputPath>
 				<DebugInformation>true</DebugInformation>
 				<IncrementalBuild>true</IncrementalBuild>
 				<NoStdLib>false</NoStdLib>
@@ -25,7 +24,6 @@
 				<WarningLevel>4</WarningLevel>
 				<WarningsAsErrors>false</WarningsAsErrors>
 				<SuppressWarnings/>
-				<OutputPath>bin</OutputPath>
 				<DebugInformation>false</DebugInformation>
 				<IncrementalBuild>true</IncrementalBuild>
 				<NoStdLib>false</NoStdLib>

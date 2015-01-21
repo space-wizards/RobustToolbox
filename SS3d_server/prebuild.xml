@@ -1,10 +1,10 @@
 <Project frameworkVersion="v4_0" name="SS13_Server" rootNamespace="SS13_Server" type="Exe" path="SS3d_server">
-  <Configuration name="Debug">
+  <Configuration name="Debug" platform="x86">
     <Options>
       <OutputPath>../Bin/Server</OutputPath>
     </Options>
   </Configuration>
-  <Configuration name="Release">
+  <Configuration name="Release" platform="x86">
     <Options>
       <OutputPath>../Bin/Server</OutputPath>
     </Options>

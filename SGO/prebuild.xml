@@ -1,10 +1,10 @@
 <Project frameworkVersion="v4_0" name="ServerGameObject" rootNamespace="SGO" type="Library" path="SGO">
-  <Configuration name="Debug">
+  <Configuration name="Debug" platform="x86">
     <Options>
       <OutputPath>../Bin</OutputPath>
     </Options>
   </Configuration>
-  <Configuration name="Release">
+  <Configuration name="Release" platform="x86">
     <Options>
       <OutputPath>../Bin</OutputPath>
     </Options>
@@ -26,6 +26,7 @@
     <File buildAction="Compile">Component/EntityStats/EntityStatsCompS.cs</File>
     <File buildAction="Compile">Component/Equipment/NewEquipmentComponent.cs</File>
     <File buildAction="Compile">Component/Hands/NewHandsComponent.cs</File>
+    <File buildAction="Compile">Component/Hitbox/HitboxComponent.cs</File>
     <File buildAction="Compile">Component/IInventoryContainer.cs</File>
     <File buildAction="Compile">Component/Inventory/NewInventory.cs</File>
     <File buildAction="Compile">Component/Inventory/Inventory.cs</File>

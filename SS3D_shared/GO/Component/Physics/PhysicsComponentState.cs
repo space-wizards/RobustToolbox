@@ -8,9 +8,9 @@ namespace SS13_Shared.GO.Component.Physics
         public float Mass;
 
         public PhysicsComponentState(float mass)
+            : base(ComponentFamily.Physics)
         {
             Mass = mass;
-            Family = ComponentFamily.Physics;
         }
     }
 }

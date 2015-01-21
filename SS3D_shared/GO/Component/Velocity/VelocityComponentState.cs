@@ -9,10 +9,10 @@ namespace SS13_Shared.GO.Component.Velocity
         public float VelocityY;
 
         public VelocityComponentState(float velx, float vely)
+            : base(ComponentFamily.Velocity)
         {
             VelocityX = velx;
             VelocityY = vely;
-            Family = ComponentFamily.Velocity;
         }
     }
 }

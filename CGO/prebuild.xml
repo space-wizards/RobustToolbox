@@ -1,10 +1,10 @@
 <Project frameworkVersion="v4_0" name="ClientGameObject" rootNamespace="CGO" type="Library" path="CGO">
-  <Configuration name="Debug">
+  <Configuration name="Debug" platform="x86">
     <Options>
       <OutputPath>../Bin</OutputPath>
     </Options>
   </Configuration>
-  <Configuration name="Release">
+  <Configuration name="Release" platform="x86">
     <Options>
       <OutputPath>../Bin</OutputPath>
     </Options>
@@ -36,6 +36,7 @@
     <File buildAction="Compile">Component/Equippable/EquippableComponent.cs</File>
     <File buildAction="Compile">Component/Hands/NewHandsComponent.cs</File>
     <File buildAction="Compile">Component/Hands/HumanHandsComponent.cs</File>
+    <File buildAction="Compile">Component/Hitbox/HitboxComponent.cs</File>
     <File buildAction="Compile">Component/Damageable/Health/HealthComponent.cs</File>
     <File buildAction="Compile">Component/Icon/IconComponent.cs</File>
     <File buildAction="Compile">Component/Input/ContextMenuComponent.cs</File>

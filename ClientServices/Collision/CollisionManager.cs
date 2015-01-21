@@ -106,10 +106,10 @@ namespace ClientServices.Collision
 
             PointF[] points =
                 {
-                    new PointF(collider.OffsetAABB.Left, collider.OffsetAABB.Top),
-                    new PointF(collider.OffsetAABB.Right, collider.OffsetAABB.Top),
-                    new PointF(collider.OffsetAABB.Right, collider.OffsetAABB.Bottom),
-                    new PointF(collider.OffsetAABB.Left, collider.OffsetAABB.Bottom)
+                    new PointF(ColliderAABB.Left, ColliderAABB.Top),
+                    new PointF(ColliderAABB.Right, ColliderAABB.Top),
+                    new PointF(ColliderAABB.Right, ColliderAABB.Bottom),
+                    new PointF(ColliderAABB.Left, ColliderAABB.Bottom)
                 };
 
             //Get the buckets that correspond to the collider's points.
@@ -128,7 +128,7 @@ namespace ClientServices.Collision
             //try all of the AABBs against the target rect.
             bool collided = false;
             foreach (
-                CollidableAABB aabb in aabBs.Where(aabb => aabb.Collidable.AABB.IntersectsWith(collider.OffsetAABB)))
+                CollidableAABB aabb in aabBs.Where(aabb => aabb.Collidable.AABB.IntersectsWith(ColliderAABB)))
             {
                 if (aabb.IsHardCollider) //If the collider is supposed to prevent movement
                 {

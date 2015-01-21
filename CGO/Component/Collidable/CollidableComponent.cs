@@ -19,11 +19,12 @@ namespace CGO
         /// <summary>
         /// X - Top | Y - Right | Z - Bottom | W - Left
         /// </summary>
-        private Vector4D tweakAABB = Vector4D.Zero;
+        private Vector4D tweakAABB;
 
         public CollidableComponent()
         {
             Family = ComponentFamily.Collidable;
+            tweakAABB = new Vector4D(0,0,0,0);
         }
 
         public override Type StateType

@@ -61,9 +61,6 @@ namespace ClientServices.Player
             ControlledEntity.AddComponent(ComponentFamily.Collider,
                                           IoCManager.Resolve<IEntityManagerContainer>().EntityManager.ComponentFactory.
                                               GetComponent("ColliderComponent"));
-            ControlledEntity.GetComponent(ComponentFamily.Collider).SetParameter(new ComponentParameter("TweakAABB",
-                                                                                                        new Vector4D(
-                                                                                                            39, 0, 0, 0)));
             ControlledEntity.GetComponent<TransformComponent>(ComponentFamily.Transform).OnMove += PlayerEntityMoved;
         }
 

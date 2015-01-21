@@ -27,6 +27,7 @@
       <Component name="PlayerActionComp"></Component>
       <Component name="EntityStatsComp"></Component>
       <Component name="ParticleSystemComponent"></Component>
+      <Component name="HitboxComponent"></Component>
     </Components>
   </EntityTemplate>
 </EntityTemplates>

@@ -40,7 +40,8 @@
         Direction,
         SVars,
         Particles,
-        Icon
+        Icon,
+        Hitbox
     }
 
     public enum ItemComponentNetMessage

@@ -50,7 +50,7 @@ namespace SS13_Server.Timing
             IntPtr timer,
             IntPtr completionEvent);
     }
-    public class TimerQueue : IDisposable
+    public class TimerQueue : IDisposable,IMainLoopTimer
     {
         public IntPtr Handle { get; private set; }
         public static TimerQueue Default { get; private set; }
@@ -133,6 +133,10 @@ namespace SS13_Server.Timing
                 }
                 Disposed = true;
             }
+        }
+        public Object CreateMainLoopTimer(MainServerLoop mainLoop, uint period)
+        {
+            return CreateTimer((s) => {mainLoop();}, null, 0, period);
         }
     }
     public class TimerQueueTimer : IDisposable

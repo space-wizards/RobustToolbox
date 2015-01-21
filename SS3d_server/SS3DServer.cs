@@ -35,7 +35,7 @@ using ServerServices.Round;
 using EntityManager = SGO.EntityManager;
 using IEntityManager = ServerInterfaces.GOC.IEntityManager;
 using SS13_Shared.Utility;
-using TimerQueueTimer = SS13_Server.Timing.TimerQueueTimer;
+using MainLoopTimer = SS13_Server.Timing.MainLoopTimer;
 namespace SS13_Server
 {
     public class SS13Server : ISS13Server
@@ -55,7 +55,7 @@ namespace SS13_Server
         private DateTime _lastStateTime = DateTime.Now;
         private uint _oldestAckedState;
         private DateTime _startAt;
-        private TimerQueueTimer mainLoopTimer;
+        private Object mainLoopTimer; //TODO: make a pretty interface for this
         private static readonly AutoResetEvent are = new AutoResetEvent(true);
         public Stopwatch stopWatch = new Stopwatch();
         private uint basePeriod;
@@ -166,12 +166,12 @@ namespace SS13_Server
             basePeriod = 1;
             period = basePeriod;
 
-            var timerQueue = new TimerQueue();
+            var timerObject = new MainLoopTimer();
             stopWatch.Start();
-            mainLoopTimer = timerQueue.CreateTimer(s =>
+            mainLoopTimer = timerObject.mainLoopTimer.CreateMainLoopTimer(() =>
                                                        {
                                                        RunLoop();
-                                                       }, null, 0, period);
+                                                       }, period);
             
             while (Active)
             {

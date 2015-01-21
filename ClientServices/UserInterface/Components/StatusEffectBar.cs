@@ -48,8 +48,11 @@ namespace ClientServices.UserInterface.Components
             {
                 foreach (StatusEffect effect in assigned.Effects)
                 {
-                    var newButt = new StatusEffectButton(effect, _resourceManager);
-                    buttons.Add(newButt);
+                    if (effect.isVisible == true)
+                    {
+                        var newButt = new StatusEffectButton(effect, _resourceManager);
+                        buttons.Add(newButt);
+                    }
                 }
             }
         }

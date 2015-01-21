@@ -16,6 +16,7 @@ namespace CGO
         public StatusEffectFamily family = StatusEffectFamily.None;
         public String icon;
         public Boolean isDebuff = true;
+        public Boolean isVisible = true;
         public String name = "Effect";
 
         public StatusEffect(uint _uid, Entity _affected)

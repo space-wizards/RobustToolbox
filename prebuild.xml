@@ -31,6 +31,23 @@
 		</Configuration>
 		
 		<!-- All the projects are in prebuild.xml files in each project directory. -->
-		<?include file="./*/prebuild.xml" ?>
+		<!-- BUILD ORDER CALCULATED BY Tools\calculate-buildorder.py -->
+		<?include file="./Lidgren.Network/prebuild.xml" ?>
+		<?include file="./SS3D_shared/prebuild.xml" ?>      <!-- Prerequisites: Lidgren.Network -->
+		<?include file="./ClientWindow/prebuild.xml" ?>
+		<?include file="./MessagingProfiler/prebuild.xml" ?><!-- Prerequisites: SS13_Shared -->
+		<?include file="./GameObject/prebuild.xml" ?>       <!-- Prerequisites: Lidgren.Network, SS13_Shared -->
+		<?include file="./ServerInterfaces/prebuild.xml" ?> <!-- Prerequisites: GameObject, Lidgren.Network, SS13_Shared -->
+		<?include file="./SS13.IoC/prebuild.xml" ?>         <!-- Prerequisites: ServerInterfaces -->
+		<?include file="./ClientInterfaces/prebuild.xml" ?> <!-- Prerequisites: GameObject, Lidgren.Network, SS13_Shared -->
+		<?include file="./ServerServices/prebuild.xml" ?>   <!-- Prerequisites: GameObject, Lidgren.Network, SS13.IoC, SS13_Shared, ServerInterfaces -->
+		<?include file="./SS13.Graphics/prebuild.xml" ?>    <!-- Prerequisites: ClientInterfaces, SS13.IoC, SS13_Shared -->
+		<?include file="./CGO/prebuild.xml" ?>              <!-- Prerequisites: ClientInterfaces, ClientWindow, GameObject, Lidgren.Network, SS13.Graphics, SS13.IoC, SS13_Shared -->
+		<?include file="./SGO/prebuild.xml" ?>              <!-- Prerequisites: GameObject, Lidgren.Network, SS13.IoC, SS13_Shared, ServerInterfaces, ServerServices -->
+		<?include file="./ClientServices/prebuild.xml" ?>   <!-- Prerequisites: ClientGameObject, ClientInterfaces, ClientWindow, GameObject, Lidgren.Network, SS13.Graphics, SS13.IoC, SS13_Shared -->
+		<?include file="./ParticleEditor/prebuild.xml" ?>   <!-- Prerequisites: ClientGameObject, ClientInterfaces, ClientServices, GameObject, SS13.IoC, SS13_Shared -->
+		<?include file="./SS3d_server/prebuild.xml" ?>      <!-- Prerequisites: GameObject, Lidgren.Network, SS13.IoC, SS13_Shared, ServerGameObject, ServerInterfaces, ServerServices -->
+		<?include file="./SS3D_Client/prebuild.xml" ?>      <!-- Prerequisites: ClientGameObject, ClientInterfaces, ClientServices, ClientWindow, GameObject, Lidgren.Network, SS13.Graphics, SS13.IoC, SS13_Shared -->
+
 	</Solution>
 </Prebuild>

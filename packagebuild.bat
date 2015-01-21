@@ -7,14 +7,13 @@ set dir=ss3d-%dt%
 mkdir %dir%
 mkdir %dir%\bin
 mkdir %dir%\bin\client
-mkdir %dir%\bin\client\client
 mkdir %dir%\bin\server
 mkdir %dir%\Resources
 copy Resources\ResourcePack.zip %dir%\Resources
 copy Buildfiles\* %dir%
 
-xcopy /E SS3D_Client\bin\Release\* %dir%\bin\client\client
-xcopy /E SS3d_server\bin\Release\* %dir%\bin\server
+xcopy /E SS3D_Client\bin\* %dir%\bin\client
+xcopy /E SS3d_server\bin\* %dir%\bin\server
 cd %dir%
 FOR /F "tokens=*" %%G IN ('DIR /B /AD /S *.svn*') DO RMDIR /S /Q "%%G"
 cd ..

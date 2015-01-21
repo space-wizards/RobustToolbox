@@ -8,9 +8,9 @@ namespace SS13_Shared.GO.Component.Direction
         public SS13_Shared.Direction Direction;
 
         public DirectionComponentState(SS13_Shared.Direction dir)
+            :base(ComponentFamily.Direction)
         {
             Direction = dir;
-            Family = ComponentFamily.Direction;
         }
     }
 }

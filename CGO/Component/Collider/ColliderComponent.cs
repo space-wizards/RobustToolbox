@@ -15,8 +15,14 @@ namespace CGO
         {
             get
             {
+                if (Owner.HasComponent(ComponentFamily.Hitbox))
+                {
+                    return Owner.GetComponent<HitboxComponent>(ComponentFamily.Hitbox).AABB;
+                }
                 if (Owner.HasComponent(ComponentFamily.Renderable))
+                {
                     return Owner.GetComponent<IRenderableComponent>(ComponentFamily.Renderable).AverageAABB;
+                }
                 return RectangleF.Empty;
             }
         }
@@ -24,11 +30,12 @@ namespace CGO
         /// <summary>
         /// X - Top | Y - Right | Z - Bottom | W - Left
         /// </summary>
-        private Vector4D tweakAABB = Vector4D.Zero;
+        private Vector4D tweakAABB;
 
         public ColliderComponent()
         {
             Family = ComponentFamily.Collider;
+            tweakAABB = new Vector4D(0, 0, 0, 0);
         }
 
         private Vector4D TweakAABB
@@ -59,24 +66,6 @@ namespace CGO
             }
         }
 
-        public override ComponentReplyMessage RecieveMessage(object sender, ComponentMessageType type,
-                                                             params object[] list)
-        {
-            ComponentReplyMessage reply = base.RecieveMessage(sender, type, list);
-
-            if (sender == this) //Don't listen to our own messages!
-                return ComponentReplyMessage.Empty;
-
-            switch (type)
-            {
-                case ComponentMessageType.CheckCollision:
-                    reply = list.Any() ? CheckCollision((bool) list[0]) : CheckCollision();
-                    break;
-            }
-
-            return reply;
-        }
-
         public override void SetParameter(ComponentParameter parameter)
         {
             base.SetParameter(parameter);
@@ -87,14 +76,6 @@ namespace CGO
                     TweakAABB = parameter.GetValue<Vector4D>();
                     break;
             }
-        }
-
-        private ComponentReplyMessage CheckCollision(bool SuppressBump = false)
-        {
-            bool isColliding = false;
-            var collisionManager = IoCManager.Resolve<ICollisionManager>();
-            isColliding = collisionManager.TryCollide(Owner);
-            return new ComponentReplyMessage(ComponentMessageType.CollisionStatus, isColliding);
         }
 
         public bool TryCollision(Vector2D offset, bool bump = false)

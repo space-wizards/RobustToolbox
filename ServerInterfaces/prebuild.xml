@@ -1,10 +1,10 @@
 <Project frameworkVersion="v4_0" name="ServerInterfaces" rootNamespace="ServerInterfaces" type="Library" path="ServerInterfaces">
-  <Configuration name="Debug">
+  <Configuration name="Debug" platform="x86">
     <Options>
       <OutputPath>../Bin</OutputPath>
     </Options>
   </Configuration>
-  <Configuration name="Release">
+  <Configuration name="Release" platform="x86">
     <Options>
       <OutputPath>../Bin</OutputPath>
     </Options>

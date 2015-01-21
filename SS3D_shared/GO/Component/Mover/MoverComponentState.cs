@@ -12,21 +12,21 @@ namespace SS13_Shared.GO.Component.Mover
         public int? Master;
 
         public MoverComponentState(float x, float y, float velx, float vely)
+            :base(ComponentFamily.Mover)
         {
             X = x;
             Y = y;
             VelocityX = velx;
             VelocityY = vely;
-            Family = ComponentFamily.Mover;
         }
 
         public MoverComponentState(float x, float y, float velx, float vely, int master)
+            : base(ComponentFamily.Mover)
         {
             X = x;
             Y = y;
             VelocityX = velx;
             VelocityY = vely;
-            Family = ComponentFamily.Mover;
             Master = master;
         }
     }

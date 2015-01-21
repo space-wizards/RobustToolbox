@@ -9,7 +9,7 @@ namespace SS13_Shared.GO.Component.Equippable
         public int? Holder;
 
         public EquippableComponentState(EquipmentSlot wearLocation, int? holder)
-            : base()
+            : base(ComponentFamily.Equippable)
         {
             WearLocation = wearLocation;
             Holder = holder;

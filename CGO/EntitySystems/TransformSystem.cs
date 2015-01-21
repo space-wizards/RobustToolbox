@@ -30,6 +30,7 @@ namespace CGO.EntitySystems
             var entities = EntityManager.GetEntities(EntityQuery);
             //Interp constant -- determines how far back in time to interpolate from
             var interpolation = IoCManager.Resolve<IConfigurationManager>().GetInterpolation();
+            Vector2D newPosition;
             foreach (var entity in entities)
             {
                 //Get transform component
@@ -40,7 +41,6 @@ namespace CGO.EntitySystems
 
                 //Pretend that the current point in time is actually 100 or more milliseconds in the past depending on the interp constant
                 var currentTime = IoCManager.Resolve<IGameTimer>().CurrentTime - interpolation;
-                Vector2D newPosition;
 
                 //Limit to how far a human can move
                 var humanMoveLimit = 6 * interpolation * PlayerInputMoverComponent.FastMoveSpeed;

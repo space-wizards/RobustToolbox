@@ -1,10 +1,10 @@
 <Project frameworkVersion="v4_0" name="SS13.IoC" rootNamespace="SS13.IoC" type="Library" path="SS13.IoC">
-  <Configuration name="Debug">
+  <Configuration name="Debug" platform="x86">
     <Options>
       <OutputPath>../Bin</OutputPath>
     </Options>
   </Configuration>
-  <Configuration name="Release">
+  <Configuration name="Release" platform="x86">
     <Options>
       <OutputPath>../Bin</OutputPath>
     </Options>

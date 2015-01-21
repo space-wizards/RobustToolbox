@@ -36,6 +36,12 @@
         </ExtendedParameters>
       </Component>
       <Component name="EntityStatsComp"></Component>
+      <Component name="HitboxComponent">
+        <Parameters>
+          <Parameter name="SizeX" type="float" value="25" />
+          <Parameter name="SizeY" type="float" value="25" />
+        </Parameters>
+      </Component>
     </Components>
   </EntityTemplate>
 </EntityTemplates>

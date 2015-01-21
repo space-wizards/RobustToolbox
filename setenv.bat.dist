@@ -1,3 +1,8 @@
+REM @echo off
 SET ARC_HOME=E:\dev\arcanist\arcanist
-call arc.bat > nul 2>&1
-if %ERRORLEVEL%==9009 SET PATH=%PATH%;%ARC_HOME%\bin
+CMD /C call arc.bat > nul 2>&1
+if ERRORLEVEL 1 GOTO path
+GOTO end
+:path
+SET PATH=%PATH%;%ARC_HOME%\bin
+:end

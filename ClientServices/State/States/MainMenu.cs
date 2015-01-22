@@ -20,12 +20,12 @@ namespace ClientServices.State.States
         private readonly List<FloatingDecoration> DecoFloats = new List<FloatingDecoration>();
 
         private readonly Sprite _background;
-        private readonly ImageButton _buttConnect;
-        private readonly ImageButton _buttExit;
-        private readonly ImageButton _buttOptions;
-        private readonly Textbox _connectTextbox;
+        private readonly ImageButton _btnConnect;
+        private readonly ImageButton _btnExit;
+        private readonly ImageButton _btnOptions;
+        private readonly Textbox _txtConnect;
         private readonly Label _lblVersion;
-        private readonly SimpleImage _titleImage;
+        private readonly SimpleImage _imgTitle;
 
         private DateTime _connectTime;
         private bool _isConnecting;
@@ -42,29 +42,29 @@ namespace ClientServices.State.States
             _background = ResourceManager.GetSprite("mainbg_filler");
             _background.Smoothing = Smoothing.Smooth;
 
-            _buttConnect = new ImageButton
+            _btnConnect = new ImageButton
                                {
                                    ImageNormal = "connect_norm",
                                    ImageHover = "connect_hover"
                                };
-            _buttConnect.Clicked += _buttConnect_Clicked;
+            _btnConnect.Clicked += _buttConnect_Clicked;
 
-            _buttOptions = new ImageButton
+            _btnOptions = new ImageButton
                                {
                                    ImageNormal = "options_norm",
                                    ImageHover = "options_hover"
                                };
-            _buttOptions.Clicked += _buttOptions_Clicked;
+            _btnOptions.Clicked += _buttOptions_Clicked;
 
-            _buttExit = new ImageButton
+            _btnExit = new ImageButton
                             {
                                 ImageNormal = "exit_norm",
                                 ImageHover = "exit_hover"
                             };
-            _buttExit.Clicked += _buttExit_Clicked;
+            _btnExit.Clicked += _buttExit_Clicked;
 
-            _connectTextbox = new Textbox(100, ResourceManager) {Text = ConfigurationManager.GetServerAddress()};
-            _connectTextbox.OnSubmit += ConnectTextboxOnSubmit;
+            _txtConnect = new Textbox(100, ResourceManager) {Text = ConfigurationManager.GetServerAddress()};
+            _txtConnect.OnSubmit += ConnectTextboxOnSubmit;
 
             Assembly assembly = Assembly.GetExecutingAssembly();
             FileVersionInfo fvi = FileVersionInfo.GetVersionInfo(assembly.Location);
@@ -74,22 +74,22 @@ namespace ClientServices.State.States
             _lblVersion.Position = new Point(Gorgon.Screen.Width - _lblVersion.ClientArea.Width - 3,
                                              Gorgon.Screen.Height - _lblVersion.ClientArea.Height - 3);
 
-            _titleImage = new SimpleImage
+            _imgTitle = new SimpleImage
                               {
                                   Sprite = "SpaceStationLogoColor",
                                   Position = new Point(Gorgon.Screen.Width - 550, 100)
                               };
 
 			_lblVersion.Update(0);
-			_titleImage.Update(0);
-			_connectTextbox.Position = new Point(_titleImage.ClientArea.Left + 40, _titleImage.ClientArea.Bottom + 50);
-			_connectTextbox.Update(0);
-			_buttConnect.Position = new Point(_connectTextbox.Position.X, _connectTextbox.ClientArea.Bottom + 20);
-			_buttConnect.Update(0);
-			_buttOptions.Position = new Point(_buttConnect.Position.X, _buttConnect.ClientArea.Bottom + 20);
-			_buttOptions.Update(0);
-			_buttExit.Position = new Point(_buttOptions.Position.X, _buttOptions.ClientArea.Bottom + 20);
-			_buttExit.Update(0);
+			_imgTitle.Update(0);
+			_txtConnect.Position = new Point(_imgTitle.ClientArea.Left + 40, _imgTitle.ClientArea.Bottom + 50);
+			_txtConnect.Update(0);
+			_btnConnect.Position = new Point(_txtConnect.Position.X, _txtConnect.ClientArea.Bottom + 20);
+			_btnConnect.Update(0);
+			_btnOptions.Position = new Point(_btnConnect.Position.X, _btnConnect.ClientArea.Bottom + 20);
+			_btnOptions.Update(0);
+			_btnExit.Position = new Point(_btnOptions.Position.X, _btnOptions.ClientArea.Bottom + 20);
+			_btnExit.Update(0);
         }
 
         #region IState Members
@@ -157,7 +157,7 @@ namespace ClientServices.State.States
         private void _buttConnect_Clicked(ImageButton sender)
         {
             if (!_isConnecting)
-                StartConnect(_connectTextbox.Text);
+                StartConnect(_txtConnect.Text);
             else
             {
                 _isConnecting = false;
@@ -265,11 +265,11 @@ namespace ClientServices.State.States
             foreach (FloatingDecoration floatingDeco in DecoFloats)
                 UserInterfaceManager.AddComponent(floatingDeco);
 
-            UserInterfaceManager.AddComponent(_connectTextbox);
-            UserInterfaceManager.AddComponent(_buttConnect);
-            UserInterfaceManager.AddComponent(_buttOptions);
-            UserInterfaceManager.AddComponent(_buttExit);
-            UserInterfaceManager.AddComponent(_titleImage);
+            UserInterfaceManager.AddComponent(_txtConnect);
+            UserInterfaceManager.AddComponent(_btnConnect);
+            UserInterfaceManager.AddComponent(_btnOptions);
+            UserInterfaceManager.AddComponent(_btnExit);
+            UserInterfaceManager.AddComponent(_imgTitle);
             UserInterfaceManager.AddComponent(_lblVersion);
         }
 
@@ -277,11 +277,11 @@ namespace ClientServices.State.States
         {
             NetworkManager.Connected -= OnConnected;
 
-            UserInterfaceManager.RemoveComponent(_connectTextbox);
-            UserInterfaceManager.RemoveComponent(_buttConnect);
-            UserInterfaceManager.RemoveComponent(_buttOptions);
-            UserInterfaceManager.RemoveComponent(_buttExit);
-            UserInterfaceManager.RemoveComponent(_titleImage);
+            UserInterfaceManager.RemoveComponent(_txtConnect);
+            UserInterfaceManager.RemoveComponent(_btnConnect);
+            UserInterfaceManager.RemoveComponent(_btnOptions);
+            UserInterfaceManager.RemoveComponent(_btnExit);
+            UserInterfaceManager.RemoveComponent(_imgTitle);
             UserInterfaceManager.RemoveComponent(_lblVersion);
 
             foreach (FloatingDecoration floatingDeco in DecoFloats)

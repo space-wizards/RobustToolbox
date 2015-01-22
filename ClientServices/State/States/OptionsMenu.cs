@@ -16,17 +16,17 @@ namespace ClientServices.State.States
     {
         #region Fields
 
-        private readonly Label _applybtt;
+        private readonly Label _btnApply;
         private readonly Sprite _background;
 
-        private readonly Checkbox _chkfullscreen;
-        private readonly Checkbox _chkvsync;
+        private readonly Checkbox _chkFullscreen;
+        private readonly Checkbox _chkVsync;
 
-        private readonly Label _lblfullscreen;
-        private readonly Label _lblvsync;
-        private readonly Label _mainmenubtt;
-        private readonly Listbox _reslistbox;
-        private readonly Sprite _ticketbg;
+        private readonly Label _lblFullscreen;
+        private readonly Label _lblVsync;
+        private readonly Label _btnMainMenu;
+        private readonly Listbox _lstResolution;
+        private readonly Sprite _ticketBg;
 
         private readonly Dictionary<string, VideoMode> vmList = new Dictionary<string, VideoMode>();
 
@@ -42,20 +42,20 @@ namespace ClientServices.State.States
             _background = ResourceManager.GetSprite("mainbg");
             _background.Smoothing = Smoothing.Smooth;
 
-            _lblfullscreen = new Label("Fullscreen", "CALIBRI", ResourceManager);
+            _lblFullscreen = new Label("Fullscreen", "CALIBRI", ResourceManager);
 
-            _chkfullscreen = new Checkbox(ResourceManager);
-            _chkfullscreen.Value = ConfigurationManager.GetFullscreen();
-            _chkfullscreen.ValueChanged += _chkfullscreen_ValueChanged;
+            _chkFullscreen = new Checkbox(ResourceManager);
+            _chkFullscreen.Value = ConfigurationManager.GetFullscreen();
+            _chkFullscreen.ValueChanged += _chkfullscreen_ValueChanged;
 
-            _lblvsync = new Label("Vsync", "CALIBRI", ResourceManager);
+            _lblVsync = new Label("Vsync", "CALIBRI", ResourceManager);
 
-            _chkvsync = new Checkbox(ResourceManager);
-            _chkvsync.Value = ConfigurationManager.GetVsync();
-            _chkvsync.ValueChanged += _chkvsync_ValueChanged;
+            _chkVsync = new Checkbox(ResourceManager);
+            _chkVsync.Value = ConfigurationManager.GetVsync();
+            _chkVsync.ValueChanged += _chkvsync_ValueChanged;
 
-            _reslistbox = new Listbox(250, 150, ResourceManager);
-            _reslistbox.ItemSelected += _reslistbox_ItemSelected;
+            _lstResolution = new Listbox(250, 150, ResourceManager);
+            _lstResolution.ItemSelected += _reslistbox_ItemSelected;
 
             IOrderedEnumerable<VideoMode> modes = from v in Gorgon.CurrentDriver.VideoModes
                                                   where
@@ -74,7 +74,7 @@ namespace ClientServices.State.States
                 if (!vmList.ContainsKey(GetVmString(vm)))
                 {
                     vmList.Add(GetVmString(vm), vm);
-                    _reslistbox.AddItem(GetVmString(vm));
+                    _lstResolution.AddItem(GetVmString(vm));
                 }
             }
 
@@ -94,7 +94,7 @@ namespace ClientServices.State.States
                         (Gorgon.Screen.Windowed
                              ? Gorgon.DesktopVideoMode.RefreshRate
                              : Gorgon.CurrentVideoMode.RefreshRate));
-                _reslistbox.SelectItem(curr.Key, false);
+                _lstResolution.SelectItem(curr.Key, false);
             }
             else
             {
@@ -104,18 +104,41 @@ namespace ClientServices.State.States
                         x =>
                         x.Value.Width == Gorgon.CurrentVideoMode.Width &&
                         x.Value.Height == Gorgon.CurrentVideoMode.Height);
-                _reslistbox.SelectItem(curr.Key, false);
+                _lstResolution.SelectItem(curr.Key, false);
             }
 
-            _ticketbg = ResourceManager.GetSprite("ticketoverlay");
+            _ticketBg = ResourceManager.GetSprite("ticketoverlay");
 
-            _mainmenubtt = new Label("Main Menu", "CALIBRI", ResourceManager);
-            _mainmenubtt.DrawBorder = true;
-            _mainmenubtt.Clicked += _mainmenubtt_Clicked;
+            _btnMainMenu = new Label("Main Menu", "CALIBRI", ResourceManager);
+            _btnMainMenu.DrawBorder = true;
+            _btnMainMenu.Clicked += _mainmenubtt_Clicked;
 
-            _applybtt = new Label("Apply", "CALIBRI", ResourceManager);
-            _applybtt.DrawBorder = true;
-            _applybtt.Clicked += _applybtt_Clicked;
+            _btnApply = new Label("Apply", "CALIBRI", ResourceManager);
+            _btnApply.DrawBorder = true;
+            _btnApply.Clicked += _applybtt_Clicked;
+
+
+			_lstResolution.Position = new Point(45, (int)(Gorgon.CurrentClippingViewport.Height / 2.5f));
+			_lstResolution.Update(0);
+			_chkFullscreen.Position = new Point(_lstResolution.Position.X,
+												_lstResolution.Position.Y + _lstResolution.ClientArea.Height + 10);
+			_chkFullscreen.Update(0);
+			_chkVsync.Position = new Point(_chkFullscreen.Position.X,
+										   _chkFullscreen.Position.Y + _chkFullscreen.ClientArea.Height + 10);
+			_chkVsync.Update(0);
+			_lblFullscreen.Position = new Point(_chkFullscreen.Position.X + _chkFullscreen.ClientArea.Width + 3,
+												_chkFullscreen.Position.Y + (int)(_chkFullscreen.ClientArea.Height / 2f) -
+												(int)(_lblFullscreen.ClientArea.Height / 2f));
+			_lblFullscreen.Update(0);
+			_lblVsync.Position = new Point(_chkVsync.Position.X + _chkVsync.ClientArea.Width + 3,
+										   _chkVsync.Position.Y + (int)(_chkVsync.ClientArea.Height / 2f) -
+										   (int)(_chkVsync.ClientArea.Height / 2f));
+			_lblVsync.Update(0);
+			_btnMainMenu.Position = new Point(_lstResolution.Position.X + 650, _lstResolution.Position.Y);
+			_btnMainMenu.Update(0);
+			_btnApply.Position = new Point(_btnMainMenu.Position.X,
+										   _btnMainMenu.Position.Y + _btnMainMenu.ClientArea.Height + 5);
+			_btnApply.Update(0);
         }
 
         #region IState Members
@@ -124,8 +147,8 @@ namespace ClientServices.State.States
         {
             _background.Draw(new Rectangle(0, 0, Gorgon.CurrentClippingViewport.Width,
                                            Gorgon.CurrentClippingViewport.Height));
-            _ticketbg.Draw(new Rectangle(0, (int) (Gorgon.CurrentClippingViewport.Height/2f - _ticketbg.Height/2f),
-                                         (int) _ticketbg.Width, (int) _ticketbg.Height));
+            _ticketBg.Draw(new Rectangle(0, (int) (Gorgon.CurrentClippingViewport.Height/2f - _ticketBg.Height/2f),
+                                         (int) _ticketBg.Width, (int) _ticketBg.Height));
             UserInterfaceManager.Render();
         }
 
@@ -245,47 +268,30 @@ namespace ClientServices.State.States
         public void Startup()
         {
             NetworkManager.Disconnect();
-            UserInterfaceManager.AddComponent(_mainmenubtt);
-            UserInterfaceManager.AddComponent(_reslistbox);
-            UserInterfaceManager.AddComponent(_chkfullscreen);
-            UserInterfaceManager.AddComponent(_chkvsync);
-            UserInterfaceManager.AddComponent(_lblfullscreen);
-            UserInterfaceManager.AddComponent(_lblvsync);
-            UserInterfaceManager.AddComponent(_applybtt);
+            UserInterfaceManager.AddComponent(_btnMainMenu);
+            UserInterfaceManager.AddComponent(_lstResolution);
+            UserInterfaceManager.AddComponent(_chkFullscreen);
+            UserInterfaceManager.AddComponent(_chkVsync);
+            UserInterfaceManager.AddComponent(_lblFullscreen);
+            UserInterfaceManager.AddComponent(_lblVsync);
+            UserInterfaceManager.AddComponent(_btnApply);
         }
 
 
         public void Shutdown()
         {
-            UserInterfaceManager.RemoveComponent(_mainmenubtt);
-            UserInterfaceManager.RemoveComponent(_reslistbox);
-            UserInterfaceManager.RemoveComponent(_chkfullscreen);
-            UserInterfaceManager.RemoveComponent(_chkvsync);
-            UserInterfaceManager.RemoveComponent(_lblfullscreen);
-            UserInterfaceManager.RemoveComponent(_lblvsync);
-            UserInterfaceManager.RemoveComponent(_applybtt);
+            UserInterfaceManager.RemoveComponent(_btnMainMenu);
+            UserInterfaceManager.RemoveComponent(_lstResolution);
+            UserInterfaceManager.RemoveComponent(_chkFullscreen);
+            UserInterfaceManager.RemoveComponent(_chkVsync);
+            UserInterfaceManager.RemoveComponent(_lblFullscreen);
+            UserInterfaceManager.RemoveComponent(_lblVsync);
+            UserInterfaceManager.RemoveComponent(_btnApply);
         }
 
         public void Update(FrameEventArgs e)
         {
-            //_connectbtt.Position = new Point(_connecttxt.Position.X, _connecttxt.Position.Y + _connecttxt.ClientArea.Height + 2);
-            _reslistbox.Position = new Point(45, (int) (Gorgon.CurrentClippingViewport.Height/2.5f));
-            _chkfullscreen.Position = new Point(_reslistbox.Position.X,
-                                                _reslistbox.Position.Y + _reslistbox.ClientArea.Height + 10);
-            _chkvsync.Position = new Point(_chkfullscreen.Position.X,
-                                           _chkfullscreen.Position.Y + _chkfullscreen.ClientArea.Height + 10);
-            _lblfullscreen.Position = new Point(_chkfullscreen.Position.X + _chkfullscreen.ClientArea.Width + 3,
-                                                _chkfullscreen.Position.Y + (int) (_chkfullscreen.ClientArea.Height/2f) -
-                                                (int) (_lblfullscreen.ClientArea.Height/2f));
-            _lblvsync.Position = new Point(_chkvsync.Position.X + _chkvsync.ClientArea.Width + 3,
-                                           _chkvsync.Position.Y + (int) (_chkvsync.ClientArea.Height/2f) -
-                                           (int) (_chkvsync.ClientArea.Height/2f));
-            _mainmenubtt.Position = new Point(_reslistbox.Position.X + 650, _reslistbox.Position.Y);
-            _applybtt.Position = new Point(_mainmenubtt.Position.X,
-                                           _mainmenubtt.Position.Y + _mainmenubtt.ClientArea.Height + 5);
-
-            _chkfullscreen.Value = ConfigurationManager.GetFullscreen();
-
+            _chkFullscreen.Value = ConfigurationManager.GetFullscreen();
             UserInterfaceManager.Update(e.FrameDeltaTime);
         }
 

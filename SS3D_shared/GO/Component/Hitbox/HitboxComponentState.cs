@@ -14,14 +14,12 @@ namespace SS13_Shared.GO.Component.Hitbox
     [Serializable]
     public class HitboxComponentState : ComponentState
     {
-        public SizeF Size;
-        public PointF Offset;
+        public RectangleF AABB;
 
-        public HitboxComponentState(SizeF size, PointF offset)
+        public HitboxComponentState(RectangleF aabb)
             :base(ComponentFamily.Hitbox)
         {
-            Size = size;
-            Offset = offset;
+            AABB = aabb;
         }
     }
 }

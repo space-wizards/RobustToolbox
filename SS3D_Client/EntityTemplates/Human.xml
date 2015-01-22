@@ -27,7 +27,11 @@
       <Component name="PlayerActionComp"></Component>
       <Component name="EntityStatsComp"></Component>
       <Component name="ParticleSystemComponent"></Component>
-      <Component name="HitboxComponent"></Component>
+      <Component name="HitboxComponent">
+        <Parameters>
+          <Parameter name="DebugColor" type="string" value="Red" />
+        </Parameters>
+      </Component>
     </Components>
   </EntityTemplate>
 </EntityTemplates>

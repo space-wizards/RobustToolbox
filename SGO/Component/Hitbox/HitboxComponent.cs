@@ -11,19 +11,17 @@ namespace SGO
 {
     public class HitboxComponent : Component
     {
-        public SizeF Size;
-        public PointF Offset;
+        public RectangleF AABB { get; set; }
 
         public HitboxComponent()
         {
             Family = ComponentFamily.Hitbox;
-            Size = new SizeF();
-            Offset = new PointF();
+            AABB = new RectangleF();
         }
 
         public override ComponentState GetComponentState()
         {
-            return new HitboxComponentState(Size, Offset);
+            return new HitboxComponentState(AABB);
         }
 
         /// <summary>
@@ -36,16 +34,20 @@ namespace SGO
             switch (parameter.MemberName)
             {
                 case "SizeX":
-                    Size.Width = parameter.GetValue<float>();
+                    var width = parameter.GetValue<float>();
+                    AABB = new RectangleF(AABB.Left + (AABB.Width - width) / 2f, AABB.Top, width, AABB.Height);
                     break;
                 case "SizeY":
-                    Size.Height = parameter.GetValue<float>();
+                    var height = parameter.GetValue<float>();
+                    AABB = new RectangleF(AABB.Left, AABB.Top + (AABB.Height - height) / 2f, AABB.Width, height);
                     break;
                 case "OffsetX":
-                    Offset.X = parameter.GetValue<float>();
+                    var x = parameter.GetValue<float>();
+                    AABB = new RectangleF(x - AABB.Width / 2f, AABB.Top, AABB.Width, AABB.Height);
                     break;
                 case "OffsetY":
-                    Offset.Y = parameter.GetValue<float>();
+                    var y = parameter.GetValue<float>();
+                    AABB = new RectangleF(AABB.Left, y - AABB.Height / 2f, AABB.Width, AABB.Height);
                     break;
             }
         }

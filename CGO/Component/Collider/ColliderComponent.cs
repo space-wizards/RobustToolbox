@@ -11,76 +11,60 @@ namespace CGO
 {
     public class ColliderComponent : Component
     {
-        private RectangleF currentAABB
+        public Color DebugColor { get; set; }
+
+        private RectangleF AABB
         {
             get
             {
                 if (Owner.HasComponent(ComponentFamily.Hitbox))
-                {
                     return Owner.GetComponent<HitboxComponent>(ComponentFamily.Hitbox).AABB;
-                }
-                if (Owner.HasComponent(ComponentFamily.Renderable))
-                {
+                else if (Owner.HasComponent(ComponentFamily.Renderable))
                     return Owner.GetComponent<IRenderableComponent>(ComponentFamily.Renderable).AverageAABB;
-                }
-                return RectangleF.Empty;
-            }
-        }
-
-        /// <summary>
-        /// X - Top | Y - Right | Z - Bottom | W - Left
-        /// </summary>
-        private Vector4D tweakAABB;
-
-        public ColliderComponent()
-        {
-            Family = ComponentFamily.Collider;
-            tweakAABB = new Vector4D(0, 0, 0, 0);
-        }
-
-        private Vector4D TweakAABB
-        {
-            get { return tweakAABB; }
-            set { tweakAABB = value; }
-        }
-
-        public RectangleF OffsetAABB
-        {
-            get
-            {
-                // Return tweaked AABB
-                var currAABB = currentAABB;
-                if (currAABB != null)
-                    return
-                        new RectangleF(
-                            currAABB.Left +
-                            Owner.GetComponent<TransformComponent>(ComponentFamily.Transform).Position.X -
-                            (currAABB.Width / 2) + tweakAABB.W,
-                            currAABB.Top +
-                            Owner.GetComponent<TransformComponent>(ComponentFamily.Transform).Position.Y -
-                            (currAABB.Height / 2) + tweakAABB.X,
-                            currAABB.Width - (tweakAABB.W - tweakAABB.Y),
-                            currAABB.Height - (tweakAABB.X - tweakAABB.Z));
                 else
                     return RectangleF.Empty;
             }
         }
 
-        public override void SetParameter(ComponentParameter parameter)
+        public ColliderComponent()
         {
-            base.SetParameter(parameter);
+            Family = ComponentFamily.Collider;
+            DebugColor = Color.Lime;
+        }
 
-            switch (parameter.MemberName)
+        public RectangleF WorldAABB
+        {
+            get
             {
-                case "TweakAABB":
-                    TweakAABB = parameter.GetValue<Vector4D>();
-                    break;
+                // Return tweaked AABB
+                var aabb = AABB;
+                var trans = Owner.GetComponent<TransformComponent>(ComponentFamily.Transform);
+                if (trans == null)
+                    return aabb;
+                else if (aabb != null)
+                    return new RectangleF(
+                        aabb.Left + trans.X,
+                        aabb.Top + trans.Y,
+                        aabb.Width,
+                        aabb.Height);
+                else
+                    return RectangleF.Empty;
             }
         }
 
         public bool TryCollision(Vector2D offset, bool bump = false)
         {
             return IoCManager.Resolve<ICollisionManager>().TryCollide(Owner, offset, bump);
+        }
+
+        public override void SetParameter(ComponentParameter parameter) {
+            switch (parameter.MemberName) {
+                case "DebugColor":
+                    var color = ColorTranslator.FromHtml(parameter.GetValue<string>());
+                    if (!color.IsEmpty)
+                        DebugColor = color;
+                    break;
+            }
         }
     }
 }

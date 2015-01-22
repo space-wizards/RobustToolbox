@@ -100,7 +100,7 @@ namespace ClientServices.Collision
             var collider = (ColliderComponent)entity.GetComponent(ComponentFamily.Collider);
             if (collider == null) return false;
 
-            var ColliderAABB = collider.OffsetAABB;
+            var ColliderAABB = collider.WorldAABB;
             if(offset.Length > 0)
                 ColliderAABB.Offset(offset.X, offset.Y);
 
@@ -113,7 +113,7 @@ namespace ClientServices.Collision
                 };
 
             //Get the buckets that correspond to the collider's points.
-            List<CollidableBucket> buckets = points.Select(GetBucket).Distinct().ToList();
+            List<CollidableBucket> buckets = points.Select(GetBucket).Distinct().ToList(); // PERF: ToList() is absolutely unnecessary here.
 
             //Get all of the points
             var cpoints = new List<CollidablePoint>();
@@ -123,7 +123,7 @@ namespace ClientServices.Collision
             }
 
             //Expand points to distinct AABBs
-            List<CollidableAABB> aabBs = (cpoints.Select(cp => cp.ParentAABB)).Distinct().ToList();
+            List<CollidableAABB> aabBs = (cpoints.Select(cp => cp.ParentAABB)).Distinct().ToList(); // PERF: ToList() and Distinct() are absolutely unnecessary here.
 
             //try all of the AABBs against the target rect.
             bool collided = false;

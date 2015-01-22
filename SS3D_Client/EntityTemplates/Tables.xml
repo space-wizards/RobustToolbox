@@ -19,7 +19,12 @@
         </Parameters>
       </Component>
       <Component name="ClickableComponent"></Component>
-      <Component name="CollidableComponent"></Component>
+      <Component name="HitboxComponent"></Component>
+      <Component name="CollidableComponent">
+        <Parameters>
+          <Parameter name="DebugColor" type="string" value="Blue" />
+        </Parameters>
+      </Component>
     </Components>
   </EntityTemplate>
 </EntityTemplates>

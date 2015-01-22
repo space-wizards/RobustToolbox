@@ -113,6 +113,7 @@ namespace ClientServices.State.States
         private RenderImage shadowIntermediate;
         private ShadowMapResolver shadowMapResolver;
         private bool debugWallOccluders = false;
+        private bool debugHitboxes = false;
 
         #endregion
 
@@ -627,6 +628,40 @@ namespace ClientServices.State.States
         {   
             if(debugWallOccluders)
                 _occluderDebugTarget.Blit(0,0,_occluderDebugTarget.Width, _occluderDebugTarget.Height, Color.White, BlitterSizeMode.Crop);
+
+            if (debugHitboxes) {
+                var corner = ClientWindowData.Singleton.ScreenOrigin;
+
+                var colliders =
+                    _entityManager.ComponentManager.GetComponents(ComponentFamily.Collider)
+                    .OfType<ColliderComponent>()
+                    .Select(c => new { Color = c.DebugColor, AABB = c.WorldAABB })
+                    .Where(c => !c.AABB.IsEmpty && c.AABB.IntersectsWith(ClientWindowData.Singleton.ViewPort));
+
+                var collidables =
+                    _entityManager.ComponentManager.GetComponents(ComponentFamily.Collidable)
+                    .OfType<CollidableComponent>()
+                    .Select(c => new { Color = c.DebugColor, AABB = c.AABB })
+                    .Where(c => !c.AABB.IsEmpty && c.AABB.IntersectsWith(ClientWindowData.Singleton.ViewPort));
+
+                var destAbo = _baseTarget.DestinationBlend;
+                var srcAbo = _baseTarget.SourceBlend;
+                _baseTarget.DestinationBlend = AlphaBlendOperation.InverseSourceAlpha;
+                _baseTarget.SourceBlend = AlphaBlendOperation.SourceAlpha;
+
+                foreach (var hitbox in colliders.Concat(collidables)) {
+                    _baseTarget.FilledRectangle(
+                        hitbox.AABB.Left - corner.X, hitbox.AABB.Top - corner.Y,
+                        hitbox.AABB.Width, hitbox.AABB.Height, Color.FromArgb(64, hitbox.Color));
+                    _baseTarget.Rectangle(
+                        hitbox.AABB.Left - corner.X, hitbox.AABB.Top - corner.Y,
+                        hitbox.AABB.Width, hitbox.AABB.Height, Color.FromArgb(128, hitbox.Color));
+                }
+
+                _baseTarget.DestinationBlend = destAbo;
+                _baseTarget.SourceBlend = srcAbo;
+            
+            }
         }
 
         public void FormResize()
@@ -661,6 +696,10 @@ namespace ClientServices.State.States
             if (e.Key == KeyboardKeys.F3)
             {
                 ToggleOccluderDebug();
+            }
+            if (e.Key == KeyboardKeys.F4)
+            {
+                debugHitboxes = !debugHitboxes;
             }
             if (e.Key == KeyboardKeys.F5)
             {

@@ -12,6 +12,8 @@ namespace CGO
 {
     public class CollidableComponent : Component, ICollidable
     {
+        public Color DebugColor { get; set; }
+
         private bool collisionEnabled = true;
         private RectangleF currentAABB;
         protected bool isHardCollidable = true;
@@ -24,6 +26,7 @@ namespace CGO
         public CollidableComponent()
         {
             Family = ComponentFamily.Collidable;
+            DebugColor = Color.Red;
             tweakAABB = new Vector4D(0,0,0,0);
         }
 
@@ -175,6 +178,11 @@ namespace CGO
                     break;
                 case "TweakAABBleft":
                     tweakAABB.W = parameter.GetValue<float>();
+                    break;
+                case "DebugColor":
+                    var color = ColorTranslator.FromHtml(parameter.GetValue<string>());
+                    if (!color.IsEmpty)
+                        DebugColor = color;
                     break;
             }
         }

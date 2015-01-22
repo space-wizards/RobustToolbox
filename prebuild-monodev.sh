@@ -1,3 +1,3 @@
 #!/bin/bash
-. ./Tools/prebuild-common.sh
+. ./Tools/prebuild_common.sh
 mono Tools/prebuild.exe /target monodev

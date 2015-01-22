@@ -12,6 +12,7 @@ using Lidgren.Network;
 using SS13.IoC;
 using SS13_Shared;
 using SS13_Shared.Utility;
+using ClientInterfaces.Player;
 
 namespace ClientServices.State.States
 {
@@ -35,8 +36,13 @@ namespace ClientServices.State.States
         private readonly Label _lblServerInfo;
         private readonly SimpleImage _imgMainBg;
         private SimpleImage _imgChatBg;
+		private ImageButton _btnReady;
 
         private readonly List<Label> _serverLabels = new List<Label>();
+
+		//Keep track of previous tick screen width and height for use in update.
+		private int _prevScreenWidth = 0;
+		private int _prevScreenHeight = 0;
 
         private readonly TabContainer _tabCharacter;
         private readonly JobTab _tabJob;
@@ -120,7 +126,8 @@ namespace ClientServices.State.States
                             TopSprite = "lobby_tab_top",
                             MidSprite = "lobby_tab_mid",
                             BotSprite = "lobby_tab_bot",
-                            TabOffset = new Point(-8, 300)
+                            TabOffset = new Point(-8, 300),
+							ZDepth = 2
                         };
 
             _tabJob = new JobTab("lobbyTabJob", new Size(793, 450), ResourceManager)
@@ -165,6 +172,23 @@ namespace ClientServices.State.States
 
             _lobbyChat.TextSubmitted += new Chatbox.TextSubmitHandler(_lobbyChat_TextSubmitted);
 
+			_btnReady = new ImageButton()
+			{
+				ImageNormal = "lobby_ready",
+				ImageHover = "lobby_ready_green",
+				BlendingMode = BlendingModes.None,
+				ZDepth = 1
+			};
+			_btnReady.Clicked += _btnReady_Clicked;
+			_btnReady.Update(0);
+
+			_lblServerInfo.FixedWidth = 100;
+			_lblModeInfo.FixedWidth = 90;
+			_lblPlayersInfo.FixedWidth = 60;
+			_lblPortInfo.FixedWidth = 50;
+
+
+			UpdateGUIPosition();
         }
 
         void _lobbyChat_TextSubmitted(Chatbox chatbox, string text)
@@ -354,6 +378,7 @@ namespace ClientServices.State.States
             UserInterfaceManager.AddComponent(_tabs);
             UserInterfaceManager.AddComponent(_imgChatBg);
             UserInterfaceManager.AddComponent(_lobbyChat);
+			UserInterfaceManager.AddComponent(_btnReady);
 
             foreach (Label curr in _serverLabels)
                 UserInterfaceManager.AddComponent(curr);
@@ -376,6 +401,7 @@ namespace ClientServices.State.States
             UserInterfaceManager.RemoveComponent(_tabs);
             UserInterfaceManager.RemoveComponent(_imgChatBg);
             UserInterfaceManager.RemoveComponent(_lobbyChat);
+			UserInterfaceManager.RemoveComponent(_btnReady);
 
             foreach (Label curr in _serverLabels)
                 UserInterfaceManager.RemoveComponent(curr);
@@ -385,38 +411,81 @@ namespace ClientServices.State.States
 
         public void Update(FrameEventArgs e)
         {
-            _imgMainBg.Position = new Point(
-                (int) ((Gorgon.Screen.Width/2f) - (_imgMainBg.ClientArea.Width/2f)),
-                (int) ((Gorgon.Screen.Height/2f) - (_imgMainBg.ClientArea.Height/2f)));
+			if (Gorgon.Screen.Width != _prevScreenWidth || Gorgon.Screen.Height != _prevScreenHeight)
+			{
+				_prevScreenHeight = Gorgon.Screen.Height;
+				_prevScreenWidth = Gorgon.Screen.Width;
+				UpdateGUIPosition();
+			}
 
-            _recStatus = new RectangleF(_imgMainBg.Position.X + 10, _imgMainBg.Position.Y + 63, 785, 21);
+			// This might be a hacky solution, but the button loses focus way too fast.
+			_btnReady.Focus = true;
 
-            _imgStatus.Position = new Point((int) _recStatus.Left, (int) _recStatus.Top);
-
-            _lblServer.Position = new Point((int) _recStatus.Left + 5, (int) _recStatus.Top + 2);
-            _lblServerInfo.Position = new Point(_lblServer.ClientArea.Right, _lblServer.ClientArea.Y);
-            _lblServerInfo.Text.Text = _serverName;
-
-            _lblMode.Position = new Point(_lblServerInfo.ClientArea.Right + (int) _lastLblSpacing,
-                                          _lblServerInfo.ClientArea.Y);
-            _lblModeInfo.Position = new Point(_lblMode.ClientArea.Right, _lblMode.ClientArea.Y);
-            _lblModeInfo.Text.Text = _gameType;
-
-            _lblPlayers.Position = new Point(_lblModeInfo.ClientArea.Right + (int) _lastLblSpacing,
-                                             _lblModeInfo.ClientArea.Y);
-            _lblPlayersInfo.Position = new Point(_lblPlayers.ClientArea.Right, _lblPlayers.ClientArea.Y);
-            _lblPlayersInfo.Text.Text = _serverPlayers.ToString() + " / " + _serverMaxPlayers.ToString();
-
-            _lblPort.Position = new Point(_lblPlayersInfo.ClientArea.Right + (int) _lastLblSpacing,
-                                          _lblPlayersInfo.ClientArea.Y);
-            _lblPortInfo.Position = new Point(_lblPort.ClientArea.Right, _lblPort.ClientArea.Y);
-            _lblPortInfo.Text.Text = _serverPort.ToString();
-
-            _tabs.Position = _imgMainBg.Position + new Size(5, 90);
-
-            _lobbyChat.Position = new Point(_imgMainBg.ClientArea.Left + 12, _imgMainBg.ClientArea.Bottom - _lobbyChat.ClientArea.Height - 12); //Wish the chat box wasnt such shit. Then i wouldnt have to do this here.
-            _imgChatBg.Position = new Point(_lobbyChat.ClientArea.Left - 6, _lobbyChat.ClientArea.Top - 9);
+			_lblServerInfo.Text.Text = _serverName;
+			_lblModeInfo.Text.Text = _gameType;
+			_lblPlayersInfo.Text.Text = _serverPlayers.ToString() + " / " + _serverMaxPlayers.ToString();
+			_lblPortInfo.Text.Text = _serverPort.ToString();
         }
+
+		public void UpdateGUIPosition()
+		{
+			_imgMainBg.Position = new Point(
+				(int)((Gorgon.Screen.Width / 2f) - (_imgMainBg.ClientArea.Width / 2f)),
+				(int)((Gorgon.Screen.Height / 2f) - (_imgMainBg.ClientArea.Height / 2f)));
+			_imgMainBg.Update(0);
+
+			_recStatus = new RectangleF(_imgMainBg.Position.X + 10, _imgMainBg.Position.Y + 63, 785, 21);
+
+			_imgStatus.Position = new Point((int)_recStatus.Left, (int)_recStatus.Top);
+			_imgStatus.Update(0);
+
+			_lblServer.Position = new Point((int)_recStatus.Left + 5, (int)_recStatus.Top + 2);
+			_lblServer.Update(0);
+			_lblServerInfo.Position = new Point(_lblServer.ClientArea.Right, _lblServer.ClientArea.Y);
+			_lblServerInfo.Update(0);
+
+			_lblMode.Position = new Point(_lblServerInfo.ClientArea.Right + (int)_lastLblSpacing,
+										  _lblServerInfo.ClientArea.Y);
+			_lblMode.Update(0);
+
+			_lblModeInfo.Position = new Point(_lblMode.ClientArea.Right, _lblMode.ClientArea.Y);
+			_lblModeInfo.Update(0);
+
+
+			_lblPlayers.Position = new Point(_lblModeInfo.ClientArea.Right + (int)_lastLblSpacing,
+											 _lblModeInfo.ClientArea.Y);
+			_lblPlayers.Update(0);
+
+			_lblPlayersInfo.Position = new Point(_lblPlayers.ClientArea.Right, _lblPlayers.ClientArea.Y);
+			_lblPlayersInfo.Update(0);
+
+
+			_lblPort.Position = new Point(_lblPlayersInfo.ClientArea.Right + (int)_lastLblSpacing,
+										  _lblPlayersInfo.ClientArea.Y);
+			_lblPort.Update(0);
+
+			_lblPortInfo.Position = new Point(_lblPort.ClientArea.Right, _lblPort.ClientArea.Y);
+			_lblPortInfo.Update(0);
+
+
+			_tabs.Position = _imgMainBg.Position + new Size(5, 90);
+			_tabs.Update(0);
+
+			_lobbyChat.Position = new Point(_imgMainBg.ClientArea.Left + 12, _imgMainBg.ClientArea.Bottom - _lobbyChat.ClientArea.Height - 12); //Wish the chat box wasnt such shit. Then i wouldnt have to do this here.
+			_lobbyChat.Update(0);
+
+			_imgChatBg.Position = new Point(_lobbyChat.ClientArea.Left - 6, _lobbyChat.ClientArea.Top - 9);
+			_imgChatBg.Update(0);
+
+			_btnReady.Position = new Point(_lobbyChat.ClientArea.Right - _btnReady.ClientArea.Width - 5, _lobbyChat.ClientArea.Top - _btnReady.ClientArea.Height - 8);
+			_btnReady.Update(0);
+		}
+
+		void _btnReady_Clicked(ImageButton sender)
+		{
+			var playerManager = IoCManager.Resolve<IPlayerManager>();
+			playerManager.SendVerb("joingame", 0);
+		}
 
         #endregion
 

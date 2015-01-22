@@ -18,7 +18,6 @@ namespace ClientServices.UserInterface.Components
         public readonly LobbyShowcase _shwDepa;
         private readonly SimpleImage _imgWhatDep;
         public readonly Label _lblDep;
-        private ImageButton _bttReady;
         private SimpleImage _imgJobDesc;
         public Label _lbljobDesc;
         public Label _lbljobName;
@@ -30,15 +29,6 @@ namespace ClientServices.UserInterface.Components
         public JobTab(string uniqueName, Size size, IResourceManager resourceManager)
             : base(uniqueName, size, resourceManager)
         {
-            _bttReady = new ImageButton()
-                {
-                    ImageNormal = "lobby_ready",
-                    ImageHover = "lobby_ready_green",
-                    BlendingMode = BlendingModes.None
-                };
-            _bttReady.Clicked += _bttReady_Clicked;
-            _bttReady.Update(0);
-
             _imgWhatDep = new SimpleImage()
                 {
                     Sprite = "lobby_whatdep"
@@ -128,8 +118,6 @@ namespace ClientServices.UserInterface.Components
             };
             _lbljobDesc.Position = new Point(3, _lbljobName.ClientArea.Bottom + 5);
 
-            _bttReady.Position = new Point(ClientArea.Width - _bttReady.ClientArea.Width - 5, _imgJobDesc.ClientArea.Bottom + 4);
-
             components.Add(_lblDep);
             components.Add(_imgWhatDep);
             components.Add(_imgDepGrad);
@@ -140,13 +128,6 @@ namespace ClientServices.UserInterface.Components
             components.Add(_imgJobDesc);
             components.Add(_lbljobDesc);
             components.Add(_lbljobName);
-            components.Add(_bttReady);
-        }
-
-        void _bttReady_Clicked(ImageButton sender)
-        {
-            var playerManager = IoCManager.Resolve<IPlayerManager>();
-            playerManager.SendVerb("joingame", 0);
         }
 
         public override void Activated() //TODO: Maybe i shouldnt request this everytime the tab is selected?. Automatic updates?
@@ -181,7 +162,6 @@ namespace ClientServices.UserInterface.Components
 
         public override void Dispose()
         {
-            _bttReady.Clicked -= _bttReady_Clicked;
             base.Dispose();
         }
 

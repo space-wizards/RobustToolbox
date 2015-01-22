@@ -33,7 +33,7 @@ namespace ClientServices.State.States
         private readonly Label _lblPortInfo;
         private readonly Label _lblServer;
         private readonly Label _lblServerInfo;
-        private readonly SimpleImage _mainbg;
+        private readonly SimpleImage _imgMainBg;
         private SimpleImage _imgChatBg;
 
         private readonly List<Label> _serverLabels = new List<Label>();
@@ -73,7 +73,7 @@ namespace ClientServices.State.States
             _background = ResourceManager.GetSprite("mainbg");
             _background.Smoothing = Smoothing.Smooth;
 
-            _mainbg = new SimpleImage
+            _imgMainBg = new SimpleImage
                           {
                               Sprite = "lobby_mainbg"
                           };
@@ -349,7 +349,7 @@ namespace ClientServices.State.States
 
         public void Startup()
         {
-            UserInterfaceManager.AddComponent(_mainbg);
+            UserInterfaceManager.AddComponent(_imgMainBg);
             UserInterfaceManager.AddComponent(_imgStatus);
             UserInterfaceManager.AddComponent(_tabs);
             UserInterfaceManager.AddComponent(_imgChatBg);
@@ -371,7 +371,7 @@ namespace ClientServices.State.States
 
         public void Shutdown()
         {
-            UserInterfaceManager.RemoveComponent(_mainbg);
+            UserInterfaceManager.RemoveComponent(_imgMainBg);
             UserInterfaceManager.RemoveComponent(_imgStatus);
             UserInterfaceManager.RemoveComponent(_tabs);
             UserInterfaceManager.RemoveComponent(_imgChatBg);
@@ -385,11 +385,11 @@ namespace ClientServices.State.States
 
         public void Update(FrameEventArgs e)
         {
-            _mainbg.Position = new Point(
-                (int) ((Gorgon.Screen.Width/2f) - (_mainbg.ClientArea.Width/2f)),
-                (int) ((Gorgon.Screen.Height/2f) - (_mainbg.ClientArea.Height/2f)));
+            _imgMainBg.Position = new Point(
+                (int) ((Gorgon.Screen.Width/2f) - (_imgMainBg.ClientArea.Width/2f)),
+                (int) ((Gorgon.Screen.Height/2f) - (_imgMainBg.ClientArea.Height/2f)));
 
-            _recStatus = new RectangleF(_mainbg.Position.X + 10, _mainbg.Position.Y + 63, 785, 21);
+            _recStatus = new RectangleF(_imgMainBg.Position.X + 10, _imgMainBg.Position.Y + 63, 785, 21);
 
             _imgStatus.Position = new Point((int) _recStatus.Left, (int) _recStatus.Top);
 
@@ -412,9 +412,9 @@ namespace ClientServices.State.States
             _lblPortInfo.Position = new Point(_lblPort.ClientArea.Right, _lblPort.ClientArea.Y);
             _lblPortInfo.Text.Text = _serverPort.ToString();
 
-            _tabs.Position = _mainbg.Position + new Size(5, 90);
+            _tabs.Position = _imgMainBg.Position + new Size(5, 90);
 
-            _lobbyChat.Position = new Point(_mainbg.ClientArea.Left + 12, _mainbg.ClientArea.Bottom - _lobbyChat.ClientArea.Height - 12); //Wish the chat box wasnt such shit. Then i wouldnt have to do this here.
+            _lobbyChat.Position = new Point(_imgMainBg.ClientArea.Left + 12, _imgMainBg.ClientArea.Bottom - _lobbyChat.ClientArea.Height - 12); //Wish the chat box wasnt such shit. Then i wouldnt have to do this here.
             _imgChatBg.Position = new Point(_lobbyChat.ClientArea.Left - 6, _lobbyChat.ClientArea.Top - 9);
         }
 

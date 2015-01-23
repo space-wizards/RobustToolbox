@@ -1,0 +1,388 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+
+<EntityTemplates>
+  <EntityTemplate name="Armour">
+    <Components>
+      <Component name="TransformComponent"></Component>
+      <Component name="VelocityComponent"></Component>
+      <Component name="DirectionComponent"></Component>
+      <Component name="ClickableComponent"></Component>
+      <Component name="WearableAnimatedSpriteComponent">
+        <Parameters>
+          <Parameter name="sprite" type="string" value="player_toolbox" />
+        </Parameters>
+      </Component>
+      <Component name="BasicInteractableComponent"></Component>
+      <Component name="BasicMoverComponent"></Component>
+      <Component name="BasicItemComponent"></Component>
+      <Component name="PhysicsComponent">
+        <Parameters>
+          <Parameter name="Mass" type="float" value="5" />
+        </Parameters>
+      </Component>
+      <Component name="EquippableComponent">
+        <Parameters>
+          <Parameter name="wearloc" type="string" value="Outer" />
+        </Parameters>
+      </Component>
+      <Component name="EntityStatsComp">
+        <ExtendedParameters>
+          <EntityArmor type="Piercing" value="5"></EntityArmor>
+          <EntityArmor type="Bludgeoning" value="5"></EntityArmor>
+          <EntityArmor type="Slashing" value="5"></EntityArmor>
+        </ExtendedParameters>
+      </Component>
+    </Components>
+  </EntityTemplate>
+  <EntityTemplate name="Assistant_Grey">
+    <Components>
+      <Component name="TransformComponent"></Component>
+      <Component name="VelocityComponent"></Component>
+      <Component name="DirectionComponent"></Component>
+      <Component name="ClickableComponent"></Component>
+      <Component name="WearableAnimatedSpriteComponent">
+        <Parameters>
+          <Parameter name="sprite" type="string" value="player_jumpsuit" />
+        </Parameters>
+      </Component>
+      <Component name="BasicInteractableComponent"></Component>
+      <Component name="BasicMoverComponent"></Component>
+      <Component name="BasicItemComponent"></Component>
+      <Component name="PhysicsComponent">
+        <Parameters>
+          <Parameter name="Mass" type="float" value="5" />
+        </Parameters>
+      </Component>
+      <Component name="EquippableComponent">
+        <Parameters>
+          <Parameter name="wearloc" type="string" value="Inner" />
+        </Parameters>
+      </Component>
+    </Components>
+  </EntityTemplate>
+  <EntityTemplate name="Security_Jumpsuit">
+    <Components>
+      <Component name="TransformComponent"></Component>
+      <Component name="VelocityComponent"></Component>
+      <Component name="DirectionComponent"></Component>
+      <Component name="ClickableComponent"></Component>
+      <Component name="WearableAnimatedSpriteComponent">
+        <Parameters>
+          <Parameter name="sprite" type="string" value="player_jumpsuit_security" />
+        </Parameters>
+      </Component>
+      <Component name="BasicInteractableComponent"></Component>
+      <Component name="BasicMoverComponent"></Component>
+      <Component name="BasicItemComponent"></Component>
+      <Component name="PhysicsComponent">
+        <Parameters>
+          <Parameter name="Mass" type="float" value="5" />
+        </Parameters>
+      </Component>
+      <Component name="EquippableComponent">
+        <Parameters>
+          <Parameter name="wearloc" type="string" value="Inner" />
+        </Parameters>
+      </Component>
+    </Components>
+  </EntityTemplate>
+  <EntityTemplate name="Janitor_Suit">
+    <Components>
+      <Component name="TransformComponent"></Component>
+      <Component name="VelocityComponent"></Component>
+      <Component name="DirectionComponent"></Component>
+      <Component name="ClickableComponent"></Component>
+      <Component name="WearableAnimatedSpriteComponent">
+        <Parameters>
+          <Parameter name="sprite" type="string" value="player_jumpsuit_gray" />
+        </Parameters>
+      </Component>
+      <Component name="BasicInteractableComponent"></Component>
+      <Component name="BasicMoverComponent"></Component>
+      <Component name="BasicItemComponent"></Component>
+      <Component name="PhysicsComponent">
+        <Parameters>
+          <Parameter name="Mass" type="float" value="5" />
+        </Parameters>
+      </Component>
+      <Component name="EquippableComponent">
+        <Parameters>
+          <Parameter name="wearloc" type="string" value="Inner" />
+        </Parameters>
+      </Component>
+    </Components>
+  </EntityTemplate>
+  <EntityTemplate name="Medical_Suit">
+    <Components>
+      <Component name="TransformComponent"></Component>
+      <Component name="VelocityComponent"></Component>
+      <Component name="DirectionComponent"></Component>
+      <Component name="ClickableComponent"></Component>
+      <Component name="WearableAnimatedSpriteComponent">
+        <Parameters>
+          <Parameter name="sprite" type="string" value="player_jumpsuit_gray" />
+        </Parameters>
+      </Component>
+      <Component name="BasicInteractableComponent"></Component>
+      <Component name="BasicMoverComponent"></Component>
+      <Component name="BasicItemComponent"></Component>
+      <Component name="PhysicsComponent">
+        <Parameters>
+          <Parameter name="Mass" type="float" value="5" />
+        </Parameters>
+      </Component>
+      <Component name="EquippableComponent">
+        <Parameters>
+          <Parameter name="wearloc" type="string" value="Inner" />
+        </Parameters>
+      </Component>
+    </Components>
+  </EntityTemplate>
+  <EntityTemplate name="Biosuit">
+    <Components>
+      <Component name="TransformComponent"></Component>
+      <Component name="VelocityComponent"></Component>
+      <Component name="DirectionComponent"></Component>
+      <Component name="ClickableComponent"></Component>
+      <Component name="WearableAnimatedSpriteComponent">
+        <Parameters>
+          <Parameter name="sprite" type="string" value="player_jumpsuit_gray" />
+        </Parameters>
+      </Component>
+      <Component name="BasicInteractableComponent"></Component>
+      <Component name="BasicMoverComponent"></Component>
+      <Component name="BasicItemComponent"></Component>
+      <Component name="PhysicsComponent">
+        <Parameters>
+          <Parameter name="Mass" type="float" value="5" />
+        </Parameters>
+      </Component>
+      <Component name="EquippableComponent">
+        <Parameters>
+          <Parameter name="wearloc" type="string" value="Outer" />
+        </Parameters>
+      </Component>
+      <Component name="EntityStatsComp">
+        <ExtendedParameters>
+          <EntityArmor type="Toxin" value="3"></EntityArmor>
+          <EntityArmor type="Shock" value="1"></EntityArmor>
+        </ExtendedParameters>
+      </Component>
+    </Components>
+  </EntityTemplate>
+  <EntityTemplate name="Gloves_Surgical">
+    <Components>
+      <Component name="TransformComponent"></Component>
+      <Component name="VelocityComponent"></Component>
+      <Component name="DirectionComponent"></Component>
+      <Component name="ClickableComponent"></Component>
+      <Component name="WearableAnimatedSpriteComponent">
+        <Parameters>
+          <Parameter name="sprite" type="string" value="player_toolbox" />
+        </Parameters>
+      </Component>
+      <Component name="BasicInteractableComponent"></Component>
+      <Component name="BasicMoverComponent"></Component>
+      <Component name="BasicItemComponent"></Component>
+      <Component name="PhysicsComponent">
+        <Parameters>
+          <Parameter name="Mass" type="float" value="5" />
+        </Parameters>
+      </Component>
+      <Component name="EquippableComponent">
+        <Parameters>
+          <Parameter name="wearloc" type="string" value="Hands" />
+        </Parameters>
+      </Component>
+    </Components>
+  </EntityTemplate>
+  <EntityTemplate name="Shoes_Medical">
+    <Components>
+      <Component name="TransformComponent"></Component>
+      <Component name="VelocityComponent"></Component>
+      <Component name="DirectionComponent"></Component>
+      <Component name="ClickableComponent"></Component>
+      <Component name="WearableAnimatedSpriteComponent">
+        <Parameters>
+          <Parameter name="sprite" type="string" value="player_toolbox" />
+        </Parameters>
+      </Component>
+      <Component name="BasicInteractableComponent"></Component>
+      <Component name="BasicMoverComponent"></Component>
+      <Component name="BasicItemComponent"></Component>
+      <Component name="PhysicsComponent">
+        <Parameters>
+          <Parameter name="Mass" type="float" value="5" />
+        </Parameters>
+      </Component>
+      <Component name="EquippableComponent">
+        <Parameters>
+          <Parameter name="wearloc" type="string" value="Feet" />
+        </Parameters>
+      </Component>
+    </Components>
+  </EntityTemplate>
+  <EntityTemplate name="Mask_Surgical">
+    <Components>
+      <Component name="TransformComponent"></Component>
+      <Component name="VelocityComponent"></Component>
+      <Component name="DirectionComponent"></Component>
+      <Component name="ClickableComponent"></Component>
+      <Component name="WearableAnimatedSpriteComponent">
+        <Parameters>
+          <Parameter name="sprite" type="string" value="player_toolbox" />
+        </Parameters>
+      </Component>
+      <Component name="BasicInteractableComponent"></Component>
+      <Component name="BasicMoverComponent"></Component>
+      <Component name="BasicItemComponent"></Component>
+      <Component name="PhysicsComponent">
+        <Parameters>
+          <Parameter name="Mass" type="float" value="5" />
+        </Parameters>
+      </Component>
+      <Component name="EquippableComponent">
+        <Parameters>
+          <Parameter name="wearloc" type="string" value="Mask" />
+        </Parameters>
+      </Component>
+    </Components>
+  </EntityTemplate>
+  <EntityTemplate name="Surgicalgown">
+    <Components>
+      <Component name="TransformComponent"></Component>
+      <Component name="VelocityComponent"></Component>
+      <Component name="DirectionComponent"></Component>
+      <Component name="ClickableComponent"></Component>
+      <Component name="WearableAnimatedSpriteComponent">
+        <Parameters>
+          <Parameter name="sprite" type="string" value="player_toolbox" />
+        </Parameters>
+      </Component>
+      <Component name="BasicInteractableComponent"></Component>
+      <Component name="BasicMoverComponent"></Component>
+      <Component name="BasicItemComponent"></Component>
+      <Component name="PhysicsComponent">
+        <Parameters>
+          <Parameter name="Mass" type="float" value="5" />
+        </Parameters>
+      </Component>
+      <Component name="EquippableComponent">
+        <Parameters>
+          <Parameter name="wearloc" type="string" value="Outer" />
+        </Parameters>
+      </Component>
+    </Components>
+  </EntityTemplate>
+  <EntityTemplate name="Helmet">
+    <Components>
+      <Component name="TransformComponent"></Component>
+      <Component name="VelocityComponent"></Component>
+      <Component name="DirectionComponent"></Component>
+      <Component name="ClickableComponent"></Component>
+      <Component name="WearableAnimatedSpriteComponent">
+        <Parameters>
+          <Parameter name="sprite" type="string" value="player_toolbox" />
+        </Parameters>
+      </Component>
+      <Component name="BasicInteractableComponent"></Component>
+      <Component name="BasicMoverComponent"></Component>
+      <Component name="BasicItemComponent"></Component>
+      <Component name="PhysicsComponent">
+        <Parameters>
+          <Parameter name="Mass" type="float" value="5" />
+        </Parameters>
+      </Component>
+      <Component name="EquippableComponent">
+        <Parameters>
+          <Parameter name="wearloc" type="string" value="Head" />
+        </Parameters>
+      </Component>
+      <Component name="EntityStatsComp">
+        <ExtendedParameters>
+          <EntityArmor type="Piercing" value="3"></EntityArmor>
+          <EntityArmor type="Bludgeoning" value="3"></EntityArmor>
+          <EntityArmor type="Slashing" value="3"></EntityArmor>
+        </ExtendedParameters>
+      </Component>
+    </Components>
+  </EntityTemplate>
+  <EntityTemplate name="BlueGloves">
+    <Components>
+      <Component name="TransformComponent"></Component>
+      <Component name="VelocityComponent"></Component>
+      <Component name="DirectionComponent"></Component>
+      <Component name="ClickableComponent"></Component>
+      <Component name="WearableAnimatedSpriteComponent">
+        <Parameters>
+          <Parameter name="sprite" type="string" value="player_toolbox" />
+        </Parameters>
+      </Component>
+      <Component name="BasicInteractableComponent"></Component>
+      <Component name="BasicMoverComponent"></Component>
+      <Component name="BasicItemComponent"></Component>
+      <Component name="PhysicsComponent">
+        <Parameters>
+          <Parameter name="Mass" type="float" value="5" />
+        </Parameters>
+      </Component>
+      <Component name="EquippableComponent">
+        <Parameters>
+          <Parameter name="wearloc" type="string" value="Hands" />
+        </Parameters>
+      </Component>
+    </Components>
+  </EntityTemplate>
+  <EntityTemplate name="Galoshes">
+    <Components>
+      <Component name="TransformComponent"></Component>
+      <Component name="VelocityComponent"></Component>
+      <Component name="DirectionComponent"></Component>
+      <Component name="ClickableComponent"></Component>
+      <Component name="WearableAnimatedSpriteComponent">
+        <Parameters>
+          <Parameter name="sprite" type="string" value="player_toolbox" />
+        </Parameters>
+      </Component>
+      <Component name="BasicInteractableComponent"></Component>
+      <Component name="BasicMoverComponent"></Component>
+      <Component name="BasicItemComponent"></Component>
+      <Component name="PhysicsComponent">
+        <Parameters>
+          <Parameter name="Mass" type="float" value="5" />
+        </Parameters>
+      </Component>
+      <Component name="EquippableComponent">
+        <Parameters>
+          <Parameter name="wearloc" type="string" value="Feet" />
+        </Parameters>
+      </Component>
+    </Components>
+  </EntityTemplate>
+  <EntityTemplate name="Shoes">
+    <Components>
+      <Component name="TransformComponent"></Component>
+      <Component name="VelocityComponent"></Component>
+      <Component name="DirectionComponent"></Component>
+      <Component name="ClickableComponent"></Component>
+      <Component name="WearableAnimatedSpriteComponent">
+        <Parameters>
+          <Parameter name="sprite" type="string" value="player_toolbox" />
+        </Parameters>
+      </Component>
+      <Component name="BasicInteractableComponent"></Component>
+      <Component name="BasicMoverComponent"></Component>
+      <Component name="BasicItemComponent"></Component>
+      <Component name="PhysicsComponent">
+        <Parameters>
+          <Parameter name="Mass" type="float" value="5" />
+        </Parameters>
+      </Component>
+      <Component name="EquippableComponent">
+        <Parameters>
+          <Parameter name="wearloc" type="string" value="Feet" />
+        </Parameters>
+      </Component>
+    </Components>
+  </EntityTemplate>
+</EntityTemplates>

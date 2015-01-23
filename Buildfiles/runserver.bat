@@ -1,2 +1,2 @@
 cd bin\server
-start SS13_Server.exe
+start SpaceStation14_Server.exe

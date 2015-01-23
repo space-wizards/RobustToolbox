@@ -31,6 +31,7 @@
 *.pidb
 *.svclog
 
+*.userprefs
 
 # Visual Studio profiler
 *.psess
@@ -47,6 +48,7 @@ _ReSharper*/
 *.DotSettings.user
 
 # Resources
+*.resources
 /Resources/textures/Animations/*.*
 /Resources/ResourcePack.zip
 /Resources/textures/*_Animations.png

@@ -1,15 +1,15 @@
 <Project frameworkVersion="v4_0" name="Lidgren.Network" rootNamespace="Lidgren.Network" type="Library" path="Lidgren.Network">
   <Configuration name="Debug" platform="x86">
     <Options>
-      <OutputPath>../Bin</OutputPath>
+      <OutputPath>../bin</OutputPath>
     </Options>
   </Configuration>
   <Configuration name="Release" platform="x86">
     <Options>
-      <OutputPath>../Bin</OutputPath>
+      <OutputPath>../bin</OutputPath>
     </Options>
   </Configuration>
-  <ReferencePath>../Bin</ReferencePath>
+  <ReferencePath>../bin</ReferencePath>
   <ReferencePath>../Third-Party</ReferencePath>
   <Reference name="System"/>
   <Reference name="System.Core"/>

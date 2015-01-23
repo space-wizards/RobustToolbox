@@ -1,15 +1,15 @@
 <Project frameworkVersion="v4_0" name="SpaceStation14_Server" rootNamespace="SS14.Server" type="Exe" path="SS14.Server">
   <Configuration name="Debug" platform="x86">
     <Options>
-      <OutputPath>../Bin/Server</OutputPath>
+      <OutputPath>../bin/Server</OutputPath>
     </Options>
   </Configuration>
   <Configuration name="Release" platform="x86">
     <Options>
-      <OutputPath>../Bin/Server</OutputPath>
+      <OutputPath>../bin/Server</OutputPath>
     </Options>
   </Configuration>
-  <ReferencePath>../Bin</ReferencePath>
+  <ReferencePath>../bin</ReferencePath>
   <ReferencePath>../Third-Party</ReferencePath>
   <Reference name="CSScriptLibrary" localCopy="true" path="../Third-Party"/>
   <Reference name="System"/>

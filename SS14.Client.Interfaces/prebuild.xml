@@ -1,0 +1,62 @@
+<Project frameworkVersion="v4_0" name="SS14.Client.Interfaces" rootNamespace="SS14.Client.Interfaces" type="Library" path="SS14.Client.Interfaces">
+  <Configuration name="Debug" platform="x86">
+    <Options>
+      <OutputPath>../Bin</OutputPath>
+    </Options>
+  </Configuration>
+  <Configuration name="Release" platform="x86">
+    <Options>
+      <OutputPath>../Bin</OutputPath>
+    </Options>
+  </Configuration>
+  <ReferencePath>../Bin</ReferencePath>
+  <ReferencePath>../Third-Party</ReferencePath>
+  <Reference name="Gorgon" path="../Third-Party"/>
+  <Reference name="System"/>
+  <Reference name="System.Core"/>
+  <Reference name="System.Drawing"/>
+  <Reference name="System.Xml.Linq"/>
+  <Reference name="System.Data.DataSetExtensions"/>
+  <Reference name="Microsoft.CSharp"/>
+  <Reference name="System.Data"/>
+  <Reference name="System.Xml"/>
+  <Files>
+    <File buildAction="Compile">Collision/ICollidable.cs</File>
+    <File buildAction="Compile">Collision/ICollider.cs</File>
+    <File buildAction="Compile">Collision/ICollisionManager.cs</File>
+    <File buildAction="Compile">Configuration/IConfigurationManager.cs</File>
+    <File buildAction="Compile">GameStates/IGameStateManager.cs</File>
+    <File buildAction="Compile">GOC/GetSVarsEventArgs.cs</File>
+    <File buildAction="Compile">GOC/IEntityManagerContainer.cs</File>
+    <File buildAction="Compile">GOC/IParticleSystemComponent.cs</File>
+    <File buildAction="Compile">GOC/IPlayerAction.cs</File>
+    <File buildAction="Compile">GOC/IRenderableComponent.cs</File>
+    <File buildAction="Compile">GOC/ISpriteComponent.cs</File>
+    <File buildAction="Compile">GOC/ISVarsComponent.cs</File>
+    <File buildAction="Compile">Input/IKeyBindingManager.cs</File>
+    <File buildAction="Compile">Lighting/ILightArea.cs</File>
+    <File buildAction="Compile">Lighting/LightMode.cs</File>
+    <File buildAction="Compile">MessageLogging/IMessageLogger.cs</File>
+    <File buildAction="Compile">Placement/IPlacementManager.cs</File>
+    <File buildAction="Compile">Lighting/ILight.cs</File>
+    <File buildAction="Compile">Lighting/ILightManager.cs</File>
+    <File buildAction="Compile">Map/IMapManager.cs</File>
+    <File buildAction="Compile">Player/IPlayerManager.cs</File>
+    <File buildAction="Compile">Resource/IResourceManager.cs</File>
+    <File buildAction="Compile">Map/ITile.cs</File>
+    <File buildAction="Compile">Serialization/ISS14Serializer.cs</File>
+    <File buildAction="Compile">GameTimer/IGameTimer.cs</File>
+    <File buildAction="Compile">UserInterface/IDragDropInfo.cs</File>
+    <File buildAction="Compile">UserInterface/IGuiComponent.cs</File>
+    <File buildAction="Compile">UserInterface/IUserInterfaceManager.cs</File>
+    <File buildAction="Compile">Network/INetworkGrapher.cs</File>
+    <File buildAction="Compile">Network/INetworkManager.cs</File>
+    <File buildAction="Compile">Properties/AssemblyInfo.cs</File>
+    <File buildAction="Compile">State/IState.cs</File>
+    <File buildAction="Compile">State/IStateManager.cs</File>
+    <File buildAction="Compile">Utility/IRand.cs</File>
+  </Files>
+  <Reference name="SS14.Shared.GameObjects"/>
+  <Reference name="Lidgren.Network"/>
+  <Reference name="SS14.Shared"/>
+</Project>

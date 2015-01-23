@@ -2,7 +2,7 @@
 set PDIR=%~dp0
 cd %PDIR%Bin\MessagingProfiler
 
-call MessagingProfiler.exe %*
+call SS14.Tools.MessagingProfiler.exe %*
 
 cd %PDIR%
 

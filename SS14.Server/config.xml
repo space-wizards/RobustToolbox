@@ -1,0 +1,15 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+
+<PersistentConfiguration xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+                         xmlns:xsd="http://www.w3.org/2001/XMLSchema">
+  <Port>1212</Port>
+  <ServerName>SS14 Server</ServerName>
+  <AdminPassword>admin123</AdminPassword>
+  <MessageLogging>false</MessageLogging>
+  <serverMaxPlayers>32</serverMaxPlayers>
+  <TickRate>66.66</TickRate>
+  <gameType>Game</gameType>
+  <serverMapName>SavedMap</serverMapName>
+  <serverWelcomeMessage>Hello and have a great fucking day!</serverWelcomeMessage>
+  <LogLevel>Information</LogLevel>
+</PersistentConfiguration>

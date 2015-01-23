@@ -1,0 +1,246 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+
+<EntityTemplates>
+  <EntityTemplate name="Forceps">
+    <Components>
+      <Component name="TransformComponent"></Component>
+      <Component name="VelocityComponent"></Component>
+      <Component name="DirectionComponent"></Component>
+      <Component name="BasicMoverComponent"></Component>
+      <Component name="WearableAnimatedSpriteComponent">
+        <Parameters>
+          <Parameter name="sprite" type="string" value="player_toolbox" />
+          <Parameter name="notWornSprite" type="string" value="forceps" />
+        </Parameters>
+      </Component>
+      <Component name="IconComponent">
+        <Parameters>
+          <Parameter name="icon" type="string" value="forceps" />
+        </Parameters>
+      </Component>
+      <Component name="PhysicsComponent"></Component>
+      <Component name="ClickableComponent"></Component>
+      <Component name="BasicItemComponent"></Component>
+    </Components>
+  </EntityTemplate>
+  <EntityTemplate name="Medical_Scanner">
+    <Components>
+      <Component name="TransformComponent"></Component>
+      <Component name="VelocityComponent"></Component>
+      <Component name="DirectionComponent"></Component>
+      <Component name="BasicMoverComponent"></Component>
+      <Component name="WearableAnimatedSpriteComponent">
+        <Parameters>
+          <Parameter name="sprite" type="string" value="player_toolbox" />
+          <Parameter name="notWornSprite" type="string" value="medscanner" />
+        </Parameters>
+      </Component>
+      <Component name="IconComponent">
+        <Parameters>
+          <Parameter name="icon" type="string" value="medscanner" />
+        </Parameters>
+      </Component>
+      <Component name="PhysicsComponent"></Component>
+      <Component name="ClickableComponent"></Component>
+      <Component name="BasicItemComponent"></Component>
+    </Components>
+  </EntityTemplate>
+  <EntityTemplate name="Medical_Saw">
+    <Components>
+      <Component name="TransformComponent"></Component>
+      <Component name="VelocityComponent"></Component>
+      <Component name="DirectionComponent"></Component>
+      <Component name="BasicMoverComponent"></Component>
+      <Component name="WearableAnimatedSpriteComponent">
+        <Parameters>
+          <Parameter name="sprite" type="string" value="player_toolbox" />
+          <Parameter name="notWornSprite" type="string" value="saw" />
+        </Parameters>
+      </Component>
+      <Component name="IconComponent">
+        <Parameters>
+          <Parameter name="icon" type="string" value="saw" />
+        </Parameters>
+      </Component>
+      <Component name="PhysicsComponent"></Component>
+      <Component name="ClickableComponent"></Component>
+      <Component name="BasicItemComponent"></Component>
+    </Components>
+  </EntityTemplate>
+  <EntityTemplate name="Scalpel">
+    <Components>
+      <Component name="TransformComponent"></Component>
+      <Component name="VelocityComponent"></Component>
+      <Component name="DirectionComponent"></Component>
+      <Component name="BasicMoverComponent"></Component>
+      <Component name="WearableAnimatedSpriteComponent">
+        <Parameters>
+          <Parameter name="sprite" type="string" value="player_toolbox" />
+          <Parameter name="notWornSprite" type="string" value="scalpel" />
+        </Parameters>
+      </Component>
+      <Component name="IconComponent">
+        <Parameters>
+          <Parameter name="icon" type="string" value="scalpel" />
+        </Parameters>
+      </Component>
+      <Component name="PhysicsComponent"></Component>
+      <Component name="ClickableComponent"></Component>
+      <Component name="BasicItemComponent"></Component>
+    </Components>
+  </EntityTemplate>
+  <EntityTemplate name="SyringeGun">
+    <Components>
+      <Component name="TransformComponent"></Component>
+      <Component name="VelocityComponent"></Component>
+      <Component name="DirectionComponent"></Component>
+      <Component name="BasicMoverComponent"></Component>
+      <Component name="WearableAnimatedSpriteComponent">
+        <Parameters>
+          <Parameter name="sprite" type="string" value="player_toolbox" />
+          <Parameter name="notWornSprite" type="string" value="syringegun" />
+        </Parameters>
+      </Component>
+      <Component name="IconComponent">
+        <Parameters>
+          <Parameter name="icon" type="string" value="syringegun" />
+        </Parameters>
+      </Component>
+      <Component name="PhysicsComponent"></Component>
+      <Component name="ClickableComponent"></Component>
+      <Component name="BasicItemComponent"></Component>
+    </Components>
+  </EntityTemplate>
+  <EntityTemplate name="Medical_Vial">
+    <Components>
+      <Component name="TransformComponent"></Component>
+      <Component name="VelocityComponent"></Component>
+      <Component name="DirectionComponent"></Component>
+      <Component name="BasicMoverComponent"></Component>
+      <Component name="WearableAnimatedSpriteComponent">
+        <Parameters>
+          <Parameter name="sprite" type="string" value="player_toolbox" />
+          <Parameter name="notWornSprite" type="string" value="vial" />
+        </Parameters>
+      </Component>
+      <Component name="IconComponent">
+        <Parameters>
+          <Parameter name="icon" type="string" value="vial" />
+        </Parameters>
+      </Component>
+      <Component name="PhysicsComponent"></Component>
+      <Component name="ClickableComponent"></Component>
+      <Component name="BasicItemComponent"></Component>
+    </Components>
+  </EntityTemplate>
+  <EntityTemplate name="Medical_Vial_2">
+    <Components>
+      <Component name="TransformComponent"></Component>
+      <Component name="VelocityComponent"></Component>
+      <Component name="DirectionComponent"></Component>
+      <Component name="BasicMoverComponent"></Component>
+      <Component name="WearableAnimatedSpriteComponent">
+        <Parameters>
+          <Parameter name="sprite" type="string" value="player_toolbox" />
+          <Parameter name="notWornSprite" type="string" value="vial_2" />
+        </Parameters>
+      </Component>
+      <Component name="IconComponent">
+        <Parameters>
+          <Parameter name="icon" type="string" value="vial_2" />
+        </Parameters>
+      </Component>
+      <Component name="PhysicsComponent"></Component>
+      <Component name="ClickableComponent"></Component>
+      <Component name="BasicItemComponent"></Component>
+    </Components>
+  </EntityTemplate>
+  <EntityTemplate name="Medkit_Red">
+    <Components>
+      <Component name="TransformComponent"></Component>
+      <Component name="VelocityComponent"></Component>
+      <Component name="DirectionComponent"></Component>
+      <Component name="BasicMoverComponent"></Component>
+      <Component name="WearableAnimatedSpriteComponent">
+        <Parameters>
+          <Parameter name="sprite" type="string" value="player_toolbox" />
+          <Parameter name="notWornSprite" type="string" value="medkit_r" />
+        </Parameters>
+      </Component>
+      <Component name="IconComponent">
+        <Parameters>
+          <Parameter name="icon" type="string" value="medkit_r" />
+        </Parameters>
+      </Component>
+      <Component name="PhysicsComponent"></Component>
+      <Component name="ClickableComponent"></Component>
+      <Component name="BasicItemComponent"></Component>
+    </Components>
+  </EntityTemplate>
+  <EntityTemplate name="Medkit_White">
+    <Components>
+      <Component name="TransformComponent"></Component>
+      <Component name="VelocityComponent"></Component>
+      <Component name="DirectionComponent"></Component>
+      <Component name="BasicMoverComponent"></Component>
+      <Component name="WearableAnimatedSpriteComponent">
+        <Parameters>
+          <Parameter name="sprite" type="string" value="player_toolbox" />
+          <Parameter name="notWornSprite" type="string" value="medkit_w" />
+        </Parameters>
+      </Component>
+      <Component name="IconComponent">
+        <Parameters>
+          <Parameter name="icon" type="string" value="medkit_w" />
+        </Parameters>
+      </Component>
+      <Component name="PhysicsComponent"></Component>
+      <Component name="ClickableComponent"></Component>
+      <Component name="BasicItemComponent"></Component>
+    </Components>
+  </EntityTemplate>
+  <EntityTemplate name="Bruise_Pack">
+    <Components>
+      <Component name="TransformComponent"></Component>
+      <Component name="VelocityComponent"></Component>
+      <Component name="DirectionComponent"></Component>
+      <Component name="BasicMoverComponent"></Component>
+      <Component name="WearableAnimatedSpriteComponent">
+        <Parameters>
+          <Parameter name="sprite" type="string" value="player_toolbox" />
+          <Parameter name="notWornSprite" type="string" value="bruisepack" />
+        </Parameters>
+      </Component>
+      <Component name="IconComponent">
+        <Parameters>
+          <Parameter name="icon" type="string" value="bruisepack" />
+        </Parameters>
+      </Component>
+      <Component name="PhysicsComponent"></Component>
+      <Component name="ClickableComponent"></Component>
+      <Component name="BasicItemComponent"></Component>
+    </Components>
+  </EntityTemplate>
+  <EntityTemplate name="Bandages">
+    <Components>
+      <Component name="TransformComponent"></Component>
+      <Component name="VelocityComponent"></Component>
+      <Component name="DirectionComponent"></Component>
+      <Component name="BasicMoverComponent"></Component>
+      <Component name="WearableAnimatedSpriteComponent">
+        <Parameters>
+          <Parameter name="sprite" type="string" value="player_toolbox" />
+          <Parameter name="notWornSprite" type="string" value="bandages" />
+        </Parameters>
+      </Component>
+      <Component name="IconComponent">
+        <Parameters>
+          <Parameter name="icon" type="string" value="bandages" />
+        </Parameters>
+      </Component>
+      <Component name="PhysicsComponent"></Component>
+      <Component name="ClickableComponent"></Component>
+      <Component name="BasicItemComponent"></Component>
+    </Components>
+  </EntityTemplate>
+</EntityTemplates>

@@ -1,0 +1,129 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<root>
+	<xsd:schema id="root" xmlns="" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:msdata="urn:schemas-microsoft-com:xml-msdata">
+		<xsd:element name="root" msdata:IsDataSet="true">
+			<xsd:complexType>
+				<xsd:choice maxOccurs="unbounded">
+					<xsd:element name="data">
+						<xsd:complexType>
+							<xsd:sequence>
+								<xsd:element name="value" type="xsd:string" minOccurs="0" msdata:Ordinal="1" />
+								<xsd:element name="comment" type="xsd:string" minOccurs="0" msdata:Ordinal="2" />
+							</xsd:sequence>
+							<xsd:attribute name="name" type="xsd:string" />
+							<xsd:attribute name="type" type="xsd:string" />
+							<xsd:attribute name="mimetype" type="xsd:string" />
+						</xsd:complexType>
+					</xsd:element>
+					<xsd:element name="resheader">
+						<xsd:complexType>
+							<xsd:sequence>
+								<xsd:element name="value" type="xsd:string" minOccurs="0" msdata:Ordinal="1" />
+							</xsd:sequence>
+							<xsd:attribute name="name" type="xsd:string" use="required" />
+						</xsd:complexType>
+					</xsd:element>
+				</xsd:choice>
+			</xsd:complexType>
+		</xsd:element>
+	</xsd:schema>
+	<resheader name="ResMimeType">
+		<value>text/microsoft-resx</value>
+	</resheader>
+	<resheader name="Version">
+		<value>1.0.0.0</value>
+	</resheader>
+	<resheader name="Reader">
+		<value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=1.0.5000.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+	</resheader>
+	<resheader name="Writer">
+		<value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=1.0.5000.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+	</resheader>
+	<data name="Argument_DifferentBitStreamLengths">
+		<value>BitStream lengths must be the same.</value>
+	</data>
+	<data name="Argument_InvalidCountOrBitIndex_Byte">
+		<value>count + bitIndex exceeds the length of the 8-bit value.</value>
+	</data>
+	<data name="Argument_InvalidCountOrBitIndex_UInt16">
+		<value>count + bitIndex exceeds the length of the 16-bit value.</value>
+	</data>
+	<data name="Argument_InvalidCountOrBitIndex_UInt32">
+		<value>count + bitIndex exceeds the length of the 32-bit value.</value>
+	</data>
+	<data name="Argument_InvalidCountOrBitIndex_UInt64">
+		<value>count + bitIndex exceeds the length of the 64-bit value.</value>
+	</data>
+	<data name="Argument_InvalidCountOrBitIndex_BitStream">
+		<value>count + offset were out of bounds for the BitStream or count is greater than the number of elements from bitIndex to the end of the BitStream.</value>
+	</data>
+	<data name="Argument_InvalidCountOrOffset">
+		<value>count + offset were out of bounds for the array or count is greater than the number of elements from offset to the end of the array.</value>
+	</data>
+	<data name="ArgumentNull_BitBuffer">
+		<value>The bit buffer cannot be null.</value>
+	</data>
+	<data name="ArgumentNull_BitStream">
+		<value>The BitStream cannot be null.</value>
+	</data>
+	<data name="ArgumentNull_Stream">
+		<value>The Stream cannot be null.</value>
+	</data>
+	<data name="ArgumentOutOfRange_NegativeOrZeroCapacity">
+		<value>Capacity must be greater than zero.</value>
+	</data>
+	<data name="ArgumentOutOfRange_NegativeParameter">
+		<value>Parameter must be greater than or equal to zero.</value>
+	</data>
+	<data name="ArgumentOutOfRange_NegativePosition">
+		<value>Position must be greater than or equal to zero.</value>
+	</data>
+	<data name="ArgumentOutOfRange_InvalidPosition">
+		<value>Position must be less than or equal to the Bit Stream Length - 1.</value>
+	</data>
+	<data name="InvalidOperation_BitIndexGreaterThan32">
+		<value>The internal bit buffer's bit index cannot be greater than 32.</value>
+	</data>
+	<data name="NotSupported_AsyncOps">
+		<value>Asynchronous operations are not supported by the BitStream class.</value>
+	</data>
+	<data name="NotSupported_Flush">
+		<value>Cannot Flush a BitStream.</value>
+	</data>
+	<data name="NotSupported_Seek">
+		<value>Cannot Seek on a BitStream. Use Position property instead.</value>
+	</data>
+	<data name="NotSupported_SetLength">
+		<value>Cannot SetLength of a BitStream.</value>
+	</data>
+	<data name="NotSupported_ReadByte">
+		<value>The inherited ReadByte method is not supported by the BitStream class. Use one of the overloaded Read methods instead.</value>
+	</data>
+	<data name="NotSupported_WriteByte">
+		<value>The inherited WriteByte method is not supported by the BitStream class. Use one of the overloaded Write methods instead.</value>
+	</data>
+	<data name="ObjectDisposed_BitStreamClosed">
+		<value>Cannot access a closed BitStream.</value>
+	</data>
+	<data name="Argument_InvalidCountOrBitIndex_Decimal">
+		<value>count + bitIndex exceeds the length of the 128-bit value.</value>
+	</data>
+	<data name="Argument_InvalidCountOrBitIndex_Char">
+		<value>count + bitIndex exceeds the length of the 16-bit value.</value>
+	</data>
+	<data name="ArgumentNull_MemoryStream">
+		<value>The MemoryStream cannot be null.</value>
+	</data>
+	<data name="ArgumentNull_FileStream">
+		<value>The FileStream cannot be null.</value>
+	</data>
+	<data name="ArgumentNull_BufferedStream">
+		<value>The BufferedStream cannot be null.</value>
+	</data>
+	<data name="ArgumentNull_NetworkStream">
+		<value>The NetworkStream cannot be null.</value>
+	</data>
+	<data name="ArgumentNull_CryptoStream">
+		<value>The CryptoStream cannot be null.</value>
+	</data>
+</root>

@@ -1,0 +1,67 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+
+<EntityTemplates>
+  <EntityTemplate name="WallLight">
+    <Components>
+      <Component name="TransformComponent"></Component>
+      <Component name="VelocityComponent"></Component>
+      <Component name="DirectionComponent"></Component>
+      <Component name="BasicMoverComponent"></Component>
+      <Component name="SpriteComponent">
+        <Parameters>
+          <Parameter name="addsprite" type="string" value="wall_light" />
+        </Parameters>
+      </Component>
+      <Component name="IconComponent">
+        <Parameters>
+          <Parameter name="icon" type="string" value="wall_light" />
+        </Parameters>
+      </Component>
+      <Component name="ClickableComponent"></Component>
+      <Component name="PointLightComponent">
+        <Parameters>
+          <Parameter name="lightoffsetx" type="float" value="0" />
+          <Parameter name="lightoffsety" type="float" value="0" />
+          <Parameter name="lightradius" type="int" value="1024" />
+          <Parameter name="lightColorR" type="int" value="220" />
+          <Parameter name="lightColorG" type="int" value="220" />
+          <Parameter name="lightColorB" type="int" value="198" />
+          <Parameter name="mask" type="string" value="whitemask" />
+        </Parameters>
+      </Component>
+    </Components>
+    <PlacementProperties>
+      <PlacementMode type="AlignWallTops"></PlacementMode>
+    </PlacementProperties>
+  </EntityTemplate>
+  <EntityTemplate name="Flashlight">
+    <Components>
+      <Component name="TransformComponent"></Component>
+      <Component name="VelocityComponent"></Component>
+      <Component name="DirectionComponent"></Component>
+      <Component name="BasicMoverComponent"></Component>
+      <Component name="WearableAnimatedSpriteComponent">
+        <Parameters>
+          <Parameter name="sprite" type="string" value="player_toolbox" />
+          <Parameter name="notWornSprite" type="string" value="flashlight" />
+        </Parameters>
+      </Component>
+      <Component name="IconComponent">
+        <Parameters>
+          <Parameter name="icon" type="string" value="flashlight" />
+        </Parameters>
+      </Component>
+      <Component name="PhysicsComponent"></Component>
+      <Component name="ClickableComponent"></Component>
+      <Component name="BasicItemComponent"></Component>
+      <Component name="FlashLightComponent">
+        <Parameters>
+          <Parameter name="lightradius" type="int" value="512" />
+          <Parameter name="lightColorR" type="int" value="180" />
+          <Parameter name="lightColorG" type="int" value="180" />
+          <Parameter name="lightColorB" type="int" value="140" />
+        </Parameters>
+      </Component>
+    </Components>
+  </EntityTemplate>
+</EntityTemplates>

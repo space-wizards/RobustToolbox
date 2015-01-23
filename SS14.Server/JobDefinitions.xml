@@ -1,0 +1,117 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<JobSettings xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+  <JobDefinitions>
+    
+    <JobDefinition>
+      <Available>true</Available>
+      <Description>Hits people with a turned-off Stunbaton like hes a cop from America.</Description>
+      <JobIcon>job_security</JobIcon>
+      <MaxNum>3</MaxNum>
+      <Name>Security Officer</Name>
+      <Department>Command</Department>
+      <SpawnEquipment>
+        <SpawnEquipDefinition>
+          <Location>Outer</Location>
+          <ObjectType>Armour</ObjectType>
+        </SpawnEquipDefinition>
+        <SpawnEquipDefinition>
+          <Location>Inner</Location>
+          <ObjectType>Assistant_Grey</ObjectType>
+        </SpawnEquipDefinition>
+        <SpawnEquipDefinition>
+          <Location>Head</Location>
+          <ObjectType>Helmet</ObjectType>
+        </SpawnEquipDefinition>
+        <SpawnEquipDefinition>
+          <Location>Feet</Location>
+          <ObjectType>Shoes</ObjectType>
+        </SpawnEquipDefinition>
+      </SpawnEquipment>
+    </JobDefinition>
+
+    <JobDefinition>
+      <Available>true</Available>
+      <Description>Is a huge jerk and pisses off into space at the beginning of the round.</Description>
+      <JobIcon>job_captain</JobIcon>
+      <MaxNum>1</MaxNum>
+      <Name>Captain</Name>
+      <Department>Command</Department>
+    </JobDefinition>
+
+    <JobDefinition>
+      <Available>true</Available>
+      <Description>Destroys the Engine permanently and then disappears forever.</Description>
+      <JobIcon>job_headengineer</JobIcon>
+      <MaxNum>1</MaxNum>
+      <Name>Head of Engineering</Name>
+      <Department>Command</Department>
+    </JobDefinition>
+
+    <JobDefinition>
+      <Available>true</Available>
+      <Description>Ignores wounded people and then spontaneously disappears later on.</Description>
+      <JobIcon>job_medic</JobIcon>
+      <MaxNum>3</MaxNum>
+      <Name>Medic</Name>
+      <Department>Research</Department>
+    </JobDefinition>
+
+    <JobDefinition>
+      <Available>true</Available>
+      <Description>Builds buttbots.</Description>
+      <JobIcon>job_roboticist</JobIcon>
+      <MaxNum>3</MaxNum>
+      <Name>Roboticist</Name>
+      <Department>Research</Department>
+    </JobDefinition>
+
+    <JobDefinition>
+      <Available>true</Available>
+      <Description>Gives everyone genetic defects and then gets toolboxed and thrown out of the airlock.</Description>
+      <JobIcon>job_geneticist</JobIcon>
+      <MaxNum>2</MaxNum>
+      <Name>Geneticist</Name>
+      <Department>Research</Department>
+    </JobDefinition>
+  </JobDefinitions>
+  
+  <DepartmentDefinitions>
+    
+    <DepartmentDefinition>
+      <Name>Command</Name>
+      <Description>The Command Department is responsible for assigning Tasks, overseeing Work and Security on the Station.</Description>
+      <DepartmentIcon>depa_command</DepartmentIcon>
+      <DepartmentColorHex>#e13129</DepartmentColorHex>
+    </DepartmentDefinition>
+
+    <DepartmentDefinition>
+      <Name>Engineering</Name>
+      <Description>The Engineering Department deals with technical Problems on the Station as well as working things like the Engine.</Description>
+      <DepartmentIcon>depa_engineering</DepartmentIcon>
+      <DepartmentColorHex>#ff9900</DepartmentColorHex>
+    </DepartmentDefinition>
+
+    <DepartmentDefinition>
+      <Name>Research</Name>
+      <Description>The Research Department has various Jobs ranging from Plasma Research to Medical Jobs.</Description>
+      <DepartmentIcon>depa_research</DepartmentIcon>
+      <DepartmentColorHex>#846ec2</DepartmentColorHex>
+    </DepartmentDefinition>
+
+    <DepartmentDefinition>
+      <Name>Civilian</Name>
+      <Description>The Civilian Department encompasses a wide Range of various Jobs. Jobs include things like Janitor, Chef or the Clown.</Description>
+      <DepartmentIcon>depa_civilian</DepartmentIcon>
+      <DepartmentColorHex>#67a9eb</DepartmentColorHex>
+    </DepartmentDefinition>
+
+    <DepartmentDefinition>
+      <Name>Wall Research</Name>
+      <Description>BLAH</Description>
+      <DepartmentIcon>depa_wall</DepartmentIcon>
+      <DepartmentColorHex>#48b04f</DepartmentColorHex>
+    </DepartmentDefinition>
+    
+  </DepartmentDefinitions>
+  
+</JobSettings>

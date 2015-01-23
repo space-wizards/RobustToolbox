@@ -1,0 +1,89 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+
+<EntityTemplates>
+  <EntityTemplate name="Extinguisher">
+    <Components>
+      <Component name="TransformComponent"></Component>
+      <Component name="VelocityComponent"></Component>
+      <Component name="DirectionComponent"></Component>
+      <Component name="BasicMoverComponent"></Component>
+      <Component name="SpriteComponent">
+        <Parameters>
+          <Parameter name="addsprite" type="string" value="fire_extinguisher" />
+        </Parameters>
+      </Component>
+      <Component name="IconComponent">
+        <Parameters>
+          <Parameter name="icon" type="string" value="fire_extinguisher" />
+        </Parameters>
+      </Component>
+      <Component name="ClickableComponent"></Component>
+    </Components>
+    <PlacementProperties>
+      <PlacementMode type="AlignWallFree"></PlacementMode>
+      <PlacementOffset offsetX="0" offsetY="0"></PlacementOffset>
+      <PlacementNodes>
+        <PlacementNode nodeHeight="18"></PlacementNode>
+        <PlacementNode nodeHeight="26"></PlacementNode>
+        <PlacementNode nodeHeight="32"></PlacementNode>
+      </PlacementNodes>
+    </PlacementProperties>
+  </EntityTemplate>
+  <EntityTemplate name="FireAlarm">
+    <Components>
+      <Component name="TransformComponent"></Component>
+      <Component name="VelocityComponent"></Component>
+      <Component name="DirectionComponent"></Component>
+      <Component name="BasicMoverComponent"></Component>
+      <Component name="SpriteComponent">
+        <Parameters>
+          <Parameter name="addsprite" type="string" value="fire_alarm_off" />
+        </Parameters>
+      </Component>
+      <Component name="IconComponent">
+        <Parameters>
+          <Parameter name="icon" type="string" value="fire_alarm_off" />
+        </Parameters>
+      </Component>
+      <Component name="ClickableComponent"></Component>
+    </Components>
+    <PlacementProperties>
+      <PlacementMode type="AlignWallFree"></PlacementMode>
+      <PlacementOffset offsetX="0" offsetY="0"></PlacementOffset>
+      <PlacementNodes>
+        <PlacementNode nodeHeight="5"></PlacementNode>
+        <PlacementNode nodeHeight="10"></PlacementNode>
+        <PlacementNode nodeHeight="15"></PlacementNode>
+      </PlacementNodes>
+    </PlacementProperties>
+  </EntityTemplate>
+  <EntityTemplate name="MedCabinet">
+    <Components>
+      <Component name="TransformComponent"></Component>
+      <Component name="VelocityComponent"></Component>
+      <Component name="DirectionComponent"></Component>
+      <Component name="BasicMoverComponent"></Component>
+      <Component name="SpriteComponent">
+        <Parameters>
+          <Parameter name="addsprite" type="string" value="med_cabinet" />
+        </Parameters>
+      </Component>
+      <Component name="IconComponent">
+        <Parameters>
+          <Parameter name="icon" type="string" value="med_cabinet" />
+        </Parameters>
+      </Component>
+      <Component name="ClickableComponent"></Component>
+      <Component name="ContextMenuComponent">
+        <ExtendedParameters>
+          <ContextEntry name="Test123" icon="context_bluepoint" message="null"></ContextEntry>
+          <ContextEntry name="Test456" icon="context_bluepoint" message="null"></ContextEntry>
+        </ExtendedParameters>
+      </Component>
+    </Components>
+    <PlacementProperties>
+      <PlacementMode type="AlignWallFree"></PlacementMode>
+      <PlacementOffset offsetX="0" offsetY="0"></PlacementOffset>
+    </PlacementProperties>
+  </EntityTemplate>
+</EntityTemplates>

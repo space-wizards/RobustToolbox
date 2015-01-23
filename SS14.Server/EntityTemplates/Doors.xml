@@ -1,0 +1,24 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+
+<EntityTemplates>
+  <EntityTemplate name="Door">
+    <Components>
+      <Component name="TransformComponent"></Component>
+      <Component name="VelocityComponent"></Component>
+      <Component name="DirectionComponent"></Component>
+      <Component name="ClickableComponent"></Component>
+      <Component name="SpriteComponent"></Component>
+      <Component name="BasicInteractableComponent"></Component>
+      <Component name="BasicMoverComponent"></Component>
+      <Component name="CollidableComponent"></Component>
+      <Component name="BasicDoorComponent">
+        <Parameters>
+          <Parameter name="OpenSprite" type="string" value="door_ewo" />
+          <Parameter name="ClosedSprite" type="string" value="door_ew" />
+          <Parameter name="OpenOnBump" type="bool" value="true" />
+          <Parameter name="AutoCloseInterval" type="int" value="5000" />
+        </Parameters>
+      </Component>
+    </Components>
+  </EntityTemplate>
+</EntityTemplates>

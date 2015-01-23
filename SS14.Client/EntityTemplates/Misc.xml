@@ -1,0 +1,55 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+
+<EntityTemplates>
+  <EntityTemplate name="Puddle">
+    <Components>
+      <Component name="TransformComponent"></Component>
+      <Component name="VelocityComponent"></Component>
+      <Component name="DirectionComponent"></Component>
+      <Component name="BasicMoverComponent"></Component>
+      <Component name="SpriteComponent">
+        <Parameters>
+          <Parameter name="addsprite" type="string" value="Puddle" />
+        </Parameters>
+      </Component>
+      <Component name="IconComponent">
+        <Parameters>
+          <Parameter name="icon" type="string" value="Puddle" />
+        </Parameters>
+      </Component>
+      <Component name="ClickableComponent"></Component>
+      <Component name="TriggerableComponent">
+        <Parameters>
+          <Parameter name="TweakAABBtop" type="float" value="30" />
+        </Parameters>
+      </Component>
+    </Components>
+  </EntityTemplate>
+  <EntityTemplate name="Blood">
+    <Components>
+      <Component name="TransformComponent"></Component>
+      <Component name="VelocityComponent"></Component>
+      <Component name="DirectionComponent"></Component>
+      <Component name="BasicMoverComponent"></Component>
+      <Component name="SpriteComponent">
+        <Parameters>
+          <Parameter name="addsprite" type="string" value="blood_decal2" />
+        </Parameters>
+      </Component>
+      <Component name="IconComponent">
+        <Parameters>
+          <Parameter name="icon" type="string" value="blood_decal2" />
+        </Parameters>
+      </Component>
+      <Component name="ClickableComponent"></Component>
+    </Components>
+  </EntityTemplate>
+  <EntityTemplate name="Particles">
+    <Components>
+      <Component name="TransformComponent"></Component>
+      <Component name="VelocityComponent"></Component>
+      <Component name="BasicMoverComponent"></Component>
+      <Component name="ParticleSystemComponent"></Component>
+    </Components>
+  </EntityTemplate>
+</EntityTemplates>

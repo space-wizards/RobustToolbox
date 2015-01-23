@@ -1,0 +1,64 @@
+<Project frameworkVersion="v4_0" name="SS14.Server.Services" rootNamespace="SS14.Server.Services" type="Library" path="SS14.Server.Services">
+  <Configuration name="Debug" platform="x86">
+    <Options>
+      <OutputPath>../Bin</OutputPath>
+    </Options>
+  </Configuration>
+  <Configuration name="Release" platform="x86">
+    <Options>
+      <OutputPath>../Bin</OutputPath>
+    </Options>
+  </Configuration>
+  <ReferencePath>../Bin</ReferencePath>
+  <ReferencePath>../Third-Party</ReferencePath>
+  <Reference name="Gorgon" path="../Third-Party"/>
+  <Reference name="System"/>
+  <Reference name="System.Core"/>
+  <Reference name="System.Drawing"/>
+  <Reference name="System.ServiceModel"/>
+  <Reference name="System.Xml.Linq"/>
+  <Reference name="System.Data.DataSetExtensions"/>
+  <Reference name="Microsoft.CSharp"/>
+  <Reference name="System.Data"/>
+  <Reference name="System.Xml"/>
+  <Files>
+    <File buildAction="Compile">Atmos/AtmosManager.cs</File>
+    <File buildAction="Compile">Chat/ChatManager.cs</File>
+    <File buildAction="Compile">ClientConsoleHost/ClientConsoleHost.cs</File>
+    <File buildAction="Compile">Configuration/ConfigurationManager.cs</File>
+    <File buildAction="Compile">ServerConsole/Commands/ListPlayers.cs</File>
+    <File buildAction="Compile">ServerConsole/Commands/RestartServer.cs</File>
+    <File buildAction="Compile">ServerConsole/Commands/SaveConfig.cs</File>
+    <File buildAction="Compile">ServerConsole/Commands/TestCommand.cs</File>
+    <File buildAction="Compile">ServerConsole/ConsoleCommand.cs</File>
+    <File buildAction="Compile">ServerConsole/ConsoleManager.cs</File>
+    <File buildAction="Compile">Crafting/CraftingManager.cs</File>
+    <File buildAction="Compile">GameState/GameStateManager.cs</File>
+    <File buildAction="Compile">Log/LogManager.cs</File>
+    <File buildAction="Compile">Map/MapManager.cs</File>
+    <File buildAction="Compile">MessageLogging/MessageLogger.cs</File>
+    <File buildAction="Compile">MessageLogging/MessageLoggerService.cs</File>
+    <File buildAction="Compile">Configuration/PersistentConfiguration.cs</File>
+    <File buildAction="Compile">Placement/PlacementManager.cs</File>
+    <File buildAction="Compile">Player/PlayerManager.cs</File>
+    <File buildAction="Compile">Player/PlayerSession.cs</File>
+    <File buildAction="Compile">Properties/AssemblyInfo.cs</File>
+    <File buildAction="Compile">Round/Gamemodes.cs</File>
+    <File buildAction="Compile">Round/RoundManager.cs</File>
+    <File buildAction="Compile">Network/SS14NetServer.cs</File>
+    <File buildAction="Compile">Serialization/SS14Serializer.cs</File>
+    <File buildAction="Compile">Atmos/GasCell.cs</File>
+    <File buildAction="Compile">Atmos/GasMixture.cs</File>
+    <File buildAction="Compile">SS14Server.cs</File>
+    <File buildAction="Compile">Tiles/Floor/Floor.cs</File>
+    <File buildAction="Compile">Tiles/Floor/Space.cs</File>
+    <File buildAction="Compile">Tiles/Tile.cs</File>
+    <File buildAction="Compile">Tiles/Wall/Wall.cs</File>
+    <File buildAction="None">MessageLogging/messageLoggerService.config</File>
+  </Files>
+  <Reference name="SS14.Shared.GameObjects"/>
+  <Reference name="Lidgren.Network"/>
+  <Reference name="SS14.Server.Interfaces"/>
+  <Reference name="SS14.Shared.IoC"/>
+  <Reference name="SS14.Shared"/>
+</Project>

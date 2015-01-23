@@ -1,0 +1,37 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+
+<EntityTemplates>
+  <EntityTemplate name="Puddle">
+    <Components>
+      <Component name="TransformComponent"></Component>
+      <Component name="VelocityComponent"></Component>
+      <Component name="DirectionComponent"></Component>
+      <Component name="ClickableComponent"></Component>
+      <Component name="SpriteComponent"></Component>
+      <Component name="BasicInteractableComponent"></Component>
+      <Component name="BasicMoverComponent"></Component>
+      <Component name="CollidableComponent"></Component>
+      <Component name="ThinkHostComponent">
+        <Parameter name="LoadThinkComponent" type="string" value="PuddleThinkComponent" />
+      </Component>
+    </Components>
+  </EntityTemplate>
+  <EntityTemplate name="Blood">
+    <Components>
+      <Component name="TransformComponent"></Component>
+      <Component name="VelocityComponent"></Component>
+      <Component name="DirectionComponent"></Component>
+      <Component name="ClickableComponent"></Component>
+      <Component name="SpriteComponent"></Component>
+      <Component name="BasicMoverComponent"></Component>
+      <Component name="BasicInteractableComponent"></Component>
+    </Components>
+  </EntityTemplate>
+  <EntityTemplate name="Particles">
+    <Components>
+      <Component name="TransformComponent"></Component>
+      <Component name="VelocityComponent"></Component>
+      <Component name="BasicMoverComponent"></Component>
+    </Components>
+  </EntityTemplate>
+</EntityTemplates>

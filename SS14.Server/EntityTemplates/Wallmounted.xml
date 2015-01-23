@@ -1,0 +1,54 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+
+<EntityTemplates>
+  <EntityTemplate name="Extinguisher">
+    <Components>
+      <Component name="TransformComponent"></Component>
+      <Component name="VelocityComponent"></Component>
+      <Component name="DirectionComponent"></Component>
+      <Component name="ClickableComponent"></Component>
+      <Component name="SpriteComponent"></Component>
+      <Component name="BasicInteractableComponent"></Component>
+      <Component name="BasicMoverComponent"></Component>
+      <Component name="BasicLargeObjectComponent"></Component>
+      <Component name="WallMountedComponent"></Component>
+    </Components>
+    <PlacementProperties>
+      <PlacementMode type="AlignWall"></PlacementMode>
+      <PlacementRange value="200"></PlacementRange>
+    </PlacementProperties>
+  </EntityTemplate>
+  <EntityTemplate name="FireAlarm">
+    <Components>
+      <Component name="TransformComponent"></Component>
+      <Component name="VelocityComponent"></Component>
+      <Component name="DirectionComponent"></Component>
+      <Component name="ClickableComponent"></Component>
+      <Component name="SpriteComponent"></Component>
+      <Component name="BasicInteractableComponent"></Component>
+      <Component name="BasicMoverComponent"></Component>
+      <Component name="BasicLargeObjectComponent"></Component>
+      <Component name="WallMountedComponent"></Component>
+    </Components>
+    <PlacementProperties>
+      <PlacementMode type="AlignWall"></PlacementMode>
+      <PlacementRange value="180"></PlacementRange>
+    </PlacementProperties>
+  </EntityTemplate>
+  <EntityTemplate name="MedCabinet">
+    <Components>
+      <Component name="TransformComponent"></Component>
+      <Component name="VelocityComponent"></Component>
+      <Component name="DirectionComponent"></Component>
+      <Component name="ClickableComponent"></Component>
+      <Component name="SpriteComponent"></Component>
+      <Component name="BasicInteractableComponent"></Component>
+      <Component name="BasicMoverComponent"></Component>
+      <Component name="BasicLargeObjectComponent"></Component>
+      <Component name="WallMountedComponent"></Component>
+    </Components>
+    <PlacementProperties>
+      <PlacementMode type="AlignWall"></PlacementMode>
+    </PlacementProperties>
+  </EntityTemplate>
+</EntityTemplates>

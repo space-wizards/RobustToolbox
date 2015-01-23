@@ -1,0 +1,44 @@
+﻿using Lidgren.Network;
+using SS14.Shared;
+using System;
+
+namespace SS14.Server.HelperClasses
+{
+    public struct InterpolationPacket
+    {
+        public Vector2 position;
+        public float rotation;
+        public double time;
+
+        public InterpolationPacket(Vector2 _position, float _rotation, double _time)
+        {
+            position = _position;
+            rotation = _rotation;
+            time = _time;
+        }
+
+        public InterpolationPacket(float x, float y, float _rotation, double _time)
+        {
+            position = new Vector2(x, y);
+            rotation = _rotation;
+            time = _time;
+        }
+
+        public InterpolationPacket(NetIncomingMessage message)
+        {
+            float x = message.ReadFloat();
+            float y = message.ReadFloat();
+            float z = message.ReadFloat();
+            position = new Vector2(x, y);
+            rotation = message.ReadFloat();
+            time = 0;
+        }
+
+        public void WriteMessage(NetOutgoingMessage message)
+        {
+            message.Write((float) Math.Round(position.X, 4));
+            message.Write((float) Math.Round(position.Y, 4));
+            message.Write((float) Math.Round(rotation, 4));
+        }
+    }
+}

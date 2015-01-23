@@ -14,10 +14,10 @@ namespace SS14.Shared.IoC
         static IoCManager()
         {
             ServiceTypes = new List<Type>();
-            if (Assembly.GetEntryAssembly().GetName().Name == "SpaceStation13")
-                ServiceTypes.AddRange(Assembly.LoadFrom("ClientServices.dll").GetTypes());
-            else if (Assembly.GetEntryAssembly().GetName().Name == "SS13_Server")
-                ServiceTypes.AddRange(Assembly.LoadFrom("ServerServices.dll").GetTypes());
+            if (Assembly.GetEntryAssembly().GetName().Name == "SpaceStation14")
+                ServiceTypes.AddRange(Assembly.LoadFrom("SS14.Client.Services.dll").GetTypes());
+            else if (Assembly.GetEntryAssembly().GetName().Name == "SpaceStation14_Server")
+                ServiceTypes.AddRange(Assembly.LoadFrom("SS14.Server.Services.dll").GetTypes());
         }
 
         public static T Resolve<T>()

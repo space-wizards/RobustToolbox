@@ -29,12 +29,12 @@ namespace SS14.Shared.GameObjects
             {
                 case EngineType.Client:
                     _systemTypes.AddRange(
-                        Assembly.LoadFrom("ClientGameObject.dll").GetTypes().Where(
+                        Assembly.LoadFrom("SS14.Client.GameObjects.dll").GetTypes().Where(
                             t => typeof(EntitySystem).IsAssignableFrom(t)));
                     break;
                 case EngineType.Server:
                     _systemTypes.AddRange(
-                        Assembly.LoadFrom("ServerGameObject.dll").GetTypes().Where(
+                        Assembly.LoadFrom("SS14.Server.GameObjects.dll").GetTypes().Where(
                             t => typeof (EntitySystem).IsAssignableFrom(t)));
                     break;
             }

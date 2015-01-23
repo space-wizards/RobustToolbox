@@ -58,10 +58,10 @@ namespace SS14.Shared.GameObjects
             switch (EngineType)
             {
                 case EngineType.Client:
-                    _componentNamespace = "CGO";
+                    _componentNamespace = "SS14.Client.GameObjects";
                     break;
                 case EngineType.Server:
-                    _componentNamespace = "SGO";
+                    _componentNamespace = "SS14.Server.GameObjects";
                     break;
             }
             EntitySystemManager = new EntitySystemManager(this);

@@ -51,12 +51,12 @@ namespace SS14.Client.Services.Resources
             Assembly _assembly = Assembly.GetExecutingAssembly(); ;
             Stream _stream;
 
-            _stream = _assembly.GetManifestResourceStream("ClientServices._EmbeddedBaseResources.bluehigh.ttf");
+            _stream = _assembly.GetManifestResourceStream("SS14.Client.Services._EmbeddedBaseResources.bluehigh.ttf");
             if (_stream != null)
                 _fonts.Add("base_font", Font.FromStream("base_font", _stream, (int)_stream.Length, 10));
             _stream = null;
 
-            _stream = _assembly.GetManifestResourceStream("ClientServices._EmbeddedBaseResources.noSprite.png");
+            _stream = _assembly.GetManifestResourceStream("SS14.Client.Services._EmbeddedBaseResources.noSprite.png");
             if (_stream != null)
             {
                 Image nospriteimage = Image.FromStream("nospriteimage", _stream, (int) _stream.Length);

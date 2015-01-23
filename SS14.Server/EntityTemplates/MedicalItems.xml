@@ -1,0 +1,337 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+
+<EntityTemplates>
+  <EntityTemplate name="Forceps">
+    <Components>
+      <Component name="TransformComponent"></Component>
+      <Component name="VelocityComponent"></Component>
+      <Component name="DirectionComponent"></Component>
+      <Component name="ClickableComponent"></Component>
+      <Component name="WearableAnimatedSpriteComponent">
+        <Parameters>
+          <Parameter name="sprite" type="string" value="player_toolbox" />
+        </Parameters>
+      </Component>
+      <Component name="BasicInteractableComponent"></Component>
+      <Component name="BasicMoverComponent"></Component>
+      <Component name="PhysicsComponent">
+        <Parameters>
+          <Parameter name="Mass" type="float" value="5" />
+        </Parameters>
+      </Component>
+      <Component name="BasicItemComponent">
+        <ExtendedParameters>
+          <ItemCapability name="MeleeWeaponCapability">
+            <ItemCapabilityParameters>
+              <ItemCapabilityParameter name="damageAmount" type="int" value="1" />
+              <ItemCapabilityParameter name="damageType" type="string" value="Pierce" />
+            </ItemCapabilityParameters>
+          </ItemCapability>
+        </ExtendedParameters>
+      </Component>
+    </Components>
+  </EntityTemplate>
+  <EntityTemplate name="Medical_Scanner">
+    <Components>
+      <Component name="TransformComponent"></Component>
+      <Component name="VelocityComponent"></Component>
+      <Component name="DirectionComponent"></Component>
+      <Component name="ClickableComponent"></Component>
+      <Component name="WearableAnimatedSpriteComponent">
+        <Parameters>
+          <Parameter name="sprite" type="string" value="player_toolbox" />
+        </Parameters>
+      </Component>
+      <Component name="BasicInteractableComponent"></Component>
+      <Component name="BasicMoverComponent"></Component>
+      <Component name="PhysicsComponent">
+        <Parameters>
+          <Parameter name="Mass" type="float" value="5" />
+        </Parameters>
+      </Component>
+      <Component name="BasicItemComponent">
+        <ExtendedParameters>
+          <ItemCapability name="HealthScanCapability"></ItemCapability>
+          <ItemCapability name="MeleeWeaponCapability">
+            <ItemCapabilityParameters>
+              <ItemCapabilityParameter name="damageAmount" type="int" value="3" />
+              <ItemCapabilityParameter name="damageType" type="string" value="Bludgeon" />
+            </ItemCapabilityParameters>
+          </ItemCapability>
+        </ExtendedParameters>
+      </Component>
+    </Components>
+  </EntityTemplate>
+  <EntityTemplate name="Medical_Saw">
+    <Components>
+      <Component name="TransformComponent"></Component>
+      <Component name="VelocityComponent"></Component>
+      <Component name="DirectionComponent"></Component>
+      <Component name="ClickableComponent"></Component>
+      <Component name="WearableAnimatedSpriteComponent">
+        <Parameters>
+          <Parameter name="sprite" type="string" value="player_toolbox" />
+        </Parameters>
+      </Component>
+      <Component name="BasicInteractableComponent"></Component>
+      <Component name="BasicMoverComponent"></Component>
+      <Component name="PhysicsComponent">
+        <Parameters>
+          <Parameter name="Mass" type="float" value="5" />
+        </Parameters>
+      </Component>
+      <Component name="BasicItemComponent">
+        <ExtendedParameters>
+          <ItemCapability name="MeleeWeaponCapability">
+            <ItemCapabilityParameters>
+              <ItemCapabilityParameter name="damageAmount" type="int" value="10" />
+              <ItemCapabilityParameter name="damageType" type="string" value="Slice" />
+            </ItemCapabilityParameters>
+          </ItemCapability>
+        </ExtendedParameters>
+      </Component>
+    </Components>
+  </EntityTemplate>
+  <EntityTemplate name="Scalpel">
+    <Components>
+      <Component name="TransformComponent"></Component>
+      <Component name="VelocityComponent"></Component>
+      <Component name="DirectionComponent"></Component>
+      <Component name="ClickableComponent"></Component>
+      <Component name="WearableAnimatedSpriteComponent">
+        <Parameters>
+          <Parameter name="sprite" type="string" value="player_toolbox" />
+        </Parameters>
+      </Component>
+      <Component name="BasicInteractableComponent"></Component>
+      <Component name="BasicMoverComponent"></Component>
+      <Component name="PhysicsComponent">
+        <Parameters>
+          <Parameter name="Mass" type="float" value="5" />
+        </Parameters>
+      </Component>
+      <Component name="BasicItemComponent">
+        <ExtendedParameters>
+          <ItemCapability name="MeleeWeaponCapability">
+            <ItemCapabilityParameters>
+              <ItemCapabilityParameter name="damageAmount" type="int" value="15" />
+              <ItemCapabilityParameter name="damageType" type="string" value="Pierce" />
+            </ItemCapabilityParameters>
+          </ItemCapability>
+        </ExtendedParameters>
+      </Component>
+    </Components>
+  </EntityTemplate>
+  <EntityTemplate name="SyringeGun">
+    <Components>
+      <Component name="TransformComponent"></Component>
+      <Component name="VelocityComponent"></Component>
+      <Component name="DirectionComponent"></Component>
+      <Component name="ClickableComponent"></Component>
+      <Component name="WearableAnimatedSpriteComponent">
+        <Parameters>
+          <Parameter name="sprite" type="string" value="player_toolbox" />
+        </Parameters>
+      </Component>
+      <Component name="BasicInteractableComponent"></Component>
+      <Component name="BasicMoverComponent"></Component>
+      <Component name="PhysicsComponent">
+        <Parameters>
+          <Parameter name="Mass" type="float" value="5" />
+        </Parameters>
+      </Component>
+      <Component name="BasicItemComponent">
+        <ExtendedParameters>
+          <ItemCapability name="MeleeWeaponCapability">
+            <ItemCapabilityParameters>
+              <ItemCapabilityParameter name="damageAmount" type="int" value="10" />
+              <ItemCapabilityParameter name="damageType" type="string" value="Bludgeon" />
+            </ItemCapabilityParameters>
+          </ItemCapability>
+        </ExtendedParameters>
+      </Component>
+    </Components>
+  </EntityTemplate>
+  <EntityTemplate name="Medical_Vial">
+    <Components>
+      <Component name="TransformComponent"></Component>
+      <Component name="VelocityComponent"></Component>
+      <Component name="DirectionComponent"></Component>
+      <Component name="ClickableComponent"></Component>
+      <Component name="WearableAnimatedSpriteComponent">
+        <Parameters>
+          <Parameter name="sprite" type="string" value="player_toolbox" />
+        </Parameters>
+      </Component>
+      <Component name="BasicInteractableComponent"></Component>
+      <Component name="BasicMoverComponent"></Component>
+      <Component name="PhysicsComponent">
+        <Parameters>
+          <Parameter name="Mass" type="float" value="5" />
+        </Parameters>
+      </Component>
+      <Component name="BasicItemComponent">
+        <ExtendedParameters>
+          <ItemCapability name="MeleeWeaponCapability">
+            <ItemCapabilityParameters>
+              <ItemCapabilityParameter name="damageAmount" type="int" value="1" />
+              <ItemCapabilityParameter name="damageType" type="string" value="Bludgeon" />
+            </ItemCapabilityParameters>
+          </ItemCapability>
+        </ExtendedParameters>
+      </Component>
+    </Components>
+  </EntityTemplate>
+  <EntityTemplate name="Medical_Vial_2">
+    <Components>
+      <Component name="TransformComponent"></Component>
+      <Component name="VelocityComponent"></Component>
+      <Component name="DirectionComponent"></Component>
+      <Component name="ClickableComponent"></Component>
+      <Component name="WearableAnimatedSpriteComponent">
+        <Parameters>
+          <Parameter name="sprite" type="string" value="player_toolbox" />
+        </Parameters>
+      </Component>
+      <Component name="BasicInteractableComponent"></Component>
+      <Component name="BasicMoverComponent"></Component>
+      <Component name="PhysicsComponent">
+        <Parameters>
+          <Parameter name="Mass" type="float" value="5" />
+        </Parameters>
+      </Component>
+      <Component name="BasicItemComponent">
+        <ExtendedParameters>
+          <ItemCapability name="MeleeWeaponCapability">
+            <ItemCapabilityParameters>
+              <ItemCapabilityParameter name="damageAmount" type="int" value="1" />
+              <ItemCapabilityParameter name="damageType" type="string" value="Bludgeon" />
+            </ItemCapabilityParameters>
+          </ItemCapability>
+        </ExtendedParameters>
+      </Component>
+    </Components>
+  </EntityTemplate>
+  <EntityTemplate name="Medkit_Red">
+    <Components>
+      <Component name="TransformComponent"></Component>
+      <Component name="VelocityComponent"></Component>
+      <Component name="DirectionComponent"></Component>
+      <Component name="ClickableComponent"></Component>
+      <Component name="WearableAnimatedSpriteComponent">
+        <Parameters>
+          <Parameter name="sprite" type="string" value="player_toolbox" />
+        </Parameters>
+      </Component>
+      <Component name="BasicInteractableComponent"></Component>
+      <Component name="BasicMoverComponent"></Component>
+      <Component name="PhysicsComponent">
+        <Parameters>
+          <Parameter name="Mass" type="float" value="5" />
+        </Parameters>
+      </Component>
+      <Component name="BasicItemComponent">
+        <ExtendedParameters>
+          <ItemCapability name="MeleeWeaponCapability">
+            <ItemCapabilityParameters>
+              <ItemCapabilityParameter name="damageAmount" type="int" value="15" />
+              <ItemCapabilityParameter name="damageType" type="string" value="Bludgeon" />
+            </ItemCapabilityParameters>
+          </ItemCapability>
+        </ExtendedParameters>
+      </Component>
+    </Components>
+  </EntityTemplate>
+  <EntityTemplate name="Medkit_White">
+    <Components>
+      <Component name="TransformComponent"></Component>
+      <Component name="VelocityComponent"></Component>
+      <Component name="DirectionComponent"></Component>
+      <Component name="ClickableComponent"></Component>
+      <Component name="WearableAnimatedSpriteComponent">
+        <Parameters>
+          <Parameter name="sprite" type="string" value="player_toolbox" />
+        </Parameters>
+      </Component>
+      <Component name="BasicInteractableComponent"></Component>
+      <Component name="BasicMoverComponent"></Component>
+      <Component name="PhysicsComponent">
+        <Parameters>
+          <Parameter name="Mass" type="float" value="5" />
+        </Parameters>
+      </Component>
+      <Component name="BasicItemComponent">
+        <ExtendedParameters>
+          <ItemCapability name="MeleeWeaponCapability">
+            <ItemCapabilityParameters>
+              <ItemCapabilityParameter name="damageAmount" type="int" value="15" />
+              <ItemCapabilityParameter name="damageType" type="string" value="Bludgeon" />
+            </ItemCapabilityParameters>
+          </ItemCapability>
+        </ExtendedParameters>
+      </Component>
+    </Components>
+  </EntityTemplate>
+  <EntityTemplate name="Bruise_Pack">
+    <Components>
+      <Component name="TransformComponent"></Component>
+      <Component name="VelocityComponent"></Component>
+      <Component name="DirectionComponent"></Component>
+      <Component name="ClickableComponent"></Component>
+      <Component name="WearableAnimatedSpriteComponent">
+        <Parameters>
+          <Parameter name="sprite" type="string" value="player_toolbox" />
+        </Parameters>
+      </Component>
+      <Component name="BasicInteractableComponent"></Component>
+      <Component name="BasicMoverComponent"></Component>
+      <Component name="PhysicsComponent">
+        <Parameters>
+          <Parameter name="Mass" type="float" value="5" />
+        </Parameters>
+      </Component>
+      <Component name="BasicItemComponent">
+        <ExtendedParameters>
+          <ItemCapability name="MedicalCapability">
+            <ItemCapabilityParameters>
+              <ItemCapabilityParameter name="healAmount" type="int" value="20" />
+              <ItemCapabilityParameter name="damageType" type="string" value="Bludgeon" />
+              <ItemCapabilityParameter name="capacity" type="int" value="100" />
+            </ItemCapabilityParameters>
+          </ItemCapability>
+        </ExtendedParameters>
+      </Component>
+    </Components>
+  </EntityTemplate>
+  <EntityTemplate name="Bandages">
+    <Components>
+      <Component name="TransformComponent"></Component>
+      <Component name="VelocityComponent"></Component>
+      <Component name="DirectionComponent"></Component>
+      <Component name="ClickableComponent"></Component>
+      <Component name="WearableAnimatedSpriteComponent">
+        <Parameters>
+          <Parameter name="sprite" type="string" value="player_toolbox" />
+        </Parameters>
+      </Component>
+      <Component name="BasicInteractableComponent"></Component>
+      <Component name="BasicMoverComponent"></Component>
+      <Component name="PhysicsComponent">
+        <Parameters>
+          <Parameter name="Mass" type="float" value="5" />
+        </Parameters>
+      </Component>
+      <Component name="BasicItemComponent">
+        <ExtendedParameters>
+          <ItemCapability name="MedicalCapability">
+            <ItemCapabilityParameters>
+              <ItemCapabilityParameter name="healAmount" type="int" value="20" />
+              <ItemCapabilityParameter name="damageType" type="string" value="Slashing" />
+              <ItemCapabilityParameter name="capacity" type="int" value="60" />
+            </ItemCapabilityParameters>
+          </ItemCapability>
+        </ExtendedParameters>
+      </Component>
+    </Components>
+  </EntityTemplate>
+</EntityTemplates>

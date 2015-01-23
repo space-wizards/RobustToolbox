@@ -374,7 +374,7 @@ namespace SS14.Client.Services.Map
 
         public ITile GetTypeAt(string type, Vector2D pos)
         {
-            return GetTypeAt(Type.GetType("ClientServices.Tiles." + type, false), pos);
+            return GetTypeAt(Type.GetType("SS14.Client.Services.Tiles." + type, false), pos);
         }
 
         public byte GetTileIndex(string typeName)
@@ -415,7 +415,7 @@ namespace SS14.Client.Services.Map
 
         public Tile GenerateNewTile(string typeName, TileState state, Vector2D pos, Direction dir = Direction.North)
         {
-            Type tileType = Type.GetType("ClientServices.Tiles." + typeName, false);
+            Type tileType = Type.GetType("SS14.Client.Services.Tiles." + typeName, false);
 
             if (tileType == null) throw new ArgumentException("Invalid Tile Type specified : '" + typeName + "' .");
             RectangleF rect = new RectangleF();

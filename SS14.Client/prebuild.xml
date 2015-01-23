@@ -1,15 +1,15 @@
 <Project frameworkVersion="v4_0" name="SpaceStation14" rootNamespace="SS14.Client" type="WinExe" path="SS14.Client">
   <Configuration name="Debug" platform="x86">
     <Options>
-      <OutputPath>../Bin/Client</OutputPath>
+      <OutputPath>../bin/Client</OutputPath>
     </Options>
   </Configuration>
   <Configuration name="Release" platform="x86">
     <Options>
-      <OutputPath>../Bin/Client</OutputPath>
+      <OutputPath>../bin/Client</OutputPath>
     </Options>
   </Configuration>
-  <ReferencePath>../Bin</ReferencePath>
+  <ReferencePath>../bin</ReferencePath>
   <ReferencePath>../Third-Party</ReferencePath>
   <Reference name="Gorgon" localCopy="true" path="../Third-Party"/>
   <Reference name="GorgonInput" localCopy="true" path="../Third-Party"/>

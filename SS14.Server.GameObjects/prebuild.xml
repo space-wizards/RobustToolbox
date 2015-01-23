@@ -1,15 +1,15 @@
 <Project frameworkVersion="v4_0" name="SS14.Server.GameObjects" rootNamespace="SS14.Server.GameObjects" type="Library" path="SS14.Server.GameObjects">
   <Configuration name="Debug" platform="x86">
     <Options>
-      <OutputPath>../Bin</OutputPath>
+      <OutputPath>../bin</OutputPath>
     </Options>
   </Configuration>
   <Configuration name="Release" platform="x86">
     <Options>
-      <OutputPath>../Bin</OutputPath>
+      <OutputPath>../bin</OutputPath>
     </Options>
   </Configuration>
-  <ReferencePath>../Bin</ReferencePath>
+  <ReferencePath>../bin</ReferencePath>
   <ReferencePath>../Third-Party</ReferencePath>
   <Reference name="NetSerializer" path="../Third-Party"/>
   <Reference name="System"/>

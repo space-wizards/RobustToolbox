@@ -54,7 +54,6 @@
   <Reference name="SS14.Client.ClientWindow" localCopy="true"/>
   <Reference name="SS14.Shared.GameObjects" localCopy="true"/>
   <Reference name="Lidgren.Network" localCopy="true"/>
-  <Reference name="SS13.Graphics" localCopy="true"/>
   <Reference name="SS14.Shared.IoC" localCopy="true"/>
   <Reference name="SS14.Shared" localCopy="true"/>
 </Project>

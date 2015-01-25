@@ -111,7 +111,9 @@ namespace SS14.Server.GameObjects.EntitySystems
 
         private bool DoEmptyHandToLargeObjectInteraction(Entity user, Entity obj)
         {
-            throw new NotImplementedException();
+            // Send a message to obj that it has been clicked by user.
+            obj.SendMessage(user, ComponentMessageType.ReceiveEmptyHandToLargeObjectInteraction, new object[1] { user });
+            return true;
         }
 
         private bool DoHandsToItemInteraction(Entity user, Entity obj)
@@ -150,6 +152,5 @@ namespace SS14.Server.GameObjects.EntitySystems
             }
             return true;
         }
-
     }
 }

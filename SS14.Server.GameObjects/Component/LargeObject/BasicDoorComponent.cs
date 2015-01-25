@@ -108,7 +108,7 @@ namespace SS14.Server.GameObjects
         /// <param name="actor">The actor entity</param>
         protected override void HandleEmptyHandToLargeObjectInteraction(Entity actor)
         {
-            ToggleDoor();
+            ToggleDoor(true);
         }
 
         private void ToggleDoor(bool forceToggle = false)

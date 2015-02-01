@@ -44,9 +44,9 @@ namespace SS14.Client.GameObjects
             return false;
         }
 
-        public void DispatchClick(int userUID)
+        public void DispatchClick(int userUID, int clickType)
         {
-            Owner.SendComponentNetworkMessage(this, NetDeliveryMethod.ReliableOrdered, ComponentMessageType.Click,
+            Owner.SendComponentNetworkMessage(this, NetDeliveryMethod.ReliableOrdered, MouseClickType.ConvertClickTypeToComponentMessageType(clickType),
                                               userUID);
         }
 

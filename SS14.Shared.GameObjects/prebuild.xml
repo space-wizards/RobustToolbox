@@ -40,6 +40,7 @@
     <File buildAction="Compile">System/EntityEventHandlingSystem.cs</File>
     <File buildAction="Compile">System/EntityProcessingSystem.cs</File>
     <File buildAction="Compile">System/EntitySystem.cs</File>
+	<File buildAction="Compile">StaticConstants.cs</File>
   </Files>
   <Reference name="Lidgren.Network"/>
   <Reference name="SS14.Shared"/>

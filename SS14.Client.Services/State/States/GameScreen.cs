@@ -839,27 +839,25 @@ namespace SS14.Client.Services.State.States
                 switch (e.Buttons)
                 {
                     case MouseButtons.Left:
+                        if (UserInterfaceManager.currentTargetingAction != null &&
+                            (UserInterfaceManager.currentTargetingAction.TargetType == PlayerActionTargetType.Any ||
+                                UserInterfaceManager.currentTargetingAction.TargetType == PlayerActionTargetType.Other))
+                            UserInterfaceManager.SelectTarget(entToClick);
+                        else
                         {
-                            if (UserInterfaceManager.currentTargetingAction != null &&
-                                (UserInterfaceManager.currentTargetingAction.TargetType == PlayerActionTargetType.Any ||
-                                 UserInterfaceManager.currentTargetingAction.TargetType == PlayerActionTargetType.Other))
-                                UserInterfaceManager.SelectTarget(entToClick);
-                            else
-                            {
-                                var c = (ClickableComponent) entToClick.GetComponent(ComponentFamily.Click);
-                                c.DispatchClick(PlayerManager.ControlledEntity.Uid);
-                            }
+                            var c = (ClickableComponent) entToClick.GetComponent(ComponentFamily.Click);
+                            c.DispatchClick(PlayerManager.ControlledEntity.Uid, MouseClickType.Left);
                         }
                         break;
-
                     case MouseButtons.Right:
                         if (UserInterfaceManager.currentTargetingAction != null)
                             UserInterfaceManager.CancelTargeting();
                         else
-                            UserInterfaceManager.AddComponent(new ContextMenu(entToClick, MousePosScreen,
-                                                                              ResourceManager, UserInterfaceManager));
+                        {
+                            var c = (ClickableComponent)entToClick.GetComponent(ComponentFamily.Click);
+                            c.DispatchClick(PlayerManager.ControlledEntity.Uid, MouseClickType.Right);
+                        }
                         break;
-
                     case MouseButtons.Middle:
                         UserInterfaceManager.DisposeAllComponents<PropEditWindow>();
                         UserInterfaceManager.AddComponent(new PropEditWindow(new Size(400, 400), ResourceManager,

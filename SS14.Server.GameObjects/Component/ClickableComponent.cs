@@ -22,11 +22,13 @@ namespace SS14.Server.GameObjects
             {
                 var type = (ComponentMessageType) message.MessageParameters[0];
                 var uid = (int) message.MessageParameters[1];
-                if (type == ComponentMessageType.Click)
-                    Owner.SendMessage(this, ComponentMessageType.Click, uid);
-                else if (type == ComponentMessageType.ClickedInHand)
-                    Owner.SendMessage(this, ComponentMessageType.ClickedInHand, uid);
-                Owner.RaiseEvent(new ClickedOnEntityEventArgs{Clicked = Owner.Uid, Clicker = uid});
+                var mouseClickType = MouseClickType.None;
+                if(type == ComponentMessageType.LeftClick || type == ComponentMessageType.RightClick || type == ComponentMessageType.ClickedInHand)
+                {
+                    Owner.SendMessage(this, type, uid);
+                    mouseClickType = MouseClickType.ConvertComponentMessageTypeToClickType(type);
+                }
+                Owner.RaiseEvent(new ClickedOnEntityEventArgs { Clicked = Owner.Uid, Clicker = uid, MouseButton = mouseClickType });
             }
         }
     }

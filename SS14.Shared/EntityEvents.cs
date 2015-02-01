@@ -28,6 +28,7 @@ namespace SS14.Shared
     {
         public int Clicker;
         public int Clicked;
+        public int MouseButton;
     }
 
 }

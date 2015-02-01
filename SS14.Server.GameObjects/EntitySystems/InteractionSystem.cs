@@ -24,7 +24,7 @@ namespace SS14.Server.GameObjects.EntitySystems
         {
             Entity user = EntityManager.GetEntity(args.Clicker);
             Entity obj = EntityManager.GetEntity(args.Clicked);
-            UserClickedEntity(user, obj);
+            UserClickedEntity(user, obj, args.MouseButton);
         }
 
         public void HandleBoundKeyChangeEvent(object sender, BoundKeyChangeEventArgs args)
@@ -50,25 +50,46 @@ namespace SS14.Server.GameObjects.EntitySystems
             }
         }
 
-        public bool UserClickedEntity(Entity user, Entity obj)
+        public bool UserClickedEntity(Entity user, Entity obj, int mouseClickType)
         {
             if (user.HasComponent(ComponentFamily.Hands))
             {
                 //It's something with hands!
-                if (obj.HasComponent(ComponentFamily.Item))
+                if (mouseClickType == MouseClickType.Left)
                 {
-                    //It's something with hands using their hands on an item!
-                    return DoHandsToItemInteraction(user, obj);
+                    if (obj.HasComponent(ComponentFamily.Item))
+                    {
+                        //It's something with hands using their hands on an item!
+                        return DoEmptyHandToItemInteraction(user, obj);
+                    }
+                    if (obj.HasComponent(ComponentFamily.LargeObject))
+                    {
+                        //It's something with hands using their hands on a large object!
+                        return DoEmptyHandToLargeObjectInteraction(user, obj);
+                    }
+                    if (obj.HasComponent(ComponentFamily.Actor))
+                    {
+                        //It's something with hands using their hands on an actor!
+                        return DoEmptyHandToActorInteraction(user, obj);
+                    }
                 }
-                if (obj.HasComponent(ComponentFamily.LargeObject))
+                if (mouseClickType == MouseClickType.Right)
                 {
-                    //It's something with hands using their hands on a large object!
-                    return DoHandsToLargeObjectInteraction(user, obj);
-                }
-                if (obj.HasComponent(ComponentFamily.Actor))
-                {
-                    //It's something with hands using their hands on an actor!
-                    return DoHandsToActorInteraction(user, obj);
+                    if (obj.HasComponent(ComponentFamily.Item))
+                    {
+                        //It's something with hands using their hands on an item!
+                        return DoHandsToItemInteraction(user, obj);
+                    }
+                    if (obj.HasComponent(ComponentFamily.LargeObject))
+                    {
+                        //It's something with hands using their hands on a large object!
+                        return DoHandsToLargeObjectInteraction(user, obj);
+                    }
+                    if (obj.HasComponent(ComponentFamily.Actor))
+                    {
+                        //It's something with hands using their hands on an actor!
+                        return DoHandsToActorInteraction(user, obj);
+                    }
                 }
             }
             return false;

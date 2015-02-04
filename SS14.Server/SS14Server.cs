@@ -213,7 +213,10 @@ namespace SS14.Server
             if ((DateTime.Now - lastBytesUpdate).TotalMilliseconds > 1000)
             {
                 string netstats = UpdateBPS();
-                Console.Title = "FPS: " + Math.Round(frameTimeAverage(), 2) + " | Netstats: " + netstats;
+                Console.Title = string.Format("FPS: {0:N2} | Net: ({1}) | Memory: {2:N0} KiB",
+                    Math.Round(frameTimeAverage(), 2),
+                    netstats,
+                    System.Diagnostics.Process.GetCurrentProcess().PrivateMemorySize64 >> 10);
                 lastBytesUpdate = DateTime.Now;
             }
 
@@ -227,10 +230,9 @@ namespace SS14.Server
 
         private string UpdateBPS()
         {
-            string BPS = "S: " + (IoCManager.Resolve<ISS14NetServer>().Statistics.SentBytes - lastSentBytes)/1000f +
-                         "kB/s | R: " +
-                         (IoCManager.Resolve<ISS14NetServer>().Statistics.ReceivedBytes - lastRecievedBytes)/1000f +
-                         "kB/s";
+            string BPS = string.Format("Send: {0:N0} KiB/s, Recv: {1:N0} KiB/s",
+                (IoCManager.Resolve<ISS14NetServer>().Statistics.SentBytes - lastSentBytes) >> 10,
+                (IoCManager.Resolve<ISS14NetServer>().Statistics.ReceivedBytes - lastRecievedBytes) >> 10);
             lastSentBytes = IoCManager.Resolve<ISS14NetServer>().Statistics.SentBytes;
             lastRecievedBytes = IoCManager.Resolve<ISS14NetServer>().Statistics.ReceivedBytes;
             return BPS;

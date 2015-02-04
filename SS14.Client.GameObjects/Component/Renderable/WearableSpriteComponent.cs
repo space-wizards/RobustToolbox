@@ -119,9 +119,6 @@ namespace SS14.Client.GameObjects
                 case ComponentMessageType.ItemUnEquipped:
                     worn = false;
                     break;
-                case ComponentMessageType.SetWornDrawDepth:
-                    wornDrawDepth = (DrawDepth) list[0];
-                    break;
             }
 
             return reply;

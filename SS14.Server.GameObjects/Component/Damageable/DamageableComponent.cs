@@ -41,26 +41,9 @@ namespace SS14.Server.GameObjects
                 case ComponentMessageType.Damage:
                     ApplyDamage((Entity) list[0], (int) list[1], (DamageType) list[2]);
                     break;
-                case ComponentMessageType.GetCurrentHealth:
-                    var reply2 = new ComponentReplyMessage(ComponentMessageType.CurrentHealth, GetHealth(),
-                                                           GetMaxHealth());
-                    reply = reply2;
-                    break;
             }
 
             return reply;
-        }
-
-        public override void HandleNetworkMessage(IncomingEntityComponentMessage message, NetConnection client)
-        {
-            var type = (ComponentMessageType) message.MessageParameters[0];
-
-            switch (type)
-            {
-                case (ComponentMessageType.HealthStatus):
-                    SendHealthUpdate(client);
-                    break;
-            }
         }
 
         public virtual float GetMaxHealth()
@@ -78,6 +61,7 @@ namespace SS14.Server.GameObjects
             SendHealthUpdate(null);
         }
 
+        [Obsolete("This is old and should be removed. Everything that calls this should instead trigger Die() if necessary.")]
         protected virtual void SendHealthUpdate(NetConnection client)
         {
             if (currentHealth <= 0)
@@ -86,10 +70,6 @@ namespace SS14.Server.GameObjects
                 {
                     Die();
                 }
-
-                /*Owner.SendComponentNetworkMessage(this, NetDeliveryMethod.ReliableOrdered,
-                                                  client != null ? client : null, ComponentMessageType.HealthStatus,
-                                                  isDead);*/
             }
         }
 

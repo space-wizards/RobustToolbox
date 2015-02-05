@@ -13,6 +13,9 @@ using System.Linq;
 
 namespace SS14.Server.GameObjects
 {
+    /// <summary>
+    /// Handles mob health, with locational damage
+    /// </summary>
     public class HumanHealthComponent : HealthComponent
     {
         private DateTime _lastUpdate;
@@ -212,18 +215,6 @@ namespace SS14.Server.GameObjects
             ; //Apply randomly instead of chest only
         }
 
-        public override void HandleNetworkMessage(IncomingEntityComponentMessage message, NetConnection client)
-        {
-            var type = (ComponentMessageType) message.MessageParameters[0];
-
-            switch (type)
-            {
-                case (ComponentMessageType.HealthStatus):
-                    SendHealthUpdate(client);
-                    break;
-            }
-        }
-
         public override ComponentReplyMessage RecieveMessage(object sender, ComponentMessageType type,
                                                              params object[] list)
         {
@@ -245,11 +236,6 @@ namespace SS14.Server.GameObjects
                                                                dmgLoc.UpdateTotalHealth(), dmgLoc.maxHealth);
                         reply = reply1;
                     }
-                    break;
-                case ComponentMessageType.GetCurrentHealth:
-                    var reply2 = new ComponentReplyMessage(ComponentMessageType.CurrentHealth, GetHealth(),
-                                                           GetMaxHealth());
-                    reply = reply2;
                     break;
                 case ComponentMessageType.Damage:
                     if (list.Count() > 3) //We also have a target location
@@ -275,31 +261,6 @@ namespace SS14.Server.GameObjects
         {
             return damageZones.Sum(x => x.UpdateTotalHealth());
         }
-
-        protected override void SendHealthUpdate()
-        {
-            SendHealthUpdate(null);
-        }
-
-        protected override void SendHealthUpdate(NetConnection client)
-        {
-            foreach (DamageLocation loc in damageZones)
-            {
-                var newUp = new List<object>();
-                newUp.Add(ComponentMessageType.HealthStatus);
-                newUp.Add(loc.location);
-                newUp.Add(loc.damageIndex.Count);
-                newUp.Add(loc.maxHealth);
-                foreach (var damagePair in loc.damageIndex)
-                {
-                    newUp.Add(damagePair.Key);
-                    newUp.Add(damagePair.Value);
-                }
-                /*Owner.SendComponentNetworkMessage(this, NetDeliveryMethod.ReliableOrdered,
-                                                  client != null ? client : null, newUp.ToArray());*/
-            }
-        }
-
 
         protected bool HasInternals()
         {

@@ -1,5 +1,7 @@
-﻿using Lidgren.Network;
+﻿using System;
+using Lidgren.Network;
 using SS14.Shared;
+using SS14.Shared.GO.Component.Inventory;
 using SS14.Shared.GameObjects;
 using SS14.Shared.GO;
 using System.Collections.Generic;
@@ -14,8 +16,6 @@ namespace SS14.Client.GameObjects
         public delegate void InventoryComponentUpdateHandler(
             InventoryComponent sender, int maxSlots, List<Entity> entities);
 
-        public delegate void InventoryUpdateRequiredHandler(InventoryComponent sender);
-
         #endregion
 
         public InventoryComponent()
@@ -28,40 +28,13 @@ namespace SS14.Client.GameObjects
 
         public int MaxSlots { get; private set; }
 
+        public override Type StateType
+        {
+            get { return typeof(InventoryComponentState); }
+        }
+
         public event InventoryComponentUpdateHandler Changed;
-
-        public event InventoryUpdateRequiredHandler UpdateRequired;
-
-        public override void HandleNetworkMessage(IncomingEntityComponentMessage message, NetConnection sender)
-        {
-            switch ((ComponentMessageType) message.MessageParameters[0])
-            {
-                case ComponentMessageType.InventoryInformation:
-                    UnpackListing(message);
-                    break;
-                case ComponentMessageType.InventoryUpdateRequired:
-                    if (UpdateRequired != null) UpdateRequired(this);
-                    break;
-            }
-        }
-
-        private void UnpackListing(IncomingEntityComponentMessage msg)
-        {
-            MaxSlots = (int) msg.MessageParameters[1];
-
-            ContainedEntities.Clear();
-
-            for (int i = 0; i < (int) msg.MessageParameters[2]; i++)
-            {
-                int msgPos = 3 + i;
-                Entity entity = Owner.EntityManager.GetEntity((int) msg.MessageParameters[msgPos]);
-                if (entity != null)
-                    ContainedEntities.Add(entity);
-            }
-
-            if (Changed != null) Changed(this, MaxSlots, ContainedEntities);
-        }
-
+        
         public bool ContainsEntity(Entity entity)
         {
             return ContainedEntities.Contains(entity);
@@ -79,18 +52,14 @@ namespace SS14.Client.GameObjects
                        : null;
         }
 
-        public void SendRequestListing()
-        {
-            Owner.SendComponentNetworkMessage(this, NetDeliveryMethod.ReliableUnordered,
-                                              ComponentMessageType.InventoryInformation);
-        }
-
+        // TODO raise an event to be handled by a clientside InventorySystem, which will send the event through to the server?
         public void SendInventoryAdd(Entity ent)
         {
             Owner.SendComponentNetworkMessage(this, NetDeliveryMethod.ReliableUnordered,
                                               ComponentMessageType.InventoryAdd, ent.Uid);
         }
 
+        // TODO raise an event to be handled by a clientside InventorySystem, which will send the event through to the server?
         public void SendInventoryRemove(Entity ent)
         {
             Owner.SendComponentNetworkMessage(this, NetDeliveryMethod.ReliableUnordered,
@@ -107,11 +76,6 @@ namespace SS14.Client.GameObjects
 
             switch (type)
             {
-                case ComponentMessageType.InventoryInformation:
-                    Owner.SendComponentNetworkMessage(this, NetDeliveryMethod.ReliableUnordered,
-                                                      ComponentMessageType.InventoryInformation);
-                    break;
-
                 case ComponentMessageType.InventoryAdd:
                     SendInventoryAdd((Entity) list[0]);
                     break;
@@ -122,6 +86,43 @@ namespace SS14.Client.GameObjects
             }
 
             return reply;
+        }
+
+        public override void HandleComponentState(dynamic state)
+        {
+            var theState = state as InventoryComponentState;
+            var stateChanged = false;
+            if(MaxSlots != theState.MaxSlots)
+            {
+                MaxSlots = theState.MaxSlots;
+                stateChanged = true;
+            }
+
+            var newEntities = new List<int>(theState.ContainedEntities);
+            var toRemove = new List<Entity>();
+            foreach (var e in ContainedEntities)
+            {
+                if(newEntities.Contains(e.Uid))
+                {
+                    newEntities.Remove(e.Uid);
+                }
+                else
+                {
+                    toRemove.Add(e);
+                }
+            }
+            stateChanged = stateChanged || toRemove.Any() || newEntities.Any();
+            foreach (var e in toRemove)
+            {
+                ContainedEntities.Remove(e);
+            }
+
+            foreach (var uid in newEntities)
+            {
+                ContainedEntities.Add(Owner.EntityManager.GetEntity(uid));
+            }
+            
+            if (stateChanged && Changed != null) Changed(this, MaxSlots, ContainedEntities);
         }
     }
 }

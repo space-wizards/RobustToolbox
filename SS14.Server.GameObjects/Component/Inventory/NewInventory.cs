@@ -1,6 +1,6 @@
 ﻿using SS14.Shared.GameObjects;
 using SS14.Shared.GO;
-using SS14.Shared.GO.Inventory;
+using SS14.Shared.GO.Component.Inventory;
 using System.Collections.Generic;
 using System.Linq;
 using System.Xml.Linq;
@@ -59,7 +59,7 @@ namespace SS14.Server.GameObjects
         public override ComponentState GetComponentState()
         {
             List<int> entities = containedEntities.Select(x => x.Uid).ToList();
-            return new InventoryState(maxSlots, entities);
+            return new InventoryComponentState(maxSlots, entities);
         }
     }
 }

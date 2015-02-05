@@ -27,13 +27,7 @@ namespace SS14.Client.Services.UserInterface.Inventory
                                                           _resourceManager);
             _inventoryComponent = assignedCompo;
             _inventoryComponent.Changed += ComponentChanged;
-            _inventoryComponent.UpdateRequired += ComponentUpdateRequired;
-            _inventoryComponent.SendRequestListing();
-        }
-
-        private void ComponentUpdateRequired(InventoryComponent sender)
-        {
-            _inventoryComponent.SendRequestListing();
+            RebuildInventoryView(_inventoryComponent.MaxSlots, _inventoryComponent.ContainedEntities);
         }
 
         private void ComponentChanged(InventoryComponent sender, int maxSlots, List<Entity> entities)
@@ -113,7 +107,6 @@ namespace SS14.Client.Services.UserInterface.Inventory
         public override void Dispose()
         {
             _inventoryComponent.Changed -= ComponentChanged;
-            _inventoryComponent.UpdateRequired -= ComponentUpdateRequired;
             _inventoryContainer.Dispose();
             base.Dispose();
             GC.SuppressFinalize(this);

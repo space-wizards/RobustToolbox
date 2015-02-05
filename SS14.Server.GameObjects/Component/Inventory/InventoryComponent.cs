@@ -3,7 +3,7 @@ using SS14.Server.Interfaces.GOC;
 using SS14.Shared;
 using SS14.Shared.GameObjects;
 using SS14.Shared.GO;
-using SS14.Shared.GO.Inventory;
+using SS14.Shared.GO.Component.Inventory;
 using System.Collections.Generic;
 using System.Linq;
 using System.Xml.Linq;
@@ -36,10 +36,7 @@ namespace SS14.Server.GameObjects
         {
             switch ((ComponentMessageType) message.MessageParameters[0])
             {
-                case ComponentMessageType.InventoryInformation:
-                    SendFullListing(client);
-                    break;
-
+                //TODO route these through the InventorySystem
                 case ComponentMessageType.InventoryAdd:
                     Entity entAdd = Owner.EntityManager.GetEntity((int) message.MessageParameters[1]);
                     if (entAdd != null)
@@ -76,11 +73,6 @@ namespace SS14.Server.GameObjects
                     RemoveFromInventory((Entity) list[0]);
                     break;
 
-                case ComponentMessageType.InventoryInformation:
-                    reply = new ComponentReplyMessage(ComponentMessageType.InventoryInformation, maxSlots,
-                                                      containedEntities);
-                    break;
-
                 case ComponentMessageType.InventorySetSize:
                     maxSlots = (int) list[0];
                     break;
@@ -95,10 +87,6 @@ namespace SS14.Server.GameObjects
             else return false;
         }
 
-        public override void HandleInstantiationMessage(NetConnection netConnection)
-        {
-        }
-
         public override void HandleExtendedParameters(XElement extendedParameters)
         {
             foreach (XElement param in extendedParameters.Descendants("InventoryProperties"))
@@ -108,22 +96,6 @@ namespace SS14.Server.GameObjects
 
                 //TODO: Add support for objects that are created inside inventories (Lockers, crates etc)
             }
-        }
-
-        private void SendFullListing(NetConnection connection)
-        {
-            var objArray = new object[containedEntities.Count + 3];
-
-            objArray[0] = ComponentMessageType.InventoryInformation;
-            objArray[1] = maxSlots;
-            objArray[2] = containedEntities.Count;
-
-            for (int i = 0; i < containedEntities.Count; i++)
-            {
-                objArray[3 + i] = containedEntities[i].Uid;
-            }
-
-            Owner.SendDirectedComponentNetworkMessage(this, NetDeliveryMethod.ReliableUnordered, connection, objArray);
         }
 
         //Adds item to inventory and dispatches hide message to sprite compo.
@@ -142,8 +114,6 @@ namespace SS14.Server.GameObjects
                 containedEntities.Add(entity);
 
                 HandleAdded(entity);
-                Owner.SendDirectedComponentNetworkMessage(this, NetDeliveryMethod.ReliableOrdered, null,
-                                                          ComponentMessageType.InventoryUpdateRequired);
             }
         }
 
@@ -155,8 +125,6 @@ namespace SS14.Server.GameObjects
                 containedEntities.Remove(entity);
             }
             HandleRemoved(entity);
-            Owner.SendDirectedComponentNetworkMessage(this, NetDeliveryMethod.ReliableOrdered, null,
-                                                      ComponentMessageType.InventoryUpdateRequired);
             return true;
         }
 
@@ -206,7 +174,7 @@ namespace SS14.Server.GameObjects
         public override ComponentState GetComponentState()
         {
             List<int> entities = containedEntities.Select(x => x.Uid).ToList();
-            return new InventoryState(maxSlots, entities);
+            return new InventoryComponentState(maxSlots, entities);
         }
     }
 }

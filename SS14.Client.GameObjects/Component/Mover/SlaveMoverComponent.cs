@@ -34,6 +34,7 @@ namespace SS14.Client.GameObjects
         private void Attach(int uid)
         {
             _master = Owner.EntityManager.GetEntity(uid);
+            // TODO handle this using event queue so that these sorts of interactions are deferred until we can be sure the target entity exists
             _master.GetComponent<TransformComponent>(ComponentFamily.Transform).OnMove += HandleOnMove;
             Translate(_master.GetComponent<TransformComponent>(ComponentFamily.Transform).Position);
         }

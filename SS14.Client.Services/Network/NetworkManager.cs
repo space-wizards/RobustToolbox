@@ -32,6 +32,10 @@ namespace SS14.Client.Services.Network
 #endif
             }
 
+#if DEBUG
+            _netConfig.ConnectionTimeout = 30000f;
+#endif
+
             NetClient = new NetClient(_netConfig);
             NetClient.Start();
         }

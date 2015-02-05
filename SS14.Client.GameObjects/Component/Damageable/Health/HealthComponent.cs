@@ -6,8 +6,10 @@ using System;
 
 namespace SS14.Client.GameObjects
 {
+    /// <summary>
+    /// Behaves like the damageable component but tracks health as well
+    /// </summary>
     public class HealthComponent : DamageableComponent
-        //Behaves like the damageable component but recieves updates about its health.
     {
         //Useful for objects that need to show different stages of damage clientside.
         protected float Health;
@@ -16,38 +18,6 @@ namespace SS14.Client.GameObjects
         public override Type StateType
         {
             get { return typeof (HealthComponentState); }
-        }
-
-        public override void HandleNetworkMessage(IncomingEntityComponentMessage message, NetConnection sender)
-        {
-            var type = (ComponentMessageType) message.MessageParameters[0];
-
-            /*switch (type)
-            {
-                case (ComponentMessageType.HealthStatus):
-                    Health = (float)message.MessageParameters[1];
-                    MaxHealth = (float)message.MessageParameters[2];
-                    if (GetHealth() <= 0) Die();
-                    break;
-            }*/
-        }
-
-        public override ComponentReplyMessage RecieveMessage(object sender, ComponentMessageType type,
-                                                             params object[] list)
-        {
-            ComponentReplyMessage reply = base.RecieveMessage(sender, type, list);
-
-            if (sender == this) //Don't listen to our own messages!
-                return ComponentReplyMessage.Empty;
-
-            switch (type)
-            {
-                case ComponentMessageType.GetCurrentHealth:
-                    reply = new ComponentReplyMessage(ComponentMessageType.CurrentHealth, GetHealth(), GetMaxHealth());
-                    break;
-            }
-
-            return reply;
         }
 
         public virtual float GetMaxHealth()

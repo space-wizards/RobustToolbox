@@ -10,12 +10,13 @@ using System.Linq;
 
 namespace SS14.Client.GameObjects
 {
+    /// <summary>
+    /// Behaves like health component but tracks damage of individual zones.
+    /// This is for mobs.
+    /// </summary>
     public class HumanHealthComponent : HealthComponent
-        //Behaves like health component but tracks damage of individual zones.
     {
-        //Useful for mobs.
-
-        public List<DamageLocation> DamageZones = new List<DamageLocation>(); //makes this protected again.
+        public List<DamageLocation> DamageZones = new List<DamageLocation>();
 
         public override Type StateType
         {
@@ -28,6 +29,7 @@ namespace SS14.Client.GameObjects
 
             switch (type)
             {
+                // TODO refactor me -- health status data should flow entirely via states -- maybe this is true, but right now its using both...
                 case (ComponentMessageType.HealthStatus):
                     HandleHealthUpdate(message);
                     break;
@@ -44,6 +46,7 @@ namespace SS14.Client.GameObjects
 
             switch (type)
             {
+                // TODO refactor me - GUI should reference component directly rather than doing this message shit
                 case ComponentMessageType.GetCurrentLocationHealth:
                     var location = (BodyPart) list[0];
                     if (DamageZones.Exists(x => x.Location == location))
@@ -53,14 +56,16 @@ namespace SS14.Client.GameObjects
                                                           dmgLoc.UpdateTotalHealth(), dmgLoc.MaxHealth);
                     }
                     break;
-                case ComponentMessageType.GetCurrentHealth:
-                    reply = new ComponentReplyMessage(ComponentMessageType.CurrentHealth, GetHealth(), GetMaxHealth());
-                    break;
             }
 
             return reply;
         }
 
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="msg"></param>
+        [Obsolete("This is the old way of doing things -- this should be removed and this component should be checked to make sure the state system handles its work.")]
         public void HandleHealthUpdate(IncomingEntityComponentMessage msg)
         {
             var part = (BodyPart) msg.MessageParameters[1];

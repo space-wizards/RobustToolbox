@@ -128,7 +128,6 @@
         GetActiveHandItem,
         ItemGetCapability,
         CurrentLocationDamage,
-        GetCurrentHealth,
         CurrentHealth,
         GetCurrentLocationHealth,
         CurrentLocationHealth,

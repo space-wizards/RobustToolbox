@@ -93,10 +93,10 @@ namespace SS14.Client.GameObjects
             sprite.SetAnimationState(state);
             sprite.SetLoop(loop);
 
-            foreach(AnimatedSpriteComponent s in slaves)
+            /*foreach(AnimatedSpriteComponent s in slaves)
             {
                 s.SetAnimationState(state, loop);
-            }
+            }*/
         }
 
         public override ComponentReplyMessage RecieveMessage(object sender, ComponentMessageType type,
@@ -228,6 +228,8 @@ namespace SS14.Client.GameObjects
 
         public virtual void Render(Vector2D topLeft, Vector2D bottomRight)
         {
+            UpdateSlaves();
+
             //Render slaves beneath
             IEnumerable<IRenderableComponent> renderablesBeneath = from IRenderableComponent c in slaves
                                                               //FIXTHIS
@@ -287,9 +289,28 @@ namespace SS14.Client.GameObjects
         public override void Update(float frameTime)
         {
             base.Update(frameTime);
-            if(sprite != null)
+            if (sprite != null && !IsSlaved())
             {
                 sprite.Update(frameTime);
+            }
+        }
+
+        public virtual void UpdateSlaves()
+        {
+            if (slaves.Any())
+            {
+                foreach (var slave in slaves.OfType<AnimatedSpriteComponent>())
+                {
+                    slave.CopyAnimationInfoFrom(this);
+                }
+            }
+        }
+
+        protected void CopyAnimationInfoFrom(AnimatedSpriteComponent c)
+        {
+            if (sprite != null && c != null && c.sprite != null)
+            {
+                sprite.CopyStateFrom(c.sprite);
             }
         }
 

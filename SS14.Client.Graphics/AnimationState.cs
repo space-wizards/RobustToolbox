@@ -37,5 +37,11 @@ namespace SS14.Client.Graphics
             }
             CurrentFrame = (int)Math.Floor(CurrentTime*_info.FPS);
         }
+
+        public void SetTime(float time)
+        {
+            CurrentTime = time;
+            CurrentFrame = (int) Math.Floor(CurrentTime*_info.FPS);
+        }
     }
 }

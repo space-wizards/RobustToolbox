@@ -33,8 +33,11 @@ namespace SS14.Client.Graphics
             get { return _direction; }
             set
             {
-                _direction = value;
-                UpdateDirection();
+                if(_direction != value)
+                {
+                    _direction = value;
+                    UpdateDirection();
+                }
             }
         }
 
@@ -179,6 +182,21 @@ namespace SS14.Client.Graphics
         public void SetLoop(bool loop)
         {
             _currentAnimationState.Loop = loop;
+        }
+
+        public void SetTime(float time)
+        {
+            _currentAnimationState.SetTime(time);
+            SetCurrentSprite();
+        }
+
+        public void CopyStateFrom(AnimatedSprite sprite)
+        {
+            SetAnimationState(sprite.CurrentAnimationStateKey);
+            Direction = sprite.Direction;
+            var otherAnimationState = sprite._currentAnimationState;
+            SetLoop(otherAnimationState.Loop);
+            SetTime(otherAnimationState.CurrentTime);
         }
 
         public void Update(float time)

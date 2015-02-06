@@ -29,7 +29,7 @@
     <File buildAction="Compile">Component/Hitbox/HitboxComponent.cs</File>
     <File buildAction="Compile">Component/IInventoryContainer.cs</File>
     <File buildAction="Compile">Component/Inventory/NewInventory.cs</File>
-    <File buildAction="Compile">Component/Inventory/Inventory.cs</File>
+    <File buildAction="Compile">Component/Inventory/InventoryComponent.cs</File>
     <File buildAction="Compile">Component/Item/ItemCapability/BreatherCapability.cs</File>
     <File buildAction="Compile">Component/Item/ItemCapability/HealthScanCapability.cs</File>
     <File buildAction="Compile">Component/Light/LightComponent.cs</File>

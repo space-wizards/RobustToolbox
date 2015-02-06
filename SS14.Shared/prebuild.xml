@@ -34,7 +34,7 @@
     <File buildAction="Compile">GO/Component/Renderable/WearableAnimatedSpriteComponentState.cs</File>
     <File buildAction="Compile">GO/Events/InputEvents.cs</File>
     <File buildAction="Compile">GO/Component/Hands/HandsComponentState.cs</File>
-    <File buildAction="Compile">GO/Inventory/InventoryState.cs</File>
+    <File buildAction="Compile">GO/Component/Inventory/InventoryComponentState.cs</File>
     <File buildAction="Compile">InventoryLocEnum.cs</File>
     <File buildAction="Compile">GameStateDelta.cs</File>
     <File buildAction="Compile">GameStates/GameState.cs</File>

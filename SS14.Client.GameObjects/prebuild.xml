@@ -41,7 +41,7 @@
     <File buildAction="Compile">Component/Icon/IconComponent.cs</File>
     <File buildAction="Compile">Component/Input/ContextMenuComponent.cs</File>
     <File buildAction="Compile">Component/Inventory/NewInventory.cs</File>
-    <File buildAction="Compile">Component/Inventory/Inventory.cs</File>
+    <File buildAction="Compile">Component/Inventory/InventoryComponent.cs</File>
     <File buildAction="Compile">Component/Item/BasicItemComponent.cs</File>
     <File buildAction="Compile">Component/Light/FlashLightComponent.cs</File>
     <File buildAction="Compile">Component/Light/PointLightComponent.cs</File>

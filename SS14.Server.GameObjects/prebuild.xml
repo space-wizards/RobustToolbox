@@ -24,11 +24,8 @@
     <File buildAction="Compile">Component/Actor/BasicActorComponent.cs</File>
     <File buildAction="Compile">Component/Direction/DirectionComponent.cs</File>
     <File buildAction="Compile">Component/EntityStats/EntityStatsCompS.cs</File>
-    <File buildAction="Compile">Component/Equipment/NewEquipmentComponent.cs</File>
-    <File buildAction="Compile">Component/Hands/NewHandsComponent.cs</File>
     <File buildAction="Compile">Component/Hitbox/HitboxComponent.cs</File>
     <File buildAction="Compile">Component/IInventoryContainer.cs</File>
-    <File buildAction="Compile">Component/Inventory/NewInventory.cs</File>
     <File buildAction="Compile">Component/Inventory/InventoryComponent.cs</File>
     <File buildAction="Compile">Component/Item/ItemCapability/BreatherCapability.cs</File>
     <File buildAction="Compile">Component/Item/ItemCapability/HealthScanCapability.cs</File>

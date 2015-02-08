@@ -23,51 +23,11 @@ namespace SS14.Client.GameObjects
         {
             get { return typeof(EquipmentComponentState); }
         }
-
-
-        public override ComponentReplyMessage RecieveMessage(object sender, ComponentMessageType type,
-                                                             params object[] list)
-        {
-            ComponentReplyMessage reply = base.RecieveMessage(sender, type, list);
-
-            if (sender == this) //Don't listen to our own messages!
-                return ComponentReplyMessage.Empty;
-
-            switch (type)
-            {
-                case ComponentMessageType.GetItemInEquipmentSlot:
-                    reply = !IsEmpty((EquipmentSlot) list[0])
-                                ? new ComponentReplyMessage(ComponentMessageType.ReturnItemInEquipmentSlot,
-                                                            EquippedEntities[(EquipmentSlot) list[0]])
-                                : new ComponentReplyMessage(ComponentMessageType.ItemSlotEmpty);
-                    break;
-                case ComponentMessageType.Die:
-                    foreach (Entity entity in EquippedEntities.Values)
-                    {
-                        entity.SendMessage(this, ComponentMessageType.WearerIsDead);
-                    }
-                    break;
-                case ComponentMessageType.Live:
-                    foreach (Entity entity in EquippedEntities.Values)
-                    {
-                        entity.SendMessage(this, ComponentMessageType.WearerIsAlive);
-                    }
-                    break;
-            }
-
-            return reply;
-        }
-
+        
         public void DispatchEquip(int uid)
         {
             Owner.SendComponentNetworkMessage(this, NetDeliveryMethod.ReliableOrdered, ComponentMessageType.EquipItem,
                                               uid);
-        }
-
-        public void DispatchEquipToPart(int uid, EquipmentSlot part)
-        {
-            Owner.SendComponentNetworkMessage(this, NetDeliveryMethod.ReliableOrdered,
-                                              ComponentMessageType.EquipItemToPart, uid, part);
         }
 
         public void DispatchEquipFromHand()
@@ -82,7 +42,7 @@ namespace SS14.Client.GameObjects
                                               ComponentMessageType.UnEquipItemToHand, uid);
         }
 
-        public void DispatchUnEquipItemToSpecifiedHand(int uid, Hand hand)
+        public void DispatchUnEquipItemToSpecifiedHand(int uid, InventoryLocation hand)
         {
             Owner.SendComponentNetworkMessage(this, NetDeliveryMethod.ReliableOrdered,
                                               ComponentMessageType.UnEquipItemToSpecifiedHand, uid, hand);
@@ -102,19 +62,6 @@ namespace SS14.Client.GameObjects
                 UnEquipItem(part);
             }
             EquippedEntities.Add(part, Owner.EntityManager.GetEntity(uid));
-        }
-        
-        private void EquipItem(EquipmentSlot part, Entity entity)
-        {
-            if (!IsEmpty(part))
-            {
-                UnEquipItem(part);
-            }
-            if (IsEquipped(entity))
-            {
-                UnEquipItem(entity);
-            }
-            EquippedEntities.Add(part, entity);
         }
 
         private void UnEquipItem(EquipmentSlot part)

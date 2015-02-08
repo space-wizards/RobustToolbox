@@ -71,6 +71,7 @@ namespace SS14.Server.GameObjects
             }
         }
 
+        // TODO use state system
         public override void HandleInstantiationMessage(NetConnection netConnection)
         {
             SendHealthUpdate(netConnection);
@@ -264,15 +265,12 @@ namespace SS14.Server.GameObjects
 
         protected bool HasInternals()
         {
-            ComponentReplyMessage reply = Owner.SendMessage(this, ComponentFamily.Equipment,
-                                                            ComponentMessageType.GetHasInternals);
-            if (reply.MessageType == ComponentMessageType.GetHasInternals)
+            if (Owner.HasComponent(ComponentFamily.Equipment))
             {
-                var hasInternals = (bool) reply.ParamsList[0];
-                if (hasInternals)
-                    return true;
+                return Owner.GetComponent<EquipmentComponent>(ComponentFamily.Equipment).HasInternals();
             }
-            return false;
+            // Maybe this should return false? If there's no equipment component?
+            return true;
         }
 
         public override ComponentState GetComponentState()

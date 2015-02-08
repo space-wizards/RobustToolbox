@@ -48,13 +48,6 @@ namespace SS14.Server.GameObjects
             }
         }
 
-        public override void HandleInstantiationMessage(NetConnection netConnection)
-        {
-            base.HandleInstantiationMessage(netConnection);
-            SendVisible(netConnection);
-            SendDrawDepth(netConnection);
-        }
-
         private void SendVisible(NetConnection connection)
         {
         }
@@ -83,10 +76,6 @@ namespace SS14.Server.GameObjects
                     break;
                 case ComponentMessageType.SetVisible:
                     Visible = (bool) list[0];
-                    break;
-                case ComponentMessageType.SetDrawDepth:
-                    if (Owner != null)
-                        drawDepth = (DrawDepth) list[0];
                     break;
             }
 

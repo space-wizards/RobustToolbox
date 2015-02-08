@@ -6,42 +6,42 @@
     public enum ComponentFamily
     {
         Null, //For message logger use
-        Generic,
-        Input, // Receives user input
-        Mover, // Moves objects around
+        Actor, // Allows an entity to interact with interactables
+        Click, // Makes an object clickable
         Collider, // Handles collision with collidable stuff
         Collidable, // Handles being collided with
-        Click, // Makes an object clickable
-        Actor, // Allows an entity to interact with interactables
+        ContextMenu,
+        Damageable,
+        Direction,
+        EntityStats, //Holds stats an entity provides. Also Manages request concerning stats.
+        Equipment, // ?
+        Equippable,
+        Generic,
+        Hands, // ? needed -- 
+        //Health, // Has hitpoints, applies damage, organs? NOT IN USE
+        Hitbox,
+        Icon,
+        Input, // Receives user input
         Interactable, // Allows an entity to be interacted with.
         Intent,
-        Equipment, // ?
-        Mob, // Has hands, can pick stuff up and manipulate objects
-        Item, // Can be picked up, placed in inventory or held in hands
         Inventory, //Holds entities
+        Item, // Can be picked up, placed in inventory or held in hands
         LargeObject, // Can't be picked up, may or may not be able to move, can be interacted with
-        Hands, // ? needed -- 
-        Tool, // Can be used as a tool to apply to other entities
-        Wearable, // Can be worn on a mob
-        //Health, // Has hitpoints, applies damage, organs? NOT IN USE
-        Renderable, // Can be rendered -- sprite or particle system
         Light,
-        Damageable,
-        Equippable,
-        WallMounted, //Provides methods to react to changing tiles. Intended for wall mounted objects.
-        ContextMenu,
-        Think, // Holds more specific scripts that need to respond to event messages
-        StatusEffects, //Holds and manages status effects.
-        PlayerActions, //Holds and manages player actions (abilities).
-        EntityStats, //Holds stats an entity provides. Also Manages request concerning stats.
+        Mob, // Has hands, can pick stuff up and manipulate objects
+        Mover, // Moves objects around
+        Particles,
         Physics,
+        PlayerActions, //Holds and manages player actions (abilities).
+        Renderable, // Can be rendered -- sprite or particle system
+        StatusEffects, //Holds and manages status effects.
+        SVars,
+        Think, // Holds more specific scripts that need to respond to event messages
+        Tool, // Can be used as a tool to apply to other entities
         Transform,
         Velocity,
-        Direction,
-        SVars,
-        Particles,
-        Icon,
-        Hitbox
+        WallMounted, //Provides methods to react to changing tiles. Intended for wall mounted objects.
+        Wearable, // Can be worn on a mob
     }
 
     public enum ItemComponentNetMessage
@@ -110,7 +110,6 @@
         CurrentAABB,
         ClientInstantiated,
         GetMoveDir,
-        SetDrawDepth,
         ActiveHandChanged,
         RecieveItemToActorInteraction,
         ActItemToItemInteraction,
@@ -164,7 +163,6 @@
         GetWearLoc,
         ReturnWearLoc,
         EquipItemToPart,
-        GetItemInEquipmentSlot,
         ReturnItemInEquipmentSlot,
         ItemSlotEmpty,
         SetWornDrawDepth,
@@ -203,13 +201,6 @@
         GetHasInternals,
         GetSVars,
         SetSVar
-    }
-
-    public enum Hand
-    {
-        Left,
-        Right,
-        None
     }
 
     public enum DrawDepth

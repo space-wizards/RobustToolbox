@@ -119,9 +119,6 @@ namespace SS14.Client.GameObjects
                 case ComponentMessageType.GetSprite:
                     reply = new ComponentReplyMessage(ComponentMessageType.CurrentSprite, sprite.GetCurrentSprite());
                     break;
-                case ComponentMessageType.SetDrawDepth:
-                    SetDrawDepth((DrawDepth)list[0]);
-                    break;
                 case ComponentMessageType.SlaveAttach:
                     SetMaster(Owner.EntityManager.GetEntity((int)list[0]));
                     break;

@@ -1,5 +1,5 @@
-﻿using GorgonLibrary.Graphics;
-using GorgonLibrary.InputDevices;
+﻿using SS14.Client.Graphics.CluwneLib.Render;
+using SFML.Window;
 using Lidgren.Network;
 using SS14.Client.GameObjects;
 using SS14.Client.Interfaces.GOC;

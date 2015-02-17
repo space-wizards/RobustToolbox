@@ -1,6 +1,7 @@
-﻿using GorgonLibrary;
-using Lidgren.Network;
+﻿using Lidgren.Network;
 using System.Drawing;
+using SS14.Shared;
+using SS14.Shared.Maths;
 
 namespace SS14.Client.Interfaces.Map
 {
@@ -12,7 +13,7 @@ namespace SS14.Client.Interfaces.Map
         int GetTileSpacing();
         int GetWallThickness();
         void Shutdown();
-        bool IsSolidTile(Vector2D pos);
+        bool IsSolidTile(Vector2 pos);
         void HandleNetworkMessage(NetIncomingMessage message);
         void HandleAtmosDisplayUpdate(NetIncomingMessage message);
 
@@ -21,9 +22,9 @@ namespace SS14.Client.Interfaces.Map
         ITile[] GetAllFloorIn(RectangleF Area);
         ITile[] GetAllWallIn(RectangleF Area);
 
-        ITile GetWallAt(Vector2D pos);
-        ITile GetFloorAt(Vector2D pos);
-        ITile[] GetAllTilesAt(Vector2D pos);
+        ITile GetWallAt(Vector2 pos);
+        ITile GetFloorAt(Vector2 pos);
+        ITile[] GetAllTilesAt(Vector2 pos);
 
         int GetMapWidth();
         int GetMapHeight();

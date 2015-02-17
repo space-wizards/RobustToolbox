@@ -10,6 +10,7 @@ using SS14.Shared.IoC;
 using System;
 using System.IO;
 using System.IO.Compression;
+using SS14.Shared.Maths;
 
 namespace SS14.Server.Services.Atmos
 {

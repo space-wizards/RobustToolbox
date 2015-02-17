@@ -1,8 +1,7 @@
-﻿using GorgonLibrary;
-using GorgonLibrary.Graphics;
-using GorgonLibrary.InputDevices;
-using SS14.Client.Interfaces.Resource;
+﻿using SS14.Client.Interfaces.Resource;
 using SS14.Client.Interfaces.UserInterface;
+using SS14.Client.Graphics.CluwneLib.Render;
+using SFML.Window;
 using System;
 using System.Collections.Generic;
 using System.Drawing;
@@ -181,7 +180,7 @@ namespace SS14.Client.Services.UserInterface.Components
             }
         }
 
-        public override bool MouseDown(MouseInputEventArgs e)
+		public override bool MouseDown(MouseButtonEventArgs e)
         {
             if (disposing || !IsVisible()) return false;
 
@@ -201,7 +200,7 @@ namespace SS14.Client.Services.UserInterface.Components
                 var modArgs = new MouseInputEventArgs
                     (e.Buttons,
                      e.ShiftButtons,
-                     new Vector2D(e.Position.X - Position.X + scrollbarH.Value,
+                     new Vector2(e.Position.X - Position.X + scrollbarH.Value,
                                   e.Position.Y - Position.Y + scrollbarV.Value),
                      e.WheelPosition,
                      e.RelativePosition,
@@ -222,7 +221,7 @@ namespace SS14.Client.Services.UserInterface.Components
             return false;
         }
 
-        public override bool MouseUp(MouseInputEventArgs e)
+		public override bool MouseUp(MouseButtonEventArgs e)
         {
             if (disposing || !IsVisible()) return false;
             if (scrollbarH.MouseUp(e)) return true;
@@ -231,7 +230,7 @@ namespace SS14.Client.Services.UserInterface.Components
             var modArgs = new MouseInputEventArgs
                 (e.Buttons,
                  e.ShiftButtons,
-                 new Vector2D(e.Position.X - Position.X + scrollbarH.Value, e.Position.Y - Position.Y + scrollbarV.Value),
+                 new Vector2(e.Position.X - Position.X + scrollbarH.Value, e.Position.Y - Position.Y + scrollbarV.Value),
                  e.WheelPosition,
                  e.RelativePosition,
                  e.WheelDelta,
@@ -243,7 +242,7 @@ namespace SS14.Client.Services.UserInterface.Components
             return false;
         }
 
-        public override void MouseMove(MouseInputEventArgs e)
+		public override void MouseMove(MouseMoveEventArgs e)
         {
             if (disposing || !IsVisible()) return;
             scrollbarH.MouseMove(e);
@@ -252,7 +251,7 @@ namespace SS14.Client.Services.UserInterface.Components
             var modArgs = new MouseInputEventArgs
                 (e.Buttons,
                  e.ShiftButtons,
-                 new Vector2D(e.Position.X - Position.X + scrollbarH.Value, e.Position.Y - Position.Y + scrollbarV.Value),
+                 new Vector2(e.Position.X - Position.X + scrollbarH.Value, e.Position.Y - Position.Y + scrollbarV.Value),
                  e.WheelPosition,
                  e.RelativePosition,
                  e.WheelDelta,
@@ -264,12 +263,12 @@ namespace SS14.Client.Services.UserInterface.Components
             return;
         }
 
-        public override bool MouseWheelMove(MouseInputEventArgs e)
+		public override bool MouseWheelMove(MouseWheelEventArgs e)
         {
             var modArgs = new MouseInputEventArgs
                 (e.Buttons,
                  e.ShiftButtons,
-                 new Vector2D(e.Position.X - Position.X + scrollbarH.Value, e.Position.Y - Position.Y + scrollbarV.Value),
+                 new Vector2(e.Position.X - Position.X + scrollbarH.Value, e.Position.Y - Position.Y + scrollbarV.Value),
                  e.WheelPosition,
                  e.RelativePosition,
                  e.WheelDelta,
@@ -293,7 +292,7 @@ namespace SS14.Client.Services.UserInterface.Components
             return false;
         }
 
-        public override bool KeyDown(KeyboardInputEventArgs e)
+        public override bool KeyDown(KeyEventArgs e)
         {
             foreach (GuiComponent component in components)
                 if (component.KeyDown(e)) return true;

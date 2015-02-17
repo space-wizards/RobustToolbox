@@ -33,6 +33,7 @@
 		<!-- All the projects are in prebuild.xml files in each project directory. -->
 		<!-- BUILD ORDER CALCULATED BY Tools\calculate-buildorder.py -->
 		<?include file="./Lidgren.Network/prebuild.xml" ?>
+		<?include file="./SS14.Client.Graphics.CluwneLib/prebuild.xml" ?>
 		<?include file="./SS14.Shared/prebuild.xml" ?>                  <!-- Prerequisites: Lidgren.Network -->
 		<?include file="./SS14.Client.ClientWindow/prebuild.xml" ?>
 		<?include file="./SS14.Tools.MessagingProfiler/prebuild.xml" ?> <!-- Prerequisites: SS14.Shared -->

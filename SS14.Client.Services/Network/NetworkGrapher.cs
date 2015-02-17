@@ -1,6 +1,4 @@
-﻿using GorgonLibrary;
-using GorgonLibrary.Graphics;
-using SS14.Client.Interfaces.Network;
+﻿using SS14.Client.Interfaces.Network;
 using SS14.Client.Interfaces.Resource;
 using System;
 using System.Collections.Generic;

@@ -20,6 +20,7 @@
   <Reference name="Microsoft.CSharp"/>
   <Reference name="System.Data"/>
   <Reference name="System.Xml"/>
+  <Reference name="sfmlnet-system-2" path="../Third-Party"/>
   <Files>
     <File buildAction="Compile">Component/Actor/BasicActorComponent.cs</File>
     <File buildAction="Compile">Component/Direction/DirectionComponent.cs</File>

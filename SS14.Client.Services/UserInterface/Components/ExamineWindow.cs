@@ -1,8 +1,8 @@
-﻿using GorgonLibrary.Graphics;
-using SS14.Client.Interfaces.Resource;
+﻿using SS14.Client.Interfaces.Resource;
 using SS14.Shared.GameObjects;
 using SS14.Shared.GO;
 using System.Drawing;
+using SS14.Client.Graphics.CluwneLib.Sprite;
 
 namespace SS14.Client.Services.UserInterface.Components
 {
@@ -10,7 +10,7 @@ namespace SS14.Client.Services.UserInterface.Components
     {
         private readonly Label _entityDescription;
         private readonly IResourceManager _resourceManager;
-        private Sprite _entitySprite;
+		private CluwneSprite _entitySprite;
 
         public ExamineWindow(Size size, Entity entity, IResourceManager resourceManager)
             : base(entity.Name, size, resourceManager)

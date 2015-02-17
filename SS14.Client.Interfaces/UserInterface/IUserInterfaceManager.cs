@@ -1,4 +1,4 @@
-﻿using GorgonLibrary.InputDevices;
+﻿using SFML.Window;
 using Lidgren.Network;
 using SS14.Client.Interfaces.GOC;
 using SS14.Shared;
@@ -27,11 +27,11 @@ namespace SS14.Client.Interfaces.UserInterface
 
         void ToggleMoveMode();
 
-        bool KeyDown(KeyboardInputEventArgs e);
-        void MouseWheelMove(MouseInputEventArgs e);
-        void MouseMove(MouseInputEventArgs e);
-        bool MouseUp(MouseInputEventArgs e);
-        bool MouseDown(MouseInputEventArgs e);
+        bool KeyDown(KeyEventArgs e);
+        void MouseWheelMove(MouseWheelEventArgs e);
+        void MouseMove(MouseMoveEventArgs e);
+        bool MouseUp(MouseButtonEventArgs e);
+        bool MouseDown(MouseButtonEventArgs e);
 
         void HandleNetMessage(NetIncomingMessage msg);
     }

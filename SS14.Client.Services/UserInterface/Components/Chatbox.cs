@@ -1,16 +1,15 @@
-﻿using GorgonLibrary;
-using GorgonLibrary.Graphics;
-using GorgonLibrary.InputDevices;
-using SS14.Client.Interfaces.Input;
+﻿using SS14.Client.Interfaces.Input;
 using SS14.Client.Interfaces.Resource;
 using SS14.Client.Interfaces.UserInterface;
 using SS14.Shared;
+using SS14.Shared.Maths;
 using System;
 using System.Collections.Generic;
 using System.Drawing;
 using System.Linq;
 using System.Text;
 using System.Text.RegularExpressions;
+using SFML.Window;
 
 namespace SS14.Client.Services.UserInterface.Components
 {
@@ -34,7 +33,7 @@ namespace SS14.Client.Services.UserInterface.Components
         private readonly IResourceManager _resourceManager;
         private readonly IUserInterfaceManager _userInterfaceManager;
 
-        public Vector2D Size = new Vector2D(475, 175);
+        public Vector2 Size = new Vector2(475, 175);
 
         private bool _active;
         private bool _disposing;
@@ -206,7 +205,7 @@ namespace SS14.Client.Services.UserInterface.Components
             }
         }
 
-        public override bool KeyDown(KeyboardInputEventArgs e)
+        public override bool KeyDown(KeyEventArgs e)
         {
             if (e.Key == KeyboardKeys.T && !Active)
             {

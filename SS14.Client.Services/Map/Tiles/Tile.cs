@@ -1,5 +1,5 @@
-﻿using GorgonLibrary;
-using GorgonLibrary.Graphics;
+﻿using SS14.Client.Graphics.CluwneLib.Sprite;
+using SS14.Shared.Maths;
 using SS14.Client.Interfaces.Lighting;
 using SS14.Client.Interfaces.Map;
 using SS14.Client.Interfaces.Resource;
@@ -16,11 +16,11 @@ namespace SS14.Client.Services.Tiles
     {
         protected readonly ILightManager _lightManager;
         protected readonly IResourceManager _resourceManager;
-        protected Sprite Sprite;
+		protected CluwneSprite Sprite;
         protected Random _random;
         public List<TileDecal> decals;
         public Dictionary<GasType, int> gasAmounts;
-        public Sprite gasSprite;
+		public CluwneSprite gasSprite;
         public string name;
         public byte surroundDirsNW, surroundDirsSE = 0; //north = 1 east = 2 south = 4 west = 8.
         public TileState tileState = TileState.Healthy;
@@ -49,9 +49,9 @@ namespace SS14.Client.Services.Tiles
         public bool ConnectSprite { get; set; }
         //Should this tile cause things like walls to change their sprite to 'connect' to this tile?
 
-        public Vector2D Position
+        public Vector2 Position
         {
-            get { return new Vector2D(bounds.X, bounds.Y); }
+            get { return new Vector2(bounds.X, bounds.Y); }
         }
 
         public virtual void Render(float xTopLeft, float yTopLeft, Batch batch)
@@ -70,7 +70,7 @@ namespace SS14.Client.Services.Tiles
             Sprite.Draw();
         }
 
-        public virtual void RenderPosOffset(float x, float y, int tileSpacing, Vector2D lightPosition)
+        public virtual void RenderPosOffset(float x, float y, int tileSpacing, Vector2 lightPosition)
         {
         }
 
@@ -166,7 +166,7 @@ namespace SS14.Client.Services.Tiles
                             break;
                     }
                     decals.Add(new TileDecal(_resourceManager.GetSprite(decalname),
-                                             new Vector2D(_random.Next(0, 64), _random.Next(0, 64)), this,
+                                             new Vector2(_random.Next(0, 64), _random.Next(0, 64)), this,
                                              Color.FromArgb(165, 6, 6)));
                     break;
             }
@@ -193,11 +193,11 @@ namespace SS14.Client.Services.Tiles
 
     public class TileDecal
     {
-        public Vector2D position; // Position relative to top left corner of tile
-        public Sprite sprite;
+        public Vector2 position; // Position relative to top left corner of tile
+		public CluwneSprite sprite;
         public Tile tile;
 
-        public TileDecal(Sprite _sprite, Vector2D _position, Tile _tile, Color color)
+		public TileDecal(CluwneSprite _sprite, Vector2 _position, Tile _tile, Color color)
         {
             sprite = _sprite;
             position = _position;

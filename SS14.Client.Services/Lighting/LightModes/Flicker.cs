@@ -1,4 +1,4 @@
-﻿using GorgonLibrary;
+﻿
 using SS14.Client.Interfaces.Lighting;
 using SS14.Client.Interfaces.Utility;
 using SS14.Shared;
@@ -9,7 +9,7 @@ namespace SS14.Client.GameObjects.Component.Light.LightModes
 {
     public class LightFlicker : LightMode
     {
-        private readonly PreciseTimer timer = new PreciseTimer();
+		private readonly PreciseTimer timer = new PreciseTimer();
         private Color _lightColorOriginal;
         private int flickerCount;
         private bool flickering;

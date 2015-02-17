@@ -1,7 +1,8 @@
-﻿using GorgonLibrary;
+﻿using SS14.Shared;
 using SS14.Shared.GameObjects;
 using SS14.Shared.GO;
 using System.Drawing;
+using SS14.Shared.Maths;
 
 namespace SS14.Client.Interfaces.GOC
 {
@@ -9,7 +10,7 @@ namespace SS14.Client.Interfaces.GOC
     {
         DrawDepth DrawDepth { get; set; }
         float Bottom { get; }
-        void Render(Vector2D topLeft, Vector2D bottomRight);
+        void Render(Vector2 topLeft, Vector2 bottomRight);
         RectangleF AABB { get; }
         RectangleF AverageAABB { get; }
         bool IsSlaved();

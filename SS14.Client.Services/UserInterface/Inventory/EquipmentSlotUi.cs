@@ -1,7 +1,4 @@
-﻿using GorgonLibrary;
-using GorgonLibrary.Graphics;
-using GorgonLibrary.InputDevices;
-using SS14.Client.GameObjects;
+﻿using SS14.Client.GameObjects;
 using SS14.Client.Interfaces.Player;
 using SS14.Client.Interfaces.Resource;
 using SS14.Client.Interfaces.UserInterface;
@@ -12,6 +9,8 @@ using SS14.Shared.GameObjects;
 using SS14.Shared.GO;
 using System;
 using System.Drawing;
+using SS14.Client.Graphics.CluwneLib.Sprite;
+using SFML.Window;
 
 namespace SS14.Client.Services.UserInterface.Inventory
 {
@@ -27,9 +26,9 @@ namespace SS14.Client.Services.UserInterface.Inventory
         private readonly IResourceManager _resourceManager;
         private readonly TextSprite _textSprite;
         private readonly IUserInterfaceManager _userInterfaceManager;
-        private Sprite _buttonSprite;
+		private CluwneSprite _buttonSprite;
         private Color _color;
-        private Sprite _currentEntSprite;
+		private CluwneSprite _currentEntSprite;
 
         public EquipmentSlotUi(EquipmentSlot slot, IPlayerManager playerManager, IResourceManager resourceManager,
                                IUserInterfaceManager userInterfaceManager)
@@ -46,7 +45,7 @@ namespace SS14.Client.Services.UserInterface.Inventory
                                          _resourceManager.GetFont("CALIBRI"))
                               {
                                   ShadowColor = Color.Black,
-                                  ShadowOffset = new Vector2D(1, 1),
+                                  ShadowOffset = new Vector2(1, 1),
                                   Shadowed = true,
                                   Color = Color.White
                               };
@@ -111,7 +110,7 @@ namespace SS14.Client.Services.UserInterface.Inventory
             GC.SuppressFinalize(this);
         }
 
-        public override bool MouseDown(MouseInputEventArgs e)
+		public override bool MouseDown(MouseButtonEventArgs e)
         {
             if (ClientArea.Contains(new Point((int) e.Position.X, (int) e.Position.Y)))
             {
@@ -129,7 +128,7 @@ namespace SS14.Client.Services.UserInterface.Inventory
             return false;
         }
 
-        public override bool MouseUp(MouseInputEventArgs e)
+		public override bool MouseUp(MouseButtonEventArgs e)
         {
             if (ClientArea.Contains(new Point((int) e.Position.X, (int) e.Position.Y)))
             {
@@ -159,7 +158,7 @@ namespace SS14.Client.Services.UserInterface.Inventory
             return false;
         }
 
-        public override void MouseMove(MouseInputEventArgs e)
+		public override void MouseMove(MouseMoveEventArgs e)
         {
             _color = ClientArea.Contains(new Point((int) e.Position.X, (int) e.Position.Y))
                          ? Color.LightSteelBlue

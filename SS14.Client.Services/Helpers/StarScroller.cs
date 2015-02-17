@@ -1,4 +1,5 @@
-﻿using GorgonLibrary;
+﻿using SS14.Client.Graphics.CluwneLib;
+using SS14.Shared.Maths;
 using System;
 using System.Drawing;
 
@@ -22,7 +23,7 @@ namespace SS14.Client.Services.Helpers
             {
                 for (int i = 0; i < _stars.Length/4; i++)
                 {
-                    _stars[i, layer].Position = new Vector2D((float) (_random.NextDouble()*Gorgon.Screen.Width),
+                    _stars[i, layer].Position = new Vector2((float) (_random.NextDouble()*Gorgon.Screen.Width),
                                                              (float)
                                                              (_random.NextDouble()*Gorgon.CurrentClippingViewport.Height));
 
@@ -64,7 +65,7 @@ namespace SS14.Client.Services.Helpers
                 // Wrap around.
                 if (_stars[i, layer].Position.Y > Gorgon.CurrentClippingViewport.Height)
                     _stars[i, layer].Position =
-                        new Vector2D((float) (_random.NextDouble()*Gorgon.CurrentClippingViewport.Width), 0);
+                        new Vector2((float) (_random.NextDouble()*Gorgon.CurrentClippingViewport.Width), 0);
             }
         }
 
@@ -89,7 +90,7 @@ namespace SS14.Client.Services.Helpers
             /// <summary>
             /// Position of the star.
             /// </summary>
-            public Vector2D Position;
+            public Vector2 Position;
 
             /// <summary>
             /// Vertical delta.

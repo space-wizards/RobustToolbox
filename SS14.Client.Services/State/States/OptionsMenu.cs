@@ -1,6 +1,4 @@
-﻿using GorgonLibrary;
-using GorgonLibrary.Graphics;
-using GorgonLibrary.InputDevices;
+﻿using SS14.Client.Graphics.CluwneLib.Sprite;
 using SS14.Client.Interfaces.State;
 using SS14.Client.Services.UserInterface.Components;
 using System;
@@ -9,6 +7,8 @@ using System.Drawing;
 using System.Linq;
 using System.Windows.Forms;
 using Label = SS14.Client.Services.UserInterface.Components.Label;
+using SFML.Window;
+using SS14.Client.Graphics.CluwneLib.Event;
 
 namespace SS14.Client.Services.State.States
 {
@@ -17,7 +17,7 @@ namespace SS14.Client.Services.State.States
         #region Fields
 
         private readonly Label _btnApply;
-        private readonly Sprite _background;
+		private readonly CluwneSprite _background;
 
         private readonly Checkbox _chkFullscreen;
         private readonly Checkbox _chkVsync;
@@ -26,7 +26,7 @@ namespace SS14.Client.Services.State.States
         private readonly Label _lblVsync;
         private readonly Label _btnMainMenu;
         private readonly Listbox _lstResolution;
-        private readonly Sprite _ticketBg;
+		private readonly CluwneSprite _ticketBg;
 
         private readonly Dictionary<string, VideoMode> vmList = new Dictionary<string, VideoMode>();
 
@@ -160,31 +160,31 @@ namespace SS14.Client.Services.State.States
 
         #region Input
 
-        public void KeyDown(KeyboardInputEventArgs e)
+		public void KeyDown(KeyPressEventArgs e)
         {
             UserInterfaceManager.KeyDown(e);
         }
 
-        public void KeyUp(KeyboardInputEventArgs e)
+		public void KeyUp(KeyPressEventArgs e)
         {
         }
 
-        public void MouseUp(MouseInputEventArgs e)
+		public void MouseUp(MouseButtonEventArgs e)
         {
             UserInterfaceManager.MouseUp(e);
         }
 
-        public void MouseDown(MouseInputEventArgs e)
+		public void MouseDown(MouseButtonEventArgs e)
         {
             UserInterfaceManager.MouseDown(e);
         }
 
-        public void MouseMove(MouseInputEventArgs e)
+		public void MouseMove(MouseMoveEventArgs e)
         {
             UserInterfaceManager.MouseMove(e);
         }
 
-        public void MouseWheelMove(MouseInputEventArgs e)
+		public void MouseWheelMove(MouseWheelEventArgs e)
         {
             UserInterfaceManager.MouseWheelMove(e);
         }
@@ -196,7 +196,7 @@ namespace SS14.Client.Services.State.States
             ConfigurationManager.SetVsync(newValue);
         }
 
-        private void _applybtt_Clicked(Label sender, MouseInputEventArgs e)
+		private void _applybtt_Clicked(Label sender, MouseButtonEventArgs e)
         {
             ApplyVideoMode();
         }
@@ -250,12 +250,12 @@ namespace SS14.Client.Services.State.States
             Environment.Exit(0);
         }
 
-        private void _mainmenubtt_Clicked(Label sender, MouseInputEventArgs e)
+		private void _mainmenubtt_Clicked(Label sender, MouseButtonEventArgs e)
         {
             StateManager.RequestStateChange<MainScreen>();
         }
 
-        private void _connectbtt_Clicked(Label sender, MouseInputEventArgs e)
+		private void _connectbtt_Clicked(Label sender, MouseButtonEventArgs e)
         {
         }
 

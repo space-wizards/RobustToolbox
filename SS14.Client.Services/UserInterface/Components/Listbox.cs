@@ -1,12 +1,12 @@
-﻿using GorgonLibrary.Graphics;
-using GorgonLibrary.InputDevices;
-using SS14.Client.Interfaces.Resource;
+﻿using SS14.Client.Interfaces.Resource;
 using SS14.Client.Interfaces.UserInterface;
 using SS14.Shared.IoC;
 using System;
 using System.Collections.Generic;
 using System.Drawing;
 using System.Linq;
+using SS14.Client.Graphics.CluwneLib.Sprite;
+using SFML.Window;
 
 namespace SS14.Client.Services.UserInterface.Components
 {
@@ -26,9 +26,9 @@ namespace SS14.Client.Services.UserInterface.Components
         private Rectangle _clientAreaRight;
         private ScrollableContainer _dropDown;
 
-        private Sprite _listboxLeft;
-        private Sprite _listboxMain;
-        private Sprite _listboxRight;
+		private CluwneSprite _listboxLeft;
+		private CluwneSprite _listboxMain;
+		private CluwneSprite _listboxRight;
         private TextSprite _selectedLabel;
 
         public Listbox(int dropDownLength, int width, IResourceManager resourceManager,
@@ -101,7 +101,7 @@ namespace SS14.Client.Services.UserInterface.Components
             }
         }
 
-        private void NewEntryClicked(Label sender, MouseInputEventArgs e)
+		private void NewEntryClicked(Label sender, MouseButtonEventArgs e)
         {
             SetItem(sender, true);
         }
@@ -163,7 +163,7 @@ namespace SS14.Client.Services.UserInterface.Components
             GC.SuppressFinalize(this);
         }
 
-        public override bool MouseDown(MouseInputEventArgs e)
+		public override bool MouseDown(MouseButtonEventArgs e)
         {
             if (ClientArea.Contains(new Point((int) e.Position.X, (int) e.Position.Y)))
                 //change to clientAreaRight when theres a proper skin with an arrow to the right.
@@ -177,12 +177,12 @@ namespace SS14.Client.Services.UserInterface.Components
             return _dropDown.MouseDown(e);
         }
 
-        public override bool MouseUp(MouseInputEventArgs e)
+		public override bool MouseUp(MouseButtonEventArgs e)
         {
             return _dropDown.MouseUp(e);
         }
 
-        public override void MouseMove(MouseInputEventArgs e)
+		public override void MouseMove(MouseMoveEventArgs e)
         {
             _dropDown.MouseMove(e);
         }

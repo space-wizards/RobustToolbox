@@ -1,20 +1,22 @@
-﻿using GorgonLibrary;
-using GorgonLibrary.Graphics;
+﻿using SFML.Graphics;
+using SS14.Client.Graphics.CluwneLib.Render;
+using SS14.Shared;
+using SS14.Shared.Maths;
 
 namespace SS14.Client.Interfaces.Lighting
 {
     public interface ILightArea
     {
         RenderImage renderTarget { get; }
-        Vector2D LightPosition { get; set; }
-        Vector2D LightAreaSize { get; set; }
+        Vector2 LightPosition { get; set; }
+        Vector2 LightAreaSize { get; set; }
         bool Calculated { get; set; }
         Sprite Mask { get; set; }
         bool MaskFlipX { get; set; }
         bool MaskFlipY { get; set; }
         bool Rot90 { get; set; }
-        Vector4D MaskProps { get; }
-        Vector2D ToRelativePosition(Vector2D worldPosition);
+        Vector4 MaskProps { get; }
+        Vector2 ToRelativePosition(Vector2 worldPosition);
         void BeginDrawingShadowCasters();
         void EndDrawingShadowCasters();
 

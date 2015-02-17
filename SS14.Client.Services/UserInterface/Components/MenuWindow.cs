@@ -1,5 +1,4 @@
-﻿using GorgonLibrary;
-using Lidgren.Network;
+﻿using Lidgren.Network;
 using SS14.Client.GameObjects;
 using SS14.Client.Interfaces.Network;
 using SS14.Client.Interfaces.Placement;

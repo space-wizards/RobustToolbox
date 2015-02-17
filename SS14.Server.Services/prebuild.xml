@@ -11,7 +11,7 @@
   </Configuration>
   <ReferencePath>../bin</ReferencePath>
   <ReferencePath>../Third-Party</ReferencePath>
-  <Reference name="Gorgon" path="../Third-Party"/>
+  <Reference name="sfmlnet-system-2" path="../Third-Party"/>
   <Reference name="System"/>
   <Reference name="System.Core"/>
   <Reference name="System.Drawing"/>

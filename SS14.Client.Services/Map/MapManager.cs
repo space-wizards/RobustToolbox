@@ -1,5 +1,6 @@
 ﻿using BKSystem.IO;
-using GorgonLibrary;
+using SS14.Client.Graphics.CluwneLib;
+using SS14.Shared.Maths;
 using Lidgren.Network;
 using SS14.Client.Interfaces.Collision;
 using SS14.Client.Interfaces.Lighting;
@@ -25,7 +26,7 @@ namespace SS14.Client.Services.Map
 
         private const int TileSpacing = 64; // Distance between tiles
         private const int wallThickness = 24;
-        private readonly List<Vector2D> _cardinalList;
+        private readonly List<Vector2> _cardinalList;
 
         private readonly ICollisionManager _collisionManager;
         private readonly ILightManager _lightManager;
@@ -56,17 +57,17 @@ namespace SS14.Client.Services.Map
             _mapWidth = 256;
             Init();
 
-            _cardinalList = new List<Vector2D>
+            _cardinalList = new List<Vector2>
                                 {
-                                    new Vector2D(0, 0),
-                                    new Vector2D(0, 1),
-                                    new Vector2D(0, -1),
-                                    new Vector2D(1, 0),
-                                    new Vector2D(-1, 0),
-                                    new Vector2D(1, 1),
-                                    new Vector2D(-1, -1),
-                                    new Vector2D(-1, 1),
-                                    new Vector2D(1, -1)
+                                    new Vector2(0, 0),
+                                    new Vector2(0, 1),
+                                    new Vector2(0, -1),
+                                    new Vector2(1, 0),
+                                    new Vector2(-1, 0),
+                                    new Vector2(1, 1),
+                                    new Vector2(-1, -1),
+                                    new Vector2(-1, 1),
+                                    new Vector2(1, -1)
                                 };
         }
 
@@ -101,7 +102,7 @@ namespace SS14.Client.Services.Map
                 {
                     dir = (Direction)message.ReadByte();
                 }
-                Tile newTile = GenerateNewTile(GetTileString(index), state, new Vector2D(posX, posY), dir);
+                Tile newTile = GenerateNewTile(GetTileString(index), state, new Vector2(posX, posY), dir);
                 AddTile(newTile);
             }
 
@@ -177,7 +178,7 @@ namespace SS14.Client.Services.Map
                         if ((types & (1 << i)) == (1 << i))
                         {
                             recordStream.Read(out amount, 0, 4);
-                            Tile t = (Tile)GetFloorAt(new Vector2D(x * TileSpacing, y * TileSpacing));
+                            Tile t = (Tile)GetFloorAt(new Vector2(x * TileSpacing, y * TileSpacing));
                             if (t == null)
                                 continue;
                             t.SetAtmosDisplay((GasType) i, amount);
@@ -215,7 +216,7 @@ namespace SS14.Client.Services.Map
             float y = message.ReadFloat();
             var type = (DecalType) message.ReadByte();
 
-            Tile t = (Tile)GetAllTilesAt(new Vector2D(x, y)).FirstOrDefault();
+            Tile t = (Tile)GetAllTilesAt(new Vector2(x, y)).FirstOrDefault();
             t.AddDecal(type);
         }
 
@@ -252,14 +253,14 @@ namespace SS14.Client.Services.Map
             Direction dir = Direction.North;
             if (tileStr == "Wall") dir = (Direction)message.ReadByte();
 
-            Tile t = (Tile)GetTypeAt(tileStr, new Vector2D(x, y));
+            Tile t = (Tile)GetTypeAt(tileStr, new Vector2(x, y));
             if (t != null && t._dir == dir)
             {
                 RemoveTile(t);
                 if (t.GetType().GetInterface("ICollidable") != null)
                     _collisionManager.RemoveCollidable((ICollidable)t);
             }
-            t = GenerateNewTile(tileStr, state, new Vector2D(x, y), dir);
+            t = GenerateNewTile(tileStr, state, new Vector2(x, y), dir);
             AddTile(t);
             t.SetSprite();
             TileChanged(t);
@@ -285,22 +286,22 @@ namespace SS14.Client.Services.Map
 
         public Tile GetFloorN(float x, float y)
         {
-            return (Tile)GetFloorAt(new Vector2D(x, y - TileSpacing));
+            return (Tile)GetFloorAt(new Vector2(x, y - TileSpacing));
         }
 
         public Tile GetFloorE(float x, float y)
         {
-            return (Tile)GetFloorAt(new Vector2D(x + TileSpacing, y));
+            return (Tile)GetFloorAt(new Vector2(x + TileSpacing, y));
         }
 
         public Tile GetFloorS(float x, float y)
         {
-            return (Tile)GetFloorAt(new Vector2D(x, y + TileSpacing));
+            return (Tile)GetFloorAt(new Vector2(x, y + TileSpacing));
         }
 
         public Tile GetFloorW(float x, float y)
         {
-            return (Tile)GetFloorAt(new Vector2D(x - TileSpacing, y));
+            return (Tile)GetFloorAt(new Vector2(x - TileSpacing, y));
         }
 
         public void AddTile(Tile t)
@@ -351,28 +352,28 @@ namespace SS14.Client.Services.Map
             return _wallArray.Query(Area).ToArray();
         }
 
-        public ITile GetWallAt(Vector2D pos)
+        public ITile GetWallAt(Vector2 pos)
         {
             return GetAllWallIn(new RectangleF(pos.X, pos.Y, 2f, 2f)).FirstOrDefault();
         }
 
-        public ITile GetFloorAt(Vector2D pos)
+        public ITile GetFloorAt(Vector2 pos)
         {
             return GetAllFloorIn(new RectangleF(pos.X, pos.Y, 2f, 2f)).FirstOrDefault();
         }
 
-        public ITile[] GetAllTilesAt(Vector2D pos)
+        public ITile[] GetAllTilesAt(Vector2 pos)
         {
             return GetAllTilesIn(new RectangleF(pos.X, pos.Y, 2f, 2f));
         }
 
-        public ITile GetTypeAt(Type type, Vector2D pos)
+        public ITile GetTypeAt(Type type, Vector2 pos)
         {
             ITile[] tiles = GetAllTilesAt(pos);
             return tiles.FirstOrDefault(x => x.GetType() == type);
         }
 
-        public ITile GetTypeAt(string type, Vector2D pos)
+        public ITile GetTypeAt(string type, Vector2 pos)
         {
             return GetTypeAt(Type.GetType("SS14.Client.Services.Tiles." + type, false), pos);
         }
@@ -413,7 +414,7 @@ namespace SS14.Client.Services.Map
             return _mapHeight;
         }
 
-        public Tile GenerateNewTile(string typeName, TileState state, Vector2D pos, Direction dir = Direction.North)
+        public Tile GenerateNewTile(string typeName, TileState state, Vector2 pos, Direction dir = Direction.North)
         {
             Type tileType = Type.GetType("SS14.Client.Services.Tiles." + typeName, false);
 
@@ -457,7 +458,7 @@ namespace SS14.Client.Services.Map
 
         #region Quick collision checks
 
-        public bool IsSolidTile(Vector2D worldPos)
+        public bool IsSolidTile(Vector2 worldPos)
         {
             var tile = (Tile) GetWallAt(worldPos);
             if (tile == null) return false;

@@ -1,0 +1,40 @@
+<Project frameworkVersion="v4_0" name="SS14.Client.Graphics.CluwneLib" rootNamespace="SS14.Client.Graphics.CluwneLib" type="Library" path="SS14.Client.Graphics.CluwneLib">
+  <Configuration name="Debug" platform="x86">
+    <Options>
+      <OutputPath>../bin</OutputPath>
+    </Options>
+  </Configuration>
+  <Configuration name="Release" platform="x86">
+    <Options>
+      <OutputPath>../bin</OutputPath>
+    </Options>
+  </Configuration>
+  <ReferencePath>../bin</ReferencePath>
+  <ReferencePath>../Third-Party</ReferencePath>
+  <Reference name="System"/>
+  <Reference name="System.Core"/>
+  <Reference name="System.Drawing"/>
+  <Reference name="System.Xml.Linq"/>
+  <Reference name="System.Data.DataSetExtensions"/>
+  <Reference name="Microsoft.CSharp"/>
+  <Reference name="System.Data"/>
+  <Reference name="System.Xml"/>
+  <Reference name="System.Windows.Forms"/>
+  <Reference name="sfmlnet-system-2"/>
+  <Reference name="sfmlnet-window-2"/>
+  <Reference name="sfmlnet-graphics-2"/>
+  <Files>
+    <File buildAction="Compile">CluwneLib.cs</File>
+    <File buildAction="Compile">Event/FrameEvent.cs</File>
+    <File buildAction="Compile">Properties/AssemblyInfo.cs</File>
+    <File buildAction="Compile">Render/CluwneWindow.cs</File>
+    <File buildAction="Compile">Render/RenderImage.cs</File>
+    <File buildAction="Compile">Shader/FXShader.cs</File>
+    <File buildAction="Compile">Sprite/Batch.cs</File>
+    <File buildAction="Compile">Sprite/CluwneSprite.cs</File>
+    <File buildAction="Compile">Sprite/SpriteInfo.cs</File>
+    <File buildAction="Compile">Timing/TimingData.cs</File>
+    <File buildAction="Compile">Viewport.cs</File>
+  </Files>
+  <Reference name="SS14.Shared"/>
+</Project>

@@ -1,9 +1,9 @@
-﻿using GorgonLibrary;
-using GorgonLibrary.Graphics;
-using SS14.Client.Interfaces.Resource;
+﻿using SS14.Client.Interfaces.Resource;
 using SS14.Client.Interfaces.Utility;
+using SFML.Graphics;
 using SS14.Shared.IoC;
 using SS14.Shared.Utility;
+using SS14.Client.Graphics.CluwneLib.Render;
 
 namespace SS14.Client.Services.Player.PostProcessing
 {
@@ -27,9 +27,9 @@ namespace SS14.Client.Services.Player.PostProcessing
             if (_noiseBase == null)
                 GenerateNoise(32);
 
-            var shadowColor = new Vector4D(1, 0, 0, 1);
-            var midtoneColor = new Vector4D(0, 0, 1, 1);
-            var highlightColor = new Vector4D(0, 1, 0, 1);
+            var shadowColor = new Vector4(1, 0, 0, 1);
+            var midtoneColor = new Vector4(0, 0, 1, 1);
+            var highlightColor = new Vector4(0, 1, 0, 1);
             Gorgon.CurrentRenderTarget = copyImage;
             Gorgon.CurrentShader = _shader;
             _shader.Parameters["xTime"].SetValue(_duration/20);

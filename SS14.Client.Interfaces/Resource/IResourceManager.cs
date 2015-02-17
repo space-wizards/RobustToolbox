@@ -1,5 +1,6 @@
-﻿using GorgonLibrary.Graphics;
-using GorgonLibrary.Sprites;
+﻿using SFML.Graphics;
+using SS14.Client.Graphics.CluwneLib.Sprite;
+using SS14.Client.Graphics.CluwneLib.Shader;
 using SS14.Shared.GameObjects;
 
 namespace SS14.Client.Interfaces.Resource
@@ -8,8 +9,8 @@ namespace SS14.Client.Interfaces.Resource
     {
         void LoadResourceZip(string path = null, string pw = null);
         void ClearLists();
-        Sprite GetSpriteFromImage(string key);
-        Sprite GetSprite(string key);
+        CluwneSprite GetSpriteFromImage(string key);
+        CluwneSprite GetSprite(string key);
         bool SpriteExists(string key);
         bool ImageExists(string key);
         FXShader GetShader(string key);
@@ -20,6 +21,6 @@ namespace SS14.Client.Interfaces.Resource
         object GetAnimatedSprite(string key);
         void LoadLocalResources();
         void LoadBaseResources();
-        Sprite GetNoSprite();
+        CluwneSprite GetNoSprite();
     }
 }

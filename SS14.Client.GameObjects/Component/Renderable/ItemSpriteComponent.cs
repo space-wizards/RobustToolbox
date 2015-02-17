@@ -1,5 +1,4 @@
-﻿using GorgonLibrary.Graphics;
-using Lidgren.Network;
+﻿using Lidgren.Network;
 using SS14.Client.Interfaces.Resource;
 using SS14.Shared;
 using SS14.Shared.GO;
@@ -7,6 +6,7 @@ using SS14.Shared.GO.Component.Renderable;
 using SS14.Shared.IoC;
 using System;
 using System.Drawing;
+using Sprite = SS14.Client.Graphics.CluwneLib.Sprite.CluwneSprite;
 
 namespace SS14.Client.GameObjects
 {

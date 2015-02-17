@@ -1,10 +1,11 @@
-﻿using GorgonLibrary;
+﻿using SS14.Shared.Maths;
 using SS14.Client.ClientWindow;
 using SS14.Client.GameObjects;
 using SS14.Client.Interfaces.Map;
 using SS14.Shared;
 using SS14.Shared.GO;
 using System.Drawing;
+using SS14.Client.Graphics.CluwneLib;
 
 namespace SS14.Client.Services.Placement.Modes
 {
@@ -15,14 +16,14 @@ namespace SS14.Client.Services.Placement.Modes
         {
         }
 
-        public override bool Update(Vector2D mouseS, IMapManager currentMap)
+        public override bool Update(Vector2 mouseS, IMapManager currentMap)
         {
             if (currentMap == null) return false;
 
             spriteToDraw = GetDirectionalSprite(pManager.CurrentBaseSprite);
 
             mouseScreen = mouseS;
-            mouseWorld = new Vector2D(mouseScreen.X + ClientWindowData.Singleton.ScreenOrigin.X,
+            mouseWorld = new Vector2(mouseScreen.X + ClientWindowData.Singleton.ScreenOrigin.X,
                                       mouseScreen.Y + ClientWindowData.Singleton.ScreenOrigin.Y);
 
             var spriteRectWorld = new RectangleF(mouseWorld.X - (spriteToDraw.Width/2f),
@@ -44,18 +45,18 @@ namespace SS14.Client.Services.Placement.Modes
             if (currentTile == null || !currentTile.IsSolidTile())
                 return false;
 
-            ITile wallTop = currentMap.GetWallAt(new Vector2D(currentTile.Position.X, currentTile.Position.Y - currentMap.GetTileSpacing()));
+            ITile wallTop = currentMap.GetWallAt(new Vector2(currentTile.Position.X, currentTile.Position.Y - currentMap.GetTileSpacing()));
             if (wallTop == null)
                 return false;
 
-            ITile wallTopNorth = currentMap.GetWallAt(new Vector2D(wallTop.Position.X, wallTop.Position.Y - currentMap.GetTileSpacing()));
-            ITile wallCurrentSouth = currentMap.GetWallAt(new Vector2D(currentTile.Position.X, currentTile.Position.Y - currentMap.GetTileSpacing()));
+            ITile wallTopNorth = currentMap.GetWallAt(new Vector2(wallTop.Position.X, wallTop.Position.Y - currentMap.GetTileSpacing()));
+            ITile wallCurrentSouth = currentMap.GetWallAt(new Vector2(currentTile.Position.X, currentTile.Position.Y - currentMap.GetTileSpacing()));
 
-            ITile wallTopEast = currentMap.GetWallAt(new Vector2D(wallTop.Position.X + currentMap.GetTileSpacing(), wallTop.Position.Y));
-            ITile wallCurrentEast = currentMap.GetWallAt(new Vector2D(currentTile.Position.X + currentMap.GetTileSpacing(), currentTile.Position.Y));
+            ITile wallTopEast = currentMap.GetWallAt(new Vector2(wallTop.Position.X + currentMap.GetTileSpacing(), wallTop.Position.Y));
+            ITile wallCurrentEast = currentMap.GetWallAt(new Vector2(currentTile.Position.X + currentMap.GetTileSpacing(), currentTile.Position.Y));
 
-            ITile wallTopWest = currentMap.GetWallAt(new Vector2D(wallTop.Position.X - currentMap.GetTileSpacing(), wallTop.Position.Y));
-            ITile wallCurrentWest = currentMap.GetWallAt(new Vector2D(currentTile.Position.X - currentMap.GetTileSpacing(), currentTile.Position.Y));
+            ITile wallTopWest = currentMap.GetWallAt(new Vector2(wallTop.Position.X - currentMap.GetTileSpacing(), wallTop.Position.Y));
+            ITile wallCurrentWest = currentMap.GetWallAt(new Vector2(currentTile.Position.X - currentMap.GetTileSpacing(), currentTile.Position.Y));
 
             switch (pManager.Direction)
             {
@@ -64,7 +65,7 @@ namespace SS14.Client.Services.Placement.Modes
                         return false;
                     else
                     {
-                        mouseWorld = new Vector2D(wallTop.Position.X + currentMap.GetTileSpacing()/2f,
+                        mouseWorld = new Vector2(wallTop.Position.X + currentMap.GetTileSpacing()/2f,
                                                   wallTop.Position.Y - spriteToDraw.AABB.Height);
                         ValidPosition = true;
                     }
@@ -75,7 +76,7 @@ namespace SS14.Client.Services.Placement.Modes
                     else
                     {
                         mouseWorld =
-                            new Vector2D(wallTop.Position.X + spriteToDraw.AABB.Width + currentMap.GetTileSpacing(),
+                            new Vector2(wallTop.Position.X + spriteToDraw.AABB.Width + currentMap.GetTileSpacing(),
                                          wallTop.Position.Y + currentMap.GetTileSpacing()/2f);
                         ValidPosition = true;
                     }
@@ -85,7 +86,7 @@ namespace SS14.Client.Services.Placement.Modes
                         return false;
                     else
                     {
-                        mouseWorld = new Vector2D(wallTop.Position.X + currentMap.GetTileSpacing()/2f,
+                        mouseWorld = new Vector2(wallTop.Position.X + currentMap.GetTileSpacing()/2f,
                                                   wallTop.Position.Y + spriteToDraw.AABB.Height +
                                                   currentMap.GetTileSpacing());
                         ValidPosition = true;
@@ -96,14 +97,14 @@ namespace SS14.Client.Services.Placement.Modes
                         return false;
                     else
                     {
-                        mouseWorld = new Vector2D(wallTop.Position.X - spriteToDraw.AABB.Width,
+                        mouseWorld = new Vector2(wallTop.Position.X - spriteToDraw.AABB.Width,
                                                   wallTop.Position.Y + currentMap.GetTileSpacing()/2f);
                         ValidPosition = true;
                     }
                     break;
             }
 
-            mouseScreen = new Vector2D(mouseWorld.X - ClientWindowData.Singleton.ScreenOrigin.X,
+            mouseScreen = new Vector2(mouseWorld.X - ClientWindowData.Singleton.ScreenOrigin.X,
                                        mouseWorld.Y - ClientWindowData.Singleton.ScreenOrigin.Y);
 
             return true;
@@ -114,7 +115,7 @@ namespace SS14.Client.Services.Placement.Modes
             if (spriteToDraw != null)
             {
                 spriteToDraw.Color = pManager.ValidPosition ? Color.ForestGreen : Color.IndianRed;
-                spriteToDraw.Position = new Vector2D(mouseScreen.X - (spriteToDraw.Width/2f),
+                spriteToDraw.Position = new Vector2(mouseScreen.X - (spriteToDraw.Width/2f),
                                                      mouseScreen.Y - (spriteToDraw.Height/2f));
                 //Centering the sprite on the cursor.
                 spriteToDraw.Draw();

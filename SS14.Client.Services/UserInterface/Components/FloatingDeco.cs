@@ -1,11 +1,11 @@
-﻿using GorgonLibrary;
-using GorgonLibrary.Graphics;
-using GorgonLibrary.InputDevices;
+﻿using SS14.Client.Graphics.CluwneLib.Sprite;
+using SS14.Shared.Maths;
 using SS14.Client.Interfaces.Resource;
 using SS14.Client.Interfaces.UserInterface;
 using SS14.Shared.IoC;
 using System;
 using System.Drawing;
+using SFML.Window;
 
 namespace SS14.Client.Services.UserInterface.Components
 {
@@ -16,20 +16,20 @@ namespace SS14.Client.Services.UserInterface.Components
         public bool BounceRotate = false; //Rotation inverts after hitting a certain angle?
         public float BounceRotateAngle = 0; //Angle at which to change rotation direction.
 
-        public Sprite DrawSprite;
+		public CluwneSprite DrawSprite;
 
         public bool MouseParallax = true; //Move with mouse?
         public bool MouseParallaxHorizontal = true;
         public bool MouseParallaxVertical = true;
-        private Vector2D ParallaxOffset;
+        private Vector2 ParallaxOffset;
 
         public float ParallaxScale = 0.01f; //Mouse Parallax Rate Modifier.
         public float RotationSpeed = 0; //Speed and direction at which this rotates.
 
-        public Vector2D SpriteLocation;
-        //Have to have a separate one because i made the ui compo pos a Point. Can't change to Vector2d unless i fix 235+ errors. Do this later.
+        public Vector2 SpriteLocation;
+        //Have to have a separate one because i made the ui compo pos a Point. Can't change to Vector2 unless i fix 235+ errors. Do this later.
 
-        public Vector2D Velocity; //Direction and speed this is moving in.
+        public Vector2 Velocity; //Direction and speed this is moving in.
 
         private float spriteRotation;
 
@@ -46,7 +46,7 @@ namespace SS14.Client.Services.UserInterface.Components
 
         public override void Update(float frameTime)
         {
-            SpriteLocation = new Vector2D(SpriteLocation.X + (Velocity.X*frameTime),
+            SpriteLocation = new Vector2(SpriteLocation.X + (Velocity.X*frameTime),
                                           SpriteLocation.Y + (Velocity.Y*frameTime));
             spriteRotation += RotationSpeed*frameTime;
 
@@ -58,14 +58,14 @@ namespace SS14.Client.Services.UserInterface.Components
 
             //Outside screen. Does not respect rotation. FIX.
             if (ClientArea.X > Gorgon.Screen.Width)
-                SpriteLocation = new Vector2D((0 - DrawSprite.Width), SpriteLocation.Y);
+                SpriteLocation = new Vector2((0 - DrawSprite.Width), SpriteLocation.Y);
             else if (ClientArea.X < (0 - DrawSprite.Width))
-                SpriteLocation = new Vector2D(Gorgon.Screen.Width, SpriteLocation.Y);
+                SpriteLocation = new Vector2(Gorgon.Screen.Width, SpriteLocation.Y);
 
             if (ClientArea.Y > Gorgon.Screen.Height)
-                SpriteLocation = new Vector2D(SpriteLocation.X, (0 - DrawSprite.Height));
+                SpriteLocation = new Vector2(SpriteLocation.X, (0 - DrawSprite.Height));
             else if (ClientArea.Y < (0 - DrawSprite.Height))
-                SpriteLocation = new Vector2D(SpriteLocation.X, Gorgon.Screen.Height);
+                SpriteLocation = new Vector2(SpriteLocation.X, Gorgon.Screen.Height);
 
             if (MouseParallax)
             {
@@ -84,11 +84,11 @@ namespace SS14.Client.Services.UserInterface.Components
                     ParY *= ParallaxScale;
                 }
 
-                ParallaxOffset = new Vector2D(ParX, ParY);
+                ParallaxOffset = new Vector2(ParX, ParY);
             }
             else
             {
-                ParallaxOffset = Vector2D.Zero;
+                ParallaxOffset = Vector2.Zero;
             }
 
             Position = new Point((int) SpriteLocation.X, (int) SpriteLocation.Y);
@@ -108,12 +108,12 @@ namespace SS14.Client.Services.UserInterface.Components
             GC.SuppressFinalize(this);
         }
 
-        public override bool MouseDown(MouseInputEventArgs e)
+		public override bool MouseDown(MouseButtonEventArgs e)
         {
             return false;
         }
 
-        public override bool MouseUp(MouseInputEventArgs e)
+		public override bool MouseUp(MouseButtonEventArgs e)
         {
             return false;
         }

@@ -1,6 +1,4 @@
-﻿using GorgonLibrary;
-using GorgonLibrary.InputDevices;
-using SS14.Client.GameObjects;
+﻿using SS14.Client.GameObjects;
 using SS14.Client.Interfaces.Player;
 using SS14.Client.Interfaces.Resource;
 using SS14.Shared.GameObjects;
@@ -8,6 +6,8 @@ using SS14.Shared.GO;
 using System;
 using System.Collections.Generic;
 using System.Drawing;
+using SFML.Window;
+using SS14.Shared.Maths;
 
 namespace SS14.Client.Services.UserInterface.Components
 {
@@ -147,17 +147,17 @@ namespace SS14.Client.Services.UserInterface.Components
             GC.SuppressFinalize(this);
         }
 
-        public override bool MouseDown(MouseInputEventArgs e)
+		public override bool MouseDown(MouseButtonEventArgs e)
         {
-            var mousePoint = new Vector2D((int) e.Position.X, (int) e.Position.Y);
+            var mousePoint = new Vector2((int) e.Position.X, (int) e.Position.Y);
 
-            if ((mousePoint - new Vector2D(Position.X, Position.Y)).Length <= 3)
+            if ((mousePoint - new Vector2(Position.X, Position.Y)).Length <= 3)
                 dragging = true;
 
             return false;
         }
 
-        public override bool MouseUp(MouseInputEventArgs e)
+		public override bool MouseUp(MouseButtonEventArgs e)
         {
             if (dragging)
             {
@@ -168,7 +168,7 @@ namespace SS14.Client.Services.UserInterface.Components
                 return false;
         }
 
-        public override void MouseMove(MouseInputEventArgs e)
+		public override void MouseMove(MouseMoveEventArgs e)
         {
             if (dragging)
             {

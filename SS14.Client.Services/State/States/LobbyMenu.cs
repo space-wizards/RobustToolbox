@@ -1,7 +1,4 @@
-﻿using GorgonLibrary;
-using GorgonLibrary.Graphics;
-using GorgonLibrary.InputDevices;
-using Lidgren.Network;
+﻿using Lidgren.Network;
 using SS14.Client.Interfaces.Network;
 using SS14.Client.Interfaces.Player;
 using SS14.Client.Interfaces.State;
@@ -13,6 +10,9 @@ using System;
 using System.Collections.Generic;
 using System.Drawing;
 using System.Linq;
+using SS14.Client.Graphics.CluwneLib.Sprite;
+using SFML.Window;
+using SS14.Client.Graphics.CluwneLib.Event;
 
 namespace SS14.Client.Services.State.States
 {
@@ -20,7 +20,7 @@ namespace SS14.Client.Services.State.States
     {
         #region Fields
 
-        private readonly Sprite _background;
+		private readonly CluwneSprite _background;
 
         private readonly SimpleImage _imgStatus;
 
@@ -160,7 +160,7 @@ namespace SS14.Client.Services.State.States
 
             _lobbyChat = new Chatbox(ResourceManager, UserInterfaceManager, KeyBindingManager)
                 {
-                    Size = new Vector2D(780,225),
+                    Size = new Vector2(780,225),
                 };
 
             _lobbyChat.Update(0);
@@ -506,31 +506,31 @@ namespace SS14.Client.Services.State.States
 
         #region Input
 
-        public void KeyDown(KeyboardInputEventArgs e)
+        public void KeyDown(KeyEventArgs e)
         {
             UserInterfaceManager.KeyDown(e);
         }
 
-        public void KeyUp(KeyboardInputEventArgs e)
+        public void KeyUp(KeyEventArgs e)
         {
         }
 
-        public void MouseUp(MouseInputEventArgs e)
+		public void MouseUp(MouseButtonEventArgs e)
         {
             UserInterfaceManager.MouseUp(e);
         }
 
-        public void MouseDown(MouseInputEventArgs e)
+		public void MouseDown(MouseButtonEventArgs e)
         {
             UserInterfaceManager.MouseDown(e);
         }
 
-        public void MouseMove(MouseInputEventArgs e)
+		public void MouseMove(MouseMoveEventArgs e)
         {
             UserInterfaceManager.MouseMove(e);
         }
 
-        public void MouseWheelMove(MouseInputEventArgs e)
+		public void MouseWheelMove(MouseWheelEventArgs e)
         {
             UserInterfaceManager.MouseWheelMove(e);
         }

@@ -1,6 +1,4 @@
-﻿using GorgonLibrary;
-using GorgonLibrary.Graphics;
-using SS14.Client.GameObjects;
+﻿using SS14.Client.GameObjects;
 using SS14.Client.Interfaces.Player;
 using SS14.Client.Interfaces.Resource;
 using SS14.Shared.GameObjects;
@@ -8,6 +6,7 @@ using SS14.Shared.GO;
 using SS14.Shared.IoC;
 using System;
 using System.Drawing;
+using SS14.Client.Graphics.CluwneLib.Sprite;
 
 namespace SS14.Client.Services.UserInterface.Components
 {
@@ -16,7 +15,7 @@ namespace SS14.Client.Services.UserInterface.Components
         private readonly IResourceManager _resourceManager;
         private readonly DamageType resAssigned;
 
-        private Sprite icon;
+		private CluwneSprite icon;
         private TextSprite text;
 
         public ArmorInfoLabel(DamageType resistance, IResourceManager resourceManager)
@@ -64,7 +63,7 @@ namespace SS14.Client.Services.UserInterface.Components
         public override void Update(float frameTime)
         {
             icon.Position = Position;
-            text.Position = new Vector2D(Position.X + icon.Width + 5,
+            text.Position = new Vector2(Position.X + icon.Width + 5,
                                          Position.Y + (int) (icon.Height/2f) - (int) (text.Height/2f));
             ClientArea = new Rectangle(Position,
                                        new Size((int) text.Width + (int) icon.Width + 5,

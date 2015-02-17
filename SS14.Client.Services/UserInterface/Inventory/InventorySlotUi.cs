@@ -1,9 +1,9 @@
-﻿using GorgonLibrary.Graphics;
-using GorgonLibrary.InputDevices;
-using SS14.Client.Interfaces.Resource;
+﻿using SS14.Client.Interfaces.Resource;
 using SS14.Client.Services.Helpers;
 using SS14.Client.Services.UserInterface.Components;
+using SS14.Client.Graphics.CluwneLib.Sprite;
 using SS14.Shared.GameObjects;
+using SFML.Window;
 using System;
 using System.Drawing;
 
@@ -17,9 +17,9 @@ namespace SS14.Client.Services.UserInterface.Inventory
 
         #endregion
 
-        private readonly Sprite _entitySprite;
+		private readonly CluwneSprite _entitySprite;
         private readonly IResourceManager _resourceManager;
-        private readonly Sprite _slotSprite;
+		private readonly CluwneSprite _slotSprite;
 
         public Entity ContainingEntity;
         private Color _currentColor;
@@ -59,7 +59,7 @@ namespace SS14.Client.Services.UserInterface.Inventory
             GC.SuppressFinalize(this);
         }
 
-        public override bool MouseDown(MouseInputEventArgs e)
+		public override bool MouseDown(MouseButtonEventArgs e)
         {
             if (ClientArea.Contains(new Point((int) e.Position.X, (int) e.Position.Y)))
             {
@@ -69,7 +69,7 @@ namespace SS14.Client.Services.UserInterface.Inventory
             return false;
         }
 
-        public override bool MouseUp(MouseInputEventArgs e)
+		public override bool MouseUp(MouseButtonEventArgs e)
         {
             if (ClientArea.Contains(new Point((int) e.Position.X, (int) e.Position.Y)))
             {
@@ -78,7 +78,7 @@ namespace SS14.Client.Services.UserInterface.Inventory
             return false;
         }
 
-        public override void MouseMove(MouseInputEventArgs e)
+		public override void MouseMove(MouseMoveEventArgs e)
         {
             _currentColor = ClientArea.Contains(new Point((int) e.Position.X, (int) e.Position.Y))
                                 ? Color.LightSteelBlue

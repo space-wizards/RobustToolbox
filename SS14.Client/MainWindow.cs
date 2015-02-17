@@ -1,7 +1,4 @@
-﻿using GorgonLibrary;
-using GorgonLibrary.Graphics;
-using GorgonLibrary.InputDevices;
-using SS14.Client.Interfaces.Configuration;
+﻿using SS14.Client.Interfaces.Configuration;
 using SS14.Client.Interfaces.Input;
 using SS14.Client.Interfaces.Network;
 using SS14.Client.Interfaces.Resource;
@@ -13,6 +10,13 @@ using System;
 using System.Drawing;
 using System.IO;
 using System.Windows.Forms;
+using SFML.Graphics;
+using SFML.Window;
+using SS14.Client.Graphics.CluwneLib;
+using SS14.Client.Graphics.CluwneLib.Event;
+using SS14.Client.Graphics.CluwneLib.Render;
+using Color = SFML.Graphics.Color;
+using KeyArgs = SFML.Window.KeyEventArgs;
 
 namespace SS14.Client
 {
@@ -63,13 +67,13 @@ namespace SS14.Client
         {
             _configurationManager = IoCManager.Resolve<IConfigurationManager>();
 
-            SetupGorgon();
+            SetupCluwne();
             SetupInput();
 
             IoCManager.Resolve<IResourceManager>().LoadBaseResources();
             IoCManager.Resolve<IResourceManager>().LoadLocalResources();
 
-            Gorgon.Go();
+            CluwneLib.Go();
 
             _networkManager = IoCManager.Resolve<INetworkManager>();
             _netGrapher = IoCManager.Resolve<INetworkGrapher>();
@@ -81,8 +85,8 @@ namespace SS14.Client
 
         private void MainWindowResizeEnd(object sender, EventArgs e)
         {
-            _input.Mouse.SetPositionRange(0, 0, Gorgon.CurrentClippingViewport.Width,
-                                          Gorgon.CurrentClippingViewport.Height);
+            _input.Mouse.SetPositionRange(0, 0, CluwneLib.CurrentClippingViewport.Width,
+                                          CluwneLib.CurrentClippingViewport.Height);
             _stateManager.CurrentState.FormResize();
         }
 
@@ -93,14 +97,14 @@ namespace SS14.Client
         /// </summary>
         /// <param name="sender">The source of the event.</param>
         /// <param name="e">The <see cref="GorgonLibrary.InputDevices.KeyboardInputEventArgs"/> instance containing the event data.</param>
-        private void KeyDownEvent(object sender, KeyboardInputEventArgs e)
+        private void KeyDownEvent(object sender, KeyArgs e)
         {
             if(_stateManager!=null)
                 _stateManager.KeyDown(e);
 
-            switch (e.Key)
+            switch (e.Code)
             {
-                case KeyboardKeys.F3:
+                case Keyboard.Key.F3:
                     IoCManager.Resolve<INetworkGrapher>().Toggle();
                     break;
             }
@@ -111,7 +115,7 @@ namespace SS14.Client
         /// </summary>
         /// <param name="sender">The source of the event.</param>
         /// <param name="e">The <see cref="GorgonLibrary.InputDevices.KeyboardInputEventArgs"/> instance containing the event data.</param>
-        private void KeyUpEvent(object sender, KeyboardInputEventArgs e)
+        private void KeyUpEvent(object sender, KeyArgs e)
         {
             if (_stateManager != null) 
                 _stateManager.KeyUp(e);
@@ -122,7 +126,7 @@ namespace SS14.Client
         /// </summary>
         /// <param name="sender">The source of the event.</param>
         /// <param name="e">The <see cref="GorgonLibrary.InputDevices.MouseInputEventArgs"/> instance containing the event data.</param>
-        private void MouseWheelMoveEvent(object sender, MouseInputEventArgs e)
+        private void MouseWheelMoveEvent(object sender, MouseWheelEventArgs e)
         {
             if (_stateManager != null) 
                 _stateManager.MouseWheelMove(e);
@@ -133,7 +137,7 @@ namespace SS14.Client
         /// </summary>
         /// <param name="sender">The source of the event.</param>
         /// <param name="e">The <see cref="GorgonLibrary.InputDevices.MouseInputEventArgs"/> instance containing the event data.</param>
-        private void MouseMoveEvent(object sender, MouseInputEventArgs e)
+        private void MouseMoveEvent(object sender, MouseMoveEventArgs e)
         {
             if (_stateManager != null) 
                 _stateManager.MouseMove(e);
@@ -144,7 +148,7 @@ namespace SS14.Client
         /// </summary>
         /// <param name="sender">The source of the event.</param>
         /// <param name="e">The <see cref="GorgonLibrary.InputDevices.MouseInputEventArgs"/> instance containing the event data.</param>
-        private void MouseDownEvent(object sender, MouseInputEventArgs e)
+        private void MouseDownEvent(object sender, MouseButtonEventArgs e)
         {
             if (_stateManager != null) 
                 _stateManager.MouseDown(e);
@@ -155,7 +159,7 @@ namespace SS14.Client
         /// </summary>
         /// <param name="sender">The source of the event.</param>
         /// <param name="e">The <see cref="GorgonLibrary.InputDevices.MouseInputEventArgs"/> instance containing the event data.</param>
-        private void MouseUpEvent(object sender, MouseInputEventArgs e)
+        private void MouseUpEvent(object sender, MouseButtonEventArgs e)
         {
             if (_stateManager != null) 
                 _stateManager.MouseUp(e);
@@ -167,54 +171,57 @@ namespace SS14.Client
 
         #region Privates
 
-        private void SetupGorgon()
+//        private void SetupGorgon()
+//        {
+//            uint displayWidth = _configurationManager.GetDisplayWidth();
+//            uint displayHeight = _configurationManager.GetDisplayHeight();
+//            bool fullscreen = _configurationManager.GetFullscreen();
+//            var refresh = (int) _configurationManager.GetDisplayRefresh();
+//            Size = new Size((int) displayWidth, (int) displayHeight);
+//
+//            //TODO. Find first compatible videomode and set it if no configuration is present. Else the client might crash due to invalid videomodes on the first start.
+//
+//            CluwneLib.Initialize();
+//            //Gorgon.SetMode(this);
+//            CluwneLib.SetMode(this, (int) displayWidth, (int) displayHeight, BackBufferFormats.BufferRGB888, !fullscreen,
+//                           false, false, refresh);
+//            CluwneLib.Screen.BackgroundColor = Color.FromArgb(50, 50, 50);
+//            CluwneLib.CurrentClippingViewport = new Viewport(0, 0, CluwneLib.Screen.Width, CluwneLib.Screen.Height);
+//            CluwneLib.DeviceReset += MainWindowResizeEnd;
+//            //Gorgon.MinimumFrameTime = PreciseTimer.FpsToMilliseconds(66);
+//            CluwneLib.Idle += GorgonIdle;
+//        }
+
+        private void SetupCluwne()
         {
             uint displayWidth = _configurationManager.GetDisplayWidth();
             uint displayHeight = _configurationManager.GetDisplayHeight();
             bool fullscreen = _configurationManager.GetFullscreen();
             var refresh = (int) _configurationManager.GetDisplayRefresh();
+
             Size = new Size((int) displayWidth, (int) displayHeight);
 
-            //TODO. Find first compatible videomode and set it if no configuration is present. Else the client might crash due to invalid videomodes on the first start.
-
-            Gorgon.Initialize(true, false);
-            //Gorgon.SetMode(this);
-            Gorgon.SetMode(this, (int) displayWidth, (int) displayHeight, BackBufferFormats.BufferRGB888, !fullscreen,
-                           false, false, refresh);
-            Gorgon.AllowBackgroundRendering = true;
-            Gorgon.Screen.BackgroundColor = Color.FromArgb(50, 50, 50);
-            Gorgon.CurrentClippingViewport = new Viewport(0, 0, Gorgon.Screen.Width, Gorgon.Screen.Height);
-            Gorgon.DeviceReset += MainWindowResizeEnd;
-            //Gorgon.MinimumFrameTime = PreciseTimer.FpsToMilliseconds(66);
-            Gorgon.Idle += GorgonIdle;
+            CluwneLib.Initialize();
+            CluwneLib.SetMode(this, (int) displayWidth, (int) displayHeight, BackBufferFormats.BufferRGB8888, !fullscreen, false, false, refresh);
+            CluwneLib.Screen.BackgroundColor = new Color(255, 50, 50, 50);
+            CluwneLib.Idle += GorgonIdle;
         }
 
         private void SetupInput()
         {
-            var inputPath = Path.Combine(Environment.CurrentDirectory,"GorgonInput.dll");
-            _input = Input.LoadInputPlugIn(inputPath, "Gorgon.RawInput");
-            _input.Bind(this);
-
             Cursor.Hide();
 
-            ResizeEnd += MainWindowResizeEnd;
+            CluwneLib.Screen.Resized += MainWindowResizeEnd;
 
-            _input.Mouse.Enabled = true;
-            _input.Mouse.Exclusive = false;
-            _input.Mouse.AllowBackground = false;
-            _input.Mouse.MouseDown += MouseDownEvent;
-            _input.Mouse.MouseUp += MouseUpEvent;
-            _input.Mouse.MouseMove += MouseMoveEvent;
-            _input.Mouse.MouseWheelMove += MouseWheelMoveEvent;
+            CluwneLib.Screen.KeyPressed  += KeyDownEvent;
+            CluwneLib.Screen.KeyReleased += KeyUpEvent;
 
-            _input.Keyboard.Enabled = true;
-            _input.Keyboard.Exclusive = true;
-            _input.Keyboard.KeyDown += KeyDownEvent;
-            _input.Keyboard.KeyUp += KeyUpEvent;
-            IoCManager.Resolve<IKeyBindingManager>().Initialize(_input.Keyboard);
+            CluwneLib.Screen.MouseButtonPressed  += MouseDownEvent;
+            CluwneLib.Screen.MouseButtonReleased += MouseUpEvent;
+            CluwneLib.Screen.MouseMoved          += MouseMoveEvent;
+            CluwneLib.Screen.MouseWheelMoved     += MouseWheelMoveEvent;
 
-            _input.Mouse.SetPositionRange(0, 0, Gorgon.CurrentClippingViewport.Width,
-                                          Gorgon.CurrentClippingViewport.Height);
+            IoCManager.Resolve<IKeyBindingManager>().Initialize();
         }
 
         #endregion

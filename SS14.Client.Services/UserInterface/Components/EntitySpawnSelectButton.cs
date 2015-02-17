@@ -1,12 +1,11 @@
-﻿using GorgonLibrary;
-using GorgonLibrary.Graphics;
-using GorgonLibrary.InputDevices;
-using SS14.Client.Interfaces.Resource;
+﻿using SS14.Client.Interfaces.Resource;
+using SS14.Client.Graphics.CluwneLib.Sprite;
 using SS14.Shared.GameObjects;
 using System;
 using System.Drawing;
 using System.Linq;
-using Font = GorgonLibrary.Graphics.Font;
+using Font = SFML.Graphics.Font;
+using SFML.Window;
 
 namespace SS14.Client.Services.UserInterface.Components
 {
@@ -25,7 +24,7 @@ namespace SS14.Client.Services.UserInterface.Components
         private readonly Font font;
 
         private readonly TextSprite name;
-        private readonly Sprite objectSprite;
+		private readonly CluwneSprite objectSprite;
 
         public int fixed_width = -1;
         public Boolean selected = false;
@@ -56,7 +55,7 @@ namespace SS14.Client.Services.UserInterface.Components
 
         public event EntitySpawnSelectPress Clicked;
 
-        public override bool MouseDown(MouseInputEventArgs e)
+		public override bool MouseDown(MouseButtonEventArgs e)
         {
             if (ClientArea.Contains(new Point((int) e.Position.X, (int) e.Position.Y)))
             {
@@ -66,7 +65,7 @@ namespace SS14.Client.Services.UserInterface.Components
             return false;
         }
 
-        public override bool MouseUp(MouseInputEventArgs e)
+		public override bool MouseUp(MouseButtonEventArgs e)
         {
             return false;
         }
@@ -74,8 +73,8 @@ namespace SS14.Client.Services.UserInterface.Components
         public override void Update(float frameTime)
         {
             base.Update(frameTime);
-            objectSprite.Position = new Vector2D(Position.X + 5, Position.Y + 5);
-            name.Position = new Vector2D(objectSprite.Position.X + objectSprite.Width + 5, objectSprite.Position.Y);
+            objectSprite.Position = new Vector2(Position.X + 5, Position.Y + 5);
+            name.Position = new Vector2(objectSprite.Position.X + objectSprite.Width + 5, objectSprite.Position.Y);
             ClientArea = new Rectangle(Position,
                                        new Size(
                                            fixed_width != -1

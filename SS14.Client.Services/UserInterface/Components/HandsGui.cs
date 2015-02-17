@@ -1,5 +1,4 @@
-﻿using GorgonLibrary.Graphics;
-using GorgonLibrary.InputDevices;
+﻿using SS14.Client.Graphics.CluwneLib.Sprite;
 using Lidgren.Network;
 using SS14.Client.GameObjects;
 using SS14.Client.Interfaces.Player;
@@ -13,6 +12,7 @@ using SS14.Shared.IoC;
 using System;
 using System.Drawing;
 using System.Linq;
+using SFML.Window;
 
 namespace SS14.Client.Services.UserInterface.Components
 {
@@ -20,7 +20,7 @@ namespace SS14.Client.Services.UserInterface.Components
     {
         public Entity Entity;
         public Hand Hand;
-        public Sprite HeldSprite;
+		public CluwneSprite HeldSprite;
     }
 
     public class HandsGui : GuiComponent
@@ -29,7 +29,7 @@ namespace SS14.Client.Services.UserInterface.Components
 
         private readonly IPlayerManager _playerManager = IoCManager.Resolve<IPlayerManager>();
         private readonly IUserInterfaceManager _userInterfaceManager = IoCManager.Resolve<IUserInterfaceManager>();
-        private readonly Sprite handSlot;
+		private readonly CluwneSprite handSlot;
         private readonly int spacing = 1;
 
         public UiHandInfo LeftHand;
@@ -162,7 +162,7 @@ namespace SS14.Client.Services.UserInterface.Components
             equipComponent.SendSwitchHands(hand);
         }
 
-        public override bool MouseDown(MouseInputEventArgs e)
+		public override bool MouseDown(MouseButtonEventArgs e)
         {
             switch (e.Buttons)
             {
@@ -182,7 +182,7 @@ namespace SS14.Client.Services.UserInterface.Components
             return false;
         }
 
-        public override bool MouseUp(MouseInputEventArgs e)
+		public override bool MouseUp(MouseButtonEventArgs e)
         {
             if (ClientArea.Contains(new Point((int) e.Position.X, (int) e.Position.Y)))
             {
@@ -257,7 +257,7 @@ namespace SS14.Client.Services.UserInterface.Components
             return false;
         }
 
-        public override void MouseMove(MouseInputEventArgs e)
+		public override void MouseMove(MouseMoveEventArgs e)
         {
             if (ClientArea.Contains(new Point((int) e.Position.X, (int) e.Position.Y)))
             {
@@ -287,12 +287,12 @@ namespace SS14.Client.Services.UserInterface.Components
             }
         }
 
-        public override bool MouseWheelMove(MouseInputEventArgs e)
+		public override bool MouseWheelMove(MouseWheelEventArgs e)
         {
             return false;
         }
 
-        public override bool KeyDown(KeyboardInputEventArgs e)
+		public override bool KeyDown(KeyEventArgs e)
         {
             return false;
         }

@@ -1,12 +1,11 @@
-﻿using GorgonLibrary;
-using GorgonLibrary.InputDevices;
-using SS14.Client.Interfaces.Resource;
+﻿using SS14.Client.Interfaces.Resource;
 using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Drawing;
 using System.Linq;
 using System.Reflection;
+using SFML.Window;
 
 namespace SS14.Client.Services.UserInterface.Components
 {
@@ -261,7 +260,7 @@ namespace SS14.Client.Services.UserInterface.Components
             }
         }
 
-        private void LabelName_Clicked(Label sender, MouseInputEventArgs e)
+		private void LabelName_Clicked(Label sender, MouseButtonEventArgs e)
         {
             switch (e.Buttons)
             {

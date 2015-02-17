@@ -1,11 +1,11 @@
-﻿using GorgonLibrary;
-using GorgonLibrary.Graphics;
-using GorgonLibrary.InputDevices;
-using SS14.Client.Interfaces.Resource;
+﻿using SS14.Client.Interfaces.Resource;
 using SS14.Shared.IoC;
 using System;
 using System.Collections.Generic;
 using System.Drawing;
+using SS14.Client.Graphics.CluwneLib.Sprite;
+using SS14.Shared.Maths;
+using SFML.Window;
 
 namespace SS14.Client.Services.UserInterface.Components
 {
@@ -18,12 +18,12 @@ namespace SS14.Client.Services.UserInterface.Components
 
         public Point TabOffset = new Point(0, 0);
         private TabContainer _activeTab;
-        private Sprite botSprite;
-        private Sprite midSprite;
+		private CluwneSprite botSprite;
+		private CluwneSprite midSprite;
 
-        public Vector2D size;
+        public Vector2 size;
 
-        private Sprite topSprite;
+		private CluwneSprite topSprite;
 
         public TabbedMenu()
         {
@@ -136,7 +136,7 @@ namespace SS14.Client.Services.UserInterface.Components
                 if (currTabSprite != null)
                 {
                     currTabSprite.Position =
-                        new Vector2D(curr.Key.Position.X + (curr.Key.ClientArea.Width/2f - currTabSprite.Width/2f),
+                        new Vector2(curr.Key.Position.X + (curr.Key.ClientArea.Width/2f - currTabSprite.Width/2f),
                                      curr.Key.Position.Y + (curr.Key.ClientArea.Height/2f - currTabSprite.Height/2f));
                     currTabSprite.Draw();
                 }
@@ -156,7 +156,7 @@ namespace SS14.Client.Services.UserInterface.Components
             GC.SuppressFinalize(this);
         }
 
-        public override bool KeyDown(KeyboardInputEventArgs e)
+        public override bool KeyDown(KeyEventArgs e)
         {
             foreach (var curr in _tabs)
             {
@@ -168,7 +168,7 @@ namespace SS14.Client.Services.UserInterface.Components
             return base.KeyDown(e);
         }
 
-        public override bool MouseWheelMove(MouseInputEventArgs e)
+		public override bool MouseWheelMove(MouseWheelEventArgs e)
         {
             foreach (var curr in _tabs)
             {
@@ -180,7 +180,7 @@ namespace SS14.Client.Services.UserInterface.Components
             return base.MouseWheelMove(e);
         }
 
-        public override void MouseMove(MouseInputEventArgs e)
+		public override void MouseMove(MouseMoveEventArgs e)
         {
             foreach (var curr in _tabs)
             {
@@ -192,7 +192,7 @@ namespace SS14.Client.Services.UserInterface.Components
             base.MouseMove(e);
         }
 
-        public override bool MouseDown(MouseInputEventArgs e)
+		public override bool MouseDown(MouseButtonEventArgs e)
         {
             foreach (var curr in _tabs)
             {
@@ -204,7 +204,7 @@ namespace SS14.Client.Services.UserInterface.Components
             return base.MouseDown(e);
         }
 
-        public override bool MouseUp(MouseInputEventArgs e)
+		public override bool MouseUp(MouseButtonEventArgs e)
         {
             foreach (var curr in _tabs)
             {

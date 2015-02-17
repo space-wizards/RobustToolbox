@@ -1,6 +1,4 @@
-﻿using GorgonLibrary.Graphics;
-using GorgonLibrary.InputDevices;
-using SS14.Client.Interfaces.Configuration;
+﻿using SS14.Client.Interfaces.Configuration;
 using SS14.Client.Interfaces.Input;
 using SS14.Client.Interfaces.Map;
 using SS14.Client.Interfaces.Network;
@@ -12,6 +10,10 @@ using SS14.Client.Interfaces.UserInterface;
 using SS14.Shared;
 using System;
 using System.Collections.Generic;
+using System.Windows.Forms;
+using SFML.Window;
+using SS14.Client.Graphics.CluwneLib.Event;
+using KeyEventArgs = SFML.Window.KeyEventArgs;
 
 namespace SS14.Client.Services.State
 {
@@ -56,37 +58,37 @@ namespace SS14.Client.Services.State
 
         #region Input
 
-        public void KeyDown(KeyboardInputEventArgs e)
+        public void KeyDown(KeyEventArgs e)
         {
             if (CurrentState != null)
                 CurrentState.KeyDown(e);
         }
 
-        public void KeyUp(KeyboardInputEventArgs e)
+        public void KeyUp(KeyEventArgs e)
         {
             if (CurrentState != null)
                 CurrentState.KeyUp(e);
         }
 
-        public void MouseUp(MouseInputEventArgs e)
+        public void MouseUp(MouseButtonEventArgs e)
         {
             if (CurrentState != null)
                 CurrentState.MouseUp(e);
         }
 
-        public void MouseDown(MouseInputEventArgs e)
+        public void MouseDown(MouseButtonEventArgs e)
         {
             if (CurrentState != null)
                 CurrentState.MouseDown(e);
         }
 
-        public void MouseMove(MouseInputEventArgs e)
+        public void MouseMove(MouseMoveEventArgs e)
         {
             if (CurrentState != null)
                 CurrentState.MouseMove(e);
         }
 
-        public void MouseWheelMove(MouseInputEventArgs e)
+        public void MouseWheelMove(MouseWheelEventArgs e)
         {
             if (CurrentState != null)
                 CurrentState.MouseWheelMove(e);
@@ -101,7 +103,7 @@ namespace SS14.Client.Services.State
             if (CurrentState == null) return;
 
             CurrentState.Update(e);
-            CurrentState.GorgonRender(e);
+            CurrentState.Render(e);
         }
 
         public void RequestStateChange<T>() where T : IState

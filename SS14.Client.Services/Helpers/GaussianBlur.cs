@@ -1,5 +1,6 @@
-﻿using GorgonLibrary;
-using GorgonLibrary.Graphics;
+﻿using SS14.Client.Graphics.CluwneLib.Shader;
+using SS14.Client.Graphics.CluwneLib.Render;
+using SS14.Shared.Maths;
 using SS14.Client.Interfaces.Resource;
 using SS14.Client.Interfaces.Utility;
 using SS14.Shared.IoC;
@@ -67,13 +68,13 @@ namespace SS14.Client.Services.Helpers
         /// Returns the weights and texture offsets used for the horizontal Gaussian blur
         /// pass.
         /// </summary>
-        public Vector4D[] WeightsOffsetsX { get; private set; }
+        public Vector4[] WeightsOffsetsX { get; private set; }
 
         /// <summary>
         /// Returns the weights and texture offsets used for the vertical Gaussian blur
         /// pass.
         /// </summary>
-        public Vector4D[] WeightsOffsetsY { get; private set; }
+        public Vector4[] WeightsOffsetsY { get; private set; }
 
         public SizeF Size { get; private set; }
 
@@ -169,8 +170,8 @@ namespace SS14.Client.Services.Helpers
 
             WeightsOffsetsX = null;
             WeightsOffsetsY = null;
-            WeightsOffsetsX = new Vector4D[Radius*2 + 1];
-            WeightsOffsetsY = new Vector4D[Radius*2 + 1];
+            WeightsOffsetsX = new Vector4[Radius*2 + 1];
+            WeightsOffsetsY = new Vector4[Radius*2 + 1];
 
             float xOffset = 1.0f/textureWidth;
             float yOffset = 1.0f/textureHeight;
@@ -178,8 +179,8 @@ namespace SS14.Client.Services.Helpers
             for (int i = -Radius; i <= Radius; ++i)
             {
                 int index = i + Radius;
-                WeightsOffsetsX[index] = new Vector4D(Kernel[index], i*xOffset, 0.0f, 0.0f);
-                WeightsOffsetsY[index] = new Vector4D(Kernel[index], i*yOffset, 0.0f, 0.0f);
+                WeightsOffsetsX[index] = new Vector4(Kernel[index], i*xOffset, 0.0f, 0.0f);
+                WeightsOffsetsY[index] = new Vector4(Kernel[index], i*yOffset, 0.0f, 0.0f);
             }
         }
 

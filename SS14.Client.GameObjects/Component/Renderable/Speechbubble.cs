@@ -1,10 +1,14 @@
-﻿using GorgonLibrary;
-using GorgonLibrary.Graphics;
+﻿using SFML.Graphics;
+using SFML.System;
+using SS14.Client.Graphics.CluwneLib.Render;
 using SS14.Client.Interfaces.Resource;
 using SS14.Shared.IoC;
 using System;
 using System.Drawing;
 using System.Text;
+using SS14.Shared.Maths;
+using Color = System.Drawing.Color;
+using Sprite = SS14.Client.Graphics.CluwneLib.Sprite.CluwneSprite;
 
 namespace SS14.Client.GameObjects
 {
@@ -49,7 +53,7 @@ namespace SS14.Client.GameObjects
         /// <summary>
         /// TextSprite used to hold and display speech text.
         /// </summary>
-        private readonly TextSprite _textSprite;
+        private readonly Text _textSprite;
 
         /// <summary>
         /// Holder for last time the sprite was
@@ -69,22 +73,14 @@ namespace SS14.Client.GameObjects
             _resourceManager = IoCManager.Resolve<IResourceManager>();
             _mobName = mobname;
             _buildTime = DateTime.Now;
-            _textSprite = new TextSprite
-                (
-                "chatBubbleTextSprite_" + _mobName,
-                String.Empty,
-                _resourceManager.GetFont("CALIBRI")
-                )
-                              {
-                                  Color = Color.Black,
-                                  WordWrap = true
-                              };
-
-            _textSprite.SetPosition(5, 3);
+            _textSprite = new Text(String.Empty, _resourceManager.GetFont("CALIBRI"));
+            _textSprite.Color = SFML.Graphics.Color.Black;
+            // TODO Word wrap!
+            _textSprite.Position = new Vector2(5, 3);
             _stringBuilder = new StringBuilder();
 
-            _bubbleRender = new RenderImage("ChatBubbleRenderImage_" + _mobName, 1, 1, ImageBufferFormats.BufferRGB888A8);
-            _bubbleSprite = new Sprite("ChatBubbleRenderSprite_" + _mobName, _bubbleRender);
+            _bubbleRender = new RenderImage(1, 1);
+            _bubbleSprite = new Sprite(_bubbleRender);
         }
 
         #endregion
@@ -95,7 +91,7 @@ namespace SS14.Client.GameObjects
 
         #region Publics
 
-        public void Draw(Vector2D position, Vector2D windowOrigin, Sprite spriteToDrawAbove)
+        public void Draw(Vector2 position, Vector2 windowOrigin, Sprite spriteToDrawAbove)
         {
             if ((DateTime.Now - _buildTime).TotalMilliseconds >= MillisecondsToLive) return;
 
@@ -106,7 +102,7 @@ namespace SS14.Client.GameObjects
             _bubbleSprite.Draw();
         }
 
-        public void Draw(Vector2D position, Vector2D windowOrigin, RectangleF boundingBox)
+        public void Draw(Vector2 position, Vector2 windowOrigin, RectangleF boundingBox)
         {
             if ((DateTime.Now - _buildTime).TotalMilliseconds >= MillisecondsToLive) return;
 
@@ -127,9 +123,8 @@ namespace SS14.Client.GameObjects
                     _stringBuilder.Append(text[i]);
             }
 
-            _textSprite.Text = _stringBuilder.ToString();
+            _textSprite.DisplayedString = _stringBuilder.ToString();
             _stringBuilder.Clear();
-            _textSprite.UpdateAABB();
 
             DrawBubbleSprite();
         }
@@ -138,7 +133,8 @@ namespace SS14.Client.GameObjects
 
         private void DrawBubbleSprite()
         {
-            RenderTarget originalTarget = Gorgon.CurrentRenderTarget;
+            // TODO unfuck this
+            /*RenderTarget originalTarget = Gorgon.CurrentRenderTarget;
             Sprite cornerSprite = _resourceManager.GetSprite("corners");
 
             //Set up dimensions
@@ -150,9 +146,9 @@ namespace SS14.Client.GameObjects
             _bubbleRender.Clear(Color.Transparent);
 
             //Draw black triangle at the bottom.
-            var pointOneBlack = new Vector2D((_bubbleRender.Width/2) - 10, _bubbleRender.Height - 10);
-            var pointTwoBlack = new Vector2D((_bubbleRender.Width/2) + 10, _bubbleRender.Height - 10);
-            var pointThreeBlack = new Vector2D((_bubbleRender.Width/2), _bubbleRender.Height);
+            var pointOneBlack = new Vector2((_bubbleRender.Width/2) - 10, _bubbleRender.Height - 10);
+            var pointTwoBlack = new Vector2((_bubbleRender.Width/2) + 10, _bubbleRender.Height - 10);
+            var pointThreeBlack = new Vector2((_bubbleRender.Width/2), _bubbleRender.Height);
             _bubbleRender.FilledTriangle(pointOneBlack, pointTwoBlack, pointThreeBlack, Color.Black);
 
             //Draw the side lines
@@ -166,9 +162,9 @@ namespace SS14.Client.GameObjects
             _bubbleRender.FilledRectangle(1, 3, _bubbleRender.Width - 2, _bubbleRender.Height - 12, Color.White);
 
             //Draw the white triangle at the bottom.
-            Vector2D pointOneWhite = pointOneBlack + new Vector2D(1, 0);
-            Vector2D pointTwoWhite = pointTwoBlack - new Vector2D(1, 0);
-            Vector2D pointThreeWhite = pointThreeBlack - new Vector2D(0, 1);
+            Vector2 pointOneWhite = pointOneBlack + new Vector2(1, 0);
+            Vector2 pointTwoWhite = pointTwoBlack - new Vector2(1, 0);
+            Vector2 pointThreeWhite = pointThreeBlack - new Vector2(0, 1);
             _bubbleRender.FilledTriangle(pointOneWhite, pointTwoWhite, pointThreeWhite, Color.White);
 
             //Draw the corners.
@@ -191,7 +187,7 @@ namespace SS14.Client.GameObjects
 
             Gorgon.CurrentRenderTarget = originalTarget;
 
-            _buildTime = DateTime.Now;
+            _buildTime = DateTime.Now;*/
         }
 
         #endregion

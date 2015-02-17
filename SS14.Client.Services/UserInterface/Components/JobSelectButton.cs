@@ -1,9 +1,8 @@
-﻿using GorgonLibrary;
-using GorgonLibrary.Graphics;
-using GorgonLibrary.InputDevices;
-using SS14.Client.Interfaces.Resource;
+﻿using SS14.Client.Interfaces.Resource;
 using System;
 using System.Drawing;
+using SS14.Client.Graphics.CluwneLib.Sprite;
+using SFML.Window;
 
 namespace SS14.Client.Services.UserInterface.Components
 {
@@ -20,9 +19,9 @@ namespace SS14.Client.Services.UserInterface.Components
         public bool Selected;
         private Rectangle _buttonArea;
 
-        private Sprite _buttonSprite;
+		private CluwneSprite _buttonSprite;
         private TextSprite _descriptionTextSprite;
-        private Sprite _jobSprite;
+		private CluwneSprite _jobSprite;
 
         public JobSelectButton(string text, string spriteName, string description, IResourceManager resourceManager)
         {
@@ -37,7 +36,7 @@ namespace SS14.Client.Services.UserInterface.Components
                                              Color = Color.Black,
                                              ShadowColor = Color.DimGray,
                                              Shadowed = true,
-                                             ShadowOffset = new Vector2D(1, 1)
+                                             ShadowOffset = new Vector2(1, 1)
                                          };
 
             Update(0);
@@ -81,7 +80,7 @@ namespace SS14.Client.Services.UserInterface.Components
             GC.SuppressFinalize(this);
         }
 
-        public override bool MouseDown(MouseInputEventArgs e)
+		public override bool MouseDown(MouseButtonEventArgs e)
         {
             if (!Available) return false;
             if (_buttonArea.Contains(new Point((int) e.Position.X, (int) e.Position.Y)))
@@ -93,7 +92,7 @@ namespace SS14.Client.Services.UserInterface.Components
             return false;
         }
 
-        public override bool MouseUp(MouseInputEventArgs e)
+		public override bool MouseUp(MouseButtonEventArgs e)
         {
             return false;
         }

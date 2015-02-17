@@ -1,9 +1,9 @@
-﻿using GorgonLibrary.Graphics;
-using GorgonLibrary.InputDevices;
-using SS14.Client.Interfaces.Resource;
+﻿using SS14.Client.Interfaces.Resource;
 using SS14.Client.Interfaces.UserInterface;
 using SS14.Shared.IoC;
+using SS14.Client.Graphics.CluwneLib.Sprite;
 using System;
+using SFML.Window;
 using System.Drawing;
 
 namespace SS14.Client.Services.UserInterface.Components
@@ -19,7 +19,7 @@ namespace SS14.Client.Services.UserInterface.Components
         #endregion
 
         private readonly IResourceManager _resourceManager;
-        private Sprite _buttonSprite;
+		private CluwneSprite _buttonSprite;
 
         public HotbarSlot(IResourceManager resourceManager)
         {
@@ -58,7 +58,7 @@ namespace SS14.Client.Services.UserInterface.Components
             GC.SuppressFinalize(this);
         }
 
-        public override bool MouseDown(MouseInputEventArgs e)
+		public override bool MouseDown(MouseButtonEventArgs e)
         {
             if (ClientArea.Contains(new Point((int) e.Position.X, (int) e.Position.Y)))
             {
@@ -68,7 +68,7 @@ namespace SS14.Client.Services.UserInterface.Components
             return false;
         }
 
-        public override bool MouseUp(MouseInputEventArgs e)
+		public override bool MouseUp(MouseButtonEventArgs e)
         {
             if (ClientArea.Contains(new Point((int) e.Position.X, (int) e.Position.Y)) &&
                 IoCManager.Resolve<IUserInterfaceManager>().DragInfo.IsActive)

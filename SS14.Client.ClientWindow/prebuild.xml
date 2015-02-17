@@ -11,7 +11,6 @@
   </Configuration>
   <ReferencePath>../bin</ReferencePath>
   <ReferencePath>../Third-Party</ReferencePath>
-  <Reference name="Gorgon" path="../Third-Party"/>
   <Reference name="System"/>
   <Reference name="System.Core"/>
   <Reference name="System.Drawing"/>
@@ -20,8 +19,11 @@
   <Reference name="Microsoft.CSharp"/>
   <Reference name="System.Data"/>
   <Reference name="System.Xml"/>
+  <Reference name="sfmlnet-system-2" path="../Third-Party"/>
   <Files>
     <File buildAction="Compile">ClientWindow.cs</File>
     <File buildAction="Compile">Properties/AssemblyInfo.cs</File>
   </Files>
+  <Reference name="SS14.Client.Graphics.CluwneLib"/>
+  <Reference name="SS14.Shared"/>
 </Project>

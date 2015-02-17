@@ -96,8 +96,8 @@ namespace SS14.Client.Services.State.States
         #endregion
 
         #region Lighting
-
-        private RenderImage _composedSceneTarget;
+        // TODO Rewrite shader code and lighting shaders to re-enable this shit
+       /* private RenderImage _composedSceneTarget;
         private RenderImage _overlayTarget;
         private RenderImage _sceneTarget;
         private RenderImage _tilesTarget;
@@ -120,7 +120,7 @@ namespace SS14.Client.Services.State.States
         private RenderImage shadowIntermediate;
         private ShadowMapResolver shadowMapResolver;
         private bool debugWallOccluders = false;
-        private bool debugHitboxes = false;
+        private bool debugHitboxes = false;*/
 
         #endregion
 
@@ -251,7 +251,11 @@ namespace SS14.Client.Services.State.States
             UserInterfaceManager.AddComponent(hotbar);
 
             #region Lighting
-
+            // TODO: Convert all shaders to GLSL
+            // TODO: Convert QuadRenderer to use SFML
+            // TODO: Convert shadowMapResolver to use SFML
+            // TODO: Convert this shit right here to use SFML
+/*
             quadRenderer = new QuadRenderer();
             quadRenderer.LoadContent();
             shadowMapResolver = new ShadowMapResolver(quadRenderer, ShadowmapSize.Size1024, ShadowmapSize.Size1024,
@@ -287,7 +291,7 @@ namespace SS14.Client.Services.State.States
             playerVision = IoCManager.Resolve<ILightManager>().CreateLight();
             playerVision.SetColor(Color.Transparent);
             playerVision.SetRadius(1024);
-            playerVision.Move(Vector2.Zero);
+            playerVision.Move(Vector2.Zero);*/
 
             #endregion
 
@@ -360,7 +364,8 @@ namespace SS14.Client.Services.State.States
                 _cleanupList.ForEach(t => {t.ForceRelease();t.Dispose();});
                 _cleanupList.Clear();
             }
-            shadowMapResolver.Dispose();
+            // TODO: See Startup() for SFML todos
+            //shadowMapResolver.Dispose();
             _gaussianBlur.Dispose();
             _entityManager.Shutdown();
             MapManager.Shutdown();
@@ -402,7 +407,8 @@ namespace SS14.Client.Services.State.States
             _overlayTarget.Height = h;
             _composedSceneTarget.Width = w;
             _composedSceneTarget.Height = h;
-            _lightTarget.Width = w;
+            // TODO: See Startup for todos related to SFML
+            /*_lightTarget.Width = w;
             _lightTarget.Height = h;
             _lightTargetIntermediate.Width = w;
             _lightTargetIntermediate.Height = h;
@@ -417,7 +423,7 @@ namespace SS14.Client.Services.State.States
                                                     Gorgon.CurrentClippingViewport.Height,
                                                     ImageBufferFormats.BufferRGB888A8);
             playerOcclusionTarget.Width = w;
-            playerOcclusionTarget.Height = h;
+            playerOcclusionTarget.Height = h;*/
             //playerOcclusionTarget.DeviceReset();
             _gaussianBlur.Dispose();
             _gaussianBlur = new GaussianBlur(ResourceManager);
@@ -1072,7 +1078,8 @@ namespace SS14.Client.Services.State.States
 
         private void ToggleOccluderDebug()
         {
-            if(debugWallOccluders)
+            // TODO: See Startup for SFML tasks
+            /*if(debugWallOccluders)
             {
                 debugWallOccluders = false;
                 _occluderDebugTarget.Dispose();
@@ -1082,7 +1089,7 @@ namespace SS14.Client.Services.State.States
             {
                 debugWallOccluders = true;
                 _occluderDebugTarget = new RenderImage("OccluderDebugTarget", Gorgon.Screen.Width, Gorgon.Screen.Height, ImageBufferFormats.BufferRGB888A8);
-            }
+            }*/
         }
 
         /// <summary>
@@ -1174,23 +1181,26 @@ namespace SS14.Client.Services.State.States
 
         private void BlurShadowMap()
         {
-            _gaussianBlur.SetRadius(11);
+            // TODO: See Startup for SFML tasks
+            /*_gaussianBlur.SetRadius(11);
             _gaussianBlur.SetAmount(2);
             _gaussianBlur.SetSize(new Size(screenShadows.Width, screenShadows.Height));
-            _gaussianBlur.PerformGaussianBlur(screenShadows);
+            _gaussianBlur.PerformGaussianBlur(screenShadows);*/
         }
 
         private void BlurPlayerVision()
         {
-            _gaussianBlur.SetRadius(11);
+            // TODO: See Startup for SFML tasks
+           /* _gaussianBlur.SetRadius(11);
             _gaussianBlur.SetAmount(2);
             _gaussianBlur.SetSize(new Size(playerOcclusionTarget.Width, playerOcclusionTarget.Height));
-            _gaussianBlur.PerformGaussianBlur(playerOcclusionTarget);
+            _gaussianBlur.PerformGaussianBlur(playerOcclusionTarget);*/
         }
 
         private void LightScene()
         {
-            //Blur the light/shadow map
+            // TODO: See Startup for SFML tasks
+            /*//Blur the light/shadow map
             BlurShadowMap();
 
             //Render the scene and lights together to compose the lit scene
@@ -1220,12 +1230,13 @@ namespace SS14.Client.Services.State.States
             _composedSceneTarget.Image.Blit(0, 0, Gorgon.CurrentClippingViewport.Width,
                                             Gorgon.CurrentClippingViewport.Height, Color.White, BlitterSizeMode.Crop);
             //screenShadows.Blit(0,0);
-            //playerOcclusionTarget.Blit(0,0);
+            //playerOcclusionTarget.Blit(0,0);*/
         }
 
         private void PlayerPostProcess()
         {
-            PlayerManager.ApplyEffects(_composedSceneTarget);
+            // TODO: See Startup for SFML tasks to re-enable shaders and shit
+            //PlayerManager.ApplyEffects(_composedSceneTarget);
         }
 
         private void OnPlayerMove(object sender, VectorEventArgs args)
@@ -1243,7 +1254,8 @@ namespace SS14.Client.Services.State.States
         /// <param name="lights">Array of lights</param>
         private void RenderLightMap(ILight[] lights)
         {
-            //Step 1 - Calculate lights that haven't been calculated yet or need refreshing
+            // TODO: See Startup for SFML tasks to re-enable shader-based lighting
+            /*//Step 1 - Calculate lights that haven't been calculated yet or need refreshing
             foreach (ILight l in lights.Where(l => l.LightArea.Calculated == false))
             {
                 if (l.LightState != LightState.On)
@@ -1362,12 +1374,13 @@ namespace SS14.Client.Services.State.States
                 Gorgon.CurrentRenderTarget = screenShadows;
                 source.Image.Blit(0, 0, source.Width, source.Height, Color.White, BlitterSizeMode.Crop);
             }
-            Gorgon.CurrentRenderTarget = null;
+            Gorgon.CurrentRenderTarget = null;*/
         }
 
         private void RenderPlayerVisionMap()
         {
-            Vector2 blitPos;
+            // TODO: See Startup for SFML tasks to re-enable player vision
+            /*Vector2 blitPos;
             if (bFullVision)
             {
                 playerOcclusionTarget.Clear(Color.LightGray);
@@ -1424,12 +1437,13 @@ namespace SS14.Client.Services.State.States
             else
             {
                 playerOcclusionTarget.Clear(Color.Black);
-            }
+            }*/
         }
 
         private void CalculateLightArea(ILight l)
         {
-            ILightArea area = l.LightArea;
+            // TODO: See Startup for SFML tasks to re-enable lighting
+            /*ILightArea area = l.LightArea;
             if (area.Calculated)
                 return;
             area.LightPosition = l.Position; //mousePosWorld; // Set the light position
@@ -1447,7 +1461,7 @@ namespace SS14.Client.Services.State.States
             area.EndDrawingShadowCasters(); // End drawing to the light rendertarget
             shadowMapResolver.ResolveShadows(area.renderTarget.Image, area.renderTarget, area.LightPosition, true,
                                              area.Mask.Image, area.MaskProps, Vector4.Unit); // Calc shadows
-            area.Calculated = true;
+            area.Calculated = true;*/
         }
 
         private ShadowmapSize RadiusToShadowMapSize(int Radius)

@@ -40,8 +40,9 @@
     <File buildAction="Compile">Lighting/LightArea.cs</File>
     <File buildAction="Compile">Lighting/LightManager.cs</File>
     <File buildAction="Compile">Lighting/LightModes/Flicker.cs</File>
-    <File buildAction="Compile">Lighting/QuadRenderer.cs</File>
-    <File buildAction="Compile">Lighting/ShadowMapResolver.cs</File>
+	<!-- DISABLED TILL SFML DOESNT FML-->
+    <!--<File buildAction="Compile">Lighting/QuadRenderer.cs</File>
+    <File buildAction="Compile">Lighting/ShadowMapResolver.cs</File>-->
     <File buildAction="Compile">Map/MapManager.cs</File>
     <File buildAction="Compile">MessageLogging/MessageLogger.cs</File>
     <File buildAction="Compile">MessageLogging/MessageLoggerService.cs</File>

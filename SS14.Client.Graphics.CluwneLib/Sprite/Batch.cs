@@ -13,5 +13,10 @@ namespace SS14.Client.Graphics.CluwneLib.Sprite
         {
             throw new NotImplementedException();
         }
+
+        public void Clear()
+        {
+            throw new NotImplementedException();
+        }
     }
 }

@@ -202,7 +202,7 @@ namespace SS14.Client
             Size = new Size((int) displayWidth, (int) displayHeight);
 
             CluwneLib.Initialize();
-            CluwneLib.SetMode(this, (int) displayWidth, (int) displayHeight, BackBufferFormats.BufferRGB8888, !fullscreen, false, false, refresh);
+            CluwneLib.SetMode(this, (int) displayWidth, (int) displayHeight, !fullscreen, false, false, refresh);
             CluwneLib.Screen.BackgroundColor = new Color(255, 50, 50, 50);
             CluwneLib.Idle += GorgonIdle;
         }

@@ -4,7 +4,7 @@ using System.Linq;
 using System.Text;
 using SFML.Graphics;
 using SFML.Window;
-using Color = System.Drawing.Color;
+using Color = SFML.Graphics.Color;
 
 namespace SS14.Client.Graphics.CluwneLib.Render
 {

@@ -64,16 +64,16 @@ namespace SS14.Tools.ParticleEditor
                 /*
                 _particleImage = GorgonLibrary.Graphics.Image.FromFile("star1.png");
                 _particleSprite = new Sprite("particlesprite", _particleImage);
-                _particleSprite.Axis = new Vector2D(_particleSprite.Width/2, _particleSprite.Height/2);*/
+                _particleSprite.Axis = new Vector2(_particleSprite.Width/2, _particleSprite.Height/2);*/
                 _particleSprite = ResourceManager.GetSprite("star1");
                 var settings = ParticleConfigurator.ParticleSettings;
-                _particleSystem = new ParticleSystem(_particleSprite, new Vector2D(0, 0));
+                _particleSystem = new ParticleSystem(_particleSprite, new Vector2(0, 0));
                 settings.ColorRange = new SS14.Shared.Utility.Range<Color>(Color.Blue, Color.Black);
                 settings.EmitterPosition = new PointF(Gorgon.Screen.Width/2, Gorgon.Screen.Height/2);
                 settings.EmissionRadiusRange = new PointF(10, 170);
                 settings.EmitRate = 40;
-                settings.Velocity = new Vector2D(0, -20);
-                settings.Acceleration = new Vector2D(0, -30);
+                settings.Velocity = new Vector2(0, -20);
+                settings.Acceleration = new Vector2(0, -30);
                 settings.RadialAcceleration = 10;
                 settings.TangentialAccelerationVariance = 0.2f;
                 settings.TangentialVelocityVariance = 1;
@@ -88,9 +88,9 @@ namespace SS14.Tools.ParticleEditor
             }
         }
 
-        private Vector4D ToVector4DColor(Color c)
+        private Vector4 ToVector4Color(Color c)
         {
-            return new Vector4D(c.A, c.R, c.G, c.B);
+            return new Vector4(c.A, c.R, c.G, c.B);
         }
 
         public void ParticleSettings_PropertyChanged(object sender, PropertyChangedEventArgs e)
@@ -106,8 +106,8 @@ namespace SS14.Tools.ParticleEditor
                     break;
                 case "ColorRange":
                     _particleSystem.ColorRange =
-                        new SS14.Shared.Utility.Range<Vector4D>(ToVector4DColor(settings.ColorRange.Start),
-                                                                ToVector4DColor(settings.ColorRange.End));
+                        new SS14.Shared.Utility.Range<Vector4>(ToVector4Color(settings.ColorRange.Start),
+                                                                ToVector4Color(settings.ColorRange.End));
                     break;
                 case "ColorVariance":
                     _particleSystem.ColorVariance = settings.ColorVariance;

@@ -1,7 +1,4 @@
-﻿using GorgonLibrary;
-using GorgonLibrary.Graphics;
-using GorgonLibrary.Sprites;
-using ICSharpCode.SharpZipLib.Core;
+﻿using ICSharpCode.SharpZipLib.Core;
 using ICSharpCode.SharpZipLib.Zip;
 using SS14.Client.Graphics;
 using SS14.Client.Interfaces.Configuration;
@@ -15,8 +12,8 @@ using System.IO;
 using System.Linq;
 using System.Reflection;
 using System.Text.RegularExpressions;
-using Font = GorgonLibrary.Graphics.Font;
-using Image = GorgonLibrary.Graphics.Image;
+using SS14.Client.Graphics.CluwneLib.Shader;
+using SS14.Client.Graphics.CluwneLib.Sprite;
 
 namespace SS14.Client.Services.Resources
 {
@@ -29,7 +26,7 @@ namespace SS14.Client.Services.Resources
         private readonly Dictionary<string, Image> _images = new Dictionary<string, Image>();
         private readonly Dictionary<string, FXShader> _shaders = new Dictionary<string, FXShader>();
         private readonly Dictionary<string, SpriteInfo> _spriteInfos = new Dictionary<string, SpriteInfo>();
-        private readonly Dictionary<string, Sprite> _sprites = new Dictionary<string, Sprite>();
+        private readonly Dictionary<string, CluwneSprite> _sprites = new Dictionary<string, CluwneSprite>();
         private readonly Dictionary<string, AnimationCollection> _animationCollections = new Dictionary<string, AnimationCollection>(); 
         private readonly Dictionary<string, AnimatedSprite> _animatedSprites = new Dictionary<string, AnimatedSprite>(); 
         private readonly List<string> supportedImageExtensions = new List<string> {".png"};
@@ -61,7 +58,7 @@ namespace SS14.Client.Services.Resources
             {
                 Image nospriteimage = Image.FromStream("nospriteimage", _stream, (int) _stream.Length);
                 _images.Add("nosprite", nospriteimage);
-                _sprites.Add("nosprite", new Sprite("nosprite", nospriteimage));  
+                _sprites.Add("nosprite", new CluwneSprite("nosprite", nospriteimage));  
             }
             _stream = null;
         }
@@ -133,8 +130,8 @@ namespace SS14.Client.Services.Resources
                         {
                             if (Path.GetExtension(tai.Name).ToLowerInvariant() == ".tai")
                             {
-                                IEnumerable<Sprite> loadedSprites = LoadSpritesFrom(zipFile, tai);
-                                foreach (Sprite currentSprite in loadedSprites.Where(currentSprite => !_sprites.ContainsKey(currentSprite.Name)))
+                                IEnumerable<CluwneSprite> loadedSprites = LoadSpritesFrom(zipFile, tai);
+                                foreach (CluwneSprite currentSprite in loadedSprites.Where(currentSprite => !_sprites.ContainsKey(currentSprite.Name)))
                                     _sprites.Add(currentSprite.Name, currentSprite);                               
                             }
                         }
@@ -359,11 +356,11 @@ namespace SS14.Client.Services.Resources
         /// <summary>
         ///  <para>Loads TAI from given Zip-File and Entry and creates & loads Sprites from it.</para>
         /// </summary>
-        private IEnumerable<Sprite> LoadSpritesFrom(ZipFile zipFile, ZipEntry taiEntry)
+        private IEnumerable<CluwneSprite> LoadSpritesFrom(ZipFile zipFile, ZipEntry taiEntry)
         {
             string ResourceName = Path.GetFileNameWithoutExtension(taiEntry.Name).ToLowerInvariant();
 
-            var loadedSprites = new List<Sprite>();
+            var loadedSprites = new List<CluwneSprite>();
 
             var byteBuffer = new byte[zipBufferSize];
 
@@ -431,14 +428,14 @@ namespace SS14.Client.Services.Resources
                     sizeY = float.Parse(splitLine[7], CultureInfo.InvariantCulture);
                 }
 
-                info.Offsets = new Vector2D((float) Math.Round(offsetX*atlasTex.Width, 1),
+                info.Offsets = new Vector2((float) Math.Round(offsetX*atlasTex.Width, 1),
                                             (float) Math.Round(offsetY*atlasTex.Height, 1));
-                info.Size = new Vector2D((float) Math.Round(sizeX*atlasTex.Width, 1),
+                info.Size = new Vector2((float) Math.Round(sizeX*atlasTex.Width, 1),
                                          (float) Math.Round(sizeY*atlasTex.Height, 1));
 
                 if (!_spriteInfos.ContainsKey(originalName)) _spriteInfos.Add(originalName, info);
 
-                loadedSprites.Add(new Sprite(originalName, atlasTex, info.Offsets, info.Size));
+                loadedSprites.Add(new CluwneSprite(originalName, atlasTex, info.Offsets, info.Size));
             }
 
             return loadedSprites;
@@ -460,7 +457,7 @@ namespace SS14.Client.Services.Resources
         ///  <para>Retrieves the Image with the given key from the Resource list and returns it as a Sprite.</para>
         ///  <para>If a sprite has been created before using this method, it will return that Sprite. Returns error Sprite if not found.</para>
         /// </summary>
-        public Sprite GetSpriteFromImage(string key)
+        public CluwneSprite GetSpriteFromImage(string key)
         {
             key = key.ToLowerInvariant();
             if (_images.ContainsKey(key))
@@ -471,7 +468,7 @@ namespace SS14.Client.Services.Resources
                 }
                 else
                 {
-                    var newSprite = new Sprite(key, _images[key]);
+                    var newSprite = new CluwneSprite(key, _images[key]);
                     _sprites.Add(key, newSprite);
                     return newSprite;
                 }
@@ -482,7 +479,7 @@ namespace SS14.Client.Services.Resources
         /// <summary>
         ///  Retrieves the Sprite with the given key from the Resource List. Returns error Sprite if not found.
         /// </summary>
-        public Sprite GetSprite(string key)
+        public CluwneSprite GetSprite(string key)
         {
             key = key.ToLowerInvariant();
             if (_sprites.ContainsKey(key))
@@ -493,7 +490,7 @@ namespace SS14.Client.Services.Resources
             else return GetSpriteFromImage(key);
         }
 
-        public List<Sprite> GetSprites()
+        public List<CluwneSprite> GetSprites()
         {
             return _sprites.Values.ToList();
         } 
@@ -513,7 +510,7 @@ namespace SS14.Client.Services.Resources
             return null;
         }
 
-        public Sprite GetNoSprite()
+        public CluwneSprite GetNoSprite()
         {
             return _sprites["nosprite"];
         }

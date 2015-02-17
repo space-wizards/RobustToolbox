@@ -1,5 +1,6 @@
-﻿using GorgonLibrary;
-using GorgonLibrary.Graphics;
+﻿using SS14.Client.Graphics.CluwneLib;
+using SS14.Client.Graphics.CluwneLib.Sprite;
+using SS14.Shared.Maths;
 using SS14.Client.Interfaces.Collision;
 using SS14.Client.Interfaces.Map;
 using SS14.Shared;
@@ -12,11 +13,11 @@ namespace SS14.Client.Services.Tiles
     public class Wall : Tile, ICollidable
     {
         private readonly IMapManager mapMgr;
-        public Sprite topSpriteNW;
-        public Sprite topSpriteSE;
-        public Sprite topSprite;
-        public Sprite wallEndE;
-        public Sprite wallEndW;
+		public CluwneSprite topSpriteNW;
+		public CluwneSprite topSpriteSE;
+		public CluwneSprite topSprite;
+		public CluwneSprite wallEndE;
+		public CluwneSprite wallEndW;
 
         public Wall(TileState state, RectangleF rect, Direction dir)
             : base(state, rect)
@@ -59,38 +60,38 @@ namespace SS14.Client.Services.Tiles
             surroundDirsNW = 0;
             surroundDirsSE = 0;
             float halfSpacing = mapMgr.GetTileSpacing() / 2f;
-            Vector2D checkPos = Position + new Vector2D(1f, 1f);
-            if (mapMgr.GetWallAt(checkPos + new Vector2D(0, -halfSpacing)) != null) // North side
+            Vector2 checkPos = Position + new Vector2(1f, 1f);
+            if (mapMgr.GetWallAt(checkPos + new Vector2(0, -halfSpacing)) != null) // North side
             {
                 surroundDirsNW += 1;
             }
-            if (mapMgr.GetWallAt(checkPos + new Vector2D(halfSpacing, 0)) != null) // East side
+            if (mapMgr.GetWallAt(checkPos + new Vector2(halfSpacing, 0)) != null) // East side
             {
                 surroundDirsNW += 2;
             }
-            if (mapMgr.GetWallAt(checkPos + new Vector2D(0, halfSpacing)) != null) // South side
+            if (mapMgr.GetWallAt(checkPos + new Vector2(0, halfSpacing)) != null) // South side
             {
                 surroundDirsNW += 4;
             }
-            if (mapMgr.GetWallAt(checkPos + new Vector2D(-halfSpacing, 0)) != null) // West side, yo
+            if (mapMgr.GetWallAt(checkPos + new Vector2(-halfSpacing, 0)) != null) // West side, yo
             {
                 surroundDirsNW += 8;
             }
 
-            checkPos += new Vector2D(bounds.Width - 2f, bounds.Height - 2f);
-            if (mapMgr.GetWallAt(checkPos + new Vector2D(0, -halfSpacing)) != null) // North side
+            checkPos += new Vector2(bounds.Width - 2f, bounds.Height - 2f);
+            if (mapMgr.GetWallAt(checkPos + new Vector2(0, -halfSpacing)) != null) // North side
             {
                 surroundDirsSE += 1;
             }
-            if (mapMgr.GetWallAt(checkPos + new Vector2D(halfSpacing, 0)) != null) // East side
+            if (mapMgr.GetWallAt(checkPos + new Vector2(halfSpacing, 0)) != null) // East side
             {
                 surroundDirsSE += 2;
             }
-            if (mapMgr.GetWallAt(checkPos + new Vector2D(0, halfSpacing)) != null) // South side
+            if (mapMgr.GetWallAt(checkPos + new Vector2(0, halfSpacing)) != null) // South side
             {
                 surroundDirsSE += 4;
             }
-            if (mapMgr.GetWallAt(checkPos + new Vector2D(-halfSpacing, 0)) != null) // West side, yo
+            if (mapMgr.GetWallAt(checkPos + new Vector2(-halfSpacing, 0)) != null) // West side, yo
             {
                 surroundDirsSE += 8;
             }
@@ -440,9 +441,9 @@ namespace SS14.Client.Services.Tiles
             return false;
         }
 
-        public override void RenderPosOffset(float x, float y, int tileSpacing, Vector2D lightPosition)
+        public override void RenderPosOffset(float x, float y, int tileSpacing, Vector2 lightPosition)
         {
-            Vector2D lightVec = lightPosition - new Vector2D(x + tileSpacing/2.0f, y + tileSpacing/2.0f);
+            Vector2 lightVec = lightPosition - new Vector2(x + tileSpacing/2.0f, y + tileSpacing/2.0f);
             lightVec.Normalize();
             lightVec *= 10;
             Sprite.Color = Color.Black;
@@ -482,14 +483,14 @@ namespace SS14.Client.Services.Tiles
         {
             int tileSpacing = mapMgr.GetTileSpacing();
 
-            Vector2D SEpos = new Vector2D();
+            Vector2 SEpos = new Vector2();
 
             if (_dir == Direction.East)
             {
                 topSpriteNW.SetPosition((float)bounds.X - xTopLeft - 12f,
                         (float)bounds.Y - (Sprite.Height - bounds.Height) - yTopLeft);
 
-                SEpos += topSpriteNW.Position + new Vector2D(tileSpacing, 0f);
+                SEpos += topSpriteNW.Position + new Vector2(tileSpacing, 0f);
 
             }
             else
@@ -497,7 +498,7 @@ namespace SS14.Client.Services.Tiles
                 topSpriteNW.SetPosition((float)bounds.X - xTopLeft,
                         (float)bounds.Y - (Sprite.Height - bounds.Height) - yTopLeft - 12f);
 
-                SEpos += topSpriteNW.Position + new Vector2D(0f, tileSpacing);
+                SEpos += topSpriteNW.Position + new Vector2(0f, tileSpacing);
             }
 
             topSpriteSE.SetPosition(SEpos.X, SEpos.Y);

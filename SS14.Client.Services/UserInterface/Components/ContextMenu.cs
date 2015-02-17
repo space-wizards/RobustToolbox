@@ -1,6 +1,5 @@
-﻿using GorgonLibrary;
-using GorgonLibrary.Graphics;
-using GorgonLibrary.InputDevices;
+﻿using SS14.Client.Graphics.CluwneLib.Sprite;
+using SS14.Shared.Maths;
 using SS14.Client.GameObjects;
 using SS14.Client.Interfaces.GOC;
 using SS14.Client.Interfaces.Resource;
@@ -8,6 +7,7 @@ using SS14.Client.Interfaces.UserInterface;
 using SS14.Shared.GameObjects;
 using SS14.Shared.GO;
 using System.Collections.Generic;
+using SFML.Window;
 using System.Drawing;
 using System.Linq;
 
@@ -15,13 +15,13 @@ namespace SS14.Client.Services.UserInterface.Components
 {
     public class ContextMenu : GuiComponent
     {
-        private readonly Vector2D _buttonSize = new Vector2D(150, 20);
+        private readonly Vector2 _buttonSize = new Vector2(150, 20);
         private readonly List<ContextMenuButton> _buttons = new List<ContextMenuButton>();
         private readonly IResourceManager _resourceManager;
         private readonly IUserInterfaceManager _userInterfaceManager;
         private Entity _owningEntity;
 
-        public ContextMenu(Entity entity, Vector2D creationPos, IResourceManager resourceManager,
+        public ContextMenu(Entity entity, Vector2 creationPos, IResourceManager resourceManager,
                            IUserInterfaceManager userInterfaceManager, bool showExamine = true)
         {
             _owningEntity = entity;
@@ -128,12 +128,12 @@ namespace SS14.Client.Services.UserInterface.Components
             base.Dispose();
         }
 
-        public override bool MouseDown(MouseInputEventArgs e)
+		public override bool MouseDown(MouseButtonEventArgs e)
         {
             return true;
         }
 
-        public override bool MouseUp(MouseInputEventArgs e)
+		public override bool MouseUp(MouseButtonEventArgs e)
         {
             foreach (ContextMenuButton button in _buttons)
                 button.MouseUp(e);
@@ -141,18 +141,18 @@ namespace SS14.Client.Services.UserInterface.Components
             return false;
         }
 
-        public override void MouseMove(MouseInputEventArgs e)
+		public override void MouseMove(MouseMoveEventArgs e)
         {
             foreach (ContextMenuButton button in _buttons)
                 button.MouseMove(e);
         }
 
-        public override bool MouseWheelMove(MouseInputEventArgs e)
+		public override bool MouseWheelMove(MouseWheelEventArgs e)
         {
             return true;
         }
 
-        public override bool KeyDown(KeyboardInputEventArgs e)
+		public override bool KeyDown(KeyEventArgs e)
         {
             return true;
         }
@@ -169,11 +169,11 @@ namespace SS14.Client.Services.UserInterface.Components
         private readonly IResourceManager _resourceManager;
         private readonly Label _textLabel;
 
-        public Vector2D Size;
+        public Vector2 Size;
         private Color _currentColor;
-        private Sprite _iconSprite;
+		private CluwneSprite _iconSprite;
 
-        public ContextMenuButton(ContextMenuEntry entry, Vector2D size, IResourceManager resourceManager)
+        public ContextMenuButton(ContextMenuEntry entry, Vector2 size, IResourceManager resourceManager)
         {
             _resourceManager = resourceManager;
 
@@ -217,14 +217,14 @@ namespace SS14.Client.Services.UserInterface.Components
             base.Dispose();
         }
 
-        public override bool MouseUp(MouseInputEventArgs e)
+		public override bool MouseUp(MouseButtonEventArgs e)
         {
             if (ClientArea.Contains(new Point((int) e.Position.X, (int) e.Position.Y)))
                 if (Selected != null) Selected(this);
             return true;
         }
 
-        public override void MouseMove(MouseInputEventArgs e)
+		public override void MouseMove(MouseMoveEventArgs e)
         {
             _currentColor = ClientArea.Contains(new Point((int) e.Position.X, (int) e.Position.Y))
                                 ? Color.LightGray

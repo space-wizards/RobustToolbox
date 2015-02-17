@@ -1,11 +1,10 @@
-﻿using GorgonLibrary;
-using GorgonLibrary.Graphics;
-using GorgonLibrary.InputDevices;
-using Lidgren.Network;
+﻿using Lidgren.Network;
 using SS14.Client.Interfaces.State;
 using SS14.Client.Services.UserInterface.Components;
+using SS14.Client.Graphics.CluwneLib.Event;
 using SS14.Shared;
 using SS14.Shared.Utility;
+using SFML.Window;
 using System;
 using System.Collections.Generic;
 using System.Drawing;
@@ -54,7 +53,7 @@ namespace SS14.Client.Services.State.States
                                  Color = Color.Black,
                                  ShadowColor = Color.DimGray,
                                  Shadowed = true,
-                                 ShadowOffset = new Vector2D(1, 1)
+                                 ShadowOffset = new Vector2(1, 1)
                              };
 
             NetOutgoingMessage message = NetworkManager.CreateMessage();
@@ -97,26 +96,26 @@ namespace SS14.Client.Services.State.States
             Gorgon.CurrentRenderTarget.FilledRectangle(625, 5, Gorgon.CurrentRenderTarget.Width - 625 - 5,
                                                        Gorgon.CurrentRenderTarget.Height - 5 - 6, Color.SlateGray);
             Gorgon.CurrentRenderTarget.FilledRectangle(5, 220, 600, _lobbyChat.Position.Y - 250 - 5, Color.SlateGray);
-            _lobbyText.Position = new Vector2D(10, 10);
+            _lobbyText.Position = new Vector2(10, 10);
             _lobbyText.Text = "Server: " + _serverName;
             _lobbyText.Draw();
-            _lobbyText.Position = new Vector2D(10, 30);
+            _lobbyText.Position = new Vector2(10, 30);
             _lobbyText.Text = "Server-Port: " + _serverPort;
             _lobbyText.Draw();
-            _lobbyText.Position = new Vector2D(10, 50);
+            _lobbyText.Position = new Vector2(10, 50);
             _lobbyText.Text = "Max Players: " + _serverMaxPlayers;
             _lobbyText.Draw();
-            _lobbyText.Position = new Vector2D(10, 70);
+            _lobbyText.Position = new Vector2(10, 70);
             _lobbyText.Text = "Gamemode: " + _gameType;
             _lobbyText.Draw();
-            _lobbyText.Position = new Vector2D(10, 110);
+            _lobbyText.Position = new Vector2(10, 110);
             _lobbyText.Text = "MOTD: \n" + _welcomeString;
             _lobbyText.Draw();
 
             int pos = 225;
             foreach (string plrStr in _playerListStrings)
             {
-                _lobbyText.Position = new Vector2D(10, pos);
+                _lobbyText.Position = new Vector2(10, pos);
                 _lobbyText.Text = plrStr;
                 _lobbyText.Draw();
                 pos += 20;
@@ -308,31 +307,31 @@ namespace SS14.Client.Services.State.States
 
         #region Input
 
-        public void KeyDown(KeyboardInputEventArgs e)
+        public void KeyDown(KeyEventArgs e)
         {
             UserInterfaceManager.KeyDown(e);
         }
 
-        public void KeyUp(KeyboardInputEventArgs e)
+        public void KeyUp(KeyEventArgs e)
         {
         }
 
-        public void MouseUp(MouseInputEventArgs e)
+		public void MouseUp(MouseButtonEventArgs e)
         {
             UserInterfaceManager.MouseUp(e);
         }
 
-        public void MouseDown(MouseInputEventArgs e)
+		public void MouseDown(MouseButtonEventArgs e)
         {
             UserInterfaceManager.MouseDown(e);
         }
 
-        public void MouseMove(MouseInputEventArgs e)
+		public void MouseMove(MouseMoveEventArgs e)
         {
             UserInterfaceManager.MouseMove(e);
         }
 
-        public void MouseWheelMove(MouseInputEventArgs e)
+		public void MouseWheelMove(MouseWheelEventArgs e)
         {
             UserInterfaceManager.MouseWheelMove(e);
         }

@@ -1,8 +1,8 @@
-﻿using GorgonLibrary.Graphics;
-using GorgonLibrary.InputDevices;
-using SS14.Client.Interfaces.Resource;
+﻿using SS14.Client.Interfaces.Resource;
 using System;
 using System.Drawing;
+using SS14.Client.Graphics.CluwneLib.Sprite;
+using SFML.Window;
 
 namespace SS14.Client.Services.UserInterface.Components
 {
@@ -16,9 +16,9 @@ namespace SS14.Client.Services.UserInterface.Components
 
         private readonly IResourceManager _resourceManager;
 
-        private Sprite _buttonLeft;
-        private Sprite _buttonMain;
-        private Sprite _buttonRight;
+		private CluwneSprite _buttonLeft;
+		private CluwneSprite _buttonMain;
+		private CluwneSprite _buttonRight;
 
         private Rectangle _clientAreaLeft;
         private Rectangle _clientAreaMain;
@@ -89,7 +89,7 @@ namespace SS14.Client.Services.UserInterface.Components
             GC.SuppressFinalize(this);
         }
 
-        public override void MouseMove(MouseInputEventArgs e)
+		public override void MouseMove(MouseMoveEventArgs e)
         {
             if (mouseOverColor != Color.White)
                 if (ClientArea.Contains(new Point((int) e.Position.X, (int) e.Position.Y)))
@@ -98,7 +98,7 @@ namespace SS14.Client.Services.UserInterface.Components
                     drawColor = Color.White;
         }
 
-        public override bool MouseDown(MouseInputEventArgs e)
+		public override bool MouseDown(MouseButtonEventArgs e)
         {
             if (ClientArea.Contains(new Point((int) e.Position.X, (int) e.Position.Y)))
             {
@@ -108,7 +108,7 @@ namespace SS14.Client.Services.UserInterface.Components
             return false;
         }
 
-        public override bool MouseUp(MouseInputEventArgs e)
+		public override bool MouseUp(MouseButtonEventArgs e)
         {
             return false;
         }

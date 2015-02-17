@@ -11,8 +11,9 @@
   </Configuration>
   <ReferencePath>../bin</ReferencePath>
   <ReferencePath>../Third-Party</ReferencePath>
-  <Reference name="Gorgon" localCopy="true" path="../Third-Party"/>
-  <Reference name="GorgonInput" localCopy="true" path="../Third-Party"/>
+  <Reference name="sfmlnet-graphics-2" localCopy="true" path="../Third-Party"/>
+  <Reference name="sfmlnet-system-2" localCopy="true" path="../Third-Party"/>
+  <Reference name="sfmlnet-window-2" localCopy="true" path="../Third-Party"/>
   <Reference name="Microsoft.Diagnostics.Runtime"/>
   <Reference name="System"/>
   <Reference name="System.Core"/>
@@ -56,4 +57,5 @@
   <Reference name="Lidgren.Network" localCopy="true"/>
   <Reference name="SS14.Shared.IoC" localCopy="true"/>
   <Reference name="SS14.Shared" localCopy="true"/>
+  <Reference name="SS14.Client.Graphics.CluwneLib" localCopy="true"/>
 </Project>

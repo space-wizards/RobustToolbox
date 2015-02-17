@@ -1,7 +1,4 @@
-﻿using GorgonLibrary;
-using GorgonLibrary.Graphics;
-using GorgonLibrary.InputDevices;
-using Lidgren.Network;
+﻿using Lidgren.Network;
 using SS14.Client.ClientWindow;
 using SS14.Client.GameObjects;
 using SS14.Client.Interfaces.GameTimer;
@@ -26,8 +23,18 @@ using System;
 using System.Collections.Generic;
 using System.Drawing;
 using System.Linq;
+using SFML.Graphics;
+using SFML.Window;
+using SS14.Client.Graphics.CluwneLib;
+using SS14.Client.Graphics.CluwneLib.Event;
+using SS14.Client.Graphics.CluwneLib.Render;
+using SS14.Client.Graphics.CluwneLib.Shader;
+using SS14.Client.Graphics.CluwneLib.Sprite;
+using SS14.Shared.Maths;
+using Color = SFML.Graphics.Color;
+using ContextMenu = SS14.Client.Services.UserInterface.Components.ContextMenu;
 using EntityManager = SS14.Client.GameObjects.EntityManager;
-using Image = GorgonLibrary.Graphics.Image;
+using KeyEventArgs = SFML.Window.KeyEventArgs;
 
 namespace SS14.Client.Services.State.States
 {
@@ -44,7 +51,7 @@ namespace SS14.Client.Services.State.States
         public int ScreenWidthTiles = 15; // How many tiles around us do we draw?
         public string SpawnType;
         private RenderImage _baseTarget;
-        private Sprite _baseTargetSprite;
+        private CluwneSprite _baseTargetSprite;
         private Batch _decalBatch;
         private EntityManager _entityManager;
         private Batch _floorBatch;
@@ -60,7 +67,7 @@ namespace SS14.Client.Services.State.States
         private bool _redrawOverlay = true;
         private bool _redrawTiles = true;
         private List<RenderTarget> _cleanupList = new List<RenderTarget>();
-        private List<Sprite> _cleanupSpriteList = new List<Sprite>();
+        private List<CluwneSprite> _cleanupSpriteList = new List<CluwneSprite>();
         private List<ITile> _visibleTiles;
 
         private bool _showDebug; // show AABBs & Bounding Circles on Entities.
@@ -76,8 +83,8 @@ namespace SS14.Client.Services.State.States
 
         #region Mouse/Camera stuff
 
-        public Vector2D MousePosScreen = Vector2D.Zero;
-        public Vector2D MousePosWorld = Vector2D.Zero;
+        public Vector2 MousePosScreen = Vector2.Zero;
+        public Vector2 MousePosWorld = Vector2.Zero;
 
         #endregion
 
@@ -120,7 +127,7 @@ namespace SS14.Client.Services.State.States
         /// <summary>
         /// Center point of the current render window.
         /// </summary>
-        private Vector2D WindowOrigin
+        private Vector2 WindowOrigin
         {
             get { return ClientWindowData.Singleton.ScreenOrigin; }
         }
@@ -140,7 +147,7 @@ namespace SS14.Client.Services.State.States
             Now = DateTime.Now;
 
             _cleanupList = new List<RenderTarget>();
-            _cleanupSpriteList = new List<Sprite>();
+            _cleanupSpriteList = new List<CluwneSprite>();
 
             UserInterfaceManager.DisposeAllComponents();
 
@@ -162,29 +169,29 @@ namespace SS14.Client.Services.State.States
             // TODO This should go somewhere else, there should be explicit session setup and teardown at some point.
             NetworkManager.SendClientName(ConfigurationManager.GetPlayerName());
 
-            _baseTarget = new RenderImage("baseTarget", Gorgon.CurrentClippingViewport.Width,
-                                          Gorgon.CurrentClippingViewport.Height, ImageBufferFormats.BufferRGB888A8);
+            _baseTarget = new RenderImage((uint)CluwneLib.Screen.GetView().Size.X,
+                                          (uint)CluwneLib.Screen.GetView().Size.Y, true);
             _cleanupList.Add(_baseTarget);
-            _baseTargetSprite = new Sprite("baseTargetSprite", _baseTarget) {DepthWriteEnabled = false};
+            _baseTargetSprite = new CluwneSprite(_baseTarget);
             _cleanupSpriteList.Add(_baseTargetSprite);
             
-            _sceneTarget = new RenderImage("sceneTarget", Gorgon.CurrentClippingViewport.Width,
-                                           Gorgon.CurrentClippingViewport.Height, ImageBufferFormats.BufferRGB888A8);
+            _sceneTarget = new RenderImage((uint) CluwneLib.Screen.GetView().Size.X,
+                                           (uint) CluwneLib.Screen.GetView().Size.Y, true);
             _cleanupList.Add(_sceneTarget);
-            _tilesTarget = new RenderImage("tilesTarget", Gorgon.CurrentClippingViewport.Width,
-                                           Gorgon.CurrentClippingViewport.Height, ImageBufferFormats.BufferRGB888A8);
+            _tilesTarget = new RenderImage((uint) CluwneLib.Screen.GetView().Size.X,
+                                           (uint) CluwneLib.Screen.GetView().Size.Y, true);
             _cleanupList.Add(_tilesTarget);
 
-            _overlayTarget = new RenderImage("overlayTarget", Gorgon.CurrentClippingViewport.Width,
-                                             Gorgon.CurrentClippingViewport.Height, ImageBufferFormats.BufferRGB888A8);
+            _overlayTarget = new RenderImage((uint) CluwneLib.Screen.GetView().Size.X,
+                                             (uint) CluwneLib.Screen.GetView().Size.Y, true);
             _cleanupList.Add(_overlayTarget);
-            _overlayTarget.SourceBlend = AlphaBlendOperation.SourceAlpha;
-            _overlayTarget.DestinationBlend = AlphaBlendOperation.InverseSourceAlpha;
-            _overlayTarget.SourceBlendAlpha = AlphaBlendOperation.SourceAlpha;
-            _overlayTarget.DestinationBlendAlpha = AlphaBlendOperation.InverseSourceAlpha;
+//            _overlayTarget.SourceBlend = AlphaBlendOperation.SourceAlpha;
+//            _overlayTarget.DestinationBlend = AlphaBlendOperation.InverseSourceAlpha;
+//            _overlayTarget.SourceBlendAlpha = AlphaBlendOperation.SourceAlpha;
+//            _overlayTarget.DestinationBlendAlpha = AlphaBlendOperation.InverseSourceAlpha;
 
-            _composedSceneTarget = new RenderImage("composedSceneTarget", Gorgon.CurrentClippingViewport.Width,
-                                                   Gorgon.CurrentClippingViewport.Height,
+            _composedSceneTarget = new RenderImage((uint) CluwneLib.Screen.GetView().Size.X,
+                                                   (uint) CluwneLib.Screen.GetView().Size.Y,
                                                    ImageBufferFormats.BufferRGB888A8);
             _cleanupList.Add(_composedSceneTarget);
 
@@ -280,7 +287,7 @@ namespace SS14.Client.Services.State.States
             playerVision = IoCManager.Resolve<ILightManager>().CreateLight();
             playerVision.SetColor(Color.Transparent);
             playerVision.SetRadius(1024);
-            playerVision.Move(Vector2D.Zero);
+            playerVision.Move(Vector2.Zero);
 
             #endregion
 
@@ -377,7 +384,7 @@ namespace SS14.Client.Services.State.States
                 ClientWindowData.Singleton.UpdateViewPort(
                     PlayerManager.ControlledEntity.GetComponent<TransformComponent>(ComponentFamily.Transform).Position);
 
-            MousePosWorld = new Vector2D(MousePosScreen.X + WindowOrigin.X, MousePosScreen.Y + WindowOrigin.Y);
+            MousePosWorld = new Vector2(MousePosScreen.X + WindowOrigin.X, MousePosScreen.Y + WindowOrigin.Y);
         }
 
         private void ResetRendertargets()
@@ -545,12 +552,12 @@ namespace SS14.Client.Services.State.States
 
         #region IState Members
 
-        public void GorgonRender(FrameEventArgs e)
+        public void Render(FrameEventArgs e)
         {
-            Gorgon.CurrentRenderTarget = _baseTarget;
+            CluwneLib.CurrentRenderTarget = _baseTarget;
 
             _baseTarget.Clear(Color.Black);
-            Gorgon.Screen.Clear(Color.Black);
+            CluwneLib.Screen.Clear(Color.Black);
 
             //Gorgon.Screen.DefaultView.Left = 400;
             //Gorgon.Screen.DefaultView.Top = 400;
@@ -571,8 +578,8 @@ namespace SS14.Client.Services.State.States
                 if (_redrawTiles)
                 {
                     //Set rendertarget to draw the rest of the scene
-                    Gorgon.CurrentRenderTarget = _tilesTarget;
-                    Gorgon.CurrentRenderTarget.Clear(Color.Black);
+                    CluwneLib.CurrentRenderTarget = _tilesTarget;
+                    CluwneLib.CurrentRenderTarget.Clear(Color.Black);
 
                     if (_floorBatch.Count > 0)
                         _floorBatch.Draw();
@@ -584,8 +591,9 @@ namespace SS14.Client.Services.State.States
                 }
 
 
-                Gorgon.CurrentRenderTarget = _sceneTarget;
+                CluwneLib.CurrentRenderTarget = _sceneTarget;
                 _sceneTarget.Clear(Color.Black);
+
 
                 _tilesTarget.Image.Blit(0, 0, _tilesTarget.Width, _tilesTarget.Height, Color.White, BlitterSizeMode.Crop);
 
@@ -623,6 +631,8 @@ namespace SS14.Client.Services.State.States
                 PlacementManager.Render();
             }
         }
+
+        
 
         private void RenderDebug()
         {   
@@ -680,7 +690,12 @@ namespace SS14.Client.Services.State.States
 
         #region Input
 
-        public void KeyDown(KeyboardInputEventArgs e)
+        public void KeyPressed(KeyEventArgs e)
+        {
+            
+        }
+
+		public void KeyDown(KeyEventArgs e)
         {
             if (UserInterfaceManager.KeyDown(e)) //KeyDown returns true if the click is handled by the ui component.
                 return;
@@ -753,17 +768,17 @@ namespace SS14.Client.Services.State.States
             PlayerManager.KeyDown(e.Key);
         }
 
-        public void KeyUp(KeyboardInputEventArgs e)
+        public void KeyUp(KeyEventArgs e)
         {
             PlayerManager.KeyUp(e.Key);
         }
 
-        public void MouseUp(MouseInputEventArgs e)
+		public void MouseUp(MouseButtonEventArgs e)
         {
             UserInterfaceManager.MouseUp(e);
         }
 
-        public void MouseDown(MouseInputEventArgs e)
+		public void MouseDown(MouseButtonEventArgs e)
         {
             if (PlayerManager.ControlledEntity == null)
                 return;
@@ -791,7 +806,7 @@ namespace SS14.Client.Services.State.States
             #region Object clicking
 
             // Convert our click from screen -> world coordinates
-            //Vector2D worldPosition = new Vector2D(e.Position.X + xTopLeft, e.Position.Y + yTopLeft);
+            //Vector2 worldPosition = new Vector2(e.Position.X + xTopLeft, e.Position.Y + yTopLeft);
             // A bounding box for our click
             var mouseAABB = new RectangleF(MousePosWorld.X, MousePosWorld.Y, 1, 1);
             float checkDistance = MapManager.GetTileSpacing()*1.5f;
@@ -903,15 +918,15 @@ namespace SS14.Client.Services.State.States
             #endregion
         }
 
-        public void MouseMove(MouseInputEventArgs e)
+		public void MouseMove(MouseMoveEventArgs e)
         {
-            float distanceToPrev = (MousePosScreen - new Vector2D(e.Position.X, e.Position.Y)).Length;
-            MousePosScreen = new Vector2D(e.Position.X, e.Position.Y);
-            MousePosWorld = new Vector2D(e.Position.X + WindowOrigin.X, e.Position.Y + WindowOrigin.Y);
+            float distanceToPrev = (MousePosScreen - new Vector2(e.Position.X, e.Position.Y)).Length;
+            MousePosScreen = new Vector2(e.Position.X, e.Position.Y);
+            MousePosWorld = new Vector2(e.Position.X + WindowOrigin.X, e.Position.Y + WindowOrigin.Y);
             UserInterfaceManager.MouseMove(e);
         }
 
-        public void MouseWheelMove(MouseInputEventArgs e)
+		public void MouseWheelMove(MouseWheelEventArgs e)
         {
             UserInterfaceManager.MouseWheelMove(e);
         }
@@ -1084,7 +1099,7 @@ namespace SS14.Client.Services.State.States
                                                                  where c.DrawDepth < DrawDepth.MobBase
                                                                  select c;
 
-            RenderList(new Vector2D(viewPort.Left, viewPort.Top), new Vector2D(viewPort.Right, viewPort.Bottom),
+            RenderList(new Vector2(viewPort.Left, viewPort.Top), new Vector2(viewPort.Right, viewPort.Bottom),
                        floorRenderables);
 
             IEnumerable<IRenderableComponent> largeRenderables = from IRenderableComponent c in components
@@ -1093,7 +1108,7 @@ namespace SS14.Client.Services.State.States
                                                                        c.DrawDepth < DrawDepth.WallTops
                                                                  select c;
 
-            RenderList(new Vector2D(viewPort.Left, viewPort.Top), new Vector2D(viewPort.Right, viewPort.Bottom),
+            RenderList(new Vector2(viewPort.Left, viewPort.Top), new Vector2(viewPort.Right, viewPort.Bottom),
                        largeRenderables);
 
             IEnumerable<IRenderableComponent> ceilingRenderables = from IRenderableComponent c in components
@@ -1101,11 +1116,11 @@ namespace SS14.Client.Services.State.States
                                                                    where c.DrawDepth >= DrawDepth.WallTops
                                                                    select c;
 
-            RenderList(new Vector2D(viewPort.Left, viewPort.Top), new Vector2D(viewPort.Right, viewPort.Bottom),
+            RenderList(new Vector2(viewPort.Left, viewPort.Top), new Vector2(viewPort.Right, viewPort.Bottom),
                        ceilingRenderables);
         }
 
-        private void RenderList(Vector2D topleft, Vector2D bottomright, IEnumerable<IRenderableComponent> renderables)
+        private void RenderList(Vector2 topleft, Vector2 bottomright, IEnumerable<IRenderableComponent> renderables)
         {
             foreach (IRenderableComponent component in renderables)
             {
@@ -1187,11 +1202,11 @@ namespace SS14.Client.Services.State.States
             finalBlendShader.Parameters["OutOfViewTexture"].SetValue(outofview.Image);
             float texratiox = Gorgon.CurrentClippingViewport.Width/outofview.Width;
             float texratioy = Gorgon.CurrentClippingViewport.Height/outofview.Height;
-            var maskProps = new Vector4D(texratiox, texratioy, 0, 0);
+            var maskProps = new Vector4(texratiox, texratioy, 0, 0);
             finalBlendShader.Parameters["MaskProps"].SetValue(maskProps);
             finalBlendShader.Parameters["LightTexture"].SetValue(screenShadows);
             finalBlendShader.Parameters["SceneTexture"].SetValue(_sceneTarget);
-            finalBlendShader.Parameters["AmbientLight"].SetValue(new Vector4D(.05f, .05f, 0.05f, 1));
+            finalBlendShader.Parameters["AmbientLight"].SetValue(new Vector4(.05f, .05f, 0.05f, 1));
             screenShadows.Image.Blit(0, 0, screenShadows.Width, screenShadows.Height, Color.White, BlitterSizeMode.Crop);
 
             // Blit the shadow image on top of the screen
@@ -1248,8 +1263,8 @@ namespace SS14.Client.Services.State.States
             Gorgon.CurrentShader = lightMapShader.Techniques["PreLightBlend"];
 
             var lightTextures = new List<Image>();
-            var colors = new List<Vector4D>();
-            var positions = new List<Vector4D>();
+            var colors = new List<Vector4>();
+            var positions = new List<Vector4>();
 
             //Step 3 - Blend all the lights!
             foreach (ILight l in lights)
@@ -1261,12 +1276,12 @@ namespace SS14.Client.Services.State.States
                 // LIGHT BLEND STAGE 1 - SIZING -- copys the light texture to a full screen rendertarget
                 var area = (LightArea) l.LightArea;
 
-                Vector2D blitPos;
+                Vector2 blitPos;
                 //Set the drawing position.
                 blitPos = ClientWindowData.WorldToScreen(area.LightPosition - area.LightAreaSize*0.5f);
 
                 //Set shader parameters
-                var LightPositionData = new Vector4D(blitPos.X/source.Width,
+                var LightPositionData = new Vector4(blitPos.X/source.Width,
                                                      blitPos.Y/source.Height,
                                                      (float) source.Width/area.renderTarget.Width,
                                                      (float) source.Height/area.renderTarget.Height);
@@ -1280,8 +1295,8 @@ namespace SS14.Client.Services.State.States
             bool fill = false;
             Image black = IoCManager.Resolve<IResourceManager>().GetSprite("black5x5").Image;
             var r_img = new Image[num_lights];
-            var r_col = new Vector4D[num_lights];
-            var r_pos = new Vector4D[num_lights];
+            var r_col = new Vector4[num_lights];
+            var r_pos = new Vector4[num_lights];
             do
             {
                 if (fill)
@@ -1289,8 +1304,8 @@ namespace SS14.Client.Services.State.States
                     for (int j = i; j < num_lights - 1; j++)
                     {
                         r_img[j] = black;
-                        r_col[j] = Vector4D.Zero;
-                        r_pos[j] = new Vector4D(0, 0, 1, 1);
+                        r_col[j] = Vector4.Zero;
+                        r_pos[j] = new Vector4(0, 0, 1, 1);
                         j++;
                     }
                     i = num_lights;
@@ -1321,8 +1336,8 @@ namespace SS14.Client.Services.State.States
                     i = 0;
                     draw = false;
                     r_img = new Image[num_lights];
-                    r_col = new Vector4D[num_lights];
-                    r_pos = new Vector4D[num_lights];
+                    r_col = new Vector4[num_lights];
+                    r_pos = new Vector4[num_lights];
                 }
                 if (lightTextures.Count > 0)
                 {
@@ -1352,7 +1367,7 @@ namespace SS14.Client.Services.State.States
 
         private void RenderPlayerVisionMap()
         {
-            Vector2D blitPos;
+            Vector2 blitPos;
             if (bFullVision)
             {
                 playerOcclusionTarget.Clear(Color.LightGray);
@@ -1371,7 +1386,7 @@ namespace SS14.Client.Services.State.States
                 if (t != null &&
                     t.Opaque)
                 {
-                    area.LightPosition = new Vector2D(area.LightPosition.X,
+                    area.LightPosition = new Vector2(area.LightPosition.X,
                                                       t.Position.Y +
                                                       MapManager.GetTileSpacing() + 1);
                 }
@@ -1394,7 +1409,7 @@ namespace SS14.Client.Services.State.States
 
                 shadowMapResolver.ResolveShadows(area.renderTarget.Image, area.renderTarget, area.LightPosition, false,
                                                  IoCManager.Resolve<IResourceManager>().GetSprite("whitemask").Image,
-                                                 Vector4D.Zero, new Vector4D(1, 1, 1, 1)); // Calc shadows
+                                                 Vector4.Zero, new Vector4(1, 1, 1, 1)); // Calc shadows
 
                 Gorgon.CurrentRenderTarget = playerOcclusionTarget; // Set to shadow rendertarget
 
@@ -1423,7 +1438,7 @@ namespace SS14.Client.Services.State.States
                 return;
             if (MapManager.GetFloorAt(l.Position).Opaque)
             {
-                area.LightPosition = new Vector2D(area.LightPosition.X,
+                area.LightPosition = new Vector2(area.LightPosition.X,
                                                   MapManager.GetAllTilesAt(l.Position).FirstOrDefault().Position.Y +
                                                   MapManager.GetTileSpacing() + 1);
             }
@@ -1431,7 +1446,7 @@ namespace SS14.Client.Services.State.States
             DrawWallsRelativeToLight(area); // Draw all shadowcasting stuff here in black
             area.EndDrawingShadowCasters(); // End drawing to the light rendertarget
             shadowMapResolver.ResolveShadows(area.renderTarget.Image, area.renderTarget, area.LightPosition, true,
-                                             area.Mask.Image, area.MaskProps, Vector4D.Unit); // Calc shadows
+                                             area.Mask.Image, area.MaskProps, Vector4.Unit); // Calc shadows
             area.Calculated = true;
         }
 
@@ -1479,7 +1494,7 @@ namespace SS14.Client.Services.State.States
 
             foreach (Tile t in tiles)
             {
-                Vector2D pos = area.ToRelativePosition(t.Position);
+                Vector2 pos = area.ToRelativePosition(t.Position);
                 t.RenderPos(pos.X, pos.Y, MapManager.GetTileSpacing(), (int)area.LightAreaSize.X);
             }
         }

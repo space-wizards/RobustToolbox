@@ -1,9 +1,9 @@
-﻿using GorgonLibrary.InputDevices;
-using SS14.Client.Interfaces.Resource;
+﻿using SS14.Client.Interfaces.Resource;
 using SS14.Shared.IoC;
 using System;
 using System.Collections.Generic;
 using System.Drawing;
+using SFML.Window;
 
 namespace SS14.Client.Services.UserInterface.Components
 {
@@ -252,7 +252,7 @@ namespace SS14.Client.Services.UserInterface.Components
             GC.SuppressFinalize(this);
         }
 
-        public override bool MouseWheelMove(MouseInputEventArgs e)
+		public override bool MouseWheelMove(MouseWheelEventArgs e)
         {
             if (ClientArea.Contains(new Point((int) e.Position.X, (int) e.Position.Y)))
             {
@@ -270,7 +270,7 @@ namespace SS14.Client.Services.UserInterface.Components
             return false;
         }
 
-        public override void MouseMove(MouseInputEventArgs e)
+		public override void MouseMove(MouseMoveEventArgs e)
         {
             if (ClientArea.Contains(new Point((int) e.Position.X, (int) e.Position.Y)))
             {
@@ -284,7 +284,7 @@ namespace SS14.Client.Services.UserInterface.Components
             }
         }
 
-        public override bool MouseDown(MouseInputEventArgs e)
+		public override bool MouseDown(MouseButtonEventArgs e)
         {
             if (ClientArea.Contains(new Point((int) e.Position.X, (int) e.Position.Y)))
             {
@@ -322,7 +322,7 @@ namespace SS14.Client.Services.UserInterface.Components
             return false;
         }
 
-        public override bool MouseUp(MouseInputEventArgs e)
+		public override bool MouseUp(MouseButtonEventArgs e)
         {
             if (ClientArea.Contains(new Point((int) e.Position.X, (int) e.Position.Y)))
             {

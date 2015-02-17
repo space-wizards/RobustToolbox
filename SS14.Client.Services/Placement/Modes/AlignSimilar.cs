@@ -1,5 +1,5 @@
-﻿using GorgonLibrary;
-using GorgonLibrary.Graphics;
+﻿using SS14.Client.Graphics.CluwneLib;
+using SS14.Shared.Maths;
 using SS14.Client.ClientWindow;
 using SS14.Client.GameObjects;
 using SS14.Client.Interfaces.GOC;
@@ -23,14 +23,14 @@ namespace SS14.Client.Services.Placement.Modes
         {
         }
 
-        public override bool Update(Vector2D mouseS, IMapManager currentMap)
+        public override bool Update(Vector2 mouseS, IMapManager currentMap)
         {
             if (currentMap == null) return false;
 
             spriteToDraw = GetDirectionalSprite(pManager.CurrentBaseSprite);
 
             mouseScreen = mouseS;
-            mouseWorld = new Vector2D(mouseScreen.X + ClientWindowData.Singleton.ScreenOrigin.X,
+            mouseWorld = new Vector2(mouseScreen.X + ClientWindowData.Singleton.ScreenOrigin.X,
                                       mouseScreen.Y + ClientWindowData.Singleton.ScreenOrigin.Y);
 
             var spriteRectWorld = new RectangleF(mouseWorld.X - (spriteToDraw.Width/2f),
@@ -84,23 +84,23 @@ namespace SS14.Client.Services.Placement.Modes
                             closestEntity.GetComponent<TransformComponent>(ComponentFamily.Transform).Position.Y -
                             closestSprite.Height/2f, closestSprite.Width, closestSprite.Height);
 
-                    var sides = new List<Vector2D>
+                    var sides = new List<Vector2>
                                     {
-                                        new Vector2D(closestRect.X + (closestRect.Width/2f),
+                                        new Vector2(closestRect.X + (closestRect.Width/2f),
                                                      closestRect.Top - spriteToDraw.Height/2f),
-                                        new Vector2D(closestRect.X + (closestRect.Width/2f),
+                                        new Vector2(closestRect.X + (closestRect.Width/2f),
                                                      closestRect.Bottom + spriteToDraw.Height/2f),
-                                        new Vector2D(closestRect.Left - spriteToDraw.Width/2f,
+                                        new Vector2(closestRect.Left - spriteToDraw.Width/2f,
                                                      closestRect.Y + (closestRect.Height/2f)),
-                                        new Vector2D(closestRect.Right + spriteToDraw.Width/2f,
+                                        new Vector2(closestRect.Right + spriteToDraw.Width/2f,
                                                      closestRect.Y + (closestRect.Height/2f))
                                     };
 
-                    Vector2D closestSide =
-                        (from Vector2D side in sides orderby (side - mouseWorld).Length ascending select side).First();
+                    Vector2 closestSide =
+                        (from Vector2 side in sides orderby (side - mouseWorld).Length ascending select side).First();
 
                     mouseWorld = closestSide;
-                    mouseScreen = new Vector2D(closestSide.X - ClientWindowData.Singleton.ScreenOrigin.X,
+                    mouseScreen = new Vector2(closestSide.X - ClientWindowData.Singleton.ScreenOrigin.X,
                                                closestSide.Y - ClientWindowData.Singleton.ScreenOrigin.Y);
                 }
             }
@@ -117,7 +117,7 @@ namespace SS14.Client.Services.Placement.Modes
             if (spriteToDraw != null)
             {
                 spriteToDraw.Color = pManager.ValidPosition ? Color.ForestGreen : Color.IndianRed;
-                spriteToDraw.Position = new Vector2D(mouseScreen.X - (spriteToDraw.Width/2f),
+                spriteToDraw.Position = new Vector2(mouseScreen.X - (spriteToDraw.Width/2f),
                                                      mouseScreen.Y - (spriteToDraw.Height/2f));
                 //Centering the sprite on the cursor.
                 spriteToDraw.Draw();

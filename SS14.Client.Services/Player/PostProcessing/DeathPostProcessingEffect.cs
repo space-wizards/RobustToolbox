@@ -1,5 +1,5 @@
-﻿using GorgonLibrary;
-using GorgonLibrary.Graphics;
+﻿using SS14.Client.Graphics.CluwneLib.Shader;
+using SS14.Client.Graphics.CluwneLib.Render;
 using SS14.Client.Interfaces.Resource;
 using SS14.Shared.IoC;
 using System;

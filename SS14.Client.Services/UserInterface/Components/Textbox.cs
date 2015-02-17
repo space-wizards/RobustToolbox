@@ -1,10 +1,8 @@
-﻿using GorgonLibrary;
-using GorgonLibrary.Graphics;
-using GorgonLibrary.InputDevices;
-using SS14.Client.Interfaces.Resource;
+﻿using SS14.Client.Interfaces.Resource;
 using System;
 using System.Drawing;
-using System.Windows.Forms;
+using SS14.Client.Graphics.CluwneLib.Sprite;
+using SFML.Window;
 
 namespace SS14.Client.Services.UserInterface.Components
 {
@@ -36,9 +34,9 @@ namespace SS14.Client.Services.UserInterface.Components
 
         private string _displayText = "";
         private string _text = "";
-        private Sprite _textboxLeft;
-        private Sprite _textboxMain;
-        private Sprite _textboxRight;
+		private CluwneSprite _textboxLeft;
+		private CluwneSprite _textboxMain;
+		private CluwneSprite _textboxRight;
 
         public Color drawColor = Color.White;
         public Color textColor = Color.Black;
@@ -133,7 +131,7 @@ namespace SS14.Client.Services.UserInterface.Components
             GC.SuppressFinalize(this);
         }
 
-        public override bool MouseDown(MouseInputEventArgs e)
+		public override bool MouseDown(MouseButtonEventArgs e)
         {
             if (ClientArea.Contains(new Point((int) e.Position.X, (int) e.Position.Y)))
             {
@@ -143,12 +141,12 @@ namespace SS14.Client.Services.UserInterface.Components
             return false;
         }
 
-        public override bool MouseUp(MouseInputEventArgs e)
+		public override bool MouseUp(MouseButtonEventArgs e)
         {
             return false;
         }
 
-        public override bool KeyDown(KeyboardInputEventArgs e)
+		public override bool KeyDown(KeyEventArgs e)
         {
             if (!Focus) return false;
 

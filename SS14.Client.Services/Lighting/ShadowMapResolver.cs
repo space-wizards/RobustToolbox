@@ -1,9 +1,10 @@
-﻿using GorgonLibrary;
-using GorgonLibrary.Graphics;
+﻿using SS14.Client.Graphics.CluwneLib;
+using SS14.Client.Graphics.CluwneLib.Shader;
+using SS14.Client.Graphics.CluwneLib.Render;
+using SS14.Shared.Maths;
 using SS14.Client.Interfaces.Resource;
 using System;
 using System.Drawing;
-using Image = GorgonLibrary.Graphics.Image;
 
 namespace SS14.Client.Services.Lighting
 {
@@ -65,8 +66,8 @@ namespace SS14.Client.Services.Lighting
                                                  ImageBufferFormats.BufferRGB888A8);
         }
 
-        public void ResolveShadows(Image shadowCastersTexture, RenderImage result, Vector2D lightPosition,
-                                   bool attenuateShadows, Image mask, Vector4D maskProps, Vector4D diffuseColor)
+        public void ResolveShadows(Image shadowCastersTexture, RenderImage result, Vector2 lightPosition,
+                                   bool attenuateShadows, Image mask, Vector4 maskProps, Vector4 diffuseColor)
         {
             resolveShadowsEffect.Parameters["AttenuateShadows"].SetValue(attenuateShadows ? 0 : 1);
             resolveShadowsEffect.Parameters["MaskProps"].SetValue(maskProps);
@@ -88,8 +89,8 @@ namespace SS14.Client.Services.Lighting
 
         private void ExecuteTechnique(Image source, RenderImage destination, string techniqueName, RenderImage shadowMap)
         {
-            Vector2D renderTargetSize;
-            renderTargetSize = new Vector2D(baseSize, baseSize);
+            Vector2 renderTargetSize;
+            renderTargetSize = new Vector2(baseSize, baseSize);
             Gorgon.CurrentRenderTarget = destination;
             Gorgon.CurrentRenderTarget.Clear(Color.White);
 
@@ -100,7 +101,7 @@ namespace SS14.Client.Services.Lighting
             if (shadowMap != null)
                 resolveShadowsEffect.Parameters["ShadowMapTexture"].SetValue(shadowMap);
 
-            quadRender.Render(new Vector2D(1, 1)*-1, new Vector2D(1, 1));
+            quadRender.Render(new Vector2(1, 1)*-1, new Vector2(1, 1));
 
             Gorgon.CurrentRenderTarget = null;
         }
@@ -120,9 +121,9 @@ namespace SS14.Client.Services.Lighting
                 d.Clear(Color.White);
 
                 reductionEffect.Parameters["SourceTexture"].SetValue(s);
-                var textureDim = new Vector2D(1.0f/s.Width, 1.0f/s.Height);
+                var textureDim = new Vector2(1.0f/s.Width, 1.0f/s.Height);
                 reductionEffect.Parameters["TextureDimensions"].SetValue(textureDim);
-                quadRender.Render(new Vector2D(1, 1)*-1, new Vector2D(1, 1));
+                quadRender.Render(new Vector2(1, 1)*-1, new Vector2(1, 1));
                 s = d;
                 step--;
             }
@@ -132,7 +133,7 @@ namespace SS14.Client.Services.Lighting
             Gorgon.CurrentShader = reductionEffect.Techniques["Copy"];
             reductionEffect.Parameters["SourceTexture"].SetValue(d);
             Gorgon.CurrentRenderTarget.Clear(Color.White);
-            quadRender.Render(new Vector2D(1, 1)*-1, new Vector2D(1, 1));
+            quadRender.Render(new Vector2(1, 1)*-1, new Vector2(1, 1));
 
             reductionEffect.Parameters["SourceTexture"].SetValue(reductionRT[reductionChainCount - 1]);
             Gorgon.CurrentRenderTarget = null;

@@ -1,4 +1,5 @@
-﻿using GorgonLibrary;
+﻿using SS14.Client.Graphics.CluwneLib;
+using SS14.Shared.Maths;
 using SS14.Client.Interfaces.Lighting;
 using SS14.Shared;
 using System.Drawing;
@@ -15,14 +16,14 @@ namespace SS14.Client.Services.Lighting
 
         #region ILight Members
 
-        public Vector2D Position { get; private set; }
+        public Vector2 Position { get; private set; }
         public Color Color { get; private set; }
         public int Radius { get; private set; }
         public ILightArea LightArea { get; private set; }
         public LightState LightState { get; private set; }
         public LightMode LightMode { get; set; }
 
-        public void Move(Vector2D toPosition)
+        public void Move(Vector2 toPosition)
         {
             Position = toPosition;
             LightArea.Calculated = false;
@@ -47,9 +48,9 @@ namespace SS14.Client.Services.Lighting
             Color = color;
         }
 
-        public Vector4D GetColorVec()
+        public Vector4 GetColorVec()
         {
-            return new Vector4D((float) Color.R/255, (float) Color.G/255, (float) Color.B/255, (float) Color.A/255);
+            return new Vector4((float) Color.R/255, (float) Color.G/255, (float) Color.B/255, (float) Color.A/255);
         }
 
         public void SetMask(string mask)

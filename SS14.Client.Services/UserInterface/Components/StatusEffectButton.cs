@@ -1,11 +1,10 @@
-﻿using GorgonLibrary;
-using GorgonLibrary.Graphics;
-using GorgonLibrary.InputDevices;
-using SS14.Client.GameObjects;
+﻿using SS14.Client.GameObjects;
+using SS14.Client.Graphics.CluwneLib.Sprite;
 using SS14.Client.Interfaces.Resource;
 using SS14.Shared.GO;
 using System;
 using System.Drawing;
+using SFML.Window;
 
 namespace SS14.Client.Services.UserInterface.Components
 {
@@ -18,7 +17,7 @@ namespace SS14.Client.Services.UserInterface.Components
         private readonly TextSprite timeLeft;
 
         private readonly TextSprite tooltip;
-        private Sprite _buttonSprite;
+		private CluwneSprite _buttonSprite;
 
         private bool showTooltip;
         private Point tooltipPos;
@@ -34,7 +33,7 @@ namespace SS14.Client.Services.UserInterface.Components
                                       _resourceManager.GetFont("CALIBRI"));
             timeLeft.Color = Color.White;
             timeLeft.ShadowColor = Color.Gray;
-            timeLeft.ShadowOffset = new Vector2D(1, 1);
+            timeLeft.ShadowOffset = new Vector2(1, 1);
             timeLeft.Shadowed = true;
 
             tooltip = new TextSprite("tooltip" + _assigned.uid.ToString() + _assigned.name, "",
@@ -58,7 +57,7 @@ namespace SS14.Client.Services.UserInterface.Components
                 if (assignedEffect.isDebuff) timeLeft.Color = Color.Red;
                 else timeLeft.Color = Color.ForestGreen;
 
-                timeLeft.Position = new Vector2D(Position.X + x_pos, Position.Y + 15);
+                timeLeft.Position = new Vector2(Position.X + x_pos, Position.Y + 15);
             }
 
             ClientArea = new Rectangle(Position,
@@ -97,7 +96,7 @@ namespace SS14.Client.Services.UserInterface.Components
                 float x_pos = (tooltipPos.X + 10 + tooltip.Width + 5) > Gorgon.CurrentClippingViewport.Width
                                   ? 0 - tooltip.Width - 10
                                   : 10 + 5;
-                tooltip.Position = new Vector2D(tooltipPos.X + x_pos + 5, tooltipPos.Y + 5 + 10);
+                tooltip.Position = new Vector2(tooltipPos.X + x_pos + 5, tooltipPos.Y + 5 + 10);
                 Gorgon.CurrentRenderTarget.FilledRectangle(tooltipPos.X + x_pos, tooltipPos.Y + 10, tooltip.Width + 5,
                                                            tooltip.Height + 5, Color.SteelBlue);
                 Gorgon.CurrentRenderTarget.Rectangle(tooltipPos.X + x_pos, tooltipPos.Y + 10, tooltip.Width + 5,
@@ -113,17 +112,17 @@ namespace SS14.Client.Services.UserInterface.Components
             GC.SuppressFinalize(this);
         }
 
-        public override bool MouseDown(MouseInputEventArgs e)
+		public override bool MouseDown(MouseButtonEventArgs e)
         {
             return false;
         }
 
-        public override bool MouseUp(MouseInputEventArgs e)
+		public override bool MouseUp(MouseButtonEventArgs e)
         {
             return false;
         }
 
-        public override void MouseMove(MouseInputEventArgs e)
+		public override void MouseMove(MouseMoveEventArgs e)
         {
             if (ClientArea.Contains(new Point((int) e.Position.X, (int) e.Position.Y)))
             {

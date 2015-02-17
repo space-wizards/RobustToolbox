@@ -1,8 +1,8 @@
-﻿using GorgonLibrary.Graphics;
-using GorgonLibrary.InputDevices;
+﻿using SS14.Client.Graphics.CluwneLib.Sprite;
 using SS14.Client.Interfaces.Resource;
 using System;
 using System.Drawing;
+using SFML.Window;
 
 namespace SS14.Client.Services.UserInterface.Components
 {
@@ -16,8 +16,8 @@ namespace SS14.Client.Services.UserInterface.Components
 
         private readonly IResourceManager _resourceManager;
 
-        private Sprite checkbox;
-        private Sprite checkboxCheck;
+		private CluwneSprite  checkbox;
+		private CluwneSprite checkboxCheck;
 
         private Boolean value;
 
@@ -61,7 +61,7 @@ namespace SS14.Client.Services.UserInterface.Components
             GC.SuppressFinalize(this);
         }
 
-        public override bool MouseDown(MouseInputEventArgs e)
+		public override bool MouseDown(MouseButtonEventArgs e)
         {
             if (ClientArea.Contains(new Point((int) e.Position.X, (int) e.Position.Y)))
             {
@@ -71,7 +71,7 @@ namespace SS14.Client.Services.UserInterface.Components
             return false;
         }
 
-        public override bool MouseUp(MouseInputEventArgs e)
+		public override bool MouseUp(MouseButtonEventArgs e)
         {
             return false;
         }

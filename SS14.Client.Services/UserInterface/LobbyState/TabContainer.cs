@@ -1,14 +1,15 @@
-﻿using GorgonLibrary.Graphics;
-using GorgonLibrary.InputDevices;
+﻿using SS14.Client.Graphics.CluwneLib;
+using SS14.Client.Graphics.CluwneLib.Sprite;
 using SS14.Client.Interfaces.Resource;
 using System.Drawing;
+using SFML.Window;
 
 namespace SS14.Client.Services.UserInterface.Components
 {
     internal class TabContainer : ScrollableContainer
     {
         public string tabName = "";
-        public Sprite tabSprite = null;
+		public CluwneSprite tabSprite = null;
 
         public TabContainer(string uniqueName, Size size, IResourceManager resourceManager)
             : base(uniqueName, size, resourceManager)
@@ -42,17 +43,17 @@ namespace SS14.Client.Services.UserInterface.Components
             base.Dispose();
         }
 
-        public override bool MouseDown(MouseInputEventArgs e)
+		public override bool MouseDown(MouseButtonEventArgs e)
         {
             return base.MouseDown(e);
         }
 
-        public override bool MouseUp(MouseInputEventArgs e)
+		public override bool MouseUp(MouseButtonEventArgs e)
         {
             return base.MouseUp(e);
         }
 
-        public override void MouseMove(MouseInputEventArgs e)
+		public override void MouseMove(MouseMoveEventArgs e)
         {
             base.MouseMove(e);
         }

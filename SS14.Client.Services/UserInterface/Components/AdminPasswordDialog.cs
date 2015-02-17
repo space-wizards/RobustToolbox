@@ -1,10 +1,9 @@
-﻿using GorgonLibrary;
-using GorgonLibrary.InputDevices;
-using Lidgren.Network;
+﻿using Lidgren.Network;
 using SS14.Client.Interfaces.Network;
 using SS14.Client.Interfaces.Resource;
 using SS14.Shared;
 using System.Drawing;
+using SFML.Window;
 
 namespace SS14.Client.Services.UserInterface.Components
 {
@@ -85,33 +84,33 @@ namespace SS14.Client.Services.UserInterface.Components
             base.Dispose();
         }
 
-        public override bool MouseDown(MouseInputEventArgs e)
+		public override bool MouseDown(MouseButtonEventArgs e)
         {
             if (disposing || !IsVisible()) return false;
             if (base.MouseDown(e)) return true;
             return false;
         }
 
-        public override bool MouseUp(MouseInputEventArgs e)
+		public override bool MouseUp(MouseButtonEventArgs e)
         {
             if (disposing || !IsVisible()) return false;
             if (base.MouseUp(e)) return true;
             return false;
         }
 
-        public override void MouseMove(MouseInputEventArgs e)
+		public override void MouseMove(MouseMoveEventArgs e)
         {
             if (disposing || !IsVisible()) return;
             base.MouseMove(e);
         }
 
-        public override bool MouseWheelMove(MouseInputEventArgs e)
+		public override bool MouseWheelMove(MouseWheelEventArgs e)
         {
             if (base.MouseWheelMove(e)) return true;
             return false;
         }
 
-        public override bool KeyDown(KeyboardInputEventArgs e)
+        public override bool KeyDown(KeyEventArgs e)
         {
             if (base.KeyDown(e)) return true;
             return false;

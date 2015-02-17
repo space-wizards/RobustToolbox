@@ -1,5 +1,6 @@
-﻿using GorgonLibrary;
-using GorgonLibrary.Graphics;
+﻿using SS14.Client.Graphics.CluwneLib.Sprite;
+using SS14.Client.Graphics.CluwneLib.Render;
+using SS14.Shared.Maths;
 using SS14.Client.Interfaces.Lighting;
 using SS14.Client.Interfaces.Resource;
 using SS14.Client.Interfaces.Utility;
@@ -13,7 +14,7 @@ namespace SS14.Client.Services.Lighting
         public LightArea(ShadowmapSize size)
         {
             int baseSize = 2 << (int) size;
-            LightAreaSize = new Vector2D(baseSize, baseSize);
+            LightAreaSize = new Vector2(baseSize, baseSize);
             renderTarget = new RenderImage("lightTest" + baseSize + IoCManager.Resolve<IRand>().Next(100000, 999999),
                                            baseSize, baseSize, ImageBufferFormats.BufferRGB888A8);
             Mask = IoCManager.Resolve<IResourceManager>().GetSprite("whitemask");
@@ -26,16 +27,16 @@ namespace SS14.Client.Services.Lighting
         /// <summary>
         /// World position coordinates of the light's center
         /// </summary>
-        public Vector2D LightPosition { get; set; }
+        public Vector2 LightPosition { get; set; }
 
-        public Vector2D LightAreaSize { get; set; }
+        public Vector2 LightAreaSize { get; set; }
         public bool Calculated { get; set; }
-        public Sprite Mask { get; set; }
+		public CluwneSprite Mask { get; set; }
         public bool MaskFlipX { get; set; }
         public bool MaskFlipY { get; set; }
         public bool Rot90 { get; set; }
 
-        public Vector4D MaskProps
+        public Vector4 MaskProps
         {
             get
             {
@@ -58,7 +59,7 @@ namespace SS14.Client.Services.Lighting
             }
         }
 
-        public Vector2D ToRelativePosition(Vector2D worldPosition)
+        public Vector2 ToRelativePosition(Vector2 worldPosition)
         {
             return worldPosition - (LightPosition - LightAreaSize*0.5f);
         }
@@ -81,9 +82,9 @@ namespace SS14.Client.Services.Lighting
 
         #endregion
 
-        private Vector4D maskPropsVec(bool rot, bool flipx, bool flipy)
+        private Vector4 maskPropsVec(bool rot, bool flipx, bool flipy)
         {
-            return new Vector4D(rot ? 1 : 0, flipx ? 1 : 0, flipy ? 1 : 0, 0);
+            return new Vector4(rot ? 1 : 0, flipx ? 1 : 0, flipy ? 1 : 0, 0);
         }
     }
 }

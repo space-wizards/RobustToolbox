@@ -1,6 +1,5 @@
-﻿using GorgonLibrary;
-using GorgonLibrary.Graphics;
-using GorgonLibrary.InputDevices;
+﻿using SS14.Client.Graphics.CluwneLib;
+using SS14.Client.Graphics.CluwneLib.Sprite;
 using Lidgren.Network;
 using SS14.Client.GameObjects;
 using SS14.Client.Interfaces.Player;
@@ -13,6 +12,7 @@ using SS14.Shared.GO;
 using SS14.Shared.IoC;
 using System;
 using System.Drawing;
+using SFML.Window;
 
 namespace SS14.Client.Services.UserInterface.Components
 {
@@ -20,15 +20,15 @@ namespace SS14.Client.Services.UserInterface.Components
     {
         private readonly Color ColCritical = Color.FromArgb(83, 19, 2);
         private readonly Color ColHealthy = Color.FromArgb(11, 83, 2);
-        private readonly Sprite _backgroundSprite;
+		private readonly CluwneSprite _backgroundSprite;
         private readonly IPlayerManager _playerManager = IoCManager.Resolve<IPlayerManager>();
         private readonly IResourceManager _resMgr = IoCManager.Resolve<IResourceManager>();
-        private readonly Sprite healthMeterBg;
-        private readonly Sprite healthMeterGrid;
-        private readonly Sprite healthMeterOverlay;
+		private readonly CluwneSprite healthMeterBg;
+		private readonly CluwneSprite healthMeterGrid;
+		private readonly CluwneSprite healthMeterOverlay;
 
         private readonly Label healthPc;
-        private readonly Sprite panelBG;
+		private readonly CluwneSprite panelBG;
 
         private IUserInterfaceManager _userInterfaceManager = IoCManager.Resolve<IUserInterfaceManager>();
         private int blipSpeed = 60;
@@ -50,7 +50,7 @@ namespace SS14.Client.Services.UserInterface.Components
             _backgroundSprite = _resMgr.GetSprite("blip");
 
             healthPc = new Label("100", "CALIBRI", _resMgr);
-            healthPc.Text.ShadowOffset = new Vector2D(1, 1);
+            healthPc.Text.ShadowOffset = new Vector2(1, 1);
             healthPc.Text.Shadowed = true;
             healthPc.Text.Color = Color.FloralWhite;
         }
@@ -66,9 +66,9 @@ namespace SS14.Client.Services.UserInterface.Components
             const int dec_inner = 7;
 
             panelBG.Position = Position;
-            healthMeterBg.Position = new Vector2D(Position.X + x_inner, Position.Y + y_inner);
-            healthMeterOverlay.Position = new Vector2D(Position.X + x_inner, Position.Y + y_inner);
-            healthMeterGrid.Position = new Vector2D(Position.X + x_inner, Position.Y + y_inner);
+            healthMeterBg.Position = new Vector2(Position.X + x_inner, Position.Y + y_inner);
+            healthMeterOverlay.Position = new Vector2(Position.X + x_inner, Position.Y + y_inner);
+            healthMeterGrid.Position = new Vector2(Position.X + x_inner, Position.Y + y_inner);
 
             ClientArea = Rectangle.Round(panelBG.AABB);
 
@@ -167,7 +167,7 @@ namespace SS14.Client.Services.UserInterface.Components
         {
         }
 
-        public override bool MouseDown(MouseInputEventArgs e)
+		public override bool MouseDown(MouseButtonEventArgs e)
         {
             if (ClientArea.Contains(new Point((int) e.Position.X, (int) e.Position.Y)))
             {
@@ -176,7 +176,7 @@ namespace SS14.Client.Services.UserInterface.Components
             return false;
         }
 
-        public override bool MouseUp(MouseInputEventArgs e)
+		public override bool MouseUp(MouseButtonEventArgs e)
         {
             if (ClientArea.Contains(new Point((int) e.Position.X, (int) e.Position.Y)))
             {
@@ -185,16 +185,16 @@ namespace SS14.Client.Services.UserInterface.Components
             return false;
         }
 
-        public override void MouseMove(MouseInputEventArgs e)
+		public override void MouseMove(MouseMoveEventArgs e)
         {
         }
 
-        public override bool MouseWheelMove(MouseInputEventArgs e)
+		public override bool MouseWheelMove(MouseWheelEventArgs e)
         {
             return false;
         }
 
-        public override bool KeyDown(KeyboardInputEventArgs e)
+		public override bool KeyDown(KeyEventArgs e)
         {
             return false;
         }

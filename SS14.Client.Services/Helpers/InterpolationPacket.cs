@@ -1,4 +1,5 @@
-﻿using GorgonLibrary;
+﻿using SS14.Client.Graphics.CluwneLib;
+using SS14.Shared.Maths;
 using Lidgren.Network;
 
 namespace SS14.Client.Services.Helpers
@@ -6,38 +7,38 @@ namespace SS14.Client.Services.Helpers
     public struct InterpolationPacket
     {
         public int Iterations;
-        public Vector2D Position;
+        public Vector2 Position;
         public float Rotation;
-        public Vector2D Startposition;
+        public Vector2 Startposition;
         public double Time;
 
-        public InterpolationPacket(Vector2D position, float rotation, double time)
+        public InterpolationPacket(Vector2 position, float rotation, double time)
         {
             Position = position;
             Rotation = rotation;
             Time = time;
             Iterations = 0;
-            Startposition = new Vector2D(1234, 1234);
+            Startposition = new Vector2(1234, 1234);
         }
 
         public InterpolationPacket(float x, float y, float rotation, double time)
         {
-            Position = new Vector2D(x, y);
+            Position = new Vector2(x, y);
             Rotation = rotation;
             Time = time;
             Iterations = 0;
-            Startposition = new Vector2D(1234, 1234);
+            Startposition = new Vector2(1234, 1234);
         }
 
         public InterpolationPacket(NetIncomingMessage message)
         {
             float x = message.ReadFloat();
             float y = message.ReadFloat();
-            Position = new Vector2D(x, y);
+            Position = new Vector2(x, y);
             Rotation = message.ReadFloat();
             Time = 0;
             Iterations = 0;
-            Startposition = new Vector2D(1234, 1234);
+            Startposition = new Vector2(1234, 1234);
         }
 
         public void WriteMessage(NetOutgoingMessage message)

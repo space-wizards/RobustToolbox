@@ -1,9 +1,9 @@
-﻿using GorgonLibrary.Graphics;
-using GorgonLibrary.InputDevices;
-using SS14.Client.Interfaces.Resource;
+﻿using SS14.Client.Interfaces.Resource;
+using SS14.Client.Graphics.CluwneLib.Sprite;
 using SS14.Shared.IoC;
 using System;
 using System.Drawing;
+using SFML.Window;
 
 namespace SS14.Client.Services.UserInterface.Components
 {
@@ -16,11 +16,11 @@ namespace SS14.Client.Services.UserInterface.Components
         #endregion
 
         private readonly IResourceManager _resourceManager;
-        private Sprite _buttonClick;
-        private Sprite _buttonHover;
-        private Sprite _buttonNormal;
+		private CluwneSprite _buttonClick;
+		private CluwneSprite _buttonHover;
+		private CluwneSprite _buttonNormal;
 
-        private Sprite _drawSprite;
+		private CluwneSprite _drawSprite;
 
         public ImageButton()
         {
@@ -116,7 +116,7 @@ namespace SS14.Client.Services.UserInterface.Components
             GC.SuppressFinalize(this);
         }
 
-        public override void MouseMove(MouseInputEventArgs e)
+		public override void MouseMove(MouseMoveEventArgs e)
         {
             if (ClientArea.Contains(new Point((int) e.Position.X, (int) e.Position.Y)) && _buttonHover != null)
             {
@@ -130,7 +130,7 @@ namespace SS14.Client.Services.UserInterface.Components
             }
         }
 
-        public override bool MouseDown(MouseInputEventArgs e)
+		public override bool MouseDown(MouseButtonEventArgs e)
         {
             if (ClientArea.Contains(new Point((int) e.Position.X, (int) e.Position.Y)))
             {
@@ -141,7 +141,7 @@ namespace SS14.Client.Services.UserInterface.Components
             return false;
         }
 
-        public override bool MouseUp(MouseInputEventArgs e)
+		public override bool MouseUp(MouseButtonEventArgs e)
         {
             if (_drawSprite == _buttonClick)
                 if (_buttonHover != null)

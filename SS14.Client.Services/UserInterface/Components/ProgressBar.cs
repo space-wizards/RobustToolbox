@@ -1,9 +1,7 @@
-﻿using GorgonLibrary;
-using GorgonLibrary.Graphics;
-using GorgonLibrary.InputDevices;
-using SS14.Client.Interfaces.Resource;
+﻿using SS14.Client.Interfaces.Resource;
 using System;
 using System.Drawing;
+using SFML.Window;
 
 namespace SS14.Client.Services.UserInterface.Components
 {
@@ -28,7 +26,7 @@ namespace SS14.Client.Services.UserInterface.Components
             Text = new TextSprite("ProgressBarText", "", _resourceManager.GetFont("CALIBRI"));
             Text.Color = Color.Black;
             Text.ShadowColor = Color.DimGray;
-            Text.ShadowOffset = new Vector2D(1, 1);
+            Text.ShadowOffset = new Vector2(1, 1);
             Text.Shadowed = true;
 
             Size = size;
@@ -47,7 +45,7 @@ namespace SS14.Client.Services.UserInterface.Components
         public override void Update(float frameTime)
         {
             Text.Text = Math.Round(percent*100).ToString() + "%";
-            Text.Position = new Vector2D(Position.X + (Size.Width/2f - Text.Width/2f),
+            Text.Position = new Vector2(Position.X + (Size.Width/2f - Text.Width/2f),
                                          Position.Y + (Size.Height/2f - Text.Height/2f));
             ClientArea = new Rectangle(Position, Size);
             Value++;
@@ -74,12 +72,12 @@ namespace SS14.Client.Services.UserInterface.Components
             GC.SuppressFinalize(this);
         }
 
-        public override bool MouseDown(MouseInputEventArgs e)
+		public override bool MouseDown(MouseButtonEventArgs e)
         {
             return false;
         }
 
-        public override bool MouseUp(MouseInputEventArgs e)
+		public override bool MouseUp(MouseButtonEventArgs e)
         {
             return false;
         }

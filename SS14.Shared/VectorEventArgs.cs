@@ -1,4 +1,5 @@
 ﻿using System;
+using SS14.Shared.Maths;
 
 namespace SS14.Shared
 {

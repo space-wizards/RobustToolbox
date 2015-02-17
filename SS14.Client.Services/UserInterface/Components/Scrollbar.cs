@@ -1,10 +1,9 @@
-﻿using GorgonLibrary;
-using GorgonLibrary.Graphics;
-using GorgonLibrary.InputDevices;
-using Lidgren.Network;
+﻿using Lidgren.Network;
 using SS14.Client.Interfaces.Resource;
+using SS14.Client.Graphics.CluwneLib.Sprite;
 using System;
 using System.Drawing;
+using SFML.Window;
 
 namespace SS14.Client.Services.UserInterface.Components
 {
@@ -24,7 +23,7 @@ namespace SS14.Client.Services.UserInterface.Components
 
         private readonly TextSprite DEBUG;
         private readonly IResourceManager _resourceManager;
-        private readonly Sprite scrollbarButton;
+		private readonly CluwneSprite scrollbarButton;
         private bool DRAW_DEBUG = false;
 
         public bool Horizontal = false;
@@ -53,7 +52,7 @@ namespace SS14.Client.Services.UserInterface.Components
             DEBUG.Color = Color.OrangeRed;
             DEBUG.ShadowColor = Color.DarkBlue;
             DEBUG.Shadowed = true;
-            DEBUG.ShadowOffset = new Vector2D(1, 1);
+            DEBUG.ShadowOffset = new Vector2(1, 1);
             Update(0);
         }
 
@@ -76,7 +75,7 @@ namespace SS14.Client.Services.UserInterface.Components
         {
         }
 
-        public override bool MouseDown(MouseInputEventArgs e)
+		public override bool MouseDown(MouseButtonEventArgs e)
         {
             if (!IsVisible()) return false;
             if (clientAreaButton.Contains((int) e.Position.X, (int) e.Position.Y))
@@ -91,7 +90,7 @@ namespace SS14.Client.Services.UserInterface.Components
             return false;
         }
 
-        public override bool MouseUp(MouseInputEventArgs e)
+		public override bool MouseUp(MouseButtonEventArgs e)
         {
             if (dragging)
             {
@@ -101,7 +100,7 @@ namespace SS14.Client.Services.UserInterface.Components
             return false;
         }
 
-        public override void MouseMove(MouseInputEventArgs e)
+		public override void MouseMove(MouseMoveEventArgs e)
         {
             if (!IsVisible()) return;
             if (dragging)
@@ -115,7 +114,7 @@ namespace SS14.Client.Services.UserInterface.Components
             }
         }
 
-        public override bool MouseWheelMove(MouseInputEventArgs e)
+		public override bool MouseWheelMove(MouseWheelEventArgs e)
         {
             Value += ((Math.Sign(e.WheelDelta)*-1)*Math.Max(((max/20)), 1));
             return true;
@@ -157,7 +156,7 @@ namespace SS14.Client.Services.UserInterface.Components
                 Gorgon.CurrentRenderTarget.FilledRectangle(ClientArea.X, ClientArea.Y, ClientArea.Width,
                                                            ClientArea.Height, Color.DarkSlateGray);
             scrollbarButton.Draw(clientAreaButton);
-            DEBUG.Position = new Vector2D(ClientArea.Location.X + 20, ClientArea.Location.Y + 20);
+            DEBUG.Position = new Vector2(ClientArea.Location.X + 20, ClientArea.Location.Y + 20);
             DEBUG.Text = "current: " + actualVal.ToString();
             if (DRAW_DEBUG) DEBUG.Draw();
             Gorgon.CurrentRenderTarget.Rectangle(ClientArea.X + 0, ClientArea.Y + 0, ClientArea.Width - 0,

@@ -1,12 +1,12 @@
-﻿using GorgonLibrary.Graphics;
-using GorgonLibrary.InputDevices;
-using SS14.Client.Interfaces.Resource;
+﻿using SS14.Client.Interfaces.Resource;
 using SS14.Client.Interfaces.UserInterface;
 using SS14.Client.Services.Helpers;
 using SS14.Client.Services.UserInterface.Components;
+using SS14.Client.Graphics.CluwneLib.Sprite;
 using SS14.Shared.GameObjects;
 using System;
 using System.Drawing;
+using SFML.Window;
 
 namespace SS14.Client.Services.UserInterface.Inventory
 {
@@ -19,10 +19,10 @@ namespace SS14.Client.Services.UserInterface.Inventory
         #endregion
 
         private readonly IResourceManager _resourceManager;
-        private readonly Sprite _sprite;
+		private readonly CluwneSprite _sprite;
         private readonly IUserInterfaceManager _userInterfaceManager;
         private Color _color;
-        private Sprite _entSprite;
+		private CluwneSprite _entSprite;
 
         public CraftSlotUi(IResourceManager resourceManager, IUserInterfaceManager userInterfaceManager)
         {
@@ -68,7 +68,7 @@ namespace SS14.Client.Services.UserInterface.Inventory
             GC.SuppressFinalize(this);
         }
 
-        public override bool MouseDown(MouseInputEventArgs e)
+		public override bool MouseDown(MouseButtonEventArgs e)
         {
             if (ClientArea.Contains(new Point((int) e.Position.X, (int) e.Position.Y)))
             {
@@ -78,7 +78,7 @@ namespace SS14.Client.Services.UserInterface.Inventory
             return false;
         }
 
-        public override bool MouseUp(MouseInputEventArgs e)
+		public override bool MouseUp(MouseButtonEventArgs e)
         {
             if (ClientArea.Contains(new Point((int) e.Position.X, (int) e.Position.Y)))
             {
@@ -92,7 +92,7 @@ namespace SS14.Client.Services.UserInterface.Inventory
             return false;
         }
 
-        public override void MouseMove(MouseInputEventArgs e)
+		public override void MouseMove(MouseMoveEventArgs e)
         {
             if (ClientArea.Contains(new Point((int) e.Position.X, (int) e.Position.Y)))
                 _color = Color.LightSteelBlue;

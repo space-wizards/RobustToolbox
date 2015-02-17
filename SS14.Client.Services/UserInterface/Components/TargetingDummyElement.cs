@@ -1,11 +1,10 @@
-﻿using GorgonLibrary;
-using GorgonLibrary.Graphics;
-using GorgonLibrary.InputDevices;
-using SS14.Client.Interfaces.Resource;
+﻿using SS14.Client.Interfaces.Resource;
 using SS14.Shared;
 using System;
 using System.Drawing;
-using Image = GorgonLibrary.Graphics.Image;
+using SS14.Client.Graphics.CluwneLib.Sprite;
+using SFML.Window;
+using Image = SFML.Graphics.Image;
 
 namespace SS14.Client.Services.UserInterface.Components
 {
@@ -23,7 +22,7 @@ namespace SS14.Client.Services.UserInterface.Components
         public float MaxHealth;
         private Point _clickPoint;
 
-        private Sprite _elementSprite;
+		private CluwneSprite _elementSprite;
         private Boolean _selected;
 
         public TargetingDummyElement(string spriteName, BodyPart part, IResourceManager resourceManager)
@@ -88,7 +87,7 @@ namespace SS14.Client.Services.UserInterface.Components
             GC.SuppressFinalize(this);
         }
 
-        public override bool MouseDown(MouseInputEventArgs e)
+		public override bool MouseDown(MouseButtonEventArgs e)
         {
             if (!ClientArea.Contains(new Point((int) e.Position.X, (int) e.Position.Y))) return false;
 
@@ -114,7 +113,7 @@ namespace SS14.Client.Services.UserInterface.Components
             return false;
         }
 
-        public override bool MouseUp(MouseInputEventArgs e)
+		public override bool MouseUp(MouseButtonEventArgs e)
         {
             return false;
         }

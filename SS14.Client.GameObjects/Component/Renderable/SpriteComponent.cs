@@ -1,6 +1,4 @@
-﻿using GorgonLibrary;
-using GorgonLibrary.Graphics;
-using Lidgren.Network;
+﻿using Lidgren.Network;
 using SS14.Client.ClientWindow;
 using SS14.Client.Interfaces.GOC;
 using SS14.Client.Interfaces.Resource;
@@ -13,7 +11,8 @@ using System;
 using System.Collections.Generic;
 using System.Drawing;
 using System.Linq;
-using Image = GorgonLibrary.Graphics.Image;
+using SS14.Shared.Maths;
+using Sprite = SS14.Client.Graphics.CluwneLib.Sprite.CluwneSprite;
 
 namespace SS14.Client.GameObjects
 {
@@ -246,18 +245,22 @@ namespace SS14.Client.GameObjects
                     Owner.GetComponent<TransformComponent>(ComponentFamily.Transform).Position.Y -
                     (spriteToCheck.Height/2), spriteToCheck.Width, spriteToCheck.Height);
             if (!AABB.Contains(worldPos)) return false;
+            
+            // Get the sprite's position within the texture
+            var texRect = spriteToCheck.TextureRect;
+            
+            // Get the clicked position relative to the texture
+            var spritePosition = new Point((int) (worldPos.X - AABB.X + texRect.Left),
+                                           (int) (worldPos.Y - AABB.Y + texRect.Top));
 
-            var spritePosition = new Point((int) (worldPos.X - AABB.X + spriteToCheck.ImageOffset.X),
-                                           (int) (worldPos.Y - AABB.Y + spriteToCheck.ImageOffset.Y));
+            if (spritePosition.X < 0 || spritePosition.Y < 0)
+                return false;
 
-            Image.ImageLockBox imgData = spriteToCheck.Image.GetImageData();
-            imgData.Lock(false);
-            Color pixColour = Color.FromArgb((int) (imgData[spritePosition.X, spritePosition.Y]));
-
-            imgData.Dispose();
-            imgData.Unlock();
-
-            if (pixColour.A == 0) return false;
+            // Copy the texture to image
+            var img = spriteToCheck.Texture.CopyToImage();
+            // Check if the clicked pixel is opaque
+            if (img.GetPixel((uint)spritePosition.X, (uint)spritePosition.Y).A == 0)
+                return false;
 
             return true;
         }
@@ -283,7 +286,7 @@ namespace SS14.Client.GameObjects
             }
         }
 
-        public virtual void Render(Vector2D topLeft, Vector2D bottomRight)
+        public virtual void Render(Vector2 topLeft, Vector2 bottomRight)
         {
             //Render slaves beneath
             IEnumerable<SpriteComponent> renderablesBeneath = from SpriteComponent c in slaves
@@ -303,7 +306,7 @@ namespace SS14.Client.GameObjects
 
             Sprite spriteToRender = GetActiveDirectionalSprite();
 
-            Vector2D renderPos =
+            Vector2 renderPos =
                 ClientWindowData.WorldToScreen(
                     Owner.GetComponent<TransformComponent>(ComponentFamily.Transform).Position);
             SetSpriteCenter(spriteToRender, renderPos);
@@ -339,12 +342,12 @@ namespace SS14.Client.GameObjects
             //Gorgon.CurrentRenderTarget.Rectangle(renderPos.X - aabb.Width / 2, renderPos.Y - aabb.Height / 2, aabb.Width, aabb.Height, Color.Lime);
         }
 
-        public void SetSpriteCenter(string sprite, Vector2D center)
+        public void SetSpriteCenter(string sprite, Vector2 center)
         {
             SetSpriteCenter(sprites[sprite], center);
         }
 
-        public void SetSpriteCenter(Sprite sprite, Vector2D center)
+        public void SetSpriteCenter(Sprite sprite, Vector2 center)
         {
             sprite.SetPosition(center.X - (GetActiveDirectionalSprite().AABB.Width/2),
                                center.Y - (GetActiveDirectionalSprite().AABB.Height/2));

@@ -1,5 +1,6 @@
-﻿using GorgonLibrary;
-using GorgonLibrary.Graphics;
+﻿using SS14.Client.Graphics.CluwneLib;
+using SS14.Client.Graphics.CluwneLib.Sprite;
+using SS14.Shared.Maths;
 using SS14.Client.GameObjects;
 using SS14.Client.Interfaces.Resource;
 using SS14.Client.Services.Tiles;
@@ -8,7 +9,7 @@ using SS14.Shared.GO;
 using SS14.Shared.IoC;
 using System;
 using System.Drawing;
-using Image = GorgonLibrary.Graphics.Image;
+
 
 namespace SS14.Client.Services.Helpers
 {
@@ -19,7 +20,7 @@ namespace SS14.Client.Services.Helpers
             return type.IsSubclassOf(typeof (Tile)) ? "tilebuildoverlay" : "nosprite";
         }
 
-        public static Sprite GetSpriteComponentSprite(Entity entity)
+		public static CluwneSprite GetSpriteComponentSprite(Entity entity)
         {
             ComponentReplyMessage reply = entity.SendMessage(entity, ComponentFamily.Renderable,
                                                              ComponentMessageType.GetSprite);
@@ -31,7 +32,7 @@ namespace SS14.Client.Services.Helpers
             return null;
         }
 
-        public static Sprite GetIconSprite(Entity entity)
+		public static CluwneSprite GetIconSprite(Entity entity)
         {
             if(entity.HasComponent(ComponentFamily.Icon))
             {
@@ -43,7 +44,7 @@ namespace SS14.Client.Services.Helpers
             return IoCManager.Resolve<IResourceManager>().GetNoSprite();
         }
 
-        public static bool SpritePixelHit(Sprite toCheck, Vector2D clickPos)
+		public static bool SpritePixelHit(CluwneSprite toCheck, Vector2 clickPos)
         {
             var clickPoint = new PointF(clickPos.X, clickPos.Y);
             if (!toCheck.AABB.Contains(clickPoint)) return false;

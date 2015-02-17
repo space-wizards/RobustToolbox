@@ -1,8 +1,7 @@
-﻿using GorgonLibrary.Graphics;
-using GorgonLibrary.InputDevices;
-using Lidgren.Network;
+﻿using Lidgren.Network;
 using SS14.Client.Interfaces.Network;
 using SS14.Client.Interfaces.Resource;
+using SFML.Window;
 using SS14.Shared;
 using SS14.Shared.IoC;
 using System.Drawing;
@@ -162,17 +161,17 @@ namespace SS14.Client.Services.UserInterface.Components
             base.Dispose();
         }
 
-        public override bool MouseDown(MouseInputEventArgs e)
+		public override bool MouseDown(MouseButtonEventArgs e)
         {
             return base.MouseDown(e);
         }
 
-        public override bool MouseUp(MouseInputEventArgs e)
+		public override bool MouseUp(MouseButtonEventArgs e)
         {
             return base.MouseUp(e);
         }
 
-        public override void MouseMove(MouseInputEventArgs e)
+		public override void MouseMove(MouseMoveEventArgs e)
         {
             base.MouseMove(e);
         }

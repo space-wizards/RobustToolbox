@@ -1,6 +1,5 @@
-﻿using GorgonLibrary;
-using GorgonLibrary.Graphics;
-using GorgonLibrary.InputDevices;
+﻿using SS14.Client.Graphics.CluwneLib.Sprite;
+using SS14.Shared.Maths;
 using Lidgren.Network;
 using SS14.Client.Interfaces.Configuration;
 using SS14.Client.Interfaces.GOC;
@@ -11,6 +10,7 @@ using SS14.Client.Services.UserInterface.Components;
 using SS14.Shared;
 using SS14.Shared.GameObjects;
 using SS14.Shared.IoC;
+using SFML.Window;
 using System;
 using System.Collections.Generic;
 using System.Drawing;
@@ -31,10 +31,10 @@ namespace SS14.Client.Services.UserInterface
         private readonly IConfigurationManager _config;
         private readonly IResourceManager _resourceManager;
         private IGuiComponent _currentFocus;
-        private Sprite _cursorSprite;
+		private CluwneSprite _cursorSprite;
         private DebugConsole _console;
 
-        private Vector2D dragOffset = Vector2D.Zero;
+        private Vector2 dragOffset = Vector2.Zero;
         private bool moveMode;
         private IGuiComponent movingComp;
 
@@ -53,7 +53,7 @@ namespace SS14.Client.Services.UserInterface
             _console.SetVisible(false);
         }
 
-        public Vector2D MousePos { get; private set; }
+        public Vector2 MousePos { get; private set; }
 
         #region IUserInterfaceManager Members
 
@@ -218,7 +218,7 @@ namespace SS14.Client.Services.UserInterface
         /// <summary>
         ///  Handles MouseDown event. Returns true if a component accepted and handled the event.
         /// </summary>
-        public virtual bool MouseDown(MouseInputEventArgs e)
+		public virtual bool MouseDown(MouseButtonEventArgs e)
         {
             if (_console.IsVisible())
             {
@@ -232,8 +232,8 @@ namespace SS14.Client.Services.UserInterface
                     if (comp.ClientArea.Contains(new Point((int) e.Position.X, (int) e.Position.Y)))
                     {
                         movingComp = comp;
-                        dragOffset = (new Vector2D(e.Position.X, e.Position.Y)) -
-                                     new Vector2D(comp.ClientArea.X, comp.ClientArea.Y);
+                        dragOffset = (new Vector2(e.Position.X, e.Position.Y)) -
+                                     new Vector2(comp.ClientArea.X, comp.ClientArea.Y);
                         break;
                     }
                 }
@@ -262,7 +262,7 @@ namespace SS14.Client.Services.UserInterface
         /// <summary>
         ///  Handles MouseUp event. Returns true if a component accepted and handled the event.
         /// </summary>
-        public virtual bool MouseUp(MouseInputEventArgs e)
+		public virtual bool MouseUp(MouseButtonEventArgs e)
         {
             if (_console.IsVisible())
             {
@@ -299,7 +299,7 @@ namespace SS14.Client.Services.UserInterface
         /// <summary>
         ///  Handles MouseMove event. Sent to all visible components.
         /// </summary>
-        public virtual void MouseMove(MouseInputEventArgs e)
+		public virtual void MouseMove(MouseMoveEventArgs e)
         {
             MousePos = e.Position;
 
@@ -320,7 +320,7 @@ namespace SS14.Client.Services.UserInterface
         /// <summary>
         ///  Handles MouseWheelMove event. Sent to Focused component.  Returns true if component accepted and handled the event.
         /// </summary>
-        public virtual void MouseWheelMove(MouseInputEventArgs e)
+		public virtual void MouseWheelMove(MouseWheelEventArgs e)
         {
             if (_console.IsVisible())
             {
@@ -338,7 +338,7 @@ namespace SS14.Client.Services.UserInterface
         /// <summary>
         ///  Handles KeyDown event. Returns true if a component accepted and handled the event.
         /// </summary>
-        public virtual bool KeyDown(KeyboardInputEventArgs e)
+        public virtual bool KeyDown(KeyEventArgs e)
         {
             if ((e.Shift ? e.CharacterMapping.Shifted : e.CharacterMapping.Character) == _config.GetConsoleKey())
             {
@@ -512,4 +512,4 @@ namespace SS14.Client.Services.UserInterface
 
         #endregion
     }
-}
+} 

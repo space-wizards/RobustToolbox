@@ -12,8 +12,7 @@
   <ReferencePath>../bin</ReferencePath>
   <ReferencePath>../Third-Party</ReferencePath>
   <Reference name="BsDiffLib" path="../Third-Party"/>
-  <Reference name="Gorgon" path="../Third-Party"/>
-  <Reference name="GorgonFramework" path="../Third-Party"/>
+  <Reference name="sfmlnet-system-2" path="../Third-Party"/>
   <Reference name="Microsoft.CSharp"/>
   <Reference name="NetSerializer" path="../Third-Party"/>
   <Reference name="System"/>
@@ -102,13 +101,13 @@
     <File buildAction="Compile">Utility/RandomString.cs</File>
     <File buildAction="Compile">Utility/Range.cs</File>
     <File buildAction="Compile">Utility/unZipString.cs</File>
-    <File buildAction="Compile">Vector2.cs</File>
+    <File buildAction="Compile">Maths/Vector2.cs</File>
+    <File buildAction="Compile">Maths/Vector3.cs</File>
+    <File buildAction="Compile">Maths/Vector4.cs</File>
     <File buildAction="Compile">NetworkEnums.cs</File>
     <File buildAction="Compile">Properties/AssemblyInfo.cs</File>
     <File buildAction="Compile">ChatConfig.cs</File>
     <File buildAction="Compile">UIComponents.cs</File>
-    <File buildAction="Compile">Vector3.cs</File>
-    <File buildAction="Compile">Vector4.cs</File>
     <File buildAction="Compile">VectorEventArgs.cs</File>
     <File buildAction="EmbeddedResource">Utility/BitStream.resx</File>
   </Files>

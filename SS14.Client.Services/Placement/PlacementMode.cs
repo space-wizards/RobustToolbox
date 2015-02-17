@@ -1,5 +1,5 @@
-﻿using GorgonLibrary;
-using GorgonLibrary.Graphics;
+﻿using SS14.Client.Graphics.CluwneLib.Sprite;
+using SS14.Shared.Maths;
 using SS14.Client.Interfaces.Map;
 
 namespace SS14.Client.Services.Placement
@@ -9,9 +9,9 @@ namespace SS14.Client.Services.Placement
         public readonly PlacementManager pManager;
 
         public ITile currentTile;
-        public Vector2D mouseScreen;
-        public Vector2D mouseWorld;
-        public Sprite spriteToDraw;
+        public Vector2 mouseScreen;
+        public Vector2 mouseWorld;
+		public CluwneSprite spriteToDraw;
 
         public PlacementMode(PlacementManager pMan)
         {
@@ -23,7 +23,7 @@ namespace SS14.Client.Services.Placement
             get { return GetType().Name; }
         }
 
-        public virtual bool Update(Vector2D mouseScreen, IMapManager currentMap) //Return valid position?
+        public virtual bool Update(Vector2 mouseScreen, IMapManager currentMap) //Return valid position?
         {
             return false;
         }
@@ -32,9 +32,9 @@ namespace SS14.Client.Services.Placement
         {
         }
 
-        public Sprite GetDirectionalSprite(Sprite baseSprite)
+		public CluwneSprite GetDirectionalSprite(CluwneSprite baseSprite)
         {
-            Sprite spriteToUse = baseSprite;
+			CluwneSprite spriteToUse = baseSprite;
 
             if (baseSprite == null) return null;
 

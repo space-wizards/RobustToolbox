@@ -44,7 +44,6 @@ namespace SS14.Client.Services.State.States
 
         //UI Vars
 
-        public bool BlendLightMap = true;
         public DateTime LastUpdate;
         public DateTime Now;
         public int ScreenHeightTiles = 12;
@@ -57,10 +56,6 @@ namespace SS14.Client.Services.State.States
         private Batch _floorBatch;
         private Batch _gasBatch;
         private GaussianBlur _gaussianBlur;
-        private RenderImage _lightTarget;
-        private RenderImage _lightTargetIntermediate;
-        private Sprite _lightTargetIntermediateSprite;
-        private Sprite _lightTargetSprite;
         private float _realScreenHeightTiles;
         private float _realScreenWidthTiles;
         private bool _recalculateScene = true;
@@ -97,30 +92,35 @@ namespace SS14.Client.Services.State.States
 
         #region Lighting
         // TODO Rewrite shader code and lighting shaders to re-enable this shit
-       /* private RenderImage _composedSceneTarget;
-        private RenderImage _overlayTarget;
-        private RenderImage _sceneTarget;
-        private RenderImage _tilesTarget;
-        private bool bPlayerVision = true;
-        private bool bFullVision = false;
-        private FXShader finalBlendShader;
-        private LightArea lightArea1024;
-        private LightArea lightArea128;
-        private LightArea lightArea256;
-        private LightArea lightArea512;
-        private FXShader lightBlendShader;
-        private FXShader lightMapShader;
-        private RenderImage playerOcclusionTarget;
-        private ILight playerVision;
-        private RenderImage _occluderDebugTarget;
+        /* private RenderImage _composedSceneTarget;
+         private RenderImage _overlayTarget;
+         private RenderImage _sceneTarget;
+         private RenderImage _tilesTarget;
+         private bool bPlayerVision = true;
+         private bool bFullVision = false;
+         private FXShader finalBlendShader;
+         private LightArea lightArea1024;
+         private LightArea lightArea128;
+         private LightArea lightArea256;
+         private LightArea lightArea512;
+         private FXShader lightBlendShader;
+         private FXShader lightMapShader;
+         private RenderImage playerOcclusionTarget;
+         private ILight playerVision;
+         private RenderImage _occluderDebugTarget;
+         private RenderImage _lightTarget;
+         private RenderImage _lightTargetIntermediate;
+         private Sprite _lightTargetIntermediateSprite;
+         private Sprite _lightTargetSprite;
+        public bool BlendLightMap = true;
 
-        private QuadRenderer quadRenderer;
-        private RenderImage screenShadows;
-        private RenderImage shadowBlendIntermediate;
-        private RenderImage shadowIntermediate;
-        private ShadowMapResolver shadowMapResolver;
-        private bool debugWallOccluders = false;
-        private bool debugHitboxes = false;*/
+         private QuadRenderer quadRenderer;
+         private RenderImage screenShadows;
+         private RenderImage shadowBlendIntermediate;
+         private RenderImage shadowIntermediate;
+         private ShadowMapResolver shadowMapResolver;
+         private bool debugWallOccluders = false;
+         private bool debugHitboxes = false;*/
 
         #endregion
 

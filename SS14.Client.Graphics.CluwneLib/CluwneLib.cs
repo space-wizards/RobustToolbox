@@ -101,7 +101,7 @@ namespace SS14.Client.Graphics.CluwneLib
             
         }
 
-        public static void SetMode(Form mainWindow, int displayWidth, int displayHeight, object bufferRgb888, bool b, bool b1, bool b2, int refresh)
+        public static void SetMode(Form mainWindow, int displayWidth, int displayHeight, bool b, bool b1, bool b2, int refresh)
         {
             throw new NotImplementedException(); //TOOD: Change bufferRgb888 to correct class.
         }

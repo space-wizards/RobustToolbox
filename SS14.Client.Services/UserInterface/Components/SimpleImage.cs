@@ -35,9 +35,9 @@ namespace SS14.Client.Services.UserInterface.Components
             set { drawingSprite.Color = value; }
         }
 
-        public BlendingModes BlendingMode
+        public BlendingMode BlendingMode
         {
-            get { return drawingSprite != null ? drawingSprite.BlendingMode : BlendingModes.None; }
+            get { return drawingSprite != null ? drawingSprite.BlendingMode : BlendingMode.None; }
             set { drawingSprite.BlendingMode = value; }
         }
 

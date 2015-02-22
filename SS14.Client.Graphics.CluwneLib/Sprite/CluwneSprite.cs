@@ -12,6 +12,7 @@ namespace SS14.Client.Graphics.CluwneLib.Sprite
     {
         private Drawing.RectangleF _AABB;
         private RenderTarget _target;
+        private BlendingMode _blendingMode = BlendingMode.None;
 
         public string Name;
 
@@ -24,15 +25,18 @@ namespace SS14.Client.Graphics.CluwneLib.Sprite
             _target = target;
         }
 
-        public CluwneSprite(Texture texture) : base(texture)
+        public CluwneSprite(Texture texture)
+            : base(texture)
         {
         }
 
-        public CluwneSprite(Texture texture, IntRect rectangle) : base(texture, rectangle)
+        public CluwneSprite(Texture texture, IntRect rectangle)
+            : base(texture, rectangle)
         {
         }
 
-        public CluwneSprite(BaseSprite copy) : base(copy)
+        public CluwneSprite(BaseSprite copy)
+            : base(copy)
         {
         }
 
@@ -83,6 +87,12 @@ namespace SS14.Client.Graphics.CluwneLib.Sprite
         public float Height
         {
             get { return GetLocalBounds().Height; }
+        }
+
+        public BlendingMode BlendingMode
+        {
+            get { return _blendingMode; }
+            set { _blendingMode = value; }
         }
     }
 }

@@ -2,8 +2,9 @@
 using SS14.Client.Graphics.CluwneLib.Sprite;
 using SS14.Shared.IoC;
 using System;
-using System.Drawing;
+using Color = SFML.Graphics.Color;
 using SFML.Window;
+using SFML.Graphics;
 
 namespace SS14.Client.Services.UserInterface.Components
 {
@@ -31,11 +32,11 @@ namespace SS14.Client.Services.UserInterface.Components
 
 		public Color Color { get; set; }
 
-		public BlendingMode BlendingMode
+		public BlendMode BlendingMode
 		{
 			get
 			{
-				return _buttonNormal != null ? _buttonNormal.BlendingMode : BlendingMode.None;
+				return _buttonNormal != null ? _buttonNormal.BlendingMode : BlendMode.None;
 			}
 			set
 			{

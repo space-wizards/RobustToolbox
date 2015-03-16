@@ -14,6 +14,9 @@ using System.Reflection;
 using System.Text.RegularExpressions;
 using SS14.Client.Graphics.CluwneLib.Shader;
 using SS14.Client.Graphics.CluwneLib.Sprite;
+using Image = SFML.Graphics.Image;
+using Font = SFML.Graphics.Font;
+using SFML.Graphics;
 
 namespace SS14.Client.Services.Resources
 {

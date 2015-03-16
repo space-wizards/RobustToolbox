@@ -1,6 +1,8 @@
 ﻿using SS14.Client.Interfaces.Resource;
 using SS14.Client.Interfaces.Utility;
 using SFML.Graphics;
+using SS14.Shared.Maths;
+using SS14.Shared;
 using SS14.Shared.IoC;
 using SS14.Shared.Utility;
 using SS14.Client.Graphics.CluwneLib.Render;
@@ -9,17 +11,20 @@ namespace SS14.Client.Services.Player.PostProcessing
 {
     public class AcidPostProcessingEffect : PostProcessingEffect
     {
-        private readonly ShaderTechnique _shader;
+        private readonly Shader _shader;
         private readonly RenderImage copyImage;
         private Image _noiseBase;
+        private SFML.Window.Window Window;
+        
+
 
         public AcidPostProcessingEffect(float duration)
             : base(duration)
         {
-            _shader = IoCManager.Resolve<IResourceManager>().GetShader("acid2").Techniques["PerlinNoise"];
-            copyImage = new RenderImage("perlinnoiseimage" + RandomString.Generate(10),
-                                        Gorgon.CurrentClippingViewport.Width, Gorgon.CurrentClippingViewport.Height,
-                                        ImageBufferFormats.BufferRGB888A8);
+
+
+            _shader = IoCManager.Resolve<IResourceManager>().GetShader("acid2");
+            copyImage = new RenderImage( Window.Size.X , Window.Size.Y);
         }
 
         public override void ProcessImage(RenderImage image)
@@ -30,21 +35,26 @@ namespace SS14.Client.Services.Player.PostProcessing
             var shadowColor = new Vector4(1, 0, 0, 1);
             var midtoneColor = new Vector4(0, 0, 1, 1);
             var highlightColor = new Vector4(0, 1, 0, 1);
+
             Gorgon.CurrentRenderTarget = copyImage;
             Gorgon.CurrentShader = _shader;
-            _shader.Parameters["xTime"].SetValue(_duration/20);
-            _shader.Parameters["xOvercast"].SetValue(1.0f);
-            _shader.Parameters["NoiseTexture"].SetValue(_noiseBase);
-            _shader.Parameters["SceneTexture"].SetValue(image);
+
+            _shader.setParameter();
+            _shader.setParameter["xOvercast"].SetValue(1.0f);
+            _shader.setParameter["NoiseTexture"].SetValue(_noiseBase);
+            _shader.setParameter["SceneTexture"].SetValue(image);
             //_shader.Parameters["shadowColor"].SetValue(shadowColor);
             //_shader.Parameters["midtoneColor"].SetValue(midtoneColor);
             //_shader.Parameters["highlightColor"].SetValue(highlightColor);
 
-            _noiseBase.Blit(0, 0, image.Width, image.Height);
+            _noiseBase.Blit(0, 0,copyImage.Size.X, copyImage.Size.y);
             Gorgon.CurrentShader = null;
             Gorgon.CurrentRenderTarget = null;
 
-            image.CopyFromImage(copyImage.Image);
+
+
+
+            CopyFromImage(copyImage.Image);
         }
 
         private void GenerateNoise(int resolution)

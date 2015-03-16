@@ -77,7 +77,7 @@ namespace SS14.Client.Services.State.States
             : base(managers)
         {
             _background = ResourceManager.GetSprite("mainbg");
-            _background.Smoothing = Smoothing.Smooth;
+           //TODO _background.Smoothing = Smoothing.Smooth;
 
             _imgMainBg = new SimpleImage
                           {
@@ -411,10 +411,10 @@ namespace SS14.Client.Services.State.States
 
         public void Update(FrameEventArgs e)
         {
-			if (Gorgon.Screen.Width != _prevScreenWidth || Gorgon.Screen.Height != _prevScreenHeight)
+            if (VideoMode.DesktopMode.Width != _prevScreenWidth || VideoMode.DesktopMode.Height != _prevScreenHeight)
 			{
-				_prevScreenHeight = Gorgon.Screen.Height;
-				_prevScreenWidth = Gorgon.Screen.Width;
+                _prevScreenHeight = (int)VideoMode.DesktopMode.Height;
+                _prevScreenWidth = (int)VideoMode.DesktopMode.Width;
 				UpdateGUIPosition();
 			}
 
@@ -430,8 +430,8 @@ namespace SS14.Client.Services.State.States
 		public void UpdateGUIPosition()
 		{
 			_imgMainBg.Position = new Point(
-				(int)((Gorgon.Screen.Width / 2f) - (_imgMainBg.ClientArea.Width / 2f)),
-				(int)((Gorgon.Screen.Height / 2f) - (_imgMainBg.ClientArea.Height / 2f)));
+                (int)((VideoMode.DesktopMode.Width / 2f) - (_imgMainBg.ClientArea.Width / 2f)) ,
+                (int)((VideoMode.DesktopMode.Height / 2f) - (_imgMainBg.ClientArea.Height / 2f)));
 			_imgMainBg.Update(0);
 
 			_recStatus = new RectangleF(_imgMainBg.Position.X + 10, _imgMainBg.Position.Y + 63, 785, 21);
@@ -491,10 +491,10 @@ namespace SS14.Client.Services.State.States
 
         #region IState Members
 
-        public void GorgonRender(FrameEventArgs e)
+        public void Render(FrameEventArgs e)
         {
-            _background.Draw(new Rectangle(0, 0, Gorgon.CurrentClippingViewport.Width,
-                                           Gorgon.CurrentClippingViewport.Height));
+            //TODO .Draw
+           // _background.Draw(new Rectangle(0, 0,(int)VideoMode.DesktopMode.Width,(int)VideoMode.DesktopMode.Height));
             UserInterfaceManager.Render();
         }
 
@@ -506,34 +506,43 @@ namespace SS14.Client.Services.State.States
 
         #region Input
 
-        public void KeyDown(KeyEventArgs e)
+        public void KeyDown ( KeyEventArgs e )
         {
             UserInterfaceManager.KeyDown(e);
         }
 
-        public void KeyUp(KeyEventArgs e)
+        public void KeyUp ( KeyEventArgs e )
         {
         }
 
-		public void MouseUp(MouseButtonEventArgs e)
+        public void MouseUp ( MouseButtonEventArgs e )
         {
             UserInterfaceManager.MouseUp(e);
         }
 
-		public void MouseDown(MouseButtonEventArgs e)
+        public void MouseDown ( MouseButtonEventArgs e )
         {
             UserInterfaceManager.MouseDown(e);
         }
 
-		public void MouseMove(MouseMoveEventArgs e)
+        public void MouseMoved ( MouseMoveEventArgs e )
+        {
+
+        }
+        public void MousePressed ( MouseButtonEventArgs e )
+        {
+            UserInterfaceManager.MouseDown(e);
+        }
+        public void MouseMove ( MouseMoveEventArgs e )
         {
             UserInterfaceManager.MouseMove(e);
         }
 
-		public void MouseWheelMove(MouseWheelEventArgs e)
+        public void MouseWheelMove ( MouseWheelEventArgs e )
         {
             UserInterfaceManager.MouseWheelMove(e);
         }
+
 
         #endregion
     }

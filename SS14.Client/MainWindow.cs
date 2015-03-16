@@ -17,6 +17,8 @@ using SS14.Client.Graphics.CluwneLib.Event;
 using SS14.Client.Graphics.CluwneLib.Render;
 using Color = SFML.Graphics.Color;
 using KeyArgs = SFML.Window.KeyEventArgs;
+using SS14.Client.Graphics.CluwneLib.Sprite;
+
 
 namespace SS14.Client
 {
@@ -85,8 +87,8 @@ namespace SS14.Client
 
         private void MainWindowResizeEnd(object sender, EventArgs e)
         {
-            _input.Mouse.SetPositionRange(0, 0, CluwneLib.CurrentClippingViewport.Width,
-                                          CluwneLib.CurrentClippingViewport.Height);
+          
+
             _stateManager.CurrentState.FormResize();
         }
 
@@ -209,8 +211,8 @@ namespace SS14.Client
 
         private void SetupInput()
         {
-            Cursor.Hide();
 
+            //Cursor.Hide();
             CluwneLib.Screen.Resized += MainWindowResizeEnd;
 
             CluwneLib.Screen.KeyPressed  += KeyDownEvent;

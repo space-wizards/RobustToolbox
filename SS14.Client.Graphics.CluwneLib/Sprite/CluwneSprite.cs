@@ -2,9 +2,11 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using Color = System.Drawing.Color;
 using SFML.Graphics;
 using Drawing = System.Drawing;
 using BaseSprite = SFML.Graphics.Sprite;
+using SS14.Client.Graphics.CluwneLib.Sprite;
 
 namespace SS14.Client.Graphics.CluwneLib.Sprite
 {
@@ -12,7 +14,8 @@ namespace SS14.Client.Graphics.CluwneLib.Sprite
     {
         private Drawing.RectangleF _AABB;
         private RenderTarget _target;
-        private BlendingMode _blendingMode = BlendingMode.None;
+
+        private BlendMode _blendingMode = BlendMode.None;
 
         public string Name;
 
@@ -31,7 +34,7 @@ namespace SS14.Client.Graphics.CluwneLib.Sprite
         }
 
         public CluwneSprite(Texture texture, IntRect rectangle)
-            : base(texture, rectangle)
+            : base(texture, rectangle) 
         {
         }
 
@@ -76,7 +79,7 @@ namespace SS14.Client.Graphics.CluwneLib.Sprite
 
         public void Draw()
         {
-            throw new NotImplementedException();
+          
         }
 
         public float Width
@@ -89,10 +92,11 @@ namespace SS14.Client.Graphics.CluwneLib.Sprite
             get { return GetLocalBounds().Height; }
         }
 
-        public BlendingMode BlendingMode
+        
+        public BlendMode BlendingMode
         {
             get { return _blendingMode; }
-            set { _blendingMode = value; }
+          set { _blendingMode = value; }
         }
     }
 }

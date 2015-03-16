@@ -2,10 +2,12 @@
 using GorgonLibrary.Graphics;
 using SS14.Client.GameObjects;
 using SS14.Client.Services.Resources;
+using SS14.Shared.Maths;
 using System;
 using System.ComponentModel;
 using System.Drawing;
 using System.Windows.Forms;
+
 
 namespace SS14.Tools.ParticleEditor
 {

@@ -1,4 +1,6 @@
 ﻿using SS14.Client.Interfaces.Resource;
+using SS14.Client.Graphics.CluwneLib.Sprite;
+using SS14.Client.Graphics.CluwneLib;
 using System;
 using System.Drawing;
 using SFML.Window;
@@ -19,6 +21,8 @@ namespace SS14.Client.Services.UserInterface.Components
         public int FixedHeight = -1;
         public int FixedWidth = -1;
         public Color HighlightColor = Color.Gray;
+        public TextSprite Text;
+
 
         public Label(string text, string font, IResourceManager resourceManager)
         {
@@ -29,7 +33,6 @@ namespace SS14.Client.Services.UserInterface.Components
             Update(0);
         }
 
-        public TextSprite Text { get; private set; }
 
         public Color TextColor 
         {
@@ -50,10 +53,11 @@ namespace SS14.Client.Services.UserInterface.Components
                                                 FixedHeight == -1 ? (int) Text.Height : FixedHeight));
         }
 
+        // TODO Gorgon fix this
         public override void Render()
         {
             if (DrawBackground)
-                Gorgon.CurrentRenderTarget.FilledRectangle(ClientArea.X, ClientArea.Y, ClientArea.Width,
+              Gorgon.CurrentRenderTarget.FilledRectangle(ClientArea.X, ClientArea.Y, ClientArea.Width,
                                                            ClientArea.Height, BackgroundColor);
             if (DrawTextHighlight)
                 Gorgon.CurrentRenderTarget.FilledRectangle(Text.Position.X + 1, Text.Position.Y + 4, Text.Width,
@@ -74,7 +78,7 @@ namespace SS14.Client.Services.UserInterface.Components
 
 		public override bool MouseDown(MouseButtonEventArgs e)
         {
-            if (ClientArea.Contains(new Point((int) e.Position.X, (int) e.Position.Y)))
+            if (ClientArea.Contains(new Point( e.X , e.Y)))
             {
                 if (Clicked != null) Clicked(this, e);
                 return true;

@@ -3,8 +3,9 @@ using SS14.Shared.Maths;
 using SS14.Client.Interfaces.Resource;
 using SS14.Shared.IoC;
 using SFML.Window;
+using SFML.Graphics;
 using System;
-using System.Drawing;
+using Color = System.Drawing.Color;
 
 
 namespace SS14.Client.Services.UserInterface.Components
@@ -35,7 +36,7 @@ namespace SS14.Client.Services.UserInterface.Components
             set { drawingSprite.Color = value; }
         }
 
-        public BlendingMode BlendingMode
+        public BlendMode BlendingMode
         {
             get { return drawingSprite != null ? drawingSprite.BlendingMode : BlendingMode.None; }
             set { drawingSprite.BlendingMode = value; }

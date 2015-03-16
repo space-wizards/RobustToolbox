@@ -3,6 +3,7 @@ using SS14.Client.Interfaces.Resource;
 using System;
 using System.Collections.Generic;
 using System.Drawing;
+using SS14.Client.Graphics.CluwneLib.Sprite;
 
 namespace SS14.Client.Services.Network
 {
@@ -12,7 +13,7 @@ namespace SS14.Client.Services.Network
         private readonly List<NetworkStatisticsDataPoint> _dataPoints;
         private readonly INetworkManager _networkManager;
         private readonly IResourceManager _resourceManager;
-        private readonly TextSprite _textSprite;
+        private TextSprite _textSprite;
         private bool _enabled;
         private DateTime _lastDataPointTime;
         private int _lastRecievedBytes;

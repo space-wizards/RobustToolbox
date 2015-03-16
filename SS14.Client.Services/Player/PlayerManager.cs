@@ -85,11 +85,11 @@ namespace SS14.Client.Services.Player
             ControlledEntity = null;
         }
 
-        public void KeyDown(KeyboardKeys key)
+        public void KeyDown(Keyboard.Key key)
         {
         }
 
-        public void KeyUp(KeyboardKeys key)
+        public void KeyUp(Keyboard.Key key)
         {
         }
 

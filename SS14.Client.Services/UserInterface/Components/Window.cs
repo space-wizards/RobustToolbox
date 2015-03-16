@@ -3,6 +3,13 @@ using SS14.Client.Interfaces.Resource;
 using System;
 using System.Drawing;
 using SFML.Window;
+using SS14.Client.Graphics.CluwneLib;
+using VertexFieldContext = SS14.Client.Graphics.CluwneLib.Vertex.VertexEnums.VertexFieldContext;
+using VertexFieldType = SS14.Client.Graphics.CluwneLib.Vertex.VertexEnums.VertexFieldType;
+using SS14.Client.Graphics.CluwneLib.Vertex;
+
+
+
 
 namespace SS14.Client.Services.UserInterface.Components
 {
@@ -64,12 +71,13 @@ namespace SS14.Client.Services.UserInterface.Components
             closeButton.Update(frameTime);
         }
 
-        public override void Render()
+        public override void Render() // Renders the main window
         {
             if (disposing || !IsVisible()) return;
             gradient.Render();
-            Gorgon.CurrentRenderTarget.Rectangle(titleArea.X, titleArea.Y, titleArea.Width, titleArea.Height,
-                                                 Color.Black);
+            
+            //TODO RenderTargetRectangle
+           // CluwneLib.CurrentRenderTarget.Rectangle(titleArea.X, titleArea.Y, titleArea.Width, titleArea.Height, Color.Black);
             base.Render();
             title.Render();
             if (closeButtonVisible) closeButton.Render();
@@ -89,10 +97,10 @@ namespace SS14.Client.Services.UserInterface.Components
 
             if (base.MouseDown(e)) return true;
 
-            if (titleArea.Contains((int) e.Position.X, (int) e.Position.Y))
+            if (titleArea.Contains((int) e.X, (int) e.Y))
             {
-                draggingOffset.X = (int) e.Position.X - Position.X;
-                draggingOffset.Y = (int) e.Position.Y - Position.Y;
+                draggingOffset.X = (int) e.X - Position.X;
+                draggingOffset.Y = (int) e.Y - Position.Y;
                 dragging = true;
                 return true;
             }
@@ -114,8 +122,8 @@ namespace SS14.Client.Services.UserInterface.Components
             if (disposing || !IsVisible()) return;
             if (dragging)
             {
-                Position = new Point((int) e.Position.X - (int) draggingOffset.X,
-                                     (int) e.Position.Y - (int) draggingOffset.Y);
+                Position = new Point((int) e.X - (int) draggingOffset.X,
+                                     (int) e.Y - (int) draggingOffset.Y);
             }
             base.MouseMove(e);
 
@@ -176,9 +184,9 @@ namespace SS14.Client.Services.UserInterface.Components
 
         public override void Render()
         {
-            Gorgon.CurrentRenderTarget.FilledRectangle(ClientArea.X, ClientArea.Y, ClientArea.Width, ClientArea.Height,
-                                                       Color.White); //Not sure why this is needed.
-            Gorgon.CurrentRenderTarget.Draw(box);
+            //TODO Window Render
+            //CluwneLib.CurrentRenderTarget.FilledRectangle(ClientArea.X, ClientArea.Y, ClientArea.Width, ClientArea.Height, Color.White); 
+           // CluwneLib.CurrentRenderTarget.Draw(box);
         }
     }
 }

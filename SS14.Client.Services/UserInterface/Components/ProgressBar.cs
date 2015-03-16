@@ -2,6 +2,7 @@
 using System;
 using System.Drawing;
 using SFML.Window;
+using SS14.Client.Graphics.CluwneLib.Sprite;
 
 namespace SS14.Client.Services.UserInterface.Components
 {

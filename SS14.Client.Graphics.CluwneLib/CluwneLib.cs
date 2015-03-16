@@ -74,6 +74,7 @@ namespace SS14.Client.Graphics.CluwneLib
         public static TimingData FrameStats { get; set; }
 
         public static bool IsInitialized { get; set; }
+
         public static RenderTarget CurrentRenderTarget 
         {
             get { return _currentTarget[0]; }
@@ -87,7 +88,7 @@ namespace SS14.Client.Graphics.CluwneLib
 
         private static void SetAdditionalRenderTarget(int i, RenderTarget value)
         {
-            throw new NotImplementedException();
+           _currentTarget[i] = value;
         }
 
         public static RenderTarget GetAdditionalRenderTarget(int index)

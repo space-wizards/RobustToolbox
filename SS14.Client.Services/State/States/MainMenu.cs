@@ -1,10 +1,11 @@
-﻿using SS14.Client.Graphics.CluwneLib.Render;
-using SS14.Client.Graphics.CluwneLib.Sprite;
-using SS14.Client.Graphics.CluwneLib.Event;
-using SFML.Window;
+﻿using SFML.Window;
 using Lidgren.Network;
 using SS14.Client.Interfaces.State;
 using SS14.Client.Services.UserInterface.Components;
+using SS14.Client.Graphics.CluwneLib.Render;
+using SS14.Client.Graphics.CluwneLib.Sprite;
+using SS14.Client.Graphics.CluwneLib.Event;
+using SS14.Shared.Maths;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
@@ -41,7 +42,7 @@ namespace SS14.Client.Services.State.States
             : base(managers)
         {
             _background = ResourceManager.GetSprite("mainbg_filler");
-            _background.Smoothing = Smoothing.Smooth;
+          //  _background.Smoothing = Smoothing.Smooth;
 
             _btnConnect = new ImageButton
                                {
@@ -72,13 +73,13 @@ namespace SS14.Client.Services.State.States
 
             _lblVersion = new Label("v. " + fvi.FileVersion, "CALIBRI", ResourceManager);
             _lblVersion.Text.Color = Color.WhiteSmoke;
-            _lblVersion.Position = new Point(Gorgon.Screen.Width - _lblVersion.ClientArea.Width - 3,
-                                             Gorgon.Screen.Height - _lblVersion.ClientArea.Height - 3);
+            _lblVersion.Position = new Point((int)VideoMode.DesktopMode.Width - _lblVersion.ClientArea.Width - 3 ,
+                                             (int)VideoMode.DesktopMode.Height - _lblVersion.ClientArea.Height - 3);
 
             _imgTitle = new SimpleImage
                               {
                                   Sprite = "SpaceStationLogoColor",
-                                  Position = new Point(Gorgon.Screen.Width - 550, 100)
+                                  Position = new Point((int)VideoMode.DesktopMode.Width - 550, 100)
                               };
 
 			_lblVersion.Update(0);
@@ -95,9 +96,9 @@ namespace SS14.Client.Services.State.States
 
         #region IState Members
 
-        public void GorgonRender(FrameEventArgs e)
+        public void Render(FrameEventArgs e)
         {
-            _background.Draw(new Rectangle(0, 0, Gorgon.Screen.Width, Gorgon.Screen.Height));
+           // _background.Draw(new Rectangle(0, 0,(int) VideoMode.DesktopMode.Width, (int) VideoMode.DesktopMode.Height));
         }
 
         public void FormResize()
@@ -107,32 +108,39 @@ namespace SS14.Client.Services.State.States
         #endregion
 
         #region Input
-
-		public void KeyDown(KeyEventArgs e)
+        public void KeyDown ( KeyEventArgs e )
         {
             UserInterfaceManager.KeyDown(e);
         }
 
-		public void KeyUp(KeyEventArgs e)
+        public void KeyUp ( KeyEventArgs e )
         {
         }
 
-		public void MouseUp(MouseButtonEventArgs e)
+        public void MouseUp ( MouseButtonEventArgs e )
         {
             UserInterfaceManager.MouseUp(e);
         }
 
-		public void MouseDown(MouseButtonEventArgs e)
+        public void MouseDown ( MouseButtonEventArgs e )
         {
             UserInterfaceManager.MouseDown(e);
         }
 
-		public void MouseMove(MouseMoveEventArgs e)
+        public void MouseMoved ( MouseMoveEventArgs e )
+        {
+
+        }
+        public void MousePressed ( MouseButtonEventArgs e )
+        {
+            UserInterfaceManager.MouseDown(e);
+        }
+        public void MouseMove ( MouseMoveEventArgs e )
         {
             UserInterfaceManager.MouseMove(e);
         }
 
-		public void MouseWheelMove(MouseWheelEventArgs e)
+        public void MouseWheelMove ( MouseWheelEventArgs e )
         {
             UserInterfaceManager.MouseWheelMove(e);
         }

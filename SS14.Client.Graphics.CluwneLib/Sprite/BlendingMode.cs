@@ -3,11 +3,12 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using SFML.Graphics;
+
 namespace SS14.Client.Graphics.CluwneLib.Sprite
 {
     public static class BMExtensions
     {
-        public static BlendMode toBlendMode(this BlendingMode B)
+        public static BlendMode toBlendMode ( this BlendingMode B )
         {
             switch (B)
             {
@@ -25,9 +26,9 @@ namespace SS14.Client.Graphics.CluwneLib.Sprite
     }
     public enum BlendingMode
     {
-        None,
-        Add,
-        Alpha,
+        None ,
+        Add ,
+        Alpha ,
         Multiply
     }
 }

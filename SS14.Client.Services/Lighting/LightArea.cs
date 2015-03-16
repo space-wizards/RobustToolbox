@@ -6,17 +6,19 @@ using SS14.Client.Interfaces.Resource;
 using SS14.Client.Interfaces.Utility;
 using SS14.Shared.IoC;
 using System.Drawing;
+using SS14.Client.Graphics.CluwneLib;
 
 namespace SS14.Client.Services.Lighting
 {
     public class LightArea : ILightArea
     {
-        public LightArea(ShadowmapSize size)
+        public LightArea(int size)
         {
             int baseSize = 2 << (int) size;
             LightAreaSize = new Vector2(baseSize, baseSize);
-            renderTarget = new RenderImage("lightTest" + baseSize + IoCManager.Resolve<IRand>().Next(100000, 999999),
-                                           baseSize, baseSize, ImageBufferFormats.BufferRGB888A8);
+            renderTarget = new RenderImage((uint)baseSize, (uint)baseSize);
+
+
             Mask = IoCManager.Resolve<IResourceManager>().GetSprite("whitemask");
         }
 
@@ -66,13 +68,14 @@ namespace SS14.Client.Services.Lighting
 
         public void BeginDrawingShadowCasters()
         {
-            Gorgon.CurrentRenderTarget = renderTarget;
-            Gorgon.CurrentRenderTarget.Clear(Color.FromArgb(0, 0, 0, 0));
+           CluwneLib.CurrentRenderTarget = renderTarget;
+            //TODO CluwneLib.Clear
+            //CluwneLib.CurrentRenderTarget.Clear(Color.FromArgb(0, 0, 0, 0));
         }
 
         public void EndDrawingShadowCasters()
         {
-            Gorgon.CurrentRenderTarget = null;
+            CluwneLib.CurrentRenderTarget = null;
         }
 
         public void SetMask(string mask)
@@ -85,6 +88,20 @@ namespace SS14.Client.Services.Lighting
         private Vector4 maskPropsVec(bool rot, bool flipx, bool flipy)
         {
             return new Vector4(rot ? 1 : 0, flipx ? 1 : 0, flipy ? 1 : 0, 0);
+        }
+
+           
+        //TODO Mask
+        SFML.Graphics.Sprite ILightArea.Mask
+        {
+            get
+            {
+                throw new System.NotImplementedException();
+            }
+            set
+            {
+                throw new System.NotImplementedException();
+            }
         }
     }
 }

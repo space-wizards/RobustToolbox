@@ -11,6 +11,9 @@ using System.Collections.Generic;
 using System.Drawing;
 using SS14.Client.Graphics.CluwneLib.Sprite;
 using SS14.Client.Graphics.CluwneLib;
+using SFML.Graphics;
+using SFML.System;
+using Color = System.Drawing.Color;
 
 namespace SS14.Client.Services.State.States
 {
@@ -54,7 +57,7 @@ namespace SS14.Client.Services.State.States
             _lobbyText = new TextSprite("lobbyText", "", ResourceManager.GetFont("CALIBRI"))
                              {
                                  Color = Color.Black,
-                                 ShadowColor = Color.DimGray,
+                                 ShadowColor = Color.Transparent,
                                  Shadowed = true,
                                  //TODO CluwneSprite ShadowOffset
                                  // ShadowOffset = new Vector2(1, 1)
@@ -76,7 +79,7 @@ namespace SS14.Client.Services.State.States
             jobListMsg.Write((byte) NetMessage.JobList); //Request Joblist.
             NetworkManager.SendMessage(jobListMsg, NetDeliveryMethod.ReliableOrdered);
 
-            var joinButton = new Button("Join Game", ResourceManager) {mouseOverColor = Color.LightSteelBlue};
+            var joinButton = new Button("Join Game", ResourceManager) {mouseOverColor = System.Drawing.Color.LightSteelBlue};
             joinButton.Position = new Point(605 - joinButton.ClientArea.Width - 5,
                                             200 - joinButton.ClientArea.Height - 5);
             joinButton.Clicked += JoinButtonClicked;
@@ -95,12 +98,17 @@ namespace SS14.Client.Services.State.States
 
         public void Render(FrameEventArgs e)
         {
-            CluwneLib.CurrentRenderTarget.Clear();
-            CluwneLib.CurrentRenderTarget.FilledRectangle(5 , 5 , 600 , 200 , Color.SlateGray);
-            CluwneLib.CurrentRenderTarget.FilledRectangle(625 , 5 , CluwneLib.CurrentRenderTarget.Width - 625 - 5 , 
-                                                          CluwneLib.CurrentRenderTarget.Height - 5 - 6, Color.SlateGray);
+            //public Vertex(Vector2f position, Color color, Vector2f texCoords);
+            RectangleShape test = new RectangleShape(new Vector2f(200, 200));
 
-             CluwneLib.CurrentRenderTarget.FilledRectangle(5, 220, 600, _lobbyChat.Position.Y - 250 - 5, Color.SlateGray);
+
+            TextSprite test2 = new TextSprite("this",1,1,1,1);
+
+            CluwneLib.CurrentRenderTarget.Clear();
+            CluwneLib.CurrentRenderTarget.Draw(test);
+           // CluwneLib.CurrentRenderTarget.Draw(625 , 5 , CluwneLib.CurrentRenderTarget.Size.X - 625 - 5 , CluwneLib.CurrentRenderTarget.Size.Y- 5 - 6, Color.SlateGray);
+
+            // CluwneLib.CurrentRenderTarget.FilledRectangle(5, 220, 600, _lobbyChat.Position.Y - 250 - 5, Color.SlateGray);
 
             _lobbyText.Position = new Vector2(10, 10);
             _lobbyText.Text = "Server: " + _serverName;

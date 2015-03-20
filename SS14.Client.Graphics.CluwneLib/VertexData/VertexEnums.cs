@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 
-namespace SS14.Client.Graphics.CluwneLib.Vertex
+namespace SS14.Client.Graphics.CluwneLib.VertexData
 {
     public class VertexEnums
     {

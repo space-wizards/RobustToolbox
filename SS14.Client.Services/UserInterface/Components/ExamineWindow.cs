@@ -27,7 +27,7 @@ namespace SS14.Client.Services.UserInterface.Components
 
             if (reply.MessageType == ComponentMessageType.CurrentSprite)
             {
-                _entitySprite = (Sprite) reply.ParamsList[0];
+                _entitySprite = (CluwneSprite) reply.ParamsList[0];
                 _entityDescription.Position = new Point(10,
                                                         (int) _entitySprite.Height +
                                                         _entityDescription.ClientArea.Height + 10);

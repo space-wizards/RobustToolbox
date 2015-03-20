@@ -16,6 +16,7 @@ using SS14.Client.Graphics.CluwneLib.Shader;
 using SS14.Client.Graphics.CluwneLib.Sprite;
 using Image = SFML.Graphics.Image;
 using Font = SFML.Graphics.Font;
+using Color = SFML.Graphics.Color;
 using SFML.Graphics;
 
 namespace SS14.Client.Services.Resources
@@ -53,13 +54,13 @@ namespace SS14.Client.Services.Resources
 
             _stream = _assembly.GetManifestResourceStream("SS14.Client.Services._EmbeddedBaseResources.bluehigh.ttf");
             if (_stream != null)
-                _fonts.Add("base_font", Font.FromStream("base_font", _stream, (int)_stream.Length, 10));
+                _fonts.Add("base_font", new Font( _stream));
             _stream = null;
 
             _stream = _assembly.GetManifestResourceStream("SS14.Client.Services._EmbeddedBaseResources.noSprite.png");
             if (_stream != null)
             {
-                Image nospriteimage = Image.FromStream("nospriteimage", _stream, (int) _stream.Length);
+                Image nospriteimage = new Image( _stream);
                 _images.Add("nosprite", nospriteimage);
                 _sprites.Add("nosprite", new CluwneSprite("nosprite", nospriteimage));  
             }
@@ -123,12 +124,12 @@ namespace SS14.Client.Services.Resources
                             {
                                 Image loadedImg = LoadImageFrom(zipFile, texture);
                                 if (loadedImg == null) continue;
-                                else _images.Add(loadedImg.Name, loadedImg);
+                                else _images.Add(texture.Name, loadedImg);
                             }
                         }
                         break;
 
-                    case("tai/"):
+                    case("tai/"): // Tai? 
                         foreach (ZipEntry tai in current.Value)
                         {
                             if (Path.GetExtension(tai.Name).ToLowerInvariant() == ".tai")
@@ -147,7 +148,7 @@ namespace SS14.Client.Services.Resources
                             {
                                 Font loadedFont = LoadFontFrom(zipFile, font);
                                 if (loadedFont == null) continue;
-                                else _fonts.Add(loadedFont.Name, loadedFont);
+                                else _fonts.Add(font.Name, loadedFont);
                             }
                         }
                         break;
@@ -171,7 +172,7 @@ namespace SS14.Client.Services.Resources
                             {
                                 FXShader loadedShader = LoadShaderFrom(zipFile, shader);
                                 if (loadedShader == null) continue;
-                                else _shaders.Add(loadedShader.Name, loadedShader);
+                                else _shaders.Add(shader.Name, loadedShader);
                             }
                         }
                         break;
@@ -219,27 +220,36 @@ namespace SS14.Client.Services.Resources
         {
             string ResourceName = Path.GetFileNameWithoutExtension(imageEntry.Name).ToLowerInvariant();
 
-            if (ImageCache.Images.Contains(ResourceName))
-                return null;
-
             var byteBuffer = new byte[zipBufferSize];
 
-            Stream zipStream = zipFile.GetInputStream(imageEntry);
-            //Will throw exception is missing or wrong password. Handle this.
+            try
+            {
+                Stream zipStream = zipFile.GetInputStream(imageEntry);
+                var memStream = new MemoryStream();
 
-            var memStream = new MemoryStream();
+                StreamUtils.Copy(zipStream, memStream, byteBuffer);
+                memStream.Position = 0;
 
-            StreamUtils.Copy(zipStream, memStream, byteBuffer);
-            memStream.Position = 0;
+                Image loadedImg = new Image(memStream);
 
-            Image loadedImg = Image.FromStream(ResourceName, memStream, (int) memStream.Length);
+                memStream.Close();
+                zipStream.Close();
+                memStream.Dispose();
+                zipStream.Dispose();
+                return loadedImg;
 
-            memStream.Close();
-            zipStream.Close();
-            memStream.Dispose();
-            zipStream.Dispose();
+            }
+            catch(EndOfStreamException I)
+            {
 
-            return loadedImg;
+            }
+            catch (IOException I)
+            {
+                
+            }
+
+            return null;
+          
         }
 
         /// <summary>
@@ -249,8 +259,7 @@ namespace SS14.Client.Services.Resources
         {
             string ResourceName = Path.GetFileNameWithoutExtension(shaderEntry.Name).ToLowerInvariant();
 
-            if (ShaderCache.Shaders.Contains(ResourceName))
-                return null;
+          
 
             var byteBuffer = new byte[zipBufferSize];
 
@@ -262,8 +271,8 @@ namespace SS14.Client.Services.Resources
             StreamUtils.Copy(zipStream, memStream, byteBuffer);
             memStream.Position = 0;
 
-            FXShader loadedShader = FXShader.FromStream(ResourceName, memStream, ShaderCompileOptions.Debug,
-                                                        (int) memStream.Length, false);
+            FXShader loadedShader = new FXShader(ResourceName,ResourceName);
+            loadedShader.memStream = memStream;
 
             memStream.Close();
             zipStream.Close();
@@ -280,8 +289,7 @@ namespace SS14.Client.Services.Resources
         {
             string ResourceName = Path.GetFileNameWithoutExtension(fontEntry.Name).ToLowerInvariant();
 
-            if (FontCache.Fonts.Contains(ResourceName))
-                return null;
+           
 
             var byteBuffer = new byte[zipBufferSize];
 
@@ -293,10 +301,8 @@ namespace SS14.Client.Services.Resources
             StreamUtils.Copy(zipStream, memStream, byteBuffer);
             memStream.Position = 0;
 
-            Font loadedFont = Font.FromStream(ResourceName, memStream, (int) memStream.Length, 9, false);
+            Font loadedFont = new Font(memStream);
 
-            loadedFont.AntiAlias = true;
-            loadedFont.Refresh();
 
             memStream.Close();
             zipStream.Close();
@@ -402,10 +408,10 @@ namespace SS14.Client.Services.Resources
 
                 string imageName = splitResourceName[0].ToLowerInvariant();
 
-                if (!ImageCache.Images.Contains(splitResourceName[0]))
-                    continue; //Image for this sprite does not exist. Possibly set to defered later.
+             //   if (!ImageCache.Images.Contains(splitResourceName[0]))
+                  //  continue; //Image for this sprite does not exist. Possibly set to defered later.
 
-                Image atlasTex = ImageCache.Images[splitResourceName[0]];
+              //  Image atlasTex = ImageCache.Images[splitResourceName[0]];
                 //Grab the image for the sprite from the cache.
 
                 var info = new SpriteInfo();
@@ -431,14 +437,15 @@ namespace SS14.Client.Services.Resources
                     sizeY = float.Parse(splitLine[7], CultureInfo.InvariantCulture);
                 }
 
-                info.Offsets = new Vector2((float) Math.Round(offsetX*atlasTex.Width, 1),
-                                            (float) Math.Round(offsetY*atlasTex.Height, 1));
-                info.Size = new Vector2((float) Math.Round(sizeX*atlasTex.Width, 1),
-                                         (float) Math.Round(sizeY*atlasTex.Height, 1));
+            //    info.Offsets = new Vector2((float) Math.Round(offsetX*atlasTex.Width, 1),
+            //                                (float) Math.Round(offsetY*atlasTex.Height, 1));
+            //    info.Size = new Vector2((float) Math.Round(sizeX*atlasTex.Width, 1),
+            //                             (float) Math.Round(sizeY*atlasTex.Height, 1));
 
-                if (!_spriteInfos.ContainsKey(originalName)) _spriteInfos.Add(originalName, info);
+            //    if (!_spriteInfos.ContainsKey(originalName)) _spriteInfos.Add(originalName, info);
 
-                loadedSprites.Add(new CluwneSprite(originalName, atlasTex, info.Offsets, info.Size));
+            //    loadedSprites.Add(new CluwneSprite(originalName, atlasTex, info.Offsets, info.Size));
+            //
             }
 
             return loadedSprites;

@@ -2,13 +2,13 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
-using SS14.Client.Graphics.CluwneLib.Vertex;
-using VertexFieldContext = SS14.Client.Graphics.CluwneLib.Vertex.VertexEnums.VertexFieldContext;
-using VertexFieldType = SS14.Client.Graphics.CluwneLib.Vertex.VertexEnums.VertexFieldType;
+using SS14.Client.Graphics.CluwneLib.VertexData;
+using VertexFieldContext = SS14.Client.Graphics.CluwneLib.VertexData.VertexEnums.VertexFieldContext;
+using VertexFieldType = SS14.Client.Graphics.CluwneLib.VertexData.VertexEnums.VertexFieldType;
 
 
 
-namespace SS14.Client.Graphics.CluwneLib.Vertex
+namespace SS14.Client.Graphics.CluwneLib.VertexData
 {
     /// <summary>
     /// Vertex declaration system.

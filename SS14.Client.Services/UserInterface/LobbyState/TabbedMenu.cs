@@ -129,7 +129,7 @@ namespace SS14.Client.Services.UserInterface.Components
             for (int i = _tabs.Count - 1; i >= 0; i--)
             {
                 KeyValuePair<ImageButton, TabContainer> curr = _tabs[i];
-                Sprite currTabSprite = curr.Value.tabSprite;
+                CluwneSprite currTabSprite = curr.Value.tabSprite;
 
                 curr.Key.Render();
 

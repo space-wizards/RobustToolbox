@@ -50,7 +50,7 @@ namespace SS14.Client.Services.UserInterface
             DragInfo = new DragDropInfo();
             _components = new List<IGuiComponent>();
             _config = IoCManager.Resolve<IConfigurationManager>();
-            _console = new DebugConsole("dbgConsole", new Size(Gorgon.Screen.Width, 400), resourceManager);
+            _console = new DebugConsole("dbgConsole", new Size((int)VideoMode.DesktopMode.Width, 400), resourceManager);
             _console.SetVisible(false);
         }
 

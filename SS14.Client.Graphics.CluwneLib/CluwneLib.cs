@@ -5,6 +5,11 @@ using SFML.System;
 using SS14.Client.Graphics.CluwneLib.Event;
 using SS14.Client.Graphics.CluwneLib.Render;
 using SS14.Client.Graphics.CluwneLib.Timing;
+using Color = System.Drawing.Color;
+using SColor = SFML.Graphics.Color;
+using SS14.Client.Graphics.CluwneLib.Shader;
+using SS14.Shared.Maths;
+using System.Drawing;
 
 namespace SS14.Client.Graphics.CluwneLib
 {
@@ -14,6 +19,7 @@ namespace SS14.Client.Graphics.CluwneLib
         private static Clock _timer;
         private static RenderTarget[] _currentTarget;
         public static event FrameEventHandler Idle;
+        private Color DEFAULTCOLOR;
 
         /// <summary>
         /// Start engine rendering.
@@ -21,6 +27,8 @@ namespace SS14.Client.Graphics.CluwneLib
         /// Shamelessly taken from Gorgon.
         public static void Go()
         {
+           
+
             if (!IsInitialized)
                 ; //TODO: Throw exception
 
@@ -39,12 +47,14 @@ namespace SS14.Client.Graphics.CluwneLib
                 {
                     if (_currentTarget[i] != null)
                     {
-                        //_currentTarget[i].Refresh(); TODO: Refresh viewport   
+                        
                     }
                 }
                 
             }
-
+            
+           
+           
             Application.Idle += new EventHandler(Run);
 
             IsRunning = true;
@@ -75,26 +85,12 @@ namespace SS14.Client.Graphics.CluwneLib
 
         public static bool IsInitialized { get; set; }
 
-        public static RenderTarget CurrentRenderTarget 
-        {
-            get { return _currentTarget[0]; }
-            set
-            {
-                if (value == null)
-                    value = Screen;
-                SetAdditionalRenderTarget(0, value);
-            }
-        }
 
-        private static void SetAdditionalRenderTarget(int i, RenderTarget value)
-        {
-           _currentTarget[i] = value;
-        }
+       
 
-        public static RenderTarget GetAdditionalRenderTarget(int index)
-        {
-            return _currentTarget[index];
-        }
+
+     
+        
 
 
         public static void Run(object sender, EventArgs e)
@@ -104,7 +100,115 @@ namespace SS14.Client.Graphics.CluwneLib
 
         public static void SetMode(Form mainWindow, int displayWidth, int displayHeight, bool b, bool b1, bool b2, int refresh)
         {
-            throw new NotImplementedException(); //TOOD: Change bufferRgb888 to correct class.
+         =
         }
+
+        public float Width
+        {
+            get;
+            set;
+        }
+        public static RenderTarget CurrentRenderTarget
+        {
+            get { return _currentTarget[0]; }
+            set
+            {
+                if (value == null)
+                    value = Screen;
+                setAdditionalRenderTarget(0, value);
+            }
+        }
+
+        public static void setAdditionalRenderTarget(int index, RenderTarget _target)
+        {
+            _currentTarget[index] = _target;
+        }
+
+        public static RenderTarget getAdditionalRenderTarget(int index)
+        {
+            return _currentTarget[index];
+        }
+
+
+
+
+        public static void Stop()
+        {
+            throw new NotImplementedException();
+        }
+
+        public static FXShader CurrentShader { get; set; }
+
+        public static void drawRectangle(int posX, int posY, int WidthX, int HeightY, Color Color)
+        {
+            RectangleShape rectangle = new RectangleShape();
+            rectangle.Position = new SFML.System.Vector2f(posX, posY);
+            rectangle.Size = new SFML.System.Vector2f(WidthX, HeightY);
+            rectangle.FillColor = SystemColorToSFML(Color);
+
+            CluwneLib.CurrentRenderTarget.Draw(rectangle);
+
+
+        }
+
+     
+
+        public void DrawHollowRectangle(int x, int y, int width, int height)
+        {
+            RectangleShape Rect = new RectangleShape();
+            Rect.FillColor = new SFML.Graphics.Color(128,128,128);
+            Rect.Position = new Vector2f(x, y);
+            Rect.Size = new Vector2f(width, height);
+
+            CluwneLib.CurrentRenderTarget.Draw(Rect);
+
+
+        }
+
+
+      
+
+        public static BlendingModes BlendingMode { get; set; }
+
+        public static void drawCircle(int p1, int p2, int p3, Color color)
+        {
+            throw new NotImplementedException();
+        }
+
+        public static void drawPoint(int p1, int p2, Color color)
+        {
+            throw new NotImplementedException();
+        }
+
+        public static void Clear(Color color)
+        {
+            throw new NotImplementedException();
+        }
+
+        public static void drawCircle(float p1, float p2, int p3, Color color, Shared.Maths.Vector2 vector2)
+        {
+           
+        }
+
+        public static SColor SystemColorToSFML(Color color) // System Color  to SFML color 
+        {
+            SColor temp = new SColor(color.R, color.G, color.B, color.A);
+            return temp;
+        }
+
+        public static Color SFMLColorToSystem(SColor color) // SFML color to System Color
+        {
+            Color temp = Color.FromArgb(color.R,color.G,color.B,color.A);
+                      
+            return temp;
+        }
+
+        public static Vector2 PointToVector2(Point point)
+        {
+
+
+            return new Vector2(point.X, point.Y);
+        }
+      
     }
 }

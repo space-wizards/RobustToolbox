@@ -9,6 +9,8 @@ using System;
 using System.Collections.Generic;
 using System.Drawing;
 using System.Linq;
+using Color = SFML.Graphics.Color;
+
 
 namespace SS14.Client.Services.Tiles
 {
@@ -56,7 +58,7 @@ namespace SS14.Client.Services.Tiles
 
         public virtual void Render(float xTopLeft, float yTopLeft, Batch batch)
         {
-            Sprite.Color = Color.White;
+            Sprite.Color = SFML.Graphics.Color.White;
             Sprite.SetPosition((float)Position.X - xTopLeft,
                                (float)Position.Y - yTopLeft);
             batch.AddClone(Sprite);
@@ -65,7 +67,7 @@ namespace SS14.Client.Services.Tiles
 
         public virtual void RenderPos(float x, float y, int tileSpacing, int lightSize)
         {
-            Sprite.Color = Color.Transparent;
+            Sprite.Color = SFML.Graphics.Color.Transparent;
             Sprite.SetPosition(x, y);
             Sprite.Draw();
         }
@@ -104,10 +106,10 @@ namespace SS14.Client.Services.Tiles
                     switch (gasAmount.Key)
                     {
                         case GasType.Toxin:
-                            gasSprite.Color = Color.FromArgb(opacity, Color.Orange);
+                            gasSprite.Color = new Color(255,5,0); 
                             break;
                         case GasType.WVapor:
-                            gasSprite.Color = Color.FromArgb(opacity, Color.LightBlue);
+                            gasSprite.Color = new Color(255 , 5 , 0); 
                             break;
                     }
                     gasBatch.AddClone(gasSprite);
@@ -167,7 +169,7 @@ namespace SS14.Client.Services.Tiles
                     }
                     decals.Add(new TileDecal(_resourceManager.GetSprite(decalname),
                                              new Vector2(_random.Next(0, 64), _random.Next(0, 64)), this,
-                                             Color.FromArgb(165, 6, 6)));
+                                             new Color(165, 6, 6)));
                     break;
             }
         }

@@ -13,6 +13,8 @@ using System.Linq;
 using SS14.Client.Graphics.CluwneLib.Sprite;
 using SFML.Window;
 using SS14.Client.Graphics.CluwneLib.Event;
+using SS14.Shared.Maths;
+using SS14.Client.Graphics.CluwneLib;
 
 namespace SS14.Client.Services.State.States
 {
@@ -176,7 +178,7 @@ namespace SS14.Client.Services.State.States
 			{
 				ImageNormal = "lobby_ready",
 				ImageHover = "lobby_ready_green",
-				BlendingMode = BlendingModes.None,
+				//BlendingMode = BlendingModes.None,
 				ZDepth = 1
 			};
 			_btnReady.Clicked += _btnReady_Clicked;

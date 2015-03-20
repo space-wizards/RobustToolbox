@@ -4,6 +4,7 @@ using System.Linq;
 using System.Text;
 using SFML.Graphics;
 using SFML.Window;
+using System.Windows.Forms;
 using Color = SFML.Graphics.Color;
 
 namespace SS14.Client.Graphics.CluwneLib.Render
@@ -31,5 +32,7 @@ namespace SS14.Client.Graphics.CluwneLib.Render
         }
 
         public Color BackgroundColor { get; set; }
+
+        public Form OwnerForm { get; set; }
     }
 }

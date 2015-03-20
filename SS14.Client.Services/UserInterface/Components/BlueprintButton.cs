@@ -3,6 +3,8 @@ using System;
 using System.Drawing;
 using SS14.Client.Graphics.CluwneLib.Sprite;
 using SFML.Window;
+using SS14.Client.Graphics.CluwneLib;
+using SS14.Shared.Maths;
 
 namespace SS14.Client.Services.UserInterface.Components
 {
@@ -71,7 +73,7 @@ namespace SS14.Client.Services.UserInterface.Components
         public override void Render()
         {
             if (_bgcol != Color.Transparent)
-                Gorgon.CurrentRenderTarget.FilledRectangle(ClientArea.X, ClientArea.Y, ClientArea.Width,
+            CluwneLib.drawRectangle(ClientArea.X, ClientArea.Y, ClientArea.Width,
                                                            ClientArea.Height, _bgcol);
             _icon.Draw();
             Label.Draw();
@@ -88,7 +90,7 @@ namespace SS14.Client.Services.UserInterface.Components
 
 		public override bool MouseDown(MouseButtonEventArgs e)
         {
-            if (ClientArea.Contains(new Point((int) e.Position.X, (int) e.Position.Y)))
+            if (ClientArea.Contains(new Point((int) e.X, (int) e.Y)))
             {
                 if (Clicked != null) Clicked(this);
                 return true;
@@ -103,7 +105,7 @@ namespace SS14.Client.Services.UserInterface.Components
 
 		public override void MouseMove(MouseMoveEventArgs e)
         {
-            _bgcol = ClientArea.Contains(new Point((int) e.Position.X, (int) e.Position.Y))
+            _bgcol = ClientArea.Contains(new Point((int) e.X, (int) e.Y))
                          ? Color.SteelBlue
                          : Color.Transparent;
         }

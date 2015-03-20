@@ -5,6 +5,8 @@ using SS14.Shared.GO;
 using System;
 using System.Drawing;
 using SFML.Window;
+using SS14.Shared.Maths;
+using SS14.Client.Graphics.CluwneLib;
 
 namespace SS14.Client.Services.UserInterface.Components
 {
@@ -47,7 +49,7 @@ namespace SS14.Client.Services.UserInterface.Components
 
         public override sealed void Update(float frameTime)
         {
-            _buttonSprite.Position = Position;
+            _buttonSprite.Position = new Vector2 (Position.X,Position.Y);
             if (assignedEffect.doesExpire)
             {
                 string leftStr = Math.Truncate(assignedEffect.expiresAt.Subtract(DateTime.Now).TotalSeconds).ToString();
@@ -66,10 +68,10 @@ namespace SS14.Client.Services.UserInterface.Components
 
         public override void Render()
         {
-            _buttonSprite.Color = Color;
-            _buttonSprite.Position = Position;
+            _buttonSprite.Color = new SFML.Graphics.Color(Color.R, Color.G, Color.B, Color.A);
+            _buttonSprite.Position =new Vector2( Position.X, Position.Y);
             _buttonSprite.Draw();
-            _buttonSprite.Color = Color.White;
+            _buttonSprite.Color = new SFML.Graphics.Color(Color.White.R, Color.White.G, Color.White.B);
 
             if (assignedEffect.doesExpire)
             {
@@ -93,14 +95,14 @@ namespace SS14.Client.Services.UserInterface.Components
                                          : "");
 
                 tooltip.Text = tooltipStr;
-                float x_pos = (tooltipPos.X + 10 + tooltip.Width + 5) > Gorgon.CurrentClippingViewport.Width
+                float x_pos = (tooltipPos.X + 10 + tooltip.Width + 5) > CluwneLib.CurrentClippingViewport.Width
                                   ? 0 - tooltip.Width - 10
                                   : 10 + 5;
                 tooltip.Position = new Vector2(tooltipPos.X + x_pos + 5, tooltipPos.Y + 5 + 10);
-                Gorgon.CurrentRenderTarget.FilledRectangle(tooltipPos.X + x_pos, tooltipPos.Y + 10, tooltip.Width + 5,
+              CluwneLib.drawRectangle((int)(tooltipPos.X + x_pos), tooltipPos.Y + 10, tooltip.Width + 5,
                                                            tooltip.Height + 5, Color.SteelBlue);
-                Gorgon.CurrentRenderTarget.Rectangle(tooltipPos.X + x_pos, tooltipPos.Y + 10, tooltip.Width + 5,
-                                                     tooltip.Height + 5, Color.DarkSlateBlue);
+              CluwneLib.drawRectangle((int)(tooltipPos.X + x_pos), tooltipPos.Y + 10, tooltip.Width + 5,
+                                                    tooltip.Height + 5, Color.DarkSlateBlue);
                 tooltip.Draw();
             }
         }
@@ -124,10 +126,10 @@ namespace SS14.Client.Services.UserInterface.Components
 
 		public override void MouseMove(MouseMoveEventArgs e)
         {
-            if (ClientArea.Contains(new Point((int) e.Position.X, (int) e.Position.Y)))
+            if (ClientArea.Contains(new Point((int) e.X, (int) e.Y)))
             {
                 showTooltip = true;
-                tooltipPos = new Point((int) e.Position.X, (int) e.Position.Y);
+                tooltipPos = new Point((int) e.X, (int) e.Y);
             }
             else
                 showTooltip = false;

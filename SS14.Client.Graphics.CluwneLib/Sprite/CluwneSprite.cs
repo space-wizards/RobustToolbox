@@ -2,11 +2,12 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
-using Color = System.Drawing.Color;
+using Color = SFML.Graphics.Color;
 using SFML.Graphics;
 using Drawing = System.Drawing;
 using BaseSprite = SFML.Graphics.Sprite;
 using SS14.Client.Graphics.CluwneLib.Sprite;
+using SS14.Shared.Maths;
 
 namespace SS14.Client.Graphics.CluwneLib.Sprite
 {
@@ -18,6 +19,9 @@ namespace SS14.Client.Graphics.CluwneLib.Sprite
         private BlendMode _blendingMode = BlendMode.None;
 
         public string Name;
+        private string key;
+        private Image image;
+        private Vector2 _imageOffset;
 
         public CluwneSprite()
         {
@@ -41,6 +45,13 @@ namespace SS14.Client.Graphics.CluwneLib.Sprite
         public CluwneSprite(BaseSprite copy)
             : base(copy)
         {
+        }
+
+        public CluwneSprite(string key, Image image)
+        {
+            // TODO: Complete member initialization
+            this.key = key;
+            this.image = image;
         }
 
         public Drawing.RectangleF AABB
@@ -82,6 +93,11 @@ namespace SS14.Client.Graphics.CluwneLib.Sprite
           
         }
 
+        public void Draw (CluwneSprite CS1 )
+        {
+
+        }
+
         public float Width
         {
             get { return GetLocalBounds().Width; }
@@ -97,6 +113,35 @@ namespace SS14.Client.Graphics.CluwneLib.Sprite
         {
             get { return _blendingMode; }
           set { _blendingMode = value; }
+        }
+
+        public void Draw ( Drawing.Rectangle _clientAreaMain )
+        {
+            throw new NotImplementedException();
+        }
+
+        public Vector2 ImageOffset
+        {
+            get { return _imageOffset; }
+            set
+            {
+                _imageOffset = value;   
+            }
+        }
+
+        public Image getImage
+        {
+            get { return image; }
+            set { }
+        }
+
+        public Vector2 Size { get; set; }
+
+
+        public Color Color
+        {
+            get { return Color; }
+            set { Color = value; }
         }
     }
 }

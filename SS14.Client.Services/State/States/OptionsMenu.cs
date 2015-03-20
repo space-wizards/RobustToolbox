@@ -10,6 +10,9 @@ using SS14.Client.Services.UserInterface.Components;
 using SS14.Client.Graphics.CluwneLib.Event;
 using KeyEventArgs = SFML.Window.KeyEventArgs;
 using Label = SS14.Client.Services.UserInterface.Components.Label;
+using SS14.Client.Graphics.CluwneLib;
+
+
 
 
 namespace SS14.Client.Services.State.States
@@ -214,14 +217,14 @@ namespace SS14.Client.Services.State.States
 
         private void ApplyVideoMode()
         {
-            Form owner = Gorgon.Screen.OwnerForm;
-            Gorgon.Stop();
+            Form owner = CluwneLib.Screen.OwnerForm;
+            CluwneLib.Stop();
 
-            Gorgon.SetMode(owner, (int) ConfigurationManager.GetDisplayWidth(),
-                           (int) ConfigurationManager.GetDisplayHeight(), BackBufferFormats.BufferRGB888,
-                           !ConfigurationManager.GetFullscreen(), false, false,
-                           (int) ConfigurationManager.GetDisplayRefresh(),
-                           (ConfigurationManager.GetVsync() ? VSyncIntervals.IntervalOne : VSyncIntervals.IntervalNone));
+            CluwneLib.SetMode(owner, (int)ConfigurationManager.GetDisplayWidth(),
+                            (int)ConfigurationManager.GetDisplayHeight(),
+                            !ConfigurationManager.GetFullscreen(), false, false,
+                            (int)ConfigurationManager.GetDisplayRefresh());
+                           
 
             if (!ConfigurationManager.GetFullscreen())
             {
@@ -233,7 +236,7 @@ namespace SS14.Client.Services.State.States
                 owner.MinimizeBox = true;
             }
 
-            Gorgon.Go();
+            CluwneLib.Go();
         }
 
         private void _reslistbox_ItemSelected(Label item, Listbox sender)
@@ -242,13 +245,13 @@ namespace SS14.Client.Services.State.States
             {
                 VideoMode sel = vmList[item.Text.Text];
                 ConfigurationManager.SetResolution((uint) sel.Width, (uint) sel.Height);
-                ConfigurationManager.SetDisplayRefresh((uint) sel.RefreshRate);
+               
             }
         }
 
         private string GetVmString(VideoMode vm)
         {
-            return vm.Width.ToString() + "x" + vm.Height.ToString() + " @ " + vm.RefreshRate + " hz";
+            return vm.Width.ToString() + "x" + vm.Height.ToString() + " @ " + vm.BitsPerPixel+ " hz";
         }
 
         private void _exitbtt_Clicked(Label sender)

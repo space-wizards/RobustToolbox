@@ -13,6 +13,7 @@ using System;
 using System.Collections.Generic;
 using System.Drawing;
 using SFML.Window;
+using SS14.Client.Graphics.CluwneLib;
 
 
 namespace SS14.Client.Services.UserInterface.Components

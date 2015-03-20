@@ -5,14 +5,14 @@ using System.Runtime.InteropServices;
 using Drawing = System.Drawing;
 using SS14.Client.Graphics.CluwneLib;
 using SS14.Shared.Maths;
-using SS14.Client.Graphics.CluwneLib.Vertex;
+using SS14.Client.Graphics.CluwneLib.VertexData;
 using SS14.Client.Graphics.CluwneLib.Collection;
-using VertexFieldContext = SS14.Client.Graphics.CluwneLib.Vertex.VertexEnums.VertexFieldContext;
-using VertexFieldType = SS14.Client.Graphics.CluwneLib.Vertex.VertexEnums.VertexFieldType;
+using VertexFieldContext = SS14.Client.Graphics.CluwneLib.VertexData.VertexEnums.VertexFieldContext;
+using VertexFieldType = SS14.Client.Graphics.CluwneLib.VertexData.VertexEnums.VertexFieldType;
 
 
 
-namespace SS14.Client.Graphics.CluwneLib.Vertex
+namespace SS14.Client.Graphics.CluwneLib.VertexData
 {
     /// <summary>
     /// Object representing a list of vertex types.

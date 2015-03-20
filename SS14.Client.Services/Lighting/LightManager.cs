@@ -78,23 +78,28 @@ namespace SS14.Client.Services.Lighting
         }
 
         public ILight[] LightsIntersectingRect(RectangleF rect)
-        {
-            return
-                _lights.FindAll(
-                    l => l.LightArea.LightPosition + l.LightArea.LightAreaSize/2 > new Vector2(rect.Left, rect.Top)
-                         &&
-                         l.LightArea.LightPosition - l.LightArea.LightAreaSize/2 < new Vector2(rect.Right, rect.Bottom))
-                    .ToArray();
+        {   //TODO Rewrite this
+            //return
+            //    _lights.FindAll(
+            //        l => l.LightArea.LightPosition + l.LightArea.LightAreaSize/2 > new Vector2(rect.Left, rect.Top)
+            //             &&
+            //             l.LightArea.LightPosition - l.LightArea.LightAreaSize/2 < new Vector2(rect.Right, rect.Bottom))
+            //        .ToArray();
+            return null;
         }
 
         public ILight[] LightsIntersectingPoint(Vector2 point)
         {
-            return
-                _lights.FindAll(
-                    l => l.LightArea.LightPosition + l.LightArea.LightAreaSize/2 > point
-                         &&
-                         l.LightArea.LightPosition - l.LightArea.LightAreaSize/2 < point)
-                    .ToArray();
+            //return
+            //    _lights.FindAll(
+            //        l => l.LightArea.LightPosition + l.LightArea.LightAreaSize/2 > point
+            //             &&
+            //             l.LightArea.LightPosition - l.LightArea.LightAreaSize/2 < point)
+            //        .ToArray();
+
+            return null;
+
+
         }
 
         public ILight CreateLight()

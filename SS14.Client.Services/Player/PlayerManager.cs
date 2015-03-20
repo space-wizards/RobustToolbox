@@ -174,11 +174,11 @@ namespace SS14.Client.Services.Player
                     e.OnExpired += EffectExpired;
                     _effects.Add(e);
                     break;
-                case PostProcessingEffectType.Acid:
-                    e = new AcidPostProcessingEffect(duration);
-                    e.OnExpired += EffectExpired;
-                    _effects.Add(e);
-                    break;
+                //case PostProcessingEffectType.Acid:
+                //    e = new AcidPostProcessingEffect(duration);
+                //    e.OnExpired += EffectExpired;
+                //    _effects.Add(e);
+                //    break;
             }
         }
 

@@ -9,5 +9,6 @@ namespace SS14.Client.Graphics.CluwneLib
     {
         public float Width { get; set; }
         public float Height { get; set; }
+
     }
 }

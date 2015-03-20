@@ -4,6 +4,7 @@ using SS14.Client.Interfaces.UserInterface;
 using SS14.Client.Services.State.States;
 using System.Drawing;
 using SFML.Window;
+using SS14.Client.Graphics.CluwneLib;
 
 namespace SS14.Client.Services.UserInterface.Components
 {
@@ -37,20 +38,19 @@ namespace SS14.Client.Services.UserInterface.Components
 
         public override void Update(float frameTime)
         {
-            _message.Position = new Point((int) (Gorgon.CurrentRenderTarget.Width/2f - _message.ClientArea.Width/2f),
-                                          (int) (Gorgon.CurrentRenderTarget.Height/2f - _message.ClientArea.Height/2f) -
+            _message.Position = new Point((int) (CluwneLib.CurrentRenderTarget.Size.X/2f - _message.ClientArea.Width/2f),
+                                          (int) (CluwneLib.CurrentRenderTarget.Size.Y/2f - _message.ClientArea.Height/2f) -
                                           50);
             _message.Update(frameTime);
             _mainMenuButton.Position =
-                new Point((int) (Gorgon.CurrentRenderTarget.Width/2f - _message.ClientArea.Width/2f),
+                new Point((int) (CluwneLib.CurrentRenderTarget.Size.X/2f - _message.ClientArea.Width/2f),
                           _message.ClientArea.Bottom + 20);
             _mainMenuButton.Update(frameTime);
         }
 
         public override void Render()
         {
-            Gorgon.CurrentRenderTarget.FilledRectangle(0, 0, Gorgon.CurrentRenderTarget.Width,
-                                                       Gorgon.CurrentRenderTarget.Height, Color.Black);
+            CluwneLib.drawRectangle(0, 0, (int)CluwneLib.CurrentRenderTarget.Size.X,  (int)CluwneLib.CurrentRenderTarget.Size.Y, Color.Black);
             _message.Render();
             _mainMenuButton.Render();
         }

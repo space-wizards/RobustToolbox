@@ -123,7 +123,7 @@ namespace SS14.Client.Services.UserInterface.Inventory
         {
             //If dropped on container add to inventory.
             if (_inventoryContainer.MouseUp(e)) return true;
-            if (_inventoryContainer.ClientArea.Contains(new Point((int) e.Position.X, (int) e.Position.Y)) &&
+            if (_inventoryContainer.ClientArea.Contains(new Point((int) e.X, (int) e.Y)) &&
                 _userInterfaceManager.DragInfo.IsEntity && _userInterfaceManager.DragInfo.IsActive)
             {
                 if (!_inventoryComponent.ContainsEntity(_userInterfaceManager.DragInfo.DragEntity))

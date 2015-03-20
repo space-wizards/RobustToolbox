@@ -4,6 +4,7 @@ using SS14.Client.Interfaces.Resource;
 using SS14.Shared;
 using System.Drawing;
 using SFML.Window;
+using SS14.Client.Graphics.CluwneLib;
 
 namespace SS14.Client.Services.UserInterface.Components
 {
@@ -28,8 +29,8 @@ namespace SS14.Client.Services.UserInterface.Components
             _textboxPassword.OnSubmit += textboxPassword_OnSubmit;
             components.Add(_textboxPassword);
             components.Add(_okayButton);
-            Position = new Point((int) (Gorgon.CurrentRenderTarget.Width/2f) - (int) (ClientArea.Width/2f),
-                                 (int) (Gorgon.CurrentRenderTarget.Height/2f) - (int) (ClientArea.Height/2f));
+            Position = new Point((int) ( CluwneLib.CurrentRenderTarget.Size.X/2f) - (int) (ClientArea.Width/2f),
+                                 (int) (CluwneLib.CurrentRenderTarget.Size.Y/2f) - (int) (ClientArea.Height/2f));
         }
 
         private void textboxPassword_OnSubmit(string text, Textbox sender)

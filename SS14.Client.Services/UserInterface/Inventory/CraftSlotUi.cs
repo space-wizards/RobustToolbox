@@ -53,13 +53,13 @@ namespace SS14.Client.Services.UserInterface.Inventory
 
         public override void Render()
         {
-            _sprite.Color = _color;
+            _sprite.Color = new SFML.Graphics.Color(_color.R, _color.G, _color.B, _color.A); ;
             _sprite.Draw(new Rectangle(Position, new Size((int) _sprite.AABB.Width, (int) _sprite.AABB.Height)));
             if (_entSprite != null)
                 _entSprite.Draw(new Rectangle((int) (Position.X + _sprite.AABB.Width/2f - _entSprite.AABB.Width/2f),
                                               (int) (Position.Y + _sprite.AABB.Height/2f - _entSprite.AABB.Height/2f),
                                               (int) _entSprite.Width, (int) _entSprite.Height));
-            _sprite.Color = Color.White;
+            _sprite.Color = new SFML.Graphics.Color(Color.White.R, Color.White.G, Color.White.B, Color.White.A);
         }
 
         public override void Dispose()
@@ -70,7 +70,7 @@ namespace SS14.Client.Services.UserInterface.Inventory
 
 		public override bool MouseDown(MouseButtonEventArgs e)
         {
-            if (ClientArea.Contains(new Point((int) e.Position.X, (int) e.Position.Y)))
+            if (ClientArea.Contains(new Point((int) e.X, (int) e.Y)))
             {
                 ResetEntity();
                 return true;
@@ -80,7 +80,7 @@ namespace SS14.Client.Services.UserInterface.Inventory
 
 		public override bool MouseUp(MouseButtonEventArgs e)
         {
-            if (ClientArea.Contains(new Point((int) e.Position.X, (int) e.Position.Y)))
+            if (ClientArea.Contains(new Point((int) e.X, (int) e.Y)))
             {
                 if (_userInterfaceManager.DragInfo.IsEntity && _userInterfaceManager.DragInfo.IsActive)
                 {
@@ -94,7 +94,7 @@ namespace SS14.Client.Services.UserInterface.Inventory
 
 		public override void MouseMove(MouseMoveEventArgs e)
         {
-            if (ClientArea.Contains(new Point((int) e.Position.X, (int) e.Position.Y)))
+            if (ClientArea.Contains(new Point((int) e.X, (int) e.Y)))
                 _color = Color.LightSteelBlue;
             else
                 _color = Color.White;

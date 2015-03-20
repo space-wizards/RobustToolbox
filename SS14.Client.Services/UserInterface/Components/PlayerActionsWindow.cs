@@ -5,6 +5,7 @@ using SS14.Shared.IoC;
 using System.Drawing;
 using System.Linq;
 using SFML.Window;
+using SS14.Client.Graphics.CluwneLib;
 
 namespace SS14.Client.Services.UserInterface.Components
 {
@@ -19,8 +20,8 @@ namespace SS14.Client.Services.UserInterface.Components
             uiMgr = IoCManager.Resolve<IUserInterfaceManager>();
             assignedComp = _assignedComp;
             assignedComp.Changed += assignedComp_Changed;
-            Position = new Point((int) (Gorgon.CurrentRenderTarget.Width/2f) - (int) (ClientArea.Width/2f),
-                                 (int) (Gorgon.CurrentRenderTarget.Height/2f) - (int) (ClientArea.Height/2f));
+            Position = new Point((int) (CluwneLib.CurrentRenderTarget.Size.X/2f) - (int) (ClientArea.Width/2f),
+                                 (int) (CluwneLib.CurrentRenderTarget.Size.Y/2f) - (int) (ClientArea.Height/2f));
             assignedComp.CheckActionList();
             PopulateList();
         }

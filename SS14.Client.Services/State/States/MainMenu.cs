@@ -11,6 +11,7 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.Drawing;
 using System.Reflection;
+using Color = System.Drawing.Color;
 
 namespace SS14.Client.Services.State.States
 {
@@ -72,7 +73,7 @@ namespace SS14.Client.Services.State.States
             FileVersionInfo fvi = FileVersionInfo.GetVersionInfo(assembly.Location);
 
             _lblVersion = new Label("v. " + fvi.FileVersion, "CALIBRI", ResourceManager);
-            _lblVersion.Text.Color = Color.WhiteSmoke;
+            _lblVersion.Text.Color = Color.WhiteSmoke;// white smoke
             _lblVersion.Position = new Point((int)VideoMode.DesktopMode.Width - _lblVersion.ClientArea.Width - 3 ,
                                              (int)VideoMode.DesktopMode.Height - _lblVersion.ClientArea.Height - 3);
 

@@ -37,17 +37,17 @@ namespace SS14.Client.Services.UserInterface.Components
 
         public override sealed void Update(float frameTime)
         {
-            _buttonSprite.Position = Position;
+            _buttonSprite.Position = new SFML.System.Vector2f(Position.X, Position.Y);
             ClientArea = new Rectangle(Position,
                                        new Size((int) _buttonSprite.AABB.Width, (int) _buttonSprite.AABB.Height));
         }
 
         public override void Render()
         {
-            _buttonSprite.Color = Color;
-            _buttonSprite.Position = Position;
+            _buttonSprite.Color = new SFML.Graphics.Color(Color.R,Color.G,Color.B,Color.A);
+            _buttonSprite.Position = new SFML.System.Vector2f(Position.X, Position.Y);
             _buttonSprite.Draw();
-            _buttonSprite.Color = Color.White;
+            _buttonSprite.Color = new SFML.Graphics.Color(Color.White.R,Color.White.G,Color.White.B,Color.White.A);
         }
 
         public override void Dispose()
@@ -60,7 +60,7 @@ namespace SS14.Client.Services.UserInterface.Components
 
 		public override bool MouseDown(MouseButtonEventArgs e)
         {
-            if (ClientArea.Contains(new Point((int) e.Position.X, (int) e.Position.Y)))
+            if (ClientArea.Contains(new Point((int) e.X, (int) e.Y)))
             {
                 if (Clicked != null) Clicked(this);
                 return true;
@@ -70,7 +70,7 @@ namespace SS14.Client.Services.UserInterface.Components
 
 		public override bool MouseUp(MouseButtonEventArgs e)
         {
-            if (ClientArea.Contains(new Point((int) e.Position.X, (int) e.Position.Y)) &&
+            if (ClientArea.Contains(new Point((int) e.X, (int) e.Y)) &&
                 IoCManager.Resolve<IUserInterfaceManager>().DragInfo.IsActive)
             {
                 if (Dropped != null) Dropped(this);

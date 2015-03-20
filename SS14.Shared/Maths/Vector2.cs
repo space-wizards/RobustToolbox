@@ -517,7 +517,7 @@ namespace SS14.Shared.Maths
             result.X = (((value1.X * num6) + (value2.X * num5)) + (tangent1.X * num4)) + (tangent2.X * num3);
             result.Y = (((value1.Y * num6) + (value2.Y * num5)) + (tangent1.Y * num4)) + (tangent2.Y * num3);
         }
-        
+
         /// <summary>Returns a vector pointing in the opposite direction.</summary>
         /// <param name="value">Source vector.</param>
         public static Vector2 Negate(Vector2 value)

@@ -113,7 +113,7 @@ namespace SS14.Client.Services.UserInterface.Components
 
 		public override bool MouseDown(MouseButtonEventArgs e)
         {
-            if (!ClientArea.Contains(new Point((int) e.Position.X, (int) e.Position.Y))) return false;
+            if (!ClientArea.Contains(new Point((int) e.X, (int) e.Y))) return false;
 
             TargetingDummyElement prevSelection = (from element in _elements
                                                    where element.IsSelected()

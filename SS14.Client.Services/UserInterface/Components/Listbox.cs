@@ -165,7 +165,7 @@ namespace SS14.Client.Services.UserInterface.Components
 
 		public override bool MouseDown(MouseButtonEventArgs e)
         {
-            if (ClientArea.Contains(new Point((int) e.Position.X, (int) e.Position.Y)))
+            if (ClientArea.Contains(new Point((int) e.X, (int) e.Y)))
                 //change to clientAreaRight when theres a proper skin with an arrow to the right.
             {
                 var UiMgr = IoCManager.Resolve<IUserInterfaceManager>();

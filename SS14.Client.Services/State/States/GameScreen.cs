@@ -359,11 +359,12 @@ namespace SS14.Client.Services.State.States
         {
             IoCManager.Resolve<IPlayerManager>().Detach();
           
-                _cleanupSpriteList.ForEach(s => s.Image = null);
+                /*
+                 _cleanupSpriteList.ForEach(s => s.Image = null);
                 _cleanupSpriteList.Clear();
                 _cleanupList.ForEach(t => {t.ForceRelease();t.Dispose();});
                 _cleanupList.Clear();
-            
+                */
             // TODO: See Startup() for SFML todos
             //shadowMapResolver.Dispose();
             _gaussianBlur.Dispose();
@@ -716,63 +717,63 @@ namespace SS14.Client.Services.State.States
                 return;
 
             //TODO Fix this
-            if (e.ToString().Equals("F1"))
+            if (e.Code == Keyboard.Key.F1)
             {
                 //TODO FrameStats
                //CluwneLib.FrameStatsVisible = !CluwneLib.FrameStatsVisible;
             }
-            if (e.ToString().Equals("F2"))
+            if (e.Code == Keyboard.Key.F2)
             {
                 _showDebug = !_showDebug;
             }
-            if (e.ToString().Equals("F3"))
+            if (e.Code == Keyboard.Key.F3)
             {
                 ToggleOccluderDebug();
             }
-            if (e.ToString().Equals("F4"))
+            if (e.Code == Keyboard.Key.F4)
             {
-               // debugHitboxes = !debugHitboxes;
+                // debugHitboxes = !debugHitboxes;
             }
-            if (e.ToString().Equals("F5"))
+            if (e.Code == Keyboard.Key.F5)
             {
                 PlayerManager.SendVerb("save", 0);
             }
-            if (e.ToString().Equals("F6"))
+            if (e.Code == Keyboard.Key.F6)
             {
                // bFullVision = !bFullVision;
             }
-            if (e.ToString().Equals("F7"))
+            if (e.Code == Keyboard.Key.F7)
             {
                 //bPlayerVision = !bPlayerVision;
             }
-            if (e.ToString().Equals("F8"))
+            if (e.Code == Keyboard.Key.F8)
             {
                 NetOutgoingMessage message = NetworkManager.CreateMessage();
                 message.Write((byte) NetMessage.ForceRestart);
                 NetworkManager.SendMessage(message, NetDeliveryMethod.ReliableUnordered);
             }
-            if (e.ToString().Equals("Escape")
+            if (e.Code == Keyboard.Key.Escape)
             {
                 UserInterfaceManager.DisposeAllComponents<MenuWindow>(); //Remove old ones.
                 UserInterfaceManager.AddComponent(new MenuWindow()); //Create a new one.
             }
-            if (e.ToString().Equals("F9"))
+            if (e.Code == Keyboard.Key.F9)
             {
                 UserInterfaceManager.ToggleMoveMode();
             }
-            if (e.ToString().Equals("F10"))
+            if (e.Code == Keyboard.Key.F10)
             {
                 UserInterfaceManager.DisposeAllComponents<TileSpawnPanel>(); //Remove old ones.
                 UserInterfaceManager.AddComponent(new TileSpawnPanel(new Size(350, 410), ResourceManager,
                                                                      PlacementManager)); //Create a new one.
             }
-            if (e.ToString().Equals("F11"))
+            if (e.Code == Keyboard.Key.F11)
             {
                 UserInterfaceManager.DisposeAllComponents<EntitySpawnPanel>(); //Remove old ones.
                 UserInterfaceManager.AddComponent(new EntitySpawnPanel(new Size(350, 410), ResourceManager,
                                                                        PlacementManager)); //Create a new one.
             }
-            if (e.ToString().Equals("F12"))
+            if (e.Code == Keyboard.Key.F12)
             {
                 UserInterfaceManager.DisposeAllComponents<PlayerActionsWindow>(); //Remove old ones.
                 var actComp =
@@ -782,12 +783,12 @@ namespace SS14.Client.Services.State.States
                                                                               actComp)); //Create a new one.
             }
 
-            PlayerManager.KeyDown(e.Key);
+            PlayerManager.KeyDown(e.Code);
         }
 
         public void KeyUp(KeyEventArgs e)
         {
-            PlayerManager.KeyUp(e.Key);
+            PlayerManager.KeyUp(e.Code);
         }
 
 		public void MouseUp(MouseButtonEventArgs e)
@@ -806,15 +807,15 @@ namespace SS14.Client.Services.State.States
 
             if (PlacementManager.IsActive && !PlacementManager.Eraser)
             {
-                switch (e.Buttons)
+                switch (e.Button)
                 {
-                    case MouseButtons.Left:
+                    case Mouse.Button.Left:
                         PlacementManager.HandlePlacement();
                         return;
-                    case MouseButtons.Right:
+                    case Mouse.Button.Right:
                         PlacementManager.Clear();
                         return;
-                    case MouseButtons.Middle:
+                    case Mouse.Button.Middle:
                         PlacementManager.Rotate();
                         return;
                 }
@@ -868,9 +869,9 @@ namespace SS14.Client.Services.State.States
                     return;
                 }
 
-                switch (e.Buttons)
+                switch (e.Button)
                 {
-                    case MouseButtons.Left:
+                    case Mouse.Button.Left:
                         if (UserInterfaceManager.currentTargetingAction != null &&
                             (UserInterfaceManager.currentTargetingAction.TargetType == PlayerActionTargetType.Any ||
                                 UserInterfaceManager.currentTargetingAction.TargetType == PlayerActionTargetType.Other))
@@ -881,7 +882,7 @@ namespace SS14.Client.Services.State.States
                             c.DispatchClick(PlayerManager.ControlledEntity.Uid, MouseClickType.Left);
                         }
                         break;
-                    case MouseButtons.Right:
+                    case Mouse.Button.Right:
                         if (UserInterfaceManager.currentTargetingAction != null)
                             UserInterfaceManager.CancelTargeting();
                         else
@@ -890,7 +891,7 @@ namespace SS14.Client.Services.State.States
                             c.DispatchClick(PlayerManager.ControlledEntity.Uid, MouseClickType.Right);
                         }
                         break;
-                    case MouseButtons.Middle:
+                    case Mouse.Button.Middle:
                         UserInterfaceManager.DisposeAllComponents<PropEditWindow>();
                         UserInterfaceManager.AddComponent(new PropEditWindow(new Size(400, 400), ResourceManager,
                                                                              entToClick));
@@ -899,9 +900,9 @@ namespace SS14.Client.Services.State.States
             }
             else
             {
-                switch (e.Buttons)
+                switch (e.Button)
                 {
-                    case MouseButtons.Left:
+                    case Mouse.Button.Left:
                         {
                             if (UserInterfaceManager.currentTargetingAction != null &&
                                 UserInterfaceManager.currentTargetingAction.TargetType == PlayerActionTargetType.Point)
@@ -923,7 +924,7 @@ namespace SS14.Client.Services.State.States
                             }
                             break;
                         }
-                    case MouseButtons.Right:
+                    case Mouse.Button.Right:
                         {
                             if (UserInterfaceManager.currentTargetingAction != null)
                                 UserInterfaceManager.CancelTargeting();
@@ -937,9 +938,9 @@ namespace SS14.Client.Services.State.States
 
 		public void MouseMove(MouseMoveEventArgs e)
         {
-            float distanceToPrev = (MousePosScreen - new Vector2(e.Position.X, e.Position.Y)).Length;
-            MousePosScreen = new Vector2(e.Position.X, e.Position.Y);
-            MousePosWorld = new Vector2(e.Position.X + WindowOrigin.X, e.Position.Y + WindowOrigin.Y);
+            float distanceToPrev = (MousePosScreen - new Vector2(e.X, e.Y)).Length;
+            MousePosScreen = new Vector2(e.X, e.Y);
+            MousePosWorld = new Vector2(e.X + WindowOrigin.X, e.Y + WindowOrigin.Y);
             UserInterfaceManager.MouseMove(e);
         }
 
@@ -1492,22 +1493,23 @@ namespace SS14.Client.Services.State.States
             }
         }
 
-        private LightArea GetLightArea(ShadowmapSize size)
-        {
-            switch (size)
-            {
-                case ShadowmapSize.Size128:
-                    return lightArea128;
-                case ShadowmapSize.Size256:
-                    return lightArea256;
-                case ShadowmapSize.Size512:
-                    return lightArea512;
-                case ShadowmapSize.Size1024:
-                    return lightArea1024;
-                default:
-                    return lightArea1024;
-            }
-        }
+       // private LightArea GetLightArea(ShadowmapSize size)
+        //{
+            //switch (size)
+            //{
+            //    case ShadowmapSize.Size128:
+            //        return lightArea128;
+            //    case ShadowmapSize.Size256:
+            //        return lightArea256;
+            //    case ShadowmapSize.Size512:
+            //        return lightArea512;
+            //    case ShadowmapSize.Size1024:
+            //        return lightArea1024;
+            //    default:
+            //        return lightArea1024;
+            //}
+           
+       // }
 
         // Draws all walls in the area around the light relative to it, and in black (test code, not pretty)
         private void DrawWallsRelativeToLight(ILightArea area)

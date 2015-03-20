@@ -18,5 +18,10 @@ namespace SS14.Client.Graphics.CluwneLib.Sprite
         {
             throw new NotImplementedException();
         }
+        public void AddClone (CluwneSprite CSprite)
+        {
+            throw new NotImplementedException();
+        }
+
     }
 }

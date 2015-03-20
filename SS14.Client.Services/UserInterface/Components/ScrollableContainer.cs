@@ -5,6 +5,8 @@ using SFML.Window;
 using System;
 using System.Collections.Generic;
 using System.Drawing;
+using SS14.Shared.Maths;
+using SS14.Client.Graphics.CluwneLib;
 
 namespace SS14.Client.Services.UserInterface.Components
 {
@@ -35,11 +37,13 @@ namespace SS14.Client.Services.UserInterface.Components
 
             Size = size;
 
-            if (RenderTargetCache.Targets.Contains(uniqueName))
-                //Now this is an ugly hack to work around duplicate RenderImages. Have to fix this later.
-                uniqueName = uniqueName + Guid.NewGuid();
+            //if (RenderTargetCache.Targets.Contains(uniqueName))
+            //    //Now this is an ugly hack to work around duplicate RenderImages. Have to fix this later.
+            //    uniqueName = uniqueName + Guid.NewGuid();
 
-            clippingRI = new RenderImage(uniqueName, Size.Width, Size.Height, ImageBufferFormats.BufferRGB888A8);
+            clippingRI = new RenderImage((uint)Size.Width,(uint) Size.Height);
+                clippingRI.setName = uniqueName;
+                clippingRI.setImageBuffer = ImageBufferFormats.BufferRGB888A8;
             scrollbarH = new Scrollbar(true, _resourceManager);
             scrollbarV = new Scrollbar(false, _resourceManager);
             scrollbarV.size = Size.Height;
@@ -47,11 +51,11 @@ namespace SS14.Client.Services.UserInterface.Components
             scrollbarH.Update(0);
             scrollbarV.Update(0);
 
-            clippingRI.SourceBlend = AlphaBlendOperation.SourceAlpha;
-            clippingRI.DestinationBlend = AlphaBlendOperation.InverseSourceAlpha;
+            //clippingRI.SourceBlend = AlphaBlendOperation.SourceAlpha;
+            //clippingRI.DestinationBlend = AlphaBlendOperation.InverseSourceAlpha;
 
-            clippingRI.SourceBlendAlpha = AlphaBlendOperation.SourceAlpha;
-            clippingRI.DestinationBlendAlpha = AlphaBlendOperation.InverseSourceAlpha;
+            //clippingRI.SourceBlendAlpha = AlphaBlendOperation.SourceAlpha;
+            //clippingRI.DestinationBlendAlpha = AlphaBlendOperation.InverseSourceAlpha;
 
             Update(0);
         }
@@ -65,7 +69,7 @@ namespace SS14.Client.Services.UserInterface.Components
         public override void Update(float frameTime)
         {
             if (disposing || !IsVisible()) return;
-            ClientArea = new Rectangle(Position, new Size(clippingRI.Width, clippingRI.Height));
+            ClientArea = new Rectangle(Position, new Size((int)clippingRI.Height, (int)clippingRI.Height));
 
             if (inner_focus != null && !components.Contains((GuiComponent) inner_focus)) ClearFocus();
 
@@ -91,11 +95,11 @@ namespace SS14.Client.Services.UserInterface.Components
 
             scrollbarH.max = (int) max_x - ClientArea.Width +
                              (max_y > clippingRI.Height ? scrollbarV.ClientArea.Width : 0);
-            if (max_x > clippingRI.Width) scrollbarH.SetVisible(true);
+            if (max_x > clippingRI.Height) scrollbarH.SetVisible(true);
             else scrollbarH.SetVisible(false);
 
             scrollbarV.max = (int) max_y - ClientArea.Height +
-                             (max_x > clippingRI.Width ? scrollbarH.ClientArea.Height : 0);
+                             (max_x > clippingRI.Height ? scrollbarH.ClientArea.Height : 0);
             if (max_y > clippingRI.Height) scrollbarV.SetVisible(true);
             else scrollbarV.SetVisible(false);
 
@@ -107,7 +111,7 @@ namespace SS14.Client.Services.UserInterface.Components
         {
             if (disposing || !IsVisible()) return;
 
-            clippingRI.Clear(DrawBackground ? BackgroundColor : Color.Transparent);
+            clippingRI.Clear(DrawBackground ? new SFML.Graphics.Color(BackgroundColor.R,BackgroundColor.G,BackgroundColor.B,BackgroundColor.A) : new SFML.Graphics.Color(0,0,0,255));           
             clippingRI.BeginDrawing();
 
             foreach (GuiComponent component in components)
@@ -134,13 +138,13 @@ namespace SS14.Client.Services.UserInterface.Components
             }
 
             clippingRI.EndDrawing();
-            clippingRI.Blit(Position.X, Position.Y,clippingRI.Width, clippingRI.Height, Color.White, BlitterSizeMode.Crop);
+            clippingRI.Blit(Position.X, Position.Y,clippingRI.Height, clippingRI.Height, Color.White, BlitterSizeMode.Crop);
 
             scrollbarH.Render();
             scrollbarV.Render();
 
             if (DrawBorder)
-                Gorgon.CurrentRenderTarget.Rectangle(ClientArea.X, ClientArea.Y, ClientArea.Width, ClientArea.Height,
+             CluwneLib.drawRectangle(ClientArea.X, ClientArea.Y, ClientArea.Width, ClientArea.Height,
                                                      Color.Black);
         }
 
@@ -195,21 +199,13 @@ namespace SS14.Client.Services.UserInterface.Components
                 return true;
             }
 
-            if (ClientArea.Contains(new Point((int) e.Position.X, (int) e.Position.Y)))
+            if (ClientArea.Contains(new Point((int) e.X, (int) e.Y)))
             {
-                var modArgs = new MouseInputEventArgs
-                    (e.Buttons,
-                     e.ShiftButtons,
-                     new Vector2(e.Position.X - Position.X + scrollbarH.Value,
-                                  e.Position.Y - Position.Y + scrollbarV.Value),
-                     e.WheelPosition,
-                     e.RelativePosition,
-                     e.WheelDelta,
-                     e.ClickCount);
+              
 
                 foreach (GuiComponent component in components)
                 {
-                    if (component.MouseDown(modArgs))
+                    if (e.Button == Mouse.Button.ButtonCount)
                     {
                         SetFocus(component);
                         return true;
@@ -227,17 +223,10 @@ namespace SS14.Client.Services.UserInterface.Components
             if (scrollbarH.MouseUp(e)) return true;
             if (scrollbarV.MouseUp(e)) return true;
 
-            var modArgs = new MouseInputEventArgs
-                (e.Buttons,
-                 e.ShiftButtons,
-                 new Vector2(e.Position.X - Position.X + scrollbarH.Value, e.Position.Y - Position.Y + scrollbarV.Value),
-                 e.WheelPosition,
-                 e.RelativePosition,
-                 e.WheelDelta,
-                 e.ClickCount);
+     
 
             foreach (GuiComponent component in components)
-                component.MouseUp(modArgs);
+                component.MouseUp(e);
 
             return false;
         }
@@ -248,43 +237,30 @@ namespace SS14.Client.Services.UserInterface.Components
             scrollbarH.MouseMove(e);
             scrollbarV.MouseMove(e);
 
-            var modArgs = new MouseInputEventArgs
-                (e.Buttons,
-                 e.ShiftButtons,
-                 new Vector2(e.Position.X - Position.X + scrollbarH.Value, e.Position.Y - Position.Y + scrollbarV.Value),
-                 e.WheelPosition,
-                 e.RelativePosition,
-                 e.WheelDelta,
-                 e.ClickCount);
-
+            
+           
+ 
             foreach (GuiComponent component in components)
-                component.MouseMove(modArgs);
+                component.MouseMove(e);
 
             return;
         }
 
 		public override bool MouseWheelMove(MouseWheelEventArgs e)
         {
-            var modArgs = new MouseInputEventArgs
-                (e.Buttons,
-                 e.ShiftButtons,
-                 new Vector2(e.Position.X - Position.X + scrollbarH.Value, e.Position.Y - Position.Y + scrollbarV.Value),
-                 e.WheelPosition,
-                 e.RelativePosition,
-                 e.WheelDelta,
-                 e.ClickCount);
+           
 
             if (inner_focus != null)
             {
-                if (inner_focus.MouseWheelMove(modArgs))
+                if (inner_focus.MouseWheelMove(e))
                     return true;
-                else if (scrollbarV.IsVisible() && ClientArea.Contains(new Point((int) e.Position.X, (int) e.Position.Y)))
+                else if (scrollbarV.IsVisible() && ClientArea.Contains(new Point((int) e.X, (int) e.Y)))
                 {
                     scrollbarV.MouseWheelMove(e);
                     return true;
                 }
             }
-            else if (scrollbarV.IsVisible() && ClientArea.Contains(new Point((int) e.Position.X, (int) e.Position.Y)))
+            else if (scrollbarV.IsVisible() && ClientArea.Contains(new Point((int) e.X, (int) e.Y)))
             {
                 scrollbarV.MouseWheelMove(e);
                 return true;

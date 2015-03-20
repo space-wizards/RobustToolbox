@@ -4,9 +4,9 @@ using System;
 using System.Drawing;
 using SFML.Window;
 using SS14.Client.Graphics.CluwneLib;
-using VertexFieldContext = SS14.Client.Graphics.CluwneLib.Vertex.VertexEnums.VertexFieldContext;
-using VertexFieldType = SS14.Client.Graphics.CluwneLib.Vertex.VertexEnums.VertexFieldType;
-using SS14.Client.Graphics.CluwneLib.Vertex;
+using VertexFieldContext = SS14.Client.Graphics.CluwneLib.VertexData.VertexEnums.VertexFieldContext;
+using VertexFieldType = SS14.Client.Graphics.CluwneLib.VertexData.VertexEnums.VertexFieldType;
+using SS14.Client.Graphics.CluwneLib.VertexData;
 
 
 

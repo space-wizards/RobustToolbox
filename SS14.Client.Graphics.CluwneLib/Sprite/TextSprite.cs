@@ -1,8 +1,11 @@
-﻿using SS14.Shared.Maths;
+﻿using SFML.Graphics;
+using SS14.Shared.Maths;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using BaseSprite = SFML.Graphics.Sprite;
+using Color = System.Drawing.Color;
 
 
 
@@ -12,7 +15,7 @@ namespace SS14.Client.Graphics.CluwneLib.Sprite
     /// <summary>
     /// Handles Text Sprites
     /// </summary>
-    public class TextSprite
+    public class TextSprite : BaseSprite
     {
         
         private string p1;                                         // Title 
@@ -23,8 +26,8 @@ namespace SS14.Client.Graphics.CluwneLib.Sprite
         private Boolean _Shadowed;                                 // Is the Text Shadowed
         private Vector2 _Position;                                 // Position (X , Y)  Of Text Sprite
         private SFML.Graphics.Font _Font;                          // Text Font
-        private System.Drawing.Color _baseColor;                   // Base Color 
-        private System.Drawing.Color _shadowColor;                 // Shadow Color
+        private Color _baseColor;                   // Base Color 
+        private Color _shadowColor;                 // Shadow Color
 
        
         public TextSprite ()
@@ -32,13 +35,19 @@ namespace SS14.Client.Graphics.CluwneLib.Sprite
 
         }
 
-        public TextSprite( string p1 , string p2 , SFML.Graphics.Font font )
+        public TextSprite( string Name , string Text, Font font )
         {
-            //TODO FINISH THIS
-            this.p1 = p1;
-            this.p2 = p2;
-            this._Font = font;
+           
         }
+
+        public TextSprite(string Name, int x, int y, int width, int height)
+        {
+
+
+
+        }
+
+
 
 
         public void Draw ( )
@@ -52,7 +61,7 @@ namespace SS14.Client.Graphics.CluwneLib.Sprite
 
         #region Accessors
         
-        public System.Drawing.Color Color
+        public Color Color
         {
             get
             {
@@ -78,7 +87,7 @@ namespace SS14.Client.Graphics.CluwneLib.Sprite
             }
         }
 
-        public System.Drawing.Color ShadowColor
+        public Color ShadowColor
         {
             get
             {
@@ -138,5 +147,19 @@ namespace SS14.Client.Graphics.CluwneLib.Sprite
 
         #endregion
 
+
+        public int MeasureLine ( string _text )
+        {
+            throw new NotImplementedException();
+        }
+
+        public System.Drawing.Size Size
+        {
+            get;
+            set;
+        }
+
+
+        public Vector2 ShadowOffset { get; set; }
     }
 }

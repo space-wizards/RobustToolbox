@@ -3,6 +3,8 @@ using System;
 using System.Drawing;
 using SFML.Window;
 using SS14.Client.Graphics.CluwneLib.Sprite;
+using SS14.Shared.Maths;
+using SS14.Client.Graphics.CluwneLib;
 
 namespace SS14.Client.Services.UserInterface.Components
 {
@@ -57,10 +59,9 @@ namespace SS14.Client.Services.UserInterface.Components
             percent = (val - min)/(max - min);
             float barWidth = Size.Width*percent;
 
-            Gorgon.CurrentRenderTarget.FilledRectangle(ClientArea.X, ClientArea.Y, ClientArea.Width, ClientArea.Height,
-                                                       backgroundColor);
-            Gorgon.CurrentRenderTarget.FilledRectangle(ClientArea.X, ClientArea.Y, barWidth, ClientArea.Height, barColor);
-            Gorgon.CurrentRenderTarget.Rectangle(ClientArea.X, ClientArea.Y, ClientArea.Width, ClientArea.Height,
+           CluwneLib.drawRectangle(ClientArea.X, ClientArea.Y, ClientArea.Width, ClientArea.Height,    backgroundColor);
+           //TODO : CluwneLib.DrawHollowRectangle (ClientArea.X, ClientArea.Y, (int)barWidth, ClientArea.Height, barColor);
+          CluwneLib.drawRectangle(ClientArea.X, ClientArea.Y, ClientArea.Width, ClientArea.Height,
                                                  borderColor);
 
             Text.Draw();

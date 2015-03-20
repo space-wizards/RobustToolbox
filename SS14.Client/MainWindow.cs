@@ -27,7 +27,7 @@ namespace SS14.Client
         #region Fields
 
         private IConfigurationManager _configurationManager;
-        private Input _input;
+      //  private Input _input;
         private INetworkGrapher _netGrapher;
         private INetworkManager _networkManager;
         private IStateManager _stateManager;
@@ -205,7 +205,8 @@ namespace SS14.Client
 
             CluwneLib.Initialize();
             CluwneLib.SetMode(this, (int) displayWidth, (int) displayHeight, !fullscreen, false, false, refresh);
-            CluwneLib.Screen.BackgroundColor = new Color(255, 50, 50, 50);
+            CluwneLib.Screen.BackgroundColor = new Color(50, 50, 50);
+
             CluwneLib.Idle += GorgonIdle;
         }
 

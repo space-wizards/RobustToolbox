@@ -36,7 +36,7 @@ namespace SS14.Client.Services.UserInterface.Components
                                              Color = Color.Black,
                                              ShadowColor = Color.DimGray,
                                              Shadowed = true,
-                                             ShadowOffset = new Vector2(1, 1)
+                                             //ShadowOffset = new Vector2(1, 1)
                                          };
 
             Update(0);
@@ -58,16 +58,17 @@ namespace SS14.Client.Services.UserInterface.Components
         {
             if (!Available)
             {
-                _buttonSprite.Color = Color.DarkRed;
+                _buttonSprite.Color = new SFML.Graphics.Color(Color.DarkRed.R, Color.DarkRed.G, Color.DarkRed.B, Color.DarkRed.A); 
             }
             else if (Selected)
             {
-                _buttonSprite.Color = Color.DarkSeaGreen;
+                _buttonSprite.Color = new SFML.Graphics.Color(Color.DarkSeaGreen.R, Color.DarkSeaGreen.G, Color.DarkSeaGreen.B, Color.DarkSeaGreen.A);
+             
             }
             _buttonSprite.Draw(_buttonArea);
             _jobSprite.Draw(_buttonArea);
             _descriptionTextSprite.Draw();
-            _buttonSprite.Color = Color.White;
+            _buttonSprite.Color = new SFML.Graphics.Color(Color.White.R, Color.White.G, Color.White.B, Color.White.A);
         }
 
         public override void Dispose()
@@ -83,7 +84,7 @@ namespace SS14.Client.Services.UserInterface.Components
 		public override bool MouseDown(MouseButtonEventArgs e)
         {
             if (!Available) return false;
-            if (_buttonArea.Contains(new Point((int) e.Position.X, (int) e.Position.Y)))
+            if (_buttonArea.Contains(new Point((int) e.X, (int) e.Y)))
             {
                 if (Clicked != null) Clicked(this);
                 Selected = true;

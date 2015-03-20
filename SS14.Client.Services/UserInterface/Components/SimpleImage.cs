@@ -6,6 +6,8 @@ using SFML.Window;
 using SFML.Graphics;
 using System;
 using Color = System.Drawing.Color;
+using System.Drawing;
+using SS14.Client.Graphics.CluwneLib;
 
 
 namespace SS14.Client.Services.UserInterface.Components
@@ -32,13 +34,13 @@ namespace SS14.Client.Services.UserInterface.Components
 
         public Color Color
         {
-            get { return drawingSprite != null ? drawingSprite.Color : Color.White; }
-            set { drawingSprite.Color = value; }
+            get { return (drawingSprite != null ? System.Drawing.Color.White : System.Drawing.Color.White); }
+            set { drawingSprite.Color = CluwneLib.SystemColorToSFML(value); }
         }
 
         public BlendMode BlendingMode
         {
-            get { return drawingSprite != null ? drawingSprite.BlendingMode : BlendingMode.None; }
+            get { return drawingSprite != null ? drawingSprite.BlendingMode : drawingSprite.BlendingMode; }
             set { drawingSprite.BlendingMode = value; }
         }
 

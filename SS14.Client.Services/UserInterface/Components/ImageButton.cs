@@ -5,6 +5,8 @@ using System;
 using Color = SFML.Graphics.Color;
 using SFML.Window;
 using SFML.Graphics;
+using System.Drawing;
+using SS14.Shared.Maths;
 
 namespace SS14.Client.Services.UserInterface.Components
 {
@@ -90,7 +92,7 @@ namespace SS14.Client.Services.UserInterface.Components
 
 			if (_drawSprite != null)
 			{
-				_drawSprite.Position = Position;
+				_drawSprite.Position = new Vector2( Position.X,Position.Y);
 				ClientArea = new Rectangle(Position,
 										   new Size((int)_drawSprite.AABB.Width, (int)_drawSprite.AABB.Height));
 			}
@@ -101,7 +103,7 @@ namespace SS14.Client.Services.UserInterface.Components
 			if (_drawSprite != null)
 			{
 				_drawSprite.Color = Color;
-				_drawSprite.Position = Position;
+				_drawSprite.Position = new Vector2 (Position.X,Position.Y);
 				_drawSprite.Draw();
 				_drawSprite.Color = Color.White;
 			}
@@ -119,7 +121,7 @@ namespace SS14.Client.Services.UserInterface.Components
 
 		public override void MouseMove(MouseMoveEventArgs e)
 		{
-			if (ClientArea.Contains(new Point((int)e.Position.X, (int)e.Position.Y)) && _buttonHover != null)
+			if (ClientArea.Contains(new Point((int)e.X, (int)e.Y)) && _buttonHover != null)
 			{
 				if (_drawSprite != _buttonClick)
 					_drawSprite = _buttonHover;
@@ -133,7 +135,7 @@ namespace SS14.Client.Services.UserInterface.Components
 
 		public override bool MouseDown(MouseButtonEventArgs e)
 		{
-			if (ClientArea.Contains(new Point((int)e.Position.X, (int)e.Position.Y)))
+			if (ClientArea.Contains(new Point((int)e.X, (int)e.Y)))
 			{
 				if (_buttonClick != null) _drawSprite = _buttonClick;
 				if (Clicked != null) Clicked(this);
@@ -146,7 +148,7 @@ namespace SS14.Client.Services.UserInterface.Components
 		{
 			if (_drawSprite == _buttonClick)
 				if (_buttonHover != null)
-					_drawSprite = ClientArea.Contains(new Point((int)e.Position.X, (int)e.Position.Y))
+					_drawSprite = ClientArea.Contains(new Point((int)e.X, (int)e.Y))
 									  ? _buttonHover
 									  : _buttonNormal;
 				else

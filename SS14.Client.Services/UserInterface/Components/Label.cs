@@ -4,6 +4,8 @@ using SS14.Client.Graphics.CluwneLib;
 using System;
 using System.Drawing;
 using SFML.Window;
+using SFML.Graphics;
+using Color = System.Drawing.Color;
 
 namespace SS14.Client.Services.UserInterface.Components
 {
@@ -56,15 +58,17 @@ namespace SS14.Client.Services.UserInterface.Components
         // TODO Gorgon fix this
         public override void Render()
         {
+
+          
+            
+
+
             if (DrawBackground)
-              Gorgon.CurrentRenderTarget.FilledRectangle(ClientArea.X, ClientArea.Y, ClientArea.Width,
-                                                           ClientArea.Height, BackgroundColor);
+              CluwneLib.drawRectangle(ClientArea.X, ClientArea.Y, ClientArea.Width,ClientArea.Height, BackgroundColor);
             if (DrawTextHighlight)
-                Gorgon.CurrentRenderTarget.FilledRectangle(Text.Position.X + 1, Text.Position.Y + 4, Text.Width,
-                                                           Text.Height - 9, BackgroundColor);
+                CluwneLib.drawRectangle((int)(Text.Position.X + 1), (int)Text.Position.Y + 4, (int)Text.Width, (int)Text.Height - 9, BackgroundColor);
             if (DrawBorder)
-                Gorgon.CurrentRenderTarget.Rectangle(ClientArea.X, ClientArea.Y, ClientArea.Width, ClientArea.Height,
-                                                     BorderColor);
+               //CluwneLib.createHollowRectangle(ClientArea.X, ClientArea.Y, ClientArea.Width, ClientArea.Height,borderColor);
             Text.Draw();
         }
 
@@ -90,5 +94,7 @@ namespace SS14.Client.Services.UserInterface.Components
         {
             return false;
         }
+
+        public Size Size { get; set; }
     }
 }

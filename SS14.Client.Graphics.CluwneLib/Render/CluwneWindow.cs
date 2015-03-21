@@ -34,10 +34,11 @@ namespace SS14.Client.Graphics.CluwneLib.Render
         {
         }
 
-        public Color BackgroundColor {
-            get
-            
-            ; set; }
+        public Color BackgroundColor
+        {
+            get;
+            set;
+        }
 
      
     }

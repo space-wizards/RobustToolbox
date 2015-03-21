@@ -69,13 +69,23 @@ namespace SS14.Client
             SetupCluwne();
             SetupInput();
 
-
-            CluwneLib.drawRectangle(60, 60, 100, 100, Color.White);
-            CluwneLib.Screen.Display();
             
+            CluwneLib.drawHollowRectangle(60, 60, 100, 100,.6f, Color.White);
+
+            CluwneLib.drawPoint(500, 120, Color.White);
+            CluwneLib.drawHollowPoint(500,100,Color.Gold);
+            CluwneLib.drawLine(1, 100, 55, .6f, Color.Red);
+
+            CluwneLib.Screen.Display();
+
+            
+
              while(CluwneLib.Screen.IsOpen == true)
                 {
-                 
+                                    
+                    
+             
+               
                     CluwneLib.Screen.WaitAndDispatchEvents();
                 }
 

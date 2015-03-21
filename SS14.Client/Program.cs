@@ -23,7 +23,7 @@ namespace SS14.Client
                                   fullDump
                                       ? MiniDump.MINIDUMP_TYPE.MiniDumpWithFullMemory
                                       : MiniDump.MINIDUMP_TYPE.MiniDumpNormal);
-            Application.Run(new MainWindow());
+            GameController GC = new GameController();
         }
         
         private static void processArgs(string[] args)

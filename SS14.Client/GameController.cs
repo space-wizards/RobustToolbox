@@ -15,15 +15,18 @@ using SFML.Window;
 using SS14.Client.Graphics.CluwneLib;
 using SS14.Client.Graphics.CluwneLib.Event;
 using SS14.Client.Graphics.CluwneLib.Render;
-using Color = SFML.Graphics.Color;
+using Color = System.Drawing.Color;
 using KeyArgs = SFML.Window.KeyEventArgs;
 using SS14.Client.Graphics.CluwneLib.Sprite;
 
 
+
 namespace SS14.Client
 {
-    public partial class MainWindow : Form
+    public class GameController 
     {
+
+
         #region Fields
 
         private IConfigurationManager _configurationManager;
@@ -43,18 +46,50 @@ namespace SS14.Client
 
         #region Constructors
 
-        public MainWindow()
+        public GameController()
         {
+            _configurationManager = IoCManager.Resolve<IConfigurationManager>();
             IoCManager.Resolve<IConfigurationManager>().Initialize("./config.xml");
 
-            InitializeComponent();
+            IoCManager.Resolve<IResourceManager>().LoadBaseResources();
+            IoCManager.Resolve<IResourceManager>().LoadLocalResources();
+          
+
+            //Initialization of private members
+           
+            _networkManager = IoCManager.Resolve<INetworkManager>();
+            _netGrapher = IoCManager.Resolve<INetworkGrapher>();
+            _stateManager = IoCManager.Resolve<IStateManager>();
+            _userInterfaceManager = IoCManager.Resolve<IUserInterfaceManager>();
+
+            ///Resolve
+           
+
+            //Setup
+            SetupCluwne();
+            SetupInput();
+
+
+            CluwneLib.drawRectangle(60, 60, 100, 100, Color.White);
+            CluwneLib.Screen.Display();
+            
+             while(CluwneLib.Screen.IsOpen == true)
+                {
+                 
+                    CluwneLib.Screen.WaitAndDispatchEvents();
+                }
+
+          
+
         }
 
         #endregion
 
+
+       
         #region EventHandlers
 
-        private void GorgonIdle(object sender, FrameEventArgs e)
+        private void CluwneLibIdle(object sender, FrameEventArgs e)
         {
             _networkManager.UpdateNetwork();
             _stateManager.Update(e);
@@ -67,21 +102,7 @@ namespace SS14.Client
 
         private void MainWindowLoad(object sender, EventArgs e)
         {
-            _configurationManager = IoCManager.Resolve<IConfigurationManager>();
-
-            SetupCluwne();
-            SetupInput();
-
-            IoCManager.Resolve<IResourceManager>().LoadBaseResources();
-            IoCManager.Resolve<IResourceManager>().LoadLocalResources();
-
-            CluwneLib.Go();
-
-            _networkManager = IoCManager.Resolve<INetworkManager>();
-            _netGrapher = IoCManager.Resolve<INetworkGrapher>();
-            _stateManager = IoCManager.Resolve<IStateManager>();
-            _userInterfaceManager = IoCManager.Resolve<IUserInterfaceManager>();
-
+           
             _stateManager.RequestStateChange<MainScreen>();
         }
 
@@ -201,13 +222,17 @@ namespace SS14.Client
             bool fullscreen = _configurationManager.GetFullscreen();
             var refresh = (int) _configurationManager.GetDisplayRefresh();
 
-            Size = new Size((int) displayWidth, (int) displayHeight);
+          
+             
 
             CluwneLib.Initialize();
-            CluwneLib.SetMode(this, (int) displayWidth, (int) displayHeight, !fullscreen, false, false, refresh);
-            CluwneLib.Screen.BackgroundColor = new Color(50, 50, 50);
+            CluwneLib.Go();
+           
+            CluwneLib.createNewWindow((int) displayWidth, (int) displayHeight,"Space station 14");
+            CluwneLib.Screen.BackgroundColor = CluwneLib.SystemColorToSFML(Color.Black);
+           
 
-            CluwneLib.Idle += GorgonIdle;
+            CluwneLib.Idle += CluwneLibIdle;
         }
 
         private void SetupInput()
@@ -232,3 +257,4 @@ namespace SS14.Client
         #endregion
     }
 }
+    

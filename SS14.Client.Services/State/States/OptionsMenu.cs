@@ -217,24 +217,16 @@ namespace SS14.Client.Services.State.States
 
         private void ApplyVideoMode()
         {
-            Form owner = CluwneLib.Screen.OwnerForm;
+            
             CluwneLib.Stop();
 
-            CluwneLib.SetMode(owner, (int)ConfigurationManager.GetDisplayWidth(),
+            CluwneLib.SetMode((int)ConfigurationManager.GetDisplayWidth(),
                             (int)ConfigurationManager.GetDisplayHeight(),
                             !ConfigurationManager.GetFullscreen(), false, false,
                             (int)ConfigurationManager.GetDisplayRefresh());
                            
 
-            if (!ConfigurationManager.GetFullscreen())
-            {
-                //Gee thanks gorgon for changing this stuff only when switching TO fullscreen.
-                owner.FormBorderStyle = FormBorderStyle.Sizable;
-                owner.WindowState = FormWindowState.Normal;
-                owner.ControlBox = true;
-                owner.MaximizeBox = true;
-                owner.MinimizeBox = true;
-            }
+           
 
             CluwneLib.Go();
         }

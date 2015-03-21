@@ -150,7 +150,7 @@ namespace SS14.Client.Graphics.CluwneLib.Sprite
 
         public int MeasureLine ( string _text )
         {
-            throw new NotImplementedException();
+            return _text.Length;
         }
 
         public System.Drawing.Size Size

@@ -10,6 +10,9 @@ using SColor = SFML.Graphics.Color;
 using SS14.Client.Graphics.CluwneLib.Shader;
 using SS14.Shared.Maths;
 using System.Drawing;
+using SFML.Window;
+using System.Collections.Generic;
+using System.Collections;
 
 namespace SS14.Client.Graphics.CluwneLib
 {
@@ -19,18 +22,22 @@ namespace SS14.Client.Graphics.CluwneLib
         private static Clock _timer;
         private static RenderTarget[] _currentTarget;
         public static event FrameEventHandler Idle;
+        
         private Color DEFAULTCOLOR;
+       
 
+        
         /// <summary>
         /// Start engine rendering.
         /// </summary>
         /// Shamelessly taken from Gorgon.
         public static void Go()
         {
-           
 
             if (!IsInitialized)
-                ; //TODO: Throw exception
+            {
+                Initialize();
+            }
 
             if ((Screen != null) && (_currentTarget == null))
                 throw new InvalidOperationException("The render target is invalid.");
@@ -45,9 +52,9 @@ namespace SS14.Client.Graphics.CluwneLib
             {
                 for (int i = 0; i < _currentTarget.Length; i++)
                 {
-                    if (_currentTarget[i] != null)
+                    if (_currentTarget[0] != null)     
                     {
-                        
+                       
                     }
                 }
                 
@@ -60,7 +67,11 @@ namespace SS14.Client.Graphics.CluwneLib
             IsRunning = true;
         }
 
-        public static CluwneWindow Screen { get; set; }
+        public static CluwneWindow Screen
+        {
+            get;
+            set;
+        }
 
         public static bool IsRunning { get; set; }
 
@@ -71,14 +82,18 @@ namespace SS14.Client.Graphics.CluwneLib
 
             IsInitialized = true;
 
+            _currentTarget = new RenderTarget[5];
+        
             _timer = new Clock();
-
             FrameStats = new TimingData(_timer);
+
+
+           
         }
 
         private static void Terminate()
         {
-            throw new NotImplementedException();
+            Screen.Close();
         }
 
         public static TimingData FrameStats { get; set; }
@@ -95,12 +110,17 @@ namespace SS14.Client.Graphics.CluwneLib
 
         public static void Run(object sender, EventArgs e)
         {
-            
+               
+
+
         }
 
-        public static void SetMode(Form mainWindow, int displayWidth, int displayHeight, bool b, bool b1, bool b2, int refresh)
+        public static void createNewWindow(int displayWidth, int displayHeight,string title)
         {
-         =
+
+          Screen = new CluwneWindow(new VideoMode((uint)displayWidth,(uint)displayHeight), title);
+
+            
         }
 
         public float Width
@@ -110,18 +130,25 @@ namespace SS14.Client.Graphics.CluwneLib
         }
         public static RenderTarget CurrentRenderTarget
         {
-            get { return _currentTarget[0]; }
+            get
+            {
+                if (_currentTarget[0] == null)
+                    _currentTarget[0] = Screen;
+                        
+                return _currentTarget[0];
+            }
             set
             {
                 if (value == null)
                     value = Screen;
+
                 setAdditionalRenderTarget(0, value);
             }
         }
 
         public static void setAdditionalRenderTarget(int index, RenderTarget _target)
         {
-            _currentTarget[index] = _target;
+          _currentTarget[index] = _target;
         }
 
         public static RenderTarget getAdditionalRenderTarget(int index)
@@ -146,7 +173,7 @@ namespace SS14.Client.Graphics.CluwneLib
             rectangle.Size = new SFML.System.Vector2f(WidthX, HeightY);
             rectangle.FillColor = SystemColorToSFML(Color);
 
-            CluwneLib.CurrentRenderTarget.Draw(rectangle);
+            CurrentRenderTarget.Draw(rectangle);
 
 
         }
@@ -209,6 +236,16 @@ namespace SS14.Client.Graphics.CluwneLib
 
             return new Vector2(point.X, point.Y);
         }
-      
+
+
+        public static void SetMode(int p1, int p2)
+        {
+            throw new NotImplementedException();
+        }
+
+        public static void SetMode(int p1, int p2, bool p3, bool p4, bool p5, int p6)
+        {
+            throw new NotImplementedException();
+        }
     }
 }

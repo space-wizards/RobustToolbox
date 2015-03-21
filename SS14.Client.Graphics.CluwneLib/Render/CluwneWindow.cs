@@ -13,6 +13,9 @@ namespace SS14.Client.Graphics.CluwneLib.Render
     {
         public CluwneWindow(VideoMode mode, string title) : base(mode, title)
         {
+           
+            
+
         }
 
         public CluwneWindow(VideoMode mode, string title, Styles style) : base(mode, title, style)
@@ -31,8 +34,11 @@ namespace SS14.Client.Graphics.CluwneLib.Render
         {
         }
 
-        public Color BackgroundColor { get; set; }
+        public Color BackgroundColor {
+            get
+            
+            ; set; }
 
-        public Form OwnerForm { get; set; }
+     
     }
 }

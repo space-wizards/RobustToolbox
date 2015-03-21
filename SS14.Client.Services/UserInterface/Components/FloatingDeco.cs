@@ -58,7 +58,7 @@ namespace SS14.Client.Services.UserInterface.Components
                                        new Size((int) DrawSprite.Width, (int) DrawSprite.Height));
 
             //Outside screen. Does not respect rotation. FIX.
-            if (ClientArea.X > CluwneLib.Screen.Size.X)
+            if (ClientArea.X >CluwneLib.Screen.Size.X)
                 SpriteLocation = new Vector2((0 - DrawSprite.Width), SpriteLocation.Y);
             else if (ClientArea.X < (0 - DrawSprite.Width))
                 SpriteLocation = new Vector2(CluwneLib.Screen.Size.X, SpriteLocation.Y);

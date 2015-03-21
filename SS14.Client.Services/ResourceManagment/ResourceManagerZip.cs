@@ -168,12 +168,13 @@ namespace SS14.Client.Services.Resources
                     case("shaders/"):
                         foreach (ZipEntry shader in current.Value)
                         {
-                            if (Path.GetExtension(shader.Name).ToLowerInvariant() == ".fx")
-                            {
-                                FXShader loadedShader = LoadShaderFrom(zipFile, shader);
-                                if (loadedShader == null) continue;
-                                else _shaders.Add(shader.Name, loadedShader);
-                            }
+                            //FIXME Throws Exception
+                            //if (Path.GetExtension(shader.Name).ToLowerInvariant() == ".fx")
+                            //{
+                            //    FXShader loadedShader = LoadShaderFrom(zipFile, shader);
+                            //    if (loadedShader == null) continue;
+                            //    else _shaders.Add(shader.Name, loadedShader);
+                            //}
                         }
                         break;
 

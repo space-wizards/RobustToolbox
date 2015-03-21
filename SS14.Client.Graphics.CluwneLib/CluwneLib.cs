@@ -24,9 +24,17 @@ namespace SS14.Client.Graphics.CluwneLib
         public static event FrameEventHandler Idle;
         
         private Color DEFAULTCOLOR;
-       
 
+        #region Accessors
+        public static bool IsInitialized { get; set; }
+        public static bool IsRunning { get; set; }
+        public static CluwneWindow Screen {  get;  set; }
+        public static TimingData FrameStats { get; set; }
+        public static FXShader CurrentShader { get; set; }
+        public static BlendingModes BlendingMode { get; set; }
+        #endregion
         
+        #region CluwneEngine
         /// <summary>
         /// Start engine rendering.
         /// </summary>
@@ -67,14 +75,6 @@ namespace SS14.Client.Graphics.CluwneLib
             IsRunning = true;
         }
 
-        public static CluwneWindow Screen
-        {
-            get;
-            set;
-        }
-
-        public static bool IsRunning { get; set; }
-
         public static void Initialize()
         {
             if (IsInitialized)
@@ -95,19 +95,7 @@ namespace SS14.Client.Graphics.CluwneLib
         {
             Screen.Close();
         }
-
-        public static TimingData FrameStats { get; set; }
-
-        public static bool IsInitialized { get; set; }
-
-
-       
-
-
-     
         
-
-
         public static void Run(object sender, EventArgs e)
         {
                
@@ -115,6 +103,15 @@ namespace SS14.Client.Graphics.CluwneLib
 
         }
 
+        public static void Stop()
+        {
+
+            Screen.Dispose();
+
+        }
+        #endregion
+
+        #region RenderWindow Methods
         public static void createNewWindow(int displayWidth, int displayHeight,string title)
         {
 
@@ -123,11 +120,25 @@ namespace SS14.Client.Graphics.CluwneLib
             
         }
 
-        public float Width
+        public static void Clear(Color color)
         {
-            get;
-            set;
+            
         }
+
+        public static void SetMode(int p1, int p2)
+        {
+            throw new NotImplementedException();
+        }
+
+        public static void SetMode(int p1, int p2, bool p3, bool p4, bool p5, int p6)
+        {
+            throw new NotImplementedException();
+        }
+
+        #endregion
+
+        #region RenderTarget Stuff
+
         public static RenderTarget CurrentRenderTarget
         {
             get
@@ -157,15 +168,10 @@ namespace SS14.Client.Graphics.CluwneLib
         }
 
 
+        #endregion
 
 
-        public static void Stop()
-        {
-            throw new NotImplementedException();
-        }
-
-        public static FXShader CurrentShader { get; set; }
-
+        #region Drawing Methods
         public static void drawRectangle(int posX, int posY, int WidthX, int HeightY, Color Color)
         {
             RectangleShape rectangle = new RectangleShape();
@@ -180,43 +186,84 @@ namespace SS14.Client.Graphics.CluwneLib
 
      
 
-        public void DrawHollowRectangle(int x, int y, int width, int height)
+        public static void drawHollowRectangle(int posX, int posY, int widthX, int heightY, float OutlineThickness, Color OutlineColor)
         {
-            RectangleShape Rect = new RectangleShape();
-            Rect.FillColor = new SFML.Graphics.Color(128,128,128);
-            Rect.Position = new Vector2f(x, y);
-            Rect.Size = new Vector2f(width, height);
+            RectangleShape HollowRect = new RectangleShape();
+            HollowRect.FillColor = SystemColorToSFML(Color.Transparent);
+            HollowRect.Position = new Vector2f(posX, posY);
+            HollowRect.Size = new Vector2f(widthX, heightY);
+            HollowRect.OutlineThickness = OutlineThickness;
+            HollowRect.OutlineColor = SystemColorToSFML(OutlineColor);
 
-            CluwneLib.CurrentRenderTarget.Draw(Rect);
+            CurrentRenderTarget.Draw(HollowRect);
 
 
         }
 
-
-      
-
-        public static BlendingModes BlendingMode { get; set; }
-
-        public static void drawCircle(int p1, int p2, int p3, Color color)
+        public static void drawCircle(int posX, int posY, int radius, Color color)
         {
-            throw new NotImplementedException();
+            CircleShape Circle = new CircleShape();
+            Circle.Position = new Vector2(posX, posY);
+            Circle.Radius = radius;
+            Circle.FillColor = SystemColorToSFML(color);
+
+            CurrentRenderTarget.Draw(Circle);
+
+
         }
 
-        public static void drawPoint(int p1, int p2, Color color)
+        public static void drawHollowCircle(int posX, int posY, int radius,float OutlineThickness ,Color OutlineColor)
         {
-            throw new NotImplementedException();
+            CircleShape Circle = new CircleShape();
+            Circle.Position = new Vector2(posX, posY);
+            Circle.Radius = radius;
+            Circle.FillColor = SystemColorToSFML(Color.Transparent);
+            Circle.OutlineThickness = OutlineThickness;
+            Circle.OutlineColor = SystemColorToSFML(OutlineColor);
+
+            CurrentRenderTarget.Draw(Circle);
         }
 
-        public static void Clear(Color color)
+        public static void drawPoint(int posX, int posY, Color color)
         {
-            throw new NotImplementedException();
+            RectangleShape Point = new RectangleShape();
+            Point.Position = new Vector2(posX, posY);
+            Point.Size = new Vector2(1, 1);
+            Point.FillColor = SystemColorToSFML(color);
+
+
+            CurrentRenderTarget.Draw(Point);
         }
 
-        public static void drawCircle(float p1, float p2, int p3, Color color, Shared.Maths.Vector2 vector2)
+        public static void drawHollowPoint(int posX, int posY, Color OutlineColor)
         {
-           
+            RectangleShape hollowPoint = new RectangleShape();
+            hollowPoint.Position = new Vector2(posX, posY);
+            hollowPoint.Size = new Vector2(1, 1);
+            hollowPoint.FillColor = SystemColorToSFML(Color.Transparent);
+            hollowPoint.OutlineThickness = .6f;
+            hollowPoint.OutlineColor = SystemColorToSFML(OutlineColor);
+
+            CurrentRenderTarget.Draw(hollowPoint);
         }
 
+        public static void drawLine(int posX, int posY, int rotate,float thickness, Color Color)
+        {
+            RectangleShape line = new RectangleShape();
+            line.Position = new Vector2(posX,posY);
+            line.Rotation = rotate;
+            line.OutlineThickness = thickness;
+            line.FillColor = SystemColorToSFML(Color);
+
+            CurrentRenderTarget.Draw(line);
+        }
+
+       
+
+        #endregion
+
+
+        #region Helper Methods
         public static SColor SystemColorToSFML(Color color) // System Color  to SFML color 
         {
             SColor temp = new SColor(color.R, color.G, color.B, color.A);
@@ -237,13 +284,10 @@ namespace SS14.Client.Graphics.CluwneLib
             return new Vector2(point.X, point.Y);
         }
 
+        #endregion
 
-        public static void SetMode(int p1, int p2)
-        {
-            throw new NotImplementedException();
-        }
 
-        public static void SetMode(int p1, int p2, bool p3, bool p4, bool p5, int p6)
+        public static void drawCircle(float p1, float p2, int p3, Color color, Vector2 vector2)
         {
             throw new NotImplementedException();
         }

@@ -17,42 +17,49 @@ namespace SS14.Client.Graphics.CluwneLib.Sprite
     /// </summary>
     public class TextSprite : BaseSprite
     {
-        
-        private string p1;                                         // Title 
-        private string p2;
+     
         private string _text; 
-        private int _Width;                                        // Width of the Text Sprite
-        private int _Height;                                       // Height of the Text Sprite    
-        private Boolean _Shadowed;                                 // Is the Text Shadowed
-        private Vector2 _Position;                                 // Position (X , Y)  Of Text Sprite
+        private int _width;                                        // Width of the Text Sprite
+        private int _height;                                       // Height of the Text Sprite    
+        private Boolean _shadowed;                                 // Is the Text Shadowed
+        private Vector2 _position;                                 // Position (X , Y)  Of Text Sprite
         private SFML.Graphics.Font _Font;                          // Text Font
-        private Color _baseColor;                   // Base Color 
-        private Color _shadowColor;                 // Shadow Color
-
+        private Color _color;                                   // Base Color 
+        private Color _shadowColor;                                 // Shadow Color
+        private Text _textSprite;
        
         public TextSprite ()
         {
 
         }
 
-        public TextSprite( string Name , string Text, Font font )
+        public TextSprite( string SPRITEID, string Label, Font font )
         {
-           
-        }
-
-        public TextSprite(string Name, int x, int y, int width, int height)
-        {
-
-
+           _textSprite = new Text();
+          _textSprite.Font = font;
+            
+  
 
         }
 
-
-
-
+        public TextSprite(string SPRITEID, int x, int y, int width, int height)
+        {
+           _textSprite = new Text();
+            
+        }
+        
         public void Draw ( )
         {
-            //TODO Draw Sprite
+            _textSprite.Color = CluwneLib.SystemColorToSFML(_color);
+            _textSprite.DisplayedString = _text;
+            _textSprite.Position = _position;
+
+            CluwneLib.CurrentRenderTarget.Draw(_textSprite);
+        }
+
+        public int MeasureLine(string _text)
+        {
+            return _text.Length;
         }
 
 
@@ -65,25 +72,29 @@ namespace SS14.Client.Graphics.CluwneLib.Sprite
         {
             get
             {
-                return _baseColor;
+                return _color;
             }
             set
             {
-                this._baseColor = value;
+                this._color = value;
             }
 
 
         }
 
+        public System.Drawing.Size Size { get; set; }
+
+        public Vector2 ShadowOffset { get; set; }
+
         public Boolean Shadowed
         {
             get
             {
-                return _Shadowed;
+                return _shadowed;
             }
             set
             {
-                this._Shadowed = value;
+                this._shadowed = value;
             }
         }
 
@@ -118,11 +129,11 @@ namespace SS14.Client.Graphics.CluwneLib.Sprite
         {
             get
             {
-                return _Position;
+                return _position;
             } 
             set
             {
-                this._Position = value;
+                this._position = value;
             }
         }
 
@@ -130,11 +141,11 @@ namespace SS14.Client.Graphics.CluwneLib.Sprite
         {
             get
             {
-                return _Width;
+                return _width;
             }
             set
             {
-                this._Width = value;
+                this._width = value;
             }
 
         }
@@ -148,18 +159,7 @@ namespace SS14.Client.Graphics.CluwneLib.Sprite
         #endregion
 
 
-        public int MeasureLine ( string _text )
-        {
-            return _text.Length;
-        }
-
-        public System.Drawing.Size Size
-        {
-            get;
-            set;
-        }
-
-
-        public Vector2 ShadowOffset { get; set; }
+     
+     
     }
 }

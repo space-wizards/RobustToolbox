@@ -40,8 +40,8 @@
     <File buildAction="Compile">Lighting/LightArea.cs</File>
     <File buildAction="Compile">Lighting/LightManager.cs</File>
     <File buildAction="Compile">Lighting/LightModes/Flicker.cs</File>
-	<!-- DISABLED TILL SFML DOESNT FML-->
-    <!--<File buildAction="Compile">Lighting/QuadRenderer.cs</File>
+
+    <File buildAction="Compile">Lighting/QuadRenderer.cs</File>
     <File buildAction="Compile">Lighting/ShadowMapResolver.cs</File>-->
     <File buildAction="Compile">Map/MapManager.cs</File>
     <File buildAction="Compile">MessageLogging/MessageLogger.cs</File>
@@ -143,6 +143,7 @@
     <File buildAction="None">MessageLogging/messageLoggerService.config</File>
     <File buildAction="EmbeddedResource">_EmbeddedBaseResources/bluehigh.ttf</File>
     <File buildAction="EmbeddedResource">_EmbeddedBaseResources/noSprite.png</File>
+    <File buildAction="EmbeddedResource">_EmbeddedBaseResources/narsie.png</File>
   </Files>
   <Reference name="SS14.Client.GameObjects"/>
   <Reference name="SS14.Client.Interfaces"/>

@@ -25,6 +25,8 @@
   <Reference name="sfmlnet-graphics-2"/>
   <Files>
     <File buildAction="Compile">CluwneLib.cs</File>
+	<File buildAction="Compile">Collection/BaseCollection.cs</File>
+	<File buildAction="Compile">Enums/GraphicsEnums.cs</File>
     <File buildAction="Compile">Event/FrameEvent.cs</File>
     <File buildAction="Compile">Properties/AssemblyInfo.cs</File>
     <File buildAction="Compile">Render/CluwneWindow.cs</File>
@@ -33,7 +35,12 @@
     <File buildAction="Compile">Sprite/Batch.cs</File>
     <File buildAction="Compile">Sprite/CluwneSprite.cs</File>
     <File buildAction="Compile">Sprite/SpriteInfo.cs</File>
-    <File buildAction="Compile">Timing/TimingData.cs</File>
+    <File buildAction="Compile">Sprite/TextSprite.cs</File>
+	<File buildAction="Compile">Timing/TimingData.cs</File>
+	<File buildAction="Compile">VertexData/VertexEnums.cs</File>
+	<File buildAction="Compile">VertexData/VertexField.cs</File>
+	<File buildAction="Compile">VertexData/VertexType.cs</File>
+	<File buildAction="Compile">VertexData/VertexTypeList.cs</File>
     <File buildAction="Compile">Viewport.cs</File>
   </Files>
   <Reference name="SS14.Shared"/>

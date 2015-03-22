@@ -22,6 +22,9 @@ namespace SS14.Client.Graphics.CluwneLib
         private static Clock _timer;
         private static RenderTarget[] _currentTarget;
         public static event FrameEventHandler Idle;
+
+
+        public Styles Style { get; set; }
         
         private Color DEFAULTCOLOR;
 
@@ -111,28 +114,27 @@ namespace SS14.Client.Graphics.CluwneLib
         }
         #endregion
 
-        #region RenderWindow Methods
-        public static void createNewWindow(int displayWidth, int displayHeight,string title)
-        {
-
-          Screen = new CluwneWindow(new VideoMode((uint)displayWidth,(uint)displayHeight), title);
-
-            
-        }
-
+        #region Window Methods
+   
         public static void Clear(Color color)
         {
             
         }
 
-        public static void SetMode(int p1, int p2)
+        public static void SetMode(int displayWidth, int displayHeight)
         {
-            throw new NotImplementedException();
+            Screen = new CluwneWindow(new VideoMode((uint)displayWidth, (uint)displayHeight), "Space station 14");
         }
 
-        public static void SetMode(int p1, int p2, bool p3, bool p4, bool p5, int p6)
+        public static void SetMode(int width, int height, bool fullscreen, bool p4, bool p5, int refreshRate)
         {
-            throw new NotImplementedException();
+            Styles stylesTemp = new Styles();
+
+            if(fullscreen)
+                stylesTemp = Styles.Fullscreen;
+            else stylesTemp = Styles.Default;
+
+            Screen = new CluwneWindow(new VideoMode((uint)width, (uint)height),"Space Station 14",stylesTemp);
         }
 
         #endregion

@@ -35,6 +35,7 @@ namespace SS14.Client
         private INetworkManager _networkManager;
         private IStateManager _stateManager;
         private IUserInterfaceManager _userInterfaceManager;
+        private IResourceManager _resourceManager;
 
         #endregion
 
@@ -51,8 +52,10 @@ namespace SS14.Client
             _configurationManager = IoCManager.Resolve<IConfigurationManager>();
             IoCManager.Resolve<IConfigurationManager>().Initialize("./config.xml");
 
-            IoCManager.Resolve<IResourceManager>().LoadBaseResources();
-            IoCManager.Resolve<IResourceManager>().LoadLocalResources();
+            _resourceManager = IoCManager.Resolve<IResourceManager>();
+
+            _resourceManager.LoadBaseResources();
+            _resourceManager.LoadLocalResources();
           
 
             //Initialization of private members
@@ -62,20 +65,51 @@ namespace SS14.Client
             _stateManager = IoCManager.Resolve<IStateManager>();
             _userInterfaceManager = IoCManager.Resolve<IUserInterfaceManager>();
 
-            ///Resolve
+        
            
 
             //Setup
             SetupCluwne();
             SetupInput();
 
+         
+            //Testing! 
+            TextSprite test = new TextSprite("TEST", "Narsietext", _resourceManager.GetFont("CALIBRI"));
+            test.Position = new Shared.Maths.Vector2(500, 640);
+            test.Color = Color.DarkRed;
+            test.Text = "NAR-SIE HAS RISEN";
+
+            TextSprite test4 = new TextSprite("TEST", "Narsietext", _resourceManager.GetFont("CALIBRI"));
+            test4.Position = new Shared.Maths.Vector2(600, 600);
+            test4.Color = Color.Gold;
+            test4.Text = "SFML Rendering Engine";
+
+            TextSprite test5 = new TextSprite("TEST", "Narsietext", _resourceManager.GetFont("CALIBRI"));
+            test5.Position = new Shared.Maths.Vector2(700, 540);
+            test5.Color = Color.Gold;
+            test5.Text = "Project == notDead";
+
+
+            CluwneLib.drawHollowRectangle(100, 100, 100, 100, .6f, Color.Blue);
+            CluwneLib.drawPoint(134, 223, Color.Beige);
+            CluwneLib.drawCircle(121, 142, 20, Color.Crimson);
+
             
-            CluwneLib.drawHollowRectangle(60, 60, 100, 100,.6f, Color.White);
+            Texture temp = new Texture(_resourceManager.GetImage("73f"));
+          
 
-            CluwneLib.drawPoint(500, 120, Color.White);
-            CluwneLib.drawHollowPoint(500,100,Color.Gold);
-            CluwneLib.drawLine(1, 100, 55, .6f, Color.Red);
+            Sprite test3 = new Sprite();
+            test3.Texture = temp;
+           
 
+
+            CluwneLib.CurrentRenderTarget.Draw(test3);
+
+
+
+            test.Draw();
+            test4.Draw();
+            test5.Draw();
             CluwneLib.Screen.Display();
 
             
@@ -238,7 +272,7 @@ namespace SS14.Client
             CluwneLib.Initialize();
             CluwneLib.Go();
            
-            CluwneLib.createNewWindow((int) displayWidth, (int) displayHeight,"Space station 14");
+            CluwneLib.SetMode((int) displayWidth, (int) displayHeight, fullscreen,false,false,refresh);
             CluwneLib.Screen.BackgroundColor = CluwneLib.SystemColorToSFML(Color.Black);
            
 

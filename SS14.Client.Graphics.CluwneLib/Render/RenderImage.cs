@@ -9,24 +9,24 @@ namespace SS14.Client.Graphics.CluwneLib.Render
 {
     public class RenderImage : RenderTexture
     {
-        private string p1;
-        private uint p2;
-        private uint p3;
+      
         private ImageBufferFormats imageBufferFormats;
-        private string uniqueName;
-        private int p4;
-        private int p5;
-        private string targetName;
-     
+        private RenderTexture _temp;
+        private Texture _texture;
+    
 
         
 
         public RenderImage(uint width, uint height) : base(width, height)
         {
+            _temp = new RenderTexture(width,height);
+            
         }
 
         public RenderImage(uint width, uint height, bool depthBuffer) : base(width, height, depthBuffer)
         {
+            _temp = new RenderTexture(width,height,depthBuffer);
+
         }
 
      
@@ -54,7 +54,7 @@ namespace SS14.Client.Graphics.CluwneLib.Render
 
         public void BeginDrawing()
         {
-            throw new NotImplementedException();
+            
         }
 
         public void Clear(Color Color)

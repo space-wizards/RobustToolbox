@@ -94,16 +94,16 @@ namespace SS14.Client
             CluwneLib.drawPoint(134, 223, Color.Beige);
             CluwneLib.drawCircle(121, 142, 20, Color.Crimson);
 
-            
-            Texture temp = new Texture(_resourceManager.GetImage("73f"));
-          
 
-            Sprite test3 = new Sprite();
-            test3.Texture = temp;
-           
+            Texture temp = new Texture(_resourceManager.GetImage("Textures/73f.png"));
+
+            CluwneSprite test3 = new CluwneSprite(temp);
 
 
-            CluwneLib.CurrentRenderTarget.Draw(test3);
+          // test3.Draw();
+
+
+           CluwneLib.CurrentRenderTarget.Draw(test3);
 
 
 
@@ -116,11 +116,12 @@ namespace SS14.Client
 
              while(CluwneLib.Screen.IsOpen == true)
                 {
-                                    
-                    
-             
-               
+
+
+
+
                     CluwneLib.Screen.WaitAndDispatchEvents();
+                    
                 }
 
           

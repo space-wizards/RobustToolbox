@@ -7,8 +7,8 @@ namespace SS14.Client.Graphics.CluwneLib
 {
     public class Viewport
     {
-        public float Width { get; set; }
-        public float Height { get; set; }
+        public int Width { get; set; }
+        public int Height { get; set; }
 
     }
 }

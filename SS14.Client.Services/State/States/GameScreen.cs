@@ -92,7 +92,7 @@ namespace SS14.Client.Services.State.States
 
         #region Lighting
         // TODO Rewrite shader code and lighting shaders to re-enable this shit
-        /* private RenderImage _composedSceneTarget;
+        private RenderImage _composedSceneTarget;
          private RenderImage _overlayTarget;
          private RenderImage _sceneTarget;
          private RenderImage _tilesTarget;
@@ -110,8 +110,8 @@ namespace SS14.Client.Services.State.States
          private RenderImage _occluderDebugTarget;
          private RenderImage _lightTarget;
          private RenderImage _lightTargetIntermediate;
-         private Sprite _lightTargetIntermediateSprite;
-         private Sprite _lightTargetSprite;
+         private CluwneSprite _lightTargetIntermediateSprite;
+         private CluwneSprite _lightTargetSprite;
         public bool BlendLightMap = true;
 
          private QuadRenderer quadRenderer;
@@ -120,7 +120,7 @@ namespace SS14.Client.Services.State.States
          private RenderImage shadowIntermediate;
          private ShadowMapResolver shadowMapResolver;
          private bool debugWallOccluders = false;
-         private bool debugHitboxes = false;*/
+         private bool debugHitboxes = false;
 
         #endregion
 
@@ -169,12 +169,14 @@ namespace SS14.Client.Services.State.States
             // TODO This should go somewhere else, there should be explicit session setup and teardown at some point.
             NetworkManager.SendClientName(ConfigurationManager.GetPlayerName());
 
+            // Create new 
             _baseTarget = new RenderImage((uint)CluwneLib.Screen.GetView().Size.X,
                                           (uint)CluwneLib.Screen.GetView().Size.Y, true);
             _cleanupList.Add(_baseTarget);
+
             _baseTargetSprite = new CluwneSprite(_baseTarget);
             _cleanupSpriteList.Add(_baseTargetSprite);
-          /*  
+          
             _sceneTarget = new RenderImage((uint) CluwneLib.Screen.GetView().Size.X,
                                           (uint) CluwneLib.Screen.GetView().Size.Y, true);
             _cleanupList.Add(_sceneTarget);
@@ -185,51 +187,54 @@ namespace SS14.Client.Services.State.States
             _overlayTarget = new RenderImage((uint) CluwneLib.Screen.GetView().Size.X,
                                              (uint) CluwneLib.Screen.GetView().Size.Y, true);
             _cleanupList.Add(_overlayTarget);
-            _overlayTarget.SourceBlend = AlphaBlendOperation.SourceAlpha;
-              _overlayTarget.DestinationBlend = AlphaBlendOperation.InverseSourceAlpha;
-           _overlayTarget.SourceBlendAlpha = AlphaBlendOperation.SourceAlpha;
-          _overlayTarget.DestinationBlendAlpha = AlphaBlendOperation.InverseSourceAlpha;
+          //  _overlayTarget.SourceBlend = AlphaBlendOperation.SourceAlpha;
+          //    _overlayTarget.DestinationBlend = AlphaBlendOperation.InverseSourceAlpha;
+          // _overlayTarget.SourceBlendAlpha = AlphaBlendOperation.SourceAlpha;
+          //_overlayTarget.DestinationBlendAlpha = AlphaBlendOperation.InverseSourceAlpha;
 
            _composedSceneTarget = new RenderImage((uint) CluwneLib.Screen.GetView().Size.X,
                                                  (uint) CluwneLib.Screen.GetView().Size.Y,
                                                 ImageBufferFormats.BufferRGB888A8);
             _cleanupList.Add(_composedSceneTarget);
 
-            _lightTarget = new RenderImage("lightTarget", Gorgon.CurrentClippingViewport.Width,
-                                           Gorgon.CurrentClippingViewport.Height, ImageBufferFormats.BufferRGB888A8);
+            _lightTarget = new RenderImage("lightTarget", CluwneLib.CurrentClippingViewport.Width,
+                                           CluwneLib.CurrentClippingViewport.Height, ImageBufferFormats.BufferRGB888A8);
+
             _cleanupList.Add(_lightTarget);
-           _lightTargetSprite = new Sprite("lightTargetSprite", _lightTarget) { DepthWriteEnabled = false };
+           _lightTargetSprite = new CluwneSprite("lightTargetSprite", _lightTarget) { DepthWriteEnabled = false };
+
             _cleanupSpriteList.Add(_lightTargetSprite);
-           _lightTargetIntermediate = new RenderImage("lightTargetIntermediate", Gorgon.CurrentClippingViewport.Width,
-                                                     Gorgon.CurrentClippingViewport.Height,
+
+           _lightTargetIntermediate = new RenderImage("lightTargetIntermediate", CluwneLib.CurrentClippingViewport.Width,
+                                                     CluwneLib.CurrentClippingViewport.Height,
                                                      ImageBufferFormats.BufferRGB888A8);
            _cleanupList.Add(_lightTargetIntermediate);
-            _lightTargetIntermediateSprite = new Sprite("lightTargetIntermediateSprite", _lightTargetIntermediate)
+            _lightTargetIntermediateSprite = new CluwneSprite("lightTargetIntermediateSprite", _lightTargetIntermediate)
                                                  {DepthWriteEnabled = false};
            _cleanupSpriteList.Add(_lightTargetIntermediateSprite);
 
-          _gasBatch = new Batch("gasBatch", 1);
-            _gasBatch.SourceBlend = AlphaBlendOperation.SourceAlpha;
-           _gasBatch.DestinationBlend = AlphaBlendOperation.InverseSourceAlpha;
-            _gasBatch.SourceBlendAlpha = AlphaBlendOperation.SourceAlpha;
-            _gasBatch.DestinationBlendAlpha = AlphaBlendOperation.InverseSourceAlpha;
+          //_gasBatch = new Batch("gasBatch", 1);
+          //  _gasBatch.SourceBlend = AlphaBlendOperation.SourceAlpha;
+          // _gasBatch.DestinationBlend = AlphaBlendOperation.InverseSourceAlpha;
+          //  _gasBatch.SourceBlendAlpha = AlphaBlendOperation.SourceAlpha;
+          //  _gasBatch.DestinationBlendAlpha = AlphaBlendOperation.InverseSourceAlpha;
 
-            _wallTopsBatch = new Batch("wallTopsBatch", 1);
-            _wallTopsBatch.SourceBlend = AlphaBlendOperation.SourceAlpha;
-            _wallTopsBatch.DestinationBlend = AlphaBlendOperation.InverseSourceAlpha;
-            _wallTopsBatch.SourceBlendAlpha = AlphaBlendOperation.SourceAlpha;
-            _wallTopsBatch.DestinationBlendAlpha = AlphaBlendOperation.InverseSourceAlpha;
+          //  _wallTopsBatch = new Batch("wallTopsBatch", 1);
+          //  _wallTopsBatch.SourceBlend = AlphaBlendOperation.SourceAlpha;
+          //  _wallTopsBatch.DestinationBlend = AlphaBlendOperation.InverseSourceAlpha;
+          //  _wallTopsBatch.SourceBlendAlpha = AlphaBlendOperation.SourceAlpha;
+          //  _wallTopsBatch.DestinationBlendAlpha = AlphaBlendOperation.InverseSourceAlpha;
 
-            _decalBatch = new Batch("decalBatch", 1);
-            _decalBatch.SourceBlend = AlphaBlendOperation.SourceAlpha;
-            _decalBatch.DestinationBlend = AlphaBlendOperation.InverseSourceAlpha;
-            _decalBatch.SourceBlendAlpha = AlphaBlendOperation.SourceAlpha;
-            _decalBatch.DestinationBlendAlpha = AlphaBlendOperation.InverseSourceAlpha;
+          //  _decalBatch = new Batch("decalBatch", 1);
+          //  _decalBatch.SourceBlend = AlphaBlendOperation.SourceAlpha;
+          //  _decalBatch.DestinationBlend = AlphaBlendOperation.InverseSourceAlpha;
+          //  _decalBatch.SourceBlendAlpha = AlphaBlendOperation.SourceAlpha;
+          //  _decalBatch.DestinationBlendAlpha = AlphaBlendOperation.InverseSourceAlpha;
 
-            _floorBatch = new Batch("floorBatch", 1);
-            _wallBatch = new Batch("wallBatch", 1);
-            */
-            _gaussianBlur = new GaussianBlur(ResourceManager);
+          //  _floorBatch = new Batch("floorBatch", 1);
+          //  _wallBatch = new Batch("wallBatch", 1);
+          //  
+           // _gaussianBlur = new GaussianBlur(ResourceManager);
 
             _realScreenWidthTiles = (float) VideoMode.DesktopMode.Width/MapManager.GetTileSpacing();
             _realScreenHeightTiles = (float) VideoMode.DesktopMode.Height/MapManager.GetTileSpacing();

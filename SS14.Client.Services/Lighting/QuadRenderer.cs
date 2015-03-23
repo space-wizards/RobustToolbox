@@ -1,4 +1,5 @@
 ﻿using SS14.Client.Graphics.CluwneLib;
+using SS14.Client.Graphics.CluwneLib.VertexData;
 using SS14.Shared.Maths;
 using System.Drawing;
 
@@ -28,10 +29,10 @@ namespace SS14.Client.Services.Lighting
             // Ok this is dumb. You have to draw a non existant filledrectangle so the verts will draw, as drawing
             // one of these makes gorgon accept a TriangleList when you use the Draw() method, otherwise it will
             // want a pointlist which is no good to us.
-            Gorgon.CurrentRenderTarget.FilledRectangle(0, 0, 0, 0, Color.Black);
-
-            Gorgon.CurrentRenderTarget.Draw(verts);
-            Gorgon.CurrentRenderTarget.Update();
+           CluwneLib.drawRectangle(0, 0, 0, 0, Color.Black);
+         
+           
+            
         }
     }
 }

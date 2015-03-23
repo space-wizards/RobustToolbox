@@ -22,10 +22,6 @@ namespace SS14.Client.Graphics.CluwneLib
         private static Clock _timer;
         private static RenderTarget[] _currentTarget;
         public static event FrameEventHandler Idle;
-
-
-        public Styles Style { get; set; }
-        
         private Color DEFAULTCOLOR;
 
         #region Accessors
@@ -35,6 +31,7 @@ namespace SS14.Client.Graphics.CluwneLib
         public static TimingData FrameStats { get; set; }
         public static FXShader CurrentShader { get; set; }
         public static BlendingModes BlendingMode { get; set; }
+        public Styles Style { get; set; }
         #endregion
         
         #region CluwneEngine
@@ -65,7 +62,7 @@ namespace SS14.Client.Graphics.CluwneLib
                 {
                     if (_currentTarget[0] != null)     
                     {
-                       
+                       //update targets and viewport
                     }
                 }
                 
@@ -94,33 +91,6 @@ namespace SS14.Client.Graphics.CluwneLib
            
         }
 
-        private static void Terminate()
-        {
-            Screen.Close();
-        }
-        
-        public static void Run(object sender, EventArgs e)
-        {
-               
-
-
-        }
-
-        public static void Stop()
-        {
-
-            Screen.Dispose();
-
-        }
-        #endregion
-
-        #region Window Methods
-   
-        public static void Clear(Color color)
-        {
-            
-        }
-
         public static void SetMode(int displayWidth, int displayHeight)
         {
             Screen = new CluwneWindow(new VideoMode((uint)displayWidth, (uint)displayHeight), "Space station 14");
@@ -137,6 +107,30 @@ namespace SS14.Client.Graphics.CluwneLib
             Screen = new CluwneWindow(new VideoMode((uint)width, (uint)height),"Space Station 14",stylesTemp);
         }
 
+
+        public static void Clear(Color color)
+        {
+            CurrentRenderTarget.Clear(SystemColorToSFML(color));
+        }
+
+        private static void Terminate()
+        {
+            Screen.Close();
+        }
+        
+        public static void Run(object sender, EventArgs e)
+        {
+               
+
+
+        }
+
+        public static void Stop()
+        {
+            CurrentRenderTarget = null;
+            Screen.Dispose();
+        }
+       
         #endregion
 
         #region RenderTarget Stuff
@@ -161,7 +155,7 @@ namespace SS14.Client.Graphics.CluwneLib
 
         public static void setAdditionalRenderTarget(int index, RenderTarget _target)
         {
-          _currentTarget[index] = _target;
+           _currentTarget[index] = _target;
         }
 
         public static RenderTarget getAdditionalRenderTarget(int index)
@@ -174,6 +168,8 @@ namespace SS14.Client.Graphics.CluwneLib
 
 
         #region Drawing Methods
+
+        #region Rectangle
         public static void drawRectangle(int posX, int posY, int WidthX, int HeightY, Color Color)
         {
             RectangleShape rectangle = new RectangleShape();
@@ -201,7 +197,9 @@ namespace SS14.Client.Graphics.CluwneLib
 
 
         }
+        #endregion
 
+        #region Circle
         public static void drawCircle(int posX, int posY, int radius, Color color)
         {
             CircleShape Circle = new CircleShape();
@@ -226,6 +224,19 @@ namespace SS14.Client.Graphics.CluwneLib
             CurrentRenderTarget.Draw(Circle);
         }
 
+
+        public static void drawCircle(float posX, float posY, int radius, Color color, Vector2 vector2)
+        {
+            CircleShape Circle = new CircleShape();
+            Circle.Position = new Vector2(posX, posY);
+            Circle.Radius = radius;
+            Circle.FillColor = SystemColorToSFML(Color.Transparent);
+        
+            CurrentRenderTarget.Draw(Circle);
+        }
+        #endregion
+
+        #region Point
         public static void drawPoint(int posX, int posY, Color color)
         {
             RectangleShape Point = new RectangleShape();
@@ -249,6 +260,9 @@ namespace SS14.Client.Graphics.CluwneLib
             CurrentRenderTarget.Draw(hollowPoint);
         }
 
+        #endregion
+
+        #region Line
         public static void drawLine(int posX, int posY, int rotate,float thickness, Color Color)
         {
             RectangleShape line = new RectangleShape();
@@ -260,7 +274,7 @@ namespace SS14.Client.Graphics.CluwneLib
             CurrentRenderTarget.Draw(line);
         }
 
-       
+        #endregion
 
         #endregion
 
@@ -289,9 +303,5 @@ namespace SS14.Client.Graphics.CluwneLib
         #endregion
 
 
-        public static void drawCircle(float p1, float p2, int p3, Color color, Vector2 vector2)
-        {
-            throw new NotImplementedException();
-        }
     }
 }

@@ -583,7 +583,7 @@ namespace SS14.Client.Services.Resources
         /// </summary>
         public Image GetImage(string key)
         {
-            key = key.ToLowerInvariant();
+            //key = key.ToLowerInvariant(); FUCK THIS LINE OF CODE ESPECIALLY BROKENASFUCK
             if (_images.ContainsKey(key)) return _images[key];
             else return _images["nosprite"];
         }

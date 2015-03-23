@@ -12,26 +12,26 @@ using System.Collections.Generic;
 using System.Drawing;
 using System.Linq;
 using SS14.Shared.Maths;
-using Sprite = SS14.Client.Graphics.CluwneLib.Sprite.CluwneSprite;
+using CluwneSprite = SS14.Client.Graphics.CluwneLib.Sprite.CluwneSprite;
 
 namespace SS14.Client.GameObjects
 {
     public class SpriteComponent : Component, IRenderableComponent, ISpriteComponent
     {
-        protected Sprite currentBaseSprite;
-        protected Dictionary<string, Sprite> dirSprites;
+        protected CluwneSprite currentBaseSprite;
+        protected Dictionary<string, CluwneSprite> dirSprites;
         protected bool flip;
         protected IRenderableComponent master;
         protected List<IRenderableComponent> slaves;
-        protected Dictionary<string, Sprite> sprites;
+        protected Dictionary<string, CluwneSprite> sprites;
         protected bool visible = true;
         public DrawDepth DrawDepth { get; set; }
 
         public SpriteComponent()
         {
             Family = ComponentFamily.Renderable;
-            sprites = new Dictionary<string, Sprite>();
-            dirSprites = new Dictionary<string, Sprite>();
+            sprites = new Dictionary<string, CluwneSprite>();
+            dirSprites = new Dictionary<string, CluwneSprite>();
             slaves = new List<IRenderableComponent>();
         }
 
@@ -65,12 +65,12 @@ namespace SS14.Client.GameObjects
             }
         }
 
-        public Sprite GetCurrentSprite()
+        public CluwneSprite GetCurrentSprite()
         {
             return GetActiveDirectionalSprite();
         }
 
-        public Sprite GetSprite(string spriteKey)
+        public CluwneSprite GetSprite(string spriteKey)
         {
             if (sprites.ContainsKey(spriteKey))
                 return sprites[spriteKey];
@@ -78,7 +78,7 @@ namespace SS14.Client.GameObjects
                 return null;
         }
 
-        public List<Sprite> GetAllSprites()
+        public List<CluwneSprite> GetAllSprites()
         {
             return sprites.Values.ToList();
         }
@@ -109,7 +109,7 @@ namespace SS14.Client.GameObjects
             BuildDirectionalSprites();
         }
 
-        public void AddSprite(string key, Sprite spritetoadd)
+        public void AddSprite(string key, CluwneSprite spritetoadd)
         {
             if (spritetoadd != null && key != "")
                 sprites.Add(key, spritetoadd);
@@ -205,7 +205,7 @@ namespace SS14.Client.GameObjects
             return reply;
         }
 
-        protected virtual Sprite GetBaseSprite()
+        protected virtual CluwneSprite GetBaseSprite()
         {
             return currentBaseSprite;
         }
@@ -215,11 +215,11 @@ namespace SS14.Client.GameObjects
             DrawDepth = p;
         }
 
-        private Sprite GetActiveDirectionalSprite()
+        private CluwneSprite GetActiveDirectionalSprite()
         {
             if (currentBaseSprite == null) return null;
 
-            Sprite sprite = currentBaseSprite;
+            CluwneSprite sprite = currentBaseSprite;
 
             string dirName =
                 (currentBaseSprite.Name + "_" +
@@ -236,7 +236,7 @@ namespace SS14.Client.GameObjects
         {
             if (currentBaseSprite == null || !visible) return false;
 
-            Sprite spriteToCheck = GetActiveDirectionalSprite();
+            CluwneSprite spriteToCheck = GetActiveDirectionalSprite();
 
             var AABB =
                 new RectangleF(
@@ -304,7 +304,7 @@ namespace SS14.Client.GameObjects
             if (!visible) return;
             if (currentBaseSprite == null) return;
 
-            Sprite spriteToRender = GetActiveDirectionalSprite();
+            CluwneSprite spriteToRender = GetActiveDirectionalSprite();
 
             Vector2 renderPos =
                 ClientWindowData.WorldToScreen(
@@ -347,7 +347,7 @@ namespace SS14.Client.GameObjects
             SetSpriteCenter(sprites[sprite], center);
         }
 
-        public void SetSpriteCenter(Sprite sprite, Vector2 center)
+        public void SetSpriteCenter(CluwneSprite sprite, Vector2 center)
         {
             sprite.SetPosition(center.X - (GetActiveDirectionalSprite().AABB.Width/2),
                                center.Y - (GetActiveDirectionalSprite().AABB.Height/2));

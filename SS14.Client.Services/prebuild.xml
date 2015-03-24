@@ -43,6 +43,7 @@
 
     <File buildAction="Compile">Lighting/QuadRenderer.cs</File>
     <File buildAction="Compile">Lighting/ShadowMapResolver.cs</File>
+    <File buildAction="Compile">Lighting/ShadowmapSize.cs</File>
  
     <File buildAction="Compile">Map/MapManager.cs</File>
     <File buildAction="Compile">MessageLogging/MessageLogger.cs</File>

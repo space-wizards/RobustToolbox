@@ -21,6 +21,7 @@
   <Reference name="System.Windows.Forms"/>
   <Files>
     <File buildAction="Compile" subType="Form">MainWindow.cs</File>
+    <File buildAction="Compile">GameController.cs</File>
     <File buildAction="Compile">MainWindow.Designer.cs</File>
     <!--<File buildAction="EmbeddedResource">MainWindow.resx</File>-->
     <File buildAction="Compile">Program.cs</File>

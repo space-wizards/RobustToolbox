@@ -21,6 +21,19 @@ namespace SS14.Client.Services.Configuration
                 var config = (Configuration) configLoader.Deserialize(configReader);
                 configReader.Close();
                 Configuration = config;
+
+                // sanitize the pathname in config.xml for the current OS
+                // N.B.: You cannot use Path.DirectorySeparatorChar and
+                // Path.AltDirectorySeparatorChar here, because on some platforms
+                // they are the same.  Mono/linux has both as '/', for example.
+                // Hardcode the only platforms we care about.
+                // FIXME: Move this into SS14.Shared.PlatformIndependant or similar.
+
+                var separators = new char [] { '/', '\\' };
+                string newpath = "";
+                foreach (string tmp in config.ResourcePack.Split(separators))
+                    newpath = Path.Combine (newpath, tmp);
+                config.ResourcePack = newpath;
             }
             else
             {

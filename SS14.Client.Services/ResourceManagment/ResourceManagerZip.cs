@@ -401,7 +401,9 @@ namespace SS14.Client.Services.Resources
                 string[] splitLine = line.Split(',');
                 string[] fullPath = Regex.Split(splitLine[0], "\t");
 
-                string originalName = Path.GetFileNameWithoutExtension(fullPath[0]).ToLowerInvariant();
+                string PlatformPathname = SS14.Shared.Utility.PlatformTools.SanePath(fullPath[0]);
+
+                string originalName = Path.GetFileNameWithoutExtension(PlatformPathname).ToLowerInvariant();
                 //The name of the original picture without extension, before it became part of the atlas. 
                 //This will be the name we can find this under in our Resource lists.
 

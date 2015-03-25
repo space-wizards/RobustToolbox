@@ -43,12 +43,12 @@ namespace SS14.Client.Graphics.CluwneLib.Sprite
         /// <summary>
         /// Creates a TextSprite
         /// </summary>
-        /// <param name="SPRITEID"> ID of the TextSprite </param>
-        /// <param name="Label">  Label of TextSprite </param>
+        /// <param name=""> Label of TextSprite </param>
+        /// <param name="p2">   </param>
         /// <param name="font"> Font to use when displaying Text </param>
-        public TextSprite( string SPRITEID, string Label, Font font )
+        public TextSprite( string Label, string text, Font font )
         {
-            this._key = SPRITEID;
+            this._text = text;
             this._label = Label;
             this._font = font;
         }
@@ -56,16 +56,17 @@ namespace SS14.Client.Graphics.CluwneLib.Sprite
         /// <summary>
         /// Creates a TextSprite
         /// </summary> 
-        /// <param name="SPRITEID"> ID of the TextSprite</param>
+        /// <param name="Label"> ID of the TextSprite</param>
         /// <param name="x"> position X of TextSprite </param>
         /// <param name="y"> Position Y of TextSprite </param>
         /// <param name="width"> Width of TextSprite </param>
         /// <param name="height"> Height of TextSprite </param>
-        public TextSprite(string SPRITEID, int x, int y, int width, int height)
+        public TextSprite(string Label, int x, int y, int width, int height)
         {
-            this._key = SPRITEID;
+            this._key = Label;
             this._position = new Vector2(x, y);
-           //width, height code goes here
+            this._width = width;
+            this._height = height;
 
             
         }
@@ -84,7 +85,8 @@ namespace SS14.Client.Graphics.CluwneLib.Sprite
             _textSprite.DisplayedString = _text;
             _textSprite.Position = _position;
             _textSprite.Font = _font;
-           
+            
+            
             CluwneLib.CurrentRenderTarget.Draw(_textSprite);
         }
 
@@ -143,11 +145,13 @@ namespace SS14.Client.Graphics.CluwneLib.Sprite
         {
             get
             {
+                if (_text == null)
+                    return "null";
                 return _text;
             }
             set
             {
-                _text = value;
+               _text = value;
             }
 
             

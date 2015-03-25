@@ -170,6 +170,15 @@ namespace SS14.Client.Graphics.CluwneLib
         #region Drawing Methods
 
         #region Rectangle
+
+        /// <summary>
+        /// Draws a Rectangle to the current RenderTarget
+        /// </summary>
+        /// <param name="posX">Pos X of rectangle </param>
+        /// <param name="posY"> Pos Y of rectangle </param>
+        /// <param name="WidthX"> Width X of rectangle </param>
+        /// <param name="HeightY"> Height Y of rectangle </param>
+        /// <param name="Color"> Fill Color </param>
         public static void drawRectangle(int posX, int posY, int WidthX, int HeightY, Color Color)
         {
             RectangleShape rectangle = new RectangleShape();
@@ -183,7 +192,15 @@ namespace SS14.Client.Graphics.CluwneLib
         }
 
      
-
+        /// <summary>
+        /// Draws a Hollow Rectangle to the Current RenderTarget
+        /// </summary>
+        /// <param name="posX"> Pos X of rectangle </param>
+        /// <param name="posY"> Pos Y of rectangle </param>
+        /// <param name="widthX"> Width X of rectangle </param>
+        /// <param name="heightY"> Height Y of rectangle </param>
+        /// <param name="OutlineThickness"> Outline Thickness of rectangle </param>
+        /// <param name="OutlineColor"> Outline Color </param>
         public static void drawHollowRectangle(int posX, int posY, int widthX, int heightY, float OutlineThickness, Color OutlineColor)
         {
             RectangleShape HollowRect = new RectangleShape();
@@ -200,6 +217,13 @@ namespace SS14.Client.Graphics.CluwneLib
         #endregion
 
         #region Circle
+        /// <summary>
+        /// Draws a Filled Circle to the CurrentRenderTarget
+        /// </summary>
+        /// <param name="posX"> Pos X of Circle</param>
+        /// <param name="posY"> Pos Y of Circle </param>
+        /// <param name="radius"> Radius of Circle </param>
+        /// <param name="color"> Fill Color </param>
         public static void drawCircle(int posX, int posY, int radius, Color color)
         {
             CircleShape Circle = new CircleShape();
@@ -211,7 +235,14 @@ namespace SS14.Client.Graphics.CluwneLib
 
 
         }
-
+        /// <summary>
+        /// Draws a Hollow Circle to the CurrentRenderTarget
+        /// </summary>
+        /// <param name="posX"> Pos X of Circle </param>
+        /// <param name="posY"> Pos Y of Circle </param>
+        /// <param name="radius"> Radius of Circle </param>
+        /// <param name="OutlineThickness"> Thickness of Circle Outline </param>
+        /// <param name="OutlineColor"> Circle outline Color </param>
         public static void drawHollowCircle(int posX, int posY, int radius,float OutlineThickness ,Color OutlineColor)
         {
             CircleShape Circle = new CircleShape();
@@ -224,7 +255,14 @@ namespace SS14.Client.Graphics.CluwneLib
             CurrentRenderTarget.Draw(Circle);
         }
 
-
+        /// <summary>
+        /// Draws a Filled Circle to the CurrentRenderTarget 
+        /// </summary>
+        /// <param name="posX"> Pos X of Circle </param>
+        /// <param name="posY"> Pos Y of Circle </param>
+        /// <param name="radius"> Radius of Cirle </param>
+        /// <param name="color"> Fill Color </param>
+        /// <param name="vector2"></param>
         public static void drawCircle(float posX, float posY, int radius, Color color, Vector2 vector2)
         {
             CircleShape Circle = new CircleShape();
@@ -237,6 +275,12 @@ namespace SS14.Client.Graphics.CluwneLib
         #endregion
 
         #region Point
+        /// <summary>
+        /// Draws a Filled Point to the CurrentRenderTarget
+        /// </summary>
+        /// <param name="posX"> Pos X of Point </param>
+        /// <param name="posY"> Pos Y of Point </param>
+        /// <param name="color"> Fill Color </param>
         public static void drawPoint(int posX, int posY, Color color)
         {
             RectangleShape Point = new RectangleShape();
@@ -248,6 +292,12 @@ namespace SS14.Client.Graphics.CluwneLib
             CurrentRenderTarget.Draw(Point);
         }
 
+        /// <summary>
+        /// Draws a hollow Point to the CurrentRenderTarget
+        /// </summary>
+        /// <param name="posX"> Pos X of Point </param>
+        /// <param name="posY"> Pos Y of Point </param>
+        /// <param name="OutlineColor"> Outline Color </param>
         public static void drawHollowPoint(int posX, int posY, Color OutlineColor)
         {
             RectangleShape hollowPoint = new RectangleShape();
@@ -263,6 +313,14 @@ namespace SS14.Client.Graphics.CluwneLib
         #endregion
 
         #region Line
+        /// <summary>
+        /// Draws a Line to the CurrentRenderTarget
+        /// </summary>
+        /// <param name="posX"> Pos X of Line </param>
+        /// <param name="posY"> Pos Y of Line </param>
+        /// <param name="rotate"> Line Rotation </param>
+        /// <param name="thickness"> Line Thickness </param>
+        /// <param name="Color"> Line Color </param>
         public static void drawLine(int posX, int posY, int rotate,float thickness, Color Color)
         {
             RectangleShape line = new RectangleShape();
@@ -280,23 +338,36 @@ namespace SS14.Client.Graphics.CluwneLib
 
 
         #region Helper Methods
-        public static SColor SystemColorToSFML(Color color) // System Color  to SFML color 
+        /// <summary>
+        /// Converts a System.Drawing.Color to a SFML.Graphics.Color
+        /// </summary>
+        /// <param name="color"> System.Drawing.Color to convert </param>
+        /// <returns></returns>
+        public static SColor SystemColorToSFML(Color color) 
         {
             SColor temp = new SColor(color.R, color.G, color.B, color.A);
             return temp;
         }
 
-        public static Color SFMLColorToSystem(SColor color) // SFML color to System Color
+        /// <summary>
+        /// Converts a SFML.Graphics.Color to a System.Drawing.Color
+        /// </summary>
+        /// <param name="color"> SFML.Graphics.Color to convert </param>
+        /// <returns></returns>
+        public static Color SFMLColorToSystem(SColor color) 
         {
             Color temp = Color.FromArgb(color.R,color.G,color.B,color.A);
                       
             return temp;
         }
 
+        /// <summary>
+        /// Converts a Point to a Vector2
+        /// </summary>
+        /// <param name="point"> Point to convert </param>
+        /// <returns></returns>
         public static Vector2 PointToVector2(Point point)
         {
-
-
             return new Vector2(point.X, point.Y);
         }
 

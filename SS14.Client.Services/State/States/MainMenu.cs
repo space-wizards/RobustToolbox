@@ -12,6 +12,7 @@ using System.Diagnostics;
 using System.Drawing;
 using System.Reflection;
 using Color = System.Drawing.Color;
+using SFML.Graphics;
 
 namespace SS14.Client.Services.State.States
 {
@@ -73,7 +74,7 @@ namespace SS14.Client.Services.State.States
             FileVersionInfo fvi = FileVersionInfo.GetVersionInfo(assembly.Location);
 
             _lblVersion = new Label("v. " + fvi.FileVersion, "CALIBRI", ResourceManager);
-            _lblVersion.Text.Color = Color.WhiteSmoke;// white smoke
+            _lblVersion.Text.Color = Color.WhiteSmoke;
             _lblVersion.Position = new Point((int)VideoMode.DesktopMode.Width - _lblVersion.ClientArea.Width - 3 ,
                                              (int)VideoMode.DesktopMode.Height - _lblVersion.ClientArea.Height - 3);
 
@@ -99,7 +100,7 @@ namespace SS14.Client.Services.State.States
 
         public void Render(FrameEventArgs e)
         {
-           // _background.Draw(new Rectangle(0, 0,(int) VideoMode.DesktopMode.Width, (int) VideoMode.DesktopMode.Height));
+           _background.Draw(new Rectangle(0, 0,(int) VideoMode.DesktopMode.Width, (int) VideoMode.DesktopMode.Height));
         }
 
         public void FormResize()
@@ -197,7 +198,7 @@ namespace SS14.Client.Services.State.States
                                    RotationSpeed = 0.0f
                                });
 
-            //            DrawSprite.Axis = new Vector2(DrawSprite.Width / 2f, DrawSprite.Height / 2f);
+            // DrawSprite.Axis = new Vector2(DrawSprite.Width / 2f, DrawSprite.Height / 2f);
 /*            var clouds = new FloatingDecoration(ResourceManager, "mainbg_clouds")
                              {
                                  BounceRotate = true,

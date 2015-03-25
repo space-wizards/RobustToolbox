@@ -6,9 +6,11 @@ using Color = SFML.Graphics.Color;
 using SFML.Graphics;
 using Drawing = System.Drawing;
 using BaseSprite = SFML.Graphics.Sprite;
+using Image = SFML.Graphics.Image;
 using SS14.Client.Graphics.CluwneLib.Sprite;
 using SS14.Shared.Maths;
 using SS14.Client.Graphics.CluwneLib.Render;
+using System.Drawing;
 
 namespace SS14.Client.Graphics.CluwneLib.Sprite
 {
@@ -26,7 +28,7 @@ namespace SS14.Client.Graphics.CluwneLib.Sprite
         private Vector2 _scale;
         private Vector2 _size;
         private float _rotation;
-        private BaseSprite _baseSprite;
+     
         private Texture _texture;
         private IntRect _textureRect;
         private Color _color;
@@ -101,24 +103,51 @@ namespace SS14.Client.Graphics.CluwneLib.Sprite
         }
 
        
-
-        public void SetPosition(float width, float height)
+        /// <summary>
+        /// sets the position of the Sprite
+        /// </summary>
+        /// <param name="X"> X Pos </param>
+        /// <param name="Y"> Y Pos </param>
+        public void SetPosition(float X, float Y)
         {
-           
+            Vector2 temp = new Vector2(X, Y);
+            base.Position = temp;
+            
         }
 
+        /// <summary>
+        /// Draws this instance to the current renderTarget
+        /// </summary>
         public void Draw()
         {
+            if (_renderTarget != null)
+                CluwneLib.CurrentRenderTarget = _renderTarget;
+
           CluwneLib.CurrentRenderTarget.Draw(this);
         }
-
+        /// <summary>
+        /// Draws a specific CluwneSprite to the current RenderTarget
+        /// </summary>
+        /// <param name="CS1"> CluwneSprite to draw </param>
         public void Draw (CluwneSprite CS1 )
         {
+            if (_renderTarget != null)
+                CluwneLib.CurrentRenderTarget = _renderTarget;
 
         }
-        public void Draw(Drawing.Rectangle _clientAreaMain)
+        /// <summary>
+        /// Draws a Rectangle 
+        /// </summary>
+        /// <param name="rect"> Rectangle to draw </param>
+        public void Draw(Rectangle rect)
         {
-           
+            if (_renderTarget != null)
+                CluwneLib.CurrentRenderTarget = _renderTarget;
+
+            RectangleShape temp = new RectangleShape();
+            temp.Position = new Vector2(rect.Location.X,rect.Location.Y);
+
+            CluwneLib.CurrentRenderTarget.Draw(temp);
         }
 
 

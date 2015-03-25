@@ -7,6 +7,8 @@ using SS14.Shared;
 using SS14.Shared.GameObjects;
 using SS14.Shared.IoC;
 using System.Drawing;
+using Color = SFML.Graphics.Color;
+using SS14.Shared.Maths;
 
 namespace SS14.Client.Services.Tiles
 {
@@ -166,7 +168,7 @@ namespace SS14.Client.Services.Tiles
                                         (float)bounds.Y - (Sprite.Height - bounds.Height) - yTopLeft);
 
             Sprite.Color = Color.White;
-            batch.AddClone(Sprite);
+           // batch.AddClone(Sprite);
 
             if(_dir == Direction.East)
             {
@@ -176,7 +178,7 @@ namespace SS14.Client.Services.Tiles
                     {
                         wallEndW.SetPosition((float)bounds.X - xTopLeft - 12f,
                                         (float)bounds.Y - (Sprite.Height - bounds.Height) - yTopLeft);
-                        batch.AddClone(wallEndW);
+                      //  batch.AddClone(wallEndW);
                     }
                 }
                 if ((surroundDirsSE & 2) == 0)
@@ -185,7 +187,7 @@ namespace SS14.Client.Services.Tiles
                     {
                         wallEndE.SetPosition((float)bounds.X - xTopLeft + Sprite.Width,
                                         (float)bounds.Y - (Sprite.Height - bounds.Height) - yTopLeft);
-                        batch.AddClone(wallEndE);
+                       // batch.AddClone(wallEndE);
                     }
                 }
             }
@@ -318,8 +320,8 @@ namespace SS14.Client.Services.Tiles
                 }
             }
 
-            Gorgon.CurrentRenderTarget.FilledRectangle(drawX + bx, drawY + by, width,
-                                                       height, Color.Black);
+            //TODO 
+           // CluwneLib.CurrentRenderTarget.FilledRectangle(drawX + bx, drawY + by, width, height, Color.Black);
         }
 
         public override void RenderPos(float x, float y, int tileSpacing, int lightSize)
@@ -448,9 +450,10 @@ namespace SS14.Client.Services.Tiles
             lightVec *= 10;
             Sprite.Color = Color.Black;
             Sprite.SetPosition(x + lightVec.X, y + lightVec.Y);
-            Sprite.BlendingMode = BlendingModes.Inverted;
-            Sprite.DestinationBlend = AlphaBlendOperation.SourceAlpha;
-            Sprite.SourceBlend = AlphaBlendOperation.One;
+           //TODO Sprite stuff
+            //Sprite.BlendingMode = BlendingModes.Inverted;
+            //Sprite.DestinationBlend = AlphaBlendOperation.SourceAlpha;
+            //Sprite.SourceBlend = AlphaBlendOperation.One;
             Sprite.Draw();
             if (lightVec.X < 0)
                 lightVec.X = -3;
@@ -470,8 +473,7 @@ namespace SS14.Client.Services.Tiles
             if (surroundingTiles[3] != null && IsOpaque(3) && lightVec.X < 0)
                 lightVec.X = 2;*/
 
-            Gorgon.CurrentRenderTarget.FilledRectangle(x + lightVec.X, y + lightVec.Y, Sprite.Width + 1,
-                                                       Sprite.Height + 1, Color.FromArgb(0, Color.Transparent));
+            //CluwneLib.CurrentRenderTarget.FilledRectangle(x + lightVec.X, y + lightVec.Y, Sprite.Width + 1,Sprite.Height + 1, Color.FromArgb(0, Color.Transparent));
         }
 
         public override void DrawDecals(float xTopLeft, float yTopLeft, int tileSpacing, Batch decalBatch)
@@ -490,7 +492,7 @@ namespace SS14.Client.Services.Tiles
                 topSpriteNW.SetPosition((float)bounds.X - xTopLeft - 12f,
                         (float)bounds.Y - (Sprite.Height - bounds.Height) - yTopLeft);
 
-                SEpos += topSpriteNW.Position + new Vector2(tileSpacing, 0f);
+            //    SEpos += topSpriteNW.Position + new Vector2(tileSpacing, 0f);
 
             }
             else
@@ -498,7 +500,7 @@ namespace SS14.Client.Services.Tiles
                 topSpriteNW.SetPosition((float)bounds.X - xTopLeft,
                         (float)bounds.Y - (Sprite.Height - bounds.Height) - yTopLeft - 12f);
 
-                SEpos += topSpriteNW.Position + new Vector2(0f, tileSpacing);
+               // SEpos += topSpriteNW.Position + new Vector2(0f, tileSpacing);
             }
 
             topSpriteSE.SetPosition(SEpos.X, SEpos.Y);
@@ -510,10 +512,10 @@ namespace SS14.Client.Services.Tiles
             topSprite.SetPosition((float)bounds.X - xTopLeft,
                        (float)bounds.Y - (Sprite.Height - bounds.Height) - yTopLeft);
 
-            wallTopsBatch.AddClone(topSprite);
+            //wallTopsBatch.AddClone(topSprite);
 
-            wallTopsBatch.AddClone(topSpriteNW);
-            wallTopsBatch.AddClone(topSpriteSE);
+            //wallTopsBatch.AddClone(topSpriteNW);
+            //wallTopsBatch.AddClone(topSpriteSE);
 
 
 

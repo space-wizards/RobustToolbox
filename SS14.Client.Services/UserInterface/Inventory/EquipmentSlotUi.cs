@@ -11,6 +11,7 @@ using System;
 using System.Drawing;
 using SS14.Client.Graphics.CluwneLib.Sprite;
 using SFML.Window;
+using SS14.Shared.Maths;
 
 namespace SS14.Client.Services.UserInterface.Inventory
 {
@@ -59,7 +60,7 @@ namespace SS14.Client.Services.UserInterface.Inventory
 
         public override sealed void Update(float frameTime)
         {
-            _buttonSprite.Position = Position;
+            _buttonSprite.Position = new Vector2(Position.X,Position.Y);
             ClientArea = new Rectangle(Position,
                                        new Size((int) _buttonSprite.AABB.Width, (int) _buttonSprite.AABB.Height));
 
@@ -88,10 +89,10 @@ namespace SS14.Client.Services.UserInterface.Inventory
 
         public override void Render()
         {
-            _buttonSprite.Color = _color;
-            _buttonSprite.Position = Position;
+            _buttonSprite.Color = new SFML.Graphics.Color(_color.R, _color.G, _color.B);
+            _buttonSprite.Position = new Vector2(Position.X,Position.Y);
             _buttonSprite.Draw();
-            _buttonSprite.Color = Color.White;
+            _buttonSprite.Color = new SFML.Graphics.Color(Color.White.R, Color.White.G, Color.White.B); ;
 
             if (_currentEntSprite != null && CurrentEntity != null)
                 _currentEntSprite.Draw(
@@ -112,7 +113,7 @@ namespace SS14.Client.Services.UserInterface.Inventory
 
 		public override bool MouseDown(MouseButtonEventArgs e)
         {
-            if (ClientArea.Contains(new Point((int) e.Position.X, (int) e.Position.Y)))
+            if (ClientArea.Contains(new Point((int) e.X, (int) e.Y)))
             {
                 if (_playerManager.ControlledEntity == null)
                     return false;
@@ -130,7 +131,7 @@ namespace SS14.Client.Services.UserInterface.Inventory
 
 		public override bool MouseUp(MouseButtonEventArgs e)
         {
-            if (ClientArea.Contains(new Point((int) e.Position.X, (int) e.Position.Y)))
+            if (ClientArea.Contains(new Point((int) e.X, (int) e.Y)))
             {
                 if (_playerManager.ControlledEntity == null)
                     return false;
@@ -160,7 +161,7 @@ namespace SS14.Client.Services.UserInterface.Inventory
 
 		public override void MouseMove(MouseMoveEventArgs e)
         {
-            _color = ClientArea.Contains(new Point((int) e.Position.X, (int) e.Position.Y))
+            _color = ClientArea.Contains(new Point((int) e.X, (int) e.Y))
                          ? Color.LightSteelBlue
                          : Color.White;
         }

@@ -7,6 +7,7 @@ using SS14.Shared.IoC;
 using System;
 using System.Drawing;
 using SS14.Client.Graphics.CluwneLib.Sprite;
+using SS14.Shared.Maths;
 
 namespace SS14.Client.Services.UserInterface.Components
 {
@@ -62,7 +63,7 @@ namespace SS14.Client.Services.UserInterface.Components
 
         public override void Update(float frameTime)
         {
-            icon.Position = Position;
+            icon.Position = new Vector2(Position.X,Position.Y);
             text.Position = new Vector2(Position.X + icon.Width + 5,
                                          Position.Y + (int) (icon.Height/2f) - (int) (text.Height/2f));
             ClientArea = new Rectangle(Position,

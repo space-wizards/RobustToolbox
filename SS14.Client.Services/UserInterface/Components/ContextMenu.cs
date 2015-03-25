@@ -10,6 +10,7 @@ using System.Collections.Generic;
 using SFML.Window;
 using System.Drawing;
 using System.Linq;
+using SS14.Client.Graphics.CluwneLib;
 
 namespace SS14.Client.Services.UserInterface.Components
 {
@@ -110,7 +111,7 @@ namespace SS14.Client.Services.UserInterface.Components
             base.Render();
             foreach (ContextMenuButton button in _buttons)
                 button.Render();
-            Gorgon.CurrentRenderTarget.Rectangle(ClientArea.X, ClientArea.Y, ClientArea.Width, ClientArea.Height,
+          CluwneLib.drawRectangle(ClientArea.X, ClientArea.Y, ClientArea.Width, ClientArea.Height,
                                                  Color.Black);
         }
 
@@ -203,8 +204,7 @@ namespace SS14.Client.Services.UserInterface.Components
             var iconRect = new Rectangle(ClientArea.X + 3,
                                          ClientArea.Y + (int) (ClientArea.Height/2f) - (int) (_iconSprite.Height/2f),
                                          (int) _iconSprite.Width, (int) _iconSprite.Height);
-            Gorgon.CurrentRenderTarget.FilledRectangle(ClientArea.X, ClientArea.Y, ClientArea.Width, ClientArea.Height,
-                                                       _currentColor);
+           CluwneLib.drawRectangle(ClientArea.X, ClientArea.Y, ClientArea.Width, ClientArea.Height,  _currentColor);
             _textLabel.Render();
             _iconSprite.Draw(iconRect);
         }
@@ -219,14 +219,14 @@ namespace SS14.Client.Services.UserInterface.Components
 
 		public override bool MouseUp(MouseButtonEventArgs e)
         {
-            if (ClientArea.Contains(new Point((int) e.Position.X, (int) e.Position.Y)))
+            if (ClientArea.Contains(new Point((int) e.X, (int) e.Y)))
                 if (Selected != null) Selected(this);
             return true;
         }
 
 		public override void MouseMove(MouseMoveEventArgs e)
         {
-            _currentColor = ClientArea.Contains(new Point((int) e.Position.X, (int) e.Position.Y))
+            _currentColor = ClientArea.Contains(new Point((int) e.X, (int) e.Y))
                                 ? Color.LightGray
                                 : Color.Gray;
         }

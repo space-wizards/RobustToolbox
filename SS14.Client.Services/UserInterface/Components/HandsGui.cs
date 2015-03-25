@@ -13,6 +13,7 @@ using System;
 using System.Drawing;
 using System.Linq;
 using SFML.Window;
+using Color = System.Drawing.Color;
 
 namespace SS14.Client.Services.UserInterface.Components
 {
@@ -70,18 +71,18 @@ namespace SS14.Client.Services.UserInterface.Components
 
             if (hands.CurrentHand == Hand.Left)
             {
-                handSlot.Color = Color.White;
+                handSlot.Color = new SFML.Graphics.Color(Color.White.R, Color.White.G, Color.White.B, Color.White.A);
                 handSlot.Draw(handL);
 
-                handSlot.Color = _inactiveColor;
+                handSlot.Color = new SFML.Graphics.Color(_inactiveColor.R, _inactiveColor.G, _inactiveColor.B, _inactiveColor.A);
                 handSlot.Draw(handR);
             }
             else
             {
-                handSlot.Color = Color.White;
+                handSlot.Color = new SFML.Graphics.Color(Color.White.R, Color.White.G, Color.White.B, Color.White.A); ;
                 handSlot.Draw(handR);
 
-                handSlot.Color = _inactiveColor;
+                handSlot.Color = new SFML.Graphics.Color(_inactiveColor.R, _inactiveColor.G, _inactiveColor.B, _inactiveColor.A);
                 handSlot.Draw(handL);
             }
 
@@ -164,15 +165,15 @@ namespace SS14.Client.Services.UserInterface.Components
 
 		public override bool MouseDown(MouseButtonEventArgs e)
         {
-            switch (e.Buttons)
+            switch (e.Button)
             {
-                case MouseButtons.Right:
-                    if (handL.Contains(new Point((int) e.Position.X, (int) e.Position.Y)))
+                case Mouse.Button.Right:
+                    if (handL.Contains(new Point((int) e.X, (int) e.Y)))
                     {
                         SendSwitchHandTo(Hand.Left);
                         return true;
                     }
-                    if (handR.Contains(new Point((int) e.Position.X, (int) e.Position.Y)))
+                    if (handR.Contains(new Point((int) e.X, (int) e.Y)))
                     {
                         SendSwitchHandTo(Hand.Right);
                         return true;
@@ -184,7 +185,7 @@ namespace SS14.Client.Services.UserInterface.Components
 
 		public override bool MouseUp(MouseButtonEventArgs e)
         {
-            if (ClientArea.Contains(new Point((int) e.Position.X, (int) e.Position.Y)))
+            if (ClientArea.Contains(new Point((int) e.X, (int) e.Y)))
             {
                 if (_playerManager.ControlledEntity == null)
                     return false;
@@ -198,7 +199,7 @@ namespace SS14.Client.Services.UserInterface.Components
 
                 if (_userInterfaceManager.DragInfo.IsEntity && _userInterfaceManager.DragInfo.IsActive)
                 {
-                    if (handL.Contains(new Point((int) e.Position.X, (int) e.Position.Y)))
+                    if (handL.Contains(new Point((int) e.X, (int) e.Y)))
                     {
                         if (!hands.HandSlots.ContainsKey(Hand.Left))
                         {
@@ -218,7 +219,7 @@ namespace SS14.Client.Services.UserInterface.Components
                         return true;
                     }
 
-                    else if (handR.Contains(new Point((int) e.Position.X, (int) e.Position.Y)))
+                    else if (handR.Contains(new Point((int) e.X, (int) e.Y)))
                     {
                         if (!hands.HandSlots.ContainsKey(Hand.Right))
                         {
@@ -240,13 +241,13 @@ namespace SS14.Client.Services.UserInterface.Components
                 }
                 else
                 {
-                    if (handL.Contains(new Point((int) e.Position.X, (int) e.Position.Y)) &&
+                    if (handL.Contains(new Point((int) e.X, (int) e.Y)) &&
                         hands.HandSlots.ContainsKey(Hand.Left) && hands.HandSlots[Hand.Right] != null)
                     {
                         hands.HandSlots[Hand.Left].SendMessage(this, ComponentMessageType.ClickedInHand,
                                                                _playerManager.ControlledEntity.Uid);
                     }
-                    else if (handR.Contains(new Point((int) e.Position.X, (int) e.Position.Y)) &&
+                    else if (handR.Contains(new Point((int) e.X, (int) e.Y)) &&
                              hands.HandSlots.ContainsKey(Hand.Right) && hands.HandSlots[Hand.Right] != null)
                     {
                         hands.HandSlots[Hand.Right].SendMessage(this, ComponentMessageType.ClickedInHand,
@@ -257,16 +258,16 @@ namespace SS14.Client.Services.UserInterface.Components
             return false;
         }
 
-		public override void MouseMove(MouseMoveEventArgs e)
+        public void MouseMove(MouseButtonEventArgs e)
         {
-            if (ClientArea.Contains(new Point((int) e.Position.X, (int) e.Position.Y)))
+            if (ClientArea.Contains(new Point((int) e.X, (int) e.Y)))
             {
                 Entity entity = _playerManager.ControlledEntity;
                 var hands = (HumanHandsComponent) entity.GetComponent(ComponentFamily.Hands);
-                switch (e.Buttons)
+                switch (e.Button)
                 {
-                    case MouseButtons.Left:
-                        if (handL.Contains(new Point((int) e.Position.X, (int) e.Position.Y)))
+                    case Mouse.Button.Left:
+                        if (handL.Contains(new Point((int) e.X, (int) e.Y)))
                         {
                             if (hands.HandSlots.Keys.Contains(Hand.Left) && hands.HandSlots[Hand.Left] != null)
                             {
@@ -274,7 +275,7 @@ namespace SS14.Client.Services.UserInterface.Components
                                 _userInterfaceManager.DragInfo.StartDrag(entityL);
                             }
                         }
-                        if (handR.Contains(new Point((int) e.Position.X, (int) e.Position.Y)))
+                        if (handR.Contains(new Point((int) e.X, (int) e.Y)))
                         {
                             if (hands.HandSlots.Keys.Contains(Hand.Right) && hands.HandSlots[Hand.Right] != null)
                             {

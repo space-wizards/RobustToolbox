@@ -27,6 +27,7 @@ namespace SS14.Client.Services.UserInterface.Components
 
         public Size Size = new Size(300, 100);
         protected ImageButton _buttonLeft;
+        private Color ctemp;
         protected ImageButton _buttonRight;
         protected int Selected
         {
@@ -185,8 +186,8 @@ namespace SS14.Client.Services.UserInterface.Components
                         new Point(ClientArea.Left + (int) (ClientArea.Width/2f - selected.Key.ClientArea.Width/2f),
                                   ClientArea.Top + (int) (ClientArea.Height/2f - selected.Key.ClientArea.Height/2f));
                     if (FadeItems)
-                        selected.Key.Color = Color.FromArgb(255, Color.White);
-
+                        ctemp = Color.FromArgb(255, Color.White);
+                    selected.Key.Color = new SFML.Graphics.Color(ctemp.R, ctemp.G, ctemp.B, ctemp.A);
                     selected.Key.Render();
 
                     int lastPosLeft = selected.Key.ClientArea.Left - ItemSpacing;
@@ -209,7 +210,8 @@ namespace SS14.Client.Services.UserInterface.Components
                             lastPosLeft = selectedLeft.Key.ClientArea.Left - ItemSpacing;
 
                             if (FadeItems)
-                                selectedLeft.Key.Color = Color.FromArgb((int) (baseAlpha/alphaAdj), Color.White);
+                                ctemp = Color.FromArgb((int)(baseAlpha / alphaAdj), Color.White);
+                                selectedLeft.Key.Color = new SFML.Graphics.Color(ctemp.R, ctemp.G, ctemp.B, ctemp.A);
 
                             selectedLeft.Key.Render();
                         }
@@ -226,8 +228,8 @@ namespace SS14.Client.Services.UserInterface.Components
                             lastPosRight = selectedRight.Key.ClientArea.Right + ItemSpacing;
 
                             if (FadeItems)
-                                selectedRight.Key.Color = Color.FromArgb((int) (baseAlpha/alphaAdj), Color.White);
-
+                                ctemp = Color.FromArgb((int)(baseAlpha / alphaAdj), Color.White);
+                            selectedRight.Key.Color = new SFML.Graphics.Color(ctemp.R, ctemp.G, ctemp.B, ctemp.A);
                             selectedRight.Key.Render();
                         }
                     }
@@ -254,14 +256,14 @@ namespace SS14.Client.Services.UserInterface.Components
 
 		public override bool MouseWheelMove(MouseWheelEventArgs e)
         {
-            if (ClientArea.Contains(new Point((int) e.Position.X, (int) e.Position.Y)))
+            if (ClientArea.Contains(new Point((int) e.X, (int) e.Y)))
             {
-                if (e.WheelDelta > 0)
+                if (e.Delta > 0)
                 {
                     if (Selected + 1 <= _items.Count - 1) Selected++;
                     return true;
                 }
-                else if (e.WheelDelta < 0)
+                else if (e.Delta < 0)
                 {
                     if (Selected - 1 >= 0) Selected--;
                     return true;
@@ -272,7 +274,7 @@ namespace SS14.Client.Services.UserInterface.Components
 
 		public override void MouseMove(MouseMoveEventArgs e)
         {
-            if (ClientArea.Contains(new Point((int) e.Position.X, (int) e.Position.Y)))
+            if (ClientArea.Contains(new Point((int) e.X, (int) e.Y)))
             {
                 _buttonLeft.MouseMove(e);
                 _buttonRight.MouseMove(e);
@@ -286,7 +288,7 @@ namespace SS14.Client.Services.UserInterface.Components
 
 		public override bool MouseDown(MouseButtonEventArgs e)
         {
-            if (ClientArea.Contains(new Point((int) e.Position.X, (int) e.Position.Y)))
+            if (ClientArea.Contains(new Point((int) e.X, (int) e.Y)))
             {
 
                 if (ShowArrows)
@@ -324,7 +326,7 @@ namespace SS14.Client.Services.UserInterface.Components
 
 		public override bool MouseUp(MouseButtonEventArgs e)
         {
-            if (ClientArea.Contains(new Point((int) e.Position.X, (int) e.Position.Y)))
+            if (ClientArea.Contains(new Point((int) e.X, (int) e.Y)))
             {
                 if (_buttonLeft.MouseUp(e)) return true;
                 if (_buttonRight.MouseUp(e)) return true;

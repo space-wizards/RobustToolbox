@@ -92,7 +92,7 @@ namespace SS14.Client.Services.State.States
 
         #region Lighting
         // TODO Rewrite shader code and lighting shaders to re-enable this shit
-        /* private RenderImage _composedSceneTarget;
+        private RenderImage _composedSceneTarget;
          private RenderImage _overlayTarget;
          private RenderImage _sceneTarget;
          private RenderImage _tilesTarget;
@@ -110,8 +110,8 @@ namespace SS14.Client.Services.State.States
          private RenderImage _occluderDebugTarget;
          private RenderImage _lightTarget;
          private RenderImage _lightTargetIntermediate;
-         private Sprite _lightTargetIntermediateSprite;
-         private Sprite _lightTargetSprite;
+         private CluwneSprite _lightTargetIntermediateSprite;
+         private CluwneSprite _lightTargetSprite;
         public bool BlendLightMap = true;
 
          private QuadRenderer quadRenderer;
@@ -120,7 +120,7 @@ namespace SS14.Client.Services.State.States
          private RenderImage shadowIntermediate;
          private ShadowMapResolver shadowMapResolver;
          private bool debugWallOccluders = false;
-         private bool debugHitboxes = false;*/
+         private bool debugHitboxes = false;
 
         #endregion
 
@@ -169,14 +169,16 @@ namespace SS14.Client.Services.State.States
             // TODO This should go somewhere else, there should be explicit session setup and teardown at some point.
             NetworkManager.SendClientName(ConfigurationManager.GetPlayerName());
 
+            // Create new 
             _baseTarget = new RenderImage((uint)CluwneLib.Screen.GetView().Size.X,
                                           (uint)CluwneLib.Screen.GetView().Size.Y, true);
             _cleanupList.Add(_baseTarget);
+
             _baseTargetSprite = new CluwneSprite(_baseTarget);
             _cleanupSpriteList.Add(_baseTargetSprite);
-            
+          
             _sceneTarget = new RenderImage((uint) CluwneLib.Screen.GetView().Size.X,
-                                           (uint) CluwneLib.Screen.GetView().Size.Y, true);
+                                          (uint) CluwneLib.Screen.GetView().Size.Y, true);
             _cleanupList.Add(_sceneTarget);
             _tilesTarget = new RenderImage((uint) CluwneLib.Screen.GetView().Size.X,
                                            (uint) CluwneLib.Screen.GetView().Size.Y, true);
@@ -185,54 +187,57 @@ namespace SS14.Client.Services.State.States
             _overlayTarget = new RenderImage((uint) CluwneLib.Screen.GetView().Size.X,
                                              (uint) CluwneLib.Screen.GetView().Size.Y, true);
             _cleanupList.Add(_overlayTarget);
-//            _overlayTarget.SourceBlend = AlphaBlendOperation.SourceAlpha;
-//            _overlayTarget.DestinationBlend = AlphaBlendOperation.InverseSourceAlpha;
-//            _overlayTarget.SourceBlendAlpha = AlphaBlendOperation.SourceAlpha;
-//            _overlayTarget.DestinationBlendAlpha = AlphaBlendOperation.InverseSourceAlpha;
+          //  _overlayTarget.SourceBlend = AlphaBlendOperation.SourceAlpha;
+          //    _overlayTarget.DestinationBlend = AlphaBlendOperation.InverseSourceAlpha;
+          // _overlayTarget.SourceBlendAlpha = AlphaBlendOperation.SourceAlpha;
+          //_overlayTarget.DestinationBlendAlpha = AlphaBlendOperation.InverseSourceAlpha;
 
-            _composedSceneTarget = new RenderImage((uint) CluwneLib.Screen.GetView().Size.X,
-                                                   (uint) CluwneLib.Screen.GetView().Size.Y,
-                                                   ImageBufferFormats.BufferRGB888A8);
+           _composedSceneTarget = new RenderImage((uint) CluwneLib.Screen.GetView().Size.X,
+                                                 (uint) CluwneLib.Screen.GetView().Size.Y,
+                                                ImageBufferFormats.BufferRGB888A8);
             _cleanupList.Add(_composedSceneTarget);
 
-            _lightTarget = new RenderImage("lightTarget", Gorgon.CurrentClippingViewport.Width,
-                                           Gorgon.CurrentClippingViewport.Height, ImageBufferFormats.BufferRGB888A8);
+            _lightTarget = new RenderImage("lightTarget", CluwneLib.CurrentClippingViewport.Width,
+                                           CluwneLib.CurrentClippingViewport.Height, ImageBufferFormats.BufferRGB888A8);
+
             _cleanupList.Add(_lightTarget);
-            _lightTargetSprite = new Sprite("lightTargetSprite", _lightTarget) { DepthWriteEnabled = false };
+           _lightTargetSprite = new CluwneSprite("lightTargetSprite", _lightTarget) { DepthWriteEnabled = false };
+
             _cleanupSpriteList.Add(_lightTargetSprite);
-            _lightTargetIntermediate = new RenderImage("lightTargetIntermediate", Gorgon.CurrentClippingViewport.Width,
-                                                       Gorgon.CurrentClippingViewport.Height,
-                                                       ImageBufferFormats.BufferRGB888A8);
-            _cleanupList.Add(_lightTargetIntermediate);
-            _lightTargetIntermediateSprite = new Sprite("lightTargetIntermediateSprite", _lightTargetIntermediate)
+
+           _lightTargetIntermediate = new RenderImage("lightTargetIntermediate", CluwneLib.CurrentClippingViewport.Width,
+                                                     CluwneLib.CurrentClippingViewport.Height,
+                                                     ImageBufferFormats.BufferRGB888A8);
+           _cleanupList.Add(_lightTargetIntermediate);
+            _lightTargetIntermediateSprite = new CluwneSprite("lightTargetIntermediateSprite", _lightTargetIntermediate)
                                                  {DepthWriteEnabled = false};
-            _cleanupSpriteList.Add(_lightTargetIntermediateSprite);
+           _cleanupSpriteList.Add(_lightTargetIntermediateSprite);
 
-            _gasBatch = new Batch("gasBatch", 1);
-            _gasBatch.SourceBlend = AlphaBlendOperation.SourceAlpha;
-            _gasBatch.DestinationBlend = AlphaBlendOperation.InverseSourceAlpha;
-            _gasBatch.SourceBlendAlpha = AlphaBlendOperation.SourceAlpha;
-            _gasBatch.DestinationBlendAlpha = AlphaBlendOperation.InverseSourceAlpha;
+          //_gasBatch = new Batch("gasBatch", 1);
+          //  _gasBatch.SourceBlend = AlphaBlendOperation.SourceAlpha;
+          // _gasBatch.DestinationBlend = AlphaBlendOperation.InverseSourceAlpha;
+          //  _gasBatch.SourceBlendAlpha = AlphaBlendOperation.SourceAlpha;
+          //  _gasBatch.DestinationBlendAlpha = AlphaBlendOperation.InverseSourceAlpha;
 
-            _wallTopsBatch = new Batch("wallTopsBatch", 1);
-            _wallTopsBatch.SourceBlend = AlphaBlendOperation.SourceAlpha;
-            _wallTopsBatch.DestinationBlend = AlphaBlendOperation.InverseSourceAlpha;
-            _wallTopsBatch.SourceBlendAlpha = AlphaBlendOperation.SourceAlpha;
-            _wallTopsBatch.DestinationBlendAlpha = AlphaBlendOperation.InverseSourceAlpha;
+          //  _wallTopsBatch = new Batch("wallTopsBatch", 1);
+          //  _wallTopsBatch.SourceBlend = AlphaBlendOperation.SourceAlpha;
+          //  _wallTopsBatch.DestinationBlend = AlphaBlendOperation.InverseSourceAlpha;
+          //  _wallTopsBatch.SourceBlendAlpha = AlphaBlendOperation.SourceAlpha;
+          //  _wallTopsBatch.DestinationBlendAlpha = AlphaBlendOperation.InverseSourceAlpha;
 
-            _decalBatch = new Batch("decalBatch", 1);
-            _decalBatch.SourceBlend = AlphaBlendOperation.SourceAlpha;
-            _decalBatch.DestinationBlend = AlphaBlendOperation.InverseSourceAlpha;
-            _decalBatch.SourceBlendAlpha = AlphaBlendOperation.SourceAlpha;
-            _decalBatch.DestinationBlendAlpha = AlphaBlendOperation.InverseSourceAlpha;
+          //  _decalBatch = new Batch("decalBatch", 1);
+          //  _decalBatch.SourceBlend = AlphaBlendOperation.SourceAlpha;
+          //  _decalBatch.DestinationBlend = AlphaBlendOperation.InverseSourceAlpha;
+          //  _decalBatch.SourceBlendAlpha = AlphaBlendOperation.SourceAlpha;
+          //  _decalBatch.DestinationBlendAlpha = AlphaBlendOperation.InverseSourceAlpha;
 
-            _floorBatch = new Batch("floorBatch", 1);
-            _wallBatch = new Batch("wallBatch", 1);
+          //  _floorBatch = new Batch("floorBatch", 1);
+          //  _wallBatch = new Batch("wallBatch", 1);
+          //  
+           // _gaussianBlur = new GaussianBlur(ResourceManager);
 
-            _gaussianBlur = new GaussianBlur(ResourceManager);
-
-            _realScreenWidthTiles = (float) Gorgon.CurrentClippingViewport.Width/MapManager.GetTileSpacing();
-            _realScreenHeightTiles = (float) Gorgon.CurrentClippingViewport.Height/MapManager.GetTileSpacing();
+            _realScreenWidthTiles = (float) VideoMode.DesktopMode.Width/MapManager.GetTileSpacing();
+            _realScreenHeightTiles = (float) VideoMode.DesktopMode.Height/MapManager.GetTileSpacing();
 
             //Init GUI components
             _gameChat = new Chatbox(ResourceManager, UserInterfaceManager, KeyBindingManager);
@@ -242,11 +247,11 @@ namespace SS14.Client.Services.State.States
             //UserInterfaceManager.AddComponent(new StatPanelComponent(ConfigurationManager.GetPlayerName(), PlayerManager, NetworkManager, ResourceManager));
 
             var statusBar = new StatusEffectBar(ResourceManager, PlayerManager);
-            statusBar.Position = new Point(Gorgon.CurrentClippingViewport.Width - 800, 10);
+            statusBar.Position = new Point((int)VideoMode.DesktopMode.Width - 800, 10);
             UserInterfaceManager.AddComponent(statusBar);
 
             var hotbar = new Hotbar(ResourceManager);
-            hotbar.Position = new Point(5, Gorgon.CurrentClippingViewport.Height - hotbar.ClientArea.Height - 5);
+            hotbar.Position = new Point(5, (int)VideoMode.DesktopMode.Height - hotbar.ClientArea.Height - 5);
             hotbar.Update(0);
             UserInterfaceManager.AddComponent(hotbar);
 
@@ -291,7 +296,8 @@ namespace SS14.Client.Services.State.States
             playerVision = IoCManager.Resolve<ILightManager>().CreateLight();
             playerVision.SetColor(Color.Transparent);
             playerVision.SetRadius(1024);
-            playerVision.Move(Vector2.Zero);*/
+            playerVision.Move(Vector2.Zero);
+ */
 
             #endregion
 
@@ -357,13 +363,13 @@ namespace SS14.Client.Services.State.States
         public void Shutdown()
         {
             IoCManager.Resolve<IPlayerManager>().Detach();
-            if(Gorgon.IsInitialized)
-            {
-                _cleanupSpriteList.ForEach(s => s.Image = null);
+          
+                /*
+                 _cleanupSpriteList.ForEach(s => s.Image = null);
                 _cleanupSpriteList.Clear();
                 _cleanupList.ForEach(t => {t.ForceRelease();t.Dispose();});
                 _cleanupList.Clear();
-            }
+                */
             // TODO: See Startup() for SFML todos
             //shadowMapResolver.Dispose();
             _gaussianBlur.Dispose();
@@ -394,9 +400,9 @@ namespace SS14.Client.Services.State.States
 
         private void ResetRendertargets()
         {
-            int w = Gorgon.CurrentClippingViewport.Width;
-            int h = Gorgon.CurrentClippingViewport.Height;
-
+            int w = (int)VideoMode.DesktopMode.Width;
+            int h = (int)VideoMode.DesktopMode.Height;
+/*
             _baseTarget.Width = w;
             _baseTarget.Height = h;
             _sceneTarget.Width = w;
@@ -407,6 +413,7 @@ namespace SS14.Client.Services.State.States
             _overlayTarget.Height = h;
             _composedSceneTarget.Width = w;
             _composedSceneTarget.Height = h;
+*/         
             // TODO: See Startup for todos related to SFML
             /*_lightTarget.Width = w;
             _lightTarget.Height = h;
@@ -584,7 +591,7 @@ namespace SS14.Client.Services.State.States
                 if (_redrawTiles)
                 {
                     //Set rendertarget to draw the rest of the scene
-                    CluwneLib.CurrentRenderTarget = _tilesTarget;
+                  //  CluwneLib.CurrentRenderTarget = _tilesTarget;
                     CluwneLib.CurrentRenderTarget.Clear(Color.Black);
 
                     if (_floorBatch.Count > 0)
@@ -597,19 +604,19 @@ namespace SS14.Client.Services.State.States
                 }
 
 
-                CluwneLib.CurrentRenderTarget = _sceneTarget;
-                _sceneTarget.Clear(Color.Black);
+              //  CluwneLib.CurrentRenderTarget = _sceneTarget;
+              // _sceneTarget.Clear(Color.Black);
 
 
-                _tilesTarget.Image.Blit(0, 0, _tilesTarget.Width, _tilesTarget.Height, Color.White, BlitterSizeMode.Crop);
+              //  _tilesTarget.Image.Blit(0, 0, _tilesTarget.Width, _tilesTarget.Height, Color.White, BlitterSizeMode.Crop);
 
                 //ComponentManager.Singleton.Render(0, ClientWindowData.Singleton.ViewPort);
                 RenderComponents(e.FrameDeltaTime, ClientWindowData.Singleton.ViewPort);
 
                 if (_redrawOverlay)
                 {
-                    Gorgon.CurrentRenderTarget = _overlayTarget;
-                    _overlayTarget.Clear(Color.Transparent);
+                    //CluwneLib.CurrentRenderTarget = _overlayTarget;
+                   // _overlayTarget.Clear(Color.Transparent);
 
                     // Render decal batch
 
@@ -622,11 +629,11 @@ namespace SS14.Client.Services.State.States
                     if (_gasBatch.Count > 0)
                         _gasBatch.Draw();
 
-                    Gorgon.CurrentRenderTarget = _sceneTarget;
+                   // CluwneLib.CurrentRenderTarget = _sceneTarget;
                     _redrawOverlay = false;
                 }
 
-                _overlayTarget.Blit();
+             //   _overlayTarget.Blit();
 
                 LightScene();
 
@@ -641,49 +648,49 @@ namespace SS14.Client.Services.State.States
         
 
         private void RenderDebug()
-        {   
-            if(debugWallOccluders)
-                _occluderDebugTarget.Blit(0,0,_occluderDebugTarget.Width, _occluderDebugTarget.Height, Color.White, BlitterSizeMode.Crop);
+        {
+            /*  if(debugWallOccluders)
+                  _occluderDebugTarget.Blit(0,0,_occluderDebugTarget.Width, _occluderDebugTarget.Height, Color.White, BlitterSizeMode.Crop);
 
-            if (debugHitboxes) {
-                var corner = ClientWindowData.Singleton.ScreenOrigin;
+              if (debugHitboxes) {
+                  var corner = ClientWindowData.Singleton.ScreenOrigin;
 
-                var colliders =
-                    _entityManager.ComponentManager.GetComponents(ComponentFamily.Collider)
-                    .OfType<ColliderComponent>()
-                    .Select(c => new { Color = c.DebugColor, AABB = c.WorldAABB })
-                    .Where(c => !c.AABB.IsEmpty && c.AABB.IntersectsWith(ClientWindowData.Singleton.ViewPort));
+                  var colliders =
+                      _entityManager.ComponentManager.GetComponents(ComponentFamily.Collider)
+                      .OfType<ColliderComponent>()
+                      .Select(c => new { Color = c.DebugColor, AABB = c.WorldAABB })
+                      .Where(c => !c.AABB.IsEmpty && c.AABB.IntersectsWith(ClientWindowData.Singleton.ViewPort));
 
-                var collidables =
-                    _entityManager.ComponentManager.GetComponents(ComponentFamily.Collidable)
-                    .OfType<CollidableComponent>()
-                    .Select(c => new { Color = c.DebugColor, AABB = c.AABB })
-                    .Where(c => !c.AABB.IsEmpty && c.AABB.IntersectsWith(ClientWindowData.Singleton.ViewPort));
+                  var collidables =
+                      _entityManager.ComponentManager.GetComponents(ComponentFamily.Collidable)
+                      .OfType<CollidableComponent>()
+                      .Select(c => new { Color = c.DebugColor, AABB = c.AABB })
+                      .Where(c => !c.AABB.IsEmpty && c.AABB.IntersectsWith(ClientWindowData.Singleton.ViewPort));
 
-                var destAbo = _baseTarget.DestinationBlend;
-                var srcAbo = _baseTarget.SourceBlend;
-                _baseTarget.DestinationBlend = AlphaBlendOperation.InverseSourceAlpha;
-                _baseTarget.SourceBlend = AlphaBlendOperation.SourceAlpha;
+                  var destAbo = _baseTarget.DestinationBlend;
+                  var srcAbo = _baseTarget.SourceBlend;
+                  _baseTarget.DestinationBlend = AlphaBlendOperation.InverseSourceAlpha;
+                  _baseTarget.SourceBlend = AlphaBlendOperation.SourceAlpha;
 
-                foreach (var hitbox in colliders.Concat(collidables)) {
-                    _baseTarget.FilledRectangle(
-                        hitbox.AABB.Left - corner.X, hitbox.AABB.Top - corner.Y,
-                        hitbox.AABB.Width, hitbox.AABB.Height, Color.FromArgb(64, hitbox.Color));
-                    _baseTarget.Rectangle(
-                        hitbox.AABB.Left - corner.X, hitbox.AABB.Top - corner.Y,
-                        hitbox.AABB.Width, hitbox.AABB.Height, Color.FromArgb(128, hitbox.Color));
-                }
+                  foreach (var hitbox in colliders.Concat(collidables)) {
+                      _baseTarget.FilledRectangle(
+                          hitbox.AABB.Left - corner.X, hitbox.AABB.Top - corner.Y,
+                          hitbox.AABB.Width, hitbox.AABB.Height, Color.FromArgb(64, hitbox.Color));
+                      _baseTarget.Rectangle(
+                          hitbox.AABB.Left - corner.X, hitbox.AABB.Top - corner.Y,
+                          hitbox.AABB.Width, hitbox.AABB.Height, Color.FromArgb(128, hitbox.Color));
+                  }
 
-                _baseTarget.DestinationBlend = destAbo;
-                _baseTarget.SourceBlend = srcAbo;
-            
-            }
+                  _baseTarget.DestinationBlend = destAbo;
+                  _baseTarget.SourceBlend = srcAbo;
+          
+              } */
         }
 
         public void FormResize()
         {
-            Gorgon.CurrentClippingViewport = new Viewport(0, 0, Gorgon.CurrentClippingViewport.Width,
-                                                          Gorgon.CurrentClippingViewport.Height);
+            //CluwneLib.CurrentClippingViewport = new Viewport(0, 0,VideoMode.DesktopMode.Width, VideoMode.DesktopMode.Height);
+          
             ClientWindowData.Singleton.UpdateViewPort(
                 PlayerManager.ControlledEntity.GetComponent<TransformComponent>(ComponentFamily.Transform).Position);
             UserInterfaceManager.ResizeComponents();
@@ -700,68 +707,78 @@ namespace SS14.Client.Services.State.States
         {
             
         }
+        public void MouseMoved( MouseMoveEventArgs e )
+        {
+
+        }
+        public void MousePressed( MouseButtonEventArgs e )
+        {
+
+        }
 
 		public void KeyDown(KeyEventArgs e)
         {
             if (UserInterfaceManager.KeyDown(e)) //KeyDown returns true if the click is handled by the ui component.
                 return;
 
-            if (e.Key == KeyboardKeys.F1)
+            //TODO Fix this
+            if (e.Code == Keyboard.Key.F1)
             {
-                Gorgon.FrameStatsVisible = !Gorgon.FrameStatsVisible;
+                //TODO FrameStats
+               //CluwneLib.FrameStatsVisible = !CluwneLib.FrameStatsVisible;
             }
-            if (e.Key == KeyboardKeys.F2)
+            if (e.Code == Keyboard.Key.F2)
             {
                 _showDebug = !_showDebug;
             }
-            if (e.Key == KeyboardKeys.F3)
+            if (e.Code == Keyboard.Key.F3)
             {
                 ToggleOccluderDebug();
             }
-            if (e.Key == KeyboardKeys.F4)
+            if (e.Code == Keyboard.Key.F4)
             {
-                debugHitboxes = !debugHitboxes;
+                // debugHitboxes = !debugHitboxes;
             }
-            if (e.Key == KeyboardKeys.F5)
+            if (e.Code == Keyboard.Key.F5)
             {
                 PlayerManager.SendVerb("save", 0);
             }
-            if (e.Key == KeyboardKeys.F6)
+            if (e.Code == Keyboard.Key.F6)
             {
-                bFullVision = !bFullVision;
+               // bFullVision = !bFullVision;
             }
-            if (e.Key == KeyboardKeys.F7)
+            if (e.Code == Keyboard.Key.F7)
             {
-                bPlayerVision = !bPlayerVision;
+                //bPlayerVision = !bPlayerVision;
             }
-            if (e.Key == KeyboardKeys.F8)
+            if (e.Code == Keyboard.Key.F8)
             {
                 NetOutgoingMessage message = NetworkManager.CreateMessage();
                 message.Write((byte) NetMessage.ForceRestart);
                 NetworkManager.SendMessage(message, NetDeliveryMethod.ReliableUnordered);
             }
-            if (e.Key == KeyboardKeys.Escape)
+            if (e.Code == Keyboard.Key.Escape)
             {
                 UserInterfaceManager.DisposeAllComponents<MenuWindow>(); //Remove old ones.
                 UserInterfaceManager.AddComponent(new MenuWindow()); //Create a new one.
             }
-            if (e.Key == KeyboardKeys.F9)
+            if (e.Code == Keyboard.Key.F9)
             {
                 UserInterfaceManager.ToggleMoveMode();
             }
-            if (e.Key == KeyboardKeys.F10)
+            if (e.Code == Keyboard.Key.F10)
             {
                 UserInterfaceManager.DisposeAllComponents<TileSpawnPanel>(); //Remove old ones.
                 UserInterfaceManager.AddComponent(new TileSpawnPanel(new Size(350, 410), ResourceManager,
                                                                      PlacementManager)); //Create a new one.
             }
-            if (e.Key == KeyboardKeys.F11)
+            if (e.Code == Keyboard.Key.F11)
             {
                 UserInterfaceManager.DisposeAllComponents<EntitySpawnPanel>(); //Remove old ones.
                 UserInterfaceManager.AddComponent(new EntitySpawnPanel(new Size(350, 410), ResourceManager,
                                                                        PlacementManager)); //Create a new one.
             }
-            if (e.Key == KeyboardKeys.F12)
+            if (e.Code == Keyboard.Key.F12)
             {
                 UserInterfaceManager.DisposeAllComponents<PlayerActionsWindow>(); //Remove old ones.
                 var actComp =
@@ -771,12 +788,12 @@ namespace SS14.Client.Services.State.States
                                                                               actComp)); //Create a new one.
             }
 
-            PlayerManager.KeyDown(e.Key);
+            PlayerManager.KeyDown(e.Code);
         }
 
         public void KeyUp(KeyEventArgs e)
         {
-            PlayerManager.KeyUp(e.Key);
+            PlayerManager.KeyUp(e.Code);
         }
 
 		public void MouseUp(MouseButtonEventArgs e)
@@ -795,15 +812,15 @@ namespace SS14.Client.Services.State.States
 
             if (PlacementManager.IsActive && !PlacementManager.Eraser)
             {
-                switch (e.Buttons)
+                switch (e.Button)
                 {
-                    case MouseButtons.Left:
+                    case Mouse.Button.Left:
                         PlacementManager.HandlePlacement();
                         return;
-                    case MouseButtons.Right:
+                    case Mouse.Button.Right:
                         PlacementManager.Clear();
                         return;
-                    case MouseButtons.Middle:
+                    case Mouse.Button.Middle:
                         PlacementManager.Rotate();
                         return;
                 }
@@ -857,9 +874,9 @@ namespace SS14.Client.Services.State.States
                     return;
                 }
 
-                switch (e.Buttons)
+                switch (e.Button)
                 {
-                    case MouseButtons.Left:
+                    case Mouse.Button.Left:
                         if (UserInterfaceManager.currentTargetingAction != null &&
                             (UserInterfaceManager.currentTargetingAction.TargetType == PlayerActionTargetType.Any ||
                                 UserInterfaceManager.currentTargetingAction.TargetType == PlayerActionTargetType.Other))
@@ -870,7 +887,7 @@ namespace SS14.Client.Services.State.States
                             c.DispatchClick(PlayerManager.ControlledEntity.Uid, MouseClickType.Left);
                         }
                         break;
-                    case MouseButtons.Right:
+                    case Mouse.Button.Right:
                         if (UserInterfaceManager.currentTargetingAction != null)
                             UserInterfaceManager.CancelTargeting();
                         else
@@ -879,7 +896,7 @@ namespace SS14.Client.Services.State.States
                             c.DispatchClick(PlayerManager.ControlledEntity.Uid, MouseClickType.Right);
                         }
                         break;
-                    case MouseButtons.Middle:
+                    case Mouse.Button.Middle:
                         UserInterfaceManager.DisposeAllComponents<PropEditWindow>();
                         UserInterfaceManager.AddComponent(new PropEditWindow(new Size(400, 400), ResourceManager,
                                                                              entToClick));
@@ -888,9 +905,9 @@ namespace SS14.Client.Services.State.States
             }
             else
             {
-                switch (e.Buttons)
+                switch (e.Button)
                 {
-                    case MouseButtons.Left:
+                    case Mouse.Button.Left:
                         {
                             if (UserInterfaceManager.currentTargetingAction != null &&
                                 UserInterfaceManager.currentTargetingAction.TargetType == PlayerActionTargetType.Point)
@@ -912,7 +929,7 @@ namespace SS14.Client.Services.State.States
                             }
                             break;
                         }
-                    case MouseButtons.Right:
+                    case Mouse.Button.Right:
                         {
                             if (UserInterfaceManager.currentTargetingAction != null)
                                 UserInterfaceManager.CancelTargeting();
@@ -926,9 +943,9 @@ namespace SS14.Client.Services.State.States
 
 		public void MouseMove(MouseMoveEventArgs e)
         {
-            float distanceToPrev = (MousePosScreen - new Vector2(e.Position.X, e.Position.Y)).Length;
-            MousePosScreen = new Vector2(e.Position.X, e.Position.Y);
-            MousePosWorld = new Vector2(e.Position.X + WindowOrigin.X, e.Position.Y + WindowOrigin.Y);
+            float distanceToPrev = (MousePosScreen - new Vector2(e.X, e.Y)).Length;
+            MousePosScreen = new Vector2(e.X, e.Y);
+            MousePosWorld = new Vector2(e.X + WindowOrigin.X, e.Y + WindowOrigin.Y);
             UserInterfaceManager.MouseMove(e);
         }
 
@@ -1481,22 +1498,23 @@ namespace SS14.Client.Services.State.States
             }
         }
 
-        private LightArea GetLightArea(ShadowmapSize size)
-        {
-            switch (size)
-            {
-                case ShadowmapSize.Size128:
-                    return lightArea128;
-                case ShadowmapSize.Size256:
-                    return lightArea256;
-                case ShadowmapSize.Size512:
-                    return lightArea512;
-                case ShadowmapSize.Size1024:
-                    return lightArea1024;
-                default:
-                    return lightArea1024;
-            }
-        }
+       // private LightArea GetLightArea(ShadowmapSize size)
+        //{
+            //switch (size)
+            //{
+            //    case ShadowmapSize.Size128:
+            //        return lightArea128;
+            //    case ShadowmapSize.Size256:
+            //        return lightArea256;
+            //    case ShadowmapSize.Size512:
+            //        return lightArea512;
+            //    case ShadowmapSize.Size1024:
+            //        return lightArea1024;
+            //    default:
+            //        return lightArea1024;
+            //}
+           
+       // }
 
         // Draws all walls in the area around the light relative to it, and in black (test code, not pretty)
         private void DrawWallsRelativeToLight(ILightArea area)

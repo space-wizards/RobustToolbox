@@ -13,6 +13,7 @@ using SS14.Shared.IoC;
 using System;
 using System.Drawing;
 using SFML.Window;
+using SS14.Shared.Maths;
 
 namespace SS14.Client.Services.UserInterface.Components
 {
@@ -65,7 +66,7 @@ namespace SS14.Client.Services.UserInterface.Components
             const int y_inner = 25;
             const int dec_inner = 7;
 
-            panelBG.Position = Position;
+            panelBG.Position =new Vector2 (Position.X, Position.Y);
             healthMeterBg.Position = new Vector2(Position.X + x_inner, Position.Y + y_inner);
             healthMeterOverlay.Position = new Vector2(Position.X + x_inner, Position.Y + y_inner);
             healthMeterGrid.Position = new Vector2(Position.X + x_inner, Position.Y + y_inner);
@@ -102,8 +103,7 @@ namespace SS14.Client.Services.UserInterface.Components
         {
             panelBG.Draw();
             healthMeterBg.Draw();
-            Gorgon.CurrentRenderTarget.FilledRectangle(healthMeterInner.X, healthMeterInner.Y, healthMeterInner.Width,
-                                                       healthMeterInner.Height, interpCol);
+            CluwneLib.drawRectangle(healthMeterInner.X, healthMeterInner.Y, healthMeterInner.Width,  healthMeterInner.Height, interpCol);
             healthPc.Render();
             healthMeterGrid.Draw();
             RenderBlip();
@@ -125,16 +125,15 @@ namespace SS14.Client.Services.UserInterface.Components
 
             var bs = (int) Math.Floor(blipTime*blipSpeed);
 
-            Gorgon.CurrentRenderTarget.BlendingMode = BlendingModes.Modulated;
+            CluwneLib.BlendingMode = BlendingModes.Modulated;
             for (int i = bs; i < (bs + blipWidth); i++)
             {
                 float sweepPct = (float) i/(bs + blipWidth);
 
                 float alpha =
                     Math.Min(Math.Max((1 - (Math.Abs((blipMaxArea/2f) - i)/(blipMaxArea/2f)))*(300f*sweepPct), 0f), 255f);
-                _backgroundSprite.Color = Color.FromArgb((int) alpha,
-                                                         ColorInterpolator.InterpolateBetween(Color.Orange,
-                                                                                              Color.LawnGreen, healthPct));
+               Color temp = Color.FromArgb((int) alpha,ColorInterpolator.InterpolateBetween(Color.Orange,  Color.LawnGreen, healthPct));
+               _backgroundSprite.Color = new SFML.Graphics.Color(temp.R, temp.G, temp.B, temp.A);
 
                 float blipHeightUp = Math.Max(((blipUp - Math.Abs(blipUp - i))/(float) blipUp) - 0.80f, 0f);
                 float blipHeightDown = Math.Max(((blipDown - Math.Abs(blipDown - i))/(float) blipDown) - 0.93f, 0f);
@@ -150,7 +149,7 @@ namespace SS14.Client.Services.UserInterface.Components
                                                           ((healthPct > 0f) ? Math.Max(healthPct, 0.45f) : 0)),
                                                          3, 3));
             }
-            Gorgon.CurrentRenderTarget.BlendingMode = BlendingModes.None;
+           CluwneLib.BlendingMode = BlendingModes.None;
         }
 
         public override void Resize()
@@ -169,7 +168,7 @@ namespace SS14.Client.Services.UserInterface.Components
 
 		public override bool MouseDown(MouseButtonEventArgs e)
         {
-            if (ClientArea.Contains(new Point((int) e.Position.X, (int) e.Position.Y)))
+            if (ClientArea.Contains(new Point((int) e.X, (int) e.Y)))
             {
                 return true;
             }
@@ -178,7 +177,7 @@ namespace SS14.Client.Services.UserInterface.Components
 
 		public override bool MouseUp(MouseButtonEventArgs e)
         {
-            if (ClientArea.Contains(new Point((int) e.Position.X, (int) e.Position.Y)))
+            if (ClientArea.Contains(new Point((int) e.X, (int) e.Y)))
             {
                 return true;
             }

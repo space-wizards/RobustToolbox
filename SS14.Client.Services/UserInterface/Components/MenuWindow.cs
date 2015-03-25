@@ -1,5 +1,6 @@
 ﻿using Lidgren.Network;
 using SS14.Client.GameObjects;
+using SS14.Client.Graphics.CluwneLib;
 using SS14.Client.Interfaces.Network;
 using SS14.Client.Interfaces.Placement;
 using SS14.Client.Interfaces.Player;
@@ -32,8 +33,8 @@ namespace SS14.Client.Services.UserInterface.Components
         public MenuWindow()
             : base("Menu", new Size(140, 130), IoCManager.Resolve<IResourceManager>())
         {
-            Position = new Point((int) (Gorgon.CurrentRenderTarget.Width/2f) - (int) (ClientArea.Width/2f),
-                                 (int) (Gorgon.CurrentRenderTarget.Height/2f) - (int) (ClientArea.Height/2f));
+            Position = new Point((int) (CluwneLib.CurrentRenderTarget.Size.X/2f) - (int) (ClientArea.Width/2f),
+                                 (int) (CluwneLib.CurrentRenderTarget.Size.Y/2f) - (int) (ClientArea.Height/2f));
 
             button_actions = new Button("Player Actions", _resMgr);
             button_actions.Clicked += button_actions_Clicked;

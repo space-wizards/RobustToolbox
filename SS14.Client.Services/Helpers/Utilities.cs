@@ -9,6 +9,7 @@ using SS14.Shared.GO;
 using SS14.Shared.IoC;
 using System;
 using System.Drawing;
+using SS14.Client.Graphics.CluwneLib;
 
 
 namespace SS14.Client.Services.Helpers
@@ -26,7 +27,7 @@ namespace SS14.Client.Services.Helpers
                                                              ComponentMessageType.GetSprite);
             if (reply.MessageType == ComponentMessageType.CurrentSprite)
             {
-                var sprite = (Sprite) reply.ParamsList[0];
+                var sprite = (CluwneSprite) reply.ParamsList[0];
                 return sprite;
             }
             return null;
@@ -49,17 +50,17 @@ namespace SS14.Client.Services.Helpers
             var clickPoint = new PointF(clickPos.X, clickPos.Y);
             if (!toCheck.AABB.Contains(clickPoint)) return false;
 
-            var spritePosition = new Point((int) clickPos.X - (int) toCheck.Position.X + (int) toCheck.ImageOffset.X,
-                                           (int) clickPos.Y - (int) toCheck.Position.Y + (int) toCheck.ImageOffset.Y);
+            var spritePosition = new Point((int) clickPos.X - (int) toCheck.Position.X ,//+ (int) toCheck.ImageOffset.X,
+                                           (int) clickPos.Y - (int) toCheck.Position.Y ); //+ (int) toCheck.ImageOffset.Y);
 
-            Image.ImageLockBox imgData = toCheck.Image.GetImageData();
+            //Image.ImageLockBox imgData = toCheck.Image.GetImageData();
 
-            imgData.Lock(false);
-            Color pixColour = Color.FromArgb((int) (imgData[spritePosition.X, spritePosition.Y]));
-            imgData.Dispose();
-            imgData.Unlock();
+            //imgData.Lock(false);
+            //Color pixColour = Color.FromArgb((int) (imgData[spritePosition.X, spritePosition.Y]));
+            //imgData.Dispose();
+            //imgData.Unlock();
 
-            return pixColour.A != 0;
+            return true; //pixColour.A != 0;
         }
     }
 

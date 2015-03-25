@@ -42,7 +42,7 @@ namespace SS14.Client.Services.UserInterface.Inventory
 
         public override void Render()
         {
-            _slotSprite.Color = _currentColor;
+            _slotSprite.Color = new SFML.Graphics.Color(_currentColor.R, _currentColor.G, _currentColor.B, _currentColor.A); ;
             _slotSprite.Draw(new Rectangle(Position,
                                            new Size((int) _slotSprite.AABB.Width, (int) _slotSprite.AABB.Height)));
             if (_entitySprite != null)
@@ -50,7 +50,7 @@ namespace SS14.Client.Services.UserInterface.Inventory
                     new Rectangle((int) (Position.X + _slotSprite.AABB.Width/2f - _entitySprite.AABB.Width/2f),
                                   (int) (Position.Y + _slotSprite.AABB.Height/2f - _entitySprite.AABB.Height/2f),
                                   (int) _entitySprite.Width, (int) _entitySprite.Height));
-            _slotSprite.Color = Color.White;
+            _slotSprite.Color = new SFML.Graphics.Color(Color.White.R, Color.White.G, Color.White.B, Color.White.A);
         }
 
         public override void Dispose()
@@ -61,7 +61,7 @@ namespace SS14.Client.Services.UserInterface.Inventory
 
 		public override bool MouseDown(MouseButtonEventArgs e)
         {
-            if (ClientArea.Contains(new Point((int) e.Position.X, (int) e.Position.Y)))
+            if (ClientArea.Contains(new Point((int) e.X, (int) e.Y)))
             {
                 if (Clicked != null) Clicked(this);
                 return true;
@@ -71,7 +71,7 @@ namespace SS14.Client.Services.UserInterface.Inventory
 
 		public override bool MouseUp(MouseButtonEventArgs e)
         {
-            if (ClientArea.Contains(new Point((int) e.Position.X, (int) e.Position.Y)))
+            if (ClientArea.Contains(new Point((int) e.X, (int) e.Y)))
             {
                 return true;
             }
@@ -80,7 +80,7 @@ namespace SS14.Client.Services.UserInterface.Inventory
 
 		public override void MouseMove(MouseMoveEventArgs e)
         {
-            _currentColor = ClientArea.Contains(new Point((int) e.Position.X, (int) e.Position.Y))
+            _currentColor = ClientArea.Contains(new Point((int) e.X, (int) e.Y))
                                 ? Color.LightSteelBlue
                                 : Color.White;
         }

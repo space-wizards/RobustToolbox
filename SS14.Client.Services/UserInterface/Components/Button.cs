@@ -63,17 +63,17 @@ namespace SS14.Client.Services.UserInterface.Components
 
         public override void Render()
         {
-            _buttonLeft.Color = drawColor;
-            _buttonMain.Color = drawColor;
-            _buttonRight.Color = drawColor;
+            _buttonLeft.Color = new SFML.Graphics.Color(drawColor.R, drawColor.G,drawColor.B);
+            _buttonMain.Color = new SFML.Graphics.Color(drawColor.R, drawColor.G, drawColor.B);
+            _buttonRight.Color = new SFML.Graphics.Color(drawColor.R, drawColor.G,drawColor.B);
 
             _buttonLeft.Draw(_clientAreaLeft);
             _buttonMain.Draw(_clientAreaMain);
             _buttonRight.Draw(_clientAreaRight);
 
-            _buttonLeft.Color = Color.White;
-            _buttonMain.Color = Color.White;
-            _buttonRight.Color = Color.White;
+            _buttonLeft.Color = new SFML.Graphics.Color(Color.White.R, Color.White.G, Color.White.B);
+            _buttonMain.Color = new SFML.Graphics.Color(Color.White.R, Color.White.G, Color.White.B);
+            _buttonRight.Color = new SFML.Graphics.Color(Color.White.R, Color.White.G, Color.White.B);
 
             Label.Draw();
         }
@@ -92,7 +92,7 @@ namespace SS14.Client.Services.UserInterface.Components
 		public override void MouseMove(MouseMoveEventArgs e)
         {
             if (mouseOverColor != Color.White)
-                if (ClientArea.Contains(new Point((int) e.Position.X, (int) e.Position.Y)))
+                if (ClientArea.Contains(new Point((int) e.X, (int) e.Y)))
                     drawColor = mouseOverColor;
                 else
                     drawColor = Color.White;
@@ -100,7 +100,7 @@ namespace SS14.Client.Services.UserInterface.Components
 
 		public override bool MouseDown(MouseButtonEventArgs e)
         {
-            if (ClientArea.Contains(new Point((int) e.Position.X, (int) e.Position.Y)))
+            if (ClientArea.Contains(new Point((int) e.X, (int) e.Y)))
             {
                 if (Clicked != null) Clicked(this);
                 return true;

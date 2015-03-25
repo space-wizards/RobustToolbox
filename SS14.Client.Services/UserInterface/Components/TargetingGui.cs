@@ -36,7 +36,7 @@ namespace SS14.Client.Services.UserInterface.Components
 
         public override void Update(float frameTime)
         {
-            background.Position = Position;
+            background.Position = new SFML.System.Vector2f(Position.X,Position.Y);
             //_targetArea.Position = new Point(Position.X + 5, Position.Y + 5);
             _targetArea.Position =
                 new Point(Position.X + (int) (ClientArea.Width/2f) - (int) (_targetArea.ClientArea.Width/2f),
@@ -68,14 +68,14 @@ namespace SS14.Client.Services.UserInterface.Components
 
 		public override bool MouseDown(MouseButtonEventArgs e)
         {
-            if (ClientArea.Contains(new Point((int) e.Position.X, (int) e.Position.Y)))
+            if (ClientArea.Contains(new Point((int) e.X, (int) e.Y)))
                 return _targetArea.MouseDown(e);
             return false;
         }
 
 		public override bool MouseUp(MouseButtonEventArgs e)
         {
-            if (ClientArea.Contains(new Point((int) e.Position.X, (int) e.Position.Y)))
+            if (ClientArea.Contains(new Point((int) e.X, (int) e.Y)))
             {
                 return true;
             }

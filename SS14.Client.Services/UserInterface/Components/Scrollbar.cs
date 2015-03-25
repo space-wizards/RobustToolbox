@@ -4,6 +4,8 @@ using SS14.Client.Graphics.CluwneLib.Sprite;
 using System;
 using System.Drawing;
 using SFML.Window;
+using SS14.Client.Graphics.CluwneLib;
+using SS14.Shared.Maths;
 
 namespace SS14.Client.Services.UserInterface.Components
 {
@@ -52,7 +54,7 @@ namespace SS14.Client.Services.UserInterface.Components
             DEBUG.Color = Color.OrangeRed;
             DEBUG.ShadowColor = Color.DarkBlue;
             DEBUG.Shadowed = true;
-            DEBUG.ShadowOffset = new Vector2(1, 1);
+          //  DEBUG.ShadowOffset = new Vector2(1, 1);
             Update(0);
         }
 
@@ -78,12 +80,12 @@ namespace SS14.Client.Services.UserInterface.Components
 		public override bool MouseDown(MouseButtonEventArgs e)
         {
             if (!IsVisible()) return false;
-            if (clientAreaButton.Contains((int) e.Position.X, (int) e.Position.Y))
+            if (clientAreaButton.Contains((int) e.X, (int) e.Y))
             {
                 dragging = true;
                 return true;
             }
-            else if (ClientArea.Contains((int) e.Position.X, (int) e.Position.Y))
+            else if (ClientArea.Contains((int) e.X, (int) e.Y))
             {
                 return true;
             }
@@ -106,8 +108,8 @@ namespace SS14.Client.Services.UserInterface.Components
             if (dragging)
             {
                 if (Horizontal)
-                    currentPos = (int) e.Position.X - ClientArea.Location.X - (int) (scrollbarButton.Width/2f);
-                else currentPos = (int) e.Position.Y - ClientArea.Location.Y - (int) (scrollbarButton.Height/2f);
+                    currentPos = (int) e.X - ClientArea.Location.X - (int) (scrollbarButton.Width/2f);
+                else currentPos = (int) e.Y - ClientArea.Location.Y - (int) (scrollbarButton.Height/2f);
                 currentPos = Math.Min(currentPos, actualSize);
                 currentPos = Math.Max(currentPos, 0);
                 RaiseEvent = true;
@@ -116,7 +118,7 @@ namespace SS14.Client.Services.UserInterface.Components
 
 		public override bool MouseWheelMove(MouseWheelEventArgs e)
         {
-            Value += ((Math.Sign(e.WheelDelta)*-1)*Math.Max(((max/20)), 1));
+            Value += ((Math.Sign(e.Y)*-1)*Math.Max(((max/20)), 1));
             return true;
         }
 
@@ -153,14 +155,12 @@ namespace SS14.Client.Services.UserInterface.Components
         {
             if (!IsVisible()) return;
             if (drawBackground)
-                Gorgon.CurrentRenderTarget.FilledRectangle(ClientArea.X, ClientArea.Y, ClientArea.Width,
-                                                           ClientArea.Height, Color.DarkSlateGray);
+              CluwneLib.drawRectangle(ClientArea.X, ClientArea.Y, ClientArea.Width, ClientArea.Height, Color.DarkSlateGray);
             scrollbarButton.Draw(clientAreaButton);
             DEBUG.Position = new Vector2(ClientArea.Location.X + 20, ClientArea.Location.Y + 20);
             DEBUG.Text = "current: " + actualVal.ToString();
             if (DRAW_DEBUG) DEBUG.Draw();
-            Gorgon.CurrentRenderTarget.Rectangle(ClientArea.X + 0, ClientArea.Y + 0, ClientArea.Width - 0,
-                                                 ClientArea.Height - 0, Color.Black);
+           CluwneLib.drawRectangle(ClientArea.X + 0, ClientArea.Y + 0, ClientArea.Width - 0, ClientArea.Height - 0, Color.Black);
         }
     }
 }

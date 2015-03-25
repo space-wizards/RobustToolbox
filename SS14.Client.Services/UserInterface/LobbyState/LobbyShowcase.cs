@@ -9,6 +9,7 @@ namespace SS14.Client.Services.UserInterface.Components
     {
         protected int ScrollOffset = 0;
         public Size ItemOffsets = new Size(0,0);
+        private Color ctemp;
 
         protected override void _buttonRight_Clicked(ImageButton sender)
         {
@@ -90,7 +91,8 @@ namespace SS14.Client.Services.UserInterface.Components
                         new Point(ItemOffsets.Width + ClientArea.Left + (int)(ClientArea.Width / 2f - middle.Key.ClientArea.Width / 2f),
                                   ItemOffsets.Height + ClientArea.Top + (int)(ClientArea.Height / 2f - middle.Key.ClientArea.Height / 2f));
                     if (FadeItems)
-                        middle.Key.Color = Color.FromArgb(255, Color.White);
+                        ctemp =  Color.FromArgb(255, Color.White);
+                    middle.Key.Color = new SFML.Graphics.Color(ctemp.R, ctemp.G, ctemp.B, ctemp.A);
 
                     if (_selectionGlow != null && Selected == ScrollOffset)
                     {
@@ -122,7 +124,8 @@ namespace SS14.Client.Services.UserInterface.Components
                             }
 
                             if (FadeItems)
-                                currLeft.Key.Color = Color.FromArgb((int) (baseAlpha/alphaAdj), Color.White);
+                                ctemp = Color.FromArgb((int) (baseAlpha/alphaAdj), Color.White);
+                                currLeft.Key.Color = new SFML.Graphics.Color(ctemp.R,ctemp.G,ctemp.B,ctemp.A);
 
                             currLeft.Key.Render();
                         }
@@ -141,7 +144,8 @@ namespace SS14.Client.Services.UserInterface.Components
                             }
 
                             if (FadeItems)
-                                currRight.Key.Color = Color.FromArgb((int) (baseAlpha/alphaAdj), Color.White);
+                                ctemp = Color.FromArgb((int) (baseAlpha/alphaAdj), Color.White);
+                                currRight.Key.Color = new SFML.Graphics.Color(ctemp.R,ctemp.G,ctemp.B,ctemp.A);
 
                             currRight.Key.Render();
                         }
@@ -164,16 +168,16 @@ namespace SS14.Client.Services.UserInterface.Components
 
 		public override bool MouseWheelMove(MouseWheelEventArgs e)
         {
-            if (ClientArea.Contains(new Point((int) e.Position.X, (int) e.Position.Y)))
+            if (ClientArea.Contains(new Point((int) e.X, (int) e.Y)))
             {
                 if (ScrollingNeeded())
                 {
-                    if (e.WheelDelta > 0)
+                    if (e.Delta> 0)
                     {
                         if (ScrollOffset + 1 <= _items.Count - 1) ScrollOffset++;
                         return true;
                     }
-                    else if (e.WheelDelta < 0)
+                    else if (e.Delta < 0)
                     {
                         if (ScrollOffset - 1 >= 0) ScrollOffset--;
                         return true;
@@ -185,7 +189,7 @@ namespace SS14.Client.Services.UserInterface.Components
 
 		public override void MouseMove(MouseMoveEventArgs e)
         {
-            if (ClientArea.Contains(new Point((int) e.Position.X, (int) e.Position.Y)))
+            if (ClientArea.Contains(new Point((int) e.X, (int) e.Y)))
             {
                 _buttonLeft.MouseMove(e);
                 _buttonRight.MouseMove(e);
@@ -199,7 +203,7 @@ namespace SS14.Client.Services.UserInterface.Components
 
 		public override bool MouseDown(MouseButtonEventArgs e)
         {
-            if (ClientArea.Contains(new Point((int) e.Position.X, (int) e.Position.Y)))
+            if (ClientArea.Contains(new Point((int) e.X, (int) e.Y)))
             {
 
                 if (ShowArrows && ScrollingNeeded())
@@ -237,7 +241,7 @@ namespace SS14.Client.Services.UserInterface.Components
 
 		public override bool MouseUp(MouseButtonEventArgs e)
         {
-            if (ClientArea.Contains(new Point((int) e.Position.X, (int) e.Position.Y)))
+            if (ClientArea.Contains(new Point((int) e.X, (int) e.Y)))
             {
                 if (_buttonLeft.MouseUp(e)) return true;
                 if (_buttonRight.MouseUp(e)) return true;

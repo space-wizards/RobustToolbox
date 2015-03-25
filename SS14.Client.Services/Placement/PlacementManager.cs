@@ -21,6 +21,7 @@ using System.Collections.Generic;
 using System.Drawing;
 using System.Linq;
 using System.Reflection;
+using SS14.Client.Graphics.CluwneLib;
 
 namespace SS14.Client.Services.Placement
 {
@@ -177,7 +178,7 @@ namespace SS14.Client.Services.Placement
 
             if (CurrentPermission != null && CurrentPermission.Range > 0)
             {
-                Gorgon.CurrentRenderTarget.Circle(
+                 CluwneLib.drawCircle(
                     PlayerManager.ControlledEntity.GetComponent<TransformComponent>(ComponentFamily.Transform).Position.
                         X - ClientWindowData.Singleton.ScreenOrigin.X,
                     PlayerManager.ControlledEntity.GetComponent<TransformComponent>(ComponentFamily.Transform).Position.

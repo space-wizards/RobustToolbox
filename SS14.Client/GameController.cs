@@ -15,21 +15,27 @@ using SFML.Window;
 using SS14.Client.Graphics.CluwneLib;
 using SS14.Client.Graphics.CluwneLib.Event;
 using SS14.Client.Graphics.CluwneLib.Render;
-using Color = SFML.Graphics.Color;
+using Color = System.Drawing.Color;
 using KeyArgs = SFML.Window.KeyEventArgs;
+using SS14.Client.Graphics.CluwneLib.Sprite;
+
+
 
 namespace SS14.Client
 {
-    public partial class MainWindow : Form
+    public class GameController 
     {
+
+
         #region Fields
 
         private IConfigurationManager _configurationManager;
-        private Input _input;
+      //  private Input _input;
         private INetworkGrapher _netGrapher;
         private INetworkManager _networkManager;
         private IStateManager _stateManager;
         private IUserInterfaceManager _userInterfaceManager;
+        private IResourceManager _resourceManager;
 
         #endregion
 
@@ -41,18 +47,119 @@ namespace SS14.Client
 
         #region Constructors
 
-        public MainWindow()
+        public GameController()
         {
+            _configurationManager = IoCManager.Resolve<IConfigurationManager>();
             IoCManager.Resolve<IConfigurationManager>().Initialize("./config.xml");
 
-            InitializeComponent();
+            _resourceManager = IoCManager.Resolve<IResourceManager>();
+
+            _resourceManager.LoadBaseResources();
+            _resourceManager.LoadLocalResources();
+          
+
+            //Initialization of private members
+           
+            _networkManager = IoCManager.Resolve<INetworkManager>();
+            _netGrapher = IoCManager.Resolve<INetworkGrapher>();
+            _stateManager = IoCManager.Resolve<IStateManager>();
+            _userInterfaceManager = IoCManager.Resolve<IUserInterfaceManager>();
+
+        
+           
+
+            //Setup
+            SetupCluwne();
+            SetupInput();
+
+
+            #region testing
+            TextSprite CluwneEngineText = new TextSprite("TEST", "CluwneEngine", _resourceManager.GetFont("CALIBRI"));
+            CluwneEngineText.Position = new Shared.Maths.Vector2(450,600);
+            CluwneEngineText.Color = Color.DarkRed;
+            CluwneEngineText.Text = " SS14: Running on CluwneEngine";
+
+            TextSprite VersionText = new TextSprite("TEST", "version", _resourceManager.GetFont("CALIBRI"));
+            VersionText.Position = new Shared.Maths.Vector2(500, 650);
+            VersionText.Color = Color.Gold;
+            VersionText.Text = "( Running SFML v2.0 ) " ;
+
+            TextSprite ProjNotDeadText = new TextSprite("TEST", "ProjNoDed", _resourceManager.GetFont("CALIBRI"));
+            ProjNotDeadText.Position = new Shared.Maths.Vector2(512, 700);
+            ProjNotDeadText.Color = Color.Gold;
+            ProjNotDeadText.Text = "  Project != Dead :)";
+            
+
+            //CluwneLib.drawHollowRectangle(100, 100, 100, 100, .6f, Color.Blue);
+            //CluwneLib.drawPoint(134, 223, Color.Beige);
+            //CluwneLib.drawCircle(121, 142, 20, Color.Crimson);
+
+
+            Texture Cluwnelogo = new Texture(_resourceManager.GetImage("Textures/CluwneLibLogo.png"));
+
+            CluwneSprite CluwneEngineLogo = new CluwneSprite(Cluwnelogo);
+            CluwneEngineLogo.Position = new SFML.System.Vector2f(150,100);
+
+            Texture _Tiles = new Texture(_resourceManager.GetImage("Textures/0_Tiles.png"));
+
+            CluwneSprite _TilesSprite = new CluwneSprite(_Tiles);
+            _TilesSprite.Position = new SFML.System.Vector2f(0, 0);
+
+
+            Texture _Items = new Texture(_resourceManager.GetImage("Textures/0_Items.png"));
+
+            CluwneSprite _TilesItems = new CluwneSprite(_Items);
+            _TilesItems.Position = new SFML.System.Vector2f(0, 500);
+
+            Texture _Objects = new Texture(_resourceManager.GetImage("Textures/0_Objects.png"));
+
+            CluwneSprite _TilesObjects = new CluwneSprite(_Objects);
+            _TilesObjects.Position = new SFML.System.Vector2f(970, 400);
+
+            Texture _Decals = new Texture(_resourceManager.GetImage("Textures/0_Decals.png"));
+
+            CluwneSprite _TilesDecals = new CluwneSprite(_Decals);
+            _TilesDecals.Position = new SFML.System.Vector2f(1000, 0);
+
+
+
+            _TilesObjects.Draw();
+            _TilesDecals.Draw();
+            _TilesItems.Draw();
+            _TilesSprite.Draw();
+            CluwneEngineText.Draw();
+            VersionText.Draw();
+            CluwneEngineLogo.Draw();
+            ProjNotDeadText.Draw();
+           
+    
+          //States Testing
+          //_stateManager.RequestStateChange<MainScreen>();
+
+            CluwneLib.Screen.Display();
+
+             while(CluwneLib.Screen.IsOpen == true)
+                {
+                 
+
+
+
+                    CluwneLib.Screen.WaitAndDispatchEvents();
+                    
+                }
+
+          
+
         }
+            #endregion
 
         #endregion
 
+
+
         #region EventHandlers
 
-        private void GorgonIdle(object sender, FrameEventArgs e)
+        private void CluwneLibIdle(object sender, FrameEventArgs e)
         {
             _networkManager.UpdateNetwork();
             _stateManager.Update(e);
@@ -65,29 +172,15 @@ namespace SS14.Client
 
         private void MainWindowLoad(object sender, EventArgs e)
         {
-            _configurationManager = IoCManager.Resolve<IConfigurationManager>();
-
-            SetupCluwne();
-            SetupInput();
-
-            IoCManager.Resolve<IResourceManager>().LoadBaseResources();
-            IoCManager.Resolve<IResourceManager>().LoadLocalResources();
-
-            CluwneLib.Go();
-
-            _networkManager = IoCManager.Resolve<INetworkManager>();
-            _netGrapher = IoCManager.Resolve<INetworkGrapher>();
-            _stateManager = IoCManager.Resolve<IStateManager>();
-            _userInterfaceManager = IoCManager.Resolve<IUserInterfaceManager>();
 
             _stateManager.RequestStateChange<MainScreen>();
         }
 
         private void MainWindowResizeEnd(object sender, EventArgs e)
         {
-            _input.Mouse.SetPositionRange(0, 0, CluwneLib.CurrentClippingViewport.Width,
-                                          CluwneLib.CurrentClippingViewport.Height);
-            _stateManager.CurrentState.FormResize();
+          
+
+           
         }
 
         #region Input Handling
@@ -199,19 +292,23 @@ namespace SS14.Client
             bool fullscreen = _configurationManager.GetFullscreen();
             var refresh = (int) _configurationManager.GetDisplayRefresh();
 
-            Size = new Size((int) displayWidth, (int) displayHeight);
+          
+             
 
-            CluwneLib.Initialize();
-            CluwneLib.SetMode(this, (int) displayWidth, (int) displayHeight, !fullscreen, false, false, refresh);
-            CluwneLib.Screen.BackgroundColor = new Color(255, 50, 50, 50);
-            CluwneLib.Idle += GorgonIdle;
+            CluwneLib.Go();
+           
+            CluwneLib.SetMode((int) displayWidth, (int) displayHeight, fullscreen,false,false,refresh);
+            CluwneLib.Screen.BackgroundColor = CluwneLib.SystemColorToSFML(Color.Black);
+            CluwneLib.CurrentClippingViewport = new Viewport(0, 0, CluwneLib.Screen.Size.X, CluwneLib.Screen.Size.Y);
+            CluwneLib.Screen.Resized += MainWindowResizeEnd;
+            CluwneLib.Idle += CluwneLibIdle;
         }
 
         private void SetupInput()
         {
-            Cursor.Hide();
 
-            CluwneLib.Screen.Resized += MainWindowResizeEnd;
+            //Cursor.Hide();
+     
 
             CluwneLib.Screen.KeyPressed  += KeyDownEvent;
             CluwneLib.Screen.KeyReleased += KeyUpEvent;
@@ -229,3 +326,4 @@ namespace SS14.Client
         #endregion
     }
 }
+    

@@ -1,4 +1,5 @@
 ﻿using SS14.Shared.Minidump;
+using SS14.Shared.Utility;
 using System;
 using System.Windows.Forms;
 
@@ -18,12 +19,12 @@ namespace SS14.Client
             //Process command-line args
             processArgs(args);
             //Register minidump dumper only if the app isn't being debugged. No use filling up hard drives with shite
-            if (!System.Diagnostics.Debugger.IsAttached)
+            if (PlatformDetector.DetectPlatform() == Platform.Windows && !System.Diagnostics.Debugger.IsAttached)
                 MiniDump.Register("crashdump-" + Guid.NewGuid().ToString("N") + ".dmp",
                                   fullDump
                                       ? MiniDump.MINIDUMP_TYPE.MiniDumpWithFullMemory
                                       : MiniDump.MINIDUMP_TYPE.MiniDumpNormal);
-            Application.Run(new MainWindow());
+            GameController GC = new GameController();
         }
         
         private static void processArgs(string[] args)

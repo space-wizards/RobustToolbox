@@ -6,6 +6,7 @@ using SS14.Shared.IoC;
 using System;
 using System.Drawing;
 using SFML.Window;
+using SS14.Client.Graphics.CluwneLib;
 
 namespace SS14.Client.Services.UserInterface.Components
 {
@@ -37,7 +38,7 @@ namespace SS14.Client.Services.UserInterface.Components
         {
             _resourceManager = resourceManager;
             DrawSprite = _resourceManager.GetSprite(spriteName);
-            DrawSprite.Smoothing = Smoothing.Smooth;
+//DrawSprite.Smoothing = Smoothing.Smooth;
 
             _uiMgr = (UserInterfaceManager) IoCManager.Resolve<IUserInterfaceManager>();
 
@@ -57,15 +58,15 @@ namespace SS14.Client.Services.UserInterface.Components
                                        new Size((int) DrawSprite.Width, (int) DrawSprite.Height));
 
             //Outside screen. Does not respect rotation. FIX.
-            if (ClientArea.X > Gorgon.Screen.Width)
+            if (ClientArea.X >CluwneLib.Screen.Size.X)
                 SpriteLocation = new Vector2((0 - DrawSprite.Width), SpriteLocation.Y);
             else if (ClientArea.X < (0 - DrawSprite.Width))
-                SpriteLocation = new Vector2(Gorgon.Screen.Width, SpriteLocation.Y);
+                SpriteLocation = new Vector2(CluwneLib.Screen.Size.X, SpriteLocation.Y);
 
-            if (ClientArea.Y > Gorgon.Screen.Height)
+            if (ClientArea.Y > CluwneLib.Screen.Size.Y)
                 SpriteLocation = new Vector2(SpriteLocation.X, (0 - DrawSprite.Height));
             else if (ClientArea.Y < (0 - DrawSprite.Height))
-                SpriteLocation = new Vector2(SpriteLocation.X, Gorgon.Screen.Height);
+                SpriteLocation = new Vector2(SpriteLocation.X, CluwneLib.Screen.Size.Y);
 
             if (MouseParallax)
             {
@@ -74,13 +75,13 @@ namespace SS14.Client.Services.UserInterface.Components
 
                 if (MouseParallaxHorizontal)
                 {
-                    ParX = Math.Abs(_uiMgr.MousePos.X - (Gorgon.Screen.Width));
+                    ParX = Math.Abs(_uiMgr.MousePos.X - (CluwneLib.Screen.Size.X));
                     ParX *= ParallaxScale;
                 }
 
                 if (MouseParallaxVertical)
                 {
-                    ParY = Math.Abs(_uiMgr.MousePos.Y - (Gorgon.Screen.Height));
+                    ParY = Math.Abs(_uiMgr.MousePos.Y - ((CluwneLib.Screen.Size.Y)));
                     ParY *= ParallaxScale;
                 }
 

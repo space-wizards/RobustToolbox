@@ -1,11 +1,12 @@
-﻿using GorgonLibrary;
-using GorgonLibrary.Graphics;
+﻿
 using SS14.Client.GameObjects;
 using SS14.Client.Services.Resources;
+using SS14.Shared.Maths;
 using System;
 using System.ComponentModel;
 using System.Drawing;
 using System.Windows.Forms;
+
 
 namespace SS14.Tools.ParticleEditor
 {
@@ -14,8 +15,8 @@ namespace SS14.Tools.ParticleEditor
         #region Properties
         public ParticleConfigurator ParticleConfigurator { get; set; }
         private ParticleSystem _particleSystem;
-        private Sprite _particleSprite;
-        private GorgonLibrary.Graphics.Image _particleImage;
+        private CluwneSprite _particleSprite;
+        private RenderImage _particleImage;
         public ResourceManager ResourceManager { get; set; }
         public ParticleEditorMainForm MainForm { get; set; }
         #endregion
@@ -30,7 +31,7 @@ namespace SS14.Tools.ParticleEditor
         private void Screen_OnFrameBegin(object sender, FrameEventArgs e)
         {
             // Clear the screen.
-            Gorgon.Screen.Clear();
+           CluwneLib.Screen.Clear();
             _particleSystem.Update(e.FrameDeltaTime);
             _particleSystem.Render();
         }

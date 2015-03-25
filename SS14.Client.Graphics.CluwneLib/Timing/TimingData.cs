@@ -6,6 +6,9 @@ using SFML.System;
 
 namespace SS14.Client.Graphics.CluwneLib.Timing
 {
+    /// <summary>
+    /// Handles TimingData
+    /// </summary>
     public class TimingData
     {
         #region Constants.

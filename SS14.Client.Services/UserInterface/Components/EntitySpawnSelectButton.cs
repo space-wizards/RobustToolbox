@@ -6,6 +6,8 @@ using System.Drawing;
 using System.Linq;
 using Font = SFML.Graphics.Font;
 using SFML.Window;
+using SS14.Shared.Maths;
+using SS14.Client.Graphics.CluwneLib;
 
 namespace SS14.Client.Services.UserInterface.Components
 {
@@ -57,7 +59,7 @@ namespace SS14.Client.Services.UserInterface.Components
 
 		public override bool MouseDown(MouseButtonEventArgs e)
         {
-            if (ClientArea.Contains(new Point((int) e.Position.X, (int) e.Position.Y)))
+            if (ClientArea.Contains(new Point((int) e.X, (int) e.Y)))
             {
                 if (Clicked != null) Clicked(this, associatedTemplate, associatedTemplateName);
                 return true;
@@ -87,9 +89,9 @@ namespace SS14.Client.Services.UserInterface.Components
 
         public override void Render()
         {
-            Gorgon.CurrentRenderTarget.FilledRectangle(ClientArea.X, ClientArea.Y, ClientArea.Width, ClientArea.Height,
+           CluwneLib.drawRectangle(ClientArea.X, ClientArea.Y, ClientArea.Width, ClientArea.Height,
                                                        selected ? Color.ForestGreen : Color.FloralWhite);
-            Gorgon.CurrentRenderTarget.Rectangle(ClientArea.X, ClientArea.Y, ClientArea.Width, ClientArea.Height,
+           CluwneLib.drawRectangle(ClientArea.X, ClientArea.Y, ClientArea.Width, ClientArea.Height,
                                                  Color.Black);
             objectSprite.Draw();
             name.Draw();

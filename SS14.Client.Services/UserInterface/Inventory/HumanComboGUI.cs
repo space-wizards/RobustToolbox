@@ -14,6 +14,7 @@ using System.Drawing;
 using System.Linq;
 using SS14.Client.Graphics.CluwneLib.Sprite;
 using SFML.Window;
+using SS14.Shared.Maths;
 
 namespace SS14.Client.Services.UserInterface.Inventory
 {
@@ -292,7 +293,7 @@ namespace SS14.Client.Services.UserInterface.Inventory
 
         public override bool KeyDown(KeyEventArgs e)
         {
-            if (e.Key == KeyboardKeys.I)
+            if (e.Code == Keyboard.Key.I)
             {
                 _showTabbedWindow = !_showTabbedWindow;
                 _craftStatus.Text = "Status";
@@ -514,12 +515,12 @@ namespace SS14.Client.Services.UserInterface.Inventory
                         _inventory = new InventoryViewer(invComp, _userInterfaceManager, _resourceManager);
                     }
 
-            _comboBg.Position = Position;
+            _comboBg.Position = new Vector2 (Position.X, Position.Y);
 
             Point equipBgPos = Position;
-            _equipBg.Position = Position;
+            _equipBg.Position = new Vector2 (Position.X,Position.Y);
             equipBgPos.Offset((int) (_comboBg.AABB.Width/2f - _equipBg.AABB.Width/2f), 40);
-            _equipBg.Position = equipBgPos;
+            _equipBg.Position = new Vector2(equipBgPos.X,equipBgPos.Y);
 
             Point comboClosePos = Position;
             comboClosePos.Offset(264, 11); //Magic photoshop ruler numbers.
@@ -529,19 +530,19 @@ namespace SS14.Client.Services.UserInterface.Inventory
             Point tabEquipPos = Position;
             tabEquipPos.Offset(-26, 76); //Magic photoshop ruler numbers.
             _tabEquip.Position = tabEquipPos;
-            _tabEquip.Color = _currentTab == 1 ? Color.White : _inactiveColor;
+            _tabEquip.Color = _currentTab == 1 ? new SFML.Graphics.Color(Color.White.R, Color.White.G, Color.White.B) : new SFML.Graphics.Color(_inactiveColor.R, _inactiveColor.G, _inactiveColor.B);
             _tabEquip.Update(frameTime);
 
             Point tabHealthPos = tabEquipPos;
             tabHealthPos.Offset(0, 3 + _tabEquip.ClientArea.Height);
             _tabHealth.Position = tabHealthPos;
-            _tabHealth.Color = _currentTab == 2 ? Color.White : _inactiveColor;
+            _tabHealth.Color = _currentTab == 2 ? new SFML.Graphics.Color(Color.White.R, Color.White.G, Color.White.B) : new SFML.Graphics.Color(_inactiveColor.R, _inactiveColor.G, _inactiveColor.B);
             _tabHealth.Update(frameTime);
 
             Point tabCraftPos = tabHealthPos;
             tabCraftPos.Offset(0, 3 + _tabHealth.ClientArea.Height);
             _tabCraft.Position = tabCraftPos;
-            _tabCraft.Color = _currentTab == 3 ? Color.White : _inactiveColor;
+            _tabCraft.Color = _currentTab == 3 ? new SFML.Graphics.Color(Color.White.R, Color.White.G, Color.White.B) : new SFML.Graphics.Color(_inactiveColor.R, _inactiveColor.G,_inactiveColor.B);
             _tabCraft.Update(frameTime);
 
             ClientArea = new Rectangle(Position.X, Position.Y, (int) _comboBg.AABB.Width, (int) _comboBg.AABB.Height);
@@ -770,7 +771,7 @@ namespace SS14.Client.Services.UserInterface.Inventory
 
 		public override bool MouseUp(MouseButtonEventArgs e)
         {
-            var mouseAABB = new PointF(e.Position.X, e.Position.Y);
+            var mouseAABB = new PointF(e.X, e.Y);
 
             switch (_currentTab)
             {

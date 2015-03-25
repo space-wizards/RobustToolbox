@@ -15,6 +15,7 @@ using System;
 using System.Collections.Generic;
 using System.Drawing;
 using System.Linq;
+using SS14.Client.Graphics.CluwneLib;
 
 namespace SS14.Client.Services.UserInterface
 {
@@ -49,7 +50,7 @@ namespace SS14.Client.Services.UserInterface
             DragInfo = new DragDropInfo();
             _components = new List<IGuiComponent>();
             _config = IoCManager.Resolve<IConfigurationManager>();
-            _console = new DebugConsole("dbgConsole", new Size(Gorgon.Screen.Width, 400), resourceManager);
+            _console = new DebugConsole("dbgConsole", new Size((int)VideoMode.DesktopMode.Width, 400), resourceManager);
             _console.SetVisible(false);
         }
 
@@ -229,10 +230,10 @@ namespace SS14.Client.Services.UserInterface
             {
                 foreach (IGuiComponent comp in _components)
                 {
-                    if (comp.ClientArea.Contains(new Point((int) e.Position.X, (int) e.Position.Y)))
+                    if (comp.ClientArea.Contains(new Point((int) e.X, (int) e.Y)))
                     {
                         movingComp = comp;
-                        dragOffset = (new Vector2(e.Position.X, e.Position.Y)) -
+                        dragOffset = (new Vector2(e.X, e.Y)) -
                                      new Vector2(comp.ClientArea.X, comp.ClientArea.Y);
                         break;
                     }
@@ -301,7 +302,7 @@ namespace SS14.Client.Services.UserInterface
         /// </summary>
 		public virtual void MouseMove(MouseMoveEventArgs e)
         {
-            MousePos = e.Position;
+            MousePos = new Vector2( e.X, e.Y);
 
             if (_console.IsVisible())
             {
@@ -340,7 +341,7 @@ namespace SS14.Client.Services.UserInterface
         /// </summary>
         public virtual bool KeyDown(KeyEventArgs e)
         {
-            if ((e.Shift ? e.CharacterMapping.Shifted : e.CharacterMapping.Character) == _config.GetConsoleKey())
+            if (e.Equals(_config.GetConsoleKey()))
             {
                 _console.ToggleVisible();
                 return true;
@@ -482,15 +483,15 @@ namespace SS14.Client.Services.UserInterface
                 component.Render();
 
                 if (moveMode)
-                {
-                    Gorgon.Screen.BlendingMode = BlendingModes.Modulated;
-                    Gorgon.Screen.FilledRectangle(component.ClientArea.X, component.ClientArea.Y,
+                { /*
+                    CluwneLib.Screen.BlendingMode = BlendingModes.Modulated;
+                   CluwneLib.Screen.FilledRectangle(component.ClientArea.X, component.ClientArea.Y,
                                                   component.ClientArea.Width, component.ClientArea.Height,
                                                   Color.FromArgb(100, Color.Green));
-                    Gorgon.Screen.Rectangle(component.ClientArea.X, component.ClientArea.Y, component.ClientArea.Width,
+                    CluwneLib.Screen.Rectangle(component.ClientArea.X, component.ClientArea.Y, component.ClientArea.Width,
                                             component.ClientArea.Height, Color.LightGreen);
-                    Gorgon.Screen.BlendingMode = BlendingModes.None;
-                }
+                   CluwneLib.Screen.BlendingMode = BlendingModes.None;
+                */}
             }
 
             if (targetingAction != null)

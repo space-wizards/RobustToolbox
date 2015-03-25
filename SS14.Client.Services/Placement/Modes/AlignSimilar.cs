@@ -11,6 +11,9 @@ using System.Collections.Generic;
 using System.Drawing;
 using System.Linq;
 using EntityManager = SS14.Client.GameObjects.EntityManager;
+using SFML.Graphics;
+using SS14.Client.Graphics.CluwneLib.Sprite;
+using Color = System.Drawing.Color;
 
 namespace SS14.Client.Services.Placement.Modes
 {
@@ -75,14 +78,14 @@ namespace SS14.Client.Services.Placement.Modes
 
                 if (reply.MessageType == ComponentMessageType.CurrentSprite)
                 {
-                    var closestSprite = (Sprite) reply.ParamsList[0]; //This is faster but kinda unsafe.
+                    var closestSprite = (CluwneSprite) reply.ParamsList[0]; //This is faster but kinda unsafe.
 
                     var closestRect =
                         new RectangleF(
                             closestEntity.GetComponent<TransformComponent>(ComponentFamily.Transform).Position.X -
-                            closestSprite.Width/2f,
+                            closestSprite.Size.X/2f,
                             closestEntity.GetComponent<TransformComponent>(ComponentFamily.Transform).Position.Y -
-                            closestSprite.Height/2f, closestSprite.Width, closestSprite.Height);
+                            closestSprite.Size.Y/2f, closestSprite.Width, closestSprite.Height);
 
                     var sides = new List<Vector2>
                                     {
@@ -116,12 +119,12 @@ namespace SS14.Client.Services.Placement.Modes
         {
             if (spriteToDraw != null)
             {
-                spriteToDraw.Color = pManager.ValidPosition ? Color.ForestGreen : Color.IndianRed;
+                spriteToDraw.Color = pManager.ValidPosition ? CluwneLib.SystemColorToSFML( Color.ForestGreen) : CluwneLib.SystemColorToSFML( Color.IndianRed);
                 spriteToDraw.Position = new Vector2(mouseScreen.X - (spriteToDraw.Width/2f),
                                                      mouseScreen.Y - (spriteToDraw.Height/2f));
                 //Centering the sprite on the cursor.
                 spriteToDraw.Draw();
-                spriteToDraw.Color = Color.White;
+                spriteToDraw.Color = CluwneLib.SystemColorToSFML(Color.White);
             }
         }
     }

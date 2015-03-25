@@ -28,6 +28,7 @@
 	<File buildAction="Compile">Collection/BaseCollection.cs</File>
 	<File buildAction="Compile">Enums/GraphicsEnums.cs</File>
     <File buildAction="Compile">Event/FrameEvent.cs</File>
+    <File buildAction="Compile">TextureCache.cs</File>
     <File buildAction="Compile">Properties/AssemblyInfo.cs</File>
     <File buildAction="Compile">Render/CluwneWindow.cs</File>
     <File buildAction="Compile">Render/RenderImage.cs</File>

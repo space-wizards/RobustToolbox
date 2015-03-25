@@ -4,6 +4,7 @@ using SS14.Client.Graphics;
 using SS14.Client.Interfaces.Configuration;
 using SS14.Client.Interfaces.Resource;
 using SS14.Shared.GameObjects;
+using Vector2 = SS14.Shared.Maths.Vector2;
 using System;
 using System.Collections.Generic;
 using System.Drawing;
@@ -14,6 +15,7 @@ using System.Reflection;
 using System.Text.RegularExpressions;
 using SS14.Client.Graphics.CluwneLib.Shader;
 using SS14.Client.Graphics.CluwneLib.Sprite;
+using TextureCache = SS14.Client.Graphics.CluwneLib.TextureCache;
 using Image = SFML.Graphics.Image;
 using Font = SFML.Graphics.Font;
 using Color = SFML.Graphics.Color;
@@ -221,6 +223,9 @@ namespace SS14.Client.Services.Resources
         {
             string ResourceName = Path.GetFileNameWithoutExtension(imageEntry.Name).ToLowerInvariant();
 
+            if (TextureCache.Textures.Contains(ResourceName))
+                return null; // ImageCache.Images[ResourceName];
+
             var byteBuffer = new byte[zipBufferSize];
 
             try
@@ -232,6 +237,7 @@ namespace SS14.Client.Services.Resources
                 memStream.Position = 0;
 
                 Image loadedImg = new Image(memStream);
+                TextureCache.Add(ResourceName, loadedImg);
 
                 memStream.Close();
                 zipStream.Close();
@@ -411,10 +417,10 @@ namespace SS14.Client.Services.Resources
 
                 string imageName = splitResourceName[0].ToLowerInvariant();
 
-             //   if (!ImageCache.Images.Contains(splitResourceName[0]))
-                  //  continue; //Image for this sprite does not exist. Possibly set to defered later.
+                if (!TextureCache.Textures.Contains(splitResourceName[0]))
+                    continue; //Image for this sprite does not exist. Possibly set to defered later.
 
-              //  Image atlasTex = ImageCache.Images[splitResourceName[0]];
+                Texture atlasTex = TextureCache.Textures[splitResourceName[0]];
                 //Grab the image for the sprite from the cache.
 
                 var info = new SpriteInfo();
@@ -440,15 +446,16 @@ namespace SS14.Client.Services.Resources
                     sizeY = float.Parse(splitLine[7], CultureInfo.InvariantCulture);
                 }
 
-            //    info.Offsets = new Vector2((float) Math.Round(offsetX*atlasTex.Width, 1),
-            //                                (float) Math.Round(offsetY*atlasTex.Height, 1));
-            //    info.Size = new Vector2((float) Math.Round(sizeX*atlasTex.Width, 1),
-            //                             (float) Math.Round(sizeY*atlasTex.Height, 1));
+                info.Offsets = new Vector2((float) Math.Round(offsetX*atlasTex.Size.X, 1),
+                    (float) Math.Round(offsetY*atlasTex.Size.Y, 1));
+                info.Size = new Vector2((float) Math.Round(sizeX*atlasTex.Size.X, 1),
+                    (float) Math.Round(sizeY*atlasTex.Size.Y, 1));
 
-            //    if (!_spriteInfos.ContainsKey(originalName)) _spriteInfos.Add(originalName, info);
+                if (!_spriteInfos.ContainsKey(originalName)) _spriteInfos.Add(originalName, info);
 
-            //    loadedSprites.Add(new CluwneSprite(originalName, atlasTex, info.Offsets, info.Size));
-            //
+                loadedSprites.Add(new CluwneSprite(originalName, atlasTex,
+                    new IntRect((int)info.Offsets.X, (int)info.Offsets.Y, (int)info.Size.X, (int)info.Size.Y)));
+
             }
 
             return loadedSprites;

@@ -59,9 +59,9 @@ namespace SS14.Client.Graphics.CluwneLib.Sprite
         /// </summary>
         /// <param name="texture"> Texture to draw </param>
         /// <param name="rectangle"> What part of the Texture to use </param>
-        public CluwneSprite(Texture texture, IntRect rectangle)  : base(texture,rectangle)
+        public CluwneSprite(string name, Texture texture, IntRect rectangle)  : base(texture,rectangle)
         {
-         
+            _key=name;
         }
 
         /// <summary>
@@ -160,9 +160,9 @@ namespace SS14.Client.Graphics.CluwneLib.Sprite
 
         }
          
-        public bool IsAABBUpdated { get; set; }
+        public bool IsAABBUpdated;
 
-        public bool HorizontalFlip { get; set; }
+        public bool HorizontalFlip;
 
         public float Width
         {
@@ -197,11 +197,7 @@ namespace SS14.Client.Graphics.CluwneLib.Sprite
 
         public Vector2 Size { get { return _size; } set { _size = value; } } 
 
-        public Color Color
-        {
-            get { return Color; }
-            set { Color = value; }
-        }
+        public Color _Color;
 
         public Drawing.RectangleF AABB
         {

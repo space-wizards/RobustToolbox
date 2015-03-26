@@ -5,6 +5,7 @@ using SS14.Client.Services.UserInterface.Components;
 using SS14.Client.Graphics.CluwneLib.Render;
 using SS14.Client.Graphics.CluwneLib.Sprite;
 using SS14.Client.Graphics.CluwneLib.Event;
+using SS14.Client.Graphics.CluwneLib;
 using SS14.Shared.Maths;
 using System;
 using System.Collections.Generic;
@@ -34,6 +35,9 @@ namespace SS14.Client.Services.State.States
         private DateTime _connectTime;
         private bool _isConnecting;
 
+        private int _Width;
+        private int _Height;
+
         #endregion
 
         #region Properties
@@ -43,6 +47,8 @@ namespace SS14.Client.Services.State.States
         public MainScreen(IDictionary<Type, object> managers)
             : base(managers)
         {
+            _Width = (int) CluwneLib.Screen.Size.X;
+            _Height = (int) CluwneLib.Screen.Size.Y;
             _background = ResourceManager.GetSprite("mainbg_filler");
           //  _background.Smoothing = Smoothing.Smooth;
 
@@ -75,14 +81,15 @@ namespace SS14.Client.Services.State.States
 
             _lblVersion = new Label("v. " + fvi.FileVersion, "CALIBRI", ResourceManager);
             _lblVersion.Text.Color = Color.WhiteSmoke;
-            _lblVersion.Position = new Point((int)VideoMode.DesktopMode.Width - _lblVersion.ClientArea.Width - 3 ,
-                                             (int)VideoMode.DesktopMode.Height - _lblVersion.ClientArea.Height - 3);
+
+            _lblVersion.Position = new Point(_Width -  _lblVersion.ClientArea.Width  - 100 ,
+                                             _Height - _lblVersion.ClientArea.Height - 100);
 
             _imgTitle = new SimpleImage
-                              {
-                                  Sprite = "SpaceStationLogoColor",
-                                  Position = new Point((int)VideoMode.DesktopMode.Width - 550, 100)
-                              };
+            {
+                Sprite = "SpaceStationLogoColor",
+                Position = new Point(_Width-550, 100),
+            };
 
 			_lblVersion.Update(0);
 			_imgTitle.Update(0);
@@ -100,11 +107,13 @@ namespace SS14.Client.Services.State.States
 
         public void Render(FrameEventArgs e)
         {
-           _background.Draw(new Rectangle(0, 0,(int) VideoMode.DesktopMode.Width, (int) VideoMode.DesktopMode.Height));
+           _background.Draw(new Rectangle(0, 0,(int) _Width, (int) _Height));
         }
 
         public void FormResize()
         {
+            _Width = (int) CluwneLib.Screen.Size.X;
+            _Height = (int) CluwneLib.Screen.Size.Y;
         }
 
         #endregion

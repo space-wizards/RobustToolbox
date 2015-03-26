@@ -16,5 +16,6 @@ namespace SS14.Client.Interfaces.State
         void MouseDown(MouseButtonEventArgs e);
         void MouseMove(MouseMoveEventArgs e);
         void MouseWheelMove(MouseWheelEventArgs e);
+        void FormResize();
     }
 }

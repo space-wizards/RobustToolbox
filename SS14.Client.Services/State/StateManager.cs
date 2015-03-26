@@ -112,6 +112,14 @@ namespace SS14.Client.Services.State
                 SwitchToState<T>();
         }
 
+        public void FormResize()
+        {
+            if (CurrentState == null)
+                return;
+
+            CurrentState.FormResize();
+        }
+
         private void SwitchToState<T>() where T : IState
         {
             IState newState;

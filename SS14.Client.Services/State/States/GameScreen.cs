@@ -236,8 +236,8 @@ namespace SS14.Client.Services.State.States
           //  
            // _gaussianBlur = new GaussianBlur(ResourceManager);
 
-            _realScreenWidthTiles = (float) VideoMode.DesktopMode.Width/MapManager.GetTileSpacing();
-            _realScreenHeightTiles = (float) VideoMode.DesktopMode.Height/MapManager.GetTileSpacing();
+            _realScreenWidthTiles = (float) CluwneLib.Screen.Size.X/MapManager.GetTileSpacing();
+            _realScreenHeightTiles = (float) CluwneLib.Screen.Size.Y/MapManager.GetTileSpacing();
 
             //Init GUI components
             _gameChat = new Chatbox(ResourceManager, UserInterfaceManager, KeyBindingManager);
@@ -247,11 +247,11 @@ namespace SS14.Client.Services.State.States
             //UserInterfaceManager.AddComponent(new StatPanelComponent(ConfigurationManager.GetPlayerName(), PlayerManager, NetworkManager, ResourceManager));
 
             var statusBar = new StatusEffectBar(ResourceManager, PlayerManager);
-            statusBar.Position = new Point((int)VideoMode.DesktopMode.Width - 800, 10);
+            statusBar.Position = new Point((int)CluwneLib.Screen.Size.X - 800, 10);
             UserInterfaceManager.AddComponent(statusBar);
 
             var hotbar = new Hotbar(ResourceManager);
-            hotbar.Position = new Point(5, (int)VideoMode.DesktopMode.Height - hotbar.ClientArea.Height - 5);
+            hotbar.Position = new Point(5, (int)CluwneLib.Screen.Size.Y - hotbar.ClientArea.Height - 5);
             hotbar.Update(0);
             UserInterfaceManager.AddComponent(hotbar);
 
@@ -400,8 +400,8 @@ namespace SS14.Client.Services.State.States
 
         private void ResetRendertargets()
         {
-            int w = (int)VideoMode.DesktopMode.Width;
-            int h = (int)VideoMode.DesktopMode.Height;
+            int w = (int)CluwneLib.Screen.Size.X;
+            int h = (int)CluwneLib.Screen.Size.Y;
 /*
             _baseTarget.Width = w;
             _baseTarget.Height = h;
@@ -689,7 +689,7 @@ namespace SS14.Client.Services.State.States
 
         public void FormResize()
         {
-            //CluwneLib.CurrentClippingViewport = new Viewport(0, 0,VideoMode.DesktopMode.Width, VideoMode.DesktopMode.Height);
+            //CluwneLib.CurrentClippingViewport = new Viewport(0, 0,CluwneLib.Screen.Size.X, CluwneLib.Screen.Size.Y);
           
             ClientWindowData.Singleton.UpdateViewPort(
                 PlayerManager.ControlledEntity.GetComponent<TransformComponent>(ComponentFamily.Transform).Position);

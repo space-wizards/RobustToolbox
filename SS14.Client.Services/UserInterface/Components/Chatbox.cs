@@ -303,7 +303,7 @@ namespace SS14.Client.Services.UserInterface.Components
         {
             base.Update(frameTime);
             ClientArea = new Rectangle(Position.X, Position.Y, (int) Size.X, (int) Size.Y);
-            _textInputLabel.Text.Scale = new SFML.System.Vector2f (ClientArea.Width - 10, 12);
+            // _textInputLabel.Text.Scale = new SFML.System.Vector2f (ClientArea.Width - 10, 12);
             _textInputLabel.Update(frameTime);
             foreach (Label l in _entries) l.Update(frameTime);
         }

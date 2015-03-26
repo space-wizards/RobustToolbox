@@ -13,7 +13,6 @@
   <ReferencePath>../Third-Party</ReferencePath>
   <Reference name="Cyotek.Windows.Forms.ColorPicker" path="../Third-Party" localCopy="true"/>
   <Reference name="DialogHelper" path="../Third-Party" localCopy="true"/>
-  <Reference name="Gorgon" path="../Third-Party" localCopy="true"/>
   <!-- Fucking why <Reference name="SS14.Tools.ParticleEditor" path="../Third-Party"/>-->
   <Reference name="System"/>
   <Reference name="System.Core"/>

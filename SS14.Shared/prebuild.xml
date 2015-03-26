@@ -98,6 +98,7 @@
     <File buildAction="Compile">Utility/CommandParsing.cs</File>
     <File buildAction="Compile">Utility/NetParamsPacker.cs</File>
     <File buildAction="Compile">Utility/PlatformDetector.cs</File>
+    <File buildAction="Compile">Utility/PlatformTools.cs</File>
     <File buildAction="Compile">Utility/RandomString.cs</File>
     <File buildAction="Compile">Utility/Range.cs</File>
     <File buildAction="Compile">Utility/unZipString.cs</File>

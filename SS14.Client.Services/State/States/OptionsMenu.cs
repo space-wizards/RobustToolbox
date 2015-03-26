@@ -119,7 +119,7 @@ namespace SS14.Client.Services.State.States
             _btnApply.Clicked += _applybtt_Clicked;
 
 
-            _lstResolution.Position = new Point(45 , (int)(SFML.Window.VideoMode.DesktopMode.Height / 2.5f));
+            _lstResolution.Position = new Point(45 , (int)(CluwneLib.Screen.Size.Y / 2.5f));
 			_lstResolution.Update(0);
 			_chkFullscreen.Position = new Point(_lstResolution.Position.X,
 												_lstResolution.Position.Y + _lstResolution.ClientArea.Height + 10);
@@ -147,9 +147,9 @@ namespace SS14.Client.Services.State.States
         public void Render(FrameEventArgs e)
         {
             //TODO .Draw Method
-            // _background.Draw(new Rectangle(0, 0, (int)VideoMode.DesktopMode.Width, (int) VideoMode.DesktopMode.Height));
+            // _background.Draw(new Rectangle(0, 0, (int)CluwneLib.Screen.Size.X, (int) CluwneLib.Screen.Size.Y));
 
-           //_ticketBg.Draw(new Rectangle(0, (int) (VideoMode.DesktopMode.Height/2f - _ticketBg.Height/2f),(int) _ticketBg.Width, (int) _ticketBg.Height));
+           //_ticketBg.Draw(new Rectangle(0, (int) (CluwneLib.Screen.Size.Y/2f - _ticketBg.Height/2f),(int) _ticketBg.Width, (int) _ticketBg.Height));
             UserInterfaceManager.Render();
         }
 

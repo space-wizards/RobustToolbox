@@ -14,7 +14,7 @@ using System.Drawing;
 
 namespace SS14.Client.Graphics.CluwneLib.Sprite
 {
-    public class CluwneSprite : BaseSprite
+    public class CluwneSprite : BaseSprite, ICluwneDrawable
     {
         private Drawing.RectangleF _AABB;
         private RenderTarget _target;
@@ -24,17 +24,8 @@ namespace SS14.Client.Graphics.CluwneLib.Sprite
         private Image _image;
         private Vector2 _imageOffset;
         private RenderImage _renderTarget;
-        private Vector2 _position;
-        private Vector2 _scale;
         private Vector2 _size;
-        private float _rotation;
-     
-        private Texture _texture;
-        private IntRect _textureRect;
-        private Color _color;
 
-       
-        
         #region Constructors
  
         /// <summary>
@@ -59,9 +50,9 @@ namespace SS14.Client.Graphics.CluwneLib.Sprite
         /// </summary>
         /// <param name="texture"> Texture to draw </param>
         /// <param name="rectangle"> What part of the Texture to use </param>
-        public CluwneSprite(Texture texture, IntRect rectangle)  : base(texture,rectangle)
+        public CluwneSprite(string name, Texture texture, IntRect rectangle)  : base(texture,rectangle)
         {
-         
+            _key=name;
         }
 
         /// <summary>
@@ -99,7 +90,8 @@ namespace SS14.Client.Graphics.CluwneLib.Sprite
 
         private void UpdateAABB()
         {
-           
+            FloatRect _fr = GetLocalBounds();
+            _AABB = new RectangleF(new PointF(_fr.Left, _fr.Top), new SizeF(_fr.Width, _fr.Height));
         }
 
        
@@ -144,12 +136,16 @@ namespace SS14.Client.Graphics.CluwneLib.Sprite
             if (_renderTarget != null)
                 CluwneLib.CurrentRenderTarget = _renderTarget;
 
-            RectangleShape temp = new RectangleShape();
-            temp.Position = new Vector2(rect.Location.X,rect.Location.Y);
+            // scale the sprite to fit in the given rectangle.
+            Vector2 oldScale=Scale;
+            Vector2 oldPosition = base.Position;
+            base.Position = new Vector2(rect.Left, rect.Top);
+            Scale = new SFML.System.Vector2f( rect.Width / TextureRect.Width, rect.Height / TextureRect.Height );
 
-            CluwneLib.CurrentRenderTarget.Draw(temp);
+            CluwneLib.CurrentRenderTarget.Draw(this);
+            base.Position = oldPosition;
+            Scale=oldScale;
         }
-
 
         #region Accessors
 
@@ -160,9 +156,9 @@ namespace SS14.Client.Graphics.CluwneLib.Sprite
 
         }
          
-        public bool IsAABBUpdated { get; set; }
+        public bool IsAABBUpdated = true;
 
-        public bool HorizontalFlip { get; set; }
+        public bool HorizontalFlip;
 
         public float Width
         {
@@ -196,12 +192,6 @@ namespace SS14.Client.Graphics.CluwneLib.Sprite
         }
 
         public Vector2 Size { get { return _size; } set { _size = value; } } 
-
-        public Color Color
-        {
-            get { return Color; }
-            set { Color = value; }
-        }
 
         public Drawing.RectangleF AABB
         {

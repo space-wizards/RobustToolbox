@@ -14,7 +14,7 @@ namespace SS14.Client.Graphics.CluwneLib.Sprite
     /// <summary>
     /// Sprite that contains Text
     /// </summary>
-    public class TextSprite
+    public class TextSprite : ICluwneDrawable
     {
 
         private Boolean _shadowed;                                 // Is the Text Shadowed

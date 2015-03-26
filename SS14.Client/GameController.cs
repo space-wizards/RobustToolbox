@@ -20,7 +20,7 @@ using KeyArgs = SFML.Window.KeyEventArgs;
 using SS14.Client.Graphics.CluwneLib.Sprite;
 using SS14.Client.Graphics.CluwneLib.Timing;
 
-
+using SS14.Client.Services.UserInterface.Components;
 
 namespace SS14.Client
 {
@@ -73,8 +73,14 @@ namespace SS14.Client
             SetupCluwne();
             SetupInput();
 
-
             #region testing
+            CluwneLib.Clear(Color.Black);
+
+	    // Test a sprite extracted from the spritesheet
+            CluwneSprite _OneTile = _resourceManager.GetSprite("locker_closed");
+            _OneTile.Position = new SFML.System.Vector2f(0, 0);
+            _OneTile.Draw();
+
             TextSprite CluwneEngineText = new TextSprite("TEST", "CluwneEngine", _resourceManager.GetFont("CALIBRI"));
             CluwneEngineText.Position = new Shared.Maths.Vector2(450,600);
             CluwneEngineText.Color = Color.DarkRed;
@@ -95,7 +101,6 @@ namespace SS14.Client
             //CluwneLib.drawPoint(134, 223, Color.Beige);
             //CluwneLib.drawCircle(121, 142, 20, Color.Crimson);
 
-
             Texture Cluwnelogo = new Texture(_resourceManager.GetImage("Textures/CluwneLibLogo.png"));
 
             CluwneSprite CluwneEngineLogo = new CluwneSprite(Cluwnelogo);
@@ -104,8 +109,15 @@ namespace SS14.Client
             Texture _Tiles = new Texture(_resourceManager.GetImage("Textures/0_Tiles.png"));
 
             CluwneSprite _TilesSprite = new CluwneSprite(_Tiles);
-            _TilesSprite.Position = new SFML.System.Vector2f(0, 0);
+            _TilesSprite.Position = new SFML.System.Vector2f(50, 50);
 
+            ImageButton _button = new ImageButton {
+                ImageNormal = "connect_norm",
+                ImageHover = "connect_hover",
+            };
+            _button.Update(0);
+            _button.Position = new System.Drawing.Point(0, 0);
+            _button.Render();
 
             Texture _Items = new Texture(_resourceManager.GetImage("Textures/0_Items.png"));
 
@@ -122,8 +134,6 @@ namespace SS14.Client
             CluwneSprite _TilesDecals = new CluwneSprite(_Decals);
             _TilesDecals.Position = new SFML.System.Vector2f(1000, 0);
 
-
-
             _TilesObjects.Draw();
             _TilesDecals.Draw();
             _TilesItems.Draw();
@@ -132,7 +142,6 @@ namespace SS14.Client
             VersionText.Draw();
             CluwneEngineLogo.Draw();
             ProjNotDeadText.Draw();
-
             CluwneLib.Screen.Display();
 
             //States Testing

@@ -136,12 +136,16 @@ namespace SS14.Client.Graphics.CluwneLib.Sprite
             if (_renderTarget != null)
                 CluwneLib.CurrentRenderTarget = _renderTarget;
 
-            RectangleShape temp = new RectangleShape();
-            temp.Position = new Vector2(rect.Location.X,rect.Location.Y);
+            // scale the sprite to fit in the given rectangle.
+            Vector2 oldScale=Scale;
+            Vector2 oldPosition = base.Position;
+            base.Position = new Vector2(rect.Left, rect.Top);
+            Scale = new SFML.System.Vector2f( rect.Width / TextureRect.Width, rect.Height / TextureRect.Height );
 
-            CluwneLib.CurrentRenderTarget.Draw(temp);
+            CluwneLib.CurrentRenderTarget.Draw(this);
+            base.Position = oldPosition;
+            Scale=oldScale;
         }
-
 
         #region Accessors
 

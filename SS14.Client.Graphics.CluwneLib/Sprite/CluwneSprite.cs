@@ -24,17 +24,8 @@ namespace SS14.Client.Graphics.CluwneLib.Sprite
         private Image _image;
         private Vector2 _imageOffset;
         private RenderImage _renderTarget;
-        private Vector2 _position;
-        private Vector2 _scale;
         private Vector2 _size;
-        private float _rotation;
-     
-        private Texture _texture;
-        private IntRect _textureRect;
-        private Color _color;
 
-       
-        
         #region Constructors
  
         /// <summary>
@@ -99,7 +90,8 @@ namespace SS14.Client.Graphics.CluwneLib.Sprite
 
         private void UpdateAABB()
         {
-           
+            FloatRect _fr = GetLocalBounds();
+            _AABB = new RectangleF(new PointF(_fr.Left, _fr.Top), new SizeF(_fr.Width, _fr.Height));
         }
 
        
@@ -160,7 +152,7 @@ namespace SS14.Client.Graphics.CluwneLib.Sprite
 
         }
          
-        public bool IsAABBUpdated;
+        public bool IsAABBUpdated = true;
 
         public bool HorizontalFlip;
 
@@ -196,8 +188,6 @@ namespace SS14.Client.Graphics.CluwneLib.Sprite
         }
 
         public Vector2 Size { get { return _size; } set { _size = value; } } 
-
-        public Color _Color;
 
         public Drawing.RectangleF AABB
         {

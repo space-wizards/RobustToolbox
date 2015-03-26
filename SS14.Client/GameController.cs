@@ -18,6 +18,7 @@ using SS14.Client.Graphics.CluwneLib.Render;
 using Color = System.Drawing.Color;
 using KeyArgs = SFML.Window.KeyEventArgs;
 using SS14.Client.Graphics.CluwneLib.Sprite;
+using SS14.Client.Graphics.CluwneLib.Timing;
 
 
 
@@ -131,24 +132,25 @@ namespace SS14.Client
             VersionText.Draw();
             CluwneEngineLogo.Draw();
             ProjNotDeadText.Draw();
-           
-    
-          //States Testing
-          //_stateManager.RequestStateChange<MainScreen>();
 
             CluwneLib.Screen.Display();
 
+            //States Testing
+            _stateManager.RequestStateChange<MainScreen>();
+	    System.Threading.Thread.Sleep(1000);
+
+	    FrameEventArgs _frameEvent = new FrameEventArgs(
+			    new TimingData(new SFML.System.Clock()));
+
              while(CluwneLib.Screen.IsOpen == true)
                 {
-                 
-
-
-
-                    CluwneLib.Screen.WaitAndDispatchEvents();
-                    
+                    CluwneLib.Clear(Color.Black);
+                    CluwneLib.Screen.DispatchEvents();
+                    CluwneLibIdle(this, _frameEvent);
+                    CluwneLib.Screen.Display();
                 }
 
-          
+
 
         }
             #endregion
@@ -178,9 +180,7 @@ namespace SS14.Client
 
         private void MainWindowResizeEnd(object sender, EventArgs e)
         {
-          
-
-           
+	    _stateManager.FormResize();
         }
 
         #region Input Handling

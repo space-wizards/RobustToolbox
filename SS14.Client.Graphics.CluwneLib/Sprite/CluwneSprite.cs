@@ -14,7 +14,7 @@ using System.Drawing;
 
 namespace SS14.Client.Graphics.CluwneLib.Sprite
 {
-    public class CluwneSprite : BaseSprite
+    public class CluwneSprite : BaseSprite, ICluwneDrawable
     {
         private Drawing.RectangleF _AABB;
         private RenderTarget _target;

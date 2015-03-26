@@ -150,7 +150,8 @@ namespace SS14.Client.Services.Resources
                             {
                                 Font loadedFont = LoadFontFrom(zipFile, font);
                                 if (loadedFont == null) continue;
-                                else _fonts.Add(font.Name, loadedFont);
+                                string ResourceName = Path.GetFileNameWithoutExtension(font.Name).ToLowerInvariant();
+                                _fonts.Add(ResourceName, loadedFont);
                             }
                         }
                         break;
@@ -294,10 +295,6 @@ namespace SS14.Client.Services.Resources
         /// </summary>
         private Font LoadFontFrom(ZipFile zipFile, ZipEntry fontEntry)
         {
-            string ResourceName = Path.GetFileNameWithoutExtension(fontEntry.Name).ToLowerInvariant();
-
-           
-
             var byteBuffer = new byte[zipBufferSize];
 
             Stream zipStream = zipFile.GetInputStream(fontEntry);
@@ -311,9 +308,9 @@ namespace SS14.Client.Services.Resources
             Font loadedFont = new Font(memStream);
 
 
-            memStream.Close();
+            // memStream.Close();
             zipStream.Close();
-            memStream.Dispose();
+            // memStream.Dispose();
             zipStream.Dispose();
 
             return loadedFont;

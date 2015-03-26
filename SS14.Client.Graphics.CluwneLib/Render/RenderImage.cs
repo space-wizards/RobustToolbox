@@ -7,7 +7,6 @@ using Color = System.Drawing.Color;
 using SS14.Client.Graphics.CluwneLib.Sprite;
 using SS14.Shared.Maths;
 
-
 namespace SS14.Client.Graphics.CluwneLib.Render
 {
     /// <summary>
@@ -17,12 +16,10 @@ namespace SS14.Client.Graphics.CluwneLib.Render
     {
       
         private ImageBufferFormats imageBufferFormats;
-        private RenderTexture _temp;
+        private RenderTarget _temp;
         private Image _renderImage;    // Image used as a RenderTarget
         private CluwneSprite _blit;  // RenderImage drawn in a sprite
         private string _key;         // ID, Name of current instance
-     
-
         
         /// <summary>
         /// Constructs a new RenderImage that can be rendered to 
@@ -31,8 +28,6 @@ namespace SS14.Client.Graphics.CluwneLib.Render
         /// <param name="height"> Height of RenderImage </param>
         public RenderImage(uint width, uint height) : base(width, height)
         {
-           
-            
         }
 
         /// <summary>
@@ -43,8 +38,6 @@ namespace SS14.Client.Graphics.CluwneLib.Render
         /// <param name="depthBuffer"> True to use a depthbuffer, false to exclude </param>
         public RenderImage(uint width, uint height, bool depthBuffer) : base(width, height, depthBuffer)
         {
-           
-            
         }
 
         /// <summary>
@@ -83,9 +76,6 @@ namespace SS14.Client.Graphics.CluwneLib.Render
             this.imageBufferFormats = imageBufferFormats;
         }
 
-
-    
-
         /// <summary>
         /// Draws the RenderImage to a CluwneSprite and then to the current RenderTarget
         /// </summary>
@@ -111,12 +101,8 @@ namespace SS14.Client.Graphics.CluwneLib.Render
            { 
                 //scale image
            }
-
-
            _blit.Draw();
-
         }
-
 
         /// <summary>
         /// Draws the RenderImage to a CluwneSprite and then to the current RenderTarget
@@ -131,24 +117,21 @@ namespace SS14.Client.Graphics.CluwneLib.Render
             _blit.Position = new Vector2(posX, posY);
             _blit.Size = new Vector2(widthX, heightY);
             _blit.Color = CluwneLib.SystemColorToSFML(Color.Transparent);
-
-
             _blit.Draw();
-
-
         }
 
-       
         public void BeginDrawing()
         {
-            
+			_temp=CluwneLib.CurrentRenderTarget;
+			CluwneLib.CurrentRenderTarget = this;
         }
 
         public void EndDrawing()
         {
-
+			if (_temp == null)
+				return;
+			CluwneLib.CurrentRenderTarget = _temp;
         }
-
 
         /// <summary>
         /// Clears the RenderImage with the specified color
@@ -159,10 +142,9 @@ namespace SS14.Client.Graphics.CluwneLib.Render
             this.Clear(CluwneLib.SystemColorToSFML(Color));
         }
 
+        public uint Width;
+        public uint Height;
 
-
-        public uint Width { get; set; }
-        public uint Height { get; set; }
         public string setName { get; set; }
 
         public ImageBufferFormats setImageBuffer { get; set; }

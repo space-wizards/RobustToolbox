@@ -17,8 +17,8 @@ namespace SS14.Client.Services.UserInterface.Components
         #region IGuiComponent Members
 
         public GuiComponentType ComponentClass { get; protected set; }
-        public Point Position { get; set; }
-        public Rectangle ClientArea { get; set; }
+        public virtual Point Position { get; set; }
+        public virtual Rectangle ClientArea { get; set; }
 
         public int ZDepth { get; set; }
 

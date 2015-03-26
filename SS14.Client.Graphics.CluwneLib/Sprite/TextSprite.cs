@@ -4,7 +4,6 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
-using BaseSprite = SFML.Graphics.Sprite;
 using Color = System.Drawing.Color;
 
 
@@ -15,30 +14,14 @@ namespace SS14.Client.Graphics.CluwneLib.Sprite
     /// <summary>
     /// Sprite that contains Text
     /// </summary>
-    public class TextSprite : BaseSprite
+    public class TextSprite : ICluwneDrawable
     {
 
-        private string _key;
-        private string _text;                                      // Text Displayed on screen
-        private int _width;                                        // Width of the Text Sprite
-        private int _height;                                       // Height of the Text Sprite    
         private Boolean _shadowed;                                 // Is the Text Shadowed
-        private Vector2 _position;                                 // Position (X , Y)  Of Text Sprite
-        private Font _font;                                        // Font of Text Displayed
-        private Color _color;                                      // Base Color 
         private Color _shadowColor;                                // Shadow Color
         private Text _textSprite;
-        private string _label;                        
-
 
         #region Constructors
-        /// <summary>
-        /// Default Constructor, creates a empty TextSprite
-        /// </summary>
-        public TextSprite ()
-        {
-
-        }
 
         /// <summary>
         /// Creates a TextSprite
@@ -48,9 +31,7 @@ namespace SS14.Client.Graphics.CluwneLib.Sprite
         /// <param name="font"> Font to use when displaying Text </param>
         public TextSprite( string Label, string text, Font font )
         {
-            this._text = text;
-            this._label = Label;
-            this._font = font;
+            _textSprite = new Text(text, font);
         }
 
         /// <summary>
@@ -63,14 +44,9 @@ namespace SS14.Client.Graphics.CluwneLib.Sprite
         /// <param name="height"> Height of TextSprite </param>
         public TextSprite(string Label, int x, int y, int width, int height)
         {
-            this._key = Label;
-            this._position = new Vector2(x, y);
-            this._width = width;
-            this._height = height;
-
-            
+            this._textSprite.Position = new Vector2(x, y);
         }
-        
+
         /// <summary>
         /// Draws the TextSprite to the CurrentRenderTarget
         /// </summary>
@@ -80,13 +56,6 @@ namespace SS14.Client.Graphics.CluwneLib.Sprite
         #region Methods
         public void Draw ( )
         {
-            _textSprite = new Text();
-            _textSprite.Color = CluwneLib.SystemColorToSFML(_color);
-            _textSprite.DisplayedString = _text;
-            _textSprite.Position = _position;
-            _textSprite.Font = _font;
-            
-            
             CluwneLib.CurrentRenderTarget.Draw(_textSprite);
         }
 
@@ -99,21 +68,9 @@ namespace SS14.Client.Graphics.CluwneLib.Sprite
 
         #region Accessors
 
-        public Color Color
-        {
-            get
-            {
-                return _color;
-            }
-            set
-            {
-                this._color = value;
-            }
+        public System.Drawing.Size Size;
 
-
-        }
-
-        public System.Drawing.Size Size { get; set; }
+        public System.Drawing.Color Color;
 
         public Vector2 ShadowOffset { get; set; }
 
@@ -145,54 +102,38 @@ namespace SS14.Client.Graphics.CluwneLib.Sprite
         {
             get
             {
-                if (_text == null)
-                    return "null";
-                return _text;
+                return _textSprite.DisplayedString;
             }
             set
             {
-               _text = value;
+                _textSprite.DisplayedString = value;
             }
-
-            
         }
     
 
-        public Vector2 Position 
+        new public Vector2 Position 
         {
             get
             {
-                return _position;
+                return _textSprite.Position;
             } 
             set
             {
-                this._position = value;
+                _textSprite.Position = value;
             }
         }
 
         public int Width
         {
-            get
-            {
-                return _width;
-            }
-            set
-            {
-                this._width = value;
-            }
+            get { return (int) _textSprite.GetLocalBounds().Width; }
 
         }
 
         public int Height
         {
-            get;
-            set;
+            get { return (int) _textSprite.GetLocalBounds().Height; }
         }
 
         #endregion
-
-
-     
-     
     }
 }

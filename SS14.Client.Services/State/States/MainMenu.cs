@@ -82,8 +82,9 @@ namespace SS14.Client.Services.State.States
             _lblVersion = new Label("v. " + fvi.FileVersion, "CALIBRI", ResourceManager);
             _lblVersion.Text.Color = Color.WhiteSmoke;
 
-            _lblVersion.Position = new Point(_Width -  _lblVersion.ClientArea.Width  - 100 ,
-                                             _Height - _lblVersion.ClientArea.Height - 100);
+            _lblVersion.Position = new Point(_Width -  _lblVersion.ClientArea.Width  - 3,
+                                             _Height - _lblVersion.ClientArea.Height - 3);
+
 
             _imgTitle = new SimpleImage
             {

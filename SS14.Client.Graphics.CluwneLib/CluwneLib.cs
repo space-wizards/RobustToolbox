@@ -119,9 +119,9 @@ namespace SS14.Client.Graphics.CluwneLib
             CurrentRenderTarget.Clear(SystemColorToSFML(color));
         }
 
-        private static void Terminate()
+        public static void Terminate()
         {
-            Screen.Close();
+            SFML_Threadlock.ReleaseMutex();
         }
 
         public static void RunIdle(object sender, FrameEventArgs e)
@@ -131,8 +131,8 @@ namespace SS14.Client.Graphics.CluwneLib
 
         public static void Stop()
         {
-            CurrentRenderTarget = null;
-            Screen.Dispose();
+            Console.WriteLine("CluwneLib: Stop() requested");
+            IsRunning=false;
         }
 
         #endregion

@@ -74,17 +74,16 @@ namespace SS14.Client
             FrameEventArgs _frameEvent = new FrameEventArgs (
                                       new TimingData (new SFML.System.Clock ()));
 
-            while (CluwneLib.Screen.IsOpen == true) {
+            while (CluwneLib.IsRunning == true) {
                 CluwneLib.Clear (Color.Black);
                 CluwneLib.Screen.DispatchEvents ();
                 CluwneLib.RunIdle (this, _frameEvent);
                 CluwneLib.Screen.Display ();
             }
+            CluwneLib.Terminate();
+            Console.WriteLine("Gameloop terminated.");
         }
-
         #endregion
-
-
 
         #region EventHandlers
 

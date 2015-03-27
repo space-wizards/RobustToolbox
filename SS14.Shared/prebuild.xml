@@ -67,7 +67,6 @@
     <File buildAction="Compile">GO/Server/ServerDelegates.cs</File>
     <File buildAction="Compile">GO/StatusEffect/StatusEffectState.cs</File>
     <File buildAction="Compile">Lighting.cs</File>
-    <File buildAction="Compile">Minidump/MiniDump.cs</File>
     <File buildAction="Compile">Objectives/ObjectiveParameterType.cs</File>
     <File buildAction="Compile">Objectives/ObjectiveType.cs</File>
     <File buildAction="Compile">PlayerActionEnum.cs</File>

@@ -161,7 +161,7 @@ namespace SS14.Client.Services.State.States
 
         private void _buttExit_Clicked(ImageButton sender)
         {
-            Environment.Exit(0);
+            CluwneLib.Stop();
         }
 
         private void _buttOptions_Clicked(ImageButton sender)

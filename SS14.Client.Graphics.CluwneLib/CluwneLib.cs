@@ -368,6 +368,13 @@ namespace SS14.Client.Graphics.CluwneLib
             return temp;
         }
 
+        public static SColor ColorFromARGB(byte A, Color rgb) {
+            return new SColor(A, rgb.R, rgb.G, rgb.B);
+        }
+
+        public static SColor ColorFromARGB(byte A, SColor rgb) {
+            return new SColor(A, rgb.R, rgb.G, rgb.B);
+        }
         /// <summary>
         /// Converts a Point to a Vector2
         /// </summary>

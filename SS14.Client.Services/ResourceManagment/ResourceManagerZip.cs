@@ -247,13 +247,9 @@ namespace SS14.Client.Services.Resources
                 return loadedImg;
 
             }
-            catch(EndOfStreamException I)
+            catch(Exception I)
             {
-
-            }
-            catch (IOException I)
-            {
-                
+                System.Console.WriteLine("Failed to load " + imageEntry.Name + ": " + I.ToString());
             }
 
             return null;

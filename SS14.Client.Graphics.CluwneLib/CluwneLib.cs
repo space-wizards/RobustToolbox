@@ -15,6 +15,11 @@ using System.Collections;
 
 namespace SS14.Client.Graphics.CluwneLib
 {
+    public class CluwneDebug {
+        public int RenderingDelay=0;
+        public bool TextBorders=false;
+        public uint Fontsize=0;
+    };
     public class CluwneLib
     {
         public static Viewport CurrentClippingViewport;
@@ -23,6 +28,7 @@ namespace SS14.Client.Graphics.CluwneLib
         private static System.Threading.Mutex SFML_Threadlock;
         public static event FrameEventHandler Idle;
         private Color DEFAULTCOLOR;
+        public static CluwneDebug Debug;
 
         #region Accessors
         public static bool IsInitialized { get; set; }
@@ -81,6 +87,8 @@ namespace SS14.Client.Graphics.CluwneLib
         {
             if (IsInitialized)
                 Terminate();
+
+            Debug = new CluwneDebug();
 
             SFML_Threadlock.WaitOne();
 

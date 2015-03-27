@@ -121,6 +121,10 @@ namespace SS14.Client.Graphics.CluwneLib.Sprite
                 _renderTarget.Draw(this);
             else
                 CluwneLib.CurrentRenderTarget.Draw(this);
+            if (CluwneLib.Debug.RenderingDelay > 0) {
+                CluwneLib.Screen.Display();
+                System.Threading.Thread.Sleep(CluwneLib.Debug.RenderingDelay);
+            }
         }
         /// <summary>
         /// Draws a specific CluwneSprite to the current RenderTarget

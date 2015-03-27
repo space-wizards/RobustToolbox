@@ -86,14 +86,14 @@ namespace SS14.Client.Services.State.States
             if (
                  vmList.Any(
                     x=>
-                    x.Value.Width == VideoMode.DesktopMode.Width && x.Value.Height == VideoMode.DesktopMode.Height ))
+                    x.Value.Width == CluwneLib.Screen.Size.X && x.Value.Height == CluwneLib.Screen.Size.Y ))
                     
             {
                 KeyValuePair<string, VideoMode> curr =
                     vmList.FirstOrDefault(
                         x =>
-                        x.Value.Width == VideoMode.DesktopMode.Width &&
-                        x.Value.Height == VideoMode.DesktopMode.Height );
+                        x.Value.Width == CluwneLib.Screen.Size.X &&
+                        x.Value.Height == CluwneLib.Screen.Size.Y );
                         
                 _lstResolution.SelectItem(curr.Key, false);
             }
@@ -103,8 +103,8 @@ namespace SS14.Client.Services.State.States
                 KeyValuePair<string, VideoMode> curr =
                     vmList.FirstOrDefault(
                         x =>
-                        x.Value.Width == VideoMode.DesktopMode.Width &&
-                        x.Value.Height == VideoMode.DesktopMode.Height);
+                        x.Value.Width == CluwneLib.Screen.Size.X &&
+                        x.Value.Height == CluwneLib.Screen.Size.Y);
                 _lstResolution.SelectItem(curr.Key, false);
             }
 

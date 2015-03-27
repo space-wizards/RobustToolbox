@@ -31,7 +31,7 @@ namespace SS14.Client.Graphics.CluwneLib.Sprite
         /// <param name="font"> Font to use when displaying Text </param>
         public TextSprite( string Label, string text, Font font )
         {
-            _textSprite = new Text(text, font);
+            _textSprite = new Text(text, font, 14);
         }
 
         /// <summary>
@@ -42,10 +42,10 @@ namespace SS14.Client.Graphics.CluwneLib.Sprite
         /// <param name="y"> Position Y of TextSprite </param>
         /// <param name="width"> Width of TextSprite </param>
         /// <param name="height"> Height of TextSprite </param>
-        public TextSprite(string Label, int x, int y, int width, int height)
-        {
-            this._textSprite.Position = new Vector2(x, y);
-        }
+//        public TextSprite(string Label, int x, int y, int width, int height)
+//        {
+//            this.Position = new Vector2(x, y);
+//        }
 
         /// <summary>
         /// Draws the TextSprite to the CurrentRenderTarget
@@ -54,9 +54,23 @@ namespace SS14.Client.Graphics.CluwneLib.Sprite
         #endregion
 
         #region Methods
-        public void Draw ( )
+        public void Draw (RenderTarget target)
         {
-            CluwneLib.CurrentRenderTarget.Draw(_textSprite);
+
+            if (CluwneLib.Debug.Fontsize > 0)
+                _textSprite.CharacterSize=CluwneLib.Debug.Fontsize;
+            _textSprite.Position = new Vector2(Position.X, Position.Y); // -(_textSprite.GetLocalBounds().Height/2f));
+            _textSprite.Color = CluwneLib.SystemColorToSFML(Color);
+            target.Draw(_textSprite);
+
+            if (CluwneLib.Debug.TextBorders) {
+                FloatRect fr = _textSprite.GetGlobalBounds();
+                CluwneLib.drawHollowRectangle((int)fr.Left, (int) fr.Top, (int) fr.Width, (int) fr.Height, 1.0f, Color.Red);
+            }
+        }
+
+        public void Draw() {
+            Draw(CluwneLib.CurrentRenderTarget);
         }
 
 
@@ -86,6 +100,11 @@ namespace SS14.Client.Graphics.CluwneLib.Sprite
             }
         }
 
+        public uint FontSize {
+            get { return _textSprite.CharacterSize; }
+            set { _textSprite.CharacterSize = value; }
+        }
+
         public Color ShadowColor
         {
             get
@@ -111,17 +130,7 @@ namespace SS14.Client.Graphics.CluwneLib.Sprite
         }
     
 
-        new public Vector2 Position 
-        {
-            get
-            {
-                return _textSprite.Position;
-            } 
-            set
-            {
-                _textSprite.Position = value;
-            }
-        }
+        public Vector2 Position;
 
         public int Width
         {
@@ -131,7 +140,8 @@ namespace SS14.Client.Graphics.CluwneLib.Sprite
 
         public int Height
         {
-            get { return (int) _textSprite.GetLocalBounds().Height; }
+            // FIXME take into account newlines.
+            get { return (int) _textSprite.CharacterSize; }
         }
 
         #endregion

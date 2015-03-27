@@ -69,7 +69,7 @@ namespace SS14.Client.Services.UserInterface.Components
         public override void Update(float frameTime)
         {
             if (disposing || !IsVisible()) return;
-            ClientArea = new Rectangle(Position, new Size((int)clippingRI.Height, (int)clippingRI.Height));
+            ClientArea = new Rectangle(Position, new Size((int)clippingRI.Width, (int)clippingRI.Height));
 
             if (inner_focus != null && !components.Contains((GuiComponent) inner_focus)) ClearFocus();
 
@@ -202,11 +202,16 @@ namespace SS14.Client.Services.UserInterface.Components
 
             if (ClientArea.Contains(new Point((int) e.X, (int) e.Y)))
             {
-              
+                MouseButtonEvent mbe= new MouseButtonEvent();
+                mbe.X = e.X-(Position.X + (int) scrollbarH.Value);
+                mbe.Y = e.Y-(Position.Y + (int) scrollbarV.Value);
+                mbe.Button=e.Button;
+
+                MouseButtonEventArgs modArgs=new MouseButtonEventArgs(mbe);
 
                 foreach (GuiComponent component in components)
                 {
-                    if (e.Button == Mouse.Button.ButtonCount)
+                    if (component.MouseDown(modArgs))
                     {
                         SetFocus(component);
                         return true;
@@ -224,11 +229,20 @@ namespace SS14.Client.Services.UserInterface.Components
             if (scrollbarH.MouseUp(e)) return true;
             if (scrollbarV.MouseUp(e)) return true;
 
-     
+            if (ClientArea.Contains(new Point((int) e.X, (int) e.Y)))
+            {
+                MouseButtonEvent mbe= new MouseButtonEvent();
+                mbe.X = e.X-(Position.X + (int) scrollbarH.Value);
+                mbe.Y = e.Y-(Position.Y + (int) scrollbarV.Value);
+                mbe.Button=e.Button;
 
-            foreach (GuiComponent component in components)
-                component.MouseUp(e);
+                MouseButtonEventArgs modArgs=new MouseButtonEventArgs(mbe);
 
+                foreach (GuiComponent component in components)
+                {
+                    component.MouseUp(modArgs);
+                }
+            }
             return false;
         }
 
@@ -238,11 +252,13 @@ namespace SS14.Client.Services.UserInterface.Components
             scrollbarH.MouseMove(e);
             scrollbarV.MouseMove(e);
 
-            
-           
+            MouseMoveEvent mme= new MouseMoveEvent();
+            mme.X = e.X-(Position.X + (int) scrollbarH.Value);
+            mme.Y = e.Y-(Position.Y + (int) scrollbarV.Value);
+            MouseMoveEventArgs modArgs = new MouseMoveEventArgs(mme);
  
             foreach (GuiComponent component in components)
-                component.MouseMove(e);
+                component.MouseMove(modArgs);
 
             return;
         }

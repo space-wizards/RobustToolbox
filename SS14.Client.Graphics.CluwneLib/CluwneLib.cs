@@ -190,8 +190,6 @@ namespace SS14.Client.Graphics.CluwneLib
             rectangle.FillColor = SystemColorToSFML(Color);
 
             CurrentRenderTarget.Draw(rectangle);
-
-
         }
 
         /// <summary>
@@ -371,9 +369,6 @@ namespace SS14.Client.Graphics.CluwneLib
         {
             return new Vector2(point.X, point.Y);
         }
-
         #endregion
-
-
     }
 }

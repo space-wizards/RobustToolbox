@@ -17,13 +17,12 @@ namespace SS14.Client.Graphics.CluwneLib.Sprite
     public class CluwneSprite : BaseSprite, ICluwneDrawable
     {
         private Drawing.RectangleF _AABB;
-        private RenderTarget _target;
         private BlendMode _blendingMode = BlendMode.None;
 
         private string _key;
         private Image _image;
         private Vector2 _imageOffset;
-        private RenderImage _renderTarget;
+        private RenderTarget _renderTarget;
         private Vector2 _size;
 
         #region Constructors
@@ -34,7 +33,7 @@ namespace SS14.Client.Graphics.CluwneLib.Sprite
         /// <param name="target"> Target to draw this sprite </param>
         public CluwneSprite(RenderTarget target) 
         {
-            this._target = target;
+            this._renderTarget = target;
         }
 
         /// <summary>
@@ -44,6 +43,10 @@ namespace SS14.Client.Graphics.CluwneLib.Sprite
         public CluwneSprite(Texture texture)  : base (texture)
         {
  
+        }
+        public CluwneSprite(string name, Texture texture) : base(texture)
+        {
+            _key=name;
         }
         /// <summary>
         /// Creates a new CluwneSprite with a specified portion of the Texture
@@ -79,11 +82,13 @@ namespace SS14.Client.Graphics.CluwneLib.Sprite
         /// </summary>
         /// <param name="key"> Key </param>
         /// <param name="_renderImage"> RenderTarget to use </param>
-        public CluwneSprite(string key, RenderImage _renderImage) 
+        public CluwneSprite(string key, RenderTarget target)
         {
             this._key = key;
-            this._renderTarget = _renderImage;
+            this._renderTarget = target;
         }
+
+        public CluwneSprite(RenderImage image) {}
 
         #endregion
 
@@ -113,9 +118,9 @@ namespace SS14.Client.Graphics.CluwneLib.Sprite
         public void Draw()
         {
             if (_renderTarget != null)
-                CluwneLib.CurrentRenderTarget = _renderTarget;
-
-          CluwneLib.CurrentRenderTarget.Draw(this);
+                _renderTarget.Draw(this);
+            else
+                CluwneLib.CurrentRenderTarget.Draw(this);
         }
         /// <summary>
         /// Draws a specific CluwneSprite to the current RenderTarget
@@ -124,8 +129,9 @@ namespace SS14.Client.Graphics.CluwneLib.Sprite
         public void Draw (CluwneSprite CS1 )
         {
             if (_renderTarget != null)
-                CluwneLib.CurrentRenderTarget = _renderTarget;
-
+                _renderTarget.Draw(CS1);
+            else
+                CluwneLib.CurrentRenderTarget.Draw(CS1);
         }
         /// <summary>
         /// Draws a Rectangle 
@@ -133,16 +139,32 @@ namespace SS14.Client.Graphics.CluwneLib.Sprite
         /// <param name="rect"> Rectangle to draw </param>
         public void Draw(Rectangle rect)
         {
-            if (_renderTarget != null)
-                CluwneLib.CurrentRenderTarget = _renderTarget;
-
             // scale the sprite to fit in the given rectangle.
             Vector2 oldScale=Scale;
             Vector2 oldPosition = base.Position;
             base.Position = new Vector2(rect.Left, rect.Top);
             Scale = new SFML.System.Vector2f( rect.Width / TextureRect.Width, rect.Height / TextureRect.Height );
 
-            CluwneLib.CurrentRenderTarget.Draw(this);
+            if (_renderTarget != null)
+                _renderTarget.Draw(this);
+            else
+                CluwneLib.CurrentRenderTarget.Draw(this);
+            base.Position = oldPosition;
+            Scale=oldScale;
+        }
+
+        public void Draw(IntRect rect)
+        {
+            // scale the sprite to fit in the given rectangle.
+            Vector2 oldScale=Scale;
+            Vector2 oldPosition = base.Position;
+            base.Position = new Vector2(rect.Left, rect.Top);
+            Scale = new SFML.System.Vector2f( rect.Width / TextureRect.Width, rect.Height / TextureRect.Height );
+
+            if (_renderTarget != null)
+                _renderTarget.Draw(this);
+            else
+                CluwneLib.CurrentRenderTarget.Draw(this);
             base.Position = oldPosition;
             Scale=oldScale;
         }

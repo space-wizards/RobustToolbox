@@ -17,8 +17,8 @@ namespace SS14.Client.Graphics.CluwneLib.Render
       
         private ImageBufferFormats imageBufferFormats;
         private RenderTarget _temp;
-        private Image _renderImage;    // Image used as a RenderTarget
-        private CluwneSprite _blit;  // RenderImage drawn in a sprite
+        public IntRect Crop;
+        public Vector2 Scale;
         private string _key;         // ID, Name of current instance
         
         /// <summary>
@@ -85,24 +85,40 @@ namespace SS14.Client.Graphics.CluwneLib.Render
         /// <param name="heightY"> Height of CluwneSprite </param>
         /// <param name="color"> Color of CluwneSprite</param>
         /// <param name="state"> RenderState </param>
-        public void Blit(int posX, int posY, uint widthX, uint heightY, Color color, BlitterSizeMode blitterSizeMode)
-        {
-           _blit = new CluwneSprite("_blit" + _key, this);
-           _blit.Position = new Vector2(posX, posY);
-           _blit.Size = new Vector2(widthX, heightY);
-           _blit.Color = CluwneLib.SystemColorToSFML(color);
-
-           if (blitterSizeMode == BlitterSizeMode.Crop)
-           { 
-               //crop image
-           }
-
-           if (blitterSizeMode == BlitterSizeMode.Scale)
-           { 
-                //scale image
-           }
-           _blit.Draw();
+        public void Blit(int posX, int posY, uint width, uint height, Color color, BlitterSizeMode state) {
+            throw new NotImplementedException("The API makes no sense, use a different blit overload.");
+            // This interface is nonsensical for Crop, since Crop needs a rectangle and not two points.
+            // the Crop+Scale overload is what you actually want to use.
         }
+
+        /// <summary>
+        /// Draws the entire Renderimage to the named position.
+        /// </summary>
+        public void Blit(Vector2 Position, Color color)
+        {
+            Display();
+            CluwneSprite _blit = new CluwneSprite("_blit" + _key, base.Texture);
+            _blit.Position=Position;
+            _blit.Color = CluwneLib.SystemColorToSFML(color);
+            _blit.Draw();
+        }
+        /// <summary>
+        /// Scale & optionally crop
+        /// </summary>
+        /// <param name="destination">The exact rectangle you wish to fill - scales to this size</param>
+        /// <param name="optionalcrop">To take a subset of the original texture instead of the whole texture</param>
+        /// <param name="color">Color.</param>
+        public void Blit(IntRect destination, IntRect optionalcrop, Color color) {
+            CluwneSprite _blit;
+            Display();
+            if (optionalcrop == null)
+                _blit=new CluwneSprite("_blit" + _key, base.Texture);
+            else
+                _blit=new CluwneSprite("_blit" + _key, base.Texture, optionalcrop);
+            _blit.Color=CluwneLib.SystemColorToSFML(color);
+            _blit.Draw(destination);
+        }
+
 
         /// <summary>
         /// Draws the RenderImage to a CluwneSprite and then to the current RenderTarget
@@ -113,7 +129,8 @@ namespace SS14.Client.Graphics.CluwneLib.Render
         /// <param name="heightY"> Height of CluwneSprite </param>
         public void Blit(int posX, int posY, uint widthX, uint heightY)
         {
-            _blit = new CluwneSprite("_blit" + _key, this);
+            this.Display();
+            CluwneSprite _blit = new CluwneSprite("_blit" + _key, this);
             _blit.Position = new Vector2(posX, posY);
             _blit.Size = new Vector2(widthX, heightY);
             _blit.Color = CluwneLib.SystemColorToSFML(Color.Transparent);
@@ -142,11 +159,19 @@ namespace SS14.Client.Graphics.CluwneLib.Render
             this.Clear(CluwneLib.SystemColorToSFML(Color));
         }
 
-        public uint Width;
-        public uint Height;
+        public uint Width  { get { return Size.X; } }
+        public uint Height { get { return Size.Y; } }
 
         public string setName { get; set; }
 
         public ImageBufferFormats setImageBuffer { get; set; }
+
+        ~RenderImage() {
+            System.Console.WriteLine("Requesting SFML_Lock");
+            CluwneLib.RequestGC(() => {
+                base.Dispose();
+            });
+            System.Console.WriteLine("Render image destroyed");
+        }
     }
 }

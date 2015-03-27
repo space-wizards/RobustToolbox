@@ -138,7 +138,8 @@ namespace SS14.Client.Services.UserInterface.Components
             }
 
             clippingRI.EndDrawing();
-            clippingRI.Blit(Position.X, Position.Y,clippingRI.Height, clippingRI.Height, Color.White, BlitterSizeMode.Crop);
+            clippingRI.Blit(Position, Color.White);
+            // clippingRI.Blit(Position.X, Position.Y,clippingRI.Height, clippingRI.Width, Color.White, BlitterSizeMode.Crop);
 
             scrollbarH.Render();
             scrollbarV.Render();

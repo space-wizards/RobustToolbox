@@ -117,10 +117,13 @@ namespace SS14.Client.Graphics.CluwneLib.Sprite
         /// </summary>
         public void Draw()
         {
-            if (_renderTarget != null)
+            if (this._key != null && this._key.Equals("_blit") && CluwneLib.Debug.RenderingDelay>0)
+                return;
+            if (_renderTarget != null && CluwneLib.Debug.RenderingDelay == 0)
                 _renderTarget.Draw(this);
             else
                 CluwneLib.CurrentRenderTarget.Draw(this);
+
             if (CluwneLib.Debug.RenderingDelay > 0) {
                 CluwneLib.Screen.Display();
                 System.Threading.Thread.Sleep(CluwneLib.Debug.RenderingDelay);
@@ -149,7 +152,7 @@ namespace SS14.Client.Graphics.CluwneLib.Sprite
             base.Position = new Vector2(rect.Left, rect.Top);
             Scale = new SFML.System.Vector2f( rect.Width / TextureRect.Width, rect.Height / TextureRect.Height );
 
-            if (_renderTarget != null)
+            if (_renderTarget != null && CluwneLib.Debug.RenderingDelay == 0)
                 _renderTarget.Draw(this);
             else
                 CluwneLib.CurrentRenderTarget.Draw(this);
@@ -165,7 +168,7 @@ namespace SS14.Client.Graphics.CluwneLib.Sprite
             base.Position = new Vector2(rect.Left, rect.Top);
             Scale = new SFML.System.Vector2f( rect.Width / TextureRect.Width, rect.Height / TextureRect.Height );
 
-            if (_renderTarget != null)
+            if (_renderTarget != null && CluwneLib.Debug.RenderingDelay == 0)
                 _renderTarget.Draw(this);
             else
                 CluwneLib.CurrentRenderTarget.Draw(this);

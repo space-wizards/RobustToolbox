@@ -139,6 +139,8 @@ namespace SS14.Client.Graphics.CluwneLib.Render
 
         public void BeginDrawing()
         {
+            if (CluwneLib.Debug.RenderingDelay > 0)
+                return;
 			_temp=CluwneLib.CurrentRenderTarget;
 			CluwneLib.CurrentRenderTarget = this;
         }

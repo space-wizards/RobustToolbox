@@ -51,28 +51,23 @@ namespace SS14.Client
         public GameController()
         {
             _configurationManager = IoCManager.Resolve<IConfigurationManager>();
-            IoCManager.Resolve<IConfigurationManager>().Initialize("./config.xml");
+            _configurationManager.Initialize("./config.xml");
 
             _resourceManager = IoCManager.Resolve<IResourceManager>();
 
             _resourceManager.LoadBaseResources();
             _resourceManager.LoadLocalResources();
-          
+
+            //Setup Cluwne first, as the rest depends on it.
+            SetupCluwne ();
 
             //Initialization of private members
-           
             _networkManager = IoCManager.Resolve<INetworkManager>();
             _netGrapher = IoCManager.Resolve<INetworkGrapher>();
             _stateManager = IoCManager.Resolve<IStateManager>();
             _userInterfaceManager = IoCManager.Resolve<IUserInterfaceManager>();
 
-        
-           
-
-            //Setup
-            SetupCluwne ();
             SetupInput ();
-
 
             _stateManager.RequestStateChange<TestState> ();
 
@@ -82,12 +77,9 @@ namespace SS14.Client
             while (CluwneLib.Screen.IsOpen == true) {
                 CluwneLib.Clear (Color.Black);
                 CluwneLib.Screen.DispatchEvents ();
-                CluwneLibIdle (this, _frameEvent);
+                CluwneLib.RunIdle (this, _frameEvent);
                 CluwneLib.Screen.Display ();
             }
-
-
-
         }
 
         #endregion

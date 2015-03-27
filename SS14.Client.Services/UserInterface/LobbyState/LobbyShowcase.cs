@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Drawing;
 using SFML.Window;
+using SS14.Client.Graphics.CluwneLib;
 
 namespace SS14.Client.Services.UserInterface.Components
 {
@@ -9,7 +10,6 @@ namespace SS14.Client.Services.UserInterface.Components
     {
         protected int ScrollOffset = 0;
         public Size ItemOffsets = new Size(0,0);
-        private Color ctemp;
 
         protected override void _buttonRight_Clicked(ImageButton sender)
         {
@@ -91,8 +91,7 @@ namespace SS14.Client.Services.UserInterface.Components
                         new Point(ItemOffsets.Width + ClientArea.Left + (int)(ClientArea.Width / 2f - middle.Key.ClientArea.Width / 2f),
                                   ItemOffsets.Height + ClientArea.Top + (int)(ClientArea.Height / 2f - middle.Key.ClientArea.Height / 2f));
                     if (FadeItems)
-                        ctemp =  Color.FromArgb(255, Color.White);
-                    middle.Key.Color = new SFML.Graphics.Color(ctemp.R, ctemp.G, ctemp.B, ctemp.A);
+                        middle.Key.Color = CluwneLib.SystemColorToSFML(Color.White);
 
                     if (_selectionGlow != null && Selected == ScrollOffset)
                     {
@@ -124,8 +123,7 @@ namespace SS14.Client.Services.UserInterface.Components
                             }
 
                             if (FadeItems)
-                                ctemp = Color.FromArgb((int) (baseAlpha/alphaAdj), Color.White);
-                                currLeft.Key.Color = new SFML.Graphics.Color(ctemp.R,ctemp.G,ctemp.B,ctemp.A);
+                                currLeft.Key.Color = CluwneLib.ColorFromARGB ((byte)(baseAlpha / alphaAdj), Color.White);
 
                             currLeft.Key.Render();
                         }
@@ -144,8 +142,7 @@ namespace SS14.Client.Services.UserInterface.Components
                             }
 
                             if (FadeItems)
-                                ctemp = Color.FromArgb((int) (baseAlpha/alphaAdj), Color.White);
-                                currRight.Key.Color = new SFML.Graphics.Color(ctemp.R,ctemp.G,ctemp.B,ctemp.A);
+                                currRight.Key.Color = CluwneLib.ColorFromARGB((byte) (baseAlpha/alphaAdj), Color.White);
 
                             currRight.Key.Render();
                         }
@@ -166,7 +163,7 @@ namespace SS14.Client.Services.UserInterface.Components
             return false;
         }
 
-		public override bool MouseWheelMove(MouseWheelEventArgs e)
+        public override bool MouseWheelMove(MouseWheelEventArgs e)
         {
             if (ClientArea.Contains(new Point((int) e.X, (int) e.Y)))
             {
@@ -187,7 +184,7 @@ namespace SS14.Client.Services.UserInterface.Components
             return false;
         }
 
-		public override void MouseMove(MouseMoveEventArgs e)
+        public override void MouseMove(MouseMoveEventArgs e)
         {
             if (ClientArea.Contains(new Point((int) e.X, (int) e.Y)))
             {
@@ -201,7 +198,7 @@ namespace SS14.Client.Services.UserInterface.Components
             }
         }
 
-		public override bool MouseDown(MouseButtonEventArgs e)
+        public override bool MouseDown(MouseButtonEventArgs e)
         {
             if (ClientArea.Contains(new Point((int) e.X, (int) e.Y)))
             {
@@ -239,7 +236,7 @@ namespace SS14.Client.Services.UserInterface.Components
             return false;
         }
 
-		public override bool MouseUp(MouseButtonEventArgs e)
+        public override bool MouseUp(MouseButtonEventArgs e)
         {
             if (ClientArea.Contains(new Point((int) e.X, (int) e.Y)))
             {

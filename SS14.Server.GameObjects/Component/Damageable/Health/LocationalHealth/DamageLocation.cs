@@ -13,9 +13,9 @@ namespace SS14.Server.GameObjects
         public BodyPart location;
         public int maxHealth;
 
-        public DamageLocation(BodyPart myPart, int maxHealth)
+        public DamageLocation(BodyPart tzone, int maxHealth)
         {
-            location = myPart;
+            location = tzone;
             this.maxHealth = maxHealth;
             currentHealth = maxHealth;
         }

@@ -39,6 +39,7 @@ namespace SS14.Server.GameObjects.Organs.Human
             InternalOrgans = new List<InternalOrgan>();
             InternalOrgans.Add(new Heart(Owner, this));
             InternalOrgans.Add(new Lungs(Owner, this));
+            InternalOrgans.Add(new Liver(Owner, this));
         }
     }
 

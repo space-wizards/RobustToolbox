@@ -39,6 +39,15 @@ namespace SS14.Server.GameObjects.Organs.Human
     }
 
 
+    public class Liver : InternalOrgan
+    {
+        public Liver(HumanHealthComponent _owner, ExternalOrgan _organ)
+        {
+            Name = "Liver";
+            Damage = 0;
+            Parent = _organ;
+        }
+    }
 
 
 

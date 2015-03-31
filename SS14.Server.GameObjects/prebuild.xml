@@ -44,6 +44,11 @@
     <File buildAction="Compile">Component/Think/ThinkComponent/PuddleThinkComponent.cs</File>
     <File buildAction="Compile">Component/Think/ThinkComponent/ThinkComponent.cs</File>
     <File buildAction="Compile">Component/Damageable/Health/LocationalHealth/HumanHealthComponent.cs</File>
+    <File buildAction="Compile">Component/Damageable/Health/Organs/Organ.cs</File>
+    <File buildAction="Compile">Component/Damageable/Health/Organs/External/External.cs</File>
+    <File buildAction="Compile">Component/Damageable/Health/Organs/External/HumanExternal.cs</File>
+    <File buildAction="Compile">Component/Damageable/Health/Organs/Internal/Internal.cs</File>
+    <File buildAction="Compile">Component/Damageable/Health/Organs/Internal/HumanInternal.cs</File>
     <File buildAction="Compile">Component/Think/ThinkHostComponent.cs</File>
     <File buildAction="Compile">Component/Transform/TransformComponent.cs</File>
     <File buildAction="Compile">Component/Velocity/VelocityComponent.cs</File>

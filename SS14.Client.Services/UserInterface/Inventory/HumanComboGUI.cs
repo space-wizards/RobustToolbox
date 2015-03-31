@@ -762,7 +762,7 @@ namespace SS14.Client.Services.UserInterface.Inventory
             return false;
         }
 
-        private void SendSwitchHandTo(Hand hand)
+        private void SendSwitchHandTo(InventoryLocation hand)
         {
             Entity playerEntity = _playerManager.ControlledEntity;
             var equipComponent = (HumanHandsComponent) playerEntity.GetComponent(ComponentFamily.Hands);

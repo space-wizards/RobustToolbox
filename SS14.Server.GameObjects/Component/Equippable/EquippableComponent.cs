@@ -27,37 +27,12 @@ namespace SS14.Server.GameObjects
 
             switch (type)
             {
-                case ComponentMessageType.ItemEquipped:
-                    HandleEquipped((Entity) list[0]);
-                    break;
-                case ComponentMessageType.ItemUnEquipped:
-                    HandleUnEquipped();
-                    break;
                 case ComponentMessageType.GetWearLoc:
                     reply = new ComponentReplyMessage(ComponentMessageType.ReturnWearLoc, wearloc);
                     break;
             }
 
             return reply;
-        }
-
-        private void HandleUnEquipped()
-        {
-            Owner.AddComponent(ComponentFamily.Mover,
-                               Owner.EntityManager.ComponentFactory.GetComponent("BasicMoverComponent"));
-            /*Owner.SendDirectedComponentNetworkMessage(this, NetDeliveryMethod.ReliableOrdered, null,
-                                                      EquippableComponentNetMessage.UnEquipped);*/
-            currentWearer = null;
-        }
-
-        private void HandleEquipped(Entity entity)
-        {
-            currentWearer = entity;
-            Owner.AddComponent(ComponentFamily.Mover,
-                               Owner.EntityManager.ComponentFactory.GetComponent("SlaveMoverComponent"));
-            Owner.SendMessage(this, ComponentMessageType.SlaveAttach, entity.Uid);
-           /* Owner.SendDirectedComponentNetworkMessage(this, NetDeliveryMethod.ReliableOrdered, null,
-                                                      EquippableComponentNetMessage.Equipped, entity.Uid, wearloc);*/
         }
 
         public override void SetParameter(ComponentParameter parameter)

@@ -161,9 +161,6 @@ namespace SS14.Client.GameObjects
                 case ComponentMessageType.SetSpriteByKey:
                     SetSpriteByKey((string) message.MessageParameters[1]);
                     break;
-                case ComponentMessageType.SetDrawDepth:
-                    SetDrawDepth((DrawDepth) message.MessageParameters[1]);
-                    break;
             }
         }
 
@@ -189,9 +186,6 @@ namespace SS14.Client.GameObjects
                     break;
                 case ComponentMessageType.SetSpriteByKey:
                     SetSpriteByKey((string) list[0]);
-                    break;
-                case ComponentMessageType.SetDrawDepth:
-                    SetDrawDepth((DrawDepth) list[0]);
                     break;
                 case ComponentMessageType.SlaveAttach:
                     SetMaster(Owner.EntityManager.GetEntity((int) list[0]));

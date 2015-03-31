@@ -10,6 +10,7 @@ using System.Linq;
 
 namespace SS14.Server.GameObjects
 {
+    // TODO use componentstate system instead of server->client messaging
     public class PlayerActionComp : Component
     {
         public List<PlayerAction> Actions = new List<PlayerAction>();
@@ -112,6 +113,7 @@ namespace SS14.Server.GameObjects
             }
         }
 
+        [Obsolete("This class needs to use ComponentState system instead of this shit")]
         private void SendFullListing(NetConnection client)
         {
             var message = new object[(Actions.Count*2) + 2];

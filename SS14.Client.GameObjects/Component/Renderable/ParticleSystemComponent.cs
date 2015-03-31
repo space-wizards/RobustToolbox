@@ -83,9 +83,6 @@ namespace SS14.Client.GameObjects
 
             switch (type)
             {
-                case ComponentMessageType.SetDrawDepth:
-                    DrawDepth = (DrawDepth)list[0];
-                    break;
             }
 
             return reply;

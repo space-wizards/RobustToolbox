@@ -24,7 +24,7 @@ namespace SS14.Client.Services.Tiles
         public Dictionary<GasType, int> gasAmounts;
 		public CluwneSprite gasSprite;
         public string name;
-        public byte surroundDirsNW, surroundDirsSE = 0; //north = 1 east = 2 south = 4 west = 8.
+        public DirectionFlags surroundDirsNW, surroundDirsSE = DirectionFlags.None;
         public TileState tileState = TileState.Healthy;
         public RectangleF bounds;
         public Direction _dir = Direction.North;

@@ -12,12 +12,12 @@ namespace SS14.Client.GameObjects
 {
     public class HumanHandsComponent : Component
     {
-        public Dictionary<Hand, Entity> HandSlots { get; private set; }
-        public Hand CurrentHand { get; private set; }
+        public Dictionary<InventoryLocation, Entity> HandSlots { get; private set; }
+        public InventoryLocation CurrentHand { get; private set; }
 
         public HumanHandsComponent()
         {
-            HandSlots = new Dictionary<Hand, Entity>();
+            HandSlots = new Dictionary<InventoryLocation, Entity>();
             Family = ComponentFamily.Hands;
         }
 
@@ -25,7 +25,7 @@ namespace SS14.Client.GameObjects
         {
             var type = (ComponentMessageType) message.MessageParameters[0];
             int entityUid;
-            Hand usedHand;
+            InventoryLocation usedHand;
             Entity item;
 
             switch (type)
@@ -33,7 +33,7 @@ namespace SS14.Client.GameObjects
                 case (ComponentMessageType.EntityChanged):
                     //This is not sent atm. Commented out serverside for later use.
                     entityUid = (int) message.MessageParameters[1];
-                    usedHand = (Hand) message.MessageParameters[2];
+                    usedHand = (InventoryLocation)message.MessageParameters[2];
                     item = Owner.EntityManager.GetEntity(entityUid);
                     if (HandSlots.Keys.Contains(usedHand))
                         HandSlots[usedHand] = item;
@@ -42,20 +42,20 @@ namespace SS14.Client.GameObjects
                     break;
                 case (ComponentMessageType.HandsDroppedItem):
                     //entityUid = (int)message.MessageParameters[1];
-                    usedHand = (Hand) message.MessageParameters[2];
+                    usedHand = (InventoryLocation)message.MessageParameters[2];
                     //item = EntityManager.Singleton.GetEntity(entityUid);
                     //item.SendMessage(this, ComponentMessageType.Dropped, null);
                     HandSlots.Remove(usedHand);
                     break;
                 case (ComponentMessageType.HandsPickedUpItem):
                     entityUid = (int) message.MessageParameters[1];
-                    usedHand = (Hand) message.MessageParameters[2];
+                    usedHand = (InventoryLocation)message.MessageParameters[2];
                     item = Owner.EntityManager.GetEntity(entityUid);
                     //item.SendMessage(this, ComponentMessageType.PickedUp, null, usedHand);
                     HandSlots.Add(usedHand, item);
                     break;
                 case ComponentMessageType.ActiveHandChanged:
-                    SwitchHandTo((Hand) message.MessageParameters[1]);
+                    SwitchHandTo((InventoryLocation)message.MessageParameters[1]);
                     break;
             }
 
@@ -70,7 +70,7 @@ namespace SS14.Client.GameObjects
             }
         }
 
-        public void SendSwitchHands(Hand hand)
+        public void SendSwitchHands(InventoryLocation hand)
         {
             Owner.SendComponentNetworkMessage(this, NetDeliveryMethod.ReliableOrdered,
                                               ComponentMessageType.ActiveHandChanged, hand);
@@ -82,18 +82,18 @@ namespace SS14.Client.GameObjects
                                               ComponentMessageType.DropEntityInHand, ent.Uid);
         }
 
-        public bool IsHandEmpty(Hand hand)
+        public bool IsHandEmpty(InventoryLocation hand)
         {
             return !HandSlots.ContainsKey(hand);
         }
 
-        public void SendDropFromHand(Hand hand)
+        public void SendDropFromHand(InventoryLocation hand)
         {
             Owner.SendComponentNetworkMessage(this, NetDeliveryMethod.ReliableOrdered,
                                               ComponentMessageType.DropItemInHand, hand);
         }
 
-        private void SwitchHandTo(Hand hand)
+        private void SwitchHandTo(InventoryLocation hand)
         {
             CurrentHand = hand;
         }
@@ -106,9 +106,7 @@ namespace SS14.Client.GameObjects
         private void SetNewState(HandsComponentState state)
         {
             bool changed = false;
-            var currentHand = Hand.None;
-            if(state.ActiveHand == InventoryLocation.HandLeft) currentHand = Hand.Left;
-            if(state.ActiveHand == InventoryLocation.HandRight) currentHand = Hand.Right;
+            var currentHand = state.ActiveHand;
             if(CurrentHand != currentHand)
             {
                 changed = true;
@@ -116,7 +114,7 @@ namespace SS14.Client.GameObjects
             }
             foreach(var handSlot in state.Slots.Keys)
             {
-                var hand = inventoryLocationToHand(handSlot);
+                var hand = handSlot;
                 if (!HandSlots.ContainsKey(hand))
                 {
                     HandSlots.Add(hand, null);
@@ -149,15 +147,6 @@ namespace SS14.Client.GameObjects
             {
                 IoCManager.Resolve<IUserInterfaceManager>().ComponentUpdate(GuiComponentType.HandsUi);
             }
-        }
-
-        private Hand inventoryLocationToHand(InventoryLocation location)
-        {
-            if(location == InventoryLocation.HandLeft)
-                return Hand.Left;
-            if(location == InventoryLocation.HandRight)
-                return Hand.Right;
-            return Hand.None;
         }
     }
 }

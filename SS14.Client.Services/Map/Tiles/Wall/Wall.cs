@@ -57,48 +57,48 @@ namespace SS14.Client.Services.Tiles
             base.Initialize();
         }
 
-        public Point GetSurroundDirs()
+        public void UpdateSurroundDirs()
         {
-            surroundDirsNW = 0;
-            surroundDirsSE = 0;
+            surroundDirsNW = DirectionFlags.None;
+            surroundDirsSE = DirectionFlags.None;
             float halfSpacing = mapMgr.GetTileSpacing() / 2f;
             Vector2 checkPos = Position + new Vector2(1f, 1f);
             if (mapMgr.GetWallAt(checkPos + new Vector2(0, -halfSpacing)) != null) // North side
             {
-                surroundDirsNW += 1;
+                surroundDirsNW |= DirectionFlags.North;
             }
             if (mapMgr.GetWallAt(checkPos + new Vector2(halfSpacing, 0)) != null) // East side
             {
-                surroundDirsNW += 2;
+                surroundDirsNW |= DirectionFlags.East;
             }
             if (mapMgr.GetWallAt(checkPos + new Vector2(0, halfSpacing)) != null) // South side
             {
-                surroundDirsNW += 4;
+                surroundDirsNW |= DirectionFlags.South;
             }
             if (mapMgr.GetWallAt(checkPos + new Vector2(-halfSpacing, 0)) != null) // West side, yo
             {
-                surroundDirsNW += 8;
+                surroundDirsNW |= DirectionFlags.West;
             }
 
             checkPos += new Vector2(bounds.Width - 2f, bounds.Height - 2f);
             if (mapMgr.GetWallAt(checkPos + new Vector2(0, -halfSpacing)) != null) // North side
             {
-                surroundDirsSE += 1;
+                surroundDirsSE |= DirectionFlags.North;
             }
             if (mapMgr.GetWallAt(checkPos + new Vector2(halfSpacing, 0)) != null) // East side
             {
-                surroundDirsSE += 2;
+                surroundDirsSE |= DirectionFlags.East;
             }
             if (mapMgr.GetWallAt(checkPos + new Vector2(0, halfSpacing)) != null) // South side
             {
-                surroundDirsSE += 4;
+                surroundDirsSE |= DirectionFlags.South;
             }
             if (mapMgr.GetWallAt(checkPos + new Vector2(-halfSpacing, 0)) != null) // West side, yo
             {
-                surroundDirsSE += 8;
+                surroundDirsSE |= DirectionFlags.West;
             }
 
-            return new Point(surroundDirsNW, surroundDirsSE);
+            //return new Point(surroundDirsNW, surroundDirsSE);
         }
 
         public bool HasNeighborWall(Direction dir)
@@ -106,38 +106,39 @@ namespace SS14.Client.Services.Tiles
             if(_dir == Direction.East)
             {
                 if (dir == Direction.East)
-                    return (surroundDirsSE & 2) != 0;
+                    return surroundDirsSE.HasFlag(DirectionFlags.East);
                 if (dir == Direction.West)
-                    return (surroundDirsNW & 8) != 0;
+                    return surroundDirsNW.HasFlag(DirectionFlags.West);
             }
             else
             {
                 if (dir == Direction.North)
-                    return (surroundDirsNW & 1) != 0;
+                    return surroundDirsNW.HasFlag(DirectionFlags.North);
                 if (dir == Direction.South)
-                    return (surroundDirsSE & 4) != 0;
+                    return surroundDirsSE.HasFlag(DirectionFlags.South);
             }
             return false;
         }
 
         public override void SetSprite()
         {
-            GetSurroundDirs();
+            UpdateSurroundDirs();
             int first = 0, second = 0;
 
             if (_dir == Direction.East)
             {
-                if ((surroundDirsNW & 8) != 0)  first = 1;
-                if ((surroundDirsSE & 2) != 0)  second = 1;
+                if (surroundDirsNW.HasFlag(DirectionFlags.West))  first = 1;
+                if (surroundDirsSE.HasFlag(DirectionFlags.East))  second = 1;
                 Sprite = _resourceManager.GetSprite("wall_EW_" + first + "_" + second);
-                topSpriteNW = _resourceManager.GetSprite("wall_top_" + surroundDirsNW);
-                topSpriteSE = _resourceManager.GetSprite("wall_top_" + surroundDirsSE);
+                
+                topSpriteNW = _resourceManager.GetSprite("wall_top_" + (byte)surroundDirsNW);
+                topSpriteSE = _resourceManager.GetSprite("wall_top_" + (byte)surroundDirsSE);
             }
             else
             {
                 Sprite = _resourceManager.GetSprite("wall_NS");
-                topSpriteNW = _resourceManager.GetSprite("wall_top_" + surroundDirsNW);
-                topSpriteSE = _resourceManager.GetSprite("wall_top_" + surroundDirsSE);
+                topSpriteNW = _resourceManager.GetSprite("wall_top_" + (byte)surroundDirsNW);
+                topSpriteSE = _resourceManager.GetSprite("wall_top_" + (byte)surroundDirsSE);
             }
         }
 
@@ -172,18 +173,18 @@ namespace SS14.Client.Services.Tiles
 
             if(_dir == Direction.East)
             {
-                if ((surroundDirsNW & 8) == 0)
+                if (!surroundDirsNW.HasFlag(DirectionFlags.West))
                 {
-                    if((surroundDirsNW & 1) != 0)
+                    if(surroundDirsNW.HasFlag(DirectionFlags.North))
                     {
                         wallEndW.SetPosition((float)bounds.X - xTopLeft - 12f,
                                         (float)bounds.Y - (Sprite.Height - bounds.Height) - yTopLeft);
                       //  batch.AddClone(wallEndW);
                     }
                 }
-                if ((surroundDirsSE & 2) == 0)
+                if (!surroundDirsSE.HasFlag(DirectionFlags.East))
                 {
-                    if ((surroundDirsSE & 1) != 0)
+                    if (surroundDirsSE.HasFlag(DirectionFlags.North))
                     {
                         wallEndE.SetPosition((float)bounds.X - xTopLeft + Sprite.Width,
                                         (float)bounds.Y - (Sprite.Height - bounds.Height) - yTopLeft);
@@ -383,7 +384,7 @@ namespace SS14.Client.Services.Tiles
             {
                 if (l < x) //Light is west of wall
                 {
-                    if((surroundDirsSE & 2) == 0)
+                    if(!surroundDirsSE.HasFlag(DirectionFlags.East))
                         RenderOccluder(Direction.East, from, x, y);
                     if (l < y) //light is north west of wall
                     {
@@ -401,7 +402,7 @@ namespace SS14.Client.Services.Tiles
                 }
                 else if (l > x + bounds.Width) // Light is east of wall
                 {
-                    if((surroundDirsSE & 8) == 0)
+                    if(!surroundDirsSE.HasFlag(DirectionFlags.West))
                         RenderOccluder(Direction.West, from, x, y);
                     if (l < y) //light is north east of wall
                     {

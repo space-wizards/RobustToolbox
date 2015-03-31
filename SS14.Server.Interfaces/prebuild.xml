@@ -39,6 +39,7 @@
     <File buildAction="Compile">GameObject/IEntityManager.cs</File>
     <File buildAction="Compile">GameObject/IEntityNetworkManager.cs</File>
     <File buildAction="Compile">GameObject/IEntityQuery.cs</File>
+	<File buildAction="Compile">GameObject/IEquipmentComponent.cs</File>
     <File buildAction="Compile">GameObject/IInventoryComponent.cs</File>
     <File buildAction="Compile">GameState/IGameStateManager.cs</File>
     <File buildAction="Compile">IClient.cs</File>

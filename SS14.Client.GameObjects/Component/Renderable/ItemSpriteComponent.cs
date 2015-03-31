@@ -14,7 +14,7 @@ namespace SS14.Client.GameObjects
     {
         private bool IsInHand;
         private string basename = "";
-        private Hand holdingHand = Hand.None;
+        private InventoryLocation holdingHand = InventoryLocation.None;
 
         public ItemSpriteComponent()
         {
@@ -42,20 +42,20 @@ namespace SS14.Client.GameObjects
                                 SetSpriteByKey(basename + "_inhand_back");
                             else
                                 SetSpriteByKey(basename + "_inhand");
-                            if (holdingHand == Hand.Left)
+                            if (holdingHand == InventoryLocation.HandLeft)
                                 flip = false;
                             else
                                 flip = true;
                             break;
                         case Direction.South:
                             SetSpriteByKey(basename + "_inhand");
-                            if (holdingHand == Hand.Left)
+                            if (holdingHand == InventoryLocation.HandLeft)
                                 flip = true;
                             else
                                 flip = false;
                             break;
                         case Direction.East:
-                            if (holdingHand == Hand.Left)
+                            if (holdingHand == InventoryLocation.HandLeft)
                                 SetDrawDepth(DrawDepth.FloorObjects);
                             else
                                 SetDrawDepth(DrawDepth.HeldItems);
@@ -63,7 +63,7 @@ namespace SS14.Client.GameObjects
                             flip = true;
                             break;
                         case Direction.West:
-                            if (holdingHand == Hand.Right)
+                            if (holdingHand == InventoryLocation.HandRight)
                                 SetDrawDepth(DrawDepth.FloorObjects);
                             else
                                 SetDrawDepth(DrawDepth.HeldItems);
@@ -75,7 +75,7 @@ namespace SS14.Client.GameObjects
                                 SetSpriteByKey(basename + "_inhand_back");
                             else
                                 SetSpriteByKey(basename + "_inhand");
-                            if (holdingHand == Hand.Left)
+                            if (holdingHand == InventoryLocation.HandLeft)
                                 flip = false;
                             else
                                 flip = true;
@@ -85,21 +85,21 @@ namespace SS14.Client.GameObjects
                                 SetSpriteByKey(basename + "_inhand_back");
                             else
                                 SetSpriteByKey(basename + "_inhand");
-                            if (holdingHand == Hand.Left)
+                            if (holdingHand == InventoryLocation.HandLeft)
                                 flip = false;
                             else
                                 flip = true;
                             break;
                         case Direction.SouthEast:
                             SetSpriteByKey(basename + "_inhand");
-                            if (holdingHand == Hand.Right)
+                            if (holdingHand == InventoryLocation.HandRight)
                                 flip = false;
                             else
                                 flip = true;
                             break;
                         case Direction.SouthWest:
                             SetSpriteByKey(basename + "_inhand");
-                            if (holdingHand == Hand.Right)
+                            if (holdingHand == InventoryLocation.HandRight)
                                 flip = false;
                             else
                                 flip = true;
@@ -110,11 +110,11 @@ namespace SS14.Client.GameObjects
                     SetSpriteByKey(basename);
                     IsInHand = false;
                     SetDrawDepth(DrawDepth.FloorObjects);
-                    holdingHand = Hand.None;
+                    holdingHand = InventoryLocation.None;
                     break;
                 case ComponentMessageType.PickedUp:
                     IsInHand = true;
-                    holdingHand = (Hand) list[0];
+                    holdingHand = (InventoryLocation)list[0];
                     break;
                 case ComponentMessageType.SetBaseName:
                     basename = (string) list[0];

@@ -26,6 +26,11 @@
     <File buildAction="Compile">Properties/AssemblyInfo.cs</File>
     <File buildAction="Compile">Properties/Resources.Designer.cs</File>
     <File buildAction="None">app.config</File>
+  	<File buildAction="Content" copyToOutput="PreserveNewest" preservePath="false">../Third-Party/extlibs/csfml-audio-2.dll</File>
+  	<File buildAction="Content" copyToOutput="PreserveNewest" preservePath="false">../Third-Party/extlibs/csfml-graphics-2.dll</File>
+  	<File buildAction="Content" copyToOutput="PreserveNewest" preservePath="false">../Third-Party/extlibs/csfml-network-2.dll</File>
+  	<File buildAction="Content" copyToOutput="PreserveNewest" preservePath="false">../Third-Party/extlibs/csfml-system-2.dll</File>
+  	<File buildAction="Content" copyToOutput="PreserveNewest" preservePath="false">../Third-Party/extlibs/csfml-window-2.dll</File>
   	<File buildAction="Content" copyToOutput="PreserveNewest">EntityTemplates/Atmos.xml</File>
     <File buildAction="Content" copyToOutput="PreserveNewest">EntityTemplates/Clothing.xml</File>
     <File buildAction="Content" copyToOutput="PreserveNewest">EntityTemplates/Containers.xml</File>

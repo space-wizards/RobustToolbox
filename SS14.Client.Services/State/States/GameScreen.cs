@@ -588,24 +588,22 @@ namespace SS14.Client.Services.State.States
                 RenderLightMap(lights);
                 CalculateSceneBatches(ClientWindowData.Singleton.ViewPort);
 
-                if (_redrawTiles)
-                {
+                //if (_redrawTiles)
+                //{
                     //Set rendertarget to draw the rest of the scene
                   //  CluwneLib.CurrentRenderTarget = _tilesTarget;
                     //CluwneLib.CurrentRenderTarget.Clear(Color.Black);
 
-                    _floorBatch.End();
                     if (_floorBatch.Count > 0)
                     {
                         CluwneLib.CurrentRenderTarget.Draw(_floorBatch);
                     }
 
-                    _wallBatch.End();
                     if (_wallBatch.Count > 0)
                         CluwneLib.CurrentRenderTarget.Draw(_wallBatch);
 
-                    _redrawTiles = false;
-                }
+               //     _redrawTiles = false;
+                //}
 
 
               //  CluwneLib.CurrentRenderTarget = _sceneTarget;
@@ -617,28 +615,25 @@ namespace SS14.Client.Services.State.States
                 //ComponentManager.Singleton.Render(0, ClientWindowData.Singleton.ViewPort);
                 RenderComponents(e.FrameDeltaTime, ClientWindowData.Singleton.ViewPort);
 
-                if (_redrawOverlay)
-                {
+                //if (_redrawOverlay)
+                //{
                     //CluwneLib.CurrentRenderTarget = _overlayTarget;
                    // _overlayTarget.Clear(Color.Transparent);
 
                     // Render decal batch
 
-                    _decalBatch.End();
                     if (_decalBatch.Count > 0)
                         CluwneLib.CurrentRenderTarget.Draw(_decalBatch);
 
-                    _wallTopsBatch.End();
                     if (_wallTopsBatch.Count > 0)
                         CluwneLib.CurrentRenderTarget.Draw(_wallTopsBatch);
 
-                    _gasBatch.End();
                     if (_gasBatch.Count > 0)
                         CluwneLib.CurrentRenderTarget.Draw(_gasBatch);
 
                    // CluwneLib.CurrentRenderTarget = _sceneTarget;
-                    _redrawOverlay = false;
-                }
+                 //   _redrawOverlay = false;
+                //}
 
              //   _overlayTarget.Blit();
 
@@ -1193,6 +1188,11 @@ namespace SS14.Client.Services.State.States
             _gasBatch.Begin();
 
             DrawTiles(vision);
+            _floorBatch.End();
+            _decalBatch.End();
+            _wallTopsBatch.End();
+            _gasBatch.End();
+            _wallBatch.End();
             _recalculateScene = false;
             _redrawTiles = true;
             _redrawOverlay = true;

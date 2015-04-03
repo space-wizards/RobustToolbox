@@ -163,7 +163,7 @@ namespace SS14.Client.Services.Tiles
 
         #endregion
 
-        public override void Render(float xTopLeft, float yTopLeft, Batch batch)
+        public override void Render(float xTopLeft, float yTopLeft, SpriteBatch batch)
         {
             Sprite.SetPosition((float)bounds.X - xTopLeft,
                                         (float)bounds.Y - (Sprite.Height - bounds.Height) - yTopLeft);
@@ -477,12 +477,12 @@ namespace SS14.Client.Services.Tiles
             //CluwneLib.CurrentRenderTarget.FilledRectangle(x + lightVec.X, y + lightVec.Y, Sprite.Width + 1,Sprite.Height + 1, Color.FromArgb(0, Color.Transparent));
         }
 
-        public override void DrawDecals(float xTopLeft, float yTopLeft, int tileSpacing, Batch decalBatch)
+        public override void DrawDecals(float xTopLeft, float yTopLeft, int tileSpacing, SpriteBatch decalBatch)
         {
             //d.Draw(xTopLeft, yTopLeft, tileSpacing, decalBatch);
         }
 
-        public override void RenderTop(float xTopLeft, float yTopLeft, Batch wallTopsBatch)
+        public override void RenderTop(float xTopLeft, float yTopLeft, SpriteBatch wallTopsBatch)
         {
             int tileSpacing = mapMgr.GetTileSpacing();
 

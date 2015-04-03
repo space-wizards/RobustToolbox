@@ -51,10 +51,10 @@ namespace SS14.Client.Services.State.States
         public string SpawnType;
         private RenderImage _baseTarget;
         private CluwneSprite _baseTargetSprite;
-        private Batch _decalBatch;
+        private SpriteBatch _decalBatch;
         private EntityManager _entityManager;
-        private Batch _floorBatch;
-        private Batch _gasBatch;
+        private SpriteBatch _floorBatch;
+        private SpriteBatch _gasBatch;
         private GaussianBlur _gaussianBlur;
         private float _realScreenHeightTiles;
         private float _realScreenWidthTiles;
@@ -66,8 +66,8 @@ namespace SS14.Client.Services.State.States
         private List<ITile> _visibleTiles;
 
         private bool _showDebug; // show AABBs & Bounding Circles on Entities.
-        private Batch _wallBatch;
-        private Batch _wallTopsBatch;
+        private SpriteBatch _wallBatch;
+        private SpriteBatch _wallTopsBatch;
 
         #region gameState stuff
 
@@ -213,28 +213,28 @@ namespace SS14.Client.Services.State.States
                                                  {DepthWriteEnabled = false};
            _cleanupSpriteList.Add(_lightTargetIntermediateSprite);
 
-          //_gasBatch = new Batch("gasBatch", 1);
-          //  _gasBatch.SourceBlend = AlphaBlendOperation.SourceAlpha;
-          // _gasBatch.DestinationBlend = AlphaBlendOperation.InverseSourceAlpha;
-          //  _gasBatch.SourceBlendAlpha = AlphaBlendOperation.SourceAlpha;
-          //  _gasBatch.DestinationBlendAlpha = AlphaBlendOperation.InverseSourceAlpha;
+           _gasBatch = new SpriteBatch();
+           //_gasBatch.SourceBlend = AlphaBlendOperation.SourceAlpha;
+           //_gasBatch.DestinationBlend = AlphaBlendOperation.InverseSourceAlpha;
+            //_gasBatch.SourceBlendAlpha = AlphaBlendOperation.SourceAlpha;
+            //_gasBatch.DestinationBlendAlpha = AlphaBlendOperation.InverseSourceAlpha;
 
-          //  _wallTopsBatch = new Batch("wallTopsBatch", 1);
-          //  _wallTopsBatch.SourceBlend = AlphaBlendOperation.SourceAlpha;
-          //  _wallTopsBatch.DestinationBlend = AlphaBlendOperation.InverseSourceAlpha;
-          //  _wallTopsBatch.SourceBlendAlpha = AlphaBlendOperation.SourceAlpha;
-          //  _wallTopsBatch.DestinationBlendAlpha = AlphaBlendOperation.InverseSourceAlpha;
+            _wallTopsBatch = new SpriteBatch();
+            //_wallTopsBatch.SourceBlend = AlphaBlendOperation.SourceAlpha;
+            //_wallTopsBatch.DestinationBlend = AlphaBlendOperation.InverseSourceAlpha;
+            //_wallTopsBatch.SourceBlendAlpha = AlphaBlendOperation.SourceAlpha;
+            //_wallTopsBatch.DestinationBlendAlpha = AlphaBlendOperation.InverseSourceAlpha;
 
-          //  _decalBatch = new Batch("decalBatch", 1);
-          //  _decalBatch.SourceBlend = AlphaBlendOperation.SourceAlpha;
-          //  _decalBatch.DestinationBlend = AlphaBlendOperation.InverseSourceAlpha;
-          //  _decalBatch.SourceBlendAlpha = AlphaBlendOperation.SourceAlpha;
-          //  _decalBatch.DestinationBlendAlpha = AlphaBlendOperation.InverseSourceAlpha;
+            _decalBatch = new SpriteBatch();
+            //_decalBatch.SourceBlend = AlphaBlendOperation.SourceAlpha;
+            //_decalBatch.DestinationBlend = AlphaBlendOperation.InverseSourceAlpha;
+            //_decalBatch.SourceBlendAlpha = AlphaBlendOperation.SourceAlpha;
+            //_decalBatch.DestinationBlendAlpha = AlphaBlendOperation.InverseSourceAlpha;
 
-          //  _floorBatch = new Batch("floorBatch", 1);
-          //  _wallBatch = new Batch("wallBatch", 1);
-          //  
-           // _gaussianBlur = new GaussianBlur(ResourceManager);
+            _floorBatch = new SpriteBatch();
+            _wallBatch = new SpriteBatch();
+            
+          _gaussianBlur = new GaussianBlur(ResourceManager);
 
             _realScreenWidthTiles = (float) CluwneLib.Screen.Size.X/MapManager.GetTileSpacing();
             _realScreenHeightTiles = (float) CluwneLib.Screen.Size.Y/MapManager.GetTileSpacing();
@@ -567,10 +567,10 @@ namespace SS14.Client.Services.State.States
 
         public void Render(FrameEventArgs e)
         {
-            CluwneLib.CurrentRenderTarget = _baseTarget;
+            //CluwneLib.CurrentRenderTarget = _baseTarget;
 
-            _baseTarget.Clear(Color.Black);
-            CluwneLib.Screen.Clear(Color.Black);
+            //_baseTarget.Clear(Color.Black);
+            //CluwneLib.Screen.Clear(Color.Black);
 
             //Gorgon.Screen.DefaultView.Left = 400;
             //Gorgon.Screen.DefaultView.Top = 400;
@@ -592,13 +592,17 @@ namespace SS14.Client.Services.State.States
                 {
                     //Set rendertarget to draw the rest of the scene
                   //  CluwneLib.CurrentRenderTarget = _tilesTarget;
-                    CluwneLib.CurrentRenderTarget.Clear(Color.Black);
+                    //CluwneLib.CurrentRenderTarget.Clear(Color.Black);
 
+                    _floorBatch.End();
                     if (_floorBatch.Count > 0)
-                        _floorBatch.Draw();
+                    {
+                        CluwneLib.CurrentRenderTarget.Draw(_floorBatch);
+                    }
 
+                    _wallBatch.End();
                     if (_wallBatch.Count > 0)
-                        _wallBatch.Draw();
+                        CluwneLib.CurrentRenderTarget.Draw(_wallBatch);
 
                     _redrawTiles = false;
                 }
@@ -620,14 +624,17 @@ namespace SS14.Client.Services.State.States
 
                     // Render decal batch
 
+                    _decalBatch.End();
                     if (_decalBatch.Count > 0)
-                        _decalBatch.Draw();
+                        CluwneLib.CurrentRenderTarget.Draw(_decalBatch);
 
+                    _wallTopsBatch.End();
                     if (_wallTopsBatch.Count > 0)
-                        _wallTopsBatch.Draw();
+                        CluwneLib.CurrentRenderTarget.Draw(_wallTopsBatch);
 
+                    _gasBatch.End();
                     if (_gasBatch.Count > 0)
-                        _gasBatch.Draw();
+                        CluwneLib.CurrentRenderTarget.Draw(_gasBatch);
 
                    // CluwneLib.CurrentRenderTarget = _sceneTarget;
                     _redrawOverlay = false;
@@ -635,7 +642,7 @@ namespace SS14.Client.Services.State.States
 
              //   _overlayTarget.Blit();
 
-                LightScene();
+                //LightScene();
 
 
 
@@ -1179,11 +1186,11 @@ namespace SS14.Client.Services.State.States
             //Blur the player vision map
             BlurPlayerVision();
 
-            _decalBatch.Clear();
-            _wallTopsBatch.Clear();
-            _floorBatch.Clear();
-            _wallBatch.Clear();
-            _gasBatch.Clear();
+            _decalBatch.Begin();
+            _wallTopsBatch.Begin();
+            _floorBatch.Begin();
+            _wallBatch.Begin();
+            _gasBatch.Begin();
 
             DrawTiles(vision);
             _recalculateScene = false;

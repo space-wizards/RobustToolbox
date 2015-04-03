@@ -249,7 +249,7 @@ namespace SS14.Client.GameObjects
         #region Variables
 
         private Particle[] _particles;
-        private Batch _batch;
+        private SpriteBatch _batch;
         private Random _rnd = new Random();
         private float _particlesToEmit;
         private List<Particle> _newParticles = new List<Particle>(); 

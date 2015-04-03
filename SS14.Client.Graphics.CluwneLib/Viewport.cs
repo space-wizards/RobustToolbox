@@ -7,21 +7,18 @@ namespace SS14.Client.Graphics.CluwneLib
 {
     public class Viewport
     {
-        private int p1;
-        private int p2;
-        private uint p3;
-        private uint p4;
-
-        public Viewport(int p1, int p2, uint p3, uint p4)
+        public Viewport(int originX, int originY, uint width, uint height)
         {
             // TODO: Complete member initialization
-            this.p1 = p1;
-            this.p2 = p2;
-            this.p3 = p3;
-            this.p4 = p4;
+            this.OriginX = originX;
+            this.OriginY = originY;
+            this.Width = (int)width;
+            this.Height = (int)height;
         }
         public int Width { get; set; }
         public int Height { get; set; }
+        public int OriginX { get; set; }
+        public int OriginY { get; set; }
 
     }
 }

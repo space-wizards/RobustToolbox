@@ -2,6 +2,7 @@
   <Configuration name="Debug" platform="x86">
     <Options>
       <OutputPath>../bin</OutputPath>
+	  <AllowUnsafe>true</AllowUnsafe>
     </Options>
   </Configuration>
   <Configuration name="Release" platform="x86">

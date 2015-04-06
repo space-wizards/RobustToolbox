@@ -35,6 +35,7 @@
     <File buildAction="Compile">Render/RenderImage.cs</File>
     <File buildAction="Compile">Shader/FXShader.cs</File>
     <File buildAction="Compile">Sprite/Batch.cs</File>
+    <File buildAction="Compile">Sprite/SpriteBatch.cs</File>
     <File buildAction="Compile">Sprite/CluwneSprite.cs</File>
     <File buildAction="Compile">Sprite/SpriteInfo.cs</File>
     <File buildAction="Compile">Sprite/TextSprite.cs</File>

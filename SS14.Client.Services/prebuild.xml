@@ -64,7 +64,7 @@
     <File buildAction="Compile">Placement/PlacementMode.cs</File>
     <File buildAction="Compile">Player/PlayerManager.cs</File>
     <File buildAction="Compile">Player/PostProcessing/BlurPostProcessingEffect.cs</File>
-    <File buildAction="Compile">Player/PostProcessing/PerlinPostProcessingEffect.cs</File>
+    <!--<File buildAction="Compile">Player/PostProcessing/PerlinPostProcessingEffect.cs</File>-->
     <File buildAction="Compile">Player/PostProcessing/DeathPostProcessingEffect.cs</File>
     <File buildAction="Compile">Player/PostProcessing/PostProcessingEffect.cs</File>
     <File buildAction="Compile">ResourceManagment/ResourceManagerZip.cs</File>
@@ -146,7 +146,7 @@
     <File buildAction="None">MessageLogging/messageLoggerService.config</File>
     <File buildAction="EmbeddedResource">_EmbeddedBaseResources/bluehigh.ttf</File>
     <File buildAction="EmbeddedResource">_EmbeddedBaseResources/noSprite.png</File>
-    <File buildAction="EmbeddedResource">_EmbeddedBaseResources/narsie.png</File>
+    <!--<File buildAction="EmbeddedResource">_EmbeddedBaseResources/narsie.png</File>-->
   </Files>
   <Reference name="SS14.Client.GameObjects"/>
   <Reference name="SS14.Client.Interfaces"/>

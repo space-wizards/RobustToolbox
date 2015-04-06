@@ -8,6 +8,7 @@ namespace SS14.Server.GameObjects
 {
     public class HealthComponent : DamageableComponent
     {
+        // TODO use state system
         public override void HandleInstantiationMessage(NetConnection netConnection)
         {
             SendHealthUpdate(netConnection);

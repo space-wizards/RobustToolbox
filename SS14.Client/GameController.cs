@@ -18,8 +18,9 @@ using SS14.Client.Graphics.CluwneLib.Render;
 using Color = System.Drawing.Color;
 using KeyArgs = SFML.Window.KeyEventArgs;
 using SS14.Client.Graphics.CluwneLib.Sprite;
+using SS14.Client.Graphics.CluwneLib.Timing;
 
-
+using SS14.Client.Services.UserInterface.Components;
 
 namespace SS14.Client
 {
@@ -50,112 +51,39 @@ namespace SS14.Client
         public GameController()
         {
             _configurationManager = IoCManager.Resolve<IConfigurationManager>();
-            IoCManager.Resolve<IConfigurationManager>().Initialize("./config.xml");
+            _configurationManager.Initialize("./config.xml");
 
             _resourceManager = IoCManager.Resolve<IResourceManager>();
 
             _resourceManager.LoadBaseResources();
             _resourceManager.LoadLocalResources();
-          
+
+            //Setup Cluwne first, as the rest depends on it.
+            SetupCluwne ();
 
             //Initialization of private members
-           
             _networkManager = IoCManager.Resolve<INetworkManager>();
             _netGrapher = IoCManager.Resolve<INetworkGrapher>();
             _stateManager = IoCManager.Resolve<IStateManager>();
             _userInterfaceManager = IoCManager.Resolve<IUserInterfaceManager>();
 
-        
-           
+            SetupInput ();
 
-            //Setup
-            SetupCluwne();
-            SetupInput();
+            _stateManager.RequestStateChange<TestState> ();
 
+            FrameEventArgs _frameEvent = new FrameEventArgs (
+                                      new TimingData (new SFML.System.Clock ()));
 
-            #region testing
-            TextSprite CluwneEngineText = new TextSprite("TEST", "CluwneEngine", _resourceManager.GetFont("CALIBRI"));
-            CluwneEngineText.Position = new Shared.Maths.Vector2(450,600);
-            CluwneEngineText.Color = Color.DarkRed;
-            CluwneEngineText.Text = " SS14: Running on CluwneEngine";
-
-            TextSprite VersionText = new TextSprite("TEST", "version", _resourceManager.GetFont("CALIBRI"));
-            VersionText.Position = new Shared.Maths.Vector2(500, 650);
-            VersionText.Color = Color.Gold;
-            VersionText.Text = "( Running SFML v2.0 ) " ;
-
-            TextSprite ProjNotDeadText = new TextSprite("TEST", "ProjNoDed", _resourceManager.GetFont("CALIBRI"));
-            ProjNotDeadText.Position = new Shared.Maths.Vector2(512, 700);
-            ProjNotDeadText.Color = Color.Gold;
-            ProjNotDeadText.Text = "  Project != Dead :)";
-            
-
-            //CluwneLib.drawHollowRectangle(100, 100, 100, 100, .6f, Color.Blue);
-            //CluwneLib.drawPoint(134, 223, Color.Beige);
-            //CluwneLib.drawCircle(121, 142, 20, Color.Crimson);
-
-
-            Texture Cluwnelogo = new Texture(_resourceManager.GetImage("Textures/CluwneLibLogo.png"));
-
-            CluwneSprite CluwneEngineLogo = new CluwneSprite(Cluwnelogo);
-            CluwneEngineLogo.Position = new SFML.System.Vector2f(150,100);
-
-            Texture _Tiles = new Texture(_resourceManager.GetImage("Textures/0_Tiles.png"));
-
-            CluwneSprite _TilesSprite = new CluwneSprite(_Tiles);
-            _TilesSprite.Position = new SFML.System.Vector2f(0, 0);
-
-
-            Texture _Items = new Texture(_resourceManager.GetImage("Textures/0_Items.png"));
-
-            CluwneSprite _TilesItems = new CluwneSprite(_Items);
-            _TilesItems.Position = new SFML.System.Vector2f(0, 500);
-
-            Texture _Objects = new Texture(_resourceManager.GetImage("Textures/0_Objects.png"));
-
-            CluwneSprite _TilesObjects = new CluwneSprite(_Objects);
-            _TilesObjects.Position = new SFML.System.Vector2f(970, 400);
-
-            Texture _Decals = new Texture(_resourceManager.GetImage("Textures/0_Decals.png"));
-
-            CluwneSprite _TilesDecals = new CluwneSprite(_Decals);
-            _TilesDecals.Position = new SFML.System.Vector2f(1000, 0);
-
-
-
-            _TilesObjects.Draw();
-            _TilesDecals.Draw();
-            _TilesItems.Draw();
-            _TilesSprite.Draw();
-            CluwneEngineText.Draw();
-            VersionText.Draw();
-            CluwneEngineLogo.Draw();
-            ProjNotDeadText.Draw();
-           
-    
-          //States Testing
-          //_stateManager.RequestStateChange<MainScreen>();
-
-            CluwneLib.Screen.Display();
-
-             while(CluwneLib.Screen.IsOpen == true)
-                {
-                 
-
-
-
-                    CluwneLib.Screen.WaitAndDispatchEvents();
-                    
-                }
-
-          
-
+            while (CluwneLib.IsRunning == true) {
+                CluwneLib.Clear (Color.Black);
+                CluwneLib.Screen.DispatchEvents ();
+                CluwneLib.RunIdle (this, _frameEvent);
+                CluwneLib.Screen.Display ();
+            }
+            CluwneLib.Terminate();
+            Console.WriteLine("Gameloop terminated.");
         }
-            #endregion
-
         #endregion
-
-
 
         #region EventHandlers
 
@@ -178,9 +106,7 @@ namespace SS14.Client
 
         private void MainWindowResizeEnd(object sender, EventArgs e)
         {
-          
-
-           
+	    _stateManager.FormResize();
         }
 
         #region Input Handling

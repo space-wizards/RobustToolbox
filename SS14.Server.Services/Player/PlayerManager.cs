@@ -1,6 +1,7 @@
 ﻿using Lidgren.Network;
 using SS14.Server.Interfaces;
 using SS14.Server.Interfaces.GOC;
+using SS14.Server.Interfaces.GameObject;
 using SS14.Server.Interfaces.Player;
 using SS14.Server.Services.Log;
 using SS14.Shared;
@@ -53,8 +54,7 @@ namespace SS14.Server.Services.Player
                 {
                     newItem.GetComponent<ITransformComponent>(ComponentFamily.Transform).TranslateTo(
                         human.GetComponent<ITransformComponent>(ComponentFamily.Transform).Position);
-                    //This is not neccessary once the equipment component is built.
-                    human.SendMessage(this, ComponentMessageType.EquipItem, newItem);
+                    human.GetComponent<IEquipmentComponent>(ComponentFamily.Equipment).RaiseEquipItem(newItem);
                 }
             }
             s.AttachToEntity(a);

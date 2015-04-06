@@ -67,7 +67,6 @@
     <File buildAction="Compile">GO/Server/ServerDelegates.cs</File>
     <File buildAction="Compile">GO/StatusEffect/StatusEffectState.cs</File>
     <File buildAction="Compile">Lighting.cs</File>
-    <File buildAction="Compile">Minidump/MiniDump.cs</File>
     <File buildAction="Compile">Objectives/ObjectiveParameterType.cs</File>
     <File buildAction="Compile">Objectives/ObjectiveType.cs</File>
     <File buildAction="Compile">PlayerActionEnum.cs</File>
@@ -98,6 +97,7 @@
     <File buildAction="Compile">Utility/CommandParsing.cs</File>
     <File buildAction="Compile">Utility/NetParamsPacker.cs</File>
     <File buildAction="Compile">Utility/PlatformDetector.cs</File>
+    <File buildAction="Compile">Utility/PlatformTools.cs</File>
     <File buildAction="Compile">Utility/RandomString.cs</File>
     <File buildAction="Compile">Utility/Range.cs</File>
     <File buildAction="Compile">Utility/unZipString.cs</File>

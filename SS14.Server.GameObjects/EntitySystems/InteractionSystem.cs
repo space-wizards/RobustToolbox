@@ -60,17 +60,17 @@ namespace SS14.Server.GameObjects.EntitySystems
                     if (obj.HasComponent(ComponentFamily.Item))
                     {
                         //It's something with hands using their hands on an item!
-                        return DoEmptyHandToItemInteraction(user, obj);
+                        return DoHandsToItemInteraction(user, obj);
                     }
                     if (obj.HasComponent(ComponentFamily.LargeObject))
                     {
                         //It's something with hands using their hands on a large object!
-                        return DoEmptyHandToLargeObjectInteraction(user, obj);
+                        return DoHandsToLargeObjectInteraction(user, obj);
                     }
                     if (obj.HasComponent(ComponentFamily.Actor))
                     {
                         //It's something with hands using their hands on an actor!
-                        return DoEmptyHandToActorInteraction(user, obj);
+                        return DoHandsToActorInteraction(user, obj);
                     }
                 }
                 if (mouseClickType == MouseClickType.Right)

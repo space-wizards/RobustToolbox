@@ -31,17 +31,14 @@
     <File buildAction="Compile">Component/Damageable/Health/LocationalHealth/HumanHealthComponent.cs</File>
     <File buildAction="Compile">Component/Direction/DirectionComponent.cs</File>
     <File buildAction="Compile">Component/EntityStats/EntityStatsCompC.cs</File>
-    <File buildAction="Compile">Component/Equipment/NewEquipmentComponent.cs</File>
     <File buildAction="Compile">Component/Equipment/EquipmentComponent.cs</File>
     <File buildAction="Compile">Component/Equipment/HumanEquipmentComponent.cs</File>
     <File buildAction="Compile">Component/Equippable/EquippableComponent.cs</File>
-    <File buildAction="Compile">Component/Hands/NewHandsComponent.cs</File>
     <File buildAction="Compile">Component/Hands/HumanHandsComponent.cs</File>
     <File buildAction="Compile">Component/Hitbox/HitboxComponent.cs</File>
     <File buildAction="Compile">Component/Damageable/Health/HealthComponent.cs</File>
     <File buildAction="Compile">Component/Icon/IconComponent.cs</File>
     <File buildAction="Compile">Component/Input/ContextMenuComponent.cs</File>
-    <File buildAction="Compile">Component/Inventory/NewInventory.cs</File>
     <File buildAction="Compile">Component/Inventory/InventoryComponent.cs</File>
     <File buildAction="Compile">Component/Item/BasicItemComponent.cs</File>
     <File buildAction="Compile">Component/Light/FlashLightComponent.cs</File>
@@ -56,7 +53,6 @@
     <File buildAction="Compile">Component/Renderable/ParticleSystemComponent.cs</File>
     <File buildAction="Compile">Component/Renderable/Speechbubble.cs</File>
     <File buildAction="Compile">Component/Renderable/WearableAnimatedSpriteComponent.cs</File>
-    <File buildAction="Compile">Component/Renderable/WearableSpriteComponent.cs</File>
     <File buildAction="Compile">Component/Renderable/ItemSpriteComponent.cs</File>
     <File buildAction="Compile">Component/Renderable/MobSpriteComponent.cs</File>
     <File buildAction="Compile">Component/Renderable/SpriteComponent.cs</File>

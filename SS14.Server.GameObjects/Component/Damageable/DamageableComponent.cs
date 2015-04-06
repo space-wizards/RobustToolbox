@@ -23,6 +23,7 @@ namespace SS14.Server.GameObjects
             RegisterSVar("CurrentHealth", typeof (int));
         }
 
+        // TODO use state system
         public override void HandleInstantiationMessage(NetConnection netConnection)
         {
             SendHealthUpdate(netConnection);

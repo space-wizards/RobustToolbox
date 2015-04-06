@@ -1,4 +1,5 @@
 ﻿using Lidgren.Network;
+using SS14.Server.GameObjects.Events;
 using SS14.Server.Interfaces.GOC;
 using SS14.Shared;
 using SS14.Shared.GameObjects;
@@ -41,12 +42,7 @@ namespace SS14.Server.GameObjects
                     Entity entAdd = Owner.EntityManager.GetEntity((int) message.MessageParameters[1]);
                     if (entAdd != null)
                         AddToInventory(entAdd);
-                    break;
-
-                case ComponentMessageType.InventoryRemove:
-                    Entity entRemove = Owner.EntityManager.GetEntity((int) message.MessageParameters[1]);
-                    if (entRemove != null)
-                        RemoveFromInventory(entRemove);
+                        //AddToInventory(entAdd);
                     break;
             }
         }
@@ -66,11 +62,8 @@ namespace SS14.Server.GameObjects
                     break;
 
                 case ComponentMessageType.InventoryAdd:
+                    // TODO Refactor craftingmanager to access this component directly, not using a message
                     AddToInventory((Entity) list[0]);
-                    break;
-
-                case ComponentMessageType.InventoryRemove:
-                    RemoveFromInventory((Entity) list[0]);
                     break;
 
                 case ComponentMessageType.InventorySetSize:
@@ -99,22 +92,14 @@ namespace SS14.Server.GameObjects
         }
 
         //Adds item to inventory and dispatches hide message to sprite compo.
+        // TODO this method should be renamed to reflect what it really does
         private void AddToInventory(Entity entity)
         {
-            if (!containedEntities.Contains(entity) && containedEntities.Count < maxSlots)
+            Owner.EntityManager.RaiseEvent(this, new InventoryAddItemToInventoryEventArgs
             {
-                Entity holder = null;
-                if (entity.HasComponent(ComponentFamily.Item))
-                    holder = ((BasicItemComponent) entity.GetComponent(ComponentFamily.Item)).CurrentHolder;
-                if (holder == null && entity.HasComponent(ComponentFamily.Equippable))
-                    holder = ((EquippableComponent) entity.GetComponent(ComponentFamily.Equippable)).currentWearer;
-                if (holder != null) holder.SendMessage(this, ComponentMessageType.DisassociateEntity, entity);
-                else Owner.SendMessage(this, ComponentMessageType.DisassociateEntity, entity);
-
-                containedEntities.Add(entity);
-
-                HandleAdded(entity);
-            }
+                Actor = Owner,
+                Item = entity
+            });
         }
 
         //Removes item from inventory and dispatches unhide message to sprite compo.
@@ -130,7 +115,7 @@ namespace SS14.Server.GameObjects
 
         private void HandleAdded(Entity entity)
         {
-            entity.SendMessage(this, ComponentMessageType.PickedUp, Owner, Hand.None);
+            entity.SendMessage(this, ComponentMessageType.PickedUp, Owner, InventoryLocation.None);
             entity.SendMessage(this, ComponentMessageType.SetVisible, false);
         }
 
@@ -153,9 +138,20 @@ namespace SS14.Server.GameObjects
             }
         }
 
-        public bool AddEntity(Entity actor, Entity toAdd, InventoryLocation location = InventoryLocation.Any)
+        public bool CanAddEntity(Entity actor, Entity toAdd, InventoryLocation location = InventoryLocation.Any)
         {
             if (containedEntities.Contains(toAdd))
+            {
+                return false;
+            }
+
+            // Todo check if inventory is full
+            return true;
+        }
+
+        public bool AddEntity(Entity actor, Entity toAdd, InventoryLocation location = InventoryLocation.Any)
+        {
+            if (!CanAddEntity(actor, toAdd, location))
             {
                 return false;
             }

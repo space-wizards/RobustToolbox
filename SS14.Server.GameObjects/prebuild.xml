@@ -25,11 +25,8 @@
     <File buildAction="Compile">Component/Actor/BasicActorComponent.cs</File>
     <File buildAction="Compile">Component/Direction/DirectionComponent.cs</File>
     <File buildAction="Compile">Component/EntityStats/EntityStatsCompS.cs</File>
-    <File buildAction="Compile">Component/Equipment/NewEquipmentComponent.cs</File>
-    <File buildAction="Compile">Component/Hands/NewHandsComponent.cs</File>
     <File buildAction="Compile">Component/Hitbox/HitboxComponent.cs</File>
     <File buildAction="Compile">Component/IInventoryContainer.cs</File>
-    <File buildAction="Compile">Component/Inventory/NewInventory.cs</File>
     <File buildAction="Compile">Component/Inventory/InventoryComponent.cs</File>
     <File buildAction="Compile">Component/Item/ItemCapability/BreatherCapability.cs</File>
     <File buildAction="Compile">Component/Item/ItemCapability/HealthScanCapability.cs</File>
@@ -47,6 +44,11 @@
     <File buildAction="Compile">Component/Think/ThinkComponent/PuddleThinkComponent.cs</File>
     <File buildAction="Compile">Component/Think/ThinkComponent/ThinkComponent.cs</File>
     <File buildAction="Compile">Component/Damageable/Health/LocationalHealth/HumanHealthComponent.cs</File>
+    <File buildAction="Compile">Component/Damageable/Health/Organs/Organ.cs</File>
+    <File buildAction="Compile">Component/Damageable/Health/Organs/External/External.cs</File>
+    <File buildAction="Compile">Component/Damageable/Health/Organs/External/HumanExternal.cs</File>
+    <File buildAction="Compile">Component/Damageable/Health/Organs/Internal/Internal.cs</File>
+    <File buildAction="Compile">Component/Damageable/Health/Organs/Internal/HumanInternal.cs</File>
     <File buildAction="Compile">Component/Think/ThinkHostComponent.cs</File>
     <File buildAction="Compile">Component/Transform/TransformComponent.cs</File>
     <File buildAction="Compile">Component/Velocity/VelocityComponent.cs</File>
